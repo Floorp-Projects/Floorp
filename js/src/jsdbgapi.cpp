@@ -739,6 +739,8 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
     if (!CheckDebugMode(cx))
         return false;
 
+    SkipRoot skip(cx, &chars);
+
     Rooted<Env*> env(cx, JS_GetFrameScopeChain(cx, fpArg));
     if (!env)
         return false;
@@ -746,8 +748,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
     StackFrame *fp = Valueify(fpArg);
 
     js::AutoCompartment ac(cx, env);
-    return EvaluateInEnv(cx, env, fp, StableCharPtr(chars, length), length,
-                         filename, lineno, rval);
+    return EvaluateInEnv(cx, env, fp, chars, length, filename, lineno, rval);
 }
 
 JS_PUBLIC_API(JSBool)

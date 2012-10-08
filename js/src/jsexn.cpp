@@ -1114,7 +1114,7 @@ js_ReportUncaughtException(JSContext *cx)
         report.column = (unsigned) column;
         if (str) {
             if (JSStableString *stable = str->ensureStable(cx))
-                report.ucmessage = stable->chars().get();
+                report.ucmessage = stable->chars();
         }
     }
 

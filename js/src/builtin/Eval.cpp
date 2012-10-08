@@ -207,7 +207,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
     if (!stableStr)
         return false;
 
-    StableCharPtr chars = stableStr->chars();
+    const jschar *chars = stableStr->chars();
     size_t length = stableStr->length();
 
     // If the eval string starts with '(' or '[' and ends with ')' or ']', it may be JSON.
@@ -271,7 +271,8 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
                .setPrincipals(principals)
                .setOriginPrincipals(originPrincipals);
         JSScript *compiled = frontend::CompileScript(cx, scopeobj, caller, options,
-                                                     chars, length, stableStr, staticLevel);
+                                                     chars, length, stableStr,
+                                                     staticLevel);
         if (!compiled)
             return false;
 

@@ -15,7 +15,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/StandardInteger.h"
 #ifdef __cplusplus
-# include "mozilla/RangedPtr.h"
 # include "mozilla/ThreadLocal.h"
 #endif
 
@@ -47,18 +46,6 @@
 
 #ifdef __cplusplus
 namespace JS {
-
-typedef mozilla::RangedPtr<const jschar> CharPtr;
-
-class StableCharPtr : public CharPtr {
-  public:
-    StableCharPtr(const StableCharPtr &s) : CharPtr(s) {}
-    StableCharPtr(const mozilla::RangedPtr<const jschar> &s) : CharPtr(s) {}
-    StableCharPtr(const jschar *s, size_t len) : CharPtr(s, len) {}
-    StableCharPtr(const jschar *pos, const jschar *start, size_t len)
-      : CharPtr(pos, start, len)
-    {}
-};
 
 /*
  * Protecting non-jsval, non-JSObject *, non-JSString * values from collection
