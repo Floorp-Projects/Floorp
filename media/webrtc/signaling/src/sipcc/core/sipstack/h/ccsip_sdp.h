@@ -46,8 +46,6 @@
 #include "sdp.h"
 #include "ccapi.h"
 
-// RAMC-start
-#define CCSIP_SDP_BUF_SIZE      SDP_MAX_LEN
 
 /* SDP bitmask values */
 #define CCSIP_SRC_SDP_BIT       0x1
@@ -92,7 +90,7 @@ PMH_EXTERN cc_sdp_t *sipsdp_create_from_buf(char *buf, uint32_t nbytes,
  */
 #define SIPSDP_VERSION              0
 // RAMC_DEBUG #define SIPSDP_ORIGIN_USERNAME      "CiscoSystemsSIP-GW-UserAgent"
-#define SIPSDP_ORIGIN_USERNAME      "Cisco-SIPUA"
+#define SIPSDP_ORIGIN_USERNAME      "Mozilla-SIPUA"
 #define SIPSDP_SESSION_NAME         "SIP Call"
 
 /* Possible encoding names fo static payload types*/

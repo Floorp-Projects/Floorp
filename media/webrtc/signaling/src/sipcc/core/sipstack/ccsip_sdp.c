@@ -404,69 +404,31 @@ sipsdp_create_from_buf (char *buf, uint32_t nbytes, cc_sdp_t *sdp)
 char *
 sipsdp_write_to_buf (cc_sdp_t *sdp_info, uint32_t *retbytes)
 {
-    const char *fname = "sipsdp_write_to_buf";
-    char *buf, *new_buf;
-    char *sdp_buf;
+    flex_string fs;
     uint32_t sdp_len;
     sdp_result_e rc;
 
+    flex_string_init(&fs);
+
     if (!sdp_info || !sdp_info->src_sdp) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NULL sdp_info or src_sdp\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NULL sdp_info or src_sdp\n", __FUNCTION__);
         return (NULL);
     }
 
-    /*
-     * Allocate storage for the SDP text
-     */
-    buf = (char *) cpr_malloc(CCSIP_SDP_BUF_SIZE);
-    if (!buf) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"malloc failure\n", fname);
-        return (NULL);
-    }
-
-    sdp_buf = buf;
-
-    if ((rc = sdp_build(sdp_info->src_sdp, &sdp_buf, CCSIP_SDP_BUF_SIZE))
+    if ((rc = sdp_build(sdp_info->src_sdp, &fs))
         != SDP_SUCCESS) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"sdp_build rc=%s\n", DEB_F_PREFIX_ARGS(SIP_SDP, fname),
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"sdp_build rc=%s\n", DEB_F_PREFIX_ARGS(SIP_SDP, __FUNCTION__),
                          sdp_get_result_name(rc));
 
-        if (rc == SDP_POTENTIAL_SDP_OVERFLOW) {
-            /* SDP may have been truncated. Issue an extra warning and abort */
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Build SDP buffer overflow\n", fname);
-        }
-
-        cpr_free(buf);
+        flex_string_free(&fs);
         *retbytes = 0;
         return (NULL);
     }
 
-    /*
-     * Compute length of SDP
-     */
-    sdp_len = sdp_buf - buf;
-    /*
-     * Minimize the memory impact on the SDP buffer by reallocating buffer
-     * with a smaller size that fits the actual SDP body for the size.
-     */
-    if ((CCSIP_SDP_BUF_SIZE - sdp_len) > 64) {
-        /*
-         * Allocate space with NULL string character, the
-         * output buffer content contains the NULL char but the
-         * the length represents an actual length of SDP
-         * without NULL char. The NULL char is added just in case,
-         * there is code that uses strlen() on the SDP then
-         * it will terminate properly.
-         */
-        new_buf = (char *) cpr_malloc(sdp_len + 1);
-        if (new_buf != NULL) {
-            memcpy(new_buf, buf, sdp_len);
-            new_buf[sdp_len] = '\0';
-            cpr_free(buf);
-            buf = new_buf;
-        }
-    }
-    *retbytes = sdp_len;
+    *retbytes = fs.string_length;
 
-    return (buf);
+    /* We are not calling flex_string_free on this, instead returning the buffer
+     * caller's responsibility to free
+     */
+    return fs.buffer;
 }

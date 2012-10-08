@@ -38,7 +38,7 @@ namespace test {
 
 static const std::string strSampleSdpAudioVideoNoIce =
   "v=0\r\n"
-  "o=Cisco-SIPUA 4949 0 IN IP4 10.86.255.143\r\n"
+  "o=Mozilla-SIPUA 4949 0 IN IP4 10.86.255.143\r\n"
   "s=SIP Call\r\n"
   "t=0 0\r\n"
   "a=ice-ufrag:qkEP\r\n"

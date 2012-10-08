@@ -1141,18 +1141,14 @@ sdp_result_e sdp_parse (void *sdp_ptr, char **bufp, u16 len)
  * Description: Build an SDP description in the specified buffer based 
  *              on the information in the given SDP structure.
  * Parameters:  sdp_ptr  The SDP handle returned by sdp_init_description
- *              bufp     Pointer to the buffer where the SDP description
- *                       should be built.
- *              len      The maximum length of the SDP/length of the buffer.
+ *              fs A flex_string where the SDP description should be built.
  * Returns:     A result value indicating if the build was successful and 
  *              if not, what type of error was encountered - e.g., 
  *              description was too long for the given buffer.
  */
-sdp_result_e sdp_build (void *sdp_ptr, char **bufp, u16 len)
+sdp_result_e sdp_build (void *sdp_ptr, flex_string *fs)
 {
     int i, j;
-    char               *ptr = NULL;
-    char               *endbuf_p;
     sdp_t              *sdp_p = (sdp_t *)sdp_ptr;
     sdp_result_e        result = SDP_SUCCESS;
 
@@ -1160,7 +1156,7 @@ sdp_result_e sdp_build (void *sdp_ptr, char **bufp, u16 len)
         return (SDP_INVALID_SDP_PTR);
     }
 
-    if ((bufp == NULL) || (*bufp == NULL)) {
+    if (!fs) {
         return (SDP_NULL_BUF_PTR);
     }
 
@@ -1168,26 +1164,22 @@ sdp_result_e sdp_build (void *sdp_ptr, char **bufp, u16 len)
         SDP_PRINT("%s Trace SDP Build:", sdp_p->debug_str);
     }
     
-    ptr = *bufp;
     sdp_p->conf_p->num_builds++;
 
-    /* Find ptr to the end of the buf for recalculating len remaining. */
-    endbuf_p = ptr + len;
-
     for (i=0; ((i < SDP_TOKEN_M) &&
-               (result == SDP_SUCCESS) && (endbuf_p - ptr > 0)); i++) {
-        result = sdp_token[i].build_func(sdp_p, SDP_SESSION_LEVEL, &ptr, (u16)(endbuf_p - ptr));
+               (result == SDP_SUCCESS)); i++) {
+        result = sdp_token[i].build_func(sdp_p, SDP_SESSION_LEVEL, fs);
         /* ok not to check buffer space (yet) as the if() checks it */
     }
     /* If the session level was ok, build the media lines. */
-    if ((result == SDP_SUCCESS) && (endbuf_p - ptr > 0)) {
+    if (result == SDP_SUCCESS) {
         for (i=1; ((i <= sdp_p->mca_count) &&
-                   (result == SDP_SUCCESS) && (endbuf_p - ptr > 0)); i++) {
-            result = sdp_token[SDP_TOKEN_M].build_func(sdp_p, (u16)i, &ptr, (u16)(endbuf_p - ptr));
+                   (result == SDP_SUCCESS)); i++) {
+            result = sdp_token[SDP_TOKEN_M].build_func(sdp_p, (u16)i, fs);
 
             /* ok not to check buffer space (yet) as the for() checks it */
             for (j=SDP_TOKEN_I;
-                 ((j < SDP_TOKEN_M) && (result == SDP_SUCCESS) && (endbuf_p - ptr > 0));
+                 ((j < SDP_TOKEN_M) && (result == SDP_SUCCESS));
                  j++) {
                 if ((j == SDP_TOKEN_U) || (j == SDP_TOKEN_E) ||
                     (j == SDP_TOKEN_P) || (j == SDP_TOKEN_T) ||
@@ -1195,22 +1187,9 @@ sdp_result_e sdp_build (void *sdp_ptr, char **bufp, u16 len)
                     /* These tokens not valid at media level. */
                     continue;
                 }
-                result = sdp_token[j].build_func(sdp_p, (u16)i, &ptr, (u16)(endbuf_p - ptr));
+                result = sdp_token[j].build_func(sdp_p, (u16)i, fs);
                 /* ok not to check buffer space (yet) as the for() checks it */
             }
-        }
-    }
-
-    /* Return the pointer where we left off. */
-    *bufp = ptr;
-    
-    if (result == SDP_SUCCESS) {
-        if ((endbuf_p - ptr) <= 1) {
-            /*
-             * The buffer was too small, or just big enough, to hold
-             * the sdp.  Some of the sdp may have gotten dropped.
-             */
-            result = SDP_POTENTIAL_SDP_OVERFLOW;
         }
     }
 
