@@ -7,14 +7,15 @@ Test of Relying Party (RP) using the DOM APIs
   <meta charset="utf-8">
   <title>Test of Relying Party (RP) using the DOM APIs</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript;version=1.8" src="head_identity.js"></script>
 </head>
 <body onload="run_next_test()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=753238">Test of Relying Party (RP) using the DOM APIs</a>
 <p id="display"></p>
-<div id="content" style="display: none">
-
+<div id="content">
+  <button id='request'>request</button>
 </div>
 <pre id="test">
 <script type="application/javascript;version=1.8">
@@ -163,7 +164,13 @@ function test_request() {
     run_next_rp_test();
   });
 
-  identity.request();
+  var button = document.getElementById('request');
+  button.addEventListener('click', function requestHandler() {
+    button.removeEventListener('click', requestHandler);
+    identity.request();
+  });
+
+  synthesizeMouseAtCenter(button, {});
 }
 
 function test_logout() {

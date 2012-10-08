@@ -12,8 +12,8 @@
 <body>
 <a target="_blank">navigator.id RP basics</a>
 <p id="display"></p>
-<div id="content" style="display: none">
-
+<div id="content">
+  <button id='request'>request</button>
 </div>
 <pre id="test">
 <script type="application/javascript;version=1.8">
@@ -49,8 +49,13 @@ let steps = [
 
   // test request before watch throws an exception
   function requestBeforeWatch() {
-    expectException(function() {
-      identity.request();
+    var button = document.getElementById('request');
+    button.addEventListener('click', function requestHandler() {
+      button.removeEventListener('click', requestHandler);
+
+      expectException(function() {
+        identity.request();
+      });
     });
     SimpleTest.executeSoon(next);
   },
