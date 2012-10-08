@@ -47,7 +47,7 @@
       <field name="mInputField">null</field>
       <field name="mIgnoreClick">false</field>
       <field name="mIgnoreFocus">false</field>
-      <field name="mEditor">false</field>
+      <field name="mEditor">null</field>
 
       <property name="inputField" readonly="true">
         <getter><![CDATA[
