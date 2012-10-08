@@ -15,7 +15,7 @@ struct ObjectHashEntry : PLDHashEntryHdr {
   nsNSSShutDownObject *obj;
 };
 
-PR_STATIC_CALLBACK(bool)
+static bool
 ObjectSetMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
@@ -23,7 +23,7 @@ ObjectSetMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return entry->obj == static_cast<const nsNSSShutDownObject*>(key);
 }
 
-PR_STATIC_CALLBACK(bool)
+static bool
 ObjectSetInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
                      const void *key)
 {
