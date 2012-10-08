@@ -1028,7 +1028,7 @@ struct ScriptSource
             destroy(rt);
     }
     bool setSourceCopy(JSContext *cx,
-                       const jschar *src,
+                       StableCharPtr src,
                        uint32_t length,
                        bool argumentsNotIncluded,
                        SourceCompressionToken *tok);

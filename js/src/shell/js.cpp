@@ -3091,7 +3091,9 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
     options.setFileAndLine("<string>", 1)
            .setCompileAndGo(false);
     Parser parser(cx, options,
-                  JS_GetStringCharsZ(cx, scriptContents), JS_GetStringLength(scriptContents),
+                  JS::StableCharPtr(JS_GetStringCharsZ(cx, scriptContents),
+                                    JS_GetStringLength(scriptContents)),
+                  JS_GetStringLength(scriptContents),
                   /* foldConstants = */ true);
     if (!parser.init())
         return false;
@@ -3367,7 +3369,8 @@ ParseLegacyJSON(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 
     RootedValue value(cx, NullValue());
-    return js::ParseJSONWithReviver(cx, chars, length, value, args.rval(), LEGACY);
+    return js::ParseJSONWithReviver(cx, StableCharPtr(chars, length), length,
+                                    value, args.rval(), LEGACY);
 }
 
 static JSBool

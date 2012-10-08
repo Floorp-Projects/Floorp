@@ -3402,14 +3402,13 @@ DebuggerFrame_setOnPop(JSContext *cx, unsigned argc, Value *vp)
  */
 JSBool
 js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, StackFrame *fp,
-                  const jschar *chars, unsigned length, const char *filename, unsigned lineno,
+                  StableCharPtr chars, unsigned length, const char *filename, unsigned lineno,
                   Value *rval)
 {
     assertSameCompartment(cx, env, fp);
     JS_ASSERT_IF(fp, thisv.get() == fp->thisValue());
 
-    JS_ASSERT(!IsPoisonedPtr(chars));
-    SkipRoot skip(cx, &chars);
+    JS_ASSERT(!IsPoisonedPtr(chars.get()));
 
     /*
      * NB: This function breaks the assumption that the compiler can see all
