@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for JavaScript terminal functionality</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for JavaScript terminal functionality</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+
+  attachConsole(["PageError"], onAttach, true);
+}
+
+function onAttach(aState, aResponse)
+{
+  top.foobarObject = Object.create(null);
+  top.foobarObject.foo = 1;
+  top.foobarObject.foobar = 2;
+  top.foobarObject.foobaz = 3;
+  top.foobarObject.omg = 4;
+  top.foobarObject.omgfoo = 5;
+
+  info("test autocomplete for 'window.foo'");
+  onAutocomplete1 = onAutocomplete1.bind(null, aState);
+  aState.client.autocomplete("window.foo", 0, onAutocomplete1);
+}
+
+function onAutocomplete1(aState, aResponse)
+{
+  let matches = aResponse.matches;
+
+  is(aResponse.matchProp, "foo", "matchProp");
+  is(matches.length, 1, "matches.length");
+  is(matches[0], "foobarObject", "matches[0]");
+
+  info("test autocomplete for 'window.foobarObject.'");
+
+  onAutocomplete2 = onAutocomplete2.bind(null, aState);
+  aState.client.autocomplete("window.foobarObject.", 0, onAutocomplete2);
+}
+
+function onAutocomplete2(aState, aResponse)
+{
+  let matches = aResponse.matches;
+
+  ok(!aResponse.matchProp, "matchProp");
+  is(matches.length, 5, "matches.length");
+  checkObject(matches, ["foo", "foobar", "foobaz", "omg", "omgfoo"]);
+
+  info("test eval '2+2'");
+
+  onEval1 = onEval1.bind(null, aState);
+  aState.client.evaluateJS("2+2", onEval1);
+}
+
+function onEval1(aState, aResponse)
+{
+  checkObject(aResponse, {
+    from: aState.actor,
+    input: "2+2",
+    result: 4,
+  });
+
+  ok(!aResponse.error, "no js error");
+  ok(!aResponse.helperResult, "no helper result");
+
+  info("test eval 'window'");
+  onEval2 = onEval2.bind(null, aState);
+  aState.client.evaluateJS("window", onEval2);
+}
+
+function onEval2(aState, aResponse)
+{
+  checkObject(aResponse, {
+    from: aState.actor,
+    input: "window",
+    result: {
+      type: "object",
+      className: "Window",
+      actor: /[a-z]/,
+    },
+  });
+
+  ok(!aResponse.error, "no js error");
+  ok(!aResponse.helperResult, "no helper result");
+
+  info("test eval with exception");
+
+  onEvalWithException = onEvalWithException.bind(null, aState);
+  aState.client.evaluateJS("window.doTheImpossible()",
+                           onEvalWithException);
+}
+
+function onEvalWithException(aState, aResponse)
+{
+  checkObject(aResponse, {
+    from: aState.actor,
+    input: "window.doTheImpossible()",
+    result: {
+      type: "undefined",
+    },
+    errorMessage: /doTheImpossible/,
+  });
+
+  ok(aResponse.error, "js error object");
+  ok(!aResponse.helperResult, "no helper result");
+
+  info("test eval with helper");
+
+  onEvalWithHelper = onEvalWithHelper.bind(null, aState);
+  aState.client.evaluateJS("clear()", onEvalWithHelper);
+}
+
+function onEvalWithHelper(aState, aResponse)
+{
+  checkObject(aResponse, {
+    from: aState.actor,
+    input: "clear()",
+    result: {
+      type: "undefined",
+    },
+    helperResult: { type: "clearOutput" },
+  });
+
+  ok(!aResponse.error, "no js error");
+
+  closeDebugger(aState, function() {
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>

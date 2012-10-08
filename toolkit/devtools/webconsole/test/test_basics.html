@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Basic Web Console Actor tests</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Basic Web Console Actor tests</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+
+  attachConsole(["PageError"], onStartPageError);
+}
+
+function onStartPageError(aState, aResponse)
+{
+  is(aResponse.startedListeners.length, 1, "startedListeners.length");
+  is(aResponse.startedListeners[0], "PageError", "startedListeners: PageError");
+  ok(aResponse.nativeConsoleAPI, "nativeConsoleAPI");
+
+  closeDebugger(aState, function() {
+    top.console_ = top.console;
+    top.console = { lolz: "foo" };
+    attachConsole(["PageError", "ConsoleAPI", "foo"],
+                  onStartPageErrorAndConsoleAPI, true);
+  });
+}
+
+function onStartPageErrorAndConsoleAPI(aState, aResponse)
+{
+  let startedListeners = aResponse.startedListeners;
+  is(startedListeners.length, 2, "startedListeners.length");
+  isnot(startedListeners.indexOf("PageError"), -1, "startedListeners: PageError");
+  isnot(startedListeners.indexOf("ConsoleAPI"), -1,
+        "startedListeners: ConsoleAPI");
+  is(startedListeners.indexOf("foo"), -1, "startedListeners: no foo");
+  ok(!aResponse.nativeConsoleAPI, "!nativeConsoleAPI");
+
+  aState.client.stopListeners(["ConsoleAPI", "foo"],
+                              onStopConsoleAPI.bind(null, aState));
+}
+
+function onStopConsoleAPI(aState, aResponse)
+{
+  is(aResponse.stoppedListeners.length, 1, "stoppedListeners.length");
+  is(aResponse.stoppedListeners[0], "ConsoleAPI", "stoppedListeners: ConsoleAPI");
+
+  closeDebugger(aState, function() {
+    attachConsole(["ConsoleAPI"], onStartConsoleAPI);
+  });
+}
+
+function onStartConsoleAPI(aState, aResponse)
+{
+  is(aResponse.startedListeners.length, 1, "startedListeners.length");
+  is(aResponse.startedListeners[0], "ConsoleAPI", "startedListeners: ConsoleAPI");
+  ok(aResponse.nativeConsoleAPI, "nativeConsoleAPI");
+
+  top.console = top.console_;
+  delete top.console_;
+
+  closeDebugger(aState, function() {
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>
