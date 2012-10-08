@@ -202,13 +202,15 @@ class CUFixtureBase {
   // address, and size. Call EndAttributes and Finish; one cannot
   // define children of the defined function's DIE.
   void DefineFunction(DIEHandler *parent, const string &name,
-                      Module::Address address, Module::Address size);      
+                      Module::Address address, Module::Address size,
+                      const char* mangled_name);
 
   // Create a declaration DIE as a child of PARENT with the given
   // offset, tag and name. If NAME is the empty string, don't provide
   // a DW_AT_name attribute. Call EndAttributes and Finish.
   void DeclarationDIE(DIEHandler *parent, uint64 offset,
-                      DwarfTag tag, const string &name);
+                      DwarfTag tag, const string &name,
+                      const string &mangled_name);
 
   // Create a definition DIE as a child of PARENT with the given tag
   // that refers to the declaration DIE at offset SPECIFICATION as its
@@ -452,7 +454,8 @@ DIEHandler *CUFixtureBase::StartSpecifiedDIE(DIEHandler *parent,
 
 void CUFixtureBase::DefineFunction(dwarf2reader::DIEHandler *parent,
                                    const string &name, Module::Address address,
-                                   Module::Address size) {
+                                   Module::Address size,
+                                   const char* mangled_name) {
   dwarf2reader::AttributeList func_attrs;
   func_attrs.push_back(make_pair(dwarf2reader::DW_AT_name,
                                  dwarf2reader::DW_FORM_strp));
@@ -475,6 +478,11 @@ void CUFixtureBase::DefineFunction(dwarf2reader::DIEHandler *parent,
   func->ProcessAttributeUnsigned(dwarf2reader::DW_AT_high_pc,
                                  dwarf2reader::DW_FORM_addr,
                                  address + size);
+  if (mangled_name)
+    func->ProcessAttributeString(dwarf2reader::DW_AT_MIPS_linkage_name,
+                                 dwarf2reader::DW_FORM_strp,
+                                 mangled_name);
+
   ProcessStrangeAttributes(func);
   EXPECT_TRUE(func->EndAttributes());
   func->Finish();
@@ -483,11 +491,14 @@ void CUFixtureBase::DefineFunction(dwarf2reader::DIEHandler *parent,
 
 void CUFixtureBase::DeclarationDIE(DIEHandler *parent, uint64 offset,
                                    DwarfTag tag,
-                                   const string &name) {
+                                   const string &name,
+                                   const string &mangled_name) {
   dwarf2reader::AttributeList attrs;
   if (!name.empty())
     attrs.push_back(make_pair(dwarf2reader::DW_AT_name,
                               dwarf2reader::DW_FORM_strp));
+
+
   attrs.push_back(make_pair(dwarf2reader::DW_AT_declaration,
                             dwarf2reader::DW_FORM_flag));
   dwarf2reader::DIEHandler *die = parent->FindChildHandler(offset, tag, attrs);
@@ -496,6 +507,11 @@ void CUFixtureBase::DeclarationDIE(DIEHandler *parent, uint64 offset,
     die->ProcessAttributeString(dwarf2reader::DW_AT_name,
                                 dwarf2reader::DW_FORM_strp,
                                 name);
+  if (!mangled_name.empty())
+    die->ProcessAttributeString(dwarf2reader::DW_AT_MIPS_linkage_name,
+                                dwarf2reader::DW_FORM_strp,
+                                mangled_name);
+
   die->ProcessAttributeUnsigned(dwarf2reader::DW_AT_declaration,
                                 dwarf2reader::DW_FORM_flag,
                                 1);
@@ -675,8 +691,8 @@ void CUFixtureBase::TestLine(int i, int j,
 #define PushLine(a,b,c,d)          TRACE(PushLine((a),(b),(c),(d)))
 #define SetLanguage(a)             TRACE(SetLanguage(a))
 #define StartCU()                  TRACE(StartCU())
-#define DefineFunction(a,b,c,d)    TRACE(DefineFunction((a),(b),(c),(d)))
-#define DeclarationDIE(a,b,c,d)    TRACE(DeclarationDIE((a),(b),(c),(d)))
+#define DefineFunction(a,b,c,d,e)  TRACE(DefineFunction((a),(b),(c),(d),(e)))
+#define DeclarationDIE(a,b,c,d,e)  TRACE(DeclarationDIE((a),(b),(c),(d),(e)))
 #define DefinitionDIE(a,b,c,d,e,f) TRACE(DefinitionDIE((a),(b),(c),(d),(e),(f)))
 #define TestFunctionCount(a)       TRACE(TestFunctionCount(a))
 #define TestFunction(a,b,c,d)      TRACE(TestFunction((a),(b),(c),(d)))
@@ -691,7 +707,7 @@ TEST_F(SimpleCU, OneFunc) {
 
   StartCU();
   DefineFunction(&root_handler_, "function1",
-                 0x938cf8c07def4d34ULL, 0x55592d727f6cd01fLL);
+                 0x938cf8c07def4d34ULL, 0x55592d727f6cd01fLL, NULL);
   root_handler_.Finish();
 
   TestFunctionCount(1);
@@ -699,6 +715,18 @@ TEST_F(SimpleCU, OneFunc) {
   TestLineCount(0, 1);
   TestLine(0, 0, 0x938cf8c07def4d34ULL, 0x55592d727f6cd01fLL, "line-file",
            246571772);
+}
+
+TEST_F(SimpleCU, MangledName) {
+  PushLine(0x938cf8c07def4d34ULL, 0x55592d727f6cd01fLL, "line-file", 246571772);
+
+  StartCU();
+  DefineFunction(&root_handler_, "function1",
+                 0x938cf8c07def4d34ULL, 0x55592d727f6cd01fLL, "_ZN1n1fEi");
+  root_handler_.Finish();
+
+  TestFunctionCount(1);
+  TestFunction(0, "n::f(int)", 0x938cf8c07def4d34ULL, 0x55592d727f6cd01fLL);
 }
 
 TEST_F(SimpleCU, IrrelevantRootChildren) {
@@ -805,7 +833,7 @@ TEST_F(SimpleCU, UnnamedFunction) {
 
   StartCU();
   DefineFunction(&root_handler_, "",
-                 0x72b80e41a0ac1d40ULL, 0x537174f231ee181cULL);
+                 0x72b80e41a0ac1d40ULL, 0x537174f231ee181cULL, NULL);
   root_handler_.Finish();
 
   TestFunctionCount(1);
@@ -882,10 +910,10 @@ TEST_P(FuncLinePairing, Pairing) {
   StartCU();
   DefineFunction(&root_handler_, "function1",
                  s.functions[0].start, 
-                 s.functions[0].end - s.functions[0].start);
+                 s.functions[0].end - s.functions[0].start, NULL);
   DefineFunction(&root_handler_, "function2",
                  s.functions[1].start, 
-                 s.functions[1].end - s.functions[1].start);
+                 s.functions[1].end - s.functions[1].start, NULL);
   root_handler_.Finish();
 
   TestFunctionCount(2);
@@ -929,7 +957,8 @@ TEST_F(FuncLinePairing, FuncsNoLines) {
   EXPECT_CALL(reporter_, UncoveredFunction(_)).WillOnce(Return());
 
   StartCU();
-  DefineFunction(&root_handler_, "function1", 0x127da12ffcf5c51fULL, 0x1000U);
+  DefineFunction(&root_handler_, "function1", 0x127da12ffcf5c51fULL, 0x1000U,
+		 NULL);
   root_handler_.Finish();
 
   TestFunctionCount(1);
@@ -941,8 +970,8 @@ TEST_F(FuncLinePairing, GapThenFunction) {
   PushLine(10, 2, "line-file-1", 263008005);
 
   StartCU();
-  DefineFunction(&root_handler_, "function1", 10, 2);
-  DefineFunction(&root_handler_, "function2", 20, 2);
+  DefineFunction(&root_handler_, "function1", 10, 2, NULL);
+  DefineFunction(&root_handler_, "function2", 20, 2, NULL);
   root_handler_.Finish();
 
   TestFunctionCount(2);
@@ -967,10 +996,10 @@ TEST_F(FuncLinePairing, GCCAlignmentStretch) {
   PushLine(20, 10, "line-file", 61661044);
 
   StartCU();
-  DefineFunction(&root_handler_, "function1", 10, 5);
+  DefineFunction(&root_handler_, "function1", 10, 5, NULL);
   // five-byte gap between functions, covered by line 63351048.
   // This should not elicit a warning.
-  DefineFunction(&root_handler_, "function2", 20, 10);
+  DefineFunction(&root_handler_, "function2", 20, 10, NULL);
   root_handler_.Finish();
 
   TestFunctionCount(2);
@@ -991,8 +1020,8 @@ TEST_F(FuncLinePairing, LineAtEndOfAddressSpace) {
   EXPECT_CALL(reporter_, UncoveredLine(_)).WillOnce(Return());
 
   StartCU();
-  DefineFunction(&root_handler_, "function1", 0xfffffffffffffff0ULL, 6);
-  DefineFunction(&root_handler_, "function2", 0xfffffffffffffffaULL, 5);
+  DefineFunction(&root_handler_, "function1", 0xfffffffffffffff0ULL, 6, NULL);
+  DefineFunction(&root_handler_, "function2", 0xfffffffffffffffaULL, 5, NULL);
   root_handler_.Finish();
 
   TestFunctionCount(2);
@@ -1012,7 +1041,7 @@ TEST_F(FuncLinePairing, WarnOnceFunc) {
   EXPECT_CALL(reporter_, UncoveredFunction(_)).WillOnce(Return());
 
   StartCU();
-  DefineFunction(&root_handler_, "function", 10, 11);
+  DefineFunction(&root_handler_, "function", 10, 11, NULL);
   root_handler_.Finish();
 
   TestFunctionCount(1);
@@ -1029,8 +1058,8 @@ TEST_F(FuncLinePairing, WarnOnceLine) {
   EXPECT_CALL(reporter_, UncoveredLine(_)).WillOnce(Return());
 
   StartCU();
-  DefineFunction(&root_handler_, "function1", 11, 1);
-  DefineFunction(&root_handler_, "function2", 13, 1);
+  DefineFunction(&root_handler_, "function1", 11, 1, NULL);
+  DefineFunction(&root_handler_, "function2", 13, 1, NULL);
   root_handler_.Finish();
 
   TestFunctionCount(2);
@@ -1062,8 +1091,8 @@ TEST_P(CXXQualifiedNames, TwoFunctions) {
   DIEHandler *enclosure_handler = StartNamedDIE(&root_handler_, tag,
                                                 "Enclosure");
   EXPECT_TRUE(enclosure_handler != NULL);
-  DefineFunction(enclosure_handler, "func_B", 10, 1);
-  DefineFunction(enclosure_handler, "func_C", 20, 1);
+  DefineFunction(enclosure_handler, "func_B", 10, 1, NULL);
+  DefineFunction(enclosure_handler, "func_C", 20, 1, NULL);
   enclosure_handler->Finish();
   delete enclosure_handler;
   root_handler_.Finish();
@@ -1087,7 +1116,7 @@ TEST_P(CXXQualifiedNames, FuncInEnclosureInNamespace) {
   DIEHandler *enclosure_handler = StartNamedDIE(namespace_handler, tag, 
                                                 "Enclosure");
   EXPECT_TRUE(enclosure_handler != NULL);
-  DefineFunction(enclosure_handler, "function", 10, 1);
+  DefineFunction(enclosure_handler, "function", 10, 1, NULL);
   enclosure_handler->Finish();
   delete enclosure_handler;
   namespace_handler->Finish();
@@ -1114,7 +1143,7 @@ TEST_F(CXXQualifiedNames, FunctionInClassInStructInNamespace) {
   DIEHandler *class_handler
       = StartNamedDIE(struct_handler, dwarf2reader::DW_TAG_class_type,
                       "class_C");
-  DefineFunction(class_handler, "function_D", 10, 1);
+  DefineFunction(class_handler, "function_D", 10, 1, NULL);
   class_handler->Finish();
   delete class_handler;
   struct_handler->Finish();
@@ -1160,7 +1189,7 @@ TEST_P(QualifiedForLanguage, MemberFunction) {
   DIEHandler *class_handler
       = StartNamedDIE(&root_handler_, dwarf2reader::DW_TAG_class_type,
                       "class_A");
-  DefineFunction(class_handler, "function_B", 10, 1);
+  DefineFunction(class_handler, "function_B", 10, 1, NULL);
   class_handler->Finish();
   delete class_handler;
   root_handler_.Finish();
@@ -1184,7 +1213,7 @@ TEST_P(QualifiedForLanguage, MemberFunctionSignedLanguage) {
   DIEHandler *class_handler
       = StartNamedDIE(&root_handler_, dwarf2reader::DW_TAG_class_type,
                       "class_A");
-  DefineFunction(class_handler, "function_B", 10, 1);
+  DefineFunction(class_handler, "function_B", 10, 1, NULL);
   class_handler->Finish();
   delete class_handler;
   root_handler_.Finish();
@@ -1204,7 +1233,7 @@ TEST_F(Specifications, Function) {
 
   StartCU();
   DeclarationDIE(&root_handler_, 0xcd3c51b946fb1eeeLL,
-                 dwarf2reader::DW_TAG_subprogram, "declaration-name");
+                 dwarf2reader::DW_TAG_subprogram, "declaration-name", "");
   DefinitionDIE(&root_handler_, dwarf2reader::DW_TAG_subprogram,
                 0xcd3c51b946fb1eeeLL, "",
                 0x93cd3dfc1aa10097ULL, 0x0397d47a0b4ca0d4ULL);
@@ -1215,6 +1244,23 @@ TEST_F(Specifications, Function) {
                0x93cd3dfc1aa10097ULL, 0x0397d47a0b4ca0d4ULL);
 }
 
+TEST_F(Specifications, MangledName) {
+  PushLine(0x93cd3dfc1aa10097ULL, 0x0397d47a0b4ca0d4ULL, "line-file", 54883661);
+
+  StartCU();
+  DeclarationDIE(&root_handler_, 0xcd3c51b946fb1eeeLL,
+                 dwarf2reader::DW_TAG_subprogram, "declaration-name",
+                 "_ZN1C1fEi");
+  DefinitionDIE(&root_handler_, dwarf2reader::DW_TAG_subprogram,
+                0xcd3c51b946fb1eeeLL, "",
+                0x93cd3dfc1aa10097ULL, 0x0397d47a0b4ca0d4ULL);
+  root_handler_.Finish();
+
+  TestFunctionCount(1);
+  TestFunction(0, "C::f(int)",
+               0x93cd3dfc1aa10097ULL, 0x0397d47a0b4ca0d4ULL);
+}
+
 TEST_F(Specifications, MemberFunction) {
   PushLine(0x3341a248634e7170ULL, 0x5f6938ee5553b953ULL, "line-file", 18116691);
 
@@ -1222,7 +1268,7 @@ TEST_F(Specifications, MemberFunction) {
   DIEHandler *class_handler
     = StartNamedDIE(&root_handler_, dwarf2reader::DW_TAG_class_type, "class_A");
   DeclarationDIE(class_handler, 0x7d83028c431406e8ULL,
-                 dwarf2reader::DW_TAG_subprogram, "declaration-name");
+                 dwarf2reader::DW_TAG_subprogram, "declaration-name", "");
   class_handler->Finish();
   delete class_handler;
   DefinitionDIE(&root_handler_, dwarf2reader::DW_TAG_subprogram,
@@ -1247,7 +1293,7 @@ TEST_F(Specifications, FunctionDeclarationParent) {
                       "class_A");
     ASSERT_TRUE(class_handler != NULL);
     DeclarationDIE(class_handler, 0x0e0e877c8404544aULL,
-                   dwarf2reader::DW_TAG_subprogram, "declaration-name");
+                   dwarf2reader::DW_TAG_subprogram, "declaration-name", "");
     class_handler->Finish();
     delete class_handler;
   }
@@ -1275,7 +1321,8 @@ TEST_F(Specifications, NamedScopeDeclarationParent) {
                       "space_A");
     ASSERT_TRUE(space_handler != NULL);
     DeclarationDIE(space_handler, 0x419bb1d12f9a73a2ULL,
-                   dwarf2reader::DW_TAG_class_type, "class-declaration-name");
+                   dwarf2reader::DW_TAG_class_type, "class-declaration-name",
+                   "");
     space_handler->Finish();
     delete space_handler;
   }
@@ -1286,7 +1333,7 @@ TEST_F(Specifications, NamedScopeDeclarationParent) {
                           0x419bb1d12f9a73a2ULL, "class-definition-name");
     ASSERT_TRUE(class_handler != NULL);
     DefineFunction(class_handler, "function", 
-                   0x5d13433d0df13d00ULL, 0x48ebebe5ade2cab4ULL);
+                   0x5d13433d0df13d00ULL, 0x48ebebe5ade2cab4ULL, NULL);
     class_handler->Finish();
     delete class_handler;
   }
@@ -1304,7 +1351,7 @@ TEST_F(Specifications, InlineFunction) {
 
   StartCU();
   DeclarationDIE(&root_handler_, 0xcd3c51b946fb1eeeLL,
-                 dwarf2reader::DW_TAG_subprogram, "inline-name");
+                 dwarf2reader::DW_TAG_subprogram, "inline-name", "");
   AbstractInstanceDIE(&root_handler_, 0x1e8dac5d507ed7abULL,
                       dwarf2reader::DW_INL_inlined, 0xcd3c51b946fb1eeeLL, "");
   DefineInlineInstanceDIE(&root_handler_, "", 0x1e8dac5d507ed7abULL,
@@ -1354,7 +1401,7 @@ TEST_F(Specifications, LongChain) {
       = StartNamedDIE(&root_handler_, dwarf2reader::DW_TAG_namespace,
                       "space_A");
     DeclarationDIE(space_A_handler, 0x2e111126496596e2ULL,
-                   dwarf2reader::DW_TAG_namespace, "space_B");
+                   dwarf2reader::DW_TAG_namespace, "space_B", "");
     space_A_handler->Finish();
     delete space_A_handler;
   }
@@ -1367,7 +1414,7 @@ TEST_F(Specifications, LongChain) {
       = StartNamedDIE(space_B_handler, dwarf2reader::DW_TAG_structure_type,
                       "struct_C");
     DeclarationDIE(struct_C_handler, 0x20cd423bf2a25a4cULL,
-                   dwarf2reader::DW_TAG_structure_type, "struct_D");
+                   dwarf2reader::DW_TAG_structure_type, "struct_D", "");
     struct_C_handler->Finish();
     delete struct_C_handler;
     space_B_handler->Finish();
@@ -1382,7 +1429,7 @@ TEST_F(Specifications, LongChain) {
       = StartNamedDIE(struct_D_handler, dwarf2reader::DW_TAG_union_type,
                       "union_E");
     DeclarationDIE(union_E_handler, 0xe25c84805aa58c32ULL,
-                   dwarf2reader::DW_TAG_union_type, "union_F");
+                   dwarf2reader::DW_TAG_union_type, "union_F", "");
     union_E_handler->Finish();
     delete union_E_handler;
     struct_D_handler->Finish();
@@ -1397,7 +1444,7 @@ TEST_F(Specifications, LongChain) {
       = StartNamedDIE(union_F_handler, dwarf2reader::DW_TAG_class_type,
                       "class_G");
     DeclarationDIE(class_G_handler, 0xb70d960dcc173b6eULL,
-                   dwarf2reader::DW_TAG_class_type, "class_H");
+                   dwarf2reader::DW_TAG_class_type, "class_H", "");
     class_G_handler->Finish();
     delete class_G_handler;
     union_F_handler->Finish();
@@ -1409,7 +1456,7 @@ TEST_F(Specifications, LongChain) {
       = StartSpecifiedDIE(&root_handler_, dwarf2reader::DW_TAG_class_type,
                           0xb70d960dcc173b6eULL);
     DeclarationDIE(class_H_handler, 0x27ff829e3bf69f37ULL,
-                   dwarf2reader::DW_TAG_subprogram, "func_I");
+                   dwarf2reader::DW_TAG_subprogram, "func_I", "");
     class_H_handler->Finish();
     delete class_H_handler;
   }
@@ -1447,7 +1494,7 @@ TEST_F(Specifications, InterCU) {
     ProcessStrangeAttributes(&root1_handler);
     ASSERT_TRUE(root1_handler.EndAttributes());
     DeclarationDIE(&root1_handler, 0xb8fbfdd5f0b26fceULL,
-                   dwarf2reader::DW_TAG_class_type, "class_A");
+                   dwarf2reader::DW_TAG_class_type, "class_A", "");
     root1_handler.Finish();
   }
    
@@ -1462,7 +1509,7 @@ TEST_F(Specifications, InterCU) {
       = StartSpecifiedDIE(&root2_handler, dwarf2reader::DW_TAG_class_type,
                           0xb8fbfdd5f0b26fceULL);
     DeclarationDIE(class_A_handler, 0xb01fef8b380bd1a2ULL,
-                   dwarf2reader::DW_TAG_subprogram, "member_func_B");
+                   dwarf2reader::DW_TAG_subprogram, "member_func_B", "");
     class_A_handler->Finish();
     delete class_A_handler;
     root2_handler.Finish();
@@ -1494,7 +1541,7 @@ TEST_F(Specifications, BadOffset) {
 
   StartCU();
   DeclarationDIE(&root_handler_, 0xefd7f7752c27b7e4ULL,
-                 dwarf2reader::DW_TAG_subprogram, "");
+                 dwarf2reader::DW_TAG_subprogram, "", "");
   DefinitionDIE(&root_handler_, dwarf2reader::DW_TAG_subprogram,
                 0x2be953efa6f9a996ULL, "function",
                 0xa0277efd7ce83771ULL, 0x149554a184c730c1ULL);
@@ -1506,7 +1553,7 @@ TEST_F(Specifications, FunctionDefinitionHasOwnName) {
 
   StartCU();
   DeclarationDIE(&root_handler_, 0xc34ff4786cae78bdULL,
-                 dwarf2reader::DW_TAG_subprogram, "declaration-name");
+                 dwarf2reader::DW_TAG_subprogram, "declaration-name", "");
   DefinitionDIE(&root_handler_, dwarf2reader::DW_TAG_subprogram,
                 0xc34ff4786cae78bdULL, "definition-name",
                 0xced50b3eea81022cULL, 0x08dd4d301cc7a7d2ULL);
@@ -1522,7 +1569,7 @@ TEST_F(Specifications, ClassDefinitionHasOwnName) {
 
   StartCU();
   DeclarationDIE(&root_handler_, 0xd0fe467ec2f1a58cULL,
-                 dwarf2reader::DW_TAG_class_type, "class-declaration-name");
+                 dwarf2reader::DW_TAG_class_type, "class-declaration-name", "");
 
   dwarf2reader::DIEHandler *class_definition
     = StartSpecifiedDIE(&root_handler_, dwarf2reader::DW_TAG_class_type,
@@ -1530,7 +1577,7 @@ TEST_F(Specifications, ClassDefinitionHasOwnName) {
   ASSERT_TRUE(class_definition);
   DeclarationDIE(class_definition, 0x6d028229c15623dbULL,
                  dwarf2reader::DW_TAG_subprogram,
-                 "function-declaration-name");
+                 "function-declaration-name", "");
   class_definition->Finish();
   delete class_definition;
 
@@ -1558,7 +1605,8 @@ TEST_F(Specifications, PreferSpecificationParents) {
     dwarf2reader::DIEHandler *declaration_class_handler
       = StartNamedDIE(&root_handler_, dwarf2reader::DW_TAG_class_type, "declaration-class");
     DeclarationDIE(declaration_class_handler, 0x9ddb35517455ef7aULL,
-                   dwarf2reader::DW_TAG_subprogram, "function-declaration");
+                   dwarf2reader::DW_TAG_subprogram, "function-declaration",
+                   "");
     declaration_class_handler->Finish();
     delete declaration_class_handler;
   }

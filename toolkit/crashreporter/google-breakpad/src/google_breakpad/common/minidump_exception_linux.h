@@ -80,7 +80,8 @@ typedef enum {
   MD_EXCEPTION_CODE_LIN_SIGIO = 29,      /* I/O now possible (4.2 BSD) */
   MD_EXCEPTION_CODE_LIN_SIGPWR = 30,     /* Power failure restart (System V) */
   MD_EXCEPTION_CODE_LIN_SIGSYS = 31,     /* Bad system call */
-  MD_EXCEPTION_CODE_LIN_DUMP_REQUESTED = -1 /* No exception, dump requested */
+  MD_EXCEPTION_CODE_LIN_DUMP_REQUESTED = 0xFFFFFFFF /* No exception,
+                                                       dump requested. */
 } MDExceptionCodeLinux;
 
 #endif  /* GOOGLE_BREAKPAD_COMMON_MINIDUMP_EXCEPTION_LINUX_H__ */

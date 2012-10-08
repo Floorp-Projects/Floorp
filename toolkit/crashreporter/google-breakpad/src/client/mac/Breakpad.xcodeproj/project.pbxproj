@@ -35,6 +35,10 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		162F64F2161C577500CD68D5 /* arch_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = 162F64F0161C577500CD68D5 /* arch_utilities.cc */; };
+		162F64F3161C577500CD68D5 /* arch_utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 162F64F1161C577500CD68D5 /* arch_utilities.h */; };
+		162F64F4161C579B00CD68D5 /* arch_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = 162F64F0161C577500CD68D5 /* arch_utilities.cc */; };
+		162F64F5161C579B00CD68D5 /* arch_utilities.h in Sources */ = {isa = PBXBuildFile; fileRef = 162F64F1161C577500CD68D5 /* arch_utilities.h */; };
 		163201D61443019E00C4DBF5 /* ConfigFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 163201D41443019E00C4DBF5 /* ConfigFile.h */; };
 		163201D71443019E00C4DBF5 /* ConfigFile.mm in Sources */ = {isa = PBXBuildFile; fileRef = 163201D51443019E00C4DBF5 /* ConfigFile.mm */; };
 		163201E31443029300C4DBF5 /* ConfigFile.mm in Sources */ = {isa = PBXBuildFile; fileRef = 163201D51443019E00C4DBF5 /* ConfigFile.mm */; };
@@ -555,6 +559,8 @@
 		0867D69BFE84028FC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		0867D6A5FE840307C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		162F64F0161C577500CD68D5 /* arch_utilities.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = arch_utilities.cc; path = ../../common/mac/arch_utilities.cc; sourceTree = "<group>"; };
+		162F64F1161C577500CD68D5 /* arch_utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = arch_utilities.h; path = ../../common/mac/arch_utilities.h; sourceTree = "<group>"; };
 		163201D41443019E00C4DBF5 /* ConfigFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConfigFile.h; path = crash_generation/ConfigFile.h; sourceTree = "<group>"; };
 		163201D51443019E00C4DBF5 /* ConfigFile.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = ConfigFile.mm; path = crash_generation/ConfigFile.mm; sourceTree = "<group>"; };
 		163202431443201300C4DBF5 /* uploader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = uploader.h; path = sender/uploader.h; sourceTree = "<group>"; };
@@ -940,6 +946,8 @@
 		F92C53840ECCE68D009BE4BA /* mac */ = {
 			isa = PBXGroup;
 			children = (
+				162F64F0161C577500CD68D5 /* arch_utilities.cc */,
+				162F64F1161C577500CD68D5 /* arch_utilities.h */,
 				8B31022211F0CE1000FCF3E4 /* GTMGarbageCollection.h */,
 				8B31007011F0CD3C00FCF3E4 /* GTMDefines.h */,
 				F9C77E0F0F7DDF650045F7DB /* testing */,
@@ -1142,6 +1150,7 @@
 				D2F9A4CC121336C7002747C1 /* crash_generation_server.h in Headers */,
 				163201D61443019E00C4DBF5 /* ConfigFile.h in Headers */,
 				16C7C918147D45AE00776EAD /* BreakpadDefines.h in Headers */,
+				162F64F3161C577500CD68D5 /* arch_utilities.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1666,6 +1675,7 @@
 				D2F9A4CB121336C7002747C1 /* crash_generation_client.cc in Sources */,
 				D2F9A4CD121336C7002747C1 /* crash_generation_server.cc in Sources */,
 				163201D71443019E00C4DBF5 /* ConfigFile.mm in Sources */,
+				162F64F2161C577500CD68D5 /* arch_utilities.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1747,6 +1757,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				162F64F4161C579B00CD68D5 /* arch_utilities.cc in Sources */,
+				162F64F5161C579B00CD68D5 /* arch_utilities.h in Sources */,
 				D2A5DD301188633800081F03 /* breakpad_nlist_64.cc in Sources */,
 				F92C563F0ECD10CA009BE4BA /* convert_UTF.c in Sources */,
 				F92C56400ECD10CA009BE4BA /* dynamic_images.cc in Sources */,

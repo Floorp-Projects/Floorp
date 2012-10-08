@@ -84,6 +84,7 @@ int pthread_barrier_destroy(pthread_barrier_t *barrier) {
   barrier->count = 0;
   pthread_cond_destroy(&barrier->cond);
   pthread_mutex_destroy(&barrier->mutex);
+  return 0;
 }
 
 #endif  // defined(PTHREAD_BARRIER_SERIAL_THREAD)

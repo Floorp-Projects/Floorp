@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		162F64FE161C5ECB00CD68D5 /* arch_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = 162F64FC161C5ECB00CD68D5 /* arch_utilities.cc */; };
 		4D2C721B126F9ACC00B43EAF /* source_line_resolver_base.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4D2C721A126F9ACC00B43EAF /* source_line_resolver_base.cc */; };
 		4D2C721F126F9ADE00B43EAF /* exploitability.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4D2C721E126F9ADE00B43EAF /* exploitability.cc */; };
 		4D2C7223126F9AF900B43EAF /* exploitability_win.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4D2C7222126F9AF900B43EAF /* exploitability_win.cc */; };
@@ -66,6 +67,8 @@
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* crash_report.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = crash_report.mm; sourceTree = "<group>"; };
 		08FB779EFE84155DC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		162F64FC161C5ECB00CD68D5 /* arch_utilities.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = arch_utilities.cc; path = ../../../common/mac/arch_utilities.cc; sourceTree = "<group>"; };
+		162F64FD161C5ECB00CD68D5 /* arch_utilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = arch_utilities.h; path = ../../../common/mac/arch_utilities.h; sourceTree = "<group>"; };
 		4D2C721A126F9ACC00B43EAF /* source_line_resolver_base.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = source_line_resolver_base.cc; path = ../../../processor/source_line_resolver_base.cc; sourceTree = SOURCE_ROOT; };
 		4D2C721E126F9ADE00B43EAF /* exploitability.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = exploitability.cc; path = ../../../processor/exploitability.cc; sourceTree = SOURCE_ROOT; };
 		4D2C7222126F9AF900B43EAF /* exploitability_win.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = exploitability_win.cc; path = ../../../processor/exploitability_win.cc; sourceTree = SOURCE_ROOT; };
@@ -183,6 +186,8 @@
 				8B3102DA11F0D65600FCF3E4 /* BreakpadDebug.xcconfig */,
 				8B3102DB11F0D65600FCF3E4 /* BreakpadRelease.xcconfig */,
 				F9C7ECE10E8ABC7F00E953AD /* DWARF */,
+				162F64FC161C5ECB00CD68D5 /* arch_utilities.cc */,
+				162F64FD161C5ECB00CD68D5 /* arch_utilities.h */,
 				5578003E0BE1F28500EC23E0 /* macho_utilities.cc */,
 				5578003F0BE1F28500EC23E0 /* macho_utilities.h */,
 				8B31FF7211F0C6E000FCF3E4 /* macho_reader.cc */,
@@ -410,6 +415,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				162F64FE161C5ECB00CD68D5 /* arch_utilities.cc in Sources */,
 				8DD76F9A0486AA7600D96B5E /* crash_report.mm in Sources */,
 				9BDF172C0B1B8B2400F8391B /* call_stack.cc in Sources */,
 				9BDF172D0B1B8B2400F8391B /* minidump_processor.cc in Sources */,
