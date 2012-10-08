@@ -70,6 +70,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_menustatus.js \
 	browser_dbg_bfcache.js \
 	browser_dbg_breakpoint-new-script.js \
+	browser_dbg_bug737803_editor_actual_location.js \
 	head.js \
 	$(NULL)
 

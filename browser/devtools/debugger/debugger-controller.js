@@ -1463,7 +1463,18 @@ Breakpoints.prototype = {
 
     let line = aBreakpoint.line + 1;
 
-    this.addBreakpoint({ url: url, line: line }, null, true);
+    this.addBreakpoint({ url: url, line: line }, function (aBp) {
+      if (aBp.requestedLocation) {
+        this.editor.removeBreakpoint(aBp.requestedLocation.line - 1);
+
+        let breakpoints = this.getBreakpoints(url, aBp.location.line);
+        if (breakpoints.length > 1) {
+          this.removeBreakpoint(breakpoints[0], null, true, true);
+        } else {
+          this.updateEditorBreakpoints();
+        }
+      }
+    }.bind(this), true);
   },
 
   /**
@@ -1555,6 +1566,18 @@ Breakpoints.prototype = {
     }
 
     this.activeThread.setBreakpoint(aLocation, function(aResponse, aBpClient) {
+      let loc = aResponse.actualLocation;
+
+      if (loc) {
+        aBpClient.requestedLocation = {
+          line: aBpClient.location.line,
+          url: aBpClient.location.url
+        };
+
+        aBpClient.location.line = loc.line;
+        aBpClient.location.url = loc.url;
+      }
+
       this.store[aBpClient.actor] = aBpClient;
       this.displayBreakpoint(aBpClient, aNoEditorUpdate, aNoPaneUpdate);
       aCallback && aCallback(aBpClient, aResponse.error);
@@ -1655,6 +1678,18 @@ Breakpoints.prototype = {
       }
     }
     return null;
+  },
+
+  getBreakpoints: function BP_getBreakpoints(aUrl, aLine) {
+    let breakpoints = [];
+
+    for each (let breakpoint in this.store) {
+      if (breakpoint.location.url == aUrl && breakpoint.location.line == aLine) {
+        breakpoints.push(breakpoint);
+      }
+    }
+
+    return breakpoints;
   }
 };
 

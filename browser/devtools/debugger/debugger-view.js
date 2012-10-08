@@ -2107,7 +2107,7 @@ BreakpointsView.prototype = {
   enableBreakpoint:
   function DVB_enableBreakpoint(aTarget, aCallback, aNoCheckboxUpdate) {
     let { breakpointUrl: url, breakpointLine: line } = aTarget;
-    let breakpoint = DebuggerController.Breakpoints.getBreakpoint(url, line)
+    let breakpoint = DebuggerController.Breakpoints.getBreakpoint(url, line);
 
     if (!breakpoint) {
       if (!aNoCheckboxUpdate) {
