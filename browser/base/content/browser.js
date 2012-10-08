@@ -3529,6 +3529,8 @@ function OpenBrowserWindow(options)
       "private" in options &&
       options.private) {
     extraFeatures = ",private";
+    // Force the new window to load about:privatebrowsing instead of the default home page
+    defaultArgs = "about:privatebrowsing";
   }
 #endif
 
