@@ -64,6 +64,7 @@
 
 #include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
+#include "nsCycleCollectionParticipant.h"
 
 
 /**
@@ -2387,6 +2388,34 @@ Loader::StartAlternateLoads()
   for (uint32_t i = 0; i < arr.Length(); ++i) {
     --mDatasToNotifyOn;
     LoadSheet(arr[i], eSheetNeedsParser);
+  }
+}
+
+static PLDHashOperator
+TraverseSheet(URIPrincipalAndCORSModeHashKey*,
+              nsCSSStyleSheet* aSheet,
+              void* aClosure)
+{
+  nsCycleCollectionTraversalCallback* cb =
+    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "Sheet cache nsCSSLoader");
+  cb->NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIStyleSheet*, aSheet));
+  return PL_DHASH_NEXT;
+}
+
+void
+Loader::TraverseCachedSheets(nsCycleCollectionTraversalCallback& cb)
+{
+  if (mCompleteSheets.IsInitialized()) {
+    mCompleteSheets.EnumerateRead(TraverseSheet, &cb);
+  }
+}
+
+void
+Loader::UnlinkCachedSheets()
+{
+  if (mCompleteSheets.IsInitialized()) {
+    mCompleteSheets.Clear();
   }
 }
 
