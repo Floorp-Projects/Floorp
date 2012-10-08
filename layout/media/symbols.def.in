@@ -37,7 +37,9 @@ vpx_codec_vp8_dx
 vpx_img_free
 vpx_codec_enc_config_set
 vpx_codec_enc_init_ver
+#ifdef MOZ_VP8_ENCODER
 vpx_codec_vp8_cx
+#endif
 vpx_img_set_rect
 vpx_codec_get_cx_data
 vpx_codec_enc_config_default
