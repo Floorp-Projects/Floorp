@@ -64,7 +64,6 @@ EXPORTS		= \
 		nsTraceRefcntImpl.h \
 		nsWeakPtr.h \
 		nsInterfaceRequestorAgg.h \
-		dmd.h \
 		nsGZFileWriter.h \
 		$(NULL)
 
