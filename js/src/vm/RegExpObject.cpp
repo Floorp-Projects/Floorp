@@ -215,18 +215,18 @@ RegExpCode::compile(JSContext *cx, JSLinearString &pattern, unsigned *parenCount
 }
 
 RegExpRunStatus
-RegExpCode::execute(JSContext *cx, const jschar *chars, size_t length, size_t start,
+RegExpCode::execute(JSContext *cx, StableCharPtr chars, size_t length, size_t start,
                     int *output, size_t outputCount)
 {
     int result;
 #if ENABLE_YARR_JIT
     (void) cx; /* Unused. */
     if (codeBlock.isFallBack())
-        result = JSC::Yarr::interpret(byteCode, chars, start, length, output);
+        result = JSC::Yarr::interpret(byteCode, chars.get(), start, length, output);
     else
-        result = JSC::Yarr::execute(codeBlock, chars, start, length, output);
+        result = JSC::Yarr::execute(codeBlock, chars.get(), start, length, output);
 #else
-    result = JSC::Yarr::interpret(byteCode, chars, start, length, output);
+    result = JSC::Yarr::interpret(byteCode, chars.get(), start, length, output);
 #endif
 
     if (result == -1)
@@ -275,7 +275,7 @@ RegExpShared::RegExpShared(JSRuntime *rt, RegExpFlag flags)
 {}
 
 RegExpObject *
-RegExpObject::create(JSContext *cx, RegExpStatics *res, const jschar *chars, size_t length,
+RegExpObject::create(JSContext *cx, RegExpStatics *res, StableCharPtr chars, size_t length,
                      RegExpFlag flags, TokenStream *tokenStream)
 {
     RegExpFlag staticsFlags = res->getFlags();
@@ -283,10 +283,10 @@ RegExpObject::create(JSContext *cx, RegExpStatics *res, const jschar *chars, siz
 }
 
 RegExpObject *
-RegExpObject::createNoStatics(JSContext *cx, const jschar *chars, size_t length, RegExpFlag flags,
+RegExpObject::createNoStatics(JSContext *cx, StableCharPtr chars, size_t length, RegExpFlag flags,
                               TokenStream *tokenStream)
 {
-    RootedAtom source(cx, AtomizeChars(cx, chars, length));
+    RootedAtom source(cx, AtomizeChars(cx, chars.get(), length));
     if (!source)
         return NULL;
 
@@ -403,7 +403,7 @@ RegExpObject::init(JSContext *cx, HandleAtom source, RegExpFlag flags)
 }
 
 RegExpRunStatus
-RegExpObject::execute(JSContext *cx, const jschar *chars, size_t length, size_t *lastIndex,
+RegExpObject::execute(JSContext *cx, StableCharPtr chars, size_t length, size_t *lastIndex,
                       MatchPairs **output)
 {
     RegExpGuard g;
@@ -469,7 +469,7 @@ RegExpShared::compile(JSContext *cx, JSAtom *source)
 }
 
 RegExpRunStatus
-RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length, size_t *lastIndex,
+RegExpShared::execute(JSContext *cx, StableCharPtr chars, size_t length, size_t *lastIndex,
                       MatchPairs **output)
 {
     const size_t origLength = length;

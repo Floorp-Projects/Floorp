@@ -289,7 +289,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
         JSStableString *str = vp->toString()->ensureStable(cx);
         if (!str)
             return false;
-        JSString *wrapped = js_NewStringCopyN(cx, str->chars(), str->length());
+        JSString *wrapped = js_NewStringCopyN(cx, str->chars().get(), str->length());
         if (!wrapped)
             return false;
         vp->setString(wrapped);
