@@ -524,7 +524,7 @@ Debugger::onNewScript(JSContext *cx, JSScript *script, GlobalObject *compileAndG
 
 extern JSBool
 EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, StackFrame *fp,
-              const jschar *chars, unsigned length, const char *filename, unsigned lineno,
+              StableCharPtr chars, unsigned length, const char *filename, unsigned lineno,
               Value *rval);
 
 }
