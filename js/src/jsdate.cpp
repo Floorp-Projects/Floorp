@@ -1420,15 +1420,12 @@ FillLocalTimeSlots(DSTOffsetCache *dstOffsetCache, RawObject obj)
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_HOURS, Int32Value(hours));
 }
 
-inline bool
-GetCachedLocalTime(DSTOffsetCache *dstOffsetCache, RawObject obj, double *time)
+inline double
+GetCachedLocalTime(DSTOffsetCache *dstOffsetCache, RawObject obj)
 {
-    if (!obj)
-        return false;
-
+    JS_ASSERT(obj);
     FillLocalTimeSlots(dstOffsetCache, obj);
-    *time = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).toDouble();
-    return true;
+    return obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).toDouble();
 }
 
 JS_ALWAYS_INLINE bool
@@ -1763,10 +1760,7 @@ date_getTimezoneOffset_impl(JSContext *cx, CallArgs args)
 
     RootedObject thisObj(cx, &args.thisv().toObject());
     double utctime = thisObj->getDateUTCTime().toNumber();
-
-    double localtime;
-    if (!GetCachedLocalTime(&cx->dstOffsetCache, thisObj, &localtime))
-        return false;
+    double localtime = GetCachedLocalTime(&cx->dstOffsetCache, thisObj);
 
     /*
      * Return the time zone offset in minutes for the current locale that is
@@ -3227,10 +3221,10 @@ js_DateIsValid(RawObject obj)
 JS_FRIEND_API(int)
 js_DateGetYear(JSContext *cx, RawObject obj)
 {
-    double localtime;
-
     /* Preserve legacy API behavior of returning 0 for invalid dates. */
-    if (!GetCachedLocalTime(&cx->dstOffsetCache, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    JS_ASSERT(obj);
+    double localtime = GetCachedLocalTime(&cx->dstOffsetCache, obj);
+    if (MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) YearFromTime(localtime);
@@ -3239,9 +3233,9 @@ js_DateGetYear(JSContext *cx, RawObject obj)
 JS_FRIEND_API(int)
 js_DateGetMonth(JSContext *cx, RawObject obj)
 {
-    double localtime;
-
-    if (!GetCachedLocalTime(&cx->dstOffsetCache, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    JS_ASSERT(obj);
+    double localtime = GetCachedLocalTime(&cx->dstOffsetCache, obj);
+    if (MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) MonthFromTime(localtime);
@@ -3250,9 +3244,9 @@ js_DateGetMonth(JSContext *cx, RawObject obj)
 JS_FRIEND_API(int)
 js_DateGetDate(JSContext *cx, RawObject obj)
 {
-    double localtime;
-
-    if (!GetCachedLocalTime(&cx->dstOffsetCache, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    JS_ASSERT(obj);
+    double localtime = GetCachedLocalTime(&cx->dstOffsetCache, obj);
+    if (MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) DateFromTime(localtime);
@@ -3261,9 +3255,9 @@ js_DateGetDate(JSContext *cx, RawObject obj)
 JS_FRIEND_API(int)
 js_DateGetHours(JSContext *cx, RawObject obj)
 {
-    double localtime;
-
-    if (!GetCachedLocalTime(&cx->dstOffsetCache, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    JS_ASSERT(obj);
+    double localtime = GetCachedLocalTime(&cx->dstOffsetCache, obj);
+    if (MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) HourFromTime(localtime);
@@ -3272,9 +3266,9 @@ js_DateGetHours(JSContext *cx, RawObject obj)
 JS_FRIEND_API(int)
 js_DateGetMinutes(JSContext *cx, RawObject obj)
 {
-    double localtime;
-
-    if (!GetCachedLocalTime(&cx->dstOffsetCache, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    JS_ASSERT(obj);
+    double localtime = GetCachedLocalTime(&cx->dstOffsetCache, obj);
+    if (MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) MinFromTime(localtime);
