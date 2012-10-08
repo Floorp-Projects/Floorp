@@ -2719,24 +2719,24 @@ static JSFunctionSpec JProfFunctions[] = {
 
 #endif /* defined(MOZ_JPROF) */
 
-#ifdef MOZ_DMD
+#ifdef MOZ_DMDV
 
 // See https://wiki.mozilla.org/Performance/MemShrink/DMD for instructions on
-// how to use DMD.
+// how to use DMDV.
 
 static JSBool
-DMDCheckJS(JSContext *cx, unsigned argc, jsval *vp)
+DMDVCheckAndDumpJS(JSContext *cx, unsigned argc, jsval *vp)
 {
-  mozilla::DMDCheckAndDump();
+  mozilla::DMDVCheckAndDump();
   return JS_TRUE;
 }
 
-static JSFunctionSpec DMDFunctions[] = {
-    JS_FS("DMD",                        DMDCheckJS,                 0, 0),
+static JSFunctionSpec DMDVFunctions[] = {
+    JS_FS("DMDV",                       DMDVCheckAndDumpJS,         0, 0),
     JS_FS_END
 };
 
-#endif /* defined(MOZ_DMD) */
+#endif /* defined(MOZ_DMDV) */
 
 nsresult
 nsJSContext::InitClasses(JSObject* aGlobalObj)
@@ -2761,9 +2761,9 @@ nsJSContext::InitClasses(JSObject* aGlobalObj)
   ::JS_DefineFunctions(mContext, aGlobalObj, JProfFunctions);
 #endif
 
-#ifdef MOZ_DMD
-  // Attempt to initialize DMD functions
-  ::JS_DefineFunctions(mContext, aGlobalObj, DMDFunctions);
+#ifdef MOZ_DMDV
+  // Attempt to initialize DMDV functions
+  ::JS_DefineFunctions(mContext, aGlobalObj, DMDVFunctions);
 #endif
 
   return rv;

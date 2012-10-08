@@ -540,10 +540,10 @@ static int64_t GetHeapAllocated()
     return stats.bytes_used;
 }
 
-// malloc_zone_statistics() crashes when run under DMD because Valgrind doesn't
-// intercept it.  This measurement isn't important for DMD, so don't even try
-// to get it.
-#ifndef MOZ_DMD
+// malloc_zone_statistics() crashes when run under DMDV because Valgrind
+// doesn't intercept it.  This measurement isn't important for DMDV, so don't
+// even try to get it.
+#ifndef MOZ_DMDV
 #define HAVE_HEAP_ZONE0_REPORTERS 1
 static int64_t GetHeapZone0Committed()
 {
@@ -574,7 +574,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapZone0Used,
     GetHeapZone0Used,
     "Memory mapped by the heap allocator in the default zone that is "
     "allocated to the application.")
-#endif  // MOZ_DMD
+#endif  // MOZ_DMDV
 
 #endif
 
@@ -1589,7 +1589,7 @@ NS_UnregisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter)
 
 namespace mozilla {
 
-#ifdef MOZ_DMD
+#ifdef MOZ_DMDV
 
 class NullMultiReporterCallback : public nsIMemoryMultiReporterCallback
 {
@@ -1601,7 +1601,7 @@ public:
                         const nsACString &aDescription,
                         nsISupports *aData)
     {
-        // Do nothing;  the reporter has already reported to DMD.
+        // Do nothing;  the reporter has already reported to DMDV.
         return NS_OK;
     }
 };
@@ -1611,7 +1611,7 @@ NS_IMPL_ISUPPORTS1(
 )
 
 void
-DMDCheckAndDump()
+DMDVCheckAndDump()
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr =
         do_GetService("@mozilla.org/memory-reporter-manager;1");
@@ -1624,7 +1624,7 @@ DMDCheckAndDump()
         nsCOMPtr<nsIMemoryReporter> r;
         e->GetNext(getter_AddRefs(r));
 
-        // Just getting the amount is enough for the reporter to report to DMD.
+        // Just getting the amount is enough for the reporter to report to DMDV.
         int64_t amount;
         (void)r->GetAmount(&amount);
     }
@@ -1639,9 +1639,9 @@ DMDCheckAndDump()
       r->CollectReports(cb, nullptr);
     }
 
-    VALGRIND_DMD_CHECK_REPORTING;
+    VALGRIND_DMDV_CHECK_REPORTING;
 }
 
-#endif  /* defined(MOZ_DMD) */
+#endif  /* defined(MOZ_DMDV) */
 
 }
