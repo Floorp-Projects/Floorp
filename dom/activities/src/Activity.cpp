@@ -6,7 +6,6 @@
 #include "nsDOMClassInfo.h"
 #include "nsContentUtils.h"
 #include "nsIDOMActivityOptions.h"
-#include "nsEventStateManager.h"
 
 using namespace mozilla::dom;
 
@@ -47,14 +46,6 @@ Activity::Initialize(nsISupports* aOwner,
   NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
 
   Init(window);
-
-  if (!nsEventStateManager::IsHandlingUserInput()) {
-    nsCOMPtr<nsIDOMRequestService> rs =
-      do_GetService("@mozilla.org/dom/dom-request-service;1");
-    rs->FireErrorAsync(static_cast<DOMRequest*>(this),
-                       NS_LITERAL_STRING("NotUserInput"));
-    return NS_OK;
-  }
 
   // We expect a single argument, which is a nsIDOMMozActivityOptions.
   if (aArgc != 1 || !aArgv[0].isObject()) {
