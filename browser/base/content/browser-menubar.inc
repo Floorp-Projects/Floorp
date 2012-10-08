@@ -22,6 +22,13 @@
                           accesskey="&newNavigatorCmd.accesskey;"
                           key="key_newNavigator"
                           command="cmd_newNavigator"/>
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+                <menuitem id="menu_newPrivateWindow"
+                          label="&newPrivateWindow.label;"
+                          accesskey="&newPrivateWindow.accesskey;"
+                          command="Tools:PrivateBrowsing"
+                          key="key_privatebrowsing"/>
+#endif
                 <menuitem id="menu_openLocation"
                           class="show-only-for-keyboard"
                           label="&openLocationCmd.label;"
@@ -541,6 +548,7 @@
 #endif
                         command="View:PageInfo"/>
               <menuseparator id="sanitizeSeparator"/>
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
               <menuitem id="privateBrowsingItem"
                         label="&privateBrowsingCmd.start.label;"
                         accesskey="&privateBrowsingCmd.start.accesskey;"
@@ -550,6 +558,7 @@
                         stopaccesskey="&privateBrowsingCmd.stop.accesskey;"
                         key="key_privatebrowsing"
                         command="Tools:PrivateBrowsing"/>
+#endif
               <menuitem id="sanitizeItem"
                         accesskey="&clearRecentHistory.accesskey;"
                         label="&clearRecentHistory.label;"
