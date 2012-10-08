@@ -40,7 +40,9 @@
 namespace css = mozilla::css;
 
 #define IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_) \
-/* virtual */ nsIDOMCSSRule* class_::GetDOMRule() \
+  /* virtual */ nsIDOMCSSRule* class_::GetDOMRule()               \
+  { return this; }                                                \
+  /* virtual */ nsIDOMCSSRule* class_::GetExistingDOMRule()       \
   { return this; }
 #define IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(class_, super_) \
 /* virtual */ void class_::MapRuleInfoInto(nsRuleData* aRuleData) \
