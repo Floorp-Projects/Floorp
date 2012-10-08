@@ -557,7 +557,7 @@ ReleaseSliceNow(int32_t slice, void* data)
 {
     nsTArray<nsISupports *>* items =
         static_cast<nsTArray<nsISupports *>*>(data);
-    uint32_t counter = 0;
+    int32_t counter = 0;
     while (1) {
         uint32_t count = items->Length();
         if (!count) {
