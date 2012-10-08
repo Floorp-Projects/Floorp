@@ -1571,6 +1571,13 @@ public:
                                       uint32_t aDisplayHeight);
 
   /**
+   * Constrain the viewport calculations from the GetViewportInfo() function
+   * in order to always return sane minimum/maximum values. This modifies the
+   * ViewportInfo struct passed as an input parameter, in place.
+   */
+  static void ConstrainViewportValues(ViewportInfo& aViewInfo);
+
+  /**
    * The device-pixel-to-CSS-px ratio used to adjust meta viewport values.
    */
   static double GetDevicePixelsPerMetaViewportPixel(nsIWidget* aWidget);

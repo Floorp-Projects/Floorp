@@ -250,8 +250,8 @@ namespace {
 /**
  * Default values for the ViewportInfo structure.
  */
-static const float    kViewportMinScale = 0.0;
-static const float    kViewportMaxScale = 10.0;
+static const double   kViewportMinScale = 0.0;
+static const double   kViewportMaxScale = 10.0;
 static const uint32_t kViewportMinWidth = 200;
 static const uint32_t kViewportMaxWidth = 10000;
 static const uint32_t kViewportMinHeight = 223;
@@ -5102,6 +5102,18 @@ static void ProcessViewportToken(nsIDocument *aDocument,
                          (c == '\t') || (c == '\n') || (c == '\r'))
 
 /* static */
+void
+nsContentUtils::ConstrainViewportValues(ViewportInfo& aViewInfo)
+{
+  // Constrain the min/max zoom as specified at:
+  // dev.w3.org/csswg/css-device-adapt section 6.2
+  aViewInfo.maxZoom = NS_MAX(aViewInfo.minZoom, aViewInfo.maxZoom);
+
+  aViewInfo.defaultZoom = NS_MIN(aViewInfo.defaultZoom, aViewInfo.maxZoom);
+  aViewInfo.defaultZoom = NS_MAX(aViewInfo.defaultZoom, aViewInfo.minZoom);
+}
+
+/* static */
 ViewportInfo
 nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
                                 uint32_t aDisplayWidth,
@@ -5111,6 +5123,10 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
   ret.defaultZoom = 1.0;
   ret.autoSize = true;
   ret.allowZoom = true;
+  ret.width = aDisplayWidth;
+  ret.height = aDisplayHeight;
+  ret.minZoom = kViewportMinScale;
+  ret.maxZoom = kViewportMaxScale;
 
   nsAutoString viewport;
   aDocument->GetHeaderData(nsGkAtoms::viewport, viewport);
@@ -5128,6 +5144,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
             (docId.Find("Mobile") != -1) ||
             (docId.Find("WML") != -1))
         {
+          nsContentUtils::ConstrainViewportValues(ret);
           return ret;
         }
       }
@@ -5136,6 +5153,7 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
     nsAutoString handheldFriendly;
     aDocument->GetHeaderData(nsGkAtoms::handheldFriendly, handheldFriendly);
     if (handheldFriendly.EqualsLiteral("true")) {
+      nsContentUtils::ConstrainViewportValues(ret);
       return ret;
     }
   }
@@ -5150,8 +5168,8 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
     scaleMinFloat = kViewportMinScale;
   }
 
-  scaleMinFloat = NS_MIN(scaleMinFloat, kViewportMaxScale);
-  scaleMinFloat = NS_MAX(scaleMinFloat, kViewportMinScale);
+  scaleMinFloat = NS_MIN((double)scaleMinFloat, kViewportMaxScale);
+  scaleMinFloat = NS_MAX((double)scaleMinFloat, kViewportMinScale);
 
   nsAutoString maxScaleStr;
   aDocument->GetHeaderData(nsGkAtoms::viewport_maximum_scale, maxScaleStr);
@@ -5165,16 +5183,14 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
     scaleMaxFloat = kViewportMaxScale;
   }
 
-  scaleMaxFloat = NS_MIN(scaleMaxFloat, kViewportMaxScale);
-  scaleMaxFloat = NS_MAX(scaleMaxFloat, kViewportMinScale);
+  scaleMaxFloat = NS_MIN((double)scaleMaxFloat, kViewportMaxScale);
+  scaleMaxFloat = NS_MAX((double)scaleMaxFloat, kViewportMinScale);
 
   nsAutoString scaleStr;
   aDocument->GetHeaderData(nsGkAtoms::viewport_initial_scale, scaleStr);
 
   nsresult scaleErrorCode;
   float scaleFloat = scaleStr.ToFloat(&scaleErrorCode);
-  scaleFloat = NS_MIN(scaleFloat, scaleMaxFloat);
-  scaleFloat = NS_MAX(scaleFloat, scaleMinFloat);
 
   nsAutoString widthStr, heightStr;
 
@@ -5274,6 +5290,8 @@ nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
   ret.minZoom = scaleMinFloat;
   ret.maxZoom = scaleMaxFloat;
   ret.autoSize = autoSize;
+
+  nsContentUtils::ConstrainViewportValues(ret);
   return ret;
 }
 
