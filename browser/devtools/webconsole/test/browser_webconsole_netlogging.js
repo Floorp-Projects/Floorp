@@ -21,7 +21,6 @@ const TEST_DATA_JSON_CONTENT =
 
 let lastRequest = null;
 let requestCallback = null;
-let lastActivity = null;
 
 function test()
 {
@@ -33,17 +32,32 @@ function test()
     openConsole(null, function(aHud) {
       hud = aHud;
 
-      HUDService.lastFinishedRequestCallback = function(aRequest) {
-        lastRequest = aRequest.log.entries[0];
-        lastActivity = aRequest;
-        if (requestCallback) {
-          requestCallback();
-        }
-      };
+      HUDService.lastFinishedRequestCallback = requestCallbackWrapper;
 
       executeSoon(testPageLoad);
     });
   }, true);
+}
+
+function requestCallbackWrapper(aRequest)
+{
+  lastRequest = aRequest;
+
+  hud.ui.webConsoleClient.getResponseContent(lastRequest.actor,
+    function(aResponse) {
+      lastRequest.response.content = aResponse.content;
+      lastRequest.discardResponseBody = aResponse.contentDiscarded;
+
+      hud.ui.webConsoleClient.getRequestPostData(lastRequest.actor,
+        function(aResponse) {
+          lastRequest.request.postData = aResponse.postData;
+          lastRequest.discardRequestBody = aResponse.postDataDiscarded;
+
+          if (requestCallback) {
+            requestCallback();
+          }
+        });
+    });
 }
 
 function testPageLoad()
@@ -55,8 +69,10 @@ function testPageLoad()
     is(lastRequest.request.url, TEST_NETWORK_REQUEST_URI,
       "Logged network entry is page load");
     is(lastRequest.request.method, "GET", "Method is correct");
-    ok(!lastRequest.request.postData, "No request body was stored");
+    ok(!lastRequest.request.postData.text, "No request body was stored");
+    ok(lastRequest.discardRequestBody, "Request body was discarded");
     ok(!lastRequest.response.content.text, "No response body was stored");
+    ok(lastRequest.discardResponseBody, "Response body was discarded");
 
     lastRequest = null;
     requestCallback = null;
@@ -68,13 +84,28 @@ function testPageLoad()
 
 function testPageLoadBody()
 {
+  // Turn on logging of request bodies and check again.
+  hud.ui.saveRequestAndResponseBodies = true;
+
+  waitForSuccess({
+    name: "saveRequestAndResponseBodies update",
+    validatorFn: function()
+    {
+      return hud.ui.saveRequestAndResponseBodies;
+    },
+    successFn: testPageLoadBodyAfterSettingUpdate,
+    failureFn: finishTest,
+  });
+}
+
+function testPageLoadBodyAfterSettingUpdate()
+{
   let loaded = false;
   let requestCallbackInvoked = false;
 
-  // Turn on logging of request bodies and check again.
-  hud.ui.saveRequestAndResponseBodies = true;
   requestCallback = function() {
     ok(lastRequest, "Page load was logged again");
+    ok(!lastRequest.discardResponseBody, "Response body was not discarded");
     is(lastRequest.response.content.text.indexOf("<!DOCTYPE HTML>"), 0,
       "Response body's beginning is okay");
 
@@ -104,7 +135,8 @@ function testXhrGet()
   requestCallback = function() {
     ok(lastRequest, "testXhrGet() was logged");
     is(lastRequest.request.method, "GET", "Method is correct");
-    ok(!lastRequest.request.postData, "No request body was sent");
+    ok(!lastRequest.request.postData.text, "No request body was sent");
+    ok(!lastRequest.discardRequestBody, "Request body was not discarded");
     is(lastRequest.response.content.text, TEST_DATA_JSON_CONTENT,
       "Response is correct");
 
@@ -165,19 +197,18 @@ function testNetworkPanel()
 {
   // Open the NetworkPanel. The functionality of the NetworkPanel is tested
   // within separate test files.
-  let networkPanel = hud.ui.openNetworkPanel(hud.ui.filterBox, lastActivity);
-  is(networkPanel, hud.ui.filterBox._netPanel,
-     "Network panel stored on anchor node");
+  let networkPanel = hud.ui.openNetworkPanel(hud.ui.filterBox, lastRequest);
 
-  networkPanel.panel.addEventListener("load", function onLoad(aEvent) {
-    networkPanel.panel.removeEventListener(aEvent.type, onLoad, true);
+  networkPanel.panel.addEventListener("popupshown", function onPopupShown() {
+    networkPanel.panel.removeEventListener("popupshown", onPopupShown, true);
 
+    is(hud.ui.filterBox._netPanel, networkPanel,
+       "Network panel stored on anchor node");
     ok(true, "NetworkPanel was opened");
 
     // All tests are done. Shutdown.
     networkPanel.panel.hidePopup();
     lastRequest = null;
-    lastActivity = null;
     HUDService.lastFinishedRequestCallback = null;
     executeSoon(finishTest);
   }, true);
