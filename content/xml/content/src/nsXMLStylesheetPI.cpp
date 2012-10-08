@@ -26,6 +26,10 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
+  // CC
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXMLStylesheetPI,
+                                           nsXMLProcessingInstruction)
+
   // nsIDOMNode
   NS_IMETHOD SetNodeValue(const nsAString& aData);
 
@@ -59,7 +63,7 @@ protected:
 
 DOMCI_NODE_DATA(XMLStylesheetProcessingInstruction, nsXMLStylesheetPI)
 
-NS_INTERFACE_TABLE_HEAD(nsXMLStylesheetPI)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXMLStylesheetPI)
   NS_NODE_INTERFACE_TABLE4(nsXMLStylesheetPI, nsIDOMNode,
                            nsIDOMProcessingInstruction, nsIDOMLinkStyle,
                            nsIStyleSheetLinkingElement)
@@ -68,6 +72,16 @@ NS_INTERFACE_MAP_END_INHERITING(nsXMLProcessingInstruction)
 
 NS_IMPL_ADDREF_INHERITED(nsXMLStylesheetPI, nsXMLProcessingInstruction)
 NS_IMPL_RELEASE_INHERITED(nsXMLStylesheetPI, nsXMLProcessingInstruction)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLStylesheetPI)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLStylesheetPI,
+                                                  nsXMLProcessingInstruction)
+  tmp->nsStyleLinkElement::Traverse(cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLStylesheetPI,
+                                                nsXMLProcessingInstruction)
+  tmp->nsStyleLinkElement::Unlink();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
 nsXMLStylesheetPI::nsXMLStylesheetPI(already_AddRefed<nsINodeInfo> aNodeInfo,

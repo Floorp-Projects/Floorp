@@ -1,0 +1,6 @@
+<?xml-stylesheet href="data:text/css,div {}"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <script>
+    document.styleSheets[0].cssRules[0].style.foo = document;
+  </script>
+</html>
