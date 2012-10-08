@@ -27,12 +27,12 @@ namespace js {
  */
 bool
 ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
-              Handle<JSStableString*> input, StableCharPtr chars, size_t length,
+              JSLinearString *input, const jschar *chars, size_t length,
               size_t *lastIndex, RegExpExecType type, Value *rval);
 
 bool
 ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpShared &shared,
-              Handle<JSStableString*> input, StableCharPtr chars, size_t length,
+              JSLinearString *input, const jschar *chars, size_t length,
               size_t *lastIndex, RegExpExecType type, Value *rval);
 
 bool
