@@ -3372,7 +3372,7 @@ fsmdef_ev_setpeerconnection(sm_event_t *event) {
     if (dcb == NULL) {
       dcb = fsmdef_get_new_dcb(call_id);
       if (dcb == NULL) {
-        return CC_CAUSE_NO_RESOURCE;
+        return SM_RC_ERROR;
       }
 
       lsm_rc = lsm_get_facility_by_line(call_id, line, FALSE, dcb);

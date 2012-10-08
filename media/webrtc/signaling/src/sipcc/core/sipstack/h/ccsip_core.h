@@ -99,6 +99,22 @@ typedef enum {
     SIP_STATE_END = SIP_STATE_RECV_UPDATEMEDIA_CCFEATUREACK_PENDING
 } sipSMStateType_t;
 
+typedef enum
+{
+    SIP_REG_STATE_INV = -1,
+    SIP_REG_STATE_NONE = 0,
+    SIP_REG_STATE_BASE = 1,
+
+    SIP_REG_STATE_IDLE = SIP_REG_STATE_BASE,
+    SIP_REG_STATE_REGISTERING,
+    SIP_REG_STATE_REGISTERED,
+    SIP_REG_STATE_UNREGISTERING,
+    SIP_REG_STATE_IN_FALLBACK,
+    SIP_REG_STATE_STABILITY_CHECK,
+    SIP_REG_STATE_TOKEN_WAIT,
+    SIP_REG_STATE_END = SIP_REG_STATE_TOKEN_WAIT
+} sipRegSMStateType_t;
+
 typedef enum {
     SIPSPI_EV_INVALID = -1,
     SIPSPI_EV_BASE = 0,
@@ -761,7 +777,7 @@ void sip_shutdown_phase1(int, int reason);
 void sip_shutdown_phase2(int);
 void sip_restart(void);
 int sip_sm_ccb_init(ccsipCCB_t *ccb, line_t index, int DN,
-                    sipSMStateType_t initial_state);
+                    sipRegSMStateType_t initial_state);
 ccsipCCB_t *sip_sm_get_ccb_by_index(line_t index);
 ccsipCCB_t *sip_sm_get_ccb_by_ccm_id_and_index(int ccm_id, line_t idx);
 ccsipCCB_t *sip_sm_get_ccb_by_callid(const char *callid);
