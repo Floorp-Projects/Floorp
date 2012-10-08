@@ -349,7 +349,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
                 JSStableString *stable = str->ensureStable(cx);
                 if (!stable)
                     return JS_FALSE;
-                *va_arg(ap, const jschar **) = stable->chars();
+                *va_arg(ap, const jschar **) = stable->chars().get();
             } else {
                 *va_arg(ap, JSString **) = str;
             }
@@ -5190,7 +5190,7 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
     JS_ASSERT_IF(options.principals, cx->compartment->principals == options.principals);
     AutoLastFrameCheck lfc(cx);
 
-    return frontend::CompileScript(cx, obj, NULL, options, chars, length);
+    return frontend::CompileScript(cx, obj, NULL, options, StableCharPtr(chars, length), length);
 }
 
 JSScript *
@@ -5359,7 +5359,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8, JSObject *objArg
     {
         CompileOptions options(cx);
         options.setCompileAndGo(false);
-        Parser parser(cx, options, chars, length, /* foldConstants = */ true);
+        Parser parser(cx, options, StableCharPtr(chars, length), length, /* foldConstants = */ true);
         if (parser.init()) {
             older = JS_SetErrorReporter(cx, NULL);
             if (!parser.parse(obj) &&
@@ -5472,7 +5472,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
     if (!fun)
         return NULL;
 
-    if (!frontend::CompileFunctionBody(cx, fun, options, formals, chars, length))
+    if (!frontend::CompileFunctionBody(cx, fun, options, formals, StableCharPtr(chars, length), length))
         return NULL;
 
     if (obj && funAtom) {
@@ -5675,7 +5675,8 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
 
     options.setCompileAndGo(true);
     options.setNoScriptRval(!rval);
-    RootedScript script(cx, frontend::CompileScript(cx, obj, NULL, options, chars, length));
+    RootedScript script(cx, frontend::CompileScript(cx, obj, NULL, options,
+                                                    StableCharPtr(chars, length), length));
     if (!script)
         return false;
 
@@ -6110,7 +6111,7 @@ JS_GetStringCharsZ(JSContext *cx, JSString *str)
     JSStableString *stable = str->ensureStable(cx);
     if (!stable)
         return NULL;
-    return stable->chars();
+    return stable->chars().get();
 }
 
 JS_PUBLIC_API(const jschar *)
@@ -6124,7 +6125,7 @@ JS_GetStringCharsZAndLength(JSContext *cx, JSString *str, size_t *plength)
     if (!stable)
         return NULL;
     *plength = stable->length();
-    return stable->chars();
+    return stable->chars().get();
 }
 
 JS_PUBLIC_API(const jschar *)
@@ -6138,7 +6139,7 @@ JS_GetStringCharsAndLength(JSContext *cx, JSString *str, size_t *plength)
     if (!stable)
         return NULL;
     *plength = stable->length();
-    return stable->chars();
+    return stable->chars().get();
 }
 
 JS_PUBLIC_API(const jschar *)
@@ -6148,7 +6149,7 @@ JS_GetInternedStringChars(JSString *str)
     JSStableString *stable = str->ensureStable(NULL);
     if (!stable)
         return NULL;
-    return stable->chars();
+    return stable->chars().get();
 }
 
 JS_PUBLIC_API(const jschar *)
@@ -6160,7 +6161,7 @@ JS_GetInternedStringCharsAndLength(JSString *str, size_t *plength)
     if (!stable)
         return NULL;
     *plength = stable->length();
-    return stable->chars();
+    return stable->chars().get();
 }
 
 extern JS_PUBLIC_API(JSFlatString *)
@@ -6181,7 +6182,7 @@ JS_GetFlatStringChars(JSFlatString *str)
     JSStableString *stable = str->ensureStable(NULL);
     if (!stable)
         return NULL;
-    return str->chars();
+    return stable->chars().get();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6391,7 +6392,7 @@ JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, jsval *vp)
     CHECK_REQUEST(cx);
 
     RootedValue reviver(cx, NullValue()), value(cx);
-    if (!ParseJSONWithReviver(cx, chars, len, reviver, &value))
+    if (!ParseJSONWithReviver(cx, StableCharPtr(chars, len), len, reviver, &value))
         return false;
 
     *vp = value;
@@ -6405,7 +6406,7 @@ JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, jsval 
     CHECK_REQUEST(cx);
 
     RootedValue reviver(cx, reviverArg), value(cx);
-    if (!ParseJSONWithReviver(cx, chars, len, reviver, &value))
+    if (!ParseJSONWithReviver(cx, StableCharPtr(chars, len), len, reviver, &value))
         return false;
 
     *vp = value;
@@ -6823,7 +6824,8 @@ JS_NewRegExpObject(JSContext *cx, JSObject *objArg, char *bytes, size_t length, 
         return NULL;
 
     RegExpStatics *res = obj->asGlobal().getRegExpStatics();
-    RegExpObject *reobj = RegExpObject::create(cx, res, chars, length, RegExpFlag(flags), NULL);
+    RegExpObject *reobj = RegExpObject::create(cx, res, StableCharPtr(chars, length), length,
+                                               RegExpFlag(flags), NULL);
     js_free(chars);
     return reobj;
 }
@@ -6835,7 +6837,8 @@ JS_NewUCRegExpObject(JSContext *cx, JSObject *objArg, jschar *chars, size_t leng
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     RegExpStatics *res = obj->asGlobal().getRegExpStatics();
-    return RegExpObject::create(cx, res, chars, length, RegExpFlag(flags), NULL);
+    return RegExpObject::create(cx, res, StableCharPtr(chars, length), length,
+                                RegExpFlag(flags), NULL);
 }
 
 JS_PUBLIC_API(void)
@@ -6870,8 +6873,8 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *objArg, JSObject *reobjArg, jschar *ch
     CHECK_REQUEST(cx);
 
     RegExpStatics *res = obj->asGlobal().getRegExpStatics();
-    return ExecuteRegExp(cx, res, reobj->asRegExp(), NULL, chars, length,
-                         indexp, test ? RegExpTest : RegExpExec, rval);
+    return ExecuteRegExp(cx, res, reobj->asRegExp(), NullPtr(), StableCharPtr(chars, length),
+                         length, indexp, test ? RegExpTest : RegExpExec, rval);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -6882,7 +6885,8 @@ JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, unsigned 
     jschar *chars = InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    RegExpObject *reobj = RegExpObject::createNoStatics(cx, chars, length, RegExpFlag(flags), NULL);
+    RegExpObject *reobj = RegExpObject::createNoStatics(cx, StableCharPtr(chars, length), length,
+                                                        RegExpFlag(flags), NULL);
     js_free(chars);
     return reobj;
 }
@@ -6892,7 +6896,8 @@ JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, unsig
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    return RegExpObject::createNoStatics(cx, chars, length, RegExpFlag(flags), NULL);
+    return RegExpObject::createNoStatics(cx, StableCharPtr(chars, length), length,
+                                         RegExpFlag(flags), NULL);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6903,8 +6908,8 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *objArg, jschar *chars, size_t
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return ExecuteRegExp(cx, NULL, obj->asRegExp(), NULL, chars, length, indexp,
-                         test ? RegExpTest : RegExpExec, rval);
+    return ExecuteRegExp(cx, NULL, obj->asRegExp(), NullPtr(), StableCharPtr(chars, length),
+                         length, indexp, test ? RegExpTest : RegExpExec, rval);
 }
 
 JS_PUBLIC_API(JSBool)
