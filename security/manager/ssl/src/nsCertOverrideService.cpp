@@ -182,7 +182,7 @@ nsCertOverrideService::RemoveAllFromMemory()
   mSettingsTable.Clear();
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 RemoveTemporariesCallback(nsCertOverrideEntry *aEntry,
                           void *aArg)
 {
@@ -289,7 +289,7 @@ nsCertOverrideService::Read()
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 WriteEntryCallback(nsCertOverrideEntry *aEntry,
                    void *aArg)
 {
@@ -753,7 +753,7 @@ struct nsCertAndBoolsAndInt
   nsCString mDottedOidForStoringNewHashes;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 FindMatchingCertCallback(nsCertOverrideEntry *aEntry,
                          void *aArg)
 {
@@ -826,7 +826,7 @@ struct nsCertAndPointerAndCallback
   nsCString mDottedOidForStoringNewHashes;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 EnumerateCertOverridesCallback(nsCertOverrideEntry *aEntry,
                                void *aArg)
 {
