@@ -2885,7 +2885,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
 }
 
 bool
-IonBuilder::makeInliningDecision(AutoObjectVector &targets)
+IonBuilder::makeInliningDecision(AutoObjectVector &targets, uint32 argc)
 {
     if (inliningDepth >= js_IonOptions.maxInlineDepth)
         return false;
@@ -2913,6 +2913,12 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets)
 
         JSScript *script = target->script();
         uint32_t calleeUses = script->getUseCount();
+
+        if (target->nargs < argc) {
+            IonSpew(IonSpew_Inlining, "Not inlining, overflow of arguments.");
+            return false;
+        }
+
         totalSize += script->length;
         if (totalSize > js_IonOptions.inlineMaxTotalBytecodeLength)
             return false;
@@ -3710,7 +3716,7 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
             }
         }
 
-        if (numTargets > 0 && makeInliningDecision(targets))
+        if (numTargets > 0 && makeInliningDecision(targets, argc))
             return inlineScriptedCall(targets, argc, constructing, types, barrier);
     }
 
