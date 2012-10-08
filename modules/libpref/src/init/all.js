@@ -174,6 +174,7 @@ pref("media.h264.enabled", true);
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", false);
 pref("media.peerconnection.enabled", false);
+pref("media.navigator.permission.disabled", false);
 #else
 #ifdef ANDROID
 pref("media.navigator.enabled", true);
