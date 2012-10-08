@@ -3730,24 +3730,10 @@ nsPluginInstanceOwner::GetContentsScaleFactor(double *result)
   // for plugins. On other platforms, plugin coordinates are always in device
   // pixels.
 #if defined(XP_MACOSX)
-  if (mWidget) {
-    scaleFactor = mWidget->GetDefaultScale();
-  } else {
-    nsCOMPtr<nsIScreenManager> screenMgr =
-      do_GetService("@mozilla.org/gfx/screenmanager;1");
-    if (screenMgr) {
-      nsCOMPtr<nsIScreen> screen;
-      nsIntRect screenRect = mObjectFrame->GetScreenRect();
-      screenMgr->ScreenForRect(screenRect.x, screenRect.y,
-                               screenRect.width, screenRect.height,
-                               getter_AddRefs(screen));
-      if (screen) {
-        nsresult rv = screen->GetContentsScaleFactor(&scaleFactor);
-        if (NS_FAILED(rv)) {
-          scaleFactor = 1.0;
-        }
-      }
-    }
+  nsIPresShell* presShell = nsContentUtils::FindPresShellForDocument(mContent->OwnerDoc());
+  if (presShell) {
+    scaleFactor = double(nsPresContext::AppUnitsPerCSSPixel())/
+      presShell->GetPresContext()->DeviceContext()->UnscaledAppUnitsPerDevPixel();
   }
 #endif
   *result = scaleFactor;
