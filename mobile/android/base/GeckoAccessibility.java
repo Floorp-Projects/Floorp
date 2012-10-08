@@ -15,6 +15,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.content.Context;
 import android.graphics.Rect;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
+
+import java.util.HashSet;
+import java.util.Arrays;
+import java.util.List;
 
 import org.json.*;
 
@@ -27,22 +33,39 @@ public class GeckoAccessibility {
     private static JSONObject mEventMessage = null;
     private static AccessibilityNodeInfo mVirtualCursorNode = null;
 
+    private static final HashSet<String> ServiceWhitelist =
+        new HashSet<String>(Arrays.asList(new String[] {
+                    "com.google.android.marvin.talkback.TalkBackService", // Google Talkback screen reader
+                    "com.mot.readout.ScreenReader", // Motorola screen reader
+                    "info.spielproject.spiel.SpielService", // Spiel screen reader
+                    "es.codefactory.android.app.ma.MAAccessibilityService" // Codefactory Mobile Accessibility screen reader
+                }));
+
     public static void updateAccessibilitySettings () {
         GeckoAppShell.getHandler().post(new Runnable() {
                 public void run() {
                     JSONObject ret = new JSONObject();
+                    boolean enabled = false;
                     AccessibilityManager accessibilityManager =
                         (AccessibilityManager) GeckoApp.mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
-                    try {
-                        ret.put("enabled", accessibilityManager.isEnabled());
-                        if (Build.VERSION.SDK_INT >= 14) { // Build.VERSION_CODES.ICE_CREAM_SANDWICH
-                            ret.put("exploreByTouch", accessibilityManager.isTouchExplorationEnabled());
-                        } else {
-                            ret.put("exploreByTouch", false);
+                    if (accessibilityManager.isEnabled()) {
+                        ActivityManager activityManager =
+                            (ActivityManager) GeckoApp.mAppContext.getSystemService(Context.ACTIVITY_SERVICE);
+                        List<RunningServiceInfo> runningServices = activityManager.getRunningServices(Integer.MAX_VALUE);
+
+                        for (RunningServiceInfo runningServiceInfo : runningServices) {
+                            enabled = ServiceWhitelist.contains(runningServiceInfo.service.getClassName());
+                            if (enabled)
+                                break;
                         }
+                    }
+
+                    try {
+                        ret.put("enabled", enabled);
                     } catch (Exception ex) {
                         Log.e(LOGTAG, "Error building JSON arguments for Accessibility:Settings:", ex);
                     }
+
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:Settings",
                                                                                    ret.toString()));
                 }
