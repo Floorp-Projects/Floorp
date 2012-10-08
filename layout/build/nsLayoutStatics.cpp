@@ -361,6 +361,4 @@ nsLayoutStatics::Shutdown()
   nsDOMMutationObserver::Shutdown();
 
   ContentParent::ShutDown();
-
-  nsRefreshDriver::Shutdown();
 }
