@@ -40,7 +40,7 @@ interface nsIDOMTouch;
 interface nsIDOMClientRect;
 interface nsIURI;
 
-[scriptable, uuid(47405734-D827-44AE-AC01-EF10E80F5D04)]
+[scriptable, uuid(a76927b7-4aca-4cd1-9c2b-a6b4789b88c3)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1270,4 +1270,11 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void removeSheet(in nsIURI sheetURI,
                                 in unsigned long type);
+
+  /**
+   * Returns true if a user input is being handled.
+   *
+   * This calls nsEventStateManager::IsHandlingUserInput().
+   */
+  readonly attribute boolean isHandlingUserInput;
 };
