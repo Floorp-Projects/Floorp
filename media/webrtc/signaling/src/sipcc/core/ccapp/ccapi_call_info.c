@@ -801,6 +801,7 @@ MediaStreamTable*  CCAPI_CallInfo_getMediaStreams(cc_callinfo_ref_t handle) {
     table->media_stream_id = data->media_stream_id;
 	table->num_tracks = 1;   /* this will change when we have multiple tracks per stream */
 	track.media_stream_track_id = data->media_stream_track_id;
+	track.video = FALSE;
 	table->track[0] = track;
 
 	/*

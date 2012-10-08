@@ -160,7 +160,7 @@ cc_int32_t g_CCLogDebug=TRUE;
 cc_int32_t g_NotifyCallDebug=TRUE;
 cc_int32_t g_NotifyLineDebug=TRUE;
 
-cc_srv_ctrl_cmd_t reset_type;
+cc_srv_ctrl_req_t reset_type;
 
 extern cprMsgQueue_t ccapp_msgq;
 extern cprThread_t ccapp_thread;
@@ -288,21 +288,21 @@ void perform_deferred_action() {
 
 void ccpro_handleserviceControlNotify() {
     cc_action_t  temp_action  = NO_ACTION;
-    if (reset_type == (int) CC_DEVICE_RESET) {
+    if (reset_type == CC_DEVICE_RESET) {
         temp_action = RESET_ACTION;
-    } else if (reset_type == (int) CC_DEVICE_RESTART) {
+    } else if (reset_type == CC_DEVICE_RESTART) {
         temp_action = RESTART_ACTION;
     }
      
-    if ((reset_type != (int) CC_DEVICE_ICMP_UNREACHABLE) &&
+    if ((reset_type != CC_DEVICE_ICMP_UNREACHABLE) &&
         is_action_to_be_deferred(temp_action) == TRUE) {
         return;
     }
 
 
-    if (reset_type == (int) CC_DEVICE_RESET) {
+    if (reset_type == CC_DEVICE_RESET) {
         resetRequest();
-    } else if (reset_type == (int) CC_DEVICE_RESTART) {
+    } else if (reset_type == CC_DEVICE_RESTART) {
         registration_processEvent(EV_CC_DO_SOFT_RESET);
     }
 }
@@ -2098,7 +2098,7 @@ void ccappFeatureUpdated (feature_update_t *featUpd) {
         }
         break;
     case DEVICE_SERVICE_CONTROL_REQ:
-        reset_type = featUpd->update.ccFeatUpd.data.reset_type;
+        reset_type = (cc_srv_ctrl_req_t) featUpd->update.ccFeatUpd.data.reset_type;
         ccpro_handleserviceControlNotify();
         break;
     case DEVICE_NOTIFICATION:
