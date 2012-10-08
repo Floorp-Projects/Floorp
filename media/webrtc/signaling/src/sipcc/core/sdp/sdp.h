@@ -53,7 +53,7 @@
 #define SDP_CHOOSE_PARAM           (-1)
 #define SDP_SESSION_LEVEL        0xFFFF
 
-#define SDP_MAX_LEN                2048
+#define SDP_MAX_LEN                4096
 
 #define UNKNOWN_CRYPTO_SUITE              "UNKNOWN_CRYPTO_SUITE"
 #define AES_CM_128_HMAC_SHA1_32           "AES_CM_128_HMAC_SHA1_32"

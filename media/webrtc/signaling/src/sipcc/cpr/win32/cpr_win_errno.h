@@ -42,6 +42,17 @@
 
 #include <errno.h>
 
+/* VC10 and above define these */
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK             WSAEWOULDBLOCK
+#endif
+#ifndef EINPROGRESS
+#define EINPROGRESS             WSAEINPROGRESS
+#endif
+#ifndef ENOTCONN
+#define ENOTCONN                WSAENOTCONN
+#endif
+
 /*
  * Maintain re-entrant nature by wrapping 'errno'
  */
