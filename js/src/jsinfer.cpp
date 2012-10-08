@@ -2697,26 +2697,12 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
     }
 
     /* Ignore duplicate barriers. */
-    size_t barrierCount = 0;
     TypeBarrier *barrier = code.typeBarriers;
     while (barrier) {
-        if (barrier->target == target && !barrier->singleton) {
-            if (barrier->type == type)
-                return;
-            if (barrier->type.isAnyObject() && type.isObject())
-                return;
-        }
+        if (barrier->target == target && barrier->type == type && !barrier->singleton)
+            return;
         barrier = barrier->next;
-        barrierCount++;
     }
-
-    /*
-     * Use a generic object barrier if the number of barriers on an opcode gets
-     * excessive: it is unlikely that we will be able to completely discharge
-     * the barrier anyways without the target being marked as a generic object.
-     */
-    if (barrierCount >= BARRIER_OBJECT_LIMIT && type.isObject())
-        type = Type::AnyObjectType();
 
     InferSpew(ISpewOps, "typeBarrier: #%u:%05u: %sT%p%s %s",
               script_->id(), pc - script_->code,
