@@ -168,6 +168,7 @@ const ThreadStateTypes = {
  */
 const UnsolicitedNotifications = {
   "consoleAPICall": "consoleAPICall",
+  "eventNotification": "eventNotification",
   "fileActivity": "fileActivity",
   "locationChange": "locationChange",
   "networkEvent": "networkEvent",
@@ -175,8 +176,7 @@ const UnsolicitedNotifications = {
   "newScript": "newScript",
   "tabDetached": "tabDetached",
   "tabNavigated": "tabNavigated",
-  "pageError": "pageError",
-  "profilerStateChanged": "profilerStateChanged"
+  "pageError": "pageError"
 };
 
 /**
