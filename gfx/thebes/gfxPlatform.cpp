@@ -489,9 +489,22 @@ gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface, const IntSize& aS
 
 cairo_user_data_key_t kSourceSurface;
 
-void SourceBufferDestroy(void *srcBuffer)
+/**
+ * Record the backend that was used to construct the SourceSurface.
+ * When getting the cached SourceSurface for a gfxASurface/DrawTarget pair,
+ * we check to make sure the DrawTarget's backend matches the backend
+ * for the cached SourceSurface, and only use it if they match. This
+ * can avoid expensive and unnecessary readbacks.
+ */
+struct SourceSurfaceUserData
 {
-  static_cast<SourceSurface*>(srcBuffer)->Release();
+  RefPtr<SourceSurface> mSrcSurface;
+  BackendType mBackendType;
+};
+
+void SourceBufferDestroy(void *srcSurfUD)
+{
+  delete static_cast<SourceSurfaceUserData*>(srcSurfUD);
 }
 
 void SourceSnapshotDetached(cairo_surface_t *nullSurf)
@@ -508,10 +521,10 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
   void *userData = aSurface->GetData(&kSourceSurface);
 
   if (userData) {
-    SourceSurface *surf = static_cast<SourceSurface*>(userData);
+    SourceSurfaceUserData *surf = static_cast<SourceSurfaceUserData*>(userData);
 
-    if (surf->IsValid()) {
-      return surf;
+    if (surf->mSrcSurface->IsValid() && surf->mBackendType == aTarget->GetType()) {
+      return surf->mSrcSurface;
     }
     // We can just continue here as when setting new user data the destroy
     // function will be called for the old user data.
@@ -624,7 +637,11 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
   }
 
   srcBuffer->AddRef();
-  aSurface->SetData(&kSourceSurface, srcBuffer, SourceBufferDestroy);
+
+  SourceSurfaceUserData *srcSurfUD = new SourceSurfaceUserData;
+  srcSurfUD->mBackendType = aTarget->GetType();
+  srcSurfUD->mSrcSurface = srcBuffer;
+  aSurface->SetData(&kSourceSurface, srcSurfUD, SourceBufferDestroy);
 
   return srcBuffer;
 }
