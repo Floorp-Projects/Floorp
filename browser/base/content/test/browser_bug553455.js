@@ -336,7 +336,6 @@ function test_restartless() {
       wait_for_notification(function(aPanel) {
         let notification = aPanel.childNodes[0];
         is(notification.id, "addon-install-complete-notification", "Should have seen the install complete");
-        is(notification.button.label, "Open Add-ons Manager", "Should have seen the right button");
         is(notification.getAttribute("label"),
            "XPI Test has been installed successfully.",
            "Should have seen the right message");
