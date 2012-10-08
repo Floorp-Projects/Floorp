@@ -58,7 +58,6 @@ struct RuntimeSizes
       , mathCache(0)
       , scriptFilenames(0)
       , scriptSources(0)
-      , compartmentObjects(0)
     {}
 
     size_t object;
@@ -75,12 +74,6 @@ struct RuntimeSizes
     size_t mathCache;
     size_t scriptFilenames;
     size_t scriptSources;
-
-    // This is the exception to the "RuntimeSizes doesn't measure things within
-    // compartments" rule.  We combine the sizes of all the JSCompartment
-    // objects into a single measurement because each one is fairly small, and
-    // they're all the same size.
-    size_t compartmentObjects;
 };
 
 struct CompartmentStats
@@ -123,7 +116,10 @@ struct CompartmentStats
     size_t scriptData;
     size_t jaegerData;
     size_t ionData;
+    size_t compartmentObject;
     size_t crossCompartmentWrappers;
+    size_t regexpCompartment;
+    size_t debuggeesSet;
 
     TypeInferenceSizes typeInferenceSizes;
 
@@ -159,7 +155,10 @@ struct CompartmentStats
         ADD(scriptData);
         ADD(jaegerData);
         ADD(ionData);
+        ADD(compartmentObject);
         ADD(crossCompartmentWrappers);
+        ADD(regexpCompartment);
+        ADD(debuggeesSet);
 
         #undef ADD
 
