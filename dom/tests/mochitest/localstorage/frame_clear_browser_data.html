@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html>
   <script>
+    dump("\n frame created \n\n");
     addEventListener('message', function(e) {
       if (e.data == 'clear') {
         navigator.mozApps.getSelf().onsuccess = function() {
+          dump("\n clearing browser data \n\n");
           this.result.clearBrowserData();
         };
       }
