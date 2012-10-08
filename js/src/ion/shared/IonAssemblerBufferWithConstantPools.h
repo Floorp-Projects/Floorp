@@ -481,7 +481,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         // Since the last pool is pools[0].other, and the first pool
         // is pools[numPoolKinds-1], we actually want to process this
         // forwards.
-        for (cur = &pools[numPoolKinds-1]; cur >= pools; cur--) {
+        for (cur = pools; cur < &pools[numPoolKinds]; cur++) {
             // fetch the pool for the backwards half.
             tmp = cur->other;
             if (p == cur)
@@ -504,7 +504,6 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             if (p == tmp) {
                 poolOffset += tmp->immSize;
             }
-            poolOffset += tmp->immSize * tmp->numEntries + tmp->getAlignment();
         }
         return p->numEntries + p->other->insertEntry(data, this->nextOffset());
     }
