@@ -70,10 +70,8 @@ sdp_result_e sdp_parse_version (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_version (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
+sdp_result_e sdp_build_version (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
-    char *endbuf_p = *ptr + len;
-
     if (sdp_p->version == SDP_INVALID_VALUE) {
         if (sdp_p->conf_p->version_reqd == TRUE) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -87,7 +85,8 @@ sdp_result_e sdp_build_version (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
             return (SDP_SUCCESS);
         }
     }
-    *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "v=%u\r\n", (u16)sdp_p->version);
+
+    flex_string_sprintf(fs, "v=%u\r\n", (u16)sdp_p->version);
 
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
         SDP_PRINT("%s Built v= version line", sdp_p->debug_str);
@@ -239,10 +238,8 @@ sdp_result_e sdp_parse_owner (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_owner (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
+sdp_result_e sdp_build_owner (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
-    char *endbuf_p = *ptr + len;
-
     if ((sdp_p->owner_name[0] == '\0') ||
         (sdp_p->owner_network_type >= SDP_MAX_NETWORK_TYPES) ||
         (sdp_p->owner_addr_type >= SDP_MAX_ADDR_TYPES) ||
@@ -250,7 +247,7 @@ sdp_result_e sdp_build_owner (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
         
         if((sdp_p->owner_network_type == SDP_NT_ATM) &&
            (sdp_p->owner_addr_type == SDP_AT_INVALID)) {
-          *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "o=%s %s %s %s - -\r\n", 
+          flex_string_sprintf(fs, "o=%s %s %s %s - -\r\n",
                     sdp_p->owner_name, sdp_p->owner_sessid,
                     sdp_p->owner_version, 
                     sdp_get_network_name(sdp_p->owner_network_type));   
@@ -269,7 +266,7 @@ sdp_result_e sdp_build_owner (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
         }
     }
 
-    *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "o=%s %s %s %s %s %s\r\n", 
+    flex_string_sprintf(fs, "o=%s %s %s %s %s %s\r\n",
                     sdp_p->owner_name, sdp_p->owner_sessid,
                     sdp_p->owner_version, 
                     sdp_get_network_name(sdp_p->owner_network_type),
@@ -312,10 +309,8 @@ sdp_result_e sdp_parse_sessname (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_sessname (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
+sdp_result_e sdp_build_sessname (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
-    char *endbuf_p = *ptr + len;
-
     if (sdp_p->sessname[0] == '\0') {
         if (sdp_p->conf_p->session_name_reqd == TRUE) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -330,7 +325,7 @@ sdp_result_e sdp_build_sessname (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
         }
     }
 
-    *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "s=%s\r\n", sdp_p->sessname);
+    flex_string_sprintf(fs, "s=%s\r\n", sdp_p->sessname);
 
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
         SDP_PRINT("%s Built s= session name line", sdp_p->debug_str);
@@ -385,7 +380,7 @@ sdp_result_e sdp_parse_sessinfo (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_sessinfo (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
+sdp_result_e sdp_build_sessinfo (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
     /* Build session info line not supported. */
     return (SDP_SUCCESS);
@@ -417,7 +412,7 @@ sdp_result_e sdp_parse_uri (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_uri (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
+sdp_result_e sdp_build_uri (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
     /* Build URI line not supported. */
     return (SDP_SUCCESS);
@@ -440,7 +435,7 @@ sdp_result_e sdp_parse_email (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_email (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
+sdp_result_e sdp_build_email (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
     /* Build email line not supported. */
     return (SDP_SUCCESS);
@@ -464,7 +459,7 @@ sdp_result_e sdp_parse_phonenum (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_phonenum (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
+sdp_result_e sdp_build_phonenum (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
     /* Build phone number line not supported. */
     return (SDP_SUCCESS);
@@ -692,12 +687,10 @@ sdp_result_e sdp_parse_connection (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_connection (sdp_t *sdp_p, u16 level, char **ptr, 
-                                   u16 len)
+sdp_result_e sdp_build_connection (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
     sdp_mca_t  *mca_p;
     sdp_conn_t *conn_p;
-    char *endbuf_p = *ptr + len;
 
     if (level == SDP_SESSION_LEVEL) {
         conn_p = &(sdp_p->default_conn);
@@ -713,7 +706,7 @@ sdp_result_e sdp_build_connection (sdp_t *sdp_p, u16 level, char **ptr,
        (conn_p->addrtype == SDP_AT_INVALID)) {
         /*allow c= line to be built without address type and address fields
          * This is a special case for ATM PVC*/
-        *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "c=%s\r\n", 
+        flex_string_sprintf(fs, "c=%s\r\n",
                     sdp_get_network_name(conn_p->nettype));
         return SDP_SUCCESS;
     } 
@@ -726,20 +719,20 @@ sdp_result_e sdp_build_connection (sdp_t *sdp_p, u16 level, char **ptr,
     
     if (conn_p->is_multicast) {
         if (conn_p->num_of_addresses > 1) {
-            *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "c=%s %s %s/%d/%d\r\n", 
+            flex_string_sprintf(fs, "c=%s %s %s/%d/%d\r\n",
                              sdp_get_network_name(conn_p->nettype),
                              sdp_get_address_name(conn_p->addrtype),
                              conn_p->conn_addr, conn_p->ttl, 
                              conn_p->num_of_addresses);
         } else {
-            *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "c=%s %s %s/%d\r\n", 
+            flex_string_sprintf(fs, "c=%s %s %s/%d\r\n",
                              sdp_get_network_name(conn_p->nettype),
                              sdp_get_address_name(conn_p->addrtype),
                              conn_p->conn_addr, conn_p->ttl);
         }
     } else {
 
-        *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "c=%s %s %s\r\n", 
+        flex_string_sprintf(fs, "c=%s %s %s\r\n",
                          sdp_get_network_name(conn_p->nettype),
                          sdp_get_address_name(conn_p->addrtype),
                          conn_p->conn_addr);
@@ -877,12 +870,11 @@ sdp_result_e sdp_parse_bandwidth (sdp_t *sdp_p, u16 level, const char *ptr)
  *
  * Builds *all* the bandwith lines for the specified level.
  */
-sdp_result_e sdp_build_bandwidth (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
+sdp_result_e sdp_build_bandwidth (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
     sdp_bw_t            *bw_p;
     sdp_bw_data_t       *bw_data_p;
     sdp_mca_t           *mca_p;
-    char                *endbuf_p;
 
     if (level == SDP_SESSION_LEVEL) {
         bw_p = &(sdp_p->bw);
@@ -894,12 +886,9 @@ sdp_result_e sdp_build_bandwidth (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
         bw_p = &(mca_p->bw);
     }
 
-    /* Find ptr to the end of the buf for recalculating len remaining. */
-    endbuf_p = *ptr + len;
-
     bw_data_p = bw_p->bw_data_list;
     while (bw_data_p) {
-        *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "b=%s:%d\r\n", 
+        flex_string_sprintf(fs, "b=%s:%d\r\n",
                          sdp_get_bw_modifier_name(bw_data_p->bw_modifier),
                          bw_data_p->bw_val);
 
@@ -982,10 +971,8 @@ sdp_result_e sdp_parse_timespec (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_timespec (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
+sdp_result_e sdp_build_timespec (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
-    char *endbuf_p = *ptr + len;
-
     if ((sdp_p->timespec_p == NULL) ||
         (sdp_p->timespec_p->start_time == '\0') ||
         (sdp_p->timespec_p->stop_time == '\0')) {
@@ -1003,7 +990,7 @@ sdp_result_e sdp_build_timespec (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
     }
 
     /* Note: We only support one t= line currently. */
-    *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "t=%s %s\r\n", sdp_p->timespec_p->start_time,
+    flex_string_sprintf(fs, "t=%s %s\r\n", sdp_p->timespec_p->start_time,
                     sdp_p->timespec_p->stop_time);
 
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
@@ -1030,7 +1017,7 @@ sdp_result_e sdp_parse_repeat_time (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_repeat_time (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
+sdp_result_e sdp_build_repeat_time (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
     /* Build repeat time line not supported. */
     return (SDP_SUCCESS);
@@ -1054,8 +1041,7 @@ sdp_result_e sdp_parse_timezone_adj (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_timezone_adj (sdp_t *sdp_p, u16 level, char **ptr, 
-                                     u16 len)
+sdp_result_e sdp_build_timezone_adj (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
     /* Build timezone adjustment line not supported. */
     return (SDP_SUCCESS);
@@ -1136,15 +1122,10 @@ sdp_result_e sdp_parse_encryption (sdp_t *sdp_p, u16 level, const char *ptr)
 }
 
 /* If the encryption info is valid, we build it.  Else skip it. */
-sdp_result_e sdp_build_encryption (sdp_t *sdp_p, u16 level, char **ptr, 
-                                   u16 len)
+sdp_result_e sdp_build_encryption (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
     sdp_encryptspec_t   *encrypt_p;
     sdp_mca_t           *mca_p;
-    char                *endbuf_p;
-
-    /* Find ptr to the end of the buf for recalculating len remaining. */
-    endbuf_p = *ptr + len;
 
     if (level == SDP_SESSION_LEVEL) {
         encrypt_p = &(sdp_p->encrypt);
@@ -1163,14 +1144,14 @@ sdp_result_e sdp_build_encryption (sdp_t *sdp_p, u16 level, char **ptr,
         return (SDP_SUCCESS);
     }
 
-    *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "k=%s", 
+    flex_string_sprintf(fs, "k=%s",
                      sdp_get_encrypt_name(encrypt_p->encrypt_type));
 
     if (encrypt_p->encrypt_type == SDP_ENCRYPT_PROMPT) {
         /* There is no key to print. */
-        *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "\r\n");
+        flex_string_sprintf(fs, "\r\n");
     } else {
-        *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), ":%s\r\n", encrypt_p->encrypt_key);
+        flex_string_sprintf(fs, ":%s\r\n", encrypt_p->encrypt_key);
     }
 
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
@@ -1539,16 +1520,12 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_media (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
+sdp_result_e sdp_build_media (sdp_t *sdp_p, u16 level, flex_string *fs)
 {
     int                   i, j;
     sdp_mca_t            *mca_p;
     tinybool              invalid_params=FALSE;
     sdp_media_profiles_t *profile_p;
-    char                 *endbuf_p;
-
-    /* Find ptr to the end of the buf for recalculating len remaining. */
-    endbuf_p = *ptr + len;
 
     /* Find the right media line */
     mca_p = sdp_find_media_level(sdp_p, level);
@@ -1573,30 +1550,30 @@ sdp_result_e sdp_build_media (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
     }
 
     /* Build the media type */
-    *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "m=%s ", sdp_get_media_name(mca_p->media));
+    flex_string_sprintf(fs, "m=%s ", sdp_get_media_name(mca_p->media));
 
     /* Build the port based on the specified port format */
     if (mca_p->port_format == SDP_PORT_NUM_ONLY) {
         if (mca_p->port == SDP_CHOOSE_PARAM) {
-            *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "$ ");
+            flex_string_sprintf(fs, "$ ");
         } else {
-            *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "%u ", (u16)mca_p->port);
+            flex_string_sprintf(fs, "%u ", (u16)mca_p->port);
         }
     } else if (mca_p->port_format == SDP_PORT_NUM_COUNT) {
-        *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "%u/%u ", (u16)mca_p->port, 
+        flex_string_sprintf(fs, "%u/%u ", (u16)mca_p->port,
                         (u16)mca_p->num_ports);
     } else if (mca_p->port_format == SDP_PORT_VPI_VCI) {
-        *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "%u/%u ", 
+        flex_string_sprintf(fs, "%u/%u ",
                          (u16)mca_p->vpi, (u16)mca_p->vci);
     } else if (mca_p->port_format == SDP_PORT_VCCI) {
-        *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "%u ", (u16)mca_p->vcci);
+        flex_string_sprintf(fs, "%u ", (u16)mca_p->vcci);
     } else if (mca_p->port_format == SDP_PORT_NUM_VPI_VCI) {
-        *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "%u/%u/%u ", (u16)mca_p->port, 
+        flex_string_sprintf(fs, "%u/%u/%u ", (u16)mca_p->port,
                          (u16)mca_p->vpi, (u16)mca_p->vci);
     } else if (mca_p->port_format == SDP_PORT_VCCI_CID) {
         if ((mca_p->vcci == SDP_CHOOSE_PARAM) &&
             (mca_p->cid == SDP_CHOOSE_PARAM)) {
-            *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "$/$ ");
+            flex_string_sprintf(fs, "$/$ ");
         } else if ((mca_p->vcci == SDP_CHOOSE_PARAM) ||
                    (mca_p->cid == SDP_CHOOSE_PARAM)) {
             /* If one is set but not the other, this is an error. */
@@ -1607,11 +1584,11 @@ sdp_result_e sdp_build_media (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
             sdp_p->conf_p->num_invalid_param++;
             return (SDP_INVALID_PARAMETER);
         } else {
-            *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "%u/%u ", 
+            flex_string_sprintf(fs, "%u/%u ",
                              (u16)mca_p->vcci, (u16)mca_p->cid);
         }
     } else if (mca_p->port_format == SDP_PORT_NUM_VPI_VCI_CID) {
-        *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "%u/%u/%u/%u ", (u16)mca_p->port, 
+        flex_string_sprintf(fs, "%u/%u/%u/%u ", (u16)mca_p->port, 
                         (u16)mca_p->vpi, (u16)mca_p->vci, (u16)mca_p->cid);
     }
 
@@ -1621,16 +1598,16 @@ sdp_result_e sdp_build_media (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
         (mca_p->transport == SDP_TRANSPORT_AAL2_CUSTOM)) {
         profile_p = mca_p->media_profiles_p;
         for (i=0; i < profile_p->num_profiles; i++) {
-            *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "%s",
+            flex_string_sprintf(fs, "%s",
                              sdp_get_transport_name(profile_p->profile[i]));
 
             for (j=0; j < profile_p->num_payloads[i]; j++) {
-                *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), " %u", 
+                flex_string_sprintf(fs, " %u",
                                  profile_p->payload_type[i][j]);
             }
-            *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), " "); 
+            flex_string_sprintf(fs, " ");
         }
-        *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "\n");
+        flex_string_sprintf(fs, "\n");
         if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
             SDP_PRINT("%s Built m= media line", sdp_p->debug_str);
         }
@@ -1638,7 +1615,7 @@ sdp_result_e sdp_build_media (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
     }
 
     /* Build the transport name */
-    *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "%s", 
+    flex_string_sprintf(fs, "%s",
                      sdp_get_transport_name(mca_p->transport));
 
     if(mca_p->transport != SDP_TRANSPORT_SCTPDTLS) {
@@ -1646,18 +1623,18 @@ sdp_result_e sdp_build_media (sdp_t *sdp_p, u16 level, char **ptr, u16 len)
         /* Build the format lists */
         for (i=0; i < mca_p->num_payloads; i++) {
             if (mca_p->payload_indicator[i] == SDP_PAYLOAD_ENUM) {
-                *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), " %s",
+                flex_string_sprintf(fs, " %s",
                                  sdp_get_payload_name((sdp_payload_e)mca_p->payload_type[i]));
             } else {
-                *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), " %u", mca_p->payload_type[i]);
+                flex_string_sprintf(fs, " %u", mca_p->payload_type[i]);
             }
         }
     } else {
         /* Add port to SDP if transport is SCTP/DTLS */
-    	*ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), " %u ", (u32)mca_p->sctpport);
+    	flex_string_sprintf(fs, " %u ", (u32)mca_p->sctpport);
     }
 
-    *ptr += snprintf(*ptr, MAX((endbuf_p - *ptr), 0), "\r\n");
+    flex_string_sprintf(fs, "\r\n");
 
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
         SDP_PRINT("%s Built m= media line", sdp_p->debug_str);
