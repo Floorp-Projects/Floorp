@@ -342,11 +342,11 @@ Range::subTruncate(const Range *lhs, const Range *rhs)
 Range
 Range::and_(const Range *lhs, const Range *rhs)
 {
-    uint64_t lower = 0;
+    int64_t lower = 0;
     // If both numbers can be negative, issues can be had.
     if (lhs->lower_ < 0 && rhs->lower_ < 0)
         lower = INT_MIN;
-    uint64_t upper = lhs->upper_;
+    int64_t upper = lhs->upper_;
     if (rhs->upper_ < lhs->upper_)
         upper = rhs->upper_;
     Range ret(lower, upper);
