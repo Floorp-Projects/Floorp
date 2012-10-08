@@ -1826,7 +1826,7 @@ nsHTMLFramesetBlankFrame::List(FILE*    out,
                                int32_t  aIndent,
                                uint32_t aFlags) const
 {
-  for (int32_t i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
+  IndentBy(out, aIndent);
   fprintf(out, "%p BLANK \n", (void*)this);
   return nsLeafFrame::List(out, aIndent, aFlags);
 }
