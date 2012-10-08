@@ -129,6 +129,8 @@ LayoutView.prototype = {
     this.iframe.removeEventListener("keypress", this.bound_handleKeypress, true);
     this.inspector.chromeWindow.removeEventListener("message", this.onMessage, true);
     this.close();
+    this.sizeHeadingLabel = null;
+    this.sizeLabel = null;
     this.iframe = null;
     this.view.parentNode.removeChild(this.view);
   },
@@ -158,6 +160,10 @@ LayoutView.prototype = {
   onDocumentReady: function LV_onDocumentReady() {
     this.documentReady = true;
     this.doc = this.iframe.contentDocument;
+
+    // Save reference to the labels displaying size of the node.
+    this.sizeLabel = this.doc.querySelector(".size > span");
+    this.sizeHeadingLabel = this.doc.getElementById("element-size");
 
     // We can't do that earlier because open() and close() need to do stuff
     // inside the iframe.
@@ -299,10 +305,9 @@ LayoutView.prototype = {
     let width = Math.round(clientRect.width);
     let height = Math.round(clientRect.height);
 
-    let elt = this.doc.querySelector("#element-size");
     let newLabel = width + "x" + height;
-    if (elt.textContent != newLabel) {
-      elt.textContent = newLabel;
+    if (this.sizeHeadingLabel.textContent != newLabel) {
+      this.sizeHeadingLabel.textContent = newLabel;
     }
 
     // If the view is closed, no need to do anything more.
@@ -312,7 +317,6 @@ LayoutView.prototype = {
     let style = this.browser.contentWindow.getComputedStyle(node);;
 
     for (let i in this.map) {
-      let selector = this.map[i].selector;
       let property = this.map[i].property;
       this.map[i].value = parseInt(style.getPropertyValue(property));
     }
@@ -326,6 +330,10 @@ LayoutView.prototype = {
     for (let i in this.map) {
       let selector = this.map[i].selector;
       let span = this.doc.querySelector(selector);
+      if (span.textContent.length > 0 &&
+          span.textContent == this.map[i].value) {
+        continue;
+      }
       span.textContent = this.map[i].value;
     }
 
@@ -335,7 +343,10 @@ LayoutView.prototype = {
     height -= this.map.borderTop.value + this.map.borderBottom.value +
               this.map.paddingTop.value + this.map.paddingBottom.value;
 
-    this.doc.querySelector(".size > span").textContent = width + "x" + height;
+    let newValue = width + "x" + height;
+    if (this.sizeLabel.textContent != newValue) {
+      this.sizeLabel.textContent = newValue;
+    }
   },
 
   /**

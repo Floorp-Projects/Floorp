@@ -80,6 +80,6 @@ function performTest(HUD) {
 }
 
 function getExpectedClipboardText(aItem) {
-  return "[" + WebConsoleUtils.l10n.timestampString(aItem.timestamp) + "] " +
+  return "[" + WCU_l10n.timestampString(aItem.timestamp) + "] " +
          aItem.clipboardText;
 }
