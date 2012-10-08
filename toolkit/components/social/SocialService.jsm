@@ -202,13 +202,14 @@ SocialProvider.prototype = {
   workerAPI: null,
 
   // Contains information related to the user's profile. Populated by the
-  // workerAPI via updateUserProfile. Null if the provider has no FrameWorker.
+  // workerAPI via updateUserProfile.
   // Properties:
   //   iconURL, portrait, userName, displayName, profileURL
   // See https://github.com/mozilla/socialapi-dev/blob/develop/docs/socialAPI.md
   // A value of null or an empty object means 'user not logged in'.
-  // A value of undefined means the service has not told us the status of the
-  // profile, but is expected to soon (ie, the service is still loading/initing)
+  // A value of undefined means the service has not yet told us the status of
+  // the profile (ie, the service is still loading/initing, or the provider has
+  // no FrameWorker)
   // This distinction might be used to cache certain data between runs - eg,
   // browser-social.js caches the notification icons so they can be displayed
   // quickly at startup without waiting for the provider to initialize -
