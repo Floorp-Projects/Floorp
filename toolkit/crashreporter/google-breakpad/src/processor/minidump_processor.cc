@@ -484,26 +484,61 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
             case MD_EXCEPTION_CODE_MAC_MEMORY_ERROR:
               reason.append("KERN_MEMORY_ERROR");
               break;
-            // These are ppc only but shouldn't be a problem as they're
-            // unused on x86
-            case MD_EXCEPTION_CODE_MAC_PPC_VM_PROT_READ:
-              reason.append("EXC_PPC_VM_PROT_READ");
-              break;
-            case MD_EXCEPTION_CODE_MAC_PPC_BADSPACE:
-              reason.append("EXC_PPC_BADSPACE");
-              break;
-            case MD_EXCEPTION_CODE_MAC_PPC_UNALIGNED:
-              reason.append("EXC_PPC_UNALIGNED");
-              break;
             default:
-              reason.append(flags_string);
-              BPLOG(INFO) << "Unknown exception reason " << reason;
+              // arm and ppc overlap
+              if (raw_system_info->processor_architecture ==
+                  MD_CPU_ARCHITECTURE_ARM) {
+                switch (exception_flags) {
+                  case MD_EXCEPTION_CODE_MAC_ARM_DA_ALIGN:
+                    reason.append("EXC_ARM_DA_ALIGN");
+                    break;
+                  case MD_EXCEPTION_CODE_MAC_ARM_DA_DEBUG:
+                    reason.append("EXC_ARM_DA_DEBUG");
+                    break;
+                  default:
+                    reason.append(flags_string);
+                    BPLOG(INFO) << "Unknown exception reason " << reason;
+                    break;
+                }
+              } else if (raw_system_info->processor_architecture ==
+                         MD_CPU_ARCHITECTURE_PPC) {
+                switch (exception_flags) {
+                  case MD_EXCEPTION_CODE_MAC_PPC_VM_PROT_READ:
+                    reason.append("EXC_PPC_VM_PROT_READ");
+                    break;
+                  case MD_EXCEPTION_CODE_MAC_PPC_BADSPACE:
+                    reason.append("EXC_PPC_BADSPACE");
+                    break;
+                  case MD_EXCEPTION_CODE_MAC_PPC_UNALIGNED:
+                    reason.append("EXC_PPC_UNALIGNED");
+                    break;
+                  default:
+                    reason.append(flags_string);
+                    BPLOG(INFO) << "Unknown exception reason " << reason;
+                    break;
+                }
+              } else {
+                reason.append(flags_string);
+                BPLOG(INFO) << "Unknown exception reason " << reason;
+              }
               break;
           }
           break;
         case MD_EXCEPTION_MAC_BAD_INSTRUCTION:
           reason = "EXC_BAD_INSTRUCTION / ";
           switch (raw_system_info->processor_architecture) {
+            case MD_CPU_ARCHITECTURE_ARM: {
+              switch (exception_flags) {
+                case MD_EXCEPTION_CODE_MAC_ARM_UNDEFINED:
+                  reason.append("EXC_ARM_UNDEFINED");
+                  break;
+                default:
+                  reason.append(flags_string);
+                  BPLOG(INFO) << "Unknown exception reason " << reason;
+                  break;
+              }
+              break;
+            }
             case MD_CPU_ARCHITECTURE_PPC: {
               switch (exception_flags) {
                 case MD_EXCEPTION_CODE_MAC_PPC_INVALID_SYSCALL:
@@ -671,6 +706,24 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
         case MD_EXCEPTION_MAC_BREAKPOINT:
           reason = "EXC_BREAKPOINT / ";
           switch (raw_system_info->processor_architecture) {
+            case MD_CPU_ARCHITECTURE_ARM: {
+              switch (exception_flags) {
+                case MD_EXCEPTION_CODE_MAC_ARM_DA_ALIGN:
+                  reason.append("EXC_ARM_DA_ALIGN");
+                  break;
+                case MD_EXCEPTION_CODE_MAC_ARM_DA_DEBUG:
+                  reason.append("EXC_ARM_DA_DEBUG");
+                  break;
+                case MD_EXCEPTION_CODE_MAC_ARM_BREAKPOINT:
+                  reason.append("EXC_ARM_BREAKPOINT");
+                  break;
+                default:
+                  reason.append(flags_string);
+                  BPLOG(INFO) << "Unknown exception reason " << reason;
+                  break;
+              }
+              break;
+            }
             case MD_CPU_ARCHITECTURE_PPC: {
               switch (exception_flags) {
                 case MD_EXCEPTION_CODE_MAC_PPC_BREAKPOINT:
