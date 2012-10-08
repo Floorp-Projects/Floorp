@@ -42,10 +42,9 @@
       const Cc = Components.classes;
       const Ci = Components.interfaces;
 
-      var pb = Cc["@mozilla.org/privatebrowsing;1"].
-               getService(Ci.nsIPrivateBrowsingService);
+      Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-      if (!pb.privateBrowsingEnabled) {
+      if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
         document.title = "]]>&privatebrowsingpage.title.normal;<![CDATA[";
         setFavIcon("chrome://global/skin/icons/question-16.png");
       } else {
@@ -81,7 +80,7 @@
       }
 
       document.addEventListener("DOMContentLoaded", function () {
-        if (!pb.privateBrowsingEnabled) {
+        if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
           document.body.setAttribute("class", "normal");
         }
 
