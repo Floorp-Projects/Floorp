@@ -117,10 +117,23 @@ SystemMessageInternal.prototype = {
       throw Cr.NS_ERROR_INVALID_ARG;
     }
 
-    this._pages.push({ type: aType,
-                       uri: aPageURI.spec,
-                       manifest: aManifestURI.spec,
-                       pending: [] });
+    let found = false;
+    this._pages.some(function(aPage) {
+      if (aPage.type == aType &&
+          aPage.uri == aPageURI.spec &&
+          aPage.manifest == aManifestURI.spec) {
+        found = true;
+      }
+
+      return found;
+    });
+
+    if (!found) {
+      this._pages.push({ type: aType,
+                         uri: aPageURI.spec,
+                         manifest: aManifestURI.spec,
+                         pending: [] });
+    }
   },
 
   receiveMessage: function receiveMessage(aMessage) {
