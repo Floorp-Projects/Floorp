@@ -32,6 +32,7 @@ try {
 const kMessages =["SystemMessageManager:GetPendingMessages",
                   "SystemMessageManager:Register",
                   "SystemMessageManager:Message:Return:OK",
+                  "SystemMessageManager:AskReadyToRegister",
                   "child-process-shutdown"]
 
 function debug(aMsg) {
@@ -54,6 +55,8 @@ function SystemMessageInternal() {
   kMessages.forEach(function(aMsg) {
     ppmm.addMessageListener(aMsg, this);
   }, this);
+
+  Services.obs.notifyObservers(this, "system-message-internal-ready", null);
 }
 
 SystemMessageInternal.prototype = {
@@ -142,6 +145,9 @@ SystemMessageInternal.prototype = {
   receiveMessage: function receiveMessage(aMessage) {
     let msg = aMessage.json;
     switch(aMessage.name) {
+      case "SystemMessageManager:AskReadyToRegister":
+        return true;
+        break;
       case "SystemMessageManager:Register":
       {
         let manifest = msg.manifest;
