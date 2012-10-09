@@ -723,7 +723,10 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
 NS_IMETHODIMP
 PeerConnectionImpl::AddStream(nsIDOMMediaStream* aMediaStream)
 {
-  MOZ_ASSERT(aMediaStream);
+  if (!aMediaStream) {
+    CSFLogError(logTag, "%s - aMediaStream is NULL", __FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
 
   nsDOMMediaStream* stream = static_cast<nsDOMMediaStream*>(aMediaStream);
 
