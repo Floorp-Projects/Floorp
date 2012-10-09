@@ -1374,10 +1374,10 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
     return NULL;
   }
   /* Check to see whether the interface objects are already installed */
-  JSObject** protoOrIfaceArray = GetProtoOrIfaceArray(aGlobal);
-  JSObject* cachedObject = protoOrIfaceArray[%s];
+  JSObject** protoAndIfaceArray = GetProtoAndIfaceArray(aGlobal);
+  JSObject* cachedObject = protoAndIfaceArray[%s];
   if (!cachedObject) {
-    protoOrIfaceArray[%s] = cachedObject = CreateInterfaceObjects(aCx, aGlobal, aReceiver);
+    protoAndIfaceArray[%s] = cachedObject = CreateInterfaceObjects(aCx, aGlobal, aReceiver);
   }
 
   /* cachedObject might _still_ be null, but that's OK */

@@ -103,7 +103,7 @@ struct DOMJSClass
 };
 
 inline bool
-HasProtoOrIfaceArray(JSObject* global)
+HasProtoAndIfaceArray(JSObject* global)
 {
   MOZ_ASSERT(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL);
   // This can be undefined if we GC while creating the global
@@ -111,7 +111,7 @@ HasProtoOrIfaceArray(JSObject* global)
 }
 
 inline JSObject**
-GetProtoOrIfaceArray(JSObject* global)
+GetProtoAndIfaceArray(JSObject* global)
 {
   MOZ_ASSERT(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL);
   return static_cast<JSObject**>(

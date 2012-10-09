@@ -39,7 +39,7 @@ using namespace mozilla;
 using namespace js;
 using namespace xpc;
 
-using mozilla::dom::DestroyProtoOrIfaceCache;
+using mozilla::dom::DestroyProtoAndIfaceCache;
 
 /***************************************************************************/
 // stuff used by all
@@ -2989,7 +2989,7 @@ sandbox_finalize(JSFreeOp *fop, JSObject *obj)
     nsIScriptObjectPrincipal *sop =
         (nsIScriptObjectPrincipal *)xpc_GetJSPrivate(obj);
     NS_IF_RELEASE(sop);
-    DestroyProtoOrIfaceCache(obj);
+    DestroyProtoAndIfaceCache(obj);
 }
 
 static JSBool
