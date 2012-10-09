@@ -9,18 +9,15 @@ import java.util.List;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.CommandRunner;
-import org.mozilla.gecko.sync.CredentialException;
 import org.mozilla.gecko.sync.GlobalConstants;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.SyncConfiguration;
-import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
-import org.mozilla.gecko.sync.setup.SyncAccounts.SyncAccountParameters;
 import org.mozilla.gecko.sync.stage.SyncClientsEngineStage;
 import org.mozilla.gecko.sync.syncadapter.SyncAdapter;
 
@@ -116,22 +113,12 @@ public class SendTabActivity extends Activity {
       return null;
     }
 
-    SyncAccountParameters params;
-    try {
-      params = SyncAccounts.blockingFromAndroidAccountV0(this, accountManager, localAccount);
-    } catch (CredentialException e) {
-      Logger.warn(LOG_TAG, "Could not get sync account parameters; aborting.");
-      return null;
-    }
-
     SharedPreferences prefs;
     try {
-      final String product = GlobalConstants.BROWSER_INTENT_PACKAGE;
-      final String profile = Constants.DEFAULT_PROFILE;
-      final long version = SyncConfiguration.CURRENT_PREFS_VERSION;
-      prefs = Utils.getSharedPreferences(getApplicationContext(), product, params.username, params.serverURL, profile, version);
+      prefs = SyncAccounts.blockingPrefsFromDefaultProfileV0(this, accountManager, localAccount);
       return prefs.getString(SyncConfiguration.PREF_ACCOUNT_GUID, null);
     } catch (Exception e) {
+      Logger.warn(LOG_TAG, "Could not get Sync account parameters or preferences; aborting.");
       return null;
     }
   }
