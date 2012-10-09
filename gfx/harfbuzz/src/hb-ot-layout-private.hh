@@ -139,9 +139,10 @@ static inline uint8_t allocate_lig_id (hb_buffer_t *buffer) {
 
 HB_INTERNAL hb_bool_t
 hb_ot_layout_would_substitute_lookup_fast (hb_face_t            *face,
+					   unsigned int          lookup_index,
 					   const hb_codepoint_t *glyphs,
 					   unsigned int          glyphs_length,
-					   unsigned int          lookup_index);
+					   hb_bool_t             zero_context);
 
 
 /* Should be called before all the substitute_lookup's are done. */
@@ -184,15 +185,21 @@ hb_ot_layout_position_finish (hb_font_t    *font,
  * hb_ot_layout_t
  */
 
+namespace OT {
+  struct GDEF;
+  struct GSUB;
+  struct GPOS;
+}
+
 struct hb_ot_layout_t
 {
   hb_blob_t *gdef_blob;
   hb_blob_t *gsub_blob;
   hb_blob_t *gpos_blob;
 
-  const struct GDEF *gdef;
-  const struct GSUB *gsub;
-  const struct GPOS *gpos;
+  const struct OT::GDEF *gdef;
+  const struct OT::GSUB *gsub;
+  const struct OT::GPOS *gpos;
 
   unsigned int gsub_lookup_count;
   unsigned int gpos_lookup_count;

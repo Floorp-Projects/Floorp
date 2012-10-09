@@ -34,6 +34,9 @@
 #include "hb-set-private.hh"
 
 
+namespace OT {
+
+
 #define NOT_COVERED		((unsigned int) -1)
 #define MAX_NESTING_LEVEL	8
 
@@ -310,11 +313,29 @@ struct Lookup
     return flag;
   }
 
+  inline bool serialize (hb_serialize_context_t *c,
+			 unsigned int lookup_type,
+			 uint32_t lookup_props,
+			 unsigned int num_subtables)
+  {
+    TRACE_SERIALIZE ();
+    if (unlikely (!c->extend_min (*this))) return TRACE_RETURN (false);
+    lookupType.set (lookup_type);
+    lookupFlag.set (lookup_props & 0xFFFF);
+    if (unlikely (!subTable.serialize (c, num_subtables))) return TRACE_RETURN (false);
+    if (lookupFlag & LookupFlag::UseMarkFilteringSet)
+    {
+      USHORT &markFilteringSet = StructAfter<USHORT> (subTable);
+      markFilteringSet.set (lookup_props >> 16);
+    }
+    return TRACE_RETURN (true);
+  }
+
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
     /* Real sanitize of the subtables is done by GSUB/GPOS/... */
     if (!(c->check_struct (this) && subTable.sanitize (c))) return TRACE_RETURN (false);
-    if (unlikely (lookupFlag & LookupFlag::UseMarkFilteringSet))
+    if (lookupFlag & LookupFlag::UseMarkFilteringSet)
     {
       USHORT &markFilteringSet = StructAfter<USHORT> (subTable);
       if (!markFilteringSet.sanitize (c)) return TRACE_RETURN (false);
@@ -350,6 +371,20 @@ struct CoverageFormat1
     int i = glyphArray.search (glyph_id);
     ASSERT_STATIC (((unsigned int) -1) == NOT_COVERED);
     return i;
+  }
+
+  inline bool serialize (hb_serialize_context_t *c,
+			 Supplier<GlyphID> &glyphs,
+			 unsigned int num_glyphs)
+  {
+    TRACE_SERIALIZE ();
+    if (unlikely (!c->extend_min (*this))) return TRACE_RETURN (false);
+    glyphArray.len.set (num_glyphs);
+    if (unlikely (!c->extend (glyphArray))) return TRACE_RETURN (false);
+    for (unsigned int i = 0; i < num_glyphs; i++)
+      glyphArray[i] = glyphs[i];
+    glyphs.advance (num_glyphs);
+    return TRACE_RETURN (true);
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) {
@@ -401,6 +436,38 @@ struct CoverageFormat2
       return (unsigned int) range.value + (glyph_id - range.start);
     }
     return NOT_COVERED;
+  }
+
+  inline bool serialize (hb_serialize_context_t *c,
+			 Supplier<GlyphID> &glyphs,
+			 unsigned int num_glyphs)
+  {
+    TRACE_SERIALIZE ();
+    if (unlikely (!c->extend_min (*this))) return TRACE_RETURN (false);
+
+    if (unlikely (!num_glyphs)) return TRACE_RETURN (true);
+
+    unsigned int num_ranges = 1;
+    for (unsigned int i = 1; i < num_glyphs; i++)
+      if (glyphs[i - 1] + 1 != glyphs[i])
+        num_ranges++;
+    rangeRecord.len.set (num_ranges);
+    if (unlikely (!c->extend (rangeRecord))) return TRACE_RETURN (false);
+
+    unsigned int range = 0;
+    rangeRecord[range].start = glyphs[0];
+    rangeRecord[range].value.set (0);
+    for (unsigned int i = 1; i < num_glyphs; i++)
+      if (glyphs[i - 1] + 1 != glyphs[i]) {
+	range++;
+	rangeRecord[range].start = glyphs[i];
+	rangeRecord[range].value.set (i);
+        rangeRecord[range].end = glyphs[i];
+      } else {
+        rangeRecord[range].end = glyphs[i];
+      }
+    glyphs.advance (num_glyphs);
+    return TRACE_RETURN (true);
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) {
@@ -476,6 +543,24 @@ struct Coverage
     case 1: return u.format1.get_coverage(glyph_id);
     case 2: return u.format2.get_coverage(glyph_id);
     default:return NOT_COVERED;
+    }
+  }
+
+  inline bool serialize (hb_serialize_context_t *c,
+			 Supplier<GlyphID> &glyphs,
+			 unsigned int num_glyphs)
+  {
+    TRACE_SERIALIZE ();
+    if (unlikely (!c->extend_min (*this))) return TRACE_RETURN (false);
+    unsigned int num_ranges = 1;
+    for (unsigned int i = 1; i < num_glyphs; i++)
+      if (glyphs[i - 1] + 1 != glyphs[i])
+        num_ranges++;
+    u.format.set (num_glyphs * 2 < num_ranges * 3 ? 1 : 2);
+    switch (u.format) {
+    case 1: return TRACE_RETURN (u.format1.serialize (c, glyphs, num_glyphs));
+    case 2: return TRACE_RETURN (u.format2.serialize (c, glyphs, num_glyphs));
+    default:return TRACE_RETURN (false);
     }
   }
 
@@ -762,6 +847,8 @@ struct Device
   DEFINE_SIZE_ARRAY (6, deltaValue);
 };
 
+
+} // namespace OT
 
 
 #endif /* HB_OT_LAYOUT_COMMON_PRIVATE_HH */

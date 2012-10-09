@@ -34,6 +34,8 @@
 #include "hb-blob.h"
 
 
+namespace OT {
+
 
 /*
  * Casts
@@ -325,6 +327,160 @@ struct Sanitizer
 
 
 
+/*
+ * Serialize
+ */
+
+#ifndef HB_DEBUG_SERIALIZE
+#define HB_DEBUG_SERIALIZE (HB_DEBUG+0)
+#endif
+
+
+#define TRACE_SERIALIZE() \
+	hb_auto_trace_t<HB_DEBUG_SERIALIZE> trace (&c->debug_depth, "SERIALIZE", c, HB_FUNC, "");
+
+
+struct hb_serialize_context_t
+{
+  inline hb_serialize_context_t (void *start, unsigned int size)
+  {
+    this->start = (char *) start;
+    this->end = this->start + size;
+
+    this->ran_out_of_room = false;
+    this->head = this->start;
+    this->debug_depth = 0;
+  }
+
+  template <typename Type>
+  inline Type *start_serialize (void)
+  {
+    DEBUG_MSG_LEVEL (SERIALIZE, this->start, 0, +1,
+		     "start [%p..%p] (%lu bytes)",
+		     this->start, this->end,
+		     (unsigned long) (this->end - this->start));
+
+    return start_embed<Type> ();
+  }
+
+  inline void end_serialize (void)
+  {
+    DEBUG_MSG_LEVEL (SERIALIZE, this->start, 0, -1,
+		     "end [%p..%p] serialized %d bytes; %s",
+		     this->start, this->end,
+		     (int) (this->head - this->start),
+		     this->ran_out_of_room ? "RAN OUT OF ROOM" : "did not ran out of room");
+
+  }
+
+  template <typename Type>
+  inline Type *copy (void)
+  {
+    assert (!this->ran_out_of_room);
+    unsigned int len = this->head - this->start;
+    void *p = malloc (len);
+    if (p)
+      memcpy (p, this->start, len);
+    return reinterpret_cast<Type *> (p);
+  }
+
+  template <typename Type>
+  inline Type *allocate_size (unsigned int size)
+  {
+    if (unlikely (this->ran_out_of_room || this->end - this->head < size)) {
+      this->ran_out_of_room = true;
+      return NULL;
+    }
+    memset (this->head, 0, size);
+    char *ret = this->head;
+    this->head += size;
+    return reinterpret_cast<Type *> (ret);
+  }
+
+  template <typename Type>
+  inline Type *allocate_min (void)
+  {
+    return this->allocate_size<Type> (Type::min_size);
+  }
+
+  template <typename Type>
+  inline Type *start_embed (void)
+  {
+    Type *ret = reinterpret_cast<Type *> (this->head);
+    return ret;
+  }
+
+  template <typename Type>
+  inline Type *embed (const Type &obj)
+  {
+    unsigned int size = obj.get_size ();
+    Type *ret = this->allocate_size<Type> (size);
+    if (unlikely (!ret)) return NULL;
+    memcpy (ret, obj, size);
+    return ret;
+  }
+
+  template <typename Type>
+  inline Type *extend_min (Type &obj)
+  {
+    unsigned int size = obj.min_size;
+    assert (this->start <= (char *) &obj && (char *) &obj <= this->head && (char *) &obj + size >= this->head);
+    if (unlikely (!this->allocate_size<Type> (((char *) &obj) + size - this->head))) return NULL;
+    return reinterpret_cast<Type *> (&obj);
+  }
+
+  template <typename Type>
+  inline Type *extend (Type &obj)
+  {
+    unsigned int size = obj.get_size ();
+    assert (this->start < (char *) &obj && (char *) &obj <= this->head && (char *) &obj + size >= this->head);
+    if (unlikely (!this->allocate_size<Type> (((char *) &obj) + size - this->head))) return NULL;
+    return reinterpret_cast<Type *> (&obj);
+  }
+
+  inline void truncate (void *head)
+  {
+    assert (this->start < head && head <= this->head);
+    this->head = (char *) head;
+  }
+
+  unsigned int debug_depth;
+  char *start, *end, *head;
+  bool ran_out_of_room;
+};
+
+template <typename Type>
+struct Supplier
+{
+  inline Supplier (const Type *array, unsigned int len_)
+  {
+    head = array;
+    len = len_;
+  }
+  inline const Type operator [] (unsigned int i) const
+  {
+    if (unlikely (i >= len)) return Type ();
+    return head[i];
+  }
+
+  inline void advance (unsigned int count)
+  {
+    if (unlikely (count > len))
+      count = len;
+    len -= count;
+    head += count;
+  }
+
+  private:
+  inline Supplier (const Supplier<Type> &); /* Disallow copy */
+  inline Supplier<Type>& operator= (const Supplier<Type> &); /* Disallow copy */
+
+  unsigned int len;
+  const Type *head;
+};
+
+
+
 
 /*
  *
@@ -371,6 +527,8 @@ struct IntType
   inline operator Type(void) const { return v; }
   inline bool operator == (const IntType<Type> &o) const { return v == o.v; }
   inline bool operator != (const IntType<Type> &o) const { return v != o.v; }
+  static inline int cmp (const IntType<Type> *a, const IntType<Type> *b) { return b->cmp (*a); }
+  inline int cmp (IntType<Type> va) const { Type a = va; Type b = v; return a < b ? -1 : a == b ? 0 : +1; }
   inline int cmp (Type a) const { Type b = v; return a < b ? -1 : a == b ? 0 : +1; }
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
@@ -382,11 +540,6 @@ struct IntType
   DEFINE_SIZE_STATIC (sizeof (Type));
 };
 
-/* Typedef these to avoid clash with windows.h */
-#define USHORT	HB_USHORT
-#define SHORT	HB_SHORT
-#define ULONG	HB_ULONG
-#define LONG	HB_LONG
 typedef IntType<uint16_t> USHORT;	/* 16-bit unsigned integer. */
 typedef IntType<int16_t>  SHORT;	/* 16-bit signed integer. */
 typedef IntType<uint32_t> ULONG;	/* 32-bit unsigned integer. */
@@ -493,6 +646,18 @@ struct GenericOffsetTo : OffsetType
     if (unlikely (!offset)) return Null(Type);
     return StructAtOffset<Type> (base, offset);
   }
+  inline Type& operator () (void *base)
+  {
+    unsigned int offset = *this;
+    return StructAtOffset<Type> (base, offset);
+  }
+
+  inline Type& serialize (hb_serialize_context_t *c, void *base)
+  {
+    Type *t = c->start_embed<Type> ();
+    this->set ((char *) t - (char *) base); /* TODO(serialize) Overflow? */
+    return *t;
+  }
 
   inline bool sanitize (hb_sanitize_context_t *c, void *base) {
     TRACE_SANITIZE ();
@@ -523,7 +688,9 @@ struct GenericOffsetTo : OffsetType
   }
 };
 template <typename Base, typename OffsetType, typename Type>
-inline const Type& operator + (const Base &base, GenericOffsetTo<OffsetType, Type> offset) { return offset (base); }
+inline const Type& operator + (const Base &base, const GenericOffsetTo<OffsetType, Type> &offset) { return offset (base); }
+template <typename Base, typename OffsetType, typename Type>
+inline Type& operator + (Base &base, GenericOffsetTo<OffsetType, Type> &offset) { return offset (base); }
 
 template <typename Type>
 struct OffsetTo : GenericOffsetTo<Offset, Type> {};
@@ -556,8 +723,34 @@ struct GenericArrayOf
     if (unlikely (i >= len)) return Null(Type);
     return array[i];
   }
+  inline Type& operator [] (unsigned int i)
+  {
+    return array[i];
+  }
   inline unsigned int get_size (void) const
   { return len.static_size + len * Type::static_size; }
+
+  inline bool serialize (hb_serialize_context_t *c,
+			 unsigned int items_len)
+  {
+    TRACE_SERIALIZE ();
+    if (unlikely (!c->extend_min (*this))) return TRACE_RETURN (false);
+    len.set (items_len); /* TODO(serialize) Overflow? */
+    if (unlikely (!c->extend (*this))) return TRACE_RETURN (false);
+    return TRACE_RETURN (true);
+  }
+
+  inline bool serialize (hb_serialize_context_t *c,
+			 Supplier<Type> &items,
+			 unsigned int items_len)
+  {
+    TRACE_SERIALIZE ();
+    if (unlikely (!serialize (c, items_len))) return TRACE_RETURN (false);
+    for (unsigned int i = 0; i < items_len; i++)
+      array[i] = items[i];
+    items.advance (items_len);
+    return TRACE_RETURN (true);
+  }
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
@@ -662,6 +855,21 @@ struct HeadlessArrayOf
   inline unsigned int get_size (void) const
   { return len.static_size + (len ? len - 1 : 0) * Type::static_size; }
 
+  inline bool serialize (hb_serialize_context_t *c,
+			 Supplier<Type> &items,
+			 unsigned int items_len)
+  {
+    TRACE_SERIALIZE ();
+    if (unlikely (!c->extend_min (*this))) return TRACE_RETURN (false);
+    len.set (items_len); /* TODO(serialize) Overflow? */
+    if (unlikely (!items_len)) return TRACE_RETURN (true);
+    if (unlikely (!c->extend (*this))) return TRACE_RETURN (false);
+    for (unsigned int i = 0; i < items_len - 1; i++)
+      array[i] = items[i];
+    items.advance (items_len - 1);
+    return TRACE_RETURN (true);
+  }
+
   inline bool sanitize_shallow (hb_sanitize_context_t *c) {
     return c->check_struct (this)
 	&& c->check_array (this, Type::static_size, len);
@@ -713,6 +921,8 @@ struct SortedArrayOf : ArrayOf<Type> {
   }
 };
 
+
+} // namespace OT
 
 
 #endif /* HB_OPEN_TYPE_PRIVATE_HH */

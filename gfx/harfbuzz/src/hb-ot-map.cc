@@ -60,7 +60,7 @@ hb_ot_map_t::add_lookups (hb_face_t    *face,
 }
 
 
-void hb_ot_map_builder_t::add_feature (hb_tag_t tag, unsigned int value, bool global)
+void hb_ot_map_builder_t::add_feature (hb_tag_t tag, unsigned int value, bool global, bool has_fallback)
 {
   feature_info_t *info = feature_infos.push();
   if (unlikely (!info)) return;
@@ -68,6 +68,7 @@ void hb_ot_map_builder_t::add_feature (hb_tag_t tag, unsigned int value, bool gl
   info->seq = feature_infos.len;
   info->max_value = value;
   info->global = global;
+  info->has_fallback = has_fallback;
   info->default_value = global ? value : 0;
   info->stage[0] = current_stage[0];
   info->stage[1] = current_stage[1];
@@ -116,16 +117,8 @@ void hb_ot_map_t::position (const hb_ot_shape_plan_t *plan, hb_font_t *font, hb_
 void hb_ot_map_t::substitute_closure (const hb_ot_shape_plan_t *plan, hb_face_t *face, hb_set_t *glyphs) const
 {
   unsigned int table_index = 0;
-  unsigned int i = 0;
-
-  for (unsigned int pause_index = 0; pause_index < pauses[table_index].len; pause_index++) {
-    const pause_map_t *pause = &pauses[table_index][pause_index];
-    for (; i < pause->num_lookups; i++)
-      hb_ot_layout_substitute_closure_lookup (face, glyphs, lookups[table_index][i].index);
-  }
-
-  for (; i < lookups[table_index].len; i++)
-    hb_ot_layout_substitute_closure_lookup (face, glyphs, lookups[table_index][i].index);
+  for (unsigned int i = 0; i < lookups[table_index].len; i++)
+    hb_ot_layout_substitute_closure_lookup (face, lookups[table_index][i].index, glyphs);
 }
 
 void hb_ot_map_builder_t::add_pause (unsigned int table_index, hb_ot_map_t::pause_func_t pause_func)
@@ -183,6 +176,7 @@ hb_ot_map_builder_t::compile (hb_face_t *face,
 	  feature_infos[j].global = false;
 	  feature_infos[j].max_value = MAX (feature_infos[j].max_value, feature_infos[i].max_value);
 	}
+	feature_infos[j].has_fallback = feature_infos[j].has_fallback || feature_infos[i].has_fallback;
 	feature_infos[j].stage[0] = MIN (feature_infos[j].stage[0], feature_infos[i].stage[0]);
 	feature_infos[j].stage[1] = MIN (feature_infos[j].stage[1], feature_infos[i].stage[1]);
 	/* Inherit default_value from j */
@@ -217,7 +211,7 @@ hb_ot_map_builder_t::compile (hb_face_t *face,
 						   language_index[table_index],
 						   info->tag,
 						   &feature_index[table_index]);
-    if (!found)
+    if (!found && !info->has_fallback)
       continue;
 
 
@@ -242,6 +236,7 @@ hb_ot_map_builder_t::compile (hb_face_t *face,
 	m.global_mask |= (info->default_value << map->shift) & map->mask;
     }
     map->_1_mask = (1 << map->shift) & map->mask;
+    map->needs_fallback = !found;
 
   }
   feature_infos.shrink (0); /* Done with these */

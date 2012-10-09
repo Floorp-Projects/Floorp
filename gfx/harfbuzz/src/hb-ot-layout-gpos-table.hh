@@ -32,6 +32,8 @@
 #include "hb-ot-layout-gsubgpos-private.hh"
 
 
+namespace OT {
+
 
 /* buffer **position** var allocations */
 #define attach_lookback() var.u16[0] /* number of glyphs to go back to attach this glyph to its base */
@@ -1529,11 +1531,11 @@ struct PosLookup : Lookup
     return false;
   }
 
-  inline bool apply_string (hb_apply_context_t *c) const
+  inline bool apply_string (hb_apply_context_t *c, const hb_set_digest_t *digest) const
   {
     bool ret = false;
 
-    if (unlikely (!c->buffer->len))
+    if (unlikely (!c->buffer->len || !c->lookup_mask))
       return false;
 
     c->set_lookup (*this);
@@ -1543,7 +1545,7 @@ struct PosLookup : Lookup
     while (c->buffer->idx < c->buffer->len)
     {
       if ((c->buffer->cur().mask & c->lookup_mask) &&
-	  c->digest.may_have (c->buffer->cur().codepoint) &&
+	  digest->may_have (c->buffer->cur().codepoint) &&
 	  apply_once (c))
 	ret = true;
       else
@@ -1578,9 +1580,6 @@ struct GPOS : GSUBGPOS
   inline void add_coverage (set_t *glyphs, unsigned int lookup_index) const
   { get_lookup (lookup_index).add_coverage (glyphs); }
 
-  inline bool position_lookup (hb_apply_context_t *c, unsigned int lookup_index) const
-  { return get_lookup (lookup_index).apply_string (c); }
-
   static inline void position_start (hb_font_t *font, hb_buffer_t *buffer);
   static inline void position_finish (hb_font_t *font, hb_buffer_t *buffer, hb_bool_t zero_width_attahced_marks);
 
@@ -1598,20 +1597,20 @@ struct GPOS : GSUBGPOS
 static void
 fix_cursive_minor_offset (hb_glyph_position_t *pos, unsigned int i, hb_direction_t direction)
 {
-    unsigned int j = pos[i].cursive_chain();
-    if (likely (!j))
-      return;
+  unsigned int j = pos[i].cursive_chain();
+  if (likely (!j))
+    return;
 
-    j += i;
+  j += i;
 
-    pos[i].cursive_chain() = 0;
+  pos[i].cursive_chain() = 0;
 
-    fix_cursive_minor_offset (pos, j, direction);
+  fix_cursive_minor_offset (pos, j, direction);
 
-    if (HB_DIRECTION_IS_HORIZONTAL (direction))
-      pos[i].y_offset += pos[j].y_offset;
-    else
-      pos[i].x_offset += pos[j].x_offset;
+  if (HB_DIRECTION_IS_HORIZONTAL (direction))
+    pos[i].y_offset += pos[j].y_offset;
+  else
+    pos[i].x_offset += pos[j].x_offset;
 }
 
 static void
@@ -1712,6 +1711,8 @@ static inline bool position_lookup (hb_apply_context_t *c, unsigned int lookup_i
 #undef attach_lookback
 #undef cursive_chain
 
+
+} // namespace OT
 
 
 #endif /* HB_OT_LAYOUT_GPOS_TABLE_HH */
