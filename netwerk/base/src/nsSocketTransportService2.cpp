@@ -44,7 +44,7 @@ PRThread                 *gSocketThread           = nullptr;
 #define SEND_BUFFER_PREF "network.tcp.sendbuffer"
 #define SOCKET_LIMIT_TARGET 550U
 #define SOCKET_LIMIT_MIN     50U
-#define BLIB_INTERVAL_PREF "network.activity.blipIntervalMilliseconds"
+#define BLIP_INTERVAL_PREF "network.activity.blipIntervalMilliseconds"
 
 uint32_t nsSocketTransportService::gMaxCount;
 PRCallOnceType nsSocketTransportService::gMaxCountInitOnce;
@@ -875,7 +875,7 @@ nsSocketTransportService::Observe(nsISupports *subject,
     }
 
     if (!strcmp(topic, "profile-initial-state")) {
-        int32_t blipInterval = Preferences::GetInt(BLIB_INTERVAL_PREF, 0);
+        int32_t blipInterval = Preferences::GetInt(BLIP_INTERVAL_PREF, 0);
         if (blipInterval <= 0) {
             return NS_OK;
         }
