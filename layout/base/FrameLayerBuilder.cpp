@@ -648,7 +648,7 @@ ThebesDisplayItemLayerUserData* GetThebesDisplayItemLayerUserData(Layer* aLayer)
 
 uint8_t gLayerManagerSecondary;
 
-bool FrameLayerBuilder::sWidgetManagerSecondary = nullptr;
+bool FrameLayerBuilder::sWidgetManagerSecondary = false;
 
 /* static */ const FramePropertyDescriptor* 
 FrameLayerBuilder::GetDescriptorForManager(LayerManager* aManager)
