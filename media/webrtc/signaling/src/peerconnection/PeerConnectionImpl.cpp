@@ -702,7 +702,10 @@ PeerConnectionImpl::CreateAnswer(const char* aHints, const char* aOffer) {
 
 NS_IMETHODIMP
 PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
-  MOZ_ASSERT(aSDP);
+  if (!aSDP) {
+    CSFLogError(logTag, "%s - aSDP is NULL", __FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
 
   CheckIceState();
   mLocalRequestedSDP = aSDP;
@@ -712,7 +715,10 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
 
 NS_IMETHODIMP
 PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
-  MOZ_ASSERT(aSDP);
+  if (!aSDP) {
+    CSFLogError(logTag, "%s - aSDP is NULL", __FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
 
   CheckIceState();
   mRemoteRequestedSDP = aSDP;
