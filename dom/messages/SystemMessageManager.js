@@ -64,7 +64,8 @@ SystemMessageManager.prototype = {
       }
     }
 
-    aHandler.handleMessage(wrapped ? aMessage : ObjectWrapper.wrap(aMessage, this._window));
+    aHandler.handleMessage(wrapped ? aMessage
+                                   : ObjectWrapper.wrap(aMessage, this._window));
   },
 
   mozSetMessageHandler: function sysMessMgr_setMessageHandler(aType, aHandler) {
@@ -114,7 +115,7 @@ SystemMessageManager.prototype = {
 
     // Send a sync message to the parent to check if we have a pending message
     // for this type.
-    let messages = cpmm.sendSyncMessage("SystemMessageManager:GetPending",
+    let messages = cpmm.sendSyncMessage("SystemMessageManager:GetPendingMessages",
                                         { type: aType,
                                           uri: this._uri,
                                           manifest: this._manifest })[0];
@@ -155,6 +156,15 @@ SystemMessageManager.prototype = {
     let msg = aMessage.json;
     if (msg.manifest != this._manifest)
       return;
+
+    // Send an acknowledgement to parent to clean up the pending message,
+    // so a re-launched app won't handle it again, which is redundant.
+    cpmm.sendAsyncMessage(
+      "SystemMessageManager:Message:Return:OK",
+      { type: msg.type,
+        manifest: msg.manifest,
+        uri: msg.uri,
+        msgID: msg.msgID });
 
     // Bail out if we have no handlers registered for this type.
     if (!(msg.type in this._handlers)) {
