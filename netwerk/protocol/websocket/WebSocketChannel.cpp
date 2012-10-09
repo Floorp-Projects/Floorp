@@ -213,6 +213,10 @@ public:
         if (outIndex)
           *outIndex = i;
         result = fail;
+        // break here: removing more entries would mess up *outIndex.
+        // Any remaining expired entries will be be deleted next time Lookup
+        // finds nothing, which is the most common case anyway.
+        break;
       } else if (fail->IsExpired(rightNow)) {
         mEntries.RemoveElementAt(i);
         delete fail;
