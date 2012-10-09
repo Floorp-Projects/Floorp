@@ -6683,12 +6683,40 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
         return NS_OK;
       }
 
+      Maybe<JSAutoCompartment> ac;
+      JSObject* global;
+      bool defineOnXray = ObjectIsNativeWrapper(cx, obj);
+      if (defineOnXray) {
+        global = xpc::Unwrap(cx, obj, false);
+        if (!global) {
+          return NS_ERROR_DOM_SECURITY_ERR;
+        }
+        ac.construct(cx, global);
+      } else {
+        global = obj;
+      }
+
       bool enabled;
-      bool defined = define(cx, obj, &enabled);
-      MOZ_ASSERT_IF(defined, enabled);
+      JSObject* interfaceObject = define(cx, global, &enabled);
       if (enabled) {
-        *did_resolve = defined;
-        return defined ? NS_OK : NS_ERROR_FAILURE;
+        if (!interfaceObject) {
+          return NS_ERROR_FAILURE;
+        }
+
+        if (defineOnXray) {
+          // This really should be handled by the Xray for the window.
+          ac.destroy();
+          if (!JS_WrapObject(cx, &interfaceObject) ||
+              !JS_DefinePropertyById(cx, obj, id,
+                                     JS::ObjectValue(*interfaceObject), nullptr,
+                                     nullptr, 0)) {
+            return NS_ERROR_FAILURE;
+          }
+        }
+
+        *did_resolve = true;
+
+        return NS_OK;
       }
     }
   }

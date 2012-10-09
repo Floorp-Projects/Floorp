@@ -3054,22 +3054,9 @@ WrapForSandbox(JSContext *cx, bool wantXrays, jsval *vp)
 
 xpc::SandboxProxyHandler xpc::sandboxProxyHandler;
 
-// A proxy handler that lets us wrap callables and invoke them with
-// the correct this object, while forwarding all other operations down
-// to them directly.
-class SandboxCallableProxyHandler : public js::Wrapper {
-public:
-    SandboxCallableProxyHandler() : js::Wrapper(0)
-    {
-    }
-
-    virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc,
-                      Value *vp);
-};
-
 bool
-SandboxCallableProxyHandler::call(JSContext *cx, JSObject *proxy, unsigned argc,
-                                  Value *vp)
+xpc::SandboxCallableProxyHandler::call(JSContext *cx, JSObject *proxy,
+                                       unsigned argc, Value *vp)
 {
     // We forward the call to our underlying callable. The callable to forward
     // to can be gotten via GetProxyCall.
@@ -3099,7 +3086,7 @@ SandboxCallableProxyHandler::call(JSContext *cx, JSObject *proxy, unsigned argc,
                     JS_ARGV(cx, vp), vp);
 }
 
-static SandboxCallableProxyHandler sandboxCallableProxyHandler;
+xpc::SandboxCallableProxyHandler xpc::sandboxCallableProxyHandler;
 
 // Wrap a callable such that if we're called with oldThisObj as the
 // "this" we will instead call it with newThisObj as the this.
@@ -3116,7 +3103,7 @@ WrapCallable(JSContext *cx, JSObject *callable, JSObject *sandboxProtoProxy)
 
     // We need to pass the given callable in as the "call" and
     // "construct" so we get a function proxy.
-    return js::NewProxyObject(cx, &sandboxCallableProxyHandler,
+    return js::NewProxyObject(cx, &xpc::sandboxCallableProxyHandler,
                               ObjectValue(*callable), nullptr,
                               sandboxProtoProxy, callable, callable);
 }
