@@ -22,6 +22,8 @@ public:
   bool StartListening();
   bool StopListening();
 
+  nsIRILTelephonyCallback* GetCallback();
+
 private:
   nsCOMPtr<nsIRILTelephonyCallback> mRILTelephonyCallback;
 };

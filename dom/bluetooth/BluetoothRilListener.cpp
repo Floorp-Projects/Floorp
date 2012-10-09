@@ -44,6 +44,9 @@ BluetoothRILTelephonyCallback::EnumerateCallState(uint32_t aCallIndex,
                                                   bool aIsActive,
                                                   bool* aResult)
 {
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  hfp->EnumerateCallState(aCallIndex, aCallState,
+                          NS_ConvertUTF16toUTF8(aNumber).get(), aIsActive);
   *aResult = true;
   return NS_OK;
 }
@@ -86,4 +89,10 @@ BluetoothRilListener::StopListening()
   nsresult rv = ril->UnregisterTelephonyCallback(mRILTelephonyCallback);
 
   return NS_FAILED(rv) ? false : true;
+}
+
+nsIRILTelephonyCallback*
+BluetoothRilListener::GetCallback()
+{
+  return mRILTelephonyCallback;
 }
