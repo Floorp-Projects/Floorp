@@ -38,18 +38,11 @@ class FeatureMap;
 class FeatureVal : public Vector<uint32>
 {
 public:
-    uint32 maskedOr(const FeatureVal &other, const FeatureVal &mask) {
-        uint32 len = size() ;
-        if (other.size()<len) len = other.size();		//defensive
-        if (mask.size()<len) len = mask.size();		//defensive
-        for (uint32 i = 0; i < len; i++)
-            if (mask[i]) operator[](i) = (operator[](i) & ~mask[i]) | (other[i] & mask[i]);
-        return len;
-    }
-
     FeatureVal() : m_pMap(0) { }
     FeatureVal(int num, const FeatureMap & pMap) : Vector<uint32>(num), m_pMap(&pMap) {}
     FeatureVal(const FeatureVal & rhs) : Vector<uint32>(rhs), m_pMap(rhs.m_pMap) {}
+
+    FeatureVal & operator = (const FeatureVal & rhs) { Vector<uint32>::operator = (rhs); m_pMap = rhs.m_pMap; return *this; }
 
     bool operator ==(const FeatureVal & b) const
     {

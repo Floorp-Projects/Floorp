@@ -39,6 +39,9 @@ class Face;
 
 class SilfSegCache
 {
+    SilfSegCache(const SilfSegCache &);
+    SilfSegCache & operator = (const SilfSegCache &);
+
 public:
     SilfSegCache() : m_caches(NULL), m_cacheCount(0) {};
     ~SilfSegCache()
@@ -86,8 +89,11 @@ private:
 
 class SegCacheStore
 {
+    SegCacheStore(const SegCacheStore &);
+    SegCacheStore & operator = (const SegCacheStore &);
+
 public:
-    SegCacheStore(const Face *face, unsigned int numSilf, size_t maxSegments);
+    SegCacheStore(const Face & face, unsigned int numSilf, size_t maxSegments);
     ~SegCacheStore()
     {
         for (size_t i = 0; i < m_numSilf; i++)

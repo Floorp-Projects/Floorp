@@ -15,8 +15,8 @@
 
     You should also have received a copy of the GNU Lesser General Public
     License along with this library in the file named "LICENSE".
-    If not, write to the Free Software Foundation, 51 Franklin Street,
-    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the
+    If not, write to the Free Software Foundation, 51 Franklin Street, 
+    Suite 500, Boston, MA 02110-1335, USA or visit their web page on the 
     internet at http://www.fsf.org/licenses/lgpl.html.
 
 Alternatively, the contents of this file may be used under the terms of the
@@ -26,40 +26,55 @@ of the License or (at your option) any later version.
 */
 #pragma once
 
-#include <graphite2/Segment.h>
+//#include "inc/FeatureMap.h"
+//#include "inc/GlyphsCache.h"
+//#include "inc/Silf.h"
+
+#ifndef GRAPHITE2_NFILEFACE
+
+#include <cstdio>
+#include <cassert>
+
+#include "graphite2/Font.h"
+
+#include "inc/Main.h"
 #include "inc/TtfTypes.h"
-#include "inc/locale2lcid.h"
+#include "inc/TtfUtil.h"
 
 namespace graphite2 {
 
-class NameTable
+
+class FileFace
 {
-    NameTable(const NameTable &);
-    NameTable & operator = (const NameTable &);
+    static const void * get_table_fn(const void* appFaceHandle, unsigned int name, size_t *len);
+    static void         rel_table_fn(const void* appFaceHandle, const void *table_buffer);
 
 public:
-    NameTable(const void * data, size_t length, uint16 platfromId=3, uint16 encodingID = 1);
-    ~NameTable() { free(const_cast<TtfUtil::Sfnt::FontNames *>(m_table)); }
-    enum eNameFallback {
-        eNoFallback = 0,
-        eEnUSFallbackOnly = 1,
-        eEnOrAnyFallback = 2
-    };
-    uint16 setPlatformEncoding(uint16 platfromId=3, uint16 encodingID = 1);
-    void * getName(uint16 & languageId, uint16 nameId, gr_encform enc, uint32 & length);
-    uint16 getLanguageId(const char * bcp47Locale);
+    static const gr_face_ops ops;
 
-    CLASS_NEW_DELETE
-private:
-    uint16 m_platformId;
-    uint16 m_encodingId;
-    uint16 m_languageCount;
-    uint16 m_platformOffset; // offset of first NameRecord with for platform 3, encoding 1
-    uint16 m_platformLastRecord;
-    uint16 m_nameDataLength;
-    const TtfUtil::Sfnt::FontNames * m_table;
-    const uint8 * m_nameData;
-    Locale2Lang m_locale2Lang;
+    FileFace(const char *filename);
+    ~FileFace();
+
+    operator bool () const throw();
+    CLASS_NEW_DELETE;
+
+private:        //defensive
+    FILE          * _file;
+    size_t          _file_len;
+
+    TtfUtil::Sfnt::OffsetSubTable         * _header_tbl;
+    TtfUtil::Sfnt::OffsetSubTable::Entry  * _table_dir;
+
+    FileFace(const FileFace&);
+    FileFace& operator=(const FileFace&);
 };
 
+inline
+FileFace::operator bool() const throw()
+{
+    return _file && _header_tbl && _table_dir;
+}
+
 } // namespace graphite2
+
+#endif      //!GRAPHITE2_NFILEFACE

@@ -26,6 +26,7 @@ of the License or (at your option) any later version.
 */
 #include "inc/Segment.h"
 #include "inc/Slot.h"
+#include "inc/Silf.h"
 #include "inc/CharInfo.h"
 #include "inc/Rule.h"
 
@@ -35,17 +36,17 @@ using namespace graphite2;
 Slot::Slot() :
     m_next(NULL), m_prev(NULL),
     m_glyphid(0), m_realglyphid(0), m_original(0), m_before(0), m_after(0),
-    m_parent(NULL), m_child(NULL), m_sibling(NULL),
+    m_index(0), m_parent(NULL), m_child(NULL), m_sibling(NULL),
     m_position(0, 0), m_shift(0, 0), m_advance(-1, -1),
     m_attach(0, 0), m_with(0, 0), m_just(0.),
-    m_flags(0), m_attLevel(0)
+    m_flags(0), m_attLevel(0), m_bidiCls(0), m_bidiLevel(0), m_justs(NULL)
     // Do not set m_userAttr since it is set *before* new is called since this
     // is used as a positional new to reset the GrSlot
 {
 }
 
 // take care, this does not copy any of the GrSlot pointer fields
-void Slot::set(const Slot & orig, int charOffset, uint8 numUserAttr)
+void Slot::set(const Slot & orig, int charOffset, size_t numUserAttr, size_t justLevels)
 {
     // leave m_next and m_prev unchanged
     m_glyphid = orig.m_glyphid;
@@ -63,10 +64,15 @@ void Slot::set(const Slot & orig, int charOffset, uint8 numUserAttr)
     m_with = orig.m_with;
     m_flags = orig.m_flags;
     m_attLevel = orig.m_attLevel;
-    assert(!orig.m_userAttr || m_userAttr);
+    m_bidiCls = orig.m_bidiCls;
+    m_bidiLevel = orig.m_bidiLevel;
     if (m_userAttr && orig.m_userAttr)
     {
         memcpy(m_userAttr, orig.m_userAttr, numUserAttr * sizeof(*m_userAttr));
+    }
+    if (m_justs && orig.m_justs)
+    {
+        memcpy(m_justs, orig.m_justs, SlotJustify::size_of(justLevels));
     }
 }
 
@@ -77,24 +83,19 @@ void Slot::update(int /*numGrSlots*/, int numCharInfo, Position &relpos)
     m_position = m_position + relpos;
 }
 
-Position Slot::finalise(const Segment *seg, const Font *font, Position & base, Rect & bbox, float & cMin, uint8 attrLevel, float & clusterMin)
+Position Slot::finalise(const Segment *seg, const Font *font, Position & base, Rect & bbox, uint8 attrLevel, float & clusterMin)
 {
     if (attrLevel && m_attLevel > attrLevel) return Position(0, 0);
     float scale = 1.0;
     Position shift = m_shift + Position(m_just, 0);
     float tAdvance = m_advance.x + m_just;
-    const GlyphFace * glyphFace = seg->getFace()->getGlyphFaceCache()->glyphSafe(glyph());
+    const GlyphFace * glyphFace = seg->getFace()->glyphs().glyphSafe(glyph());
     if (font)
     {
         scale = font->scale();
         shift *= scale;
-        if (font->isHinted())
-        {
-            if (glyphFace)
-                tAdvance = (m_advance.x - glyphFace->theAdvance().x) * scale + font->advance(m_glyphid);
-            else
-                tAdvance = (m_advance.x - seg->glyphAdvance(glyph())) * scale + font->advance(m_glyphid);
-        }
+        if (font->isHinted() && glyphFace)
+            tAdvance = (m_advance.x - glyphFace->theAdvance().x + m_just) * scale + font->advance(m_glyphid);
         else
             tAdvance *= scale;
     }    
@@ -104,16 +105,15 @@ Position Slot::finalise(const Segment *seg, const Font *font, Position & base, R
     if (!m_parent)
     {
         res = base + Position(tAdvance, m_advance.y * scale);
-        cMin = 0.;
         clusterMin = base.x;
     }
     else
     {
         float tAdv;
         m_position += (m_attach - m_with) * scale;
-        tAdv = tAdvance > 0.f ? m_position.x + tAdvance - shift.x : 0.f;
+        tAdv = m_advance.x >= 0.5 ? m_position.x + tAdvance - shift.x : 0.f;
         res = Position(tAdv, 0);
-        if (m_position.x < clusterMin) clusterMin = m_position.x;
+        if ((m_advance.x >= 0.5 || m_position.x < 0) && m_position.x < clusterMin) clusterMin = m_position.x;
     }
 
     if (glyphFace)
@@ -121,39 +121,25 @@ Position Slot::finalise(const Segment *seg, const Font *font, Position & base, R
         Rect ourBbox = glyphFace->theBBox() * scale + m_position;
         bbox = bbox.widen(ourBbox);
     }
-    //Rect ourBbox = seg->theGlyphBBoxTemporary(glyph()) * scale + m_position;
-    //bbox->widen(ourBbox);
-
-    if (m_parent && m_position.x < cMin) cMin = m_position.x;
 
     if (m_child && m_child != this && m_child->attachedTo() == this)
     {
-        Position tRes = m_child->finalise(seg, font, m_position, bbox, cMin, attrLevel, clusterMin);
-        if (tRes.x > res.x) res = tRes;
+        Position tRes = m_child->finalise(seg, font, m_position, bbox, attrLevel, clusterMin);
+        if ((!m_parent || m_advance.x >= 0.5) && tRes.x > res.x) res = tRes;
     }
 
     if (m_parent && m_sibling && m_sibling != this && m_sibling->attachedTo() == m_parent)
     {
-        Position tRes = m_sibling->finalise(seg, font, base, bbox, cMin, attrLevel, clusterMin);
+        Position tRes = m_sibling->finalise(seg, font, base, bbox, attrLevel, clusterMin);
         if (tRes.x > res.x) res = tRes;
     }
     
-    if (!m_parent)
+    if (!m_parent && clusterMin < base.x)
     {
-        if (cMin < 0)
-        {
-            Position adj = Position(-cMin, 0.);
-            res += adj;
-            m_position += adj;
-            if (m_child) m_child->floodShift(adj);
-        }
-        else if ((seg->dir() & 1) && (clusterMin < base.x))
-        {
-            Position adj = Position(base.x - clusterMin, 0.);
-            res += adj;
-            m_position += adj;
-            if (m_child) m_child->floodShift(adj);
-        }
+        Position adj = Position(base.x - clusterMin, 0.);
+        res += adj;
+        m_position += adj;
+        if (m_child) m_child->floodShift(adj);
     }
     return res;
 }
@@ -162,9 +148,8 @@ uint32 Slot::clusterMetric(const Segment *seg, uint8 metric, uint8 attrLevel)
 {
     Position base;
     Rect bbox = seg->theGlyphBBoxTemporary(gid());
-    float cMin = 0.;
     float clusterMin = 0.;
-    Position res = finalise(seg, NULL, base, bbox, cMin, attrLevel, clusterMin);
+    Position res = finalise(seg, NULL, base, bbox, attrLevel, clusterMin);
 
     switch (metrics(metric))
     {
@@ -201,6 +186,12 @@ int Slot::getAttr(const Segment *seg, attrCode ind, uint8 subindex) const
         ind = gr_slatUserDefn;
         subindex = 0;
     }
+    else if (ind >= gr_slatJStretch && ind < gr_slatJStretch + 20 && ind != gr_slatJWidth)
+    {
+        int indx = ind - gr_slatJStretch;
+        return getJustify(seg, indx / 5, indx % 5);
+    }
+
     switch (ind)
     {
     case gr_slatAdvX :		return int(m_advance.x);
@@ -225,11 +216,7 @@ int Slot::getAttr(const Segment *seg, attrCode ind, uint8 subindex) const
     case gr_slatShiftY :	return int(m_shift.y);
     case gr_slatMeasureSol:	return -1; // err what's this?
     case gr_slatMeasureEol: return -1;
-    case gr_slatJStretch :
-    case gr_slatJShrink :
-    case gr_slatJStep :
-    case gr_slatJWeight :	return 0;
-    case gr_slatJWidth :	return int(m_just);
+    case gr_slatJWidth:     return m_just;
     case gr_slatUserDefn :	return m_userAttr[subindex];
     case gr_slatSegSplit :  return seg->charinfo(m_original)->flags() & 3;
     default :				return 0;
@@ -244,6 +231,12 @@ void Slot::setAttr(Segment *seg, attrCode ind, uint8 subindex, int16 value, cons
         ind = gr_slatUserDefn;
         subindex = 0;
     }
+    else if (ind >= gr_slatJStretch && ind < gr_slatJStretch + 20 && ind != gr_slatJWidth)
+    {
+        int indx = ind - gr_slatJStretch;
+        return setJustify(seg, indx / 5, indx % 5, value);
+    }
+
     switch (ind)
     {
     case gr_slatAdvX :	m_advance.x = value; break;
@@ -257,7 +250,10 @@ void Slot::setAttr(Segment *seg, attrCode ind, uint8 subindex, int16 value, cons
             if (other != this && other->child(this))
             {
                 attachTo(other);
-                m_attach = Position(seg->glyphAdvance(other->gid()), 0);
+                if (((seg->dir() & 1) != 0) ^ (idx > subindex))
+                    m_with = Position(advance(), 0);
+                else        // normal match to previous root
+                    m_attach = Position(other->advance(), 0);
             }
         }
         break;
@@ -287,16 +283,44 @@ void Slot::setAttr(Segment *seg, attrCode ind, uint8 subindex, int16 value, cons
     case gr_slatShiftY :    m_shift.y = value; break;
     case gr_slatMeasureSol :	break;
     case gr_slatMeasureEol :	break;
-    case gr_slatJStretch :      break;  // handle these later
-    case gr_slatJShrink :       break;
-    case gr_slatJStep :         break;
-    case gr_slatJWeight :       break;
-    case gr_slatJWidth :	m_just = value; break;
+    case gr_slatJWidth :	just(value); break;
     case gr_slatSegSplit :  seg->charinfo(m_original)->addflags(value & 3); break;
     case gr_slatUserDefn :  m_userAttr[subindex] = value; break;
     default :
     	break;
     }
+}
+
+int Slot::getJustify(const Segment *seg, uint8 level, uint8 subindex) const
+{
+    if (level && level >= seg->silf()->numJustLevels()) return 0;
+
+    if (m_justs)
+        return m_justs->values[level * SlotJustify::NUMJUSTPARAMS + subindex];
+
+    if (level >= seg->silf()->numJustLevels()) return 0;
+    Justinfo *jAttrs = seg->silf()->justAttrs() + level;
+
+    switch (subindex) {
+        case 0 : return seg->glyphAttr(gid(), jAttrs->attrStretch());
+        case 1 : return seg->glyphAttr(gid(), jAttrs->attrShrink());
+        case 2 : return seg->glyphAttr(gid(), jAttrs->attrStep());
+        case 3 : return seg->glyphAttr(gid(), jAttrs->attrWeight());
+        case 4 : return 0;      // not been set yet, so clearly 0
+        default: return 0;
+    }
+}
+
+void Slot::setJustify(Segment *seg, uint8 level, uint8 subindex, int16 value)
+{
+    if (level >= seg->silf()->numJustLevels()) return;
+    if (!m_justs)
+    {
+        SlotJustify *j = seg->newJustify();
+        j->LoadSlot(this, seg);
+        m_justs = j;
+    }
+    m_justs->values[level * SlotJustify::NUMJUSTPARAMS + subindex] = value;
 }
 
 bool Slot::child(Slot *ap)
@@ -326,7 +350,7 @@ void Slot::setGlyph(Segment *seg, uint16 glyphid, const GlyphFace * theGlyph)
     m_glyphid = glyphid;
     if (!theGlyph)
     {
-        theGlyph = seg->getFace()->getGlyphFaceCache()->glyphSafe(glyphid);
+        theGlyph = seg->getFace()->glyphs().glyphSafe(glyphid);
         if (!theGlyph)
         {
             m_realglyphid = 0;
@@ -334,10 +358,10 @@ void Slot::setGlyph(Segment *seg, uint16 glyphid, const GlyphFace * theGlyph)
             return;
         }
     }
-    m_realglyphid = theGlyph->getAttr(seg->silf()->aPseudo());
+    m_realglyphid = theGlyph->attrs()[seg->silf()->aPseudo()];
     if (m_realglyphid)
     {
-        const GlyphFace *aGlyph = seg->getFace()->getGlyphFaceCache()->glyphSafe(m_realglyphid);
+        const GlyphFace *aGlyph = seg->getFace()->glyphs().glyphSafe(m_realglyphid);
         if (aGlyph) theGlyph = aGlyph;
     }
     m_advance = Position(theGlyph->theAdvance().x, 0.);
@@ -348,4 +372,17 @@ void Slot::floodShift(Position adj)
     m_position += adj;
     if (m_child) m_child->floodShift(adj);
     if (m_sibling) m_sibling->floodShift(adj);
+}
+
+void SlotJustify::LoadSlot(const Slot *s, const Segment *seg)
+{
+    for (int i = seg->silf()->numJustLevels() - 1; i >= 0; --i)
+    {
+        Justinfo *justs = seg->silf()->justAttrs() + i;
+        int16 *v = values + i * NUMJUSTPARAMS;
+        v[0] = seg->glyphAttr(s->gid(), justs->attrStretch());
+        v[1] = seg->glyphAttr(s->gid(), justs->attrShrink());
+        v[2] = seg->glyphAttr(s->gid(), justs->attrStep());
+        v[3] = seg->glyphAttr(s->gid(), justs->attrWeight());
+    }
 }

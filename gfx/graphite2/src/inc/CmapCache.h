@@ -27,6 +27,7 @@ of the License or (at your option) any later version.
 #pragma once
 
 #include "inc/Main.h"
+#include "inc/Face.h"
 
 namespace graphite2 {
 
@@ -35,6 +36,7 @@ class Face;
 class Cmap
 {
 public:
+
 	virtual ~Cmap() throw() {}
 
 	virtual uint16 operator [] (const uint32) const throw() { return 0; }
@@ -46,22 +48,29 @@ public:
 
 class DirectCmap : public Cmap
 {
+    DirectCmap(const DirectCmap &);
+    DirectCmap & operator = (const DirectCmap &);
+
 public:
-	DirectCmap(const void* cmap, size_t length);
+	DirectCmap(const Face &);
 	virtual uint16 operator [] (const uint32 usv) const throw();
 	virtual operator bool () const throw();
 
     CLASS_NEW_DELETE;
 private:
-    const void *_stable,
-    		   *_ctable;
+    const Face::Table   _cmap;
+    const void        * _smp,
+                      * _bmp;
 };
 
-class CmapCache : public Cmap
+class CachedCmap : public Cmap
 {
+    CachedCmap(const CachedCmap &);
+    CachedCmap & operator = (const CachedCmap &);
+
 public:
-	CmapCache(const void * cmapTable, size_t length);
-	virtual ~CmapCache() throw();
+	CachedCmap(const Face &);
+	virtual ~CachedCmap() throw();
 	virtual uint16 operator [] (const uint32 usv) const throw();
 	virtual operator bool () const throw();
     CLASS_NEW_DELETE;

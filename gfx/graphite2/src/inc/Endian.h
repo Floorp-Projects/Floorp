@@ -33,6 +33,10 @@ Being template based means if the either le or be class is not used then
 template code of unused functions will not be instantiated by the compiler
 and thus shouldn't cause any overhead.
 -----------------------------------------------------------------------------*/
+#include <cstddef>
+
+#pragma once
+
 
 class be
 {
