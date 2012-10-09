@@ -153,7 +153,7 @@ public class Favicons {
         return mDbHelper.getFaviconUrlForPageUrl(pageUrl);
     }
 
-    public long loadFavicon(String pageUrl, String faviconUrl,
+    public long loadFavicon(String pageUrl, String faviconUrl, boolean persist,
             OnFaviconLoadedListener listener) {
 
         // Handle the case where page url is empty
@@ -162,7 +162,7 @@ public class Favicons {
                 listener.onFaviconLoaded(null, null);
         }
 
-        LoadFaviconTask task = new LoadFaviconTask(pageUrl, faviconUrl, listener);
+        LoadFaviconTask task = new LoadFaviconTask(pageUrl, faviconUrl, persist, listener);
 
         long taskId = task.getId();
         mLoadTasks.put(taskId, task);
@@ -214,8 +214,10 @@ public class Favicons {
         private String mPageUrl;
         private String mFaviconUrl;
         private OnFaviconLoadedListener mListener;
+        private boolean mPersist;
 
-        public LoadFaviconTask(String pageUrl, String faviconUrl, OnFaviconLoadedListener listener) {
+        public LoadFaviconTask(String pageUrl, String faviconUrl, boolean persist,
+                OnFaviconLoadedListener listener) {
             synchronized(this) {
                 mId = ++mNextFaviconLoadId;
             }
@@ -223,6 +225,7 @@ public class Favicons {
             mPageUrl = pageUrl;
             mFaviconUrl = faviconUrl;
             mListener = listener;
+            mPersist = persist;
         }
 
         // Runs in background thread
@@ -235,6 +238,10 @@ public class Favicons {
 
         // Runs in background thread
         private void saveFaviconToDb(BitmapDrawable favicon) {
+            if (!mPersist) {
+                return;
+            }
+
             // since the Async task can run this on any number of threads in the
             // pool, we need to protect against inserting the same url twice
             synchronized(mDbHelper) {

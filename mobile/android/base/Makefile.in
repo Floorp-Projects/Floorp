@@ -101,6 +101,7 @@ FENNEC_JAVA_FILES = \
   OnInterceptTouchListener.java \
   PrefsHelper.java \
   PrivateDataPreference.java \
+  PrivateTab.java \
   PropertyAnimator.java \
   ProfileMigrator.java \
   PromptService.java \
