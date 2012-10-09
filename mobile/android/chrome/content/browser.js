@@ -3180,18 +3180,6 @@ Tab.prototype = {
     this.shouldShowPluginDoorhanger = true;
     this.clickToPlayPluginsActivated = false;
 
-    // This is where we might check for helper apps.
-    // For now it is special cased to only check for the marketplace urls
-    if (WebappsUI.isMarketplace(aLocationURI)) {
-      // the marketplace app may not actually be installed, so instead we use a custom
-      // callback that will install and launch it for us if necessary
-      HelperApps.showDoorhanger(aLocationURI, function() {
-        WebappsUI.installAndLaunchMarketplace(aLocationURI.spec);
-        if (aRequest)
-          aRequest.cancel(Cr.NS_OK);
-      });
-    }
-
     let message = {
       gecko: {
         type: "Content:LocationChange",
@@ -6554,10 +6542,6 @@ var WebappsUI = {
     let manifest = new ManifestHelper(aData.app.manifest, aData.app.origin);
     let name = manifest.name ? manifest.name : manifest.fullLaunchPath();
     let showPrompt = true;
-
-    // skip showing the prompt if this is for the marketplace app
-    if (aData.app.origin == this.MARKETPLACE.URI.prePath)
-      showPrompt = false;
 
     if (!showPrompt || Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name)) {
       // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
