@@ -130,7 +130,7 @@ public:
   NS_DECL_NSIDOMSVGZOOMANDPAN
   
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE(nsSVGSVGElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGSVGElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGSVGElementBase::)
 

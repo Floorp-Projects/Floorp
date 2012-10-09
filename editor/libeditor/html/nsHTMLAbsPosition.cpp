@@ -528,7 +528,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
     nsCOMPtr<nsINode> element = do_QueryInterface(aElement);
     NS_ENSURE_STATE(element);
 
-    nsINode* parentNode = element->GetNodeParent();
+    nsINode* parentNode = element->GetParentNode();
     if (parentNode->GetChildCount() == 1) {
       nsCOMPtr<nsIDOMNode> brNode;
       nsresult res = CreateBR(parentNode->AsDOMNode(), 0, address_of(brNode));

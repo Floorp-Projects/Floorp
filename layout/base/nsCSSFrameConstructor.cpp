@@ -9370,7 +9370,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
     return rv;
   }
 
-  nsINode* containerNode = aContent->GetNodeParent();
+  nsINode* containerNode = aContent->GetParentNode();
   // XXXbz how can containerNode be null here?
   if (containerNode) {
     // Before removing the frames associated with the content object,

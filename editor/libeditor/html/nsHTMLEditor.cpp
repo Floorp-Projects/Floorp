@@ -3358,7 +3358,7 @@ nsHTMLEditor::GetIsSelectionEditable(bool* aIsSelectionEditable)
     nsINode* commonAncestor =
       selection->GetAnchorFocusRange()->GetCommonAncestor();
     while (commonAncestor && !commonAncestor->IsEditable()) {
-      commonAncestor = commonAncestor->GetNodeParent();
+      commonAncestor = commonAncestor->GetParentNode();
     }
     if (!commonAncestor) {
       // No editable common ancestor

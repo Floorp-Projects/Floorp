@@ -1214,7 +1214,7 @@ nsXMLContentSerializer::MaybeAddNewlineForRootNode(nsAString& aStr)
 void
 nsXMLContentSerializer::MaybeFlagNewlineForRootNode(nsINode* aNode)
 {
-  nsINode* parent = aNode->GetNodeParent();
+  nsINode* parent = aNode->GetParentNode();
   if (parent) {
     mAddNewlineForRootNode = parent->IsNodeOfType(nsINode::eDOCUMENT);
   }

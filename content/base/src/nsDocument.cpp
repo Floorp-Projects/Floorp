@@ -3496,7 +3496,7 @@ nsDocument::IsNodeOfType(uint32_t aFlags) const
 Element*
 nsIDocument::GetRootElement() const
 {
-  return (mCachedRootElement && mCachedRootElement->GetNodeParent() == this) ?
+  return (mCachedRootElement && mCachedRootElement->GetParentNode() == this) ?
          mCachedRootElement : GetRootElementInternal();
 }
 
@@ -4981,7 +4981,7 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
     case nsIDOMNode::COMMENT_NODE:
     case nsIDOMNode::DOCUMENT_TYPE_NODE:
     {
-      nsCOMPtr<nsIDOMNode> newNode;
+      nsCOMPtr<nsINode> newNode;
       nsCOMArray<nsINode> nodesWithProperties;
       rv = nsNodeUtils::Clone(imported, aDeep, mNodeInfoManager,
                               nodesWithProperties, getter_AddRefs(newNode));
@@ -4993,8 +4993,7 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
                                              true);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      newNode.swap(*aResult);
-
+      *aResult = newNode.forget().get()->AsDOMNode();
       return NS_OK;
     }
     default:
@@ -5796,267 +5795,6 @@ nsDocument::SetDir(const nsAString& aDirection)
   return NS_OK;
 }
 
-
-//
-// nsIDOMNode methods
-//
-NS_IMETHODIMP
-nsDocument::GetNodeName(nsAString& aNodeName)
-{
-  aNodeName.AssignLiteral("#document");
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetNodeValue(nsAString& aNodeValue)
-{
-  SetDOMStringToNull(aNodeValue);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::SetNodeValue(const nsAString& aNodeValue)
-{
-  // The DOM spec says that when nodeValue is defined to be null "setting it
-  // has no effect", so we don't throw an exception.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetNodeType(uint16_t* aNodeType)
-{
-  *aNodeType = nsIDOMNode::DOCUMENT_NODE;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetParentNode(nsIDOMNode** aParentNode)
-{
-  *aParentNode = nullptr;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetParentElement(nsIDOMElement** aParentElement)
-{
-  *aParentElement = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
-{
-  return nsINode::GetChildNodes(aChildNodes);
-}
-
-NS_IMETHODIMP
-nsDocument::HasChildNodes(bool* aHasChildNodes)
-{
-  NS_ENSURE_ARG(aHasChildNodes);
-
-  *aHasChildNodes = (mChildren.ChildCount() != 0);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::HasAttributes(bool* aHasAttributes)
-{
-  NS_ENSURE_ARG(aHasAttributes);
-
-  *aHasAttributes = false;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetFirstChild(nsIDOMNode** aFirstChild)
-{
-  return nsINode::GetFirstChild(aFirstChild);
-}
-
-NS_IMETHODIMP
-nsDocument::GetLastChild(nsIDOMNode** aLastChild)
-{
-  return nsINode::GetLastChild(aLastChild);
-}
-
-NS_IMETHODIMP
-nsDocument::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
-{
-  *aPreviousSibling = nullptr;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetNextSibling(nsIDOMNode** aNextSibling)
-{
-  *aNextSibling = nullptr;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
-{
-  *aAttributes = nullptr;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetNamespaceURI(nsAString& aNamespaceURI)
-{
-  SetDOMStringToNull(aNamespaceURI);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetPrefix(nsAString& aPrefix)
-{
-  SetDOMStringToNull(aPrefix);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetLocalName(nsAString& aLocalName)
-{
-  SetDOMStringToNull(aLocalName);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                         nsIDOMNode** aReturn)
-{
-  return ReplaceOrInsertBefore(false, aNewChild, aRefChild, aReturn);
-}
-
-NS_IMETHODIMP
-nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                         nsIDOMNode** aReturn)
-{
-  return ReplaceOrInsertBefore(true, aNewChild, aOldChild, aReturn);
-}
-
-NS_IMETHODIMP
-nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-{
-  return nsINode::RemoveChild(aOldChild, aReturn);
-}
-
-NS_IMETHODIMP
-nsDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
-{
-  return nsDocument::InsertBefore(aNewChild, nullptr, aReturn);
-}
-
-NS_IMETHODIMP
-nsDocument::CloneNode(bool aDeep, uint8_t aOptionalArgc, nsIDOMNode** aReturn)
-{
-  if (!aOptionalArgc) {
-    aDeep = true;
-  }
-
-  return nsNodeUtils::CloneNodeImpl(this, aDeep, !mCreatingStaticClone, aReturn);
-}
-
-NS_IMETHODIMP
-nsDocument::Normalize()
-{
-  return nsIDocument::Normalize();
-}
-
-NS_IMETHODIMP
-nsDocument::IsSupported(const nsAString& aFeature, const nsAString& aVersion,
-                        bool* aReturn)
-{
-  *aReturn = nsContentUtils::InternalIsSupported(static_cast<nsIDOMDocument*>(this),
-                                                 aFeature, aVersion);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetDOMBaseURI(nsAString &aURI)
-{
-  return nsIDocument::GetDOMBaseURI(aURI);
-}
-
-NS_IMETHODIMP
-nsDocument::GetTextContent(nsAString &aTextContent)
-{
-  SetDOMStringToNull(aTextContent);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::IsEqualNode(nsIDOMNode* aOther, bool* aResult)
-{
-  return nsINode::IsEqualNode(aOther, aResult);
-}
-
-NS_IMETHODIMP
-nsDocument::CompareDocumentPosition(nsIDOMNode *other,
-                                   uint16_t *aResult)
-{
-  return nsINode::CompareDocumentPosition(other, aResult);
-}
-
-NS_IMETHODIMP
-nsDocument::SetTextContent(const nsAString & aTextContent)
-{
-  return nsINode::SetTextContent(aTextContent);
-}
-
-NS_IMETHODIMP
-nsDocument::LookupPrefix(const nsAString & namespaceURI, nsAString & aResult)
-{
-  return nsINode::LookupPrefix(namespaceURI, aResult);
-}
-
-NS_IMETHODIMP
-nsDocument::IsDefaultNamespace(const nsAString & namespaceURI,
-                              bool *aResult)
-{
-  return nsINode::IsDefaultNamespace(namespaceURI, aResult);
-}
-
-NS_IMETHODIMP
-nsDocument::LookupNamespaceURI(const nsAString & prefix,
-                              nsAString & aResult)
-{
-  return nsINode::LookupNamespaceURI(prefix, aResult);
-}
-
-NS_IMETHODIMP
-nsDocument::SetUserData(const nsAString & key,
-                       nsIVariant *data, nsIDOMUserDataHandler *handler,
-                       nsIVariant **aResult)
-{
-  return nsINode::SetUserData(key, data, handler, aResult);
-}
-
-NS_IMETHODIMP
-nsDocument::GetUserData(const nsAString & key,
-                        nsIVariant **aResult)
-{
-  return nsINode::GetUserData(key, aResult);
-}
-
-NS_IMETHODIMP
-nsDocument::Contains(nsIDOMNode* aOther, bool* aReturn)
-{
-  return nsINode::Contains(aOther, aReturn);
-}
-
 NS_IMETHODIMP
 nsDocument::GetInputEncoding(nsAString& aInputEncoding)
 {
@@ -6274,7 +6012,7 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
   // Scope firing mutation events so that we don't carry any state that
   // might be stale
   {
-    nsINode* parent = adoptedNode->GetNodeParent();
+    nsINode* parent = adoptedNode->GetParentNode();
     if (parent) {
       nsContentUtils::MaybeFireNodeRemoved(adoptedNode, parent,
                                            adoptedNode->OwnerDoc());
@@ -6331,7 +6069,7 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
       } while ((doc = doc->GetParentDocument()));
 
       // Remove from parent.
-      nsCOMPtr<nsINode> parent = adoptedNode->GetNodeParent();
+      nsCOMPtr<nsINode> parent = adoptedNode->GetParentNode();
       if (parent) {
         parent->RemoveChildAt(parent->IndexOf(adoptedNode), true);
       }
@@ -6415,12 +6153,6 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
 
   NS_ADDREF(*aResult = aAdoptedNode);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
-{
-  return nsINode::GetOwnerDocument(aOwnerDocument);
 }
 
 nsEventListenerManager*

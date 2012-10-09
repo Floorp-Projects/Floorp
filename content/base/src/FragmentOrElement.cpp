@@ -454,7 +454,8 @@ NS_IMETHODIMP
 nsNode3Tearoff::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                                    nsAString& aNamespaceURI)
 {
-  return mNode->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
+  mNode->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
+  return NS_OK;
 }
 
 nsContentList*
@@ -639,90 +640,6 @@ FragmentOrElement::~FragmentOrElement()
   }
 }
 
-NS_IMETHODIMP
-FragmentOrElement::GetNodeName(nsAString& aNodeName)
-{
-  aNodeName = NodeName();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FragmentOrElement::GetLocalName(nsAString& aLocalName)
-{
-  aLocalName = LocalName();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FragmentOrElement::GetNodeValue(nsAString& aNodeValue)
-{
-  SetDOMStringToNull(aNodeValue);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FragmentOrElement::SetNodeValue(const nsAString& aNodeValue)
-{
-  // The DOM spec says that when nodeValue is defined to be null "setting it
-  // has no effect", so we don't throw an exception.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FragmentOrElement::GetNodeType(uint16_t* aNodeType)
-{
-  *aNodeType = NodeType();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FragmentOrElement::GetNamespaceURI(nsAString& aNamespaceURI)
-{
-  return mNodeInfo->GetNamespaceURI(aNamespaceURI);
-}
-
-NS_IMETHODIMP
-FragmentOrElement::GetPrefix(nsAString& aPrefix)
-{
-  mNodeInfo->GetPrefix(aPrefix);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FragmentOrElement::IsSupported(const nsAString& aFeature,
-                               const nsAString& aVersion,
-                               bool* aReturn)
-{
-  *aReturn = nsContentUtils::InternalIsSupported(this, aFeature, aVersion);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FragmentOrElement::HasAttributes(bool* aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-
-  *aReturn = GetAttrCount() > 0;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FragmentOrElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
-{
-  *aAttributes = nullptr;
-  return NS_OK;
-}
-
-nsresult
-FragmentOrElement::HasChildNodes(bool* aReturn)
-{
-  *aReturn = mAttrsAndChildren.ChildCount() > 0;
-
-  return NS_OK;
-}
-
 already_AddRefed<nsINodeList>
 FragmentOrElement::GetChildren(uint32_t aFilter)
 {
@@ -751,7 +668,7 @@ FragmentOrElement::GetChildren(uint32_t aFilter)
   if (!(aFilter & eAllButXBL)) {
     childList = document->BindingManager()->GetXBLChildNodesFor(this);
     if (!childList) {
-      childList = GetChildNodesList();
+      childList = ChildNodes();
     }
 
   } else {
@@ -978,17 +895,17 @@ FragmentOrElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
   }
 }
 
-NS_IMETHODIMP
-FragmentOrElement::GetTextContent(nsAString &aTextContent)
+void
+FragmentOrElement::GetTextContentInternal(nsAString& aTextContent)
 {
   nsContentUtils::GetNodeTextContent(this, true, aTextContent);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-FragmentOrElement::SetTextContent(const nsAString& aTextContent)
+void
+FragmentOrElement::SetTextContentInternal(const nsAString& aTextContent,
+                                          ErrorResult& aError)
 {
-  return nsContentUtils::SetNodeTextContent(this, aTextContent, false);
+  aError = nsContentUtils::SetNodeTextContent(this, aTextContent, false);
 }
 
 void
@@ -1208,7 +1125,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
 
   {
     nsIDocument *doc;
-    if (!tmp->GetNodeParent() && (doc = tmp->OwnerDoc())) {
+    if (!tmp->GetParentNode() && (doc = tmp->OwnerDoc())) {
       doc->BindingManager()->RemovedFromDocument(tmp, doc);
     }
   }
@@ -1259,7 +1176,7 @@ nsINode*
 FindOptimizableSubtreeRoot(nsINode* aNode)
 {
   nsINode* p;
-  while ((p = aNode->GetNodeParent())) {
+  while ((p = aNode->GetParentNode())) {
     if (aNode->UnoptimizableCCNode()) {
       return nullptr;
     }
@@ -1888,7 +1805,7 @@ FragmentOrElement::FireNodeRemovedForChildren()
 
   nsCOMPtr<nsINode> child;
   for (child = GetFirstChild();
-       child && child->GetNodeParent() == this;
+       child && child->GetParentNode() == this;
        child = child->GetNextSibling()) {
     nsContentUtils::MaybeFireNodeRemoved(child, this, doc);
   }

@@ -269,7 +269,7 @@ public:
    */
   Accessible* GetContainerAccessible(nsINode* aNode)
   {
-    return aNode ? GetAccessibleOrContainer(aNode->GetNodeParent()) : nullptr;
+    return aNode ? GetAccessibleOrContainer(aNode->GetParentNode()) : nullptr;
   }
 
   /**

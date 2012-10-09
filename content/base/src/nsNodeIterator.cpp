@@ -62,7 +62,7 @@ bool nsNodeIterator::NodePointer::MoveToPrevious(nsINode *aRoot)
     if (mNode == aRoot)
         return false;
 
-    MoveBackward(mNode->GetNodeParent(), mNode->GetPreviousSibling());
+    MoveBackward(mNode->GetParentNode(), mNode->GetPreviousSibling());
 
     return true;
 }
@@ -113,7 +113,7 @@ bool nsNodeIterator::NodePointer::MoveForward(nsINode *aRoot, nsINode *aNode)
             mNode = sibling;
             return true;
         }
-        aNode = aNode->GetNodeParent();
+        aNode = aNode->GetParentNode();
     }
 
     return false;

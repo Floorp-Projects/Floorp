@@ -496,8 +496,8 @@ customReturnInterfaces = [
     ]
 
 nsIDOMNode_GetChildNodes_customMethodCallCode = """
-    nsChildContentList* result = static_cast<nsChildContentList*>(self->GetChildNodesList());
-    rv = result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    nsChildContentList* result = static_cast<nsChildContentList*>(self->ChildNodes());
+    rv = NS_OK;
 """
 
 nsIDOMHTMLDocument_Write_customMethodCallCode = """
@@ -563,7 +563,7 @@ customMethodCalls = {
         },
     'nsIDOMNode_GetParentNode': {
         'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetNodeParent();',
+        'code': '    nsINode *result = self->GetParentNode();',
         'canFail': False
         },
     'nsIDOMNode_GetParentElement': {
@@ -575,30 +575,55 @@ customMethodCalls = {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
         'arg1Type': 'nsINode',
-        'code': '    nsINode *result = self->InsertBefore(arg0, arg1, &rv);\n'
-                '    if(NS_FAILED(rv))\n'
-                '        result = nullptr;'
+        'code': '    nsINode* result;'
+                '    if (arg0) {\n'
+                '        mozilla::ErrorResult error;\n'
+                '        result = self->InsertBefore(*arg0, arg1, error);\n'
+                '        rv = error.ErrorCode();\n'
+                '    } else {\n'
+                '        rv = NS_ERROR_NULL_POINTER;\n'
+                '        result = nullptr;\n'
+                '    }'
         },
     'nsIDOMNode_ReplaceChild': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
         'arg1Type': 'nsINode',
-        'code': '    nsINode *result = self->ReplaceChild(arg0, arg1, &rv);\n'
-                '    if(NS_FAILED(rv))\n'
-                '        result = nullptr;'
+        'code': '    nsINode* result;'
+                '    if (arg0 && arg1) {\n'
+                '        mozilla::ErrorResult error;\n'
+                '        result = self->ReplaceChild(*arg0, *arg1, error);\n'
+                '        rv = error.ErrorCode();\n'
+                '    } else {\n'
+                '        rv = NS_ERROR_NULL_POINTER;\n'
+                '        result = nullptr;\n'
+                '    }'
         },
     'nsIDOMNode_RemoveChild': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
-        'code': '    rv = self->RemoveChild(arg0);\n'
-                '    nsINode *result = NS_SUCCEEDED(rv) ? arg0 : nullptr;'
+        'code': '    nsINode* result;\n'
+                '    if (arg0) {\n'
+                '        mozilla::ErrorResult error;\n'
+                '        result = self->RemoveChild(*arg0, error);\n'
+                '        rv = error.ErrorCode();\n'
+                '    } else {\n'
+                '        rv = NS_ERROR_NULL_POINTER;\n'
+                '        result = nullptr;\n'
+                '    }'
         },
     'nsIDOMNode_AppendChild': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
-        'code': '    nsINode *result = self->AppendChild(arg0, &rv);\n'
-                '    if(NS_FAILED(rv))\n'
-                '        result = nullptr;'
+        'code': '    nsINode* result;\n'
+                '    if (arg0) {\n'
+                '        mozilla::ErrorResult error;\n'
+                '        result = self->AppendChild(*arg0, error);\n'
+                '        rv = error.ErrorCode();\n'
+                '    } else {\n'
+                '        rv = NS_ERROR_NULL_POINTER;\n'
+                '        result = nullptr;\n'
+                '    }'
         },
     'nsIDOMNode_GetNodeType': {
         'thisType': 'nsINode',
@@ -766,7 +791,12 @@ customMethodCalls = {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
         'code': '    uint16_t result;\n'
-                '    rv = self->CompareDocPosition(arg0, &result);',
+                '    if (arg0) {\n'
+                '        result = self->CompareDocumentPosition(*arg0);\n'
+                '        rv = NS_OK;\n'
+                '    } else {\n'
+                '        rv = NS_ERROR_INVALID_ARG;\n'
+                '    }',
         'canFail': True
         },
     'nsIDOMNode_GetTextContent': {
@@ -779,6 +809,7 @@ customMethodCalls = {
         },
     'nsIDOMNode_IsDefaultNamespace': {
         'thisType': 'nsINode',
+        'code': '    bool result = self->IsDefaultNamespace(arg0);',
         'canFail': False
         },
     'nsIDOMNode_LookupNamespaceURI': {
@@ -788,7 +819,7 @@ customMethodCalls = {
     'nsIDOMNode_IsEqualNode': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
-        'code': '    bool result = self->IsEqualTo(arg0);',
+        'code': '    bool result = self->IsEqualNode(arg0);',
         'canFail': False
         },
     'nsIDOMNode_GetUserData': {
