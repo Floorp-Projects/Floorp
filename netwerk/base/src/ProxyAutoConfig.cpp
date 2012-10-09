@@ -22,8 +22,7 @@ namespace net {
 // These are some global helper symbols the PAC format requires that we provide that
 // are initialized as part of the global javascript context used for PAC evaluations.
 // Additionally dnsResolve(host) and myIpAddress() are supplied in the same context
-// but are implemented as c++ helpers. proxyAlert(msg) is similarly defined, but that
-// is a gecko specific extension.
+// but are implemented as c++ helpers. alert(msg) is similarly defined.
 
 static const char *sPacUtils =
   "function dnsDomainIs(host, domain) {\n"
@@ -447,7 +446,7 @@ JSBool PACProxyAlert(JSContext *cx, unsigned int argc, jsval *vp)
 static JSFunctionSpec PACGlobalFunctions[] = {
   JS_FS("dnsResolve", PACDnsResolve, 1, 0),
   JS_FS("myIpAddress", PACMyIpAddress, 0, 0),
-  JS_FS("proxyAlert", PACProxyAlert, 1, 0),
+  JS_FS("alert", PACProxyAlert, 1, 0),
   JS_FS_END
 };
 
