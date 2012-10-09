@@ -133,7 +133,8 @@ int ChannelNameToClientFD(const std::string& channel_id) {
 }
 
 //------------------------------------------------------------------------------
-const size_t kMaxPipeNameLength = sizeof(sockaddr_un::sun_path);
+sockaddr_un sizecheck;
+const size_t kMaxPipeNameLength = sizeof(sizecheck.sun_path);
 
 // Creates a Fifo with the specified name ready to listen on.
 bool CreateServerFifo(const std::string& pipe_name, int* server_listen_fd) {
