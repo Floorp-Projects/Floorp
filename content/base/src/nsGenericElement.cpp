@@ -934,12 +934,11 @@ nsGenericElement::GetAttributeNode(const nsAString& aName,
     document->WarnOnceAbout(nsIDocument::eGetAttributeNode);
   }
 
-  nsCOMPtr<nsIDOMNamedNodeMap> map;
-  nsresult rv = GetAttributes(getter_AddRefs(map));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsDOMAttributeMap* map = GetAttributes();
+  NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMNode> node;
-  rv = map->GetNamedItem(aName, getter_AddRefs(node));
+  nsresult rv = map->GetNamedItem(aName, getter_AddRefs(node));
 
   if (NS_SUCCEEDED(rv) && node) {
     rv = CallQueryInterface(node, aReturn);
@@ -959,12 +958,11 @@ nsGenericElement::SetAttributeNode(nsIDOMAttr* aAttribute,
 
   OwnerDoc()->WarnOnceAbout(nsIDocument::eSetAttributeNode);
 
-  nsCOMPtr<nsIDOMNamedNodeMap> map;
-  nsresult rv = GetAttributes(getter_AddRefs(map));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsDOMAttributeMap* map = GetAttributes();
+  NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMNode> returnNode;
-  rv = map->SetNamedItem(aAttribute, getter_AddRefs(returnNode));
+  nsresult rv = map->SetNamedItem(aAttribute, getter_AddRefs(returnNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (returnNode) {
@@ -985,13 +983,12 @@ nsGenericElement::RemoveAttributeNode(nsIDOMAttr* aAttribute,
 
   OwnerDoc()->WarnOnceAbout(nsIDocument::eRemoveAttributeNode);
 
-  nsCOMPtr<nsIDOMNamedNodeMap> map;
-  nsresult rv = GetAttributes(getter_AddRefs(map));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsDOMAttributeMap* map = GetAttributes();
+  NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
 
   nsAutoString name;
 
-  rv = aAttribute->GetName(name);
+  nsresult rv = aAttribute->GetName(name);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDOMNode> node;
     rv = map->RemoveNamedItem(name, getter_AddRefs(node));
@@ -1094,12 +1091,12 @@ nsGenericElement::GetAttributeNodeNSInternal(const nsAString& aNamespaceURI,
                                              const nsAString& aLocalName,
                                              nsIDOMAttr** aReturn)
 {
-  nsCOMPtr<nsIDOMNamedNodeMap> map;
-  nsresult rv = GetAttributes(getter_AddRefs(map));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsDOMAttributeMap* map = GetAttributes();
+  NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMNode> node;
-  rv = map->GetNamedItemNS(aNamespaceURI, aLocalName, getter_AddRefs(node));
+  nsresult rv = map->GetNamedItemNS(aNamespaceURI, aLocalName,
+                                    getter_AddRefs(node));
 
   if (NS_SUCCEEDED(rv) && node) {
     rv = CallQueryInterface(node, aReturn);
@@ -1118,12 +1115,11 @@ nsGenericElement::SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
 
   OwnerDoc()->WarnOnceAbout(nsIDocument::eSetAttributeNodeNS);
 
-  nsCOMPtr<nsIDOMNamedNodeMap> map;
-  nsresult rv = GetAttributes(getter_AddRefs(map));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsDOMAttributeMap* map = GetAttributes();
+  NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMNode> returnNode;
-  rv = map->SetNamedItemNS(aNewAttr, getter_AddRefs(returnNode));
+  nsresult rv = map->SetNamedItemNS(aNewAttr, getter_AddRefs(returnNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (returnNode) {

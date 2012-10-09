@@ -100,7 +100,7 @@ nsRange::CompareNodeToRange(nsINode* aNode, nsRange* aRange,
   
   // gather up the dom point info
   int32_t nodeStart, nodeEnd;
-  nsINode* parent = aNode->GetNodeParent();
+  nsINode* parent = aNode->GetParentNode();
   if (!parent) {
     // can't make a parent/offset pair to represent start or 
     // end of the root node, because it has no parent.
@@ -173,7 +173,7 @@ GetNextRangeCommonAncestor(nsINode* aNode)
     if (!aNode->IsDescendantOfCommonAncestorForRangeInSelection()) {
       return nullptr;
     }
-    aNode = aNode->GetNodeParent();
+    aNode = aNode->GetParentNode();
   }
   return aNode;
 }
@@ -188,7 +188,7 @@ nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
   nsINode* n = GetNextRangeCommonAncestor(aNode);
   NS_ASSERTION(n || !aNode->IsSelectionDescendant(),
                "orphan selection descendant");
-  for (; n; n = GetNextRangeCommonAncestor(n->GetNodeParent())) {
+  for (; n; n = GetNextRangeCommonAncestor(n->GetParentNode())) {
     RangeHashTable* ranges =
       static_cast<RangeHashTable*>(n->GetProperty(nsGkAtoms::range));
     ranges->EnumerateEntries(FindSelectedRange, &data);
@@ -422,7 +422,7 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
   // did so too (otherwise the range would end up with disconnected nodes).
   if (aContent == mEndParent &&
       aInfo->mChangeStart < static_cast<uint32_t>(mEndOffset)) {
-    if (aInfo->mDetails && (aContent->GetNodeParent() || newStartNode)) {
+    if (aInfo->mDetails && (aContent->GetParentNode() || newStartNode)) {
       // splitText(), aInfo->mDetails->mNextSibling is the new text node
       NS_ASSERTION(aInfo->mDetails->mType ==
                    CharacterDataChangeInfo::Details::eSplit,
@@ -436,7 +436,7 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
       if (isCommonAncestor && !newStartNode) {
         // The split occurs inside the range.
         UnregisterCommonAncestor(mStartParent);
-        RegisterCommonAncestor(mStartParent->GetNodeParent());
+        RegisterCommonAncestor(mStartParent->GetParentNode());
         newEndNode->SetDescendantOfCommonAncestorForRangeInSelection();
       } else if (mEndParent->IsDescendantOfCommonAncestorForRangeInSelection()) {
         newEndNode->SetDescendantOfCommonAncestorForRangeInSelection();
@@ -480,7 +480,7 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
     }
     DoSetRange(newStartNode, newStartOffset, newEndNode, newEndOffset,
                newRoot ? newRoot : mRoot.get(),
-               !newEndNode->GetNodeParent() || !newStartNode->GetNodeParent());
+               !newEndNode->GetParentNode() || !newStartNode->GetParentNode());
   }
 }
 
@@ -662,7 +662,7 @@ nsRange::IntersectsNode(nsIDOMNode* aNode, bool* aResult)
   NS_ENSURE_TRUE(mIsPositioned, NS_ERROR_NOT_INITIALIZED);
 
   // Step 3.
-  nsINode* parent = node->GetNodeParent();
+  nsINode* parent = node->GetParentNode();
   if (!parent) {
     // Steps 2 and 4. 
     // |parent| is null, so |node|'s root is |node| itself.
@@ -720,7 +720,7 @@ nsRange::DoSetRange(nsINode* aStartN, int32_t aStartOffset,
                     static_cast<nsIContent*>(aStartN)->GetBindingParent() &&
                    aRoot ==
                     static_cast<nsIContent*>(aEndN)->GetBindingParent()) ||
-                  (!aRoot->GetNodeParent() &&
+                  (!aRoot->GetParentNode() &&
                    (aRoot->IsNodeOfType(nsINode::eDOCUMENT) ||
                     aRoot->IsNodeOfType(nsINode::eATTRIBUTE) ||
                     aRoot->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) ||
@@ -774,7 +774,7 @@ IndexOf(nsIDOMNode* aChildNode)
     return -1;
   }
 
-  nsINode *parent = child->GetNodeParent();
+  nsINode *parent = child->GetParentNode();
 
   // finally we get the index
   return parent ? parent->IndexOf(child) : -1;
@@ -895,7 +895,7 @@ nsRange::IsValidBoundary(nsINode* aNode)
   }
 
   root = aNode;
-  while ((aNode = aNode->GetNodeParent())) {
+  while ((aNode = aNode->GetParentNode())) {
     root = aNode;
   }
 
@@ -1062,7 +1062,7 @@ nsRange::SelectNode(nsIDOMNode* aN)
   nsCOMPtr<nsINode> node = do_QueryInterface(aN);
   NS_ENSURE_TRUE(node, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
 
-  nsINode* parent = node->GetNodeParent();
+  nsINode* parent = node->GetParentNode();
   nsINode* newRoot = IsValidBoundary(parent);
   NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
 
@@ -1440,19 +1440,6 @@ CollapseRangeAfterDelete(nsIDOMRange *aRange)
 }
 
 /**
- * Remove a node from the DOM entirely.
- *
- * @param aNode The node to remove.
- */
-static nsresult
-RemoveNode(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsCOMPtr<nsINode> parent = node->GetNodeParent();
-  return parent ? parent->RemoveChild(node) : NS_OK;
-}
-
-/**
  * Split a data node into two parts.
  *
  * @param aStartNode          The original node we are trying to split.
@@ -1760,8 +1747,13 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
                       ValidateCurrentNode(this, iter));
     } else if (nodeToResult) {
       nsMutationGuard guard;
-      rv = RemoveNode(nodeToResult);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsINode> node = do_QueryInterface(nodeToResult);
+      nsINode* parent = node->GetParentNode();
+      if (parent) {
+        mozilla::ErrorResult error;
+        parent->RemoveChild(*node, error);
+        NS_ENSURE_FALSE(error.Failed(), error.ErrorCode());
+      }
       NS_ENSURE_STATE(!guard.Mutated(1) ||
                       ValidateCurrentNode(this, iter));
     }
@@ -2195,8 +2187,8 @@ nsRange::SurroundContents(nsIDOMNode* aNewParent)
   if (mStartParent != mEndParent) {
     bool startIsText = mStartParent->IsNodeOfType(nsINode::eTEXT);
     bool endIsText = mEndParent->IsNodeOfType(nsINode::eTEXT);
-    nsINode* startGrandParent = mStartParent->GetNodeParent();
-    nsINode* endGrandParent = mEndParent->GetNodeParent();
+    nsINode* startGrandParent = mStartParent->GetParentNode();
+    nsINode* endGrandParent = mEndParent->GetParentNode();
     NS_ENSURE_TRUE((startIsText && endIsText &&
                     startGrandParent &&
                     startGrandParent == endGrandParent) ||
@@ -2630,7 +2622,7 @@ nsRange::GetRegisteredCommonAncestor()
     if (ranges->GetEntry(this)) {
       break;
     }
-    ancestor = GetNextRangeCommonAncestor(ancestor->GetNodeParent());
+    ancestor = GetNextRangeCommonAncestor(ancestor->GetParentNode());
   }
   NS_ASSERTION(ancestor, "can't find common ancestor for selected range");
   return ancestor;

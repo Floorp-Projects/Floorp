@@ -58,7 +58,7 @@ using namespace mozilla::dom;
         slots->mMutationObservers, nsIMutationObserver,           \
         func_, params_);                                          \
     }                                                             \
-    node = node->GetNodeParent();                                 \
+    node = node->GetParentNode();                                 \
   } while (node);                                                 \
   if (needsEnterLeave) {                                          \
     nsDOMMutationObserver::LeaveMutationHandling();               \
@@ -359,11 +359,11 @@ nsNodeUtils::TraverseUserData(nsINode* aNode,
 nsresult
 nsNodeUtils::CloneNodeImpl(nsINode *aNode, bool aDeep,
                            bool aCallUserDataHandlers,
-                           nsIDOMNode **aResult)
+                           nsINode **aResult)
 {
   *aResult = nullptr;
 
-  nsCOMPtr<nsIDOMNode> newNode;
+  nsCOMPtr<nsINode> newNode;
   nsCOMArray<nsINode> nodesWithProperties;
   nsresult rv = Clone(aNode, aDeep, nullptr, nodesWithProperties,
                       getter_AddRefs(newNode));

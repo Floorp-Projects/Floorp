@@ -1721,6 +1721,11 @@ public:
     }
   }
 
+  bool CreatingStaticClone() const
+  {
+    return mCreatingStaticClone;
+  }
+
 private:
   uint64_t mWarnedAbout;
 
