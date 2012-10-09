@@ -232,18 +232,12 @@ pref("gfx.font_rendering.graphite.enabled", false);
 // (see http://mxr.mozilla.org/mozilla-central/ident?i=ShapingType)
 // Scripts not listed are grouped in the default category.
 // Set the pref to -1 to have all text shaped via the harfbuzz backend.
-#ifdef XP_MACOSX
-// use harfbuzz for all scripts (except when using AAT fonts)
-pref("gfx.font_rendering.harfbuzz.scripts", -1);
-#else
-#ifdef ANDROID
-// use harfbuzz for everything, as we don't have a platform script-shaping lib
-// to fall back on anyhow, and Indic support is coming along well
-pref("gfx.font_rendering.harfbuzz.scripts", -1);
-#else
+#ifdef XP_WIN
 // use harfbuzz for default (0x01) + arabic (0x02) + hebrew (0x04)
 pref("gfx.font_rendering.harfbuzz.scripts", 7);
-#endif
+#else
+// use harfbuzz for all scripts
+pref("gfx.font_rendering.harfbuzz.scripts", -1);
 #endif
 
 #ifdef XP_WIN
