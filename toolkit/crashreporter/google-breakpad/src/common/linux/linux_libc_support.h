@@ -57,7 +57,7 @@ extern unsigned my_uint_len(uintmax_t i);
 
 // Convert an unsigned integer to a string
 //   output: (output) the resulting string is written here. This buffer must be
-//     large enough to hold the resulting string. Call |my_int_len| to get the
+//     large enough to hold the resulting string. Call |my_uint_len| to get the
 //     required length.
 //   i: the unsigned integer to serialise.
 //   i_len: the length of the integer in base 10 (see |my_uint_len|).

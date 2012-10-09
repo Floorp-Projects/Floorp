@@ -290,6 +290,8 @@ class RegExpCompartment
      * mapping property, 'hackedSource' is unambiguous.
      */
     bool lookupHack(JSAtom *source, RegExpFlag flags, JSContext *cx, RegExpGuard *g);
+
+    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf);
 };
 
 class RegExpObject : public JSObject

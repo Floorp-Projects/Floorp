@@ -4301,9 +4301,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     AddCookiesToRequest();
 
-    // notify "http-on-modify-request" observers
-    gHttpHandler->OnModifyRequest(this);
-
     mIsPending = true;
     mWasOpened = true;
 
@@ -4315,11 +4312,11 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     if (mLoadGroup)
         mLoadGroup->AddRequest(this, nullptr);
 
-    // Collect mAsyncOpenTime after we have called all observers like
-    // "http-on-modify-request" and load group observers that may set
-    // mTimingEnabled flag.
-    if (mTimingEnabled)
-        mAsyncOpenTime = mozilla::TimeStamp::Now();
+    // record asyncopen time unconditionally and clear it if we
+    // don't want it after OnModifyRequest() weighs in. But waiting for
+    // that to complete would mean we don't include proxy resolution in the
+    // timing.
+    mAsyncOpenTime = mozilla::TimeStamp::Now();
 
     // the only time we would already know the proxy information at this
     // point would be if we were proxying a non-http protocol like ftp
@@ -4338,6 +4335,14 @@ nsHttpChannel::BeginConnect()
 {
     LOG(("nsHttpChannel::BeginConnect [this=%p]\n", this));
     nsresult rv;
+
+    // notify "http-on-modify-request" observers
+    gHttpHandler->OnModifyRequest(this);
+
+    // If mTimingEnabled flag is not set after OnModifyRequest() then
+    // clear the already recorded AsyncOpen value for consistency.
+    if (!mTimingEnabled)
+        mAsyncOpenTime = mozilla::TimeStamp();
 
     // Construct connection info object
     nsAutoCString host;
@@ -4519,11 +4524,10 @@ NS_IMETHODIMP
 nsHttpChannel::GetProxyInfo(nsIProxyInfo **result)
 {
     if (!mConnectionInfo)
-        *result = nullptr;
-    else {
+        *result = mProxyInfo;
+    else
         *result = mConnectionInfo->ProxyInfo();
-        NS_IF_ADDREF(*result);
-    }
+    NS_IF_ADDREF(*result);
     return NS_OK;
 }
 

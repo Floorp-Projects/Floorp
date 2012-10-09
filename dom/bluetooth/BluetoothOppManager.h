@@ -62,6 +62,9 @@ private:
   void FileTransferComplete(bool aSuccess, bool aReceived,
                             const nsString& aFileName, uint32_t aFileLength);
   void UpdateProgress(uint32_t aProcessed, uint32_t aFileLength);
+  void ReplyToConnect();
+  void ReplyToDisconnect();
+  void ReplyToPut(bool aFinal);
 
   bool mConnected;
   int mConnectionId;
@@ -70,6 +73,7 @@ private:
   uint8_t mRemoteConnectionFlags;
   int mRemoteMaxPacketLength;
   bool mAbortFlag;
+  int mPacketLeftLength;
 
   nsCOMPtr<nsIDOMBlob> mBlob;
   nsCOMPtr<nsIThread> mReadFileThread;

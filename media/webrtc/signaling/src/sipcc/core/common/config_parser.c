@@ -649,12 +649,12 @@ void config_parser_handle_fcp_file (char* fcpTemplateFile)
     if (strcmp (fcpTemplateFile, "") == 0)
     {
         CC_Config_setFcp(NULL, 0);
-        ccsnap_gen_deviceEvent(CCAPI_LINE_EV_CAPSET_CHANGED, CC_DEVICE_ID);
+        ccsnap_gen_deviceEvent(CCAPI_DEVICE_EV_CONFIG_CHANGED, CC_DEVICE_ID);
 
         return;
     }
 
-    ccsnap_gen_deviceEvent(CCAPI_LINE_EV_CAPSET_CHANGED, CC_DEVICE_ID);
+    ccsnap_gen_deviceEvent(CCAPI_DEVICE_EV_CONFIG_CHANGED, CC_DEVICE_ID);
 }
 
 

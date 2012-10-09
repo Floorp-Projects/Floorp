@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Components.utils.import("resource://gre/modules/ClearRecentHistory.jsm");
+Components.utils.import("resource://gre/modules/ForgetAboutSite.jsm");
 
 const domains = [
   "mochi.test:8888",
@@ -66,7 +66,7 @@ function test2()
 function test3()
 {
   // Remove database from domain 2
-  ClearRecentHistory.removeDataFromDomain(domains[1]);
+  ForgetAboutSite.removeDataFromDomain(domains[1]);
   setPermission(testPageURL4, "indexedDB", "unknown");
   executeSoon(test4);
 }

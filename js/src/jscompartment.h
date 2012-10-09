@@ -278,8 +278,14 @@ struct JSCompartment
 
     js::RegExpCompartment        regExps;
 
-    size_t sizeOfShapeTable(JSMallocSizeOfFun mallocSizeOf);
+  private:
     void sizeOfTypeInferenceData(JS::TypeInferenceSizes *stats, JSMallocSizeOfFun mallocSizeOf);
+
+  public:
+    void sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *compartmentObject,
+                             JS::TypeInferenceSizes *tiSizes,
+                             size_t *shapesCompartmentTables, size_t *crossCompartmentWrappers,
+                             size_t *regexpCompartment, size_t *debuggeesSet);
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.

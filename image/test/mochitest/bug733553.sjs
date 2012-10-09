@@ -43,7 +43,9 @@ function getFileAsInputStream(aFilename) {
 
 function handleRequest(request, response)
 {
-  setSharedState("next-part", "-1");
+  if (!getSharedState("next-part")) {
+    setSharedState("next-part", "-1");
+  }
   response.setHeader("Content-Type",
                      "multipart/x-mixed-replace;boundary=BOUNDARYOMG", false);
   response.setHeader("Cache-Control", "no-cache", false);
