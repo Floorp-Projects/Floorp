@@ -811,9 +811,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     template <typename T>
-    void loadUnboxedValue(const T &src, AnyRegister dest) {
+    void loadUnboxedValue(const T &src, MIRType type, AnyRegister dest) {
         if (dest.isFloat())
             loadInt32OrDouble(Operand(src), dest.fpu());
+        else if (type == MIRType_Int32 || type == MIRType_Boolean)
+            movl(Operand(src), dest.gpr());
         else
             unboxNonDouble(Operand(src), dest.gpr());
     }
