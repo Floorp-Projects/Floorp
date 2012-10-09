@@ -58,6 +58,18 @@ public:
 
 private:
   /**
+   * StageIdleDaily is the interim call made when an idle-daily event is due.
+   * However we don't want to fire idle-daily until the user is idle for this
+   * session, so this sets up a short wait for an idle event which triggers
+   * the actual idle-daily event.
+   *
+   * @param aHasBeenLongWait Pass true indicating nsIdleServiceDaily is having
+   * trouble getting the idle-daily event fired. If true StageIdleDaily will
+   * use a shorter idle wait time before firing idle-daily.
+   */
+  void StageIdleDaily(bool aHasBeenLongWait);
+
+  /**
    * @note This is a normal pointer, part to avoid creating a cycle with the
    * idle service, part to avoid potential pointer corruption due to this class
    * being instantiated in the constructor of the service itself.
@@ -86,10 +98,17 @@ private:
   bool mShutdownInProgress;
 
   /**
-   * Real time we fired off the one-day timer, in case timers aren't
-   * very reliable.
+   * Next time we expect an idle-daily timer to fire, in case timers aren't
+   * very reliable on the platform. Value is in PR_Now microsecond units.
    */
-  PRTime mDailyTimerStart;
+  PRTime mExpectedTriggerTime;
+
+  /**
+   * Tracks which idle daily observer callback we ask for. There are two: a
+   * regular long idle wait and a shorter wait if we've been waiting to fire
+   * idle daily for an extended period. Set by StageIdleDaily.
+   */
+  int32_t mIdleDailyTriggerWait;
 };
 
 class nsIdleService : public nsIIdleServiceInternal
