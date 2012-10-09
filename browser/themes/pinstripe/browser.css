@@ -4316,7 +4316,7 @@ panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .
 }
 
 .center-item-box[warn="true"] {
-  background-image: url("chrome://mozapps/skin/extensions/stripes-info-negative-small.png");
+  background-image: url("chrome://browser/skin/click-to-play-warning-stripes.png");
   background-repeat: repeat-x;
   padding-top: 3px;
   -moz-padding-end: 11px;

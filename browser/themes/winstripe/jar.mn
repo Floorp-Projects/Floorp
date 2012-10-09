@@ -49,6 +49,7 @@ browser.jar:
         skin/classic/browser/searchbar-dropdown-arrow.png
         skin/classic/browser/Secure24.png
         skin/classic/browser/setDesktopBackground.css
+        skin/classic/browser/click-to-play-warning-stripes.png
         skin/classic/browser/Toolbar.png
         skin/classic/browser/Toolbar-inverted.png
         skin/classic/browser/toolbarbutton-dropdown-arrow.png
@@ -254,6 +255,7 @@ browser.jar:
         skin/classic/aero/browser/searchbar-dropdown-arrow.png       (searchbar-dropdown-arrow-aero.png)
         skin/classic/aero/browser/Secure24.png                       (Secure24-aero.png)
         skin/classic/aero/browser/setDesktopBackground.css
+        skin/classic/aero/browser/click-to-play-warning-stripes.png
         skin/classic/aero/browser/Toolbar.png
         skin/classic/aero/browser/Toolbar-inverted.png
         skin/classic/aero/browser/toolbarbutton-dropdown-arrow.png
