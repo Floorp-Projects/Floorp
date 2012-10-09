@@ -2684,34 +2684,11 @@ html|*#gcli-output-frame {
   margin-right: -12px;
 }
 
-#social-statusarea-user {
-  border-bottom: 1px solid rgb(221,221,221);
-  background-color: -moz-Dialog;
-  color: -moz-dialogtext;
-  position: relative;
-  font: message-box;
-  font-size: 12px;
-  cursor: pointer;
-}
-
 #social-statusarea-user-portrait {
   width: 32px;
   height: 32px;
   border-radius: 2px;
   margin: 10px;
-}
-
-#social-statusarea-user > vbox > .link {
-  -moz-appearance: none;
-  background: transparent;
-  border: none;
-  color: -moz-nativehyperlinktext;
-  min-width: 0;
-  margin: 0 6px;
-  list-style-image: none;
-}
-#social-statusarea-user:hover > vbox > .link {
-  text-decoration: underline;
 }
 
 .social-panel > .panel-arrowcontainer > .panel-arrowcontent {

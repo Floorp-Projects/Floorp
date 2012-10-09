@@ -623,7 +623,7 @@ var SocialToolbar = {
     if (profile.userName) {
       notLoggedInLabel.hidden = true;
       userNameBtn.hidden = false;
-      userNameBtn.label = profile.userName;
+      userNameBtn.value = profile.userName;
     } else {
       notLoggedInLabel.hidden = false;
       userNameBtn.hidden = true;

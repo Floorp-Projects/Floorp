@@ -30,7 +30,7 @@ var tests = {
     is(profile.portrait, portrait, "portrait is set");
     let userButton = document.getElementById("social-statusarea-username");
     ok(!userButton.hidden, "username is visible");
-    is(userButton.label, profile.userName, "username is set");
+    is(userButton.value, profile.userName, "username is set");
     next();
   },
   testAmbientNotifications: function(next) {
