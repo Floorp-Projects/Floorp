@@ -4100,29 +4100,11 @@ html|*#gcli-output-frame {
 
 /* === social toolbar provider menu  === */
 
-#social-statusarea-user {
-  cursor: default;
-  font-family: "lucida grande",tahoma,verdana,arial,sans-serif;
-  font-size: 12px;
-  cursor: pointer;
-}
-
 #social-statusarea-user-portrait {
   width: 32px;
   height: 32px;
-  margin: 10px;
-}
-
-#social-statusarea-user > vbox > .link {
-  -moz-appearance: none;
-  color: -moz-nativehyperlinktext;
-  min-width: 0;
-  margin: 0 6px;
-  list-style-image: none;
-}
-
-#social-statusarea-user:hover > vbox > .link {
-  text-decoration: underline;
+  margin: 4px;
+  -moz-margin-start: 0;
 }
 
 .social-panel > .panel-arrowcontainer > .panel-arrowcontent {

@@ -3361,12 +3361,10 @@ html|*#gcli-output-frame {
 }
 
 #social-statusarea-user {
+  -moz-appearance: none;
   border-bottom: 1px solid rgb(221,221,221);
   background-color: -moz-Dialog;
-  color: -moz-dialogtext;
   position: relative;
-  font: message-box;
-  font-size: 12px;
   cursor: pointer;
 }
 
@@ -3377,7 +3375,8 @@ html|*#gcli-output-frame {
   margin: 10px;
 }
 
-#social-statusarea-user > vbox > .link {
+#social-statusarea-user > vbox > #social-statusarea-notloggedin,
+#social-statusarea-user > vbox > #social-statusarea-username {
   -moz-appearance: none;
   background: transparent;
   border: none;
@@ -3386,7 +3385,9 @@ html|*#gcli-output-frame {
   margin: 0 6px;
   list-style-image: none;
 }
-#social-statusarea-user:hover > vbox > .link {
+
+#social-statusarea-user[_moz-menuactive] > vbox > #social-statusarea-notloggedin,
+#social-statusarea-user[_moz-menuactive] > vbox > #social-statusarea-username {
   text-decoration: underline;
 }
 
