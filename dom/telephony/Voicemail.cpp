@@ -50,6 +50,11 @@ Voicemail::Voicemail(nsPIDOMWindow* aWindow, nsIRILContentHelper* aRIL)
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed registering voicemail callback with RIL");
   }
+
+  rv = aRIL->RegisterVoicemailMsg();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed registering voicemail messages with RIL");
+  }
 }
 
 Voicemail::~Voicemail()
