@@ -77,6 +77,8 @@ static inline Type MAX (const Type &a, const Type &b) { return a > b ? a : b; }
 #undef  ARRAY_LENGTH
 template <typename Type, unsigned int n>
 static inline unsigned int ARRAY_LENGTH (const Type (&a)[n]) { return n; }
+/* A const version, but does not detect erratically being called on pointers. */
+#define ARRAY_LENGTH_CONST(__array) ((signed int) (sizeof (__array) / sizeof (__array[0])))
 
 #define HB_STMT_START do
 #define HB_STMT_END   while (0)
@@ -544,7 +546,7 @@ _hb_debug (unsigned int level,
 #define DEBUG_LEVEL(WHAT, LEVEL) (_hb_debug ((LEVEL), HB_DEBUG_##WHAT))
 #define DEBUG(WHAT) (DEBUG_LEVEL (WHAT, 0))
 
-template <int max_level> inline void
+template <int max_level> static inline void
 _hb_debug_msg_va (const char *what,
 		  const void *obj,
 		  const char *func,
@@ -581,12 +583,13 @@ _hb_debug_msg_va (const char *what,
     fprintf (stderr, "   " VRBAR LBAR);
 
   if (func) {
-    /* If there's a class name, just write that. */
-    const char *dotdot = strstr (func, "::");
+    /* Skip return type */
     const char *space = strchr (func, ' ');
-    if (space && dotdot && space < dotdot)
+    if (space)
       func = space + 1;
-    unsigned int func_len = dotdot ? dotdot - func : strlen (func);
+    /* Skip parameter list */
+    const char *paren = strchr (func, '(');
+    unsigned int func_len = paren ? paren - func : strlen (func);
     fprintf (stderr, "%.*s: ", func_len, func);
   }
 
@@ -605,7 +608,7 @@ _hb_debug_msg_va<0> (const char *what HB_UNUSED,
 		     const char *message HB_UNUSED,
 		     va_list ap HB_UNUSED) {}
 
-template <int max_level> inline void
+template <int max_level> static inline void
 _hb_debug_msg (const char *what,
 	       const void *obj,
 	       const char *func,
@@ -614,7 +617,7 @@ _hb_debug_msg (const char *what,
 	       int level_dir,
 	       const char *message,
 	       ...) HB_PRINTF_FUNC(7, 8);
-template <int max_level> inline void
+template <int max_level> static inline void
 _hb_debug_msg (const char *what,
 	       const void *obj,
 	       const char *func,

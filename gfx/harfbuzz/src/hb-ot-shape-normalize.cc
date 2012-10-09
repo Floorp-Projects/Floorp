@@ -130,10 +130,7 @@ compose_func (hb_unicode_funcs_t *unicode,
 	      hb_codepoint_t *ab)
 {
   /* XXX, this belongs to indic normalizer. */
-  if ((FLAG (unicode->general_category (a)) &
-       (FLAG (HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK) |
-	FLAG (HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK) |
-	FLAG (HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK))))
+  if (HB_UNICODE_GENERAL_CATEGORY_IS_MARK (unicode->general_category (a)))
     return false;
   /* XXX, add composition-exclusion exceptions to Indic shaper. */
   if (a == 0x09AF && b == 0x09BC) { *ab = 0x09DF; return true; }
@@ -414,10 +411,10 @@ decompose_multi_char_cluster (hb_font_t *font, hb_buffer_t *buffer, unsigned int
 }
 
 static inline bool
-decompose_cluster (hb_font_t *font, hb_buffer_t *buffer, bool recompose, unsigned int end)
+decompose_cluster (hb_font_t *font, hb_buffer_t *buffer, bool short_circuit, unsigned int end)
 {
   if (likely (buffer->idx + 1 == end))
-    return decompose_current_character (font, buffer, recompose);
+    return decompose_current_character (font, buffer, short_circuit);
   else
     return decompose_multi_char_cluster (font, buffer, end);
 }
@@ -437,7 +434,8 @@ void
 _hb_ot_shape_normalize (hb_font_t *font, hb_buffer_t *buffer,
 			hb_ot_shape_normalization_mode_t mode)
 {
-  bool recompose = mode != HB_OT_SHAPE_NORMALIZATION_MODE_DECOMPOSED;
+  bool short_circuit = mode != HB_OT_SHAPE_NORMALIZATION_MODE_DECOMPOSED &&
+		       mode != HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS_NO_SHORT_CIRCUIT;
   bool can_use_recompose = false;
   unsigned int count;
 
@@ -459,7 +457,7 @@ _hb_ot_shape_normalize (hb_font_t *font, hb_buffer_t *buffer,
       if (buffer->cur().cluster != buffer->info[end].cluster)
         break;
 
-    can_use_recompose = decompose_cluster (font, buffer, recompose, end) || can_use_recompose;
+    can_use_recompose = decompose_cluster (font, buffer, short_circuit, end) || can_use_recompose;
   }
   buffer->swap_buffers ();
 
@@ -495,7 +493,7 @@ _hb_ot_shape_normalize (hb_font_t *font, hb_buffer_t *buffer,
   }
 
 
-  if (!recompose)
+  if (mode == HB_OT_SHAPE_NORMALIZATION_MODE_DECOMPOSED)
     return;
 
   /* Third round, recompose */

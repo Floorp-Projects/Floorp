@@ -32,6 +32,8 @@
 #include "hb-open-type-private.hh"
 
 
+namespace OT {
+
 
 /*
  *
@@ -252,6 +254,8 @@ struct OpenTypeFontFile
   DEFINE_SIZE_UNION (4, tag);
 };
 
+
+} // namespace OT
 
 
 #endif /* HB_OPEN_FILE_PRIVATE_HH */

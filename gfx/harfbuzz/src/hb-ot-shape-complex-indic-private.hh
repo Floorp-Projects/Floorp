@@ -300,7 +300,7 @@ is_halant_or_coeng (const hb_glyph_info_t &info)
 }
 
 static inline void
-set_indic_properties (hb_glyph_info_t   &info)
+set_indic_properties (hb_glyph_info_t &info)
 {
   hb_codepoint_t u = info.codepoint;
   unsigned int type = get_indic_categories (u);

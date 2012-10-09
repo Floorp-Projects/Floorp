@@ -51,6 +51,7 @@ HBSOURCES =  \
 	hb-tt-font.cc \
 	hb-unicode-private.hh \
 	hb-unicode.cc \
+	hb-utf-private.hh \
 	hb-warning.cc \
 	$(NULL)
 HBHEADERS = \
@@ -78,6 +79,7 @@ HBSOURCES += \
 	hb-ot-map-private.hh \
 	hb-ot-shape.cc \
 	hb-ot-shape-complex-arabic.cc \
+	hb-ot-shape-complex-arabic-fallback.hh \
 	hb-ot-shape-complex-arabic-table.hh \
 	hb-ot-shape-complex-indic.cc \
 	hb-ot-shape-complex-indic-machine.hh \
@@ -96,6 +98,11 @@ HBHEADERS += \
 	hb-ot-layout.h \
 	hb-ot-tag.h \
 	$(NULL)
+endif
+
+if HAVE_PTHREAD
+HBCFLAGS += $(PTHREAD_CFLAGS)
+HBLIBS   += $(PTHREAD_LIBS)
 endif
 
 if HAVE_GLIB
@@ -163,6 +170,21 @@ HBSOURCES += hb-old.cc
 endif
 DIST_SUBDIRS += hb-old
 
+if HAVE_ICU_LE
+SUBDIRS += hb-icu-le
+HBCFLAGS += -I$(srcdir)/hb-icu-le
+HBLIBS   += hb-icu-le/libhb-icu-le.la
+HBSOURCES += hb-icu-le.cc
+endif
+DIST_SUBDIRS += hb-icu-le
+
+if HAVE_UCDN
+SUBDIRS += hb-ucdn
+HBCFLAGS += -I$(srcdir)/hb-ucdn
+HBLIBS   += hb-ucdn/libhb-ucdn.la
+HBSOURCES += hb-ucdn.cc
+endif
+DIST_SUBDIRS += hb-ucdn
 
 
 # Put the library together
@@ -170,16 +192,18 @@ DIST_SUBDIRS += hb-old
 if OS_WIN32
 export_symbols = -export-symbols harfbuzz.def
 harfbuzz_def_dependency = harfbuzz.def
-endif
-
+libharfbuzz_la_LINK = $(CXXLINK) $(libharfbuzz_la_LDFLAGS)
+else
 # Use a C linker, not C++; Don't link to libstdc++
 libharfbuzz_la_LINK = $(LINK) $(libharfbuzz_la_LDFLAGS)
+endif
+
 libharfbuzz_la_SOURCES = $(HBSOURCES) $(HBHEADERS)
 nodist_libharfbuzz_la_SOURCES = $(nodist_HBSOURCES)
 libharfbuzz_la_CPPFLAGS = $(HBCFLAGS)
 libharfbuzz_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(HB_LIBTOOL_VERSION_INFO) $(export_symbols) -no-undefined
 libharfbuzz_la_LIBADD = $(HBLIBS)
-libharfbuzz_la_DEPENDENCIES = $(harfbuzz_def_dependency)
+EXTRA_libharfbuzz_la_DEPENDENCIES = $(harfbuzz_def_dependency)
 pkginclude_HEADERS = $(HBHEADERS)
 nodist_pkginclude_HEADERS = hb-version.h
 
@@ -217,22 +241,17 @@ arabic-table: gen-arabic-table.py ArabicShaping.txt UnicodeData.txt
 
 .PHONY: unicode-tables arabic-table indic-table
 
-BUILT_SOURCES += hb-ot-shape-complex-indic-machine.hh
 EXTRA_DIST += hb-ot-shape-complex-indic-machine.rl
 hb-ot-shape-complex-indic-machine.hh: hb-ot-shape-complex-indic-machine.rl
 	$(AM_V_GEN)$(top_srcdir)/missing --run ragel -e -F1 -o "$@.tmp" "$<" && \
 	mv "$@.tmp" "$@" || ( $(RM) "$@.tmp" && false )
 
-noinst_PROGRAMS = main indic test-would-substitute
+noinst_PROGRAMS = main test-would-substitute
 bin_PROGRAMS =
 
 main_SOURCES = main.cc
 main_CPPFLAGS = $(HBCFLAGS)
 main_LDADD = libharfbuzz.la $(HBLIBS)
-
-indic_SOURCES = indic.cc
-indic_CPPFLAGS = $(HBCFLAGS)
-indic_LDADD = libharfbuzz.la $(HBLIBS)
 
 test_would_substitute_SOURCES = test-would-substitute.cc
 test_would_substitute_CPPFLAGS = $(HBCFLAGS) $(FREETYPE_CFLAGS)
@@ -244,12 +263,16 @@ dist_check_SCRIPTS = \
 	check-exported-symbols.sh \
 	check-includes.sh \
 	check-internal-symbols.sh \
-	check-static-inits.sh \
 	$(NULL)
 
 if HAVE_ICU
 else
 dist_check_SCRIPTS += check-libstdc++.sh
+endif
+
+if HAVE_ICU_LE
+else
+dist_check_SCRIPTS += check-static-inits.sh
 endif
 
 TESTS = $(dist_check_SCRIPTS)
