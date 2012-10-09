@@ -47,6 +47,8 @@ protected:
 };
 
 class THEBES_API GonkIOSurfaceImage : public Image {
+  typedef android::GraphicBuffer GraphicBuffer;
+  static uint32_t sColorIdMap[];
 public:
   struct Data {
     nsRefPtr<GraphicBufferLocked> mGraphicBuffer;
@@ -73,11 +75,20 @@ public:
     return mSize;
   }
 
-  virtual already_AddRefed<gfxASurface> GetAsSurface()
-  {
-    // We need to fix this and return a ASurface at some point.
-    return nullptr;
-  }
+  // From [android 4.0.4]/hardware/msm7k/libgralloc-qsd8k/gralloc_priv.h
+  enum {
+    /* OEM specific HAL formats */
+    HAL_PIXEL_FORMAT_YCbCr_422_P            = 0x102,
+    HAL_PIXEL_FORMAT_YCbCr_420_P            = 0x103,
+    HAL_PIXEL_FORMAT_YCbCr_420_SP           = 0x109,
+    HAL_PIXEL_FORMAT_YCrCb_420_SP_ADRENO    = 0x10A,
+  };
+
+  enum {
+    OMX_QCOM_COLOR_FormatYVU420SemiPlanar   = 0x7FA30C00,
+  };
+
+  virtual already_AddRefed<gfxASurface> GetAsSurface();
 
   void* GetNativeBuffer()
   {
