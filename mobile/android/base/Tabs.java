@@ -37,6 +37,7 @@ public class Tabs implements GeckoEventListener {
     public static final int LOADURL_NONE = 0;
     public static final int LOADURL_NEW_TAB = 1;
     public static final int LOADURL_USER_ENTERED = 2;
+    public static final int LOADURL_PRIVATE = 4;
 
     private static final int SCORE_INCREMENT_TAB_LOCATION_CHANGE = 5;
     private static final int SCORE_INCREMENT_TAB_SELECTED = 10;
@@ -455,11 +456,14 @@ public class Tabs implements GeckoEventListener {
         int tabId = -1;
 
         try {
+            boolean isPrivate = (flags & LOADURL_PRIVATE) != 0;
+
             args.put("url", url);
             args.put("engine", searchEngine);
             args.put("parentId", parentId);
             args.put("userEntered", (flags & LOADURL_USER_ENTERED) != 0);
             args.put("newTab", (flags & LOADURL_NEW_TAB) != 0);
+            args.put("isPrivate", isPrivate);
 
             if ((flags & LOADURL_NEW_TAB) != 0) {
                 tabId = getNextTabId();

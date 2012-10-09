@@ -1089,7 +1089,8 @@ var BrowserApp = {
         selected: true,
         parentId: ("parentId" in data) ? data.parentId : -1,
         flags: flags,
-        tabID: data.tabID
+        tabID: data.tabID,
+        isPrivate: data.isPrivate
       };
 
       let url = data.url;
@@ -2282,6 +2283,11 @@ Tab.prototype = {
     // Must be called after appendChild so the docshell has been created.
     this.setActive(false);
 
+    let isPrivate = ("isPrivate" in aParams) && aParams.isPrivate;
+    if (isPrivate) {
+      this.browser.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing = true;
+    }
+
     this.browser.stop();
 
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
@@ -2316,7 +2322,8 @@ Tab.prototype = {
           selected: ("selected" in aParams) ? aParams.selected : true,
           title: aParams.title || aURL,
           delayLoad: aParams.delayLoad || false,
-          desktopMode: this.desktopMode
+          desktopMode: this.desktopMode,
+          isPrivate: isPrivate
         }
       };
       sendMessageToJava(message);
