@@ -233,8 +233,8 @@ pref("gfx.font_rendering.graphite.enabled", false);
 // Scripts not listed are grouped in the default category.
 // Set the pref to -1 to have all text shaped via the harfbuzz backend.
 #ifdef XP_MACOSX
-// use harfbuzz for default (0x01) + arabic (0x02) + hebrew (0x04) + thai (0x40)
-pref("gfx.font_rendering.harfbuzz.scripts", 71);
+// use harfbuzz for all scripts (except when using AAT fonts)
+pref("gfx.font_rendering.harfbuzz.scripts", -1);
 #else
 #ifdef ANDROID
 // use harfbuzz for everything, as we don't have a platform script-shaping lib
