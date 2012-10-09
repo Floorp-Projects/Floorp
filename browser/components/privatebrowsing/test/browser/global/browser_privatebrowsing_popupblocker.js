@@ -13,7 +13,7 @@ function test() {
   let oldPopupPolicy = gPrefService.getBoolPref("dom.disable_open_during_load");
   gPrefService.setBoolPref("dom.disable_open_during_load", true);
 
-  const TEST_URI = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/popup.html";
+  const TEST_URI = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/global/popup.html";
 
   waitForExplicitFinish();
 
