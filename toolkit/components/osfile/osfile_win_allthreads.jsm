@@ -194,4 +194,7 @@ if (typeof Components != "undefined") {
     return new OSError(operation, exports.OS.Constants.Win.INVALID_HANDLE_VALUE);
   };
 
+  OSError.exists = function exists(operation) {
+    return new OSError(operation, exports.OS.Constants.Win.ERROR_FILE_EXISTS);
+  };
 })(this);

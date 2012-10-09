@@ -355,6 +355,20 @@ function test_readall_writeall_file()
   compare_files("test_readall_writeall_file (OS.File.readAll + writeAtomic 2)",
                 src_file_name, tmp_file_name);
 
+  // File.writeAtomic on top of existing file but without overwritten the file
+  exn = null;
+  try {
+    let view = new Uint8Array(readResult.buffer, 10, 200);
+    OS.File.writeAtomic(tmp_file_name, view,
+      { tmpPath: tmp_file_name + ".tmp", noOverwrite: true});
+  } catch (x) {
+    exn = x;
+  }
+  ok(exn && exn instanceof OS.File.Error && exn.becauseExists, "writeAtomic fails if file already exists with noOverwrite option");
+  // Check file was not overwritten.
+  compare_files("test_readall_writeall_file (OS.File.readAll + writeAtomic check file was not overwritten)",
+                src_file_name, tmp_file_name);
+
   // Ensure that File.writeAtomic fails if no temporary file name is provided
   // (FIXME: Remove this test as part of bug 793660)
 
@@ -365,7 +379,7 @@ function test_readall_writeall_file()
   } catch (x) {
     exn = x;
   }
-  ok(!!exn && exn instanceof TypeError, "wrietAtomic fails if tmpPath is not provided");
+  ok(!!exn && exn instanceof TypeError, "writeAtomic fails if tmpPath is not provided");
 }
 
 /**
