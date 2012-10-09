@@ -11,10 +11,10 @@
  */
 
 /*
- * Created on Mon Jun 11 21:04:54 2012 from UCD data files with version info:
+ * Created on Sun Oct  7 17:20:27 2012 from UCD data files with version info:
  *
 
-# Date: 2012-01-26, 22:03:00 GMT [KW]
+# Date: 2012-09-24, 22:40:00 GMT [KW]
 #
 # Unicode Character Database
 # Copyright (c) 1991-2012 Unicode, Inc.
@@ -26,27 +26,29 @@
 #
 
 This directory contains final data files
-for the Unicode Character Database (UCD) for Unicode 6.1.0.
+for the Unicode Character Database (UCD) for Unicode 6.2.0.
 
-# Scripts-6.1.0.txt
-# Date: 2011-11-27, 05:10:50 GMT [MD]
 
-# EastAsianWidth-6.1.0.txt
-# Date: 2011-09-19, 18:46:00 GMT [KW]
 
-# BidiMirroring-6.1.0.txt
-# Date: 2011-12-20, 19:31:00 GMT [KW, LI]
+# Scripts-6.2.0.txt
+# Date: 2012-06-04, 17:21:29 GMT [MD]
 
-# HangulSyllableType-6.1.0.txt
-# Date: 2011-08-25, 00:02:18 GMT [MD]
+# EastAsianWidth-6.2.0.txt
+# Date: 2012-05-15, 18:30:00 GMT [KW]
+
+# BidiMirroring-6.2.0.txt
+# Date: 2012-05-15, 24:19:00 GMT [KW, LI]
+
+# HangulSyllableType-6.2.0.txt
+# Date: 2012-05-23, 20:34:56 GMT [MD]
 
 # File: xidmodifications.txt
-# Version: 2.1
-# Generated: 2010-04-13, 01:33:09 GMT
+# Version: 3.0-draft
+# Generated: 2012-05-07, 07:52:41 GMT
 
 #
 # Unihan_Variants.txt
-# Date: 2011-08-08 22:10:53 GMT [JHJ]
+# Date: 2012-08-17 17:13:30 GMT [JHJ]
 
  *
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
@@ -179,6 +181,9 @@ enum {
   MOZ_SCRIPT_SHARADA = 100,
   MOZ_SCRIPT_SORA_SOMPENG = 101,
   MOZ_SCRIPT_TAKRI = 102,
+
+  MOZ_NUM_SCRIPT_CODES = 103,
+
   MOZ_SCRIPT_INVALID = -1
 };
 
