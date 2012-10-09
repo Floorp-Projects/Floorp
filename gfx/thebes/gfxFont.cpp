@@ -1588,7 +1588,7 @@ struct GlyphBufferAzure {
                gfxContext *aThebesContext, const Matrix *aInvFontMatrix, bool aFinish = false)
     {
         // Ensure there's enough room for a glyph to be added to the buffer
-        if (!aFinish && mNumGlyphs < GLYPH_BUFFER_SIZE || !mNumGlyphs) {
+        if ((!aFinish && mNumGlyphs < GLYPH_BUFFER_SIZE) || !mNumGlyphs) {
             return;
         }
 
@@ -4926,7 +4926,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, gfxFont::DrawMode aDrawMode
         ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
         
         bool drawPartial = aDrawMode == gfxFont::GLYPH_FILL ||
-                           aDrawMode == gfxFont::GLYPH_PATH && aCallbacks;
+                           (aDrawMode == gfxFont::GLYPH_PATH && aCallbacks);
 
         if (drawPartial) {
             DrawPartialLigature(font, aContext, start, ligatureRunStart, &pt,
