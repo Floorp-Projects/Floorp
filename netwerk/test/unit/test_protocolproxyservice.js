@@ -628,20 +628,43 @@ function failed_script_callback(pi)
   directFilter = new TestFilter("http", "127.0.0.1", 7246, 0, 0);
   pps.registerFilter(directFilter, 10);
 
+  // test that on-modify-request contains the proxy info too
+  var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
+  obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
+  obs.addObserver(directFilterListener, "http-on-modify-request", false);
+
   var chan = ios.newChannel("http://127.0.0.1:7247", "", null);
   chan.asyncOpen(directFilterListener, chan);
 }
 
 var directFilterListener = {
+  onModifyRequestCalled : false,
+
   onStartRequest: function test_onStart(request, ctx) {  },
   onDataAvailable: function test_OnData() { },
 
   onStopRequest: function test_onStop(request, ctx, status) {
+    // check on the PI from the channel itself
     ctx.QueryInterface(Components.interfaces.nsIProxiedChannel);
     check_proxy(ctx.proxyInfo, "http", "127.0.0.1", 7246, 0, 0, false);
     pps.unregisterFilter(directFilter);
+
+    // check on the PI from on-modify-request
+    do_check_true(this.onModifyRequestCalled);
+    var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
+    obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
+    obs.removeObserver(this, "http-on-modify-request");
     do_test_finished();
   },
+
+   observe: function(subject, topic, data) {
+     if (topic === "http-on-modify-request" &&
+         subject instanceof Components.interfaces.nsIHttpChannel &&
+         subject instanceof Components.interfaces.nsIProxiedChannel) {
+       check_proxy(subject.proxyInfo, "http", "127.0.0.1", 7246, 0, 0, false);
+       this.onModifyRequestCalled = true;
+     }
+   }
 };
 
 function run_deprecated_sync_test()
