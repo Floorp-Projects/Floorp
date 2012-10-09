@@ -11,7 +11,7 @@ function test() {
            getService(Ci.nsIPrivateBrowsingService);
 
   const testPageURL = "http://example.com/browser/" +
-    "browser/components/privatebrowsing/test/browser/browser_privatebrowsing_protocolhandler_page.html";
+    "browser/components/privatebrowsing/test/browser/global/browser_privatebrowsing_protocolhandler_page.html";
   waitForExplicitFinish();
 
   const notificationValue = "Protocol Registration: testprotocol";
