@@ -1361,8 +1361,8 @@ NS_INTERFACE_MAP_BEGIN(StyleRule)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF_INHERITED(StyleRule, Rule)
-NS_IMPL_RELEASE_INHERITED(StyleRule, Rule)
+NS_IMPL_ADDREF(StyleRule)
+NS_IMPL_RELEASE(StyleRule)
 
 void
 StyleRule::RuleMatched()
@@ -1403,6 +1403,12 @@ StyleRule::GetDOMRule()
     mDOMRule = new DOMCSSStyleRule(this);
     NS_ADDREF(mDOMRule);
   }
+  return mDOMRule;
+}
+
+/* virtual */ nsIDOMCSSRule*
+StyleRule::GetExistingDOMRule()
+{
   return mDOMRule;
 }
 

@@ -484,7 +484,7 @@ var gPluginHandler = {
 
     let messageString = gNavigatorBundle.getString("activatePluginsMessage.message");
     let mainAction = {
-      label: gNavigatorBundle.getString("activatePluginsMessage.label"),
+      label: gNavigatorBundle.getString("activateAllPluginsMessage.label"),
       accessKey: gNavigatorBundle.getString("activatePluginsMessage.accesskey"),
       callback: function() { gPluginHandler.activatePlugins(contentWindow); }
     };

@@ -421,7 +421,7 @@ EquivalentYearForDST(int year)
 
 /* ES5 15.9.1.8. */
 static double
-DaylightSavingTA(double t, JSContext *cx)
+DaylightSavingTA(double t, DSTOffsetCache *dstOffsetCache)
 {
     if (!MOZ_DOUBLE_IS_FINITE(t))
         return js_NaN;
@@ -437,29 +437,29 @@ DaylightSavingTA(double t, JSContext *cx)
     }
 
     int64_t timeMilliseconds = static_cast<int64_t>(t);
-    int64_t offsetMilliseconds = cx->dstOffsetCache.getDSTOffsetMilliseconds(timeMilliseconds, cx);
+    int64_t offsetMilliseconds = dstOffsetCache->getDSTOffsetMilliseconds(timeMilliseconds);
     return static_cast<double>(offsetMilliseconds);
 }
 
 static double
-AdjustTime(double date, JSContext *cx)
+AdjustTime(double date, DSTOffsetCache *dstOffsetCache)
 {
-    double t = DaylightSavingTA(date, cx) + LocalTZA;
+    double t = DaylightSavingTA(date, dstOffsetCache) + LocalTZA;
     t = (LocalTZA >= 0) ? fmod(t, msPerDay) : -fmod(msPerDay - t, msPerDay);
     return t;
 }
 
 /* ES5 15.9.1.9. */
 static double
-LocalTime(double t, JSContext *cx)
+LocalTime(double t, DSTOffsetCache *dstOffsetCache)
 {
-    return t + AdjustTime(t, cx);
+    return t + AdjustTime(t, dstOffsetCache);
 }
 
 static double
-UTC(double t, JSContext *cx)
+UTC(double t, DSTOffsetCache *dstOffsetCache)
 {
-    return t - AdjustTime(t - LocalTZA, cx);
+    return t - AdjustTime(t - LocalTZA, dstOffsetCache);
 }
 
 /* ES5 15.9.1.10. */
@@ -810,7 +810,7 @@ DaysInMonth(int year, int month)
  */
 
 static JSBool
-date_parseISOString(JSLinearString *str, double *result, JSContext *cx)
+date_parseISOString(JSLinearString *str, double *result, DSTOffsetCache *dstOffsetCache)
 {
     double msec;
 
@@ -924,7 +924,7 @@ date_parseISOString(JSLinearString *str, double *result, JSContext *cx)
                              frac * 1000.0);;
 
     if (isLocalTime) {
-        msec = UTC(msec, cx);
+        msec = UTC(msec, dstOffsetCache);
     } else {
         msec -= ((tzMul) * ((tzHour * msPerHour)
                             + (tzMin * msPerMinute)));
@@ -949,7 +949,7 @@ date_parseISOString(JSLinearString *str, double *result, JSContext *cx)
 }
 
 static JSBool
-date_parseString(JSLinearString *str, double *result, JSContext *cx)
+date_parseString(JSLinearString *str, double *result, DSTOffsetCache *dstOffsetCache)
 {
     double msec;
 
@@ -970,7 +970,7 @@ date_parseString(JSLinearString *str, double *result, JSContext *cx)
     int temp;
     JSBool seenmonthname = JS_FALSE;
 
-    if (date_parseISOString(str, result, cx))
+    if (date_parseISOString(str, result, dstOffsetCache))
         return JS_TRUE;
 
     s = str->chars();
@@ -1206,7 +1206,7 @@ date_parseString(JSLinearString *str, double *result, JSContext *cx)
     msec = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
 
     if (tzoffset == -1) { /* no time zone specified, have to use local */
-        msec = UTC(msec, cx);
+        msec = UTC(msec, dstOffsetCache);
     } else {
         msec += tzoffset * msPerMinute;
     }
@@ -1238,7 +1238,7 @@ date_parse(JSContext *cx, unsigned argc, Value *vp)
     if (!linearStr)
         return false;
 
-    if (!date_parseString(linearStr, &result, cx)) {
+    if (!date_parseString(linearStr, &result, &cx->dstOffsetCache)) {
         vp->setDouble(js_NaN);
         return true;
     }
@@ -1264,8 +1264,8 @@ date_now(JSContext *cx, unsigned argc, Value *vp)
 /*
  * Set UTC time to a given time and invalidate cached local time.
  */
-static JSBool
-SetUTCTime(JSContext *cx, JSObject *obj, double t, Value *vp = NULL)
+static void
+SetUTCTime(RawObject obj, double t, Value *vp = NULL)
 {
     JS_ASSERT(obj->isDate());
 
@@ -1278,14 +1278,6 @@ SetUTCTime(JSContext *cx, JSObject *obj, double t, Value *vp = NULL)
     obj->setDateUTCTime(DoubleValue(t));
     if (vp)
         vp->setDouble(t);
-    return true;
-}
-
-static void
-SetDateToNaN(JSContext *cx, JSObject *obj, Value *vp = NULL)
-{
-    double NaN = cx->runtime->NaNValue.getDoubleRef();
-    SetUTCTime(cx, obj, NaN, vp);
 }
 
 /*
@@ -1293,8 +1285,8 @@ SetDateToNaN(JSContext *cx, JSObject *obj, Value *vp = NULL)
  * If UTC time is not finite (e.g., NaN), the local time
  * slots will be set to the UTC time without conversion.
  */
-static bool
-CacheLocalTime(JSContext *cx, JSObject *obj)
+static void
+FillLocalTimeSlots(DSTOffsetCache *dstOffsetCache, RawObject obj)
 {
     JS_ASSERT(obj->isDate());
 
@@ -1302,7 +1294,7 @@ CacheLocalTime(JSContext *cx, JSObject *obj)
     if (!obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).isUndefined() &&
         obj->getSlot(JSObject::JSSLOT_DATE_TZA).toDouble() == LocalTZA)
     {
-        return true;
+        return;
     }
 
     /* Remember timezone used to generate the local cache. */
@@ -1316,10 +1308,10 @@ CacheLocalTime(JSContext *cx, JSObject *obj)
              ind++) {
             obj->setSlot(ind, DoubleValue(utcTime));
         }
-        return true;
+        return;
     }
 
-    double localTime = LocalTime(utcTime, cx);
+    double localTime = LocalTime(utcTime, dstOffsetCache);
 
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_TIME, DoubleValue(localTime));
 
@@ -1426,18 +1418,14 @@ CacheLocalTime(JSContext *cx, JSObject *obj)
 
     int hours = (yearSeconds / (60 * 60)) % 24;
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_HOURS, Int32Value(hours));
-
-    return true;
 }
 
-inline bool
-GetCachedLocalTime(JSContext *cx, JSObject *obj, double *time)
+inline double
+GetCachedLocalTime(DSTOffsetCache *dstOffsetCache, RawObject obj)
 {
-    if (!obj || !CacheLocalTime(cx, obj))
-        return false;
-
-    *time = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).toDouble();
-    return true;
+    JS_ASSERT(obj);
+    FillLocalTimeSlots(dstOffsetCache, obj);
+    return obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).toDouble();
 }
 
 JS_ALWAYS_INLINE bool
@@ -1469,9 +1457,8 @@ date_getYear_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(cx, thisObj))
-        return false;
+    RootedObject thisObj(cx, &args.thisv().toObject());
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     Value yearVal = thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR);
     if (yearVal.isInt32()) {
@@ -1497,9 +1484,8 @@ date_getFullYear_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(cx, thisObj))
-        return false;
+    RootedObject thisObj(cx, &args.thisv().toObject());
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR));
     return true;
@@ -1537,9 +1523,8 @@ date_getMonth_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(cx, thisObj))
-        return false;
+    RootedObject thisObj(cx, &args.thisv().toObject());
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MONTH));
     return true;
@@ -1574,9 +1559,8 @@ date_getDate_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(cx, thisObj))
-        return false;
+    RootedObject thisObj(cx, &args.thisv().toObject());
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DATE));
     return true;
@@ -1614,9 +1598,8 @@ date_getDay_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(cx, thisObj))
-        return false;
+    RootedObject thisObj(cx, &args.thisv().toObject());
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_DAY));
     return true;
@@ -1654,9 +1637,8 @@ date_getHours_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(cx, thisObj))
-        return false;
+    RootedObject thisObj(cx, &args.thisv().toObject());
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_HOURS));
     return true;
@@ -1694,9 +1676,8 @@ date_getMinutes_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(cx, thisObj))
-        return false;
+    RootedObject thisObj(cx, &args.thisv().toObject());
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_MINUTES));
     return true;
@@ -1736,9 +1717,8 @@ date_getUTCSeconds_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
-    if (!CacheLocalTime(cx, thisObj))
-        return false;
+    RootedObject thisObj(cx, &args.thisv().toObject());
+    FillLocalTimeSlots(&cx->dstOffsetCache, thisObj);
 
     args.rval().set(thisObj->getSlot(JSObject::JSSLOT_DATE_LOCAL_SECONDS));
     return true;
@@ -1778,12 +1758,9 @@ date_getTimezoneOffset_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     double utctime = thisObj->getDateUTCTime().toNumber();
-
-    double localtime;
-    if (!GetCachedLocalTime(cx, thisObj, &localtime))
-        return false;
+    double localtime = GetCachedLocalTime(&cx->dstOffsetCache, thisObj);
 
     /*
      * Return the time zone offset in minutes for the current locale that is
@@ -1807,9 +1784,9 @@ date_setTime_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     if (args.length() == 0) {
-        SetDateToNaN(cx, thisObj, args.rval().address());
+        SetUTCTime(thisObj, js_NaN, args.rval().address());
         return true;
     }
 
@@ -1817,7 +1794,8 @@ date_setTime_impl(JSContext *cx, CallArgs args)
     if (!ToNumber(cx, args[0], &result))
         return false;
 
-    return SetUTCTime(cx, thisObj, TimeClip(result), args.rval().address());
+    SetUTCTime(thisObj, TimeClip(result), args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -1863,10 +1841,10 @@ date_setMilliseconds_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
-    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), cx);
+    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), &cx->dstOffsetCache);
 
     /* Step 2. */
     double milli;
@@ -1875,10 +1853,11 @@ date_setMilliseconds_impl(JSContext *cx, CallArgs args)
     double time = MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), milli);
 
     /* Step 3. */
-    double u = TimeClip(UTC(MakeDate(Day(t), time), cx));
+    double u = TimeClip(UTC(MakeDate(Day(t), time), &cx->dstOffsetCache));
 
     /* Steps 4-5. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -1894,7 +1873,7 @@ date_setUTCMilliseconds_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = thisObj->getDateUTCTime().toNumber();
@@ -1909,7 +1888,8 @@ date_setUTCMilliseconds_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(MakeDate(Day(t), time));
 
     /* Steps 4-5. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -1925,10 +1905,10 @@ date_setSeconds_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
-    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), cx);
+    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), &cx->dstOffsetCache);
 
     /* Step 2. */
     double s;
@@ -1944,10 +1924,11 @@ date_setSeconds_impl(JSContext *cx, CallArgs args)
     double date = MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), s, milli));
 
     /* Step 5. */
-    double u = TimeClip(UTC(date, cx));
+    double u = TimeClip(UTC(date, &cx->dstOffsetCache));
 
     /* Steps 6-7. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.31. */
@@ -1963,7 +1944,7 @@ date_setUTCSeconds_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = thisObj->getDateUTCTime().toNumber();
@@ -1985,7 +1966,8 @@ date_setUTCSeconds_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(date);
 
     /* Steps 6-7. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.32. */
@@ -2001,10 +1983,10 @@ date_setMinutes_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
-    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), cx);
+    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), &cx->dstOffsetCache);
 
     /* Step 2. */
     double m;
@@ -2025,10 +2007,11 @@ date_setMinutes_impl(JSContext *cx, CallArgs args)
     double date = MakeDate(Day(t), MakeTime(HourFromTime(t), m, s, milli));
 
     /* Step 6. */
-    double u = TimeClip(UTC(date, cx));
+    double u = TimeClip(UTC(date, &cx->dstOffsetCache));
 
     /* Steps 7-8. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.33. */
@@ -2044,7 +2027,7 @@ date_setUTCMinutes_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = thisObj->getDateUTCTime().toNumber();
@@ -2071,7 +2054,8 @@ date_setUTCMinutes_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(date);
 
     /* Steps 7-8. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.34. */
@@ -2087,10 +2071,10 @@ date_setHours_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
-    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), cx);
+    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), &cx->dstOffsetCache);
 
     /* Step 2. */
     double h;
@@ -2116,10 +2100,11 @@ date_setHours_impl(JSContext *cx, CallArgs args)
     double date = MakeDate(Day(t), MakeTime(h, m, s, milli));
 
     /* Step 6. */
-    double u = TimeClip(UTC(date, cx));
+    double u = TimeClip(UTC(date, &cx->dstOffsetCache));
 
     /* Steps 7-8. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.35. */
@@ -2135,7 +2120,7 @@ date_setUTCHours_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = thisObj->getDateUTCTime().toNumber();
@@ -2167,7 +2152,8 @@ date_setUTCHours_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 8-9. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.36. */
@@ -2183,10 +2169,10 @@ date_setDate_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
-    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), cx);
+    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), &cx->dstOffsetCache);
 
     /* Step 2. */
     double dt;
@@ -2197,10 +2183,11 @@ date_setDate_impl(JSContext *cx, CallArgs args)
     double newDate = MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), dt), TimeWithinDay(t));
 
     /* Step 4. */
-    double u = TimeClip(UTC(newDate, cx));
+    double u = TimeClip(UTC(newDate, &cx->dstOffsetCache));
 
     /* Steps 5-6. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 /* ES5 15.9.5.37. */
@@ -2216,7 +2203,7 @@ date_setUTCDate_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = thisObj->getDateUTCTime().toNumber();
@@ -2233,7 +2220,8 @@ date_setUTCDate_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 5-6. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -2269,10 +2257,10 @@ date_setMonth_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
-    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), cx);
+    double t = LocalTime(thisObj->getDateUTCTime().toNumber(), &cx->dstOffsetCache);
 
     /* Step 2. */
     double m;
@@ -2288,10 +2276,11 @@ date_setMonth_impl(JSContext *cx, CallArgs args)
     double newDate = MakeDate(MakeDay(YearFromTime(t), m, dt), TimeWithinDay(t));
 
     /* Step 5. */
-    double u = TimeClip(UTC(newDate, cx));
+    double u = TimeClip(UTC(newDate, &cx->dstOffsetCache));
 
     /* Steps 6-7. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -2307,7 +2296,7 @@ date_setUTCMonth_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = thisObj->getDateUTCTime().toNumber();
@@ -2329,7 +2318,8 @@ date_setUTCMonth_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 6-7. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -2340,16 +2330,16 @@ date_setUTCMonth(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static double
-ThisLocalTimeOrZero(Handle<JSObject*> date, JSContext *cx)
+ThisLocalTimeOrZero(HandleObject date, DSTOffsetCache *dstOffsetCache)
 {
     double t = date->getDateUTCTime().toNumber();
     if (MOZ_DOUBLE_IS_NaN(t))
         return +0;
-    return LocalTime(t, cx);
+    return LocalTime(t, dstOffsetCache);
 }
 
 static double
-ThisUTCTimeOrZero(Handle<JSObject*> date)
+ThisUTCTimeOrZero(HandleObject date)
 {
     double t = date->getDateUTCTime().toNumber();
     return MOZ_DOUBLE_IS_NaN(t) ? +0 : t;
@@ -2361,10 +2351,10 @@ date_setFullYear_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
-    double t = ThisLocalTimeOrZero(thisObj, cx);
+    double t = ThisLocalTimeOrZero(thisObj, &cx->dstOffsetCache);
 
     /* Step 2. */
     double y;
@@ -2385,10 +2375,11 @@ date_setFullYear_impl(JSContext *cx, CallArgs args)
     double newDate = MakeDate(MakeDay(y, m, dt), TimeWithinDay(t));
 
     /* Step 6. */
-    double u = TimeClip(UTC(newDate, cx));
+    double u = TimeClip(UTC(newDate, &cx->dstOffsetCache));
 
     /* Steps 7-8. */
-    return SetUTCTime(cx, thisObj, u, args.rval().address());
+    SetUTCTime(thisObj, u, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -2404,7 +2395,7 @@ date_setUTCFullYear_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
     double t = ThisUTCTimeOrZero(thisObj);
@@ -2431,7 +2422,8 @@ date_setUTCFullYear_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 7-8. */
-    return SetUTCTime(cx, thisObj, v, args.rval().address());
+    SetUTCTime(thisObj, v, args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -2447,10 +2439,10 @@ date_setYear_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     /* Step 1. */
-    double t = ThisLocalTimeOrZero(thisObj, cx);
+    double t = ThisLocalTimeOrZero(thisObj, &cx->dstOffsetCache);
 
     /* Step 2. */
     double y;
@@ -2459,7 +2451,7 @@ date_setYear_impl(JSContext *cx, CallArgs args)
 
     /* Step 3. */
     if (MOZ_DOUBLE_IS_NaN(y)) {
-        SetDateToNaN(cx, thisObj, args.rval().address());
+        SetUTCTime(thisObj, js_NaN, args.rval().address());
         return true;
     }
 
@@ -2472,10 +2464,11 @@ date_setYear_impl(JSContext *cx, CallArgs args)
     double day = MakeDay(yint, MonthFromTime(t), DateFromTime(t));
 
     /* Step 6. */
-    double u = UTC(MakeDate(day, TimeWithinDay(t)), cx);
+    double u = UTC(MakeDate(day, TimeWithinDay(t)), &cx->dstOffsetCache);
 
     /* Steps 7-8. */
-    return SetUTCTime(cx, thisObj, TimeClip(u), args.rval().address());
+    SetUTCTime(thisObj, TimeClip(u), args.rval().address());
+    return true;
 }
 
 static JSBool
@@ -2636,7 +2629,7 @@ date_toJSON(JSContext *cx, unsigned argc, Value *vp)
 /* for Date.toLocaleString; interface to PRMJTime date struct.
  */
 static void
-new_explode(double timeval, PRMJTime *split, JSContext *cx)
+new_explode(double timeval, PRMJTime *split, DSTOffsetCache *dstOffsetCache)
 {
     double year = YearFromTime(timeval);
 
@@ -2652,7 +2645,7 @@ new_explode(double timeval, PRMJTime *split, JSContext *cx)
 
     /* not sure how this affects things, but it doesn't seem
        to matter. */
-    split->tm_isdst = (DaylightSavingTA(timeval, cx) != 0);
+    split->tm_isdst = (DaylightSavingTA(timeval, dstOffsetCache) != 0);
 }
 
 typedef enum formatspec {
@@ -2675,11 +2668,11 @@ date_format(JSContext *cx, double date, formatspec format, CallReceiver call)
     } else {
         JS_ASSERT(TimeClip(date) == date);
 
-        double local = LocalTime(date, cx);
+        double local = LocalTime(date, &cx->dstOffsetCache);
 
         /* offset from GMT in minutes.  The offset includes daylight savings,
            if it applies. */
-        int minutes = (int) floor(AdjustTime(date, cx) / msPerMinute);
+        int minutes = (int) floor(AdjustTime(date, &cx->dstOffsetCache) / msPerMinute);
 
         /* map 510 minutes to 0830 hours */
         int offset = (minutes / 60) * 100 + minutes % 60;
@@ -2695,7 +2688,7 @@ date_format(JSContext *cx, double date, formatspec format, CallReceiver call)
 
         /* get a timezone string from the OS to include as a
            comment. */
-        new_explode(date, &split, cx);
+        new_explode(date, &split, &cx->dstOffsetCache);
         if (PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &split) != 0) {
 
             /* Decide whether to use the resulting timezone string.
@@ -2776,7 +2769,7 @@ date_format(JSContext *cx, double date, formatspec format, CallReceiver call)
 }
 
 static bool
-ToLocaleHelper(JSContext *cx, CallReceiver call, JSObject *obj, const char *format)
+ToLocaleHelper(JSContext *cx, CallReceiver call, HandleObject obj, const char *format)
 {
     double utctime = obj->getDateUTCTime().toNumber();
 
@@ -2785,9 +2778,9 @@ ToLocaleHelper(JSContext *cx, CallReceiver call, JSObject *obj, const char *form
         JS_snprintf(buf, sizeof buf, js_NaN_date_str);
     } else {
         int result_len;
-        double local = LocalTime(utctime, cx);
+        double local = LocalTime(utctime, &cx->dstOffsetCache);
         PRMJTime split;
-        new_explode(local, &split, cx);
+        new_explode(local, &split, &cx->dstOffsetCache);
 
         /* Let PRMJTime format it. */
         result_len = PRMJ_FormatTime(buf, sizeof buf, format, &split);
@@ -2822,7 +2815,7 @@ ToLocaleHelper(JSContext *cx, CallReceiver call, JSObject *obj, const char *form
 }
 
 static bool
-ToLocaleStringHelper(JSContext *cx, CallReceiver call, Handle<JSObject*> thisObj)
+ToLocaleStringHelper(JSContext *cx, CallReceiver call, HandleObject thisObj)
 {
     /*
      * Use '%#c' for windows, because '%c' is backward-compatible and non-y2k
@@ -2843,7 +2836,7 @@ date_toLocaleString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     return ToLocaleStringHelper(cx, args, thisObj);
 }
 
@@ -2872,7 +2865,7 @@ date_toLocaleDateString_impl(JSContext *cx, CallArgs args)
 #endif
                                    ;
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     return ToLocaleHelper(cx, args, thisObj, format);
 }
 
@@ -2889,7 +2882,7 @@ date_toLocaleTimeString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
     return ToLocaleHelper(cx, args, thisObj, "%X");
 }
 
@@ -2905,7 +2898,7 @@ date_toLocaleFormat_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     if (args.length() == 0)
         return ToLocaleStringHelper(cx, args, thisObj);
@@ -3012,7 +3005,7 @@ date_valueOf_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsDate(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    RootedObject thisObj(cx, &args.thisv().toObject());
 
     args.rval().set(thisObj->getDateUTCTime());
     return true;
@@ -3116,7 +3109,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
             if (!linearStr)
                 return false;
 
-            if (!date_parseString(linearStr, &d, cx))
+            if (!date_parseString(linearStr, &d, &cx->dstOffsetCache))
                 d = js_NaN;
             else
                 d = TimeClip(d);
@@ -3132,13 +3125,13 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
             return false;
 
         if (MOZ_DOUBLE_IS_FINITE(msec_time)) {
-            msec_time = UTC(msec_time, cx);
+            msec_time = UTC(msec_time, &cx->dstOffsetCache);
             msec_time = TimeClip(msec_time);
         }
         d = msec_time;
     }
 
-    JSObject *obj = js_NewDateObjectMsec(cx, d);
+    RawObject obj = js_NewDateObjectMsec(cx, d);
     if (!obj)
         return false;
 
@@ -3158,7 +3151,7 @@ js_InitDateClass(JSContext *cx, HandleObject obj)
     RootedObject dateProto(cx, global->createBlankPrototype(cx, &DateClass));
     if (!dateProto)
         return NULL;
-    SetDateToNaN(cx, dateProto);
+    SetUTCTime(dateProto, js_NaN);
 
     RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, js_Date, cx->names().Date, MAXARGS);
@@ -3197,25 +3190,20 @@ js_InitDateClass(JSContext *cx, HandleObject obj)
 JS_FRIEND_API(JSObject *)
 js_NewDateObjectMsec(JSContext *cx, double msec_time)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &DateClass);
+    RawObject obj = NewBuiltinClassInstance(cx, &DateClass);
     if (!obj)
         return NULL;
-    if (!SetUTCTime(cx, obj, msec_time))
-        return NULL;
+    SetUTCTime(obj, msec_time);
     return obj;
 }
 
 JS_FRIEND_API(JSObject *)
-js_NewDateObject(JSContext* cx, int year, int mon, int mday,
+js_NewDateObject(JSContext *cx, int year, int mon, int mday,
                  int hour, int min, int sec)
 {
-    JSObject *obj;
-    double msec_time;
-
     JS_ASSERT(mon < 12);
-    msec_time = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
-    obj = js_NewDateObjectMsec(cx, UTC(msec_time, cx));
-    return obj;
+    double msec_time = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
+    return js_NewDateObjectMsec(cx, UTC(msec_time, &cx->dstOffsetCache));
 }
 
 void
@@ -3225,69 +3213,69 @@ js_ClearDateCaches()
 }
 
 JS_FRIEND_API(JSBool)
-js_DateIsValid(JSContext *cx, JSObject* obj)
+js_DateIsValid(RawObject obj)
 {
     return obj->isDate() && !MOZ_DOUBLE_IS_NaN(obj->getDateUTCTime().toNumber());
 }
 
 JS_FRIEND_API(int)
-js_DateGetYear(JSContext *cx, JSObject* obj)
+js_DateGetYear(JSContext *cx, RawObject obj)
 {
-    double localtime;
-
     /* Preserve legacy API behavior of returning 0 for invalid dates. */
-    if (!GetCachedLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    JS_ASSERT(obj);
+    double localtime = GetCachedLocalTime(&cx->dstOffsetCache, obj);
+    if (MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) YearFromTime(localtime);
 }
 
 JS_FRIEND_API(int)
-js_DateGetMonth(JSContext *cx, JSObject* obj)
+js_DateGetMonth(JSContext *cx, RawObject obj)
 {
-    double localtime;
-
-    if (!GetCachedLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    JS_ASSERT(obj);
+    double localtime = GetCachedLocalTime(&cx->dstOffsetCache, obj);
+    if (MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) MonthFromTime(localtime);
 }
 
 JS_FRIEND_API(int)
-js_DateGetDate(JSContext *cx, JSObject* obj)
+js_DateGetDate(JSContext *cx, RawObject obj)
 {
-    double localtime;
-
-    if (!GetCachedLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    JS_ASSERT(obj);
+    double localtime = GetCachedLocalTime(&cx->dstOffsetCache, obj);
+    if (MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) DateFromTime(localtime);
 }
 
 JS_FRIEND_API(int)
-js_DateGetHours(JSContext *cx, JSObject* obj)
+js_DateGetHours(JSContext *cx, RawObject obj)
 {
-    double localtime;
-
-    if (!GetCachedLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    JS_ASSERT(obj);
+    double localtime = GetCachedLocalTime(&cx->dstOffsetCache, obj);
+    if (MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) HourFromTime(localtime);
 }
 
 JS_FRIEND_API(int)
-js_DateGetMinutes(JSContext *cx, JSObject* obj)
+js_DateGetMinutes(JSContext *cx, RawObject obj)
 {
-    double localtime;
-
-    if (!GetCachedLocalTime(cx, obj, &localtime) || MOZ_DOUBLE_IS_NaN(localtime))
+    JS_ASSERT(obj);
+    double localtime = GetCachedLocalTime(&cx->dstOffsetCache, obj);
+    if (MOZ_DOUBLE_IS_NaN(localtime))
         return 0;
 
     return (int) MinFromTime(localtime);
 }
 
 JS_FRIEND_API(int)
-js_DateGetSeconds(JSContext *cx, JSObject* obj)
+js_DateGetSeconds(RawObject obj)
 {
     if (!obj->isDate())
         return 0;
@@ -3299,7 +3287,7 @@ js_DateGetSeconds(JSContext *cx, JSObject* obj)
 }
 
 JS_FRIEND_API(double)
-js_DateGetMsecSinceEpoch(JSContext *cx, RawObject obj)
+js_DateGetMsecSinceEpoch(RawObject obj)
 {
     return obj->isDate() ? obj->getDateUTCTime().toNumber() : 0;
 }

@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import re, sys, os, os.path, logging, shutil, signal, math, time
+import re, sys, os, os.path, logging, shutil, signal, math, time, traceback
 import xml.dom.minidom
 from glob import glob
 from optparse import OptionParser
@@ -316,6 +316,20 @@ class XPCShellTests(object):
       On a remote system, this is overloaded to handle remote process communication.
     """
     return proc.communicate()
+
+  def poll(self, proc):
+    """
+      Simple wrapper to check if a process has terminated.
+      On a remote system, this is overloaded to handle remote process communication.
+    """
+    return proc.poll()
+
+  def kill(self, proc):
+    """
+      Simple wrapper to kill a process.
+      On a remote system, this is overloaded to handle remote process communication.
+    """
+    return proc.kill()
 
   def removeDir(self, dirname):
     """
@@ -860,10 +874,38 @@ class XPCShellTests(object):
         if self.logfiles and stdout:
           self.createLogFile(name, stdout, leakLogs)
       finally:
+        # We can sometimes get here before the process has terminated, which would
+        # cause removeDir() to fail - so check for the process & kill it it needed.
+        if self.poll(proc) is None:
+          message = "TEST-UNEXPECTED-FAIL | %s | Process still running after test!" % name
+          self.log.error(message)
+          print_stdout(stdout)
+          self.failCount += 1
+          xunitResult["passed"] = False
+          xunitResult["failure"] = {
+            "type": "TEST-UNEXPECTED-FAIL",
+            "message": message,
+            "text": stdout
+          }
+          self.kill(proc)
         # We don't want to delete the profile when running check-interactive
         # or check-one.
         if self.profileDir and not self.interactive and not self.singleFile:
-          self.removeDir(self.profileDir)
+          try:
+            self.removeDir(self.profileDir)
+          except Exception:
+            message = "TEST-UNEXPECTED-FAIL | %s | Failed to clean up the test profile directory: %s" % (name, sys.exc_info()[0])
+            self.log.error(message)
+            print_stdout(stdout)
+            print_stdout(traceback.format_exc())
+            self.failCount += 1
+            xunitResult["passed"] = False
+            xunitResult["failure"] = {
+              "type": "TEST-UNEXPECTED-FAIL",
+              "message": message,
+              "text": "%s\n%s" % (stdout, traceback.format_exc())
+            }
+
       if gotSIGINT:
         xunitResult["passed"] = False
         xunitResult["time"] = "0.0"

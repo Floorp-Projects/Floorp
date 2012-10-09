@@ -11,11 +11,9 @@ relativesrcdir = @relativesrcdir@
 
 include $(topsrcdir)/config/config.mk
 
-ifneq (mobile,$(MOZ_BUILD_APP))
 DIRS = \
     browser \
     $(NULL)
-endif
 
 # Module name for xpcshell tests.
 MODULE = test_passwordmgr

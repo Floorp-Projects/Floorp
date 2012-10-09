@@ -3,10 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const BASE_URL_PREF = "extensions.testpilot.indexBaseURL";
+const SSL_DOWNLOAD_REQUIRED_PREF = "extensions.testpilot.ssldownloadrequired";
+
 var Cuddlefish = require("cuddlefish");
 var resolveUrl = require("url").resolve;
 var SecurableModule = require("securable-module");
 let JarStore = require("jar-code-store").JarStore;
+let prefs = require("preferences-service");
 
 /* Security info should look like this:
  * Security Info:
@@ -100,11 +103,16 @@ function downloadFile(url, cb, lastModified) {
     console.info("Using binary mode to download jar file.");
     req.overrideMimeType('text/plain; charset=x-user-defined');
   }
-  req.addEventListener("readystatechange", function(aEvt) {
+  req.onreadystatechange = function(aEvt) {
     if (req.readyState == 4) {
       if (req.status == 200) {
-        // check security channel:
-        if (verifyChannelSecurity(req.channel)) {
+        // check security channel, unless the user is ignoring that.
+        let ssldownloadrequired= prefs.get(SSL_DOWNLOAD_REQUIRED_PREF,true);
+        if (!ssldownloadrequired) {
+            dump("not requiring ssl download for experiements.  use at your own risk!\n");
+            dump("change this with: " + SSL_DOWNLOAD_REQUIRED_PREF + "\n");
+        }
+        if (!ssldownloadrequired | verifyChannelSecurity(req.channel)) {
           cb(req.responseText);
         } else {
           cb(null);
@@ -122,7 +130,7 @@ function downloadFile(url, cb, lastModified) {
 	cb(null);
       }
     }
-  }, false);
+  };
   req.send();
 }
 
@@ -377,7 +385,7 @@ exports.RemoteExperimentLoader.prototype = {
       let foStream = Cc["@mozilla.org/network/file-output-stream;1"].
                                createInstance(Ci.nsIFileOutputStream);
 
-      foStream.init(file, 0x02 | 0x08 | 0x20, 0666, 0);
+      foStream.init(file, 0x02 | 0x08 | 0x20, parseInt("0666", 8), 0);
       // write, create, truncate
       let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
                                 createInstance(Ci.nsIConverterOutputStream);

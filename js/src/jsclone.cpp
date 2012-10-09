@@ -686,7 +686,7 @@ JSStructuredCloneWriter::startWrite(const Value &v)
             return out.writePair(SCTAG_REGEXP_OBJECT, reobj.getFlags()) &&
                    writeString(SCTAG_STRING, reobj.getSource());
         } else if (obj->isDate()) {
-            double d = js_DateGetMsecSinceEpoch(context(), obj);
+            double d = js_DateGetMsecSinceEpoch(obj);
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(d);
         } else if (obj->isTypedArray()) {
             return writeTypedArray(obj);

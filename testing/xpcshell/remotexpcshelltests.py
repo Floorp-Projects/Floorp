@@ -224,8 +224,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         # Guard against an accumulation of hung processes by killing
         # them here. Note also that IPC tests may spawn new instances
         # of xpcshell.
-        self.device.killProcess(cmd[0]);
-        self.device.killProcess("xpcshell");
+        self.device.killProcess(cmd[0])
+        self.device.killProcess("xpcshell")
         return outputFile
 
     def communicate(self, proc):
@@ -234,6 +234,15 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         f.close()
         os.remove(proc)
         return contents, ""
+
+    def poll(self, proc):
+        if self.device.processExist("xpcshell") is None:
+          return self.getReturnCode(proc)
+        # Process is still running
+        return None
+
+    def kill(self, proc):
+        return self.device.killProcess("xpcshell", True)
 
     def getReturnCode(self, proc):
         if self.shellReturnCode is not None:

@@ -14,6 +14,7 @@
 #include "mozilla/css/Rule.h"
 #include "nsCOMArray.h"
 #include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsPresContext;
 class nsMediaQueryResultCacheKey;
@@ -32,6 +33,9 @@ protected:
   GroupRule(const GroupRule& aCopy);
   virtual ~GroupRule();
 public:
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(GroupRule)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // implement part of nsIStyleRule and Rule
   DECL_STYLE_RULE_INHERIT_NO_DOMRULE

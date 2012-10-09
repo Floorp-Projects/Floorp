@@ -638,7 +638,7 @@ DSTOffsetCache::computeDSTOffsetMilliseconds(int64_t localTimeSeconds)
 }
 
 int64_t
-DSTOffsetCache::getDSTOffsetMilliseconds(int64_t localTimeMilliseconds, JSContext *cx)
+DSTOffsetCache::getDSTOffsetMilliseconds(int64_t localTimeMilliseconds)
 {
     sanityCheck();
 

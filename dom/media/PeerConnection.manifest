@@ -1,0 +1,11 @@
+component {7cb2b368-b1ce-4560-acac-8e0dbda7d3d0} PeerConnection.js
+component {8c5dbd70-2c8e-4ecb-a5ad-2fc919099f01} PeerConnection.js
+component {5f21ffd9-b73f-4ba0-a685-56b4667aaf1c} PeerConnection.js
+
+contract @mozilla.org/dom/peerconnection;1 {7cb2b368-b1ce-4560-acac-8e0dbda7d3d0}
+contract @mozilla.org/dom/rtcicecandidate;1 {8c5dbd70-2c8e-4ecb-a5ad-2fc919099f01}
+contract @mozilla.org/dom/rtcsessiondescription;1 {5f21ffd9-b73f-4ba0-a685-56b4667aaf1c}
+
+category JavaScript-global-constructor mozRTCPeerConnection @mozilla.org/dom/peerconnection;1
+category JavaScript-global-constructor mozRTCIceCandidate @mozilla.org/dom/rtcicecandidate;1
+category JavaScript-global-constructor mozRTCSessionDescription @mozilla.org/dom/rtcsessiondescription;1

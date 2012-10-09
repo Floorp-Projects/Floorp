@@ -19,7 +19,7 @@
 
   <box id="alertBox" class="alertBox">
     
-    <hbox class="alertImageBox" align="center" pack="center">
+    <hbox id="alertImageBox" class="alertImageBox" align="center" pack="center">
       <image id="alertImage"/>
     </hbox>
 

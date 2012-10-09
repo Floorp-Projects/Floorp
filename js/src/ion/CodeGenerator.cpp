@@ -1920,6 +1920,7 @@ CodeGenerator::visitCompareS(LCompareS *lir)
     Register left = ToRegister(lir->left());
     Register right = ToRegister(lir->right());
     Register output = ToRegister(lir->output());
+    Register temp = ToRegister(lir->temp());
 
     typedef bool (*pf)(JSContext *, HandleString, HandleString, JSBool *);
     static const VMFunction stringsEqualInfo = FunctionInfo<pf>(ion::StringsEqual<true>);
@@ -1943,20 +1944,26 @@ CodeGenerator::visitCompareS(LCompareS *lir)
     masm.jump(ool->rejoin());
 
     masm.bind(&notPointerEqual);
+    masm.loadPtr(Address(left, JSString::offsetOfLengthAndFlags()), output);
+    masm.loadPtr(Address(right, JSString::offsetOfLengthAndFlags()), temp);
 
-    // JSString::isAtom === !(lengthAndFlags & ATOM_MASK)
-    Imm32 atomMask(JSString::ATOM_BIT);
-
-    // This optimization is only correct for atomized strings,
-    // so we need to jump to the ool path.
-    masm.branchTest32(Assembler::Zero, Address(left, JSString::offsetOfLengthAndFlags()), 
-                      atomMask, ool->entry());
-
-    masm.branchTest32(Assembler::Zero, Address(right, JSString::offsetOfLengthAndFlags()), 
-                      atomMask, ool->entry());
+    Label notAtom;
+    // We can optimize the equality operation to a pointer compare for
+    // two atoms.
+    Imm32 atomBit(JSString::ATOM_BIT);
+    masm.branchTest32(Assembler::Zero, output, atomBit, &notAtom);
+    masm.branchTest32(Assembler::Zero, temp, atomBit, &notAtom);
 
     masm.cmpPtr(left, right);
     emitSet(JSOpToCondition(op), output);
+    masm.jump(ool->rejoin());
+
+    masm.bind(&notAtom);
+    // Strings of different length can never be equal.
+    masm.rshiftPtr(Imm32(JSString::LENGTH_SHIFT), output);
+    masm.rshiftPtr(Imm32(JSString::LENGTH_SHIFT), temp);
+    masm.branchPtr(Assembler::Equal, output, temp, ool->entry());
+    masm.move32(Imm32(op == JSOP_NE || op == JSOP_STRICTNE), output);
 
     masm.bind(ool->rejoin());
     return true;

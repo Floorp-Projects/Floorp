@@ -314,7 +314,7 @@ class MozbuildObject(object):
         def handleLine(line):
             # Converts str to unicode on Python 2 and bytes to str on Python 3.
             if isinstance(line, bytes):
-                line = line.decode(sys.stdout.encoding)
+                line = line.decode(sys.stdout.encoding or 'utf-8', 'replace')
 
             if line_handler:
                 line_handler(line)

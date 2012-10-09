@@ -12,6 +12,8 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = \
   trunk \
   trunk/testing \
+  signaling \
+  signalingtest \
   $(NULL)
 
 # These Makefiles don't have corresponding Makefile.ins

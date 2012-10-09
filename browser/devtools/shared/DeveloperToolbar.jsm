@@ -7,9 +7,7 @@
 const EXPORTED_SYMBOLS = [ "DeveloperToolbar" ];
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
-
-const WEBCONSOLE_CONTENT_SCRIPT_URL =
-  "chrome://browser/content/devtools/HUDService-content.js";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -25,6 +23,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "gcli",
 
 XPCOMUtils.defineLazyModuleGetter(this, "CmdCommands",
                                   "resource:///modules/devtools/CmdCmd.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PageErrorListener",
+                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
 /**
  * Due to a number of panel bugs we need a way to check if we are running on
@@ -56,7 +57,8 @@ function DeveloperToolbar(aChromeWindow, aToolbarElement)
   this._lastState = NOTIFICATIONS.HIDE;
   this._pendingShowCallback = undefined;
   this._pendingHide = false;
-  this._errorsCount = {};
+  this._errorsCount = Object.create(null);
+  this._errorListeners = Object.create(null);
   this._webConsoleButton = this._doc
                            .getElementById("developer-toolbar-webconsole");
 
@@ -87,9 +89,6 @@ const NOTIFICATIONS = {
  * use them without needing to import anything
  */
 DeveloperToolbar.prototype.NOTIFICATIONS = NOTIFICATIONS;
-
-DeveloperToolbar.prototype._contentMessageListeners =
-  ["WebConsole:CachedMessages", "WebConsole:PageError"];
 
 /**
  * Is the toolbar open?
@@ -285,21 +284,18 @@ DeveloperToolbar.prototype._initErrorsCount = function DT__initErrorsCount(aTab)
     return;
   }
 
-  let messageManager = aTab.linkedBrowser.messageManager;
-  messageManager.loadFrameScript(WEBCONSOLE_CONTENT_SCRIPT_URL, true);
+  let window = aTab.linkedBrowser.contentWindow;
+  let listener = new PageErrorListener(window, {
+    onPageError: this._onPageError.bind(this, tabId),
+  });
+  listener.init();
 
+  this._errorListeners[tabId] = listener;
   this._errorsCount[tabId] = 0;
 
-  this._contentMessageListeners.forEach(function(aName) {
-    messageManager.addMessageListener(aName, this);
-  }, this);
+  let messages = listener.getCachedMessages();
+  messages.forEach(this._onPageError.bind(this, tabId));
 
-  let message = {
-    features: ["PageError"],
-    cachedMessages: ["PageError"],
-  };
-
-  this.sendMessageToTab(aTab, "WebConsole:Init", message);
   this._updateErrorsCount();
 };
 
@@ -319,14 +315,10 @@ DeveloperToolbar.prototype._stopErrorsCount = function DT__stopErrorsCount(aTab)
     return;
   }
 
-  this.sendMessageToTab(aTab, "WebConsole:Destroy", {});
-
-  let messageManager = aTab.linkedBrowser.messageManager;
-  this._contentMessageListeners.forEach(function(aName) {
-    messageManager.removeMessageListener(aName, this);
-  }, this);
-
+  this._errorListeners[tabId].destroy();
+  delete this._errorListeners[tabId];
   delete this._errorsCount[tabId];
+
   this._updateErrorsCount();
 };
 
@@ -434,61 +426,13 @@ DeveloperToolbar.prototype.handleEvent = function DT_handleEvent(aEvent)
 };
 
 /**
- * The handler of messages received from the nsIMessageManager.
- *
- * @param object aMessage the message received from the content process.
- */
-DeveloperToolbar.prototype.receiveMessage = function DT_receiveMessage(aMessage)
-{
-  if (!aMessage.json || !(aMessage.json.hudId in this._errorsCount)) {
-    return;
-  }
-
-  let tabId = aMessage.json.hudId;
-  let errors = this._errorsCount[tabId];
-
-  switch (aMessage.name) {
-    case "WebConsole:PageError":
-      this._onPageError(tabId, aMessage.json.pageError);
-      break;
-    case "WebConsole:CachedMessages":
-      aMessage.json.messages.forEach(this._onPageError.bind(this, tabId));
-      break;
-  }
-
-  if (errors != this._errorsCount[tabId]) {
-    this._updateErrorsCount(tabId);
-  }
-};
-
-/**
- * Send a message to the content process using the nsIMessageManager of the
- * given tab.
- *
- * @param nsIDOMNode aTab the tab you want to send a message to.
- * @param string aName the name of the message you want to send.
- * @param object aMessage the message to send.
- */
-DeveloperToolbar.prototype.sendMessageToTab =
-function DT_sendMessageToTab(aTab, aName, aMessage)
-{
-  let tabId = aTab.linkedPanel;
-  aMessage.hudId = tabId;
-  if (!("id" in aMessage)) {
-    aMessage.id = "DevToolbar-" + this.sequenceId;
-  }
-
-  aTab.linkedBrowser.messageManager.sendAsyncMessage(aName, aMessage);
-};
-
-/**
- * Process a "WebConsole:PageError" message received from the given tab. This
- * method counts the JavaScript exceptions received.
+ * Count a page error received for the currently selected tab. This
+ * method counts the JavaScript exceptions received and CSS errors/warnings.
  *
  * @private
  * @param string aTabId the ID of the tab from where the page error comes.
- * @param object aPageError the page error object received from the content
- * process.
+ * @param object aPageError the page error object received from the
+ * PageErrorListener.
  */
 DeveloperToolbar.prototype._onPageError =
 function DT__onPageError(aTabId, aPageError)
@@ -501,6 +445,7 @@ function DT__onPageError(aTabId, aPageError)
   }
 
   this._errorsCount[aTabId]++;
+  this._updateErrorsCount(aTabId);
 };
 
 /**
@@ -638,7 +583,6 @@ function OutputPanel(aChromeDoc, aInput, aLoadCallback)
   this._frame = aChromeDoc.createElementNS(NS_XHTML, "iframe");
   this._frame.id = "gcli-output-frame";
   this._frame.setAttribute("src", "chrome://browser/content/devtools/commandlineoutput.xhtml");
-  this._frame.setAttribute("flex", "1");
   this._panel.appendChild(this._frame);
 
   this.displayedOutput = undefined;
@@ -675,6 +619,33 @@ OutputPanel.prototype._onload = function OP_onload()
 };
 
 /**
+ * Determine the scrollbar width in the current document.
+ *
+ * @private
+ */
+Object.defineProperty(OutputPanel.prototype, 'scrollbarWidth', {
+  get: function() {
+    if (this.__scrollbarWidth) {
+      return this.__scrollbarWidth;
+    }
+
+    let hbox = this.document.createElementNS(XUL_NS, "hbox");
+    hbox.setAttribute("style", "height: 0%; overflow: hidden");
+
+    let scrollbar = this.document.createElementNS(XUL_NS, "scrollbar");
+    scrollbar.setAttribute("orient", "vertical");
+    hbox.appendChild(scrollbar);
+
+    this.document.documentElement.appendChild(hbox);
+    this.__scrollbarWidth = scrollbar.clientWidth;
+    this.document.documentElement.removeChild(hbox);
+
+    return this.__scrollbarWidth;
+  },
+  enumerable: true
+});
+
+/**
  * Prevent the popup from hiding if it is not permitted via this.canHide.
  */
 OutputPanel.prototype._onpopuphiding = function OP_onpopuphiding(aEvent)
@@ -691,16 +662,14 @@ OutputPanel.prototype._onpopuphiding = function OP_onpopuphiding(aEvent)
  */
 OutputPanel.prototype.show = function OP_show()
 {
-  // This is nasty, but displaying the panel causes it to re-flow, which can
-  // change the size it should be, so we need to resize the iframe after the
-  // panel has displayed
-  this._panel.ownerDocument.defaultView.setTimeout(function() {
-    this._resize();
-  }.bind(this), 0);
-
   if (isLinux) {
     this.canHide = false;
   }
+
+  // We need to reset the iframe size in order for future size calculations to
+  // be correct
+  this._frame.style.minHeight = this._frame.style.maxHeight = 0;
+  this._frame.style.minWidth = 0;
 
   this._panel.openPopup(this._input, "before_start", 0, 0, false, false, null);
   this._resize();
@@ -718,8 +687,38 @@ OutputPanel.prototype._resize = function CLP_resize()
     return
   }
 
-  this._frame.height = this.document.body.scrollHeight;
-  this._frame.width = this._input.clientWidth + 2;
+  // Set max panel width to match any content with a max of the width of the
+  // browser window.
+  let maxWidth = this._panel.ownerDocument.documentElement.clientWidth;
+  let width = Math.min(maxWidth, this.document.documentElement.scrollWidth);
+
+  // Add scrollbar width to content size in case a scrollbar is needed.
+  width += this.scrollbarWidth;
+
+  // Set the width of the iframe.
+  this._frame.style.minWidth = width + "px";
+
+  // browserAdjustment is used to correct the panel height according to the
+  // browsers borders etc.
+  const browserAdjustment = 15;
+
+  // Set max panel height to match any content with a max of the height of the
+  // browser window.
+  let maxHeight =
+    this._panel.ownerDocument.documentElement.clientHeight - browserAdjustment;
+  let height = Math.min(maxHeight, this.document.documentElement.scrollHeight);
+
+  // Set the height of the iframe. Setting iframe.height does not work.
+  this._frame.style.minHeight = this._frame.style.maxHeight = height + "px";
+
+  // Set the height and width of the panel to match the iframe.
+  this._panel.sizeTo(width, height);
+
+  // Move the panel to the correct position in the case that it has been
+  // positioned incorrectly.
+  let screenX = this._input.boxObject.screenX;
+  let screenY = this._toolbar.boxObject.screenY;
+  this._panel.moveTo(screenX, screenY - height);
 };
 
 /**

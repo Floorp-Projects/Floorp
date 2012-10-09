@@ -29,12 +29,12 @@ TimeManager::Set(const JS::Value& date, JSContext* ctx) {
   if (date.isObject()) {
     JSObject* dateObj = JSVAL_TO_OBJECT(date);
 
-    if (JS_ObjectIsDate(ctx, dateObj) && js_DateIsValid(ctx, dateObj)) {
-      dateMSec = js_DateGetMsecSinceEpoch(ctx, dateObj);
+    if (JS_ObjectIsDate(ctx, dateObj) && js_DateIsValid(dateObj)) {
+      dateMSec = js_DateGetMsecSinceEpoch(dateObj);
     }
     else {
       NS_WARN_IF_FALSE(JS_ObjectIsDate(ctx, dateObj), "This is not a Date object");
-      NS_WARN_IF_FALSE(js_DateIsValid(ctx, dateObj), "Date is not valid");
+      NS_WARN_IF_FALSE(js_DateIsValid(dateObj), "Date is not valid");
       return NS_ERROR_INVALID_ARG;
     }
   } else if (date.isNumber()) {

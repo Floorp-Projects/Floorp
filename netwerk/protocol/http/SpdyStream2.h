@@ -143,6 +143,9 @@ private:
   // Flag is set after the WAITING_FOR Transport event has been generated
   uint32_t                     mSentWaitingFor       : 1;
 
+  // Flag is set after TCP send autotuning has been disabled
+  uint32_t                     mSetTCPSocketBuffer   : 1;
+
   // The InlineFrame and associated data is used for composing control
   // frames and data frame headers.
   nsAutoArrayPtr<char>         mTxInlineFrame;

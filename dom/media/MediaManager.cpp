@@ -18,6 +18,8 @@
 #include "nsDOMFile.h"
 #include "nsGlobalWindow.h"
 
+#include "mozilla/Preferences.h"
+
 /* Using WebRTC backend on Desktops (Mac, Windows, Linux), otherwise default */
 #include "MediaEngineDefault.h"
 #if defined(MOZ_WEBRTC)
@@ -25,6 +27,13 @@
 #endif
 
 namespace mozilla {
+
+// We only support 1 audio and 1 video track for now.
+enum {
+  kVideoTrack = 1,
+  kAudioTrack = 2
+};
+
 
 /**
  * Send an error back to content. The error is the form a string.
@@ -219,7 +228,16 @@ public:
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
     // Create a media stream.
-    nsCOMPtr<nsDOMMediaStream> stream = nsDOMMediaStream::CreateInputStream();
+    nsCOMPtr<nsDOMMediaStream> stream;
+    if (mTrackID == kVideoTrack) {
+      stream = nsDOMMediaStream::CreateInputStream(
+        nsDOMMediaStream::HINT_CONTENTS_VIDEO
+      );
+    } else {
+      stream = nsDOMMediaStream::CreateInputStream(
+        nsDOMMediaStream::HINT_CONTENTS_AUDIO
+      );
+    }
 
     nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
       (nsGlobalWindow::GetInnerWindowWithId(mWindowID));
@@ -328,12 +346,6 @@ public:
       delete mBackend;
     }
   }
-
-  // We only support 1 audio and 1 video track for now.
-  enum {
-    kVideoTrack = 1,
-    kAudioTrack = 2
-  };
 
   NS_IMETHOD
   Run()
@@ -663,6 +675,11 @@ MediaManager::GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
     mActiveWindows.Put(windowID, listeners);
   }
 
+  // Developer preference for turning off permission check.
+  if (Preferences::GetBool("media.navigator.permission.disabled", false)) {
+    aPrivileged = true;
+  }
+
   /**
    * Pass runnables along to GetUserMediaRunnable so it can add the
    * MediaStreamListener to the runnable list. The last argument can
@@ -696,7 +713,7 @@ MediaManager::GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
   if (picture) {
     // ShowFilePickerForMimeType() must run on the Main Thread! (on Android)
     NS_DispatchToMainThread(gUMRunnable);
-  } else if (aPrivileged) {
+  } else if (aPrivileged || fake) {
     if (!mMediaThread) {
       nsresult rv = NS_NewThread(getter_AddRefs(mMediaThread));
       NS_ENSURE_SUCCESS(rv, rv);

@@ -14,35 +14,30 @@
   border: 1px solid threedshadow;
   border-radius: 3px;
   background-color: -moz-Dialog;
-  min-height: 50px;
+}
+
+.alertImageBox {
+  padding: 8px 0;
+  width: 64px;
+  background-image: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.6));
+  -moz-border-end: 1px solid rgba(0,0,0,.1);
+}
+
+.alertTextBox {
   padding: 8px;
-}
-
-@media (-moz-windows-default-theme) {
-  .alertBox {
-    background-image: linear-gradient(to bottom, white 1px, rgba(255,255,255,0) 15px);
-  }
-}
-
-.alertBox[orient="horizontal"] > .alertImageBox {
-  -moz-margin-end: 8px;
-}
-
-.alertBox[orient="vertical"] > .alertImageBox {
-  margin-bottom: 8px;
+  -moz-padding-start: 16px;
+  width: 255px;
+  background-image: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.1));
 }
 
 .alertTitle {
   font-weight: bold;
+  font-size: 110%;
 }
 
 #alertImage {
   max-width: 48px;
   max-height: 48px;
-}
-
-.alertText {
-  -moz-margin-end: 6px;
 }
 
 #alertNotification[clickable="true"] {
@@ -59,11 +54,7 @@ label {
 }
 
 .alertText[clickable="true"]:hover:active {
-  color: #424F63;
-}
-
-.alertBox[orient="vertical"] > .alertTextBox {
-  -moz-box-align: center;
+  color: -moz-activehyperlinktext;
 }
 
 @keyframes alert-animation {

@@ -15,7 +15,7 @@ function test() {
 
 function consoleOpened(HUD) {
   let tmp = {};
-  Cu.import("resource:///modules/WebConsoleUtils.jsm", tmp);
+  Cu.import("resource://gre/modules/devtools/WebConsoleUtils.jsm", tmp);
   let WCU = tmp.WebConsoleUtils;
   let JSPropertyProvider = tmp.JSPropertyProvider;
   tmp = null;
@@ -117,7 +117,7 @@ function testPropertyPanel(aPanel) {
   ok(find("iter1: Iterator", false),
      "iter1 is correctly displayed in the Property Panel");
 
-  ok(find("iter2: Iterator", false),
+  ok(find("iter2: Object", false),
      "iter2 is correctly displayed in the Property Panel");
 
   executeSoon(finishTest);

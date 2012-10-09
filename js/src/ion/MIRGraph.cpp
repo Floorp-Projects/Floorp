@@ -117,7 +117,8 @@ MBasicBlock::NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred)
 }
 
 MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kind kind)
-  : graph_(graph),
+    : earlyAbort_(false),
+    graph_(graph),
     info_(info),
     stackPosition_(info_.firstStackSlot()),
     lastIns_(NULL),
