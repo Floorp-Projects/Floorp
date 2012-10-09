@@ -821,7 +821,14 @@ $(filter-out %.$(LIB_SUFFIX),$(LIBRARY)): $(filter %.$(LIB_SUFFIX),$(LIBRARY)) $
 	$(EXPAND_LIBS_GEN) -o $@ $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS)
 
 ifeq ($(OS_ARCH),WINNT)
-$(IMPORT_LIBRARY): $(SHARED_LIBRARY)
+# Import libraries are created by the rules creating shared libraries.
+# The rules to copy them to $(DIST)/lib depend on $(IMPORT_LIBRARY),
+# but make will happily consider the import library before it is refreshed
+# when rebuilding the corresponding shared library. Defining an empty recipe
+# for import libraries forces make to wait for the shared library recipe to
+# have run before considering other targets that depend on the import library.
+# See bug 795204.
+$(IMPORT_LIBRARY): $(SHARED_LIBRARY) ;
 endif
 
 ifeq ($(OS_ARCH),OS2)
