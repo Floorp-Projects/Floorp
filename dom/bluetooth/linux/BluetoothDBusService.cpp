@@ -150,8 +150,6 @@ static const char* sBluetoothDBusSignals[] =
 static nsAutoPtr<RawDBusConnection> gThreadConnection;
 static nsDataHashtable<nsStringHashKey, DBusMessage* > sPairingReqTable;
 static nsDataHashtable<nsStringHashKey, DBusMessage* > sAuthorizeReqTable;
-static nsTArray<uint32_t> sServiceHandles;
-
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
 
 class DistributeBluetoothSignalTask : public nsRunnable {
@@ -768,10 +766,15 @@ public:
     uuids.AppendElement((uint32_t)(BluetoothServiceUuid::HandsfreeAG >> 32));
     uuids.AppendElement((uint32_t)(BluetoothServiceUuid::HeadsetAG >> 32));
 
-    sServiceHandles.Clear();
-    if (!BluetoothDBusService::AddReservedServicesInternal(mPath, uuids, sServiceHandles)) {
+    // TODO/qdot: This needs to be held for the life of the bluetooth connection
+    // so we could clean it up. For right now though, we can throw it away.
+    nsTArray<uint32_t> handles;
+
+    if (!BluetoothDBusService::AddReservedServicesInternal(mPath, uuids, handles)) {
       NS_WARNING("Failed to add reserved services");
+#ifdef MOZ_WIDGET_GONK
       return NS_ERROR_FAILURE;
+#endif
     }
 
     if(!RegisterAgent(mPath)) {
@@ -2256,6 +2259,7 @@ BluetoothDBusService::Disconnect(const uint16_t aProfileId,
   BluetoothValue v = true;
   DispatchBluetoothReply(aRunnable, v, replyError);
 }
+
 class CreateBluetoothScoSocket : public nsRunnable
 {
 public: 
