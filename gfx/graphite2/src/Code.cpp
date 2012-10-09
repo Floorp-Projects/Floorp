@@ -42,7 +42,7 @@ of the License or (at your option) any later version.
 #include "inc/Rule.h"
 #include "inc/Silf.h"
 
-#include <cstdio>
+#include <stdio.h>
 
 #ifdef NDEBUG
 #ifdef __GNUC__

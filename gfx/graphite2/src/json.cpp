@@ -29,7 +29,7 @@ of the License or (at your option) any later version.
 
 #if !defined GRAPHITE2_NTRACING
 
-#include <cstdio>
+#include <stdio.h>
 #include "inc/json.h"
 
 using namespace graphite2;
