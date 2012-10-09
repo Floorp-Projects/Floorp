@@ -308,6 +308,23 @@ AbstractFile.read = function read(path, bytes) {
 };
 
 /**
+ * Find outs if a file exists.
+ *
+ * @param {string} path The path to the file.
+ *
+ * @return {bool} true if the file exists, false otherwise.
+ */
+AbstractFile.exists = function exists(path) {
+  try {
+    let file = exports.OS.File.open(path);
+    file.close();
+    return true;
+  } catch (x) {
+    return false;
+  }
+};
+
+/**
  * Write a file, atomically.
  *
  * By opposition to a regular |write|, this operation ensures that,
@@ -324,6 +341,8 @@ AbstractFile.read = function read(path, bytes) {
  * - {number} bytes The number of bytes to write. If unspecified,
  * |buffer.byteLength|. Required if |buffer| is a C pointer.
  * - {string} tmpPath The path at which to write the temporary file.
+ * - {bool} noOverwrite - If set, this function will fail if a file already
+ * exists at |path|. The |tmpPath| is not overwritten if |path| exist.
  *
  * @return {number} The number of bytes actually written.
  */
@@ -335,6 +354,12 @@ AbstractFile.writeAtomic =
   if (!tmpPath) {
     throw new TypeError("Expected option tmpPath");
   }
+
+  let noOverwrite = options.noOverwrite;
+  if (noOverwrite && OS.File.exists(path)) {
+    throw OS.File.Error.exists("writeAtomic");
+  }
+
   let tmpFile = OS.File.open(tmpPath, {write: true, truncate: true});
   let bytesWritten;
   try {
