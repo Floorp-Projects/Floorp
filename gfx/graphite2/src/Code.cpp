@@ -169,16 +169,17 @@ Machine::Code::Code(bool is_constraint, const byte * bytecode_begin, const byte 
         bytecode_end,
         pre_context,
         rule_length,
-        silf.numClasses(),
-        face.glyphs().numAttrs(),
-        face.numFeatures(), 
+        static_cast<uint16>(silf.numClasses()),
+        static_cast<uint16>(face.glyphs().numAttrs()),
+        static_cast<byte>(face.numFeatures()),
         {1,1,1,1,1,1,1,1, 
          1,1,1,1,1,1,1,255,
          1,1,1,1,1,1,1,1, 
          1,1,1,1,1,1,0,0, 
          0,0,0,0,0,0,0,0, 
          0,0,0,0,0,0,0,0, 
-         0,0,0,0,0,0,0, silf.numUser()}
+         0,0,0,0,0,0,0,
+         static_cast<byte>(silf.numUser())}
     };
     
     decoder dec(lims, *this);
