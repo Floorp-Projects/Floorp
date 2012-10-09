@@ -32,6 +32,9 @@
           android:title="@string/desktop_mode"
           android:checkable="true" />
 
+    <item android:id="@+id/private_browsing"
+          android:title="@string/new_pb_tab"/>
+
     <item android:id="@+id/addons"
           android:title="@string/addons"/>
 
