@@ -3390,24 +3390,26 @@ DebuggerFrame_setOnPop(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+/*
+ * Evaluate |chars[0..length-1]| in the environment |env|, treating that
+ * source as appearing starting at |lineno| in |filename|. Store the return
+ * value in |*rval|. Use |thisv| as the 'this' value.
+ *
+ * If |fp| is non-NULL, evaluate as for a direct eval in that frame; |env|
+ * must be either |fp|'s DebugScopeObject, or some extension of that
+ * environment; either way, |fp|'s scope is where newly declared variables
+ * go. In this case, |fp| must have a computed 'this' value, equal to |thisv|.
+ */
 JSBool
-js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar *chars,
-                  unsigned length, const char *filename, unsigned lineno, Value *rval)
+js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, StackFrame *fp,
+                  const jschar *chars, unsigned length, const char *filename, unsigned lineno,
+                  Value *rval)
 {
     assertSameCompartment(cx, env, fp);
+    JS_ASSERT_IF(fp, thisv.get() == fp->thisValue());
 
     JS_ASSERT(!IsPoisonedPtr(chars));
     SkipRoot skip(cx, &chars);
-
-    RootedValue thisv(cx);
-    if (fp) {
-        /* Execute assumes an already-computed 'this" value. */
-        if (!ComputeThis(cx, fp))
-            return false;
-        thisv = fp->thisValue();
-    } else {
-        thisv = ObjectValue(*env);
-    }
 
     /*
      * NB: This function breaks the assumption that the compiler can see all
@@ -3480,9 +3482,20 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
     else
         ac.construct(cx, scope);
 
-    Rooted<Env *> env(cx, fp ? GetDebugScopeForFrame(cx, fp) : scope);
-    if (!env)
-        return false;
+    RootedValue thisv(cx);
+    Rooted<Env *> env(cx);
+    if (fp) {
+        /* ExecuteInEnv requires 'fp' to have a computed 'this" value. */
+        if (!ComputeThis(cx, fp))
+            return false;
+        thisv = fp->thisValue();
+        env = GetDebugScopeForFrame(cx, fp);
+        if (!env)
+            return false;
+    } else {
+        thisv = ObjectValue(*scope);
+        env = scope;
+    }
 
     /* If evalWithBindings, create the inner environment. */
     if (bindings) {
@@ -3505,7 +3518,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName,
     /* Run the code and produce the completion value. */
     Value rval;
     JS::Anchor<JSString *> anchor(stable);
-    bool ok = EvaluateInEnv(cx, env, fp, stable->chars(), stable->length(),
+    bool ok = EvaluateInEnv(cx, env, thisv, fp, stable->chars(), stable->length(),
                             "debugger eval code", 1, &rval);
     return dbg->receiveCompletionValue(ac, ok, rval, vp);
 }
