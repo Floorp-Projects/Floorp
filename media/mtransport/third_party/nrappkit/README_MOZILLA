@@ -1,0 +1,22 @@
+This import of nrappkit is a subset of the distribution at:
+
+  nrappkit.sourceforge.net
+
+
+The last revision included in this import was on Nov 25, 2008.
+This import includes a small nunber of portability fixes that
+have been submitted to the upstream repository and are included
+in upstream.diff.
+
+
+Out of the list in the README, we use:
+
+- registry-based configuration (with change callbacks)
+  [but without the registry daemon]
+- configurable logging system
+- event and timer handling
+  [though partly reimplemented]
+ 
+Also, we use a bunch of the generic utilities such as string handling,
+generic hash tables in C, yet another concrete type mapping, etc.
+

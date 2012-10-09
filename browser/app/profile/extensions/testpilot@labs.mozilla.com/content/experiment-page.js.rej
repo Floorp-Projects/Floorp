@@ -1,0 +1,21 @@
+--- content/experiment-page.js
++++ content/experiment-page.js
+@@ -156,17 +156,17 @@
+           for (let j = 0; j < columnNames.length; j++) {
+ 	    csvString += "\"" + rawData[i][propertyNames[j]] + "\",";
+           }
+ 	  csvString = csvString.substring(0, (csvString.length - 1));
+           csvString += "\n";
+         }
+ 
+         // write, create, truncate
+-        foStream.init(file, 0x02 | 0x08 | 0x20, 0664, 0);
++        foStream.init(file, 0x02 | 0x08 | 0x20, parseInt("0664", 8), 0);
+         converter.init(foStream, "UTF-8", 0, 0);
+         converter.writeString(csvString);
+         converter.close();
+       });
+     }
+   }
+ 
+   function openLink(url) {

@@ -405,7 +405,7 @@ AlphaBoxBlur::AlphaBoxBlur(uint8_t* aData,
 AlphaBoxBlur::~AlphaBoxBlur()
 {
   if (mFreeData) {
-    delete mData;
+    free(mData);
   }
 }
 

@@ -3,6 +3,7 @@
 
 function test() {
   let instance, widthBeforeClose, heightBeforeClose;
+  let events = ResponsiveUI.ResponsiveUIManager.events;
 
   waitForExplicitFinish();
 
@@ -16,8 +17,8 @@ function test() {
 
   function startTest() {
     document.getElementById("Tools:ResponsiveUI").removeAttribute("disabled");
+    events.once("on", function() {executeSoon(onUIOpen)});
     synthesizeKeyFromKeyTag("key_responsiveUI");
-    executeSoon(onUIOpen);
   }
 
   function onUIOpen() {
@@ -118,14 +119,13 @@ function test() {
     widthBeforeClose = content.innerWidth;
     heightBeforeClose = content.innerHeight;
 
+    events.once("off", function() {executeSoon(restart)});
     EventUtils.synthesizeKey("VK_ESCAPE", {});
-
-    executeSoon(restart);
   }
 
   function restart() {
+    events.once("on", function() {executeSoon(onUIOpen2)});
     synthesizeKeyFromKeyTag("key_responsiveUI");
-    executeSoon(onUIOpen2);
   }
 
   function onUIOpen2() {
@@ -138,8 +138,8 @@ function test() {
     is(content.innerWidth, widthBeforeClose, "width restored.");
     is(content.innerHeight, heightBeforeClose, "height restored.");
 
+    events.once("off", function() {executeSoon(finishUp)});
     EventUtils.synthesizeKey("VK_ESCAPE", {});
-    executeSoon(finishUp);
   }
 
   function finishUp() {

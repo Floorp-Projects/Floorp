@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(9b283337-097d-4fa8-a2da-916318eaf828)]
+[scriptable, builtinclass, uuid(e93b2f6a-c543-448b-9239-55c96e31672e)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -685,4 +685,19 @@ interface nsIDocShell : nsISupports
    * not be allowed.
    */
   [noscript, notxpcom] bool pluginsAllowedInCurrentDoc();
+  
+
+  /**
+   * Attribute that determines whether fullscreen is allowed to be entered for
+   * this subtree of the docshell tree. This is true when all iframes containing
+   * this docshell have their "mozallowfullscreen" attribute set to "true".
+   * fullscreenAllowed is only writable at content boundaries, where it is used
+   * to propagate the value of the cross process parent's iframe's
+   * "mozallowfullscreen" attribute to the child process. Setting
+   * fullscreenAllowed on docshells which aren't content boundaries throws an
+   * exception.
+   */
+  [infallible] readonly attribute boolean fullscreenAllowed;
+  
+  void setFullscreenAllowed(in boolean allowed);
 };

@@ -788,7 +788,10 @@ LinuxNativeApp.prototype = {
     // The trailing semicolon is needed as written in the freedesktop specification
     let categories = "";
     for (let category of this.app.categories) {
-      categories += translations[category] + ";";
+      let catLower = category.toLowerCase();
+      if (catLower in translations) {
+        categories += translations[catLower] + ";";
+      }
     }
 
     return categories;

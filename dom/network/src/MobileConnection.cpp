@@ -11,6 +11,13 @@
 #include "DataErrorEvent.h"
 #include "mozilla/Services.h"
 #include "IccManager.h"
+#include "GeneratedEvents.h"
+#include "nsIDOMICCCardLockErrorEvent.h"
+
+#include "nsContentUtils.h"
+#include "nsJSUtils.h"
+#include "nsJSON.h"
+#include "jsapi.h"
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 
@@ -20,6 +27,7 @@
 #define ICCINFOCHANGE_EVENTNAME    NS_LITERAL_STRING("iccinfochange")
 #define USSDRECEIVED_EVENTNAME     NS_LITERAL_STRING("ussdreceived")
 #define DATAERROR_EVENTNAME        NS_LITERAL_STRING("dataerror")
+#define ICCCARDLOCKERROR_EVENTNAME NS_LITERAL_STRING("icccardlockerror")
 
 DOMCI_DATA(MozMobileConnection, mozilla::dom::network::MobileConnection)
 
@@ -33,6 +41,7 @@ const char* kCardStateChangedTopic = "mobile-connection-cardstate-changed";
 const char* kIccInfoChangedTopic   = "mobile-connection-iccinfo-changed";
 const char* kUssdReceivedTopic     = "mobile-connection-ussd-received";
 const char* kDataErrorTopic        = "mobile-connection-data-error";
+const char* kIccCardLockErrorTopic = "mobile-connection-icccardlock-error";
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MobileConnection)
 
@@ -61,6 +70,7 @@ NS_IMPL_EVENT_HANDLER(MobileConnection, voicechange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, datachange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, ussdreceived)
 NS_IMPL_EVENT_HANDLER(MobileConnection, dataerror)
+NS_IMPL_EVENT_HANDLER(MobileConnection, icccardlockerror)
 
 MobileConnection::MobileConnection()
 {
@@ -90,6 +100,7 @@ MobileConnection::Init(nsPIDOMWindow* aWindow)
   obs->AddObserver(this, kIccInfoChangedTopic, false);
   obs->AddObserver(this, kUssdReceivedTopic, false);
   obs->AddObserver(this, kDataErrorTopic, false);
+  obs->AddObserver(this, kIccCardLockErrorTopic, false);
 
   mIccManager = new icc::IccManager();
   mIccManager->Init(aWindow);
@@ -110,6 +121,7 @@ MobileConnection::Shutdown()
   obs->RemoveObserver(this, kIccInfoChangedTopic);
   obs->RemoveObserver(this, kUssdReceivedTopic);
   obs->RemoveObserver(this, kDataErrorTopic);
+  obs->RemoveObserver(this, kIccCardLockErrorTopic);
 
   if (mIccManager) {
     mIccManager->Shutdown();
@@ -165,6 +177,60 @@ MobileConnection::Observe(nsISupports* aSubject,
     nsresult rv =
       event->Dispatch(ToIDOMEventTarget(), DATAERROR_EVENTNAME);
     NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, kIccCardLockErrorTopic)) {
+    nsString errorMsg;
+    errorMsg.Assign(aData);
+
+    if (errorMsg.IsEmpty()) {
+      NS_ERROR("Got a 'icc-cardlock-error' topic without a valid message!");
+      return NS_OK;
+    }
+
+    nsString lockType;
+    int32_t retryCount = -1;
+
+    // Decode the json string "errorMsg" and retrieve its properties:
+    // "lockType" and "retryCount".
+    nsresult rv;
+    nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+    NS_ENSURE_STATE(sc);
+    JSContext* cx = sc->GetNativeContext();
+    NS_ASSERTION(cx, "Failed to get a context!");
+
+    nsCOMPtr<nsIJSON> json(new nsJSON());
+    jsval error;
+    rv = json->DecodeToJSVal(errorMsg, cx, &error);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    jsval type;
+    if (JS_GetProperty(cx, JSVAL_TO_OBJECT(error), "lockType", &type)) {
+      if (JSVAL_IS_STRING(type)) {
+        nsDependentJSString str;
+        str.init(cx, type.toString());
+        lockType.Assign(str);
+      }
+    }
+
+    jsval count;
+    if (JS_GetProperty(cx, JSVAL_TO_OBJECT(error), "retryCount", &count)) {
+      if (JSVAL_IS_NUMBER(count)) {
+        retryCount = count.toNumber();
+      }
+    }
+
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMICCCardLockErrorEvent(getter_AddRefs(event), nullptr, nullptr);
+
+    nsCOMPtr<nsIDOMICCCardLockErrorEvent> e = do_QueryInterface(event);
+    e->InitICCCardLockErrorEvent(NS_LITERAL_STRING("icccardlockerror"),
+                                 false, false, lockType, retryCount);
+    e->SetTrusted(true);
+    bool dummy;
+    DispatchEvent(event, &dummy);
+
     return NS_OK;
   }
 

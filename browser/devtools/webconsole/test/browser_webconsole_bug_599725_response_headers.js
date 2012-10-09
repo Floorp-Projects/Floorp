@@ -10,9 +10,11 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-599725-response-headers.sjs";
 
-function performTest(lastFinishedRequest)
+function performTest(lastFinishedRequest, aConsole)
 {
   ok(lastFinishedRequest, "page load was logged");
+
+  let headers = null;
 
   function readHeader(aName)
   {
@@ -24,13 +26,16 @@ function performTest(lastFinishedRequest)
     return null;
   }
 
-  let headers = lastFinishedRequest.log.entries[0].response.headers;
-  ok(headers, "we have the response headers");
-  ok(!readHeader("Content-Type"), "we do not have the Content-Type header");
-  isnot(readHeader("Content-Length"), 60, "Content-Length != 60");
+  aConsole.webConsoleClient.getResponseHeaders(lastFinishedRequest.actor,
+    function (aResponse) {
+      headers = aResponse.headers;
+      ok(headers, "we have the response headers");
+      ok(!readHeader("Content-Type"), "we do not have the Content-Type header");
+      isnot(readHeader("Content-Length"), 60, "Content-Length != 60");
+      executeSoon(finishTest);
+    });
 
   HUDService.lastFinishedRequestCallback = null;
-  executeSoon(finishTest);
 }
 
 function test()

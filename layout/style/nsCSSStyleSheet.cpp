@@ -1075,14 +1075,8 @@ nsCSSStyleSheet::~nsCSSStyleSheet()
       child->mDocument = nullptr;
     }
   }
-  if (nullptr != mRuleCollection) {
-    mRuleCollection->DropReference();
-    NS_RELEASE(mRuleCollection);
-  }
-  if (mMedia) {
-    mMedia->SetStyleSheet(nullptr);
-    mMedia = nullptr;
-  }
+  DropRuleCollection();
+  DropMedia();
   mInner->RemoveSheet(this);
   // XXX The document reference is not reference counted and should
   // not be released. The document will let us know when it is going
@@ -1093,11 +1087,85 @@ nsCSSStyleSheet::~nsCSSStyleSheet()
   }
 }
 
+void
+nsCSSStyleSheet::DropRuleCollection()
+{
+  if (mRuleCollection) {
+    mRuleCollection->DropReference();
+    NS_RELEASE(mRuleCollection);
+  }
+}
+
+void
+nsCSSStyleSheet::DropMedia()
+{
+  if (mMedia) {
+    mMedia->SetStyleSheet(nullptr);
+    mMedia = nullptr;
+  }
+}
+
+void
+nsCSSStyleSheet::UnlinkInner()
+{
+  // We can only have a cycle through our inner if we have a unique inner,
+  // because otherwise there are no JS wrappers for anything in the inner.
+  if (mInner->mSheets.Length() != 1) {
+    return;
+  }
+
+  mInner->mOrderedRules.EnumerateForwards(SetStyleSheetReference, nullptr);
+  mInner->mOrderedRules.Clear();
+
+  // Have to be a bit careful with child sheets, because we want to
+  // drop their mNext pointers and null out their mParent and
+  // mDocument, but don't want to work with deleted objects.  And we
+  // don't want to do any addrefing in the process, just to make sure
+  // we don't confuse the cycle collector (though on the face of it,
+  // addref/release pairs during unlink should probably be ok).
+  nsRefPtr<nsCSSStyleSheet> child;
+  child.swap(mInner->mFirstChild);
+  while (child) {
+    MOZ_ASSERT(child->mParent == this, "We have a unique inner!");
+    child->mParent = nullptr;
+    child->mDocument = nullptr;
+    nsRefPtr<nsCSSStyleSheet> next;
+    // Null out child->mNext, but don't let it die yet
+    next.swap(child->mNext);
+    // Switch to looking at the old value of child->mNext next iteration
+    child.swap(next);
+    // "next" is now our previous value of child; it'll get released
+    // as we loop around.
+  }
+}
+
+void
+nsCSSStyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
+{
+  // We can only have a cycle through our inner if we have a unique inner,
+  // because otherwise there are no JS wrappers for anything in the inner.
+  if (mInner->mSheets.Length() != 1) {
+    return;
+  }
+
+  nsRefPtr<nsCSSStyleSheet>* childSheetSlot = &mInner->mFirstChild;
+  while (*childSheetSlot) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "child sheet");
+    cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIStyleSheet*, childSheetSlot->get()));
+    childSheetSlot = &(*childSheetSlot)->mNext;
+  }
+
+  const nsCOMArray<css::Rule>& rules = mInner->mOrderedRules;
+  for (int32_t i = 0, count = rules.Count(); i < count; ++i) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mOrderedRules[i]");
+    cb.NoteXPCOMChild(rules[i]->GetExistingDOMRule());
+  }
+}
 
 DOMCI_DATA(CSSStyleSheet, nsCSSStyleSheet)
 
 // QueryInterface implementation for nsCSSStyleSheet
-NS_INTERFACE_MAP_BEGIN(nsCSSStyleSheet)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsIStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleSheet)
@@ -1110,8 +1178,26 @@ NS_INTERFACE_MAP_BEGIN(nsCSSStyleSheet)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(nsCSSStyleSheet)
-NS_IMPL_RELEASE(nsCSSStyleSheet)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSStyleSheet)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSStyleSheet)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSStyleSheet)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSStyleSheet)
+  tmp->DropMedia();
+  // We do not unlink mNext; our parent will handle that.  If we
+  // unlinked it here, our parent would not be able to walk its list
+  // of child sheets and null out the back-references to it, if we got
+  // unlinked before it does.
+  tmp->DropRuleCollection();
+  tmp->UnlinkInner();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSStyleSheet)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mMedia)
+  // We do not traverse mNext; our parent will handle that.  See
+  // comments in Unlink for why.
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mRuleCollection)
+  tmp->TraverseInner(cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
 nsresult

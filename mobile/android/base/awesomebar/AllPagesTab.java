@@ -146,7 +146,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
         filterSuggestions(searchTerm);
         if (mSuggestionsOptInPrompt != null) {
-            int visibility = searchTerm.isEmpty() ? View.GONE : View.VISIBLE;
+            int visibility = TextUtils.isEmpty(searchTerm) ? View.GONE : View.VISIBLE;
             if (mSuggestionsOptInPrompt.getVisibility() != visibility) {
                 mSuggestionsOptInPrompt.setVisibility(visibility);
             }

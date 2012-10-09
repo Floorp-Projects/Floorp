@@ -3125,6 +3125,12 @@ html|*#gcli-output-frame {
               0 0 0 1px hsla(210,40%,83%,.1);
 }
 
+.gclitoolbar-input-node > .textbox-input-box > html|*.textbox-input::-moz-selection {
+  background-color: hsl(210,30%,85%);
+  color: hsl(210,24%,16%);
+  text-shadow: none;
+}
+
 .gclitoolbar-complete-node {
   padding-left: 21px;
   background-color: transparent;
@@ -3531,7 +3537,6 @@ chatbox[minimized="true"] {
 }
 
 .click-to-play-plugins-notification-icon-box {
-  background: hsla(0,0%,100%,.4);
   -moz-border-end: 1px solid hsla(0,0%,100%,.2);
   padding-top: 16px;
   -moz-padding-end: 16px;

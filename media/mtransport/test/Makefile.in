@@ -1,0 +1,100 @@
+# -*- Mode: makefile; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- #
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+DEPTH = @DEPTH@
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = test_mtransport
+
+DEFINES += \
+  -DHAVE_STRDUP -DNR_SOCKET_IS_VOID_PTR -DSCTP_DEBUG -DINET -DINET6
+LIBS = $(EXTRA_DSO_LIBS) \
+  $(XPCOM_LIBS) \
+  $(NSPR_LIBS) \
+  $(NSS_LIBS) \
+  $(DEPTH)/media/mtransport/standalone/$(LIB_PREFIX)mtransport_s.$(LIB_SUFFIX) \
+  $(DEPTH)/media/mtransport/third_party/nICEr/nicer_nicer/$(LIB_PREFIX)nicer.$(LIB_SUFFIX) \
+  $(DEPTH)/media/mtransport/third_party/nrappkit/nrappkit_nrappkit/$(LIB_PREFIX)nrappkit.$(LIB_SUFFIX) \
+  $(DEPTH)/media/webrtc/trunk/testing/gtest_gtest/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
+  $(NULL)
+
+ifdef MOZ_SCTP
+LIBS += $(DEPTH)/netwerk/sctp/src/$(LIB_PREFIX)nksctp_s.$(LIB_SUFFIX)
+endif
+
+LOCAL_INCLUDES += \
+  -I. \
+  -I$(topsrcdir)/media/webrtc/trunk/testing/gtest/include/ \
+  -I$(topsrcdir)/media/mtransport/ \
+  -I$(topsrcdir)/netwerk/sctp/src/ \
+ $(NULL)
+
+LOCAL_INCLUDES += \
+ -I. \
+ -I$(topsrcdir)/media/mtransport/third_party/ \
+ -I$(topsrcdir)/media/mtransport/third_party/ \
+ -I$(topsrcdir)/media/mtransport/third_party/nICEr/src/crypto \
+ -I$(topsrcdir)/media/mtransport/third_party/nICEr/src/ice \
+ -I$(topsrcdir)/media/mtransport/third_party/nICEr/src/net \
+ -I$(topsrcdir)/media/mtransport/third_party/nICEr/src/stun \
+ -I$(topsrcdir)/media/mtransport/third_party/nICEr/src/util \
+ -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/share \
+ -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/util/libekr \
+ -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/log \
+ -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/registry \
+ -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/stats \
+ -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/plugin \
+ -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/event \
+ $(NULL)
+
+# SCTP DEFINES
+ifeq ($(OS_TARGET),WINNT)
+DEFINES += -D__Userspace_os_Windows=1
+else
+ifeq ($(OS_TARGET),Darwin)
+DEFINES += -D__Userspace_os_Darwin=1
+else
+ifeq ($(OS_TARGET),Linux)
+DEFINES += -D__Userspace_os_Linux=1
+else
+ifeq ($(OS_TARGET),FreeBSD)
+DEFINES += -D__Userspace_os_FreeBSD=1
+else
+#default_fallback; probably doesn't work
+DEFINES += -D__Userspace_os_$(OS_TARGET)=1
+endif
+endif
+endif
+endif
+
+ifeq ($(OS_ARCH), Darwin)
+LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/darwin/include
+DEFINES += \
+  -DGTEST_USE_OWN_TR1_TUPLE=1 \
+  $(NULL)
+endif
+
+ifeq ($(OS_ARCH), Linux)
+LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/linux/include
+endif
+
+ifneq ($(OS_TARGET),WINNT)
+CPP_UNIT_TESTS = \
+  ice_unittest.cpp \
+  nrappkit_unittest.cpp \
+  sockettransportservice_unittest.cpp \
+  transport_unittests.cpp \
+  runnable_utils_unittest.cpp \
+  $(NULL)
+ifdef MOZ_SCTP
+CPP_UNIT_TESTS += sctp_unittest.cpp
+endif
+
+endif
+
+include $(topsrcdir)/config/rules.mk

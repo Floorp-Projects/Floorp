@@ -80,7 +80,7 @@ SmsFilter::SetStartDate(JSContext* aCx, const jsval& aStartDate)
     return NS_ERROR_INVALID_ARG;
   }
 
-  mData.startDate() = js_DateGetMsecSinceEpoch(aCx, &obj);
+  mData.startDate() = js_DateGetMsecSinceEpoch(&obj);
   return NS_OK;
 }
 
@@ -115,7 +115,7 @@ SmsFilter::SetEndDate(JSContext* aCx, const jsval& aEndDate)
     return NS_ERROR_INVALID_ARG;
   }
 
-  mData.endDate() = js_DateGetMsecSinceEpoch(aCx, &obj);
+  mData.endDate() = js_DateGetMsecSinceEpoch(&obj);
   return NS_OK;
 }
 

@@ -545,7 +545,7 @@ NS_IMPL_ISUPPORTS1(CloseCookieDBListener, mozIStorageCompletionCallback)
 
 namespace {
 
-class AppUninstallObserver MOZ_FINAL : public nsIObserver {
+class AppClearDataObserver MOZ_FINAL : public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
 
@@ -553,24 +553,22 @@ public:
   NS_IMETHODIMP
   Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *data)
   {
-    MOZ_ASSERT(!nsCRT::strcmp(aTopic, "webapps-uninstall"));
+    MOZ_ASSERT(!nsCRT::strcmp(aTopic, TOPIC_WEB_APP_CLEAR_DATA));
 
-    nsCOMPtr<nsIAppsService> appsService = do_GetService("@mozilla.org/AppsService;1");
-    nsCOMPtr<mozIApplication> app;
+    uint32_t appId = NECKO_UNKNOWN_APP_ID;
+    bool browserOnly = false;
+    nsresult rv = NS_GetAppInfoFromClearDataNotification(aSubject, &appId,
+                                                         &browserOnly);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    appsService->GetAppFromObserverMessage(nsAutoString(data), getter_AddRefs(app));
-    NS_ENSURE_TRUE(app, NS_ERROR_UNEXPECTED);
-
-    uint32_t appId;
-    app->GetLocalId(&appId);
-    MOZ_ASSERT(appId != NECKO_NO_APP_ID);
-
-    nsCOMPtr<nsICookieManager2> cookieManager = do_GetService(NS_COOKIEMANAGER_CONTRACTID);
-    return cookieManager->RemoveCookiesForApp(appId, false);
+    nsCOMPtr<nsICookieManager2> cookieManager
+      = do_GetService(NS_COOKIEMANAGER_CONTRACTID);
+    MOZ_ASSERT(cookieManager);
+    return cookieManager->RemoveCookiesForApp(appId, browserOnly);
   }
 };
 
-NS_IMPL_ISUPPORTS1(AppUninstallObserver, nsIObserver)
+NS_IMPL_ISUPPORTS1(AppClearDataObserver, nsIObserver)
 
 } // anonymous namespace
 
@@ -616,10 +614,12 @@ nsCookieService::GetSingleton()
 }
 
 /* static */ void
-nsCookieService::AppUninstallObserverInit()
+nsCookieService::AppClearDataObserverInit()
 {
   nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
-  observerService->AddObserver(new AppUninstallObserver(), "webapps-uninstall", /* holdsWeak= */ false);
+  nsCOMPtr<AppClearDataObserver> obs = new AppClearDataObserver();
+  observerService->AddObserver(obs, TOPIC_WEB_APP_CLEAR_DATA,
+                               /* holdsWeak= */ false);
 }
 
 /******************************************************************************

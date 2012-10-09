@@ -174,6 +174,7 @@ nsHttpHandler::nsHttpHandler()
     , mCoalesceSpdy(true)
     , mUseAlternateProtocol(false)
     , mSpdySendingChunkSize(ASpdySession::kSendingChunkSize)
+    , mSpdySendBufferSize(ASpdySession::kTCPSendBufferSize)
     , mSpdyPingThreshold(PR_SecondsToInterval(44))
     , mSpdyPingTimeout(PR_SecondsToInterval(8))
     , mConnectTimeout(90000)
@@ -1101,6 +1102,14 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         if (NS_SUCCEEDED(rv))
             mSpdyPingTimeout =
                 PR_SecondsToInterval((uint16_t) clamped(val, 0, 0x7fffffff));
+    }
+
+    // The amount of seconds to wait for a spdy ping response before
+    // closing the session.
+    if (PREF_CHANGED(HTTP_PREF("spdy.send-buffer-size"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("spdy.send-buffer-size"), &val);
+        if (NS_SUCCEEDED(rv))
+            mSpdySendBufferSize = (uint32_t) clamped(val, 1500, 0x7fffffff);
     }
 
     // The maximum amount of time to wait for socket transport to be

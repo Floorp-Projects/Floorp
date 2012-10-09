@@ -446,6 +446,7 @@ listTemplate = (
 "  if (ok || *enabled) {\n"
 "    return ok;\n"
 "  }\n"
+"  *enabled = true;\n"
 "  return getPrototype(cx, receiver);\n"
 "}\n"
 "\n")

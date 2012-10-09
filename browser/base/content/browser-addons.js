@@ -158,26 +158,7 @@ const gXPInstallObserver = {
       }
       else {
         messageString = gNavigatorBundle.getString("addonsInstalled");
-        action = {
-          label: gNavigatorBundle.getString("addonInstallManage"),
-          accessKey: gNavigatorBundle.getString("addonInstallManage.accesskey"),
-          callback: function() {
-            // Calculate the add-on type that is most popular in the list of
-            // installs
-            var types = {};
-            var bestType = null;
-            for (let install of installInfo.installs) {
-              if (install.type in types)
-                types[install.type]++;
-              else
-                types[install.type] = 1;
-              if (!bestType || types[install.type] > types[bestType])
-                bestType = install.type;
-            }
-
-            BrowserOpenAddonsMgr("addons://list/" + bestType);
-          }
-        };
+        action = null;
       }
 
       messageString = PluralForm.get(installInfo.installs.length, messageString);

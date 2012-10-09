@@ -3,50 +3,39 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 html {
-	padding-bottom: 0px; 
+	padding-bottom: 0px;
 	padding-top: 20px;
 	padding-left: 0px;
 	padding-right: 0px;
 }
 
-body { 
+body {
 	font-family: 'Lucida Grande', 'Lucida Sans Unicode', Lucida, Arial, Helvetica, sans-serif;
-	font-family: 'DroidSans';
 	background: #fff url('chrome://testpilot/skin/bg.jpg') repeat-x top center;
-	padding: 0px; 
+	padding: 0px;
 	color:#787878;
 	font-size:12px;
 	line-height: 18px;
 	margin: 0 auto;
-	
+
 }
 
-	h1 {font-family: 'DroidSans'; color: #3a3a3a; font-size: 28px; font-weight: normal; letter-spacing: -1px}
-	h2 {font-family: 'DroidSans'; color: #54717b; font-size: 24px; line-height: 22px;font-weight: normal; letter-spacing: -1px}
-	
+	h1 {font-family: 'sans-serif'; color: #3a3a3a; font-size: 28px; font-weight: normal; letter-spacing: -1px}
+	h2 {font-family: 'sans-serif'; color: #54717b; font-size: 24px; line-height: 22px;font-weight: normal; letter-spacing: -1px}
+
 	p, ul {font-size: 12px;}
-	
+
 	a:link, a:hover, a:active, a:focus, a:visited {color: #9f423b; text-decoration: none;}
 	a:hover {color: #9f423b; text-decoration: none;}
-	
-	.bold {font-family: 'DroidSans-Bold'; color:#3a3a3a;}
+
+	.bold {color:#3a3a3a;}
 	.address {margin-left: 20px;}
 	.inactive {color:#ccc;}
-	
+
 	li {list-style-type: circle;}
 
 	.spacer {height: 75px;}
 
-
-@font-face{
-font-family: 'DroidSans'; 
-src: url('chrome://testpilot/skin/fonts/DroidSans.ttf') format('truetype');
-}
-
-@font-face{
-font-family: 'DroidSans-Bold'; 
-src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
-}
 
 #container {
 	margin: 0px auto;
@@ -61,14 +50,14 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 #contentWelcome {
 	margin-top: 120px;
 	padding: 8px 24px 24px 24px;
-	font-family: 'DroidSans';
+	font-family: 'sans-serif';
 	text-align: left;
 }
 
 #content {
 	margin-top: 60px;
 	padding: 8px 24px 24px 24px;
-	font-family: 'DroidSans';
+	font-family: 'sans-serif';
 	text-align: left;
 }
 
@@ -77,16 +66,6 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 	margin-left: 410px;
 	margin-top: 240px;
 }
-
-.downloadButton {
-	margin-bottom: -10px;
-	margin-top: -2px;
-	margin-right: 12px;
-}
-
-.downloadH1 {font-family: 'DroidSans-bold'; color: #3a3a3a; font-size: 24px; font-weight: normal; letter-spacing: -1px; margin-right: 8px;}
-
-.downloadH2 {font-family: 'DroidSans'; color: #3a3a3a; font-size: 22px; font-weight: normal; letter-spacing: -1px; line-height: 28px; margin-left: 46px;}
 
 #intro {
 	float: left;
@@ -102,60 +81,60 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 }
 
 .button {
-	font-family: 'DroidSans';
+	font-family: 'sans-serif';
 	font-size: 16px;
 	padding: 8px 12px;
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
-	box-shadow: 
+	box-shadow:
 		inset rgba(0, 0, 0, 0.2) 0 1px 1px,
 		inset rgba(255, 255, 255, 1) 0 3px 1px,
 		inset rgba(255, 255, 255, 0.3) 0 16px 0px,
 		inset rgba(0, 0, 0, 0.2) 0 -1px 1px,
-		inset rgba(0, 0, 0, 0.1) 0 -2px 1px, 
+		inset rgba(0, 0, 0, 0.1) 0 -2px 1px,
 		rgba(255, 255, 255, 1) 0 1px,
 		rgba(133, 153, 166, 0.3) 0px 1px 12px;
 	background-color: #e7eaec;
-	//display: inline;
+	/*display: inline;*/
 }
 
 .home_button {
-	font-family: 'DroidSans';
+	font-family: 'sans-serif';
 	font-size: 16px;
 	padding: 8px 12px;
 	width: 240px;
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
-	box-shadow: 
+	box-shadow:
 		inset rgba(0, 0, 0, 0.2) 0 1px 1px,
 		inset rgba(255, 255, 255, 1) 0 3px 1px,
 		inset rgba(255, 255, 255, 0.3) 0 16px 0px,
 		inset rgba(0, 0, 0, 0.2) 0 -1px 1px,
-		inset rgba(0, 0, 0, 0.1) 0 -2px 1px, 
+		inset rgba(0, 0, 0, 0.1) 0 -2px 1px,
 		rgba(255, 255, 255, 1) 0 1px,
 		rgba(133, 153, 166, 0.3) 0px 1px 12px;
 	background-color: #e7eaec;
-	//display: inline;
+	/*display: inline;*/
 }
 
 
 .callout {
-	font-family: 'DroidSans';
+	font-family: 'sans-serif';
 	font-size: 16px;
 	padding: 8px 24px;
 	margin: 24px auto;
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/callout.png') no-repeat top center;
-	box-shadow: 
+	box-shadow:
 		inset rgba(185, 221, 234, 0.2) 0 -10px 12px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
 		inset rgba(255, 255, 255, 0.2) 0 10px 12px;
-	//display: inline;
+	/*display: inline;*/
 }
 
 .home_callout {
-	font-family: 'DroidSans';
+	font-family: 'sans-serif';
 	font-size: 16px;
 	vertical-align: middle;
 	width: 240px;
@@ -164,11 +143,11 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/callout.png') no-repeat top center;
-	box-shadow: 
+	box-shadow:
 		inset rgba(185, 221, 234, 0.2) 0 -10px 12px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
 		inset rgba(255, 255, 255, 0.2) 0 10px 12px;
-	//display: inline;
+	/*display: inline;*/
 }
 
 .homeIcon {
@@ -189,7 +168,7 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 	margin-right: 6px;
 }
 
-/* ------- MENU ------- 
+/* ------- MENU -------
 
 #menu {
 	margin: 20px auto;
@@ -204,7 +183,7 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 	border-bottom: 3px solid #adb6ba;
 	-moz-border-bottom-colors:#adb6ba #e7eaec #e7eaec;
 	background-color: #fff;
-} 
+}
 
 */
 
@@ -222,7 +201,7 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 	font-size: 14px;
 	text-shadow: 1px 1px 1px rgba(173, 182, 186, 1);
 	background-color: rgba(173, 182, 186, 0.3);
-	box-shadow: 
+	box-shadow:
 		inset rgba(0, 0, 0, 0.2) 0 -10px 12px;
 	padding: 9px 8px 8px 8px;
 }

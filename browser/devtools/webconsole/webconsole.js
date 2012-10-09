@@ -15,6 +15,12 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
+                                  "resource://gre/modules/devtools/dbg-server.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
+                                  "resource://gre/modules/devtools/dbg-client.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
                                    "@mozilla.org/widget/clipboardhelper;1",
                                    "nsIClipboardHelper");
@@ -32,17 +38,18 @@ XPCOMUtils.defineLazyModuleGetter(this, "AutocompletePopup",
                                   "resource:///modules/AutocompletePopup.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
-                                  "resource:///modules/WebConsoleUtils.jsm");
+                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "l10n", function() {
-  return WebConsoleUtils.l10n;
-});
+const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
+let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
 
 // The XUL namespace.
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/en/Security/MixedContent";
+
+const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
 // The amount of time in milliseconds that must pass between messages to
 // trigger the display of a new group.
@@ -180,6 +187,10 @@ function WebConsoleFrame(aWebConsoleOwner, aPosition)
 
   this._toggleFilter = this._toggleFilter.bind(this);
   this._onPositionConsoleCommand = this._onPositionConsoleCommand.bind(this);
+  this._flushMessageQueue = this._flushMessageQueue.bind(this);
+
+  this._outputTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  this._outputTimerInitialized = false;
 
   this._initDefaultFilterPrefs();
   this._commandController = new CommandController(this);
@@ -187,6 +198,7 @@ function WebConsoleFrame(aWebConsoleOwner, aPosition)
 
   this.jsterm = new JSTerm(this);
   this.jsterm.inputNode.focus();
+  this._initConnection();
 }
 
 WebConsoleFrame.prototype = {
@@ -196,6 +208,16 @@ WebConsoleFrame.prototype = {
    * @type object
    */
   owner: null,
+
+  /**
+   * Proxy between the Web Console and the remote Web Console instance. This
+   * object holds methods used for connecting, listening and disconnecting from
+   * the remote server, using the remote debugging protocol.
+   *
+   * @see WebConsoleConnectionProxy
+   * @type object
+   */
+  proxy: null,
 
   /**
    * Getter for the xul:popupset that holds any popups we open.
@@ -246,6 +268,15 @@ WebConsoleFrame.prototype = {
   _flushCallback: null,
 
   /**
+   * Timer used for flushing the messages output queue.
+   *
+   * @private
+   * @type nsITimer
+   */
+  _outputTimer: null,
+  _outputTimerInitialized: null,
+
+  /**
    * Store for tracking repeated CSS nodes.
    * @private
    * @type object
@@ -263,6 +294,12 @@ WebConsoleFrame.prototype = {
    * The nesting depth of the currently active console group.
    */
   groupDepth: 0,
+
+  /**
+   * The current tab location.
+   * @type string
+   */
+  contentLocation: "",
 
   /**
    * The JSTerm object that manage the console's input.
@@ -283,6 +320,12 @@ WebConsoleFrame.prototype = {
    */
   filterBox: null,
 
+  /**
+   * Getter for the debugger WebConsoleClient.
+   * @type object
+   */
+  get webConsoleClient() this.proxy ? this.proxy.webConsoleClient : null,
+
   _saveRequestAndResponseBodies: false,
 
   /**
@@ -299,16 +342,30 @@ WebConsoleFrame.prototype = {
    *        The new value you want to set.
    */
   set saveRequestAndResponseBodies(aValue) {
-    this._saveRequestAndResponseBodies = aValue;
-
-    let message = {
-      preferences: {
-        "NetworkMonitor.saveRequestAndResponseBodies":
-          this._saveRequestAndResponseBodies,
-      },
+    let newValue = !!aValue;
+    let preferences = {
+      "NetworkMonitor.saveRequestAndResponseBodies": newValue,
     };
 
-    this.owner.sendMessageToContent("WebConsole:SetPreferences", message);
+    this.webConsoleClient.setPreferences(preferences, function(aResponse) {
+      if (!aResponse.error) {
+        this._saveRequestAndResponseBodies = newValue;
+      }
+    }.bind(this));
+  },
+
+  /**
+   * Connect to the server using the remote debugging protocol.
+   * @private
+   */
+  _initConnection: function WCF__initConnection()
+  {
+    this.proxy = new WebConsoleConnectionProxy(this);
+    this.proxy.initServer();
+    this.proxy.connect(function() {
+      this.saveRequestAndResponseBodies = this._saveRequestAndResponseBodies;
+      this._onInitComplete();
+    }.bind(this));
   },
 
   /**
@@ -374,8 +431,10 @@ WebConsoleFrame.prototype = {
                                       this.owner.onCloseButton.bind(this.owner));
 
     let clearButton = doc.getElementsByClassName("webconsole-clear-console-button")[0];
-    clearButton.addEventListener("command",
-                                 this.owner.onClearButton.bind(this.owner));
+    clearButton.addEventListener("command", function WCF__onClearButton() {
+      this.owner._onClearButton();
+      this.jsterm.clearOutput(true);
+    }.bind(this));
   },
 
   /**
@@ -487,6 +546,19 @@ WebConsoleFrame.prototype = {
   },
 
   /**
+   * Callback method for when the Web Console initialization is complete. For
+   * now this method sends the web-console-created notification using the
+   * nsIObserverService.
+   *
+   * @private
+   */
+  _onInitComplete: function WC__onInitComplete()
+  {
+    let id = WebConsoleUtils.supportsString(this.hudId);
+    Services.obs.notifyObservers(id, "web-console-created", null);
+  },
+
+  /**
    * Handle the "command" event for the buttons that allow the user to
    * reposition the Web Console UI.
    *
@@ -588,62 +660,6 @@ WebConsoleFrame.prototype = {
       this.inputNode.style.fontSize = "";
       this.outputNode.style.fontSize = "";
       Services.prefs.clearUserPref("devtools.webconsole.fontSize");
-    }
-  },
-
-  /**
-   * Handler for all of the messages coming from the Web Console content script.
-   *
-   * @private
-   * @param object aMessage
-   *        A MessageManager object that holds the remote message.
-   */
-  receiveMessage: function WCF_receiveMessage(aMessage)
-  {
-    if (!aMessage.json || aMessage.json.hudId != this.hudId) {
-      return;
-    }
-
-    switch (aMessage.name) {
-      case "JSTerm:EvalResult":
-      case "JSTerm:EvalObject":
-      case "JSTerm:AutocompleteProperties":
-        this.owner._receiveMessageWithCallback(aMessage.json);
-        break;
-      case "JSTerm:ClearOutput":
-        this.jsterm.clearOutput();
-        break;
-      case "JSTerm:InspectObject":
-        this.jsterm.handleInspectObject(aMessage.json);
-        break;
-      case "WebConsole:ConsoleAPI":
-        this.outputMessage(CATEGORY_WEBDEV, this.logConsoleAPIMessage,
-                           [aMessage.json]);
-        break;
-      case "WebConsole:PageError": {
-        let pageError = aMessage.json.pageError;
-        let category = Utils.categoryForScriptError(pageError);
-        this.outputMessage(category, this.reportPageError,
-                           [category, pageError]);
-        break;
-      }
-      case "WebConsole:CachedMessages":
-        this._displayCachedConsoleMessages(aMessage.json.messages);
-        this.owner._onInitComplete();
-        break;
-      case "WebConsole:NetworkActivity":
-        this.handleNetworkActivity(aMessage.json);
-        break;
-      case "WebConsole:FileActivity":
-        this.outputMessage(CATEGORY_NETWORK, this.logFileActivity,
-                           [aMessage.json.uri]);
-        break;
-      case "WebConsole:LocationChange":
-        this.owner.onLocationChange(aMessage.json);
-        break;
-      case "JSTerm:NonNativeConsoleAPI":
-        this.outputMessage(CATEGORY_JS, this.logWarningAboutReplacedAPI);
-        break;
     }
   },
 
@@ -972,13 +988,11 @@ WebConsoleFrame.prototype = {
    * Display cached messages that may have been collected before the UI is
    * displayed.
    *
-   * @private
    * @param array aRemoteMessages
    *        Array of cached messages coming from the remote Web Console
    *        content instance.
    */
-  _displayCachedConsoleMessages:
-  function WCF__displayCachedConsoleMessages(aRemoteMessages)
+  displayCachedMessages: function WCF_displayCachedMessages(aRemoteMessages)
   {
     if (!aRemoteMessages.length) {
       return;
@@ -1001,19 +1015,11 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Logs a message to the Web Console that originates from the remote Web
-   * Console instance.
+   * Logs a message to the Web Console that originates from the Web Console
+   * server.
    *
    * @param object aMessage
-   *        The message received from the remote Web Console instance.
-   *        console service. This object needs to hold:
-   *          - hudId - the Web Console ID.
-   *          - apiMessage - a representation of the object sent by the console
-   *          storage service. This object holds the console message level, the
-   *          arguments that were passed to the console method and other
-   *          information.
-   *          - argumentsToString - the array of arguments passed to the console
-   *          method, each converted to a string.
+   *        The message received from the server.
    * @return nsIDOMElement|undefined
    *         The message element to display in the Web Console output.
    */
@@ -1023,9 +1029,9 @@ WebConsoleFrame.prototype = {
     let clipboardText = null;
     let sourceURL = null;
     let sourceLine = 0;
-    let level = aMessage.apiMessage.level;
-    let args = aMessage.apiMessage.arguments;
-    let argsToString = aMessage.argumentsToString;
+    let level = aMessage.level;
+    let args = aMessage.arguments;
+    let objectActors = [];
 
     switch (level) {
       case "log":
@@ -1033,17 +1039,36 @@ WebConsoleFrame.prototype = {
       case "warn":
       case "error":
       case "debug":
-        body = {
-          cacheId: aMessage.objectsCacheId,
-          remoteObjects: args,
-          argsToString: argsToString,
-        };
-        clipboardText = argsToString.join(" ");
-        sourceURL = aMessage.apiMessage.filename;
-        sourceLine = aMessage.apiMessage.lineNumber;
-        break;
+      case "dir":
+      case "groupEnd": {
+        body = { arguments: args };
+        let clipboardArray = [];
+        args.forEach(function(aValue) {
+          clipboardArray.push(WebConsoleUtils.objectActorGripToString(aValue));
+          if (aValue && typeof aValue == "object" && aValue.actor) {
+            objectActors.push(aValue.actor);
+          }
+        }, this);
+        clipboardText = clipboardArray.join(" ");
+        sourceURL = aMessage.filename;
+        sourceLine = aMessage.lineNumber;
 
-      case "trace":
+        if (level == "dir") {
+          body.objectProperties = aMessage.objectProperties;
+        }
+        else if (level == "groupEnd") {
+          objectActors.forEach(this._releaseObject, this);
+
+          if (this.groupDepth > 0) {
+            this.groupDepth--;
+          }
+          return; // no need to continue
+        }
+
+        break;
+      }
+
+      case "trace": {
         let filename = WebConsoleUtils.abbreviateSourceURL(args[0].filename);
         let functionName = args[0].functionName ||
                            l10n.getStr("stacktrace.anonymousFunction");
@@ -1065,33 +1090,15 @@ WebConsoleFrame.prototype = {
 
         clipboardText = clipboardText.trimRight();
         break;
-
-      case "dir":
-        body = {
-          cacheId: aMessage.objectsCacheId,
-          resultString: argsToString[0],
-          remoteObject: args[0],
-          remoteObjectProvider:
-            this.jsterm.remoteObjectProvider.bind(this.jsterm),
-        };
-        clipboardText = body.resultString;
-        sourceURL = aMessage.apiMessage.filename;
-        sourceLine = aMessage.apiMessage.lineNumber;
-        break;
+      }
 
       case "group":
       case "groupCollapsed":
         clipboardText = body = args;
-        sourceURL = aMessage.apiMessage.filename;
-        sourceLine = aMessage.apiMessage.lineNumber;
+        sourceURL = aMessage.filename;
+        sourceLine = aMessage.lineNumber;
         this.groupDepth++;
         break;
-
-      case "groupEnd":
-        if (this.groupDepth > 0) {
-          this.groupDepth--;
-        }
-        return;
 
       case "time":
         if (!args) {
@@ -1103,8 +1110,8 @@ WebConsoleFrame.prototype = {
         }
         body = l10n.getFormatStr("timerStarted", [args.name]);
         clipboardText = body;
-        sourceURL = aMessage.apiMessage.filename;
-        sourceLine = aMessage.apiMessage.lineNumber;
+        sourceURL = aMessage.filename;
+        sourceLine = aMessage.lineNumber;
         break;
 
       case "timeEnd":
@@ -1113,8 +1120,8 @@ WebConsoleFrame.prototype = {
         }
         body = l10n.getFormatStr("timeEnd", [args.name, args.duration]);
         clipboardText = body;
-        sourceURL = aMessage.apiMessage.filename;
-        sourceLine = aMessage.apiMessage.lineNumber;
+        sourceURL = aMessage.filename;
+        sourceLine = aMessage.lineNumber;
         break;
 
       default:
@@ -1125,6 +1132,10 @@ WebConsoleFrame.prototype = {
     let node = this.createMessageNode(CATEGORY_WEBDEV, LEVELS[level], body,
                                       sourceURL, sourceLine, clipboardText,
                                       level, aMessage.timeStamp);
+
+    if (objectActors.length) {
+      node._objectActors = objectActors;
+    }
 
     // Make the node bring up the property panel, to allow the user to inspect
     // the stack trace.
@@ -1147,10 +1158,6 @@ WebConsoleFrame.prototype = {
     }
 
     if (level == "dir") {
-      // Make sure the cached evaluated object will be purged when the node is
-      // removed.
-      node._evalCacheId = aMessage.objectsCacheId;
-
       // Initialize the inspector message node, by setting the PropertyTreeView
       // object on the tree view. This has to be done *after* the node is
       // shown, because the tree binding must be attached first.
@@ -1163,6 +1170,18 @@ WebConsoleFrame.prototype = {
   },
 
   /**
+   * Handle ConsoleAPICall objects received from the server. This method outputs
+   * the window.console API call.
+   *
+   * @param object aMessage
+   *        The console API message received from the server.
+   */
+  handleConsoleAPICall: function WCF_handleConsoleAPICall(aMessage)
+  {
+    this.outputMessage(CATEGORY_WEBDEV, this.logConsoleAPIMessage, [aMessage]);
+  },
+
+  /**
    * The click event handler for objects shown inline coming from the
    * window.console API.
    *
@@ -1172,11 +1191,11 @@ WebConsoleFrame.prototype = {
    * @param nsIDOMNode aAnchor
    *        The object inspector anchor element. This is the clickable element
    *        in the console.log message we display.
-   * @param array aRemoteObject
-   *        The remote object representation.
+   * @param object aObjectActor
+   *        The object actor grip.
    */
   _consoleLogClick:
-  function WCF__consoleLogClick(aMessage, aAnchor, aRemoteObject)
+  function WCF__consoleLogClick(aMessage, aAnchor, aObjectActor)
   {
     if (aAnchor._panelOpen) {
       return;
@@ -1188,29 +1207,28 @@ WebConsoleFrame.prototype = {
 
       // Data to inspect.
       data: {
-        // This is where the resultObject children are cached.
-        rootCacheId: aMessage._evalCacheId,
-        remoteObject: aRemoteObject,
-        // This is where all objects retrieved by the panel will be cached.
-        panelCacheId: "HUDPanel-" + gSequenceId(),
-        remoteObjectProvider: this.jsterm.remoteObjectProvider.bind(this.jsterm),
+        objectPropertiesProvider: this.objectPropertiesProvider.bind(this),
+        releaseObject: this._releaseObject.bind(this),
       },
     };
 
-    let propPanel = this.jsterm.openPropertyPanel(options);
-    propPanel.panel.setAttribute("hudId", this.hudId);
-
-    let onPopupHide = function JST__evalInspectPopupHide() {
+    let propPanel;
+    let onPopupHide = function _onPopupHide() {
       propPanel.panel.removeEventListener("popuphiding", onPopupHide, false);
 
-      this.jsterm.clearObjectCache(options.data.panelCacheId);
-
-      if (!aMessage.parentNode && aMessage._evalCacheId) {
-        this.jsterm.clearObjectCache(aMessage._evalCacheId);
+      if (!aMessage.parentNode && aMessage._objectActors) {
+        aMessage._objectActors.forEach(this._releaseObject, this);
+        aMessage._objectActors = null;
       }
     }.bind(this);
 
-    propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
+    this.objectPropertiesProvider(aObjectActor.actor,
+      function _onObjectProperties(aProperties) {
+        options.data.objectProperties = aProperties;
+        propPanel = this.jsterm.openPropertyPanel(options);
+        propPanel.panel.setAttribute("hudId", this.hudId);
+        propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
+      }.bind(this));
   },
 
   /**
@@ -1226,8 +1244,7 @@ WebConsoleFrame.prototype = {
     // Warnings and legacy strict errors become warnings; other types become
     // errors.
     let severity = SEVERITY_ERROR;
-    if ((aScriptError.flags & aScriptError.warningFlag) ||
-        (aScriptError.flags & aScriptError.strictFlag)) {
+    if (aScriptError.warning || aScriptError.strict) {
       severity = SEVERITY_WARNING;
     }
 
@@ -1240,22 +1257,34 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Log network activity.
+   * Handle PageError objects received from the server. This method outputs the
+   * given error.
    *
-   * @param object aHttpActivity
-   *        The HTTP activity to log.
+   * @param nsIScriptError aPageError
+   *        The error received from the server.
+   */
+  handlePageError: function WCF_handlePageError(aPageError)
+  {
+    let category = Utils.categoryForScriptError(aPageError);
+    this.outputMessage(category, this.reportPageError, [category, aPageError]);
+  },
+
+  /**
+   * Log network event.
+   *
+   * @param object aActorId
+   *        The network event actor ID to log.
    * @return nsIDOMElement|undefined
    *         The message element to display in the Web Console output.
    */
-  logNetActivity: function WCF_logNetActivity(aConnectionId)
+  logNetEvent: function WCF_logNetEvent(aActorId)
   {
-    let networkInfo = this._networkRequests[aConnectionId];
+    let networkInfo = this._networkRequests[aActorId];
     if (!networkInfo) {
       return;
     }
 
-    let entry = networkInfo.httpActivity.log.entries[0];
-    let request = entry.request;
+    let request = networkInfo.request;
 
     let msgNode = this.document.createElementNS(XUL_NS, "hbox");
 
@@ -1283,8 +1312,7 @@ WebConsoleFrame.prototype = {
 
     let severity = SEVERITY_LOG;
     let mixedRequest =
-      WebConsoleUtils.isMixedHTTPSRequest(request.url,
-                                          this.owner.contentLocation);
+      WebConsoleUtils.isMixedHTTPSRequest(request.url, this.contentLocation);
     if (mixedRequest) {
       urlNode.classList.add("webconsole-mixed-content");
       this.makeMixedContentNode(linkNode);
@@ -1305,18 +1333,18 @@ WebConsoleFrame.prototype = {
     let messageNode = this.createMessageNode(CATEGORY_NETWORK, severity,
                                              msgNode, null, null, clipboardText);
 
-    messageNode._connectionId = entry.connection;
+    messageNode._connectionId = aActorId;
     messageNode.url = request.url;
 
     this.makeOutputMessageLink(messageNode, function WCF_net_message_link() {
       if (!messageNode._panelOpen) {
-        this.openNetworkPanel(messageNode, networkInfo.httpActivity);
+        this.openNetworkPanel(messageNode, networkInfo);
       }
     }.bind(this));
 
     networkInfo.node = messageNode;
 
-    this._updateNetMessage(entry.connection);
+    this._updateNetMessage(aActorId);
 
     return messageNode;
   },
@@ -1378,99 +1406,144 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Inform user that the Web Console API has been replaced by a script
-   * in a content page.
+   * Handle the file activity messages coming from the remote Web Console.
    *
-   * @return nsIDOMElement|undefined
-   *         The message element to display in the Web Console output.
+   * @param string aFileURI
+   *        The file URI that was requested.
    */
-  logWarningAboutReplacedAPI: function WCF_logWarningAboutReplacedAPI()
+  handleFileActivity: function WCF_handleFileActivity(aFileURI)
   {
-    return this.createMessageNode(CATEGORY_JS, SEVERITY_WARNING,
-                                  l10n.getStr("ConsoleAPIDisabled"));
+    this.outputMessage(CATEGORY_NETWORK, this.logFileActivity, [aFileURI]);
   },
 
   /**
-   * Handle the "WebConsole:NetworkActivity" message coming from the remote Web
-   * Console.
-   *
-   * @param object aMessage
-   *        The HTTP activity object. This object needs to hold two properties:
-   *        - meta - some metadata about the request log:
-   *          - stages - the stages the network request went through.
-   *          - discardRequestBody and discardResponseBody - booleans that tell
-   *          if the network request/response body was discarded or not.
-   *        - log - the request and response information. This is a HAR-like
-   *        object. See HUDService-content.js
-   *        NetworkMonitor.createActivityObject().
+   * Inform user that the Web Console API has been replaced by a script
+   * in a content page.
    */
-  handleNetworkActivity: function WCF_handleNetworkActivity(aMessage)
+  logWarningAboutReplacedAPI: function WCF_logWarningAboutReplacedAPI()
   {
-    let stage = aMessage.meta.stages[aMessage.meta.stages.length - 1];
-    let entry = aMessage.log.entries[0];
+    let node = this.createMessageNode(CATEGORY_JS, SEVERITY_WARNING,
+                                      l10n.getStr("ConsoleAPIDisabled"));
+    this.outputMessage(CATEGORY_JS, node);
+  },
 
-    if (stage == "REQUEST_HEADER") {
-      let networkInfo = {
-        node: null,
-        httpActivity: aMessage,
-      };
+  /**
+   * Handle the network events coming from the remote Web Console.
+   *
+   * @param object aActor
+   *        The NetworkEventActor grip.
+   */
+  handleNetworkEvent: function WCF_handleNetworkEvent(aActor)
+  {
+    let networkInfo = {
+      node: null,
+      actor: aActor.actor,
+      discardRequestBody: true,
+      discardResponseBody: true,
+      startedDateTime: aActor.startedDateTime,
+      request: {
+        url: aActor.url,
+        method: aActor.method,
+      },
+      response: {},
+      timings: {},
+      updates: [], // track the list of network event updates
+    };
 
-      this._networkRequests[entry.connection] = networkInfo;
-      this.outputMessage(CATEGORY_NETWORK, this.logNetActivity,
-                         [entry.connection]);
+    this._networkRequests[aActor.actor] = networkInfo;
+    this.outputMessage(CATEGORY_NETWORK, this.logNetEvent, [aActor.actor]);
+  },
+
+  /**
+   * Handle network event updates coming from the server.
+   *
+   * @param string aActorId
+   *        The network event actor ID.
+   * @param string aType
+   *        Update type.
+   * @param object aPacket
+   *        Update details.
+   */
+  handleNetworkEventUpdate:
+  function WCF_handleNetworkEventUpdate(aActorId, aType, aPacket)
+  {
+    let networkInfo = this._networkRequests[aActorId];
+    if (!networkInfo) {
       return;
     }
-    else if (!(entry.connection in this._networkRequests)) {
-      return;
-    }
 
-    let networkInfo = this._networkRequests[entry.connection];
-    networkInfo.httpActivity = aMessage;
+    networkInfo.updates.push(aType);
+
+    switch (aType) {
+      case "requestHeaders":
+        networkInfo.request.headersSize = aPacket.headersSize;
+        break;
+      case "requestPostData":
+        networkInfo.discardRequestBody = aPacket.discardRequestBody;
+        networkInfo.request.bodySize = aPacket.dataSize;
+        break;
+      case "responseStart":
+        networkInfo.response.httpVersion = aPacket.response.httpVersion;
+        networkInfo.response.status = aPacket.response.status;
+        networkInfo.response.statusText = aPacket.response.statusText;
+        networkInfo.response.headersSize = aPacket.response.headersSize;
+        networkInfo.discardResponseBody = aPacket.response.discardResponseBody;
+        break;
+      case "responseContent":
+        networkInfo.response.content = {
+          mimeType: aPacket.mimeType,
+        };
+        networkInfo.response.bodySize = aPacket.contentSize;
+        networkInfo.discardResponseBody = aPacket.discardResponseBody;
+        break;
+      case "eventTimings":
+        networkInfo.totalTime = aPacket.totalTime;
+        break;
+    }
 
     if (networkInfo.node) {
-      this._updateNetMessage(entry.connection);
+      this._updateNetMessage(aActorId);
     }
 
     // For unit tests we pass the HTTP activity object to the test callback,
     // once requests complete.
     if (this.owner.lastFinishedRequestCallback &&
-        aMessage.meta.stages.indexOf("REQUEST_STOP") > -1 &&
-        aMessage.meta.stages.indexOf("TRANSACTION_CLOSE") > -1) {
-      this.owner.lastFinishedRequestCallback(aMessage);
+        networkInfo.updates.indexOf("responseContent") > -1 &&
+        networkInfo.updates.indexOf("eventTimings") > -1) {
+      this.owner.lastFinishedRequestCallback(networkInfo, this);
     }
   },
 
   /**
    * Update an output message to reflect the latest state of a network request,
-   * given a network connection ID.
+   * given a network event actor ID.
    *
    * @private
-   * @param string aConnectionId
-   *        The connection ID to update.
+   * @param string aActorId
+   *        The network event actor ID for which you want to update the message.
    */
-  _updateNetMessage: function WCF__updateNetMessage(aConnectionId)
+  _updateNetMessage: function WCF__updateNetMessage(aActorId)
   {
-    let networkInfo = this._networkRequests[aConnectionId];
+    let networkInfo = this._networkRequests[aActorId];
     if (!networkInfo || !networkInfo.node) {
       return;
     }
 
     let messageNode = networkInfo.node;
-    let httpActivity = networkInfo.httpActivity;
-    let stages = httpActivity.meta.stages;
-    let hasTransactionClose = stages.indexOf("TRANSACTION_CLOSE") > -1;
-    let hasResponseHeader = stages.indexOf("RESPONSE_HEADER") > -1;
-    let entry = httpActivity.log.entries[0];
-    let request = entry.request;
-    let response = entry.response;
+    let updates = networkInfo.updates;
+    let hasEventTimings = updates.indexOf("eventTimings") > -1;
+    let hasResponseStart = updates.indexOf("responseStart") > -1;
+    let request = networkInfo.request;
+    let response = networkInfo.response;
 
-    if (hasTransactionClose || hasResponseHeader) {
+    if (hasEventTimings || hasResponseStart) {
       let status = [];
       if (response.httpVersion && response.status) {
         status = [response.httpVersion, response.status, response.statusText];
       }
-      if (hasTransactionClose) {
-        status.push(l10n.getFormatStr("NetworkPanel.durationMS", [entry.time]));
+      if (hasEventTimings) {
+        status.push(l10n.getFormatStr("NetworkPanel.durationMS",
+                                      [networkInfo.totalTime]));
       }
       let statusText = "[" + status.join(" ") + "]";
 
@@ -1481,7 +1554,7 @@ WebConsoleFrame.prototype = {
       messageNode.clipboardText = [request.method, request.url, statusText]
                                   .join(" ");
 
-      if (hasResponseHeader && response.status >= MIN_HTTP_ERROR_CODE &&
+      if (hasResponseStart && response.status >= MIN_HTTP_ERROR_CODE &&
           response.status <= MAX_HTTP_ERROR_CODE) {
         this.setMessageType(messageNode, CATEGORY_NETWORK, SEVERITY_ERROR);
       }
@@ -1505,25 +1578,136 @@ WebConsoleFrame.prototype = {
    */
   openNetworkPanel: function WCF_openNetworkPanel(aNode, aHttpActivity)
   {
+    let actor = aHttpActivity.actor;
+
+    if (actor) {
+      this.webConsoleClient.getRequestHeaders(actor, function(aResponse) {
+        if (aResponse.error) {
+          Cu.reportError("WCF_openNetworkPanel getRequestHeaders:" +
+                         aResponse.error);
+          return;
+        }
+
+        aHttpActivity.request.headers = aResponse.headers;
+
+        this.webConsoleClient.getRequestCookies(actor, onRequestCookies);
+      }.bind(this));
+    }
+
+    let onRequestCookies = function(aResponse) {
+      if (aResponse.error) {
+        Cu.reportError("WCF_openNetworkPanel getRequestCookies:" +
+                       aResponse.error);
+        return;
+      }
+
+      aHttpActivity.request.cookies = aResponse.cookies;
+
+      this.webConsoleClient.getResponseHeaders(actor, onResponseHeaders);
+    }.bind(this);
+
+    let onResponseHeaders = function(aResponse) {
+      if (aResponse.error) {
+        Cu.reportError("WCF_openNetworkPanel getResponseHeaders:" +
+                       aResponse.error);
+        return;
+      }
+
+      aHttpActivity.response.headers = aResponse.headers;
+
+      this.webConsoleClient.getResponseCookies(actor, onResponseCookies);
+    }.bind(this);
+
+    let onResponseCookies = function(aResponse) {
+      if (aResponse.error) {
+        Cu.reportError("WCF_openNetworkPanel getResponseCookies:" +
+                       aResponse.error);
+        return;
+      }
+
+      aHttpActivity.response.cookies = aResponse.cookies;
+
+      this.webConsoleClient.getRequestPostData(actor, onRequestPostData);
+    }.bind(this);
+
+    let onRequestPostData = function(aResponse) {
+      if (aResponse.error) {
+        Cu.reportError("WCF_openNetworkPanel getRequestPostData:" +
+                       aResponse.error);
+        return;
+      }
+
+      aHttpActivity.request.postData = aResponse.postData;
+      aHttpActivity.discardRequestBody = aResponse.postDataDiscarded;
+
+      this.webConsoleClient.getResponseContent(actor, onResponseContent);
+    }.bind(this);
+
+    let onResponseContent = function(aResponse) {
+      if (aResponse.error) {
+        Cu.reportError("WCF_openNetworkPanel getResponseContent:" +
+                       aResponse.error);
+        return;
+      }
+
+      aHttpActivity.response.content = aResponse.content;
+      aHttpActivity.discardResponseBody = aResponse.contentDiscarded;
+
+      this.webConsoleClient.getEventTimings(actor, onEventTimings);
+    }.bind(this);
+
+    let onEventTimings = function(aResponse) {
+      if (aResponse.error) {
+        Cu.reportError("WCF_openNetworkPanel getEventTimings:" +
+                       aResponse.error);
+        return;
+      }
+
+      aHttpActivity.timings = aResponse.timings;
+
+      openPanel();
+    }.bind(this);
+
+    let openPanel = function() {
+      aNode._netPanel = netPanel;
+
+      let panel = netPanel.panel;
+      panel.openPopup(aNode, "after_pointer", 0, 0, false, false);
+      panel.sizeTo(450, 500);
+      panel.setAttribute("hudId", this.hudId);
+
+      panel.addEventListener("popuphiding", function WCF_netPanel_onHide() {
+        panel.removeEventListener("popuphiding", WCF_netPanel_onHide);
+
+        aNode._panelOpen = false;
+        aNode._netPanel = null;
+      });
+
+      aNode._panelOpen = true;
+    }.bind(this);
+
     let netPanel = new NetworkPanel(this.popupset, aHttpActivity);
     netPanel.linkNode = aNode;
-    aNode._netPanel = netPanel;
 
-    let panel = netPanel.panel;
-    panel.openPopup(aNode, "after_pointer", 0, 0, false, false);
-    panel.sizeTo(450, 500);
-    panel.setAttribute("hudId", aHttpActivity.hudId);
-
-    panel.addEventListener("popuphiding", function WCF_netPanel_onHide() {
-      panel.removeEventListener("popuphiding", WCF_netPanel_onHide);
-
-      aNode._panelOpen = false;
-      aNode._netPanel = null;
-    });
-
-    aNode._panelOpen = true;
+    if (!actor) {
+      openPanel();
+    }
 
     return netPanel;
+  },
+
+  /**
+   * Handler for page location changes.
+   *
+   * @param string aURI
+   *        New page location.
+   * @param string aTitle
+   *        New page title.
+   */
+  onLocationChange: function WCF_onLocationChange(aURI, aTitle)
+  {
+    this.contentLocation = aURI;
+    this.owner.onLocationChange(aURI, aTitle);
   },
 
   /**
@@ -1554,10 +1738,8 @@ WebConsoleFrame.prototype = {
 
     this._outputQueue.push([aCategory, aMethodOrNode, aArguments]);
 
-    if (!this._outputTimeout) {
-      this._outputTimeout =
-        this.window.setTimeout(this._flushMessageQueue.bind(this),
-                               OUTPUT_INTERVAL);
+    if (!this._outputTimerInitialized) {
+      this._initOutputTimer();
     }
   },
 
@@ -1570,19 +1752,21 @@ WebConsoleFrame.prototype = {
    */
   _flushMessageQueue: function WCF__flushMessageQueue()
   {
+    if (!this._outputTimer) {
+      return;
+    }
+
     let timeSinceFlush = Date.now() - this._lastOutputFlush;
     if (this._outputQueue.length > MESSAGES_IN_INTERVAL &&
         timeSinceFlush < THROTTLE_UPDATES) {
-      this._outputTimeout =
-        this.window.setTimeout(this._flushMessageQueue.bind(this),
-                               OUTPUT_INTERVAL);
+      this._initOutputTimer();
       return;
     }
 
     // Determine how many messages we can display now.
     let toDisplay = Math.min(this._outputQueue.length, MESSAGES_IN_INTERVAL);
     if (toDisplay < 1) {
-      this._outputTimeout = null;
+      this._outputTimerInitialized = false;
       return;
     }
 
@@ -1595,7 +1779,7 @@ WebConsoleFrame.prototype = {
 
     let batch = this._outputQueue.splice(0, toDisplay);
     if (!batch.length) {
-      this._outputTimeout = null;
+      this._outputTimerInitialized = false;
       return;
     }
 
@@ -1653,16 +1837,30 @@ WebConsoleFrame.prototype = {
 
     // If the queue is not empty, schedule another flush.
     if (this._outputQueue.length > 0) {
-      this._outputTimeout =
-        this.window.setTimeout(this._flushMessageQueue.bind(this),
-                               OUTPUT_INTERVAL);
+      this._initOutputTimer();
     }
     else {
-      this._outputTimeout = null;
+      this._outputTimerInitialized = false;
       this._flushCallback && this._flushCallback();
     }
 
     this._lastOutputFlush = Date.now();
+  },
+
+  /**
+   * Initialize the output timer.
+   * @private
+   */
+  _initOutputTimer: function WCF__initOutputTimer()
+  {
+    if (!this._outputTimer) {
+      return;
+    }
+
+    this._outputTimerInitialized = true;
+    this._outputTimer.initWithCallback(this._flushMessageQueue,
+                                       OUTPUT_INTERVAL,
+                                       Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   /**
@@ -1779,13 +1977,13 @@ WebConsoleFrame.prototype = {
   {
     let [category, methodOrNode, args] = aItem;
     if (typeof methodOrNode != "function" &&
-        methodOrNode._evalCacheId && !methodOrNode._panelOpen) {
-      this.jsterm.clearObjectCache(methodOrNode._evalCacheId);
+        methodOrNode._objectActors && !methodOrNode._panelOpen) {
+      methodOrNode._objectActors.forEach(this._releaseObject, this);
     }
 
     if (category == CATEGORY_NETWORK) {
       let connectionId = null;
-      if (methodOrNode == this.logNetActivity) {
+      if (methodOrNode == this.logNetEvent) {
         connectionId = args[0];
       }
       else if (typeof methodOrNode != "function") {
@@ -1793,13 +1991,34 @@ WebConsoleFrame.prototype = {
       }
       if (connectionId && connectionId in this._networkRequests) {
         delete this._networkRequests[connectionId];
+        this._releaseObject(connectionId);
       }
     }
     else if (category == CATEGORY_WEBDEV &&
              methodOrNode == this.logConsoleAPIMessage) {
-      let level = args[0].apiMessage.level;
-      if (level == "dir") {
-        this.jsterm.clearObjectCache(args[0].objectsCacheId);
+      let level = args[0].level;
+      let releaseObject = function _releaseObject(aValue) {
+        if (aValue && typeof aValue == "object" && aValue.actor) {
+          this._releaseObject(aValue.actor);
+        }
+      }.bind(this);
+      switch (level) {
+        case "log":
+        case "info":
+        case "warn":
+        case "error":
+        case "debug":
+        case "dir":
+        case "groupEnd": {
+          args[0].arguments.forEach(releaseObject);
+          if (level == "dir") {
+            args[0].objectProperties.forEach(function(aObject) {
+              ["value", "get", "set"].forEach(function(aProp) {
+                releaseObject(aObject[aProp]);
+              });
+            });
+          }
+        }
       }
     }
   },
@@ -1843,10 +2062,8 @@ WebConsoleFrame.prototype = {
 
     let tree = aMessageNode.querySelector("tree");
     tree.parentNode.removeChild(tree);
+    aMessageNode.propertyTreeView.data = null;
     aMessageNode.propertyTreeView = null;
-    if (tree.view) {
-      tree.view.data = null;
-    }
     tree.view = null;
   },
 
@@ -1858,8 +2075,8 @@ WebConsoleFrame.prototype = {
    */
   removeOutputMessage: function WCF_removeOutputMessage(aNode)
   {
-    if (aNode._evalCacheId && !aNode._panelOpen) {
-      this.jsterm.clearObjectCache(aNode._evalCacheId);
+    if (aNode._objectActors && !aNode._panelOpen) {
+      aNode._objectActors.forEach(this._releaseObject, this);
     }
 
     if (aNode.classList.contains("webconsole-msg-cssparser")) {
@@ -1870,8 +2087,10 @@ WebConsoleFrame.prototype = {
       }
       delete this._cssNodes[desc + location];
     }
-    else if (aNode.classList.contains("webconsole-msg-network")) {
+    else if (aNode._connectionId &&
+             aNode.classList.contains("webconsole-msg-network")) {
       delete this._networkRequests[aNode._connectionId];
+      this._releaseObject(aNode._connectionId);
     }
     else if (aNode.classList.contains("webconsole-msg-inspector")) {
       this.pruneConsoleDirNode(aNode);
@@ -1984,7 +2203,7 @@ WebConsoleFrame.prototype = {
     else {
       let str = undefined;
       if (aLevel == "dir") {
-        str = aBody.resultString;
+        str = WebConsoleUtils.objectActorGripToString(aBody.arguments[0]);
       }
       else if (["log", "info", "warn", "error", "debug"].indexOf(aLevel) > -1 &&
                typeof aBody == "object") {
@@ -2059,10 +2278,9 @@ WebConsoleFrame.prototype = {
       let treeView = node.propertyTreeView = new PropertyTreeView();
 
       treeView.data = {
-        rootCacheId: body.cacheId,
-        panelCacheId: body.cacheId,
-        remoteObject: Array.isArray(body.remoteObject) ? body.remoteObject : [],
-        remoteObjectProvider: body.remoteObjectProvider,
+        objectPropertiesProvider: this.objectPropertiesProvider.bind(this),
+        releaseObject: this._releaseObject.bind(this),
+        objectProperties: body.objectProperties,
       };
 
       tree.setAttribute("rows", treeView.rowCount);
@@ -2091,13 +2309,12 @@ WebConsoleFrame.prototype = {
    *        output.
    * @param object aBody
    *        The object given by this.logConsoleAPIMessage(). This object holds
-   *        the call information that we need to display.
+   *        the call information that we need to display - mainly the arguments
+   *        array of the given API call.
    */
   _makeConsoleLogMessageBody:
   function WCF__makeConsoleLogMessageBody(aMessage, aContainer, aBody)
   {
-    aMessage._evalCacheId = aBody.cacheId;
-
     Object.defineProperty(aMessage, "_panelOpen", {
       get: function() {
         let nodes = aContainer.querySelectorAll(".hud-clickable");
@@ -2109,17 +2326,19 @@ WebConsoleFrame.prototype = {
       configurable: false
     });
 
-    aBody.remoteObjects.forEach(function(aItem, aIndex) {
+    aBody.arguments.forEach(function(aItem) {
       if (aContainer.firstChild) {
         aContainer.appendChild(this.document.createTextNode(" "));
       }
 
-      let text = aBody.argsToString[aIndex];
-      if (!Array.isArray(aItem)) {
+      let text = WebConsoleUtils.objectActorGripToString(aItem);
+
+      if (aItem && typeof aItem != "object" || !aItem.inspectable) {
         aContainer.appendChild(this.document.createTextNode(text));
         return;
       }
 
+      // For inspectable objects.
       let elem = this.document.createElement("description");
       elem.classList.add("hud-clickable");
       elem.setAttribute("aria-haspopup", "true");
@@ -2321,6 +2540,43 @@ WebConsoleFrame.prototype = {
   },
 
   /**
+   * Object properties provider. This function gives you the properties of the
+   * remote object you want.
+   *
+   * @param string aActor
+   *        The object actor ID from which you want the properties.
+   * @param function aCallback
+   *        Function you want invoked once the properties are received.
+   */
+  objectPropertiesProvider:
+  function WCF_objectPropertiesProvider(aActor, aCallback)
+  {
+    this.webConsoleClient.inspectObjectProperties(aActor,
+      function(aResponse) {
+        if (aResponse.error) {
+          Cu.reportError("Failed to retrieve the object properties from the " +
+                         "server. Error: " + aResponse.error);
+          return;
+        }
+        aCallback(aResponse.properties);
+      });
+  },
+
+  /**
+   * Release an actor.
+   *
+   * @private
+   * @param string aActor
+   *        The actor ID you want to release.
+   */
+  _releaseObject: function WCF__releaseObject(aActor)
+  {
+    if (this.proxy) {
+      this.proxy.releaseActor(aActor);
+    }
+  },
+
+  /**
    * Open the selected item's URL in a new tab.
    */
   openSelectedItemInTab: function WCF_openSelectedItemInTab()
@@ -2337,12 +2593,35 @@ WebConsoleFrame.prototype = {
   /**
    * Destroy the HUD object. Call this method to avoid memory leaks when the Web
    * Console is closed.
+   *
+   * @param function [aOnDestroy]
+   *        Optional function to invoke when the Web Console instance is
+   *        destroyed.
    */
-  destroy: function WCF_destroy()
+  destroy: function WCF_destroy(aOnDestroy)
   {
+    this._cssNodes = {};
+    this._outputQueue = [];
+    this._pruneCategoriesQueue = {};
+    this._networkRequests = {};
+
+    if (this._outputTimerInitialized) {
+      this._outputTimerInitialized = false;
+      this._outputTimer.cancel();
+    }
+    this._outputTimer = null;
+
+    if (this.proxy) {
+      this.proxy.disconnect(aOnDestroy);
+      this.proxy = null;
+    }
+
     if (this.jsterm) {
       this.jsterm.destroy();
+      this.jsterm = null;
     }
+
+    this._commandController = null;
   },
 };
 
@@ -2397,6 +2676,12 @@ JSTerm.prototype = {
    */
   get outputNode() this.hud.outputNode,
 
+  /**
+   * Getter for the debugger WebConsoleClient.
+   * @type object
+   */
+  get webConsoleClient() this.hud.webConsoleClient,
+
   COMPLETE_FORWARD: 0,
   COMPLETE_BACKWARD: 1,
   COMPLETE_HINT_ONLY: 2,
@@ -2418,59 +2703,63 @@ JSTerm.prototype = {
   },
 
   /**
-   * Asynchronously evaluate a string in the content process sandbox.
-   *
-   * @param string aString
-   *        String to evaluate in the content process JavaScript sandbox.
-   * @param function [aCallback]
-   *        Optional function to be invoked when the evaluation result is
-   *        received.
-   */
-  evalInContentSandbox: function JST_evalInContentSandbox(aString, aCallback)
-  {
-    let message = {
-      str: aString,
-      resultCacheId: "HUDEval-" + gSequenceId(),
-    };
-
-    this.hud.owner.sendMessageToContent("JSTerm:EvalRequest", message, aCallback);
-
-    return message;
-  },
-
-  /**
-   * The "JSTerm:EvalResult" message handler. This is the JSTerm execution
-   * result callback which is invoked whenever JavaScript code evaluation
-   * results come from the content process.
+   * The JavaScript evaluation response handler.
    *
    * @private
+   * @param nsIDOMElement [aAfterNode]
+   *        Optional DOM element after which the evaluation result will be
+   *        inserted.
    * @param function [aCallback]
    *        Optional function to invoke when the evaluation result is added to
    *        the output.
    * @param object aResponse
-   *        The JSTerm:EvalResult message received from the content process. See
-   *        JSTerm.handleEvalRequest() in HUDService-content.js for further
-   *        details.
-   * @param object aRequest
-   *        The JSTerm:EvalRequest message we sent to the content process.
-   * @see JSTerm.handleEvalRequest() in HUDService-content.js
+   *        The message received from the server.
    */
   _executeResultCallback:
-  function JST__executeResultCallback(aCallback, aResponse, aRequest)
+  function JST__executeResultCallback(aAfterNode, aCallback, aResponse)
   {
-    let errorMessage = aResponse.errorMessage;
-    let resultString = aResponse.resultString;
-
-    // Hide undefined results coming from JSTerm helper functions.
-    if (!errorMessage &&
-        resultString == "undefined" &&
-        aResponse.helperResult &&
-        !aResponse.inspectable &&
-        !aResponse.helperRawOutput) {
+    if (!this.hud) {
       return;
     }
 
-    let afterNode = aRequest.outputNode;
+    let errorMessage = aResponse.errorMessage;
+    let result = aResponse.result;
+    let inspectable = result && typeof result == "object" && result.inspectable;
+    let helperResult = aResponse.helperResult;
+    let helperHasRawOutput = !!(helperResult || {}).rawOutput;
+    let resultString =
+      WebConsoleUtils.objectActorGripToString(result,
+                                              !helperHasRawOutput);
+
+    if (helperResult && helperResult.type) {
+      switch (helperResult.type) {
+        case "clearOutput":
+          this.clearOutput();
+          break;
+        case "inspectObject":
+          this.handleInspectObject(helperResult.input, helperResult.object);
+          break;
+        case "error":
+          try {
+            errorMessage = l10n.getStr(helperResult.message);
+          }
+          catch (ex) {
+            errorMessage = helperResult.message;
+          }
+          break;
+        case "help":
+          this.hud.owner.openLink(HELP_URL);
+          break;
+      }
+    }
+
+    // Hide undefined results coming from JSTerm helper functions.
+    if (!errorMessage && result && typeof result == "object" &&
+        result.type == "undefined" &&
+        helperResult && !helperHasRawOutput) {
+      aCallback && aCallback();
+      return;
+    }
 
     if (aCallback) {
       let oldFlushCallback = this.hud._flushCallback;
@@ -2481,19 +2770,24 @@ JSTerm.prototype = {
       }.bind(this);
     }
 
-    if (aResponse.errorMessage) {
-      this.writeOutput(aResponse.errorMessage, CATEGORY_OUTPUT, SEVERITY_ERROR,
-                       afterNode, aResponse.timestamp);
+    let node;
+
+    if (errorMessage) {
+      node = this.writeOutput(errorMessage, CATEGORY_OUTPUT, SEVERITY_ERROR,
+                              aAfterNode, aResponse.timestamp);
     }
-    else if (aResponse.inspectable) {
-      let node = this.writeOutputJS(aResponse.resultString,
-                                    this._evalOutputClick.bind(this, aResponse),
-                                    afterNode, aResponse.timestamp);
-      node._evalCacheId = aResponse.childrenCacheId;
+    else if (inspectable) {
+      node = this.writeOutputJS(resultString,
+                                this._evalOutputClick.bind(this, aResponse),
+                                aAfterNode, aResponse.timestamp);
     }
     else {
-      this.writeOutput(aResponse.resultString, CATEGORY_OUTPUT, SEVERITY_LOG,
-                       afterNode, aResponse.timestamp);
+      node = this.writeOutput(resultString, CATEGORY_OUTPUT, SEVERITY_LOG,
+                              aAfterNode, aResponse.timestamp);
+    }
+
+    if (result && typeof result == "object" && result.actor) {
+      node._objectActors = [result.actor];
     }
   },
 
@@ -2516,10 +2810,9 @@ JSTerm.prototype = {
     }
 
     let node = this.writeOutput(aExecuteString, CATEGORY_INPUT, SEVERITY_LOG);
+    let onResult = this._executeResultCallback.bind(this, node, aCallback);
 
-    let onResult = this._executeResultCallback.bind(this, aCallback);
-    let messageToContent = this.evalInContentSandbox(aExecuteString, onResult);
-    messageToContent.outputNode = node;
+    this.webConsoleClient.evaluateJS(aExecuteString, onResult);
 
     this.history.push(aExecuteString);
     this.historyIndex++;
@@ -2670,7 +2963,7 @@ JSTerm.prototype = {
     hud._cssNodes = {};
 
     if (aClearStorage) {
-      hud.owner.sendMessageToContent("ConsoleAPI:ClearCache", {});
+      this.webConsoleClient.clearMessagesCache();
     }
   },
 
@@ -2997,25 +3290,30 @@ JSTerm.prototype = {
       return;
     }
 
-    let message = {
-      id: "HUDComplete-" + gSequenceId(),
-      input: this.inputNode.value,
-    };
+    let requestId = gSequenceId();
+    let input = this.inputNode.value;
+    let cursor = this.inputNode.selectionStart;
 
+    // TODO: Bug 787986 - throttle/disable updates, deal with slow/high latency
+    // network connections.
     this.lastCompletion = {
-      requestId: message.id,
+      requestId: requestId,
       completionType: aType,
       value: null,
     };
-    let callback = this._receiveAutocompleteProperties.bind(this, aCallback);
-    this.hud.owner.sendMessageToContent("JSTerm:Autocomplete", message, callback);
+
+    let callback = this._receiveAutocompleteProperties.bind(this, requestId,
+                                                            aCallback);
+    this.webConsoleClient.autocomplete(input, cursor, callback);
   },
 
   /**
-   * Handler for the "JSTerm:AutocompleteProperties" message. This method takes
-   * the completion result received from the content process and updates the UI
+   * Handler for the autocompletion results. This method takes
+   * the completion result received from the server and updates the UI
    * accordingly.
    *
+   * @param number aRequestId
+   *        Request ID.
    * @param function [aCallback=null]
    *        Optional, function to invoke when the completion result is received.
    * @param object aMessage
@@ -3023,13 +3321,12 @@ JSTerm.prototype = {
    *        the content process.
    */
   _receiveAutocompleteProperties:
-  function JST__receiveAutocompleteProperties(aCallback, aMessage)
+  function JST__receiveAutocompleteProperties(aRequestId, aCallback, aMessage)
   {
     let inputNode = this.inputNode;
     let inputValue = inputNode.value;
-    if (aMessage.input != inputValue ||
-        this.lastCompletion.value == inputValue ||
-        aMessage.id != this.lastCompletion.requestId) {
+    if (this.lastCompletion.value == inputValue ||
+        aRequestId != this.lastCompletion.requestId) {
       return;
     }
 
@@ -3185,7 +3482,7 @@ JSTerm.prototype = {
   },
 
   /**
-   * The "JSTerm:InspectObject" remote message handler. This allows the content
+   * The JSTerm InspectObject remote message handler. This allows the remote
    * process to open the Property Panel for a given object.
    *
    * @param object aRequest
@@ -3193,29 +3490,31 @@ JSTerm.prototype = {
    *        the user input string that was evaluated to inspect an object and
    *        the result object which is to be inspected.
    */
-  handleInspectObject: function JST_handleInspectObject(aRequest)
+  handleInspectObject: function JST_handleInspectObject(aInput, aActor)
   {
     let options = {
-      title: aRequest.input,
+      title: aInput,
 
       data: {
-        rootCacheId: aRequest.objectCacheId,
-        panelCacheId: aRequest.objectCacheId,
-        remoteObject: aRequest.resultObject,
-        remoteObjectProvider: this.remoteObjectProvider.bind(this),
+        objectPropertiesProvider: this.hud.objectPropertiesProvider.bind(this.hud),
+        releaseObject: this.hud._releaseObject.bind(this.hud),
       },
     };
 
-    let propPanel = this.openPropertyPanel(options);
-    propPanel.panel.setAttribute("hudId", this.hudId);
+    let propPanel;
 
     let onPopupHide = function JST__onPopupHide() {
       propPanel.panel.removeEventListener("popuphiding", onPopupHide, false);
-
-      this.clearObjectCache(options.data.panelCacheId);
+      this.hud._releaseObject(aActor.actor);
     }.bind(this);
 
-    propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
+    this.hud.objectPropertiesProvider(aActor.actor,
+      function _onObjectProperties(aProperties) {
+        options.data.objectProperties = aProperties;
+        propPanel = this.openPropertyPanel(options);
+        propPanel.panel.setAttribute("hudId", this.hudId);
+        propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
+      }.bind(this));
   },
 
   /**
@@ -3223,7 +3522,7 @@ JSTerm.prototype = {
    *
    * @private
    * @param object aResponse
-   *        The JSTerm:EvalResult message received from the content process.
+   *        The JavaScript evaluation response received from the server.
    * @param nsIDOMNode aLink
    *        The message node for which we are handling events.
    */
@@ -3239,35 +3538,36 @@ JSTerm.prototype = {
 
       // Data to inspect.
       data: {
-        // This is where the resultObject children are cached.
-        rootCacheId: aResponse.childrenCacheId,
-        remoteObject: aResponse.resultObject,
-        // This is where all objects retrieved by the panel will be cached.
-        panelCacheId: "HUDPanel-" + gSequenceId(),
-        remoteObjectProvider: this.remoteObjectProvider.bind(this),
+        objectPropertiesProvider: this.hud.objectPropertiesProvider.bind(this.hud),
+        releaseObject: this.hud._releaseObject.bind(this.hud),
       },
     };
 
-    options.updateButtonCallback = function JST__evalUpdateButton() {
-      this.evalInContentSandbox(aResponse.input,
-        this._evalOutputUpdatePanelCallback.bind(this, options, propPanel,
-                                                 aResponse));
-    }.bind(this);
+    let propPanel;
 
-    let propPanel = this.openPropertyPanel(options);
-    propPanel.panel.setAttribute("hudId", this.hudId);
+    options.updateButtonCallback = function JST__evalUpdateButton() {
+      let onResult =
+        this._evalOutputUpdatePanelCallback.bind(this, options, propPanel,
+                                                 aResponse);
+      this.webConsoleClient.evaluateJS(aResponse.input, onResult);
+    }.bind(this);
 
     let onPopupHide = function JST__evalInspectPopupHide() {
       propPanel.panel.removeEventListener("popuphiding", onPopupHide, false);
 
-      this.clearObjectCache(options.data.panelCacheId);
-
-      if (!aLinkNode.parentNode && aLinkNode._evalCacheId) {
-        this.clearObjectCache(aLinkNode._evalCacheId);
+      if (!aLinkNode.parentNode && aLinkNode._objectActors) {
+        aLinkNode._objectActors.forEach(this.hud._releaseObject, this.hud);
+        aLinkNode._objectActors = null;
       }
     }.bind(this);
 
-    propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
+    this.hud.objectPropertiesProvider(aResponse.result.actor,
+      function _onObjectProperties(aProperties) {
+        options.data.objectProperties = aProperties;
+        propPanel = this.openPropertyPanel(options);
+        propPanel.panel.setAttribute("hudId", this.hudId);
+        propPanel.panel.addEventListener("popuphiding", onPopupHide, false);
+      }.bind(this));
   },
 
   /**
@@ -3296,32 +3596,40 @@ JSTerm.prototype = {
       return;
     }
 
-    if (!aNewResponse.inspectable) {
+    let result = aNewResponse.result;
+    let inspectable = result && typeof result == "object" && result.inspectable;
+    let newActor = result && typeof result == "object" ? result.actor : null;
+
+    let anchor = aOptions.anchor;
+    if (anchor && newActor) {
+      if (!anchor._objectActors) {
+        anchor._objectActors = [];
+      }
+      if (anchor._objectActors.indexOf(newActor) == -1) {
+        anchor._objectActors.push(newActor);
+      }
+    }
+
+    if (!inspectable) {
       this.writeOutput(l10n.getStr("JSTerm.updateNotInspectable"), CATEGORY_OUTPUT, SEVERITY_ERROR);
       return;
     }
 
-    this.clearObjectCache(aOptions.data.panelCacheId);
-    this.clearObjectCache(aOptions.data.rootCacheId);
-
-    if (aOptions.anchor && aOptions.anchor._evalCacheId) {
-      aOptions.anchor._evalCacheId = aNewResponse.childrenCacheId;
-    }
-
     // Update the old response object such that when the panel is reopen, the
     // user sees the new response.
-    aOldResponse.id = aNewResponse.id;
-    aOldResponse.childrenCacheId = aNewResponse.childrenCacheId;
-    aOldResponse.resultObject = aNewResponse.resultObject;
-    aOldResponse.resultString = aNewResponse.resultString;
+    aOldResponse.result = aNewResponse.result;
+    aOldResponse.error = aNewResponse.error;
+    aOldResponse.errorMessage = aNewResponse.errorMessage;
+    aOldResponse.timestamp = aNewResponse.timestamp;
 
-    aOptions.data.rootCacheId = aNewResponse.childrenCacheId;
-    aOptions.data.remoteObject = aNewResponse.resultObject;
-
-    // TODO: This updates the value of the tree.
-    // However, the states of open nodes is not saved.
-    // See bug 586246.
-    aPropPanel.treeView.data = aOptions.data;
+    this.hud.objectPropertiesProvider(newActor,
+      function _onObjectProperties(aProperties) {
+        aOptions.data.objectProperties = aProperties;
+        // TODO: This updates the value of the tree.
+        // However, the states of open nodes is not saved.
+        // See bug 586246.
+        aPropPanel.treeView.data = aOptions.data;
+      }.bind(this));
   },
 
   /**
@@ -3333,10 +3641,13 @@ JSTerm.prototype = {
     this.clearOutput();
 
     this.autocompletePopup.destroy();
+    this.autocompletePopup = null;
 
     this.inputNode.removeEventListener("keypress", this._keyPress, false);
     this.inputNode.removeEventListener("input", this._inputEventHandler, false);
     this.inputNode.removeEventListener("keyup", this._inputEventHandler, false);
+
+    this.hud = null;
   },
 };
 
@@ -3533,6 +3844,326 @@ CommandController.prototype = {
         break;
     }
   }
+};
+
+///////////////////////////////////////////////////////////////////////////////
+// Web Console connection proxy
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * The WebConsoleConnectionProxy handles the connection between the Web Console
+ * and the application we connect to through the remote debug protocol.
+ *
+ * @constructor
+ * @param object aWebConsole
+ *        The Web Console instance that owns this connection proxy.
+ */
+function WebConsoleConnectionProxy(aWebConsole)
+{
+  this.owner = aWebConsole;
+
+  this._onPageError = this._onPageError.bind(this);
+  this._onConsoleAPICall = this._onConsoleAPICall.bind(this);
+  this._onNetworkEvent = this._onNetworkEvent.bind(this);
+  this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
+  this._onFileActivity = this._onFileActivity.bind(this);
+  this._onLocationChange = this._onLocationChange.bind(this);
+}
+
+WebConsoleConnectionProxy.prototype = {
+  /**
+   * The owning Web Console instance.
+   *
+   * @see WebConsoleFrame
+   * @type object
+   */
+  owner: null,
+
+  /**
+   * The DebuggerClient object.
+   *
+   * @see DebuggerClient
+   * @type object
+   */
+  client: null,
+
+  /**
+   * The WebConsoleClient object.
+   *
+   * @see WebConsoleClient
+   * @type object
+   */
+  webConsoleClient: null,
+
+  /**
+   * Tells if the connection is established.
+   * @type boolean
+   */
+  connected: false,
+
+  /**
+   * The WebConsoleActor ID.
+   *
+   * @private
+   * @type string
+   */
+  _consoleActor: null,
+
+  /**
+   * Tells if the window.console object of the remote web page is the native
+   * object or not.
+   * @private
+   * @type boolean
+   */
+  _hasNativeConsoleAPI: false,
+
+  /**
+   * Initialize the debugger server.
+   */
+  initServer: function WCCP_initServer()
+  {
+    if (!DebuggerServer.initialized) {
+      DebuggerServer.init();
+      DebuggerServer.addBrowserActors();
+    }
+  },
+
+  /**
+   * Initialize a debugger client and connect it to the debugger server.
+   *
+   * @param function [aCallback]
+   *        Optional function to invoke when connection is established.
+   */
+  connect: function WCCP_connect(aCallback)
+  {
+    let transport = DebuggerServer.connectPipe();
+    let client = this.client = new DebuggerClient(transport);
+
+    client.addListener("pageError", this._onPageError);
+    client.addListener("consoleAPICall", this._onConsoleAPICall);
+    client.addListener("networkEvent", this._onNetworkEvent);
+    client.addListener("networkEventUpdate", this._onNetworkEventUpdate);
+    client.addListener("fileActivity", this._onFileActivity);
+    client.addListener("locationChange", this._onLocationChange);
+
+    let listeners = ["PageError", "ConsoleAPI", "NetworkActivity",
+                     "FileActivity", "LocationChange"];
+
+    client.connect(function(aType, aTraits) {
+      client.listTabs(function(aResponse) {
+        let tab = aResponse.tabs[aResponse.selected];
+        this._consoleActor = tab.consoleActor;
+        this.owner.onLocationChange(tab.url, tab.title);
+        client.attachConsole(tab.consoleActor, listeners,
+                             this._onAttachConsole.bind(this, aCallback));
+      }.bind(this));
+    }.bind(this));
+  },
+
+  /**
+   * The "attachConsole" response handler.
+   *
+   * @private
+   * @param function [aCallback]
+   *        Optional function to invoke once the connection is established.
+   * @param object aResponse
+   *        The JSON response object received from the server.
+   * @param object aWebConsoleClient
+   *        The WebConsoleClient instance for the attached console, for the
+   *        specific tab we work with.
+   */
+  _onAttachConsole:
+  function WCCP__onAttachConsole(aCallback, aResponse, aWebConsoleClient)
+  {
+    if (aResponse.error) {
+      Cu.reportError("attachConsole failed: " + aResponse.error + " " +
+                     aResponse.message);
+      return;
+    }
+
+    this.webConsoleClient = aWebConsoleClient;
+
+    this._hasNativeConsoleAPI = aResponse.nativeConsoleAPI;
+
+    let msgs = ["PageError", "ConsoleAPI"];
+    this.webConsoleClient.getCachedMessages(msgs,
+      this._onCachedMessages.bind(this, aCallback));
+  },
+
+  /**
+   * The "cachedMessages" response handler.
+   *
+   * @private
+   * @param function [aCallback]
+   *        Optional function to invoke once the connection is established.
+   * @param object aResponse
+   *        The JSON response object received from the server.
+   */
+  _onCachedMessages: function WCCP__onCachedMessages(aCallback, aResponse)
+  {
+    if (aResponse.error) {
+      Cu.reportError("Web Console getCachedMessages error: " + aResponse.error +
+                     " " + aResponse.message);
+      return;
+    }
+
+    this.owner.displayCachedMessages(aResponse.messages);
+
+    if (!this._hasNativeConsoleAPI) {
+      this.owner.logWarningAboutReplacedAPI();
+    }
+
+    this.connected = true;
+    aCallback && aCallback();
+  },
+
+  /**
+   * The "pageError" message type handler. We redirect any page errors to the UI
+   * for displaying.
+   *
+   * @private
+   * @param string aType
+   *        Message type.
+   * @param object aPacket
+   *        The message received from the server.
+   */
+  _onPageError: function WCCP__onPageError(aType, aPacket)
+  {
+    if (this.owner && aPacket.from == this._consoleActor) {
+      this.owner.handlePageError(aPacket.pageError);
+    }
+  },
+
+  /**
+   * The "consoleAPICall" message type handler. We redirect any message to
+   * the UI for displaying.
+   *
+   * @private
+   * @param string aType
+   *        Message type.
+   * @param object aPacket
+   *        The message received from the server.
+   */
+  _onConsoleAPICall: function WCCP__onConsoleAPICall(aType, aPacket)
+  {
+    if (this.owner && aPacket.from == this._consoleActor) {
+      this.owner.handleConsoleAPICall(aPacket.message);
+    }
+  },
+
+  /**
+   * The "networkEvent" message type handler. We redirect any message to
+   * the UI for displaying.
+   *
+   * @private
+   * @param string aType
+   *        Message type.
+   * @param object aPacket
+   *        The message received from the server.
+   */
+  _onNetworkEvent: function WCCP__onNetworkEvent(aType, aPacket)
+  {
+    if (this.owner && aPacket.from == this._consoleActor) {
+      this.owner.handleNetworkEvent(aPacket.eventActor);
+    }
+  },
+
+  /**
+   * The "networkEventUpdate" message type handler. We redirect any message to
+   * the UI for displaying.
+   *
+   * @private
+   * @param string aType
+   *        Message type.
+   * @param object aPacket
+   *        The message received from the server.
+   */
+  _onNetworkEventUpdate: function WCCP__onNetworkEvenUpdatet(aType, aPacket)
+  {
+    if (this.owner) {
+      this.owner.handleNetworkEventUpdate(aPacket.from, aPacket.updateType,
+                                          aPacket);
+    }
+  },
+
+  /**
+   * The "fileActivity" message type handler. We redirect any message to
+   * the UI for displaying.
+   *
+   * @private
+   * @param string aType
+   *        Message type.
+   * @param object aPacket
+   *        The message received from the server.
+   */
+  _onFileActivity: function WCCP__onFileActivity(aType, aPacket)
+  {
+    if (this.owner && aPacket.from == this._consoleActor) {
+      this.owner.handleFileActivity(aPacket.uri);
+    }
+  },
+
+  /**
+   * The "locationChange" message type handler. We redirect any message to
+   * the UI for displaying.
+   *
+   * @private
+   * @param string aType
+   *        Message type.
+   * @param object aPacket
+   *        The message received from the server.
+   */
+  _onLocationChange: function WCCP__onLocationChange(aType, aPacket)
+  {
+    if (!this.owner || aPacket.from != this._consoleActor) {
+      return;
+    }
+
+    this.owner.onLocationChange(aPacket.uri, aPacket.title);
+    if (aPacket.state == "stop" && !aPacket.nativeConsoleAPI) {
+      this.owner.logWarningAboutReplacedAPI();
+    }
+  },
+
+  /**
+   * Release an object actor.
+   *
+   * @param string aActor
+   *        The actor ID to send the request to.
+   */
+  releaseActor: function WCCP_releaseActor(aActor)
+  {
+    if (this.client) {
+      this.client.release(aActor);
+    }
+  },
+
+  /**
+   * Disconnect the Web Console from the remote server.
+   *
+   * @param function [aOnDisconnect]
+   *        Optional function to invoke when the connection is dropped.
+   */
+  disconnect: function WCCP_disconnect(aOnDisconnect)
+  {
+    if (!this.client) {
+      aOnDisconnect && aOnDisconnect();
+      return;
+    }
+
+    this.client.removeListener("pageError", this._onPageError);
+    this.client.removeListener("consoleAPICall", this._onConsoleAPICall);
+    this.client.removeListener("networkEvent", this._onNetworkEvent);
+    this.client.removeListener("networkEventUpdate", this._onNetworkEventUpdate);
+    this.client.removeListener("fileActivity", this._onFileActivity);
+    this.client.removeListener("locationChange", this._onLocationChange);
+    this.client.close(aOnDisconnect);
+
+    this.client = null;
+    this.webConsoleClient = null;
+    this.connected = false;
+    this.owner = null;
+  },
 };
 
 function gSequenceId()

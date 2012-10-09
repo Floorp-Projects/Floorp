@@ -121,6 +121,12 @@ static bool test_basic_array(ElementType *data,
     return false;
 
   ary.Clear();
+  if (ary.IndexOf(extra) != UINT32_MAX)
+    return false;
+  if (ary.LastIndexOf(extra) != UINT32_MAX)
+    return false;
+
+  ary.Clear();
   if (!ary.IsEmpty() || ary.Elements() == nullptr)
     return false;
   if (!(ary == nsTArray<ElementType>()))

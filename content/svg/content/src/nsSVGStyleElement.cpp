@@ -30,6 +30,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGSTYLEELEMENT
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsSVGStyleElement,
+                                           nsSVGStyleElementBase)
+
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE(nsSVGStyleElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGStyleElementBase::)
@@ -105,13 +108,23 @@ NS_IMPL_RELEASE_INHERITED(nsSVGStyleElement,nsSVGStyleElementBase)
 
 DOMCI_NODE_DATA(SVGStyleElement, nsSVGStyleElement)
 
-NS_INTERFACE_TABLE_HEAD(nsSVGStyleElement)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsSVGStyleElement)
   NS_NODE_INTERFACE_TABLE7(nsSVGStyleElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGStyleElement,
                            nsIDOMLinkStyle, nsIStyleSheetLinkingElement,
                            nsIMutationObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGStyleElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGStyleElementBase)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGStyleElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsSVGStyleElement,
+                                                  nsSVGStyleElementBase)
+  tmp->nsStyleLinkElement::Traverse(cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsSVGStyleElement,
+                                                nsSVGStyleElementBase)
+  tmp->nsStyleLinkElement::Unlink();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 //----------------------------------------------------------------------
 // Implementation
