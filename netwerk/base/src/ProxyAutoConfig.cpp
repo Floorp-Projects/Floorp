@@ -396,11 +396,14 @@ JSBool PACDnsResolve(JSContext *cx, unsigned int argc, jsval *vp)
 
   if (!hostName.init(cx, arg1))
     return false;
-  if (!PACResolveToString(NS_ConvertUTF16toUTF8(hostName), dottedDecimal, 0))
-    return false;
-
-  JSString *dottedDecimalString = JS_NewStringCopyZ(cx, dottedDecimal.get());
-  JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(dottedDecimalString));
+  if (PACResolveToString(NS_ConvertUTF16toUTF8(hostName), dottedDecimal, 0)) {
+    JSString *dottedDecimalString = JS_NewStringCopyZ(cx, dottedDecimal.get());
+    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(dottedDecimalString));
+  }
+  else {
+    JS_SET_RVAL(cx, vp, JSVAL_NULL);
+  }
+  
   return true;
 }
 
