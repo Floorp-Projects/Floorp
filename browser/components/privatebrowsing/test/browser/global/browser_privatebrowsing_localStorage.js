@@ -12,7 +12,7 @@ function test() {
   browser.addEventListener('load', function() {
     browser.removeEventListener('load', arguments.callee, true);
     let tab2 = gBrowser.selectedTab = gBrowser.addTab();
-    browser.contentWindow.location = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/' +
+    browser.contentWindow.location = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/global/' +
                      'browser_privatebrowsing_localStorage_page2.html';
     browser.addEventListener('load', function() {
       browser.removeEventListener('load', arguments.callee, true);
@@ -21,6 +21,6 @@ function test() {
       finish();
     }, true);
   }, true);
-  browser.loadURI('http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/' +
+  browser.loadURI('http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/global/' +
                   'browser_privatebrowsing_localStorage_page1.html');
 }
