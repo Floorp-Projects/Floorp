@@ -16,5 +16,6 @@
   <color name="url_bar_text_highlight">#FF9500</color>
   <color name="suggestion_primary">#dddddd</color>
   <color name="suggestion_pressed">#bbbbbb</color>
+  <color name="private_browsing_color">#993399</color>
 </resources>
 
