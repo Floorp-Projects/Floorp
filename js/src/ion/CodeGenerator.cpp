@@ -3118,8 +3118,10 @@ CodeGenerator::visitLoadFixedSlotT(LLoadFixedSlotT *ins)
     const Register obj = ToRegister(ins->getOperand(0));
     size_t slot = ins->mir()->slot();
     AnyRegister result = ToAnyRegister(ins->getDef(0));
+    MIRType type = ins->mir()->type();
 
-    masm.loadUnboxedValue(Address(obj, JSObject::getFixedSlotOffset(slot)), result);
+    masm.loadUnboxedValue(Address(obj, JSObject::getFixedSlotOffset(slot)), type, result);
+
     return true;
 }
 

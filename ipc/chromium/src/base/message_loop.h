@@ -408,6 +408,7 @@ public:
   Lock incoming_queue_lock_;
 
   RunState* state_;
+  int run_depth_base_;
 
 #if defined(OS_WIN)
   // Should be set to true before calling Windows APIs like TrackPopupMenu, etc

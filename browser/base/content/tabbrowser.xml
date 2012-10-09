@@ -686,7 +686,7 @@
                 aURI = makeURI(aURI);
               this.mFaviconService.setAndFetchFaviconForPage(browser.currentURI,
                                                              aURI, false,
-                                                             gPrivateBrowsingUI.privateWindow ?
+                                                             PrivateBrowsingUtils.isWindowPrivate(window) ?
                                                                this.mFaviconService.FAVICON_LOAD_PRIVATE :
                                                                this.mFaviconService.FAVICON_LOAD_NON_PRIVATE);
             }

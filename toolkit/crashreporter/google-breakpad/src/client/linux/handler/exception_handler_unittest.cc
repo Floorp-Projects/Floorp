@@ -60,8 +60,8 @@ const int kGUIDStringSize = 37;
 
 void sigchld_handler(int signo) { }
 
-int CreateTMPFile(const std::string& dir, std::string* path) {
-  std::string file = dir + "/exception-handler-unittest.XXXXXX";
+int CreateTMPFile(const string& dir, string* path) {
+  string file = dir + "/exception-handler-unittest.XXXXXX";
   const char* c_file = file.c_str();
   // Copy that string, mkstemp needs a C string it can modify.
   char* c_path = strdup(c_file);
@@ -98,7 +98,7 @@ void WaitForProcessToTerminate(pid_t process_id, int expected_status) {
 }
 
 // Reads the minidump path sent over the pipe |fd| and sets it in |path|.
-void ReadMinidumpPathFromPipe(int fd, std::string* path) {
+void ReadMinidumpPathFromPipe(int fd, string* path) {
   struct pollfd pfd;
   memset(&pfd, 0, sizeof(pfd));
   pfd.fd = fd;
@@ -133,7 +133,7 @@ TEST(ExceptionHandlerTest, SimpleWithPath) {
 
 TEST(ExceptionHandlerTest, SimpleWithFD) {
   AutoTempDir temp_dir;
-  std::string path;
+  string path;
   const int fd = CreateTMPFile(temp_dir.path(), &path);
   ExceptionHandler handler(MinidumpDescriptor(fd), NULL, NULL, NULL, true, -1);
   close(fd);
@@ -159,7 +159,7 @@ void ChildCrash(bool use_fd) {
   AutoTempDir temp_dir;
   int fds[2] = {0};
   int minidump_fd = -1;
-  std::string minidump_path;
+  string minidump_path;
   if (use_fd) {
     minidump_fd = CreateTMPFile(temp_dir.path(), &minidump_path);
   } else {
@@ -169,7 +169,7 @@ void ChildCrash(bool use_fd) {
   const pid_t child = fork();
   if (child == 0) {
     {
-      scoped_ptr<ExceptionHandler> handler;
+      google_breakpad::scoped_ptr<ExceptionHandler> handler;
       if (use_fd) {
         handler.reset(new ExceptionHandler(MinidumpDescriptor(minidump_fd),
                                            NULL, NULL, NULL, true, -1));
@@ -222,6 +222,7 @@ static bool DoneCallbackRaiseSIGKILL(const MinidumpDescriptor& descriptor,
                                      void* context,
                                      bool succeeded) {
   raise(SIGKILL);
+  return true;
 }
 
 static bool FilterCallbackReturnFalse(void* context) {
@@ -916,7 +917,7 @@ TEST(ExceptionHandlerTest, WriteMinidumpExceptionStream) {
 
 TEST(ExceptionHandlerTest, GenerateMultipleDumpsWithFD) {
   AutoTempDir temp_dir;
-  std::string path;
+  string path;
   const int fd = CreateTMPFile(temp_dir.path(), &path);
   ExceptionHandler handler(MinidumpDescriptor(fd), NULL, NULL, NULL, false, -1);
   ASSERT_TRUE(handler.WriteMinidump());
@@ -941,7 +942,7 @@ TEST(ExceptionHandlerTest, GenerateMultipleDumpsWithPath) {
   struct stat st;
   ASSERT_EQ(0, stat(minidump_1.path(), &st));
   ASSERT_GT(st.st_size, 0U);
-  std::string minidump_1_path(minidump_1.path());
+  string minidump_1_path(minidump_1.path());
   // Check it is a valid minidump.
   Minidump minidump1(minidump_1_path);
   ASSERT_TRUE(minidump1.Read());
@@ -952,7 +953,7 @@ TEST(ExceptionHandlerTest, GenerateMultipleDumpsWithPath) {
   const MinidumpDescriptor& minidump_2 = handler.minidump_descriptor();
   ASSERT_EQ(0, stat(minidump_2.path(), &st));
   ASSERT_GT(st.st_size, 0U);
-  std::string minidump_2_path(minidump_2.path());
+  string minidump_2_path(minidump_2.path());
   // Check it is a valid minidump.
   Minidump minidump2(minidump_2_path);
   ASSERT_TRUE(minidump2.Read());

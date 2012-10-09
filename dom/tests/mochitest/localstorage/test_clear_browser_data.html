@@ -191,10 +191,13 @@ function browserLoadEvent() {
   setupStorage(gBrowserStorage.localStorage);
   setupStorage(gBrowserStorage.sessionStorage);
 
+  dump("\n send message to iframe \n\n");
   frames[1].postMessage("clear", "http://www.example.com");
 
   SimpleTest.executeSoon(function() {
+    dump("\n call getAll() \n\n");
     navigator.mozApps.mgmt.getAll().onsuccess = function() {
+      dump("\n get getAll() results \n\n");
       for (i in this.result) {
         var app = this.result[i];
         if (app.manifestURL == gManifestURL) {

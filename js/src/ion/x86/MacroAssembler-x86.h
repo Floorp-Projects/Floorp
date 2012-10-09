@@ -649,7 +649,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     template <typename T>
-    void loadUnboxedValue(const T &src, AnyRegister dest) {
+    void loadUnboxedValue(const T &src, MIRType type, AnyRegister dest) {
         if (dest.isFloat())
             loadInt32OrDouble(Operand(src), dest.fpu());
         else

@@ -2957,3 +2957,15 @@ nsDOMWindowUtils::RemoveSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   doc->RemoveAdditionalStyleSheet(type, aSheetURI);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetIsHandlingUserInput(bool* aHandlingUserInput)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  *aHandlingUserInput = nsEventStateManager::IsHandlingUserInput();
+
+  return NS_OK;
+}

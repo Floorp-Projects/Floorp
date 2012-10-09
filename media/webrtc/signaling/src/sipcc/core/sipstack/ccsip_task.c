@@ -731,7 +731,7 @@ SIPTaskProcessListEvent (uint32_t cmd, void *msg, void *pUsr, uint16_t len)
                              "SIP_REG_REQ event.\n", DEB_F_PREFIX_ARGS(SIP_EVT, fname));
             break;
         }
-        (void) sip_sm_ccb_init(sip_sm_event.ccb, (line_t)idx, idx, SIP_STATE_IDLE);
+        (void) sip_sm_ccb_init(sip_sm_event.ccb, (line_t)idx, idx, SIP_REG_STATE_IDLE);
         sip_sm_event.ccb->state = (sipSMStateType_t) SIP_REG_STATE_IDLE;
         sip_sm_event.type = (sipSMEventType_t) E_SIP_REG_REG_REQ;
         if (sip_reg_sm_process_event(&sip_sm_event) < 0) {

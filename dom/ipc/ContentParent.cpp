@@ -227,8 +227,15 @@ ContentParent::MaybeTakePreallocatedAppProcess()
 {
     nsRefPtr<ContentParent> process = sPreallocatedAppProcess.get();
     sPreallocatedAppProcess = nullptr;
-    ScheduleDelayedPreallocateAppProcess();
     return process.forget();
+}
+
+/*static*/ void
+ContentParent::FirstIdle(void)
+{
+  // The parent has gone idle for the first time. This would be a good
+  // time to preallocate an app process.
+  ScheduleDelayedPreallocateAppProcess();
 }
 
 /*static*/ void
@@ -247,7 +254,10 @@ ContentParent::StartUp()
             "dom.ipc.processPrelaunch.delayMs", 1000);
 
         MOZ_ASSERT(!sPreallocateAppProcessTask);
-        ScheduleDelayedPreallocateAppProcess();
+
+        // Let's not slow down the main process initialization. Wait until
+        // the main process goes idle before we preallocate a process
+        MessageLoop::current()->PostIdleTask(FROM_HERE, NewRunnableFunction(FirstIdle));
     }
 }
 
@@ -1000,6 +1010,17 @@ ContentParent::RecvGetShowPasswordSetting(bool* showPassword)
     if (AndroidBridge::Bridge() != nullptr)
         *showPassword = AndroidBridge::Bridge()->GetShowPasswordSetting();
 #endif
+    return true;
+}
+
+bool
+ContentParent::RecvFirstIdle()
+{
+    // When the ContentChild goes idle, it sends us a FirstIdle message
+    // which we use as a good time to prelaunch another process. If we
+    // prelaunch any sooner than this, then we'll be competing with the
+    // child process and slowing it down.
+    ScheduleDelayedPreallocateAppProcess();
     return true;
 }
 

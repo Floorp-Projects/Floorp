@@ -6644,7 +6644,7 @@ var WebappsUI = {
     try {
       Cu.import("resource://gre/modules/JNI.jsm");
       let jni = new JNI();
-      let cls = jni.findClass("org.mozilla.gecko.GeckoAppShell");
+      let cls = jni.findClass("org/mozilla/gecko/GeckoAppShell");
       let method = jni.getStaticMethodID(cls, "getPreferredIconSize", "()I");
       iconSize = jni.callStaticIntMethod(cls, method);
       jni.close();

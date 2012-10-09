@@ -1,8 +1,9 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>nsIDOMWindowUtils::elementFromPoint test</title>
+  <title>Test nsIDOMWindowUtils</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
   <style>
     html, body, div {
@@ -25,8 +26,11 @@
 
 <script type="application/javascript;version=1.8">
 
+SimpleTest.waitForExplicitFinish();
+
 var domWindowUtils = SpecialPowers.getDOMWindowUtils(window);
 
+var gTests = [
 /*
   nsIDOMElement elementFromPoint(in long aX,
                                  in long aY,
@@ -85,13 +89,104 @@ function testElementFromPoint() {
     is(found, expected, "at index " + i + " for data " + testData[i][0].toSource());
   }
 
+  SimpleTest.executeSoon(function() {
+    next();
+  });
+},
+
+/**
+ * Test .isHandlingUserInput attribute.
+ */
+function testHandlingUserInput() {
+  ok('isHandlingUserInput' in domWindowUtils,
+     "isHandlingUserInput should be present");
+
+  is(domWindowUtils.isHandlingUserInput, false,
+     "isHandlingUserInput should return false if nothing is happening");
+
+  function testEvents() {
+    var data = [
+      {
+        eventName: "click",
+        result: true,
+      },
+      {
+        eventName: "mousemove",
+        result: false,
+      },
+      {
+        eventName: "mouseup",
+        result: true,
+      },
+      {
+        eventName: "mousedown",
+        result: true,
+      },
+      {
+        eventName: "keydown",
+        result: true,
+      },
+      {
+        eventName: "keyup",
+        result: true,
+      },
+    ];
+
+    for (let i=0; i<data.length; ++i) {
+      document.addEventListener(data[i].eventName, function() {
+        document.removeEventListener(data[i].eventName, arguments.callee);
+
+        is(domWindowUtils.isHandlingUserInput, data[i].result,
+           "isHandlingUserInput should be " + data[i].result);
+
+        SimpleTest.executeSoon(function() {
+          try { testEventsRunner.next(); } catch (e) { }
+        });
+      });
+
+      SimpleTest.executeSoon(function() {
+        if (data[i].eventName == "click") {
+          synthesizeMouseAtCenter(document.body, {});
+        } else if (data[i].eventName.indexOf("key") == 0) {
+          synthesizeKey("VK_A", { type: data[i].eventName });
+        } else {
+          synthesizeMouseAtCenter(document.body, { type: data[i].eventName });
+        }
+      });
+
+      yield;
+    }
+
+    SimpleTest.executeSoon(function() {
+      next();
+    });
+  }
+
+  var testEventsRunner = testEvents();
+  testEventsRunner.next();
+},
+];
+
+function runner() {
+  for (let i=0; i<gTests.length; ++i) {
+    gTests[i]();
+    yield;
+  }
+
   SimpleTest.finish();
+};
+
+var gTestRunner = runner();
+
+function next() {
+  try { gTestRunner.next(); } catch (e) { if (e != StopIteration) { throw e; } }
 }
 
 // Run the test from onload, since the onscreen and offscreen divs should be in
 // the right places by then.
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(testElementFromPoint);
+addLoadEvent(function() {
+  gTestRunner.next();
+});
 
 </script>
 

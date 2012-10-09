@@ -81,11 +81,14 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
     rtStats->initExtraCompartmentStats(compartment, &cStats);
     rtStats->currCompartmentStats = &cStats;
 
-    // Get the compartment-level numbers.
-    compartment->sizeOfTypeInferenceData(&cStats.typeInferenceSizes, rtStats->mallocSizeOf);
-    cStats.shapesCompartmentTables = compartment->sizeOfShapeTable(rtStats->mallocSizeOf);
-    cStats.crossCompartmentWrappers =
-        compartment->crossCompartmentWrappers.sizeOfExcludingThis(rtStats->mallocSizeOf);
+    // Measure the compartment object itself, and things hanging off it.
+    compartment->sizeOfIncludingThis(rtStats->mallocSizeOf,
+                                     &cStats.compartmentObject,
+                                     &cStats.typeInferenceSizes,
+                                     &cStats.shapesCompartmentTables,
+                                     &cStats.crossCompartmentWrappers,
+                                     &cStats.regexpCompartment,
+                                     &cStats.debuggeesSet);
 }
 
 static void

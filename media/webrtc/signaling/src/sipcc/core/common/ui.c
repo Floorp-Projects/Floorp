@@ -1228,7 +1228,7 @@ ui_call_in_preservation (line_t line_id, callid_t call_id)
 
     /* simply update the state . A Preservation event from
        CUCM is just for the session */
-    ui_call_state (PRESERVATION , line_id, call_id, CC_CAUSE_NORMAL);
+    ui_call_state (evCallPreservation , line_id, call_id, CC_CAUSE_NORMAL);
 }
 
 /**

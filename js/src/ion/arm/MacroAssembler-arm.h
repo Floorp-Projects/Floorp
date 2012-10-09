@@ -726,14 +726,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, cond);
     }
 
-    void loadUnboxedValue(Address address, AnyRegister dest) {
+    void loadUnboxedValue(Address address, MIRType type, AnyRegister dest) {
         if (dest.isFloat())
             loadInt32OrDouble(Operand(address), dest.fpu());
         else
             ma_ldr(address, dest.gpr());
     }
 
-    void loadUnboxedValue(BaseIndex address, AnyRegister dest) {
+    void loadUnboxedValue(BaseIndex address, MIRType type, AnyRegister dest) {
         if (dest.isFloat())
             loadInt32OrDouble(address.base, address.index, dest.fpu(), address.scale);
         else

@@ -104,8 +104,8 @@ class ArgumentsObject : public JSObject
     static const uint32_t PACKED_BITS_COUNT = 1;
 
     template <typename CopyArgs>
-    static ArgumentsObject *create(JSContext *cx, HandleScript script,
-                                   HandleFunction callee, CopyArgs &copy);
+    static ArgumentsObject *create(JSContext *cx, HandleScript script, HandleFunction callee,
+                                   unsigned numActuals, CopyArgs &copy);
 
     inline ArgumentsData *data() const;
 

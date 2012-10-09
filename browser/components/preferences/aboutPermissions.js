@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/ClearRecentHistory.jsm");
+Cu.import("resource://gre/modules/ForgetAboutSite.jsm");
 
 let gFaviconService = Cc["@mozilla.org/browser/favicon-service;1"].
                       getService(Ci.nsIFaviconService);
@@ -232,7 +232,7 @@ Site.prototype = {
    * Removes all data from the browser corresponding to the site.
    */
   forgetSite: function Site_forgetSite() {
-    ClearRecentHistory.removeDataFromDomain(this.host);
+    ForgetAboutSite.removeDataFromDomain(this.host);
   }
 }
 
