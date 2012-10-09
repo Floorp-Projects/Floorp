@@ -76,7 +76,6 @@ using namespace mozilla::layers;
 
 gfxPlatform *gPlatform = nullptr;
 static bool gEverInitialized = false;
-static nsTArray<nsCString>* gBackendList = nullptr;
 
 // These two may point to the same profile
 static qcms_profile *gCMSOutputProfile = nullptr;
@@ -410,9 +409,6 @@ gfxPlatform::Shutdown()
     ImageBridgeChild::ShutDown();
 
     CompositorParent::ShutDown();
-
-    delete gBackendList;
-    gBackendList = nullptr;
 
     delete gPlatform;
     gPlatform = nullptr;
@@ -1230,16 +1226,14 @@ gfxPlatform::GetBackendPref(const char* aEnabledPrefName, const char* aBackendPr
         return BACKEND_NONE;
     }
 
-    if (!gBackendList) {
-        gBackendList = new nsTArray<nsCString>();
-        nsCString prefString;
-        if (NS_SUCCEEDED(Preferences::GetCString(aBackendPrefName, &prefString))) {
-            ParseString(prefString, ',', *gBackendList);
-        }
+    nsTArray<nsCString> backendList;
+    nsCString prefString;
+    if (NS_SUCCEEDED(Preferences::GetCString(aBackendPrefName, &prefString))) {
+        ParseString(prefString, ',', backendList);
     }
 
-    for (uint32_t i = 0; i < gBackendList->Length(); ++i) {
-        BackendType result = BackendTypeForName((*gBackendList)[i]);
+    for (uint32_t i = 0; i < backendList.Length(); ++i) {
+        BackendType result = BackendTypeForName(backendList[i]);
         if ((1 << result) & aBackendBitmask) {
             return result;
         }
