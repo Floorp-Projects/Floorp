@@ -55,11 +55,6 @@ class nsWifiMonitor MOZ_FINAL : nsIRunnable, nsIWifiMonitor, nsIObserver
 
   nsresult DoScan();
 
-#if defined(XP_MACOSX)
-  nsresult DoScanWithCoreWLAN();
-  nsresult DoScanOld();
-#endif
-
   nsresult CallWifiListeners(const nsCOMArray<nsWifiAccessPoint> &aAccessPoints,
                              bool aAccessPointsChanged);
 
