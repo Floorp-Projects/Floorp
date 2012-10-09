@@ -32,6 +32,8 @@
 #include "hb-open-type-private.hh"
 
 
+namespace OT {
+
 
 /*
  * head -- Font Header
@@ -140,6 +142,8 @@ struct head
   DEFINE_SIZE_STATIC (54);
 };
 
+
+} // namespace OT
 
 
 #endif /* HB_OT_HEAD_TABLE_HH */

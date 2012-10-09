@@ -1,7 +1,7 @@
 /*
  * Copyright © 1998-2004  David Turner and Werner Lemberg
  * Copyright © 2004,2007,2009  Red Hat, Inc.
- * Copyright © 2011  Google, Inc.
+ * Copyright © 2011,2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -62,6 +62,12 @@ typedef struct hb_glyph_position_t {
   hb_var_int_t   var;
 } hb_glyph_position_t;
 
+typedef enum {
+  HB_BUFFER_CONTENT_TYPE_INVALID = 0,
+  HB_BUFFER_CONTENT_TYPE_UNICODE,
+  HB_BUFFER_CONTENT_TYPE_GLYPHS
+} hb_buffer_content_type_t;
+
 
 hb_buffer_t *
 hb_buffer_create (void);
@@ -85,6 +91,14 @@ hb_buffer_set_user_data (hb_buffer_t        *buffer,
 void *
 hb_buffer_get_user_data (hb_buffer_t        *buffer,
 			 hb_user_data_key_t *key);
+
+
+void
+hb_buffer_set_content_type (hb_buffer_t              *buffer,
+			    hb_buffer_content_type_t  content_type);
+
+hb_buffer_content_type_t
+hb_buffer_get_content_type (hb_buffer_t *buffer);
 
 
 void
