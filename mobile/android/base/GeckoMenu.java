@@ -436,6 +436,11 @@ public class GeckoMenu extends ListView
         }
 
         @Override
+        public int getItemViewType (int position) {
+            return AdapterView.ITEM_VIEW_TYPE_IGNORE;
+        }
+
+        @Override
         public boolean areAllItemsEnabled() {
             for (GeckoMenuItem item : mItems) {
                  if (!item.isEnabled())
