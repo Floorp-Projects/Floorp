@@ -41,31 +41,46 @@ public:
 
   BluetoothHfpManagerObserver()
   {
+  }
+
+  bool Init()
+  {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     MOZ_ASSERT(obs);
     if (NS_FAILED(obs->AddObserver(this, MOZSETTINGS_CHANGED_ID, false))) {
       NS_WARNING("Failed to add settings change observer!");
+      return false;
     }
 
     if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
       NS_WARNING("Failed to add shutdown observer!");
+      return false;
     }
+
+    return true;
+  }
+
+  bool Shutdown()
+  {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (!obs ||
+        (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) ||
+         NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID)))) {
+      NS_WARNING("Can't unregister observers, or already unregistered!");
+      return false;
+    }
+    return true;
   }
 
   ~BluetoothHfpManagerObserver()
   {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    if (obs &&
-        (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) ||
-         NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID)))) {
-      NS_WARNING("Can't unregister observers!");
-    }
+    Shutdown();
   }
 };
 
 namespace {
   StaticRefPtr<BluetoothHfpManager> gBluetoothHfpManager;
-  StaticAutoPtr<BluetoothHfpManagerObserver> sHfpObserver;
+  StaticRefPtr<BluetoothHfpManagerObserver> sHfpObserver;
   bool gInShutdown = false;
   static nsCOMPtr<nsIThread> sHfpCommandThread;
   static bool sStopSendingRingFlag = true;
@@ -170,6 +185,9 @@ bool
 BluetoothHfpManager::Init()
 {
   sHfpObserver = new BluetoothHfpManagerObserver();
+  if (!sHfpObserver->Init()) {
+    NS_WARNING("Cannot set up Hfp Observers!");
+  }
 
   mListener = new BluetoothRilListener();
   if (!mListener->StartListening()) {
@@ -209,6 +227,7 @@ BluetoothHfpManager::Cleanup()
     }
   }
 
+  sHfpObserver->Shutdown();
   sHfpObserver = nullptr;
 }
 
