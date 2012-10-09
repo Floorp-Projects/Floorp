@@ -1022,6 +1022,11 @@ TabParent::AllocPRenderFrame(ScrollingBehavior* aScrolling,
   MOZ_ASSERT(ManagedPRenderFrameParent().IsEmpty());
 
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  if (!frameLoader) {
+    NS_ERROR("Can't allocate graphics resources, aborting subprocess");
+    return nullptr;
+  }
+
   *aScrolling = UseAsyncPanZoom() ? ASYNC_PAN_ZOOM : DEFAULT_SCROLLING;
   return new RenderFrameParent(frameLoader,
                                *aScrolling,
