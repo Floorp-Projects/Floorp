@@ -35,13 +35,34 @@ of the License or (at your option) any later version.
 
 using namespace graphite2;
 
+namespace { static const uint32 ERROROFFSET = 0xFFFFFFFF; }
 
 Silf::Silf() throw()
-: m_passes(0), m_pseudos(0), m_classOffsets(0), m_classData(0), m_justs(0),
-  m_numPasses(0), m_sPass(0), m_pPass(0), m_jPass(0), m_bPass(0), m_flags(0),
-  m_aBreak(0), m_aUser(0), m_iMaxComp(0),
-  m_aLig(0), m_numPseudo(0), m_nClass(0), m_nLinear(0)
+: m_passes(0),
+  m_pseudos(0),
+  m_classOffsets(0),
+  m_classData(0),
+  m_justs(0),
+  m_numPasses(0),
+  m_numJusts(0),
+  m_sPass(0),
+  m_pPass(0),
+  m_jPass(0),
+  m_bPass(0),
+  m_flags(0),
+  m_aPseudo(0),
+  m_aBreak(0),
+  m_aUser(0),
+  m_aBidi(0),
+  m_aMirror(0),
+  m_iMaxComp(0),
+  m_aLig(0),
+  m_numPseudo(0),
+  m_nClass(0),
+  m_nLinear(0),
+  m_gEndLine(0)
 {
+    memset(&m_silfinfo, 0, sizeof m_silfinfo);
 }
 
 Silf::~Silf() throw()
@@ -76,8 +97,9 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, const Face&
         be::skip<uint16>(p,2); // passOffset & pseudosOffset
     }
     else if (lSilf < 20) 	{ releaseBuffers(); return false; }
-    be::skip<uint16>(p);  // maxGlyphID
-    be::skip<int16>(p,2); // extra ascent & descent
+    const uint16 maxGlyph = be::read<uint16>(p);
+    m_silfinfo.extra_ascent = be::read<uint16>(p);
+    m_silfinfo.extra_descent = be::read<uint16>(p);
     m_numPasses = be::read<uint8>(p);
     m_sPass     = be::read<uint8>(p);
     m_pPass     = be::read<uint8>(p);
@@ -93,7 +115,8 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, const Face&
 
     // Read Justification levels.
     m_numJusts  = be::read<uint8>(p);
-    if (p + m_numJusts * 8 >= silf_end)  { releaseBuffers(); return false; }
+    if (maxGlyph >= face.glyphs().numGlyphs()
+        || p + m_numJusts * 8 >= silf_end)  { releaseBuffers(); return false; }
     m_justs = gralloc<Justinfo>(m_numJusts);
     for (uint8 i = 0; i < m_numJusts; i++)
     {
@@ -110,18 +133,21 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, const Face&
     be::skip<byte>(p);							// reserved
     if (p >= silf_end)   { releaseBuffers(); return false; }
     be::skip<uint32>(p, be::read<uint8>(p));	// don't use scriptTag array.
-    be::skip<uint16>(p); // lbGID
+    m_gEndLine  = be::read<uint16>(p);          // lbGID
     if (p >= silf_end)   { releaseBuffers(); return false; }
     const byte * o_passes = p,
                * const passes_start = silf_start + be::read<uint32>(p);
 
-    if (m_numPasses > 128 || passes_start >= silf_end
-    	|| m_pPass < m_sPass
-    	|| m_jPass < m_pPass
+    const size_t num_attrs = face.glyphs().numAttrs();
+    if (m_aPseudo   >= num_attrs
+        || m_aBreak >= num_attrs
+        || m_aBidi  >= num_attrs
+        || m_aMirror>= num_attrs
+        || m_numPasses > 128 || passes_start >= silf_end
+    	|| m_pPass < m_sPass || m_pPass > m_numPasses || m_sPass > m_numPasses
+    	|| m_jPass < m_pPass || m_jPass > m_numPasses
     	|| (m_bPass != 0xFF && (m_bPass < m_jPass || m_bPass > m_numPasses))
-    	|| m_aLig > 127) {
-        releaseBuffers(); return false;
-    }
+    	|| m_aLig > 127) { releaseBuffers(); return false; }
     be::skip<uint32>(p, m_numPasses);
     if (p + sizeof(uint16) >= passes_start)  { releaseBuffers(); return false; }
     m_numPseudo = be::read<uint16>(p);
@@ -137,7 +163,7 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, const Face&
     }
 
     const size_t clen = readClassMap(p, passes_start - p, version);
-    if (clen == 0 || p + clen > passes_start)  { releaseBuffers(); return false; }
+    if (clen == ERROROFFSET || p + clen > passes_start)  { releaseBuffers(); return false; }
 
     m_passes = new Pass[m_numPasses];
     for (size_t i = 0; i < m_numPasses; ++i)
@@ -155,16 +181,23 @@ bool Silf::readGraphite(const byte * const silf_start, size_t lSilf, const Face&
         	return false;
         }
     }
+
+    // fill in gr_faceinfo
+    m_silfinfo.upem = face.glyphs().unitsPerEm();
+    m_silfinfo.has_bidi_pass = (m_bPass != 0xFF);
+    m_silfinfo.justifies = (m_numJusts != 0) || (m_jPass < m_pPass);
+    m_silfinfo.line_ends = (m_flags & 1);
+    m_silfinfo.space_contextuals = gr_faceinfo::gr_space_contextuals((m_flags >> 2) & 0x7);
     return true;
 }
 
 template<typename T> inline uint32 Silf::readClassOffsets(const byte *&p, size_t data_len)
 {
 	const T cls_off = 2*sizeof(uint16) + sizeof(T)*(m_nClass+1);
-	const uint32 max_off = (be::peek<T>(p + sizeof(T)*m_nClass) - cls_off)/sizeof(uint16);
+	const size_t max_off = (be::peek<T>(p + sizeof(T)*m_nClass) - cls_off)/sizeof(uint16);
 	// Check that the last+1 offset is less than or equal to the class map length.
 	if (be::peek<T>(p) != cls_off || max_off > (data_len - cls_off)/sizeof(uint16))
-		return 0;
+		return ERROROFFSET;
 
 	// Read in all the offsets.
 	m_classOffsets = gralloc<uint32>(m_nClass+1);
@@ -172,14 +205,14 @@ template<typename T> inline uint32 Silf::readClassOffsets(const byte *&p, size_t
 	{
 		*o = (be::read<T>(p) - cls_off)/sizeof(uint16);
 		if (*o > max_off)
-			return 0;
+			return ERROROFFSET;
 	}
     return max_off;
 }
 
 size_t Silf::readClassMap(const byte *p, size_t data_len, uint32 version)
 {
-	if (data_len < sizeof(uint16)*2)	return 0;
+	if (data_len < sizeof(uint16)*2)	return ERROROFFSET;
 
 	m_nClass  = be::read<uint16>(p);
 	m_nLinear = be::read<uint16>(p);
@@ -188,7 +221,7 @@ size_t Silf::readClassMap(const byte *p, size_t data_len, uint32 version)
 	// that there is at least enough data for numClasses offsets.
 	if (m_nLinear > m_nClass
 	 || (m_nClass + 1) * (version >= 0x00040000 ? sizeof(uint32) : sizeof(uint16))> (data_len - 4))
-		return 0;
+		return ERROROFFSET;
 
     
     uint32 max_off;
@@ -197,12 +230,12 @@ size_t Silf::readClassMap(const byte *p, size_t data_len, uint32 version)
     else
         max_off = readClassOffsets<uint16>(p, data_len);
 
-    if (max_off == 0) return 0;
+    if (max_off == ERROROFFSET) return ERROROFFSET;
 
 	// Check the linear offsets are sane, these must be monotonically increasing.
 	for (const uint32 *o = m_classOffsets, * const o_end = o + m_nLinear; o != o_end; ++o)
 		if (o[0] > o[1])
-			return 0;
+			return ERROROFFSET;
 
 	// Fortunately the class data is all uint16s so we can decode these now
     m_classData = gralloc<uint16>(max_off);
@@ -217,7 +250,7 @@ size_t Silf::readClassMap(const byte *p, size_t data_len, uint32 version)
          || lookup[0] == 0							// A LookupClass with no looks is a suspicious thing ...
 		 || lookup[0] > (max_off - *o - 4)/2  	    // numIDs lookup pairs fits within (start of LookupClass' lookups array, max_off]
 		 || lookup[3] != lookup[0] - lookup[1])		// rangeShift:	 numIDs  - searchRange
-			return 0;
+			return ERROROFFSET;
 	}
 
 	return max_off;
@@ -279,9 +312,12 @@ bool Silf::runGraphite(Segment *seg, uint8 firstPass, uint8 lastPass) const
 {
     assert(seg != 0);
     SlotMap            map(*seg);
-    FiniteStateMachine fsm(map);
+    FiniteStateMachine fsm(map, seg->getFace()->logger());
     vm::Machine        m(map);
     unsigned int       initSize = seg->slotCount();
+#if !defined GRAPHITE2_NTRACING
+    json * const dbgout = seg->getFace()->logger();
+#endif
 
     if (lastPass == 0)
     {
@@ -289,18 +325,6 @@ bool Silf::runGraphite(Segment *seg, uint8 firstPass, uint8 lastPass) const
             return true;
         lastPass = m_numPasses;
     }
-
-#if !defined GRAPHITE2_NTRACING
-    if (dbgout)
-    {
-    	char version[64];
-    	sprintf(version, "%d.%d.%d",
-    			GR2_VERSION_MAJOR, GR2_VERSION_MINOR, GR2_VERSION_BUGFIX);
-    	*dbgout << json::object
-    				<< "version"	<< version
-    				<< "passes"		<< json::array;
-    }
-#endif
 
     for (size_t i = firstPass; i < lastPass; ++i)
     {
@@ -357,23 +381,5 @@ bool Silf::runGraphite(Segment *seg, uint8 firstPass, uint8 lastPass) const
             || (seg->slotCount() && seg->slotCount() * MAX_SEG_GROWTH_FACTOR < initSize))))
             return false;
     }
-#if !defined GRAPHITE2_NTRACING
-	if (dbgout)
-	{
-		*dbgout 			<< json::item
-							<< json::close // Close up the passes array
-				<< "output" << json::array;
-		for(Slot * s = seg->first(); s; s = s->next())
-			*dbgout		<< dslot(seg, s);
-		seg->finalise(0);					// Call this here to fix up charinfo back indexes.
-		*dbgout			<< json::close
-				<< "advance" << seg->advance()
-				<< "chars"	 << json::array;
-		for(size_t i = 0, n = seg->charInfoCount(); i != n; ++i)
-			*dbgout 	<< json::flat << *seg->charinfo(i);
-		*dbgout			<< json::close	// Close up the chars array
-					<< json::close;		// Clsoe up the segment object
-	}
-#endif
     return true;
 }

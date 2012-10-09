@@ -39,13 +39,12 @@ using namespace graphite2;
 #ifndef GRAPHITE2_NSEGCACHE
 
 SegCache::SegCache(const SegCacheStore * store, const Features & feats)
-    :
-    m_prefixLength(ePrefixLength),
-    m_maxCachedSegLength(eMaxSpliceSize),
-    m_segmentCount(0),
-    m_features(feats),
-    m_totalAccessCount(0l), m_totalMisses(0l),
-    m_purgeFactor(1.0f / (ePurgeFactor * store->maxSegmentCount()))
+: m_prefixLength(ePrefixLength),
+  m_maxCachedSegLength(eMaxSpliceSize),
+  m_segmentCount(0),
+  m_features(feats),
+  m_totalAccessCount(0l), m_totalMisses(0l),
+  m_purgeFactor(1.0f / (ePurgeFactor * store->maxSegmentCount()))
 {
     m_prefixes.raw = grzeroalloc<void*>(store->maxCmapGid() + 2);
     m_prefixes.range[SEG_CACHE_MIN_INDEX] = SEG_CACHE_UNSET_INDEX;
@@ -200,7 +199,7 @@ uint32 SegCachePrefixEntry::purge(unsigned long long minAccessCount,
             }
             else
             {
-                m_entries[length][newIndex++] = m_entries[length][j];
+                memcpy(m_entries[length] + newIndex++, m_entries[length] + j, sizeof(SegCacheEntry));
             }
         }
         if (purgeCount == m_entryCounts[length])
