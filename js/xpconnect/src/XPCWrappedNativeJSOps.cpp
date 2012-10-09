@@ -11,7 +11,9 @@
 #include "XPCWrapper.h"
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/Preferences.h"
 
+using namespace mozilla;
 /***************************************************************************/
 
 // All of the exceptions thrown into JS from this file go through here.
@@ -254,8 +256,25 @@ DefinePropertyIfFound(XPCCallContext& ccx,
     if (!found) {
         if (reflectToStringAndToSource) {
             JSNative call;
+            uint32_t flags = 0;
 
-            if (id == rt->GetStringID(XPCJSRuntime::IDX_TO_STRING)) {
+            if (scriptableInfo) {
+                nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(
+                    scriptableInfo->GetCallback());
+
+                if (classInfo) {
+                    nsresult rv = classInfo->GetFlags(&flags);
+                    if (NS_FAILED(rv))
+                        return Throw(rv, ccx);
+                }
+            }
+
+            bool overwriteToString = !(flags & nsIClassInfo::DOM_OBJECT)
+                || Preferences::GetBool("dom.XPCToStringForDOMClasses", false);
+
+            if(id == rt->GetStringID(XPCJSRuntime::IDX_TO_STRING)
+                && overwriteToString)
+            {
                 call = XPC_WN_Shared_ToString;
                 name = rt->GetStringName(XPCJSRuntime::IDX_TO_STRING);
                 id   = rt->GetStringID(XPCJSRuntime::IDX_TO_STRING);
