@@ -83,7 +83,7 @@ nsAppShellService::CreateHiddenWindow()
 {
   nsresult rv;
   int32_t initialHeight = 100, initialWidth = 100;
-    
+
 #ifdef XP_MACOSX
   uint32_t    chromeMask = 0;
   nsAdoptingCString prefVal =
@@ -349,7 +349,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   nsresult rv = window->Initialize(parent, center ? aParent : nullptr,
                                    aUrl, aInitialWidth, aInitialHeight,
                                    aIsHiddenWindow, widgetInitData);
-      
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   window.swap(*aResult); // transfer reference
@@ -381,7 +381,7 @@ nsAppShellService::GetHiddenDOMWindow(nsIDOMWindow **aWindow)
 
   rv = mHiddenWindow->GetDocShell(getter_AddRefs(docShell));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   nsCOMPtr<nsIDOMWindow> hiddenDOMWindow(do_GetInterface(docShell, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -451,9 +451,12 @@ nsAppShellService::GetApplicationProvidedHiddenWindow(bool* aAPHW)
 NS_IMETHODIMP
 nsAppShellService::RegisterTopLevelWindow(nsIXULWindow* aWindow)
 {
+  NS_ENSURE_ARG_POINTER(aWindow);
+
   nsCOMPtr<nsIDocShell> docShell;
   aWindow->GetDocShell(getter_AddRefs(docShell));
   nsCOMPtr<nsPIDOMWindow> domWindow(do_GetInterface(docShell));
+  NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
   domWindow->SetInitialPrincipalToSubject();
 
   // tell the window mediator about the new window
@@ -497,7 +500,7 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
     */
     return NS_ERROR_FAILURE;
   }
-  
+
   NS_ENSURE_ARG_POINTER(aWindow);
 
   if (aWindow == mHiddenWindow) {
@@ -512,7 +515,7 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
 
   if (mediator)
     mediator->UnregisterWindow(aWindow);
-	
+
   // tell the window watcher
   nsCOMPtr<nsPIWindowWatcher> wwatcher ( do_GetService(NS_WINDOWWATCHER_CONTRACTID) );
   NS_ASSERTION(wwatcher, "Couldn't get windowwatcher, doing xpcom shutdown?");
