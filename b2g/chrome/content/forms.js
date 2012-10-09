@@ -77,6 +77,7 @@ let FormAssistant = {
       case "blur":
         if (this.previousTarget) {
           sendAsyncMessage("Forms:Input", { "type": "blur" });
+          this.isKeyboardOpened = false;
           this.previousTarget = null;
         }
         break;
