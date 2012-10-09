@@ -610,7 +610,7 @@ WrappedNativeFinalize(js::FreeOp *fop, JSObject *obj, WNHelperType helperType)
 {
     js::Class* clazz = js::GetObjectClass(obj);
     if (clazz->flags & JSCLASS_DOM_GLOBAL) {
-        mozilla::dom::DestroyProtoOrIfaceCache(obj);
+        mozilla::dom::DestroyProtoAndIfaceCache(obj);
     }
     nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
     if (!p)
@@ -661,7 +661,7 @@ MarkWrappedNative(JSTracer *trc, JSObject *obj)
 {
     js::Class* clazz = js::GetObjectClass(obj);
     if (clazz->flags & JSCLASS_DOM_GLOBAL) {
-        mozilla::dom::TraceProtoOrIfaceCache(trc, obj);
+        mozilla::dom::TraceProtoAndIfaceCache(trc, obj);
     }
 
     JSObject *obj2;
