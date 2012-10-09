@@ -7,4 +7,5 @@ toolkit.jar:
   content/global/devtools/dbg-server.js        		(debugger/server/dbg-server.js)
   content/global/devtools/dbg-script-actors.js    (debugger/server/dbg-script-actors.js)
   content/global/devtools/dbg-browser-actors.js   (debugger/server/dbg-browser-actors.js)
+  content/global/devtools/dbg-webconsole-actors.js (webconsole/dbg-webconsole-actors.js)
   content/global/devtools/dbg-profiler-actors.js  (debugger/server/dbg-profiler-actors.js)

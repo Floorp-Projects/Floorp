@@ -67,13 +67,14 @@ public:
 
   nsresult      PostScrollSelectionIntoViewEvent(
                                         SelectionRegion aRegion,
-                                        bool aFirstAncestorOnly,
+                                        int32_t aFlags,
                                         nsIPresShell::ScrollAxis aVertical,
                                         nsIPresShell::ScrollAxis aHorizontal);
   enum {
     SCROLL_SYNCHRONOUS = 1<<1,
     SCROLL_FIRST_ANCESTOR_ONLY = 1<<2,
-    SCROLL_DO_FLUSH = 1<<3
+    SCROLL_DO_FLUSH = 1<<3,
+    SCROLL_OVERFLOW_HIDDEN = 1<<5
   };
   // aDoFlush only matters if aIsSynchronous is true.  If not, we'll just flush
   // when the scroll event fires so we make sure to scroll to the right place.
@@ -153,12 +154,12 @@ private:
                                  SelectionRegion aRegion,
                                  nsIPresShell::ScrollAxis aVertical,
                                  nsIPresShell::ScrollAxis aHorizontal,
-                                 bool aFirstAncestorOnly)
+                                 int32_t aFlags)
       : mSelection(aSelection),
         mRegion(aRegion),
         mVerticalScroll(aVertical),
         mHorizontalScroll(aHorizontal),
-        mFirstAncestorOnly(aFirstAncestorOnly) {
+        mFlags(aFlags) {
       NS_ASSERTION(aSelection, "null parameter");
     }
     void Revoke() { mSelection = nullptr; }
@@ -167,7 +168,7 @@ private:
     SelectionRegion mRegion;
     nsIPresShell::ScrollAxis mVerticalScroll;
     nsIPresShell::ScrollAxis mHorizontalScroll;
-    bool mFirstAncestorOnly;
+    int32_t mFlags;
   };
 
   void setAnchorFocusRange(int32_t aIndex); // pass in index into mRanges;

@@ -97,12 +97,14 @@ function reportAssertionFailure(aMsg)
 
 function debug(x)
 {
-  appendElementWithText(document.body, "div", "debug", JSON.stringify(x));
+  let section = appendElement(document.body, 'div', 'section');
+  appendElementWithText(section, "div", "debug", JSON.stringify(x));
 }
 
 function badInput(x)
 {
-  appendElementWithText(document.body, "div", "badInputWarning", x);
+  let section = appendElement(document.body, 'div', 'section');
+  appendElementWithText(section, "div", "badInputWarning", x);
 }
 
 //---------------------------------------------------------------------------
@@ -219,7 +221,7 @@ function clearBody()
   let body = oldBody.cloneNode(false);
   oldBody.parentNode.replaceChild(body, oldBody);
   body.classList.add(gVerbose ? 'verbose' : 'non-verbose');
-  return body;
+  return body
 }
 
 function appendTextNode(aP, aText)
@@ -543,7 +545,10 @@ function appendAboutMemoryMain(aBody, aProcess, aHasMozMallocUsableSize,
   // Generate output for each process.
   for (let i = 0; i < processes.length; i++) {
     let process = processes[i];
-    appendProcessAboutMemoryElements(aBody, process, treesByProcess[process],
+    let section = appendElement(aBody, 'div', 'section');
+
+    appendProcessAboutMemoryElements(section, process,
+                                     treesByProcess[process],
                                      degeneratesByProcess[process],
                                      heapTotalByProcess[process],
                                      aHasMozMallocUsableSize);
@@ -558,7 +563,7 @@ function appendAboutMemoryMain(aBody, aProcess, aHasMozMallocUsableSize,
  */
 function appendAboutMemoryFooter(aBody)
 {
-  appendElement(aBody, "hr");
+  let section = appendElement(aBody, 'div', 'footer');
 
   // Memory-related actions.
   const UpDesc = "Re-measure.";
@@ -582,7 +587,7 @@ function appendAboutMemoryFooter(aBody)
     }
   }
 
-  let div1 = appendElement(aBody, "div");
+  let div1 = appendElement(section, "div");
 
   // The "Update" button has an id so it can be clicked in a test.
   appendButton(div1, UpDesc, updateAboutMemory, "Update", "updateButton");
@@ -607,7 +612,7 @@ function appendAboutMemoryFooter(aBody)
   appendButton(div1, CbDesc, updateAboutMemoryFromClipboard,
                "Read reports from clipboard", "readReportsFromClipboardButton");
 
-  let div2 = appendElement(aBody, "div");
+  let div2 = appendElement(section, "div");
   if (gVerbose) {
     let a = appendElementWithText(div2, "a", "option", "Less verbose");
     a.href = "about:memory";
@@ -616,7 +621,7 @@ function appendAboutMemoryFooter(aBody)
     a.href = "about:memory?verbose";
   }
 
-  let div3 = appendElement(aBody, "div");
+  let div3 = appendElement(section, "div");
   let a = appendElementWithText(div3, "a", "option",
                                 "Troubleshooting information");
   a.href = "about:support";
@@ -626,8 +631,8 @@ function appendAboutMemoryFooter(aBody)
   let legendText2 = "Hover the pointer over the name of a memory report " +
                     "to see a description of what it measures.";
 
-  appendElementWithText(aBody, "div", "legend", legendText1);
-  appendElementWithText(aBody, "div", "legend hiddenOnMobile", legendText2);
+  appendElementWithText(section, "div", "legend", legendText1);
+  appendElementWithText(section, "div", "legend hiddenOnMobile", legendText2);
 }
 
 //---------------------------------------------------------------------------

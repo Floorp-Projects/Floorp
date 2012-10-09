@@ -10,11 +10,11 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
     <em:id>testpilot@labs.mozilla.com</em:id>
-    <em:version>1.1.2</em:version>
+    <em:version>1.2.2</em:version>
     <em:type>2</em:type>
 
-    <!-- Target Application this extension can install into, 
-         with minimum and maximum supported versions. --> 
+    <!-- Target Application this extension can install into,
+         with minimum and maximum supported versions. -->
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
@@ -22,7 +22,7 @@
         <em:maxVersion>@FIREFOX_VERSION@</em:maxVersion>
       </Description>
     </em:targetApplication>
-   
+
     <!-- Front End MetaData -->
     <em:name>Feedback</em:name>
     <em:description>Help make Firefox better by giving feedback.</em:description>

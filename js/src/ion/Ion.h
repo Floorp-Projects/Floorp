@@ -165,7 +165,7 @@ struct IonOptions
         lsra(true),
         inlining(true),
         edgeCaseAnalysis(true),
-        rangeAnalysis(false),
+        rangeAnalysis(true),
         parallelCompilation(false),
         usesBeforeCompile(10240),
         usesBeforeCompileNoJaeger(40),
@@ -226,6 +226,7 @@ bool SetIonContext(IonContext *ctx);
 MethodStatus CanEnterAtBranch(JSContext *cx, HandleScript script,
                               StackFrame *fp, jsbytecode *pc);
 MethodStatus CanEnter(JSContext *cx, HandleScript script, StackFrame *fp, bool newType);
+MethodStatus CanEnterUsingFastInvoke(JSContext *cx, HandleScript script);
 
 enum IonExecStatus
 {

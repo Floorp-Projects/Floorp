@@ -202,3 +202,9 @@
    fun:_ZN22nsComponentManagerImpl17ManifestComponentERNS_25ManifestProcessingContextEiPKPc
    ...
 }
+{
+   Bug 799157
+   Memcheck:Cond
+   fun:_ZN2js3ion5Range6updateEPKS1_
+   ...
+}

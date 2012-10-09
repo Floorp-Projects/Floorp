@@ -213,13 +213,11 @@ _VISITED_REFTEST_FILES = \
 		$(topsrcdir)/layout/reftests/svg/as-image/svg-image-visited-2-helper.svg \
 		$(NULL)
 
-ifneq (mobile,$(MOZ_BUILD_APP))
 MOCHITEST_BROWSER_FILES = \
 		browser_bug453896.js \
 		bug453896_iframe.html \
 		media_queries_iframe.html \
 		$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
 

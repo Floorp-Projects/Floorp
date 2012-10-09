@@ -1,0 +1,410 @@
+diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/event/async_wait.h src/event/async_wait.h
+--- /Users/ekr/dev/mtransport-import-references/nrappkit/src/event/async_wait.h	2007-06-26 15:37:44.000000000 -0700
++++ src/event/async_wait.h	2012-10-03 22:15:41.000000000 -0700
+@@ -38,21 +38,21 @@
+ 
+ 
+ #ifndef _async_wait_h
+ #define _async_wait_h
+ 
+ #ifdef HAVE_SYS_TIME_H
+ #include <sys/time.h>
+ #endif
+ #include <csi_platform.h>
+ 
+-typedef void (*NR_async_cb)(int resource,int how,void *arg);
++typedef void (*NR_async_cb)(NR_SOCKET resource,int how,void *arg);
+ 
+ #define NR_ASYNC_WAIT_READ 0
+ #define NR_ASYNC_WAIT_WRITE 1
+ 
+ 
+ int NR_async_wait_init(void);
+ int NR_async_wait(NR_SOCKET sock, int how, NR_async_cb cb,void *cb_arg,
+                             char *function,int line);
+ int NR_async_cancel(NR_SOCKET sock,int how);
+ int NR_async_schedule(NR_async_cb cb,void *arg,char *function,int line);
+diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/log/r_log.c src/log/r_log.c
+--- /Users/ekr/dev/mtransport-import-references/nrappkit/src/log/r_log.c	2008-11-25 14:25:18.000000000 -0800
++++ src/log/r_log.c	2012-10-03 22:15:41.000000000 -0700
+@@ -33,28 +33,40 @@
+    POSSIBILITY OF SUCH DAMAGE.
+    
+ 
+    ekr@rtfm.com  Mon Dec  3 15:24:38 2001
+  */
+ 
+ 
+ static char *RCSSTRING __UNUSED__ ="$Id: r_log.c,v 1.10 2008/11/25 22:25:18 adamcain Exp $";
+ 
+ 
++#ifdef LINUX
++#define _BSD_SOURCE
++#endif
++
+ #include "r_log.h"
+ #include "hex.h"
++
+ #include <string.h>
++#ifndef _MSC_VER
++#include <strings.h>
++#include <syslog.h>
++#endif
+ #include <registry.h>
+ #include <time.h>
++
++
+ #include "nr_common.h"
+ #include "nr_reg_keys.h"
+ 
++
+ #define LOGGING_DEFAULT_LEVEL  5
+ 
+ int NR_LOG_LOGGING = 0;
+ 
+ static char *log_level_strings[]={
+      "EMERG",
+      "ALERT",
+      "CRIT",
+      "ERR",
+      "WARNING",
+diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/darwin/include/csi_platform.h src/port/darwin/include/csi_platform.h
+--- /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/darwin/include/csi_platform.h	2007-06-26 15:37:48.000000000 -0700
++++ src/port/darwin/include/csi_platform.h	2012-10-03 22:15:41.000000000 -0700
+@@ -37,17 +37,21 @@
+  */
+ 
+ 
+ #ifndef _platform_h
+ #define _platform_h
+ 
+ #include <unistd.h>
+ 
+ #define STDIO_BYTES_BUFFERED(fp) (fp->_r)
+ 
++#ifdef NR_SOCKET_IS_VOID_PTR
++typedef void* NR_SOCKET;
++#else
+ typedef int NR_SOCKET;
+ #define NR_SOCKET_READ(sock,buf,count)   read((sock),(buf),(count))
+ #define NR_SOCKET_WRITE(sock,buf,count)  write((sock),(buf),(count))
+ #define NR_SOCKET_CLOSE(sock)            close(sock)
++#endif
+ 
+ #endif
+ 
+diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/linux/include/csi_platform.h src/port/linux/include/csi_platform.h
+--- /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/linux/include/csi_platform.h	2007-06-26 15:37:49.000000000 -0700
++++ src/port/linux/include/csi_platform.h	2012-10-03 22:15:41.000000000 -0700
+@@ -35,17 +35,21 @@
+ 
+    ekr@rtfm.com  Mon Dec 13 17:26:51 2004
+  */
+ 
+ 
+ #ifndef _platform_h
+ #define _platform_h
+ 
+ #include <linux_funcs.h>
+ 
++#ifdef NR_SOCKET_IS_VOID_PTR
++typedef void* NR_SOCKET;
++#else
+ typedef int NR_SOCKET;
+ #define NR_SOCKET_READ(sock,buf,count)   read((sock),(buf),(count))
+ #define NR_SOCKET_WRITE(sock,buf,count)  write((sock),(buf),(count))
+ #define NR_SOCKET_CLOSE(sock)            close(sock)
++#endif
+ 
+ #endif
+ 
+diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/linux/include/sys/queue.h src/port/linux/include/sys/queue.h
+--- /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/linux/include/sys/queue.h	2012-10-03 18:04:13.000000000 -0700
++++ src/port/linux/include/sys/queue.h	2012-10-03 17:49:05.000000000 -0700
+@@ -26,21 +26,21 @@
+  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  * SUCH DAMAGE.
+  *
+  *	@(#)queue.h	8.5 (Berkeley) 8/20/94
+  * $FreeBSD: src/sys/sys/queue.h,v 1.58 2004/04/07 04:19:49 imp Exp $
+  */
+ 
+ #ifndef _SYS_QUEUE_H_
+ #define	_SYS_QUEUE_H_
+ 
+-#include <stddef.h>
++#include <linux/stddef.h>
+ #define __offsetof offsetof
+ 
+ #include <sys/cdefs.h>
+ 
+ #define STAILQ_FOREACH_SAFE(var, head, field, tvar)                     \
+          for ((var) = STAILQ_FIRST((head));                              \
+              (var) && ((tvar) = STAILQ_NEXT((var), field), 1);           \
+              (var) = (tvar))
+ 
+ 
+diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/win32/include/csi_platform.h src/port/win32/include/csi_platform.h
+--- /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/win32/include/csi_platform.h	2008-04-29 20:19:10.000000000 -0700
++++ src/port/win32/include/csi_platform.h	2012-10-03 22:15:41.000000000 -0700
+@@ -47,43 +47,46 @@
+ 
+ #define UINT8 UBLAH_IGNORE_ME_PLEASE
+ #define INT8 BLAH_IGNORE_ME_PLEASE
+ #include <winsock2.h>
+ #undef UINT8
+ #undef INT8
+ #include <r_types.h>
+ 
+ #define strcasecmp _stricmp
+ #define strncasecmp _strnicmp
+-#define snprintf _snprintf
+ 
+ #define strcasestr stristr
+ 
+ /* Hack version of addr2ascii (in util/util.c) */
+ char *addr2ascii(int af, const void *addrp, int len,char *buf);
+ 
+ /* Hack version of strlcpy (in util/util.c) */
+ size_t strlcat(char *dst, const char *src, size_t siz);
+ 
+ /* Hack version of getopt() (in util/getopt.c) */
+ int getopt(int argc, char *argv[], char *opstring);
+ extern char *optarg;
+ extern int optind;
+ extern int opterr;
+ 
+ /* Hack version of gettimeofday() (in util/util.c) */
+ int gettimeofday(struct timeval *tv, void *tz);
+ 
++#ifdef NR_SOCKET_IS_VOID_PTR
++typedef void* NR_SOCKET;
++#else
+ typedef SOCKET NR_SOCKET;
+ #define NR_SOCKET_READ(sock,buf,count)   recv((sock),(buf),(count),0)
+ #define NR_SOCKET_WRITE(sock,buf,count)  send((sock),(buf),(count),0)
+ #define NR_SOCKET_CLOSE(sock)            closesocket(sock)
++#endif
+ 
+ #define EHOSTUNREACH    WSAEHOSTUNREACH
+ 
+ #define LOG_EMERG       0
+ #define LOG_ALERT       1
+ #define LOG_CRIT        2
+ #define LOG_ERR         3
+ #define LOG_WARNING     4
+ #define LOG_NOTICE      5
+ #define LOG_INFO        6
+diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/registry/registry.c src/registry/registry.c
+--- /Users/ekr/dev/mtransport-import-references/nrappkit/src/registry/registry.c	2007-11-20 16:09:12.000000000 -0800
++++ src/registry/registry.c	2012-10-03 22:15:41.000000000 -0700
+@@ -37,21 +37,22 @@
+  *    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+  *    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  *    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  *    POSSIBILITY OF SUCH DAMAGE.
+  *    
+  *
+  */
+ 
+ #include <assert.h>
+ #include <string.h>
+-#ifndef WIN32
++#ifndef _MSC_VER
++#include <strings.h>
+ #include <sys/param.h>
+ #include <netinet/in.h>
+ #endif
+ #ifdef OPENSSL
+ #include <openssl/ssl.h>
+ #endif
+ #include <ctype.h>
+ #include "registry.h"
+ #include "registry_int.h"
+ #include "registry_vtbl.h"
+diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libekr/r_crc32.c src/util/libekr/r_crc32.c
+--- /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libekr/r_crc32.c	2008-11-25 19:22:02.000000000 -0800
++++ src/util/libekr/r_crc32.c	2012-10-03 22:15:41.000000000 -0700
+@@ -58,20 +58,21 @@
+  * the crc computation is finished.  The crc should be complemented
+  * before transmission.
+  * The variable corresponding to the macro argument "crc" should
+  * be an unsigned long and should be preset to all ones for Ethernet
+  * use.  An error-free packet will leave 0xDEBB20E3 in the crc.
+  *			Spencer Garrett <srg@quick.com>
+  */
+ 
+ 
+ #include <sys/types.h>
++#include <r_types.h>
+ 
+ static char *RCSSTRING __UNUSED__ ="$Id: r_crc32.c,v 1.4 2008/11/26 03:22:02 adamcain Exp $";
+ 
+ #ifdef WIN32
+ #define u_int32_t  UINT4
+ #endif
+ 
+ #define CRC(crc, ch)	 (crc = (crc >> 8) ^ crctab[(crc ^ (ch)) & 0xff])
+ 
+ /* generated using the AUTODIN II polynomial
+diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libekr/r_macros.h src/util/libekr/r_macros.h
+--- /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libekr/r_macros.h	2007-06-26 15:37:57.000000000 -0700
++++ src/util/libekr/r_macros.h	2012-10-03 22:15:41.000000000 -0700
+@@ -118,20 +118,20 @@
+ #ifndef MIN
+ #define MIN(a,b) ((a)>(b))?(b):(a)
+ #endif
+ 
+ #ifndef MAX
+ #define MAX(a,b) ((b)>(a))?(b):(a)
+ #endif
+ 
+ #ifdef DEBUG
+ #define DBG(a) debug a
+-int debug(int class,char *format,...);
++int debug(int cls, char *format,...);
+ #else
+ #define DBG(a)
+ #endif
+ 
+ #define UNIMPLEMENTED do { fprintf(stderr,"%s:%d Function %s unimplemented\n",__FILE__,__LINE__,__FUNCTION__); abort(); } while(0)
+ 
+ #include "r_memory.h"
+ 
+ #endif 
+diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libekr/r_time.h src/util/libekr/r_time.h
+--- /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libekr/r_time.h	2007-06-26 15:37:57.000000000 -0700
++++ src/util/libekr/r_time.h	2012-10-03 22:15:46.000000000 -0700
+@@ -77,35 +77,25 @@
+    $Id: r_time.h,v 1.4 2007/06/26 22:37:57 adamcain Exp $
+ 
+ 
+    ekr@rtfm.com  Thu Mar  4 08:45:41 1999
+  */
+ 
+ 
+ #ifndef _r_time_h
+ #define _r_time_h
+ 
++#include <csi_platform.h>
+ 
+-#ifdef WIN32
+-#  include <time.h>
+-#else
+-/* Cribbed from the autoconf doc */
+-# if TIME_WITH_SYS_TIME
+-#  include <sys/time.h>
+-#  include <time.h>
+-# else
+-#  if HAVE_SYS_TIME_H
+-#   include <sys/time.h>
+-#  else
+-#   include <time.h>
+-#  endif
+-# endif
++#ifndef WIN32
++#include <sys/time.h>
++#include <time.h>
+ #endif
+ 
+ int r_timeval_diff(struct timeval *t1,struct timeval *t0, struct timeval *diff);
+ int r_timeval_add(struct timeval *t1,struct timeval *t2, struct timeval *sum);
+ int r_timeval_cmp(struct timeval *t1,struct timeval *t2);
+ 
+ UINT8 r_timeval2int(struct timeval *tv);
+ int r_int2timeval(UINT8 t,struct timeval *tv);
+ UINT8 r_gettimeint(void);
+ 
+diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/util.c src/util/util.c
+--- /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/util.c	2007-11-20 16:09:13.000000000 -0800
++++ src/util/util.c	2012-10-03 22:15:41.000000000 -0700
+@@ -291,20 +291,22 @@
+     
+     return(_status);
+   }
+ 
+ #endif
+ 
+ #ifdef WIN32
+   // TODO
+ #else
+ 
++#if 0
++
+ #include <fts.h>
+ 
+ int nr_rm_tree(char *path)
+   {
+     FTS *fts=0;
+     FTSENT *p;
+     int failed=0;
+     int _status;
+     char *argv[2];
+     
+@@ -336,20 +338,21 @@
+     }
+ 
+     if(failed)
+       ABORT(R_FAILED);
+     
+     _status=0;
+   abort:
+     if(fts) fts_close(fts);
+     return(_status);
+   }
++#endif
+ 
+ int nr_write_pid_file(char *pid_filename)
+   {
+     FILE *fp;
+     int _status;
+ 
+     if(!pid_filename)
+       ABORT(R_BAD_ARGS);
+ 
+     unlink(pid_filename);
+@@ -541,12 +544,24 @@
+      * since the Epoch */
+     SystemTimeToFileTime(&st, &ft);
+     u.HighPart = ft.dwHighDateTime;
+     u.LowPart = ft.dwLowDateTime;
+ 
+     tv->tv_sec = (long) (u.QuadPart / 10000000L);
+     tv->tv_usec = (long) (st.wMilliseconds * 1000);;
+ 
+     return 0;
+   }
++
++int snprintf(char *buffer, size_t n, const char *format, ...)
++{
++  va_list argp;
++  int ret;
++  va_start(argp, format);
++  ret = _vscprintf(format, argp);
++  vsnprintf_s(buffer, n, _TRUNCATE, format, argp);
++  va_end(argp);
++  return ret;
++}
++
+ #endif 
+ 
+diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/util.h src/util/util.h
+--- /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/util.h	2006-08-16 12:39:17.000000000 -0700
++++ src/util/util.h	2012-10-03 22:15:41.000000000 -0700
+@@ -57,12 +57,16 @@
+ int nr_hex_ascii_dump(Data *data);
+ int nr_fwrite_all(FILE *fp,UCHAR *buf,int len);
+ int nr_sha1_file(char *filename,UCHAR *out);
+ int nr_bin2hex(UCHAR *in,int len,UCHAR *out);
+ int nr_rm_tree(char *path);
+ int nr_write_pid_file(char *pid_filename);
+ 
+ int nr_reg_uint4_fetch_and_check(NR_registry key, UINT4 min, UINT4 max, int log_fac, int die, UINT4 *val);
+ int nr_reg_uint8_fetch_and_check(NR_registry key, UINT8 min, UINT8 max, int log_fac, int die, UINT8 *val);
+ 
++#ifdef WIN32
++int snprintf(char *buffer, size_t n, const char *format, ...);
++#endif
++
+ #endif
+ 

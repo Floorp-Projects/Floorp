@@ -1,0 +1,33 @@
+<!ENTITY testpilot.brand.label                      "Test Pilot">
+<!ENTITY testpilot.settings.label                   "Settings">
+<!ENTITY testpilot.settings.dataSubmission.label    "Data Submission">
+<!ENTITY testpilot.settings.notifications.label     "Notifications">
+<!ENTITY testpilot.settings.notifyWhen.label        "Notify me when…">
+<!ENTITY testpilot.settings.readyToSubmit.label     "A study is ready to submit">
+<!ENTITY testpilot.settings.newStudy.label          "There's a new study">
+<!ENTITY testpilot.settings.hasNewResults.label     "A study has new results">
+<!ENTITY testpilot.settings.alwaysSubmitData.label  "Automatically submit my data (don't ask me)">
+<!ENTITY testpilot.allYourStudies.label             "All Your User Studies…">
+<!ENTITY testpilot.about.label                      "About Test Pilot">
+
+<!-- all studies window -->
+<!ENTITY testpilot.studiesWindow.title                  "Your Test Pilot Studies">
+<!ENTITY testpilot.studiesWindow.currentStudies.label   "Current Studies">
+<!ENTITY testpilot.studiesWindow.finishedStudies.label  "Finished Studies">
+<!ENTITY testpilot.studiesWindow.studyFindings.label    "Study Findings">
+<!ENTITY testpilot.studiesWindow.settings.label         "Settings">
+<!ENTITY testpilot.studiesWindow.stillLoadingMessage    "Loading, please wait…">
+
+<!-- raw data dialog -->
+<!ENTITY testpilot.rawDataWindow.title                  "Test Pilot: Raw Data">
+
+<!-- notification -->
+<!ENTITY testpilot.notification.close.tooltip            "Close">
+
+<!-- Firefox 4 beta version UI -->
+<!ENTITY testpilot.enable.label                        "Turn On User Studies">
+<!ENTITY testpilot.feedbackbutton.label                "Feedback">
+<!ENTITY testpilot.happy.label        "Firefox Made Me Happy Because…">
+<!ENTITY testpilot.sad.label          "Firefox Made Me Sad Because…">
+<!ENTITY testpilot.broken.label      "Report this website as broken…">
+<!ENTITY testpilot.idea.label        "Give us a suggestion…">

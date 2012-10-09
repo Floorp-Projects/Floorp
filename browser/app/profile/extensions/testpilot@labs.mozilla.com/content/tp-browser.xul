@@ -54,15 +54,8 @@
   </menupopup>
 </menu>
 
-<statusbar id="status-bar">
-  <statusbarpanel id="pilot-notifications-button"
-                  class="statusbarpanel-iconic"
-                  insertbefore="security-button"
-                  onmousedown="
-                    event.preventDefault();
-                    TestPilotMenuUtils.onMenuButtonMouseDown();"
-                  image="chrome://testpilot/skin/testpilot_16x16.png"/>
-
+<toolbar id="nav-bar">
+  <image id="tp-notification-popup-icon" role="button" hidden="true"/>
   <panel id="pilot-notification-popup" hidden="true" noautofocus="true"
     level="parent" position="after_start">
     <vbox class="pilot-notification-popup-container">
@@ -78,7 +71,7 @@
         </vbox>
       </hbox>
       <description id="pilot-notification-text" />
-      <hbox align="right"><label id="pilot-notification-link" /></hbox>
+      <hbox align="right"><label id="pilot-notification-link"/></hbox>
       <hbox>
         <checkbox id="pilot-notification-always-submit-checkbox"
           label="&testpilot.settings.alwaysSubmitData.label;" />
@@ -89,5 +82,5 @@
       </hbox>
     </vbox>
   </panel>
-</statusbar>
+</toolbar>
 </overlay>

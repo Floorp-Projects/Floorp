@@ -226,7 +226,8 @@ public:
   nsresult Init();
 
   static nsresult GetMimeTypeFromContent(const char* aContents, uint32_t aLength, nsACString& aContentType);
-  static bool SupportImageWithMimeType(const char* aMimeType);
+  // exported for use by mimei.cpp in libxul sdk builds
+  static NS_EXPORT_(bool) SupportImageWithMimeType(const char* aMimeType);
 
   static void GlobalInit(); // for use by the factory
   static void Shutdown(); // for use by the factory

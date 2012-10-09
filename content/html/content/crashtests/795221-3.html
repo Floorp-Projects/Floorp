@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<body>
+<script>
+  // Create the stylesheet via script, so that the parser's preloading doesn't
+  // make the CSS loader hold on to the sheet we're _not_ trying to form a
+  // cycle through, thus accidentally avoiding the cycle
+  var link = document.createElement("link");
+  link.setAttribute("rel", "stylesheet");
+  link.setAttribute("href", "data:text/css,div { }");
+  link.onload = function () {
+    document.styleSheets[0].cssRules[0].style.foo = document;
+  }
+  document.body.appendChild(link);
+</script>

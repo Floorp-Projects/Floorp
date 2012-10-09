@@ -1752,17 +1752,88 @@ function run_PointerType_tests() {
   let z = ctypes.int32_t.array(0)().address();
   do_check_eq(z.contents.length, 0);
 
-  // Check that you can use an ArrayBuffer as a pointer
-  let c_arraybuffer = new ArrayBuffer(24);
-  let c_int32 = new Int32Array(c_arraybuffer);
-  for (let i = 0; i < 6; ++i) {
-    c_int32[i] = i;
-  }
-  let c_ptr = ctypes.int32_t.ptr(c_arraybuffer);
-  do_check_eq(c_ptr.contents, 0);
-  let c_array = ctypes.cast(c_ptr, ctypes.ArrayType(ctypes.int32_t, 6).ptr).contents;
-  for (let i = 0; i < 6; ++i) {
-    do_check_eq(c_array[i], c_int32[i]);
+  // Check that you can use an ArrayBuffer or a typed array as a pointer
+  let c_arraybuffer = new ArrayBuffer(256);
+  let typed_array_samples =
+       [
+         [new Int8Array(c_arraybuffer), ctypes.int8_t],
+         [new Uint8Array(c_arraybuffer), ctypes.uint8_t],
+         [new Int16Array(c_arraybuffer), ctypes.int16_t],
+         [new Uint16Array(c_arraybuffer), ctypes.uint16_t],
+         [new Int32Array(c_arraybuffer), ctypes.int32_t],
+         [new Uint32Array(c_arraybuffer), ctypes.uint32_t],
+         [new Float32Array(c_arraybuffer), ctypes.float32_t],
+         [new Float64Array(c_arraybuffer), ctypes.float64_t]
+        ];
+  for (let i = 0; i < typed_array_samples.length; ++i) {
+    for (let j = 0; j < typed_array_samples.length; ++j) {
+      let view = typed_array_samples[i][0];
+      let item_type = typed_array_samples[j][1];
+      let number_of_items = c_arraybuffer.byteLength / item_type.size;
+      let array_type = item_type.array(number_of_items);
+
+      if (i != j) {
+        do_print("Checking that typed array " + (view.constructor.name) +
+                 " canNOT be converted to " + item_type + " pointer/array");
+        do_check_throws(function() { item_type.ptr(view); }, TypeError);
+        do_check_throws(function() { array_type(view); }, TypeError);
+
+      } else {
+        do_print("Checking that typed array " + (view.constructor.name) +
+                 " can be converted to " + item_type + " pointer/array");
+        // Fill buffer using view
+        for (let k = 0; k < number_of_items; ++k) {
+          view[k] = k;
+        }
+
+        // Convert ArrayBuffer to pointer then array and check contents
+        let c_ptr = item_type.ptr(c_arraybuffer);
+        let c_array = ctypes.cast(c_ptr, array_type.ptr).contents;
+        for (let k = 0; k < number_of_items; ++k) {
+          do_check_eq(c_array[k], view[k]);
+        }
+
+        // Convert view to pointer then array and check contents
+        c_ptr = item_type.ptr(view);
+        c_array = ctypes.cast(c_ptr, array_type.ptr).contents;
+        for (let k = 0; k < number_of_items; ++k) {
+          do_check_eq(c_array[k], view[k]);
+        }
+
+        // Convert ArrayBuffer to array of the right size and check contents
+        c_array = array_type(c_arraybuffer);
+        for (let k = 0; k < number_of_items; ++k) {
+          do_check_eq(c_array[k], view[k]);
+        }
+
+        // Convert typed array to array of the right size and check contents
+        c_array = array_type(view);
+        for (let k = 0; k < number_of_items; ++k) {
+          do_check_eq(c_array[k], view[k]);
+        }
+
+        // Convert typed array to array of wrong size, ensure that it fails
+        let array_type_too_large = item_type.array(number_of_items + 1);
+        let array_type_too_small = item_type.array(number_of_items - 1);
+
+        do_check_throws(function() { array_type_too_large(c_arraybuffer); }, Error);
+        do_check_throws(function() { array_type_too_small(c_arraybuffer); }, Error);
+        do_check_throws(function() { array_type_too_large(view); }, Error);
+        do_check_throws(function() { array_type_too_small(view); }, Error);
+
+        // Convert subarray of typed array to array of right size and check contents
+        c_array = array_type_too_small(view.subarray(1));
+        for (let k = 1; k < number_of_items; ++k) {
+          do_check_eq(c_array[k - 1], view[k]);
+        }
+
+        // Convert array to void*
+        ctypes.voidptr_t(c_arraybuffer);
+
+        // Convert view to void*
+        ctypes.voidptr_t(view);
+      }
+    }
   }
 }
 
@@ -2010,25 +2081,6 @@ function run_ArrayType_tests() {
   do_check_throws(function() { c.value = [1, 2, 3, 4, 5, 6, 7]; }, Error);
   do_check_throws(function() { c.value = [1, 2, 7.4, 4, 5, 6]; }, TypeError);
   do_check_throws(function() { c.value = []; }, Error);
-
-  // Check that you can use an ArrayBuffer with the right size for an array
-  let c_arraybuffer = new ArrayBuffer(24);
-  let c_int32 = new Int32Array(c_arraybuffer);
-  for (let i = 0; i < 6; ++i) {
-    c_int32[i] = i + 101;
-  }
-  c.value = c_arraybuffer;
-  do_check_eq(c[3], 104);
-  do_check_eq(c.toSource(), "ctypes.int32_t.array(6)([101, 102, 103, 104, 105, 106])");
-  do_check_eq(c.toSource(), c.toString());
-  eval("let c2 = " + c.toSource());
-  do_check_eq(c2.constructor.name, "int32_t[6]");
-  do_check_eq(c2.length, 6);
-  do_check_eq(c2[3], c[3]);
-
-  // Check that you cannot use an ArrayBuffer with the wrong size for an array
-  c_arraybuffer = new ArrayBuffer(20);
-  do_check_throws(function () { c.value = c_arraybuffer; }, Error);
 }
 
 function run_type_toString_tests() {

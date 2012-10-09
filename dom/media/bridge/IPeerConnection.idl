@@ -1,0 +1,110 @@
+#include "nsIThread.idl"
+#include "nsIDOMWindow.idl"
+
+interface nsIDOMMediaStream;
+interface nsIDOMDataChannel;
+
+/* Do not confuse with nsIDOMRTCPeerConnection. This interface is purely for
+ * communication between the PeerConnection JS DOM binding and the C++
+ * implementation in SIPCC.
+ *
+ * See media/webrtc/signaling/include/PeerConnectionImpl.h
+ */
+[scriptable, uuid(e61821ba-7772-4973-b583-1715e4bbaeed)]
+interface IPeerConnectionObserver : nsISupports
+{
+  /* Constants */
+  const long kReadyState = 0x1;
+  const long kIceState = 0x2;
+  const long kSdpState = 0x3;
+  const long kSipccState = 0x4;
+
+  /* JSEP callbacks */
+  void onCreateOfferSuccess(in string offer);
+  void onCreateOfferError(in unsigned long code);
+  void onCreateAnswerSuccess(in string answer);
+  void onCreateAnswerError(in unsigned long code);
+  void onSetLocalDescriptionSuccess(in unsigned long code);
+  void onSetRemoteDescriptionSuccess(in unsigned long code);
+  void onSetLocalDescriptionError(in unsigned long code);
+  void onSetRemoteDescriptionError(in unsigned long code);
+
+  /* Data channel callbacks */
+  void notifyDataChannel(in nsIDOMDataChannel channel);
+  void notifyConnection();
+  void notifyClosedConnection();
+
+  /* Notification of one of several types of state changed */
+  void onStateChange(in unsigned long state);
+
+  /* Changes to MediaStreams */
+  void onAddStream(in nsIDOMMediaStream stream, in string type);
+  void onRemoveStream();
+  void onAddTrack();
+  void onRemoveTrack();
+
+  /* When SDP is parsed and a candidate line is found this method is called.
+   * It should hook back into the media transport to notify it of ICE candidates
+   * listed in the SDP PeerConnectionImpl does not parse ICE candidates, just
+   * pulls them out of the SDP.
+   */
+  void foundIceCandidate(in string candidate);
+};
+
+[scriptable, uuid(cb3f0048-1009-11e2-b822-87ee49eface7)]
+interface IPeerConnection : nsISupports
+{
+  const unsigned long kHintAudio = 0x00000001;
+  const unsigned long kHintVideo = 0x00000002;
+
+  const long kActionNone = -1;
+  const long kActionOffer = 0;
+  const long kActionAnswer = 1;
+  const long kActionPRAnswer = 2;
+
+  const long kIceGathering = 0;
+  const long kIceWaiting = 1;
+  const long kIceChecking = 2;
+  const long kIceConnected = 3;
+  const long kIceFailed = 4;
+
+  /* Must be called first. Observer events will be dispatched on the thread provided */
+  void initialize(in IPeerConnectionObserver observer, in nsIDOMWindow window,
+                  [optional] in nsIThread thread);
+
+  /* JSEP calls */
+  void createOffer(in string hints);
+  void createAnswer(in string hints, in string offer);
+  void setLocalDescription(in long action, in string sdp);
+  void setRemoteDescription(in long action, in string sdp);
+
+  /* Adds the stream created by GetUserMedia */
+  void addStream(in nsIDOMMediaStream stream);
+  void removeStream(in nsIDOMMediaStream stream);
+  void closeStreams();
+
+  /* As the ICE candidates roll in this one should be called each time
+   * in order to keep the candidate list up-to-date for the next SDP-related
+   * call PeerConnectionImpl does not parse ICE candidates, just sticks them
+   * into the SDP.
+   */
+  void addIceCandidate(in string candidate, in string mid, in unsigned short level);
+
+  /* Puts the SIPCC engine back to 'kIdle', shuts down threads, deletes state */
+  void close();
+
+  /* Attributes */
+  readonly attribute string localDescription;
+  readonly attribute string remoteDescription;
+
+  readonly attribute unsigned long iceState;
+  readonly attribute unsigned long readyState;
+  readonly attribute unsigned long sipccState;
+
+  /* Data channels */
+  nsIDOMDataChannel createDataChannel(in ACString label,
+    in unsigned short type, in boolean outOfOrderAllowed,
+    in unsigned short maxTime, in unsigned short maxNum);
+  void connectDataConnection(in unsigned short localport,
+    in unsigned short remoteport, in unsigned short numstreams);
+};

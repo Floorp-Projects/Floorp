@@ -66,6 +66,7 @@ interface nsISelectionController : nsISelectionDisplay
    const short SCROLL_SYNCHRONOUS = 1<<1;
    const short SCROLL_FIRST_ANCESTOR_ONLY = 1<<2;
    const short SCROLL_CENTER_VERTICALLY = 1<<4;
+   const short SCROLL_OVERFLOW_HIDDEN = 1<<5;
 
    /**
    * ScrollSelectionIntoView scrolls a region of the selection,
@@ -79,6 +80,8 @@ interface nsISelectionController : nsISelectionDisplay
    * at some point after the method returns.
    * SCROLL_FIRST_ANCESTOR_ONLY: if set, only the first ancestor will be scrolled
    * into view.
+   * SCROLL_OVERFLOW_HIDDEN: if set, scrolls even if the overflow is specified
+   * as hidden.
    *
    * Note that if isSynchronous is true, then this might flush the pending
    * reflow. It's dangerous for some objects. See bug 418470 comment 12.

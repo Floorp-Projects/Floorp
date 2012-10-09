@@ -54,7 +54,6 @@ MOCHITEST_FILES += \
 		$(NULL)
 endif
 
-ifneq (mobile,$(MOZ_BUILD_APP))
 MOCHITEST_BROWSER_FILES = \
 		browser_bug343515.js \
 		bug343515_pg1.html \
@@ -64,6 +63,5 @@ MOCHITEST_BROWSER_FILES = \
 		bug343515_pg3_2.html \
 		bug343515_pg3_1_1.html \
 		$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk

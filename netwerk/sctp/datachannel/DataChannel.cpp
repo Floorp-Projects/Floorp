@@ -1178,7 +1178,7 @@ DataChannelConnection::HandleAssociationChangeEvent(const struct sctp_assoc_chan
   LOG(("Association change: streams (in/out) = (%u/%u)",
        sac->sac_inbound_streams, sac->sac_outbound_streams));
 
-  NS_ENSURE_TRUE(sizeof(*sac) >= sac->sac_length, /* */);
+  NS_ENSURE_TRUE_VOID(sac);
   n = sac->sac_length - sizeof(*sac);
   if (((sac->sac_state == SCTP_COMM_UP) ||
         (sac->sac_state == SCTP_RESTART)) && (n > 0)) {

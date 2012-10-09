@@ -3,43 +3,43 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 html {
-	padding-bottom: 40px; 
+	padding-bottom: 40px;
 	padding-top: 20px;
 	padding-left: 0px;
 	padding-right: 0px;
 }
 
-body { 
+body {
 	font-family: 'Lucida Grande', 'Lucida Sans Unicode', Lucida, Arial, Helvetica, sans-serif;
-	background: #fff url('chrome://testpilot/skin/images/bg-status.jpg') repeat-x top center;	padding: 0px; 
+	background: #fff url('chrome://testpilot/skin/images/bg-status.jpg') repeat-x top center;	padding: 0px;
 	color:#787878;
 	font-size:12px;
 	line-height: 18px;
 	margin: 0 auto;
-	
+
 }
 
 	h1 {color: #3a3a3a; font-size: 28px; font-weight: normal; letter-spacing: -1px}
 	h2 {color: #54717b; font-size: 24px; line-height: 24px;font-weight: normal; letter-spacing: -1px}
 	h3 {color: #54717b; font-size: 18px; line-height: 18px;font-weight: normal; letter-spacing: -1px}
-	
+
 	p, ul {font-size: 12px;}
-	
+
 	a:link, a:hover, a:active, a:focus, a:visited {color: #9f423b; text-decoration: none;}
 	a:hover {color: #9f423b; text-decoration: none;}
-	
+
 	.bold {color:#3a3a3a;}
 	.address {margin-left: 20px;}
 	.inactive {color:#ccc;}
-	
+
 	li {list-style-type: circle;}
 
 	.spacer {height: 40px;}
-	
+
 	.center {text-align: center;}
 
 	.data {
-	
+
 	    background-color: #fff;
         margin-bottom: 6px;
         border: 1px solid rgba(133, 153, 166, 0.2);
@@ -48,11 +48,9 @@ body {
         padding: 6px;
         box-shadow:
 			rgba(133, 153, 166, 0.4) 0px 1px 17px;
-		-webkit-box-shadow:
-			rgba(133, 153, 166, 0.4) 0px 1px 24px;
-		
+
 	}
-	
+
 	.dataBox {
 		font-size: 16px;
 		padding: 6px 20px 20px 20px;
@@ -89,16 +87,6 @@ body {
 	margin-top: 240px;
 }
 
-.downloadButton {
-	margin-bottom: -10px;
-	margin-top: -2px;
-	margin-right: 12px;
-}
-
-.downloadH1 {color: #3a3a3a; font-size: 24px; font-weight: normal; letter-spacing: -1px; margin-right: 8px;}
-
-.downloadH2 {color: #3a3a3a; font-size: 22px; font-weight: normal; letter-spacing: -1px; line-height: 28px; margin-left: 46px;}
-
 #intro {
 	float: left;
 	width: 500px;
@@ -117,12 +105,12 @@ body {
 	padding: 8px 12px;
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
-	box-shadow: 
+	box-shadow:
 		inset rgba(0, 0, 0, 0.2) 0 1px 1px,
 		inset rgba(255, 255, 255, 1) 0 3px 1px,
 		inset rgba(255, 255, 255, 0.3) 0 16px 0px,
 		inset rgba(0, 0, 0, 0.2) 0 -1px 1px,
-		inset rgba(0, 0, 0, 0.1) 0 -2px 1px, 
+		inset rgba(0, 0, 0, 0.1) 0 -2px 1px,
 		rgba(255, 255, 255, 1) 0 1px,
 		rgba(133, 153, 166, 0.3) 0px 1px 8.5px;
 	background-color: #e7eaec;
@@ -135,12 +123,12 @@ body {
 	width: 240px;
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
-	box-shadow: 
+	box-shadow:
 		inset rgba(0, 0, 0, 0.2) 0 1px 1px,
 		inset rgba(255, 255, 255, 1) 0 3px 1px,
 		inset rgba(255, 255, 255, 0.3) 0 16px 0px,
 		inset rgba(0, 0, 0, 0.2) 0 -1px 1px,
-		inset rgba(0, 0, 0, 0.1) 0 -2px 1px, 
+		inset rgba(0, 0, 0, 0.1) 0 -2px 1px,
 		rgba(255, 255, 255, 1) 0 1px,
 		rgba(133, 153, 166, 0.3) 0px 1px 8.5px;
 	background-color: #e7eaec;
@@ -154,7 +142,7 @@ body {
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout.png') no-repeat top center;
-	box-shadow: 
+	box-shadow:
 		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
 		inset rgba(255, 255, 255, 0.2) 0 10px 8.5px;
@@ -175,7 +163,7 @@ body {
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout.png') no-repeat top center;
-	box-shadow: 
+	box-shadow:
 		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
 		inset rgba(255, 255, 255, 0.2) 0 10px 8.5px;
@@ -191,7 +179,7 @@ body {
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout_continue.png') no-repeat top center;
-	box-shadow: 
+	box-shadow:
 		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
 		inset rgba(255, 255, 255, 0.2) 0 10px 8.5px;
@@ -227,7 +215,7 @@ body {
 	margin-right: 6px;
 }
 
-/* ------- MENU ------- 
+/* ------- MENU -------
 
 #menu {
 	margin: 20px auto;
@@ -242,7 +230,7 @@ body {
 	border-bottom: 3px solid #adb6ba;
 	-moz-border-bottom-colors:#adb6ba #e7eaec #e7eaec;
 	background-color: #fff;
-} 
+}
 
 */
 
@@ -260,7 +248,7 @@ body {
 	font-size: 14px;
 	text-shadow: 1px 1px 1px rgba(173, 182, 186, 1);
 	background-color: rgba(173, 182, 186, 0.3);
-	box-shadow: 
+	box-shadow:
 		inset rgba(0, 0, 0, 0.2) 0 -10px 8.5px;
 	padding: 9px 8px 8px 8px;
 }

@@ -12,7 +12,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozIccManager;
 
-[scriptable, builtinclass, uuid(f7bddd87-e967-4f97-9481-2042beb86a92)]
+[scriptable, builtinclass, uuid(5362762c-7091-4da9-aecd-ba878bc51b3d)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   /**
@@ -260,6 +260,12 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * receives an error from the RIL
    */
   [implicit_jscontext] attribute jsval ondataerror;
+
+  /**
+   * The 'icccardlockerror' event is notified whenever 'unlockCardLock' or
+   * 'setCardLock' fails.
+   */
+  [implicit_jscontext] attribute jsval onicccardlockerror;
 };
 
 [scriptable, uuid(5ea0e4a9-4684-40da-9930-8ebb61d187f3)]
