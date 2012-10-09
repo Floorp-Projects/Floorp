@@ -399,7 +399,7 @@ class IonBuilder : public MIRGenerator
                           Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns);
     bool inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool constructing,
                             types::StackTypeSet *types, types::StackTypeSet *barrier);
-    bool makeInliningDecision(AutoObjectVector &targets);
+    bool makeInliningDecision(AutoObjectVector &targets, uint32 argc);
 
     MCall *makeCallHelper(HandleFunction target, uint32 argc, bool constructing);
     bool makeCallBarrier(HandleFunction target, uint32 argc, bool constructing,
