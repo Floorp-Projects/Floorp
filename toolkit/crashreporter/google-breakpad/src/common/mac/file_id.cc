@@ -70,13 +70,15 @@ bool FileID::FileIdentifier(unsigned char identifier[16]) {
   return true;
 }
 
-bool FileID::MachoIdentifier(int cpu_type, unsigned char identifier[16]) {
+bool FileID::MachoIdentifier(cpu_type_t cpu_type,
+                             cpu_subtype_t cpu_subtype,
+                             unsigned char identifier[16]) {
   MachoID macho(path_);
 
-  if (macho.UUIDCommand(cpu_type, identifier))
+  if (macho.UUIDCommand(cpu_type, cpu_subtype, identifier))
     return true;
 
-  return macho.MD5(cpu_type, identifier);
+  return macho.MD5(cpu_type, cpu_subtype, identifier);
 }
 
 // static

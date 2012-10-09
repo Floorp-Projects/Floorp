@@ -31,6 +31,7 @@
 #include <cstdio>
 
 #include <mach/host_info.h>
+#include <mach/machine.h>
 #include <mach/vm_statistics.h>
 #include <mach-o/dyld.h>
 #include <mach-o/loader.h>
@@ -1304,14 +1305,15 @@ bool MinidumpGenerator::WriteCVRecord(MDRawModule *module, int cpu_type,
     MacFileUtilities::MachoID macho(module_path,
         reinterpret_cast<void *>(module->base_of_image),
         static_cast<size_t>(module->size_of_image));
-    result = macho.UUIDCommand(cpu_type, identifier);
+    result = macho.UUIDCommand(cpu_type, CPU_SUBTYPE_MULTIPLE, identifier);
     if (!result)
-      result = macho.MD5(cpu_type, identifier);
+      result = macho.MD5(cpu_type, CPU_SUBTYPE_MULTIPLE, identifier);
   }
 
   if (!result) {
      FileID file_id(module_path);
-     result = file_id.MachoIdentifier(cpu_type, identifier);
+     result = file_id.MachoIdentifier(cpu_type, CPU_SUBTYPE_MULTIPLE,
+                                      identifier);
   }
 
   if (result) {

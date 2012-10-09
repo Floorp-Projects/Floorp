@@ -906,43 +906,6 @@ class AutoDestroyAllocator
     }
 };
 
-bool
-TestCompiler(IonBuilder *builder, MIRGraph *graph, AutoDestroyAllocator &autoDestroy)
-{
-    JS_ASSERT(!builder->script()->ion);
-    JSContext *cx = GetIonContext()->cx;
-
-    IonSpewNewFunction(graph, builder->script());
-
-    if (!builder->build())
-        return false;
-    builder->clearForBackEnd();
-
-    if (js_IonOptions.parallelCompilation) {
-        builder->script()->ion = ION_COMPILING_SCRIPT;
-
-        if (!StartOffThreadIonCompile(cx, builder))
-            return false;
-
-        // The allocator and associated data will be destroyed after being
-        // processed in the finishedOffThreadCompilations list.
-        autoDestroy.cancel();
-
-        return true;
-    }
-
-    if (!CompileBackEnd(builder))
-        return false;
-
-    CodeGenerator codegen(builder, *builder->lir);
-    if (!codegen.generate())
-        return false;
-
-    IonSpewEndFunction();
-
-    return true;
-}
-
 void
 AttachFinishedCompilations(JSContext *cx)
 {
@@ -995,7 +958,6 @@ AttachFinishedCompilations(JSContext *cx)
 
 static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
 
-template <bool Compiler(IonBuilder *, MIRGraph *, AutoDestroyAllocator &)>
 static bool
 IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing)
 {
@@ -1040,10 +1002,43 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
     AutoTempAllocatorRooter root(cx, temp);
 
     IonBuilder *builder = alloc->new_<IonBuilder>(cx, temp, graph, &oracle, info);
-    if (!Compiler(builder, graph, autoDestroy)) {
-        IonSpew(IonSpew_Abort, "IM Compilation failed.");
+    JS_ASSERT(!builder->script()->ion);
+
+    IonSpewNewFunction(graph, builder->script());
+
+    if (!builder->build()) {
+        IonSpew(IonSpew_Abort, "Builder failed to build.");
         return false;
     }
+    builder->clearForBackEnd();
+
+    if (js_IonOptions.parallelCompilation) {
+        builder->script()->ion = ION_COMPILING_SCRIPT;
+
+        if (!StartOffThreadIonCompile(cx, builder)) {
+            IonSpew(IonSpew_Abort, "Unable to start off-thread ion compilation.");
+            return false;
+        }
+
+        // The allocator and associated data will be destroyed after being
+        // processed in the finishedOffThreadCompilations list.
+        autoDestroy.cancel();
+
+        return true;
+    }
+
+    if (!CompileBackEnd(builder)) {
+        IonSpew(IonSpew_Abort, "Failed during back-end compilation.");
+        return false;
+    }
+
+    CodeGenerator codegen(builder, *builder->lir);
+    if (!codegen.generate()) {
+        IonSpew(IonSpew_Abort, "Failed during code generation.");
+        return false;
+    }
+
+    IonSpewEndFunction();
 
     return true;
 }
@@ -1051,7 +1046,7 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
 bool
 TestIonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing)
 {
-    if (!IonCompile<TestCompiler>(cx, script, fun, osrPc, constructing)) {
+    if (!IonCompile(cx, script, fun, osrPc, constructing)) {
         if (!cx->isExceptionPending())
             ForbidCompilation(cx, script);
         return false;
@@ -1139,7 +1134,6 @@ CheckScriptSize(JSScript *script)
     return true;
 }
 
-template <bool Compiler(IonBuilder *, MIRGraph *, AutoDestroyAllocator &)>
 static MethodStatus
 Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing)
 {
@@ -1172,7 +1166,7 @@ Compile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, boo
             return Method_Skipped;
     }
 
-    if (!IonCompile<Compiler>(cx, script, fun, osrPc, constructing))
+    if (!IonCompile(cx, script, fun, osrPc, constructing))
         return Method_CantCompile;
 
     // Compilation succeeded, but we invalidated right away.
@@ -1214,7 +1208,7 @@ ion::CanEnterAtBranch(JSContext *cx, HandleScript script, StackFrame *fp, jsbyte
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
     JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
-    MethodStatus status = Compile<TestCompiler>(cx, script, fun, pc, false);
+    MethodStatus status = Compile(cx, script, fun, pc, false);
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);
@@ -1270,7 +1264,7 @@ ion::CanEnter(JSContext *cx, HandleScript script, StackFrame *fp, bool newType)
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
     JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
-    MethodStatus status = Compile<TestCompiler>(cx, script, fun, NULL, fp->isConstructing());
+    MethodStatus status = Compile(cx, script, fun, NULL, fp->isConstructing());
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);

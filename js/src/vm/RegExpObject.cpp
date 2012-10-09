@@ -617,6 +617,12 @@ RegExpCompartment::get(JSContext *cx, JSAtom *atom, JSString *opt, RegExpGuard *
     return get(cx, atom, flags, g);
 }
 
+size_t
+RegExpCompartment::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
+{
+    return map_.sizeOfExcludingThis(mallocSizeOf);
+}
+
 /* Functions */
 
 JSObject *

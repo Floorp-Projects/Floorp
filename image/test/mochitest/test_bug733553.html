@@ -67,10 +67,10 @@ function imageLoad(aEvent) {
   is(aEvent.target.width, width,
      "Test " + testIndex + " " + fileName + " width correct");
 
+  // Always call readyForNext here, as it's the closest we have to a cleanup
+  readyForNext();
   if ((testParts.length - 1) == testIndex) {
     SimpleTest.finish();
-  } else {
-    readyForNext();
   }
 }
 

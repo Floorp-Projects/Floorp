@@ -292,9 +292,9 @@
                 oncommand="gContextMenu.viewInfo();"/>
       <menuseparator id="spell-separator"/>
       <menuitem id="spell-check-enabled"
-                label="&spellCheckEnable.label;"
+                label="&spellCheckToggle.label;"
                 type="checkbox"
-                accesskey="&spellCheckEnable.accesskey;"
+                accesskey="&spellCheckToggle.accesskey;"
                 oncommand="InlineSpellCheckerUI.toggleEnabled();"/>
       <menuitem id="spell-add-dictionaries-main"
                 label="&spellAddDictionaries.label;"

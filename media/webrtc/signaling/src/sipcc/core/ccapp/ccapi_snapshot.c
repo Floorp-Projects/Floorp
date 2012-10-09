@@ -393,7 +393,7 @@ void ccsnap_device_init() {
    g_deviceInfo.mwi_lamp = FALSE;
    g_deviceInfo.cucm_mode = CC_MODE_CCM;
    g_deviceInfo.ins_state = CC_STATE_IDLE;
-   g_deviceInfo.ins_cause = CC_CREATED_IDLE;
+   g_deviceInfo.ins_cause = CC_CAUSE_NONE;
    g_deviceInfo.reg_time  = 0;
 
    config_get_string(CFGID_CCM1_ADDRESS, temp, MAX_SIP_URL_LENGTH);

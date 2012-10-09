@@ -6721,17 +6721,17 @@ sip_sm_call_cleanup (ccsipCCB_t *ccb)
          * registration CCBs which use the same ccb->state field.
          */
         (void) sip_sm_ccb_init(ccb, ccb->index, ccb->dn_line,
-                               (sipSMStateType_t) SIP_REG_STATE_IDLE);
+                               SIP_REG_STATE_IDLE);
         return;
     }
 
     if (sip_platform_msg_timer_outstanding_get(ccb->index)) {
         sip_sm_change_state(ccb, SIP_STATE_IDLE_MSG_TIMER_OUTSTANDING);
         (void) sip_sm_ccb_init(ccb, ccb->index, ccb->dn_line,
-                               SIP_STATE_IDLE_MSG_TIMER_OUTSTANDING);
+                               SIP_REG_STATE_IDLE /*_MSG_TIMER_OUTSTANDING */);
     } else {
         sip_sm_change_state(ccb, SIP_STATE_IDLE);
-        (void) sip_sm_ccb_init(ccb, ccb->index, 1, SIP_STATE_IDLE);
+        (void) sip_sm_ccb_init(ccb, ccb->index, 1, SIP_REG_STATE_IDLE);
     }
 
 }
@@ -6739,7 +6739,7 @@ sip_sm_call_cleanup (ccsipCCB_t *ccb)
 
 int
 sip_sm_ccb_init (ccsipCCB_t *ccb, line_t ccb_index, int DN,
-                 sipSMStateType_t initial_state)
+                 sipRegSMStateType_t initial_state)
 {
     int nat_enable = 0;
     uint8_t i;
@@ -7231,7 +7231,7 @@ sip_sm_init (void)
                 g_disable_mass_reg_debug_print = TRUE;
             }
             sip_sm_call_cleanup(&(gGlobInfo.ccbs[i]));
-            if (sip_sm_ccb_init(&(gGlobInfo.ccbs[i]), i, 1, SIP_STATE_IDLE) < 0) {
+            if (sip_sm_ccb_init(&(gGlobInfo.ccbs[i]), i, 1, SIP_REG_STATE_IDLE) < 0) {
                 return SIP_ERROR;
             }
         }
