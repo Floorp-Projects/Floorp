@@ -669,15 +669,18 @@
                        class="toolbarbutton-1"
                        type="menu">
           <menupopup id="social-statusarea-popup">
-            <hbox id="social-statusarea-user" pack="start" align="center"
+            <menuitem id="social-statusarea-user" pack="start" align="center" class="menuitem-iconic"
                   onclick="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();">
               <image id="social-statusarea-user-portrait"/>
               <vbox>
-                <button id="social-statusarea-notloggedin"
-                        class="link" label="&social.notLoggedIn.label;"/>
-                <button id="social-statusarea-username" class="link"/>
+                <label id="social-statusarea-notloggedin"
+                       value="&social.notLoggedIn.label;"/>
+                <label id="social-statusarea-username"/>
               </vbox>
-            </hbox>
+            </menuitem>
+#ifndef XP_WIN
+            <menuseparator/>
+#endif
             <menuitem id="social-toggle-sidebar-menuitem"
                       type="checkbox"
                       autocheck="false"
