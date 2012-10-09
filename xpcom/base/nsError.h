@@ -116,7 +116,7 @@
 /*@{*/
 
 typedef enum tag_nsresult
-#if defined(__cplusplus) && defined(_MSC_VER) && defined(_M_X64)
+#if defined(__cplusplus) && defined(MOZ_HAVE_CXX11_ENUM_TYPE)
   /* need underlying type for workaround of Microsoft compiler (Bug 794734) */
   : uint32_t
 #endif
