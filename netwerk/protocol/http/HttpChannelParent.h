@@ -43,7 +43,8 @@ public:
   NS_DECL_NSIPROGRESSEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  HttpChannelParent(mozilla::dom::PBrowserParent* iframeEmbedding);
+  HttpChannelParent(mozilla::dom::PBrowserParent* iframeEmbedding,
+                    const IPC::SerializedLoadContext& loadContext);
   virtual ~HttpChannelParent();
 
 protected:
@@ -65,8 +66,7 @@ protected:
                              const nsCString&           entityID,
                              const bool&                chooseApplicationCache,
                              const nsCString&           appCacheClientID,
-                             const bool&                allowSpdy,
-                             const IPC::SerializedLoadContext& loadContext) MOZ_OVERRIDE;
+                             const bool&                allowSpdy) MOZ_OVERRIDE;
 
   virtual bool RecvConnectChannel(const uint32_t& channelId);
   virtual bool RecvSetPriority(const uint16_t& priority);
@@ -109,6 +109,14 @@ private:
   bool mSentRedirect1Begin          : 1;
   bool mSentRedirect1BeginFailed    : 1;
   bool mReceivedRedirect2Verify     : 1;
+
+  // Used to override channel Private Browsing status if needed.
+  enum PBOverrideStatus {
+    kPBOverride_Unset = 0,
+    kPBOverride_Private,
+    kPBOverride_NotPrivate
+  };
+  PBOverrideStatus mPBOverride;
 
   nsCOMPtr<nsILoadContext> mLoadContext;
 };
