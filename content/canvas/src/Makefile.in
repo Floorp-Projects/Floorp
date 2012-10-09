@@ -43,6 +43,7 @@ CPPSRCS	= \
 ifdef MOZ_WEBGL
 
 CPPSRCS += \
+	WebGLActiveInfo.cpp \
 	WebGLBuffer.cpp \
 	WebGLContext.cpp \
 	WebGLContextGL.cpp \

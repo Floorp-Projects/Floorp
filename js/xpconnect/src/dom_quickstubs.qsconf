@@ -463,8 +463,6 @@ irregularFilenames = {
 
     'nsIDOMBlob': 'nsIDOMFile',
 
-    'nsIWebGLActiveInfo': 'nsIDOMWebGLRenderingContext',
-
     'nsIIndexedDatabaseUsageCallback': 'nsIIndexedDatabaseManager',
 
     'nsIDOMTouch': 'nsIDOMTouchEvent',
