@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=741267
+-->
+<window title="Mozilla Bug 741267"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <iframe id="t"></iframe>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741267"
+     target="_blank">Mozilla Bug 741267</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 741267 **/
+    function doTest() {
+      // Resolve XMLHttpRequest on the chrome global
+      new XMLHttpRequest();
+
+      var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader);
+      var context = { window: $("t").contentWindow };
+      var thrown = false;
+      try {
+        loader.loadSubScript(/.*\//.exec(window.location.href)[0] + "file_subscript_bindings.js", context);
+      } catch (e) {
+        thrown = true;
+      }
+      ok(!thrown, "'new window.XMLHttpRequest()' in a subscript shouldn't throw");
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  ]]>
+  </script>
+</window>
