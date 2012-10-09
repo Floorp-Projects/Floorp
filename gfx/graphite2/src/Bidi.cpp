@@ -462,6 +462,8 @@ void resolveNeutrals(int baseLevel, Slot *s)
         int clsNew = GetResolvedNeutrals(action);
         if (clsNew != N)
             s->setBidiClass(clsNew);
+        if (!sRun && (action & In))
+            sRun = s->prev();
         state = stateNeutrals[state][neutral_class_map[cls]];
         level = s->getBidiLevel();
     }

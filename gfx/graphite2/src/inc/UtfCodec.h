@@ -131,9 +131,9 @@ public:
 		bool toolong = false;
 
 		switch(seq_sz) {
-			case 4:     u <<= 6; u |= *++cp & 0x3F; if (*cp >> 6 != 2) break; ++l; toolong  = (u < 0x10);
-			case 3:     u <<= 6; u |= *++cp & 0x3F; if (*cp >> 6 != 2) break; ++l; toolong |= (u < 0x20);
-			case 2:     u <<= 6; u |= *++cp & 0x3F; if (*cp >> 6 != 2) break; ++l; toolong |= (u < 0x80);
+			case 4:     u <<= 6; u |= *++cp & 0x3F; if (*cp >> 6 != 2) break; ++l; toolong  = (u < 0x10); // no break
+			case 3:     u <<= 6; u |= *++cp & 0x3F; if (*cp >> 6 != 2) break; ++l; toolong |= (u < 0x20); // no break
+			case 2:     u <<= 6; u |= *++cp & 0x3F; if (*cp >> 6 != 2) break; ++l; toolong |= (u < 0x80); // no break
 			case 1:		break;
 			case 0:     l = -1; return 0xFFFD;
 		}

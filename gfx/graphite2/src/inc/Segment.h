@@ -30,11 +30,14 @@ of the License or (at your option) any later version.
 
 #include <cassert>
 
-#include "inc/Slot.h"
 #include "inc/CharInfo.h"
+#include "inc/Face.h"
 #include "inc/FeatureVal.h"
-#include "inc/Silf.h"
-
+#include "inc/GlyphCache.h"
+#include "inc/GlyphFace.h"
+//#include "inc/Silf.h"
+#include "inc/Slot.h"
+#include "inc/Position.h"
 #include "inc/List.h"
 
 #define MAX_SEG_GROWTH_FACTOR  256
@@ -44,11 +47,14 @@ namespace graphite2 {
 typedef Vector<Features>        FeatureList;
 typedef Vector<Slot *>          SlotRope;
 typedef Vector<int16 *>        AttributeRope;
+typedef Vector<SlotJustify *>   JustifyRope;
 
 #ifndef GRAPHITE2_NSEGCACHE
 class SegmentScopeState;
 #endif
+class Font;
 class Segment;
+class Silf;
 
 enum SpliceParam {
 /** sub-Segments longer than this are not cached
@@ -74,6 +80,10 @@ private:
 
 class Segment
 {
+    // Prevent copying of any kind.
+    Segment(const Segment&);
+    Segment& operator=(const Segment&);
+
 public:
     unsigned int slotCount() const { return m_numGlyphs; }      //one slot per glyph
     void extendLength(int num) { m_numGlyphs += num; }
@@ -103,24 +113,31 @@ public:
     void appendSlot(int i, int cid, int gid, int fid, size_t coffset);
     Slot *newSlot();
     void freeSlot(Slot *);
+    SlotJustify *newJustify();
+    void freeJustify(SlotJustify *aJustify);
     Position positionSlots(const Font *font, Slot *first=0, Slot *last=0);
     void associateChars();
     void linkClusters(Slot *first, Slot *last);
     uint16 getClassGlyph(uint16 cid, uint16 offset) const { return m_silf->getClassGlyph(cid, offset); }
     uint16 findClassIndex(uint16 cid, uint16 gid) const { return m_silf->findClassIndex(cid, gid); }
     int addFeatures(const Features& feats) { m_feats.push_back(feats); return m_feats.size() - 1; }
-    uint16 getFeature(int index, uint8 findex) const { const FeatureRef* pFR=m_face->theSill().theFeatureMap().featureRef(findex); if (!pFR) return 0; else return pFR->getFeatureVal(m_feats[index]); }
+    uint32 getFeature(int index, uint8 findex) const { const FeatureRef* pFR=m_face->theSill().theFeatureMap().featureRef(findex); if (!pFR) return 0; else return pFR->getFeatureVal(m_feats[index]); }
     void dir(int8 val) { m_dir = val; }
-    uint16 glyphAttr(uint16 gid, uint8 gattr) const { return m_face->glyphAttr(gid, gattr); }
+    uint16 glyphAttr(uint16 gid, uint16 gattr) const { return m_face->glyphs().glyphAttr(gid, gattr); }
     uint16 getGlyphMetric(Slot *iSlot, uint8 metric, uint8 attrLevel) const;
-    float glyphAdvance(uint16 gid) const { return m_face->getAdvance(gid, 1.0); }
-    const Rect &theGlyphBBoxTemporary(uint16 gid) const { return m_face->theBBoxTemporary(gid); }   //warning value may become invalid when another glyph is accessed
+    float glyphAdvance(uint16 gid) const { return m_face->glyphs().glyph(gid)->theAdvance().x; }
+    const Rect &theGlyphBBoxTemporary(uint16 gid) const { return m_face->glyphs().glyph(gid)->theBBox(); }   //warning value may become invalid when another glyph is accessed
     Slot *findRoot(Slot *is) const { return is->attachedTo() ? findRoot(is->attachedTo()) : is; }
     int numAttrs() const { return m_silf->numUser(); }
     int defaultOriginal() const { return m_defaultOriginal; }
     const Face * getFace() const { return m_face; }
     const Features & getFeatures(unsigned int /*charIndex*/) { assert(m_feats.size() == 1); return m_feats[0]; }
     void bidiPass(uint8 aBidi, int paradir, uint8 aMirror);
+    Slot *addLineEnd(Slot *nSlot);
+    void delLineEnd(Slot *s);
+    bool hasJustification() const { return m_justifies.size() != 0; }
+
+    bool isWhitespace(const int cid) const;
 
     CLASS_NEW_DELETE
 
@@ -128,30 +145,27 @@ public:       //only used by: GrSegment* makeAndInitialize(const GrFont *font, c
     void read_text(const Face *face, const Features* pFeats/*must not be NULL*/, gr_encform enc, const void*pStart, size_t nChars);
     void prepare_pos(const Font *font);
     void finalise(const Font *font);
-    void justify(Slot *pSlot, const Font *font, float width, enum justFlags flags, Slot *pFirst, Slot *pLast);
+    float justify(Slot *pSlot, const Font *font, float width, enum justFlags flags, Slot *pFirst, Slot *pLast);
   
 private:
-    SlotRope m_slots;           // std::vector of slot buffers
-    Slot *m_freeSlots;          // linked list of free slots
-    Slot *m_first;              // first slot in segment
-    Slot *m_last;               // last slot in segment
-    unsigned int m_bufSize;     // how big a buffer to create when need more slots
-    unsigned int m_numGlyphs;
-    unsigned int m_numCharinfo; // size of the array and number of input characters
-    int m_defaultOriginal;      // CharInfo index used if all slots have been deleted
-    AttributeRope m_userAttrs;  // std::vector of userAttrs buffers
-    CharInfo *m_charinfo;       // character info, one per input character
-
-    const Face *m_face;       // GrFace
-    const Silf *m_silf;
-    Position m_advance;         // whole segment advance
-    Rect m_bbox;                // ink box of the segment
-    int8 m_dir;
-    FeatureList m_feats;	// feature settings referenced by charinfos in this segment
-
-private:		//defensive on m_charinfo
-    Segment(const Segment&);
-    Segment& operator=(const Segment&);
+    Rect            m_bbox;             // ink box of the segment
+    Position        m_advance;          // whole segment advance
+    SlotRope        m_slots;            // std::vector of slot buffers
+    AttributeRope   m_userAttrs;        // std::vector of userAttrs buffers
+    JustifyRope     m_justifies;        // Slot justification info buffers
+    FeatureList     m_feats;            // feature settings referenced by charinfos in this segment
+    Slot          * m_freeSlots;        // linked list of free slots
+    SlotJustify   * m_freeJustifies;    // Slot justification blocks free list
+    CharInfo      * m_charinfo;         // character info, one per input character
+    const Face    * m_face;             // GrFace
+    const Silf    * m_silf;
+    Slot          * m_first;            // first slot in segment
+    Slot          * m_last;             // last slot in segment
+    unsigned int    m_bufSize,          // how big a buffer to create when need more slots
+                    m_numGlyphs,
+                    m_numCharinfo;      // size of the array and number of input characters
+    int             m_defaultOriginal;  // number of whitespace chars in the string
+    int8            m_dir;
 };
 
 
@@ -176,6 +190,79 @@ uint16 Segment::getGlyphMetric(Slot *iSlot, uint8 metric, uint8 attrLevel) const
     else
         return m_face->getGlyphMetric(iSlot->gid(), metric);
 }
+
+inline
+bool Segment::isWhitespace(const int cid) const
+{
+    return ((cid >= 0x0009) * (cid <= 0x000D)
+         + (cid == 0x0020)
+         + (cid == 0x0085)
+         + (cid == 0x00A0)
+         + (cid == 0x1680)
+         + (cid == 0x180E)
+         + (cid >= 0x2000) * (cid <= 0x200A)
+         + (cid == 0x2028)
+         + (cid == 0x2029)
+         + (cid == 0x202F)
+         + (cid == 0x205F)
+         + (cid == 0x3000)) != 0;
+}
+
+//inline
+//bool Segment::isWhitespace(const int cid) const
+//{
+//    switch (cid >> 8)
+//    {
+//        case 0x00:
+//            switch (cid)
+//            {
+//            case 0x09:
+//            case 0x0A:
+//            case 0x0B:
+//            case 0x0C:
+//            case 0x0D:
+//            case 0x20:
+//                return true;
+//            default:
+//                break;
+//            }
+//            break;
+//        case 0x16:
+//            return cid == 0x1680;
+//            break;
+//        case 0x18:
+//            return cid == 0x180E;
+//            break;
+//        case 0x20:
+//            switch (cid)
+//            {
+//            case 0x00:
+//            case 0x01:
+//            case 0x02:
+//            case 0x03:
+//            case 0x04:
+//            case 0x05:
+//            case 0x06:
+//            case 0x07:
+//            case 0x08:
+//            case 0x09:
+//            case 0x0A:
+//            case 0x28:
+//            case 0x29:
+//            case 0x2F:
+//            case 0x5F:
+//                return true
+//            default:
+//                break;
+//            }
+//            break;
+//        case 0x30:
+//            return cid == 0x3000;
+//            break;
+//    }
+//
+//    return false;
+//}
 
 } // namespace graphite2
 
