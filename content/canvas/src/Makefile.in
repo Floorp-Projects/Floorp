@@ -64,8 +64,10 @@ CPPSRCS += \
 	WebGLProgram.cpp \
 	WebGLRenderbuffer.cpp \
 	WebGLShader.cpp \
+	WebGLShaderPrecisionFormat.cpp \
 	WebGLTexelConversions.cpp \
 	WebGLTexture.cpp \
+	WebGLUniformLocation.cpp \
 	$(NULL)
 
 DEFINES += -DUSE_ANGLE
