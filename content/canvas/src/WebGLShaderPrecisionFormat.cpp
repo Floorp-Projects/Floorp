@@ -8,17 +8,15 @@
 
 using namespace mozilla;
 
-JSObject*
-WebGLTexture::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap) {
-    return dom::WebGLTextureBinding::Wrap(cx, scope, this, triedToWrap);
-}
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLTexture)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(WebGLTexture)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLTexture)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLTexture)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+NS_INTERFACE_MAP_BEGIN(WebGLShaderPrecisionFormat)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(WebGLShaderPrecisionFormat)
+NS_IMPL_RELEASE(WebGLShaderPrecisionFormat)
+
+JSObject*
+WebGLShaderPrecisionFormat::WrapObject(JSContext *cx, JSObject *scope)
+{
+    return dom::WebGLShaderPrecisionFormatBinding::Wrap(cx, scope, this);
+}
