@@ -470,10 +470,21 @@ ContentChild::AllocPImageBridge(mozilla::ipc::Transport* aTransport,
     return ImageBridgeChild::StartUpInChildProcess(aTransport, aOtherProcess);
 }
 
+static void FirstIdle(void)
+{
+    ContentChild::GetSingleton()->SendFirstIdle();
+}
+
 PBrowserChild*
 ContentChild::AllocPBrowser(const uint32_t& aChromeFlags,
                             const bool& aIsBrowserElement, const AppId& aApp)
 {
+    static bool firstIdleTaskPosted = false;
+    if (!firstIdleTaskPosted) {
+        MessageLoop::current()->PostIdleTask(FROM_HERE, NewRunnableFunction(FirstIdle));
+        firstIdleTaskPosted = true;
+    }
+
     nsRefPtr<TabChild> child =
         TabChild::Create(aChromeFlags, aIsBrowserElement, aApp.get_uint32_t());
     // The ref here is released below.
