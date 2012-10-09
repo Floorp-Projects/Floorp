@@ -14,7 +14,7 @@ function test() {
   waitForExplicitFinish();
   ignoreAllUncaughtExceptions();
 
-  const TEST_URL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/title.sjs";
+  const TEST_URL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/global/title.sjs";
 
   function waitForCleanup(aCallback) {
     // delete all cookies

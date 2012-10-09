@@ -1,0 +1,41 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= @DEPTH@
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir  = @relativesrcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MOCHITEST_BROWSER_FILES =  \
+		head.js \
+		browser_console_clear.js \
+		browser_privatebrowsing_commandline_toggle.js \
+		browser_privatebrowsing_fastswitch.js \
+		browser_privatebrowsing_findbar.js \
+		browser_privatebrowsing_forgetthissite.js \
+		browser_privatebrowsing_import.js \
+		browser_privatebrowsing_newwindow_stopcmd.js \
+		browser_privatebrowsing_pageinfo.js \
+		browser_privatebrowsing_popupmode.js \
+		browser_privatebrowsing_searchbar.js \
+		browser_privatebrowsing_transition.js \
+		browser_privatebrowsing_urlbarundo.js \
+		browser_privatebrowsing_viewsource.js \
+		staller.sjs \
+		$(NULL)
+
+# Disabled until bug 564934 is fixed:
+#		browser_privatebrowsing_downloadmonitor.js \
+
+# Turn off private browsing tests that perma-timeout on Linux.
+ifneq (Linux,$(OS_ARCH))
+MOCHITEST_BROWSER_FILES += \
+		browser_privatebrowsing_beforeunload.js \
+		$(NULL)
+endif
+
+include $(topsrcdir)/config/rules.mk
