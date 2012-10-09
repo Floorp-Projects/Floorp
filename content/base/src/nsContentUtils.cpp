@@ -1675,7 +1675,7 @@ nsContentUtils::InProlog(nsINode *aNode)
 {
   NS_PRECONDITION(aNode, "missing node to nsContentUtils::InProlog");
 
-  nsINode* parent = aNode->GetNodeParent();
+  nsINode* parent = aNode->GetParentNode();
   if (!parent || !parent->IsNodeOfType(nsINode::eDOCUMENT)) {
     return false;
   }
@@ -1811,7 +1811,7 @@ nsContentUtils::GetCrossDocParentNode(nsINode* aChild)
 {
   NS_PRECONDITION(aChild, "The child is null!");
 
-  nsINode* parent = aChild->GetNodeParent();
+  nsINode* parent = aChild->GetParentNode();
   if (parent || !aChild->IsNodeOfType(nsINode::eDOCUMENT))
     return parent;
 
@@ -1831,7 +1831,7 @@ nsContentUtils::ContentIsDescendantOf(const nsINode* aPossibleDescendant,
   do {
     if (aPossibleDescendant == aPossibleAncestor)
       return true;
-    aPossibleDescendant = aPossibleDescendant->GetNodeParent();
+    aPossibleDescendant = aPossibleDescendant->GetParentNode();
   } while (aPossibleDescendant);
 
   return false;
@@ -1862,7 +1862,7 @@ nsContentUtils::GetAncestors(nsINode* aNode,
 {
   while (aNode) {
     aArray.AppendElement(aNode);
-    aNode = aNode->GetNodeParent();
+    aNode = aNode->GetParentNode();
   }
   return NS_OK;
 }
@@ -1941,11 +1941,11 @@ nsContentUtils::GetCommonAncestor(nsINode* aNode1,
   nsAutoTArray<nsINode*, 30> parents1, parents2;
   do {
     parents1.AppendElement(aNode1);
-    aNode1 = aNode1->GetNodeParent();
+    aNode1 = aNode1->GetParentNode();
   } while (aNode1);
   do {
     parents2.AppendElement(aNode2);
-    aNode2 = aNode2->GetNodeParent();
+    aNode2 = aNode2->GetParentNode();
   } while (aNode2);
 
   // Find where the parent chain differs
@@ -1982,11 +1982,11 @@ nsContentUtils::ComparePoints(nsINode* aParent1, int32_t aOffset1,
   nsINode* node2 = aParent2;
   do {
     parents1.AppendElement(node1);
-    node1 = node1->GetNodeParent();
+    node1 = node1->GetParentNode();
   } while (node1);
   do {
     parents2.AppendElement(node2);
-    node2 = node2->GetNodeParent();
+    node2 = node2->GetParentNode();
   } while (node2);
 
   uint32_t pos1 = parents1.Length() - 1;
@@ -2340,12 +2340,12 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
     // Now start at aContent and append the indices of it and all its ancestors
     // in their containers.  That should at least pin down its position in the
     // DOM...
-    nsINode* parent = aContent->GetNodeParent();
+    nsINode* parent = aContent->GetParentNode();
     nsINode* content = aContent;
     while (parent) {
       KeyAppendInt(parent->IndexOf(content), aKey);
       content = parent;
-      parent = content->GetNodeParent();
+      parent = content->GetParentNode();
     }
   }
 
@@ -3858,7 +3858,7 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
         continue;
       }
     }
-    aNode = aNode->GetNodeParent();
+    aNode = aNode->GetParentNode();
   }
 
   return false;
@@ -3882,7 +3882,7 @@ nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
                                      nsIDocument* aOwnerDoc)
 {
   NS_PRECONDITION(aChild, "Missing child");
-  NS_PRECONDITION(aChild->GetNodeParent() == aParent, "Wrong parent");
+  NS_PRECONDITION(aChild->GetParentNode() == aParent, "Wrong parent");
   NS_PRECONDITION(aChild->OwnerDoc() == aOwnerDoc, "Wrong owner-doc");
 
   // This checks that IsSafeToRunScript is true since we don't want to fire
@@ -4382,7 +4382,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
       nsCOMPtr<nsINode> child;
       bool skipFirst = aTryReuse;
       for (child = aContent->GetFirstChild();
-           child && child->GetNodeParent() == aContent;
+           child && child->GetParentNode() == aContent;
            child = child->GetNextSibling()) {
         if (skipFirst && child->IsNodeOfType(nsINode::eTEXT)) {
           skipFirst = false;

@@ -1394,7 +1394,7 @@ DocAccessible::GetAccessibleOrContainer(nsINode* aNode)
   nsINode* currNode = aNode;
   Accessible* accessible = nullptr;
   while (!(accessible = GetAccessible(currNode)) &&
-         (currNode = currNode->GetNodeParent()));
+         (currNode = currNode->GetParentNode()));
 
   return accessible;
 }

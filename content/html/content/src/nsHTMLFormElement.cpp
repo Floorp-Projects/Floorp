@@ -526,7 +526,7 @@ nsHTMLFormElement::UnbindFromTree(bool aDeep, bool aNullParent)
   nsINode* ancestor = this;
   nsINode* cur;
   do {
-    cur = ancestor->GetNodeParent();
+    cur = ancestor->GetParentNode();
     if (!cur) {
       break;
     }

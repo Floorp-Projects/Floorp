@@ -348,4 +348,9 @@ inline const mozilla::dom::Element* nsINode::AsElement() const
   return static_cast<const mozilla::dom::Element*>(this);
 }
 
+inline bool nsINode::HasAttributes() const
+{
+  return IsElement() && AsElement()->GetAttrCount() > 0;
+}
+
 #endif // mozilla_dom_Element_h__
