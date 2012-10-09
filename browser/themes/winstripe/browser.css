@@ -3599,7 +3599,7 @@ chatbox[minimized="true"] {
 }
 
 .center-item-box[warn="true"] {
-  background-image: url("chrome://mozapps/skin/extensions/stripes-info-negative-small.png");
+  background-image: url("chrome://browser/skin/click-to-play-warning-stripes.png");
   background-repeat: repeat-x;
   padding: 8px 16px 6px 16px;
 }
