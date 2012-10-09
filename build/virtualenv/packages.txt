@@ -1,5 +1,6 @@
 simplejson.pth:python/simplejson-2.1.1
 manifestdestiny.pth:testing/mozbase/manifestdestiny
+mozcrash.pth:testing/mozbase/mozcrash
 mozdevice.pth:testing/mozbase/mozdevice
 mozinfo.pth:testing/mozbase/mozinfo
 mozinstall.pth:testing/mozbase/mozinstall
