@@ -1471,6 +1471,8 @@ class ObjectBox {
 
     ObjectBox *traceLink;
     ObjectBox *emitLink;
+
+    ObjectBox(JSFunction *function, ObjectBox *traceLink);
 };
 
 } /* namespace frontend */
