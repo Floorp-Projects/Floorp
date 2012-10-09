@@ -255,9 +255,22 @@ struct ClassExtension
      * WeakMaps use this to override the wrapper disposal optimization.
      */
     bool                isWrappedNative;
+
+    /*
+     * If an object is used as a key in a weakmap, it may be desirable for the
+     * garbage collector to keep that object around longer than it otherwise
+     * would. A common case is when the key is a wrapper around an object in
+     * another compartment, and we want to avoid collecting the wrapper (and
+     * removing the weakmap entry) as long as the wrapped object is alive. In
+     * that case, the wrapped object is returned by the wrapper's
+     * weakmapKeyDelegateOp hook. As long as the wrapper is used as a weakmap
+     * key, it will not be collected (and remain in the weakmap) until the
+     * wrapped object is collected.
+     */
+    JSWeakmapKeyDelegateOp weakmapKeyDelegateOp;
 };
 
-#define JS_NULL_CLASS_EXT   {NULL,NULL,NULL,NULL,NULL,false}
+#define JS_NULL_CLASS_EXT   {NULL,NULL,NULL,NULL,NULL,false,NULL}
 
 struct ObjectOps
 {

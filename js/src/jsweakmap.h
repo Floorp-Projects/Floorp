@@ -27,42 +27,10 @@ namespace js {
 //     is collected. If an entry is not collected, it remains in the WeakMap and it has a
 //     strong reference to the value.
 //
-// You must call this table's 'mark' method when the object of which it is a part is
+// You must call this table's 'trace' method when the object of which it is a part is
 // reached by the garbage collection tracer. Once a table is known to be live, the
 // implementation takes care of the iterative marking needed for weak tables and removing
 // table entries when collection is complete.
-//
-// You may provide your own MarkPolicy class to specify how keys and values are marked; a
-// policy template provides default definitions for some common key/value type
-// combinations.
-//
-// Details:
-//
-// The interface is as for a js::HashMap, with the following additions:
-//
-// - You must call the WeakMap's 'trace' member function when you discover that the map is
-//   part of a live object. (You'll typically call this from the containing type's 'trace'
-//   function.)
-//
-// - There is no AllocPolicy parameter; these are used with our garbage collector, so
-//   RuntimeAllocPolicy is hard-wired.
-//
-// - Optional fourth and fifth parameters are the MarkPolicies for the key and value type.
-//   A MarkPolicy has the constructor:
-//
-//     MarkPolicy(JSTracer *)
-//
-//   and the following member functions:
-//
-//     bool isMarked(const Type &x)
-//        Return true if x has been marked as live by the garbage collector.
-//
-//     bool mark(Type &x)
-//        Return false if x is already marked. Otherwise, mark x and return true.
-//
-//   If omitted, the MarkPolicy parameter defaults to js::DefaultMarkPolicy<Type>,
-//   a policy template with the obvious definitions for some typical
-//   SpiderMonkey type combinations.
 
 // The value for the next pointer for maps not in the map list.
 static WeakMapBase * const WeakMapNotInList = reinterpret_cast<WeakMapBase *>(1);
@@ -170,6 +138,23 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
             markValue(trc, &r.front().value);
     }
 
+    bool keyNeedsMark(JSObject *key) {
+        if (JSWeakmapKeyDelegateOp op = key->getClass()->ext.weakmapKeyDelegateOp) {
+            JSObject *delegate = op(key);
+            /*
+             * Check if the delegate is marked with any color to properly handle
+             * gray marking when the key's delegate is black and the map is
+             * gray.
+             */
+            return delegate && gc::IsObjectMarked(&delegate);
+        }
+        return false;
+    }
+
+    bool keyNeedsMark(gc::Cell *cell) {
+        return false;
+    }
+
     bool markIteratively(JSTracer *trc) {
         bool markedAny = false;
         for (Enum e(*this); !e.empty(); e.popFront()) {
@@ -180,6 +165,12 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
                     markedAny = true;
                 if (prior != e.front().key)
                     e.rekeyFront(e.front().key);
+            } else if (keyNeedsMark(e.front().key)) {
+                gc::Mark(trc, const_cast<Key *>(&e.front().key), "proxy-preserved WeakMap key");
+                if (prior != e.front().key)
+                    e.rekeyFront(e.front().key);
+                gc::Mark(trc, &e.front().value, "WeakMap entry");
+                markedAny = true;
             }
         }
         return markedAny;
