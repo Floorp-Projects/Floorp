@@ -72,8 +72,9 @@ public class Tabs implements GeckoEventListener {
         return mTabs.size();
     }
 
-    private Tab addTab(int id, String url, boolean external, int parentId, String title) {
-        final Tab tab = new Tab(id, url, external, parentId, title);
+    private Tab addTab(int id, String url, boolean external, int parentId, String title, boolean isPrivate) {
+        final Tab tab = isPrivate ? new PrivateTab(id, url, external, parentId, title) :
+                                    new Tab(id, url, external, parentId, title);
         mTabs.put(id, tab);
         mOrder.add(tab);
 
@@ -250,7 +251,8 @@ public class Tabs implements GeckoEventListener {
                                  message.isNull("uri") ? null : message.getString("uri"),
                                  message.getBoolean("external"),
                                  message.getInt("parentId"),
-                                 message.getString("title"));
+                                 message.getString("title"),
+                                 message.getBoolean("isPrivate"));
                 }
 
                 if (message.getBoolean("selected"))
@@ -468,7 +470,7 @@ public class Tabs implements GeckoEventListener {
             if ((flags & LOADURL_NEW_TAB) != 0) {
                 tabId = getNextTabId();
                 args.put("tabID", tabId);
-                addTab(tabId, null, false, parentId, url);
+                addTab(tabId, null, false, parentId, url, isPrivate);
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "error building JSON arguments");
