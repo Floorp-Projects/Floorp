@@ -9,6 +9,7 @@
 #ifndef nscore_h___
 #include "nscore.h"  /* needed for nsresult */
 #endif
+#include "mozilla/Attributes.h"
 
 /*
  * To add error code to your module, you need to do the following:
