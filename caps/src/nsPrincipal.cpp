@@ -1521,25 +1521,28 @@ nsExpandedPrincipal::GetWhiteList(nsTArray<nsCOMPtr<nsIPrincipal> >** aWhiteList
 NS_IMETHODIMP
 nsExpandedPrincipal::GetExtendedOrigin(nsACString& aExtendedOrigin)
 {
-  return NS_ERROR_NOT_AVAILABLE;
+  return GetOrigin(getter_Copies(aExtendedOrigin));
 }
 
 NS_IMETHODIMP
 nsExpandedPrincipal::GetAppStatus(uint16_t* aAppStatus)
 {
-  return NS_ERROR_NOT_AVAILABLE;
+  *aAppStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsExpandedPrincipal::GetAppId(uint32_t* aAppId)
 {
-  return NS_ERROR_NOT_AVAILABLE;
+  *aAppId = nsIScriptSecurityManager::NO_APP_ID;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsExpandedPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
 {
-  return NS_ERROR_NOT_AVAILABLE;
+  *aIsInBrowserElement = false;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
