@@ -41,7 +41,7 @@ MDefinition::earlyAbortCheck()
 {
     if (isPhi())
         return false;
-    for (int i = 0; i < numOperands(); i++) {
+    for (size_t i = 0; i < numOperands(); i++) {
         if (getOperand(i)->block()->earlyAbort()) {
             block()->setEarlyAbort();
             IonSpew(IonSpew_Range, "Ignoring value from block %d because instruction %d is in a block that aborts", block()->id(), getOperand(i)->id());
