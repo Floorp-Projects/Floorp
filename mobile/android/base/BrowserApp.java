@@ -37,6 +37,9 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import dalvik.system.DexClassLoader;
+
+import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.EnumSet;
@@ -214,6 +217,7 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Feedback:LastUrl");
         registerEventListener("Feedback:OpenPlayStore");
         registerEventListener("Feedback:MaybeLater");
+        registerEventListener("Dex:Load");
     }
 
     @Override
@@ -227,6 +231,7 @@ abstract public class BrowserApp extends GeckoApp
         unregisterEventListener("Feedback:LastUrl");
         unregisterEventListener("Feedback:OpenPlayStore");
         unregisterEventListener("Feedback:MaybeLater");
+        unregisterEventListener("Dex:Load");
     }
 
     @Override
@@ -432,6 +437,18 @@ abstract public class BrowserApp extends GeckoApp
                             menu.findItem(R.id.settings).setEnabled(true);
                     }
                 });
+            } else if (event.equals("Dex:Load")) {
+                String zipFile = message.getString("zipfile");
+                String implClass = message.getString("impl");
+                Log.d(LOGTAG, "Attempting to load classes.dex file from " + zipFile + " and instantiate " + implClass);
+                try {
+                    File tmpDir = getDir("dex", 0);
+                    DexClassLoader loader = new DexClassLoader(zipFile, tmpDir.getAbsolutePath(), null, ClassLoader.getSystemClassLoader());
+                    Class<?> c = loader.loadClass(implClass);
+                    c.newInstance();
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "Unable to initialize addon", e);
+                }
             } else {
                 super.handleMessage(event, message);
             }

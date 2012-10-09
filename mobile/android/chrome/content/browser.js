@@ -1185,6 +1185,16 @@ var NativeWindow = {
     this.contextmenus.uninit();
   },
 
+  loadDex: function(zipFile, implClass) {
+    sendMessageToJava({
+      gecko: {
+        type: "Dex:Load",
+        zipfile: zipFile,
+        impl: implClass || "Main"
+      }
+    });
+  },
+
   toast: {
     show: function(aMessage, aDuration) {
       sendMessageToJava({
