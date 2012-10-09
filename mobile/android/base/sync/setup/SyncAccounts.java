@@ -49,7 +49,8 @@ public class SyncAccounts {
   /**
    * Return Sync accounts.
    *
-   * @param c Android context.
+   * @param c
+   *          Android context.
    * @return Sync accounts.
    */
   public static Account[] syncAccounts(final Context c) {
@@ -467,7 +468,7 @@ public class SyncAccounts {
    * @param accountManager
    *          Android account manager.
    * @param account
-   *          Android account.
+   *          Android Account.
    * @return Sync account parameters, always non-null; fields username,
    *         password, serverURL, and syncKey always non-null.
    */
@@ -579,5 +580,65 @@ public class SyncAccounts {
     }
 
     return intent;
+  }
+
+  /**
+   * Synchronously fetch SharedPreferences of a profile associated with a Sync
+   * account.
+   * <p>
+   * Safe to call from main thread.
+   *
+   * @param context
+   *          Android context.
+   * @param accountManager
+   *          Android account manager.
+   * @param account
+   *          Android Account.
+   * @param product
+   *          package.
+   * @param profile
+   *          of account.
+   * @param version
+   *          number.
+   * @return SharedPreferences associated with Sync account.
+   * @throws CredentialException
+   * @throws NoSuchAlgorithmException
+   * @throws UnsupportedEncodingException
+   */
+  public static SharedPreferences blockingPrefsFromAndroidAccountV0(final Context context, final AccountManager accountManager, final Account account,
+      final String product, final String profile, final long version)
+          throws CredentialException, NoSuchAlgorithmException, UnsupportedEncodingException {
+    SyncAccountParameters params = SyncAccounts.blockingFromAndroidAccountV0(context, accountManager, account);
+    String prefsPath = Utils.getPrefsPath(product, params.username, params.serverURL, profile, version);
+
+    return context.getSharedPreferences(prefsPath, Utils.SHARED_PREFERENCES_MODE);
+  }
+
+  /**
+   * Synchronously fetch SharedPreferences of a profile associated with the
+   * default Firefox profile of a Sync Account.
+   * <p>
+   * Uses the default package, default profile, and current version.
+   * <p>
+   * Safe to call from main thread.
+   *
+   * @param context
+   *          Android context.
+   * @param accountManager
+   *          Android account manager.
+   * @param account
+   *          Android Account.
+   * @return SharedPreferences associated with Sync account.
+   * @throws CredentialException
+   * @throws NoSuchAlgorithmException
+   * @throws UnsupportedEncodingException
+   */
+  public static SharedPreferences blockingPrefsFromDefaultProfileV0(final Context context, final AccountManager accountManager, final Account account)
+      throws CredentialException, NoSuchAlgorithmException, UnsupportedEncodingException {
+    final String product = GlobalConstants.BROWSER_INTENT_PACKAGE;
+    final String profile = Constants.DEFAULT_PROFILE;
+    final long version = SyncConfiguration.CURRENT_PREFS_VERSION;
+
+    return blockingPrefsFromAndroidAccountV0(context, accountManager, account, product, profile, version);
   }
 }

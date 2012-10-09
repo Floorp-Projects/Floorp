@@ -50,6 +50,15 @@
   <!-- Firefox SyncAdapter Settings Screen -->
   <string name="sync_settings_options">&sync.settings.options.label;</string>
   <string name="sync_settings_summary_pair">&sync.summary.pair.label;</string>
+
+  <!-- Configure Engines -->
+  <string name="sync_configure_engines_title">&sync.configure.engines.title.label;</string>
+  <string name="sync_configure_engines_sync_my_title">&sync.configure.engines.sync.my.title.label;</string>
+  <string name="sync_configure_engines_title_bookmarks">&sync.configure.engines.title.bookmarks;</string>
+  <string name="sync_configure_engines_title_passwords">&sync.configure.engines.title.passwords;</string>
+  <string name="sync_configure_engines_title_history">&sync.configure.engines.title.history;</string>
+  <string name="sync_configure_engines_title_tabs">&sync.configure.engines.title.tabs;</string>
+
   <!-- Common text -->
   <string name="sync_button_cancel">&sync.button.cancel.label;</string>
   <string name="sync_button_connect">&sync.button.connect.label;</string>
@@ -70,6 +79,7 @@
 
   <!-- Notification strings -->
   <string name="sync_notification_oneaccount">&sync.notification.oneaccount.label;</string>
+  <string name="sync_notification_savedprefs">&sync.notification.configure.saved;</string>
 
   <!-- Incorrect settings and changing credentials. -->
   <string name="sync_invalidcreds_label">&sync.invalidcreds.label;</string>

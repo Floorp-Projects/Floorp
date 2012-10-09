@@ -33,15 +33,30 @@
             android:name="org.mozilla.gecko.sync.setup.activities.RedirectToSetupActivity"
             android:windowSoftInputMode="adjustResize|stateHidden"/>
 
+        <!-- Secondary Sync activities. These depend on other activities for context
+             (display a result, or a next step). Since these don't make sense as stand-alone
+             activities, set excludeFromRecents="true" -->
         <activity
             android:theme="@style/SyncTheme"
             android:noHistory="true"
+            android:excludeFromRecents="true"
             android:name="org.mozilla.gecko.sync.setup.activities.SetupFailureActivity" />
 
         <activity
             android:theme="@style/SyncTheme"
             android:noHistory="true"
+            android:excludeFromRecents="true"
             android:name="org.mozilla.gecko.sync.setup.activities.SetupSuccessActivity" />
+
+        <activity
+            android:theme="@style/SyncTheme"
+            android:excludeFromRecents="true"
+            android:taskAffinity="org.mozilla.gecko.sync.setup"
+            android:name="org.mozilla.gecko.sync.config.activities.SelectEnginesActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+         </activity>
 
         <receiver
             android:name="org.mozilla.gecko.sync.receivers.UpgradeReceiver">
@@ -62,6 +77,7 @@
 
         <activity
             android:theme="@style/SyncTheme"
+            android:excludeFromRecents="true"
             android:icon="@drawable/icon"
             android:label="@string/sync_app_name"
             android:configChanges="orientation"
