@@ -1160,8 +1160,8 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     MOZ_ASSERT(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL);
 
     // Init WebIDL binding constructors wanted on all XPConnect globals.
-    if (!TextDecoderBinding::GetProtoObject(aJSContext, global, global) ||
-        !TextEncoderBinding::GetProtoObject(aJSContext, global, global)) {
+    if (!TextDecoderBinding::GetConstructorObject(aJSContext, global) ||
+        !TextEncoderBinding::GetConstructorObject(aJSContext, global)) {
         return UnexpectedFailure(NS_ERROR_FAILURE);
     }
 

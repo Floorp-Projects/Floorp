@@ -819,7 +819,7 @@ private:
     DedicatedWorkerGlobalScope* scope =
       UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj, eRegularDOMObject);
     if (scope) {
-      mozilla::dom::TraceProtoAndIfaceCache(aTrc, aObj);
+      TraceProtoAndIfaceCache(aTrc, aObj);
       scope->_trace(aTrc);
     }
   }
@@ -852,8 +852,6 @@ private:
 MOZ_STATIC_ASSERT(prototypes::MaxProtoChainLength == 3,
                   "The MaxProtoChainLength must match our manual DOMJSClasses");
 
-// When this DOMJSClass is removed and it's the last consumer of
-// sNativePropertyHooks then sNativePropertyHooks should be removed too.
 DOMJSClass DedicatedWorkerGlobalScope::sClass = {
   {
     // We don't have to worry about Xray expando slots here because we'll never
@@ -869,7 +867,7 @@ DOMJSClass DedicatedWorkerGlobalScope::sClass = {
     { prototypes::id::EventTarget_workers, prototypes::id::_ID_Count,
       prototypes::id::_ID_Count },
     false,
-    &sNativePropertyHooks
+    &sWorkerNativePropertyHooks
   }
 };
 
@@ -940,7 +938,7 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
   //          -> Object
 
   JSObject* eventTargetProto =
-    EventTargetBinding_workers::GetProtoObject(aCx, global, global);
+    EventTargetBinding_workers::GetProtoObject(aCx, global);
   if (!eventTargetProto) {
     return NULL;
   }
@@ -987,14 +985,10 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
     return NULL;
   }
 
-  // Init other paris-bindings.  Use GetProtoObject so the proto will
-  // be correctly cached in the proto cache.  Otherwise we'll end up
-  // double-calling CreateInterfaceObjects when we actually create an
-  // object which has these protos, which breaks things like
-  // instanceof.
-  if (!FileReaderSyncBinding_workers::GetProtoObject(aCx, global, global) ||
-      !XMLHttpRequestBinding_workers::GetProtoObject(aCx, global, global) ||
-      !XMLHttpRequestUploadBinding_workers::GetProtoObject(aCx, global, global)) {
+  // Init other paris-bindings.
+  if (!FileReaderSyncBinding_workers::GetConstructorObject(aCx, global) ||
+      !XMLHttpRequestBinding_workers::GetConstructorObject(aCx, global) ||
+      !XMLHttpRequestUploadBinding_workers::GetConstructorObject(aCx, global)) {
     return NULL;
   }
 
