@@ -1027,7 +1027,7 @@ TraceXPCGlobal(JSTracer *trc, JSObject *obj)
 #endif
 
     if (js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL)
-        mozilla::dom::TraceProtoOrIfaceCache(trc, obj);
+        mozilla::dom::TraceProtoAndIfaceCache(trc, obj);
 }
 
 #ifdef DEBUG
@@ -1104,7 +1104,7 @@ CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal)
 #endif
 
     if (clasp->flags & JSCLASS_DOM_GLOBAL) {
-        AllocateProtoOrIfaceCache(global);
+        AllocateProtoAndIfaceCache(global);
     }
 
     return global;
