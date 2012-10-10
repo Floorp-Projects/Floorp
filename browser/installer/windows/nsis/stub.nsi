@@ -96,7 +96,7 @@ Var CTL_RIGHT_PX
 !undef URLStubDownload
 !define URLStubDownload "http://download.mozilla.org/?product=firefox-beta-latest&os=win&lang=${AB_CD}"
 !undef URLManualDownload
-!define URLManualDownload "http://download.mozilla.org/?product=firefox-beta-latest&os=win&lang=${AB_CD}"
+!define URLManualDownload "https://www.mozilla.org/firefox/installer-help/?channel=beta"
 !endif
 !endif
 
