@@ -14,11 +14,13 @@ import which
 
 from pymake.data import Makefile
 
+from mach.config import (
+    ConfigProvider,
+    PositiveIntegerType,
+)
+
 from mach.mixin.logging import LoggingMixin
 from mach.mixin.process import ProcessExecutionMixin
-
-from mozbuild.config import ConfigProvider
-from mozbuild.config import PositiveIntegerType
 
 
 class MozbuildObject(ProcessExecutionMixin):

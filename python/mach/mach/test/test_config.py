@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
-# You can obtain one at http://mozilla.org/MPL/2.0/.  
+# You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import unicode_literals
 
 import sys
@@ -8,15 +8,18 @@ import unittest
 
 from tempfile import NamedTemporaryFile
 
-from mozbuild.config import AbsolutePathType
-from mozbuild.config import BooleanType
-from mozbuild.config import ConfigProvider
-from mozbuild.config import ConfigSettings
-from mozbuild.config import IntegerType
-from mozbuild.config import PathType
-from mozbuild.config import PositiveIntegerType
-from mozbuild.config import RelativePathType
-from mozbuild.config import StringType
+from mach.config import (
+    AbsolutePathType,
+    BooleanType,
+    ConfigProvider,
+    ConfigSettings,
+    IntegerType,
+    PathType,
+    PositiveIntegerType,
+    RelativePathType,
+    StringType,
+)
+
 
 if sys.version_info[0] == 3:
     str_type = str
