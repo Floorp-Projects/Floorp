@@ -9,5 +9,5 @@ const expectedString = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUV
 const aliases = [ "IBM864", "ibm864", "cp864", "864", "csibm864", "ibm-864" ];
 
 function run_test() {
-  testEncodeAliases();
+  testEncodeAliasesInternal();
 }
