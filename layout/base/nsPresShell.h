@@ -197,6 +197,8 @@ public:
   virtual bool ShouldIgnoreInvalidation();
   virtual void WillPaint(bool aWillSendDidPaint);
   virtual void DidPaint();
+  virtual void WillPaintWindow(bool aWillSendDidPaint);
+  virtual void DidPaintWindow();
   virtual void ScheduleViewManagerFlush();
   virtual void DispatchSynthMouseMove(nsGUIEvent *aEvent, bool aFlushOnHoverChange);
   virtual void ClearMouseCaptureOnView(nsIView* aView);
