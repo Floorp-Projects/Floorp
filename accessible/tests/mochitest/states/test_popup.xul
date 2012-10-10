@@ -20,8 +20,6 @@
   <![CDATA[
     function doTest()
     {
-      disableLogging(); // a hack from failing test_link.html to stop logging.
-
       // label with popup
       testStates("labelWithPopup", STATE_HASPOPUP);
 
