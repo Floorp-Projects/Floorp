@@ -195,8 +195,8 @@ class MozbuildObject(ProcessExecutionMixin):
         if filename:
             args.extend(['-f', filename])
 
-        if allow_parallel:
-            args.append('-j%d' % self.settings.build.threads)
+        #if allow_parallel:
+        #    args.append('-j%d' % self.settings.build.threads)
 
         if ignore_errors:
             args.append('-k')
