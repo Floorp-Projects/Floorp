@@ -7,7 +7,8 @@ from __future__ import unicode_literals
 import os
 
 from mozbuild.base import MozbuildObject
-from mozbuild.testing.test import TestRunner
+
+from moztesting.util import parse_test_path
 
 from mach.base import (
     CommandArgument,
@@ -20,7 +21,7 @@ generic_help = 'Test to run. Can be specified as a single file, a ' +\
 'directory, or omitted. If omitted, the entire test suite is executed.'
 
 
-class ReftestRunner(TestRunner):
+class ReftestRunner(MozbuildObject):
     """Easily run reftests.
 
     This currently contains just the basics for running reftests. We may want
@@ -38,7 +39,7 @@ class ReftestRunner(TestRunner):
 
     def _find_manifest(self, suite, test_file):
         assert test_file
-        parsed = self._parse_test_path(test_file)
+        parsed = parse_test_path(test_file, self.topsrcdir)
         if parsed['is_dir']:
             return os.path.join(parsed['normalized'], self._manifest_file(suite))
 
