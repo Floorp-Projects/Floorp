@@ -334,13 +334,16 @@ public:
   void SetEnumAttribute(TestEnum);
 
   // Callback types
-  void PassCallback(JSContext*, JSObject*);
+  void PassCallback(JSContext*, JSObject&);
   void PassNullableCallback(JSContext*, JSObject*);
-  void PassOptionalCallback(JSContext*, const Optional<JSObject*>&);
+  void PassOptionalCallback(JSContext*, const Optional<NonNull<JSObject> >&);
   void PassOptionalNullableCallback(JSContext*, const Optional<JSObject*>&);
   void PassOptionalNullableCallbackWithDefaultValue(JSContext*, JSObject*);
   JSObject* ReceiveCallback(JSContext*);
   JSObject* ReceiveNullableCallback(JSContext*);
+  void PassNullableTreatAsNullCallback(JSContext*, JSObject*);
+  void PassOptionalNullableTreatAsNullCallback(JSContext*, const Optional<JSObject*>&);
+  void PassOptionalNullableTreatAsNullCallbackWithDefaultValue(JSContext*, JSObject*);
 
   // Any types
   void PassAny(JSContext*, JS::Value);
