@@ -33,6 +33,13 @@ SEARCH_PATHS = [
     'testing/mozbase/mozinfo',
 ]
 
+# Individual files providing mach commands.
+MACH_MODULES = [
+    'layout/tools/reftest/mach_commands.py',
+    'testing/mochitest/mach_commands.py',
+    'testing/xpcshell/mach_commands.py',
+]
+
 our_dir = os.path.dirname(os.path.abspath(__file__))
 
 try:
@@ -45,4 +52,8 @@ except ImportError:
 # All of the code is in a module because EVERYTHING IS A LIBRARY.
 mach = mach.main.Mach(our_dir)
 mach.load_commands_from_sys_path()
+
+for path in MACH_MODULES:
+    mach.load_commands_from_file(os.path.join(our_dir, path))
+
 sys.exit(mach.run(sys.argv[1:]))

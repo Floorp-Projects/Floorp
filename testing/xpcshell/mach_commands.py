@@ -1,16 +1,22 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this file,
-# You can obtain one at http://mozilla.org/MPL/2.0/.
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This modules contains code for interacting with xpcshell tests.
+# Integrates the xpcshell test runner with mach.
 
 from __future__ import unicode_literals
 
-import os.path
+import os
 
 from StringIO import StringIO
 
 from mozbuild.base import MozbuildObject
+
+from mach.base import (
+    CommandArgument,
+    CommandProvider,
+    Command,
+)
 
 
 class XPCShellRunner(MozbuildObject):
@@ -89,3 +95,17 @@ class XPCShellRunner(MozbuildObject):
         xpcshell.runTests(**args)
 
         self.log_manager.disable_unstructured()
+
+
+@CommandProvider
+class MachCommands(MozbuildObject):
+    @Command('xpcshell-test', help='Run an xpcshell test.')
+    @CommandArgument('test_file', default='all', nargs='?', metavar='TEST',
+        help='Test to run. Can be specified as a single JS file, a directory, '
+             'or omitted. If omitted, the entire test suite is executed.')
+    @CommandArgument('--debug', '-d', action='store_true',
+        help='Run test in a debugger.')
+    def run_xpcshell_test(self, **params):
+        xpcshell = self._spawn(XPCShellRunner)
+        xpcshell.run_test(**params)
+
