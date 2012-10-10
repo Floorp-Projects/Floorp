@@ -4321,7 +4321,11 @@ case "${target}" in
         fi
 
         NSS_DISABLE_DBM=1
-        NECKO_WIFI=
+        if test -z "$gonkdir"; then
+          NECKO_WIFI=
+        else
+          NECKO_WIFI=1
+        fi
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
         MOZ_MEMORY=1
