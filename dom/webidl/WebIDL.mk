@@ -22,6 +22,7 @@ webidl_files = \
   DOMTokenList.webidl \
   DOMSettableTokenList.webidl \
   Function.webidl \
+  EventHandler.webidl \
   EventListener.webidl \
   EventTarget.webidl \
   FileList.webidl \

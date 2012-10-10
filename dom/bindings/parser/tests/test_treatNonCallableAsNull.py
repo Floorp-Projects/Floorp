@@ -2,11 +2,11 @@ import WebIDL
 
 def WebIDLTest(parser, harness):
     parser.parse("""
-        callback Function = any(any... arguments);
+        [TreatNonCallableAsNull] callback Function = any(any... arguments);
 
         interface TestTreatNonCallableAsNull1 {
-          [TreatNonCallableAsNull] attribute Function? onfoo;
-          attribute Function? onbar;
+          attribute Function? onfoo;
+          attribute Function onbar;
         };
     """)
 

@@ -24,6 +24,7 @@ enum TestEnum {
 };
 
 callback TestCallback = void();
+[TreatNonCallableAsNull] callback TestTreatAsNullCallback = void();
 
 TestInterface implements ImplementedInterface;
 
@@ -265,6 +266,9 @@ interface TestInterface {
   void passOptionalNullableCallbackWithDefaultValue(optional TestCallback? arg = null);
   TestCallback receiveCallback();
   TestCallback? receiveNullableCallback();
+  void passNullableTreatAsNullCallback(TestTreatAsNullCallback? arg);
+  void passOptionalNullableTreatAsNullCallback(optional TestTreatAsNullCallback? arg);
+  void passOptionalNullableTreatAsNullCallbackWithDefaultValue(optional TestTreatAsNullCallback? arg = null);
 
   // Any types
   void passAny(any arg);

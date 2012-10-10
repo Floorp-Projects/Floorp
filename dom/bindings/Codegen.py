@@ -1770,6 +1770,10 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         return CGWrapper(CGGeneric(
                 failureCode or
                 'return ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' % typeName), post="\n")
+    def onFailureNotCallable(failureCode):
+        return CGWrapper(CGGeneric(
+                failureCode or
+                'return ThrowErrorMessage(cx, MSG_NOT_CALLABLE);'), post="\n")
 
     # A helper function for handling default values.  Takes a template
     # body and the C++ code to set the default value and wraps the
@@ -2393,23 +2397,41 @@ for (uint32_t i = 0; i < length; ++i) {
 
     if type.isCallback():
         assert not isEnforceRange and not isClamp
+        assert not type.treatNonCallableAsNull() or type.nullable()
 
         if isMember:
             raise TypeError("Can't handle member callbacks; need to sort out "
                             "rooting issues")
-        # XXXbz we're going to assume that callback types are always
-        # nullable and always have [TreatNonCallableAsNull] for now.
-        haveCallable = "${val}.isObject() && JS_ObjectIsCallable(cx, &${val}.toObject())"
-        if defaultValue is not None:
-            assert(isinstance(defaultValue, IDLNullValue))
-            haveCallable = "${haveValue} && " + haveCallable
-        return (
-            "if (%s) {\n"
-            "  ${declName} = &${val}.toObject();\n"
-            "} else {\n"
-            "  ${declName} = NULL;\n"
-            "}" % haveCallable,
-            CGGeneric("JSObject*"), None, isOptional)
+
+        if type.nullable():
+            declType = CGGeneric("JSObject*")
+        else:
+            declType = CGGeneric("NonNull<JSObject>")
+
+        if type.treatNonCallableAsNull():
+            haveCallable = "JS_ObjectIsCallable(cx, &${val}.toObject())"
+            if not isDefinitelyObject:
+                haveCallable = "${val}.isObject() && " + haveCallable
+            if defaultValue is not None:
+                assert(isinstance(defaultValue, IDLNullValue))
+                haveCallable = "${haveValue} && " + haveCallable
+            template = (
+                "if (%s) {\n"
+                "  ${declName} = &${val}.toObject();\n"
+                "} else {\n"
+                "  ${declName} = nullptr;\n"
+                "}" % haveCallable)
+        else:
+            template = wrapObjectTemplate(
+                "if (JS_ObjectIsCallable(cx, &${val}.toObject())) {\n"
+                "  ${declName} = &${val}.toObject();\n"
+                "} else {\n"
+                "%s"
+                "}" % CGIndenter(onFailureNotCallable(failureCode)).define(),
+                isDefinitelyObject, type,
+                "${declName} = nullptr",
+                failureCode)
+        return (template, declType, None, isOptional)
 
     if type.isAny():
         assert not isEnforceRange and not isClamp
@@ -3849,7 +3871,9 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
         return CGGeneric(type.inner.identifier.name)
 
     if type.isCallback():
-        return CGGeneric("JSObject*")
+        if type.nullable():
+            return CGGeneric("JSObject*")
+        return CGGeneric("JSObject&")
 
     if type.isAny():
         return CGGeneric("JS::Value")
