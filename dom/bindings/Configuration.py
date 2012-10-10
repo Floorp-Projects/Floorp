@@ -187,7 +187,9 @@ class Descriptor(DescriptorProvider):
 
         # If we're concrete, we need to crawl our ancestor interfaces and mark
         # them as having a concrete descendant.
-        self.concrete = desc.get('concrete', not self.interface.isExternal())
+        self.concrete = (not self.interface.isExternal() and
+                         not self.interface.isCallback() and
+                         desc.get('concrete', True))
         if self.concrete:
             self.proxy = False
             operations = {
@@ -263,7 +265,8 @@ class Descriptor(DescriptorProvider):
                                 (self.interface.identifier.name, self.nativeOwnership))
         self.customTrace = desc.get('customTrace', self.workers)
         self.customFinalize = desc.get('customFinalize', self.workers)
-        self.wrapperCache = self.workers or desc.get('wrapperCache', True)
+        self.wrapperCache = (not self.interface.isCallback() and
+                             (self.workers or desc.get('wrapperCache', True)))
 
         if not self.wrapperCache and self.prefable:
             raise TypeError("Descriptor for %s is prefable but not wrappercached" %
