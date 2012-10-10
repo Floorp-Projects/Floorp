@@ -116,7 +116,6 @@ class Range {
     // copying when chaining together unions when handling Phi
     // nodes.
     void unionWith(const Range *other);
-    void unionWith(RangeChangeCount *other);
     static Range intersect(const Range *lhs, const Range *rhs, bool *nullRange);
     static Range addTruncate(const Range *lhs, const Range *rhs);
     static Range subTruncate(const Range *lhs, const Range *rhs);
@@ -199,6 +198,19 @@ struct RangeChangeCount {
             upperCount_ = upperCount_ < 15 ? upperCount_ + 1 : upperCount_;
         oldRange = *newRange;
     }
+};
+class RangeUpdater {
+    Range r_;
+    bool lowerSet_;
+    bool upperSet_;
+  public:
+    RangeUpdater() : r_(), lowerSet_(false), upperSet_(false) {}
+    void unionWith(const Range *other);
+    void unionWith(RangeChangeCount *other);
+    void updateLower(const Range * other);
+    void updateUpper(const Range * other);
+    Range *getRange() { JS_ASSERT(lowerSet_ && upperSet_); return &r_; }
+    void printRange(FILE *fp) { r_.printRange(fp); }
 };
 
 } // namespace ion
