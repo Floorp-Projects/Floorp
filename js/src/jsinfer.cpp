@@ -3875,7 +3875,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
       }
 
       case JSOP_NAME:
-      case JSOP_INTRINSICNAME:
+      case JSOP_GETINTRINSIC:
       case JSOP_CALLNAME:
       case JSOP_CALLINTRINSIC: {
         StackTypeSet *seen = bytecodeTypes(pc);
@@ -3886,6 +3886,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
 
       case JSOP_BINDGNAME:
       case JSOP_BINDNAME:
+      case JSOP_BINDINTRINSIC:
         break;
 
       case JSOP_SETGNAME: {
@@ -3897,6 +3898,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
       }
 
       case JSOP_SETNAME:
+      case JSOP_SETINTRINSIC:
       case JSOP_SETCONST:
         cx->compartment->types.monitorBytecode(cx, script, offset);
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
@@ -5408,6 +5410,7 @@ IgnorePushed(const jsbytecode *pc, unsigned index)
       /* We keep track of the scopes pushed by BINDNAME separately. */
       case JSOP_BINDNAME:
       case JSOP_BINDGNAME:
+      case JSOP_BINDINTRINSIC:
       case JSOP_BINDXMLNAME:
         return true;
 

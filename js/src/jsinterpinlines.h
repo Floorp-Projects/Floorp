@@ -403,11 +403,18 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
 }
 
 inline bool
-IntrinsicNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, MutableHandleValue vp)
+GetIntrinsicOperation(JSContext *cx, JSScript *script, jsbytecode *pc, MutableHandleValue vp)
 {
     JSOp op = JSOp(*pc);
     RootedPropertyName name(cx, GetNameFromBytecode(cx, script, pc, op));
     return cx->global()->getIntrinsicValue(cx, name, vp);
+}
+
+inline bool
+SetIntrinsicOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleValue val)
+{
+    RootedPropertyName name(cx, script->getName(pc));
+    return cx->global()->setIntrinsicValue(cx, name, val);
 }
 
 inline bool
