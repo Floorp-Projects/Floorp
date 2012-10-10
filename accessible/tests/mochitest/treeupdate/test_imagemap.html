@@ -228,6 +228,9 @@
       {
         this.imageMap = getAccessible(aImageMapID);
         this.mapNode.setAttribute("name", "atoz_map");
+
+        // XXXhack: force repainting of the image (see bug 745788 for details).
+        waveOverImageMap(aImageMapID);
       }
 
       this.finalCheck = function removeNameOnMap_finalCheck()
@@ -324,10 +327,6 @@
         map.appendChild(area);
 
         this.containerNode.appendChild(map);
-        
-        // force repainting of the image
-        // XXX this is a hack. Fix bug 745788.
-        document.getElementById(aImageID).style.opacity = 0.8;
       }
 
       this.finalCheck = function insertMap_finalCheck()
@@ -382,11 +381,10 @@
       }
     }
 
-    gA11yEventDumpToConsole = true;
+    //gA11yEventDumpToConsole = true; // debug stuff
     function doPreTest()
     {
-      var imgMap = document.getElementById("imgmap");
-      waitForImageMap(imgMap, doTest);
+      waitForImageMap("imgmap", doTest);
     }
 
     var gQueue = null;
@@ -402,6 +400,9 @@
       gQueue.push(new removeMap("container", "imgmap", "map"));
       gQueue.push(new insertMap("container", "imgmap"));
       gQueue.push(new hideImageMap("container", "imgmap"));
+
+      //enableLogging("tree"); // debug stuff
+      //gQueue.onFinish = function() { disableLogging("tree"); }
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
