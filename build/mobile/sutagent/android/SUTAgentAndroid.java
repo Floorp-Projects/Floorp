@@ -109,6 +109,12 @@ public class SUTAgentAndroid extends Activity
 
         String today = "";
         String yesterday = "";
+
+        // test root can be null (if getTestRoot fails), handle that:
+        if (testroot == null) {
+            testroot = "";
+        }
+
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss:SSS");
             Date dateObj = sdf.parse(datestamp);
