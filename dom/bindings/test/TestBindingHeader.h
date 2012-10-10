@@ -276,7 +276,9 @@ public:
   void PassOptionalSequenceOfNullableInts(const Optional<Sequence<Nullable<int32_t> > > &);
   void PassOptionalNullableSequenceOfNullableInts(const Optional<Nullable<Sequence<Nullable<int32_t> > > > &);
   void ReceiveCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &);
+  void ReceiveCallbackObjectSequence(nsTArray< nsRefPtr<TestCallbackInterface> > &);
   void ReceiveNullableCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &);
+  void ReceiveNullableCallbackObjectSequence(nsTArray< nsRefPtr<TestCallbackInterface> > &);
   void ReceiveCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&);
   void ReceiveNullableCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&);
   void ReceiveWeakCastableObjectSequence(nsTArray<TestInterface*> &);

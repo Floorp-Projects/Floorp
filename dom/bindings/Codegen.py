@@ -2771,16 +2771,13 @@ if (%s.IsNull()) {
             type.inner, descriptorProvider,
             {
                 'result' :  "%s[i]" % result,
-                'successCode': ("if (!JS_DefineElement(cx, returnArray, i, tmp,\n"
-                                "                      NULL, NULL, JSPROP_ENUMERATE)) {\n"
-                                "  return false;\n"
-                                "}"),
+                'successCode': "break;",
                 'jsvalRef': "tmp",
                 'jsvalPtr': "&tmp",
                 'isCreator': isCreator
                 }
             )
-        innerTemplate = CGIndenter(CGGeneric(innerTemplate)).define()
+        innerTemplate = CGIndenter(CGGeneric(innerTemplate), 4).define()
         return (("""
 uint32_t length = %s.Length();
 JSObject *returnArray = JS_NewArrayObject(cx, length, NULL);
@@ -2789,7 +2786,15 @@ if (!returnArray) {
 }
 jsval tmp;
 for (uint32_t i = 0; i < length; ++i) {
+  // Control block to let us common up the JS_DefineElement calls when there
+  // are different ways to succeed at wrapping the object.
+  do {
 %s
+  } while (0);
+  if (!JS_DefineElement(cx, returnArray, i, tmp,
+                        nullptr, nullptr, JSPROP_ENUMERATE)) {
+    return false;
+  }
 }\n""" % (result, innerTemplate)) + setValue("JS::ObjectValue(*returnArray)"), False)
 
     if type.isGeckoInterface():
@@ -2800,8 +2805,11 @@ for (uint32_t i = 0; i < length; ++i) {
                             "}\n")
         else:
             wrappingCode = ""
-        if (not descriptor.interface.isExternal() and
-            not descriptor.interface.isCallback()):
+
+        if descriptor.interface.isCallback():
+            wrap = "WrapCallbackInterface(cx, obj, %s, ${jsvalPtr})" % result
+            failed = None
+        elif not descriptor.interface.isExternal():
             if descriptor.wrapperCache:
                 wrapMethod = "WrapNewBindingObject"
             else:
@@ -2824,14 +2832,15 @@ for (uint32_t i = 0; i < length; ++i) {
                                     descriptor.interface.identifier.name)
                 # Try old-style wrapping for bindings which might be preffed off.
                 failed = wrapAndSetPtr("HandleNewBindingWrappingFailure(cx, ${obj}, %s, ${jsvalPtr})" % result)
-            wrappingCode += wrapAndSetPtr(wrap, failed)
         else:
             if descriptor.notflattened:
                 getIID = "&NS_GET_IID(%s), " % descriptor.nativeType
             else:
                 getIID = ""
             wrap = "WrapObject(cx, ${obj}, %s, %s${jsvalPtr})" % (result, getIID)
-            wrappingCode += wrapAndSetPtr(wrap)
+            failed = None
+
+        wrappingCode += wrapAndSetPtr(wrap, failed)
         return (wrappingCode, False)
 
     if type.isString():

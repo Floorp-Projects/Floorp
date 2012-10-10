@@ -198,7 +198,9 @@ interface TestInterface {
   void passOptionalSequenceOfNullableInts(optional sequence<long?> arg);
   void passOptionalNullableSequenceOfNullableInts(optional sequence<long?>? arg);
   sequence<TestInterface> receiveCastableObjectSequence();
+  sequence<TestCallbackInterface> receiveCallbackObjectSequence();
   sequence<TestInterface?> receiveNullableCastableObjectSequence();
+  sequence<TestCallbackInterface?> receiveNullableCallbackObjectSequence();
   sequence<TestInterface>? receiveCastableObjectNullableSequence();
   sequence<TestInterface?>? receiveNullableCastableObjectNullableSequence();
   sequence<TestInterface> receiveWeakCastableObjectSequence();
