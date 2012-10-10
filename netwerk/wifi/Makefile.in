@@ -28,10 +28,13 @@ XPIDLSRCS = \
   nsIWifiMonitor.idl \
   $(NULL)
 
-CPPSRCS = \
-  nsWifiMonitor.cpp \
-  nsWifiAccessPoint.cpp \
-  $(NULL)
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += nsWifiMonitorGonk.cpp
+else
+CPPSRCS += nsWifiMonitor.cpp
+endif
+
+CPPSRCS += nsWifiAccessPoint.cpp
 
 ifeq ($(OS_ARCH),Darwin)
 CPPSRCS += nsWifiScannerMac.cpp

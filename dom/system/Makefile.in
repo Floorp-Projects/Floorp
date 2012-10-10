@@ -60,6 +60,13 @@ EXTRA_COMPONENTS = \
   $(NULL)
 endif
 
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+EXTRA_COMPONENTS = \
+  NetworkGeolocationProvider.js \
+  NetworkGeolocationProvider.manifest \
+  $(NULL)
+endif
+
 EXPORTS_NAMESPACES = mozilla
 
 EXPORTS     = \
