@@ -2781,15 +2781,15 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_NAME)
 
-          BEGIN_CASE(JSOP_INTRINSICNAME)
+          BEGIN_CASE(JSOP_GETINTRINSIC)
           BEGIN_CASE(JSOP_CALLINTRINSIC)
           {
             PropertyName *name = script_->getName(GET_UINT32_INDEX(PC));
-            if (!jsop_intrinsicname(name, knownPushedType(0)))
+            if (!jsop_intrinsic(name, knownPushedType(0)))
                 return Compile_Error;
             frame.extra(frame.peek(-1)).name = name;
           }
-          END_CASE(JSOP_INTRINSICNAME)
+          END_CASE(JSOP_GETINTRINSIC)
 
           BEGIN_CASE(JSOP_IMPLICITTHIS)
           {
@@ -5807,7 +5807,7 @@ mjit::Compiler::jsop_setprop(PropertyName *name, bool popGuaranteed)
 }
 
 bool
-mjit::Compiler::jsop_intrinsicname(PropertyName *name, JSValueType type)
+mjit::Compiler::jsop_intrinsic(PropertyName *name, JSValueType type)
 {
     if (type == JSVAL_TYPE_UNKNOWN) {
         prepareStubCall(Uses(0));

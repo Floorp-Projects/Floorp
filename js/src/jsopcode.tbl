@@ -10,7 +10,8 @@
  * for a name of the form JSOP_UNUSED* and claim it.  Otherwise, always add at
  * the end of the table.
  *
- * When changing the bytecode, don't forget to update JSXDR_BYTECODE_VERSION!
+ * When changing the bytecode, don't forget to update XDR_BYTECODE_VERSION in
+ * vm/Xdr.h!
  *
  * Includers must define an OPDEF macro of the following form:
  *
@@ -358,18 +359,18 @@ OPDEF(JSOP_ALIASEDVARINC, 141,"aliasedvarinc",NULL,   10, 0,  1, 15,  JOF_SCOPEC
 OPDEF(JSOP_ALIASEDVARDEC, 142,"aliasedvardec",NULL,   10, 0,  1, 15,  JOF_SCOPECOORD|JOF_NAME|JOF_DEC|JOF_POST|JOF_TMPSLOT3|JOF_DECOMPOSE)
 
 /*
- * Intrinsic names are emitted instead of JSOP_*NAME ops when the 
+ * Intrinsic names are emitted instead of JSOP_*NAME ops when the
  * CompileOptions flag "selfHostingMode" is set.
  *
- * They are used in self-hosted code to access other self-hosted values and 
+ * They are used in self-hosted code to access other self-hosted values and
  * intrinsic functions the runtime doesn't give client JS code access to.
  */
-OPDEF(JSOP_INTRINSICNAME, 143, "intrinsicname", NULL, 5,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_TYPESET)
+OPDEF(JSOP_GETINTRINSIC,  143, "getintrinsic",  NULL, 5,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_TYPESET)
 OPDEF(JSOP_CALLINTRINSIC, 144, "callintrinsic", NULL, 5,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_TYPESET)
+OPDEF(JSOP_SETINTRINSIC,  145, "setintrinsic",  NULL, 5,  2,  1,  3,  JOF_ATOM|JOF_NAME|JOF_SET|JOF_DETECTING)
+OPDEF(JSOP_BINDINTRINSIC, 146, "bindintrinsic", NULL, 5,  0,  1,  0,  JOF_ATOM|JOF_NAME|JOF_SET)
 
 /* Unused. */
-OPDEF(JSOP_UNUSED10,      145,"unused10", NULL,       1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED11,      146,"unused11", NULL,       1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED12,      147,"unused12", NULL,       1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED13,      148,"unused13", NULL,       1,  0,  0,  0,  JOF_BYTE)
 

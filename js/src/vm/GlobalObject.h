@@ -334,11 +334,6 @@ class GlobalObject : public JSObject
         return &getPrototype(JSProto_Iterator).toObject();
     }
 
-    JSObject *intrinsicsHolder() {
-        JS_ASSERT(!getSlotRef(INTRINSICS).isUndefined());
-        return &getSlotRef(INTRINSICS).toObject();
-    }
-
   private:
     typedef bool (*ObjectInitOp)(JSContext *cx, Handle<GlobalObject*> global);
 
@@ -382,8 +377,13 @@ class GlobalObject : public JSObject
         return &self->getPrototype(JSProto_DataView).toObject();
     }
 
+    JSObject *intrinsicsHolder() {
+        JS_ASSERT(!getSlotRef(INTRINSICS).isUndefined());
+        return &getSlotRef(INTRINSICS).toObject();
+    }
+
     bool getIntrinsicValue(JSContext *cx, PropertyName *name, MutableHandleValue value) {
-        RootedObject holder(cx, &getSlotRef(INTRINSICS).toObject());
+        RootedObject holder(cx, intrinsicsHolder());
         RootedId id(cx, NameToId(name));
         if (HasDataProperty(cx, holder, id, value.address()))
             return true;
@@ -394,6 +394,16 @@ class GlobalObject : public JSObject
         JS_ASSERT(ok);
         return true;
     }
+
+    bool setIntrinsicValue(JSContext *cx, PropertyName *name, HandleValue value) {
+#ifdef DEBUG
+        RootedObject self(cx, this);
+        JS_ASSERT(cx->runtime->isSelfHostingGlobal(self));
+#endif
+        RootedObject holder(cx, intrinsicsHolder());
+        RootedValue valCopy(cx, value);
+        return JSObject::setProperty(cx, holder, holder, name, &valCopy, false);
+     }
 
     inline RegExpStatics *getRegExpStatics() const;
 

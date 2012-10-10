@@ -974,11 +974,11 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_getname(name);
       }
 
-      case JSOP_INTRINSICNAME:
+      case JSOP_GETINTRINSIC:
       case JSOP_CALLINTRINSIC:
       {
         RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
-        return jsop_intrinsicname(name);
+        return jsop_intrinsic(name);
       }
 
       case JSOP_BINDNAME:
@@ -5128,7 +5128,7 @@ IonBuilder::jsop_getname(HandlePropertyName name)
 }
 
 bool
-IonBuilder::jsop_intrinsicname(HandlePropertyName name)
+IonBuilder::jsop_intrinsic(HandlePropertyName name)
 {
     types::StackTypeSet *types = oracle->propertyRead(script(), pc);
     JSValueType type = types->getKnownTypeTag();
