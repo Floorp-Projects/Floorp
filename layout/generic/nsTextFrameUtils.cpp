@@ -165,8 +165,8 @@ nsTextFrameUtils::TransformText(const uint8_t* aText, uint32_t aLength,
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
       uint8_t ch = *aText++;
-      if (IsDiscardable(ch, &flags) || 
-          ch == '\n' && aCompression == DISCARD_NEWLINE) {
+      if (IsDiscardable(ch, &flags) ||
+          (ch == '\n' && aCompression == DISCARD_NEWLINE)) {
         aSkipChars->SkipChar();
       } else {
         aSkipChars->KeepChar();

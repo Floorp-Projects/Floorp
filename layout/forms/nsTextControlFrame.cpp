@@ -444,7 +444,7 @@ nsTextControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
 nscoord
 nsTextControlFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
 {
-    nscoord result = 0;
+    DebugOnly<nscoord> result = 0;
     DISPLAY_PREF_WIDTH(this, result);
 
     float inflation = nsLayoutUtils::FontSizeInflationFor(this);

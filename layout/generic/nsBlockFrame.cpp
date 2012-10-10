@@ -1553,13 +1553,13 @@ IsAlignedLeft(uint8_t aAlignment,
               uint8_t aUnicodeBidi,
               nsIFrame* aFrame)
 {
-  return (aFrame->IsSVGText() ||
-          NS_STYLE_TEXT_ALIGN_LEFT == aAlignment ||
-          ((NS_STYLE_TEXT_ALIGN_DEFAULT == aAlignment &&
-            NS_STYLE_DIRECTION_LTR == aDirection) ||
-           (NS_STYLE_TEXT_ALIGN_END == aAlignment &&
-            NS_STYLE_DIRECTION_RTL == aDirection)) &&
-          !(NS_STYLE_UNICODE_BIDI_PLAINTEXT & aUnicodeBidi));
+  return aFrame->IsSVGText() ||
+         NS_STYLE_TEXT_ALIGN_LEFT == aAlignment ||
+         (((NS_STYLE_TEXT_ALIGN_DEFAULT == aAlignment &&
+           NS_STYLE_DIRECTION_LTR == aDirection) ||
+          (NS_STYLE_TEXT_ALIGN_END == aAlignment &&
+           NS_STYLE_DIRECTION_RTL == aDirection)) &&
+         !(NS_STYLE_UNICODE_BIDI_PLAINTEXT & aUnicodeBidi));
 }
 
 nsresult
@@ -5408,8 +5408,8 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags)
         // XXX We need to do this if we're removing a frame as a result of
         // a call to RemoveFrame(), but we may not need to do this in all
         // cases...
-        nsRect visOverflow(cur->GetVisualOverflowArea());
 #ifdef NOISY_BLOCK_INVALIDATE
+        nsRect visOverflow(cur->GetVisualOverflowArea());
         printf("%p invalidate 10 (%d, %d, %d, %d)\n",
                this, visOverflow.x, visOverflow.y,
                visOverflow.width, visOverflow.height);

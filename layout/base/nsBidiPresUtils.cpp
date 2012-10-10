@@ -2010,7 +2010,6 @@ private:
   nsPoint mPt;
   const PRUnichar* mText;
   int32_t mLength;
-  nsBidiDirection mDirection;
 };
 
 nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const PRUnichar*       aText,
