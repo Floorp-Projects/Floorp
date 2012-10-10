@@ -155,8 +155,12 @@ enum {
   NODE_ALL_DIRECTION_FLAGS =              NODE_HAS_DIRECTION_LTR |
                                           NODE_HAS_DIRECTION_RTL,
 
+  NODE_CHROME_ONLY_ACCESS =               NODE_FLAG_BIT(22),
+
+  NODE_IS_ROOT_OF_CHROME_ONLY_ACCESS =    NODE_FLAG_BIT(23),
+
   // Remaining bits are node type specific.
-  NODE_TYPE_SPECIFIC_BITS_OFFSET =        22
+  NODE_TYPE_SPECIFIC_BITS_OFFSET =        24
 };
 
 /**
@@ -239,8 +243,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0xf73e3890, 0xe4ab, 0x453e, \
-  { 0x8c, 0x78, 0x2d, 0x1f, 0xa4, 0x0b, 0x48, 0x00 } }
+{ 0x9aede57e, 0xe39e, 0x42e8, \
+  { 0x8d, 0x33, 0x7a, 0xc3, 0xd0, 0xbb, 0x5b, 0xf9 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -911,7 +915,8 @@ public:
                                   NODE_IS_IN_ANONYMOUS_SUBTREE |
                                   NODE_ATTACH_BINDING_ON_POSTCREATE |
                                   NODE_DESCENDANTS_NEED_FRAMES |
-                                  NODE_NEEDS_FRAME)) ||
+                                  NODE_NEEDS_FRAME |
+                                  NODE_CHROME_ONLY_ACCESS)) ||
                  IsNodeOfType(eCONTENT),
                  "Flag only permitted on nsIContent nodes");
     mFlags |= aFlagsToSet;
@@ -960,6 +965,13 @@ public:
 #else
     return HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE);
 #endif
+  }
+
+  // True for native anonymous content and for XBL content if the binging
+  // has chromeOnlyContent="true".
+  bool ChromeOnlyAccess() const
+  {
+    return HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE | NODE_CHROME_ONLY_ACCESS);
   }
 
   /**

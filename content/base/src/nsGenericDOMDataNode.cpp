@@ -467,6 +467,9 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     if (aParent->IsInNativeAnonymousSubtree()) {
       SetFlags(NODE_IS_IN_ANONYMOUS_SUBTREE);
     }
+    if (aParent->HasFlag(NODE_CHROME_ONLY_ACCESS)) {
+      SetFlags(NODE_CHROME_ONLY_ACCESS);
+    }
   }
 
   // Set parent
