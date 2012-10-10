@@ -863,10 +863,18 @@ nsCSSStyleSheet::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   const nsCSSStyleSheet* s = this;
   while (s) {
     n += aMallocSizeOf(s);
-    n += s->mInner->SizeOfIncludingThis(aMallocSizeOf);
 
-    // Measurement of the following members may be added later if DMD finds it is
-    // worthwhile:
+    // Each inner can be shared by multiple sheets.  So we only count the inner
+    // if this sheet is the first one in the list of those sharing it.  As a
+    // result, the first such sheet takes all the blame for the memory
+    // consumption of the inner, which isn't ideal but it's better than
+    // double-counting the inner.
+    if (s->mInner->mSheets[0] == s) {
+      n += s->mInner->SizeOfIncludingThis(aMallocSizeOf);
+    }
+
+    // Measurement of the following members may be added later if DMD finds it
+    // is worthwhile:
     // - s->mTitle
     // - s->mMedia
     // - s->mRuleCollection
