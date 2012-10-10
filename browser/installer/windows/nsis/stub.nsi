@@ -1204,15 +1204,16 @@ Function ExecSetAsDefaultAppUser
 FunctionEnd
 
 Function LaunchApp
+  FindWindow $0 "${WindowClass}"
+  ${If} $0 <> 0 ; integer comparison
+    MessageBox MB_OK|MB_ICONQUESTION "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
+    Return
+  ${EndIf}
+
   ClearErrors
   ${GetParameters} $0
   ${GetOptions} "$0" "/UAC:" $1
   ${If} ${Errors}
-    FindWindow $0 "${WindowClass}"
-    ${If} $0 <> 0 ; integer comparison
-      MessageBox MB_OK|MB_ICONQUESTION "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
-      Return
-    ${EndIf}
     Exec "$\"$INSTDIR\${FileMainEXE}$\""
   ${Else}
     GetFunctionAddress $0 LaunchAppFromElevatedProcess
@@ -1221,12 +1222,6 @@ Function LaunchApp
 FunctionEnd
 
 Function LaunchAppFromElevatedProcess
-  FindWindow $0 "${WindowClass}"
-  ${If} $0 <> 0 ; integer comparison
-    MessageBox MB_OK|MB_ICONQUESTION "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
-    Return
-  ${EndIf}
-
   ; Find the installation directory when launching using GetFunctionAddress
   ; from an elevated installer since $INSTDIR will not be set in this installer
   ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
