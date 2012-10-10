@@ -45,20 +45,25 @@ function testSimpleCall() {
       localVar4.setGrip({ "type": "null" });
       localVar5.setGrip({ "type": "object", "class": "Object" });
 
-      localVar5.addProperties({ "someProp0": { "value": 42 },
-                                "someProp1": { "value": true },
-                                "someProp2": { "value": "nasu" },
-                                "someProp3": { "value": { "type": "undefined" } },
-                                "someProp4": { "value": { "type": "null" } },
-                                "someProp5": { "value": { "type": "object", "class": "Object" } } });
+      localVar5.addProperties({ "someProp0": { "value": 42, "enumerable": true },
+                                "someProp1": { "value": true , "enumerable": true},
+                                "someProp2": { "value": "nasu", "enumerable": true},
+                                "someProp3": { "value": { "type": "undefined" }, "enumerable": true},
+                                "someProp4": { "value": { "type": "null" }, "enumerable": true },
+                                "someProp5": {
+                                  "value": { "type": "object", "class": "Object" },
+                                  "enumerable": true
+                                }
+                              });
 
-      localVar5.someProp5.addProperties({ "someProp0": { "value": 42 },
-                                          "someProp1": { "value": true },
-                                          "someProp2": { "value": "nasu" },
-                                          "someProp3": { "value": { "type": "undefined" } },
-                                          "someProp4": { "value": { "type": "null" } },
+      localVar5.someProp5.addProperties({ "someProp0": { "value": 42, "enumerable": true },
+                                          "someProp1": { "value": true, "enumerable": true },
+                                          "someProp2": { "value": "nasu", "enumerable": true },
+                                          "someProp3": { "value": { "type": "undefined" }, "enumerable": true },
+                                          "someProp4": { "value": { "type": "null" }, "enumerable": true },
                                           "someAccessor": { "get": { "type": "object", "class": "Function" },
-                                                            "set": { "type": "undefined" } } });
+                                                            "set": { "type": "undefined" },
+                                                            "enumerable": true } });
 
       windowVar.setGrip({ "type": "object", "class": "Window" });
       windowVar.addProperties({ "helloWorld": { "value": "hello world" } });
