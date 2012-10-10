@@ -63,6 +63,9 @@ elif system == "Linux":
     if not processor:
         processor = machine
     info['os'] = 'linux'
+elif system in ['DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD']:
+    info['os'] = 'bsd'
+    version = sys.platform
 elif system == "Darwin":
     (release, versioninfo, machine) = platform.mac_ver()
     version = "OS X %s" % release
@@ -78,7 +81,7 @@ if processor in ["i386", "i686"]:
         processor = "x86"
     elif bits == "64bit":
         processor = "x86_64"
-elif processor == "AMD64":
+elif processor.upper() == "AMD64":
     bits = "64bit"
     processor = "x86_64"
 elif processor == "Power Macintosh":
@@ -89,7 +92,7 @@ info.update({'processor': processor,
             })
 
 # standard value of choices, for easy inspection
-choices = {'os': ['linux', 'win', 'mac', 'unix'],
+choices = {'os': ['linux', 'bsd', 'win', 'mac', 'unix'],
            'bits': [32, 64],
            'processor': ['x86', 'x86_64', 'ppc']}
 
@@ -117,7 +120,7 @@ def update(new_info):
     for os_name in choices['os']:
         globals()['is' + os_name.title()] = info['os'] == os_name
     # unix is special
-    if isLinux:
+    if isLinux or isBsd:
         globals()['isUnix'] = True
 
 update({})
