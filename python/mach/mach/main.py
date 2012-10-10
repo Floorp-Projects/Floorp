@@ -13,7 +13,9 @@ import imp
 import logging
 import os
 import sys
+import traceback
 import uuid
+import sys
 
 from mozbuild.base import BuildConfig
 from mozbuild.config import ConfigSettings
@@ -40,6 +42,37 @@ CONSUMED_ARGUMENTS = [
     'method',
     'func',
 ]
+
+MACH_ERROR = r'''
+The error occurred in mach itself. This is likely a bug in mach itself or a
+fundamental problem with a loaded module.
+
+Please consider filing a bug against mach by going to the URL:
+
+    https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=mach
+
+'''.lstrip()
+
+ERROR_FOOTER = r'''
+If filing a bug, please include the full output of mach, including this error
+message.
+
+The details of the failure are as follows:
+'''.lstrip()
+
+COMMAND_ERROR = r'''
+The error occurred in the implementation of the invoked mach command.
+
+This should never occur and is likely a bug in the implementation of that
+command. Consider filing a bug for this issue.
+'''.lstrip()
+
+MODULE_ERROR = r'''
+The error occured in code that was called by the mach command. This is either
+a bug in the called code itself or in the way that mach is calling it.
+
+You should consider filing a bug for this issue.
+'''.lstrip()
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -101,8 +134,6 @@ To see more help for a specific command, run:
 """
 
     def __init__(self, cwd):
-        global MODULES_SCANNED
-
         assert os.path.isdir(cwd)
 
         self.cwd = cwd
@@ -161,7 +192,7 @@ To see more help for a specific command, run:
 
         imp.load_source(module_name, path)
 
-    def run(self, argv):
+    def run(self, argv, stdin=None, stdout=None, stderr=None):
         """Runs mach with arguments provided from the command line.
 
         Returns the integer exit code that should be used. 0 means success. All
@@ -173,24 +204,49 @@ To see more help for a specific command, run:
         # up with UnicodeEncodeError as soon as it encounters a non-ASCII
         # character in a unicode instance. We simply install a wrapper around
         # the streams and restore once we have finished.
+        stdin = sys.stdin if stdin is None else stdin
+        stdout = sys.stdout if stdout is None else stdout
+        stderr = sys.stderr if stderr is None else stderr
+
         orig_stdin = sys.stdin
         orig_stdout = sys.stdout
         orig_stderr = sys.stderr
 
+        sys.stdin = stdin
+        sys.stdout = stdout
+        sys.stderr = stderr
+
         try:
-            if sys.stdin.encoding is None:
-                sys.stdin = codecs.getreader('utf-8')(sys.stdin)
+            if stdin.encoding is None:
+                sys.stdin = codecs.getreader('utf-8')(stdin)
 
-            if sys.stdout.encoding is None:
-                sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
+            if stdout.encoding is None:
+                sys.stdout = codecs.getwriter('utf-8')(stdout)
 
-            if sys.stderr.encoding is None:
-                sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
+            if stderr.encoding is None:
+                sys.stderr = codecs.getwriter('utf-8')(stderr)
 
             return self._run(argv)
         except KeyboardInterrupt:
             print('mach interrupted by signal or user action. Stopping.')
             return 1
+
+        except Exception as e:
+            # _run swallows exceptions in invoked handlers and converts them to
+            # a proper exit code. So, the only scenario where we should get an
+            # exception here is if _run itself raises. If _run raises, that's a
+            # bug in mach (or a loaded command module being silly) and thus
+            # should be reported differently.
+            self._print_error_header(argv, sys.stdout)
+            print(MACH_ERROR)
+
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            stack = traceback.extract_tb(exc_tb)
+
+            self._print_exception(sys.stdout, exc_type, exc_value, stack)
+
+            return 1
+
         finally:
             sys.stdin = orig_stdin
             sys.stdout = orig_stdout
@@ -246,19 +302,72 @@ To see more help for a specific command, run:
         else:
             raise Exception('Dispatch configuration error in module.')
 
-        result = fn(**stripped)
+        try:
+            result = fn(**stripped)
 
-        if not result:
-            result = 0
+            if not result:
+                result = 0
 
-        assert isinstance(result, int)
+            assert isinstance(result, int)
 
-        return result
+            return result
+        except KeyboardInterrupt as ki:
+            raise ki
+        except Exception as e:
+            exc_type, exc_value, exc_tb = sys.exc_info()
+
+            # The first frame is us and is never used.
+            stack = traceback.extract_tb(exc_tb)[1:]
+
+            # Split the frames into those from the module containing the
+            # command and everything else.
+            command_frames = []
+            other_frames = []
+
+            initial_file = stack[0][0]
+
+            for frame in stack:
+                if frame[0] == initial_file:
+                    command_frames.append(frame)
+                else:
+                    other_frames.append(frame)
+
+            # If the exception was in the module providing the command, it's
+            # likely the bug is in the mach command module, not something else.
+            # If there are other frames, the bug is likely not the mach
+            # command's fault.
+            self._print_error_header(argv, sys.stdout)
+
+            if len(other_frames):
+                print(MODULE_ERROR)
+            else:
+                print(COMMAND_ERROR)
+
+            self._print_exception(sys.stdout, exc_type, exc_value, stack)
+
+            return 1
 
     def log(self, level, action, params, format_str):
         """Helper method to record a structured log event."""
         self.logger.log(level, format_str,
             extra={'action': action, 'params': params})
+
+    def _print_error_header(self, argv, fh):
+        fh.write('Error running mach:\n\n')
+        fh.write('    ')
+        fh.write(repr(argv))
+        fh.write('\n\n')
+
+    def _print_exception(self, fh, exc_type, exc_value, stack):
+        fh.write(ERROR_FOOTER)
+        fh.write('\n')
+
+        for l in traceback.format_exception_only(exc_type, exc_value):
+            fh.write(l)
+
+        fh.write('\n')
+        for l in traceback.format_list(stack):
+            fh.write(l)
 
     def load_settings(self, args):
         """Determine which settings files apply and load them.
