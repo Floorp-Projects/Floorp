@@ -34,6 +34,9 @@ namespace graphite2 {
 
 class NameTable
 {
+    NameTable(const NameTable &);
+    NameTable & operator = (const NameTable &);
+
 public:
     NameTable(const void * data, size_t length, uint16 platfromId=3, uint16 encodingID = 1);
     ~NameTable() { free(const_cast<TtfUtil::Sfnt::FontNames *>(m_table)); }

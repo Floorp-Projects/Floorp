@@ -8,6 +8,7 @@
 
 #include "2D.h"
 #include <vector>
+#include <iostream>
 
 namespace mozilla {
 namespace gfx {

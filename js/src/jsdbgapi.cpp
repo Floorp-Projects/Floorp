@@ -747,8 +747,12 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
 
     StackFrame *fp = Valueify(fpArg);
 
+    if (!ComputeThis(cx, fp))
+        return false;
+    RootedValue thisv(cx, fp->thisValue());
+
     js::AutoCompartment ac(cx, env);
-    return EvaluateInEnv(cx, env, fp, chars, length, filename, lineno, rval);
+    return EvaluateInEnv(cx, env, thisv, fp, chars, length, filename, lineno, rval);
 }
 
 JS_PUBLIC_API(JSBool)

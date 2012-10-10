@@ -37,56 +37,52 @@ namespace graphite2 {
 class Font
 {
 public:
-    Font(float ppm, const Face *face/*needed for scaling*/);
+    Font(float ppm, const Face & face, const void * appFontHandle=0, const gr_font_ops * ops=0);
     virtual ~Font();
 
-    float advance(unsigned short glyphid) const {
-        if (m_advances[glyphid] == INVALID_ADVANCE)
-            m_advances[glyphid] = computeAdvance(glyphid);
-        return m_advances[glyphid];
-    }
-//    Position scale(const Position& p) const { return Position(m_scale * p.x, m_scale * p.y); }
-//    float scale(float p) const { return m_scale * p; }
-    float scale() const { return m_scale; }
-    virtual bool isHinted() const { return false; }
+    float advance(unsigned short glyphid) const;
+    float scale() const;
+    bool isHinted() const;
+    const Face & face() const;
 
-    CLASS_NEW_DELETE
+    CLASS_NEW_DELETE;
 private:
-    virtual float computeAdvance(unsigned short /*glyphid*/) const { assert(false); return .0f; };
-    
-protected:
-    float m_scale;      // scales from design units to ppm
-    float *m_advances;  // One advance per glyph in pixels. Nan if not defined
-    
-private:			//defensive on m_advances
+    gr_font_ops         m_ops;
+    const void  * const m_appFontHandle;
+    float             * m_advances;  // One advance per glyph in pixels. Nan if not defined
+    const Face        & m_face;
+    float               m_scale;      // scales from design units to ppm
+    bool                m_hinted;
+
     Font(const Font&);
     Font& operator=(const Font&);
 };
 
-
-class SimpleFont : public Font      //has no external hints - gets advance information from the face
+inline
+float Font::advance(unsigned short glyphid) const
 {
-public:
-    SimpleFont(float ppm/*pixels per em*/, const Face *face);
-private:
-    virtual float computeAdvance(unsigned short glyphid) const;
-private:
-    const Face *m_face;   // GrFace to get the rest of the info from
-};
+    if (m_advances[glyphid] == INVALID_ADVANCE)
+        m_advances[glyphid] = (*m_ops.glyph_advance_x)(m_appFontHandle, glyphid);
+    return m_advances[glyphid];
+}
 
-
-class HintedFont : public Font
+inline
+float Font::scale() const
 {
-public:
-    HintedFont(float ppm/*pixels per em*/, const void* appFontHandle/*non-NULL*/, gr_advance_fn advance, const Face *face/*needed for scaling*/);
-    virtual bool isHinted() const { return true; }
-private:
-    virtual float computeAdvance(unsigned short glyphid) const;
+	return m_scale;
+}
 
-private:
-    const void* m_appFontHandle/*non-NULL*/;
-    gr_advance_fn m_advance;
-};
+inline
+bool Font::isHinted() const
+{
+	return m_hinted;
+}
+
+inline
+const Face & Font::face() const
+{
+    return m_face;
+}
 
 } // namespace graphite2
 

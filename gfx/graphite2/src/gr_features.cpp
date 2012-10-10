@@ -37,21 +37,15 @@ extern "C" {
 
 gr_uint16 gr_fref_feature_value(const gr_feature_ref* pfeatureref, const gr_feature_val* feats)    //returns 0 if either pointer is NULL
 {
-    if (!pfeatureref)
-    return 0;
-    if (!feats)
-    return 0;
-    
+    if (!pfeatureref || !feats)	return 0;
+
     return pfeatureref->getFeatureVal(*feats);
 }
 
 
 int gr_fref_set_feature_value(const gr_feature_ref* pfeatureref, gr_uint16 val, gr_feature_val* pDest)
 {
-    if (!pfeatureref)
-    return false;
-    if (!pDest)
-    return false;
+    if (!pfeatureref || !pDest)	return 0;
     
     return pfeatureref->applyValToFeature(val, *pDest);
 }

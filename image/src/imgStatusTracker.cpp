@@ -266,6 +266,10 @@ imgStatusTracker::EmulateRequestFinished(imgRequestProxy* aProxy, nsresult aStat
     }
   }
 
+  if (mState & stateBlockingOnload) {
+    aProxy->UnblockOnload();
+  }
+
   if (!(mState & stateRequestStopped)) {
     aProxy->OnStopRequest(true);
   }

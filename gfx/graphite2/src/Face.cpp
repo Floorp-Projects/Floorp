@@ -26,66 +26,79 @@ of the License or (at your option) any later version.
 */
 #include <cstring>
 #include "graphite2/Segment.h"
-#include "inc/Face.h"
-#include "inc/Endian.h"
-#include "inc/Segment.h"
 #include "inc/CmapCache.h"
-#include "inc/NameTable.h"
+#include "inc/debug.h"
+#include "inc/Endian.h"
+#include "inc/Face.h"
+#include "inc/FileFace.h"
+#include "inc/GlyphFace.h"
+#include "inc/json.h"
 #include "inc/SegCacheStore.h"
+#include "inc/Segment.h"
+#include "inc/NameTable.h"
 
 
 using namespace graphite2;
 
+Face::Face(const void* appFaceHandle/*non-NULL*/, const gr_face_ops & ops)
+: m_appFaceHandle(appFaceHandle),
+  m_pFileFace(NULL),
+  m_pGlyphFaceCache(NULL),
+  m_cmap(NULL),
+  m_pNames(NULL),
+  m_logger(NULL),
+  m_silfs(NULL),
+  m_numSilf(0),
+  m_ascent(0),
+  m_descent(0)
+{
+    memset(&m_ops, 0, sizeof m_ops);
+    memcpy(&m_ops, &ops, std::min(sizeof m_ops, ops.size));
+}
+
+
 Face::~Face()
 {
+    setLogger(0);
     delete m_pGlyphFaceCache;
     delete m_cmap;
     delete[] m_silfs;
-    m_pGlyphFaceCache = NULL;
-    m_cmap = NULL;
-    m_silfs = NULL;
+#ifndef GRAPHITE2_NFILEFACE
     delete m_pFileFace;
+#endif
     delete m_pNames;
-    m_pFileFace = NULL;
 }
 
+float Face::default_glyph_advance(const void* font_ptr, gr_uint16 glyphid)
+{
+    const Font & font = *reinterpret_cast<const Font *>(font_ptr);
+
+    return font.face().glyphs().glyph(glyphid)->theAdvance().x * font.scale();
+}
 
 bool Face::readGlyphs(uint32 faceOptions)
 {
-    GlyphFaceCacheHeader hdr;
-    if (!hdr.initialize(*this, faceOptions & gr_face_dumbRendering)) return false;
-
-    m_pGlyphFaceCache = GlyphFaceCache::makeCache(hdr);
-    if (!m_pGlyphFaceCache) return false;
-
-    size_t length = 0;
-    const byte * table = getTable(Tag::cmap, &length);
-    if (!table) return false;
-
     if (faceOptions & gr_face_cacheCmap)
-    	m_cmap = new CmapCache(table, length);
+    	m_cmap = new CachedCmap(*this);
     else
-    	m_cmap = new DirectCmap(table, length);
+    	m_cmap = new DirectCmap(*this);
 
-    if (!m_cmap || !*m_cmap) return false;
+    m_pGlyphFaceCache = new GlyphCache(*this, faceOptions);
+    if (!m_pGlyphFaceCache
+        || m_pGlyphFaceCache->numGlyphs() == 0
+        || m_pGlyphFaceCache->unitsPerEm() == 0
+    	|| !m_cmap || !*m_cmap)
+    	return false;
 
     if (faceOptions & gr_face_preloadGlyphs)
-    {
-        m_pGlyphFaceCache->loadAllGlyphs();
         nameTable();        // preload the name table along with the glyphs, heh.
-    }
-    m_upem = TtfUtil::DesignUnits(m_pGlyphFaceCache->m_pHead);
-    if (!m_upem) return false;
-    // m_glyphidx = new unsigned short[m_numGlyphs];        // only need this if doing occasional glyph reads
-    
+
     return true;
 }
 
-bool Face::readGraphite()
+bool Face::readGraphite(const Table & silf)
 {
-    size_t lSilf;
-    const byte * const pSilf = getTable(Tag::Silf, &lSilf),
-    		   *           p = pSilf;
+    const byte * p = silf;
     if (!p) return false;
 
     const uint32 version = be::read<uint32>(p);
@@ -100,11 +113,11 @@ bool Face::readGraphite()
     for (int i = 0; i < m_numSilf; i++)
     {
         const uint32 offset = be::read<uint32>(p),
-        			 next   = i == m_numSilf - 1 ? lSilf : be::peek<uint32>(p);
-        if (next > lSilf || offset >= next)
+        			 next   = i == m_numSilf - 1 ? silf.size() : be::peek<uint32>(p);
+        if (next > silf.size() || offset >= next)
             return false;
 
-        if (!m_silfs[i].readGraphite(pSilf + offset, next - offset, *this, version))
+        if (!m_silfs[i].readGraphite(silf + offset, next - offset, *this, version))
             return false;
 
         if (m_silfs[i].numPasses())
@@ -114,9 +127,54 @@ bool Face::readGraphite()
     return havePasses;
 }
 
+bool Face::readFeatures()
+{
+    return m_Sill.readFace(*this);
+}
+
 bool Face::runGraphite(Segment *seg, const Silf *aSilf) const
 {
-    return aSilf->runGraphite(seg, 0, aSilf->numPasses());
+#if !defined GRAPHITE2_NTRACING
+    json * dbgout = logger();
+    if (dbgout)
+    {
+    	*dbgout << json::object
+    				<< "id"			<< objectid(seg)
+    				<< "passes"		<< json::array;
+    }
+#endif
+
+    bool res = aSilf->runGraphite(seg, 0, aSilf->justificationPass());
+    res &= aSilf->runGraphite(seg, aSilf->positionPass(), aSilf->numPasses());
+
+#if !defined GRAPHITE2_NTRACING
+	if (dbgout)
+{
+		*dbgout 			<< json::item
+							<< json::close // Close up the passes array
+				<< "output" << json::array;
+		for(Slot * s = seg->first(); s; s = s->next())
+			*dbgout		<< dslot(seg, s);
+		seg->finalise(0);					// Call this here to fix up charinfo back indexes.
+		*dbgout			<< json::close
+				<< "advance" << seg->advance()
+				<< "chars"	 << json::array;
+		for(size_t i = 0, n = seg->charInfoCount(); i != n; ++i)
+			*dbgout 	<< json::flat << *seg->charinfo(i);
+		*dbgout			<< json::close	// Close up the chars array
+					<< json::close;		// Close up the segment object
+	}
+#endif
+
+    return res;
+}
+
+void Face::setLogger(FILE * log_file GR_MAYBE_UNUSED)
+{
+#if !defined GRAPHITE2_NTRACING
+    delete m_logger;
+    m_logger = log_file ? new json(log_file) : 0;
+#endif
 }
 
 const Silf *Face::chooseSilf(uint32 script) const
@@ -129,32 +187,38 @@ const Silf *Face::chooseSilf(uint32 script) const
         return m_silfs;
 }
 
+uint16 Face::findPseudo(uint32 uid) const
+{
+    return (m_numSilf) ? m_silfs[0].findPseudo(uid) : 0;
+}
+
 uint16 Face::getGlyphMetric(uint16 gid, uint8 metric) const
 {
     switch (metrics(metric))
     {
         case kgmetAscent : return m_ascent;
         case kgmetDescent : return m_descent;
-        default: return m_pGlyphFaceCache->glyph(gid)->getMetric(metric);
+        default: return glyphs().glyph(gid)->getMetric(metric);
     }
 }
 
-void Face::takeFileFace(FileFace* pFileFace/*takes ownership*/)
+void Face::takeFileFace(FileFace* pFileFace GR_MAYBE_UNUSED/*takes ownership*/)
 {
+#ifndef GRAPHITE2_NFILEFACE
     if (m_pFileFace==pFileFace)
       return;
     
     delete m_pFileFace;
     m_pFileFace = pFileFace;
+#endif
 }
 
 NameTable * Face::nameTable() const
 {
     if (m_pNames) return m_pNames;
-    size_t tableLength = 0;
-    const byte * table = getTable(Tag::name, &tableLength);
-    if (table)
-        m_pNames = new NameTable(table, tableLength);
+    const Table name(*this, Tag::name);
+    if (name)
+        m_pNames = new NameTable(name, name.size());
     return m_pNames;
 }
 
@@ -166,87 +230,25 @@ uint16 Face::languageForLocale(const char * locale) const
     return 0;
 }
 
-
-#ifndef GRAPHITE2_NFILEFACE
-
-FileFace::FileFace(const char *filename) :
-    m_pHeader(NULL),
-    m_pTableDir(NULL)
+Face::Table::Table(const Face & face, const Tag n) throw()
+: _f(&face)
 {
-    if (!(m_pfile = fopen(filename, "rb"))) return;
-    if (fseek(m_pfile, 0, SEEK_END)) return;
-    m_lfile = ftell(m_pfile);
-    if (fseek(m_pfile, 0, SEEK_SET)) return;
-    size_t lOffset, lSize;
-    if (!TtfUtil::GetHeaderInfo(lOffset, lSize)) return;
-    m_pHeader = (TtfUtil::Sfnt::OffsetSubTable*)gralloc<char>(lSize);
-    if (fseek(m_pfile, lOffset, SEEK_SET)) return;
-    if (fread(m_pHeader, 1, lSize, m_pfile) != lSize) return;
-    if (!TtfUtil::CheckHeader(m_pHeader)) return;
-    if (!TtfUtil::GetTableDirInfo(m_pHeader, lOffset, lSize)) return;
-    m_pTableDir = (TtfUtil::Sfnt::OffsetSubTable::Entry*)gralloc<char>(lSize);
-    if (fseek(m_pfile, lOffset, SEEK_SET)) return;
-    if (fread(m_pTableDir, 1, lSize, m_pfile) != lSize) return;
-}
-
-FileFace::~FileFace()
-{
-    free(m_pTableDir);
-    free(m_pHeader);
-    if (m_pfile)
-        fclose(m_pfile);
-    m_pTableDir = NULL;
-    m_pfile = NULL;
-    m_pHeader = NULL;
-}
-
-
-const void *FileFace::table_fn(const void* appFaceHandle, unsigned int name, size_t *len)
-{
-    const FileFace* ttfFaceHandle = (const FileFace*)appFaceHandle;
-    TableCacheItem * tci = ttfFaceHandle->m_tables;
-
-    switch (name)
+    size_t sz = 0;
+    _p = reinterpret_cast<const byte *>((*_f->m_ops.get_table)(_f->m_appFaceHandle, n, &sz));
+    _sz = uint32(sz);
+    if (!TtfUtil::CheckTable(n, _p, _sz))
     {
-		case Tag::Feat:	tci += 0; break;
-		case Tag::Glat:	tci += 1; break;
-		case Tag::Gloc:	tci += 2; break;
-		case Tag::OS_2:	tci += 3; break;
-		case Tag::Sile:	tci += 4; break;
-		case Tag::Silf:	tci += 5; break;
-		case Tag::Sill:	tci += 6; break;
-    	case Tag::cmap:	tci += 7; break;
-    	case Tag::glyf:	tci += 8; break;
-    	case Tag::hdmx:	tci += 9; break;
-    	case Tag::head:	tci += 10; break;
-    	case Tag::hhea:	tci += 11; break;
-    	case Tag::hmtx:	tci += 12; break;
-    	case Tag::kern:	tci += 13; break;
-    	case Tag::loca:	tci += 14; break;
-    	case Tag::maxp:	tci += 15; break;
-    	case Tag::name:	tci += 16; break;
-    	case Tag::post:	tci += 17; break;
-    	default:					tci = 0; break;
+        this->~Table();     // Make sure we release the table buffer even if the table filed it's checks
+        _p = 0; _sz = 0;
     }
-
-    assert(tci); // don't expect any other table types
-    if (!tci) return NULL;
-    if (tci->data() == NULL)
-    {
-        char *tptr;
-        size_t tlen, lOffset;
-        if (!TtfUtil::GetTableInfo(name, ttfFaceHandle->m_pHeader, ttfFaceHandle->m_pTableDir, lOffset, tlen)) return NULL;
-        if (fseek(ttfFaceHandle->m_pfile, lOffset, SEEK_SET)) return NULL;
-        if (lOffset + tlen > ttfFaceHandle->m_lfile) return NULL;
-        tptr = gralloc<char>(tlen);
-        if (fread(tptr, 1, tlen, ttfFaceHandle->m_pfile) != tlen) 
-        {
-            free(tptr);
-            return NULL;
-        }
-        tci->set(tptr, tlen);
-    }
-    if (len) *len = tci->size();
-    return tci->data();
 }
-#endif                  //!GRAPHITE2_NFILEFACE
+
+Face::Table & Face::Table::operator = (const Table & rhs) throw()
+{
+    if (_p == rhs._p)   return *this;
+
+    this->~Table();
+    new (this) Table(rhs);
+    return *this;
+}
+

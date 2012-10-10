@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/JNI.jsm");
 
 #ifdef ACCESSIBILITY
 Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
@@ -162,7 +163,6 @@ var BrowserApp = {
 
     getBridge().browserApp = this;
 
-    Services.obs.addObserver(this, "Tab:Add", false);
     Services.obs.addObserver(this, "Tab:Load", false);
     Services.obs.addObserver(this, "Tab:Selected", false);
     Services.obs.addObserver(this, "Tab:Closed", false);
@@ -1076,7 +1076,7 @@ var BrowserApp = {
       browser.reload();
     } else if (aTopic == "Session:Stop") {
       browser.stop();
-    } else if (aTopic == "Tab:Add" || aTopic == "Tab:Load") {
+    } else if (aTopic == "Tab:Load") {
       let data = JSON.parse(aData);
 
       // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
@@ -1088,7 +1088,9 @@ var BrowserApp = {
       let params = {
         selected: true,
         parentId: ("parentId" in data) ? data.parentId : -1,
-        flags: flags
+        flags: flags,
+        tabID: data.tabID,
+        isPrivate: data.isPrivate
       };
 
       let url = data.url;
@@ -1105,7 +1107,7 @@ var BrowserApp = {
       if (!shouldShowProgress(url))
         params.showProgress = false;
 
-      if (aTopic == "Tab:Add")
+      if (data.newTab)
         this.addTab(url, params);
       else
         this.loadURI(url, browser, params);
@@ -2238,8 +2240,6 @@ nsBrowserAccess.prototype = {
 };
 
 
-let gTabIDFactory = 0;
-
 // track the last known screen size so that new tabs
 // get created with the right size rather than being 1x1
 let gScreenWidth = 1;
@@ -2283,6 +2283,11 @@ Tab.prototype = {
     // Must be called after appendChild so the docshell has been created.
     this.setActive(false);
 
+    let isPrivate = ("isPrivate" in aParams) && aParams.isPrivate;
+    if (isPrivate) {
+      this.browser.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing = true;
+    }
+
     this.browser.stop();
 
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
@@ -2295,7 +2300,16 @@ Tab.prototype = {
     } catch (e) {}
 
     if (!aParams.zombifying) {
-      this.id = ++gTabIDFactory;
+      if ("tabID" in aParams) {
+        this.id = aParams.tabID;
+      } else {
+        let jni = new JNI();
+        let cls = jni.findClass("org/mozilla/gecko/Tabs");
+        let method = jni.getStaticMethodID(cls, "getNextTabId", "()I");
+        this.id = jni.callStaticIntMethod(cls, method);
+        jni.close();
+      }
+
       this.desktopMode = ("desktopMode" in aParams) ? aParams.desktopMode : false;
 
       let message = {
@@ -2308,7 +2322,8 @@ Tab.prototype = {
           selected: ("selected" in aParams) ? aParams.selected : true,
           title: aParams.title || aURL,
           delayLoad: aParams.delayLoad || false,
-          desktopMode: this.desktopMode
+          desktopMode: this.desktopMode,
+          isPrivate: isPrivate
         }
       };
       sendMessageToJava(message);
@@ -3179,18 +3194,6 @@ Tab.prototype = {
     this.pluginDoorhangerTimeout = null;
     this.shouldShowPluginDoorhanger = true;
     this.clickToPlayPluginsActivated = false;
-
-    // This is where we might check for helper apps.
-    // For now it is special cased to only check for the marketplace urls
-    if (WebappsUI.isMarketplace(aLocationURI)) {
-      // the marketplace app may not actually be installed, so instead we use a custom
-      // callback that will install and launch it for us if necessary
-      HelperApps.showDoorhanger(aLocationURI, function() {
-        WebappsUI.installAndLaunchMarketplace(aLocationURI.spec);
-        if (aRequest)
-          aRequest.cancel(Cr.NS_OK);
-      });
-    }
 
     let message = {
       gecko: {
@@ -6555,10 +6558,6 @@ var WebappsUI = {
     let name = manifest.name ? manifest.name : manifest.fullLaunchPath();
     let showPrompt = true;
 
-    // skip showing the prompt if this is for the marketplace app
-    if (aData.app.origin == this.MARKETPLACE.URI.prePath)
-      showPrompt = false;
-
     if (!showPrompt || Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), name)) {
       // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
       // a unique ID for Android webapp allocation
@@ -6642,7 +6641,6 @@ var WebappsUI = {
   get iconSize() {
     let iconSize = 64;
     try {
-      Cu.import("resource://gre/modules/JNI.jsm");
       let jni = new JNI();
       let cls = jni.findClass("org/mozilla/gecko/GeckoAppShell");
       let method = jni.getStaticMethodID(cls, "getPreferredIconSize", "()I");

@@ -29,7 +29,7 @@ of the License or (at your option) any later version.
 
 #if !defined GRAPHITE2_NTRACING
 
-#include <cstdio>
+#include <stdio.h>
 #include "inc/json.h"
 
 using namespace graphite2;
@@ -67,7 +67,7 @@ void json::indent(const int d) throw()
 inline
 void json::push_context(const char prefix, const char suffix) throw()
 {
-	assert(_context - _contexts < std::ptrdiff_t(sizeof _contexts));
+	assert(_context - _contexts < ptrdiff_t(sizeof _contexts));
 
 	if (_context == _contexts)
 		*_context = suffix;
