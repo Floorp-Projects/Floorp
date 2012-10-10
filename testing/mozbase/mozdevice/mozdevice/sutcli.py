@@ -79,7 +79,14 @@ class SUTCli(object):
                                     'max_args': 1,
                                     'help_args': '<remote>',
                                     'help': 'recursively remove directory from device'
-                                }
+                                },
+                          'screencap': { 'function': lambda f: self.dm.saveScreenshot(f),
+                                          'min_args': 1,
+                                          'max_args': 1,
+                                          'help_args': '<png file>',
+                                          'help': 'capture screenshot of device in action'
+                                          }
+
                           }
 
         for (commandname, command) in sorted(self.commands.iteritems()):

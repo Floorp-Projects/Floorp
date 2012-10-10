@@ -47,14 +47,18 @@ class _MozLogger(_LoggerClass):
 
 class _MozFormatter(Formatter):
     """
-    MozFormatter class used for default formatting
-    This can easily be overriden with the log handler's setFormatter()
+    MozFormatter class used to standardize formatting
+    If a different format is desired, this can be explicitly
+    overriden with the log handler's setFormatter() method
     """
     level_length = 0
     max_level_length = len('TEST-START')
 
     def __init__(self):
-        pass
+        """
+        Formatter.__init__ has fmt and datefmt parameters that won't have
+        any affect on a MozFormatter instance. Bypass it to avoid confusion.
+        """
 
     def format(self, record):
         record.message = record.getMessage()
