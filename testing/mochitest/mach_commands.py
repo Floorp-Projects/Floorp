@@ -7,7 +7,8 @@ from __future__ import unicode_literals
 import os
 
 from mozbuild.base import MozbuildObject
-from mozbuild.testing.test import TestRunner
+
+from moztesting.util import parse_test_path
 
 from mach.base import (
     CommandArgument,
@@ -20,7 +21,7 @@ generic_help = 'Test to run. Can be specified as a single file, a ' +\
 'directory, or omitted. If omitted, the entire test suite is executed.'
 
 
-class MochitestRunner(TestRunner):
+class MochitestRunner(MozbuildObject):
     """Easily run mochitests.
 
     This currently contains just the basics for running mochitests. We may want
@@ -71,7 +72,7 @@ class MochitestRunner(TestRunner):
             raise Exception('None or unrecognized mochitest suite type.')
 
         if test_file:
-            path = self._parse_test_path(test_file)['normalized']
+            path = parse_test_path(test_file, self.topsrcdir)['normalized']
             if not os.path.exists(path):
                 raise Exception('No manifest file was found at %s.' % path)
             env = {'TEST_PATH': path}
