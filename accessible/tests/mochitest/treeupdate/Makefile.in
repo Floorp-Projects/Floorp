@@ -20,7 +20,7 @@ MOCHITEST_A11Y_FILES =\
 		test_doc.html \
 		test_gencontent.html \
 		test_hidden.html \
-		$(warning test_imagemap.html temporarily disabled because of very frequent oranges, see bug 745788) \
+		test_imagemap.html \
 		test_list_editabledoc.html \
 		test_list.html \
 		test_listbox.xul \
