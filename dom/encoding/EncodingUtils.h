@@ -18,7 +18,7 @@ public:
 
   /**
    * Implements decode algorithm's step 1 & 2 from Encoding spec.
-   * http://dvcs.w3.org/hg/encoding/raw-file/tip/Overview.html#decode
+   * http://encoding.spec.whatwg.org/#decode
    *
    * @param     aData, incoming byte stream of data.
    * @param     aLength, incoming byte stream length.
@@ -33,7 +33,7 @@ public:
 
   /**
    * Implements get an encoding algorithm from Encoding spec.
-   * http://dvcs.w3.org/hg/encoding/raw-file/tip/Overview.html#concept-encoding-get
+   * http://encoding.spec.whatwg.org/#concept-encoding-get
    * Given a label, this function returns the corresponding encoding or a
    * false.
    *
@@ -48,7 +48,7 @@ public:
   /**
    * Remove any leading and trailing space characters, following the
    * definition of space characters from Encoding spec.
-   * http://dvcs.w3.org/hg/encoding/raw-file/tip/Overview.html#terminology
+   * http://encoding.spec.whatwg.org/#terminology
    * Note that nsAString::StripWhitespace() doesn't exactly match the
    * definition. It also removes all matching chars in the string,
    * not just leading and trailing.
