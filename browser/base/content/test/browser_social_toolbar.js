@@ -9,7 +9,7 @@ function test() {
     name: "provider 1",
     origin: "https://example.com",
     workerURL: "https://example.com/browser/browser/base/content/test/social_worker.js",
-    iconURL: "chrome://branding/content/icon48.png"
+    iconURL: "https://example.com/browser/browser/base/content/test/moz.png"
   };
   runSocialTestWithProvider(manifest, function (finishcb) {
     runSocialTests(tests, undefined, undefined, finishcb);
@@ -36,7 +36,7 @@ var tests = {
   testAmbientNotifications: function(next) {
     let ambience = {
       name: "testIcon",
-      iconURL: "chrome://branding/content/icon48.png",
+      iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
       contentPanel: "about:blank",
       counter: 42
     };
@@ -66,6 +66,16 @@ var tests = {
       ok(ambientIcon.collapsed, "ambient icon (" + ambientIcon.id + ") is collapsed");
     }
     
+    next();
+  },
+  testShowSidebarMenuitemExists: function(next) {
+    let toggleSidebarMenuitem = document.getElementById("social-toggle-sidebar-menuitem");
+    ok(toggleSidebarMenuitem, "Toggle Sidebar menuitem exists");
+    next();
+  },
+  testShowDesktopNotificationsMenuitemExists: function(next) {
+    let toggleDesktopNotificationsMenuitem = document.getElementById("social-toggle-notifications-menuitem");
+    ok(toggleDesktopNotificationsMenuitem, "Toggle notifications menuitem exists");
     next();
   }
 }
