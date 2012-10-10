@@ -15,11 +15,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <receiver android:name=".SUTStartupIntentReceiver">
-            <intent-filter>
-                 <action android:name="android.intent.action.MEDIA_MOUNTED"></action>
-            </intent-filter>
-        </receiver>
         <service android:name=".service.ASMozStub">
 		    <intent-filter>
 			    <action android:name="com.mozilla.SUTAgentAndroid.service.LISTENER_SERVICE" />

@@ -24,7 +24,6 @@ JAVAFILES = \
   RunCmdThread.java \
   RunDataThread.java \
   SUTAgentAndroid.java \
-  SUTStartupIntentReceiver.java \
   WifiConfiguration.java \
   R.java \
   $(NULL)
