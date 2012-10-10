@@ -292,6 +292,8 @@ To see more help for a specific command, run:
         if args.verbose:
             log_level = logging.DEBUG
 
+        self.log_manager.register_structured_logger(logging.getLogger('mach'))
+
         # Always enable terminal logging. The log manager figures out if we are
         # actually in a TTY or are a pipe and does the right thing.
         self.log_manager.add_terminal_logging(level=log_level,
