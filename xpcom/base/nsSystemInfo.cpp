@@ -190,6 +190,13 @@ nsSystemInfo::Init()
         }
         bool isTablet = mozilla::AndroidBridge::Bridge()->IsTablet();
         SetPropertyAsBool(NS_LITERAL_STRING("tablet"), isTablet);
+        // NSPR "version" is the kernel version. For Android we want the Android version.
+        // Rename SDK version to version and put the kernel version into kernel_version.
+        rv = GetPropertyAsAString(NS_LITERAL_STRING("version"), str);
+        if (NS_SUCCEEDED(rv)) {
+            SetPropertyAsAString(NS_LITERAL_STRING("kernel_version"), str);
+        }
+        SetPropertyAsInt32(NS_LITERAL_STRING("version"), android_sdk_version);
     }
 #endif
 
