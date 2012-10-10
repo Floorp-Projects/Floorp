@@ -254,7 +254,7 @@ nsDOMUIEvent::GetRangeParent(nsIDOMNode** aRangeParent)
                                                               targetFrame);
     nsCOMPtr<nsIContent> parent = targetFrame->GetContentOffsetsFromPoint(pt).content;
     if (parent) {
-      if (parent->IsInNativeAnonymousSubtree() &&
+      if (parent->ChromeOnlyAccess() &&
           !nsContentUtils::CanAccessNativeAnon()) {
         return NS_OK;
       }

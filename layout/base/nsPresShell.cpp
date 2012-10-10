@@ -6762,7 +6762,7 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
   NS_ENSURE_TRUE(node, false);
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
   if (content) {
-    nsIContent* nonNative = content->FindFirstNonNativeAnonymous();
+    nsIContent* nonNative = content->FindFirstNonChromeOnlyAccessContent();
     content = nonNative;
   }
 
