@@ -897,6 +897,21 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     }
   }
 
+  if (windowIsNew) {
+    // For top level windows, we want to ensure that the privacy status of the parent
+    // is propagated to the new child if it is available.
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    GetWindowTreeItem(aParent, getter_AddRefs(parentItem));
+    nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(parentItem);
+
+    nsCOMPtr<nsIDocShellTreeItem> childRoot;
+    newDocShellItem->GetRootTreeItem(getter_AddRefs(childRoot));
+    nsCOMPtr<nsILoadContext> childContext = do_QueryInterface(childRoot);
+    if (parentContext && childContext) {
+      childContext->SetUsePrivateBrowsing(parentContext->UsePrivateBrowsing());
+    }
+  }
+
   if (uriToLoad && aNavigate) { // get the script principal and pass it to docshell
     JSContextAutoPopper contextGuard;
 
