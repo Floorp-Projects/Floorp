@@ -708,14 +708,19 @@ let DOMApplicationRegistry = {
     } catch(e) { }
 
     // Get the manifest, and set properties.
-    this.getManifestFor(app.origin, function(aData) {
+    this.getManifestFor(app.origin, (function(aData) {
       app.readyToApplyDownload = false;
       this.broadcastMessage("Webapps:PackageEvent",
                             { type: "applied",
                               manifestURL: aApp.manifestURL,
                               app: app,
                               manifest: aData });
-    });
+      // Update the permissions for this app.
+      PermissionsInstaller.installPermissions({ manifest: aData,
+                                                origin: app.origin,
+                                                manifestURL: aApp.manifestURL },
+                                              true);
+    }).bind(this));
   },
 
   startOfflineCacheDownload: function startOfflineCacheDownload(aManifest, aApp,
@@ -811,6 +816,12 @@ let DOMApplicationRegistry = {
 
       // Preload the appcache if needed.
       this.startOfflineCacheDownload(manifest, app);
+
+      // Update the permissions for this app.
+      PermissionsInstaller.installPermissions({ manifest: aManifest,
+                                                origin: app.origin,
+                                                manifestURL: aData.manifestURL },
+                                              true);
     }
 
     // First, we download the manifest.
@@ -951,9 +962,13 @@ let DOMApplicationRegistry = {
 
     this.webapps[id] = appObject;
 
-    PermissionsInstaller.installPermissions(aData.app, isReinstall, (function() {
-      this.uninstall(aData, aData.mm);
-    }).bind(this));
+    // For package apps, the permissions are not in the mini-manifest, so
+    // don't update the permissions yet.
+    if (!aData.isPackage) {
+      PermissionsInstaller.installPermissions(aData.app, isReinstall, (function() {
+        this.uninstall(aData, aData.mm);
+      }).bind(this));
+    }
 
     ["installState", "downloadAvailable",
      "downloading", "downloadSize", "readyToApplyDownload"].forEach(function(aProp) {
@@ -1001,6 +1016,11 @@ let DOMApplicationRegistry = {
         app.downloading = false;
         app.downloadavailable = false;
         DOMApplicationRegistry._saveApps(function() {
+          // Update the permissions for this app.
+          PermissionsInstaller.installPermissions({ manifest: aManifest,
+                                                    origin: appObject.origin,
+                                                    manifestURL: appObject.manifestURL },
+                                                  true);
           debug("About to fire Webapps:PackageEvent");
           DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
                                                   { type: "installed",
