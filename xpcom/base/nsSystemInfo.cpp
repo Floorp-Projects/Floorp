@@ -179,15 +179,6 @@ nsSystemInfo::Init()
         android_sdk_version = version;
         if (version >= 8 && mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str))
             SetPropertyAsAString(NS_LITERAL_STRING("hardware"), str);
-        SetPropertyAsAString(NS_LITERAL_STRING("shellName"), NS_LITERAL_STRING("Android"));
-        if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build$VERSION", "CODENAME", str)) {
-            if (version) {
-                str.Append(NS_LITERAL_STRING(" ("));
-                str.AppendInt(version);
-                str.Append(NS_LITERAL_STRING(")"));
-            }
-            SetPropertyAsAString(NS_LITERAL_STRING("shellVersion"), str);
-        }
         bool isTablet = mozilla::AndroidBridge::Bridge()->IsTablet();
         SetPropertyAsBool(NS_LITERAL_STRING("tablet"), isTablet);
         // NSPR "version" is the kernel version. For Android we want the Android version.
