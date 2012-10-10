@@ -300,7 +300,6 @@ To see more help for a specific command, run:
             write_interval=args.log_interval)
 
         self.load_settings(args)
-        conf = BuildConfig(self.settings)
 
         stripped = {k: getattr(args, k) for k in vars(args) if k not in
             CONSUMED_ARGUMENTS}
@@ -403,6 +402,11 @@ To see more help for a specific command, run:
           2) Environment variable
           3) Default path
         """
+        # Settings are disabled until integration with command providers is
+        # worked out.
+        self.settings = None
+        return False
+
         for provider in SETTINGS_PROVIDERS:
             provider.register_settings()
             self.settings.register_provider(provider)
@@ -434,8 +438,8 @@ To see more help for a specific command, run:
         global_group.add_argument('-h', '--help', action='help',
             help='Show this help message and exit.')
 
-        global_group.add_argument('--settings', dest='settings_file',
-            metavar='FILENAME', help='Path to settings file.')
+        #global_group.add_argument('--settings', dest='settings_file',
+        #    metavar='FILENAME', help='Path to settings file.')
 
         global_group.add_argument('-v', '--verbose', dest='verbose',
             action='store_true', default=False,
