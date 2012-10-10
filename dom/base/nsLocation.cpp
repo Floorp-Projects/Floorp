@@ -212,9 +212,6 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
     nsIPrincipal* principal = secMan->GetCxSubjectPrincipalAndFrame(cx, &fp);
     NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIURI> principalURI;
-    principal->GetURI(getter_AddRefs(principalURI));
-
     // Make the load's referrer reflect changes to the document's URI caused by
     // push/replaceState, if possible.  First, get the document corresponding to
     // fp.  If the document's original URI (i.e. its URI before
@@ -222,11 +219,13 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
     // current URI as the referrer.  If they don't match, use the principal's
     // URI.
 
-    nsCOMPtr<nsIDocument> frameDoc = GetFrameDocument(cx, fp);
-    nsCOMPtr<nsIURI> docOriginalURI, docCurrentURI;
-    if (frameDoc) {
-      docOriginalURI = frameDoc->GetOriginalURI();
-      docCurrentURI = frameDoc->GetDocumentURI();
+    nsCOMPtr<nsIDocument> doc = GetFrameDocument(cx, fp);
+    nsCOMPtr<nsIURI> docOriginalURI, docCurrentURI, principalURI;
+    if (doc) {
+      docOriginalURI = doc->GetOriginalURI();
+      docCurrentURI = doc->GetDocumentURI();
+      rv = doc->NodePrincipal()->GetURI(getter_AddRefs(principalURI));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     bool urisEqual = false;
@@ -241,7 +240,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
       sourceURI = principalURI;
     }
 
-    owner = do_QueryInterface(principal);
+    owner = do_QueryInterface(doc ? doc->NodePrincipal() : secMan->GetCxSubjectPrincipal(cx));
   }
 
   // Create load info
