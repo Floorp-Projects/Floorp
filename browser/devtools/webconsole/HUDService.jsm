@@ -901,6 +901,53 @@ WebConsole.prototype = {
   },
 
   /**
+   * Open a link in Firefox's view source.
+   *
+   * @param string aSourceURL
+   *        The URL of the file.
+   * @param integer aSourceLine
+   *        The line number which should be highlighted.
+   */
+  viewSource: function WC_viewSource(aSourceURL, aSourceLine)
+  {
+    this.gViewSourceUtils.viewSource(aSourceURL, null,
+                                     this.iframeWindow.document, aSourceLine);
+  },
+
+  /**
+   * Tries to open a Stylesheet file related to the web page for the web console
+   * instance in the Style Editor. If the file is not found, it is opened in
+   * source view instead.
+   *
+   * @param string aSourceURL
+   *        The URL of the file.
+   * @param integer aSourceLine
+   *        The line number which you want to place the caret.
+   * TODO: This function breaks the client-server boundaries.
+   *       To be fixed in bug 793259.
+   */
+  viewSourceInStyleEditor:
+  function WC_viewSourceInStyleEditor(aSourceURL, aSourceLine)
+  {
+    let styleSheets = this.tab.linkedBrowser.contentWindow.document.styleSheets;
+    for each (let style in styleSheets) {
+      if (style.href == aSourceURL) {
+        let SEM = this.chromeWindow.StyleEditor.StyleEditorManager;
+        let win = SEM.getEditorForWindow(this.chromeWindow.content.window);
+        if (win) {
+          SEM.selectEditor(win, style, aSourceLine);
+        }
+        else {
+          this.chromeWindow.StyleEditor.openChrome(style, aSourceLine);
+        }
+        return;
+      }
+    }
+    // Open view source if style editor fails.
+    this.viewSource(aSourceURL, aSourceLine);
+  },
+
+  /**
    * Destroy the object. Call this method to avoid memory leaks when the Web
    * Console is closed.
    *

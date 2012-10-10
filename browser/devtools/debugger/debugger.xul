@@ -90,6 +90,10 @@
                 type="checkbox"
                 tabindex="0"
                 label="&debuggerUI.pauseExceptions;"/>
+      <checkbox id="show-nonenum"
+                type="checkbox"
+                tabindex="0"
+                label="&debuggerUI.showNonEnums;"/>
       <spacer flex="1"/>
 #ifndef XP_MACOSX
       <toolbarbutton id="close"
