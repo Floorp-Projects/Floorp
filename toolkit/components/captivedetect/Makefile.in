@@ -22,4 +22,8 @@ EXTRA_COMPONENTS = \
   captivedetect.js \
   $(NULL)
 
+ifdef ENABLE_TESTS
+XPCSHELL_TESTS = test
+endif
+
 include $(topsrcdir)/config/rules.mk
