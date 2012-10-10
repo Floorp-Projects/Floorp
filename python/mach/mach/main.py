@@ -13,6 +13,7 @@ import imp
 import logging
 import os
 import sys
+import uuid
 
 from mozbuild.base import BuildConfig
 from mozbuild.config import ConfigSettings
@@ -39,8 +40,6 @@ CONSUMED_ARGUMENTS = [
     'method',
     'func',
 ]
-
-MODULES_SCANNED = False
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -113,10 +112,54 @@ To see more help for a specific command, run:
 
         self.log_manager.register_structured_logger(self.logger)
 
-        if not MODULES_SCANNED:
-            self._load_modules()
+    def load_commands_from_sys_path(self):
+        """Discover and load mach command modules from sys.path.
 
-        MODULES_SCANNED = True
+        This iterates over all paths on sys.path. If the path contains a
+        "mach/commands" subdirectory, all .py files in that directory will be
+        loaded and examined for mach commands.
+        """
+        # Create parent module otherwise Python complains when the parent is
+        # missing.
+        if b'mach.commands' not in sys.modules:
+            mod = imp.new_module(b'mach.commands')
+            sys.modules[b'mach.commands'] = mod
+
+        for path in sys.path:
+            # We only support importing .py files from directories.
+            commands_path = os.path.join(path, 'mach', 'commands')
+
+            if not os.path.isdir(commands_path):
+                continue
+
+            self.load_commands_from_directory(commands_path)
+
+    def load_commands_from_directory(self, path):
+        """Scan for mach commands from modules in a directory.
+
+        This takes a path to a directory, loads the .py files in it, and
+        registers and found mach command providers with this mach instance.
+        """
+        for f in sorted(os.listdir(path)):
+            if not f.endswith('.py') or f == '__init__.py':
+                continue
+
+            full_path = os.path.join(path, f)
+            module_name = 'mach.commands.%s' % f[0:-3]
+
+            self.load_commands_from_file(full_path, module_name=module_name)
+
+    def load_commands_from_file(self, path, module_name=None):
+        """Scan for mach commands from a file.
+
+        This takes a path to a file and loads it as a Python module under the
+        module name specified. If no name is specified, a random one will be
+        chosen.
+        """
+        if module_name is None:
+            module_name = 'mach.commands.%s' % uuid.uuid1().get_hex()
+
+        imp.load_source(module_name, path)
 
     def run(self, argv):
         """Runs mach with arguments provided from the command line.
@@ -216,35 +259,6 @@ To see more help for a specific command, run:
         """Helper method to record a structured log event."""
         self.logger.log(level, format_str,
             extra={'action': action, 'params': params})
-
-    def _load_modules(self):
-        """Scan over Python modules looking for mach command providers."""
-
-        # Create parent module otherwise Python complains when the parent is
-        # missing.
-        if b'mach.commands' not in sys.modules:
-            mod = imp.new_module(b'mach.commands')
-            sys.modules[b'mach.commands'] = mod
-
-        for path in sys.path:
-            # We only support importing .py files from directories.
-            commands_path = os.path.join(path, 'mach', 'commands')
-
-            if not os.path.isdir(commands_path):
-                continue
-
-            # We only support loading modules in the immediate mach.commands
-            # module, not sub-modules. Walking the tree would be trivial to
-            # implement if it were ever desired.
-            for f in sorted(os.listdir(commands_path)):
-                if not f.endswith('.py') or f == '__init__.py':
-                    continue
-
-                full_path = os.path.join(commands_path, f)
-                module_name = 'mach.commands.%s' % f[0:-3]
-
-                imp.load_source(module_name, full_path)
-
 
     def load_settings(self, args):
         """Determine which settings files apply and load them.

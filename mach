@@ -44,4 +44,5 @@ except ImportError:
 
 # All of the code is in a module because EVERYTHING IS A LIBRARY.
 mach = mach.main.Mach(our_dir)
+mach.load_commands_from_sys_path()
 sys.exit(mach.run(sys.argv[1:]))
