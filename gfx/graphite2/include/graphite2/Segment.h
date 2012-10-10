@@ -51,6 +51,8 @@ enum gr_break_weight {
 };
 
 enum gr_justFlags {
+    /// Indicates that this segment is a complete line
+    gr_justCompleteLine = 0,
     /// Indicates that the start of the slot list is not at the start of a line
     gr_justStartInline = 1,
     /// Indicates that the end of the slot list is not at the end of a line
@@ -264,15 +266,18 @@ GR2_API const gr_slot* gr_seg_last_slot(gr_segment* pSeg/*not NULL*/);    //may 
   * This allows skipping of line initial or final whitespace, for example. While this will ensure
   * that the subrange fits width, the line will still be positioned with the first glyph of the
   * line at 0. So the resulting positions may be beyond width.
+  *
+  * @return float   The resulting width of the range of slots justified.
   * @param pSeg     Pointer to the segment
   * @param pStart   Pointer to the start of the line linked list (including skipped characters)
   * @param pFont    Font to use for positioning
-  * @param width    Width in pixels in which to fit the line
+  * @param width    Width in pixels in which to fit the line. If < 0. don't adjust natural width, just run justification passes
+  *                 to handle line end contextuals, if there are any.
   * @param flags    Indicates line ending types. Default is linked list is a full line
   * @param pFirst   If not NULL, the first slot in the list to be considered part of the line (so can skip)
   * @param pLast    If not NULL, the last slot to process in the line (allow say trailing whitespace to be skipped)
   */
-GR2_API void gr_seg_justify(gr_segment* pSeg/*not NULL*/, gr_slot* pStart/*not NULL*/, const gr_font *pFont, double width, enum gr_justFlags flags, gr_slot* pFirst, gr_slot* pLast);
+GR2_API float gr_seg_justify(gr_segment* pSeg/*not NULL*/, const gr_slot* pStart/*not NULL*/, const gr_font *pFont, double width, enum gr_justFlags flags, const gr_slot* pFirst, const gr_slot* pLast);
 
 /** Returns the next slot along in the segment.
   *

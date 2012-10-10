@@ -268,4 +268,13 @@ extern HB_INTERNAL const hb_unicode_funcs_t _hb_unicode_funcs_nil;
 #define HB_MODIFIED_COMBINING_CLASS_CCC132 132 /* sign u */
 
 
+/* Misc */
+
+#define HB_UNICODE_GENERAL_CATEGORY_IS_MARK(gen_cat) \
+	(FLAG (gen_cat) & \
+	 (FLAG (HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK) | \
+	  FLAG (HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK) | \
+	  FLAG (HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)))
+
+
 #endif /* HB_UNICODE_PRIVATE_HH */

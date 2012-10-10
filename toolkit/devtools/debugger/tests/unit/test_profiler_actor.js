@@ -114,16 +114,23 @@ function test_profile(aClient, aProfiler)
     do_check_eq(typeof aResponse.profile.threads[0].samples, "object");
     do_check_neq(aResponse.profile.threads[0].samples.length, 0);
 
-    // A sample around the middle of the list is expected to have been
-    // in the busy wait above.
-    var sample = aResponse.profile.threads[0].samples[Math.floor(aResponse.profile.threads[0].samples.length / 2)];
-    do_check_eq(sample.name, "(root)");
-    do_check_eq(typeof sample.frames, "object");
-    do_check_neq(sample.frames.length, 0);
-    do_check_true(sample.frames.some(function(f) {
-                    return (f.line == stack.lineNumber) &&
-                           (f.location == stack.name + " (" + stack.filename + ":" + funcLine + ")");
-                  }));
+    function some(array, cb) {
+      for (var i = array.length; i; i--) {
+        if (cb(array[i - 1]))
+          return true;
+      }
+      return false;
+    }
+    // At least one sample is expected to have been in the busy wait above.
+    do_check_true(some(aResponse.profile.threads[0].samples, function(sample) {
+      return sample.name == "(root)" &&
+             typeof sample.frames == "object" &&
+             sample.frames.length != 0 &&
+             sample.frames.some(function(f) {
+               return (f.line == stack.lineNumber) &&
+                      (f.location == stack.name + " (" + stack.filename + ":" + funcLine + ")");
+             });
+    }));
 
     aClient.request({ to: aProfiler, type: "stopProfiler" }, function (aResponse) {
       do_check_eq(typeof aResponse.msg, "string");

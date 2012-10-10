@@ -32,7 +32,7 @@ import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class Tab {
+public class Tab {
     private static final String LOGTAG = "GeckoTab";
 
     private static Pattern sColorPattern;
@@ -288,7 +288,15 @@ public final class Tab {
         });
     }
 
-    private void updateHistory(final String uri, final String title) {
+    protected void addHistory(final String uri) {
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                GlobalHistory.getInstance().add(uri);
+            }
+        });
+    }
+
+    protected void updateHistory(final String uri, final String title) {
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
                 GlobalHistory.getInstance().update(uri, title);
@@ -454,7 +462,7 @@ public final class Tab {
             return;
 
         mEnteringReaderMode = true;
-        GeckoApp.mAppContext.loadUrl(ReaderModeUtils.getAboutReaderForUrl(getURL(), mId, mReadingListItem));
+        Tabs.getInstance().loadUrl(ReaderModeUtils.getAboutReaderForUrl(getURL(), mId, mReadingListItem));
     }
 
     public boolean isEnteringReaderMode() {
@@ -504,11 +512,7 @@ public final class Tab {
             final String url = message.getString("url");
             mHistoryIndex++;
             mHistorySize = mHistoryIndex + 1;
-            GeckoAppShell.getHandler().post(new Runnable() {
-                public void run() {
-                    GlobalHistory.getInstance().add(url);
-                }
-            });
+            addHistory(url);
         } else if (event.equals("Back")) {
             if (!canDoBack()) {
                 Log.e(LOGTAG, "Received unexpected back notification");
@@ -573,7 +577,7 @@ public final class Tab {
         });
     }
 
-    private void saveThumbnailToDB() {
+    protected void saveThumbnailToDB() {
         try {
             String url = getURL();
             if (url == null)
@@ -659,5 +663,9 @@ public final class Tab {
 
     public boolean getDesktopMode() {
         return mDesktopMode;
+    }
+
+    public boolean isPrivate() {
+        return false;
     }
 }

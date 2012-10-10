@@ -36,8 +36,7 @@ Description:
 ----------------------------------------------------------------------------------------------*/
 
 
-//#include <cstddef>
-//#include <stdexcept>
+#include <cstddef>
 
 namespace graphite2
 {
@@ -138,13 +137,13 @@ public:
 	////////////////////////////////// cmap lookup tools 
 	const void * FindCmapSubtable(const void * pCmap, int nPlatformId = 3, 
 		int nEncodingId = 1, size_t length = 0);
-	bool CheckCmap31Subtable(const void * pCmap31);
-	gid16 Cmap31Lookup(const void * pCmap31, int nUnicodeId, int rangeKey = 0); 
-	unsigned int Cmap31NextCodepoint(const void *pCmap31, unsigned int nUnicodeId,
+	bool CheckCmapSubtable4(const void * pCmap31);
+	gid16 CmapSubtable4Lookup(const void * pCmapSubtabel4, unsigned int nUnicodeId, int rangeKey = 0);
+	unsigned int CmapSubtable4NextCodepoint(const void *pCmap31, unsigned int nUnicodeId,
 		int * pRangeKey = 0);
-	bool CheckCmap310Subtable(const void *pCmap310);
-	gid16 Cmap310Lookup(const void * pCmap310, unsigned int uUnicodeId, int rangeKey = 0);
-	unsigned int Cmap310NextCodepoint(const void *pCmap310, unsigned int nUnicodeId,
+	bool CheckCmapSubtable12(const void *pCmap310);
+	gid16 CmapSubtable12Lookup(const void * pCmap310, unsigned int uUnicodeId, int rangeKey = 0);
+	unsigned int CmapSubtable12NextCodepoint(const void *pCmap310, unsigned int nUnicodeId,
 		int * pRangeKey = 0);
 
 	///////////////////////////////// horizontal metric data for a glyph

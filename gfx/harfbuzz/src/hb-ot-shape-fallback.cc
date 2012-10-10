@@ -26,28 +26,55 @@
 
 #include "hb-ot-shape-fallback-private.hh"
 
-static void
-zero_mark_advances (hb_buffer_t *buffer,
-		    unsigned int start,
-		    unsigned int end)
-{
-  for (unsigned int i = start; i < end; i++)
-    if (_hb_glyph_info_get_general_category (&buffer->info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)
-    {
-      buffer->pos[i].x_advance = 0;
-      buffer->pos[i].y_advance = 0;
-    }
-}
-
 static unsigned int
-recategorize_combining_class (unsigned int modified_combining_class)
+recategorize_combining_class (hb_codepoint_t u,
+			      unsigned int klass)
 {
-  if (modified_combining_class >= 200)
-    return modified_combining_class;
+  if (klass >= 200)
+    return klass;
 
-  /* This should be kept in sync with modified combining class mapping
-   * from hb-unicode.cc. */
-  switch (modified_combining_class)
+  /* Thai / Lao need some per-character work. */
+  if ((u & ~0xFF) == 0x0E00)
+  {
+    if (unlikely (klass == 0))
+    {
+      switch (u)
+      {
+        case 0x0E31:
+        case 0x0E34:
+        case 0x0E35:
+        case 0x0E36:
+        case 0x0E37:
+        case 0x0E47:
+        case 0x0E4C:
+        case 0x0E4D:
+        case 0x0E4E:
+	  klass = HB_UNICODE_COMBINING_CLASS_ABOVE_RIGHT;
+	  break;
+
+        case 0x0EB1:
+        case 0x0EB4:
+        case 0x0EB5:
+        case 0x0EB6:
+        case 0x0EB7:
+        case 0x0EBB:
+        case 0x0ECC:
+        case 0x0ECD:
+	  klass = HB_UNICODE_COMBINING_CLASS_ABOVE;
+	  break;
+
+        case 0x0EBC:
+	  klass = HB_UNICODE_COMBINING_CLASS_BELOW;
+	  break;
+      }
+    } else {
+      /* Thai virama is below-right */
+      if (u == 0x0E3A)
+	klass = HB_UNICODE_COMBINING_CLASS_BELOW_RIGHT;
+    }
+  }
+
+  switch (klass)
   {
 
     /* Hebrew */
@@ -101,23 +128,20 @@ recategorize_combining_class (unsigned int modified_combining_class)
 
     /* Thai */
 
-    /* Note: to be useful we also need to position U+0E3A that has ccc=9 (virama).
-     * But viramas can be both above and below based on the codepoint / script. */
-
     case HB_MODIFIED_COMBINING_CLASS_CCC103: /* sara u / sara uu */
-      return HB_UNICODE_COMBINING_CLASS_BELOW;
+      return HB_UNICODE_COMBINING_CLASS_BELOW_RIGHT;
 
     case HB_MODIFIED_COMBINING_CLASS_CCC107: /* mai */
-      return HB_UNICODE_COMBINING_CLASS_ABOVE;
+      return HB_UNICODE_COMBINING_CLASS_ABOVE_RIGHT;
 
 
     /* Lao */
 
     case HB_MODIFIED_COMBINING_CLASS_CCC118: /* sign u / sign uu */
-      return HB_UNICODE_COMBINING_CLASS_BELOW;
+      return HB_UNICODE_COMBINING_CLASS_BELOW_RIGHT;
 
     case HB_MODIFIED_COMBINING_CLASS_CCC122: /* mai */
-      return HB_UNICODE_COMBINING_CLASS_ABOVE;
+      return HB_UNICODE_COMBINING_CLASS_ABOVE_RIGHT;
 
 
     /* Tibetan */
@@ -133,7 +157,35 @@ recategorize_combining_class (unsigned int modified_combining_class)
 
   }
 
-  return modified_combining_class;
+  return klass;
+}
+
+void
+_hb_ot_shape_fallback_position_recategorize_marks (const hb_ot_shape_plan_t *plan,
+						   hb_font_t *font,
+						   hb_buffer_t  *buffer)
+{
+  unsigned int count = buffer->len;
+  for (unsigned int i = 0; i < count; i++)
+    if (_hb_glyph_info_get_general_category (&buffer->info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) {
+      unsigned int combining_class = _hb_glyph_info_get_modified_combining_class (&buffer->info[i]);
+      combining_class = recategorize_combining_class (buffer->info[i].codepoint, combining_class);
+      _hb_glyph_info_set_modified_combining_class (&buffer->info[i], combining_class);
+    }
+}
+
+
+static void
+zero_mark_advances (hb_buffer_t *buffer,
+		    unsigned int start,
+		    unsigned int end)
+{
+  for (unsigned int i = start; i < end; i++)
+    if (_hb_glyph_info_get_general_category (&buffer->info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)
+    {
+      buffer->pos[i].x_advance = 0;
+      buffer->pos[i].y_advance = 0;
+    }
 }
 
 static inline void
@@ -171,6 +223,7 @@ position_mark (const hb_ot_shape_plan_t *plan,
       }
       /* Fall through */
 
+    default:
     case HB_UNICODE_COMBINING_CLASS_ATTACHED_BELOW:
     case HB_UNICODE_COMBINING_CLASS_ATTACHED_ABOVE:
     case HB_UNICODE_COMBINING_CLASS_BELOW:
@@ -234,6 +287,7 @@ position_around_base (const hb_ot_shape_plan_t *plan,
 		      unsigned int base,
 		      unsigned int end)
 {
+  hb_direction_t horiz_dir = HB_DIRECTION_INVALID;
   hb_glyph_extents_t base_extents;
   if (!font->get_glyph_extents (buffer->info[base].codepoint,
 				&base_extents))
@@ -245,33 +299,61 @@ position_around_base (const hb_ot_shape_plan_t *plan,
   base_extents.x_bearing += buffer->pos[base].x_offset;
   base_extents.y_bearing += buffer->pos[base].y_offset;
 
-  /* XXX Handle ligature component positioning... */
-  HB_UNUSED bool is_ligature = is_a_ligature (buffer->info[base]);
+  unsigned int lig_id = get_lig_id (buffer->info[base]);
+  unsigned int num_lig_components = get_lig_num_comps (buffer->info[base]);
 
   hb_position_t x_offset = 0, y_offset = 0;
   if (HB_DIRECTION_IS_FORWARD (buffer->props.direction)) {
     x_offset -= buffer->pos[base].x_advance;
     y_offset -= buffer->pos[base].y_advance;
   }
+
+  hb_glyph_extents_t component_extents = base_extents;
+  unsigned int last_lig_component = (unsigned int) -1;
   unsigned int last_combining_class = 255;
   hb_glyph_extents_t cluster_extents;
   for (unsigned int i = base + 1; i < end; i++)
-    if (_hb_glyph_info_get_general_category (&buffer->info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)
+    if (_hb_glyph_info_get_modified_combining_class (&buffer->info[i]))
     {
-      unsigned int this_combining_class = recategorize_combining_class (_hb_glyph_info_get_modified_combining_class (&buffer->info[i]));
-      if (this_combining_class != last_combining_class)
-        cluster_extents = base_extents;
+      if (num_lig_components > 1) {
+	unsigned int this_lig_id = get_lig_id (buffer->info[i]);
+	unsigned int this_lig_component = get_lig_comp (buffer->info[i]) - 1;
+	/* Conditions for attaching to the last component. */
+	if (!lig_id || lig_id != this_lig_id || this_lig_component >= num_lig_components)
+	  this_lig_component = num_lig_components - 1;
+	if (last_lig_component != this_lig_component)
+	{
+	  last_lig_component = this_lig_component;
+	  last_combining_class = 255;
+	  component_extents = base_extents;
+	  if (unlikely (horiz_dir == HB_DIRECTION_INVALID)) {
+	    if (HB_DIRECTION_IS_HORIZONTAL (plan->props.direction))
+	      horiz_dir = plan->props.direction;
+	    else
+	      horiz_dir = hb_script_get_horizontal_direction (plan->props.script);
+	  }
+	  if (horiz_dir == HB_DIRECTION_LTR)
+	    component_extents.x_bearing += (this_lig_component * component_extents.width) / num_lig_components;
+	  else
+	    component_extents.x_bearing += ((num_lig_components - 1 - this_lig_component) * component_extents.width) / num_lig_components;
+	  component_extents.width /= num_lig_components;
+	}
+      }
 
-      position_mark (plan, font, buffer, base_extents, i, this_combining_class);
+      unsigned int this_combining_class = _hb_glyph_info_get_modified_combining_class (&buffer->info[i]);
+      if (last_combining_class != this_combining_class)
+      {
+	last_combining_class = this_combining_class;
+        cluster_extents = component_extents;
+      }
+
+      position_mark (plan, font, buffer, cluster_extents, i, this_combining_class);
 
       buffer->pos[i].x_advance = 0;
       buffer->pos[i].y_advance = 0;
       buffer->pos[i].x_offset += x_offset;
       buffer->pos[i].y_offset += y_offset;
 
-      /* combine cluster extents. */
-
-      last_combining_class = this_combining_class;
     } else {
       if (HB_DIRECTION_IS_FORWARD (buffer->props.direction)) {
 	x_offset -= buffer->pos[i].x_advance;
@@ -281,8 +363,6 @@ position_around_base (const hb_ot_shape_plan_t *plan,
 	y_offset += buffer->pos[i].y_advance;
       }
     }
-
-
 }
 
 static inline void
@@ -297,14 +377,17 @@ position_cluster (const hb_ot_shape_plan_t *plan,
 
   /* Find the base glyph */
   for (unsigned int i = start; i < end; i++)
-    if (is_a_ligature (buffer->info[i]) ||
-        !(FLAG (_hb_glyph_info_get_general_category (&buffer->info[i])) &
-	  (FLAG (HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK) |
-	   FLAG (HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK) |
-	   FLAG (HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK))))
+    if (!HB_UNICODE_GENERAL_CATEGORY_IS_MARK (_hb_glyph_info_get_general_category (&buffer->info[i])))
     {
-      position_around_base (plan, font, buffer, i, end);
-      break;
+      /* Find mark glyphs */
+      unsigned int j;
+      for (j = i + 1; j < end; j++)
+	if (!HB_UNICODE_GENERAL_CATEGORY_IS_MARK (_hb_glyph_info_get_general_category (&buffer->info[j])))
+	  break;
+
+      position_around_base (plan, font, buffer, i, j);
+
+      i = j - 1;
     }
 }
 

@@ -678,24 +678,6 @@ WebGLContext::CopyTexSubImage2D_base(WebGLenum target,
     if (!tex)
         return ErrorInvalidOperation("%s: no texture is bound to this target");
 
-#ifdef MOZ_X11
-    // bug 785734
-    if (gl->WorkAroundDriverBugs() &&
-        mIsMesa &&
-        level > 0 &&
-        !sub)
-    {
-        size_t face = WebGLTexture::FaceForTarget(target);
-        if (!tex->HasImageInfoAt(0, face) ||
-            tex->ImageInfoAt(0, face).Width() <= width)
-        {
-            return  ErrorInvalidOperation("%s: rejecting valid call to avoid Mesa driver crash. "
-                                          "See Mozilla bug 785734",
-                                          info);
-        }
-    }
-#endif
-
     if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, framebufferWidth, framebufferHeight)) {
         if (sub)
             gl->fCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
@@ -4676,22 +4658,6 @@ WebGLContext::TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum intern
     // Handle ES2 and GL differences in floating point internal formats.  Note that
     // format == internalformat, as checked above and as required by ES.
     internalformat = InternalFormatForFormatAndType(format, type, gl->IsGLES2());
-
-#ifdef MOZ_X11
-    // bug 785734
-    if (gl->WorkAroundDriverBugs() &&
-        mIsMesa &&
-        level > 0)
-    {
-        size_t face = WebGLTexture::FaceForTarget(target);
-        if (!tex->HasImageInfoAt(0, face) ||
-            tex->ImageInfoAt(0, face).Width() <= width)
-        {
-            return  ErrorInvalidOperation("texImage2D: rejecting valid call to avoid Mesa driver crash. "
-                                          "See Mozilla bug 785734");
-        }
-    }
-#endif
 
     GLenum error = LOCAL_GL_NO_ERROR;
 

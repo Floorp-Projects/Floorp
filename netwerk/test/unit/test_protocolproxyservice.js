@@ -16,6 +16,7 @@
 // run_proxy_host_filters_test();
 // run_myipaddress_test();
 // run_failed_script_test();
+// run_isresolvable_test();
 
 var ios = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService);
@@ -654,7 +655,8 @@ var directFilterListener = {
     var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
     obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
     obs.removeObserver(this, "http-on-modify-request");
-    do_test_finished();
+
+    run_isresolvable_test();
   },
 
    observe: function(subject, topic, data) {
@@ -666,6 +668,38 @@ var directFilterListener = {
      }
    }
 };
+
+function run_isresolvable_test()
+{
+  // test a non resolvable host in the pac file
+
+  var pac = 'data:text/plain,' +
+            'function FindProxyForURL(url, host) {' +
+            ' if (isResolvable("nonexistant.lan"))' +
+            '   return "DIRECT";' +
+            ' return "PROXY 127.0.0.1:1234";' +
+            '}';
+
+  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+
+  prefs.setIntPref("network.proxy.type", 2);
+  prefs.setCharPref("network.proxy.autoconfig_url", pac);
+
+  var cb = new resolveCallback();
+  cb.nextFunction = isresolvable_callback;
+  var req = pps.asyncResolve(uri, 0, cb);
+}
+
+function isresolvable_callback(pi)
+{
+  do_check_neq(pi, null);
+  do_check_eq(pi.type, "http");
+  do_check_eq(pi.port, 1234);
+  do_check_eq(pi.host, "127.0.0.1");
+
+  prefs.setIntPref("network.proxy.type", 0);
+  do_test_finished();
+}
 
 function run_deprecated_sync_test()
 {

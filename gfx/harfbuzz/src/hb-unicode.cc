@@ -112,6 +112,7 @@ hb_unicode_decompose_compatibility_nil (hb_unicode_funcs_t *ufuncs     HB_UNUSED
 #define HB_UNICODE_FUNCS_IMPLEMENT_SET \
   HB_UNICODE_FUNCS_IMPLEMENT (glib) \
   HB_UNICODE_FUNCS_IMPLEMENT (icu) \
+  HB_UNICODE_FUNCS_IMPLEMENT (ucdn) \
   HB_UNICODE_FUNCS_IMPLEMENT (nil) \
   /* ^--- Add new callbacks before nil */
 
@@ -134,6 +135,8 @@ hb_unicode_funcs_get_default (void)
   HB_UNICODE_FUNCS_IMPLEMENT(glib)
 #elif defined(HAVE_ICU)
   HB_UNICODE_FUNCS_IMPLEMENT(icu)
+#elif defined(HAVE_UCDN)
+  HB_UNICODE_FUNCS_IMPLEMENT(ucdn)
 #else
 #define HB_UNICODE_FUNCS_NIL 1
   HB_UNICODE_FUNCS_IMPLEMENT(nil)
