@@ -94,7 +94,7 @@
   <statusbar>
     <statusbarpanel flex="1" pack="start">
       <textbox placeholder="&filter.label;" accesskey="&filter.accesskey;" type="search"
-               id="Filter" oncommand="changeFilter()" oninput="changeFilter()"/>
+               id="Filter" oncommand="changeFilter();"/>
     </statusbarpanel>
   </statusbar>
 </window>
