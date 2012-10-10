@@ -1827,7 +1827,7 @@ DataChannelConnection::SendBlob(uint16_t stream, nsIInputStream *aBlob)
   aBlob->Available(&len);
   nsresult rv = NS_ReadInputStreamToString(aBlob, *temp, len);
 
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, 0);
 
   aBlob->Close();
   //aBlob->Release(); We didn't AddRef() the way WebSocket does in OutboundMessage (yet)
