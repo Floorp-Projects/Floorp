@@ -99,12 +99,22 @@ function waitForEvent(aEventType, aTarget, aFunc, aContext, aArg1, aArg2)
 }
 
 /**
+ * Generate mouse move over image map what creates image map accessible (async).
+ * See waitForImageMap() function.
+ */
+function waveOverImageMap(aImageMapID)
+{
+  var imageMapNode = getNode(aImageMapID);
+  synthesizeMouse(imageMapNode, 10, 10, { type: "mousemove" },
+                  imageMapNode.ownerDocument.defaultView);
+}
+
+/**
  * Call the given function when the tree of the given image map is built.
  */
 function waitForImageMap(aImageMapID, aTestFunc)
 {
-  synthesizeMouse(aImageMapID, 10, 10, { type: "mousemove" },
-                  aImageMapID.ownerDocument.defaultView);
+  waveOverImageMap(aImageMapID);
 
   var imageMapAcc = getAccessible(aImageMapID);
   if (imageMapAcc.firstChild)
