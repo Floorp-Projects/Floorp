@@ -117,7 +117,7 @@ bool nsCharsetConverterManager::IsInternal(const nsACString& aCharset)
   nsAutoString str;
   // fully qualify to possibly avoid vtable call
   nsresult rv = GetCharsetDataImpl(PromiseFlatCString(aCharset).get(),
-                                   NS_LITERAL_STRING(".isXSSVulnerable").get(),
+                                   NS_LITERAL_STRING(".isInternal").get(),
                                    str);
 
   return NS_SUCCEEDED(rv);

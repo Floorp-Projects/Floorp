@@ -87,7 +87,7 @@ interface nsICharsetConverterManager : nsISupports
      *    notForOutgoing - not to be used for exporting files.
      *    LangGroup      - language code for charset, e.g. 'he' and 'zh-CN'.
      *    isMultibyte    - is this a multi-byte charset?
-     *    isXSSVulnerable - not to be used in untrusted web content
+     *    isInternal     - not to be used in untrusted web content.
      * 
      * @param aCharset name of the character encoding, e.g. 'iso-8859-15'.
      * @param aProp property desired for the character encoding.
