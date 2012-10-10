@@ -34,8 +34,8 @@ of the License or (at your option) any later version.
 
 using namespace graphite2;
 
-CachedFace::CachedFace(const void* appFaceHandle/*non-NULL*/, gr_get_table_fn getTable2)
-: Face(appFaceHandle, getTable2), m_cacheStore(0) 
+CachedFace::CachedFace(const void* appFaceHandle/*non-NULL*/, const gr_face_ops & ops)
+: Face(appFaceHandle, ops), m_cacheStore(0)
 {
 }
 
@@ -46,8 +46,8 @@ CachedFace::~CachedFace()
 
 bool CachedFace::setupCache(unsigned int cacheSize)
 {
-    m_cacheStore = new SegCacheStore(this, m_numSilf, cacheSize);
-    return (m_cacheStore != NULL);
+    m_cacheStore = new SegCacheStore(*this, m_numSilf, cacheSize);
+    return bool(m_cacheStore);
 }
 
 

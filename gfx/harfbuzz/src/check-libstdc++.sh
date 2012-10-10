@@ -27,7 +27,7 @@ for suffix in so dylib; do
 	fi
 done
 if ! $tested; then
-	echo "check-internal-symbols.sh: libharfbuzz shared library not found; skipping test"
+	echo "check-libstdc++.sh: libharfbuzz shared library not found; skipping test"
 	exit 77
 fi
 

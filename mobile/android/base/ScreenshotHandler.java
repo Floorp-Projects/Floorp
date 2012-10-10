@@ -12,6 +12,7 @@ import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.gfx.ScreenshotLayer;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 import org.mozilla.gecko.util.FloatUtils;
+import org.mozilla.gecko.PrefsHelper;
 
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -28,11 +29,14 @@ public final class ScreenshotHandler implements Runnable {
     public static final int SCREENSHOT_THUMBNAIL = 0;
     public static final int SCREENSHOT_CHECKERBOARD = 1;
 
+    private static final String SCREENSHOT_DISABLED_PREF = "gfx.java.screenshot.enabled";
+
     private static final String LOGTAG = "GeckoScreenshotHandler";
     private static final int BYTES_FOR_16BPP = 2;
     private static final int MAX_PIXELS_PER_SLICE = 100000;
 
     private static boolean sDisableScreenshot;
+    private static boolean sForceDisabled;
     private static ScreenshotHandler sInstance;
 
     private final int mMaxTextureSize;
@@ -80,6 +84,14 @@ public final class ScreenshotHandler implements Runnable {
         mBuffer = DirectBufferAllocator.allocate(mMaxPixels * BYTES_FOR_16BPP);
         mDirtyRect = new RectF();
         clearDirtyRect();
+        PrefsHelper.getPref(SCREENSHOT_DISABLED_PREF,
+             new PrefsHelper.PrefHandlerBase() {
+                  @Override public void prefValue(String pref, boolean value) {
+                      if (SCREENSHOT_DISABLED_PREF.equals(pref) && !value)
+                          disableScreenshot(true);
+                  }
+             }
+            );
     }
 
     private void cleanup() {
@@ -96,9 +108,19 @@ public final class ScreenshotHandler implements Runnable {
 
     // Invoked via reflection from robocop test
     public static synchronized void disableScreenshot() {
+        disableScreenshot(true);
+    }
+
+    // Invoked via reflection from robocop test
+    public static synchronized void disableScreenshot(boolean forced) {
         if (sDisableScreenshot) {
+            if (!sForceDisabled)
+                sForceDisabled = forced;
             return;
         }
+
+        sForceDisabled = forced;
+
         sDisableScreenshot = true;
         if (sInstance != null) {
             sInstance.cleanup();
@@ -107,11 +129,12 @@ public final class ScreenshotHandler implements Runnable {
         Log.i(LOGTAG, "Screenshotting disabled");
     }
 
-    public static synchronized void enableScreenshot() {
-        if (!sDisableScreenshot) {
+    public static synchronized void enableScreenshot(boolean forced) {
+        if (!sDisableScreenshot || (sForceDisabled && !forced)) {
             return;
         }
         sDisableScreenshot = false;
+        sForceDisabled = false;
         Log.i(LOGTAG, "Screenshotting enabled");
     }
 

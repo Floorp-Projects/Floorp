@@ -673,7 +673,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             updateTabCount(Tabs.getInstance().getCount());
             updateBackButton(tab.canDoBack());
             updateForwardButton(tab.canDoForward());
+            updateBackgroundColor(tab.isPrivate() ? 1 : 0);
         }
+    }
+
+    private void updateBackgroundColor(int level) {
+        mAwesomeBar.getBackground().setLevel(level);
     }
 
     public void destroy() {

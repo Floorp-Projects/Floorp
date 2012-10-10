@@ -49,6 +49,7 @@ struct hb_ot_map_t
     unsigned int shift;
     hb_mask_t mask;
     hb_mask_t _1_mask; /* mask for value=1, for quick access */
+    hb_bool_t needs_fallback;
 
     static int cmp (const feature_map_t *a, const feature_map_t *b)
     { return a->tag < b->tag ? -1 : a->tag > b->tag ? 1 : 0; }
@@ -78,6 +79,11 @@ struct hb_ot_map_t
     const feature_map_t *map = features.bsearch (&feature_tag);
     if (shift) *shift = map ? map->shift : 0;
     return map ? map->mask : 0;
+  }
+
+  inline bool needs_fallback (hb_tag_t feature_tag) const {
+    const feature_map_t *map = features.bsearch (&feature_tag);
+    return map ? map->needs_fallback : false;
   }
 
   inline hb_mask_t get_1_mask (hb_tag_t feature_tag) const {
@@ -147,10 +153,10 @@ struct hb_ot_map_builder_t
 
   hb_ot_map_builder_t (void) { memset (this, 0, sizeof (*this)); }
 
-  HB_INTERNAL void add_feature (hb_tag_t tag, unsigned int value, bool global);
+  HB_INTERNAL void add_feature (hb_tag_t tag, unsigned int value, bool global, bool has_fallback = false);
 
-  inline void add_bool_feature (hb_tag_t tag, bool global = true)
-  { add_feature (tag, 1, global); }
+  inline void add_bool_feature (hb_tag_t tag, bool global = true, bool has_fallback = false)
+  { add_feature (tag, 1, global, has_fallback); }
 
   inline void add_gsub_pause (hb_ot_map_t::pause_func_t pause_func)
   { add_pause (0, pause_func); }
@@ -174,6 +180,7 @@ struct hb_ot_map_builder_t
     unsigned int seq; /* sequence#, used for stable sorting only */
     unsigned int max_value;
     bool global; /* whether the feature applies value to every glyph in the buffer */
+    bool has_fallback; /* whether to allocate bits even if feature not found */
     unsigned int default_value; /* for non-global features, what should the unset glyphs take */
     unsigned int stage[2]; /* GSUB/GPOS */
 

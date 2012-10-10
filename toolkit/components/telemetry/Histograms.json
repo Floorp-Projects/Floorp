@@ -2243,6 +2243,11 @@
     "description": "Fennec: Time for the Awesomebar Top Sites query to return with no filter set (ms)",
     "cpp_guard": "ANDROID"
   },
+  "FENNEC_RESTORING_ACTIVITY": {
+    "kind": "flag",
+    "description": "Fennec is starting up but the Gecko thread was still running",
+    "cpp_guard": "ANDROID"
+  },
   "FENNEC_STARTUP_TIME_JAVAUI": {
     "kind": "exponential",
     "low": 100,
@@ -2273,9 +2278,9 @@
     "description": "The way the GeckoApp was launched. (Normal, URL, Prefetch, Redirector)",
     "cpp_guard": "ANDROID"
   },
-  "OUT_OF_MEMORY_KILLED": {
+  "FENNEC_WAS_KILLED": {
     "kind": "flag",
-    "description": "Killed due to an OOM condition",
+    "description": "Killed, likely due to an OOM condition",
     "cpp_guard": "ANDROID"
   },
   "SECURITY_UI": {
