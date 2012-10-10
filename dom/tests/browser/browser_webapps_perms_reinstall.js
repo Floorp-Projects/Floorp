@@ -14,19 +14,15 @@ const TEST_ORIGIN_URL = "http://mochi.test:8888";
 
 const installedPermsToTest = {
   "geolocation": "prompt",
-  "alarm": "allow",
-  "contacts-read": "deny",
-  "contacts-create": "deny",
-  "contacts-write": "deny",
+  "alarms": "allow",
+  "contacts": "deny",
   "device-storage:apps": "deny",
 };
 
 const reinstalledPermsToTest = {
   "geolocation": "prompt",
-  "alarm": "unknown",
-  "contacts-read": "deny",
-  "contacts-create": "deny",
-  "contacts-write": "deny",
+  "alarms": "unknown",
+  "contacts": "deny",
   "device-storage:apps": "deny",
 };
 

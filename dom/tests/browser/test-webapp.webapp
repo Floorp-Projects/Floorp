@@ -6,12 +6,11 @@
     "geolocation": {
       "description": "geolocate"
     },
-    "alarm" : {
+    "alarms" : {
       "description": "alarm"
     },
     "contacts": {
-      "description": "contacts",
-      "access": "readwrite"
+      "description": "contacts"
     },
     "device-storage:apps": {
       "description": "storage"
