@@ -34,6 +34,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WeakPtr.h"
+#include "gfx2DGlue.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
 #endif
@@ -475,50 +476,122 @@ private:
 
   struct ScaleRequest : public LinkedListElement<ScaleRequest>
   {
-    ScaleRequest(RasterImage* aImage)
-      : image(aImage)
-      , srcFrame(nullptr)
-      , dstFrame(nullptr)
-      , scale(0, 0)
+    ScaleRequest(RasterImage* aImage, const gfxSize& aScale, imgFrame* aSrcFrame)
+      : scale(aScale)
+      , dstLocked(false)
       , done(false)
-      , stopped(false)
-      , srcDataLocked(false)
-    {};
-
-    bool LockSourceData()
     {
-      if (!srcDataLocked) {
-        bool success = true;
-        success = success && NS_SUCCEEDED(image->LockImage());
-        success = success && NS_SUCCEEDED(srcFrame->LockImageData());
-        srcDataLocked = success;
-      }
-      return srcDataLocked;
+      MOZ_ASSERT(!aSrcFrame->GetIsPaletted());
+      MOZ_ASSERT(aScale.width > 0 && aScale.height > 0);
+
+      weakImage = aImage->asWeakPtr();
+      srcRect = aSrcFrame->GetRect();
+      dstSize.width = NSToIntRoundUp(srcRect.width * scale.width);
+      dstSize.height = NSToIntRoundUp(srcRect.height * scale.height);
     }
 
-    bool UnlockSourceData()
+    // This can only be called on the main thread.
+    bool GetSurfaces(imgFrame* srcFrame)
     {
-      bool success = true;
-      if (srcDataLocked) {
-        success = success && NS_SUCCEEDED(image->UnlockImage());
-        success = success && NS_SUCCEEDED(srcFrame->UnlockImageData());
+      MOZ_ASSERT(NS_IsMainThread());
 
-        // If unlocking fails, there's nothing we can do to make it work, so we
-        // claim that we're not locked regardless.
-        srcDataLocked = false;
+      nsRefPtr<RasterImage> image = weakImage.get();
+      if (!image) {
+        return false;
+      }
+
+      bool success = false;
+      if (!dstLocked) {
+        bool srcLocked = NS_SUCCEEDED(srcFrame->LockImageData());
+        dstLocked = NS_SUCCEEDED(dstFrame->LockImageData());
+
+        nsRefPtr<gfxASurface> dstASurf;
+        nsRefPtr<gfxASurface> srcASurf;
+        success = srcLocked && NS_SUCCEEDED(srcFrame->GetSurface(getter_AddRefs(srcASurf)));
+        success = success && dstLocked && NS_SUCCEEDED(dstFrame->GetSurface(getter_AddRefs(dstASurf)));
+
+        success = success && srcLocked && dstLocked && srcASurf && dstASurf;
+
+        if (success) {
+          srcSurface = srcASurf->GetAsImageSurface();
+          dstSurface = dstASurf->GetAsImageSurface();
+          srcData = srcSurface->Data();
+          dstData = dstSurface->Data();
+          srcStride = srcSurface->Stride();
+          dstStride = dstSurface->Stride();
+          srcFormat = mozilla::gfx::ImageFormatToSurfaceFormat(srcFrame->GetFormat());
+        }
+
+        // We have references to the Thebes surfaces, so we don't need to leave
+        // the source frame (that we don't own) locked. We'll unlock the
+        // destination frame in ReleaseSurfaces(), below.
+        if (srcLocked) {
+          success = NS_SUCCEEDED(srcFrame->UnlockImageData()) && success;
+        }
+
+        success = success && srcSurface && dstSurface;
+      }
+
+      return success;
+    }
+
+    // This can only be called on the main thread.
+    bool ReleaseSurfaces()
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      nsRefPtr<RasterImage> image = weakImage.get();
+      if (!image) {
+        return false;
+      }
+
+      bool success = false;
+      if (dstLocked) {
+        success = NS_SUCCEEDED(dstFrame->UnlockImageData());
+
+        dstLocked = false;
+        srcData = nullptr;
+        dstData = nullptr;
+        srcSurface = nullptr;
+        dstSurface = nullptr;
       }
       return success;
     }
 
-    static void Stop(RasterImage* aImg);
-
-    RasterImage* const image;
-    imgFrame *srcFrame;
+    // These values may only be touched on the main thread.
+    WeakPtr<RasterImage> weakImage;
     nsAutoPtr<imgFrame> dstFrame;
+    nsRefPtr<gfxImageSurface> srcSurface;
+    nsRefPtr<gfxImageSurface> dstSurface;
+
+    // Below are the values that may be touched on the scaling thread.
     gfxSize scale;
+    uint8_t* srcData;
+    uint8_t* dstData;
+    nsIntRect srcRect;
+    gfxIntSize dstSize;
+    uint32_t srcStride;
+    uint32_t dstStride;
+    mozilla::gfx::SurfaceFormat srcFormat;
+    bool dstLocked;
     bool done;
-    bool stopped;
-    bool srcDataLocked;
+  };
+
+  enum ScaleStatus
+  {
+    SCALE_INVALID,
+    SCALE_PENDING,
+    SCALE_DONE
+  };
+  struct ScaleResult
+  {
+    ScaleResult()
+     : status(SCALE_INVALID)
+    {}
+
+    gfxSize scale;
+    nsAutoPtr<imgFrame> frame;
+    ScaleStatus status;
   };
 
   class ScaleWorker : public nsRunnable
@@ -538,7 +611,7 @@ private:
     {};
 
     // Note: you MUST call RequestScale with the ScaleWorker mutex held.
-    void RequestScale(RasterImage* aImg);
+    bool RequestScale(ScaleRequest* request, RasterImage* image, imgFrame* aSrcFrame);
 
   private: /* members */
 
@@ -561,7 +634,7 @@ private:
   private: /* methods */
     DrawWorker() {};
 
-    void RequestDraw(RasterImage* aImg);
+    void RequestDraw(ScaleRequest* request);
 
   private: /* members */
 
@@ -575,6 +648,14 @@ private:
                                     const gfxMatrix &aUserSpaceToImageSpace,
                                     const gfxRect &aFill,
                                     const nsIntRect &aSubimage);
+
+  // Call this with a finished ScaleRequest to set this RasterImage's scale
+  // result, or nullptr to reset the scale result.
+  void SetScaleResult(ScaleRequest* request);
+
+  // Call this with a new ScaleRequest to mark this RasterImage's scale result
+  // as waiting for the results of this request.
+  void SetResultPending(ScaleRequest* request);
 
   /**
    * Advances the animation. Typically, this will advance a single frame, but it
@@ -787,7 +868,7 @@ private: // data
   TimeStamp mDrawStartTime;
 
   inline bool CanScale(gfxPattern::GraphicsFilter aFilter, gfxSize aScale);
-  ScaleRequest mScaleRequest;
+  ScaleResult mScaleResult;
 
   // Decoder shutdown
   enum eShutdownIntent {
