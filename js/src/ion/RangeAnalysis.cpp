@@ -346,9 +346,7 @@ Range::and_(const Range *lhs, const Range *rhs)
     // If both numbers can be negative, issues can be had.
     if (lhs->lower_ < 0 && rhs->lower_ < 0)
         lower = INT_MIN;
-    int64_t upper = lhs->upper_;
-    if (rhs->upper_ < lhs->upper_)
-        upper = rhs->upper_;
+    int64_t upper = Max(lhs->upper_, rhs->upper_);
     Range ret(lower, upper);
     return ret;
 
@@ -455,6 +453,7 @@ RangeAnalysis::analyze()
         if (!def->earlyAbortCheck() && def->recomputeRange()) {
             JS_ASSERT(def->range()->lower() <= def->range()->upper());
             IonSpew(IonSpew_Range, "Range changed; adding consumers");
+            IonSpew(IonSpew_Range, "New range for %d is: (%d, %d)", def->id(), def->range()->lower(), def->range()->upper());
             for (MUseDefIterator use(def); use; use++) {
                 if(!AddToWorklist(worklist, use.def()))
                     return false;
