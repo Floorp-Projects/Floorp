@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-llvm_revision = "163716"
+llvm_revision = "164411"
 moz_version = "moz0"
 
 ##############################################
@@ -111,9 +111,6 @@ def build_one_stage_aux(stage_dir, is_stage_one):
                       "--disable-assertions",
                       "--prefix=%s" % inst_dir,
                       "--with-gcc-toolchain=/tools/gcc-4.5-0moz3"]
-    if is_stage_one and not isDarwin:
-        configure_opts.append("--with-optimize-option=-O0")
-
     build_package(llvm_source_dir, build_dir, configure_opts)
 
 if isDarwin:
@@ -130,11 +127,7 @@ if not os.path.exists(source_dir):
     os.symlink("../../clang", llvm_source_dir + "/tools/clang")
     os.symlink("../../compiler-rt", llvm_source_dir + "/projects/compiler-rt")
     patch("llvm-debug-frame.patch", 1, llvm_source_dir)
-    patch("llvm-deterministic.patch", 1, llvm_source_dir)
-    patch("clang-deterministic.patch", 1, clang_source_dir)
     if not isDarwin:
-        patch("old-ld-hack.patch", 1, llvm_source_dir)
-        patch("compiler-rt-gnu89-inline.patch", 1, compiler_rt_source_dir)
         patch("no-sse-on-linux.patch", 1, clang_source_dir)
 
 if os.path.exists(build_dir):
@@ -152,15 +145,12 @@ if isDarwin:
 else:
     extra_cflags = "-static-libgcc"
     extra_cxxflags = "-static-libgcc -static-libstdc++"
-    cc = "/tools/gcc-4.5-0moz3/bin/gcc %s" % extra_cflags
-    cxx = "/tools/gcc-4.5-0moz3/bin/g++ %s" % extra_cxxflags
+    cc = "/usr/bin/gcc"
+    cxx = "/usr/bin/g++"
 
 build_one_stage({"CC"  : cc,
                  "CXX" : cxx },
                 stage1_dir, True)
-
-if not isDarwin:
-    extra_cflags += " -fgnu89-inline"
 
 stage2_dir = build_dir + '/stage2'
 build_one_stage({"CC"  : stage1_inst_dir + "/bin/clang %s" % extra_cflags,
