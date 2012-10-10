@@ -28,10 +28,10 @@ for obj in $OBJS; do
 	fi
 done
 
-echo "Checking that no object file has lazy static C++ constructors/destructors"
+echo "Checking that no object file has lazy static C++ constructors/destructors or other such stuff"
 for obj in $OBJS; do
 	if objdump -t "$obj" | grep '__c'; then
-		echo "Ouch, $obj has lazy static C++ constructors/destructors"
+		echo "Ouch, $obj has lazy static C++ constructors/destructors or other such stuff"
 		stat=1
 	fi
 done

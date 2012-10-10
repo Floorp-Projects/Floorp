@@ -28,6 +28,8 @@
 #define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
 #define BLUETOOTH_SCO_STATUS_CHANGED "bluetooth-sco-status-changed"
 #define AUDIO_VOLUME_MASTER "audio.volume.master"
+#define HANDSFREE_UUID mozilla::dom::bluetooth::BluetoothServiceUuidStr::Handsfree
+#define HEADSET_UUID mozilla::dom::bluetooth::BluetoothServiceUuidStr::Headset
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -178,6 +180,9 @@ BluetoothHfpManager::BluetoothHfpManager()
   : mCurrentVgs(-1)
   , mCurrentCallIndex(0)
   , mCurrentCallState(nsIRadioInterfaceLayer::CALL_STATE_DISCONNECTED)
+  , mCall(0)
+  , mCallSetup(0)
+  , mCallHeld(0)
 {
 }
 
@@ -389,6 +394,23 @@ BluetoothHfpManager::HandleShutdown()
   return NS_OK;
 }
 
+bool
+AppendIntegerToString(nsAutoCString& aString, int aValue)
+{
+  nsDiscriminatedUnion du;
+  du.mType = 0;
+  du.u.mInt8Value = aValue;
+
+  nsCString temp;
+  if (NS_FAILED(nsVariant::ConvertToACString(du, temp))) {
+    NS_WARNING("Failed to convert mCall/mCallSetup/mCallHeld to string");
+    return false;
+  }
+  aString += temp;
+  aString += ",";
+  return true;
+}
+
 // Virtual function of class SocketConsumer
 void
 BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
@@ -416,13 +438,18 @@ BluetoothHfpManager::ReceiveSocketData(UnixSocketRawData* aMessage)
 
     SendLine(cindRange.get());
     SendLine("OK");
-  } else if (!strncmp(msg, "AT+CIND", 7)) {
-    // FIXME - Bug 794349
-    // This value reflects current status of telephony, roaming, battery ...,
-    // so obviously fixed value must be wrong if there is an ongoing call. 
-    // Need a patch for this, but currently just using fixed value for basic 
-    // SLC establishment.
-    SendLine("+CIND: 5,5,1,0,0,0,0");
+  } else if (!strncmp(msg, "AT+CIND?", 8)) {
+    nsAutoCString cind;
+    cind += "+CIND: 5,5,1,";
+
+    if (!AppendIntegerToString(cind, mCall) ||
+        !AppendIntegerToString(cind, mCallSetup) ||
+        !AppendIntegerToString(cind, mCallHeld)) {
+      NS_WARNING("Failed to convert mCall/mCallSetup/mCallHeld to string");
+    } 
+    cind += "0";
+
+    SendLine(cind.get());
     SendLine("OK");
   } else if (!strncmp(msg, "AT+CMER=", 8)) {
     // SLC establishment
@@ -522,10 +549,15 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceObjectPath,
 
   nsString serviceUuidStr;
   if (aIsHandsfree) {
-    serviceUuidStr = NS_ConvertUTF8toUTF16(mozilla::dom::bluetooth::BluetoothServiceUuidStr::Handsfree);
+    serviceUuidStr = NS_ConvertUTF8toUTF16(HANDSFREE_UUID);
   } else {
-    serviceUuidStr = NS_ConvertUTF8toUTF16(mozilla::dom::bluetooth::BluetoothServiceUuidStr::Headset);
+    serviceUuidStr = NS_ConvertUTF8toUTF16(HEADSET_UUID);
   }
+
+  nsCOMPtr<nsIRILContentHelper> ril =
+    do_GetService("@mozilla.org/ril/content-helper;1");
+  NS_ENSURE_TRUE(ril, NS_ERROR_UNEXPECTED);
+  ril->EnumerateCalls(mListener->GetCallback());
 
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
 
@@ -570,6 +602,9 @@ BluetoothHfpManager::Disconnect()
 {
   NotifySettings(false);
   CloseSocket();
+  mCall = 0;
+  mCallSetup = 0;
+  mCallHeld = 0;
 }
 
 bool
@@ -583,6 +618,61 @@ BluetoothHfpManager::SendLine(const char* aMessage)
   msg += kHfpCrlf;
 
   return SendSocketData(msg);
+}
+
+/*
+ * EnumerateCallState will be called for each call
+ */
+void
+BluetoothHfpManager::EnumerateCallState(int aCallIndex, int aCallState,
+                                        const char* aNumber, bool aIsActive)
+{
+  // TODO: enums for mCall, mCallSetup, mCallHeld
+  /* mCall - 0: there are no calls in progress
+   *       - 1: at least one call is in progress
+   * mCallSetup - 0: not currently in call set up
+   *            - 1: an incoming call process ongoing
+   *            - 2: an outgoing call set up is ongoing
+   *            - 3: remote party being alerted in an outgoing call
+   * mCallHeld - 0: no calls held
+   *           - 1: call is placed on hold or active/held calls swapped
+   *           - 2: call o hold, no active call
+   */
+
+  if (mCallHeld == 2 && aIsActive) {
+    mCallHeld = 1;
+  }
+
+  if (mCall || mCallSetup) {
+    return;
+  }
+
+  switch (aCallState) {
+    case nsIRadioInterfaceLayer::CALL_STATE_ALERTING:
+      mCall = 1;
+      mCallSetup = 3;
+      break;
+    case nsIRadioInterfaceLayer::CALL_STATE_INCOMING:
+      mCall = 1;
+      mCallSetup = 1;
+      break;
+    case nsIRadioInterfaceLayer::CALL_STATE_CONNECTING:
+    case nsIRadioInterfaceLayer::CALL_STATE_CONNECTED:
+    case nsIRadioInterfaceLayer::CALL_STATE_DISCONNECTING:
+    case nsIRadioInterfaceLayer::CALL_STATE_DISCONNECTED:
+    case nsIRadioInterfaceLayer::CALL_STATE_BUSY:
+      mCall = 1;
+      mCallSetup = 2;
+      break;
+    case nsIRadioInterfaceLayer::CALL_STATE_HOLDING:
+    case nsIRadioInterfaceLayer::CALL_STATE_HELD:
+    case nsIRadioInterfaceLayer::CALL_STATE_RESUMING:
+      mCall = 1;
+      mCallHeld = 2;
+    default:
+      mCall = 0;
+      mCallSetup = 0;
+  }
 }
 
 /*

@@ -38,7 +38,7 @@ function testFrameParameters()
 
       var frames = gDebugger.DebuggerView.StackFrames._frames,
           globalScope = gDebugger.DebuggerView.Properties._vars.lastChild,
-          globalNodes = globalScope.querySelector(".details").childNodes;
+          globalNodes = globalScope.childNodes[2].childNodes;
 
       globalScope.expand();
 
@@ -55,11 +55,11 @@ function testFrameParameters()
         "Should have the right property value for |Array|.");
 
       let len = globalNodes.length - 1;
-      is(globalNodes[len].querySelector(".name").getAttribute("value"), "window",
-        "Should have the right property name for |window|.");
+      is(globalNodes[len].querySelector(".name").getAttribute("value"), "uneval",
+        "Should have the right property name for |uneval|.");
 
-      is(globalNodes[len].querySelector(".value").getAttribute("value"), "[object Proxy]",
-        "Should have the right property value for |window|.");
+      is(globalNodes[len].querySelector(".value").getAttribute("value"), "[object Function]",
+        "Should have the right property value for |uneval|.");
 
       resumeAndFinish();
     }}, 0);

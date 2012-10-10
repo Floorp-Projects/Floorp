@@ -203,6 +203,10 @@ enum {
 };
 
 static void
+setup_syllables (const hb_ot_shape_plan_t *plan,
+		 hb_font_t *font,
+		 hb_buffer_t *buffer);
+static void
 initial_reordering (const hb_ot_shape_plan_t *plan,
 		    hb_font_t *font,
 		    hb_buffer_t *buffer);
@@ -215,6 +219,9 @@ static void
 collect_features_indic (hb_ot_shape_planner_t *plan)
 {
   hb_ot_map_builder_t *map = &plan->map;
+
+  /* Do this before any lookups have been applied. */
+  map->add_gsub_pause (setup_syllables);
 
   map->add_bool_feature (HB_TAG('l','o','c','l'));
   /* The Indic specs do not require ccmp, but we apply it here since if
@@ -254,10 +261,11 @@ struct would_substitute_feature_t
 
   inline bool would_substitute (hb_codepoint_t    *glyphs,
 				unsigned int       glyphs_count,
+				bool               zero_context,
 				hb_face_t         *face) const
   {
     for (unsigned int i = 0; i < count; i++)
-      if (hb_ot_layout_would_substitute_lookup_fast (face, glyphs, glyphs_count, lookups[i].index))
+      if (hb_ot_layout_would_substitute_lookup_fast (face, lookups[i].index, glyphs, glyphs_count, zero_context))
 	return true;
     return false;
   }
@@ -340,11 +348,23 @@ consonant_position_from_face (const indic_shape_plan_t *indic_plan,
 			      hb_codepoint_t *glyphs, unsigned int glyphs_len,
 			      hb_face_t      *face)
 {
-  if (indic_plan->pref.would_substitute (glyphs, glyphs_len, face)) return POS_BELOW_C;
-  if (indic_plan->blwf.would_substitute (glyphs, glyphs_len, face)) return POS_BELOW_C;
-  if (indic_plan->pstf.would_substitute (glyphs, glyphs_len, face)) return POS_POST_C;
+  bool zero_context = indic_plan->is_old_spec ? false : true;
+  if (indic_plan->pref.would_substitute (glyphs, glyphs_len, zero_context, face)) return POS_BELOW_C;
+  if (indic_plan->blwf.would_substitute (glyphs, glyphs_len, zero_context, face)) return POS_BELOW_C;
+  if (indic_plan->pstf.would_substitute (glyphs, glyphs_len, zero_context, face)) return POS_POST_C;
   return POS_BASE_C;
 }
+
+
+enum syllable_type_t {
+  consonant_syllable,
+  vowel_syllable,
+  standalone_cluster,
+  broken_cluster,
+  non_indic_cluster,
+};
+
+#include "hb-ot-shape-complex-indic-machine.hh"
 
 
 static void
@@ -361,6 +381,14 @@ setup_masks_indic (const hb_ot_shape_plan_t *plan HB_UNUSED,
   unsigned int count = buffer->len;
   for (unsigned int i = 0; i < count; i++)
     set_indic_properties (buffer->info[i]);
+}
+
+static void
+setup_syllables (const hb_ot_shape_plan_t *plan HB_UNUSED,
+		 hb_font_t *font HB_UNUSED,
+		 hb_buffer_t *buffer)
+{
+  find_syllables (buffer);
 }
 
 static int
@@ -445,7 +473,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan, hb_buffer
       has_reph = true;
     };
 
-    switch (indic_plan->config->base_pos == BASE_POS_LAST)
+    switch (indic_plan->config->base_pos)
     {
       case BASE_POS_LAST:
       {
@@ -694,13 +722,12 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan, hb_buffer
       info[i].mask  |= mask;
   }
 
-  /* XXX This will not match for old-Indic spec since the Halant-Ra order is reversed already. */
   if (indic_plan->mask_array[PREF] && base + 2 < end)
   {
     /* Find a Halant,Ra sequence and mark it for pre-base reordering processing. */
     for (unsigned int i = base + 1; i + 1 < end; i++)
-      if (is_halant_or_coeng (info[i]) &&
-	  info[i + 1].indic_category() == OT_Ra)
+      if (is_halant_or_coeng (info[i + (indic_plan->is_old_spec ? 1 : 0)]) &&
+	  info[i + (indic_plan->is_old_spec ? 0 : 1)].indic_category() == OT_Ra)
       {
 	info[i++].mask |= indic_plan->mask_array[PREF];
 	info[i++].mask |= indic_plan->mask_array[PREF];
@@ -769,15 +796,87 @@ initial_reordering_standalone_cluster (const hb_ot_shape_plan_t *plan,
 }
 
 static void
-initial_reordering_non_indic (const hb_ot_shape_plan_t *plan HB_UNUSED,
-			      hb_buffer_t *buffer HB_UNUSED,
-			      unsigned int start HB_UNUSED, unsigned int end HB_UNUSED)
+initial_reordering_broken_cluster (const hb_ot_shape_plan_t *plan,
+				   hb_buffer_t *buffer,
+				   unsigned int start, unsigned int end)
+{
+  /* We already inserted dotted-circles, so just call the standalone_cluster. */
+  initial_reordering_standalone_cluster (plan, buffer, start, end);
+}
+
+static void
+initial_reordering_non_indic_cluster (const hb_ot_shape_plan_t *plan HB_UNUSED,
+				      hb_buffer_t *buffer HB_UNUSED,
+				      unsigned int start HB_UNUSED, unsigned int end HB_UNUSED)
 {
   /* Nothing to do right now.  If we ever switch to using the output
    * buffer in the reordering process, we'd need to next_glyph() here. */
 }
 
-#include "hb-ot-shape-complex-indic-machine.hh"
+
+static void
+initial_reordering_syllable (const hb_ot_shape_plan_t *plan,
+			     hb_buffer_t *buffer,
+			     unsigned int start, unsigned int end)
+{
+  syllable_type_t syllable_type = (syllable_type_t) (buffer->info[start].syllable() & 0x0F);
+  switch (syllable_type) {
+  case consonant_syllable:	initial_reordering_consonant_syllable (plan, buffer, start, end); return;
+  case vowel_syllable:		initial_reordering_vowel_syllable     (plan, buffer, start, end); return;
+  case standalone_cluster:	initial_reordering_standalone_cluster (plan, buffer, start, end); return;
+  case broken_cluster:		initial_reordering_broken_cluster     (plan, buffer, start, end); return;
+  case non_indic_cluster:	initial_reordering_non_indic_cluster  (plan, buffer, start, end); return;
+  }
+}
+
+static inline void
+insert_dotted_circles (const hb_ot_shape_plan_t *plan,
+		       hb_font_t *font,
+		       hb_buffer_t *buffer)
+{
+  /* Note: This loop is extra overhead, but should not be measurable. */
+  bool has_broken_syllables = false;
+  unsigned int count = buffer->len;
+  for (unsigned int i = 0; i < count; i++)
+    if ((buffer->info[i].syllable() & 0x0F) == broken_cluster) {
+      has_broken_syllables = true;
+      break;
+    }
+  if (likely (!has_broken_syllables))
+    return;
+
+
+  hb_codepoint_t dottedcircle_glyph;
+  if (!font->get_glyph (0x25CC, 0, &dottedcircle_glyph))
+    return;
+
+  hb_glyph_info_t dottedcircle;
+  dottedcircle.codepoint = 0x25CC;
+  set_indic_properties (dottedcircle);
+  dottedcircle.codepoint = dottedcircle_glyph;
+
+  buffer->clear_output ();
+
+  buffer->idx = 0;
+  unsigned int last_syllable = 0;
+  while (buffer->idx < buffer->len)
+  {
+    unsigned int syllable = buffer->cur().syllable();
+    syllable_type_t syllable_type = (syllable_type_t) (syllable & 0x0F);
+    if (unlikely (last_syllable != syllable && syllable_type == broken_cluster))
+    {
+      hb_glyph_info_t info = dottedcircle;
+      info.cluster = buffer->cur().cluster;
+      info.mask = buffer->cur().mask;
+      info.syllable() = buffer->cur().syllable();
+      buffer->output_info (info);
+      last_syllable = syllable;
+    }
+    buffer->next_glyph ();
+  }
+
+  buffer->swap_buffers ();
+}
 
 static void
 initial_reordering (const hb_ot_shape_plan_t *plan,
@@ -785,7 +884,20 @@ initial_reordering (const hb_ot_shape_plan_t *plan,
 		    hb_buffer_t *buffer)
 {
   update_consonant_positions (plan, font, buffer);
-  find_syllables (plan, buffer);
+  insert_dotted_circles (plan, font, buffer);
+
+  hb_glyph_info_t *info = buffer->info;
+  unsigned int count = buffer->len;
+  if (unlikely (!count)) return;
+  unsigned int last = 0;
+  unsigned int last_syllable = info[0].syllable();
+  for (unsigned int i = 1; i < count; i++)
+    if (last_syllable != info[i].syllable()) {
+      initial_reordering_syllable (plan, buffer, last, i);
+      last = i;
+      last_syllable = info[last].syllable();
+    }
+  initial_reordering_syllable (plan, buffer, last, count);
 }
 
 static void
@@ -829,11 +941,11 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
     /* If we lost track of base, alas, position before last thingy. */
     unsigned int new_pos = base == end ? base - 2 : base - 1;
 
-    /* Malayalam does not have "half" forms or explicit virama forms.
-     * The glyphs formed by 'half' are Chillus.  We want to position
-     * matra after them all.
+    /* Malayalam / Tamil do not have "half" forms or explicit virama forms.
+     * The glyphs formed by 'half' are Chillus or ligated explicit viramas.
+     * We want to position matra after them.
      */
-    if (buffer->props.script != HB_SCRIPT_MALAYALAM)
+    if (buffer->props.script != HB_SCRIPT_MALAYALAM && buffer->props.script != HB_SCRIPT_TAMIL)
     {
       while (new_pos > start &&
 	     !(is_one_of (info[new_pos], (FLAG (OT_M) | FLAG (OT_H) | FLAG (OT_Coeng)))))
@@ -853,7 +965,7 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
         new_pos = start; /* No move. */
     }
 
-    if (start < new_pos)
+    if (start < new_pos && info[new_pos].indic_position () != POS_PRE_M)
     {
       /* Now go see if there's actually any matras... */
       for (unsigned int i = new_pos; i > start; i--)
@@ -1109,7 +1221,7 @@ final_reordering (const hb_ot_shape_plan_t *plan,
 		  hb_buffer_t *buffer)
 {
   unsigned int count = buffer->len;
-  if (!count) return;
+  if (unlikely (!count)) return;
 
   hb_glyph_info_t *info = buffer->info;
   unsigned int last = 0;
@@ -1122,10 +1234,20 @@ final_reordering (const hb_ot_shape_plan_t *plan,
     }
   final_reordering_syllable (plan, buffer, last, count);
 
+  /* Zero syllables now... */
+  for (unsigned int i = 0; i < count; i++)
+    info[i].syllable() = 0;
+
   HB_BUFFER_DEALLOCATE_VAR (buffer, indic_category);
   HB_BUFFER_DEALLOCATE_VAR (buffer, indic_position);
 }
 
+
+static hb_ot_shape_normalization_mode_t
+normalization_preference_indic (const hb_ot_shape_plan_t *plan)
+{
+  return HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS_NO_SHORT_CIRCUIT;
+}
 
 const hb_ot_complex_shaper_t _hb_ot_complex_shaper_indic =
 {
@@ -1135,7 +1257,7 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_indic =
   data_create_indic,
   data_destroy_indic,
   NULL, /* preprocess_text */
-  NULL, /* normalization_preference */
+  normalization_preference_indic,
   setup_masks_indic,
   false, /* zero_width_attached_marks */
 };

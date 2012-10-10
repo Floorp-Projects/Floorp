@@ -44,14 +44,6 @@ class Element;
 // OpenGL object wrappers
 //
 
-[scriptable, builtinclass, uuid(a85d4fd0-5b9f-4cb8-aeee-5a2c5c5bad76)]
-interface nsIWebGLActiveInfo : nsISupports
-{
-    readonly attribute WebGLint size;
-    readonly attribute WebGLenum type;
-    readonly attribute DOMString name;
-};
-
 /* Base class for all WebGL extensions, and for those without
  * any additional tokens/methods.
  */

@@ -29,6 +29,7 @@ of the License or (at your option) any later version.
 #ifndef GRAPHITE2_NSEGCACHE
 
 #include "inc/Main.h"
+#include "inc/Slot.h"
 
 namespace graphite2 {
 
@@ -65,10 +66,14 @@ public:
  */
 class SegCacheEntry
 {
+    // Prevent any implict copying;
+    SegCacheEntry(const SegCacheEntry &);
+    SegCacheEntry & operator = (const SegCacheEntry &);
+
     friend class SegCachePrefixEntry;
 public:
     SegCacheEntry() :
-        m_glyphLength(0), m_unicode(NULL), m_glyph(NULL), m_attr(NULL),
+        m_glyphLength(0), m_unicode(NULL), m_glyph(NULL), m_attr(NULL), m_justs(0),
         m_accessCount(0), m_lastAccess(0)
     {}
     SegCacheEntry(const uint16 * cmapGlyphs, size_t length, Segment * seg, size_t charOffset, long long cacheTime);
@@ -106,6 +111,7 @@ private:
     /** slots after shapping and positioning */
     Slot   * m_glyph;
     int16  * m_attr;
+    byte   * m_justs;
     mutable unsigned long long m_accessCount;
     mutable unsigned long long m_lastAccess;
 };

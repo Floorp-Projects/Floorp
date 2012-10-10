@@ -11,6 +11,10 @@
 #include "base/basictypes.h"
 #include "prlog.h"
 
+#ifdef NO_CHROMIUM_LOGGING
+#include <sstream>
+#endif
+
 // Replace the Chromium logging code with NSPR-based logging code and
 // some C++ wrappers to emulate std::ostream
 
@@ -84,9 +88,15 @@ const mozilla::EmptyLog& operator <<(const mozilla::EmptyLog& log, const T&)
   return log;
 }
 
+#ifdef NO_CHROMIUM_LOGGING
+#define LOG(info) std::stringstream()
+#define LOG_IF(info, condition) if (!(condition)) std::stringstream()
+#else
 #define LOG(info) mozilla::LogWrapper(mozilla::LOG_ ## info, __FILE__, __LINE__)
 #define LOG_IF(info, condition) \
   if (!(condition)) mozilla::LogWrapper(mozilla::LOG_ ## info, __FILE__, __LINE__)
+#endif
+
 
 #ifdef DEBUG
 #define DLOG(info) LOG(info)
