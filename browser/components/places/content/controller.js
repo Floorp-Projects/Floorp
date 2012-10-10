@@ -528,30 +528,30 @@ PlacesController.prototype = {
     }
 
     var selectionAttr = aMenuItem.getAttribute("selection");
-    if (selectionAttr) {
-      if (selectionAttr == "any")
-        return true;
-
-      var showRules = selectionAttr.split("|");
-      var anyMatched = false;
-      function metaDataNodeMatches(metaDataNode, rules) {
-        for (var i=0; i < rules.length; i++) {
-          if (rules[i] in metaDataNode)
-            return true;
-        }
-
-        return false;
-      }
-      for (var i = 0; i < aMetaData.length; ++i) {
-        if (metaDataNodeMatches(aMetaData[i], showRules))
-          anyMatched = true;
-        else
-          return false;
-      }
-      return anyMatched;
+    if (!selectionAttr) {
+      return !aMenuItem.hidden;
     }
 
-    return !aMenuItem.hidden;
+    if (selectionAttr == "any")
+      return true;
+
+    var showRules = selectionAttr.split("|");
+    var anyMatched = false;
+    function metaDataNodeMatches(metaDataNode, rules) {
+      for (var i = 0; i < rules.length; i++) {
+        if (rules[i] in metaDataNode)
+          return true;
+      }
+      return false;
+    }
+
+    for (var i = 0; i < aMetaData.length; ++i) {
+      if (metaDataNodeMatches(aMetaData[i], showRules))
+        anyMatched = true;
+      else
+        return false;
+    }
+    return anyMatched;
   },
 
   /**
@@ -1021,21 +1021,21 @@ PlacesController.prototype = {
     if (!didSuppressNotifications)
       result.suppressNotifications = true;
 
+    function addData(type, index, overrideURI) {
+      let wrapNode = PlacesUtils.wrapNode(node, type, overrideURI, doCopy);
+      dt.mozSetDataAt(type, wrapNode, index);
+    }
+
+    function addURIData(index, overrideURI) {
+      addData(PlacesUtils.TYPE_X_MOZ_URL, index, overrideURI);
+      addData(PlacesUtils.TYPE_UNICODE, index, overrideURI);
+      addData(PlacesUtils.TYPE_HTML, index, overrideURI);
+    }
+
     try {
       let nodes = this._view.draggableSelection;
       for (let i = 0; i < nodes.length; ++i) {
         var node = nodes[i];
-
-        function addData(type, index, overrideURI) {
-          let wrapNode = PlacesUtils.wrapNode(node, type, overrideURI, doCopy);
-          dt.mozSetDataAt(type, wrapNode, index);
-        }
-
-        function addURIData(index, overrideURI) {
-          addData(PlacesUtils.TYPE_X_MOZ_URL, index, overrideURI);
-          addData(PlacesUtils.TYPE_UNICODE, index, overrideURI);
-          addData(PlacesUtils.TYPE_HTML, index, overrideURI);
-        }
 
         // This order is _important_! It controls how this and other
         // applications select data to be inserted based on type.
