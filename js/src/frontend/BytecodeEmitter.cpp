@@ -1161,17 +1161,21 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
  *   }
  *   foo();
  *
- * In self-hosting mode, JSOP_NAME is unconditionally converted to
- * JSOP_INTRINSICNAME. This causes the lookup to be redirected to the special
- * intrinsics holder in the global object, into which any missing objects are
+ * In self-hosting mode, JSOP_*NAME is unconditionally converted to
+ * JSOP_*INTRINSIC. This causes lookups to be redirected to the special
+ * intrinsics holder in the global object, into which any missing values are
  * cloned lazily upon first access.
  */
 static bool
 TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
 {
     if (bce->selfHostingMode) {
-        JS_ASSERT(*op == JSOP_NAME);
-        *op = JSOP_INTRINSICNAME;
+        switch (*op) {
+          case JSOP_NAME:     *op = JSOP_GETINTRINSIC; break;
+          case JSOP_SETNAME:  *op = JSOP_SETINTRINSIC; break;
+          /* Other *NAME ops aren't (yet) supported in self-hosted code. */
+          default: JS_NOT_REACHED("intrinsic");
+        }
         return true;
     }
     if (bce->script->compileAndGo &&
@@ -1744,7 +1748,7 @@ EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callContext)
           case JSOP_NAME:
             op = JSOP_CALLNAME;
             break;
-          case JSOP_INTRINSICNAME:
+          case JSOP_GETINTRINSIC:
             op = JSOP_CALLINTRINSIC;
             break;
           case JSOP_GETGNAME:
@@ -3383,9 +3387,15 @@ EmitVariables(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmitOption 
 
         if (pn3) {
             JS_ASSERT(emitOption != DefineVars);
-            if (op == JSOP_SETNAME || op == JSOP_SETGNAME) {
+            if (op == JSOP_SETNAME || op == JSOP_SETGNAME || op == JSOP_SETINTRINSIC) {
                 JS_ASSERT(emitOption != PushInitialValues);
-                JSOp bindOp = (op == JSOP_SETNAME) ? JSOP_BINDNAME : JSOP_BINDGNAME;
+                JSOp bindOp;
+                if (op == JSOP_SETNAME)
+                    bindOp = JSOP_BINDNAME;
+                else if (op == JSOP_SETGNAME)
+                    bindOp = JSOP_BINDGNAME;
+                else
+                    bindOp = JSOP_BINDINTRINSIC;
                 if (!EmitIndex32(cx, bindOp, atomIndex, bce))
                     return false;
             }
@@ -3470,8 +3480,14 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
             if (!bce->makeAtomIndex(lhs->pn_atom, &atomIndex))
                 return false;
             if (!lhs->isConst()) {
-                JSOp op = lhs->isOp(JSOP_SETGNAME) ? JSOP_BINDGNAME : JSOP_BINDNAME;
-                if (!EmitIndex32(cx, op, atomIndex, bce))
+                JSOp bindOp;
+                if (lhs->isOp(JSOP_SETNAME))
+                    bindOp = JSOP_BINDNAME;
+                else if (lhs->isOp(JSOP_SETGNAME))
+                    bindOp = JSOP_BINDGNAME;
+                else
+                    bindOp = JSOP_BINDINTRINSIC;
+                if (!EmitIndex32(cx, bindOp, atomIndex, bce))
                     return false;
                 offset++;
             }
@@ -3542,6 +3558,10 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
             } else if (lhs->isOp(JSOP_SETGNAME)) {
                 JS_ASSERT(lhs->pn_cookie.isFree());
                 if (!EmitAtomOp(cx, lhs, JSOP_GETGNAME, bce))
+                    return false;
+            } else if (lhs->isOp(JSOP_SETINTRINSIC)) {
+                JS_ASSERT(lhs->pn_cookie.isFree());
+                if (!EmitAtomOp(cx, lhs, JSOP_GETINTRINSIC, bce))
                     return false;
             } else {
                 JSOp op = lhs->isOp(JSOP_SETARG) ? JSOP_GETARG : JSOP_GETLOCAL;
