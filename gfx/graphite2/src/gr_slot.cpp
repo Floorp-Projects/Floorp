@@ -96,7 +96,7 @@ float gr_slot_advance_X(const gr_slot* p/*not NULL*/, const gr_face *face, const
     {
         scale = font->scale();
         if (face && font->isHinted())
-            res = (res - face->advance(p->gid())) * scale + font->advance(p->gid());
+            res = (res - face->glyphs().glyph(p->gid())->theAdvance().x) * scale + font->advance(p->gid());
         else
             res = res * scale;
     }

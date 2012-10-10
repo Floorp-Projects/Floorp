@@ -126,6 +126,7 @@ size. -->
 <!ENTITY find_in_page "Find in Page">
 <!ENTITY desktop_mode "Request Desktop Site">
 <!ENTITY tools "Tools">
+<!ENTITY new_pb_tab "New Private Browsing Tab">
 
 <!-- Localization note (find_text, find_prev, find_next, find_close) : These strings are used
      as alternate text for accessibility. They are not visible in the UI. -->

@@ -191,12 +191,6 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     @Override
-    protected void loadRequest(String url, AwesomeBar.Target target, String searchEngine, boolean userEntered) {
-        mBrowserToolbar.setTitle(url);
-        super.loadRequest(url, target, searchEngine, userEntered);
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -549,7 +543,7 @@ abstract public class BrowserApp extends GeckoApp
     private void loadFavicon(final Tab tab) {
         maybeCancelFaviconLoad(tab);
 
-        long id = getFavicons().loadFavicon(tab.getURL(), tab.getFaviconURL(),
+        long id = getFavicons().loadFavicon(tab.getURL(), tab.getFaviconURL(), !tab.isPrivate(),
                         new Favicons.OnFaviconLoadedListener() {
 
             public void onFaviconLoaded(String pageUrl, Drawable favicon) {
@@ -636,7 +630,7 @@ abstract public class BrowserApp extends GeckoApp
                     mAboutHomeContent.setUriLoadCallback(new AboutHomeContent.UriLoadCallback() {
                         public void callback(String url) {
                             mBrowserToolbar.setProgressVisibility(true);
-                            loadUrl(url, AwesomeBar.Target.CURRENT_TAB);
+                            Tabs.getInstance().loadUrl(url);
                         }
                     });
                     mAboutHomeContent.setLoadCompleteCallback(new AboutHomeContent.VoidCallback() {
@@ -874,13 +868,13 @@ abstract public class BrowserApp extends GeckoApp
                 startActivity(intent);
                 return true;
             case R.id.addons:
-                loadUrlInTab("about:addons");
+                Tabs.getInstance().loadUrlInTab("about:addons");
                 return true;
             case R.id.downloads:
-                loadUrlInTab("about:downloads");
+                Tabs.getInstance().loadUrlInTab("about:downloads");
                 return true;
             case R.id.apps:
-                loadUrlInTab("about:apps");
+                Tabs.getInstance().loadUrlInTab("about:apps");
                 return true;
             case R.id.char_encoding:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Get", null));
@@ -900,6 +894,9 @@ abstract public class BrowserApp extends GeckoApp
                     Log.e(LOGTAG, "error building json arguments");
                 }
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("DesktopMode:Change", args.toString()));
+                return true;
+            case R.id.private_browsing:
+                Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -938,7 +935,7 @@ abstract public class BrowserApp extends GeckoApp
             @Override
             public void onPostExecute(Boolean shouldShowFeedbackPage) {
                 if (shouldShowFeedbackPage)
-                    loadUrlInTab("about:feedback");
+                    Tabs.getInstance().loadUrlInTab("about:feedback");
             }
         }).execute();
     }

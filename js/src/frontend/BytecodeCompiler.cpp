@@ -150,7 +150,10 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
              * function captured in case it refers to an upvar, and someone
              * wishes to decompile it while it's running.
              */
-            ObjectBox *funbox = parser.newObjectBox(callerFrame->fun());
+            JSFunction *fun = callerFrame->fun();
+            ObjectBox *funbox = parser.newFunctionBox(fun, &pc, 
+                                                      fun->inStrictMode() ? StrictMode::STRICT 
+                                                                          : StrictMode::NOTSTRICT);
             if (!funbox)
                 return NULL;
             bce.objectList.add(funbox);

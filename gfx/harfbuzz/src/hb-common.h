@@ -95,9 +95,13 @@ typedef uint32_t hb_tag_t;
 
 #define HB_TAG_NONE HB_TAG(0,0,0,0)
 
-/* len=-1 means str is NUL-terminated */
+/* len=-1 means str is NUL-terminated. */
 hb_tag_t
 hb_tag_from_string (const char *str, int len);
+
+/* buf should have 4 bytes. */
+void
+hb_tag_to_string (hb_tag_t tag, char *buf);
 
 
 /* hb_direction_t */

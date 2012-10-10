@@ -34,7 +34,7 @@ class CharInfo
 {
 
 public:
-    CharInfo() : m_before(-1), m_after(0), m_flags(0) {}
+    CharInfo() : m_char(0), m_before(-1), m_after(0), m_base(0), m_featureid(0), m_break(0), m_flags(0) {}
     void init(int cid) { m_char = cid; }
     unsigned int unicodeChar() const { return m_char; }
     void feats(int offset) { m_featureid = offset; }

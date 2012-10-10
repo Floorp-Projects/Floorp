@@ -235,14 +235,40 @@ hb_set_unicode_props (hb_buffer_t *buffer)
 }
 
 static void
+hb_insert_dotted_circle (hb_buffer_t *buffer, hb_font_t *font)
+{
+  if (buffer->context_len[0] ||
+      _hb_glyph_info_get_general_category (&buffer->info[0]) !=
+      HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)
+    return;
+
+  hb_codepoint_t dottedcircle_glyph;
+  if (!font->get_glyph (0x25CC, 0, &dottedcircle_glyph))
+    return;
+
+  hb_glyph_info_t dottedcircle;
+  dottedcircle.codepoint = 0x25CC;
+  _hb_glyph_info_set_unicode_props (&dottedcircle, buffer->unicode);
+
+  buffer->clear_output ();
+
+  buffer->idx = 0;
+  hb_glyph_info_t info = dottedcircle;
+  info.cluster = buffer->cur().cluster;
+  info.mask = buffer->cur().mask;
+  buffer->output_info (info);
+  while (buffer->idx < buffer->len)
+    buffer->next_glyph ();
+
+  buffer->swap_buffers ();
+}
+
+static void
 hb_form_clusters (hb_buffer_t *buffer)
 {
   unsigned int count = buffer->len;
   for (unsigned int i = 1; i < count; i++)
-    if (FLAG (_hb_glyph_info_get_general_category (&buffer->info[i])) &
-	(FLAG (HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK) |
-	 FLAG (HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK) |
-	 FLAG (HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)))
+    if (HB_UNICODE_GENERAL_CATEGORY_IS_MARK (_hb_glyph_info_get_general_category (&buffer->info[i])))
       buffer->merge_clusters (i - 1, i + 1);
 }
 
@@ -317,6 +343,16 @@ hb_ot_map_glyphs_fast (hb_buffer_t  *buffer)
 }
 
 static inline void
+hb_synthesize_glyph_classes (hb_ot_shape_context_t *c)
+{
+  unsigned int count = c->buffer->len;
+  for (unsigned int i = 0; i < count; i++)
+    c->buffer->info[i].glyph_props() = _hb_glyph_info_get_general_category (&c->buffer->info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK ?
+				       HB_OT_LAYOUT_GLYPH_CLASS_MARK :
+				       HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH;
+}
+
+static inline void
 hb_ot_substitute_default (hb_ot_shape_context_t *c)
 {
   if (c->plan->shaper->preprocess_text)
@@ -333,21 +369,14 @@ hb_ot_substitute_default (hb_ot_shape_context_t *c)
 
   hb_ot_shape_setup_masks (c);
 
+  /* This is unfortunate to go here, but necessary... */
+  if (!hb_ot_layout_has_positioning (c->face))
+    _hb_ot_shape_fallback_position_recategorize_marks (c->plan, c->font, c->buffer);
+
   hb_ot_map_glyphs_fast (c->buffer);
 
   HB_BUFFER_DEALLOCATE_VAR (c->buffer, glyph_index);
 }
-
-static inline void
-hb_synthesize_glyph_classes (hb_ot_shape_context_t *c)
-{
-  unsigned int count = c->buffer->len;
-  for (unsigned int i = 0; i < count; i++)
-    c->buffer->info[i].glyph_props() = _hb_glyph_info_get_general_category (&c->buffer->info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK ?
-				       HB_OT_LAYOUT_GLYPH_CLASS_MARK :
-				       HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH;
-}
-
 
 static inline void
 hb_ot_substitute_complex (hb_ot_shape_context_t *c)
@@ -357,8 +386,7 @@ hb_ot_substitute_complex (hb_ot_shape_context_t *c)
   if (!hb_ot_layout_has_glyph_classes (c->face))
     hb_synthesize_glyph_classes (c);
 
-  if (hb_ot_layout_has_substitution (c->face))
-    c->plan->substitute (c->font, c->buffer);
+  c->plan->substitute (c->font, c->buffer);
 
   hb_ot_layout_substitute_finish (c->font, c->buffer);
 
@@ -486,14 +514,18 @@ hb_ot_position (hb_ot_shape_context_t *c)
 static void
 hb_ot_hide_zerowidth (hb_ot_shape_context_t *c)
 {
-  hb_codepoint_t space;
-  if (!c->font->get_glyph (' ', 0, &space))
-    return; /* No point! */
+  hb_codepoint_t space = 0;
 
   unsigned int count = c->buffer->len;
   for (unsigned int i = 0; i < count; i++)
     if (unlikely (!is_a_ligature (c->buffer->info[i]) &&
-		  _hb_glyph_info_is_zero_width (&c->buffer->info[i]))) {
+		  _hb_glyph_info_is_zero_width (&c->buffer->info[i])))
+    {
+      if (!space) {
+        /* We assume that the space glyph is not gid0. */
+        if (unlikely (!c->font->get_glyph (' ', 0, &space)) || !space)
+	return; /* No point! */
+      }
       c->buffer->info[i].codepoint = space;
       c->buffer->pos[i].x_advance = 0;
       c->buffer->pos[i].y_advance = 0;
@@ -517,6 +549,7 @@ hb_ot_shape_internal (hb_ot_shape_context_t *c)
   c->buffer->clear_output ();
 
   hb_set_unicode_props (c->buffer);
+  hb_insert_dotted_circle (c->buffer, c->font);
   hb_form_clusters (c->buffer);
 
   hb_ensure_native_direction (c->buffer);
@@ -556,7 +589,7 @@ hb_ot_map_glyphs_dumb (hb_font_t    *font,
 {
   unsigned int count = buffer->len;
   for (unsigned int i = 0; i < count; i++)
-    font->get_glyph (buffer->cur().codepoint, 0, &buffer->cur().codepoint);
+    font->get_glyph (buffer->info[i].codepoint, 0, &buffer->info[i].codepoint);
 }
 
 void

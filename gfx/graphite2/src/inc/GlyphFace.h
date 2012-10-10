@@ -40,37 +40,20 @@ enum metrics {
     kgmetAscent, kgmetDescent
 };
 
-class Rect
-{
-public :
-    Rect() {}
-    Rect(const Position& botLeft, const Position& topRight): bl(botLeft), tr(topRight) {}
-    Rect widen(const Rect& other) { return Rect(Position(bl.x > other.bl.x ? other.bl.x : bl.x, bl.y > other.bl.y ? other.bl.y : bl.y), Position(tr.x > other.tr.x ? tr.x : other.tr.x, tr.y > other.tr.y ? tr.y : other.tr.y)); }
-    Rect operator + (const Position &a) const { return Rect(Position(bl.x + a.x, bl.y + a.y), Position(tr.x + a.x, tr.y + a.y)); }
-    Rect operator * (float m) const { return Rect(Position(bl.x, bl.y) * m, Position(tr.x, tr.y) * m); }
-
-    Position bl;
-    Position tr;
-};
-
-class GlyphFaceCacheHeader;
 
 class GlyphFace
 {
-private:
-friend class GlyphFaceCache;
-    GlyphFace(const GlyphFaceCacheHeader& hdr, unsigned short glyphid);
-    ~GlyphFace() throw();
-
 public:
+    GlyphFace();
+    template<typename I>
+    GlyphFace(const Rect & bbox, const Position & adv, I first, const I last);
 
     const Position    & theAdvance() const;
-    const Rect &theBBox() const { return m_bbox; }
-    uint16  getAttr(uint8 index) const { 
-    	return m_attrs ? m_attrs[index] : 0;
-    }
-    uint16  getMetric(uint8 metric) const;
+    const Rect        & theBBox() const { return m_bbox; }
+    const sparse      & attrs() const { return m_attrs; }
+    uint16              getMetric(uint8 metric) const;
 
+    CLASS_NEW_DELETE;
 private:
     Rect     m_bbox;        // bounding box metrics in design units
     Position m_advance;     // Advance width and height in design units
@@ -78,10 +61,22 @@ private:
 };
 
 
-inline GlyphFace::~GlyphFace() throw() {
+// Inlines: class GlyphFace
+//
+inline
+GlyphFace::GlyphFace()
+{}
+
+template<typename I>
+GlyphFace::GlyphFace(const Rect & bbox, const Position & adv, I first, const I last)
+: m_bbox(bbox),
+  m_advance(adv),
+  m_attrs(first, last)
+{
 }
 
-inline const Position & GlyphFace::theAdvance() const { 
+inline
+const Position & GlyphFace::theAdvance() const {
     return m_advance;
 }
 

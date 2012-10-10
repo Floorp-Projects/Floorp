@@ -66,9 +66,12 @@ const DownloadsPanel = {
   /** This object is linked to data, but the panel is invisible. */
   get kStateHidden() 1,
   /** The panel will be shown as soon as possible. */
-  get kStateShowing() 2,
+  get kStateWaitingData() 2,
+  /** The panel is almost shown - we're just waiting to get a handle on the
+      anchor. */
+  get kStateWaitingAnchor() 3,
   /** The panel is open. */
-  get kStateShown() 3,
+  get kStateShown() 4,
 
   /**
    * Location of the panel overlay.
@@ -164,7 +167,7 @@ const DownloadsPanel = {
       setTimeout(function () DownloadsPanel._openPopupIfDataReady(), 0);
     }.bind(this));
 
-    this._state = this.kStateShowing;
+    this._state = this.kStateWaitingData;
   },
 
   /**
@@ -190,7 +193,8 @@ const DownloadsPanel = {
    */
   get isPanelShowing()
   {
-    return this._state == this.kStateShowing ||
+    return this._state == this.kStateWaitingData ||
+           this._state == this.kStateWaitingAnchor ||
            this._state == this.kStateShown;
   },
 
@@ -297,13 +301,20 @@ const DownloadsPanel = {
   {
     // We don't want to open the popup if we already displayed it, or if we are
     // still loading data.
-    if (this._state != this.kStateShowing || DownloadsView.loading) {
+    if (this._state != this.kStateWaitingData || DownloadsView.loading) {
       return;
     }
+
+    this._state = this.kStateWaitingAnchor;
 
     // Ensure the anchor is visible.  If that is not possible, show the panel
     // anchored to the top area of the window, near the default anchor position.
     DownloadsButton.getAnchor(function DP_OPIDR_callback(aAnchor) {
+      // If somehow we've switched states already (by getting a panel hiding
+      // event before an overlay is loaded, for example), bail out.
+      if (this._state != this.kStateWaitingAnchor)
+        return;
+
       // At this point, if the window is minimized, opening the panel could fail
       // without any notification, and there would be no way to either open or
       // close the panel anymore.  To prevent this, check if the window is

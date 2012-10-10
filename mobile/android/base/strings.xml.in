@@ -125,6 +125,7 @@
   <string name="downloads">&downloads;</string>
   <string name="apps">&apps;</string>
   <string name="char_encoding">&char_encoding;</string>
+  <string name="new_pb_tab">&new_pb_tab;</string>
   <!-- This string only appears in developer builds, which
        is why it is not localizable. -->
   <string name="toggle_profiling">Toggle Profiling</string>

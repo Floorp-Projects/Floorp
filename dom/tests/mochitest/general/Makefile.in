@@ -46,6 +46,7 @@ MOCHITEST_FILES = \
 		file_moving_nodeList.html \
 		test_performance_now.html \
 		test_interfaces.html \
+		test_idleapi_permissions.html \
 		$(NULL)
 
 # Disable this test until bug 795711 is fixed.
