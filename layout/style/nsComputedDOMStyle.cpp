@@ -1245,7 +1245,7 @@ nsComputedDOMStyle::DoGetFontWeight()
 
   uint16_t weight = font->mFont.weight;
   NS_ASSERTION(weight % 100 == 0, "unexpected value of font-weight");
-  val->SetNumber(font->mFont.weight);
+  val->SetNumber(weight);
 
   return val;
 }

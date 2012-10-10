@@ -804,8 +804,8 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
       (NS_UNCONSTRAINEDSIZE != mContentArea.height)) {
     region.height = NS_MAX(region.height, mContentArea.height - floatY);
   }
-  nsresult rv =
-  mFloatManager->AddFloat(aFloat, region);
+  DebugOnly<nsresult> rv =
+    mFloatManager->AddFloat(aFloat, region);
   NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "bad float placement");
   // store region
   nsFloatManager::StoreRegionFor(aFloat, region);

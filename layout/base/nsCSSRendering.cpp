@@ -1955,6 +1955,7 @@ ComputeRadialGradientLine(nsPresContext* aPresContext,
     break;
   }
   default:
+    radiusX = radiusY = 0;
     NS_ABORT_IF_FALSE(false, "unknown radial gradient sizing method");
   }
   *aRadiusX = radiusX;
@@ -2403,7 +2404,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // If we're not drawing the back-most layer, we don't want to draw the
   // background color.
   const nsStyleBackground *bg = aBackgroundSC->GetStyleBackground();
-  if (drawBackgroundColor && aLayer >= 0 && aLayer != bg->mImageCount - 1) {
+  if (drawBackgroundColor && aLayer >= 0 &&
+      static_cast<uint32_t>(aLayer) != bg->mImageCount - 1) {
     drawBackgroundColor = false;
   }
 
