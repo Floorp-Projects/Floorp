@@ -100,6 +100,7 @@ let FormAssistant = {
         if (this.focusedElement) {
           sendAsyncMessage("Forms:Input", { "type": "blur" });
           this.setFocusedElement(null);
+          this.isKeyboardOpened = false;
         }
         break;
 
