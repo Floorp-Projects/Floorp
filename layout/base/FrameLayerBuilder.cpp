@@ -1479,6 +1479,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
   return layer.forget();
 }
 
+#ifdef DEBUG
 /**
  * Returns the appunits per dev pixel for the item's frame. The item must
  * have a frame because only nsDisplayClip items don't have a frame,
@@ -1496,6 +1497,7 @@ AppUnitsPerDevPixel(nsDisplayItem* aItem)
   }
   return aItem->GetUnderlyingFrame()->PresContext()->AppUnitsPerDevPixel();
 }
+#endif
 
 /**
  * Restrict the visible region of aLayer to the region that is actually visible.
@@ -2216,10 +2218,10 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
                                          const FrameLayerBuilder::Clip& aClip,
                                          const nsPoint& aTopLeft)
 {
-  nsIFrame* f = aItem->GetUnderlyingFrame();
-  NS_ASSERTION(f, "Display items that render using Thebes must have a frame");
-  uint32_t key = aItem->GetPerFrameKey();
-  NS_ASSERTION(key, "Display items that render using Thebes must have a key");
+  NS_ASSERTION(aItem->GetUnderlyingFrame(),
+               "Display items that render using Thebes must have a frame");
+  NS_ASSERTION(aItem->GetPerFrameKey(),
+               "Display items that render using Thebes must have a key");
   nsDisplayItemGeometry *oldGeometry = NULL;
   FrameLayerBuilder::Clip* oldClip = NULL;
   nsAutoPtr<nsDisplayItemGeometry> geometry(aItem->AllocateGeometry(mBuilder));
@@ -2908,8 +2910,8 @@ Layer*
 FrameLayerBuilder::GetLeafLayerFor(nsDisplayListBuilder* aBuilder,
                                    nsDisplayItem* aItem)
 {
-  nsIFrame* f = aItem->GetUnderlyingFrame();
-  NS_ASSERTION(f, "Can only call GetLeafLayerFor on items that have a frame");
+  NS_ASSERTION(aItem->GetUnderlyingFrame(),
+               "Can only call GetLeafLayerFor on items that have a frame");
   Layer* layer = GetOldLayerFor(aItem);
   if (!layer)
     return nullptr;

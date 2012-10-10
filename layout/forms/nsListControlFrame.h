@@ -126,7 +126,7 @@ public:
 
   virtual void CaptureMouseEvents(bool aGrabMouseEvents) MOZ_OVERRIDE;
   virtual nscoord GetHeightOfARow() MOZ_OVERRIDE;
-  virtual int32_t GetNumberOfOptions() MOZ_OVERRIDE;  
+  virtual uint32_t GetNumberOfOptions() MOZ_OVERRIDE;
   virtual void AboutToDropDown() MOZ_OVERRIDE;
 
   /**

@@ -86,10 +86,10 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSimplePageSequenceFrame)
 nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
   nsContainerFrame(aContext),
   mTotalPages(-1),
-  mCurrentCanvasListSetup(false),
   mSelectionHeight(-1),
   mYSelOffset(0),
-  mCalledBeginPage(false)
+  mCalledBeginPage(false),
+  mCurrentCanvasListSetup(false)
 {
   nscoord halfInch = PresContext()->CSSTwipsToAppUnits(NS_INCHES_TO_TWIPS(0.5));
   mMargin.SizeTo(halfInch, halfInch, halfInch, halfInch);
