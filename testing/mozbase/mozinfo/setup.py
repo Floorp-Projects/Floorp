@@ -6,7 +6,7 @@
 import os
 from setuptools import setup
 
-PACKAGE_VERSION = '0.3.3'
+PACKAGE_VERSION = '0.4'
 
 # get documentation from the README
 try:

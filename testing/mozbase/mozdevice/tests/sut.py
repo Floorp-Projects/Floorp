@@ -5,7 +5,6 @@
 
 import socket
 from threading import Thread
-import unittest
 import time
 
 class MockAgent(object):
@@ -14,8 +13,8 @@ class MockAgent(object):
             self.commands = start_commands
         else:
             self.commands = [("testroot", "/mnt/sdcard"),
-                                   ("isdir /mnt/sdcard/tests", "TRUE"),
-                                   ("ver", "SUTAgentAndroid Version 1.14")]
+                             ("isdir /mnt/sdcard/tests", "TRUE"),
+                             ("ver", "SUTAgentAndroid Version 1.14")]
         self.commands = self.commands + commands
 
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
