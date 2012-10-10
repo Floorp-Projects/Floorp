@@ -64,7 +64,6 @@ EXTRA_JS_MODULES = \
   InlineSpellChecker.jsm \
   PageMenu.jsm \
   PopupNotifications.jsm \
-  PrivateBrowsingUtils.jsm \
   PropertyListUtils.jsm \
   Task.jsm \
   UpdateChannel.jsm \
@@ -72,6 +71,7 @@ EXTRA_JS_MODULES = \
 
 EXTRA_PP_JS_MODULES = \
   LightweightThemeConsumer.jsm \
+  PrivateBrowsingUtils.jsm \
   Services.jsm \
   WindowDraggingUtils.jsm \
   Troubleshoot.jsm \
