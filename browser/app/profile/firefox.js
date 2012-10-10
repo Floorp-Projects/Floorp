@@ -225,6 +225,7 @@ pref("general.autoScroll", true);
 // Gecko token as a temporary measure against bug 778408 (mail.aol.com defaults
 // to basic web UI when accessed with a user agent without Gecko/20100101).
 pref("general.useragent.override.aol.com", "Gecko/[^ ]*#Gecko/20100101");
+pref("general.useragent.complexOverride.moodle", true); // bug 797703
 
 // At startup, check if we're the default browser and prompt user if not.
 pref("browser.shell.checkDefaultBrowser", true);
