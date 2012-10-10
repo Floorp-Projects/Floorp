@@ -18,7 +18,6 @@ import uuid
 import sys
 
 from mozbuild.base import BuildConfig
-from mozbuild.config import ConfigSettings
 
 from .base import (
     CommandArgument,
@@ -26,6 +25,7 @@ from .base import (
     Command,
 )
 
+from .config import ConfigSettings
 from .logging import LoggingManager
 
 from .registrar import populate_argument_parser
