@@ -28,6 +28,7 @@ SEARCH_PATHS = [
     'python/which',
     'other-licenses/ply',
     'xpcom/idl-parser',
+    'testing',
     'testing/xpcshell',
     'testing/mozbase/mozprocess',
     'testing/mozbase/mozinfo',
