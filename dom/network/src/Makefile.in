@@ -21,7 +21,7 @@ EXTRA_COMPONENTS = \
 	$(NULL)
 
 ifdef MOZ_B2G_RIL
-EXTRA_COMPONENTS = \
+EXTRA_COMPONENTS += \
   NetworkStatsManager.manifest \
   NetworkStatsManager.js \
   $(NULL)

@@ -47,4 +47,8 @@ HB_SHAPER_IMPLEMENT (ot) /* <--- This is our main OpenType shaper. */
 HB_SHAPER_IMPLEMENT (old)
 #endif
 
+#ifdef HAVE_ICU_LE
+HB_SHAPER_IMPLEMENT (icu_le)
+#endif
+
 HB_SHAPER_IMPLEMENT (fallback) /* <--- This should be last. */

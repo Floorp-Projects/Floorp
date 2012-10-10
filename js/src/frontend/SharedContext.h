@@ -222,7 +222,6 @@ class FunctionBox : public ObjectBox, public SharedContext
                                              funCxFlags.definitelyNeedsArgsObj   = true; }
 };
 
-
 /*
  * NB: If you add a new type of statement that is a scope, add it between
  * STMT_WITH and STMT_CATCH, or you will break StmtInfoBase::linksScope. If you

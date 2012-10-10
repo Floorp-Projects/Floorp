@@ -337,6 +337,9 @@ retry:
   ALLOCATE_ARRAY (HB_GlyphAttributes, item.attributes, num_glyphs);
   ALLOCATE_ARRAY (HB_Fixed, item.advances, num_glyphs);
   ALLOCATE_ARRAY (HB_FixedPoint, item.offsets, num_glyphs);
+  /* Apparently in some cases the offsets array will not be fully assigned to.
+   * Clear it. */
+  memset (item.offsets, 0, num_glyphs * sizeof (item.offsets[0]));
   uint32_t *vis_clusters;
   ALLOCATE_ARRAY (uint32_t, vis_clusters, num_glyphs);
 

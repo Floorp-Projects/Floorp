@@ -28,6 +28,7 @@ of the License or (at your option) any later version.
 // designed to have a limited subset of the std::vector api
 #pragma once
 
+#include <cstddef>
 #include <cassert>
 #include <cstring>
 #include <cstdlib>

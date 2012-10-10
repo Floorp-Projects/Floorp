@@ -122,7 +122,7 @@ def print_shaping_table(f):
 	keys = shapes.keys ()
 	min_u, max_u = min (keys), max (keys)
 	for u in range (min_u, max_u + 1):
-		s = [shapes[u][shape] if u in shapes and shape in shapes[u] else u
+		s = [shapes[u][shape] if u in shapes and shape in shapes[u] else 0
 		     for shape in  ['initial', 'medial', 'final', 'isolated']]
 		value = ', '.join ("0x%04X" % c for c in s)
 		print "  {%s}, /* U+%04X %s */" % (value, u, names[u] if u in names else "")
@@ -148,9 +148,9 @@ def print_shaping_table(f):
 			ligas[liga[0]].append ((liga[1], c))
 	max_i = max (len (ligas[l]) for l in ligas)
 	print
-	print "static const struct {"
+	print "static const struct ligature_set_t {"
 	print " uint16_t first;"
-	print " struct {"
+	print " struct ligature_pairs_t {"
 	print "   uint16_t second;"
 	print "   uint16_t ligature;"
 	print " } ligatures[%d];" % max_i

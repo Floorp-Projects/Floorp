@@ -41,17 +41,23 @@ void gr_engine_version(int *nMajor, int *nMinor, int *nBugFix)
 
 gr_font* gr_make_font(float ppm/*pixels per em*/, const gr_face *face)
 {
-    Font * const res = new SimpleFont(ppm, face);
-    return static_cast<gr_font*>(res);
+    return gr_make_font_with_advance_fn(ppm, 0, 0, face);
 }
 
 
-gr_font* gr_make_font_with_advance_fn(float ppm/*pixels per em*/, const void* appFontHandle/*non-NULL*/, gr_advance_fn advance, const gr_face *face/*needed for scaling*/)
+gr_font* gr_make_font_with_ops(float ppm/*pixels per em*/, const void* appFontHandle/*non-NULL*/, const gr_font_ops * font_ops, const gr_face * face/*needed for scaling*/)
 {                 //the appFontHandle must stay alive all the time when the gr_font is alive. When finished with the gr_font, call destroy_gr_font    
-    Font * const res = new HintedFont(ppm, appFontHandle, advance, face);
+	if (face == 0)	return 0;
+
+	Font * const res = new Font(ppm, *face, appFontHandle, font_ops);
     return static_cast<gr_font*>(res);
 }
 
+gr_font* gr_make_font_with_advance_fn(float ppm/*pixels per em*/, const void* appFontHandle/*non-NULL*/, gr_advance_fn getAdvance, const gr_face * face/*needed for scaling*/)
+{
+    const gr_font_ops ops = {sizeof(gr_font_ops), getAdvance, NULL};
+    return gr_make_font_with_ops(ppm, appFontHandle, &ops, face);
+}
 
 void gr_font_destroy(gr_font *font)
 {

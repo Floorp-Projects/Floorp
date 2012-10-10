@@ -164,11 +164,11 @@ const gr_slot* gr_seg_last_slot(gr_segment* pSeg/*not NULL*/)
     return static_cast<const gr_slot*>(pSeg->last());
 }
 
-void gr_seg_justify(gr_segment* pSeg/*not NULL*/, gr_slot* pSlot/*not NULL*/, const gr_font *pFont, double width, enum gr_justFlags flags, gr_slot *pFirst, gr_slot *pLast)
+float gr_seg_justify(gr_segment* pSeg/*not NULL*/, const gr_slot* pSlot/*not NULL*/, const gr_font *pFont, double width, enum gr_justFlags flags, const gr_slot *pFirst, const gr_slot *pLast)
 {
     assert(pSeg);
     assert(pSlot);
-    pSeg->justify(pSlot, pFont, float(width), justFlags(flags), pFirst, pLast);
+    return pSeg->justify(const_cast<gr_slot *>(pSlot), pFont, float(width), justFlags(flags), const_cast<gr_slot *>(pFirst), const_cast<gr_slot *>(pLast));
 }
 
 } // extern "C"

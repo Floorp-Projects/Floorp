@@ -101,6 +101,7 @@ FENNEC_JAVA_FILES = \
   OnInterceptTouchListener.java \
   PrefsHelper.java \
   PrivateDataPreference.java \
+  PrivateTab.java \
   PropertyAnimator.java \
   ProfileMigrator.java \
   PromptService.java \
@@ -923,6 +924,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/action_bar_button.xml                  \
   mobile/android/base/resources/drawable/address_bar_bg.xml                     \
   mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
+  mobile/android/base/resources/drawable/address_bar_url_level.xml              \
   mobile/android/base/resources/drawable/autocomplete_list_bg.9.png             \
   mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \
   mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \

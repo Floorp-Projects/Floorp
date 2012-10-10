@@ -3092,7 +3092,7 @@ protected:
 };
 
 class WebGLActiveInfo MOZ_FINAL
-    : public nsIWebGLActiveInfo
+    : public nsISupports
 {
 public:
     WebGLActiveInfo(WebGLint size, WebGLenum type, const nsACString& name) :
@@ -3101,8 +3101,24 @@ public:
         mName(NS_ConvertASCIItoUTF16(name))
     {}
 
+    // WebIDL attributes
+
+    WebGLint Size() const {
+        return mSize;
+    }
+
+    WebGLenum Type() const {
+        return mType;
+    }
+
+    void GetName(nsString& retval) const {
+        retval = mName;
+    }
+
+    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope);
+
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLACTIVEINFO
+
 protected:
     WebGLint mSize;
     WebGLenum mType;
