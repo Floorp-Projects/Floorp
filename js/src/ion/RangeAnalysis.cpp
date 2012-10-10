@@ -289,17 +289,50 @@ Range::unionWith(const Range *other)
 }
 
 void
-Range::unionWith(RangeChangeCount *other)
+RangeUpdater::updateLower(const Range *other)
+{
+    if (lowerSet_) {
+        r_.setLower(Min(r_.lower(), other->lower()));
+    } else {
+        r_.setLower(other->lower());
+        lowerSet_ = true;
+    }
+    if (other->isLowerInfinite())
+        r_.makeLowerInfinite();
+}
+void
+RangeUpdater::updateUpper(const Range *other)
+{
+    if (upperSet_) {
+        r_.setUpper(Min(r_.upper(), other->upper()));
+    } else {
+        r_.setUpper(other->upper());
+        upperSet_ = true;
+    }
+    if (other->isUpperInfinite())
+        r_.makeUpperInfinite();
+}
+
+void
+RangeUpdater::unionWith(const Range *other)
+{
+    updateLower(other);
+    updateUpper(other);
+}
+
+void
+RangeUpdater::unionWith(RangeChangeCount *other)
 {
     if (other->lowerCount_ <= 2) {
-        setLower(Min(lower_, other->oldRange.lower_));
-        lower_infinite_ |= other->oldRange.lower_infinite_;
+        // If this->lower has been initialized, then update it
+        // otherwise, initialize it.
+        updateLower(&other->oldRange);
     } else {
         other->lowerCount_ = 0;
     }
+
     if (other->upperCount_ <= 2) {
-        setUpper(Max(upper_, other->oldRange.upper_));
-        upper_infinite_ |= other->oldRange.upper_infinite_;
+        updateUpper(&other->oldRange);
     } else {
         other->upperCount_ = 0;
     }
