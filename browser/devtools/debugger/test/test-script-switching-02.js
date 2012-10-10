@@ -4,4 +4,8 @@
 function secondCall() {
   // This comment is useful for browser_dbg_select-line.js. ☺
   eval("debugger;");
+  function foo() {}
+  if (true) {
+    foo();
+  }
 }
