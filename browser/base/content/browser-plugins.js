@@ -262,14 +262,14 @@ var gPluginHandler = {
 
   // Callback for user clicking on a missing (unsupported) plugin.
   installSinglePlugin: function (plugin) {
-    var missingPluginsArray = {};
+    var missingPlugins = new Map();
 
     var pluginInfo = getPluginInfo(plugin);
-    missingPluginsArray[pluginInfo.mimetype] = pluginInfo;
+    missingPlugins.set(pluginInfo.mimetype, pluginInfo);
 
     openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
                "PFSWindow", "chrome,centerscreen,resizable=yes",
-               {plugins: missingPluginsArray, browser: gBrowser.selectedBrowser});
+               {plugins: missingPlugins, browser: gBrowser.selectedBrowser});
   },
 
   // Callback for user clicking on a disabled plugin
@@ -423,19 +423,20 @@ var gPluginHandler = {
     let contentWindow = aBrowser.contentWindow;
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
-    let pluginsDictionary = {};
+    let pluginsDictionary = new Map();
     for (let plugin of cwu.plugins) {
       let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
       if (gPluginHandler.canActivatePlugin(objLoadingContent)) {
         let pluginName = getPluginInfo(plugin).pluginName;
-        if (!pluginsDictionary[pluginName]) pluginsDictionary[pluginName] = [];
-        pluginsDictionary[pluginName].push(objLoadingContent);
+        if (!pluginsDictionary.has(pluginName))
+          pluginsDictionary.set(pluginName, []);
+        pluginsDictionary.get(pluginName).push(objLoadingContent);
       }
     }
 
     let centerActions = [];
-    for (let pluginName in pluginsDictionary) {
-      let plugin = pluginsDictionary[pluginName][0];
+    for (let [pluginName, namedPluginArray] of pluginsDictionary) {
+      let plugin = namedPluginArray[0];
       let warn = false;
       let warningText = "";
       let updateLink = Services.urlFormatter.formatURLPref("plugins.update.url");
@@ -539,10 +540,10 @@ var gPluginHandler = {
     let browser = gBrowser.getBrowserForDocument(plugin.ownerDocument
                                                        .defaultView.top.document);
     if (!browser.missingPlugins)
-      browser.missingPlugins = {};
+      browser.missingPlugins = new Map();
 
     var pluginInfo = getPluginInfo(plugin);
-    browser.missingPlugins[pluginInfo.mimetype] = pluginInfo;
+    browser.missingPlugins.set(pluginInfo.mimetype, pluginInfo);
 
     var notificationBox = gBrowser.getNotificationBox(browser);
 
@@ -568,11 +569,11 @@ var gPluginHandler = {
 
     function showPluginsMissing() {
       // get the urls of missing plugins
-      var missingPluginsArray = gBrowser.selectedBrowser.missingPlugins;
-      if (missingPluginsArray) {
+      var missingPlugins = gBrowser.selectedBrowser.missingPlugins;
+      if (missingPlugins) {
         openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
                    "PFSWindow", "chrome,centerscreen,resizable=yes",
-                   {plugins: missingPluginsArray, browser: gBrowser.selectedBrowser});
+                   {plugins: missingPlugins, browser: gBrowser.selectedBrowser});
       }
     }
 
