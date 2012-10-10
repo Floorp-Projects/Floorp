@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef __nsWifiMonitor__
+#define __nsWifiMonitor__
+
 #include "nsIWifiMonitor.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -13,10 +16,9 @@
 #include "prlog.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
+#include "nsITimer.h"
 #include "mozilla/Attributes.h"
-
-#ifndef __nsWifiMonitor__
-#define __nsWifiMonitor__
+#include "nsIInterfaceRequestor.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo *gWifiMonitorLog;
@@ -40,6 +42,7 @@ class nsWifiListener
   bool mHasSentData;
 };
 
+#ifndef MOZ_WIDGET_GONK
 class nsWifiMonitor MOZ_FINAL : nsIRunnable, nsIWifiMonitor, nsIObserver
 {
  public:
@@ -66,5 +69,31 @@ class nsWifiMonitor MOZ_FINAL : nsIRunnable, nsIWifiMonitor, nsIObserver
   mozilla::ReentrantMonitor mReentrantMonitor;
 
 };
+#else
+#include "nsIWifi.h"
+class nsWifiMonitor MOZ_FINAL : nsIWifiMonitor, nsIWifiScanResultsReady, nsIObserver
+{
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWIFIMONITOR
+  NS_DECL_NSIOBSERVER
+  NS_DECL_NSIWIFISCANRESULTSREADY
+
+  nsWifiMonitor();
+
+ private:
+  ~nsWifiMonitor();
+
+  void ClearTimer() {
+    if (mTimer) {
+      mTimer->Cancel();
+      mTimer = nullptr;
+    }
+  }
+  nsCOMArray<nsWifiAccessPoint> mLastAccessPoints;
+  nsTArray<nsWifiListener> mListeners;
+  nsCOMPtr<nsITimer> mTimer;
+};
+#endif
 
 #endif
