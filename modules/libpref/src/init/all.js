@@ -236,7 +236,7 @@ pref("gfx.font_rendering.graphite.enabled", false);
 // use harfbuzz for default (0x01) + arabic (0x02) + hebrew (0x04)
 pref("gfx.font_rendering.harfbuzz.scripts", 7);
 #else
-// use harfbuzz for all scripts
+// use harfbuzz for all scripts (except when using AAT fonts on OS X)
 pref("gfx.font_rendering.harfbuzz.scripts", -1);
 #endif
 
