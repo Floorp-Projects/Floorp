@@ -252,6 +252,37 @@ function test_set_property_lazy_getter() {
   }
 }
 
+// This is used by both test_construct_dict_from_json_string and test_serialize_dict_to_json_string
+function _sort_comp_arr(arr1,arr2){
+  arr1.sort();
+  arr2.sort();
+  do_check_eq(arr1.toString(),arr2.toString());
+}
+
+/**
+ * Tests constructing a dictionary from a JSON string.
+ */
+function test_construct_dict_from_json_string() {
+  let d1 = new Dict({a:1, b:2, c:"foobar"});
+  let d2 = new Dict(JSON.stringify(({a:1, b:2, c:"foobar"})));
+  _sort_comp_arr(d1.listkeys(),d2.listkeys());
+  do_check_eq(d1.get("a"), d2.get("a"));
+  do_check_eq(d1.get("b"), d2.get("b"));
+  do_check_eq(d1.get("c"), d2.get("c"));
+}
+
+/**
+ * Tests serializing a dictionary to a JSON string.
+ */
+function test_serialize_dict_to_json_string() {
+  let d1 = new Dict({a:1, b:2, c:"foobar"});
+  let d2 = new Dict(d1.toJSON());
+  _sort_comp_arr(d1.listkeys(),d2.listkeys());
+  do_check_eq(d1.get("a"), d2.get("a"));
+  do_check_eq(d1.get("b"), d2.get("b"));
+  do_check_eq(d1.get("c"), d2.get("c"));
+}
+
 var tests = [
   test_get_set_has_del,
   test_get_default,
@@ -262,7 +293,9 @@ var tests = [
   test_iterators,
   test_set_property_strict,
   test_set_property_non_strict,
-  test_set_property_lazy_getter
+  test_set_property_lazy_getter,
+  test_construct_dict_from_json_string,
+  test_serialize_dict_to_json_string
 ];
 
 function run_test() {
