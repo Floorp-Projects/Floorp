@@ -10,7 +10,7 @@ interface nsIURI;
 interface nsIChannel;
 interface nsIDocShell;
 
-[scriptable, uuid(51289544-fd8a-11e1-8017-5abf937d8bec)]
+[scriptable, uuid(2182f772-16c8-4b6d-be65-921d4da5751d)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -266,9 +266,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * principal.
      */
     [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipal(in JSContextPtr cx);
-    [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipalAndFrame(in JSContextPtr cx,
-                                                                   out JSStackFramePtr fp);
-
 
     const unsigned long NO_APP_ID = 0;
     const unsigned long UNKNOWN_APP_ID = 4294967295; // UINT32_MAX
