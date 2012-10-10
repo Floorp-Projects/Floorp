@@ -27,7 +27,6 @@
 #include "nsIconDecoder.h"
 
 #include "gfxContext.h"
-#include "gfx2DGlue.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/StandardInteger.h"
@@ -35,59 +34,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/gfx/Scale.h"
-
-// The high-quality scaler requires Skia.
-#ifdef MOZ_ENABLE_SKIA
-
-static bool
-ScaleFrameImage(imgFrame *aSrcFrame, imgFrame *aDstFrame,
-                const gfxSize &aScaleFactors)
-{
-  if (aScaleFactors.width <= 0 || aScaleFactors.height <= 0)
-    return false;
-
-  imgFrame *srcFrame = aSrcFrame;
-  nsIntRect srcRect = srcFrame->GetRect();
-  uint32_t dstWidth = NSToIntRoundUp(srcRect.width * aScaleFactors.width);
-  uint32_t dstHeight = NSToIntRoundUp(srcRect.height * aScaleFactors.height);
-
-  // Destination is unconditionally ARGB32 because that's what the scaler
-  // outputs.
-  nsresult rv = aDstFrame->Init(0, 0, dstWidth, dstHeight,
-                                gfxASurface::ImageFormatARGB32);
-  if (!NS_FAILED(rv)) {
-    uint8_t* srcData;
-    uint32_t srcDataLength;
-    // Source frame data is locked/unlocked on the main thread.
-    srcFrame->GetImageData(&srcData, &srcDataLength);
-    NS_ASSERTION(srcData != nullptr, "Source data is unavailable! Is it locked?");
-
-    uint8_t* dstData;
-    uint32_t dstDataLength;
-    aDstFrame->LockImageData();
-    aDstFrame->GetImageData(&dstData, &dstDataLength);
-
-    // This returns an SkBitmap backed by dstData; since it wrote to dstData,
-    // we don't need to look at that SkBitmap.
-    mozilla::gfx::Scale(srcData, srcRect.width, srcRect.height, aSrcFrame->GetImageBytesPerRow(),
-                        dstData, dstWidth, dstHeight, aDstFrame->GetImageBytesPerRow(),
-                        mozilla::gfx::ImageFormatToSurfaceFormat(aSrcFrame->GetFormat()));
-
-    aDstFrame->UnlockImageData();
-    return true;
-  }
-
-  return false;
-}
-#else // MOZ_ENABLE_SKIA
-static bool
-ScaleFrameImage(imgFrame *aSrcFrame, imgFrame *aDstFrame,
-                const gfxSize &aScaleFactors)
-{
-  return false;
-}
-#endif // MOZ_ENABLE_SKIA
-
 
 #include "sampler.h"
 
@@ -235,8 +181,7 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
   mInDecoder(false),
   mAnimationFinished(false),
   mFinishing(false),
-  mInUpdateImageContainer(false),
-  mScaleRequest(this)
+  mInUpdateImageContainer(false)
 {
   // Set up the discard tracker node.
   mDiscardTrackerNode.img = this;
@@ -244,14 +189,11 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
 
   // Statistics
   num_containers++;
-
 }
 
 //******************************************************************************
 RasterImage::~RasterImage()
 {
-  ScaleRequest::Stop(mScaleRequest.image);
-
   // Discardable statistics
   if (mDiscardable) {
     num_discardable_containers--;
@@ -2699,44 +2641,39 @@ RasterImage::ScaleWorker::Run()
   }
 
   ScaleRequest* request;
-  gfxSize scale;
-  imgFrame* frame;
   {
     MutexAutoLock lock(ScaleWorker::Singleton()->mRequestsMutex);
     request = mScaleRequests.popFirst();
-    if (!request)
-      return NS_OK;
-
-    scale = request->scale;
-    frame = request->srcFrame;
   }
 
-  nsAutoPtr<imgFrame> scaledFrame(new imgFrame());
-  bool scaled = ScaleFrameImage(frame, scaledFrame, scale);
+  request->done = mozilla::gfx::Scale(request->srcData, request->srcRect.width, request->srcRect.height, request->srcStride,
+                                      request->dstData, request->dstSize.width, request->dstSize.height, request->dstStride,
+                                      request->srcFormat);
 
   // OK, we've got a new scaled image. Let's get the main thread to unlock and
   // redraw it.
-  {
-    MutexAutoLock lock(ScaleWorker::Singleton()->mRequestsMutex);
-    if (scaled && scale == request->scale && !request->isInList()) {
-      request->dstFrame = scaledFrame;
-      request->done = true;
-    }
+  DrawWorker::Singleton()->RequestDraw(request);
 
-    DrawWorker::Singleton()->RequestDraw(request->image);
-  }
   return NS_OK;
 }
 
 // Note: you MUST call RequestScale with the ScaleWorker mutex held.
-void
-RasterImage::ScaleWorker::RequestScale(RasterImage* aImg)
+bool
+RasterImage::ScaleWorker::RequestScale(ScaleRequest* request,
+                                       RasterImage* image,
+                                       imgFrame* aSrcFrame)
 {
   mRequestsMutex.AssertCurrentThreadOwns();
 
-  ScaleRequest* request = &aImg->mScaleRequest;
-  if (request->isInList())
-    return;
+  // Destination is unconditionally ARGB32 because that's what the scaler
+  // outputs.
+  request->dstFrame = new imgFrame();
+  nsresult rv = request->dstFrame->Init(0, 0, request->dstSize.width, request->dstSize.height,
+                                        gfxASurface::ImageFormatARGB32);
+
+  if (NS_FAILED(rv) || !request->GetSurfaces(aSrcFrame)) {
+    return false;
+  }
 
   mScaleRequests.insertBack(request);
 
@@ -2747,6 +2684,10 @@ RasterImage::ScaleWorker::RequestScale(RasterImage* aImg)
   else {
     sScaleWorkerThread->Dispatch(this, NS_DISPATCH_NORMAL);
   }
+
+  image->SetResultPending(request);
+
+  return true;
 }
 
 /* static */ RasterImage::DrawWorker*
@@ -2768,53 +2709,45 @@ RasterImage::DrawWorker::Run()
     MutexAutoLock lock(ScaleWorker::Singleton()->mRequestsMutex);
     request = mDrawRequests.popFirst();
   }
-  if (request) {
-    // ScaleWorker is finished with this request, so we can unlock the data now.
-    request->UnlockSourceData();
-    // We have to reset dstFrame if request was stopped while ScaleWorker was scaling.
-    if (request->stopped) {
-      ScaleRequest::Stop(request->image);
-    }
-    nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(request->image->mObserver));
-    if (request->done && observer) {
-      imgFrame *scaledFrame = request->dstFrame.get();
-      scaledFrame->ImageUpdated(scaledFrame->GetRect());
-      nsIntRect frameRect = request->srcFrame->GetRect();
-      observer->FrameChanged(&frameRect);
+
+  // ScaleWorker is finished with this request, so we can unlock the data now.
+  request->ReleaseSurfaces();
+
+  // Only set the scale result if the request finished successfully.
+  if (request->done) {
+    RasterImage* image = request->weakImage;
+    if (image) {
+      nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(image->mObserver));
+      if (observer) {
+        imgFrame *scaledFrame = request->dstFrame.get();
+        scaledFrame->ImageUpdated(scaledFrame->GetRect());
+        observer->FrameChanged(&request->srcRect);
+      }
+
+      image->SetScaleResult(request);
     }
   }
+
+  // Scaling failed. Reset the scale result on our image.
+  else {
+    RasterImage* image = request->weakImage;
+    if (image) {
+      image->SetScaleResult(nullptr);
+    }
+  }
+
+  // We're all done with this ScaleRequest; now it dies.
+  delete request;
 
   return NS_OK;
 }
 
 void
-RasterImage::DrawWorker::RequestDraw(RasterImage* aImg)
+RasterImage::DrawWorker::RequestDraw(ScaleRequest* request)
 {
-  ScaleRequest* request = &aImg->mScaleRequest;
+  MutexAutoLock lock(ScaleWorker::Singleton()->mRequestsMutex);
   mDrawRequests.insertBack(request);
   NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
-}
-
-void
-RasterImage::ScaleRequest::Stop(RasterImage* aImg)
-{
-  ScaleRequest* request = &aImg->mScaleRequest;
-  // It's safe to unlock source image data only if request is in the list.
-  // Otherwise we may be reading from the source while performing scaling
-  // and can't interrupt immediately.
-  if (request->isInList()) {
-    request->remove();
-    request->UnlockSourceData();
-  }
-  // We have to check if request is finished before dropping the destination
-  // frame. Otherwise we may be writing to the dest while performing scaling.
-  if (request->done) {
-    request->done = false;
-    request->dstFrame = nullptr;
-    request->scale.width = 0;
-    request->scale.height = 0;
-  }
-  request->stopped = true;
 }
 
 static inline bool
@@ -2847,6 +2780,28 @@ RasterImage::CanScale(gfxPattern::GraphicsFilter aFilter,
 }
 
 void
+RasterImage::SetScaleResult(ScaleRequest* request)
+{
+  if (request) {
+    MOZ_ASSERT(request->done);
+    mScaleResult.status = SCALE_DONE;
+    mScaleResult.frame = request->dstFrame;
+    mScaleResult.scale = request->scale;
+  } else {
+    mScaleResult.status = SCALE_INVALID;
+    mScaleResult.frame = nullptr;
+  }
+}
+
+void
+RasterImage::SetResultPending(ScaleRequest* request)
+{
+  MOZ_ASSERT(request);
+  mScaleResult.scale = request->scale;
+  mScaleResult.status = SCALE_PENDING;
+}
+
+void
 RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
                                           gfxContext *aContext,
                                           gfxPattern::GraphicsFilter aFilter,
@@ -2865,35 +2820,30 @@ RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
   if (CanScale(aFilter, scale)) {
     MutexAutoLock lock(ScaleWorker::Singleton()->mRequestsMutex);
     // If scale factor is still the same that we scaled for and
-    // ScaleWorker has done it's job, then we can use pre-downscaled frame.
+    // ScaleWorker isn't still working, then we can use pre-downscaled frame.
     // If scale factor has changed, order new request.
-    if (mScaleRequest.scale == scale) {
-      if (mScaleRequest.done) {
-        frame = mScaleRequest.dstFrame.get();
-        userSpaceToImageSpace.Multiply(gfxMatrix().Scale(scale.width, scale.height));
+    // FIXME: Current implementation doesn't support pre-downscale
+    // mechanism for multiple sizes from same src, since we cache
+    // pre-downscaled frame only for the latest requested scale.
+    // The solution is to cache more than one scaled image frame
+    // for each RasterImage.
+    if (mScaleResult.status == SCALE_DONE && mScaleResult.scale == scale) {
+      frame = mScaleResult.frame;
+      userSpaceToImageSpace.Multiply(gfxMatrix().Scale(scale.width, scale.height));
 
-        // Since we're switching to a scaled image, we we need to transform the
-        // area of the subimage to draw accordingly, since imgFrame::Draw()
-        // doesn't know about scaled frames.
-        subimage.ScaleRoundOut(scale.width, scale.height);
-      }
-    } else {
-      // FIXME: Current implementation doesn't support pre-downscale
-      // mechanism for multiple images from same src, since we cache
-      // pre-downscaled frame only for the latest requested scale.
-      // The solution is to cache more than one scaled image frame
-      // for each RasterImage.
-      int scaling = mScaleRequest.srcDataLocked ? 1 : 0;
-      if (mLockCount - scaling == 1) {
-        ScaleRequest::Stop(this);
-        mScaleRequest.srcFrame = frame;
-        mScaleRequest.scale = scale;
-        mScaleRequest.stopped = false;
+      // Since we're switching to a scaled image, we we need to transform the
+      // area of the subimage to draw accordingly, since imgFrame::Draw()
+      // doesn't know about scaled frames.
+      subimage.ScaleRoundOut(scale.width, scale.height);
+    }
 
-        // We need to make sure that source data is available before asking to scale.
-        if (mScaleRequest.LockSourceData()) {
-          ScaleWorker::Singleton()->RequestScale(this);
-        }
+    // If we're not waiting for exactly this result, ask for it.
+    else if (!(mScaleResult.status == SCALE_PENDING && mScaleResult.scale == scale)) {
+      ScaleRequest* request = new ScaleRequest(this, scale, frame);
+
+      if (!ScaleWorker::Singleton()->RequestScale(request, this, frame)) {
+        // Requesting a scale failed. Not much we can do.
+        delete request;
       }
     }
   }
@@ -3032,11 +2982,6 @@ RasterImage::UnlockImage()
 
   // Decrement our lock count
   mLockCount--;
-
-  if (ScaleWorker::sSingleton && mLockCount == 0) {
-    MutexAutoLock lock(ScaleWorker::Singleton()->mRequestsMutex);
-    ScaleRequest::Stop(this);
-  }
 
   // If we've decoded this image once before, we're currently decoding again,
   // and our lock count is now zero (so nothing is forcing us to keep the
