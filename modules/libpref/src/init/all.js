@@ -3791,10 +3791,6 @@ pref("dom.mozApps.dev_mode", false);
 // Lowest localId for apps.
 pref("dom.mozApps.maxLocalId", 1000);
 
-// Let us know wether we should run the permissions update algorithm.
-// See Bug 787439
-pref("dom.mozApps.runUpdate", true);
-
 // Minimum delay in milliseconds between network activity notifications (0 means
 // no notifications). The delay is the same for both download and upload, though
 // they are handled separately. This pref is only read once at startup:

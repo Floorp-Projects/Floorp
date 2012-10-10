@@ -145,6 +145,21 @@ let DOMApplicationRegistry = {
 #endif
   },
 
+  updatePermissionsForApp: function updatePermissionsForApp(aId) {
+    // Install the permissions for this app, as if we were updating
+    // to cleanup the old ones if needed.
+    this._readManifests([{ id: aId }], (function(aResult) {
+      let data = aResult[0];
+      PermissionsInstaller.installPermissions({
+        manifest: data.manifest,
+        manifestURL: this.webapps[aId].manifestURL,
+        origin: this.webapps[aId].origin
+      }, true, function() {
+        debug("Error installing permissions for " + aId);
+      });
+    }).bind(this));
+  },
+
   // Implements the core of bug 787439
   // 1. load the apps from the current registry.
   // 2. if at first run, go through these steps:
@@ -154,8 +169,7 @@ let DOMApplicationRegistry = {
   //   c. for all apps in the new core registry, install them if they are not
   //      yet in the current registry, and run installPermissions()
   loadAndUpdateApps: function loadAndUpdateApps() {
-    let runUpdate = Services.prefs.getBoolPref("dom.mozApps.runUpdate");
-    Services.prefs.setBoolPref("dom.mozApps.runUpdate", false);
+    let runUpdate = AppsUtils.isFirstRun(Services.prefs);
 
     // 1.
     this.loadCurrentRegistry((function() {
@@ -179,10 +193,14 @@ let DOMApplicationRegistry = {
           for (let id in this.webapps) {
             if (id in aData || this.webapps[id].removable)
               continue;
-            let localId = this.webapps[id].localId;
             delete this.webapps[id];
-            // XXXX once bug 758269 is ready, revoke perms for this app
-            // removePermissions(localId);
+            // Remove the permissions, cookies and private data for this app.
+            let localId = this.webapps[id].localId;
+            let permMgr = Cc["@mozilla.org/permissionmanager;1"]
+                            .getService(Ci.nsIPermissionManager);
+            permMgr.RemovePermissionsForApp(localId);
+            Services.cookies.removeCookiesForApp(localId, false);
+            this._clearPrivateData(localId, false);
           }
 
           let appDir = FileUtils.getDir("coreAppsDir", ["webapps"], false);
@@ -202,19 +220,28 @@ let DOMApplicationRegistry = {
                 this.webapps[id].removable = false;
               }
             }
-            // XXXX once bug 758269 is ready, revoke perms for this app
-            // let localId = this.webapps[id].localId;
-            // installPermissions(localId);
+
+            this.updatePermissionsForApp(id);
           }
           this.registerAppsHandlers();
         }).bind(this));
       } else {
+        // At first run, set up the permissions for eng builds.
+        for (let id in this.webapps) {
+          this.updatePermissionsForApp(id);
+        }
         this.registerAppsHandlers();
       }
     } else {
       this.registerAppsHandlers();
     }
 #else
+    if (runUpdate) {
+      // At first run, set up the permissions for desktop builds.
+      for (let id in this.webapps) {
+        this.updatePermissionsForApp(id);
+      }
+    }
     this.registerAppsHandlers();
 #endif
     }).bind(this));
