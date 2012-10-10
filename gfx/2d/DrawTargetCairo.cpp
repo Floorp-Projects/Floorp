@@ -221,8 +221,10 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
                                         pattern.mEnd.x, pattern.mEnd.y);
 
       MOZ_ASSERT(pattern.mStops->GetBackendType() == BACKEND_CAIRO);
-      const std::vector<GradientStop>& stops =
-        static_cast<GradientStopsCairo*>(pattern.mStops.get())->GetStops();
+      GradientStopsCairo* cairoStops = static_cast<GradientStopsCairo*>(pattern.mStops.get());
+      cairo_pattern_set_extend(pat, GfxExtendToCairoExtend(cairoStops->GetExtendMode()));
+
+      const std::vector<GradientStop>& stops = cairoStops->GetStops();
       for (size_t i = 0; i < stops.size(); ++i) {
         const GradientStop& stop = stops[i];
         cairo_pattern_add_color_stop_rgba(pat, stop.offset, stop.color.r,
@@ -239,8 +241,11 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
       pat = cairo_pattern_create_radial(pattern.mCenter1.x, pattern.mCenter1.y, pattern.mRadius1,
                                         pattern.mCenter2.x, pattern.mCenter2.y, pattern.mRadius2);
 
-      const std::vector<GradientStop>& stops =
-        static_cast<GradientStopsCairo*>(pattern.mStops.get())->GetStops();
+      MOZ_ASSERT(pattern.mStops->GetBackendType() == BACKEND_CAIRO);
+      GradientStopsCairo* cairoStops = static_cast<GradientStopsCairo*>(pattern.mStops.get());
+      cairo_pattern_set_extend(pat, GfxExtendToCairoExtend(cairoStops->GetExtendMode()));
+
+      const std::vector<GradientStop>& stops = cairoStops->GetStops();
       for (size_t i = 0; i < stops.size(); ++i) {
         const GradientStop& stop = stops[i];
         cairo_pattern_add_color_stop_rgba(pat, stop.offset, stop.color.r,
@@ -727,9 +732,11 @@ DrawTargetCairo::ClearSurfaceForUnboundedSource(const CompositionOp &aOperator)
 
 
 TemporaryRef<GradientStops>
-DrawTargetCairo::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops, ExtendMode aExtendMode) const
+DrawTargetCairo::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops,
+                                     ExtendMode aExtendMode) const
 {
-  RefPtr<GradientStopsCairo> stops = new GradientStopsCairo(aStops, aNumStops);
+  RefPtr<GradientStopsCairo> stops = new GradientStopsCairo(aStops, aNumStops,
+                                                            aExtendMode);
   return stops;
 }
 
