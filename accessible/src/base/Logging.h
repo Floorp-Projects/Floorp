@@ -151,6 +151,11 @@ void Address(const char* aDescr, Accessible* aAcc);
 void Node(const char* aDescr, nsINode* aNode);
 
 /**
+ * Log the document accessible info as message entry.
+ */
+void Document(DocAccessible* aDocument);
+
+/**
  * Log the accessible and its DOM node as a message entry.
  */
 void AccessibleNNode(const char* aDescr, Accessible* aAccessible);
