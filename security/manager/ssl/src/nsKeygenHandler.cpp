@@ -81,7 +81,7 @@ decode_pqg_params(char *aStr)
 {
     unsigned char *buf = nullptr;
     unsigned int len;
-    PRArenaPool *arena = nullptr;
+    PLArenaPool *arena = nullptr;
     PQGParams *params = nullptr;
     SECStatus status;
 
@@ -485,7 +485,7 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
     SECKEYPrivateKey *privateKey = nullptr;
     SECKEYPublicKey *publicKey = nullptr;
     CERTSubjectPublicKeyInfo *spkInfo = nullptr;
-    PRArenaPool *arena = nullptr;
+    PLArenaPool *arena = nullptr;
     SECStatus sec_rv = SECFailure;
     SECItem spkiItem;
     SECItem pkacItem;

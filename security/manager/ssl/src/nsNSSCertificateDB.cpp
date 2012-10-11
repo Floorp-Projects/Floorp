@@ -219,7 +219,7 @@ collect_certs(void *arg, SECItem **certs, int numcerts)
 }
 
 CERTDERCerts*
-nsNSSCertificateDB::getCertsFromPackage(PRArenaPool *arena, uint8_t *data, 
+nsNSSCertificateDB::getCertsFromPackage(PLArenaPool *arena, uint8_t *data, 
                                         uint32_t length)
 {
   nsNSSShutDownPreventionLock locker;
@@ -438,7 +438,7 @@ nsNSSCertificateDB::ImportCertificates(uint8_t * data, uint32_t length,
   nsNSSShutDownPreventionLock locker;
   nsresult nsrv;
 
-  PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  PLArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   if (!arena)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -513,7 +513,7 @@ nsNSSCertificateDB::ImportEmailCertificate(uint8_t * data, uint32_t length,
   if (NS_FAILED(nsrv))
     return nsrv;
  
-  PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  PLArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   if (!arena)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -657,7 +657,7 @@ nsNSSCertificateDB::ImportServerCertificate(uint8_t * data, uint32_t length,
   nsNSSCertTrust trust;
   char *serverNickname = nullptr;
  
-  PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  PLArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   if (!arena)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -892,7 +892,7 @@ nsNSSCertificateDB::ImportUserCertificate(uint8_t *data, uint32_t length, nsIInt
   int numCACerts;
   SECItem *CACerts;
   CERTDERCerts * collectArgs;
-  PRArenaPool *arena;
+  PLArenaPool *arena;
   CERTCertificate * cert=NULL;
 
   arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);

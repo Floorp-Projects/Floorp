@@ -35,7 +35,7 @@ nsDataSignatureVerifier::VerifyData(const nsACString & aData,
                                     bool *_retval)
 {
     // Allocate an arena to handle the majority of the allocations
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (!arena)
         return NS_ERROR_OUT_OF_MEMORY;
