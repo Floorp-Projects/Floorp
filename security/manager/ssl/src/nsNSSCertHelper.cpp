@@ -990,7 +990,7 @@ ProcessIA5String(SECItem  *extData,
 }
 
 static nsresult
-AppendBMPtoUTF16(PRArenaPool *arena,
+AppendBMPtoUTF16(PLArenaPool *arena,
 		 unsigned char* data, unsigned int len,
 		 nsAString& text)
 {
@@ -1017,7 +1017,7 @@ ProcessBMPString(SECItem  *extData,
 		 nsINSSComponent *nssComponent)
 {
   SECItem item;
-  PRArenaPool *arena;
+  PLArenaPool *arena;
   nsresult rv = NS_ERROR_FAILURE;
   
   arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -1033,7 +1033,7 @@ ProcessBMPString(SECItem  *extData,
 }
 
 static nsresult
-ProcessGeneralName(PRArenaPool *arena,
+ProcessGeneralName(PLArenaPool *arena,
 		   CERTGeneralName *current,
 		   nsAString &text,
 		   nsINSSComponent *nssComponent)
@@ -1156,7 +1156,7 @@ ProcessGeneralName(PRArenaPool *arena,
 }
 
 static nsresult
-ProcessGeneralNames(PRArenaPool *arena,
+ProcessGeneralNames(PLArenaPool *arena,
 		    CERTGeneralName *nameList,
 		    nsAString &text,
 		    nsINSSComponent *nssComponent)
@@ -1179,7 +1179,7 @@ ProcessAltName(SECItem  *extData,
 	       nsINSSComponent *nssComponent)
 {
   nsresult rv = NS_OK;
-  PRArenaPool *arena;
+  PLArenaPool *arena;
   CERTGeneralName *nameList;
 
   arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -1202,7 +1202,7 @@ ProcessSubjectKeyId(SECItem  *extData,
 		    nsAString &text,
 		    nsINSSComponent *nssComponent)
 {
-  PRArenaPool *arena;
+  PLArenaPool *arena;
   nsresult rv = NS_OK;
   SECItem decoded;
   nsAutoString local;
@@ -1234,7 +1234,7 @@ ProcessAuthKeyId(SECItem  *extData,
 		 nsINSSComponent *nssComponent)
 {
   CERTAuthKeyID *ret;
-  PRArenaPool *arena;
+  PLArenaPool *arena;
   nsresult rv = NS_OK;
   nsAutoString local;
 
@@ -1284,7 +1284,7 @@ ProcessUserNotice(SECItem *der_notice,
 {
   CERTUserNotice *notice = NULL;
   SECItem **itemList;
-  PRArenaPool *arena;
+  PLArenaPool *arena;
 
   arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   if (!arena)
@@ -1449,7 +1449,7 @@ ProcessCrlDistPoints(SECItem  *extData,
 {
   CERTCrlDistributionPoints *crldp;
   CRLDistributionPoint **points, *point;
-  PRArenaPool *arena;
+  PLArenaPool *arena;
   nsresult rv = NS_OK;
   nsAutoString local;
   int reasons, comma;
@@ -1542,7 +1542,7 @@ ProcessAuthInfoAccess(SECItem  *extData,
 		      nsINSSComponent *nssComponent)
 {
   CERTAuthInfoAccess **aia, *desc;
-  PRArenaPool *arena;
+  PLArenaPool *arena;
   nsresult rv = NS_OK;
   nsAutoString local;
 

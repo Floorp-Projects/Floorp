@@ -741,7 +741,7 @@ GetSubjectAltNames(CERTCertificate *nssCert,
   allNames.Truncate();
   nameCount = 0;
 
-  PRArenaPool *san_arena = nullptr;
+  PLArenaPool *san_arena = nullptr;
   SECItem altNameExtension = {siBuffer, NULL, 0 };
   CERTGeneralName *sanNameList = nullptr;
 

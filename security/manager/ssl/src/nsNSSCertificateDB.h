@@ -43,7 +43,7 @@ private:
                     uint32_t     *_count,
                     PRUnichar  ***_certNameList);
 
-  CERTDERCerts *getCertsFromPackage(PRArenaPool *arena, uint8_t *data, 
+  CERTDERCerts *getCertsFromPackage(PLArenaPool *arena, uint8_t *data, 
                                     uint32_t length);
   nsresult handleCACertDownload(nsIArray *x509Certs, 
                                 nsIInterfaceRequestor *ctx);

@@ -55,7 +55,7 @@ nsCRLManager::ImportCrl (uint8_t *aData, uint32_t aLength, nsIURI * aURI, uint32
   
   nsNSSShutDownPreventionLock locker;
   nsresult rv;
-  PRArenaPool *arena = NULL;
+  PLArenaPool *arena = NULL;
   CERTCertificate *caCert;
   SECItem derName = { siBuffer, NULL, 0 };
   SECItem derCrl;
