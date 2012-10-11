@@ -2135,12 +2135,12 @@ nsHTMLMediaElement::IsWebMType(const nsACString& aType)
 
 #if defined(MOZ_GSTREAMER) || defined(MOZ_WIDGET_GONK)
 char const *const nsHTMLMediaElement::gH264Codecs[7] = {
-  "avc1.42E01E",
-  "avc1.42001E",
-  "avc1.58A01E",
-  "avc1.4D401E",
-  "avc1.64001E",
-  "mp4a.40.2",
+  "avc1.42E01E",  // H.264 Constrained Baseline Profile Level 3.0
+  "avc1.42001E",  // H.264 Baseline Profile Level 3.0
+  "avc1.58A01E",  // H.264 Extended Profile Level 3.0
+  "avc1.4D401E",  // H.264 Main Profile Level 3.0
+  "avc1.64001E",  // H.264 High Profile Level 3.0
+  "mp4a.40.2",    // AAC-LC
   nullptr
 };
 #endif
