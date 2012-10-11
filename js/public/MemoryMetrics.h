@@ -53,7 +53,7 @@ struct RuntimeSizes
       , ionCode(0)
       , regexpCode(0)
       , unusedCode(0)
-      , stackCommitted(0)
+      , stack(0)
       , gcMarker(0)
       , mathCache(0)
       , scriptFilenames(0)
@@ -69,7 +69,7 @@ struct RuntimeSizes
     size_t ionCode;
     size_t regexpCode;
     size_t unusedCode;
-    size_t stackCommitted;
+    size_t stack;
     size_t gcMarker;
     size_t mathCache;
     size_t scriptFilenames;
