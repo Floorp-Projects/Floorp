@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This file contains logging functionality for mozbuild. This functionality
-# could likely be split out of mozbuild. For now, mozbuild is the only
-# consumer and thus it lives here.
+# This file contains logging functionality for mach. It essentially provides
+# support for a structured logging framework built on top of Python's built-in
+# logging framework.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 try:
     import blessings
