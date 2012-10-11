@@ -42,6 +42,7 @@
 
 #include "nsTArray.h"
 #include "nsRefPtrHashtable.h"
+#include "nsIMemoryReporter.h"
 
 namespace mozilla {
 
@@ -158,6 +159,56 @@ static nsTArray<nsAutoPtr<CacheData> >* gCacheData = nullptr;
 static nsRefPtrHashtable<ValueObserverHashKey,
                          ValueObserver>* gObserverTable = nullptr;
 
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(PreferencesMallocSizeOf, "preferences")
+
+static size_t
+SizeOfObserverEntryExcludingThis(ValueObserverHashKey* aKey,
+                                 const nsRefPtr<ValueObserver>& aData,
+                                 nsMallocSizeOfFun aMallocSizeOf,
+                                 void*)
+{
+  size_t n = 0;
+  n += aKey->mPrefName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  n += aData->mClosures.SizeOfExcludingThis(aMallocSizeOf);
+  return n;
+}
+
+// static
+int64_t
+Preferences::GetPreferencesMemoryUsed()
+{
+  size_t n = 0;
+  n += PreferencesMallocSizeOf(sPreferences);
+  if (gHashTable.ops) {
+    // pref keys are allocated in a private arena, which we count elsewhere.
+    // pref stringvals are allocated out of the same private arena.
+    n += PL_DHashTableSizeOfExcludingThis(&gHashTable, nullptr,
+                                          PreferencesMallocSizeOf);
+  }
+  if (gCacheData) {
+    n += gCacheData->SizeOfIncludingThis(PreferencesMallocSizeOf);
+    for (uint32_t i = 0, count = gCacheData->Length(); i < count; ++i) {
+      n += PreferencesMallocSizeOf((*gCacheData)[i]);
+    }
+  }
+  if (gObserverTable) {
+    n += PreferencesMallocSizeOf(gObserverTable);
+    n += gObserverTable->SizeOfExcludingThis(SizeOfObserverEntryExcludingThis,
+                                             PreferencesMallocSizeOf);
+  }
+  // We don't measure sRootBranch and sDefaultRootBranch here because
+  // DMD indicates they are not significant.
+  n += pref_SizeOfPrivateData(PreferencesMallocSizeOf);
+  return n;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(Preferences,
+  "explicit/preferences",
+  KIND_HEAP,
+  UNITS_BYTES,
+  Preferences::GetPreferencesMemoryUsed,
+  "Memory used by the preferences system.")
+
 // static
 Preferences*
 Preferences::GetInstanceForService()
@@ -187,6 +238,9 @@ Preferences::GetInstanceForService()
 
   gObserverTable = new nsRefPtrHashtable<ValueObserverHashKey, ValueObserver>();
   gObserverTable->Init();
+
+  nsCOMPtr<nsIMemoryReporter> reporter(new NS_MEMORY_REPORTER_NAME(Preferences));
+  NS_RegisterMemoryReporter(reporter);
 
   NS_ADDREF(sPreferences);
   return sPreferences;
