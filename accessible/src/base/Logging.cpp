@@ -162,13 +162,17 @@ LogDocState(nsIDocument* aDocumentNode)
   printf(", %sshowing", aDocumentNode->IsShowing() ? "" : "not ");
   printf(", %svisible", aDocumentNode->IsVisible() ? "" : "not ");
   printf(", %sactive", aDocumentNode->IsActive() ? "" : "not ");
+  printf(", %sresource", aDocumentNode->IsResourceDoc() ? "" : "not ");
+  printf(", has %srole content",
+         nsCoreUtils::GetRoleContent(aDocumentNode) ? "" : "no ");
 }
 
 static void
 LogPresShell(nsIDocument* aDocumentNode)
 {
   nsIPresShell* ps = aDocumentNode->GetShell();
-  printf("presshell: %p", static_cast<void*>(ps));
+  printf("presshell: %p, is %s destroying", static_cast<void*>(ps),
+         (ps->IsDestroying() ? "" : "not"));
   nsIScrollableFrame *sf = ps ?
     ps->GetRootScrollFrameAsScrollableExternal() : nullptr;
   printf(", root scroll frame: %p", static_cast<void*>(sf));
@@ -531,7 +535,7 @@ logging::FocusNotificationTarget(const char* aMsg, const char* aTargetDescr,
   if (aTargetThing) {
     nsCOMPtr<nsINode> targetNode(do_QueryInterface(aTargetThing));
     if (targetNode)
-      Node(aTargetDescr, targetNode);
+      AccessibleNNode(aTargetDescr, targetNode);
     else
       printf("    %s: %p, window\n", aTargetDescr,
              static_cast<void*>(aTargetThing));
@@ -710,6 +714,18 @@ logging::Node(const char* aDescr, nsINode* aNode)
 }
 
 void
+logging::Document(DocAccessible* aDocument)
+{
+  printf("    Document: %p, document node: %p\n",
+         static_cast<void*>(aDocument),
+         static_cast<void*>(aDocument->GetDocumentNode()));
+
+  printf("    Document ");
+  LogDocURI(aDocument->GetDocumentNode());
+  printf("\n");
+}
+
+void
 logging::AccessibleNNode(const char* aDescr, Accessible* aAccessible)
 {
   printf("    %s: %p; ", aDescr, static_cast<void*>(aAccessible));
@@ -728,13 +744,7 @@ logging::AccessibleNNode(const char* aDescr, Accessible* aAccessible)
   nodeDescr.AppendLiteral(" node");
   Node(nodeDescr.get(), aAccessible->GetNode());
 
-  printf("    Document: %p, document node: %p\n",
-         static_cast<void*>(aAccessible->Document()),
-         static_cast<void*>(aAccessible->GetDocumentNode()));
-
-  printf("    Document ");
-  LogDocURI(static_cast<nsIDocument*>(aAccessible->GetDocumentNode()));
-  printf("\n");
+  Document(aAccessible->Document());
 }
 
 void
@@ -751,9 +761,18 @@ logging::AccessibleNNode(const char* aDescr, nsINode* aNode)
     }
   }
 
-  nsAutoCString nodeDescr("Not accessible ");
+  nsAutoCString nodeDescr("[not accessible] ");
   nodeDescr.Append(aDescr);
   Node(nodeDescr.get(), aNode);
+
+  if (document) {
+    Document(document);
+    return;
+  }
+
+  printf("    [contained by not accessible document]:\n");
+  LogDocInfo(aNode->OwnerDoc(), document);
+  printf("\n");
 }
 
 void
