@@ -93,7 +93,9 @@ parseHexColor(const char* color, int len)
   uint8_t bgra[4] = { 0, 0, 0, 0xFF };
   int i = 0;
 
-  assert(len == 9 || len == 8);
+  // Ignore unsupported formats.
+  if (len != 9 && len != 8)
+    return 0;
 
   // start from the right and work to the left
   while (len >= 2) { // we have at least #AA or AA left.

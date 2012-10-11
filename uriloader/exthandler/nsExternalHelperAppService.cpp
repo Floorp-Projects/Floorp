@@ -487,7 +487,8 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
 #endif
   { VIDEO_MP4, "mp4", "MPEG-4 Video" },
   { VIDEO_RAW, "yuv", "Raw YUV Video" },
-  { AUDIO_WAV, "wav", "Waveform Audio" }
+  { AUDIO_WAV, "wav", "Waveform Audio" },
+  { VIDEO_3GPP, "3gpp,3gp", "3GPP Video" }
 };
 
 #undef MAC_TYPE

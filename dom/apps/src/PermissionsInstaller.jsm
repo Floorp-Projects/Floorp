@@ -53,8 +53,8 @@ function mapSuffixes(aPermName, aSuffixes)
 // Permissions Matrix: https://docs.google.com/spreadsheet/ccc?key=0Akyz_Bqjgf5pdENVekxYRjBTX0dCXzItMnRyUU1RQ0E#gid=0
 
 // Permissions that are implicit:
-// battery-status, idle, network-information, vibration,
-// device-capabilities, webapps-manage, web-activities
+// battery-status, network-information, vibration,
+// device-capabilities
 
 const PermissionsTable = { "resource-lock": {
                              app: ALLOW_ACTION,
@@ -71,12 +71,12 @@ const PermissionsTable = { "resource-lock": {
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION
                            },
-                           alarm: {
+                           alarms: {
                              app: ALLOW_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
-                           "network-tcp": {
+                           "tcp-socket": {
                              app: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
@@ -89,11 +89,7 @@ const PermissionsTable = { "resource-lock": {
                            contacts: {
                              app: DENY_ACTION,
                              privileged: PROMPT_ACTION,
-                             certified: ALLOW_ACTION,
-                             access: ["read",
-                                      "write",
-                                      "create"
-                                     ]
+                             certified: ALLOW_ACTION
                            },
                            "device-storage:apps": {
                              app: DENY_ACTION,
@@ -163,10 +159,7 @@ const PermissionsTable = { "resource-lock": {
                            settings: {
                              app: DENY_ACTION,
                              privileged: DENY_ACTION,
-                             certified: ALLOW_ACTION,
-                             access: ["read",
-                                      "write"
-                                     ],
+                             certified: ALLOW_ACTION
                            },
                            permissions: {
                              app: DENY_ACTION,
@@ -179,6 +172,71 @@ const PermissionsTable = { "resource-lock": {
                              certified: ALLOW_ACTION
                            },
                            attention: {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "webapps-manage": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "backgroundservice": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "desktop-notification": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "networkstats-manage": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "mozBluetooth": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "wifi-manage": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "systemXHR": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "voicemail": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "deprecated-hwvideo": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "idle": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "time": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "embed-apps": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
+                           "storage": {
                              app: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
@@ -213,7 +271,8 @@ function expandPermissions(aPermName, aAccess) {
   }
   if (!aAccess && PermissionsTable[aPermName].access ||
       aAccess && !PermissionsTable[aPermName].access) {
-    Cu.reportError("PermissionsTable.jsm: expandPermissions: Invalid Manifest");
+    Cu.reportError("PermissionsTable.jsm: expandPermissions: Invalid Manifest : " +
+                   aPermName + " " + aAccess + "\n");
     throw new Error("PermissionsTable.jsm: expandPermissions: Invalid Manifest");
   }
   if (!PermissionsTable[aPermName].access) {
@@ -252,10 +311,13 @@ function expandPermissions(aPermName, aAccess) {
 let PermissionsInstaller = {
 /**
    * Install permissisions or remove deprecated permissions upon re-install
-   * @param object aData
-   *        The just-installed app configuration
+   * @param object aApp
+   *        The just-installed app configuration.
+            The properties used are manifestURL, origin and manifest.
    * @param boolean aIsReinstall
    *        Indicates the app was just re-installed
+   * @param function aOnError
+   *        A function called if an error occurs
    * @returns void
    **/
   installPermissions: function installPermissions(aApp, aIsReinstall, aOnError) {
@@ -292,11 +354,7 @@ let PermissionsInstaller = {
               }
               // Remove the deprecated permission
               // TODO: use PermSettings.remove, see bug 793204
-              PermSettings.set(AllPossiblePermissions[idx],
-                               "unknown",
-                               aApp.manifestURL,
-                               aApp.origin,
-                               false);
+              this._setPermission(AllPossiblePermissions[idx], "unknown", aApp);
             }
           }
         }
@@ -304,7 +362,7 @@ let PermissionsInstaller = {
 
       let installPermType;
       // Check to see if the 'webapp' is app/priv/certified
-      switch (AppsUtils.getAppManifestStatus(newManifest)) {
+      switch (AppsUtils.getAppManifestStatus(aApp.manifest)) {
       case Ci.nsIPrincipal.APP_STATUS_CERTIFIED:
         installPermType = "certified";
         break;
@@ -316,12 +374,12 @@ let PermissionsInstaller = {
         break;
       default:
         // Cannot determine app type, abort install by throwing an error
-        throw new Error("Webapps.jsm: Cannot determine app type, install cancelled");
+        throw new Error("PermissionsInstaller.jsm: Cannot determine app type, install cancelled");
       }
 
       for (let permName in newManifest.permissions) {
         if (!PermissionsTable[permName]) {
-          throw new Error("Webapps.jsm: '" + permName + "'" +
+          throw new Error("PermissionsInstaller.jsm: '" + permName + "'" +
                          " is not a valid Webapps permission type. Aborting Webapp installation");
           return;
         }
@@ -331,11 +389,7 @@ let PermissionsInstaller = {
         for (let idx in perms) {
           let perm = PermissionsTable[permName][installPermType];
           let permValue = PERM_TO_STRING[perm];
-          PermSettings.set(perms[idx],
-                           permValue,
-                           aApp.manifestURL,
-                           aApp.origin,
-                           false);
+          this._setPermission(perms[idx], permValue, aApp);
         }
       }
     }
@@ -346,5 +400,30 @@ let PermissionsInstaller = {
         aOnError();
       }
     }
+  },
+
+  /**
+   * Set a permission value, replacing "storage" if needed.
+   * @param string aPerm
+   *        The permission name.
+   * @param string aValue
+   *        The permission value.
+   * @param object aApp
+   *        The just-installed app configuration.
+            The properties used are manifestURL, origin and manifest.
+   * @returns void
+   **/
+  _setPermission: function setPermission(aPerm, aValue, aApp) {
+    dump("XxXxX setting " + aPerm + " to " + aValue + "\n");
+    if (aPerm != "storage") {
+      PermSettings.set(aPerm, aValue, aApp.manifestURL, aApp.origin, false);
+      return;
+    }
+
+    ["indexedDB-unlimited", "offline-app", "pin-app"].forEach(
+      function(aName) {
+        PermSettings.set(aName, aValue, aApp.manifestURL, aApp.origin, false);
+      }
+    );
   }
 }

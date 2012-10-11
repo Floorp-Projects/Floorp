@@ -56,6 +56,7 @@ bool IsEnabled(uint32_t aModules);
 void DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
              nsIRequest* aRequest, uint32_t aStateFlags);
 void DocLoad(const char* aMsg, nsIDocument* aDocumentNode);
+void DocCompleteLoad(DocAccessible* aDocument, bool aIsLoadEventTarget);
 
 /**
  * Log that document load event was fired.

@@ -57,6 +57,7 @@ browser.jar:
   skin/classic/browser/Search@2x.png
   skin/classic/browser/Secure-Glyph.png
   skin/classic/browser/Secure-Glyph@2x.png
+  skin/classic/browser/click-to-play-warning-stripes.png
   skin/classic/browser/keyhole-circle.png
   skin/classic/browser/Toolbar.png
   skin/classic/browser/toolbarbutton-dropmarker.png

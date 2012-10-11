@@ -71,7 +71,7 @@ struct RequestHashEntry : PLDHashEntryHdr {
     void *r;
 };
 
-PR_STATIC_CALLBACK(bool)
+static bool
 RequestMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
@@ -79,7 +79,7 @@ RequestMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return entry->r == key;
 }
 
-PR_STATIC_CALLBACK(bool)
+static bool
 RequestMapInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
                      const void *key)
 {

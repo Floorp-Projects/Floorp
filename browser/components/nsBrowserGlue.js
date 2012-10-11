@@ -351,7 +351,8 @@ BrowserGlue.prototype = {
     // handle any UI migration
     this._migrateUI();
 
-    UserAgentOverrides.init();
+    this._setUpUserAgentOverrides();
+
     webappsUI.init();
     PageThumbs.init();
     NewTabUtils.init();
@@ -361,6 +362,22 @@ BrowserGlue.prototype = {
     webrtcUI.init();
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
+  },
+
+  _setUpUserAgentOverrides: function BG__setUpUserAgentOverrides() {
+    UserAgentOverrides.init();
+
+    if (Services.prefs.getBoolPref("general.useragent.complexOverride.moodle")) {
+      UserAgentOverrides.addComplexOverride(function (aHttpChannel, aOriginalUA) {
+        let cookies;
+        try {
+          cookies = aHttpChannel.getRequestHeader("Cookie");
+        } catch (e) { /* no cookie sent */ }
+        if (cookies && cookies.indexOf("MoodleSession") > -1)
+          return aOriginalUA.replace(/Gecko\/[^ ]*/, "Gecko/20100101");
+        return null;
+      });
+    }
   },
 
   // the first browser window has finished initializing

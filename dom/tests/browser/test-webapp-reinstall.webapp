@@ -7,8 +7,7 @@
       "description": "geolocate"
     },
     "contacts": {
-      "description": "contacts",
-      "access": "read"
+      "description": "contacts"
     },
     "device-storage:apps": {
       "description": "storage"

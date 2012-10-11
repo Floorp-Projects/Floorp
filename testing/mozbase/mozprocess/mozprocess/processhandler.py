@@ -312,7 +312,7 @@ falling back to not using job objects for managing child processes"""
                         # parent abort (which is what we're looking for here).
                         if diff.seconds > self.MAX_IOCOMPLETION_PORT_NOTIFICATION_DELAY:
                             print >> sys.stderr, "Parent process %s exited with children alive:" % self.pid
-                            print >> sys.stderr, "PIDS: %s" %  ', '.join(self._spawned_procs.keys())
+                            print >> sys.stderr, "PIDS: %s" %  ', '.join([str(i) for i in self._spawned_procs])
                             print >> sys.stderr, "Attempting to kill them..."
                             self.kill()
                             self._process_events.put({self.pid: 'FINISHED'})

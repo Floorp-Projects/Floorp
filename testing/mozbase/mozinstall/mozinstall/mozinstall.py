@@ -7,6 +7,7 @@ applications across platforms.
 
 """
 import mozinfo
+import mozfile
 from optparse import OptionParser
 import os
 import shutil
@@ -112,7 +113,7 @@ def install(src, dest):
     try:
         install_dir = None
         if zipfile.is_zipfile(src) or tarfile.is_tarfile(src):
-            install_dir = _extract(src, dest)[0]
+            install_dir = mozfile.extract(src, dest)[0]
         elif src.lower().endswith('.dmg'):
             install_dir = _install_dmg(src, dest)
         elif src.lower().endswith('.exe'):
@@ -205,60 +206,6 @@ def uninstall(install_folder):
     # Ensure that we remove any trace of the installation. Even the uninstaller
     # on Windows leaves files behind we have to explicitely remove.
     shutil.rmtree(install_folder)
-
-
-def _extract(src, dest):
-    """Extract a tar or zip file into the destination folder and return the
-    application folder.
-
-    Arguments:
-    src -- archive which has to be extracted
-    dest -- the path to extract to
-
-    """
-    if zipfile.is_zipfile(src):
-        bundle = zipfile.ZipFile(src)
-
-        # FIXME: replace with zip.extractall() when we require python 2.6
-        namelist = bundle.namelist()
-        for name in bundle.namelist():
-            filename = os.path.realpath(os.path.join(dest, name))
-            if name.endswith('/'):
-                os.makedirs(filename)
-            else:
-                path = os.path.dirname(filename)
-                if not os.path.isdir(path):
-                    os.makedirs(path)
-                _dest = open(filename, 'wb')
-                _dest.write(bundle.read(name))
-                _dest.close()
-
-    elif tarfile.is_tarfile(src):
-        bundle = tarfile.open(src)
-        namelist = bundle.getnames()
-
-        if hasattr(bundle, 'extractall'):
-            # tarfile.extractall doesn't exist in Python 2.4
-            bundle.extractall(path=dest)
-        else:
-            for name in namelist:
-                bundle.extract(name, path=dest)
-    else:
-        return
-
-    bundle.close()
-
-    # namelist returns paths with forward slashes even in windows
-    top_level_files = [os.path.join(dest, name) for name in namelist
-                             if len(name.rstrip('/').split('/')) == 1]
-
-    # namelist doesn't include folders, append these to the list
-    for name in namelist:
-        root = os.path.join(dest, name[:name.find('/')])
-        if root not in top_level_files:
-            top_level_files.append(root)
-
-    return top_level_files
 
 
 def _install_dmg(src, dest):

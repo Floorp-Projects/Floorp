@@ -235,7 +235,10 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   // Make a copy of the reflow state and change the computed width and height
   // to reflect the available space for the fixed items
   nsHTMLReflowState reflowState(aReflowState);
-  nsPoint offset = AdjustReflowStateForScrollbars(&reflowState);
+#ifdef DEBUG
+  nsPoint offset =
+#endif
+    AdjustReflowStateForScrollbars(&reflowState);
 
   if (IsAbsoluteContainer()) {
     NS_ASSERTION(GetAbsoluteContainingBlock()->GetChildList().IsEmpty() ||

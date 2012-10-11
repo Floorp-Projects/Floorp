@@ -3,6 +3,7 @@ sync/CollectionKeys.java
 sync/CommandProcessor.java
 sync/CommandRunner.java
 sync/config/AccountPickler.java
+sync/config/activities/SelectEnginesActivity.java
 sync/config/ClientRecordTerminator.java
 sync/config/ConfigurationMigrator.java
 sync/CredentialException.java

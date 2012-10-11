@@ -10,7 +10,7 @@ function test() {
     origin: "https://example.com",
     sidebarURL: "https://example.com/browser/browser/base/content/test/social_sidebar.html",
     workerURL: "https://example.com/browser/browser/base/content/test/social_worker.js",
-    iconURL: "chrome://branding/content/icon48.png"
+    iconURL: "https://example.com/browser/browser/base/content/test/moz.png"
   };
   runSocialTestWithProvider(manifest, function (finishcb) {
     runSocialTests(tests, undefined, undefined, finishcb);

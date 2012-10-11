@@ -1261,8 +1261,8 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
 
     nsRefPtr<ImageContainer> container = GetImageContainer();
-    if (container && container->HasCurrentImage() || !isVisible ||
-        container->GetCurrentSize() != gfxIntSize(window->width, window->height)) {
+    if (container && (container->HasCurrentImage() || !isVisible ||
+        container->GetCurrentSize() != gfxIntSize(window->width, window->height))) {
       mInstanceOwner->NotifyPaintWaiter(aBuilder);
     }
   }
