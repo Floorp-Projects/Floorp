@@ -1503,11 +1503,16 @@ parse_body (cc_subscriptions_t event_type, char *msgBody, int msgLength,
 boolean
 add_content (ccsip_event_data_t *eventData, sipMessage_t *request, const char *fname)
 {
+    return FALSE;
+
+/* This function requires XML handling */
+#if 0 
     const char     *fname1 = "add_content";
     uint32_t        len;
     char           *eventBody = NULL;
 
     while (eventData) {
+        /* Encode eventData into eventBody here */
         len = strlen(eventBody);
 
         switch (eventData->type) {
@@ -1536,6 +1541,7 @@ add_content (ccsip_event_data_t *eventData, sipMessage_t *request, const char *f
         eventData = eventData->next;
     }
     return (TRUE);
+#endif
 }
 
 // Functions to handle requests from internal applications
