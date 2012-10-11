@@ -388,8 +388,8 @@ class HashTable : private AllocPolicy
     }
 
   private:
-    static HashNumber hash1(HashNumber hash0, uint32_t shift) {
-        return hash0 >> shift;
+    HashNumber hash1(HashNumber hash0) const {
+        return hash0 >> hashShift;
     }
 
     struct DoubleHash {
@@ -397,7 +397,7 @@ class HashTable : private AllocPolicy
         HashNumber sizeMask;
     };
 
-    DoubleHash hash2(HashNumber curKeyHash, uint32_t hashShift) const {
+    DoubleHash hash2(HashNumber curKeyHash) const {
         unsigned sizeLog2 = sHashBits - hashShift;
         DoubleHash dh = {
             ((curKeyHash << sizeLog2) >> hashShift) | 1,
@@ -433,7 +433,7 @@ class HashTable : private AllocPolicy
         METER(stats.searches++);
 
         /* Compute the primary hash address. */
-        HashNumber h1 = hash1(keyHash, hashShift);
+        HashNumber h1 = hash1(keyHash);
         Entry *entry = &table[h1];
 
         /* Miss: return space for a new entry. */
@@ -449,7 +449,7 @@ class HashTable : private AllocPolicy
         }
 
         /* Collision: double hash. */
-        DoubleHash dh = hash2(keyHash, hashShift);
+        DoubleHash dh = hash2(keyHash);
 
         /* Save the first removed entry pointer so we can recycle later. */
         Entry *firstRemoved = NULL;
@@ -495,7 +495,7 @@ class HashTable : private AllocPolicy
         /* N.B. the |keyHash| has already been distributed. */
 
         /* Compute the primary hash address. */
-        HashNumber h1 = hash1(keyHash, hashShift);
+        HashNumber h1 = hash1(keyHash);
         Entry *entry = &table[h1];
 
         /* Miss: return space for a new entry. */
@@ -505,7 +505,7 @@ class HashTable : private AllocPolicy
         }
 
         /* Collision: double hash. */
-        DoubleHash dh = hash2(keyHash, hashShift);
+        DoubleHash dh = hash2(keyHash);
 
         while(true) {
             JS_ASSERT(!entry->isRemoved());
@@ -632,8 +632,8 @@ class HashTable : private AllocPolicy
             }
 
             HashNumber keyHash = src->getKeyHash();
-            HashNumber h1 = hash1(keyHash, hashShift);
-            DoubleHash dh = hash2(keyHash, hashShift);
+            HashNumber h1 = hash1(keyHash);
+            DoubleHash dh = hash2(keyHash);
             Entry *tgt = &table[h1];
             while (true) {
                 if (!tgt->hasCollision()) {
