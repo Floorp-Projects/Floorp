@@ -3826,7 +3826,7 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
   }
 
   if (aNode->IsNodeOfType(nsINode::eCONTENT) &&
-      static_cast<nsIContent*>(aNode)->IsInNativeAnonymousSubtree()) {
+      static_cast<nsIContent*>(aNode)->ChromeOnlyAccess()) {
     return false;
   }
 

@@ -349,7 +349,7 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
     if (!isChromeShell) {
       // don't allow resizers in content shells, except for the viewport
       // scrollbar which doesn't have a parent
-      nsIContent* nonNativeAnon = mContent->FindFirstNonNativeAnonymous();
+      nsIContent* nonNativeAnon = mContent->FindFirstNonChromeOnlyAccessContent();
       if (!nonNativeAnon || nonNativeAnon->GetParent()) {
         return nullptr;
       }
@@ -375,7 +375,7 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
   if (elementid.EqualsLiteral("_parent")) {
     // return the parent, but skip over native anonymous content
     nsIContent* parent = mContent->GetParent();
-    return parent ? parent->FindFirstNonNativeAnonymous() : nullptr;
+    return parent ? parent->FindFirstNonChromeOnlyAccessContent() : nullptr;
   }
 
   return aPresShell->GetDocument()->GetElementById(elementid);

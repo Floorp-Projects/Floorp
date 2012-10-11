@@ -10,7 +10,7 @@ from mozbuild.base import MozbuildObject
 from mach.base import CommandProvider
 from mach.base import Command
 
-@CommandProvider
+#@CommandProvider
 class Settings(MozbuildObject):
     """Interact with settings for mach.
 
