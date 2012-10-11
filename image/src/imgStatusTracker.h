@@ -80,12 +80,10 @@ public:
   // OnStartRequest).
   void SyncNotify(imgRequestProxy* proxy);
 
-  // Send all notifications that would be necessary to make |proxy| believe the
-  // request is finished downloading and decoding.
-  // If aOnlySendStopRequest is true, we will only send OnStopRequest, and then
-  // only if that is necessary.
-  void EmulateRequestFinished(imgRequestProxy* proxy, nsresult aStatus,
-                              bool aOnlySendStopRequest);
+  // Send some notifications that would be necessary to make |proxy| believe
+  // the request is finished downloading and decoding.  We only send
+  // OnStopRequest and UnblockOnload, and only if necessary.
+  void EmulateRequestFinished(imgRequestProxy* proxy, nsresult aStatus);
 
   // Returns whether we are in the process of loading; that is, whether we have
   // not received OnStopRequest.
