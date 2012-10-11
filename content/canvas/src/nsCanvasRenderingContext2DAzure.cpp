@@ -880,8 +880,13 @@ nsCanvasRenderingContext2DAzure::EnsureTarget()
     }
 
     mTarget->ClearRect(mgfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
-    // always force a redraw, because if the surface dimensions were reset
-    // then the surface became cleared, and we need to redraw everything.
+    // Force a full layer transaction since we didn't have a layer before
+    // and now we might need one.
+    if (mCanvasElement) {
+      mCanvasElement->InvalidateCanvas();
+    }
+    // Calling Redraw() tells our invalidation machinery that the entire
+    // canvas is already invalid, which can speed up future drawing.
     Redraw();
   } else {
     EnsureErrorTarget();
