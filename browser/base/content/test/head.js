@@ -132,7 +132,6 @@ function runSocialTestWithProvider(manifest, callback) {
 
     // Now that we've set the UI's provider, enable the social functionality
     Services.prefs.setBoolPref("social.enabled", true);
-    Services.prefs.setBoolPref("social.active", true);
 
     // Need to re-call providerReady since it is actually called before the test
     // framework is loaded and the provider state won't be set in the browser yet.
@@ -150,7 +149,6 @@ function runSocialTestWithProvider(manifest, callback) {
       }
       Social.provider = oldProvider;
       Services.prefs.clearUserPref("social.enabled");
-      Services.prefs.clearUserPref("social.active");
     });
 
     function finishSocialTest() {
