@@ -6073,7 +6073,35 @@ nsDocument::GetDocumentURI(nsAString& aDocumentURI)
     mDocumentURI->GetSpec(uri);
     CopyUTF8toUTF16(uri, aDocumentURI);
   } else {
-    SetDOMStringToNull(aDocumentURI);
+    aDocumentURI.Truncate();
+  }
+
+  return NS_OK;
+}
+
+// Alias of above
+NS_IMETHODIMP
+nsDocument::GetURL(nsAString& aURL)
+{
+  return GetDocumentURI(aURL);
+}
+
+// readonly attribute DOMString compatMode;
+// Returns "BackCompat" if we are in quirks mode, "CSS1Compat" if we are
+// in almost standards or full standards mode. See bug 105640.  This was
+// implemented to match MSIE's compatMode property.
+NS_IMETHODIMP
+nsDocument::GetCompatMode(nsAString& aCompatMode)
+{
+  NS_ASSERTION(mCompatMode == eCompatibility_NavQuirks ||
+               mCompatMode == eCompatibility_AlmostStandards ||
+               mCompatMode == eCompatibility_FullStandards,
+               "mCompatMode is neither quirks nor strict for this document");
+
+  if (mCompatMode == eCompatibility_NavQuirks) {
+    aCompatMode.AssignLiteral("BackCompat");
+  } else {
+    aCompatMode.AssignLiteral("CSS1Compat");
   }
 
   return NS_OK;

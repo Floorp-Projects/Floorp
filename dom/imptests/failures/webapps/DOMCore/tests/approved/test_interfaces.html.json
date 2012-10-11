@@ -161,8 +161,6 @@
   "XMLDocument interface: existence and properties of interface prototype object": true,
   "XMLDocument interface: existence and properties of interface prototype object's \"constructor\" property": true,
   "Stringification of xmlDoc": "debug",
-  "Document interface: xmlDoc must inherit property \"URL\" with the proper type (1)": true,
-  "Document interface: xmlDoc must inherit property \"compatMode\" with the proper type (3)": true,
   "Document interface: calling getElementsByTagName(DOMString) on xmlDoc with too few arguments must throw TypeError": true,
   "Document interface: calling getElementsByTagNameNS(DOMString,DOMString) on xmlDoc with too few arguments must throw TypeError": true,
   "Document interface: calling getElementsByClassName(DOMString) on xmlDoc with too few arguments must throw TypeError": true,
