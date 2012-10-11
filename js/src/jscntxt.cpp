@@ -251,6 +251,84 @@ static JSClass self_hosting_global_class = {
     JS_ConvertStub,   NULL
 };
 
+static JSBool
+intrinsic_ToObject(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedValue val(cx, args[0]);
+    RootedObject obj(cx, ToObject(cx, val));
+    if (!obj)
+        return false;
+    args.rval().set(OBJECT_TO_JSVAL(obj));
+    return true;
+}
+
+static JSBool
+intrinsic_ToInteger(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    double result;
+    if (!ToInteger(cx, args[0], &result))
+        return false;
+    args.rval().set(DOUBLE_TO_JSVAL(result));
+    return true;
+}
+
+static JSBool
+intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    Value val = args[0];
+    bool isCallable = val.isObject() && val.toObject().isCallable();
+    args.rval().set(BOOLEAN_TO_JSVAL(isCallable));
+    return true;
+}
+
+static JSBool
+intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() >= 1);
+    uint32_t errorNumber = args[0].toInt32();
+
+    char *errorArgs[3] = {NULL, NULL, NULL};
+    for (unsigned i = 1; i < 4 && i < args.length(); i++) {
+        RootedValue val(cx, args[i]);
+        if (val.isInt32() || val.isString()) {
+            errorArgs[i - 1] = JS_EncodeString(cx, ToString(cx, val));
+        } else {
+            ptrdiff_t spIndex = cx->stack.spIndexOf(val.address());
+            errorArgs[i - 1] = DecompileValueGenerator(cx, spIndex, val, NullPtr(), 1);
+        }
+    }
+
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber,
+                         errorArgs[0], errorArgs[1], errorArgs[2]);
+    for (unsigned i = 0; i < 3; i++)
+        js_free(errorArgs[i]);
+    return false;
+}
+
+static JSBool
+intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() >= 1);
+    JS_ASSERT(args[0].isObject());
+    RootedObject obj(cx, &args[0].toObject());
+    JS_ASSERT(obj->isFunction());
+    obj->toFunction()->flags |= JSFUN_SELF_HOSTED_CTOR;
+    return true;
+}
+
+JSFunctionSpec intrinsic_functions[] = {
+    JS_FN("ToObject",           intrinsic_ToObject,             1,0),
+    JS_FN("ToInteger",          intrinsic_ToInteger,            1,0),
+    JS_FN("IsCallable",         intrinsic_IsCallable,           1,0),
+    JS_FN("ThrowError",         intrinsic_ThrowError,           4,0),
+    JS_FN("_MakeConstructible", intrinsic_MakeConstructible,    1,0),
+    JS_FS_END
+};
 bool
 JSRuntime::initSelfHosting(JSContext *cx)
 {
@@ -259,6 +337,11 @@ JSRuntime::initSelfHosting(JSContext *cx)
     if (!(selfHostedGlobal_ = JS_NewGlobalObject(cx, &self_hosting_global_class, NULL)))
         return false;
     JS_SetGlobalObject(cx, selfHostedGlobal_);
+    JSAutoCompartment ac(cx, cx->global());
+    RootedObject shg(cx, selfHostedGlobal_);
+
+    if (!JS_DefineFunctions(cx, shg, intrinsic_functions))
+        return false;
 
     CompileOptions options(cx);
     options.setFileAndLine("self-hosted", 1);
@@ -270,7 +353,6 @@ JSRuntime::initSelfHosting(JSContext *cx)
      * and we don't want errors in self-hosted code to be silently swallowed.
      */
     JSErrorReporter oldReporter = JS_SetErrorReporter(cx, selfHosting_ErrorReporter);
-    RootedObject shg(cx, selfHostedGlobal_);
     Value rv;
     bool ok;
 
