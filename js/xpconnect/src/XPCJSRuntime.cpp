@@ -1743,11 +1743,21 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                   "Memory allocated by one of the JITs to hold the "
                   "runtime's code, but which is currently unused.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/stack-committed"),
-                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.stackCommitted,
-                  "Memory used for the JS call stack.  This is the committed "
-                  "portion of the stack; the uncommitted portion is not "
-                  "measured because it hardly costs anything.");
+    nsCString stackDescription;
+    stackDescription.AppendASCII(
+        "Memory used for the JS call stack.  This is the committed portion of "
+        "the stack on Windows; on *nix, it is the resident portion of the "
+        "stack.  Therefore, on *nix, if part of the stack is swapped out to "
+        "disk, we do not count it here.");
+#ifdef DEBUG
+     stackDescription.AppendASCII(
+         " Note: You are running a debug build, which likely has stack "
+         "poisoning enabled, which causes the whole stack to be committed (and "
+         "likely resident).");
+#endif
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/stack"),
+                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.stack,
+                  stackDescription.get());
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc-marker"),
                   nsIMemoryReporter::KIND_HEAP, rtStats.runtime.gcMarker,
