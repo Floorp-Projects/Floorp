@@ -28,29 +28,32 @@ XPIDLSRCS = \
   nsIWifiMonitor.idl \
   $(NULL)
 
-CPPSRCS = \
-  nsWifiMonitor.cpp \
-  nsWifiAccessPoint.cpp \
-  $(NULL)
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += nsWifiMonitorGonk.cpp
+else
+CPPSRCS += nsWifiMonitor.cpp
+endif
+
+CPPSRCS += nsWifiAccessPoint.cpp
 
 ifeq ($(OS_ARCH),Darwin)
 CPPSRCS += nsWifiScannerMac.cpp
 CMMSRCS = osx_corewlan.mm
-else
+endif
+
 ifneq (,$(filter WINNT,$(OS_ARCH)))
 CPPSRCS += nsWifiScannerWin.cpp
-else
-ifeq ($(OS_ARCH),Linux)
-CPPSRCS += nsWifiScannerDBus.cpp
-OS_INCLUDES += $(MOZ_DBUS_GLIB_CFLAGS)
-else
+endif
+
 ifeq ($(OS_ARCH),SunOS)
 CPPSRCS += nsWifiScannerSolaris.cpp
 OS_INCLUDES += $(GLIB_CFLAGS)
-endif # solaris
-endif # linux
-endif # windows
-endif # mac
+endif
+
+ifdef MOZ_ENABLE_DBUS
+CPPSRCS += nsWifiScannerDBus.cpp
+OS_INCLUDES += $(MOZ_DBUS_GLIB_CFLAGS)
+endif
 
 include $(topsrcdir)/config/rules.mk
 

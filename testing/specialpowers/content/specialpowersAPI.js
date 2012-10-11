@@ -11,6 +11,7 @@ var Cu = Components.utils;
 
 Components.utils.import("resource://specialpowers/MockFilePicker.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 function SpecialPowersAPI() { 
   this._consoleListeners = [];
@@ -1241,5 +1242,9 @@ SpecialPowersAPI.prototype = {
 
   getMozFullPath: function(file) {
     return file.mozFullPath;
+  },
+
+  isWindowPrivate: function(win) {
+    return PrivateBrowsingUtils.isWindowPrivate(win);
   },
 };

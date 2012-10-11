@@ -196,7 +196,7 @@ LogDocParent(nsIDocument* aDocumentNode)
 static void
 LogDocInfo(nsIDocument* aDocumentNode, DocAccessible* aDocument)
 {
-  printf("    DOM id: %p, acc id: %p\n    ",
+  printf("    DOM document: %p, acc document: %p\n    ",
          static_cast<void*>(aDocumentNode), static_cast<void*>(aDocument));
 
   // log document info
@@ -323,6 +323,20 @@ LogRequest(nsIRequest* aRequest)
 }
 
 static void
+LogDocAccState(DocAccessible* aDocument)
+{
+  printf("document acc state: ");
+  if (aDocument->HasLoadState(DocAccessible::eCompletelyLoaded))
+    printf("completely loaded;");
+  else if (aDocument->HasLoadState(DocAccessible::eReady))
+    printf("ready;");
+  else if (aDocument->HasLoadState(DocAccessible::eDOMLoaded))
+    printf("DOM loaded;");
+  else if (aDocument->HasLoadState(DocAccessible::eTreeConstructed))
+    printf("tree constructed;");
+}
+
+static void
 GetDocLoadEventType(AccEvent* aEvent, nsACString& aEventType)
 {
   uint32_t type = aEvent->GetEventType();
@@ -402,6 +416,30 @@ logging::DocLoad(const char* aMsg, nsIDocument* aDocumentNode)
   DocAccessible* document =
     GetAccService()->GetDocAccessibleFromCache(aDocumentNode);
   LogDocInfo(aDocumentNode, document);
+
+  MsgEnd();
+}
+
+void
+logging::DocCompleteLoad(DocAccessible* aDocument, bool aIsLoadEventTarget)
+{
+  MsgBegin(sDocLoadTitle, "document loaded *completely*");
+
+  nsIDocument* docNode = aDocument->GetDocumentNode();
+  printf("    DOM document: %p, acc document: %p\n",
+         static_cast<void*>(aDocument->GetDocumentNode()),
+         static_cast<void*>(aDocument));
+
+  printf("    ");
+  LogDocURI(aDocument->GetDocumentNode());
+  printf("\n");
+
+  printf("    ");
+  LogDocAccState(aDocument);
+  printf("\n");
+
+  printf("    document is load event target: %s\n",
+         (aIsLoadEventTarget ? "true" : "false"));
 
   MsgEnd();
 }

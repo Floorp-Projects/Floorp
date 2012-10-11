@@ -102,6 +102,12 @@ PrivateBrowsingService.prototype = {
   },
 
   _onBeforePrivateBrowsingModeChange: function PBS__onBeforePrivateBrowsingModeChange() {
+    var windowsEnum = Services.wm.getEnumerator(null);
+    while (windowsEnum.hasMoreElements()) {
+      var window = windowsEnum.getNext();
+      this._setPerWindowPBFlag(window, this._inPrivateBrowsing);
+    }
+
     // nothing needs to be done here if we're enabling at startup
     if (!this._autoStarted) {
       let ss = Cc["@mozilla.org/browser/sessionstore;1"].
@@ -174,12 +180,6 @@ PrivateBrowsingService.prototype = {
     }
     else
       this._saveSession = false;
-
-    var windowsEnum = Services.wm.getEnumerator("navigator:browser");
-    while (windowsEnum.hasMoreElements()) {
-      var window = windowsEnum.getNext();
-      this._setPerWindowPBFlag(window, this._inPrivateBrowsing);
-    }
   },
 
   _onAfterPrivateBrowsingModeChange: function PBS__onAfterPrivateBrowsingModeChange() {

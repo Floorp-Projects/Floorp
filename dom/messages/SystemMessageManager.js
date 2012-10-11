@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
+const kSystemMessageInternalReady = "system-message-internal-ready";
+
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsISyncMessageSender");
@@ -39,6 +41,20 @@ function SystemMessageManager() {
 
   // Pending messages for this page, keyed by message type.
   this._pendings = {};
+
+  // Flag to specify if this process has already registered manifest.
+  this._registerManifestReady = false;
+
+  // Flag to determine this process is a parent or child process.
+  let appInfo = Cc["@mozilla.org/xre/app-info;1"];
+  this._isParentProcess =
+    !appInfo || appInfo.getService(Ci.nsIXULRuntime)
+                  .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+
+  // An oberver to listen to whether the |SystemMessageInternal| is ready.
+  if (this._isParentProcess) {
+    Services.obs.addObserver(this, kSystemMessageInternalReady, false);
+  }
 }
 
 SystemMessageManager.prototype = {
@@ -64,7 +80,8 @@ SystemMessageManager.prototype = {
       }
     }
 
-    aHandler.handleMessage(wrapped ? aMessage : ObjectWrapper.wrap(aMessage, this._window));
+    aHandler.handleMessage(wrapped ? aMessage
+                                   : ObjectWrapper.wrap(aMessage, this._window));
   },
 
   mozSetMessageHandler: function sysMessMgr_setMessageHandler(aType, aHandler) {
@@ -114,7 +131,7 @@ SystemMessageManager.prototype = {
 
     // Send a sync message to the parent to check if we have a pending message
     // for this type.
-    let messages = cpmm.sendSyncMessage("SystemMessageManager:GetPending",
+    let messages = cpmm.sendSyncMessage("SystemMessageManager:GetPendingMessages",
                                         { type: aType,
                                           uri: this._uri,
                                           manifest: this._manifest })[0];
@@ -144,7 +161,11 @@ SystemMessageManager.prototype = {
 
   uninit: function sysMessMgr_uninit()  {
     this._handlers = null;
-    this._pendings =  null;
+    this._pendings = null;
+
+    if (this._isParentProcess) {
+      Services.obs.removeObserver(this, kSystemMessageInternalReady);
+    }
   },
 
   receiveMessage: function sysMessMgr_receiveMessage(aMessage) {
@@ -155,6 +176,15 @@ SystemMessageManager.prototype = {
     let msg = aMessage.json;
     if (msg.manifest != this._manifest)
       return;
+
+    // Send an acknowledgement to parent to clean up the pending message,
+    // so a re-launched app won't handle it again, which is redundant.
+    cpmm.sendAsyncMessage(
+      "SystemMessageManager:Message:Return:OK",
+      { type: msg.type,
+        manifest: msg.manifest,
+        uri: msg.uri,
+        msgID: msg.msgID });
 
     // Bail out if we have no handlers registered for this type.
     if (!(msg.type in this._handlers)) {
@@ -177,15 +207,45 @@ SystemMessageManager.prototype = {
                         .getService(Ci.nsIAppsService);
     this._manifest = appsService.getManifestURLByLocalId(principal.appId);
     this._window = aWindow;
-    cpmm.sendAsyncMessage("SystemMessageManager:Register",
-                          { manifest: this._manifest });
+
+    // Two cases are valid to register the manifest for the current process:
+    // 1. This is asked by a child process (parent process must be ready).
+    // 2. Parent process has already constructed the |SystemMessageInternal|.
+    // Otherwise, delay to do it when the |SystemMessageInternal| is ready.
+    let readyToRegister = true;
+    if (this._isParentProcess) {
+      let ready = cpmm.sendSyncMessage(
+        "SystemMessageManager:AskReadyToRegister", null);
+      if (ready.length == 0 || !ready[0]) {
+        readyToRegister = false;
+      }
+    }
+    if (readyToRegister) {
+      this._registerManifest();
+    }
+
     debug("done");
+  },
+
+  observe: function sysMessMgr_observe(aSubject, aTopic, aData) {
+    if (aTopic === kSystemMessageInternalReady) {
+      this._registerManifest();
+    }
+  },
+
+  _registerManifest: function sysMessMgr_registerManifest() {
+    if (!this._registerManifestReady) {
+      cpmm.sendAsyncMessage("SystemMessageManager:Register",
+                            { manifest: this._manifest });
+      this._registerManifestReady = true;
+    }
   },
 
   classID: Components.ID("{bc076ea0-609b-4d8f-83d7-5af7cbdc3bb2}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMNavigatorSystemMessages,
-                                         Ci.nsIDOMGlobalPropertyInitializer]),
+                                         Ci.nsIDOMGlobalPropertyInitializer,
+                                         Ci.nsIObserver]),
 
   classInfo: XPCOMUtils.generateCI({classID: Components.ID("{bc076ea0-609b-4d8f-83d7-5af7cbdc3bb2}"),
                                     contractID: "@mozilla.org/system-message-manager;1",

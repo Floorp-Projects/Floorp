@@ -14,13 +14,11 @@ include protocol PBlob; //FIXME: bug #792908
 include "mozilla/net/PHttpChannelParams.h";
 include "mozilla/net/NeckoMessageUtils.h";
 include "prio.h";
-include "SerializedLoadContext.h";
 
 using RequestHeaderTuples;
 using nsHttpHeaderArray;
 using nsHttpResponseHead;
 using nsHttpAtom;
-using IPC::SerializedLoadContext;
 using PRNetAddr;
 
 namespace mozilla {
@@ -53,8 +51,7 @@ parent:
             nsCString           entityID,
             bool                chooseApplicationCache,
             nsCString           appCacheClientID,
-            bool                allowSpdy,
-            SerializedLoadContext loadContext);
+            bool                allowSpdy);
 
   // Used to connect redirected-to channel on the parent with redirected-to
   // channel on the child.
