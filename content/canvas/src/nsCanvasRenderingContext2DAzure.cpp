@@ -4465,7 +4465,8 @@ nsCanvasRenderingContext2DAzure::PutImageData_explicit(int32_t x, int32_t y, uin
   }
 
   nsRefPtr<gfxImageSurface> imgsurf = new gfxImageSurface(gfxIntSize(w, h),
-                                                          gfxASurface::ImageFormatARGB32);
+                                                          gfxASurface::ImageFormatARGB32,
+                                                          false);
   if (!imgsurf || imgsurf->CairoStatus()) {
     return NS_ERROR_FAILURE;
   }
