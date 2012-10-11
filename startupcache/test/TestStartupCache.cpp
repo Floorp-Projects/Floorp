@@ -400,14 +400,14 @@ SetupJS(JSContext **cxp)
 }
 
 bool
-GetHistogramCounts(const char *testmsg, JSContext *cx, jsval *counts)
+GetHistogramCounts(const char *testmsg, const nsACString &histogram_id,
+                   JSContext *cx, jsval *counts)
 {
   nsCOMPtr<nsITelemetry> telemetry = do_GetService("@mozilla.org/base/telemetry;1");
-  NS_NAMED_LITERAL_CSTRING(histogram_id, "STARTUP_CACHE_AGE_HOURS");
   JS::AutoValueRooter h(cx);
   nsresult trv = telemetry->GetHistogramById(histogram_id, cx, h.addr());
   if (NS_FAILED(trv)) {
-    fail("%s: couldn't get histogram", testmsg);
+    fail("%s: couldn't get histogram %s", testmsg, ToNewCString(histogram_id));
     return false;
   }
   passed(testmsg);
@@ -459,9 +459,30 @@ CompareCountArrays(JSContext *cx, JSObject *before, JSObject *after)
     }
   }
 
-  // All of the elements of the histograms's count arrays differed.
+  // None of the elements of the histograms's count arrays differed.
   // Not good, we should have recorded something.
   return NS_ERROR_FAILURE;
+}
+
+nsresult
+TestHistogramValues(const char* type, bool use_js, JSContext *cx,
+                    JSObject *before, JSObject *after)
+{
+  if (!use_js) {
+    fail("couldn't check histogram recording");
+    return NS_ERROR_FAILURE;
+  }
+  nsresult compare = CompareCountArrays(cx, before, after);
+  if (compare == NS_ERROR_UNEXPECTED) {
+    fail("count comparison error");
+    return compare;
+  }
+  if (compare == NS_ERROR_FAILURE) {
+    fail("histogram didn't record %s", type);
+    return compare;
+  }
+  passed("histogram records %s", type);
+  return NS_OK;
 }
 
 int main(int argc, char** argv)
@@ -499,9 +520,17 @@ int main(int argc, char** argv)
   if (use_js && !JS_InitStandardClasses(cx, glob))
     use_js = false;
 
-  JS::AutoValueRooter before_counts(cx);
+  NS_NAMED_LITERAL_CSTRING(age_histogram_id, "STARTUP_CACHE_AGE_HOURS");
+  NS_NAMED_LITERAL_CSTRING(invalid_histogram_id, "STARTUP_CACHE_INVALID");
+
+  JS::AutoValueRooter age_before_counts(cx);
   if (use_js && !GetHistogramCounts("STARTUP_CACHE_AGE_HOURS histogram before test",
-                                 cx, before_counts.addr()))
+                                    age_histogram_id, cx, age_before_counts.addr()))
+    use_js = false;
+  
+  JS::AutoValueRooter invalid_before_counts(cx);
+  if (use_js && !GetHistogramCounts("STARTUP_CACHE_INVALID histogram before test",
+                                    invalid_histogram_id, cx, invalid_before_counts.addr()))
     use_js = false;
   
   nsresult scrv;
@@ -523,28 +552,26 @@ int main(int argc, char** argv)
   if (NS_FAILED(TestEarlyShutdown()))
     rv = 1;
 
-  JS::AutoValueRooter after_counts(cx);
+  JS::AutoValueRooter age_after_counts(cx);
   if (use_js && !GetHistogramCounts("STARTUP_CACHE_AGE_HOURS histogram after test",
-                                    cx, after_counts.addr()))
+                                    age_histogram_id, cx, age_after_counts.addr()))
     use_js = false;
 
-  if (!use_js) {
-    fail("couldn't check histogram recording");
+  if (NS_FAILED(TestHistogramValues("age samples", use_js, cx,
+                                    JSVAL_TO_OBJECT(age_before_counts.value()),
+                                    JSVAL_TO_OBJECT(age_after_counts.value()))))
     rv = 1;
-  } else {
-    nsresult compare = CompareCountArrays(cx,
-                                          JSVAL_TO_OBJECT(before_counts.value()),
-                                          JSVAL_TO_OBJECT(after_counts.value()));
-    if (compare == NS_ERROR_UNEXPECTED) {
-      fail("count comparison error");
-      rv = 1;
-    } else if (compare == NS_ERROR_FAILURE) {
-      fail("histogram didn't record samples");
-      rv = 1;
-    } else {
-      passed("histogram records samples");
-    }
-  }
+                                                    
+  JS::AutoValueRooter invalid_after_counts(cx);
+  if (use_js && !GetHistogramCounts("STARTUP_CACHE_INVALID histogram after test",
+                                    invalid_histogram_id, cx, invalid_after_counts.addr()))
+    use_js = false;
+
+  // STARTUP_CACHE_INVALID should have been triggered by TestIgnoreDiskCache()
+  if (NS_FAILED(TestHistogramValues("invalid disk cache", use_js, cx,
+                                    JSVAL_TO_OBJECT(invalid_before_counts.value()),
+                                    JSVAL_TO_OBJECT(invalid_after_counts.value()))))
+    rv = 1;
 
   return rv;
 }
