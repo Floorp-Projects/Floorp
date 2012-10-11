@@ -7068,6 +7068,9 @@ function getNavToolbox() gNavToolbox;
 # make it work in both modes, the amount of duplicated code is small and the
 # code is much more readable this way.
 let gPrivateBrowsingUI = {
+  _inited: false,
+  _initCallbacks: [],
+
   init: function PBUI_init() {
     // Do nothing for normal windows
     if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
@@ -7088,6 +7091,26 @@ let gPrivateBrowsingUI = {
       docElement.setAttribute("privatebrowsingmode", "temporary");
       gBrowser.updateTitlebar();
     }
+
+    this._inited = true;
+
+    this._initCallbacks.forEach(function (callback) callback.apply());
+    this._initCallbacks = [];
+  },
+
+  get autoStarted() {
+    return false; // auto-started PB not supported for now
+  },
+
+  get initialized() {
+    return this._inited;
+  },
+
+  addInitializationCallback: function PBUI_addInitializationCallback(aCallback) {
+    if (this._inited)
+      return;
+
+    this._initCallbacks.push(aCallback);
   }
 };
 
@@ -7098,6 +7121,7 @@ let gPrivateBrowsingUI = {
   _searchBarValue: null,
   _findBarValue: null,
   _inited: false,
+  _initCallbacks: [],
 
   init: function PBUI_init() {
     Services.obs.addObserver(this, "private-browsing", false);
@@ -7110,6 +7134,9 @@ let gPrivateBrowsingUI = {
       this.onEnterPrivateBrowsing(true);
 
     this._inited = true;
+
+    this._initCallbacks.forEach(function (callback) callback.apply());
+    this._initCallbacks = [];
   },
 
   uninit: function PBUI_unint() {
@@ -7118,6 +7145,17 @@ let gPrivateBrowsingUI = {
 
     Services.obs.removeObserver(this, "private-browsing");
     Services.obs.removeObserver(this, "private-browsing-transition-complete");
+  },
+
+  get initialized() {
+    return this._inited;
+  },
+
+  addInitializationCallback: function PBUI_addInitializationCallback(aCallback) {
+    if (this._inited)
+      return;
+
+    this._initCallbacks.push(aCallback);
   },
 
   get _disableUIOnToggle() {
@@ -7320,6 +7358,10 @@ let gPrivateBrowsingUI = {
 
     this._privateBrowsingService.privateBrowsingEnabled =
       !this.privateBrowsingEnabled;
+  },
+
+  get autoStarted() {
+    return this._privateBrowsingService.autoStarted;
   },
 
   get privateBrowsingEnabled() {
