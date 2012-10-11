@@ -8240,6 +8240,18 @@ if test -n "$MOZ_SERVICES_AITC"; then
   AC_DEFINE(MOZ_SERVICES_AITC)
 fi
 
+dnl Build Common JS modules provided by services.
+AC_SUBST(MOZ_SERVICES_COMMON)
+if test -n "$MOZ_SERVICES_COMMON"; then
+  AC_DEFINE(MOZ_SERVICES_COMMON)
+fi
+
+dnl Build Services crypto component (used by Sync)
+AC_SUBST(MOZ_SERVICES_CRYPTO)
+if test -n "$MOZ_SERVICES_CRYPTO"; then
+  AC_DEFINE(MOZ_SERVICES_CRYPTO)
+fi
+
 dnl Build Notifications if required
 AC_SUBST(MOZ_SERVICES_NOTIFICATIONS)
 if test -n "$MOZ_SERVICES_NOTIFICATIONS"; then
