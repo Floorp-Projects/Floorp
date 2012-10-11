@@ -10,7 +10,7 @@ VPATH		= @srcdir@
 relativesrcdir  = @relativesrcdir@
 DIRS		+= webgl crossorigin
 
-TOOLS_DIRS += compiled
+# TEST_DIRS += compiled
 
 include $(DEPTH)/config/autoconf.mk
 MOCHITEST_FILES = \
