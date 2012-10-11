@@ -5,8 +5,8 @@
 
 Components.utils.import("resource://gre/modules/ForgetAboutSite.jsm");
 
-// Test clearing plugin data by domain using nsPrivateBrowsingService.
-const testURL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/browser_privatebrowsing_clearplugindata.html";
+// Test clearing plugin data by domain using ForgetAboutSite.
+const testURL = "http://mochi.test:8888/browser/toolkit/forgetaboutsite/test/browser/browser_clearplugindata.html";
 
 const pluginHostIface = Ci.nsIPluginHost;
 var pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);

@@ -74,6 +74,16 @@ Var CTL_RIGHT_PX
 
 !define CONFIG_INI "config.ini"
 
+!define MAX_PATH 260
+
+!define FILE_SHARE_READ 1
+!define GENERIC_READ 0x80000000
+!define OPEN_EXISTING 3
+!define FILE_BEGIN 0
+!define FILE_END 2
+!define INVALID_HANDLE_VALUE -1
+!define INVALID_FILE_SIZE 0xffffffff
+
 !include "nsDialogs.nsh"
 !include "LogicLib.nsh"
 !include "FileFunc.nsh"
@@ -206,6 +216,39 @@ Function .onInit
 
   ; Require elevation if the user can elevate
   ${ElevateUAC}
+
+  ; Create a mutex to prevent multiple launches of the same stub installer in
+  ; the same location on the file system. This intentionally won't handle the
+  ; case where someone runs multiple copies of the stub on the file system but
+  ; it does handle the important case which is a user launching the same stub
+  ; multiple times.
+  StrCpy $1 "$EXEPATH"
+  ; Backslashes are illegal in a mutex name so replace all occurences of a
+  ; backslash with a forward slash.
+  ${WordReplace} "$1" "\" "/" "+" $1
+  StrLen $2 "$1"
+
+  ; The lpName parameter for CreateMutexW is limited to MAX_PATH characters so
+  ; use the characters at the end since they are more likely to be unique.
+  ${If} $2 > ${MAX_PATH}
+    StrCpy $1 "$1" ${MAX_PATH} -${MAX_PATH}
+  ${EndIf}
+  System::Call "kernel32::CreateMutexW(i 0, i 0, w '$1') i .r0 ?e"
+  Pop $0
+
+  ${Unless} $0 == 0
+    ; The mutex is specific to this executable's path so we should be able to
+    ; find the Window with the same caption as this executable's and bring that
+    ; window to the front. This could find another instance of the same
+    ; executable but that is an uninteresting edge case.
+    FindWindow $1 "#32770" "$(WIN_CAPTION)" 0
+    ${If} $1 != 0
+      ; Restore the window if it is minimized and make it the foreground window
+      System::Call "user32::ShowWindow(i r1, i ${SW_RESTORE}) i."
+      System::Call "user32::SetForegroundWindow(i r1) i."
+    ${EndIf}
+    Abort
+  ${EndUnless}
 
   SetShellVarContext all      ; Set SHCTX to HKLM
   ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
@@ -786,14 +829,6 @@ Function StartDownload
     RmDir /r "$INSTDIR\${TO_BE_DELETED}"
   ${EndIf}
 FunctionEnd
-
-!define FILE_SHARE_READ 1
-!define GENERIC_READ 0x80000000
-!define OPEN_EXISTING 3
-!define FILE_BEGIN 0
-!define FILE_END 2
-!define INVALID_HANDLE_VALUE -1
-!define INVALID_FILE_SIZE 0xffffffff
 
 Function OnDownload
   InetBgDL::GetStats

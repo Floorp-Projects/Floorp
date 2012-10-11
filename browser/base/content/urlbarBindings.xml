@@ -1714,15 +1714,39 @@
       <field name="_brandBundle" readonly="true">
         Services.strings.createBundle("chrome://branding/locale/brand.properties");
       </field>
+      <property name="_viewsLeftMap">
+        <getter><![CDATA[
+          let viewsLeftMap = {};
+          try {
+            viewsLeftMap = JSON.parse(Services.prefs.getCharPref("browser.syncPromoViewsLeftMap"));
+          } catch (ex) {
+            // If the old preference exists, migrate it to the new one.
+            try {
+              let oldPref = Services.prefs.getIntPref("browser.syncPromoViewsLeft");
+              Services.prefs.clearUserPref("browser.syncPromoViewsLeft");
+              viewsLeftMap.bookmarks = oldPref;
+              viewsLeftMap.passwords = oldPref;
+              Services.prefs.setCharPref("browser.syncPromoViewsLeftMap",
+                                         JSON.stringify(viewsLeftMap));
+            } catch (ex2) {}
+          }
+          return viewsLeftMap;
+        ]]></getter>
+      </property>
       <property name="_viewsLeft">
         <getter><![CDATA[
-          try {
-            return Services.prefs.getIntPref("browser.syncPromoViewsLeft");
-          } catch(ex) {}
-          return 5;
+          let views = 5;
+          let map = this._viewsLeftMap;
+          if (this._notificationType in map) {
+            views = map[this._notificationType];
+          }
+          return views;
         ]]></getter>
         <setter><![CDATA[
-          Services.prefs.setIntPref("browser.syncPromoViewsLeft", val);
+          let map = this._viewsLeftMap;
+          map[this._notificationType] = val;
+          Services.prefs.setCharPref("browser.syncPromoViewsLeftMap",
+                                     JSON.stringify(map));
           return val;
         ]]></setter>
       </property>
@@ -1814,13 +1838,16 @@
             // thus set a width on it, based on the available space, before
             // setting its textContent.  Then set its height as well, to
             // fix wrong height calculation on Linux (bug 659578).
-            let self = this;
-            this._panel.addEventListener("popupshown", function (evt) {
-              self._panel.removeEventListener("popupshown", arguments.callee, true);
-              self._promomessage.width = self._promomessage.getBoundingClientRect().width;
-              self._promomessage.firstChild.textContent = self._notificationMessage;
-              self._promomessage.height = self._promomessage.getBoundingClientRect().height;
-            }, true);
+            this._panel.addEventListener("popupshown", function panelShown() {
+              this._panel.removeEventListener("popupshown", panelShown, true);
+              // Previous popupShown events may close the panel or change
+              // its contents, so ensure this is still valid.
+              if (this._panel.state != "open" || !this._notificationType)
+                return;
+              this._promomessage.width = this._promomessage.getBoundingClientRect().width;
+              this._promomessage.firstChild.textContent = this._notificationMessage;
+              this._promomessage.height = this._promomessage.getBoundingClientRect().height;
+            }.bind(this), true);
           }
         ]]></body>
       </method>

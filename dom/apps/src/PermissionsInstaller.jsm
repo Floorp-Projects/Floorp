@@ -414,7 +414,6 @@ let PermissionsInstaller = {
    * @returns void
    **/
   _setPermission: function setPermission(aPerm, aValue, aApp) {
-    dump("XxXxX setting " + aPerm + " to " + aValue + "\n");
     if (aPerm != "storage") {
       PermSettings.set(aPerm, aValue, aApp.manifestURL, aApp.origin, false);
       return;

@@ -585,16 +585,4 @@ JSContext::setDefaultCompartmentObjectIfUnset(JSObject *obj)
         setDefaultCompartmentObject(obj);
 }
 
-/* Get the current frame, first lazily instantiating stack frames if needed. */
-static inline js::StackFrame *
-js_GetTopStackFrame(JSContext *cx, FrameExpandKind expand)
-{
-#ifdef JS_METHODJIT
-    if (expand)
-        js::mjit::ExpandInlineFrames(cx->compartment);
-#endif
-
-    return cx->maybefp();
-}
-
 #endif /* jscntxtinlines_h___ */
