@@ -491,7 +491,6 @@ public class GeckoLayerClient
             // a full viewport update, which is fine because if browser.js has somehow moved to
             // be out of sync with this first-paint viewport, then we force them back in sync.
             abortPanZoomAnimation();
-            mView.setPaintState(LayerView.PAINT_BEFORE_FIRST);
         }
         DisplayPortCalculator.resetPageState();
         mDrawTimingQueue.reset();

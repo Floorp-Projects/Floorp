@@ -25,7 +25,7 @@
 # The dialog units for the bitmap's dimensions should match exactly with the
 # bitmap's width and height in pixels.
 !define APPNAME_BMP_WIDTH_DU 159u
-!define APPNAME_BMP_HEIGHT_DU 26u
+!define APPNAME_BMP_HEIGHT_DU 28u
 !define INTRO_BLURB_WIDTH_DU "230u"
 !define INTRO_BLURB_EDGE_DU "198u"
 !define INTRO_BLURB_LTR_TOP_DU "16u"

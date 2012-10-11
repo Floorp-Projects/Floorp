@@ -22,7 +22,8 @@ public:
   ~BluetoothScoManager();
 
   static BluetoothScoManager* Get();
-  void ReceiveSocketData(mozilla::ipc::UnixSocketRawData* aMessage);
+  void ReceiveSocketData(mozilla::ipc::UnixSocketRawData* aMessage)
+    MOZ_OVERRIDE;
 
   bool Connect(const nsAString& aDeviceObjectPath);
   void Disconnect();
@@ -36,6 +37,8 @@ private:
   void Cleanup();
   nsresult HandleShutdown();
   void CreateScoSocket(const nsAString& aDevicePath);
+  virtual void OnConnectSuccess() MOZ_OVERRIDE;
+  virtual void OnConnectError() MOZ_OVERRIDE;
   bool mConnected;
 };
 

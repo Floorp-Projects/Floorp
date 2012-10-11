@@ -11,7 +11,7 @@
 #include <X11/extensions/Xrender.h>
 #include <X11/Xlib.h>
 
-#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+#if !defined(MOZ_PLATFORM_MAEMO)
 #include "GLXLibrary.h"
 #endif
 
@@ -75,7 +75,7 @@ public:
     // server, not the main application.
     virtual gfxASurface::MemoryLocation GetMemoryLocation() const;
 
-#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+#if !defined(MOZ_PLATFORM_MAEMO)
     GLXPixmap GetGLXPixmap();
 #endif
 
@@ -102,7 +102,7 @@ protected:
 
     gfxIntSize mSize;
 
-#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+#if !defined(MOZ_PLATFORM_MAEMO)
     GLXPixmap mGLXPixmap;
 #endif
 };

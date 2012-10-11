@@ -184,6 +184,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
     unsigned staticLevel;
     RootedValue thisv(cx);
     if (evalType == DIRECT_EVAL) {
+        JS_ASSERT(!caller->runningInIon());
         staticLevel = caller->script()->staticLevel + 1;
 
         // Direct calls to eval are supposed to see the caller's |this|. If we

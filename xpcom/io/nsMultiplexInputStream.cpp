@@ -378,26 +378,23 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
                 remaining = 0;
             }
             else if (remaining > streamPos) {
-                if (i < oldCurrentStream) {
-                    // We're already at end so no need to seek this stream
-                    remaining -= streamPos;
+                uint64_t avail;
+                rv = mStreams[i]->Available(&avail);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                int64_t newPos;
+                if (remaining < (streamPos + (int64_t) avail)) {
+                    newPos = remaining - streamPos;
+                    remaining = 0;
+                } else {
+                    newPos = streamPos + (int64_t)avail;
+                    remaining -= streamPos + avail;
                 }
-                else {
-                    uint64_t avail;
-                    rv = mStreams[i]->Available(&avail);
-                    NS_ENSURE_SUCCESS(rv, rv);
+                rv = stream->Seek(NS_SEEK_CUR, newPos);
+                NS_ENSURE_SUCCESS(rv, rv);
 
-                    int64_t newPos = streamPos +
-                                     NS_MIN((int64_t)avail, remaining);
-
-                    rv = stream->Seek(NS_SEEK_SET, newPos);
-                    NS_ENSURE_SUCCESS(rv, rv);
-
-                    mCurrentStream = i;
-                    mStartedReadingCurrent = true;
-
-                    remaining -= newPos;
-                }
+                mCurrentStream = i;
+                mStartedReadingCurrent = true;
             }
             else {
                 NS_ASSERTION(remaining == streamPos, "Huh?");
