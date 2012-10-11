@@ -261,9 +261,9 @@ nsDOMMouseEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
 
   if (relatedTarget) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(relatedTarget);
-    if (content && content->IsInNativeAnonymousSubtree() &&
+    if (content && content->ChromeOnlyAccess() &&
         !nsContentUtils::CanAccessNativeAnon()) {
-      relatedTarget = content->FindFirstNonNativeAnonymous();
+      relatedTarget = content->FindFirstNonChromeOnlyAccessContent();
       if (!relatedTarget) {
         return NS_OK;
       }

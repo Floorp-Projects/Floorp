@@ -7858,7 +7858,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     }
 
     // No slim wrappers for a document's scope object.
-    return node->IsInNativeAnonymousSubtree() ?
+    return node->ChromeOnlyAccess() ?
       NS_SUCCESS_CHROME_ACCESS_ONLY : NS_OK;
   }
 
@@ -7870,7 +7870,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   nsresult rv = WrapNativeParent(cx, globalObj, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return node->IsInNativeAnonymousSubtree() ?
+  return node->ChromeOnlyAccess() ?
     NS_SUCCESS_CHROME_ACCESS_ONLY : NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
 }
 

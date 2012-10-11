@@ -69,7 +69,8 @@ public:
   bool ImplementsInterface(REFNSIID aIID) const;
 
   void GenerateAnonymousContent();
-  void InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement);
+  void InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement,
+                               bool aNativeAnon);
   static void UninstallAnonymousContent(nsIDocument* aDocument,
                                         nsIContent* aAnonParent);
   void InstallEventHandlers();

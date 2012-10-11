@@ -46,7 +46,7 @@ def main(argv):
         
         all_histograms.update({ name: parameters });
 
-        if startup_histogram_re.match(name) is not None:
+        if startup_histogram_re.search(name) is not None:
             all_histograms.update({ "STARTUP_" + name: parameters })
 
     print json.dumps({ 'histograms': all_histograms})
