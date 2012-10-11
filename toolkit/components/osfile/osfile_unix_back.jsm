@@ -241,6 +241,11 @@
                     /*return*/ Types.negativeone_or_fd,
                     /*fd*/     Types.fd);
 
+       UnixFile.dirfd =
+         declareFFI("dirfd", ctypes.default_abi,
+                    /*return*/ Types.negativeone_or_fd,
+                    /*dir*/    Types.null_or_DIR_ptr);
+
        UnixFile.chdir =
          declareFFI("chdir", ctypes.default_abi,
                     /*return*/ Types.negativeone_or_nothing,
