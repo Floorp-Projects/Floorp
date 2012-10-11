@@ -3826,9 +3826,11 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
 
     // If authentication fails, XMLHttpRequest origin and
     // the request URL are same origin, ...
+    /* Disabled - bug: 799540
     if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
       showPrompt = false;
     }
+    */
 
     // ... Authorization is not in the list of author request headers, ...
     if (showPrompt) {
