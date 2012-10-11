@@ -4631,8 +4631,11 @@ nsCanvasRenderingContext2DAzure::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                                 CanvasLayer *aOldLayer,
                                                 LayerManager *aManager)
 {
-  EnsureTarget();
-  if (!IsTargetValid()) {
+  // Don't call EnsureTarget() ... if there isn't already a surface, then
+  // we have nothing to paint and there is no need to create a surface just
+  // to paint nothing. Also, EnsureTarget() can cause creation of a persistent
+  // layer manager which must NOT happen during a paint.
+  if (!mTarget || !IsTargetValid()) {
     // No DidTransactionCallback will be received, so mark the context clean
     // now so future invalidations will be dispatched.
     MarkContextClean();
