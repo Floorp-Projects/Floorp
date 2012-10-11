@@ -1762,8 +1762,14 @@ Debugger::getNewestFrame(JSContext *cx, unsigned argc, Value *vp)
      * Since there may be multiple contexts, use AllFramesIter instead.
      */
     for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
-        if (dbg->observesFrame(i.fp()))
-            return dbg->getScriptFrame(cx, i.fp(), vp);
+        /*
+         * Debug-mode currently disables Ion compilation in the compartment of
+         * the debuggee.
+         */
+        if (i.isIon())
+            continue;
+        if (dbg->observesFrame(i.interpFrame()))
+            return dbg->getScriptFrame(cx, i.interpFrame(), vp);
     }
     args.rval().setNull();
     return true;
@@ -2113,7 +2119,7 @@ class Debugger::ScriptQuery {
                  */
                 JS_ASSERT(script->isForEval());
 
-                GlobalObject *global = &fri.fp()->global();
+                GlobalObject *global = &fri.interpFrame()->global();
                 if (!consider(script, global, vector))
                     return false;
             }

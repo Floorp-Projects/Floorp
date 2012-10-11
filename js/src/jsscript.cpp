@@ -2572,8 +2572,19 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
      *  - type inference data for the script assuming script->needsArgsObj; and
      */
     for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
-        StackFrame *fp = i.fp();
-        if (fp->isFunctionFrame() && !fp->runningInIon() && fp->script() == script) {
+        /*
+         * We cannot reliably create an arguments object for Ion activations of
+         * this script.  To maintain the invariant that "script->needsArgsObj
+         * implies fp->hasArgsObj", the Ion bail mechanism will create an
+         * arguments object right after restoring the StackFrame and before
+         * entering the interpreter (in ion::ThunkToInterpreter).  This delay is
+         * safe since the engine avoids any observation of a StackFrame when it
+         * beginsIonActivation (see StackIter::interpFrame comment).
+         */
+        if (i.isIon())
+            continue;
+        StackFrame *fp = i.interpFrame();
+        if (fp->isFunctionFrame() && fp->script() == script) {
             ArgumentsObject *argsobj = ArgumentsObject::createExpected(cx, fp);
             if (!argsobj) {
                 /*

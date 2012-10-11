@@ -1972,12 +1972,6 @@ namespace mjit {
 
 } /* namespace js */
 
-/* How much expansion of inlined frames to do when inspecting the stack. */
-enum FrameExpandKind {
-    FRAME_EXPAND_NONE = 0,
-    FRAME_EXPAND_ALL = 1
-};
-
 namespace js {
 
 /************************************************************************/
