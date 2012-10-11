@@ -267,8 +267,6 @@ class MozbuildObject(ProcessExecutionMixin):
     def _run_command_in_objdir(self, **args):
         self.run_process(cwd=self.topobjdir, **args)
 
-        return [_current_shell, '-c', cline]
-
     def _is_windows(self):
         return os.name in ('nt', 'ce')
 
