@@ -661,7 +661,7 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
       }
     }
   }
-  int32_t doneCounter = 0;
+  uint32_t doneCounter = 0;
   for (int32_t i = mCurrentCanvasList.Length() - 1; i >= 0 ; i--) {
     nsHTMLCanvasElement* canvas = mCurrentCanvasList[i];
 
