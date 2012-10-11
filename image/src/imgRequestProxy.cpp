@@ -83,11 +83,8 @@ imgRequestProxy::~imgRequestProxy()
          channel, if still downloading data, from being canceled if 'this' is
          the last observer.  This allows the image to continue to download and
          be cached even if no one is using it currently.
-         
-         Passing false to aNotify means that we will still get
-         OnStopRequest, if needed.
        */
-      mOwner->RemoveProxy(this, NS_OK, false);
+      mOwner->RemoveProxy(this, NS_OK);
     }
   }
 }
@@ -160,9 +157,7 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
     wasDecoded = true;
   }
 
-  // Passing false to aNotify means that mListener will still get
-  // OnStopRequest, if needed.
-  mOwner->RemoveProxy(this, NS_IMAGELIB_CHANGING_OWNER, false);
+  mOwner->RemoveProxy(this, NS_IMAGELIB_CHANGING_OWNER);
 
   // If we had animation requests, restore them here. Note that we
   // do this *after* RemoveProxy, which clears out animation consumers
@@ -256,10 +251,9 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
 void
 imgRequestProxy::DoCancel(nsresult status)
 {
-  // Passing false to aNotify means that mListener will still get
-  // OnStopRequest, if needed.
-  if (mOwner)
-    mOwner->RemoveProxy(this, status, false);
+  if (mOwner) {
+    mOwner->RemoveProxy(this, status);
+  }
 
   NullOutListener();
 }
@@ -284,10 +278,9 @@ NS_IMETHODIMP imgRequestProxy::CancelAndForgetObserver(nsresult aStatus)
   bool oldIsInLoadGroup = mIsInLoadGroup;
   mIsInLoadGroup = false;
 
-  // Passing false to aNotify means that mListener will still get
-  // OnStopRequest, if needed.
-  if (mOwner)
-    mOwner->RemoveProxy(this, aStatus, false);
+  if (mOwner) {
+    mOwner->RemoveProxy(this, aStatus);
+  }
 
   mIsInLoadGroup = oldIsInLoadGroup;
 
