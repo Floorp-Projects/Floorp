@@ -645,6 +645,8 @@ protected:
   static PLDHashOperator RemoveDisplayItemDataForFrame(nsRefPtrHashKey<DisplayItemData>* aEntry,
                                                        void* aClosure);
 
+  static PLDHashOperator DumpDisplayItemDataForFrame(nsRefPtrHashKey<DisplayItemData>* aEntry,
+                                                     void* aClosure);
   /**
    * We store one of these for each display item associated with a
    * ThebesLayer, in a hashtable that maps each ThebesLayer to an array
