@@ -882,7 +882,8 @@ pm_linux.$(OBJ_SUFFIX): CXXFLAGS += $(LINUX_HEADERS_INCLUDES)
 endif
 
 # Prepare self-hosted JS code for embedding
-export:: selfhosted.out.h
+export:: selfhosting
+selfhosting:: selfhosted.out.h
 
 selfhosting_srcs := \
   $(srcdir)/builtin/array.js \
