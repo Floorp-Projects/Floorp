@@ -17,6 +17,7 @@
     <uses-sdk android:minSdkVersion="8"
               android:targetSdkVersion="14"/>
 
+#include ../services/manifests/AnnouncementsAndroidManifest_permissions.xml.in
 #include ../services/manifests/SyncAndroidManifest_permissions.xml.in
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
@@ -169,6 +170,7 @@
           </intent-filter>
         </activity>
 
+#include ../services/manifests/AnnouncementsAndroidManifest_activities.xml.in
 #include ../services/manifests/SyncAndroidManifest_activities.xml.in
 
 #if MOZ_CRASHREPORTER
@@ -241,6 +243,7 @@
         </service>
 
 
+#include ../services/manifests/AnnouncementsAndroidManifest_services.xml.in
 #include ../services/manifests/SyncAndroidManifest_services.xml.in
     </application>
 
