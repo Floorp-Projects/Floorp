@@ -440,7 +440,7 @@ def GenerateOutput(target_list, target_dicts, data, params):
                 swapslashes(top),
                 swapslashes(src),
                 swapslashes(relative_srcdir))
-  scriptname = "$(topsrcdir)/media/webrtc/trunk/tools/gyp/pylib/gyp/generator/mozmake.py"
+  scriptname = topsrcdir_path(__file__)
   # Reassemble a commandline from parts so that all the paths are correct
   commandline = [topsrcdir_path(sys.argv[0]),
                  "--format=mozmake",
