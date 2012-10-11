@@ -849,10 +849,12 @@ static bool Match(const char *aMimeChars, size_t aMimeLen, const char *aNeedle)
 }
 
 static const char* const gCodecs[] = {
-  "avc",
-  "mp3",
-  "mp4v",
-  "mp4a",
+  "avc1.42E01E",  // H.264 Constrained Baseline Profile Level 3.0
+  "avc1.42001E",  // H.264 Baseline Profile Level 3.0
+  "avc1.42001F",  // H.264 Baseline Profile Level 3.1
+  "avc1.4D401E",  // H.264 Main Profile Level 3.0
+  "avc1.4D401F",  // H.264 Main Profile Level 3.1
+  "mp4a.40.2",    // AAC-LC
   NULL
 };
 
