@@ -48,6 +48,8 @@ protected:
 
   void GetSelection(nsIPresShell *aPresShell, nsISelectionController **aSelCon, 
                     nsISelection **aDomSel);
+  // *aNewRange may not be collapsed.  If you want to collapse it in a
+  // particular way, you need to do it yourself.
   bool IsRangeVisible(nsIPresShell *aPresShell, nsPresContext *aPresContext,
                         nsIDOMRange *aRange, bool aMustBeVisible, 
                         bool aGetTopVisibleLeaf, nsIDOMRange **aNewRange,
