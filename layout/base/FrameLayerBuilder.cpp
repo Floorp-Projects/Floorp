@@ -2005,6 +2005,10 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                                     uint32_t aFlags)
 {
   SAMPLE_LABEL("ContainerState", "ProcessDisplayItems");
+
+  const nsIFrame* lastActiveScrolledRoot = nullptr;
+  nsPoint topLeft;
+
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     nsDisplayItem::Type type = item->GetType();
     if (type == nsDisplayItem::TYPE_CLIP ||
@@ -2035,7 +2039,6 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     bool isFixed;
     bool forceInactive;
     const nsIFrame* activeScrolledRoot;
-    nsPoint topLeft;
     if (aFlags & NO_COMPONENT_ALPHA) {
       // When NO_COMPONENT_ALPHA is set, items will be flattened onto the
       // reference frame. In this case, force the active scrolled root to
@@ -2047,7 +2050,10 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     } else {
       forceInactive = false;
       isFixed = mBuilder->IsFixedItem(item, &activeScrolledRoot);
-      topLeft = activeScrolledRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
+      if (activeScrolledRoot != lastActiveScrolledRoot) {
+        lastActiveScrolledRoot = activeScrolledRoot;
+        topLeft = activeScrolledRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
+      }
     }
   
     nsAutoPtr<nsDisplayItemGeometry> geometry(item->AllocateGeometry(mBuilder));
