@@ -574,6 +574,10 @@ nsImageLoadingContent::BlockOnload(imgIRequest* aRequest)
     return NS_OK;
   }
 
+  NS_ASSERTION(!(mCurrentRequestFlags & REQUEST_BLOCKS_ONLOAD),
+               "Double BlockOnload!?");
+  mCurrentRequestFlags |= REQUEST_BLOCKS_ONLOAD;
+
   nsIDocument* doc = GetOurCurrentDoc();
   if (doc) {
     doc->BlockOnload();
@@ -588,6 +592,10 @@ nsImageLoadingContent::UnblockOnload(imgIRequest* aRequest)
   if (aRequest != mCurrentRequest) {
     return NS_OK;
   }
+
+  NS_ASSERTION(mCurrentRequestFlags & REQUEST_BLOCKS_ONLOAD,
+               "Double UnblockOnload!?");
+  mCurrentRequestFlags &= ~REQUEST_BLOCKS_ONLOAD;
 
   nsIDocument* doc = GetOurCurrentDoc();
   if (doc) {
@@ -1167,6 +1175,9 @@ nsImageLoadingContent::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     aDocument->AddImage(mCurrentRequest);
   if (mPendingRequestFlags & REQUEST_SHOULD_BE_TRACKED)
     aDocument->AddImage(mPendingRequest);
+
+  if (mCurrentRequestFlags & REQUEST_BLOCKS_ONLOAD)
+    aDocument->BlockOnload();
 }
 
 void
@@ -1186,6 +1197,9 @@ nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
     doc->RemoveImage(mCurrentRequest);
   if (mPendingRequestFlags & REQUEST_SHOULD_BE_TRACKED)
     doc->RemoveImage(mPendingRequest);
+
+  if (mCurrentRequestFlags & REQUEST_BLOCKS_ONLOAD)
+    doc->UnblockOnload(false);
 }
 
 nsresult
