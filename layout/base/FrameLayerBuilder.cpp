@@ -31,6 +31,7 @@
 #ifdef DEBUG
 #include <stdio.h>
 //#define DEBUG_INVALIDATIONS
+//#define DEBUG_DISPLAY_ITEM_DATA
 #endif
 
 using namespace mozilla::layers;
@@ -176,6 +177,17 @@ public:
     mDisplayItems.EnumerateEntries(
         FrameLayerBuilder::RemoveDisplayItemDataForFrame, nullptr);
   }
+ 
+#ifdef DEBUG_DISPLAY_ITEM_DATA
+  void Dump(const char *aPrefix = "") {
+    printf("%sLayerManagerData %p\n", aPrefix, this);
+    nsAutoCString prefix;
+    prefix += aPrefix;
+    prefix += "  ";
+    mDisplayItems.EnumerateEntries(
+        FrameLayerBuilder::DumpDisplayItemDataForFrame, (void*)prefix.get());
+  }
+#endif
 
   /**
    * Tracks which frames have layers associated with them.
@@ -857,6 +869,17 @@ FrameLayerBuilder::RemoveFrameFromLayerManager(nsIFrame* aFrame,
     arrayCopy.AppendElement(array->ElementAt(i));
   }
 
+#ifdef DEBUG_DISPLAY_ITEM_DATA
+  if (array->Length()) {
+    LayerManagerData *rootData = array->ElementAt(0)->mParent;
+    while (rootData->mParent) {
+      rootData = rootData->mParent;
+    }
+    printf("Removing frame %p - dumping display data\n", aFrame);
+    rootData->Dump();
+  }
+#endif
+
   for (uint32_t i = 0; i < array->Length(); ++i) {
     DisplayItemData* data = array->ElementAt(i);
 
@@ -1010,6 +1033,62 @@ FrameLayerBuilder::RemoveDisplayItemDataForFrame(nsRefPtrHashKey<DisplayItemData
   // and we could crash trying to check. See the definition of sDestroyedFrame.
   data->RemoveFrameData(sDestroyedFrame);
   return PL_DHASH_REMOVE;
+}
+
+/* static */ PLDHashOperator 
+FrameLayerBuilder::DumpDisplayItemDataForFrame(nsRefPtrHashKey<DisplayItemData>* aEntry,
+                                               void* aClosure)
+{
+#ifdef DEBUG_DISPLAY_ITEM_DATA
+  DisplayItemData *data = aEntry->GetKey();
+
+  nsAutoCString prefix;
+  prefix += static_cast<const char*>(aClosure);
+  
+  const char *layerState;
+  switch (data->mLayerState) {
+    case LAYER_NONE:
+      layerState = "LAYER_NONE"; break;
+    case LAYER_INACTIVE:
+      layerState = "LAYER_INACTIVE"; break;
+    case LAYER_ACTIVE:
+      layerState = "LAYER_ACTIVE"; break;
+    case LAYER_ACTIVE_FORCE:
+      layerState = "LAYER_ACTIVE_FORCE"; break;
+    case LAYER_ACTIVE_EMPTY:
+      layerState = "LAYER_ACTIVE_EMPTY"; break;
+    case LAYER_SVG_EFFECTS:
+      layerState = "LAYER_SVG_EFFECTS"; break;
+  }
+  uint32_t mask = (1 << nsDisplayItem::TYPE_BITS) - 1;
+
+  nsAutoCString str;
+  str += prefix;
+  str += nsPrintfCString("Frame %p ", data->mFrameList[0]);
+  str += nsDisplayItem::DisplayItemTypeName(static_cast<nsDisplayItem::Type>(data->mDisplayItemKey & mask));
+  if ((data->mDisplayItemKey >> nsDisplayItem::TYPE_BITS)) {
+    str += nsPrintfCString("(%i)", data->mDisplayItemKey >> nsDisplayItem::TYPE_BITS);
+  }
+  str += nsPrintfCString(", %s, Layer %p", layerState, data->mLayer.get());
+  if (data->mOptLayer) {
+    str += nsPrintfCString(", OptLayer %p", data->mOptLayer.get());
+  }
+  if (data->mInactiveManager) {
+    str += nsPrintfCString(", InactiveLayerManager %p", data->mInactiveManager.get());
+  }
+  str += "\n";
+
+  printf("%s", str.get());
+    
+  if (data->mInactiveManager) {
+    prefix += "  ";
+    printf("%sDumping inactive layer info:\n", prefix.get());
+    LayerManagerData* lmd = static_cast<LayerManagerData*>
+      (data->mInactiveManager->GetUserData(&gLayerManagerUserData));
+    lmd->Dump(prefix.get());
+  }
+#endif
+  return PL_DHASH_NEXT;
 }
 
 /* static */ PLDHashOperator
