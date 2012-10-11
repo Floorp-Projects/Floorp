@@ -58,35 +58,35 @@
 // LSB uncompressed.
 //
 // byte sliced (numValues) data format:
-//    uint32 compressed-size
+//    uint32_t compressed-size
 //    compressed-size bytes    zlib DEFLATE data
 //        0...numValues        byte MSB of 4-byte numValues data
-//    uint32 compressed-size
+//    uint32_t compressed-size
 //    compressed-size bytes    zlib DEFLATE data
 //        0...numValues        byte 2nd byte of 4-byte numValues data
-//    uint32 compressed-size
+//    uint32_t compressed-size
 //    compressed-size bytes    zlib DEFLATE data
 //        0...numValues        byte 3rd byte of 4-byte numValues data
 //    0...numValues            byte LSB of 4-byte numValues data
 //
 // Store data format:
-//    uint32 magic
-//    uint32 version
-//    uint32 numAddChunks
-//    uint32 numSubChunks
-//    uint32 numAddPrefixes
-//    uint32 numSubPrefixes
-//    uint32 numAddCompletes
-//    uint32 numSubCompletes
-//    0...numAddChunks               uint32 addChunk
-//    0...numSubChunks               uint32 subChunk
-//    byte sliced (numAddPrefixes)   uint32 add chunk of AddPrefixes
-//    byte sliced (numSubPrefixes)   uint32 add chunk of SubPrefixes
-//    byte sliced (numSubPrefixes)   uint32 sub chunk of SubPrefixes
-//    byte sliced (numSubPrefixes)   uint32 SubPrefixes
-//    0...numAddCompletes            32-byte Completions + uint32 addChunk
-//    0...numSubCompletes            32-byte Completions + uint32 addChunk
-//                                                       + uint32 subChunk
+//    uint32_t magic
+//    uint32_t version
+//    uint32_t numAddChunks
+//    uint32_t numSubChunks
+//    uint32_t numAddPrefixes
+//    uint32_t numSubPrefixes
+//    uint32_t numAddCompletes
+//    uint32_t numSubCompletes
+//    0...numAddChunks               uint32_t addChunk
+//    0...numSubChunks               uint32_t subChunk
+//    byte sliced (numAddPrefixes)   uint32_t add chunk of AddPrefixes
+//    byte sliced (numSubPrefixes)   uint32_t add chunk of SubPrefixes
+//    byte sliced (numSubPrefixes)   uint32_t sub chunk of SubPrefixes
+//    byte sliced (numSubPrefixes)   uint32_t SubPrefixes
+//    0...numAddCompletes            32-byte Completions + uint32_t addChunk
+//    0...numSubCompletes            32-byte Completions + uint32_t addChunk
+//                                                       + uint32_t subChunk
 //    16-byte MD5 of all preceding data
 
 // Name of the SafeBrowsing store
@@ -117,8 +117,8 @@ extern PRLogModuleInfo *gUrlClassifierDbServiceLog;
 namespace mozilla {
 namespace safebrowsing {
 
-const uint32 STORE_MAGIC = 0x1231af3b;
-const uint32 CURRENT_VERSION = 2;
+const uint32_t STORE_MAGIC = 0x1231af3b;
+const uint32_t CURRENT_VERSION = 2;
 
 void
 TableUpdate::NewAddPrefix(uint32_t aAddChunk, const Prefix& aHash)
@@ -314,7 +314,7 @@ HashStore::CalculateChecksum(nsAutoCString& aChecksum,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Size of MD5 hash in bytes
-  const uint32 CHECKSUM_SIZE = 16;
+  const uint32_t CHECKSUM_SIZE = 16;
 
   rv = hash->Init(nsICryptoHash::MD5);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -379,8 +379,8 @@ HashStore::ReadHashes()
 
   nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mInputStream);
 
-  uint32 offset = sizeof(Header);
-  offset += (mHeader.numAddChunks + mHeader.numSubChunks) * sizeof(uint32);
+  uint32_t offset = sizeof(Header);
+  offset += (mHeader.numAddChunks + mHeader.numSubChunks) * sizeof(uint32_t);
   nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, offset);
 
   rv = ReadAddPrefixes();
@@ -673,7 +673,7 @@ ByteSliceRead(nsIInputStream* aInStream, nsTArray<uint32_t>* aData, uint32_t cou
 
   aData->SetCapacity(count);
 
-  for (uint32 i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     aData->AppendElement((slice1[i] << 24) | (slice2[i] << 16)
                          | (slice3[i] << 8) | (slice4[i]));
   }
@@ -718,7 +718,7 @@ HashStore::ReadSubPrefixes()
   NS_ENSURE_SUCCESS(rv, rv);
 
   mSubPrefixes.SetCapacity(count);
-  for (uint32 i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     SubPrefix *sub = mSubPrefixes.AppendElement();
     sub->addChunk = addchunks[i];
     sub->prefix.FromUint32(prefixes[i]);
@@ -736,7 +736,7 @@ HashStore::WriteAddPrefixes(nsIOutputStream* aOut)
   uint32_t count = mAddPrefixes.Length();
   chunks.SetCapacity(count);
 
-  for (uint32 i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     chunks.AppendElement(mAddPrefixes[i].Chunk());
   }
 
@@ -757,7 +757,7 @@ HashStore::WriteSubPrefixes(nsIOutputStream* aOut)
   subchunks.SetCapacity(count);
   prefixes.SetCapacity(count);
 
-  for (uint32 i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     addchunks.AppendElement(mSubPrefixes[i].AddChunk());
     prefixes.AppendElement(mSubPrefixes[i].PrefixHash().ToUint32());
     subchunks.AppendElement(mSubPrefixes[i].Chunk());
@@ -828,8 +828,8 @@ template <class T>
 static void
 Erase(nsTArray<T>* array, T* iterStart, T* iterEnd)
 {
-  uint32 start = iterStart - array->Elements();
-  uint32 count = iterEnd - iterStart;
+  uint32_t start = iterStart - array->Elements();
+  uint32_t count = iterEnd - iterStart;
 
   if (count > 0) {
     array->RemoveElementsAt(start, count);
@@ -863,7 +863,7 @@ KnockoutSubs(nsTArray<TSub>* aSubs, nsTArray<TAdd>* aAdds)
 
   while (addIter != addEnd && subIter != subEnd) {
     // additer compare, so it compares on add chunk
-    int32 cmp = addIter->Compare(*subIter);
+    int32_t cmp = addIter->Compare(*subIter);
     if (cmp > 0) {
       // If |*sub_iter| < |*add_iter|, retain the sub.
       *subOut = *subIter;
@@ -900,7 +900,7 @@ RemoveMatchingPrefixes(const SubPrefixArray& aSubs, nsTArray<T>* aFullHashes)
   SubPrefix const * removeEnd = aSubs.Elements() + aSubs.Length();
 
   while (hashIter != hashEnd && removeIter != removeEnd) {
-    int32 cmp = removeIter->CompareAlt(*hashIter);
+    int32_t cmp = removeIter->CompareAlt(*hashIter);
     if (cmp > 0) {
       // Keep items less than |*removeIter|.
       *out = *hashIter;
@@ -1006,13 +1006,13 @@ HashStore::ProcessSubs()
 nsresult
 HashStore::AugmentAdds(const nsTArray<uint32_t>& aPrefixes)
 {
-  uint32 cnt = aPrefixes.Length();
+  uint32_t cnt = aPrefixes.Length();
   if (cnt != mAddPrefixes.Length()) {
     LOG(("Amount of prefixes in cache not consistent with store (%d vs %d)",
          aPrefixes.Length(), mAddPrefixes.Length()));
     return NS_ERROR_FAILURE;
   }
-  for (uint32 i = 0; i < cnt; i++) {
+  for (uint32_t i = 0; i < cnt; i++) {
     mAddPrefixes[i].prefix.FromUint32(aPrefixes[i]);
   }
   return NS_OK;

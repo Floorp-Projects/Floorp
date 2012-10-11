@@ -374,13 +374,13 @@ static bool IsCompatibleArch(nsIFile *file)
         executablePath[0] = '\0';
       }
 
-      uint32 pluginLibArchitectures;
+      uint32_t pluginLibArchitectures;
       nsresult rv = mozilla::ipc::GeckoChildProcessHost::GetArchitecturesForBinary(executablePath, &pluginLibArchitectures);
       if (NS_FAILED(rv)) {
         return false;
       }
 
-      uint32 containerArchitectures = mozilla::ipc::GeckoChildProcessHost::GetSupportedArchitecturesForProcessType(GeckoProcessType_Plugin);
+      uint32_t containerArchitectures = mozilla::ipc::GeckoChildProcessHost::GetSupportedArchitecturesForProcessType(GeckoProcessType_Plugin);
 
       // Consider the plugin architecture valid if there is any overlap in the masks.
       isPluginFile = !!(containerArchitectures & pluginLibArchitectures);

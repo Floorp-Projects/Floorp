@@ -28,7 +28,7 @@ struct tm_thread {
      * This counter suppresses tracing, in case any tracing code needs
      * to malloc.
      */
-    uint32 suppress_tracing;
+    uint32_t suppress_tracing;
 
     /* buffer for backtrace, below */
     stack_buffer_info backtrace_buf;
