@@ -126,7 +126,7 @@ protected:
   };
 
   // Cycle-collection implementation helpers
-  PR_STATIC_CALLBACK(PLDHashOperator) CompositorTableEntryTraverse(
+  static PLDHashOperator CompositorTableEntryTraverse(
       nsSMILCompositor* aCompositor, void* aArg);
 
   // Returns mDocument's refresh driver, if it's got one.
@@ -144,22 +144,22 @@ protected:
   void DoSample(bool aSkipUnchangedContainers);
 
   void RewindElements();
-  PR_STATIC_CALLBACK(PLDHashOperator) RewindNeeded(
+  static PLDHashOperator RewindNeeded(
       TimeContainerPtrKey* aKey, void* aData);
-  PR_STATIC_CALLBACK(PLDHashOperator) RewindAnimation(
+  static PLDHashOperator RewindAnimation(
       AnimationElementPtrKey* aKey, void* aData);
-  PR_STATIC_CALLBACK(PLDHashOperator) ClearRewindNeeded(
+  static PLDHashOperator ClearRewindNeeded(
       TimeContainerPtrKey* aKey, void* aData);
 
   void DoMilestoneSamples();
-  PR_STATIC_CALLBACK(PLDHashOperator) GetNextMilestone(
+  static PLDHashOperator GetNextMilestone(
       TimeContainerPtrKey* aKey, void* aData);
-  PR_STATIC_CALLBACK(PLDHashOperator) GetMilestoneElements(
+  static PLDHashOperator GetMilestoneElements(
       TimeContainerPtrKey* aKey, void* aData);
 
-  PR_STATIC_CALLBACK(PLDHashOperator) SampleTimeContainer(
+  static PLDHashOperator SampleTimeContainer(
       TimeContainerPtrKey* aKey, void* aData);
-  PR_STATIC_CALLBACK(PLDHashOperator) SampleAnimation(
+  static PLDHashOperator SampleAnimation(
       AnimationElementPtrKey* aKey, void* aData);
   static void SampleTimedElement(nsISMILAnimationElement* aElement,
                                  TimeContainerHashtable* aActiveContainers);

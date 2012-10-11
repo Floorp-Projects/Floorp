@@ -132,7 +132,7 @@ class RegExpCode
 
 
     RegExpRunStatus
-    execute(JSContext *cx, const jschar *chars, size_t length, size_t start,
+    execute(JSContext *cx, StableCharPtr chars, size_t length, size_t start,
             int *output, size_t outputCount);
 };
 
@@ -183,7 +183,7 @@ class RegExpShared
     /* Primary interface: run this regular expression on the given string. */
 
     RegExpRunStatus
-    execute(JSContext *cx, const jschar *chars, size_t length, size_t *lastIndex,
+    execute(JSContext *cx, StableCharPtr chars, size_t length, size_t *lastIndex,
             MatchPairs **output);
 
     /* Accessors */
@@ -314,11 +314,11 @@ class RegExpObject : public JSObject
      * execution, as opposed to during something like XDR.
      */
     static RegExpObject *
-    create(JSContext *cx, RegExpStatics *res, const jschar *chars, size_t length,
+    create(JSContext *cx, RegExpStatics *res, StableCharPtr chars, size_t length,
            RegExpFlag flags, frontend::TokenStream *ts);
 
     static RegExpObject *
-    createNoStatics(JSContext *cx, const jschar *chars, size_t length, RegExpFlag flags,
+    createNoStatics(JSContext *cx, StableCharPtr chars, size_t length, RegExpFlag flags,
                     frontend::TokenStream *ts);
 
     static RegExpObject *
@@ -336,7 +336,7 @@ class RegExpObject : public JSObject
      * into the |RegExpStatics| appropriately, if necessary.
      */
     RegExpRunStatus
-    execute(JSContext *cx, const jschar *chars, size_t length, size_t *lastIndex,
+    execute(JSContext *cx, StableCharPtr chars, size_t length, size_t *lastIndex,
             MatchPairs **output);
 
     /* Accessors. */

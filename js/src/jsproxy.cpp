@@ -2384,20 +2384,28 @@ Proxy::getElementIfPresent(JSContext *cx, HandleObject proxy_, HandleObject rece
                            MutableHandleValue vp, bool *present)
 {
     JS_CHECK_RECURSION(cx, return false);
+
     RootedObject proxy(cx, proxy_);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
-    bool hasOwn, status = true;
-    RootedId id(cx);
+
     if (!handler->hasPrototype()) {
-        return GetProxyHandler(proxy)->getElementIfPresent(cx, proxy, receiver, index, vp.address(), present);
-    } else if ((status = IndexToId(cx, index, id.address())) &&
-               (status = handler->hasOwn(cx, proxy, id, &hasOwn)) && hasOwn)
-    {
+        return GetProxyHandler(proxy)->getElementIfPresent(cx, proxy, receiver, index,
+                                                           vp.address(), present);
+    }
+
+    RootedId id(cx);
+    if (!IndexToId(cx, index, id.address()))
+        return false;
+
+    bool hasOwn;
+    if (!handler->hasOwn(cx, proxy, id, &hasOwn))
+        return false;
+
+    if (hasOwn) {
         *present = true;
         return GetProxyHandler(proxy)->get(cx, proxy, receiver, id, vp.address());
-    } else if (!status) {
-        return false;
     }
+
     INVOKE_ON_PROTOTYPE(cx, handler, proxy,
                         JSObject::getElementIfPresent(cx, proto, receiver, index, vp, present));
 }

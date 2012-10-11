@@ -963,15 +963,8 @@ class IDLType(IDLObject):
         assert False # Override me!
 
     def treatNonCallableAsNull(self):
-        if not (self.nullable() and self.tag() == IDLType.Tags.callback):
-            raise WebIDLError("Type %s cannot be TreatNonCallableAsNull" % self,
-                              [self.location])
-
-        return hasattr(self, "_treatNonCallableAsNull")
-
-    def markTreatNonCallableAsNull(self):
-        assert not self.treatNonCallableAsNull()
-        self._treatNonCallableAsNull = True
+        assert self.tag() == IDLType.Tags.callback
+        return self.nullable() and self.inner._treatNonCallableAsNull
 
     def addExtendedAttributes(self, attrs):
         assert len(attrs) == 0
@@ -1999,7 +1992,8 @@ class IDLAttribute(IDLInterfaceMember):
     def handleExtendedAttribute(self, attr):
         identifier = attr.identifier()
         if identifier == "TreatNonCallableAsNull":
-            self.type.markTreatNonCallableAsNull();
+            raise WebIDLError("TreatNonCallableAsNull cannot be specified on attributes",
+                              [attr.location, self.location])
         elif identifier == "SetterInfallible" and self.readonly:
             raise WebIDLError("Readonly attributes must not be flagged as "
                               "[SetterInfallible]",
@@ -2114,6 +2108,8 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
             for argument in arguments:
                 argument.resolve(self)
 
+        self._treatNonCallableAsNull = False
+
     def isCallback(self):
         return True
 
@@ -2152,6 +2148,16 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
             return other.isDistinguishableFrom(self)
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isNonCallbackInterface() or other.isDate())
+
+    def addExtendedAttributes(self, attrs):
+        unhandledAttrs = []
+        for attr in attrs:
+            if attr.identifier() == "TreatNonCallableAsNull":
+                self._treatNonCallableAsNull = True
+            else:
+                unhandledAttrs.append(attr)
+        if len(unhandledAttrs) != 0:
+            IDLType.addExtendedAttributes(self, unhandledAttrs)
 
 class IDLMethodOverload:
     """

@@ -2326,6 +2326,18 @@ nsDownload::SetState(DownloadState aState)
             }
 #endif
           }
+#ifdef MOZ_ENABLE_GIO
+          // Use GIO to store the source URI for later display in the file manager.
+          GFile* gio_file = g_file_new_for_path(NS_ConvertUTF16toUTF8(path).get());
+          nsCString source_uri;
+          mSource->GetSpec(source_uri);
+
+          g_file_set_attribute(gio_file, "metadata::download-uri",
+                               G_FILE_ATTRIBUTE_TYPE_STRING,
+                               (gpointer)source_uri.get(),
+                               G_FILE_QUERY_INFO_NONE, NULL, NULL);
+          g_object_unref(gio_file);
+#endif
         }
 #endif
 #ifdef XP_MACOSX

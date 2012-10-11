@@ -12,10 +12,14 @@ const Cc = Components.classes;
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 const PREF_OVERRIDES_ENABLED = "general.useragent.site_specific_overrides";
+const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
+                     .getService(Ci.nsIHttpProtocolHandler)
+                     .userAgent;
 
 var gPrefBranch;
 var gOverrides;
 var gInitialized = false;
+var gComplexOverrides = [];
 
 var UserAgentOverrides = {
   init: function uao_init() {
@@ -31,6 +35,10 @@ var UserAgentOverrides = {
     Services.obs.addObserver(HTTP_on_modify_request, "http-on-modify-request", false);
 
     buildOverrides();
+  },
+
+  addComplexOverride: function uao_addComplexOverride(callback) {
+    gComplexOverrides.push(callback);
   },
 
   uninit: function uao_uninit() {
@@ -52,9 +60,6 @@ function buildOverrides() {
   if (!Services.prefs.getBoolPref(PREF_OVERRIDES_ENABLED))
     return;
 
-  const defaultUA = Cc["@mozilla.org/network/protocol;1?name=http"]
-                      .getService(Ci.nsIHttpProtocolHandler)
-                      .userAgent;
   let domains = gPrefBranch.getChildList("");
 
   for (let domain of domains) {
@@ -62,7 +67,7 @@ function buildOverrides() {
 
     let [search, replace] = override.split("#", 2);
     if (search && replace) {
-      gOverrides[domain] = defaultUA.replace(new RegExp(search, "g"), replace);
+      gOverrides[domain] = DEFAULT_UA.replace(new RegExp(search, "g"), replace);
     } else {
       gOverrides[domain] = override;
     }
@@ -77,7 +82,15 @@ function HTTP_on_modify_request(aSubject, aTopic, aData) {
     if (host == domain ||
         host.endsWith("." + domain)) {
       channel.setRequestHeader("User-Agent", gOverrides[domain], false);
-      break;
+      return;
+    }
+  }
+
+  for (let callback of gComplexOverrides) {
+    let modifiedUA = callback(channel, DEFAULT_UA);
+    if (modifiedUA) {
+      channel.setRequestHeader("User-Agent", modifiedUA, false);
+      return;
     }
   }
 }

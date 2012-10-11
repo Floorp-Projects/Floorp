@@ -2,11 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"
 #include "mozilla/SHA1.h"
 
-using namespace mozilla;
+using mozilla::SHA1Sum;
 
-static unsigned int TestV[1024] = {
+static unsigned int testV[1024] = {
   0x048edc1a, 0x4345588c, 0x0ef03cbf, 0x1d6438f5, 0x094e0a1e, 0x68535f60,
   0x14e8c927, 0x60190043, 0x5d640ab7, 0x73dc7c62, 0x364223f9, 0x47320292,
   0x3924cae0, 0x5f6b26d3, 0x5efa04ef, 0x7aab361e, 0x2773b1aa, 0x1631b07d,
@@ -180,20 +181,24 @@ static unsigned int TestV[1024] = {
   0x236f5e8d, 0x1a4b4495, 0x360bd008, 0x32227d40
 };
 
-int main()
+int
+main()
 {
-  SHA1Sum S;
-  unsigned char hash[20];
-  S.update((const unsigned char*) TestV, sizeof(TestV));
-  S.finish(hash);
-  const unsigned char expected[20] = {
-    0xc8, 0xf2, 0x09, 0x59, 0x4e, 0x64, 0x40, 0xaa, 0x7b, 0xf7, 0xb8, 0xe0,
-    0xfa, 0x44, 0xb2, 0x31, 0x95, 0xad, 0x94, 0x81};
+  SHA1Sum sum;
+  SHA1Sum::Hash hash;
+  sum.update(reinterpret_cast<const uint8_t*>(testV), sizeof(testV));
+  sum.finish(hash);
 
-  for (unsigned int i = 0; i < 20; ++i) {
-    if (hash[i] != expected[i]) {
-      return 1;
-    }
-  }
+  static const uint8_t expected[20] =
+    { 0xc8, 0xf2, 0x09, 0x59, 0x4e, 0x64, 0x40, 0xaa, 0x7b, 0xf7, 0xb8, 0xe0,
+      0xfa, 0x44, 0xb2, 0x31, 0x95, 0xad, 0x94, 0x81 };
+
+  MOZ_STATIC_ASSERT(sizeof(expected) == sizeof(SHA1Sum::Hash),
+                    "expected-data size should be the same as the actual hash "
+                    "size");
+
+  for (size_t i = 0; i < SHA1Sum::HashSize; i++)
+    MOZ_ASSERT(hash[i] == expected[i]);
+
   return 0;
 }

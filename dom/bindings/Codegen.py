@@ -1770,6 +1770,10 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         return CGWrapper(CGGeneric(
                 failureCode or
                 'return ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' % typeName), post="\n")
+    def onFailureNotCallable(failureCode):
+        return CGWrapper(CGGeneric(
+                failureCode or
+                'return ThrowErrorMessage(cx, MSG_NOT_CALLABLE);'), post="\n")
 
     # A helper function for handling default values.  Takes a template
     # body and the C++ code to set the default value and wraps the
@@ -2393,23 +2397,41 @@ for (uint32_t i = 0; i < length; ++i) {
 
     if type.isCallback():
         assert not isEnforceRange and not isClamp
+        assert not type.treatNonCallableAsNull() or type.nullable()
 
         if isMember:
             raise TypeError("Can't handle member callbacks; need to sort out "
                             "rooting issues")
-        # XXXbz we're going to assume that callback types are always
-        # nullable and always have [TreatNonCallableAsNull] for now.
-        haveCallable = "${val}.isObject() && JS_ObjectIsCallable(cx, &${val}.toObject())"
-        if defaultValue is not None:
-            assert(isinstance(defaultValue, IDLNullValue))
-            haveCallable = "${haveValue} && " + haveCallable
-        return (
-            "if (%s) {\n"
-            "  ${declName} = &${val}.toObject();\n"
-            "} else {\n"
-            "  ${declName} = NULL;\n"
-            "}" % haveCallable,
-            CGGeneric("JSObject*"), None, isOptional)
+
+        if type.nullable():
+            declType = CGGeneric("JSObject*")
+        else:
+            declType = CGGeneric("NonNull<JSObject>")
+
+        if type.treatNonCallableAsNull():
+            haveCallable = "JS_ObjectIsCallable(cx, &${val}.toObject())"
+            if not isDefinitelyObject:
+                haveCallable = "${val}.isObject() && " + haveCallable
+            if defaultValue is not None:
+                assert(isinstance(defaultValue, IDLNullValue))
+                haveCallable = "${haveValue} && " + haveCallable
+            template = (
+                "if (%s) {\n"
+                "  ${declName} = &${val}.toObject();\n"
+                "} else {\n"
+                "  ${declName} = nullptr;\n"
+                "}" % haveCallable)
+        else:
+            template = wrapObjectTemplate(
+                "if (JS_ObjectIsCallable(cx, &${val}.toObject())) {\n"
+                "  ${declName} = &${val}.toObject();\n"
+                "} else {\n"
+                "%s"
+                "}" % CGIndenter(onFailureNotCallable(failureCode)).define(),
+                isDefinitelyObject, type,
+                "${declName} = nullptr",
+                failureCode)
+        return (template, declType, None, isOptional)
 
     if type.isAny():
         assert not isEnforceRange and not isClamp
@@ -2749,16 +2771,13 @@ if (%s.IsNull()) {
             type.inner, descriptorProvider,
             {
                 'result' :  "%s[i]" % result,
-                'successCode': ("if (!JS_DefineElement(cx, returnArray, i, tmp,\n"
-                                "                      NULL, NULL, JSPROP_ENUMERATE)) {\n"
-                                "  return false;\n"
-                                "}"),
+                'successCode': "break;",
                 'jsvalRef': "tmp",
                 'jsvalPtr': "&tmp",
                 'isCreator': isCreator
                 }
             )
-        innerTemplate = CGIndenter(CGGeneric(innerTemplate)).define()
+        innerTemplate = CGIndenter(CGGeneric(innerTemplate), 4).define()
         return (("""
 uint32_t length = %s.Length();
 JSObject *returnArray = JS_NewArrayObject(cx, length, NULL);
@@ -2767,7 +2786,15 @@ if (!returnArray) {
 }
 jsval tmp;
 for (uint32_t i = 0; i < length; ++i) {
+  // Control block to let us common up the JS_DefineElement calls when there
+  // are different ways to succeed at wrapping the object.
+  do {
 %s
+  } while (0);
+  if (!JS_DefineElement(cx, returnArray, i, tmp,
+                        nullptr, nullptr, JSPROP_ENUMERATE)) {
+    return false;
+  }
 }\n""" % (result, innerTemplate)) + setValue("JS::ObjectValue(*returnArray)"), False)
 
     if type.isGeckoInterface():
@@ -2778,8 +2805,11 @@ for (uint32_t i = 0; i < length; ++i) {
                             "}\n")
         else:
             wrappingCode = ""
-        if (not descriptor.interface.isExternal() and
-            not descriptor.interface.isCallback()):
+
+        if descriptor.interface.isCallback():
+            wrap = "WrapCallbackInterface(cx, obj, %s, ${jsvalPtr})" % result
+            failed = None
+        elif not descriptor.interface.isExternal():
             if descriptor.wrapperCache:
                 wrapMethod = "WrapNewBindingObject"
             else:
@@ -2802,14 +2832,15 @@ for (uint32_t i = 0; i < length; ++i) {
                                     descriptor.interface.identifier.name)
                 # Try old-style wrapping for bindings which might be preffed off.
                 failed = wrapAndSetPtr("HandleNewBindingWrappingFailure(cx, ${obj}, %s, ${jsvalPtr})" % result)
-            wrappingCode += wrapAndSetPtr(wrap, failed)
         else:
             if descriptor.notflattened:
                 getIID = "&NS_GET_IID(%s), " % descriptor.nativeType
             else:
                 getIID = ""
             wrap = "WrapObject(cx, ${obj}, %s, %s${jsvalPtr})" % (result, getIID)
-            wrappingCode += wrapAndSetPtr(wrap)
+            failed = None
+
+        wrappingCode += wrapAndSetPtr(wrap, failed)
         return (wrappingCode, False)
 
     if type.isString():
@@ -3849,7 +3880,9 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
         return CGGeneric(type.inner.identifier.name)
 
     if type.isCallback():
-        return CGGeneric("JSObject*")
+        if type.nullable():
+            return CGGeneric("JSObject*")
+        return CGGeneric("JSObject&")
 
     if type.isAny():
         return CGGeneric("JS::Value")

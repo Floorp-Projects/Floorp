@@ -730,8 +730,15 @@ add_test(function test_exception_in_onProgress() {
 add_test(function test_new_channel() {
   _("Ensure a redirect to a new channel is handled properly.");
 
+  function checkUA(metadata) {
+    let ua = metadata.getHeader("User-Agent");
+    _("User-Agent is " + ua);
+    do_check_eq("foo bar", ua);
+  }
+
   let redirectRequested = false;
   function redirectHandler(metadata, response) {
+    checkUA(metadata);
     redirectRequested = true;
 
     let body = "Redirecting";
@@ -742,12 +749,14 @@ add_test(function test_new_channel() {
 
   let resourceRequested = false;
   function resourceHandler(metadata, response) {
+    checkUA(metadata);
     resourceRequested = true;
 
     let body = "Test";
     response.setHeader("Content-Type", "text/plain");
     response.bodyOutputStream.write(body, body.length);
   }
+
   let server1 = httpd_setup({"/redirect": redirectHandler}, 8080);
   let server2 = httpd_setup({"/resource": resourceHandler}, 8081);
 
@@ -758,11 +767,25 @@ add_test(function test_new_channel() {
   }
 
   let request = new RESTRequest("http://localhost:8080/redirect");
+  request.setHeader("User-Agent", "foo bar");
+
+  // Swizzle in our own fakery, because this redirect is neither
+  // internal nor URI-preserving. RESTRequest's policy is to only
+  // copy headers under certain circumstances.
+  let protoMethod = request.shouldCopyOnRedirect;
+  request.shouldCopyOnRedirect = function wrapped(o, n, f) {
+    // Check the default policy.
+    do_check_false(protoMethod.call(this, o, n, f));
+    return true;
+  };
+
   request.get(function onComplete(error) {
     let response = this.response;
 
     do_check_eq(200, response.status);
     do_check_eq("Test", response.body);
+    do_check_true(redirectRequested);
+    do_check_true(resourceRequested);
 
     advance();
   });

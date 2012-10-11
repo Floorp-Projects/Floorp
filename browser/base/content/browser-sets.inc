@@ -102,7 +102,12 @@
     <command id="Tools:ErrorConsole" oncommand="toJavaScriptConsole()" hidden="true"/>
     <command id="Tools:Sanitize"
      oncommand="Cc['@mozilla.org/browser/browserglue;1'].getService(Ci.nsIBrowserGlue).sanitize(window);"/>
-    <command id="Tools:PrivateBrowsing" oncommand="gPrivateBrowsingUI.toggleMode();"/>
+    <command id="Tools:PrivateBrowsing"
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+      oncommand="OpenBrowserWindow({private: true});"/>
+#else
+      oncommand="gPrivateBrowsingUI.toggleMode();"/>
+#endif
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
     <command id="History:UndoCloseWindow" oncommand="undoCloseWindow();"/>
     <command id="Browser:ToggleAddonBar" oncommand="toggleAddonBar();"/>

@@ -125,6 +125,7 @@ public class ExtendedJSONObject {
 
   /**
    * Return a server timestamp value as milliseconds since epoch.
+   *
    * @param key
    * @return A Long, or null if the value is non-numeric or doesn't exist.
    */
@@ -164,6 +165,18 @@ public class ExtendedJSONObject {
     @SuppressWarnings("unchecked")
     Map<Object, Object> map = this.object;
     map.put(key, value);
+  }
+
+  /**
+   * Remove key-value pair from JSONObject.
+   *
+   * @param key
+   *          to be removed.
+   * @return true if key exists and was removed, false otherwise.
+   */
+  public boolean remove(String key) {
+    Object res = this.object.remove(key);
+    return (res != null);
   }
 
   public ExtendedJSONObject getObject(String key) throws NonObjectJSONException {

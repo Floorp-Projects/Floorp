@@ -59,8 +59,8 @@ dictionary MozXMLHttpRequestParameters
  Constructor(DOMString ignored)]
 interface XMLHttpRequest : XMLHttpRequestEventTarget {
   // event handler
-  [TreatNonCallableAsNull, SetterThrows, GetterThrows=Workers]
-  attribute Function? onreadystatechange;
+  [SetterThrows, GetterThrows=Workers]
+  attribute EventHandler onreadystatechange;
 
   // states
   const unsigned short UNSENT = 0;
