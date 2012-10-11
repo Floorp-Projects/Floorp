@@ -316,6 +316,7 @@ function testChildList5() {
   var c4 = document.createElement("div");
   var c5 = document.createElement("div");
   var df = document.createDocumentFragment();
+  var emptyDF = document.createDocumentFragment();
   var dfc1 = df.appendChild(document.createElement("div"));
   var dfc2 = df.appendChild(document.createElement("div"));
   var dfc3 = df.appendChild(document.createElement("div"));
@@ -358,6 +359,7 @@ function testChildList5() {
   div.appendChild(c4);
   div.appendChild(c5);
   div.replaceChild(df, c4);
+  div.appendChild(emptyDF); // empty document shouldn't cause mutation records
 }
 
 function testAdoptNode() {
@@ -385,8 +387,9 @@ function testOuterHTML() {
   var d1 = doc.body.appendChild(document.createElement("div"));
   var d2 = doc.body.appendChild(document.createElement("div"));
   var d3 = doc.body.appendChild(document.createElement("div"));
+  var d4 = doc.body.appendChild(document.createElement("div"));
   m = new M(function(records, observer) {
-      is(records.length, 3, "Should have 1 record");
+      is(records.length, 4, "Should have 1 record");
       is(records[0].removedNodes.length, 1, "Should have 1 removed nodes");
       is(records[0].addedNodes.length, 2, "Should have 2 added nodes");
       is(records[0].previousSibling, null, "");
@@ -398,7 +401,11 @@ function testOuterHTML() {
       is(records[2].removedNodes.length, 1, "Should have 1 removed nodes");
       is(records[2].addedNodes.length, 2, "Should have 2 added nodes");
       is(records[2].previousSibling, records[1].addedNodes[1], "");
-      is(records[2].nextSibling, null, "");
+      is(records[2].nextSibling, d4, "");
+      is(records[3].removedNodes.length, 1, "Should have 1 removed nodes");
+      is(records[3].addedNodes.length, 0);
+      is(records[3].previousSibling, records[2].addedNodes[1], "");
+      is(records[3].nextSibling, null, "");
       observer.disconnect();
       then(testInsertAdjacentHTML);
       m = null;
@@ -407,6 +414,7 @@ function testOuterHTML() {
   d1.outerHTML = "<div>1</div><div>1</div>";
   d2.outerHTML = "<div>2</div><div>2</div>";
   d3.outerHTML = "<div>3</div><div>3</div>";
+  d4.outerHTML = "";
 }
 
 function testInsertAdjacentHTML() {
