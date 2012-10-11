@@ -553,6 +553,28 @@ function test_iter_dir()
   });
   iterator.close();
 
+  //test for prototype |OS.File.DirectoryIterator.unixAsFile|
+  if ("unixAsFile" in OS.File.DirectoryIterator.prototype) {
+    ok(true, "testing property unixAsFile");
+    let path = OS.Path.join("chrome", "toolkit", "components", "osfile", "tests", "mochi");
+    iterator = new OS.File.DirectoryIterator(path);
+
+    let dir_file = iterator.unixAsFile();// return |File|
+    let stat0 = dir_file.stat();
+    let stat1 = OS.File.stat(path);
+
+    let unix_info_to_string = function unix_info_to_string(info) {
+      return "| " + info.unixMode + " | " + info.unixOwner + " | " + info.unixGroup + " | " + info.creationDate + " | " + info.lastModificationDate + " | " + info.lastAccessDate + " | " + info.size + " |";
+    };
+
+    let s0_string = unix_info_to_string(stat0);
+    let s1_string = unix_info_to_string(stat1);
+
+    ok(stat0.isDir, "unixAsFile returned a directory");
+    is(s0_string, s1_string, "unixAsFile returned the correct file");
+    dir_file.close();
+    iterator.close();
+  }
   ok(true, "test_iter_dir: Complete");
 }
 
