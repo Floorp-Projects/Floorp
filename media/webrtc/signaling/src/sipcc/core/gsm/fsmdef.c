@@ -6168,7 +6168,7 @@ fsmdef_ev_hold_pending_feature (sm_event_t *event)
             feature_data.hold.call_info.data.call_info_feat_data.swap = FALSE;
             feature_data.hold.call_info.data.call_info_feat_data.protect = FALSE;
             sm_rc = fsm_hold_local(fcb, &feature_data, TRUE);
-            break;
+            return sm_rc;
 
         case CC_FEATURE_END_CALL:
             sm_rc = fsmdef_release_call(fcb, msg);
