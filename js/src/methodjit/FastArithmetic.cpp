@@ -353,7 +353,7 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
     types::TypeSet *resultTypes = pushedTypeSet(0);
     if (resultTypes && !resultTypes->hasType(types::Type::DoubleType())) {
         /*
-         * Call a stub and try harder to convert to int32, failing that trigger
+         * Call a stub and try harder to convert to int32_t, failing that trigger
          * recompilation of this script.
          */
         stubcc.linkExit(masm.jump(), Uses(2));

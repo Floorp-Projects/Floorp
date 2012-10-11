@@ -27,9 +27,9 @@ namespace mozilla {
 namespace safebrowsing {
 
 // Updates will fail if fed chunks larger than this
-const uint32 MAX_CHUNK_SIZE = (1024 * 1024);
+const uint32_t MAX_CHUNK_SIZE = (1024 * 1024);
 
-const uint32 DOMAIN_SIZE = 4;
+const uint32_t DOMAIN_SIZE = 4;
 
 // Parse one stringified range of chunks of the form "n" or "n-m" from a
 // comma-separated list of chunks.  Upon return, 'begin' will point to the
@@ -431,7 +431,7 @@ ProtocolParser::ProcessPlaintextChunk(const nsACString& aChunk)
   ParseString(PromiseFlatCString(aChunk), '\n', lines);
 
   // non-hashed tables need to be hashed
-  for (uint32 i = 0; i < lines.Length(); i++) {
+  for (uint32_t i = 0; i < lines.Length(); i++) {
     nsCString& line = lines[i];
 
     if (mChunkState.type == CHUNK_ADD) {
@@ -459,7 +459,7 @@ ProtocolParser::ProcessPlaintextChunk(const nsACString& aChunk)
       line.BeginReading(begin);
       line.EndReading(end);
       iter = begin;
-      uint32 addChunk;
+      uint32_t addChunk;
       if (!FindCharInReadable(':', iter, end) ||
           PR_sscanf(lines[i].get(), "%d:", &addChunk) != 1) {
         NS_WARNING("Received sub chunk without associated add chunk.");
@@ -507,7 +507,7 @@ ProtocolParser::ProcessShaChunk(const nsACString& aChunk)
     start += DOMAIN_SIZE;
 
     // Then a count of entries.
-    uint8 numEntries = static_cast<uint8>(aChunk[start]);
+    uint8_t numEntries = static_cast<uint8_t>(aChunk[start]);
     start++;
 
     nsresult rv;
@@ -557,7 +557,7 @@ ProtocolParser::ProcessHostAdd(const Prefix& aDomain, uint8_t aNumEntries,
     return NS_ERROR_FAILURE;
   }
 
-  for (uint8 i = 0; i < aNumEntries; i++) {
+  for (uint8_t i = 0; i < aNumEntries; i++) {
     Prefix hash;
     hash.Assign(Substring(aChunk, *aStart, PREFIX_SIZE));
     nsresult rv = LookupCache::KeyedHash(hash.ToUint32(), domHash, mHashKey, &codedHash,
@@ -591,7 +591,7 @@ ProtocolParser::ProcessHostSub(const Prefix& aDomain, uint8_t aNumEntries,
     const nsCSubstring& addChunkStr = Substring(aChunk, *aStart, 4);
     *aStart += 4;
 
-    uint32 addChunk;
+    uint32_t addChunk;
     memcpy(&addChunk, addChunkStr.BeginReading(), 4);
     addChunk = PR_ntohl(addChunk);
 
@@ -614,11 +614,11 @@ ProtocolParser::ProcessHostSub(const Prefix& aDomain, uint8_t aNumEntries,
     return NS_ERROR_FAILURE;
   }
 
-  for (uint8 i = 0; i < aNumEntries; i++) {
+  for (uint8_t i = 0; i < aNumEntries; i++) {
     const nsCSubstring& addChunkStr = Substring(aChunk, *aStart, 4);
     *aStart += 4;
 
-    uint32 addChunk;
+    uint32_t addChunk;
     memcpy(&addChunk, addChunkStr.BeginReading(), 4);
     addChunk = PR_ntohl(addChunk);
 
@@ -660,7 +660,7 @@ ProtocolParser::ProcessHostAddComplete(uint8_t aNumEntries,
     return NS_ERROR_FAILURE;
   }
 
-  for (uint8 i = 0; i < aNumEntries; i++) {
+  for (uint8_t i = 0; i < aNumEntries; i++) {
     Completion hash;
     hash.Assign(Substring(aChunk, *aStart, COMPLETE_SIZE));
     mTableUpdate->NewAddComplete(mChunkState.num, hash);
@@ -696,7 +696,7 @@ ProtocolParser::ProcessHostSubComplete(uint8_t aNumEntries,
     const nsCSubstring& addChunkStr = Substring(aChunk, *aStart, 4);
     *aStart += 4;
 
-    uint32 addChunk;
+    uint32_t addChunk;
     memcpy(&addChunk, addChunkStr.BeginReading(), 4);
     addChunk = PR_ntohl(addChunk);
 
@@ -709,7 +709,7 @@ ProtocolParser::ProcessHostSubComplete(uint8_t aNumEntries,
 bool
 ProtocolParser::NextLine(nsACString& line)
 {
-  int32 newline = mPending.FindChar('\n');
+  int32_t newline = mPending.FindChar('\n');
   if (newline == kNotFound) {
     return false;
   }
@@ -721,7 +721,7 @@ ProtocolParser::NextLine(nsACString& line)
 void
 ProtocolParser::CleanupUpdates()
 {
-  for (uint32 i = 0; i < mTableUpdates.Length(); i++) {
+  for (uint32_t i = 0; i < mTableUpdates.Length(); i++) {
     delete mTableUpdates[i];
   }
   mTableUpdates.Clear();
@@ -730,7 +730,7 @@ ProtocolParser::CleanupUpdates()
 TableUpdate *
 ProtocolParser::GetTableUpdate(const nsACString& aTable)
 {
-  for (uint32 i = 0; i < mTableUpdates.Length(); i++) {
+  for (uint32_t i = 0; i < mTableUpdates.Length(); i++) {
     if (aTable.Equals(mTableUpdates[i]->TableName())) {
       return mTableUpdates[i];
     }

@@ -13,7 +13,7 @@
 
 #include "mozilla/StandardInteger.h"
 
-extern "C" uint32
+extern "C" uint32_t
 invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
 {
     // Count a word for a0 even though it's never stored or loaded

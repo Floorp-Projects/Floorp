@@ -131,14 +131,14 @@ private:
   nsresult ProcessSubs();
 
   struct Header {
-    uint32 magic;
-    uint32 version;
-    uint32 numAddChunks;
-    uint32 numSubChunks;
-    uint32 numAddPrefixes;
-    uint32 numSubPrefixes;
-    uint32 numAddCompletes;
-    uint32 numSubCompletes;
+    uint32_t magic;
+    uint32_t version;
+    uint32_t numAddChunks;
+    uint32_t numSubChunks;
+    uint32_t numAddPrefixes;
+    uint32_t numSubPrefixes;
+    uint32_t numAddCompletes;
+    uint32_t numSubCompletes;
   };
 
   Header mHeader;

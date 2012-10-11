@@ -25,7 +25,7 @@
 #endif
 
 /* Specify explicitly a symbol for this function, don't try to guess the c++ mangled symbol.  */
-static nsresult PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint32_t* args) asm("_PrepareAndDispatch")
+static nsresult PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args) asm("_PrepareAndDispatch")
 DONT_DROP_OR_WARN;
 
 #ifdef __ARM_EABI__
@@ -42,7 +42,7 @@ DONT_DROP_OR_WARN;
 #endif
 
 static nsresult
-PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint32_t* args)
+PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args)
 {
 #define PARAM_BUFFER_COUNT     16
 

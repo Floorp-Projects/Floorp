@@ -158,7 +158,7 @@ nsStructuredCloneContainer::GetSerializedNBytes(uint64_t *aSize)
   NS_ENSURE_ARG_POINTER(aSize);
 
   // mSize is a size_t, while aSize is a uint64_t.  We rely on an implicit cast
-  // here so that we'll get a compile error if a size_t-to-uint64 cast is
+  // here so that we'll get a compile error if a size_t-to-uint64_t cast is
   // narrowing.
   *aSize = mSize;
 

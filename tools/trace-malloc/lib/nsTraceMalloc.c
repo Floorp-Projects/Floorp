@@ -96,8 +96,8 @@ struct logfile {
     char        *buf;
     int         bufsize;
     int         pos;
-    uint32      size;
-    uint32      simsize;
+    uint32_t      size;
+    uint32_t      simsize;
     logfile     *next;
     logfile     **prevp;
 };
@@ -125,12 +125,12 @@ static char      sdlogname[PATH_MAX] = ""; /* filename for shutdown leak log */
  * It must default to zero, since it can be tested by the Linux malloc
  * hooks before NS_TraceMallocStartup sets it.
  */
-static uint32 tracing_enabled = 0;
+static uint32_t tracing_enabled = 0;
 
 /*
  * Control whether we should log stacks
  */
-static uint32 stacks_enabled = 1;
+static uint32_t stacks_enabled = 1;
 
 /*
  * This lock must be held while manipulating the calltree, the
@@ -268,13 +268,13 @@ tm_get_thread(void)
 }
 
 /* We don't want more than 32 logfiles open at once, ok? */
-typedef uint32          lfd_set;
+typedef uint32_t          lfd_set;
 
 #define LFD_SET_STATIC_INITIALIZER 0
 #define LFD_SET_SIZE    32
 
 #define LFD_ZERO(s)     (*(s) = 0)
-#define LFD_BIT(i)      ((uint32)1 << (i))
+#define LFD_BIT(i)      ((uint32_t)1 << (i))
 #define LFD_TEST(i,s)   (LFD_BIT(i) & *(s))
 #define LFD_SET(i,s)    (*(s) |= LFD_BIT(i))
 #define LFD_CLR(i,s)    (*(s) &= ~LFD_BIT(i))
@@ -382,7 +382,7 @@ static void log_filename(logfile* fp, const char* filename)
     log_string(fp, filename);
 }
 
-static void log_uint32(logfile *fp, uint32 ival)
+static void log_uint32(logfile *fp, uint32_t ival)
 {
     if (ival < 0x80) {
         /* 0xxx xxxx */
@@ -412,57 +412,57 @@ static void log_uint32(logfile *fp, uint32 ival)
     }
 }
 
-static void log_event1(logfile *fp, char event, uint32 serial)
+static void log_event1(logfile *fp, char event, uint32_t serial)
 {
     log_byte(fp, event);
-    log_uint32(fp, (uint32) serial);
+    log_uint32(fp, (uint32_t) serial);
 }
 
-static void log_event2(logfile *fp, char event, uint32 serial, size_t size)
+static void log_event2(logfile *fp, char event, uint32_t serial, size_t size)
 {
     log_event1(fp, event, serial);
-    log_uint32(fp, (uint32) size);
+    log_uint32(fp, (uint32_t) size);
 }
 
-static void log_event3(logfile *fp, char event, uint32 serial, size_t oldsize,
+static void log_event3(logfile *fp, char event, uint32_t serial, size_t oldsize,
                        size_t size)
 {
     log_event2(fp, event, serial, oldsize);
-    log_uint32(fp, (uint32) size);
+    log_uint32(fp, (uint32_t) size);
 }
 
-static void log_event4(logfile *fp, char event, uint32 serial, uint32 ui2,
-                       uint32 ui3, uint32 ui4)
+static void log_event4(logfile *fp, char event, uint32_t serial, uint32_t ui2,
+                       uint32_t ui3, uint32_t ui4)
 {
     log_event3(fp, event, serial, ui2, ui3);
     log_uint32(fp, ui4);
 }
 
-static void log_event5(logfile *fp, char event, uint32 serial, uint32 ui2,
-                       uint32 ui3, uint32 ui4, uint32 ui5)
+static void log_event5(logfile *fp, char event, uint32_t serial, uint32_t ui2,
+                       uint32_t ui3, uint32_t ui4, uint32_t ui5)
 {
     log_event4(fp, event, serial, ui2, ui3, ui4);
     log_uint32(fp, ui5);
 }
 
-static void log_event6(logfile *fp, char event, uint32 serial, uint32 ui2,
-                       uint32 ui3, uint32 ui4, uint32 ui5, uint32 ui6)
+static void log_event6(logfile *fp, char event, uint32_t serial, uint32_t ui2,
+                       uint32_t ui3, uint32_t ui4, uint32_t ui5, uint32_t ui6)
 {
     log_event5(fp, event, serial, ui2, ui3, ui4, ui5);
     log_uint32(fp, ui6);
 }
 
-static void log_event7(logfile *fp, char event, uint32 serial, uint32 ui2,
-                       uint32 ui3, uint32 ui4, uint32 ui5, uint32 ui6,
-                       uint32 ui7)
+static void log_event7(logfile *fp, char event, uint32_t serial, uint32_t ui2,
+                       uint32_t ui3, uint32_t ui4, uint32_t ui5, uint32_t ui6,
+                       uint32_t ui7)
 {
     log_event6(fp, event, serial, ui2, ui3, ui4, ui5, ui6);
     log_uint32(fp, ui7);
 }
 
-static void log_event8(logfile *fp, char event, uint32 serial, uint32 ui2,
-                       uint32 ui3, uint32 ui4, uint32 ui5, uint32 ui6,
-                       uint32 ui7, uint32 ui8)
+static void log_event8(logfile *fp, char event, uint32_t serial, uint32_t ui2,
+                       uint32_t ui3, uint32_t ui4, uint32_t ui5, uint32_t ui6,
+                       uint32_t ui7, uint32_t ui8)
 {
     log_event7(fp, event, serial, ui2, ui3, ui4, ui5, ui6, ui7);
     log_uint32(fp, ui8);
@@ -472,7 +472,7 @@ typedef struct callsite callsite;
 
 struct callsite {
     void*       pc;
-    uint32      serial;
+    uint32_t      serial;
     lfd_set     lfdset;
     const char  *name;    /* pointer to string owned by methods table */
     const char  *library; /* pointer to string owned by libraries table */
@@ -483,11 +483,11 @@ struct callsite {
 };
 
 /* NB: these counters are incremented and decremented only within tmlock. */
-static uint32 library_serial_generator = 0;
-static uint32 method_serial_generator = 0;
-static uint32 callsite_serial_generator = 0;
-static uint32 tmstats_serial_generator = 0;
-static uint32 filename_serial_generator = 0;
+static uint32_t library_serial_generator = 0;
+static uint32_t method_serial_generator = 0;
+static uint32_t callsite_serial_generator = 0;
+static uint32_t tmstats_serial_generator = 0;
+static uint32_t filename_serial_generator = 0;
 
 /* Root of the tree of callsites, the sum of all (cycle-compressed) stacks. */
 static callsite calltree_root =
@@ -593,10 +593,10 @@ calltree(void **stack, size_t num_stack_entries, tm_thread *t)
 {
     logfile *fp = logfp;
     void *pc;
-    uint32 nkids;
+    uint32_t nkids;
     callsite *parent, *site, **csp, *tmp;
     int maxstack;
-    uint32 library_serial, method_serial, filename_serial;
+    uint32_t library_serial, method_serial, filename_serial;
     const char *library, *method, *filename;
     char *slash;
     PLHashNumber hash;
@@ -718,7 +718,7 @@ calltree(void **stack, size_t num_stack_entries, tm_thread *t)
             he = *hep;
             if (he) {
                 library = (char*) he->key;
-                library_serial = (uint32) NS_PTR_TO_INT32(he->value);
+                library_serial = (uint32_t) NS_PTR_TO_INT32(he->value);
                 le = (lfdset_entry *) he;
                 if (LFD_TEST(fp->lfd, &le->lfdset)) {
                     /* We already logged an event on fp for this library. */
@@ -765,7 +765,7 @@ calltree(void **stack, size_t num_stack_entries, tm_thread *t)
         he = *hep;
         if (he) {
             filename = (char*) he->key;
-            filename_serial = (uint32) NS_PTR_TO_INT32(he->value);
+            filename_serial = (uint32_t) NS_PTR_TO_INT32(he->value);
             le = (lfdset_entry *) he;
             if (LFD_TEST(fp->lfd, &le->lfdset)) {
                 /* We already logged an event on fp for this filename. */
@@ -812,7 +812,7 @@ calltree(void **stack, size_t num_stack_entries, tm_thread *t)
         he = *hep;
         if (he) {
             method = (char*) he->key;
-            method_serial = (uint32) NS_PTR_TO_INT32(he->value);
+            method_serial = (uint32_t) NS_PTR_TO_INT32(he->value);
             le = (lfdset_entry *) he;
             if (LFD_TEST(fp->lfd, &le->lfdset)) {
                 /* We already logged an event on fp for this method. */
@@ -1315,7 +1315,7 @@ static const char magic[] = NS_TRACE_MALLOC_MAGIC;
 static void
 log_header(int logfd)
 {
-    uint32 ticksPerSec = PR_htonl(PR_TicksPerSecond());
+    uint32_t ticksPerSec = PR_htonl(PR_TicksPerSecond());
     (void) write(logfd, magic, NS_TRACE_MALLOC_MAGIC_SIZE);
     (void) write(logfd, &ticksPerSec, sizeof ticksPerSec);
 }
@@ -1557,7 +1557,7 @@ NS_TraceMallocDisable(void)
 {
     tm_thread *t = tm_get_thread();
     logfile *fp;
-    uint32 sample;
+    uint32_t sample;
 
     /* Robustify in case of duplicate call. */
     PR_ASSERT(tracing_enabled);
@@ -1577,7 +1577,7 @@ PR_IMPLEMENT(void)
 NS_TraceMallocEnable(void)
 {
     tm_thread *t = tm_get_thread();
-    uint32 sample;
+    uint32_t sample;
 
     TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
     sample = ++tracing_enabled;
@@ -1691,13 +1691,13 @@ NS_TraceMallocLogTimestamp(const char *caption)
 
 #ifdef XP_UNIX
     gettimeofday(&tv, NULL);
-    log_uint32(fp, (uint32) tv.tv_sec);
-    log_uint32(fp, (uint32) tv.tv_usec);
+    log_uint32(fp, (uint32_t) tv.tv_sec);
+    log_uint32(fp, (uint32_t) tv.tv_usec);
 #endif
 #ifdef XP_WIN32
     _ftime(&tb);
-    log_uint32(fp, (uint32) tb.time);
-    log_uint32(fp, (uint32) tb.millitm);
+    log_uint32(fp, (uint32_t) tb.time);
+    log_uint32(fp, (uint32_t) tb.millitm);
 #endif
     log_string(fp, caption);
 
@@ -1848,7 +1848,7 @@ MallocCallback(void *ptr, size_t size, uint32_t start, uint32_t end, tm_thread *
         if (site) {
             log_event5(logfp, TM_EVENT_MALLOC,
                        site->serial, start, end - start,
-                       (uint32)NS_PTR_TO_INT32(ptr), size);
+                       (uint32_t)NS_PTR_TO_INT32(ptr), size);
         }
         if (get_allocations()) {
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -1886,7 +1886,7 @@ CallocCallback(void *ptr, size_t count, size_t size, uint32_t start, uint32_t en
         if (site) {
             log_event5(logfp, TM_EVENT_CALLOC,
                        site->serial, start, end - start,
-                       (uint32)NS_PTR_TO_INT32(ptr), size);
+                       (uint32_t)NS_PTR_TO_INT32(ptr), size);
         }
         if (get_allocations()) {
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -1953,9 +1953,9 @@ ReallocCallback(void * oldptr, void *ptr, size_t size,
         if (site) {
             log_event8(logfp, TM_EVENT_REALLOC,
                        site->serial, start, end - start,
-                       (uint32)NS_PTR_TO_INT32(ptr), size,
+                       (uint32_t)NS_PTR_TO_INT32(ptr), size,
                        oldsite ? oldsite->serial : 0,
-                       (uint32)NS_PTR_TO_INT32(oldptr), oldsize);
+                       (uint32_t)NS_PTR_TO_INT32(oldptr), oldsize);
         }
         if (ptr && allocations) {
             if (ptr != oldptr) {
@@ -2021,7 +2021,7 @@ FreeCallback(void * ptr, uint32_t start, uint32_t end, tm_thread *t)
                     }
                     log_event5(logfp, TM_EVENT_FREE,
                                site->serial, start, end - start,
-                               (uint32)NS_PTR_TO_INT32(ptr), alloc->size);
+                               (uint32_t)NS_PTR_TO_INT32(ptr), alloc->size);
                 }
                 PL_HashTableRawRemove(allocations, hep, he);
             }

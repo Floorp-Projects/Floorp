@@ -224,7 +224,7 @@ DHWImportHooker::PatchOneModule(HMODULE aModule, const char* name)
     // do the fun stuff...
 
     PIMAGE_IMPORT_DESCRIPTOR desc;
-    uint32 size;
+    uint32_t size;
 
     desc = (PIMAGE_IMPORT_DESCRIPTOR) 
         dhwImageDirectoryEntryToData(aModule, true, 

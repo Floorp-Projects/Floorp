@@ -206,7 +206,7 @@ struct THEBES_API gfxRGBA {
 
     /**
      * Returns this color value as a packed 32-bit integer. This reconstructs
-     * the int32 based on the given colorType, always in the native byte order.
+     * the int32_t based on the given colorType, always in the native byte order.
      *
      * Note: gcc 4.2.3 on at least Ubuntu (x86) does something strange with
      * (uint8_t)(c * 255.0) << x, where the result is different than

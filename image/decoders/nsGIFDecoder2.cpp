@@ -438,7 +438,7 @@ nsGIFDecoder2::DoLzw(const uint8_t *q)
   for (const uint8_t* ch = q; count-- > 0; ch++)
   {
     /* Feed the next byte into the decoder's 32-bit input buffer. */
-    datum += ((int32) *ch) << bits;
+    datum += ((int32_t) *ch) << bits;
     bits += 8;
 
     /* Check for underflow of decoder's 32-bit input buffer. */

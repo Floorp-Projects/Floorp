@@ -940,7 +940,7 @@ nsCacheProfilePrefObserver::MemoryCacheCapacity()
     if (bytes == 0)
         bytes = 32 * 1024 * 1024;
 
-    // Conversion from unsigned int64 to double doesn't work on all platforms.
+    // Conversion from unsigned int64_t to double doesn't work on all platforms.
     // We need to truncate the value at INT64_MAX to make sure we don't
     // overflow.
     if (bytes > INT64_MAX)

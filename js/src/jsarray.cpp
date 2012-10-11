@@ -14,7 +14,7 @@
  * &ArrayClass, and can then directly manipulate the slots for efficiency.
  *
  * We track these pieces of metadata for arrays in dense mode:
- *  - The array's length property as a uint32, accessible with
+ *  - The array's length property as a uint32_t, accessible with
  *    getArrayLength(), setArrayLength().
  *  - The number of element slots (capacity), gettable with
  *    getDenseArrayCapacity().
