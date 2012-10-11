@@ -12,6 +12,7 @@
 #else
 #include <stagefright/OMXClient.h>
 #endif
+#include <algorithm>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Types.h"
@@ -600,10 +601,21 @@ void OmxDecoder::ToVideoFrame_CbYCrY(VideoFrame *aFrame, int64_t aTimeUs, void *
 }
 
 void OmxDecoder::ToVideoFrame_YUV420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
+  // There is a bug in the OMX.SEC.avcdec where it returns an implausibly high
+  // value for mVideoSliceHeight. To work around this issue we calculate the
+  // maximum slice height for the data buffer size and limit to that.
+  //
+  // For example if we've got 396 lines of data then we must have at most 264
+  // lines of Y data and 132 lines of U data. There isn't enough data for a
+  // slice height of 272 so we limit the slice height to 264.
+
+  int32_t maxVideoSliceHeight = (aSize / mVideoStride) * 2 / 3;
+  int32_t videoSliceHeight = std::min(mVideoSliceHeight, maxVideoSliceHeight);
+
   void *y = aData;
-  void *uv = static_cast<uint8_t *>(y) + (mVideoStride * mVideoSliceHeight);
+  void *uv = static_cast<uint8_t *>(y) + (mVideoStride * videoSliceHeight);
   aFrame->Set(aTimeUs, aKeyFrame,
-              aData, aSize, mVideoStride, mVideoSliceHeight, mVideoRotation,
+              aData, aSize, mVideoStride, videoSliceHeight, mVideoRotation,
               y, mVideoStride, mVideoWidth, mVideoHeight, 0, 0,
               uv, mVideoStride, mVideoWidth/2, mVideoHeight/2, 0, 1,
               uv, mVideoStride, mVideoWidth/2, mVideoHeight/2, 1, 1);

@@ -8166,6 +8166,16 @@ nsFrame::InitBoxMetrics(bool aClear)
   metrics->mLastSize.SizeTo(0, 0);
 }
 
+void
+nsIFrame::CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder, 
+                                 nsDisplayList* aList)
+{
+  if (GetContent()->HasAttr(kNameSpaceID_None, nsGkAtoms::layer)) {
+    aList->AppendNewToTop(new (aBuilder) 
+        nsDisplayOwnLayer(aBuilder, this, aList));
+  }
+}
+
 // Box layout debugging
 #ifdef DEBUG_REFLOW
 int32_t gIndent2 = 0;

@@ -880,8 +880,13 @@ nsCanvasRenderingContext2DAzure::EnsureTarget()
     }
 
     mTarget->ClearRect(mgfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
-    // always force a redraw, because if the surface dimensions were reset
-    // then the surface became cleared, and we need to redraw everything.
+    // Force a full layer transaction since we didn't have a layer before
+    // and now we might need one.
+    if (mCanvasElement) {
+      mCanvasElement->InvalidateCanvas();
+    }
+    // Calling Redraw() tells our invalidation machinery that the entire
+    // canvas is already invalid, which can speed up future drawing.
     Redraw();
   } else {
     EnsureErrorTarget();
@@ -4465,7 +4470,8 @@ nsCanvasRenderingContext2DAzure::PutImageData_explicit(int32_t x, int32_t y, uin
   }
 
   nsRefPtr<gfxImageSurface> imgsurf = new gfxImageSurface(gfxIntSize(w, h),
-                                                          gfxASurface::ImageFormatARGB32);
+                                                          gfxASurface::ImageFormatARGB32,
+                                                          false);
   if (!imgsurf || imgsurf->CairoStatus()) {
     return NS_ERROR_FAILURE;
   }
@@ -4630,8 +4636,11 @@ nsCanvasRenderingContext2DAzure::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                                 CanvasLayer *aOldLayer,
                                                 LayerManager *aManager)
 {
-  EnsureTarget();
-  if (!IsTargetValid()) {
+  // Don't call EnsureTarget() ... if there isn't already a surface, then
+  // we have nothing to paint and there is no need to create a surface just
+  // to paint nothing. Also, EnsureTarget() can cause creation of a persistent
+  // layer manager which must NOT happen during a paint.
+  if (!mTarget || !IsTargetValid()) {
     // No DidTransactionCallback will be received, so mark the context clean
     // now so future invalidations will be dispatched.
     MarkContextClean();

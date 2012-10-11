@@ -129,7 +129,46 @@ function test_multiplex_streams() {
   }
 }
 
+function test_multiplex_bug797871() {
+
+  var data = "1234567890123456789012345678901234567890";
+
+  try {
+    var MultiplexStream = CC("@mozilla.org/io/multiplex-input-stream;1",
+                             "nsIMultiplexInputStream");
+    do_check_eq(1, 1);
+
+    var BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
+                                                   "nsIBinaryInputStream");
+    var BinaryOutputStream = Components.Constructor("@mozilla.org/binaryoutputstream;1",
+                                                    "nsIBinaryOutputStream",
+                                                    "setOutputStream");
+    var multiplex = new MultiplexStream();
+    let s = Cc["@mozilla.org/io/string-input-stream;1"]
+              .createInstance(Ci.nsIStringInputStream);
+    s.setData(data, data.length);
+
+    multiplex.appendStream(s);
+
+    var seekable = multiplex.QueryInterface(Ci.nsISeekableStream);
+    var sis = Cc["@mozilla.org/scriptableinputstream;1"]
+                .createInstance(Ci.nsIScriptableInputStream);
+    sis.init(seekable);
+
+    seekable.seek(Ci.nsISeekableStream.NS_SEEK_SET, 8);
+    do_check_eq(seekable.tell(), 8);
+    readData = sis.read(2);
+    do_check_eq(seekable.tell(), 10);
+
+    seekable.seek(Ci.nsISeekableStream.NS_SEEK_SET, 20);
+    do_check_eq(seekable.tell(), 20);
+  } catch(e) {
+    do_note_exception(e, "exception in test_multiplex_bug797871");
+  }
+}
+
 function run_test() {
   test_multiplex_streams();
+  test_multiplex_bug797871();
 }
 

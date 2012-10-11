@@ -22,7 +22,8 @@ class BluetoothHfpManager : public mozilla::ipc::UnixSocketConsumer
 public:
   ~BluetoothHfpManager();
   static BluetoothHfpManager* Get();
-  void ReceiveSocketData(mozilla::ipc::UnixSocketRawData* aMessage);
+  virtual void ReceiveSocketData(mozilla::ipc::UnixSocketRawData* aMessage)
+    MOZ_OVERRIDE;
   bool Connect(const nsAString& aDeviceObjectPath,
                const bool aIsHandsfree,
                BluetoothReplyRunnable* aRunnable);
@@ -43,6 +44,8 @@ private:
   void Cleanup();
   void NotifyDialer(const nsAString& aCommand);
   void NotifySettings(const bool aConnected);
+  virtual void OnConnectSuccess() MOZ_OVERRIDE;
+  virtual void OnConnectError() MOZ_OVERRIDE;
 
   int mCurrentVgs;
   int mCurrentCallIndex;

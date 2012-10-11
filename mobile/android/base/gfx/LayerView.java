@@ -59,11 +59,9 @@ public class LayerView extends FrameLayout {
 
     private Listener mListener;
 
-    /* Flags used to determine when to show the painted surface. The integer
-     * order must correspond to the order in which these states occur. */
-    public static final int PAINT_NONE = 0;
-    public static final int PAINT_BEFORE_FIRST = 1;
-    public static final int PAINT_AFTER_FIRST = 2;
+    /* Flags used to determine when to show the painted surface. */
+    public static final int PAINT_BEFORE_FIRST = 0;
+    public static final int PAINT_AFTER_FIRST = 1;
 
     boolean shouldUseTextureView() {
         // we can only use TextureView on ICS or higher
@@ -88,10 +86,11 @@ public class LayerView extends FrameLayout {
         if (shouldUseTextureView()) {
             mTextureView = new TextureView(context);
             mTextureView.setSurfaceTextureListener(new SurfaceTextureListener());
-
+            mTextureView.setBackgroundColor(Color.WHITE);
             addView(mTextureView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         } else {
             mSurfaceView = new SurfaceView(context);
+            mSurfaceView.setBackgroundColor(Color.WHITE);
             addView(mSurfaceView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
             SurfaceHolder holder = mSurfaceView.getHolder();
@@ -100,7 +99,7 @@ public class LayerView extends FrameLayout {
         }
 
         mGLController = new GLController(this);
-        mPaintState = PAINT_NONE;
+        mPaintState = PAINT_BEFORE_FIRST;
         mCheckerboardColor = Color.WHITE;
         mCheckerboardShouldShowChecks = true;
     }
@@ -261,13 +260,10 @@ public class LayerView extends FrameLayout {
         return mRenderer;
     }
 
-    /* paintState must be a PAINT_xxx constant. The state will only be changed
-     * if paintState represents a state that occurs after the current state. */
+    /* paintState must be a PAINT_xxx constant. */
     public void setPaintState(int paintState) {
-        if (paintState > mPaintState) {
-            Log.d(LOGTAG, "LayerView paint state set to " + paintState);
-            mPaintState = paintState;
-        }
+        Log.d(LOGTAG, "LayerView paint state set to " + paintState);
+        mPaintState = paintState;
     }
 
     public int getPaintState() {
