@@ -27,7 +27,6 @@ abstract class Axis {
 
     private static final String PREF_SCROLLING_FRICTION_SLOW = "ui.scrolling.friction_slow";
     private static final String PREF_SCROLLING_FRICTION_FAST = "ui.scrolling.friction_fast";
-    private static final String PREF_SCROLLING_VELOCITY_THRESHOLD = "ui.scrolling.velocity_threshold";
     private static final String PREF_SCROLLING_MAX_EVENT_ACCELERATION = "ui.scrolling.max_event_acceleration";
     private static final String PREF_SCROLLING_OVERSCROLL_DECEL_RATE = "ui.scrolling.overscroll_decel_rate";
     private static final String PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT = "ui.scrolling.overscroll_snap_limit";
@@ -67,7 +66,6 @@ abstract class Axis {
         JSONArray prefs = new JSONArray();
         prefs.put(PREF_SCROLLING_FRICTION_FAST);
         prefs.put(PREF_SCROLLING_FRICTION_SLOW);
-        prefs.put(PREF_SCROLLING_VELOCITY_THRESHOLD);
         prefs.put(PREF_SCROLLING_MAX_EVENT_ACCELERATION);
         prefs.put(PREF_SCROLLING_OVERSCROLL_DECEL_RATE);
         prefs.put(PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT);
@@ -86,12 +84,22 @@ abstract class Axis {
         });
     }
 
+    static final float MS_PER_FRAME = 4.0f;
+    private static final float FRAMERATE_MULTIPLIER = (1000f/60f) / MS_PER_FRAME;
+
+    //  The values we use for friction are based on a 16.6ms frame, adjust them to MS_PER_FRAME:
+    //  FRICTION^1 = FRICTION_ADJUSTED^(16/MS_PER_FRAME)
+    //  FRICTION_ADJUSTED = e ^ ((ln(FRICTION))/FRAMERATE_MULTIPLIER)
+    static float getFrameAdjustedFriction(float baseFriction) {
+        return (float)Math.pow(Math.E, (Math.log(baseFriction) / FRAMERATE_MULTIPLIER));
+    }
+
     static void setPrefs(Map<String, Integer> prefs) {
-        FRICTION_SLOW = getFloatPref(prefs, PREF_SCROLLING_FRICTION_SLOW, 850);
-        FRICTION_FAST = getFloatPref(prefs, PREF_SCROLLING_FRICTION_FAST, 970);
-        VELOCITY_THRESHOLD = getIntPref(prefs, PREF_SCROLLING_VELOCITY_THRESHOLD, 10);
+        FRICTION_SLOW = getFrameAdjustedFriction(getFloatPref(prefs, PREF_SCROLLING_FRICTION_SLOW, 850));
+        FRICTION_FAST = getFrameAdjustedFriction(getFloatPref(prefs, PREF_SCROLLING_FRICTION_FAST, 970));
+        VELOCITY_THRESHOLD = 10 / FRAMERATE_MULTIPLIER;
         MAX_EVENT_ACCELERATION = getFloatPref(prefs, PREF_SCROLLING_MAX_EVENT_ACCELERATION, 12);
-        OVERSCROLL_DECEL_RATE = getFloatPref(prefs, PREF_SCROLLING_OVERSCROLL_DECEL_RATE, 40);
+        OVERSCROLL_DECEL_RATE = getFrameAdjustedFriction(getFloatPref(prefs, PREF_SCROLLING_OVERSCROLL_DECEL_RATE, 40));
         SNAP_LIMIT = getFloatPref(prefs, PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT, 300);
         MIN_SCROLLABLE_DISTANCE = getFloatPref(prefs, PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE, 500);
         Log.i(LOGTAG, "Prefs: " + FRICTION_SLOW + "," + FRICTION_FAST + "," + VELOCITY_THRESHOLD + ","
@@ -102,9 +110,6 @@ abstract class Axis {
         // set the scrolling parameters to default values on startup
         setPrefs(null);
     }
-
-    // The number of milliseconds per frame assuming 60 fps
-    private static final float MS_PER_FRAME = 1000.0f / 60.0f;
 
     private enum FlingStates {
         STOPPED,
@@ -182,7 +187,7 @@ abstract class Axis {
         // If there's a direction change, or current velocity is very low,
         // allow setting of the velocity outright. Otherwise, use the current
         // velocity and a maximum change factor to set the new velocity.
-        boolean curVelocityIsLow = Math.abs(mVelocity) < 1.0f;
+        boolean curVelocityIsLow = Math.abs(mVelocity) < 1.0f / FRAMERATE_MULTIPLIER;
         boolean directionChange = (mVelocity > 0) != (newVelocity > 0);
         if (curVelocityIsLow || (directionChange && !FloatUtils.fuzzyEquals(newVelocity, 0.0f))) {
             mVelocity = newVelocity;
