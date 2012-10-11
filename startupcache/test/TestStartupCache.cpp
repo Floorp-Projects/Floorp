@@ -22,6 +22,7 @@
 #include "nsIPrefService.h"
 #include "nsITelemetry.h"
 #include "jsapi.h"
+#include "prio.h"
 
 namespace mozilla {
 namespace scache {
@@ -56,7 +57,7 @@ PR_END_MACRO
 nsresult
 WaitForStartupTimer() {
   nsresult rv;
-  nsCOMPtr<nsIStartupCache> sc 
+  nsCOMPtr<nsIStartupCache> sc
     = do_GetService("@mozilla.org/startupcache/cache;1");
   PR_Sleep(10 * PR_TicksPerSecond());
   
@@ -75,7 +76,7 @@ WaitForStartupTimer() {
 nsresult
 TestStartupWriteRead() {
   nsresult rv;
-  nsCOMPtr<nsIStartupCache> sc 
+  nsCOMPtr<nsIStartupCache> sc
     = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
   if (!sc) {
     fail("didn't get a pointer...");
@@ -118,7 +119,7 @@ TestWriteInvalidateRead() {
   const char* id = "id";
   char* outbuf = NULL;
   uint32_t len;
-  nsCOMPtr<nsIStartupCache> sc 
+  nsCOMPtr<nsIStartupCache> sc
     = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
   sc->InvalidateCache();
 
@@ -248,9 +249,109 @@ TestWriteObject() {
 }
 
 nsresult
+LockCacheFile(bool protect, nsIFile* profileDir) {
+  NS_ENSURE_ARG(profileDir);
+
+  nsCOMPtr<nsIFile> startupCache;
+  profileDir->Clone(getter_AddRefs(startupCache));
+  NS_ENSURE_STATE(startupCache);
+  startupCache->AppendNative(NS_LITERAL_CSTRING("startupCache"));
+
+  nsresult rv;
+#ifndef XP_WIN
+  static uint32_t oldPermissions;
+#else
+  static PRFileDesc* fd = nullptr;
+#endif
+
+  // To prevent deletion of the startupcache file, we change the containing
+  // directory's permissions on Linux/Mac, and hold the file open on Windows
+  if (protect) {
+#ifndef XP_WIN
+    rv = startupCache->GetPermissions(&oldPermissions);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = startupCache->SetPermissions(0555);
+    NS_ENSURE_SUCCESS(rv, rv);
+#else
+    // Filename logic from StartupCache.cpp
+    #ifdef IS_BIG_ENDIAN
+    #define SC_ENDIAN "big"
+    #else
+    #define SC_ENDIAN "little"
+    #endif
+
+    #if PR_BYTES_PER_WORD == 4
+    #define SC_WORDSIZE "4"
+    #else
+    #define SC_WORDSIZE "8"
+    #endif
+    char sStartupCacheName[] = "startupCache." SC_WORDSIZE "." SC_ENDIAN;
+    startupCache->AppendNative(NS_LITERAL_CSTRING(sStartupCacheName));
+
+    rv = startupCache->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
+    NS_ENSURE_SUCCESS(rv, rv);
+#endif
+  } else {
+#ifndef XP_WIN
+    rv = startupCache->SetPermissions(oldPermissions);
+    NS_ENSURE_SUCCESS(rv, rv);
+#else
+   PR_Close(fd);
+#endif
+  }
+
+  return NS_OK;
+}
+
+nsresult
+TestIgnoreDiskCache(nsIFile* profileDir) {
+  nsresult rv;
+  nsCOMPtr<nsIStartupCache> sc
+    = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
+  sc->InvalidateCache();
+  
+  const char* buf = "Get a Beardbook app for your smartphone";
+  const char* id = "id";
+  char* outbuf = NULL;
+  PRUint32 len;
+  
+  rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = sc->ResetStartupWriteTimer();
+  rv = WaitForStartupTimer();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Prevent StartupCache::InvalidateCache from deleting the disk file
+  rv = LockCacheFile(true, profileDir);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  sc->IgnoreDiskCache();
+
+  rv = sc->GetBuffer(id, &outbuf, &len);
+
+  nsresult r = LockCacheFile(false, profileDir);
+  NS_ENSURE_SUCCESS(r, r);
+
+  delete[] outbuf;
+
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    passed("buffer not available after ignoring disk cache");
+  } else if (NS_SUCCEEDED(rv)) {
+    fail("GetBuffer succeeded unexpectedly after ignoring disk cache");
+    return NS_ERROR_UNEXPECTED;
+  } else {
+    fail("GetBuffer gave an unexpected failure, expected NOT_AVAILABLE");
+    return rv;
+  }
+
+  sc->InvalidateCache();
+  return NS_OK;
+}
+
+nsresult
 TestEarlyShutdown() {
   nsresult rv;
-  nsCOMPtr<nsIStartupCache> sc 
+  nsCOMPtr<nsIStartupCache> sc
     = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
   sc->InvalidateCache();
 
@@ -415,6 +516,9 @@ int main(int argc, char** argv)
   if (NS_FAILED(TestWriteInvalidateRead()))
     rv = 1;
   if (NS_FAILED(TestWriteObject()))
+    rv = 1;
+  nsCOMPtr<nsIFile> profileDir = xpcom.GetProfileDirectory();
+  if (NS_FAILED(TestIgnoreDiskCache(profileDir)))
     rv = 1;
   if (NS_FAILED(TestEarlyShutdown()))
     rv = 1;
