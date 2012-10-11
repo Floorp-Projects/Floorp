@@ -84,8 +84,6 @@ namespace mozilla {
 
 MOZ_MTLOG_MODULE("mtransport");
 
-static bool initialized = false;
-
 TransportLayerIce::TransportLayerIce(const std::string& name,
     RefPtr<NrIceCtx> ctx, RefPtr<NrIceMediaStream> stream,
                                      int component)

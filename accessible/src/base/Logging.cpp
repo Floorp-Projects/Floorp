@@ -425,7 +425,6 @@ logging::DocCompleteLoad(DocAccessible* aDocument, bool aIsLoadEventTarget)
 {
   MsgBegin(sDocLoadTitle, "document loaded *completely*");
 
-  nsIDocument* docNode = aDocument->GetDocumentNode();
   printf("    DOM document: %p, acc document: %p\n",
          static_cast<void*>(aDocument->GetDocumentNode()),
          static_cast<void*>(aDocument));
