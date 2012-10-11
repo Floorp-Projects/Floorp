@@ -203,6 +203,8 @@ MOCHITEST_FILES +=	\
 		flexbox_layout_testcases.js \
 		file_flexbox_order.html \
 		test_flexbox_order.html \
+		file_flexbox_order_table.html \
+		test_flexbox_order_table.html \
 		$(NULL)
 endif
 
