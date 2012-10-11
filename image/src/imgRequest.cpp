@@ -200,7 +200,7 @@ void imgRequest::AddProxy(imgRequestProxy *proxy)
   mObservers.AppendElementUnlessExists(proxy);
 }
 
-nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, bool aNotify)
+nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
 {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy", "proxy", proxy);
 
@@ -220,7 +220,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, bool 
   // one it was in at this point.
 
   imgStatusTracker& statusTracker = GetStatusTracker();
-  statusTracker.EmulateRequestFinished(proxy, aStatus, !aNotify);
+  statusTracker.EmulateRequestFinished(proxy, aStatus);
 
   if (mObservers.IsEmpty()) {
     // If we have no observers, there's nothing holding us alive. If we haven't
