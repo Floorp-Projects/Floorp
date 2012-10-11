@@ -7317,6 +7317,6 @@ JS_GetScriptedGlobal(JSContext *cx)
     ScriptFrameIter i(cx);
     if (i.done())
         return cx->global();
-    return &i.fp()->global();
+    return &i.scopeChain()->global();
 }
 

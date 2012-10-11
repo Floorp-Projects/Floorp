@@ -15,6 +15,7 @@
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
+#include "jsinterpinlines.h"
 
 #include "jsopcode.h"
 
@@ -823,7 +824,13 @@ bool
 StackSpace::containsSlow(StackFrame *fp)
 {
     for (AllFramesIter i(*this); !i.done(); ++i) {
-        if (i.fp() == fp)
+        /*
+         * Debug-mode currently disables Ion compilation in the compartment of
+         * the debuggee.
+         */
+        if (i.isIon())
+            continue;
+        if (i.interpFrame() == fp)
             return true;
     }
     return false;
@@ -861,16 +868,6 @@ bool
 ContextStack::onTop() const
 {
     return seg_ && seg_ == space().seg_;
-}
-
-bool
-ContextStack::containsSlow(const StackFrame *target) const
-{
-    for (StackSegment *s = seg_; s; s = s->prevInContext()) {
-        if (s->contains(target))
-            return true;
-    }
-    return false;
 }
 
 /*
@@ -1055,8 +1052,13 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
         /* Though the prev-frame is given, need to search for prev-call. */
         StackSegment &seg = cx->stack.space().containingSegment(evalInFrame);
         StackIter iter(cx->runtime, seg);
-        while (!iter.isScript() || iter.fp() != evalInFrame)
+        /* Debug-mode currently disables Ion compilation. */
+        JS_ASSERT(!evalInFrame->runningInIon());
+        JS_ASSERT_IF(evalInFrame->compartment() == iter.compartment(), !iter.isIon());
+        while (!iter.isScript() || iter.isIon() || iter.interpFrame() != evalInFrame) {
             ++iter;
+            JS_ASSERT_IF(evalInFrame->compartment() == iter.compartment(), !iter.isIon());
+        }
         evalInFrameCalls = iter.calls_;
         extend = CANT_EXTEND;
     } else {
@@ -1330,9 +1332,9 @@ StackIter::settleOnNewState()
                 /* Avoid duplicating logic; seg_ contains fp_, so no iloop. */
                 StackIter tmp = *this;
                 tmp.startOnSegment(seg_);
-                while (!tmp.isScript() || tmp.fp() != fp_)
+                while (!tmp.isScript() || tmp.fp_ != fp_)
                     ++tmp;
-                JS_ASSERT(tmp.state_ == SCRIPTED && tmp.seg_ == seg_ && tmp.fp_ == fp_);
+                JS_ASSERT(tmp.isScript() && tmp.seg_ == seg_ && tmp.fp_ == fp_);
                 *this = tmp;
                 return;
             }
@@ -1521,8 +1523,29 @@ StackIter::operator==(const StackIter &rhs) const
     return done() == rhs.done() &&
            (done() ||
             (isScript() == rhs.isScript() &&
-             ((isScript() && fp() == rhs.fp()) ||
+             ((isScript() && fp_ == rhs.fp_) ||
               (!isScript() && nativeArgs().base() == rhs.nativeArgs().base()))));
+}
+
+JSCompartment *
+StackIter::compartment() const
+{
+    switch (state_) {
+      case DONE:
+        break;
+      case SCRIPTED:
+        return fp_->compartment();
+      case ION:
+#ifdef  JS_ION
+        return ionActivations_.activation()->compartment();
+#else
+        break;
+#endif
+      case NATIVE:
+        return calls_->callee().compartment();
+    }
+    JS_NOT_REACHED("Unexpected state");
+    return NULL;
 }
 
 bool
@@ -1532,7 +1555,7 @@ StackIter::isFunctionFrame() const
       case DONE:
         break;
       case SCRIPTED:
-        return fp()->isFunctionFrame();
+        return interpFrame()->isFunctionFrame();
       case ION:
 #ifdef  JS_ION    
         return ionInlineFrames_.isFunctionFrame();
@@ -1553,7 +1576,7 @@ StackIter::isEvalFrame() const
       case DONE:
         break;
       case SCRIPTED:
-        return fp()->isEvalFrame();
+        return interpFrame()->isEvalFrame();
       case ION:
       case NATIVE:
         return false;
@@ -1570,7 +1593,7 @@ StackIter::isNonEvalFunctionFrame() const
       case DONE:
         break;
       case SCRIPTED:
-        return fp()->isNonEvalFunctionFrame();
+        return interpFrame()->isNonEvalFunctionFrame();
       case ION:
       case NATIVE:
         return !isEvalFrame() && isFunctionFrame();
@@ -1584,19 +1607,18 @@ StackIter::isConstructing() const
 {
     switch (state_) {
       case DONE:
-        JS_NOT_REACHED("Unexpected state");
-        return false;
+        break;
       case ION:
 #ifdef JS_ION      
         return ionInlineFrames_.isConstructing();
 #else
-        JS_NOT_REACHED("Unexpected state");
-        return false;
+        break;
 #endif        
       case SCRIPTED:
       case NATIVE:
-        return fp()->isConstructing();
+        return fp_->isConstructing();
     }
+    JS_NOT_REACHED("Unexpected state");
     return false;
 }
 
@@ -1608,9 +1630,9 @@ StackIter::callee() const
         break;
       case SCRIPTED:
         JS_ASSERT(isFunctionFrame());
-        return &fp()->callee();
+        return &interpFrame()->callee();
       case ION:
-#ifdef JS_ION      
+#ifdef JS_ION
         if (ionFrames_.isScripted())
             return ionInlineFrames_.callee();
         JS_ASSERT(ionFrames_.isNative());
@@ -1633,7 +1655,7 @@ StackIter::calleev() const
         break;
       case SCRIPTED:
         JS_ASSERT(isFunctionFrame());
-        return fp()->calleev();
+        return interpFrame()->calleev();
       case ION:
 #ifdef JS_ION
         return ObjectValue(*callee());
@@ -1655,7 +1677,7 @@ StackIter::numActualArgs() const
         break;
       case SCRIPTED:
         JS_ASSERT(isFunctionFrame());
-        return fp()->numActualArgs();
+        return interpFrame()->numActualArgs();
       case ION:
 #ifdef JS_ION
         return ionInlineFrames_.numActualArgs();
@@ -1667,6 +1689,37 @@ StackIter::numActualArgs() const
     }
     JS_NOT_REACHED("Unexpected state");
     return 0;
+}
+
+JSObject *
+StackIter::scopeChain() const
+{
+    switch (state_) {
+      case DONE:
+        break;
+      case ION:
+#ifdef JS_ION
+        return ionInlineFrames_.scopeChain();
+#else
+        break;
+#endif
+      case SCRIPTED:
+        return interpFrame()->scopeChain();
+      case NATIVE:
+        break;
+    }
+    JS_NOT_REACHED("Unexpected state");
+    return NULL;
+}
+
+bool
+StackIter::computeThis() const
+{
+    if (isScript() && !isIon()) {
+        JS_ASSERT(maybecx_);
+        return ComputeThis(maybecx_, interpFrame());
+    }
+    return true;
 }
 
 Value
@@ -1683,7 +1736,7 @@ StackIter::thisv() const
 #endif
       case SCRIPTED:
       case NATIVE:
-        return fp()->thisValue();
+        return fp_->thisValue();
     }
     JS_NOT_REACHED("Unexpected state");
     return NullValue();
@@ -1704,8 +1757,8 @@ StackIter::numFrameSlots() const
 #endif
       case SCRIPTED:
         JS_ASSERT(maybecx_);
-        JS_ASSERT(maybecx_->regs().spForStackDepth(0) == fp()->base());
-        return maybecx_->regs().sp - fp()->base();
+        JS_ASSERT(maybecx_->regs().spForStackDepth(0) == interpFrame()->base());
+        return maybecx_->regs().sp - interpFrame()->base();
     }
     JS_NOT_REACHED("Unexpected state");
     return 0;
@@ -1729,7 +1782,7 @@ StackIter::frameSlotValue(size_t index) const
         break;
 #endif
       case SCRIPTED:
-          return fp()->base()[index];
+          return interpFrame()->base()[index];
     }
     JS_NOT_REACHED("Unexpected state");
     return NullValue();
