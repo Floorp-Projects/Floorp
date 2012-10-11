@@ -21,6 +21,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
                                   "resource://gre/modules/devtools/dbg-client.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "debuggerSocketConnect",
+                                  "resource://gre/modules/devtools/dbg-client.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
                                    "@mozilla.org/widget/clipboardhelper;1",
                                    "nsIClipboardHelper");
@@ -360,8 +363,11 @@ WebConsoleFrame.prototype = {
    */
   _initConnection: function WCF__initConnection()
   {
-    this.proxy = new WebConsoleConnectionProxy(this);
-    this.proxy.initServer();
+    this.proxy = new WebConsoleConnectionProxy(this, {
+      host: this.owner.remoteHost,
+      port: this.owner.remotePort,
+    });
+
     this.proxy.connect(function() {
       this.saveRequestAndResponseBodies = this._saveRequestAndResponseBodies;
       this._onInitComplete();
@@ -3859,10 +3865,14 @@ CommandController.prototype = {
  * @constructor
  * @param object aWebConsole
  *        The Web Console instance that owns this connection proxy.
+ * @param object aOptions
+ *        Connection options: host and port.
  */
-function WebConsoleConnectionProxy(aWebConsole)
+function WebConsoleConnectionProxy(aWebConsole, aOptions = {})
 {
   this.owner = aWebConsole;
+  this.remoteHost = aOptions.host;
+  this.remotePort = aOptions.port;
 
   this._onPageError = this._onPageError.bind(this);
   this._onConsoleAPICall = this._onConsoleAPICall.bind(this);
@@ -3938,7 +3948,15 @@ WebConsoleConnectionProxy.prototype = {
    */
   connect: function WCCP_connect(aCallback)
   {
-    let transport = DebuggerServer.connectPipe();
+    let transport;
+    if (this.remoteHost) {
+      transport = debuggerSocketConnect(this.remoteHost, this.remotePort);
+    }
+    else {
+      this.initServer();
+      transport = DebuggerServer.connectPipe();
+    }
+
     let client = this.client = new DebuggerClient(transport);
 
     client.addListener("pageError", this._onPageError);
@@ -3948,18 +3966,58 @@ WebConsoleConnectionProxy.prototype = {
     client.addListener("fileActivity", this._onFileActivity);
     client.addListener("locationChange", this._onLocationChange);
 
+    client.connect(function(aType, aTraits) {
+      client.listTabs(this._onListTabs.bind(this, aCallback));
+    }.bind(this));
+  },
+
+  /**
+   * The "listTabs" response handler.
+   *
+   * @private
+   * @param function [aCallback]
+   *        Optional function to invoke once the connection is established.
+   * @param object aResponse
+   *        The JSON response object received from the server.
+   */
+  _onListTabs: function WCCP__onListTabs(aCallback, aResponse)
+  {
+    let selectedTab;
+
+    if (this.remoteHost) {
+      let tabs = [];
+      for (let tab of aResponse.tabs) {
+        tabs.push(tab.title);
+      }
+
+      tabs.push(l10n.getStr("listTabs.globalConsoleActor"));
+
+      let selected = {};
+      let result = Services.prompt.select(null,
+        l10n.getStr("remoteWebConsoleSelectTabTitle"),
+        l10n.getStr("remoteWebConsoleSelectTabMessage"),
+        tabs.length, tabs, selected);
+
+      if (result && selected.value < aResponse.tabs.length) {
+        selectedTab = aResponse.tabs[selected.value];
+      }
+    }
+    else {
+      selectedTab = aResponse.tabs[aResponse.selected];
+    }
+
+    if (selectedTab) {
+      this._consoleActor = selectedTab.consoleActor;
+      this.owner.onLocationChange(selectedTab.url, selectedTab.title);
+    }
+    else {
+      this._consoleActor = aResponse.consoleActor;
+    }
+
     let listeners = ["PageError", "ConsoleAPI", "NetworkActivity",
                      "FileActivity", "LocationChange"];
-
-    client.connect(function(aType, aTraits) {
-      client.listTabs(function(aResponse) {
-        let tab = aResponse.tabs[aResponse.selected];
-        this._consoleActor = tab.consoleActor;
-        this.owner.onLocationChange(tab.url, tab.title);
-        client.attachConsole(tab.consoleActor, listeners,
-                             this._onAttachConsole.bind(this, aCallback));
-      }.bind(this));
-    }.bind(this));
+    this.client.attachConsole(this._consoleActor, listeners,
+                              this._onAttachConsole.bind(this, aCallback));
   },
 
   /**
