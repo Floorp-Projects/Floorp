@@ -4,122 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIVariant.idl"
 
-interface nsIDOMElement;
-interface nsIDOMHTMLCanvasElement;
-interface nsIPropertyBag;
-
-// XXX should we comment out these typedefs in the C++ header?
-
-typedef unsigned long  WebGLenum;
-typedef boolean        WebGLboolean;
-typedef unsigned long  WebGLbitfield;
-typedef long           WebGLint;
-typedef long           WebGLsizei;
-typedef long long      WebGLsizeiptr;
-typedef long long      WebGLintptr;
-typedef unsigned long  WebGLuint;
-typedef float          WebGLfloat;
-typedef float          WebGLclampf;
-
-%{C++
-// for jsval
-#include "jsapi.h"
-
-namespace mozilla {
-namespace dom {
-class Element;
-} // namespace dom
-} // namespace mozilla
-
-/* Avoid conflict with WinAPI */
-#undef NO_ERROR
-%}
-
-[ptr] native WebGLJSObjectPtr (JSObject);
-[ptr] native Element (mozilla::dom::Element);
-
-//
-// OpenGL object wrappers
-//
-
-/* Base class for all WebGL extensions, and for those without
- * any additional tokens/methods.
- */
-[scriptable, builtinclass, uuid(70814f32-a5c5-4b95-83d5-ac653bac3316)]
-interface nsIWebGLExtension : nsISupports
-{
-};
-
-/* Classes that extend on nsIWebGLExtension and provide
- * extra tokens, functions, etc.
- */
-[scriptable, builtinclass, uuid(3de3dfd9-864a-4e4c-989b-2977eaa80b7b)]
-interface nsIWebGLExtensionStandardDerivatives : nsIWebGLExtension
-{
-  //
-  //  CONSTANTS
-  //
-
-  /* Fragment shader hint */
-  const WebGLenum FRAGMENT_SHADER_DERIVATIVE_HINT_OES   = 0x8B8B;
-};
-
-[scriptable, builtinclass, uuid(b0afc2eb-0895-4509-98de-5c383d160694)]
-interface nsIWebGLExtensionLoseContext : nsIWebGLExtension
-{
-  void loseContext();
-  void restoreContext();
-};
-
-[scriptable, builtinclass, uuid(73bfb64d-94bd-4a7a-9eab-6b6d32e57aa0)]
-interface nsIWebGLExtensionTextureFilterAnisotropic : nsIWebGLExtension
-{
-  const WebGLenum TEXTURE_MAX_ANISOTROPY_EXT = 0x84FE;
-  const WebGLenum MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
-};
-
-[scriptable, builtinclass, uuid(a1508b6f-f2ab-44cf-bbb4-3cfb339e1e8a)]
-interface nsIWebGLExtensionCompressedTextureS3TC : nsIWebGLExtension
-{
-    /* Compressed Texture Formats */
-    const WebGLenum COMPRESSED_RGB_S3TC_DXT1_EXT        = 0x83F0;
-    const WebGLenum COMPRESSED_RGBA_S3TC_DXT1_EXT       = 0x83F1;
-    const WebGLenum COMPRESSED_RGBA_S3TC_DXT3_EXT       = 0x83F2;
-    const WebGLenum COMPRESSED_RGBA_S3TC_DXT5_EXT       = 0x83F3;
-};
-
-[scriptable, builtinclass, uuid(9592637f-ee3b-4c42-8329-5c9ad47411c1)]
-interface nsIWebGLExtensionCompressedTextureATC : nsIWebGLExtension
-{
-    /* Compressed Texture Formats */
-    const WebGLenum COMPRESSED_RGB_ATC_WEBGL                     = 0x8C92;
-    const WebGLenum COMPRESSED_RGBA_ATC_EXPLICIT_ALPHA_WEBGL     = 0x8C93;
-    const WebGLenum COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL = 0x87EE;
-};
-
-[scriptable, builtinclass, uuid(c33aa5a1-035c-4dfa-b240-df71395ad0f8)]
-interface nsIWebGLExtensionCompressedTexturePVRTC : nsIWebGLExtension
-{
-    /* Compressed Texture Formats */
-    const WebGLenum COMPRESSED_RGB_PVRTC_4BPPV1  = 0x8C00;
-    const WebGLenum COMPRESSED_RGB_PVRTC_2BPPV1  = 0x8C01;
-    const WebGLenum COMPRESSED_RGBA_PVRTC_4BPPV1 = 0x8C02;
-    const WebGLenum COMPRESSED_RGBA_PVRTC_2BPPV1 = 0x8C03;
-};
-
-[scriptable, builtinclass, uuid(ef36f000-c1b2-11e1-afa7-0800200c9a66)]
-interface nsIWebGLExtensionDepthTexture : nsIWebGLExtension
-{
-  const WebGLenum UNSIGNED_INT_24_8_WEBGL = 0x84FA;
-};
-
-[builtinclass, uuid(a1fdfb76-6a08-4a1a-b0c9-d92ef3357cb9)]
+[builtinclass, uuid(f1a2fd3a-c6ac-4ee2-a700-5d285d5e3fff)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {
   // get an underlying GL parameter, without any WebGL intervention.
   // Most useful for querying GL_VENDOR/GL_RENDERER for identifying
   // the underlying renderer to the user.
-  [noscript] DOMString mozGetUnderlyingParamString(in WebGLenum pname);
+  [noscript] DOMString mozGetUnderlyingParamString(in unsigned long pname);
 };
