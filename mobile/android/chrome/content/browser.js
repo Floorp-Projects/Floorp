@@ -3549,6 +3549,7 @@ var BrowserEventHandler = {
     document.addEventListener("MozMagnifyGesture", this, true);
 
     Services.prefs.addObserver("browser.zoom.reflowOnZoom", this, false);
+    this.updateReflozPref();
   },
 
   updateReflozPref: function() {
