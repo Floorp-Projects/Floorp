@@ -29,7 +29,8 @@ public:
 
   ~BluetoothOppManager();
   static BluetoothOppManager* Get();
-  void ReceiveSocketData(mozilla::ipc::UnixSocketRawData* aMessage);
+  void ReceiveSocketData(mozilla::ipc::UnixSocketRawData* aMessage)
+    MOZ_OVERRIDE;
 
   /*
    * If a application wnats to send a file, first, it needs to
@@ -65,6 +66,8 @@ private:
   void ReplyToConnect();
   void ReplyToDisconnect();
   void ReplyToPut(bool aFinal);
+  virtual void OnConnectSuccess() MOZ_OVERRIDE;
+  virtual void OnConnectError() MOZ_OVERRIDE;
 
   bool mConnected;
   int mConnectionId;
