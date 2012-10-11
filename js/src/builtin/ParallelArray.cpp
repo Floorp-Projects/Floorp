@@ -157,7 +157,7 @@ GetLength(JSContext *cx, HandleObject obj, uint32_t *length)
     if (obj->isArray() || obj->isArguments())
         return GetLengthProperty(cx, obj, length);
 
-    // Otherwise check that we don't overflow uint32.
+    // Otherwise check that we don't overflow uint32_t.
     RootedValue value(cx);
     if (!JSObject::getProperty(cx, obj, obj, cx->names().length, &value))
         return false;

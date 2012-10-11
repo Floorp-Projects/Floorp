@@ -10,12 +10,12 @@
 #if defined(sparc) || defined(__sparc__)
 
 extern "C" nsresult
-PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint32* args)
+PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args)
 {
 
     typedef struct {
-        uint32 hi;
-        uint32 lo;
+        uint32_t hi;
+        uint32_t lo;
     } DU;               // have to move 64 bit entities as 32 bit halves since
                         // stack slots are not guaranteed 16 byte aligned
 
