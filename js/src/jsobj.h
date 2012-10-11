@@ -1390,6 +1390,9 @@ ToObjectFromStack(JSContext *cx, HandleValue vp)
     return ToObjectSlow(cx, vp, true);
 }
 
+extern JSObject *
+CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj);
+
 } /* namespace js */
 
 extern void
