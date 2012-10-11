@@ -18,7 +18,8 @@ ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _NON_MAC_BROWSER_TESTS = browser_bug415846.js
 endif
 
-_BROWSER_FILES = browser_bug400731.js \
+_BROWSER_FILES = head.js \
+                 browser_bug400731.js \
                  $(_NON_MAC_BROWSER_TESTS) \
     $(NULL)
 
