@@ -123,3 +123,4 @@ class ProcessExecutionMixin(LoggingMixin):
         # '-c' and pass all the arguments as one argument because that is
         # how sh works.
         cline = subprocess.list2cmdline([prog] + args[1:])
+        return [_current_shell, '-c', cline]
