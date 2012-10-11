@@ -226,8 +226,6 @@ nsLineBox::StateToString(char* aBuf, int32_t aBufSize) const
 void
 nsLineBox::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {
-  int32_t i;
-
   nsFrame::IndentBy(out, aIndent);
   char cbuf[100];
   fprintf(out, "line %p: count=%d state=%s ",
