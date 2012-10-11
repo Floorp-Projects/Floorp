@@ -6,11 +6,11 @@
 #undef NO_NSPR_10_SUPPORT
 #endif
 
+#include "NSPRFormatTime.h" // must include before any headers that include prtime.h
 #include "nsAppRunner.h"
 
 #include "prio.h"
 #include "prprf.h"
-#include "prtime.h"
 #include "prenv.h"
 
 #include "nsCRT.h"
