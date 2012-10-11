@@ -33,27 +33,12 @@ var tests = {
     is(userButton.value, profile.userName, "username is set");
     next();
   },
-  testNoAmbientNotificationsIsNoKeyboardMenu: function(next) {
-    // Test that keyboard accessible menuitem doesn't exist when no ambient icons specified.
-    let toolsPopup = document.getElementById("menu_ToolsPopup");
-    toolsPopup.addEventListener("popupshown", function ontoolspopupshownNoAmbient() {
-      toolsPopup.removeEventListener("popupshown", ontoolspopupshownNoAmbient);
-      let socialToggleMore = document.getElementById("menu_socialAmbientMenu");
-      ok(socialToggleMore, "Keyboard accessible social menu should exist");
-      is(socialToggleMore.hidden, true, "Menu should be hidden when no ambient notifications.");
-      toolsPopup.hidePopup();
-      next();
-    }, false);
-    document.getElementById("menu_ToolsPopup").openPopup();
-  },
   testAmbientNotifications: function(next) {
     let ambience = {
       name: "testIcon",
       iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
       contentPanel: "about:blank",
-      counter: 42,
-      label: "Test Ambient 1",
-      menuURL: "https://example.com/testAmbient1"
+      counter: 42
     };
     Social.provider.setAmbientNotification(ambience);
 
@@ -68,20 +53,7 @@ var tests = {
       ambience.counter = 0;
       Social.provider.setAmbientNotification(ambience);
       is(statusIconLabel.value, "", "status value is correct");
-
-      // Test that keyboard accessible menuitem was added.
-      let toolsPopup = document.getElementById("menu_ToolsPopup");
-      toolsPopup.addEventListener("popupshown", function ontoolspopupshownAmbient() {
-        toolsPopup.removeEventListener("popupshown", ontoolspopupshownAmbient);
-        let socialToggleMore = document.getElementById("menu_socialAmbientMenu");
-        ok(socialToggleMore, "Keyboard accessible social menu should exist");
-        is(socialToggleMore.hidden, false, "Menu is visible when ambient notifications have label & menuURL");
-        let menuitem = socialToggleMore.querySelector("menuitem");
-        is(menuitem.getAttribute("label"), "Test Ambient 1", "Keyboard accessible ambient menuitem should have specified label");
-        toolsPopup.hidePopup();
-        next();
-      }, false);
-      document.getElementById("menu_ToolsPopup").openPopup();
+      next();
     }, "statusIcon was never found");
   },
   testProfileUnset: function(next) {
