@@ -23,8 +23,6 @@
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
 #include "RasterImage.h"
-#include "ScriptedNotificationObserver.h"
-#include "imgIScriptedNotificationObserver.h"
 
 using namespace mozilla::image;
 
@@ -275,13 +273,6 @@ NS_IMETHODIMP imgTools::GetFirstImageFrame(imgIContainer *aContainer,
   NS_ENSURE_TRUE(frame->Width() && frame->Height(), NS_ERROR_FAILURE);
 
   frame.forget(aSurface);
-  return NS_OK;
-}
-
-NS_IMETHODIMP imgTools::CreateScriptedObserver(imgIScriptedNotificationObserver* aInner,
-                                               imgINotificationObserver** aObserver)
-{
-  NS_ADDREF(*aObserver = new ScriptedNotificationObserver(aInner));
   return NS_OK;
 }
 

@@ -10,6 +10,7 @@
 #include "nsRect.h"
 %}
 
+interface imgIContainer;
 interface imgIRequest;
 [ptr] native nsIntRect(nsIntRect);
 
@@ -19,8 +20,10 @@ interface imgIRequest;
  * @author Stuart Parmenter <pavlov@netscape.com>
  * @version 0.1
  */
-[scriptable, uuid(f4aaf410-e88f-4036-b91c-610c9c11d825)]
+[scriptable, uuid(f01efdb3-4b20-4313-a636-a2aa01a4ef5d)]
 interface imgIContainerObserver : nsISupports
 {
-  [noscript] void frameChanged([const] in nsIntRect aDirtyRect);
+  [noscript] void frameChanged(in imgIRequest aRequest,
+                               in imgIContainer aContainer,
+                               [const] in nsIntRect aDirtyRect);
 };

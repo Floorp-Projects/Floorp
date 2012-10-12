@@ -98,6 +98,13 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSICHANNELEVENTSINK
 
+#ifdef HAVE_CPP_AMBIGUITY_RESOLVING_USING
+    // Fix gcc compile warnings
+    using nsImageLoadingContent::OnStartRequest;
+    using nsImageLoadingContent::OnDataAvailable;
+    using nsImageLoadingContent::OnStopRequest;
+#endif
+
     /**
      * Object state. This is a bitmask of NS_EVENT_STATEs epresenting the
      * current state of the object.

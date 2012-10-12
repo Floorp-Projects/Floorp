@@ -10,7 +10,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "imgIContainer.h"
-#include "imgINotificationObserver.h"
+#include "imgIDecoderObserver.h"
 #include "gfxContext.h"
 
 using namespace mozilla;
@@ -42,7 +42,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGImageElement)
   NS_NODE_INTERFACE_TABLE9(nsSVGImageElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGTests,
                            nsIDOMSVGImageElement,
-                           nsIDOMSVGURIReference, imgINotificationObserver,
+                           nsIDOMSVGURIReference, imgIDecoderObserver,
                            nsIImageLoadingContent, imgIOnloadBlocker)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGImageElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGImageElementBase)

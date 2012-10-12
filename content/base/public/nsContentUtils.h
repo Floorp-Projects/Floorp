@@ -64,7 +64,7 @@ class nsIParserService;
 class nsIIOService;
 class nsIURI;
 class imgIContainer;
-class imgINotificationObserver;
+class imgIDecoderObserver;
 class imgIRequest;
 class imgILoader;
 class imgICache;
@@ -661,7 +661,7 @@ public:
                             nsIDocument* aLoadingDocument,
                             nsIPrincipal* aLoadingPrincipal,
                             nsIURI* aReferrer,
-                            imgINotificationObserver* aObserver,
+                            imgIDecoderObserver* aObserver,
                             int32_t aLoadFlags,
                             imgIRequest** aRequest);
 

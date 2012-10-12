@@ -140,8 +140,7 @@ nsImageFrame::nsImageFrame(nsStyleContext* aContext) :
   ImageFrameSuper(aContext),
   mComputedSize(0, 0),
   mIntrinsicRatio(0, 0),
-  mDisplayingIcon(false),
-  mFirstFrameComplete(false)
+  mDisplayingIcon(false)
 {
   // We assume our size is not constrained and we haven't gotten an
   // initial reflow yet, so don't touch those flags.
@@ -527,34 +526,6 @@ nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
 }
 
 nsresult
-nsImageFrame::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData)
-{
-  if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
-    nsCOMPtr<imgIContainer> image;
-    aRequest->GetImage(getter_AddRefs(image));
-    return OnStartContainer(aRequest, image);
-  }
-
-  if (aType == imgINotificationObserver::FRAME_UPDATE) {
-    return OnDataAvailable(aRequest, aData);
-  }
-
-  if (aType == imgINotificationObserver::FRAME_COMPLETE) {
-    mFirstFrameComplete = true;
-  }
-
-  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
-    uint32_t imgStatus;
-    aRequest->GetImageStatus(&imgStatus);
-    nsresult status =
-        imgStatus & imgIRequest::STATUS_ERROR ? NS_ERROR_FAILURE : NS_OK;
-    return OnStopRequest(aRequest, status);
-  }
-
-  return NS_OK;
-}
-
-nsresult
 nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
 {
   if (!aImage) return NS_ERROR_INVALID_ARG;
@@ -593,14 +564,9 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
 
 nsresult
 nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
+                              bool aCurrentFrame,
                               const nsIntRect *aRect)
 {
-  if (mFirstFrameComplete) {
-    nsCOMPtr<imgIContainer> container;
-    aRequest->GetImage(getter_AddRefs(container));
-    return FrameChanged(aRequest, container);
-  }
-
   // XXX do we need to make sure that the reflow from the
   // OnStartContainer has been processed before we start calling
   // invalidate?
@@ -617,6 +583,11 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
     return NS_OK;
   }
 
+  // Don't invalidate if the current visible frame isn't the one the data is
+  // from
+  if (!aCurrentFrame)
+    return NS_OK;
+  
 #ifdef DEBUG_decode
   printf("Source rect (%d,%d,%d,%d)\n",
          aRect->x, aRect->y, aRect->width, aRect->height);
@@ -630,13 +601,14 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
     InvalidateFrameWithRect(invalid, nsDisplayItem::TYPE_IMAGE);
     InvalidateFrameWithRect(invalid, nsDisplayItem::TYPE_ALT_FEEDBACK);
   }
-
+  
   return NS_OK;
 }
 
 nsresult
-nsImageFrame::OnStopRequest(imgIRequest *aRequest,
-                            nsresult aStatus)
+nsImageFrame::OnStopDecode(imgIRequest *aRequest,
+                           nsresult aStatus,
+                           const PRUnichar *aStatusArg)
 {
   // Check what request type we're dealing with
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
@@ -695,7 +667,8 @@ nsImageFrame::NotifyNewCurrentRequest(imgIRequest *aRequest,
 
 nsresult
 nsImageFrame::FrameChanged(imgIRequest *aRequest,
-                           imgIContainer *aContainer)
+                           imgIContainer *aContainer,
+                           const nsIntRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible()) {
     return NS_OK;
@@ -1921,7 +1894,7 @@ nsresult nsImageFrame::LoadIcons(nsPresContext *aPresContext)
 }
 
 NS_IMPL_ISUPPORTS2(nsImageFrame::IconLoad, nsIObserver,
-                   imgINotificationObserver)
+                   imgIDecoderObserver)
 
 static const char* kIconLoadPrefs[] = {
   "browser.display.force_inline_alttext",
@@ -1978,14 +1951,74 @@ void nsImageFrame::IconLoad::GetPrefs()
     Preferences::GetBool("browser.display.show_image_placeholders", true);
 }
 
-NS_IMETHODIMP
-nsImageFrame::IconLoad::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
-{
-  if (aType != imgINotificationObserver::LOAD_COMPLETE &&
-      aType != imgINotificationObserver::FRAME_UPDATE) {
-    return NS_OK;
-  }
 
+
+NS_IMETHODIMP
+nsImageFrame::IconLoad::OnStartRequest(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::IconLoad::OnStartDecode(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::IconLoad::OnStartContainer(imgIRequest *aRequest,
+                                         imgIContainer *aContainer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::IconLoad::OnStartFrame(imgIRequest *aRequest,
+                                     uint32_t aFrame)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::IconLoad::OnDataAvailable(imgIRequest *aRequest,
+                                        bool aCurrentFrame,
+                                        const nsIntRect * aRect)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::IconLoad::OnStopFrame(imgIRequest *aRequest,
+                                    uint32_t aFrame)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::IconLoad::OnStopContainer(imgIRequest *aRequest,
+                                        imgIContainer *aContainer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::IconLoad::OnStopDecode(imgIRequest *aRequest,
+                                     nsresult status,
+                                     const PRUnichar *statusArg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::IconLoad::OnImageIsAnimated(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::IconLoad::OnStopRequest(imgIRequest *aRequest,
+                                      bool aIsLastPart)
+{
   nsTObserverArray<nsImageFrame*>::ForwardIterator iter(mIconObservers);
   nsImageFrame *frame;
   while (iter.HasMore()) {
@@ -1996,7 +2029,30 @@ nsImageFrame::IconLoad::Notify(imgIRequest *aRequest, int32_t aType, const nsInt
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsImageListener, imgINotificationObserver)
+NS_IMETHODIMP
+nsImageFrame::IconLoad::OnDiscard(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageFrame::IconLoad::FrameChanged(imgIRequest *aRequest,
+                                     imgIContainer *aContainer,
+                                     const nsIntRect *aDirtyRect)
+{
+  nsTObserverArray<nsImageFrame*>::ForwardIterator iter(mIconObservers);
+  nsImageFrame *frame;
+  while (iter.HasMore()) {
+    frame = iter.GetNext();
+    frame->InvalidateFrame();
+  }
+
+  return NS_OK;
+}
+
+
+
+NS_IMPL_ISUPPORTS2(nsImageListener, imgIDecoderObserver, imgIContainerObserver)
 
 nsImageListener::nsImageListener(nsImageFrame *aFrame) :
   mFrame(aFrame)
@@ -2007,13 +2063,43 @@ nsImageListener::~nsImageListener()
 {
 }
 
-NS_IMETHODIMP
-nsImageListener::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
+NS_IMETHODIMP nsImageListener::OnStartContainer(imgIRequest *aRequest,
+                                                imgIContainer *aImage)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  return mFrame->Notify(aRequest, aType, aData);
+  return mFrame->OnStartContainer(aRequest, aImage);
+}
+
+NS_IMETHODIMP nsImageListener::OnDataAvailable(imgIRequest *aRequest,
+                                               bool aCurrentFrame,
+                                               const nsIntRect *aRect)
+{
+  if (!mFrame)
+    return NS_ERROR_FAILURE;
+
+  return mFrame->OnDataAvailable(aRequest, aCurrentFrame, aRect);
+}
+
+NS_IMETHODIMP nsImageListener::OnStopDecode(imgIRequest *aRequest,
+                                            nsresult status,
+                                            const PRUnichar *statusArg)
+{
+  if (!mFrame)
+    return NS_ERROR_FAILURE;
+
+  return mFrame->OnStopDecode(aRequest, status, statusArg);
+}
+
+NS_IMETHODIMP nsImageListener::FrameChanged(imgIRequest *aRequest,
+                                            imgIContainer *aContainer,
+                                            const nsIntRect *aDirtyRect)
+{
+  if (!mFrame)
+    return NS_ERROR_FAILURE;
+
+  return mFrame->FrameChanged(aRequest, aContainer, aDirtyRect);
 }
 
 static bool

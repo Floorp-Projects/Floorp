@@ -48,10 +48,11 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 };
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsGenConImageContent,
+NS_IMPL_ISUPPORTS_INHERITED4(nsGenConImageContent,
                              nsXMLElement,
                              nsIImageLoadingContent,
-                             imgINotificationObserver,
+                             imgIContainerObserver,
+                             imgIDecoderObserver,
                              imgIOnloadBlocker)
 
 nsresult
