@@ -19,6 +19,24 @@
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
 #include "nsLayoutStatics.h"
+#include "nsIMemoryReporter.h"
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(LayoutStyleSheetServiceMallocSizeOf,
+                                     "layout/style-sheet-service")
+
+static int64_t
+GetStyleSheetServiceSize()
+{
+  return nsStyleSheetService::SizeOfIncludingThis(
+           LayoutStyleSheetServiceMallocSizeOf);
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(StyleSheetService,
+  "explicit/layout/style-sheet-service",
+  KIND_HEAP,
+  nsIMemoryReporter::UNITS_BYTES,
+  GetStyleSheetServiceSize,
+  "Memory used for style sheets held by the style sheet service.")
 
 nsStyleSheetService *nsStyleSheetService::gInstance = nullptr;
 
@@ -28,12 +46,18 @@ nsStyleSheetService::nsStyleSheetService()
   NS_ASSERTION(!gInstance, "Someone is using CreateInstance instead of GetService");
   gInstance = this;
   nsLayoutStatics::AddRef();
+
+  mReporter = new NS_MEMORY_REPORTER_NAME(StyleSheetService);
+  (void)::NS_RegisterMemoryReporter(mReporter);
 }
 
 nsStyleSheetService::~nsStyleSheetService()
 {
   gInstance = nullptr;
   nsLayoutStatics::Release();
+
+  (void)::NS_UnregisterMemoryReporter(mReporter);
+  mReporter = nullptr;
 }
 
 NS_IMPL_ISUPPORTS1(nsStyleSheetService, nsIStyleSheetService)
@@ -173,7 +197,7 @@ nsStyleSheetService::UnregisterSheet(nsIURI *sheetURI, uint32_t aSheetType)
   NS_ENSURE_TRUE(foundIndex >= 0, NS_ERROR_INVALID_ARG);
   nsCOMPtr<nsIStyleSheet> sheet = mSheets[aSheetType][foundIndex];
   mSheets[aSheetType].RemoveObjectAt(foundIndex);
-  
+
   const char* message = (aSheetType == AGENT_SHEET) ?
       "agent-sheet-removed" : "user-sheet-removed";
   nsCOMPtr<nsIObserverService> serv =
@@ -183,3 +207,34 @@ nsStyleSheetService::UnregisterSheet(nsIURI *sheetURI, uint32_t aSheetType)
 
   return NS_OK;
 }
+
+size_t
+nsStyleSheetService::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+{
+  if (!nsStyleSheetService::gInstance) {
+    return 0;
+  }
+
+  return nsStyleSheetService::gInstance->
+      SizeOfIncludingThisHelper(aMallocSizeOf);
+}
+
+static size_t
+SizeOfElementIncludingThis(nsIStyleSheet* aElement,
+                           nsMallocSizeOfFun aMallocSizeOf, void *aData)
+{
+    return aElement->SizeOfIncludingThis(aMallocSizeOf);
+}
+
+size_t
+nsStyleSheetService::SizeOfIncludingThisHelper(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mSheets[AGENT_SHEET].SizeOfExcludingThis(SizeOfElementIncludingThis,
+                                                aMallocSizeOf);
+  n += mSheets[USER_SHEET].SizeOfExcludingThis(SizeOfElementIncludingThis,
+                                               aMallocSizeOf);
+  return n;
+}
+
+
