@@ -25,13 +25,14 @@ EXPORTS = \
 EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
+	CanvasRenderingContext2D.h \
   ImageData.h \
   $(NULL)
 
 CPPSRCS	= \
 	CanvasImageCache.cpp \
-	CanvasUtils.cpp \
 	CanvasRenderingContext2D.cpp \
+	CanvasUtils.cpp \
 	DocumentRendererParent.cpp \
 	DocumentRendererChild.cpp \
 	ImageData.cpp \

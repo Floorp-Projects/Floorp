@@ -962,7 +962,6 @@ customMethodCalls = {
         'thisType' : 'nsIDOMWindow',
         'unwrapThisFailureFatal' : False
         },
-    
     'nsIDOMImageData_GetWidth': {
         'thisType': 'nsIDOMImageData',
         'code': 'uint32_t result = static_cast<mozilla::dom::ImageData*>(self)->GetWidth();',
@@ -977,4 +976,3 @@ customMethodCalls = {
         'canFail': False
         }
     }
-
