@@ -148,10 +148,6 @@ private:
   // Returns whether we've got a reference to the cache entry.
   bool HasCacheEntry() const;
 
-  // Return true if at least one of our proxies, excluding
-  // aProxyToIgnore, has an observer.  aProxyToIgnore may be null.
-  bool HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const;
-
   // Return the priority of the underlying network request, or return
   // PRIORITY_NORMAL if it doesn't support nsISupportsPriority.
   int32_t Priority() const;
