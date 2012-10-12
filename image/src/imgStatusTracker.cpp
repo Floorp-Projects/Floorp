@@ -635,7 +635,7 @@ imgStatusTracker::RecordStopDecode(nsresult aStatus)
                     "RecordStopDecode called before we have an Image");
   mState |= stateDecodeStopped;
 
-  if (NS_SUCCEEDED(aStatus))
+  if (NS_SUCCEEDED(aStatus) && mImageStatus != imgIRequest::STATUS_ERROR)
     mImageStatus |= imgIRequest::STATUS_DECODE_COMPLETE;
   // If we weren't successful, clear all success status bits and set error.
   else
@@ -750,8 +750,10 @@ imgStatusTracker::RecordStopRequest(bool aLastPart, nsresult aStatus)
   mState |= stateRequestStopped;
 
   // If we were successful in loading, note that the image is complete.
-  if (NS_SUCCEEDED(aStatus))
+  if (NS_SUCCEEDED(aStatus) && mImageStatus != imgIRequest::STATUS_ERROR)
     mImageStatus |= imgIRequest::STATUS_LOAD_COMPLETE;
+  else
+    mImageStatus = imgIRequest::STATUS_ERROR;
 }
 
 void
@@ -770,6 +772,18 @@ imgStatusTracker::OnStopRequest(bool aLastPart, nsresult aStatus)
   nsTObserverArray<imgRequestProxy*>::ForwardIterator srIter(mConsumers);
   while (srIter.HasMore()) {
     SendStopRequest(srIter.GetNext(), aLastPart, aStatus);
+  }
+
+  if (NS_FAILED(aStatus)) {
+    // Some kind of problem has happened with image decoding.
+    // Report the URI to net:failed-to-process-uri-conent observers.
+
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      nsCOMPtr<nsIURI> uri;
+      mTracker->GetRequest()->GetURI(getter_AddRefs(uri));
+      os->NotifyObservers(uri, "net:failed-to-process-uri-content", nullptr);
+    }
   }
 }
 
