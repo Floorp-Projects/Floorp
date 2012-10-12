@@ -385,8 +385,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasGradientAzure, NS_CANVASGRADIENTAZURE_PRIV
 NS_IMPL_ADDREF(nsCanvasGradientAzure)
 NS_IMPL_RELEASE(nsCanvasGradientAzure)
 
-// XXX
-// DOMCI_DATA(CanvasGradient, nsCanvasGradientAzure)
+DOMCI_DATA(CanvasGradient, nsCanvasGradientAzure)
 
 NS_INTERFACE_MAP_BEGIN(nsCanvasGradientAzure)
   NS_INTERFACE_MAP_ENTRY(nsCanvasGradientAzure)
@@ -400,8 +399,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasPatternAzure, NS_CANVASPATTERNAZURE_PRIVAT
 NS_IMPL_ADDREF(nsCanvasPatternAzure)
 NS_IMPL_RELEASE(nsCanvasPatternAzure)
 
-// XXX
-// DOMCI_DATA(CanvasPattern, nsCanvasPatternAzure)
+DOMCI_DATA(CanvasPattern, nsCanvasPatternAzure)
 
 NS_INTERFACE_MAP_BEGIN(nsCanvasPatternAzure)
   NS_INTERFACE_MAP_ENTRY(nsCanvasPatternAzure)
@@ -440,8 +438,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsTextMetricsAzure, NS_TEXTMETRICSAZURE_PRIVATE_II
 NS_IMPL_ADDREF(nsTextMetricsAzure)
 NS_IMPL_RELEASE(nsTextMetricsAzure)
 
-// XXX
-// DOMCI_DATA(TextMetrics, nsTextMetricsAzure)
+DOMCI_DATA(TextMetrics, nsTextMetricsAzure)
 
 NS_INTERFACE_MAP_BEGIN(nsTextMetricsAzure)
   NS_INTERFACE_MAP_ENTRY(nsTextMetricsAzure)
@@ -524,8 +521,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsCanvasRenderingContext2DAzure)
   return nsCCUncollectableMarker::sGeneration && tmp->IsBlack();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-// XXX
-// DOMCI_DATA(CanvasRenderingContext2D, nsCanvasRenderingContext2DAzure)
+DOMCI_DATA(CanvasRenderingContext2D, nsCanvasRenderingContext2DAzure)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCanvasRenderingContext2DAzure)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -547,27 +543,10 @@ uint8_t (*nsCanvasRenderingContext2DAzure::sUnpremultiplyTable)[256] = nullptr;
 uint8_t (*nsCanvasRenderingContext2DAzure::sPremultiplyTable)[256] = nullptr;
 DrawTarget* nsCanvasRenderingContext2DAzure::sErrorTarget = nullptr;
 
-namespace mozilla {
-namespace dom {
-
-bool
-AzureCanvasEnabled()
-{
-  return gfxPlatform::GetPlatform()->SupportsAzureCanvas();
-}
-
-}
-}
 
 nsresult
 NS_NewCanvasRenderingContext2DAzure(nsIDOMCanvasRenderingContext2D** aResult)
 {
-  // XXX[nrc] remove this check when Thebes canvas is removed
-  // (because we will always support Azure)
-  if (!AzureCanvasEnabled()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsRefPtr<nsIDOMCanvasRenderingContext2D> ctx = new nsCanvasRenderingContext2DAzure();
   if (!ctx)
     return NS_ERROR_OUT_OF_MEMORY;

@@ -936,16 +936,11 @@ nsHTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, gfxPattern::Gr
   return mCurrentContext->Render(aContext, aFilter, aFlags);
 }
 
-nsresult NS_NewCanvasRenderingContext2DThebes(nsIDOMCanvasRenderingContext2D** aResult);
 nsresult NS_NewCanvasRenderingContext2DAzure(nsIDOMCanvasRenderingContext2D** aResult);
 
 nsresult
 NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 {
   Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
-  if (AzureCanvasEnabled()) {
-    return NS_NewCanvasRenderingContext2DAzure(aResult);
-  }
-
-  return NS_NewCanvasRenderingContext2DThebes(aResult);
+  return NS_NewCanvasRenderingContext2DAzure(aResult);
 }
