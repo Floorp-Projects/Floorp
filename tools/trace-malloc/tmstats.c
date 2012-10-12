@@ -437,7 +437,6 @@ double getAverage(VarianceState* inVariance)
     if(NULL != inVariance && 0 < inVariance->mCount)
     {
         double count;
-        double sum;
         int64_t isum;
 
         /*
@@ -446,9 +445,8 @@ double getAverage(VarianceState* inVariance)
         isum = inVariance->mSum;
 
         count = (double)inVariance->mCount;
-        LL_L2F(sum, isum);
 
-        retval = sum / count;
+        retval = (double)isum / count;
     }
 
     return retval;
@@ -465,7 +463,6 @@ double getVariance(VarianceState* inVariance)
     if(NULL != inVariance && 1 < inVariance->mCount)
     {
         double count;
-        double squaredSum;
         double avg;
         double squaredAvg;
         int64_t isquaredSum;
@@ -476,12 +473,11 @@ double getVariance(VarianceState* inVariance)
         isquaredSum = inVariance->mSquaredSum;
 
         count = (double)inVariance->mCount;
-        LL_L2F(squaredSum, isquaredSum);
 
         avg = getAverage(inVariance);
         squaredAvg = avg * avg;
 
-        retval = (squaredSum - (count * squaredAvg)) / (count - 1.0);
+        retval = ((double)isquaredSum - (count * squaredAvg)) / (count - 1.0);
     }
 
     return retval;
