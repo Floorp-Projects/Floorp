@@ -30,7 +30,6 @@ webidl_files = \
   HTMLCollection.webidl \
   HTMLOptionsCollection.webidl \
   HTMLPropertiesCollection.webidl \
-  MediaStreamList.webidl \
   NodeList.webidl \
   PaintRequestList.webidl \
   Performance.webidl \
