@@ -9,18 +9,27 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsITreeColumns.h"
+#include "nsStubImageDecoderObserver.h"
 #include "nsTreeBodyFrame.h"
 #include "mozilla/Attributes.h"
 
 // This class handles image load observation.
-class nsTreeImageListener MOZ_FINAL : public imgINotificationObserver
+class nsTreeImageListener MOZ_FINAL : public nsStubImageDecoderObserver
 {
 public:
   nsTreeImageListener(nsTreeBodyFrame *aTreeFrame);
   ~nsTreeImageListener();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGINOTIFICATIONOBSERVER
+  // imgIDecoderObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
+  NS_IMETHOD OnImageIsAnimated(imgIRequest* aRequest);
+  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, bool aCurrentFrame,
+                             const nsIntRect *aRect);
+  // imgIContainerObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD FrameChanged(imgIRequest *aRequest,
+                          imgIContainer *aContainer,
+                          const nsIntRect *aDirtyRect);
 
   NS_IMETHOD ClearFrame();
 

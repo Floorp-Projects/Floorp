@@ -43,7 +43,7 @@ interface imgIContainer;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(0089cf0c-210c-4b44-9ab0-8099b32bcf64)]
+[scriptable, uuid(5ca71b89-1a2f-475f-881d-d76c1531c4c8)]
 interface imgIDecoderObserver : imgIContainerObserver
 {
   /**
@@ -53,7 +53,7 @@ interface imgIDecoderObserver : imgIContainerObserver
    * (used only for observers of imgIRequest objects, which are nsIRequests,
    * not imgIDecoder objects)
    */
-  void onStartRequest();
+  void onStartRequest(in imgIRequest aRequest);
 
   /**
    * Decode notification.
@@ -62,7 +62,7 @@ interface imgIDecoderObserver : imgIContainerObserver
    * "header-only" decodes used by decode-on-draw to parse the width/height
    * out of the image. Thus, it is a decode notification only.
    */
-  void onStartDecode();
+  void onStartDecode(in imgIRequest aRequest);
 
   /**
    * Load notification.
@@ -72,34 +72,54 @@ interface imgIDecoderObserver : imgIContainerObserver
    * called, the size has been set on the container and STATUS_SIZE_AVAILABLE
    * has been set on the associated imgRequest.
    */
-  void onStartContainer();
+  void onStartContainer(in imgIRequest aRequest, in imgIContainer aContainer);
+
+  /**
+   * Decode notification.
+   *
+   * called when each frame is created.
+   */
+  void onStartFrame(in imgIRequest aRequest, in unsigned long aFrame);
 
   /**
    * Decode notification.
    *
    * called when there is more to paint.
    */
-  [noscript] void onDataAvailable([const] in nsIntRect aRect);
+  [noscript] void onDataAvailable(in imgIRequest aRequest, in boolean aCurrentFrame, [const] in nsIntRect aRect);
 
   /**
    * Decode notification.
    *
    * called when a frame is finished decoding.
    */
-  void onStopFrame();
+  void onStopFrame(in imgIRequest aRequest, in unsigned long aFrame);
+
+  /**
+   * Do not implement this. It is useless and going away.
+   */
+  void onStopContainer(in imgIRequest aRequest, in imgIContainer aContainer);
 
   /**
    * Notification for when an image is known to be animated. This should be
    * fired at the earliest possible time.
    */
-  void onImageIsAnimated();
+  void onImageIsAnimated(in imgIRequest aRequest);
 
   /**
-   * Decode notification.
+   * In theory a decode notification, but currently a load notification.
    *
-   * Called when all decoding has terminated.
+   * Ideally this would be called when the decode is complete. Unfortunately,
+   * this is currently the only way to signal decoding errors to consumers,
+   * and the only decoding errors that consumers care about (indeed, the only
+   * ones that they're prepared to hear about) are failures to instantiate the
+   * decoder (<img src="foo.html"> for example). Thus, currently this is just
+   * a companion to onStopDecode to signal success or failure. This will be
+   * revisited in bug 505385. If you're thinking of doing something new with
+   * this, please talk to bholley first.
    */
-  void onStopDecode(in nsresult status);
+  void onStopDecode(in imgIRequest aRequest, in nsresult status,
+                    in wstring statusArg);
 
   /**
    * Load notification.
@@ -108,13 +128,13 @@ interface imgIDecoderObserver : imgIContainerObserver
    * (used only for observers of imgIRequest objects, which are nsIRequests,
    * not imgIDecoder objects)
    */
-  void onStopRequest(in boolean aIsLastPart);
+  void onStopRequest(in imgIRequest aRequest, in boolean aIsLastPart);
 
   /**
    * Called when the decoded image data is discarded. This means that the frames
    * no longer exist in decoded form, and any attempt to access or draw the
    * image will initiate a new series of progressive decode notifications.
    */
-  void onDiscard();
+  void onDiscard(in imgIRequest aRequest);
 
 };

@@ -11,7 +11,7 @@
 #include "nsIDOMSVGImageElement.h"
 #include "nsLayoutUtils.h"
 #include "nsRenderingContext.h"
-#include "imgINotificationObserver.h"
+#include "nsStubImageDecoderObserver.h"
 #include "nsSVGEffects.h"
 #include "nsSVGImageElement.h"
 #include "nsSVGPathGeometryFrame.h"
@@ -23,13 +23,22 @@ using namespace mozilla;
 
 class nsSVGImageFrame;
 
-class nsSVGImageListener MOZ_FINAL : public imgINotificationObserver
+class nsSVGImageListener MOZ_FINAL : public nsStubImageDecoderObserver
 {
 public:
   nsSVGImageListener(nsSVGImageFrame *aFrame);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGINOTIFICATIONOBSERVER
+  // imgIDecoderObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
+                          const PRUnichar *statusArg);
+  // imgIContainerObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD FrameChanged(imgIRequest *aRequest,
+                          imgIContainer *aContainer,
+                          const nsIntRect *aDirtyRect);
+  // imgIContainerObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD OnStartContainer(imgIRequest *aRequest,
+                              imgIContainer *aContainer);
 
   void SetFrame(nsSVGImageFrame *frame) { mFrame = frame; }
 
@@ -89,7 +98,7 @@ private:
   gfxMatrix GetVectorImageTransform(uint32_t aFor);
   bool      TransformContextForPainting(gfxContext* aGfxContext);
 
-  nsCOMPtr<imgINotificationObserver> mListener;
+  nsCOMPtr<imgIDecoderObserver> mListener;
 
   nsCOMPtr<imgIContainer> mImageContainer;
 
@@ -551,34 +560,49 @@ nsSVGImageFrame::GetHitTestFlags()
 //----------------------------------------------------------------------
 // nsSVGImageListener implementation
 
-NS_IMPL_ISUPPORTS1(nsSVGImageListener, imgINotificationObserver)
+NS_IMPL_ISUPPORTS2(nsSVGImageListener,
+                   imgIDecoderObserver,
+                   imgIContainerObserver)
 
 nsSVGImageListener::nsSVGImageListener(nsSVGImageFrame *aFrame) :  mFrame(aFrame)
 {
 }
 
-NS_IMETHODIMP
-nsSVGImageListener::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
+NS_IMETHODIMP nsSVGImageListener::OnStopDecode(imgIRequest *aRequest,
+                                               nsresult status,
+                                               const PRUnichar *statusArg)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
-    nsSVGUtils::InvalidateAndScheduleReflowSVG(mFrame);
-  }
+  nsSVGUtils::InvalidateAndScheduleReflowSVG(mFrame);
+  return NS_OK;
+}
 
-  if (aType == imgINotificationObserver::FRAME_UPDATE) {
-    // No new dimensions, so we don't need to call
-    // nsSVGUtils::InvalidateAndScheduleBoundsUpdate.
-    nsSVGEffects::InvalidateRenderingObservers(mFrame);
-    nsSVGUtils::InvalidateBounds(mFrame);
-  }
+NS_IMETHODIMP nsSVGImageListener::FrameChanged(imgIRequest *aRequest,
+                                               imgIContainer *aContainer,
+                                               const nsIntRect *aDirtyRect)
+{
+  if (!mFrame)
+    return NS_ERROR_FAILURE;
 
-  if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
-    // Called once the resource's dimensions have been obtained.
-    aRequest->GetImage(getter_AddRefs(mFrame->mImageContainer));
-    nsSVGUtils::InvalidateAndScheduleReflowSVG(mFrame);
-  }
+  // No new dimensions, so we don't need to call
+  // nsSVGUtils::InvalidateAndScheduleBoundsUpdate.
+  nsSVGEffects::InvalidateRenderingObservers(mFrame);
+  nsSVGUtils::InvalidateBounds(mFrame);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSVGImageListener::OnStartContainer(imgIRequest *aRequest,
+                                                   imgIContainer *aContainer)
+{
+  // Called once the resource's dimensions have been obtained.
+
+  if (!mFrame)
+    return NS_ERROR_FAILURE;
+
+  mFrame->mImageContainer = aContainer;
+  nsSVGUtils::InvalidateAndScheduleReflowSVG(mFrame);
 
   return NS_OK;
 }

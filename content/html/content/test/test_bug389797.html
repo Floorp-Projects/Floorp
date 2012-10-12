@@ -72,7 +72,7 @@ function HTML_TAG(aTagName, aImplClass) {
 }
 
 const objectIfaces = [
-    "imgINotificationObserver", "nsIRequestObserver", "nsIStreamListener",
+    "imgIDecoderObserver", "nsIRequestObserver", "nsIStreamListener",
     "nsIFrameLoaderOwner", "nsIObjectLoadingContent", "nsIInterfaceRequestor",
     "nsIChannelEventSink"
   ];
@@ -160,9 +160,9 @@ HTML_TAG("i", "");
 HTML_TAG("iframe", "IFrame", [ "nsIDOMGetSVGDocument", "nsIDOMMozBrowserFrame" ],
                              [ "nsIFrameLoaderOwner" ]);
 HTML_TAG("image", "Span");
-HTML_TAG("img", "Image", [], [ "imgINotificationObserver",
+HTML_TAG("img", "Image", [], [ "imgIDecoderObserver",
                                "nsIImageLoadingContent" ]);
-HTML_TAG("input", "Input", [], [ "imgINotificationObserver",
+HTML_TAG("input", "Input", [], [ "imgIDecoderObserver",
                                  "nsIImageLoadingContent",
                                  "nsIDOMNSEditableElement" ]);
 HTML_TAG("ins", "Mod");

@@ -14,21 +14,32 @@
 
 #include "imgIRequest.h"
 #include "imgIDecoderObserver.h"
-#include "imgINotificationObserver.h"
+#include "nsStubImageDecoderObserver.h"
 
 #define BULLET_FRAME_IMAGE_LOADING NS_FRAME_STATE_BIT(63)
 #define BULLET_FRAME_HAS_FONT_INFLATION NS_FRAME_STATE_BIT(62)
 
 class nsBulletFrame;
 
-class nsBulletListener : public imgINotificationObserver
+class nsBulletListener : public nsStubImageDecoderObserver
 {
 public:
   nsBulletListener();
   virtual ~nsBulletListener();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGINOTIFICATIONOBSERVER
+  // imgIDecoderObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
+  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, bool aCurrentFrame,
+                             const nsIntRect *aRect);
+  NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
+                          const PRUnichar *statusArg);
+  NS_IMETHOD OnImageIsAnimated(imgIRequest *aRequest);
+
+  // imgIContainerObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD FrameChanged(imgIRequest *aRequest,
+                          imgIContainer *aContainer,
+                          const nsIntRect *dirtyRect);
 
   void SetFrame(nsBulletFrame *frame) { mFrame = frame; }
 
@@ -49,8 +60,6 @@ public:
   {
   }
   virtual ~nsBulletFrame();
-
-  NS_IMETHOD Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData);
 
   // nsIFrame
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
@@ -76,6 +85,18 @@ public:
                              int32_t aIncrement);
 
 
+  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
+  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest,
+                             bool aCurrentFrame,
+                             const nsIntRect *aRect);
+  NS_IMETHOD OnStopDecode(imgIRequest *aRequest,
+                          nsresult aStatus,
+                          const PRUnichar *aStatusArg);
+  NS_IMETHOD OnImageIsAnimated(imgIRequest *aRequest);
+  NS_IMETHOD FrameChanged(imgIRequest *aRequest,
+                          imgIContainer *aContainer,
+                          const nsIntRect *aDirtyRect);
+
   /* get list item text, without '.' */
   static bool AppendCounterText(int32_t aListStyleType,
                                   int32_t aOrdinal,
@@ -99,8 +120,6 @@ public:
   void SetFontSizeInflation(float aInflation);
 
 protected:
-  nsresult OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
-
   void GetDesiredSize(nsPresContext* aPresContext,
                       nsRenderingContext *aRenderingContext,
                       nsHTMLReflowMetrics& aMetrics,
