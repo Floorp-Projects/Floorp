@@ -63,7 +63,7 @@ public class LayerView extends FrameLayout {
     public static final int PAINT_BEFORE_FIRST = 0;
     public static final int PAINT_AFTER_FIRST = 1;
 
-    boolean shouldUseTextureView() {
+    public boolean shouldUseTextureView() {
         // Disable TextureView support for now as it causes panning/zooming
         // performance regressions (see bug 792259). Uncomment the code below
         // once this bug is fixed.
