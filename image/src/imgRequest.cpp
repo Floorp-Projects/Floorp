@@ -81,6 +81,7 @@ NS_IMPL_ISUPPORTS8(imgRequest,
 
 imgRequest::imgRequest(imgLoader* aLoader)
  : mLoader(aLoader)
+ , mStatusTracker(new imgStatusTracker(nullptr, this))
  , mValidator(nullptr)
  , mImageSniffers("image-sniffing-services")
  , mInnerWindowId(0)
@@ -126,8 +127,6 @@ nsresult imgRequest::Init(nsIURI *aURI,
   NS_ABORT_IF_FALSE(aChannel, "No channel");
 
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
-
-  mStatusTracker = new imgStatusTracker(nullptr, this);
 
   mURI = aURI;
   mCurrentURI = aCurrentURI;
