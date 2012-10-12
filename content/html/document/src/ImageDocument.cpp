@@ -508,13 +508,13 @@ ImageDocument::ToggleImageSize()
 NS_IMETHODIMP
 ImageDocument::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData)
 {
-  if (aType == imgINotificationObserver::START_CONTAINER) {
+  if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
     return OnStartContainer(aRequest, image);
   }
 
-  if (aType == imgINotificationObserver::STOP_DECODE) {
+  if (aType == imgINotificationObserver::DECODE_COMPLETE) {
     if (mImageContent) {
       // Update the background-color of the image only after the
       // image has been decoded to prevent flashes of just the
@@ -533,7 +533,7 @@ ImageDocument::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aDa
     }
   }
 
-  if (aType == imgINotificationObserver::STOP_REQUEST) {
+  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     uint32_t reqStatus;
     aRequest->GetImageStatus(&reqStatus);
     nsresult status =

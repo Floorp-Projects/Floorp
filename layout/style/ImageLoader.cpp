@@ -341,7 +341,7 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 ImageLoader::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
 {
-  if (aType == imgINotificationObserver::START_CONTAINER) {
+  if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
     return OnStartContainer(aRequest, image);
@@ -351,11 +351,11 @@ ImageLoader::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData
     return OnImageIsAnimated(aRequest);
   }
 
-  if (aType == imgINotificationObserver::STOP_FRAME) {
+  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     return OnStopFrame(aRequest);
   }
 
-  if (aType == imgINotificationObserver::FRAME_CHANGED) {
+  if (aType == imgINotificationObserver::FRAME_UPDATE) {
     return FrameChanged(aRequest);
   }
 

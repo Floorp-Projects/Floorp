@@ -580,17 +580,17 @@ nsImageBoxFrame::GetFrameName(nsAString& aResult) const
 nsresult
 nsImageBoxFrame::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
 {
-  if (aType == imgINotificationObserver::START_CONTAINER) {
+  if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
     return OnStartContainer(aRequest, image);
   }
 
-  if (aType == imgINotificationObserver::STOP_DECODE) {
+  if (aType == imgINotificationObserver::DECODE_COMPLETE) {
     return OnStopDecode(aRequest);
   }
 
-  if (aType == imgINotificationObserver::STOP_REQUEST) {
+  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     uint32_t imgStatus;
     aRequest->GetImageStatus(&imgStatus);
     nsresult status =
@@ -602,7 +602,7 @@ nsImageBoxFrame::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* a
     return OnImageIsAnimated(aRequest);
   }
 
-  if (aType == imgINotificationObserver::FRAME_CHANGED) {
+  if (aType == imgINotificationObserver::FRAME_UPDATE) {
     return FrameChanged(aRequest);
   }
 
