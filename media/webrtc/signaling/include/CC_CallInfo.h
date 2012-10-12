@@ -101,7 +101,7 @@ namespace CSF
         /**
            Get calling party number
            @return calling party number as a string
-                   Note: this is a const reference to a string that's owned by the 
+                   Note: this is a const reference to a string that's owned by the
           */
         virtual std::string getCallingPartyNumber() = 0;
 
@@ -122,7 +122,7 @@ namespace CSF
         virtual bool hasCapability (CC_CallCapabilityEnum::CC_CallCapability capability) = 0;
 
         /**
-           If you need the complete set of capabilities 
+           If you need the complete set of capabilities
 
            @return cc_return_t - set of Call Capabilities.
          */
@@ -173,7 +173,7 @@ namespace CSF
         /**
            get call instance number
            @param [in] handle - call info handle
-           @return 
+           @return
          */
         virtual cc_int32_t getCallInstance() = 0;
 
@@ -275,7 +275,7 @@ namespace CSF
 
            //TODO NEED TO DO SOMETHING WRAP CALL LOG REF.
            @return string - INFO body
-           NOTE: Memory associated with the call log is tied to the  
+           NOTE: Memory associated with the call log is tied to the
            this would be freed when the callinfo ref is freed.
          */
         virtual cc_calllog_ref_t  getCallLogRef() = 0;
@@ -289,16 +289,16 @@ namespace CSF
 
          /**
            Find out if this call is capable of querying the media state, which includes mute state and video direction
-           @return  bool  
-          */       
+           @return  bool
+          */
         virtual bool isMediaStateAvailable() = 0;
-        
+
         /**
            Get the audio mute state if available (check availability with isMediaStateAvailable())
            @return  bool  - the current audio state of the call
           */
         virtual bool isAudioMuted(void) = 0;
-        
+
          /**
            Get the video mute state if available (check availability with isMediaStateAvailable())
            @return  bool  - the current video state of the call
@@ -312,7 +312,7 @@ namespace CSF
         virtual int getVolume() = 0;
 
         /**
-           get SDP from info object returned from JSEP functions 
+           get SDP from info object returned from JSEP functions
            @param [in] handle - call info handle
            @return SDP string
          */
@@ -328,7 +328,7 @@ namespace CSF
         /**
            get media streams
            @return media stream table
-           Note:Ownership of the MediaStreamTable is responsibiliy of 
+           Note:Ownership of the MediaStreamTable is responsibiliy of
            the caller.
          */
         virtual MediaStreamTable* getMediaStreams() const = 0;

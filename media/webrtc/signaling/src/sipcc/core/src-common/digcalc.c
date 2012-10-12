@@ -89,14 +89,14 @@ DigestCalcResponse (IN HASHHEX HA1,       /* H(A1) */
     MD5Update(&Md5Ctx, (unsigned char *) pszMethod, strlen(pszMethod));
     MD5Update(&Md5Ctx, (unsigned char *) ":", 1);
     MD5Update(&Md5Ctx, (unsigned char *) pszDigestUri, strlen(pszDigestUri));
-    
+
 /*  Commented as causes problems on Windows ToDo
- * qop is not used but this should be fixed    
+ * qop is not used but this should be fixed
     if (cpr_strcasecmp(pszQop, "auth-int") == 0) {
         MD5Update(&Md5Ctx, (unsigned char *) ":", 1);
         MD5Update(&Md5Ctx, (unsigned char *) HEntity, HASHHEXLEN);
     };
-*/     
+*/
     MD5Final((unsigned char *) HA2, &Md5Ctx);
 
     CvtHex(HA2, HA2Hex);

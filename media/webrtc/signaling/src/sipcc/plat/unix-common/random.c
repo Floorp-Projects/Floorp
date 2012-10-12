@@ -33,7 +33,7 @@
  *             'len' will indicate how many bytes are actually being
  *             returned) on failure, its value will be set to 0.
  *
- * @return 
+ * @return
  *     1 - success.
  *     0 - fail.
  *
@@ -69,7 +69,7 @@ platGenerateCryptoRand(uint8_t *buf, int *len)
         *len = 0;
         rc = 0; /* Failure */
     }
-        
+
     (void) close(fd);
     return rc;
 }

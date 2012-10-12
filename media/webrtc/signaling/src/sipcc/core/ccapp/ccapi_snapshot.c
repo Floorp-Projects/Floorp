@@ -29,7 +29,7 @@ cc_string_t lineLabels[MAX_CONFIG_LINES+1] = {0};
 
 
 void ccsnap_set_line_label(int btn, cc_string_t label) {
-   
+
    CCAPP_ERROR(DEB_F_PREFIX"btn=%d label=%s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_set_line_label"), btn, label);
    if ( btn > 0 && btn <= MAX_CONFIG_LINES+1 ) {
        if ( label == NULL ) {
@@ -51,7 +51,7 @@ cc_string_t ccsnap_get_line_label(int btn) {
 
 /*
  * The below two functions are borrowed from CUCM/CUP as they both perform
- * identical functions.  That is, taking a DN 1555 and 
+ * identical functions.  That is, taking a DN 1555 and
  * a mask 919476XXXX to build a true external number 9194761555.
  */
 static void stringInsert(char *string, int num, char ch)
@@ -138,7 +138,7 @@ DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_ApplyTranslationMask"));
         else
             translatedString[j++] = translationMask[i];
     }
- 
+
     translatedString[j] = 0;
     result = strlib_malloc(translatedString, strlen(translatedString));
     return result;
@@ -163,11 +163,11 @@ void ccsnap_line_pre_init () {
         if ((lineInfo[i].cfwd_dest) && (strlen(lineInfo[i].cfwd_dest) > 0)) {
             strlib_free(lineInfo[i].cfwd_dest);
         }
-        if ((lineInfo[i].externalNumber) && 
+        if ((lineInfo[i].externalNumber) &&
             (strlen(lineInfo[i].externalNumber) > 0)) {
             strlib_free(lineInfo[i].externalNumber);
         }
-        if ((featureInfo[i].speedDialNumber) && 
+        if ((featureInfo[i].speedDialNumber) &&
             (strlen(featureInfo[i].speedDialNumber) > 0)) {
             strlib_free(featureInfo[i].speedDialNumber);
         }
@@ -177,7 +177,7 @@ void ccsnap_line_pre_init () {
         if ((featureInfo[i].name) && (strlen(featureInfo[i].name) > 0)) {
             strlib_free(featureInfo[i].name);
         }
-        if ((featureInfo[i].retrievalPrefix) && 
+        if ((featureInfo[i].retrievalPrefix) &&
             (strlen(featureInfo[i].retrievalPrefix) > 0)) {
             strlib_free(featureInfo[i].retrievalPrefix);
         }
@@ -302,14 +302,14 @@ cc_line_info_t* ccsnap_getLineInfoFromBtn(int btnID)
      return NULL;
 }
 
-cc_boolean allowedFeature(int fid){ 
+cc_boolean allowedFeature(int fid){
     return TRUE;
 }
 
 cc_feature_info_t* ccsnap_getFeatureInfo(int featureIndex)
 {
-	if ( ( featureIndex<=MAX_CONFIG_LINES ) && 
-			( featureIndex>= 1 ) && 
+	if ( ( featureIndex<=MAX_CONFIG_LINES ) &&
+			( featureIndex>= 1 ) &&
 		( featureInfo[featureIndex].button == featureIndex ) ) {
             if ( allowedFeature(featureInfo[featureIndex].feature_id) ){
 		return &featureInfo[featureIndex];
@@ -335,7 +335,7 @@ void ccsnap_device_pre_init () {
 
     i = 0;
     while (i < CCAPI_MAX_SERVERS) {
-        if ((g_deviceInfo.ucm[i].name) && 
+        if ((g_deviceInfo.ucm[i].name) &&
             (strlen(g_deviceInfo.ucm[i].name) > 0)) {
             strlib_free(g_deviceInfo.ucm[i].name);
         }
@@ -476,7 +476,7 @@ void ccsnap_update_ccm_status(cc_string_t addr, cc_ccm_status_t status)
     }
 }
 
-void ccsnap_handle_mnc_reached (cc_line_info_t *line_info, cc_boolean mnc_reached, cc_cucm_mode_t mode) 
+void ccsnap_handle_mnc_reached (cc_line_info_t *line_info, cc_boolean mnc_reached, cc_cucm_mode_t mode)
 {
     cc_call_handle_t handles[MAX_CALLS];
     int count = MAX_CALLS, i;

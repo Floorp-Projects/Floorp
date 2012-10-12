@@ -31,11 +31,11 @@ namespace CSF
     {
     public:
         virtual int  getCodecList( CodecRequestType requestType ) = 0;
-        
+
         virtual int  rxAlloc    ( int groupId, int streamId, int requestedPort ) = 0;
         virtual int  rxOpen     ( int groupId, int streamId, int requestedPort, int listenIp, bool isMulticast ) = 0;
         virtual int  rxStart    ( int groupId, int streamId, int payloadType, int packPeriod, int localPort, int rfc2833PayloadType,
-                                  EncryptionAlgorithm algorithm, unsigned char* key, int keyLen, unsigned char* salt, int saltLen, int mode, int party ) = 0;        
+                                  EncryptionAlgorithm algorithm, unsigned char* key, int keyLen, unsigned char* salt, int saltLen, int mode, int party ) = 0;
         virtual void rxClose    ( int groupId, int streamId ) = 0;
         virtual void rxRelease  ( int groupId, int streamId, int port ) = 0;
 

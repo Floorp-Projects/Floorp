@@ -26,7 +26,7 @@ typedef uint8_t boolean;
 /*
  * Define min/max
  *    defined in param.h
- * 
+ *
  * The GNU versions of the MAX and MIN macros do two things better than
  * the old versions:
  * 1. they are more optimal as they only evaluate a & b once by creating a

@@ -35,8 +35,8 @@ void CC_ServiceListener_outOfService(cc_cucm_mode_t cucm_mode, cc_service_cause_
  * @param additional_number the additional version number
  * @return void
  */
-void CC_ServiceListener_inService(cc_cucm_mode_t cucm_mode, 
-        cc_service_cause_t service_cause, 
+void CC_ServiceListener_inService(cc_cucm_mode_t cucm_mode,
+        cc_service_cause_t service_cause,
         cc_string_t sis_ver_name,
         cc_uint32_t major_number,
         cc_uint32_t minor_number,
@@ -60,7 +60,7 @@ void CC_ServiceListener_inService(cc_cucm_mode_t cucm_mode,
  *  configuration changes and required the phone to re-register to make them
  *  effective.
  * @param load_id [in] - firmware image name that phone should be running with
- * @param inactive_load_d [in] firmaware image name for the inactive load image 
+ * @param inactive_load_d [in] firmaware image name for the inactive load image
  * @param load_server [in] - address of load server to download the  firmware
  * image load_id.
  * @param log_server [in] - log server address where error report need to be

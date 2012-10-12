@@ -104,11 +104,11 @@ typedef struct
      * name field of the key is a primary indication whether the
      * parameter is configured or not. This is because the
      * zero value is a designated value for G711 and the -1 is
-     * for no codec. The -1 is not natural value of uninitialized 
+     * for no codec. The -1 is not natural value of uninitialized
      * variable therefore keep the codec as name and value pair.
      * The missing of the name indiates there the parameter is not
      * configured.
-     */ 
+     */
     key_table_entry_t preferred_codec;
     int         dtmf_db_level;
     DtmfOutOfBandTransport_t dtmf_outofband;
@@ -237,7 +237,7 @@ static const key_table_entry_t codec_table[] = {
     {"iLBC",             RTP_ILBC},
     {"iSAC",             RTP_ISAC},
     {"opus",             RTP_OPUS},
-    {"none",             RTP_NONE}, 
+    {"none",             RTP_NONE},
     {0,                  RTP_NONE}
 };
 

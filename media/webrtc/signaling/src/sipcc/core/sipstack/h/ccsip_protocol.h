@@ -402,7 +402,7 @@ typedef struct sip_header_
 #define REQ_SUPP_PARAM_CISCO_CONFIG "X-cisco-config"
 #define REQ_SUPP_PARAM_SDP_ANAT "sdp-anat"
 /* Add defines for the SIP Interfcae Specification (SIS) protocol version tags*/
-#define REQ_SUPP_PARAM_CISCO_SISTAG "X-cisco-sis-" 
+#define REQ_SUPP_PARAM_CISCO_SISTAG "X-cisco-sis-"
 #define SIS_CURRENT_PROTOCOL_VERSION  "5.2.0"
 #define SIS_PROTOCOL_MAJOR_VERSION_SEADRAGON  1
 #define SIS_PROTOCOL_MAJOR_VERSION_MUSTER  2
@@ -412,7 +412,7 @@ typedef struct sip_header_
 #define SIS_PROTOCOL_MINOR_VERSION_ANGELFIRE   1
 #define SIS_PROTOCOL_MINOR_VERSION_MONTBLANC   1
 #define REQ_SUPP_PARAM_CISCO_SIPVER REQ_SUPP_PARAM_CISCO_SISTAG SIS_CURRENT_PROTOCOL_VERSION
-#define REQ_SUPP_PARAM_CISCO_MONREC "X-cisco-monrec" 
+#define REQ_SUPP_PARAM_CISCO_MONREC "X-cisco-monrec"
 /* Add define for CME version negotiation */
 #define REQ_SUPP_PARAM_CISCO_CME_SISTAG "X-cisco-cme-sis-"
 
@@ -641,5 +641,5 @@ typedef struct sip_header_
 #define SIP_CLI_ERR_BAD_REQ_NO_BODY               "Bad Request - 'Body Expected'"
 #define SIP_CLI_ERR_BAD_REQ_NO_SUBSCRIPTION_HEADER "Bad Request - 'Malformed/Missing Subscription-State Header'"
 #define SIP_CLI_ERR_BAD_REQ_CONTENT_ID_ERROR      "Bad Request - 'Invalid Content-Id field'"
-#define SIP_CLI_ERR_BAD_REQ_REQUIRE_HDR           "Bad Request - 'Malformed/Missing Require header'"             
+#define SIP_CLI_ERR_BAD_REQ_REQUIRE_HDR           "Bad Request - 'Malformed/Missing Require header'"
 #endif /*_CCSIP_PROTOCOL_H_*/

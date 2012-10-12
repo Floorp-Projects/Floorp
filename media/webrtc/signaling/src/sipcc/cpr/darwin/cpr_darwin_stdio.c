@@ -83,12 +83,12 @@ buginf_msg (const char *str)
             printf("%s",buf);
         } while (len > LOG_MAX);
 
-        if (len) 
+        if (len)
         {
           CSFLogDebug("cpr", "%s", (char *) p);
         }
-    } 
-    else 
+    }
+    else
     {
       CSFLogDebug("cpr", "%s", (char *) str);
 

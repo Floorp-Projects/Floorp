@@ -8,12 +8,12 @@
  *  @section intro_sec Introduction
  *  The portable SIP stack is used in multiple SIP endpoints. This document
  *  describes the API's provided by the portable SIP stack that third party
- *  vendors must implement to use the stack. 
+ *  vendors must implement to use the stack.
  *
  *  @section hlapi NG APIs
  *  This API provides 3 main sets of APIs (device, line. call) and provides ways to
  *  invoke actions on these and get status and even callbacks
- * 
+ *
  *  @subsection Management
  *    @li cc_service.h @par
  *
@@ -21,17 +21,17 @@
  *    @li ccapi_call.h @par
  *    @li ccapi_call_info.h @par
  *    @li ccapi_call_listener.h @par to be implemented by the vendor for events related to call
- * 
+ *
  *  @subsection Line
  *    @li ccapi_line.h @par
  *    @li ccapi_line_info.h @par
  *    @li ccapi_line_listener.h @par to be implemented by the vendor for events related to line
- * 
+ *
  *  @subsection Device
  *    @li ccapi_device.h @par
  *    @li ccapi_device_info.h @par
  *    @li ccapi_device_listener.h @par to be implemented by the vendor for events related to device
- * 
+ *
  *  @subsection Misc
  *    @li ccapi_types.h @par
  *    @li cc_types.h @par

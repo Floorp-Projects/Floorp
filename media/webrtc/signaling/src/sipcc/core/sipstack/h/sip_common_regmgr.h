@@ -88,7 +88,7 @@ typedef struct ccm_fallback_table_t_ {
 } ccm_fallback_table_t;
 
 typedef struct {
-    uint32_t   ccb_index;   /* ccb index for which this msg is intended for */     
+    uint32_t   ccb_index;   /* ccb index for which this msg is intended for */
     CCM_ID     ccm_id;      /* cucm id */
 } ccsip_registration_msg_t;
 
@@ -153,5 +153,5 @@ extern boolean g_disable_mass_reg_debug_print;
 
 void regmgr_handle_register_update(line_t last_available_line);
 
-	
+
 #endif /* __SIP_COMMON_REGMGR_H__ */

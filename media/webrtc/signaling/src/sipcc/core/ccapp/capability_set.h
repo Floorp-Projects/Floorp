@@ -23,7 +23,7 @@ extern char g_fp_version_stamp[MAX_FP_VERSION_STAMP_LEN];
 
 // for each feature in the XML FCP file, we'll receive the
 // feature name, featureId, and whether or not it is enabled
-typedef struct cc_feature_control_policy_info_t_ 
+typedef struct cc_feature_control_policy_info_t_
 {
     char                         featureName[FCP_FEATURE_NAME_MAX];
     unsigned int                 featureId;

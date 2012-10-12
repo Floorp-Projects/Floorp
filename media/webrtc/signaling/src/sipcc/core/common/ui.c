@@ -190,7 +190,7 @@ ui_set_call_attr (line_t line_id, callid_t call_id, call_attr_t attr)
 }
 
 /**
- *  Wrapper for ui_update_callref  
+ *  Wrapper for ui_update_callref
  *
  *  @param  line - line for the session
  *  @param  call_id - callid for the session
@@ -291,12 +291,12 @@ ui_update_video_avail (line_t line, callid_t call_id, int avail)
 
 void ui_update_media_interface_change(line_t line, callid_t call_id, group_call_event_t event) {
     session_update_t msg;
-    
+
     if (event != MEDIA_INTERFACE_UPDATE_BEGIN &&
         event != MEDIA_INTERFACE_UPDATE_SUCCESSFUL &&
         event != MEDIA_INTERFACE_UPDATE_FAIL) {
         // un-related event. ignore.
-        return;   
+        return;
     }
 
     if (event != MEDIA_INTERFACE_UPDATE_BEGIN) {
@@ -304,7 +304,7 @@ void ui_update_media_interface_change(line_t line, callid_t call_id, group_call_
         g_dock_undock_event = MEDIA_INTERFACE_UPDATE_NOT_REQUIRED;
     }
 
-    DEF_DEBUG(DEB_L_C_F_PREFIX "event=%s", DEB_L_C_F_PREFIX_ARGS(UI_API, line, call_id, __FUNCTION__), 
+    DEF_DEBUG(DEB_L_C_F_PREFIX "event=%s", DEB_L_C_F_PREFIX_ARGS(UI_API, line, call_id, __FUNCTION__),
         event == MEDIA_INTERFACE_UPDATE_BEGIN ? "MEDIA_INTERFACE_UPDATE_BEGIN" :
         event == MEDIA_INTERFACE_UPDATE_SUCCESSFUL ? "MEDIA_INTERFACE_UPDATE_SUCCESSFUL" :
         event == MEDIA_INTERFACE_UPDATE_FAIL ? "MEDIA_INTERFACE_UPDATE_FAIL" : "unknown");
@@ -1527,12 +1527,12 @@ ui_control_feature (line_t line_id, callid_t call_id,
  *
  */
 static void post_message_helper(
-    group_call_event_t eventId, 
-    call_events event, 
+    group_call_event_t eventId,
+    call_events event,
     line_t nLine,
     callid_t nCallId,
     uint16_t call_instance_id,
-    char *sdp, 
+    char *sdp,
     cc_int32_t status)
 {
     session_update_t msg;

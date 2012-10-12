@@ -25,7 +25,7 @@ typedef void *cprTimer_t;
  * and return a pointer to the timer structure.
  */
 
-/** 
+/**
  * Information CPR needs to send back to the application
  * when a timer expires.
  */
@@ -39,7 +39,7 @@ typedef struct {
 /* Function prototypes */
 
 /**
- * cprSleep 
+ * cprSleep
  *
  * @brief Suspend the calling thread
  * The cprSleep function blocks the calling thread for the indicated number of
@@ -56,12 +56,12 @@ void cprSleep(uint32_t duration);
  * cprCreateTimer
  *
  * @brief Initialize a timer
- * 
+ *
  * The cprCreateTimer function is called to allow the OS to perform whatever
  * work is needed to create a timer. The input name parameter is optional. If present, CPR assigns
  * this name to the timer to assist in debugging. The callbackMsgQueue is the
  * address of a message queue created with cprCreateMsgQueue. This is the
- * queue where the timer expire message will be sent. 
+ * queue where the timer expire message will be sent.
  * So, when this timer expires a msg of type "applicationMsgId" will be sent to the msg queue
  * "callbackMsgQueue" indicating that timer applicationTimerId has expired.
  *
@@ -117,9 +117,9 @@ boolean cprIsTimerRunning(cprTimer_t timer);
 /**
  * cprDestroyTimer
  *
- * @brief Destroys a timer. 
+ * @brief Destroys a timer.
  *
- * This function will cancel the timer and then destroy it. It sets 
+ * This function will cancel the timer and then destroy it. It sets
  * all links to NULL and then frees the timer block.
  *
  * @param[in] timer - which timer to destroy

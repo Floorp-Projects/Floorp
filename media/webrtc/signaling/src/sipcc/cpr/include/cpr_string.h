@@ -44,7 +44,7 @@ sstrncpy(char *dst, const char *src, unsigned long max);
 
 /**
  * sstrncat
- * 
+ *
  * @brief The CPR wrapper for strncat
  *
  * This is Cisco's *safe* version of strncat.  The string will always

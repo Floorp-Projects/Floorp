@@ -32,7 +32,7 @@ static void sub_process_feature_msg(uint32_t cmd, void *msg);
 static void sub_process_feature_notify(ccsip_sub_not_data_t *msg, callid_t call_id,
                             callid_t other_call_id);
 static void sub_process_b2bcnf_msg(uint32_t cmd, void *msg);
-void fsmb2bcnf_get_sub_call_id_from_ccb(fsmcnf_ccb_t *ccb, callid_t *cnf_call_id, 
+void fsmb2bcnf_get_sub_call_id_from_ccb(fsmcnf_ccb_t *ccb, callid_t *cnf_call_id,
                 callid_t *cns_call_id);
 cprMsgQueue_t gsm_msg_queue;
 void destroy_gsm_thread(void);
@@ -50,7 +50,7 @@ static media_timer_callback_fp* media_timer_callback = NULL;
 /**
  * Add media falsh one time timer call back. It's for ROUNDTABLE only.
  */
-void 
+void
 gsm_set_media_callback(media_timer_callback_fp* callback) {
     media_timer_callback = callback;
 }
@@ -109,7 +109,7 @@ gsm_process_msg (uint32_t cmd, void *msg)
     case GSM_SIP:
         if (gsm_initialized) {
 
-            if (event_id == CC_MSG_FEATURE && 
+            if (event_id == CC_MSG_FEATURE &&
                 (((cc_feature_t *) msg)->feature_id == CC_FEATURE_CAC_RESP_PASS)) {
 
                 fsm_cac_process_bw_avail_resp ();
@@ -118,7 +118,7 @@ gsm_process_msg (uint32_t cmd, void *msg)
                 release_msg = TRUE;
 
                 GSM_DEBUG(DEB_F_PREFIX"CAC Message Processed: 0x%x\n", DEB_F_PREFIX_ARGS(GSM, fname), cmd);
-            } else  if (event_id == CC_MSG_FEATURE && 
+            } else  if (event_id == CC_MSG_FEATURE &&
                 (((cc_feature_t *) msg)->feature_id == CC_FEATURE_CAC_RESP_FAIL)) {
 
                 fsm_cac_process_bw_failed_resp ();
@@ -220,7 +220,7 @@ gsm_process_timer_expiration (void *msg)
         break;
     }
 
-    /* 
+    /*
      * If there is a timer message to be processed by state machine,
      * hands it to GSM state machine here.
      */
@@ -374,9 +374,9 @@ GSMTask (void *arg)
             if (release_msg == TRUE) {
                 cpr_free(msg);
             }
-            
-            /* Check if there are pending messages for dcsm 
-             * if it in the right state perform its operation 
+
+            /* Check if there are pending messages for dcsm
+             * if it in the right state perform its operation
              */
             dcsm_process_jobs();
         }
@@ -408,13 +408,13 @@ static void sub_process_b2bcnf_sub_resp (ccsip_sub_not_data_t *msg)
 
         cause = CC_CAUSE_OK;
 
-        GSM_DEBUG(DEB_F_PREFIX"B2BCNF subs response  = OK\n", 
-                DEB_F_PREFIX_ARGS(GSM,fname)); 
+        GSM_DEBUG(DEB_F_PREFIX"B2BCNF subs response  = OK\n",
+                DEB_F_PREFIX_ARGS(GSM,fname));
 
     } else {
 
-        GSM_DEBUG(DEB_F_PREFIX"B2BCNF subs response  = ERROR\n", 
-                DEB_F_PREFIX_ARGS(GSM,fname)); 
+        GSM_DEBUG(DEB_F_PREFIX"B2BCNF subs response  = ERROR\n",
+                DEB_F_PREFIX_ARGS(GSM,fname));
 
         cause = CC_CAUSE_ERROR;
     }
@@ -442,14 +442,14 @@ static void sub_process_b2bcnf_msg (uint32_t cmd, void *msg)
                                 &call_id, &other_call_id);
     switch (cmd) {
     case SUB_MSG_B2BCNF_SUBSCRIBE_RESP:
-        GSM_DEBUG(DEB_F_PREFIX"B2BCNF subs response\n", 
-                DEB_F_PREFIX_ARGS(GSM,fname)); 
+        GSM_DEBUG(DEB_F_PREFIX"B2BCNF subs response\n",
+                DEB_F_PREFIX_ARGS(GSM,fname));
         sub_process_b2bcnf_sub_resp((ccsip_sub_not_data_t *)msg);
         break;
 
     case SUB_MSG_B2BCNF_NOTIFY:
-        GSM_DEBUG(DEB_F_PREFIX"B2BCNF subs notify\n", 
-                DEB_F_PREFIX_ARGS(GSM,fname)); 
+        GSM_DEBUG(DEB_F_PREFIX"B2BCNF subs notify\n",
+                DEB_F_PREFIX_ARGS(GSM,fname));
         sub_process_feature_notify((ccsip_sub_not_data_t *)msg, call_id, other_call_id);
         break;
     case SUB_MSG_B2BCNF_TERMINATE:
@@ -457,8 +457,8 @@ static void sub_process_b2bcnf_msg (uint32_t cmd, void *msg)
           * This is posted by SIP stack if it is shutting down or rolling over.
           * if so, notify b2bcnf to cleanup state machine.
           */
-        GSM_DEBUG(DEB_F_PREFIX"B2BCNF subs terminate\n", 
-                DEB_F_PREFIX_ARGS(GSM,fname)); 
+        GSM_DEBUG(DEB_F_PREFIX"B2BCNF subs terminate\n",
+                DEB_F_PREFIX_ARGS(GSM,fname));
 
         data.notify.subscription = CC_SUBSCRIPTIONS_REMOTECC;
         data.notify.method = CC_RCC_METHOD_REFER;
@@ -470,8 +470,8 @@ static void sub_process_b2bcnf_msg (uint32_t cmd, void *msg)
 
         break;
     default:
-        GSM_DEBUG(DEB_F_PREFIX"B2BCNF subs unknown event\n", 
-                DEB_F_PREFIX_ARGS(GSM,fname)); 
+        GSM_DEBUG(DEB_F_PREFIX"B2BCNF subs unknown event\n",
+                DEB_F_PREFIX_ARGS(GSM,fname));
          break;
     }
 }
@@ -551,12 +551,12 @@ static void sub_process_feature_notify (ccsip_sub_not_data_t *msg, callid_t call
          * challenges to terminating SUBSCRIBE sent.
          */
        (void)sub_int_subscribe_term(msg->sub_id, FALSE, msg->request_id, CC_SUBSCRIPTIONS_REMOTECC);
-        
+
     }
     ev_data     = msg->u.notify_ind_data.eventData;
     msg->u.notify_ind_data.eventData = NULL;
     if (ev_data == NULL) {
-        GSM_ERR_MSG(DEB_F_PREFIX"No body in the NOTIFY message\n", 
+        GSM_ERR_MSG(DEB_F_PREFIX"No body in the NOTIFY message\n",
                     DEB_F_PREFIX_ARGS(GSM, fname));
         /*
          * if (no content & subscription state is TERMINATED
@@ -590,16 +590,16 @@ gsm_is_idle (void)
     return (FALSE);
 }
 
-/*  
+/*
  *  Function: destroy_gsm_thread
- *  Description:  shutdown gsm and kill gsm thread 
+ *  Description:  shutdown gsm and kill gsm thread
  *  Parameters:   none
  *  Returns: none
  */
 void destroy_gsm_thread()
 {
     static const char fname[] = "destroy_gsm_thread";
-    DEF_DEBUG(DEB_F_PREFIX"Unloading GSM and destroying GSM thread\n", 
+    DEF_DEBUG(DEB_F_PREFIX"Unloading GSM and destroying GSM thread\n",
         DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
     gsm_shutdown();
     dp_shutdown();

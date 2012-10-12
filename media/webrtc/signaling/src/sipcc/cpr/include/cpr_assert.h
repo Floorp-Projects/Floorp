@@ -32,7 +32,7 @@ __END_DECLS
 /*
  * This is outside the scope of the standard #ifdef <=> #endif header
  * file to allow a per-file definition.  By default, cprAssert is not
- * enabled.  
+ * enabled.
  */
 #undef cprAssert
 #define cprAssert(expr, rc)

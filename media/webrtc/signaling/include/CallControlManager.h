@@ -94,9 +94,9 @@ namespace CSF
 
         /* P2P MODE */
         virtual bool startP2PMode(const std::string& user) = 0;
-        
+
         /* SDP MODE */
-        virtual bool startSDPMode() = 0;        
+        virtual bool startSDPMode() = 0;
 
         /**
          * Obtain the device object, from which call control can be done.

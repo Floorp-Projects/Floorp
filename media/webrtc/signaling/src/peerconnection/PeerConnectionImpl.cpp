@@ -393,10 +393,10 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   PK11_GenerateRandom(handle_bin, sizeof(handle_bin));
 
   char hex[17];
-  PR_snprintf(hex,sizeof(hex),"%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x", 
-    handle_bin[0], 
+  PR_snprintf(hex,sizeof(hex),"%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x",
+    handle_bin[0],
     handle_bin[1],
-    handle_bin[2], 
+    handle_bin[2],
     handle_bin[3],
     handle_bin[4],
     handle_bin[5],

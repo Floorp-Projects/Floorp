@@ -58,7 +58,7 @@ enum AUDIOFLAGS {
     HEADSET_AUDIOFLAG              = 0x0001<<2,
     SPEAKER_ON_REQUEST_AUDIOFLAG   = 0x0001<<3,
     SPEAKER_OFF_REQUEST_AUDIOFLAG  = 0x0001<<4,
-    ANY_AUDIOFLAGS                 = (HANDSET_AUDIOFLAG      | 
+    ANY_AUDIOFLAGS                 = (HANDSET_AUDIOFLAG      |
                                       SPEAKERPHONE_AUDIOFLAG |
                                       HEADSET_AUDIOFLAG)
 };
@@ -81,23 +81,23 @@ void cfg_sanity_check_media_range (void)
 {
     int32_t start_port = 0;
     int32_t end_port = 0;
-    boolean changed = FALSE;  
+    boolean changed = FALSE;
 
-    config_get_value(CFGID_MEDIA_PORT_RANGE_START, 
+    config_get_value(CFGID_MEDIA_PORT_RANGE_START,
                      &start_port, sizeof(start_port));
-    config_get_value(CFGID_MEDIA_PORT_RANGE_END, 
+    config_get_value(CFGID_MEDIA_PORT_RANGE_END,
                      &end_port, sizeof(end_port));
-                     
+
     // Ensure that the ports are on an even port boundary
-    if (start_port & 0x1) {                  
+    if (start_port & 0x1) {
         start_port =  start_port & ~0x1;
         changed = TRUE;
     }
-    if (end_port & 0x1) { 
+    if (end_port & 0x1) {
         end_port = end_port & ~0x1;
         changed = TRUE;
     }
-                  
+
     /*
      * If the ranges are swapped, swap them for convenience here
      */
@@ -105,15 +105,15 @@ void cfg_sanity_check_media_range (void)
         unsigned int temp = end_port;
         end_port = start_port;
         start_port = temp;
-        changed = TRUE; 
+        changed = TRUE;
     }
-    
+
     if ((end_port - start_port) < 4) {
         start_port  = RTP_START_PORT;
         end_port = RTP_END_PORT;
-        changed = TRUE; 
+        changed = TRUE;
     }
-    
+
     /*
      * We are trying to ensure that the start_port and the end_port
      * are in the range of 0x4000 through and including 0x7ffe.
@@ -132,20 +132,20 @@ void cfg_sanity_check_media_range (void)
      */
     if ((start_port < RTP_START_PORT) || (start_port > (RTP_END_PORT - 4))) {
         start_port = RTP_START_PORT;
-        changed = TRUE; 
+        changed = TRUE;
     }
 
     if ((end_port < (RTP_START_PORT + 4)) || (end_port > RTP_END_PORT)) {
         end_port = RTP_END_PORT;
-        changed = TRUE; 
-    } 
-    
+        changed = TRUE;
+    }
+
     if (changed) {
-        config_set_value(CFGID_MEDIA_PORT_RANGE_START, 
+        config_set_value(CFGID_MEDIA_PORT_RANGE_START,
                          &start_port, sizeof(start_port));
-        config_set_value(CFGID_MEDIA_PORT_RANGE_END, 
+        config_set_value(CFGID_MEDIA_PORT_RANGE_END,
                          &end_port, sizeof(end_port));
-    }      
+    }
 }
 
 
@@ -162,7 +162,7 @@ static debug_entry_t debug_table[MAX_DEBUG_CMDS];
 
 /*================================================================
  * From timer_platform.c which used to be included and needs to be FIXED
- *===============================================================*/	
+ *===============================================================*/
 
 
 extern struct tm *gmtime_r(const time_t *timer, struct tm *pts)
@@ -217,7 +217,7 @@ unsigned long seconds_to_gmt_string (unsigned long seconds, char *gmt_string)
 int PhoneAudioFlags = NO_AUDIOFLAGS;
 
 #include "lsm.h"
-void OnTerminateCall() 
+void OnTerminateCall()
 {
 	terminate_active_calls();
 }

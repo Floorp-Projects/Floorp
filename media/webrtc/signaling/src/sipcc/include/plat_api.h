@@ -171,7 +171,7 @@ typedef enum
 } cc_debug_clear_cpr_options_e;
 
 /**
-  * cpr memory show sub-commands 
+  * cpr memory show sub-commands
   */
 typedef enum
 {
@@ -383,7 +383,7 @@ boolean platGetMWIStatus(cc_lineid_t line);
 
 /**
  * Check if the speaker or headset is enabled.
- * 
+ *
  * @return boolean if the speaker or headset is enabled, returns true.
  */
 boolean platGetSpeakerHeadsetMode();
@@ -440,12 +440,12 @@ plat_soc_status_e platSecIsServerSecure(void);
  * If mode == TRUE (blocking):
  *    int secEstablishSecureConnection(const char* serverAddr, *uint32_t port, secConnectionType type)
  *    @li ipMode is UNUSED
- *    @li "host" maps to "serverAddr", "type" should be determined by an application and use the value from SecServerType. 
+ *    @li "host" maps to "serverAddr", "type" should be determined by an application and use the value from SecServerType.
  *    @li localPort is passed in as 0
  * If mode == FALSE (non-blocking):
  *     int secConnect(const char* serverAddr, uint32_t port, *secConnectionType type, uint32_t localPort)
  *    @li ipMode is UNUSED
- *    @li "host" maps to "serverAddr", "type" should be determined by an application and use the value from SecServerType. 
+ *    @li "host" maps to "serverAddr", "type" should be determined by an application and use the value from SecServerType.
  *
  * @note The implementation should use the "setsockopt" to set the "tos" value passed
  * in this API on the created socket.
@@ -676,11 +676,11 @@ void platSetStatusMessage(char *msg);
  * This function MUST be implemented by the vendors. This is called by the core
  * library whenever some debugging information needs to be printed out.
  * call this function in order to clear the CPR Memory/Tracking statistics
- * 
+ *
  * Please also be aware that cpr_stdio.h has other logging functions as well.
  * Vendors need to implement this function and the functions (err_msg,
  * buginf....etc) found in cpr_stdio.h
- * 
+ *
  * @param[in] _format  format string
  * @param[in] ...     variable arg list
  *
@@ -710,7 +710,7 @@ int platGetAudioDeviceStatus(plat_audio_device_t device_type);
 
 /*
  * Returns the default gateway
- * 
+ *
  * @param void
  * @return u_long
  */

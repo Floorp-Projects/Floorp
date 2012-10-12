@@ -32,14 +32,14 @@ namespace CSF
 
         /**
            gets the service state
-           @param [in] handle - reference to device info 
-           @returns cc_service_state_t - INS/OOS 
+           @param [in] handle - reference to device info
+           @returns cc_service_state_t - INS/OOS
          */
         virtual cc_service_state_t getServiceState() = 0;
 
         /**
            gets the service cause
-           @param [in] handle - reference to device info 
+           @param [in] handle - reference to device info
            @returns cc_service_cause_t - reason for service state
          */
         virtual cc_service_cause_t getServiceCause() = 0;
@@ -79,7 +79,7 @@ namespace CSF
         /**
            gets handles of call agent servers
 
-           @returns 
+           @returns
          */
         virtual std::vector<CC_CallServerInfoPtr> getCallServers () = 0;
 

@@ -10,7 +10,7 @@
 #include "ccsip_callinfo.h"
 
 
-typedef uint32_t pub_handle_t; 
+typedef uint32_t pub_handle_t;
 #define NULL_PUBLISH_HANDLE  0 /* this is to indicate that handle is not assigned  yet */
 
 
@@ -32,7 +32,7 @@ typedef struct {
      pub_handle_t       app_handle; // handle assigned by the Application
 } pub_rsp_t;
 
-extern 
+extern
 void publish_init(pub_handle_t             app_handle,
                   char                    *ruri,
                   char                    *esc,
@@ -40,7 +40,7 @@ void publish_init(pub_handle_t             app_handle,
                   cc_subscriptions_t       event_type,
                   ccsip_event_data_t      *event_data_p,
                   cc_srcs_t                callback_task,
-                  int                      message_id 
+                  int                      message_id
                  );
 
 extern

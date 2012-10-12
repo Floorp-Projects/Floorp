@@ -22,7 +22,7 @@
  * @return The duplicated string or NULL in case of no memory
  *
  */
-char * 
+char *
 cpr_strdup(const char *str);
 
 

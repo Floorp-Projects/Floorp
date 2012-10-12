@@ -17,8 +17,8 @@ __BEGIN_DECLS
 #include "../darwin/cpr_darwin_time.h"
 #endif
 
-/** 
- * The generic "time" value strucutre 
+/**
+ * The generic "time" value strucutre
  */
 struct cpr_timeval
 {

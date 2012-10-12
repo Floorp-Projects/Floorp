@@ -22,13 +22,13 @@ cc_lineinfo_ref_t CCAPI_Line_getLineInfo(cc_uint32_t line);
  */
 cc_call_handle_t CCAPI_Line_CreateCall(cc_lineid_t line);
 
-/** 
- * Retain the lineInfo snapshot - this info shall not be freed until a 
+/**
+ * Retain the lineInfo snapshot - this info shall not be freed until a
  * CCAPI_Line_releaseLineInfo() API releases this resource.
  * @param [in] ref - reference to the block to be retained
  * @return void
- * NOTE: Application may use this API to retain the device info using this API inside 
- * CCAPI_LineListener_onLineEvent() App must release the Info using 
+ * NOTE: Application may use this API to retain the device info using this API inside
+ * CCAPI_LineListener_onLineEvent() App must release the Info using
  * CCAPI_Line_releaseLineInfo() once it is done with it.
  */
 void CCAPI_Line_retainLineInfo(cc_lineinfo_ref_t ref);

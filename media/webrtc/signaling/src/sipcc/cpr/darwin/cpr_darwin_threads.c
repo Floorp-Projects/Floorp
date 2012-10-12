@@ -23,15 +23,15 @@
  *  current process. If the input parameter "name" is present, then this is used
  *  for debugging purposes. The startRoutine is the address of the function where
  *  the thread execution begins. The start routine prototype is defined as
- *  follows 
- *  @code 
+ *  follows
+ *  @code
  *     int32_t (*cprThreadStartRoutine)(void* data)
  *  @endcode
  *
  * @param[in]  name         - name of the thread created (optional)
  * @param[in]  startRoutine - function where thread execution begins
- * @param[in]  stackSize    - size of the thread's stack 
- * @param[in]  priority     - thread's execution priority 
+ * @param[in]  stackSize    - size of the thread's stack
+ * @param[in]  priority     - thread's execution priority
  * @param[in]  data         - parameter to pass to startRoutine
  *
  * Return Value: Thread handle or NULL if creation failed.
@@ -55,9 +55,9 @@ cprCreateThread (const char *name,
     threadPtr = (cpr_thread_t *)cpr_malloc(sizeof(cpr_thread_t));
     if (threadPtr != NULL) {
         if (pthread_attr_init(&attr) != 0) {
-            
+
             CPR_ERROR("%s - Failed to init attribute for thread %s\n",
-                      fname, name); 
+                      fname, name);
             cpr_free(threadPtr);
             return (cprThread_t)NULL;
         }
@@ -111,8 +111,8 @@ cprCreateThread (const char *name,
  * @param[in] thread - thread to destroy.
  *
  * @return CPR_SUCCESS or CPR_FAILURE. errno should be set for FAILURE case.
- * 
- * @note In Linux there will never be a success indication as the 
+ *
+ * @note In Linux there will never be a success indication as the
  *       calling thread will have been terminated.
  */
 cprRC_t
@@ -149,9 +149,9 @@ cprDestroyThread (cprThread_t thread)
  * cprAdjustRelativeThreadPriority
  *
  * @brief The function sets the relative thread priority up or down by the given value.
- *  
+ *
  * This function is used pSIPCC to set up the thread priority. The values of the
- * priority range from -20 (Maximum priority) to +19 (Minimum priority). 
+ * priority range from -20 (Maximum priority) to +19 (Minimum priority).
  *
  * @param[in] relPri - nice value of the thread -20 is MAX and 19 is MIN
  *
@@ -180,7 +180,7 @@ cprAdjustRelativeThreadPriority (int relPri)
  */
 
 /**
- * cprGetThreadId 
+ * cprGetThreadId
  *
  * @brief Return the pthread ID for the given CPR thread.
  *

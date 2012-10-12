@@ -80,7 +80,7 @@ int i;
     initCfgTblEntry(CFGID_PROXY_ADDRESS+i, "ProxyAddr", CFGVAR(line[i].proxy_address), PA_STR, PR_STR, 0);
     initCfgTblEntry(CFGID_PROXY_PORT+i, "ProxyPort", CFGVAR(line[i].proxy_port), PA_INT, PR_INT, 0);
     initCfgTblEntry(CFGID_LINE_CALL_WAITING+i, "CWait", CFGVAR(line[i].call_waiting), PA_INT, PR_INT, 0);
-    initCfgTblEntry(CFGID_LINE_AUTOANSWER_ENABLED+i, "AAns", CFGVAR(line[i].autoanswer), PA_INT, PR_INT, 0);    
+    initCfgTblEntry(CFGID_LINE_AUTOANSWER_ENABLED+i, "AAns", CFGVAR(line[i].autoanswer), PA_INT, PR_INT, 0);
     initCfgTblEntry(CFGID_LINE_AUTOANSWER_MODE+i, "AAnsMode", CFGVAR(line[i].autoanswer_mode), PA_STR, PR_STR, 0);
     initCfgTblEntry(CFGID_LINE_MSG_WAITING_LAMP+i, "MWILamp", CFGVAR(line[i].msg_waiting_lamp), PA_INT, PR_INT, 0);
     initCfgTblEntry(CFGID_LINE_MESSAGE_WAITING_AMWI+i, "AMWI", CFGVAR(line[i].msg_waiting_amwi), PA_INT, PR_INT, 0);
@@ -128,7 +128,7 @@ sip_config_get_net_device_ipaddr (cpr_ip_addr_t *ip_addr)
  * Get the device IP address.
  * Note: the IP Address is returned in the non-Telecaster
  *       SIP format, which is not byte reversed.
- *       
+ *
  */
 void
 sip_config_get_net_ipv6_device_ipaddr (cpr_ip_addr_t *ip_addr)
@@ -300,7 +300,7 @@ sip_config_get_button_from_line (line_t line)
      */
 
     for (button = 1; button <= max_lines_allowed; button++) {
-       
+
         config_get_line_value(CFGID_LINE_INDEX, &line_no, sizeof(line_no), button);
 
         if ((line_t)line_no == line) {
@@ -311,7 +311,7 @@ sip_config_get_button_from_line (line_t line)
     button = 0;
     line_no = 0;
 
-    /* Nothing has found so far, try old way of calculating the 
+    /* Nothing has found so far, try old way of calculating the
      * button number
      */
     do {
@@ -324,12 +324,12 @@ sip_config_get_button_from_line (line_t line)
         button++;
         line_no++;
 
-    } while (((line_t)line_no < line) && 
+    } while (((line_t)line_no < line) &&
             button <= max_lines_allowed);
 
 
     /* Above loop not able to find the correct button number
-     * so return value 0 
+     * so return value 0
      */
     if (button > max_lines_allowed) {
         return(0);
@@ -406,13 +406,13 @@ sip_config_local_line_get (void)
 /*
  * sip_config_get_keepalive_expires()
  *
- * Returns the keepalive expires configured. 
- * The minimum allowed value is returned if 
+ * Returns the keepalive expires configured.
+ * The minimum allowed value is returned if
  * configured value is less than the minimum
- * allowed value.If the configured value is 
+ * allowed value.If the configured value is
  * greater than the maximum allowed then the
  * maximum allowed value is returned.
- * 
+ *
  */
 int
 sip_config_get_keepalive_expires()
@@ -424,12 +424,12 @@ sip_config_get_keepalive_expires()
 
     if (keepalive_interval < MIN_KEEPALIVE_EXPIRES) {
         keepalive_interval = MIN_KEEPALIVE_EXPIRES;
-        TNP_DEBUG(DEB_F_PREFIX"Keepalive interval less than minimum acceptable.Resetting it to %d\n", 
+        TNP_DEBUG(DEB_F_PREFIX"Keepalive interval less than minimum acceptable.Resetting it to %d\n",
             DEB_F_PREFIX_ARGS(SIP_KA, "sip_config_get_keepalive_expires"),
             keepalive_interval);
     } else if (keepalive_interval > MAX_KEEPALIVE_EXPIRES) {
         keepalive_interval = MAX_KEEPALIVE_EXPIRES;
-        TNP_DEBUG(DEB_F_PREFIX"Keepalive interval more than maximum acceptable.Resetting it to %d\n", 
+        TNP_DEBUG(DEB_F_PREFIX"Keepalive interval more than maximum acceptable.Resetting it to %d\n",
             DEB_F_PREFIX_ARGS(SIP_KA, "sip_config_get_keepalive_expires"),
             keepalive_interval);
     }
@@ -454,18 +454,18 @@ sip_config_get_display_name (line_t line, char *buffer, int buffer_len)
 
 /**
  * Returns the configured value of preferred codec. The codec may
- * or may not be available by the platform. 
- * 
+ * or may not be available by the platform.
+ *
  * @param[in] none.
- * 
+ *
  * @return rtp_ptype of the codec.
- */ 
+ */
 rtp_ptype
 sip_config_preferred_codec (void)
 {
     key_table_entry_t cfg_preferred_codec;
 
-    config_get_value(CFGID_PREFERRED_CODEC, &cfg_preferred_codec, 
+    config_get_value(CFGID_PREFERRED_CODEC, &cfg_preferred_codec,
                      sizeof(cfg_preferred_codec));
     if ((cfg_preferred_codec.name != NULL) &&
         (cfg_preferred_codec.name[0] != '\0')) {
@@ -479,15 +479,15 @@ sip_config_preferred_codec (void)
 /**
  * sip_config_local_supported_codecs_get()
  * Get the locally supported codec list. The returned list
- * of codecs will be in the ordered of preference. If there is 
+ * of codecs will be in the ordered of preference. If there is
  * preferred condec configured and it is available, the
  * preferred codec will be put on the first entry of the
  * returned list.
  *
- * @param[in,out] aSupportedCodecs - pointer to arrary fo the 
+ * @param[in,out] aSupportedCodecs - pointer to arrary fo the
  *                                   rtp_ptype to store the result of
  *                                   currenlty available codecs.
- * @param[in] supportedCodecsLen   - indicates the number of entry 
+ * @param[in] supportedCodecsLen   - indicates the number of entry
  *                                   of the aSupportedCodecs.
  *
  * @return number of current codecs available.
@@ -511,10 +511,10 @@ sip_config_local_supported_codecs_get (rtp_ptype aSupportedCodecs[],
     if (!codec_mask) {
         codec_mask = VCM_CODEC_RESOURCE_G711 | VCM_CODEC_RESOURCE_OPUS;
     }
-    
+
     /*
-     * convert the current available codec into the enumerated 
-     * preferred list. 
+     * convert the current available codec into the enumerated
+     * preferred list.
      */
     current_codec_table[0] = RTP_NONE;
     current_codec_table[MAX_CODEC_ENTRIES] = RTP_NONE;
@@ -539,7 +539,7 @@ sip_config_local_supported_codecs_get (rtp_ptype aSupportedCodecs[],
                 break;
             }
             codec++;
-        } 
+        }
     }
 
     if (preferred_codec_available) {
@@ -579,7 +579,7 @@ sip_config_local_supported_codecs_get (rtp_ptype aSupportedCodecs[],
  * Get the locally supported codec list.
  */
 uint16_t
-sip_config_video_supported_codecs_get (rtp_ptype aSupportedCodecs[], 
+sip_config_video_supported_codecs_get (rtp_ptype aSupportedCodecs[],
                           uint16_t supportedCodecsLen, boolean isOffer)
 {
     uint16_t count = 0;
@@ -589,7 +589,7 @@ sip_config_video_supported_codecs_get (rtp_ptype aSupportedCodecs[],
     if ( isOffer ) {
         codec_mask = vcmGetVideoCodecList(VCM_DSP_FULLDUPLEX);
     } else {
-        /* we are trying to match the answer then we 
+        /* we are trying to match the answer then we
            already have the rx stream open */
         //codec_mask = vcmGetVideoCodecList(DSP_ENCODEONLY);
         codec_mask = vcmGetVideoCodecList(VCM_DSP_IGNORE);
@@ -599,12 +599,12 @@ sip_config_video_supported_codecs_get (rtp_ptype aSupportedCodecs[],
       count++;
     }
     if ( codec_mask & VCM_CODEC_RESOURCE_H264) {
-      /* 
+      /*
        * include payload type for packetization mode 1 only if ucm sis version
        * is equal to or greater than 5.1.0 (AngelFire).
        */
       platGetSISProtocolVer(&major_ver, &minor_ver, NULL, NULL);
-      if ((major_ver > SIS_PROTOCOL_MAJOR_VERSION_ANGELFIRE) || 
+      if ((major_ver > SIS_PROTOCOL_MAJOR_VERSION_ANGELFIRE) ||
           (major_ver == SIS_PROTOCOL_MAJOR_VERSION_ANGELFIRE &&
            minor_ver >= SIS_PROTOCOL_MINOR_VERSION_ANGELFIRE)) {
           if (vcmGetVideoMaxSupportedPacketizationMode() == 1) {
@@ -627,19 +627,19 @@ sip_config_video_supported_codecs_get (rtp_ptype aSupportedCodecs[],
  * The function fills in the given codec array based on the
  * platform bit mask of codecs.  Note, that the enumerated list
  * produced is also in the preferred order.
- * 
+ *
  * @param[in] codec_mask - platform bit mask corresponding to the
  *                         codecs.
  * @param[in/out] codecs - pointer to array of for storing the
  *                         output of the enumerated codec based on
- *                         bit set in the codec_mask. 
- * 
+ *                         bit set in the codec_mask.
+ *
  * @return  None.
- * 
+ *
  * @pre     (codec_table != NULL)
  * @pre     storge of codec_table must be last enough to holds
  *          supported codec in the bit mask.
- */ 
+ */
 static void
 config_set_current_codec_table (int codec_mask, rtp_ptype *codecs)
 {
@@ -666,7 +666,7 @@ config_set_current_codec_table (int codec_mask, rtp_ptype *codecs)
         codecs[idx] = RTP_L16;
         idx++;
     }
-    
+
     if (codec_mask & VCM_CODEC_RESOURCE_G722) {
         codecs[idx] = RTP_G722;
         idx++;
@@ -676,7 +676,7 @@ config_set_current_codec_table (int codec_mask, rtp_ptype *codecs)
         codecs[idx] = RTP_ILBC;
         idx++;
     }
-	
+
     if (codec_mask & VCM_CODEC_RESOURCE_iSAC) {
         codecs[idx] = RTP_ISAC;
         idx++;

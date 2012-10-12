@@ -26,7 +26,7 @@
 #define GSMSDP_FOR_MEDIA_LIST(media, start_media, end_media, dcb) \
     for (media = start_media; (media != NULL);                \
          media = (media != end_media ?                        \
-                   GSMSDP_NEXT_MEDIA_ENTRY(media) : NULL)) 
+                   GSMSDP_NEXT_MEDIA_ENTRY(media) : NULL))
 
 #define GSMSDP_FOR_ALL_MEDIA(media, dcb) \
     for (media = GSMSDP_FIRST_MEDIA_ENTRY(dcb); (media != NULL); \
@@ -34,7 +34,7 @@
 
 cc_causes_t gsmsdp_create_local_sdp(fsmdef_dcb_t *dcb_p, boolean force_streams_enabled);
 void gsmsdp_create_options_sdp(cc_sdp_t **sdp_pp);
-void gsmsdp_reset_local_sdp_media(fsmdef_dcb_t *dcb, fsmdef_media_t *media, 
+void gsmsdp_reset_local_sdp_media(fsmdef_dcb_t *dcb, fsmdef_media_t *media,
                                   boolean hold);
 void gsmsdp_set_local_sdp_direction(fsmdef_dcb_t *dcb_p, fsmdef_media_t *media,
                                     sdp_direction_e direction);

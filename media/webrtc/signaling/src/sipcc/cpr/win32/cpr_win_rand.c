@@ -12,24 +12,24 @@
  * On WIN32 platform, there is no security support, for now generate
  * enough random number of bytes using normal "rand()" function.
  *
- * Parameters: 
+ * Parameters:
  *     buf  - pointer to the buffer to store the result of random
- *            bytes requested. 
- *     len  - pointer to the length of the desired random bytes. 
- *            When calling the function, the integer's value 
- *            should be set to the desired number of random 
+ *            bytes requested.
+ *     len  - pointer to the length of the desired random bytes.
+ *            When calling the function, the integer's value
+ *            should be set to the desired number of random
  *            bytes ('buf' should be of at least this size).
  *            upon success, its value will be set to the
  *            actual number of random bytes being returned.
- *            (realistically, there is a maximum number of 
+ *            (realistically, there is a maximum number of
  *            random bytes that can be returned at a time.
  *            if the caller request more than that, the
  *            'len' will indicate how many bytes are actually being
  *            returned) on failure, its value will be set to 0.
  *
- * Return Value: 
+ * Return Value:
  *     1 - success.
- *     0 - fail. 
+ *     0 - fail.
  */
 int cpr_crypto_rand (uint8_t *buf, int *len)
 {
@@ -39,7 +39,7 @@ int cpr_crypto_rand (uint8_t *buf, int *len)
      */
     int      i, total_bytes;
 
-    if ((buf == NULL) || (len == NULL)) { 
+    if ((buf == NULL) || (len == NULL)) {
         /* Invalid parameters */
         return (0);
     }

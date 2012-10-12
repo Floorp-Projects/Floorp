@@ -8,21 +8,21 @@
 #include "ccapi_types.h"
 
 
-/** 
+/**
  * Get device ID
- * @return cc_deviceinfo_ref_t - reference handle of the device 
+ * @return cc_deviceinfo_ref_t - reference handle of the device
  */
 cc_device_handle_t CCAPI_Device_getDeviceID();
 
 /**
  * Get device reference handle
  * @param [in] id - device ID
- * @return cc_deviceinfo_ref_t - reference handle of the device 
+ * @return cc_deviceinfo_ref_t - reference handle of the device
  * NOTE: The info returned by this method must be released using CCAPI_Device_releaseDeviceInfo()
  */
 cc_deviceinfo_ref_t CCAPI_Device_getDeviceInfo(cc_device_handle_t id);
 
-/** 
+/**
  * Set full path of device configuration file. API will download and parse the config file using
  * provided location.
  * @param handle - device handle
@@ -32,14 +32,14 @@ cc_deviceinfo_ref_t CCAPI_Device_getDeviceInfo(cc_device_handle_t id);
 void CCAPI_Device_configUpdate(cc_device_handle_t handle, file_path_t file_path);
 
 /**
- * Retain the deviceInfo snapshot - this info shall not be freed until a 
+ * Retain the deviceInfo snapshot - this info shall not be freed until a
  * CCAPI_Device_releaseDeviceInfo() API releases this resource.
  * @param [in] ref - refrence to the block to be freed
  * @return void
- * NOTE: Application may use this API to retain the device info using this API inside 
- * CCAPI_DeviceListener_onDeviceEvent() App must release the Info using 
+ * NOTE: Application may use this API to retain the device info using this API inside
+ * CCAPI_DeviceListener_onDeviceEvent() App must release the Info using
  * CCAPI_Device_releaseDeviceInfo() once it is done with it.
- */ 
+ */
 void CCAPI_Device_retainDeviceInfo(cc_deviceinfo_ref_t ref);
 
 /**
@@ -78,7 +78,7 @@ void CCAPI_Device_enableCamera(cc_device_handle_t handle, cc_boolean enable);
 
 /**
  * CCAPI_Device_setDigestNamePasswd
- * 
+ *
  * @param handle - device handle
  * @param name - The Digest auth name
  * @param passwd - The password for that name for the line
@@ -89,14 +89,14 @@ void CCAPI_Device_setDigestNamePasswd (cc_device_handle_t handle,
 
 
 /**
- * CCAPI_Device_IP_Update 
+ * CCAPI_Device_IP_Update
  *
  * There is a update in the IP address and the values of new set
  * of signaling and media IP addresses are provided.
  * These value are compared with the current IP address values
  * and depending on what changed, restart and/or re-invite
  * action is taken.
- * 
+ *
  * The case being addressed.
  * 1) If the signaling IP change  happens during a call,
  *    the change is deferred till phone is idle.
@@ -126,7 +126,7 @@ void CCAPI_Device_IP_Update (cc_device_handle_t handle,
 
 /**
  * CCAPI_Device_setVideoAutoTxPreference
- * 
+ *
  * @param handle - device handle
  * @param txPref - TRUE=> auto Tx Video prefered
  * @return void

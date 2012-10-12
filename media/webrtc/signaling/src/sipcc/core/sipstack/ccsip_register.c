@@ -302,7 +302,7 @@ sip_start_ack_timer (ccsipCCB_t *ccb)
         ack_timer_index = ccb->dn_line - 1;
     }
 
-    CCSIP_DEBUG_REG_STATE( DEB_L_C_F_PREFIX " ccb->index=%d ack_timer_index=%d ", 
+    CCSIP_DEBUG_REG_STATE( DEB_L_C_F_PREFIX " ccb->index=%d ack_timer_index=%d ",
         DEB_L_C_F_PREFIX_ARGS(SIP_STATE, ccb->dn_line, 0, "sip_start_ack_timer"),
         ccb->index, ack_timer_index);
 
@@ -329,7 +329,7 @@ sip_stop_ack_timer (ccsipCCB_t *ccb)
         ack_timer_index = ccb->dn_line - 1;
     }
 
-    CCSIP_DEBUG_REG_STATE( DEB_L_C_F_PREFIX " ccb->index=%d ack_timer_index=%d ", 
+    CCSIP_DEBUG_REG_STATE( DEB_L_C_F_PREFIX " ccb->index=%d ack_timer_index=%d ",
         DEB_L_C_F_PREFIX_ARGS(SIP_STATE, ccb->dn_line, 0, "sip_stop_ack_timer"),
         ccb->index, ack_timer_index);
 
@@ -629,7 +629,7 @@ ccsip_get_exp_time_2xx (ccsipCCB_t *ccb, sipContact_t *contact_info,
      * registration expiration is 60 seconds to prevent the phone from being
      * flooded with msgs.
      */
-  if ((exp_time - register_delta) < MIN_REGISTRATION_PERIOD) { 
+  if ((exp_time - register_delta) < MIN_REGISTRATION_PERIOD) {
         CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX
                 "Warning - Registration period received (%d) "
                 "minus configured timer_register_delta (%d) is less than "
@@ -692,7 +692,7 @@ ccsip_check_ccm_restarted (sipContact_t *contact_info)
  *  Function: update_sis_protocol_version
  *
  *  Parameters:
- *      response - 200 OK message pointer 
+ *      response - 200 OK message pointer
  *
  *  Description:
  *      The function parses theupported header in response and updates
@@ -700,7 +700,7 @@ ccsip_check_ccm_restarted (sipContact_t *contact_info)
  *  SEADRAGON version gets updated
  *
  *  Returns:
- *     void 
+ *     void
  */
 
 void
@@ -713,11 +713,11 @@ update_sis_protocol_version (sipMessage_t *response)
        sipver = strcasestr(supported, REQ_SUPP_PARAM_CISCO_SISTAG);
        if (sipver) {
           cc_uint32_t major = SIS_PROTOCOL_MAJOR_VERSION_SEADRAGON, minor = 0, addtnl = 0;
-          if ( sscanf ( &sipver[strlen(REQ_SUPP_PARAM_CISCO_SISTAG)], "%d.%d.%d", 
+          if ( sscanf ( &sipver[strlen(REQ_SUPP_PARAM_CISCO_SISTAG)], "%d.%d.%d",
 			         &major, &minor, &addtnl) == 3) {
-            platSetSISProtocolVer ( major, minor, addtnl,REQ_SUPP_PARAM_CISCO_SISTAG); 
+            platSetSISProtocolVer ( major, minor, addtnl,REQ_SUPP_PARAM_CISCO_SISTAG);
             return;
-          } 
+          }
         }
     }
     /* All other cases we set the version to 1.0.0 */
@@ -762,7 +762,7 @@ ccsip_handle_ev_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
     sipContact_t   *contact_info = NULL;
     //line_t          line_index = 0;
     //ccsipCCB_t     *line_ccb = NULL;
-  
+
 
     // Extract Date header and store
     datehdr = sippmh_get_header_val(response, SIP_HEADER_DATE, NULL);
@@ -845,9 +845,9 @@ ccsip_handle_ev_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
            ccb->reg.registered = 1;
            sip_reg_sm_change_state(ccb, SIP_REG_STATE_REGISTERED);
            regall_fail_attempt = FALSE;
-           
-           if (ccb->index != REG_BACKUP_CCB) { 
-           	   registration_reject = FALSE;                             
+
+           if (ccb->index != REG_BACKUP_CCB) {
+           	   registration_reject = FALSE;
                ui_set_sip_registration_state(ccb->dn_line, TRUE);
                CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Setting Reg state to TRUE for line=%d\n",
                               DEB_F_PREFIX_ARGS(SIP_REG_STATE, fname), ccb->dn_line);
@@ -863,7 +863,7 @@ ccsip_handle_ev_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
     }
 
     ccb->reg.tmr_expire = exp_time;
-  
+
     ccb->reg.act_time = (int) time(NULL);
     CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"Starting expires timer (%d "
                           "sec)\n", DEB_L_C_F_PREFIX_ARGS(SIP_TIMER, ccb->index, ccb->dn_line, fname),
@@ -968,7 +968,7 @@ ccsip_handle_ev_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
         }
     }
 
-    free_sip_message(response);   
+    free_sip_message(response);
 }
 
 void
@@ -1094,9 +1094,9 @@ ccsip_handle_ev_4xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
     char            uri[MAX_IPADDR_STR_LEN + 10]; /* Proxy IP address string */
     char            tmp_str[STATUS_LINE_MAX_LEN];
     ti_config_table_t *ccm_table_ptr = NULL;
-    
+
     ccm_table_ptr = (ti_config_table_t *) ccb->cc_cfg_table_entry;
-    
+
 
     response = event->u.pSipMessage;
     clean_method_request_trx(ccb, sipMethodRegister, TRUE);
@@ -1107,17 +1107,17 @@ ccsip_handle_ev_4xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
         free_sip_message(response);
         return;
     }
-    
+
     /*
      * Set reject flag if we get 4xx from publisher cucm.
      * Note: if non-prime dn is congfigured with #, such as 1234##,
      * then phone will get 404 for that DN, even though the prime DN is
      * registered.
-     */ 
+     */
     if (ccm_table_ptr &&
         ccb->index != REG_BACKUP_CCB) {
-    	DEF_DEBUG(DEB_F_PREFIX"Receive 4xx in ccm mode. set registration_reject to TRUE.\n", 
-            DEB_F_PREFIX_ARGS(SIP_REG, fname));	
+    	DEF_DEBUG(DEB_F_PREFIX"Receive 4xx in ccm mode. set registration_reject to TRUE.\n",
+            DEB_F_PREFIX_ARGS(SIP_REG, fname));
     	registration_reject = TRUE;
     }
 
@@ -1177,11 +1177,11 @@ ccsip_handle_ev_4xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
                                 cpr_free(ccb->authen.authorization);
                                 ccb->authen.authorization = NULL;
                             }
-    
+
                             ccb->authen.authorization =
                                 (char *) cpr_malloc(strlen(author_str) *
                                                     sizeof(char) + 1);
-    
+
                             if (ccb->authen.authorization != NULL) {
                                 sstrncpy(ccb->authen.authorization, author_str,
                                          strlen(author_str) * sizeof(char) + 1);
@@ -1353,7 +1353,7 @@ ccsip_handle_ev_4xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     if (ccb->reg.rereg_pending != 0) {
         ccb->reg.rereg_pending = 0;
-        if (ccsip_register_send_msg(SIP_REG_REQ, ccb->index) != SIP_REG_OK) { 
+        if (ccsip_register_send_msg(SIP_REG_REQ, ccb->index) != SIP_REG_OK) {
             ccsip_register_cleanup(ccb, TRUE);
         }
     }
@@ -1372,13 +1372,13 @@ ccsip_handle_ev_failure_response (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     /*
      * Set reject flag if we get 5xx/6xx from publisher cucm.
-     */ 
+     */
     ccm_table_ptr = (ti_config_table_t *) ccb->cc_cfg_table_entry;
-    if (ccm_table_ptr && 
+    if (ccm_table_ptr &&
         ccb->index != REG_BACKUP_CCB) {
         registration_reject = TRUE;
-        DEF_DEBUG(DEB_F_PREFIX"registration has been rejected. Set registration_reject to TRUE.\n", 
-            DEB_F_PREFIX_ARGS(SIP_REG, fname));	
+        DEF_DEBUG(DEB_F_PREFIX"registration has been rejected. Set registration_reject to TRUE.\n",
+            DEB_F_PREFIX_ARGS(SIP_REG, fname));
     }
 
     response = event->u.pSipMessage;
@@ -1427,7 +1427,7 @@ ccsip_handle_ev_failure_response (ccsipCCB_t *ccb, sipSMEvent_t *event)
         if (ccb->state == (int) SIP_REG_STATE_TOKEN_WAIT) {
 
             /* Handle only 503 error condition for other errors
-             * use default state 
+             * use default state
              */
             if (status_code == SIP_SERV_ERR_UNAVAIL) {
                 clean_method_request_trx(ccb, sipMethodRefer, TRUE);
@@ -1443,7 +1443,7 @@ ccsip_handle_ev_failure_response (ccsipCCB_t *ccb, sipSMEvent_t *event)
          * if response code is 503 with Retry-After
          */
         if ((status_code == SIP_SERV_ERR_UNAVAIL) &&
-            (process_retry_after(ccb, response) == TRUE)) {            
+            (process_retry_after(ccb, response) == TRUE)) {
             free_sip_message(response);
             return;
         }
@@ -1525,7 +1525,7 @@ ccsip_handle_ev_tmr_retry (ccsipCCB_t *ccb, sipSMEvent_t *event)
             /*
              * regmgr - Send event to the regmgr
              */
-            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Reached here for ccb->index=%d \n", 
+            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Reached here for ccb->index=%d \n",
                     DEB_F_PREFIX_ARGS(SIP_MSG_SEND, fname), ccb->index);
             sip_regmgr_ev_tmr_ack_retry(ccb, event);
             return;
@@ -1542,7 +1542,7 @@ ccsip_handle_ev_tmr_retry (ccsipCCB_t *ccb, sipSMEvent_t *event)
              */
             util_ntohl(&ip_addr, &(event->u.UsrInfo));
             if (util_compare_ip(&ip_addr, &(ccb->outBoundProxyAddr)) ||
-                ((event->u.UsrInfo.type == CPR_IP_ADDR_INVALID) && 
+                ((event->u.UsrInfo.type == CPR_IP_ADDR_INVALID) &&
                 util_check_if_ip_valid(&(ccb->outBoundProxyAddr)))) {
                 /*
                  * If there are more records, reset address to force code
@@ -1614,7 +1614,7 @@ ccsip_handle_ev_tmr_retry (ccsipCCB_t *ccb, sipSMEvent_t *event)
          * the event has come due to race condition
          */
         ccb->retx_counter++;
-        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Resending message: #%d\n", 
+        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Resending message: #%d\n",
                               DEB_F_PREFIX_ARGS(SIP_MSG_SEND, fname), ccb->retx_counter);
 
         if (sipSPISendLastMessage(ccb) != TRUE) {
@@ -2008,11 +2008,11 @@ ccsip_register_send_msg (uint32_t cmd, line_t ndx)
         }
     }
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"cmd=%d=%s ccb->index=%d ccm_id=%s\n", 
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"cmd=%d=%s ccb->index=%d ccm_id=%s\n",
         DEB_F_PREFIX_ARGS(SIP_MSG_SEND, fname),
         cmd, REG_CMD_PRINT(cmd), ndx, CCM_ID_PRINT(ccm_id));
 
-    register_msg = (ccsip_registration_msg_t *) 
+    register_msg = (ccsip_registration_msg_t *)
         SIPTaskGetBuffer(sizeof(ccsip_registration_msg_t));
 
     if (!register_msg) {
@@ -2117,7 +2117,7 @@ ccsip_register_cleanup (ccsipCCB_t *ccb, boolean start)
 
 cc_int32_t
 ccsip_register_cmd (cc_int32_t argc, const char *argv[])
-{ 
+{
     /*
      * On 7970 phones the command is reg line [option] [line]
      * On 7940/60 the command is reg [option] [line]
@@ -2178,11 +2178,11 @@ ccsip_register_cmd (cc_int32_t argc, const char *argv[])
                 return (0);
             }
         }
-   
+
 
             ndx = SIP_REG_REGLINE2LINE(temp_line - 1);
             ccb = sip_sm_get_ccb_by_index(ndx);
-       
+
         if (ccb == NULL) {
             debugif_printf("Unable to retrieve registration information for this line.\n");
             debugif_printf("Command aborted.\n");
@@ -2337,14 +2337,14 @@ show_register_data (void)
 	    /*
              * Ensure that the timer_count_down value is valid. There
              * are cases where the phone completes registration before an
-             * SNTP/NTP response is received which makes the act_time and 
+             * SNTP/NTP response is received which makes the act_time and
              * time(NULL) values inconsistent.
              */
 	    if ((timer_count_down < 0) ||
 		(timer_count_down > ccb->reg.tmr_expire)) {
-                 
+
 		timer_count_down = 0;
-	    } 
+	    }
         }
 
         // build the flag string
@@ -2459,7 +2459,7 @@ ccsip_register_init (void)
     int i;
 
     ccsip_register_set_register_state(SIP_REG_IDLE);
-    
+
     /*
      * Create acknowledgement timers
      */
@@ -2545,7 +2545,7 @@ ccsip_register_cancel (boolean cancel_reg, boolean backup_proxy)
                 }
                 if (ccb->index == REG_CCB_START) {
                      ccb->send_reason_header = TRUE;
-                } 
+                }
 
                     if (ccsip_register_send_msg(SIP_REG_CANCEL, ndx)
                         != SIP_REG_OK) {
@@ -2629,7 +2629,7 @@ ccsip_register_all_lines (void)
     ccsip_register_reset_proxy();
     ccsip_register_set_register_state(SIP_REG_REGISTERING);
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"registering %d line%c\n", 
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"registering %d line%c\n",
                           DEB_F_PREFIX_ARGS(SIP_REG, fname), line_end, line_end > 1 ? 's' : ' ');
 
     /* register line 1 to the backup proxy.
@@ -2661,7 +2661,7 @@ ccsip_register_all_lines (void)
          * Assume CSPS since only those two for now.
          */
         if (util_check_if_ip_valid(&(ccb->dest_sip_addr))) {
-            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, 0x%x\n", 
+            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, 0x%x\n",
                                   DEB_L_C_F_PREFIX_ARGS(SIP_REG, ccb->index, ccb->dn_line, fname),
                                   ndx, ccb);
 
@@ -2699,7 +2699,7 @@ ccsip_register_all_lines (void)
                 continue;
             }
 
-            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, 0x%x\n", 
+            CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, 0x%x\n",
                                   DEB_L_C_F_PREFIX_ARGS(SIP_REG, ccb->index, ccb->dn_line, fname),
                                   ndx, ccb);
 
@@ -2737,13 +2737,13 @@ ccsip_register_all_lines (void)
                 ui_set_sip_registration_state(ccb->dn_line, FALSE);
                 if (ccsip_register_send_msg(SIP_REG_REQ, ndx) != SIP_REG_OK) {
                     ccsip_register_cleanup(ccb, TRUE);
-                } 
+                }
 
         }
     }
     g_disable_mass_reg_debug_print = FALSE;
-   
-    sip_platform_cc_mode_notify();  
+
+    sip_platform_cc_mode_notify();
 }
 
 
@@ -2877,8 +2877,8 @@ ccsip_backup_register_commit (void)
     sip_sm_call_cleanup(ccb);
 
     if (util_check_if_ip_valid(&(ccb->dest_sip_addr))) {
-        CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, 0x%x\n", 
-                              DEB_L_C_F_PREFIX_ARGS(SIP_REG, ccb->index, ccb->dn_line, fname), 
+        CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d, 0x%x\n",
+                              DEB_L_C_F_PREFIX_ARGS(SIP_REG, ccb->index, ccb->dn_line, fname),
                               ndx, ccb);
         ccb->reg.addr = ccb->dest_sip_addr;
         ccb->reg.port = (uint16_t) ccb->dest_sip_port;

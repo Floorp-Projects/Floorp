@@ -60,5 +60,5 @@ extern void platform_reg_fallback_cfm(void);
 extern void platform_regallfail_ind(void *);
 extern void sip_platform_logout_reset_req(void);
 extern void platform_logout_reset_req (void);
-	 
+
 #endif /* _SIP_INTERFACE_REGMGR_H_ */

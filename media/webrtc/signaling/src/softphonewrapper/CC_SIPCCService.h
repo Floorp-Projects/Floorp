@@ -11,7 +11,7 @@ extern "C" {
 	// Callbacks from SIPCC.
     void configCtlFetchReq(int device_handle);
     char* platGetIPAddr();
-  
+
     void CCAPI_DeviceListener_onDeviceEvent(ccapi_device_event_e type, cc_device_handle_t hDevice, cc_deviceinfo_ref_t dev_info);
     void CCAPI_DeviceListener_onFeatureEvent(ccapi_device_event_e type, cc_deviceinfo_ref_t /* device_info */, cc_featureinfo_ref_t feature_info);
     void CCAPI_LineListener_onLineEvent(ccapi_line_event_e eventType, cc_lineid_t line, cc_lineinfo_ref_t info);
@@ -39,7 +39,7 @@ namespace CSF
     {
 	    friend void ::configCtlFetchReq(int device_handle);
 	    friend char* ::platGetIPAddr();
-      
+
 	public:
 	    CC_SIPCCService();
 	    virtual ~CC_SIPCCService();
@@ -67,7 +67,7 @@ namespace CSF
 
 	    virtual AudioControlPtr getAudioControl();
 	    virtual VideoControlPtr getVideoControl();
-	    
+
 	    // From the StreamObserver interface
 	    virtual void registerStream(cc_call_handle_t call, int streamId, bool isVideo);
     	virtual void deregisterStream(cc_call_handle_t call, int streamId);

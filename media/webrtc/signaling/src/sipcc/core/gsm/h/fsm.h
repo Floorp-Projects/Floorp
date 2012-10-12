@@ -138,7 +138,7 @@ typedef struct fsmdef_previous_sdp_ {
 
 typedef struct fsmdef_media_t_ {
     sll_lite_node_t node;     /* link node, must be first member of struct */
-    media_refid_t   refid;    /* media reference id                        */ 
+    media_refid_t   refid;    /* media reference id                        */
     sdp_media_e     type;     /* audio, video etc. media                   */
     sdp_addrtype_e  addr_type;/* ipv4, ipv6                                */
     /*
@@ -248,7 +248,7 @@ struct fsm_fcb_t_;
 
 typedef struct {
     callid_t        call_id;
-    callid_t        join_call_id;    
+    callid_t        join_call_id;
     line_t          line;
     cc_caller_id_t  caller_id;
     groupid_t       group_id;
@@ -393,13 +393,13 @@ typedef struct {
     cprTimer_t revertTimer;
 
     boolean dsp_out_of_resources;
-    
+
     boolean selected;
 
     boolean select_pending;
 
     boolean call_not_counted_in_mnc_bt;
-     
+
     /*
      * The media_cap holds the current media caps of the call
      */
@@ -415,8 +415,8 @@ typedef struct {
      */
     cc_media_local_track_table_t *local_media_track_tbl;
 
-#define FSMDEF_F_HOLD_REQ_PENDING  (1 << 0)/* hold feature pending    */ 
-#define FSMDEF_F_XFER_COMPLETE     (1 << 1)/* hold feature pending    */ 
+#define FSMDEF_F_HOLD_REQ_PENDING  (1 << 0)/* hold feature pending    */
+#define FSMDEF_F_XFER_COMPLETE     (1 << 1)/* hold feature pending    */
     uint32_t                flags;         /* misc. flags.            */
 
     int log_disp;
@@ -588,7 +588,7 @@ fsmdef_dcb_t *fsm_get_dcb(callid_t call_id);
 void fsm_init_scb(fim_icb_t *icb, callid_t call_id);
 fsm_fcb_t *fsm_get_fcb_by_call_id(callid_t call_id);
 fsm_fcb_t *fsm_get_fcb_by_call_id_and_type(callid_t call_id, fsm_types_t type);
-void 
+void
 fsm_get_fcb_by_selected_or_connected_call_fcb(callid_t call_id, fsm_fcb_t **con_fcb_found,
                                                fsm_fcb_t **sel_fcb_found);
 fsm_fcb_t *fsm_get_new_fcb(callid_t call_id, fsm_types_t fsm_type);

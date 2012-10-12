@@ -90,7 +90,7 @@ typedef struct sockaddr_storage cpr_sockaddr_storage; // need uniform the defini
  * @param[in] addr_len Points to a cpr_socklen_t structure which on specifies the length
  *                   of the supplied cpr_sockaddr_t structure.
  *
- * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case. 
+ * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case.
  *
  * @note The possible error values this function should return are
  *         @li [CPR_EBADF]      socket is not a valid socket descriptor.
@@ -115,7 +115,7 @@ cprBind(cpr_socket_t socket,
  *
  * @param[in] soc  - The socket that needs to be destroyed
  *
- * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case. 
+ * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case.
  *
  * @note The possible error values this function should return are
  *         @li [CPR_EBADF]      socket is not a valid socket descriptor.
@@ -153,7 +153,7 @@ cprCloseSocket(cpr_socket_t socket);
  * @param[in] addr_len  - Points to a cpr_socklen_t structure which specifies
  *                        the length of the supplied cpr_sockaddr_t structure.
  *
- * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case. 
+ * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case.
  *
  * @note The possible error values this function should return are
  *         @li [CPR_EBADF]      socket is not a valid socket descriptor.
@@ -181,7 +181,7 @@ cprConnect(cpr_socket_t socket,
  * @param[out] addr - A pointer to a cpr_sockaddr_t structure containing the peer address.
  * @param[out] addr_len  - Points to a cpr_socklen_t structure which specifies
  *                        the length of the supplied cpr_sockaddr_t structure.
- * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case. 
+ * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case.
  *
  *  @note If successful, the address argument shall point to the address of the socket
  *  @note The possible error values this function should return are
@@ -209,22 +209,22 @@ cprGetSockName(cpr_socket_t socket,
  * specified value. Implementations shall support values of backlog up to
  * SOMAXCONN.
  * If listen() is called with a backlog argument value that is less than zero
- * (0), the function behaves as if it had been called with a backlog argument 
+ * (0), the function behaves as if it had been called with a backlog argument
  * value of 0.  A backlog argument of zero (0) may allow the socket to accept
  * connections, in which case the length of the listen queue may be set to an
  * implementation-defined minimum value.
  *
- * @param[in] soc  - Specifies the socket to get the peer address 
+ * @param[in] soc  - Specifies the socket to get the peer address
  * @param[in] backlog  - The limit on the number of outstanding connections
  *
- * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case. 
+ * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case.
  *  @note The possible error values this function should return are
  *        @li [CPR_EBADF]  The socket argument is not a valid file descriptor
  *        @li [CPR_EINVAL] cprListen() has not been called on the socket descriptor.
  *        @li [CPR_ENOTSOCK]  The descriptor references a file, not a socket.
  *        @li [CPR_EDESTADDRREQ]  The socket is not bound to a local address
  */
-cpr_status_e 
+cpr_status_e
 cprListen(cpr_socket_t socket,
           uint16_t backlog);
 
@@ -233,7 +233,7 @@ cprListen(cpr_socket_t socket,
  *
  * @brief The cprRecv() function shall receive a message from a socket.
  *
- * This function is normally used with connected sockets because it does not permit 
+ * This function is normally used with connected sockets because it does not permit
  * the application to retrieve the source address of received data.  The cprRecv()
  * function shall return the length of the message written to the buffer pointed
  * to by the "buf" argument.
@@ -367,12 +367,12 @@ cprRecvFrom(cpr_socket_t socket,
  * @param[in] nfds    Specifies the argument range of file descriptors to be tested. The
  *            descriptors from zero through nfds-1 in the descriptor sets shall be examined.
  *
- * @param[in] read_fds    If not a null pointer, this is a pointer to an fd_set object.  
+ * @param[in] read_fds    If not a null pointer, this is a pointer to an fd_set object.
  *    @li On input this specifies the file descriptors to be checked for being ready to read.
  *    @li On output this specifies the file descriptors that are ready to read.
  *
- * @param[in] write_fds   If not a null pointer, this is a pointer to an fd_set object.  
- *    @li On input this specifies the file descriptors to be checked for being ready to write.  
+ * @param[in] write_fds   If not a null pointer, this is a pointer to an fd_set object.
+ *    @li On input this specifies the file descriptors to be checked for being ready to write.
  *    @li On output this specifies the file descriptors that are ready to write.
  *
  * @note If you specify a non-NULL value for write_fds then note that this function will
@@ -382,21 +382,21 @@ cprRecvFrom(cpr_socket_t socket,
  *       out if the socket was generally available for a write operation. You should really
  *       only check for writability when you know you have something to write to a socket.
  *
- * @param[in] except_fds   If not a null pointer, this is a pointer to an fd_set object.  
- *    @li On input this specifies the file descriptors to be checked for errors/exceptions pending.  
+ * @param[in] except_fds   If not a null pointer, this is a pointer to an fd_set object.
+ *    @li On input this specifies the file descriptors to be checked for errors/exceptions pending.
  *    @li On output this specifies the file descriptors that have errors/exceptions pending.
  *
- * @param[in] timeout If not a null pointer, this  points to an object of type struct cpr_timeval 
- *       that specifies the maximum time interval to wait for the selection to complete.  
- *       If timeout expires, the function shall return.  If the parameter is a null pointer, the function 
+ * @param[in] timeout If not a null pointer, this  points to an object of type struct cpr_timeval
+ *       that specifies the maximum time interval to wait for the selection to complete.
+ *       If timeout expires, the function shall return.  If the parameter is a null pointer, the function
  *       will block indefinitely until at least one file descriptor meets the criteria.
  *
- * @note While this function supports multiple file descriptor types, only file descriptors referring to a 
+ * @note While this function supports multiple file descriptor types, only file descriptors referring to a
  *       socket are guaranteed to be supported.
  * @note Note that the "nfds" parameter is not used in Windows.
  *
- * @return Upon successful completion, cprSelect() shall return the number of file descriptors ready. 
- *       Otherwise, SOCKET_ERROR shall be returned and cpr_errno set to indicate the error where read_fds, 
+ * @return Upon successful completion, cprSelect() shall return the number of file descriptors ready.
+ *       Otherwise, SOCKET_ERROR shall be returned and cpr_errno set to indicate the error where read_fds,
  *       write_fds and error_fds are not modified.
  *
  *        The possible error values this function should return are
@@ -638,8 +638,8 @@ cprSetSockNonBlock(cpr_socket_t socket);
  *
  * @brief The cprSocket() is the CPR wrapper for the "socket" API
  *
- * The cprSocket() function shall create an unbound socket in a 
- * communications domain, and return a file descriptor that can be used 
+ * The cprSocket() function shall create an unbound socket in a
+ * communications domain, and return a file descriptor that can be used
  * in later function calls that operate on sockets.
  *
  * @param[in] domain  The communications domain, i.e. address family, in which a socket is to

@@ -49,7 +49,7 @@ config_get_string (int id, char *buffer, int buffer_len)
     if ((id >= 0) && (id < CFGID_PROTOCOL_MAX)) {
         entry = &prot_cfg_table[id];
         if (entry->length > buffer_len) {
-            CONFIG_ERROR(CFG_F_PREFIX"insufficient buffer: %d\n", "config_get_string", 
+            CONFIG_ERROR(CFG_F_PREFIX"insufficient buffer: %d\n", "config_get_string",
                     id);
         } else {
             buf_start = buffer;
@@ -156,7 +156,7 @@ print_config_value (int id, char *get_set, const char *entry_name,
         *str_ptr = '\0';
         CONFIG_DEBUG(DEB_F_PREFIX"CFGID %d: %s: %s = %s\n", DEB_F_PREFIX_ARGS(CONFIG_API, "print_config_value"), id, get_set, entry_name, str);
     } else {
-        CONFIG_ERROR(CFG_F_PREFIX"cfg_id = %d length too long -> %d\n", "print_config_value", 
+        CONFIG_ERROR(CFG_F_PREFIX"cfg_id = %d length too long -> %d\n", "print_config_value",
                 id, length);
     }
 }
@@ -191,7 +191,7 @@ config_get_value (int id, void *buffer, int length)
                 print_config_value(id, "Get Val", entry->name, buffer, length);
             }
         } else {
-            CONFIG_ERROR(CFG_F_PREFIX"%s size error\n", "config_get_value", 
+            CONFIG_ERROR(CFG_F_PREFIX"%s size error\n", "config_get_value",
                     entry->name);
         }
     } else {
@@ -250,7 +250,7 @@ get_printable_cfg(unsigned int indx, char *buf, unsigned int len)
 {
    const var_t *table;
    buf[0]=0;
-   
+
    table = &prot_cfg_table[indx];
    // If this field has a password, print the param name, but NOT the
    // real password
@@ -345,7 +345,7 @@ show_config_cmd (cc_int32_t argc, const char *argv[])
         debugif_printf("%s\n", get_printable_cfg(CFGID_LINE_CONTACT+i, buf, MAX_CONFIG_VAL_PRINT_LEN));
       }
     }
-    
+
     return (0);
 }
 

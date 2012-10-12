@@ -37,7 +37,7 @@ cc_call_attr_t CCAPI_CallInfo_getCallAttr(cc_callinfo_ref_t handle);
 cc_call_type_t CCAPI_CallInfo_getCallType(cc_callinfo_ref_t handle);
 
 /**
- * get Called party name 
+ * get Called party name
  * @param [in] handle - call info handle
  * @return called party name
  * NOTE: The memory for return string doesn't need to be freed it will be freed when the info reference is freed
@@ -128,7 +128,7 @@ cc_string_t CCAPI_CallInfo_getPlacedCallPartyNumber(cc_callinfo_ref_t handle);
 /**
  * get call instance number
  * @param [in] handle - call info handle
- * @return 
+ * @return
  * NOTE: The memory for return string doesn't need to be freed it will be freed when the info reference is freed
  */
 cc_int32_t CCAPI_CallInfo_getCallInstance(cc_callinfo_ref_t handle);
@@ -220,7 +220,7 @@ cc_boolean  CCAPI_CallInfo_hasCapability(cc_callinfo_ref_t handle, cc_int32_t fe
 /**
  * get Allowed Feature set
  * @param [in] handle - call info handle
- * @param [in,out] feat_set - array of len CC_CALL_CAP_MAX 
+ * @param [in,out] feat_set - array of len CC_CALL_CAP_MAX
  * @return cc_return_t - CC_SUCCESS or CC_FAILURE
  */
 cc_return_t  CCAPI_CallInfo_getCapabilitySet(cc_callinfo_ref_t handle, cc_int32_t feat_set[]);
@@ -257,7 +257,7 @@ cc_string_t  CCAPI_CallInfo_getINFOBody(cc_callinfo_ref_t handle);
  * Get the call log reference
  * @param [in] handle - call info handle
  * @return cc_string_t - INFO body
- * NOTE: Memory associated with the call log is tied to the cc_callinfo_ref_t handle 
+ * NOTE: Memory associated with the call log is tied to the cc_callinfo_ref_t handle
  * this would be freed when the callinfo ref is freed.
  */
 cc_calllog_ref_t  CCAPI_CallInfo_getCallLogRef(cc_callinfo_ref_t handle);
@@ -272,13 +272,13 @@ cc_sdp_direction_t  CCAPI_CallInfo_getVideoDirection(cc_callinfo_ref_t handle);
 /**
  * Returns the Audio mute state for this call
  * @return boolean true=muted false=not muted
- */        
+ */
 cc_boolean CCAPI_CallInfo_isAudioMuted(cc_callinfo_ref_t handle);
 
 /**
  * Returns the Video  mute state for this call
  * @return boolean true=muted false=not muted
- */        
+ */
 cc_boolean CCAPI_CallInfo_isVideoMuted(cc_callinfo_ref_t handle);
 
 /**

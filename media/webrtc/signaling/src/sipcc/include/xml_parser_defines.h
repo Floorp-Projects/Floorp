@@ -10,8 +10,8 @@
 
 
 /**
- * In general, when a parser constructs a xml string, 
- * it should translate the enum to cooresponding string 
+ * In general, when a parser constructs a xml string,
+ * it should translate the enum to cooresponding string
  * value that is defined in the accompanied xsd files.
  */
 /**
@@ -202,8 +202,8 @@ typedef enum {
 
 typedef signed long         xml_signed32;
 typedef unsigned long       xml_unsigned32;
-typedef unsigned short      xml_unsigned16; 
-typedef unsigned char       xml_unsigned8;  
+typedef unsigned short      xml_unsigned16;
+typedef unsigned char       xml_unsigned8;
 
 // start of copy from ccsip_eventbodies.h
 typedef struct State {
@@ -633,4 +633,4 @@ void *ccAllocXML(cc_size_t size);
  * @return void
  */
 void ccFreeXML(void *mem);
-#endif 
+#endif

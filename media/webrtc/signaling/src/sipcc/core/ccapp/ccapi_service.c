@@ -27,7 +27,7 @@ char g_cfg_p[G_CFG_P_SIZE];
 int g_compl_cfg;
 
 // Externs
-extern void setState(); 
+extern void setState();
 extern void resetReady();
 extern void resetNotReady();
 extern void ccpro_handleserviceControlNotify();
@@ -36,7 +36,7 @@ extern void ccpro_handleserviceControlNotify();
 extern cc_srv_ctrl_cmd_t reset_type;
 boolean isServiceStartRequestPending = FALSE;
 cc_boolean is_action_to_be_deferred(cc_action_t action);
-extern cc_action_t pending_action_type; 
+extern cc_action_t pending_action_type;
 //cc_boolean parse_config_properties (int device_handle, const char *device_name, const char *cfg, int from_memory);
 
 
@@ -63,9 +63,9 @@ cc_return_t CCAPI_Service_create() {
  */
 cc_return_t CCAPI_Service_destroy() {
     CCAPP_ERROR("CCAPI_Service_destroy - calling CC_Service_destroy \n");
-    
+
  //   if (is_action_to_be_deferred(STOP_ACTION) == TRUE) {
- //       return CC_SUCCESS; 
+ //       return CC_SUCCESS;
  //   }
     // initialize the config to empty
     init_empty_str(g_cfg_p);
@@ -87,7 +87,7 @@ cc_return_t CCAPI_Service_start() {
 
     DEF_DEBUG("CCAPI_Service_start - \n");
     isServiceStartRequestPending = TRUE;
-    
+
     registration_processEvent(EV_CC_START);
 
     return (CC_SUCCESS);
@@ -118,7 +118,7 @@ cc_return_t CCAPI_Service_stop() {
 
 /**
  * reregister the Sipcc stack service, without downloading the config file
- * 
+ *
  */
 cc_return_t CCAPI_Service_reregister(int device_handle, const char *device_name,
                              const char *cfg,
@@ -127,16 +127,16 @@ cc_return_t CCAPI_Service_reregister(int device_handle, const char *device_name,
     CCAPP_ERROR("CCAPI_Service_reregister - initiate reregister \n");
 
     if (is_action_to_be_deferred(RE_REGISTER_ACTION) == TRUE) {
-        return CC_SUCCESS; 
+        return CC_SUCCESS;
     }
     if (pending_action_type != NO_ACTION) {
         CCAPP_ERROR("Reset/Restart is pending, reregister Ignored! \n");
         return CC_FAILURE;
     }
-    
+
     if (is_empty_str((char*)cfg)) {
         CCAPP_ERROR("Reregister request with empty config.  Exiting.\n");
-        return CC_FAILURE;    
+        return CC_FAILURE;
     }
 
     g_dev_hdl = device_handle;
@@ -146,17 +146,17 @@ cc_return_t CCAPI_Service_reregister(int device_handle, const char *device_name,
     g_compl_cfg  = complete_config;
 
         registration_processEvent(EV_CC_RE_REGISTER);
-    
+
     return (CC_SUCCESS);
 }
 
 /**
- * Reset Manager has request a reset, send the current state and 
+ * Reset Manager has request a reset, send the current state and
  * start sending updates.
  */
 void CCAPI_Service_reset_request()  {
     cc_deviceinfo_ref_t handle = 0;
-    sendResetUpdates  = 1;  
+    sendResetUpdates  = 1;
     if (CCAPI_DeviceInfo_isPhoneIdle(handle) == TRUE) {
         resetReady();
     } else {

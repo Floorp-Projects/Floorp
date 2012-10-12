@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- *  @brief CPR layer for interprocess communication 
+ *  @brief CPR layer for interprocess communication
  *
  * The name of this file may be overly broad, rather this file deals
  * with IPC via message queues.  A user may create, destroy and
@@ -13,7 +13,7 @@
  * The send/get APIs attempt to reliably deliver messages even when
  * under stress.  Two mechanisms have been added to deal with a full
  * message queue.  First, the message queue size may be extended to
- * allow more messages to be handled than supported by an OS. 
+ * allow more messages to be handled than supported by an OS.
  * Second, if the queue is indeed full a sleep-and-retry
  * method is used to force a context-switch to allow for other threads
  * to run in hope of clearing some messages off of the queue.  The
@@ -43,7 +43,7 @@
 #define STATIC static
 
 /* @def The Message Queue depth */
-#define OS_MSGTQL 31 
+#define OS_MSGTQL 31
 
 /*
  * Internal CPR API
@@ -159,7 +159,7 @@ static const char unnamed_string[] = "unnamed";
  * will sleep the timeout interval to allow the msg queue to be
  * drained.
  *
- * Note: 25 attempts for upto .5 seconds at the interval of 
+ * Note: 25 attempts for upto .5 seconds at the interval of
  *       CPR_SND_TIMEOUT_WAIT_INTERVAL worst case.
  */
 #define CPR_ATTEMPTS_TO_SEND 25
@@ -198,10 +198,10 @@ cprMoveMsgToQueue(cpr_msg_queue_t *msgq);
  * perform whatever work is needed to create a message queue.
 
  * If the name is present, CPR should assign this name to the message queue to assist in
- * debugging. The message queue depth is the second input parameter and is for 
- * setting the desired queue depth. This parameter may not be supported by all OS. 
+ * debugging. The message queue depth is the second input parameter and is for
+ * setting the desired queue depth. This parameter may not be supported by all OS.
  * Its primary intention is to set queue depth beyond the default queue depth
- * limitation. 
+ * limitation.
  * On any OS where there is no limit on the message queue depth or
  * its queue depth is sufficiently large then this parameter is ignored on that
  * OS.
@@ -241,7 +241,7 @@ cprCreateMessageQueue (const char *name, uint16_t depth)
      */
     key = ftok("/proc/self", key_id++);
     printf("key = %x\n", key);
-    
+
     if (key == -1) {
         CPR_ERROR("%s: Key generation failed: %d\n", fname, errno);
         cpr_free(msgq);
@@ -258,32 +258,32 @@ cprCreateMessageQueue (const char *name, uint16_t depth)
                 /* Remove message queue */
             msgq->queueId = msgget(key, (IPC_CREAT | 0666));
             if (msgctl(msgq->queueId, IPC_RMID, &buf) == -1) {
-                
+
                 CPR_ERROR("%s: Destruction failed: %s: %d\n", fname,
                           msgq->name, errno);
-                
+
                 return NULL;
             }
             msgq->queueId = msgget(key, (IPC_CREAT | 0666));
         }
     } else {
         printf("there was no preexisting q..\n");
-        
+
     }
-    
-    
-    
+
+
+
     if (msgq->queueId == -1) {
         CPR_ERROR("%s: Creation failed: %s: %d\n", fname, name, errno);
         if (errno == EEXIST) {
-            
+
         }
-        
+
         cpr_free(msgq);
         return NULL;
     }
     printf("create message q with id=%x\n", msgq->queueId);
-    
+
     /* flush the q before ?? */
 
     /*
@@ -333,8 +333,8 @@ cprCreateMessageQueue (const char *name, uint16_t depth)
  * The cprDestroyMessageQueue function is called to destroy a message queue. The
  * function drains any messages from the queue and the frees the
  * message queue. Any messages on the queue are to be deleted, and not sent to the intended
- * recipient. It is the application's responsibility to ensure that no threads are 
- * blocked on a message queue when it is destroyed. 
+ * recipient. It is the application's responsibility to ensure that no threads are
+ * blocked on a message queue when it is destroyed.
  *
  * @param[in] msgQueue - message queue to destroy
  *
@@ -348,7 +348,7 @@ cprDestroyMessageQueue (cprMsgQueue_t msgQueue)
     void *msg;
     struct msqid_ds buf;
     printf("Destroy message Q called..\n");
-    
+
 
     msgq = (cpr_msg_queue_t *) msgQueue;
     if (msgq == NULL) {
@@ -577,7 +577,7 @@ cprSendMessage (cprMsgQueue_t msgQueue, void *msg, void **ppUserData)
 
     msgq = (cpr_msg_queue_t *) msgQueue;
 
-    /* 
+    /*
      * Attempt to send message
      */
     do {
@@ -914,7 +914,7 @@ cprMoveMsgToQueue (cpr_msg_queue_t *msgq)
 
 /**
   * @}
-  * 
+  *
   * @addtogroup MsgQIPCAPIs The Message Queue IPC APIs
   * @{
   */

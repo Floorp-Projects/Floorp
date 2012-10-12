@@ -8,28 +8,28 @@
 
 /**
  * resetRequest
- * 
+ *
  * This function tells the reset Manager that the SIPCC module
  * wants to do a HARD RESET. This is most likely because of a request
  * from the CUCM.
  *
- * The response received for this request is asynchronous and 
+ * The response received for this request is asynchronous and
  * should be handled via event provided by reset manager.
- * The CCAPI_Service_shutdown api needs to be called for the 
+ * The CCAPI_Service_shutdown api needs to be called for the
  * handling of the response to the reset request
  *
  */
-void resetRequest(); 
+void resetRequest();
 
 
 /**
  * resetReady
- * 
- * This function tells the reset manager that call control is 
+ *
+ * This function tells the reset manager that call control is
  * ready for reset. This is called whenever the call control
  * determines that it is idle
- * 
- * The resetManager will keep track of events can initate 
+ *
+ * The resetManager will keep track of events can initate
  * reset when it has received ready.
  *
  */
@@ -37,12 +37,12 @@ void resetReady();
 
 /**
  * resetNotReady
- * 
- * This function tells the reset manager that call control is 
+ *
+ * This function tells the reset manager that call control is
  * NOT ready for reset. This is called whenever the call control
  * is not idle
- * 
- * The resetManager will keep track of events  and it CANNOT initate 
+ *
+ * The resetManager will keep track of events  and it CANNOT initate
  * reset until a resetReady event is received
  *
  */

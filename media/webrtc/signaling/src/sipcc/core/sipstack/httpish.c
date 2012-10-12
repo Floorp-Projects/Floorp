@@ -73,7 +73,7 @@ httpish_msg_create (void)
 int
 httpish_strncasecmp(const char *s1, const char* s2, size_t len)
 {
-  /*This routine is an enhanced version of strncasecmp(). 
+  /*This routine is an enhanced version of strncasecmp().
    *It ensures that the two strings being compared for size "len"
    *don't have trailing characters beyond "len" chars.
    *The trailing whitespaces beyond "len" chars is ignored.
@@ -96,7 +96,7 @@ httpish_strncasecmp(const char *s1, const char* s2, size_t len)
     }
 
    if (len == 0 && toupper(*us1) == toupper(*us2)) {
-       //all "len" chars are compared, need to look for trailing 
+       //all "len" chars are compared, need to look for trailing
        //chars beyond "len" string size. Ignore white spaces.
       while (*(++us1) != '\0') {
           if (*us1 != ' ' && *us1 != '\t') {
@@ -109,7 +109,7 @@ httpish_strncasecmp(const char *s1, const char* s2, size_t len)
                break;
           }
       }
-   } 
+   }
 
 
    return (toupper(*us1) - toupper(*us2));
@@ -500,52 +500,52 @@ compact_hdr_cmp (char *this_line,
     return -1;
 }
 
-int 
-httpish_header_name_val (char *sipHeaderName,  char *this_line)  
+int
+httpish_header_name_val (char *sipHeaderName,  char *this_line)
 {
     unsigned int x = 0;
     boolean  nameFound = FALSE;
- 
+
     if (!sipHeaderName || !this_line) {
-       return (SIP_ERROR);  
+       return (SIP_ERROR);
     }
 
     sipHeaderName[0] = '\0';
- 
+
     /* Remove the leading white spaces  eg: ......From:  or .....From....: */
     while ((*this_line==' ' || *this_line=='\t') ) {
         this_line++;
     }
-     
-     /* Copy the allowed characters for header field name */ 
+
+     /* Copy the allowed characters for header field name */
     while ((*this_line > 32) && (*this_line < 127) && (x < HTTPISH_HEADER_NAME_SIZE)) {
         if (*this_line == ':') {
             nameFound = TRUE;
             sipHeaderName[x] = '\0';
-            break; 
+            break;
         }
         sipHeaderName[x] = *this_line;
         this_line++;
         x++;
     }
- 
-    /* Remove trailing white spaces */ 
+
+    /* Remove trailing white spaces */
      if (nameFound == FALSE && x < HTTPISH_HEADER_NAME_SIZE) {
          while ((*this_line == ' ' || *this_line=='\t') ){
              this_line++;
              if (*this_line == ':') {
                  nameFound = TRUE;
                  sipHeaderName[x] = '\0';
-                 break; 
+                 break;
              }
          }
      }
      sipHeaderName[HTTPISH_HEADER_NAME_SIZE-1] = '\0';
-     
+
      if (nameFound) {
-         return (SIP_OK);  
+         return (SIP_OK);
      } else {
-         return (SIP_ERROR);  
+         return (SIP_ERROR);
      }
 }
 
@@ -915,9 +915,9 @@ httpish_cache_header_val (httpishMsg_t *hmsg,
 
     if (httpish_header_name_val(headerName, this_line)) {
         CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Invalid Header %s\n", DEB_F_PREFIX_ARGS(HTTPISH, fname), this_line);
-        return (SIP_ERROR);  
-    } 
-    
+        return (SIP_ERROR);
+    }
+
     for (i = 0; i < HTTPISH_HEADER_CACHE_SIZE; ++i) {
         sip_header_t *tmp = sip_cached_headers + i;
 
@@ -953,7 +953,7 @@ httpish_cache_header_val (httpishMsg_t *hmsg,
                         hdr_cache[i].hdr_start = newbuf;
                         hdr_cache[i].val_start = hdr_cache[i].hdr_start + offset;
                         hdr_cache[i].hdr_start[org_len] = ',';
-                        sstrncpy(hdr_cache[i].hdr_start + org_len + 1, this_line, 
+                        sstrncpy(hdr_cache[i].hdr_start + org_len + 1, this_line,
                                 size - org_len - 1);
                         cpr_free(hdr_start);
                     } else {
@@ -1131,12 +1131,12 @@ msg_process_one_body (httpishMsg_t *hmsg,
                     content_id++;
                 }
                 nbytes = strlen(content_id) + 1;
-                hmsg->mesg_body[current_body_part].msgContentId = 
-                             (char *) cpr_malloc((nbytes)*sizeof(char)); 
+                hmsg->mesg_body[current_body_part].msgContentId =
+                             (char *) cpr_malloc((nbytes)*sizeof(char));
                 if (hmsg->mesg_body[current_body_part].msgContentId == NULL) {
                    CCSIP_DEBUG_ERROR(SIP_F_PREFIX"malloc failed\n", fname);
                 }
-                memcpy(hmsg->mesg_body[current_body_part].msgContentId, 
+                memcpy(hmsg->mesg_body[current_body_part].msgContentId,
                           content_id, nbytes);
             } else if (!cpr_strncasecmp(line, SIP_HEADER_CONTENT_DISP,
                                         sizeof(SIP_HEADER_CONTENT_DISP) - 1)) {
@@ -1467,10 +1467,10 @@ httpish_msg_process_network_msg (httpishMsg_t *hmsg,
                     cpr_free(raw_body);
                     return HSTATUS_FAILURE;
                 }
-	        memcpy(hmsg->mesg_body[0].msgContentId, 
+	        memcpy(hmsg->mesg_body[0].msgContentId,
 			content_id, contentid_len);
             }
-  
+
             hmsg->mesg_body[0].msgContentTypeValue = get_content_type_value(content_type);
             contenttype_len = strlen(content_type) + 1;
             hmsg->mesg_body[0].msgContentType = (char *)

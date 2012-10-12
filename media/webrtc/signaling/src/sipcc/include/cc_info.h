@@ -24,7 +24,7 @@
 
 
 /**
- * Send SIP INFO message with the specified event_type and xml body 
+ * Send SIP INFO message with the specified event_type and xml body
  * @param call_handle call handle
  * @param info_package the Info-Package header of the INFO message
  * @param info_type the Content-Type header of the INFO message

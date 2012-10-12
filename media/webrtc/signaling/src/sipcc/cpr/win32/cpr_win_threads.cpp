@@ -28,10 +28,10 @@ cprSuspendThread(cprThread_t thread)
     int32_t returnCode;
     static const char fname[] = "cprSuspendThread";
     cpr_thread_t *cprThreadPtr;
-	
+
     cprThreadPtr = (cpr_thread_t*)thread;
     if (cprThreadPtr != NULL) {
-		
+
 		CWinThread *pCWinThread;
 		pCWinThread = (CWinThread *)cprThreadPtr->u.handlePtr;
 		if (pCWinThread != NULL) {
@@ -42,7 +42,7 @@ cprSuspendThread(cprThread_t thread)
 				return(CPR_FAILURE);
 			}
 			return(CPR_SUCCESS);
-			
+
 			/* Bad application! */
 		}
 	}
@@ -54,7 +54,7 @@ cprSuspendThread(cprThread_t thread)
 /**
  * cprResumeThread
  *
- * Resume execution of a previously suspended thread 
+ * Resume execution of a previously suspended thread
  *
  * Parameters: thread - which system thread to resume
  *
@@ -66,13 +66,13 @@ cprResumeThread(cprThread_t thread)
     int32_t returnCode;
     static const char fname[] = "cprResumeThread";
     cpr_thread_t *cprThreadPtr;
-	
+
     cprThreadPtr = (cpr_thread_t*)thread;
     if (cprThreadPtr != NULL) {
 		CWinThread *pCWinThread;
 		pCWinThread = (CWinThread *)cprThreadPtr->u.handlePtr;
 		if (pCWinThread != NULL) {
-			
+
 			returnCode = pCWinThread->ResumeThread();
 			if (returnCode == -1) {
 				CPR_ERROR("%s - Resume thread failed: %d\n",
@@ -118,14 +118,14 @@ cprCreateThread(const char* name,
     /* Malloc memory for a new thread */
     threadPtr = (cpr_thread_t *)cpr_malloc(sizeof(cpr_thread_t));
     if (threadPtr != NULL) {
-		
+
         /* Assign name to CPR and CNU if one was passed in */
         if (name != NULL) {
             threadPtr->name = name;
         }
 
 		threadPtr->u.handlePtr = AfxBeginThread((AFX_THREADPROC)startRoutine, data, priority, stackSize);
-		  
+
         if (threadPtr->u.handlePtr != NULL) {
 			PostThreadMessage(((CWinThread *)(threadPtr->u.handlePtr))->m_nThreadID, MSG_ECHO_EVENT, (unsigned long)&serialize_lock, 0);
 			result = WaitForSingleObject(serialize_lock, 1000);
@@ -136,7 +136,7 @@ cprCreateThread(const char* name,
 			CPR_ERROR("%s - Thread creation failure: %d\n", fname, GetLastError());
 			cpr_free(threadPtr);
             threadPtr = NULL;
-			
+
         }
     } else {
         /* Malloc failed */

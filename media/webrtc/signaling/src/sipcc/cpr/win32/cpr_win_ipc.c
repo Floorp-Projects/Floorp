@@ -251,7 +251,7 @@ cprGetMessage (cprMsgQueue_t msgQueue,
             {
                 CloseHandle(pThreadPtr->u.handlePtr);
             }
-			pCprMsgQueue->handlePtr = NULL;	// zap the thread ptr, since the thread is going away now			
+			pCprMsgQueue->handlePtr = NULL;	// zap the thread ptr, since the thread is going away now
 			_endthreadex(0);
             break;
         case MSG_BUF:

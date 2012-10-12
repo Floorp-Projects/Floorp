@@ -242,7 +242,7 @@
      * so that the caller has a guarantee that both address come from the same
      * network address.
      */
-    
+
 //    if (getifaddr2(AF_INET, (struct sockaddr *) &inaddr, sizeof(inaddr),
 //            &lladdr) != 0)
 //        /* XXX */

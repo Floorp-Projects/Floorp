@@ -502,7 +502,7 @@ void CC_SIPCCCallInfo::generateCapabilities()
         else
         {
             caps.insert(CC_CallCapabilityEnum::canMuteAudio);
-        }       
+        }
 
         if ((CCAPI_CallInfo_getVideoDirection(callinfo_ref) == CC_SDP_DIRECTION_SENDRECV) ||
             (CCAPI_CallInfo_getVideoDirection(callinfo_ref) == CC_SDP_DIRECTION_SENDONLY))

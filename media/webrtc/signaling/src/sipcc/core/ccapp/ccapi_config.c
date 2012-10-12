@@ -21,7 +21,7 @@ extern cc_apply_config_result_t apply_config_result;
 cc_boolean parse_setup_properties (int device_handle, const char *device_name, const char *sipUser, const char *sipPassword, const char *sipDomain);
 
 /**
- * 
+ *
  * @return
  */
 

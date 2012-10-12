@@ -169,7 +169,7 @@ fsm_get_fcb_by_call_id_and_type (callid_t call_id, fsm_types_t type)
  *      NULL:  fcb not found
  *
  */
-void 
+void
 fsm_get_fcb_by_selected_or_connected_call_fcb (callid_t call_id, fsm_fcb_t **con_fcb_found,
                                                fsm_fcb_t **sel_fcb_found)
 {
@@ -185,7 +185,7 @@ fsm_get_fcb_by_selected_or_connected_call_fcb (callid_t call_id, fsm_fcb_t **con
             /* Do not count current call_id */
             continue;
         }
-        if (fcb->fsm_type == FSM_TYPE_DEF && 
+        if (fcb->fsm_type == FSM_TYPE_DEF &&
             (fcb->state == FSMDEF_S_CONNECTED ||
              fcb->state == FSMDEF_S_CONNECTED_MEDIA_PEND ||
              fcb->state == FSMDEF_S_OUTGOING_ALERTING)) {
@@ -341,7 +341,7 @@ fsm_change_state (fsm_fcb_t *fcb, int fname, int new_state)
     DEF_DEBUG(DEB_L_C_F_PREFIX"%s: %s -> %s\n",
                  DEB_L_C_F_PREFIX_ARGS(FSM, ((fcb->dcb == NULL)? CC_NO_LINE: fcb->dcb->line),
                  fcb->call_id, "fsm_change_state"),
-                 fsm_type_name(fcb->fsm_type), 
+                 fsm_type_name(fcb->fsm_type),
                  fsm_state_name(fcb->fsm_type, fcb->state),
                  fsm_state_name(fcb->fsm_type, new_state));
 
@@ -849,7 +849,7 @@ fsmutil_init_groupid (fsmdef_dcb_t *dcb, callid_t call_id,
  * @pre     none
  */
 int
-fsmutil_get_call_attr (fsmdef_dcb_t *dcb, 
+fsmutil_get_call_attr (fsmdef_dcb_t *dcb,
                     line_t line, callid_t call_id)
 {
     int call_attr;
@@ -1113,7 +1113,7 @@ fsmutil_free_ci_id (uint16_t id, line_t line)
 }
 
 #ifdef LOCAL_UI_CALLINSTANCE_ID
-/*This routine is not needed now as the local assignment 
+/*This routine is not needed now as the local assignment
  *of call instance id is no longer supported.
  */
 /*

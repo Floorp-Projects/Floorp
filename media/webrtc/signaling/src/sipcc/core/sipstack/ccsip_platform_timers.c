@@ -783,7 +783,7 @@ sip_platform_subnot_periodic_timer_callback (void *data)
 /**
  ** sip_platform_reg_all_fail_timer_start
  *  Starts a timer when all registrations fail.
- *  
+ *
  *  @param  msec Value of the timer to be started
  *
  *  @return SIP_OK if timer could be started; else  SIP_ERROR
@@ -810,8 +810,8 @@ sip_platform_reg_all_fail_timer_start (uint32_t msec)
 
 /**
  ** sip_platform_reg_all_fail_timer_stop
- *  Stops the Reg-All Fail timer  
- *  
+ *  Stops the Reg-All Fail timer
+ *
  *  @param  none
  *
  *  @return SIP_OK if timer could be stopped; else  SIP_ERROR
@@ -952,16 +952,16 @@ int
 sip_platform_pass_through_timer_start (uint32_t sec)
 {
 	static const char fname[] = "sip_platform_pass_through_timer_start";
-	
+
 	if (sip_platform_pass_through_timer_stop() == SIP_ERROR) {
 		return SIP_ERROR;
-	}	
+	}
 	if (cprStartTimer(sipPassThroughTimer, sec*1000, NULL) == CPR_FAILURE) {
 		CCSIP_DEBUG_STATE(get_debug_string(DEBUG_SIP_FUNCTIONCALL_FAILED),
 				 		  0, 0, fname, "cprStartTimer");
 		return SIP_ERROR;
 	}
-	
+
 	CCSIP_DEBUG_REG_STATE("%s: Regmgr Pass Through Timer started for %lu secs\n", fname, sec);
 	return SIP_OK;
 }
@@ -979,7 +979,7 @@ int
 sip_platform_pass_through_timer_stop (void)
 {
 	static const char fname[] = "sip_platform_pass_through_timer_stop";
-	
+
 	if (cprCancelTimer(sipPassThroughTimer) == CPR_FAILURE) {
 		CCSIP_DEBUG_STATE(get_debug_string(DEBUG_SIP_FUNCTIONCALL_FAILED),
 						  0, 0, fname, "cprCancelTimer");

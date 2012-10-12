@@ -63,12 +63,12 @@ uint32_t nfds = 0;
 sip_connection_t sip_conn;
 
 /*
- * Internal message structure between main thread and 
+ * Internal message structure between main thread and
  * message queue waiting thread.
  */
 typedef struct sip_int_msg_t_ {
     void            *msg;
-    phn_syshdr_t    *syshdr;   
+    phn_syshdr_t    *syshdr;
 } sip_int_msg_t;
 
 /* Internal message queue (array) */
@@ -77,7 +77,7 @@ static sip_int_msg_t sip_int_msgq_buf[MAX_SIP_MESSAGES] = {{0,0},{0,0}};
 /* Main thread and message queue waiting thread IPC names */
 static const char *sip_IPC_serv_name = SIP_MSG_IPC_PATH SIP_MSG_SERV_NAME;
 static const char *sip_IPC_clnt_name = SIP_MSG_IPC_PATH SIP_MSG_CLNT_NAME;
-static cpr_sockaddr_un_t sip_serv_sock_addr; 
+static cpr_sockaddr_un_t sip_serv_sock_addr;
 static cpr_sockaddr_un_t sip_clnt_sock_addr;
 
 
@@ -164,7 +164,7 @@ static cpr_socket_t sip_create_IPC_sock (const char *name)
 
     /* make sure file doesn't already exist */
     unlink( (char *)addr.sun_path);
-   
+
     /* do the bind */
     if (cprBind(sock, (cpr_sockaddr_t *)&addr,
                 cpr_sun_len(addr)) == CPR_FAILURE) {
@@ -197,8 +197,8 @@ static cpr_socket_t sip_create_IPC_sock (const char *name)
  *  @param[in] arg - pointer to SIP main thread's message queue.
  *
  *  @return None.
- * 
- *  @pre     (arg != NULL) 
+ *
+ *  @pre     (arg != NULL)
  */
 void sip_platform_task_msgqwait (void *arg)
 {
@@ -246,10 +246,10 @@ void sip_platform_task_msgqwait (void *arg)
     /* Use default priority */
     (void) cprAdjustRelativeThreadPriority(0);
 #endif
-    
+
     /*
      * The main thread is ready. set global client socket address
-     * so that the server can send back response. 
+     * so that the server can send back response.
      */
     cpr_set_sockun_addr(&sip_clnt_sock_addr, sip_IPC_clnt_name, getpid());
 
@@ -305,7 +305,7 @@ void sip_platform_task_msgqwait (void *arg)
              */
             if (cprSendTo(sip_ipc_clnt_socket, (void *)&num_messages,
                           sizeof(num_messages), 0,
-                          (cpr_sockaddr_t *)&sip_serv_sock_addr, 
+                          (cpr_sockaddr_t *)&sip_serv_sock_addr,
                           cpr_sun_len(sip_serv_sock_addr)) < 0) {
                 CCSIP_DEBUG_ERROR(SIP_F_PREFIX"send IPC failed errno=%d\n", fname, cpr_errno);
             }
@@ -344,7 +344,7 @@ static void sip_process_int_msg (void)
     phn_syshdr_t  *syshdr;
 
     /* read the msg count from the IPC socket */
-    rcv_len = cprRecvFrom(sip_ipc_serv_socket, &num_messages, 
+    rcv_len = cprRecvFrom(sip_ipc_serv_socket, &num_messages,
                           sizeof(num_messages), 0, NULL, NULL);
 
     if (rcv_len < 0) {
@@ -352,7 +352,7 @@ static void sip_process_int_msg (void)
                           " errno=%d\n", fname, cpr_errno);
         return;
     }
-     
+
     if (num_messages == 0) {
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"message queue is empty!\n", fname);
         return;
@@ -444,7 +444,7 @@ sip_platform_task_loop (void *arg)
 
     /*
      * Setup IPC socket addresses for main thread (server)
-     */ 
+     */
     cpr_set_sockun_addr(&sip_serv_sock_addr, sip_IPC_serv_name, getpid());
 
     /*
@@ -473,7 +473,7 @@ sip_platform_task_loop (void *arg)
     sip_platform_task_set_read_socket(sip_ipc_serv_socket);
 
     /*
-     * Let the message queue waiting thread know that the main 
+     * Let the message queue waiting thread know that the main
      * thread is ready.
      */
     main_thread_ready = TRUE;
@@ -496,7 +496,7 @@ sip_platform_task_loop (void *arg)
                 FD_SET(entry->fd, &sip_write_fds);
             }
         }
-        
+
         pending_operations = cprSelect((nfds + 1),
                                        &sip_read_fds,
                                        &sip_write_fds,
@@ -505,23 +505,23 @@ sip_platform_task_loop (void *arg)
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"cprSelect() failed: errno=%d."
                 " Recover by initiating sip restart\n",
                               fname, cpr_errno);
-            /* 
-             * If we have come here, then either read socket related to 
-             * sip_ipc_serv_socket has got corrupted, or one of the write 
+            /*
+             * If we have come here, then either read socket related to
+             * sip_ipc_serv_socket has got corrupted, or one of the write
              * socket related to cucm tcp/tls connection.
              * We will recover, by first clearing all fds, then re-establishing
-             * the connection with sip-msgq by listening on 
+             * the connection with sip-msgq by listening on
              * sip_ipc_serv_socket.
              */
             sip_platform_task_init(); /* this clear FDs */
-            sip_platform_task_set_read_socket(sip_ipc_serv_socket); 
-            
-            /* 
+            sip_platform_task_set_read_socket(sip_ipc_serv_socket);
+
+            /*
              * Since all sockets fds have been cleared above, we can not anyway
              * send or receive msg from cucm. So, there is no point
              * trying to send registration cancel msg to cucm. Also, a
              * call may be active, and in that case we do not want to
-             * un-register. So, by setting sip_reg_all_failed to true, we 
+             * un-register. So, by setting sip_reg_all_failed to true, we
              * make sure that no registration cancelation attempt is made.
              */
             sip_reg_all_failed = TRUE;

@@ -14,7 +14,7 @@
  * @param [in] info - reference to call info
  * @return void
  * NOTE: The memory associated with callInfo will be freed immediately upon return from this method.
- * If the application wishesd to retain a copy it should invoke CCAPI_Call_retainCallInfo() API. Once retained 
+ * If the application wishesd to retain a copy it should invoke CCAPI_Call_retainCallInfo() API. Once retained
  * it can be released by invoking the CCAPI_Call_releaseCallInfo API.
  */
 void CCAPI_CallListener_onCallEvent(ccapi_call_event_e event, cc_call_handle_t handle, cc_callinfo_ref_t info);

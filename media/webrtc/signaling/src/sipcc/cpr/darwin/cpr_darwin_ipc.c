@@ -131,7 +131,7 @@ static const char unnamed_string[] = "unnamed";
  * will sleep the timeout interval to allow the msg queue to be
  * drained.
  *
- * Note: 25 attempts for upto .5 seconds at the interval of 
+ * Note: 25 attempts for upto .5 seconds at the interval of
  *       CPR_SND_TIMEOUT_WAIT_INTERVAL worst case.
  */
 #define CPR_ATTEMPTS_TO_SEND 25
@@ -191,7 +191,7 @@ cprCreateMessageQueue (const char *name, uint16_t depth)
 
     msgq->name = name ? name : unnamed_string;
 	msgq->queueId = key_id++;
-	
+
 	pthread_cond_t _cond = PTHREAD_COND_INITIALIZER;
 	msgq->cond = _cond;
 	pthread_mutex_t _lock = PTHREAD_MUTEX_INITIALIZER;
@@ -222,7 +222,7 @@ cprDestroyMessageQueue (cprMsgQueue_t msgQueue)
     static const char fname[] = "cprDestroyMessageQueue";
     cpr_msg_queue_t *msgq;
     void *msg;
-	
+
     msgq = (cpr_msg_queue_t *) msgQueue;
     if (msgq == NULL) {
         /* Bad application! */
@@ -316,7 +316,7 @@ void *
 cprGetMessage (cprMsgQueue_t msgQueue, boolean waitForever, void **ppUserData)
 {
     static const char fname[] = "cprGetMessage";
-	
+
     void *buffer = 0;
     cpr_msg_queue_t *msgq;
     cpr_msgq_node_t *node;
@@ -327,12 +327,12 @@ cprGetMessage (cprMsgQueue_t msgQueue, boolean waitForever, void **ppUserData)
 		int     tz_minuteswest; /* of Greenwich */
 		int     tz_dsttime;     /* type of dst correction to apply */
 	} tz;
-	
+
     /* Initialize ppUserData */
     if (ppUserData) {
         *ppUserData = NULL;
     }
-	
+
     msgq = (cpr_msg_queue_t *) msgQueue;
     if (msgq == NULL) {
         /* Bad application! */
@@ -340,14 +340,14 @@ cprGetMessage (cprMsgQueue_t msgQueue, boolean waitForever, void **ppUserData)
         errno = EINVAL;
         return NULL;
     }
-	
+
     /*
      * If waitForever is set, block on the message queue
      * until a message is received, else return after
 	 * 25msec of waiting
      */
 	pthread_mutex_lock(&msgq->mutex);
-	
+
 	if (!waitForever)
 	{
 		// We'll wait till 25uSec from now
@@ -356,7 +356,7 @@ cprGetMessage (cprMsgQueue_t msgQueue, boolean waitForever, void **ppUserData)
 		timeout.tv_sec = tv.tv_sec;
 
 		pthread_cond_timedwait(&msgq->cond, &msgq->mutex, &timeout);
-		
+
 	}
 	else
 	{
@@ -365,7 +365,7 @@ cprGetMessage (cprMsgQueue_t msgQueue, boolean waitForever, void **ppUserData)
 			pthread_cond_wait(&msgq->cond, &msgq->mutex);
 		}
 	}
-	
+
 	// If there is a message on the queue, de-queue it
 	if (msgq->tail)
 	{
@@ -385,11 +385,11 @@ cprGetMessage (cprMsgQueue_t msgQueue, boolean waitForever, void **ppUserData)
 			*ppUserData = node->pUserData;
 		}
 		buffer = node->msg;
-		
+
 	}
-	
+
 	pthread_mutex_unlock(&msgq->mutex);
-	
+
     return buffer;
 }
 
@@ -435,26 +435,26 @@ cprSendMessage (cprMsgQueue_t msgQueue, void *msg, void **ppUserData)
     cpr_msg_queue_t *msgq;
     int16_t attemptsToSend = CPR_ATTEMPTS_TO_SEND;
     uint16_t numAttempts   = 0;
-	
+
     /* Bad application? */
     if (msgQueue == NULL) {
         CPR_ERROR(error_str, fname, "undefined", "invalid input");
         errno = EINVAL;
         return CPR_FAILURE;
     }
-	
+
     msgq = (cpr_msg_queue_t *) msgQueue;
-	
-    /* 
+
+    /*
      * Attempt to send message
      */
     do {
-		
-		/* 
+
+		/*
 		 * Post the message to the Queue
 		 */
 		rc = cprPostMessage(msgq, msg, ppUserData);
-		
+
 		if (rc == CPR_MSGQ_POST_SUCCESS) {
 			cprPegSendMessageStats(msgq, numAttempts);
 			return CPR_SUCCESS;
@@ -469,11 +469,11 @@ cprSendMessage (cprMsgQueue_t msgQueue, void *msg, void **ppUserData)
 			if (pthread_self() == msgq->thread) {
 				msgq->selfQErrors++;
 			}
-			
+
 			return CPR_FAILURE;
 		}
-		
-		
+
+
         /*
          * Did not succeed in sending the message, so continue
          * to attempt up to the CPR_ATTEMPTS_TO_SEND.
@@ -493,7 +493,7 @@ cprSendMessage (cprMsgQueue_t msgQueue, void *msg, void **ppUserData)
             numAttempts++;
         }
     } while (attemptsToSend > 0);
-	
+
     CPR_ERROR(error_str, fname, msgq->name, "FULL");
     msgq->sendErrors++;
     return CPR_FAILURE;
@@ -542,7 +542,7 @@ static cpr_msgq_post_result_e
 cprPostMessage (cpr_msg_queue_t *msgq, void *msg, void **ppUserData)
 {
 	cpr_msgq_node_t *node;
-	
+
 	/*
 	 * Allocate new message queue node
 	 */
@@ -551,9 +551,9 @@ cprPostMessage (cpr_msg_queue_t *msgq, void *msg, void **ppUserData)
 		errno = ENOMEM;
 		return CPR_MSGQ_POST_FAILED;
 	}
-		
+
 	pthread_mutex_lock(&msgq->mutex);
-	
+
 	/*
 	 * Fill in data
 	 */
@@ -563,26 +563,26 @@ cprPostMessage (cpr_msg_queue_t *msgq, void *msg, void **ppUserData)
 	} else {
 		node->pUserData = NULL;
 	}
-	
+
 	/*
 	 * Push onto list
 	 */
 	node->prev = NULL;
 	node->next = msgq->head;
 	msgq->head = node;
-	
+
 	if (node->next) {
 		node->next->prev = node;
 	}
-	
+
 	if (msgq->tail == NULL) {
 		msgq->tail = node;
 	}
 	msgq->currentCount++;
-	
+
 	pthread_cond_signal(&msgq->cond);
 	pthread_mutex_unlock(&msgq->mutex);
-	
+
 	return CPR_MSGQ_POST_SUCCESS;
 
 }
@@ -608,7 +608,7 @@ cprGetMessageQueueStats (cprMsgQueue_t msgQueue, cprMsgQueueStats_t *stats)
 
         sstrncpy(stats->name, msgq->name ? msgq->name : "undefined",
                 sizeof(stats->name));
-        
+
         stats->extendedDepth = msgq->maxExtendedQDepth;
         stats->maxCount = msgq->maxCount;
         stats->currentCount = msgq->currentCount;

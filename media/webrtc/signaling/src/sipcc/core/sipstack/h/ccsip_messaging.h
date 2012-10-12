@@ -160,7 +160,7 @@ void sipSPIGenerateGenAuthorizationResponse(ccsipCCB_t *ccb,
 void sipSPIGenerateTargetUrl(genUrl_t *genUrl, char *sipurlstr);
 void sipSPIGenerateSipUrl(sipUrl_t *sipUrl, char *sipurlstr);
 
-boolean sipSPISendRefer(ccsipCCB_t *ccb, char *referto, 
+boolean sipSPISendRefer(ccsipCCB_t *ccb, char *referto,
                         sipRefEnum_e referto_type);
 boolean sipSPISendReferResponse202(ccsipCCB_t *ccb);
 boolean sipSPISendNotify(ccsipCCB_t *ccb, int referto);
@@ -175,7 +175,7 @@ boolean sipSPISendNotifyResponse(ccsipCCB_t *ccb, cc_causes_t cause);
 boolean sipSPIAddStdHeaders(sipMessage_t *msg,
                             ccsipCCB_t *ccb,
                             boolean isResponse);
-sipMessage_t *sipSPIBuildRegisterHeaders(ccsipCCB_t *ccb,                    
+sipMessage_t *sipSPIBuildRegisterHeaders(ccsipCCB_t *ccb,
                     const char *user,
                     int expires_int);
 boolean sipSPIAddLocalVia(sipMessage_t *msg,
