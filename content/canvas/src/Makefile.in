@@ -33,7 +33,7 @@ EXPORTS_mozilla/dom = \
 CPPSRCS	= \
 	CanvasImageCache.cpp \
 	CanvasUtils.cpp \
-	nsCanvasRenderingContext2DAzure.cpp \
+	CanvasRenderingContext2D.cpp \
 	DocumentRendererParent.cpp \
 	DocumentRendererChild.cpp \
 	ImageData.cpp \
