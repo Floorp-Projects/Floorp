@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 
@@ -42,8 +43,8 @@ public class PropertyAnimator extends TimerTask {
         public void onPropertyAnimationEnd();
     }
 
-    private int mCount;
-    private int mDuration;
+    private long mStartTime;
+    private long mDuration;
     private List<ElementHolder> mElementsList;
     private PropertyAnimationListener mListener;
 
@@ -84,21 +85,20 @@ public class PropertyAnimator extends TimerTask {
 
     @Override
     public void run() {
-        float interpolation = mInterpolator.getInterpolation((float) (mCount * INTERVAL) / (float) mDuration);
+        long timePassed = AnimationUtils.currentAnimationTimeMillis() - mStartTime;
+        float interpolation = mInterpolator.getInterpolation((float) (timePassed) / (float) mDuration);
 
         for (ElementHolder element : mElementsList) { 
             int delta = element.from + (int) ((element.to - element.from) * interpolation);
             invalidate(element, delta);
         }
 
-        mCount++;
-
-        if (mCount * INTERVAL >= mDuration)
+        if (timePassed >= mDuration)
             stop();
     }
 
     public void start() {
-        mCount = 0;
+        mStartTime = AnimationUtils.currentAnimationTimeMillis();
 
         // Fix the from value based on current position and property
         for (ElementHolder element : mElementsList) {
