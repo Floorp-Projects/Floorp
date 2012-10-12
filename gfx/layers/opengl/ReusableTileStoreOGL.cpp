@@ -131,10 +131,19 @@ ReusableTileStoreOGL::HarvestTiles(TiledThebesLayerOGL* aLayer,
     if (x + w > validBounds.x + validBounds.width)
       w = validBounds.x + validBounds.width - x;
 
+    // A tile will consume 256^2 of memory, don't retain small tile trims.
+    // This works around the display port sometimes creating a small 1 pixel wide
+    // tile because of rounding error.
+    if (w < 16)
+      continue;
+
     for (int y = validBounds.y; y < validBounds.YMost();) {
       int h = tileSize - aVideoMemoryTiledBuffer->GetTileStart(y);
       if (y + h > validBounds.y + validBounds.height)
         h = validBounds.y + validBounds.height - y;
+
+      if (h < 16)
+        continue;
 
       // If the new valid region doesn't contain this tile region,
       // harvest the tile.
@@ -166,6 +175,21 @@ ReusableTileStoreOGL::HarvestTiles(TiledThebesLayerOGL* aLayer,
             new ReusableTiledTextureOGL(removedTile, nsIntPoint(x, y), tileRegion,
                                         tileSize, aOldResolution);
           mTiles.AppendElement(reusedTile);
+
+          // Remove any tile that is superseded by this new tile.
+          // (same resolution, same area)
+          for (int i = 0; i < mTiles.Length() - 1; i++) {
+            // XXX Perhaps we should check the region instead of the origin
+            //     so a partial tile doesn't replace a full older tile?
+            if (aVideoMemoryTiledBuffer->RoundDownToTileEdge(mTiles[i]->mTileOrigin.x) == aVideoMemoryTiledBuffer->RoundDownToTileEdge(x) &&
+                aVideoMemoryTiledBuffer->RoundDownToTileEdge(mTiles[i]->mTileOrigin.y) == aVideoMemoryTiledBuffer->RoundDownToTileEdge(y) &&
+                mTiles[i]->mResolution == aOldResolution) {
+              mContext->fDeleteTextures(1, &mTiles[i]->mTexture.mTextureHandle);
+              mTiles.RemoveElementAt(i);
+              // There should only be one similar tile
+              break;
+            }
+          }
         }
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
         else
