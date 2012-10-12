@@ -115,7 +115,7 @@ function addDownload(dm, aParams)
     aParams.targetFile.append(aParams.resultFileName);
   }
   if (!("sourceURI" in aParams))
-    aParams.sourceURI = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/staller.sjs";
+    aParams.sourceURI = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/global/staller.sjs";
   if (!("downloadName" in aParams))
     aParams.downloadName = null;
   if (!("runBeforeStart" in aParams))

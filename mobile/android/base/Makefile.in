@@ -14,7 +14,7 @@ DIRS = locales
 
 DIST_FILES = package-name.txt
 
-include $(topsrcdir)/mobile/android/base/android-sync-files.mk
+include $(topsrcdir)/mobile/android/base/android-services-files.mk
 
 MOZGLUE_JAVA_FILES := \
   mozglue/DirectBufferAllocator.java \
@@ -284,7 +284,7 @@ GARBAGE += \
   Manifest.java \
   $(NULL)
 
-GARBAGE_DIRS += classes db jars res sync
+GARBAGE_DIRS += classes db jars res sync services
 
 MOZ_ANDROID_SHARED_ID = "$(ANDROID_PACKAGE_NAME).sharedID"
 MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "$(ANDROID_PACKAGE_NAME)_sync"
@@ -1061,7 +1061,7 @@ $(PP_RES_XML): $(patsubst res/%,$(srcdir)/resources/%.in,$(PP_RES_XML))
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $(subst res,$(srcdir)/resources,$@).in > $@
 
 # AndroidManifest.xml includes these files, so they need to be marked as dependencies.
-SYNC_MANIFEST_FRAGMENTS = $(wildcard $(topsrcdir)/mobile/android/sync/manifests/*.in)
+SERVICES_MANIFEST_FRAGMENTS = $(wildcard $(topsrcdir)/mobile/android/services/manifests/*.in)
 
 android-tgts = \
   AndroidManifest.xml \
@@ -1073,7 +1073,7 @@ android-tgts = \
 android-preqs = \
   Makefile.in \
   $(call mkdir_deps,db,sync/repositories/android) \
-  $(SYNC_MANIFEST_FRAGMENTS) \
+  $(SERVICES_MANIFEST_FRAGMENTS) \
   WebAppManifestFragment.xml.in \
   WebAppsFragments.java \
   $(NULL)

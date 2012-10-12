@@ -5,8 +5,6 @@
 // This test makes sure that the "Import and Backup->Import From Another Browser"
 // menu item in the Places Organizer is disabled inside private browsing mode.
 
-// TEST_PATH=browser/components/privatebrowsing/test/browser/browser_privatebrowsing_import.js make -C $(OBJDIR) mochitest-browser-chrome
-
 let pb = Cc["@mozilla.org/privatebrowsing;1"].
          getService(Ci.nsIPrivateBrowsingService);
 

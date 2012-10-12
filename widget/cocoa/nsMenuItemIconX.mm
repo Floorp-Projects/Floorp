@@ -10,7 +10,6 @@
 #include "nsMenuItemIconX.h"
 
 #include "nsObjCExceptions.h"
-#include "prmem.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"

@@ -13,8 +13,6 @@
 //---- for XPCOM
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "pratom.h"
-#include "prmem.h"
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kUniversalDetectorCID, NS_UNIVERSAL_DETECTOR_CID);

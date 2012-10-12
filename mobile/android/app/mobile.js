@@ -604,9 +604,6 @@ pref("gfx.show_checkerboard_pattern", true);
 pref("ui.scrolling.friction_slow", -1);
 // This fraction in 1000ths of velocity remains after every animation frame when the velocity is high.
 pref("ui.scrolling.friction_fast", -1);
-// Below this velocity (in pixels per frame), the friction starts increasing from friction_fast
-// to friction_slow.
-pref("ui.scrolling.velocity_threshold", -1);
 // The maximum velocity change factor between events, per ms, in 1000ths.
 // Direction changes are excluded.
 pref("ui.scrolling.max_event_acceleration", -1);
@@ -617,9 +614,6 @@ pref("ui.scrolling.overscroll_snap_limit", -1);
 // The minimum amount of space that must be present for an axis to be considered scrollable,
 // in 1/1000ths of pixels.
 pref("ui.scrolling.min_scrollable_distance", -1);
-// A comma-separated list of float values in the range [0.0, 1.0) that are used as
-// interpolation frames for zoom animations.
-pref("ui.zooming.animation_frames", "");
 
 // Enable accessibility mode if platform accessibility is enabled.
 pref("accessibility.accessfu.activate", 2);

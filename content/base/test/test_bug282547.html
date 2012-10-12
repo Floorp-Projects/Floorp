@@ -65,10 +65,26 @@ function xhr_auth_header_async() {
   xhr.send(null);
 }
 
+function xhr_crossorigin_sync() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://example.com/tests/content/base/test/bug282547.sjs', true);
+  xhr.withCredentials = true;
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      ok(xhr.status == 401, "Status 401");
+      runTests();
+    }
+  }
+
+  xhr.send(null);
+}
+
 var tests = [ xhr_userpass_sync,
               xhr_userpass_async,
               xhr_auth_header_sync,
-              xhr_auth_header_async ];
+              xhr_auth_header_async,
+              /* Disabled: bug799540 xhr_crossorigin_sync */ ];
 function runTests() {
   if (!tests.length) {
     SimpleTest.finish();
