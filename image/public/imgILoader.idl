@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-interface imgIDecoderObserver;
+interface imgINotificationObserver;
 interface imgIRequest;
 
 interface nsIChannel;
@@ -61,7 +61,7 @@ interface imgILoader : nsISupports
                         in nsIURI aReferrerURI,
                         in nsIPrincipal aLoadingPrincipal,
                         in nsILoadGroup aLoadGroup,
-                        in imgIDecoderObserver aObserver,
+                        in imgINotificationObserver aObserver,
                         in nsISupports aCX,
                         in nsLoadFlags aLoadFlags,
                         in nsISupports cacheKey,
@@ -86,7 +86,7 @@ interface imgILoader : nsISupports
    * make sure to Cancel() the resulting request before the observer goes away.
    */
   imgIRequest loadImageWithChannel(in nsIChannel aChannel,
-                        in imgIDecoderObserver aObserver,
+                        in imgINotificationObserver aObserver,
                         in nsISupports cx,
                         out nsIStreamListener aListener);
 };

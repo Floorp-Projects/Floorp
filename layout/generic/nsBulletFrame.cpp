@@ -1431,9 +1431,37 @@ nsBulletFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   return metrics.width;
 }
 
+NS_IMETHODIMP
+nsBulletFrame::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
+{
+  if (aType == imgINotificationObserver::START_CONTAINER) {
+    nsCOMPtr<imgIContainer> image;
+    aRequest->GetImage(getter_AddRefs(image));
+    return OnStartContainer(aRequest, image);
+  }
 
-NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
-                                              imgIContainer *aImage)
+  if (aType == imgINotificationObserver::DATA_AVAILABLE ||
+      aType == imgINotificationObserver::FRAME_CHANGED) {
+    // The image has changed.
+    // Invalidate the entire content area. Maybe it's not optimal but it's simple and
+    // always correct, and I'll be a stunned mullet if it ever matters for performance
+    InvalidateFrame();
+  }
+
+  if (aType == imgINotificationObserver::IS_ANIMATED) {
+    // Register the image request with the refresh driver now that we know it's
+    // animated.
+    if (aRequest == mImageRequest) {
+      nsLayoutUtils::RegisterImageRequest(PresContext(), mImageRequest,
+                                          &mRequestRegistered);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
+                                         imgIContainer *aImage)
 {
   if (!aImage) return NS_ERROR_INVALID_ARG;
   if (!aRequest) return NS_ERROR_INVALID_ARG;
@@ -1472,60 +1500,6 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
   // 'cleaned up' by the Request when it is destroyed, but only then.
   aRequest->IncrementAnimationConsumers();
   
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBulletFrame::OnDataAvailable(imgIRequest *aRequest,
-                                             bool aCurrentFrame,
-                                             const nsIntRect *aRect)
-{
-  // The image has changed.
-  // Invalidate the entire content area. Maybe it's not optimal but it's simple and
-  // always correct, and I'll be a stunned mullet if it ever matters for performance
-  InvalidateFrame();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBulletFrame::OnStopDecode(imgIRequest *aRequest,
-                                          nsresult aStatus,
-                                          const PRUnichar *aStatusArg)
-{
-  // XXX should the bulletframe do anything if the image failed to load?
-  //     it didn't in the old code...
-
-#if 0
-  if (NS_FAILED(aStatus)) {
-    // We failed to load the image. Notify the pres shell
-    if (NS_FAILED(aStatus) && (mImageRequest == aRequest || !mImageRequest)) {
-      imageFailed = true;
-    }
-  }
-#endif
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBulletFrame::OnImageIsAnimated(imgIRequest* aRequest)
-{
-  // Register the image request with the refresh driver now that we know it's
-  // animated.
-  if (aRequest == mImageRequest) {
-    nsLayoutUtils::RegisterImageRequest(PresContext(), mImageRequest,
-                                        &mRequestRegistered);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBulletFrame::FrameChanged(imgIRequest *aRequest,
-                                          imgIContainer *aContainer,
-                                          const nsIntRect *aDirtyRect)
-{
-  // Invalidate the entire content area. Maybe it's not optimal but it's simple and
-  // always correct.
-  InvalidateFrame();
-
   return NS_OK;
 }
 
@@ -1624,7 +1598,7 @@ nsBulletFrame::GetBaseline() const
 
 
 
-NS_IMPL_ISUPPORTS2(nsBulletListener, imgIDecoderObserver, imgIContainerObserver)
+NS_IMPL_ISUPPORTS1(nsBulletListener, imgINotificationObserver)
 
 nsBulletListener::nsBulletListener() :
   mFrame(nullptr)
@@ -1635,49 +1609,10 @@ nsBulletListener::~nsBulletListener()
 {
 }
 
-NS_IMETHODIMP nsBulletListener::OnStartContainer(imgIRequest *aRequest,
-                                                 imgIContainer *aImage)
+NS_IMETHODIMP
+nsBulletListener::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
-
-  return mFrame->OnStartContainer(aRequest, aImage);
-}
-
-NS_IMETHODIMP nsBulletListener::OnDataAvailable(imgIRequest *aRequest,
-                                                bool aCurrentFrame,
-                                                const nsIntRect *aRect)
-{
-  if (!mFrame)
-    return NS_OK;
-
-  return mFrame->OnDataAvailable(aRequest, aCurrentFrame, aRect);
-}
-
-NS_IMETHODIMP nsBulletListener::OnStopDecode(imgIRequest *aRequest,
-                                             nsresult status,
-                                             const PRUnichar *statusArg)
-{
-  if (!mFrame)
-    return NS_OK;
-  
-  return mFrame->OnStopDecode(aRequest, status, statusArg);
-}
-
-NS_IMETHODIMP nsBulletListener::OnImageIsAnimated(imgIRequest *aRequest)
-{
-  if (!mFrame)
-    return NS_OK;
-
-  return mFrame->OnImageIsAnimated(aRequest);
-}
-
-NS_IMETHODIMP nsBulletListener::FrameChanged(imgIRequest *aRequest,
-                                             imgIContainer *aContainer,
-                                             const nsIntRect *aDirtyRect)
-{
-  if (!mFrame)
-    return NS_OK;
-
-  return mFrame->FrameChanged(aRequest, aContainer, aDirtyRect);
+  return mFrame->Notify(aRequest, aType, aData);
 }

@@ -121,15 +121,19 @@ function getImagePref(pref)
     return null;
 }
 
-// JS implementation of imgIDecoderObserver with stubs for all of its methods.
+// JS implementation of imgIScriptedNotificationObserver with stubs for all of its methods.
 function ImageDecoderObserverStub()
 {
-  this.onStartRequest = function onStartRequest(aRequest)                 {}
-  this.onStartDecode = function onStartDecode(aRequest)                   {}
-  this.onStartContainer = function onStartContainer(aRequest, aContainer) {}
-  this.onStartFrame = function onStartFrame(aRequest, aFrame)             {}
-  this.onStopFrame = function onStopFrame(aRequest, aFrame)               {}
-  this.onStopContainer = function onStopContainer(aRequest, aContainer)   {}
-  this.onStopDecode = function onStopDecode(aRequest, status, statusArg)  {}
-  this.onStopRequest = function onStopRequest(aRequest, aIsLastPart)      {}
+  this.startRequest = function startRequest(aRequest)     {}
+  this.startDecode = function startDecode(aRequest)       {}
+  this.startContainer = function startContainer(aRequest) {}
+  this.startFrame = function startFrame(aRequest)         {}
+  this.stopFrame = function stopFrame(aRequest)           {}
+  this.stopContainer = function stopContainer(aRequest)   {}
+  this.stopDecode = function stopDecode(aRequest)         {}
+  this.stopRequest = function stopRequest(aRequest)       {}
+  this.dataAvailable = function dataAvailable(aRequest)   {}
+  this.discard = function discard(aRequest)               {}
+  this.isAnimated = function isAnimated(aRequest)         {}
+  this.frameChanged = function frameChanged(aRequest)     {}
 }

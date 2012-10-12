@@ -122,112 +122,56 @@ nsImageLoadingContent::~nsImageLoadingContent()
     }                                                                    \
   PR_END_MACRO
 
-
 /*
- * imgIContainerObserver impl
+ * imgINotificationObserver impl
  */
 NS_IMETHODIMP
-nsImageLoadingContent::FrameChanged(imgIRequest* aRequest,
-                                    imgIContainer* aContainer,
-                                    const nsIntRect* aDirtyRect)
+nsImageLoadingContent::Notify(imgIRequest* aRequest,
+                              int32_t aType,
+                              const nsIntRect* aData)
 {
-  LOOP_OVER_OBSERVERS(FrameChanged(aRequest, aContainer, aDirtyRect));
-  return NS_OK;
-}
-            
-/*
- * imgIDecoderObserver impl
- */
-NS_IMETHODIMP
-nsImageLoadingContent::OnStartRequest(imgIRequest* aRequest)
-{
+  if (aType == imgINotificationObserver::IS_ANIMATED) {
+    return OnImageIsAnimated(aRequest);
+  }
+
+  if (aType == imgINotificationObserver::STOP_DECODE) {
+    // We should definitely have a request here
+    NS_ABORT_IF_FALSE(aRequest, "no request?");
+
+    NS_PRECONDITION(aRequest == mCurrentRequest || aRequest == mPendingRequest,
+                    "Unknown request");
+  }
+
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
-  LOOP_OVER_OBSERVERS(OnStartRequest(aRequest));
-  return NS_OK;
-}
+  if (aType != imgINotificationObserver::FRAME_CHANGED) {
+    LOOP_OVER_OBSERVERS(Notify(aRequest, aType, aData));
+  }
 
-NS_IMETHODIMP
-nsImageLoadingContent::OnStartDecode(imgIRequest* aRequest)
-{
-  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+  if (aType == imgINotificationObserver::START_CONTAINER) {
+    // Have to check for state changes here, since we might have been in
+    // the LOADING state before.
+    UpdateImageState(true);
+  }
 
-  LOOP_OVER_OBSERVERS(OnStartDecode(aRequest));
-  return NS_OK;
-}
+  if (aType == imgINotificationObserver::STOP_DECODE) {
+    uint32_t reqStatus;
+    aRequest->GetImageStatus(&reqStatus);
+    nsresult status =
+        reqStatus & imgIRequest::STATUS_ERROR ? NS_ERROR_FAILURE : NS_OK;
+    return OnStopDecode(aRequest, status);
+  }
 
-NS_IMETHODIMP
-nsImageLoadingContent::OnStartContainer(imgIRequest* aRequest,
-                                        imgIContainer* aContainer)
-{
-  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-
-  LOOP_OVER_OBSERVERS(OnStartContainer(aRequest, aContainer));
-
-  // Have to check for state changes here, since we might have been in
-  // the LOADING state before.
-  UpdateImageState(true);
-  return NS_OK;    
-}
-
-NS_IMETHODIMP
-nsImageLoadingContent::OnStartFrame(imgIRequest* aRequest,
-                                    uint32_t aFrame)
-{
-  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-
-  LOOP_OVER_OBSERVERS(OnStartFrame(aRequest, aFrame));
-  return NS_OK;    
-}
-
-NS_IMETHODIMP
-nsImageLoadingContent::OnDataAvailable(imgIRequest* aRequest,
-                                       bool aCurrentFrame,
-                                       const nsIntRect* aRect)
-{
-  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-
-  LOOP_OVER_OBSERVERS(OnDataAvailable(aRequest, aCurrentFrame, aRect));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageLoadingContent::OnStopFrame(imgIRequest* aRequest,
-                                   uint32_t aFrame)
-{
-  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-
-  LOOP_OVER_OBSERVERS(OnStopFrame(aRequest, aFrame));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageLoadingContent::OnStopContainer(imgIRequest* aRequest,
-                                       imgIContainer* aContainer)
-{
-  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-
-  LOOP_OVER_OBSERVERS(OnStopContainer(aRequest, aContainer));
   return NS_OK;
 }
 
 // Warning - This isn't actually fired when decode is complete. Rather, it's
 // fired when load is complete. See bug 505385, and in the mean time use
 // OnStopContainer.
-NS_IMETHODIMP
+nsresult
 nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
-                                    nsresult aStatus,
-                                    const PRUnichar* aStatusArg)
+                                    nsresult aStatus)
 {
-  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-
-  // We should definitely have a request here
-  NS_ABORT_IF_FALSE(aRequest, "no request?");
-
-  NS_PRECONDITION(aRequest == mCurrentRequest || aRequest == mPendingRequest,
-                  "Unknown request");
-  LOOP_OVER_OBSERVERS(OnStopDecode(aRequest, aStatus, aStatusArg));
-
   // XXXbholley - When we fix bug 505385,  everything here should go in
   // OnStopRequest.
 
@@ -284,17 +228,7 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest, bool aLastPart)
-{
-  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-
-  LOOP_OVER_OBSERVERS(OnStopRequest(aRequest, aLastPart));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+nsresult
 nsImageLoadingContent::OnImageIsAnimated(imgIRequest *aRequest)
 {
   bool* requestFlag = GetRegisteredFlagForRequest(aRequest);
@@ -302,16 +236,6 @@ nsImageLoadingContent::OnImageIsAnimated(imgIRequest *aRequest)
     nsLayoutUtils::RegisterImageRequest(GetFramePresContext(),
                                         aRequest, requestFlag);
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageLoadingContent::OnDiscard(imgIRequest *aRequest)
-{
-  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-
-  LOOP_OVER_OBSERVERS(OnDiscard(aRequest));
 
   return NS_OK;
 }
@@ -351,7 +275,7 @@ nsImageLoadingContent::GetImageBlockingStatus(int16_t* aStatus)
 }
 
 NS_IMETHODIMP
-nsImageLoadingContent::AddObserver(imgIDecoderObserver* aObserver)
+nsImageLoadingContent::AddObserver(imgINotificationObserver* aObserver)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
@@ -379,7 +303,7 @@ nsImageLoadingContent::AddObserver(imgIDecoderObserver* aObserver)
 }
 
 NS_IMETHODIMP
-nsImageLoadingContent::RemoveObserver(imgIDecoderObserver* aObserver)
+nsImageLoadingContent::RemoveObserver(imgINotificationObserver* aObserver)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 

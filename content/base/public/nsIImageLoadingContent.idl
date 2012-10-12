@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "imgIDecoderObserver.idl"
+#include "imgINotificationObserver.idl"
 
 interface imgIRequest;
 interface nsIChannel;
@@ -34,8 +34,8 @@ interface nsIFrame;
  * sufficient, when combined with the imageBlockingStatus information.)
  */
 
-[scriptable, uuid(4bf1a7c5-6edb-4191-a257-e31a90f6aa85)]
-interface nsIImageLoadingContent : imgIDecoderObserver
+[scriptable, builtinclass, uuid(497bfb9b-d996-4d1e-a647-8137b0cfc876)]
+interface nsIImageLoadingContent : imgINotificationObserver
 {
   /**
    * Request types.  Image loading content nodes attempt to do atomic
@@ -75,14 +75,14 @@ interface nsIImageLoadingContent : imgIDecoderObserver
    *
    * @throws NS_ERROR_OUT_OF_MEMORY
    */
-  void addObserver(in imgIDecoderObserver aObserver);
+  void addObserver(in imgINotificationObserver aObserver);
 
   /**
    * Used to unregister an image decoder observer.
    *
    * @param aObserver the observer to unregister
    */
-  void removeObserver(in imgIDecoderObserver aObserver);
+  void removeObserver(in imgINotificationObserver aObserver);
   
   /**
    * Accessor to get the image requests

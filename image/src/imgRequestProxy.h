@@ -8,7 +8,7 @@
 #define imgRequestProxy_h__
 
 #include "imgIRequest.h"
-#include "imgIDecoderObserver.h"
+#include "imgINotificationObserver.h"
 #include "nsISecurityInfoProvider.h"
 
 #include "nsIRequestObserver.h"
@@ -59,7 +59,7 @@ public:
   // (although not immediately after) doing so.
   nsresult Init(imgStatusTracker* aStatusTracker,
                 nsILoadGroup *aLoadGroup,
-                nsIURI* aURI, imgIDecoderObserver *aObserver);
+                nsIURI* aURI, imgINotificationObserver *aObserver);
 
   nsresult ChangeOwner(imgRequest *aNewOwner); // this will change mOwner.  Do not call this if the previous
                                                // owner has already sent notifications out!
@@ -199,7 +199,7 @@ private:
   // mListener is only promised to be a weak ref (see imgILoader.idl),
   // but we actually keep a strong ref to it until we've seen our
   // first OnStopRequest.
-  imgIDecoderObserver* mListener;
+  imgINotificationObserver* mListener;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   nsLoadFlags mLoadFlags;
