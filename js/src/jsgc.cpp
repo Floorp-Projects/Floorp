@@ -3830,7 +3830,7 @@ BeginSweepPhase(JSRuntime *rt)
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_START);
         if (rt->gcFinalizeCallback)
-            rt->gcFinalizeCallback(&fop, JSFINALIZE_START, !isFull);
+            rt->gcFinalizeCallback(&fop, JSFINALIZE_GROUP_START, !isFull);
     }
 
     /* Finalize unreachable (key,value) pairs in all weak maps. */
@@ -3910,7 +3910,7 @@ BeginSweepPhase(JSRuntime *rt)
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_END);
         if (rt->gcFinalizeCallback)
-            rt->gcFinalizeCallback(&fop, JSFINALIZE_END, !isFull);
+            rt->gcFinalizeCallback(&fop, JSFINALIZE_GROUP_END, !isFull);
     }
 }
 
@@ -4024,6 +4024,12 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
             AutoLockGC lock(rt);
             ExpireChunksAndArenas(rt, gckind == GC_SHRINK);
         }
+    }
+
+    {
+        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_END);
+        if (rt->gcFinalizeCallback)
+            rt->gcFinalizeCallback(&fop, JSFINALIZE_COLLECTION_END, !rt->gcIsFull);
     }
 
     /*
