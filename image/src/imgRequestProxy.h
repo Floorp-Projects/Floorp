@@ -179,6 +179,10 @@ protected:
 
   virtual mozilla::image::Image* GetImage() const;
 
+  nsresult PerformClone(imgINotificationObserver* aObserver,
+                        imgRequestProxy* (aAllocFn)(imgRequestProxy*),
+                        imgIRequest** aClone);
+
 public:
   NS_FORWARD_SAFE_NSITIMEDCHANNEL(TimedChannel())
 
@@ -236,10 +240,15 @@ public:
     mOwnerHasImage = true;
   };
 
-  NS_IMETHOD GetImagePrincipal(nsIPrincipal** aPrincipal);
+  NS_IMETHOD GetImagePrincipal(nsIPrincipal** aPrincipal) MOZ_OVERRIDE;
   virtual imgStatusTracker& GetStatusTracker() const MOZ_OVERRIDE;
 
+  NS_IMETHOD Clone(imgINotificationObserver* aObserver,
+                   imgIRequest** aClone) MOZ_OVERRIDE;
+
 protected:
+  friend imgRequestProxy* NewStaticProxy(imgRequestProxy*);
+
   // Our image. We have to hold a strong reference here, because that's normally
   // the job of the underlying request.
   nsRefPtr<mozilla::image::Image> mImage;
