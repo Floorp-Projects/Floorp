@@ -111,7 +111,6 @@ showHelp(void)
 uint32_t
 ticks2xsec(tmreader * aReader, uint32_t aTicks, uint32_t aResolution)
 {
-    uint32_t retval = 0;
     uint64_t bigone;
     uint64_t tmp64;
 
@@ -120,8 +119,7 @@ ticks2xsec(tmreader * aReader, uint32_t aTicks, uint32_t aResolution)
     bigone *= tmp64;
     LL_UI2L(tmp64, aReader->ticksPerSec);
     bigone /= tmp64;
-    LL_L2UI(retval, bigone);
-    return retval;
+    return (uint32)bigone;
 }
 
 #define ticks2msec(reader, ticks) ticks2xsec((reader), (ticks), 1000)

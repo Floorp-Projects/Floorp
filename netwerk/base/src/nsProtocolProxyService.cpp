@@ -786,11 +786,8 @@ nsProtocolProxyService::SecondsSinceSessionStart()
     LL_I2L(ups, PR_USEC_PER_SEC);
     diff /= ups;
 
-    // convert to 32 bit value
-    uint32_t dsec;
-    LL_L2UI(dsec, diff);
-
-    return dsec;
+    // return converted 32 bit value
+    return uint32_t(diff);
 }
 
 void
