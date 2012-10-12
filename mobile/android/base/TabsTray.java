@@ -297,7 +297,7 @@ public class TabsTray extends LinearLayout
 
     private void animateTo(final View view, int x, int duration) {
         PropertyAnimator pa = new PropertyAnimator(duration);
-        pa.attach(view, Property.SLIDE_LEFT, x);
+        pa.attach(view, Property.SCROLL_X, -x);
         if (x != 0 && !mWaitingForClose) {
             mWaitingForClose = true;
 

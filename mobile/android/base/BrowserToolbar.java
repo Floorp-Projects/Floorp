@@ -51,12 +51,15 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                                        Animation.AnimationListener {
     private static final String LOGTAG = "GeckoToolbar";
     private LinearLayout mLayout;
-    private Button mAwesomeBar;
+    private View mAwesomeBar;
+    private View mAwesomeBarRightEdge;
+    private View mAddressBarBg;
     private TextView mTitle;
     private int mTitlePadding;
     private boolean mSiteSecurityVisible;
     private boolean mAnimateSiteSecurity;
     private ImageButton mTabs;
+    private int mTabsPaneWidth;
     private ImageView mBack;
     private ImageView mForward;
     public ImageButton mFavicon;
@@ -112,12 +115,29 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mShowSiteSecurity = false;
         mShowReader = false;
 
+        // Only used on tablet layout. We need a separate view for the background
+        // because we need to slide it left/right for hiding/shoing the tabs sidebar
+        // See prepareTabsAnimation().
+        mAddressBarBg = mLayout.findViewById(R.id.address_bar_bg);
+
+        // Only used on tablet layout. The tabs sidebar slide animation is implemented
+        // in terms of translating the inner elements of the tablet toolbar to give the
+        // impression of resizing. In order to do this, This "fake" right edge  is kept
+        // in the same position during the animation while the elements on the left
+        // (favicon, back, forware, lock icon, title, ...) slide behind it.
+        // See prepareTabsAnimation().
+        mAwesomeBarRightEdge = mLayout.findViewById(R.id.awesome_bar_right_edge);
+
+        // This will hold the translation width inside the toolbar when the tabs
+        // pane is visible. It will affect the padding applied to the title TextView.
+        mTabsPaneWidth = 0;
+
         mTitle = (TextView) mLayout.findViewById(R.id.awesome_bar_title);
         mTitlePadding = mTitle.getPaddingRight();
         if (Build.VERSION.SDK_INT >= 16)
             mTitle.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
-        mAwesomeBar = (Button) mLayout.findViewById(R.id.awesome_bar);
+        mAwesomeBar = mLayout.findViewById(R.id.awesome_bar);
         mAwesomeBar.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
                 mActivity.autoHideTabs();
@@ -460,6 +480,54 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         updateTabs(mActivity.areTabsShown());
     }
 
+    public void prepareTabsAnimation(PropertyAnimator animator, int width) {
+        // This is negative before we want to keep the right edge in the same
+        // position while animating the left-most elements below.
+        animator.attach(mAwesomeBarRightEdge,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        -width);
+
+        animator.attach(mAwesomeBar,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        width);
+        animator.attach(mAddressBarBg,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        width);
+        animator.attach(mTabs,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        width);
+        animator.attach(mTabsCount,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        width);
+        animator.attach(mBack,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        width);
+        animator.attach(mForward,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        width);
+        animator.attach(mTitle,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        width);
+        animator.attach(mFavicon,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        width);
+        animator.attach(mSiteSecurity,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        width);
+
+        mTabsPaneWidth = width;
+
+        // Only update title padding immediatelly when shrinking the browser
+        // toolbar. Leave the padding update to the end of the animation when
+        // expanding (see finishTabsAnimation()).
+        if (mTabsPaneWidth > 0)
+            setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
+    }
+
+    public void finishTabsAnimation() {
+        setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
+    }
+
     public void updateTabs(boolean areTabsShown) {
         if (areTabsShown) {
             mTabs.getBackground().setLevel(TABS_EXPANDED);
@@ -511,7 +579,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         // We want title to fill the whole space available for it when there are icons
         // being shown on the right side of the toolbar as the icons already have some
         // padding in them. This is just to avoid wasting space when icons are shown.
-        mTitle.setPadding(0, 0, (!mShowReader && !isLoading ? mTitlePadding : 0), 0);
+        mTitle.setPadding(0, 0, (!mShowReader && !isLoading ? mTitlePadding : 0) + mTabsPaneWidth, 0);
 
         updateFocusOrder();
     }
