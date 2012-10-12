@@ -58,7 +58,6 @@ function checkAllCallbacks(listener, aRequest)
   do_check_neq(listener.state & START_CONTAINER, 0);
   do_check_neq(listener.state & START_FRAME, 0);
   do_check_neq(listener.state & STOP_FRAME, 0);
-  do_check_neq(listener.state & STOP_CONTAINER, 0);
   do_check_neq(listener.state & STOP_DECODE, 0);
   do_check_neq(listener.state & STOP_REQUEST, 0);
   do_check_eq(listener.state, ALL_BITS);

@@ -159,7 +159,7 @@ protected:
                   nsIContent* aBindingParent, bool aCompileEventHandlers);
   void UnbindFromTree(bool aDeep, bool aNullParent);
 
-  nsresult OnStopDecode(imgIRequest* aRequest, nsresult aStatus);
+  nsresult OnStopRequest(imgIRequest* aRequest, nsresult aStatus);
   nsresult OnImageIsAnimated(imgIRequest *aRequest);
 
 private:

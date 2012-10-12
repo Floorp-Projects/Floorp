@@ -5771,7 +5771,7 @@ nsSVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRec
     container->StartDecoding();
   }
 
-  if (aType == imgINotificationObserver::STOP_DECODE ||
+  if (aType == imgINotificationObserver::STOP_REQUEST ||
       aType == imgINotificationObserver::FRAME_CHANGED ||
       aType == imgINotificationObserver::START_CONTAINER) {
     Invalidate();

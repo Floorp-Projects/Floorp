@@ -14,7 +14,7 @@ interface imgIRequest;
 
 [ptr] native nsIntRect(nsIntRect);
 
-[scriptable, builtinclass, uuid(bf9ed307-02a5-4732-b3eb-659bde5de84f)]
+[scriptable, builtinclass, uuid(9c606ef4-a8e9-45c0-9721-9d6171227ca5)]
 interface imgINotificationObserver : nsISupports
 {
   const long START_REQUEST = 1;
@@ -22,7 +22,6 @@ interface imgINotificationObserver : nsISupports
   const long START_FRAME = 3;
   const long DATA_AVAILABLE = 4;
   const long STOP_FRAME = 5;
-  const long STOP_CONTAINER = 6;
   const long STOP_DECODE = 7;
   const long DISCARD = 8;
   const long IS_ANIMATED = 9;
