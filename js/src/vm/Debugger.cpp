@@ -55,6 +55,7 @@ extern Class DebuggerEnv_class;
 
 enum {
     JSSLOT_DEBUGENV_OWNER,
+    JSSLOT_DEBUGENV_GC_GRAY_LINK,
     JSSLOT_DEBUGENV_COUNT
 };
 
@@ -62,6 +63,7 @@ extern Class DebuggerObject_class;
 
 enum {
     JSSLOT_DEBUGOBJECT_OWNER,
+    JSSLOT_DEBUGOBJECT_GC_GRAY_LINK,
     JSSLOT_DEBUGOBJECT_COUNT
 };
 
@@ -69,6 +71,7 @@ extern Class DebuggerScript_class;
 
 enum {
     JSSLOT_DEBUGSCRIPT_OWNER,
+    JSSLOT_DEBUGSCRIPT_GC_GRAY_LINK,
     JSSLOT_DEBUGSCRIPT_COUNT
 };
 
@@ -1333,6 +1336,17 @@ Debugger::slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global
 
 /*** Debugger JSObjects **************************************************************************/
 
+JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGENV_GC_GRAY_LINK) ==
+                 unsigned(JSSLOT_DEBUGOBJECT_GC_GRAY_LINK));
+JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGENV_GC_GRAY_LINK) ==
+                 unsigned(JSSLOT_DEBUGSCRIPT_GC_GRAY_LINK));
+
+unsigned
+Debugger::gcGrayLinkSlot()
+{
+    return JSSLOT_DEBUGOBJECT_GC_GRAY_LINK;
+}
+
 void
 Debugger::markKeysInCompartment(JSTracer *tracer)
 {
@@ -2542,7 +2556,7 @@ DebuggerScript_trace(JSTracer *trc, RawObject obj)
 {
     /* This comes from a private pointer, so no barrier needed. */
     if (JSScript *script = GetScriptReferent(obj)) {
-        MarkCrossCompartmentScriptUnbarriered(trc, &script, "Debugger.Script referent");
+        MarkCrossCompartmentScriptUnbarriered(trc, obj, &script, "Debugger.Script referent");
         obj->setPrivateUnbarriered(script);
     }
 }
@@ -3752,7 +3766,7 @@ DebuggerObject_trace(JSTracer *trc, RawObject obj)
      * is okay.
      */
     if (JSObject *referent = (JSObject *) obj->getPrivate()) {
-        MarkCrossCompartmentObjectUnbarriered(trc, &referent, "Debugger.Object referent");
+        MarkCrossCompartmentObjectUnbarriered(trc, obj, &referent, "Debugger.Object referent");
         obj->setPrivateUnbarriered(referent);
     }
 }
@@ -4524,7 +4538,7 @@ DebuggerEnv_trace(JSTracer *trc, RawObject obj)
      * is okay.
      */
     if (Env *referent = (JSObject *) obj->getPrivate()) {
-        MarkCrossCompartmentObjectUnbarriered(trc, &referent, "Debugger.Environment referent");
+        MarkCrossCompartmentObjectUnbarriered(trc, obj, &referent, "Debugger.Environment referent");
         obj->setPrivateUnbarriered(referent);
     }
 }
