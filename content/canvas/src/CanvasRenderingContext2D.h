@@ -99,10 +99,10 @@ public:
   };
 
   CanvasPattern(mozilla::gfx::SourceSurface* aSurface,
-                       RepeatMode aRepeat,
-                       nsIPrincipal* principalForSecurityCheck,
-                       bool forceWriteOnly,
-                       bool CORSUsed)
+                RepeatMode aRepeat,
+                nsIPrincipal* principalForSecurityCheck,
+                bool forceWriteOnly,
+                bool CORSUsed)
     : mSurface(aSurface)
     , mRepeat(aRepeat)
     , mPrincipal(principalForSecurityCheck)
@@ -480,8 +480,8 @@ public:
   NS_IMETHOD SetIsOpaque(bool isOpaque);
   NS_IMETHOD Reset();
   already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
-                                                CanvasLayer *aOldLayer,
-                                                LayerManager *aManager);
+                                               CanvasLayer *aOldLayer,
+                                               LayerManager *aManager);
   virtual bool ShouldForceInactiveLayer(LayerManager *aManager);
   void MarkContextClean();
   NS_IMETHOD SetIsIPC(bool isIPC);
@@ -836,109 +836,112 @@ protected:
     * the operation abstracted to a flag.
     */
   nsresult DrawOrMeasureText(const nsAString& text,
-                              float x,
-                              float y,
-                              const mozilla::dom::Optional<double>& maxWidth,
-                              TextDrawOperation op,
-                              float* aWidth);
+                             float x,
+                             float y,
+                             const mozilla::dom::Optional<double>& maxWidth,
+                             TextDrawOperation op,
+                             float* aWidth);
 
   // state stack handling
   class ContextState {
   public:
-      ContextState() : textAlign(TEXT_ALIGN_START),
-                       textBaseline(TEXT_BASELINE_ALPHABETIC),
-                       lineWidth(1.0f),
-                       miterLimit(10.0f),
-                       globalAlpha(1.0f),
-                       shadowBlur(0.0),
-                       dashOffset(0.0f),
-                       op(mozilla::gfx::OP_OVER),
-                       fillRule(mozilla::gfx::FILL_WINDING),
-                       lineCap(mozilla::gfx::CAP_BUTT),
-                       lineJoin(mozilla::gfx::JOIN_MITER_OR_BEVEL),
-                       imageSmoothingEnabled(true)
-      { }
+    ContextState() : textAlign(TEXT_ALIGN_START),
+                     textBaseline(TEXT_BASELINE_ALPHABETIC),
+                     lineWidth(1.0f),
+                     miterLimit(10.0f),
+                     globalAlpha(1.0f),
+                     shadowBlur(0.0),
+                     dashOffset(0.0f),
+                     op(mozilla::gfx::OP_OVER),
+                     fillRule(mozilla::gfx::FILL_WINDING),
+                     lineCap(mozilla::gfx::CAP_BUTT),
+                     lineJoin(mozilla::gfx::JOIN_MITER_OR_BEVEL),
+                     imageSmoothingEnabled(true)
+    { }
 
-      ContextState(const ContextState& other)
-          : fontGroup(other.fontGroup),
-            font(other.font),
-            textAlign(other.textAlign),
-            textBaseline(other.textBaseline),
-            shadowColor(other.shadowColor),
-            transform(other.transform),
-            shadowOffset(other.shadowOffset),
-            lineWidth(other.lineWidth),
-            miterLimit(other.miterLimit),
-            globalAlpha(other.globalAlpha),
-            shadowBlur(other.shadowBlur),
-            dash(other.dash),
-            dashOffset(other.dashOffset),
-            op(other.op),
-            fillRule(other.fillRule),
-            lineCap(other.lineCap),
-            lineJoin(other.lineJoin),
-            imageSmoothingEnabled(other.imageSmoothingEnabled)
-      {
-          for (int i = 0; i < STYLE_MAX; i++) {
-              colorStyles[i] = other.colorStyles[i];
-              gradientStyles[i] = other.gradientStyles[i];
-              patternStyles[i] = other.patternStyles[i];
-          }
+    ContextState(const ContextState& other)
+        : fontGroup(other.fontGroup),
+          font(other.font),
+          textAlign(other.textAlign),
+          textBaseline(other.textBaseline),
+          shadowColor(other.shadowColor),
+          transform(other.transform),
+          shadowOffset(other.shadowOffset),
+          lineWidth(other.lineWidth),
+          miterLimit(other.miterLimit),
+          globalAlpha(other.globalAlpha),
+          shadowBlur(other.shadowBlur),
+          dash(other.dash),
+          dashOffset(other.dashOffset),
+          op(other.op),
+          fillRule(other.fillRule),
+          lineCap(other.lineCap),
+          lineJoin(other.lineJoin),
+          imageSmoothingEnabled(other.imageSmoothingEnabled)
+    {
+      for (int i = 0; i < STYLE_MAX; i++) {
+        colorStyles[i] = other.colorStyles[i];
+        gradientStyles[i] = other.gradientStyles[i];
+        patternStyles[i] = other.patternStyles[i];
       }
+    }
 
-      void SetColorStyle(Style whichStyle, nscolor color) {
-          colorStyles[whichStyle] = color;
-          gradientStyles[whichStyle] = nullptr;
-          patternStyles[whichStyle] = nullptr;
-      }
+    void SetColorStyle(Style whichStyle, nscolor color)
+    {
+      colorStyles[whichStyle] = color;
+      gradientStyles[whichStyle] = nullptr;
+      patternStyles[whichStyle] = nullptr;
+    }
 
-      void SetPatternStyle(Style whichStyle, CanvasPattern* pat) {
-          gradientStyles[whichStyle] = nullptr;
-          patternStyles[whichStyle] = pat;
-      }
+    void SetPatternStyle(Style whichStyle, CanvasPattern* pat)
+    {
+      gradientStyles[whichStyle] = nullptr;
+      patternStyles[whichStyle] = pat;
+    }
 
-      void SetGradientStyle(Style whichStyle, CanvasGradient* grad) {
-          gradientStyles[whichStyle] = grad;
-          patternStyles[whichStyle] = nullptr;
-      }
+    void SetGradientStyle(Style whichStyle, CanvasGradient* grad)
+    {
+      gradientStyles[whichStyle] = grad;
+      patternStyles[whichStyle] = nullptr;
+    }
 
-      /**
-        * returns true iff the given style is a solid color.
-        */
-      bool StyleIsColor(Style whichStyle) const
-      {
-          return !(patternStyles[whichStyle] || gradientStyles[whichStyle]);
-      }
+    /**
+      * returns true iff the given style is a solid color.
+      */
+    bool StyleIsColor(Style whichStyle) const
+    {
+      return !(patternStyles[whichStyle] || gradientStyles[whichStyle]);
+    }
 
 
-      std::vector<mozilla::RefPtr<mozilla::gfx::Path> > clipsPushed;
+    std::vector<mozilla::RefPtr<mozilla::gfx::Path> > clipsPushed;
 
-      nsRefPtr<gfxFontGroup> fontGroup;
-      nsRefPtr<CanvasGradient> gradientStyles[STYLE_MAX];
-      nsRefPtr<CanvasPattern> patternStyles[STYLE_MAX];
+    nsRefPtr<gfxFontGroup> fontGroup;
+    nsRefPtr<CanvasGradient> gradientStyles[STYLE_MAX];
+    nsRefPtr<CanvasPattern> patternStyles[STYLE_MAX];
 
-      nsString font;
-      TextAlign textAlign;
-      TextBaseline textBaseline;
+    nsString font;
+    TextAlign textAlign;
+    TextBaseline textBaseline;
 
-      nscolor colorStyles[STYLE_MAX];
-      nscolor shadowColor;
+    nscolor colorStyles[STYLE_MAX];
+    nscolor shadowColor;
 
-      mozilla::gfx::Matrix transform;
-      mozilla::gfx::Point shadowOffset;
-      mozilla::gfx::Float lineWidth;
-      mozilla::gfx::Float miterLimit;
-      mozilla::gfx::Float globalAlpha;
-      mozilla::gfx::Float shadowBlur;
-      FallibleTArray<mozilla::gfx::Float> dash;
-      mozilla::gfx::Float dashOffset;
+    mozilla::gfx::Matrix transform;
+    mozilla::gfx::Point shadowOffset;
+    mozilla::gfx::Float lineWidth;
+    mozilla::gfx::Float miterLimit;
+    mozilla::gfx::Float globalAlpha;
+    mozilla::gfx::Float shadowBlur;
+    FallibleTArray<mozilla::gfx::Float> dash;
+    mozilla::gfx::Float dashOffset;
 
-      mozilla::gfx::CompositionOp op;
-      mozilla::gfx::FillRule fillRule;
-      mozilla::gfx::CapStyle lineCap;
-      mozilla::gfx::JoinStyle lineJoin;
+    mozilla::gfx::CompositionOp op;
+    mozilla::gfx::FillRule fillRule;
+    mozilla::gfx::CapStyle lineCap;
+    mozilla::gfx::JoinStyle lineJoin;
 
-      bool imageSmoothingEnabled;
+    bool imageSmoothingEnabled;
   };
 
   nsAutoTArray<ContextState, 3> mStyleStack;
@@ -951,7 +954,8 @@ protected:
   friend class AdjustedTarget;
 
   // other helpers
-  void GetAppUnitsValues(uint32_t *perDevPixel, uint32_t *perCSSPixel) {
+  void GetAppUnitsValues(uint32_t *perDevPixel, uint32_t *perCSSPixel)
+  {
     // If we don't have a canvas element, we just return something generic.
     uint32_t devPixel = 60;
     uint32_t cssPixel = 60;
