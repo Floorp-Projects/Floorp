@@ -1944,12 +1944,11 @@ GCMarker::stop()
     JS_ASSERT(!unmarkedArenaStackTop);
     JS_ASSERT(markLaterArenas == 0);
 
-    JS_ASSERT(grayRoots.empty());
+    grayRoots.clearAndFree();
     grayFailed = false;
 
     /* Free non-ballast stack memory. */
     stack.reset();
-    grayRoots.clearAndFree();
 }
 
 void
@@ -2102,19 +2101,30 @@ GCMarker::markBufferedGrayRoots()
 {
     JS_ASSERT(!grayFailed);
 
-    for (GrayRoot *elem = grayRoots.begin(); elem != grayRoots.end(); elem++) {
+    unsigned markCount = 0;
+
+    GrayRoot *elem = grayRoots.begin();
+    GrayRoot *write = elem;
+    for (; elem != grayRoots.end(); elem++) {
 #ifdef DEBUG
         debugPrinter = elem->debugPrinter;
         debugPrintArg = elem->debugPrintArg;
         debugPrintIndex = elem->debugPrintIndex;
 #endif
-        JS_SET_TRACING_LOCATION(this, (void *)&elem->thing);
         void *tmp = elem->thing;
-        MarkKind(this, &tmp, elem->kind);
-        JS_ASSERT(tmp == elem->thing);
+        if (static_cast<Cell *>(tmp)->compartment()->isGCMarkingGray()) {
+            JS_SET_TRACING_LOCATION(this, (void *)&elem->thing);
+            MarkKind(this, &tmp, elem->kind);
+            JS_ASSERT(tmp == elem->thing);
+            ++markCount;
+        } else {
+            if (write != elem)
+                *write = *elem;
+            ++write;
+        }
     }
-
-    grayRoots.clearAndFree();
+    JS_ASSERT(markCount == elem - write);
+    grayRoots.shrinkBy(elem - write);
 }
 
 void
@@ -3335,8 +3345,11 @@ BeginMarkPhase(JSRuntime *rt)
      * atoms. Otherwise, the non-collected compartments could contain pointers
      * to atoms that we would miss.
      */
-    if (rt->atomsCompartment->isGCScheduled() && rt->gcIsFull && !rt->gcKeepAtoms)
-        rt->atomsCompartment->setGCState(JSCompartment::Mark);
+    JSCompartment *atomsComp = rt->atomsCompartment;
+    if (atomsComp->isGCScheduled() && rt->gcIsFull && !rt->gcKeepAtoms) {
+        JS_ASSERT(!atomsComp->isCollecting());
+        atomsComp->setGCState(JSCompartment::Mark);
+    }
 
     /*
      * At the end of each incremental slice, we call prepareForIncrementalGC,
@@ -3452,9 +3465,13 @@ BeginMarkPhase(JSRuntime *rt)
 }
 
 void
-MarkWeakReferences(GCMarker *gcmarker)
+MarkWeakReferences(JSRuntime *rt, gcstats::Phase phase = gcstats::PHASE_MARK_WEAK)
 {
+    GCMarker *gcmarker = &rt->gcMarker;
     JS_ASSERT(gcmarker->isDrained());
+
+    gcstats::AutoPhase ap(rt->gcStats, phase);
+
     while (WatchpointMap::markAllIteratively(gcmarker) ||
            WeakMapBase::markAllIteratively(gcmarker) ||
            Debugger::markAllIteratively(gcmarker))
@@ -3466,15 +3483,9 @@ MarkWeakReferences(GCMarker *gcmarker)
 }
 
 static void
-MarkGrayAndWeak(JSRuntime *rt)
+MarkGrayReferences(JSRuntime *rt)
 {
     GCMarker *gcmarker = &rt->gcMarker;
-
-    {
-        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK_WEAK);
-        JS_ASSERT(gcmarker->isDrained());
-        MarkWeakReferences(gcmarker);
-    }
 
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK_GRAY);
@@ -3489,10 +3500,7 @@ MarkGrayAndWeak(JSRuntime *rt)
         gcmarker->drainMarkStack(budget);
     }
 
-    {
-        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK_GRAY_WEAK);
-        MarkWeakReferences(gcmarker);
-    }
+    MarkWeakReferences(rt, gcstats::PHASE_MARK_GRAY_WEAK);
 
     JS_ASSERT(gcmarker->isDrained());
 
@@ -3555,7 +3563,8 @@ ValidateIncrementalMarking(JSRuntime *rt)
     SliceBudget budget;
     rt->gcIncrementalState = MARK;
     rt->gcMarker.drainMarkStack(budget);
-    MarkGrayAndWeak(rt);
+    MarkWeakReferences(rt);
+    MarkGrayReferences(rt);
 
     /* Now verify that we have the same mark bits as before. */
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront()) {
@@ -3583,7 +3592,20 @@ ValidateIncrementalMarking(JSRuntime *rt)
             uintptr_t end = arena->thingsEnd();
             while (thing < end) {
                 Cell *cell = (Cell *)thing;
+
+                /*
+                 * If a non-incremental GC wouldn't have collected a cell, then
+                 * an incremental GC won't collect it.
+                 */
                 JS_ASSERT_IF(bitmap->isMarked(cell, BLACK), incBitmap.isMarked(cell, BLACK));
+
+                /*
+                 * If the cycle collector isn't allowed to collect an object
+                 * after a non-incremental GC has run, then it isn't allowed to
+                 * collected it after an incremental GC.
+                 */
+                JS_ASSERT_IF(!bitmap->isMarked(cell, GRAY), !incBitmap.isMarked(cell, GRAY));
+
                 thing += Arena::thingSize(kind);
             }
         }
@@ -3688,12 +3710,156 @@ GetNextCompartmentGroup(JSRuntime *rt)
     ++rt->gcCompartmentGroupIndex;
 }
 
+/*
+ * Gray marking:
+ *
+ * At the end of collection, anything reachable from a gray root that has not
+ * otherwise been marked black must be marked gray.
+ *
+ * This means that when marking things gray we must not allow marking to leave
+ * the current compartment group, as that could result in things being marked
+ * grey when they might subsequently be marked black.  To acheive this, when we
+ * find a cross compartment pointer we don't mark the referent but add it to a
+ * singly-linked list of incoming gray pointers that is stored with each
+ * compartment.
+ *
+ * The list head is stored in JSCompartment::gcIncomingGrayPointers and can
+ * contain both cross compartment wrapper objects and debugger env, object or
+ * script wrappers. The next pointer is stored in a slot on the on the object,
+ * either the second extra slot for cross compartment wrappers, or a dedicated
+ * slot for debugger objects.
+ *
+ * The list is created during gray marking when one of the
+ * MarkCrossCompartmentXXX functions is called for a pointer that leaves the
+ * current compartent group.  This calls DelayCrossCompartmentGrayMarking to
+ * push the referring object onto the list.
+ *
+ * The list is traversed and then unlinked in
+ * MarkIncomingCrossCompartmentPointers.
+ */
+
+static unsigned
+GrayLinkSlot(RawObject o)
+{
+    return IsCrossCompartmentWrapper(o) ? JSSLOT_PROXY_EXTRA + 1 : Debugger::gcGrayLinkSlot();
+}
+
+static Cell *
+CrossCompartmentPointerReferent(RawObject o)
+{
+    return (Cell*)(IsCrossCompartmentWrapper(o) ? GetProxyPrivate(o).toGCThing() : o->getPrivate());
+}
+
+static RawObject
+NextIncomingCrossCompartmentPointer(RawObject prev, bool unlink)
+{
+    unsigned slot = GrayLinkSlot(prev);
+    RawObject next = prev->getReservedSlot(slot).toObjectOrNull();
+
+    if (unlink)
+        prev->setSlot(slot, UndefinedValue());
+
+    return next;
+}
+
+void
+js::DelayCrossCompartmentGrayMarking(RawObject src, Cell *cell)
+{
+    /* Called from MarkCrossCompartmentXXX functions. */
+    unsigned slot = GrayLinkSlot(src);
+    JSCompartment *c = cell->compartment();
+
+    if (src->getReservedSlot(slot).isUndefined()) {
+        src->setCrossCompartmentSlot(slot, ObjectOrNullValue(c->gcIncomingGrayPointers));
+        c->gcIncomingGrayPointers = src;
+    } else {
+#ifdef DEBUG
+        /* Assert that if the slot is in use, the object is in our list. */
+        JS_ASSERT(src->getReservedSlot(slot).isObjectOrNull());
+        RawObject o = c->gcIncomingGrayPointers;
+        while (o && o != src)
+            o = NextIncomingCrossCompartmentPointer(o, false);
+        JS_ASSERT(o);
+#endif
+    }
+}
+
+static void
+MarkIncomingCrossCompartmentPointers(JSRuntime *rt, const uint32_t color)
+{
+    JS_ASSERT(color == BLACK || color == GRAY);
+
+    bool unlinkList = color == GRAY;
+
+    for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+        JS_ASSERT_IF(color == GRAY, c->isGCMarkingGray());
+        JS_ASSERT_IF(color == BLACK, c->isGCMarkingBlack());
+
+        for (RawObject src = c->gcIncomingGrayPointers;
+             src;
+             src = NextIncomingCrossCompartmentPointer(src, unlinkList)) {
+
+            Cell *dst = CrossCompartmentPointerReferent(src);
+            JS_ASSERT(dst->compartment() == c);
+
+            if (color == GRAY) {
+                if (IsObjectMarked(&src) && src->isMarked(GRAY))
+                    MarkGCThingUnbarriered(&rt->gcMarker, (void**)&dst,
+                                           "cross-compartment gray pointer");
+            } else {
+                if (IsObjectMarked(&src) && !src->isMarked(GRAY))
+                    MarkGCThingUnbarriered(&rt->gcMarker, (void**)&dst,
+                                           "cross-compartment black pointer");
+            }
+        }
+
+        if (unlinkList)
+            c->gcIncomingGrayPointers = NULL;
+    }
+
+    SliceBudget budget;
+    rt->gcMarker.drainMarkStack(budget);
+}
+
 static void
 EndMarkingCompartmentGroup(JSRuntime *rt)
 {
     {
         gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_MARK);
-        MarkGrayAndWeak(rt);
+
+        /*
+         * Mark any incoming black pointers from previously swept compartments
+         * whose referents are not marked. This can occur when gray cells become
+         * black by the action of UnmarkGray.
+         */
+        MarkIncomingCrossCompartmentPointers(rt, BLACK);
+
+        MarkWeakReferences(rt);
+
+        /*
+         * Change state of current group to MarkGray to restrict marking to this
+         * group.  Note that there may be pointers to the atoms compartment, and
+         * these will be marked through, as they are not marked with
+         * MarkCrossCompartmentXXX.
+         */
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+            JS_ASSERT(c->isGCMarkingBlack());
+            c->setGCState(JSCompartment::MarkGray);
+        }
+
+        /* Mark incoming gray pointers from previously swept compartments. */
+        rt->gcMarker.setMarkColorGray();
+        MarkIncomingCrossCompartmentPointers(rt, GRAY);
+        rt->gcMarker.setMarkColorBlack();
+
+        /* Mark gray roots and mark transitively inside the current compartment group. */
+        MarkGrayReferences(rt);
+
+        /* Restore marking state. */
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+            JS_ASSERT(c->isGCMarkingGray());
+            c->setGCState(JSCompartment::Mark);
+        }
     }
 
 #ifdef DEBUG
@@ -3716,7 +3882,7 @@ EndMarkingCompartmentGroup(JSRuntime *rt)
             Cell *src = ToMarkable(e.front().value);
             JS_ASSERT(src->compartment() == c);
             if (IsCellMarked(&src) && !src->isMarked(GRAY) && dst->isMarked(GRAY)) {
-                //JS_ASSERT(!dst->compartment()->isCollecting());
+                JS_ASSERT(!dst->compartment()->isCollecting());
                 rt->gcFoundBlackGrayEdges = true;
             }
         }
@@ -3830,6 +3996,12 @@ EndSweepingCompartmentGroup(JSRuntime *rt)
         JS_ASSERT(c->isGCSweeping());
         c->setGCState(JSCompartment::Finished);
     }
+
+    /* Reset the list of arenas marked as being allocated during sweep phase. */
+    while (ArenaHeader *arena = rt->gcArenasAllocatedDuringSweep) {
+        rt->gcArenasAllocatedDuringSweep = arena->getNextAllocDuringSweep();
+        arena->unsetAllocDuringSweep();
+    }
 }
 
 static void
@@ -3848,7 +4020,11 @@ BeginSweepPhase(JSRuntime *rt)
     rt->gcSweepOnBackgroundThread = rt->hasContexts() && rt->useHelperThreads();
 #endif
 
+#ifdef DEBUG
     JS_ASSERT(!rt->gcCompartmentGroup);
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+        JS_ASSERT(!c->gcIncomingGrayPointers);
+#endif
 
     DropStringWrappers(rt);
     FindCompartmentGroups(rt);
@@ -3980,14 +4156,6 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
             rt->gcFinalizeCallback(&fop, JSFINALIZE_COLLECTION_END, !isFull);
     }
 
-    /*
-     * Reset the list of arenas marked as being allocated during sweep phase.
-     */
-    while (ArenaHeader *arena = rt->gcArenasAllocatedDuringSweep) {
-        rt->gcArenasAllocatedDuringSweep = arena->getNextAllocDuringSweep();
-        arena->unsetAllocDuringSweep();
-    }
-
     /* Set up list of compartments for sweeping of background things. */
     JS_ASSERT(!rt->gcSweepingCompartments);
     for (GCCompartmentsIter c(rt); !c.done(); c.next())
@@ -4009,12 +4177,14 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         c->setGCLastBytes(c->gcBytes, c->gcMallocAndFreeBytes, gckind);
         if (c->isCollecting()) {
-            JS_ASSERT(!c->isGCMarking() && !c->isGCSweeping());
+            JS_ASSERT(c->isGCFinished());
             c->setGCState(JSCompartment::NoGC);
         }
 
         JS_ASSERT(!c->isCollecting());
         JS_ASSERT(!c->wasGCStarted());
+        JS_ASSERT(!c->gcIncomingGrayPointers);
+
         for (unsigned i = 0 ; i < FINALIZE_LIMIT ; ++i) {
             JS_ASSERT_IF(!IsBackgroundFinalized(AllocKind(i)) ||
                          !rt->gcSweepOnBackgroundThread,

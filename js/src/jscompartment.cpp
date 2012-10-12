@@ -72,6 +72,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     propertyTree(thisForCtor()),
     gcMallocAndFreeBytes(0),
     gcTriggerMallocAndFreeBytes(0),
+    gcIncomingGrayPointers(NULL),
     gcMallocBytes(0),
     debugModeBits(rt->debugMode ? DebugFromC : 0),
     watchpointMap(NULL),
