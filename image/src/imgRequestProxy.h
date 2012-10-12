@@ -71,8 +71,6 @@ public:
     return mListener != nullptr;
   }
 
-  void SetPrincipal(nsIPrincipal *aPrincipal);
-
   // Asynchronously notify this proxy's listener of the current state of the
   // image, and, if we have an imgRequest mOwner, any status changes that
   // happen between the time this function is called and the time the
@@ -201,10 +199,6 @@ private:
   // set by imgRequest.
   nsRefPtr<mozilla::image::Image> mImage;
 
-  // Our principal. Is null until data has been received from the channel, and
-  // is then set by imgRequest.
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-
   // mListener is only promised to be a weak ref (see imgILoader.idl),
   // but we actually keep a strong ref to it until we've seen our
   // first OnStopRequest.
@@ -226,6 +220,23 @@ private:
   // We only want to send OnStartContainer once for each proxy, but we might
   // get multiple OnStartContainer calls.
   bool mSentStartContainer;
+};
+
+// Used for static image proxies for which no requests are available, so
+// certain behaviours must be overridden to compensate.
+class imgRequestProxyStatic : public imgRequestProxy
+{
+
+public:
+  imgRequestProxyStatic(nsIPrincipal* aPrincipal) : mPrincipal(aPrincipal) {};
+
+  NS_IMETHOD GetImagePrincipal(nsIPrincipal** aPrincipal);
+
+protected:
+  // Our principal. We have to cache it, rather than accessing the underlying
+  // request on-demand, because static proxies don't have an underlying request.
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+
 };
 
 #endif // imgRequestProxy_h__
