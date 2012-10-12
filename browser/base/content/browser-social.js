@@ -62,6 +62,7 @@ let SocialUI = {
         break;
       case "social:ambient-notification-changed":
         SocialToolbar.updateButton();
+        SocialMenu.updateMenu();
         break;
       case "social:profile-changed":
         SocialToolbar.updateProfile();
@@ -107,7 +108,7 @@ let SocialUI = {
     // FIXME: bug 772808: menu items don't inherit the "hidden" state properly,
     // need to update them manually.
     // This should just be: toggleCommand.hidden = !Social.active;
-    for (let id of ["appmenu_socialToggle", "menu_socialToggle"]) {
+    for (let id of ["appmenu_socialToggle", "menu_socialToggle", "menu_socialAmbientMenu"]) {
       let el = document.getElementById(id);
       if (!el)
         continue;
@@ -584,6 +585,31 @@ let SocialShareButton = {
   }
 };
 
+var SocialMenu = {
+  populate: function SocialMenu_populate() {
+    // This menu is only accessible through keyboard navigation.
+    let submenu = document.getElementById("menu_socialAmbientMenuPopup");
+    while(submenu.hasChildNodes())
+          submenu.removeChild(submenu.firstChild);
+    let provider = Social.provider;
+    if (Social.active && provider) {
+      let iconNames = Object.keys(provider.ambientNotificationIcons);
+      for each(let name in iconNames) {
+        let icon = provider.ambientNotificationIcons[name];
+        if (!icon.label || !icon.menuURL)
+          continue;
+        let menuitem = document.createElement("menuitem");
+        menuitem.setAttribute("label", icon.label);
+        menuitem.addEventListener("command", function() {
+          openUILinkIn(icon.menuURL, "tab");
+        }, false);
+        submenu.appendChild(menuitem);
+      }
+    }
+    document.getElementById("menu_socialAmbientMenu").hidden = !submenu.querySelector("menuitem");
+  }
+};
+
 var SocialToolbar = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SocialToolbar_init() {
@@ -717,6 +743,9 @@ var SocialToolbar = {
         let box = document.createElement("box");
         box.classList.add("toolbarbutton-1");
         box.setAttribute("id", iconId);
+        // Use the accessibility menuitem label as tooltiptext.
+        if (icon.label)
+          box.setAttribute("tooltiptext", icon.label);
         box.addEventListener("mousedown", function (e) {
           if (e.button == 0)
             SocialToolbar.showAmbientPopup(box);
