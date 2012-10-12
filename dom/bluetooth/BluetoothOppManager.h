@@ -60,9 +60,21 @@ public:
 
 private:
   BluetoothOppManager();
-  void FileTransferComplete(bool aSuccess, bool aReceived,
-                            const nsString& aFileName, uint32_t aFileLength);
-  void UpdateProgress(uint32_t aProcessed, uint32_t aFileLength);
+  void StartFileTransfer(const nsString& aDeviceAddress,
+                         bool aReceived,
+                         const nsString& aFileName,
+                         uint32_t aFileLength,
+                         const nsString& aContentType);
+  void FileTransferComplete(const nsString& aDeviceAddress,
+                            bool aSuccess,
+                            bool aReceived,
+                            const nsString& aFileName,
+                            uint32_t aFileLength,
+                            const nsString& aContentType);
+  void UpdateProgress(const nsString& aDeviceAddress,
+                      bool aReceived,
+                      uint32_t aProcessedLength,
+                      uint32_t aFileLength);
   void ReplyToConnect();
   void ReplyToDisconnect();
   void ReplyToPut(bool aFinal);
@@ -77,6 +89,7 @@ private:
   int mRemoteMaxPacketLength;
   bool mAbortFlag;
   int mPacketLeftLength;
+  nsString mConnectedDeviceAddress;
 
   nsCOMPtr<nsIDOMBlob> mBlob;
   nsCOMPtr<nsIThread> mReadFileThread;
