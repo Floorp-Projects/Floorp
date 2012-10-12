@@ -46,19 +46,11 @@ NS_IMETHODIMP imgStatusTrackerObserver::FrameChanged(const nsIntRect *dirtyRect)
 
 /** imgIDecoderObserver methods **/
 
-/* void onStartDecode (); */
 NS_IMETHODIMP imgStatusTrackerObserver::OnStartDecode()
 {
   LOG_SCOPE(gImgLog, "imgStatusTrackerObserver::OnStartDecode");
   NS_ABORT_IF_FALSE(mTracker->GetImage(),
                     "OnStartDecode callback before we've created our image");
-
-  mTracker->RecordStartDecode();
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
-  while (iter.HasMore()) {
-    mTracker->SendStartDecode(iter.GetNext());
-  }
 
   if (!mTracker->GetRequest()->GetMultipart()) {
     MOZ_ASSERT(!mTracker->mBlockingOnload);
@@ -100,23 +92,6 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStartContainer()
   nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
     mTracker->SendStartContainer(iter.GetNext());
-  }
-
-  return NS_OK;
-}
-
-/* void onStartFrame (); */
-NS_IMETHODIMP imgStatusTrackerObserver::OnStartFrame()
-{
-  LOG_SCOPE(gImgLog, "imgStatusTrackerObserver::OnStartFrame");
-  NS_ABORT_IF_FALSE(mTracker->GetImage(),
-                    "OnStartFrame callback before we've created our image");
-
-  mTracker->RecordStartFrame();
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
-  while (iter.HasMore()) {
-    mTracker->SendStartFrame(iter.GetNext());
   }
 
   return NS_OK;
@@ -420,28 +395,22 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
   if (mState & stateHasSize)
     proxy->OnStartContainer();
 
-  // OnStartDecode
-  if (mState & stateDecodeStarted)
-    proxy->OnStartDecode();
-
   // BlockOnload
   if (mState & stateBlockingOnload)
     proxy->BlockOnload();
 
   if (mImage) {
     int16_t imageType = mImage->GetType();
-    // Send frame messages (OnStartFrame, OnDataAvailable, OnStopFrame)
+    // Send frame messages (OnDataAvailable, OnStopFrame)
     if (imageType == imgIContainer::TYPE_VECTOR ||
         static_cast<RasterImage*>(mImage)->GetNumFrames() > 0) {
-
-      proxy->OnStartFrame();
 
       // OnDataAvailable
       // XXX - Should only send partial rects here, but that needs to
       // wait until we fix up the observer interface
       nsIntRect r;
       mImage->GetCurrentFrameRect(r);
-      proxy->OnDataAvailable(&r);
+      proxy->OnFrameUpdate(&r);
 
       if (mState & stateFrameStopped)
         proxy->OnStopFrame();
@@ -529,23 +498,8 @@ void
 imgStatusTracker::RecordDecoded()
 {
   NS_ABORT_IF_FALSE(mImage, "RecordDecoded called before we have an Image");
-  mState |= stateDecodeStarted | stateDecodeStopped | stateFrameStopped;
+  mState |= stateDecodeStopped | stateFrameStopped;
   mImageStatus |= imgIRequest::STATUS_FRAME_COMPLETE | imgIRequest::STATUS_DECODE_COMPLETE;
-}
-
-/* non-virtual imgIDecoderObserver methods */
-void
-imgStatusTracker::RecordStartDecode()
-{
-  NS_ABORT_IF_FALSE(mImage, "RecordStartDecode without an Image");
-  mState |= stateDecodeStarted;
-}
-
-void
-imgStatusTracker::SendStartDecode(imgRequestProxy* aProxy)
-{
-  if (!aProxy->NotificationsDeferred())
-    aProxy->OnStartDecode();
 }
 
 void
@@ -567,21 +521,6 @@ imgStatusTracker::SendStartContainer(imgRequestProxy* aProxy)
 }
 
 void
-imgStatusTracker::RecordStartFrame()
-{
-  NS_ABORT_IF_FALSE(mImage, "RecordStartFrame called before we have an Image");
-  // no bookkeeping necessary here - this is implied by imgIContainer's number
-  // of frames
-}
-
-void
-imgStatusTracker::SendStartFrame(imgRequestProxy* aProxy)
-{
-  if (!aProxy->NotificationsDeferred())
-    aProxy->OnStartFrame();
-}
-
-void
 imgStatusTracker::RecordDataAvailable()
 {
   NS_ABORT_IF_FALSE(mImage,
@@ -595,7 +534,7 @@ imgStatusTracker::SendDataAvailable(imgRequestProxy* aProxy,
                                     const nsIntRect* aRect)
 {
   if (!aProxy->NotificationsDeferred())
-    aProxy->OnDataAvailable(aRect);
+    aProxy->OnFrameUpdate(aRect);
 }
 
 
@@ -642,7 +581,7 @@ imgStatusTracker::RecordDiscard()
   NS_ABORT_IF_FALSE(mImage,
                     "RecordDiscard called before we have an Image");
   // Clear the state bits we no longer deserve.
-  uint32_t stateBitsToClear = stateDecodeStarted | stateDecodeStopped;
+  uint32_t stateBitsToClear = stateDecodeStopped;
   mState &= ~stateBitsToClear;
 
   // Clear the status bits we no longer deserve.
@@ -691,7 +630,7 @@ imgStatusTracker::SendFrameChanged(imgRequestProxy* aProxy,
                                    const nsIntRect* aDirtyRect)
 {
   if (!aProxy->NotificationsDeferred())
-    aProxy->FrameChanged(aDirtyRect);
+    aProxy->OnFrameUpdate(aDirtyRect);
 }
 
 /* non-virtual sort-of-nsIRequestObserver methods */
@@ -704,7 +643,6 @@ imgStatusTracker::RecordStartRequest()
   mImageStatus &= ~imgIRequest::STATUS_LOAD_COMPLETE;
   mImageStatus &= ~imgIRequest::STATUS_FRAME_COMPLETE;
   mState &= ~stateRequestStarted;
-  mState &= ~stateDecodeStarted;
   mState &= ~stateDecodeStopped;
   mState &= ~stateRequestStopped;
   mState &= ~stateBlockingOnload;

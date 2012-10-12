@@ -43,7 +43,7 @@ interface imgIContainer;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(dad8093d-384b-4923-b83c-351c4e5f9dce)]
+[scriptable, uuid(0089cf0c-210c-4b44-9ab0-8099b32bcf64)]
 interface imgIDecoderObserver : imgIContainerObserver
 {
   /**
@@ -73,13 +73,6 @@ interface imgIDecoderObserver : imgIContainerObserver
    * has been set on the associated imgRequest.
    */
   void onStartContainer();
-
-  /**
-   * Decode notification.
-   *
-   * called when each frame is created.
-   */
-  void onStartFrame();
 
   /**
    * Decode notification.
