@@ -21,10 +21,6 @@ public class AnimatorProxy {
             new WeakHashMap<View, AnimatorProxy>();
 
     private static interface AnimatorProxyImpl {
-        public int getScrollX();
-        public int getScrollY();
-        public void scrollTo(int scrollX, int scrollY);
-
         public float getAlpha();
         public void setAlpha(float alpha);
 
@@ -33,6 +29,8 @@ public class AnimatorProxy {
 
         public float getTranslationY();
         public void setTranslationY(float translationY);
+
+        public View getView();
     }
 
     private AnimatorProxyImpl mImpl;
@@ -59,15 +57,25 @@ public class AnimatorProxy {
     }
 
     public int getScrollX() {
-        return mImpl.getScrollX();
+        View view = mImpl.getView();
+        if (view != null)
+            return view.getScrollX();
+
+        return 0;
     }
 
     public int getScrollY() {
-        return mImpl.getScrollY();
+        View view = mImpl.getView();
+        if (view != null)
+            return view.getScrollY();
+
+        return 0;
     }
 
     public void scrollTo(int scrollX, int scrollY) {
-        mImpl.scrollTo(scrollX, scrollY);
+        View view = mImpl.getView();
+        if (view != null)
+            view.scrollTo(scrollX, scrollY);
     }
 
     public float getAlpha() {
@@ -187,31 +195,6 @@ public class AnimatorProxy {
         }
 
         @Override
-        public int getScrollX() {
-            View view = mViewRef.get();
-            if (view != null)
-                return view.getScrollX();
-
-            return 0;
-        }
-
-        @Override
-        public int getScrollY() {
-            View view = mViewRef.get();
-            if (view != null)
-                return view.getScrollY();
-
-            return 0;
-        }
-
-        @Override
-        public void scrollTo(int scrollX, int scrollY) {
-            View view = mViewRef.get();
-            if (view != null)
-                view.scrollTo(scrollX, scrollY);
-        }
-
-        @Override
         public float getAlpha() {
             return mTranslationX;
         }
@@ -259,6 +242,11 @@ public class AnimatorProxy {
         }
 
         @Override
+        public View getView() {
+            return mViewRef.get();
+        }
+
+        @Override
         protected void applyTransformation(float interpolatedTime, Transformation t) {
             View view = mViewRef.get();
             if (view != null) {
@@ -273,31 +261,6 @@ public class AnimatorProxy {
 
         public AnimatorProxyPostHC(View view) {
             mViewRef = new WeakReference<View>(view);
-        }
-
-        @Override
-        public int getScrollX() {
-            View view = mViewRef.get();
-            if (view != null)
-                return view.getScrollX();
-
-            return 0;
-        }
-
-        @Override
-        public int getScrollY() {
-            View view = mViewRef.get();
-            if (view != null)
-                return view.getScrollY();
-
-            return 0;
-        }
-
-        @Override
-        public void scrollTo(int scrollX, int scrollY) {
-            View view = mViewRef.get();
-            if (view != null)
-                view.scrollTo(scrollX, scrollY);
         }
 
         @Override
@@ -346,6 +309,11 @@ public class AnimatorProxy {
             View view = mViewRef.get();
             if (view != null)
                 view.setTranslationY(translationY);
+        }
+
+        @Override
+        public View getView() {
+            return mViewRef.get();
         }
     }
 }
