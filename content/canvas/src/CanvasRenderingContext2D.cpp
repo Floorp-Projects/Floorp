@@ -122,10 +122,8 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
   Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
   nsRefPtr<nsIDOMCanvasRenderingContext2D> ctx =
     new mozilla::dom::CanvasRenderingContext2D();
-  if (!ctx)
-    return NS_ERROR_OUT_OF_MEMORY;
 
-  *aResult = ctx.forget().get();
+  ctx.forget(aResult);
   return NS_OK;
 }
 
@@ -912,13 +910,17 @@ CanvasRenderingContext2D::ClearTarget()
 }
 
 NS_IMETHODIMP
-CanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, int32_t width, int32_t height)
+CanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *shell,
+                                                gfxASurface *surface,
+                                                int32_t width,
+                                                int32_t height)
 {
   mDocShell = shell;
   mThebesSurface = surface;
 
   SetDimensions(width, height);
-  mTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surface, IntSize(width, height));
+  mTarget = gfxPlatform::GetPlatform()->
+    CreateDrawTargetForSurface(surface, IntSize(width, height));
   if (!mTarget) {
     EnsureErrorTarget();
     mTarget = sErrorTarget;
@@ -1975,7 +1977,7 @@ CanvasRenderingContext2D::FillRect(double x, double y, double w,
   const ContextState &state = CurrentState();
 
   if (state.patternStyles[STYLE_FILL]) {
-    CanvasPattern::RepeatMode repeat = 
+    CanvasPattern::RepeatMode repeat =
       state.patternStyles[STYLE_FILL]->mRepeat;
     // In the FillRect case repeat modes are easy to deal with.
     bool limitx = repeat == CanvasPattern::NOREPEAT || repeat == CanvasPattern::REPEATY;
