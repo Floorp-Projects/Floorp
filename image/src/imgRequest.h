@@ -109,6 +109,9 @@ public:
     return principal.forget();
   }
 
+  // Get the current principal of the image. No AddRefing.
+  inline nsIPrincipal* GetPrincipal() const { return mPrincipal.get(); };
+
 private:
   friend class imgCacheEntry;
   friend class imgRequestProxy;
