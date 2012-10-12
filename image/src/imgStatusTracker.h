@@ -124,9 +124,6 @@ public:
     return mConsumers.SafeElementAt(0, nullptr) == aConsumer;
   }
 
-  // Temporary hack that goes away in the next patch.
-  const nsTObserverArray<imgRequestProxy*>& GetConsumers() { return mConsumers; };
-
   void AdoptConsumers(imgStatusTracker* aTracker) { mConsumers = aTracker->mConsumers; }
 
   // Returns whether we are in the process of loading; that is, whether we have
@@ -182,6 +179,10 @@ public:
   void SendStartRequest(imgRequestProxy* aProxy);
   void RecordStopRequest(bool aLastPart, nsresult aStatus);
   void SendStopRequest(imgRequestProxy* aProxy, bool aLastPart, nsresult aStatus);
+
+  void OnStartRequest();
+  void OnDataAvailable();
+  void OnStopRequest(bool aLastPart, nsresult aStatus);
 
   /* non-virtual imgIOnloadBlocker methods */
   // NB: If UnblockOnload is sent, and then we are asked to replay the
