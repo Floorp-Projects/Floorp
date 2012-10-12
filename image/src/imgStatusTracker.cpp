@@ -250,21 +250,10 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
 }
 
 void
-imgStatusTracker::EmulateRequestFinished(imgRequestProxy* aProxy, nsresult aStatus,
-                                                bool aOnlySendStopRequest)
+imgStatusTracker::EmulateRequestFinished(imgRequestProxy* aProxy,
+                                         nsresult aStatus)
 {
   nsCOMPtr<imgIRequest> kungFuDeathGrip(aProxy);
-
-  if (!aOnlySendStopRequest) {
-    // The "real" OnStopDecode - fix this with bug 505385.
-    if (!(mState & stateDecodeStopped)) {
-      aProxy->OnStopContainer(mImage);
-    }
-
-    if (!(mState & stateRequestStopped)) {
-      aProxy->OnStopDecode(aStatus, nullptr);
-    }
-  }
 
   if (mState & stateBlockingOnload) {
     aProxy->UnblockOnload();

@@ -19,7 +19,6 @@
 #include "plbase64.h"
 #include "plstr.h"
 #include "prprf.h"
-#include "prmem.h"
 #include "nsCRT.h"
 
 //-----------------------------------------------------------------------------

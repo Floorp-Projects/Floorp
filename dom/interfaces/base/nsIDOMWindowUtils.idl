@@ -40,7 +40,7 @@ interface nsIDOMTouch;
 interface nsIDOMClientRect;
 interface nsIURI;
 
-[scriptable, uuid(f5b9883b-2ab9-426c-8fc1-7296cb6bc1d2)]
+[scriptable, uuid(d0b58b1b-58fa-49a0-8e4d-a3693bc65ebd)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1050,6 +1050,12 @@ interface nsIDOMWindowUtils : nsISupports {
   void startFrameTimeRecording();
   void stopFrameTimeRecording([optional] out unsigned long frameCount,
                               [retval, array, size_is(frameCount)] out float frameTime);
+  /**
+   * Signals that we're begining to tab switch. This is used by painting code to
+   * determine total tab switch time.
+   */
+  void beginTabSwitch();
+
   /**
    * The DPI of the display
    */

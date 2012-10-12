@@ -51,7 +51,6 @@
 #include "nsIConsoleService.h"
 #include "nsIStorageStream.h"
 #include "nsIStringStream.h"
-#include "prmem.h"
 #if defined(XP_WIN)
 #include "nsILocalFileWin.h"
 #endif

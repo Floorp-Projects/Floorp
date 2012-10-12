@@ -133,7 +133,6 @@
 #include "xpcexception.h"
 #include "xpcjsid.h"
 #include "prlong.h"
-#include "prmem.h"
 #include "prenv.h"
 #include "prclist.h"
 #include "nsString.h"

@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=799348
+-->
+<window title="Mozilla Bug 799348"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=799348"
+     target="_blank">Mozilla Bug 799348</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 799348 **/
+  SimpleTest.waitForExplicitFinish();
+  Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  gCalledOnload = false;
+  var myObserver = {
+    QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsIObserver]),
+    observe: function(win, topic, data) {
+      if (topic == "domwindowopened") {
+        ok(!gCalledOnload, "domwindowopened notification fired before onload");
+        win.addEventListener("load", function(evt) {
+          gCalledOnload = true;
+          win.close();
+        }, false);
+      } else if (topic == "domwindowclosed") {
+        ok(gCalledOnload, "should have called onload");
+        Services.ww.unregisterNotification(myObserver);
+        SimpleTest.finish();
+      }
+      else {
+        ok(false, "unknown topic");
+      }
+    }
+  };
+  Services.ww.registerNotification(myObserver);
+
+
+  ]]>
+  </script>
+  <iframe id="frame" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_bug799348.html" />
+</window>

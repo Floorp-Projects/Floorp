@@ -7,6 +7,7 @@
 
 #include "mozilla/layers/PLayers.h"
 #include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/Telemetry.h"
 
 #include "ImageLayers.h"
 #include "ImageContainer.h"
@@ -876,6 +877,11 @@ LayerManager::PostPresent()
     mFrameTimes.AppendElement((now - mLastFrameTime).ToMilliseconds());
     mLastFrameTime = now;
   }
+  if (!mTabSwitchStart.IsNull()) {
+    Telemetry::Accumulate(Telemetry::FX_TAB_SWITCH_TOTAL_MS,
+                          uint32_t((TimeStamp::Now() - mTabSwitchStart).ToMilliseconds()));
+    mTabSwitchStart = TimeStamp();
+  }
 }
 
 nsTArray<float>
@@ -887,7 +893,11 @@ LayerManager::StopFrameTimeRecording()
   return result;
 }
 
-
+void
+LayerManager::BeginTabSwitch()
+{
+  mTabSwitchStart = TimeStamp::Now();
+}
 
 #ifdef MOZ_LAYERS_HAVE_LOG
 

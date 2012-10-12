@@ -11,7 +11,6 @@
 #include "nsMappedAttributes.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsRuleWalker.h"
-#include "prmem.h"
 #include "mozilla/HashFunctions.h"
 
 using namespace mozilla;

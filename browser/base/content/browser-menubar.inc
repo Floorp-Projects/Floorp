@@ -482,7 +482,9 @@
                   accesskey="&toolsMenu.accesskey;">
               <menupopup id="menu_ToolsPopup"
 #ifdef MOZ_SERVICES_SYNC
-                         onpopupshowing="gSyncUI.updateUI();"
+                         onpopupshowing="gSyncUI.updateUI(); SocialMenu.populate();"
+#else
+                         onpopupshowing="SocialMenu.populate();"
 #endif
                          >
               <menuitem id="menu_search"
@@ -507,6 +509,11 @@
                         type="checkbox"
                         autocheck="false"
                         command="Social:Toggle"/>
+              <menu id="menu_socialAmbientMenu"
+                    class="show-only-for-keyboard"
+                    command="Social:Toggle">
+                <menupopup id="menu_socialAmbientMenuPopup"/>
+              </menu>
 #ifdef MOZ_SERVICES_SYNC
               <!-- only one of sync-setup or sync-menu will be showing at once -->
               <menuitem id="sync-setup"

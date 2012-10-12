@@ -11,9 +11,9 @@
 //   existing.
 
 function test() {
-  let prefix = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/';
+  let prefix = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/global/';
   waitForExplicitFinish();
-  
+
   // We wait for a GC to ensure that all previous PB docshells in this test suite are destroyed
   // so that the PB localStorage instance is clean.
   Components.utils.schedulePreciseGC(function() {

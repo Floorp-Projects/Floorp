@@ -10,10 +10,29 @@ package org.mozilla.gecko.sync;
  */
 public class GlobalConstants {
   public static final String PRODUCT_NAME = "@MOZ_APP_DISPLAYNAME@";
-  public static final String SYNC_VERSION_STRING = "1.@MOZ_APP_VERSION@.0";
+  public static final String ANDROID_CPU_ARCH = "@ANDROID_CPU_ARCH@";
 
-  public static final String USER_AGENT = "Firefox AndroidSync " + SYNC_VERSION_STRING +
-                                          " (" + PRODUCT_NAME + ")";
+  // One of 'beta', 'aurora', 'nightly', 'default'.
+  // If this is an official build, 'default' means 'release'.
+  // Otherwise, it means 'dev'.
+  public static final String MOZ_UPDATE_CHANNEL = "@MOZ_UPDATE_CHANNEL@";
+#ifdef MOZ_OFFICIAL_BRANDING
+  public static final boolean MOZ_OFFICIAL_BRANDING = true;
+#else
+  public static final boolean MOZ_OFFICIAL_BRANDING = false;
+#endif
+
+  public static final String MOZ_APP_VERSION = "@MOZ_APP_VERSION@";
+  public static final String SYNC_MAJOR_VERSION  = "1";
+  public static final String SYNC_MINOR_VERSION  = "0";
+  public static final String SYNC_VERSION_STRING = SYNC_MAJOR_VERSION + "." +
+                                                   MOZ_APP_VERSION + "." +
+                                                   SYNC_MINOR_VERSION;
+
+  public static final String SYNC_USER_AGENT = "Firefox AndroidSync " +
+                                               SYNC_VERSION_STRING + " (" +
+                                               PRODUCT_NAME + ")";
+
   public static final String BROWSER_INTENT_PACKAGE = "@ANDROID_PACKAGE_NAME@";
   public static final String BROWSER_INTENT_CLASS = BROWSER_INTENT_PACKAGE + ".App";
 

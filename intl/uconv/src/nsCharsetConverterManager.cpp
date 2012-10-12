@@ -13,7 +13,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsEncoderDecoderUtils.h"
 #include "nsIStringBundle.h"
-#include "prmem.h"
 #include "nsCRT.h"
 #include "nsTArray.h"
 #include "nsStringEnumerator.h"
