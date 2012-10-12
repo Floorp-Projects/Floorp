@@ -4016,7 +4016,7 @@ nsImageRenderer::PrepareImage()
 {
   if (mImage->IsEmpty() || !mImage->IsComplete()) {
     // Make sure the image is actually decoding
-    mImage->RequestDecode();
+    mImage->StartDecoding();
 
     // We can not prepare the image for rendering if it is not fully loaded.
     //
