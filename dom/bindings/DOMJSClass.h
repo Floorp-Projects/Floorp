@@ -11,8 +11,6 @@
 
 #include "mozilla/dom/PrototypeList.h" // auto-generated
 
-class nsCycleCollectionParticipant;
-
 // We use slot 0 for holding the raw object.  This is safe for both
 // globals and non-globals.
 #define DOM_OBJECT_SLOT 0
@@ -68,11 +66,6 @@ struct DOMClass
   const bool mDOMObjectIsISupports;
 
   const NativePropertyHooks* mNativeHooks;
-
-  // This stores the CC participant for the native, null if this class is for a
-  // worker or for a native inheriting from nsISupports (we can get the CC
-  // participant by QI'ing in that case).
-  nsCycleCollectionParticipant* mParticipant;
 };
 
 // Special JSClass for reflected DOM objects.

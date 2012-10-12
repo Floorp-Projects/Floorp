@@ -847,16 +847,10 @@ NoteGCThingXPCOMChildren(js::Class *clasp, JSObject *obj,
             static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
         cb.NoteXPCOMChild(identity);
     } else {
-        const DOMClass* domClass;
-        DOMObjectSlot slot = GetDOMClass(obj, domClass);
-        if (slot != eNonDOMObject) {
+        nsISupports *identity;
+        if (UnwrapDOMObjectToISupports(obj, identity)) {
             NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "UnwrapDOMObject(obj)");
-            if (domClass->mDOMObjectIsISupports) {
-                cb.NoteXPCOMChild(UnwrapDOMObject<nsISupports>(obj, slot));
-            } else if (domClass->mParticipant) {
-                cb.NoteNativeChild(UnwrapDOMObject<void>(obj, slot),
-                                   domClass->mParticipant);
-            }
+            cb.NoteXPCOMChild(identity);
         }
     }
 }
