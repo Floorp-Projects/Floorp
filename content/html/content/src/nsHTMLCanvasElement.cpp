@@ -836,7 +836,7 @@ nsHTMLCanvasElement::InvalidateCanvasContent(const gfxRect* damageRect)
 
   frame->MarkLayersActive(nsChangeHint(0));
 
-  Layer* layer;
+  Layer* layer = nullptr;
   if (damageRect) {
     nsIntSize size = GetWidthHeight();
     if (size.width != 0 && size.height != 0) {
