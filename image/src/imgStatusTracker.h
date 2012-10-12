@@ -152,13 +152,13 @@ public:
   void RecordStartDecode();
   void SendStartDecode(imgRequestProxy* aProxy);
   void RecordStartContainer(imgIContainer* aContainer);
-  void SendStartContainer(imgRequestProxy* aProxy, imgIContainer* aContainer);
-  void RecordStartFrame(uint32_t aFrame);
-  void SendStartFrame(imgRequestProxy* aProxy, uint32_t aFrame);
-  void RecordDataAvailable(bool aCurrentFrame, const nsIntRect* aRect);
-  void SendDataAvailable(imgRequestProxy* aProxy, bool aCurrentFrame, const nsIntRect* aRect);
-  void RecordStopFrame(uint32_t aFrame);
-  void SendStopFrame(imgRequestProxy* aProxy, uint32_t aFrame);
+  void SendStartContainer(imgRequestProxy* aProxy);
+  void RecordStartFrame();
+  void SendStartFrame(imgRequestProxy* aProxy);
+  void RecordDataAvailable();
+  void SendDataAvailable(imgRequestProxy* aProxy, const nsIntRect* aRect);
+  void RecordStopFrame();
+  void SendStopFrame(imgRequestProxy* aProxy);
   void RecordStopDecode(nsresult statusg);
   void SendStopDecode(imgRequestProxy* aProxy, nsresult aStatus);
   void RecordDiscard();
@@ -167,10 +167,8 @@ public:
   void SendImageIsAnimated(imgRequestProxy *aProxy);
 
   /* non-virtual imgIContainerObserver methods */
-  void RecordFrameChanged(imgIContainer* aContainer,
-                          const nsIntRect* aDirtyRect);
-  void SendFrameChanged(imgRequestProxy* aProxy, imgIContainer* aContainer,
-                        const nsIntRect* aDirtyRect);
+  void RecordFrameChanged(const nsIntRect* aDirtyRect);
+  void SendFrameChanged(imgRequestProxy* aProxy, const nsIntRect* aDirtyRect);
 
   /* non-virtual sort-of-nsIRequestObserver methods */
   void RecordStartRequest();
