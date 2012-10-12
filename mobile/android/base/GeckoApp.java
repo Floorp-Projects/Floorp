@@ -1671,7 +1671,7 @@ abstract public class GeckoApp
 
         if (mLayerView == null) {
             LayerView layerView = (LayerView) findViewById(R.id.layer_view);
-            layerView.createLayerClient(GeckoAppShell.getEventDispatcher());
+            layerView.initializeView(GeckoAppShell.getEventDispatcher());
             mLayerView = layerView;
         }
 

@@ -83,13 +83,24 @@ public class LayerView extends FrameLayout {
     public LayerView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
+        mGLController = new GLController(this);
+        mPaintState = PAINT_BEFORE_FIRST;
+        mCheckerboardColor = Color.WHITE;
+        mCheckerboardShouldShowChecks = true;
+    }
+
+    public void initializeView(EventDispatcher eventDispatcher) {
+        // This check should not be done while the view tree is still being
+        // created as hardware acceleration will not be enabled at this point.
+        // initializeView() is called on the initialization phase of GeckoApp,
+        // which is late enough to detect hardware acceleration properly.
         if (shouldUseTextureView()) {
-            mTextureView = new TextureView(context);
+            mTextureView = new TextureView(getContext());
             mTextureView.setSurfaceTextureListener(new SurfaceTextureListener());
             mTextureView.setBackgroundColor(Color.WHITE);
             addView(mTextureView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         } else {
-            mSurfaceView = new SurfaceView(context);
+            mSurfaceView = new SurfaceView(getContext());
             mSurfaceView.setBackgroundColor(Color.WHITE);
             addView(mSurfaceView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
@@ -98,13 +109,6 @@ public class LayerView extends FrameLayout {
             holder.setFormat(PixelFormat.RGB_565);
         }
 
-        mGLController = new GLController(this);
-        mPaintState = PAINT_BEFORE_FIRST;
-        mCheckerboardColor = Color.WHITE;
-        mCheckerboardShouldShowChecks = true;
-    }
-
-    public void createLayerClient(EventDispatcher eventDispatcher) {
         mLayerClient = new GeckoLayerClient(getContext(), this, eventDispatcher);
 
         mTouchEventHandler = new TouchEventHandler(getContext(), this, mLayerClient);
