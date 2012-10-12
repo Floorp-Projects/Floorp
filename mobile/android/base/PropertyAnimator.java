@@ -22,6 +22,7 @@ public class PropertyAnimator implements Runnable {
     private static final String LOGTAG = "GeckoPropertyAnimator";
 
     public static enum Property {
+        ALPHA,
         TRANSLATION_X,
         TRANSLATION_Y,
         SCROLL_X,
@@ -67,7 +68,7 @@ public class PropertyAnimator implements Runnable {
         mUseHardwareLayer = useHardwareLayer;
     }
 
-    public void attach(View view, Property property, int to) {
+    public void attach(View view, Property property, float to) {
         ElementHolder element = new ElementHolder();
 
         element.view = view;
@@ -105,7 +106,9 @@ public class PropertyAnimator implements Runnable {
 
         // Fix the from value based on current position and property
         for (ElementHolder element : mElementsList) {
-            if (element.property == Property.TRANSLATION_Y)
+            if (element.property == Property.ALPHA)
+                element.from = element.proxy.getAlpha();
+            else if (element.property == Property.TRANSLATION_Y)
                 element.from = element.proxy.getTranslationY();
             else if (element.property == Property.TRANSLATION_X)
                 element.from = element.proxy.getTranslationX();
@@ -154,7 +157,9 @@ public class PropertyAnimator implements Runnable {
         if (!(element.view instanceof ViewGroup))
             return false;
 
-        if (element.property == Property.TRANSLATION_Y || element.property == Property.TRANSLATION_X)
+        if (element.property == Property.ALPHA ||
+            element.property == Property.TRANSLATION_Y ||
+            element.property == Property.TRANSLATION_X)
             return true;
 
         return false;
@@ -168,7 +173,9 @@ public class PropertyAnimator implements Runnable {
         if (view.getHandler() == null)
             return;
 
-        if (element.property == Property.TRANSLATION_Y)
+        if (element.property == Property.ALPHA)
+            element.proxy.setAlpha(delta);
+        else if (element.property == Property.TRANSLATION_Y)
             element.proxy.setTranslationY(delta);
         else if (element.property == Property.TRANSLATION_X)
             element.proxy.setTranslationX(delta);
