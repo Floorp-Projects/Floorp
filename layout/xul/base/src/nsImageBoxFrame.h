@@ -95,8 +95,8 @@ protected:
 
 private:
   nsresult OnStartContainer(imgIRequest *request, imgIContainer *image);
-  nsresult OnStopContainer(imgIRequest *request);
-  nsresult OnStopDecode(imgIRequest *request, nsresult status);
+  nsresult OnStopDecode(imgIRequest *request);
+  nsresult OnStopRequest(imgIRequest *request, nsresult status);
   nsresult OnImageIsAnimated(imgIRequest* aRequest);
   nsresult FrameChanged(imgIRequest *aRequest);
 

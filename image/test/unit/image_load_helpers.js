@@ -11,10 +11,10 @@ const START_DECODE = 0x02;
 const START_CONTAINER = 0x04;
 const START_FRAME = 0x08;
 const STOP_FRAME = 0x10;
-const STOP_CONTAINER = 0x20;
-const STOP_DECODE = 0x40;
-const STOP_REQUEST = 0x80;
-const ALL_BITS = 0xFF;
+const STOP_DECODE = 0x20;
+const STOP_REQUEST = 0x40;
+const ALL_BITS = START_REQUEST | START_DECODE | START_CONTAINER | START_FRAME |
+                 STOP_FRAME | STOP_DECODE | STOP_REQUEST;
 
 // An implementation of imgIDecoderObserver with the ability to call specified
 // functions on onStartRequest and onStopRequest.
@@ -53,12 +53,6 @@ function ImageListener(start_callback, stop_callback)
 
     this.state |= STOP_FRAME;
   }
-  this.stopContainer = function onStopContainer(aRequest)
-  {
-    do_check_false(this.synchronous);
-
-    this.state |= STOP_CONTAINER;
-  }
   this.stopDecode = function onStopDecode(aRequest)
   {
     do_check_false(this.synchronous);
@@ -68,10 +62,6 @@ function ImageListener(start_callback, stop_callback)
   this.stopRequest = function onStopRequest(aRequest)
   {
     do_check_false(this.synchronous);
-
-    // onStopDecode must always be called before, and with, onStopRequest. See
-    // imgRequest::OnStopDecode for more information.
-    do_check_true(!!(this.state & STOP_DECODE));
 
     // We have to cancel the request when we're done with it to break any
     // reference loops!

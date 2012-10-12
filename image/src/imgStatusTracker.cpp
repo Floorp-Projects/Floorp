@@ -172,51 +172,28 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStopFrame(imgIRequest *request,
   return NS_OK;
 }
 
-/* void onStopContainer (in imgIRequest request, in imgIContainer image); */
-NS_IMETHODIMP imgStatusTrackerObserver::OnStopContainer(imgIRequest *request,
-                                          imgIContainer *image)
-{
-  LOG_SCOPE(gImgLog, "imgStatusTrackerObserver::OnStopContainer");
-  NS_ABORT_IF_FALSE(mTracker->GetImage(),
-                    "OnDataContainer callback before we've created our image");
-
-  mTracker->RecordStopContainer(image);
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
-  while (iter.HasMore()) {
-    mTracker->SendStopContainer(iter.GetNext(), image);
-  }
-
-  // This is really hacky. We need to handle the case where we start decoding,
-  // block onload, but then hit an error before we get to our first frame. In
-  // theory we would just hook in at OnStopDecode, but OnStopDecode is broken
-  // until we fix bug 505385. OnStopContainer is actually going away at that
-  // point. So for now we take advantage of the fact that OnStopContainer is
-  // always fired in the decoders at the same time as OnStopDecode.
-  mTracker->MaybeUnblockOnload();
-
-  return NS_OK;
-}
-
 /* void onStopDecode (in imgIRequest request, in nsresult status, in wstring statusArg); */
 NS_IMETHODIMP imgStatusTrackerObserver::OnStopDecode(imgIRequest *aRequest,
-                                       nsresult aStatus,
-                                       const PRUnichar *aStatusArg)
+                                                     nsresult aStatus)
 {
   LOG_SCOPE(gImgLog, "imgStatusTrackerObserver::OnStopDecode");
   NS_ABORT_IF_FALSE(mTracker->GetImage(),
-                    "OnDataDecode callback before we've created our image");
+                    "OnStopDecode callback before we've created our image");
 
   // We finished the decode, and thus have the decoded frames. Update the cache
   // entry size to take this into account.
   mTracker->GetRequest()->UpdateCacheEntrySize();
 
-  mTracker->RecordStopDecode(aStatus, aStatusArg);
+  mTracker->RecordStopDecode(aStatus);
 
   nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
-    mTracker->SendStopDecode(iter.GetNext(), aStatus, aStatusArg);
+    mTracker->SendStopDecode(iter.GetNext(), aStatus);
   }
+
+  // This is really hacky. We need to handle the case where we start decoding,
+  // block onload, but then hit an error before we get to our first frame.
+  mTracker->MaybeUnblockOnload();
 
   if (NS_FAILED(aStatus)) {
     // Some kind of problem has happened with image decoding.
@@ -229,19 +206,6 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStopDecode(imgIRequest *aRequest,
       os->NotifyObservers(uri, "net:failed-to-process-uri-content", nullptr);
     }
   }
-
-  // RasterImage and everything below it is completely correct and
-  // bulletproof about its handling of decoder notifications.
-  // Unfortunately, here and above we have to make some gross and
-  // inappropriate use of things to get things to work without
-  // completely overhauling the decoder observer interface (this will,
-  // thankfully, happen in bug 505385). From imgRequest and above (for
-  // the time being), OnStopDecode is just a companion to OnStopRequest
-  // that signals success or failure of the _load_ (not the _decode_).
-  // Within imgStatusTracker, we ignore OnStopDecode notifications from the
-  // decoder and RasterImage and generate our own every time we send
-  // OnStopRequest. From within SendStopDecode, we actually send
-  // OnStopContainer.  For more information, see bug 435296.
 
   return NS_OK;
 }
@@ -513,16 +477,12 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
     }
   }
 
-  // See bug 505385 and imgStatusTrackerObserver::OnStopDecode for more information on why we
-  // call OnStopContainer based on stateDecodeStopped, and why OnStopDecode is
-  // called with OnStopRequest.
   if (mState & stateDecodeStopped) {
     NS_ABORT_IF_FALSE(mImage, "stopped decoding without ever having an image?");
-    proxy->OnStopContainer(mImage);
+    proxy->OnStopDecode();
   }
 
   if (mState & stateRequestStopped) {
-    proxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nullptr);
     proxy->OnStopRequest(mHadLastPart);
   }
 }
@@ -669,21 +629,7 @@ imgStatusTracker::SendStopFrame(imgRequestProxy* aProxy, uint32_t aFrame)
 }
 
 void
-imgStatusTracker::RecordStopContainer(imgIContainer* aContainer)
-{
-  NS_ABORT_IF_FALSE(mImage,
-                    "RecordStopContainer called before we have an Image");
-  // No-op: see imgStatusTrackerObserver::OnStopDecode for more information
-}
-
-void
-imgStatusTracker::SendStopContainer(imgRequestProxy* aProxy, imgIContainer* aContainer)
-{
-  // No-op: see imgStatusTrackerObserver::OnStopDecode for more information
-}
-
-void
-imgStatusTracker::RecordStopDecode(nsresult aStatus, const PRUnichar* statusArg)
+imgStatusTracker::RecordStopDecode(nsresult aStatus)
 {
   NS_ABORT_IF_FALSE(mImage,
                     "RecordStopDecode called before we have an Image");
@@ -697,14 +643,10 @@ imgStatusTracker::RecordStopDecode(nsresult aStatus, const PRUnichar* statusArg)
 }
 
 void
-imgStatusTracker::SendStopDecode(imgRequestProxy* aProxy, nsresult aStatus,
-                                 const PRUnichar* statusArg)
+imgStatusTracker::SendStopDecode(imgRequestProxy* aProxy, nsresult aStatus)
 {
-  // See imgStatusTrackerObserver::OnStopDecode for more information on why we call
-  // OnStopContainer from here this, and why imgRequestProxy::OnStopDecode() is
-  // called from OnStopRequest() and SyncNotify().
   if (!aProxy->NotificationsDeferred())
-    aProxy->OnStopContainer(mImage);
+    aProxy->OnStopDecode();
 }
 
 void
@@ -815,10 +757,7 @@ imgStatusTracker::RecordStopRequest(bool aLastPart, nsresult aStatus)
 void
 imgStatusTracker::SendStopRequest(imgRequestProxy* aProxy, bool aLastPart, nsresult aStatus)
 {
-  // See bug 505385 and imgStatusTrackerObserver::OnStopDecode for more information on why
-  // OnStopDecode is called with OnStopRequest.
   if (!aProxy->NotificationsDeferred()) {
-    aProxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nullptr);
     aProxy->OnStopRequest(aLastPart);
   }
 }
