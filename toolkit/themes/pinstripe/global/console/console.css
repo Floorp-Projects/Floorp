@@ -29,8 +29,7 @@
   color: #505050;
 }
 
-
-.console-row-msg > label {
+.console-row-msg > label:first-child {
   font-weight: bold;
 }
 
