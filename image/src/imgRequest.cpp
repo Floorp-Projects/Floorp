@@ -188,13 +188,6 @@ void imgRequest::AddProxy(imgRequestProxy *proxy)
     mLoader->SetHasProxies(mURI);
   }
 
-  // If we don't have any current observers, we should restart any animation.
-  if (mImage && !HaveProxyWithObserver(proxy) && proxy->HasObserver()) {
-    LOG_MSG(gImgLog, "imgRequest::AddProxy", "resetting animation");
-
-    mImage->ResetAnimation();
-  }
-
   proxy->SetPrincipal(mPrincipal);
 
   mObservers.AppendElementUnlessExists(proxy);
@@ -340,24 +333,6 @@ void imgRequest::RemoveFromCache()
   }
 
   mCacheEntry = nullptr;
-}
-
-bool imgRequest::HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const
-{
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
-  imgRequestProxy* proxy;
-  while (iter.HasMore()) {
-    proxy = iter.GetNext();
-    if (proxy == aProxyToIgnore) {
-      continue;
-    }
-    
-    if (proxy->HasObserver()) {
-      return true;
-    }
-  }
-  
-  return false;
 }
 
 int32_t imgRequest::Priority() const
