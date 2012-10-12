@@ -1149,7 +1149,7 @@ JSCompartment::sweepBaseShapeTable()
     if (baseShapes.initialized()) {
         for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
             UnownedBaseShape *base = e.front();
-            if (!base->isMarked())
+            if (IsBaseShapeAboutToBeFinalized(&base))
                 e.removeFront();
         }
     }
@@ -1306,12 +1306,12 @@ JSCompartment::sweepInitialShapeTable()
             const InitialShapeEntry &entry = e.front();
             Shape *shape = entry.shape;
             JSObject *proto = entry.proto.raw();
-            if (!IsShapeMarked(&shape) || (entry.proto.isObject() && !IsObjectMarked(&proto))) {
+            if (IsShapeAboutToBeFinalized(&shape) || (entry.proto.isObject() && IsObjectAboutToBeFinalized(&proto))) {
                 e.removeFront();
             } else {
 #ifdef DEBUG
                 DebugOnly<JSObject *> parent = shape->getObjectParent();
-                JS_ASSERT(!parent || IsObjectMarked(&parent));
+                JS_ASSERT(!parent || !IsObjectAboutToBeFinalized(&parent));
                 JS_ASSERT(parent == shape->getObjectParent());
 #endif
                 if (shape != entry.shape || proto != entry.proto.raw()) {

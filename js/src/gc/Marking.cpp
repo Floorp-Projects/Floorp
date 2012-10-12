@@ -221,6 +221,17 @@ IsMarked(T **thingp)
     return (*thingp)->isMarked();
 }
 
+template <typename T>
+static bool
+IsAboutToBeFinalized(T **thingp)
+{
+    JS_ASSERT(thingp);
+    JS_ASSERT(*thingp);
+    if (!(*thingp)->compartment()->isGCSweeping())
+        return false;
+    return !(*thingp)->isMarked();
+}
+
 #define DeclMarkerImpl(base, type)                                                                \
 void                                                                                              \
 Mark##base(JSTracer *trc, EncapsulatedPtr<type> *thing, const char *name)                         \
@@ -262,6 +273,16 @@ bool                                                                            
 Is##base##Marked(EncapsulatedPtr<type> *thingp)                                                   \
 {                                                                                                 \
     return IsMarked<type>(thingp->unsafeGet());                                                   \
+}                                                                                                 \
+                                                                                                  \
+bool Is##base##AboutToBeFinalized(type **thingp)                                                  \
+{                                                                                                 \
+    return IsAboutToBeFinalized<type>(thingp);                                                    \
+}                                                                                                 \
+                                                                                                  \
+bool Is##base##AboutToBeFinalized(EncapsulatedPtr<type> *thingp)                                  \
+{                                                                                                 \
+    return IsAboutToBeFinalized<type>(thingp->unsafeGet());                                       \
 }
 
 DeclMarkerImpl(BaseShape, BaseShape)
@@ -498,6 +519,23 @@ gc::IsValueMarked(Value *v)
     return rv;
 }
 
+bool
+gc::IsValueAboutToBeFinalized(Value *v)
+{
+    JS_ASSERT(v->isMarkable());
+    bool rv;
+    if (v->isString()) {
+        JSString *str = (JSString *)v->toGCThing();
+        rv = IsAboutToBeFinalized<JSString>(&str);
+        v->setString(str);
+    } else {
+        JSObject *obj = (JSObject *)v->toGCThing();
+        rv = IsAboutToBeFinalized<JSObject>(&obj);
+        v->setObject(*obj);
+    }
+    return rv;
+}
+
 /*** Slot Marking ***/
 
 void
@@ -576,6 +614,12 @@ bool
 gc::IsCellMarked(Cell **thingp)
 {
     return IsMarked<Cell>(thingp);
+}
+
+bool
+gc::IsCellAboutToBeFinalized(Cell **thingp)
+{
+    return IsAboutToBeFinalized<Cell>(thingp);
 }
 
 /*** Push Mark Stack ***/

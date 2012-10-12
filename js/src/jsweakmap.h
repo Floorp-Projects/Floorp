@@ -180,7 +180,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
         /* Remove all entries whose keys remain unmarked. */
         for (Enum e(*this); !e.empty(); e.popFront()) {
             Key k(e.front().key);
-            if (!gc::IsMarked(&k))
+            if (gc::IsAboutToBeFinalized(&k))
                 e.removeFront();
         }
 
@@ -192,8 +192,8 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
         for (Range r = Base::all(); !r.empty(); r.popFront()) {
             Key k(r.front().key);
             Value v(r.front().value);
-            JS_ASSERT(gc::IsMarked(&k));
-            JS_ASSERT(gc::IsMarked(&v));
+            JS_ASSERT(!gc::IsAboutToBeFinalized(&k));
+            JS_ASSERT(!gc::IsAboutToBeFinalized(&v));
             JS_ASSERT(k == r.front().key);
             JS_ASSERT(v == r.front().value);
         }

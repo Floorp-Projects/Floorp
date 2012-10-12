@@ -452,7 +452,7 @@ struct JSCompartment
     js::ScriptCountsMap *scriptCountsMap;
 
     js::DebugScriptMap *debugScriptMap;
-	
+
 #ifdef JS_ION
   private:
     js::ion::IonCompartment *ionCompartment_;

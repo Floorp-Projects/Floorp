@@ -598,10 +598,9 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
         sweepInitialShapeTable();
         sweepNewTypeObjectTable(newTypeObjects);
         sweepNewTypeObjectTable(lazyTypeObjects);
-
         sweepBreakpoints(fop);
 
-        if (global_ && !IsObjectMarked(&global_))
+        if (global_ && IsObjectAboutToBeFinalized(&global_))
             global_ = NULL;
 
 #ifdef JS_ION
@@ -693,11 +692,11 @@ JSCompartment::sweepCrossCompartmentWrappers()
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         CrossCompartmentKey key = e.front().key;
-        bool keyMarked = IsCellMarked(&key.wrapped);
-        bool valMarked = IsValueMarked(e.front().value.unsafeGet());
-        bool dbgMarked = !key.debugger || IsObjectMarked(&key.debugger);
-        JS_ASSERT_IF(!keyMarked && valMarked, key.kind == CrossCompartmentKey::StringWrapper);
-        if (!keyMarked || !valMarked || !dbgMarked)
+        bool keyDying = IsCellAboutToBeFinalized(&key.wrapped);
+        bool valDying = IsValueAboutToBeFinalized(e.front().value.unsafeGet());
+        bool dbgDying = key.debugger && IsObjectAboutToBeFinalized(&key.debugger);
+        JS_ASSERT_IF(keyDying && !valDying, key.kind == CrossCompartmentKey::StringWrapper);
+        if (keyDying || valDying || dbgDying)
             e.removeFront();
         else if (key.wrapped != e.front().key.wrapped || key.debugger != e.front().key.debugger)
             e.rekeyFront(key);
@@ -895,7 +894,7 @@ JSCompartment::sweepBreakpoints(FreeOp *fop)
         JSScript *script = i.get<JSScript>();
         if (!script->hasAnyBreakpointsOrStepMode())
             continue;
-        bool scriptGone = !IsScriptMarked(&script);
+        bool scriptGone = IsScriptAboutToBeFinalized(&script);
         JS_ASSERT(script == i.get<JSScript>());
         for (unsigned i = 0; i < script->length; i++) {
             BreakpointSite *site = script->getBreakpointSite(script->code + i);
@@ -906,7 +905,7 @@ JSCompartment::sweepBreakpoints(FreeOp *fop)
             Breakpoint *nextbp;
             for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
                 nextbp = bp->nextInSite();
-                if (scriptGone || !IsObjectMarked(&bp->debugger->toJSObjectRef()))
+                if (scriptGone || IsObjectAboutToBeFinalized(&bp->debugger->toJSObjectRef()))
                     bp->destroy(fop);
             }
         }
