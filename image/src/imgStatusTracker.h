@@ -52,7 +52,7 @@ public:
   // aImage is the image that this status tracker will pass to the
   // imgRequestProxys in SyncNotify() and EmulateRequestFinished(), and must be
   // alive as long as this instance is, because we hold a weak reference to it.
-  imgStatusTracker(mozilla::image::Image* aImage);
+  imgStatusTracker(mozilla::image::Image* aImage, imgRequest* aRequest);
   imgStatusTracker(const imgStatusTracker& aOther);
 
   // Image-setter, for imgStatusTrackers created by imgRequest::Init, which
@@ -167,15 +167,20 @@ public:
   void RecordUnblockOnload();
   void SendUnblockOnload(imgRequestProxy* aProxy);
 
+  // Weak pointer getters - no AddRefs.
+  inline mozilla::image::Image* GetImage() const { return mImage; };
+  inline imgRequest* GetRequest() const { return mRequest; };
+
 private:
   friend class imgStatusNotifyRunnable;
   friend class imgRequestNotifyRunnable;
 
   nsCOMPtr<nsIRunnable> mRequestRunnable;
 
-  // A weak pointer to the Image, because it owns us, and we
-  // can't create a cycle.
+  // Weak pointers to the image and request. The request owns the image, and
+  // the image (or the request, if there's no image) owns the status tracker.
   mozilla::image::Image* mImage;
+  imgRequest* mRequest;
   uint32_t mState;
   uint32_t mImageStatus;
   bool mHadLastPart;

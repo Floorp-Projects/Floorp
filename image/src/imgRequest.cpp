@@ -127,7 +127,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
 
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
 
-  mStatusTracker = new imgStatusTracker(nullptr);
+  mStatusTracker = new imgStatusTracker(nullptr, this);
 
   mURI = aURI;
   mCurrentURI = aCurrentURI;
@@ -995,7 +995,7 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
       // our own any more.
       if (mResniffMimeType) {
         NS_ABORT_IF_FALSE(mIsMultiPartChannel, "Resniffing a non-multipart image");
-        imgStatusTracker* freshTracker = new imgStatusTracker(nullptr);
+        imgStatusTracker* freshTracker = new imgStatusTracker(nullptr, this);
         freshTracker->AdoptConsumers(mStatusTracker);
         mStatusTracker = freshTracker;
       }
