@@ -60,7 +60,7 @@ function setup_chan(path, isPrivate, callback) {
   var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                 .createScriptedObserver(listener);
   listeners.push(outer);
-  requests.push(loader.loadImageWithChannel(chan, outer, null, outlistener));
+  requests.push(loader.loadImageWithChannelXPCOM(chan, outer, null, outlistener));
   channelListener.outputListener = outlistener.value;
   listener.synchronous = false;
 }
@@ -73,7 +73,7 @@ function loadImage(isPrivate, callback) {
   var loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
   loadGroup.notificationCallbacks = new NotificationCallbacks(isPrivate);
   var loader = isPrivate ? gPrivateLoader : gPublicLoader;
-  requests.push(loader.loadImage(uri, null, null, null, loadGroup, outer, null, 0, null, null));
+  requests.push(loader.loadImageXPCOM(uri, null, null, null, loadGroup, outer, null, 0, null, null));
   listener.synchronous = false;  
 }
 

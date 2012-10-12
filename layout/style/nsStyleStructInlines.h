@@ -17,13 +17,13 @@
 #include "imgIContainer.h"
 
 inline void
-nsStyleBorder::SetBorderImage(imgIRequest* aImage)
+nsStyleBorder::SetBorderImage(imgRequestProxy* aImage)
 {
   mBorderImageSource = aImage;
   mSubImages.Clear();
 }
 
-inline imgIRequest*
+inline imgRequestProxy*
 nsStyleBorder::GetBorderImage() const
 {
   NS_ABORT_IF_FALSE(!mBorderImageSource || mImageTracked,

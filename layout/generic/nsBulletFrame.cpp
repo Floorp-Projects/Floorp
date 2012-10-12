@@ -24,6 +24,7 @@
 
 #include "imgILoader.h"
 #include "imgIContainer.h"
+#include "imgRequestProxy.h"
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -94,7 +95,7 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   nsFrame::DidSetStyleContext(aOldStyleContext);
 
-  imgIRequest *newRequest = GetStyleList()->GetListStyleImage();
+  imgRequestProxy *newRequest = GetStyleList()->GetListStyleImage();
 
   if (newRequest) {
 
