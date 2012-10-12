@@ -89,12 +89,12 @@ myLL_L2II(int64_t result, int32_t *hi, int32_t *lo )
 
     // shift the hi word to the low word, then push it into a long.
     a64 = result >> 32;
-    LL_L2I(*hi, a64);
+    *hi = int32_t(a64);
 
     // shift the low word to the hi word first, then shift it back.
     b64 = result << 32;
     a64 = b64 >> 32;
-    LL_L2I(*lo, a64);
+    *lo = int32_t(a64);
 }
 
 // Locates the first occurrence of charToSearchFor in the stringToSearch

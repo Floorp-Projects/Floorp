@@ -244,9 +244,8 @@ struct DateHashEntry : public PLDHashEntryHdr {
         h64 = t >> 32;
         l64 = LL_INIT(0, 0xffffffff);
         l64 &= t;
-        int32_t h32, l32;
-        LL_L2I(h32, h64);
-        LL_L2I(l32, l64);
+        int32_t h32 = int32_t(h64);
+        int32_t l32 = int32_t(l64);
         return PLDHashNumber(l32 ^ h32);
     }
 

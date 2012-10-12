@@ -3877,7 +3877,7 @@ graphFootprint(STRequest * inRequest, STRun * aRun)
 
                         in64 = ydata64 * spacey64;
                         in64 /= mem64;
-                        LL_L2I(in32, in64);
+                        in32 = int32_t(in64);
 
                         x2 = x1;
                         y2 = y1 - in32;
@@ -4093,7 +4093,7 @@ graphTimeval(STRequest * inRequest, STRun * aRun)
 
                         in64 = ydata64 * spacey64;
                         in64 /= mem64;
-                        LL_L2I(in32, in64);
+                        in32 = int32_t(in64);
 
                         x2 = x1;
                         y2 = y1 - in32;
@@ -4311,7 +4311,7 @@ graphLifespan(STRequest * inRequest, STRun * aRun)
 
                         in64 = ydata64 * spacey64;
                         in64 /= mem64;
-                        LL_L2I(in32, in64);
+                        in32 = int32_t(in64);
 
                         x2 = x1;
                         y2 = y1 - in32;
@@ -4543,7 +4543,7 @@ graphWeight(STRequest * inRequest, STRun * aRun)
 
                         in64 = YData64[traverse] * spacey64;
                         in64 /= weight64;
-                        LL_L2I(in32, in64);
+                        in32 = int32_t(in64);
 
                         x2 = x1;
                         y2 = y1 - in32;

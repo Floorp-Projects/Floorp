@@ -1192,9 +1192,7 @@ FileSystemDataSource::GetFileSize(nsIRDFResource *source, nsIRDFInt **aResult)
         return(rv);
 
     // convert 64bits to 32bits
-    int32_t     aFileSize32 = 0;
-    LL_L2I(aFileSize32, aFileSize64);
-
+    int32_t aFileSize32 = int32_t(aFileSize64);
     mRDFService->GetIntLiteral(aFileSize32, aResult);
 
     return(NS_OK);

@@ -328,8 +328,8 @@ int main()
     LL_I2L(two, 2);
     if(NS_SUCCEEDED(test->AddTwoLLs(one,one,&out64)))
     {
-        LL_L2I(tmp32, out64);
-        printf("\t1L + 1L = %d\n", (int)tmp32);
+        tmp32 = (int)out64;
+        printf("\t1L + 1L = %d\n", tmp32);
     }
     else
         printf("\tFAILED");
@@ -339,8 +339,8 @@ int main()
         printf("\tFAILED");
     if(NS_SUCCEEDED(test->MultTwoLLs(two,two,&out64)))
     {
-        LL_L2I(tmp32, out64);
-        printf("\t2L * 2L = %d\n", (int)tmp32);
+        tmp32 = (int)out64;
+        printf("\t2L * 2L = %d\n", tmp32);
     }
     else
         printf("\tFAILED");
@@ -377,24 +377,24 @@ int main()
 
     if(NS_SUCCEEDED(test->AddMixedInts(1,2,3,4,5,6,7,8,9,10,&out64)))
      {
-         LL_L2I(tmp32, out64);
-         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n", (int)tmp32);
+         tmp32 = (int)out64;
+         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n", tmp32);
      }
      else
          printf("\tFAILED");
  
      if(NS_SUCCEEDED(test->AddMixedInts2(1,2,3,4,5,6,7,8,9,10,&out64)))
      {
-          LL_L2I(tmp32, out64);
-         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n", (int)tmp32);
+         tmp32 = (int)out64;
+         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n", tmp32);
      }
      else
          printf("\tFAILED");
 
      if(NS_SUCCEEDED(test->AddMixedInts3(3,5,7,11,13,17,19,23,29,31,&out64)))
      {
-          LL_L2I(tmp32, out64);
-         printf("\t3 + 5 + 7 + 11 + 13 + 17 + 19 + 23 + 29 + 31 = %d\n", (int)tmp32);
+         tmp32 = (int)out64;
+         printf("\t3 + 5 + 7 + 11 + 13 + 17 + 19 + 23 + 29 + 31 = %d\n", tmp32);
      }
      else
          printf("\tFAILED");
