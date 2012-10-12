@@ -34,6 +34,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Interpolator;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -72,6 +73,13 @@ abstract public class BrowserApp extends GeckoApp
     private Vector<MenuItemInfo> mAddonMenuItemsCache;
 
     private PropertyAnimator mMainLayoutAnimator;
+
+    private static final Interpolator sTabsInterpolator = new Interpolator() {
+        public float getInterpolation(float t) {
+            t -= 1.0f;
+            return t * t * t * t * t + 1.0f;
+        }
+    };
 
     private FindInPageBar mFindInPageBar;
 
@@ -500,7 +508,7 @@ abstract public class BrowserApp extends GeckoApp
         if (mTabsPanel.isShown())
             mTabsPanel.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
 
-        mMainLayoutAnimator = new PropertyAnimator(150);
+        mMainLayoutAnimator = new PropertyAnimator(450, sTabsInterpolator);
         mMainLayoutAnimator.setPropertyAnimationListener(this);
 
         if (hasTabsSideBar()) {
