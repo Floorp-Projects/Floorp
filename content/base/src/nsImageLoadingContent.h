@@ -13,8 +13,7 @@
 #ifndef nsImageLoadingContent_h__
 #define nsImageLoadingContent_h__
 
-#include "imgIContainerObserver.h"
-#include "imgIDecoderObserver.h"
+#include "imgINotificationObserver.h"
 #include "imgIOnloadBlocker.h"
 #include "mozilla/CORSMode.h"
 #include "nsCOMPtr.h"
@@ -36,8 +35,7 @@ public:
   nsImageLoadingContent();
   virtual ~nsImageLoadingContent();
 
-  NS_DECL_IMGICONTAINEROBSERVER
-  NS_DECL_IMGIDECODEROBSERVER
+  NS_DECL_IMGINOTIFICATIONOBSERVER
   NS_DECL_NSIIMAGELOADINGCONTENT
   NS_DECL_IMGIONLOADBLOCKER
 
@@ -161,12 +159,15 @@ protected:
                   nsIContent* aBindingParent, bool aCompileEventHandlers);
   void UnbindFromTree(bool aDeep, bool aNullParent);
 
+  nsresult OnStopDecode(imgIRequest* aRequest, nsresult aStatus);
+  nsresult OnImageIsAnimated(imgIRequest *aRequest);
+
 private:
   /**
    * Struct used to manage the image observers.
    */
   struct ImageObserver {
-    ImageObserver(imgIDecoderObserver* aObserver) :
+    ImageObserver(imgINotificationObserver* aObserver) :
       mObserver(aObserver),
       mNext(nullptr)
     {
@@ -178,7 +179,7 @@ private:
       NS_CONTENT_DELETE_LIST_MEMBER(ImageObserver, this, mNext);
     }
 
-    nsCOMPtr<imgIDecoderObserver> mObserver;
+    nsCOMPtr<imgINotificationObserver> mObserver;
     ImageObserver* mNext;
   };
 
