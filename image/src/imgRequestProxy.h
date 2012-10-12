@@ -93,9 +93,8 @@ public:
     mDeferNotifications = aDeferNotifications;
   }
 
-  // Setter for our |mImage| pointer, for imgRequest to use, once it
-  // instantiates an Image.
-  void SetImage(mozilla::image::Image* aImage);
+  // XXXbholley - This eventually gets folded into the new notification API.
+  void SetHasImage();
 
   // Removes all animation consumers that were created with
   // IncrementAnimationConsumers. This is necessary since we need
@@ -169,7 +168,7 @@ protected:
   // live either on mOwner or mImage, depending on whether
   //   (a) we have an mOwner at all
   //   (b) whether mOwner has instantiated its image yet
-  imgStatusTracker& GetStatusTracker();
+  imgStatusTracker& GetStatusTracker() const;
 
   nsITimedChannel* TimedChannel()
   {
@@ -177,6 +176,8 @@ protected:
       return nullptr;
     return mOwner->mTimedChannel;
   }
+
+  virtual mozilla::image::Image* GetImage() const;
 
 public:
   NS_FORWARD_SAFE_NSITIMEDCHANNEL(TimedChannel())
@@ -197,10 +198,6 @@ private:
 
   // The URI of our request.
   nsCOMPtr<nsIURI> mURI;
-
-  // The image we represent. Is null until data has been received, and is then
-  // set by imgRequest.
-  nsRefPtr<mozilla::image::Image> mImage;
 
   // mListener is only promised to be a weak ref (see imgILoader.idl),
   // but we actually keep a strong ref to it until we've seen our
@@ -223,6 +220,9 @@ private:
   // We only want to send OnStartContainer once for each proxy, but we might
   // get multiple OnStartContainer calls.
   bool mSentStartContainer;
+
+  protected:
+    bool mOwnerHasImage;
 };
 
 // Used for static image proxies for which no requests are available, so
@@ -231,15 +231,28 @@ class imgRequestProxyStatic : public imgRequestProxy
 {
 
 public:
-  imgRequestProxyStatic(nsIPrincipal* aPrincipal) : mPrincipal(aPrincipal) {};
+  imgRequestProxyStatic(mozilla::image::Image* aImage,
+                        nsIPrincipal* aPrincipal)
+                       : mImage(aImage)
+                       , mPrincipal(aPrincipal)
+  {
+    mOwnerHasImage = true;
+  };
 
   NS_IMETHOD GetImagePrincipal(nsIPrincipal** aPrincipal);
 
 protected:
+  // Our image. We have to hold a strong reference here, because that's normally
+  // the job of the underlying request.
+  nsRefPtr<mozilla::image::Image> mImage;
+
   // Our principal. We have to cache it, rather than accessing the underlying
   // request on-demand, because static proxies don't have an underlying request.
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
+private:
+  mozilla::image::Image* GetImage() const MOZ_OVERRIDE;
+  using imgRequestProxy::GetImage;
 };
 
 #endif // imgRequestProxy_h__
