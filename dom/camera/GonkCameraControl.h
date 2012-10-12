@@ -18,7 +18,6 @@
 #define DOM_CAMERA_GONKCAMERACONTROL_H
 
 #include "base/basictypes.h"
-#include "prtypes.h"
 #include "prrwlock.h"
 #include "nsIDOMCameraManager.h"
 #include "DOMCameraControl.h"

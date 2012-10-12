@@ -234,6 +234,11 @@ label.findbar-find-fast:-moz-lwtheme,
   display: none;
 }
 
+.find-status-icon[status="pending"] {
+  display: block;
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
 .findbar-find-status {
   color: #436599;
   font-weight: bold;

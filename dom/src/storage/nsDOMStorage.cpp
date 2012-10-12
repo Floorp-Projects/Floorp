@@ -1008,7 +1008,7 @@ DOMStorageImpl::RemoveValue(bool aCallerSecure, const nsAString& aKey,
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 CheckSecure(nsSessionStorageEntry* aEntry, void* userArg)
 {
   bool* secure = (bool*)userArg;

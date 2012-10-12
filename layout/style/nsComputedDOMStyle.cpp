@@ -1245,7 +1245,7 @@ nsComputedDOMStyle::DoGetFontWeight()
 
   uint16_t weight = font->mFont.weight;
   NS_ASSERTION(weight % 100 == 0, "unexpected value of font-weight");
-  val->SetNumber(font->mFont.weight);
+  val->SetNumber(weight);
 
   return val;
 }
@@ -2881,7 +2881,7 @@ nsComputedDOMStyle::DoGetBorderImageSlice()
   NS_FOR_CSS_SIDES (side) {
     nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
     valueList->AppendCSSValue(val);
-    SetValueToCoord(val, border->mBorderImageSlice.Get(side), nullptr, nullptr);
+    SetValueToCoord(val, border->mBorderImageSlice.Get(side), false, nullptr);
   }
 
   // Fill keyword.
@@ -2903,7 +2903,7 @@ nsComputedDOMStyle::DoGetBorderImageWidth()
     nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
     valueList->AppendCSSValue(val);
     SetValueToCoord(val, border->mBorderImageWidth.Get(side),
-                    nullptr, nullptr);
+                    false, nullptr);
   }
 
   return valueList;
@@ -2920,7 +2920,7 @@ nsComputedDOMStyle::DoGetBorderImageOutset()
     nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
     valueList->AppendCSSValue(val);
     SetValueToCoord(val, border->mBorderImageOutset.Get(side),
-                    nullptr, nullptr);
+                    false, nullptr);
   }
 
   return valueList;

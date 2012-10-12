@@ -6,6 +6,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "jsapi.h"
+#include "jswrapper.h"
 #include "nsCRT.h"
 #include "nsError.h"
 #include "nsXPIDLString.h"
@@ -286,6 +287,18 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
 
         nsCOMPtr<nsIXPConnectJSObjectHolder> sandbox;
         rv = xpc->CreateSandbox(cx, principal, getter_AddRefs(sandbox));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // The nsXPConnect sandbox API gives us a wrapper to the sandbox for
+        // our current compartment. Because our current context doesn't necessarily
+        // subsume that of the sandbox, we want to unwrap and enter the sandbox's
+        // compartment. It's a shame that the APIs here are so clunkly. :-(
+        JSObject *sandboxObj;
+        rv = sandbox->GetJSObject(&sandboxObj);
+        NS_ENSURE_SUCCESS(rv, rv);
+        sandboxObj = js::UnwrapObject(sandboxObj);
+        JSAutoCompartment ac(cx, sandboxObj);
+        rv = xpc->HoldObject(cx, sandboxObj, getter_AddRefs(sandbox));
         NS_ENSURE_SUCCESS(rv, rv);
 
         jsval rval = JSVAL_VOID;

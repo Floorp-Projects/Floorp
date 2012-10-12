@@ -8,7 +8,6 @@
 
 #include "nsIDOMXULElement.h"
 
-#include "prmem.h"
 #include "prenv.h"
 
 #include "nsIServiceManager.h"
@@ -4166,7 +4165,8 @@ nsCanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t
         return NS_ERROR_DOM_SYNTAX_ERR;
 
     nsRefPtr<gfxImageSurface> imgsurf = new gfxImageSurface(gfxIntSize(w, h),
-                                                            gfxASurface::ImageFormatARGB32);
+                                                            gfxASurface::ImageFormatARGB32,
+                                                            false);
     if (!imgsurf || imgsurf->CairoStatus())
         return NS_ERROR_FAILURE;
 

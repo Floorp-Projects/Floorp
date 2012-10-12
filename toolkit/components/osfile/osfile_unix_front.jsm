@@ -828,6 +828,7 @@
      };
 
      File.read = exports.OS.Shared.AbstractFile.read;
+     File.exists = exports.OS.Shared.AbstractFile.exists;
      File.writeAtomic = exports.OS.Shared.AbstractFile.writeAtomic;
 
      /**

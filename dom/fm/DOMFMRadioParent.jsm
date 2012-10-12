@@ -63,6 +63,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
 let EXPORTED_SYMBOLS = ["DOMFMRadioParent"];
 
 let DOMFMRadioParent = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISettingsServiceCallback]),
+
   _initialized: false,
 
   /* Indicates if the FM radio is currently enabled */

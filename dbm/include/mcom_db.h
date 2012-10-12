@@ -206,13 +206,9 @@
 #include "xp_mcom.h"
 #define O_ACCMODE       3       /* Mask for file access modes */
 #define EFTYPE 2000
-#ifdef __cplusplus
-extern "C" {
-#endif
+PR_BEGIN_EXTERN_C
 int mkstemp(const char *path);
-#ifdef __cplusplus
-}
-#endif
+PR_END_EXTERN_C
 #endif	/* MACINTOSH */
 
 #if !defined(_WINDOWS) && !defined(macintosh)
@@ -395,9 +391,7 @@ typedef struct {
 }
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+PR_BEGIN_EXTERN_C
 
 extern DB *
 dbopen (const char *, int, int, DBTYPE, const void *);
@@ -414,8 +408,6 @@ DB	*__rec_open (const char *, int, int, const RECNOINFO *, int);
 void	 __dbpanic (DB *dbp);
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+PR_END_EXTERN_C
 
 #endif /* !_DB_H_ */

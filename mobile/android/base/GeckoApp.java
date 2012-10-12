@@ -134,6 +134,7 @@ abstract public class GeckoApp
     public static final String ACTION_ALERT_CLICK   = "org.mozilla.gecko.ACTION_ALERT_CLICK";
     public static final String ACTION_ALERT_CLEAR   = "org.mozilla.gecko.ACTION_ALERT_CLEAR";
     public static final String ACTION_ALERT_CALLBACK = "org.mozilla.gecko.ACTION_ALERT_CALLBACK";
+    public static final String ACTION_ANNOUNCEMENTS_PREF = "org.mozilla.gecko.ANNOUNCEMENTS_PREF";
     public static final String ACTION_WEBAPP_PREFIX = "org.mozilla.gecko.WEBAPP";
     public static final String ACTION_DEBUG         = "org.mozilla.gecko.DEBUG";
     public static final String ACTION_BOOKMARK      = "org.mozilla.gecko.BOOKMARK";
@@ -1744,6 +1745,12 @@ abstract public class GeckoApp
                 // Sync settings need Gecko to be loaded, so
                 // no hurry in starting this.
                 checkMigrateSync();
+
+                // Kick off our background service to fetch product announcements.
+                // We do this by invoking the broadcast receiver, which uses the
+                // system alarm infrastructure to perform tasks at intervals.
+                Log.d(LOGTAG, "Broadcasting announcements pref.");
+                GeckoPreferences.broadcastAnnouncementsPref(GeckoApp.mAppContext);
 
                 /*
                   XXXX see bug 635342

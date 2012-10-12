@@ -64,15 +64,40 @@ Var InitialInstallDir
 Var HandleDownload
 Var CanSetAsDefault
 Var TmpVal
+Var InstallCounterStep
 
 Var HEIGHT_PX
 Var CTL_RIGHT_PX
+
+!define DownloadIntervalMS 200 ; Interval for the download timer
+!define InstallIntervalMS 100 ; Interval for the install timer
+
+; Number of steps for the install progress.
+; This is 120 seconds with a 100 millisecond timer and a first step of 20 as
+; defined by InstallProgressFirstStep. This might not be enough when installing
+; on a slow network drive so it will fallback to downloading the full installer
+; if it reaches this number. The size of the install progress step increases
+; when the full installer finishes instead of waiting the entire 120 seconds.
+!define InstallProgresSteps 1220
+; The first step for the install progress bar. By starting with a large step
+; immediate feedback is given to the user.
+!define InstallProgressFirstStep 20
 
 ; On Vista and above attempt to elevate Standard Users in addition to users that
 ; are a member of the Administrators group.
 !define NONADMIN_ELEVATE
 
 !define CONFIG_INI "config.ini"
+
+!define MAX_PATH 260
+
+!define FILE_SHARE_READ 1
+!define GENERIC_READ 0x80000000
+!define OPEN_EXISTING 3
+!define FILE_BEGIN 0
+!define FILE_END 2
+!define INVALID_HANDLE_VALUE -1
+!define INVALID_FILE_SIZE 0xffffffff
 
 !include "nsDialogs.nsh"
 !include "LogicLib.nsh"
@@ -96,7 +121,7 @@ Var CTL_RIGHT_PX
 !undef URLStubDownload
 !define URLStubDownload "http://download.mozilla.org/?product=firefox-beta-latest&os=win&lang=${AB_CD}"
 !undef URLManualDownload
-!define URLManualDownload "http://download.mozilla.org/?product=firefox-beta-latest&os=win&lang=${AB_CD}"
+!define URLManualDownload "https://www.mozilla.org/firefox/installer-help/?channel=beta"
 !endif
 !endif
 
@@ -207,6 +232,39 @@ Function .onInit
   ; Require elevation if the user can elevate
   ${ElevateUAC}
 
+  ; Create a mutex to prevent multiple launches of the same stub installer in
+  ; the same location on the file system. This intentionally won't handle the
+  ; case where someone runs multiple copies of the stub on the file system but
+  ; it does handle the important case which is a user launching the same stub
+  ; multiple times.
+  StrCpy $1 "$EXEPATH"
+  ; Backslashes are illegal in a mutex name so replace all occurences of a
+  ; backslash with a forward slash.
+  ${WordReplace} "$1" "\" "/" "+" $1
+  StrLen $2 "$1"
+
+  ; The lpName parameter for CreateMutexW is limited to MAX_PATH characters so
+  ; use the characters at the end since they are more likely to be unique.
+  ${If} $2 > ${MAX_PATH}
+    StrCpy $1 "$1" ${MAX_PATH} -${MAX_PATH}
+  ${EndIf}
+  System::Call "kernel32::CreateMutexW(i 0, i 0, w '$1') i .r0 ?e"
+  Pop $0
+
+  ${Unless} $0 == 0
+    ; The mutex is specific to this executable's path so we should be able to
+    ; find the Window with the same caption as this executable's and bring that
+    ; window to the front. This could find another instance of the same
+    ; executable but that is an uninteresting edge case.
+    FindWindow $1 "#32770" "$(WIN_CAPTION)" 0
+    ${If} $1 != 0
+      ; Restore the window if it is minimized and make it the foreground window
+      System::Call "user32::ShowWindow(i r1, i ${SW_RESTORE}) i."
+      System::Call "user32::SetForegroundWindow(i r1) i."
+    ${EndIf}
+    Abort
+  ${EndUnless}
+
   SetShellVarContext all      ; Set SHCTX to HKLM
   ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
 
@@ -271,6 +329,8 @@ Function .onUserAbort
   ${NSD_KillTimer} StartDownload
   ${NSD_KillTimer} OnDownload
   ${NSD_KillTimer} StartInstall
+  ${NSD_KillTimer} CheckInstall
+  ${NSD_KillTimer} FinishInstall
 
   Delete "$PLUGINSDIR\download.exe"
   Delete "$PLUGINSDIR\${CONFIG_INI}"
@@ -342,13 +402,10 @@ Function createIntro
 
   GetDlgItem $0 $HWNDPARENT 1 ; Install button
   SendMessage $0 ${WM_SETTEXT} 0 "STR:$(INSTALL_BUTTON)"
+  ${NSD_SetFocus} $0
 
   GetDlgItem $0 $HWNDPARENT 2 ; Cancel button
   SendMessage $0 ${WM_SETTEXT} 0 "STR:$(CANCEL_BUTTON)"
-  ; Focus the Cancel button so tab stops will start from there.
-  ${NSD_SetFocus} $0
-  ; Kill the Cancel button's focus so pressing enter won't cancel the install.
-  SendMessage $0 ${WM_KILLFOCUS} 0 0
 
   GetDlgItem $0 $HWNDPARENT 3 ; Back and Options button
   SendMessage $0 ${WM_SETTEXT} 0 "STR:$(OPTIONS_BUTTON)"
@@ -558,15 +615,10 @@ Function createOptions
 
   GetDlgItem $0 $HWNDPARENT 1 ; Install button
   SendMessage $0 ${WM_SETTEXT} 0 "STR:$(INSTALL_BUTTON)"
+  ${NSD_SetFocus} $0
 
   GetDlgItem $0 $HWNDPARENT 2 ; Cancel button
   SendMessage $0 ${WM_SETTEXT} 0 "STR:$(CANCEL_BUTTON)"
-  ; If the first control in the dialog is focused it won't display with a focus
-  ; ring on dialog creation when the Options button is clicked so just focus the
-  ; Cancel button so tab stops will start from there.
-  ${NSD_SetFocus} $0
-  ; Kill the Cancel button's focus so pressing enter won't cancel the install.
-  SendMessage $0 ${WM_KILLFOCUS} 0 0
 
   GetDlgItem $0 $HWNDPARENT 3 ; Back and Options button
   SendMessage $0 ${WM_SETTEXT} 0 "STR:$(BACK_BUTTON)"
@@ -718,8 +770,7 @@ Function createInstall
 
   ${NSD_CreateProgressBar} 260u 166u 84u 9u ""
   Pop $ProgressbarInstall
-  ${NSD_AddStyle} $ProgressbarInstall ${PBS_MARQUEE}
-  SendMessage $ProgressbarInstall ${PBM_SETMARQUEE} 0 10 ; start=1|stop=0 interval(ms)=+N
+  SendMessage $ProgressbarInstall ${PBM_SETRANGE32} 0 ${InstallProgresSteps}
 
   ${NSD_CreateBitmap} ${APPNAME_BMP_EDGE_DU} ${APPNAME_BMP_TOP_DU} \
                       ${APPNAME_BMP_WIDTH_DU} ${APPNAME_BMP_HEIGHT_DU} ""
@@ -761,7 +812,7 @@ Function createInstall
   ShowWindow $0 ${SW_SHOW}
 
   StrCpy $DownloadReset "false"
-  ${NSD_CreateTimer} StartDownload 500
+  ${NSD_CreateTimer} StartDownload ${DownloadIntervalMS}
 
   LockWindow off
   nsDialogs::Show
@@ -781,19 +832,11 @@ Function StartDownload
   ${NSD_KillTimer} StartDownload
   InetBgDL::Get "${URLStubDownload}" "$PLUGINSDIR\download.exe" /END
   StrCpy $4 ""
-  ${NSD_CreateTimer} OnDownload 500
+  ${NSD_CreateTimer} OnDownload ${DownloadIntervalMS}
   ${If} ${FileExists} "$INSTDIR\${TO_BE_DELETED}"
     RmDir /r "$INSTDIR\${TO_BE_DELETED}"
   ${EndIf}
 FunctionEnd
-
-!define FILE_SHARE_READ 1
-!define GENERIC_READ 0x80000000
-!define OPEN_EXISTING 3
-!define FILE_BEGIN 0
-!define FILE_END 2
-!define INVALID_HANDLE_VALUE -1
-!define INVALID_FILE_SIZE 0xffffffff
 
 Function OnDownload
   InetBgDL::GetStats
@@ -811,7 +854,7 @@ Function OnDownload
       SendMessage $ProgressbarDownload ${PBM_SETMARQUEE} 1 10 ; start=1|stop=0 interval(ms)=+N
     ${EndIf}
     InetBgDL::Get /RESET /END
-    ${NSD_CreateTimer} StartDownload 500
+    ${NSD_CreateTimer} StartDownload ${DownloadIntervalMS}
     StrCpy $DownloadReset "true"
     StrCpy $DownloadSize ""
     Return
@@ -826,7 +869,7 @@ Function OnDownload
     StrCpy $DownloadSize $4
     System::Int64Op $4 / 2
     Pop $HalfOfDownload
-    SendMessage $ProgressbarDownload ${PBM_SETMARQUEE} 0 50 ; start=1|stop=0 interval(ms)=+N
+    SendMessage $ProgressbarDownload ${PBM_SETMARQUEE} 0 0 ; start=1|stop=0 interval(ms)=+N
     ${RemoveStyle} $ProgressbarDownload ${PBS_MARQUEE}
     SendMessage $ProgressbarDownload ${PBM_SETRANGE32} 0 $DownloadSize
   ${EndIf}
@@ -841,12 +884,15 @@ Function OnDownload
     ${If} $2 == 0
       ${NSD_KillTimer} OnDownload
       StrCpy $IsDownloadFinished "true"
+      ; The first step of the install progress bar is determined by the
+      ; InstallProgressFirstStep define and provides the user with immediate
+      ; feedback.
+      StrCpy $InstallCounterStep ${InstallProgressFirstStep}
       LockWindow on
       ; Update the progress bars first in the UI change so they take affect
       ; before other UI changes.
       SendMessage $ProgressbarDownload ${PBM_SETPOS} $DownloadSize 0
-      ${NSD_AddStyle} $ProgressbarDownload ${PBS_MARQUEE}
-      SendMessage $ProgressbarInstall ${PBM_SETMARQUEE} 1 10 ; start=1|stop=0 interval(ms)=+N
+      SendMessage $ProgressbarInstall ${PBM_SETPOS} $InstallCounterStep 0
       ShowWindow $LabelDownloadingInProgress ${SW_HIDE}
       ShowWindow $LabelInstallingToBeDone ${SW_HIDE}
       ShowWindow $LabelInstallingInProgress ${SW_SHOW}
@@ -929,10 +975,17 @@ Function OnDownload
 
       ${OnStubInstallUninstall}
 
-      Exec "$\"$PLUGINSDIR\download.exe$\" /INI=$PLUGINSDIR\${CONFIG_INI}"
-      ; Close the handle that prevents modification of the full installer
-      System::Call 'kernel32::CloseHandle(i $HandleDownload)'
-      ${NSD_CreateTimer} StartInstall 1000
+      ; Delete the install.log and let the full installer create it. When the
+      ; installer closes it we can detect that it has completed.
+      Delete "$INSTDIR\install.log"
+
+      ; Delete firefox.exe.moz-upgrade if it exists since it being present will
+      ; require an OS restart for the full installer.
+      Delete "$INSTDIR\${FileMainEXE}.moz-upgrade"
+
+      ; Flicker happens less often if a timer is used between updates of the
+      ; progress bar.
+      ${NSD_CreateTimer} StartInstall ${InstallIntervalMS}
     ${Else}
       ${If} $HalfOfDownload != "true"
       ${AndIf} $3 > $HalfOfDownload
@@ -950,54 +1003,107 @@ Function OnDownload
 FunctionEnd
 
 Function StartInstall
-  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
-  ${AndIf} ${FileExists} "$INSTDIR\uninstall\uninstall.log"
-    Delete "$INSTDIR\uninstall\uninstall.tmp"
-    CopyFiles /SILENT "$INSTDIR\uninstall\uninstall.log" "$INSTDIR\uninstall\uninstall.tmp"
+  ${NSD_KillTimer} StartInstall
+
+  IntOp $InstallCounterStep $InstallCounterStep + 1
+  LockWindow on
+  SendMessage $ProgressbarInstall ${PBM_SETPOS} $InstallCounterStep 0
+  LockWindow off
+
+  Exec "$\"$PLUGINSDIR\download.exe$\" /INI=$PLUGINSDIR\${CONFIG_INI}"
+  ${NSD_CreateTimer} CheckInstall ${InstallIntervalMS}
+FunctionEnd
+
+Function CheckInstall
+  IntOp $InstallCounterStep $InstallCounterStep + 1
+  ${If} $InstallCounterStep >= ${InstallProgresSteps} 
+    ${NSD_KillTimer} CheckInstall
+    ; Close the handle that prevents modification of the full installer
+    System::Call 'kernel32::CloseHandle(i $HandleDownload)'
+    MessageBox MB_OKCANCEL|MB_ICONSTOP "$(ERROR_DOWNLOAD)" IDCANCEL +2 IDOK 0
+    ExecShell "open" "${URLManualDownload}"
+    ; The following will exit the installer
+    SetAutoClose true
+    StrCpy $R9 2
+    Call RelativeGotoPage
+    Return
+  ${EndIf}
+
+  SendMessage $ProgressbarInstall ${PBM_SETPOS} $InstallCounterStep 0
+
+  ${If} ${FileExists} "$INSTDIR\install.log"
+    Delete "$INSTDIR\install.tmp"
+    CopyFiles /SILENT "$INSTDIR\install.log" "$INSTDIR\install.tmp"
+
+    ; When the full installer completes the installation the install.log will no
+    ; longer be in use.
     ClearErrors
-    Delete "$INSTDIR\uninstall\uninstall.log"
+    Delete "$INSTDIR\install.log"
     ${Unless} ${Errors}
-      CopyFiles /SILENT "$INSTDIR\uninstall\uninstall.tmp" "$INSTDIR\uninstall\uninstall.log"
-      ${NSD_KillTimer} StartInstall
-      Delete "$INSTDIR\uninstall\uninstall.tmp"
+      ${NSD_KillTimer} CheckInstall
+      ; Close the handle that prevents modification of the full installer
+      System::Call 'kernel32::CloseHandle(i $HandleDownload)'
+      Rename "$INSTDIR\install.tmp" "$INSTDIR\install.log"
       Delete "$PLUGINSDIR\download.exe"
       Delete "$PLUGINSDIR\${CONFIG_INI}"
-
-      ${If} "$CheckboxSetAsDefault" == "1"
-        ${GetParameters} $0
-        ClearErrors
-        ${GetOptions} "$0" "/UAC:" $0
-        ${If} ${Errors} ; Not elevated
-          Call ExecSetAsDefaultAppUser
-        ${Else} ; Elevated - execute the function in the unelevated process
-          GetFunctionAddress $0 ExecSetAsDefaultAppUser
-          UAC::ExecCodeSegment $0
-        ${EndIf}
-      ${EndIf}
-
-      ${If} $CheckboxShortcutOnBar == 1
-        ${If} ${AtMostWinVista}
-          ClearErrors
-          ${GetParameters} $0
-          ClearErrors
-          ${GetOptions} "$0" "/UAC:" $0
-          ${If} ${Errors}
-            Call AddQuickLaunchShortcut
-          ${Else}
-            GetFunctionAddress $0 AddQuickLaunchShortcut
-            UAC::ExecCodeSegment $0
-          ${EndIf}
-        ${EndIf}
-      ${EndIf}
-
-      Call LaunchApp
-
-      ; The following will exit the installer
-      SetAutoClose true
-      StrCpy $R9 2
-      Call RelativeGotoPage
+      ${NSD_CreateTimer} FinishInstall ${InstallIntervalMS}
     ${EndUnless}
   ${EndIf}
+FunctionEnd
+
+Function FinishInstall
+  ; The full installer has complete but we still need to finish the progress
+  ; bar so increase the size of the step
+  IntOp $InstallCounterStep $InstallCounterStep + 10
+  ${If} ${InstallProgresSteps} < $InstallCounterStep
+    StrCpy $InstallCounterStep "${InstallProgresSteps}"
+  ${EndIf}
+
+  SendMessage $ProgressbarInstall ${PBM_SETPOS} $InstallCounterStep 0
+  ${If} ${InstallProgresSteps} != $InstallCounterStep
+    Return
+  ${EndIf}
+
+  ${NSD_KillTimer} FinishInstall
+
+  ${If} "$CheckboxSetAsDefault" == "1"
+    ${GetParameters} $0
+    ClearErrors
+    ${GetOptions} "$0" "/UAC:" $0
+    ${If} ${Errors} ; Not elevated
+      Call ExecSetAsDefaultAppUser
+    ${Else} ; Elevated - execute the function in the unelevated process
+      GetFunctionAddress $0 ExecSetAsDefaultAppUser
+      UAC::ExecCodeSegment $0
+    ${EndIf}
+  ${EndIf}
+
+  ${If} $CheckboxShortcutOnBar == 1
+    ${If} ${AtMostWinVista}
+      ClearErrors
+      ${GetParameters} $0
+      ClearErrors
+      ${GetOptions} "$0" "/UAC:" $0
+      ${If} ${Errors}
+        Call AddQuickLaunchShortcut
+      ${Else}
+        GetFunctionAddress $0 AddQuickLaunchShortcut
+        UAC::ExecCodeSegment $0
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+
+  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}.moz-upgrade"
+    Delete "$INSTDIR\${FileMainEXE}"
+    Rename "$INSTDIR\${FileMainEXE}.moz-upgrade" "$INSTDIR\${FileMainEXE}"
+  ${EndIf}
+
+  Call LaunchApp
+
+  ; The following will exit the installer
+  SetAutoClose true
+  StrCpy $R9 2
+  Call RelativeGotoPage
 FunctionEnd
 
 Function OnBack
@@ -1204,15 +1310,16 @@ Function ExecSetAsDefaultAppUser
 FunctionEnd
 
 Function LaunchApp
+  FindWindow $0 "${WindowClass}"
+  ${If} $0 <> 0 ; integer comparison
+    MessageBox MB_OK|MB_ICONQUESTION "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
+    Return
+  ${EndIf}
+
   ClearErrors
   ${GetParameters} $0
   ${GetOptions} "$0" "/UAC:" $1
   ${If} ${Errors}
-    FindWindow $0 "${WindowClass}"
-    ${If} $0 <> 0 ; integer comparison
-      MessageBox MB_OK|MB_ICONQUESTION "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
-      Return
-    ${EndIf}
     Exec "$\"$INSTDIR\${FileMainEXE}$\""
   ${Else}
     GetFunctionAddress $0 LaunchAppFromElevatedProcess
@@ -1221,12 +1328,6 @@ Function LaunchApp
 FunctionEnd
 
 Function LaunchAppFromElevatedProcess
-  FindWindow $0 "${WindowClass}"
-  ${If} $0 <> 0 ; integer comparison
-    MessageBox MB_OK|MB_ICONQUESTION "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
-    Return
-  ${EndIf}
-
   ; Find the installation directory when launching using GetFunctionAddress
   ; from an elevated installer since $INSTDIR will not be set in this installer
   ${StrFilter} "${FileMainEXE}" "+" "" "" $R9

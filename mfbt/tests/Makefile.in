@@ -12,9 +12,10 @@ include $(DEPTH)/config/autoconf.mk
 STL_FLAGS =
 
 CPP_UNIT_TESTS = \
+  TestBloomFilter.cpp \
   TestCheckedInt.cpp \
-  TestTypeTraits.cpp \
   TestSHA1.cpp \
+  TestTypeTraits.cpp \
   TestWeakPtr.cpp \
   $(NULL)
 

@@ -173,8 +173,7 @@ nsPresContext::PrefChangedUpdateTimerCallback(nsITimer *aTimer, void *aClosure)
 static bool
 IsVisualCharset(const nsCString& aCharset)
 {
-  if (aCharset.LowerCaseEqualsLiteral("ibm864")             // Arabic//ahmed
-      || aCharset.LowerCaseEqualsLiteral("ibm862")          // Hebrew
+  if (aCharset.LowerCaseEqualsLiteral("ibm862")             // Hebrew
       || aCharset.LowerCaseEqualsLiteral("iso-8859-8") ) {  // Hebrew
     return true; // visual text type
   }

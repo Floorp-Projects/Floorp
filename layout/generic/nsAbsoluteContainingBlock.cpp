@@ -364,12 +364,6 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   AutoNoisyIndenter indent(nsBlockFrame::gNoisy);
 #endif // DEBUG
 
-  // Store position and overflow rect so taht we can invalidate the correct
-  // area if the position changes
-  nsRect oldOverflowRect(aKidFrame->GetVisualOverflowRect() +
-                         aKidFrame->GetPosition());
-  nsRect oldRect = aKidFrame->GetRect();
-
   nsresult  rv;
   // Get the border values
   const nsMargin& border = aReflowState.mStyleBorder->GetComputedBorder();
@@ -381,7 +375,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     availWidth =
       aReflowState.ComputedWidth() + aReflowState.mComputedPadding.LeftRight();
   }
-    
+
   nsHTMLReflowMetrics kidDesiredSize;
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, aKidFrame,
                                    nsSize(availWidth, NS_UNCONSTRAINEDSIZE),

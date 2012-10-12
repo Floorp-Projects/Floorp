@@ -37,6 +37,13 @@ nsDOMTouch::GetIdentifier(int32_t* aIdentifier)
 NS_IMETHODIMP
 nsDOMTouch::GetTarget(nsIDOMEventTarget** aTarget)
 {
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mTarget);
+  if (content && content->ChromeOnlyAccess() &&
+      !nsContentUtils::CanAccessNativeAnon()) {
+    content = content->FindFirstNonChromeOnlyAccessContent();
+    *aTarget = content.forget().get();
+    return NS_OK;
+  }
   NS_IF_ADDREF(*aTarget = mTarget);
   return NS_OK;
 }
@@ -314,7 +321,7 @@ nsDOMTouchEvent::GetTargetTouches(nsIDOMTouchList** aTargetTouches)
     if ((mEvent->message != NS_TOUCH_END &&
          mEvent->message != NS_TOUCH_CANCEL) || !touches[i]->mChanged) {
       nsIDOMEventTarget* targetPtr = touches[i]->GetTarget();
-      if (targetPtr == mEvent->target) {
+      if (targetPtr == mEvent->originalTarget) {
         targetTouches.AppendElement(touches[i]);
       }
     }

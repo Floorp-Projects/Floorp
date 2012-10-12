@@ -392,7 +392,7 @@ nsAnimationManager::GetElementAnimations(dom::Element *aElement,
     // FIXME: Consider arena-allocating?
     ea = new ElementAnimations(aElement, propName, this);
     nsresult rv = aElement->SetProperty(propName, ea,
-                                        ElementAnimationsPropertyDtor, nullptr);
+                                        ElementAnimationsPropertyDtor, false);
     if (NS_FAILED(rv)) {
       NS_WARNING("SetProperty failed");
       delete ea;

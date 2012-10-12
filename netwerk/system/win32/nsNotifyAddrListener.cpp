@@ -13,7 +13,6 @@
 #include <netcon.h>
 #include <objbase.h>
 #include <iprtrmib.h>
-#include "prmem.h"
 #include "plstr.h"
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"

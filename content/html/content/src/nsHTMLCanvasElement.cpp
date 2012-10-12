@@ -9,7 +9,6 @@
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
 #include "nsNetUtil.h"
-#include "prmem.h"
 #include "nsDOMFile.h"
 
 #include "nsICanvasRenderingContextInternal.h"
@@ -837,7 +836,7 @@ nsHTMLCanvasElement::InvalidateCanvasContent(const gfxRect* damageRect)
 
   frame->MarkLayersActive(nsChangeHint(0));
 
-  Layer* layer;
+  Layer* layer = nullptr;
   if (damageRect) {
     nsIntSize size = GetWidthHeight();
     if (size.width != 0 && size.height != 0) {

@@ -1817,11 +1817,6 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
    * actual document fragment).
    */
   if (nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
-    uint32_t count = fragChildren.ref().Length();
-    if (!count) {
-      return NS_OK;
-    }
-
     if (!aReplace) {
       mb.Init(this, true, true);
     }
@@ -1830,6 +1825,11 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       mutationBatch->RemovalDone();
       mutationBatch->SetPrevSibling(GetChildAt(insPos - 1));
       mutationBatch->SetNextSibling(GetChildAt(insPos));
+    }
+
+    uint32_t count = fragChildren.ref().Length();
+    if (!count) {
+      return NS_OK;
     }
 
     bool appending =

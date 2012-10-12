@@ -83,16 +83,6 @@
 // {2D524FDB-AE74-11d3-ABF7-0004ACEEFA51}
 #define NS_UNICODETOCP864_CID \
   { 0x2d524fdb, 0xae74, 0x11d3, {0xab, 0xf7, 0x0, 0x4, 0xac, 0xee, 0xfa, 0x51}}
-  
-// Class ID for our CP864iToUnicode charset converter
-// {2D524FDC-AE74-11d3-ABF7-0004ACEEFA51}
-#define NS_CP864ITOUNICODE_CID \
-  { 0x2d524fdc, 0xae74, 0x11d3, {0xab, 0xf7, 0x0, 0x4, 0xac, 0xee, 0xfa, 0x51}}
-
-// Class ID for our UnicodeToCP864i charset converter
-// {2D524FDD-AE74-11d3-ABF7-0004ACEEFA51}
-#define NS_UNICODETOCP864I_CID \
-  { 0x2d524fdd, 0xae74, 0x11d3, {0xab, 0xf7, 0x0, 0x4, 0xac, 0xee, 0xfa, 0x51}}
 
 // Class ID for our CP869ToUnicode charset converter
 // {2D524FE0-AE74-11d3-ABF7-0004ACEEFA51}

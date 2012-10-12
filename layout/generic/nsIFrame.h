@@ -2907,6 +2907,8 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
 
   bool IsSVGText() const { return mState & NS_FRAME_IS_SVG_TEXT; }
 
+  void CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder, nsDisplayList* aList);
+
 protected:
   // Members
   nsRect           mRect;

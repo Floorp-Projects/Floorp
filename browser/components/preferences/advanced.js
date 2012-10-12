@@ -31,24 +31,12 @@ var gAdvancedPane = {
 #ifdef HAVE_SHELL_SERVICE
     this.updateSetDefaultBrowser();
 #ifdef XP_WIN
-    let shellSvc = getShellService();
     // In Windows 8 we launch the control panel since it's the only
     // way to get all file type association prefs. So we don't know
     // when the user will select the default.  We refresh here periodically
-    // in case the default changes. 
-    if (!shellSvc.isDefaultBrowser(false, true)) {
-      var isWin8OrHigher = false;
-      try {
-        let version = Components.classes["@mozilla.org/system-info;1"].
-                      getService(Components.interfaces.nsIPropertyBag2).
-                      getProperty("version");
-        isWin8OrHigher = parseFloat(version) >= 6.2;
-      } catch (ex) { }
-
-      if (isWin8OrHigher) {
-        window.setInterval(this.updateSetDefaultBrowser, 1000);
-      }
-    }
+    // in case the default changes.  On other Windows OS's defaults can also
+    // be set while the prefs are open.
+    window.setInterval(this.updateSetDefaultBrowser, 1000);
 #endif
 #endif
 

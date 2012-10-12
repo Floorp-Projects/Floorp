@@ -496,6 +496,33 @@ function testRemovingElement() {
   nextTest();
 }
 
+function testNAC() {
+  let cwu = SpecialPowers.getDOMWindowUtils(window);
+  let target = document.getElementById("testTarget3");
+  let bcr = target.getBoundingClientRect();
+
+  let touch1 = new testtouch({
+    page: {x: Math.round(bcr.left + bcr.width/2),
+           y: Math.round(bcr.top  + bcr.height/2)},
+    target: target
+  });
+  let event = new touchEvent({
+    touches: [touch1],
+    targetTouches: [touch1],
+    changedTouches: [touch1]
+  });
+
+  // test touchstart event fires correctly
+  var checkFunction = checkEvent(event);
+  window.addEventListener("touchstart", checkFunction, false);
+  sendTouchEvent(cwu, "touchstart", event, 0);
+  window.removeEventListener("touchstart", checkFunction, false);
+
+  sendTouchEvent(cwu, "touchend", event, 0);
+
+  nextTest();
+}
+
 function doTest() {
   tests.push(testSingleTouch);
   tests.push(testSingleTouch2);
@@ -503,6 +530,7 @@ function doTest() {
   tests.push(testPreventDefault);
   tests.push(testTouchChanged);
   tests.push(testRemovingElement);
+  tests.push(testNAC);
 
   tests.push(function() {
     SimpleTest.finish();
@@ -519,6 +547,7 @@ addLoadEvent(doTest);
 <div id="parent">
   <span id="testTarget" style="padding: 5px; border: 1px solid black;">testTarget</span>
   <span id="testTarget2" style="padding: 5px; border: 1px solid blue;">testTarget</span>
+  <input type="text" id="testTarget3">
 </div>
 </body>
 </html>

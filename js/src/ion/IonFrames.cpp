@@ -1031,6 +1031,17 @@ IonFrameIterator::isConstructing() const
 }
 
 JSObject *
+InlineFrameIterator::scopeChain() const
+{
+    SnapshotIterator s(si_);
+
+    // scopeChain
+    Value v = s.read();
+    JS_ASSERT(v.isObject());
+    return &v.toObject();
+}
+
+JSObject *
 InlineFrameIterator::thisObject() const
 {
     // JS_ASSERT(isConstructing(...));

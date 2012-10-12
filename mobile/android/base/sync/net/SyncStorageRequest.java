@@ -131,7 +131,7 @@ public class SyncStorageRequest implements Resource {
 
     @Override
     public void addHeaders(HttpRequestBase request, DefaultHttpClient client) {
-      client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, GlobalConstants.USER_AGENT);
+      client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, GlobalConstants.SYNC_USER_AGENT);
 
       // Clients can use their delegate interface to specify X-If-Unmodified-Since.
       String ifUnmodifiedSince = this.request.delegate.ifUnmodifiedSince();

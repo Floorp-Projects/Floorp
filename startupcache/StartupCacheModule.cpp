@@ -6,11 +6,6 @@
 #include <string.h>
 
 #include "nscore.h"
-#include "pratom.h"
-#include "prmem.h"
-#include "prio.h"
-#include "plstr.h"
-#include "prlog.h"
 
 #include "nsID.h"
 #include "nsIComponentManager.h"

@@ -109,8 +109,7 @@ LoadProperties(const nsString& aName,
 class nsGlyphTable {
 public:
   explicit nsGlyphTable(const nsString& aPrimaryFontName)
-    : mType(NS_TABLE_TYPE_UNICODE),
-      mFontName(1), // ensure space for primary font name.
+    : mFontName(1), // ensure space for primary font name.
       mState(NS_TABLE_STATE_EMPTY),
       mCharCache(0)
   {
@@ -172,14 +171,11 @@ private:
   nsGlyphCode ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
                         uint32_t aPosition);
 
-  // The type is either NS_TABLE_TYPE_UNICODE or NS_TABLE_TYPE_GLYPH_INDEX
-  int32_t mType;    
-                           
   // mFontName[0] is the primary font associated to this table. The others 
   // are possible "external" fonts for glyphs not in the primary font
   // but which are needed to stretch certain characters in the table
-  nsTArray<nsString> mFontName; 
-                               
+  nsTArray<nsString> mFontName;
+
   // Tri-state variable for error/empty/ready
   int32_t mState;
 
@@ -199,8 +195,7 @@ private:
   // mGlyphCache excludes the '@' symbol and explicitly inserts all optional '0'
   // that indicates the primary font identifier. Specifically therefore, the
   // k-th glyph is characterized by :
-  // 1) mGlyphCache[3*k],mGlyphCache[3*k+1] : its Unicode point (or glyph index
-  // -- depending on mType),
+  // 1) mGlyphCache[3*k],mGlyphCache[3*k+1] : its Unicode point
   // 2) mGlyphCache[3*k+2] : the numeric identifier of the font where it comes
   // from.
   // A font identifier of '0' means the default primary font associated to this

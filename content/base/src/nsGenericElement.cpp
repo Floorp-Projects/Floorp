@@ -1300,8 +1300,13 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                (aParent && aParent->IsInNativeAnonymousSubtree()),
                "Trying to re-bind content from native anonymous subtree to "
                "non-native anonymous parent!");
-  if (aParent && aParent->IsInNativeAnonymousSubtree()) {
-    SetFlags(NODE_IS_IN_ANONYMOUS_SUBTREE);
+  if (aParent) {
+    if (aParent->IsInNativeAnonymousSubtree()) {
+      SetFlags(NODE_IS_IN_ANONYMOUS_SUBTREE);
+    }
+    if (aParent->HasFlag(NODE_CHROME_ONLY_ACCESS)) {
+      SetFlags(NODE_CHROME_ONLY_ACCESS);
+    }
   }
 
   bool hadForceXBL = HasFlag(NODE_FORCE_XBL_BINDINGS);
