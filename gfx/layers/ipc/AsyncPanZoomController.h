@@ -209,6 +209,22 @@ public:
     const gfx::Point& aAcceleration,
     double aEstimatedPaintDuration);
 
+  /**
+   * Return the scale factor needed to fit the viewport in |aMetrics|
+   * into its compositiong bounds.
+   */
+  static gfxSize CalculateIntrinsicScale(const FrameMetrics& aMetrics);
+
+  /**
+   * Return the resolution that content should be rendered at given
+   * the configuration in aFrameMetrics: viewport dimensions, zoom
+   * factor, etc.  (The mResolution member of aFrameMetrics is
+   * ignored.)
+   */
+  static gfxSize CalculateResolution(const FrameMetrics& aMetrics);
+
+  static gfx::Rect CalculateCompositedRectInCssPixels(const FrameMetrics& aMetrics);
+
 protected:
   /**
    * Internal handler for ReceiveInputEvent(). Does all the actual work.

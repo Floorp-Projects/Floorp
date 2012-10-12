@@ -38,6 +38,7 @@ public:
     , mScrollId(NULL_SCROLL_ID)
     , mScrollableRect(0, 0, 0, 0)
     , mResolution(1, 1)
+    , mZoom(1, 1)
     , mDevPixelsPerCSSPixel(1)
     , mMayHaveTouchListeners(false)
   {}
@@ -204,17 +205,19 @@ public:
   // resolution of parent layers is opaque to this metric.
   gfxSize mResolution;
 
-  // The amount we are currently zooming the frame. This is distinct from
-  // |mResolution| as we can paint a frame at a different resolution than we
-  // zoom it at. This is useful in situations where we want to zoom a frame
-  // without forcing a repaint. At steady state, this and |mResolution| will be
-  // equal.
+  // The resolution-independent "user zoom".  For example, if a page
+  // configures the viewport to a zoom value of 2x, then this member
+  // will always be 2.0 no matter what the viewport or composition
+  // bounds.
   //
-  // Every time this frame is composited and the compositor samples its
-  // transform, this metric is used to create a transform which is
-  // post-multiplied into the parent's transform. Since this only happens when
-  // we walk the layer tree, the resulting transform isn't stored here. Thus the
-  // zoom of parent layers is opaque to this metric.
+  // In the steady state (no animations), and ignoring DPI, then the
+  // following is usually true
+  //
+  //  intrinsicScale = (mCompositionBounds / mViewport)
+  //  mResolution = mZoom * intrinsicScale
+  //
+  // When this is not true, we're probably asynchronously sampling a
+  // zoom animation for content.
   gfxSize mZoom;
 
   // The conversion factor between CSS pixels and device pixels for this frame.

@@ -338,11 +338,12 @@ private:
     // variables local to this class before setting it.
     void SetCSSViewport(float aX, float aY);
 
-    // Recalculates the display state, including the CSS viewport. This should
-    // be called whenever we believe the meta viewport data on a document may
-    // have changed. If it didn't change, this function doesn't do anything.
-    // However, it should not be called all the time as it is fairly expensive.
-    void HandlePossibleMetaViewportChange();
+    // Recalculates the display state, including the CSS
+    // viewport. This should be called whenever we believe the
+    // viewport data on a document may have changed. If it didn't
+    // change, this function doesn't do anything.  However, it should
+    // not be called all the time as it is fairly expensive.
+    void HandlePossibleViewportChange();
 
     // Wraps up a JSON object as a structured clone and sends it to the browser
     // chrome script.
