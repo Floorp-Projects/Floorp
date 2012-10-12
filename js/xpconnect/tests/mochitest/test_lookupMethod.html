@@ -47,6 +47,11 @@ function go() {
   var gebtn = SC.lookupMethod(document, 'getElementsByTagName');
   is(Function.call.apply(gebtn, [window, 'iframe']).length, 2, "method is bound");
 
+  // Test that lookupMethod doesn't return ChromeOnly properties when used from
+  // content.
+  is(SC.lookupMethod(new XMLHttpRequest(), 'getInterface'), undefined,
+     "lookupMethod from content shouldn't find a ChromeOnly property");
+
   // Test that we throw for location objects. Location objects already use same-
   // compartment Xrays, so callers shouldn't need to use lookupMethod there. And
   // making it work would involve complicating the security surounding the
