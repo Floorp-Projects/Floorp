@@ -3559,7 +3559,7 @@ pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
 #ifdef XP_MACOSX
 pref("image.high_quality_downscaling.enabled", false);
 #else
-pref("image.high_quality_downscaling.enabled", false);
+pref("image.high_quality_downscaling.enabled", true);
 #endif
 
 // The minimum percent downscaling we'll use high-quality downscaling on,
