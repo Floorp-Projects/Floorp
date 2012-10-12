@@ -28,23 +28,17 @@ function test_thread_lifetime()
   gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
     let pauseGrip = aPacket.frame.arguments[0];
 
+    // Create a thread-lifetime actor for this object.
     gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function(aResponse) {
-      let threadGrip = aResponse.threadGrip;
-
-      do_check_neq(pauseGrip.actor, threadGrip.actor);
-
-      // Create a thread-lifetime actor for this object.
-
+      // Successful promotion won't return an error.
+      do_check_eq(aResponse.error, undefined);
       gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
-        // Now that we've resumed, should get noSuchActor for the
-        // pause grip, but unrecognizePacketType for the thread grip.
-        gClient.request({ to: pauseGrip.actor, type: "bogusRequest" }, function(aResponse) {
-          do_check_eq(aResponse.error, "noSuchActor");
-          gClient.request({ to: threadGrip.actor, type: "bogusRequest"}, function(aResponse) {
-            do_check_eq(aResponse.error, "unrecognizedPacketType");
-            gThreadClient.resume(function() {
-              finishClient(gClient);
-            });
+        // Now that we've resumed, should get unrecognizePacketType for the
+        // promoted grip.
+        gClient.request({ to: pauseGrip.actor, type: "bogusRequest"}, function(aResponse) {
+          do_check_eq(aResponse.error, "unrecognizedPacketType");
+          gThreadClient.resume(function() {
+            finishClient(gClient);
           });
         });
       });
