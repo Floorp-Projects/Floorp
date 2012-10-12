@@ -493,6 +493,10 @@ imgStatusTracker::EmulateRequestFinished(imgRequestProxy* aProxy,
 {
   nsCOMPtr<imgIRequest> kungFuDeathGrip(aProxy);
 
+  if (!(mState & stateRequestStarted)) {
+    aProxy->OnStartRequest();
+  }
+
   if (mState & stateBlockingOnload) {
     aProxy->UnblockOnload();
   }
@@ -781,7 +785,7 @@ imgStatusTracker::OnStopRequest(bool aLastPart, nsresult aStatus)
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
       nsCOMPtr<nsIURI> uri;
-      mTracker->GetRequest()->GetURI(getter_AddRefs(uri));
+      GetRequest()->GetURI(getter_AddRefs(uri));
       os->NotifyObservers(uri, "net:failed-to-process-uri-content", nullptr);
     }
   }
