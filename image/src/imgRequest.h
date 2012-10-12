@@ -22,7 +22,6 @@
 #include "nsCategoryCache.h"
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
-#include "nsTObserverArray.h"
 #include "nsWeakReference.h"
 #include "nsError.h"
 #include "imgIRequest.h"
@@ -198,8 +197,6 @@ private:
   nsCOMPtr<nsISupports> mSecurityInfo;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIInterfaceRequestor> mPrevChannelSink;
-
-  nsTObserverArray<imgRequestProxy*> mObservers;
 
   nsCOMPtr<nsITimedChannel> mTimedChannel;
 
