@@ -11,6 +11,7 @@ import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -670,9 +671,9 @@ public class LayerRenderer {
 
             // Remove white screen once we've painted
             if (mView.getPaintState() == LayerView.PAINT_BEFORE_FIRST) {
-                GeckoAppShell.getMainHandler().postAtFrontOfQueue(new Runnable() {
+                mView.post(new Runnable() {
                     public void run() {
-                        mView.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+                        mView.getChildAt(0).setBackgroundColor(Color.TRANSPARENT);
                     }
                 });
                 mView.setPaintState(LayerView.PAINT_AFTER_FIRST);

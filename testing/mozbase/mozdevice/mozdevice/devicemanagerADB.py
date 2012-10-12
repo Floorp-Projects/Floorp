@@ -183,13 +183,9 @@ class DeviceManagerADB(DeviceManager):
         """
         Creates a single directory on the device file system
         """
-        try:
-            result = self._runCmdAs(["shell", "mkdir", name]).stdout.read()
-            if 'read-only file system' in result.lower():
-                raise DMError("Error creating directory: read only file system")
-            # otherwise assume success
-        except:
-            raise DMError("Error creating directory")
+        result = self._runCmdAs(["shell", "mkdir", name]).stdout.read()
+        if 'read-only file system' in result.lower():
+            raise DMError("Error creating directory: read only file system")
 
     def pushDir(self, localDir, remoteDir):
         """
@@ -324,7 +320,7 @@ class DeviceManagerADB(DeviceManager):
         ret = []
         while (proc):
             els = proc.split()
-            ret.append(list([els[1], els[len(els) - 1], els[0]]))
+            ret.append(list([int(els[1]), els[len(els) - 1], els[0]]))
             proc =  p.stdout.readline()
         return ret
 
@@ -514,16 +510,20 @@ class DeviceManagerADB(DeviceManager):
             self.deviceRoot = testRoot
             return
 
-        for (basePath, subPath) in [('/mnt/sdcard', 'tests'),
-                                    ('/data/local', 'tests')]:
+        paths = [('/mnt/sdcard', 'tests'),
+                 ('/data/local', 'tests')]
+        for (basePath, subPath) in paths:
             if self.dirExists(basePath):
                 testRoot = os.path.join(basePath, subPath)
-                if self.mkDir(testRoot):
+                try:
+                    self.mkDir(testRoot)
                     self.deviceRoot = testRoot
                     return
+                except:
+                    pass
 
-        raise DMError("Unable to set up device root as /mnt/sdcard/tests "
-                                    "or /data/local/tests")
+        raise DMError("Unable to set up device root using paths: [%s]"
+                        % ", ".join(["'%s'" % os.path.join(b, s) for b, s in paths]))
 
     def getDeviceRoot(self):
         """

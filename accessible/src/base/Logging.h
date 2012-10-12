@@ -56,6 +56,7 @@ bool IsEnabled(uint32_t aModules);
 void DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
              nsIRequest* aRequest, uint32_t aStateFlags);
 void DocLoad(const char* aMsg, nsIDocument* aDocumentNode);
+void DocCompleteLoad(DocAccessible* aDocument, bool aIsLoadEventTarget);
 
 /**
  * Log that document load event was fired.
@@ -148,6 +149,11 @@ void Address(const char* aDescr, Accessible* aAcc);
  * Log the DOM node info as message entry.
  */
 void Node(const char* aDescr, nsINode* aNode);
+
+/**
+ * Log the document accessible info as message entry.
+ */
+void Document(DocAccessible* aDocument);
 
 /**
  * Log the accessible and its DOM node as a message entry.

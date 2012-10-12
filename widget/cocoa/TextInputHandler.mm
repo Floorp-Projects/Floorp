@@ -2594,7 +2594,7 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange)
   if (!rootWindow || !rootView) {
     return rect;
   }
-  nsCocoaUtils::GeckoRectToNSRect(r, rect);
+  rect = nsCocoaUtils::DevPixelsToCocoaPoints(r, mWidget->GetDefaultScale());
   rect = [rootView convertRect:rect toView:nil];
   rect.origin = [rootWindow convertBaseToScreen:rect.origin];
 

@@ -63,7 +63,7 @@ CompareCacheHashEntry::CompareCacheHashEntry()
   }
 }
 
-PR_STATIC_CALLBACK(bool)
+static bool
 CompareCacheMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
@@ -71,7 +71,7 @@ CompareCacheMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return entryPtr->entry->key == key;
 }
 
-PR_STATIC_CALLBACK(bool)
+static bool
 CompareCacheInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
                      const void *key)
 {
@@ -84,7 +84,7 @@ CompareCacheInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
   return true;
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 CompareCacheClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
   CompareCacheHashEntryPtr *entryPtr = static_cast<CompareCacheHashEntryPtr*>(hdr);
@@ -359,7 +359,7 @@ struct nsCertAndArrayAndPositionAndCounterAndTracker
 // track entries that have not yet been handled.
 // The created display-info references the cert, so make a note
 // of that by incrementing the cert usage counter.
-PR_STATIC_CALLBACK(void)
+static void
 MatchingCertOverridesCallback(const nsCertOverride &aSettings,
                               void *aUserData)
 {
@@ -393,7 +393,7 @@ MatchingCertOverridesCallback(const nsCertOverride &aSettings,
 
 // Used to collect a list of the (unique) host:port keys
 // for all stored overrides.
-PR_STATIC_CALLBACK(void)
+static void
 CollectAllHostPortOverridesCallback(const nsCertOverride &aSettings,
                                     void *aUserData)
 {
@@ -417,7 +417,7 @@ struct nsArrayAndPositionAndCounterAndTracker
 
 // Used when enumerating the stored host:port overrides where
 // no associated certificate was found in the NSS database.
-PR_STATIC_CALLBACK(void)
+static void
 AddRemaningHostPortOverridesCallback(const nsCertOverride &aSettings,
                                      void *aUserData)
 {

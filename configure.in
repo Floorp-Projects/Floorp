@@ -1486,13 +1486,11 @@ if test "$GNU_CXX"; then
     # -Werror=return-type - catches missing returns, zero false positives
     # -Wtype-limits - catches overflow bugs, few false positives
     # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
-    # -Werror=conversion-null - catches conversions between NULL and non-pointer types
     #
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Woverloaded-virtual"
     MOZ_CXX_SUPPORTS_WARNING(-W, error=return-type, ac_cxx_has_werror_return_type)
     MOZ_CXX_SUPPORTS_WARNING(-W, type-limits, ac_cxx_has_wtype_limits)
     MOZ_CXX_SUPPORTS_WARNING(-W, empty-body, ac_cxx_has_wempty_body)
-    MOZ_CXX_SUPPORTS_WARNING(-W, error=conversion-null, ac_cxx_has_werror_conversion_null)
 
     # Turn off the following warnings that -Wall/-pedantic turn on:
     # -Wno-ctor-dtor-privacy - ???
@@ -4321,7 +4319,11 @@ case "${target}" in
         fi
 
         NSS_DISABLE_DBM=1
-        NECKO_WIFI=
+        if test -z "$gonkdir"; then
+          NECKO_WIFI=
+        else
+          NECKO_WIFI=1
+        fi
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
         MOZ_MEMORY=1
@@ -8194,14 +8196,6 @@ if test "$NECKO_WIFI" -a \
   AC_MSG_ERROR([Necko WiFi scanning not supported on your platform, use --disable-necko-wifi])
 fi
 
-if test -z "$SKIP_LIBRARY_CHECKS" -a "$NECKO_WIFI" -a "$OS_ARCH" = "Linux"
-then
-  MOZ_CHECK_HEADER([iwlib.h])
-  if test "$ac_cv_header_iwlib_h" != "yes"; then
-    AC_MSG_ERROR([Can't find header iwlib.h for Necko WiFi scanning (might be in package libiw-dev (Ubuntu) or wireless-tools-devel (Fedora) or libiw-devel (openSUSE)); use --disable-necko-wifi to disable])
-  fi
-fi
-
 if test "$NECKO_WIFI"; then
   AC_DEFINE(NECKO_WIFI)
   _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_WIFI"
@@ -8242,6 +8236,18 @@ dnl Build Apps in the Cloud (AITC) if required
 AC_SUBST(MOZ_SERVICES_AITC)
 if test -n "$MOZ_SERVICES_AITC"; then
   AC_DEFINE(MOZ_SERVICES_AITC)
+fi
+
+dnl Build Common JS modules provided by services.
+AC_SUBST(MOZ_SERVICES_COMMON)
+if test -n "$MOZ_SERVICES_COMMON"; then
+  AC_DEFINE(MOZ_SERVICES_COMMON)
+fi
+
+dnl Build Services crypto component (used by Sync)
+AC_SUBST(MOZ_SERVICES_CRYPTO)
+if test -n "$MOZ_SERVICES_CRYPTO"; then
+  AC_DEFINE(MOZ_SERVICES_CRYPTO)
 fi
 
 dnl Build Notifications if required

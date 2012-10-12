@@ -34,4 +34,12 @@ public class MetaGlobalException extends SyncException {
       this.serverSyncID = syncID;
     }
   }
+
+  public static class MetaGlobalEngineStateChangedException extends MetaGlobalException {
+    private static final long serialVersionUID = 1L;
+    public final boolean isEnabled;
+    public MetaGlobalEngineStateChangedException(boolean isEnabled) {
+      this.isEnabled = isEnabled;
+    }
+  }
 }

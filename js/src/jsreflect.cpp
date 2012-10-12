@@ -3484,7 +3484,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     if (!stable)
         return JS_FALSE;
 
-    const jschar *chars = stable->chars();
+    const StableCharPtr chars = stable->chars();
     size_t length = stable->length();
     CompileOptions options(cx);
     options.setFileAndLine(filename, lineno);

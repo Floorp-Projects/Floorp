@@ -22,6 +22,13 @@
                           accesskey="&newNavigatorCmd.accesskey;"
                           key="key_newNavigator"
                           command="cmd_newNavigator"/>
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+                <menuitem id="menu_newPrivateWindow"
+                          label="&newPrivateWindow.label;"
+                          accesskey="&newPrivateWindow.accesskey;"
+                          command="Tools:PrivateBrowsing"
+                          key="key_privatebrowsing"/>
+#endif
                 <menuitem id="menu_openLocation"
                           class="show-only-for-keyboard"
                           label="&openLocationCmd.label;"
@@ -475,7 +482,9 @@
                   accesskey="&toolsMenu.accesskey;">
               <menupopup id="menu_ToolsPopup"
 #ifdef MOZ_SERVICES_SYNC
-                         onpopupshowing="gSyncUI.updateUI();"
+                         onpopupshowing="gSyncUI.updateUI(); SocialMenu.populate();"
+#else
+                         onpopupshowing="SocialMenu.populate();"
 #endif
                          >
               <menuitem id="menu_search"
@@ -500,6 +509,11 @@
                         type="checkbox"
                         autocheck="false"
                         command="Social:Toggle"/>
+              <menu id="menu_socialAmbientMenu"
+                    class="show-only-for-keyboard"
+                    command="Social:Toggle">
+                <menupopup id="menu_socialAmbientMenuPopup"/>
+              </menu>
 #ifdef MOZ_SERVICES_SYNC
               <!-- only one of sync-setup or sync-menu will be showing at once -->
               <menuitem id="sync-setup"
@@ -541,6 +555,7 @@
 #endif
                         command="View:PageInfo"/>
               <menuseparator id="sanitizeSeparator"/>
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
               <menuitem id="privateBrowsingItem"
                         label="&privateBrowsingCmd.start.label;"
                         accesskey="&privateBrowsingCmd.start.accesskey;"
@@ -550,6 +565,7 @@
                         stopaccesskey="&privateBrowsingCmd.stop.accesskey;"
                         key="key_privatebrowsing"
                         command="Tools:PrivateBrowsing"/>
+#endif
               <menuitem id="sanitizeItem"
                         accesskey="&clearRecentHistory.accesskey;"
                         label="&clearRecentHistory.label;"

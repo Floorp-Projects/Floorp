@@ -253,14 +253,10 @@ float Axis::GetOrigin() {
 }
 
 float Axis::GetCompositionLength() {
-  nsIntRect compositionBounds =
-    mAsyncPanZoomController->GetFrameMetrics().mCompositionBounds;
-  gfx::Rect scaledCompositionBounds =
-    gfx::Rect(compositionBounds.x, compositionBounds.y,
-              compositionBounds.width, compositionBounds.height);
-  scaledCompositionBounds.ScaleInverseRoundIn(
-    mAsyncPanZoomController->GetFrameMetrics().mZoom.width);
-  return GetRectLength(scaledCompositionBounds);
+  const FrameMetrics& metrics = mAsyncPanZoomController->GetFrameMetrics();
+  gfx::Rect cssCompositedRect =
+    AsyncPanZoomController::CalculateCompositedRectInCssPixels(metrics);
+  return GetRectLength(cssCompositedRect);
 }
 
 float Axis::GetPageStart() {

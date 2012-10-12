@@ -863,7 +863,7 @@ Revive(JSContext *cx, HandleValue reviver, MutableHandleValue vp)
 namespace js {
 
 JSBool
-ParseJSONWithReviver(JSContext *cx, const jschar *chars, size_t length, HandleValue reviver,
+ParseJSONWithReviver(JSContext *cx, StableCharPtr chars, size_t length, HandleValue reviver,
                      MutableHandleValue vp, DecodingMode decodingMode /* = STRICT */)
 {
     /* 15.12.2 steps 2-3. */

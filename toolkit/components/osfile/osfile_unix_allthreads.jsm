@@ -185,4 +185,8 @@ if (typeof Components != "undefined") {
   OSError.closed = function closed(operation) {
     return new OSError(operation, OS.Constants.libc.EBADF);
   };
+
+  OSError.exists = function exists(operation) {
+    return new OSError(operation, OS.Constants.libc.EEXIST);
+  };
 })(this);

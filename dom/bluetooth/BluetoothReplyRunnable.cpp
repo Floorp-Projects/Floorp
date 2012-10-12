@@ -43,8 +43,8 @@ BluetoothReplyRunnable::FireReply(const jsval& aVal)
   
   
   return mReply->type() == BluetoothReply::TBluetoothReplySuccess ?
-    rs->FireSuccess(mDOMRequest, aVal) :
-    rs->FireError(mDOMRequest, mReply->get_BluetoothReplyError().error());
+    rs->FireSuccessAsync(mDOMRequest, aVal) :
+    rs->FireErrorAsync(mDOMRequest, mReply->get_BluetoothReplyError().error());
 }
 
 nsresult
@@ -58,7 +58,7 @@ BluetoothReplyRunnable::FireErrorString()
     return NS_ERROR_FAILURE;
   }
   
-  return rs->FireError(mDOMRequest, mErrorString);
+  return rs->FireErrorAsync(mDOMRequest, mErrorString);
 }
 
 NS_IMETHODIMP

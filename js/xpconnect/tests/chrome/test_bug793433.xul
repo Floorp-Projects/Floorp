@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=793433
+-->
+<window title="Mozilla Bug 793433"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=793433"
+     target="_blank">Mozilla Bug 793433</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"/>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+function shouldThrow(fun, args, msg) {
+  try {
+    fun.apply(this, args);
+    ok(false, msg);
+  } catch (e) {
+    ok(true, msg+" -- "+e);
+  }
+}
+
+function do_registerTopLevelWindow(win) {
+  Cc['@mozilla.org/appshell/appShellService;1'].
+    getService(Ci.nsIAppShellService).registerTopLevelWindow(win);
+}
+
+shouldThrow(
+  do_registerTopLevelWindow, [null],
+  "registering null as a top-level window should throw");
+
+shouldThrow(
+  do_registerTopLevelWindow, [{}],
+  "registering a void object as a top-level window should throw");
+
+  ]]></script>
+</window>

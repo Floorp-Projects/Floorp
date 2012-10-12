@@ -8,7 +8,6 @@
 #include "nsAutoPtr.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
-#include "prmem.h"
 #include "sampler.h"
 #include NEW_H
 #include "nsFixedSizeAllocator.h"

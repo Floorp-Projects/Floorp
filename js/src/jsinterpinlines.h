@@ -80,6 +80,7 @@ ComputeImplicitThis(JSContext *cx, HandleObject obj, Value *vp)
 inline bool
 ComputeThis(JSContext *cx, StackFrame *fp)
 {
+    JS_ASSERT(!fp->runningInIon());
     Value &thisv = fp->thisValue();
     if (thisv.isObject())
         return true;

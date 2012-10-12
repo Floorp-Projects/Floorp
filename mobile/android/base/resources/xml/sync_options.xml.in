@@ -20,4 +20,13 @@
         android:value="false" />
     </intent>
   </PreferenceScreen>
+  <PreferenceScreen
+    android:key="sync_configure_engines"
+    android:title="@string/sync_configure_engines_title">
+    <intent
+      android:action="android.intent.action.MAIN"
+      android:targetPackage="@ANDROID_PACKAGE_NAME@"
+      android:targetClass="org.mozilla.gecko.sync.config.activities.SelectEnginesActivity">
+    </intent>
+  </PreferenceScreen>
 </PreferenceScreen>

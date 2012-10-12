@@ -9,7 +9,7 @@ function test() {
     name: "provider 1",
     origin: "https://example.com",
     workerURL: "https://example.com/browser/browser/base/content/test/social_worker.js",
-    iconURL: "chrome://branding/content/icon48.png"
+    iconURL: "https://example.com/browser/browser/base/content/test/moz.png"
   };
   runSocialTestWithProvider(manifest, function (finishcb) {
     runSocialTests(tests, undefined, undefined, finishcb);
@@ -30,15 +30,36 @@ var tests = {
     is(profile.portrait, portrait, "portrait is set");
     let userButton = document.getElementById("social-statusarea-username");
     ok(!userButton.hidden, "username is visible");
-    is(userButton.label, profile.userName, "username is set");
+    is(userButton.value, profile.userName, "username is set");
     next();
+  },
+  testNoAmbientNotificationsIsNoKeyboardMenu: function(next) {
+    // The menu bar isn't as easy to instrument on Mac.
+    if (navigator.platform.contains("Mac")) {
+      info("Skipping checking the menubar on Mac OS");
+      next();
+    }
+
+    // Test that keyboard accessible menuitem doesn't exist when no ambient icons specified.
+    let toolsPopup = document.getElementById("menu_ToolsPopup");
+    toolsPopup.addEventListener("popupshown", function ontoolspopupshownNoAmbient() {
+      toolsPopup.removeEventListener("popupshown", ontoolspopupshownNoAmbient);
+      let socialToggleMore = document.getElementById("menu_socialAmbientMenu");
+      ok(socialToggleMore, "Keyboard accessible social menu should exist");
+      is(socialToggleMore.hidden, true, "Menu should be hidden when no ambient notifications.");
+      toolsPopup.hidePopup();
+      next();
+    }, false);
+    document.getElementById("menu_ToolsPopup").openPopup();
   },
   testAmbientNotifications: function(next) {
     let ambience = {
       name: "testIcon",
-      iconURL: "chrome://branding/content/icon48.png",
+      iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
       contentPanel: "about:blank",
-      counter: 42
+      counter: 42,
+      label: "Test Ambient 1",
+      menuURL: "https://example.com/testAmbient1"
     };
     Social.provider.setAmbientNotification(ambience);
 
@@ -53,7 +74,24 @@ var tests = {
       ambience.counter = 0;
       Social.provider.setAmbientNotification(ambience);
       is(statusIconLabel.value, "", "status value is correct");
-      next();
+
+      // The menu bar isn't as easy to instrument on Mac.
+      if (navigator.platform.contains("Mac"))
+        next();
+
+      // Test that keyboard accessible menuitem was added.
+      let toolsPopup = document.getElementById("menu_ToolsPopup");
+      toolsPopup.addEventListener("popupshown", function ontoolspopupshownAmbient() {
+        toolsPopup.removeEventListener("popupshown", ontoolspopupshownAmbient);
+        let socialToggleMore = document.getElementById("menu_socialAmbientMenu");
+        ok(socialToggleMore, "Keyboard accessible social menu should exist");
+        is(socialToggleMore.hidden, false, "Menu is visible when ambient notifications have label & menuURL");
+        let menuitem = socialToggleMore.querySelector("menuitem");
+        is(menuitem.getAttribute("label"), "Test Ambient 1", "Keyboard accessible ambient menuitem should have specified label");
+        toolsPopup.hidePopup();
+        next();
+      }, false);
+      document.getElementById("menu_ToolsPopup").openPopup();
     }, "statusIcon was never found");
   },
   testProfileUnset: function(next) {
@@ -66,6 +104,16 @@ var tests = {
       ok(ambientIcon.collapsed, "ambient icon (" + ambientIcon.id + ") is collapsed");
     }
     
+    next();
+  },
+  testShowSidebarMenuitemExists: function(next) {
+    let toggleSidebarMenuitem = document.getElementById("social-toggle-sidebar-menuitem");
+    ok(toggleSidebarMenuitem, "Toggle Sidebar menuitem exists");
+    next();
+  },
+  testShowDesktopNotificationsMenuitemExists: function(next) {
+    let toggleDesktopNotificationsMenuitem = document.getElementById("social-toggle-notifications-menuitem");
+    ok(toggleDesktopNotificationsMenuitem, "Toggle notifications menuitem exists");
     next();
   }
 }

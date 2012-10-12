@@ -5944,13 +5944,9 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
 
         ins = load;
     } else if (obj->type() == MIRType_Value && unaryTypes.inTypes->objectOrSentinel()) {
-        // Fallibly unwrap the object and IC the result.
-        MUnbox *unbox = MUnbox::New(obj, MIRType_Object, MUnbox::Fallible);
-        current->add(unbox);
-
         spew("GETPROP is object-or-sentinel");
 
-        MGetPropertyCache *load = MGetPropertyCache::New(unbox, name);
+        MGetPropertyCache *load = MGetPropertyCache::New(obj, name);
         load->setResultType(rvalType);
         if (accessGetter)
             load->setAllowGetters();

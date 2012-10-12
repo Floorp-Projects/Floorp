@@ -13,7 +13,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsEncoderDecoderUtils.h"
 #include "nsIStringBundle.h"
-#include "prmem.h"
 #include "nsCRT.h"
 #include "nsTArray.h"
 #include "nsStringEnumerator.h"
@@ -117,7 +116,7 @@ bool nsCharsetConverterManager::IsInternal(const nsACString& aCharset)
   nsAutoString str;
   // fully qualify to possibly avoid vtable call
   nsresult rv = GetCharsetDataImpl(PromiseFlatCString(aCharset).get(),
-                                   NS_LITERAL_STRING(".isXSSVulnerable").get(),
+                                   NS_LITERAL_STRING(".isInternal").get(),
                                    str);
 
   return NS_SUCCEEDED(rv);

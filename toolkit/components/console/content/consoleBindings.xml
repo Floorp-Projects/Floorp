@@ -24,22 +24,20 @@
         250
       </field>
       <field name="_showChromeErrors">-1</field>
-      
+
       <property name="showChromeErrors">
         <getter><![CDATA[
           if (this._showChromeErrors != -1)
             return this._showChromeErrors;
-          var pref = Components.classes['@mozilla.org/preferences-service;1'].getService();
-          pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
 
           try {
-            return this._showChromeErrors = pref.getBoolPref("javascript.options.showInConsole");
+            return this._showChromeErrors = Services.prefs.getBoolPref("javascript.options.showInConsole");
           }
           catch(ex) {
             return this._showChromeErrors = false;
           }
         ]]></getter>
-      </property>          
+      </property>
 
       <property name="count" readonly="true">
         <getter>return this.mCount</getter>
@@ -105,18 +103,16 @@
           
           this.mConsoleRowBox = document.getAnonymousElementByAttribute(this, "role", "console-rows");
           this.mStrBundle = document.getAnonymousElementByAttribute(this, "role", "string-bundle");
-          
+
           try {
-            var isupports = Components.classes['@mozilla.org/consoleservice;1'].getService();
-            this.mCService = isupports.QueryInterface(Components.interfaces.nsIConsoleService);
-            this.mCService.registerListener(this.mConsoleListener);
+            Services.console.registerListener(this.mConsoleListener);
           } catch (ex) {
             appendItem(
               "Unable to display errors - couldn't get Console Service component. " +
               "(Missing @mozilla.org/consoleservice;1)");
             return;
-          }          
-                    
+          }
+
           this.mMode = this.getAttribute("mode") || "All";
           this.mFilter = "";
 
@@ -127,7 +123,7 @@
 
       <method name="destroy">
         <body><![CDATA[
-          this.mCService.unregisterListener(this.mConsoleListener);
+          Services.console.unregisterListener(this.mConsoleListener);
           window.controllers.removeController(this._controller);
         ]]></body>
       </method>
@@ -135,7 +131,7 @@
       <method name="appendInitialItems">
         <body><![CDATA[
           var out = {}; // Throwaway references to support 'out' parameters.
-          this.mCService.getMessageArray(out, {});
+          Services.console.getMessageArray(out, {});
           var messages = out.value;
       
           // In case getMessageArray returns 0-length array as null
@@ -236,8 +232,8 @@
       <method name="clear">
         <body><![CDATA[
           // add a "clear" message (mainly for other listeners)
-          this.mCService.logStringMessage(null);
-          this.mCService.reset();
+          Services.console.logStringMessage(null);
+          Services.console.reset();
         ]]></body>
       </method>
 
@@ -417,12 +413,10 @@
           <xul:image class="console-icon" xbl:inherits="src,type"/>
         </xul:box>
         <xul:vbox class="console-row-content" xbl:inherits="selected" flex="1">
-          <xul:box class="console-row-time">
-            <xul:label class="label" xbl:inherits="value=time"/>
-          </xul:box>
           <xul:box class="console-row-msg" align="start">
             <xul:label class="label" xbl:inherits="value=typetext"/>
             <xul:description class="console-error-msg" xbl:inherits="xbl:text=msg" flex="1"/>
+            <xul:label class="label console-time" xbl:inherits="value=time"/>
           </xul:box>
           <xul:box class="console-row-file" xbl:inherits="hidden=hideSource">
             <xul:label class="label" value="&errFile.label;"/>

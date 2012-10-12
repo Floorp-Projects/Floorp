@@ -6,7 +6,9 @@ import hashlib
 import socket
 import os
 import re
+import struct
 import StringIO
+import zlib
 
 class DMError(Exception):
     "generic devicemanager exception."
@@ -149,6 +151,8 @@ class DeviceManager:
           success: pid
           failure: None
         """
+        if not isinstance(appname, basestring):
+            raise TypeError("appname %s is not a string" % appname)
 
         pid = None
 
@@ -511,6 +515,50 @@ class DeviceManager:
             return None
 
         return str(buf.getvalue()[0:-1]).rstrip().split('\r')
+
+    @staticmethod
+    def _writePNG(buf, width, height):
+        """
+        Method for writing a PNG from a buffer, used by getScreenshot on older devices
+        Based on: http://code.activestate.com/recipes/577443-write-a-png-image-in-native-python/
+        """
+        width_byte_4 = width * 4
+        raw_data = b"".join(b'\x00' + buf[span:span + width_byte_4] for span in range(0, (height - 1) * width * 4, width_byte_4))
+        def png_pack(png_tag, data):
+            chunk_head = png_tag + data
+            return struct.pack("!I", len(data)) + chunk_head + struct.pack("!I", 0xFFFFFFFF & zlib.crc32(chunk_head))
+        return b"".join([
+                b'\x89PNG\r\n\x1a\n',
+                png_pack(b'IHDR', struct.pack("!2I5B", width, height, 8, 6, 0, 0, 0)),
+                png_pack(b'IDAT', zlib.compress(raw_data, 9)),
+                png_pack(b'IEND', b'')])
+
+    def saveScreenshot(self, filename):
+        """
+        Takes a screenshot of what's being display on the device. Uses
+        "screencap" on newer (Android 3.0+) devices (and some older ones with
+        the functionality backported). This function also works on B2G.
+
+        Throws an exception on failure. This will always fail on devices
+        without the screencap utility.
+        """
+        screencap = '/system/bin/screencap'
+        if not self.fileExists(screencap):
+            raise DMError("Unable to capture screenshot on device: no screencap utility")
+
+        with open(filename, 'w') as pngfile:
+            # newer versions of screencap can write directly to a png, but some
+            # older versions can't
+            tempScreenshotFile = self.getDeviceRoot() + "/ss-dm.tmp"
+            self.shellCheckOutput(["sh", "-c", "%s > %s" %
+                                   (screencap, tempScreenshotFile)],
+                                  root=True)
+            buf = self.pullFile(tempScreenshotFile)
+            width = int(struct.unpack("I", buf[0:4])[0])
+            height = int(struct.unpack("I", buf[4:8])[0])
+            with open(filename, 'w') as pngfile:
+                pngfile.write(self._writePNG(buf[12:], width, height))
+            self.removeFile(tempScreenshotFile)
 
     @abstractmethod
     def chmodDir(self, remoteDir, mask="777"):
