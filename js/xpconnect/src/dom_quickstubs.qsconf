@@ -57,8 +57,7 @@ members = [
 
     # dom/interfaces/canvas
     #
-    # nsIDOMCanvasRenderingContext2D and friends
-    'nsIDOMCanvasRenderingContext2D.*',
+    # canvas friends
     'nsIDOMTextMetrics.*',
     'nsIDOMCanvasGradient.*',
     'nsIDOMCanvasPattern.*',
@@ -489,10 +488,6 @@ customIncludes = [
     'mozilla/dom/ImageData.h'
     ]
 
-customQuickStubs = [
-    'CustomQS_Canvas2D.h'
-    ]
-
 customReturnInterfaces = [
     'nsIDOMCanvasPattern',
     'nsIDOMCanvasGradient',
@@ -649,10 +644,6 @@ customMethodCalls = {
     'nsIDOMStorage_Clear': {
         'code': nsIDOMStorage_Clear_customMethodCallCode
         },
-    'nsIDOMCanvasRenderingContext2D_StrokeStyle': { 'skipgen': True },
-    'nsIDOMCanvasRenderingContext2D_StrokeStyle': { 'skipgen': True },
-    'nsIDOMCanvasRenderingContext2D_FillStyle': { 'skipgen': True },
-    'nsIDOMCanvasRenderingContext2D_FillStyle': { 'skipgen': True },
     'nsIDOMCSS2Properties_': {
         'thisType': 'nsICSSDeclaration',
         'additionalArguments': 'const nsCSSProperty prop',
@@ -971,13 +962,7 @@ customMethodCalls = {
         'thisType' : 'nsIDOMWindow',
         'unwrapThisFailureFatal' : False
         },
-    # Canvas 2D
-    'nsIDOMCanvasRenderingContext2D_CreateImageData': CUSTOM_QS,
-    'nsIDOMCanvasRenderingContext2D_PutImageData': CUSTOM_QS,
-    # Nasty hack to make the ordering of |arc| and |arcTo| correct.
-    # |arc| is not traceable because it has an optional argument.
-    'nsIDOMCanvasRenderingContext2D_ArcTo' : { 'traceable' : False },
-
+    
     'nsIDOMImageData_GetWidth': {
         'thisType': 'nsIDOMImageData',
         'code': 'uint32_t result = static_cast<mozilla::dom::ImageData*>(self)->GetWidth();',
