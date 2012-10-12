@@ -33,6 +33,7 @@
           android:checkable="true" />
 
     <item android:id="@+id/private_browsing"
+          android:visible="false"
           android:title="@string/new_pb_tab"/>
 
     <item android:title="@string/tools"
