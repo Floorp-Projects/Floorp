@@ -1381,9 +1381,9 @@ nsLayoutUtils::TransformRootPointToFrame(nsIFrame *aFrame,
     float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
     gfxPoint result(NSAppUnitsToFloatPixels(aPoint.x, factor),
                     NSAppUnitsToFloatPixels(aPoint.y, factor));
-    
+
     result = TransformGfxPointFromAncestor(aFrame, result, nullptr);
-   
+
     return nsPoint(NSFloatPixelsToAppUnits(float(result.x), factor),
                    NSFloatPixelsToAppUnits(float(result.y), factor));
 }
@@ -1393,18 +1393,19 @@ nsLayoutUtils::TransformAncestorRectToFrame(nsIFrame* aFrame,
                                             const nsRect &aRect,
                                             const nsIFrame* aAncestor)
 {
-    float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
-    gfxRect result(NSAppUnitsToFloatPixels(aRect.x, factor),
-                   NSAppUnitsToFloatPixels(aRect.y, factor),
-                   NSAppUnitsToFloatPixels(aRect.width, factor),
-                   NSAppUnitsToFloatPixels(aRect.height, factor));
+    float srcAppUnitsPerDevPixel = aAncestor->PresContext()->AppUnitsPerDevPixel();
+    gfxRect result(NSAppUnitsToFloatPixels(aRect.x, srcAppUnitsPerDevPixel),
+                   NSAppUnitsToFloatPixels(aRect.y, srcAppUnitsPerDevPixel),
+                   NSAppUnitsToFloatPixels(aRect.width, srcAppUnitsPerDevPixel),
+                   NSAppUnitsToFloatPixels(aRect.height, srcAppUnitsPerDevPixel));
 
     result = TransformGfxRectFromAncestor(aFrame, result, aAncestor);
 
-    return nsRect(NSFloatPixelsToAppUnits(float(result.x), factor),
-                  NSFloatPixelsToAppUnits(float(result.y), factor),
-                  NSFloatPixelsToAppUnits(float(result.width), factor),
-                  NSFloatPixelsToAppUnits(float(result.height), factor));
+    float destAppUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+    return nsRect(NSFloatPixelsToAppUnits(float(result.x), destAppUnitsPerDevPixel),
+                  NSFloatPixelsToAppUnits(float(result.y), destAppUnitsPerDevPixel),
+                  NSFloatPixelsToAppUnits(float(result.width), destAppUnitsPerDevPixel),
+                  NSFloatPixelsToAppUnits(float(result.height), destAppUnitsPerDevPixel));
 }
 
 nsRect
@@ -1412,18 +1413,19 @@ nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
                                             const nsRect& aRect,
                                             const nsIFrame* aAncestor)
 {
-  float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
-  gfxRect result(NSAppUnitsToFloatPixels(aRect.x, factor),
-                 NSAppUnitsToFloatPixels(aRect.y, factor),
-                 NSAppUnitsToFloatPixels(aRect.width, factor),
-                 NSAppUnitsToFloatPixels(aRect.height, factor));
+  float srcAppUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+  gfxRect result(NSAppUnitsToFloatPixels(aRect.x, srcAppUnitsPerDevPixel),
+                 NSAppUnitsToFloatPixels(aRect.y, srcAppUnitsPerDevPixel),
+                 NSAppUnitsToFloatPixels(aRect.width, srcAppUnitsPerDevPixel),
+                 NSAppUnitsToFloatPixels(aRect.height, srcAppUnitsPerDevPixel));
 
   result = TransformGfxRectToAncestor(aFrame, result, aAncestor);
 
-  return nsRect(NSFloatPixelsToAppUnits(float(result.x), factor),
-                NSFloatPixelsToAppUnits(float(result.y), factor),
-                NSFloatPixelsToAppUnits(float(result.width), factor),
-                NSFloatPixelsToAppUnits(float(result.height), factor));
+  float destAppUnitsPerDevPixel = aAncestor->PresContext()->AppUnitsPerDevPixel();
+  return nsRect(NSFloatPixelsToAppUnits(float(result.x), destAppUnitsPerDevPixel),
+                NSFloatPixelsToAppUnits(float(result.y), destAppUnitsPerDevPixel),
+                NSFloatPixelsToAppUnits(float(result.width), destAppUnitsPerDevPixel),
+                NSFloatPixelsToAppUnits(float(result.height), destAppUnitsPerDevPixel));
 }
 
 static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
