@@ -563,7 +563,7 @@ nsSVGImageListener::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  if (aType == imgINotificationObserver::STOP_DECODE) {
+  if (aType == imgINotificationObserver::STOP_REQUEST) {
     nsSVGUtils::InvalidateAndScheduleReflowSVG(mFrame);
   }
 

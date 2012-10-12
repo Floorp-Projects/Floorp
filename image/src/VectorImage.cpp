@@ -685,7 +685,7 @@ VectorImage::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
 
     observer->FrameChanged(nullptr, this, &nsIntRect::GetMaxSizedIntRect());
     observer->OnStopFrame(nullptr, 0);
-    observer->OnStopDecode(nullptr, NS_OK, nullptr);
+    observer->OnStopDecode(nullptr, NS_OK);
   }
   EvaluateAnimation();
 

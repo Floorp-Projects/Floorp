@@ -214,8 +214,8 @@ protected:
   friend class nsImageLoadingContent;
   nsresult OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
   nsresult OnDataAvailable(imgIRequest *aRequest, const nsIntRect *rect);
-  nsresult OnStopDecode(imgIRequest *aRequest,
-                        nsresult aStatus);
+  nsresult OnStopRequest(imgIRequest *aRequest,
+                         nsresult aStatus);
   nsresult FrameChanged(imgIRequest *aRequest,
                         imgIContainer *aContainer);
   /**

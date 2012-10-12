@@ -43,7 +43,7 @@ interface imgIContainer;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(5ca71b89-1a2f-475f-881d-d76c1531c4c8)]
+[scriptable, uuid(7abf38ca-242b-413a-ab18-80532dd81133)]
 interface imgIDecoderObserver : imgIContainerObserver
 {
   /**
@@ -96,11 +96,6 @@ interface imgIDecoderObserver : imgIContainerObserver
   void onStopFrame(in imgIRequest aRequest, in unsigned long aFrame);
 
   /**
-   * Do not implement this. It is useless and going away.
-   */
-  void onStopContainer(in imgIRequest aRequest, in imgIContainer aContainer);
-
-  /**
    * Notification for when an image is known to be animated. This should be
    * fired at the earliest possible time.
    */
@@ -118,8 +113,7 @@ interface imgIDecoderObserver : imgIContainerObserver
    * revisited in bug 505385. If you're thinking of doing something new with
    * this, please talk to bholley first.
    */
-  void onStopDecode(in imgIRequest aRequest, in nsresult status,
-                    in wstring statusArg);
+  void onStopDecode(in imgIRequest aRequest, in nsresult status);
 
   /**
    * Load notification.

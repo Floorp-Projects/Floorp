@@ -137,8 +137,7 @@ protected:
   void OnStartFrame      (uint32_t aFrame);
   void OnDataAvailable   (bool aCurrentFrame, const nsIntRect * aRect);
   void OnStopFrame       (uint32_t aFrame);
-  void OnStopContainer   (imgIContainer *aContainer);
-  void OnStopDecode      (nsresult status, const PRUnichar *statusArg);
+  void OnStopDecode      ();
   void OnDiscard         ();
   void OnImageIsAnimated ();
 
