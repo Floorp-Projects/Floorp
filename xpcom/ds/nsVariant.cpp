@@ -647,7 +647,7 @@ nsVariant::ConvertToInt64(const nsDiscriminatedUnion& data, int64_t *_retval)
     switch(tempData.mType)
     {
     case nsIDataType::VTYPE_INT32:
-        LL_I2L(*_retval, tempData.u.mInt32Value);
+        *_retval = tempData.u.mInt32Value;
         return rv;
     case nsIDataType::VTYPE_UINT32:
         LL_UI2L(*_retval, tempData.u.mUint32Value);
