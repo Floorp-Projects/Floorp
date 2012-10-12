@@ -26,7 +26,8 @@ public class PropertyAnimator implements Runnable {
         TRANSLATION_X,
         TRANSLATION_Y,
         SCROLL_X,
-        SCROLL_Y
+        SCROLL_Y,
+        HEIGHT
     }
 
     private class ElementHolder {
@@ -116,6 +117,8 @@ public class PropertyAnimator implements Runnable {
                 element.from = element.proxy.getScrollY();
             else if (element.property == Property.SCROLL_X)
                 element.from = element.proxy.getScrollX();
+            else if (element.property == Property.HEIGHT)
+                element.from = element.proxy.getHeight();
 
             if (shouldEnableHardwareLayer(element))
                 element.view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
@@ -183,6 +186,8 @@ public class PropertyAnimator implements Runnable {
             element.proxy.scrollTo(element.proxy.getScrollX(), (int) delta);
         else if (element.property == Property.SCROLL_X)
             element.proxy.scrollTo((int) delta, element.proxy.getScrollY());
+        else if (element.property == Property.HEIGHT)
+            element.proxy.setHeight((int) delta);
     }
 
     private static abstract class FramePoster {
