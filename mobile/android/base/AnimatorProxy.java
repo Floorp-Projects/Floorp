@@ -25,6 +25,9 @@ public class AnimatorProxy {
         public int getScrollY();
         public void scrollTo(int scrollX, int scrollY);
 
+        public float getAlpha();
+        public void setAlpha(float alpha);
+
         public float getTranslationX();
         public void setTranslationX(float translationX);
 
@@ -67,6 +70,14 @@ public class AnimatorProxy {
         mImpl.scrollTo(scrollX, scrollY);
     }
 
+    public float getAlpha() {
+        return mImpl.getAlpha();
+    }
+
+    public void setAlpha(float alpha) {
+        mImpl.setAlpha(alpha);
+    }
+
     public float getTranslationX() {
         return mImpl.getTranslationX();
     }
@@ -97,6 +108,7 @@ public class AnimatorProxy {
         private final RectF mAfter;
         private final Matrix mTempMatrix;
 
+        private float mAlpha;
         private float mTranslationX;
         private float mTranslationY;
 
@@ -105,6 +117,7 @@ public class AnimatorProxy {
             mAfter = new RectF();
             mTempMatrix = new Matrix();
 
+            mAlpha = 1;
             mTranslationX = 0;
             mTranslationY = 0;
 
@@ -128,6 +141,7 @@ public class AnimatorProxy {
             animation.getTransformation(AnimationUtils.currentAnimationTimeMillis(), transformation);
             transformation.getMatrix().getValues(matrix);
 
+            mAlpha = transformation.getAlpha();
             mTranslationX = matrix[Matrix.MTRANS_X];
             mTranslationY = matrix[Matrix.MTRANS_Y];
         }
@@ -198,6 +212,23 @@ public class AnimatorProxy {
         }
 
         @Override
+        public float getAlpha() {
+            return mTranslationX;
+        }
+
+        @Override
+        public void setAlpha(float alpha) {
+            if (alpha == alpha)
+                return;
+
+            mAlpha = alpha;
+
+            View view = mViewRef.get();
+            if (view != null)
+                view.invalidate();
+        }
+
+        @Override
         public float getTranslationX() {
             return mTranslationX;
         }
@@ -230,8 +261,10 @@ public class AnimatorProxy {
         @Override
         protected void applyTransformation(float interpolatedTime, Transformation t) {
             View view = mViewRef.get();
-            if (view != null)
+            if (view != null) {
+                t.setAlpha(mAlpha);
                 transformMatrix(t.getMatrix(), view);
+            }
         }
     }
 
@@ -265,6 +298,22 @@ public class AnimatorProxy {
             View view = mViewRef.get();
             if (view != null)
                 view.scrollTo(scrollX, scrollY);
+        }
+
+        @Override
+        public float getAlpha() {
+            View view = mViewRef.get();
+            if (view != null)
+                return view.getAlpha();
+
+            return 1;
+        }
+
+        @Override
+        public void setAlpha(float alpha) {
+            View view = mViewRef.get();
+            if (view != null)
+                view.setAlpha(alpha);
         }
 
         @Override
