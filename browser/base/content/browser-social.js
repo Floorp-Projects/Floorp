@@ -589,12 +589,12 @@ var SocialMenu = {
   populate: function SocialMenu_populate() {
     // This menu is only accessible through keyboard navigation.
     let submenu = document.getElementById("menu_socialAmbientMenuPopup");
-    while(submenu.hasChildNodes())
-          submenu.removeChild(submenu.firstChild);
+    while (submenu.hasChildNodes())
+      submenu.removeChild(submenu.firstChild);
     let provider = Social.provider;
     if (Social.active && provider) {
       let iconNames = Object.keys(provider.ambientNotificationIcons);
-      for each(let name in iconNames) {
+      for (let name of iconNames) {
         let icon = provider.ambientNotificationIcons[name];
         if (!icon.label || !icon.menuURL)
           continue;

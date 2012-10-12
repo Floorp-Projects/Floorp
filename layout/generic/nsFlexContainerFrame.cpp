@@ -698,7 +698,8 @@ FlexItem::FlexItem(nsIFrame* aChildFrame,
 
   // Resolve "align-self: auto" to parent's "align-items" value.
   if (mAlignSelf == NS_STYLE_ALIGN_SELF_AUTO) {
-    mAlignSelf = mFrame->GetParent()->GetStylePosition()->mAlignItems;
+    mAlignSelf =
+      mFrame->GetStyleContext()->GetParent()->GetStylePosition()->mAlignItems;
   }
 
   // If the flex item's inline axis is the same as the cross axis, then
