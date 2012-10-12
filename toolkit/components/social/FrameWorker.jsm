@@ -96,8 +96,8 @@ FrameWorker.prototype = {
     // copy the window apis onto the sandbox namespace only functions or
     // objects that are naturally a part of an iframe, I'm assuming they are
     // safe to import this way
-    let workerAPI = ['MozWebSocket', 'WebSocket', 'localStorage',
-                     'atob', 'btoa', 'clearInterval', 'clearTimeout', 'dump',
+    let workerAPI = ['WebSocket', 'localStorage', 'atob', 'btoa',
+                     'clearInterval', 'clearTimeout', 'dump',
                      'setInterval', 'setTimeout', 'XMLHttpRequest',
                      'MozBlobBuilder', 'FileReader', 'Blob',
                      'location'];
