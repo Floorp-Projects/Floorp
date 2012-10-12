@@ -146,6 +146,7 @@ CPPSRCS		= \
 		Memory.cpp \
 		Statistics.cpp \
 		StoreBuffer.cpp \
+		FindSCCs.cpp \
 		StringBuffer.cpp \
 		Unicode.cpp \
 		Xdr.cpp \
