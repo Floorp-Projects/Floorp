@@ -329,18 +329,10 @@ public:
   }
 
   // Get a specific local stream
-  uint32_t LocalStreamsLength()
-  {
-    return mLocalSourceStreams.Length();
-  }
-  LocalSourceStreamInfo* GetLocalStream(int index);
+  nsRefPtr<LocalSourceStreamInfo> GetLocalStream(int aIndex);
 
   // Get a specific remote stream
-  uint32_t RemoteStreamsLength()
-  {
-    return mRemoteSourceStreams.Length();
-  }
-  RemoteSourceStreamInfo* GetRemoteStream(int index);
+  nsRefPtr<RemoteSourceStreamInfo> GetRemoteStream(int aIndex);
 
   // Add a remote stream. Returns the index in index
   nsresult AddRemoteStream(nsRefPtr<RemoteSourceStreamInfo> aInfo, int *aIndex);
@@ -377,8 +369,6 @@ public:
 
   // Create a fake media stream
   nsresult CreateFakeMediaStream(uint32_t hint, nsIDOMMediaStream** retval);
-
-  nsPIDOMWindow* GetWindow() const { return mWindow; }
 
 private:
   PeerConnectionImpl(const PeerConnectionImpl&rhs);

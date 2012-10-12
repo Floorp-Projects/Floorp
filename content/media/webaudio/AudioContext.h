@@ -26,7 +26,8 @@ class AudioDestinationNode;
 class AudioBufferSourceNode;
 class AudioBuffer;
 
-class AudioContext MOZ_FINAL : public nsWrapperCache,
+class AudioContext MOZ_FINAL : public nsISupports,
+                               public nsWrapperCache,
                                public EnableWebAudioCheck
 {
   explicit AudioContext(nsIDOMWindow* aParentWindow);
@@ -34,8 +35,8 @@ class AudioContext MOZ_FINAL : public nsWrapperCache,
 public:
   virtual ~AudioContext();
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioContext)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioContext)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AudioContext)
 
   nsIDOMWindow* GetParentObject() const
   {
