@@ -91,7 +91,7 @@ function main() {
 
   // Create, customize & attach decoder observer
   observer = new ImageDecoderObserverStub();
-  observer.stopFrame = myOnStopFrame;
+  observer.frameComplete = myOnStopFrame;
   gMyDecoderObserver =
     Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
       .createScriptedObserver(observer);

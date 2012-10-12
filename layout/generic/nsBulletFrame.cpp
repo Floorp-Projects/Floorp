@@ -1434,14 +1434,13 @@ nsBulletFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 NS_IMETHODIMP
 nsBulletFrame::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
 {
-  if (aType == imgINotificationObserver::START_CONTAINER) {
+  if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
     return OnStartContainer(aRequest, image);
   }
 
-  if (aType == imgINotificationObserver::DATA_AVAILABLE ||
-      aType == imgINotificationObserver::FRAME_CHANGED) {
+  if (aType == imgINotificationObserver::FRAME_UPDATE) {
     // The image has changed.
     // Invalidate the entire content area. Maybe it's not optimal but it's simple and
     // always correct, and I'll be a stunned mullet if it ever matters for performance

@@ -134,7 +134,7 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
     return OnImageIsAnimated(aRequest);
   }
 
-  if (aType == imgINotificationObserver::STOP_REQUEST) {
+  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     // We should definitely have a request here
     NS_ABORT_IF_FALSE(aRequest, "no request?");
 
@@ -144,17 +144,15 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
 
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
-  if (aType != imgINotificationObserver::FRAME_CHANGED) {
-    LOOP_OVER_OBSERVERS(Notify(aRequest, aType, aData));
-  }
+  LOOP_OVER_OBSERVERS(Notify(aRequest, aType, aData));
 
-  if (aType == imgINotificationObserver::START_CONTAINER) {
+  if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     // Have to check for state changes here, since we might have been in
     // the LOADING state before.
     UpdateImageState(true);
   }
 
-  if (aType == imgINotificationObserver::STOP_REQUEST) {
+  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     uint32_t reqStatus;
     aRequest->GetImageStatus(&reqStatus);
     nsresult status =

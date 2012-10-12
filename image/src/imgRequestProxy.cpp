@@ -612,29 +612,7 @@ NS_IMETHODIMP imgRequestProxy::GetHasTransferredData(bool* hasData)
   return NS_OK;
 }
 
-void imgRequestProxy::FrameChanged(const nsIntRect *dirtyRect)
-{
-  LOG_FUNC(gImgLog, "imgRequestProxy::FrameChanged");
-
-  if (mListener && !mCanceled) {
-    // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
-    mListener->Notify(this, imgINotificationObserver::FRAME_CHANGED, dirtyRect);
-  }
-}
-
 /** imgIDecoderObserver methods **/
-
-void imgRequestProxy::OnStartDecode()
-{
-  LOG_FUNC(gImgLog, "imgRequestProxy::OnStartDecode");
-
-  if (mListener && !mCanceled) {
-    // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
-    mListener->Notify(this, imgINotificationObserver::START_DECODE, nullptr);
-  }
-}
 
 void imgRequestProxy::OnStartContainer()
 {
@@ -643,30 +621,19 @@ void imgRequestProxy::OnStartContainer()
   if (mListener && !mCanceled && !mSentStartContainer) {
     // Hold a ref to the listener while we call it, just in case.
     nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
-    mListener->Notify(this, imgINotificationObserver::START_CONTAINER, nullptr);
+    mListener->Notify(this, imgINotificationObserver::SIZE_AVAILABLE, nullptr);
     mSentStartContainer = true;
   }
 }
 
-void imgRequestProxy::OnStartFrame()
-{
-  LOG_FUNC(gImgLog, "imgRequestProxy::OnStartFrame");
-
-  if (mListener && !mCanceled) {
-    // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
-    mListener->Notify(this, imgINotificationObserver::START_FRAME, nullptr);
-  }
-}
-
-void imgRequestProxy::OnDataAvailable(const nsIntRect * rect)
+void imgRequestProxy::OnFrameUpdate(const nsIntRect * rect)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnDataAvailable");
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
     nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
-    mListener->Notify(this, imgINotificationObserver::DATA_AVAILABLE, rect);
+    mListener->Notify(this, imgINotificationObserver::FRAME_UPDATE, rect);
   }
 }
 
@@ -677,7 +644,7 @@ void imgRequestProxy::OnStopFrame()
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
     nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
-    mListener->Notify(this, imgINotificationObserver::STOP_FRAME, nullptr);
+    mListener->Notify(this, imgINotificationObserver::FRAME_COMPLETE, nullptr);
   }
 }
 
@@ -688,7 +655,7 @@ void imgRequestProxy::OnStopDecode()
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
     nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
-    mListener->Notify(this, imgINotificationObserver::STOP_DECODE, nullptr);
+    mListener->Notify(this, imgINotificationObserver::DECODE_COMPLETE, nullptr);
   }
 
   // Multipart needs reset for next OnStartContainer
@@ -724,14 +691,6 @@ void imgRequestProxy::OnStartRequest()
   GetName(name);
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStartRequest", "name", name.get());
 #endif
-
-  // Notify even if mCanceled, since OnStartRequest is guaranteed by the
-  // nsIStreamListener contract so it makes sense to do the same here.
-  if (mListener) {
-    // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
-    mListener->Notify(this, imgINotificationObserver::START_REQUEST, nullptr);
-  }
 }
 
 void imgRequestProxy::OnStopRequest(bool lastPart)
@@ -749,7 +708,7 @@ void imgRequestProxy::OnStopRequest(bool lastPart)
   if (mListener) {
     // Hold a ref to the listener while we call it, just in case.
     nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
-    mListener->Notify(this, imgINotificationObserver::STOP_REQUEST, nullptr);
+    mListener->Notify(this, imgINotificationObserver::LOAD_COMPLETE, nullptr);
   }
 
   // If we're expecting more data from a multipart channel, re-add ourself
