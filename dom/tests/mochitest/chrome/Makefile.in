@@ -48,6 +48,8 @@ MOCHITEST_CHROME_FILES = \
 		test_sandbox_bindings.xul \
 		test_selectAtPoint.html \
 		selectAtPoint.html \
+		test_bug799299.xul \
+		file_bug799299.xul \
 		$(NULL)
 
 ifeq (WINNT,$(OS_ARCH))
