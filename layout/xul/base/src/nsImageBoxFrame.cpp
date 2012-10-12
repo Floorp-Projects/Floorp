@@ -586,16 +586,16 @@ nsImageBoxFrame::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* a
     return OnStartContainer(aRequest, image);
   }
 
-  if (aType == imgINotificationObserver::STOP_CONTAINER) {
-    return OnStopContainer(aRequest);
+  if (aType == imgINotificationObserver::STOP_DECODE) {
+    return OnStopDecode(aRequest);
   }
 
-  if (aType == imgINotificationObserver::STOP_DECODE) {
+  if (aType == imgINotificationObserver::STOP_REQUEST) {
     uint32_t imgStatus;
     aRequest->GetImageStatus(&imgStatus);
     nsresult status =
         imgStatus & imgIRequest::STATUS_ERROR ? NS_ERROR_FAILURE : NS_OK;
-    return OnStopDecode(aRequest, status);
+    return OnStopRequest(aRequest, status);
   }
 
   if (aType == imgINotificationObserver::IS_ANIMATED) {
@@ -634,7 +634,7 @@ nsresult nsImageBoxFrame::OnStartContainer(imgIRequest *request,
   return NS_OK;
 }
 
-nsresult nsImageBoxFrame::OnStopContainer(imgIRequest *request)
+nsresult nsImageBoxFrame::OnStopDecode(imgIRequest *request)
 {
   nsBoxLayoutState state(PresContext());
   this->Redraw(state);
@@ -642,8 +642,8 @@ nsresult nsImageBoxFrame::OnStopContainer(imgIRequest *request)
   return NS_OK;
 }
 
-nsresult nsImageBoxFrame::OnStopDecode(imgIRequest *request,
-                                       nsresult aStatus)
+nsresult nsImageBoxFrame::OnStopRequest(imgIRequest *request,
+                                        nsresult aStatus)
 {
   if (NS_SUCCEEDED(aStatus))
     // Fire an onload DOM event.

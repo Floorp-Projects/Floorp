@@ -538,12 +538,12 @@ nsImageFrame::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aDat
     return OnDataAvailable(aRequest, aData);
   }
 
-  if (aType == imgINotificationObserver::STOP_DECODE) {
+  if (aType == imgINotificationObserver::STOP_REQUEST) {
     uint32_t imgStatus;
     aRequest->GetImageStatus(&imgStatus);
     nsresult status =
         imgStatus & imgIRequest::STATUS_ERROR ? NS_ERROR_FAILURE : NS_OK;
-    return OnStopDecode(aRequest, status);
+    return OnStopRequest(aRequest, status);
   }
 
   if (aType == imgINotificationObserver::FRAME_CHANGED) {
@@ -630,8 +630,8 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
 }
 
 nsresult
-nsImageFrame::OnStopDecode(imgIRequest *aRequest,
-                           nsresult aStatus)
+nsImageFrame::OnStopRequest(imgIRequest *aRequest,
+                            nsresult aStatus)
 {
   // Check what request type we're dealing with
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
