@@ -130,6 +130,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
         if (gc::IsMarked(x))
             return false;
         gc::Mark(trc, x, "WeakMap entry");
+        JS_ASSERT(gc::IsMarked(x));
         return true;
     }
 

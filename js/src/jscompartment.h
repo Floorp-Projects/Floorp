@@ -193,6 +193,7 @@ struct JSCompartment : public js::gc::GraphNodeBase
     enum CompartmentGCState {
         NoGC,
         Mark,
+        MarkGray,
         Sweep,
         Finished
     };
@@ -250,14 +251,27 @@ struct JSCompartment : public js::gc::GraphNodeBase
 
     bool isGCMarking() {
         if (rt->isHeapCollecting())
-            return gcState == Mark;
+            return gcState == Mark || gcState == MarkGray;
         else
             return needsBarrier();
+    }
+
+    bool isGCMarkingBlack() {
+        return gcState == Mark;
+    }
+
+    bool isGCMarkingGray() {
+        return gcState == MarkGray;
     }
 
     bool isGCSweeping() {
         return gcState == Sweep;
     }
+
+    bool isGCFinished() {
+        return gcState == Finished;
+    }
+
 
     size_t                       gcBytes;
     size_t                       gcTriggerBytes;
@@ -339,6 +353,15 @@ struct JSCompartment : public js::gc::GraphNodeBase
 
     /* During GC, stores the index of this compartment in rt->compartments. */
     unsigned                     gcIndex;
+
+    /*
+     * During GC, stores the head of a list of incoming pointers from gray cells.
+     *
+     * The objects in the list are either cross-compartment wrappers, or
+     * debugger wrapper objects.  The list link is either in the second extra
+     * slot for the former, or a special slot for the latter.
+     */
+    js::RawObject                gcIncomingGrayPointers;
 
   private:
     /*

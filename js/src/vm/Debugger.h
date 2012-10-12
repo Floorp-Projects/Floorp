@@ -252,6 +252,7 @@ class Debugger {
     static void sweepAll(FreeOp *fop);
     static void detachAllDebuggersFromGlobal(FreeOp *fop, GlobalObject *global,
                                              GlobalObjectSet::Enum *compartmentEnum);
+    static unsigned gcGrayLinkSlot();
 
     static inline JSTrapStatus onEnterFrame(JSContext *cx, Value *vp);
     static inline bool onLeaveFrame(JSContext *cx, bool ok);

@@ -195,17 +195,19 @@ void
 MarkObjectSlots(JSTracer *trc, JSObject *obj, uint32_t start, uint32_t nslots);
 
 void
-MarkCrossCompartmentObjectUnbarriered(JSTracer *trc, JSObject **obj, const char *name);
+MarkCrossCompartmentObjectUnbarriered(JSTracer *trc, RawObject src, JSObject **dst_obj,
+                                      const char *name);
 
 void
-MarkCrossCompartmentScriptUnbarriered(JSTracer *trc, JSScript **script, const char *name);
+MarkCrossCompartmentScriptUnbarriered(JSTracer *trc, RawObject src, JSScript **dst_script,
+                                      const char *name);
 
 /*
  * Mark a value that may be in a different compartment from the compartment
  * being GC'd. (Although it won't be marked if it's in the wrong compartment.)
  */
 void
-MarkCrossCompartmentSlot(JSTracer *trc, HeapSlot *s, const char *name);
+MarkCrossCompartmentSlot(JSTracer *trc, RawObject src, HeapSlot *dst_slot, const char *name);
 
 
 /*** Special Cases ***/

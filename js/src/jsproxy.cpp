@@ -2842,9 +2842,15 @@ proxy_TraceObject(JSTracer *trc, RawObject obj)
 
     // NB: If you add new slots here, make sure to change
     // js::NukeChromeCrossCompartmentWrappers to cope.
-    MarkCrossCompartmentSlot(trc, &obj->getReservedSlotRef(JSSLOT_PROXY_PRIVATE), "private");
+    MarkCrossCompartmentSlot(trc, obj, &obj->getReservedSlotRef(JSSLOT_PROXY_PRIVATE), "private");
     MarkSlot(trc, &obj->getReservedSlotRef(JSSLOT_PROXY_EXTRA + 0), "extra0");
-    MarkSlot(trc, &obj->getReservedSlotRef(JSSLOT_PROXY_EXTRA + 1), "extra1");
+
+    /*
+     * The GC can use the second reserved slot to link the cross compartment
+     * wrappers into a linked list, in which case we don't want to trace it.
+     */
+    if (!IsCrossCompartmentWrapper(obj))
+        MarkSlot(trc, &obj->getReservedSlotRef(JSSLOT_PROXY_EXTRA + 1), "extra1");
 }
 
 static void
@@ -2852,7 +2858,7 @@ proxy_TraceFunction(JSTracer *trc, RawObject obj)
 {
     // NB: If you add new slots here, make sure to change
     // js::NukeChromeCrossCompartmentWrappers to cope.
-    MarkCrossCompartmentSlot(trc, &GetCall(obj), "call");
+    MarkCrossCompartmentSlot(trc, obj, &GetCall(obj), "call");
     MarkSlot(trc, &GetFunctionProxyConstruct(obj), "construct");
     proxy_TraceObject(trc, obj);
 }
@@ -3155,7 +3161,13 @@ js::RenewProxyObject(JSContext *cx, JSObject *obj,
     obj->setSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));
     obj->setCrossCompartmentSlot(JSSLOT_PROXY_PRIVATE, priv);
     obj->setSlot(JSSLOT_PROXY_EXTRA + 0, UndefinedValue());
-    obj->setSlot(JSSLOT_PROXY_EXTRA + 1, UndefinedValue());
+
+    /*
+     * The GC can use the second reserved slot to link the cross compartment
+     * wrappers into a linked list, in which case we don't want to reset it.
+     */
+    if (!IsCrossCompartmentWrapper(obj))
+        obj->setSlot(JSSLOT_PROXY_EXTRA + 1, UndefinedValue());
 
     return obj;
 }

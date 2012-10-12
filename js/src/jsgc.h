@@ -544,6 +544,9 @@ GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount);
 extern void
 PrepareForDebugGC(JSRuntime *rt);
 
+extern void
+DelayCrossCompartmentGrayMarking(RawObject src, gc::Cell *cell);
+
 void
 InitTracer(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback);
 
