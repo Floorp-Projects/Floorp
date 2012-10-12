@@ -3869,9 +3869,9 @@ graphFootprint(STRequest * inRequest, STRun * aRun)
                         /*
                          ** Need to do this math in 64 bits.
                          */
-                        LL_I2L(ydata64, YData[traverse]);
-                        LL_I2L(spacey64, STGD_SPACE_Y);
-                        LL_I2L(mem64, (maxMemory - minMemory));
+                        ydata64 = (int64_t)YData[traverse];
+                        spacey64 = (int64_t)STGD_SPACE_Y;
+                        mem64 = (int64_t)(maxMemory - minMemory);
 
                         in64 = ydata64 * spacey64;
                         in64 /= mem64;
@@ -4085,9 +4085,9 @@ graphTimeval(STRequest * inRequest, STRun * aRun)
                         /*
                          ** Need to do this math in 64 bits.
                          */
-                        LL_I2L(ydata64, YData[traverse]);
-                        LL_I2L(spacey64, STGD_SPACE_Y);
-                        LL_I2L(mem64, (maxMemory - minMemory));
+                        ydata64 = (int64_t)YData[traverse];
+                        spacey64 = (int64_t)STGD_SPACE_Y;
+                        mem64 = (int64_t)(maxMemory - minMemory);
 
                         in64 = ydata64 * spacey64;
                         in64 /= mem64;
@@ -4303,9 +4303,9 @@ graphLifespan(STRequest * inRequest, STRun * aRun)
                         /*
                          ** Need to do this math in 64 bits.
                          */
-                        LL_I2L(ydata64, YData[traverse]);
-                        LL_I2L(spacey64, STGD_SPACE_Y);
-                        LL_I2L(mem64, (maxMemory - minMemory));
+                        ydata64 = (int64_t)YData[traverse];
+                        spacey64 = (int64_t)STGD_SPACE_Y;
+                        mem64 = (int64_t)(maxMemory - minMemory);
 
                         in64 = ydata64 * spacey64;
                         in64 /= mem64;
@@ -4536,7 +4536,7 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                         /*
                          ** Need to do this math in 64 bits.
                          */
-                        LL_I2L(spacey64, STGD_SPACE_Y);
+                        spacey64 = (int64_t)STGD_SPACE_Y;
                         weight64 = maxWeight64 - minWeight64;
 
                         in64 = YData64[traverse] * spacey64;

@@ -532,10 +532,8 @@ protected:
     static  inline  uint32_t
     PRTimeToSeconds(PRTime t_usec)
     {
-      PRTime usec_per_sec;
-      LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
-      t_usec /= usec_per_sec;
-      return  uint32_t(t_usec);
+      PRTime usec_per_sec = PR_USEC_PER_SEC;
+      return  uint32_t(t_usec /= usec_per_sec);
     }
 
     bool IsFrame();

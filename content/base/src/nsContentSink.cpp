@@ -1225,9 +1225,8 @@ nsContentSink::Notify(nsITimer *timer)
 #ifdef MOZ_DEBUG
   {
     PRTime now = PR_Now();
-    int64_t interval;
 
-    LL_I2L(interval, GetNotificationInterval());
+    int64_t interval = GetNotificationInterval();
     delay = int32_t(now - mLastNotificationTime - interval) / PR_USEC_PER_MSEC;
 
     mBackoffCount--;
