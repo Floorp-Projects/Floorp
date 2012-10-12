@@ -73,21 +73,6 @@ FormHistory.prototype = {
         return this._uuidService;
     },
 
-    // Private Browsing Service
-    // If the service is not available, null will be returned.
-    _privBrowsingSvc : undefined,
-    get privBrowsingSvc() {
-        if (this._privBrowsingSvc == undefined) {
-            if ("@mozilla.org/privatebrowsing;1" in Cc)
-                this._privBrowsingSvc = Cc["@mozilla.org/privatebrowsing;1"].
-                                        getService(Ci.nsIPrivateBrowsingService);
-            else
-                this._privBrowsingSvc = null;
-        }
-        return this._privBrowsingSvc;
-    },
-
-
     log : function log(message) {
         if (!this.debug)
             return;
@@ -143,8 +128,7 @@ FormHistory.prototype = {
 
 
     addEntry : function addEntry(name, value) {
-        if (!this.enabled ||
-            this.privBrowsingSvc && this.privBrowsingSvc.privateBrowsingEnabled)
+        if (!this.enabled)
             return;
 
         this.log("addEntry for " + name + "=" + value);
