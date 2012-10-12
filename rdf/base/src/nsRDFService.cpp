@@ -241,7 +241,7 @@ struct DateHashEntry : public PLDHashEntryHdr {
         // xor the low 32 bits with the high 32 bits.
         PRTime t = *static_cast<const PRTime *>(key);
         int64_t h64, l64;
-        LL_USHR(h64, t, 32);
+        h64 = t >> 32;
         l64 = LL_INIT(0, 0xffffffff);
         l64 &= t;
         int32_t h32, l32;

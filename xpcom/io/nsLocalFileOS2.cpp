@@ -88,12 +88,12 @@ myLL_L2II(int64_t result, int32_t *hi, int32_t *lo )
                        // and I am a wimp.
 
     // shift the hi word to the low word, then push it into a long.
-    LL_SHR(a64, result, 32);
+    a64 = result >> 32;
     LL_L2I(*hi, a64);
 
     // shift the low word to the hi word first, then shift it back.
-    LL_SHL(b64, result, 32);
-    LL_SHR(a64, b64, 32);
+    b64 = result << 32;
+    a64 = b64 >> 32;
     LL_L2I(*lo, a64);
 }
 
