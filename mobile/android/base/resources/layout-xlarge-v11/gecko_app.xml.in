@@ -15,9 +15,8 @@
                                 android:background="@drawable/tabs_tray_bg_repeat"
                                 gecko:sidebar="true"/>
 
-   <view class="org.mozilla.gecko.GeckoApp$MainLayout"
-         android:id="@+id/main_layout"
-         style="@style/Screen.Transparent">
+   <LinearLayout android:id="@+id/main_layout"
+                 style="@style/Screen.Transparent">
  
         <!-- BrowserToolbar will be added dynamically -->
         
@@ -42,6 +41,6 @@
                                          style="@style/FindBar"
                                          android:visibility="gone"/>
 
-    </view>
+    </LinearLayout>
 
 </RelativeLayout>
