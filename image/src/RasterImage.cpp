@@ -2792,8 +2792,10 @@ RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
       subimage.ScaleRoundOut(scale.width, scale.height);
     }
 
-    // If we're not waiting for exactly this result, ask for it.
-    else if (!(mScaleResult.status == SCALE_PENDING && mScaleResult.scale == scale)) {
+    // If we're not waiting for exactly this result, and there's only one
+    // instance of this image on this page, ask for a scale.
+    else if (!(mScaleResult.status == SCALE_PENDING && mScaleResult.scale == scale) &&
+             mLockCount == 1) {
       // If we have an oustanding request, signal it to stop (if it can).
       if (mScaleRequest) {
         mScaleRequest->stopped = true;
