@@ -33,7 +33,7 @@ sm_process_event (sm_table_t *tbl, sm_event_t *event)
         (event_id < tbl->max_event)) {
         rc = SM_RC_DEF_CONT;
         /*
-         * Save some paramters for debuging, the event handler may 
+         * Save some paramters for debuging, the event handler may
          * free the fcb once returned.
          */
         fsm_type = fcb->fsm_type;

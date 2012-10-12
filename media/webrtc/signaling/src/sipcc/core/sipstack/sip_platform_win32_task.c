@@ -253,7 +253,7 @@ sip_platform_task_loop (void *arg)
          * queue. Shorten the socket select time out to come back and
          * check the message queue for the message that might be left on
          * the queue.
-         */ 
+         */
         if (i >= MAX_SIP_MESSAGES) {
             timeout.tv_usec = SIP_SELECT_QUICK_TIMEOUT;
         } else {

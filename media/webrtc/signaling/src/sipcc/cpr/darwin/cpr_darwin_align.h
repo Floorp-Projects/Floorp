@@ -19,12 +19,12 @@
 #define ALIGN_MASK(alignment)	(~((alignment) - 1))
 
 /*
- * Macro to set the minimum alignment 
+ * Macro to set the minimum alignment
  */
 #define ALIGN_MIN(align,align_min) (((align) > (align_min)) ? (align) : (align_min))
 
 /*
- * Macro to round up or down "val" to be a multiple of "align", assuming 
+ * Macro to round up or down "val" to be a multiple of "align", assuming
  * "align" is a power of 2. if "align" is zero then no action will
  * be performed
  */

@@ -16,7 +16,7 @@
 
 #define SIP_TCP_NOT_CONNECTED 0
 #define SIP_TCP_CONNECTED 1
-	 
+
 typedef struct _sendData
 {
     struct _sendData *next;

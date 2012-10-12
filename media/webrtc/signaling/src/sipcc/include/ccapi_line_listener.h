@@ -13,9 +13,9 @@
  * @param [in] line - line id
  * @param [in] lineInfo - line info reference
  * @return cc_call_handle_t - handle of the call created
- * NOTE: The memory associated with deviceInfo will be freed immediately upon 
- * return from this method. If the application wishes to retain a copy it should 
- * invoke CCAPI_Line_retainlineInfo() API. once the info is retained it can be 
+ * NOTE: The memory associated with deviceInfo will be freed immediately upon
+ * return from this method. If the application wishes to retain a copy it should
+ * invoke CCAPI_Line_retainlineInfo() API. once the info is retained it can be
  * released by invoking CCAPI_Line_releaseLineInfo() API
  */
 void CCAPI_LineListener_onLineEvent(ccapi_line_event_e line_event, cc_lineid_t line, cc_lineinfo_ref_t lineInfo);

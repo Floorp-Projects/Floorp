@@ -43,8 +43,8 @@ strlib_malloc (const char *str, int length, const char *fname, int line)
 
     // if specified length is unknown or invalid... then calculate it
     // Length < 0 is not expected, but since length is an int, it could
-    // theoritically be negative.  [ This check accounts for that, and 
-    // avoids a static analysis warning related to same ] 
+    // theoritically be negative.  [ This check accounts for that, and
+    // avoids a static analysis warning related to same ]
     if ((length == LEN_UNKNOWN) || (length < 0)) {
         length = strlen(str);
     }
@@ -232,7 +232,7 @@ strlib_free (string_t str)
         temp->signature = 0;
         cpr_free(temp);
     }
-    
+
     return;
 }
 
@@ -277,7 +277,7 @@ strlib_open (string_t str, int length, const char *fname, int line)
             strlib_free(str);
         }
     }
-    
+
     return (ret_str);
 }
 

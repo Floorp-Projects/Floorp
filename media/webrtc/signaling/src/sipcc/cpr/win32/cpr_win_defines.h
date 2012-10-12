@@ -75,7 +75,7 @@ void cprEnableSwap (void);
  * Msg queue information needed to hide OS differences in implementation.
  * To use msg queues, the application code may pass in a name to the
  * create function for msg queues. CPR does not use this field, it is
- * solely for the convenience of the application and to aid in debugging. 
+ * solely for the convenience of the application and to aid in debugging.
  */
 typedef struct {
     const char *name;

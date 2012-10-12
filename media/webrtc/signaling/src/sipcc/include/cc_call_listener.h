@@ -17,7 +17,7 @@
  */
 
 /**
- * Notification for the creation of a new call 
+ * Notification for the creation of a new call
  * @param call_handle call handle that is created.
  * @param call_state the call state
  * @param cc_cause cause that the call is created
@@ -105,9 +105,9 @@ void CC_CallListener_callInfoChanged(cc_call_handle_t call_handle,
 		cc_call_type_t call_type);
 
 /**
- * Update Global Call Identification for a call. GCID can be used to collapse 
- * multiple call bubbles for the same call to a single call bubble. Please refer 
- * to the collpased call bubble as specified by the roundtable UI Spec. 
+ * Update Global Call Identification for a call. GCID can be used to collapse
+ * multiple call bubbles for the same call to a single call bubble. Please refer
+ * to the collpased call bubble as specified by the roundtable UI Spec.
  * @param call_handle
  * @param gcid global call identification
  * @return void
@@ -115,7 +115,7 @@ void CC_CallListener_callInfoChanged(cc_call_handle_t call_handle,
 void CC_CallListener_callGCIDChanged(cc_call_handle_t call_handle, char* gcid);
 
 /**
- * Update the placed call information. This API reports the dialed digits for the 
+ * Update the placed call information. This API reports the dialed digits for the
  * placed call. The number specified by this API should be logged in the placed call information.
  * @param call_handle call_handle
  * @param cld_name called party name

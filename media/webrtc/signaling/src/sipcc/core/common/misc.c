@@ -17,7 +17,7 @@
 #include "debug.h"
 #include "cpr_string.h"
 #include "cpr_stdlib.h"
- 
+
 /*--------------------------------------------------------------------------
  * Local definitions
  *--------------------------------------------------------------------------
@@ -116,7 +116,7 @@ phone_reset (DeviceResetType resetType)
 }
 
 
-/* 
+/*
  * Methods below should be moved to plat as they are exported as an external API.
  * For now keeping all miscellaneous methods here.
  */

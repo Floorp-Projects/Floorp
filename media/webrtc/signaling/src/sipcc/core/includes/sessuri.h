@@ -34,7 +34,7 @@ typedef enum {
 
 /**
  * parameter tags/names
- * 
+ *
  */
 
 #define LINE_TAG "line"
@@ -157,13 +157,13 @@ typedef union params {
 typedef struct uri_s {
     scheme_e     scheme;
     char         scheme_specific[MAX_LEN_SCHEME_INFO];
-    union 
+    union
     {
         call_session_param_t call_session_param;
-        file_session_param_t file_session_param;   
+        file_session_param_t file_session_param;
         raw_rtp_session_param_t raw_session_param;
     }param;
-    
+
 } uri_t;
 
 int parse_uri(const char *uri, uri_t *uri_info);

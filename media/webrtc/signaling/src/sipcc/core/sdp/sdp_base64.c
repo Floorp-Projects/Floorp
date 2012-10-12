@@ -83,16 +83,16 @@ int base64_est_encode_size_bytes (int raw_size_bytes)
 {
     int length;
 
-    /* 
+    /*
      * Find the number of bytes needed to represent the data
-     * using a 4/3 expansion ratio. That result must be 
+     * using a 4/3 expansion ratio. That result must be
      * rounded to the next higher multiple of four to account
      * for padding. Then add in a term to account for any '\n's
      * added.
      */
-    length = ((((raw_size_bytes * 4 + 2)/ 3) + 3) & ~(0x3)) + 
+    length = ((((raw_size_bytes * 4 + 2)/ 3) + 3) & ~(0x3)) +
 	raw_size_bytes / MAX_BASE64_LINE_LENGTH;
-    
+
     return length;
 }
 
@@ -113,7 +113,7 @@ int base64_est_decode_size_bytes (int base64_size_bytes)
 {
     int length;
 
-    length = (base64_size_bytes * 3 + 3) / 4; 
+    length = (base64_size_bytes * 3 + 3) / 4;
     return length;
 }
 
@@ -137,8 +137,8 @@ int base64_est_decode_size_bytes (int base64_size_bytes)
  *	but at completion holds the number of bytes converted.
  *
  * RETURN VALUE
- *  base64_success if the buffer was successfully converted, the 
- *  appropriate error code otherwise. 
+ *  base64_success if the buffer was successfully converted, the
+ *  appropriate error code otherwise.
  *
  *  The dest parameter holds the converted data.
  *
@@ -169,7 +169,7 @@ base64_result_t base64_encode(unsigned char *src, int src_bytes, unsigned char *
 	line_count += 4;
 
 	if ((j+3) < dmax) {
-	    
+
 	    /* Find mapping of upper 6 bits */
 	    index = (src[i] >> 2) & 0x3F;
 	    dest[j++] = raw_to_base64_table[index];
@@ -192,7 +192,7 @@ base64_result_t base64_encode(unsigned char *src, int src_bytes, unsigned char *
 
     /* Check to see if any more work must be done */
     if (i<src_bytes) {
-	
+
 	/* Check to see if a newline should be output */
 	if (line_count>=MAX_BASE64_LINE_LENGTH) {
 	    if (j<dmax){
@@ -255,8 +255,8 @@ base64_result_t base64_encode(unsigned char *src, int src_bytes, unsigned char *
  *	but at completion holds the number of bytes converted.
  *
  * RETURN VALUE
- *  base64_success if the buffer was successfully converted, the 
- *  appropriate error code otherwise. 
+ *  base64_success if the buffer was successfully converted, the
+ *  appropriate error code otherwise.
  *
  *  The dest parameter holds the converted data.
  *
@@ -265,14 +265,14 @@ base64_result_t base64_encode(unsigned char *src, int src_bytes, unsigned char *
 base64_result_t base64_decode(unsigned char *src, int src_bytes, unsigned char *dest, int *dest_bytes)
 {
     int i, j = 0;
-    int sindex = 0;			/* Current NON-whitespace source 
+    int sindex = 0;			/* Current NON-whitespace source
 					 * index */
-    int pad_count=0;			/* Number of padding characters 
+    int pad_count=0;			/* Number of padding characters
 					 * encountered */
     int dest_size_bytes = *dest_bytes;	/* Save size of destination buffer */
     unsigned char cindex;		/* The current Base64 character to
 					 * process */
-    unsigned char val;			/* The value of the current Base64 
+    unsigned char val;			/* The value of the current Base64
 					 * character */
 
     *dest_bytes = 0;
@@ -330,9 +330,9 @@ base64_result_t base64_decode(unsigned char *src, int src_bytes, unsigned char *
 		/* Fill Top 4 bits */
 		dest[j] = (val << 4) & 0xF0;
 	    } else {
-		/* 
+		/*
 		 * Check to see if there is any more data present.
-		 * Next base64 character MUST be a pad character and 
+		 * Next base64 character MUST be a pad character and
 		 * the rest of this data MUST be zero.
 		 *
 		 * If this is not the end of data then a buffer overrun
@@ -353,9 +353,9 @@ base64_result_t base64_decode(unsigned char *src, int src_bytes, unsigned char *
 		/* Fill Top 2 bits */
 		dest[j] = (val << 6) & 0xC0;
 	    } else {
-		/* 
+		/*
 		 * Check to see if there is any more data present.
-		 * Next base64 character MUST be a pad character and 
+		 * Next base64 character MUST be a pad character and
 		 * the rest of this data MUST be zero.
 		 *
 		 * If this is not the end of data then a buffer overrun

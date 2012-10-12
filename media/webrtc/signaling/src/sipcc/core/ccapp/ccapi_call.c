@@ -52,7 +52,7 @@ void CCAPI_Call_retainCallInfo(cc_callinfo_ref_t ref) {
  */
 void CCAPI_Call_releaseCallInfo(cc_callinfo_ref_t ref) {
     if (ref != NULL ) {
-	DEF_DEBUG(DEB_F_PREFIX"ref=0x%x: count=%d", 
+	DEF_DEBUG(DEB_F_PREFIX"ref=0x%x: count=%d",
            DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_Call_releaseCallInfo"), ref, ref->ref_count);
 	ref->ref_count--;
 	if ( ref->ref_count == 0 ) {
@@ -79,7 +79,7 @@ cc_lineid_t CCAPI_Call_getLine(cc_call_handle_t call_handle){
 }
 
 /**
- * Originate call 
+ * Originate call
  * Goes offhook and dials digits if specified
  * @param [in] handle - call handle
  * @param [in] video_pref - video direction desired on call
@@ -162,7 +162,7 @@ cc_return_t CCAPI_Call_redial(cc_call_handle_t handle, cc_sdp_direction_t video_
 }
 
 /**
- * Initiate Call Forward All 
+ * Initiate Call Forward All
  * @param [in] handle - call handle
  * @return SUCCESS or FAILURE
  */
@@ -259,7 +259,7 @@ cc_return_t CCAPI_Call_transferStart(cc_call_handle_t handle, cc_sdp_direction_t
  * @param [in] video_pref - video direction desired on consult call
  * @return SUCCESS or FAILURE
  */
-cc_return_t CCAPI_Call_transferComplete(cc_call_handle_t handle, cc_call_handle_t phandle, 
+cc_return_t CCAPI_Call_transferComplete(cc_call_handle_t handle, cc_call_handle_t phandle,
                               cc_sdp_direction_t video_pref){
   return CC_CallFeature_transfer(handle, phandle, video_pref);
 }
@@ -299,7 +299,7 @@ cc_return_t CCAPI_Call_joinAcrossLine(cc_call_handle_t handle, cc_call_handle_t 
  * @param [in] speed - speedDial Number
  * @return SUCCESS or FAILURE
  */
-cc_return_t CCAPI_Call_blfCallPickup(cc_call_handle_t handle, 
+cc_return_t CCAPI_Call_blfCallPickup(cc_call_handle_t handle,
                   cc_sdp_direction_t video_pref, cc_string_t speed){
   return CC_CallFeature_blfCallPickup(handle, video_pref, speed);
 }
@@ -347,7 +347,7 @@ cc_return_t CCAPI_Call_sendInfo (cc_call_handle_t handle, cc_string_t infopackag
 cc_return_t CCAPI_Call_setAudioMute (cc_call_handle_t handle, cc_boolean val) {
 	unsigned int session_id = ccpro_get_sessionId_by_callid(GET_CALL_ID(handle));
         session_data_t * sess_data_p = (session_data_t *)findhash(session_id);
-	DEF_DEBUG(DEB_F_PREFIX": val=%d, handle=%d datap=%x", 
+	DEF_DEBUG(DEB_F_PREFIX": val=%d, handle=%d datap=%x",
            DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_Call_setAudioMute"), val, handle, sess_data_p);
 	if ( sess_data_p != NULL ) {
 		sess_data_p->audio_mute = val;
@@ -365,7 +365,7 @@ cc_return_t CCAPI_Call_setAudioMute (cc_call_handle_t handle, cc_boolean val) {
 cc_return_t CCAPI_Call_setVideoMute (cc_call_handle_t handle, cc_boolean val){
 	unsigned int session_id = ccpro_get_sessionId_by_callid(GET_CALL_ID(handle));
         session_data_t * sess_data_p = (session_data_t *)findhash(session_id);
-	DEF_DEBUG(DEB_F_PREFIX": val=%d, handle=%d datap=%x", 
+	DEF_DEBUG(DEB_F_PREFIX": val=%d, handle=%d datap=%x",
            DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_Call_setVideoMute"), val, handle, sess_data_p);
 	if ( sess_data_p != NULL ) {
 		sess_data_p->video_mute = val;

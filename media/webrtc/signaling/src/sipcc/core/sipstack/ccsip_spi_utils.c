@@ -61,7 +61,7 @@ sipSPI_validate_hostname (char *str)
     char *tok;
     char ip_addr_out[MAX_IPADDR_STR_LEN];
     char *strtok_state;
-    
+
     if (str == NULL) {
         return FALSE;
     }

@@ -70,7 +70,7 @@ void dp_int_update_key_string(line_t line, callid_t call_id, char *digits);
 void dp_int_store_digit_string(line_t line, callid_t call_id, char *digit_str);
 void dp_int_update_keypress(line_t line, callid_t call_id, unsigned char digit);
 void dp_int_dial_immediate(line_t line, callid_t call_id, boolean collect_more,
-                           char *digit_str, char *g_call_id, 
+                           char *digit_str, char *g_call_id,
                            monitor_mode_t monitor_mode);
 void dp_int_do_redial(line_t line, callid_t call_id);
 void dp_int_onhook(line_t line, callid_t call_id);

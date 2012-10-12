@@ -13,7 +13,7 @@ typedef enum
     AudioCodecMask_LINEAR = 2,
     AudioCodecMask_G722 = 4,
     AudioCodecMask_iLBC = 16,
-    AudioCodecMask_iSAC = 32 
+    AudioCodecMask_iSAC = 32
 
 } AudioCodecMask;
 

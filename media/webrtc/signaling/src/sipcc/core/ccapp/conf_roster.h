@@ -7,7 +7,7 @@
 
 #include "sll_lite.h"
 #include "cpr_string.h"
-#include "cc_constants.h" 
+#include "cc_constants.h"
 #include "cpr_stdio.h"
 #include "ccapi_conf_roster.h"
 
@@ -17,8 +17,8 @@ typedef struct cc_call_conferenceParticipant_Info_t_ {
     cc_participant_ref_t         callid;
     string_t                     participantName;
     string_t                     participantNumber;
-    cc_conf_participant_status_t participantStatus;     
-    cc_call_security_t           participantSecurity;             
+    cc_conf_participant_status_t participantStatus;
+    cc_call_security_t           participantSecurity;
     string_t                     endpointUri;
     cc_boolean                   canRemoveOtherParticipants;
 } cc_call_conferenceParticipant_Info_t;
@@ -31,7 +31,7 @@ typedef struct cc_call_conference_Info_t_ {
     int32_t              participantMax;
     int32_t              participantCount;
     cc_participant_ref_t myParticipantId;
-    sll_lite_list_t      currentParticipantsList;   
+    sll_lite_list_t      currentParticipantsList;
 } cc_call_conference_Info_t;
 
 // reference to above structure

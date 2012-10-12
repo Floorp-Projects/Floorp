@@ -56,15 +56,15 @@ extern "C"
 
 /**
  * configCtlFetchReq
- * 
- * This function tells the config manager to fetch the CTL file 
- * and then fetch the config  from the CUCM. It is expected that 
+ *
+ * This function tells the config manager to fetch the CTL file
+ * and then fetch the config  from the CUCM. It is expected that
  * this will result in processing of
  * the config file after the config managers response is received.
  *
- * The response received for this request is asynchronous and 
+ * The response received for this request is asynchronous and
  * should be handled via event provided by config manager.
- * The CCAPI_Config_reponse api needs to be called for the 
+ * The CCAPI_Config_reponse api needs to be called for the
  * handling of the response to the fetch request
  *
  */
@@ -87,14 +87,14 @@ void configCtlFetchReq(int device_handle)
 
 /**
  * configFetchReq
- * 
+ *
  * This function tells the config manager to fetch the latest config
  * from the CUCM. It is expected that this will result in processing of
  * the config file after the config managers response is received.
  *
- * The response received for this request is asynchronous and 
+ * The response received for this request is asynchronous and
  * should be handled via event provided by config manager.
- * The CCAPI_Config_reponse api needs to be called for the 
+ * The CCAPI_Config_reponse api needs to be called for the
  * handling of the response to the fetch request
  *
  * There are cases where only the config file is needed, for eg: during
@@ -115,7 +115,7 @@ void configFetchReq(int device_handle)
  * and a new config file needs to be downloaded.
  *
  * The error could be XML format error or minimum config not being
- * present in the config file.  It is expected that 
+ * present in the config file.  It is expected that
  * this will result in processing of
  * the config file after the config managers response is received.
  *
@@ -185,12 +185,12 @@ void ccmedia_flash_once_timer_callback (void)
 
 /**
  * dialPlanFetchReq
- * 
+ *
  * This function tells the get file request service to fetch the latest dial
  * plan from the CUCM.
  *
  * @param device_handle [in] handle of the device, the response is for
- * @param dialPlanFileName [in] the name of dialplan file to retrieve 
+ * @param dialPlanFileName [in] the name of dialplan file to retrieve
  *
  */
 cc_boolean dialPlanFetchReq(int device_handle, char* dialPlanFileName)
@@ -200,12 +200,12 @@ cc_boolean dialPlanFetchReq(int device_handle, char* dialPlanFileName)
 
 /**
  * fcpFetchReq
- * 
+ *
  * This function tells the get file request service to fetch the latest fcp
  * file from the CUCM.
  *
  * @param device_handle [in] handle of the device, the response is for
- * @param dialPlanFileName [in] the name of fcp file to retrieve 
+ * @param dialPlanFileName [in] the name of fcp file to retrieve
  *
  */
 cc_boolean fcpFetchReq(int device_handle, char* fcpFileName)
@@ -311,8 +311,8 @@ CC_SIPCCService* CC_SIPCCService::_self = NULL;
 CC_SIPCCService::CC_SIPCCService()
 : loggingMask(0),
   bCreated(false),
-  bStarted(false), 
-  m_lock("CC_SIPCCService"), 
+  bStarted(false),
+  m_lock("CC_SIPCCService"),
   bUseConfig(false)
 {
 	// Only one instance allowed!
@@ -526,7 +526,7 @@ void CC_SIPCCService::applyLoggingMask (int newMask)
     	CSFLogWarn( logTag, "Value of 0x%x specified for mask includes at least one bit value that exceeds the maximum supported bitfield value. "
                     "Ignoring unsupported bits.", newMask);
     }
-    
+
     CSFLogDebugS( logTag, "Applying a sipcc log mask = " << newMask);
 
     loggingMask = newMask & (HAS_21_BITS);

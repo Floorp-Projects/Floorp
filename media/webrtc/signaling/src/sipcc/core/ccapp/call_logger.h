@@ -6,7 +6,7 @@
 #define __CALL_LOGGER_H__
 
 #include "cc_types.h"
-#include "CCProvider.h" 
+#include "CCProvider.h"
 
 void calllogger_init_call_log(cc_call_log_t *log);
 void calllogger_copy_call_log(cc_call_log_t *dest, cc_call_log_t * src);

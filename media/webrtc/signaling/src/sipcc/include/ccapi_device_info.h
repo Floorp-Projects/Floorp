@@ -15,7 +15,7 @@ cc_deviceinfo_ref_t CCAPI_DeviceInfo_getDeviceHandle() ;
 
 /**
  * gets the device name
- * @param [in] handle - reference to device info 
+ * @param [in] handle - reference to device info
  * @returns - a pointer to the device name
  * NOTE: The memory for return string doesn't need to be freed it will be freed when the info reference is freed
  */
@@ -23,38 +23,38 @@ cc_string_t CCAPI_DeviceInfo_getDeviceName(cc_deviceinfo_ref_t handle) ;
 
 /**
  * gets the device idle status
- * @param [in] handle - reference to device info 
+ * @param [in] handle - reference to device info
  * @returns boolean - idle status
  */
 cc_boolean CCAPI_DeviceInfo_isPhoneIdle(cc_deviceinfo_ref_t handle) ;
 
 /**
  * gets the service state
- * @param [in] handle - reference to device info 
- * @returns cc_service_state_t - INS/OOS 
+ * @param [in] handle - reference to device info
+ * @returns cc_service_state_t - INS/OOS
  */
 cc_service_state_t CCAPI_DeviceInfo_getServiceState(cc_deviceinfo_ref_t handle) ;
 
 /**
  * gets the service cause
- * @param [in] handle - reference to device info 
+ * @param [in] handle - reference to device info
  * @returns cc_service_cause_t - reason for service state
  */
 cc_service_cause_t CCAPI_DeviceInfo_getServiceCause(cc_deviceinfo_ref_t handle) ;
 
 /**
  * gets the cucm mode
- * @param [in] handle - reference to device info 
+ * @param [in] handle - reference to device info
  * @returns cc_cucm_mode_t - CUCM mode
  */
 cc_cucm_mode_t CCAPI_DeviceInfo_getCUCMMode(cc_deviceinfo_ref_t handle) ;
 
 /**
  * gets list of handles to calls on the device
- * @param [in] handle - reference to device info 
+ * @param [in] handle - reference to device info
  * @param [out] handles - array of call handle to be returned
  * @param [in,out] count number allocated in array/elements returned
- * @returns 
+ * @returns
  */
 void CCAPI_DeviceInfo_getCalls(cc_deviceinfo_ref_t handle, cc_call_handle_t handles[], cc_uint16_t *count) ;
 
@@ -66,15 +66,15 @@ void CCAPI_DeviceInfo_getCalls(cc_deviceinfo_ref_t handle, cc_call_handle_t hand
  * @param [in,out] count number allocated in array/elements returned
  * @returns
  */
-void CCAPI_DeviceInfo_getCallsByState(cc_deviceinfo_ref_t handle, cc_call_state_t state, 
+void CCAPI_DeviceInfo_getCallsByState(cc_deviceinfo_ref_t handle, cc_call_state_t state,
                 cc_call_handle_t handles[], cc_uint16_t *count) ;
 
 /**
  * gets list of handles to lines on the device
- * @param [in] handle - reference to device info 
+ * @param [in] handle - reference to device info
  * @param [in] handles - array of line handle to be returned
  * @param [in,out] count - pointer to count in array in-> memory allocated out-> num populated
- * @returns 
+ * @returns
  */
 void CCAPI_DeviceInfo_getLines(cc_deviceinfo_ref_t handle, cc_lineid_t handles[], cc_uint16_t *count) ;
 
@@ -89,10 +89,10 @@ void CCAPI_DeviceInfo_getFeatures(cc_deviceinfo_ref_t handle, cc_featureinfo_ref
 
 /**
  * gets handles of call agent servers
- * @param [in] handle - reference to device info 
+ * @param [in] handle - reference to device info
  * @param [in] handles - array of handles to call agent servers
  * @param [in,out] count - pointer to count in array in-> memory allocated out-> num populated
- * @returns 
+ * @returns
  */
 void CCAPI_DeviceInfo_getCallServers(cc_deviceinfo_ref_t handle, cc_callserver_ref_t handles[], cc_uint16_t *count) ;
 
@@ -165,14 +165,14 @@ cc_boolean CCAPI_DeviceInfo_isReceivedCallLoggingEnabled (cc_deviceinfo_ref_t ha
 
 /**
  * gets register/in service time
- * This value should be read once the register completes successfully 
+ * This value should be read once the register completes successfully
  * @param [in] handle - reference to device info
  * @returns long - time registration completed successfully.
  */
 long long CCAPI_DeviceInfo_getRegTime (cc_deviceinfo_ref_t handle);
 
 /**
- * Returns dot notation IP address used for registering phone. If phone is not 
+ * Returns dot notation IP address used for registering phone. If phone is not
  * registered, then "0.0.0.0" is returned.
  * @param [in] handle - reference to device info
  * @return  cc_string_t  IP address used to register phone.
@@ -195,7 +195,7 @@ cc_boolean CCAPI_DeviceInfo_isVideoCapEnabled(cc_deviceinfo_ref_t handle);
 
 /**
  * gets the device mwi_lamp state
- * @param [in] handle - reference to device info 
+ * @param [in] handle - reference to device info
  * @returns boolean - mwi_lamp state
  */
 cc_boolean CCAPI_DeviceInfo_getMWILampState(cc_deviceinfo_ref_t handle);

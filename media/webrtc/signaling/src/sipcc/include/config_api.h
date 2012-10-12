@@ -10,15 +10,15 @@
 
 /**
  * configFetchReq
- * 
- * This function tells the config manager to fetch the CTL file 
- * and then fetch the config  from the CUCM. It is expected that 
+ *
+ * This function tells the config manager to fetch the CTL file
+ * and then fetch the config  from the CUCM. It is expected that
  * this will result in processing of
  * the config file after the config managers response is received.
  *
- * The response received for this request is asynchronous and 
+ * The response received for this request is asynchronous and
  * should be handled via event provided by config manager.
- * The CCAPI_Config_reponse api needs to be called for the 
+ * The CCAPI_Config_reponse api needs to be called for the
  * handling of the response to the fetch request
  *
  */
@@ -31,7 +31,7 @@ void configFetchReq(int device_handle);
  * and a new config file needs to be downloaded.
  *
  * The error could be XML format error or minimum config not being
- * present in the config file.  It is expected that 
+ * present in the config file.  It is expected that
  * this will result in processing of
  * the config file after the config managers response is received.
  *
@@ -81,29 +81,29 @@ void configApplyConfigNotify(cc_string_t config_version,
 
 /**
  * dialPlanFetchReq
- * 
+ *
  * This function tells the get file request service to fetch the latest dial
  * plan from the CUCM.
  *
  * @param device_handle [in] handle of the device, the response is for
- * @param dialPlanFileName [in] the name of dialplan file to retrieve 
+ * @param dialPlanFileName [in] the name of dialplan file to retrieve
  * @return cc_boolean indicating success/failure
  *
  */
-cc_boolean dialPlanFetchReq(int device_handle, char* dialPlanFileName); 
+cc_boolean dialPlanFetchReq(int device_handle, char* dialPlanFileName);
 
 /**
  * fcpFetchReq
- * 
+ *
  * This function tells the get file request service to fetch the latest fcp
  * file from the CUCM.
  *
  * @param device_handle [in] handle of the device, the response is for
- * @param dialPlanFileName [in] the name of fcp file to retrieve 
+ * @param dialPlanFileName [in] the name of fcp file to retrieve
 *  @return cc_boolean indicating success/failure
  *
  */
-cc_boolean fcpFetchReq(int device_handle, char* fcpFileName); 
+cc_boolean fcpFetchReq(int device_handle, char* fcpFileName);
 
 
 cc_boolean CCAPI_Config_set_server_address(const char *ip_address);

@@ -81,7 +81,7 @@ void CC_SIPCCDevice::enableVideo(bool enable)
     CCAPI_Device_enableVideo(deviceHandle, enable);
 }
 
-void CC_SIPCCDevice::enableCamera(bool enable)    
+void CC_SIPCCDevice::enableCamera(bool enable)
 {
     CCAPI_Device_enableCamera(deviceHandle, enable);
 }

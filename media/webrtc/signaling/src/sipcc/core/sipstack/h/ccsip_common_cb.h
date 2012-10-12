@@ -21,7 +21,7 @@
 typedef enum {
     SUBNOT_CB,
     PUBLISH_CB,
-    UNSOLICIT_NOTIFY_CB 
+    UNSOLICIT_NOTIFY_CB
 } ccsip_cb_type_e;
 
 

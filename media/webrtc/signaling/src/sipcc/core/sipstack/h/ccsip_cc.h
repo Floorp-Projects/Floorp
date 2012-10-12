@@ -29,7 +29,7 @@ void sip_cc_release_complete(int gsm_call_id, int line, cc_causes_t cause);
 void sip_cc_feature(int call_id, int line, int feature, void *data);
 void sip_cc_feature_ack(int call_id, int line, int feature, void *data,
                         cc_causes_t cause);
-void sip_cc_mwi(int call_id, int line, boolean on, int type, 
+void sip_cc_mwi(int call_id, int line, boolean on, int type,
                 int newCount, int oldCount, int hpNewCount, int hpOldCount);
 void sip_cc_mv_msg_body_to_cc_msg(cc_msgbody_info_t *cc_msg,
                                   sipMessage_t *sip_msg);

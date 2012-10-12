@@ -122,8 +122,8 @@ int8_t errno_table[] =
  *
  * @brief Translates to "cpr_errno" Macro
  *
- * pSIPCC uses the cpr_errno macro to print the errno 
- * for error conditions. This function is used to map the standard 
+ * pSIPCC uses the cpr_errno macro to print the errno
+ * for error conditions. This function is used to map the standard
  * errno to standard CPR errors
  *
  * @return The CPR error number

@@ -77,7 +77,7 @@ namespace CSF
            @return true or false
          */
         virtual bool endCall() = 0;
-        
+
         /**
            Send digits on the call - can be invoked either to dial additional digits or send DTMF
 
@@ -103,7 +103,7 @@ namespace CSF
         virtual bool redial (cc_sdp_direction_t video_pref) = 0;
 
         /**
-           Initiate Call Forward All 
+           Initiate Call Forward All
 
            @return true or false
          */
@@ -152,7 +152,7 @@ namespace CSF
 
            @return true or false
          */
-        virtual bool transferComplete (CC_CallPtr otherLeg, 
+        virtual bool transferComplete (CC_CallPtr otherLeg,
                                        cc_sdp_direction_t video_pref) = 0;
 
         /**
@@ -220,8 +220,8 @@ namespace CSF
            NOTE: The mute state is persisted within the stack and shall be remembered across hold/resume.
          */
         virtual bool muteAudio(void) = 0;
-        
-        
+
+
         /**
            API to unmute audio
 
@@ -238,8 +238,8 @@ namespace CSF
            NOTE: The mute state is persisted within the stack and shall be remembered across hold/resume.
          */
         virtual bool muteVideo(void) = 0;
-        
-        
+
+
         /**
            API to unmute video
 

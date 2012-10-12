@@ -99,7 +99,7 @@ extern void platform_get_ipv4_address(cpr_ip_addr_t *ip_addr);
 
 #define SIP_IPPROTO_UDP 17
 #define SIP_IPPROTO_TCP 6
-            
+
 /*
  *  Function: ccsip_add_wlan_classifiers()
  *
@@ -117,12 +117,12 @@ void ccsip_add_wlan_classifiers ()
     uint32_t  transport_prot = 0;
 
     platform_get_ipv4_address (&my_addr);
-    
+
     config_get_value(CFGID_VOIP_CONTROL_PORT, &local_port,
                          sizeof(local_port));
     config_get_value(CFGID_TRANSPORT_LAYER_PROT, &transport_prot,
                          sizeof(transport_prot));
-    
+
     platAddCallControlClassifiers(my_addr.u.ip4, local_port ,
             ntohl(CCM_Device_Specific_Config_Table[PRIMARY_CCM].ti_common.addr.u.ip4),
             CCM_Device_Specific_Config_Table[PRIMARY_CCM].ti_common.port,
@@ -411,7 +411,7 @@ sip_transport_setup_cc_conn (line_t dn, CCM_ID ccm_id)
 
 #ifdef IPV6_STACK_ENABLED
 
-    config_get_value(CFGID_IP_ADDR_MODE, 
+    config_get_value(CFGID_IP_ADDR_MODE,
                      &ip_mode, sizeof(ip_mode));
 #endif
 
@@ -437,14 +437,14 @@ sip_transport_setup_cc_conn (line_t dn, CCM_ID ccm_id)
         if (dnsErrorCode != DNS_OK) {
             CCSIP_DEBUG_ERROR(get_debug_string(DEBUG_GENERAL_FUNCTIONCALL_FAILED),
                               "sip_transport_setup_cc_conn",
-                                "dnsGetHostByName() returned error:%s", 
+                                "dnsGetHostByName() returned error:%s",
                                 CCM_Config_Table[dn - 1][ccm_id]->ti_common.addr_str);
             return status;
         }
 
         util_ntohl(&server_ipaddr, &server_ipaddr);
 
-        
+
         config_get_value(CFGID_VOIP_CONTROL_PORT, &s_port, sizeof(s_port));
         server_port =  (uint16_t) s_port;
 
@@ -535,7 +535,7 @@ sip_transport_setup_cc_conn (line_t dn, CCM_ID ccm_id)
                                  server_port, listener_port,
                                  server_conn_handle);
                 status = CONN_SUCCESS;
-                phone_local_tcp_port[CCM_Config_Table[dn-1][ccm_id]->ti_specific.ti_ccm.ccm_id] = 
+                phone_local_tcp_port[CCM_Config_Table[dn-1][ccm_id]->ti_specific.ti_ccm.ccm_id] =
                     sip_msg.createConnMsg.local_listener_port;
             } else {
                 CCSIP_DEBUG_ERROR(SIP_F_PREFIX"DN <%d>:"
@@ -760,7 +760,7 @@ sipTransportCreateSendMessage (ccsipCCB_t *ccb,
         if (ccb) {
             CCSIP_DEBUG_ERROR("SIPCC-ENTRY: LINE %d/%d: %-35s: message not "
                 "sent of type %s=%d. sipTransportSendMessage() failed.\n",
-                 ccb->index, ccb->dn_line, fname, 
+                 ccb->index, ccb->dn_line, fname,
                  message_type == sipMethodRegister ? "sipMethodRegister" : "", sipMethodRegister);
         } else {
             CCSIP_DEBUG_ERROR(get_debug_string(DEBUG_GENERAL_FUNCTIONCALL_FAILED),
@@ -822,7 +822,7 @@ sipTransportSendMessage (ccsipCCB_t *ccb,
     }
 
 #ifdef IPV6_STACK_ENABLED
-    config_get_value(CFGID_IP_ADDR_MODE, 
+    config_get_value(CFGID_IP_ADDR_MODE,
                      &ip_mode, sizeof(ip_mode));
 #endif
     conn_type = sipTransportGetTransportType(1, TRUE, ccb);
@@ -950,7 +950,7 @@ sipTransportSendMessage (ccsipCCB_t *ccb,
          * we are using the default proxy, we are not using the Emergency
          * route, and it is not the backup proxy registration.
          */
-        if (util_check_if_ip_valid(&(ccb->outBoundProxyAddr)) && 
+        if (util_check_if_ip_valid(&(ccb->outBoundProxyAddr)) &&
             (ccb->proxySelection == SIP_PROXY_DEFAULT) &&
             (ccb->routeMode != RouteEmergency) && (ccb->index != REG_BACKUP_CCB)) {
             send_to_proxy_handle = INVALID_SOCKET;
@@ -1103,7 +1103,7 @@ sipTransportSendMessage (ccsipCCB_t *ccb,
              * for TCP. In that case, that message has to be retransmitted from the SIP
              * layer. So if the error_no == CPR_ENOTCONN, then send the SIP message
              * during next retry.
-             * 
+             *
              */
             if ((timeout > 0) && ((!cpr_strcasecmp(conn_type, "UDP")
                 || ((tcp_error == CPR_ENOTCONN) && (!cpr_strcasecmp(conn_type, "TCP")))))) {
@@ -1156,7 +1156,7 @@ sipTransportSendMessage (ccsipCCB_t *ccb,
                     CCSIP_DEBUG_STATE(DEB_F_PREFIX"%s failed\n", DEB_F_PREFIX_ARGS(SIP_TRANS, fname), "cprStartTimer");
                 }
             }
- 
+
             if (timeout > 0 && timer != NULL) {
                 CCSIP_DEBUG_STATE(DEB_F_PREFIX"Starting reTx timer for %d secs",
                                   DEB_F_PREFIX_ARGS(SIP_TRANS, fname), timeout);
@@ -2132,7 +2132,7 @@ sipTransportClearServerHandle (cpr_ip_addr_t *ipaddr, uint16_t port, int connid)
     ti_common_t *ti_common;
     CCM_ID cc_index;
 
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"addr 0x%x port %d connid %d\n", 
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"addr 0x%x port %d connid %d\n",
                      DEB_F_PREFIX_ARGS(SIP_TRANS, "sipTransportClearServerHandle"), ipaddr, port, connid);
     for (cc_index = PRIMARY_CCM; cc_index < MAX_CCM; cc_index++) {
         ti_common = &CCM_Device_Specific_Config_Table[cc_index].ti_common;

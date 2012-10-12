@@ -87,7 +87,7 @@ int platGetAudioDeviceStatus(plat_audio_device_t device_type) {
 
 /**
  * Check if the speaker or headset is enabled.
- * 
+ *
  * @return boolean if the speaker or headset is enabled, returns true.
  */
 boolean platGetSpeakerHeadsetMode() {
@@ -355,8 +355,8 @@ boolean platGetMWIStatus(cc_lineid_t line) {
 
 /**
  * platSecIsServerSecure
- * 
- * @brief Lookup the secure status of the server 
+ *
+ * @brief Lookup the secure status of the server
  *
  * This function looks at the the CCM server type by using the security library
  * and returns appropriate indication to the pSIPCC.
@@ -364,7 +364,7 @@ boolean platGetMWIStatus(cc_lineid_t line) {
  *
  * @return   Server is security enabled or not
  *           PLAT_SOCK_SECURE or PLAT_SOCK_NONSECURE
- *             
+ *
  * @note This API maps to the following HandyIron API:
  *  int secIsServerSecure(SecServerType type) where type should be SRVR_TYPE_CCM
  */
@@ -378,10 +378,10 @@ plat_soc_status_e platSecIsServerSecure(void) {
  * @brief  Securely connect to a remote server
  *
  * This function uses the security library APIs to connect to a remote server.
- * @param[in]  host         server addr 
+ * @param[in]  host         server addr
  * @param[in]  port         port number
  * @param[in]  ipMode       IP mode to indicate v6, v4 or both
- * @param[in]  mode         blocking connect or not 
+ * @param[in]  mode         blocking connect or not
  *                          FALSE: non-blocking; TRUE: blocking
  * @param[in]  tos          TOS value
  * @param[in]  connectionType Are we talking to Call-Agent
@@ -395,23 +395,23 @@ plat_soc_status_e platSecIsServerSecure(void) {
  *
  * @pre        (hostAndPort not_eq NULL)
  * @pre        (localPort   not_eq NULL)
- *             
+ *
  * @note localPort is undefined when the return value is INVALID_SOCKET
  *
  * @note This API maps to the HandyIron APIs as follows:
- * If mode == TRUE (blocking): 
+ * If mode == TRUE (blocking):
  *    int secEstablishSecureConnection(const char* serverAddr, *uint32_t port, secConnectionType type)
  *    @li ipMode is UNUSED
  *    @li "host" maps to "serverAddr", "connectionType" maps to "type"
  *    @li localPort is passed in as 0
- * If mode == FALSE (non-blocking): 
+ * If mode == FALSE (non-blocking):
  *     int secConnect(const char* serverAddr, uint32_t port, *secConnectionType type, uint32_t localPort)
  *    @li ipMode is UNUSED
  *    @li "host" maps to "serverAddr", "connectionType" maps to "type"
  *
  * @note The implementation should use the "setsockopt" to set the "tos" value passed
  * in this API on the created socket.
- *               
+ *
  */
 cpr_socket_t
 platSecSocConnect (char *host,
@@ -429,13 +429,13 @@ platSecSocConnect (char *host,
  * Determine the status of a secure connection that was initiated
  * in non-blocking mode
  *
- * @param[in]    sock   socket descriptor 
+ * @param[in]    sock   socket descriptor
  *
  * @return   connection status
  *           @li connection complete: PLAT_SOCK_CONN_OK
  *           @li connection waiting:  PLAT_SOCK_CONN_WAITING
  *           @li connection failed:   PLAT_SOCK_CONN_FAILED
- *               
+ *
  * @note This API maps to the following HandyIron API:
  * int secIsConnectionReady (int connDesc)
  * The "sock" is the connection descriptor.
@@ -450,8 +450,8 @@ plat_soc_connect_status_e platSecSockIsConnected (cpr_socket_t sock) {
  * @brief Generates a Random Number
  *
  * Generate crypto graphically random number for a desired length.
- * The function is expected to be much slower than the cpr_rand(). 
- * This function should be used when good random number is needed 
+ * The function is expected to be much slower than the cpr_rand().
+ * This function should be used when good random number is needed
  * such as random number that to be used for SRTP key for an example.
  *
  * @param[in] buf  - pointer to the buffer to store the result of random
@@ -468,7 +468,7 @@ plat_soc_connect_status_e platSecSockIsConnected (cpr_socket_t sock) {
  *             'len' will indicate how many bytes are actually being
  *             returned) on failure, its value will be set to 0.
  *
- * @return 
+ * @return
  *     1 - success.
  *     0 - fail.
  *
@@ -524,7 +524,7 @@ int platGenerateCryptoRand(uint8_t *buf, int *len) {
 /*
   <Umesh> The version is to regulate certain features like Join, which are added in later releases.
   This is exchanged during registration with CUCM. It is a sheer luck that join may be working in some cases.
-  In this case Set API you have to store each of those API and return the same value in get. 
+  In this case Set API you have to store each of those API and return the same value in get.
 
   We can go over all platform API’ and see which one are mandatory, we can do this in an email or in a  meeting.
   Please send out list methods for which you need clarification.

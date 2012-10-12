@@ -20,8 +20,8 @@ cc_lineid_t CCAPI_CallInfo_getLine(cc_callinfo_ref_t handle)
   static const char *fname="CCAPI_CallInfo_getLine";
   session_data_t *data = (session_data_t *)handle;
   CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
-  
-  if ( data != NULL){ 
+
+  if ( data != NULL){
      CCAPP_DEBUG(DEB_F_PREFIX"returned %u\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), GET_LINE_ID(CREATE_CALL_HANDLE_FROM_SESSION_ID(data->sess_id)));
      return GET_LINE_ID(CREATE_CALL_HANDLE_FROM_SESSION_ID(data->sess_id));
   }
@@ -38,8 +38,8 @@ cc_call_state_t CCAPI_CallInfo_getCallState(cc_callinfo_ref_t handle){
   static const char *fname="CCAPI_CallInfo_getCallState";
   session_data_t *data = (session_data_t *)handle;
   CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
-  
-  if ( data != NULL){ 
+
+  if ( data != NULL){
      CCAPP_DEBUG(DEB_F_PREFIX"returned %02X\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), data->state);
      return data->state;
   }
@@ -84,7 +84,7 @@ cc_call_type_t CCAPI_CallInfo_getCallType(cc_callinfo_ref_t handle){
 }
 
 /**
- * get Called party name 
+ * get Called party name
  * @param handle - call handle
  * @return called party name
  */
@@ -285,7 +285,7 @@ cc_string_t CCAPI_CallInfo_getPlacedCallPartyNumber(cc_callinfo_ref_t handle){
 /**
  * get call instance number
  * @param handle - call handle
- * @return 
+ * @return
  */
 cc_int32_t CCAPI_CallInfo_getCallInstance(cc_callinfo_ref_t handle){
   static const char *fname="CCAPI_CallInfo_getCallInstance";
@@ -320,7 +320,7 @@ cc_string_t CCAPI_CallInfo_getStatus(cc_callinfo_ref_t handle){
 }
 
 /**
- * get call security   
+ * get call security
  * @param handle - call handle
  * @return call security status
  */
@@ -545,7 +545,7 @@ cc_boolean  CCAPI_CallInfo_getCapabilitySet(cc_callinfo_ref_t handle, cc_int32_t
          feat_set[feat_id] = data->allowed_features[feat_id];
          CCAPP_DEBUG(DEB_F_PREFIX"feature id:  %d , value %d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),feat_id,  feat_set[feat_id]);
      }
-     
+
      CCAPP_DEBUG(DEB_F_PREFIX"returned CC_SUCCESS\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
      return CC_SUCCESS;
   }

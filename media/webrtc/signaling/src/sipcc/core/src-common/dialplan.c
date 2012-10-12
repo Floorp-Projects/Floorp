@@ -901,7 +901,7 @@ ParseDialEntry (char **parseptr)
             case STATE_GOT_TONE:
                 state = STATE_GOT_TONE_EQ;
                 break;
-                
+
             default:
                 return 1;
             }
@@ -1073,7 +1073,7 @@ ParseDialVersion (char **parseptr)
                 }
                 state = STATE_END_TAG_FOUND;
                 break;
-                
+
             default:
                 break;
             }
@@ -1088,9 +1088,9 @@ ParseDialVersion (char **parseptr)
                 if (len <= 2)
                 {
                     CCAPP_ERROR("ParseDialVersion(): Version length [%d] is way too small", len);
-                    return (1);                                
+                    return (1);
                 }
-                
+
                 memset(g_dp_version_stamp, 0, MAX_DP_VERSION_STAMP_LEN);
                 if ((version_stamp[0] == '{')
                     && (version_stamp[len - 1] == '}')) {

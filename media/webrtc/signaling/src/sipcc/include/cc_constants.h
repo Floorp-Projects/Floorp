@@ -7,7 +7,7 @@
 #include "cc_types.h"
 
 /**
- * Max call servers 
+ * Max call servers
  */
 #define MAX_CALL_SERVERS 4
 
@@ -28,7 +28,7 @@
 /**
  * Attrib bit in video available direction byte to indicate if the video is over CAST
  */
-#define CC_ATTRIB_CAST 0x8 
+#define CC_ATTRIB_CAST 0x8
 
 /**
  * Define the line id. The value 0 (CC_NO_LINE) means not set, it will be set by pSipcc system.
@@ -279,7 +279,7 @@ typedef enum {
 	CREATEOFFERERROR,
 	CREATEANSWERERROR,
 	SETLOCALDESC,
-	SETREMOTEDESC,	
+	SETREMOTEDESC,
 	SETLOCALDESCERROR,
 	SETREMOTEDESCERROR,
 	REMOTESTREAMADD,
@@ -508,10 +508,10 @@ typedef enum {
     CC_SIS_SWAP,
     CC_SIS_CFWD_ANY_LINE
 } cc_sis_feature_id_e;
-  
+
 /**
  * enum for conference participant status
- */  
+ */
 
 typedef enum {
    CCAPI_CONFPARTICIPANT_UNKNOWN,
@@ -520,7 +520,7 @@ typedef enum {
    CCAPI_CONFPARTICIPANT_CONNECTED,
    CCAPI_CONFPARTICIPANT_ON_HOLD,
    CCAPI_CONFPARTICIPANT_DISCONNECTED
-} cc_conf_participant_status_t;  
+} cc_conf_participant_status_t;
 
 
 typedef enum {

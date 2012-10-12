@@ -63,14 +63,14 @@ void calllogger_print_call_log(cc_call_log_t *log)
     static const char *fname = "calllogger_print_call_log";
 
     CCLOG_DEBUG(DEB_F_PREFIX"Entering...\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
-    CCLOG_DEBUG("Remote ID %s:%s %s:%s\n LocalID %s:%s \n alt %s:%s\n", 
-           log->remotePartyName[0], log->remotePartyNumber[0], 
-           log->remotePartyName[1], log->remotePartyNumber[1], 
-           log->localPartyName, log->localPartyNumber, 
+    CCLOG_DEBUG("Remote ID %s:%s %s:%s\n LocalID %s:%s \n alt %s:%s\n",
+           log->remotePartyName[0], log->remotePartyNumber[0],
+           log->remotePartyName[1], log->remotePartyNumber[1],
+           log->localPartyName, log->localPartyNumber,
            log->altPartyNumber[0], log->altPartyNumber[1] );
     CCLOG_DEBUG("state %d \n Disp %d\n", log->callState, log->logDisp);
 }
-  
+
 /**
  * Call logger update to be called placed call num update
  */
@@ -79,7 +79,7 @@ void calllogger_setPlacedCallInfo (session_data_t *data)
     static const char *fname = "calllogger_setPlacedCallInfo";
 
     CCLOG_DEBUG(DEB_F_PREFIX"updating placed number for session %x to %s:%s\n",
-                            DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), data->sess_id, 
+                            DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), data->sess_id,
                      data->cld_name, data->cld_number);
     if ( data->call_log.logDisp == CC_LOGD_RCVD ) { return;}
     data->call_log.remotePartyName[0] = strlib_copy(data->plcd_name);
@@ -99,8 +99,8 @@ void calllogger_updateLogDisp (session_data_t *data)
                             DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), data->sess_id, data->log_disp);
     data->call_log.logDisp = data->log_disp;
 }
-                              
-cc_boolean partyInfoPassedTheNumberFilter (cc_string_t partyString) 
+
+cc_boolean partyInfoPassedTheNumberFilter (cc_string_t partyString)
 {
     static const char *fname = "partyInfoPassedTheNumberFilter";
 
@@ -133,7 +133,7 @@ cc_boolean partyInfoPassedTheNameFilter(cc_string_t partyString) {
 
     CCLOG_DEBUG(DEB_F_PREFIX"Entering...\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
     // If the name String has Conference, filter it out
-    if (partyString && strlen(partyString) > 1 && 
+    if (partyString && strlen(partyString) > 1 &&
         (partyString[1] == 52 || partyString[1] == 53)) {
         CCLOG_DEBUG(DEB_F_PREFIX"Filtering out the partyName=%s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), partyString);
         return FALSE;
@@ -145,7 +145,7 @@ static cc_string_t missedCallMask=NULL;
 void calllogger_setMissedCallLoggingConfig(cc_string_t mask) {
     static const char *fname = "calllogger_setMissedCallLoggingConfig";
 
-    
+
     CCLOG_DEBUG(DEB_F_PREFIX"Entering... mask=%s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), mask);
     if ( missedCallMask == NULL) {
         missedCallMask = strlib_empty();
@@ -171,10 +171,10 @@ cc_boolean isMissedCallLoggingEnabled (unsigned int line)
 }
 
 
-void handlePlacedCall (session_data_t *data) 
+void handlePlacedCall (session_data_t *data)
 {
     static const char *fname = "handlePlacedCall";
-   
+
     CCLOG_DEBUG(DEB_F_PREFIX"Entering...\n",DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     //populate calling party if not already populated
@@ -185,13 +185,13 @@ void handlePlacedCall (session_data_t *data)
 
     // first update or update with the same number we update name and number
     if ( data->call_log.remotePartyNumber[0] == strlib_empty() ||
-            (data->cld_number[0] != 0 && strncmp(data->call_log.remotePartyNumber[0], 
+            (data->cld_number[0] != 0 && strncmp(data->call_log.remotePartyNumber[0],
                         data->cld_number, strlen(data->cld_number)) == 0 )) {
        if ( partyInfoPassedTheNameFilter(data->cld_name) &&
             partyInfoPassedTheNumberFilter(data->cld_number) )
            data->call_log.remotePartyNumber[0] = strlib_update(data->call_log.remotePartyNumber[0], data->cld_number);
            data->call_log.remotePartyName[0] = strlib_update(data->call_log.remotePartyName[0], data->cld_name);
-    } 
+    }
 
     // Start the duration count once the call reaches connected state.
     if ( data->state == CONNECTED &&
@@ -206,7 +206,7 @@ void handlePlacedCall (session_data_t *data)
 	} else {
             data->call_log.startTime = time(NULL);
         }
-    } 
+    }
 
     data->call_log.callState = data->state;
 }
@@ -218,7 +218,7 @@ void handleMissedOrReceviedCall ( session_data_t *data )
     int line = GET_LINE_ID(data->sess_id);
     cc_string_t localName = strlib_empty(), localNumber = strlib_empty();
     cc_string_t remoteName = strlib_empty(), remoteNumber = strlib_empty();
-    
+
     CCLOG_DEBUG(DEB_F_PREFIX"Entering...\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
 
     if (data->type == CC_CALL_TYPE_INCOMING || data->type == CC_CALL_TYPE_FORWARDED ) {
@@ -240,7 +240,7 @@ void handleMissedOrReceviedCall ( session_data_t *data )
 
     // first update or update with the same number we update name and number
     if ( data->call_log.remotePartyNumber[0] == strlib_empty() ||
-            (remoteNumber[0] != 0 && strncmp(data->call_log.remotePartyNumber[0], 
+            (remoteNumber[0] != 0 && strncmp(data->call_log.remotePartyNumber[0],
                         remoteNumber, strlen(remoteNumber)) == 0 )) {
        data->call_log.remotePartyNumber[0] = strlib_update(data->call_log.remotePartyNumber[0], remoteNumber);
        data->call_log.altPartyNumber[0] = strlib_update(data->call_log.altPartyNumber[0], data->alt_number);
@@ -257,9 +257,9 @@ void handleMissedOrReceviedCall ( session_data_t *data )
     if ( data->state == ONHOOK ) {
        if ( data->call_log.callState == RINGIN ) {
            data->call_log.startTime = time(NULL);
-           if (isMissedCallLoggingEnabled(line)) { 
+           if (isMissedCallLoggingEnabled(line)) {
                data->call_log.logDisp = CC_LOGD_MISSED;
-           } else { 
+           } else {
                data->call_log.logDisp = CC_LOGD_DELETE;
            }
            data->call_log.startTime = time(NULL);
@@ -277,7 +277,7 @@ void handleMissedOrReceviedCall ( session_data_t *data )
 
     data->call_log.callState = data->state;
 }
-    
+
 
 /**
  * Call logger update to be called on attr or callinfo or state events
@@ -285,10 +285,10 @@ void handleMissedOrReceviedCall ( session_data_t *data )
 void  calllogger_update (session_data_t *data)
 {
     static const char *fname = "calllogger_update";
-    
+
     CCLOG_DEBUG(DEB_F_PREFIX"Entering...\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
     if (data->call_log.logDisp == CC_LOGD_DELETE) {
-        CCLOG_DEBUG(DEB_F_PREFIX"log disposition set to delete. Ignoring call logging for sess_id=%x\n", 
+        CCLOG_DEBUG(DEB_F_PREFIX"log disposition set to delete. Ignoring call logging for sess_id=%x\n",
                 DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), data->sess_id);
     }
 

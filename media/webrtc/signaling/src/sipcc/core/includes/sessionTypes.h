@@ -93,14 +93,14 @@ typedef struct {
 
 typedef struct {
     cc_boolean      start;
-    vcm_ring_mode_t mode; 
+    vcm_ring_mode_t mode;
     cc_boolean      once;
 } cc_ringer_state_t;
 
 /**
  * Define call status to carry over timeout/priority that might be sent from CUCM.
- * Note: if the values of timeout and priority are zero, then 2 second is the 
- *      derfault value for the timeout. It's mostly the application based on UI 
+ * Note: if the values of timeout and priority are zero, then 2 second is the
+ *      derfault value for the timeout. It's mostly the application based on UI
  *      design.
  */
 typedef struct {

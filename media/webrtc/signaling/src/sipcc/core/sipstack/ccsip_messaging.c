@@ -529,7 +529,7 @@ sipSPISetRPID (ccsipCCB_t *ccb, boolean request)
                                 sizeof(display_name));
 
     ip_type = sipTransportGetPrimServerAddress(ccb->dn_line, src_addr_str);
-    
+
     sstrncpy(remote_party_id_buf, "\"", MAX_SIP_URL_LENGTH);
     escaped_url_len = 1;
     escaped_url_len +=
@@ -997,8 +997,8 @@ sipSPISendInviteMidCall (ccsipCCB_t *ccb, boolean expires)
     /* Successfully constructed msg with new URI for this INVITE to send out.
      * Update URIOriginal before sending out.
      */
-    ccb->ReqURIOriginal = strlib_update(ccb->ReqURIOriginal, ccb->ReqURI); 
-    
+    ccb->ReqURIOriginal = strlib_update(ccb->ReqURIOriginal, ccb->ReqURI);
+
     /* Enable reTx and send */
     ccb->retx_counter = 0;
     if (SendRequest(ccb, request, sipMethodInvite, TRUE, TRUE, TRUE) == FALSE) {
@@ -1065,7 +1065,7 @@ sipSPISendAck (ccsipCCB_t *ccb, sipMessage_t *response)
         }
         response_cseq_number = response_cseq_structure->number;
         cpr_free(response_cseq_structure);
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Cseq from response = %d \n", 
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Cseq from response = %d \n",
             DEB_F_PREFIX_ARGS(SIP_ACK, "sipSPISendAck"), response_cseq_number);
     } else {
         trx_index = get_method_request_trx_index(ccb, sipMethodInvite, TRUE);
@@ -1073,7 +1073,7 @@ sipSPISendAck (ccsipCCB_t *ccb, sipMessage_t *response)
             return (FALSE);
         }
         response_cseq_number = ccb->sent_request[trx_index].cseq_number;
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Cseq from ccb = %d \n", 
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Cseq from ccb = %d \n",
             DEB_F_PREFIX_ARGS(SIP_ACK, "sipSPISendAck"), response_cseq_number);
     }
 
@@ -2433,8 +2433,8 @@ sipSPISendInviteResponse (ccsipCCB_t *ccb,
     if (statusCode != SIP_1XX_TRYING) {
         /*
          * The RPID header is not sent in the 100 Trying because the response is directly
-         * sent from the SIP stack.The information needed for building the RPID is updated 
-         * by the gsm later. 
+         * sent from the SIP stack.The information needed for building the RPID is updated
+         * by the gsm later.
          */
         rpid_flag = sipSPISetRPID(ccb, FALSE);
         if (rpid_flag == RPID_ENABLED) {
@@ -2455,7 +2455,7 @@ sipSPISendInviteResponse (ccsipCCB_t *ccb,
     UPDATE_FLAGS(flag, tflag);
 
     tflag = sipSPIAddCallStats(ccb, response);
-  
+
     UPDATE_FLAGS(flag, tflag);
     /* If build error detected, cleanup and do not send message */
     if (flag != STATUS_SUCCESS) {
@@ -2692,7 +2692,7 @@ sipSPISendErrorResponse (sipMessage_t *msg,
                                        "en");
         UPDATE_FLAGS(flag, tflag);
     }
-    
+
     if (status_code == SIP_CLI_ERR_NOT_ALLOWED) {
         // Add Allow
         snprintf(temp, MAX_SIP_HEADER_LENGTH, "%s,%s,%s,%s,%s,%s,%s,%s,%s",
@@ -2700,7 +2700,7 @@ sipSPISendErrorResponse (sipMessage_t *msg,
                  SIP_METHOD_INVITE, SIP_METHOD_NOTIFY, SIP_METHOD_OPTIONS,
                  SIP_METHOD_REFER, SIP_METHOD_UPDATE, SIP_METHOD_SUBSCRIBE);
         tflag = sippmh_add_text_header(response, SIP_HEADER_ALLOW, temp);
-        UPDATE_FLAGS(flag, tflag);        
+        UPDATE_FLAGS(flag, tflag);
     }
 
     /* Write CSeq */
@@ -3477,7 +3477,7 @@ sipSPIAddRouteHeaders (sipMessage_t *msg, ccsipCCB_t *ccb,
     if (route[0] != '\0') {
         if (sippmh_add_text_header(msg, SIP_HEADER_ROUTE, route)
                 == STATUS_SUCCESS) {
-            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Adding route = %s\n", 
+            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Adding route = %s\n",
                 DEB_F_PREFIX_ARGS(SIP_ROUTE, fname), route);
             if (result_route) {
                 sstrncpy(result_route, route, result_route_length);
@@ -3966,7 +3966,7 @@ sipSPICheckRequest (ccsipCCB_t *ccb, sipMessage_t *request)
                                     "current= %d, last= %d.\n",
                                     DEB_F_PREFIX_ARGS(SIP_CSEQ, fname), request_cseq_number,
                                     ccb->last_recv_request_cseq);
-                                    
+
                 return (SIP_CLI_ERR_BAD_REQ);
             }
             if (request_cseq_number == ccb->last_recv_request_cseq) {
@@ -3976,7 +3976,7 @@ sipSPICheckRequest (ccsipCCB_t *ccb, sipMessage_t *request)
                                         DEB_F_PREFIX_ARGS(SIP_CSEQ, fname),
                                         sipGetMethodString(request_cseq_method),
                                         sipGetMethodString(ccb->last_recv_request_cseq_method));
-                                        
+
                     return (SIP_CLI_ERR_BAD_REQ);
                 }
             }
@@ -4583,7 +4583,7 @@ sipSPICheckResponse (ccsipCCB_t *ccb, sipMessage_t *response)
         return (SIP_MESSAGING_ERROR_STALE_RESP);
     }
     CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Response match: callid=%s, cseq=%u, "
-                        "cseq_method=%s\n", DEB_F_PREFIX_ARGS(SIP_RESP, fname), 
+                        "cseq_method=%s\n", DEB_F_PREFIX_ARGS(SIP_RESP, fname),
                         callID, response_cseq_number, sipGetMethodString(response_method));
 
 
@@ -5819,7 +5819,7 @@ is_extended_feature (ccsipCCB_t *ccb)
     if (ccb) {
         switch (ccb->featuretype) {
         case CC_FEATURE_B2BCONF:
-        case CC_FEATURE_CANCEL: 
+        case CC_FEATURE_CANCEL:
             return TRUE;
         default:
             return FALSE;
@@ -5867,14 +5867,14 @@ sipSPIGenRequestURI (ccsipCCB_t *ccb, sipMethod_t sipmethod, boolean initInvite)
                 sstrncpy(dest_sip_addr_str, ccb->reg.proxy,
                         MAX_IPADDR_STR_LEN);
 
-                if (ccb->reg.addr.type == CPR_IP_ADDR_IPV6) {                
+                if (ccb->reg.addr.type == CPR_IP_ADDR_IPV6) {
                     *domainloc++ = '[';
                 }
 
                 sstrncpy(domainloc, dest_sip_addr_str,
                          MAX_SIP_URL_LENGTH - (domainloc - ccb->ReqURI));
 
-                if (ccb->reg.addr.type == CPR_IP_ADDR_IPV6) {                
+                if (ccb->reg.addr.type == CPR_IP_ADDR_IPV6) {
                     *domainloc++ = ']';
                 }
             }
@@ -6000,7 +6000,7 @@ sipSPIGenRequestURI (ccsipCCB_t *ccb, sipMethod_t sipmethod, boolean initInvite)
                 (lr || (ccb->state >= SIP_STATE_SENT_INVITE_CONNECTED))) {
                 // Use Contact info ONLY if loose routing or
                 // if we're fully connected - otherwise use proxy
-                CCSIP_DEBUG_STATE(DEB_F_PREFIX"Forming Req-URI: using Contact\n", 
+                CCSIP_DEBUG_STATE(DEB_F_PREFIX"Forming Req-URI: using Contact\n",
                                   DEB_F_PREFIX_ARGS(SIP_REQ_URI, fname));
 
                 if ((sipMethodInvite == sipmethod) &&
@@ -6298,7 +6298,7 @@ sipSPIAddContactHeader (ccsipCCB_t *ccb, sipMessage_t *request)
 }
 
 /**
- * Convert phone name to upper case 
+ * Convert phone name to upper case
  *
  * @param phone_name - phone name
  *
@@ -6318,14 +6318,14 @@ void convert_phone_name_to_upper_case(char *phone_name)
  *
  * eg: Reason: SIP;cause=200;text="cisco:22 Name=SEP000000000000
  * Load=SIP70.8-2-25 Last=reset-reset
- * 
+ *
  * @param ccb       call control block
  * @param request   sip message
  *
- * @return status 
+ * @return status
  *         success: STATUS_SUCCESS
  *         failure: STATUS_FAILURE
- *  
+ *
  * @pre  (ccb      not_eq NULL)
  * @pre  (request  not_eq NULL)
  *
@@ -6340,14 +6340,14 @@ sipSPIAddReasonHeader (ccsipCCB_t *ccb, sipMessage_t *request)
     char        image_a[MAX_LOAD_ID_STRING];
     char        image_b[MAX_LOAD_ID_STRING];
     int         active_partition;
-    int         unreg_reason_code = 0;   
+    int         unreg_reason_code = 0;
     char        unreg_reason_str[MAX_UNREG_REASON_STR_LEN];
 
-    if (ccb->send_reason_header) { 
+    if (ccb->send_reason_header) {
         // should only be set when the phone is registering after a restart/reset
         platform_get_wired_mac_address(mac_address);
-  
-        snprintf(phone_name, MAX_PHONE_NAME_LEN, "SEP%04x%04x%04x", mac_address[0] * 256 + mac_address[1], 
+
+        snprintf(phone_name, MAX_PHONE_NAME_LEN, "SEP%04x%04x%04x", mac_address[0] * 256 + mac_address[1],
                                                                     mac_address[2] * 256 + mac_address[3],
                                                                     mac_address[4] * 256 + mac_address[5]);
 
@@ -6359,11 +6359,11 @@ sipSPIAddReasonHeader (ccsipCCB_t *ccb, sipMessage_t *request)
         unreg_reason_str[0] = '\0';
         get_reason_string(unreg_reason_code, unreg_reason_str, MAX_UNREG_REASON_STR_LEN);
         active_partition = platGetActiveInactivePhoneLoadName(image_a, image_b, MAX_LOAD_ID_STRING);
-        snprintf(pReasonStr, MAX_SIP_HEADER_LENGTH, 
+        snprintf(pReasonStr, MAX_SIP_HEADER_LENGTH,
             "SIP;cause=200;text=\"cisco-alarm:%d Name=%s ActiveLoad=%s InactiveLoad=%s Last=%s",
             unreg_reason_code, phone_name, (active_partition == 1) ?  image_a:image_b,
             (active_partition == 1) ? image_b:image_a, unreg_reason_str);
-        sstrncat(pReasonStr, "\"", 
+        sstrncat(pReasonStr, "\"",
                 MAX_SIP_HEADER_LENGTH - strlen(pReasonStr) - 1);
         return (sippmh_add_text_header(request, SIP_HEADER_REASON, pReasonStr));
     } else {
@@ -6373,12 +6373,12 @@ sipSPIAddReasonHeader (ccsipCCB_t *ccb, sipMessage_t *request)
 }
 
 /**
- * Return the reason string that is to be returned 
+ * Return the reason string that is to be returned
  * corresponding to the unreg reason that is to be sent
  * in the register message.
- * 
- * @param unreg_reason    - unreg reason code 
- * @param char *          - reason string corresponding to the code 
+ *
+ * @param unreg_reason    - unreg reason code
+ * @param char *          - reason string corresponding to the code
  * @return none
  *
  */
@@ -7093,7 +7093,7 @@ AddGeneralHeaders (ccsipCCB_t *ccb,
                                           time_exp);
             break;
 
-        case SIP_HEADER_REASON_BIT:	    
+        case SIP_HEADER_REASON_BIT:
             tflag = sipSPIAddReasonHeader(ccb, request);
             break;
 
@@ -7233,8 +7233,8 @@ AddGeneralHeaders (ccsipCCB_t *ccb,
             if (ip_mode == CPR_IP_MODE_DUAL) {
                 tflag = sippmh_add_text_header(request, SIP_HEADER_REQUIRE, "sdp-anat");
             }
-            break;     
- 
+            break;
+
         case SIP_HEADER_RETRY_AFTER_BIT:
             tflag = sippmh_add_int_header(request,
                                           SIP_HEADER_RETRY_AFTER,
@@ -7456,7 +7456,7 @@ sipSPISendNotifyResponse (ccsipCCB_t *ccb, cc_causes_t cause)
  * @pre                 (ccb not_eqs NULL)
  *
  */
-boolean 
+boolean
 sipSPIGenerateReferredByHeader (ccsipCCB_t *ccb)
 {
     char        line_name[MAX_LINE_NAME_SIZE];
@@ -7465,7 +7465,7 @@ sipSPIGenerateReferredByHeader (ccsipCCB_t *ccb)
     char        pReferByStr[MAX_SIP_URL_LENGTH];
     boolean     retval = FALSE;
     cpr_ip_type ip_type;
-    
+
     /* Initialize */
     line_name[0] = '\0';
     escaped_line_name[0] = '\0';
@@ -7486,7 +7486,7 @@ sipSPIGenerateReferredByHeader (ccsipCCB_t *ccb)
     }
 
     ip_type = sipTransportGetPrimServerAddress(ccb->dn_line, dest_sip_addr_str);
-    
+
     if (escaped_line_name[0] != '\0') {
         if (ip_type == CPR_IP_ADDR_IPV6) {
             snprintf(pReferByStr, MAX_SIP_URL_LENGTH, "<sip:%s@[%s]>",
@@ -7508,7 +7508,7 @@ sipSPIGenerateReferredByHeader (ccsipCCB_t *ccb)
 /*
  *  Function: sipSPIBuildRegisterHeaders
  *
- *  Parameters: 
+ *  Parameters:
  *      ccsipCCB_t * - pointer to the ccb used for registration
  *      const char * user - used to build the headers
  *      int expires_int - registration expiry time
@@ -7520,7 +7520,7 @@ sipSPIGenerateReferredByHeader (ccsipCCB_t *ccb)
  *
  */
 sipMessage_t *
-sipSPIBuildRegisterHeaders(ccsipCCB_t *ccb, 
+sipSPIBuildRegisterHeaders(ccsipCCB_t *ccb,
                     const char *user,
                     int expires_int)
 {
@@ -7607,7 +7607,7 @@ sipSPIBuildRegisterHeaders(ccsipCCB_t *ccb,
         messageflag.flags |= SIP_HEADER_AUTHENTICATION_BIT;
     }
 
-    if (ccb->send_reason_header) {   
+    if (ccb->send_reason_header) {
         messageflag.flags |= SIP_HEADER_REASON_BIT;
     }
 

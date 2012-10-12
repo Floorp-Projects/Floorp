@@ -961,7 +961,7 @@ static void sub_handler_initialized (void)
         if (presentity_url == NULL)
         {
             BLF_ERROR("MSC:  Error parsing presentity_url", fname);
-            return;                
+            return;
         }
 
         presentity_url = presentity_url + 1;

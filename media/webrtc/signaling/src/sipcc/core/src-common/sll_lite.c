@@ -4,13 +4,13 @@
 
 /*
  *     This module provides sigle linked list near functionality of the
- *     the singly_link_list.c module with limitations. The main 
+ *     the singly_link_list.c module with limitations. The main
  *     intention is for low overhead. The followings are the main
  *     differences.
  *
  *     1) It does not allocate storage containers for list node or
  *        list control structures by the facility. The caller
- *        provides the storage from any source as needed.  
+ *        provides the storage from any source as needed.
  *
  *     2) No application call back for node search/find.
  *
@@ -21,7 +21,7 @@
  *
  *     4) Lite verion is higher risk because the caller also has
  *        the defition of the list and node structures. Use it
- *        at your own risk. 
+ *        at your own risk.
  *
  *     5) There is no protection for mutual exclusive access by
  *        multiple threads or from interrupt context. The caller
@@ -42,24 +42,24 @@
  */
 
 /**
- * sll_lite_init initializes list control structure given by the 
+ * sll_lite_init initializes list control structure given by the
  * caller.
  *
- * @param[in]list - pointer to the list control structure 
- *                  sll_lite_list_t 
+ * @param[in]list - pointer to the list control structure
+ *                  sll_lite_list_t
  *
  * @return        - SLL_LITE_RET_SUCCESS for success
- *                - SLL_LITE_RET_INVALID_ARGS when arguments are 
+ *                - SLL_LITE_RET_INVALID_ARGS when arguments are
  *                  invalid.
  */
 sll_lite_return_e
 sll_lite_init (sll_lite_list_t *list)
 {
-    if (list == NULL) { 
+    if (list == NULL) {
         return (SLL_LITE_RET_INVALID_ARGS);
     }
     list->count   = 0;
-    list->head_p  = NULL; 
+    list->head_p  = NULL;
     list->tail_p  = NULL;
     return (SLL_LITE_RET_SUCCESS);
 }
@@ -67,13 +67,13 @@ sll_lite_init (sll_lite_list_t *list)
 /**
  * sll_lite_link_head puts node to the head of the list.
  *
- * @param[in]list - pointer to the list control structure 
+ * @param[in]list - pointer to the list control structure
  *                  sll_lite_list_t. The list must be
- *                  initialized prior. 
+ *                  initialized prior.
  * @param[in]node - pointer to the list node structure.
  *
  * @return        - SLL_LITE_RET_SUCCESS for success
- *                - SLL_LITE_RET_INVALID_ARGS when arguments are 
+ *                - SLL_LITE_RET_INVALID_ARGS when arguments are
  *                  invalid.
  */
 sll_lite_return_e
@@ -87,7 +87,7 @@ sll_lite_link_head (sll_lite_list_t *list, sll_lite_node_t *node)
         /* list is empty, this node becomes head */
         list->head_p = node;
         list->tail_p = node;
-        node->next_p = NULL; 
+        node->next_p = NULL;
     } else {
         /* list is not empty, link to the head */
         node->next_p = list->head_p;
@@ -204,7 +204,7 @@ sll_lite_unlink_tail (sll_lite_list_t *list)
  *                  removed.
  *
  * @return        - SLL_LITE_RET_SUCCESS for success
- *                - SLL_LITE_RET_INVALID_ARGS when arguments are 
+ *                - SLL_LITE_RET_INVALID_ARGS when arguments are
  *                  invalid.
  *                - SLL_LITE_RET_NODE_NOT_FOUND when the node
  *                  to remove is not found.

@@ -5,9 +5,8 @@
 #ifndef _CPR_DARWIN_LOCKS_H_
 #define _CPR_DARWIN_LOCKS_H_
 
-/* 
- * System Mutexes. 
+/*
+ * System Mutexes.
  */
 extern pthread_mutex_t linuxThreadMutex;
 #endif
-

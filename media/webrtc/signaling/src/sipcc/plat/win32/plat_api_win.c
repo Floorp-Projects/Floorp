@@ -17,7 +17,7 @@ char* sipcc_platGetIPAddr (void) {
 	char szHostName[128] = "";
 	struct sockaddr_in SocketAddress;
 	struct hostent     *pHost        = 0;
-	
+
 
 	WSADATA WSAData;
 
@@ -27,7 +27,7 @@ char* sipcc_platGetIPAddr (void) {
 		return "";
 	}
 
-	
+
 	if(gethostname(szHostName, sizeof(szHostName)))
 	{
 	  // Error handling -> call 'WSAGetLastError()'

@@ -42,8 +42,8 @@
 /*
   These numbers need to match up
   with whats defined on the J-Side
-  The Master copy should be here because 
-  the reason needs to be sent out in the register 
+  The Master copy should be here because
+  the reason needs to be sent out in the register
   message
 */
 #define UNREG_REASON_UNSPECIFIED                       0

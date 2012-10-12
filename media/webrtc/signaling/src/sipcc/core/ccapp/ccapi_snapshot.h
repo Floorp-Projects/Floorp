@@ -23,7 +23,7 @@ typedef struct cc_mwi_info_t_ {
 
 /*
  * line reference data structure
- */ 
+ */
 typedef struct cc_line_info_t_ {
   cc_uint32_t     ref_count;
   cc_uint32_t     line_id;
@@ -98,7 +98,7 @@ void ccsnap_gen_deviceEvent(ccapi_device_event_e event, cc_device_handle_t handl
 void ccsnap_gen_lineEvent(ccapi_line_event_e event, cc_lineid_t handle);
 void ccsnap_gen_callEvent(ccapi_call_event_e event, cc_call_handle_t handle);
 void ccsnap_update_ccm_status(cc_string_t addr, cc_ccm_status_t status);
-void ccsnap_handle_mnc_reached (cc_line_info_t *line_info, 
+void ccsnap_handle_mnc_reached (cc_line_info_t *line_info,
 		 cc_boolean mnc_reached, cc_cucm_mode_t mode);
 cc_feature_info_t* ccsnap_getFeatureInfo(int featureIndex);
 void ccsnap_gen_blfFeatureEvent(cc_blf_state_t state, int appId);

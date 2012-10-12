@@ -134,7 +134,7 @@
 
 // SOUNDWAVE
 #define PHONE_MODEL_NUMBER_SOUNDWAVE      "575"
-#define SOUNDWAVE_MODEL                   "SOUNDWAVE"    
+#define SOUNDWAVE_MODEL                   "SOUNDWAVE"
 #define CCSIP_SIP_SOUNDWAVE_USER_AGENT    "SOUNDWAVE"
 
 
@@ -172,7 +172,7 @@
 #define RTLITE_MODEL_6945            "CP-6945"
 #define CCSIP_SIP_6945_USER_AGENT    "CP6945"
 
-//Definition for 6961 
+//Definition for 6961
 #define PHONE_MODEL_NUMBER_6961      "497"
 #define RTLITE_MODEL_6961            "CP-6961"
 #define CCSIP_SIP_6961_USER_AGENT    "CP6961"
@@ -197,7 +197,7 @@
 
 /*
  * MAX_INSTANCES (call_instances) should equal to maximum number of calls
- * allowed by the phone but MAX_CALLS is defined to be 1 more than the 
+ * allowed by the phone but MAX_CALLS is defined to be 1 more than the
  * actual maximum capacity. Therefore define MAX_INSTANCES to MAX_CALLS -1
  */
 #define MAX_INSTANCES        (MAX_CALLS - 1) /* max number of instance ID */

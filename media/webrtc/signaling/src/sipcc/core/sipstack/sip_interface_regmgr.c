@@ -128,7 +128,7 @@ sip_platform_failover_ind (CCM_ID ccm_id)
     static const char fname[] = "sip_platform_failover_ind";
     int to_id = CC_TYPE_CCM;
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"ccm-id=%s=%d", DEB_F_PREFIX_ARGS(SIP_FAILOVER, fname), 
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"ccm-id=%s=%d", DEB_F_PREFIX_ARGS(SIP_FAILOVER, fname),
         ccm_id == PRIMARY_CCM ? "PRIMARY_CCM" :
         ccm_id == SECONDARY_CCM ? "SECONDARY_CCM" :
         ccm_id == TERTIARY_CCM ? "TERTIARY_CCM" : "Unknown",
@@ -163,7 +163,7 @@ sip_platform_logout_reset_req(void)
 {
 	platform_logout_reset_req();
 }
-																			 
+
 /*
  ** sip_platform_set_ccm_status
  *

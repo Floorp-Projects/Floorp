@@ -54,7 +54,7 @@ void publish_init (pub_handle_t             app_handle,
                    cc_subscriptions_t       event_type,
                    ccsip_event_data_t      *event_data_p,
                    cc_srcs_t                callback_task,
-                   int                      message_id 
+                   int                      message_id
                   )
 {
 
@@ -93,8 +93,8 @@ void publish_update (pub_handle_t          pub_handle,
                      cc_subscriptions_t    event_type,
                      ccsip_event_data_t   *event_data_p,
                      cc_srcs_t             callback_task,
-                     int                   message_id 
-                    ) 
+                     int                   message_id
+                    )
 {
     pub_req_t pub_req;
 
@@ -126,7 +126,7 @@ void publish_update (pub_handle_t          pub_handle,
 void publish_terminate (pub_handle_t          pub_handle,
                         cc_subscriptions_t    event_type,
                         cc_srcs_t             callback_task,
-                        int                   message_id 
+                        int                   message_id
                        )
 {
    pub_req_t pub_req;
@@ -157,7 +157,7 @@ void publish_terminate (pub_handle_t          pub_handle,
  */
 cc_rcs_t publish_int_response (pub_rsp_t               *pub_rsp_p,
                                cc_srcs_t               callback_task,
-                               int                     message_id    
+                               int                     message_id
                               )
 {
     pub_rsp_t *pmsg;

@@ -214,7 +214,7 @@ static boolean append_pending_reqs (ccsip_publish_cb_t *pcb_p, pub_req_t *msg_p)
  *
  * @param[in] list -  pending requests list handle
  *
- * @return none 
+ * @return none
  *
  */
 static void free_pending_reqs (sll_handle_t list)
@@ -244,7 +244,7 @@ static void free_pending_reqs (sll_handle_t list)
  * @param[in] callback_task - task in which the application resides.
  * @param[in] resp_msg_id - messageID posted to the task.
  *
- * @return none 
+ * @return none
  */
 static void send_resp_to_app (int resp_code, pub_handle_t pub_handle, pub_handle_t app_handle,
                               cc_srcs_t callback_task, int resp_msg_id)
@@ -284,10 +284,10 @@ int publish_handle_ev_app_publish (cprBuffer_t buf)
     /*
      * If this is initial PUBLISH, allocate a PCB.
      * Otherwise, look up for PCB based on pub_handle.
-     */ 
+     */
     if (msg_p->pub_handle != NULL_PUBLISH_HANDLE) {
         pcb_p = find_pcb(msg_p->pub_handle);
-        
+
         if (pcb_p == NULL) {
             send_resp_to_app(PUBLISH_FAILED_NOCONTEXT, msg_p->pub_handle, msg_p->app_handle,
                              msg_p->callback_task, msg_p->resp_msg_id);
@@ -359,7 +359,7 @@ int publish_handle_ev_app_publish (cprBuffer_t buf)
                      msg_p->callback_task, msg_p->resp_msg_id);
     CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Failed to send PUBLISH request\n", fname);
     return SIP_ERROR;
-    
+
 }
 
 
@@ -374,7 +374,7 @@ int publish_handle_ev_app_publish (cprBuffer_t buf)
  *
  * @pre    (pcb_p != NULL)
  */
-static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen) 
+static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
 {
     static const char fname[] = "sipSPISendPublish";
     static uint32_t   cseq = 0;
@@ -389,7 +389,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
     static uint16_t   count = 1;
     sipMessage_t     *request = NULL;
     int               timeout = 0;
-   
+
     request = GET_SIP_MESSAGE();
     if (!request) {
         return FALSE;
@@ -428,7 +428,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
         return (FALSE);
     }
 
-    // Add local Via 
+    // Add local Via
     snprintf(via, sizeof(via), "SIP/2.0/%s %s:%d;%s=%s%.8x",
              sipTransportGetTransportType(1, TRUE, NULL),
              src_addr_str, pcb_p->hb.local_port, VIA_BRANCH,
@@ -457,7 +457,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
         return (FALSE);
     }
 
-    // Add Call-ID Header. 
+    // Add Call-ID Header.
     platform_get_wired_mac_address(mac_address);
     count++;
     snprintf(pcb_p->hb.sipCallID, MAX_SIP_CALL_ID, "%.4x%.4x-%.4x%.4x-%.8x-%.8x@%s", // was MAX_SIP_URL_LENGTH
@@ -485,7 +485,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
         return (FALSE);
     }
 
-    // Add Cseq. 
+    // Add Cseq.
     cseq++;
     if (cseq == 0) {
         cseq = 1;
@@ -566,7 +566,7 @@ static boolean sipSPISendPublish (ccsip_publish_cb_t *pcb_p, boolean authen)
     }
 
     return (TRUE);
-    
+
 }
 
 /**
@@ -643,7 +643,7 @@ int publish_handle_retry_timer_expire (uint32_t handle)
 }
 
 /**
- * This function will check if wee need to send refresh PUBLISH. 
+ * This function will check if wee need to send refresh PUBLISH.
  * If so, it will send refresh PUBLISH
  *
  * @param[in] none
@@ -671,7 +671,7 @@ void publish_handle_periodic_timer_expire (void)
                 /* refresh is triggered by NULL event data and non-zero expires value */
                 msg.pub_handle = pcb_p->pub_handle;
                 msg.expires = pcb_p->hb.orig_expiration;
-                (void)publish_handle_ev_app_publish(&msg);               
+                (void)publish_handle_ev_app_publish(&msg);
             }
         }
         pcb_p = (ccsip_publish_cb_t *)sll_next(s_PCB_list, pcb_p);
@@ -720,7 +720,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
      */
     sip_platform_msg_timer_subnot_stop(&(pcb_p->retry_timer));
     pcb_p->hb.retx_flag = FALSE;
-    
+
     // Parse the return code
     (void) sipGetResponseCode(pSipMessage, &response_code);
 
@@ -779,7 +779,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"failed to respond to 423\n", fname);
         return SIP_ERROR;
     }
-    
+
     /*
      * if the response_code is > 299, free up the PCB and let the app know.
      */
@@ -798,7 +798,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
         CCSIP_DEBUG_TASK(DEB_F_PREFIX"received %d response\n", DEB_F_PREFIX_ARGS(SIP_PUB, fname), response_code);
         return SIP_OK;
     }
-    
+
     /*
      * If it is PUBLISH remove operation, free up PCB
      */
@@ -831,7 +831,7 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
                              pcb_p->callback_task, pcb_p->resp_msg_id);
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"memory allocation failed\n", fname);
             return SIP_ERROR;
-            
+
         }
     }
 
@@ -852,9 +852,9 @@ int publish_handle_ev_sip_response (sipMessage_t *pSipMessage)
 }
 
 /**
- * This function will inform the application that phone is either 
+ * This function will inform the application that phone is either
  * 1. restarting or
- * 2. failing over/ falling back 
+ * 2. failing over/ falling back
  *
  * @note detection of CCM reboot will be handled by PUBLISH ETag mechanism.
  *

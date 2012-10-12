@@ -172,7 +172,7 @@ void send_protocol_config_msg(void);
 /**
  * ccMemInit()
  */
-extern 
+extern
 int ccMemInit(size_t size) {
     return CPR_SUCCESS;
 }
@@ -279,7 +279,7 @@ thread_init ()
     }
 #endif
 #endif
-	
+
     /* SIP main thread */
     sip_thread = cprCreateThread("SIPStack task",
                                  (cprThreadStartRoutine) sip_platform_task_loop,
@@ -325,7 +325,7 @@ thread_init ()
 #endif
 
     /* Associate the threads with the message queues */
-    (void) cprSetMessageQueueThread(sip_msgq, sip_thread);  
+    (void) cprSetMessageQueueThread(sip_msgq, sip_thread);
     (void) cprSetMessageQueueThread(gsm_msgq, gsm_thread);
 
     if (FALSE == gHardCodeSDPMode) {
@@ -549,7 +549,7 @@ ccUnload (void)
     static const char fname[] = "ccUnload";
 
     DEF_DEBUG(DEB_F_PREFIX"ccUnload called..\n", DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
-    if (platform_initialized == FALSE) 
+    if (platform_initialized == FALSE)
     {
         TNP_DEBUG(DEB_F_PREFIX"system is not loaded, ignore unload\n", DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
         return;

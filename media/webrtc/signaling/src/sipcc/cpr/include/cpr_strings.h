@@ -31,8 +31,8 @@ __BEGIN_DECLS
  * The cpr_strcasecmp performs case insensitive string comparison of the "s1"
  * and the "s2" strings.
  *
- * @param[in] s1  - The first string 
- * @param[in] s2  - The second string 
+ * @param[in] s1  - The first string
+ * @param[in] s2  - The second string
  *
  * @return integer <,=,> 0 depending on whether s1 is <,=,> s2
  */
@@ -46,8 +46,8 @@ int cpr_strcasecmp(const char *s1, const char *s2);
  * The cpr_strncasecmp performs case insensitive string comparison for specific
  * length "len".
  *
- * @param[in] s1  - The first string 
- * @param[in] s2  - The second string 
+ * @param[in] s1  - The first string
+ * @param[in] s2  - The second string
  * @param[in] len  - The length to be compared
  *
  * @return integer <,=,> 0 depending on whether s1 is <,=,> s2

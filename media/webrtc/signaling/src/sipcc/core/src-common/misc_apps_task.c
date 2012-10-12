@@ -21,7 +21,7 @@
 #define MISC_ERROR err_msg
 
 cprMsgQueue_t s_misc_msg_queue;
-void destroy_misc_app_thread(void); 
+void destroy_misc_app_thread(void);
 extern cprThread_t misc_app_thread;
 
 cpr_status_e
@@ -47,7 +47,7 @@ MiscAppTaskSendMsg (uint32_t cmd, cprBuffer_t buf, uint16_t len)
 
 void MiscAppTask (void *arg)
 {
-    static const char fname[] = "MiscAppTask";    
+    static const char fname[] = "MiscAppTask";
     void *msg_p;
     phn_syshdr_t *syshdr_p;
 
@@ -59,7 +59,7 @@ void MiscAppTask (void *arg)
         MISC_ERROR(MISC_F_PREFIX"invalid input, exiting\n", fname);
         return;
     }
-    
+
     if (platThreadInit("MiscAppTask") != 0) {
         MISC_ERROR(MISC_F_PREFIX"Failed to Initialize the thread, exiting\n",
                 fname);
@@ -100,7 +100,7 @@ void MiscAppTask (void *arg)
                 break;
 
             case THREAD_UNLOAD:
-                destroy_misc_app_thread(); 
+                destroy_misc_app_thread();
                 break;
 
             default:
@@ -128,19 +128,19 @@ void MiscAppTask (void *arg)
 void MiscAppTaskShutdown (void)
 {
     /* Destroy retry after timers */
-    pres_destroy_retry_after_timers(); 
+    pres_destroy_retry_after_timers();
 }
 
-/*  
+/*
  *  Function: destroy_misc_thread
- *  Description:  shutdown and kill misc app thread 
+ *  Description:  shutdown and kill misc app thread
  *  Parameters:   none
  *  Returns: none
  */
 void destroy_misc_app_thread()
 {
     static const char fname[] = "destroy_misc_app_thread";
-    DEF_DEBUG(DEB_F_PREFIX"Unloading Misc app and destroying Misc app thread\n", 
+    DEF_DEBUG(DEB_F_PREFIX"Unloading Misc app and destroying Misc app thread\n",
         DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
     configapp_shutdown();
     MiscAppTaskShutdown();

@@ -37,10 +37,10 @@ typedef void* cprMsgQueue_t;
  * perform whatever work is needed to create a message queue.
 
  * If the name is present, CPR should assign this name to the message queue to assist in
- * debugging. The message queue depth is the second input parameter and is for 
- * setting the desired queue depth. This parameter may not be supported by all OS. 
+ * debugging. The message queue depth is the second input parameter and is for
+ * setting the desired queue depth. This parameter may not be supported by all OS.
  * Its primary intention is to set queue depth beyond the default queue depth
- * limitation. 
+ * limitation.
  * On any OS where there is no limit on the message queue depth or
  * its queue depth is sufficiently large then this parameter is ignored on that
  * OS.
@@ -67,8 +67,8 @@ cprCreateMessageQueue(const char *name, uint16_t depth);
  * The cprDestroyMessageQueue function is called to destroy a message queue. The
  * function drains any messages from the queue and the frees the
  * message queue. Any messages on the queue are to be deleted, and not sent to the intended
- * recipient. It is the application's responsibility to ensure that no threads are 
- * blocked on a message queue when it is destroyed. 
+ * recipient. It is the application's responsibility to ensure that no threads are
+ * blocked on a message queue when it is destroyed.
  *
  * @param[in] msgQueue - message queue to destroy
  *

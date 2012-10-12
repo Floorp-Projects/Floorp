@@ -28,7 +28,7 @@
 cpr_socket_t sip_tls_create_connection(sipSPIMessage_t *spi_msg,
                                        boolean blocking,
                                        sec_level_t sec);
-extern cpr_sockaddr_t *sip_set_sockaddr(cpr_sockaddr_storage *psock_storage, uint16_t family, 
+extern cpr_sockaddr_t *sip_set_sockaddr(cpr_sockaddr_storage *psock_storage, uint16_t family,
                                  cpr_ip_addr_t ip_addr, uint16_t port, uint16_t *addr_len);
 
 /*
@@ -86,7 +86,7 @@ sip_tls_create_connection (sipSPIMessage_t *spi_msg, boolean blocking,
     ipaddr2dotted(ipaddr_str, &create_msg->addr);
     ret = platSecIsServerSecure();
     if (ret != PLAT_SOCK_SECURE) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX 
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX
                           "Secure connection is not created because"
                           " there is no secure servers\n", fname);
         return INVALID_SOCKET;
@@ -102,7 +102,7 @@ sip_tls_create_connection (sipSPIMessage_t *spi_msg, boolean blocking,
     } else if (sec == ENCRYPTED) {
         conn_mode = PLAT_SOCK_ENCRYPTED;
     } else {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX 
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX
                           "Secure connection is not created. Security mode was"
                           " not encrypyted or authenticated.\n", fname);
         conn_mode = PLAT_SOCK_NON_SECURE;
@@ -114,10 +114,10 @@ sip_tls_create_connection (sipSPIMessage_t *spi_msg, boolean blocking,
                             tos_dscp_val, /* TOS value  */
                             conn_mode,   /* The mode (Auth/Encry/None) */
                             &sec_port);          /* local port */
-    
+
     if (sock < 0) {
 
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX 
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX
                           "Secure connect failed!!\n",fname);
         return INVALID_SOCKET;
     }
@@ -127,13 +127,13 @@ sip_tls_create_connection (sipSPIMessage_t *spi_msg, boolean blocking,
         conn_status = platSecSockIsConnected(sock);
         if (conn_status == PLAT_SOCK_CONN_FAILED) {
             (void)sipSocketClose(sock, TRUE);
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX 
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX
                               "Establish non-blocking mode secure"
                               " connection failed!!\n", fname);
             return INVALID_SOCKET;
         }
     } else {
-        conn_status = PLAT_SOCK_CONN_OK;   
+        conn_status = PLAT_SOCK_CONN_OK;
     }
     if (sip_tcp_set_sock_options(sock) != TRUE) {
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX "Socket set option failure\n",
@@ -151,7 +151,7 @@ sip_tls_create_connection (sipSPIMessage_t *spi_msg, boolean blocking,
     }
 
     memset(&sock_addr, 0, sizeof(sock_addr));
-    (void) sip_set_sockaddr(&sock_addr, af_listen, create_msg->addr, 
+    (void) sip_set_sockaddr(&sock_addr, af_listen, create_msg->addr,
                             (uint16_t)(create_msg->port), &addr_len);
 
     sip_tcp_conn_tab[idx].fd = sock;

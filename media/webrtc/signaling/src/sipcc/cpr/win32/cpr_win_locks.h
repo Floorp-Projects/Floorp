@@ -10,13 +10,13 @@
 
 typedef struct {
 	/* Number of waiting thread */
-	int noWaiters; 
-	
+	int noWaiters;
+
 	/* Serialise access to the waiting thread count */
-	CRITICAL_SECTION noWaitersLock; 
+	CRITICAL_SECTION noWaitersLock;
 
 	/* Semaphore used to queue up threads waiting for the condition to be signalled */
-	HANDLE sema; 
+	HANDLE sema;
 
 } cpr_condition_t;
 

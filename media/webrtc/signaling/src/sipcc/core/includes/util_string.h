@@ -12,7 +12,7 @@
 #define EMPTY_STR_LEN 1
 
 boolean is_empty_str(char *str);
-void init_empty_str(char *str); 
+void init_empty_str(char *str);
 
 void ipaddr2dotted(char *addr_str, cpr_ip_addr_t *addr);
 uint32_t dotted2ipaddr(const char *addr_str);

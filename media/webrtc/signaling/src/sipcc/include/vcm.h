@@ -29,7 +29,7 @@
  */
 //The result maps to RTP payload type for using internally.
 #define GET_DYNAMIC_PAY_LOAD_TYPE(payload) (payload>>16)
-//The result maps to the enum vcm_media_payload_type_t. 
+//The result maps to the enum vcm_media_payload_type_t.
 #define GET_MEDIA_PAYLOAD_TYPE_ENUM(payload) (payload & 0xFFFF)
 
 /** Evaluates to TRUE for audio media streams where id is the mcap_id of the given stream */
@@ -413,7 +413,7 @@ void vcmRxAllocICE(cc_mcapid_t mcap_id,
         cc_streamid_t stream_id,
         cc_call_handle_t  call_handle,
         const char *peerconnection,
-        uint16_t level,  
+        uint16_t level,
         char **default_addr, /* Out */
         int *default_port, /* Out */
         char ***candidates, /* Out */
@@ -432,7 +432,7 @@ void vcmRxAllocICE(cc_mcapid_t mcap_id,
 void vcmGetIceParams(const char *peerconnection, char **ufragp, char **pwdp);
 
 /* Set remote ICE global parameters.
- * 
+ *
  *  @param[in]  peerconnection - the peerconnection in use
  *  @param[in]  ufrag - the ufrag
  *  @param[in]  pwd - the pwd
@@ -452,7 +452,7 @@ short vcmSetIceSessionParams(const char *peerconnection, char *ufrag, char *pwd)
 short vcmSetIceCandidate(const char *peerconnection, const char *icecandidate, uint16_t level);
 
 /* Set remote ICE media-level parameters.
- * 
+ *
  *  @param[in]  peerconnection - the peerconnection in use
  *  @param[in]  level - the m-line
  *  @param[in]  ufrag - the ufrag
@@ -479,7 +479,7 @@ short vcmStartIceChecks(const char *peerconnection);
  *  @param[in] mcap_id - group identifier to which stream belongs.
  *  @param[in]  peerconnection - the peerconnection in use
  *  @param[out] pc_stream_id - the id of the allocated stream
- * 
+ *
  *  TODO(ekr@rtfm.com): Revise along with everything else for the
  *  new stream model.
  *
@@ -556,7 +556,7 @@ int vcmRxStart(cc_mcapid_t mcap_id,
  *  @param[in]   call_handle  - call handle
  *  @param[in]   peerconnection - the peerconnection in use
  *  @param[in]   num_payloads  - number of codecs negotiated
- *  @param[in]   payloads      - list of negotiated codec details 
+ *  @param[in]   payloads      - list of negotiated codec details
  *  @param[in]   fingerprint_alg - the DTLS fingerprint algorithm
  *  @param[in]   fingerprint  - the DTLS fingerprint
  *  @param[in]   attrs        - media attributes
@@ -574,7 +574,7 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
         cc_call_handle_t  call_handle,
         const char *peerconnection,
         int num_payloads,
-        const vcm_media_payload_type_t* payloads,        
+        const vcm_media_payload_type_t* payloads,
         const char *fingerprint_alg,
         const char *fingerprint,
         vcm_mediaAttrs_t *attrs);
@@ -798,9 +798,9 @@ void vcmControlRinger(vcm_ring_mode_t ringMode,
 
 /**
  * Get current list of audio codec that could be used
- * @param request_type - 
+ * @param request_type -
  * The request_type should be VCM_DECODEONLY/ENCODEONLY/FULLDUPLEX/IGNORE
- * 
+ *
  * @return A bit mask should be returned that specifies the list of the audio
  * codecs. The bit mask should conform to the defines in this file.
  * #define VCM_RESOURCE_G711     0x00000001
@@ -812,7 +812,7 @@ int vcmGetAudioCodecList(int request_type);
 
 /**
  * Get current list of video codec that could be used
- * @param request_type - 
+ * @param request_type -
  * The request_type should be VCM_DECODEONLY/ENCODEONLY/FULLDUPLEX/IGNORE
  *
  * @return A bit mask should be returned that specifies the list of the audio
@@ -825,7 +825,7 @@ int vcmGetAudioCodecList(int request_type);
 int vcmGetVideoCodecList(int request_type);
 
 /**
- * Get max supported H.264 video packetization mode. 
+ * Get max supported H.264 video packetization mode.
  * @return maximum supported video packetization mode for H.264. Value returned
  * must be 0 or 1. Value 2 is not supported yet.
  */
@@ -834,7 +834,7 @@ int vcmGetVideoMaxSupportedPacketizationMode();
 /**
  * Get the rx/tx stream statistics associated with the call.
  * The rx/tx stats are defined as comma seperated string as follows.
- * Rx_stats: 
+ * Rx_stats:
  *   snprintf(rx_stats, CC_KFACTOR_STAT_LEN,
  *               "Dur=%d,Pkt=%d,Oct=%d,LatePkt=%d,LostPkt=%d,AvgJit=%d,VQMetrics=\"%s\"",
  *               duration, numberOfPackageReceived, numberOfByteReceived, numberOfLatePackage, numberOfPackageLost, averageJitter, qualityMatrics);
@@ -990,11 +990,11 @@ int vcmDtmfBurst(int digit, int duration, int direction);
 /**
  * vcmGetILBCMode
  *
- * This method should return the mode that needs to be used in 
+ * This method should return the mode that needs to be used in
  * SDP
  * @return int
  */
-int vcmGetILBCMode(); 
+int vcmGetILBCMode();
 
 //Using C++ for gips. This is the end of extern "C" above.
 #ifdef __cplusplus
@@ -1002,6 +1002,6 @@ int vcmGetILBCMode();
 #endif
 
 
-  
+
 
 #endif /* _VCM_H_ */

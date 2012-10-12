@@ -35,7 +35,7 @@ typedef struct {
 } cpr_thread_t;
 
 /**
- * Thread start routine signature 
+ * Thread start routine signature
  */
 typedef void *(*cprThreadStartRoutine)(void *data);
 
@@ -50,8 +50,8 @@ typedef void *(*cprThreadStartRoutine)(void *data);
  *  current process. If the input parameter "name" is present, then this is used
  *  for debugging purposes. The startRoutine is the address of the function where
  *  the thread execution begins. The start routine prototype is defined as
- *  follows 
- *  @code 
+ *  follows
+ *  @code
  *     int32_t (*cprThreadStartRoutine)(void* data)
  *  @endcode
  *
@@ -81,8 +81,8 @@ cprThread_t cprCreateThread(const char *name,
  * @param[in] thread - thread to destroy.
  *
  * @return CPR_SUCCESS or CPR_FAILURE. errno should be set for FAILURE case.
- * 
- * @note In Linux there will never be a success indication as the 
+ *
+ * @note In Linux there will never be a success indication as the
  *       calling thread will have been terminated.
  */
 cprRC_t cprDestroyThread(cprThread_t thread);

@@ -19,7 +19,7 @@ typedef void* cprMutex_t;
  * Mutex information needed to hide OS differences in implementation.
  * To use mutexes, the application code may pass in a name to the
  * create function for mutexes. CPR does not use this field, it is
- * solely for the convience of the application and to aid in debugging. 
+ * solely for the convience of the application and to aid in debugging.
  * Upon an application calling the init routine, CPR will malloc the
  * memory for a mutex, set the handlePtr or handleInt as appropriate
  * and return a pointer to the mutex structure.
@@ -109,7 +109,7 @@ typedef void* cprSignal_t;
  * Condition information needed to hide OS differences in implementation.
  * To use conditions, the application code may pass in a name to the
  * create function for mutexes. CPR does not use this field, it is
- * solely for the convience of the application and to aid in debugging. 
+ * solely for the convience of the application and to aid in debugging.
  * Upon an application calling the init routine, CPR will malloc the
  * memory for a condition, set the handlePtr or handleInt as appropriate
  * and return a pointer to the condition structure.

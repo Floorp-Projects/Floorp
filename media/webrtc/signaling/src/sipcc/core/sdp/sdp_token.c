@@ -27,7 +27,7 @@ sdp_result_e sdp_parse_version (sdp_t *sdp_p, u16 level, const char *ptr)
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
     }
-  
+
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
         SDP_PRINT("%s Parse version line successful, version %u",
                   sdp_p->debug_str, (u16)sdp_p->version);
@@ -85,7 +85,7 @@ sdp_result_e sdp_parse_owner (sdp_t *sdp_p, u16 level, const char *ptr)
         return (SDP_INVALID_PARAMETER);
     }
 
-    /* Find the owner session id.  This is a numeric field but is  
+    /* Find the owner session id.  This is a numeric field but is
      * stored as a string since it may be 64 bit.
      */
     ptr = sdp_getnextstrtok(ptr, sdp_p->owner_sessid, sizeof(sdp_p->owner_sessid), " \t", &result);
@@ -93,7 +93,7 @@ sdp_result_e sdp_parse_owner (sdp_t *sdp_p, u16 level, const char *ptr)
         /* Make sure the sessid is numeric, even though we store it as
          * a string.
          */
-        (void)sdp_getnextnumtok(sdp_p->owner_sessid, 
+        (void)sdp_getnextnumtok(sdp_p->owner_sessid,
                                 (const char **)&tmpptr, " \t",&result);
     }
     if (result != SDP_SUCCESS) {
@@ -111,7 +111,7 @@ sdp_result_e sdp_parse_owner (sdp_t *sdp_p, u16 level, const char *ptr)
         /* Make sure the version is numeric, even though we store it as
          * a string.
          */
-        (void)sdp_getnextnumtok(sdp_p->owner_version, 
+        (void)sdp_getnextnumtok(sdp_p->owner_version,
                                 (const char **)&tmpptr," \t",&result);
     }
     if (result != SDP_SUCCESS) {
@@ -144,7 +144,7 @@ sdp_result_e sdp_parse_owner (sdp_t *sdp_p, u16 level, const char *ptr)
     }
     if (sdp_p->owner_network_type == SDP_NT_UNSUPPORTED) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            SDP_ERROR("%s Owner network type unsupported (%s)", 
+            SDP_ERROR("%s Owner network type unsupported (%s)",
                       sdp_p->debug_str, tmp);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -173,7 +173,7 @@ sdp_result_e sdp_parse_owner (sdp_t *sdp_p, u16 level, const char *ptr)
     if ((sdp_p->owner_addr_type == SDP_AT_UNSUPPORTED) &&
         (sdp_p->owner_network_type != SDP_NT_ATM)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            SDP_ERROR("%s Owner address type unsupported (%s)", 
+            SDP_ERROR("%s Owner address type unsupported (%s)",
                       sdp_p->debug_str, tmp);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -191,8 +191,8 @@ sdp_result_e sdp_parse_owner (sdp_t *sdp_p, u16 level, const char *ptr)
     }
 
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-        SDP_PRINT("%s Parse owner: name %s, session id %s, version %s", 
-                  sdp_p->debug_str, sdp_p->owner_name, sdp_p->owner_sessid, 
+        SDP_PRINT("%s Parse owner: name %s, session id %s, version %s",
+                  sdp_p->debug_str, sdp_p->owner_name, sdp_p->owner_sessid,
                   sdp_p->owner_version);
         SDP_PRINT("%s              network %s, address type %s, "
                   "address %s", sdp_p->debug_str,
@@ -209,13 +209,13 @@ sdp_result_e sdp_build_owner (sdp_t *sdp_p, u16 level, flex_string *fs)
         (sdp_p->owner_network_type >= SDP_MAX_NETWORK_TYPES) ||
         (sdp_p->owner_addr_type >= SDP_MAX_ADDR_TYPES) ||
         (sdp_p->owner_addr[0] == '\0')) {
-        
+
         if((sdp_p->owner_network_type == SDP_NT_ATM) &&
            (sdp_p->owner_addr_type == SDP_AT_INVALID)) {
           flex_string_sprintf(fs, "o=%s %s %s %s - -\r\n",
                     sdp_p->owner_name, sdp_p->owner_sessid,
-                    sdp_p->owner_version, 
-                    sdp_get_network_name(sdp_p->owner_network_type));   
+                    sdp_p->owner_version,
+                    sdp_get_network_name(sdp_p->owner_network_type));
         }
 
         if (sdp_p->conf_p->owner_reqd == TRUE) {
@@ -233,7 +233,7 @@ sdp_result_e sdp_build_owner (sdp_t *sdp_p, u16 level, flex_string *fs)
 
     flex_string_sprintf(fs, "o=%s %s %s %s %s %s\r\n",
                     sdp_p->owner_name, sdp_p->owner_sessid,
-                    sdp_p->owner_version, 
+                    sdp_p->owner_version,
                     sdp_get_network_name(sdp_p->owner_network_type),
                     sdp_get_address_name(sdp_p->owner_addr_type),
                     sdp_p->owner_addr);
@@ -260,7 +260,7 @@ sdp_result_e sdp_parse_sessname (sdp_t *sdp_p, u16 level, const char *ptr)
     endptr = sdp_findchar(ptr, "\r\n");
     if (ptr == endptr) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-            SDP_WARN("%s Warning: No session name specified.", 
+            SDP_WARN("%s Warning: No session name specified.",
                      sdp_p->debug_str);
         }
     }
@@ -268,7 +268,7 @@ sdp_result_e sdp_parse_sessname (sdp_t *sdp_p, u16 level, const char *ptr)
     sstrncpy(sdp_p->sessname, ptr, str_len+1);
 
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-        SDP_PRINT("%s Parse session name, %s", 
+        SDP_PRINT("%s Parse session name, %s",
                   sdp_p->debug_str, sdp_p->sessname);
     }
     return (SDP_SUCCESS);
@@ -478,7 +478,7 @@ sdp_result_e sdp_parse_connection (sdp_t *sdp_p, u16 level, const char *ptr)
     }
     conn_p->nettype = SDP_NT_UNSUPPORTED;
     for (i=0; i < SDP_MAX_NETWORK_TYPES; i++) {
-        if (cpr_strncasecmp(tmp, sdp_nettype[i].name, 
+        if (cpr_strncasecmp(tmp, sdp_nettype[i].name,
                         sdp_nettype[i].strlen) == 0) {
             if (sdp_p->conf_p->nettype_supported[i] == TRUE) {
                 conn_p->nettype = (sdp_nettype_e)i;
@@ -537,12 +537,12 @@ sdp_result_e sdp_parse_connection (sdp_t *sdp_p, u16 level, const char *ptr)
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
     }
-    /* We currently only support addrs containing '/'s for EPN addrs. 
+    /* We currently only support addrs containing '/'s for EPN addrs.
      * For other addrs this would indicate multicast addrs. */
-    /* Multicast host group addresses are defined to be the IP addresses 
-     * whose high-order four bits are 1110, giving an address range from 
+    /* Multicast host group addresses are defined to be the IP addresses
+     * whose high-order four bits are 1110, giving an address range from
      * 224.0.0.0 through 239.255.255.255
-     */ 
+     */
     /* multicast addr check */
     sstrncpy (mcast_str, conn_p->conn_addr, MCAST_STRING_LEN);
 
@@ -560,24 +560,24 @@ sdp_result_e sdp_parse_connection (sdp_t *sdp_p, u16 level, const char *ptr)
 
 
     mcast_bits = (int) strtoul_result;
-    if ((mcast_bits >= SDP_MIN_MCAST_ADDR_HI_BIT_VAL ) && 
+    if ((mcast_bits >= SDP_MIN_MCAST_ADDR_HI_BIT_VAL ) &&
         (mcast_bits <= SDP_MAX_MCAST_ADDR_HI_BIT_VAL)) {
-        SDP_PRINT("%s Parsed to be a multicast address with mcast bits %d", 
+        SDP_PRINT("%s Parsed to be a multicast address with mcast bits %d",
                   sdp_p->debug_str, mcast_bits);
         conn_p->is_multicast = TRUE;
-    } 
-    
+    }
+
     if (conn_p->addrtype != SDP_AT_EPN) {
         slash_ptr = sdp_findchar(conn_p->conn_addr, "/");
         if (slash_ptr[0] != '\0') {
             if (conn_p->is_multicast) {
-                SDP_PRINT("%s A multicast address with slash %s", 
+                SDP_PRINT("%s A multicast address with slash %s",
                           sdp_p->debug_str, conn_p->conn_addr);
                 slash_ptr++;
                 slash_ptr = sdp_getnextstrtok(slash_ptr, tmp, sizeof(tmp), "/", &result);
                 if (result != SDP_SUCCESS) {
                     if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                        SDP_ERROR("%s No ttl value specified for this multicast addr with a slash", 
+                        SDP_ERROR("%s No ttl value specified for this multicast addr with a slash",
                                  sdp_p->debug_str);
                     }
                     sdp_p->conf_p->num_invalid_param++;
@@ -594,7 +594,7 @@ sdp_result_e sdp_parse_connection (sdp_t *sdp_p, u16 level, const char *ptr)
                     }
                     sdp_p->conf_p->num_invalid_param++;
                     return (SDP_INVALID_PARAMETER);
-                } 
+                }
 
                 conn_p->ttl = (int) strtoul_result;
 
@@ -605,7 +605,7 @@ sdp_result_e sdp_parse_connection (sdp_t *sdp_p, u16 level, const char *ptr)
                 slash_ptr = sdp_findchar(slash_ptr, "/");
                 if (slash_ptr != NULL &&
                       slash_ptr[0] != '\0') {
-                    SDP_PRINT("%s Found a num addr field for multicast addr %s ", 
+                    SDP_PRINT("%s Found a num addr field for multicast addr %s ",
                               sdp_p->debug_str,slash_ptr);
                     slash_ptr++;
 
@@ -625,7 +625,7 @@ sdp_result_e sdp_parse_connection (sdp_t *sdp_p, u16 level, const char *ptr)
                 }
 	        } else {
                 sdp_p->conf_p->num_invalid_param++;
-                SDP_PRINT("%s Only multicast addresses allowed with slashes", 
+                SDP_PRINT("%s Only multicast addresses allowed with slashes",
                           sdp_p->debug_str);
                 return (SDP_INVALID_PARAMETER);
             }
@@ -640,10 +640,10 @@ sdp_result_e sdp_parse_connection (sdp_t *sdp_p, u16 level, const char *ptr)
                      "address specified but not allowed.", sdp_p->debug_str);
         }
     }
-    
+
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
         SDP_PRINT("%s Parse connection: network %s, address type %s, "
-                  "address %s ttl= %d num of addresses = %d", 
+                  "address %s ttl= %d num of addresses = %d",
                   sdp_p->debug_str,
                   sdp_get_network_name(conn_p->nettype),
                   sdp_get_address_name(conn_p->addrtype),
@@ -667,27 +667,27 @@ sdp_result_e sdp_build_connection (sdp_t *sdp_p, u16 level, flex_string *fs)
         conn_p = &(mca_p->conn);
     }
 
-    if((conn_p->nettype == SDP_NT_ATM ) && 
+    if((conn_p->nettype == SDP_NT_ATM ) &&
        (conn_p->addrtype == SDP_AT_INVALID)) {
         /*allow c= line to be built without address type and address fields
          * This is a special case for ATM PVC*/
         flex_string_sprintf(fs, "c=%s\r\n",
                     sdp_get_network_name(conn_p->nettype));
         return SDP_SUCCESS;
-    } 
+    }
     if ((conn_p->nettype >= SDP_MAX_NETWORK_TYPES) ||
         (conn_p->addrtype >= SDP_MAX_ADDR_TYPES) ||
         (conn_p->conn_addr[0] == '\0')) {
         /* Connection info isn't set - don't need to build the token. */
         return (SDP_SUCCESS);
     }
-    
+
     if (conn_p->is_multicast) {
         if (conn_p->num_of_addresses > 1) {
             flex_string_sprintf(fs, "c=%s %s %s/%d/%d\r\n",
                              sdp_get_network_name(conn_p->nettype),
                              sdp_get_address_name(conn_p->addrtype),
-                             conn_p->conn_addr, conn_p->ttl, 
+                             conn_p->conn_addr, conn_p->ttl,
                              conn_p->num_of_addresses);
         } else {
             flex_string_sprintf(fs, "c=%s %s %s/%d\r\n",
@@ -709,7 +709,7 @@ sdp_result_e sdp_build_connection (sdp_t *sdp_p, u16 level, flex_string *fs)
     return (SDP_SUCCESS);
 }
 
-/* 
+/*
  * sdp_parse_bandwidth
  *
  * This function parses a bandwidth field. The parsing is done in accordance
@@ -718,7 +718,7 @@ sdp_result_e sdp_build_connection (sdp_t *sdp_p, u16 level, flex_string *fs)
  * bandwidth-fields =    *("b=" bwtype ":" bandwidth CRLF)
  * bwtype =              1*(alpha-numeric)
  * bandwidth =           1*(DIGIT)
- *  
+ *
  * It currently supports three types of valid bwtypes - AS, CT and TIAS
  */
 sdp_result_e sdp_parse_bandwidth (sdp_t *sdp_p, u16 level, const char *ptr)
@@ -767,7 +767,7 @@ sdp_result_e sdp_parse_bandwidth (sdp_t *sdp_p, u16 level, const char *ptr)
 
     if (bw_modifier == SDP_BW_MODIFIER_UNSUPPORTED) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            SDP_ERROR("%s Error: BW Modifier type unsupported (%s).", 
+            SDP_ERROR("%s Error: BW Modifier type unsupported (%s).",
                      sdp_p->debug_str, tmp);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -784,7 +784,7 @@ sdp_result_e sdp_parse_bandwidth (sdp_t *sdp_p, u16 level, const char *ptr)
         if ((result != SDP_SUCCESS)) {
 
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-                SDP_ERROR("%s Error: No BW Value specified ", 
+                SDP_ERROR("%s Error: No BW Value specified ",
                           sdp_p->debug_str);
             }
             sdp_p->conf_p->num_invalid_param++;
@@ -807,23 +807,23 @@ sdp_result_e sdp_parse_bandwidth (sdp_t *sdp_p, u16 level, const char *ptr)
 
     /*
      * Enqueue the sdp_bw_data_t instance at the end of the list of
-     * sdp_bw_data_t instances. 
+     * sdp_bw_data_t instances.
      */
     if (bw_p->bw_data_list == NULL) {
         bw_p->bw_data_list = new_bw_data_p;
     } else {
-        for (bw_data_p = bw_p->bw_data_list; 
+        for (bw_data_p = bw_p->bw_data_list;
              bw_data_p->next_p != NULL;
              bw_data_p = bw_data_p->next_p) {
             ; // Empty For
         }
         bw_data_p->next_p = new_bw_data_p;
-    } 
+    }
     bw_p->bw_data_count++;
 
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
         SDP_PRINT("%s Parsed bw type %s, value %d", sdp_p->debug_str,
-                     sdp_get_bw_modifier_name(new_bw_data_p->bw_modifier), 
+                     sdp_get_bw_modifier_name(new_bw_data_p->bw_modifier),
 		     new_bw_data_p->bw_val);
     }
 
@@ -862,7 +862,7 @@ sdp_result_e sdp_build_bandwidth (sdp_t *sdp_p, u16 level, flex_string *fs)
                      sdp_get_bw_modifier_name(bw_data_p->bw_modifier),
                      bw_data_p->bw_val);
         }
-  
+
         bw_data_p = bw_data_p->next_p;
     }
 
@@ -888,7 +888,7 @@ sdp_result_e sdp_parse_timespec (sdp_t *sdp_p, u16 level, const char *ptr)
         /* Make sure the start_time is numeric, even though we store it as
          * a string.
          */
-        (void)sdp_getnextnumtok(timespec_p->start_time, 
+        (void)sdp_getnextnumtok(timespec_p->start_time,
                                 (const char **)&tmpptr, " \t", &result);
     }
     if (result != SDP_SUCCESS) {
@@ -906,7 +906,7 @@ sdp_result_e sdp_parse_timespec (sdp_t *sdp_p, u16 level, const char *ptr)
         /* Make sure the start_time is numeric, even though we store it as
          * a string.
          */
-        (void)sdp_getnextnumtok(timespec_p->stop_time, 
+        (void)sdp_getnextnumtok(timespec_p->stop_time,
                                 (const char **)&tmpptr, " \t", &result);
     }
     if (result != SDP_SUCCESS) {
@@ -1051,7 +1051,7 @@ sdp_result_e sdp_parse_encryption (sdp_t *sdp_p, u16 level, const char *ptr)
     }
     if (encrypt_p->encrypt_type == SDP_ENCRYPT_UNSUPPORTED) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-            SDP_WARN("%s Warning: Encryption type unsupported (%s).", 
+            SDP_WARN("%s Warning: Encryption type unsupported (%s).",
                      sdp_p->debug_str, tmp);
         }
     }
@@ -1102,7 +1102,7 @@ sdp_result_e sdp_build_encryption (sdp_t *sdp_p, u16 level, flex_string *fs)
         encrypt_p = &(mca_p->encrypt);
     }
 
-    if ((encrypt_p->encrypt_type >= SDP_MAX_ENCRYPT_TYPES) ||   
+    if ((encrypt_p->encrypt_type >= SDP_MAX_ENCRYPT_TYPES) ||
         ((encrypt_p->encrypt_type != SDP_ENCRYPT_PROMPT) &&
          (encrypt_p->encrypt_key[0] == '\0'))) {
         /* Encryption info isn't set - don't need to build the token. */
@@ -1129,7 +1129,7 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
 {
     u16                   i;
     u16                   num_port_params=0;
-    int32                 num[SDP_MAX_PORT_PARAMS];  
+    int32                 num[SDP_MAX_PORT_PARAMS];
     tinybool              valid_param = FALSE;
     sdp_result_e          result;
     sdp_mca_t            *mca_p;
@@ -1145,12 +1145,12 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
         sdp_p->conf_p->num_no_resource++;
         return (SDP_NO_RESOURCE);
     }
-    
+
     /* Find the media type. */
     ptr = sdp_getnextstrtok(ptr, tmp, sizeof(tmp), " \t", &result);
     if (result != SDP_SUCCESS) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            SDP_ERROR("%s No media type specified, parse failed.", 
+            SDP_ERROR("%s No media type specified, parse failed.",
                       sdp_p->debug_str);
         }
         SDP_FREE(mca_p);
@@ -1166,14 +1166,14 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
     }
     if (mca_p->media == SDP_MEDIA_UNSUPPORTED) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-            SDP_WARN("%s Warning: Media type unsupported (%s).", 
+            SDP_WARN("%s Warning: Media type unsupported (%s).",
                      sdp_p->debug_str, tmp);
         }
     }
 
-    /* Find the port token parameters, but don't process it until 
-     * we determine the transport protocol as that determines what 
-     * port number formats are valid. 
+    /* Find the port token parameters, but don't process it until
+     * we determine the transport protocol as that determines what
+     * port number formats are valid.
      */
     ptr = sdp_getnextstrtok(ptr, port, sizeof(port), " \t", &result);
     if (result != SDP_SUCCESS) {
@@ -1190,7 +1190,7 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
         if (sdp_getchoosetok(port_ptr, &port_ptr, "/ \t", &result) == TRUE) {
             num[i] = SDP_CHOOSE_PARAM;
         } else {
-            num[i] = sdp_getnextnumtok(port_ptr, (const char **)&port_ptr, 
+            num[i] = sdp_getnextnumtok(port_ptr, (const char **)&port_ptr,
                                        "/ \t", &result);
             if (result != SDP_SUCCESS) {
                 break;
@@ -1238,8 +1238,8 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
         if ((mca_p->transport == SDP_TRANSPORT_RTPAVP) ||
 	    (mca_p->transport == SDP_TRANSPORT_RTPSAVP) ||
 	    (mca_p->transport == SDP_TRANSPORT_RTPSAVPF) ||
-            (mca_p->transport == SDP_TRANSPORT_UDP) || 
-            (mca_p->transport == SDP_TRANSPORT_TCP) || 
+            (mca_p->transport == SDP_TRANSPORT_UDP) ||
+            (mca_p->transport == SDP_TRANSPORT_TCP) ||
             (mca_p->transport == SDP_TRANSPORT_UDPTL) ||
             (mca_p->transport == SDP_TRANSPORT_UDPSPRT) ||
             (mca_p->transport == SDP_TRANSPORT_LOCAL) ||
@@ -1277,12 +1277,12 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
         if ((mca_p->transport == SDP_TRANSPORT_RTPAVP) ||
 	    (mca_p->transport == SDP_TRANSPORT_RTPSAVP) ||
 	    (mca_p->transport == SDP_TRANSPORT_RTPSAVPF) ||
-            (mca_p->transport == SDP_TRANSPORT_UDP) || 
+            (mca_p->transport == SDP_TRANSPORT_UDP) ||
             (mca_p->transport == SDP_TRANSPORT_LOCAL)) {
-            /* Port format is <port>/<num of ports>. Make sure choose 
-             * params were not specified. 
+            /* Port format is <port>/<num of ports>. Make sure choose
+             * params were not specified.
              */
-            if ((num[0] != SDP_CHOOSE_PARAM) && 
+            if ((num[0] != SDP_CHOOSE_PARAM) &&
                 (num[1] != SDP_CHOOSE_PARAM)) {
                 mca_p->port        = num[0];
                 mca_p->num_ports   = num[1];
@@ -1290,11 +1290,11 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
                 valid_param        = TRUE;
             }
         } else if (mca_p->transport == SDP_TRANSPORT_UDPTL) {
-            /* Port format is <port>/<num of ports>. Make sure choose 
+            /* Port format is <port>/<num of ports>. Make sure choose
              * params were not specified.  For UDPTL, only "1" may
              * be specified for number of ports.
              */
-            if ((num[0] != SDP_CHOOSE_PARAM) && 
+            if ((num[0] != SDP_CHOOSE_PARAM) &&
                 (num[1] == 1)) {
                 mca_p->port        = num[0];
                 mca_p->num_ports   = 1;
@@ -1302,10 +1302,10 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
                 valid_param        = TRUE;
             }
         } else if (mca_p->transport == SDP_TRANSPORT_CES10) {
-            /* Port format is <vpi>/<vci>. Make sure choose 
-             * params were not specified. 
+            /* Port format is <vpi>/<vci>. Make sure choose
+             * params were not specified.
              */
-            if ((num[0] != SDP_CHOOSE_PARAM) && 
+            if ((num[0] != SDP_CHOOSE_PARAM) &&
                 (num[1] != SDP_CHOOSE_PARAM)) {
                 mca_p->vpi         = num[0];
                 mca_p->vci         = num[1];
@@ -1320,9 +1320,9 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
              * are allowed by default and don't need to be allowed
              * through the appl config.
              */
-            if (((num[0] != SDP_CHOOSE_PARAM) && 
+            if (((num[0] != SDP_CHOOSE_PARAM) &&
                  (num[1] != SDP_CHOOSE_PARAM)) ||
-                ((num[0] == SDP_CHOOSE_PARAM) && 
+                ((num[0] == SDP_CHOOSE_PARAM) &&
                  (num[1] == SDP_CHOOSE_PARAM))) {
                 mca_p->vcci        = num[0];
                 mca_p->cid         = num[1];
@@ -1333,10 +1333,10 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
         break;
     case 3:
         if (mca_p->transport == SDP_TRANSPORT_AAL1AVP) {
-            /* Port format is <port>/<vpi>/<vci>. Make sure choose 
-             * params were not specified. 
+            /* Port format is <port>/<vpi>/<vci>. Make sure choose
+             * params were not specified.
              */
-            if ((num[0] != SDP_CHOOSE_PARAM) && 
+            if ((num[0] != SDP_CHOOSE_PARAM) &&
                 (num[1] != SDP_CHOOSE_PARAM) &&
                 (num[2] != SDP_CHOOSE_PARAM)) {
                 mca_p->port        = num[0];
@@ -1351,10 +1351,10 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
         if ((mca_p->transport == SDP_TRANSPORT_AAL2_ITU) ||
             (mca_p->transport == SDP_TRANSPORT_AAL2_ATMF) ||
             (mca_p->transport == SDP_TRANSPORT_AAL2_CUSTOM)) {
-            /* Port format is <port>/<vpi>/<vci>/<cid>. Make sure choose 
-             * params were not specified. 
+            /* Port format is <port>/<vpi>/<vci>/<cid>. Make sure choose
+             * params were not specified.
              */
-            if ((num[0] != SDP_CHOOSE_PARAM) && 
+            if ((num[0] != SDP_CHOOSE_PARAM) &&
                 (num[1] != SDP_CHOOSE_PARAM) &&
                 (num[2] != SDP_CHOOSE_PARAM) &&
                 (num[3] != SDP_CHOOSE_PARAM)) {
@@ -1379,13 +1379,13 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
         return (SDP_INVALID_PARAMETER);
     }
 
-    /* Find payload formats. AAL2 media lines allow multiple 
+    /* Find payload formats. AAL2 media lines allow multiple
      * transport/profile types per line, so these are handled differently. */
     if ((mca_p->transport == SDP_TRANSPORT_AAL2_ITU) ||
         (mca_p->transport == SDP_TRANSPORT_AAL2_ATMF) ||
         (mca_p->transport == SDP_TRANSPORT_AAL2_CUSTOM)) {
 
-        if (sdp_parse_multiple_profile_payload_types(sdp_p, mca_p, ptr) != 
+        if (sdp_parse_multiple_profile_payload_types(sdp_p, mca_p, ptr) !=
             SDP_SUCCESS) {
             sdp_p->conf_p->num_invalid_param++;
 	    SDP_FREE(mca_p);
@@ -1395,7 +1395,7 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
         /* Transport is a non-AAL2 type.  Parse payloads normally. */
         sdp_parse_payload_types(sdp_p, mca_p, ptr);
     }
-    
+
     /* Parse SCTP/DTLS port */
     if (mca_p->transport == SDP_TRANSPORT_SCTPDTLS) {
         ptr = sdp_getnextstrtok(ptr, port, sizeof(port), " \t", &result);
@@ -1435,39 +1435,39 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
     }
 
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-        
+
         SDP_PRINT("%s Parsed media type %s, ", sdp_p->debug_str,
                   sdp_get_media_name(mca_p->media));
         switch (mca_p->port_format) {
-        case SDP_PORT_NUM_ONLY: 
+        case SDP_PORT_NUM_ONLY:
             SDP_PRINT("Port num %ld, ", mca_p->port);
             break;
 
-        case SDP_PORT_NUM_COUNT: 
-            SDP_PRINT("Port num %ld, count %ld, ", 
+        case SDP_PORT_NUM_COUNT:
+            SDP_PRINT("Port num %ld, count %ld, ",
                       mca_p->port, mca_p->num_ports);
             break;
-        case SDP_PORT_VPI_VCI: 
+        case SDP_PORT_VPI_VCI:
             SDP_PRINT("VPI/VCI %ld/%lu, ", mca_p->vpi, mca_p->vci);
             break;
-        case SDP_PORT_VCCI: 
+        case SDP_PORT_VCCI:
             SDP_PRINT("VCCI %ld, ", mca_p->vcci);
             break;
-        case SDP_PORT_NUM_VPI_VCI: 
+        case SDP_PORT_NUM_VPI_VCI:
             SDP_PRINT("Port %ld, VPI/VCI %ld/%lu, ", mca_p->port,
                       mca_p->vpi, mca_p->vci);
             break;
-        case SDP_PORT_VCCI_CID: 
+        case SDP_PORT_VCCI_CID:
             SDP_PRINT("VCCI %ld, CID %ld, ", mca_p->vcci, mca_p->cid);
             break;
-        case SDP_PORT_NUM_VPI_VCI_CID: 
+        case SDP_PORT_NUM_VPI_VCI_CID:
             SDP_PRINT("Port %ld, VPI/VCI %ld/%lu, CID %ld, ", mca_p->port,
                       mca_p->vpi, mca_p->vci, mca_p->cid);
             break;
         default:
             SDP_PRINT("Port format not valid, ");
             break;
-        }        
+        }
 
         if ((mca_p->transport >= SDP_TRANSPORT_AAL2_ITU) &&
             (mca_p->transport <= SDP_TRANSPORT_AAL2_CUSTOM)) {
@@ -1553,7 +1553,7 @@ sdp_result_e sdp_build_media (sdp_t *sdp_p, u16 level, flex_string *fs)
                              (u16)mca_p->vcci, (u16)mca_p->cid);
         }
     } else if (mca_p->port_format == SDP_PORT_NUM_VPI_VCI_CID) {
-        flex_string_sprintf(fs, "%u/%u/%u/%u ", (u16)mca_p->port, 
+        flex_string_sprintf(fs, "%u/%u/%u/%u ", (u16)mca_p->port,
                         (u16)mca_p->vpi, (u16)mca_p->vci, (u16)mca_p->cid);
     }
 
@@ -1632,7 +1632,7 @@ void sdp_parse_payload_types (sdp_t *sdp_p, sdp_mca_t *mca_p, const char *ptr)
             /* If there are no more payload types, we're finished */
             break;
         }
-        mca_p->payload_type[num_payloads] = (u16)sdp_getnextnumtok(tmp, 
+        mca_p->payload_type[num_payloads] = (u16)sdp_getnextnumtok(tmp,
                                                         (const char **)&tmp2,
                                                         " \t", &result);
         if (result == SDP_SUCCESS) {
@@ -1687,9 +1687,9 @@ void sdp_parse_payload_types (sdp_t *sdp_p, sdp_mca_t *mca_p, const char *ptr)
             } else {
                 if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
                     SDP_WARN("%s Warning: Payload type %s not valid for "
-                             "media %s with transport %s.", 
+                             "media %s with transport %s.",
                              sdp_p->debug_str,
-                             sdp_get_payload_name((sdp_payload_e)i), 
+                             sdp_get_payload_name((sdp_payload_e)i),
                              sdp_get_media_name(mca_p->media),
                              sdp_get_transport_name(mca_p->transport));
                 }
@@ -1704,7 +1704,7 @@ void sdp_parse_payload_types (sdp_t *sdp_p, sdp_mca_t *mca_p, const char *ptr)
     }
     if (mca_p->num_payloads == 0) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-            SDP_WARN("%s Warning: No payload types specified.", 
+            SDP_WARN("%s Warning: No payload types specified.",
                      sdp_p->debug_str);
         }
     }
@@ -1720,8 +1720,8 @@ void sdp_parse_payload_types (sdp_t *sdp_p, sdp_mca_t *mca_p, const char *ptr)
  *              ptr          The pointer to the list of payloads.
  * Returns:     Nothing.
  */
-sdp_result_e sdp_parse_multiple_profile_payload_types (sdp_t *sdp_p, 
-                                                 sdp_mca_t *mca_p, 
+sdp_result_e sdp_parse_multiple_profile_payload_types (sdp_t *sdp_p,
+                                                 sdp_mca_t *mca_p,
                                                  const char *ptr)
 {
     u16                   i;
@@ -1795,7 +1795,7 @@ sdp_result_e sdp_parse_multiple_profile_payload_types (sdp_t *sdp_p,
 
         /* See if the payload type is numeric. */
         if (prof < SDP_MAX_PROFILES && payload < SDP_MAX_PAYLOAD_TYPES) {
-            profile_p->payload_type[prof][payload] = (u16)sdp_getnextnumtok(tmp, 
+            profile_p->payload_type[prof][payload] = (u16)sdp_getnextnumtok(tmp,
                                                              (const char **)&tmp2,
                                                              " \t", &result);
             if (result == SDP_SUCCESS) {

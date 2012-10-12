@@ -229,10 +229,10 @@ typedef enum cc_msgs_t_ {
     CC_MSG_DIALSTRING,
     CC_MSG_MWI,
     CC_MSG_AUDIT,
-    CC_MSG_CREATEOFFER,  
+    CC_MSG_CREATEOFFER,
     CC_MSG_CREATEANSWER,
     CC_MSG_SETLOCALDESC,
-    CC_MSG_SETREMOTEDESC,  
+    CC_MSG_SETREMOTEDESC,
     CC_MSG_REMOTEDESC,
     CC_MSG_LOCALDESC,
     CC_MSG_SETPEERCONNECTION,
@@ -278,7 +278,7 @@ static const char *cc_msg_names[] = {
     "LOCALDESC",
     "SETPEERCONNECTION",
     "ADDSTREAM",
-    "REMOVESTREAM",    
+    "REMOVESTREAM",
     "ADDCANDIDATE",
     "AUDIT_ACK",
     "OPTIONS",
@@ -1177,29 +1177,29 @@ void cc_int_feature2(cc_msgs_t msg_id, cc_srcs_t src_id, cc_srcs_t dst_id,
 
 void cc_createoffer(cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
                     line_t line, cc_features_t feature_id, cc_feature_data_t *data);
-                   
+
 void cc_createanswer (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
                     line_t line, cc_features_t feature_id, string_t sdp, cc_feature_data_t *data);
 
-void cc_setlocaldesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line, 
+void cc_setlocaldesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
                     cc_features_t feature_id, cc_jsep_action_t action, string_t sdp, cc_feature_data_t *data);
 
-void cc_setremotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line, 
+void cc_setremotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
                     cc_features_t feature_id, cc_jsep_action_t action, string_t sdp, cc_feature_data_t *data);
 
-void cc_localdesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line, 
+void cc_localdesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
                     cc_features_t feature_id, cc_feature_data_t *data);
 
-void cc_remotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line, 
+void cc_remotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
                     cc_features_t feature_id, cc_feature_data_t *data);
-                   
+
 void cc_int_feature_ack(cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
                         line_t line, cc_features_t feature_id,
                         cc_feature_data_t *data, cc_causes_t cause);
 
 void cc_int_offhook(cc_srcs_t src_id, cc_srcs_t dst_id, callid_t prim_call_id,
                     cc_hold_resume_reason_e consult_reason, callid_t call_id,
-                    line_t line, char *global_call_id, 
+                    line_t line, char *global_call_id,
                     monitor_mode_t monitor_mode,
                     cfwdall_mode_t cfwdall_mode);
 

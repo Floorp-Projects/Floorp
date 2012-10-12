@@ -50,7 +50,7 @@ static sll_handle_t s_cac_list = NULL;
 
 
 /*
- *      Function responsible for searching the list waiting for 
+ *      Function responsible for searching the list waiting for
  *  bandwidth allocation.
  *
  *  @param cac_data_t *key_p - pointer to the key.
@@ -151,10 +151,10 @@ static void fsm_cac_notify_failure (cac_data_t *cac_data)
     line_t          line     = msg->line;
     int             event_id = msg_id;
     cc_srcs_t       src_id  = msg->src_id;
-    
+
     /* Notify UI about the failure */
     lsm_ui_display_notify_str_index(STR_INDEX_NO_BAND_WIDTH);
-    
+
     /* Send response from network side regarding the failure */
     if (event_id == CC_MSG_SETUP &&
             src_id == CC_SRC_SIP) {
@@ -163,20 +163,20 @@ static void fsm_cac_notify_failure (cac_data_t *cac_data)
         cc_int_release(CC_SRC_GSM, CC_SRC_SIP, call_id, line,
                        CC_CAUSE_CONGESTION, NULL, NULL);
     } else {
-        /* If the cac failed, GSM is not spinning yet, so just send the 
+        /* If the cac failed, GSM is not spinning yet, so just send the
          * information to UI in this case. Other case, where GSM receives event
          * will send the information from GSM.
          * If the UI is not cleaned up, session infomation is not cleared.
          */
         ui_call_state(evOnHook, line, call_id, CC_CAUSE_CONGESTION);
     }
-    
+
 }
 
 /**
  *
  * Initialize the cac timer. This timer is responsible for cleanup if the
- * cac response is not received from lower layer. 
+ * cac response is not received from lower layer.
  *
  * @param cac_data       cac data structure
  *        timeout        specify the time out in sec
@@ -193,7 +193,7 @@ fsm_init_cac_failure_timer(cac_data_t *cac_data, uint32_t timeout)
     const char fname[] = "fsm_init_cac_failure_timer";
 
     CAC_DEBUG(DEB_F_PREFIX"cac_data call_id=%x\n",
-              DEB_F_PREFIX_ARGS("CAC", fname), 
+              DEB_F_PREFIX_ARGS("CAC", fname),
               cac_data->call_id);
 
     cac_data->cac_fail_timer =
@@ -208,14 +208,14 @@ fsm_init_cac_failure_timer(cac_data_t *cac_data, uint32_t timeout)
 
     (void) cprStartTimer(cac_data->cac_fail_timer, timeout * 1000,
                          (void *)(long)cac_data->call_id);
-                         
+
     return(TRUE);
 }
 
 /**
  *
  * Serches through cac link list and returns cac_data
- * based on call_id. This search is a singly link list search. 
+ * based on call_id. This search is a singly link list search.
  *
  * @param call_id       call_id of the call
  *
@@ -237,17 +237,17 @@ fsm_cac_get_data_by_call_id (callid_t call_id)
 
         if (cac_data->call_id == call_id) {
             CAC_DEBUG(DEB_F_PREFIX"cac_data found call_id=%x\n",
-              DEB_F_PREFIX_ARGS("CAC", fname), 
+              DEB_F_PREFIX_ARGS("CAC", fname),
               cac_data->call_id);
             return(cac_data);
-        } 
+        }
 
         cac_data = (cac_data_t *) sll_next(s_cac_list, cac_data);
 
     }
 
     CAC_DEBUG(DEB_F_PREFIX"cac_data NOT found.\n",
-        DEB_F_PREFIX_ARGS("CAC", fname)); 
+        DEB_F_PREFIX_ARGS("CAC", fname));
     return(NULL);
 }
 
@@ -331,7 +331,7 @@ void fsm_cac_shutdown (void)
 
 /**
  *
- * Check if there are pending CAC requests 
+ * Check if there are pending CAC requests
  *
  * @param none
  *
@@ -363,7 +363,7 @@ fsm_cac_check_if_pending_req (void)
 
 /**
  *
- * Check if there are pending CAC requests 
+ * Check if there are pending CAC requests
  *
  * @param none
  *
@@ -376,14 +376,14 @@ fsm_cac_process_bw_allocation (cac_data_t *cac_data)
 {
     const char fname[] = "fsm_cac_process_bw_allocation";
 
-    if (lsm_allocate_call_bandwidth(cac_data->call_id, cac_data->sessions) == 
+    if (lsm_allocate_call_bandwidth(cac_data->call_id, cac_data->sessions) ==
             CC_CAUSE_CONGESTION) {
 
         DEF_DEBUG(DEB_F_PREFIX"CAC Allocation failed.\n",
                 DEB_F_PREFIX_ARGS("CAC", fname));
 
         fsm_cac_notify_failure(cac_data);
-            
+
         fsm_clear_cac_data(cac_data);
 
         return(CC_CAUSE_CONGESTION);
@@ -396,7 +396,7 @@ fsm_cac_process_bw_allocation (cac_data_t *cac_data)
 
 /**
  *
- * Check if there are pending CAC requests 
+ * Check if there are pending CAC requests
  *
  * @param call_id request a cac for this call_id
  *       sessions  number of sessions in the request
@@ -406,7 +406,7 @@ fsm_cac_process_bw_allocation (cac_data_t *cac_data)
  * @return  CC_CAUSE_BW_OK if the bandwidth is received.
  *          CC_CAUSE_Ok Call returned successfully, not sure about BW yet
  *          CC_CAUSE_ERROR: Call returned with failure.
- * 
+ *
  * @pre     (NULL)
  */
 cc_causes_t
@@ -418,9 +418,9 @@ fsm_cac_call_bandwidth_req (callid_t call_id, uint32_t sessions,
 
     /* If wlan not connected return OK */
     cac_data = fsm_get_new_cac_data();
-    
+
     if (cac_data == NULL) {
-        
+
         return(CC_CAUSE_CONGESTION);
     }
 
@@ -430,19 +430,19 @@ fsm_cac_call_bandwidth_req (callid_t call_id, uint32_t sessions,
     cac_data->sessions = sessions;
 
     fsm_init_cac_failure_timer(cac_data, CAC_FAILURE_TIMEOUT);
-    
+
     /* Make sure there is no pending requests before submitting
      * another one
      */
     if ((cac_pend_data = fsm_cac_check_if_pending_req()) == NULL) {
 
         /*
-        * Make sure sufficient bandwidth available to make a outgoing call. This 
+        * Make sure sufficient bandwidth available to make a outgoing call. This
         * should be done before allocating other resources.
         */
         DEF_DEBUG(DEB_F_PREFIX"CAC request for %d sessions %d.\n",
                 DEB_F_PREFIX_ARGS("CAC", fname), call_id, sessions);
-                
+
         if (fsm_cac_process_bw_allocation(cac_data) == CC_CAUSE_CONGESTION) {
 
             return(CC_CAUSE_CONGESTION);
@@ -460,9 +460,9 @@ fsm_cac_call_bandwidth_req (callid_t call_id, uint32_t sessions,
 
             return(CC_CAUSE_CONGESTION);
         }
-        
+
     }
-    
+
     (void) sll_append(s_cac_list, cac_data);
 
     return(CC_CAUSE_OK);
@@ -471,9 +471,9 @@ fsm_cac_call_bandwidth_req (callid_t call_id, uint32_t sessions,
 
 /**
  *
- * This is called by gsm to cleanup the cac data. If there are any 
+ * This is called by gsm to cleanup the cac data. If there are any
  * pending CAC requests and far end cancels the call, the pending
- * request has to be canceled. 
+ * request has to be canceled.
  *
  * @param call_id - call_id of the request
  *
@@ -506,11 +506,11 @@ void fsm_cac_call_release_cleanup (callid_t call_id)
  *
  * @return  CC_CAUSE_NO_RESOURCE No bandwidth
  *          CC_CAUSE_OK if ok
- *           
+ *
  *
  * @pre     (NULL)
  */
- 
+
 cc_causes_t
 fsm_cac_process_bw_avail_resp (void)
 {
@@ -529,7 +529,7 @@ fsm_cac_process_bw_avail_resp (void)
             DEF_DEBUG(DEB_F_PREFIX"No Pending CAC request.\n",
                 DEB_F_PREFIX_ARGS("CAC", fname));
             /*
-            * Make sure sufficient bandwidth available to make a outgoing call. This 
+            * Make sure sufficient bandwidth available to make a outgoing call. This
             * should be done before allocating other resources.
             */
             if (fsm_cac_process_bw_allocation(cac_data) == CC_CAUSE_CONGESTION) {
@@ -546,34 +546,34 @@ fsm_cac_process_bw_avail_resp (void)
             next_cac_data = (cac_data_t *) sll_next(s_cac_list, cac_data);
             sll_remove(s_cac_list, cac_data);
 
-            /* Request for the next bandwidth */ 
+            /* Request for the next bandwidth */
             DEF_DEBUG(DEB_F_PREFIX"Process pending responses %d.\n",
                 DEB_F_PREFIX_ARGS("CAC", fname), cac_data->call_id);
 
-            /* Let GSM process completed request */ 
+            /* Let GSM process completed request */
             fim_process_event(cac_data->msg_ptr, TRUE);
 
             fsm_clear_cac_data(cac_data);
 
             if (next_cac_data != NULL) {
                 /*
-                 * Make sure sufficient bandwidth available to make a outgoing call. This 
+                 * Make sure sufficient bandwidth available to make a outgoing call. This
                  * should be done before allocating other resources.
                  */
                 DEF_DEBUG(DEB_F_PREFIX"Requesting next allocation %d.\n",
                     DEB_F_PREFIX_ARGS("CAC", fname), next_cac_data->call_id);
 
-                if (fsm_cac_process_bw_allocation(next_cac_data) == 
+                if (fsm_cac_process_bw_allocation(next_cac_data) ==
                                 CC_CAUSE_CONGESTION) {
 
-                    /* If the next data was in idle state and the request fialed  
-                     * then clean up the remaining list 
+                    /* If the next data was in idle state and the request fialed
+                     * then clean up the remaining list
                      */
                     if (next_cac_data->cac_state == FSM_CAC_IDLE) {
                         /* Clear all remaining data */
                         fsm_cac_clear_list();
                     } else {
-                    
+
                         sll_remove(s_cac_list, next_cac_data);
                     }
 
@@ -600,7 +600,7 @@ fsm_cac_process_bw_avail_resp (void)
  *
  * @return  CC_CAUSE_NO_RESOURCE No bandwidth
  *          CC_CAUSE_OK if ok
- *           
+ *
  *
  * @pre     (NULL)
  */
@@ -622,7 +622,7 @@ fsm_cac_process_bw_failed_resp (void)
             DEF_DEBUG(DEB_F_PREFIX"No Pending request.\n",
                 DEB_F_PREFIX_ARGS("CAC", fname));
             /*
-            * Make sure sufficient bandwidth available to make a outgoing call. This 
+            * Make sure sufficient bandwidth available to make a outgoing call. This
             * should be done before allocating other resources.
             */
             if (fsm_cac_process_bw_allocation(cac_data) == CC_CAUSE_CONGESTION) {
@@ -639,31 +639,31 @@ fsm_cac_process_bw_failed_resp (void)
 
             sll_remove(s_cac_list, cac_data);
 
-            /* Request for the next bandwidth */ 
+            /* Request for the next bandwidth */
             DEF_DEBUG(DEB_F_PREFIX"Process pending responses even after failure.\n",
                 DEB_F_PREFIX_ARGS("CAC", fname));
 
-            /* Let GSM process completed request */ 
+            /* Let GSM process completed request */
             fsm_cac_notify_failure(cac_data);
 
             fsm_clear_cac_data(cac_data);
-    
+
             if (next_cac_data != NULL) {
 
                 /*
-                 * Make sure sufficient bandwidth available to make a outgoing call. This 
+                 * Make sure sufficient bandwidth available to make a outgoing call. This
                  * should be done before allocating other resources.
                  */
                 if (fsm_cac_process_bw_allocation(next_cac_data) == CC_CAUSE_CONGESTION) {
-                
-                    /* If the next data was in idle state and the request fialed  
-                     * then clean up the remaining list 
+
+                    /* If the next data was in idle state and the request fialed
+                     * then clean up the remaining list
                      */
                     if (next_cac_data->cac_state == FSM_CAC_IDLE) {
                         /* Clear all remaining data */
                         fsm_cac_clear_list();
                     } else {
-                    
+
                         sll_remove(s_cac_list, next_cac_data);
                     }
 
@@ -687,11 +687,11 @@ fsm_cac_process_bw_failed_resp (void)
  * @param   void *tmr_data - timer data
  *
  * @return  none
- *           
+ *
  *
  * @pre     (NULL)
  */
-void 
+void
 fsm_cac_process_bw_fail_timer (void *tmr_data)
 {
     const char      fname[] = "fsm_cac_process_bw_fail_timer";
@@ -699,7 +699,7 @@ fsm_cac_process_bw_fail_timer (void *tmr_data)
     DEF_DEBUG(DEB_F_PREFIX"CAC request timedout %d.\n",
                     DEB_F_PREFIX_ARGS("CAC", fname), (callid_t)(long)tmr_data);
 
-    /* Time-out causes same set of processing as bw failure 
+    /* Time-out causes same set of processing as bw failure
      */
     fsm_cac_process_bw_failed_resp();
 

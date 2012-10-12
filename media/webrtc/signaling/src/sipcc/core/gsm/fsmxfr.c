@@ -123,7 +123,7 @@ fsmxfr_get_new_xfr_id (void)
 
 /**
  *
- * Sets/rest transfer complete flag in the DCB so it can be used in 
+ * Sets/rest transfer complete flag in the DCB so it can be used in
  * UI to indicate if the call is ended because of xfer or endcall.
  *
  * @cns_call_id consult call id
@@ -137,10 +137,10 @@ void fsmxfr_mark_dcb_for_xfr_complete(callid_t cns_call_id, callid_t xfr_call_id
         boolean set_flag)
 {
     fsm_fcb_t    *cns_fcb, *xfr_fcb;
-    
-    cns_fcb = fsm_get_fcb_by_call_id_and_type(cns_call_id, 
+
+    cns_fcb = fsm_get_fcb_by_call_id_and_type(cns_call_id,
                                     FSM_TYPE_DEF);
-    xfr_fcb = fsm_get_fcb_by_call_id_and_type(xfr_call_id, 
+    xfr_fcb = fsm_get_fcb_by_call_id_and_type(xfr_call_id,
                                     FSM_TYPE_DEF);
     if (set_flag) {
         if (cns_fcb && cns_fcb->dcb) {
@@ -165,7 +165,7 @@ void fsmxfr_mark_dcb_for_xfr_complete(callid_t cns_call_id, callid_t xfr_call_id
  *
  * @param none
  *
- * @return  fsm_fcb_t if there is a active trasnfer pending 
+ * @return  fsm_fcb_t if there is a active trasnfer pending
  *          else NULL
  *
  * @pre     (none)
@@ -179,7 +179,7 @@ fsm_fcb_t *fsmxfr_get_active_xfer(void)
 
     FSM_FOR_ALL_CBS(xcb, fsmxfr_xcbs, FSMXFR_MAX_XCBS) {
         fcb = fsm_get_fcb_by_call_id_and_type(xcb->xfr_call_id,
-                                               FSM_TYPE_XFR);        
+                                               FSM_TYPE_XFR);
         if (fcb && fcb->state == FSMXFR_S_ACTIVE) {
             return(fcb);
         }
@@ -311,7 +311,7 @@ fsmxfr_get_xcb_by_call_id (callid_t call_id)
 /**
  *
  * Cancel tranfer operation by sending cancel event to SIP stack.
- * This routine is used in roundtable phone. 
+ * This routine is used in roundtable phone.
  *
  * @param line, call_id, target_call_id, cause (implicit or explicit)
  *
@@ -320,7 +320,7 @@ fsmxfr_get_xcb_by_call_id (callid_t call_id)
  * @pre     (none)
  */
 void
-fsmxfr_feature_cancel (fsmxfr_xcb_t *xcb, line_t line, callid_t call_id, 
+fsmxfr_feature_cancel (fsmxfr_xcb_t *xcb, line_t line, callid_t call_id,
                        callid_t target_call_id,
                        cc_rcc_skey_evt_type_e cause)
 {
@@ -328,7 +328,7 @@ fsmxfr_feature_cancel (fsmxfr_xcb_t *xcb, line_t line, callid_t call_id,
     cc_feature_data_t data;
     fsm_fcb_t         *fcb_def;
 
-    DEF_DEBUG(DEB_F_PREFIX"Sending cancel call_id = %d, t_id=%d, cause = %d\n", 
+    DEF_DEBUG(DEB_F_PREFIX"Sending cancel call_id = %d, t_id=%d, cause = %d\n",
             DEB_F_PREFIX_ARGS(GSM, fname), call_id, target_call_id, cause);
 
     fcb_def = fsm_get_fcb_by_call_id_and_type(call_id, FSM_TYPE_DEF);
@@ -336,7 +336,7 @@ fsmxfr_feature_cancel (fsmxfr_xcb_t *xcb, line_t line, callid_t call_id,
     if ((cause == CC_SK_EVT_TYPE_EXPLI) &&
         (fcb_def != NULL) && ((fcb_def->dcb->selected == FALSE) &&
         ((fcb_def->state == FSMDEF_S_OUTGOING_ALERTING) ||
-            ((fcb_def->state == FSMDEF_S_CONNECTED) && 
+            ((fcb_def->state == FSMDEF_S_CONNECTED) &&
             (fcb_def->dcb->spoof_ringout_requested == TRUE) &&
             (fcb_def->dcb->spoof_ringout_applied == TRUE))))) {
 
@@ -349,7 +349,7 @@ fsmxfr_feature_cancel (fsmxfr_xcb_t *xcb, line_t line, callid_t call_id,
     if ((cause == CC_SK_EVT_TYPE_EXPLI) &&
         (fcb_def != NULL) && ((fcb_def->dcb->selected == FALSE) &&
         ((fcb_def->state == FSMDEF_S_OUTGOING_ALERTING) ||
-            ((fcb_def->state == FSMDEF_S_CONNECTED) && 
+            ((fcb_def->state == FSMDEF_S_CONNECTED) &&
             (fcb_def->dcb->spoof_ringout_requested == TRUE) &&
             (fcb_def->dcb->spoof_ringout_applied == TRUE))))) {
 
@@ -386,7 +386,7 @@ fsmxfr_update_xfr_context (fsmxfr_xcb_t *xcb, callid_t old_call_id,
 }
 
 /*
- *      Function to get line number of other call associated in 
+ *      Function to get line number of other call associated in
  *      transfer.
  *
  *  @param xcb and call_id.
@@ -868,7 +868,7 @@ fsmxfr_ev_idle_feature (sm_event_t *event)
         switch (ftr_id) {
         case CC_FEATURE_DIRTRXFR:
 
-            /* If there is a active xfer pending 
+            /* If there is a active xfer pending
              * then link this transfer to active transfer
              */
             other_fcb = fsmxfr_get_active_xfer();
@@ -877,13 +877,13 @@ fsmxfr_ev_idle_feature (sm_event_t *event)
                     GSM_DEBUG_ERROR(GSM_F_PREFIX"Cannot find the active xfer\n", fname);
                     return (SM_RC_END);
                 }
-                /* End existing consult call and then link another 
+                /* End existing consult call and then link another
                  * call with the trasfer
                  */
                 cc_int_feature(CC_SRC_GSM, CC_SRC_GSM, other_fcb->xcb->cns_call_id,
                        other_fcb->xcb->cns_line, CC_FEATURE_END_CALL, NULL);
                 other_fcb->xcb->cns_call_id = call_id;
-               
+
                 cc_int_feature(CC_SRC_GSM, CC_SRC_GSM, other_fcb->xcb->xfr_call_id,
                                other_fcb->xcb->xfr_line, CC_FEATURE_DIRTRXFR, NULL);
 
@@ -901,7 +901,7 @@ fsmxfr_ev_idle_feature (sm_event_t *event)
                 return(SM_RC_CONT);
             }
 
-            /* Make sure atleast one call has been selected, connected and this call 
+            /* Make sure atleast one call has been selected, connected and this call
              * is not in the focus
              */
             if ((fsmutil_get_num_selected_calls() > 1) && (dcb->selected == FALSE)) {
@@ -935,7 +935,7 @@ fsmxfr_ev_idle_feature (sm_event_t *event)
              */
             cc_int_feature(CC_SRC_GSM, CC_SRC_GSM, dcb->call_id,
                                dcb->line, CC_FEATURE_DIRTRXFR, NULL);
-            
+
             fsm_change_state(fcb, __LINE__, FSMXFR_S_ACTIVE);
 
             return(SM_RC_END);
@@ -949,7 +949,7 @@ fsmxfr_ev_idle_feature (sm_event_t *event)
              * call and link that to another call.
              */
             if ((cause != CC_CAUSE_XFER_CNF) &&
-                (ftr_data && msg->data_valid) && 
+                (ftr_data && msg->data_valid) &&
                 (ftr_data->xfer.target_call_id != CC_NO_CALL_ID) &&
                 ((cns_fcb = fsm_get_fcb_by_call_id_and_type(ftr_data->xfer.target_call_id,
                                                     FSM_TYPE_XFR)) != NULL)) {
@@ -962,7 +962,7 @@ fsmxfr_ev_idle_feature (sm_event_t *event)
                 if (xcb == NULL) {
                     return(SM_RC_END);
                 }
-               
+
                 fcb->xcb = xcb;
                 cns_fcb->xcb = xcb;
                 xcb->type = FSMXFR_TYPE_DIR_XFR;
@@ -1489,7 +1489,7 @@ fsmxfr_ev_active_proceeding (sm_event_t *event)
      * or is currently connected, otherwise just let this call be setup
      * normally so that it will ring.
      */
-    
+
     if (other_fcb && (other_fcb->old_state == FSMDEF_S_CONNECTED ||
         other_fcb->old_state == FSMDEF_S_CONNECTED_MEDIA_PEND ||
         other_fcb->old_state == FSMDEF_S_RESUME_PENDING ||
@@ -1529,7 +1529,7 @@ fsmxfr_ev_active_connected_ack (sm_event_t *event)
     /*
      * Remove this call from the transfer.
      */
-    fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id, 
+    fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
             xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
     fsmxfr_cleanup(fcb, __LINE__, FALSE);
 
@@ -1616,11 +1616,11 @@ fsmxfr_ev_active_release (sm_event_t *event)
             fsmxfr_init_xcb(xcb);
             fcb->xcb->active = FALSE;
             fcb->xcb->xcb2 = NULL;
-            fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id, 
+            fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
                     xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
             fsmxfr_cleanup(fcb, __LINE__, FALSE);
         } else if (xcb->active == TRUE) {
-            fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id, 
+            fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
                     xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
             fsmxfr_cleanup(fcb, __LINE__, FALSE);
             fcb->xcb->active = FALSE;
@@ -1631,7 +1631,7 @@ fsmxfr_ev_active_release (sm_event_t *event)
              * the cleanup function works properly.
              */
             fsmxfr_update_xfr_context(xcb, new_call_id, CC_NO_CALL_ID);
-            fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id, 
+            fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
                     xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
             fsmxfr_cleanup(fcb, __LINE__, TRUE);
         }
@@ -1720,7 +1720,7 @@ static char *fsmxfr_get_dialed_num (fsmdef_dcb_t *dcb)
 
     tmp_called_number = lsm_get_gdialed_digits();
 
-    DEF_DEBUG(DEB_F_PREFIX"called_dialed_num = %s\n", 
+    DEF_DEBUG(DEB_F_PREFIX"called_dialed_num = %s\n",
                 DEB_F_PREFIX_ARGS(GSM, fname), tmp_called_number);
 
     /* Get dialed number to put in the refer-to header. If there
@@ -1729,12 +1729,12 @@ static char *fsmxfr_get_dialed_num (fsmdef_dcb_t *dcb)
     if (tmp_called_number == NULL || (*tmp_called_number) == NUL) {
 
         if (dcb->caller_id.called_number[0] != NUL) {
-            DEF_DEBUG(DEB_F_PREFIX"called_dcb_num = %s\n", 
+            DEF_DEBUG(DEB_F_PREFIX"called_dcb_num = %s\n",
                 DEB_F_PREFIX_ARGS(GSM, fname), (char *)dcb->caller_id.called_number);
             return((char *)dcb->caller_id.called_number);
-            
+
         } else {
-            DEF_DEBUG(DEB_F_PREFIX"calling_dcb_num = %s\n", 
+            DEF_DEBUG(DEB_F_PREFIX"calling_dcb_num = %s\n",
                 DEB_F_PREFIX_ARGS(GSM, fname), (char *)dcb->caller_id.calling_number);
             return((char *)dcb->caller_id.calling_number);
         }
@@ -1767,7 +1767,7 @@ fsmxfr_initiate_xfr (sm_event_t *event)
     cc_feature_data_t data;
     fsmxfr_xcb_t     *xcb     = fcb->xcb;
     char             *called_num = NULL;
- 
+
     /*
      * Place the consultation call on hold.
      */
@@ -1830,7 +1830,7 @@ fsmxfr_initiate_xfr (sm_event_t *event)
                  * Can't transfer the call without a dialstring, so
                  * just cleanup the transfer.
                  */
-                fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id, 
+                fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
                                     xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
                 fsmxfr_cleanup(fcb, __LINE__, TRUE);
                 if (xcb->cnf_xfr) {
@@ -1928,10 +1928,10 @@ fsmxfr_ev_active_feature (sm_event_t *event)
              * call_id in the data then terminate the existing consulatative
              * call and link that to another call.
             */
-            DEF_DEBUG(DEB_F_PREFIX"ACTIVE XFER call_id = %d, cns_id = %d, t_id=%d\n", 
-                DEB_F_PREFIX_ARGS(GSM, fname), xcb->xfr_call_id, 
+            DEF_DEBUG(DEB_F_PREFIX"ACTIVE XFER call_id = %d, cns_id = %d, t_id=%d\n",
+                DEB_F_PREFIX_ARGS(GSM, fname), xcb->xfr_call_id,
                     feat_data->xfer.target_call_id, xcb->cns_call_id);
-            
+
             if (feat_data && msg->data_valid &&
                 (xcb->cns_call_id != feat_data->xfer.target_call_id)) {
 
@@ -1939,8 +1939,8 @@ fsmxfr_ev_active_feature (sm_event_t *event)
                         FSM_TYPE_DEF);
 
                 if (cns_fcb != NULL) {
-                    DEF_DEBUG(DEB_F_PREFIX"INVOKE ACTIVE XFER call_id = %d, t_id=%d\n", 
-                        DEB_F_PREFIX_ARGS(GSM, fname), xcb->xfr_call_id, 
+                    DEF_DEBUG(DEB_F_PREFIX"INVOKE ACTIVE XFER call_id = %d, t_id=%d\n",
+                        DEB_F_PREFIX_ARGS(GSM, fname), xcb->xfr_call_id,
                         feat_data->xfer.target_call_id);
                     cc_int_feature(CC_SRC_GSM, CC_SRC_GSM, xcb->xfr_call_id,
                                xcb->xfr_line, CC_FEATURE_DIRTRXFR, NULL);
@@ -1962,7 +1962,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
                 fsmxfr_initiate_xfr(event);
                 lsm_set_hold_ringback_status(xcb->cns_call_id, FALSE);
                 break;
-             
+
             default:
                 fsm_sm_ignore_ftr(fcb, __LINE__, ftr_id);
                 break;
@@ -2002,7 +2002,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
             {
                 feat_data->hold.call_info.data.call_info_feat_data.protect = TRUE;
             } else {
-                DEF_DEBUG(DEB_F_PREFIX"Invoke hold call_id = %d t_call_id=%d\n", 
+                DEF_DEBUG(DEB_F_PREFIX"Invoke hold call_id = %d t_call_id=%d\n",
                         DEB_F_PREFIX_ARGS(GSM, fname), xcb->xfr_call_id, xcb->cns_call_id);
                 //Actual hold to this call, so break the feature layer.
                 ui_terminate_feature(xcb->xfr_line, xcb->xfr_call_id, xcb->cns_call_id);
@@ -2042,7 +2042,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
                 * Can't transfer the call without a dialstring, so
                 * just cleanup the transfer.
                 */
-                fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id, 
+                fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
                                     xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
                 fsmxfr_cleanup(fcb, __LINE__, TRUE);
             }
@@ -2060,7 +2060,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
             } else if ((xcb->type == FSMXFR_TYPE_XFR) &&
                        (msg->data.endcall.cause == CC_CAUSE_NO_USER_RESP)) {
 
-                DEF_DEBUG(DEB_F_PREFIX"Xfer type =%d\n", 
+                DEF_DEBUG(DEB_F_PREFIX"Xfer type =%d\n",
                         DEB_F_PREFIX_ARGS(GSM, fname), xcb->type);
 
                 if ((platGetPhraseText(STR_INDEX_TRANSFERRING,
@@ -2070,7 +2070,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
                 }
 
                 if (xcb->xfer_comp_req == FALSE) {
-                    fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id, 
+                    fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
                                     xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
                 } else {
                     // Mark it as transfer complete.
@@ -2085,7 +2085,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
                  * do not send cancel in that case
                  */
                 if (xcb->xfer_comp_req == FALSE) {
-                    fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id, 
+                    fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
                                     xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
                 }
                 fsmxfr_cleanup(fcb, __LINE__, TRUE);
@@ -2109,7 +2109,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
     case CC_SRC_SIP:
         switch (ftr_id) {
         case CC_FEATURE_CALL_PRESERVATION:
-            DEF_DEBUG(DEB_F_PREFIX"Preservation call_id = %d t_call_id=%d\n", 
+            DEF_DEBUG(DEB_F_PREFIX"Preservation call_id = %d t_call_id=%d\n",
                         DEB_F_PREFIX_ARGS(GSM, fname), xcb->xfr_call_id, xcb->cns_call_id);
             ui_terminate_feature(xcb->xfr_line, xcb->xfr_call_id, xcb->cns_call_id);
             fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
@@ -2240,7 +2240,7 @@ fsmxfr_ev_active_feature (sm_event_t *event)
                          * Release the transfer call.
                          */
                         /* Set the dcb flag to indicate transfer is complete, so that
-                         * it won't display endcall in this case 
+                         * it won't display endcall in this case
                          */
                         fsmxfr_mark_dcb_for_xfr_complete(xcb->cns_call_id,
                                     xcb->xfr_call_id, TRUE);
@@ -2376,17 +2376,17 @@ fsmxfr_ev_active_feature (sm_event_t *event)
                                                   dcb->line, xcb->xfr_call_id);
                             fsmxfr_mark_dcb_for_xfr_complete(xcb->cns_call_id,
                                         xcb->xfr_call_id, FALSE);
-                            fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id, 
+                            fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
                                                       xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
                             /*
-                             * Resume the consultation call. 
+                             * Resume the consultation call.
                              * if xcb->cns_call_id == 0, then cns call is already ended.
                              */
                             if (xcb->cns_call_id != CC_NO_CALL_ID) {
                                	lsm_ui_display_status(platform_get_phrase_index_str(TRANSFER_FAILED),
                                                       dcb->line, xcb->cns_call_id);
                                 cns_dcb = fsm_get_dcb (xcb->cns_call_id);
-                                cc_int_feature(CC_SRC_GSM, CC_SRC_GSM, 
+                                cc_int_feature(CC_SRC_GSM, CC_SRC_GSM,
                                                xcb->cns_call_id, cns_dcb->line,
                                                CC_FEATURE_RESUME, NULL);
                             }
@@ -2502,7 +2502,7 @@ fsmxfr_ev_active_feature_ack (sm_event_t *event)
                         //cc_int_feature(CC_SRC_GSM, CC_SRC_GSM, dcb->call_id,
                                        //dcb->line, CC_FEATURE_END_CALL, &data);
                     } else {
-                        fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id, 
+                        fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
                             xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
                         fsmxfr_cleanup(fcb, __LINE__, TRUE);
                     }
@@ -2594,7 +2594,7 @@ fsmxfr_ev_active_feature_ack (sm_event_t *event)
                          * Can't transfer the call without a dialstring, so
                          * just cleanup the transfer.
                          */
-                        fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id, 
+                        fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
                                                 xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
                         fsmxfr_cleanup(fcb, __LINE__, TRUE);
                     }
@@ -2641,7 +2641,7 @@ fsmxfr_ev_active_feature_ack (sm_event_t *event)
                              * Can't transfer the call without a dialstring, so
                              * just cleanup the transfer.
                              */
-                            fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id, 
+                            fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
                                                     xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
                             fsmxfr_cleanup(fcb, __LINE__, TRUE);
                         }
@@ -2657,7 +2657,7 @@ fsmxfr_ev_active_feature_ack (sm_event_t *event)
                                       xcb->xfr_line, xcb->xfr_call_id);
                 lsm_ui_display_status(platform_get_phrase_index_str(TRANSFER_FAILED),
                                       xcb->cns_line, xcb->cns_call_id);
-                fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id, 
+                fsmxfr_feature_cancel(xcb, xcb->xfr_line, xcb->xfr_call_id,
                                     xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
                 fsmxfr_cleanup(fcb, __LINE__, TRUE);
             } else {
@@ -2744,9 +2744,9 @@ fsmxfr_ev_active_onhook (sm_event_t *event)
                            xfr_dcb->line, CC_FEATURE_NOTIFY, &data);
             if (cns_fcb && cns_fcb->state != FSMDEF_S_HOLDING &&
                 cns_fcb->state != FSMDEF_S_HOLD_PENDING) {
-                fsmxfr_feature_cancel(xcb, xfr_dcb->line, 
+                fsmxfr_feature_cancel(xcb, xfr_dcb->line,
                                     xcb->xfr_call_id, xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
-                                        
+
                 fsmxfr_cleanup(fcb, __LINE__, TRUE);
             }
             /*
@@ -2768,17 +2768,17 @@ fsmxfr_ev_active_onhook (sm_event_t *event)
              cns_fcb->state == FSMDEF_S_HOLD_PENDING)) {
             /* ignore the onhook event for the held consultation call */
         } if (msg->active_list == CC_REASON_ACTIVECALL_LIST) {
-            /* Active call list has been requested also 
-             * existing consult call is canceled 
+            /* Active call list has been requested also
+             * existing consult call is canceled
              * But transfer state machine will remain
              * intact as feature layer is still running.*/
             xcb->cns_call_id = CC_NO_CALL_ID;
             xcb->cns_line = CC_NO_LINE;
 
         }else {
-            fsmxfr_feature_cancel(xcb, xcb->xfr_line, 
+            fsmxfr_feature_cancel(xcb, xcb->xfr_line,
                                     xcb->xfr_call_id, xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
-                                        
+
             fsmxfr_cleanup(fcb, __LINE__, TRUE);
         }
         return (SM_RC_CONT);
@@ -2794,15 +2794,15 @@ fsmxfr_ev_active_onhook (sm_event_t *event)
             (cns_fcb->state == FSMDEF_S_CONNECTED))) {
             fsmxfr_initiate_xfr(event);
             return (SM_RC_END);
-        } else if (onhook_xfer && xfr_fcb && 
+        } else if (onhook_xfer && xfr_fcb &&
                 ((xfr_fcb->state == FSMDEF_S_OUTGOING_ALERTING)||
                 (xfr_fcb->state == FSMDEF_S_CONNECTED))) {
             fsmxfr_initiate_xfr(event);
             return (SM_RC_END);
         } else {
-            fsmxfr_feature_cancel(xcb, xcb->xfr_line, 
+            fsmxfr_feature_cancel(xcb, xcb->xfr_line,
                                     xcb->xfr_call_id, xcb->cns_call_id, CC_SK_EVT_TYPE_IMPLI);
-                                        
+
             fsmxfr_cleanup(fcb, __LINE__, TRUE);
             return (SM_RC_CONT);
         }
@@ -2836,7 +2836,7 @@ fsmxfr_ev_active_dialstring (sm_event_t *event)
         return (SM_RC_END);
     }
 
-    FSM_DEBUG_SM(DEB_L_C_F_PREFIX"dialstring= %s\n", 
+    FSM_DEBUG_SM(DEB_L_C_F_PREFIX"dialstring= %s\n",
 		DEB_L_C_F_PREFIX_ARGS(FSM, msg->line, call_id, fname), dialstring);
 
     /*
@@ -2893,7 +2893,7 @@ fsmxfr_ev_active_dialstring (sm_event_t *event)
         data.endcall.cause = CC_CAUSE_NORMAL;
         cc_int_feature(CC_SRC_GSM, CC_SRC_GSM, call_id,
                        line, CC_FEATURE_END_CALL, &data);
-        
+
 
         /*
          * Send an event to the transferer call leg so it can send the called

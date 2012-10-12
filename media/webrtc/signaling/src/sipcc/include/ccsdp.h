@@ -5,16 +5,16 @@
 /**
  *  Skip this file if not doing video on the device.
  *
- *  The ccsdp_xxx api's provide a means to query and populate the SDP attributes 
- *  for video m lines. These Api are not needed if we are not supporting video on 
- *  the platform. For audio the stack will populate the appropriate attributes 
+ *  The ccsdp_xxx api's provide a means to query and populate the SDP attributes
+ *  for video m lines. These Api are not needed if we are not supporting video on
+ *  the platform. For audio the stack will populate the appropriate attributes
  *
- *  
- *  These API's can be invoked from the vcmCheckAttrs() and vcmPopulateAttrs() 
+ *
+ *  These API's can be invoked from the vcmCheckAttrs() and vcmPopulateAttrs()
  *  methods to populate or extract the value of specific attributes in the video SDP.
  *  These api require an handle to the SDP that is passed in the above methods.
  * <pre>
- * sdp_handle     The SDP handle 
+ * sdp_handle     The SDP handle
  * level       The level the attribute is defined.  Can be either
  *             SDP_SESSION_LEVEL or 0-n specifying a media line level.
  * inst_num    The instance number of the attribute.  Multiple instances
@@ -121,12 +121,12 @@ typedef enum {
 } sdp_result_e;
 
 /**
- * Indicates invalid bandwidth value 
+ * Indicates invalid bandwidth value
  */
 #define SDP_INVALID_VALUE          (-2)
 
 /**
- * Bandwidth modifier type for b= SDP line 
+ * Bandwidth modifier type for b= SDP line
  */
 typedef enum {
     SDP_BW_MODIFIER_INVALID = -1,
@@ -213,10 +213,10 @@ typedef enum {
     SDP_ATTR_INVALID
 } sdp_attr_e;
 
-/** 
+/**
  * Gets the value of the fmtp attribute- parameter-sets parameter for H.264 codec
  *
- * @param[in]  sdp_handle     The SDP handle 
+ * @param[in]  sdp_handle     The SDP handle
  * @param[in]  level       The level to check for the attribute.
  * @param[in]  cap_num     The capability number associated with the attribute if any.  If none, should be zero.
  * @param[in]  inst_num    The attribute instance number to check.
@@ -224,13 +224,13 @@ typedef enum {
  * @return      parameter-sets value.
  */
 
-const char* ccsdpAttrGetFmtpParamSets(void *sdp_handle, uint16_t level, 
+const char* ccsdpAttrGetFmtpParamSets(void *sdp_handle, uint16_t level,
                                             uint8_t cap_num, uint16_t inst_num);
 
 /**
  * Gets the value of the fmtp attribute- packetization-mode parameter for H.264 codec
  *
- * @param[in]  sdp_handle     The SDP handle 
+ * @param[in]  sdp_handle     The SDP handle
  * @param[in]  level       The level to check for the attribute.
  * @param[in]  cap_num     The capability number associated with the attribute if any.  If none, should be zero.
  * @param[in]  inst_num    The attribute instance number to check.
@@ -238,12 +238,12 @@ const char* ccsdpAttrGetFmtpParamSets(void *sdp_handle, uint16_t level,
  *
  * @return     sdp_result_e         SDP_SUCCESS = SUCCESS
  */
-sdp_result_e ccsdpAttrGetFmtpPackMode(void *sdp_handle, uint16_t level, 
+sdp_result_e ccsdpAttrGetFmtpPackMode(void *sdp_handle, uint16_t level,
                          uint8_t cap_num, uint16_t inst_num, uint16_t *val);
 /**
  * Gets the value of the fmtp attribute- level asymmetry allowed parameter for H.264 codec
  *
- * @param[in]  sdp_handle     The SDP handle 
+ * @param[in]  sdp_handle     The SDP handle
  * @param[in]  level       The level to check for the attribute.
  * @param[in]  cap_num     The capability number associated with the attribute if any.  If none, should be zero.
  * @param[in]  inst_num    The attribute instance number to check.
@@ -251,11 +251,11 @@ sdp_result_e ccsdpAttrGetFmtpPackMode(void *sdp_handle, uint16_t level,
  *
  * @return     sdp_result_e         SDP_SUCCESS = SUCCESS
  */
-sdp_result_e ccsdpAttrGetFmtpLevelAsymmetryAllowed(void *sdp_handle, uint16_t level, 
+sdp_result_e ccsdpAttrGetFmtpLevelAsymmetryAllowed(void *sdp_handle, uint16_t level,
                          uint8_t cap_num, uint16_t inst_num, uint16_t *val);
 
 
-/** 
+/**
  * Gets the value of the fmtp attribute- profile-level-id parameter for H.264 codec
  *
  * @param[in]  sdp_handle     The SDP handle returned by sdp_init_description.
@@ -268,10 +268,10 @@ sdp_result_e ccsdpAttrGetFmtpLevelAsymmetryAllowed(void *sdp_handle, uint16_t le
 const char* ccsdpAttrGetFmtpProfileLevelId (void *sdp_handle, uint16_t level,
                                           uint8_t cap_num, uint16_t inst_num);
 
-/** 
+/**
  * Gets the value of the fmtp attribute- max-mbps parameter for H.264 codec
  *
- * @param[in] sdp_handle     The SDP handle 
+ * @param[in] sdp_handle     The SDP handle
  * @param[in] level       The level to check for the attribute.
  * @param[in] cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
@@ -287,7 +287,7 @@ sdp_result_e ccsdpAttrGetFmtpMaxMbps (void *sdp_handle, uint16_t level,
 /**
  * Gets the value of the fmtp attribute- max-fs parameter for H.264 codec
  *
- * @param[in] sdp_handle     The SDP handle 
+ * @param[in] sdp_handle     The SDP handle
  * @param[in] level       The level to check for the attribute.
  * @param[in] cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
@@ -312,7 +312,7 @@ sdp_result_e ccsdpAttrGetFmtpMaxFs (void *sdp_handle, uint16_t level,
 sdp_result_e ccsdpAttrGetFmtpMaxCpb (void *sdp_handle, uint16_t level,
                                  uint8_t cap_num, uint16_t inst_num, uint32_t *val);
 
-/** 
+/**
  * Gets the value of the fmtp attribute- max-br parameter for H.264 codec
  *
  * @param[in] sdp_handle     The SDP handle
@@ -326,7 +326,7 @@ sdp_result_e ccsdpAttrGetFmtpMaxCpb (void *sdp_handle, uint16_t level,
 sdp_result_e ccsdpAttrGetFmtpMaxBr (void *sdp_handle, uint16_t level,
                              uint8_t cap_num, uint16_t inst_num, uint32_t* val);
 
-/** 
+/**
  * Returns the bandwidth value parameter from the b= line.
  *
  * @param[in] sdp_handle     The SDP handle
@@ -338,8 +338,8 @@ sdp_result_e ccsdpAttrGetFmtpMaxBr (void *sdp_handle, uint16_t level,
  */
 int ccsdpGetBandwidthValue (void *sdp_handle, uint16_t level, uint16_t inst_num);
 
-/** 
- * Add a new attribute of the specified type at the given level and capability 
+/**
+ * Add a new attribute of the specified type at the given level and capability
  * level or base attribute if cap_num is zero.
  *
  * @param[in] sdp_handle     The SDP handle
@@ -348,7 +348,7 @@ int ccsdpGetBandwidthValue (void *sdp_handle, uint16_t level, uint16_t inst_num)
  * @param[in] attr_type   The type of attribute to add.
  * @param[in] inst_num    Pointer to a uint16_t in which to return the instance number of the newly added attribute.
  *
- * @return     sdp_result_e       
+ * @return     sdp_result_e
  * 		SDP_SUCCESS            Attribute was added successfully.
  *              SDP_NO_RESOURCE        No memory avail for new attribute.
  *              SDP_INVALID_PARAMETER  Specified media line is not defined.
@@ -356,16 +356,16 @@ int ccsdpGetBandwidthValue (void *sdp_handle, uint16_t level, uint16_t inst_num)
 sdp_result_e ccsdpAddNewAttr (void *sdp_handle, uint16_t level, uint8_t cap_num,
                                sdp_attr_e attr_type, uint16_t *inst_num);
 
-/** 
+/**
  * Gets the value of the fmtp attribute- max-dpb parameter for H.264 codec
  *
- * @param[in] sdp_handle     The SDP handle 
+ * @param[in] sdp_handle     The SDP handle
  * @param[in] level       The level to check for the attribute.
  * @param[in] cap_num     The capability number associated with the attribute if any.  If none, should be zero.
  * @param[in] inst_num    The attribute instance number to check.
  * @param[out] *val       max-dpb value.
  *
- * @return     sdp_result_e       
+ * @return     sdp_result_e
  * 		SDP_SUCCESS            Attribute was added successfully.
  */
 
@@ -373,7 +373,7 @@ sdp_result_e ccsdpAttrGetFmtpMaxDpb (void *sdp_handle, uint16_t level,
                                uint8_t cap_num, uint16_t inst_num, uint32_t *val);
 
 
-/** 
+/**
  * Sets the value of the fmtp attribute payload type parameter for the given attribute.
  *
  * @param[in] sdp_handle     The SDP handle

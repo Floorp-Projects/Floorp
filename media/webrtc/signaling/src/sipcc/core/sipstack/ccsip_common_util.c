@@ -14,7 +14,7 @@
  *
  * @param[in] cb_p - pointer to the header control block.
  *
- * @return none 
+ * @return none
  *
  * @pre     (cb_p != NULL)
  */
@@ -46,7 +46,7 @@ void ccsip_common_util_set_dest_ipaddr_port (ccsip_common_cb_t *cb_p)
  *
  * @param[in] cb_p - pointer to the header control block.
  *
- * @return none 
+ * @return none
  *
  * @pre     (cb_p != NULL)
  */
@@ -77,7 +77,7 @@ void ccsip_common_util_set_src_ipaddr (ccsip_common_cb_t *cb_p)
  *     the first time with valid args.
  *
  * @param[in] cb_p - pointer to header control block.
- * @param[out] timeout_p - returns the value to be used to set a timer. 
+ * @param[out] timeout_p - returns the value to be used to set a timer.
  *
  * @return none
  *
@@ -145,7 +145,7 @@ boolean ccsip_common_util_generate_auth (sipMessage_t *pSipMessage, ccsip_common
     cred_get_line_credentials(cb_p->dn_line, &credentials,
                               sizeof(credentials.id),
                               sizeof(credentials.pw));
-    /* 
+    /*
      * Extract Authenticate/Proxy-Authenticate header from the message.
      */
     authenticate = sippmh_get_header_val(pSipMessage, AUTH_HDR(response_code), NULL);
@@ -230,7 +230,7 @@ void ccsip_util_get_from_entity (sipMessage_t *pSipMessage, char *entity)
     if (sip_from != NULL) {
         from_loc = sippmh_parse_from_or_to((char *) sip_from, TRUE);
         if ((from_loc) && (from_loc->genUrl->schema == URL_TYPE_SIP) && (from_loc->genUrl->u.sipUrl->user)) {
-            sstrncpy(entity, from_loc->genUrl->u.sipUrl->user, CC_MAX_DIALSTRING_LEN);       
+            sstrncpy(entity, from_loc->genUrl->u.sipUrl->user, CC_MAX_DIALSTRING_LEN);
         }
     }
     if (from_loc) {
