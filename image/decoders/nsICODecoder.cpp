@@ -458,10 +458,10 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
       return;
     }
     // Feed the actual image data (not including headers) into the BMP decoder
-    int32_t bmpDataOffset = mDirEntry.mImageOffset + BITMAPINFOSIZE;
-    int32_t bmpDataEnd = mDirEntry.mImageOffset + BITMAPINFOSIZE + 
-                         static_cast<nsBMPDecoder*>(mContainedDecoder.get())->GetCompressedImageSize() +
-                         4 * numColors;
+    uint32_t bmpDataOffset = mDirEntry.mImageOffset + BITMAPINFOSIZE;
+    uint32_t bmpDataEnd = mDirEntry.mImageOffset + BITMAPINFOSIZE + 
+                          static_cast<nsBMPDecoder*>(mContainedDecoder.get())->GetCompressedImageSize() +
+                          4 * numColors;
 
     // If we are feeding in the core image data, but we have not yet
     // reached the ICO's 'AND buffer mask'
