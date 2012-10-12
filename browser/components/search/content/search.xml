@@ -436,7 +436,7 @@
           }
 
           // Save the current value in the form history
-          if (textValue) {
+          if (textValue && !gPrivateBrowsingUI.privateWindow) {
             try {
               textBox._formHistSvc.addEntry(textBox.getAttribute("autocompletesearchparam"),
                                             textValue);
