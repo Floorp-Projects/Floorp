@@ -12,7 +12,7 @@
 #include "nsCSSValue.h"
 #include "imgIRequest.h"
 #include "imgIOnloadBlocker.h"
-#include "imgINotificationObserver.h"
+#include "nsStubImageDecoderObserver.h"
 #include "mozilla/Attributes.h"
 
 class nsIFrame;
@@ -24,7 +24,7 @@ class nsIPrincipal;
 namespace mozilla {
 namespace css {
 
-class ImageLoader MOZ_FINAL : public imgINotificationObserver,
+class ImageLoader MOZ_FINAL : public nsStubImageDecoderObserver,
                               public imgIOnloadBlocker {
 public:
   typedef mozilla::css::ImageValue Image;
@@ -42,7 +42,19 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIONLOADBLOCKER
-  NS_DECL_IMGINOTIFICATIONOBSERVER
+
+  // imgIDecoderObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
+  NS_IMETHOD OnStopFrame(imgIRequest *aRequest, uint32_t aFrame);
+  NS_IMETHOD OnImageIsAnimated(imgIRequest *aRequest);
+  // Do not override OnDataAvailable since background images are not
+  // displayed incrementally; they are displayed after the entire image
+  // has been loaded.
+
+  // imgIContainerObserver (override nsStubImageDecoderObserver)
+  NS_IMETHOD FrameChanged(imgIRequest* aRequest,
+                          imgIContainer *aContainer,
+                          const nsIntRect *aDirtyRect);
 
   void DropDocumentReference();
 
@@ -90,14 +102,6 @@ private:
   static PLDHashOperator
   SetAnimationModeEnumerator(nsISupports* aKey, FrameSet* aValue,
                              void* aClosure);
-
-  nsresult OnStartContainer(imgIRequest *aRequest, imgIContainer* aImage);
-  nsresult OnStopFrame(imgIRequest *aRequest);
-  nsresult OnImageIsAnimated(imgIRequest *aRequest);
-  nsresult FrameChanged(imgIRequest* aRequest);
-  // Do not override OnDataAvailable since background images are not
-  // displayed incrementally; they are displayed after the entire image
-  // has been loaded.
 
   // A map of imgIRequests to the nsIFrames that are using them.
   RequestToFrameMap mRequestToFrameMap;

@@ -27,7 +27,6 @@ CPPSRCS		= \
 			Decoder.cpp \
 			DiscardTracker.cpp \
 			RasterImage.cpp \
-			ScriptedNotificationObserver.cpp \
 			SVGDocumentWrapper.cpp \
 			VectorImage.cpp \
 			imgFrame.cpp \

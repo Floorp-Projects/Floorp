@@ -681,11 +681,11 @@ VectorImage::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
   nsCOMPtr<imgIDecoderObserver> observer = do_QueryReferent(mObserver);
   if (observer) {
     // NOTE: This signals that width/height are available.
-    observer->OnStartContainer();
+    observer->OnStartContainer(nullptr, this);
 
-    observer->FrameChanged(&nsIntRect::GetMaxSizedIntRect());
-    observer->OnStopFrame();
-    observer->OnStopDecode(NS_OK);
+    observer->FrameChanged(nullptr, this, &nsIntRect::GetMaxSizedIntRect());
+    observer->OnStopFrame(nullptr, 0);
+    observer->OnStopDecode(nullptr, NS_OK, nullptr);
   }
   EvaluateAnimation();
 
@@ -722,12 +722,12 @@ VectorImage::InvalidateObserver()
 
   nsCOMPtr<imgIContainerObserver> containerObs(do_QueryReferent(mObserver));
   if (containerObs) {
-    containerObs->FrameChanged(&nsIntRect::GetMaxSizedIntRect());
+    containerObs->FrameChanged(nullptr, this, &nsIntRect::GetMaxSizedIntRect());
   }
 
   nsCOMPtr<imgIDecoderObserver> decoderObs(do_QueryReferent(mObserver));
   if (decoderObs) {
-    decoderObs->OnStopFrame();
+    decoderObs->OnStopFrame(nullptr, imgIContainer::FRAME_CURRENT);
   }
 }
 

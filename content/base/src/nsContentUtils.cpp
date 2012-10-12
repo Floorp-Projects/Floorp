@@ -51,7 +51,7 @@
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsGkAtoms.h"
-#include "imgINotificationObserver.h"
+#include "imgIDecoderObserver.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "imgILoader.h"
@@ -2734,7 +2734,7 @@ nsContentUtils::IsImageInCache(nsIURI* aURI, nsIDocument* aDocument)
 nsresult
 nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                           nsIPrincipal* aLoadingPrincipal, nsIURI* aReferrer,
-                          imgINotificationObserver* aObserver, int32_t aLoadFlags,
+                          imgIDecoderObserver* aObserver, int32_t aLoadFlags,
                           imgIRequest** aRequest)
 {
   NS_PRECONDITION(aURI, "Must have a URI");
@@ -2777,7 +2777,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                               aReferrer,            /* referrer */
                               aLoadingPrincipal,    /* loading principal */
                               loadGroup,            /* loadgroup */
-                              aObserver,            /* imgINotificationObserver */
+                              aObserver,            /* imgIDecoderObserver */
                               aLoadingDocument,     /* uniquification key */
                               aLoadFlags,           /* load flags */
                               nullptr,               /* cache key */

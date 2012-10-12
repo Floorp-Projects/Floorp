@@ -30,7 +30,7 @@ class imgLoader;
 class imgRequest;
 class imgRequestProxy;
 class imgIRequest;
-class imgINotificationObserver;
+class imgIDecoderObserver;
 class nsILoadGroup;
 class imgCacheExpirationTracker;
 class imgMemoryReporter;
@@ -289,7 +289,7 @@ private: // methods
   bool ValidateEntry(imgCacheEntry *aEntry, nsIURI *aKey,
                        nsIURI *aInitialDocumentURI, nsIURI *aReferrerURI, 
                        nsILoadGroup *aLoadGroup,
-                       imgINotificationObserver *aObserver, nsISupports *aCX,
+                       imgIDecoderObserver *aObserver, nsISupports *aCX,
                        nsLoadFlags aLoadFlags, bool aCanMakeNewChannel,
                        imgIRequest *aExistingRequest,
                        imgIRequest **aProxyRequest,
@@ -300,7 +300,7 @@ private: // methods
                                        nsIURI *aInitialDocumentURI,
                                        nsIURI *aReferrerURI,
                                        nsILoadGroup *aLoadGroup,
-                                       imgINotificationObserver *aObserver,
+                                       imgIDecoderObserver *aObserver,
                                        nsISupports *aCX, nsLoadFlags aLoadFlags,
                                        imgIRequest *aExistingRequest,
                                        imgIRequest **aProxyRequest,
@@ -309,7 +309,7 @@ private: // methods
                                        int32_t aCORSMode);
 
   nsresult CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGroup,
-                                    imgINotificationObserver *aObserver,
+                                    imgIDecoderObserver *aObserver,
                                     nsLoadFlags aLoadFlags, imgIRequest *aRequestProxy,
                                     imgIRequest **_retval);
 

@@ -56,8 +56,8 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
              mFrameToRequestMap.IsInitialized() &&
              mImages.IsInitialized());
 
-  nsCOMPtr<imgINotificationObserver> observer;
-  aRequest->GetNotificationObserver(getter_AddRefs(observer));
+  nsCOMPtr<imgIDecoderObserver> observer;
+  aRequest->GetDecoderObserver(getter_AddRefs(observer));
   if (!observer) {
     // The request has already been canceled, so ignore it.  This is ok because
     // we're not going to get any more notifications from a canceled request.
@@ -157,8 +157,8 @@ ImageLoader::DisassociateRequestFromFrame(imgIRequest* aRequest,
 
 #ifdef DEBUG
   {
-    nsCOMPtr<imgINotificationObserver> observer;
-    aRequest->GetNotificationObserver(getter_AddRefs(observer));
+    nsCOMPtr<imgIDecoderObserver> observer;
+    aRequest->GetDecoderObserver(getter_AddRefs(observer));
     MOZ_ASSERT(!observer || observer == this);
   }
 #endif
@@ -334,35 +334,12 @@ NS_IMPL_ADDREF(ImageLoader)
 NS_IMPL_RELEASE(ImageLoader)
 
 NS_INTERFACE_MAP_BEGIN(ImageLoader)
-  NS_INTERFACE_MAP_ENTRY(imgINotificationObserver)
+  NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
+  NS_INTERFACE_MAP_ENTRY(imgIContainerObserver)
   NS_INTERFACE_MAP_ENTRY(imgIOnloadBlocker)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-ImageLoader::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
-{
-  if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
-    nsCOMPtr<imgIContainer> image;
-    aRequest->GetImage(getter_AddRefs(image));
-    return OnStartContainer(aRequest, image);
-  }
-
-  if (aType == imgINotificationObserver::IS_ANIMATED) {
-    return OnImageIsAnimated(aRequest);
-  }
-
-  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
-    return OnStopFrame(aRequest);
-  }
-
-  if (aType == imgINotificationObserver::FRAME_UPDATE) {
-    return FrameChanged(aRequest);
-  }
-
-  return NS_OK;
-}
-
-nsresult
 ImageLoader::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
 { 
   nsPresContext* presContext = GetPresContext();
@@ -375,7 +352,7 @@ ImageLoader::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 ImageLoader::OnImageIsAnimated(imgIRequest* aRequest)
 {
   if (!mDocument) {
@@ -399,8 +376,8 @@ ImageLoader::OnImageIsAnimated(imgIRequest* aRequest)
   return NS_OK;
 }
 
-nsresult
-ImageLoader::OnStopFrame(imgIRequest *aRequest)
+NS_IMETHODIMP
+ImageLoader::OnStopFrame(imgIRequest *aRequest, uint32_t aFrame)
 {
   if (!mDocument || mInClone) {
     return NS_OK;
@@ -418,8 +395,10 @@ ImageLoader::OnStopFrame(imgIRequest *aRequest)
   return NS_OK;
 }
 
-nsresult
-ImageLoader::FrameChanged(imgIRequest *aRequest)
+NS_IMETHODIMP
+ImageLoader::FrameChanged(imgIRequest *aRequest,
+                          imgIContainer *aContainer,
+                          const nsIntRect *aDirtyRect)
 {
   if (!mDocument || mInClone) {
     return NS_OK;

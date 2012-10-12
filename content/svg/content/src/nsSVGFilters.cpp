@@ -5505,7 +5505,7 @@ NS_INTERFACE_TABLE_HEAD(nsSVGFEImageElement)
                            nsIDOMSVGElement,
                            nsIDOMSVGFilterPrimitiveStandardAttributes,
                            nsIDOMSVGFEImageElement, nsIDOMSVGURIReference,
-                           imgINotificationObserver, nsIImageLoadingContent,
+                           imgIDecoderObserver, nsIImageLoadingContent,
                            imgIOnloadBlocker)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEImageElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEImageElementBase)
@@ -5756,27 +5756,43 @@ nsSVGFEImageElement::GetStringInfo()
 }
 
 //----------------------------------------------------------------------
-// imgINotificationObserver methods
+// imgIDecoderObserver methods
 
 NS_IMETHODIMP
-nsSVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData)
+nsSVGFEImageElement::OnStopDecode(imgIRequest *aRequest,
+                                  nsresult status,
+                                  const PRUnichar *statusArg)
 {
-  nsresult rv = nsImageLoadingContent::Notify(aRequest, aType, aData);
+  nsresult rv =
+    nsImageLoadingContent::OnStopDecode(aRequest, status, statusArg);
+  Invalidate();
+  return rv;
+}
 
-  if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
-    // Request a decode
-    nsCOMPtr<imgIContainer> container;
-    aRequest->GetImage(getter_AddRefs(container));
-    NS_ABORT_IF_FALSE(container, "who sent the notification then?");
-    container->StartDecoding();
-  }
+NS_IMETHODIMP
+nsSVGFEImageElement::FrameChanged(imgIRequest* aRequest,
+                                  imgIContainer *aContainer,
+                                  const nsIntRect *aDirtyRect)
+{
+  nsresult rv =
+    nsImageLoadingContent::FrameChanged(aRequest, aContainer, aDirtyRect);
+  Invalidate();
+  return rv;
+}
 
-  if (aType == imgINotificationObserver::LOAD_COMPLETE ||
-      aType == imgINotificationObserver::FRAME_UPDATE ||
-      aType == imgINotificationObserver::SIZE_AVAILABLE) {
-    Invalidate();
-  }
+NS_IMETHODIMP
+nsSVGFEImageElement::OnStartContainer(imgIRequest *aRequest,
+                                      imgIContainer *aContainer)
+{
+  nsresult rv =
+    nsImageLoadingContent::OnStartContainer(aRequest, aContainer);
 
+  // Request a decode
+  NS_ABORT_IF_FALSE(aContainer, "who sent the notification then?");
+  aContainer->StartDecoding();
+
+  // We have a size - invalidate
+  Invalidate();
   return rv;
 }
 
