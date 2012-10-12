@@ -948,7 +948,7 @@ abstract public class BrowserApp extends GeckoApp
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        if (!Intent.ACTION_MAIN.equals(intent.getAction()))
+        if (!Intent.ACTION_MAIN.equals(intent.getAction()) || !mInitialized)
             return;
 
         (new GeckoAsyncTask<Void, Void, Boolean>(mAppContext, GeckoAppShell.getHandler()) {
