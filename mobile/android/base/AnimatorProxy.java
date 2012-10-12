@@ -9,6 +9,7 @@ import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.os.Build;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Transformation;
@@ -54,6 +55,23 @@ public class AnimatorProxy {
         }
 
         return proxy;
+    }
+
+    public int getHeight() {
+        View view = mImpl.getView();
+        if (view != null)
+            return view.getHeight();
+
+        return 0;
+    }
+
+    public void setHeight(int height) {
+        View view = mImpl.getView();
+        if (view != null) {
+            ViewGroup.LayoutParams lp = view.getLayoutParams();
+            lp.height = height;
+            view.setLayoutParams(lp);
+        }
     }
 
     public int getScrollX() {
