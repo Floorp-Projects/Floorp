@@ -430,11 +430,11 @@ logging::DocCompleteLoad(DocAccessible* aDocument, bool aIsLoadEventTarget)
   MsgBegin(sDocLoadTitle, "document loaded *completely*");
 
   printf("    DOM document: %p, acc document: %p\n",
-         static_cast<void*>(aDocument->GetDocumentNode()),
+         static_cast<void*>(aDocument->DocumentNode()),
          static_cast<void*>(aDocument));
 
   printf("    ");
-  LogDocURI(aDocument->GetDocumentNode());
+  LogDocURI(aDocument->DocumentNode());
   printf("\n");
 
   printf("    ");
@@ -660,7 +660,7 @@ logging::Address(const char* aDescr, Accessible* aAcc)
   }
 
   DocAccessible* doc = aAcc->Document();
-  nsIDocument* docNode = aAcc->GetDocumentNode();
+  nsIDocument* docNode = doc->DocumentNode();
   printf("    document: %p, node: %p\n",
          static_cast<void*>(doc), static_cast<void*>(docNode));
 
@@ -718,10 +718,10 @@ logging::Document(DocAccessible* aDocument)
 {
   printf("    Document: %p, document node: %p\n",
          static_cast<void*>(aDocument),
-         static_cast<void*>(aDocument->GetDocumentNode()));
+         static_cast<void*>(aDocument->DocumentNode()));
 
   printf("    Document ");
-  LogDocURI(aDocument->GetDocumentNode());
+  LogDocURI(aDocument->DocumentNode());
   printf("\n");
 }
 

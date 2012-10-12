@@ -133,7 +133,7 @@ OuterDocAccessible::Shutdown()
 #ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eDocDestroy)) {
       logging::DocDestroy("outerdoc's child document shutdown",
-                          childAcc->GetDocumentNode());
+                          childAcc->AsDoc()->DocumentNode());
     }
 #endif
     childAcc->Shutdown();
@@ -177,7 +177,7 @@ OuterDocAccessible::AppendChild(Accessible* aAccessible)
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocCreate)) {
     logging::DocCreate("append document to outerdoc",
-                       aAccessible->GetDocumentNode());
+                       aAccessible->AsDoc()->DocumentNode());
     logging::Address("outerdoc", this);
   }
 #endif
@@ -196,8 +196,8 @@ OuterDocAccessible::RemoveChild(Accessible* aAccessible)
 
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocDestroy)) {
-    logging::DocDestroy("remove document from outerdoc", child->GetDocumentNode(),
-                        child->AsDoc());
+    logging::DocDestroy("remove document from outerdoc",
+                        child->AsDoc()->DocumentNode(), child->AsDoc());
     logging::Address("outerdoc", this);
   }
 #endif
