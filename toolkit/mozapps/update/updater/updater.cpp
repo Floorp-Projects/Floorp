@@ -2305,6 +2305,7 @@ int NS_main(int argc, NS_tchar **argv)
   }
 
 #ifdef XP_WIN
+  int possibleWriteError; // Variable holding one of the errors 46-48
   if (pid > 0) {
     HANDLE parent = OpenProcess(SYNCHRONIZE, false, (DWORD) pid);
     // May return NULL if the parent process has already gone away.
@@ -2315,7 +2316,12 @@ int NS_main(int argc, NS_tchar **argv)
       CloseHandle(parent);
       if (result != WAIT_OBJECT_0)
         return 1;
+      possibleWriteError = WRITE_ERROR_SHARING_VIOLATION_SIGNALED;
+    } else {
+      possibleWriteError = WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID;
     }
+  } else {
+    possibleWriteError = WRITE_ERROR_SHARING_VIOLATION_NOPID;
   }
 #else
   if (pid > 0)
@@ -2841,7 +2847,7 @@ int NS_main(int argc, NS_tchar **argv)
         if (ERROR_ACCESS_DENIED == lastWriteError) {
           WriteStatusFile(WRITE_ERROR_ACCESS_DENIED);
         } else if (ERROR_SHARING_VIOLATION == lastWriteError) {
-          WriteStatusFile(WRITE_ERROR_SHARING_VIOLATION);
+          WriteStatusFile(possibleWriteError);
         } else {
           WriteStatusFile(WRITE_ERROR_CALLBACK_APP);
         }
