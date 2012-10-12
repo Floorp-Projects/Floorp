@@ -28,7 +28,6 @@ EXPORTS		= \
 		nsRange.h \
 		nsScriptLoader.h \
 		nsStubDocumentObserver.h \
-		nsStubImageDecoderObserver.h \
 		nsStubMutationObserver.h \
 		nsTextFragment.h \
 		mozAutoDocUpdate.h \
@@ -109,7 +108,6 @@ CPPSRCS		= \
 		nsScriptElement.cpp \
 		nsScriptLoader.cpp \
 		nsStubDocumentObserver.cpp \
-		nsStubImageDecoderObserver.cpp \
 		nsStubMutationObserver.cpp \
 		nsStyledElement.cpp \
 		nsStyleLinkElement.cpp \
