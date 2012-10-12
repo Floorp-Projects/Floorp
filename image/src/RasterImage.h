@@ -479,6 +479,7 @@ private:
       : scale(aScale)
       , dstLocked(false)
       , done(false)
+      , stopped(false)
     {
       MOZ_ASSERT(!aSrcFrame->GetIsPaletted());
       MOZ_ASSERT(aScale.width > 0 && aScale.height > 0);
@@ -574,6 +575,10 @@ private:
     mozilla::gfx::SurfaceFormat srcFormat;
     bool dstLocked;
     bool done;
+    // This boolean is accessed from both threads simultaneously without locking.
+    // That's safe because stopping a ScaleRequest is strictly an optimization;
+    // if we're not cache-coherent, at worst we'll do extra work.
+    bool stopped;
   };
 
   enum ScaleStatus
@@ -625,13 +630,15 @@ private:
                                     const gfxRect &aFill,
                                     const nsIntRect &aSubimage);
 
-  // Call this with a finished ScaleRequest to set this RasterImage's scale
-  // result, or nullptr to reset the scale result.
-  void SetScaleResult(ScaleRequest* request);
-
   // Call this with a new ScaleRequest to mark this RasterImage's scale result
-  // as waiting for the results of this request.
-  void SetResultPending(ScaleRequest* request);
+  // as waiting for the results of this request. You call to ScalingDone before
+  // request is destroyed!
+  void ScalingStart(ScaleRequest* request);
+
+  // Call this with a finished ScaleRequest to set this RasterImage's scale
+  // result. Give it a ScaleStatus of SCALE_DONE if everything succeeded, and
+  // SCALE_INVALID otherwise.
+  void ScalingDone(ScaleRequest* request, ScaleStatus status);
 
   /**
    * Advances the animation. Typically, this will advance a single frame, but it
@@ -845,6 +852,11 @@ private: // data
 
   inline bool CanScale(gfxPattern::GraphicsFilter aFilter, gfxSize aScale);
   ScaleResult mScaleResult;
+
+  // We hold on to a bare pointer to a ScaleRequest while it's outstanding so
+  // we can mark it as stopped if necessary. The ScaleWorker/DrawWorker duo
+  // will inform us when to let go of this pointer.
+  ScaleRequest* mScaleRequest;
 
   // Decoder shutdown
   enum eShutdownIntent {
