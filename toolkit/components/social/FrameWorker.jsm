@@ -71,24 +71,39 @@ function FrameWorker(url, name) {
   this.loaded = false;
 
   this.frame = makeHiddenFrame();
-
-  var self = this;
-  Services.obs.addObserver(function injectController(doc, topic, data) {
-    if (!doc.defaultView || doc.defaultView != self.frame.contentWindow) {
-      return;
-    }
-    Services.obs.removeObserver(injectController, "document-element-inserted", false);
-    try {
-      self.createSandbox();
-    } catch (e) {
-      Cu.reportError("FrameWorker: failed to create sandbox for " + url + ". " + e);
-    }
-  }, "document-element-inserted", false);
-
-  this.frame.setAttribute("src", url);
+  this.load();
 }
 
 FrameWorker.prototype = {
+  load: function FrameWorker_loadWorker() {
+    var self = this;
+    Services.obs.addObserver(function injectController(doc, topic, data) {
+      if (!doc.defaultView || doc.defaultView != self.frame.contentWindow) {
+        return;
+      }
+      Services.obs.removeObserver(injectController, "document-element-inserted", false);
+      try {
+        self.createSandbox();
+      } catch (e) {
+        Cu.reportError("FrameWorker: failed to create sandbox for " + url + ". " + e);
+      }
+    }, "document-element-inserted", false);
+
+    this.frame.setAttribute("src", this.url);
+  },
+
+  reload: function FrameWorker_reloadWorker() {
+    // push all the ports into pending ports, they will be re-entangled
+    // during the call to createSandbox after the document is reloaded
+    for (let [portid, port] in Iterator(this.ports)) {
+      port._window = null;
+      this.pendingPorts.push(port);
+    }
+    this.ports = {};
+    this.loaded = false;
+    this.load();
+  },
+
   createSandbox: function createSandbox() {
     let workerWindow = this.frame.contentWindow;
     let sandbox = new Cu.Sandbox(workerWindow);
@@ -139,10 +154,10 @@ FrameWorker.prototype = {
 
     // and we delegate ononline and onoffline events to the worker.
     // See http://www.whatwg.org/specs/web-apps/current-work/multipage/workers.html#workerglobalscope
-    this.frame.addEventListener('offline', function fw_onoffline(event) {
+    workerWindow.addEventListener('offline', function fw_onoffline(event) {
       Cu.evalInSandbox("onoffline();", sandbox);
     }, false);
-    this.frame.addEventListener('online', function fw_ononline(event) {
+    workerWindow.addEventListener('online', function fw_ononline(event) {
       Cu.evalInSandbox("ononline();", sandbox);
     }, false);
 
@@ -248,15 +263,12 @@ function makeHiddenFrame() {
   return iframe;
 }
 
+// public methods on WorkerHandle should conform to the SharedWorker api
 function WorkerHandle(port, worker) {
   this.port = port;
   this._worker = worker;
 }
 WorkerHandle.prototype = {
-  get document() {
-    return this._worker.frame.contentDocument;
-  },
-
   // XXX - workers have no .close() method, but *do* have a .terminate()
   // method which we should implement. However, the worker spec doesn't define
   // a callback to be made in the worker when this happens - it all just dies.
