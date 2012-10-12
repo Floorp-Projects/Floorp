@@ -279,8 +279,23 @@ public class TabsTray extends LinearLayout
 
         mWaitingForClose = true;
 
+        animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+            public void onPropertyAnimationStart() { }
+            public void onPropertyAnimationEnd() {
+                animateFinishClose(view);
+            }
+        });
+
+        animator.start();
+    }
+
+    private void animateFinishClose(final View view) {
+        PropertyAnimator animator = new PropertyAnimator(ANIMATION_DURATION);
+        animator.attach(view, Property.HEIGHT, 1);
+
         TabRow tab = (TabRow)view.getTag();
         final int tabId = tab.id;
+        final int originalHeight = view.getHeight();
 
         animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             public void onPropertyAnimationStart() { }
@@ -290,6 +305,7 @@ public class TabsTray extends LinearLayout
                 AnimatorProxy proxy = AnimatorProxy.create(view);
                 proxy.setAlpha(1);
                 proxy.setTranslationX(0);
+                proxy.setHeight(originalHeight);
 
                 Tabs tabs = Tabs.getInstance();
                 Tab tab = tabs.getTab(tabId);
