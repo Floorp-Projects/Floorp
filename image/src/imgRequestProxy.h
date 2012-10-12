@@ -168,7 +168,7 @@ protected:
   // live either on mOwner or mImage, depending on whether
   //   (a) we have an mOwner at all
   //   (b) whether mOwner has instantiated its image yet
-  imgStatusTracker& GetStatusTracker() const;
+  virtual imgStatusTracker& GetStatusTracker() const;
 
   nsITimedChannel* TimedChannel()
   {
@@ -192,9 +192,6 @@ private:
   // from whatever request it was registered with (if any). This, in turn,
   // means that imgRequest::mObservers will not have any stale pointers in it.
   nsRefPtr<imgRequest> mOwner;
-
-  // Weak pointer to the status tracker.
-  imgStatusTracker* mStatusTracker;
 
   // The URI of our request.
   nsCOMPtr<nsIURI> mURI;
@@ -240,6 +237,7 @@ public:
   };
 
   NS_IMETHOD GetImagePrincipal(nsIPrincipal** aPrincipal);
+  virtual imgStatusTracker& GetStatusTracker() const MOZ_OVERRIDE;
 
 protected:
   // Our image. We have to hold a strong reference here, because that's normally
