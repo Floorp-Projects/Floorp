@@ -612,8 +612,7 @@ NS_IMETHODIMP imgRequestProxy::GetHasTransferredData(bool* hasData)
   return NS_OK;
 }
 
-void imgRequestProxy::FrameChanged(imgIContainer *container,
-                                   const nsIntRect *dirtyRect)
+void imgRequestProxy::FrameChanged(const nsIntRect *dirtyRect)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::FrameChanged");
 
@@ -637,7 +636,7 @@ void imgRequestProxy::OnStartDecode()
   }
 }
 
-void imgRequestProxy::OnStartContainer(imgIContainer *image)
+void imgRequestProxy::OnStartContainer()
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStartContainer");
 
@@ -649,7 +648,7 @@ void imgRequestProxy::OnStartContainer(imgIContainer *image)
   }
 }
 
-void imgRequestProxy::OnStartFrame(uint32_t frame)
+void imgRequestProxy::OnStartFrame()
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStartFrame");
 
@@ -660,7 +659,7 @@ void imgRequestProxy::OnStartFrame(uint32_t frame)
   }
 }
 
-void imgRequestProxy::OnDataAvailable(bool aCurrentFrame, const nsIntRect * rect)
+void imgRequestProxy::OnDataAvailable(const nsIntRect * rect)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnDataAvailable");
 
@@ -671,7 +670,7 @@ void imgRequestProxy::OnDataAvailable(bool aCurrentFrame, const nsIntRect * rect
   }
 }
 
-void imgRequestProxy::OnStopFrame(uint32_t frame)
+void imgRequestProxy::OnStopFrame()
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStopFrame");
 
