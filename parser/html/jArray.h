@@ -100,12 +100,14 @@ class autoJArray {
       arr = other.arr;
       length = other.length;
     }
-#if defined(__clang__)
+#if defined(MOZ_HAVE_CXX11_NULLPTR)
+#  if defined(__clang__)
     // clang on OS X 10.7 does not have std::nullptr_t
     typedef decltype(nullptr) jArray_nullptr_t;
-#elif defined(MOZ_HAVE_CXX11_NULLPTR)
+#  else
     // decltype(nullptr) does not evaluate to std::nullptr_t on GCC 4.6.3
     typedef std::nullptr_t jArray_nullptr_t;
+#  endif
 #elif defined(__GNUC__)
     typedef void* jArray_nullptr_t;
 #elif defined(_WIN64)

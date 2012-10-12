@@ -9,7 +9,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
-#include "prmem.h"
 #include "nsUTF8ConverterService.h"
 #include "nsEscape.h"
 #include "nsAutoPtr.h"

@@ -67,8 +67,7 @@ public:
   // Callers must call imgRequestProxy::Notify later.
   void AddProxy(imgRequestProxy *proxy);
 
-  // aNotify==false still sends OnStopRequest.
-  nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, bool aNotify);
+  nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus);
 
   void SniffMimeType(const char *buf, uint32_t len, nsACString& newType);
 

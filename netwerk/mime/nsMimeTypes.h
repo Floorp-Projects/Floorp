@@ -135,6 +135,7 @@
 #define VIDEO_RAW                           "video/x-raw-yuv"
 #define VIDEO_OGG                           "video/ogg"
 #define VIDEO_WEBM                          "video/webm"
+#define VIDEO_3GPP                          "video/3gpp"
 #define APPLICATION_OGG                     "application/ogg"
 #ifdef MOZ_DASH
 #define APPLICATION_DASH                    "application/dash+xml"

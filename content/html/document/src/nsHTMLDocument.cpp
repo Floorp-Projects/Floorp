@@ -110,7 +110,6 @@ using namespace mozilla::dom;
 
 #define NS_MAX_DOCUMENT_WRITE_DEPTH 20
 
-#include "prmem.h"
 #include "prtime.h"
 
 // Find/Search Includes
@@ -633,8 +632,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  int32_t textType = GET_BIDI_OPTION_TEXTTYPE(GetBidiOptions());
-
   // Look for the parent document.  Note that at this point we don't have our
   // content viewer set up yet, and therefore do not have a useful
   // mParentDocument.
@@ -788,13 +785,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     } else {
       parserCharset = charset;
       parserCharsetSource = charsetSource;
-    }
-
-    // ahmed
-    // Check if 864 but in Implicit mode !
-    if ((textType == IBMBIDI_TEXTTYPE_LOGICAL) &&
-        (charset.LowerCaseEqualsLiteral("ibm864"))) {
-      charset.AssignLiteral("IBM864i");
     }
   }
 

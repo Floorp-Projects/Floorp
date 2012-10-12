@@ -100,17 +100,26 @@ public:
    *
    * @return true is successful, false otherwise
    */
-  virtual bool Setup(int aFd) = 0;  
+  virtual bool SetUp(int aFd) = 0;
+};
+
+enum SocketConnectionStatus {
+  SOCKET_DISCONNECTED = 0,
+  SOCKET_CONNECTING = 1,
+  SOCKET_CONNECTED = 2
 };
 
 class UnixSocketConsumer : public RefCounted<UnixSocketConsumer>
 {
 public:
-  UnixSocketConsumer()
-    : mImpl(nullptr)
-  {}
+  UnixSocketConsumer();
 
   virtual ~UnixSocketConsumer();
+
+  SocketConnectionStatus GetConnectionStatus()
+  {
+    return mConnectionStatus;
+  }
 
   /**
    * Function to be called whenever data is received. This is only called on the
@@ -172,8 +181,32 @@ public:
    * Cancels connect/accept task loop, if one is currently running.
    */
   void CancelSocketTask();
+
+  /** 
+   * Callback for socket connect/accept success. Called after connect/accept has
+   * finished. Will be run on main thread, before any reads take place.
+   */
+  virtual void OnConnectSuccess() = 0;
+
+  /** 
+   * Callback for socket connect/accept error. Will be run on main thread.
+   */
+  virtual void OnConnectError() = 0;
+
+
+  /** 
+   * Called by implementation to notify consumer of success.
+   */
+  void NotifySuccess();
+
+  /** 
+   * Called by implementation to notify consumer of error.
+   */
+  void NotifyError();
+
 private:
   UnixSocketImpl* mImpl;
+  SocketConnectionStatus mConnectionStatus;
 };
 
 } // namespace ipc

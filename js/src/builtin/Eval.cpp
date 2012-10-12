@@ -184,6 +184,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
     unsigned staticLevel;
     RootedValue thisv(cx);
     if (evalType == DIRECT_EVAL) {
+        JS_ASSERT(!caller->runningInIon());
         staticLevel = caller->script()->staticLevel + 1;
 
         // Direct calls to eval are supposed to see the caller's |this|. If we
@@ -207,7 +208,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
     if (!stableStr)
         return false;
 
-    const jschar *chars = stableStr->chars();
+    StableCharPtr chars = stableStr->chars();
     size_t length = stableStr->length();
 
     // If the eval string starts with '(' or '[' and ends with ')' or ']', it may be JSON.
@@ -236,7 +237,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
 
             if (cp == end) {
                 bool isArray = (chars[0] == '[');
-                JSONParser parser(cx, isArray ? chars : chars + 1, isArray ? length : length - 2,
+                JSONParser parser(cx, isArray ? chars : chars + 1U, isArray ? length : length - 2,
                                   JSONParser::StrictJSON, JSONParser::NoError);
                 RootedValue tmp(cx);
                 if (!parser.parse(&tmp))
@@ -271,8 +272,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
                .setPrincipals(principals)
                .setOriginPrincipals(originPrincipals);
         JSScript *compiled = frontend::CompileScript(cx, scopeobj, caller, options,
-                                                     chars, length, stableStr,
-                                                     staticLevel);
+                                                     chars, length, stableStr, staticLevel);
         if (!compiled)
             return false;
 

@@ -637,6 +637,10 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
 
   metrics.mMayHaveTouchListeners = aMayHaveTouchListeners;
 
+  if (nsIWidget* widget = aForFrame->GetNearestWidget()) {
+    widget->GetBounds(metrics.mCompositionBounds);
+  }
+
   aRoot->SetFrameMetrics(metrics);
 }
 
@@ -993,7 +997,6 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
       layerManager = window->GetLayerManager(&allowRetaining);
       if (layerManager) {
         doBeginTransaction = !(aFlags & PAINT_EXISTING_TRANSACTION);
-        FrameLayerBuilder::SetWidgetLayerManager(layerManager);
         widgetTransaction = true;
       }
     }
@@ -1020,7 +1023,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
       layerManager->BeginTransaction();
     }
   }
-  if (allowRetaining) {
+  if (widgetTransaction) {
     layerBuilder->DidBeginRetainedLayerTransaction(layerManager);
   }
 

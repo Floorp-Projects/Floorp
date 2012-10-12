@@ -13,6 +13,7 @@
 #include "nsITextControlFrame.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"
+#include "mozilla/WeakPtr.h"
 
 class nsTextInputListener;
 class nsTextControlFrame;
@@ -117,7 +118,7 @@ class nsITextControlElement;
 
 class RestoreSelectionState;
 
-class nsTextEditorState {
+class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
 public:
   explicit nsTextEditorState(nsITextControlElement* aOwningElement);
   ~nsTextEditorState();

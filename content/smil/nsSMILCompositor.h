@@ -83,7 +83,7 @@ public:
   void UpdateCachedBaseValue(const nsSMILValue& aBaseValue);
 
   // Static callback methods
-  PR_STATIC_CALLBACK(PLDHashOperator) DoComposeAttribute(
+  static PLDHashOperator DoComposeAttribute(
       nsSMILCompositor* aCompositor, void *aData);
 
   // The hash key (tuple of element/attributeName/attributeType)

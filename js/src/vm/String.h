@@ -546,6 +546,12 @@ class JSStableString : public JSFlatString
 
   public:
     static inline JSStableString *new_(JSContext *cx, const jschar *chars, size_t length);
+
+    JS_ALWAYS_INLINE
+    JS::StableCharPtr chars() const {
+        JS_ASSERT(!JSString::isInline());
+        return JS::StableCharPtr(d.u1.chars, length());
+    }
 };
 
 JS_STATIC_ASSERT(sizeof(JSStableString) == sizeof(JSString));

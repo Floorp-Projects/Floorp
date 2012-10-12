@@ -176,7 +176,7 @@ nsMutationReceiver::AttributeWillChange(nsIDocument* aDocument,
 {
   if (nsAutoMutationBatch::IsBatching() ||
       !ObservesAttr(aElement, aNameSpaceID, aAttribute) ||
-      aElement->IsInNativeAnonymousSubtree()) {
+      aElement->ChromeOnlyAccess()) {
     return;
   }
 
@@ -213,7 +213,7 @@ nsMutationReceiver::CharacterDataWillChange(nsIDocument *aDocument,
 {
   if (nsAutoMutationBatch::IsBatching() ||
       !CharacterData() || !(Subtree() || aContent == Target()) ||
-      aContent->IsInNativeAnonymousSubtree()) {
+      aContent->ChromeOnlyAccess()) {
     return;
   }
   
@@ -239,7 +239,7 @@ nsMutationReceiver::ContentAppended(nsIDocument* aDocument,
 {
   nsINode* parent = NODE_FROM(aContainer, aDocument);
   bool wantsChildList = ChildList() && (Subtree() || parent == Target());
-  if (!wantsChildList || aFirstNewContent->IsInNativeAnonymousSubtree()) {
+  if (!wantsChildList || aFirstNewContent->ChromeOnlyAccess()) {
     return;
   }
 
@@ -277,7 +277,7 @@ nsMutationReceiver::ContentInserted(nsIDocument* aDocument,
 {
   nsINode* parent = NODE_FROM(aContainer, aDocument);
   bool wantsChildList = ChildList() && (Subtree() || parent == Target());
-  if (!wantsChildList || aChild->IsInNativeAnonymousSubtree()) {
+  if (!wantsChildList || aChild->ChromeOnlyAccess()) {
     return;
   }
 
@@ -308,7 +308,7 @@ nsMutationReceiver::ContentRemoved(nsIDocument* aDocument,
                                    int32_t aIndexInContainer,
                                    nsIContent* aPreviousSibling)
 {
-  if (aChild->IsInNativeAnonymousSubtree()) {
+  if (aChild->ChromeOnlyAccess()) {
     return;
   }
 

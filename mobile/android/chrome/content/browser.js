@@ -822,10 +822,11 @@ var BrowserApp = {
         webBrowserPrint.cancel();
       }
     }
+    let isPrivate = aBrowser.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing;
     let download = dm.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
                                   aBrowser.currentURI,
                                   Services.io.newFileURI(file), "", mimeInfo,
-                                  Date.now() * 1000, null, cancelable);
+                                  Date.now() * 1000, null, cancelable, isPrivate);
 
     webBrowserPrint.print(printSettings, download);
   },
@@ -1183,6 +1184,16 @@ var NativeWindow = {
     Services.obs.removeObserver(this, "Menu:Clicked");
     Services.obs.removeObserver(this, "Doorhanger:Reply");
     this.contextmenus.uninit();
+  },
+
+  loadDex: function(zipFile, implClass) {
+    sendMessageToJava({
+      gecko: {
+        type: "Dex:Load",
+        zipfile: zipFile,
+        impl: implClass || "Main"
+      }
+    });
   },
 
   toast: {
@@ -3538,6 +3549,7 @@ var BrowserEventHandler = {
     document.addEventListener("MozMagnifyGesture", this, true);
 
     Services.prefs.addObserver("browser.zoom.reflowOnZoom", this, false);
+    this.updateReflozPref();
   },
 
   updateReflozPref: function() {

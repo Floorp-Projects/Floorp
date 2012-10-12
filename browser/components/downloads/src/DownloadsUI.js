@@ -68,17 +68,24 @@ DownloadsUI.prototype = {
     }
 
     if (aReason == Ci.nsIDownloadManagerUI.REASON_NEW_DOWNLOAD) {
-      // If the indicator is visible, then new download notifications are
-      // already handled by the panel service.
+      const kMinimized = Ci.nsIDOMChromeWindow.STATE_MINIMIZED;
       let browserWin = gBrowserGlue.getMostRecentBrowserWindow();
-      if (browserWin &&
-          browserWin.windowState != Ci.nsIDOMChromeWindow.STATE_MINIMIZED &&
-          browserWin.DownloadsButton.isVisible) {
-        return;
-      }
-    }
 
-    this._toolkitUI.show(aWindowContext, aID, aReason);
+      if (!browserWin || browserWin.windowState == kMinimized) {
+        this._toolkitUI.show(aWindowContext, aID, aReason);
+      }
+      else {
+        // If the indicator is visible, then new download notifications are
+        // already handled by the panel service.
+        browserWin.DownloadsButton.checkIsVisible(function(isVisible) {
+          if (!isVisible) {
+            this._toolkitUI.show(aWindowContext, aID, aReason);
+          }
+        }.bind(this));
+      }
+    } else {
+      this._toolkitUI.show(aWindowContext, aID, aReason);
+    }
   },
 
   get visible()

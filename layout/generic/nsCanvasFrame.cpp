@@ -439,7 +439,6 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     aDesiredSize.width = aDesiredSize.height = 0;
   } else {
     nsIFrame* kidFrame = mFrames.FirstChild();
-    nsRect oldKidRect = kidFrame->GetRect();
     bool kidDirty = (kidFrame->GetStateBits() & NS_FRAME_IS_DIRTY) != 0;
 
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,

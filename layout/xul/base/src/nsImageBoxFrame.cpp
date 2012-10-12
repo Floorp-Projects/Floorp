@@ -304,8 +304,16 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
 
-  return aLists.Content()->AppendNewToTop(
+
+  nsDisplayList list;
+  rv = list.AppendNewToTop(
       new (aBuilder) nsDisplayXULImage(aBuilder, this));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  CreateOwnLayerIfNeeded(aBuilder, &list);
+
+  aLists.Content()->AppendToTop(&list);
+  return NS_OK;
 }
 
 void

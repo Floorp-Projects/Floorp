@@ -274,6 +274,7 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding()
   mInheritStyle(true), 
   mCheckedBaseProto(false),
   mKeyHandlersRegistered(false),
+  mChromeOnlyContent(false),
   mResources(nullptr),
   mAttributeTable(nullptr),
   mInsertionPointTable(nullptr),
@@ -442,6 +443,11 @@ nsXBLPrototypeBinding::SetBindingElement(nsIContent* aElement)
   if (mBinding->AttrValueIs(kNameSpaceID_None, nsGkAtoms::inheritstyle,
                             nsGkAtoms::_false, eCaseMatters))
     mInheritStyle = false;
+
+  mChromeOnlyContent = IsChrome() &&
+                       mBinding->AttrValueIs(kNameSpaceID_None,
+                                             nsGkAtoms::chromeOnlyContent,
+                                             nsGkAtoms::_true, eCaseMatters);
 }
 
 bool
@@ -1466,6 +1472,8 @@ nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
                             uint8_t aFlags)
 {
   mInheritStyle = (aFlags & XBLBinding_Serialize_InheritStyle) ? true : false;
+  mChromeOnlyContent =
+    (aFlags & XBLBinding_Serialize_ChromeOnlyContent) ? true : false;
 
   // nsXBLContentSink::ConstructBinding doesn't create a binding with an empty
   // id, so we don't here either.
@@ -1674,6 +1682,10 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
   // mAlternateBindingURI is only set on the first binding.
   if (mAlternateBindingURI) {
     flags |= XBLBinding_Serialize_IsFirstBinding;
+  }
+
+  if (mChromeOnlyContent) {
+    flags |= XBLBinding_Serialize_ChromeOnlyContent;
   }
 
   nsresult rv = aStream->Write8(flags);

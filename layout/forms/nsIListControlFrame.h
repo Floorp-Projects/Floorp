@@ -59,7 +59,7 @@ public:
    * Returns the number of options in the listbox
    */
 
-  virtual int32_t GetNumberOfOptions() = 0; 
+  virtual uint32_t GetNumberOfOptions() = 0;
 
   /**
    * Called by combobox when it's about to drop down

@@ -23,7 +23,8 @@ public:
   virtual ~NeckoParent();
 
 protected:
-  virtual PHttpChannelParent* AllocPHttpChannel(PBrowserParent* browser);
+  virtual PHttpChannelParent* AllocPHttpChannel(PBrowserParent*,
+                                                const SerializedLoadContext&);
   virtual bool DeallocPHttpChannel(PHttpChannelParent*);
   virtual PCookieServiceParent* AllocPCookieService();
   virtual bool DeallocPCookieService(PCookieServiceParent*);

@@ -1382,7 +1382,8 @@ TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rval,
     ScriptFrameIter iter(cx);
     JS_ASSERT(!iter.done());
 
-    JSStackFrame *caller = Jsvalify(iter.fp());
+    /* Debug-mode currently disables Ion compilation. */
+    JSStackFrame *caller = Jsvalify(iter.interpFrame());
     JSScript *script = iter.script();
 
     size_t length;
@@ -2504,9 +2505,10 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
 
     JS_ASSERT(cx->hasfp());
 
+    /* Debug-mode currently disables Ion compilation. */
     ScriptFrameIter fi(cx);
     for (uint32_t i = 0; i < upCount; ++i, ++fi) {
-        if (!fi.fp()->prev())
+        if (!fi.interpFrame()->prev())
             break;
     }
 
@@ -2519,7 +2521,7 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     if (!chars)
         return false;
 
-    StackFrame *fp = fi.fp();
+    StackFrame *fp = fi.interpFrame();
     bool ok = !!JS_EvaluateUCInStackFrame(cx, Jsvalify(fp), chars, length,
                                           fp->script()->filename,
                                           JS_PCToLineNumber(cx, fp->script(),
@@ -3091,7 +3093,9 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
     options.setFileAndLine("<string>", 1)
            .setCompileAndGo(false);
     Parser parser(cx, options,
-                  JS_GetStringCharsZ(cx, scriptContents), JS_GetStringLength(scriptContents),
+                  JS::StableCharPtr(JS_GetStringCharsZ(cx, scriptContents),
+                                    JS_GetStringLength(scriptContents)),
+                  JS_GetStringLength(scriptContents),
                   /* foldConstants = */ true);
     if (!parser.init())
         return false;
@@ -3367,7 +3371,8 @@ ParseLegacyJSON(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 
     RootedValue value(cx, NullValue());
-    return js::ParseJSONWithReviver(cx, chars, length, value, args.rval(), LEGACY);
+    return js::ParseJSONWithReviver(cx, StableCharPtr(chars, length), length,
+                                    value, args.rval(), LEGACY);
 }
 
 static JSBool

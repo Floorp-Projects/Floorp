@@ -150,7 +150,6 @@
               ## Mac
               [ 'OS == "mac"', {
                 'cflags_mozilla': [
-                    '-Werror',
                     '-Wall',
                     '-Wno-parentheses',
                     '-Wno-strict-prototypes',
@@ -200,7 +199,6 @@
               ## Linux
               [ 'OS == "linux"', {
                 'cflags': [
-                    '-Werror',
                     '-Wall',
                     '-Wno-parentheses',
                     '-Wno-strict-prototypes',

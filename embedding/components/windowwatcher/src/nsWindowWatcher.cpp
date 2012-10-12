@@ -897,6 +897,29 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     }
   }
 
+  if (windowIsNew) {
+    // See if the caller has requested a private browsing window.
+    bool isPrivateBrowsingWindow =
+      !!(chromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW);
+    // Otherwise, propagate the privacy status of the parent window, if
+    // available, to the child.
+    if (!isPrivateBrowsingWindow) {
+      nsCOMPtr<nsIDocShellTreeItem> parentItem;
+      GetWindowTreeItem(aParent, getter_AddRefs(parentItem));
+      nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(parentItem);
+      if (parentContext) {
+        isPrivateBrowsingWindow = parentContext->UsePrivateBrowsing();
+      }
+    }
+
+    nsCOMPtr<nsIDocShellTreeItem> childRoot;
+    newDocShellItem->GetRootTreeItem(getter_AddRefs(childRoot));
+    nsCOMPtr<nsILoadContext> childContext = do_QueryInterface(childRoot);
+    if (childContext) {
+      childContext->SetUsePrivateBrowsing(isPrivateBrowsingWindow);
+    }
+  }
+
   if (uriToLoad && aNavigate) { // get the script principal and pass it to docshell
     JSContextAutoPopper contextGuard;
 
@@ -1473,6 +1496,12 @@ uint32_t nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
     if (NS_FAILED(rv)) {
       isChrome = false;
     }
+  }
+
+  // Determine whether the window is a private browsing window
+  if (isChrome) {
+    chromeFlags |= WinHasOption(aFeatures, "private", 0, &presenceFlag) ?
+      nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW : 0;
   }
 
   nsCOMPtr<nsIPrefBranch> prefBranch;

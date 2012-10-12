@@ -1834,7 +1834,14 @@ DebugScopes::updateLiveScopes(JSContext *cx)
      * the flag for us, at exactly the time when execution resumes fp->prev().
      */
     for (AllFramesIter i(cx->runtime->stackSpace); !i.done(); ++i) {
-        StackFrame *fp = i.fp();
+        /*
+         * Debug-mode currently disables Ion compilation in the compartment of
+         * the debuggee.
+         */
+        if (i.isIon())
+            continue;
+
+        StackFrame *fp = i.interpFrame();
         if (fp->scopeChain()->compartment() != cx->compartment)
             continue;
 

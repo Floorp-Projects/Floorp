@@ -663,7 +663,7 @@ public:
   {
     if (aFrame) {
       mReferenceFrame = aBuilder->FindReferenceFrameFor(aFrame);
-      mToReferenceFrame = aFrame->GetOffsetToCrossDoc(mReferenceFrame);
+      mToReferenceFrame = aBuilder->ToReferenceFrame(aFrame);
     }
   }
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,

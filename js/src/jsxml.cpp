@@ -1184,7 +1184,7 @@ ParseNodeToQName(Parser *parser, ParseNode *pn,
     JSStableString *str = atom->ensureStable(cx);
     if (!str)
         return NULL;
-    start = str->chars();
+    start = str->chars().get();
     length = str->length();
     JS_ASSERT(length != 0 && *start != '@');
     JS_ASSERT(length != 1 || *start != '*');
@@ -1764,7 +1764,7 @@ ParseXMLSource(JSContext *cx, HandleString src)
     {
         CompileOptions options(cx);
         options.setFileAndLine(filename, lineno);
-        Parser parser(cx, options, chars, length, /* foldConstants = */ true);
+        Parser parser(cx, options, StableCharPtr(chars, length), length, /* foldConstants = */ true);
         if (parser.init()) {
             JSObject *scopeChain = GetCurrentScopeChain(cx);
             if (!scopeChain) {

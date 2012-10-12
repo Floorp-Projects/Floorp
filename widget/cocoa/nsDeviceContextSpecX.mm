@@ -6,8 +6,6 @@
 #include "nsDeviceContextSpecX.h"
 #include "nsObjCExceptions.h"
 
-#include "prmem.h"
-#include "plstr.h"
 #include "nsCRT.h"
 #include <unistd.h>
 

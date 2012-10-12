@@ -276,7 +276,9 @@ public:
   void PassOptionalSequenceOfNullableInts(const Optional<Sequence<Nullable<int32_t> > > &);
   void PassOptionalNullableSequenceOfNullableInts(const Optional<Nullable<Sequence<Nullable<int32_t> > > > &);
   void ReceiveCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &);
+  void ReceiveCallbackObjectSequence(nsTArray< nsRefPtr<TestCallbackInterface> > &);
   void ReceiveNullableCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &);
+  void ReceiveNullableCallbackObjectSequence(nsTArray< nsRefPtr<TestCallbackInterface> > &);
   void ReceiveCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&);
   void ReceiveNullableCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&);
   void ReceiveWeakCastableObjectSequence(nsTArray<TestInterface*> &);
@@ -334,13 +336,16 @@ public:
   void SetEnumAttribute(TestEnum);
 
   // Callback types
-  void PassCallback(JSContext*, JSObject*);
+  void PassCallback(JSContext*, JSObject&);
   void PassNullableCallback(JSContext*, JSObject*);
-  void PassOptionalCallback(JSContext*, const Optional<JSObject*>&);
+  void PassOptionalCallback(JSContext*, const Optional<NonNull<JSObject> >&);
   void PassOptionalNullableCallback(JSContext*, const Optional<JSObject*>&);
   void PassOptionalNullableCallbackWithDefaultValue(JSContext*, JSObject*);
   JSObject* ReceiveCallback(JSContext*);
   JSObject* ReceiveNullableCallback(JSContext*);
+  void PassNullableTreatAsNullCallback(JSContext*, JSObject*);
+  void PassOptionalNullableTreatAsNullCallback(JSContext*, const Optional<JSObject*>&);
+  void PassOptionalNullableTreatAsNullCallbackWithDefaultValue(JSContext*, JSObject*);
 
   // Any types
   void PassAny(JSContext*, JS::Value);

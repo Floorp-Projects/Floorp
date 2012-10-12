@@ -570,3 +570,13 @@ BluetoothOppManager::UpdateProgress(uint32_t aProcessed, uint32_t aFileLength)
     return;
   }
 }
+
+void
+BluetoothOppManager::OnConnectSuccess()
+{
+}
+
+void
+BluetoothOppManager::OnConnectError()
+{
+}
