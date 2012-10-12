@@ -169,6 +169,19 @@ nsresult
 nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest,
                                      nsresult aStatus)
 {
+  uint32_t oldStatus;
+  aRequest->GetImageStatus(&oldStatus);
+
+  //XXXjdm This occurs when we have a pending request created, then another
+  //       pending request replaces it before the first one is finished.
+  //       This begs the question of what the correct behaviour is; we used
+  //       to not have to care because we ran this code in OnStopDecode which
+  //       wasn't called when the first request was cancelled. For now, I choose
+  //       to punt when the given request doesn't appear to have terminated in
+  //       an expected state.
+  if (!(oldStatus & (imgIRequest::STATUS_ERROR | imgIRequest::STATUS_LOAD_COMPLETE)))
+    return NS_OK;
+
   // Our state may change. Watch it.
   AutoStateChanger changer(this, true);
 
