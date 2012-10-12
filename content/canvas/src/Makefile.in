@@ -17,8 +17,6 @@ LIBRARY_NAME	= gkconcvs_s
 LIBXUL_LIBRARY  = 1
 
 EXPORTS = \
-	CustomQS_Canvas.h \
-	CustomQS_Canvas2D.h \
 	WebGLContext.h \
 	WebGLElementArrayCache.h \
 	WebGLExtensions.h \
