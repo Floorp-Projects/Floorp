@@ -333,6 +333,7 @@ class Emulator(object):
         # need to remount so we can write to /system/b2g
         self._run_adb(['remount'])
         self._run_adb(['shell', 'stop', 'b2g'])
+        self._run_adb(['shell', 'rm', '-rf', '/system/b2g/*.so'])
         print 'installing gecko binaries'
         self._run_adb(['push', self.gecko_path, '/system/b2g'])
         print 'restarting B2G'
