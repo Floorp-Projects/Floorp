@@ -5,8 +5,10 @@
 
 package org.mozilla.gecko;
 
+import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Choreographer;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
@@ -18,10 +20,9 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class PropertyAnimator extends TimerTask {
+public class PropertyAnimator implements Runnable {
     private static final String LOGTAG = "GeckoPropertyAnimator";
 
-    private Timer mTimer;
     private Interpolator mInterpolator;
 
     public static enum Property {
@@ -48,16 +49,14 @@ public class PropertyAnimator extends TimerTask {
     private float mDurationReciprocal;
     private List<ElementHolder> mElementsList;
     private PropertyAnimationListener mListener;
-
-    // Default refresh rate in ms.
-    private static final int INTERVAL = 10;
+    private FramePoster mFramePoster;
 
     public PropertyAnimator(int duration) {
         mDuration = duration;
         mDurationReciprocal = 1.0f / (float) mDuration;
-        mTimer = new Timer();
         mInterpolator = new DecelerateInterpolator();
         mElementsList = new ArrayList<ElementHolder>();
+        mFramePoster = FramePoster.create(this);
     }
 
     public void attach(View view, Property property, int to) {
@@ -88,6 +87,11 @@ public class PropertyAnimator extends TimerTask {
     @Override
     public void run() {
         int timePassed = (int) (AnimationUtils.currentAnimationTimeMillis() - mStartTime);
+        if (timePassed >= mDuration) {
+            stop();
+            return;
+        }
+
         float interpolation = mInterpolator.getInterpolation(timePassed * mDurationReciprocal);
 
         for (ElementHolder element : mElementsList) { 
@@ -95,8 +99,7 @@ public class PropertyAnimator extends TimerTask {
             invalidate(element, delta);
         }
 
-        if (timePassed >= mDuration)
-            stop();
+        mFramePoster.postNextAnimationFrame();
     }
 
     public void start() {
@@ -118,7 +121,7 @@ public class PropertyAnimator extends TimerTask {
         }
 
         if (mDuration != 0) {
-            mTimer.scheduleAtFixedRate(this, 0, INTERVAL);
+            mFramePoster.postFirstAnimationFrame();
 
             if (mListener != null)
                 mListener.onPropertyAnimationStart();
@@ -126,9 +129,7 @@ public class PropertyAnimator extends TimerTask {
     }
 
     public void stop() {
-        cancel();
-        mTimer.cancel();
-        mTimer.purge();
+        mFramePoster.cancelAnimationFrame();
 
         // Make sure to snap to the end position.
         for (ElementHolder element : mElementsList) { 
@@ -146,36 +147,98 @@ public class PropertyAnimator extends TimerTask {
     private void invalidate(final ElementHolder element, final int delta) {
         final View view = element.view;
 
-        Handler handler = view.getHandler();
-        if (handler == null)
+        // check to see if the view was detached between the check above and this code
+        // getting run on the UI thread.
+        if (view.getHandler() == null)
             return;
 
-        // Post the layout changes on the view's UI thread.
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                // check to see if the view was detached between the check above and this code
-                // getting run on the UI thread.
-                if (view.getHandler() == null)
-                    return;
-            
-                if (element.property == Property.SLIDE_TOP) {
-                    view.scrollTo(view.getScrollX(), delta);
-                    return;
-                } else if (element.property == Property.SLIDE_LEFT) {
-                    view.scrollTo(delta, view.getScrollY());
-                    return;
+        if (element.property == Property.SLIDE_TOP) {
+            view.scrollTo(view.getScrollX(), delta);
+            return;
+        } else if (element.property == Property.SLIDE_LEFT) {
+            view.scrollTo(delta, view.getScrollY());
+            return;
+        }
+
+        ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
+
+        if (element.property == Property.SHRINK_TOP)
+            params.setMargins(params.leftMargin, delta, params.rightMargin, params.bottomMargin);
+        else if (element.property == Property.SHRINK_LEFT)
+            params.setMargins(delta, params.topMargin, params.rightMargin, params.bottomMargin);
+
+        view.requestLayout();
+    }
+
+    private static abstract class FramePoster {
+        public static FramePoster create(Runnable r) {
+            if (Build.VERSION.SDK_INT >= 16)
+                return new FramePosterPostJB(r);
+            else
+                return new FramePosterPreJB(r);
+        }
+
+        public abstract void postFirstAnimationFrame();
+        public abstract void postNextAnimationFrame();
+        public abstract void cancelAnimationFrame();
+    }
+
+    private static class FramePosterPreJB extends FramePoster {
+        // Default refresh rate in ms.
+        private static final int INTERVAL = 10;
+
+        private Handler mHandler;
+        private Runnable mRunnable;
+
+        public FramePosterPreJB(Runnable r) {
+            mHandler = new Handler();
+            mRunnable = r;
+        }
+
+        @Override
+        public void postFirstAnimationFrame() {
+            mHandler.post(mRunnable);
+        }
+
+        @Override
+        public void postNextAnimationFrame() {
+            mHandler.postDelayed(mRunnable, INTERVAL);
+        }
+
+        @Override
+        public void cancelAnimationFrame() {
+            mHandler.removeCallbacks(mRunnable);
+        }
+    }
+
+    private static class FramePosterPostJB extends FramePoster {
+        private Choreographer mChoreographer;
+        private Choreographer.FrameCallback mCallback;
+
+        public FramePosterPostJB(final Runnable r) {
+            mChoreographer = Choreographer.getInstance();
+
+            mCallback = new Choreographer.FrameCallback() {
+                @Override
+                public void doFrame(long frameTimeNanos) {
+                    r.run();
                 }
+            };
+        }
 
-                ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
+        @Override
+        public void postFirstAnimationFrame() {
+            postNextAnimationFrame();
+        }
 
-                if (element.property == Property.SHRINK_TOP)
-                    params.setMargins(params.leftMargin, delta, params.rightMargin, params.bottomMargin);
-                else if (element.property == Property.SHRINK_LEFT)
-                    params.setMargins(delta, params.topMargin, params.rightMargin, params.bottomMargin);
+        @Override
+        public void postNextAnimationFrame() {
+            mChoreographer.postFrameCallback(mCallback);
+        }
 
-                view.requestLayout();
-            }
-        });
+        @Override
+        public void cancelAnimationFrame() {
+            mChoreographer.removeFrameCallback(mCallback);
+        }
     }
 }
