@@ -53,13 +53,10 @@ function checkClone(other_listener, aRequest)
 // Ensure that all the callbacks were called on aRequest.
 function checkAllCallbacks(listener, aRequest)
 {
-  do_check_neq(listener.state & START_REQUEST, 0);
-  do_check_neq(listener.state & START_DECODE, 0);
-  do_check_neq(listener.state & START_CONTAINER, 0);
-  do_check_neq(listener.state & START_FRAME, 0);
-  do_check_neq(listener.state & STOP_FRAME, 0);
-  do_check_neq(listener.state & STOP_DECODE, 0);
-  do_check_neq(listener.state & STOP_REQUEST, 0);
+  do_check_neq(listener.state & SIZE_AVAILABLE, 0);
+  do_check_neq(listener.state & FRAME_COMPLETE, 0);
+  do_check_neq(listener.state & DECODE_COMPLETE, 0);
+  do_check_neq(listener.state & LOAD_COMPLETE, 0);
   do_check_eq(listener.state, ALL_BITS);
 
   do_test_finished();
@@ -115,10 +112,10 @@ function firstLoadDone(oldlistener, aRequest)
 function getChannelLoadImageStartCallback(streamlistener)
 {
   return function channelLoadStart(imglistener, aRequest) {
-    // We must not have received any status before we get this start callback.
+    // We must not have received all status before we get this start callback.
     // If we have, we've broken people's expectations by delaying events from a
     // channel we were given.
-    do_check_eq(streamlistener.requestStatus, 0);
+    do_check_eq(streamlistener.requestStatus & STOP_REQUEST, 0);
 
     checkClone(imglistener, aRequest);
   }

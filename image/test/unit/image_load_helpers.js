@@ -2,64 +2,47 @@
  * Helper structures to track callbacks from image and channel loads.
  */
 
-// One bit per callback that imageListener below implements. Stored in
-// ImageListener.state.
-// START_REQUEST and STOP_REQUEST are also reused by ChannelListener, and
+// START_REQUEST and STOP_REQUEST are used by ChannelListener, and
 // stored in ChannelListener.requestStatus.
 const START_REQUEST = 0x01;
-const START_DECODE = 0x02;
-const START_CONTAINER = 0x04;
-const START_FRAME = 0x08;
-const STOP_FRAME = 0x10;
-const STOP_DECODE = 0x20;
-const STOP_REQUEST = 0x40;
-const ALL_BITS = START_REQUEST | START_DECODE | START_CONTAINER | START_FRAME |
-                 STOP_FRAME | STOP_DECODE | STOP_REQUEST;
+const STOP_REQUEST = 0x02;
+const DATA_AVAILABLE = 0x04;
+
+// One bit per callback that imageListener below implements. Stored in
+// ImageListener.state.
+const SIZE_AVAILABLE = 0x01;
+const FRAME_UPDATE = 0x02;
+const FRAME_COMPLETE = 0x04;
+const LOAD_COMPLETE = 0x08;
+const DECODE_COMPLETE = 0x10;
+const ALL_BITS = SIZE_AVAILABLE | FRAME_COMPLETE | DECODE_COMPLETE | LOAD_COMPLETE;
 
 // An implementation of imgIDecoderObserver with the ability to call specified
 // functions on onStartRequest and onStopRequest.
 function ImageListener(start_callback, stop_callback)
 {
-  this.startRequest = function onStartRequest(aRequest)
+  this.sizeAvailable = function onSizeAvailable(aRequest)
   {
     do_check_false(this.synchronous);
 
-    this.state |= START_REQUEST;
+    this.state |= SIZE_AVAILABLE;
 
     if (this.start_callback)
       this.start_callback(this, aRequest);
   }
-  this.startDecode = function onStartDecode(aRequest)
+  this.frameComplete = function onFrameComplete(aRequest)
   {
     do_check_false(this.synchronous);
 
-    this.state |= START_DECODE;
+    this.state |= FRAME_COMPLETE;
   }
-  this.startContainer = function onStartContainer(aRequest)
+  this.decodeComplete = function onDecodeComplete(aRequest)
   {
     do_check_false(this.synchronous);
 
-    this.state |= START_CONTAINER;
+    this.state |= DECODE_COMPLETE;
   }
-  this.startFrame = function onStartFrame(aRequest)
-  {
-    do_check_false(this.synchronous);
-
-    this.state |= START_FRAME;
-  }
-  this.stopFrame = function onStopFrame(aRequest)
-  {
-    do_check_false(this.synchronous);
-
-    this.state |= STOP_FRAME;
-  }
-  this.stopDecode = function onStopDecode(aRequest)
-  {
-    do_check_false(this.synchronous);
-
-    this.state |= STOP_DECODE;
-  }
-  this.stopRequest = function onStopRequest(aRequest)
+  this.loadComplete = function onLoadcomplete(aRequest)
   {
     do_check_false(this.synchronous);
 
@@ -67,12 +50,15 @@ function ImageListener(start_callback, stop_callback)
     // reference loops!
     aRequest.cancelAndForgetObserver(0);
 
-    this.state |= STOP_REQUEST;
+    this.state |= LOAD_COMPLETE;
 
     if (this.stop_callback)
       this.stop_callback(this, aRequest);
   }
-  this.dataAvailable = function onDataAvailable(aRequest)
+  this.frameUpdate = function onFrameUpdate(aRequest)
+  {
+  }
+  this.isAnimated = function onIsAnimated()
   {
   }
 
@@ -111,6 +97,8 @@ function ChannelListener()
   {
     if (this.outputListener)
       this.outputListener.onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount);
+
+    this.requestStatus |= DATA_AVAILABLE;
   }
 
   this.onStopRequest = function onStopRequest(aRequest, aContext, aStatusCode)

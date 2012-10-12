@@ -140,7 +140,8 @@ nsImageFrame::nsImageFrame(nsStyleContext* aContext) :
   ImageFrameSuper(aContext),
   mComputedSize(0, 0),
   mIntrinsicRatio(0, 0),
-  mDisplayingIcon(false)
+  mDisplayingIcon(false),
+  mFirstFrameComplete(false)
 {
   // We assume our size is not constrained and we haven't gotten an
   // initial reflow yet, so don't touch those flags.
@@ -528,28 +529,26 @@ nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
 nsresult
 nsImageFrame::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData)
 {
-  if (aType == imgINotificationObserver::START_CONTAINER) {
+  if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
     return OnStartContainer(aRequest, image);
   }
 
-  if (aType == imgINotificationObserver::DATA_AVAILABLE) {
+  if (aType == imgINotificationObserver::FRAME_UPDATE) {
     return OnDataAvailable(aRequest, aData);
   }
 
-  if (aType == imgINotificationObserver::STOP_REQUEST) {
+  if (aType == imgINotificationObserver::FRAME_COMPLETE) {
+    mFirstFrameComplete = true;
+  }
+
+  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     uint32_t imgStatus;
     aRequest->GetImageStatus(&imgStatus);
     nsresult status =
         imgStatus & imgIRequest::STATUS_ERROR ? NS_ERROR_FAILURE : NS_OK;
     return OnStopRequest(aRequest, status);
-  }
-
-  if (aType == imgINotificationObserver::FRAME_CHANGED) {
-    nsCOMPtr<imgIContainer> image;
-    aRequest->GetImage(getter_AddRefs(image));
-    return FrameChanged(aRequest, image);
   }
 
   return NS_OK;
@@ -596,6 +595,12 @@ nsresult
 nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
                               const nsIntRect *aRect)
 {
+  if (mFirstFrameComplete) {
+    nsCOMPtr<imgIContainer> container;
+    aRequest->GetImage(getter_AddRefs(container));
+    return FrameChanged(aRequest, container);
+  }
+
   // XXX do we need to make sure that the reflow from the
   // OnStartContainer has been processed before we start calling
   // invalidate?
@@ -625,7 +630,7 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
     InvalidateFrameWithRect(invalid, nsDisplayItem::TYPE_IMAGE);
     InvalidateFrameWithRect(invalid, nsDisplayItem::TYPE_ALT_FEEDBACK);
   }
-  
+
   return NS_OK;
 }
 
@@ -1976,8 +1981,8 @@ void nsImageFrame::IconLoad::GetPrefs()
 NS_IMETHODIMP
 nsImageFrame::IconLoad::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
 {
-  if (aType != imgINotificationObserver::STOP_REQUEST &&
-      aType != imgINotificationObserver::FRAME_CHANGED) {
+  if (aType != imgINotificationObserver::LOAD_COMPLETE &&
+      aType != imgINotificationObserver::FRAME_UPDATE) {
     return NS_OK;
   }
 
