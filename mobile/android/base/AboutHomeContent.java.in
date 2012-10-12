@@ -94,7 +94,6 @@ public class AboutHomeContent extends ScrollView
     protected AboutHomeSection mRemoteTabs;
 
     private View.OnClickListener mRemoteTabClickListener;
-    private OnInterceptTouchListener mOnInterceptTouchListener;
 
     public interface UriLoadCallback {
         public void callback(String uriSpec);
@@ -345,24 +344,6 @@ public class AboutHomeContent extends ScrollView
         inflate();
         mTopSitesGrid.setAdapter(mTopSitesAdapter); // mTopSitesGrid is a new instance (from loadTopSites()).
         update(AboutHomeContent.UpdateFlags.ALL); // Refresh all elements.
-    }
-
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent event) {
-        if (mOnInterceptTouchListener != null && mOnInterceptTouchListener.onInterceptTouchEvent(this, event))
-            return true;
-        return super.onInterceptTouchEvent(event);
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (mOnInterceptTouchListener != null && mOnInterceptTouchListener.onTouch(this, event))
-            return true;
-        return super.onTouchEvent(event);
-    }
-
-    public void setOnInterceptTouchListener(OnInterceptTouchListener listener) {
-        mOnInterceptTouchListener = listener;
     }
 
     private String readFromZipFile(String filename) {
