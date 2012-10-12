@@ -2949,9 +2949,9 @@ JS_PUBLIC_API(JSBool)
 JS_IsAboutToBeFinalized(void *thing)
 {
     gc::Cell *t = static_cast<gc::Cell *>(thing);
-    bool isMarked = IsCellMarked(&t);
+    bool isDying = IsCellAboutToBeFinalized(&t);
     JS_ASSERT(t == thing);
-    return !isMarked;
+    return isDying;
 }
 
 JS_PUBLIC_API(void)

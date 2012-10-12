@@ -220,7 +220,7 @@ WatchpointMap::sweep()
     for (Map::Enum e(map); !e.empty(); e.popFront()) {
         Map::Entry &entry = e.front();
         RelocatablePtrObject obj(entry.key.object);
-        if (!IsObjectMarked(&obj)) {
+        if (IsObjectAboutToBeFinalized(&obj)) {
             JS_ASSERT(!entry.value.held);
             e.removeFront();
         } else if (obj != entry.key.object) {
