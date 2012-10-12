@@ -23,8 +23,6 @@ import java.util.TimerTask;
 public class PropertyAnimator implements Runnable {
     private static final String LOGTAG = "GeckoPropertyAnimator";
 
-    private Interpolator mInterpolator;
-
     public static enum Property {
         SHRINK_LEFT,
         SHRINK_TOP,
@@ -44,6 +42,7 @@ public class PropertyAnimator implements Runnable {
         public void onPropertyAnimationEnd();
     }
 
+    private Interpolator mInterpolator;
     private long mStartTime;
     private long mDuration;
     private float mDurationReciprocal;
@@ -52,9 +51,13 @@ public class PropertyAnimator implements Runnable {
     private FramePoster mFramePoster;
 
     public PropertyAnimator(int duration) {
+        this(duration, new DecelerateInterpolator());
+    }
+
+    public PropertyAnimator(int duration, Interpolator interpolator) {
         mDuration = duration;
         mDurationReciprocal = 1.0f / (float) mDuration;
-        mInterpolator = new DecelerateInterpolator();
+        mInterpolator = interpolator;
         mElementsList = new ArrayList<ElementHolder>();
         mFramePoster = FramePoster.create(this);
     }
