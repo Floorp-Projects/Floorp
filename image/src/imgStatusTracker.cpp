@@ -28,8 +28,9 @@ GetResultFromImageStatus(uint32_t aStatus)
   return NS_OK;
 }
 
-imgStatusTracker::imgStatusTracker(Image* aImage)
+imgStatusTracker::imgStatusTracker(Image* aImage, imgRequest* aRequest)
   : mImage(aImage),
+    mRequest(aRequest),
     mState(0),
     mImageStatus(imgIRequest::STATUS_NONE),
     mHadLastPart(false)
@@ -37,6 +38,7 @@ imgStatusTracker::imgStatusTracker(Image* aImage)
 
 imgStatusTracker::imgStatusTracker(const imgStatusTracker& aOther)
   : mImage(aOther.mImage),
+    mRequest(aOther.mRequest),
     mState(aOther.mState),
     mImageStatus(aOther.mImageStatus),
     mHadLastPart(aOther.mHadLastPart)
