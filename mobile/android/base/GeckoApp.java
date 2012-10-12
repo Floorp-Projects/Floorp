@@ -2539,17 +2539,15 @@ abstract public class GeckoApp
     protected void connectGeckoLayerClient() {
         mLayerView.getLayerClient().notifyGeckoReady();
 
-        mLayerView.getTouchEventHandler().setOnTouchListener(new OnInterceptTouchListener() {
+        mLayerView.getTouchEventHandler().setOnTouchListener(new ContentTouchListener() {
             private PointF initialPoint = null;
-
-            @Override
-            public boolean onInterceptTouchEvent(View view, MotionEvent event) {
-                return false;
-            }
 
             @Override
             public boolean onTouch(View view, MotionEvent event) {
                 if (event == null)
+                    return true;
+
+                if (super.onTouch(view, event))
                     return true;
 
                 int action = event.getAction();
@@ -2574,30 +2572,30 @@ abstract public class GeckoApp
         });
     }
 
-    public static class MainLayout extends LinearLayout {
-        private OnInterceptTouchListener mOnInterceptTouchListener;
+    protected class ContentTouchListener implements OnInterceptTouchListener {
+        private boolean mIsHidingTabs = false;
 
-        public MainLayout(Context context, AttributeSet attrs) {
-            super(context, attrs);
-            mOnInterceptTouchListener = null;
-        }
-
-        public void setOnInterceptTouchListener(OnInterceptTouchListener listener) {
-            mOnInterceptTouchListener = listener;
+        @Override
+        public boolean onInterceptTouchEvent(View view, MotionEvent event) {
+            // If the tab tray is showing, hide the tab tray and don't send the event to content.
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN && autoHideTabs()) {
+                mIsHidingTabs = true;
+                return true;
+            }
+            return false;
         }
 
         @Override
-        public boolean onInterceptTouchEvent(MotionEvent event) {
-            if (mOnInterceptTouchListener != null && mOnInterceptTouchListener.onInterceptTouchEvent(this, event))
+        public boolean onTouch(View view, MotionEvent event) {
+            if (mIsHidingTabs) {
+                // Keep consuming events until the gesture finishes.
+                int action = event.getActionMasked();
+                if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                    mIsHidingTabs = false;
+                }
                 return true;
-            return super.onInterceptTouchEvent(event);
-        }
-
-        @Override
-        public boolean onTouchEvent(MotionEvent event) {
-            if (mOnInterceptTouchListener != null && mOnInterceptTouchListener.onTouch(this, event))
-                return true;
-            return super.onTouchEvent(event);
+            }
+            return false;
         }
     }
 
