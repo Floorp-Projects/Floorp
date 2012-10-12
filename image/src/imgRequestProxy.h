@@ -57,8 +57,8 @@ public:
 
   // Callers to Init or ChangeOwner are required to call NotifyListener after
   // (although not immediately after) doing so.
-  nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup,
-                mozilla::image::Image* aImage,
+  nsresult Init(imgStatusTracker* aStatusTracker,
+                nsILoadGroup *aLoadGroup,
                 nsIURI* aURI, imgIDecoderObserver *aObserver);
 
   nsresult ChangeOwner(imgRequest *aNewOwner); // this will change mOwner.  Do not call this if the previous
@@ -191,6 +191,9 @@ private:
   // from whatever request it was registered with (if any). This, in turn,
   // means that imgRequest::mObservers will not have any stale pointers in it.
   nsRefPtr<imgRequest> mOwner;
+
+  // Weak pointer to the status tracker.
+  imgStatusTracker* mStatusTracker;
 
   // The URI of our request.
   nsCOMPtr<nsIURI> mURI;
