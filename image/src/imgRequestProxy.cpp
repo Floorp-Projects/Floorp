@@ -98,10 +98,8 @@ nsresult imgRequestProxy::Init(imgStatusTracker* aStatusTracker,
 
   NS_ABORT_IF_FALSE(mAnimationConsumers == 0, "Cannot have animation before Init");
 
-  mStatusTracker = aStatusTracker;
   mOwner = aStatusTracker->GetRequest();
   mOwnerHasImage = !!aStatusTracker->GetImage();
-  MOZ_ASSERT_IF(mOwner, mStatusTracker == &mOwner->GetStatusTracker());
   mListener = aObserver;
   // Make sure to addref mListener before the AddProxy call below, since
   // that call might well want to release it if the imgRequest has
@@ -136,7 +134,6 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
 
   nsRefPtr<imgRequest> oldOwner = mOwner;
   mOwner = aNewOwner;
-  mStatusTracker = &aNewOwner->GetStatusTracker();
 
   // If we were locked, apply the locks here
   for (uint32_t i = 0; i < oldLockCount; i++)
@@ -501,7 +498,7 @@ NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
   // XXXldb That's not true anymore.  Stuff from imgLoader adds the
   // request to the loadgroup.
   clone->SetLoadFlags(mLoadFlags);
-  nsresult rv = clone->Init(mStatusTracker, mLoadGroup, mURI, aObserver);
+  nsresult rv = clone->Init(&mOwner->GetStatusTracker(), mLoadGroup, mURI, aObserver);
   if (NS_FAILED(rv))
     return rv;
 
@@ -910,7 +907,7 @@ imgRequestProxy::GetStatusTracker() const
   // That's why this method uses mOwner->GetStatusTracker() instead of just
   // mOwner->mStatusTracker -- we might have a null mImage and yet have an
   // mOwner with a non-null mImage (and a null mStatusTracker pointer).
-  return *mStatusTracker;
+  return mOwner->GetStatusTracker();
 }
 
 mozilla::image::Image*
@@ -937,4 +934,10 @@ mozilla::image::Image*
 imgRequestProxyStatic::GetImage() const
 {
   return mImage;
+}
+
+imgStatusTracker&
+imgRequestProxyStatic::GetStatusTracker() const
+{
+  return mImage->GetStatusTracker();
 }
