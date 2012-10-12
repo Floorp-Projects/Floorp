@@ -132,17 +132,21 @@ const SERVICE_UPDATER_NOT_FIXED_DRIVE      = 31;
 const SERVICE_COULD_NOT_LOCK_UPDATER       = 32;
 const SERVICE_INSTALLDIR_ERROR             = 33;
 
-const WRITE_ERROR_ACCESS_DENIED        = 35;
-const WRITE_ERROR_SHARING_VIOLATION    = 36;
-const WRITE_ERROR_CALLBACK_APP         = 37;
-const INVALID_UPDATER_STATUS_CODE      = 38;
-const UNEXPECTED_BZIP_ERROR            = 39;
-const UNEXPECTED_MAR_ERROR             = 40;
-const UNEXPECTED_BSPATCH_ERROR         = 41;
-const UNEXPECTED_FILE_OPERATION_ERROR  = 42;
-const FILESYSTEM_MOUNT_READWRITE_ERROR = 43;
-const FOTA_GENERAL_ERROR               = 44;
-const FOTA_UNKNOWN_ERROR               = 45;
+const WRITE_ERROR_ACCESS_DENIED                     = 35;
+// const WRITE_ERROR_SHARING_VIOLATION                 = 36; // Replaced with errors 46-48
+const WRITE_ERROR_CALLBACK_APP                      = 37;
+const INVALID_UPDATER_STATUS_CODE                   = 38;
+const UNEXPECTED_BZIP_ERROR                         = 39;
+const UNEXPECTED_MAR_ERROR                          = 40;
+const UNEXPECTED_BSPATCH_ERROR                      = 41;
+const UNEXPECTED_FILE_OPERATION_ERROR               = 42;
+const FILESYSTEM_MOUNT_READWRITE_ERROR              = 43;
+const FOTA_GENERAL_ERROR                            = 44;
+const FOTA_UNKNOWN_ERROR                            = 45;
+const WRITE_ERROR_SHARING_VIOLATION_SIGNALED        = 46;
+const WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID = 47;
+const WRITE_ERROR_SHARING_VIOLATION_NOPID           = 48;
+
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
@@ -958,7 +962,9 @@ function handleUpdateFailure(update, errorCode) {
   update.errorCode = parseInt(errorCode);
   if (update.errorCode == WRITE_ERROR || 
       update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
-      update.errorCode == WRITE_ERROR_SHARING_VIOLATION ||
+      update.errorCode == WRITE_ERROR_SHARING_VIOLATION_SIGNALED ||
+      update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID ||
+      update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPID ||
       update.errorCode == WRITE_ERROR_CALLBACK_APP ||
       update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR ||
       update.errorCode == FOTA_GENERAL_ERROR ||
@@ -3506,7 +3512,9 @@ UpdatePrompt.prototype = {
     if (update.state == STATE_FAILED &&
         (update.errorCode == WRITE_ERROR ||
          update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
-         update.errorCode == WRITE_ERROR_SHARING_VIOLATION ||
+         update.errorCode == WRITE_ERROR_SHARING_VIOLATION_SIGNALED ||
+         update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID ||
+         update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPID ||
          update.errorCode == WRITE_ERROR_CALLBACK_APP ||
          update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR ||
          update.errorCode == FOTA_GENERAL_ERROR ||
