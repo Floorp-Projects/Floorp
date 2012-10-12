@@ -29,15 +29,14 @@ nsTreeImageListener::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRec
     return mTreeFrame ? mTreeFrame->OnImageIsAnimated(aRequest) : NS_OK;
   }
 
-  if (aType == imgINotificationObserver::START_CONTAINER) {
+  if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     // Ensure the animation (if any) is started. Note: There is no
     // corresponding call to Decrement for this. This Increment will be
     // 'cleaned up' by the Request when it is destroyed, but only then.
     aRequest->IncrementAnimationConsumers();
   }
 
-  if (aType == imgINotificationObserver::DATA_AVAILABLE ||
-      aType == imgINotificationObserver::FRAME_CHANGED) {
+  if (aType == imgINotificationObserver::FRAME_UPDATE) {
     Invalidate();
   }
 

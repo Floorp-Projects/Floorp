@@ -92,11 +92,11 @@ nsAlertsIconListener::~nsAlertsIconListener()
 NS_IMETHODIMP
 nsAlertsIconListener::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
 {
-  if (aType == imgINotificationObserver::STOP_REQUEST) {
+  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     return OnStopRequest(aRequest);
   }
 
-  if (aType == imgINotificationObserver::STOP_FRAME) {
+  if (aType == imgINotificationObserver::FRAME_COMPLETE) {
     return OnStopFrame(aRequest);
   }
 

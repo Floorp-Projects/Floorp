@@ -5763,7 +5763,7 @@ nsSVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRec
 {
   nsresult rv = nsImageLoadingContent::Notify(aRequest, aType, aData);
 
-  if (aType == imgINotificationObserver::START_CONTAINER) {
+  if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     // Request a decode
     nsCOMPtr<imgIContainer> container;
     aRequest->GetImage(getter_AddRefs(container));
@@ -5771,9 +5771,9 @@ nsSVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRec
     container->StartDecoding();
   }
 
-  if (aType == imgINotificationObserver::STOP_REQUEST ||
-      aType == imgINotificationObserver::FRAME_CHANGED ||
-      aType == imgINotificationObserver::START_CONTAINER) {
+  if (aType == imgINotificationObserver::LOAD_COMPLETE ||
+      aType == imgINotificationObserver::FRAME_UPDATE ||
+      aType == imgINotificationObserver::SIZE_AVAILABLE) {
     Invalidate();
   }
 

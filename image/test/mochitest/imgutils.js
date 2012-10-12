@@ -124,15 +124,11 @@ function getImagePref(pref)
 // JS implementation of imgIScriptedNotificationObserver with stubs for all of its methods.
 function ImageDecoderObserverStub()
 {
-  this.startRequest = function startRequest(aRequest)     {}
-  this.startDecode = function startDecode(aRequest)       {}
-  this.startContainer = function startContainer(aRequest) {}
-  this.startFrame = function startFrame(aRequest)         {}
-  this.stopFrame = function stopFrame(aRequest)           {}
-  this.stopDecode = function stopDecode(aRequest)         {}
-  this.stopRequest = function stopRequest(aRequest)       {}
-  this.dataAvailable = function dataAvailable(aRequest)   {}
+  this.sizeAvailable = function sizeAvailable(aRequest)   {}
+  this.frameComplete = function frameComplete(aRequest)   {}
+  this.decodeComplete = function decodeComplete(aRequest) {}
+  this.loadComplete = function loadComplete(aRequest)     {}
+  this.frameUpdate = function frameUpdate(aRequest)       {}
   this.discard = function discard(aRequest)               {}
   this.isAnimated = function isAnimated(aRequest)         {}
-  this.frameChanged = function frameChanged(aRequest)     {}
 }

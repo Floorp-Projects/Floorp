@@ -8,18 +8,14 @@
 
 interface imgIRequest;
 
-[scriptable, uuid(c5a58b5f-cd1f-4c47-a5ed-5013e0b53e95)]
+[scriptable, uuid(10be55b3-2029-41a7-a975-538efed250ed)]
 interface imgIScriptedNotificationObserver : nsISupports
 {
-  void startRequest(in imgIRequest aRequest);
-  void startContainer(in imgIRequest aRequest);
-  void startFrame(in imgIRequest aRequest);
-  void startDecode(in imgIRequest aRequest);
-  void dataAvailable(in imgIRequest aRequest);
-  void stopFrame(in imgIRequest aRequest);
-  void stopDecode(in imgIRequest aRequest);
-  void stopRequest(in imgIRequest aRequest);
+  void sizeAvailable(in imgIRequest aRequest);
+  void frameUpdate(in imgIRequest aRequest);
+  void frameComplete(in imgIRequest aRequest);
+  void loadComplete(in imgIRequest aRequest);
+  void decodeComplete(in imgIRequest aRequest);
   void discard(in imgIRequest aRequest);
   void isAnimated(in imgIRequest aRequest);
-  void frameChanged(in imgIRequest aRequest);
 };

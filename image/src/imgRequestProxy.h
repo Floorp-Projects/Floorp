@@ -132,17 +132,12 @@ protected:
   // notifications.
 
   /* non-virtual imgIDecoderObserver methods */
-  void OnStartDecode     ();
   void OnStartContainer  ();
-  void OnStartFrame      ();
-  void OnDataAvailable   (const nsIntRect * aRect);
+  void OnFrameUpdate     (const nsIntRect * aRect);
   void OnStopFrame       ();
   void OnStopDecode      ();
   void OnDiscard         ();
   void OnImageIsAnimated ();
-
-  /* non-virtual imgIContainerObserver methods */
-  void FrameChanged(const nsIntRect *aDirtyRect);
 
   /* non-virtual sort-of-nsIRequestObserver methods */
   void OnStartRequest();

@@ -324,11 +324,11 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
 NS_IMETHODIMP
 nsMenuItemIconX::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
 {
-  if (aType == imgINotificationObserver::STOP_FRAME) {
+  if (aType == imgINotificationObserver::FRAME_COMPLETE) {
     return OnStopFrame(aRequest);
   }
 
-  if (aType == imgINotificationObserver::STOP_REQUEST) {
+  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     if (mIconRequest && mIconRequest == aRequest) {
       mIconRequest->Cancel(NS_BINDING_ABORTED);
       mIconRequest = nullptr;

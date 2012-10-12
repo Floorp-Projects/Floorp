@@ -284,6 +284,7 @@ private:
   nsSize mIntrinsicRatio;
 
   bool mDisplayingIcon;
+  bool mFirstFrameComplete;
 
   static nsIIOService* sIOService;
   
