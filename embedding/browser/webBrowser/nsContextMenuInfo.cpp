@@ -6,7 +6,7 @@
 #include "nsContextMenuInfo.h"
 
 #include "nsIImageLoadingContent.h"
-#include "imgILoader.h"
+#include "imgLoader.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
@@ -26,6 +26,8 @@
 #include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIContentPolicy.h"
+#include "nsAutoPtr.h"
+#include "imgRequestProxy.h"
 
 //*****************************************************************************
 // class nsContextMenuInfo
@@ -160,7 +162,7 @@ nsContextMenuInfo::GetBackgroundImageContainer(imgIContainer **aImageContainer)
   NS_ENSURE_ARG_POINTER(aImageContainer);
   NS_ENSURE_STATE(mDOMNode);
   
-  nsCOMPtr<imgIRequest> request;
+  nsRefPtr<imgRequestProxy> request;
   GetBackgroundImageRequest(mDOMNode, getter_AddRefs(request));
   if (request)
     return request->GetImage(aImageContainer);
@@ -175,7 +177,7 @@ nsContextMenuInfo::GetBackgroundImageSrc(nsIURI **aURI)
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_STATE(mDOMNode);
   
-  nsCOMPtr<imgIRequest> request;
+  nsRefPtr<imgRequestProxy> request;
   GetBackgroundImageRequest(mDOMNode, getter_AddRefs(request));
   if (request)
     return request->GetURI(aURI);
@@ -204,14 +206,14 @@ nsContextMenuInfo::HasBackgroundImage(nsIDOMNode * aDOMNode)
 {
   NS_ENSURE_TRUE(aDOMNode, false);
 
-  nsCOMPtr<imgIRequest> request;
+  nsRefPtr<imgRequestProxy> request;
   GetBackgroundImageRequest(aDOMNode, getter_AddRefs(request));
   
   return (request != nullptr);
 }
 
 nsresult
-nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode *aDOMNode, imgIRequest **aRequest)
+nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode *aDOMNode, imgRequestProxy **aRequest)
 {
 
   NS_ENSURE_ARG(aDOMNode);
@@ -246,7 +248,7 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode *aDOMNode, imgIRequest *
 }
 
 nsresult
-nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgIRequest **aRequest)
+nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgRequestProxy **aRequest)
 {
   NS_ENSURE_ARG_POINTER(aDOMNode);
 
@@ -301,7 +303,7 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgIR
           NS_NewURI(getter_AddRefs(bgUri), bgStringValue);
           NS_ENSURE_TRUE(bgUri, NS_ERROR_FAILURE);
 
-          nsCOMPtr<imgILoader> il(do_CreateInstance("@mozilla.org/image/loader;1"));
+          nsRefPtr<imgLoader> il = imgLoader::GetInstance();
           NS_ENSURE_TRUE(il, NS_ERROR_FAILURE);
 
           return il->LoadImage(bgUri, nullptr, nullptr, principal, nullptr,

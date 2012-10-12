@@ -30,6 +30,7 @@ class nsPresContext;
 class nsImageFrame;
 class nsTransform2D;
 class nsImageLoadingContent;
+class imgRequestProxy;
 
 namespace mozilla {
 namespace layers {
@@ -298,7 +299,7 @@ private:
   // loading / broken images
   nsresult LoadIcons(nsPresContext *aPresContext);
   nsresult LoadIcon(const nsAString& aSpec, nsPresContext *aPresContext,
-                    imgIRequest **aRequest);
+                    imgRequestProxy **aRequest);
 
   class IconLoad MOZ_FINAL : public nsIObserver,
                              public imgINotificationObserver {
@@ -333,8 +334,8 @@ private:
 
 
   public:
-    nsCOMPtr<imgIRequest> mLoadingImage;
-    nsCOMPtr<imgIRequest> mBrokenImage;
+    nsRefPtr<imgRequestProxy> mLoadingImage;
+    nsRefPtr<imgRequestProxy> mBrokenImage;
     bool             mPrefForceInlineAltText;
     bool             mPrefShowPlaceholders;
   };

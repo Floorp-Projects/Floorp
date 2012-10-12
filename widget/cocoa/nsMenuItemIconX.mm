@@ -34,7 +34,7 @@
 #include "nsToolkit.h"
 #include "nsNetUtil.h"
 #include "imgLoader.h"
-#include "imgIRequest.h"
+#include "imgRequestProxy.h"
 #include "nsMenuItemX.h"
 #include "gfxImageSurface.h"
 #include "imgIContainer.h"

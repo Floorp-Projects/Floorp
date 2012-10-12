@@ -244,7 +244,7 @@ double nsCSSValue::GetAngleValueInRadians() const
   }
 }
 
-imgIRequest* nsCSSValue::GetImageValue(nsIDocument* aDocument) const
+imgRequestProxy* nsCSSValue::GetImageValue(nsIDocument* aDocument) const
 {
   NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Image, "not an Image value");
   return mValue.mImage->mRequests.GetWeak(aDocument);
@@ -1725,7 +1725,7 @@ css::ImageValue::ImageValue(nsIURI* aURI, nsStringBuffer* aString,
 }
 
 static PLDHashOperator
-ClearRequestHashtable(nsISupports* aKey, nsCOMPtr<imgIRequest>& aValue,
+ClearRequestHashtable(nsISupports* aKey, nsRefPtr<imgRequestProxy>& aValue,
                       void* aClosure)
 {
   mozilla::css::ImageValue* image =

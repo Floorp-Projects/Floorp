@@ -16,6 +16,8 @@
 #include "imgIDecoderObserver.h"
 #include "imgINotificationObserver.h"
 
+class imgRequestProxy;
+
 #define BULLET_FRAME_IMAGE_LOADING NS_FRAME_STATE_BIT(63)
 #define BULLET_FRAME_HAS_FONT_INFLATION NS_FRAME_STATE_BIT(62)
 
@@ -109,7 +111,7 @@ protected:
   void GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGroup);
 
   nsMargin mPadding;
-  nsCOMPtr<imgIRequest> mImageRequest;
+  nsRefPtr<imgRequestProxy> mImageRequest;
   nsRefPtr<nsBulletListener> mListener;
 
   nsSize mIntrinsicSize;
