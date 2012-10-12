@@ -1862,8 +1862,25 @@ typedef void
 (* JSGCCallback)(JSRuntime *rt, JSGCStatus status);
 
 typedef enum JSFinalizeStatus {
-    JSFINALIZE_START,
-    JSFINALIZE_END
+    /*
+     * Called when preparing to sweep a group of compartments, before anything
+     * has been swept.  The collector will not yield to the mutator before
+     * calling the callback with JSFINALIZE_GROUP_END status.
+     */
+    JSFINALIZE_GROUP_START,
+
+    /*
+     * Called when preparing to sweep a group of compartments. Weak references
+     * to unmarked things have been removed and things that are not swept
+     * incrementally have been finalized at this point.  The collector may yield
+     * to the mutator after this point.
+     */
+    JSFINALIZE_GROUP_END,
+
+    /*
+     * Called at the end of collection when everything has been swept.
+     */
+    JSFINALIZE_COLLECTION_END
 } JSFinalizeStatus;
 
 typedef void
