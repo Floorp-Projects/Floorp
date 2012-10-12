@@ -6,4 +6,5 @@
 <ListView xmlns:android="http://schemas.android.com/apk/res/android"
           android:id="@+id/list"
           style="@style/TabsList"
+          android:background="@drawable/tabs_tray_bg_repeat"
           android:divider="@drawable/tabs_tray_list_divider"/>
