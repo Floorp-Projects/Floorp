@@ -188,7 +188,7 @@ nsImageBoxFrame::Init(nsIContent*      aContent,
     nsImageBoxListener *listener = new nsImageBoxListener();
     NS_ADDREF(listener);
     listener->SetFrame(this);
-    listener->QueryInterface(NS_GET_IID(imgIDecoderObserver), getter_AddRefs(mListener));
+    listener->QueryInterface(NS_GET_IID(imgINotificationObserver), getter_AddRefs(mListener));
     NS_RELEASE(listener);
   }
 
@@ -577,9 +577,40 @@ nsImageBoxFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
+nsresult
+nsImageBoxFrame::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
+{
+  if (aType == imgINotificationObserver::START_CONTAINER) {
+    nsCOMPtr<imgIContainer> image;
+    aRequest->GetImage(getter_AddRefs(image));
+    return OnStartContainer(aRequest, image);
+  }
 
-NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
-                                                imgIContainer *image)
+  if (aType == imgINotificationObserver::STOP_CONTAINER) {
+    return OnStopContainer(aRequest);
+  }
+
+  if (aType == imgINotificationObserver::STOP_DECODE) {
+    uint32_t imgStatus;
+    aRequest->GetImageStatus(&imgStatus);
+    nsresult status =
+        imgStatus & imgIRequest::STATUS_ERROR ? NS_ERROR_FAILURE : NS_OK;
+    return OnStopDecode(aRequest, status);
+  }
+
+  if (aType == imgINotificationObserver::IS_ANIMATED) {
+    return OnImageIsAnimated(aRequest);
+  }
+
+  if (aType == imgINotificationObserver::FRAME_CHANGED) {
+    return FrameChanged(aRequest);
+  }
+
+  return NS_OK;
+}
+
+nsresult nsImageBoxFrame::OnStartContainer(imgIRequest *request,
+                                           imgIContainer *image)
 {
   NS_ENSURE_ARG_POINTER(image);
 
@@ -603,8 +634,7 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageBoxFrame::OnStopContainer(imgIRequest *request,
-                                               imgIContainer *image)
+nsresult nsImageBoxFrame::OnStopContainer(imgIRequest *request)
 {
   nsBoxLayoutState state(PresContext());
   this->Redraw(state);
@@ -612,9 +642,8 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopContainer(imgIRequest *request,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
-                                            nsresult aStatus,
-                                            const PRUnichar *statusArg)
+nsresult nsImageBoxFrame::OnStopDecode(imgIRequest *request,
+                                       nsresult aStatus)
 {
   if (NS_SUCCEEDED(aStatus))
     // Fire an onload DOM event.
@@ -630,7 +659,7 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageBoxFrame::OnImageIsAnimated(imgIRequest *aRequest)
+nsresult nsImageBoxFrame::OnImageIsAnimated(imgIRequest *aRequest)
 {
   // Register with our refresh driver, if we're animated.
   nsLayoutUtils::RegisterImageRequest(PresContext(), aRequest,
@@ -639,9 +668,7 @@ NS_IMETHODIMP nsImageBoxFrame::OnImageIsAnimated(imgIRequest *aRequest)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageBoxFrame::FrameChanged(imgIRequest *aRequest,
-                                            imgIContainer *aContainer,
-                                            const nsIntRect *aDirtyRect)
+nsresult nsImageBoxFrame::FrameChanged(imgIRequest *aRequest)
 {
   if ((0 == mRect.width) || (0 == mRect.height)) {
     return NS_OK;
@@ -652,7 +679,7 @@ NS_IMETHODIMP nsImageBoxFrame::FrameChanged(imgIRequest *aRequest,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2(nsImageBoxListener, imgIDecoderObserver, imgIContainerObserver)
+NS_IMPL_ISUPPORTS1(nsImageBoxListener, imgINotificationObserver)
 
 nsImageBoxListener::nsImageBoxListener()
 {
@@ -662,49 +689,11 @@ nsImageBoxListener::~nsImageBoxListener()
 {
 }
 
-NS_IMETHODIMP nsImageBoxListener::OnStartContainer(imgIRequest *request,
-                                                   imgIContainer *image)
+NS_IMETHODIMP
+nsImageBoxListener::Notify(imgIRequest *request, int32_t aType, const nsIntRect* aData)
 {
   if (!mFrame)
     return NS_OK;
 
-  return mFrame->OnStartContainer(request, image);
+  return mFrame->Notify(request, aType, aData);
 }
-
-NS_IMETHODIMP nsImageBoxListener::OnStopContainer(imgIRequest *request,
-                                                  imgIContainer *image)
-{
-  if (!mFrame)
-    return NS_OK;
-
-  return mFrame->OnStopContainer(request, image);
-}
-
-NS_IMETHODIMP nsImageBoxListener::OnStopDecode(imgIRequest *request,
-                                               nsresult status,
-                                               const PRUnichar *statusArg)
-{
-  if (!mFrame)
-    return NS_OK;
-
-  return mFrame->OnStopDecode(request, status, statusArg);
-}
-
-NS_IMETHODIMP nsImageBoxListener::OnImageIsAnimated(imgIRequest* aRequest)
-{
-  if (!mFrame)
-    return NS_OK;
-
-  return mFrame->OnImageIsAnimated(aRequest);
-}
-
-NS_IMETHODIMP nsImageBoxListener::FrameChanged(imgIRequest *aRequest,
-                                               imgIContainer *aContainer,
-                                               const nsIntRect *aDirtyRect)
-{
-  if (!mFrame)
-    return NS_ERROR_FAILURE;
-
-  return mFrame->FrameChanged(aRequest, aContainer, aDirtyRect);
-}
-

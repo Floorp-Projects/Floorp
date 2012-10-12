@@ -1,0 +1,26 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface imgIRequest;
+
+[scriptable, uuid(1296bf6c-6067-424b-ba8e-389ec89ee48b)]
+interface imgIScriptedNotificationObserver : nsISupports
+{
+  void startRequest(in imgIRequest aRequest);
+  void startContainer(in imgIRequest aRequest);
+  void startFrame(in imgIRequest aRequest);
+  void startDecode(in imgIRequest aRequest);
+  void dataAvailable(in imgIRequest aRequest);
+  void stopFrame(in imgIRequest aRequest);
+  void stopContainer(in imgIRequest aRequest);
+  void stopDecode(in imgIRequest aRequest);
+  void stopRequest(in imgIRequest aRequest);
+  void discard(in imgIRequest aRequest);
+  void isAnimated(in imgIRequest aRequest);
+  void frameChanged(in imgIRequest aRequest);
+};

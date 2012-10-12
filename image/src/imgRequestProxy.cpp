@@ -90,7 +90,7 @@ imgRequestProxy::~imgRequestProxy()
 
 nsresult imgRequestProxy::Init(imgStatusTracker* aStatusTracker,
                                nsILoadGroup* aLoadGroup,
-                               nsIURI* aURI, imgIDecoderObserver* aObserver)
+                               nsIURI* aURI, imgINotificationObserver* aObserver)
 {
   NS_PRECONDITION(!mOwner && !mListener, "imgRequestProxy is already initialized");
 
@@ -458,11 +458,11 @@ NS_IMETHODIMP imgRequestProxy::GetURI(nsIURI **aURI)
   return NS_OK;
 }
 
-/* readonly attribute imgIDecoderObserver decoderObserver; */
-NS_IMETHODIMP imgRequestProxy::GetDecoderObserver(imgIDecoderObserver **aDecoderObserver)
+/* readonly attribute imgINotificationObserver notificationObserver; */
+NS_IMETHODIMP imgRequestProxy::GetNotificationObserver(imgINotificationObserver **aObserver)
 {
-  *aDecoderObserver = mListener;
-  NS_IF_ADDREF(*aDecoderObserver);
+  *aObserver = mListener;
+  NS_IF_ADDREF(*aObserver);
   return NS_OK;
 }
 
@@ -481,7 +481,7 @@ NS_IMETHODIMP imgRequestProxy::GetMimeType(char **aMimeType)
   return NS_OK;
 }
 
-NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
+NS_IMETHODIMP imgRequestProxy::Clone(imgINotificationObserver* aObserver,
                                      imgIRequest** aClone)
 {
   NS_PRECONDITION(aClone, "Null out param");
@@ -591,8 +591,6 @@ NS_IMETHODIMP imgRequestProxy::GetHasTransferredData(bool* hasData)
   return NS_OK;
 }
 
-/** imgIContainerObserver methods **/
-
 void imgRequestProxy::FrameChanged(imgIContainer *container,
                                    const nsIntRect *dirtyRect)
 {
@@ -600,8 +598,8 @@ void imgRequestProxy::FrameChanged(imgIContainer *container,
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
-    mListener->FrameChanged(this, container, dirtyRect);
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::FRAME_CHANGED, dirtyRect);
   }
 }
 
@@ -613,8 +611,8 @@ void imgRequestProxy::OnStartDecode()
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
-    mListener->OnStartDecode(this);
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::START_DECODE, nullptr);
   }
 }
 
@@ -624,8 +622,8 @@ void imgRequestProxy::OnStartContainer(imgIContainer *image)
 
   if (mListener && !mCanceled && !mSentStartContainer) {
     // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
-    mListener->OnStartContainer(this, image);
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::START_CONTAINER, nullptr);
     mSentStartContainer = true;
   }
 }
@@ -636,8 +634,8 @@ void imgRequestProxy::OnStartFrame(uint32_t frame)
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
-    mListener->OnStartFrame(this, frame);
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::START_FRAME, nullptr);
   }
 }
 
@@ -647,8 +645,8 @@ void imgRequestProxy::OnDataAvailable(bool aCurrentFrame, const nsIntRect * rect
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
-    mListener->OnDataAvailable(this, aCurrentFrame, rect);
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::DATA_AVAILABLE, rect);
   }
 }
 
@@ -658,8 +656,8 @@ void imgRequestProxy::OnStopFrame(uint32_t frame)
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
-    mListener->OnStopFrame(this, frame);
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::STOP_FRAME, nullptr);
   }
 }
 
@@ -669,8 +667,8 @@ void imgRequestProxy::OnStopContainer(imgIContainer *image)
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
-    mListener->OnStopContainer(this, image);
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::STOP_CONTAINER, nullptr);
   }
 
   // Multipart needs reset for next OnStartContainer
@@ -684,8 +682,8 @@ void imgRequestProxy::OnStopDecode(nsresult status, const PRUnichar *statusArg)
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
-    mListener->OnStopDecode(this, status, statusArg);
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::STOP_DECODE, nullptr);
   }
 }
 
@@ -695,8 +693,8 @@ void imgRequestProxy::OnDiscard()
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
-    mListener->OnDiscard(this);
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::DISCARD, nullptr);
   }
 }
 
@@ -705,8 +703,8 @@ void imgRequestProxy::OnImageIsAnimated()
   LOG_FUNC(gImgLog, "imgRequestProxy::OnImageIsAnimated");
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
-    mListener->OnImageIsAnimated(this);
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::IS_ANIMATED, nullptr);
   }
 }
 
@@ -722,8 +720,8 @@ void imgRequestProxy::OnStartRequest()
   // nsIStreamListener contract so it makes sense to do the same here.
   if (mListener) {
     // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
-    mListener->OnStartRequest(this);
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::START_REQUEST, nullptr);
   }
 }
 
@@ -741,8 +739,8 @@ void imgRequestProxy::OnStopRequest(bool lastPart)
 
   if (mListener) {
     // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgIDecoderObserver> kungFuDeathGrip(mListener);
-    mListener->OnStopRequest(this, lastPart);
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::STOP_REQUEST, nullptr);
   }
 
   // If we're expecting more data from a multipart channel, re-add ourself
@@ -764,7 +762,7 @@ void imgRequestProxy::OnStopRequest(bool lastPart)
     // Drop our strong ref to the listener now that we're done with
     // everything.  Note that this can cancel us and other fun things
     // like that.  Don't add anything in this method after this point.
-    imgIDecoderObserver* obs = mListener;
+    imgINotificationObserver* obs = mListener;
     mListenerIsStrongRef = false;
     NS_RELEASE(obs);
   }
@@ -806,7 +804,7 @@ void imgRequestProxy::NullOutListener()
 
   if (mListenerIsStrongRef) {
     // Releasing could do weird reentery stuff, so just play it super-safe
-    nsCOMPtr<imgIDecoderObserver> obs;
+    nsCOMPtr<imgINotificationObserver> obs;
     obs.swap(mListener);
     mListenerIsStrongRef = false;
   } else {

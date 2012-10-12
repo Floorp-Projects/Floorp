@@ -8,7 +8,7 @@
 #include "nsIRequest.idl"
 
 interface imgIContainer;
-interface imgIDecoderObserver;
+interface imgINotificationObserver;
 interface nsIURI;
 interface nsIPrincipal;
 
@@ -19,7 +19,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(a5a785a8-9881-11e1-aaff-001fbc092072)]
+[scriptable, uuid(3ea9fc87-2e97-45bf-b373-d1dd253a0b5e)]
 interface imgIRequest : nsIRequest
 {
   /**
@@ -82,7 +82,7 @@ interface imgIRequest : nsIRequest
    */
   readonly attribute nsIURI URI;
 
-  readonly attribute imgIDecoderObserver decoderObserver;
+  readonly attribute imgINotificationObserver notificationObserver;
 
   readonly attribute string mimeType;
 
@@ -92,7 +92,7 @@ interface imgIRequest : nsIRequest
    * call returns) with all the notifications that have already been dispatched
    * for this image load.
    */
-  imgIRequest clone(in imgIDecoderObserver aObserver);
+  imgIRequest clone(in imgINotificationObserver aObserver);
 
   /**
    * The principal gotten from the channel the image was loaded from.

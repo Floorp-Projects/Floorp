@@ -20,7 +20,7 @@
 #include "nsAutoPtr.h"
 #include "nsDataHashtable.h"
 #include "imgIRequest.h"
-#include "imgIDecoderObserver.h"
+#include "imgINotificationObserver.h"
 #include "nsScrollbarFrame.h"
 #include "nsThreadUtils.h"
 #include "mozilla/LookAndFeel.h"
@@ -32,11 +32,11 @@ class nsTreeImageListener;
 struct nsTreeImageCacheEntry
 {
   nsTreeImageCacheEntry() {}
-  nsTreeImageCacheEntry(imgIRequest *aRequest, imgIDecoderObserver *aListener)
+  nsTreeImageCacheEntry(imgIRequest *aRequest, imgINotificationObserver *aListener)
     : request(aRequest), listener(aListener) {}
 
   nsCOMPtr<imgIRequest> request;
-  nsCOMPtr<imgIDecoderObserver> listener;
+  nsCOMPtr<imgINotificationObserver> listener;
 };
 
 // The actual frame that paints the cells and rows.

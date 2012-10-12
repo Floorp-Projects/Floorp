@@ -20,7 +20,7 @@ const ALL_BITS = 0xFF;
 // functions on onStartRequest and onStopRequest.
 function ImageListener(start_callback, stop_callback)
 {
-  this.onStartRequest = function onStartRequest(aRequest)
+  this.startRequest = function onStartRequest(aRequest)
   {
     do_check_false(this.synchronous);
 
@@ -29,43 +29,43 @@ function ImageListener(start_callback, stop_callback)
     if (this.start_callback)
       this.start_callback(this, aRequest);
   }
-  this.onStartDecode = function onStartDecode(aRequest)
+  this.startDecode = function onStartDecode(aRequest)
   {
     do_check_false(this.synchronous);
 
     this.state |= START_DECODE;
   }
-  this.onStartContainer = function onStartContainer(aRequest, aContainer)
+  this.startContainer = function onStartContainer(aRequest)
   {
     do_check_false(this.synchronous);
 
     this.state |= START_CONTAINER;
   }
-  this.onStartFrame = function onStartFrame(aRequest, aFrame)
+  this.startFrame = function onStartFrame(aRequest)
   {
     do_check_false(this.synchronous);
 
     this.state |= START_FRAME;
   }
-  this.onStopFrame = function onStopFrame(aRequest, aFrame)
+  this.stopFrame = function onStopFrame(aRequest)
   {
     do_check_false(this.synchronous);
 
     this.state |= STOP_FRAME;
   }
-  this.onStopContainer = function onStopContainer(aRequest, aContainer)
+  this.stopContainer = function onStopContainer(aRequest)
   {
     do_check_false(this.synchronous);
 
     this.state |= STOP_CONTAINER;
   }
-  this.onStopDecode = function onStopDecode(aRequest, status, statusArg)
+  this.stopDecode = function onStopDecode(aRequest)
   {
     do_check_false(this.synchronous);
 
     this.state |= STOP_DECODE;
   }
-  this.onStopRequest = function onStopRequest(aRequest, aIsLastPart)
+  this.stopRequest = function onStopRequest(aRequest)
   {
     do_check_false(this.synchronous);
 
@@ -81,6 +81,9 @@ function ImageListener(start_callback, stop_callback)
 
     if (this.stop_callback)
       this.stop_callback(this, aRequest);
+  }
+  this.dataAvailable = function onDataAvailable(aRequest)
+  {
   }
 
   // Initialize the synchronous flag to true to start. This must be set to

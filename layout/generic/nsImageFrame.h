@@ -12,8 +12,7 @@
 #include "nsIIOService.h"
 #include "nsIObserver.h"
 
-#include "nsStubImageDecoderObserver.h"
-#include "imgIDecoderObserver.h"
+#include "imgINotificationObserver.h"
 
 #include "nsDisplayList.h"
 #include "imgIContainer.h"
@@ -40,23 +39,14 @@ namespace layers {
 }
 }
 
-class nsImageListener : public nsStubImageDecoderObserver
+class nsImageListener : public imgINotificationObserver
 {
 public:
   nsImageListener(nsImageFrame *aFrame);
   virtual ~nsImageListener();
 
   NS_DECL_ISUPPORTS
-  // imgIDecoderObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
-  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, bool aCurrentFrame,
-                             const nsIntRect *aRect);
-  NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
-                          const PRUnichar *statusArg);
-  // imgIContainerObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD FrameChanged(imgIRequest *aRequest,
-                          imgIContainer *aContainer,
-                          const nsIntRect *dirtyRect);
+  NS_DECL_IMGINOTIFICATIONOBSERVER
 
   void SetFrame(nsImageFrame *frame) { mFrame = frame; }
 
@@ -136,6 +126,8 @@ public:
     }
     NS_IF_RELEASE(sIOService);
   }
+
+  nsresult Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData);
 
   /**
    * Function to test whether aContent, which has aStyleContext as its style,
@@ -221,14 +213,11 @@ protected:
   friend class nsImageListener;
   friend class nsImageLoadingContent;
   nsresult OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
-  nsresult OnDataAvailable(imgIRequest *aRequest, bool aCurrentFrame,
-                           const nsIntRect *rect);
+  nsresult OnDataAvailable(imgIRequest *aRequest, const nsIntRect *rect);
   nsresult OnStopDecode(imgIRequest *aRequest,
-                        nsresult aStatus,
-                        const PRUnichar *aStatusArg);
+                        nsresult aStatus);
   nsresult FrameChanged(imgIRequest *aRequest,
-                        imgIContainer *aContainer,
-                        const nsIntRect *aDirtyRect);
+                        imgIContainer *aContainer);
   /**
    * Notification that aRequest will now be the current request.
    */
@@ -288,7 +277,7 @@ private:
 
   nsImageMap*         mImageMap;
 
-  nsCOMPtr<imgIDecoderObserver> mListener;
+  nsCOMPtr<imgINotificationObserver> mListener;
 
   nsSize mComputedSize;
   nsIFrame::IntrinsicSize mIntrinsicSize;
@@ -311,7 +300,7 @@ private:
                     imgIRequest **aRequest);
 
   class IconLoad MOZ_FINAL : public nsIObserver,
-                             public imgIDecoderObserver {
+                             public imgINotificationObserver {
     // private class that wraps the data and logic needed for
     // broken image and loading image icons
   public:
@@ -321,8 +310,7 @@ private:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
-    NS_DECL_IMGICONTAINEROBSERVER
-    NS_DECL_IMGIDECODEROBSERVER
+    NS_DECL_IMGINOTIFICATIONOBSERVER
 
     void AddIconObserver(nsImageFrame *frame) {
         NS_ABORT_IF_FALSE(!mIconObservers.Contains(frame),
