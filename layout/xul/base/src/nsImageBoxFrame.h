@@ -13,6 +13,7 @@
 #include "imgIContainer.h"
 #include "imgINotificationObserver.h"
 
+class imgRequestProxy;
 class nsImageBoxFrame;
 
 class nsDisplayXULImage;
@@ -110,7 +111,7 @@ private:
   // registered with the refresh driver.
   bool mRequestRegistered;
 
-  nsCOMPtr<imgIRequest> mImageRequest;
+  nsRefPtr<imgRequestProxy> mImageRequest;
   nsCOMPtr<imgINotificationObserver> mListener;
 
   int32_t mLoadFlags;

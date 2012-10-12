@@ -553,12 +553,22 @@ imgRequestProxy* NewStaticProxy(imgRequestProxy* aThis)
 NS_IMETHODIMP imgRequestProxy::Clone(imgINotificationObserver* aObserver,
                                      imgIRequest** aClone)
 {
+  nsresult result;
+  imgRequestProxy* proxy;
+  result = Clone(aObserver, &proxy);
+  *aClone = proxy;
+  return result;
+}
+
+nsresult imgRequestProxy::Clone(imgINotificationObserver* aObserver,
+                                imgRequestProxy** aClone)
+{
   return PerformClone(aObserver, NewProxy, aClone);
 }
 
 nsresult imgRequestProxy::PerformClone(imgINotificationObserver* aObserver,
                                        imgRequestProxy* (aAllocFn)(imgRequestProxy*),
-                                       imgIRequest** aClone)
+                                       imgRequestProxy** aClone)
 {
   NS_PRECONDITION(aClone, "Null out param");
 
@@ -838,6 +848,15 @@ void imgRequestProxy::NullOutListener()
 NS_IMETHODIMP
 imgRequestProxy::GetStaticRequest(imgIRequest** aReturn)
 {
+  imgRequestProxy *proxy;
+  nsresult result = GetStaticRequest(&proxy);
+  *aReturn = proxy;
+  return result;
+}
+
+nsresult
+imgRequestProxy::GetStaticRequest(imgRequestProxy** aReturn)
+{
   *aReturn = nullptr;
   mozilla::image::Image* image = GetImage();
 
@@ -989,5 +1008,9 @@ NS_IMETHODIMP
 imgRequestProxyStatic::Clone(imgINotificationObserver* aObserver,
                              imgIRequest** aClone)
 {
-  return PerformClone(aObserver, NewStaticProxy, aClone);
+  nsresult result;
+  imgRequestProxy* proxy;
+  result = PerformClone(aObserver, NewStaticProxy, &proxy);
+  *aClone = proxy;
+  return result;
 }
