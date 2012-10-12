@@ -109,6 +109,11 @@ public:
     return principal.forget();
   }
 
+  // Return the imgStatusTracker associated with this imgRequest. It may live
+  // in |mStatusTracker| or in |mImage.mStatusTracker|, depending on whether
+  // mImage has been instantiated yet.
+  imgStatusTracker& GetStatusTracker();
+
   // Get the current principal of the image. No AddRefing.
   inline nsIPrincipal* GetPrincipal() const { return mPrincipal.get(); };
 
@@ -136,11 +141,6 @@ private:
   inline nsIProperties *Properties() {
     return mProperties;
   }
-
-  // Return the imgStatusTracker associated with this imgRequest.  It may live
-  // in |mStatusTracker| or in |mImage.mStatusTracker|, depending on whether
-  // mImage has been instantiated yet..
-  imgStatusTracker& GetStatusTracker();
     
   // Reset the cache entry after we've dropped our reference to it. Used by the
   // imgLoader when our cache entry is re-requested after we've dropped our
