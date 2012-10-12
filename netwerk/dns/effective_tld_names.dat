@@ -5999,20 +5999,20 @@ com.ug
 org.ug
 
 // uk : http://en.wikipedia.org/wiki/.uk
+// Submitted by registry <noc@nominet.org.uk> 2012-10-02
 *.uk
+*.nhs.uk
+*.police.uk
 *.sch.uk
 !bl.uk
 !british-library.uk
-!icnet.uk
 !jet.uk
 !mod.uk
+!national-library-scotland.uk
 !nel.uk
-!nhs.uk
 !nic.uk
 !nls.uk
-!national-library-scotland.uk
 !parliament.uk
-!police.uk
 
 // us : http://en.wikipedia.org/wiki/.us
 us
