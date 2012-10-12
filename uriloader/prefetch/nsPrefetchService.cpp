@@ -58,11 +58,9 @@ static inline uint32_t
 PRTimeToSeconds(PRTime t_usec)
 {
     PRTime usec_per_sec;
-    uint32_t t_sec;
     LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
     t_usec /= usec_per_sec;
-    LL_L2I(t_sec, t_usec);
-    return t_sec;
+    return uint32_t(t_usec);
 }
 
 #define NowInSeconds() PRTimeToSeconds(PR_Now())
