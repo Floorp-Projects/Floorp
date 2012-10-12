@@ -7,8 +7,6 @@
 #ifndef imgRequest_h__
 #define imgRequest_h__
 
-#include "imgIDecoderObserver.h"
-
 #include "nsIChannelEventSink.h"
 #include "nsIContentSniffer.h"
 #include "nsIInterfaceRequestor.h"
@@ -22,7 +20,6 @@
 #include "nsCategoryCache.h"
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
-#include "nsWeakReference.h"
 #include "nsError.h"
 #include "imgIRequest.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -41,9 +38,7 @@ class Image;
 } // namespace image
 } // namespace mozilla
 
-class imgRequest : public imgIDecoderObserver,
-                   public nsIStreamListener,
-                   public nsSupportsWeakReference,
+class imgRequest : public nsIStreamListener,
                    public nsIChannelEventSink,
                    public nsIInterfaceRequestor,
                    public nsIAsyncVerifyRedirectCallback
@@ -117,6 +112,14 @@ public:
   // Get the current principal of the image. No AddRefing.
   inline nsIPrincipal* GetPrincipal() const { return mPrincipal.get(); };
 
+  // Resize the cache entry to 0 if it exists
+  void ResetCacheEntry();
+
+  // Update the cache entry size based on the image container
+  void UpdateCacheEntrySize();
+
+  nsresult GetURI(nsIURI **aURI);
+
 private:
   friend class imgCacheEntry;
   friend class imgRequestProxy;
@@ -132,7 +135,6 @@ private:
   void Cancel(nsresult aStatus);
   void RemoveFromCache();
 
-  nsresult GetURI(nsIURI **aURI);
   nsresult GetSecurityInfo(nsISupports **aSecurityInfo);
 
   inline const char *GetMimeType() const {
@@ -166,12 +168,10 @@ private:
   // try to update or modify the image cache.
   void SetIsInCache(bool cacheable);
 
-  // Update the cache entry size based on the image container
-  void UpdateCacheEntrySize();
+  bool IsBlockingOnload() const;
+  void SetBlockingOnload(bool block) const;
 
 public:
-  NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_IMGICONTAINEROBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSICHANNELEVENTSINK
