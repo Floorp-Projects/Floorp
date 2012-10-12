@@ -46,8 +46,6 @@ public class PanZoomController
     private static String MESSAGE_ZOOM_RECT = "Browser:ZoomToRect";
     private static String MESSAGE_ZOOM_PAGE = "Browser:ZoomToPageWidth";
 
-    private static final String PREF_ZOOM_ANIMATION_FRAMES = "ui.zooming.animation_frames";
-
     // Animation stops if the velocity is below this value when overscrolled or panning.
     private static final float STOPPED_THRESHOLD = 4.0f;
 
@@ -63,26 +61,6 @@ public class PanZoomController
 
     // The maximum amount we allow you to zoom into a page
     private static final float MAX_ZOOM = 4.0f;
-
-    /* 16 precomputed frames of the _ease-out_ animation from the CSS Transitions specification. */
-    private static float[] ZOOM_ANIMATION_FRAMES = new float[] {
-        0.00000f,   /* 0 */
-        0.10211f,   /* 1 */
-        0.19864f,   /* 2 */
-        0.29043f,   /* 3 */
-        0.37816f,   /* 4 */
-        0.46155f,   /* 5 */
-        0.54054f,   /* 6 */
-        0.61496f,   /* 7 */
-        0.68467f,   /* 8 */
-        0.74910f,   /* 9 */
-        0.80794f,   /* 10 */
-        0.86069f,   /* 11 */
-        0.90651f,   /* 12 */
-        0.94471f,   /* 13 */
-        0.97401f,   /* 14 */
-        0.99309f,   /* 15 */
-    };
 
     private enum PanZoomState {
         NOTHING,        /* no touch-start events received */
@@ -135,11 +113,6 @@ public class PanZoomController
         registerEventListener(MESSAGE_ZOOM_RECT);
         registerEventListener(MESSAGE_ZOOM_PAGE);
 
-        PrefsHelper.getPref(PREF_ZOOM_ANIMATION_FRAMES, new PrefsHelper.PrefHandlerBase() {
-            @Override public void prefValue(String pref, String value) {
-                setZoomAnimationFrames(value);
-            }
-        });
         Axis.initPrefs();
     }
 
@@ -147,6 +120,13 @@ public class PanZoomController
         unregisterEventListener(MESSAGE_ZOOM_RECT);
         unregisterEventListener(MESSAGE_ZOOM_PAGE);
         mSubscroller.destroy();
+    }
+
+    private final static float easeOut(float t) {
+        // ease-out approx.
+        // -(t-1)^2+1
+        t = t-1;
+        return -t*t+1;
     }
 
     private void registerEventListener(String event) {
@@ -211,23 +191,6 @@ public class PanZoomController
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
-        }
-    }
-
-    private void setZoomAnimationFrames(String frames) {
-        try {
-            if (frames.length() > 0) {
-                StringTokenizer st = new StringTokenizer(frames, ",");
-                float[] values = new float[st.countTokens()];
-                for (int i = 0; i < values.length; i++) {
-                    values[i] = Float.parseFloat(st.nextToken());
-                }
-                ZOOM_ANIMATION_FRAMES = values;
-            }
-        } catch (NumberFormatException e) {
-            Log.e(LOGTAG, "Error setting zoom animation frames", e);
-        } finally {
-            Log.i(LOGTAG, "Zoom animation frames: " + Arrays.toString(ZOOM_ANIMATION_FRAMES));
         }
     }
 
@@ -579,7 +542,7 @@ public class PanZoomController
         mAnimationTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() { mTarget.post(runnable); }
-        }, 0, 1000L/60L);
+        }, 0, (int)Axis.MS_PER_FRAME);
     }
 
     /* Stops the fling or bounce animation. */
@@ -679,7 +642,7 @@ public class PanZoomController
             }
 
             /* Perform the next frame of the bounce-back animation. */
-            if (mBounceFrame < ZOOM_ANIMATION_FRAMES.length) {
+            if (mBounceFrame < (int)(256f/Axis.MS_PER_FRAME)) {
                 advanceBounce();
                 return;
             }
@@ -693,7 +656,7 @@ public class PanZoomController
         /* Performs one frame of a bounce animation. */
         private void advanceBounce() {
             synchronized (mTarget.getLock()) {
-                float t = ZOOM_ANIMATION_FRAMES[mBounceFrame];
+                float t = easeOut(mBounceFrame * Axis.MS_PER_FRAME / 256f);
                 ViewportMetrics newMetrics = mBounceStartMetrics.interpolate(mBounceEndMetrics, t);
                 mTarget.setViewportMetrics(newMetrics);
                 mBounceFrame++;

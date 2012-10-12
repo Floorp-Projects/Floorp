@@ -60,6 +60,10 @@ findbar {
   list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
 }
 
+.find-status-icon[status="pending"] {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
 .findbar-textbox[status="notfound"] {
   box-shadow: 0 0 0 1em #f66 inset;
   color: white;

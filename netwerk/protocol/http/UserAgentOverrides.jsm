@@ -19,7 +19,9 @@ const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
 var gPrefBranch;
 var gOverrides;
 var gInitialized = false;
-var gComplexOverrides = [];
+var gOverrideFunctions = [
+  function (aHttpChannel) UserAgentOverrides.getOverrideForURI(aHttpChannel.URI)
+];
 
 var UserAgentOverrides = {
   init: function uao_init() {
@@ -38,7 +40,22 @@ var UserAgentOverrides = {
   },
 
   addComplexOverride: function uao_addComplexOverride(callback) {
-    gComplexOverrides.push(callback);
+    gOverrideFunctions.push(callback);
+  },
+
+  getOverrideForURI: function uao_getOverrideForURI(aURI) {
+    if (!gInitialized)
+      return null;
+
+    let host = aURI.asciiHost;
+    for (let domain in gOverrides) {
+      if (host == domain ||
+          host.endsWith("." + domain)) {
+        return gOverrides[domain];
+      }
+    }
+
+    return null;
   },
 
   uninit: function uao_uninit() {
@@ -76,17 +93,8 @@ function buildOverrides() {
 
 function HTTP_on_modify_request(aSubject, aTopic, aData) {
   let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
-  let host = channel.URI.asciiHost;
 
-  for (let domain in gOverrides) {
-    if (host == domain ||
-        host.endsWith("." + domain)) {
-      channel.setRequestHeader("User-Agent", gOverrides[domain], false);
-      return;
-    }
-  }
-
-  for (let callback of gComplexOverrides) {
+  for (let callback of gOverrideFunctions) {
     let modifiedUA = callback(channel, DEFAULT_UA);
     if (modifiedUA) {
       channel.setRequestHeader("User-Agent", modifiedUA, false);

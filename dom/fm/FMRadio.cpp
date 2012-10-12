@@ -144,14 +144,16 @@ NS_IMETHODIMP FMRadio::Enable(nsIFMRadioSettings *settings)
 /* void disableRadio (); */
 NS_IMETHODIMP FMRadio::Disable()
 {
+  // Fix Bug 796733. 
+  // DisableFMRadio should be called before SetFmRadioAudioEnabled to prevent
+  // the annoying beep sound.
+  DisableFMRadio();
+  
   nsCOMPtr<nsIAudioManager> audioManager =
     do_GetService(NS_AUDIOMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(audioManager, NS_OK);
 
   audioManager->SetFmRadioAudioEnabled(false);
-
-  DisableFMRadio();
-
   return NS_OK;
 }
 

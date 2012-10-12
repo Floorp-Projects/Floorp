@@ -1746,12 +1746,19 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
   }
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
+  // We need to create a chrome window to contain the content window we're about
+  // to pass back. The subject principal needs to be system while we're creating
+  // it to make things work right, so push a null cx. See bug 799348 comment 13
+  // for a description of what happens when we don't.
+  nsCxPusher pusher;
+  if (!pusher.PushNull())
+    return NS_ERROR_FAILURE;
   nsCOMPtr<nsIXULWindow> newWindow;
   appShell->CreateTopLevelWindow(this, uri,
                                  aChromeFlags, 615, 480,
                                  getter_AddRefs(newWindow));
-
   NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
+  pusher.Pop();
 
   // Specify that we want the window to remain locked until the chrome has loaded.
   nsXULWindow *xulWin = static_cast<nsXULWindow*>

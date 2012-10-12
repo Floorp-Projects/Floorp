@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=666041
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 666041</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=666041">Mozilla Bug 666041</a>
+<div id="display">
+  <iframe id="iframe" style="height: 100px; width: 200px"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+"use strict";
+
+/** Test for Bug 666041 **/
+
+/*
+ * This mochitest runs in an iframe so that we can selectively turn on the
+ * flexbox about:config pref before its document is instantiated.
+ *
+ * See the iframe's source ("file_flexbox_order.html") for the actual
+ * test code and for more documentation.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+ok(!SpecialPowers.getBoolPref("layout.css.flexbox.enabled"),
+   "expecting flexbox pref to be disabled by default");
+
+SpecialPowers.setBoolPref("layout.css.flexbox.enabled", true);
+document.getElementById("iframe").src = "file_flexbox_order.html";
+
+function finish() {
+  SpecialPowers.clearUserPref("layout.css.flexbox.enabled");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

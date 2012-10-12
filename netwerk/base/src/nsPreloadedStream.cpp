@@ -8,7 +8,6 @@
 
 #include "nsThreadUtils.h"
 #include "nsAlgorithm.h"
-#include "prmem.h"
    
 namespace mozilla {
 namespace net {

@@ -12,7 +12,6 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 
-#include "prmem.h"
 #include "prcvar.h"
 #include "pratom.h"
 

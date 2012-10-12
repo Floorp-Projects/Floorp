@@ -8,7 +8,6 @@
 
 #include "nsIDOMXULElement.h"
 
-#include "prmem.h"
 #include "prenv.h"
 
 #include "nsIServiceManager.h"

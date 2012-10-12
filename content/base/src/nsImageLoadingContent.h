@@ -325,7 +325,9 @@ protected:
     REQUEST_NEEDS_ANIMATION_RESET = 0x00000001U,
     // Set if the request should be tracked.  This is true if the request is
     // not tracked iff this node is not in the document.
-    REQUEST_SHOULD_BE_TRACKED = 0x00000002U
+    REQUEST_SHOULD_BE_TRACKED = 0x00000002U,
+    // Set if the request is blocking onload.
+    REQUEST_BLOCKS_ONLOAD = 0x00000004U
   };
 
   // If the image was blocked or if there was an error loading, it's nice to
