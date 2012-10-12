@@ -125,6 +125,8 @@ class nsIInputStream;
  * in Init().
  */
 
+class ScaleRequest;
+
 namespace mozilla {
 namespace layers {
 class LayerManager;
@@ -314,6 +316,23 @@ public:
   // Called from module startup. Sets up RasterImage to be used.
   static void Initialize();
 
+  enum ScaleStatus
+  {
+    SCALE_INVALID,
+    SCALE_PENDING,
+    SCALE_DONE
+  };
+
+  // Call this with a new ScaleRequest to mark this RasterImage's scale result
+  // as waiting for the results of this request. You call to ScalingDone before
+  // request is destroyed!
+  void ScalingStart(ScaleRequest* request);
+
+  // Call this with a finished ScaleRequest to set this RasterImage's scale
+  // result. Give it a ScaleStatus of SCALE_DONE if everything succeeded, and
+  // SCALE_INVALID otherwise.
+  void ScalingDone(ScaleRequest* request, ScaleStatus status);
+
 private:
   struct Anim
   {
@@ -473,172 +492,12 @@ private:
     bool mPendingInEventLoop;
   };
 
-  struct ScaleRequest
-  {
-    ScaleRequest(RasterImage* aImage, const gfxSize& aScale, imgFrame* aSrcFrame)
-      : scale(aScale)
-      , dstLocked(false)
-      , done(false)
-      , stopped(false)
-    {
-      MOZ_ASSERT(!aSrcFrame->GetIsPaletted());
-      MOZ_ASSERT(aScale.width > 0 && aScale.height > 0);
-
-      weakImage = aImage->asWeakPtr();
-      srcRect = aSrcFrame->GetRect();
-      dstSize.width = NSToIntRoundUp(srcRect.width * scale.width);
-      dstSize.height = NSToIntRoundUp(srcRect.height * scale.height);
-    }
-
-    // This can only be called on the main thread.
-    bool GetSurfaces(imgFrame* srcFrame)
-    {
-      MOZ_ASSERT(NS_IsMainThread());
-
-      nsRefPtr<RasterImage> image = weakImage.get();
-      if (!image) {
-        return false;
-      }
-
-      bool success = false;
-      if (!dstLocked) {
-        bool srcLocked = NS_SUCCEEDED(srcFrame->LockImageData());
-        dstLocked = NS_SUCCEEDED(dstFrame->LockImageData());
-
-        nsRefPtr<gfxASurface> dstASurf;
-        nsRefPtr<gfxASurface> srcASurf;
-        success = srcLocked && NS_SUCCEEDED(srcFrame->GetSurface(getter_AddRefs(srcASurf)));
-        success = success && dstLocked && NS_SUCCEEDED(dstFrame->GetSurface(getter_AddRefs(dstASurf)));
-
-        success = success && srcLocked && dstLocked && srcASurf && dstASurf;
-
-        if (success) {
-          srcSurface = srcASurf->GetAsImageSurface();
-          dstSurface = dstASurf->GetAsImageSurface();
-          srcData = srcSurface->Data();
-          dstData = dstSurface->Data();
-          srcStride = srcSurface->Stride();
-          dstStride = dstSurface->Stride();
-          srcFormat = mozilla::gfx::ImageFormatToSurfaceFormat(srcFrame->GetFormat());
-        }
-
-        // We have references to the Thebes surfaces, so we don't need to leave
-        // the source frame (that we don't own) locked. We'll unlock the
-        // destination frame in ReleaseSurfaces(), below.
-        if (srcLocked) {
-          success = NS_SUCCEEDED(srcFrame->UnlockImageData()) && success;
-        }
-
-        success = success && srcSurface && dstSurface;
-      }
-
-      return success;
-    }
-
-    // This can only be called on the main thread.
-    bool ReleaseSurfaces()
-    {
-      MOZ_ASSERT(NS_IsMainThread());
-
-      nsRefPtr<RasterImage> image = weakImage.get();
-      if (!image) {
-        return false;
-      }
-
-      bool success = false;
-      if (dstLocked) {
-        success = NS_SUCCEEDED(dstFrame->UnlockImageData());
-
-        dstLocked = false;
-        srcData = nullptr;
-        dstData = nullptr;
-        srcSurface = nullptr;
-        dstSurface = nullptr;
-      }
-      return success;
-    }
-
-    // These values may only be touched on the main thread.
-    WeakPtr<RasterImage> weakImage;
-    nsAutoPtr<imgFrame> dstFrame;
-    nsRefPtr<gfxImageSurface> srcSurface;
-    nsRefPtr<gfxImageSurface> dstSurface;
-
-    // Below are the values that may be touched on the scaling thread.
-    gfxSize scale;
-    uint8_t* srcData;
-    uint8_t* dstData;
-    nsIntRect srcRect;
-    gfxIntSize dstSize;
-    uint32_t srcStride;
-    uint32_t dstStride;
-    mozilla::gfx::SurfaceFormat srcFormat;
-    bool dstLocked;
-    bool done;
-    // This boolean is accessed from both threads simultaneously without locking.
-    // That's safe because stopping a ScaleRequest is strictly an optimization;
-    // if we're not cache-coherent, at worst we'll do extra work.
-    bool stopped;
-  };
-
-  enum ScaleStatus
-  {
-    SCALE_INVALID,
-    SCALE_PENDING,
-    SCALE_DONE
-  };
-  struct ScaleResult
-  {
-    ScaleResult()
-     : status(SCALE_INVALID)
-    {}
-
-    gfxSize scale;
-    nsAutoPtr<imgFrame> frame;
-    ScaleStatus status;
-  };
-
-  class ScaleRunner : public nsRunnable
-  {
-  public:
-    ScaleRunner(RasterImage* aImage, const gfxSize& aScale, imgFrame* aSrcFrame);
-
-    NS_IMETHOD Run();
-
-    bool IsOK() const { return !!mScaleRequest; }
-
-  private:
-    nsAutoPtr<ScaleRequest> mScaleRequest;
-  };
-
-  class DrawRunner : public nsRunnable
-  {
-  public:
-    DrawRunner(ScaleRequest* request);
-
-    NS_IMETHOD Run();
-
-  private: /* members */
-
-    nsAutoPtr<ScaleRequest> mScaleRequest;
-  };
-
   void DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
                                     gfxContext *aContext,
                                     gfxPattern::GraphicsFilter aFilter,
                                     const gfxMatrix &aUserSpaceToImageSpace,
                                     const gfxRect &aFill,
                                     const nsIntRect &aSubimage);
-
-  // Call this with a new ScaleRequest to mark this RasterImage's scale result
-  // as waiting for the results of this request. You call to ScalingDone before
-  // request is destroyed!
-  void ScalingStart(ScaleRequest* request);
-
-  // Call this with a finished ScaleRequest to set this RasterImage's scale
-  // result. Give it a ScaleStatus of SCALE_DONE if everything succeeded, and
-  // SCALE_INVALID otherwise.
-  void ScalingDone(ScaleRequest* request, ScaleStatus status);
 
   /**
    * Advances the animation. Typically, this will advance a single frame, but it
@@ -851,6 +710,18 @@ private: // data
   TimeStamp mDrawStartTime;
 
   inline bool CanScale(gfxPattern::GraphicsFilter aFilter, gfxSize aScale);
+
+  struct ScaleResult
+  {
+    ScaleResult()
+     : status(SCALE_INVALID)
+    {}
+
+    gfxSize scale;
+    nsAutoPtr<imgFrame> frame;
+    ScaleStatus status;
+  };
+
   ScaleResult mScaleResult;
 
   // We hold on to a bare pointer to a ScaleRequest while it's outstanding so
