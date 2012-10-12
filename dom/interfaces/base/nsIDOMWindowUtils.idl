@@ -40,7 +40,7 @@ interface nsIDOMTouch;
 interface nsIDOMClientRect;
 interface nsIURI;
 
-[scriptable, uuid(a76927b7-4aca-4cd1-9c2b-a6b4789b88c3)]
+[scriptable, uuid(f5b9883b-2ab9-426c-8fc1-7296cb6bc1d2)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1277,4 +1277,10 @@ interface nsIDOMWindowUtils : nsISupports {
    * This calls nsEventStateManager::IsHandlingUserInput().
    */
   readonly attribute boolean isHandlingUserInput;
+
+  /**
+   * After calling the method, the window for which this DOMWindowUtils
+   * was created can be closed using scripts.
+   */
+   void allowScriptsToClose();
 };
