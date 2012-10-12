@@ -64,6 +64,12 @@ public class LayerView extends FrameLayout {
     public static final int PAINT_AFTER_FIRST = 1;
 
     boolean shouldUseTextureView() {
+        // Disable TextureView support for now as it causes panning/zooming
+        // performance regressions (see bug 792259). Uncomment the code below
+        // once this bug is fixed.
+        return false;
+
+        /*
         // we can only use TextureView on ICS or higher
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             Log.i(LOGTAG, "Not using TextureView: not on ICS+");
@@ -77,7 +83,7 @@ public class LayerView extends FrameLayout {
         } catch (Exception e) {
             Log.i(LOGTAG, "Not using TextureView: caught exception checking for hw accel: " + e.toString());
             return false;
-        }
+        } */
     }
 
     public LayerView(Context context, AttributeSet attrs) {
