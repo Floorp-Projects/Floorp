@@ -45,6 +45,7 @@ public class PropertyAnimator extends TimerTask {
 
     private long mStartTime;
     private long mDuration;
+    private float mDurationReciprocal;
     private List<ElementHolder> mElementsList;
     private PropertyAnimationListener mListener;
 
@@ -53,6 +54,7 @@ public class PropertyAnimator extends TimerTask {
 
     public PropertyAnimator(int duration) {
         mDuration = duration;
+        mDurationReciprocal = 1.0f / (float) mDuration;
         mTimer = new Timer();
         mInterpolator = new DecelerateInterpolator();
         mElementsList = new ArrayList<ElementHolder>();
@@ -85,8 +87,8 @@ public class PropertyAnimator extends TimerTask {
 
     @Override
     public void run() {
-        long timePassed = AnimationUtils.currentAnimationTimeMillis() - mStartTime;
-        float interpolation = mInterpolator.getInterpolation((float) (timePassed) / (float) mDuration);
+        int timePassed = (int) (AnimationUtils.currentAnimationTimeMillis() - mStartTime);
+        float interpolation = mInterpolator.getInterpolation(timePassed * mDurationReciprocal);
 
         for (ElementHolder element : mElementsList) { 
             int delta = element.from + (int) ((element.to - element.from) * interpolation);
