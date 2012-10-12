@@ -71,10 +71,8 @@ InitPrefCaches()
 PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
 #endif
 
-NS_IMPL_ISUPPORTS8(imgRequest,
-                   imgIDecoderObserver, imgIContainerObserver,
+NS_IMPL_ISUPPORTS5(imgRequest,
                    nsIStreamListener, nsIRequestObserver,
-                   nsISupportsWeakReference,
                    nsIChannelEventSink,
                    nsIInterfaceRequestor,
                    nsIAsyncVerifyRedirectCallback)
@@ -90,7 +88,6 @@ imgRequest::imgRequest(imgLoader* aLoader)
  , mIsMultiPartChannel(false)
  , mGotData(false)
  , mIsInCache(false)
- , mBlockingOnload(false)
  , mResniffMimeType(false)
 {
   // Register our pref observers if we haven't yet.
@@ -173,6 +170,13 @@ void imgRequest::SetCacheEntry(imgCacheEntry *entry)
 bool imgRequest::HasCacheEntry() const
 {
   return mCacheEntry != nullptr;
+}
+
+void imgRequest::ResetCacheEntry()
+{
+  if (HasCacheEntry()) {
+    mCacheEntry->SetDataSize(0);
+  }
 }
 
 void imgRequest::AddProxy(imgRequestProxy *proxy)
@@ -270,16 +274,7 @@ void imgRequest::Cancel(nsresult aStatus)
 
   imgStatusTracker& statusTracker = GetStatusTracker();
 
-  if (mBlockingOnload) {
-    mBlockingOnload = false;
-
-    statusTracker.RecordUnblockOnload();
-
-    nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-    while (iter.HasMore()) {
-      statusTracker.SendUnblockOnload(iter.GetNext());
-    }
-  }
+  statusTracker.MaybeUnblockOnload();
 
   statusTracker.RecordCancel();
 
@@ -473,289 +468,6 @@ imgRequest::StartDecoding()
 
   // Otherwise, flag to do it when we get the image
   mDecodeRequested = true;
-
-  return NS_OK;
-}
-
-
-
-/** imgIContainerObserver methods **/
-
-/* [noscript] void frameChanged (in imgIRequest request,
-                                 in imgIContainer container,
-                                 in nsIntRect dirtyRect); */
-NS_IMETHODIMP imgRequest::FrameChanged(imgIRequest *request,
-                                       imgIContainer *container,
-                                       const nsIntRect *dirtyRect)
-{
-  LOG_SCOPE(gImgLog, "imgRequest::FrameChanged");
-  NS_ABORT_IF_FALSE(mImage,
-                    "FrameChanged callback before we've created our image");
-
-  mImage->GetStatusTracker().RecordFrameChanged(container, dirtyRect);
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-  while (iter.HasMore()) {
-    mImage->GetStatusTracker().SendFrameChanged(iter.GetNext(), container, dirtyRect);
-  }
-
-  return NS_OK;
-}
-
-/** imgIDecoderObserver methods **/
-
-/* void onStartDecode (in imgIRequest request); */
-NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request)
-{
-  LOG_SCOPE(gImgLog, "imgRequest::OnStartDecode");
-  NS_ABORT_IF_FALSE(mImage,
-                    "OnStartDecode callback before we've created our image");
-
-
-  imgStatusTracker& tracker = mImage->GetStatusTracker();
-  tracker.RecordStartDecode();
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-  while (iter.HasMore()) {
-    tracker.SendStartDecode(iter.GetNext());
-  }
-
-  if (!mIsMultiPartChannel) {
-    MOZ_ASSERT(!mBlockingOnload);
-    mBlockingOnload = true;
-
-    tracker.RecordBlockOnload();
-
-    nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-    while (iter.HasMore()) {
-      tracker.SendBlockOnload(iter.GetNext());
-    }
-  }
-
-  /* In the case of streaming jpegs, it is possible to get multiple OnStartDecodes which
-     indicates the beginning of a new decode.
-     The cache entry's size therefore needs to be reset to 0 here.  If we do not do this,
-     the code in imgRequest::OnStopFrame will continue to increase the data size cumulatively.
-   */
-  if (mCacheEntry)
-    mCacheEntry->SetDataSize(0);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP imgRequest::OnStartRequest(imgIRequest *aRequest)
-{
-  NS_NOTREACHED("imgRequest(imgIDecoderObserver)::OnStartRequest");
-  return NS_OK;
-}
-
-/* void onStartContainer (in imgIRequest request, in imgIContainer image); */
-NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, imgIContainer *image)
-{
-  LOG_SCOPE(gImgLog, "imgRequest::OnStartContainer");
-
-  NS_ASSERTION(image, "imgRequest::OnStartContainer called with a null image!");
-  if (!image) return NS_ERROR_UNEXPECTED;
-
-  NS_ABORT_IF_FALSE(mImage,
-                    "OnStartContainer callback before we've created our image");
-  NS_ABORT_IF_FALSE(image == mImage,
-                    "OnStartContainer callback from an image we don't own");
-  mImage->GetStatusTracker().RecordStartContainer(image);
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-  while (iter.HasMore()) {
-    mImage->GetStatusTracker().SendStartContainer(iter.GetNext(), image);
-  }
-
-  return NS_OK;
-}
-
-/* void onStartFrame (in imgIRequest request, in unsigned long frame); */
-NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request,
-                                       uint32_t frame)
-{
-  LOG_SCOPE(gImgLog, "imgRequest::OnStartFrame");
-  NS_ABORT_IF_FALSE(mImage,
-                    "OnStartFrame callback before we've created our image");
-
-  mImage->GetStatusTracker().RecordStartFrame(frame);
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-  while (iter.HasMore()) {
-    mImage->GetStatusTracker().SendStartFrame(iter.GetNext(), frame);
-  }
-
-  return NS_OK;
-}
-
-/* [noscript] void onDataAvailable (in imgIRequest request, in boolean aCurrentFrame, [const] in nsIntRect rect); */
-NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request,
-                                          bool aCurrentFrame,
-                                          const nsIntRect * rect)
-{
-  LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable");
-  NS_ABORT_IF_FALSE(mImage,
-                    "OnDataAvailable callback before we've created our image");
-
-  mImage->GetStatusTracker().RecordDataAvailable(aCurrentFrame, rect);
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-  while (iter.HasMore()) {
-    mImage->GetStatusTracker().SendDataAvailable(iter.GetNext(), aCurrentFrame, rect);
-  }
-
-  return NS_OK;
-}
-
-/* void onStopFrame (in imgIRequest request, in unsigned long frame); */
-NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request,
-                                      uint32_t frame)
-{
-  LOG_SCOPE(gImgLog, "imgRequest::OnStopFrame");
-  NS_ABORT_IF_FALSE(mImage,
-                    "OnStopFrame callback before we've created our image");
-
-  imgStatusTracker& tracker = mImage->GetStatusTracker();
-  tracker.RecordStopFrame(frame);
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-  while (iter.HasMore()) {
-    tracker.SendStopFrame(iter.GetNext(), frame);
-  }
-
-  if (mBlockingOnload) {
-    mBlockingOnload = false;
-
-    tracker.RecordUnblockOnload();
-
-    nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-    while (iter.HasMore()) {
-      tracker.SendUnblockOnload(iter.GetNext());
-    }
-  }
-
-  return NS_OK;
-}
-
-/* void onStopContainer (in imgIRequest request, in imgIContainer image); */
-NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request,
-                                          imgIContainer *image)
-{
-  LOG_SCOPE(gImgLog, "imgRequest::OnStopContainer");
-  NS_ABORT_IF_FALSE(mImage,
-                    "OnDataContainer callback before we've created our image");
-
-  imgStatusTracker& tracker = mImage->GetStatusTracker();
-  tracker.RecordStopContainer(image);
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-  while (iter.HasMore()) {
-    tracker.SendStopContainer(iter.GetNext(), image);
-  }
-
-  // This is really hacky. We need to handle the case where we start decoding,
-  // block onload, but then hit an error before we get to our first frame. In
-  // theory we would just hook in at OnStopDecode, but OnStopDecode is broken
-  // until we fix bug 505385. OnStopContainer is actually going away at that
-  // point. So for now we take advantage of the fact that OnStopContainer is
-  // always fired in the decoders at the same time as OnStopDecode.
-  if (mBlockingOnload) {
-    mBlockingOnload = false;
-
-    tracker.RecordUnblockOnload();
-
-    nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-    while (iter.HasMore()) {
-      tracker.SendUnblockOnload(iter.GetNext());
-    }
-  }
-
-  return NS_OK;
-}
-
-/* void onStopDecode (in imgIRequest request, in nsresult status, in wstring statusArg); */
-NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest,
-                                       nsresult aStatus,
-                                       const PRUnichar *aStatusArg)
-{
-  LOG_SCOPE(gImgLog, "imgRequest::OnStopDecode");
-  NS_ABORT_IF_FALSE(mImage,
-                    "OnDataDecode callback before we've created our image");
-
-  // We finished the decode, and thus have the decoded frames. Update the cache
-  // entry size to take this into account.
-  UpdateCacheEntrySize();
-
-  mImage->GetStatusTracker().RecordStopDecode(aStatus, aStatusArg);
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-  while (iter.HasMore()) {
-    mImage->GetStatusTracker().SendStopDecode(iter.GetNext(), aStatus,
-                                              aStatusArg);
-  }
-
-  if (NS_FAILED(aStatus)) {
-    // Some kind of problem has happened with image decoding.
-    // Report the URI to net:failed-to-process-uri-conent observers.
-
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os)
-      os->NotifyObservers(mURI, "net:failed-to-process-uri-content", nullptr);
-  }
-
-  // RasterImage and everything below it is completely correct and
-  // bulletproof about its handling of decoder notifications.
-  // Unfortunately, here and above we have to make some gross and
-  // inappropriate use of things to get things to work without
-  // completely overhauling the decoder observer interface (this will,
-  // thankfully, happen in bug 505385). From imgRequest and above (for
-  // the time being), OnStopDecode is just a companion to OnStopRequest
-  // that signals success or failure of the _load_ (not the _decode_).
-  // Within imgStatusTracker, we ignore OnStopDecode notifications from the
-  // decoder and RasterImage and generate our own every time we send
-  // OnStopRequest. From within SendStopDecode, we actually send
-  // OnStopContainer.  For more information, see bug 435296.
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP imgRequest::OnStopRequest(imgIRequest *aRequest,
-                                        bool aLastPart)
-{
-  NS_NOTREACHED("imgRequest(imgIDecoderObserver)::OnStopRequest");
-  return NS_OK;
-}
-
-/* void onDiscard (in imgIRequest request); */
-NS_IMETHODIMP imgRequest::OnDiscard(imgIRequest *aRequest)
-{
-  NS_ABORT_IF_FALSE(mImage,
-                    "OnDiscard callback before we've created our image");
-
-  mImage->GetStatusTracker().RecordDiscard();
-
-  // Update the cache entry size, since we just got rid of frame data
-  UpdateCacheEntrySize();
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-  while (iter.HasMore()) {
-    mImage->GetStatusTracker().SendDiscard(iter.GetNext());
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP imgRequest::OnImageIsAnimated(imgIRequest *aRequest)
-{
-  NS_ABORT_IF_FALSE(mImage,
-                    "OnImageIsAnimated callback before we've created our image");
-  mImage->GetStatusTracker().RecordImageIsAnimated();
-
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(GetStatusTracker().GetConsumers());
-  while (iter.HasMore()) {
-    mImage->GetStatusTracker().SendImageIsAnimated(iter.GetNext());
-  }
 
   return NS_OK;
 }
@@ -1082,7 +794,8 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
       // Initialize the image that we created above. For RasterImages, this
       // instantiates a decoder behind the scenes, so if we don't have a decoder
       // for this mimetype we'll find out about it here.
-      rv = mImage->Init(this, mContentType.get(), uriString.get(), imageFlags);
+      rv = mImage->Init(GetStatusTracker().GetDecoderObserver(),
+                        mContentType.get(), uriString.get(), imageFlags);
 
       // We allow multipart images to fail to initialize without cancelling the
       // load because subsequent images might be fine.
