@@ -30,7 +30,7 @@ struct StringWrapper
 void
 FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool isCompartmentGC)
 {
-    if (status == JSFINALIZE_START)
+    if (status == JSFINALIZE_GROUP_START)
         sw.strOk = !JS_IsAboutToBeFinalized(sw.str);
 }
 
