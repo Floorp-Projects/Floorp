@@ -2,9 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import StringIO
+import threading
+
+from Zeroconf import Zeroconf, ServiceBrowser
+from devicemanager import ZeroconfListener, NetworkTools
 from devicemanagerADB import DeviceManagerADB
 from devicemanagerSUT import DeviceManagerSUT
-import StringIO
 
 class DroidMixin(object):
     """Mixin to extend DeviceManager with Android-specific functionality"""
@@ -81,3 +85,33 @@ class DroidADB(DeviceManagerADB, DroidMixin):
 
 class DroidSUT(DeviceManagerSUT, DroidMixin):
     pass
+
+def DroidConnectByHWID(hwid, timeout=30, **kwargs):
+    """Try to connect to the given device by waiting for it to show up using mDNS with the given timeout."""
+    nt = NetworkTools()
+    local_ip = nt.getLanIp()
+
+    zc = Zeroconf(local_ip)
+
+    evt = threading.Event()
+    listener = ZeroconfListener(hwid, evt)
+    sb = ServiceBrowser(zc, "_sutagent._tcp.local.", listener)
+    foundIP = None
+    if evt.wait(timeout):
+        # we found the hwid 
+        foundIP = listener.ip
+    sb.cancel()
+    zc.close()
+
+    if foundIP is not None:
+        return DroidSUT(foundIP, **kwargs)
+    print "Connected via SUT to %s [at %s]" % (hwid, foundIP)
+
+    # try connecting via adb
+    try:
+        sut = DroidADB(deviceSerial=hwid, **kwargs)
+    except:
+        return None
+
+    print "Connected via ADB to %s" % (hwid)
+    return sut
