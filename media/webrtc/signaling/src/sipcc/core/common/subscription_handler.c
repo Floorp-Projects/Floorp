@@ -35,7 +35,7 @@ static void ccBLFHandlerInitialized();
  *
  *  Returns:    TRUE/FALSE
  */
-boolean sub_hndlr_isAlertingBLFState(int inst) 
+boolean sub_hndlr_isAlertingBLFState(int inst)
 {
     static const char fname[] = "sub_hndlr_isAlertingBLFState";
 
@@ -51,7 +51,7 @@ boolean sub_hndlr_isAlertingBLFState(int inst)
                 inst);
     return FALSE;
 }
-    
+
 /*
  *  Function:    sub_hndlr_isInUseBLFState
  *
@@ -62,7 +62,7 @@ boolean sub_hndlr_isAlertingBLFState(int inst)
  *
  *  Returns:    TRUE/FALSE
  */
-boolean sub_hndlr_isInUseBLFState(int inst) 
+boolean sub_hndlr_isInUseBLFState(int inst)
 {
     static const char fname[] = "sub_hndlr_isInUseBLFState";
 
@@ -77,7 +77,7 @@ boolean sub_hndlr_isInUseBLFState(int inst)
                 inst);
     return FALSE;
 }
-    
+
 /*
  *  Function:    sub_hndlr_isAvailable
  *
@@ -87,7 +87,7 @@ boolean sub_hndlr_isInUseBLFState(int inst)
  *
  *  Returns:    TRUE/FALSE
  */
-boolean sub_hndlr_isAvailable() 
+boolean sub_hndlr_isAvailable()
 {
     static const char fname[] = "sub_hndlr_isAvailable";
 
@@ -107,7 +107,7 @@ static unsigned short get_new_trans_id()
 
     return curr_trans_id;
 }
-    
+
 /*
  *  Function:    sub_hndlr_start
  *
@@ -117,7 +117,7 @@ static unsigned short get_new_trans_id()
  *
  *  Returns:   void
  */
-void sub_hndlr_start() 
+void sub_hndlr_start()
 {
     static const char fname[] = "sub_hndlr_start";
     int i;
@@ -134,7 +134,7 @@ void sub_hndlr_start()
 
     /* get primary DN */
     config_get_line_string(CFGID_LINE_NAME, primaryLine, 1, sizeof(primaryLine));
-        
+
     /*
      * for speeddial/BLF buttons, make presence subscriptions.
      */
@@ -142,7 +142,7 @@ void sub_hndlr_start()
         // first line must always be a calling line.
         config_get_line_value(CFGID_LINE_FEATURE, &lineFeature, sizeof(lineFeature), i);
 
-            
+
         CCAPP_DEBUG(DEB_F_PREFIX"inst=%d, lineFeature=%d\n",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
                     i, lineFeature);
@@ -153,7 +153,7 @@ void sub_hndlr_start()
                 break;
             }
             config_get_line_value(CFGID_LINE_FEATURE, &featureOptionMask, sizeof(featureOptionMask), i);
-                    
+
             transId = get_new_trans_id();
             transactionIds[i - 1] = transId;
             CC_BLF_subscribe(transId,
@@ -166,20 +166,20 @@ void sub_hndlr_start()
         default:
             break;
         }
-        
+
         //Initializes native BLF handler
         ccBLFHandlerInitialized();
     }
 }
-    
-static void ccBLFHandlerInitialized() 
+
+static void ccBLFHandlerInitialized()
 {
     if (!isBLFHandlerRunning) {
         CC_BLF_init();
         isBLFHandlerRunning = TRUE;
     }
 }
-    
+
 /*
  *  Function:    sub_hndlr_stop
  *
@@ -189,7 +189,7 @@ static void ccBLFHandlerInitialized()
  *
  *  Returns:    void
  */
-void sub_hndlr_stop() 
+void sub_hndlr_stop()
 {
     static const char fname[] = "sub_hndlr_stop";
     int i;
@@ -209,7 +209,7 @@ void sub_hndlr_stop()
     CC_BLF_unsubscribe_All();
 }
 
-    
+
 /*
  *  Function:    hideBLFButtonsDisplay
  *
@@ -219,7 +219,7 @@ void sub_hndlr_stop()
  *
  *  Returns:    void
  */
-static void hideBLFButtonsDisplay() 
+static void hideBLFButtonsDisplay()
 {
     static const char fname[] = "hideBLFButtonsDisplay";
     int i;
@@ -231,7 +231,7 @@ static void hideBLFButtonsDisplay()
     for (i = SPEEDDIAL_START_BUTTON_NUMBER; i <= MAX_REG_LINES; i++) {
         // first line must always be a calling line.
         config_get_line_value(CFGID_LINE_FEATURE, &lineFeature, sizeof(lineFeature), i);
-            
+
         switch (lineFeature) {
         case cfgLineFeatureSpeedDialBLF:
             ccsnap_gen_blfFeatureEvent(CC_SIP_BLF_UNKNOWN, i);
@@ -241,7 +241,7 @@ static void hideBLFButtonsDisplay()
         }
     }
 }
-    
+
 /*
  *  Function:    unhideBLFButtonsDisplay
  *
@@ -277,7 +277,7 @@ static void unhideBLFButtonsDisplay()
         }
     }
 }
-    
+
 /*
  *  Function:    sub_hndlr_controlBLFButtons
  *
@@ -301,20 +301,20 @@ void sub_hndlr_controlBLFButtons(boolean state)
         unhideBLFButtonsDisplay();
     }
 }
-    
+
 /*
  *  Function:    sub_hndlr_NotifyBLFStatus
  *
  *  Description: notifies the app of BLF state.
  *
- *  Parameters: 
+ *  Parameters:
  *      requestId - requestId of the subscription
  *      status - BLF status
  *      appId -  button number of the BLF feature key.
  *
  *  Returns:    void
  */
-void sub_hndlr_NotifyBLFStatus(int requestId, cc_blf_state_t status, int appId) 
+void sub_hndlr_NotifyBLFStatus(int requestId, cc_blf_state_t status, int appId)
 {
     static const char fname[] = "sub_hndlr_NotifyBLFStatus";
     cc_uint32_t lineFeature = 0;
@@ -329,7 +329,7 @@ void sub_hndlr_NotifyBLFStatus(int requestId, cc_blf_state_t status, int appId)
     } else {
         config_get_line_value(CFGID_LINE_FEATURE, &lineFeature, sizeof(lineFeature), appId);
         config_get_line_string(CFGID_LINE_SPEEDDIAL_NUMBER, speedDialNumber, appId, sizeof(speedDialNumber));
-                    
+
         blfStates[appId - 1] = status;
         if (displayBLFState == FALSE) {
             return; // ignore the notify

@@ -625,7 +625,7 @@ PMH_EXTERN uint16_t sippmh_parse_allow_header(const char *header);
 
 PMH_EXTERN uint16_t sippmh_parse_accept_header(const char *header);
 
-PMH_EXTERN sipServiceControl_t 
+PMH_EXTERN sipServiceControl_t
             *sippmh_parse_service_control_body(char *msgBody, int msgLength);
 
 PMH_EXTERN void sippmh_free_service_control_info(sipServiceControl_t *scp);
@@ -642,7 +642,7 @@ PMH_EXTERN int32_t sippmh_parse_max_forwards(const char *max_fwd_hdr);
 PMH_EXTERN string_t sippmh_get_url_from_hdr(char *string);
 
 PMH_EXTERN int32_t sippmh_parse_message_summary(sipMessage_t *pSipMessage, sipMessageSummary_t *mesgSummary);
-  
+
 /*
  * The following SIP parser functions are the same as corresponding
  * HTTP/1.1 message parser functions.

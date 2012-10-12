@@ -30,7 +30,7 @@ namespace CSF
         virtual CC_CallPtr createCall();
 
         virtual void enableVideo(bool enable);
-        virtual void enableCamera(bool enable);    
+        virtual void enableCamera(bool enable);
 		virtual void setDigestNamePasswd (char *name, char *pw);
 
     private:

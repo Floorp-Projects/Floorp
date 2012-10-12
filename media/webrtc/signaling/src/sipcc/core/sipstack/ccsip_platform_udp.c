@@ -35,15 +35,15 @@ static uint16_t af_family_connect = AF_INET6;
  *         ip_addr        ip address
  *         port
  *         addr_len       legth returned based on family
- *         
+ *
  *
  *  @return  pointer to cpr_sockaddr, which is also psock_storage
- *  
+ *
  *  @pre     none
  *
  */
 
-cpr_sockaddr_t *sip_set_sockaddr (cpr_sockaddr_storage *psock_storage, uint16_t family, 
+cpr_sockaddr_t *sip_set_sockaddr (cpr_sockaddr_storage *psock_storage, uint16_t family,
                                  cpr_ip_addr_t ip_addr, uint16_t port, uint16_t *addr_len)
 {
     static const char fname[] = "sip_set_sockaddr";
@@ -150,14 +150,14 @@ sip_platform_udp_channel_listen (cpr_ip_mode_e ip_mode, cpr_socket_t *s,
             *s = cprSocket(af_family_listen, SOCK_DGRAM, 0);
             if (*s == INVALID_SOCKET) {
                 CCSIP_DEBUG_ERROR(get_debug_string(DEBUG_GENERAL_SYSTEMCALL_FAILED),
-                              fname, "cprSocket unable to open socket for IPv4", 
+                              fname, "cprSocket unable to open socket for IPv4",
                                         cpr_errno);
                 return SIP_ERROR;
             }
         }
     }
 
-    (void) sip_set_sockaddr(&sock_addr, af_family_listen, *local_ipaddr, 
+    (void) sip_set_sockaddr(&sock_addr, af_family_listen, *local_ipaddr,
                             local_port, &addr_len);
 
     if (cprBind(*s,  (cpr_sockaddr_t *)&sock_addr, addr_len) == CPR_FAILURE) {
@@ -204,7 +204,7 @@ sip_platform_udp_channel_create (cpr_ip_mode_e ip_mode, cpr_socket_t *s,
     *s = cprSocket(af_family_connect, SOCK_DGRAM, 0);
     if (*s == INVALID_SOCKET) {
         CCSIP_DEBUG_ERROR(get_debug_string(DEBUG_GENERAL_SYSTEMCALL_FAILED),
-                          fname, "cprSocket unable to open socket", 
+                          fname, "cprSocket unable to open socket",
                           cpr_errno);
         /* Try opening ipv4 socket */
         if (ip_mode == CPR_IP_MODE_DUAL) {
@@ -240,7 +240,7 @@ sip_platform_udp_channel_create (cpr_ip_mode_e ip_mode, cpr_socket_t *s,
     /*
      * Connect to remote address
      */
-    (void) sip_set_sockaddr(&sock_addr, af_family_connect, *remote_ipaddr, 
+    (void) sip_set_sockaddr(&sock_addr, af_family_connect, *remote_ipaddr,
                             remote_port, &addr_len);
 
  /*   if (cprConnect(*s, (cpr_sockaddr_t *)&sock_addr, addr_len) == CPR_FAILURE) {
@@ -381,7 +381,7 @@ sip_platform_udp_read_socket (cpr_socket_t s)
     cpr_sockaddr_storage from;
     cpr_socklen_t from_len;
     const char *fname = "sip_platform_udp_read_socket";
-    
+
     if (af_family_listen == AF_INET6) {
         from_len = sizeof(cpr_sockaddr_in6_t);
     } else {
@@ -415,7 +415,7 @@ sip_platform_udp_channel_sendto (cpr_socket_t s, char *buf, uint32_t len,
      * Connect to remote address
      */
     dest_ip_addr = *dst_ipaddr;
-    (void) sip_set_sockaddr(&sock_addr, af_family_connect, dest_ip_addr, 
+    (void) sip_set_sockaddr(&sock_addr, af_family_connect, dest_ip_addr,
                             dst_port, &addr_len);
 
 

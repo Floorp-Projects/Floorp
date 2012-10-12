@@ -166,7 +166,7 @@ handle_range_selector (char *str, unsigned long *bitmask)
         /* make sure there is only 1 char after '-' */
         char_ptr++;
         if (*char_ptr != ']') {
-            KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.\n", 
+            KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.\n",
                        DEB_F_PREFIX_ARGS(KPML_INFO, fname), str);
             rc = KPML_ERROR_INVALID_VALUE;
 
@@ -177,7 +177,7 @@ handle_range_selector (char *str, unsigned long *bitmask)
             rc = KPML_ERROR_INVALID_VALUE;
         }
     } else {
-        KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.\n", 
+        KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.\n",
                    DEB_F_PREFIX_ARGS(KPML_INFO, fname), str);
         rc = KPML_ERROR_INVALID_VALUE;
     }
@@ -203,7 +203,7 @@ handle_range_selector (char *str, unsigned long *bitmask)
     }
 
     KPML_DEBUG(DEB_F_PREFIX"1st/last digit=%d/%d, bitmask=%lu, "
-               "return status = %d\n", DEB_F_PREFIX_ARGS(KPML_INFO, fname), first_digit, 
+               "return status = %d\n", DEB_F_PREFIX_ARGS(KPML_INFO, fname), first_digit,
                last_digit, *bitmask, rc);
 
     return (rc);
@@ -267,7 +267,7 @@ handle_character_selector (char *str, unsigned long *bitmask)
             /* There should not be any characters after the ']' */
             char_ptr++;
             if (*char_ptr) {
-                KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.\n", 
+                KPML_DEBUG(DEB_F_PREFIX"The Regex format %s is not supported.\n",
                             DEB_F_PREFIX_ARGS(KPML_INFO, fname), str);
                 rc = KPML_ERROR_INVALID_VALUE;
             }
@@ -284,7 +284,7 @@ handle_character_selector (char *str, unsigned long *bitmask)
         }
     }
 
-    KPML_DEBUG(DEB_F_PREFIX"bitmask=%lu, return status = %d\n", 
+    KPML_DEBUG(DEB_F_PREFIX"bitmask=%lu, return status = %d\n",
                 DEB_F_PREFIX_ARGS(KPML_INFO, fname), *bitmask, rc);
 
     return (rc);

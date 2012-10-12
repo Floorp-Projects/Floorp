@@ -29,8 +29,8 @@
  *  @li Debug/Logging Abstraction
  *
  *  @section file_list EXTERNAL APIS
- *   The External APIs that need to be exposed by CPR to the pSIPCC application are 
- *   defined in the following header files. The documentation within 
+ *   The External APIs that need to be exposed by CPR to the pSIPCC application are
+ *   defined in the following header files. The documentation within
  *   each header file lists the functions/macros that @b NEED to be defined for
  *   pSIPCC to work correctly. Example functions (and an implementation for
  *   Linux) is available for most functions defined in these headers. Look under
@@ -50,7 +50,7 @@
  *   @li cpr_stddef.h
  *   @li cpr_time.h
  *   @li cpr_types.h
- * 
+ *
  *   The function prototypes in these header files are implemented in the
  *   binaries related to memory and string functionality. The prototypes are
  *   given so that vendors can use these functions for implementation of other
@@ -96,7 +96,7 @@
  *
  *  @file cpr_linux_init.c
  *  @brief This file contains CPR initialization routines
- *  
+ *
  *  DESCRIPTION
  *     Initialization routine for the Cisco Portable Runtime layer
  *     running in the Linux operating System.
@@ -106,7 +106,7 @@
   * @addtogroup Initialization The initialization module
   * @ingroup CPR
   * @brief The intialization module consists of APIs used to initialize or destroy the CPR layer by pSipCC
-  * 
+  *
   * @{
   */
 #include "cpr.h"
@@ -122,12 +122,12 @@
 #include "plat_debug.h"
 
 /**
-  * Mutex to manage message queue list. 
+  * Mutex to manage message queue list.
   */
 extern pthread_mutex_t msgQueueListMutex;
 
 /**
-  * Boolean to check that cprPreInit been called 
+  * Boolean to check that cprPreInit been called
   */
 static boolean pre_init_called = FALSE;
 
@@ -144,11 +144,11 @@ int32_t cprInfo = TRUE;
 /**
  * cprPreInit
  *
- * @brief The cprPreInit function IS called from pSIPCC @b before any components are initialized. 
+ * @brief The cprPreInit function IS called from pSIPCC @b before any components are initialized.
  *
  * This function @b SHOULD initialize those portions of the CPR that
  * are needed before applications can start using it. The memory subsystem
- * (sandbox) is initialized from this routine. 
+ * (sandbox) is initialized from this routine.
  *
  *
  * @return CPR_SUCCESS or CPR_FAILURE
@@ -181,7 +181,7 @@ cprPreInit (void)
         CPR_ERROR("%s: timer pre init failed %d\n", fname, returnCode);
         return CPR_FAILURE;
     }
-    
+
 
     return CPR_SUCCESS;
 }
@@ -190,7 +190,7 @@ cprPreInit (void)
 /**
  * cprPostInit
  *
- * @brief The cprPostInit function IS called from pSIPCC @b after all the components are initialized. 
+ * @brief The cprPostInit function IS called from pSIPCC @b after all the components are initialized.
  *
  * This function @b SHOULD complete any CPR activities before the phone is
  * operational. In other words a call to this function will be the last line of

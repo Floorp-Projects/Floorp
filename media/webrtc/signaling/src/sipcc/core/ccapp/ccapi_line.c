@@ -17,19 +17,19 @@ extern cc_line_info_t lineInfo[MAX_CONFIG_LINES+1];
 cc_lineinfo_ref_t CCAPI_Line_getLineInfo(cc_uint32_t lineID)
 {
   cc_line_info_t *line_info = NULL;
-  int i; 
+  int i;
 
   for (i=1;i<=MAX_CONFIG_LINES;i++) {
       if ( (cc_uint32_t)lineInfo[i].button == lineID ) {
           line_info = (cc_line_info_t*)cpr_malloc(sizeof(cc_line_info_t));
-   
+
           if (line_info) {
               *line_info = lineInfo[i];
               line_info->ref_count = 1;
               line_info->name = strlib_copy(lineInfo[i].name);
               line_info->dn = strlib_copy(lineInfo[i].dn);
               line_info->cfwd_dest = strlib_copy(lineInfo[i].cfwd_dest);
-              line_info->externalNumber = 
+              line_info->externalNumber =
                   strlib_copy(lineInfo[i].externalNumber);
           }
       }

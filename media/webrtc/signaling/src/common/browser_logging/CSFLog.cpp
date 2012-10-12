@@ -19,15 +19,15 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
   printf("%s\n:",tag);
   vprintf(format, args);
 #else
-  
+
 #define MAX_MESSAGE_LENGTH 1024
   char message[MAX_MESSAGE_LENGTH];
-    
+
   vsnprintf(message, MAX_MESSAGE_LENGTH, format, args);
-  
+
   if (gLogModuleInfo == NULL)
     gLogModuleInfo = PR_NewLogModule("ikran");
-    
+
   switch(priority)
   {
     case CSF_LOG_CRITICAL:
@@ -45,7 +45,7 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
     default:
       PR_LOG(gLogModuleInfo, PR_LOG_ALWAYS, ("%s %s", tag, message));
   }
-  
+
 #endif
 
 }
@@ -54,7 +54,7 @@ void CSFLog( CSFLogLevel priority, const char* sourceFile, int sourceLine, const
 {
 	va_list ap;
   va_start(ap, format);
-	
+
   CSFLogV(priority, sourceFile, sourceLine, tag, format, ap);
   va_end(ap);
 }

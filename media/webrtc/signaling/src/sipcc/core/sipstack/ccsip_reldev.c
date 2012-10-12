@@ -150,7 +150,7 @@ sipRelDevCoupledMessageStore (sipMessage_t *pCoupledMessage,
                 /* Return the stored idx to the caller */
                 return (i);
             }
-        }   
+        }
     }
     return (RELDEV_NO_STORED_MSG);
 }

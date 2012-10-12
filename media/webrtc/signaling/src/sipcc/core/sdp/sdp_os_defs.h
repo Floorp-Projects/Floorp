@@ -29,7 +29,7 @@ typedef int32_t    int32;
 typedef int16_t    int16;
 typedef unsigned short ushort;
 typedef unsigned long  ulong;
-#define inline 
+#define inline
 
 
 #endif /* _SDP_OS_DEFS_H_ */

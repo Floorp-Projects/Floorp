@@ -55,8 +55,8 @@ cpr_strdup (const char *str)
  * The cpr_strcasecmp performs case insensitive string comparison of the "s1"
  * and the "s2" strings.
  *
- * @param[in] s1  - The first string 
- * @param[in] s2  - The second string 
+ * @param[in] s1  - The first string
+ * @param[in] s2  - The second string
  *
  * @return integer <,=,> 0 depending on whether s1 is <,=,> s2
  */
@@ -96,8 +96,8 @@ cpr_strcasecmp (const char *s1, const char *s2)
  * The cpr_strncasecmp performs case insensitive string comparison for specific
  * length "len".
  *
- * @param[in] s1  - The first string 
- * @param[in] s2  - The second string 
+ * @param[in] s1  - The first string
+ * @param[in] s2  - The second string
  * @param[in] len  - The length to be compared
  *
  * @return integer <,=,> 0 depending on whether s1 is <,=,> s2
@@ -131,12 +131,12 @@ cpr_strncasecmp (const char *s1, const char *s2, size_t len)
  *
  * @brief The same as strstr, but ignores case
  *
- * The strcasestr performs the strstr function, but ignores the case. 
- * This function shall locate the first occurrence in the string 
- * pointed to by s1 of the sequence of bytes (excluding the terminating 
+ * The strcasestr performs the strstr function, but ignores the case.
+ * This function shall locate the first occurrence in the string
+ * pointed to by s1 of the sequence of bytes (excluding the terminating
  * null byte) in the string pointed to by s2.
  *
- * @param[in] s1  - The input string 
+ * @param[in] s1  - The input string
  * @param[in] s2  - The pattern to be matched
  *
  * @return A pointer to the first occurrence of string s2 found

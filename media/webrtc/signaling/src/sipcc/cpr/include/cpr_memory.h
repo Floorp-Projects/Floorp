@@ -10,7 +10,7 @@
 #ifdef SIP_OS_WINDOWS
 #include "../win32/cpr_win_defines.h"
 #endif
- 
+
 typedef void *cprBuffer_t;
 
 #endif

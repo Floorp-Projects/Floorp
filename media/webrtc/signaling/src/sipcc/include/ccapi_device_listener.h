@@ -13,9 +13,9 @@
  * @param [in] device_id - device id
  * @param [in] dev_info - reference to device info
  * @returns
- * NOTE: The memory associated with deviceInfo will be freed immediately upon 
- * return from this method. If the application wishes to retain a copy it should 
- * invoke CCAPI_Device_retainDeviceInfo() API. once the info is retained it can be 
+ * NOTE: The memory associated with deviceInfo will be freed immediately upon
+ * return from this method. If the application wishes to retain a copy it should
+ * invoke CCAPI_Device_retainDeviceInfo() API. once the info is retained it can be
  * released by invoking CCAPI_Device_releaseDeviceInfo() API
  */
 void CCAPI_DeviceListener_onDeviceEvent(ccapi_device_event_e type, cc_device_handle_t device_id, cc_deviceinfo_ref_t dev_info);

@@ -19,7 +19,7 @@ namespace CSF
     struct StreamInfo
     {
 		// a bit of overkill having a structure just for video, but we may have other properties later
-    	bool isVideo;                    
+    	bool isVideo;
     };
     typedef std::map<int, StreamInfo> StreamMapType;
 
@@ -28,27 +28,27 @@ namespace CSF
     class CC_SIPCCCallMediaData
 	{
 	public:
-		CC_SIPCCCallMediaData(): 
-          remoteWindow(NULL), 
+		CC_SIPCCCallMediaData():
+          remoteWindow(NULL),
           streamMapMutex("CC_SIPCCCallMediaData"),
-          audioMuteState(false), 
-          videoMuteState(false), 
+          audioMuteState(false),
+          videoMuteState(false),
           volume(-1){}
 		CC_SIPCCCallMediaData(VideoWindowHandle remoteWindow,
-            bool audioMuteState, bool videoMuteState, int volume): 
+            bool audioMuteState, bool videoMuteState, int volume):
           remoteWindow(remoteWindow),
           streamMapMutex("CC_SIPCCCallMediaData"),
-          audioMuteState(audioMuteState), 
-          videoMuteState(videoMuteState), 
+          audioMuteState(audioMuteState),
+          videoMuteState(videoMuteState),
           volume(volume) {}
-        VideoWindowHandle remoteWindow; 
+        VideoWindowHandle remoteWindow;
 		ExternalRendererHandle extRenderer;
-		VideoFormat videoFormat;	
+		VideoFormat videoFormat;
         mozilla::Mutex streamMapMutex;
         StreamMapType streamMap;
         bool audioMuteState;
-        bool videoMuteState; 
-        int volume;        
+        bool videoMuteState;
+        int volume;
     private:
         CC_SIPCCCallMediaData(const CC_SIPCCCallMediaData&);
         CC_SIPCCCallMediaData& operator=(const CC_SIPCCCallMediaData&);
@@ -93,7 +93,7 @@ namespace CSF
         virtual bool conferenceStart (cc_sdp_direction_t video_pref);
         virtual bool conferenceComplete (CC_CallPtr otherLog, cc_sdp_direction_t video_pref);
         virtual bool transferStart (cc_sdp_direction_t video_pref);
-        virtual bool transferComplete (CC_CallPtr otherLeg, 
+        virtual bool transferComplete (CC_CallPtr otherLeg,
                                        cc_sdp_direction_t video_pref);
         virtual bool cancelTransferOrConferenceFeature();
         virtual bool directTransfer (CC_CallPtr target);

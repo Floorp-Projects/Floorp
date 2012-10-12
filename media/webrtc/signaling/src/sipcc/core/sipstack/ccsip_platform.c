@@ -105,7 +105,7 @@ sip_platform_handle_service_control_notify (sipServiceControl_t *scp)
 
     case SERVICE_CONTROL_ACTION_APPLY_CONFIG:
         // call the function to process apply config NOTIFY message.
-        platform_apply_config(scp->configVersionStamp, 
+        platform_apply_config(scp->configVersionStamp,
                                scp->dialplanVersionStamp,
                                scp->fcpVersionStamp,
                                scp->cucm_result,
@@ -114,7 +114,7 @@ sip_platform_handle_service_control_notify (sipServiceControl_t *scp)
                                scp->loadServer,
                                scp->logServer,
                                scp->ppid);
-        break;        
+        break;
     default:
         break;
 

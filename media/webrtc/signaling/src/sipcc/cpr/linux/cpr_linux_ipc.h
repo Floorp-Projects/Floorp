@@ -48,7 +48,7 @@ extern pthread_mutex_t msgQueueListMutex;
 
 /**
  * cprGetDepth
- * 
+ *
  * Get depth of a message queue
  */
 uint16_t cprGetDepth(cprMsgQueue_t msgQueue);

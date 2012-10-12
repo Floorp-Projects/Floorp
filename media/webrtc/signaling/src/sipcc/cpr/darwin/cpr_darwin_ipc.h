@@ -56,7 +56,7 @@ cprShowMessageQueueStats(int32_t argc, const char *argv[]);
 
 /**
  * cprGetDepth
- * 
+ *
  * Get depth of a message queue
  */
 uint16_t cprGetDepth(cprMsgQueue_t msgQueue);

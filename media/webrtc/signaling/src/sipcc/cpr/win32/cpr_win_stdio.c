@@ -39,8 +39,8 @@ void
 err_msg (const char *_format, ...)
 {
   va_list ap;
-  
-  va_start(ap, _format);  
+
+  va_start(ap, _format);
   CSFLogErrorV("cpr", _format, ap);
   va_end(ap);
 }
@@ -50,7 +50,7 @@ notice_msg (const char *_format, ...)
 {
   va_list ap;
 
-  va_start(ap, _format);  
+  va_start(ap, _format);
   CSFLogInfoV("cpr", _format, ap);
   va_end(ap);
 }
@@ -59,8 +59,8 @@ int32_t
 buginf (const char *_format, ...)
 {
   va_list ap;
-  
-  va_start(ap, _format);  
+
+  va_start(ap, _format);
   CSFLogDebugV("cpr", _format, ap);
   va_end(ap);
 

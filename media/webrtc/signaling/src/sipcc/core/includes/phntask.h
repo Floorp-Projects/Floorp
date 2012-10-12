@@ -278,12 +278,12 @@ enum {
 
 #define NICE_STEP -4
 #define TIMER_THREAD_RELATIVE_PRIORITY  4*(NICE_STEP) /* -16 */
-/* redid priorities to adjust relative priority with EDT cannot 
+/* redid priorities to adjust relative priority with EDT cannot
      use NICE_STEP so using absolute numbers here */
-#define GSM_THREAD_RELATIVE_PRIORITY    -14 
-#define SIP_THREAD_RELATIVE_PRIORITY    -14 
-#define APP_THREAD_RELATIVE_PRIORITY    -14 
-#define CCPROVIDER_THREAD_RELATIVE_PRIORITY -14 
+#define GSM_THREAD_RELATIVE_PRIORITY    -14
+#define SIP_THREAD_RELATIVE_PRIORITY    -14
+#define APP_THREAD_RELATIVE_PRIORITY    -14
+#define CCPROVIDER_THREAD_RELATIVE_PRIORITY -14
 
 #elif defined SIP_OS_OSX
 

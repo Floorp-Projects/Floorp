@@ -22,7 +22,7 @@
  * @return The duplicated string or NULL in case of no memory
  *
  */
-char * 
+char *
 cpr_strdup(const char *str);
 
 /**
@@ -30,12 +30,12 @@ cpr_strdup(const char *str);
  *
  * @brief The same as strstr, but ignores case
  *
- * The strcasestr performs the strstr function, but ignores the case. 
- * This function shall locate the first occurrence in the string 
- * pointed to by s1 of the sequence of bytes (excluding the terminating 
+ * The strcasestr performs the strstr function, but ignores the case.
+ * This function shall locate the first occurrence in the string
+ * pointed to by s1 of the sequence of bytes (excluding the terminating
  * null byte) in the string pointed to by s2.
  *
- * @param[in] s1  - The input string 
+ * @param[in] s1  - The input string
  * @param[in] s2  - The pattern to be matched
  *
  * @return A pointer to the first occurrence of string s2 found

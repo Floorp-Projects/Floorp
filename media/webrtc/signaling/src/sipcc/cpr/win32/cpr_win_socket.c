@@ -15,13 +15,13 @@
 #pragma comment(lib, "wsock32.lib")
 #pragma comment(lib, "ws2_32.lib")
 
-#define IN6ADDRSZ   16 
-#define INT16SZ     2 
+#define IN6ADDRSZ   16
+#define INT16SZ     2
 #define	INADDRSZ	4
 #define IS_DIGIT(ch)   ((ch >= '0') && (ch <= '9'))
 
 //const cpr_in6_addr_t in6addr_any = IN6ADDR_ANY_INIT;
-const cpr_ip_addr_t ip_addr_invalid = {0};  
+const cpr_ip_addr_t ip_addr_invalid = {0};
 
 // Function prototypes for windows calls until CPR is in such a state that it can include windows sockets.
 
@@ -95,9 +95,9 @@ const cpr_ip_addr_t ip_addr_invalid = {0};
 
 int SECReq_LookupSrvr(char* serverAddr, int serverType) ;
 
-int SECSock_connect (int    appType, 
-					 char * srvrAddrAndPort, 
-					 int    blockingConnect, 
+int SECSock_connect (int    appType,
+					 char * srvrAddrAndPort,
+					 int    blockingConnect,
 					 int    connTimeout,
 					 int    ipTOS) ;
 int SECSock_getFD(int nSSL) ;
@@ -417,14 +417,14 @@ cpr_status_e
 cprCloseSocket (cpr_socket_t socket)
 {
 	int	connid ;
-	
+
 	connid = cpr_sec_fd_to_connid(socket);
 	if(connid == -1)
 		return ((closesocket(socket) != 0) ? CPR_FAILURE : CPR_SUCCESS);
 	secSock_close(cpr_sec_conn_tab[connid].ssl) ;
 	cpr_sec_purge_entry(connid) ;
 
-	return CPR_SUCCESS ;	
+	return CPR_SUCCESS ;
 }
 
 cpr_status_e
@@ -690,9 +690,9 @@ cprShutDown (cpr_socket_t socket,
  *
  * @return  Server is not enabled for security
  *          CPR_SOC_NONSECURE
- *             
+ *
  * @todo    Security is not implemented for win32
- *       
+ *
  */
 cpr_soc_sec_status_e
 cprSecLookupSrvr (char* ipaddr_str)
@@ -710,20 +710,20 @@ cprSecLookupSrvr (char* ipaddr_str)
 #define HOST_AND_PORT_SIZE 64
 
 /**
- * 
+ *
  * Securely connect to a remote server
  *
  * @param[in]  hostAndPort  server addr and port in host:port form
- * @param[in]  mode         blocking connect or not 
+ * @param[in]  mode         blocking connect or not
  *                          FALSE : non-blocking; TRUE: blocking
  * @param[in]  tos          TOS value
- *                          
+ *
  * @param[out] localPort    local port used for the connection
  *
  * @return     INVALID SOCKET, connect failed
  *
- * @todo       Security is not implemented for win32            
- *               
+ * @todo       Security is not implemented for win32
+ *
  */
 cpr_socket_t
 cprSecSocConnect (char *host,
@@ -798,9 +798,9 @@ cprSecSocConnect (char *host,
  * @param    sock   socket descriptor
  *
  * @return   connection failed, CPR_SOC_CONN_FAILED
- * 
- * @todo     Security is not implemented for win32  
- *         
+ *
+ * @todo     Security is not implemented for win32
+ *
  */
 cpr_soc_connect_status_e
 cprSecSockIsConnected (cpr_socket_t sock)

@@ -23,7 +23,7 @@ sdp_mca_t *sdp_find_media_level (sdp_t *sdp_p, u16 level)
     sdp_mca_t *mca_p = NULL;
 
     if ((level >= 1) && (level <= sdp_p->mca_count)) {
-        for (i=1, mca_p = sdp_p->mca_p; 
+        for (i=1, mca_p = sdp_p->mca_p;
              ((i < level) && (mca_p != NULL));
              mca_p = mca_p->next_p, i++) {
 
@@ -31,7 +31,7 @@ sdp_mca_t *sdp_find_media_level (sdp_t *sdp_p, u16 level)
              ; /* Do nothing. */
         }
     }
-    
+
     return (mca_p);
 }
 
@@ -42,7 +42,7 @@ sdp_mca_t *sdp_find_media_level (sdp_t *sdp_p, u16 level)
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     TRUE or FALSE.
  */
-tinybool sdp_version_valid (void *sdp_ptr) 
+tinybool sdp_version_valid (void *sdp_ptr)
 {
     sdp_t *sdp_p = (sdp_t *)sdp_ptr;
 
@@ -62,7 +62,7 @@ tinybool sdp_version_valid (void *sdp_ptr)
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     Version value.
  */
-int32 sdp_get_version (void *sdp_ptr) 
+int32 sdp_get_version (void *sdp_ptr)
 {
     sdp_t *sdp_p = (sdp_t *)sdp_ptr;
 
@@ -80,7 +80,7 @@ int32 sdp_get_version (void *sdp_ptr)
  *              version     Version to set.
  * Returns:     SDP_SUCCESS
  */
-sdp_result_e sdp_set_version (void *sdp_ptr, int32 version) 
+sdp_result_e sdp_set_version (void *sdp_ptr, int32 version)
 {
     sdp_t *sdp_p = (sdp_t*)sdp_ptr;
 
@@ -94,11 +94,11 @@ sdp_result_e sdp_set_version (void *sdp_ptr, int32 version)
 
 /* Function:    sdp_owner_valid
  * Description: Returns true or false depending on whether the owner
- *              token line has been defined for this SDP.  
+ *              token line has been defined for this SDP.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     TRUE or FALSE.
  */
-tinybool sdp_owner_valid (void *sdp_ptr) 
+tinybool sdp_owner_valid (void *sdp_ptr)
 {
     sdp_t *sdp_p = (sdp_t *)sdp_ptr;
 
@@ -118,12 +118,12 @@ tinybool sdp_owner_valid (void *sdp_ptr)
 
 /* Function:    sdp_get_owner_username
  * Description: Returns a pointer to the value of the username parameter
- *              from the o= owner token line.  Value is returned as a 
- *              const ptr and so cannot be modified by the application.  
+ *              from the o= owner token line.  Value is returned as a
+ *              const ptr and so cannot be modified by the application.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     Version value.
  */
-const char *sdp_get_owner_username (void *sdp_ptr) 
+const char *sdp_get_owner_username (void *sdp_ptr)
 {
     sdp_t *sdp_p = (sdp_t *)sdp_ptr;
 
@@ -135,11 +135,11 @@ const char *sdp_get_owner_username (void *sdp_ptr)
 }
 
 /* Function:    sdp_get_owner_sessionid
- * Description: Returns the session id parameter from the o= owner token 
+ * Description: Returns the session id parameter from the o= owner token
  *              line.  Because the value may be larger than 32 bits, this
  *              parameter is returned as a string, though has been verified
- *              to be numeric.  Value is returned as a const ptr and so 
- *              cannot be modified by the application.  
+ *              to be numeric.  Value is returned as a const ptr and so
+ *              cannot be modified by the application.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     Ptr to owner session id or NULL.
  */
@@ -155,11 +155,11 @@ const char *sdp_get_owner_sessionid (void *sdp_ptr)
 }
 
 /* Function:    sdp_get_owner_version
- * Description: Returns the version parameter from the o= owner token 
+ * Description: Returns the version parameter from the o= owner token
  *              line.  Because the value may be larger than 32 bits, this
  *              parameter is returned as a string, though has been verified
- *              to be numeric.  Value is returned as a const ptr and so 
- *              cannot be modified by the application.  
+ *              to be numeric.  Value is returned as a const ptr and so
+ *              cannot be modified by the application.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     Ptr to owner version or NULL.
  */
@@ -175,7 +175,7 @@ const char *sdp_get_owner_version (void *sdp_ptr)
 }
 
 /* Function:    sdp_get_owner_network_type
- * Description: Returns the network type parameter from the o= owner token 
+ * Description: Returns the network type parameter from the o= owner token
  *              line.  If network type has not been set SDP_NT_INVALID will
  *              be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
@@ -193,7 +193,7 @@ sdp_nettype_e sdp_get_owner_network_type (void *sdp_ptr)
 }
 
 /* Function:    sdp_get_owner_address_type
- * Description: Returns the address type parameter from the o= owner token 
+ * Description: Returns the address type parameter from the o= owner token
  *              line.  If address type has not been set SDP_AT_INVALID will
  *              be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
@@ -211,9 +211,9 @@ sdp_addrtype_e sdp_get_owner_address_type (void *sdp_ptr)
 }
 
 /* Function:    sdp_get_owner_address
- * Description: Returns the address parameter from the o= owner token 
- *              line.  Value is returned as a const ptr and so 
- *              cannot be modified by the application.  
+ * Description: Returns the address parameter from the o= owner token
+ *              line.  Value is returned as a const ptr and so
+ *              cannot be modified by the application.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     Ptr to address or NULL.
  */
@@ -295,7 +295,7 @@ sdp_result_e sdp_set_owner_version (void *sdp_ptr, const char *version)
  *              network_type  Network type for the owner line.
  * Returns:     SDP_SUCCESS
  */
-sdp_result_e sdp_set_owner_network_type (void *sdp_ptr, 
+sdp_result_e sdp_set_owner_network_type (void *sdp_ptr,
                                          sdp_nettype_e network_type)
 {
     sdp_t *sdp_p = (sdp_t *)sdp_ptr;
@@ -315,7 +315,7 @@ sdp_result_e sdp_set_owner_network_type (void *sdp_ptr,
  *              address_type  Address type for the owner line.
  * Returns:     SDP_SUCCESS
  */
-sdp_result_e sdp_set_owner_address_type (void *sdp_ptr, 
+sdp_result_e sdp_set_owner_address_type (void *sdp_ptr,
                                          sdp_addrtype_e address_type)
 {
     sdp_t *sdp_p = (sdp_t *)sdp_ptr;
@@ -350,7 +350,7 @@ sdp_result_e sdp_set_owner_address (void *sdp_ptr, const char *address)
 
 /* Function:    sdp_session_name_valid
  * Description: Returns true or false depending on whether the session name
- *              s= token line has been defined for this SDP.  
+ *              s= token line has been defined for this SDP.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     TRUE or FALSE.
  */
@@ -371,8 +371,8 @@ tinybool sdp_session_name_valid (void *sdp_ptr)
 
 /* Function:    sdp_get_session_name
  * Description: Returns the session name parameter from the s= session
- *              name token line.  Value is returned as a const ptr and so 
- *              cannot be modified by the application.  
+ *              name token line.  Value is returned as a const ptr and so
+ *              cannot be modified by the application.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     Ptr to session name or NULL.
  */
@@ -388,9 +388,9 @@ const char *sdp_get_session_name (void *sdp_ptr)
 }
 
 /* Function:    sdp_set_session_name
- * Description: Sets the value of the session name parameter for the s= 
- *              session name token line.  The string is copied into the 
- *              SDP structure so application memory will not be 
+ * Description: Sets the value of the session name parameter for the s=
+ *              session name token line.  The string is copied into the
+ *              SDP structure so application memory will not be
  *              referenced by the SDP lib.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              sessname    Ptr to the session name string.
@@ -410,7 +410,7 @@ sdp_result_e sdp_set_session_name (void *sdp_ptr, const char *sessname)
 
 /* Function:    sdp_timespec_valid
  * Description: Returns true or false depending on whether the timespec t=
- *              token line has been defined for this SDP.  
+ *              token line has been defined for this SDP.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     TRUE or FALSE.
  */
@@ -432,11 +432,11 @@ tinybool sdp_timespec_valid (void *sdp_ptr)
 }
 
 /* Function:    sdp_get_time_start
- * Description: Returns the start time parameter from the t= timespec token 
+ * Description: Returns the start time parameter from the t= timespec token
  *              line.  Because the value may be larger than 32 bits, this
  *              parameter is returned as a string, though has been verified
- *              to be numeric.  Value is returned as a const ptr and so 
- *              cannot be modified by the application.  
+ *              to be numeric.  Value is returned as a const ptr and so
+ *              cannot be modified by the application.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     Ptr to start time or NULL.
  */
@@ -456,11 +456,11 @@ const char *sdp_get_time_start (void *sdp_ptr)
 }
 
 /* Function:    sdp_get_time_stop
- * Description: Returns the stop time parameter from the t= timespec token 
+ * Description: Returns the stop time parameter from the t= timespec token
  *              line.  Because the value may be larger than 32 bits, this
  *              parameter is returned as a string, though has been verified
- *              to be numeric.  Value is returned as a const ptr and so 
- *              cannot be modified by the application.  
+ *              to be numeric.  Value is returned as a const ptr and so
+ *              cannot be modified by the application.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     Ptr to stop time or NULL.
  */
@@ -480,9 +480,9 @@ const char *sdp_get_time_stop (void *sdp_ptr)
 }
 
 /* Function:    sdp_set_time_start
- * Description: Sets the value of the start time parameter for the t= 
- *              timespec token line.  The string is copied into the 
- *              SDP structure so application memory will not be 
+ * Description: Sets the value of the start time parameter for the t=
+ *              timespec token line.  The string is copied into the
+ *              SDP structure so application memory will not be
  *              referenced by the SDP lib.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              start_time  Ptr to the start time string.
@@ -505,15 +505,15 @@ sdp_result_e sdp_set_time_start (void *sdp_ptr, const char *start_time)
         sdp_p->timespec_p->start_time[0] = '\0';
         sdp_p->timespec_p->stop_time[0] = '\0';
     }
-    sstrncpy(sdp_p->timespec_p->start_time, start_time, 
+    sstrncpy(sdp_p->timespec_p->start_time, start_time,
              sizeof(sdp_p->timespec_p->start_time));
     return (SDP_SUCCESS);
 }
 
 /* Function:    sdp_set_time_stop
- * Description: Sets the value of the stop time parameter for the t= 
- *              timespec token line.  The string is copied into the 
- *              SDP structure so application memory will not be 
+ * Description: Sets the value of the stop time parameter for the t=
+ *              timespec token line.  The string is copied into the
+ *              SDP structure so application memory will not be
  *              referenced by the SDP lib.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              stop_time  Ptr to the stop time string.
@@ -536,17 +536,17 @@ sdp_result_e sdp_set_time_stop (void *sdp_ptr, const char *stop_time)
         sdp_p->timespec_p->start_time[0] = '\0';
         sdp_p->timespec_p->stop_time[0] = '\0';
     }
-    sstrncpy(sdp_p->timespec_p->stop_time, stop_time, 
+    sstrncpy(sdp_p->timespec_p->stop_time, stop_time,
              sizeof(sdp_p->timespec_p->stop_time));
     return (SDP_SUCCESS);
 }
 
 /* Function:    sdp_encryption_valid
  * Description: Returns true or false depending on whether the encryption k=
- *              token line has been defined for this SDP at the given level.  
+ *              token line has been defined for this SDP at the given level.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the k= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the k= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  * Returns:     TRUE or FALSE.
  */
@@ -570,7 +570,7 @@ tinybool sdp_encryption_valid (void *sdp_ptr, u16 level)
         encrypt_p = &(mca_p->encrypt);
     }
 
-    if ((encrypt_p->encrypt_type == SDP_ENCRYPT_INVALID) ||   
+    if ((encrypt_p->encrypt_type == SDP_ENCRYPT_INVALID) ||
         ((encrypt_p->encrypt_type != SDP_ENCRYPT_PROMPT) &&
          (encrypt_p->encrypt_key[0] == '\0'))) {
         return (FALSE);
@@ -580,12 +580,12 @@ tinybool sdp_encryption_valid (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_encryption_method
- * Description: Returns the encryption method parameter from the k= 
- *              encryption token line.  If encryption method has not been 
+ * Description: Returns the encryption method parameter from the k=
+ *              encryption token line.  If encryption method has not been
  *              set SDP_ENCRYPT_INVALID will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  * Returns:     Encryption method or SDP_ENCRYPT_INVALID.
  */
@@ -614,11 +614,11 @@ sdp_encrypt_type_e sdp_get_encryption_method (void *sdp_ptr, u16 level)
 
 /* Function:    sdp_get_encryption_key
  * Description: Returns a pointer to the encryption key parameter
- *              from the k= encryption token line.  Value is returned as a 
- *              const ptr and so cannot be modified by the application.  
+ *              from the k= encryption token line.  Value is returned as a
+ *              const ptr and so cannot be modified by the application.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  * Returns:     Ptr to encryption key or NULL.
  */
@@ -646,11 +646,11 @@ const char *sdp_get_encryption_key (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_set_encryption_method
- * Description: Sets the value of the encryption method param for the k= 
+ * Description: Sets the value of the encryption method param for the k=
  *              encryption token line.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the k= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the k= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  *              type        The encryption type.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
@@ -676,19 +676,19 @@ sdp_result_e sdp_set_encryption_method (void *sdp_ptr, u16 level,
         }
         encrypt_p = &(mca_p->encrypt);
     }
-    
+
     encrypt_p->encrypt_type = type;
     return (SDP_SUCCESS);
 }
 
 /* Function:    sdp_set_encryption_key
- * Description: Sets the value of the encryption key parameter for the k= 
- *              encryption token line.  The string is copied into the 
- *              SDP structure so application memory will not be 
+ * Description: Sets the value of the encryption key parameter for the k=
+ *              encryption token line.  The string is copied into the
+ *              SDP structure so application memory will not be
  *              referenced by the SDP lib.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the k= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the k= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  *              key         Ptr to the encryption key string.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
@@ -713,17 +713,17 @@ sdp_result_e sdp_set_encryption_key (void *sdp_ptr, u16 level, const char *key)
         }
         encrypt_p = &(mca_p->encrypt);
     }
-    
+
     sstrncpy(encrypt_p->encrypt_key, key, sizeof(encrypt_p->encrypt_key));
     return (SDP_SUCCESS);
 }
 
 /* Function:    sdp_connection_valid
  * Description: Returns true or false depending on whether the connection c=
- *              token line has been defined for this SDP at the given level.  
+ *              token line has been defined for this SDP at the given level.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  * Returns:     TRUE or FALSE.
  */
@@ -746,14 +746,14 @@ tinybool sdp_connection_valid (void *sdp_ptr, u16 level)
         }
         conn_p = &(mca_p->conn);
     }
-    
-    /*if network type is ATM . then allow c= line without address type 
-     * and address . This is a special case to cover PVC 
-     */ 
-    if (conn_p->nettype == SDP_NT_ATM && 
-        conn_p->addrtype == SDP_AT_INVALID) { 
-        return TRUE; 
-    } 
+
+    /*if network type is ATM . then allow c= line without address type
+     * and address . This is a special case to cover PVC
+     */
+    if (conn_p->nettype == SDP_NT_ATM &&
+        conn_p->addrtype == SDP_AT_INVALID) {
+        return TRUE;
+    }
 
     if ((conn_p->nettype >= SDP_MAX_NETWORK_TYPES) ||
         (conn_p->addrtype >= SDP_MAX_ADDR_TYPES) ||
@@ -766,12 +766,12 @@ tinybool sdp_connection_valid (void *sdp_ptr, u16 level)
 
 /* Function:    sdp_bandwidth_valid
  * Description: Returns true or false depending on whether the bandwidth b=
- *              token line has been defined for this SDP at the given level.  
+ *              token line has been defined for this SDP at the given level.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
- *              inst_num    instance number of bw line at that level. The first 
+ *              inst_num    instance number of bw line at that level. The first
  *                          instance has a inst_num of 1 and so on.
  * Returns:     TRUE or FALSE.
  */
@@ -784,9 +784,9 @@ tinybool sdp_bandwidth_valid (void *sdp_ptr, u16 level, u16 inst_num)
         return FALSE;
     }
 
-    bw_data_p = sdp_find_bw_line(sdp_p, level, inst_num); 
+    bw_data_p = sdp_find_bw_line(sdp_p, level, inst_num);
     if (bw_data_p != NULL) {
-        if ((bw_data_p->bw_modifier < SDP_BW_MODIFIER_AS) || 
+        if ((bw_data_p->bw_modifier < SDP_BW_MODIFIER_AS) ||
             (bw_data_p->bw_modifier >= SDP_MAX_BW_MODIFIER_VAL)) {
             return FALSE;
         } else {
@@ -801,12 +801,12 @@ tinybool sdp_bandwidth_valid (void *sdp_ptr, u16 level, u16 inst_num)
  * sdp_bw_line_exists
  *
  * Description: This api retruns true if there exists a bw line at the
- *              instance and level specified. 
+ *              instance and level specified.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
- *              inst_num    instance number of bw line at that level. The first 
+ *              inst_num    instance number of bw line at that level. The first
  *                          instance has a inst_num of 1 and so on.
  * Returns:     TRUE or FALSE
  */
@@ -819,7 +819,7 @@ tinybool sdp_bw_line_exists (void *sdp_ptr, u16 level, u16 inst_num)
         return FALSE;
     }
 
-    bw_data_p = sdp_find_bw_line(sdp_p, level, inst_num); 
+    bw_data_p = sdp_find_bw_line(sdp_p, level, inst_num);
     if (bw_data_p != NULL) {
         return TRUE;
     } else {
@@ -828,12 +828,12 @@ tinybool sdp_bw_line_exists (void *sdp_ptr, u16 level, u16 inst_num)
 }
 
 /* Function:    sdp_get_conn_nettype
- * Description: Returns the network type parameter from the c= 
- *              connection token line.  If network type has not been 
+ * Description: Returns the network type parameter from the c=
+ *              connection token line.  If network type has not been
  *              set SDP_NT_INVALID will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  * Returns:     Network type or SDP_NT_INVALID.
  */
@@ -861,12 +861,12 @@ sdp_nettype_e sdp_get_conn_nettype (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_conn_addrtype
- * Description: Returns the address type parameter from the c= 
- *              connection token line.  If address type has not been 
+ * Description: Returns the address type parameter from the c=
+ *              connection token line.  If address type has not been
  *              set SDP_AT_INVALID will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  * Returns:     Address type or SDP_AT_INVALID.
  */
@@ -895,11 +895,11 @@ sdp_addrtype_e sdp_get_conn_addrtype (void *sdp_ptr, u16 level)
 
 /* Function:    sdp_get_conn_address
  * Description: Returns a pointer to the address parameter
- *              from the c= connection token line.  Value is returned as a 
- *              const ptr and so cannot be modified by the application.  
+ *              from the c= connection token line.  Value is returned as a
+ *              const ptr and so cannot be modified by the application.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  * Returns:     Ptr to address or NULL.
  */
@@ -927,11 +927,11 @@ const char *sdp_get_conn_address (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_is_mcast_addr
- * Description: Returns a boolean to indicate if the addr is multicast in 
+ * Description: Returns a boolean to indicate if the addr is multicast in
  *              the c=line.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  * Returns:     TRUE if the addr is multicast, FALSE if not.
  */
@@ -941,22 +941,22 @@ tinybool sdp_is_mcast_addr (void *sdp_ptr, u16 level)
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_conn_t *conn_p;
     sdp_mca_t  *mca_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (FALSE);
     }
-    
+
     if (level == SDP_SESSION_LEVEL) {
         conn_p = &(sdp_p->default_conn);
     } else {
         mca_p = sdp_find_media_level(sdp_p, level);
         if (mca_p != NULL) {
             conn_p = &(mca_p->conn);
-	} else { 
+	} else {
             return (FALSE);
 	}
     }
-    
+
     if ((conn_p) && (conn_p->is_multicast)) {
         return (TRUE);
     } else {
@@ -965,11 +965,11 @@ tinybool sdp_is_mcast_addr (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_mcast_ttl
- * Description: Get the time to live(ttl) value for the multicast address 
+ * Description: Get the time to live(ttl) value for the multicast address
  *              if present.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  * Returns:     Multicast address - Time to live (ttl) value
  */
@@ -980,7 +980,7 @@ int32 sdp_get_mcast_ttl (void *sdp_ptr, u16 level)
     sdp_conn_t *conn_p;
     sdp_mca_t  *mca_p;
     u16 ttl=0;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) != FALSE) {
         if (level == SDP_SESSION_LEVEL) {
             conn_p = &(sdp_p->default_conn);
@@ -995,7 +995,7 @@ int32 sdp_get_mcast_ttl (void *sdp_ptr, u16 level)
     } else {
         return SDP_INVALID_VALUE;
     }
-    
+
     if (conn_p) {
 	ttl = conn_p->ttl;
     }
@@ -1003,11 +1003,11 @@ int32 sdp_get_mcast_ttl (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_mcast_num_of_addresses
- * Description: Get the number of addresses value for the multicast address 
+ * Description: Get the number of addresses value for the multicast address
  *              if present.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  * Returns:     Multicast address - number of addresses value
  */
@@ -1018,7 +1018,7 @@ int32 sdp_get_mcast_num_of_addresses (void *sdp_ptr, u16 level)
     sdp_conn_t *conn_p;
     sdp_mca_t  *mca_p;
     u16 num_addr = 0;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     } else {
@@ -1033,23 +1033,23 @@ int32 sdp_get_mcast_num_of_addresses (void *sdp_ptr, u16 level)
 	    }
         }
     }
-    
+
     if (conn_p) {
 	num_addr = conn_p->num_of_addresses;
     }
     return num_addr;
 }
 /* Function:    sdp_set_conn_nettype
- * Description: Sets the value of the network type parameter for the c= 
+ * Description: Sets the value of the network type parameter for the c=
  *              connection token line.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              nettype     Network type for the connection line.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_conn_nettype (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_set_conn_nettype (void *sdp_ptr, u16 level,
                                    sdp_nettype_e nettype)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -1076,16 +1076,16 @@ sdp_result_e sdp_set_conn_nettype (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_set_conn_addrtype
- * Description: Sets the value of the address type parameter for the c= 
+ * Description: Sets the value of the address type parameter for the c=
  *              connection token line.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              addrtype    Address type for the connection line.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_conn_addrtype (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_set_conn_addrtype (void *sdp_ptr, u16 level,
                                     sdp_addrtype_e addrtype)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -1112,18 +1112,18 @@ sdp_result_e sdp_set_conn_addrtype (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_set_conn_address
- * Description: Sets the value of the address parameter for the c= 
- *              connection token line.  The string is copied into the 
- *              SDP structure so application memory will not be 
+ * Description: Sets the value of the address parameter for the c=
+ *              connection token line.  The string is copied into the
+ *              SDP structure so application memory will not be
  *              referenced by the SDP lib.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  *              address     Ptr to the address string.
  * Returns:     SDP_SUCCESS
  */
-sdp_result_e sdp_set_conn_address (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_set_conn_address (void *sdp_ptr, u16 level,
                                    const char *address)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -1150,18 +1150,18 @@ sdp_result_e sdp_set_conn_address (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_set_mcast_addr_fields
- * Description: Sets the value of the ttl and num of addresses for 
+ * Description: Sets the value of the ttl and num of addresses for
  *              a multicast address.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
- *                          either SDP_SESSION_LEVEL or 1-n specifying a 
+ *              level       The level to check for the c= line.  Will be
+ *                          either SDP_SESSION_LEVEL or 1-n specifying a
  *                          media line level.
  *              ttl         Time to live (ttl) value.
  *              num_of_addresses number of addresses
  .
  * Returns:     SDP_SUCCESS
  */
-sdp_result_e sdp_set_mcast_addr_fields(void *sdp_ptr, u16 level, 
+sdp_result_e sdp_set_mcast_addr_fields(void *sdp_ptr, u16 level,
 				       u16 ttl, u16 num_of_addresses)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -1190,19 +1190,19 @@ sdp_result_e sdp_set_mcast_addr_fields(void *sdp_ptr, u16 level,
        }
        conn_p->num_of_addresses = num_of_addresses;
     } else {
-       return (SDP_FAILURE); 
+       return (SDP_FAILURE);
     }
     return (SDP_SUCCESS);
 }
 
 
 /* Function:    sdp_media_line_valid
- * Description: Returns true or false depending on whether the specified 
+ * Description: Returns true or false depending on whether the specified
  *              media line m= has been defined for this SDP.  The
  *              SDP_SESSION_LEVEL level is not valid for this check since,
  *              by definition, this is a media level.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the c= line.  Will be 
+ *              level       The level to check for the c= line.  Will be
  *                          1-n specifying a media line level.
  * Returns:     TRUE or FALSE.
  */
@@ -1248,8 +1248,8 @@ u16 sdp_get_num_media_lines (void *sdp_ptr)
 }
 
 /* Function:    sdp_get_media_type
- * Description: Returns the media type parameter from the m= 
- *              media token line.  If media type has not been 
+ * Description: Returns the media type parameter from the m=
+ *              media token line.  If media type has not been
  *              set SDP_MEDIA_INVALID will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The level to of the m= media line.  Will be 1-n.
@@ -1273,8 +1273,8 @@ sdp_media_e sdp_get_media_type (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_media_port_format
- * Description: Returns the port format type associated with the m= 
- *              media token line.  If port format type has not been 
+ * Description: Returns the port format type associated with the m=
+ *              media token line.  If port format type has not been
  *              set SDP_PORT_FORMAT_INVALID will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The level to of the m= media line.  Will be 1-n.
@@ -1298,8 +1298,8 @@ sdp_port_format_e sdp_get_media_port_format (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_media_portnum
- * Description: Returns the port number associated with the m= 
- *              media token line.  If port number has not been 
+ * Description: Returns the port number associated with the m=
+ *              media token line.  If port number has not been
  *              set SDP_INVALID_VALUE will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The level to of the m= media line.  Will be 1-n.
@@ -1325,7 +1325,7 @@ int32 sdp_get_media_portnum (void *sdp_ptr, u16 level)
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI) &&
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            SDP_ERROR("%s Port num not valid for media line %u", 
+            SDP_ERROR("%s Port num not valid for media line %u",
                       sdp_p->debug_str, level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1336,8 +1336,8 @@ int32 sdp_get_media_portnum (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_media_portcount
- * Description: Returns the port count associated with the m= 
- *              media token line.  If port count has not been 
+ * Description: Returns the port count associated with the m=
+ *              media token line.  If port count has not been
  *              set SDP_INVALID_VALUE will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The level to of the m= media line.  Will be 1-n.
@@ -1360,7 +1360,7 @@ int32 sdp_get_media_portcount (void *sdp_ptr, u16 level)
     /* Make sure port number is valid for the specified format. */
     if (mca_p->port_format != SDP_PORT_NUM_COUNT) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            SDP_ERROR("%s Port count not valid for media line %u", 
+            SDP_ERROR("%s Port count not valid for media line %u",
                       sdp_p->debug_str, level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1371,8 +1371,8 @@ int32 sdp_get_media_portcount (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_media_vpi
- * Description: Returns the VPI parameter associated with the m= 
- *              media token line.  If VPI has not been set 
+ * Description: Returns the VPI parameter associated with the m=
+ *              media token line.  If VPI has not been set
  *              SDP_INVALID_VALUE will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The level to of the m= media line.  Will be 1-n.
@@ -1393,11 +1393,11 @@ int32 sdp_get_media_vpi (void *sdp_ptr, u16 level)
     }
 
     /* Make sure port number is valid for the specified format. */
-    if ((mca_p->port_format != SDP_PORT_VPI_VCI) && 
-        (mca_p->port_format != SDP_PORT_NUM_VPI_VCI) && 
+    if ((mca_p->port_format != SDP_PORT_VPI_VCI) &&
+        (mca_p->port_format != SDP_PORT_NUM_VPI_VCI) &&
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            SDP_ERROR("%s VPI not valid for media line %u", 
+            SDP_ERROR("%s VPI not valid for media line %u",
                       sdp_p->debug_str, level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1408,8 +1408,8 @@ int32 sdp_get_media_vpi (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_media_vci
- * Description: Returns the VCI parameter associated with the m= 
- *              media token line.  If VCI has not been set 
+ * Description: Returns the VCI parameter associated with the m=
+ *              media token line.  If VCI has not been set
  *              SDP_INVALID_VALUE will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The level to of the m= media line.  Will be 1-n.
@@ -1430,11 +1430,11 @@ u32 sdp_get_media_vci (void *sdp_ptr, u16 level)
     }
 
     /* Make sure port number is valid for the specified format. */
-    if ((mca_p->port_format != SDP_PORT_VPI_VCI) && 
-        (mca_p->port_format != SDP_PORT_NUM_VPI_VCI) && 
+    if ((mca_p->port_format != SDP_PORT_VPI_VCI) &&
+        (mca_p->port_format != SDP_PORT_NUM_VPI_VCI) &&
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            SDP_ERROR("%s VCI not valid for media line %u", 
+            SDP_ERROR("%s VCI not valid for media line %u",
                       sdp_p->debug_str, level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1445,8 +1445,8 @@ u32 sdp_get_media_vci (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_media_vcci
- * Description: Returns the VCCI parameter associated with the m= 
- *              media token line.  If VCCI has not been set 
+ * Description: Returns the VCCI parameter associated with the m=
+ *              media token line.  If VCCI has not been set
  *              SDP_INVALID_VALUE will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The level to of the m= media line.  Will be 1-n.
@@ -1467,10 +1467,10 @@ int32 sdp_get_media_vcci (void *sdp_ptr, u16 level)
     }
 
     /* Make sure port number is valid for the specified format. */
-    if ((mca_p->port_format != SDP_PORT_VCCI) && 
+    if ((mca_p->port_format != SDP_PORT_VCCI) &&
         (mca_p->port_format != SDP_PORT_VCCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            SDP_ERROR("%s VCCI not valid for media line %u", 
+            SDP_ERROR("%s VCCI not valid for media line %u",
                       sdp_p->debug_str, level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1481,8 +1481,8 @@ int32 sdp_get_media_vcci (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_media_cid
- * Description: Returns the CID parameter associated with the m= 
- *              media token line.  If CID has not been set 
+ * Description: Returns the CID parameter associated with the m=
+ *              media token line.  If CID has not been set
  *              SDP_INVALID_VALUE will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The level to of the m= media line.  Will be 1-n.
@@ -1503,10 +1503,10 @@ int32 sdp_get_media_cid (void *sdp_ptr, u16 level)
     }
 
     /* Make sure port number is valid for the specified format. */
-    if ((mca_p->port_format != SDP_PORT_VCCI_CID) && 
+    if ((mca_p->port_format != SDP_PORT_VCCI_CID) &&
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            SDP_ERROR("%s CID not valid for media line %u", 
+            SDP_ERROR("%s CID not valid for media line %u",
                       sdp_p->debug_str, level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1517,8 +1517,8 @@ int32 sdp_get_media_cid (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_media_transport
- * Description: Returns the transport type parameter associated with the m= 
- *              media token line.  If transport type has not been set 
+ * Description: Returns the transport type parameter associated with the m=
+ *              media token line.  If transport type has not been set
  *              SDP_TRANSPORT_INVALID will be returned.  If the transport
  *              type is one of the AAL2 variants, the profile routines below
  *              should be used to access multiple profile types and payload
@@ -1545,7 +1545,7 @@ sdp_transport_e sdp_get_media_transport (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_media_num_profiles
- * Description: Returns the number of profiles associated with the m= 
+ * Description: Returns the number of profiles associated with the m=
  *              media token line.  If the media line is invalid, zero will
  *              be returned.  Application must validate the media line
  *              before using this routine.  Multiple profile types per
@@ -1579,17 +1579,17 @@ u16 sdp_get_media_num_profiles (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_media_profile
- * Description: Returns the specified profile type associated with the m= 
- *              media token line.  If the media line or profile number is 
- *              invalid, SDP_TRANSPORT_INVALID will be returned.  
- *              Applications must validate the media line before using this 
- *              routine.  
+ * Description: Returns the specified profile type associated with the m=
+ *              media token line.  If the media line or profile number is
+ *              invalid, SDP_TRANSPORT_INVALID will be returned.
+ *              Applications must validate the media line before using this
+ *              routine.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The level to of the m= media line.  Will be 1-n.
  *              profile_num The specific profile type number to be retrieved.
  * Returns:     The profile type or SDP_TRANSPORT_INVALID.
  */
-sdp_transport_e sdp_get_media_profile (void *sdp_ptr, u16 level, 
+sdp_transport_e sdp_get_media_profile (void *sdp_ptr, u16 level,
                                        u16 profile_num)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -1613,7 +1613,7 @@ sdp_transport_e sdp_get_media_profile (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_get_media_num_payload_types
- * Description: Returns the number of payload types associated with the m= 
+ * Description: Returns the number of payload types associated with the m=
  *              media token line.  If the media line is invalid, zero will
  *              be returned.  Application must validate the media line
  *              before using this routine.
@@ -1639,8 +1639,8 @@ u16 sdp_get_media_num_payload_types (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_get_media_profile_num_payload_types
- * Description: Returns the number of payload types associated with the 
- *              specified profile on the m= media token line.  If the 
+ * Description: Returns the number of payload types associated with the
+ *              specified profile on the m= media token line.  If the
  *              media line or profile number is invalid, zero will
  *              be returned.  Application must validate the media line
  *              and profile before using this routine.
@@ -1673,9 +1673,9 @@ u16 sdp_get_media_profile_num_payload_types (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_get_media_payload_type
- * Description: Returns the payload type of the specified payload for the m= 
- *              media token line.  If the media line or payload number is 
- *              invalid, zero will be returned.  Application must validate 
+ * Description: Returns the payload type of the specified payload for the m=
+ *              media token line.  If the media line or payload number is
+ *              invalid, zero will be returned.  Application must validate
  *              the media line before using this routine.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The level to of the m= media line.  Will be 1-n.
@@ -1733,7 +1733,7 @@ u32 sdp_get_media_payload_type (void *sdp_ptr, u16 level, u16 payload_num,
                     }
                     if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_L16_256K) == 0) {
                         return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_L16));
-                    }                    
+                    }
                     if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_ISAC) == 0) {
                         return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_ISAC));
                     }
@@ -1750,7 +1750,7 @@ u32 sdp_get_media_payload_type (void *sdp_ptr, u16 level, u16 payload_num,
                     }
                     if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_VP8) == 0) {
                         return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_VP8));
-                    }                    
+                    }
                 }
             }
         }
@@ -1759,9 +1759,9 @@ u32 sdp_get_media_payload_type (void *sdp_ptr, u16 level, u16 payload_num,
 }
 
 /* Function:    sdp_get_media_profile_payload_type
- * Description: Returns the payload type of the specified payload for the m= 
- *              media token line.  If the media line or payload number is 
- *              invalid, zero will be returned.  Application must validate 
+ * Description: Returns the payload type of the specified payload for the m=
+ *              media token line.  If the media line or payload number is
+ *              invalid, zero will be returned.  Application must validate
  *              the media line before using this routine.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The level to of the m= media line.  Will be 1-n.
@@ -1772,7 +1772,7 @@ u32 sdp_get_media_payload_type (void *sdp_ptr, u16 level, u16 payload_num,
  * Returns:     Payload type or zero.
  */
 u32 sdp_get_media_profile_payload_type (void *sdp_ptr, u16 level, u16 prof_num,
-                                        u16 payload_num, 
+                                        u16 payload_num,
                                         sdp_payload_ind_e *indicator)
 {
     sdp_t                *sdp_p = (sdp_t *)sdp_ptr;
@@ -1794,7 +1794,7 @@ u32 sdp_get_media_profile_payload_type (void *sdp_ptr, u16 level, u16 prof_num,
         return (0);
     }
 
-    if ((payload_num < 1) || 
+    if ((payload_num < 1) ||
         (payload_num > prof_p->num_payloads[prof_num-1])) {
         return (0);
     }
@@ -1804,7 +1804,7 @@ u32 sdp_get_media_profile_payload_type (void *sdp_ptr, u16 level, u16 prof_num,
 }
 
 /* Function:    sdp_insert_media_line
- * Description: Insert a new media line at the level specified for the 
+ * Description: Insert a new media line at the level specified for the
  *              given SDP.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The new media level to insert.  Will be 1-n.
@@ -1841,7 +1841,7 @@ sdp_result_e sdp_insert_media_line (void *sdp_ptr, u16 level)
         new_mca_p->next_p = sdp_p->mca_p;
         sdp_p->mca_p = new_mca_p;
     } else {
-        /* Find the pointer to the media stream just prior to where 
+        /* Find the pointer to the media stream just prior to where
          * we want to insert the new stream.
          */
         mca_p = sdp_find_media_level(sdp_p, (u16)(level-1));
@@ -1860,7 +1860,7 @@ sdp_result_e sdp_insert_media_line (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_delete_media_line
- * Description: Delete the media line at the level specified for the 
+ * Description: Delete the media line at the level specified for the
  *              given SDP.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The media level to delete.  Will be 1-n.
@@ -1880,7 +1880,7 @@ void sdp_delete_media_line (void *sdp_ptr, u16 level)
         return;
     }
 
-    /* If we're not deleting media line 1, then we need a pointer 
+    /* If we're not deleting media line 1, then we need a pointer
      * to the previous media line so we can relink. */
     if (level == 1) {
         mca_p = sdp_find_media_level(sdp_p, level);
@@ -1925,7 +1925,7 @@ void sdp_delete_media_line (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_set_media_type
- * Description: Sets the value of the media type parameter for the m= 
+ * Description: Sets the value of the media type parameter for the m=
  *              media token line.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The media level to set the param.  Will be 1-n.
@@ -1952,17 +1952,17 @@ sdp_result_e sdp_set_media_type (void *sdp_ptr, u16 level, sdp_media_e media)
 }
 
 /* Function:    sdp_set_media_port_format
- * Description: Sets the value of the port format parameter for the m= 
+ * Description: Sets the value of the port format parameter for the m=
  *              media token line.  Note that this parameter must be set
- *              before any of the port type specific parameters.  If a 
- *              parameter is not valid according to the port format 
+ *              before any of the port type specific parameters.  If a
+ *              parameter is not valid according to the port format
  *              specified, an attempt to set the parameter will fail.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The media level to set the param.  Will be 1-n.
  *              port_format Media type for the media line.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_media_port_format (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_set_media_port_format (void *sdp_ptr, u16 level,
                                         sdp_port_format_e port_format)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -1983,7 +1983,7 @@ sdp_result_e sdp_set_media_port_format (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_set_media_portnum
- * Description: Sets the value of the port number parameter for the m= 
+ * Description: Sets the value of the port number parameter for the m=
  *              media token line.  If the port number is not valid with the
  *              port format specified for the media line, this call will
  *              fail.
@@ -2014,7 +2014,7 @@ sdp_result_e sdp_set_media_portnum (void *sdp_ptr, u16 level, int32 portnum, int
 }
 
 /* Function:    sdp_set_media_portcount
- * Description: Sets the value of the port count parameter for the m= 
+ * Description: Sets the value of the port count parameter for the m=
  *              media token line.  If the port count is not valid with the
  *              port format specified for the media line, this call will
  *              fail.
@@ -2023,7 +2023,7 @@ sdp_result_e sdp_set_media_portnum (void *sdp_ptr, u16 level, int32 portnum, int
  *              num_ports   Port count to set.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_media_portcount (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_set_media_portcount (void *sdp_ptr, u16 level,
                                       int32 num_ports)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -2044,7 +2044,7 @@ sdp_result_e sdp_set_media_portcount (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_set_media_vpi
- * Description: Sets the value of the VPI parameter for the m= 
+ * Description: Sets the value of the VPI parameter for the m=
  *              media token line.  If the VPI is not valid with the
  *              port format specified for the media line, this call will
  *              fail.
@@ -2073,7 +2073,7 @@ sdp_result_e sdp_set_media_vpi (void *sdp_ptr, u16 level, int32 vpi)
 }
 
 /* Function:    sdp_set_media_vci
- * Description: Sets the value of the VCI parameter for the m= 
+ * Description: Sets the value of the VCI parameter for the m=
  *              media token line.  If the VCI is not valid with the
  *              port format specified for the media line, this call will
  *              fail.
@@ -2102,7 +2102,7 @@ sdp_result_e sdp_set_media_vci (void *sdp_ptr, u16 level, u32 vci)
 }
 
 /* Function:    sdp_set_media_vcci
- * Description: Sets the value of the VCCI parameter for the m= 
+ * Description: Sets the value of the VCCI parameter for the m=
  *              media token line.  If the VCCI is not valid with the
  *              port format specified for the media line, this call will
  *              fail.
@@ -2131,7 +2131,7 @@ sdp_result_e sdp_set_media_vcci (void *sdp_ptr, u16 level, int32 vcci)
 }
 
 /* Function:    sdp_set_media_cid
- * Description: Sets the value of the CID parameter for the m= 
+ * Description: Sets the value of the CID parameter for the m=
  *              media token line.  If the CID is not valid with the
  *              port format specified for the media line, this call will
  *              fail.
@@ -2160,14 +2160,14 @@ sdp_result_e sdp_set_media_cid (void *sdp_ptr, u16 level, int32 cid)
 }
 
 /* Function:    sdp_set_media_transport
- * Description: Sets the value of the transport type parameter for the m= 
+ * Description: Sets the value of the transport type parameter for the m=
  *              media token line.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The media level to set the param.  Will be 1-n.
  *              transport   The transport type to set.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_media_transport (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_set_media_transport (void *sdp_ptr, u16 level,
                                       sdp_transport_e transport)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -2197,7 +2197,7 @@ sdp_result_e sdp_set_media_transport (void *sdp_ptr, u16 level,
  *              profile     The profile type to add.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_add_media_profile (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_add_media_profile (void *sdp_ptr, u16 level,
                                     sdp_transport_e profile)
 {
     u16         prof_num;
@@ -2243,7 +2243,7 @@ sdp_result_e sdp_add_media_profile (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_add_media_payload_type
- * Description: Add a new payload type for the media line at the level 
+ * Description: Add a new payload type for the media line at the level
  *              specified. The new payload type will be added at the end
  *              of the payload type list.
  * Parameters:  sdp_ptr      The SDP handle returned by sdp_init_description.
@@ -2253,8 +2253,8 @@ sdp_result_e sdp_add_media_profile (void *sdp_ptr, u16 level,
  *                           NUMERIC or ENUM.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_add_media_payload_type (void *sdp_ptr, u16 level, 
-                                         u16 payload_type, 
+sdp_result_e sdp_add_media_payload_type (void *sdp_ptr, u16 level,
+                                         u16 payload_type,
                                          sdp_payload_ind_e indicator)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -2285,7 +2285,7 @@ sdp_result_e sdp_add_media_payload_type (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_add_media_profile_payload_type
- * Description: Add a new payload type for the media line at the level 
+ * Description: Add a new payload type for the media line at the level
  *              specified. The new payload type will be added at the end
  *              of the payload type list.
  * Parameters:  sdp_ptr      The SDP handle returned by sdp_init_description.
@@ -2296,7 +2296,7 @@ sdp_result_e sdp_add_media_payload_type (void *sdp_ptr, u16 level,
  *                           NUMERIC or ENUM.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_add_media_profile_payload_type (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_add_media_profile_payload_type (void *sdp_ptr, u16 level,
                                                 u16 prof_num, u16 payload_type,
                                                 sdp_payload_ind_e indicator)
 {
@@ -2324,11 +2324,11 @@ sdp_result_e sdp_add_media_profile_payload_type (void *sdp_ptr, u16 level,
         return (SDP_INVALID_PARAMETER);
     }
 
-    if (mca_p->media_profiles_p->num_payloads[prof_num-1] == 
+    if (mca_p->media_profiles_p->num_payloads[prof_num-1] ==
         SDP_MAX_PAYLOAD_TYPES) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s Max number of profile payload types already "
-                      "defined profile %u on media line %u", 
+                      "defined profile %u on media line %u",
                       sdp_p->debug_str, prof_num, level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2360,11 +2360,11 @@ sdp_bw_data_t* sdp_find_bw_line (void *sdp_ptr, u16 level, u16 inst_num)
     sdp_bw_data_t       *bw_data_p;
     sdp_mca_t           *mca_p;
     int                 bw_attr_count=0;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (NULL);
     }
-    
+
     if (level == SDP_SESSION_LEVEL) {
         bw_p = &(sdp_p->bw);
     } else {
@@ -2376,8 +2376,8 @@ sdp_bw_data_t* sdp_find_bw_line (void *sdp_ptr, u16 level, u16 inst_num)
         bw_p = &(mca_p->bw);
     }
 
-    for (bw_data_p = bw_p->bw_data_list; 
-         bw_data_p != NULL; 
+    for (bw_data_p = bw_p->bw_data_list;
+         bw_data_p != NULL;
          bw_data_p = bw_data_p->next_p) {
         bw_attr_count++;
         if (bw_attr_count == inst_num) {
@@ -2399,7 +2399,7 @@ sdp_bw_data_t* sdp_find_bw_line (void *sdp_ptr, u16 level, u16 inst_num)
  *              src_level   The level in the src sdp from where to get the
  *                          attributes.
  *              dst_level   The level in the dst sdp where to put the
- *                          attributes. 
+ *                          attributes.
  * Returns:     SDP_SUCCESS Attributes were successfully copied.
  */
 sdp_result_e sdp_copy_all_bw_lines (void *src_sdp_ptr, void *dst_sdp_ptr,
@@ -2421,8 +2421,8 @@ sdp_result_e sdp_copy_all_bw_lines (void *src_sdp_ptr, void *dst_sdp_ptr,
     if (sdp_verify_sdp_ptr(dst_sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-       
-    /* Find src bw list */ 
+
+    /* Find src bw list */
     if (src_level == SDP_SESSION_LEVEL) {
         src_bw_p = &(src_sdp_p->bw);
     } else {
@@ -2437,7 +2437,7 @@ sdp_result_e sdp_copy_all_bw_lines (void *src_sdp_ptr, void *dst_sdp_ptr,
         src_bw_p = &(mca_p->bw);
     }
 
-    /* Find dst bw list */ 
+    /* Find dst bw list */
     if (dst_level == SDP_SESSION_LEVEL) {
         dst_bw_p = &(dst_sdp_p->bw);
     } else {
@@ -2465,15 +2465,15 @@ sdp_result_e sdp_copy_all_bw_lines (void *src_sdp_ptr, void *dst_sdp_ptr,
 
         /*
          * Enqueue the sdp_bw_data_t instance at the end of the list of
-         * sdp_bw_data_t instances. 
+         * sdp_bw_data_t instances.
          */
         if (dst_bw_p->bw_data_list == NULL) {
             dst_bw_p->bw_data_list = new_bw_data_p;
         } else {
-            for (bw_data_p = dst_bw_p->bw_data_list; 
+            for (bw_data_p = dst_bw_p->bw_data_list;
                  bw_data_p->next_p != NULL;
                  bw_data_p = bw_data_p->next_p) {
-                 
+
                 /*sa_ignore EMPTYLOOP*/
                 ; /* Do nothing. */
             }
@@ -2489,13 +2489,13 @@ sdp_result_e sdp_copy_all_bw_lines (void *src_sdp_ptr, void *dst_sdp_ptr,
 }
 
 /* Function:    sdp_get_bw_modifier
- * Description: Returns the bandwidth modifier parameter from the b= 
+ * Description: Returns the bandwidth modifier parameter from the b=
  *              line.  If no bw modifier has been set ,
  *              SDP_BW_MODIFIER_UNSUPPORTED will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The level from which to get the bw modifier.
- *              inst_num    instance number of bw line at that level. The first 
- *                          instance has a inst_num of 1 and so on. 
+ *              inst_num    instance number of bw line at that level. The first
+ *                          instance has a inst_num of 1 and so on.
  * Returns:     Valid modifer value or SDP_BW_MODIFIER_UNSUPPORTED.
  */
 sdp_bw_modifier_e sdp_get_bw_modifier (void *sdp_ptr, u16 level, u16 inst_num)
@@ -2506,23 +2506,23 @@ sdp_bw_modifier_e sdp_get_bw_modifier (void *sdp_ptr, u16 level, u16 inst_num)
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_BW_MODIFIER_UNSUPPORTED);
     }
-    
+
     bw_data_p = sdp_find_bw_line(sdp_p, level, inst_num);
 
     if (bw_data_p) {
         return (bw_data_p->bw_modifier);
     } else {
         return (SDP_BW_MODIFIER_UNSUPPORTED);
-    } 
+    }
 }
 
 /* Function:    sdp_get_bw_value
- * Description: Returns the bandwidth value parameter from the b= 
- *              line.  
+ * Description: Returns the bandwidth value parameter from the b=
+ *              line.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       The level from which to get the bw value.
- *              inst_num    instance number of bw line at the level. The first 
- *                          instance has a inst_num of 1 and so on. 
+ *              inst_num    instance number of bw line at the level. The first
+ *                          instance has a inst_num of 1 and so on.
  * Returns:     A valid numerical bw value or SDP_INVALID_VALUE.
  */
 int32 sdp_get_bw_value (void *sdp_ptr, u16 level, u16 inst_num)
@@ -2533,7 +2533,7 @@ int32 sdp_get_bw_value (void *sdp_ptr, u16 level, u16 inst_num)
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
+
     bw_data_p = sdp_find_bw_line(sdp_p, level, inst_num);
 
     if (bw_data_p) {
@@ -2558,11 +2558,11 @@ int32 sdp_get_num_bw_lines (void *sdp_ptr, u16 level)
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_bw_t            *bw_p;
     sdp_mca_t           *mca_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
+
     if (level == SDP_SESSION_LEVEL) {
         bw_p = &(sdp_p->bw);
     } else {
@@ -2582,14 +2582,14 @@ int32 sdp_get_num_bw_lines (void *sdp_ptr, u16 level)
  *
  * To specify bandwidth parameters at any level, a bw line must first be
  * added at that level using this function. After this addition, you can set
- * the properties of the added bw line by using sdp_set_bw(). 
+ * the properties of the added bw line by using sdp_set_bw().
  *
  * Note carefully though, that since there can be multiple instances of bw
- * lines at any level, you must specify the instance number when setting 
- * or getting the properties of a bw line at any level.      
+ * lines at any level, you must specify the instance number when setting
+ * or getting the properties of a bw line at any level.
  *
  * This function returns within the inst_num variable, the instance number
- * of the created bw_line at that level. The instance number is 1-based. 
+ * of the created bw_line at that level. The instance number is 1-based.
  * For example:
  *             v=0                               #Session Level
  *             o=mhandley 2890844526 2890842807 IN IP4 126.16.64.4
@@ -2603,10 +2603,10 @@ int32 sdp_get_num_bw_lines (void *sdp_ptr, u16 level)
  *             b=TIAS:8480                       # instance number 2
  *             m=audio 1234 RTP/AVP 0 101 102    # 2nd Media level
  *             b=AS:20                           # instance number 1
- * 
+ *
  * Parameters:
  * sdp_ptr     The SDP handle returned by sdp_init_description.
- * level       The level to create the bw line.  
+ * level       The level to create the bw line.
  * bw_modifier The Type of bandwidth, CT, AS or TIAS.
  * *inst_num   This memory is set with the instance number of the newly
  *             created bw line instance.
@@ -2620,11 +2620,11 @@ sdp_result_e sdp_add_new_bw_line (void *sdp_ptr, u16 level, sdp_bw_modifier_e bw
     sdp_bw_data_t       *bw_data_p = NULL;
 
     *inst_num = 0;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
+
     if (level == SDP_SESSION_LEVEL) {
         bw_p = &(sdp_p->bw);
     } else {
@@ -2656,26 +2656,26 @@ sdp_result_e sdp_add_new_bw_line (void *sdp_ptr, u16 level, sdp_bw_modifier_e bw
     new_bw_data_p->next_p = NULL;
     new_bw_data_p->bw_modifier = SDP_BW_MODIFIER_UNSUPPORTED;
     new_bw_data_p->bw_val = 0;
-  
+
     /*
      * Enqueue the sdp_bw_data_t instance at the end of the list of
-     * sdp_bw_data_t instances. 
+     * sdp_bw_data_t instances.
      */
     if (bw_p->bw_data_list == NULL) {
         bw_p->bw_data_list = new_bw_data_p;
     } else {
-        for (bw_data_p = bw_p->bw_data_list; 
+        for (bw_data_p = bw_p->bw_data_list;
              bw_data_p->next_p != NULL;
              bw_data_p = bw_data_p->next_p) {
 
              /*sa_ignore EMPTYLOOP*/
              ; /* Do nothing. */
         }
-                      
+
         bw_data_p->next_p = new_bw_data_p;
     }
     *inst_num = ++bw_p->bw_data_count;
- 
+
     return (SDP_SUCCESS);
 }
 
@@ -2683,9 +2683,9 @@ sdp_result_e sdp_add_new_bw_line (void *sdp_ptr, u16 level, sdp_bw_modifier_e bw
  * sdp_delete_bw_line
  *
  * Deletes the bw line instance at the specified level.
- * 
+ *
  * sdp_ptr     The SDP handle returned by sdp_init_description.
- * level       The level to delete the bw line.  
+ * level       The level to delete the bw line.
  * inst_num   The instance of the bw line to delete.
  */
 sdp_result_e sdp_delete_bw_line (void *sdp_ptr, u16 level, u16 inst_num)
@@ -2696,11 +2696,11 @@ sdp_result_e sdp_delete_bw_line (void *sdp_ptr, u16 level, u16 inst_num)
     sdp_bw_data_t       *bw_data_p = NULL;
     sdp_bw_data_t       *prev_bw_data_p = NULL;
     int                 bw_data_count = 0;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
+
     if (level == SDP_SESSION_LEVEL) {
         bw_p = &(sdp_p->bw);
     } else {
@@ -2725,7 +2725,7 @@ sdp_result_e sdp_delete_bw_line (void *sdp_ptr, u16 level, u16 inst_num)
 
     if (bw_data_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            SDP_ERROR("%s bw line instance %d not found.", 
+            SDP_ERROR("%s bw line instance %d not found.",
                       sdp_p->debug_str, inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2735,10 +2735,10 @@ sdp_result_e sdp_delete_bw_line (void *sdp_ptr, u16 level, u16 inst_num)
     if (prev_bw_data_p == NULL) {
         bw_p->bw_data_list = bw_data_p->next_p;
     } else {
-        prev_bw_data_p->next_p = bw_data_p->next_p; 
+        prev_bw_data_p->next_p = bw_data_p->next_p;
     }
     bw_p->bw_data_count--;
-    
+
     SDP_FREE(bw_data_p);
     return (SDP_SUCCESS);
 }
@@ -2751,11 +2751,11 @@ sdp_result_e sdp_delete_bw_line (void *sdp_ptr, u16 level, u16 inst_num)
  *
  * Parameters:
  * sdp_ptr     The SDP handle returned by sdp_init_description.
- * level       The level to at which the bw line resides.  
+ * level       The level to at which the bw line resides.
  * inst_num    The instance number of the bw line that is to be set.
  * bw_modifier The Type of bandwidth, CT, AS or TIAS.
  * bw_val      Numerical bandwidth value.
- * 
+ *
  * NOTE: Before calling this function to set the bw line, the bw line must
  * be added using sdp_add_new_bw_line at the required level.
  */
@@ -2769,7 +2769,7 @@ sdp_result_e sdp_set_bw (void *sdp_ptr, u16 level, u16 inst_num,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    if ((bw_modifier < SDP_BW_MODIFIER_AS) || 
+    if ((bw_modifier < SDP_BW_MODIFIER_AS) ||
         (bw_modifier >= SDP_MAX_BW_MODIFIER_VAL)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s Invalid bw modifier type: %d.",
@@ -2778,7 +2778,7 @@ sdp_result_e sdp_set_bw (void *sdp_ptr, u16 level, u16 inst_num,
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
     }
-    
+
     bw_data_p = sdp_find_bw_line(sdp_p, level, inst_num);
     if (bw_data_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -2795,7 +2795,7 @@ sdp_result_e sdp_set_bw (void *sdp_ptr, u16 level, u16 inst_num,
 }
 
 /* Function:    sdp_get_mid_value
- * Description: Returns the mid value parameter from the a= mid: line.  
+ * Description: Returns the mid value parameter from the a= mid: line.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       SDP_MEDIA_LEVEL
  * Returns:     mid value.
@@ -2804,11 +2804,11 @@ int32 sdp_get_mid_value (void *sdp_ptr, u16 level)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t           *mca_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
+
     mca_p = sdp_find_media_level(sdp_p, level);
     if (mca_p == NULL) {
         sdp_p->conf_p->num_invalid_param++;
@@ -2818,7 +2818,7 @@ int32 sdp_get_mid_value (void *sdp_ptr, u16 level)
 }
 
 /* Function:    sdp_set_mid_value
- * Description: Sets the value of the mid value for the 
+ * Description: Sets the value of the mid value for the
  *              a= mid:<val> line.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       SDP_MEDIA_LEVEL
@@ -2829,11 +2829,11 @@ sdp_result_e sdp_set_mid_value (void *sdp_ptr, u16 level, u32 mid_val)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t           *mca_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
+
     mca_p = sdp_find_media_level(sdp_p, level);
     if (mca_p == NULL) {
         sdp_p->conf_p->num_invalid_param++;

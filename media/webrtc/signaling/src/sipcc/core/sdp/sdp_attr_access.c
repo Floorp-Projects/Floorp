@@ -9,7 +9,7 @@
 /* Attribute access routines are all defined by the following parameters.
  *
  * sdp_ptr     The SDP handle returned by sdp_init_description.
- * level       The level the attribute is defined.  Can be either 
+ * level       The level the attribute is defined.  Can be either
  *             SDP_SESSION_LEVEL or 0-n specifying a media line level.
  * inst_num    The instance number of the attribute.  Multiple instances
  *             of a particular attribute may exist at each level and so
@@ -37,20 +37,20 @@
  */
 
 /* Attribute handling:
- * 
+ *
  * There are two basic types of attributes handled by the SDP library,
  * those defined by a= token lines, and those embedded with a=X-cpar lines.
  * The handling for each of these is described here.
- * 
+ *
  * Simple (non X-cpar attributes):
  *
- * Attributes not embedded in a=X-cpar lines are referenced by level and 
+ * Attributes not embedded in a=X-cpar lines are referenced by level and
  * instance number.  For these attributes the capability number is always
  * set to zero.
  *
  * An application will typically process these attributes in one of two ways.
- * With the first method, the application can determine the total number 
- * of attributes defined at a given level and process them one at a time.  
+ * With the first method, the application can determine the total number
+ * of attributes defined at a given level and process them one at a time.
  * For each attribute, the application will query the library to find out
  * what type of attribute it is and which instance within that type. The
  * application can then process this particular attribute referencing it
@@ -64,7 +64,7 @@
  * X-cpar attribute processing:
  *
  * X-cpar attributes can contain embedded attributes.  They are associated
- * with X-cap attribute lines.  An example of X-cap and X-cpar attributes 
+ * with X-cap attribute lines.  An example of X-cap and X-cpar attributes
  * found in an SDP is as follows:
  *
  * v=0
@@ -85,38 +85,38 @@
  * a=X-cap: 7 audio RTP/AVP 100 101
  * a=X-cpar: a=rtpmap:100 g.711/8000
  * a=X-cpar: a=rtpmap:101 g.729/8000
- * 
+ *
  * X-cap attributes can be defined at the SESSION_LEVEL or any media level.
- * An X-cap attr is defined by the level and instance number just like 
- * other attributes.  In the example above, X-cap attrs are defined at 
+ * An X-cap attr is defined by the level and instance number just like
+ * other attributes.  In the example above, X-cap attrs are defined at
  * media level 1 and there are four instances at that level.
- * 
+ *
  * The X-cpar attributes can also be referenced by level and instance number.
- * However, the embedded attribute within an X-cpar attribute must be 
+ * However, the embedded attribute within an X-cpar attribute must be
  * referenced by level, instance number, and capability number.  This is
  * because the X-cpar attribute is associated with a particular X-cap/
- * capability.  
+ * capability.
  * For all attributes that are not embedded within an X-cpar attribute, the
  * cap_num should be referenced as zero.  But for X-cpar attributes, the
  * cap_num is specified to be one of the capability numbers of the previous
  * X-cap line.  The number of capabilities specified in an X-cap line is
- * equal to the number of payloads.  Thus, in this example, the first X-cap 
+ * equal to the number of payloads.  Thus, in this example, the first X-cap
  * attr instance specifies capabilities 1-4, the second specifies capability
  * 5, the third capability 6, and the fourth capabilities 7-8.
  *
- * X-cpar attributes can be processed with methods similar to the two 
+ * X-cpar attributes can be processed with methods similar to the two
  * previously mentioned.  For each X-cap attribute, the application can
  * use one of two methods to process the X-cpar attributes.  First, it
- * can query the total number of X-cpar attributes associated with a 
+ * can query the total number of X-cpar attributes associated with a
  * given X-cap attribute.  The X-cap attribute is here defined by a level
- * and a capability number.  In the example above, the total number of 
+ * and a capability number.  In the example above, the total number of
  * attributes defined is as follows:
  *  level 1, cap_num 1 - total attrs: 3
  *  level 1, cap_num 5 - total attrs: 0
  *  level 1, cap_num 6 - total attrs: 0
  *  level 1, cap_num 7 - total attrs: 2
- * 
- * Note that if the application queried the number of attributes for 
+ *
+ * Note that if the application queried the number of attributes for
  * cap_num 2, 3, or 4, it would also return 3 attrs, and for cap_num
  * 8 the library would return 2.
  *
@@ -124,18 +124,18 @@
  * that capability, it can again query the embedded attribute type and
  * instance.  For example, sdp_get_attr_type would return the following:
  *  level 1, cap_num 1, attr 1 -> attr type fmtp, instance 1
- *  level 1, cap_num 1, attr 2 -> attr type rtpmap, instance 1 
+ *  level 1, cap_num 1, attr 2 -> attr type rtpmap, instance 1
  *  level 1, cap_num 1, attr 3 -> attr type fmtp, instance 2
  *  level 1, cap_num 7, attr 1 -> attr type rtpmap, instance 1
  *  level 1, cap_num 7, attr 2 -> attr type rtpmap, instance 2
- * 
+ *
  * The individual embedded attributes can then be accessed by level,
  * cap_num, and instance number.
  *
  * With the second method for handling X-cpar attributes, the application
  * determines the types of attributes it is interested in.  It can then
- * query the SDP library to determine the number of attributes of that 
- * type found for that level and cap_num, and then process each one at 
+ * query the SDP library to determine the number of attributes of that
+ * type found for that level and cap_num, and then process each one at
  * a time.  e.g., calling sdp_attr_num_instances would give:
  *  level 1, cap_num 1, attr_type fmtp -> two instances
  *  level 1, cap_num 1, attr_type rtpmap -> one instance
@@ -147,9 +147,9 @@
 /* Function:    sdp_add_new_attr
  * Description: Add a new attribute of the specified type at the given
  *              level and capability level or base attribute if cap_num
- *              is zero.  
+ *              is zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              attr_type   The type of attribute to add.
@@ -178,9 +178,9 @@ sdp_result_e sdp_add_new_attr (void *sdp_ptr, u16 level, u8 cap_num,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    if ((cap_num != 0) && 
+    if ((cap_num != 0) &&
         ((attr_type == SDP_ATTR_X_CAP) || (attr_type == SDP_ATTR_X_CPAR) ||
-         (attr_type == SDP_ATTR_X_SQN) || (attr_type == SDP_ATTR_CDSC) || 
+         (attr_type == SDP_ATTR_X_SQN) || (attr_type == SDP_ATTR_CDSC) ||
 	 (attr_type == SDP_ATTR_CPAR) || (attr_type == SDP_ATTR_SQN))) {
         if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
             SDP_WARN("%s Warning: Invalid attribute type for X-cpar/cdsc "
@@ -190,7 +190,7 @@ sdp_result_e sdp_add_new_attr (void *sdp_ptr, u16 level, u8 cap_num,
         return (SDP_INVALID_PARAMETER);
     }
 
-    /* Some attributes are valid only under media level */ 
+    /* Some attributes are valid only under media level */
     if (level == SDP_SESSION_LEVEL) {
         switch (attr_type) {
             case SDP_ATTR_RTCP:
@@ -212,7 +212,7 @@ sdp_result_e sdp_add_new_attr (void *sdp_ptr, u16 level, u8 cap_num,
     new_attr_p->next_p = NULL;
 
     /* Initialize the new attribute structure */
-    if ((new_attr_p->type == SDP_ATTR_X_CAP) || 
+    if ((new_attr_p->type == SDP_ATTR_X_CAP) ||
 	(new_attr_p->type == SDP_ATTR_CDSC)) {
         new_attr_p->attr.cap_p = (sdp_mca_t *)SDP_MALLOC(sizeof(sdp_mca_t));
         if (new_attr_p->attr.cap_p == NULL) {
@@ -232,7 +232,7 @@ sdp_result_e sdp_add_new_attr (void *sdp_ptr, u16 level, u8 cap_num,
 	fmtp_p->bitrate = 0;
 	fmtp_p->cif = 0;
 	fmtp_p->qcif = 0;
-        fmtp_p->profile = SDP_INVALID_VALUE; 
+        fmtp_p->profile = SDP_INVALID_VALUE;
         fmtp_p->level = SDP_INVALID_VALUE;
         fmtp_p->parameter_add = TRUE;
 	for (i=0; i < SDP_NE_NUM_BMAP_WORDS; i++) {
@@ -244,7 +244,7 @@ sdp_result_e sdp_add_new_attr (void *sdp_ptr, u16 level, u8 cap_num,
     } else if (new_attr_p->type == SDP_ATTR_DIRECTION) {
         comediadir_p = &(new_attr_p->attr.comediadir);
 	comediadir_p->role = SDP_MEDIADIR_ROLE_PASSIVE;
-        comediadir_p->conn_info_present = FALSE; 
+        comediadir_p->conn_info_present = FALSE;
     } else if (new_attr_p->type == SDP_ATTR_MPTIME) {
         sdp_mptime_t *mptime = &(new_attr_p->attr.mptime);
         mptime->num_intervals = 0;
@@ -378,7 +378,7 @@ void sdp_copy_attr_fields (sdp_attr_t *src_attr_p, sdp_attr_t *dst_attr_p)
         dst_attr_p->attr.qos.direction = src_attr_p->attr.qos.direction;
         dst_attr_p->attr.qos.confirm   = src_attr_p->attr.qos.confirm;
         break;
-  
+
     case SDP_ATTR_CURR:
         dst_attr_p->attr.curr.type         = src_attr_p->attr.curr.type;
         dst_attr_p->attr.curr.direction    = src_attr_p->attr.curr.direction;
@@ -390,8 +390,8 @@ void sdp_copy_attr_fields (sdp_attr_t *src_attr_p, sdp_attr_t *dst_attr_p)
         dst_attr_p->attr.des.status_type  = src_attr_p->attr.des.status_type;
         dst_attr_p->attr.des.strength     = src_attr_p->attr.des.strength;
         break;
-         
-    
+
+
     case SDP_ATTR_CONF:
         dst_attr_p->attr.conf.type         = src_attr_p->attr.conf.type;
         dst_attr_p->attr.conf.direction    = src_attr_p->attr.conf.direction;
@@ -425,44 +425,44 @@ void sdp_copy_attr_fields (sdp_attr_t *src_attr_p, sdp_attr_t *dst_attr_p)
         dst_attr_p->attr.fmtp.cpcf      = src_attr_p->attr.fmtp.cpcf;
         dst_attr_p->attr.fmtp.bpp      = src_attr_p->attr.fmtp.bpp;
         dst_attr_p->attr.fmtp.hrd      = src_attr_p->attr.fmtp.hrd;
-        
+
         dst_attr_p->attr.fmtp.profile      = src_attr_p->attr.fmtp.profile;
         dst_attr_p->attr.fmtp.level      = src_attr_p->attr.fmtp.level;
         dst_attr_p->attr.fmtp.is_interlace = src_attr_p->attr.fmtp.is_interlace;
-        
-        sstrncpy(dst_attr_p->attr.fmtp.profile_level_id, 
+
+        sstrncpy(dst_attr_p->attr.fmtp.profile_level_id,
                  src_attr_p->attr.fmtp.profile_level_id,
                  SDP_MAX_STRING_LEN+1);
-        sstrncpy(dst_attr_p->attr.fmtp.parameter_sets, 
+        sstrncpy(dst_attr_p->attr.fmtp.parameter_sets,
                  src_attr_p->attr.fmtp.parameter_sets,
                  SDP_MAX_STRING_LEN+1);
         dst_attr_p->attr.fmtp.deint_buf_req =
 		 src_attr_p->attr.fmtp.deint_buf_req;
-        dst_attr_p->attr.fmtp.max_don_diff = 
+        dst_attr_p->attr.fmtp.max_don_diff =
             src_attr_p->attr.fmtp.max_don_diff;
         dst_attr_p->attr.fmtp.init_buf_time =
 		 src_attr_p->attr.fmtp.init_buf_time;
         dst_attr_p->attr.fmtp.packetization_mode =
 		 src_attr_p->attr.fmtp.packetization_mode;
-        dst_attr_p->attr.fmtp.flag = 
+        dst_attr_p->attr.fmtp.flag =
                  src_attr_p->attr.fmtp.flag;
-     
+
         dst_attr_p->attr.fmtp.max_mbps = src_attr_p->attr.fmtp.max_mbps;
-        dst_attr_p->attr.fmtp.max_fs = src_attr_p->attr.fmtp.max_fs;        
+        dst_attr_p->attr.fmtp.max_fs = src_attr_p->attr.fmtp.max_fs;
         dst_attr_p->attr.fmtp.max_cpb = src_attr_p->attr.fmtp.max_cpb;
         dst_attr_p->attr.fmtp.max_dpb = src_attr_p->attr.fmtp.max_dpb;
         dst_attr_p->attr.fmtp.max_br = src_attr_p->attr.fmtp.max_br;
-        dst_attr_p->attr.fmtp.redundant_pic_cap = 
-            src_attr_p->attr.fmtp.redundant_pic_cap;        
+        dst_attr_p->attr.fmtp.redundant_pic_cap =
+            src_attr_p->attr.fmtp.redundant_pic_cap;
         dst_attr_p->attr.fmtp.deint_buf_cap =
 		 src_attr_p->attr.fmtp.deint_buf_cap;
-        dst_attr_p->attr.fmtp.max_rcmd_nalu_size = 
-                 src_attr_p->attr.fmtp.max_rcmd_nalu_size; 
+        dst_attr_p->attr.fmtp.max_rcmd_nalu_size =
+                 src_attr_p->attr.fmtp.max_rcmd_nalu_size;
         dst_attr_p->attr.fmtp.interleaving_depth =
 		 src_attr_p->attr.fmtp.interleaving_depth;
-        dst_attr_p->attr.fmtp.parameter_add = 
+        dst_attr_p->attr.fmtp.parameter_add =
             src_attr_p->attr.fmtp.parameter_add;
-        
+
         dst_attr_p->attr.fmtp.annex_d = src_attr_p->attr.fmtp.annex_d;
         dst_attr_p->attr.fmtp.annex_f = src_attr_p->attr.fmtp.annex_f;
         dst_attr_p->attr.fmtp.annex_i = src_attr_p->attr.fmtp.annex_i;
@@ -470,16 +470,16 @@ void sdp_copy_attr_fields (sdp_attr_t *src_attr_p, sdp_attr_t *dst_attr_p)
         dst_attr_p->attr.fmtp.annex_t = src_attr_p->attr.fmtp.annex_t;
         dst_attr_p->attr.fmtp.annex_k_val = src_attr_p->attr.fmtp.annex_k_val;
         dst_attr_p->attr.fmtp.annex_n_val = src_attr_p->attr.fmtp.annex_n_val;
-        dst_attr_p->attr.fmtp.annex_p_val_picture_resize = 
+        dst_attr_p->attr.fmtp.annex_p_val_picture_resize =
             src_attr_p->attr.fmtp.annex_p_val_picture_resize;
         dst_attr_p->attr.fmtp.annex_p_val_warp  =
             src_attr_p->attr.fmtp.annex_p_val_warp;
-        
+
         dst_attr_p->attr.fmtp.annexb_required  =
             src_attr_p->attr.fmtp.annexb_required;
         dst_attr_p->attr.fmtp.annexa_required  =
             src_attr_p->attr.fmtp.annexa_required;
-        dst_attr_p->attr.fmtp.fmtp_format   
+        dst_attr_p->attr.fmtp.fmtp_format
             = src_attr_p->attr.fmtp.fmtp_format;
 
         for (i=0; i < SDP_NE_NUM_BMAP_WORDS; i++) {
@@ -488,13 +488,13 @@ void sdp_copy_attr_fields (sdp_attr_t *src_attr_p, sdp_attr_t *dst_attr_p)
         break;
 
     case SDP_ATTR_RTPMAP:
-        dst_attr_p->attr.transport_map.payload_num = 
+        dst_attr_p->attr.transport_map.payload_num =
             src_attr_p->attr.transport_map.payload_num;
-        dst_attr_p->attr.transport_map.clockrate = 
+        dst_attr_p->attr.transport_map.clockrate =
           src_attr_p->attr.transport_map.clockrate;
-        dst_attr_p->attr.transport_map.num_chan  = 
+        dst_attr_p->attr.transport_map.num_chan  =
           src_attr_p->attr.transport_map.num_chan;
-        sstrncpy(dst_attr_p->attr.transport_map.encname, 
+        sstrncpy(dst_attr_p->attr.transport_map.encname,
                src_attr_p->attr.transport_map.encname,
                SDP_MAX_STRING_LEN+1);
         break;
@@ -516,10 +516,10 @@ void sdp_copy_attr_fields (sdp_attr_t *src_attr_p, sdp_attr_t *dst_attr_p)
         break;
 
     case SDP_ATTR_X_PC_CODEC:
-        dst_attr_p->attr.pccodec.num_payloads = 
+        dst_attr_p->attr.pccodec.num_payloads =
             src_attr_p->attr.pccodec.num_payloads;
         for (i=0; i < src_attr_p->attr.pccodec.num_payloads; i++) {
-            dst_attr_p->attr.pccodec.payload_type[i] = 
+            dst_attr_p->attr.pccodec.payload_type[i] =
                 src_attr_p->attr.pccodec.payload_type[i];
         }
         break;
@@ -530,7 +530,7 @@ void sdp_copy_attr_fields (sdp_attr_t *src_attr_p, sdp_attr_t *dst_attr_p)
 	    src_attr_p->attr.comediadir.role;
 
 	if (src_attr_p->attr.comediadir.conn_info.nettype) {
-	    dst_attr_p->attr.comediadir.conn_info_present = TRUE; 
+	    dst_attr_p->attr.comediadir.conn_info_present = TRUE;
 	    dst_attr_p->attr.comediadir.conn_info.nettype =
 		src_attr_p->attr.comediadir.conn_info.nettype;
 	    dst_attr_p->attr.comediadir.conn_info.addrtype =
@@ -580,15 +580,15 @@ void sdp_copy_attr_fields (sdp_attr_t *src_attr_p, sdp_attr_t *dst_attr_p)
             src_attr_p->attr.stream_data.group_attr;
         dst_attr_p->attr.stream_data.num_group_id =
              src_attr_p->attr.stream_data.num_group_id;
-        
+
         for (i=0; i < src_attr_p->attr.stream_data.num_group_id; i++) {
-            dst_attr_p->attr.stream_data.group_id_arr[i] = 
+            dst_attr_p->attr.stream_data.group_id_arr[i] =
                 src_attr_p->attr.stream_data.group_id_arr[i];
         }
         break;
 
     case SDP_ATTR_SOURCE_FILTER:
-        dst_attr_p->attr.source_filter.mode = 
+        dst_attr_p->attr.source_filter.mode =
                          src_attr_p->attr.source_filter.mode;
         dst_attr_p->attr.source_filter.nettype =
                          src_attr_p->attr.source_filter.nettype;
@@ -602,7 +602,7 @@ void sdp_copy_attr_fields (sdp_attr_t *src_attr_p, sdp_attr_t *dst_attr_p)
                      src_attr_p->attr.source_filter.src_list[i],
                      SDP_MAX_STRING_LEN+1);
         }
-        dst_attr_p->attr.source_filter.num_src_addr = 
+        dst_attr_p->attr.source_filter.num_src_addr =
                 src_attr_p->attr.source_filter.num_src_addr;
         break;
 
@@ -610,46 +610,46 @@ void sdp_copy_attr_fields (sdp_attr_t *src_attr_p, sdp_attr_t *dst_attr_p)
     case SDP_ATTR_SDESCRIPTIONS:
          /* Tag parameter is not valid for version 2 sdescriptions */
         if (src_attr_p->type == SDP_ATTR_SDESCRIPTIONS) {
-            dst_attr_p->attr.srtp_context.tag = 
+            dst_attr_p->attr.srtp_context.tag =
 	        src_attr_p->attr.srtp_context.tag;
         }
-	
+
 	dst_attr_p->attr.srtp_context.selection_flags =
 	            src_attr_p->attr.srtp_context.selection_flags;
-		    
+
 	dst_attr_p->attr.srtp_context.suite = src_attr_p->attr.srtp_context.suite;
-		    
+
 	dst_attr_p->attr.srtp_context.master_key_size_bytes =
 	            src_attr_p->attr.srtp_context.master_key_size_bytes;
-		    
+
         dst_attr_p->attr.srtp_context.master_salt_size_bytes =
 	            src_attr_p->attr.srtp_context.master_salt_size_bytes;
-		    
+
         bcopy(src_attr_p->attr.srtp_context.master_key,
 	      dst_attr_p->attr.srtp_context.master_key,
 	      SDP_SRTP_MAX_KEY_SIZE_BYTES);
-		 
+
 	bcopy(src_attr_p->attr.srtp_context.master_salt,
 	      dst_attr_p->attr.srtp_context.master_salt,
 	      SDP_SRTP_MAX_SALT_SIZE_BYTES);
-		 
-	
+
+
 	sstrncpy((char*)dst_attr_p->attr.srtp_context.master_key_lifetime,
 	         (char*)src_attr_p->attr.srtp_context.master_key_lifetime,
 		 SDP_SRTP_MAX_LIFETIME_BYTES);
-		 
+
 	sstrncpy((char*)dst_attr_p->attr.srtp_context.mki,
 	         (char*)src_attr_p->attr.srtp_context.mki,
 		 SDP_SRTP_MAX_MKI_SIZE_BYTES);
-		 
+
 	dst_attr_p->attr.srtp_context.mki_size_bytes =
 	            src_attr_p->attr.srtp_context.mki_size_bytes;
-		    
+
 	if (src_attr_p->attr.srtp_context.session_parameters) {
 	    dst_attr_p->attr.srtp_context.session_parameters =
 	                cpr_strdup(src_attr_p->attr.srtp_context.session_parameters);
 	}
-		    
+
         break;
 
     default:
@@ -666,16 +666,16 @@ void sdp_copy_attr_fields (sdp_attr_t *src_attr_p, sdp_attr_t *dst_attr_p)
  *              copied.
  * Description: Add a new attribute of the specified type at the given
  *              level and capability level or base attribute if cap_num
- *              is zero.  
+ *              is zero.
  * Parameters:  src_sdp_ptr The source SDP handle.
  *              dst_sdp_ptr The dest SDP handle.
  *              src_level   The level of the source attribute.
  *              dst_level   The level of the source attribute.
  *              src_cap_num The src capability number associated with the
- *                          attribute if any.  
+ *                          attribute if any.
  *              dst_cap_num The dst capability number associated with the
  *                          attribute if any. Note that src and dst
- *                          cap_num must both be zero or both be non-zero. 
+ *                          cap_num must both be zero or both be non-zero.
  *              src_attr_type  The type of source attribute. This cannot
  *                             be SDP_ATTR_X_CAP or SDP_ATTR_X_CPAR.
  *              src_inst_num   The instance number of the source attr.
@@ -707,7 +707,7 @@ sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
         return (SDP_INVALID_PARAMETER);
     }
 
-    /* Cannot copy X_CAP/CDSC attributes directly using this routine. 
+    /* Cannot copy X_CAP/CDSC attributes directly using this routine.
      * You also can't copy X_CPAR/CPAR attributes by specifying them directly,
      * but you can copy them by giving the corresponding cap_num. */
     if ((src_attr_type == SDP_ATTR_X_CAP) ||
@@ -718,7 +718,7 @@ sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
         return (SDP_INVALID_PARAMETER);
     }
 
-    src_attr_p = sdp_find_attr(src_sdp_p, src_level, src_cap_num, 
+    src_attr_p = sdp_find_attr(src_sdp_p, src_level, src_cap_num,
                                src_attr_type, src_inst_num);
     if (src_attr_p == NULL) {
         if (src_sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -785,7 +785,7 @@ sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
         new_attr_p->attr.qos.direction = src_attr_p->attr.qos.direction;
         new_attr_p->attr.qos.confirm   = src_attr_p->attr.qos.confirm;
         break;
-        
+
     case SDP_ATTR_CURR:
         new_attr_p->attr.curr.type         = src_attr_p->attr.curr.type;
         new_attr_p->attr.curr.direction    = src_attr_p->attr.curr.direction;
@@ -797,7 +797,7 @@ sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
         new_attr_p->attr.des.status_type  = src_attr_p->attr.des.status_type;
         new_attr_p->attr.des.strength     = src_attr_p->attr.des.strength;
         break;
-         
+
     case SDP_ATTR_CONF:
         new_attr_p->attr.conf.type         = src_attr_p->attr.conf.type;
         new_attr_p->attr.conf.direction    = src_attr_p->attr.conf.direction;
@@ -834,40 +834,40 @@ sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
         new_attr_p->attr.fmtp.profile    = src_attr_p->attr.fmtp.profile;
         new_attr_p->attr.fmtp.level      = src_attr_p->attr.fmtp.level;
         new_attr_p->attr.fmtp.is_interlace = src_attr_p->attr.fmtp.is_interlace;
-        
-        sstrncpy(new_attr_p->attr.fmtp.profile_level_id, 
+
+        sstrncpy(new_attr_p->attr.fmtp.profile_level_id,
                 src_attr_p->attr.fmtp.profile_level_id,
                 SDP_MAX_STRING_LEN+1);
-        sstrncpy(new_attr_p->attr.fmtp.parameter_sets, 
+        sstrncpy(new_attr_p->attr.fmtp.parameter_sets,
                 src_attr_p->attr.fmtp.parameter_sets,
                 SDP_MAX_STRING_LEN+1);
         new_attr_p->attr.fmtp.deint_buf_req =
 		 src_attr_p->attr.fmtp.deint_buf_req;
-        new_attr_p->attr.fmtp.max_don_diff = 
+        new_attr_p->attr.fmtp.max_don_diff =
             src_attr_p->attr.fmtp.max_don_diff;
         new_attr_p->attr.fmtp.init_buf_time =
                  src_attr_p->attr.fmtp.init_buf_time;
         new_attr_p->attr.fmtp.packetization_mode =
                  src_attr_p->attr.fmtp.packetization_mode;
-        new_attr_p->attr.fmtp.flag = 
+        new_attr_p->attr.fmtp.flag =
                  src_attr_p->attr.fmtp.flag;
 
         new_attr_p->attr.fmtp.max_mbps = src_attr_p->attr.fmtp.max_mbps;
-        new_attr_p->attr.fmtp.max_fs = src_attr_p->attr.fmtp.max_fs;        
+        new_attr_p->attr.fmtp.max_fs = src_attr_p->attr.fmtp.max_fs;
         new_attr_p->attr.fmtp.max_cpb = src_attr_p->attr.fmtp.max_cpb;
         new_attr_p->attr.fmtp.max_dpb = src_attr_p->attr.fmtp.max_dpb;
         new_attr_p->attr.fmtp.max_br = src_attr_p->attr.fmtp.max_br;
-        new_attr_p->attr.fmtp.redundant_pic_cap = 
-            src_attr_p->attr.fmtp.redundant_pic_cap;        
+        new_attr_p->attr.fmtp.redundant_pic_cap =
+            src_attr_p->attr.fmtp.redundant_pic_cap;
         new_attr_p->attr.fmtp.deint_buf_cap =
 		 src_attr_p->attr.fmtp.deint_buf_cap;
         new_attr_p->attr.fmtp.max_rcmd_nalu_size =
-                 src_attr_p->attr.fmtp.max_rcmd_nalu_size; 
+                 src_attr_p->attr.fmtp.max_rcmd_nalu_size;
         new_attr_p->attr.fmtp.interleaving_depth =
 		 src_attr_p->attr.fmtp.interleaving_depth;
-        new_attr_p->attr.fmtp.parameter_add = 
+        new_attr_p->attr.fmtp.parameter_add =
             src_attr_p->attr.fmtp.parameter_add;
-        
+
         new_attr_p->attr.fmtp.annex_d = src_attr_p->attr.fmtp.annex_d;
         new_attr_p->attr.fmtp.annex_f = src_attr_p->attr.fmtp.annex_f;
         new_attr_p->attr.fmtp.annex_i = src_attr_p->attr.fmtp.annex_i;
@@ -875,16 +875,16 @@ sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
         new_attr_p->attr.fmtp.annex_t = src_attr_p->attr.fmtp.annex_t;
         new_attr_p->attr.fmtp.annex_k_val = src_attr_p->attr.fmtp.annex_k_val;
         new_attr_p->attr.fmtp.annex_n_val = src_attr_p->attr.fmtp.annex_n_val;
-        new_attr_p->attr.fmtp.annex_p_val_picture_resize = 
+        new_attr_p->attr.fmtp.annex_p_val_picture_resize =
             src_attr_p->attr.fmtp.annex_p_val_picture_resize;
         new_attr_p->attr.fmtp.annex_p_val_warp  =
             src_attr_p->attr.fmtp.annex_p_val_warp;
-        
+
 	new_attr_p->attr.fmtp.annexb_required  =
 	                                  src_attr_p->attr.fmtp.annexb_required;
         new_attr_p->attr.fmtp.annexa_required  =
 	                                  src_attr_p->attr.fmtp.annexa_required;
-	new_attr_p->attr.fmtp.fmtp_format   
+	new_attr_p->attr.fmtp.fmtp_format
 	                                  = src_attr_p->attr.fmtp.fmtp_format;
 
         for (i=0; i < SDP_NE_NUM_BMAP_WORDS; i++) {
@@ -893,13 +893,13 @@ sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
         break;
 
     case SDP_ATTR_RTPMAP:
-        new_attr_p->attr.transport_map.payload_num = 
+        new_attr_p->attr.transport_map.payload_num =
             src_attr_p->attr.transport_map.payload_num;
-        new_attr_p->attr.transport_map.clockrate = 
+        new_attr_p->attr.transport_map.clockrate =
           src_attr_p->attr.transport_map.clockrate;
-        new_attr_p->attr.transport_map.num_chan  = 
+        new_attr_p->attr.transport_map.num_chan  =
           src_attr_p->attr.transport_map.num_chan;
-        sstrncpy(new_attr_p->attr.transport_map.encname, 
+        sstrncpy(new_attr_p->attr.transport_map.encname,
                src_attr_p->attr.transport_map.encname,
                SDP_MAX_STRING_LEN+1);
         break;
@@ -921,10 +921,10 @@ sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
         break;
 
     case SDP_ATTR_X_PC_CODEC:
-        new_attr_p->attr.pccodec.num_payloads = 
+        new_attr_p->attr.pccodec.num_payloads =
             src_attr_p->attr.pccodec.num_payloads;
         for (i=0; i < src_attr_p->attr.pccodec.num_payloads; i++) {
-            new_attr_p->attr.pccodec.payload_type[i] = 
+            new_attr_p->attr.pccodec.payload_type[i] =
                 src_attr_p->attr.pccodec.payload_type[i];
         }
         break;
@@ -935,7 +935,7 @@ sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
 	    src_attr_p->attr.comediadir.role;
 
 	if (src_attr_p->attr.comediadir.conn_info.nettype) {
-	    new_attr_p->attr.comediadir.conn_info_present = TRUE; 
+	    new_attr_p->attr.comediadir.conn_info_present = TRUE;
 	    new_attr_p->attr.comediadir.conn_info.nettype =
 		src_attr_p->attr.comediadir.conn_info.nettype;
 	    new_attr_p->attr.comediadir.conn_info.addrtype =
@@ -967,10 +967,10 @@ sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
         break;
 
     case SDP_ATTR_MPTIME:
-        new_attr_p->attr.mptime.num_intervals = 
+        new_attr_p->attr.mptime.num_intervals =
             src_attr_p->attr.mptime.num_intervals;
         for (i=0; i < src_attr_p->attr.mptime.num_intervals; i++) {
-            new_attr_p->attr.mptime.intervals[i] = 
+            new_attr_p->attr.mptime.intervals[i] =
                 src_attr_p->attr.mptime.intervals[i];
         }
         break;
@@ -985,15 +985,15 @@ sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
         sstrncpy(new_attr_p->attr.stream_data.x_confid,
                  src_attr_p->attr.stream_data.x_confid,SDP_MAX_STRING_LEN+1);
 	break;
-        
+
     case SDP_ATTR_GROUP:
         new_attr_p->attr.stream_data.group_attr =
             src_attr_p->attr.stream_data.group_attr;
         new_attr_p->attr.stream_data.num_group_id =
             src_attr_p->attr.stream_data.num_group_id;
-        
+
         for (i=0; i < src_attr_p->attr.stream_data.num_group_id; i++) {
-            new_attr_p->attr.stream_data.group_id_arr[i] = 
+            new_attr_p->attr.stream_data.group_id_arr[i] =
                 src_attr_p->attr.stream_data.group_id_arr[i];
         }
         break;
@@ -1021,47 +1021,47 @@ sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
     case SDP_ATTR_SDESCRIPTIONS:
         /* Tag parameter is only valid for version 9 sdescriptions */
         if (src_attr_type == SDP_ATTR_SDESCRIPTIONS) {
-            new_attr_p->attr.srtp_context.tag = 
+            new_attr_p->attr.srtp_context.tag =
 	        src_attr_p->attr.srtp_context.tag;
 	}
-	
-	new_attr_p->attr.srtp_context.suite =  
+
+	new_attr_p->attr.srtp_context.suite =
 	            src_attr_p->attr.srtp_context.suite;
-		    
-	new_attr_p->attr.srtp_context.selection_flags =  
+
+	new_attr_p->attr.srtp_context.selection_flags =
 	            src_attr_p->attr.srtp_context.selection_flags;
-		    
+
 	new_attr_p->attr.srtp_context.master_key_size_bytes =
 	            src_attr_p->attr.srtp_context.master_key_size_bytes;
-		    
+
         new_attr_p->attr.srtp_context.master_salt_size_bytes =
 	            src_attr_p->attr.srtp_context.master_salt_size_bytes;
-		    
+
         bcopy(src_attr_p->attr.srtp_context.master_key,
 	      new_attr_p->attr.srtp_context.master_key,
 	      SDP_SRTP_MAX_KEY_SIZE_BYTES);
-		 
+
 	bcopy(src_attr_p->attr.srtp_context.master_salt,
 	      new_attr_p->attr.srtp_context.master_salt,
 	      SDP_SRTP_MAX_SALT_SIZE_BYTES);
-		 
-	
+
+
 	sstrncpy((char*)new_attr_p->attr.srtp_context.master_key_lifetime,
 	         (char*)src_attr_p->attr.srtp_context.master_key_lifetime,
 		 SDP_SRTP_MAX_LIFETIME_BYTES);
-		 
+
 	sstrncpy((char*)new_attr_p->attr.srtp_context.mki,
 	         (char*)src_attr_p->attr.srtp_context.mki,
 		 SDP_SRTP_MAX_MKI_SIZE_BYTES);
-		 
+
 	new_attr_p->attr.srtp_context.mki_size_bytes =
 	            src_attr_p->attr.srtp_context.mki_size_bytes;
-		    
+
 	if (src_attr_p->attr.srtp_context.session_parameters) {
 	    new_attr_p->attr.srtp_context.session_parameters =
 	                cpr_strdup(src_attr_p->attr.srtp_context.session_parameters);
 	}
-		    
+
         break;
 
     default:
@@ -1112,7 +1112,7 @@ sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
         } else {
             for (prev_attr_p = cap_p->media_attrs_p;
                  prev_attr_p->next_p != NULL;
-                 prev_attr_p = prev_attr_p->next_p) {                  
+                 prev_attr_p = prev_attr_p->next_p) {
                  ; /* Empty for */
             }
             prev_attr_p->next_p = new_attr_p;
@@ -1205,10 +1205,10 @@ sdp_result_e sdp_copy_all_attrs (void *src_sdp_ptr, void *dst_sdp_ptr,
             /* Simple attr type - copy over all the attr info. */
             sdp_copy_attr_fields(src_attr_p, new_attr_p);
         } else {
-            /* X-cap/cdsc attrs must be handled differently. Allocate an 
+            /* X-cap/cdsc attrs must be handled differently. Allocate an
              * mca structure and copy over any X-cpar/cdsc attrs. */
-            
-            new_attr_p->attr.cap_p = 
+
+            new_attr_p->attr.cap_p =
                 (sdp_mca_t *)SDP_MALLOC(sizeof(sdp_mca_t));
             if (new_attr_p->attr.cap_p == NULL) {
 	        sdp_free_attr(new_attr_p);
@@ -1237,9 +1237,9 @@ sdp_result_e sdp_copy_all_attrs (void *src_sdp_ptr, void *dst_sdp_ptr,
             dst_cap_p->mid           = src_cap_p->mid;
 
             for (i=0; i < SDP_MAX_PAYLOAD_TYPES; i++) {
-                new_attr_p->attr.cap_p->payload_indicator[i] = 
+                new_attr_p->attr.cap_p->payload_indicator[i] =
                     src_attr_p->attr.cap_p->payload_indicator[i];
-                new_attr_p->attr.cap_p->payload_type[i] = 
+                new_attr_p->attr.cap_p->payload_type[i] =
                     src_attr_p->attr.cap_p->payload_type[i];
             }
 
@@ -1254,7 +1254,7 @@ sdp_result_e sdp_copy_all_attrs (void *src_sdp_ptr, void *dst_sdp_ptr,
 		    sdp_free_attr (new_attr_p);
                     return (SDP_NO_RESOURCE);
                 }
-                
+
                 /* Copy X-cpar/cpar attribute info. */
                 sdp_copy_attr_fields(src_cap_attr_p, new_cap_attr_p);
 
@@ -1295,10 +1295,10 @@ sdp_result_e sdp_copy_all_attrs (void *src_sdp_ptr, void *dst_sdp_ptr,
 }
 
 /* Function:    sdp_attr_num_instances
- * Description: Get the number of attributes of the specified type at 
+ * Description: Get the number of attributes of the specified type at
  *              the given level and capability level.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              attr_type   The type of attribute to add.
@@ -1323,7 +1323,7 @@ sdp_result_e sdp_attr_num_instances (void *sdp_ptr, u16 level, u8 cap_num,
 
     rc = sdp_find_attr_list(sdp_p, level, cap_num, &attr_p, fname);
     if (rc == SDP_SUCCESS) {
-        /* Found the attr list. Count the number of attrs of the given 
+        /* Found the attr list. Count the number of attrs of the given
          * type at this level. */
         for (; attr_p != NULL; attr_p = attr_p->next_p) {
             if (attr_p->type == attr_type) {
@@ -1338,10 +1338,10 @@ sdp_result_e sdp_attr_num_instances (void *sdp_ptr, u16 level, u8 cap_num,
 
 
 /* Function:    sdp_get_total_attrs
- * Description: Get the total number of attributes at the given level and 
+ * Description: Get the total number of attributes at the given level and
  *              capability level.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              num_attrs   Pointer to a u16 in which to return the
@@ -1365,7 +1365,7 @@ sdp_result_e sdp_get_total_attrs (void *sdp_ptr, u16 level, u8 cap_num,
 
     rc = sdp_find_attr_list(sdp_p, level, cap_num, &attr_p, fname);
     if (rc == SDP_SUCCESS) {
-        /* Found the attr list. Count the total number of attrs  
+        /* Found the attr list. Count the total number of attrs
          * at this level. */
         for (; attr_p != NULL; attr_p = attr_p->next_p) {
             (*num_attrs)++;
@@ -1383,7 +1383,7 @@ sdp_result_e sdp_get_total_attrs (void *sdp_ptr, u16 level, u8 cap_num,
  *              the attribute type and the instance number of that particular
  *              type of attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              attr_num    Attribute number to retrieve. This is an overall
@@ -1412,7 +1412,7 @@ sdp_result_e sdp_get_attr_type (void *sdp_ptr, u16 level, u8 cap_num,
 
     if (attr_num < 1) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            SDP_ERROR("%s %s, invalid attr num specified (%u) at level %u", 
+            SDP_ERROR("%s %s, invalid attr num specified (%u) at level %u",
                       sdp_p->debug_str, fname, attr_num, level);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1444,21 +1444,21 @@ sdp_result_e sdp_get_attr_type (void *sdp_ptr, u16 level, u8 cap_num,
 
 /* Internal routine to free the memory associated with an attribute.
  * Certain attributes allocate additional memory.  Free this and then
- * free the attribute itself.  
- * Note that this routine may be called at any point (i.e., may be 
- * called due to a failure case) and so the additional memory 
- * associated with an attribute may or may not have been already 
+ * free the attribute itself.
+ * Note that this routine may be called at any point (i.e., may be
+ * called due to a failure case) and so the additional memory
+ * associated with an attribute may or may not have been already
  * allocated. This routine should check this carefully.
  */
-void sdp_free_attr (sdp_attr_t *attr_p) 
+void sdp_free_attr (sdp_attr_t *attr_p)
 {
     sdp_mca_t   *cap_p;
     sdp_attr_t  *cpar_p;
     sdp_attr_t  *next_cpar_p;
 
-    /* If this is an X-cap/cdsc attr, free the cap_p structure and 
+    /* If this is an X-cap/cdsc attr, free the cap_p structure and
      * all X-cpar/cpar attributes. */
-    if ((attr_p->type == SDP_ATTR_X_CAP) || 
+    if ((attr_p->type == SDP_ATTR_X_CAP) ||
 	(attr_p->type == SDP_ATTR_CDSC)) {
         cap_p = attr_p->attr.cap_p;
         if (cap_p != NULL) {
@@ -1483,7 +1483,7 @@ void sdp_free_attr (sdp_attr_t *attr_p)
 /* Function:    sdp_delete_attr
  * Description: Delete the specified attribute from the SDP structure.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              attr_type   The type of attribute to delete.
@@ -1550,7 +1550,7 @@ sdp_result_e sdp_delete_attr (void *sdp_ptr, u16 level, u8 cap_num,
             if (attr_p == NULL) {
                 if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
                     SDP_ERROR("%s Delete attribute (%s) instance %d "
-                              "not found.", sdp_p->debug_str, 
+                              "not found.", sdp_p->debug_str,
                               sdp_get_attr_name(attr_type), inst_num);
                 }
                 sdp_p->conf_p->num_invalid_param++;
@@ -1603,10 +1603,10 @@ sdp_result_e sdp_delete_attr (void *sdp_ptr, u16 level, u8 cap_num,
 
 
 /* Function:    sdp_delete_all_attrs
- * Description: Delete all attributes at the specified level from 
+ * Description: Delete all attributes at the specified level from
  *              the SDP structure.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  * Returns:     SDP_SUCCESS            Attributes were deleted successfully.
@@ -1680,12 +1680,12 @@ sdp_result_e sdp_delete_all_attrs (void *sdp_ptr, u16 level, u8 cap_num)
  *                          filled in on return if successful.
  *              fname       String function name calling this routine.
  *                          Use for printing debug.
- * Returns:     SDP_SUCCESS 
- *              SDP_INVALID_MEDIA_LEVEL 
- *              SDP_INVALID_CAPABILITY 
+ * Returns:     SDP_SUCCESS
+ *              SDP_INVALID_MEDIA_LEVEL
+ *              SDP_INVALID_CAPABILITY
  *              SDP_FAILURE
  */
-sdp_result_e sdp_find_attr_list (sdp_t *sdp_p, u16 level, u8 cap_num, 
+sdp_result_e sdp_find_attr_list (sdp_t *sdp_p, u16 level, u8 cap_num,
                                  sdp_attr_t **attr_p, char *fname)
 {
     sdp_mca_t   *mca_p;
@@ -1727,16 +1727,16 @@ sdp_result_e sdp_find_attr_list (sdp_t *sdp_p, u16 level, u8 cap_num,
 }
 
 /* Function:    sdp_find_attr
- * Description: Find the specified attribute in an SDP structure.  
+ * Description: Find the specified attribute in an SDP structure.
  *              Note: This is not an API for the application but an internal
  *              routine used by the SDP library.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              attr_type   The type of attribute to find.
  *              inst_num    The instance num of the attribute to delete.
- *                          Range should be (1 - max num insts of this 
+ *                          Range should be (1 - max num insts of this
  *                          particular type of attribute at this level).
  * Returns:     Pointer to the attribute or NULL if not found.
  */
@@ -1801,11 +1801,11 @@ sdp_attr_t *sdp_find_attr (sdp_t *sdp_p, u16 level, u8 cap_num,
 }
 
 /* Function:    sdp_find_capability
- * Description: Find the specified capability attribute in an SDP structure.  
+ * Description: Find the specified capability attribute in an SDP structure.
  *              Note: This is not an API for the application but an internal
  *              routine used by the SDP library.
  * Parameters:  sdp_p       The SDP handle.
- *              level       The level to check for the capability.  
+ *              level       The level to check for the capability.
  *              cap_num     The capability number to locate.
  * Returns:     Pointer to the capability attribute or NULL if not found.
  */
@@ -1819,7 +1819,7 @@ sdp_attr_t *sdp_find_capability (sdp_t *sdp_p, u16 level, u8 cap_num)
     if (level == SDP_SESSION_LEVEL) {
         for (attr_p = sdp_p->sess_attrs_p; attr_p != NULL;
              attr_p = attr_p->next_p) {
-            if ((attr_p->type == SDP_ATTR_X_CAP) || 
+            if ((attr_p->type == SDP_ATTR_X_CAP) ||
 	        (attr_p->type == SDP_ATTR_CDSC)) {
                 cap_p = attr_p->attr.cap_p;
                 cur_cap_num += cap_p->num_payloads;
@@ -1836,7 +1836,7 @@ sdp_attr_t *sdp_find_capability (sdp_t *sdp_p, u16 level, u8 cap_num)
         }
         for (attr_p = mca_p->media_attrs_p; attr_p != NULL;
              attr_p = attr_p->next_p) {
-            if ((attr_p->type == SDP_ATTR_X_CAP) || 
+            if ((attr_p->type == SDP_ATTR_X_CAP) ||
 	        (attr_p->type == SDP_ATTR_CDSC)) {
                 cap_p = attr_p->attr.cap_p;
                 cur_cap_num += cap_p->num_payloads;
@@ -1859,17 +1859,17 @@ sdp_attr_t *sdp_find_capability (sdp_t *sdp_p, u16 level, u8 cap_num)
 
 /* Function:    sdp_attr_valid(void *sdp_ptr)
  * Description: Returns true or false depending on whether the specified
- *              instance of the given attribute has been defined at the 
+ *              instance of the given attribute has been defined at the
  *              given level.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              attr_type   The attribute type to validate.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  * Returns:     TRUE or FALSE.
  */
-tinybool sdp_attr_valid (void *sdp_ptr, sdp_attr_e attr_type, u16 level, 
+tinybool sdp_attr_valid (void *sdp_ptr, sdp_attr_e attr_type, u16 level,
                          u8 cap_num, u16 inst_num)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -1896,7 +1896,7 @@ tinybool sdp_attr_valid (void *sdp_ptr, sdp_attr_e attr_type, u16 level,
  *              and framing.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              attr_type   The simple string attribute type.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -1912,9 +1912,9 @@ const char *sdp_attr_get_simple_string (void *sdp_ptr, sdp_attr_e attr_type,
         return (NULL);
     }
 
-    if ((attr_type != SDP_ATTR_BEARER) && 
+    if ((attr_type != SDP_ATTR_BEARER) &&
         (attr_type != SDP_ATTR_CALLED) &&
-        (attr_type != SDP_ATTR_CONN_TYPE) && 
+        (attr_type != SDP_ATTR_CONN_TYPE) &&
         (attr_type != SDP_ATTR_DIALED) &&
         (attr_type != SDP_ATTR_DIALING) &&
         (attr_type != SDP_ATTR_FRAMING) &&
@@ -1934,7 +1934,7 @@ const char *sdp_attr_get_simple_string (void *sdp_ptr, sdp_attr_e attr_type,
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s Attribute %s, level %u instance %u not found.",
-                      sdp_p->debug_str, sdp_get_attr_name(attr_type), 
+                      sdp_p->debug_str, sdp_get_attr_name(attr_type),
                       level, inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -1949,13 +1949,13 @@ const char *sdp_attr_get_simple_string (void *sdp_ptr, sdp_attr_e attr_type,
  *              routine can only be called for attributes that have just
  *              one string parameter.  The string is copied into the SDP
  *              structure so application memory will not be referenced by
- *              the SDP library. 
+ *              the SDP library.
  *              Attributes with a simple string parameter currently include:
  *              bearer, called, connection_type, dialed, dialing, and
  *              framing.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              attr_type   The simple string attribute type.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -1974,9 +1974,9 @@ sdp_result_e sdp_attr_set_simple_string (void *sdp_ptr, sdp_attr_e attr_type,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    if ((attr_type != SDP_ATTR_BEARER) && 
+    if ((attr_type != SDP_ATTR_BEARER) &&
         (attr_type != SDP_ATTR_CALLED) &&
-        (attr_type != SDP_ATTR_CONN_TYPE) && 
+        (attr_type != SDP_ATTR_CONN_TYPE) &&
         (attr_type != SDP_ATTR_DIALED) &&
         (attr_type != SDP_ATTR_DIALING) &&
         (attr_type != SDP_ATTR_FRAMING) &&
@@ -2002,7 +2002,7 @@ sdp_result_e sdp_attr_set_simple_string (void *sdp_ptr, sdp_attr_e attr_type,
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
     } else {
-        sstrncpy(attr_p->attr.string_val, string_parm, 
+        sstrncpy(attr_p->attr.string_val, string_parm,
                  sizeof(attr_p->attr.string_val));
         return (SDP_SUCCESS);
     }
@@ -2014,7 +2014,7 @@ sdp_result_e sdp_attr_set_simple_string (void *sdp_ptr, sdp_attr_e attr_type,
  *              one u32 parameter.  If the given attribute is not defined,
  *              zero will be returned.  There is no way for the application
  *              to determine if zero is the actual value or the attribute
- *              wasn't defined, so the application must use the 
+ *              wasn't defined, so the application must use the
  *              sdp_attr_valid function to determine this.
  *              Attributes with a simple u32 parameter currently include:
  *              eecid, ptime, T38FaxVersion, T38maxBitRate, T38FaxMaxBuffer,
@@ -2022,7 +2022,7 @@ sdp_result_e sdp_attr_set_simple_string (void *sdp_ptr, sdp_attr_e attr_type,
  *              TC2PayloadBytes, TC2WindowSize, rtcp.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              attr_type   The simple u32 attribute type.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -2038,10 +2038,10 @@ u32 sdp_attr_get_simple_u32 (void *sdp_ptr, sdp_attr_e attr_type, u16 level,
         return (0);
     }
 
-    if ((attr_type != SDP_ATTR_EECID) && 
+    if ((attr_type != SDP_ATTR_EECID) &&
         (attr_type != SDP_ATTR_PTIME) &&
         (attr_type != SDP_ATTR_MAXPTIME) &&
-        (attr_type != SDP_ATTR_T38_VERSION) && 
+        (attr_type != SDP_ATTR_T38_VERSION) &&
         (attr_type != SDP_ATTR_T38_MAXBITRATE) &&
         (attr_type != SDP_ATTR_T38_MAXBUFFER) &&
         (attr_type != SDP_ATTR_T38_MAXDGRAM) &&
@@ -2076,7 +2076,7 @@ u32 sdp_attr_get_simple_u32 (void *sdp_ptr, sdp_attr_e attr_type, u16 level,
 }
 
 /* Function:    sdp_attr_set_simple_u32
- * Description: Sets the value of an unsigned 32-bit attribute parameter.  
+ * Description: Sets the value of an unsigned 32-bit attribute parameter.
  *              This routine can only be called for attributes that have just
  *              one u32 parameter.
  *              Attributes with a simple u32 parameter currently include:
@@ -2085,7 +2085,7 @@ u32 sdp_attr_get_simple_u32 (void *sdp_ptr, sdp_attr_e attr_type, u16 level,
  *              TC2PayloadBytes, TC2WindowSize, rtcp.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              attr_type   The simple u32 attribute type.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -2093,7 +2093,7 @@ u32 sdp_attr_get_simple_u32 (void *sdp_ptr, sdp_attr_e attr_type, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_simple_u32 (void *sdp_ptr, sdp_attr_e attr_type, 
+sdp_result_e sdp_attr_set_simple_u32 (void *sdp_ptr, sdp_attr_e attr_type,
                            u16 level, u8 cap_num, u16 inst_num, u32 num_parm)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -2103,10 +2103,10 @@ sdp_result_e sdp_attr_set_simple_u32 (void *sdp_ptr, sdp_attr_e attr_type,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    if ((attr_type != SDP_ATTR_EECID) && 
+    if ((attr_type != SDP_ATTR_EECID) &&
         (attr_type != SDP_ATTR_PTIME) &&
         (attr_type != SDP_ATTR_MAXPTIME) &&
-        (attr_type != SDP_ATTR_T38_VERSION) && 
+        (attr_type != SDP_ATTR_T38_VERSION) &&
         (attr_type != SDP_ATTR_T38_MAXBITRATE) &&
         (attr_type != SDP_ATTR_T38_MAXBUFFER) &&
         (attr_type != SDP_ATTR_T38_MAXDGRAM) &&
@@ -2148,14 +2148,14 @@ sdp_result_e sdp_attr_set_simple_u32 (void *sdp_ptr, sdp_attr_e attr_type,
  *              one boolean parameter.  If the given attribute is not defined,
  *              FALSE will be returned.  There is no way for the application
  *              to determine if FALSE is the actual value or the attribute
- *              wasn't defined, so the application must use the 
+ *              wasn't defined, so the application must use the
  *              sdp_attr_valid function to determine this.
  *              Attributes with a simple boolean parameter currently include:
- *              T38FaxFillBitRemoval, T38FaxTranscodingMMR, 
+ *              T38FaxFillBitRemoval, T38FaxTranscodingMMR,
  *              T38FaxTranscodingJBIG, and TMRGwXid.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              attr_type   The simple boolean attribute type.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -2171,7 +2171,7 @@ tinybool sdp_attr_get_simple_boolean (void *sdp_ptr, sdp_attr_e attr_type,
         return (FALSE);
     }
 
-    if ((attr_type != SDP_ATTR_T38_FILLBITREMOVAL) && 
+    if ((attr_type != SDP_ATTR_T38_FILLBITREMOVAL) &&
         (attr_type != SDP_ATTR_T38_TRANSCODINGMMR) &&
         (attr_type != SDP_ATTR_T38_TRANSCODINGJBIG) &&
         (attr_type != SDP_ATTR_TMRGWXID)) {
@@ -2198,15 +2198,15 @@ tinybool sdp_attr_get_simple_boolean (void *sdp_ptr, sdp_attr_e attr_type,
 }
 
 /* Function:    sdp_attr_set_simple_boolean
- * Description: Sets the value of a boolean attribute parameter.  
+ * Description: Sets the value of a boolean attribute parameter.
  *              This routine can only be called for attributes that have just
  *              one boolean parameter.
  *              Attributes with a simple boolean parameter currently include:
- *              T38FaxFillBitRemoval, T38FaxTranscodingMMR, 
+ *              T38FaxFillBitRemoval, T38FaxTranscodingMMR,
  *              T38FaxTranscodingJBIG, and TMRGwXid.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              attr_type   The simple boolean attribute type.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -2225,7 +2225,7 @@ sdp_result_e sdp_attr_set_simple_boolean (void *sdp_ptr, sdp_attr_e attr_type,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    if ((attr_type != SDP_ATTR_T38_FILLBITREMOVAL) && 
+    if ((attr_type != SDP_ATTR_T38_FILLBITREMOVAL) &&
         (attr_type != SDP_ATTR_T38_TRANSCODINGMMR) &&
         (attr_type != SDP_ATTR_T38_TRANSCODINGJBIG) &&
         (attr_type != SDP_ATTR_TMRGWXID)) {
@@ -2259,10 +2259,10 @@ sdp_result_e sdp_attr_set_simple_boolean (void *sdp_ptr, sdp_attr_e attr_type,
  * within the maxprate attribute.
  *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to set.
  *
- * Returns a pointer to a constant char array that stores the packet-rate, 
+ * Returns a pointer to a constant char array that stores the packet-rate,
  * OR null if the attribute does not exist.
  */
 const char*
@@ -2279,7 +2279,7 @@ sdp_attr_get_maxprate (void *sdp_ptr, u16 level, u16 inst_num)
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s Attribute %s, level %u instance %u not found.",
-                      sdp_p->debug_str, sdp_get_attr_name(SDP_ATTR_MAXPRATE), 
+                      sdp_p->debug_str, sdp_get_attr_name(SDP_ATTR_MAXPRATE),
                       level, inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2298,12 +2298,12 @@ sdp_attr_get_maxprate (void *sdp_ptr, u16 level, u16 inst_num)
  *
  *    max-p-rate-def = "a" "=" "maxprate" ":" packet-rate CRLF
  *    packet-rate = 1*DIGIT ["." 1*DIGIT]
- * 
- * 
+ *
+ *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to set.
- *              string_parm A string that contains the value of packet-rate 
+ *              string_parm A string that contains the value of packet-rate
  *                          that needs to be advertised.
  *
  * Note that we use a string to set the packet-rate, so the application layer
@@ -2322,7 +2322,7 @@ sdp_attr_get_maxprate (void *sdp_ptr, u16 level, u16 inst_num)
  * SDP_SUCCESS - If we are successfully able to set the maxprate attribute.
  */
 sdp_result_e
-sdp_attr_set_maxprate (void *sdp_ptr, u16 level, u16 inst_num, 
+sdp_attr_set_maxprate (void *sdp_ptr, u16 level, u16 inst_num,
                        const char *string_parm)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -2350,18 +2350,18 @@ sdp_attr_set_maxprate (void *sdp_ptr, u16 level, u16 inst_num,
             return (SDP_INVALID_PARAMETER);
         }
 
-        sstrncpy(attr_p->attr.string_val, string_parm, 
+        sstrncpy(attr_p->attr.string_val, string_parm,
                  sizeof(attr_p->attr.string_val));
         return (SDP_SUCCESS);
     }
 }
 
 /* Function:    sdp_attr_get_t38ratemgmt
- * Description: Returns the value of the t38ratemgmt attribute 
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_T38_UNKNOWN_RATE is returned.  
+ * Description: Returns the value of the t38ratemgmt attribute
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_T38_UNKNOWN_RATE is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -2377,7 +2377,7 @@ sdp_t38_ratemgmt_e sdp_attr_get_t38ratemgmt (void *sdp_ptr, u16 level,
         return (SDP_T38_UNKNOWN_RATE);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_T38_RATEMGMT, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -2393,9 +2393,9 @@ sdp_t38_ratemgmt_e sdp_attr_get_t38ratemgmt (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_set_t38ratemgmt
  * Description: Sets the value of the t38ratemgmt attribute parameter
- *              for the given attribute. 
+ *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -2403,7 +2403,7 @@ sdp_t38_ratemgmt_e sdp_attr_get_t38ratemgmt (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_t38ratemgmt (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_t38ratemgmt (void *sdp_ptr, u16 level,
                                        u8 cap_num, u16 inst_num,
                                        sdp_t38_ratemgmt_e t38ratemgmt)
 {
@@ -2414,7 +2414,7 @@ sdp_result_e sdp_attr_set_t38ratemgmt (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_T38_RATEMGMT, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -2431,11 +2431,11 @@ sdp_result_e sdp_attr_set_t38ratemgmt (void *sdp_ptr, u16 level,
 
 
 /* Function:    sdp_attr_get_t38udpec
- * Description: Returns the value of the t38udpec attribute 
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_T38_UDPEC_UNKNOWN is returned.  
+ * Description: Returns the value of the t38udpec attribute
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_T38_UDPEC_UNKNOWN is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -2451,7 +2451,7 @@ sdp_t38_udpec_e sdp_attr_get_t38udpec (void *sdp_ptr, u16 level,
         return (SDP_T38_UDPEC_UNKNOWN);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_T38_UDPEC, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -2467,9 +2467,9 @@ sdp_t38_udpec_e sdp_attr_get_t38udpec (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_set_t38udpec
  * Description: Sets the value of the t38ratemgmt attribute parameter
- *              for the given attribute. 
+ *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -2477,7 +2477,7 @@ sdp_t38_udpec_e sdp_attr_get_t38udpec (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_t38udpec (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_t38udpec (void *sdp_ptr, u16 level,
                                     u8 cap_num, u16 inst_num,
                                     sdp_t38_udpec_e t38udpec)
 {
@@ -2488,7 +2488,7 @@ sdp_result_e sdp_attr_set_t38udpec (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_T38_UDPEC, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -2511,7 +2511,7 @@ sdp_result_e sdp_attr_set_t38udpec (void *sdp_ptr, u16 level,
  *              the given level.  If none of these attributes are specified,
  *              the direction will be sendrecv by default.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  * Returns:     An SDP direction enum value.
@@ -2564,20 +2564,20 @@ sdp_direction_e sdp_get_media_direction (void *sdp_ptr, u16 level,
 
 /*
  * sdp_delete_all_media_direction_attrs
- * 
- * Deletes all the media direction attributes from a given SDP level. 
+ *
+ * Deletes all the media direction attributes from a given SDP level.
  * Media direction attributes include:
  * a=sendonly
  * a=recvonly
  * a=sendrecv
  * a=inactive
  *
- * This function can be used in conjunction with sdp_add_new_attr, to ensure 
- * that there is only one direction attribute per level. 
- * It can also be used to delete all attributes when the client wants to 
+ * This function can be used in conjunction with sdp_add_new_attr, to ensure
+ * that there is only one direction attribute per level.
+ * It can also be used to delete all attributes when the client wants to
  * advertise the default direction, i.e. a=sendrecv.
  */
-sdp_result_e sdp_delete_all_media_direction_attrs (void *sdp_ptr, u16 level) 
+sdp_result_e sdp_delete_all_media_direction_attrs (void *sdp_ptr, u16 level)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t   *mca_p;
@@ -2593,11 +2593,11 @@ sdp_result_e sdp_delete_all_media_direction_attrs (void *sdp_ptr, u16 level)
     if (level == SDP_SESSION_LEVEL) {
         attr_p = sdp_p->sess_attrs_p;
         while (attr_p != NULL) {
-            if ((attr_p->type == SDP_ATTR_INACTIVE) || 
+            if ((attr_p->type == SDP_ATTR_INACTIVE) ||
                 (attr_p->type == SDP_ATTR_SENDONLY) ||
                 (attr_p->type == SDP_ATTR_RECVONLY) ||
                 (attr_p->type == SDP_ATTR_SENDRECV)) {
-                
+
                 tmp_attr_p = attr_p;
 
                 if (prev_attr_p == NULL) {
@@ -2607,7 +2607,7 @@ sdp_result_e sdp_delete_all_media_direction_attrs (void *sdp_ptr, u16 level)
                 }
                 attr_p = attr_p->next_p;
 
-                sdp_free_attr(tmp_attr_p);                
+                sdp_free_attr(tmp_attr_p);
             } else {
                 prev_attr_p = attr_p;
                 attr_p = attr_p->next_p;
@@ -2621,7 +2621,7 @@ sdp_result_e sdp_delete_all_media_direction_attrs (void *sdp_ptr, u16 level)
 
         attr_p = mca_p->media_attrs_p;
         while (attr_p != NULL) {
-            if ((attr_p->type == SDP_ATTR_INACTIVE) || 
+            if ((attr_p->type == SDP_ATTR_INACTIVE) ||
                 (attr_p->type == SDP_ATTR_SENDONLY) ||
                 (attr_p->type == SDP_ATTR_RECVONLY) ||
                 (attr_p->type == SDP_ATTR_SENDRECV)) {
@@ -2669,11 +2669,11 @@ tinybool sdp_validate_qos_attr (sdp_attr_e qos_attr)
 
 /* Function:    sdp_attr_get_qos_strength
  * Description: Returns the value of the qos attribute strength
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_QOS_STRENGTH_UNKNOWN is 
- *              returned.  
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_QOS_STRENGTH_UNKNOWN is
+ *              returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -2702,7 +2702,7 @@ sdp_qos_strength_e sdp_attr_get_qos_strength (void *sdp_ptr, u16 level,
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s %s attribute, level %u instance %u "
-                      "not found.", sdp_p->debug_str, 
+                      "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), level, inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2715,18 +2715,18 @@ sdp_qos_strength_e sdp_attr_get_qos_strength (void *sdp_ptr, u16 level,
                 return (attr_p->attr.des.strength);
             default:
                 return SDP_QOS_STRENGTH_UNKNOWN;
-        
+
         }
     }
 }
 
 /* Function:    sdp_attr_get_qos_direction
  * Description: Returns the value of the qos attribute direction
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_QOS_DIR_UNKNOWN is 
- *              returned.  
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_QOS_DIR_UNKNOWN is
+ *              returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -2772,18 +2772,18 @@ sdp_qos_dir_e sdp_attr_get_qos_direction (void *sdp_ptr, u16 level,
                  return (attr_p->attr.conf.direction);
             default:
                 return SDP_QOS_DIR_UNKNOWN;
-        
+
         }
     }
 }
 
 /* Function:    sdp_attr_get_qos_status_type
  * Description: Returns the value of the qos attribute status_type
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_QOS_STATUS_TYPE_UNKNOWN is 
- *              returned.  
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_QOS_STATUS_TYPE_UNKNOWN is
+ *              returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -2827,7 +2827,7 @@ sdp_qos_status_types_e sdp_attr_get_qos_status_type (void *sdp_ptr, u16 level,
                 return (attr_p->attr.conf.status_type);
             default:
                 return SDP_QOS_STATUS_TYPE_UNKNOWN;
-        
+
         }
     }
 }
@@ -2837,7 +2837,7 @@ sdp_qos_status_types_e sdp_attr_get_qos_status_type (void *sdp_ptr, u16 level,
  *              parameter specified for the given attribute.  Returns TRUE if
  *              the confirm parameter is specified.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -2866,7 +2866,7 @@ tinybool sdp_attr_get_qos_confirm (void *sdp_ptr, u16 level,
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s %s attribute, level %u instance %u "
-                      "not found.", sdp_p->debug_str, 
+                      "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), level, inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -2877,9 +2877,9 @@ tinybool sdp_attr_get_qos_confirm (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_set_qos_strength
- * Description: Sets the qos strength value for the specified qos attribute. 
+ * Description: Sets the qos strength value for the specified qos attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -2889,7 +2889,7 @@ tinybool sdp_attr_get_qos_confirm (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_qos_strength (void *sdp_ptr, u16 level, u8 cap_num, 
+sdp_result_e sdp_attr_set_qos_strength (void *sdp_ptr, u16 level, u8 cap_num,
                                         sdp_attr_e qos_attr, u16 inst_num,
                                         sdp_qos_strength_e strength)
 {
@@ -2926,18 +2926,18 @@ sdp_result_e sdp_attr_set_qos_strength (void *sdp_ptr, u16 level, u8 cap_num,
                 return (SDP_SUCCESS);
             default:
                 return (SDP_FAILURE);
-        
+
         }
     }
 }
 
 /* Function:    sdp_attr_get_curr_type
  * Description: Returns the value of the curr attribute status_type
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_CURR_UNKNOWN_TYPE is 
- *              returned.  
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_CURR_UNKNOWN_TYPE is
+ *              returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -2971,11 +2971,11 @@ sdp_curr_type_e sdp_attr_get_curr_type (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_get_des_type
  * Description: Returns the value of the des attribute status_type
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_DES_UNKNOWN_TYPE is 
- *              returned.  
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_DES_UNKNOWN_TYPE is
+ *              returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -3009,11 +3009,11 @@ sdp_des_type_e sdp_attr_get_des_type (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_get_conf_type
  * Description: Returns the value of the des attribute status_type
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_CONF_UNKNOWN_TYPE is 
- *              returned.  
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_CONF_UNKNOWN_TYPE is
+ *              returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -3047,11 +3047,11 @@ sdp_conf_type_e sdp_attr_get_conf_type (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_set_curr_type
  * Description: Returns the value of the curr attribute status_type
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_CURR_UNKNOWN_TYPE is 
- *              returned.  
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_CURR_UNKNOWN_TYPE is
+ *              returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -3082,7 +3082,7 @@ sdp_result_e sdp_attr_set_curr_type (void *sdp_ptr, u16 level,
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s %s attribute, level %u instance %u "
-                      "not found.", sdp_p->debug_str, 
+                      "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), level, inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3095,11 +3095,11 @@ sdp_result_e sdp_attr_set_curr_type (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_set_des_type
  * Description: Sets the value of the des attribute type
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_DES_UNKNOWN_TYPE is 
- *              returned.  
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_DES_UNKNOWN_TYPE is
+ *              returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -3130,7 +3130,7 @@ sdp_result_e sdp_attr_set_des_type (void *sdp_ptr, u16 level,
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s %s attribute, level %u instance %u "
-                      "not found.", sdp_p->debug_str, 
+                      "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), level, inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3144,11 +3144,11 @@ sdp_result_e sdp_attr_set_des_type (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_set_conf_type
  * Description: Sets the value of the conf attribute type
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_CONF_UNKNOWN_TYPE is 
- *              returned.  
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_CONF_UNKNOWN_TYPE is
+ *              returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -3179,7 +3179,7 @@ sdp_result_e sdp_attr_set_conf_type (void *sdp_ptr, u16 level,
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s %s attribute, level %u instance %u "
-                      "not found.", sdp_p->debug_str, 
+                      "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), level, inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3191,9 +3191,9 @@ sdp_result_e sdp_attr_set_conf_type (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_set_qos_direction
- * Description: Sets the qos direction value for the specified qos attribute. 
+ * Description: Sets the qos direction value for the specified qos attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -3203,7 +3203,7 @@ sdp_result_e sdp_attr_set_conf_type (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_qos_direction (void *sdp_ptr, u16 level, u8 cap_num, 
+sdp_result_e sdp_attr_set_qos_direction (void *sdp_ptr, u16 level, u8 cap_num,
                                          sdp_attr_e qos_attr, u16 inst_num,
                                          sdp_qos_dir_e direction)
 {
@@ -3225,7 +3225,7 @@ sdp_result_e sdp_attr_set_qos_direction (void *sdp_ptr, u16 level, u8 cap_num,
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s %s attribute, level %u instance %u "
-                      "not found.", sdp_p->debug_str, 
+                      "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), level, inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3246,15 +3246,15 @@ sdp_result_e sdp_attr_set_qos_direction (void *sdp_ptr, u16 level, u8 cap_num,
                 return (SDP_SUCCESS);
             default:
                 return (SDP_FAILURE);
-        
+
         }
     }
 }
 
 /* Function:    sdp_attr_set_qos_status_type
- * Description: Sets the qos status_type value for the specified qos attribute. 
+ * Description: Sets the qos status_type value for the specified qos attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -3264,7 +3264,7 @@ sdp_result_e sdp_attr_set_qos_direction (void *sdp_ptr, u16 level, u8 cap_num,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_qos_status_type (void *sdp_ptr, u16 level, u8 cap_num, 
+sdp_result_e sdp_attr_set_qos_status_type (void *sdp_ptr, u16 level, u8 cap_num,
                                          sdp_attr_e qos_attr, u16 inst_num,
                                          sdp_qos_status_types_e status_type)
 {
@@ -3286,7 +3286,7 @@ sdp_result_e sdp_attr_set_qos_status_type (void *sdp_ptr, u16 level, u8 cap_num,
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s %s attribute, level %u instance %u "
-                      "not found.", sdp_p->debug_str, 
+                      "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(qos_attr), level, inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -3304,7 +3304,7 @@ sdp_result_e sdp_attr_set_qos_status_type (void *sdp_ptr, u16 level, u8 cap_num,
                 return (SDP_SUCCESS);
             default:
                 return (SDP_FAILURE);
-        
+
         }
     }
 }
@@ -3314,7 +3314,7 @@ sdp_result_e sdp_attr_set_qos_status_type (void *sdp_ptr, u16 level, u8 cap_num,
  *              If this parameter is TRUE, the confirm parameter will be
  *              specified when the SDP description is built.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -3324,7 +3324,7 @@ sdp_result_e sdp_attr_set_qos_status_type (void *sdp_ptr, u16 level, u8 cap_num,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_qos_confirm (void *sdp_ptr, u16 level, u8 cap_num, 
+sdp_result_e sdp_attr_set_qos_confirm (void *sdp_ptr, u16 level, u8 cap_num,
                                        sdp_attr_e qos_attr, u16 inst_num,
                                        tinybool qos_confirm)
 {
@@ -3360,11 +3360,11 @@ sdp_result_e sdp_attr_set_qos_confirm (void *sdp_ptr, u16 level, u8 cap_num,
 
 
 /* Function:    sdp_attr_get_subnet_nettype
- * Description: Returns the value of the subnet attribute network type 
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_NT_INVALID is returned.  
+ * Description: Returns the value of the subnet attribute network type
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_NT_INVALID is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3380,7 +3380,7 @@ sdp_nettype_e sdp_attr_get_subnet_nettype (void *sdp_ptr, u16 level,
         return (SDP_NT_INVALID);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SUBNET, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -3395,11 +3395,11 @@ sdp_nettype_e sdp_attr_get_subnet_nettype (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_get_subnet_addrtype
- * Description: Returns the value of the subnet attribute address type 
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_AT_INVALID is returned.  
+ * Description: Returns the value of the subnet attribute address type
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_AT_INVALID is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3415,7 +3415,7 @@ sdp_addrtype_e sdp_attr_get_subnet_addrtype (void *sdp_ptr, u16 level,
         return (SDP_AT_INVALID);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SUBNET, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -3430,13 +3430,13 @@ sdp_addrtype_e sdp_attr_get_subnet_addrtype (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_get_subnet_addr
- * Description: Returns the value of the subnet attribute address 
- *              parameter specified for the given attribute.  If the given 
+ * Description: Returns the value of the subnet attribute address
+ *              parameter specified for the given attribute.  If the given
  *              attribute is not defined, NULL is returned.  Value is
  *              returned as a const ptr and so cannot be modified by the
  *              application.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3452,7 +3452,7 @@ const char *sdp_attr_get_subnet_addr (void *sdp_ptr, u16 level,
         return (NULL);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SUBNET, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -3467,13 +3467,13 @@ const char *sdp_attr_get_subnet_addr (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_get_subnet_prefix
- * Description: Returns the value of the subnet attribute prefix 
- *              parameter specified for the given attribute.  If the given 
+ * Description: Returns the value of the subnet attribute prefix
+ *              parameter specified for the given attribute.  If the given
  *              attribute is not defined, SDP_INVALID_PARAM is returned.
- *              Note that this is value is defined to be (-2) and is 
+ *              Note that this is value is defined to be (-2) and is
  *              different from the return code SDP_INVALID_PARAMETER.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3489,7 +3489,7 @@ int32 sdp_attr_get_subnet_prefix (void *sdp_ptr, u16 level,
         return (SDP_INVALID_VALUE);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SUBNET, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -3505,9 +3505,9 @@ int32 sdp_attr_get_subnet_prefix (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_set_subnet_nettype
  * Description: Sets the value of the subnet attribute nettype parameter
- *              for the given attribute. 
+ *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3515,7 +3515,7 @@ int32 sdp_attr_get_subnet_prefix (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_subnet_nettype (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_subnet_nettype (void *sdp_ptr, u16 level,
                                           u8 cap_num, u16 inst_num,
                                           sdp_nettype_e nettype)
 {
@@ -3526,7 +3526,7 @@ sdp_result_e sdp_attr_set_subnet_nettype (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SUBNET, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -3543,9 +3543,9 @@ sdp_result_e sdp_attr_set_subnet_nettype (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_set_subnet_addrtype
  * Description: Sets the value of the subnet attribute addrtype parameter
- *              for the given attribute. 
+ *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3553,7 +3553,7 @@ sdp_result_e sdp_attr_set_subnet_nettype (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_subnet_addrtype (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_subnet_addrtype (void *sdp_ptr, u16 level,
                                            u8 cap_num, u16 inst_num,
                                            sdp_addrtype_e sdp_addrtype)
 {
@@ -3564,7 +3564,7 @@ sdp_result_e sdp_attr_set_subnet_addrtype (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SUBNET, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -3581,11 +3581,11 @@ sdp_result_e sdp_attr_set_subnet_addrtype (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_set_subnet_addr
  * Description: Sets the value of the subnet attribute addr parameter
- *              for the given attribute. The address is copied into the 
- *              SDP structure so application memory will not be 
+ *              for the given attribute. The address is copied into the
+ *              SDP structure so application memory will not be
  *              referenced by the SDP lib.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3593,7 +3593,7 @@ sdp_result_e sdp_attr_set_subnet_addrtype (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_subnet_addr (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_subnet_addr (void *sdp_ptr, u16 level,
                                        u8 cap_num, u16 inst_num,
                                        const char *addr)
 {
@@ -3604,7 +3604,7 @@ sdp_result_e sdp_attr_set_subnet_addr (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SUBNET, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -3614,7 +3614,7 @@ sdp_result_e sdp_attr_set_subnet_addr (void *sdp_ptr, u16 level,
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
     } else {
-        sstrncpy(attr_p->attr.subnet.addr, addr, 
+        sstrncpy(attr_p->attr.subnet.addr, addr,
                  sizeof(attr_p->attr.subnet.addr)) ;
         return (SDP_SUCCESS);
     }
@@ -3624,7 +3624,7 @@ sdp_result_e sdp_attr_set_subnet_addr (void *sdp_ptr, u16 level,
  * Description: Sets the value of the subnet attribute prefix parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3632,7 +3632,7 @@ sdp_result_e sdp_attr_set_subnet_addr (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_subnet_prefix (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_subnet_prefix (void *sdp_ptr, u16 level,
                                          u8 cap_num, u16 inst_num,
                                          int32 prefix)
 {
@@ -3643,7 +3643,7 @@ sdp_result_e sdp_attr_set_subnet_prefix (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SUBNET, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -3660,19 +3660,19 @@ sdp_result_e sdp_attr_set_subnet_prefix (void *sdp_ptr, u16 level,
 
 
 /* Function:    sdp_attr_rtpmap_payload_valid
- * Description: Returns true or false depending on whether an rtpmap 
+ * Description: Returns true or false depending on whether an rtpmap
  *              attribute was specified with the given payload value
  *              at the given level.  If it was, the instance number of
  *              that attribute is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number of the attribute
  *                          found is returned via this param.
  * Returns:     TRUE or FALSE.
  */
-tinybool sdp_attr_rtpmap_payload_valid (void *sdp_ptr, u16 level, u8 cap_num, 
+tinybool sdp_attr_rtpmap_payload_valid (void *sdp_ptr, u16 level, u8 cap_num,
                                         u16 *inst_num, u16 payload_type)
 {
     u16          i;
@@ -3686,29 +3686,29 @@ tinybool sdp_attr_rtpmap_payload_valid (void *sdp_ptr, u16 level, u8 cap_num,
         return (FALSE);
     }
 
-    if (sdp_attr_num_instances(sdp_ptr, level, cap_num, 
+    if (sdp_attr_num_instances(sdp_ptr, level, cap_num,
                           SDP_ATTR_RTPMAP, &num_instances) != SDP_SUCCESS) {
         return (FALSE);
     }
 
     for (i=1; i <= num_instances; i++) {
         attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_RTPMAP, i);
-        if ((attr_p != NULL) && 
+        if ((attr_p != NULL) &&
             (attr_p->attr.transport_map.payload_num == payload_type)) {
             *inst_num = i;
             return (TRUE);
         }
-    }   
+    }
 
     return (FALSE);
 }
 
 /* Function:    sdp_attr_get_rtpmap_payload_type
  * Description: Returns the value of the rtpmap attribute payload type
- *              parameter specified for the given attribute.  If the given 
+ *              parameter specified for the given attribute.  If the given
  *              attribute is not defined, zero is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3744,7 +3744,7 @@ u16 sdp_attr_get_rtpmap_payload_type (void *sdp_ptr, u16 level,
  *              application.  If the given attribute is not defined, NULL
  *              will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3775,10 +3775,10 @@ const char *sdp_attr_get_rtpmap_encname (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_get_rtpmap_clockrate
  * Description: Returns the value of the rtpmap attribute clockrate
- *              parameter specified for the given attribute.  If the given 
+ *              parameter specified for the given attribute.  If the given
  *              attribute is not defined, zero is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3809,10 +3809,10 @@ u32 sdp_attr_get_rtpmap_clockrate (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_get_rtpmap_num_chan
  * Description: Returns the value of the rtpmap attribute num_chan
- *              parameter specified for the given attribute.  If the given 
+ *              parameter specified for the given attribute.  If the given
  *              attribute is not defined, zero is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3845,7 +3845,7 @@ u16 sdp_attr_get_rtpmap_num_chan (void *sdp_ptr, u16 level,
  * Description: Sets the value of the rtpmap attribute payload type parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3853,8 +3853,8 @@ u16 sdp_attr_get_rtpmap_num_chan (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_rtpmap_payload_type (void *sdp_ptr, u16 level, 
-                                               u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_rtpmap_payload_type (void *sdp_ptr, u16 level,
+                                               u8 cap_num, u16 inst_num,
                                                u16 payload_num)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -3882,7 +3882,7 @@ sdp_result_e sdp_attr_set_rtpmap_payload_type (void *sdp_ptr, u16 level,
  * Description: Sets the value of the rtpmap attribute encname parameter
  *              for the given attribute.  String is copied into SDP memory.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -3910,7 +3910,7 @@ sdp_result_e sdp_attr_set_rtpmap_encname (void *sdp_ptr, u16 level, u8 cap_num,
         return (SDP_INVALID_PARAMETER);
     } else {
         if (encname) {
-            sstrncpy(attr_p->attr.transport_map.encname, encname, 
+            sstrncpy(attr_p->attr.transport_map.encname, encname,
                      sizeof(attr_p->attr.transport_map.encname));
         }
         return (SDP_SUCCESS);
@@ -3993,7 +3993,7 @@ sdp_result_e sdp_attr_set_ice_attribute(void *sdp_ptr, u16 level,
 
     if (!ice_attrib) {
       return (SDP_INVALID_PARAMETER);
-    }        
+    }
 
     sstrncpy(attr_p->attr.ice_attr, ice_attrib, sizeof(attr_p->attr.ice_attr));
     return (SDP_SUCCESS);
@@ -4161,7 +4161,7 @@ sdp_result_e sdp_attr_set_dtls_fingerprint_attribute(void *sdp_ptr, u16 level,
  * Description: Sets the value of the rtpmap attribute clockrate parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4169,8 +4169,8 @@ sdp_result_e sdp_attr_set_dtls_fingerprint_attribute(void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_rtpmap_clockrate (void *sdp_ptr, u16 level, 
-                                            u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_rtpmap_clockrate (void *sdp_ptr, u16 level,
+                                            u8 cap_num, u16 inst_num,
                                             u32 clockrate)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -4198,7 +4198,7 @@ sdp_result_e sdp_attr_set_rtpmap_clockrate (void *sdp_ptr, u16 level,
  * Description: Sets the value of the rtpmap attribute num_chan parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4206,8 +4206,8 @@ sdp_result_e sdp_attr_set_rtpmap_clockrate (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_rtpmap_num_chan (void *sdp_ptr, u16 level, 
-                                           u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_rtpmap_num_chan (void *sdp_ptr, u16 level,
+                                           u8 cap_num, u16 inst_num,
                                            u16 num_chan)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -4233,19 +4233,19 @@ sdp_result_e sdp_attr_set_rtpmap_num_chan (void *sdp_ptr, u16 level,
 
 
 /* Function:    sdp_attr_sprtmap_payload_valid
- * Description: Returns true or false depending on whether an sprtmap 
+ * Description: Returns true or false depending on whether an sprtmap
  *              attribute was specified with the given payload value
  *              at the given level.  If it was, the instance number of
  *              that attribute is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number of the attribute
  *                          found is returned via this param.
  * Returns:     TRUE or FALSE.
  */
-tinybool sdp_attr_sprtmap_payload_valid (void *sdp_ptr, u16 level, u8 cap_num, 
+tinybool sdp_attr_sprtmap_payload_valid (void *sdp_ptr, u16 level, u8 cap_num,
                                         u16 *inst_num, u16 payload_type)
 {
     u16          i;
@@ -4259,29 +4259,29 @@ tinybool sdp_attr_sprtmap_payload_valid (void *sdp_ptr, u16 level, u8 cap_num,
         return (FALSE);
     }
 
-    if (sdp_attr_num_instances(sdp_ptr, level, cap_num, 
+    if (sdp_attr_num_instances(sdp_ptr, level, cap_num,
                           SDP_ATTR_SPRTMAP, &num_instances) != SDP_SUCCESS) {
         return (FALSE);
     }
 
     for (i=1; i <= num_instances; i++) {
         attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_SPRTMAP, i);
-        if ((attr_p != NULL) && 
+        if ((attr_p != NULL) &&
             (attr_p->attr.transport_map.payload_num == payload_type)) {
             *inst_num = i;
             return (TRUE);
         }
-    }   
+    }
 
     return (FALSE);
 }
 
 /* Function:    sdp_attr_get_sprtmap_payload_type
  * Description: Returns the value of the sprtmap attribute payload type
- *              parameter specified for the given attribute.  If the given 
+ *              parameter specified for the given attribute.  If the given
  *              attribute is not defined, zero is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4317,7 +4317,7 @@ u16 sdp_attr_get_sprtmap_payload_type (void *sdp_ptr, u16 level,
  *              application.  If the given attribute is not defined, NULL
  *              will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4348,10 +4348,10 @@ const char *sdp_attr_get_sprtmap_encname (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_get_sprtmap_clockrate
  * Description: Returns the value of the sprtmap attribute clockrate
- *              parameter specified for the given attribute.  If the given 
+ *              parameter specified for the given attribute.  If the given
  *              attribute is not defined, zero is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4382,10 +4382,10 @@ u32 sdp_attr_get_sprtmap_clockrate (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_get_sprtmap_num_chan
  * Description: Returns the value of the sprtmap attribute num_chan
- *              parameter specified for the given attribute.  If the given 
+ *              parameter specified for the given attribute.  If the given
  *              attribute is not defined, zero is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4418,7 +4418,7 @@ u16 sdp_attr_get_sprtmap_num_chan (void *sdp_ptr, u16 level,
  * Description: Sets the value of the sprtmap attribute payload type parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4426,8 +4426,8 @@ u16 sdp_attr_get_sprtmap_num_chan (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_sprtmap_payload_type (void *sdp_ptr, u16 level, 
-                                               u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_sprtmap_payload_type (void *sdp_ptr, u16 level,
+                                               u8 cap_num, u16 inst_num,
                                                u16 payload_num)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -4455,7 +4455,7 @@ sdp_result_e sdp_attr_set_sprtmap_payload_type (void *sdp_ptr, u16 level,
  * Description: Sets the value of the sprtmap attribute encname parameter
  *              for the given attribute.  String is copied into SDP memory.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4482,7 +4482,7 @@ sdp_result_e sdp_attr_set_sprtmap_encname (void *sdp_ptr, u16 level, u8 cap_num,
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
     } else {
-        sstrncpy(attr_p->attr.transport_map.encname, encname, 
+        sstrncpy(attr_p->attr.transport_map.encname, encname,
                  sizeof(attr_p->attr.transport_map.encname));
         return (SDP_SUCCESS);
     }
@@ -4492,7 +4492,7 @@ sdp_result_e sdp_attr_set_sprtmap_encname (void *sdp_ptr, u16 level, u8 cap_num,
  * Description: Sets the value of the sprtmap attribute clockrate parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4500,8 +4500,8 @@ sdp_result_e sdp_attr_set_sprtmap_encname (void *sdp_ptr, u16 level, u8 cap_num,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_sprtmap_clockrate (void *sdp_ptr, u16 level, 
-                                            u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_sprtmap_clockrate (void *sdp_ptr, u16 level,
+                                            u8 cap_num, u16 inst_num,
                                             u16 clockrate)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -4529,7 +4529,7 @@ sdp_result_e sdp_attr_set_sprtmap_clockrate (void *sdp_ptr, u16 level,
  * Description: Sets the value of the sprtmap attribute num_chan parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4537,8 +4537,8 @@ sdp_result_e sdp_attr_set_sprtmap_clockrate (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_sprtmap_num_chan (void *sdp_ptr, u16 level, 
-                                           u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_sprtmap_num_chan (void *sdp_ptr, u16 level,
+                                           u8 cap_num, u16 inst_num,
                                            u16 num_chan)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -4577,13 +4577,13 @@ sdp_result_e sdp_attr_set_sprtmap_num_chan (void *sdp_ptr, u16 level,
  *              at the given level.  If it was, the instance number of
  *              that attribute is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  * Returns:     TRUE or FALSE.
  */
-tinybool sdp_attr_fmtp_payload_valid (void *sdp_ptr, u16 level, u8 cap_num, 
+tinybool sdp_attr_fmtp_payload_valid (void *sdp_ptr, u16 level, u8 cap_num,
                                       u16 *inst_num, u16 payload_type)
 {
     u16          i;
@@ -4595,29 +4595,29 @@ tinybool sdp_attr_fmtp_payload_valid (void *sdp_ptr, u16 level, u8 cap_num,
         return (FALSE);
     }
 
-    if (sdp_attr_num_instances(sdp_ptr, level, cap_num, 
+    if (sdp_attr_num_instances(sdp_ptr, level, cap_num,
                                SDP_ATTR_FMTP, &num_instances) != SDP_SUCCESS) {
         return (FALSE);
     }
 
     for (i=1; i <= num_instances; i++) {
         attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, i);
-        if ((attr_p != NULL) && 
+        if ((attr_p != NULL) &&
             (attr_p->attr.fmtp.payload_num == payload_type)) {
             *inst_num = i;
             return (TRUE);
         }
-    }   
+    }
 
     return (FALSE);
 }
 
 /* Function:    sdp_attr_get_fmtp_payload_type
  * Description: Returns the value of the fmtp attribute payload type
- *              parameter specified for the given attribute.  If the given 
+ *              parameter specified for the given attribute.  If the given
  *              attribute is not defined, zero is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4652,11 +4652,11 @@ u16 sdp_attr_get_fmtp_payload_type (void *sdp_ptr, u16 level,
  *              The overall range for events is 0-255.
  *              This will return either FULL_MATCH, PARTIAL_MATCH, or NO_MATCH
  *              depending on whether all, some, or none of the specified
- *              events are defined. If the given attribute is not defined, 
+ *              events are defined. If the given attribute is not defined,
  *              NO_MATCH will be returned.  It is up to the appl to verify
  *              the validity of the attribute before calling this routine.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4664,7 +4664,7 @@ u16 sdp_attr_get_fmtp_payload_type (void *sdp_ptr, u16 level,
  *              high_val    High value of the range.
  * Returns:     SDP_FULL_MATCH, SDP_PARTIAL_MATCH, SDP_NO_MATCH
  */
-sdp_ne_res_e sdp_attr_fmtp_is_range_set (void *sdp_ptr, u16 level, u8 cap_num, 
+sdp_ne_res_e sdp_attr_fmtp_is_range_set (void *sdp_ptr, u16 level, u8 cap_num,
                                          u16 inst_num, u8 low_val, u8 high_val)
 {
     u16          i;
@@ -4716,10 +4716,10 @@ sdp_ne_res_e sdp_attr_fmtp_is_range_set (void *sdp_ptr, u16 level, u8 cap_num,
  *              This routine will do a simple AND comparison and report the result.
  *
  *              This will return TRUE if ftmp events are valid, and FALSE otherwise.
- *              It is up to the appl to verify the validity of the attribute 
+ *              It is up to the appl to verify the validity of the attribute
  *              before calling this routine.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4757,7 +4757,7 @@ sdp_attr_fmtp_valid(void *sdp_ptr, u16 level, u8 cap_num,
     if (fmtp_p->maxval > appl_maxval)
       return FALSE;
 
-    /* Ok, events are within range. Now check that only 
+    /* Ok, events are within range. Now check that only
      * allowed events have been received
      */
     mapword = appl_maxval/SDP_NE_BITS_PER_WORD;
@@ -4766,7 +4766,7 @@ sdp_attr_fmtp_valid(void *sdp_ptr, u16 level, u8 cap_num,
 	/* Remote SDP is requesting events not supported by Application */
 	return FALSE;
       }
-    }    
+    }
     return TRUE;
 }
 
@@ -4774,7 +4774,7 @@ sdp_attr_fmtp_valid(void *sdp_ptr, u16 level, u8 cap_num,
  * Description: Sets the value of the fmtp attribute payload type parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -4782,8 +4782,8 @@ sdp_attr_fmtp_valid(void *sdp_ptr, u16 level, u8 cap_num,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_fmtp_payload_type (void *sdp_ptr, u16 level, 
-                                             u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_payload_type (void *sdp_ptr, u16 level,
+                                             u8 cap_num, u16 inst_num,
                                              u16 payload_num)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -4810,14 +4810,14 @@ sdp_result_e sdp_attr_set_fmtp_payload_type (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_set_fmtp_bitmap
  * Description: Set a range of named events for an fmtp attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  *              bmap        The 8 word data array holding the bitmap
- * Returns:     SDP_SUCCESS 
+ * Returns:     SDP_SUCCESS
  */
-sdp_result_e sdp_attr_set_fmtp_bitmap(void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_fmtp_bitmap(void *sdp_ptr, u16 level,
                            u8 cap_num, u16 inst_num, u32 *bmap, u32 maxval)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -4848,14 +4848,14 @@ sdp_result_e sdp_attr_set_fmtp_bitmap(void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_range
  * Description: Get a range of named events for an fmtp attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  *              bmap        The 8 word data array holding the bitmap
- * Returns:     SDP_SUCCESS 
+ * Returns:     SDP_SUCCESS
  */
-sdp_result_e sdp_attr_get_fmtp_range (void *sdp_ptr, u16 level, u8 cap_num, 
+sdp_result_e sdp_attr_get_fmtp_range (void *sdp_ptr, u16 level, u8 cap_num,
                                       u16 inst_num, u32 *bmap)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -4886,15 +4886,15 @@ sdp_result_e sdp_attr_get_fmtp_range (void *sdp_ptr, u16 level, u8 cap_num,
  * Description: Set a range of named events for an fmtp attribute. The low
  *              value specified must be <= the high value.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  *              low_val     The low value of the range. Range is 0-255.
  *              high_val    The high value of the range.  May be == low.
- * Returns:     SDP_SUCCESS 
+ * Returns:     SDP_SUCCESS
  */
-sdp_result_e sdp_attr_set_fmtp_range (void *sdp_ptr, u16 level, u8 cap_num, 
+sdp_result_e sdp_attr_set_fmtp_range (void *sdp_ptr, u16 level, u8 cap_num,
                                       u16 inst_num, u8 low_val, u8 high_val)
 {
     u16          i;
@@ -4935,15 +4935,15 @@ sdp_result_e sdp_attr_set_fmtp_range (void *sdp_ptr, u16 level, u8 cap_num,
  * Description: Clear a range of named events for an fmtp attribute. The low
  *              value specified must be <= the high value.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  *              low_val     The low value of the range. Range is 0-255
  *              high_val    The high value of the range.  May be == low.
- * Returns:     SDP_SUCCESS 
+ * Returns:     SDP_SUCCESS
  */
-sdp_result_e sdp_attr_clear_fmtp_range (void *sdp_ptr, u16 level, u8 cap_num, 
+sdp_result_e sdp_attr_clear_fmtp_range (void *sdp_ptr, u16 level, u8 cap_num,
                                         u16 inst_num, u8 low_val, u8 high_val)
 {
     u16          i;
@@ -4996,7 +4996,7 @@ sdp_result_e sdp_attr_clear_fmtp_range (void *sdp_ptr, u16 level, u8 cap_num,
  * Returns:     SDP_FULL_MATCH, SDP_PARTIAL_MATCH, SDP_NO_MATCH.
  */
 sdp_ne_res_e sdp_attr_compare_fmtp_ranges (void *src_sdp_ptr,void *dst_sdp_ptr,
-                                           u16 src_level, u16 dst_level, 
+                                           u16 src_level, u16 dst_level,
                                            u8 src_cap_num, u8 dst_cap_num,
                                            u16 src_inst_num, u16 dst_inst_num)
 {
@@ -5015,9 +5015,9 @@ sdp_ne_res_e sdp_attr_compare_fmtp_ranges (void *src_sdp_ptr,void *dst_sdp_ptr,
         return (SDP_NO_MATCH);
     }
 
-    src_attr_p = sdp_find_attr(src_sdp_p, src_level, src_cap_num, 
+    src_attr_p = sdp_find_attr(src_sdp_p, src_level, src_cap_num,
                                SDP_ATTR_FMTP, src_inst_num);
-    dst_attr_p = sdp_find_attr(dst_sdp_p, dst_level, dst_cap_num, 
+    dst_attr_p = sdp_find_attr(dst_sdp_p, dst_level, dst_cap_num,
                                SDP_ATTR_FMTP, dst_inst_num);
     if ((src_attr_p == NULL) || (dst_attr_p == NULL)) {
         if (src_sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -5052,7 +5052,7 @@ sdp_ne_res_e sdp_attr_compare_fmtp_ranges (void *src_sdp_ptr,void *dst_sdp_ptr,
 }
 
 /* Function:    sdp_attr_copy_fmtp_ranges
- * Description: Copy the named events set for one fmtp attribute to another. 
+ * Description: Copy the named events set for one fmtp attribute to another.
  * Parameters:  src_sdp_ptr The SDP handle returned by sdp_init_description.
  *              dst_sdp_ptr The SDP handle returned by sdp_init_description.
  *              src_level   The level of the src fmtp attribute.
@@ -5061,10 +5061,10 @@ sdp_ne_res_e sdp_attr_compare_fmtp_ranges (void *src_sdp_ptr,void *dst_sdp_ptr,
  *              dst_cap_num The capability number of the dst attr.
  *              src_inst_numh The attribute instance of the src attr.
  *              dst_inst_numh The attribute instance of the dst attr.
- * Returns:     SDP_SUCCESS 
+ * Returns:     SDP_SUCCESS
  */
 sdp_result_e sdp_attr_copy_fmtp_ranges (void *src_sdp_ptr, void *dst_sdp_ptr,
-                                        u16 src_level, u16 dst_level, 
+                                        u16 src_level, u16 dst_level,
                                         u8 src_cap_num, u8 dst_cap_num,
                                         u16 src_inst_num, u16 dst_inst_num)
 {
@@ -5081,9 +5081,9 @@ sdp_result_e sdp_attr_copy_fmtp_ranges (void *src_sdp_ptr, void *dst_sdp_ptr,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    src_attr_p = sdp_find_attr(src_sdp_p, src_level, src_cap_num, 
+    src_attr_p = sdp_find_attr(src_sdp_p, src_level, src_cap_num,
                                SDP_ATTR_FMTP, src_inst_num);
-    dst_attr_p = sdp_find_attr(dst_sdp_p, dst_level, dst_cap_num, 
+    dst_attr_p = sdp_find_attr(dst_sdp_p, dst_level, dst_cap_num,
                                SDP_ATTR_FMTP, dst_inst_num);
     if ((src_attr_p == NULL) || (dst_attr_p == NULL)) {
         if (src_sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -5107,7 +5107,7 @@ sdp_result_e sdp_attr_copy_fmtp_ranges (void *src_sdp_ptr, void *dst_sdp_ptr,
  * Description: Sets the value of the fmtp attribute annexa type parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -5115,8 +5115,8 @@ sdp_result_e sdp_attr_copy_fmtp_ranges (void *src_sdp_ptr, void *dst_sdp_ptr,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_fmtp_annexa (void *sdp_ptr, u16 level, 
-                                       u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_annexa (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num,
                                        tinybool annexa)
 {
 
@@ -5142,7 +5142,7 @@ sdp_result_e sdp_attr_set_fmtp_annexa (void *sdp_ptr, u16 level,
     fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
     fmtp_p->annexa_required = TRUE;
     fmtp_p->annexa = annexa;
-    
+
     return (SDP_SUCCESS);
 }
 
@@ -5150,7 +5150,7 @@ sdp_result_e sdp_attr_set_fmtp_annexa (void *sdp_ptr, u16 level,
  * Description: Sets the value of the fmtp attribute annexb type parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -5158,8 +5158,8 @@ sdp_result_e sdp_attr_set_fmtp_annexa (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_fmtp_annexb  (void *sdp_ptr, u16 level, 
-                                        u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_annexb  (void *sdp_ptr, u16 level,
+                                        u8 cap_num, u16 inst_num,
                                         tinybool annexb)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -5169,7 +5169,7 @@ sdp_result_e sdp_attr_set_fmtp_annexb  (void *sdp_ptr, u16 level,
    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
    }
-   
+
     attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -5191,7 +5191,7 @@ sdp_result_e sdp_attr_set_fmtp_annexb  (void *sdp_ptr, u16 level,
  * Description: Gets the value of the fmtp attribute mode parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              payload_type payload type.
@@ -5215,7 +5215,7 @@ u32 sdp_attr_get_fmtp_mode_for_payload_type (void *sdp_ptr, u16 level,
                                   &num_a_lines);
     for (i = 0; i < num_a_lines; i++) {
         attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, (uint16_t) (i + 1));
-        if ((attr_p != NULL) && 
+        if ((attr_p != NULL) &&
             (attr_p->attr.fmtp.payload_num == (u16)payload_type)) {
             if (attr_p->attr.fmtp.fmtp_format == SDP_FMTP_MODE) {
                 return attr_p->attr.fmtp.mode;
@@ -5269,7 +5269,7 @@ sdp_result_e sdp_attr_set_fmtp_mode  (void *sdp_ptr, u16 level,
  * Description: Sets the value of the fmtp attribute bitrate type parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -5277,14 +5277,14 @@ sdp_result_e sdp_attr_set_fmtp_mode  (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_fmtp_bitrate_type  (void *sdp_ptr, u16 level, 
-                                             u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_bitrate_type  (void *sdp_ptr, u16 level,
+                                             u8 cap_num, u16 inst_num,
                                              u32 bitrate)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (bitrate <= 0) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5313,7 +5313,7 @@ sdp_result_e sdp_attr_set_fmtp_bitrate_type  (void *sdp_ptr, u16 level,
  * Description: Sets the value of the fmtp attribute cif parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -5321,14 +5321,14 @@ sdp_result_e sdp_attr_set_fmtp_bitrate_type  (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_fmtp_cif  (void *sdp_ptr, u16 level, 
-                                     u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_cif  (void *sdp_ptr, u16 level,
+                                     u8 cap_num, u16 inst_num,
                                      u16 cif)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if ((cif < SDP_MIN_CIF_VALUE) || ( cif > SDP_MAX_CIF_VALUE)) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5357,7 +5357,7 @@ sdp_result_e sdp_attr_set_fmtp_cif  (void *sdp_ptr, u16 level,
  * Description: Sets the value of the fmtp attribute qcif parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -5365,14 +5365,14 @@ sdp_result_e sdp_attr_set_fmtp_cif  (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS       Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_fmtp_qcif  (void *sdp_ptr, u16 level, 
-                                     u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_qcif  (void *sdp_ptr, u16 level,
+                                     u8 cap_num, u16 inst_num,
                                      u16 qcif)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if ((qcif < SDP_MIN_CIF_VALUE) || ( qcif > SDP_MAX_CIF_VALUE)) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5400,22 +5400,22 @@ sdp_result_e sdp_attr_set_fmtp_qcif  (void *sdp_ptr, u16 level,
  * Description: Sets the value of the fmtp attribute sqcif parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
- *                          attribute if any.  If none, should be zero.  
+ *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  *              sqcif        Sets the SQCIF value for a video codec
  * Returns:     SDP_SUCCESS       Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_fmtp_sqcif  (void *sdp_ptr, u16 level, 
-                                       u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_sqcif  (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num,
                                        u16 sqcif)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if ((sqcif < SDP_MIN_CIF_VALUE) || (sqcif > SDP_MAX_CIF_VALUE)) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5445,22 +5445,22 @@ sdp_result_e sdp_attr_set_fmtp_sqcif  (void *sdp_ptr, u16 level,
  * Description: Sets the value of the fmtp attribute cif4 parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
- *                          attribute if any.  If none, should be zero.  
+ *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  *              sqcif        Sets the cif4 value for a video codec
  * Returns:     SDP_SUCCESS       Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_fmtp_cif4  (void *sdp_ptr, u16 level, 
-                                       u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_cif4  (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num,
                                        u16 cif4)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if ((cif4 < SDP_MIN_CIF_VALUE) || (cif4 > SDP_MAX_CIF_VALUE)) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5489,22 +5489,22 @@ sdp_result_e sdp_attr_set_fmtp_cif4  (void *sdp_ptr, u16 level,
  * Description: Sets the value of the fmtp attribute cif16 parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
- *                          attribute if any.  If none, should be zero.  
+ *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  *              cif16        Sets the cif16 value for a video codec
  * Returns:     SDP_SUCCESS       Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_fmtp_cif16  (void *sdp_ptr, u16 level, 
-                                       u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_cif16  (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num,
                                        u16 cif16)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if ((cif16 < SDP_MIN_CIF_VALUE) || (cif16 > SDP_MAX_CIF_VALUE)) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5534,7 +5534,7 @@ sdp_result_e sdp_attr_set_fmtp_cif16  (void *sdp_ptr, u16 level,
  * Description: Sets the value of the fmtp attribute maxbr parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -5543,14 +5543,14 @@ sdp_result_e sdp_attr_set_fmtp_cif16  (void *sdp_ptr, u16 level,
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
 */
 
-sdp_result_e sdp_attr_set_fmtp_maxbr  (void *sdp_ptr, u16 level, 
-                                       u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_maxbr  (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num,
                                        u16 maxbr)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (maxbr <= 0) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5579,7 +5579,7 @@ sdp_result_e sdp_attr_set_fmtp_maxbr  (void *sdp_ptr, u16 level,
  * Description: Sets the value of the fmtp attribute custom parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -5588,14 +5588,14 @@ sdp_result_e sdp_attr_set_fmtp_maxbr  (void *sdp_ptr, u16 level,
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
 */
 
-sdp_result_e sdp_attr_set_fmtp_custom  (void *sdp_ptr, u16 level, 
-                                        u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_custom  (void *sdp_ptr, u16 level,
+                                        u8 cap_num, u16 inst_num,
                                         u16 custom_x, u16 custom_y, u16 custom_mpi)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if ((custom_x <= 0) || (custom_y <= 0) || (custom_mpi <= 0)) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5626,7 +5626,7 @@ sdp_result_e sdp_attr_set_fmtp_custom  (void *sdp_ptr, u16 level,
  * Description: Sets the value of the fmtp attribute PAR parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -5635,14 +5635,14 @@ sdp_result_e sdp_attr_set_fmtp_custom  (void *sdp_ptr, u16 level,
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
 */
 
-sdp_result_e sdp_attr_set_fmtp_par  (void *sdp_ptr, u16 level, 
-                                     u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_par  (void *sdp_ptr, u16 level,
+                                     u8 cap_num, u16 inst_num,
                                      u16 par_width, u16 par_height)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if ((par_width <= 0) || (par_height <= 0)) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5672,7 +5672,7 @@ sdp_result_e sdp_attr_set_fmtp_par  (void *sdp_ptr, u16 level,
  * Description: Sets the value of the fmtp attribute CPCF parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -5681,14 +5681,14 @@ sdp_result_e sdp_attr_set_fmtp_par  (void *sdp_ptr, u16 level,
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
 */
 
-sdp_result_e sdp_attr_set_fmtp_cpcf (void *sdp_ptr, u16 level, 
-                                     u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_cpcf (void *sdp_ptr, u16 level,
+                                     u8 cap_num, u16 inst_num,
                                      u16 cpcf)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (cpcf <= 0) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5717,7 +5717,7 @@ sdp_result_e sdp_attr_set_fmtp_cpcf (void *sdp_ptr, u16 level,
  * Description: Sets the value of the fmtp attribute BPP parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -5726,14 +5726,14 @@ sdp_result_e sdp_attr_set_fmtp_cpcf (void *sdp_ptr, u16 level,
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
 */
 
-sdp_result_e sdp_attr_set_fmtp_bpp (void *sdp_ptr, u16 level, 
-                                    u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_bpp (void *sdp_ptr, u16 level,
+                                    u8 cap_num, u16 inst_num,
                                     u16 bpp)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (bpp <= 0) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5762,7 +5762,7 @@ sdp_result_e sdp_attr_set_fmtp_bpp (void *sdp_ptr, u16 level,
  * Description: Sets the value of the fmtp attribute HRD parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -5771,13 +5771,13 @@ sdp_result_e sdp_attr_set_fmtp_bpp (void *sdp_ptr, u16 level,
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
 
-sdp_result_e sdp_attr_set_fmtp_hrd (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_fmtp_hrd (void *sdp_ptr, u16 level,
                                     u8 cap_num, u16 inst_num, u16 hrd)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (hrd <= 0) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5802,8 +5802,8 @@ sdp_result_e sdp_attr_set_fmtp_hrd (void *sdp_ptr, u16 level,
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_h263_num_params (void *sdp_ptr, int16 level, 
-                                                u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_h263_num_params (void *sdp_ptr, int16 level,
+                                                u8 cap_num, u16 inst_num,
                                                 int16 profile,
                                                 u16 h263_level,
                                                 tinybool interlace)
@@ -5811,7 +5811,7 @@ sdp_result_e sdp_attr_set_fmtp_h263_num_params (void *sdp_ptr, int16 level,
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
 
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
@@ -5830,13 +5830,13 @@ sdp_result_e sdp_attr_set_fmtp_h263_num_params (void *sdp_ptr, int16 level,
     fmtp_p = &(attr_p->attr.fmtp);
     fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
 
-    if ((profile >= SDP_MIN_PROFILE_LEVEL_VALUE) && 
+    if ((profile >= SDP_MIN_PROFILE_LEVEL_VALUE) &&
              (profile <= SDP_MAX_PROFILE_VALUE)) {
         fmtp_p->profile  = profile;
     }
 
-    if ((level >= SDP_MIN_PROFILE_LEVEL_VALUE) && 
-             (level <= SDP_MAX_LEVEL_VALUE)) { 
+    if ((level >= SDP_MIN_PROFILE_LEVEL_VALUE) &&
+             (level <= SDP_MAX_LEVEL_VALUE)) {
         fmtp_p->level  = h263_level;
     }
 
@@ -5849,14 +5849,14 @@ sdp_result_e sdp_attr_set_fmtp_h263_num_params (void *sdp_ptr, int16 level,
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_profile_level_id (void *sdp_ptr, u16 level, 
-                                                u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_profile_level_id (void *sdp_ptr, u16 level,
+                                                u8 cap_num, u16 inst_num,
                                                 const char *profile_level_id)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5873,22 +5873,22 @@ sdp_result_e sdp_attr_set_fmtp_profile_level_id (void *sdp_ptr, u16 level,
 
     fmtp_p = &(attr_p->attr.fmtp);
     fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-    if (profile_level_id) { 
-        sstrncpy(fmtp_p->profile_level_id, profile_level_id, 
+    if (profile_level_id) {
+        sstrncpy(fmtp_p->profile_level_id, profile_level_id,
 	   SDP_MAX_STRING_LEN+1);
     }
-    
+
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_parameter_sets (void *sdp_ptr, u16 level, 
-                                               u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_parameter_sets (void *sdp_ptr, u16 level,
+                                               u8 cap_num, u16 inst_num,
                                                const char *parameter_sets)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5908,18 +5908,18 @@ sdp_result_e sdp_attr_set_fmtp_parameter_sets (void *sdp_ptr, u16 level,
     if (parameter_sets) {
         sstrncpy(fmtp_p->parameter_sets, parameter_sets, SDP_MAX_STRING_LEN+1);
     }
-    
+
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_pack_mode (void *sdp_ptr, u16 level, 
-                                          u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_pack_mode (void *sdp_ptr, u16 level,
+                                          u8 cap_num, u16 inst_num,
                                           u16 pack_mode)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (pack_mode > SDP_MAX_PACKETIZATION_MODE_VALUE) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5945,14 +5945,14 @@ sdp_result_e sdp_attr_set_fmtp_pack_mode (void *sdp_ptr, u16 level,
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_level_asymmetry_allowed (void *sdp_ptr, u16 level, 
-                                          u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_level_asymmetry_allowed (void *sdp_ptr, u16 level,
+                                          u8 cap_num, u16 inst_num,
                                           u16 asym_allowed)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -5974,14 +5974,14 @@ sdp_result_e sdp_attr_set_fmtp_level_asymmetry_allowed (void *sdp_ptr, u16 level
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_deint_buf_req (void *sdp_ptr, u16 level, 
-                                                u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_deint_buf_req (void *sdp_ptr, u16 level,
+                                                u8 cap_num, u16 inst_num,
                                                 u32 deint_buf_req)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
 
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
@@ -6005,14 +6005,14 @@ sdp_result_e sdp_attr_set_fmtp_deint_buf_req (void *sdp_ptr, u16 level,
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_init_buf_time (void *sdp_ptr, u16 level, 
-                                                u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_init_buf_time (void *sdp_ptr, u16 level,
+                                                u8 cap_num, u16 inst_num,
                                                 u32 init_buf_time)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
 
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
@@ -6036,14 +6036,14 @@ sdp_result_e sdp_attr_set_fmtp_init_buf_time (void *sdp_ptr, u16 level,
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_max_don_diff (void *sdp_ptr, u16 level, 
-                                                u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_max_don_diff (void *sdp_ptr, u16 level,
+                                                u8 cap_num, u16 inst_num,
                                                 u32 max_don_diff)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
 
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
@@ -6066,14 +6066,14 @@ sdp_result_e sdp_attr_set_fmtp_max_don_diff (void *sdp_ptr, u16 level,
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_interleaving_depth (void *sdp_ptr, u16 level, 
-                                                u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_interleaving_depth (void *sdp_ptr, u16 level,
+                                                u8 cap_num, u16 inst_num,
                                                 u16 interleaving_depth)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
 
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
@@ -6096,14 +6096,14 @@ sdp_result_e sdp_attr_set_fmtp_interleaving_depth (void *sdp_ptr, u16 level,
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_redundant_pic_cap (void *sdp_ptr, u16 level, 
-                                               u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_redundant_pic_cap (void *sdp_ptr, u16 level,
+                                               u8 cap_num, u16 inst_num,
 					       tinybool redundant_pic_cap)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
 
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
@@ -6130,14 +6130,14 @@ sdp_result_e sdp_attr_set_fmtp_redundant_pic_cap (void *sdp_ptr, u16 level,
     }
 }
 
-sdp_result_e sdp_attr_set_fmtp_max_mbps (void *sdp_ptr, u16 level, 
-                                         u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_max_mbps (void *sdp_ptr, u16 level,
+                                         u8 cap_num, u16 inst_num,
                                          u32 max_mbps)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -6163,14 +6163,14 @@ sdp_result_e sdp_attr_set_fmtp_max_mbps (void *sdp_ptr, u16 level,
     }
 }
 
-sdp_result_e sdp_attr_set_fmtp_max_fs (void *sdp_ptr, u16 level, 
-                                       u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_max_fs (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num,
                                        u32 max_fs)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -6196,14 +6196,14 @@ sdp_result_e sdp_attr_set_fmtp_max_fs (void *sdp_ptr, u16 level,
     }
 }
 
-sdp_result_e sdp_attr_set_fmtp_max_br (void *sdp_ptr, u16 level, 
-                                       u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_max_br (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num,
                                        u32 max_br)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -6754,14 +6754,14 @@ sdp_result_e sdp_attr_get_fmtp_data_channel_protocol (void *sdp_ptr, u16 level,
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_max_cpb (void *sdp_ptr, u16 level, 
-                                        u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_max_cpb (void *sdp_ptr, u16 level,
+                                        u8 cap_num, u16 inst_num,
                                         u32 max_cpb)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -6787,14 +6787,14 @@ sdp_result_e sdp_attr_set_fmtp_max_cpb (void *sdp_ptr, u16 level,
     }
 }
 
-sdp_result_e sdp_attr_set_fmtp_max_dpb (void *sdp_ptr, u16 level, 
-                                        u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_max_dpb (void *sdp_ptr, u16 level,
+                                        u8 cap_num, u16 inst_num,
                                         u32 max_dpb)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
     }
@@ -6820,14 +6820,14 @@ sdp_result_e sdp_attr_set_fmtp_max_dpb (void *sdp_ptr, u16 level,
     }
 }
 
-sdp_result_e sdp_attr_set_fmtp_max_rcmd_nalu_size (void *sdp_ptr, u16 level, 
-                                               u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_max_rcmd_nalu_size (void *sdp_ptr, u16 level,
+                                               u8 cap_num, u16 inst_num,
 					       u32 max_rcmd_nalu_size)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
 
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
@@ -6847,18 +6847,18 @@ sdp_result_e sdp_attr_set_fmtp_max_rcmd_nalu_size (void *sdp_ptr, u16 level,
     fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
     fmtp_p->max_rcmd_nalu_size = max_rcmd_nalu_size;
     fmtp_p->flag |= SDP_MAX_RCMD_NALU_SIZE_FLAG;
- 
+
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_deint_buf_cap (void *sdp_ptr, u16 level, 
-                                               u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_deint_buf_cap (void *sdp_ptr, u16 level,
+                                               u8 cap_num, u16 inst_num,
 					       u32 deint_buf_cap)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
 
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
@@ -6878,12 +6878,12 @@ sdp_result_e sdp_attr_set_fmtp_deint_buf_cap (void *sdp_ptr, u16 level,
     fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
     fmtp_p->deint_buf_cap = deint_buf_cap;
     fmtp_p->flag |= SDP_DEINT_BUF_CAP_FLAG;
-    
+
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_h264_parameter_add (void *sdp_ptr, u16 level, 
-                                              u8 cap_num, u16 inst_num, 
+sdp_result_e sdp_attr_set_fmtp_h264_parameter_add (void *sdp_ptr, u16 level,
+                                              u8 cap_num, u16 inst_num,
                                               tinybool parameter_add)
 {
 
@@ -6908,17 +6908,17 @@ sdp_result_e sdp_attr_set_fmtp_h264_parameter_add (void *sdp_ptr, u16 level,
     fmtp_p = &(attr_p->attr.fmtp);
     fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
     fmtp_p->parameter_add = parameter_add;
-    
+
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_h261_annex_params (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_fmtp_h261_annex_params (void *sdp_ptr, u16 level,
                                                   u8 cap_num, u16 inst_num,
                                                   tinybool annex_d) {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
 
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
@@ -6941,7 +6941,7 @@ sdp_result_e sdp_attr_set_fmtp_h261_annex_params (void *sdp_ptr, u16 level,
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_attr_set_fmtp_h263_annex_params (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_fmtp_h263_annex_params (void *sdp_ptr, u16 level,
                                                   u8 cap_num, u16 inst_num,
                                                   tinybool annex_f,
                                                   tinybool annex_i,
@@ -6949,14 +6949,14 @@ sdp_result_e sdp_attr_set_fmtp_h263_annex_params (void *sdp_ptr, u16 level,
                                                   tinybool annex_t,
                                                   u16 annex_k_val,
                                                   u16 annex_n_val,
-                                                  u16 annex_p_val_picture_resize, 
+                                                  u16 annex_p_val_picture_resize,
                                                   u16 annex_p_val_warp)
 
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     sdp_fmtp_t  *fmtp_p;
-    
+
 
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_PARAMETER);
@@ -6979,13 +6979,13 @@ sdp_result_e sdp_attr_set_fmtp_h263_annex_params (void *sdp_ptr, u16 level,
     fmtp_p->annex_i = annex_i;
     fmtp_p->annex_j = annex_j;
     fmtp_p->annex_t = annex_t;
-    
+
     fmtp_p->annex_k_val = annex_k_val;
     fmtp_p->annex_n_val = annex_n_val;
-    
+
     fmtp_p->annex_p_val_picture_resize = annex_p_val_picture_resize;
     fmtp_p->annex_p_val_warp = annex_p_val_warp;
-             
+
     return (SDP_SUCCESS);
 }
 
@@ -6995,18 +6995,18 @@ sdp_result_e sdp_attr_set_fmtp_h263_annex_params (void *sdp_ptr, u16 level,
  * Description: Gives the value of the fmtp attribute annexb type parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
- *              
+ *
  *
  * Returns:     TRUE or FALSE.
  */
-tinybool sdp_attr_fmtp_is_annexb_set (void *sdp_ptr, u16 level, u8 cap_num, 
+tinybool sdp_attr_fmtp_is_annexb_set (void *sdp_ptr, u16 level, u8 cap_num,
                                       u16 inst_num)
-{    
-    
+{
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
 
@@ -7014,7 +7014,7 @@ tinybool sdp_attr_fmtp_is_annexb_set (void *sdp_ptr, u16 level, u8 cap_num,
         return (FALSE);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7032,15 +7032,15 @@ tinybool sdp_attr_fmtp_is_annexb_set (void *sdp_ptr, u16 level, u8 cap_num,
  * Description: Gives the value of the fmtp attribute annexa type parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
- *              
+ *
  *
  * Returns:     TRUE or FALSE.
  */
-tinybool sdp_attr_fmtp_is_annexa_set (void *sdp_ptr, u16 level, u8 cap_num, 
+tinybool sdp_attr_fmtp_is_annexa_set (void *sdp_ptr, u16 level, u8 cap_num,
                                       u16 inst_num)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -7050,7 +7050,7 @@ tinybool sdp_attr_fmtp_is_annexa_set (void *sdp_ptr, u16 level, u8 cap_num,
         return (FALSE);
    }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7068,7 +7068,7 @@ tinybool sdp_attr_fmtp_is_annexa_set (void *sdp_ptr, u16 level, u8 cap_num,
  * Description: Gets the value of the fmtp attribute bitrate type parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7085,7 +7085,7 @@ int32 sdp_attr_get_fmtp_bitrate_type (void *sdp_ptr, u16 level,
         return (SDP_INVALID_VALUE);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7103,7 +7103,7 @@ int32 sdp_attr_get_fmtp_bitrate_type (void *sdp_ptr, u16 level,
  * Description: Gets the value of the fmtp attribute QCIF type parameter
  *              for a given Video codec.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7112,15 +7112,15 @@ int32 sdp_attr_get_fmtp_bitrate_type (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_qcif (void *sdp_ptr, u16 level,
                             u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7137,7 +7137,7 @@ int32 sdp_attr_get_fmtp_qcif (void *sdp_ptr, u16 level,
  * Description: Gets the value of the fmtp attribute CIF type parameter
  *              for a given Video codec.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7146,15 +7146,15 @@ int32 sdp_attr_get_fmtp_qcif (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_cif (void *sdp_ptr, u16 level,
                              u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7173,7 +7173,7 @@ int32 sdp_attr_get_fmtp_cif (void *sdp_ptr, u16 level,
  * Description: Gets the value of the fmtp attribute sqcif type parameter
  *              for a given Video codec.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7182,15 +7182,15 @@ int32 sdp_attr_get_fmtp_cif (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_sqcif (void *sdp_ptr, u16 level,
                                u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7208,7 +7208,7 @@ int32 sdp_attr_get_fmtp_sqcif (void *sdp_ptr, u16 level,
  * Description: Gets the value of the fmtp attribute CIF4 type parameter
  *              for a given Video codec.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7217,15 +7217,15 @@ int32 sdp_attr_get_fmtp_sqcif (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_cif4 (void *sdp_ptr, u16 level,
                               u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7243,7 +7243,7 @@ int32 sdp_attr_get_fmtp_cif4 (void *sdp_ptr, u16 level,
  * Description: Gets the value of the fmtp attribute CIF16 type parameter
  *              for a given Video codec.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7253,15 +7253,15 @@ int32 sdp_attr_get_fmtp_cif4 (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_cif16 (void *sdp_ptr, u16 level,
                                u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7280,7 +7280,7 @@ int32 sdp_attr_get_fmtp_cif16 (void *sdp_ptr, u16 level,
  * Description: Gets the value of the fmtp attribute MAXBR type parameter
  *              for a given Video codec.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7289,15 +7289,15 @@ int32 sdp_attr_get_fmtp_cif16 (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_maxbr (void *sdp_ptr, u16 level,
                                u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7315,7 +7315,7 @@ int32 sdp_attr_get_fmtp_maxbr (void *sdp_ptr, u16 level,
  * Description: Gets the value of the fmtp attribute CUSTOM type parameter
  *              for a given Video codec.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7325,15 +7325,15 @@ int32 sdp_attr_get_fmtp_maxbr (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_custom_x (void *sdp_ptr, u16 level,
                                   u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7350,7 +7350,7 @@ int32 sdp_attr_get_fmtp_custom_x (void *sdp_ptr, u16 level,
  * Description: Gets the value of the fmtp attribute custom_y type parameter
  *              for a given Video codec.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7360,15 +7360,15 @@ int32 sdp_attr_get_fmtp_custom_x (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_custom_y (void *sdp_ptr, u16 level,
                                   u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7386,7 +7386,7 @@ int32 sdp_attr_get_fmtp_custom_y (void *sdp_ptr, u16 level,
  * Description: Gets the value of the fmtp attribute CUSTOM type parameter
  *              for a given Video codec.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7396,15 +7396,15 @@ int32 sdp_attr_get_fmtp_custom_y (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_custom_mpi (void *sdp_ptr, u16 level,
                                     u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7421,7 +7421,7 @@ int32 sdp_attr_get_fmtp_custom_mpi (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_par_width
  * Description: Gets the value of the fmtp attribute PAR (width) parameter
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7430,15 +7430,15 @@ int32 sdp_attr_get_fmtp_custom_mpi (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_par_width (void *sdp_ptr, u16 level,
                                    u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7455,7 +7455,7 @@ int32 sdp_attr_get_fmtp_par_width (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_par_height
  * Description: Gets the value of the fmtp attribute PAR (height) parameter
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7464,15 +7464,15 @@ int32 sdp_attr_get_fmtp_par_width (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_par_height (void *sdp_ptr, u16 level,
                                     u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7489,7 +7489,7 @@ int32 sdp_attr_get_fmtp_par_height (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_cpcf
  * Description: Gets the value of the fmtp attribute- CPCF parameter
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7498,15 +7498,15 @@ int32 sdp_attr_get_fmtp_par_height (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_cpcf (void *sdp_ptr, u16 level,
                               u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7523,7 +7523,7 @@ int32 sdp_attr_get_fmtp_cpcf (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_bpp
  * Description: Gets the value of the fmtp attribute- BPP parameter
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7532,15 +7532,15 @@ int32 sdp_attr_get_fmtp_cpcf (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_bpp (void *sdp_ptr, u16 level,
                              u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7557,7 +7557,7 @@ int32 sdp_attr_get_fmtp_bpp (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_hrd
  * Description: Gets the value of the fmtp attribute- HRD parameter
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7566,15 +7566,15 @@ int32 sdp_attr_get_fmtp_bpp (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_hrd (void *sdp_ptr, u16 level,
                              u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7591,7 +7591,7 @@ int32 sdp_attr_get_fmtp_hrd (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_profile
  * Description: Gets the value of the fmtp attribute- PROFILE parameter
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7600,15 +7600,15 @@ int32 sdp_attr_get_fmtp_hrd (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_profile (void *sdp_ptr, u16 level,
                                  u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7625,7 +7625,7 @@ int32 sdp_attr_get_fmtp_profile (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_level
  * Description: Gets the value of the fmtp attribute- LEVEL parameter
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7634,15 +7634,15 @@ int32 sdp_attr_get_fmtp_profile (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_level (void *sdp_ptr, u16 level,
                                u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7659,7 +7659,7 @@ int32 sdp_attr_get_fmtp_level (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_interlace
  * Description: Checks if INTERLACE parameter is set.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7668,15 +7668,15 @@ int32 sdp_attr_get_fmtp_level (void *sdp_ptr, u16 level,
 tinybool sdp_attr_get_fmtp_interlace (void *sdp_ptr, u16 level,
                                       u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return FALSE;
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7693,7 +7693,7 @@ tinybool sdp_attr_get_fmtp_interlace (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_pack_mode
  * Description: Gets the value of the fmtp attribute- packetization-mode parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7703,15 +7703,15 @@ tinybool sdp_attr_get_fmtp_interlace (void *sdp_ptr, u16 level,
 sdp_result_e sdp_attr_get_fmtp_pack_mode (void *sdp_ptr, u16 level,
                                  u8 cap_num, u16 inst_num, u16 *val)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7729,7 +7729,7 @@ sdp_result_e sdp_attr_get_fmtp_pack_mode (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_level_asymmetry_allowed
  * Description: Gets the value of the fmtp attribute- level-asymmetry-allowed parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7739,15 +7739,15 @@ sdp_result_e sdp_attr_get_fmtp_pack_mode (void *sdp_ptr, u16 level,
 sdp_result_e sdp_attr_get_fmtp_level_asymmetry_allowed (void *sdp_ptr, u16 level,
                                  u8 cap_num, u16 inst_num, u16 *val)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7765,7 +7765,7 @@ sdp_result_e sdp_attr_get_fmtp_level_asymmetry_allowed (void *sdp_ptr, u16 level
 /* Function:    sdp_attr_get_fmtp_profile_id
  * Description: Gets the value of the fmtp attribute- profile-level-id parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7774,15 +7774,15 @@ sdp_result_e sdp_attr_get_fmtp_level_asymmetry_allowed (void *sdp_ptr, u16 level
 const char* sdp_attr_get_fmtp_profile_id (void *sdp_ptr, u16 level,
                                           u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (0);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7799,7 +7799,7 @@ const char* sdp_attr_get_fmtp_profile_id (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_param_sets
  * Description: Gets the value of the fmtp attribute- parameter-sets parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7808,15 +7808,15 @@ const char* sdp_attr_get_fmtp_profile_id (void *sdp_ptr, u16 level,
 const char* sdp_attr_get_fmtp_param_sets (void *sdp_ptr, u16 level,
                                           u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (0);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7833,7 +7833,7 @@ const char* sdp_attr_get_fmtp_param_sets (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_interleaving_depth
  * Description: Gets the value of the fmtp attribute- interleaving_depth parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7845,12 +7845,12 @@ sdp_result_e sdp_attr_get_fmtp_interleaving_depth (void *sdp_ptr, u16 level,
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7868,7 +7868,7 @@ sdp_result_e sdp_attr_get_fmtp_interleaving_depth (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_deint_buf_req
  * Description: Gets the value of the fmtp attribute- deint-buf-req parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7881,12 +7881,12 @@ sdp_result_e sdp_attr_get_fmtp_deint_buf_req (void *sdp_ptr, u16 level,
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7908,7 +7908,7 @@ sdp_result_e sdp_attr_get_fmtp_deint_buf_req (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_max_don_diff
  * Description: Gets the value of the fmtp attribute- max-don-diff parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7920,12 +7920,12 @@ sdp_result_e sdp_attr_get_fmtp_max_don_diff (void *sdp_ptr, u16 level,
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7943,7 +7943,7 @@ sdp_result_e sdp_attr_get_fmtp_max_don_diff (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_init_buf_time
  * Description: Gets the value of the fmtp attribute- init-buf-time parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7955,12 +7955,12 @@ sdp_result_e sdp_attr_get_fmtp_init_buf_time (void *sdp_ptr, u16 level,
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -7982,7 +7982,7 @@ sdp_result_e sdp_attr_get_fmtp_init_buf_time (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_max_mbps
  * Description: Gets the value of the fmtp attribute- max-mbps parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -7995,12 +7995,12 @@ sdp_result_e sdp_attr_get_fmtp_max_mbps (void *sdp_ptr, u16 level,
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8018,7 +8018,7 @@ sdp_result_e sdp_attr_get_fmtp_max_mbps (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_max_fs
  * Description: Gets the value of the fmtp attribute- max-fs parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -8030,12 +8030,12 @@ sdp_result_e sdp_attr_get_fmtp_max_fs (void *sdp_ptr, u16 level,
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8053,7 +8053,7 @@ sdp_result_e sdp_attr_get_fmtp_max_fs (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_max_cpb
  * Description: Gets the value of the fmtp attribute- max-cpb parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -8065,12 +8065,12 @@ sdp_result_e sdp_attr_get_fmtp_max_cpb (void *sdp_ptr, u16 level,
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8088,7 +8088,7 @@ sdp_result_e sdp_attr_get_fmtp_max_cpb (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_max_dpb
  * Description: Gets the value of the fmtp attribute- max-dpb parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -8100,12 +8100,12 @@ sdp_result_e sdp_attr_get_fmtp_max_dpb (void *sdp_ptr, u16 level,
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8124,7 +8124,7 @@ sdp_result_e sdp_attr_get_fmtp_max_dpb (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_max_br
  * Description: Gets the value of the fmtp attribute- max-br parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -8136,12 +8136,12 @@ sdp_result_e sdp_attr_get_fmtp_max_br (void *sdp_ptr, u16 level,
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8159,7 +8159,7 @@ sdp_result_e sdp_attr_get_fmtp_max_br (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_fmtp_is_redundant_pic_cap
  * Description: Gets the value of the fmtp attribute- redundant_pic_cap parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -8168,15 +8168,15 @@ sdp_result_e sdp_attr_get_fmtp_max_br (void *sdp_ptr, u16 level,
 tinybool sdp_attr_fmtp_is_redundant_pic_cap (void *sdp_ptr, u16 level,
                                              u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (FALSE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8193,7 +8193,7 @@ tinybool sdp_attr_fmtp_is_redundant_pic_cap (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_deint_buf_cap
  * Description: Gets the value of the fmtp attribute- deint-buf-cap parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -8204,15 +8204,15 @@ sdp_result_e sdp_attr_get_fmtp_deint_buf_cap (void *sdp_ptr, u16 level,
                                              u8 cap_num, u16 inst_num,
                                              u32 *val)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8234,7 +8234,7 @@ sdp_result_e sdp_attr_get_fmtp_deint_buf_cap (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_get_fmtp_max_rcmd_nalu_size
  * Description: Gets the value of the fmtp attribute- max-rcmd-nalu-size parameter for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -8244,15 +8244,15 @@ sdp_result_e sdp_attr_get_fmtp_max_rcmd_nalu_size (void *sdp_ptr, u16 level,
                                                   u8 cap_num, u16 inst_num,
                                                   u32 *val)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8274,7 +8274,7 @@ sdp_result_e sdp_attr_get_fmtp_max_rcmd_nalu_size (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_fmtp_is_parameter_add
  * Description: Gets the value of the fmtp attribute- parameter-add for H.264 codec
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -8283,15 +8283,15 @@ sdp_result_e sdp_attr_get_fmtp_max_rcmd_nalu_size (void *sdp_ptr, u16 level,
 tinybool sdp_attr_fmtp_is_parameter_add (void *sdp_ptr, u16 level,
                                          u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (FALSE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8305,31 +8305,31 @@ tinybool sdp_attr_fmtp_is_parameter_add (void *sdp_ptr, u16 level,
     }
 }
 
-/****** Following functions are get routines for Annex values 
+/****** Following functions are get routines for Annex values
  * For each Annex support, the get routine will return the boolean TRUE/FALSE
- * Some Annexures for Video codecs have values defined . In those cases, 
+ * Some Annexures for Video codecs have values defined . In those cases,
  * (e.g Annex K, P ) , the return values are not boolean.
- * 
+ *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
- * Returns:     Annex value 
+ * Returns:     Annex value
  */
 
 tinybool sdp_attr_get_fmtp_annex_d (void *sdp_ptr, u16 level,
                                     u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (FALSE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8346,15 +8346,15 @@ tinybool sdp_attr_get_fmtp_annex_d (void *sdp_ptr, u16 level,
 tinybool sdp_attr_get_fmtp_annex_f (void *sdp_ptr, u16 level,
                                     u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (FALSE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8371,15 +8371,15 @@ tinybool sdp_attr_get_fmtp_annex_f (void *sdp_ptr, u16 level,
 tinybool sdp_attr_get_fmtp_annex_i (void *sdp_ptr, u16 level,
                                     u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (FALSE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8396,15 +8396,15 @@ tinybool sdp_attr_get_fmtp_annex_i (void *sdp_ptr, u16 level,
 tinybool sdp_attr_get_fmtp_annex_j (void *sdp_ptr, u16 level,
                                     u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (FALSE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8421,15 +8421,15 @@ tinybool sdp_attr_get_fmtp_annex_j (void *sdp_ptr, u16 level,
 tinybool sdp_attr_get_fmtp_annex_t (void *sdp_ptr, u16 level,
                                     u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (FALSE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8446,15 +8446,15 @@ tinybool sdp_attr_get_fmtp_annex_t (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_annex_k_val (void *sdp_ptr, u16 level,
                                      u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8471,15 +8471,15 @@ int32 sdp_attr_get_fmtp_annex_k_val (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_annex_n_val (void *sdp_ptr, u16 level,
                                      u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8497,15 +8497,15 @@ int32 sdp_attr_get_fmtp_annex_p_picture_resize (void *sdp_ptr, u16 level,
                                                 u8 cap_num, u16 inst_num)
 {
 
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8514,7 +8514,7 @@ int32 sdp_attr_get_fmtp_annex_p_picture_resize (void *sdp_ptr, u16 level,
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_VALUE);
-    } else {        
+    } else {
         return (attr_p->attr.fmtp.annex_p_val_picture_resize);
     }
 }
@@ -8522,15 +8522,15 @@ int32 sdp_attr_get_fmtp_annex_p_picture_resize (void *sdp_ptr, u16 level,
 int32 sdp_attr_get_fmtp_annex_p_warp (void *sdp_ptr, u16 level,
                                       u8 cap_num, u16 inst_num)
 {
-    
+
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8549,16 +8549,16 @@ int32 sdp_attr_get_fmtp_annex_p_warp (void *sdp_ptr, u16 level,
  *              type parameter
  *              for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
- *              
+ *
  *
  * Returns:     Enum type sdp_fmtp_format_type_e
  */
-sdp_fmtp_format_type_e  sdp_attr_fmtp_get_fmtp_format (void *sdp_ptr, 
-                                                       u16 level, u8 cap_num, 
+sdp_fmtp_format_type_e  sdp_attr_fmtp_get_fmtp_format (void *sdp_ptr,
+                                                       u16 level, u8 cap_num,
                                                        u16 inst_num)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -8568,7 +8568,7 @@ sdp_fmtp_format_type_e  sdp_attr_fmtp_get_fmtp_format (void *sdp_ptr,
         return (SDP_FMTP_UNKNOWN_TYPE);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_FMTP,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8583,11 +8583,11 @@ sdp_fmtp_format_type_e  sdp_attr_fmtp_get_fmtp_format (void *sdp_ptr,
 }
 
 /* Function:    sdp_attr_get_pccodec_num_payload_types
- * Description: Returns the number of payload types specified for the 
- *              given X-pc-codec attribute.  If the given attribute is not 
+ * Description: Returns the number of payload types specified for the
+ *              given X-pc-codec attribute.  If the given attribute is not
  *              defined, zero is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -8603,7 +8603,7 @@ u16 sdp_attr_get_pccodec_num_payload_types (void *sdp_ptr, u16 level,
         return (0);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_X_PC_CODEC, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_X_PC_CODEC,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8618,19 +8618,19 @@ u16 sdp_attr_get_pccodec_num_payload_types (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_get_pccodec_payload_type
- * Description: Returns the value of the specified payload type for the 
- *              given X-pc-codec attribute.  If the given attribute is not 
+ * Description: Returns the value of the specified payload type for the
+ *              given X-pc-codec attribute.  If the given attribute is not
  *              defined, zero is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
- *              payload_num The payload number to get.  Range is (1 - 
+ *              payload_num The payload number to get.  Range is (1 -
  *                          max num payloads).
  * Returns:     Payload type.
  */
-u16 sdp_attr_get_pccodec_payload_type (void *sdp_ptr, u16 level, u8 cap_num, 
+u16 sdp_attr_get_pccodec_payload_type (void *sdp_ptr, u16 level, u8 cap_num,
                                        u16 inst_num, u16 payload_num)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -8640,7 +8640,7 @@ u16 sdp_attr_get_pccodec_payload_type (void *sdp_ptr, u16 level, u8 cap_num,
         return (0);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_X_PC_CODEC, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_X_PC_CODEC,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8650,11 +8650,11 @@ u16 sdp_attr_get_pccodec_payload_type (void *sdp_ptr, u16 level, u8 cap_num,
         sdp_p->conf_p->num_invalid_param++;
         return (0);
     } else {
-        if ((payload_num < 1) || 
+        if ((payload_num < 1) ||
             (payload_num > attr_p->attr.pccodec.num_payloads)) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
                 SDP_ERROR("%s X-pc-codec attribute, level %u instance %u, "
-                          "invalid payload number %u requested.", 
+                          "invalid payload number %u requested.",
                           sdp_p->debug_str, level, inst_num, payload_num);
             }
             sdp_p->conf_p->num_invalid_param++;
@@ -8671,7 +8671,7 @@ u16 sdp_attr_get_pccodec_payload_type (void *sdp_ptr, u16 level, u8 cap_num,
  *              added to the end of the list so these values should be added
  *              in the order they will be displayed within the attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -8679,7 +8679,7 @@ u16 sdp_attr_get_pccodec_payload_type (void *sdp_ptr, u16 level, u8 cap_num,
  * Returns:     SDP_SUCCESS            Payload type was added successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_add_pccodec_payload_type (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_add_pccodec_payload_type (void *sdp_ptr, u16 level,
                                                 u8 cap_num, u16 inst_num,
                                                 u16 payload_type)
 {
@@ -8691,7 +8691,7 @@ sdp_result_e sdp_attr_add_pccodec_payload_type (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_X_PC_CODEC, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num, SDP_ATTR_X_PC_CODEC,
                            inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8709,11 +8709,11 @@ sdp_result_e sdp_attr_add_pccodec_payload_type (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_get_xcap_first_cap_num
  * Description: Gets the first capability number valid for the specified
- *              X-cap attribute instance.  If the capability is not 
+ *              X-cap attribute instance.  If the capability is not
  *              defined, zero is returned.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the capability.  
+ *              level       The level to check for the capability.
  *              inst_num    The X-cap instance number to check.
  * Returns:     Capability number or zero.
  */
@@ -8769,12 +8769,12 @@ u16 sdp_attr_get_xcap_first_cap_num (void *sdp_ptr, u16 level, u16 inst_num)
 }
 
 /* Function:    sdp_attr_get_xcap_media_type
- * Description: Returns the media type specified for the given X-cap  
+ * Description: Returns the media type specified for the given X-cap
  *              attribute.  If the given attribute is not defined,
  *              SDP_MEDIA_INVALID is returned.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to check.
  * Returns:     Media type or SDP_MEDIA_INVALID.
  */
@@ -8804,12 +8804,12 @@ sdp_media_e sdp_attr_get_xcap_media_type (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_get_xcap_transport_type
- * Description: Returns the transport type specified for the given X-cap  
+ * Description: Returns the transport type specified for the given X-cap
  *              attribute.  If the given attribute is not defined,
  *              SDP_TRANSPORT_INVALID is returned.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to check.
  * Returns:     Media type or SDP_TRANSPORT_INVALID.
  */
@@ -8824,7 +8824,7 @@ sdp_transport_e sdp_attr_get_xcap_transport_type (void *sdp_ptr, u16 level,
         return (SDP_TRANSPORT_INVALID);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_X_CAP, 
+    attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_X_CAP,
                            inst_num);
     if ((attr_p == NULL) || (attr_p->attr.cap_p == NULL)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -8840,13 +8840,13 @@ sdp_transport_e sdp_attr_get_xcap_transport_type (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_get_xcap_num_payload_types
- * Description: Returns the number of payload types associated with the  
- *              specified X-cap attribute.  If the attribute is invalid, 
- *              zero will be returned.  Application must validate the 
+ * Description: Returns the number of payload types associated with the
+ *              specified X-cap attribute.  If the attribute is invalid,
+ *              zero will be returned.  Application must validate the
  *              attribute line before using this routine.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -8878,15 +8878,15 @@ u16 sdp_attr_get_xcap_num_payload_types (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_get_xcap_payload_type
- * Description: Returns the payload type of the specified payload for the 
- *              X-cap attribute line.  If the attr line or payload number is 
- *              invalid, zero will be returned.  Application must validate 
+ * Description: Returns the payload type of the specified payload for the
+ *              X-cap attribute line.  If the attr line or payload number is
+ *              invalid, zero will be returned.  Application must validate
  *              the X-cap attr before using this routine.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to check.
- *              payload_num The payload number to retrieve.  Range is 
+ *              payload_num The payload number to retrieve.  Range is
  *                          (1 - max num payloads).
  * Returns:     Payload type or zero.
  */
@@ -8934,12 +8934,12 @@ u16 sdp_attr_get_xcap_payload_type (void *sdp_ptr, u16 level,
  *              attribute line.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to check.
  *              media       Media type for the X-cap attribute.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_attr_set_xcap_media_type (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_xcap_media_type (void *sdp_ptr, u16 level,
                                            u16 inst_num, sdp_media_e media)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -8970,13 +8970,13 @@ sdp_result_e sdp_attr_set_xcap_media_type (void *sdp_ptr, u16 level,
  *              attribute line.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to check.
  *              transport   Transport type for the X-cap attribute.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_attr_set_xcap_transport_type(void *sdp_ptr, u16 level, 
-                                              u16 inst_num, 
+sdp_result_e sdp_attr_set_xcap_transport_type(void *sdp_ptr, u16 level,
+                                              u16 inst_num,
                                               sdp_transport_e transport)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -9003,12 +9003,12 @@ sdp_result_e sdp_attr_set_xcap_transport_type(void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_add_xcap_payload_type
- * Description: Add a new payload type for the X-cap attribute line  
+ * Description: Add a new payload type for the X-cap attribute line
  *              specified. The new payload type will be added at the end
  *              of the payload type list.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to check.
  *              payload_type The new payload type.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
@@ -9043,11 +9043,11 @@ sdp_result_e sdp_attr_add_xcap_payload_type(void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_get_cdsc_first_cap_num
  * Description: Gets the first capability number valid for the specified
- *              CDSC attribute instance.  If the capability is not 
+ *              CDSC attribute instance.  If the capability is not
  *              defined, zero is returned.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the capability.  
+ *              level       The level to check for the capability.
  *              inst_num    The CDSC instance number to check.
  * Returns:     Capability number or zero.
  */
@@ -9108,7 +9108,7 @@ u16 sdp_attr_get_cdsc_first_cap_num(void *sdp_ptr, u16 level, u16 inst_num)
  *              SDP_MEDIA_INVALID is returned.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to check.
  * Returns:     Media type or SDP_MEDIA_INVALID.
  */
@@ -9138,12 +9138,12 @@ sdp_media_e sdp_attr_get_cdsc_media_type(void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_get_cdsc_transport_type
- * Description: Returns the transport type specified for the given CDSC  
+ * Description: Returns the transport type specified for the given CDSC
  *              attribute.  If the given attribute is not defined,
  *              SDP_TRANSPORT_INVALID is returned.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to check.
  * Returns:     Media type or SDP_TRANSPORT_INVALID.
  */
@@ -9158,7 +9158,7 @@ sdp_transport_e sdp_attr_get_cdsc_transport_type(void *sdp_ptr, u16 level,
         return (SDP_TRANSPORT_INVALID);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_CDSC, 
+    attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_CDSC,
                            inst_num);
     if ((attr_p == NULL) || (attr_p->attr.cap_p == NULL)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -9174,13 +9174,13 @@ sdp_transport_e sdp_attr_get_cdsc_transport_type(void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_get_cdsc_num_payload_types
- * Description: Returns the number of payload types associated with the  
- *              specified CDSC attribute.  If the attribute is invalid, 
- *              zero will be returned.  Application must validate the 
+ * Description: Returns the number of payload types associated with the
+ *              specified CDSC attribute.  If the attribute is invalid,
+ *              zero will be returned.  Application must validate the
  *              attribute line before using this routine.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9212,15 +9212,15 @@ u16 sdp_attr_get_cdsc_num_payload_types (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_get_cdsc_payload_type
- * Description: Returns the payload type of the specified payload for the 
- *              CDSC attribute line.  If the attr line or payload number is 
- *              invalid, zero will be returned.  Application must validate 
+ * Description: Returns the payload type of the specified payload for the
+ *              CDSC attribute line.  If the attr line or payload number is
+ *              invalid, zero will be returned.  Application must validate
  *              the CDSC attr before using this routine.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to check.
- *              payload_num The payload number to retrieve.  Range is 
+ *              payload_num The payload number to retrieve.  Range is
  *                          (1 - max num payloads).
  * Returns:     Payload type or zero.
  */
@@ -9267,12 +9267,12 @@ u16 sdp_attr_get_cdsc_payload_type (void *sdp_ptr, u16 level,
  *              attribute line.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to check.
  *              media       Media type for the CDSC attribute.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_attr_set_cdsc_media_type (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_cdsc_media_type (void *sdp_ptr, u16 level,
                                            u16 inst_num, sdp_media_e media)
 {
     sdp_t *sdp_p = (sdp_t *)sdp_ptr;
@@ -9303,12 +9303,12 @@ sdp_result_e sdp_attr_set_cdsc_media_type (void *sdp_ptr, u16 level,
  *              attribute line.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to check.
  *              transport   Transport type for the CDSC attribute.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_attr_set_cdsc_transport_type (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_cdsc_transport_type (void *sdp_ptr, u16 level,
                                       u16 inst_num, sdp_transport_e transport)
 {
     sdp_t *sdp_p = (sdp_t *)sdp_ptr;
@@ -9335,12 +9335,12 @@ sdp_result_e sdp_attr_set_cdsc_transport_type (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_add_cdsc_payload_type
- * Description: Add a new payload type for the CDSC attribute line  
+ * Description: Add a new payload type for the CDSC attribute line
  *              specified. The new payload type will be added at the end
  *              of the payload type list.
  *              Note: cap_num is not specified.  It must be zero.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              inst_num    The attribute instance number to check.
  *              payload_type The new payload type.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
@@ -9382,7 +9382,7 @@ sdp_result_e sdp_attr_add_cdsc_payload_type (void *sdp_ptr, u16 level,
  * Returns:     TRUE or FALSE. Returns TRUE if payload type is defined on the
  *              media line, else returns FALSE
  */
- 
+
 tinybool sdp_media_dynamic_payload_valid (void *sdp_ptr, u16 payload_type,
                                           u16 m_line)
 {
@@ -9392,21 +9392,21 @@ tinybool sdp_media_dynamic_payload_valid (void *sdp_ptr, u16 payload_type,
    tinybool payload_matches = FALSE;
    tinybool result = TRUE;
    sdp_t *sdp_p = (sdp_t *)sdp_ptr;
-   
+
    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (FALSE);
    }
-   
-   if ((payload_type < SDP_MIN_DYNAMIC_PAYLOAD) || 
+
+   if ((payload_type < SDP_MIN_DYNAMIC_PAYLOAD) ||
        (payload_type > SDP_MAX_DYNAMIC_PAYLOAD)) {
        return FALSE;
    }
-    
+
    num_payload_types =
        sdp_get_media_num_payload_types(sdp_p, m_line);
-		
+
    for(p_type=1; p_type <=num_payload_types;p_type++){
-	  
+
        m_ptype = (u16)sdp_get_media_payload_type(sdp_p,
                                             m_line, p_type, &ind);
        if (payload_type == m_ptype) {
@@ -9415,13 +9415,13 @@ tinybool sdp_media_dynamic_payload_valid (void *sdp_ptr, u16 payload_type,
        }
 
    }
-   
+
    if (!payload_matches) {
        return FALSE;
    }
-       
+
    return (result);
-   
+
 }
 
 /* Function:    sdp_attr_set_rtr_confirm
@@ -9429,7 +9429,7 @@ tinybool sdp_media_dynamic_payload_valid (void *sdp_ptr, u16 payload_type,
  *              If this parameter is TRUE, the confirm parameter will be
  *              specified when the SDP description is built.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              qos_attr    The specific type of qos attribute.  May be
@@ -9439,7 +9439,7 @@ tinybool sdp_media_dynamic_payload_valid (void *sdp_ptr, u16 payload_type,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_rtr_confirm (void *sdp_ptr, u16 level, u8 cap_num, 
+sdp_result_e sdp_attr_set_rtr_confirm (void *sdp_ptr, u16 level, u8 cap_num,
                                        u16 inst_num,
                                        tinybool confirm)
 {
@@ -9470,7 +9470,7 @@ sdp_result_e sdp_attr_set_rtr_confirm (void *sdp_ptr, u16 level, u8 cap_num,
  *              parameter specified for the given attribute.  Returns TRUE if
  *              the confirm parameter is specified.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9490,7 +9490,7 @@ tinybool sdp_attr_get_rtr_confirm (void *sdp_ptr, u16 level,
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s %s attribute, level %u instance %u "
-                      "not found.", sdp_p->debug_str, 
+                      "not found.", sdp_p->debug_str,
                       sdp_get_attr_name(SDP_ATTR_RTR), level, inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -9512,7 +9512,7 @@ sdp_mediadir_role_e sdp_attr_get_comediadir_role (void *sdp_ptr, u16 level,
         return (SDP_MEDIADIR_ROLE_UNKNOWN);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_DIRECTION, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -9528,9 +9528,9 @@ sdp_mediadir_role_e sdp_attr_get_comediadir_role (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_set_comediadir_role
  * Description: Sets the value of the comediadir role parameter
- *              for the direction attribute. 
+ *              for the direction attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9538,7 +9538,7 @@ sdp_mediadir_role_e sdp_attr_get_comediadir_role (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_comediadir_role (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_comediadir_role (void *sdp_ptr, u16 level,
                                        u8 cap_num, u16 inst_num,
                                        sdp_mediadir_role_e comediadir_role)
 {
@@ -9549,7 +9549,7 @@ sdp_result_e sdp_attr_set_comediadir_role (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_DIRECTION, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -9569,7 +9569,7 @@ sdp_result_e sdp_attr_set_comediadir_role (void *sdp_ptr, u16 level,
  *              parameter specified for the given attribute.  Returns TRUE if
  *              the confirm parameter is specified.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9585,7 +9585,7 @@ tinybool sdp_attr_get_silencesupp_enabled (void *sdp_ptr, u16 level,
         return (FALSE);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -9605,7 +9605,7 @@ tinybool sdp_attr_get_silencesupp_enabled (void *sdp_ptr, u16 level,
  *              is set to TRUE if no value was specified, but instead the
  *              null "-" value was specified.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9623,7 +9623,7 @@ u16 sdp_attr_get_silencesupp_timer (void *sdp_ptr, u16 level,
         return (0);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -9643,7 +9643,7 @@ u16 sdp_attr_get_silencesupp_timer (void *sdp_ptr, u16 level,
  *              If this parameter is TRUE, the confirm parameter will be
  *              specified when the SDP description is built.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9652,7 +9652,7 @@ u16 sdp_attr_get_silencesupp_timer (void *sdp_ptr, u16 level,
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
 sdp_silencesupp_pref_e sdp_attr_get_silencesupp_pref (void *sdp_ptr,
-                                                      u16 level, u8 cap_num, 
+                                                      u16 level, u8 cap_num,
                                                       u16 inst_num)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -9662,7 +9662,7 @@ sdp_silencesupp_pref_e sdp_attr_get_silencesupp_pref (void *sdp_ptr,
         return (SDP_SILENCESUPP_PREF_UNKNOWN);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -9678,11 +9678,11 @@ sdp_silencesupp_pref_e sdp_attr_get_silencesupp_pref (void *sdp_ptr,
 
 /* Function:    sdp_attr_get_silencesupp_siduse
  * Description: Returns the value of the silencesupp attribute siduse
- *              parameter specified for the given attribute.  If the given 
- *              attribute is not defined, SDP_QOS_STRENGTH_UNKNOWN is 
- *              returned.  
+ *              parameter specified for the given attribute.  If the given
+ *              attribute is not defined, SDP_QOS_STRENGTH_UNKNOWN is
+ *              returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9700,7 +9700,7 @@ sdp_silencesupp_siduse_e sdp_attr_get_silencesupp_siduse (void *sdp_ptr,
         return (SDP_SILENCESUPP_SIDUSE_UNKNOWN);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -9720,7 +9720,7 @@ sdp_silencesupp_siduse_e sdp_attr_get_silencesupp_siduse (void *sdp_ptr,
  *              null_ind is set to TRUE if no value was specified,
  *              but instead the null "-" value was specified.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9738,7 +9738,7 @@ u8 sdp_attr_get_silencesupp_fxnslevel (void *sdp_ptr, u16 level,
         return (0);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -9756,7 +9756,7 @@ u8 sdp_attr_get_silencesupp_fxnslevel (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_set_silencesupp_enabled
  * Description: Sets the silencesupp enable value
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9775,7 +9775,7 @@ sdp_result_e sdp_attr_set_silencesupp_enabled (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -9793,7 +9793,7 @@ sdp_result_e sdp_attr_set_silencesupp_enabled (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_set_silencesupp_timer
  * Description: Sets the silencesupp timer value
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9814,7 +9814,7 @@ sdp_result_e sdp_attr_set_silencesupp_timer (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -9833,7 +9833,7 @@ sdp_result_e sdp_attr_set_silencesupp_timer (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_set_silencesupp_pref
  * Description: Sets the silencesupp supppref value
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9852,7 +9852,7 @@ sdp_result_e sdp_attr_set_silencesupp_pref (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -9870,7 +9870,7 @@ sdp_result_e sdp_attr_set_silencesupp_pref (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_set_silencesupp_siduse
  * Description: Sets the silencesupp supppref value
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9889,7 +9889,7 @@ sdp_result_e sdp_attr_set_silencesupp_siduse (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -9907,7 +9907,7 @@ sdp_result_e sdp_attr_set_silencesupp_siduse (void *sdp_ptr, u16 level,
 /* Function:    sdp_attr_set_silencesupp_fxnslevel
  * Description: Sets the silencesupp timer value
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9928,7 +9928,7 @@ sdp_result_e sdp_attr_set_silencesupp_fxnslevel (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SILENCESUPP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -9946,11 +9946,11 @@ sdp_result_e sdp_attr_set_silencesupp_fxnslevel (void *sdp_ptr, u16 level,
 
 
 /* Function:    sdp_attr_get_mptime_num_intervals
- * Description: Returns the number of intervals specified for the 
- *              given mptime attribute.  If the given attribute is not 
+ * Description: Returns the number of intervals specified for the
+ *              given mptime attribute.  If the given attribute is not
  *              defined, zero is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -9961,7 +9961,7 @@ u16 sdp_attr_get_mptime_num_intervals (
     u16 level,
     u8 cap_num,
     u16 inst_num) {
-    
+
     sdp_t *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t *attr_p;
 
@@ -9973,7 +9973,7 @@ u16 sdp_attr_get_mptime_num_intervals (
     if (attr_p != NULL) {
         return attr_p->attr.mptime.num_intervals;
     }
-        
+
     if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
         SDP_ERROR("%s mptime attribute, level %u instance %u not found.",
                   sdp_p->debug_str, level, inst_num);
@@ -9983,15 +9983,15 @@ u16 sdp_attr_get_mptime_num_intervals (
 }
 
 /* Function:    sdp_attr_get_mptime_interval
- * Description: Returns the value of the specified interval for the 
- *              given mptime attribute.  If the given attribute is not 
+ * Description: Returns the value of the specified interval for the
+ *              given mptime attribute.  If the given attribute is not
  *              defined, zero is returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
- *              interval_num The interval number to get.  Range is (1 - 
+ *              interval_num The interval number to get.  Range is (1 -
  *                          max num payloads).
  * Returns:     Interval.
  */
@@ -10001,7 +10001,7 @@ u16 sdp_attr_get_mptime_interval (
     u8 cap_num,
     u16 inst_num,
     u16 interval_num) {
-    
+
     sdp_t *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t *attr_p;
 
@@ -10018,11 +10018,11 @@ u16 sdp_attr_get_mptime_interval (
         sdp_p->conf_p->num_invalid_param++;
         return 0;
     }
-        
+
     if ((interval_num<1) || (interval_num>attr_p->attr.mptime.num_intervals)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s mptime attribute, level %u instance %u, "
-                      "invalid interval number %u requested.", 
+                      "invalid interval number %u requested.",
                       sdp_p->debug_str, level, inst_num, interval_num);
         }
         sdp_p->conf_p->num_invalid_param++;
@@ -10038,7 +10038,7 @@ u16 sdp_attr_get_mptime_interval (
  *              added to the end of the list so these values should be added
  *              in the order they will be displayed within the attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -10053,7 +10053,7 @@ sdp_result_e sdp_attr_add_mptime_interval (
     u8 cap_num,
     u16 inst_num,
     u16 mp_interval) {
-    
+
     u16 interval_num;
     sdp_t *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t *attr_p;
@@ -10082,7 +10082,7 @@ sdp_result_e sdp_attr_add_mptime_interval (
         sdp_p->conf_p->num_invalid_param++;
         return SDP_INVALID_PARAMETER;
     }
-    
+
     attr_p->attr.mptime.intervals[interval_num] = mp_interval;
     ++attr_p->attr.mptime.num_intervals;
     return SDP_SUCCESS;
@@ -10091,7 +10091,7 @@ sdp_result_e sdp_attr_add_mptime_interval (
 
 
 /* Function:    sdp_get_group_attr
- * Description: Returns the attribute parameter from the a=group:<>  
+ * Description: Returns the attribute parameter from the a=group:<>
  *              line.  If no attrib has been set ,
  *              SDP_GROUP_ATTR_UNSUPPORTED will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
@@ -10103,12 +10103,12 @@ sdp_group_attr_e sdp_get_group_attr (void *sdp_ptr, u16 level,
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t          *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_GROUP_ATTR_UNSUPPORTED);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_GROUP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10119,8 +10119,8 @@ sdp_group_attr_e sdp_get_group_attr (void *sdp_ptr, u16 level,
         return (SDP_GROUP_ATTR_UNSUPPORTED);
     } else {
        if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-           SDP_PRINT("%s Stream data group attr field is :%s ", 
-		     sdp_p->debug_str, 
+           SDP_PRINT("%s Stream data group attr field is :%s ",
+		     sdp_p->debug_str,
 		     sdp_get_group_attr_name(attr_p->attr.stream_data.group_attr) );
         }
         return (attr_p->attr.stream_data.group_attr);
@@ -10128,7 +10128,7 @@ sdp_group_attr_e sdp_get_group_attr (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_set_group_attr
- * Description: Sets the value of the group attribute for the 
+ * Description: Sets the value of the group attribute for the
  *              a=group:<val> line.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       SDP_SESSION_LEVEL
@@ -10136,17 +10136,17 @@ sdp_group_attr_e sdp_get_group_attr (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER/SDP_INVALID_SDP_PTR
 */
 
-sdp_result_e sdp_set_group_attr (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_set_group_attr (void *sdp_ptr, u16 level,
                                  u8 cap_num, u16 inst_num,
                                  sdp_group_attr_e group_attr)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_GROUP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10162,22 +10162,22 @@ sdp_result_e sdp_set_group_attr (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_get_group_num_id
- * Description: Returns the number of ids from the a=group:<>  line.  
+ * Description: Returns the number of ids from the a=group:<>  line.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       SDP_SESSION_LEVEL
- * Returns:    Num of group ids present or 0 if there is an error. 
+ * Returns:    Num of group ids present or 0 if there is an error.
  */
 u16 sdp_get_group_num_id (void *sdp_ptr, u16 level,
                           u8 cap_num, u16 inst_num)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t          *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (0);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_GROUP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10188,8 +10188,8 @@ u16 sdp_get_group_num_id (void *sdp_ptr, u16 level,
         return (0);
     } else {
         if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-            SDP_PRINT("%s Stream data group attr - num of ids is :%d ", 
-                      sdp_p->debug_str, 
+            SDP_PRINT("%s Stream data group attr - num of ids is :%d ",
+                      sdp_p->debug_str,
                       attr_p->attr.stream_data.num_group_id);
         }
     }
@@ -10203,21 +10203,21 @@ u16 sdp_get_group_num_id (void *sdp_ptr, u16 level,
  *              level       SDP_SESSION_LEVEL
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER/SDP_INVALID_SDP_PTR
  * Note:        The application must call this API to set the number of group
- *              ids to be provided before actually setting the group ids on 
+ *              ids to be provided before actually setting the group ids on
  *              the a=group line.
 */
 
-sdp_result_e sdp_set_group_num_id (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_set_group_num_id (void *sdp_ptr, u16 level,
                                  u8 cap_num, u16 inst_num,
                                  u16 group_num_id)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_GROUP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10240,12 +10240,12 @@ sdp_result_e sdp_set_group_num_id (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_get_group_id
- * Description: Returns the number of ids from the a=group:<>  line.  
+ * Description: Returns the number of ids from the a=group:<>  line.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       SDP_SESSION_LEVEL
- *              id_num      Number of the id to retrieve. The range is (1 - 
+ *              id_num      Number of the id to retrieve. The range is (1 -
  *                          SDP_MAX_GROUP_STREAM_ID)
- * Returns:    Value of the group id at the index specified or 
+ * Returns:    Value of the group id at the index specified or
  *             SDP_INVALID_VALUE if an error
  */
 int32 sdp_get_group_id (void *sdp_ptr, u16 level,
@@ -10253,12 +10253,12 @@ int32 sdp_get_group_id (void *sdp_ptr, u16 level,
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t          *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
     }
-    
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_GROUP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10269,8 +10269,8 @@ int32 sdp_get_group_id (void *sdp_ptr, u16 level,
         return (SDP_INVALID_VALUE);
     } else {
         if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-            SDP_PRINT("%s Stream data group attr - num of ids is :%d ", 
-                      sdp_p->debug_str, 
+            SDP_PRINT("%s Stream data group attr - num of ids is :%d ",
+                      sdp_p->debug_str,
                       attr_p->attr.stream_data.num_group_id);
         }
         if ((id_num < 1) || (id_num > attr_p->attr.stream_data.num_group_id)) {
@@ -10288,18 +10288,18 @@ int32 sdp_get_group_id (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER/SDP_INVALID_SDP_PTR
 */
 
-sdp_result_e sdp_set_group_id (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_set_group_id (void *sdp_ptr, u16 level,
                                u8 cap_num, u16 inst_num,
                                u16 group_id)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     u16 num_group_id;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_GROUP, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10325,7 +10325,7 @@ sdp_result_e sdp_set_group_id (void *sdp_ptr, u16 level,
 }
 
 /* Function:    sdp_attr_get_x_sidin
- * Description: Returns the attribute parameter from the a=X-sidin:<>  
+ * Description: Returns the attribute parameter from the a=X-sidin:<>
  *              line.  If no attrib has been set NULL will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       media level index
@@ -10339,12 +10339,12 @@ const char* sdp_attr_get_x_sidin (void *sdp_ptr, u16 level,
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t          *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (NULL);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_X_SIDIN, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10355,8 +10355,8 @@ const char* sdp_attr_get_x_sidin (void *sdp_ptr, u16 level,
         return (NULL);
     } else {
         if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-            SDP_PRINT("%s Stream X-sidin attr field is :%s ", 
-	       	      sdp_p->debug_str, 
+            SDP_PRINT("%s Stream X-sidin attr field is :%s ",
+	       	      sdp_p->debug_str,
 		      attr_p->attr.stream_data.x_sidin);
         }
         return (attr_p->attr.stream_data.x_sidin);
@@ -10365,19 +10365,19 @@ const char* sdp_attr_get_x_sidin (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_set_x_sidin
  * Description: Sets the value of the X-sidin parameter
- *              for the given attribute. The address is copied into the 
- *              SDP structure so application memory will not be 
+ *              for the given attribute. The address is copied into the
+ *              SDP structure so application memory will not be
  *              referenced by the SDP lib.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
- *              sidin       Ptr to the sidin string 
+ *              sidin       Ptr to the sidin string
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_x_sidin (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_x_sidin (void *sdp_ptr, u16 level,
                                    u8 cap_num, u16 inst_num,
                                    const char *sidin)
 {
@@ -10388,7 +10388,7 @@ sdp_result_e sdp_attr_set_x_sidin (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_X_SIDIN, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10398,14 +10398,14 @@ sdp_result_e sdp_attr_set_x_sidin (void *sdp_ptr, u16 level,
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
     } else {
-        sstrncpy(attr_p->attr.stream_data.x_sidin, sidin, 
+        sstrncpy(attr_p->attr.stream_data.x_sidin, sidin,
                  sizeof(attr_p->attr.stream_data.x_sidin)) ;
         return (SDP_SUCCESS);
     }
 }
 
 /* Function:    sdp_attr_get_x_sidout
- * Description: Returns the attribute parameter from the a=X-sidout:<>  
+ * Description: Returns the attribute parameter from the a=X-sidout:<>
  *              line.  If no attrib has been set NULL will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       media level index
@@ -10419,12 +10419,12 @@ const char* sdp_attr_get_x_sidout (void *sdp_ptr, u16 level,
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t          *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (NULL);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_X_SIDOUT, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10435,8 +10435,8 @@ const char* sdp_attr_get_x_sidout (void *sdp_ptr, u16 level,
         return (NULL);
     } else {
         if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-            SDP_PRINT("%s Stream X-sidout attr field is :%s ", 
-	 	      sdp_p->debug_str, 
+            SDP_PRINT("%s Stream X-sidout attr field is :%s ",
+	 	      sdp_p->debug_str,
 		      attr_p->attr.stream_data.x_sidout);
         }
         return (attr_p->attr.stream_data.x_sidout);
@@ -10445,11 +10445,11 @@ const char* sdp_attr_get_x_sidout (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_set_x_sidout
  * Description: Sets the value of the x-sidout parameter
- *              for the given attribute. The address is copied into the 
- *              SDP structure so application memory will not be 
+ *              for the given attribute. The address is copied into the
+ *              SDP structure so application memory will not be
  *              referenced by the SDP lib.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -10457,7 +10457,7 @@ const char* sdp_attr_get_x_sidout (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_x_sidout (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_x_sidout (void *sdp_ptr, u16 level,
                                    u8 cap_num, u16 inst_num,
                                    const char *sidout)
 {
@@ -10468,7 +10468,7 @@ sdp_result_e sdp_attr_set_x_sidout (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_X_SIDOUT, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10478,14 +10478,14 @@ sdp_result_e sdp_attr_set_x_sidout (void *sdp_ptr, u16 level,
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
     } else {
-        sstrncpy(attr_p->attr.stream_data.x_sidout, sidout, 
+        sstrncpy(attr_p->attr.stream_data.x_sidout, sidout,
                  sizeof(attr_p->attr.stream_data.x_sidout)) ;
         return (SDP_SUCCESS);
     }
 }
 
 /* Function:    sdp_attr_get_x_confid
- * Description: Returns the attribute parameter from the a=X-confid:<>  
+ * Description: Returns the attribute parameter from the a=X-confid:<>
  *              line.  If no attrib has been set NULL will be returned.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  *              level       media level index
@@ -10499,12 +10499,12 @@ const char* sdp_attr_get_x_confid (void *sdp_ptr, u16 level,
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t          *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (NULL);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_X_CONFID, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10515,8 +10515,8 @@ const char* sdp_attr_get_x_confid (void *sdp_ptr, u16 level,
         return (NULL);
     } else {
         if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-            SDP_PRINT("%s Stream X-confid attr field is :%s ", 
-		      sdp_p->debug_str, 
+            SDP_PRINT("%s Stream X-confid attr field is :%s ",
+		      sdp_p->debug_str,
 		      attr_p->attr.stream_data.x_confid);
         }
         return (attr_p->attr.stream_data.x_confid);
@@ -10525,11 +10525,11 @@ const char* sdp_attr_get_x_confid (void *sdp_ptr, u16 level,
 
 /* Function:    sdp_attr_set_x_confid
  * Description: Sets the value of the X-confid parameter
- *              for the given attribute. The address is copied into the 
- *              SDP structure so application memory will not be 
+ *              for the given attribute. The address is copied into the
+ *              SDP structure so application memory will not be
  *              referenced by the SDP lib.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -10537,7 +10537,7 @@ const char* sdp_attr_get_x_confid (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
-sdp_result_e sdp_attr_set_x_confid (void *sdp_ptr, u16 level, 
+sdp_result_e sdp_attr_set_x_confid (void *sdp_ptr, u16 level,
                                    u8 cap_num, u16 inst_num,
                                    const char *confid)
 {
@@ -10548,7 +10548,7 @@ sdp_result_e sdp_attr_set_x_confid (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_X_CONFID, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10558,7 +10558,7 @@ sdp_result_e sdp_attr_set_x_confid (void *sdp_ptr, u16 level,
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
     } else {
-        sstrncpy(attr_p->attr.stream_data.x_confid, confid, 
+        sstrncpy(attr_p->attr.stream_data.x_confid, confid,
                  sizeof(attr_p->attr.stream_data.x_confid)) ;
         return (SDP_SUCCESS);
     }
@@ -10572,28 +10572,28 @@ sdp_result_e sdp_attr_set_x_confid (void *sdp_ptr, u16 level,
  *              mode        Filter-mode (incl/excl)
  *              nettype     Network type
  *              addrtype    Address type of the destination
- *              dest_addr   Destination unicast/multicast address 
+ *              dest_addr   Destination unicast/multicast address
  *                          (ip-addr/ fqdn/ *)
  *              src_addr    One of the source address to which the filter
  *                          applies, i.e. process/drop the packets.
- *                          (More source addresses are added using 
+ *                          (More source addresses are added using
  *                           sdp_include_new_filter_src_addr)
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER/SDP_INVALID_SDP_PTR
  */
-sdp_result_e 
-sdp_set_source_filter (void *sdp_ptr, u16 level, u8 cap_num, 
+sdp_result_e
+sdp_set_source_filter (void *sdp_ptr, u16 level, u8 cap_num,
                        u16 inst_num, sdp_src_filter_mode_e mode,
-                       sdp_nettype_e nettype, sdp_addrtype_e addrtype, 
+                       sdp_nettype_e nettype, sdp_addrtype_e addrtype,
                        const char *dest_addr, const char *src_addr)
 {
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
     u16 index;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SOURCE_FILTER, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10609,18 +10609,18 @@ sdp_set_source_filter (void *sdp_ptr, u16 level, u8 cap_num,
     sstrncpy(attr_p->attr.source_filter.dest_addr, dest_addr,
              SDP_MAX_STRING_LEN+1);
     if (src_addr) {
-        index = attr_p->attr.source_filter.num_src_addr;	     
-        sstrncpy(attr_p->attr.source_filter.src_list[index], 
+        index = attr_p->attr.source_filter.num_src_addr;
+        sstrncpy(attr_p->attr.source_filter.src_list[index],
 	         src_addr,SDP_MAX_STRING_LEN+1);
         /* Increment source list count if the api was invoked for
          * first time or else we're basically replacing the index 0
          * element in src-list.
          */
         ++attr_p->attr.source_filter.num_src_addr;
-	SDP_PRINT("%s Source address (%s) number %d added to source filter", 
-		  sdp_p->debug_str,src_addr, 
+	SDP_PRINT("%s Source address (%s) number %d added to source filter",
+		  sdp_p->debug_str,src_addr,
 		  attr_p->attr.source_filter.num_src_addr);
-        
+
     }
 
     return (SDP_SUCCESS);
@@ -10637,13 +10637,13 @@ sdp_set_source_filter (void *sdp_ptr, u16 level, u8 cap_num,
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER/SDP_INVALID_SDP_PTR
  */
 
-sdp_result_e 
-sdp_include_new_filter_src_addr (void *sdp_ptr, u16 level, u8 cap_num, 
+sdp_result_e
+sdp_include_new_filter_src_addr (void *sdp_ptr, u16 level, u8 cap_num,
                                  u16 inst_num, const char *src_addr)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
     }
@@ -10681,8 +10681,8 @@ sdp_include_new_filter_src_addr (void *sdp_ptr, u16 level, u8 cap_num,
  *              inst_num  The attribute instance number
  * Returns:     Filter mode (incl/excl/not present)
  */
-sdp_src_filter_mode_e 
-sdp_get_source_filter_mode (void *sdp_ptr, u16 level, u8 cap_num, 
+sdp_src_filter_mode_e
+sdp_get_source_filter_mode (void *sdp_ptr, u16 level, u8 cap_num,
                             u16 inst_num)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -10691,7 +10691,7 @@ sdp_get_source_filter_mode (void *sdp_ptr, u16 level, u8 cap_num,
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_FILTER_MODE_NOT_PRESENT);
     }
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SOURCE_FILTER, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10707,15 +10707,15 @@ sdp_get_source_filter_mode (void *sdp_ptr, u16 level, u8 cap_num,
 
 /* Function:    sdp_get_filter_destination_attributes
  * Description: Gets the destination address parameters
- * Parameters:  Network type (optional), destination address type 
- *              (optional), and destination address (mandatory) variables 
+ * Parameters:  Network type (optional), destination address type
+ *              (optional), and destination address (mandatory) variables
  *              which gets updated.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER/SDP_INVALID_SDP_PTR
  */
 sdp_result_e
 sdp_get_filter_destination_attributes (void *sdp_ptr, u16 level, u8 cap_num,
                                        u16 inst_num, sdp_nettype_e *nettype,
-                                       sdp_addrtype_e *addrtype, 
+                                       sdp_addrtype_e *addrtype,
                                        char *dest_addr)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -10755,7 +10755,7 @@ sdp_get_filter_destination_attributes (void *sdp_ptr, u16 level, u8 cap_num,
  */
 
 int32
-sdp_get_filter_source_address_count (void *sdp_ptr, u16 level, 
+sdp_get_filter_source_address_count (void *sdp_ptr, u16 level,
                                      u8 cap_num, u16 inst_num)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -10790,7 +10790,7 @@ sdp_get_filter_source_address_count (void *sdp_ptr, u16 level,
  */
 sdp_result_e
 sdp_get_filter_source_address (void *sdp_ptr, u16 level, u8 cap_num,
-                               u16 inst_num, u16 src_addr_id, 
+                               u16 inst_num, u16 src_addr_id,
                                char *src_addr)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -10824,7 +10824,7 @@ sdp_get_filter_source_address (void *sdp_ptr, u16 level, u8 cap_num,
 }
 
 sdp_result_e
-sdp_set_rtcp_unicast_mode (void *sdp_ptr, u16 level, u8 cap_num, 
+sdp_set_rtcp_unicast_mode (void *sdp_ptr, u16 level, u8 cap_num,
                            u16 inst_num, sdp_rtcp_unicast_mode_e mode)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -10836,7 +10836,7 @@ sdp_set_rtcp_unicast_mode (void *sdp_ptr, u16 level, u8 cap_num,
     if (mode >= SDP_RTCP_MAX_UNICAST_MODE) {
         return (SDP_INVALID_PARAMETER);
     }
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_RTCP_UNICAST, inst_num);
 
     if (attr_p == NULL) {
@@ -10852,7 +10852,7 @@ sdp_set_rtcp_unicast_mode (void *sdp_ptr, u16 level, u8 cap_num,
     return (SDP_SUCCESS);
 }
 
-sdp_rtcp_unicast_mode_e 
+sdp_rtcp_unicast_mode_e
 sdp_get_rtcp_unicast_mode(void *sdp_ptr, u16 level, u8 cap_num,
                           u16 inst_num)
 {
@@ -10881,14 +10881,14 @@ sdp_get_rtcp_unicast_mode(void *sdp_ptr, u16 level, u8 cap_num,
  * Description: Returns the value of the sdescriptions tag
  *              parameter specified for the given attribute.
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  * Returns:     Tag value or SDP_INVALID_VALUE (-2) if error encountered.
  */
- 
-int32 
+
+int32
 sdp_attr_get_sdescriptions_tag (void *sdp_ptr, u16 level,
                                 u8 cap_num, u16 inst_num)
 {
@@ -10899,9 +10899,9 @@ sdp_attr_get_sdescriptions_tag (void *sdp_ptr, u16 level,
         return SDP_INVALID_VALUE;
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SDESCRIPTIONS, inst_num);
-    
+
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s srtp attribute tag, level %u instance %u "
@@ -10923,16 +10923,16 @@ sdp_attr_get_sdescriptions_tag (void *sdp_ptr, u16 level,
  *              attribute is present. If it is, return the suite. If it's not,
  *              try to find the version 9. This assumes you cannot have both
  *              versions in the same SDP.
- *              
+ *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
- * Returns:     SDP_SRTP_UNKNOWN_CRYPTO_SUITE is returned if an error was 
+ * Returns:     SDP_SRTP_UNKNOWN_CRYPTO_SUITE is returned if an error was
  *              encountered otherwise the crypto suite is returned.
  */
- 
+
 sdp_srtp_crypto_suite_t
 sdp_attr_get_sdescriptions_crypto_suite (void *sdp_ptr, u16 level,
                                          u8 cap_num, u16 inst_num)
@@ -10944,14 +10944,14 @@ sdp_attr_get_sdescriptions_crypto_suite (void *sdp_ptr, u16 level,
         return SDP_SRTP_UNKNOWN_CRYPTO_SUITE;
     }
 
-   
+
     /* Try version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
-    
+
     if (attr_p == NULL) {
         /* There's no version 2 so now try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
 	if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -10962,9 +10962,9 @@ sdp_attr_get_sdescriptions_crypto_suite (void *sdp_ptr, u16 level,
             return SDP_SRTP_UNKNOWN_CRYPTO_SUITE;
 	}
     }
-    
+
     return attr_p->attr.srtp_context.suite;
-    
+
 }
 
 /* Function:    sdp_attr_get_sdescriptions_key
@@ -10978,13 +10978,13 @@ sdp_attr_get_sdescriptions_crypto_suite (void *sdp_ptr, u16 level,
  *              versions in the same SDP.
  *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  * Returns:     NULL if error encountered or master key salt string
  */
- 
+
 const char*
 sdp_attr_get_sdescriptions_key (void *sdp_ptr, u16 level,
                                 u8 cap_num, u16 inst_num)
@@ -10997,14 +10997,14 @@ sdp_attr_get_sdescriptions_key (void *sdp_ptr, u16 level,
     }
 
     /* Try version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
-    
+
     if (attr_p == NULL) {
         /* Couldn't find version 2 now try version 9 */
-	attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+	attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
-			       
+
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
                 SDP_ERROR("%s srtp attribute key, level %u instance %u "
@@ -11013,8 +11013,8 @@ sdp_attr_get_sdescriptions_key (void *sdp_ptr, u16 level,
             sdp_p->conf_p->num_invalid_param++;
             return NULL;
 	}
-    } 
-    
+    }
+
     return (char*)attr_p->attr.srtp_context.master_key;
 }
 
@@ -11030,13 +11030,13 @@ sdp_attr_get_sdescriptions_key (void *sdp_ptr, u16 level,
  *              versions in the same SDP.
  *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  * Returns:     NULL if error encountered or master key salt string
  */
- 
+
 const char*
 sdp_attr_get_sdescriptions_salt (void *sdp_ptr, u16 level,
                                  u8 cap_num, u16 inst_num)
@@ -11049,14 +11049,14 @@ sdp_attr_get_sdescriptions_salt (void *sdp_ptr, u16 level,
     }
 
     /* Try version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
-    
+
     if (attr_p == NULL) {
         /* Couldn't find version 2 now try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
-        
+
 	if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
                 SDP_ERROR("%s srtp attribute salt, level %u instance %u "
@@ -11065,10 +11065,10 @@ sdp_attr_get_sdescriptions_salt (void *sdp_ptr, u16 level,
             sdp_p->conf_p->num_invalid_param++;
             return NULL;
 	}
-    } 
-        
+    }
+
     return (char*) attr_p->attr.srtp_context.master_salt;
-    
+
 }
 
 
@@ -11084,13 +11084,13 @@ sdp_attr_get_sdescriptions_salt (void *sdp_ptr, u16 level,
  *              both versions in the same SDP.
  *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  * Returns:     NULL if error encountered or lifetime string
  */
- 
+
 const char*
 sdp_attr_get_sdescriptions_lifetime (void *sdp_ptr, u16 level,
                                      u8 cap_num, u16 inst_num)
@@ -11103,14 +11103,14 @@ sdp_attr_get_sdescriptions_lifetime (void *sdp_ptr, u16 level,
     }
 
     /* Try version 2 first. */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
-    
+
     if (attr_p == NULL) {
         /* Couldn't find version 2 now try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
-			       
+
 	if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
                 SDP_ERROR("%s srtp attribute lifetime, level %u instance %u "
@@ -11119,10 +11119,10 @@ sdp_attr_get_sdescriptions_lifetime (void *sdp_ptr, u16 level,
             sdp_p->conf_p->num_invalid_param++;
             return NULL;
 	}
-    } 
-    
+    }
+
     return (char*)attr_p->attr.srtp_context.master_key_lifetime;
-    
+
 }
 
 /* Function:    sdp_attr_get_sdescriptions_mki
@@ -11136,18 +11136,18 @@ sdp_attr_get_sdescriptions_lifetime (void *sdp_ptr, u16 level,
  *              both versions in the same SDP.
  *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
  *              mki_value   application provided pointer that on exit
  *                          is set to the MKI value string if one exists.
- *              mki_length application provided pointer that on exit 
+ *              mki_length application provided pointer that on exit
  *                         is set to the MKI length if one exists.
- * Returns:     SDP_SUCCESS no errors encountered otherwise sdp error 
+ * Returns:     SDP_SUCCESS no errors encountered otherwise sdp error
  *              based upon the specific error.
  */
- 
+
 sdp_result_e
 sdp_attr_get_sdescriptions_mki (void *sdp_ptr, u16 level,
                                 u8 cap_num, u16 inst_num,
@@ -11159,18 +11159,18 @@ sdp_attr_get_sdescriptions_mki (void *sdp_ptr, u16 level,
 
     *mki_value = NULL;
     *mki_length = 0;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return SDP_INVALID_SDP_PTR;
     }
 
     /* Try version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
-    
+
     if (attr_p == NULL) {
         /* Couldn't find version 2 now try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
 	if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -11181,11 +11181,11 @@ sdp_attr_get_sdescriptions_mki (void *sdp_ptr, u16 level,
             return SDP_INVALID_PARAMETER;
 	}
     }
-    
+
     *mki_value = (char*)attr_p->attr.srtp_context.mki;
     *mki_length = attr_p->attr.srtp_context.mki_size_bytes;
     return SDP_SUCCESS;
-   
+
 }
 
 
@@ -11197,9 +11197,9 @@ sdp_attr_get_sdescriptions_mki (void *sdp_ptr, u16 level,
  *              attribute is present. If it is, return session parameters. If
  *              it's not, try to find version 9. This assumes you cannot have
  *              both versions in the same SDP.
- *     
+ *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -11208,7 +11208,7 @@ sdp_attr_get_sdescriptions_mki (void *sdp_ptr, u16 level,
  *              parameters string. Note that the calling function should
  *              not free the returned pointer.
  */
- 
+
 const char*
 sdp_attr_get_sdescriptions_session_params (void *sdp_ptr, u16 level,
                                            u8 cap_num, u16 inst_num)
@@ -11221,12 +11221,12 @@ sdp_attr_get_sdescriptions_session_params (void *sdp_ptr, u16 level,
     }
 
     /* Try version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
-    
+
     if (attr_p == NULL) {
         /* Couldn't find version 2 try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SDESCRIPTIONS, inst_num);
 	if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -11236,8 +11236,8 @@ sdp_attr_get_sdescriptions_session_params (void *sdp_ptr, u16 level,
             sdp_p->conf_p->num_invalid_param++;
             return NULL;
         }
-    } 
-    
+    }
+
     return attr_p->attr.srtp_context.session_parameters;
 }
 
@@ -11250,37 +11250,37 @@ sdp_attr_get_sdescriptions_session_params (void *sdp_ptr, u16 level,
  *              attribute is present. If it is, return key size. If
  *              it's not, try to find version 9. This assumes you cannot have
  *              both versions in the same SDP.
- *     
+ *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
- * Returns:     0 (SDP_SDESCRIPTIONS_KEY_SIZE_UNKNOWN) if error was 
+ * Returns:     0 (SDP_SDESCRIPTIONS_KEY_SIZE_UNKNOWN) if error was
  *              encountered, otherwise key size.
  */
- 
-unsigned char 
-sdp_attr_get_sdescriptions_key_size (void *sdp_ptr, 
-                                     u16 level, 
-				     u8 cap_num, 
+
+unsigned char
+sdp_attr_get_sdescriptions_key_size (void *sdp_ptr,
+                                     u16 level,
+				     u8 cap_num,
 				     u16 inst_num)
 {
 
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return SDP_SDESCRIPTIONS_KEY_SIZE_UNKNOWN;
     }
 
     /* Try version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
-    
+
     if (attr_p == NULL) {
         /* Couldn't find version 2 now try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
 	if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -11291,7 +11291,7 @@ sdp_attr_get_sdescriptions_key_size (void *sdp_ptr,
             return SDP_SDESCRIPTIONS_KEY_SIZE_UNKNOWN;
 	}
     }
-    
+
     return attr_p->attr.srtp_context.master_key_size_bytes;
 
 }
@@ -11305,37 +11305,37 @@ sdp_attr_get_sdescriptions_key_size (void *sdp_ptr,
  *              attribute is present. If it is, return salt size. If
  *              it's not, try to find version 9. This assumes you cannot have
  *              both versions in the same SDP.
- *     
+ *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
- * Returns:     0 (SDP_SDESCRIPTIONS_KEY_SIZE_UNKNOWN) if error was 
+ * Returns:     0 (SDP_SDESCRIPTIONS_KEY_SIZE_UNKNOWN) if error was
  *              encountered, otherwise salt size.
  */
- 
-unsigned char 
-sdp_attr_get_sdescriptions_salt_size (void *sdp_ptr, 
-                                      u16 level, 
-				      u8 cap_num, 
+
+unsigned char
+sdp_attr_get_sdescriptions_salt_size (void *sdp_ptr,
+                                      u16 level,
+				      u8 cap_num,
 				      u16 inst_num)
 {
 
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return SDP_SDESCRIPTIONS_KEY_SIZE_UNKNOWN;
     }
 
     /* Try version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
-    
+
     if (attr_p == NULL) {
         /* Couldn't find version 2 now try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
 	if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -11346,7 +11346,7 @@ sdp_attr_get_sdescriptions_salt_size (void *sdp_ptr,
             return SDP_SDESCRIPTIONS_KEY_SIZE_UNKNOWN;
 	}
     }
-    
+
     return attr_p->attr.srtp_context.master_salt_size_bytes;
 
 }
@@ -11361,38 +11361,38 @@ sdp_attr_get_sdescriptions_salt_size (void *sdp_ptr,
  *              it's not, try to find version 9. This assumes you cannot have
  *              both versions in the same SDP.
  *              Currently only necessary for MGCP.
- *     
+ *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
- * Returns:     0 (SDP_SRTP_CRYPTO_SELECTION_FLAGS_UNKNOWN) if error was 
+ * Returns:     0 (SDP_SRTP_CRYPTO_SELECTION_FLAGS_UNKNOWN) if error was
  *              encountered, otherwise selection flags.
  */
- 
-unsigned long 
-sdp_attr_get_srtp_crypto_selection_flags (void *sdp_ptr, 
-                                          u16 level, 
-					  u8 cap_num, 
+
+unsigned long
+sdp_attr_get_srtp_crypto_selection_flags (void *sdp_ptr,
+                                          u16 level,
+					  u8 cap_num,
 					  u16 inst_num)
 {
 
 
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
     sdp_attr_t  *attr_p;
-    
+
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return SDP_SRTP_CRYPTO_SELECTION_FLAGS_UNKNOWN;
     }
 
     /* Try version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
-    
+
     if (attr_p == NULL) {
         /* Couldn't find version 2 now try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
 	if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -11403,9 +11403,9 @@ sdp_attr_get_srtp_crypto_selection_flags (void *sdp_ptr,
             return SDP_SRTP_CRYPTO_SELECTION_FLAGS_UNKNOWN;
 	}
     }
-    
+
     return attr_p->attr.srtp_context.selection_flags;
-    
+
 }
 
 
@@ -11413,7 +11413,7 @@ sdp_attr_get_srtp_crypto_selection_flags (void *sdp_ptr,
 /* Function:    sdp_attr_set_sdescriptions_tag
  * Description: Sets the sdescriptions tag parameter
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -11421,8 +11421,8 @@ sdp_attr_get_srtp_crypto_selection_flags (void *sdp_ptr,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
- 
-sdp_result_e 
+
+sdp_result_e
 sdp_attr_set_sdescriptions_tag (void *sdp_ptr, u16 level,
                                 u8 cap_num, u16 inst_num,
                                 int32 tag_num)
@@ -11434,7 +11434,7 @@ sdp_attr_set_sdescriptions_tag (void *sdp_ptr, u16 level,
         return (SDP_INVALID_SDP_PTR);
     }
 
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SDESCRIPTIONS, inst_num);
     if (attr_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -11456,11 +11456,11 @@ sdp_attr_set_sdescriptions_tag (void *sdp_ptr, u16 level,
  *              sdescriptions. It has no knowledge which version is being
  *              used so it will first try to find if a version 2 sdescriptions
  *              attribute is present. If it is, it will set the crypto suite
- *              for version 2. If it's not, try to find version 9. This assumes 
+ *              for version 2. If it's not, try to find version 9. This assumes
  *              you cannot have both versions in the same SDP.
  *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -11468,8 +11468,8 @@ sdp_attr_set_sdescriptions_tag (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
- 
-sdp_result_e 
+
+sdp_result_e
 sdp_attr_set_sdescriptions_crypto_suite (void *sdp_ptr, u16 level,
                                          u8 cap_num, u16 inst_num,
                                          sdp_srtp_crypto_suite_t crypto_suite)
@@ -11483,15 +11483,15 @@ sdp_attr_set_sdescriptions_crypto_suite (void *sdp_ptr, u16 level,
     }
 
     /* Try to find version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
     if (attr_p == NULL) {
-    
+
         /* Version 2 not found, try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
         if (attr_p == NULL) {
-	
+
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
                 SDP_ERROR("%s srtp attribute suite, level %u instance %u "
                           "not found.", sdp_p->debug_str, level, inst_num);
@@ -11499,27 +11499,27 @@ sdp_attr_set_sdescriptions_crypto_suite (void *sdp_ptr, u16 level,
             sdp_p->conf_p->num_invalid_param++;
             return SDP_INVALID_PARAMETER;
 	}
-    } 
-    
+    }
+
     attr_p->attr.srtp_context.suite = crypto_suite;
     for (i=0; i < SDP_SRTP_MAX_NUM_CRYPTO_SUITES; i++) {
          /* For the specified crypto suite, get the size of the
 	  * key and salt.
 	  */
-	 if (sdp_srtp_crypto_suite_array[i].crypto_suite_val == 
+	 if (sdp_srtp_crypto_suite_array[i].crypto_suite_val ==
 	                                    crypto_suite) {
-					       
+
               attr_p->attr.srtp_context.master_key_size_bytes =
 	      sdp_srtp_crypto_suite_array[i].key_size_bytes;
-	      
-	      attr_p->attr.srtp_context.master_salt_size_bytes = 
+
+	      attr_p->attr.srtp_context.master_salt_size_bytes =
 	      sdp_srtp_crypto_suite_array[i].salt_size_bytes;
-					       
+
 	 }
    }
-   
+
    return SDP_SUCCESS;
-    
+
 }
 
 
@@ -11529,11 +11529,11 @@ sdp_attr_set_sdescriptions_crypto_suite (void *sdp_ptr, u16 level,
  *              sdescriptions. It has no knowledge which version is being
  *              used so it will first try to find if a version 2 sdescriptions
  *              attribute is present. If it is, it will set the key for
- *              version 2. If it's not, try to find version 9. This assumes 
+ *              version 2. If it's not, try to find version 9. This assumes
  *              you cannot have both versions in the same SDP.
  *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -11541,8 +11541,8 @@ sdp_attr_set_sdescriptions_crypto_suite (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
- 
-sdp_result_e 
+
+sdp_result_e
 sdp_attr_set_sdescriptions_key (void *sdp_ptr, u16 level,
                                 u8 cap_num, u16 inst_num,
                                 char *key)
@@ -11556,11 +11556,11 @@ sdp_attr_set_sdescriptions_key (void *sdp_ptr, u16 level,
     }
 
     /* Try version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
     if (attr_p == NULL) {
         /* Couldn't find version 2 try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SDESCRIPTIONS, inst_num);
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -11570,14 +11570,14 @@ sdp_attr_set_sdescriptions_key (void *sdp_ptr, u16 level,
             sdp_p->conf_p->num_invalid_param++;
             return SDP_INVALID_PARAMETER;
         }
-	
-    } 
-    
-    bcopy(key, attr_p->attr.srtp_context.master_key, 
+
+    }
+
+    bcopy(key, attr_p->attr.srtp_context.master_key,
 	  SDP_SRTP_MAX_KEY_SIZE_BYTES);
-	     
+
     return SDP_SUCCESS;
-    
+
 }
 
 
@@ -11587,11 +11587,11 @@ sdp_attr_set_sdescriptions_key (void *sdp_ptr, u16 level,
  *              sdescriptions. It has no knowledge which version is being
  *              used so it will first try to find if a version 2 sdescriptions
  *              attribute is present. If it is, it will set the salt for
- *              version 2. If it's not, try to find version 9. This assumes 
+ *              version 2. If it's not, try to find version 9. This assumes
  *              you cannot have both versions in the same SDP.
  *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -11599,8 +11599,8 @@ sdp_attr_set_sdescriptions_key (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
- 
-sdp_result_e 
+
+sdp_result_e
 sdp_attr_set_sdescriptions_salt (void *sdp_ptr, u16 level,
                                  u8 cap_num, u16 inst_num,
                                  char *salt)
@@ -11614,11 +11614,11 @@ sdp_attr_set_sdescriptions_salt (void *sdp_ptr, u16 level,
     }
 
     /* Try to find version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
     if (attr_p == NULL) {
         /* Couldn't find version 2, try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
 	if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -11628,12 +11628,12 @@ sdp_attr_set_sdescriptions_salt (void *sdp_ptr, u16 level,
             sdp_p->conf_p->num_invalid_param++;
             return (SDP_INVALID_PARAMETER);
 	}
-	
-    } 
-    
+
+    }
+
     bcopy(salt, attr_p->attr.srtp_context.master_salt,
 	  SDP_SRTP_MAX_SALT_SIZE_BYTES);
-	     
+
     return SDP_SUCCESS;
 }
 
@@ -11644,11 +11644,11 @@ sdp_attr_set_sdescriptions_salt (void *sdp_ptr, u16 level,
  *              sdescriptions. It has no knowledge which version is being
  *              used so it will first try to find if a version 2 sdescriptions
  *              attribute is present. If it is, it will set the lifetime for
- *              version 2. If it's not, try to find version 9. This assumes 
+ *              version 2. If it's not, try to find version 9. This assumes
  *              you cannot have both versions in the same SDP.
  *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -11656,8 +11656,8 @@ sdp_attr_set_sdescriptions_salt (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
- 
-sdp_result_e 
+
+sdp_result_e
 sdp_attr_set_sdescriptions_lifetime (void *sdp_ptr, u16 level,
                                      u8 cap_num, u16 inst_num,
                                      char *lifetime)
@@ -11670,11 +11670,11 @@ sdp_attr_set_sdescriptions_lifetime (void *sdp_ptr, u16 level,
     }
 
     /* Try version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
     if (attr_p == NULL) {
         /* Couldn't find version 2, try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
 	if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -11684,38 +11684,38 @@ sdp_attr_set_sdescriptions_lifetime (void *sdp_ptr, u16 level,
             sdp_p->conf_p->num_invalid_param++;
             return SDP_INVALID_PARAMETER;
 	}
-	
-    } 
-    
-    sstrncpy((char*)attr_p->attr.srtp_context.master_key_lifetime, lifetime, 
+
+    }
+
+    sstrncpy((char*)attr_p->attr.srtp_context.master_key_lifetime, lifetime,
 	     SDP_SRTP_MAX_LIFETIME_BYTES);
     return SDP_SUCCESS;
-   
+
 }
 
 
 /* Function:    sdp_attr_set_sdescriptions_mki
- * Description: Sets the sdescriptions mki parameter compose of the MKI 
+ * Description: Sets the sdescriptions mki parameter compose of the MKI
  *              value and length. Note that this is a common api for both
  *              version 2 and version 9 sdescriptions. It has no knowledge
- *              which version is being used so it will first try to find if 
- *              a version 2 sdescriptions attribute is present. If it is, it will 
- *              set the lifetime for version 2. If it's not, try to find version 9. 
+ *              which version is being used so it will first try to find if
+ *              a version 2 sdescriptions attribute is present. If it is, it will
+ *              set the lifetime for version 2. If it's not, try to find version 9.
  *              This assumes you cannot have both versions in the same SDP.
  *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
- *              mki_value   buffer containing the mki value. Assumes null 
+ *              mki_value   buffer containing the mki value. Assumes null
  *                          terminated buffer.
  *              mki_length  length of the MKI
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
- 
-sdp_result_e 
+
+sdp_result_e
 sdp_attr_set_sdescriptions_mki (void *sdp_ptr, u16 level,
                                 u8 cap_num, u16 inst_num,
                                 char *mki_value,
@@ -11729,11 +11729,11 @@ sdp_attr_set_sdescriptions_mki (void *sdp_ptr, u16 level,
     }
 
     /* Try version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
     if (attr_p == NULL) {
         /* Couldn't find version 2, try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -11744,12 +11744,12 @@ sdp_attr_set_sdescriptions_mki (void *sdp_ptr, u16 level,
             return SDP_INVALID_PARAMETER;
 	}
     }
-    
-    sstrncpy((char*)attr_p->attr.srtp_context.mki, mki_value, 
+
+    sstrncpy((char*)attr_p->attr.srtp_context.mki, mki_value,
 	     SDP_SRTP_MAX_MKI_SIZE_BYTES);
     attr_p->attr.srtp_context.mki_size_bytes = mki_length;
     return SDP_SUCCESS;
-  
+
 }
 
 
@@ -11759,11 +11759,11 @@ sdp_attr_set_sdescriptions_mki (void *sdp_ptr, u16 level,
  *              sdescriptions. It has no knowledge which version is being
  *              used so it will first try to find if a version 2 sdescriptions
  *              attribute is present. If it is, it will set the key for
- *              version 2. If it's not, try to find version 9. This assumes 
+ *              version 2. If it's not, try to find version 9. This assumes
  *              you cannot have both versions in the same SDP.
  *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -11771,14 +11771,14 @@ sdp_attr_set_sdescriptions_mki (void *sdp_ptr, u16 level,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
- 
+
 sdp_result_e
-sdp_attr_set_sdescriptions_key_size (void *sdp_ptr, 
-                                     u16 level, 
-				     u8 cap_num, 
-				     u16 inst_num, 
+sdp_attr_set_sdescriptions_key_size (void *sdp_ptr,
+                                     u16 level,
+				     u8 cap_num,
+				     u16 inst_num,
 				     unsigned char key_size)
-				     
+
 {
 
     sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
@@ -11789,11 +11789,11 @@ sdp_attr_set_sdescriptions_key_size (void *sdp_ptr,
     }
 
     /* Try version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
     if (attr_p == NULL) {
         /* Couldn't find version 2, try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -11804,7 +11804,7 @@ sdp_attr_set_sdescriptions_key_size (void *sdp_ptr,
             return SDP_INVALID_PARAMETER;
 	}
     }
-    
+
     attr_p->attr.srtp_context.master_key_size_bytes = key_size;
     return SDP_SUCCESS;
 
@@ -11817,11 +11817,11 @@ sdp_attr_set_sdescriptions_key_size (void *sdp_ptr,
  *              sdescriptions. It has no knowledge which version is being
  *              used so it will first try to find if a version 2 sdescriptions
  *              attribute is present. If it is, it will set the salt for
- *              version 2. If it's not, try to find version 9. This assumes 
+ *              version 2. If it's not, try to find version 9. This assumes
  *              you cannot have both versions in the same SDP.
  *
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
- *              level       The level to check for the attribute.  
+ *              level       The level to check for the attribute.
  *              cap_num     The capability number associated with the
  *                          attribute if any.  If none, should be zero.
  *              inst_num    The attribute instance number to check.
@@ -11829,12 +11829,12 @@ sdp_attr_set_sdescriptions_key_size (void *sdp_ptr,
  * Returns:     SDP_SUCCESS            Attribute param was set successfully.
  *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
  */
- 
+
 sdp_result_e
-sdp_attr_set_sdescriptions_salt_size (void *sdp_ptr, 
-                                      u16 level, 
-				      u8 cap_num, 
-				      u16 inst_num, 
+sdp_attr_set_sdescriptions_salt_size (void *sdp_ptr,
+                                      u16 level,
+				      u8 cap_num,
+				      u16 inst_num,
 				      unsigned char salt_size)
 {
 
@@ -11846,11 +11846,11 @@ sdp_attr_set_sdescriptions_salt_size (void *sdp_ptr,
     }
 
     /* Try version 2 first */
-    attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+    attr_p = sdp_find_attr(sdp_p, level, cap_num,
                            SDP_ATTR_SRTP_CONTEXT, inst_num);
     if (attr_p == NULL) {
         /* Couldn't find version 2, try version 9 */
-        attr_p = sdp_find_attr(sdp_p, level, cap_num, 
+        attr_p = sdp_find_attr(sdp_p, level, cap_num,
                                SDP_ATTR_SDESCRIPTIONS, inst_num);
         if (attr_p == NULL) {
             if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
@@ -11861,7 +11861,7 @@ sdp_attr_set_sdescriptions_salt_size (void *sdp_ptr,
             return SDP_INVALID_PARAMETER;
 	}
     }
-    
+
     attr_p->attr.srtp_context.master_salt_size_bytes = salt_size;
     return SDP_SUCCESS;
 

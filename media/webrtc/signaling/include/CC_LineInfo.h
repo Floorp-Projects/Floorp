@@ -74,7 +74,7 @@ namespace CSF
 
         /**
            Get calls on line
-           
+
            @param [in] line - line
            @return vector<CC_CallPtr>
          */
@@ -85,7 +85,7 @@ namespace CSF
 
            @param [in] line - line
            @param [in] state - state
-           
+
            @return vector<CC_CallPtr>
          */
         virtual std::vector<CC_CallPtr> getCallsByState (CC_LinePtr linePtr, cc_call_state_t state) = 0;
@@ -99,7 +99,7 @@ namespace CSF
 
         /**
            Get the MWI Type
-           
+
            @return cc_uint32_t - MWI Type
          */
         virtual cc_uint32_t getMWIType() = 0;
@@ -113,14 +113,14 @@ namespace CSF
 
         /**
            Get the MWI old msg count
-           
+
            @return cc_uint32_t - MWI old msg count
          */
         virtual cc_uint32_t getMWIOldMsgCount() = 0;
 
         /**
            Get the MWI high priority new msg count
-           
+
            @return cc_uint32_t - MWI new msg count
          */
         virtual cc_uint32_t getMWIPrioNewMsgCount() = 0;

@@ -50,7 +50,7 @@ cc_string_t CCAPI_lineInfo_getExternalNumber(cc_lineinfo_ref_t line);
  * Get the physical button number on which this line is configured
  * @param [in] line - line reference handle
  * @return cc_uint32_t - button number
- * NOTE: This API is deprecated please don't use this. the CCAPI_lineInfo_getID() returns the button number 
+ * NOTE: This API is deprecated please don't use this. the CCAPI_lineInfo_getID() returns the button number
  * as we use the button as line id
  */
 cc_uint32_t CCAPI_lineInfo_getButton(cc_lineinfo_ref_t line);
@@ -86,7 +86,7 @@ cc_string_t CCAPI_lineInfo_getCFWDName(cc_lineinfo_ref_t line);
 
 /**
  * Get calls on line
- * @param [in] line - lineID 
+ * @param [in] line - lineID
  * @param [in, out] handles[] - Array of callinfo references
  * @param [in,out] count - count of call references populated
  * @return void
@@ -101,7 +101,7 @@ void CCAPI_LineInfo_getCalls(cc_lineid_t line, cc_call_handle_t handles[], int *
  * @param [in,out] count - count of call references populated
  * @return void
  */
-void CCAPI_LineInfo_getCallsByState(cc_lineid_t line, cc_call_state_t state, 
+void CCAPI_LineInfo_getCallsByState(cc_lineid_t line, cc_call_state_t state,
                 cc_call_handle_t handles[], int *count);
 
 /**
@@ -157,7 +157,7 @@ cc_boolean  CCAPI_LineInfo_hasCapability(cc_lineinfo_ref_t line, cc_int32_t feat
 /**
  * get Allowed Feature set
  * @param [in] handle - call info handle
- * @param [in,out] feat_set - array of len CC_CALL_CAP_MAX 
+ * @param [in,out] feat_set - array of len CC_CALL_CAP_MAX
  * @return cc_return_t - CC_SUCCESS or CC_FAILURE
  */
 cc_return_t  CCAPI_LineInfo_getCapabilitySet(cc_lineinfo_ref_t line, cc_int32_t feat_set[]);

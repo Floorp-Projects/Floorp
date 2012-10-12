@@ -19,9 +19,9 @@ void platform_apply_config (char * configVersionStamp, char * dialplanVersionSta
 
 /**
  * Set ip address mode
- * e.g. 
+ * e.g.
  */
-cpr_ip_mode_e platGetIpAddressMode(); 
+cpr_ip_mode_e platGetIpAddressMode();
 
 /**
  * @brief Given a msg buffer, returns a pointer to the buffer's header

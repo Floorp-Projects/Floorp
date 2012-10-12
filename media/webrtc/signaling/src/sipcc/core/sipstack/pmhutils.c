@@ -230,8 +230,8 @@ pmhutils_wstream_write_line (pmhWstream_t *pmhWstream, char *this_line)
     if (!pmhutils_wstream_write_byte(pmhWstream, '\r')) {
         return FALSE;
     }
-     
-    if (!pmhutils_wstream_write_byte(pmhWstream, '\n')) { 
+
+    if (!pmhutils_wstream_write_byte(pmhWstream, '\n')) {
         return FALSE;
     }
 

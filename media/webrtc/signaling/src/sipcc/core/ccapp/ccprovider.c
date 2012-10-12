@@ -222,7 +222,7 @@ void ccpro_handleOOS() {
 
 cc_boolean is_action_to_be_deferred(cc_action_t action) {
     if (CCAPI_DeviceInfo_isPhoneIdle(CC_DEVICE_ID) == FALSE) {
-        pending_action_type = action;        
+        pending_action_type = action;
         DEF_DEBUG("Action deferred=%d", action);
         return TRUE;
     } else {
@@ -232,14 +232,14 @@ cc_boolean is_action_to_be_deferred(cc_action_t action) {
 
 void perform_deferred_action() {
     cc_action_t  temp_action = pending_action_type;
-    
+
     if (is_action_to_be_deferred(pending_action_type) == TRUE) {
-        return; 
+        return;
     }
 
     pending_action_type = NO_ACTION;
     DEF_DEBUG("Perform deferred action=%d", temp_action);
-    
+
     if (temp_action == RESET_ACTION || temp_action == RESTART_ACTION) {
         ccpro_handleserviceControlNotify();
     } else if (temp_action == RE_REGISTER_ACTION) {
@@ -258,7 +258,7 @@ void ccpro_handleserviceControlNotify() {
     } else if (reset_type == CC_DEVICE_RESTART) {
         temp_action = RESTART_ACTION;
     }
-     
+
     if ((reset_type != CC_DEVICE_ICMP_UNREACHABLE) &&
         is_action_to_be_deferred(temp_action) == TRUE) {
         return;
@@ -272,7 +272,7 @@ void ccpro_handleserviceControlNotify() {
     }
 }
 
-/** 
+/**
  * Returns the registration state
  */
 cc_reg_state_t ccapp_get_state() {
@@ -589,25 +589,25 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
              dp_int_update_keypress(line_id, call_id, BKSP_KEY);
              break;
          case CC_FEATURE_CREATEOFFER:
-             cc_createoffer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEOFFER, &featdata);                                        
+             cc_createoffer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEOFFER, &featdata);
              break;
          case CC_FEATURE_CREATEANSWER:
-             cc_createanswer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEANSWER, data, &featdata);                                        
-             break;     
+             cc_createanswer (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_CREATEANSWER, data, &featdata);
+             break;
          case CC_FEATURE_SETLOCALDESC:
              cc_setlocaldesc (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_SETLOCALDESC, ccData.action, data, &featdata);
              break;
          case CC_FEATURE_SETREMOTEDESC:
              cc_setremotedesc (CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_SETREMOTEDESC, ccData.action, data, &featdata);
-             break;             
+             break;
          case CC_FEATURE_SETPEERCONNECTION:
            PR_ASSERT(strlen(data) < PC_HANDLE_SIZE);
            if (strlen(data) >= PC_HANDLE_SIZE)
              return;
-           
+
            sstrncpy(featdata.pc.pc_handle, data, sizeof(featdata.pc.pc_handle));
 
-           cc_int_feature2(CC_MSG_SETPEERCONNECTION, CC_SRC_UI, CC_SRC_GSM, 
+           cc_int_feature2(CC_MSG_SETPEERCONNECTION, CC_SRC_UI, CC_SRC_GSM,
              call_id, (line_t)instance,
              CC_FEATURE_SETPEERCONNECTION, &featdata);
            break;
@@ -823,7 +823,7 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
 		     // for CUCM mode we will translate CONF to B2BCONF
 		     if ( gCCApp.mode == CC_MODE_CCM ) {
                  if ( gCCApp.mode == CC_MODE_CCM && platGetFeatureAllowed(CC_SIS_B2B_CONF) ) {
-                     //CUCME can't support B2BCONF currently. 
+                     //CUCME can't support B2BCONF currently.
 		         event = CC_FEATURE_B2BCONF;
   	         }
 		     }// DON'T ADD BREAK HERE. EVENT IS PASSED BELOW
@@ -963,7 +963,7 @@ session_data_t * getDeepCopyOfSessionData(session_data_t *data)
 
    if ( newData != NULL ) {
        memset(newData, 0, sizeof(session_data_t));
-       
+
        if ( data != NULL ) {
            *newData = *data;
            newData->ref_count = 1;
@@ -1262,7 +1262,7 @@ static boolean ccappCldNumIsCfwdallString(string_t cld_number) {
     return ((int) FALSE);
 }
 
-/** 
+/**
  * Api to update mute state of connected call
  */
 cc_call_handle_t ccappGetConnectedCall(){
@@ -1340,7 +1340,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
 				data->state = call_state;
         data->line = sessUpd->update.ccSessionUpd.data.state_data.line_id;
         if (sessUpd->eventID == CALL_NEWCALL || sessUpd->eventID == CREATE_OFFER ||
-            sessUpd->eventID == CREATE_ANSWER || sessUpd->eventID == SET_LOCAL_DESC || 
+            sessUpd->eventID == CREATE_ANSWER || sessUpd->eventID == SET_LOCAL_DESC ||
             sessUpd->eventID == SET_REMOTE_DESC || sessUpd->eventID == REMOTE_STREAM_ADD ) {
             data->attr = sessUpd->update.ccSessionUpd.data.state_data.attr;
             data->inst = sessUpd->update.ccSessionUpd.data.state_data.inst;
@@ -1362,8 +1362,8 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
 	data->vid_dir = SDP_DIRECTION_INACTIVE;
         data->callref = 0;
         calllogger_init_call_log(&data->call_log);
-        
-        if ( sessUpd->eventID == CREATE_OFFER || sessUpd->eventID == CREATE_ANSWER 
+
+        if ( sessUpd->eventID == CREATE_OFFER || sessUpd->eventID == CREATE_ANSWER
             || sessUpd->eventID == SET_LOCAL_DESC  || sessUpd->eventID == SET_REMOTE_DESC
             || sessUpd->eventID == REMOTE_STREAM_ADD) {
         	data->sdp = sessUpd->update.ccSessionUpd.data.state_data.sdp;
@@ -1371,11 +1371,11 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
             data->media_stream_track_id = sessUpd->update.ccSessionUpd.data.state_data.media_stream_track_id;
             data->media_stream_id = sessUpd->update.ccSessionUpd.data.state_data.media_stream_id;
         }
-        
+
         /*
          * If phone was idle, we not going to active state
          * send notification to resetmanager that we
-         * are no longer resetReady. 
+         * are no longer resetReady.
          */
         if ((CCAPI_DeviceInfo_isPhoneIdle(handle) == TRUE) && (sendResetUpdates)) {
             resetNotReady();
@@ -1450,9 +1450,9 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
             proceedWithFOFB();
         }
         if ((CCAPI_DeviceInfo_isPhoneIdle(handle) == TRUE) && (sendResetUpdates)) {
-            resetReady(); 
+            resetReady();
         }
-        if (pending_action_type != NO_ACTION) { 
+        if (pending_action_type != NO_ACTION) {
             perform_deferred_action();
         }
 		break;
@@ -1464,7 +1464,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
 	                        data->attr,
 	                        sessUpd->update.ccSessionUpd.data.state_data.cause,
 	                        data->inst);
-            if ( sessUpd->update.ccSessionUpd.data.state_data.state == HOLD && 
+            if ( sessUpd->update.ccSessionUpd.data.state_data.state == HOLD &&
                  (data->state == REMHOLD || data->state == REMINUSE)){
                 data->state = REMHOLD;
             } else {
@@ -1510,7 +1510,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
                 if ((CCAPI_DeviceInfo_isPhoneIdle(handle) == TRUE) && (sendResetUpdates)) {
                     resetReady();
                 }
-                if (pending_action_type != NO_ACTION) { 
+                if (pending_action_type != NO_ACTION) {
                     perform_deferred_action();
                 }
              }
@@ -1544,7 +1544,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
 	case CALL_INFORMATION:
         // check conference state, if it changes, we'll send a conference event notification
         previouslyInConference = CCAPI_CallInfo_getIsConference(data);
-                
+
 		data->clg_name = ccsnap_EscapeStrToLocaleStr(data->clg_name, sessUpd->update.ccSessionUpd.data.call_info.clgName, LEN_UNKNOWN);
 		data->cld_name = ccsnap_EscapeStrToLocaleStr(data->cld_name, sessUpd->update.ccSessionUpd.data.call_info.cldName, LEN_UNKNOWN);
 		data->orig_called_name = ccsnap_EscapeStrToLocaleStr(data->orig_called_name, sessUpd->update.ccSessionUpd.data.call_info.origCalledName, LEN_UNKNOWN);
@@ -1569,16 +1569,16 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
          *   dictionaries might not be equivalent.
          */
          calllogger_update(data);
-                  
+
          ccsnap_gen_callEvent(CCAPI_CALL_EV_CALLINFO, CREATE_CALL_HANDLE_FROM_SESSION_ID(sessUpd->sessionID));
-         
+
          // if we're entering a conference, then indicate conference participant info (in case the info came earlier, app
-         // will receive the notification now.  If info comes later, then app will receive an additional subsequent info notice 
+         // will receive the notification now.  If info comes later, then app will receive an additional subsequent info notice
          // at that time.
          if ((!previouslyInConference) && (CCAPI_CallInfo_getIsConference(data))) {
             ccsnap_gen_callEvent(CCAPI_CALL_EV_CONF_PARTICIPANT_INFO, CREATE_CALL_HANDLE_FROM_SESSION_ID(sessUpd->sessionID));
          }
-         
+
 		break;
 
 	case CALL_PLACED_INFO:
@@ -1614,7 +1614,7 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
         if (data->status != NULL) {
             if(strncmp(data->status, UNKNOWN_PHRASE_STR, UNKNOWN_PHRASE_STR_SIZE) == 0){
                     data->status = strlib_empty();
-            } 
+            }
             if(strcmp(data->status, strlib_empty()) != 0){
                     ccsnap_gen_callEvent(CCAPI_CALL_EV_STATUS, CREATE_CALL_HANDLE_FROM_SESSION_ID(sessUpd->sessionID));
             }
@@ -1678,20 +1678,20 @@ static void ccappUpdateSessionData (session_update_t *sessUpd)
         //Should not come here. It's dealed in CCAPP_RCVD_INFO.
         break;
     case MEDIA_INTERFACE_UPDATE_BEGIN:
-        ccsnap_gen_callEvent(CCAPI_CALL_EV_MEDIA_INTERFACE_UPDATE_BEGIN, 
+        ccsnap_gen_callEvent(CCAPI_CALL_EV_MEDIA_INTERFACE_UPDATE_BEGIN,
             CREATE_CALL_HANDLE_FROM_SESSION_ID(sessUpd->sessionID));
         break;
     case MEDIA_INTERFACE_UPDATE_SUCCESSFUL:
-        ccsnap_gen_callEvent(CCAPI_CALL_EV_MEDIA_INTERFACE_UPDATE_SUCCESSFUL, 
+        ccsnap_gen_callEvent(CCAPI_CALL_EV_MEDIA_INTERFACE_UPDATE_SUCCESSFUL,
             CREATE_CALL_HANDLE_FROM_SESSION_ID(sessUpd->sessionID));
         break;
     case MEDIA_INTERFACE_UPDATE_FAIL:
-        ccsnap_gen_callEvent(CCAPI_CALL_EV_MEDIA_INTERFACE_UPDATE_FAIL, 
+        ccsnap_gen_callEvent(CCAPI_CALL_EV_MEDIA_INTERFACE_UPDATE_FAIL,
             CREATE_CALL_HANDLE_FROM_SESSION_ID(sessUpd->sessionID));
         break;
     case CREATE_OFFER:
     case CREATE_ANSWER:
-    case SET_LOCAL_DESC: 
+    case SET_LOCAL_DESC:
     case SET_REMOTE_DESC:
     case REMOTE_STREAM_ADD:
         data->sdp = sessUpd->update.ccSessionUpd.data.state_data.sdp;
@@ -1952,15 +1952,15 @@ void ccp_handler(void* msg, int type) {
             data->info_body = rcvdInfo->info.generic_raw.message_body;
 
             ccsnap_gen_callEvent(CCAPI_CALL_EV_RECEIVED_INFO, CREATE_CALL_HANDLE_FROM_SESSION_ID(rcvdInfo->sessionID));
-                   
+
             // most of the time isConference will be true at this point, we can notify the app of
             // the updated participant info.  However, if we're transitioning from non conference into
-            // conference, then we'll delay this notification until we're fully in conference state       
+            // conference, then we'll delay this notification until we're fully in conference state
             if (CCAPI_CallInfo_getIsConference(data))
-            {   // in conference - send the info  
+            {   // in conference - send the info
                 ccsnap_gen_callEvent(CCAPI_CALL_EV_CONF_PARTICIPANT_INFO, CREATE_CALL_HANDLE_FROM_SESSION_ID(rcvdInfo->sessionID));
             }
-                  
+
             // one shot notify cleanup after event generation
             data->info_package = strlib_empty();
             data->info_type = strlib_empty();
@@ -2140,7 +2140,7 @@ void ccappSyncSessionMgmt(session_mgmt_t *sessMgmt)
     case SESSION_MGMT_SET_TIME:
         g_deviceInfo.reg_time = sessMgmt->data.time.gmt_time;
         CCAPP_DEBUG(DEB_F_PREFIX"Setting reg_time to == %lld\n",
-                           DEB_F_PREFIX_ARGS(SIP_CC_PROV, 
+                           DEB_F_PREFIX_ARGS(SIP_CC_PROV,
                                 "ccappSyncSessionMgmt"), g_deviceInfo.reg_time);
         platSetCucmRegTime();
         break;
@@ -2171,8 +2171,8 @@ void ccappSyncSessionMgmt(session_mgmt_t *sessMgmt)
     case SESSION_MGMT_APPLY_CONFIG:
         // save the proposed versions of fcp and dialplan to apply.  Will check against
         // current versions and redownload if necessary
-                  
-    if (pending_action_type == NO_ACTION) { 
+
+    if (pending_action_type == NO_ACTION) {
             configApplyConfigNotify(sessMgmt->data.config.config_version_stamp,
                 sessMgmt->data.config.dialplan_version_stamp,
                 sessMgmt->data.config.fcp_version_stamp,

@@ -49,7 +49,7 @@ namespace CSF {
 			return "";
 		}
 	}
-	
+
 	std::string AudioControlWrapper::getPlayoutDevice()
 	{
 		if (_realAudioControl != NULL)
@@ -143,6 +143,6 @@ namespace CSF {
 
     AudioControlWrapper::~AudioControlWrapper()
     {
-        delete _realAudioControl;        
+        delete _realAudioControl;
     }
 }

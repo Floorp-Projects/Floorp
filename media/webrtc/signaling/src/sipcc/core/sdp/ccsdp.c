@@ -6,7 +6,7 @@
 #include "ccapi.h"
 
 
-const char* ccsdpAttrGetFmtpParamSets(void *sdp_ptr, u16 level, 
+const char* ccsdpAttrGetFmtpParamSets(void *sdp_ptr, u16 level,
                                             u8 cap_num, u16 inst_num)
 {
   cc_sdp_t *sdpp = sdp_ptr;
@@ -17,7 +17,7 @@ const char* ccsdpAttrGetFmtpParamSets(void *sdp_ptr, u16 level,
   return sdp_attr_get_fmtp_param_sets(sdpp->dest_sdp, level, cap_num, inst_num);
 }
 
-sdp_result_e ccsdpAttrGetFmtpPackMode(void *sdp_ptr, u16 level, 
+sdp_result_e ccsdpAttrGetFmtpPackMode(void *sdp_ptr, u16 level,
                          u8 cap_num, u16 inst_num, u16 *val)
 {
   cc_sdp_t *sdpp = sdp_ptr;
@@ -28,7 +28,7 @@ sdp_result_e ccsdpAttrGetFmtpPackMode(void *sdp_ptr, u16 level,
   return sdp_attr_get_fmtp_pack_mode(sdpp->dest_sdp, level, cap_num, inst_num, val);
 }
 
-sdp_result_e ccsdpAttrGetFmtpLevelAsymmetryAllowed(void *sdp_ptr, u16 level, 
+sdp_result_e ccsdpAttrGetFmtpLevelAsymmetryAllowed(void *sdp_ptr, u16 level,
                          u8 cap_num, u16 inst_num, u16 *val)
 {
   cc_sdp_t *sdpp = sdp_ptr;

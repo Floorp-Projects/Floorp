@@ -81,7 +81,7 @@ public:
 private:
   LockNSPR& lock_;
 };
- 
+
 template <class T>
 class Wrapper
 {

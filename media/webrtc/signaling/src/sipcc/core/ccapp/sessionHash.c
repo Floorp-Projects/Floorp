@@ -10,13 +10,13 @@
 #include "cpr_stdlib.h"
 #endif
 
-#include "sessionHash.h" 
+#include "sessionHash.h"
 
 #define HASHBUCKETS 67
 
 hash_table_t *hashtable[HASHBUCKETS]={0};
 
-void hashItrInit(hashItr_t *itr) 
+void hashItrInit(hashItr_t *itr)
 {
   itr->bucket = 0;
   itr->node = NULL;
@@ -30,8 +30,8 @@ void * hashItrNext(hashItr_t *itr)
      if ( itr->node->next != NULL ) {
        itr->node = itr->node->next;
        return itr->node->data;
-     } 
-     // We just iterated to the end of the list. 
+     }
+     // We just iterated to the end of the list.
      // Increment the bucket to search next
      itr->bucket++;
    }
@@ -48,14 +48,14 @@ void * hashItrNext(hashItr_t *itr)
 
 
 /**
- * sessionHash 
+ * sessionHash
  *      function to add generate hash given the key
- * 
- * @param key - 
  *
- * @return the hash index 
+ * @param key -
+ *
+ * @return the hash index
  */
-unsigned int sessionHash (unsigned int key) 
+unsigned int sessionHash (unsigned int key)
 {
  // since the key is session_id create the hashval to be line_id + call_id
    unsigned int hashval = key + ((key & 0xFFFF0000)>>16);
@@ -64,16 +64,16 @@ unsigned int sessionHash (unsigned int key)
 }
 
 /**
- * addhash 
+ * addhash
  *      function to add data for a given key in the table
- * 
- * @param key  
- * @param data - pointer to data stored  
+ *
+ * @param key
+ * @param data - pointer to data stored
  *
  * @return - 0 for success
  */
 
-int addhash (unsigned int key, void *data) 
+int addhash (unsigned int key, void *data)
 {
    hash_table_t *newhash;
    hash_table_t *cur_hash;
@@ -104,7 +104,7 @@ int addhash (unsigned int key, void *data)
       newhash->next = NULL;
       newhash->prev = cur_hash;
    }
-   
+
    return 0;
 }
 
@@ -120,7 +120,7 @@ unsigned int ccpro_get_sessionId_by_callid(unsigned short call_id) {
 
    for ( i=0; i<HASHBUCKETS ;i++){
        cur_hash = hashtable[i];
-       while ( cur_hash) { 
+       while ( cur_hash) {
          if ( (cur_hash->key & 0xffff) == call_id ) {
            return cur_hash->key;
          }
@@ -140,16 +140,16 @@ unsigned int ccpro_get_sessionId_by_callid(unsigned short call_id) {
  * @return the data ptr or NULL
  */
 
-void *findhash(unsigned int key) 
+void *findhash(unsigned int key)
 {
    unsigned int hashval;
    hash_table_t *cur_hash;
-   
+
    hashval = 0;
 
    hashval = sessionHash(key);
 
-   
+
    cur_hash = hashtable[hashval];
    while ( cur_hash != NULL ) {
        if ( cur_hash->key == key) {
@@ -170,20 +170,20 @@ void *findhash(unsigned int key)
  * @return - 0 for success
  */
 
-int delhash(unsigned int  key) 
+int delhash(unsigned int  key)
 {
    unsigned int hashval;
    hash_table_t *cur_hash;
-   
+
    hashval = 0;
 
    hashval = sessionHash(key);
 
-   
+
    if (hashtable[hashval] == NULL) {
       return -1;
    }
- 
+
    if (hashtable[hashval]->key == key) {
       cur_hash = hashtable[hashval];
       hashtable[hashval] = cur_hash->next;
@@ -191,7 +191,7 @@ int delhash(unsigned int  key)
         hashtable[hashval]->prev = NULL;
       }
       cpr_free(cur_hash);
-      return 0; 
+      return 0;
    }
    else {
 
@@ -204,7 +204,7 @@ int delhash(unsigned int  key)
                cur_hash->next->prev = cur_hash->prev;
             }
             cpr_free(cur_hash);
-            return 0; 
+            return 0;
          }
          cur_hash = cur_hash->next;
       }
@@ -214,16 +214,16 @@ int delhash(unsigned int  key)
 
 #ifdef UNIT_TEST
 
-void hashstats(int detail) 
+void hashstats(int detail)
 {
    static const char *fname="hashstats";
    int max, total, i, nodes, used;
    double avg;
    hash_table_t *cur_hash;
-  
+
    max = total = i = nodes = used = 0;
    avg = 0;
- 
+
    if (detail > 0) {
       for (i = 0; i < HASHBUCKETS; i++) {
          if (hashtable[i] != NULL) {
@@ -233,18 +233,18 @@ void hashstats(int detail)
             while(cur_hash != NULL) {
                nodes++;
                if (detail > 3) {
-                  CCAPPDEBUG(DEB_F_PREFIX"%lx -> %lx: (%lx) (%lx) -> %lx\n", 
+                  CCAPPDEBUG(DEB_F_PREFIX"%lx -> %lx: (%lx) (%lx) -> %lx\n",
                              DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname),
                              cur_hash->prev, cur_hash, cur_hash->key, cur_hash->data, cur_hash->next);
                }
-               cur_hash = cur_hash->next; 
+               cur_hash = cur_hash->next;
             }
-            if (nodes != 0) total += nodes; 
+            if (nodes != 0) total += nodes;
             if (nodes > max) {
                max = nodes;
             }
             if (detail > 1) {
-               CCAPPDEBUG(DEB_F_PREFIX"i: %d\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), i); 
+               CCAPPDEBUG(DEB_F_PREFIX"i: %d\n", DEB_F_PREFIX_ARGS(SIP_SES_HASH, fname), i);
             }
          }
       }

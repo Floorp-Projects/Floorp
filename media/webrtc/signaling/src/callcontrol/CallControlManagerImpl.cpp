@@ -122,14 +122,14 @@ void CallControlManagerImpl::setSecureCachePath(const std::string &secureCachePa
 // Add local codecs
 void CallControlManagerImpl::setAudioCodecs(int codecMask)
 {
-  CSFLogDebug(logTag, "setAudioCodecs %X", codecMask); 
+  CSFLogDebug(logTag, "setAudioCodecs %X", codecMask);
 
   VcmSIPCCBinding::setAudioCodecs(codecMask);
 }
 
 void CallControlManagerImpl::setVideoCodecs(int codecMask)
 {
-  CSFLogDebug(logTag, "setVideoCodecs %X", codecMask); 
+  CSFLogDebug(logTag, "setVideoCodecs %X", codecMask);
 
   VcmSIPCCBinding::setVideoCodecs(codecMask);
 }
@@ -216,7 +216,7 @@ bool CallControlManagerImpl::startSDPMode()
     softPhone->setLoggingMask(sipccLoggingMask);
     phone->addCCObserver(this);
     phone->setSDPMode(true);
- 
+
     return phone->startService();
 }
 

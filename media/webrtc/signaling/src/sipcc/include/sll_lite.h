@@ -17,7 +17,7 @@ typedef struct sll_lite_node_t_ {
  * List control structure
  */
 typedef struct sll_lite_list_t_ {
-    uint16_t        count;    /* number of elements on the list    */ 
+    uint16_t        count;    /* number of elements on the list    */
     sll_lite_node_t *head_p;  /* pointer to the head or first node */
     sll_lite_node_t *tail_p;  /* pointer to the tail or last node  */
 } sll_lite_list_t;
@@ -44,15 +44,15 @@ typedef enum {
 #define SLL_LITE_NODE_COUNT(link) \
      (((sll_lite_list_t *)link)->count)
 
-/** 
+/**
  * sll_lite_init initializes list control structure given by the
  * caller.
  *
  * @param[in] list - pointer to the list control structure
  *                  sll_lite_list_t
  *
- * @return        - SLL_LITE_RET_SUCCESS for success 
- *                - SLL_LITE_RET_INVALID_ARGS when arguments are 
+ * @return        - SLL_LITE_RET_SUCCESS for success
+ *                - SLL_LITE_RET_INVALID_ARGS when arguments are
  *                  invalid.
  */
 extern sll_lite_return_e
@@ -69,7 +69,7 @@ sll_lite_init(sll_lite_list_t *list);
  * @return        - SLL_LITE_RET_SUCCESS for success
  *                - SLL_LITE_RET_INVALID_ARGS when arguments are
  *                  invalid.
- */ 
+ */
 extern sll_lite_return_e
 sll_lite_link_head(sll_lite_list_t *list, sll_lite_node_t *node);
 
@@ -90,7 +90,7 @@ sll_lite_link_tail(sll_lite_list_t *list, sll_lite_node_t *node);
 
 /**
  * sll_lite_unlink_head removes head node from the head of the list and
- * returns it to the caller. 
+ * returns it to the caller.
  *
  * @param[in] list - pointer to the list control structure
  *                  sll_lite_list_t. The list must be

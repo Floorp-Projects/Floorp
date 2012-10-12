@@ -8,7 +8,7 @@
 #include "ccapi_types.h"
 
 /**
- * Get reference to call info 
+ * Get reference to call info
  * @param [in] handle - call handle
  * @return cc_call_info_snap_t
  * NOTE: The info returned by this method must be released using CCAPI_Call_releaseCallInfo()
@@ -26,8 +26,8 @@ void CCAPI_Call_releaseCallInfo(cc_callinfo_ref_t ref);
  *  Retain the call info reference
  *  @param [in] ref - reference to the call info to be retained
  *  @return void
- *  NOTE: Application that has retained callInfo must call CCAPI_Call_releaseCallInfo() 
- *  to free memory associated with this Info. 
+ *  NOTE: Application that has retained callInfo must call CCAPI_Call_releaseCallInfo()
+ *  to free memory associated with this Info.
  */
 void CCAPI_Call_retainCallInfo(cc_callinfo_ref_t ref);
 
@@ -96,7 +96,7 @@ cc_return_t CCAPI_Call_answerCall(cc_call_handle_t handle, cc_sdp_direction_t vi
 cc_return_t CCAPI_Call_redial(cc_call_handle_t handle, cc_sdp_direction_t video_pref);
 
 /**
- * Initiate Call Forward All 
+ * Initiate Call Forward All
  * @param [in] handle - call handle
  * @return SUCCESS or FAILURE
  */

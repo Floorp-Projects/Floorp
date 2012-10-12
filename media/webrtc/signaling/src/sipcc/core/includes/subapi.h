@@ -15,7 +15,7 @@ cc_rcs_t sub_int_subnot_register(cc_srcs_t src_id, cc_srcs_t dst_id,
 
 cc_rcs_t sub_int_subscribe(sipspi_msg_t *msg_p);
 
-cc_rcs_t sub_int_subscribe_ack(cc_srcs_t src_id, cc_srcs_t dst_id, 
+cc_rcs_t sub_int_subscribe_ack(cc_srcs_t src_id, cc_srcs_t dst_id,
                                sub_id_t sub_id, uint16_t response_code,
                                int duration);
 
@@ -25,10 +25,10 @@ cc_rcs_t sub_int_notify(cc_srcs_t src_id, cc_srcs_t dst_id, sub_id_t sub_id,
                         ccsip_event_data_t *eventData,
                         subscriptionState subState);
 
-cc_rcs_t sub_int_notify_ack(sub_id_t sub_id, uint16_t response_code, 
+cc_rcs_t sub_int_notify_ack(sub_id_t sub_id, uint16_t response_code,
                             uint32_t cseq);
 
-cc_rcs_t sub_int_subscribe_term(sub_id_t sub_id, boolean immediate, 
+cc_rcs_t sub_int_subscribe_term(sub_id_t sub_id, boolean immediate,
                                 int request_id,
                                 cc_subscriptions_t event_package);
 

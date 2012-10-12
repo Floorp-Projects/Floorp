@@ -18,7 +18,7 @@
 #include "util_string.h"
 #include "ccapi_service.h"
 #include "ccapi_device_info.h"
-  
+
 char g_new_signaling_ip[MAX_IPADDR_STR_LEN];
 
 dock_undock_event_t  g_dock_undock_event = MEDIA_INTERFACE_UPDATE_NOT_REQUIRED;
@@ -28,19 +28,19 @@ extern void escalateDeescalate();
 
 int signaling_interface_type;
 
-/** 
+/**
  * Get device reference handle
- * @return cc_deviceinfo_ref_t - reference handle of the device 
+ * @return cc_deviceinfo_ref_t - reference handle of the device
  */
 cc_device_handle_t CCAPI_Device_getDeviceID()
 {
    return CC_DEVICE_ID;
 }
 
-/** 
+/**
  * Get device reference handle
  * @param handle - device handle
- * @return cc_deviceinfo_ref_t - reference handle of the device 
+ * @return cc_deviceinfo_ref_t - reference handle of the device
  */
 cc_deviceinfo_ref_t CCAPI_Device_getDeviceInfo(cc_device_handle_t handle)
 {
@@ -109,7 +109,7 @@ void CCAPI_Device_releaseDeviceInfo(cc_deviceinfo_ref_t ref){
  * @param handle - device handle
  * @return cc_call_handle_t - handle of the call created
  */
-cc_call_handle_t CCAPI_Device_CreateCall(cc_device_handle_t handle) 
+cc_call_handle_t CCAPI_Device_CreateCall(cc_device_handle_t handle)
 {
   return CC_createCall(0);
 }
@@ -142,7 +142,7 @@ void CCAPI_Device_enableCamera(cc_device_handle_t handle, cc_boolean enable)
 
 /**
  * CCAPI_Device_setDigestNamePasswd
- * 
+ *
  * @param handle - device handle
  * @param name - The Digest auth name
  * @param passwd - The password for that name for the line
@@ -160,14 +160,14 @@ void CCAPI_Device_setDigestNamePasswd (cc_device_handle_t handle,
 }
 
 /**
- * CCAPI_Device_IP_Update 
+ * CCAPI_Device_IP_Update
  *
  * There is a change in the IP address and the values of new set
  * of signaling and media IP addresses are provided.
  * These value are compared with the current IP address values
  * and depending on what changed, restart and/or re-invite
  * action is taken.
- * 
+ *
  * The case being addressed.
  * 1) If the signaling IP change  happens during a call,
  *    the change is deferred till phone is idle.
@@ -215,15 +215,15 @@ void CCAPI_Device_IP_Update (cc_device_handle_t handle,
                         MAX_IPADDR_STR_LEN);
 
     DEF_DEBUG(DEB_F_PREFIX"New sig_ip=%s media_ip=%s  Current: sig_ip: %s,"\
-            "media_ip: %s \n", 
+            "media_ip: %s \n",
             DEB_F_PREFIX_ARGS(CC_API, fname),
             signaling_ip,
             media_ip,
-            curr_signaling_ip, 
+            curr_signaling_ip,
             curr_media_ip);
 
     /*
-     * If signaling and media IP are empty, stop the 
+     * If signaling and media IP are empty, stop the
      * SIP service and return;
      */
     if ((is_empty_str((char *)signaling_ip) ||
@@ -240,9 +240,9 @@ void CCAPI_Device_IP_Update (cc_device_handle_t handle,
             return;
         }
     }
-  
+
     /*
-     * There is a change in the signaling IP, set the 
+     * There is a change in the signaling IP, set the
      * new IP as the platform signaling IP and re-register
      */
     if ((signaling_ip != NULL)  &&
@@ -255,7 +255,7 @@ void CCAPI_Device_IP_Update (cc_device_handle_t handle,
     }
 
     /*
-     * There is a change in the media IP, set the 
+     * There is a change in the media IP, set the
      * new IP as the platform media IP and post the call to GSM
      * to initiate re-inivite for all relevane calls
      */
@@ -276,7 +276,7 @@ void CCAPI_Device_IP_Update (cc_device_handle_t handle,
 
 /**
  * CCAPI_Device_setVideoAutoTxPreference
- * 
+ *
  * @param handle - device handle
  * @param txPref - TRUE=> auto Tx Video prefered
  * @return void

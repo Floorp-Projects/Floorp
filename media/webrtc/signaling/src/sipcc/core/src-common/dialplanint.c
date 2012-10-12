@@ -112,13 +112,13 @@ dp_int_store_digit_string (line_t line, callid_t call_id, char* digit_str)
 void
 dp_int_update_keypress (line_t line, callid_t call_id, unsigned char digit)
 {
-    dp_int_message(line, call_id, digit, NULL, FALSE, 
+    dp_int_message(line, call_id, digit, NULL, FALSE,
                    NULL, DP_MSG_DIGIT, NULL, CC_MONITOR_NONE);
 }
 
 void
 dp_int_dial_immediate (line_t line, callid_t call_id, boolean collect_more,
-                       char *digit_str, char *g_call_id, 
+                       char *digit_str, char *g_call_id,
                        monitor_mode_t monitor_mode)
 {
     dp_int_message(line, call_id, 0, digit_str, collect_more, NULL,
@@ -128,21 +128,21 @@ dp_int_dial_immediate (line_t line, callid_t call_id, boolean collect_more,
 void
 dp_int_do_redial (line_t line, callid_t call_id)
 {
-    dp_int_message(line, call_id, 0, NULL, FALSE, 
+    dp_int_message(line, call_id, 0, NULL, FALSE,
                    NULL, DP_MSG_REDIAL, NULL, CC_MONITOR_NONE);
 }
 
 void
 dp_int_onhook (line_t line, callid_t call_id)
 {
-    dp_int_message(line, call_id, 0, NULL, FALSE, 
+    dp_int_message(line, call_id, 0, NULL, FALSE,
                    NULL, DP_MSG_ONHOOK, NULL, CC_MONITOR_NONE);
 }
 
 void
 dp_int_offhook (line_t line, callid_t call_id)
 {
-    dp_int_message(line, call_id, 0, NULL, FALSE, 
+    dp_int_message(line, call_id, 0, NULL, FALSE,
                    NULL, DP_MSG_OFFHOOK, NULL, CC_MONITOR_NONE);
 }
 
@@ -156,7 +156,7 @@ dp_int_update (line_t line, callid_t call_id, string_t called_num)
 void
 dp_int_cancel_offhook_timer (line_t line, callid_t call_id)
 {
-    dp_int_message(line, call_id, 0, NULL, FALSE, 
+    dp_int_message(line, call_id, 0, NULL, FALSE,
                    NULL, DP_MSG_CANCEL_OFFHOOK_TIMER, NULL, CC_MONITOR_NONE);
 }
 
@@ -197,7 +197,7 @@ dp_store_digits (line_t line, callid_t call_id, unsigned char digit)
     {   // safety check to prevent going out of bounds
         CCAPP_ERROR(DEB_F_PREFIX"Unexpected dialstring [%s] (length [%d] > max [%d]) received", DEB_F_PREFIX_ARGS(DIALPLAN, fname), g_dp_int.gDialed,
             len, MAX_DIALSTRING);
-        return;    
+        return;
     }
 
     g_dp_int.gDialed[len] = digit;
@@ -678,7 +678,7 @@ dp_get_gdialed_digits (void)
 
     DPINT_DEBUG(DEB_F_PREFIX"Dialed digits:%s\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), g_dp_int.gDialed);
 
-    /* Digits are copied to Redial buffer after 180 is received 
+    /* Digits are copied to Redial buffer after 180 is received
      * after dp_update (). Afterthat gDialed buffer is cleared. So the dialed
      * value is moved into gRedialed buffer
      */
@@ -741,11 +741,11 @@ dp_do_redial (line_t line, callid_t call_id)
     g_dp_int.call_id = call_id;
 
     g_dp_int.allow_proceed = TRUE;
-    
+
     /*
      * If we are doing redial, then we won't be entering any more digits
      */
-    g_dp_int.gDialplanDone = TRUE;   
+    g_dp_int.gDialplanDone = TRUE;
 
     (void) cprCancelTimer(g_dp_int.dial_timer);
 
@@ -951,9 +951,9 @@ boolean dp_offhook (line_t line, callid_t call_id)
 
     DPINT_DEBUG(DEB_F_PREFIX"line=%d call_id=%d\n", DEB_F_PREFIX_ARGS(DIALPLAN, fname), line, call_id);
 
-    /* 
+    /*
      * If this line and call_id is same that means
-     * dialing has been initialized already.  In addition, if 
+     * dialing has been initialized already.  In addition, if
      * gDialplanDone is true, there won't be any further digit entry
      * so don't start the dial timer.
      * Example case where remote-cc or speedial initates the call
@@ -962,7 +962,7 @@ boolean dp_offhook (line_t line, callid_t call_id)
      * timer or process anything else in these cases.
      */
     if ((g_dp_int.line == line) && (g_dp_int.call_id == call_id)) {
-        
+
         if (g_dp_int.gDialplanDone == FALSE) {
             dp_restart_dial_timer(line, call_id, g_dp_int.offhook_timeout);
             g_dp_int.gTimerType = DP_OFFHOOK_TIMER;
@@ -1004,7 +1004,7 @@ boolean dp_offhook (line_t line, callid_t call_id)
  */
 static void
 dp_dial_immediate (line_t line, callid_t call_id, boolean collect_more,
-                   char *digit_str, char *global_call_id, 
+                   char *digit_str, char *global_call_id,
                    monitor_mode_t monitor_mode)
 {
     const char fname[] = "dp_dial_immediate";
@@ -1028,7 +1028,7 @@ dp_dial_immediate (line_t line, callid_t call_id, boolean collect_more,
 
     if (g_dp_int.gDialplanDone) {
 
-        // if used with CCM, we should allow user to continue to input more digits 
+        // if used with CCM, we should allow user to continue to input more digits
         // after they've entered partial destination number onhook then press dial
         if (sip_regmgr_get_cc_mode(line) == REG_MODE_CCM) {
             return;
@@ -1047,7 +1047,7 @@ dp_dial_immediate (line_t line, callid_t call_id, boolean collect_more,
 
     if (digit_str[0] == 0 && global_call_id[0] != 0) {
 
-        cc_offhook_ext(CC_SRC_GSM, call_id, line, 
+        cc_offhook_ext(CC_SRC_GSM, call_id, line,
                        global_call_id, monitor_mode);
         return;
     }
@@ -1109,7 +1109,7 @@ dp_update (line_t line, callid_t call_id, string_t called_num)
      */
 
     if (g_dp_int.gDialed[0] &&
-        (strcmp(g_dp_int.gDialed, CISCO_PLAR_STRING) != 0) && 
+        (strcmp(g_dp_int.gDialed, CISCO_PLAR_STRING) != 0) &&
         (strncmp(g_dp_int.gDialed, CISCO_BLFPICKUP_STRING, (sizeof(CISCO_BLFPICKUP_STRING) - 1)) != 0)) {
 
         sstrncpy(g_dp_int.gReDialed, g_dp_int.gDialed, MAX_DIALSTRING);
@@ -1121,7 +1121,7 @@ dp_update (line_t line, callid_t call_id, string_t called_num)
         dp_clear_dialing_data(line, call_id);
         /* Clear kpml data and collected digits */
         kpml_flush_quarantine_buffer(line, call_id);
-    }       
+    }
 }
 
 
@@ -1178,7 +1178,7 @@ void
 dp_shutdown (void)
 {
     if (g_dp_int.dial_timer != NULL) {
-        (void)cprDestroyTimer(g_dp_int.dial_timer); 
+        (void)cprDestroyTimer(g_dp_int.dial_timer);
         g_dp_int.dial_timer = NULL;
     }
     FreeDialTemplates();
@@ -1203,10 +1203,10 @@ int dp_init_template(const char * dial_plan_string, int length) {
     /* Clear existing dialplan templates before building a new one */
     FreeDialTemplates();
     memset(dpLoadArea, 0, sizeof(dpLoadArea));
- 
+
     //Copy over data
     memcpy (dpLoadArea, dial_plan_string, length);
-  
+
     if (length == 0 || ParseDialTemplate(TemplateData) == FALSE) {
 
         if (kpml_get_state()) {
@@ -1318,7 +1318,7 @@ dp_process_msg (uint32_t cmd, void *msg)
     case DP_MSG_DIAL_IMMEDIATE:
         dp_dial_immediate(dp_int_msg->line, dp_int_msg->call_id,
                           dp_int_msg->collect_more, &(dp_int_msg->digit_str[0]),
-                          &(dp_int_msg->global_call_id[0]), 
+                          &(dp_int_msg->global_call_id[0]),
                           dp_int_msg->monitor_mode);
         break;
 

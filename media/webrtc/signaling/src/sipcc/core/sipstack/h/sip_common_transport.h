@@ -193,7 +193,7 @@ int      sipTransportGetBkupServerPort(line_t line);
 int      sipTransportGetEmerServerPort(line_t line);
 int      sipTransportGetOutbProxyPort(line_t line);
 cpr_ip_type     sipTransportGetPrimServerAddress(line_t line, char *buffer);
-uint16_t  sipTransportGetBkupServerAddress(cpr_ip_addr_t *pip_addr, 
+uint16_t  sipTransportGetBkupServerAddress(cpr_ip_addr_t *pip_addr,
                                             line_t line, char *buffer);
 void     sipTransportGetEmerServerAddress(line_t line, char *buffer);
 void     sipTransportGetOutbProxyAddress(line_t line, char *buffer);
@@ -210,7 +210,7 @@ const char *sipTransportGetTransportType(line_t line, boolean upper_case,
                                          ccsipCCB_t *ccb);
 
 void     sipTransportShutdown(void);
-extern void ccsip_dump_send_msg_info(char *msg, sipMessage_t *pSIPMessage, 
+extern void ccsip_dump_send_msg_info(char *msg, sipMessage_t *pSIPMessage,
                                cpr_ip_addr_t *cc_remote_ipaddr,
                                uint16_t cc_remote_port);
 void SIPTaskProcessTCPMessage(sipMessage_t *pSipMessage,

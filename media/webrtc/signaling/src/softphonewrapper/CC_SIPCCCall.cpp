@@ -26,15 +26,15 @@ static const char* logTag = "CC_SIPCCCall";
 
 CSF_IMPLEMENT_WRAP(CC_SIPCCCall, cc_call_handle_t);
 
-CC_SIPCCCall::CC_SIPCCCall (cc_call_handle_t aCallHandle) : 
-            callHandle(aCallHandle),  
+CC_SIPCCCall::CC_SIPCCCall (cc_call_handle_t aCallHandle) :
+            callHandle(aCallHandle),
             pMediaData(new CC_SIPCCCallMediaData(NULL,false,false,-1)),
             m_lock("CC_SIPCCCall")
 {
     CSFLogInfoS( logTag, "Creating  CC_SIPCCCall " << callHandle );
-    
+
     AudioControl * audioControl = VcmSIPCCBinding::getAudioControl();
-    
+
     if(audioControl)
     {
          pMediaData->volume = audioControl->getDefaultVolume();
@@ -70,14 +70,14 @@ void CC_SIPCCCall::setRemoteWindow (VideoWindowHandle window)
         CSFLogWarnS( logTag, "setRemoteWindow: no video provider found");
         return;
     }
-           
+
     for (StreamMapType::iterator entry =  pMediaData->streamMap.begin(); entry !=  pMediaData->streamMap.end(); entry++)
     {
         if (entry->second.isVideo)
         {
             // first video stream found
             int streamId = entry->first;
-            pVideo->setRemoteWindow(streamId,  pMediaData->remoteWindow); 
+            pVideo->setRemoteWindow(streamId,  pMediaData->remoteWindow);
 
             return;
         }
@@ -96,14 +96,14 @@ int CC_SIPCCCall::setExternalRenderer(VideoFormat vFormat, ExternalRendererHandl
         CSFLogWarnS( logTag, "setExternalRenderer: no video provider found");
         return -1;
     }
-           
+
     for (StreamMapType::iterator entry =  pMediaData->streamMap.begin(); entry !=  pMediaData->streamMap.end(); entry++)
     {
         if (entry->second.isVideo)
         {
             // first video stream found
             int streamId = entry->first;
-            return pVideo->setExternalRenderer(streamId,  pMediaData->videoFormat, pMediaData->extRenderer); 
+            return pVideo->setExternalRenderer(streamId,  pMediaData->videoFormat, pMediaData->extRenderer);
         }
     }
     CSFLogInfoS( logTag, "setExternalRenderer:no video stream found in call " << callHandle );
@@ -275,7 +275,7 @@ bool CC_SIPCCCall::transferStart (cc_sdp_direction_t video_pref)
     return (CCAPI_Call_transferStart(callHandle, video_pref) == CC_SUCCESS);
 }
 
-bool CC_SIPCCCall::transferComplete (CC_CallPtr otherLeg, 
+bool CC_SIPCCCall::transferComplete (CC_CallPtr otherLeg,
                                      cc_sdp_direction_t video_pref)
 {
     return (CCAPI_Call_transferComplete(callHandle, ((CC_SIPCCCall*)otherLeg.get())->callHandle, video_pref) == CC_SUCCESS);
@@ -366,7 +366,7 @@ bool CC_SIPCCCall::setAudioMute(bool mute)
     {
     	returnCode = false;
     }
-    
+
 	return returnCode;
 }
 
@@ -412,17 +412,17 @@ void CC_SIPCCCall::addStream(int streamId, bool isVideo)
 		mozilla::MutexAutoLock lock(m_lock);
 		pMediaData->streamMap[streamId].isVideo = isVideo;
 	}
-	// The new stream needs to be given any properties that the call has for it. 
+	// The new stream needs to be given any properties that the call has for it.
 	// At the moment the only candidate is the muted state
 	if (isVideo)
 	{
 #ifndef NO_WEBRTC_VIDEO
         VideoTermination * pVideo = VcmSIPCCBinding::getVideoTermination();
-        
+
         // if there is a window for this call apply it to the stream
         if ( pMediaData->remoteWindow != NULL)
         {
-            pVideo->setRemoteWindow(streamId,  pMediaData->remoteWindow); 
+            pVideo->setRemoteWindow(streamId,  pMediaData->remoteWindow);
         }
         else
         {
@@ -432,13 +432,13 @@ void CC_SIPCCCall::addStream(int streamId, bool isVideo)
 		if(pMediaData->extRenderer != NULL)
 		{
 			pVideo->setExternalRenderer(streamId, pMediaData->videoFormat, pMediaData->extRenderer);
-		} 
+		}
 		else
 		{
             CSFLogInfoS( logTag, "addStream: externalRenderer is NULL");
 
 		}
-     
+
 
         for (StreamMapType::iterator entry =  pMediaData->streamMap.begin(); entry !=  pMediaData->streamMap.end(); entry++)
         {
@@ -447,7 +447,7 @@ void CC_SIPCCCall::addStream(int streamId, bool isVideo)
     			// first is the streamId
     			pVideo->setAudioStreamId(entry->first);
     		}
-        }        
+        }
 		if (!pVideo->mute(streamId,  pMediaData->videoMuteState))
 		{
 			CSFLogErrorS( logTag, "setting video mute state failed for new stream: " << streamId);
@@ -458,8 +458,8 @@ void CC_SIPCCCall::addStream(int streamId, bool isVideo)
 		}
 #endif
 	}
-	else		
-	{	
+	else
+	{
 		AudioTermination * pAudio = VcmSIPCCBinding::getAudioTermination();
 		if (!pAudio->mute(streamId,  pMediaData->audioMuteState))
 		{
@@ -479,13 +479,13 @@ void CC_SIPCCCall::removeStream(int streamId)
 	if ( pMediaData->streamMap.erase(streamId) != 1)
 	{
 		CSFLogErrorS( logTag, "removeStream stream that was never in the streamMap: " << streamId);
-	} 
+	}
 }
 
 bool CC_SIPCCCall::setVolume(int volume)
 {
 	bool returnCode = false;
-    
+
     AudioTermination * pAudio = VcmSIPCCBinding::getAudioTermination();
 	{
     	mozilla::MutexAutoLock lock(m_lock);
@@ -524,7 +524,7 @@ void CC_SIPCCCall::originateP2PCall (cc_sdp_direction_t video_pref, const std::s
 	CCAPI_Config_set_server_address(ip.c_str());
     CCAPI_Call_originateCall(callHandle, video_pref, digits.c_str());
 }
- 
+
 /*
  * This method works asynchronously, there will be an onCallEvent with the resulting SDP
  * When Constraints are implemented the Audio and Video port will not be a parameter to CCAPI_CreateAnswer
@@ -543,7 +543,7 @@ void CC_SIPCCCall::createAnswer (const std::string & hints, const std::string & 
 void CC_SIPCCCall::setLocalDescription(cc_jsep_action_t action, const std::string & sdp) {
 	CCAPI_SetLocalDescription(callHandle, action, sdp.c_str());
 }
-        
+
 void CC_SIPCCCall::setRemoteDescription(cc_jsep_action_t action, const std::string & sdp) {
 	CCAPI_SetRemoteDescription(callHandle, action, sdp.c_str());
 }
@@ -551,7 +551,7 @@ void CC_SIPCCCall::setRemoteDescription(cc_jsep_action_t action, const std::stri
 void CC_SIPCCCall::setPeerConnection(const std::string& handle)
 {
   CSFLogDebug(logTag, "setPeerConnection");
-  
+
   peerconnection = handle;  // Cache this here. we need it to make the CC_SIPCCCallInfo
   CCAPI_SetPeerConnection(callHandle, handle.c_str());
 }

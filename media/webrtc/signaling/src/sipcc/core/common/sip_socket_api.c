@@ -13,7 +13,7 @@
  * @brief The sipSocketSend() function is a wrapper used by the sipstack to send
  * data over a socket. This function decides to use the secure versus unsecure
  * connection based on the "secure" flag.
- * 
+ *
  * @note - The implementation of both secure/non-secure is the same in RT/TNP
  * products. It is different for the other vendors and hence we need this
  * flexibility.
@@ -28,7 +28,7 @@
 ssize_t
 sipSocketSend (cpr_socket_t soc,
          CONST void *buf,
-         size_t len, 
+         size_t len,
          int32_t flags,
          boolean secure)
 {
@@ -45,7 +45,7 @@ sipSocketSend (cpr_socket_t soc,
  * @brief The sipSocketRecv() function is a wrapper used by the sipstack to send
  * data over a socket. This function decides to use the secure versus unsecure
  * connection based on the "secure" flag.
- * 
+ *
  * @note - The implementation of both secure/non-secure is the same in RT/TNP
  * products. It is different for the other vendors and hence we need this
  * flexibility.
@@ -75,14 +75,14 @@ sipSocketRecv (cpr_socket_t soc,
  * @brief The sipSocketClose() function is a wrapper used by the sipstack to
  * close a socket. This function decides to use the secure versus unsecure
  * connection based on the "secure" flag.
- * 
+ *
  * @note - The implementation of both secure/non-secure is the same in RT/TNP
  * products. It is different for the other vendors and hence we need this
  * flexibility.
  *
  * @param[in] soc  - The socket that needs to be destroyed
  *
- * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case. 
+ * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case.
  *
  * @note The possible error values this function should return are
  *         @li [CPR_EBADF]      socket is not a valid socket descriptor.

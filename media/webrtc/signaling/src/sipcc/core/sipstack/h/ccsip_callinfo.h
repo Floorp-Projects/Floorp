@@ -43,8 +43,8 @@
 #define SIP_CI_ORIENTATION        "orientation="
 #define SIP_CI_ORIENTATION_TO     "to"
 #define SIP_CI_ORIENTATION_FROM   "from"
-#define SIP_CI_POLICY             "policy="	
-#define SIP_CI_POLICY_UNKNOWN     "unknown"	
+#define SIP_CI_POLICY             "policy="
+#define SIP_CI_POLICY_UNKNOWN     "unknown"
 #define SIP_CI_POLICY_CHAPERONE   "chaperone"
 #define SIP_CI_CALL_INSTANCE      "call-instance="
 #define SIP_CI_CTI_CALLID         "cti-callid="
@@ -78,7 +78,7 @@
 char* ccsip_encode_call_info_hdr(cc_call_info_t *call_info_p,
                                  const char *misc_parms_p);
 
-void ccsip_free_call_info_header(cc_call_info_t *call_info_p); 
+void ccsip_free_call_info_header(cc_call_info_t *call_info_p);
 
 void ccsip_store_call_info(cc_call_info_t *call_info_p, ccsipCCB_t* ccb);
 void ccsip_process_call_info_header(sipMessage_t *request_p, ccsipCCB_t* ccb);

@@ -54,12 +54,12 @@ convertStringToParticipantSecurity(const char *data)
 void conf_roster_init_call_conference (cc_call_conference_Info_t *info)
 {
     CCAPP_DEBUG(DEB_F_PREFIX"in init_call_conference \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"));
-    
+
     info->participantMax = 0;
     info->participantCount = 0;
     info->myParticipantId = strlib_empty();
-    
-    sll_lite_init(&info->currentParticipantsList); 
+
+    sll_lite_init(&info->currentParticipantsList);
 }
 
 void conf_roster_free_call_conference (cc_call_conference_Info_t *confInfo)
@@ -69,17 +69,17 @@ void conf_roster_free_call_conference (cc_call_conference_Info_t *confInfo)
     CCAPP_DEBUG(DEB_F_PREFIX"in free_call_confrerence \n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"));
 
     while((participant=(cc_call_conferenceParticipant_Info_t *)
-                sll_lite_unlink_head(&confInfo->currentParticipantsList)) != NULL) 
+                sll_lite_unlink_head(&confInfo->currentParticipantsList)) != NULL)
     {
         strlib_free(participant->participantName);
         strlib_free(participant->endpointUri);
         strlib_free(participant->callid);
         strlib_free(participant->participantNumber);
-        
-        participant->participantSecurity        = CC_SECURITY_NONE; 
+
+        participant->participantSecurity        = CC_SECURITY_NONE;
         participant->participantStatus          = CCAPI_CONFPARTICIPANT_UNKNOWN;
         participant->canRemoveOtherParticipants = FALSE;
-        
+
         cpr_free(participant);
         participant = NULL;
     }
@@ -107,7 +107,7 @@ void conf_roster_copy_call_conferance (cc_call_conference_Info_t *dest, cc_call_
     while (iterator) {
         srcParticipant = (cc_call_conferenceParticipant_Info_t *)iterator;
 
-        destParticipant = cpr_malloc(sizeof(cc_call_conferenceParticipant_Info_t)); 
+        destParticipant = cpr_malloc(sizeof(cc_call_conferenceParticipant_Info_t));
         if (destParticipant == NULL) {
             CCAPP_ERROR(DEB_F_PREFIX" Malloc failure for participant\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONFPARSE"));
             return;
@@ -115,10 +115,10 @@ void conf_roster_copy_call_conferance (cc_call_conference_Info_t *dest, cc_call_
             destParticipant->participantName = strlib_copy(srcParticipant->participantName);
             destParticipant->endpointUri = strlib_copy(srcParticipant->endpointUri);
             destParticipant->callid = strlib_copy(srcParticipant->callid);
-            
+
             destParticipant->participantNumber          = strlib_copy(srcParticipant->participantNumber);
-            destParticipant->participantSecurity        = srcParticipant->participantSecurity; 
-            destParticipant->participantStatus          = srcParticipant->participantStatus; 
+            destParticipant->participantSecurity        = srcParticipant->participantSecurity;
+            destParticipant->participantStatus          = srcParticipant->participantStatus;
             destParticipant->canRemoveOtherParticipants = srcParticipant->canRemoveOtherParticipants;
         }
 
@@ -130,7 +130,7 @@ void conf_roster_copy_call_conferance (cc_call_conference_Info_t *dest, cc_call_
         }
 
         iterator = iterator->next_p;
-    } 
+    }
 }
 
 // -------------------
@@ -145,7 +145,7 @@ void conf_roster_copy_call_conferance (cc_call_conference_Info_t *dest, cc_call_
 * @return void
 */
 void CCAPI_CallInfo_getConfParticipants (cc_callinfo_ref_t handle, cc_participant_ref_t participantHandles[], int* count)
-{  
+{
    cc_call_conference_ref_t              callConference   = NULL;    // conference reference (from call info)
    cc_call_conference_participant_ref_t  participant      = NULL;    // participant reference
    cc_uint16_t                           participantIndex = 0;       // participant index
@@ -165,9 +165,9 @@ void CCAPI_CallInfo_getConfParticipants (cc_callinfo_ref_t handle, cc_participan
    nodeCount = SLL_LITE_NODE_COUNT(&(callConference->currentParticipantsList));
    CCAPP_DEBUG(DEB_F_PREFIX"SLL NODE COUNT = [%d]\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"), nodeCount);
    if (nodeCount <= 0)
-   {      
+   {
       *count = 0;
-      return;      
+      return;
    }
 
    participant = (cc_call_conference_participant_ref_t)SLL_LITE_LINK_HEAD(&callConference->currentParticipantsList);
@@ -176,12 +176,12 @@ void CCAPI_CallInfo_getConfParticipants (cc_callinfo_ref_t handle, cc_participan
       if (participantIndex >= *count)
       {
           CCAPP_ERROR(DEB_F_PREFIX"Not Enough Room Provided To List All Participants.  Listed [%d] of [%d]\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"), count, nodeCount);
-          return;            
+          return;
       }
-      
+
       // add this participant to our list of particpiants
       participantHandles[participantIndex] = (participant->callid);
-                
+
       // step to the next stored participant in the list
       participant = (cc_call_conference_participant_ref_t)SLL_LITE_LINK_NEXT_NODE(participant);
       participantIndex++;
@@ -195,7 +195,7 @@ void CCAPI_CallInfo_getConfParticipants (cc_callinfo_ref_t handle, cc_participan
        *count = 0;
        return;
    }
-   
+
    // return number of participants
    *count = nodeCount;
    return;
@@ -207,7 +207,7 @@ void CCAPI_CallInfo_getConfParticipants (cc_callinfo_ref_t handle, cc_participan
 * @return maximum number of conference participants
 */
 cc_uint16_t CCAPI_CallInfo_getConfParticipantMax (cc_callinfo_ref_t handle)
-{  // 
+{  //
    cc_call_conference_ref_t callConference;    // conference reference (from call info)
 
    CCAPP_DEBUG(DEB_F_PREFIX"Entering:  CCAPI_CallInfo_getConfParticipantMax\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
@@ -232,11 +232,11 @@ cc_uint16_t CCAPI_CallInfo_getConfParticipantMax (cc_callinfo_ref_t handle)
 * @return display name of the conference participant
 */
 cc_string_t CCAPI_CallInfo_getConfParticipantName (cc_callinfo_ref_t handle, cc_participant_ref_t participantHandle)
-{ 
+{
     cc_call_conference_participant_ref_t participant = getConferenceParticipantRef (handle, participantHandle);
     if (participant == NULL)
     {
-        return strlib_empty();    
+        return strlib_empty();
     }
 
     return (participant->participantName);
@@ -249,7 +249,7 @@ cc_string_t CCAPI_CallInfo_getConfParticipantName (cc_callinfo_ref_t handle, cc_
 * @return display number of the conference participant
 */
 cc_string_t CCAPI_CallInfo_getConfParticipantNumber (cc_callinfo_ref_t handle, cc_participant_ref_t participantHandle)
-{  
+{
     cc_call_conference_participant_ref_t participant = getConferenceParticipantRef (handle, participantHandle);
     if (participant == NULL)
     {
@@ -263,7 +263,7 @@ cc_string_t CCAPI_CallInfo_getConfParticipantNumber (cc_callinfo_ref_t handle, c
 * Get Conference Participant Status
 * @param [in] handle - call handle
 * @param [in] participantHandle - handle of conference participant
-* @return conference participant status 
+* @return conference participant status
 */
 cc_conf_participant_status_t CCAPI_CallInfo_getConfParticipantStatus (cc_callinfo_ref_t handle, cc_participant_ref_t participantHandle)
 {
@@ -283,38 +283,38 @@ cc_conf_participant_status_t CCAPI_CallInfo_getConfParticipantStatus (cc_callinf
 * @return security setting of the specific conference participant
 */
 cc_call_security_t CCAPI_CallInfo_getConfParticipantSecurity (cc_callinfo_ref_t handle, cc_participant_ref_t participantHandle)
-{  
+{
     cc_call_conference_participant_ref_t participant = getConferenceParticipantRef (handle, participantHandle);
     if (participant == NULL)
     {
         return (CC_SECURITY_NONE);
     }
 
-    return (participant->participantSecurity);  
+    return (participant->participantSecurity);
 }
 
 /**
 */
 cc_boolean CCAPI_CallInfo_isConfSelfParticipant (cc_callinfo_ref_t handle, cc_participant_ref_t participantHandle)
-{ 
+{
    cc_call_conference_ref_t callConference;    // conference reference (from call info)
 
    // get conference reference from the call info
    callConference = getCallConferenceRef(handle);
    if (callConference == NULL)
    {
-      // error - log 
+      // error - log
       CCAPP_ERROR(DEB_F_PREFIX"Unable to get conference reference\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
       return (FALSE);
    }
-   
+
    return (strcmp((callConference->myParticipantId), participantHandle) == 0);
 }
 
 /**
 */
 cc_participant_ref_t CCAPI_CallInfo_getConfSelfParticipant (cc_callinfo_ref_t handle)
-{  
+{
    cc_call_conference_ref_t callConference;    // conference reference (from call info)
 
    // get conference reference from the call info
@@ -325,7 +325,7 @@ cc_participant_ref_t CCAPI_CallInfo_getConfSelfParticipant (cc_callinfo_ref_t ha
       CCAPP_ERROR(DEB_F_PREFIX"Unable to get conference reference\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI-CONF"));
       return strlib_empty();
    }
-   
+
    return (callConference->myParticipantId);
 }
 
@@ -349,7 +349,7 @@ cc_call_conference_ref_t  getCallConferenceRef(cc_callinfo_ref_t handle)
   {
       return (NULL);
   }
-  
+
   return (&data->call_conference);
 }
 
@@ -359,7 +359,7 @@ cc_call_conference_ref_t  getCallConferenceRef(cc_callinfo_ref_t handle)
 cc_call_conference_participant_ref_t getConferenceParticipantRef(cc_callinfo_ref_t handle, cc_participant_ref_t participantHandle)
 {
    cc_call_conference_ref_t              callConference;    // conference reference (from call info)
-   cc_call_conference_participant_ref_t  participant;  
+   cc_call_conference_participant_ref_t  participant;
 
    // get conference reference from the call info
    callConference = getCallConferenceRef(handle);
@@ -385,14 +385,14 @@ cc_call_conference_participant_ref_t getConferenceParticipantRef(cc_callinfo_ref
 
    participant = (cc_call_conference_participant_ref_t)SLL_LITE_LINK_HEAD(&callConference->currentParticipantsList);
    while (participant != NULL)
-   {   
+   {
       // see if we've found the participant we're looking for
       if (strcmp(participant->callid, participantHandle) == 0)
       {
          return (participant);
       }
 
-      // no match so far, so look at the next item in the list...      
+      // no match so far, so look at the next item in the list...
       participant = (cc_call_conference_participant_ref_t)SLL_LITE_LINK_NEXT_NODE(participant);
    }
 

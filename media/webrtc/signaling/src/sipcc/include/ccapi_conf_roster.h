@@ -18,7 +18,7 @@ typedef string_t cc_participant_ref_t;
 *
 * Returns list of conference participant information last received from the UCM.
 * Note that the list may include conference participants in various states in addition to Connected.
-* [ For exampke, a listed participant may be in the ringing state (not yet on conference), 
+* [ For exampke, a listed participant may be in the ringing state (not yet on conference),
 * or disconnected state (leaving/left the conference).]  Application should invoke
 * getConferenceParticipantStatus for each participant in the list to query exact status.
 *

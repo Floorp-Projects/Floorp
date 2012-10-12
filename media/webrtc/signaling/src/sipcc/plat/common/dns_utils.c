@@ -15,7 +15,7 @@
 #include "util_string.h"
 
 #ifdef SIP_OS_WINDOWS
-cc_int32_t 
+cc_int32_t
 dnsGetHostByName (const char *hname,
                    cpr_ip_addr_t *ipaddr_ptr,
                    cc_int32_t timeout,

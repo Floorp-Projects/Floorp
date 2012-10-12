@@ -52,7 +52,7 @@ egetname(const struct ename *index, int event)
   ECC_API cc_string_t typeName##_getname(tokenPrepend##typeName##eventOrType ev) \
   {\
       return egetname(&tokenPrepend##typeName##_names[0], (int) ev);\
-  }  
+  }
 
 //stringizing enums from ccapi_types.h
 
