@@ -51,8 +51,8 @@ static void notify_closed_marshal(GClosure* closure,
   NS_RELEASE(alert);
 }
 
-NS_IMPL_ISUPPORTS4(nsAlertsIconListener, imgIContainerObserver,
-                   imgIDecoderObserver, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(nsAlertsIconListener, imgINotificationObserver,
+                   nsIObserver, nsISupportsWeakReference)
 
 nsAlertsIconListener::nsAlertsIconListener()
 : mLoadedFrame(false),
@@ -90,69 +90,21 @@ nsAlertsIconListener::~nsAlertsIconListener()
 }
 
 NS_IMETHODIMP
-nsAlertsIconListener::OnStartRequest(imgIRequest* aRequest)
+nsAlertsIconListener::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
 {
+  if (aType == imgINotificationObserver::STOP_REQUEST) {
+    return OnStopRequest(aRequest);
+  }
+
+  if (aType == imgINotificationObserver::STOP_FRAME) {
+    return OnStopFrame(aRequest);
+  }
+
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsAlertsIconListener::OnStartDecode(imgIRequest* aRequest)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAlertsIconListener::OnStartContainer(imgIRequest* aRequest,
-                                       imgIContainer* aContainer)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAlertsIconListener::OnStartFrame(imgIRequest* aRequest,
-                                   uint32_t aFrame)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAlertsIconListener::OnDataAvailable(imgIRequest* aRequest,
-                                      bool aCurrentFrame,
-                                      const nsIntRect* aRect)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAlertsIconListener::OnStopContainer(imgIRequest* aRequest,
-                                      imgIContainer* aContainer)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAlertsIconListener::OnStopDecode(imgIRequest* aRequest,
-                                   nsresult status,
-                                   const PRUnichar* statusArg)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAlertsIconListener::FrameChanged(imgIRequest* aRequest, 
-                                   imgIContainer* aContainer,
-                                   const nsIntRect* aDirtyRect)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAlertsIconListener::OnStopRequest(imgIRequest* aRequest,
-                                    bool aIsLastPart)
+nsresult
+nsAlertsIconListener::OnStopRequest(imgIRequest* aRequest)
 {
   uint32_t imgStatus = imgIRequest::STATUS_ERROR;
   nsresult rv = aRequest->GetImageStatus(&imgStatus);
@@ -169,21 +121,8 @@ nsAlertsIconListener::OnStopRequest(imgIRequest* aRequest,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsAlertsIconListener::OnDiscard(imgIRequest *aRequest)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAlertsIconListener::OnImageIsAnimated(imgIRequest *aRequest)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAlertsIconListener::OnStopFrame(imgIRequest* aRequest,
-                                  uint32_t aFrame)
+nsresult
+nsAlertsIconListener::OnStopFrame(imgIRequest* aRequest)
 {
   if (aRequest != mIconRequest)
     return NS_ERROR_FAILURE;
