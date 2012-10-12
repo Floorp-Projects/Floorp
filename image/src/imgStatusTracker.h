@@ -32,7 +32,6 @@ class Image;
 enum {
   stateRequestStarted    = PR_BIT(0),
   stateHasSize           = PR_BIT(1),
-  stateDecodeStarted     = PR_BIT(2),
   stateDecodeStopped     = PR_BIT(3),
   stateFrameStopped      = PR_BIT(4),
   stateRequestStopped    = PR_BIT(5),
@@ -149,12 +148,8 @@ public:
   void RecordDecoded();
 
   /* non-virtual imgIDecoderObserver methods */
-  void RecordStartDecode();
-  void SendStartDecode(imgRequestProxy* aProxy);
   void RecordStartContainer(imgIContainer* aContainer);
   void SendStartContainer(imgRequestProxy* aProxy);
-  void RecordStartFrame();
-  void SendStartFrame(imgRequestProxy* aProxy);
   void RecordDataAvailable();
   void SendDataAvailable(imgRequestProxy* aProxy, const nsIntRect* aRect);
   void RecordStopFrame();

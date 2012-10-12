@@ -31,27 +31,19 @@ ScriptedNotificationObserver::Notify(imgIRequest* aRequest,
                                      int32_t aType,
                                      const nsIntRect* /*aUnused*/)
 {
-  if (aType == imgINotificationObserver::START_REQUEST)
-    return mInner->StartRequest(aRequest);
-  if (aType == imgINotificationObserver::START_CONTAINER)
-    return mInner->StartContainer(aRequest);
-  if (aType == imgINotificationObserver::START_FRAME)
-    return mInner->StartFrame(aRequest);
-  if (aType == imgINotificationObserver::START_DECODE)
-    return mInner->StartDecode(aRequest);
-  if (aType == imgINotificationObserver::DATA_AVAILABLE)
-    return mInner->DataAvailable(aRequest);
-  if (aType == imgINotificationObserver::STOP_FRAME)
-    return mInner->StopFrame(aRequest);
-  if (aType == imgINotificationObserver::STOP_DECODE)
-    return mInner->StopDecode(aRequest);
-  if (aType == imgINotificationObserver::STOP_REQUEST)
-    return mInner->StopRequest(aRequest);
+  if (aType == imgINotificationObserver::SIZE_AVAILABLE)
+    return mInner->SizeAvailable(aRequest);
+  if (aType == imgINotificationObserver::FRAME_UPDATE)
+    return mInner->FrameUpdate(aRequest);
+  if (aType == imgINotificationObserver::FRAME_COMPLETE)
+    return mInner->FrameComplete(aRequest);
+  if (aType == imgINotificationObserver::DECODE_COMPLETE)
+    return mInner->DecodeComplete(aRequest);
+  if (aType == imgINotificationObserver::LOAD_COMPLETE)
+    return mInner->LoadComplete(aRequest);
   if (aType == imgINotificationObserver::DISCARD)
     return mInner->Discard(aRequest);
   if (aType == imgINotificationObserver::IS_ANIMATED)
     return mInner->IsAnimated(aRequest);
-  if (aType == imgINotificationObserver::FRAME_CHANGED)
-    return mInner->FrameChanged(aRequest);
   return NS_OK;
 }
