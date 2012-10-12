@@ -13,6 +13,9 @@
 #include "ImageLogging.h"
 #include "RasterImage.h"
 
+#include "mozilla/Util.h"
+#include "mozilla/Assertions.h"
+
 using namespace mozilla::image;
 
 static nsresult
@@ -262,6 +265,28 @@ imgStatusTracker::EmulateRequestFinished(imgRequestProxy* aProxy,
   if (!(mState & stateRequestStopped)) {
     aProxy->OnStopRequest(true);
   }
+}
+
+void
+imgStatusTracker::AddConsumer(imgRequestProxy* aConsumer)
+{
+  mConsumers.AppendElementUnlessExists(aConsumer);
+}
+
+// XXX - The last two arguments should go away.
+bool
+imgStatusTracker::RemoveConsumer(imgRequestProxy* aConsumer, nsresult aStatus,
+                                 bool aOnlySendStopRequest)
+{
+  // Remove the proxy from the list.
+  bool removed = mConsumers.RemoveElement(aConsumer);
+  //MOZ_NONFATAL_ASSERT(removed, "Trying to remove a consumer we don't have");
+
+  // Consumers can get confused if they don't get all the proper teardown
+  // notifications. Part ways on good terms.
+  if (removed)
+    EmulateRequestFinished(aConsumer, aStatus, aOnlySendStopRequest);
+  return removed;
 }
 
 void
