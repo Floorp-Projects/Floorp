@@ -88,16 +88,18 @@ imgRequestProxy::~imgRequestProxy()
   }
 }
 
-nsresult imgRequestProxy::Init(imgRequest* request, nsILoadGroup* aLoadGroup, Image* aImage,
+nsresult imgRequestProxy::Init(imgStatusTracker* aStatusTracker,
+                               nsILoadGroup* aLoadGroup,
                                nsIURI* aURI, imgIDecoderObserver* aObserver)
 {
   NS_PRECONDITION(!mOwner && !mListener, "imgRequestProxy is already initialized");
 
-  LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequestProxy::Init", "request", request);
+  LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequestProxy::Init", "request", aStatusTracker->GetRequest());
 
   NS_ABORT_IF_FALSE(mAnimationConsumers == 0, "Cannot have animation before Init");
 
-  mOwner = request;
+  mStatusTracker = aStatusTracker;
+  mOwner = aStatusTracker->GetRequest();
   mListener = aObserver;
   // Make sure to addref mListener before the AddProxy call below, since
   // that call might well want to release it if the imgRequest has
@@ -107,7 +109,7 @@ nsresult imgRequestProxy::Init(imgRequest* request, nsILoadGroup* aLoadGroup, Im
     NS_ADDREF(mListener);
   }
   mLoadGroup = aLoadGroup;
-  mImage = aImage;
+  mImage = aStatusTracker->GetImage();
   mURI = aURI;
 
   // Note: AddProxy won't send all the On* notifications immediately
@@ -502,9 +504,7 @@ NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
   // XXXldb That's not true anymore.  Stuff from imgLoader adds the
   // request to the loadgroup.
   clone->SetLoadFlags(mLoadFlags);
-  nsresult rv = clone->Init(mOwner, mLoadGroup,
-                            mImage ? mImage : mOwner->mImage,
-                            mURI, aObserver);
+  nsresult rv = clone->Init(mStatusTracker, mLoadGroup, mURI, aObserver);
   if (NS_FAILED(rv))
     return rv;
 
@@ -851,7 +851,7 @@ imgRequestProxy::GetStaticRequest(imgIRequest** aReturn)
   nsCOMPtr<nsIPrincipal> currentPrincipal;
   GetImagePrincipal(getter_AddRefs(currentPrincipal));
   nsRefPtr<imgRequestProxy> req = new imgRequestProxyStatic(currentPrincipal);
-  req->Init(nullptr, nullptr, frame, mURI, nullptr);
+  req->Init(&frame->GetStatusTracker(), nullptr, mURI, nullptr);
 
   NS_ADDREF(*aReturn = req);
 
