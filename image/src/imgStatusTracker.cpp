@@ -40,7 +40,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::FrameChanged(imgIRequest *request,
 
   mTracker->RecordFrameChanged(container, dirtyRect);
 
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->GetConsumers());
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
     mTracker->SendFrameChanged(iter.GetNext(), container, dirtyRect);
   }
@@ -60,7 +60,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStartDecode(imgIRequest *request)
 
   mTracker->RecordStartDecode();
 
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->GetConsumers());
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
     mTracker->SendStartDecode(iter.GetNext());
   }
@@ -71,7 +71,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStartDecode(imgIRequest *request)
 
     mTracker->RecordBlockOnload();
 
-    nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->GetConsumers());
+    nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
     while (iter.HasMore()) {
       mTracker->SendBlockOnload(iter.GetNext());
     }
@@ -107,7 +107,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStartContainer(imgIRequest *request, i
                     "OnStartContainer callback from an image we don't own");
   mTracker->RecordStartContainer(image);
 
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->GetConsumers());
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
     mTracker->SendStartContainer(iter.GetNext(), image);
   }
@@ -125,7 +125,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStartFrame(imgIRequest *request,
 
   mTracker->RecordStartFrame(frame);
 
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->GetConsumers());
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
     mTracker->SendStartFrame(iter.GetNext(), frame);
   }
@@ -144,7 +144,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnDataAvailable(imgIRequest *request,
 
   mTracker->RecordDataAvailable(aCurrentFrame, rect);
 
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->GetConsumers());
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
     mTracker->SendDataAvailable(iter.GetNext(), aCurrentFrame, rect);
   }
@@ -162,7 +162,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStopFrame(imgIRequest *request,
 
   mTracker->RecordStopFrame(frame);
 
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->GetConsumers());
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
     mTracker->SendStopFrame(iter.GetNext(), frame);
   }
@@ -182,7 +182,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStopContainer(imgIRequest *request,
 
   mTracker->RecordStopContainer(image);
 
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->GetConsumers());
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
     mTracker->SendStopContainer(iter.GetNext(), image);
   }
@@ -213,7 +213,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStopDecode(imgIRequest *aRequest,
 
   mTracker->RecordStopDecode(aStatus, aStatusArg);
 
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->GetConsumers());
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
     mTracker->SendStopDecode(iter.GetNext(), aStatus, aStatusArg);
   }
@@ -264,7 +264,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnDiscard(imgIRequest *aRequest)
   // Update the cache entry size, since we just got rid of frame data
   mTracker->GetRequest()->UpdateCacheEntrySize();
 
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->GetConsumers());
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
     mTracker->SendDiscard(iter.GetNext());
   }
@@ -278,7 +278,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnImageIsAnimated(imgIRequest *aRequest)
                     "OnImageIsAnimated callback before we've created our image");
   mTracker->RecordImageIsAnimated();
 
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->GetConsumers());
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
     mTracker->SendImageIsAnimated(iter.GetNext());
   }
@@ -793,6 +793,16 @@ imgStatusTracker::SendStartRequest(imgRequestProxy* aProxy)
 }
 
 void
+imgStatusTracker::OnStartRequest()
+{
+  RecordStartRequest();
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
+  while (iter.HasMore()) {
+    SendStartRequest(iter.GetNext());
+  }
+}
+
+void
 imgStatusTracker::RecordStopRequest(bool aLastPart, nsresult aStatus)
 {
   mHadLastPart = aLastPart;
@@ -811,6 +821,27 @@ imgStatusTracker::SendStopRequest(imgRequestProxy* aProxy, bool aLastPart, nsres
   if (!aProxy->NotificationsDeferred()) {
     aProxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nullptr);
     aProxy->OnStopRequest(aLastPart);
+  }
+}
+
+void
+imgStatusTracker::OnStopRequest(bool aLastPart, nsresult aStatus)
+{
+  RecordStopRequest(aLastPart, aStatus);
+  /* notify the kids */
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator srIter(mConsumers);
+  while (srIter.HasMore()) {
+    SendStopRequest(srIter.GetNext(), aLastPart, aStatus);
+  }
+}
+
+void
+imgStatusTracker::OnDataAvailable()
+{
+  // Notify any imgRequestProxys that are observing us that we have an Image.
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
+  while (iter.HasMore()) {
+    iter.GetNext()->SetHasImage();
   }
 }
 
