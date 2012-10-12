@@ -11,30 +11,20 @@
 #include "imgILoader.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
-#include "nsStubImageDecoderObserver.h"
+#include "imgINotificationObserver.h"
 
 class nsImageBoxFrame;
 
 class nsDisplayXULImage;
 
-class nsImageBoxListener : public nsStubImageDecoderObserver
+class nsImageBoxListener : public imgINotificationObserver
 {
 public:
   nsImageBoxListener();
   virtual ~nsImageBoxListener();
 
   NS_DECL_ISUPPORTS
-  // imgIDecoderObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD OnStartContainer(imgIRequest *request, imgIContainer *image);
-  NS_IMETHOD OnStopContainer(imgIRequest *request, imgIContainer *image);
-  NS_IMETHOD OnStopDecode(imgIRequest *request, nsresult status,
-                          const PRUnichar *statusArg);
-  NS_IMETHOD OnImageIsAnimated(imgIRequest* aRequest);
-
-  // imgIContainerObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD FrameChanged(imgIRequest *aRequest,
-                          imgIContainer *aContainer,
-                          const nsIntRect *aDirtyRect);
+  NS_DECL_IMGINOTIFICATIONOBSERVER
 
   void SetFrame(nsImageBoxFrame *frame) { mFrame = frame; }
 
@@ -52,6 +42,8 @@ public:
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
   virtual void MarkIntrinsicWidthsDirty() MOZ_OVERRIDE;
+
+  nsresult Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData);
 
   friend nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -89,17 +81,6 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  NS_IMETHOD OnStartContainer(imgIRequest *request, imgIContainer *image);
-  NS_IMETHOD OnStopContainer(imgIRequest *request, imgIContainer *image);
-  NS_IMETHOD OnStopDecode(imgIRequest *request,
-                          nsresult status,
-                          const PRUnichar *statusArg);
-  NS_IMETHOD OnImageIsAnimated(imgIRequest* aRequest);
-
-  NS_IMETHOD FrameChanged(imgIRequest *aRequest,
-                          imgIContainer *aContainer,
-                          const nsIntRect *aDirtyRect);
-
   virtual ~nsImageBoxFrame();
 
   void  PaintImage(nsRenderingContext& aRenderingContext,
@@ -113,6 +94,11 @@ protected:
   virtual void GetImageSize();
 
 private:
+  nsresult OnStartContainer(imgIRequest *request, imgIContainer *image);
+  nsresult OnStopContainer(imgIRequest *request);
+  nsresult OnStopDecode(imgIRequest *request, nsresult status);
+  nsresult OnImageIsAnimated(imgIRequest* aRequest);
+  nsresult FrameChanged(imgIRequest *aRequest);
 
   nsRect mSubRect; ///< If set, indicates that only the portion of the image specified by the rect should be used.
   nsSize mIntrinsicSize;
@@ -123,7 +109,7 @@ private:
   bool mRequestRegistered;
 
   nsCOMPtr<imgIRequest> mImageRequest;
-  nsCOMPtr<imgIDecoderObserver> mListener;
+  nsCOMPtr<imgINotificationObserver> mListener;
 
   int32_t mLoadFlags;
 
