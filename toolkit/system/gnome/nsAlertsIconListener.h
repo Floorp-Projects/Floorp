@@ -7,7 +7,7 @@
 #define nsAlertsIconListener_h__
 
 #include "nsCOMPtr.h"
-#include "imgIDecoderObserver.h"
+#include "imgINotificationObserver.h"
 #include "nsStringAPI.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
@@ -18,14 +18,13 @@ class imgIRequest;
 
 struct NotifyNotification;
 
-class nsAlertsIconListener : public imgIDecoderObserver,
+class nsAlertsIconListener : public imgINotificationObserver,
                              public nsIObserver,
                              public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGICONTAINEROBSERVER
-  NS_DECL_IMGIDECODEROBSERVER
+  NS_DECL_IMGINOTIFICATIONOBSERVER
   NS_DECL_NSIOBSERVER
 
   nsAlertsIconListener();
@@ -42,6 +41,9 @@ public:
   void SendClosed();
 
 protected:
+  nsresult OnStopRequest(imgIRequest* aRequest);
+  nsresult OnStopFrame(imgIRequest* aRequest);
+
   /**
    * The only difference between libnotify.so.4 and libnotify.so.1 for these symbols
    * is that notify_notification_new takes three arguments in libnotify.so.4 and

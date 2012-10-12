@@ -55,21 +55,25 @@ function setup_chan(path, isPrivate, callback) {
   chan.asyncOpen(channelListener, null);
   
   var listener = new ImageListener(null, callback);
-  listeners.push(listener);
   var outlistener = {};
   var loader = isPrivate ? gPrivateLoader : gPublicLoader;
-  requests.push(loader.loadImageWithChannel(chan, listener, null, outlistener));
+  var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                .createScriptedObserver(listener);
+  listeners.push(outer);
+  requests.push(loader.loadImageWithChannel(chan, outer, null, outlistener));
   channelListener.outputListener = outlistener.value;
   listener.synchronous = false;
 }
 
 function loadImage(isPrivate, callback) {
   var listener = new ImageListener(null, callback);
+  var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                .createScriptedObserver(listener);
   var uri = gIoService.newURI(gImgPath, null, null);
   var loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
   loadGroup.notificationCallbacks = new NotificationCallbacks(isPrivate);
   var loader = isPrivate ? gPrivateLoader : gPublicLoader;
-  requests.push(loader.loadImage(uri, null, null, null, loadGroup, listener, null, 0, null, null, null));
+  requests.push(loader.loadImage(uri, null, null, null, loadGroup, outer, null, 0, null, null, null));
   listener.synchronous = false;  
 }
 
