@@ -134,7 +134,7 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
     return OnImageIsAnimated(aRequest);
   }
 
-  if (aType == imgINotificationObserver::STOP_DECODE) {
+  if (aType == imgINotificationObserver::STOP_REQUEST) {
     // We should definitely have a request here
     NS_ABORT_IF_FALSE(aRequest, "no request?");
 
@@ -154,27 +154,21 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
     UpdateImageState(true);
   }
 
-  if (aType == imgINotificationObserver::STOP_DECODE) {
+  if (aType == imgINotificationObserver::STOP_REQUEST) {
     uint32_t reqStatus;
     aRequest->GetImageStatus(&reqStatus);
     nsresult status =
         reqStatus & imgIRequest::STATUS_ERROR ? NS_ERROR_FAILURE : NS_OK;
-    return OnStopDecode(aRequest, status);
+    return OnStopRequest(aRequest, status);
   }
 
   return NS_OK;
 }
 
-// Warning - This isn't actually fired when decode is complete. Rather, it's
-// fired when load is complete. See bug 505385, and in the mean time use
-// OnStopContainer.
 nsresult
-nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
-                                    nsresult aStatus)
+nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest,
+                                     nsresult aStatus)
 {
-  // XXXbholley - When we fix bug 505385,  everything here should go in
-  // OnStopRequest.
-
   // Our state may change. Watch it.
   AutoStateChanger changer(this, true);
 

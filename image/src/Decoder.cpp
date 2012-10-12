@@ -124,8 +124,7 @@ Decoder::Finish()
 
     // Fire teardown notifications
     if (mObserver) {
-      mObserver->OnStopContainer(nullptr, &mImage);
-      mObserver->OnStopDecode(nullptr, salvage ? NS_OK : NS_ERROR_FAILURE, nullptr);
+      mObserver->OnStopDecode(nullptr, salvage ? NS_OK : NS_ERROR_FAILURE);
     }
   }
 }
@@ -278,8 +277,7 @@ Decoder::PostDecodeDone()
   // Notify
   mImage.DecodingComplete();
   if (mObserver) {
-    mObserver->OnStopContainer(nullptr, &mImage);
-    mObserver->OnStopDecode(nullptr, NS_OK, nullptr);
+    mObserver->OnStopDecode(nullptr, NS_OK);
   }
 }
 

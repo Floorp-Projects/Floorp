@@ -682,22 +682,7 @@ void imgRequestProxy::OnStopFrame(uint32_t frame)
   }
 }
 
-void imgRequestProxy::OnStopContainer(imgIContainer *image)
-{
-  LOG_FUNC(gImgLog, "imgRequestProxy::OnStopContainer");
-
-  if (mListener && !mCanceled) {
-    // Hold a ref to the listener while we call it, just in case.
-    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
-    mListener->Notify(this, imgINotificationObserver::STOP_CONTAINER, nullptr);
-  }
-
-  // Multipart needs reset for next OnStartContainer
-  if (mOwner && mOwner->GetMultipart())
-    mSentStartContainer = false;
-}
-
-void imgRequestProxy::OnStopDecode(nsresult status, const PRUnichar *statusArg)
+void imgRequestProxy::OnStopDecode()
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStopDecode");
 
@@ -706,6 +691,10 @@ void imgRequestProxy::OnStopDecode(nsresult status, const PRUnichar *statusArg)
     nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
     mListener->Notify(this, imgINotificationObserver::STOP_DECODE, nullptr);
   }
+
+  // Multipart needs reset for next OnStartContainer
+  if (mOwner && mOwner->GetMultipart())
+    mSentStartContainer = false;
 }
 
 void imgRequestProxy::OnDiscard()

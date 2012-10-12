@@ -129,7 +129,6 @@ function ImageDecoderObserverStub()
   this.startContainer = function startContainer(aRequest) {}
   this.startFrame = function startFrame(aRequest)         {}
   this.stopFrame = function stopFrame(aRequest)           {}
-  this.stopContainer = function stopContainer(aRequest)   {}
   this.stopDecode = function stopDecode(aRequest)         {}
   this.stopRequest = function stopRequest(aRequest)       {}
   this.dataAvailable = function dataAvailable(aRequest)   {}

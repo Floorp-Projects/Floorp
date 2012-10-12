@@ -43,14 +43,12 @@ ScriptedNotificationObserver::Notify(imgIRequest* aRequest,
     return mInner->DataAvailable(aRequest);
   if (aType == imgINotificationObserver::STOP_FRAME)
     return mInner->StopFrame(aRequest);
-  if (aType == imgINotificationObserver::STOP_CONTAINER)
-    return mInner->StopContainer(aRequest);
   if (aType == imgINotificationObserver::STOP_DECODE)
     return mInner->StopDecode(aRequest);
   if (aType == imgINotificationObserver::STOP_REQUEST)
     return mInner->StopRequest(aRequest);
   if (aType == imgINotificationObserver::DISCARD)
-    return mInner->StopRequest(aRequest);
+    return mInner->Discard(aRequest);
   if (aType == imgINotificationObserver::IS_ANIMATED)
     return mInner->IsAnimated(aRequest);
   if (aType == imgINotificationObserver::FRAME_CHANGED)
