@@ -6874,9 +6874,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
         rv = file->GetLastModifiedTime(&msecs);
 
         if (NS_SUCCEEDED(rv)) {
-          int64_t intermediateValue;
-          LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
-          modDate = msecs * intermediateValue;
+          modDate = msecs * int64_t(PR_USEC_PER_MSEC);
         }
       }
     } else {

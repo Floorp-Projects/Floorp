@@ -88,9 +88,7 @@ MoveCList(PRCList &from, PRCList &to)
 static uint32_t
 NowInMinutes()
 {
-    PRTime now = PR_Now(), factor;
-    LL_I2L(factor, 60 * PR_USEC_PER_SEC);
-    return uint32_t(now / factor);
+    return uint32_t(PR_Now() / int64_t(60 * PR_USEC_PER_SEC));
 }
 
 //----------------------------------------------------------------------------
