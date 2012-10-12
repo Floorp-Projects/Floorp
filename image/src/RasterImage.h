@@ -17,7 +17,6 @@
 #ifndef mozilla_imagelib_RasterImage_h_
 #define mozilla_imagelib_RasterImage_h_
 
-#include "mozilla/Mutex.h"
 #include "Image.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
@@ -474,7 +473,7 @@ private:
     bool mPendingInEventLoop;
   };
 
-  struct ScaleRequest : public LinkedListElement<ScaleRequest>
+  struct ScaleRequest
   {
     ScaleRequest(RasterImage* aImage, const gfxSize& aScale, imgFrame* aSrcFrame)
       : scale(aScale)
@@ -594,52 +593,29 @@ private:
     ScaleStatus status;
   };
 
-  class ScaleWorker : public nsRunnable
+  class ScaleRunner : public nsRunnable
   {
   public:
-    static ScaleWorker* Singleton();
+    ScaleRunner(RasterImage* aImage, const gfxSize& aScale, imgFrame* aSrcFrame);
 
     NS_IMETHOD Run();
 
-  /* statics */
-    static nsRefPtr<ScaleWorker> sSingleton;
+    bool IsOK() const { return !!mScaleRequest; }
 
-  private: /* methods */
-    ScaleWorker()
-      : mRequestsMutex("RasterImage.ScaleWorker.mRequestsMutex")
-      , mInitialized(false)
-    {};
-
-    // Note: you MUST call RequestScale with the ScaleWorker mutex held.
-    bool RequestScale(ScaleRequest* request, RasterImage* image, imgFrame* aSrcFrame);
-
-  private: /* members */
-
-    friend class RasterImage;
-    LinkedList<ScaleRequest> mScaleRequests;
-    Mutex mRequestsMutex;
-    bool mInitialized;
+  private:
+    nsAutoPtr<ScaleRequest> mScaleRequest;
   };
 
-  class DrawWorker : public nsRunnable
+  class DrawRunner : public nsRunnable
   {
   public:
-    static DrawWorker* Singleton();
+    DrawRunner(ScaleRequest* request);
 
     NS_IMETHOD Run();
 
-  /* statics */
-    static nsRefPtr<DrawWorker> sSingleton;
-
-  private: /* methods */
-    DrawWorker() {};
-
-    void RequestDraw(ScaleRequest* request);
-
   private: /* members */
 
-    friend class RasterImage;
-    LinkedList<ScaleRequest> mDrawRequests;
+    nsAutoPtr<ScaleRequest> mScaleRequest;
   };
 
   void DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
