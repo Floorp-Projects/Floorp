@@ -1012,7 +1012,7 @@ static int32_t kShift = 6;
         // 3. The same anonymous resource gets requested, and refers
         //    to something completely different.
         // 4. The serialization is read back in.
-        LL_L2UI(gCounter, PR_Now());
+        gCounter = uint32_t(PR_Now());
     }
 
     nsresult rv;
