@@ -635,8 +635,8 @@ GetWrapperCache(const ParentObject& aParentObject)
 }
 
 template<class T>
-inline T
-GetParentPointer(T aObject)
+inline T*
+GetParentPointer(T* aObject)
 {
   return aObject;
 }
