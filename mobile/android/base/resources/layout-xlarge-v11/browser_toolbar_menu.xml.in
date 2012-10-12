@@ -10,8 +10,12 @@
               style="@style/BrowserToolbar">
 
     <RelativeLayout android:id="@+id/address_bar"
-                    style="@style/AddressBar"
-                    android:background="@drawable/address_bar_bg">
+                    style="@style/AddressBar">
+
+        <ImageView android:id="@+id/address_bar_bg"
+                   android:layout_width="fill_parent"
+                   android:layout_height="fill_parent"
+                   android:background="@drawable/address_bar_bg"/>
 
         <org.mozilla.gecko.TabsButton android:id="@+id/tabs"
                                       style="@style/AddressBar.ImageButton"
@@ -33,18 +37,17 @@
                      android:layout_alignLeft="@id/tabs"
                      android:gravity="center_horizontal"/>
 
-        <org.mozilla.gecko.MenuButton android:id="@+id/menu"
-                                      style="@style/AddressBar.ImageButton"
-                                      android:layout_width="56dip"
-                                      android:layout_alignParentRight="true"
-                                      gecko:curveTowards="none"
-                                      android:gravity="center_vertical"
-                                      android:src="@drawable/menu"
-                                      android:contentDescription="@string/menu"
-                                      android:background="@drawable/action_bar_button"
-                                      android:paddingLeft="14dip"
-                                      android:paddingRight="14dip"
-                                      android:visibility="gone"/>
+        <ImageButton android:id="@+id/menu"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="56dip"
+                     android:layout_alignParentRight="true"
+                     android:gravity="center_vertical"
+                     android:src="@drawable/menu"
+                     android:contentDescription="@string/menu"
+                     android:background="@drawable/action_bar_button"
+                     android:paddingLeft="14dip"
+                     android:paddingRight="14dip"
+                     android:visibility="gone"/>
 
         <LinearLayout android:id="@+id/menu_items"
                       android:layout_width="wrap_content"
@@ -52,20 +55,52 @@
                       android:orientation="horizontal"
                       android:layout_toLeftOf="@id/menu"/>
 
-        <FrameLayout style="@style/AddressBar.Button"
-                     android:layout_toRightOf="@id/tabs"
-                     android:layout_toLeftOf="@id/menu_items"
-                     android:layout_marginLeft="-28dp"
-                     android:layout_alignParentBottom="true"
-                     android:layout_centerVertical="true">
+        <RelativeLayout style="@style/AddressBar.Button"
+                        android:layout_toRightOf="@id/tabs"
+                        android:layout_toLeftOf="@id/menu_items"
+                        android:layout_marginLeft="-28dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_centerVertical="true">
 
-            <Button android:id="@+id/awesome_bar"
-                    style="@style/AddressBar.Button"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginTop="6dp"
-                    android:layout_marginBottom="6dp"
-                    android:layout_marginRight="0dp"
-                    android:background="@drawable/address_bar_url_level"/>
+            <RelativeLayout android:id="@+id/awesome_bar"
+                            style="@style/AddressBar.Button"
+                            android:layout_centerVertical="true"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                <ImageView style="@style/AddressBar.Button"
+                           android:layout_marginLeft="20dp"
+                           android:layout_marginRight="0dp"
+                           android:layout_marginTop="6dp"
+                           android:layout_marginBottom="6dp"
+                           android:duplicateParentState="true"
+                           android:clickable="false"
+                           android:focusable="false"
+                           android:background="@drawable/address_bar_url"/>
+
+                <FrameLayout android:id="@+id/awesome_bar_right_edge"
+                             style="@style/AddressBar.ImageButton"
+                             android:layout_width="25dp"
+                             android:layout_height="fill_parent"
+                             android:paddingTop="6dp"
+                             android:paddingBottom="6dp"
+                             android:layout_centerVertical="true"
+                             android:layout_alignParentRight="true"
+                             android:duplicateParentState="true"
+                             android:background="@drawable/address_bar_bg">
+
+                    <ImageView android:layout_width="50dp"
+                               android:layout_height="fill_parent"
+                               android:scaleType="fitXY"
+                               android:layout_marginLeft="-26dp"
+                               android:duplicateParentState="true"
+                               android:clickable="false"
+                               android:focusable="false"
+                               android:src="@drawable/address_bar_url"/>
+
+                </FrameLayout>
+
+            </RelativeLayout>
 
             <ImageButton android:id="@+id/forward"
                          style="@style/AddressBar.ImageButton"
@@ -73,7 +108,7 @@
                          android:layout_height="40dip"
                          android:layout_marginLeft="22dp"
                          android:paddingLeft="22dp"
-                         android:layout_gravity="center_vertical"
+                         android:layout_centerVertical="true"
                          android:src="@drawable/ic_menu_forward"
                          android:contentDescription="@string/forward"
                          android:background="@drawable/address_bar_forward_button"/>
@@ -82,7 +117,7 @@
                          style="@style/AddressBar.ImageButton"
                          android:layout_width="50dip"
                          android:layout_height="50dip"
-                         android:layout_gravity="center_vertical"
+                         android:layout_centerVertical="true"
                          android:src="@drawable/ic_menu_back"
                          android:contentDescription="@string/back"
                          android:background="@drawable/address_bar_back_button"/>
@@ -139,7 +174,7 @@
 
             </LinearLayout>
 
-        </FrameLayout>
+        </RelativeLayout>
 
          <ImageView android:id="@+id/shadow"
                     android:layout_width="fill_parent"
