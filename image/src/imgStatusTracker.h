@@ -21,6 +21,7 @@ class Image;
 
 
 #include "nsCOMPtr.h"
+#include "nsTObserverArray.h"
 #include "nsIRunnable.h"
 #include "nscore.h"
 
@@ -84,6 +85,24 @@ public:
   // the request is finished downloading and decoding.  We only send
   // OnStopRequest and UnblockOnload, and only if necessary.
   void EmulateRequestFinished(imgRequestProxy* proxy, nsresult aStatus);
+
+  // We manage a set of consumers that are using an image and thus concerned
+  // with its status. Weak pointers.
+  void AddConsumer(imgRequestProxy* aConsumer);
+  bool RemoveConsumer(imgRequestProxy* aConsumer, nsresult aStatus);
+  size_t ConsumerCount() const { return mConsumers.Length(); };
+
+  // This is intentionally non-general because its sole purpose is to support an
+  // some obscure network priority logic in imgRequest. That stuff could probably
+  // be improved, but it's too scary to mess with at the moment.
+  bool FirstConsumerIs(imgRequestProxy* aConsumer) {
+    return mConsumers.SafeElementAt(0, nullptr) == aConsumer;
+  }
+
+  // Temporary hack that goes away in the next patch.
+  const nsTObserverArray<imgRequestProxy*>& GetConsumers() { return mConsumers; };
+
+  void AdoptConsumers(imgStatusTracker* aTracker) { mConsumers = aTracker->mConsumers; }
 
   // Returns whether we are in the process of loading; that is, whether we have
   // not received OnStopRequest.
@@ -160,6 +179,10 @@ private:
   uint32_t mState;
   uint32_t mImageStatus;
   bool mHadLastPart;
+
+  // List of proxies attached to the image. Each proxy represents a consumer
+  // using the image.
+  nsTObserverArray<imgRequestProxy*> mConsumers;
 };
 
 #endif
