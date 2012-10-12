@@ -46,6 +46,7 @@ private:
   void NotifySettings(const bool aConnected);
   virtual void OnConnectSuccess() MOZ_OVERRIDE;
   virtual void OnConnectError() MOZ_OVERRIDE;
+  virtual void OnDisconnect() MOZ_OVERRIDE;
 
   int mCurrentVgs;
   int mCurrentCallIndex;

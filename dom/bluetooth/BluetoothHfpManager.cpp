@@ -783,3 +783,9 @@ BluetoothHfpManager::OnConnectError()
   // If connecting for some reason didn't work, restart listening
   Listen();
 }
+
+void
+BluetoothHfpManager::OnDisconnect()
+{
+  NS_WARNING("GOT DISCONNECT!");
+}
