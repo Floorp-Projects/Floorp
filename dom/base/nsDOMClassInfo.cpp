@@ -4546,10 +4546,8 @@ nsDOMClassInfo::Init()
   // overwrite some values.
   mozilla::dom::oldproxybindings::Register(nameSpaceManager);
 
-  if (!AzureCanvasEnabled()) {
-    nameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING("CanvasRenderingContext2D"),
-                                                 nullptr, nullptr);
-  }
+  nameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING("CanvasRenderingContext2D"),
+                                               nullptr, nullptr);
 
   sIsInitialized = true;
 
