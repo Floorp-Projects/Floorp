@@ -36,7 +36,7 @@ static const uint8_t gASCIIToLower [128] = {
 // We want ToLowerCase(uint32_t) and ToLowerCaseASCII(uint32_t) to be fast
 // when they're called from within the case-insensitive comparators, so we
 // define inlined versions.
-static NS_ALWAYS_INLINE uint32_t
+static MOZ_ALWAYS_INLINE uint32_t
 ToLowerCase_inline(uint32_t aChar)
 {
   if (IS_ASCII(aChar)) {
@@ -46,7 +46,7 @@ ToLowerCase_inline(uint32_t aChar)
   return mozilla::unicode::GetLowercase(aChar);
 }
 
-static NS_ALWAYS_INLINE uint32_t
+static MOZ_ALWAYS_INLINE uint32_t
 ToLowerCaseASCII_inline(const uint32_t aChar)
 {
   if (IS_ASCII(aChar)) {
@@ -271,7 +271,7 @@ CaseInsensitiveCompare(const PRUnichar *a,
 // the end of the string (as marked by aEnd), returns -1 and does not set
 // aNext.  Note that this function doesn't check that aStr < aEnd -- it assumes
 // you've done that already.
-static NS_ALWAYS_INLINE uint32_t
+static MOZ_ALWAYS_INLINE uint32_t
 GetLowerUTF8Codepoint(const char* aStr, const char* aEnd, const char **aNext)
 {
   // Convert to unsigned char so that stuffing chars into PRUint32s doesn't
