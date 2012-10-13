@@ -4245,6 +4245,17 @@ static bool
 RequireGlobalObject(JSContext *cx, HandleValue dbgobj, HandleObject obj)
 {
     if (!obj->isGlobal()) {
+        /* Help the poor programmer by pointing out wrappers around globals. */
+        if (obj->isWrapper()) {
+            JSObject *unwrapped = js::UnwrapObject(obj);
+            if (unwrapped->isGlobal()) {
+                js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
+                                         JSDVG_SEARCH_STACK, dbgobj, NullPtr(),
+                                         "a global object", NULL);
+                return false;
+            }
+        }
+
         js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
                                  JSDVG_SEARCH_STACK, dbgobj, NullPtr(),
                                  "a global object", NULL);
