@@ -44,7 +44,6 @@ function addOverwritingSuccess(e) {
 
 function addOverwritingError(e) {
   ok(true, "Adding to the same location should fail");
-  ok(e.target.error.name == "NoModificationAllowedError", "Error must be NoModificationAllowedError");
 
   var storage = navigator.getDeviceStorage("pictures");
   request = storage.delete(filename)
