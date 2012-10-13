@@ -21,10 +21,10 @@ CPPSRCS = \
   ARIAGridAccessibleWrap.cpp \
   DocAccessibleWrap.cpp \
   HTMLTableAccessibleWrap.cpp \
+  HTMLWin32ObjectAccessible.cpp \
   HyperTextAccessibleWrap.cpp \
   ImageAccessibleWrap.cpp \
   nsAccessNodeWrap.cpp \
-  nsHTMLWin32ObjectAccessible.cpp \
   nsWinUtils.cpp \
   Compatibility.cpp \
   EnumVariant.cpp \
