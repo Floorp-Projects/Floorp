@@ -44,7 +44,6 @@ protected:
   static void AddWidth(nsSize& aSize, nscoord aSize2, bool aIsHorizontal);
 
 private:
-  nsGridRow* mRowColumn;
   int32_t mRowCount;
 };
 
