@@ -5999,20 +5999,20 @@ com.ug
 org.ug
 
 // uk : http://en.wikipedia.org/wiki/.uk
+// Submitted by registry <noc@nominet.org.uk> 2012-10-02
 *.uk
+*.nhs.uk
+*.police.uk
 *.sch.uk
 !bl.uk
 !british-library.uk
-!icnet.uk
 !jet.uk
 !mod.uk
+!national-library-scotland.uk
 !nel.uk
-!nhs.uk
 !nic.uk
 !nls.uk
-!national-library-scotland.uk
 !parliament.uk
-!police.uk
 
 // us : http://en.wikipedia.org/wiki/.us
 us
@@ -6576,6 +6576,10 @@ operaunite.com
 // Google, Inc.
 // Requested by Eduardo Vela <evn@google.com> 2010-09-06
 appspot.com
+
+// DreamHost : http://www.dreamhost.com/
+// Requested by Andrew Farmer <andrew.farmer@dreamhost.com> 2012-10-02
+dreamhosters.com
 
 // iki.fi : Submitted by Hannu Aronsson <haa@iki.fi> 2009-11-05
 iki.fi

@@ -38,7 +38,7 @@ namespace test {
 
 static const std::string strSampleSdpAudioVideoNoIce =
   "v=0\r\n"
-  "o=Cisco-SIPUA 4949 0 IN IP4 10.86.255.143\r\n"
+  "o=Mozilla-SIPUA 4949 0 IN IP4 10.86.255.143\r\n"
   "s=SIP Call\r\n"
   "t=0 0\r\n"
   "a=ice-ufrag:qkEP\r\n"
@@ -307,7 +307,7 @@ class ParsedSDP {
     Parse();
   }
 
-  
+
   void ReplaceLine(std::string objType, std::string content)
   {
     std::multimap<std::string, SdpLine>::iterator it;
@@ -320,8 +320,8 @@ class ParsedSDP {
       sdp_map_.insert(std::pair<std::string, SdpLine>(objType, make_pair(line_no,value)));
     }
   }
-  
-  void AddLine(std::string content) 
+
+  void AddLine(std::string content)
   {
     size_t whiteSpace = content.find(' ');
     std::string key;
@@ -375,7 +375,7 @@ class ParsedSDP {
         ice_candidates_.insert(std::pair<int, std::string>(levels_, cand));
        } else {
         sdp_without_ice_ += line;
-      }    
+      }
       if (line.find("m=") == 0) {
         // This is an m-line
         ++levels_;
@@ -412,7 +412,7 @@ class ParsedSDP {
     return sdp;
   }
 
-  
+
 
   std::string sdp_;
   std::string sdp_without_ice_;
@@ -481,7 +481,7 @@ class SignalingAgent {
   void CreateOffer(const char* hints, bool audio, bool video) {
 
     // Create a media stream as if it came from GUM
-    Fake_AudioStreamSource *audio_stream = 
+    Fake_AudioStreamSource *audio_stream =
       new Fake_AudioStreamSource();
 
     nsresult ret;
@@ -582,12 +582,12 @@ class SignalingAgent {
          it != sdp.ice_candidates_.end(); ++it) {
       if ((*it).first != 0) {
         std::cerr << "Adding trickle ICE candidate " << (*it).second << std::endl;
-        
+
         ASSERT_TRUE(NS_SUCCEEDED(pc->AddIceCandidate((*it).second.c_str(), "", (*it).first)));
       }
     }
   }
-  
+
 
   bool IceCompleted() {
     uint32_t state;
@@ -689,7 +689,7 @@ public:
     a1_.CreateOffer(hints, true, true);
     a1_.SetLocal(TestObserver::OFFER, a1_.offer());
   }
-  
+
   void OfferAnswer(const char* ahints, const char* bhints) {
     a1_.CreateOffer(ahints, true, true);
     a1_.SetLocal(TestObserver::OFFER, a1_.offer());

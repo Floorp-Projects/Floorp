@@ -323,13 +323,11 @@ int main()
         printf("\t1 + 1 = %d\n", out);
     else
         printf("\tFAILED");
-    int64_t one, two;
-    LL_I2L(one, 1);
-    LL_I2L(two, 2);
+    int64_t one = 1, two = 2;
     if(NS_SUCCEEDED(test->AddTwoLLs(one,one,&out64)))
     {
-        LL_L2I(tmp32, out64);
-        printf("\t1L + 1L = %d\n", (int)tmp32);
+        tmp32 = (int)out64;
+        printf("\t1L + 1L = %d\n", tmp32);
     }
     else
         printf("\tFAILED");
@@ -339,8 +337,8 @@ int main()
         printf("\tFAILED");
     if(NS_SUCCEEDED(test->MultTwoLLs(two,two,&out64)))
     {
-        LL_L2I(tmp32, out64);
-        printf("\t2L * 2L = %d\n", (int)tmp32);
+        tmp32 = (int)out64;
+        printf("\t2L * 2L = %d\n", tmp32);
     }
     else
         printf("\tFAILED");
@@ -377,24 +375,24 @@ int main()
 
     if(NS_SUCCEEDED(test->AddMixedInts(1,2,3,4,5,6,7,8,9,10,&out64)))
      {
-         LL_L2I(tmp32, out64);
-         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n", (int)tmp32);
+         tmp32 = (int)out64;
+         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n", tmp32);
      }
      else
          printf("\tFAILED");
  
      if(NS_SUCCEEDED(test->AddMixedInts2(1,2,3,4,5,6,7,8,9,10,&out64)))
      {
-          LL_L2I(tmp32, out64);
-         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n", (int)tmp32);
+         tmp32 = (int)out64;
+         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %d\n", tmp32);
      }
      else
          printf("\tFAILED");
 
      if(NS_SUCCEEDED(test->AddMixedInts3(3,5,7,11,13,17,19,23,29,31,&out64)))
      {
-          LL_L2I(tmp32, out64);
-         printf("\t3 + 5 + 7 + 11 + 13 + 17 + 19 + 23 + 29 + 31 = %d\n", (int)tmp32);
+         tmp32 = (int)out64;
+         printf("\t3 + 5 + 7 + 11 + 13 + 17 + 19 + 23 + 29 + 31 = %d\n", tmp32);
      }
      else
          printf("\tFAILED");
@@ -435,15 +433,15 @@ int main()
     else
         printf("\tFAILED");
 
-    LL_I2L(var[0].val.i64, 1);
+    var[0].val.i64 = 1;
     var[0].type = nsXPTType::T_I64;
     var[0].flags = 0;
 
-    LL_I2L(var[1].val.i64, 1);
+    var[1].val.i64 = 1;
     var[1].type = nsXPTType::T_I64;
     var[1].flags = 0;
 
-    LL_I2L(var[2].val.i64, 0);
+    var[2].val.i64 = 0;
     var[2].type = nsXPTType::T_I64;
     var[2].flags = nsXPTCVariant::PTR_IS_DATA;
     var[2].ptr = &var[2].val.i64;
@@ -471,15 +469,15 @@ int main()
     else
         printf("\tFAILED");
 
-    LL_I2L(var[0].val.i64,2);
+    var[0].val.i64 = 2;
     var[0].type = nsXPTType::T_I64;
     var[0].flags = 0;
 
-    LL_I2L(var[1].val.i64,2);
+    var[1].val.i64 = 2;
     var[1].type = nsXPTType::T_I64;
     var[1].flags = 0;
 
-    LL_I2L(var[2].val.i64,0);
+    var[2].val.i64 = 0;
     var[2].type = nsXPTType::T_I64;
     var[2].flags = nsXPTCVariant::PTR_IS_DATA;
     var[2].ptr = &var[2].val.i64;

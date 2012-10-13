@@ -40,6 +40,7 @@ FENNEC_JAVA_FILES = \
   ActivityHandlerHelper.java \
   AndroidImport.java \
   AndroidImportPreference.java \
+  AnimatorProxy.java \
   AlertNotification.java \
   AnimatedHeightLayout.java \
   AwesomeBar.java \

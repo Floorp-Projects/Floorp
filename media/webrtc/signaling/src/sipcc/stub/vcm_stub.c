@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /** @mainpage VCM APIs.
  *
@@ -48,7 +13,7 @@
  * @brief  APIs to interface with the Media layer.
  *
  * This file contains API that interface to the media layer on the platform.
- * The following APIs need to be implemented to have the sip stack interact 
+ * The following APIs need to be implemented to have the sip stack interact
  * and issue commands to the media layer.
  */
 
@@ -58,7 +23,7 @@
 #include "ccsdp.h"
 
 
-/** 
+/**
  *  The initialization of the VCM module
  *
  */
@@ -67,7 +32,7 @@ void vcmInit()
     return ;
 }
 
-/** 
+/**
  *   Should we remove this from external API
  *
  *  @param[in] mcap_id - group identifier to which stream belongs.
@@ -91,7 +56,7 @@ short vcmRxOpen(cc_mcapid_t mcap_id, cc_groupid_t group_id, cc_streamid_t stream
 {
     return 0;
 }
-/*! 
+/*!
  *  should we remove from external API
  *
  *  @param[in]  mcap_id - Media Capability ID
@@ -108,7 +73,7 @@ short vcmTxOpen(cc_mcapid_t mcap_id, cc_groupid_t group_id, cc_streamid_t stream
     return 0;
 }
 
-/*! 
+/*!
  *  Allocate(Reserve) a receive port.
  *
  *  @param[in]  mcap_id - Media Capability ID
@@ -410,7 +375,7 @@ int vcmGetRtpStats(cc_mcapid_t mcap_id, cc_groupid_t group_id,
  * media API into wlan to get the call bandwidth. The function
  * return is asynchronous and will block till the return media
  * callback signals to continue the execution.
- * 
+ *
  * @note If not using WLAN interface simply return true
  *
  * @return true if the bandwidth can be allocated else false.
@@ -425,7 +390,7 @@ boolean vcmAllocateBandwidth(cc_call_handle_t call_handle, int sessions)
 
 /**
  *
- * Free the bandwidth allocated for this call 
+ * Free the bandwidth allocated for this call
  * using the vcmAllocateBandwidth API
  *
  * @note  If not using WLAN provide a stub
@@ -503,11 +468,11 @@ void vcmSetRtcpDscp(cc_groupid_t group_id, int dscp)
 /**
  * Verify if the SDP attributes for the requested video codec are acceptable
  *
- * This method is called for video codecs only. This method should parse the 
- * Video SDP attributes using the SDP helper API and verify if received 
- * attributes are acceptable. If the attributes are acceptable any attribute 
- * values if needed by vcmTxStart method should be bundled in the desired 
- * structure and its pointer should be returned in rccappptr. This opaque 
+ * This method is called for video codecs only. This method should parse the
+ * Video SDP attributes using the SDP helper API and verify if received
+ * attributes are acceptable. If the attributes are acceptable any attribute
+ * values if needed by vcmTxStart method should be bundled in the desired
+ * structure and its pointer should be returned in rccappptr. This opaque
  * pointer shall be provided again when vcmTxStart is invoked.
  *
  * @param [in] media_type - codec for which we are negotiating
@@ -524,10 +489,10 @@ boolean vcmCheckAttribs(uint32_t media_type, void *sdp_p, int level, void **rcap
 }
 
 /**
- * Add Video attributes in the offer/answer SDP 
+ * Add Video attributes in the offer/answer SDP
  *
  * This method is called for video codecs only. This method should populate the
- * Video SDP attributes using the SDP helper API 
+ * Video SDP attributes using the SDP helper API
  *
  * @param [in] sdp_p - opaque SDP pointer to be used via SDP helper APIs
  * @param [in] level - Parameter to be used with SDP helper APIs

@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * Routines that parse SIP messages into individual components
@@ -114,7 +79,7 @@ trim_right (char *pstr)
  *  @param pstr  address string
  *
  *  @return  none
- *  
+ *
  *  @pre     none
  *
  */
@@ -427,7 +392,7 @@ url_add_headers_to_list (char *url_strp, sipUrl_t *sip_url)
 
     sip_url->num_headers = num_head;
     num_head = 0;
-    url_strp = PL_strtok_r(url_strp, "&?", &lasts);  
+    url_strp = PL_strtok_r(url_strp, "&?", &lasts);
     while ((url_strp != NULL) && (num_head < sip_url->num_headers)) {
 
         tmp_ptr = strchr(url_strp, EQUAL_SIGN);
@@ -506,7 +471,7 @@ parseUrlParams (char *url_param, sipUrl_t *sipUrl, genUrl_t *genUrl)
                 SKIP_SIP_TOKEN(url_param);
                 SKIP_LWS(url_param);
                 if (*url_param != SEMI_COLON && *url_param != 0) {
-                    CCSIP_DEBUG_ERROR(ERROR_3, fname, url_param);                    
+                    CCSIP_DEBUG_ERROR(ERROR_3, fname, url_param);
                     return PARSE_ERR_SYNTAX;
                 }
             }
@@ -519,7 +484,7 @@ parseUrlParams (char *url_param, sipUrl_t *sipUrl, genUrl_t *genUrl)
             } else if (cpr_strncasecmp(url_param, "ip", 2) == 0) {
                 url_param += 2;
             } else {
-                CCSIP_DEBUG_ERROR(ERROR_3, fname, url_param);                
+                CCSIP_DEBUG_ERROR(ERROR_3, fname, url_param);
                 return PARSE_ERR_SYNTAX;
             }
         } else if (cpr_strncasecmp(url_param, "method=", 7) == 0) {
@@ -544,7 +509,7 @@ parseUrlParams (char *url_param, sipUrl_t *sipUrl, genUrl_t *genUrl)
                 url_param++;
                 /* Atmost 3 digits allowed in ttl value */
                 if ((url_param - param_val) > 3) {
-                    CCSIP_DEBUG_ERROR(ERROR_3, fname, url_param);                    
+                    CCSIP_DEBUG_ERROR(ERROR_3, fname, url_param);
                     return PARSE_ERR_SYNTAX;
                 }
             }
@@ -624,7 +589,7 @@ parseUrlParams (char *url_param, sipUrl_t *sipUrl, genUrl_t *genUrl)
                 if (i == SIP_MAX_LOCATIONS) {
                     cpr_free(url_other_param);
                     CCSIP_DEBUG_ERROR(SIP_F_PREFIX"parseUrlParams: Too many unknown parameters"
-                               " in URL of Contact header", fname);                    
+                               " in URL of Contact header", fname);
                 } else {
                     genUrl->other_params[i] = url_other_param;
                     url_other_param = NULL;
@@ -638,7 +603,7 @@ parseUrlParams (char *url_param, sipUrl_t *sipUrl, genUrl_t *genUrl)
             return 0;
         }
         if (*url_param != SEMI_COLON) {
-            CCSIP_DEBUG_ERROR(ERROR_3, fname, url_param);            
+            CCSIP_DEBUG_ERROR(ERROR_3, fname, url_param);
             return PARSE_ERR_SYNTAX;
         }
         *url_param++ = 0; /* Zero the ';' and advance pointer */
@@ -777,13 +742,13 @@ parseSipUrl (char *url_start, genUrl_t *genUrl)
             if (*url_main == COLON || *url_main == AT_SIGN) {
                 if (separator_cnt == 3) {
                     /* Too many separators */
-                    CCSIP_DEBUG_ERROR(ERROR_3_1, fname, *url_main);                    
+                    CCSIP_DEBUG_ERROR(ERROR_3_1, fname, *url_main);
                     return PARSE_ERR_SYNTAX;
                 }
                 separator[separator_cnt++] = *url_main;
                 *url_main++ = 0;  /* Zero the separator */
                 SKIP_LWS(url_main);
-                
+
                 if (*url_main == LEFT_SQUARE_BRACKET) {
                     *url_main++ = 0; /* Must be IPv6 address */
                     ipv6_addr = TRUE;
@@ -835,7 +800,7 @@ parseSipUrl (char *url_start, genUrl_t *genUrl)
     case 3:
         if (separator[0] == separator[1]) {
             /* Cannot have 2 successive entries of : or @ */
-            CCSIP_DEBUG_ERROR(ERROR_3_1, fname, separator[1]);            
+            CCSIP_DEBUG_ERROR(ERROR_3_1, fname, separator[1]);
             return PARSE_ERR_SYNTAX;
         }
         if (separator[0] == AT_SIGN) {
@@ -873,7 +838,7 @@ parseSipUrl (char *url_start, genUrl_t *genUrl)
                 sipUrl->port = 0;
             }
         } else {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Bad separator sequence", fname);            
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Bad separator sequence", fname);
             return PARSE_ERR_SYNTAX;
         }
         break;
@@ -885,13 +850,13 @@ parseSipUrl (char *url_start, genUrl_t *genUrl)
 
     /* Verify the Port */
     if (sipUrl->port == 0) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Received Bad Port", fname);        
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Received Bad Port", fname);
         return PARSE_ERR_SYNTAX;
     }
 
     /* Verify the host portion */
     if (sipSPI_validate_ip_addr_name(sipUrl->host) == FALSE) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Received Bad Host", fname);        
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Received Bad Host", fname);
         return PARSE_ERR_SYNTAX;
     }
 
@@ -959,7 +924,7 @@ parseTelUrl (char *url_start, genUrl_t *genUrl)
      */
 
     if (!url_start) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Missing user field", fname);        
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Missing user field", fname);
         return PARSE_ERR_SYNTAX;
     }
 
@@ -997,15 +962,15 @@ parseTelUrl (char *url_start, genUrl_t *genUrl)
             return 0;  /* no fields to parse */
         } else {
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"local-phone-number must have area-specifier",
-                       fname);            
+                       fname);
             return PARSE_ERR_SYNTAX;
         }
     }
-    if (url_main) { 
+    if (url_main) {
         if ((*url_main) && (*url_main == SEMI_COLON)) {
             *url_main++ = 0;  /* skip separator */
         } else {
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Need ';' before parameters", fname);            
+            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Need ';' before parameters", fname);
             return PARSE_ERR_SYNTAX;
         }
     }
@@ -1024,7 +989,7 @@ parseTelUrl (char *url_start, genUrl_t *genUrl)
             url_main += 13;
             SKIP_LWS(url_main);
             if (*url_main != EQUAL_SIGN) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Bad syntax in phone_context field", fname);                
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Bad syntax in phone_context field", fname);
                 return PARSE_ERR_SYNTAX;
             }
             *url_main++ = 0;  /* skip "=" */
@@ -1034,7 +999,7 @@ parseTelUrl (char *url_start, genUrl_t *genUrl)
             url_main += 3;
             SKIP_LWS(url_main);
             if (*url_main != EQUAL_SIGN) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Bad syntax in service-provider field", fname);                
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Bad syntax in service-provider field", fname);
                 return PARSE_ERR_SYNTAX;
             }
             *url_main++ = 0;  /* skip "=" */
@@ -1043,13 +1008,13 @@ parseTelUrl (char *url_start, genUrl_t *genUrl)
         } else {
             /* future extension */
             if (telUrl->future_ext) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Only one future extension allowed", fname);                
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Only one future extension allowed", fname);
                 return PARSE_ERR_SYNTAX;
             }
             SKIP_LWS(url_main);
             url_main = strchr(url_main, EQUAL_SIGN);
             if (!url_main) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Bad field value", fname);                
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Bad field value", fname);
                 return PARSE_ERR_SYNTAX;
             } else {
                 *url_main++ = 0;
@@ -1064,7 +1029,7 @@ parseTelUrl (char *url_start, genUrl_t *genUrl)
     }
     if ((is_local_subscriber) && (!genUrl->phone_context)) {
         /* local-phone-number must have area-specifier */
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"local-phone-number requires area-specifier", fname);        
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"local-phone-number requires area-specifier", fname);
         return PARSE_ERR_SYNTAX;
     }
     return 0;  /* Success */
@@ -1177,7 +1142,7 @@ sippmh_parse_url (char *url, boolean dup_flag)
             if (parse_errno == PARSE_ERR_NO_MEMORY) {
                 parse_errno = 0;  /* Not really a parse error (out of mem) */
             } else {
-                CCSIP_DEBUG_ERROR(parse_errors[parse_errno], "sippmh_parse_url");                
+                CCSIP_DEBUG_ERROR(parse_errors[parse_errno], "sippmh_parse_url");
             }
         }
         sippmh_genurl_free(genUrl);
@@ -1201,7 +1166,7 @@ sippmh_parse_url (char *url, boolean dup_flag)
             if (parse_errno == PARSE_ERR_NO_MEMORY) {
                 parse_errno = 0;  /* Not really a parse error (out of mem) */
             } else {
-                CCSIP_DEBUG_ERROR(parse_errors[parse_errno], "sippmh_parse_url");                
+                CCSIP_DEBUG_ERROR(parse_errors[parse_errno], "sippmh_parse_url");
             }
         }
         sippmh_genurl_free(genUrl);
@@ -1268,7 +1233,7 @@ parse_display_name (char *ptr)
             /* ptr should now be pointing to '<' */
             if (*ptr != LEFT_ANGULAR_BRACKET) {
                 parse_errno = PARSE_ERR_UNMATCHED_BRACKET;
-                CCSIP_DEBUG_ERROR(parse_errors[parse_errno], fname);                
+                CCSIP_DEBUG_ERROR(parse_errors[parse_errno], fname);
 
                 return NULL;
             }
@@ -1278,7 +1243,7 @@ parse_display_name (char *ptr)
     }
 
     parse_errno = PARSE_ERR_UNTERMINATED_STRING;
-    CCSIP_DEBUG_ERROR(parse_errors[parse_errno], fname);    
+    CCSIP_DEBUG_ERROR(parse_errors[parse_errno], fname);
 
     return NULL;  /* Unmatched " */
 }
@@ -1396,7 +1361,7 @@ sippmh_parse_nameaddr_or_addrspec (char *input_loc_ptr,
             cpr_free(sipLoc);
             parse_errno = PARSE_ERR_UNMATCHED_BRACKET;
             CCSIP_DEBUG_ERROR(parse_errors[parse_errno],
-                       "sippmh_parse_nameaddr_or_addrspec");            
+                       "sippmh_parse_nameaddr_or_addrspec");
             return NULL;
         }
 
@@ -1558,7 +1523,7 @@ sippmh_parse_from_or_to (char *input_loc_ptr, boolean dup_flag)
             /* if we had a ; without any addr-params */
             if (more_ptr == NULL) {
                 parse_errno = PARSE_ERR_UNEXPECTED_EOS;
-                CCSIP_DEBUG_ERROR(parse_errors[parse_errno], fname);                
+                CCSIP_DEBUG_ERROR(parse_errors[parse_errno], fname);
             } else {
                 /* parse the tag but skip any addr-extensions */
                 while (more_ptr && tag_found == FALSE) {
@@ -1574,7 +1539,7 @@ sippmh_parse_from_or_to (char *input_loc_ptr, boolean dup_flag)
 
         } else if (*more_ptr) {
             parse_errno = PARSE_ERR_SYNTAX;
-            CCSIP_DEBUG_ERROR(parse_errors[parse_errno], fname, more_ptr);            
+            CCSIP_DEBUG_ERROR(parse_errors[parse_errno], fname, more_ptr);
         }
     }
 
@@ -2205,7 +2170,7 @@ sippmh_parse_contact (const char *input_contact)
             if (contact && *contact) {
                 parse_errno = PARSE_ERR_SYNTAX;
                 CCSIP_DEBUG_ERROR(parse_errors[parse_errno], "sippmh_parse_contact",
-                           contact);                
+                           contact);
                 sippmh_free_contact(sipContact);
                 sipContact = NULL;
             }
@@ -2402,7 +2367,7 @@ sippmh_parse_via (const char *input_via)
         SKIP_LWS(via);
         if (*via == 0) {
             parse_errno = PARSE_ERR_UNEXPECTED_EOS;
-            CCSIP_DEBUG_ERROR(parse_errors[parse_errno], fname);            
+            CCSIP_DEBUG_ERROR(parse_errors[parse_errno], fname);
             break;
         }
 
@@ -2412,7 +2377,7 @@ sippmh_parse_via (const char *input_via)
 
     if (parse_errno) {
         if (parse_errno == PARSE_ERR_SYNTAX) {
-            CCSIP_DEBUG_ERROR(parse_errors[parse_errno], fname, via ? via : input_via);            
+            CCSIP_DEBUG_ERROR(parse_errors[parse_errno], fname, via ? via : input_via);
         }
         sippmh_free_via(sipVia);
         return NULL;
@@ -2736,7 +2701,7 @@ sippmh_parse_record_route (const char *input_record_route)
             if (record_route && *record_route) {
                 parse_errno = PARSE_ERR_SYNTAX;
                 CCSIP_DEBUG_ERROR(parse_errors[parse_errno],
-                           "sippmh_parse_record_route", record_route);                
+                           "sippmh_parse_record_route", record_route);
                 sippmh_free_record_route(sipRecordRoute);
                 sipRecordRoute = NULL;
             }
@@ -2752,7 +2717,7 @@ sippmh_parse_record_route (const char *input_record_route)
 
 /*
  *  This function is a placeholder for future expansion.
- *  If deep copy of the record route is needed from one ccb to another 
+ *  If deep copy of the record route is needed from one ccb to another
  *  this function can be used.
  */
 sipRecordRoute_t *
@@ -3775,7 +3740,7 @@ sippmh_parse_remote_party_id_params (char *params,
             } else {
                 params_good = TRUE;
             }
-        } 
+        }
 
         SKIP_LWS(params);
         if (*params == SEMI_COLON) {
@@ -4199,7 +4164,7 @@ sippmh_parse_authenticate (const char *input_char)
         *input++ = 0;
         SKIP_WHITE_SPACE(input);
     }
-    
+
     sippmh_free_authen(sip_authen);
     return NULL;
 }
@@ -4388,15 +4353,15 @@ sippmh_parse_user (char *url_main)
 /*
  *  Function: sippmh_parse_message_summary
  *
- *  Parameters: The incoming SIP message and a container to be 
- *              filled with the parsed message body.   
+ *  Parameters: The incoming SIP message and a container to be
+ *              filled with the parsed message body.
  *
  *  Description: This function will parse the incoming MWI NTFY SIP message
- *               and fill the passed in structure with the 
+ *               and fill the passed in structure with the
  *               contents of the parsed message.Basic Error checking is done on
- *               the passed in message.  
+ *               the passed in message.
  *
- *  Returns: SIP_ERROR on error.SIP_OK otherwise. 
+ *  Returns: SIP_ERROR on error.SIP_OK otherwise.
  */
 int32_t
 sippmh_parse_message_summary(sipMessage_t *pSipMessage, sipMessageSummary_t *mesgSummary)
@@ -4446,7 +4411,7 @@ sippmh_parse_message_summary(sipMessage_t *pSipMessage, sipMessageSummary_t *mes
             return SIP_ERROR;
         }
     } else {
-        return SIP_ERROR;        
+        return SIP_ERROR;
     }
 
     if (cpr_strcasecmp(temp, "no") == 0) {
@@ -4456,11 +4421,11 @@ sippmh_parse_message_summary(sipMessage_t *pSipMessage, sipMessageSummary_t *mes
     } else {
         return SIP_ERROR;
     }
-    
+
 /*
     p = strstr(pSipMessage->mesg_body[0].msgBody, "Message-Account");
-   
-    if (p) {    
+
+    if (p) {
         trim_right(p);
 
         val = strstr(p, ":");
@@ -4480,14 +4445,14 @@ sippmh_parse_message_summary(sipMessage_t *pSipMessage, sipMessageSummary_t *mes
                 }
             }
             mesgSummary->message_account[i] = '\0';
-        } else { 
+        } else {
             return SIP_ERROR;
         }
     }
 */
 
     p = strstr(pSipMessage->mesg_body[0].msgBody, "Voice-Message");
-    
+
     if (p) {
         mesgSummary->type = mwiVoiceType;
         memset(temp, '\0', MAX_SIP_URL_LENGTH);
@@ -4801,7 +4766,7 @@ sippmh_parse_supported_require (const char *header, char **punsupported_tokens)
         }
 
         if (bad_token != NULL) {
-            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Invalid tag in Require/Supported %s\n", 
+            CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Invalid tag in Require/Supported %s\n",
                 DEB_F_PREFIX_ARGS(SIP_TAG, fname), bad_token);
 
             //allocate memory for unsupported options if necessary
@@ -5088,7 +5053,7 @@ sippmh_parse_service_control_body (char *msgBody, int msgLength)
                 } else if (!strncasecmp(value, "apply-config",
                                         sizeof("apply-config") - 1)) {
                     scp->action = SERVICE_CONTROL_ACTION_APPLY_CONFIG;
-                    
+
                 } else {
                     scp->action = SERVICE_CONTROL_ACTION_INVALID;
                 }
@@ -5189,17 +5154,17 @@ sippmh_parse_service_control_body (char *msgBody, int msgLength)
                         }
                     }
                 }
-            }  else if (!strncasecmp(line, "CUCMResult", 
+            }  else if (!strncasecmp(line, "CUCMResult",
                                                  sizeof("CUCMResult") - 1)) {
                 if (value == NULL) {
                     scp->cucm_result = NULL;
                 } else {
                     int len =0;
-                    if ((strncasecmp(value, "no_change", 
+                    if ((strncasecmp(value, "no_change",
                                          len = strlen("no_change")) == 0)  ||
-                        (strncasecmp(value, "config_applied", 
+                        (strncasecmp(value, "config_applied",
                                     len = strlen("config_applied")) == 0)  ||
-                        (strncasecmp(value, "reregister_needed", 
+                        (strncasecmp(value, "reregister_needed",
                                     len = strlen("reregister_needed")) == 0)) {
                         scp->cucm_result = (char *) cpr_calloc(1,len + 1);
                         if (scp->cucm_result) {
@@ -5291,14 +5256,14 @@ sippmh_parse_service_control_body (char *msgBody, int msgLength)
                     scp->ppid = TRUE;
                 } else if (!strncasecmp(value, "disabled",
                                         sizeof("disabled") - 1)) {
-                    scp->ppid = FALSE;  
+                    scp->ppid = FALSE;
                 } else {
                     scp->ppid = FALSE;
                 }
 
            }
            cpr_free(line);
-            
+
         } else {
             body_read = TRUE;
         }
@@ -5330,10 +5295,10 @@ sippmh_free_service_control_info (sipServiceControl_t *scp)
         cpr_free(scp->cucm_result);
     if (scp->loadServer)
         cpr_free(scp->loadServer);
-    if (scp->firmwareLoadId)    
-        cpr_free(scp->firmwareLoadId);                
+    if (scp->firmwareLoadId)
+        cpr_free(scp->firmwareLoadId);
     if (scp->logServer)
-        cpr_free(scp->logServer);        
+        cpr_free(scp->logServer);
 
     cpr_free(scp);
 }
@@ -5357,10 +5322,10 @@ sippmh_parse_max_forwards (const char *max_fwd_hdr)
 /*
  *  Function: sippmh_parse_url_from_hdr
  *
- *  Parameters: String that needs to be parsed 
+ *  Parameters: String that needs to be parsed
  *
- *  Description: This function will strip out the tags and 
- *                other characters in the header to retreive 
+ *  Description: This function will strip out the tags and
+ *                other characters in the header to retreive
  *               a string that could be used as the request uri.
  *               Note that the input string needs to be well formed.
  *
@@ -5372,9 +5337,9 @@ sippmh_get_url_from_hdr (char *input_str)
 {
     char *left_bracket, *right_bracket = NULL;
 
-    /* 
-      This function is only intended for properly 
-      formed headers.   
+    /*
+      This function is only intended for properly
+      formed headers.
     */
     left_bracket = strpbrk(input_str, ",<");
     if (left_bracket) {

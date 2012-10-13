@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "cpr_types.h"
 #include "cpr_stdlib.h"
@@ -128,7 +93,7 @@ static char *ccsip_find_preallocated_sip_call_id(line_t dn_line);
 static void ccsip_free_preallocated_sip_call_id(line_t dn_line);
 static boolean ccsip_handle_cc_hook_event(sipSMEvent_t *sip_sm_event);
 
-extern cc_int32_t dnsGetHostByName (const char *hname, cpr_ip_addr_t *ipaddr_ptr, cc_int32_t timeout, cc_int32_t retries); 
+extern cc_int32_t dnsGetHostByName (const char *hname, cpr_ip_addr_t *ipaddr_ptr, cc_int32_t timeout, cc_int32_t retries);
 
 //CPR TODO: need reference for
 extern char *Basic_is_phone_forwarded(line_t line);
@@ -818,7 +783,7 @@ static const sipSMEventActionFn_t
         ccsip_handle_default_ev_cc_feature,
 
     /*56*//*H_DEFAULT_RECVREQ_ACK_PENDING_EV_CC_FEATURE                */
-        ccsip_handle_default_recvreq_ack_pending_ev_cc_feature, 
+        ccsip_handle_default_recvreq_ack_pending_ev_cc_feature,
 
     /*57*//*H_OOD_REFER_RESPONSE_EV_SIP_1xx                            */
         ccsip_handle_sent_ood_refer_ev_sip_1xx,
@@ -836,7 +801,7 @@ static const sipSMEventActionFn_t
         ccsip_handle_ev_cc_info,
 
     /*62*//* H_RELEASE_EV_RELEASE,                                  */
-        ccsip_handle_release_ev_release,        
+        ccsip_handle_release_ev_release,
 };
 
 static uint32_t get_callref(const char *tag) {
@@ -849,7 +814,7 @@ static uint32_t get_callref(const char *tag) {
            sscanf ( ref, "-%d", &callref);
            break;
         }
-    } 
+    }
     return callref;
 }
 
@@ -976,7 +941,7 @@ sip_util_extract_sdp (ccsipCCB_t *ccb, sipMessage_t *message)
         CCSIP_DEBUG_STATE(DEB_F_PREFIX"\nmultipart/mixed No SDP Found!\n", DEB_F_PREFIX_ARGS(SIP_SDP, fname));
     } else {
         for (i = 0; i < message->num_body_parts; i++) {
-            if (message->mesg_body[i].msgContentTypeValue == 
+            if (message->mesg_body[i].msgContentTypeValue ==
                 SIP_CONTENT_TYPE_SDP_VALUE) {
                 content_type = SIP_CONTENT_TYPE_SDP_VALUE;
                 content_length = message->mesg_body[i].msgLength;
@@ -987,7 +952,7 @@ sip_util_extract_sdp (ccsipCCB_t *ccb, sipMessage_t *message)
     }
 
     /*
-     * Check for content 
+     * Check for content
      */
     if ((content_type != SIP_CONTENT_TYPE_SDP_VALUE) ||
         (content_length <= 0)) {
@@ -1008,13 +973,13 @@ sip_util_extract_sdp (ccsipCCB_t *ccb, sipMessage_t *message)
         return (SIP_SDP_ERROR);
     }
     /*
-     * Pasrse the SDP body 
+     * Pasrse the SDP body
      */
     if (sdp_parse(sip_msg_sdp->dest_sdp, &sdp_data,
                   (uint16_t)content_length) != SDP_SUCCESS) {
         /* unable to parse the SDP */
         CCSIP_DEBUG_ERROR(get_debug_string(DEBUG_SIP_PARSE_SDP_ERROR), fname);
-        
+
         sipsdp_src_dest_free(CCSIP_DEST_SDP_BIT, &sip_msg_sdp);
         return (SIP_SDP_ERROR);
     }
@@ -1037,7 +1002,7 @@ sip_util_extract_sdp (ccsipCCB_t *ccb, sipMessage_t *message)
          * Check to see if the sdp->session_id and version_id are
          * the same.  If they are, it could be a session audit.
          * In most cases, this is handled the same as
-         * SIP_SDP_SUCCESS. 
+         * SIP_SDP_SUCCESS.
          */
         if (sip_msg_sdp->dest_sdp) {
             const char *new_session_id = NULL;
@@ -1583,7 +1548,7 @@ ccsip_is_special_name_to_mask_display_number (const char *name)
     if (cpr_strncasecmp(name, INDEX_STR_PRIVATE, 2) == 0) {
         return (TRUE);
     }
-    
+
     /*
      * Detect monitoring display number.
      */
@@ -1597,7 +1562,7 @@ ccsip_is_special_name_to_mask_display_number (const char *name)
     if (cpr_strncasecmp(name, INDEX_STR_COACHING, 2) == 0) {
         return (TRUE);
     }
-        
+
     return (FALSE);
 }
 
@@ -1618,8 +1583,8 @@ ccsip_is_special_name_to_mask_display_number (const char *name)
  *               the unescaped data (along with the un-inspected host data). However,
  *               various usages in the code calls this with possible input string of
  *               "userinfo@host" or "userinfo" where "userinfo" could contain '@' which
- *               correctly needs not be escaped. Since the input is flexible as described, 
- *               we've changed to escape the entire input string although the 
+ *               correctly needs not be escaped. Since the input is flexible as described,
+ *               we've changed to escape the entire input string although the
  *               host portion, when present, should never has an escaped character anyway.
  */
 
@@ -1976,7 +1941,7 @@ ccsip_parse_rpid (ccsipCCB_t *ccb, sipMessage_t *msg)
  *
  *  Description: Determines if host string received in a SIP URL should
  *               be appended to the calling number for UI display and
- *               storage in the missed/received calls directory. 
+ *               storage in the missed/received calls directory.
  *               Domain from the receive SIP URL will be appended to the
  *               calling number under the following conditions.
  *               1. Received domain is FQDN and receiving line's proxy address
@@ -1985,7 +1950,7 @@ ccsip_parse_rpid (ccsipCCB_t *ccb, sipMessage_t *msg)
  *                  is a FQDN that differs from the received domain.
  *               3. If received domain is dotted ip, it is NOT appended to
  *                  the calling number under any condtion.
- *              
+ *
  */
 static string_t ccsip_set_url_domain (char *host, string_t callingNumber, string_t calledNumber, line_t line)
 {
@@ -2006,7 +1971,7 @@ static string_t ccsip_set_url_domain (char *host, string_t callingNumber, string
     if (!address) {
         /*
          * Host is not a dotted ip. Treat as a domain name.
-         * Validate the domain name and then compare the domain name 
+         * Validate the domain name and then compare the domain name
          * to what is configured for the line.
          */
         target = cpr_strdup(host);
@@ -2039,7 +2004,7 @@ static string_t ccsip_set_url_domain (char *host, string_t callingNumber, string
                         include_domain = TRUE;
                     } else {
                         if (strncmp(host, buffer, MAX_SIP_URL_LENGTH) != 0) {
-                            /* 
+                            /*
                              * Configured domain differs from received domain
                              */
                             include_domain = TRUE;
@@ -2064,7 +2029,7 @@ static string_t ccsip_set_url_domain (char *host, string_t callingNumber, string
  *
  *  Returns:    char *: pointer to alt_callback_number.
  *
- *  Description: Checks to see the x-cisco-callback-number params 
+ *  Description: Checks to see the x-cisco-callback-number params
  *               Copies the value to ccb->altCallingNumber
  *
  *  assumes  ccb->best_rpid->loc->genUrl valid
@@ -2078,7 +2043,7 @@ void ccsip_set_alt_callback_number(ccsipCCB_t *ccb)
 	while ( (ptr = ccb->best_rpid->loc->genUrl->other_params[param_idx++]) != NULL )
 	{
 		if ( ! strncasecmp ( ptr, RPID_CALLBACK, RPID_CALLBACK_LEN)) {
-			ccb->altCallingNumber = 
+			ccb->altCallingNumber =
 				strlib_update(ccb->altCallingNumber, ptr + RPID_CALLBACK_LEN);
 			return;
 		}
@@ -2093,7 +2058,7 @@ void ccsip_set_alt_callback_number(ccsipCCB_t *ccb)
  *  Parameters: ccb: call control block
  *              calling: boolean value indicating if message is a
  *                       request or response.
- *              display_enabled: boolean indicating if callerid is blocked. 
+ *              display_enabled: boolean indicating if callerid is blocked.
  *
  *  Returns:    boolean: TRUE indicates call id was obtained from RPID.
  *
@@ -2112,7 +2077,7 @@ ccsip_set_caller_id_from_rpid (ccsipCCB_t *ccb, boolean request, boolean update_
     char       *pUser = NULL;
     string_t   *name;
     string_t   *number;
-    boolean     display_number = TRUE; 
+    boolean     display_number = TRUE;
     boolean     private_num = FALSE;
     line_t      line = 0;
 
@@ -2161,10 +2126,10 @@ ccsip_set_caller_id_from_rpid (ccsipCCB_t *ccb, boolean request, boolean update_
     if (private_num) {
         /*
          * Need to distinguish between privacy=uri and privacy=full
-         */ 
+         */
         if (cpr_strncasecmp(ccb->best_rpid->privacy, PRIVACY_FULL, sizeof(PRIVACY_FULL)) == 0) {
            /*
-            * This is used for anonymous call block  
+            * This is used for anonymous call block
             */
            *display_enabled = display_number = FALSE;
         } else {
@@ -2175,13 +2140,13 @@ ccsip_set_caller_id_from_rpid (ccsipCCB_t *ccb, boolean request, boolean update_
         }
     }
 
-    /* 
+    /*
      * Update the alt Calling number if received in the RPID
      */
     if ( (!private_num) )
     {
         ccsip_set_alt_callback_number(ccb);
-    } 
+    }
 
       /*
      * Append host portion of url if needed. If in CCM mode, skip this step.
@@ -2252,7 +2217,7 @@ ccsip_send_callinfo (ccsipCCB_t *ccb, boolean update_caller_id,
         data.call_info.ui_state = feat_data->ui_state;
         data.call_info.caller_id.call_instance_id = feat_data->caller_id.call_instance_id;
         data.call_info.dusting = feat_data->dusting;
-        sstrncpy(data.call_info.global_call_id, 
+        sstrncpy(data.call_info.global_call_id,
 		  ccb->in_call_info->data.call_info_feat_data.global_call_id, CC_GCID_LEN);
     }
 
@@ -2320,13 +2285,13 @@ ccsip_send_callinfo (ccsipCCB_t *ccb, boolean update_caller_id,
             data.call_info.caller_id.display_calling_number = FALSE;
             if(ccb->best_rpid != NULL && ccb->best_rpid->loc->genUrl->u.sipUrl->user != NULL)
                 data.call_info.caller_id.orig_rpid_number = (const char *) ccb->best_rpid->loc->genUrl->u.sipUrl->user;
-        }          
+        }
     }
 
     /* Include diversion information
      * Note that a valid ccb->div_info pointer here does not indicate that call is of
-     * type Forward. It simply means a call to parse diversion header had been made. 
-     */ 
+     * type Forward. It simply means a call to parse diversion header had been made.
+     */
     if (ccb->div_info) {
         data.call_info.caller_id.last_redirect_name = ccb->div_info->last_redirect_name;
         data.call_info.caller_id.last_redirect_number = ccb->div_info->last_redirect_number;
@@ -2338,8 +2303,8 @@ ccsip_send_callinfo (ccsipCCB_t *ccb, boolean update_caller_id,
         data.call_info.caller_id.orig_called_name = strlib_empty();
         data.call_info.caller_id.orig_called_number = strlib_empty();
     }
-    data.call_info.caller_id.call_type = ccb->call_type; 
-    
+    data.call_info.caller_id.call_type = ccb->call_type;
+
     /* Set UP update delay flag */
     data.call_info.feature_flag &= ~(CC_DELAY_UI_UPDATE);
     if (delay_update) {
@@ -2719,7 +2684,7 @@ ccsip_handle_idle_ev_sip_invite (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     /*
      * Make sure we have a valid called_number.
-     */ 
+     */
     if ((ccb->calledNumber == NULL) || (ccb->calledNumber[0] == '\0')) {
         (void) sipSPISendErrorResponse(request, SIP_CLI_ERR_NOT_FOUND,
                                            SIP_CLI_ERR_NOT_FOUND_PHRASE,
@@ -2832,7 +2797,7 @@ ccsip_handle_idle_ev_sip_invite (ccsipCCB_t *ccb, sipSMEvent_t *event)
                 ccb->wastransferred = TRUE;
                 check_send_487 = TRUE;
             } else {
-                is_previous_call_id = sip_sm_is_previous_call_id(replaces_t->callid, 
+                is_previous_call_id = sip_sm_is_previous_call_id(replaces_t->callid,
                                                                  &previous_call_index);
                 replaces_ccb = sip_sm_get_ccb_by_callid(replaces_t->callid);
                 if (replaces_ccb != NULL && replaces_ccb->state == SIP_STATE_RELEASE) {
@@ -3027,7 +2992,7 @@ ccsip_handle_idle_ev_sip_invite (ccsipCCB_t *ccb, sipSMEvent_t *event)
         config_get_value(CFGID_TIMER_T1, &delta, sizeof(delta));
         delta = (2 * delta) / 1000;
         CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"Starting INVITE Local Expires %d"
-                          "timer (%d sec)\n", 
+                          "timer (%d sec)\n",
 						  DEB_L_C_F_PREFIX_ARGS(SIP_TIMER, ccb->dn_line, ccb->gsm_id, fname),
                           ccb->index, local_expires_timeout + delta);
         /*
@@ -3070,7 +3035,7 @@ ccsip_handle_idle_ev_sip_invite (ccsipCCB_t *ccb, sipSMEvent_t *event)
     }
 
     sipSPISendInviteResponse100(ccb, TRUE);
-    
+
     /* Inform CSM */
     cc_call_id = cc_get_new_call_id();
     ccb->gsm_id = cc_call_id;
@@ -3115,7 +3080,7 @@ ccsip_handle_idle_ev_sip_invite (ccsipCCB_t *ccb, sipSMEvent_t *event)
     /* Info Package stuff */
     ccsip_parse_send_info_header(request, &recv_info_list);
 
-    
+
 
     if (ccb->wastransferred) {
         sip_cc_setup(cc_call_id, dn_line,
@@ -3246,7 +3211,7 @@ ccsip_attempt_backup_proxy (ccsipCCB_t *ccb)
  * This fucntion sends mid-call INVITE.
  *
  * @param[in] ccb             Pointer to ccsipCCB_t structure.
- * @param[in] hold_initiated  boolean indicating whther this is 
+ * @param[in] hold_initiated  boolean indicating whther this is
  *                            a mid-call INVITE for HOLD feature.
  *
  * @pre               (ccb      not_eq NULL)
@@ -3521,7 +3486,7 @@ ccsip_handle_idle_ev_cc_setup (ccsipCCB_t *ccb, sipSMEvent_t *event)
             if (!ccsip_attempt_backup_proxy(ccb)) {
                 CCSIP_DEBUG_TASK(DEB_F_PREFIX"Attempt to reach backup proxy failed.\n",
                                  DEB_F_PREFIX_ARGS(SIP_PROXY, fname));
-                CCSIP_DEBUG_TASK(DEB_F_PREFIX"INVITE will be broadcast.\n", 
+                CCSIP_DEBUG_TASK(DEB_F_PREFIX"INVITE will be broadcast.\n",
                     DEB_F_PREFIX_ARGS(SIP_PROXY, fname));
             }
         }
@@ -3579,7 +3544,7 @@ ccsip_handle_idle_ev_cc_setup (ccsipCCB_t *ccb, sipSMEvent_t *event)
         ccb->calledNumberLen = (uint16_t) strlen(ccb->calledNumber);
     }
 
-    CCSIP_DEBUG_STATE(DEB_F_PREFIX"All digits collected.  Placing the call\n", 
+    CCSIP_DEBUG_STATE(DEB_F_PREFIX"All digits collected.  Placing the call\n",
         DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
     config_get_line_string(CFGID_LINE_NAME, line_name, ccb->dn_line, sizeof(line_name));
     ccb->callingNumber = strlib_update(ccb->callingNumber, line_name);
@@ -3594,7 +3559,7 @@ ccsip_handle_idle_ev_cc_setup (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     /* Save the GSM's msg. bodies for future used */
     ccsip_save_local_msg_body(ccb, &event->u.cc_msg->msg.setup.msg_body);
-    
+
     /*
      * CC_REDIRECT_REASON_DEFLECTION shows that this is an attended transfer
      */
@@ -3691,7 +3656,7 @@ ccsip_handle_sentinvite_ev_sip_1xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
         {
             sipsdp_status_t sdp_status;
             CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d: %s <- SIP 180 RINGING\n",
-                              DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname), 
+                              DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
 							  ccb->index, sip_util_state2string(ccb->state));
 
             /* check for alert-info in header.
@@ -3704,7 +3669,7 @@ ccsip_handle_sentinvite_ev_sip_1xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
              }
              */
             sdp_status = sip_util_extract_sdp(ccb, response);
-	
+
             switch (sdp_status) {
             case SIP_SDP_SUCCESS:
             case SIP_SDP_SESSION_AUDIT:
@@ -3785,14 +3750,14 @@ ccsip_handle_sentinvite_ev_sip_1xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
             sip_cc_alerting(ccb->gsm_id, ccb->dn_line, response, TRUE);
 
             /*UI-STATE tag with value of "BUSY" is being sent to indicate the busy line
-             *and to support callback feature. GSM needs to be informed so it can 
+             *and to support callback feature. GSM needs to be informed so it can
              *trigger the LSM to transition to BUSY state and display appropriate
-             *softkeys. 
+             *softkeys.
              */
             if ((ccb->in_call_info) &&
                 (ccb->in_call_info->data.call_info_feat_data.feature_flag & CC_UI_STATE) &&
                 (ccb->in_call_info->data.call_info_feat_data.ui_state == CC_UI_STATE_BUSY)) {
-                 CCSIP_DEBUG_STATE(DEB_F_PREFIX"DETECTED UI_STATE=BUSY IN 183.\n", 
+                 CCSIP_DEBUG_STATE(DEB_F_PREFIX"DETECTED UI_STATE=BUSY IN 183.\n",
                      DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
                  sip_cc_release(ccb->gsm_id, ccb->dn_line, CC_CAUSE_UI_STATE_BUSY, NULL);
             }
@@ -3802,7 +3767,7 @@ ccsip_handle_sentinvite_ev_sip_1xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     case SIP_1XX_CALL_FWD:
         CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d: %s <- SIP 181 CALL IS BEING"
-                          "FORWARDED\n", 
+                          "FORWARDED\n",
 						  DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
                           ccb->index, sip_util_state2string(ccb->state));
         /* Update connected party info from RPID and Call-Info header */
@@ -3950,7 +3915,7 @@ ccsip_handle_sentinvite_ev_sip_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     /*
      * Parse the diversion header which could be present, as in case of
-     * Auto Pick up 
+     * Auto Pick up
      */
     ccsip_parse_diversion_header (ccb, response);
 
@@ -4250,7 +4215,7 @@ ccsip_handle_sendbye_ev_supervision_disconnect (ccsipCCB_t *ccb,
 
 /**
  *
- * Handler for SIP_STATE_RELEASE features. Currently only CANCEL feature is 
+ * Handler for SIP_STATE_RELEASE features. Currently only CANCEL feature is
  * supported in this state.
  *
  * @param line, ccb, event
@@ -4291,7 +4256,7 @@ ccsip_handle_release_ev_cc_feature (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
 /**
  *
- * Handler for event RELEASE at SIP_STATE_RELEASE. 
+ * Handler for event RELEASE at SIP_STATE_RELEASE.
  * sipstack is waiting for RELEASE_COMPLETE from gsm, but it got RELEASE from gsm.
  * so we know that gsm also want to release the call.
  * to avoid defects like CSCtg46399, we need to send RELEASE_COMPLETE to both sipstack & gsm,
@@ -4307,7 +4272,7 @@ ccsip_handle_release_ev_release (ccsipCCB_t *ccb, sipSMEvent_t *event)
                       ccb->index, ccb->dn_line, fname,
                       sip_util_state2string(ccb->state),
                       "sipstack at SIP_STATE_RELEASE received a RELEASE event from gsm");
-                      
+
     /* send RELEASE_COMPLETE to sipstack */
     ccsip_handle_release_complete(ccb, event);
 
@@ -4433,13 +4398,13 @@ ccsip_handle_sentbye_ev_sip_fxx (ccsipCCB_t *ccb, sipSMEvent_t *event)
     switch (status_code) {
     case SIP_CLI_ERR_UNAUTH:
     case SIP_CLI_ERR_PROXY_REQD:
-        CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d: %s\n", 
-						  DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname), 
+        CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d: %s\n",
+						  DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
 						  ccb->index, AUTH_BUGINF(status_code));
 
         if (cred_get_credentials_r(ccb, &credentials) == FALSE) {
             CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"retries exceeded: %d/%d\n",
-                              DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname), 
+                              DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
 							  ccb->index, ccb->authen.cred_type, MAX_RETRIES_401);
 
             free_sip_message(response);
@@ -4450,7 +4415,7 @@ ccsip_handle_sentbye_ev_sip_fxx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
         authenticate = sippmh_get_header_val(response, AUTH_HDR(status_code), NULL);
         if (authenticate != NULL) {
-            CCSIP_DEBUG_STATE(DEB_F_PREFIX"Authenticate header %s= %s\n", DEB_F_PREFIX_ARGS(SIP_STATE, fname), 
+            CCSIP_DEBUG_STATE(DEB_F_PREFIX"Authenticate header %s= %s\n", DEB_F_PREFIX_ARGS(SIP_STATE, fname),
                               AUTH_HDR_STR(status_code), authenticate);
             ccb->retx_counter = 0;
             sip_authen = sippmh_parse_authenticate(authenticate);
@@ -4656,7 +4621,7 @@ ccsip_handle_sentinvite_ev_sip_3xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
         break;
     default:
         CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d %d unsupported\n",
-                          DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname), 
+                          DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
                           ccb->index, status_code);
         break;
     }
@@ -4709,7 +4674,7 @@ handle_error_for_state (ccsipCCB_t *ccb, int status_code)
             sip_sm_change_state(ccb, SIP_STATE_RELEASE);
         } else if (status_code == SIP_CLI_ERR_REQ_CANCEL) {
             sip_cc_release(ccb->gsm_id, ccb->dn_line, CC_CAUSE_NO_USER_ANS, NULL);
-            sip_sm_change_state(ccb, SIP_STATE_RELEASE);    
+            sip_sm_change_state(ccb, SIP_STATE_RELEASE);
         } else {
             /*
              * This should take care of miscellaneous errors including 400
@@ -4764,7 +4729,7 @@ handle_error_for_state (ccsipCCB_t *ccb, int status_code)
         } else {
             fail_reason = CC_CAUSE_ERROR;
         }
-     
+
         /* ack the feature */
         sip_cc_feature_ack(ccb->gsm_id, ccb->dn_line, ccb->featuretype, NULL,
                            fail_reason);
@@ -4800,8 +4765,8 @@ handle_error_for_state (ccsipCCB_t *ccb, int status_code)
 }
 
 
-void 
-ccsip_handle_sentinvite_ev_sip_fxx (ccsipCCB_t *ccb, sipSMEvent_t *event) 
+void
+ccsip_handle_sentinvite_ev_sip_fxx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 {
     const char     *fname = "sentinvite_ev_sip_fxx";
     sipMessage_t   *response;
@@ -4886,7 +4851,7 @@ ccsip_handle_sentinvite_ev_sip_fxx (ccsipCCB_t *ccb, sipSMEvent_t *event)
         case CC_FEATURE_SELECT:
         case CC_FEATURE_CANCEL:
             if (status_code != SIP_CLI_ERR_UNAUTH && status_code != SIP_CLI_ERR_PROXY_REQD) {
-                CCSIP_DEBUG_STATE(DEB_F_PREFIX"Received error response for ext refer\n", 
+                CCSIP_DEBUG_STATE(DEB_F_PREFIX"Received error response for ext refer\n",
                     DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
                 sip_cc_feature_ack(ccb->gsm_id, ccb->dn_line, ccb->featuretype, NULL,
                                    CC_CAUSE_ERROR);
@@ -4905,8 +4870,8 @@ ccsip_handle_sentinvite_ev_sip_fxx (ccsipCCB_t *ccb, sipSMEvent_t *event)
     switch (status_code) {
     case SIP_CLI_ERR_UNAUTH:
     case SIP_CLI_ERR_PROXY_REQD:
-        CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"SIP_CLI_ERR_PROXY_REQD: %d: %s\n", 
-						  DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname), 
+        CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"SIP_CLI_ERR_PROXY_REQD: %d: %s\n",
+						  DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
 						  ccb->index, AUTH_BUGINF(status_code));
 
         /* Send ACK */
@@ -4916,7 +4881,7 @@ ccsip_handle_sentinvite_ev_sip_fxx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
         if (cred_get_credentials_r(ccb, &credentials) == FALSE) {
             CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"retries exceeded: %d/%d\n",
-                              DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname), 
+                              DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
                               ccb->authen.cred_type, MAX_RETRIES_401);
             /*
              * Retries exceeded for 40X could be due to remote end
@@ -4934,7 +4899,7 @@ ccsip_handle_sentinvite_ev_sip_fxx (ccsipCCB_t *ccb, sipSMEvent_t *event)
         authenticate = sippmh_get_header_val(response, AUTH_HDR(status_code),
                                              NULL);
         if (authenticate != NULL) {
-            CCSIP_DEBUG_STATE(DEB_F_PREFIX"Authenticate header %s= %s\n", DEB_F_PREFIX_ARGS(SIP_AUTH, fname), 
+            CCSIP_DEBUG_STATE(DEB_F_PREFIX"Authenticate header %s= %s\n", DEB_F_PREFIX_ARGS(SIP_AUTH, fname),
                               AUTH_HDR_STR(status_code), authenticate);
 
             ccb->retx_counter = 0;
@@ -5126,7 +5091,7 @@ ccsip_handle_sentinvite_ev_sip_fxx (ccsipCCB_t *ccb, sipSMEvent_t *event)
     case SIP_CLI_ERR_REQ_PENDING:
         if (method == sipMethodInvite) {
             CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d Glare detected!\n",
-                              DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname), 
+                              DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
 							  ccb->index);
             sipSPISendFailureResponseAck(ccb, response, FALSE, 0);
             // The other side has detected a glare condition -
@@ -5277,7 +5242,7 @@ ccsip_handle_recvinvite_ev_cc_connected (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     (void) sip_platform_localexpires_timer_stop(ccb->index);
 
-    CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"SIPSM %d: connected\n", 
+    CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"SIPSM %d: connected\n",
 					  DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname), ccb->index);
 
     /* Send 200 OK */
@@ -5304,7 +5269,7 @@ ccsip_handle_recvinvite_ev_expires_timer (ccsipCCB_t *ccb, sipSMEvent_t *event)
 {
     const char *fname = "recvinvite_ev_expires_timer";
 
-    CCSIP_DEBUG_STATE(DEB_F_PREFIX"Sent 200OK but received no ACK\n", 
+    CCSIP_DEBUG_STATE(DEB_F_PREFIX"Sent 200OK but received no ACK\n",
         DEB_F_PREFIX_ARGS(SIP_ACK, fname));
 
     // Stop the retry timer, if any
@@ -5368,7 +5333,7 @@ ccsip_handle_recvinvite_ev_sip_ack (ccsipCCB_t *ccb, sipSMEvent_t *event)
             return;
         } else {
             ccb->oa_state = OA_IDLE;
-            CCSIP_DEBUG_STATE(DEB_F_PREFIX"Using the SDP in INVITE\n", 
+            CCSIP_DEBUG_STATE(DEB_F_PREFIX"Using the SDP in INVITE\n",
                 DEB_F_PREFIX_ARGS(SIP_ACK, fname));
         }
         break;
@@ -5394,7 +5359,7 @@ ccsip_handle_recvinvite_ev_sip_ack (ccsipCCB_t *ccb, sipSMEvent_t *event)
             sip_sm_change_state(ccb, SIP_STATE_RELEASE);
             return;
         } else {
-            CCSIP_DEBUG_STATE(DEB_F_PREFIX"Using the SDP in INVITE\n", 
+            CCSIP_DEBUG_STATE(DEB_F_PREFIX"Using the SDP in INVITE\n",
                 DEB_F_PREFIX_ARGS(SIP_ACK, fname));
         }
     }
@@ -5513,7 +5478,7 @@ ccsip_handle_disconnect_local (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     /* Send BYE message */
     ccb->authen.cred_type = 0;
-	
+
     sipSPISendBye(ccb, alsoString, NULL);
     if (ccb->state == SIP_STATE_SENT_MIDCALL_INVITE) {
         sip_sm_change_state(ccb, SIP_STATE_RELEASE);
@@ -5542,7 +5507,7 @@ ccsip_handle_disconnect_media_change (ccsipCCB_t *ccb, sipSMEvent_t *event)
          * Send Invite Response with correct cause message
          */
         code = ccsip_cc_to_sip_cause(cause, &phrase);
-        if (ccb->state == SIP_STATE_RECV_MIDCALL_INVITE_CCFEATUREACK_PENDING) { 
+        if (ccb->state == SIP_STATE_RECV_MIDCALL_INVITE_CCFEATUREACK_PENDING) {
             sipSPISendInviteResponse(ccb, (uint16_t) code, phrase, 0, NULL,
                                      FALSE /* no SDP */, TRUE /* reTx */);
             ccb->wait_for_ack = TRUE;
@@ -5605,7 +5570,7 @@ ccsip_handle_disconnect_local_early (ccsipCCB_t *ccb, sipSMEvent_t *event)
     } else {
         // Defer the CANCEL - Note we'll move to the RELEASE state even if we
         // defer the CANCEL
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Received CC disconnect without 1xx from far side\n", 
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Received CC disconnect without 1xx from far side\n",
             DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
         CCSIP_DEBUG_STATE(get_debug_string(DEBUG_SIP_ENTRY),
                           ccb->index, ccb->dn_line, fname,
@@ -5834,8 +5799,8 @@ ccsip_handle_disconnect_remote (ccsipCCB_t *ccb, sipSMEvent_t *event)
         cc_feature_data_t data;
 
         CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d Far end requested Call Transfer, "
-                          "destination=<%s>\n", 
-						  DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname), 
+                          "destination=<%s>\n",
+						  DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
 						  ccb->index, alsoString);
         sstrncpy(data.xfer.dialstring, alsoString, strlen(alsoString) + 1);
         data.xfer.cause  = CC_CAUSE_XFER_REMOTE;
@@ -5849,14 +5814,14 @@ ccsip_handle_disconnect_remote (ccsipCCB_t *ccb, sipSMEvent_t *event)
     } else {
         /* Send BYE response message */
         if (event->type == E_SIP_BYE) {
-            /* 
-             * We want to wait for release_complete from GSM before sending 
-             * the 200 OK out, in order to collect call_stats 
+            /*
+             * We want to wait for release_complete from GSM before sending
+             * the 200 OK out, in order to collect call_stats
              */
             ccb->flags |= RECD_BYE;
         } else {
             (void) sipSPISendByeOrCancelResponse(ccb, request, sipMethodCancel);
-            // if the reason header contains a reason code of 200 
+            // if the reason header contains a reason code of 200
             // we should pass this forward to gsm
             reasonHdr = sippmh_get_header_val(request, SIP_HEADER_REASON, NULL);
             if ( reasonHdr && strcasestr(reasonHdr, "cause=200;") ) {
@@ -6182,7 +6147,7 @@ ccsip_handle_process_in_call_options_request (ccsipCCB_t *ccb,
     sipMessage_t   *request;
     sipMethod_t     method = sipMethodInvalid;
 
-    CCSIP_DEBUG_STATE(DEB_F_PREFIX"Processing within-dialog OPTIONS request\n", 
+    CCSIP_DEBUG_STATE(DEB_F_PREFIX"Processing within-dialog OPTIONS request\n",
         DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
 
     /* Unpack the event */
@@ -6294,7 +6259,7 @@ sip_sm_process_event (sipSMEvent_t *pEvent)
     if ((event_handler = get_handler_index(ccb->state, pEvent->type))
             != H_INVALID_EVENT) {
         CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"Processing SM event: %d: --0x%08lx--%21s: %s <- %s\n",
-                          DEB_L_C_F_PREFIX_ARGS(SIP_EVT, ccb->dn_line, ccb->gsm_id, fname), 
+                          DEB_L_C_F_PREFIX_ARGS(SIP_EVT, ccb->dn_line, ccb->gsm_id, fname),
 						  ccb->index, EVENT_ACTION_SM(event_handler),
                           "", sip_util_state2string(ccb->state),
                           sip_util_event2string(pEvent->type));
@@ -6358,7 +6323,7 @@ sip_sm_process_cc_event (cprBuffer_t buf)
         if (!sip_sm_event.ccb) {
             sip_cc_release(pCCMsg->msg.setup.call_id, pCCMsg->msg.setup.line,
                            CC_CAUSE_ERROR, NULL);
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"No free lines available\n", 
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"No free lines available\n",
                 DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
             cc_free_msg_data(sip_sm_event.u.cc_msg);
             cpr_free(pCCMsg);
@@ -6413,7 +6378,7 @@ sip_sm_process_cc_event (cprBuffer_t buf)
                 sip_cc_release(pCCMsg->msg.setup.call_id, pCCMsg->msg.setup.line,
                                CC_CAUSE_ERROR, NULL);
             }
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"No ccb with matching gsm_id = <%d>\n", 
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"No ccb with matching gsm_id = <%d>\n",
                 DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname),
                              pCCMsg->msg.setup.call_id);
             cc_free_msg_data(sip_sm_event.u.cc_msg);
@@ -6519,7 +6484,7 @@ sip_sm_call_cleanup (ccsipCCB_t *ccb)
     int             i = 0;
 
     if (ccb == NULL) {
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Null CCB passed into function.\n", 
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Null CCB passed into function.\n",
             DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
         return;
     }
@@ -6536,7 +6501,7 @@ sip_sm_call_cleanup (ccsipCCB_t *ccb)
     CCSIP_DEBUG_STATE(get_debug_string(DEBUG_SIP_ENTRY),
                       ccb->index, ccb->dn_line, fname, "Cleaning up the call");
 
-    /* 
+    /*
      * If there are any shared pointers because of duping
      * make sure we have taken care of those
      */
@@ -7154,7 +7119,7 @@ sip_util_get_new_call_id (ccsipCCB_t *ccb)
         temp_call_id = ccsip_find_preallocated_sip_call_id(ccb->dn_line);
         if (temp_call_id != NULL) {
             sstrncpy(ccb->sipCallID, temp_call_id, MAX_SIP_CALL_ID);
-            CCSIP_DEBUG_STATE(DEB_F_PREFIX"using pre allocated call ID\n", 
+            CCSIP_DEBUG_STATE(DEB_F_PREFIX"using pre allocated call ID\n",
                 DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
             ccsip_free_preallocated_sip_call_id(ccb->dn_line);
             return;
@@ -7198,9 +7163,9 @@ sip_sm_init (void)
     int            sdpmode = 0;
 
 	config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
-	
+
 	if (!sdpmode) {
-	
+
         if (ccsip_register_init() == SIP_ERROR) {
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"registration initialization failed\n", fname);
             return SIP_ERROR;
@@ -7244,7 +7209,7 @@ sip_sm_init (void)
         if (sip_subsManager_init() != SIP_OK) {
             return SIP_ERROR;
         }
-    
+
     }
 
     /* Initialize SDP Parser */
@@ -7271,7 +7236,7 @@ ccsip_handle_sip_shutdown ()
             case SIP_STATE_RECV_INVITE_PROCEEDING:
             case SIP_STATE_RECV_INVITE_ALERTING:
                 CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"Received invite: %d: STATE: %s\n",
-                                  DEB_L_C_F_PREFIX_ARGS(SIP_STATE, ccb->dn_line, ccb->gsm_id, fname), 
+                                  DEB_L_C_F_PREFIX_ARGS(SIP_STATE, ccb->dn_line, ccb->gsm_id, fname),
 								  ccb->index, sip_util_state2string(ccb->state));
                 sipSPISendInviteResponse(ccb, SIP_SERV_ERR_INTERNAL,
                                          SIP_SERV_ERR_INTERNAL_PHRASE, 0, NULL,
@@ -7286,19 +7251,19 @@ ccsip_handle_sip_shutdown ()
             case SIP_STATE_RECV_INVITE_CONNECTED:
             case SIP_STATE_ACTIVE:
             default:
-                CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"Clearing %d STATE: %s\n", 
-                                  DEB_L_C_F_PREFIX_ARGS(SIP_STATE, ccb->dn_line, ccb->gsm_id, fname), 
+                CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"Clearing %d STATE: %s\n",
+                                  DEB_L_C_F_PREFIX_ARGS(SIP_STATE, ccb->dn_line, ccb->gsm_id, fname),
 								  ccb->index, sip_util_state2string(ccb->state));
                 sipSPISendBye(ccb, NULL, NULL);
                 sip_sm_change_state(ccb, SIP_STATE_IDLE);
-                // send this to make sure GSM goes IDLE if it's currently in CONNECTED 
-                sip_cc_release(ccb->gsm_id, ccb->dn_line, CC_CAUSE_ERROR, NULL); 
+                // send this to make sure GSM goes IDLE if it's currently in CONNECTED
+                sip_cc_release(ccb->gsm_id, ccb->dn_line, CC_CAUSE_ERROR, NULL);
                 sip_sm_call_cleanup(ccb);
                 break;
 
             case SIP_STATE_SENT_INVITE:
-                CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"Sent invite: Clearing %d STATE: %s\n", 
-                                 DEB_L_C_F_PREFIX_ARGS(SIP_STATE,  ccb->dn_line, ccb->gsm_id, fname), 
+                CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"Sent invite: Clearing %d STATE: %s\n",
+                                 DEB_L_C_F_PREFIX_ARGS(SIP_STATE,  ccb->dn_line, ccb->gsm_id, fname),
 								 ccb->index, sip_util_state2string(ccb->state));
                 sipSPISendCancel(ccb);
                 sip_sm_change_state(ccb, SIP_STATE_IDLE);
@@ -7308,8 +7273,8 @@ ccsip_handle_sip_shutdown ()
                 break;
 
             case SIP_STATE_SENT_INVITE_CONNECTED:
-                CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"Sent invite connected: Clearing %d STATE: %s\n", 
-                                  DEB_L_C_F_PREFIX_ARGS(SIP_STATE, ccb->dn_line, ccb->gsm_id, fname), 
+                CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"Sent invite connected: Clearing %d STATE: %s\n",
+                                  DEB_L_C_F_PREFIX_ARGS(SIP_STATE, ccb->dn_line, ccb->gsm_id, fname),
 								  ccb->index, sip_util_state2string(ccb->state));
                 if (sipSPISendAck(ccb, NULL) == FALSE) {
                     CCSIP_DEBUG_ERROR(get_debug_string(DEBUG_GENERAL_FUNCTIONCALL_FAILED),
@@ -7323,7 +7288,7 @@ ccsip_handle_sip_shutdown ()
                 break;
 
             case SIP_STATE_RELEASE:
-                CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"Release: Clearing %d STATE: %s\n", 
+                CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"Release: Clearing %d STATE: %s\n",
                                   DEB_L_C_F_PREFIX_ARGS(SIP_STATE, ccb->dn_line, ccb->gsm_id, fname),
 								  ccb->index, sip_util_state2string(ccb->state));
                 sip_sm_change_state(ccb, SIP_STATE_IDLE);
@@ -7370,7 +7335,7 @@ sip_shutdown (void)
 
         // Shutdown Subscription Manager
         (void) sip_subsManager_shut();
-        //reset publish handler 
+        //reset publish handler
         publish_reset();
 
         // Close all sockets
@@ -7428,7 +7393,7 @@ sip_restart (void)
     sip_mode_quiet = FALSE;
     sip_reg_all_failed = FALSE;
     ccsip_remove_wlan_classifiers();
-    
+
     // Initialize all GSM modules
     cc_fail_fallback_gsm(CC_SRC_SIP, CC_RSP_COMPLETE, CC_REG_FAILOVER_RSP);
 }
@@ -7436,7 +7401,7 @@ sip_restart (void)
 void
 sip_shutdown_phase2 (int action)
 {
-    DEF_DEBUG(DEB_F_PREFIX"(%d)\n", 
+    DEF_DEBUG(DEB_F_PREFIX"(%d)\n",
                      DEB_F_PREFIX_ARGS(SIP_CTRL, "sip_shutdown_phase2"), action);
     sip.taskInited = TRUE; // Forcing sip_shutdown() to execute
     DEF_DEBUG(DEB_F_PREFIX"sip.taskInited is set to true\n", DEB_F_PREFIX_ARGS(SIP_CTRL, "sip_shutdown_phase2"));
@@ -7452,7 +7417,7 @@ sip_shutdown_phase2 (int action)
 void
 sip_shutdown_phase1 (int action, int reason)
 {
-    DEF_DEBUG(DEB_F_PREFIX"In sip_shutdown_phase1 (%d)\n", 
+    DEF_DEBUG(DEB_F_PREFIX"In sip_shutdown_phase1 (%d)\n",
                      DEB_F_PREFIX_ARGS(SIP_CTRL, "sip_shutdown_phase1"), action);
     if (sip_reg_all_failed) {
         // NO CCM available; need not wait for unreg timer
@@ -7492,7 +7457,7 @@ sip_sm_get_ccb_by_ccm_id_and_index (int ccmid, line_t idx)
             ccb = fallback_ccb->ccb;
         }
     }
-    if (ccb != NULL) { 
+    if (ccb != NULL) {
         if ((ccb->cc_cfg_table_entry == NULL) ||
             (((ti_config_table_t *)(ccb->cc_cfg_table_entry))->ti_specific.ti_ccm.ccm_id != ccm_id)) {
             /*
@@ -7503,7 +7468,7 @@ sip_sm_get_ccb_by_ccm_id_and_index (int ccmid, line_t idx)
              * that standby cucm has sent. Should not do much harm.
              */
             DEF_DEBUG(DEB_F_PREFIX"ccb index has moved or cfg_table not initialized for the cucm=%s. "
-                "index=%d ccb=%d. Throwing away the msg.\n",DEB_F_PREFIX_ARGS(SIP_BRANCH, fname),  
+                "index=%d ccb=%d. Throwing away the msg.\n",DEB_F_PREFIX_ARGS(SIP_BRANCH, fname),
                 CCM_ID_PRINT(ccm_id), idx, ccb);
             ccb = NULL;
         }
@@ -7631,9 +7596,9 @@ sip_sm_get_ccb_next_available (line_t *line_number)
 
 /**
  * sip_sm_get_ccb_by_gsm_id
- *  
+ *
  * This fucntion tries to match the ccbs given the gsm id
- * The algorithm tries to match the non duplicate CCB first 
+ * The algorithm tries to match the non duplicate CCB first
  * If the only match is a DUP_CCB it shall be returned as a match
  * @param[in] gsm_id   GSM ID in the CCB
  *
@@ -7665,7 +7630,7 @@ sip_sm_get_ccb_by_gsm_id (callid_t gsm_id)
 /**
  * sip_sm_ccb_match_branch_cseq
  *
- * This fucntion tries to match the Branch and Cseq ID for a 
+ * This fucntion tries to match the Branch and Cseq ID for a
  * given CCB to see if the values match in the response with the
  * values sent in the request.
  *
@@ -7677,7 +7642,7 @@ sip_sm_get_ccb_by_gsm_id (callid_t gsm_id)
  * @pre               (sipCseq  not_eq NULL)
  * @pre               (via_this not_eq NULL)
  *
- * @return            TRUE/FALSE 
+ * @return            TRUE/FALSE
  *
  */
 static boolean
@@ -7706,7 +7671,7 @@ sip_sm_ccb_match_branch_cseq (ccsipCCB_t *ccb,
                               " Via's branch parameter in response:"
                               "ccb=0x%x,%d, cseq(trx,msg)=(%d,%d),"
                               "branch(trx,msg)=(%s,%s)\n",
-                               ccb->dn_line, ccb->gsm_id, fname, ccb,  
+                               ccb->dn_line, ccb->gsm_id, fname, ccb,
                                ccb->index, trx->cseq_number, sipCseq->number,
                                trx->u.sip_via_branch,
                                via_this->branch_param);
@@ -7717,7 +7682,7 @@ sip_sm_ccb_match_branch_cseq (ccsipCCB_t *ccb,
     CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Method index not found\n", fname);
     return (FALSE);
 }
-               							
+
 // The function below attempts to determine more intelligently if there
 // is an existing dialog to which an incoming message should be directed.
 // In addition to call-id, it also considers the Req-URI, CSeq, etc.
@@ -7761,12 +7726,12 @@ sip_sm_determine_ccb (const char *callid,
                         if (ccb->sip_to_tag[0] != '\0') {
                             if (strcmp(to_loc->tag, ccb->sip_to_tag) == 0) {
                                 *ccb_ret = ccb;
-                                CCSIP_DEBUG_STATE(DEB_F_PREFIX"Matched to_tag\n", 
+                                CCSIP_DEBUG_STATE(DEB_F_PREFIX"Matched to_tag\n",
                                     DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
                                 break;
                             } else if (strcmp(to_loc->tag, ccb->sip_from_tag) == 0) {
                                 *ccb_ret = ccb;
-                                CCSIP_DEBUG_STATE(DEB_F_PREFIX"Matched from_tag\n", 
+                                CCSIP_DEBUG_STATE(DEB_F_PREFIX"Matched from_tag\n",
                                     DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
                                 break;
                             }
@@ -7819,7 +7784,7 @@ sip_sm_determine_ccb (const char *callid,
                 ccb = &(gGlobInfo.ccbs[i]);
                 if (ccb->ReqURI[0] != '\0') {
                     if (strcmp(ccb->ReqURI, reqURI) == 0) {
-                        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Matched reqURI\n", 
+                        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Matched reqURI\n",
                             DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
                         *ccb_ret = ccb;
                         break;
@@ -7835,7 +7800,7 @@ sip_sm_determine_ccb (const char *callid,
                         (ccb->state < SIP_STATE_ACTIVE)) {
                         // Return this CCB if we match call-id but have
                         // not connected yet
-                        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Matched Call-id - not active.\n", 
+                        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Matched Call-id - not active.\n",
                             DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
                         *ccb_ret = ccb;
                         break;
@@ -7953,7 +7918,7 @@ sip_sm_determine_ccb (const char *callid,
     }
 
     /*
-     * If the CCB is not NULL and this is a response, then check 
+     * If the CCB is not NULL and this is a response, then check
      * if the branch and Cseq match.
      */
     if ((*ccb_ret != NULL) && !is_request) {
@@ -7977,7 +7942,7 @@ ccsip_handle_default (ccsipCCB_t *ccb, sipSMEvent_t *event)
     const char *fname = "ccsip_handle_default";
 
     CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d No action -> %s\n",
-                      DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname), 
+                      DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
                       ccb->index, sip_util_state2string(ccb->state));
 }
 
@@ -8040,7 +8005,7 @@ ccsip_handle_default_sip_message (ccsipCCB_t *ccb, sipSMEvent_t *event)
  * ccsip_handle_default_ev_cc_feature
  *
  * The function is a default function for handling CC_FEATURE in the
- * state that does not expect CC_FEATURE. 
+ * state that does not expect CC_FEATURE.
  *
  * @param[in] ccb     Pointer to ccsipCCB_t structure.
  * @param[in] event   Pointer to sipSMEvent_t structure.
@@ -8048,7 +8013,7 @@ ccsip_handle_default_sip_message (ccsipCCB_t *ccb, sipSMEvent_t *event)
  * @pre               (ccb not_eq NULL)
  *
  * @return            N/A
- * 
+ *
  */
 void
 ccsip_handle_default_ev_cc_feature (ccsipCCB_t *ccb, sipSMEvent_t *event)
@@ -8087,7 +8052,7 @@ void
 ccsip_handle_default_recvreq_ack_pending_ev_cc_feature (ccsipCCB_t *ccb,
                                                         sipSMEvent_t *event)
 {
-    const char *fname = 
+    const char *fname =
         "ccsip_handle_default_recvreq_ack_pending_ev_cc_feature";
     cc_features_t feature_type;
 
@@ -8204,8 +8169,8 @@ ccsip_restart_reTx_timer (ccsipCCB_t *ccb, sipMethod_t messageType)
         }
     }
     CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d: Restarting timer (%d msec)"
-                      " (msg is %s)\n", 
-					  DEB_L_C_F_PREFIX_ARGS(SIP_TIMER, ccb->dn_line, ccb->gsm_id, fname), 
+                      " (msg is %s)\n",
+					  DEB_L_C_F_PREFIX_ARGS(SIP_TIMER, ccb->dn_line, ccb->gsm_id, fname),
 					  ccb->index, timeout, sipGetMethodString(messageType));
 
     ccb->retx_flag = TRUE;
@@ -8288,7 +8253,7 @@ ccsip_handle_obp_error (ccsipCCB_t *ccb, sipMethod_t messageType, cpr_ip_addr_t 
         if (sipSPISendLastMessage(ccb) == TRUE) {
             ccb->retx_counter++;
             CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d:  Resent message: #%d\n",
-                              DEB_L_C_F_PREFIX_ARGS(SIP_MSG_SEND, ccb->dn_line, ccb->gsm_id,  fname), 
+                              DEB_L_C_F_PREFIX_ARGS(SIP_MSG_SEND, ccb->dn_line, ccb->gsm_id,  fname),
                               ccb->index, ccb->retx_counter);
             ccsip_restart_reTx_timer(ccb, messageType);
             if (ccb->state == SIP_STATE_RELEASE) {
@@ -8376,7 +8341,7 @@ ccsip_pick_a_proxy (ccsipCCB_t *ccb)
              * Or we are not using DNS SRV and we need to try the backup
              */
             if (dns_error_code != DNS_OK) {
-                CCSIP_DEBUG_TASK(DEB_F_PREFIX"Unable to reach proxy, attempting backup.\n", 
+                CCSIP_DEBUG_TASK(DEB_F_PREFIX"Unable to reach proxy, attempting backup.\n",
                     DEB_F_PREFIX_ARGS(SIP_PROXY, fname));
                 if (ccsip_attempt_backup_proxy(ccb)) {
 
@@ -8426,7 +8391,7 @@ ccsip_pick_a_proxy (ccsipCCB_t *ccb)
                     /* Backup proxy failed as well. Broadcast once */
                 } else {
                     CCSIP_DEBUG_TASK(DEB_F_PREFIX"Attempt to reach backup proxy"
-                                     " failed. Message will be broadcast.\n", 
+                                     " failed. Message will be broadcast.\n",
                                      DEB_F_PREFIX_ARGS(SIP_PROXY, fname));
                     return 1;
                 }
@@ -8474,7 +8439,7 @@ ccsip_handle_icmp_unreachable (ccsipCCB_t *ccb, sipSMEvent_t *event)
         //we are in a dialog
         // NOT USED: sipMessage_t *response;
 
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"ICMP received within a dialog.\n", 
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"ICMP received within a dialog.\n",
             DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
         /*
          * At this point we should be checking to see if we picked up an
@@ -8494,7 +8459,7 @@ ccsip_handle_icmp_unreachable (ccsipCCB_t *ccb, sipSMEvent_t *event)
         sip_cc_release_complete(ccb->gsm_id, ccb->dn_line, CC_CAUSE_NORMAL);
         sip_sm_call_cleanup(ccb);
     } else {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"ICMP received outside of a dialog.\n", 
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"ICMP received outside of a dialog.\n",
             DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
         //ccb->retx_counter = 100; //to cause failover to next proxy if one is available
         ccsip_handle_default_sip_timer(ccb, event);
@@ -8561,7 +8526,7 @@ ccsip_handle_default_sip_timer (ccsipCCB_t *ccb, sipSMEvent_t *event)
     /* Determine if msg to outbound proxy bounced or timed out */
     util_ntohl(&out_ip, &event->u.UsrInfo);
     if ((util_compare_ip(&out_ip, &(ccb->outBoundProxyAddr))) ||
-        ((event->u.UsrInfo.type == CPR_IP_ADDR_INVALID) && 
+        ((event->u.UsrInfo.type == CPR_IP_ADDR_INVALID) &&
             util_check_if_ip_valid(&(ccb->outBoundProxyAddr)))) {
         ccsip_handle_obp_error(ccb, retxMessageType, &(event->u.UsrInfo));
         return;
@@ -8586,7 +8551,7 @@ ccsip_handle_default_sip_timer (ccsipCCB_t *ccb, sipSMEvent_t *event)
     if (ccb->retx_counter <= max_retx) {
         if (sipSPISendLastMessage(ccb) == TRUE) {
             CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d:Resent message: #%d\n",
-                              DEB_L_C_F_PREFIX_ARGS(SIP_MSG_SEND, ccb->dn_line, ccb->gsm_id, fname), 
+                              DEB_L_C_F_PREFIX_ARGS(SIP_MSG_SEND, ccb->dn_line, ccb->gsm_id, fname),
                               ccb->index, ccb->retx_counter);
         }
         if (ccb->state == SIP_STATE_RELEASE) {
@@ -8888,15 +8853,15 @@ sip_sm_check_retx_timers (ccsipCCB_t *ccb, sipMessage_t *canceller_message)
     }
 
     /* In the case of TCP/TLS, no messages are retransmitted unless there was a
-     * socket open (CPR_ENOTCONN) error. Hence there are no retx timers started 
-     * in this case. If any retx timers were started, then, in the 
-     * sip_platform_msg_timer_start procedure, the message_buffer_len would be 
+     * socket open (CPR_ENOTCONN) error. Hence there are no retx timers started
+     * in this case. If any retx timers were started, then, in the
+     * sip_platform_msg_timer_start procedure, the message_buffer_len would be
      * set to a valid non-zero value.
      */
     conn_type = sipTransportGetTransportType(1, TRUE, ccb);
     if ((!cpr_strcasecmp(conn_type, "TCP") || !cpr_strcasecmp(conn_type, "TLS")) &&
         0 == sipPlatformUISMTimers[ccb->index].message_buffer_len) {
-        /* This is not an error in case of TCP/TLS. 
+        /* This is not an error in case of TCP/TLS.
          */
         return;
     }
@@ -8983,8 +8948,8 @@ sip_sm_check_retx_timers (ccsipCCB_t *ccb, sipMessage_t *canceller_message)
           (strcmp(canceller_callid, retx_callid) == 0)) {
         sip_platform_msg_timer_stop(ccb->index);
         CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d: Stopping reTx timer.\n"
-                          "(callid=%s, cseq=%u, cseq_method=%s)\n", 
-                          DEB_L_C_F_PREFIX_ARGS(SIP_TIMER, ccb->dn_line, ccb->gsm_id, fname), 
+                          "(callid=%s, cseq=%u, cseq_method=%s)\n",
+                          DEB_L_C_F_PREFIX_ARGS(SIP_TIMER, ccb->dn_line, ccb->gsm_id, fname),
                           ccb->index, retx_callid, retx_cseq,
                           sipGetMethodString(retx_cseq_method));
 
@@ -9005,9 +8970,9 @@ sip_sm_check_retx_timers (ccsipCCB_t *ccb, sipMessage_t *canceller_message)
     } else {
         CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d:CSeq mismatch:\n(Rx: callid=%s,"
                           " cseq=%u, cseq_method=%s),\n(reTx: callid=%s,"
-                          " cseq=%u, cseq_method=%s)\n", 
-                          DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname), 
-						  ccb->index, 
+                          " cseq=%u, cseq_method=%s)\n",
+                          DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
+						  ccb->index,
                           canceller_callid, canceller_cseq,
                           sipGetMethodString(canceller_cseq_method),
                           retx_callid, retx_cseq,
@@ -9344,7 +9309,7 @@ sip_sm_update_to_from_on_callsetup_finalresponse (ccsipCCB_t *ccb,
                 /* ccb->sip_to_tag[0] = '\0'; */
             }
             CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d: Recorded to_tag=<%s>\n",
-                              DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname), 
+                              DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
                               ccb->index, ccb->sip_to_tag);
             sippmh_free_location(to_loc);
         }
@@ -9444,7 +9409,7 @@ ccsip_handle_active_ev_cc_feature (ccsipCCB_t *ccb, sipSMEvent_t *event)
         }
         break;
     case CC_FEATURE_B2BCONF:
-    case CC_FEATURE_SELECT:    
+    case CC_FEATURE_SELECT:
     case CC_FEATURE_B2B_JOIN:
     case CC_FEATURE_CANCEL:
         break;
@@ -9609,7 +9574,7 @@ ccsip_handle_active_ev_cc_feature_xfer (ccsipCCB_t *ccb, sipSMEvent_t *event)
              */
             *domainloc++ = '@';
             xfer_ccb = sip_sm_get_ccb_by_target_call_id(ccb->con_call_id);
-            if ((xfer_ccb != NULL) && 
+            if ((xfer_ccb != NULL) &&
                 util_check_if_ip_valid(&(xfer_ccb->dest_sip_addr)) &&
                 (ccb->featuretype == CC_FEATURE_XFER)) {
                 /*
@@ -9812,7 +9777,7 @@ ccsip_handle_active_ev_sip_invite (ccsipCCB_t *ccb, sipSMEvent_t *event)
     // If we have an outstanding INVITE that we sent then we have glare
     if (get_method_request_trx_index(ccb, sipMethodInvite, TRUE) > -1) {
         CCSIP_DEBUG_STATE(DEB_L_C_F_PREFIX"%d Glare condition detected \n",
-                          DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname), 
+                          DEB_L_C_F_PREFIX_ARGS(SIP_CALL_STATUS, ccb->dn_line, ccb->gsm_id, fname),
 						  ccb->index);
         // return 491
         (void) sipSPISendErrorResponse(request, SIP_CLI_ERR_REQ_PENDING,
@@ -9922,7 +9887,7 @@ ccsip_handle_active_ev_sip_invite (ccsipCCB_t *ccb, sipSMEvent_t *event)
        /*FALLTHROUGH*/
 
     default:
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Waiting for SDP in ACK\n", 
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Waiting for SDP in ACK\n",
             DEB_F_PREFIX_ARGS(SIP_SDP, fname));
         /*
          * Update connected party info from RPID and Call-Info header.
@@ -9976,14 +9941,14 @@ ccsip_handle_active_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
 /**
  * ccsip_handle_sentinvite_midcall_ev_cc_feature
- * 
+ *
  * The function handles for CC_FEATURE during mid call invite.
- * 
+ *
  * @param[in] ccb     Pointer to ccsipCCB_t structure.
  * @param[in] event   Pointer to sipSMEvent_t structure.
- * 
+ *
  * @pre               (ccb not_eq NULL)
- * 
+ *
  * @return            N/A
  */
 void ccsip_handle_sentinvite_midcall_ev_cc_feature (ccsipCCB_t *ccb,
@@ -10029,7 +9994,7 @@ void ccsip_handle_sentinvite_midcall_ev_cc_feature (ccsipCCB_t *ccb,
  *
  * @return            N/A
  */
-void ccsip_handle_sentinvite_midcall_ev_sip_2xx (ccsipCCB_t *ccb, 
+void ccsip_handle_sentinvite_midcall_ev_sip_2xx (ccsipCCB_t *ccb,
                                                  sipSMEvent_t *event)
 {
     const char   *fname = "ccsip_handle_sentinvite_midcall_ev_sip_2xx";
@@ -10082,7 +10047,7 @@ void ccsip_handle_sentinvite_midcall_ev_sip_2xx (ccsipCCB_t *ccb,
                                &data, CC_CAUSE_NORMAL);
             break;
         case CC_FEATURE_RESUME:
-        case CC_FEATURE_MEDIA:    
+        case CC_FEATURE_MEDIA:
             sip_cc_mv_msg_body_to_cc_msg(&data.resume.msg_body, response);
             sip_cc_feature_ack(ccb->gsm_id, ccb->dn_line, ccb->featuretype,
                                &data, CC_CAUSE_NORMAL);
@@ -10090,9 +10055,9 @@ void ccsip_handle_sentinvite_midcall_ev_sip_2xx (ccsipCCB_t *ccb,
         default:
             /*
              * Other features are not expected.
-             */ 
+             */
             CCSIP_DEBUG_ERROR(DEB_L_C_F_PREFIX"%d: unexpected feature %d\n",
-                              ccb->dn_line, ccb->gsm_id, fname,  
+                              ccb->dn_line, ccb->gsm_id, fname,
                               ccb->index, ccb->featuretype);
             sip_cc_feature_ack(ccb->gsm_id, ccb->dn_line, ccb->featuretype,
                                NULL, CC_CAUSE_ERROR);
@@ -10226,7 +10191,7 @@ ccsip_handle_recvmidcallinvite_ccfeatureackpending_ev_cc_feature_ack (
         }
 
         sipSPISendInviteResponse200(ccb); /* HOLD */
-        sip_sm_change_state(ccb, 
+        sip_sm_change_state(ccb,
                             SIP_STATE_RECV_MIDCALL_INVITE_SIPACK_PENDING);
         break;
 
@@ -10238,7 +10203,7 @@ ccsip_handle_recvmidcallinvite_ccfeatureackpending_ev_cc_feature_ack (
             msg_body = &event->u.cc_msg->msg.feature_ack.data.resume.msg_body;
             ccsip_save_local_msg_body(ccb, msg_body);
         }
-        if (event->u.cc_msg->msg.feature_ack.cause ==  CC_CAUSE_PAYLOAD_MISMATCH ||  
+        if (event->u.cc_msg->msg.feature_ack.cause ==  CC_CAUSE_PAYLOAD_MISMATCH ||
             event->u.cc_msg->msg.feature_ack.cause ==  CC_CAUSE_NO_MEDIA ||
             event->u.cc_msg->msg.feature_ack.cause ==  CC_CAUSE_ERROR) {
             /*
@@ -10271,7 +10236,7 @@ void
 ccsip_handle_recvmidcallinvite_sipackpending_ev_sip_ack (ccsipCCB_t *ccb,
                                                          sipSMEvent_t *event)
 {
-    const char     *fname = 
+    const char     *fname =
                  "ccsip_handle_recvmidcallinvite_sipackpending_ev_sip_ack";
     sipMessage_t   *request;
     uint16_t        request_check_reason_code = 0;
@@ -11145,7 +11110,7 @@ ccsip_handle_active_ev_sip_update (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     switch (sdp_status) {
     case SIP_SDP_SESSION_AUDIT:
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Received Session Audit SDP in UPDATE\n", 
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Received Session Audit SDP in UPDATE\n",
             DEB_F_PREFIX_ARGS(SIP_SDP, fname));
         /*FALLTHROUGH*/
 
@@ -11227,7 +11192,7 @@ ccsip_handle_active_ev_sip_update (ccsipCCB_t *ccb, sipSMEvent_t *event)
  * Function: ccsip_handle_recvupdatemedia_ccfeatureackpending_ev_cc_feature_ack
  *
  * Description: This function handles a CC_FEATURE_ACK from GSM that the
- * GSM sends in response to an new media SDP or hold received in an UPDATE 
+ * GSM sends in response to an new media SDP or hold received in an UPDATE
  * message and sent to it.
  ***********************************************************************/
 void
@@ -11262,7 +11227,7 @@ ccsip_handle_recvupdatemedia_ccfeatureackpending_ev_cc_feature_ack (
         if (cause == CC_CAUSE_NORMAL || cause == CC_CAUSE_NO_RESUME) {
             cause = CC_CAUSE_OK;
         }
-    
+
         /* new media acks put the sdp in the resume area as well */
         if (event->u.cc_msg->msg.feature_ack.data_valid) {
             msg_body = &event->u.cc_msg->msg.feature_ack.data.resume.msg_body;
@@ -11343,7 +11308,7 @@ ccsip_get_notify_service_control (sipMessage_t *pSipMessage)
         return NULL;
     }
     if (pSipMessage->mesg_body[0].msgContentTypeValue != SIP_CONTENT_TYPE_TEXT_PLAIN_VALUE) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY with unknown body type\n", 
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY with unknown body type\n",
             DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
         if (sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_BAD_REQ,
                                     SIP_CLI_ERR_BAD_REQ_PHRASE,
@@ -11360,7 +11325,7 @@ ccsip_get_notify_service_control (sipMessage_t *pSipMessage)
                                 pSipMessage->mesg_body[0].msgLength);
 
     if (scp == NULL) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY but couldn't parse body\n", 
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY but couldn't parse body\n",
             DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
         if (sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_BAD_REQ,
                                     SIP_CLI_ERR_BAD_REQ_PHRASE,
@@ -11374,7 +11339,7 @@ ccsip_get_notify_service_control (sipMessage_t *pSipMessage)
     }
     // Verify common mandatory parms
     if (scp->registerCallID == NULL) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY but no mandatory params\n", 
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY but no mandatory params\n",
             DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
         if (sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_BAD_REQ,
                                     SIP_CLI_ERR_BAD_REQ_PHRASE,
@@ -11395,7 +11360,7 @@ ccsip_get_notify_service_control (sipMessage_t *pSipMessage)
                         (scp->dialplanVersionStamp != NULL) &&
                         (scp->softkeyVersionStamp != NULL)) ? TRUE : FALSE;
         if (!all_provided) {
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY but no mandatory params\n", 
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY but no mandatory params\n",
                 DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
             if (sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_BAD_REQ,
                                         SIP_CLI_ERR_BAD_REQ_PHRASE,
@@ -11417,7 +11382,7 @@ ccsip_get_notify_service_control (sipMessage_t *pSipMessage)
          * firmwareInactiveLoadId is not mandatory field because of  backward
          * compatibility purposes. So, it is not included in the following
          * check.
-         */ 
+         */
         all_provided = ((scp->configVersionStamp != NULL) &&
                         (scp->dialplanVersionStamp != NULL) &&
                         (scp->softkeyVersionStamp != NULL) &&
@@ -11425,7 +11390,7 @@ ccsip_get_notify_service_control (sipMessage_t *pSipMessage)
                         (scp->firmwareLoadId != NULL) &&
                         (scp->loadServer != NULL) &&
                         (scp->logServer != NULL)) ? TRUE : FALSE;
-        if (!all_provided) 
+        if (!all_provided)
         {
             CCSIP_DEBUG_TASK(SIP_F_PREFIX "Incorrect message format or missing "
                    "param value for [configVer/cucmResult] in"
@@ -11436,7 +11401,7 @@ ccsip_get_notify_service_control (sipMessage_t *pSipMessage)
                    "\nppid=%s\n\n", fname,
                    (scp->configVersionStamp != NULL) ? scp->configVersionStamp
                                                      : "",
-                   (scp->dialplanVersionStamp != NULL) ?  
+                   (scp->dialplanVersionStamp != NULL) ?
                                scp->dialplanVersionStamp:"",
                    (scp->softkeyVersionStamp != NULL) ?
                                scp->softkeyVersionStamp : "",
@@ -11481,7 +11446,7 @@ ccsip_get_notify_service_control (sipMessage_t *pSipMessage)
     // Call Platform API for actually performing the called for action
     if (param_match && ccb != NULL) {
         if (sip_regmgr_get_cc_mode(ccb->dn_line) != REG_MODE_CCM) {
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY in non CCM mode\n", 
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY in non CCM mode\n",
                 DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
             if (sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_BAD_REQ,
                                         SIP_CLI_ERR_BAD_REQ_PHRASE,
@@ -11493,7 +11458,7 @@ ccsip_get_notify_service_control (sipMessage_t *pSipMessage)
             return NULL;
         }
     } else {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY, callid doesn't match\n", 
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY, callid doesn't match\n",
             DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
         if (sipSPISendErrorResponse(pSipMessage, SIP_CLI_ERR_BAD_REQ,
                                     SIP_CLI_ERR_BAD_REQ_PHRASE,
@@ -11506,7 +11471,7 @@ ccsip_get_notify_service_control (sipMessage_t *pSipMessage)
     }
 
     /* NOTIFY message validated and scp allocated */
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY, callid matches\n", 
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Received NOTIFY, callid matches\n",
         DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
     return scp;
 }
@@ -11538,7 +11503,7 @@ ccsip_handle_unsolicited_notify (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
             }
         } else {
-            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Unsupported unsolicited notify event\n", 
+            CCSIP_DEBUG_TASK(DEB_F_PREFIX"Unsupported unsolicited notify event\n",
                 DEB_F_PREFIX_ARGS(SIP_NOTIFY, fname));
             if (sipSPISendErrorResponse(request, SIP_CLI_ERR_BAD_REQ,
                                         SIP_CLI_ERR_BAD_REQ_PHRASE,
@@ -11565,7 +11530,7 @@ void free_duped (ccsipCCB_t *dup_ccb)
 
 /**
  * This function dups the origCCB and returns a new ccb. It applies
- * to only TEL CCBs. The contents of the new CCB is determined by dupCCBFlags. 
+ * to only TEL CCBs. The contents of the new CCB is determined by dupCCBFlags.
  *
  * dupCCBFlag values are:
  *     DUPED_CCB             0x01
@@ -11573,17 +11538,17 @@ void free_duped (ccsipCCB_t *dup_ccb)
  *     DUP_CCB_INIT_STATE    0x04
  *     DUP_CCB_REINIT_DNS    0x08
  *     DUP_CCB_STOLEN_FEAT_DATA 0x10
- * if this flag is set and ccb->feature_data is NULL, then 
+ * if this flag is set and ccb->feature_data is NULL, then
  * feature data was stolen from this ccb.
- *                    
+ *
  * if this flag is set and ccb->feature_data is non-NULL, then
  * this ccb stole the feature_data pointer from the mother_ccb.
  *
- * The concept of duping is to maximize sharing of 
+ * The concept of duping is to maximize sharing of
  * data structures by pointer sharing where it makes sense.
  * The companion function of freeDupedCCB() is aware that
  * of the duping. ccb->dup_flags will remember the duping
- * attributes (flags shown above) and will free members 
+ * attributes (flags shown above) and will free members
  * appropriately.
  *
  * @param origCCB
@@ -11629,11 +11594,11 @@ create_dupCCB (ccsipCCB_t *origCCB, int dup_flags)
     if (!(dup_flags & DUP_CCB_REINIT_DNS)) {
         dupCCB->SRVhandle = NULL;
         dupCCB->ObpSRVhandle = NULL;
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Reiniting DNS fields in duped ccb\n", 
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Reiniting DNS fields in duped ccb\n",
             DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
     } else {
         //TBD
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Not reiniting DNS fields in duped ccb\n", 
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Not reiniting DNS fields in duped ccb\n",
             DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
     }
 
@@ -11648,12 +11613,12 @@ create_dupCCB (ccsipCCB_t *origCCB, int dup_flags)
         sip_util_get_new_call_id(dupCCB);
         sstrncpy(dupCCB->sipCallID, outOfDialogPrefix,
                 sizeof(dupCCB->sipCallID));
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Using new Call-ID for OutofDialog ccb\n", 
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Using new Call-ID for OutofDialog ccb\n",
             DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
     } else {
         dupCCB->record_route_info =
             sippmh_copy_record_route(origCCB->record_route_info);
-        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Copied mother CCB's route set.\n", 
+        CCSIP_DEBUG_STATE(DEB_F_PREFIX"Copied mother CCB's route set.\n",
             DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
     }
 
@@ -11750,7 +11715,7 @@ create_dupCCB (ccsipCCB_t *origCCB, int dup_flags)
     return dupCCB;
 }
 
-void 
+void
 ccsip_handle_sent_ood_refer_ev_sip_1xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 {
     const char *fname = "ccsip_handle_sent_ood_refer_ev_sip_1xx";
@@ -11763,7 +11728,7 @@ ccsip_handle_sent_ood_refer_ev_sip_1xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
     ccsip_handle_sentinvite_ev_sip_1xx(ccb, event);
 }
 
-void 
+void
 ccsip_handle_sent_ood_refer_ev_sip_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 {
     const char *fname = "ccsip_handle_sent_ood_refer_ev_sip_2xx";
@@ -11777,7 +11742,7 @@ ccsip_handle_sent_ood_refer_ev_sip_2xx (ccsipCCB_t *ccb, sipSMEvent_t *event)
     sip_sm_call_cleanup(ccb);
 }
 
-void 
+void
 ccsip_handle_sent_ood_refer_ev_sip_fxx (ccsipCCB_t *ccb, sipSMEvent_t *event)
 {
     const char *fname = "ccsip_handle_sent_ood_refer_ev_sip_fxx";
@@ -12033,12 +11998,12 @@ ccsip_get_join_info (ccsipCCB_t *ccb, sipMessage_t *request)
             /* OK to continue to send CC_MSG_SETUP because DCSM will hold CC_FEATURE_JOIN until */
             /* DEF is in the CONNECTED state to process the JOIN msg.                           */
         }
-        
+
 		ff_check = cpr_strcasecmp(join_ccb->sip_from_tag, ccb->join_info->from_tag);
 		ft_check = cpr_strcasecmp(join_ccb->sip_from_tag, ccb->join_info->to_tag);
 		tt_check = cpr_strcasecmp(join_ccb->sip_to_tag, ccb->join_info->to_tag);
 		tf_check = cpr_strcasecmp(join_ccb->sip_to_tag, ccb->join_info->from_tag);
-		
+
 		// In this issue, the correct match is to match F/F and T/T, or to match F/T and T/F.
 		// All other cases are error.
 		// So, (ff_check==0 && tt_check==0) || (ft_check==0 && tf_check==0) is the correct match
@@ -12282,7 +12247,7 @@ ccsip_handle_cc_hook_event (sipSMEvent_t *sip_sm_event)
     }
     if (sip_regmgr_get_cc_mode(line_number) != REG_MODE_CCM) {
         /* this is not CCM environment */
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Exiting Not CCM mode\n", 
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"Exiting Not CCM mode\n",
             DEB_F_PREFIX_ARGS(SIP_CALL_STATUS, fname));
         return TRUE;
     }

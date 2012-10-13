@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "cpr_types.h"
 #include "cpr_stdlib.h"
@@ -448,7 +413,7 @@ fsmcnf_free_cb (fim_icb_t *icb, callid_t call_id)
 /**
  *
  * Cancel conference feature by sending cancel event to SIP stack.
- * This routine is used in roundtable phone. 
+ * This routine is used in roundtable phone.
  *
  * Copied and pasted from fsmb2bcnf_feature_cancel().
  * See also fsmxfr_feature_cancel().
@@ -460,7 +425,7 @@ fsmcnf_free_cb (fim_icb_t *icb, callid_t call_id)
  * @pre     (none)
  */
 void
-fsmcnf_feature_cancel (fsmcnf_ccb_t *ccb, line_t line, callid_t call_id, 
+fsmcnf_feature_cancel (fsmcnf_ccb_t *ccb, line_t line, callid_t call_id,
                           callid_t target_call_id)
 {
     cc_feature_data_t data;
@@ -474,7 +439,7 @@ fsmcnf_feature_cancel (fsmcnf_ccb_t *ccb, line_t line, callid_t call_id,
     if (/*(cause == CC_SK_EVT_TYPE_EXPLI) && */
         (fcb_def != NULL) && ((fcb_def->dcb->selected == FALSE) &&
             ((fcb_def->state == FSMDEF_S_OUTGOING_ALERTING) ||
-            ((fcb_def->state == FSMDEF_S_CONNECTED) && 
+            ((fcb_def->state == FSMDEF_S_CONNECTED) &&
             (fcb_def->dcb->spoof_ringout_requested == TRUE) &&
             (fcb_def->dcb->spoof_ringout_applied == TRUE))))) {
 
@@ -487,7 +452,7 @@ fsmcnf_feature_cancel (fsmcnf_ccb_t *ccb, line_t line, callid_t call_id,
     if (/* (cause == CC_SK_EVT_TYPE_EXPLI) && */
         (fcb_def != NULL) && ((fcb_def->dcb->selected == FALSE) &&
             ((fcb_def->state == FSMDEF_S_OUTGOING_ALERTING) ||
-            ((fcb_def->state == FSMDEF_S_CONNECTED) && 
+            ((fcb_def->state == FSMDEF_S_CONNECTED) &&
             (fcb_def->dcb->spoof_ringout_requested == TRUE) &&
             (fcb_def->dcb->spoof_ringout_applied == TRUE))))) {
 
@@ -531,7 +496,7 @@ fsmcnf_ev_idle_setup (sm_event_t *event)
         return (SM_RC_DEF_CONT);
     }
 
-    /* This new call is part of a conference */ 
+    /* This new call is part of a conference */
     fcb->ccb = ccb;           /* attach ccb to the new call chain */
     fsm_change_state(fcb, __LINE__, FSMCNF_S_CNFING);
 
@@ -580,7 +545,7 @@ fsmcnf_ev_idle_feature (sm_event_t *event)
              * call_id in the data then terminate the existing consulatative
              * call and link that to another call.
             */
-            if (feat_data && msg->data_valid && 
+            if (feat_data && msg->data_valid &&
                 (feat_data->cnf.target_call_id != CC_NO_CALL_ID)
                 && (cns_fcb = fsm_get_fcb_by_call_id_and_type(feat_data->cnf.target_call_id,
                             FSM_TYPE_CNF)) != NULL) {
@@ -833,7 +798,7 @@ fsmcnf_ev_idle_feature (sm_event_t *event)
                     ((fcb_def->state != FSMDEF_S_CONNECTED) &&
                      (fcb_def->state != FSMDEF_S_RESUME_PENDING))) {
                     FSM_DEBUG_SM(DEB_L_C_F_PREFIX"Join target \
-                            call is not at connected state\n", 
+                            call is not at connected state\n",
                             DEB_L_C_F_PREFIX_ARGS(FSM, line, call_id, fname));
                     break;
                 }
@@ -1011,7 +976,7 @@ fsmcnf_update_release (sm_event_t *event)
                                                         FSM_TYPE_B2BCNF);
                 xfr_fcb = fsm_get_fcb_by_call_id_and_type(other_call_id,
                                                         FSM_TYPE_XFR);
-                if ((b2bcnf_fcb != NULL && b2bcnf_fcb->b2bccb == NULL)  && 
+                if ((b2bcnf_fcb != NULL && b2bcnf_fcb->b2bccb == NULL)  &&
                         (xfr_fcb != NULL && xfr_fcb->xcb == NULL)) {
                     cc_call_attribute(other_call_id, other_fcb->dcb->line, NORMAL_CALL);
                 }
@@ -1109,7 +1074,7 @@ fsmcnf_ev_cnfing_feature (sm_event_t *event)
             }
             /*
              * The answer to the a setup with replaced we have received.
-             * The setup with replaced is automatically answered 
+             * The setup with replaced is automatically answered
              * by xfer state machine as UI source (simulate user pressing
              * the answer key).
              *
@@ -1142,7 +1107,7 @@ fsmcnf_ev_cnfing_feature (sm_event_t *event)
             other_call_id = fsmcnf_get_other_call_id(ccb, call_id);
             other_dcb = fsm_get_dcb(other_call_id);
 
-            /* 
+            /*
              * Since we are resuming the other leg, allocate the src_sdp
              * because src_sdp was freed and set to null when this other-leg
              * was put on hold.
@@ -1164,7 +1129,7 @@ fsmcnf_ev_cnfing_feature (sm_event_t *event)
             if (other_fcb && other_fcb->state == FSMDEF_S_HOLDING) {
 
                 other_dcb->session = LOCAL_CONF;
-                
+
                 cc_int_feature(CC_SRC_GSM, CC_SRC_GSM, other_dcb->call_id,
                            other_dcb->line, CC_FEATURE_RESUME, &data);
 
@@ -1205,8 +1170,8 @@ fsmcnf_ev_cnfing_feature (sm_event_t *event)
                 feat_data->hold.call_info.data.hold_resume_reason != CC_REASON_CONF &&
                 feat_data->hold.call_info.data.hold_resume_reason != CC_REASON_INTERNAL)) {
                 sm_rc = SM_RC_END;
-                DEF_DEBUG(DEB_F_PREFIX"Invoke hold call_id = %d t_call_id=%d\n", 
-                            DEB_F_PREFIX_ARGS(GSM, fname), ccb->cnf_call_id, ccb->cns_call_id); 
+                DEF_DEBUG(DEB_F_PREFIX"Invoke hold call_id = %d t_call_id=%d\n",
+                            DEB_F_PREFIX_ARGS(GSM, fname), ccb->cnf_call_id, ccb->cns_call_id);
                 //Actual hold to this call, so break the feature layer.
                 ui_terminate_feature(dcb->line, ccb->cnf_call_id, ccb->cns_call_id);
 
@@ -1270,11 +1235,11 @@ fsmcnf_ev_cnfed_release (sm_event_t *event)
     fsm_fcb_t        *other_fcb;
     cc_causes_t       cause;
 
-    /* Conference is not active any more, clear that flag 
+    /* Conference is not active any more, clear that flag
     */
     ccb->active  = FALSE;
-    
-    if( ccb->flags & JOINED ){ 
+
+    if( ccb->flags & JOINED ){
         other_call_id = fsmcnf_get_other_call_id(ccb, call_id);
         if(other_call_id != CC_NO_CALL_ID ){
             fsm_fcb_t       *b2bcnf_fcb, *xfr_fcb;
@@ -1282,7 +1247,7 @@ fsmcnf_ev_cnfed_release (sm_event_t *event)
                                                         FSM_TYPE_B2BCNF);
             xfr_fcb = fsm_get_fcb_by_call_id_and_type(other_call_id,
                                                         FSM_TYPE_XFR);
-            if ((b2bcnf_fcb != NULL && b2bcnf_fcb->b2bccb == NULL)  && 
+            if ((b2bcnf_fcb != NULL && b2bcnf_fcb->b2bccb == NULL)  &&
                         (xfr_fcb != NULL && xfr_fcb->xcb == NULL)) {
                 cc_call_attribute(other_call_id, dcb->line, NORMAL_CALL);
             }
@@ -1338,7 +1303,7 @@ fsmcnf_ev_cnfed_release (sm_event_t *event)
 
         if (other_fcb != NULL) {
             other_fcb->ccb = ccb;
-        
+
             fsm_change_state(other_fcb, __LINE__, FSMCNF_S_CNFED);
 
             action_data.update_ui.action = CC_UPDATE_CONF_ACTIVE;
@@ -1404,7 +1369,7 @@ fsmcnf_ev_cnfed_feature (sm_event_t *event)
              * to end the call.
              */
             config_get_value(CFGID_CNF_JOIN_ENABLE, &join, sizeof(join));
-            if (((ccb->bridged == TRUE) && (join) && !(ccb->flags & JOINED)) || 
+            if (((ccb->bridged == TRUE) && (join) && !(ccb->flags & JOINED)) ||
                 ((ccb->bridged == TRUE) && (ccb->flags & XFER))) {
 
                 fsmcnf_cnf_xfer(ccb);
@@ -1478,7 +1443,7 @@ fsmcnf_ev_cnfed_feature (sm_event_t *event)
 
     case CC_SRC_SIP:
         switch (ftr_id) {
-        case CC_FEATURE_CALLINFO:    
+        case CC_FEATURE_CALLINFO:
             if ((ccb->flags & JOINED) &&
                 (call_id == ccb->cns_call_id)) {
                 /*
@@ -1486,7 +1451,7 @@ fsmcnf_ev_cnfed_feature (sm_event_t *event)
                  * info event that came for the virtual bubble
                  */
                 return (SM_RC_END);
-            } 
+            }
             fsm_sm_ignore_ftr(fcb, __LINE__, ftr_id);
             break;
 
@@ -1513,7 +1478,7 @@ fsmcnf_ev_cnfed_feature (sm_event_t *event)
                     fsmcnf_update_cnf_context(ccb, call_id,
                                               msg->data.xfer.target_call_id);
                     /* Drop this call from conferenced */
-                    fsmcnf_cleanup(fcb, __LINE__, FALSE); 
+                    fsmcnf_cleanup(fcb, __LINE__, FALSE);
                 } else {
                     fsm_sm_ignore_ftr(fcb, __LINE__, ftr_id);
                 }
@@ -1525,7 +1490,7 @@ fsmcnf_ev_cnfed_feature (sm_event_t *event)
             }
             break;
 
-        default:    
+        default:
             fsm_sm_ignore_ftr(fcb, __LINE__, ftr_id);
             break;
         }
@@ -1647,7 +1612,7 @@ fsmcnf_ev_cnfed_onhook (sm_event_t *event)
      * flag to dcb of cns_call_id to know of the event,
      * and vice versa. We do not want to process more than
      * one onhook for calls in a conf call. Note that this is
-     * needed because when in Speaker mode, onhook event is 
+     * needed because when in Speaker mode, onhook event is
      * sent to each call_id in active state.
      */
     if (fcb->call_id == ccb->cnf_call_id) {

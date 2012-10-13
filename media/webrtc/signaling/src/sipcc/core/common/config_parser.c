@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stdio.h>
 #include "cc_constants.h"
@@ -70,7 +35,7 @@
 #define ID_BLOCK_PREF3   3
 /*
  * File location is hardcoded for getting mac and IP addr
- */ 
+ */
 #define IP_ADDR_FILE  "/sdcard/myip.txt"
 static char autoreg_name[MAX_LINE_NAME_SIZE];
 
@@ -196,7 +161,7 @@ boolean is_cfgid_in_restart_list(int cfgid) {
 void compare_or_set_byte_value(int cfgid, unsigned char value, const unsigned char * config_name) {
     int temp_value ;
     const var_t *entry;
-    if (apply_config == TRUE) { 
+    if (apply_config == TRUE) {
         if (is_cfgid_in_restart_list(cfgid) == TRUE) {
             config_get_value(cfgid, &temp_value, sizeof(temp_value));
             if (((int)value) !=  temp_value) {
@@ -218,7 +183,7 @@ void compare_or_set_byte_value(int cfgid, unsigned char value, const unsigned ch
 void compare_or_set_boolean_value(int cfgid, cc_boolean value, const unsigned char * config_name) {
     int temp_value ;
     const var_t *entry;
-    if (apply_config == TRUE) { 
+    if (apply_config == TRUE) {
         if (is_cfgid_in_restart_list(cfgid) == TRUE) {
             config_get_value(cfgid, &temp_value, sizeof(temp_value));
             if (((int)value) !=  temp_value) {
@@ -240,7 +205,7 @@ void compare_or_set_boolean_value(int cfgid, cc_boolean value, const unsigned ch
 void compare_or_set_int_value(int cfgid, int value, const unsigned char * config_name) {
     int temp_value;
     const var_t *entry;
-    if (apply_config == TRUE) { 
+    if (apply_config == TRUE) {
         if (is_cfgid_in_restart_list(cfgid) == TRUE) {
             config_get_value(cfgid, &temp_value, sizeof(temp_value));
             if (value !=  temp_value) {
@@ -263,7 +228,7 @@ void compare_or_set_int_value(int cfgid, int value, const unsigned char * config
 void compare_or_set_string_value (int cfgid, const char* value, const unsigned char * config_name) {
     static char temp_value[MAX_SIP_URL_LENGTH];
     const var_t *entry;
-    if (apply_config == TRUE ) { 
+    if (apply_config == TRUE ) {
         if (is_cfgid_in_restart_list(cfgid) == TRUE) {
             config_get_string(cfgid, temp_value, MAX_SIP_URL_LENGTH);
             if (strcmp(value, temp_value) != 0) {
@@ -324,7 +289,7 @@ void config_set_autoreg_properties ()
 void update_security_mode_and_ports(void) {
         sec_level_t sec_level = NON_SECURE;
 
-    // convert security mode (from UCM xml) into internal enum        
+    // convert security mode (from UCM xml) into internal enum
     switch (security_mode)
     {
        case 1:  sec_level = NON_SECURE; break;
@@ -334,14 +299,14 @@ void update_security_mode_and_ports(void) {
           CONFIG_ERROR(CFG_F_PREFIX "unable to translate securite mode [%d]\n", "update_security_mode_and_ports", (int)security_mode);
           break;
         }
-                                
+
 	compare_or_set_int_value(CFGID_CCM1_SEC_LEVEL, sec_level,
 							 (const unsigned char *)"deviceSecurityMode");
 	compare_or_set_int_value(CFGID_CCM2_SEC_LEVEL, sec_level,
 							 (const unsigned char *)"deviceSecurityMode");
 	compare_or_set_int_value(CFGID_CCM3_SEC_LEVEL, sec_level,
 							 (const unsigned char *)"deviceSecurityMode");
-                                                                                
+
 	if (sec_level == NON_SECURE) {
 		compare_or_set_int_value(CFGID_CCM1_SIP_PORT, sip_port[0],
 								 (const unsigned char *)"ccm1_sip_port");
@@ -367,7 +332,7 @@ void update_security_mode_and_ports(void) {
 /*
  * config_get_mac_addr
  *
- * Get the filename that has the mac address and parse the string 
+ * Get the filename that has the mac address and parse the string
  * convert it into an mac address stored in the bytearray maddr
 */
 void config_get_mac_addr (char *maddr)
@@ -388,7 +353,7 @@ void config_set_ccm_ip_mac ()
     compare_or_set_int_value(CFGID_SPEAKER_ENABLED, 1, (const unsigned char *) "speakerEnabled");
 
     if (apply_config == FALSE) {
-        config_get_mac_addr(macaddr);     
+        config_get_mac_addr(macaddr);
 
         CONFIG_DEBUG(CFG_F_PREFIX ": MAC Address IS:  %x:%x:%x:%x:%x:%x  \n",
                           "config_get_mac_addr", macaddr[0], macaddr[1],
@@ -476,7 +441,7 @@ void config_setup_elements (const char *sipUser, const char *sipPassword, const 
     compare_or_set_int_value(CFGID_DSCP_VIDEO, gDscpVideo, (const unsigned char *) "dscpVideo");
     compare_or_set_int_value(CFGID_INTER_DIGIT_TIMER, gT302Timer, (const unsigned char *) "T302Timer");
 
-    // TODO(emannion): You had line=1; line<= .... 
+    // TODO(emannion): You had line=1; line<= ....
     // Debugging suggests that alghouth *line* is 1-indexed, the config entries
     // are 1-indexed. See. config_get_line_id().
     // You may want to rewrite this in terms of config_get_line_id().

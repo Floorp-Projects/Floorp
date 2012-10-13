@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
  *
@@ -43,7 +8,7 @@
  *  @brief CPR layer for Timers.
  *
  *     This file contains the Cisco Portable Runtime layer for non-blocking
- *     timers. This implementation is for the Linux operating system using 
+ *     timers. This implementation is for the Linux operating system using
  *     select with a timeout.
  *
  *     Timer Service runs in its own thread and blocks on select
@@ -104,7 +69,7 @@
  *--------------------------------------------------------------------------
  */
 
-typedef struct timer_ipc_cmd_s 
+typedef struct timer_ipc_cmd_s
 {
     void * timer_ptr;
     void * user_data_ptr;
@@ -115,7 +80,7 @@ typedef struct timer_ipc_cmd_s
 typedef struct timer_ipc_s
 {
     uint32_t  msg_type;
-    union 
+    union
     {
         timer_ipc_cmd_t cmd;
         cprRC_t         result;
@@ -211,7 +176,7 @@ static void     send_api_result(cprRC_t result, struct sockaddr_un *addr, sockle
  */
 
 /**
- * cprSleep 
+ * cprSleep
  *
  * @brief Suspend the calling thread
  * The cprSleep function blocks the calling thread for the indicated number of
@@ -239,7 +204,7 @@ cprSleep (uint32_t duration)
 /**
   * @}
   */
-        
+
 /**
  * @defgroup TimerInternal The Timer internal functions
  * @ingroup Timers
@@ -258,7 +223,7 @@ cprSleep (uint32_t duration)
  * @param[in] data         - opaque data
  * @return  - CPR_SUCCESS or CPR_FAILURE
  */
-static cprRC_t addTimerToList (cpr_timer_t *cprTimerPtr, uint32_t duration, void *data) 
+static cprRC_t addTimerToList (cpr_timer_t *cprTimerPtr, uint32_t duration, void *data)
 {
     // TODO(ekr@rtfm.com): Put this back in when you figure out why it causes crashes
     return CPR_SUCCESS;
@@ -267,10 +232,10 @@ static cprRC_t addTimerToList (cpr_timer_t *cprTimerPtr, uint32_t duration, void
     static const char fname[] = "addTimerToList";
     timer_ipc_t tmr_cmd = {0};
     timer_ipc_t tmr_rsp={0};
-    
+
 
     API_ENTER();
-    
+
     CPR_INFO("%s: cprTimerptr=0x%x dur=%d user_data=%p\n",
              fname, cprTimerPtr, duration, data);
     tmr_cmd.msg_type = TMR_CMD_ADD;
@@ -287,7 +252,7 @@ static cprRC_t addTimerToList (cpr_timer_t *cprTimerPtr, uint32_t duration, void
                    strerror(errno), fname);
             API_RETURN(CPR_FAILURE);
         }
-        
+
     } else {
         CPR_ERROR("can not make IPC connection, client_sock is invalid %s\n", fname);
         API_RETURN(CPR_FAILURE);
@@ -338,7 +303,7 @@ static cprRC_t addTimer (cpr_timer_t *cprTimerPtr, uint32_t duration, void *data
         CPR_ERROR("%s - Timer %s has not been initialized.\n",
                   fname, cprTimerPtr->name);
         errno = EINVAL;
-        
+
         return(CPR_FAILURE);
     }
 
@@ -347,7 +312,7 @@ static cprRC_t addTimer (cpr_timer_t *cprTimerPtr, uint32_t duration, void *data
         CPR_ERROR("%s - Timer %s is already active.\n", fname, cprTimerPtr->name);
         errno = EAGAIN;
         return(CPR_FAILURE);
-        
+
     }
 
     /* Sanity tests passed, store the data the application passed in */
@@ -364,7 +329,7 @@ static cprRC_t addTimer (cpr_timer_t *cprTimerPtr, uint32_t duration, void *data
      * when the timer before them expires and when the newly
      * inserted timer expires.
      */
-    
+
     /* Check for insertion into an empty list */
     if (timerListHead == NULL) {
         //CPR_INFO("no timer in the list case..\n");
@@ -374,7 +339,7 @@ static cprRC_t addTimer (cpr_timer_t *cprTimerPtr, uint32_t duration, void *data
 	/* Insert timer into list */
         timerList = timerListHead;
         while (timerList != NULL) {
-            
+
             /*
              * If the duration on this new timer are less than the
              * timer in the list, insert this new timer before
@@ -447,14 +412,14 @@ removeTimerFromList (cpr_timer_t *cprTimerPtr)
     static const char fname[] = "removeTimerFromList";
     timer_ipc_t tmr_cmd = {0};
     timer_ipc_t tmr_rsp = {0};
-    
+
 
     API_ENTER();
-    
-    //CPR_INFO("%s:remove timer from list=0x%x\n",fname, cprTimerPtr); 
+
+    //CPR_INFO("%s:remove timer from list=0x%x\n",fname, cprTimerPtr);
     tmr_cmd.msg_type = TMR_CMD_REMOVE;
     tmr_cmd.u.cmd.timer_ptr = cprTimerPtr;
-  
+
     //CPR_INFO("sending messge of type=%d\n", tmr_cmd.msg_type);
 
     /* simply post a request here to the timer service.. */
@@ -469,12 +434,12 @@ removeTimerFromList (cpr_timer_t *cprTimerPtr)
         CPR_ERROR("%s:client_sock invalid, no IPC connection \n", fname);
         API_RETURN(CPR_FAILURE);
     }
-  
+
     /*
      * wait for the timer service to excute the request
      * so that we get result of operation
      */
-    
+
     if (recvfrom(client_sock, &tmr_rsp, sizeof(timer_ipc_t),0, NULL, NULL) < 0) {
         //CPR_INFO("error in recving the result error=%s\n", strerror(errno));
         API_RETURN(CPR_FAILURE);
@@ -505,7 +470,7 @@ removeTimer (cpr_timer_t *cprTimerPtr)
     timerBlk *timerPtr;
 
     //CPR_INFO("removing timer..0x%x\n", cprTimerPtr);
-    
+
     /*
      * No need to sanitize the cprTimerPtr data as only
      * internal CPR functions call us and they have already
@@ -515,7 +480,7 @@ removeTimer (cpr_timer_t *cprTimerPtr)
      */
     timerPtr = (timerBlk *) cprTimerPtr->u.handlePtr;
     //CPR_INFO("%s: timer ptr=%x\n", fname, timerPtr);
-    
+
     if (timerPtr != NULL) {
         /* Walk the list looking for this timer to cancel. */
         timerList = timerListHead;
@@ -558,9 +523,9 @@ removeTimer (cpr_timer_t *cprTimerPtr)
                 timerList->duration = -1;
                 timerList->timerActive = FALSE;
                 cprTimerPtr->data = NULL;
-                
+
                 return(CPR_SUCCESS);
-                
+
             }
 
             /* Walk the list */
@@ -582,16 +547,16 @@ removeTimer (cpr_timer_t *cprTimerPtr)
         timerPtr->duration = -1;
         timerPtr->cprTimerPtr->data = NULL;
         timerPtr->timerActive = FALSE;
-        
+
         return(CPR_SUCCESS);
-        
+
     }
 
     /* Bad application! */
     CPR_ERROR("%s - Timer not initialized.\n", fname);
     errno = EINVAL;
     return(CPR_FAILURE);
-    
+
 }
 
 /**
@@ -605,12 +570,12 @@ removeTimer (cpr_timer_t *cprTimerPtr)
  * cprCreateTimer
  *
  * @brief Initialize a timer
- * 
+ *
  * The cprCreateTimer function is called to allow the OS to perform whatever
  * work is needed to create a timer. The input name parameter is optional. If present, CPR assigns
  * this name to the timer to assist in debugging. The callbackMsgQueue is the
  * address of a message queue created with cprCreateMsgQueue. This is the
- * queue where the timer expire message will be sent. 
+ * queue where the timer expire message will be sent.
  * So, when this timer expires a msg of type "applicationMsgId" will be sent to the msg queue
  * "callbackMsgQueue" indicating that timer applicationTimerId has expired.
  *
@@ -683,7 +648,7 @@ cprCreateTimer (const char *name,
         timerPtr->cprTimerPtr = cprTimerPtr;
         cprTimerPtr->u.handlePtr = timerPtr;
         //CPR_INFO("cprTimerCreate: timer_t=%x blk=%x\n",cprTimerPtr, timerPtr);
-        
+
         return cprTimerPtr;
     }
 
@@ -762,7 +727,7 @@ cprIsTimerRunning (cprTimer_t timer)
     timerBlk *timerPtr;
 
     //CPR_INFO("istimerrunning(): timer=0x%x\n", timer);
-    
+
     cprTimerPtr = (cpr_timer_t *) timer;
     if (cprTimerPtr != NULL) {
         timerPtr = (timerBlk *) cprTimerPtr->u.handlePtr;
@@ -807,7 +772,7 @@ cprCancelTimer (cprTimer_t timer)
     cprRC_t rc = CPR_SUCCESS;
 
     //CPR_INFO("cprCancelTimer: timer ptr=%x\n", timer);
-    
+
     cprTimerPtr = (cpr_timer_t *) timer;
     if (cprTimerPtr != NULL) {
         timerPtr = (timerBlk *) cprTimerPtr->u.handlePtr;
@@ -885,9 +850,9 @@ cprUpdateTimer (cprTimer_t timer, uint32_t duration)
 /**
  * cprDestroyTimer
  *
- * @brief Destroys a timer. 
+ * @brief Destroys a timer.
  *
- * This function will cancel the timer and then destroy it. It sets 
+ * This function will cancel the timer and then destroy it. It sets
  * all links to NULL and then frees the timer block.
  *
  * @param[in] timer - which timer to destroy
@@ -902,7 +867,7 @@ cprDestroyTimer (cprTimer_t timer)
     cprRC_t rc;
 
     //CPR_INFO("cprDestroyTimer:destroying timer=%x\n", timer);
-    
+
     cprTimerPtr = (cpr_timer_t *) timer;
     if (cprTimerPtr != NULL) {
         rc = cprCancelTimer(timer);
@@ -942,7 +907,7 @@ cprRC_t cpr_timer_pre_init (void)
 {
     static const char fname[] = "cpr_timer_pre_init";
     int32_t returnCode;
-    
+
     /* start the timer service first */
     returnCode = (int32_t)pthread_create(&timerThreadId, NULL, timerThread, NULL);
     if (returnCode == -1) {
@@ -955,7 +920,7 @@ cprRC_t cpr_timer_pre_init (void)
      * TBD:we should really implement wait on timerthread using condvar.
      */
     cprSleep(1000);
-    
+
     return CPR_SUCCESS;
 }
 
@@ -972,8 +937,8 @@ cprRC_t cpr_timer_de_init(void)
     // close all sockets..
     close(client_sock);
     close(serv_sock);
-    
-    
+
+
     // destroy api mutex
     pthread_mutex_destroy(&api_mutex);
 
@@ -996,10 +961,10 @@ cprRC_t cpr_timer_de_init(void)
  *
  * @return  This function eventually starts an infinite loop on a "select".
  */
-void *timerThread (void *data) 
+void *timerThread (void *data)
 {
     static const char fname[] = "timerThread";
-    
+
     //CPR_INFO("timerThread:started..\n");
 #ifndef HOST
 #ifndef PTHREAD_SET_NAME
@@ -1021,7 +986,7 @@ void *timerThread (void *data)
     if (start_timer_service_loop() == CPR_FAILURE) {
         CPR_ERROR("%s: timer service loop failed\n", fname);
     }
-    
+
     return NULL;
 }
 
@@ -1061,7 +1026,7 @@ static int select_sockets (void)
     FD_ZERO(&socks);
 
     FD_SET(serv_sock, &socks);
-    
+
     return (serv_sock);
 }
 
@@ -1079,29 +1044,29 @@ static cprRC_t read_timer_cmd ()
     int  rcvlen;
     timer_ipc_t tmr_cmd ={0};
     cprRC_t ret = CPR_FAILURE;
-    
 
-    
+
+
     rcvlen =recvfrom(serv_sock, &tmr_cmd, sizeof(timer_ipc_t), 0,
                      NULL, NULL);
-    
+
     if (rcvlen > 0) {
         //CPR_INFO("got message type=%d\n", tmr_cmd.msg_type);
         switch(tmr_cmd.msg_type) {
 	case TMR_CMD_ADD:
-            //CPR_INFO("request to add timer ptr=%x duration=%d datptr=%x\n", 
+            //CPR_INFO("request to add timer ptr=%x duration=%d datptr=%x\n",
             //       tmr_cmd.u.cmd.timer_ptr, tmr_cmd.u.cmd.duration, tmr_cmd.u.cmd.user_data_ptr);
-	  
+
             ret = addTimer((cpr_timer_t *)tmr_cmd.u.cmd.timer_ptr,tmr_cmd.u.cmd.duration,
               tmr_cmd.u.cmd.user_data_ptr);
 
             break;
-            
+
 	case TMR_CMD_REMOVE:
             //CPR_INFO("request to remove timer ptr=%x\n", tmr_cmd.u.cmd.timer_ptr);
             ret = removeTimer((cpr_timer_t *)tmr_cmd.u.cmd.timer_ptr);
             break;
-            
+
         default:
             CPR_ERROR("%s:invalid ipc command = %d\n", tmr_cmd.msg_type);
             ret = CPR_FAILURE;
@@ -1117,9 +1082,9 @@ static cprRC_t read_timer_cmd ()
 
     /* send the result back */
     send_api_result(ret, &tmr_client_addr, sizeof(tmr_client_addr));
-    
+
     return (ret);
-    
+
 }
 
 /**
@@ -1132,7 +1097,7 @@ void send_api_result(cprRC_t retVal, struct sockaddr_un *addr, socklen_t len)
 {
     static const char fname[] = "send_api_result";
     timer_ipc_t tmr_rsp = {0};
-    
+
     tmr_rsp.msg_type = TMR_RESULT;
     tmr_rsp.u.result = retVal;
     if (sendto(serv_sock, &tmr_rsp, sizeof(timer_ipc_t),0, (struct sockaddr *)addr, len) < 0) {
@@ -1161,11 +1126,11 @@ cprRC_t start_timer_service_loop (void)
     memset(&tmr_serv_addr, 0, sizeof(tmr_serv_addr));
     tmr_serv_addr.sun_family = AF_UNIX;
     snprintf(tmr_serv_addr.sun_path, sizeof(tmr_serv_addr.sun_path), "%s_%d",SERVER_PATH, getpid());
-    
+
     memset(&tmr_client_addr, 0, sizeof(tmr_client_addr));
     tmr_client_addr.sun_family = AF_UNIX;
     snprintf(tmr_client_addr.sun_path, sizeof(tmr_client_addr.sun_path), "%s_%d",CLIENT_PATH, getpid());
-    
+
     /*
      * init mutex and cond var.
      * these are used for making API synchronous etc..
@@ -1175,8 +1140,8 @@ cprRC_t start_timer_service_loop (void)
                   strerror(errno));
         return CPR_FAILURE;
     }
-    
-     
+
+
     /* open a unix datagram socket for client library */
     client_sock = socket(AF_UNIX, SOCK_DGRAM, 0);
     if (client_sock == INVALID_SOCKET) {
@@ -1220,7 +1185,7 @@ cprRC_t start_timer_service_loop (void)
             tv.tv_sec = (timerListHead->duration)/1000;
             tv.tv_usec = (timerListHead->duration%1000)*1000;
             //CPR_INFO("%s:time duration on head =%d sec:%d usec (or %d msec)\n",
-            //       fname, tv.tv_sec, tv.tv_usec, 
+            //       fname, tv.tv_sec, tv.tv_usec,
             //       timerListHead->duration);
             use_timeout = TRUE;
 	} else {
@@ -1230,7 +1195,7 @@ cprRC_t start_timer_service_loop (void)
 	}
 
         ret = select(lsock + 1, &socks, NULL, NULL, (use_timeout == TRUE) ? &tv:NULL);
-        
+
         if (ret == -1) {
             CPR_ERROR("%s:error in select err=%s\n", fname,
                       strerror(errno));
@@ -1242,7 +1207,7 @@ cprRC_t start_timer_service_loop (void)
             timerListHead->duration = 0;
             process_expired_timers();
         } else {
-            
+
             if (FD_ISSET(serv_sock, &socks)) {
                 //CPR_INFO("Got something on serv_sock..\n");
                 /* first reduce the duration of the head by current run time */
@@ -1252,7 +1217,7 @@ cprRC_t start_timer_service_loop (void)
                     //       timerListHead->duration);
                     /* set the head with the remaining duration(tv) as indicated by select */
                     timerListHead->duration = tv.tv_sec * 1000 + (tv.tv_usec/1000);
-                }  
+                }
                 /* read the ipc message to remove or add a timer */
                 (void) read_timer_cmd();
             }
@@ -1264,7 +1229,7 @@ cprRC_t start_timer_service_loop (void)
 /**
  *
  * Process the timers expired. Generally this is called when head timer
- * has expired. 
+ * has expired.
  * @note we need to process the list as there could be
  * other timers too in the list which have expired.
  *
@@ -1284,7 +1249,7 @@ void process_expired_timers() {
     if (timerListHead->duration > 0) {
         return;
     }
-    
+
 
     /* There are one or more expired timers on the list */
     processingTimers = TRUE;
@@ -1301,7 +1266,7 @@ void process_expired_timers() {
                         timerListHead->cprTimerPtr->name;
                     //CPR_INFO("%s: timer %s expired..\n",fname,
                     //       timerMsg->expiredTimerName);
-                    
+
                     timerMsg->expiredTimerId =
                         timerListHead->cprTimerPtr->applicationTimerId;
                     timerMsg->usrData =

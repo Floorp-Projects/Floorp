@@ -180,9 +180,8 @@ DataStruct::ReadCache(nsISupports** aData, uint32_t* aDataLen)
     cacheFile->GetFileSize(&fileSize);
     if (fileSize > max32)
       return NS_ERROR_OUT_OF_MEMORY;
-    uint32_t size;
-    LL_L2UI(size, fileSize);
 
+    uint32_t size = uint32_t(fileSize);
     // create new memory for the large clipboard data
     nsAutoArrayPtr<char> data(new char[size]);
     if ( !data )
