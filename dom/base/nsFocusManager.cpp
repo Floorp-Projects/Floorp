@@ -324,7 +324,7 @@ nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
 
         nsINodeList* children = doc->BindingManager()->GetXBLChildNodesFor(aContent);
         if (children) {
-          nsIContent* child = children->GetNodeAt(0);
+          nsIContent* child = children->Item(0);
           if (child && child->Tag() == nsGkAtoms::slider)
             return child;
         }

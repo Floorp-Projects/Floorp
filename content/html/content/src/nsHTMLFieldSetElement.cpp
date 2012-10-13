@@ -99,7 +99,7 @@ nsHTMLFieldSetElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 
     uint32_t length = mElements->Length(true);
     for (uint32_t i=0; i<length; ++i) {
-      static_cast<nsGenericHTMLFormElement*>(mElements->GetNodeAt(i))
+      static_cast<nsGenericHTMLFormElement*>(mElements->Item(i))
         ->FieldSetDisabledChanged(aNotify);
     }
   }
@@ -230,7 +230,7 @@ nsHTMLFieldSetElement::NotifyElementsForFirstLegendChange(bool aNotify)
 
   uint32_t length = mElements->Length(true);
   for (uint32_t i = 0; i < length; ++i) {
-    static_cast<nsGenericHTMLFormElement*>(mElements->GetNodeAt(i))
+    static_cast<nsGenericHTMLFormElement*>(mElements->Item(i))
       ->FieldSetFirstLegendChanged(aNotify);
   }
 }

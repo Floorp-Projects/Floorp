@@ -144,11 +144,11 @@ nsHTMLTableRowElement::GetRowIndex(int32_t* aValue)
   nsCOMPtr<nsIDOMHTMLCollection> rows;
   table->GetRows(getter_AddRefs(rows));
 
-  uint32_t numRows;
-  rows->GetLength(&numRows);
+  nsCOMPtr<nsIHTMLCollection> coll = do_QueryInterface(rows);
+  uint32_t numRows = coll->Length();
 
   for (uint32_t i = 0; i < numRows; i++) {
-    if (rows->GetElementAt(i) == this) {
+    if (coll->GetElementAt(i) == this) {
       *aValue = i;
       break;
     }
@@ -168,10 +168,10 @@ nsHTMLTableRowElement::GetSectionRowIndex(int32_t* aValue)
   nsCOMPtr<nsIDOMHTMLCollection> rows;
   section->GetRows(getter_AddRefs(rows));
 
-  uint32_t numRows;
-  rows->GetLength(&numRows);
+  nsCOMPtr<nsIHTMLCollection> coll = do_QueryInterface(rows);
+  uint32_t numRows = coll->Length();
   for (uint32_t i = 0; i < numRows; i++) {
-    if (rows->GetElementAt(i) == this) {
+    if (coll->GetElementAt(i) == this) {
       *aValue = i;
       break;
     }

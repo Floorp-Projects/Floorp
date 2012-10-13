@@ -422,7 +422,7 @@ nsFrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
     uint32_t length;
     list->GetLength(&length);
     for (uint32_t i = 0; i < length; ++i) {
-      nsIContent* child = list->GetNodeAt(i);
+      nsIContent* child = list->Item(i);
       if (child->GetParent() != aParentContent) {
         ClearUndisplayedContentIn(child, child->GetParent());
       }

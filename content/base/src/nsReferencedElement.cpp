@@ -71,7 +71,7 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
           anonymousChildren->GetLength(&length);
           for (uint32_t i = 0; i < length && !mElement; ++i) {
             mElement =
-              nsContentUtils::MatchElementId(anonymousChildren->GetNodeAt(i), ref);
+              nsContentUtils::MatchElementId(anonymousChildren->Item(i), ref);
           }
         }
 

@@ -5139,7 +5139,7 @@ nsDocument::GetAnonymousElementByAttribute(nsIContent* aElement,
   bool universalMatch = aAttrValue.EqualsLiteral("*");
 
   for (uint32_t i = 0; i < length; ++i) {
-    nsIContent* current = nodeList->GetNodeAt(i);
+    nsIContent* current = nodeList->Item(i);
     nsIContent* matchedElm =
       GetElementByAttribute(current, aAttrName, aAttrValue, universalMatch);
     if (matchedElm)
@@ -8113,7 +8113,7 @@ nsDocument::FindImageMap(const nsAString& aUseMapValue)
 
   uint32_t i, n = mImageMaps->Length(true);
   for (i = 0; i < n; ++i) {
-    nsIContent* map = mImageMaps->GetNodeAt(i);
+    nsIContent* map = mImageMaps->Item(i);
     if (map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, mapName,
                          eCaseMatters) ||
         map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, mapName,
