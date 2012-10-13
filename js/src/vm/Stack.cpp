@@ -827,12 +827,11 @@ StackSpace::sizeOf()
     size_t numBytes = (trustedEnd_ - base_) * sizeof(Value);
     size_t numPages = (numBytes + pageSize - 1) / pageSize;
 
-    // On Linux, mincore's third argument has type unsigned char*.  On Mac, it
-    // has type char*.
-#if defined(XP_MACOSX)
-    typedef char MincoreArgType;
-#else
+    // On Linux, mincore's third argument has type unsigned char*.
+#ifdef __linux__
     typedef unsigned char MincoreArgType;
+#else
+    typedef char MincoreArgType;
 #endif
 
     MincoreArgType *vec = (MincoreArgType *) js_malloc(numPages);
