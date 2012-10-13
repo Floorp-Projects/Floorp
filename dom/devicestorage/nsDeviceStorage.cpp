@@ -1285,6 +1285,16 @@ public:
     nsCOMPtr<nsIInputStream> stream;
     mBlob->GetInternalStream(getter_AddRefs(stream));
 
+    bool check = false;
+    mFile->mFile->Exists(&check);
+    if (check) {
+      nsCOMPtr<PostErrorEvent> event = new PostErrorEvent(mRequest,
+                                                          POST_ERROR_EVENT_FILE_EXISTS,
+                                                          mFile);
+      NS_DispatchToMainThread(event);
+      return NS_OK;
+    }
+
     nsresult rv = mFile->Write(stream);
 
     if (NS_FAILED(rv)) {
