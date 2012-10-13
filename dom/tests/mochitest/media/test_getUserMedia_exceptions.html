@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=795367
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test mozGetUserMedia Exceptions</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=795367">Test mozGetUserMedia Exceptions</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+  These tests verify that the appropriate exception is thrown when incorrect
+  values are provided to the immediate mozGetUserMedia call.
+*/
+var exceptionTests = [
+  // Each test here verifies that a caller is required to have all
+  // three arguments in order to call mozGetUserMedia
+  { params: undefined,
+    error: Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS,
+    message: "no arguments specified" },
+  { params: [{video: true, fake: true}],
+    error: Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS,
+    message: "one argument specified" },
+  { params: [{video: true, fake: true}, unexpectedCall],
+    error: Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS,
+    message: "two arguments specified" },
+
+  // Each test here verifies that providing an incorret object
+  // type to any mozGetUserMedia parameter should throw
+  // the correct exception specified
+  { params: [1, unexpectedCall, unexpectedCall],
+    error: Cr.NS_ERROR_XPC_BAD_CONVERT_JS,
+    message: "wrong object type as first parameter" },
+  { params: [{video: true, fake: true}, 1, unexpectedCall],
+    error: Cr.NS_ERROR_XPC_BAD_CONVERT_JS,
+    message: "wrong object type as second parameter" },
+  { params: [{video: true, fake: true}, unexpectedCall, 1],
+    error: Cr.NS_ERROR_XPC_BAD_CONVERT_JS,
+    message: "wrong object type as third parameter" }
+];
+
+/**
+ * A callback function that is only called if a particular
+ * exception was not thrown, resulting in the test failing.
+ *
+ * @param  {MediaStream} argument ignored
+ */
+function unexpectedCall(obj) {
+  ok(false, "Callback should not have been called");
+}
+
+/**
+ * Starts the test run by running through each exception
+ * test by verifying that the correct exception type specified
+ * is thrown on the mozGetUserMedia call with the parameters
+ * specified.
+ */
+runTest(function () {
+  exceptionTests.forEach(function (test) {
+    var exception = false;
+    try {
+      navigator.mozGetUserMedia.apply(navigator, test.params);
+    } catch (e) {
+      exception = (e.result === test.error);
+    }
+    ok(exception, "Exception for " + test.message);
+  });
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
