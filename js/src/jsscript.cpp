@@ -1002,7 +1002,7 @@ SourceCompressorThread::waitOnCompression(SourceCompressionToken *userTok)
 {
     JS_ASSERT(userTok == tok);
     PR_Lock(lock);
-    if (state == COMPRESSING)
+    while (state == COMPRESSING)
         PR_WaitCondVar(done, PR_INTERVAL_NO_TIMEOUT);
     JS_ASSERT(state == IDLE);
     SourceCompressionToken *saveTok = tok;
