@@ -107,6 +107,23 @@ protected:
   a11y::role mRole;
 };
 
+
+/**
+ * A wrapper accessible around native accessible to connect it with
+ * crossplatform accessible tree.
+ */
+class DummyAccessible : public AccessibleWrap
+{
+public:
+  DummyAccessible() : AccessibleWrap(nullptr, nullptr) { }
+  virtual ~DummyAccessible() { }
+
+  virtual uint64_t NativeState() MOZ_OVERRIDE MOZ_FINAL;
+  virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE MOZ_FINAL;
+  virtual uint64_t NativeLinkState() const MOZ_OVERRIDE MOZ_FINAL;
+  virtual bool NativelyUnavailable() const MOZ_OVERRIDE MOZ_FINAL;
+};
+
 } // namespace a11y
 } // namespace mozilla
 

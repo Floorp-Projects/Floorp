@@ -84,7 +84,7 @@ DocAccessible::
   mVirtualCursor(nullptr),
   mPresShell(aPresShell)
 {
-  mFlags |= eDocAccessible;
+  mFlags |= eDocAccessible | eNotNodeMapEntry;
   if (mPresShell)
     mPresShell->SetAccDocument(this);
 
@@ -271,10 +271,11 @@ DocAccessible::Description(nsString& aDescription)
   if (mParent)
     mParent->Description(aDescription);
 
-  if (aDescription.IsEmpty())
+  if (HasOwnContent() && aDescription.IsEmpty()) {
     nsTextEquivUtils::
       GetTextEquivFromIDRefs(this, nsGkAtoms::aria_describedby,
                              aDescription);
+  }
 }
 
 // Accessible public method
@@ -1390,7 +1391,7 @@ DocAccessible::BindToDocument(Accessible* aAccessible,
     return false;
 
   // Put into DOM node cache.
-  if (aAccessible->IsPrimaryForNode())
+  if (aAccessible->IsNodeMapEntry())
     mNodeToAccessibleMap.Put(aAccessible->GetNode(), aAccessible);
 
   // Put into unique ID cache.
@@ -1423,7 +1424,7 @@ DocAccessible::UnbindFromDocument(Accessible* aAccessible)
   }
 
   // Remove an accessible from node-to-accessible map if it exists there.
-  if (aAccessible->IsPrimaryForNode() &&
+  if (aAccessible->IsNodeMapEntry() &&
       mNodeToAccessibleMap.Get(aAccessible->GetNode()) == aAccessible)
     mNodeToAccessibleMap.Remove(aAccessible->GetNode());
 
@@ -2047,7 +2048,7 @@ DocAccessible::UncacheChildrenInSubtree(Accessible* aRoot)
   for (uint32_t idx = 0; idx < count; idx++)
     UncacheChildrenInSubtree(aRoot->ContentChildAt(idx));
 
-  if (aRoot->IsPrimaryForNode() &&
+  if (aRoot->IsNodeMapEntry() &&
       mNodeToAccessibleMap.Get(aRoot->GetNode()) == aRoot)
     mNodeToAccessibleMap.Remove(aRoot->GetNode());
 }

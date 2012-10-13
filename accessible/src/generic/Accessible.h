@@ -147,11 +147,6 @@ public:
   }
 
   /**
-   * Returns the accessible name specified by ARIA.
-   */
-  nsresult GetARIAName(nsAString& aName);
-
-  /**
    * Maps ARIA state attributes to state of accessible. Note the given state
    * argument should hold states for accessible before you pass it into this
    * method.
@@ -693,13 +688,15 @@ public:
   bool IsInDocument() const { return !(mFlags & eIsNotInDocument); }
 
   /**
-  * Return true if the accessible is primary accessible for the given DOM node.
-  *
-  * Accessible hierarchy may be complex for single DOM node, in this case
-  * these accessibles share the same DOM node. The primary accessible "owns"
-  * that DOM node in terms it gets stored in the accessible to node map.
-  */
-  bool IsPrimaryForNode() const { return !(mFlags & eSharedNode); }
+   * Return true if the accessible should be contained by document node map.
+   */
+  bool IsNodeMapEntry() const
+    { return HasOwnContent() && !(mFlags & eNotNodeMapEntry); }
+
+  /**
+   * Return true if the accessible has associated DOM content.
+   */
+  bool HasOwnContent() const { return mContent && !(mFlags & eSharedNode); }
 
   /**
   * Return true if the accessible has a numeric value.
@@ -757,7 +754,8 @@ protected:
     eIsDefunct = 1 << 2, // accessible is defunct
     eIsNotInDocument = 1 << 3, // accessible is not in document
     eSharedNode = 1 << 4, // accessible shares DOM node from another accessible
-    eHasNumericValue = 1 << 5 // accessible has a numeric value
+    eNotNodeMapEntry = 1 << 5, // accessible shouldn't be in document node map
+    eHasNumericValue = 1 << 6 // accessible has a numeric value
   };
 
   /**
@@ -765,23 +763,23 @@ protected:
    * @note keep these flags in sync with ChildrenFlags and StateFlags
    */
   enum AccessibleTypes {
-    eApplicationAccessible = 1 << 6,
-    eAutoCompleteAccessible = 1 << 7,
-    eAutoCompletePopupAccessible = 1 << 8,
-    eComboboxAccessible = 1 << 9,
-    eDocAccessible = 1 << 10,
-    eHyperTextAccessible = 1 << 11,
-    eHTMLFileInputAccessible = 1 << 12,
-    eHTMLListItemAccessible = 1 << 13,
-    eImageAccessible = 1 << 14,
-    eImageMapAccessible = 1 << 15,
-    eListControlAccessible = 1 << 16,
-    eMenuButtonAccessible = 1 << 17,
-    eMenuPopupAccessible = 1 << 18,
-    eRootAccessible = 1 << 19,
-    eTextLeafAccessible = 1 << 20,
-    eXULDeckAccessible = 1 << 21,
-    eXULTreeAccessible = 1 << 22
+    eApplicationAccessible = 1 << 7,
+    eAutoCompleteAccessible = 1 << 8,
+    eAutoCompletePopupAccessible = 1 << 9,
+    eComboboxAccessible = 1 << 10,
+    eDocAccessible = 1 << 11,
+    eHyperTextAccessible = 1 << 12,
+    eHTMLFileInputAccessible = 1 << 13,
+    eHTMLListItemAccessible = 1 << 14,
+    eImageAccessible = 1 << 15,
+    eImageMapAccessible = 1 << 16,
+    eListControlAccessible = 1 << 17,
+    eMenuButtonAccessible = 1 << 18,
+    eMenuPopupAccessible = 1 << 19,
+    eRootAccessible = 1 << 20,
+    eTextLeafAccessible = 1 << 21,
+    eXULDeckAccessible = 1 << 22,
+    eXULTreeAccessible = 1 << 23
   };
 
   //////////////////////////////////////////////////////////////////////////////
@@ -794,6 +792,11 @@ protected:
 
   //////////////////////////////////////////////////////////////////////////////
   // Name helpers
+
+  /**
+   * Returns the accessible name specified by ARIA.
+   */
+  void ARIAName(nsAString& aName);
 
   /**
    * Compute the name of HTML node.
