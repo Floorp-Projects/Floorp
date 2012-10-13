@@ -169,12 +169,15 @@ function ResponsiveUI(aWindow, aTab)
     }
   } catch(e) {}
 
-  switchToFloatingScrollbars(this.tab);
+  if (this._floatingScrollbars)
+    switchToFloatingScrollbars(this.tab);
+
   ResponsiveUIManager.events.emit("on", this.tab, this);
 }
 
 ResponsiveUI.prototype = {
   _transitionsEnabled: true,
+  _floatingScrollbars: false, // See bug 799471
   get transitionsEnabled() this._transitionsEnabled,
   set transitionsEnabled(aValue) {
     this._transitionsEnabled = aValue;
@@ -191,8 +194,10 @@ ResponsiveUI.prototype = {
   close: function RUI_unload() {
     if (this.closing)
       return;
-    switchToNativeScrollbars(this.tab);
     this.closing = true;
+
+    if (this._floatingScrollbars)
+      switchToNativeScrollbars(this.tab);
 
     this.unCheckMenus();
     // Reset style of the stack.
