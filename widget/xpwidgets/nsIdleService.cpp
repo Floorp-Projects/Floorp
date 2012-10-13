@@ -149,9 +149,9 @@ nsIdleServiceDaily::nsIdleServiceDaily(nsIIdleService* aIdleService)
   : mIdleService(aIdleService)
   , mTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
   , mCategoryObservers(OBSERVER_TOPIC_IDLE_DAILY)
+  , mShutdownInProgress(false)
   , mExpectedTriggerTime(0)
   , mIdleDailyTriggerWait(DAILY_SIGNIFICANT_IDLE_SERVICE_SEC)
-  , mShutdownInProgress(false)
 {
 }
 
