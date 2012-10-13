@@ -1289,8 +1289,8 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
       nsTArray<nsNPAPIPluginInstance::VideoInfo*> videos;
       mInstanceOwner->GetVideos(videos);
-      
-      for (int i = 0; i < videos.Length(); i++) {
+
+      for (uint32_t i = 0; i < videos.Length(); i++) {
         rv = replacedContent.AppendNewToTop(new (aBuilder)
           nsDisplayPluginVideo(aBuilder, this, videos[i]));
         NS_ENSURE_SUCCESS(rv, rv);
