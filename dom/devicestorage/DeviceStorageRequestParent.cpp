@@ -248,14 +248,6 @@ DeviceStorageRequestParent::WriteFileEvent::CancelableRun()
     return NS_OK;
   }
 
-  bool check = false;
-  mFile->mFile->Exists(&check);
-  if (check) {
-    nsCOMPtr<PostErrorEvent> event = new PostErrorEvent(mParent, POST_ERROR_EVENT_FILE_EXISTS);
-    NS_DispatchToMainThread(event);
-    return NS_OK;
-  }
-
   nsresult rv = mFile->Write(mInputStream);
 
   if (NS_FAILED(rv)) {
