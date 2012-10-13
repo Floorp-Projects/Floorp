@@ -1857,7 +1857,13 @@ Parser::processDirectives(ParseNode *stmts)
         bool isDirective = IsEscapeFreeStringLiteral(directive);
         JSAtom *atom = directive.atom();
         TokenKind next = tokenStream.peekTokenSameLine();
-        if (next != TOK_EOF && next != TOK_EOL && next != TOK_SEMI && next != TOK_RC) {
+
+        // We need to check whether the directive ends explicitly or implicitly
+        // due to ASI. In the latter case, the expression must not continue on
+        // the next line.
+        if (next != TOK_EOF && next != TOK_SEMI && next != TOK_RC &&
+           (next != TOK_EOL || TokenContinuesStringExpression(tokenStream.peekToken())))
+        {
             freeTree(stringNode);
             if (next == TOK_ERROR)
                 return false;
