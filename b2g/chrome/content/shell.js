@@ -788,6 +788,14 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
     "ipc:content-shutdown", false);
 })();
 
+window.addEventListener('ContentStart', function update_onContentStart() {
+  let updatePrompt = Cc["@mozilla.org/updates/update-prompt;1"]
+                       .createInstance(Ci.nsIUpdatePrompt);
+
+  let content = shell.contentBrowser.contentWindow;
+  content.addEventListener("mozContentEvent", updatePrompt.wrappedJSObject);
+});
+
 (function geolocationStatusTracker() {
   let gGeolocationActiveCount = 0;
 
