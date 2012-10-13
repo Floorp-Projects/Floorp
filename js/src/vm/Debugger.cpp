@@ -16,6 +16,7 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
+#include "jscompartment.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
@@ -2484,6 +2485,30 @@ Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+JSBool
+Debugger::findAllGlobals(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "findAllGlobals", args, dbg);
+
+    RootedObject result(cx, NewDenseEmptyArray(cx));
+    if (!result)
+        return false;
+
+    for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
+        GlobalObject *global = c->maybeGlobal();
+        if (global) {
+            Value globalValue(ObjectValue(*global));
+            if (!dbg->wrapDebuggeeValue(cx, &globalValue))
+                return false;
+            if (!js_NewbornArrayPush(cx, result, globalValue))
+                return false;
+        }
+    }
+
+    args.rval().setObject(*result);
+    return true;
+}
+
 JSPropertySpec Debugger::properties[] = {
     JS_PSGS("enabled", Debugger::getEnabled, Debugger::setEnabled, 0),
     JS_PSGS("onDebuggerStatement", Debugger::getOnDebuggerStatement,
@@ -2506,6 +2531,7 @@ JSFunctionSpec Debugger::methods[] = {
     JS_FN("getNewestFrame", Debugger::getNewestFrame, 0, 0),
     JS_FN("clearAllBreakpoints", Debugger::clearAllBreakpoints, 1, 0),
     JS_FN("findScripts", Debugger::findScripts, 1, 0),
+    JS_FN("findAllGlobals", Debugger::findAllGlobals, 0, 0),
     JS_FS_END
 };
 
