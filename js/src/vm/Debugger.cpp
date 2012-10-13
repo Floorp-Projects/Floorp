@@ -4278,6 +4278,32 @@ DebuggerObject_evalInGlobalWithBindings(JSContext *cx, unsigned argc, Value *vp)
                                args[0], &args[1], vp, dbg, referent, NULL);
 }
 
+static JSBool
+DebuggerObject_unwrap(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "unwrap", args, dbg, referent);
+    JSObject *unwrapped = UnwrapOneChecked(cx, referent);
+    if (!unwrapped) {
+        // If we were terminated, then pass that along.
+        if (!cx->isExceptionPending())
+            return false;
+
+        // If the unwrap operation threw an exception, assume it's a
+        // security exception, and return null. It seems like the wrappers
+        // in use in Firefox just call JS_ReportError, so we have no way to
+        // distinguish genuine should-not-unwrap errors from other kinds of
+        // errors.
+        cx->clearPendingException();
+        vp->setNull();
+        return true;
+    }
+
+    *vp = ObjectValue(*unwrapped);
+    if (!dbg->wrapDebuggeeValue(cx, vp))
+        return false;
+    return true;
+}
+
 static JSPropertySpec DebuggerObject_properties[] = {
     JS_PSG("proto", DebuggerObject_getProto, 0),
     JS_PSG("class", DebuggerObject_getClass, 0),
@@ -4308,6 +4334,7 @@ static JSFunctionSpec DebuggerObject_methods[] = {
     JS_FN("makeDebuggeeValue", DebuggerObject_makeDebuggeeValue, 1, 0),
     JS_FN("evalInGlobal", DebuggerObject_evalInGlobal, 1, 0),
     JS_FN("evalInGlobalWithBindings", DebuggerObject_evalInGlobalWithBindings, 2, 0),
+    JS_FN("unwrap", DebuggerObject_unwrap, 0, 0),
     JS_FS_END
 };
 
