@@ -193,6 +193,10 @@ public:
    */
   virtual void OnConnectError() = 0;
 
+  /** 
+   * Callback for socket disconnect. Will be run on main thread.
+   */
+  virtual void OnDisconnect() = 0;
 
   /** 
    * Called by implementation to notify consumer of success.
@@ -204,6 +208,10 @@ public:
    */
   void NotifyError();
 
+  /** 
+   * Called by implementation to notify consumer of disconnect.
+   */
+  void NotifyDisconnect();
 private:
   UnixSocketImpl* mImpl;
   SocketConnectionStatus mConnectionStatus;

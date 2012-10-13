@@ -182,6 +182,41 @@ TokenKindIsAssignment(TokenKind tt)
 }
 
 inline bool
+TokenContinuesStringExpression(TokenKind tt)
+{
+    switch (tt) {
+      // comma expression
+      case TOK_COMMA:
+      // conditional expression
+      case TOK_HOOK:
+      // binary expression
+      case TOK_OR:
+      case TOK_AND:
+      case TOK_BITOR:
+      case TOK_BITXOR:
+      case TOK_BITAND:
+      case TOK_PLUS:
+      case TOK_MINUS:
+      case TOK_STAR:
+      case TOK_DIV:
+      case TOK_MOD:
+      case TOK_IN:
+      case TOK_INSTANCEOF:
+      // member expression
+      case TOK_DOT:
+      case TOK_LB:
+      case TOK_LP:
+      case TOK_DBLDOT:
+        return true;
+      default:
+        return TokenKindIsEquality(tt) ||
+               TokenKindIsRelational(tt) ||
+               TokenKindIsShift(tt) ||
+               TokenKindIsAssignment(tt);
+    }
+}
+
+inline bool
 TokenKindIsDecl(TokenKind tt)
 {
 #if JS_HAS_BLOCK_SCOPE

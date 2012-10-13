@@ -343,7 +343,7 @@ void imgRequest::AdjustPriority(imgRequestProxy *proxy, int32_t delta)
   if (!GetStatusTracker().FirstConsumerIs(proxy))
     return;
 
-  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mRequest);
+  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
   if (p)
     p->AdjustPriority(delta);
 }
