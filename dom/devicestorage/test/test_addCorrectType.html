@@ -43,6 +43,8 @@ var tests = [
 
 function fail(e) {
   ok(false, "addSuccess was called");
+  ok(e.target.error.name == "TypeMismatchError", "Error must be TypeMismatchError");
+
   devicestorage_cleanup();
 }
 
