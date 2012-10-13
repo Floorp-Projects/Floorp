@@ -3784,13 +3784,6 @@ AC_CHECK_FUNCS(strndup posix_memalign memalign valloc)
 
 dnl See if compiler supports some gcc-style attributes
 
-AC_CACHE_CHECK(for __attribute__((always_inline)),
-               ac_cv_attribute_always_inline,
-               [AC_TRY_COMPILE([inline void f(void) __attribute__((always_inline));],
-                               [],
-                               ac_cv_attribute_always_inline=yes,
-                               ac_cv_attribute_always_inline=no)])
-
 AC_CACHE_CHECK(for __attribute__((malloc)),
                ac_cv_attribute_malloc,
                [AC_TRY_COMPILE([void* f(int) __attribute__((malloc));],
@@ -3842,12 +3835,6 @@ dnl are defined in build/autoconf/altoptions.m4.
 
 dnl If the compiler supports these attributes, define them as
 dnl convenience macros.
-if test "$ac_cv_attribute_always_inline" = yes ; then
-  AC_DEFINE(NS_ALWAYS_INLINE, [__attribute__((always_inline))])
-else
-  AC_DEFINE(NS_ALWAYS_INLINE,)
-fi
-
 if test "$ac_cv_attribute_malloc" = yes ; then
   AC_DEFINE(NS_ATTR_MALLOC, [__attribute__((malloc))])
 else
