@@ -22,6 +22,7 @@ DIRS	+= \
 	whatwg \
 	geolocation \
 	localstorage \
+	media \
 	orientation \
 	sessionstorage \
 	storageevent \
