@@ -558,7 +558,7 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceObjectPath,
 
   nsCOMPtr<nsIRILContentHelper> ril =
     do_GetService("@mozilla.org/ril/content-helper;1");
-  NS_ENSURE_TRUE(ril, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(ril, false);
   ril->EnumerateCalls(mListener->GetCallback());
 
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
