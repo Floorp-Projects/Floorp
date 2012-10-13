@@ -381,13 +381,16 @@ DebuggerClient.prototype = {
    *
    * @param string aActor
    *        The actor ID to send the request to.
+   * @param aOnResponse function
+   *        If specified, will be called with the response packet when
+   *        debugging server responds.
    */
-  release: function DC_release(aActor) {
+  release: function DC_release(aActor, aOnResponse) {
     let packet = {
       to: aActor,
       type: "release",
     };
-    this.request(packet);
+    this.request(packet, aOnResponse);
   },
 
   /**
@@ -784,6 +787,23 @@ ThreadClient.prototype = {
       }
       doSetBreakpoint(this.resume.bind(this));
     }.bind(this));
+  },
+
+  /**
+   * Release multiple thread-lifetime object actors. If any pause-lifetime
+   * actors are included in the request, a |notReleasable| error will return,
+   * but all the thread-lifetime ones will have been released.
+   *
+   * @param array aActors
+   *        An array with actor IDs to release.
+   */
+  releaseMany: function TC_releaseMany(aActors, aOnResponse) {
+    let packet = {
+      to: this._actor,
+      type: "releaseMany",
+      actors: aActors
+    };
+    this._client.request(packet, aOnResponse);
   },
 
   /**
