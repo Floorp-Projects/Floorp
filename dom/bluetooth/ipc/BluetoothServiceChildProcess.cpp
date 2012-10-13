@@ -175,7 +175,7 @@ BluetoothServiceChildProcess::GetDevicePath(const nsAString& aAdapterPath,
 
   aDevicePath = path;
 
-  return NS_OK;
+  return true;
 }
 
 nsresult
