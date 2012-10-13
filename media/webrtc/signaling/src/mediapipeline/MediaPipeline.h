@@ -32,7 +32,7 @@ namespace mozilla {
 // CaptureDevice -> stream -> [us] -> conduit -> [us] -> transport -> network
 //
 // RECEIVE
-// network -> transport -> [us] -> conduit -> [us] -> stream -> Playout 
+// network -> transport -> [us] -> conduit -> [us] -> stream -> Playout
 //
 // The boxes labeled [us] are just bridge logic implemented in this class
 class MediaPipeline : public sigslot::has_slots<> {

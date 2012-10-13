@@ -251,8 +251,7 @@ void NS_MakeRandomString(char *aBuf, int32_t aBufLen)
 {
   // turn PR_Now() into milliseconds since epoch
   // and salt rand with that.
-  double fpTime;
-  LL_L2D(fpTime, PR_Now());
+  double fpTime = double(PR_Now());
   srand((uint)(fpTime * 1e-6 + 0.5));   // use 1e-6, granularity of PR_Now() on the mac is seconds
 
   int32_t i;

@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "cpr_types.h"
 #include "cpr_ipc.h"
@@ -64,9 +29,9 @@
  */
 extern cc_config_table_t CC_Config_Table[];
 extern ccm_act_stdby_table_t CCM_Active_Standby_Table;
-extern cpr_sockaddr_t *sip_set_sockaddr(cpr_sockaddr_storage *psock_storage, uint16_t family, 
+extern cpr_sockaddr_t *sip_set_sockaddr(cpr_sockaddr_storage *psock_storage, uint16_t family,
                                  cpr_ip_addr_t ip_addr, uint16_t port, uint16_t *addr_len);
-extern void ccsip_dump_recv_msg_info(sipMessage_t *pSIPMessage, 
+extern void ccsip_dump_recv_msg_info(sipMessage_t *pSIPMessage,
                                cpr_ip_addr_t *cc_remote_ipaddr,
                                uint16_t cc_remote_port);
 
@@ -158,11 +123,11 @@ ccsipSocketSetPushBit (cpr_socket_t fd, int optval)
 }
 #endif /* NOT_AVAILABLE_WIN32 */
 
-static boolean ccsipIsSecureType(sipSPIConnId_t connid) 
+static boolean ccsipIsSecureType(sipSPIConnId_t connid)
 {
     if (sip_tcp_conn_tab[connid].soc_type == SIP_SOC_TLS) {
         return TRUE;
-    } 
+    }
     return FALSE;
 }
 /**
@@ -279,7 +244,7 @@ sip_tcp_set_sock_options (int fd)
     if (status != SIP_SUCCESS) {
         return FALSE;
     }
-	
+
     /* Set the keepalive option */
     status = ccsipSocketSetKeepAlive(fd, optval);
     if (status != SIP_SUCCESS) {
@@ -396,13 +361,13 @@ sip_tcp_purge_entry (sipSPIConnId_t connid)
         return;
     }
     secure = ccsipIsSecureType(connid);
-    
+
     (void) sip_tcp_detach_socket(entry->fd);
     (void) sipSocketClose(entry->fd, secure);
     CCSIP_DEBUG_MESSAGE(DEB_F_PREFIX"Socket fd: %d closed for connid %ld with "
                         "address: %i, remote port: %u\n",
                         DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname), entry->fd, connid, entry->ipaddr, entry->port);
-    
+
     entry->fd = -1;  /* Free the connection table entry in the BEGINNING ! */
     sipTcpFlushRetrySendQueue(entry);
     entry->ipaddr = ip_addr_invalid;
@@ -484,14 +449,14 @@ sip_tcp_create_connection (sipSPIMessage_t *spi_msg)
         (void) sipSocketClose(new_fd, FALSE);
         return INVALID_SOCKET;
     }
-	
+
     if (sip_tcp_set_sock_options(new_fd) != TRUE) {
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Socket set option failed.\n",
                             fname);
     }
 
     sip_config_get_net_device_ipaddr(&local_ipaddr);
-     
+
     memset(&local_sock_addr, 0, sizeof(local_sock_addr));
 
     (void) sip_set_sockaddr(&local_sock_addr, af_listen, local_ipaddr, 0, &addr_len);
@@ -505,11 +470,11 @@ sip_tcp_create_connection (sipSPIMessage_t *spi_msg)
         (void) sipSocketClose(new_fd, FALSE);
         sip_tcp_conn_tab[idx].fd = INVALID_SOCKET;
         return INVALID_SOCKET;
-    } 
+    }
 
     memset(&sock_addr, 0, sizeof(sock_addr));
 
-    (void) sip_set_sockaddr(&sock_addr, af_listen, create_msg->addr, 
+    (void) sip_set_sockaddr(&sock_addr, af_listen, create_msg->addr,
                             (uint16_t)(create_msg->port), &addr_len);
 
     sip_tcp_conn_tab[idx].fd = new_fd;
@@ -518,17 +483,17 @@ sip_tcp_create_connection (sipSPIMessage_t *spi_msg)
     sip_tcp_conn_tab[idx].context = spi_msg->context;
     sip_tcp_conn_tab[idx].dirtyFlag = FALSE;
     sip_tcp_conn_tab[idx].addr = sock_addr;
-    
+
     if (cprConnect(new_fd, (cpr_sockaddr_t *)&sock_addr, addr_len)
             == CPR_FAILURE) {
         if (errno == EWOULDBLOCK || errno == EINPROGRESS) {
             char ipaddr_str[MAX_IPADDR_STR_LEN];
 
             ipaddr2dotted(ipaddr_str, &create_msg->addr);
-            
+
             /* connect in progress. Include this socket in select */
             sip_tcp_conn_tab[idx].state = SOCK_CONNECT_PENDING;
-            
+
             CCSIP_DEBUG_MESSAGE(SIP_F_PREFIX"socket connection in progress errno:%d"
                                 "ipaddr: %s, port: %d\n",
                                 fname, errno, ipaddr_str, create_msg->port);
@@ -737,15 +702,15 @@ sip_tcp_createconnfailed_to_spi (cpr_ip_addr_t *ipaddr,
         	int last_cpr_err = cpr_errno;
             CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Active server going down due to "
                 "%s. ip_addr:%s\n", DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname),
-                last_cpr_err == CPR_ETIMEDOUT ? "ETIMEDOUT": 
-                last_cpr_err == CPR_ECONNABORTED ? "ECONNABORTED": 
+                last_cpr_err == CPR_ETIMEDOUT ? "ETIMEDOUT":
+                last_cpr_err == CPR_ECONNABORTED ? "ECONNABORTED":
                 last_cpr_err == CPR_ECONNRESET ? "CM_RESET_TCP": "CM_CLOSED_TCP",
                  ip_addr_str);
 
             ccb = sip_sm_get_ccb_by_index(REG_CCB_START);
             ccm_table_entry = ccm_active_table_entry;
-            
-        } else if (standby_ti_common && 
+
+        } else if (standby_ti_common &&
                     util_compare_ip(&(standby_ti_common->addr), ipaddr) &&
                    standby_ti_common->port == port) {
             /*
@@ -753,7 +718,7 @@ sip_tcp_createconnfailed_to_spi (cpr_ip_addr_t *ipaddr,
              */
             CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Standby server going down "
                 "ip_addr=%s\n",
-                DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname), 
+                DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname),
                  ip_addr_str);
 
             ccb = sip_sm_get_ccb_by_index(REG_BACKUP_CCB);
@@ -804,14 +769,14 @@ sip_tcp_createconnfailed_to_spi (cpr_ip_addr_t *ipaddr,
         		config_get_value(CFGID_SIP_RETX, &retx_value, sizeof(retx_value));
 	            ccb->retx_counter = retx_value + 1;
 	            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"send a SIP_TMR_REG_RETRY"
-	                "message so this cucm ip:%s can be put in fallback list \n", 
+	                "message so this cucm ip:%s can be put in fallback list \n",
 	                DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname), ip_addr_str);
 	            if (ccsip_register_send_msg(SIP_TMR_REG_RETRY, ccb->index)
 	                    != SIP_REG_OK) {
 	                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"REG send message failed.\n", fname);
 	                ccsip_register_cleanup(ccb, TRUE);
 	            }
-        	         
+
         }
     }
 }
@@ -841,7 +806,7 @@ sip_tcp_read_socket (cpr_socket_t this_fd)
 
     connid = sip_tcp_fd_to_connid(this_fd);
     if (connid == -1) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Read failed for unknown socket %d.\n", 
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Read failed for unknown socket %d.\n",
                         fname, this_fd);
         return;
     }
@@ -875,7 +840,7 @@ sip_tcp_read_socket (cpr_socket_t this_fd)
             sip_tcp_conn_tab[connid].prev_bytes = 0;
 
             if (sip_tcp_buf == NULL) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to realloc tcp_msg buffer memory.\n", 
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to realloc tcp_msg buffer memory.\n",
                                     fname);
                 cpr_free(sip_tcp_conn_tab[connid].prev_msg);
                 sip_tcp_conn_tab[connid].prev_msg = NULL;
@@ -895,7 +860,7 @@ sip_tcp_read_socket (cpr_socket_t this_fd)
                                   fname, (nbytes + offset),
                                   (MAX_PAYLOAD_SIZE + 1));
 
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Dropping SIP message %s", 
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Dropping SIP message %s",
                                     fname, sip_tcp_buf);
                 cpr_free(sip_tcp_buf);
                 return;
@@ -903,7 +868,7 @@ sip_tcp_read_socket (cpr_socket_t this_fd)
         } else {
             sip_tcp_buf = (char *) cpr_malloc(CPR_MAX_MSG_SIZE + 1);
             if (sip_tcp_buf == NULL) {
-                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to malloc tcp_msg buffer memory.\n", 
+                CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Unable to malloc tcp_msg buffer memory.\n",
                                     fname);
                 return;
             }
@@ -920,7 +885,7 @@ sip_tcp_read_socket (cpr_socket_t this_fd)
              * Remote connection closure or broken pipe - post a message
              * to sip transport and wait for connection close command.
              */
-            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"CUCM closed TCP connection.\n", 
+            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"CUCM closed TCP connection.\n",
                 DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname));
             sip_tcp_conn_tab[connid].error_cause = SOCKET_REMOTE_CLOSURE;
 
@@ -986,14 +951,14 @@ sipTcpQueueSendData (int total_len, int connid,
     if (entry->sendQueue == NULL) {
         entry->sendQueue = sll_create(sip_tcp_find_msg);
         if (entry->sendQueue == NULL) {
-            CCSIP_DEBUG_ERROR("%s Failed to create sendQueue to buffer data!\n", fname); 
+            CCSIP_DEBUG_ERROR("%s Failed to create sendQueue to buffer data!\n", fname);
             return;
         }
     }
 
     sendData = (ccsipTCPSendData_t *) cpr_malloc(sizeof(ccsipTCPSendData_t));
     if (sendData == NULL) {
-        CCSIP_DEBUG_ERROR("%s Failed to allocate memory for sendData!\n", fname); 
+        CCSIP_DEBUG_ERROR("%s Failed to allocate memory for sendData!\n", fname);
         return;
     }
     memset(sendData, 0, sizeof(ccsipTCPSendData_t));
@@ -1003,7 +968,7 @@ sipTcpQueueSendData (int total_len, int connid,
     if (sendData->data) {
         sstrncpy(sendData->data, buf, total_len);
     } else {
-        CCSIP_DEBUG_ERROR("%s Failed to allocate memory for sendData->data!\n", fname); 
+        CCSIP_DEBUG_ERROR("%s Failed to allocate memory for sendData->data!\n", fname);
         cpr_free(sendData);
         return;
     }
@@ -1015,7 +980,7 @@ sipTcpQueueSendData (int total_len, int connid,
     sendData->ip_sig_tos = ip_sig_tos;
     (void) sll_append(entry->sendQueue, sendData);
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Data queued length %d\n", 
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Data queued length %d\n",
                           DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname), total_len);
 
     if (send_msg_q_size > max_tcp_send_msg_q_size) {
@@ -1057,7 +1022,7 @@ sip_tcp_resend (int connid)
     boolean secure;
 
     if (!VALID_CONNID(connid)) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Resend failed for unknown socket %d.\n", 
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Resend failed for unknown socket %d.\n",
                         fname, connid);
         return;
     }
@@ -1088,7 +1053,7 @@ sip_tcp_resend (int connid)
                             sip_tcp_conn_tab[connid].port,
                             sip_tcp_conn_tab[connid].context,
                             SOCKET_CONNECT_ERROR, connid);
-                        CCSIP_DEBUG_ERROR("%s: Socket send error." 
+                        CCSIP_DEBUG_ERROR("%s: Socket send error."
                                           "Purge queued entry data.\n", fname);
                     }
                     return;
@@ -1098,7 +1063,7 @@ sip_tcp_resend (int connid)
             cpr_free(qElem->data);
             (void) sll_remove(entry->sendQueue, qElem);
             cpr_free(qElem);
-            CCSIP_DEBUG_REG_STATE("%s: sent out successfully, dequeue an entry.\n", fname); 
+            CCSIP_DEBUG_REG_STATE("%s: sent out successfully, dequeue an entry.\n", fname);
 
             qElem = (ccsipTCPSendData_t *) sll_next(entry->sendQueue, NULL);
         } /* while qElem */
@@ -1126,17 +1091,17 @@ sip_tcp_channel_send (cpr_socket_t s, char *buf, uint32_t len)
     sip_tcp_conn_t *entry;
     boolean secure;
 
-    /* convert socket to connid */ 
+    /* convert socket to connid */
     connid = sip_tcp_fd_to_connid(s);
     if (!VALID_CONNID(connid)) {
         CCSIP_DEBUG_ERROR("%s: Couldn't map socket to a valid connid!\n", fname);
-        return SIP_TCP_SEND_ERROR; 
+        return SIP_TCP_SEND_ERROR;
     }
-    /* use connid we can get this socket's entry in sip_tcp_conn_tab[] */ 
+    /* use connid we can get this socket's entry in sip_tcp_conn_tab[] */
     entry = sip_tcp_conn_tab + connid;
 
     /* secd requires that the socket should be in connected state
-     * to send message. Return if the status is pending. 
+     * to send message. Return if the status is pending.
      * Currently this gets control in fallback state. The retry timer
      * event in fallback state will resend the message.
      */
@@ -1157,7 +1122,7 @@ sip_tcp_channel_send (cpr_socket_t s, char *buf, uint32_t len)
             sip_tcp_createconnfailed_to_spi(&(sip_tcp_conn_tab[connid].ipaddr),
                                             sip_tcp_conn_tab[connid].port,
                                             sip_tcp_conn_tab[connid].context,
-                                            SOCKET_CONNECT_ERROR, connid);   
+                                            SOCKET_CONNECT_ERROR, connid);
             CCSIP_DEBUG_ERROR(SIP_F_PREFIX"TLS socket connect failed %d\n",
                               fname, s);
             return SIP_TCP_SEND_ERROR;
@@ -1198,7 +1163,7 @@ sip_tcp_channel_send (cpr_socket_t s, char *buf, uint32_t len)
                                         TRUE, 0x0);
                     break;
             }
-            if (cpr_errno != CPR_ENOTCONN) { 
+            if (cpr_errno != CPR_ENOTCONN) {
                 CCSIP_DEBUG_ERROR(SIP_F_PREFIX"socket error=%d=\n", fname, errno);
                 sip_tcp_createconnfailed_to_spi(&(sip_tcp_conn_tab[connid].ipaddr),
                                                 sip_tcp_conn_tab[connid].port,
@@ -1225,7 +1190,7 @@ sipTcpFreeSendQueue (int connid)
     static const char *fname = "sipTcpFreeSendQueue";
     sip_tcp_conn_t *entry;
 
-    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Free TCP send queue for connid %d \n", 
+    CCSIP_DEBUG_TASK(DEB_F_PREFIX"Free TCP send queue for connid %d \n",
                         DEB_F_PREFIX_ARGS(SIP_TCP_MSG, fname), connid);
     if (!VALID_CONNID(connid)) {
         return;
@@ -1246,10 +1211,10 @@ sipTcpFreeSendQueue (int connid)
  */
 cpr_socket_t
 sip_tcp_create_conn_using_blocking_socket (sipSPIMessage_t *spi_msg) {
-	
+
 	cpr_socket_t server_conn_handle = INVALID_SOCKET;
 
 	server_conn_handle = sip_tcp_create_connection(spi_msg);
-	
+
 	return server_conn_handle;
 }

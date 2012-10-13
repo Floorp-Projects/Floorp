@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "cpr_stdio.h"
 #include "ccapi_call.h"
@@ -55,8 +20,8 @@ cc_lineid_t CCAPI_CallInfo_getLine(cc_callinfo_ref_t handle)
   static const char *fname="CCAPI_CallInfo_getLine";
   session_data_t *data = (session_data_t *)handle;
   CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
-  
-  if ( data != NULL){ 
+
+  if ( data != NULL){
      CCAPP_DEBUG(DEB_F_PREFIX"returned %u\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), GET_LINE_ID(CREATE_CALL_HANDLE_FROM_SESSION_ID(data->sess_id)));
      return GET_LINE_ID(CREATE_CALL_HANDLE_FROM_SESSION_ID(data->sess_id));
   }
@@ -73,8 +38,8 @@ cc_call_state_t CCAPI_CallInfo_getCallState(cc_callinfo_ref_t handle){
   static const char *fname="CCAPI_CallInfo_getCallState";
   session_data_t *data = (session_data_t *)handle;
   CCAPP_DEBUG(DEB_F_PREFIX"Entering\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
-  
-  if ( data != NULL){ 
+
+  if ( data != NULL){
      CCAPP_DEBUG(DEB_F_PREFIX"returned %02X\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), data->state);
      return data->state;
   }
@@ -119,7 +84,7 @@ cc_call_type_t CCAPI_CallInfo_getCallType(cc_callinfo_ref_t handle){
 }
 
 /**
- * get Called party name 
+ * get Called party name
  * @param handle - call handle
  * @return called party name
  */
@@ -320,7 +285,7 @@ cc_string_t CCAPI_CallInfo_getPlacedCallPartyNumber(cc_callinfo_ref_t handle){
 /**
  * get call instance number
  * @param handle - call handle
- * @return 
+ * @return
  */
 cc_int32_t CCAPI_CallInfo_getCallInstance(cc_callinfo_ref_t handle){
   static const char *fname="CCAPI_CallInfo_getCallInstance";
@@ -355,7 +320,7 @@ cc_string_t CCAPI_CallInfo_getStatus(cc_callinfo_ref_t handle){
 }
 
 /**
- * get call security   
+ * get call security
  * @param handle - call handle
  * @return call security status
  */
@@ -580,7 +545,7 @@ cc_boolean  CCAPI_CallInfo_getCapabilitySet(cc_callinfo_ref_t handle, cc_int32_t
          feat_set[feat_id] = data->allowed_features[feat_id];
          CCAPP_DEBUG(DEB_F_PREFIX"feature id:  %d , value %d\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),feat_id,  feat_set[feat_id]);
      }
-     
+
      CCAPP_DEBUG(DEB_F_PREFIX"returned CC_SUCCESS\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
      return CC_SUCCESS;
   }

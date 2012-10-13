@@ -10,6 +10,8 @@ import struct
 import StringIO
 import zlib
 
+from Zeroconf import Zeroconf, ServiceBrowser
+
 class DMError(Exception):
     "generic devicemanager exception."
 
@@ -231,16 +233,6 @@ class DeviceManager:
         returns:
           success: list of files, string
           failure: None
-        """
-
-    @abstractmethod
-    def isDir(self, remotePath):
-        """
-        Checks if remotePath is a directory on the device
-
-        returns:
-          success: True
-          failure: False
         """
 
     @abstractmethod
@@ -614,12 +606,12 @@ class NetworkTools:
             ip = socket.gethostbyname(socket.gethostname())
         except socket.gaierror:
             ip = socket.gethostbyname(socket.gethostname() + ".local") # for Mac OS X
-        if ip.startswith("127.") and os.name != "nt":
+        if (ip is None or ip.startswith("127.")) and os.name != "nt":
             interfaces = ["eth0","eth1","eth2","wlan0","wlan1","wifi0","ath0","ath1","ppp0"]
             for ifname in interfaces:
                 try:
                     ip = self.getInterfaceIp(ifname)
-                    break;
+                    break
                 except IOError:
                     pass
         return ip
@@ -680,3 +672,34 @@ def _pop_last_line(file_obj):
         bytes_from_end += 1
 
     return None
+
+class ZeroconfListener(object):
+    def __init__(self, hwid, evt):
+        self.hwid = hwid
+        self.evt = evt
+
+    # Format is 'SUTAgent [hwid:015d2bc2825ff206] [ip:10_242_29_221]._sutagent._tcp.local.'
+    def addService(self, zeroconf, type, name):
+        #print "Found _sutagent service broadcast:", name
+        if not name.startswith("SUTAgent"):
+            return
+
+        sutname = name.split('.')[0]
+        m = re.search('\[hwid:([^\]]*)\]', sutname)
+        if m is None:
+            return
+
+        hwid = m.group(1)
+
+        m = re.search('\[ip:([0-9_]*)\]', sutname)
+        if m is None:
+            return
+
+        ip = m.group(1).replace("_", ".")
+        
+        if self.hwid == hwid:
+            self.ip = ip
+            self.evt.set()
+
+    def removeService(self, zeroconf, type, name):
+        pass

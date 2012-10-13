@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef _CONFIG_API_H_
 #define _CONFIG_API_H_
@@ -45,15 +10,15 @@
 
 /**
  * configFetchReq
- * 
- * This function tells the config manager to fetch the CTL file 
- * and then fetch the config  from the CUCM. It is expected that 
+ *
+ * This function tells the config manager to fetch the CTL file
+ * and then fetch the config  from the CUCM. It is expected that
  * this will result in processing of
  * the config file after the config managers response is received.
  *
- * The response received for this request is asynchronous and 
+ * The response received for this request is asynchronous and
  * should be handled via event provided by config manager.
- * The CCAPI_Config_reponse api needs to be called for the 
+ * The CCAPI_Config_reponse api needs to be called for the
  * handling of the response to the fetch request
  *
  */
@@ -66,7 +31,7 @@ void configFetchReq(int device_handle);
  * and a new config file needs to be downloaded.
  *
  * The error could be XML format error or minimum config not being
- * present in the config file.  It is expected that 
+ * present in the config file.  It is expected that
  * this will result in processing of
  * the config file after the config managers response is received.
  *
@@ -116,29 +81,29 @@ void configApplyConfigNotify(cc_string_t config_version,
 
 /**
  * dialPlanFetchReq
- * 
+ *
  * This function tells the get file request service to fetch the latest dial
  * plan from the CUCM.
  *
  * @param device_handle [in] handle of the device, the response is for
- * @param dialPlanFileName [in] the name of dialplan file to retrieve 
+ * @param dialPlanFileName [in] the name of dialplan file to retrieve
  * @return cc_boolean indicating success/failure
  *
  */
-cc_boolean dialPlanFetchReq(int device_handle, char* dialPlanFileName); 
+cc_boolean dialPlanFetchReq(int device_handle, char* dialPlanFileName);
 
 /**
  * fcpFetchReq
- * 
+ *
  * This function tells the get file request service to fetch the latest fcp
  * file from the CUCM.
  *
  * @param device_handle [in] handle of the device, the response is for
- * @param dialPlanFileName [in] the name of fcp file to retrieve 
+ * @param dialPlanFileName [in] the name of fcp file to retrieve
 *  @return cc_boolean indicating success/failure
  *
  */
-cc_boolean fcpFetchReq(int device_handle, char* fcpFileName); 
+cc_boolean fcpFetchReq(int device_handle, char* fcpFileName);
 
 
 cc_boolean CCAPI_Config_set_server_address(const char *ip_address);

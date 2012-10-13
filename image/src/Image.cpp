@@ -21,7 +21,7 @@ Image::Image(imgStatusTracker* aStatusTracker) :
     mStatusTracker = aStatusTracker;
     mStatusTracker->SetImage(this);
   } else {
-    mStatusTracker = new imgStatusTracker(this);
+    mStatusTracker = new imgStatusTracker(this, nullptr);
   }
 }
 

@@ -810,11 +810,58 @@ StackSpace::tryBumpLimit(JSContext *cx, Value *from, unsigned nvals, Value **lim
 }
 
 size_t
-StackSpace::sizeOfCommitted()
+StackSpace::sizeOf()
 {
-#ifdef XP_WIN
+#if defined(XP_UNIX)
+    /*
+     * Measure how many of our pages are resident in RAM using mincore, and
+     * return that as our size.  This is slow, but hopefully nobody expects
+     * this method to be fast.
+     *
+     * Note that using mincore means that we don't count pages of the stack
+     * which are swapped out to disk.  We really should, but what we have here
+     * is better than counting the whole stack!
+     */
+
+    const int pageSize = getpagesize();
+    size_t numBytes = (trustedEnd_ - base_) * sizeof(Value);
+    size_t numPages = (numBytes + pageSize - 1) / pageSize;
+
+    // On Linux, mincore's third argument has type unsigned char*.  On Mac, it
+    // has type char*.
+#if defined(XP_MACOSX)
+    typedef char MincoreArgType;
+#else
+    typedef unsigned char MincoreArgType;
+#endif
+
+    MincoreArgType *vec = (MincoreArgType *) js_malloc(numPages);
+    int result = mincore(base_, numBytes, vec);
+    if (result) {
+        js_free(vec);
+        /*
+         * If mincore fails us, return the vsize (like we do below if we're not
+         * on Windows or Unix).
+         */
+        return (trustedEnd_ - base_) * sizeof(Value);
+    }
+
+    size_t residentBytes = 0;
+    for (size_t i = 0; i < numPages; i++) {
+        /* vec[i] has its least-significant bit set iff page i is in RAM. */
+        if (vec[i] & 0x1)
+            residentBytes += pageSize;
+    }
+    js_free(vec);
+    return residentBytes;
+
+#elif defined(XP_WIN)
     return (commitEnd_ - base_) * sizeof(Value);
 #else
+    /*
+     * Return the stack's virtual size, which is at least an upper bound on its
+     * resident size.
+     */
     return (trustedEnd_ - base_) * sizeof(Value);
 #endif
 }

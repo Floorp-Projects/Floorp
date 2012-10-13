@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "cpr_types.h"
 #include "cc_types.h"
@@ -70,7 +35,7 @@ static void ccBLFHandlerInitialized();
  *
  *  Returns:    TRUE/FALSE
  */
-boolean sub_hndlr_isAlertingBLFState(int inst) 
+boolean sub_hndlr_isAlertingBLFState(int inst)
 {
     static const char fname[] = "sub_hndlr_isAlertingBLFState";
 
@@ -86,7 +51,7 @@ boolean sub_hndlr_isAlertingBLFState(int inst)
                 inst);
     return FALSE;
 }
-    
+
 /*
  *  Function:    sub_hndlr_isInUseBLFState
  *
@@ -97,7 +62,7 @@ boolean sub_hndlr_isAlertingBLFState(int inst)
  *
  *  Returns:    TRUE/FALSE
  */
-boolean sub_hndlr_isInUseBLFState(int inst) 
+boolean sub_hndlr_isInUseBLFState(int inst)
 {
     static const char fname[] = "sub_hndlr_isInUseBLFState";
 
@@ -112,7 +77,7 @@ boolean sub_hndlr_isInUseBLFState(int inst)
                 inst);
     return FALSE;
 }
-    
+
 /*
  *  Function:    sub_hndlr_isAvailable
  *
@@ -122,7 +87,7 @@ boolean sub_hndlr_isInUseBLFState(int inst)
  *
  *  Returns:    TRUE/FALSE
  */
-boolean sub_hndlr_isAvailable() 
+boolean sub_hndlr_isAvailable()
 {
     static const char fname[] = "sub_hndlr_isAvailable";
 
@@ -142,7 +107,7 @@ static unsigned short get_new_trans_id()
 
     return curr_trans_id;
 }
-    
+
 /*
  *  Function:    sub_hndlr_start
  *
@@ -152,7 +117,7 @@ static unsigned short get_new_trans_id()
  *
  *  Returns:   void
  */
-void sub_hndlr_start() 
+void sub_hndlr_start()
 {
     static const char fname[] = "sub_hndlr_start";
     int i;
@@ -169,7 +134,7 @@ void sub_hndlr_start()
 
     /* get primary DN */
     config_get_line_string(CFGID_LINE_NAME, primaryLine, 1, sizeof(primaryLine));
-        
+
     /*
      * for speeddial/BLF buttons, make presence subscriptions.
      */
@@ -177,7 +142,7 @@ void sub_hndlr_start()
         // first line must always be a calling line.
         config_get_line_value(CFGID_LINE_FEATURE, &lineFeature, sizeof(lineFeature), i);
 
-            
+
         CCAPP_DEBUG(DEB_F_PREFIX"inst=%d, lineFeature=%d\n",
                     DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname),
                     i, lineFeature);
@@ -188,7 +153,7 @@ void sub_hndlr_start()
                 break;
             }
             config_get_line_value(CFGID_LINE_FEATURE, &featureOptionMask, sizeof(featureOptionMask), i);
-                    
+
             transId = get_new_trans_id();
             transactionIds[i - 1] = transId;
             CC_BLF_subscribe(transId,
@@ -201,20 +166,20 @@ void sub_hndlr_start()
         default:
             break;
         }
-        
+
         //Initializes native BLF handler
         ccBLFHandlerInitialized();
     }
 }
-    
-static void ccBLFHandlerInitialized() 
+
+static void ccBLFHandlerInitialized()
 {
     if (!isBLFHandlerRunning) {
         CC_BLF_init();
         isBLFHandlerRunning = TRUE;
     }
 }
-    
+
 /*
  *  Function:    sub_hndlr_stop
  *
@@ -224,7 +189,7 @@ static void ccBLFHandlerInitialized()
  *
  *  Returns:    void
  */
-void sub_hndlr_stop() 
+void sub_hndlr_stop()
 {
     static const char fname[] = "sub_hndlr_stop";
     int i;
@@ -244,7 +209,7 @@ void sub_hndlr_stop()
     CC_BLF_unsubscribe_All();
 }
 
-    
+
 /*
  *  Function:    hideBLFButtonsDisplay
  *
@@ -254,7 +219,7 @@ void sub_hndlr_stop()
  *
  *  Returns:    void
  */
-static void hideBLFButtonsDisplay() 
+static void hideBLFButtonsDisplay()
 {
     static const char fname[] = "hideBLFButtonsDisplay";
     int i;
@@ -266,7 +231,7 @@ static void hideBLFButtonsDisplay()
     for (i = SPEEDDIAL_START_BUTTON_NUMBER; i <= MAX_REG_LINES; i++) {
         // first line must always be a calling line.
         config_get_line_value(CFGID_LINE_FEATURE, &lineFeature, sizeof(lineFeature), i);
-            
+
         switch (lineFeature) {
         case cfgLineFeatureSpeedDialBLF:
             ccsnap_gen_blfFeatureEvent(CC_SIP_BLF_UNKNOWN, i);
@@ -276,7 +241,7 @@ static void hideBLFButtonsDisplay()
         }
     }
 }
-    
+
 /*
  *  Function:    unhideBLFButtonsDisplay
  *
@@ -312,7 +277,7 @@ static void unhideBLFButtonsDisplay()
         }
     }
 }
-    
+
 /*
  *  Function:    sub_hndlr_controlBLFButtons
  *
@@ -336,20 +301,20 @@ void sub_hndlr_controlBLFButtons(boolean state)
         unhideBLFButtonsDisplay();
     }
 }
-    
+
 /*
  *  Function:    sub_hndlr_NotifyBLFStatus
  *
  *  Description: notifies the app of BLF state.
  *
- *  Parameters: 
+ *  Parameters:
  *      requestId - requestId of the subscription
  *      status - BLF status
  *      appId -  button number of the BLF feature key.
  *
  *  Returns:    void
  */
-void sub_hndlr_NotifyBLFStatus(int requestId, cc_blf_state_t status, int appId) 
+void sub_hndlr_NotifyBLFStatus(int requestId, cc_blf_state_t status, int appId)
 {
     static const char fname[] = "sub_hndlr_NotifyBLFStatus";
     cc_uint32_t lineFeature = 0;
@@ -364,7 +329,7 @@ void sub_hndlr_NotifyBLFStatus(int requestId, cc_blf_state_t status, int appId)
     } else {
         config_get_line_value(CFGID_LINE_FEATURE, &lineFeature, sizeof(lineFeature), appId);
         config_get_line_string(CFGID_LINE_SPEEDDIAL_NUMBER, speedDialNumber, appId, sizeof(speedDialNumber));
-                    
+
         blfStates[appId - 1] = status;
         if (displayBLFState == FALSE) {
             return; // ignore the notify
