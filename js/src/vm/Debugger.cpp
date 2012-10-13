@@ -366,6 +366,7 @@ Debugger::Debugger(JSContext *cx, JSObject *dbg)
     JSRuntime *rt = cx->runtime;
     JS_APPEND_LINK(&link, &rt->debuggerList);
     JS_INIT_CLIST(&breakpoints);
+    JS_INIT_CLIST(&onNewGlobalObjectWatchersLink);
 }
 
 Debugger::~Debugger()
@@ -375,6 +376,12 @@ Debugger::~Debugger()
     /* This always happens in the GC thread, so no locking is required. */
     JS_ASSERT(object->compartment()->rt->isHeapBusy());
     JS_REMOVE_LINK(&link);
+
+    /*
+     * Since the inactive state for this link is a singleton cycle, it's always
+     * safe to apply JS_REMOVE_LINK to it, regardless of whether we're in the list or not.
+     */
+    JS_REMOVE_LINK(&onNewGlobalObjectWatchersLink);
 }
 
 bool
@@ -1246,6 +1253,79 @@ Debugger::onSingleStep(JSContext *cx, Value *vp)
     return JSTRAP_CONTINUE;
 }
 
+JSTrapStatus
+Debugger::fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, Value *vp)
+{
+    RootedObject hook(cx, getHook(OnNewGlobalObject));
+    JS_ASSERT(hook);
+    JS_ASSERT(hook->isCallable());
+
+    Maybe<AutoCompartment> ac;
+    ac.construct(cx, object);
+
+    Value argv[1];
+    argv[0].setObject(*global);
+    if (!wrapDebuggeeValue(cx, &argv[0]))
+        return handleUncaughtException(ac, NULL, false);
+
+    Value rv;
+    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv);
+    return parseResumptionValue(ac, ok, rv, vp);
+}
+
+bool
+Debugger::slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global)
+{
+    JS_ASSERT(!JS_CLIST_IS_EMPTY(&cx->runtime->onNewGlobalObjectWatchers));
+
+    /*
+     * Make a copy of the runtime's onNewGlobalObjectWatchers before running the
+     * handlers. Since one Debugger's handler can disable another's, the list
+     * can be mutated while we're walking it.
+     */
+    AutoObjectVector watchers(cx);
+    for (JSCList *link = JS_LIST_HEAD(&cx->runtime->onNewGlobalObjectWatchers);
+         link != &cx->runtime->onNewGlobalObjectWatchers;
+         link = JS_NEXT_LINK(link)) {
+        Debugger *dbg = fromOnNewGlobalObjectWatchersLink(link);
+        JS_ASSERT(dbg->observesNewGlobalObject());
+        if (!watchers.append(dbg->object))
+            return false;
+    }
+
+    JSTrapStatus status = JSTRAP_CONTINUE;
+    RootedValue value(cx);
+
+    for (size_t i = 0; i < watchers.length(); i++) {
+        Debugger *dbg = fromJSObject(watchers[i]);
+
+        // One Debugger's onNewGlobalObject handler can disable another's, so we
+        // must test this in the loop.
+        if (dbg->observesNewGlobalObject()) {
+            status = dbg->fireNewGlobalObject(cx, global, &value.get());
+            if (status != JSTRAP_CONTINUE && status != JSTRAP_RETURN)
+                break;
+        }
+    }
+
+    switch (status) {
+      case JSTRAP_CONTINUE:
+      case JSTRAP_RETURN: // Treat return like continue, ignoring the value.
+        return true;
+
+      case JSTRAP_ERROR:
+        JS_ASSERT(!cx->isExceptionPending());
+        return false;
+
+      case JSTRAP_THROW:
+        cx->setPendingException(value);
+        return false;
+
+      default:
+        JS_NOT_REACHED("bad status from Debugger::fireNewGlobalObject");
+    }
+}
+
 
 /*** Debugger JSObjects **************************************************************************/
 
@@ -1556,6 +1636,23 @@ Debugger::setEnabled(JSContext *cx, unsigned argc, Value *vp)
             else
                 bp->site->dec(cx->runtime->defaultFreeOp());
         }
+
+        /*
+         * Add or remove ourselves from the runtime's list of Debuggers
+         * that care about new globals.
+         */
+        if (dbg->getHook(OnNewGlobalObject)) {
+            if (enabled) {
+                /* If we were not enabled, the link should be a singleton list. */
+                JS_ASSERT(JS_CLIST_IS_EMPTY(&dbg->onNewGlobalObjectWatchersLink));
+                JS_APPEND_LINK(&dbg->onNewGlobalObjectWatchersLink,
+                               &cx->runtime->onNewGlobalObjectWatchers);
+            } else {
+                /* If we were enabled, the link should be inserted in the list. */
+                JS_ASSERT(!JS_CLIST_IS_EMPTY(&dbg->onNewGlobalObjectWatchersLink));
+                JS_REMOVE_AND_INIT_LINK(&dbg->onNewGlobalObjectWatchersLink);
+            }
+        }
     }
 
     dbg->enabled = enabled;
@@ -1636,6 +1733,42 @@ JSBool
 Debugger::setOnEnterFrame(JSContext *cx, unsigned argc, Value *vp)
 {
     return setHookImpl(cx, argc, vp, OnEnterFrame);
+}
+
+JSBool
+Debugger::getOnNewGlobalObject(JSContext *cx, unsigned argc, Value *vp)
+{
+    return getHookImpl(cx, argc, vp, OnNewGlobalObject);
+}
+
+JSBool
+Debugger::setOnNewGlobalObject(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "setOnNewGlobalObject", args, dbg);
+    JSObject *oldHook = dbg->getHook(OnNewGlobalObject);
+
+    if (!setHookImpl(cx, argc, vp, OnNewGlobalObject))
+        return false;
+
+    /*
+     * Add or remove ourselves from the runtime's list of Debuggers that
+     * care about new globals.
+     */
+    if (dbg->enabled) {
+        JSObject *newHook = dbg->getHook(OnNewGlobalObject);
+        if (!oldHook && newHook) {
+            /* If we didn't have a hook, the link should be a singleton list. */
+            JS_ASSERT(JS_CLIST_IS_EMPTY(&dbg->onNewGlobalObjectWatchersLink));
+            JS_APPEND_LINK(&dbg->onNewGlobalObjectWatchersLink,
+                           &cx->runtime->onNewGlobalObjectWatchers);
+        } else if (oldHook && !newHook) {
+            /* If we did have a hook, the link should be inserted in the list. */
+            JS_ASSERT(!JS_CLIST_IS_EMPTY(&dbg->onNewGlobalObjectWatchersLink));
+            JS_REMOVE_AND_INIT_LINK(&dbg->onNewGlobalObjectWatchersLink);
+        }
+    }
+
+    return true;
 }
 
 JSBool
@@ -2359,6 +2492,7 @@ JSPropertySpec Debugger::properties[] = {
             Debugger::setOnExceptionUnwind, 0),
     JS_PSGS("onNewScript", Debugger::getOnNewScript, Debugger::setOnNewScript, 0),
     JS_PSGS("onEnterFrame", Debugger::getOnEnterFrame, Debugger::setOnEnterFrame, 0),
+    JS_PSGS("onNewGlobalObject", Debugger::getOnNewGlobalObject, Debugger::setOnNewGlobalObject, 0),
     JS_PSGS("uncaughtExceptionHook", Debugger::getUncaughtExceptionHook,
             Debugger::setUncaughtExceptionHook, 0),
     JS_PS_END

@@ -63,6 +63,7 @@
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "js/MemoryMetrics.h"
+#include "vm/Debugger.h"
 #include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
@@ -864,6 +865,7 @@ JSRuntime::JSRuntime()
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&contextList);
     JS_INIT_CLIST(&debuggerList);
+    JS_INIT_CLIST(&onNewGlobalObjectWatchers);
 
     PodZero(&debugHooks);
     PodZero(&atomState);
@@ -3381,8 +3383,13 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals)
 
     JSCompartment *saved = cx->compartment;
     cx->setCompartment(compartment);
-    GlobalObject *global = GlobalObject::create(cx, Valueify(clasp));
+    Rooted<GlobalObject *> global(cx, GlobalObject::create(cx, Valueify(clasp)));
     cx->setCompartment(saved);
+    if (!global)
+        return NULL;
+
+    if (!Debugger::onNewGlobalObject(cx, global))
+        return NULL;
 
     return global;
 }

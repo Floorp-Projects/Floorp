@@ -814,6 +814,12 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     JSCList             debuggerList;
 
+    /*
+     * Head of circular list of all enabled Debuggers that have
+     * onNewGlobalObject handler methods established.
+     */
+    JSCList             onNewGlobalObjectWatchers;
+
     /* Bookkeeping information for debug scope objects. */
     js::DebugScopes     *debugScopes;
 
