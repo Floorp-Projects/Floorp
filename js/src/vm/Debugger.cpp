@@ -1662,29 +1662,43 @@ Debugger::setUncaughtExceptionHook(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JSObject *
+GlobalObject *
 Debugger::unwrapDebuggeeArgument(JSContext *cx, const Value &v)
 {
-    /*
-     * The argument to {add,remove,has}Debuggee may be
-     *   - a Debugger.Object belonging to this Debugger: return its referent
-     *   - a cross-compartment wrapper: return the wrapped object
-     *   - any other non-Debugger.Object object: return it
-     * If it is a primitive, or a Debugger.Object that belongs to some other
-     * Debugger, throw a TypeError.
-     */
-    JSObject *obj = NonNullObject(cx, v);
-    if (obj) {
-        if (obj->getClass() == &DebuggerObject_class) {
-            Value rv = v;
-            if (!unwrapDebuggeeValue(cx, &rv))
-                return NULL;
-            return &rv.toObject();
-        }
-        if (IsCrossCompartmentWrapper(obj))
-            return &GetProxyPrivate(obj).toObject();
+    if (!v.isObject()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
+                             "argument", "not a global object");
+        return NULL;
     }
-    return obj;
+
+    RootedObject obj(cx, &v.toObject());
+
+    /* If it's a Debugger.Object belonging to this debugger, dereference that. */
+    if (obj->getClass() == &DebuggerObject_class) {
+        Value rv = v;
+        if (!unwrapDebuggeeValue(cx, &rv))
+            return NULL;
+        obj = &rv.toObject();
+    }
+
+    /* If we have a cross-compartment wrapper, dereference as far as is secure. */
+    obj = UnwrapObjectChecked(cx, obj);
+    if (!obj)
+        return NULL;
+
+    /* If that produced an outer window, innerize it. */
+    obj = GetInnerObject(cx, obj);
+    if (!obj)
+        return NULL;
+
+    /* If that didn't produce a global object, it's an error. */
+    if (!obj->isGlobal()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
+                             "argument", "not a global object");
+        return NULL;
+    }
+
+    return &obj->asGlobal();
 }
 
 JSBool
@@ -1692,14 +1706,14 @@ Debugger::addDebuggee(JSContext *cx, unsigned argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.addDebuggee", 1);
     THIS_DEBUGGER(cx, argc, vp, "addDebuggee", args, dbg);
-    RootedObject referent(cx, dbg->unwrapDebuggeeArgument(cx, args[0]));
-    if (!referent)
+    Rooted<GlobalObject*> global(cx, dbg->unwrapDebuggeeArgument(cx, args[0]));
+    if (!global)
         return false;
-    Rooted<GlobalObject*> global(cx, &referent->global());
+
     if (!dbg->addDebuggeeGlobal(cx, global))
         return false;
 
-    Value v = ObjectValue(*referent);
+    Value v = ObjectValue(*global);
     if (!dbg->wrapDebuggeeValue(cx, &v))
         return false;
     args.rval().set(v);
@@ -1711,10 +1725,9 @@ Debugger::removeDebuggee(JSContext *cx, unsigned argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.removeDebuggee", 1);
     THIS_DEBUGGER(cx, argc, vp, "removeDebuggee", args, dbg);
-    JSObject *referent = dbg->unwrapDebuggeeArgument(cx, args[0]);
-    if (!referent)
+    GlobalObject *global = dbg->unwrapDebuggeeArgument(cx, args[0]);
+    if (!global)
         return false;
-    GlobalObject *global = &referent->global();
     if (dbg->debuggees.has(global))
         dbg->removeDebuggeeGlobal(cx->runtime->defaultFreeOp(), global, NULL, NULL);
     args.rval().setUndefined();
@@ -1726,10 +1739,10 @@ Debugger::hasDebuggee(JSContext *cx, unsigned argc, Value *vp)
 {
     REQUIRE_ARGC("Debugger.hasDebuggee", 1);
     THIS_DEBUGGER(cx, argc, vp, "hasDebuggee", args, dbg);
-    JSObject *referent = dbg->unwrapDebuggeeArgument(cx, args[0]);
-    if (!referent)
+    GlobalObject *global = dbg->unwrapDebuggeeArgument(cx, args[0]);
+    if (!global)
         return false;
-    args.rval().setBoolean(!!dbg->debuggees.lookup(&referent->global()));
+    args.rval().setBoolean(!!dbg->debuggees.lookup(global));
     return true;
 }
 
@@ -2011,10 +2024,9 @@ class Debugger::ScriptQuery {
         if (global.isUndefined()) {
             matchAllDebuggeeGlobals();
         } else {
-            JSObject *referent = debugger->unwrapDebuggeeArgument(cx, global);
-            if (!referent)
+            GlobalObject *globalObject = debugger->unwrapDebuggeeArgument(cx, global);
+            if (!globalObject)
                 return false;
-            GlobalObject *globalObject = &referent->global();
 
             /*
              * If the given global isn't a debuggee, just leave the set of
