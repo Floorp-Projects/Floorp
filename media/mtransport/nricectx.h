@@ -126,7 +126,7 @@ class NrIceCtx {
   // The thread to direct method calls to
   nsCOMPtr<nsIEventTarget> thread() { return sts_target_; }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceCtx);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceCtx)
 
  private:
   NrIceCtx(const std::string& name, bool offerer)
