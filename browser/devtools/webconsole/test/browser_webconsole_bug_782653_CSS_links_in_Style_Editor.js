@@ -54,7 +54,12 @@ function checkStyleEditorForSheetAndLine(aStyleSheetIndex, aLine, aCallback) {
 
     // Editor is already loaded, check the current line of caret.
     if (aEditor.sourceEditor) {
+      ok(true, "Editor is already loaded, check the current line of caret");
       executeSoon(function() {
+        ok(true, "Execute soon occured");
+        ok(aEditor.sourceEditor != null, "sourceeditor not null");
+        ok(aEditor.sourceEditor.getCaretPosition() != null, "position not null");
+        ok(aEditor.sourceEditor.getCaretPosition().line != null, "line not null");
         is(aEditor.sourceEditor.getCaretPosition().line, aLine,
            "Correct line is selected");
         if (aCallback) {
@@ -64,12 +69,19 @@ function checkStyleEditorForSheetAndLine(aStyleSheetIndex, aLine, aCallback) {
       return;
     }
 
+    ok(true, "Editor is not loaded, waiting for it.");
+    ok(aEditor, "aEditor is defined.");
     // Wait for source editor to be loaded.
     aEditor.addActionListener({
       onAttach: function onAttach() {
+        ok(true, "on attach happened");
         aEditor.removeActionListener(this);
-
+        ok(true, "this removed");
         executeSoon(function() {
+          ok(true, "execute soon");
+          ok(aEditor.sourceEditor != null, "sourceeditor not null");
+          ok(aEditor.sourceEditor.getCaretPosition() != null, "position not null");
+          ok(aEditor.sourceEditor.getCaretPosition().line != null, "line not null");
           is(aEditor.sourceEditor.getCaretPosition().line, aLine,
              "Correct line is selected");
           if (aCallback) {
