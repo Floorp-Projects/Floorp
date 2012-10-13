@@ -45,7 +45,7 @@ def get_locale_strings(path, prefix, middle, add_cr):
 
         name, value = line.split("=", 1)
         value = value.strip() # trim whitespace from the start and end
-        if value[-1] == "\"" and value[0] == "\"":
+        if value and value[-1] == "\"" and value[0] == "\"":
             value = value[1:-1] # remove " from the start and end
 
         if add_cr:
