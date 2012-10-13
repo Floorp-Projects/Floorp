@@ -11,6 +11,7 @@
 
 struct JSContext;
 struct JSObject;
+class nsGenericElement;
 class nsINode;
 namespace mozilla {
 class ErrorResult;
@@ -18,8 +19,8 @@ class ErrorResult;
 
 // IID for the nsIHTMLCollection interface
 #define NS_IHTMLCOLLECTION_IID \
-{ 0x5c6012c3, 0xa816, 0x4f28, \
- { 0xab, 0x93, 0xe9, 0x8a, 0x36, 0x16, 0x88, 0xf2 } }
+{ 0x5643235d, 0x9a72, 0x4b6a, \
+ { 0xa6, 0x0c, 0x64, 0x63, 0x72, 0xb7, 0x53, 0x4a } }
 
 /**
  * An internal interface
@@ -43,6 +44,7 @@ public:
     GetLength(&length);
     return length;
   }
+  virtual nsGenericElement* GetElementAt(uint32_t index) = 0;
   nsGenericElement* Item(uint32_t index)
   {
     return GetElementAt(index);

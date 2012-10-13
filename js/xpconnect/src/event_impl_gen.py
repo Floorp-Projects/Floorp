@@ -5,7 +5,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from codegen import *
 import sys, os.path, re, xpidl, itertools
 
 # --makedepend-output support.
@@ -18,6 +17,9 @@ def strip_end(text, suffix):
     return text[:-len(suffix)]
 
 # Copied from dombindingsgen.py
+def makeQuote(filename):
+    return filename.replace(' ', '\\ ')  # enjoy!
+
 def writeMakeDependOutput(filename):
     print "Creating makedepend file", filename
     f = open(filename, 'w')

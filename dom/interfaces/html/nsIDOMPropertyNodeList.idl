@@ -7,17 +7,10 @@
 #include "nsIVariant.idl"
 
 interface nsIDOMNode;
-interface nsIContent;
 
-[scriptable, uuid(255cc828-49e8-4fb0-8e36-875e6e072da3)]
+[scriptable, uuid(22c9c591-182d-4504-8a95-d3274a8b147a)]
 interface nsIDOMPropertyNodeList : nsISupports {
-  [getter,forward(getNodeAt)] nsIDOMNode    item(in unsigned long index);
+  nsIDOMNode    item(in unsigned long index);
   readonly attribute unsigned long          length;
-
-  /**
-   * Get the node at the index.  Returns null if the index is out of bounds
-   */
-  [noscript,notxpcom,nostdcall] nsIContent  getNodeAt(in unsigned long index);
-
   nsIVariant getValues();
 };

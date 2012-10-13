@@ -5,10 +5,9 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(917da19d-62f5-441d-b47e-9e35f05639c9)]
+[scriptable, uuid(f474c567-cbcb-458f-abad-ae42363da287)]
 interface nsIDOMClientRectList : nsISupports
 {
   readonly attribute unsigned long length;
-  [getter,forward(getItemAt)] nsIDOMClientRect        item(in unsigned long index);
-  [noscript,notxpcom,nostdcall] nsIDOMClientRect getItemAt(in unsigned long index);
+  nsIDOMClientRect        item(in unsigned long index);
 };

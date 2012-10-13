@@ -5,8 +5,6 @@
 
 #include "domstubs.idl"
 
-interface nsGenericElement;
-
 /**
  * The nsIDOMHTMLCollection interface is an interface to a collection
  * of [X]HTML elements.
@@ -18,22 +16,11 @@ interface nsGenericElement;
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(db690d8f-3bca-4198-be64-78adb7f38bf8)]
+[scriptable, uuid(bb07f567-5b37-4172-92aa-7d00ceed4809)]
 interface nsIDOMHTMLCollection : nsISupports
 {
   readonly attribute unsigned long    length;
 
-  [getter,forward(getElementAt)] nsIDOMNode item(in unsigned long index);
-  [getter,forward(getNamedItem)] nsIDOMNode namedItem(in DOMString name);
-
-  /**
-   * Get the node at the index.  Returns null if the index is out of bounds.
-   */
-  [noscript,notxpcom,nostdcall] nsGenericElement getElementAt(in unsigned long index);
-
-  /**
-   * Get the node for the name.  Returns null if no node exists for the name.
-   */
-  [noscript,notxpcom,nostdcall] nsISupports getNamedItem(in DOMString name,
-                                                         out nsWrapperCachePtr cache);
+  nsIDOMNode item(in unsigned long index);
+  nsIDOMNode namedItem(in DOMString name);
 };

@@ -7,7 +7,7 @@
 
 interface nsIDOMSVGPathSeg;
 
-[scriptable, uuid(1e4efb5c-7b0f-4338-a92e-6ca5402b303c)]
+[scriptable, uuid(24bc0498-ebfd-4966-a1c7-524e939308c9)]
 interface nsIDOMSVGPathSegList : nsISupports
 { 
   readonly attribute unsigned long numberOfItems;
@@ -19,7 +19,6 @@ interface nsIDOMSVGPathSegList : nsISupports
                     // raises(nsIDOMDOMException, nsIDOMSVGException);
   nsIDOMSVGPathSeg getItem(in unsigned long index);
                     // raises(nsIDOMDOMException);
-  [getter,noscript,notxpcom,nostdcall] nsIDOMSVGPathSeg getItemAt(in unsigned long index);
   nsIDOMSVGPathSeg insertItemBefore(in nsIDOMSVGPathSeg newItem, in unsigned long index);
                     // raises(nsIDOMDOMException, nsIDOMSVGException);
   nsIDOMSVGPathSeg replaceItem(in nsIDOMSVGPathSeg newItem, in unsigned long index);

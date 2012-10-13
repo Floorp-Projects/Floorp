@@ -14,8 +14,8 @@ class nsIContent;
 
 // IID for the nsINodeList interface
 #define NS_INODELIST_IID \
-{ 0xe60b773e, 0x5d20, 0x43f6, \
- { 0xb0, 0x8c, 0xfd, 0x65, 0x26, 0xce, 0xe0, 0x7a } }
+{ 0xadb5e54c, 0x6e96, 0x4102, \
+ { 0x8d, 0x40, 0xe0, 0x12, 0x3d, 0xcf, 0x48, 0x7a } }
 
 /**
  * An internal interface for a reasonably fast indexOf.
@@ -45,10 +45,7 @@ public:
     GetLength(&length);
     return length;
   }
-  nsIContent* Item(uint32_t aIndex)
-  {
-    return GetNodeAt(aIndex);
-  }
+  virtual nsIContent* Item(uint32_t aIndex) = 0;
   nsIContent* IndexedGetter(uint32_t aIndex, bool& aFound)
   {
     nsIContent* item = Item(aIndex);

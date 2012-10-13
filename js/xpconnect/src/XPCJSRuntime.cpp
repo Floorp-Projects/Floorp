@@ -417,16 +417,10 @@ SuspectDOMExpandos(nsPtrHashKey<JSObject> *key, void *arg)
 {
     Closure *closure = static_cast<Closure*>(arg);
     JSObject* obj = key->GetKey();
-    nsISupports* native = nullptr;
-    if (dom::oldproxybindings::instanceIsProxy(obj)) {
-        native = static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
-    }
-    else {
-        const dom::DOMClass* clasp;
-        dom::DOMObjectSlot slot = GetDOMClass(obj, clasp);
-        MOZ_ASSERT(slot != dom::eNonDOMObject && clasp->mDOMObjectIsISupports);
-        native = dom::UnwrapDOMObject<nsISupports>(obj, slot);
-    }
+    const dom::DOMClass* clasp;
+    dom::DOMObjectSlot slot = GetDOMClass(obj, clasp);
+    MOZ_ASSERT(slot != dom::eNonDOMObject && clasp->mDOMObjectIsISupports);
+    nsISupports* native = dom::UnwrapDOMObject<nsISupports>(obj, slot);
     closure->cb->NoteXPCOMRoot(native);
     return PL_DHASH_NEXT;
 }
@@ -2395,7 +2389,6 @@ JSBool
 XPCJSRuntime::OnJSContextNew(JSContext *cx)
 {
     // if it is our first context then we need to generate our string ids
-    JSBool ok = true;
     if (JSID_IS_VOID(mStrIDs[0])) {
         JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
         {
@@ -2406,22 +2399,17 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
                 JSString* str = JS_InternString(cx, mStrings[i]);
                 if (!str || !JS_ValueToId(cx, STRING_TO_JSVAL(str), &mStrIDs[i])) {
                     mStrIDs[0] = JSID_VOID;
-                    ok = false;
-                    break;
+                    return false;
                 }
                 mStrJSVals[i] = STRING_TO_JSVAL(str);
             }
         }
 
-        ok = mozilla::dom::DefineStaticJSVals(cx) &&
-             mozilla::dom::oldproxybindings::DefineStaticJSVals(cx);
-        if (!ok)
+        if (!mozilla::dom::DefineStaticJSVals(cx) ||
+            !InternStaticDictionaryJSVals(cx)) {
             return false;
-
-        ok = InternStaticDictionaryJSVals(cx);
+        }
     }
-    if (!ok)
-        return false;
 
     XPCContext* xpc = new XPCContext(this, cx);
     if (!xpc)
