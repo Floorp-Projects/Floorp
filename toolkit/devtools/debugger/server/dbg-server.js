@@ -391,9 +391,9 @@ ActorPool.prototype = {
   /**
    * Remove an actor from the actor pool.
    */
-  removeActor: function AP_remove(aActorID) {
-    delete this._actors[aActorID];
-    delete this._cleanups[aActorID];
+  removeActor: function AP_remove(aActor) {
+    delete this._actors[aActor.actorID];
+    delete this._cleanups[aActor.actorID];
   },
 
   /**
