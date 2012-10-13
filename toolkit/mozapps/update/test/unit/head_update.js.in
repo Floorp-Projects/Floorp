@@ -114,6 +114,9 @@ var gTestserver;
 var gXHR;
 var gXHRCallback;
 
+var gUpdatePrompt;
+var gUpdatePromptCallback;
+
 var gCheckFunc;
 var gResponseBody;
 var gResponseStatusCode = 200;
@@ -1502,6 +1505,7 @@ function overrideXHR(callback) {
                             gXHR.contractID, gXHR);
 }
 
+
 /**
  * Bare bones XMLHttpRequest implementation for testing onprogress, onerror,
  * and onload nsIDomEventListener handleEvent.
@@ -1566,6 +1570,63 @@ xhr.prototype = {
   get wrappedJSObject() { return this; }
 };
 
+function overrideUpdatePrompt(callback) {
+  var registrar = Components.manager.QueryInterface(AUS_Ci.nsIComponentRegistrar);
+  gUpdatePrompt = new UpdatePrompt();
+  gUpdatePromptCallback = callback;
+  registrar.registerFactory(gUpdatePrompt.classID, gUpdatePrompt.classDescription,
+                            gUpdatePrompt.contractID, gUpdatePrompt);
+}
+
+function UpdatePrompt() {
+  var fns = ["checkForUpdates", "showUpdateAvailable", "showUpdateDownloaded",
+             "showUpdateError", "showUpdateHistory", "showUpdateInstalled"];
+
+  fns.forEach(function(promptFn) {
+    UpdatePrompt.prototype[promptFn] = function() {
+      if (!gUpdatePromptCallback) {
+        return;
+      }
+
+      var callback = gUpdatePromptCallback[promptFn];
+      if (!callback) {
+        return;
+      }
+
+      callback.apply(gUpdatePromptCallback,
+                     Array.prototype.slice.call(arguments));
+    }
+  });
+}
+
+UpdatePrompt.prototype = {
+  flags: AUS_Ci.nsIClassInfo.SINGLETON,
+  implementationLanguage: AUS_Ci.nsIProgrammingLanguage.JAVASCRIPT,
+  getHelperForLanguage: function(language) null,
+  getInterfaces: function(count) {
+    var interfaces = [AUS_Ci.nsISupports, AUS_Ci.nsIUpdatePrompt];
+    count.value = interfaces.length;
+    return interfaces;
+  },
+  classDescription: "UpdatePrompt",
+  contractID: "@mozilla.org/updates/update-prompt;1",
+  classID: Components.ID("{8c350a15-9b90-4622-93a1-4d320308664b}"),
+  createInstance: function (outer, aIID) {
+    if (outer == null)
+      return gUpdatePrompt.QueryInterface(aIID);
+    throw AUS_Cr.NS_ERROR_NO_AGGREGATION;
+  },
+  QueryInterface: function(aIID) {
+    if (aIID.equals(AUS_Ci.nsIClassInfo) ||
+        aIID.equals(AUS_Ci.nsISupports) ||
+        aIID.equals(AUS_Ci.nsIUpdatePrompt))
+      return gUpdatePrompt;
+    throw AUS_Cr.NS_ERROR_NO_INTERFACE;
+  },
+};
+
+
+
 /* Update check listener */
 const updateCheckListener = {
   onProgress: function UCL_onProgress(request, position, totalSize) {
@@ -1586,12 +1647,13 @@ const updateCheckListener = {
   onError: function UCL_onError(request, update) {
     gRequestURL = request.channel.originalURI.spec;
     gStatusCode = request.status;
+
     gStatusText = update.statusText;
     logTestInfo("url = " + gRequestURL + ", " +
                 "request.status = " + gStatusCode + ", " +
                 "update.statusText = " + gStatusText);
     // Use a timeout to allow the XHR to complete
-    do_execute_soon(gCheckFunc);
+    do_execute_soon(gCheckFunc.bind(null, request, update));
   },
 
   QueryInterface: function(aIID) {

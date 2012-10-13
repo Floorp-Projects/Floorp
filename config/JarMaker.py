@@ -74,6 +74,9 @@ class JarMaker(object):
     self.useJarfileManifest = useJarfileManifest
     self.useChromeManifest = useChromeManifest
     self.pp = Preprocessor()
+    self.topsourcedir = None
+    self.sourcedirs = []
+    self.localedirs = None
 
   def getCommandLineParser(self):
     '''Get a optparse.OptionParser for jarmaker.
@@ -102,22 +105,8 @@ class JarMaker(object):
                  help="top source directory")
     p.add_option('-c', '--l10n-src', type="string", action="append",
                  help="localization directory")
-    p.add_option('--l10n-base', type="string", action="append", default=[],
-                 help="base directory to be used for localization (multiple)")
     p.add_option('-j', type="string",
                  help="jarfile directory")
-    # backwards compat, not needed
-    p.add_option('-a', action="store_false", default=True,
-                 help="NOT SUPPORTED, turn auto-registration of chrome off (installed-chrome.txt)")
-    p.add_option('-d', type="string",
-                 help="UNUSED, chrome directory")
-    p.add_option('-o', help="cross compile for auto-registration, ignored")
-    p.add_option('-l', action="store_true",
-                 help="ignored (used to switch off locks)")
-    p.add_option('-x', action="store_true",
-                 help="force Unix")
-    p.add_option('-z', help="backwards compat, ignored")
-    p.add_option('-p', help="backwards compat, ignored")
     return p
 
   def processIncludes(self, includes):
@@ -182,16 +171,21 @@ class JarMaker(object):
     finally:
       lock = None
   
-  def makeJar(self, infile=None,
-               jardir='',
-               sourcedirs=[], topsourcedir='', localedirs=None):
+  def makeJar(self, infile, jardir):
     '''makeJar is the main entry point to JarMaker.
 
     It takes the input file, the output directory, the source dirs and the
     top source dir as argument, and optionally the l10n dirs.
     '''
+    # making paths absolute, guess srcdir if file and add to sourcedirs
+    _normpath = lambda p: os.path.normpath(os.path.abspath(p))
+    self.topsourcedir = _normpath(self.topsourcedir)
+    self.sourcedirs = [_normpath(p) for p in self.sourcedirs]
+    if self.localedirs:
+      self.localedirs = [_normpath(p) for p in self.localedirs]
     if isinstance(infile, basestring):
       logging.info("processing " + infile)
+      self.sourcedirs.append(_normpath(os.path.dirname(infile)))
     pp = self.pp.clone()
     pp.out = StringIO()
     pp.do_include(infile)
@@ -205,68 +199,13 @@ class JarMaker(object):
         if m.group('jarfile') is None:
           # comment
           continue
-        self.processJarSection(m.group('jarfile'), lines,
-                               jardir, sourcedirs, topsourcedir,
-                               localedirs)
+        self.processJarSection(m.group('jarfile'), lines, jardir)
     except StopIteration:
       # we read the file
       pass
     return
 
-  def makeJars(self, infiles, l10nbases,
-               jardir='',
-               sourcedirs=[], topsourcedir='', localedirs=None):
-    '''makeJars is the second main entry point to JarMaker.
-
-    It takes an iterable sequence of input file names, the l10nbases,
-    the output directory, the source dirs and the
-    top source dir as argument, and optionally the l10n dirs.
-
-    It iterates over all inputs, guesses srcdir and l10ndir from the
-    path and topsourcedir and calls into makeJar.
-
-    The l10ndirs are created by guessing the relativesrcdir, and resolving
-    that against the l10nbases. l10nbases can either be path strings, or 
-    callables. In the latter case, that will be called with the 
-    relativesrcdir as argument, and is expected to return a path string.
-    This logic is disabled if the jar.mn path is not inside the topsrcdir.
-    '''
-    topsourcedir = os.path.normpath(os.path.abspath(topsourcedir))
-    def resolveL10nBase(relpath):
-      def _resolve(base):
-        if isinstance(base, basestring):
-          return os.path.join(base, relpath)
-        if callable(base):
-          return base(relpath)
-        return base
-      return _resolve
-    for infile in infiles:
-      srcdir = os.path.normpath(os.path.abspath(os.path.dirname(infile)))
-      l10ndir = srcdir
-      if os.path.basename(srcdir) == 'locales':
-        l10ndir = os.path.dirname(l10ndir)
-
-      l10ndirs = None
-      # srcdir may not be a child of topsourcedir, in which case
-      # we assume that the caller passed in suitable sourcedirs,
-      # and just skip passing in localedirs
-      if srcdir.startswith(topsourcedir):
-        rell10ndir = l10ndir[len(topsourcedir):].lstrip(os.sep)
-
-        l10ndirs = map(resolveL10nBase(rell10ndir), l10nbases)
-        if localedirs is not None:
-          l10ndirs += [os.path.normpath(os.path.abspath(s))
-                       for s in localedirs]
-      srcdirs = [os.path.normpath(os.path.abspath(s))
-                 for s in sourcedirs] + [srcdir]
-      self.makeJar(infile=infile,
-                   sourcedirs=srcdirs, topsourcedir=topsourcedir,
-                   localedirs=l10ndirs,
-                   jardir=jardir)
-
-
-  def processJarSection(self, jarfile, lines,
-                        jardir, sourcedirs, topsourcedir, localedirs):
+  def processJarSection(self, jarfile, lines, jardir):
     '''Internal method called by makeJar to actually process a section
     of a jar.mn file.
 
@@ -328,30 +267,27 @@ class JarMaker(object):
             jf.close()
           lines.pushback(l)
           return
-        self._processEntryLine(m, sourcedirs, topsourcedir, localedirs,
-                              outHelper, jf)
+        self._processEntryLine(m, outHelper, jf)
     finally:
       if jf is not None:
         jf.close()
     return
 
-  def _processEntryLine(self, m, 
-                        sourcedirs, topsourcedir, localedirs,
-                        outHelper, jf):
+  def _processEntryLine(self, m, outHelper, jf):
       out = m.group('output')
       src = m.group('source') or os.path.basename(out)
       # pick the right sourcedir -- l10n, topsrc or src
       if m.group('locale'):
-        src_base = localedirs
+        src_base = self.localedirs
       elif src.startswith('/'):
         # path/in/jar/file_name.xul     (/path/in/sourcetree/file_name.xul)
         # refers to a path relative to topsourcedir, use that as base
         # and strip the leading '/'
-        src_base = [topsourcedir]
+        src_base = [self.topsourcedir]
         src = src[1:]
       else:
         # use srcdirs and the objdir (current working dir) for relative paths
-        src_base = sourcedirs + [os.getcwd()]
+        src_base = self.sourcedirs + [os.getcwd()]
       # check if the source file exists
       realsrc = None
       for _srcdir in src_base:
@@ -458,12 +394,15 @@ def main():
   (options, args) = p.parse_args()
   jm.processIncludes(options.I)
   jm.outputFormat = options.f
+  jm.sourcedirs = options.s
+  jm.topsourcedir = options.t
   if options.e:
     jm.useChromeManifest = True
     jm.useJarfileManifest = False
   if options.bothManifests:
     jm.useChromeManifest = True
     jm.useJarfileManifest = True
+  jm.localedirs = options.l10n_src
   noise = logging.INFO
   if options.verbose is not None:
     noise = (options.verbose and logging.DEBUG) or logging.WARN
@@ -475,15 +414,10 @@ def main():
   topsrc = options.t
   topsrc = os.path.normpath(os.path.abspath(topsrc))
   if not args:
-    jm.makeJar(infile=sys.stdin,
-               sourcedirs=options.s, topsourcedir=topsrc,
-               localedirs=options.l10n_src,
-               jardir=options.j)
+    infile = sys.stdin
   else:
-    jm.makeJars(args, options.l10n_base,
-                jardir=options.j,
-                sourcedirs=options.s, topsourcedir=topsrc,
-                localedirs=options.l10n_src)
+    infile,  = args
+  jm.makeJar(infile, options.j)
 
 if __name__ == "__main__":
   main()

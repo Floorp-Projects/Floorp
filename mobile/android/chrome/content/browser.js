@@ -7413,79 +7413,8 @@ var MemoryObserver = {
   },
 
   dumpMemoryStats: function(aLabel) {
-    // TODO once bug 788021 has landed, replace this code and just invoke that instead
-    // currently this code is hijacked from areweslimyet.com, original code can be found at:
-    // https://github.com/Nephyrin/MozAreWeSlimYet/blob/master/mozmill_endurance_test/performance.js
     let memMgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
-
-    let timestamp = new Date();
-    let memory = {};
-
-    // These *should* be identical to the explicit/resident root node
-    // sum, AND the explicit/resident node explicit value (on newer builds),
-    // but we record all three so we can make sure the data is consistent
-    memory['manager_explicit'] = memMgr.explicit;
-    memory['manager_resident'] = memMgr.resident;
-
-    let knownHeap = 0;
-
-    function addReport(path, amount, kind, units) {
-      if (units !== undefined && units != Ci.nsIMemoryReporter.UNITS_BYTES)
-        // Unhandled. (old builds don't specify units, but use only bytes)
-        return;
-
-      if (memory[path])
-        memory[path] += amount;
-      else
-        memory[path] = amount;
-      if (kind !== undefined && kind == Ci.nsIMemoryReporter.KIND_HEAP
-          && path.indexOf('explicit/') == 0)
-        knownHeap += amount;
-    }
-
-    // Normal reporters
-    let reporters = memMgr.enumerateReporters();
-    while (reporters.hasMoreElements()) {
-      let r = reporters.getNext();
-      r instanceof Ci.nsIMemoryReporter;
-      if (r.path.length) {
-        addReport(r.path, r.amount, r.kind, r.units);
-      }
-    }
-
-    // Multireporters
-    if (memMgr.enumerateMultiReporters) {
-      let multireporters = memMgr.enumerateMultiReporters();
-
-      while (multireporters.hasMoreElements()) {
-        let mr = multireporters.getNext();
-        mr instanceof Ci.nsIMemoryMultiReporter;
-        mr.collectReports(function (proc, path, kind, units, amount, description, closure) {
-          addReport(path, amount, kind, units);
-        }, null);
-      }
-    }
-
-    let heapAllocated = memory['heap-allocated'];
-    // Called heap-used in older builds
-    if (!heapAllocated) heapAllocated = memory['heap-used'];
-    // This is how about:memory calculates derived value heap-unclassified, which
-    // is necessary to get a proper explicit value.
-    if (knownHeap && heapAllocated)
-      memory['explicit/heap-unclassified'] = memory['heap-allocated'] - knownHeap;
-
-    // If the build doesn't have a resident/explicit reporter, but does have
-    // the memMgr.explicit/resident field, use that
-    if (!memory['resident'])
-      memory['resident'] = memory['manager_resident']
-    if (!memory['explicit'])
-      memory['explicit'] = memory['manager_explicit']
-
-    let label = "[AboutMemoryDump|" + aLabel + "] ";
-    dump(label + timestamp);
-    for (let type in memory) {
-      dump(label + type + " = " + memory[type]);
-    }
+    memMgr.dumpMemoryReportsToFile(aLabel, false, true);
   },
 };
 

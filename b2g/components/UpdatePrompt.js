@@ -35,7 +35,10 @@ XPCOMUtils.defineLazyServiceGetter(Services, "aus",
 XPCOMUtils.defineLazyServiceGetter(Services, "idle",
                                    "@mozilla.org/widget/idleservice;1",
                                    "nsIIdleService");
-function UpdatePrompt() { }
+
+function UpdatePrompt() {
+  this.wrappedJSObject = this;
+}
 
 UpdatePrompt.prototype = {
   classID: Components.ID("{88b3eb21-d072-4e3b-886d-f89d8c49fe59}"),
@@ -43,6 +46,7 @@ UpdatePrompt.prototype = {
                                          Ci.nsIRequestObserver,
                                          Ci.nsIProgressEventSink,
                                          Ci.nsIObserver]),
+  _xpcom_factory: XPCOMUtils.generateSingletonFactory(UpdatePrompt),
 
   _update: null,
   _applyPromptTimer: null,
@@ -56,8 +60,7 @@ UpdatePrompt.prototype = {
   checkForUpdates: function UP_checkForUpdates() { },
 
   showUpdateAvailable: function UP_showUpdateAvailable(aUpdate) {
-    if (!this.sendUpdateEvent("update-available", aUpdate,
-                             this.handleAvailableResult)) {
+    if (!this.sendUpdateEvent("update-available", aUpdate)) {
 
       log("Unable to prompt for available update, forcing download");
       this.downloadUpdate(aUpdate);
@@ -105,10 +108,8 @@ UpdatePrompt.prototype = {
     Services.obs.addObserver(this, "quit-application", false);
   },
 
-
   showApplyPrompt: function UP_showApplyPrompt(aUpdate) {
-    if (!this.sendUpdateEvent("update-prompt-apply", aUpdate,
-                             this.handleApplyPromptResult)) {
+    if (!this.sendUpdateEvent("update-prompt-apply", aUpdate)) {
       log("Unable to prompt, forcing restart");
       this.restartProcess();
       return;
@@ -119,7 +120,7 @@ UpdatePrompt.prototype = {
     this._applyPromptTimer = this.createTimer(APPLY_PROMPT_TIMEOUT);
   },
 
-  sendUpdateEvent: function UP_sendUpdateEvent(aType, aUpdate, aCallback) {
+  sendUpdateEvent: function UP_sendUpdateEvent(aType, aUpdate) {
     let detail = {
       displayVersion: aUpdate.displayVersion,
       detailsURL: aUpdate.detailsURL
@@ -140,10 +141,10 @@ UpdatePrompt.prototype = {
     detail.updateType = patch.type;
 
     this._update = aUpdate;
-    return this.sendChromeEvent(aType, detail, aCallback);
+    return this.sendChromeEvent(aType, detail);
   },
 
-  sendChromeEvent: function UP_sendChromeEvent(aType, aDetail, aCallback) {
+  sendChromeEvent: function UP_sendChromeEvent(aType, aDetail) {
     let browser = Services.wm.getMostRecentWindow("navigator:browser");
     if (!browser) {
       log("Warning: Couldn't send update event " + aType +
@@ -151,36 +152,9 @@ UpdatePrompt.prototype = {
       return false;
     }
 
-    let content = browser.getContentWindow();
-    if (!content) {
-      log("Warning: Couldn't send update event " + aType +
-          ": no content window");
-      return false;
-    }
-
     let detail = aDetail || {};
     detail.type = aType;
 
-    if (!aCallback) {
-      browser.shell.sendChromeEvent(detail);
-      return true;
-    }
-
-    let resultType = aType + "-result";
-    let handleContentEvent = (function(e) {
-      if (!e.detail) {
-        return;
-      }
-
-      let detail = e.detail;
-      if (detail.type == resultType) {
-        aCallback.call(this, detail);
-        content.removeEventListener("mozContentEvent", handleContentEvent);
-        this._update = null;
-      }
-    }).bind(this);
-
-    content.addEventListener("mozContentEvent", handleContentEvent);
     browser.shell.sendChromeEvent(detail);
     return true;
   },
@@ -208,6 +182,7 @@ UpdatePrompt.prototype = {
         break;
       case "restart":
         this.finishUpdate();
+        this._update = null;
         break;
     }
   },
@@ -274,6 +249,40 @@ UpdatePrompt.prototype = {
     }
   },
 
+  forceUpdateCheck: function UP_forceUpdateCheck() {
+    log("Forcing update check");
+
+    let checker = Cc["@mozilla.org/updates/update-checker;1"]
+                    .createInstance(Ci.nsIUpdateChecker);
+
+    Services.aus.QueryInterface(Ci.nsIUpdateCheckListener);
+    checker.checkForUpdates(Services.aus, true);
+  },
+
+  handleEvent: function UP_handleEvent(evt) {
+    if (evt.type !== "mozContentEvent") {
+      return;
+    }
+
+    let detail = evt.detail;
+    if (!detail) {
+      return;
+    }
+
+    switch (detail.type) {
+      case "force-update-check":
+        this.forceUpdateCheck();
+        break;
+      case "update-available-result":
+        this.handleAvailableResult(detail);
+        this._update = null;
+        break;
+      case "update-prompt-apply-result":
+        this.handleApplyPromptResult(detail);
+        break;
+    }
+  },
+
   // nsIObserver
 
   observe: function UP_observe(aSubject, aTopic, aData) {
@@ -288,6 +297,8 @@ UpdatePrompt.prototype = {
         break;
     }
   },
+
+  // nsITimerCallback
 
   notify: function UP_notify(aTimer) {
     if (aTimer == this._applyPromptTimer) {

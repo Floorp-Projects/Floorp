@@ -80,6 +80,7 @@ private:
   void ReplyToPut(bool aFinal);
   virtual void OnConnectSuccess() MOZ_OVERRIDE;
   virtual void OnConnectError() MOZ_OVERRIDE;
+  virtual void OnDisconnect() MOZ_OVERRIDE;
 
   bool mConnected;
   int mConnectionId;
