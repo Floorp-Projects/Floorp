@@ -38,6 +38,11 @@
 #include <fcntl.h>
 #endif
 
+#ifdef ANDROID
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -1308,7 +1313,15 @@ nsMemoryReporterManager::DumpMemoryReportsToFileImpl(
     rv = tmpFile->AppendNative(NS_LITERAL_CSTRING("incomplete-") + filename);
     NS_ENSURE_SUCCESS(rv, rv);
    
-    rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+#ifdef ANDROID
+    // Set umask to 0 while we create the file because on Android the default
+    // umask is 0077.
+    mode_t mask = umask(0);
+#endif
+    rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
+#ifdef ANDROID
+    umask(mask);
+#endif
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsRefPtr<nsGZFileWriter> writer = new nsGZFileWriter();
