@@ -2549,7 +2549,7 @@ let BrowserOnClick = {
     switch (elmId) {
       case "exceptionDialogButton":
         secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_CLICK_ADD_EXCEPTION);
-        let params = { exceptionAdded : false, handlePrivateBrowsing : true };
+        let params = { exceptionAdded : false };
 
         try {
           switch (Services.prefs.getIntPref("browser.ssl_override_behavior")) {
