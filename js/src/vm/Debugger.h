@@ -139,7 +139,7 @@ class Debugger {
     JSTrapStatus parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value &rv,
                                       Value *vp, bool callHook = true);
 
-    JSObject *unwrapDebuggeeArgument(JSContext *cx, const Value &v);
+    GlobalObject *unwrapDebuggeeArgument(JSContext *cx, const Value &v);
 
     static void traceObject(JSTracer *trc, RawObject obj);
     void trace(JSTracer *trc);

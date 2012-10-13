@@ -2,10 +2,11 @@
 load(libdir + 'asserts.js');
 
 var dbg = new Debugger();
+var g = newGlobal();
 assertEq(dbg.findScripts().length, 0);
 assertEq(dbg.findScripts({}).length, 0);
 
-assertEq(dbg.findScripts({global:{}}).length, 0);
+assertEq(dbg.findScripts({global:g}).length, 0);
 assertThrowsInstanceOf(function () { dbg.findScripts({global:null}); }, TypeError);
 assertThrowsInstanceOf(function () { dbg.findScripts({global:true}); }, TypeError);
 assertThrowsInstanceOf(function () { dbg.findScripts({global:4}); }, TypeError);
