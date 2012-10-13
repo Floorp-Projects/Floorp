@@ -6,8 +6,17 @@ function test() {
   gBrowser.selectedTab = gBrowser.addTab();
   
   // Navigate to malware site.  Can't use an onload listener here since
-  // error pages don't fire onload
-  window.addEventListener("DOMContentLoaded", testMalware, true);
+  // error pages don't fire onload.  Also can't register the DOMContentLoaded
+  // handler here because registering it too soon would mean that we might
+  // get it for about:blank, and not about:blocked.
+  gBrowser.addTabsProgressListener({
+    onLocationChange: function(aTab, aWebProgress, aRequest, aLocation, aFlags) {
+      if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
+        gBrowser.removeTabsProgressListener(this);
+        window.addEventListener("DOMContentLoaded", testMalware, true);
+      }
+    }
+  });
   content.location = "http://www.mozilla.org/firefox/its-an-attack.html";
 }
 

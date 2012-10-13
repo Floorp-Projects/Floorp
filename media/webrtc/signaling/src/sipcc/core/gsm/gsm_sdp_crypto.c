@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <errno.h>
 #include <limits.h>
@@ -894,7 +859,7 @@ gsmsdp_check_answer_crypto_param (fsmdef_dcb_t *dcb_p, cc_sdp_t * cc_sdp_p,
         GSM_DEBUG_ERROR(GSM_L_C_F_PREFIX
                   "Answer SDP contains invalid number of"
                   " crypto attributes %d for media level %d\n",
-                  dcb_p->line, dcb_p->call_id, fname, 
+                  dcb_p->line, dcb_p->call_id, fname,
 				  num_crypto_attr, level);
         return (FALSE);
     }
@@ -937,7 +902,7 @@ gsmsdp_check_answer_crypto_param (fsmdef_dcb_t *dcb_p, cc_sdp_t * cc_sdp_p,
         GSM_DEBUG_ERROR(GSM_L_C_F_PREFIX
                   "Answer SDP contains wrong tag %d vs %d"
                   " for the media level %d\n",
-                  dcb_p->line, dcb_p->call_id, fname, 
+                  dcb_p->line, dcb_p->call_id, fname,
 				  dest_crypto_tag, offered_tag, level);
         return (FALSE);
     }
@@ -1263,7 +1228,7 @@ gsmsdp_add_single_crypto_attr (void *sdp_p, uint16_t level, int32_t tag,
  *      N/A.
  */
 static void
-gsmsdp_add_all_crypto_lines (fsmdef_dcb_t *dcb_p, void *sdp_p, 
+gsmsdp_add_all_crypto_lines (fsmdef_dcb_t *dcb_p, void *sdp_p,
                              fsmdef_media_t *media)
 {
     const char *fname = "gsmsdp_add_all_crypto_lines";
@@ -1283,8 +1248,8 @@ gsmsdp_add_all_crypto_lines (fsmdef_dcb_t *dcb_p, void *sdp_p,
     /* Get the crypto suite based on the algorithm ID */
     crypto_suite =
         gsmsdp_algorithmID_to_crypto_suite(media->local_crypto.algorithmID);
-    if (gsmsdp_add_single_crypto_attr(sdp_p, media->level, 
-            media->local_crypto.tag, crypto_suite, &media->local_crypto.key, 
+    if (gsmsdp_add_single_crypto_attr(sdp_p, media->level,
+            media->local_crypto.tag, crypto_suite, &media->local_crypto.key,
             GSMSDP_DEFALT_KEY_LIFETIME) != SDP_SUCCESS) {
         GSM_DEBUG_ERROR(GSM_L_C_F_PREFIX
                   "Failed to add crypto attributes\n",
@@ -1590,7 +1555,7 @@ gsmsdp_update_crypto_transmit_key (fsmdef_dcb_t *dcb_p,
         if (initial_offer) {
             /* An initial offer always needs new key */
             generate_key = TRUE;
-        } else if ((util_compare_ip(&(media->previous_sdp.dest_addr), 
+        } else if ((util_compare_ip(&(media->previous_sdp.dest_addr),
                                 &(media->dest_addr)) == FALSE) &&
                    media->dest_addr.type != CPR_IP_ADDR_INVALID) {
             //Todo IPv6: IPv6 does not support 0.0.0.0 hold.
@@ -1647,8 +1612,8 @@ gsmsdp_update_crypto_transmit_key (fsmdef_dcb_t *dcb_p,
         } else if (media->negotiated_crypto.tx_key.key_len == 0) {
             if (gsmsdp_local_offer_srtp(media)) {
                 /*
-                 * This an answer to our offer sent similar to 
-                 * the address change scenario above (delayed media, we 
+                 * This an answer to our offer sent similar to
+                 * the address change scenario above (delayed media, we
                  * sent SDP in 200OK and got SDP in ACK but GSM treats
                  * SDP in ACK case as an offer rather than an answer).
                  * Use the key in the offered SDP.
@@ -1885,7 +1850,7 @@ gsmsdp_is_media_encrypted (fsmdef_dcb_t *dcb_p)
         if (!GSMSDP_MEDIA_ENABLED(media)) {
             continue;
         }
-        
+
         if (media->transport == SDP_TRANSPORT_RTPSAVP || media->transport == SDP_TRANSPORT_RTPSAVPF) {
             num_encrypted++;
         }
@@ -1939,12 +1904,12 @@ gsmsdp_crypto_params_change (boolean rcv_only, fsmdef_media_t *media)
  * @param[in] media - pointer to fsmdef_media_t.
  *
  * @return            None.
- *  
+ *
  * @pre               (media not_eq NULL)
  */
 void
 gsmsdp_crypto_reset_params_change (fsmdef_media_t *media)
 {
-    media->negotiated_crypto.flags &= ~(FSMDEF_CRYPTO_RX_CHANGE | 
+    media->negotiated_crypto.flags &= ~(FSMDEF_CRYPTO_RX_CHANGE |
                                         FSMDEF_CRYPTO_TX_CHANGE);
 }

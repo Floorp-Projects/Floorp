@@ -132,8 +132,6 @@ protected:
 namespace mozilla {
 namespace dom {
 
-extern bool AzureCanvasEnabled();
-
 }
 }
 

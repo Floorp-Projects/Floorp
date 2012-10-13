@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
  * Implements functions to parse and create SDP(Session Description Protocol)
@@ -404,69 +369,31 @@ sipsdp_create_from_buf (char *buf, uint32_t nbytes, cc_sdp_t *sdp)
 char *
 sipsdp_write_to_buf (cc_sdp_t *sdp_info, uint32_t *retbytes)
 {
-    const char *fname = "sipsdp_write_to_buf";
-    char *buf, *new_buf;
-    char *sdp_buf;
+    flex_string fs;
     uint32_t sdp_len;
     sdp_result_e rc;
 
+    flex_string_init(&fs);
+
     if (!sdp_info || !sdp_info->src_sdp) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NULL sdp_info or src_sdp\n", fname);
+        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NULL sdp_info or src_sdp\n", __FUNCTION__);
         return (NULL);
     }
 
-    /*
-     * Allocate storage for the SDP text
-     */
-    buf = (char *) cpr_malloc(CCSIP_SDP_BUF_SIZE);
-    if (!buf) {
-        CCSIP_DEBUG_ERROR(SIP_F_PREFIX"malloc failure\n", fname);
-        return (NULL);
-    }
-
-    sdp_buf = buf;
-
-    if ((rc = sdp_build(sdp_info->src_sdp, &sdp_buf, CCSIP_SDP_BUF_SIZE))
+    if ((rc = sdp_build(sdp_info->src_sdp, &fs))
         != SDP_SUCCESS) {
-        CCSIP_DEBUG_TASK(DEB_F_PREFIX"sdp_build rc=%s\n", DEB_F_PREFIX_ARGS(SIP_SDP, fname),
+        CCSIP_DEBUG_TASK(DEB_F_PREFIX"sdp_build rc=%s\n", DEB_F_PREFIX_ARGS(SIP_SDP, __FUNCTION__),
                          sdp_get_result_name(rc));
 
-        if (rc == SDP_POTENTIAL_SDP_OVERFLOW) {
-            /* SDP may have been truncated. Issue an extra warning and abort */
-            CCSIP_DEBUG_ERROR(SIP_F_PREFIX"Build SDP buffer overflow\n", fname);
-        }
-
-        cpr_free(buf);
+        flex_string_free(&fs);
         *retbytes = 0;
         return (NULL);
     }
 
-    /*
-     * Compute length of SDP
-     */
-    sdp_len = sdp_buf - buf;
-    /*
-     * Minimize the memory impact on the SDP buffer by reallocating buffer
-     * with a smaller size that fits the actual SDP body for the size.
-     */
-    if ((CCSIP_SDP_BUF_SIZE - sdp_len) > 64) {
-        /*
-         * Allocate space with NULL string character, the
-         * output buffer content contains the NULL char but the
-         * the length represents an actual length of SDP
-         * without NULL char. The NULL char is added just in case,
-         * there is code that uses strlen() on the SDP then
-         * it will terminate properly.
-         */
-        new_buf = (char *) cpr_malloc(sdp_len + 1);
-        if (new_buf != NULL) {
-            memcpy(new_buf, buf, sdp_len);
-            new_buf[sdp_len] = '\0';
-            cpr_free(buf);
-            buf = new_buf;
-        }
-    }
-    *retbytes = sdp_len;
+    *retbytes = fs.string_length;
 
-    return (buf);
+    /* We are not calling flex_string_free on this, instead returning the buffer
+     * caller's responsibility to free
+     */
+    return fs.buffer;
 }

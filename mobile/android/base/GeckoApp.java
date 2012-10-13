@@ -175,7 +175,7 @@ abstract public class GeckoApp
     protected FormAssistPopup mFormAssistPopup;
     protected TabsPanel mTabsPanel;
 
-    private LayerView mLayerView;
+    protected LayerView mLayerView;
     private AbsoluteLayout mPluginContainer;
 
     private FullScreenHolder mFullScreenPluginContainer;
@@ -1671,7 +1671,7 @@ abstract public class GeckoApp
 
         if (mLayerView == null) {
             LayerView layerView = (LayerView) findViewById(R.id.layer_view);
-            layerView.createLayerClient(GeckoAppShell.getEventDispatcher());
+            layerView.initializeView(GeckoAppShell.getEventDispatcher());
             mLayerView = layerView;
         }
 

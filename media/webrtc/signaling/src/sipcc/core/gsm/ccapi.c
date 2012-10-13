@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "cpr_types.h"
 #include "cpr_stdio.h"
@@ -98,7 +63,7 @@ cc_print_msg (char *pData, int len)
     int ix;
     int msg_id = *((int *) pData);
 
-    buginf("\n" CCA_F_PREFIX "cc_msg= %s, 0x=", __FUNCTION__, 
+    buginf("\n" CCA_F_PREFIX "cc_msg= %s, 0x=", __FUNCTION__,
                             cc_msg_name((cc_msgs_t) msg_id));
     for (ix = 0; ix < len; ix++) {
         if ((ix % 8 == 0) && ix) {
@@ -252,7 +217,7 @@ cc_initialize_msg_body_parts_info (cc_msgbody_info_t *msg_body)
  */
 void
 cc_mv_msg_body_parts (cc_msgbody_info_t *dst_msg, cc_msgbody_info_t *src_msg)
-{    
+{
     if (dst_msg == NULL) {
         GSM_ERR_MSG(CCA_F_PREFIX "dst is NULL\n", __FUNCTION__);
         return;
@@ -550,15 +515,15 @@ cc_mv_caller_id (cc_caller_id_t *dst_caller, cc_caller_id_t *src_caller)
         }
         dst_caller->last_redirect_number = src_caller->last_redirect_number;
         src_caller->last_redirect_number = NULL;
-    }    
-    
+    }
+
     if (src_caller->orig_rpid_number != NULL) {
         if (dst_caller->orig_rpid_number != NULL) {
             strlib_free(dst_caller->orig_rpid_number);
         }
         dst_caller->orig_rpid_number = src_caller->orig_rpid_number;
         src_caller->orig_rpid_number = NULL;
-    } 
+    }
     dst_caller->display_calling_number = src_caller->display_calling_number;
     dst_caller->display_called_number = src_caller->display_called_number;
 }
@@ -619,10 +584,10 @@ cc_free_caller_id (cc_caller_id_t *caller)
     if (caller->last_redirect_number) {
         strlib_free(caller->last_redirect_number);
     }
-    
+
     if (caller->orig_rpid_number != NULL) {
         strlib_free(caller->orig_rpid_number);
-    } 
+    }
 }
 
 /*
@@ -820,7 +785,7 @@ cc_int_setup (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
     }
 
     CC_DEBUG(DEB_L_C_F_PREFIX "    CGPD= %s, CGPN= %s,\n    CDPD= %s, CDPN= %s\n",
-			 DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), 
+			 DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__),
              caller_id->calling_name, caller_id->calling_number,
              caller_id->called_name, caller_id->called_number);
 
@@ -1127,7 +1092,7 @@ cc_int_release_complete (cc_srcs_t src_id, cc_srcs_t dst_id,
     }
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_msg_name(pmsg->msg_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX "    cause= %s\n", 
+    CC_DEBUG(DEB_L_C_F_PREFIX "    cause= %s\n",
 		DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), cc_cause_name(cause));
 
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
@@ -1153,7 +1118,7 @@ cc_int_feature2 (cc_msgs_t msg_id, cc_srcs_t src_id, cc_srcs_t dst_id,
                     cc_feature_name(feature_id));
         return;
     }
-    
+
     pmsg->msg_id     = msg_id;
     pmsg->src_id     = src_id;
     pmsg->call_id    = call_id;
@@ -1178,11 +1143,11 @@ cc_int_feature2 (cc_msgs_t msg_id, cc_srcs_t src_id, cc_srcs_t dst_id,
         msg_body = cc_get_msg_body_info_ptr_from_feature_data(feature_id, data);
         cc_initialize_msg_body_parts_info(msg_body);
     }
-    
+
     if ((feature_id == CC_FEATURE_XFER) ||
         (feature_id == CC_FEATURE_BLIND_XFER)) {
         if (data != NULL) {
-            CC_DEBUG(DEB_L_C_F_PREFIX 
+            CC_DEBUG(DEB_L_C_F_PREFIX
                      "method= %d, call_id= %d, cause= %s dialstring= %s\n",
                      DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__),
 					 data->xfer.method, data->xfer.target_call_id,
@@ -1190,7 +1155,7 @@ cc_int_feature2 (cc_msgs_t msg_id, cc_srcs_t src_id, cc_srcs_t dst_id,
         }
     }
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_feature_name(feature_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX "feature= %s, data= %p\n", 
+    CC_DEBUG(DEB_L_C_F_PREFIX "feature= %s, data= %p\n",
 		DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), cc_feature_name(feature_id), data);
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
         // nobody checks the return code, so generate error message
@@ -1207,11 +1172,11 @@ cc_int_feature2 (cc_msgs_t msg_id, cc_srcs_t src_id, cc_srcs_t dst_id,
  */
 static void send_message_helper(
     cc_msgs_t msg_id,
-    cc_srcs_t src_id, 
-    cc_srcs_t dst_id, 
+    cc_srcs_t src_id,
+    cc_srcs_t dst_id,
     callid_t call_id,
-    line_t line, 
-    cc_features_t feature_id, 
+    line_t line,
+    cc_features_t feature_id,
     cc_feature_data_t *data,
     string_t sdp,
     cc_jsep_action_t action)
@@ -1225,7 +1190,7 @@ static void send_message_helper(
                     cc_feature_name(feature_id));
         return;
     }
-    
+
     pmsg->msg_id     = msg_id;
     pmsg->src_id     = src_id;
     pmsg->call_id    = call_id;
@@ -1239,7 +1204,7 @@ static void send_message_helper(
 
     if (msg_id == CC_MSG_CREATEANSWER || msg_id == CC_MSG_SETLOCALDESC || msg_id == CC_MSG_SETREMOTEDESC) {
         sstrncpy(pmsg->sdp, sdp, sizeof(pmsg->sdp));
-    }    
+    }
 
     if (pmsg->data_valid == TRUE) {
         pmsg->data = *data;
@@ -1258,9 +1223,9 @@ static void send_message_helper(
         msg_body = cc_get_msg_body_info_ptr_from_feature_data(feature_id, data);
         cc_initialize_msg_body_parts_info(msg_body);
     }
-    
+
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_feature_name(feature_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX "feature= %s, data= %p\n", 
+    CC_DEBUG(DEB_L_C_F_PREFIX "feature= %s, data= %p\n",
         DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), cc_feature_name(feature_id), data);
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
         // nobody checks the return code, so generate error message
@@ -1293,7 +1258,7 @@ cc_createanswer (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
 }
 
 
-void cc_setlocaldesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line, 
+void cc_setlocaldesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
                     cc_features_t feature_id, cc_jsep_action_t action, string_t sdp,  cc_feature_data_t *data)
 {
     send_message_helper(CC_MSG_SETLOCALDESC, src_id, dst_id, call_id, line,
@@ -1302,7 +1267,7 @@ void cc_setlocaldesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line
     return;
 }
 
-void cc_setremotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line, 
+void cc_setremotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
                     cc_features_t feature_id, cc_jsep_action_t action, string_t sdp, cc_feature_data_t *data)
 {
     send_message_helper(CC_MSG_SETREMOTEDESC, src_id, dst_id, call_id, line,
@@ -1311,7 +1276,7 @@ void cc_setremotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, lin
     return;
 }
 
-void cc_localdesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line, 
+void cc_localdesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
                     cc_features_t feature_id, cc_feature_data_t *data)
 {
     send_message_helper(CC_MSG_LOCALDESC, src_id, dst_id, call_id, line,
@@ -1320,7 +1285,7 @@ void cc_localdesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t 
     return;
 }
 
-void cc_remotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line, 
+void cc_remotedesc (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
                     cc_features_t feature_id, cc_feature_data_t *data)
 {
     send_message_helper(CC_MSG_REMOTEDESC, src_id, dst_id, call_id, line,
@@ -1366,9 +1331,9 @@ cc_int_feature_ack (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
     if ((feature_id == CC_FEATURE_XFER) ||
         (feature_id == CC_FEATURE_BLIND_XFER)) {
         if (data != NULL) {
-            CC_DEBUG(DEB_L_C_F_PREFIX 
+            CC_DEBUG(DEB_L_C_F_PREFIX
                      "method= %d, call_id= %d, cause= %s dialstring= %s\n",
-                     DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), 
+                     DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__),
 					 data->xfer.method, data->xfer.target_call_id,
                      cc_cause_name(data->xfer.cause), data->xfer.dialstring);
         }
@@ -1376,7 +1341,7 @@ cc_int_feature_ack (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_msg_name(pmsg->msg_id));
     CC_DEBUG(DEB_L_C_F_PREFIX "feature= %s, data= %p, cause= %s\n",
-			DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), cc_feature_name(feature_id), data, 
+			DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), cc_feature_name(feature_id), data,
              cc_cause_name(cause));
 
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
@@ -1525,7 +1490,7 @@ cc_int_dialstring (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
         return;
     }
 
-    CC_DEBUG(DEB_L_C_F_PREFIX "dialstring= %s\n", 
+    CC_DEBUG(DEB_L_C_F_PREFIX "dialstring= %s\n",
 		DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__),dialstring);
 
     pmsg = (cc_dialstring_t *) cc_get_msg_buf(sizeof(*pmsg));
@@ -1578,7 +1543,7 @@ cc_int_mwi (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id, line_t line,
     pmsg->msgSummary.hpOldCount = hpOldCount;
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_msg_name(pmsg->msg_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX "    mwi status= %d\n new count= %d old count= %d", 
+    CC_DEBUG(DEB_L_C_F_PREFIX "    mwi status= %d\n new count= %d old count= %d",
 		DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), on, newCount, oldCount);
 
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
@@ -1608,7 +1573,7 @@ cc_int_options_sdp_req (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
     pmsg->pMessage = pMessage;
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_msg_name(pmsg->msg_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX " message ptr=%p\n", 
+    CC_DEBUG(DEB_L_C_F_PREFIX " message ptr=%p\n",
 		DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), pMessage);
 
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
@@ -1641,7 +1606,7 @@ cc_int_options_sdp_ack (cc_srcs_t src_id, cc_srcs_t dst_id, callid_t call_id,
     cc_mv_msg_body_parts(&pmsg->msg_body, msg_body);
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, call_id, line, cc_msg_name(pmsg->msg_id));
-    CC_DEBUG(DEB_L_C_F_PREFIX " message ptr=%p\n", 
+    CC_DEBUG(DEB_L_C_F_PREFIX " message ptr=%p\n",
 		DEB_L_C_F_PREFIX_ARGS(CC_API, line, call_id, __FUNCTION__), pMessage);
 
     if (cc_send_msg((cprBuffer_t) pmsg, sizeof(*pmsg), dst_id) != CC_RC_SUCCESS) {
@@ -1732,7 +1697,7 @@ cc_int_fail_fallback (cc_srcs_t src_id, cc_srcs_t dst_id, int rsp_type,
 
     CC_DEBUG_ENTRY(__FUNCTION__, src_id, dst_id, 0, 0, cc_msg_name(pmsg->msg_id));
     CC_DEBUG(DEB_F_PREFIX "rsp_type= %s rsp_id= %s waited = %d\n",
-             DEB_F_PREFIX_ARGS(CC_API, __FUNCTION__), 
+             DEB_F_PREFIX_ARGS(CC_API, __FUNCTION__),
              rsp_type == RSP_START ? "RSP_START" : "RSP_COMPLETE",
              rsp_id == CC_REG_FAILOVER_RSP  ? "REG_FAILOVER_RSP" : "REG_FALLBACK_RSP",
              waited);

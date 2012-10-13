@@ -18,7 +18,7 @@
 #include "imgIRequest.h"
 #include "imgILoader.h"
 #include "imgIContainer.h"
-#include "nsStubImageDecoderObserver.h"
+#include "imgINotificationObserver.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
@@ -64,7 +64,7 @@ public:
 
 class ImageDocument : public MediaDocument
                     , public nsIImageDocument
-                    , public nsStubImageDecoderObserver
+                    , public imgINotificationObserver
                     , public nsIDOMEventListener
 {
 public:
@@ -89,12 +89,7 @@ public:
                           nsIDOMEventTarget* aDispatchStartTarget);
 
   NS_DECL_NSIIMAGEDOCUMENT
-
-  // imgIDecoderObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage);
-  NS_IMETHOD OnStopContainer(imgIRequest* aRequest, imgIContainer* aImage);
-  NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult aStatus, const PRUnichar *aStatusArg);
-  NS_IMETHOD OnDiscard(imgIRequest *aRequest);
+  NS_DECL_IMGINOTIFICATIONOBSERVER
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -122,6 +117,9 @@ protected:
 
   void ResetZoomLevel();
   float GetZoomLevel();
+
+  nsresult OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage);
+  nsresult OnStopRequest(imgIRequest *aRequest, nsresult aStatus);
 
   nsCOMPtr<nsIContent>          mImageContent;
 
@@ -238,8 +236,7 @@ DOMCI_NODE_DATA(ImageDocument, ImageDocument)
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(ImageDocument)
   NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(ImageDocument)
     NS_INTERFACE_TABLE_ENTRY(ImageDocument, nsIImageDocument)
-    NS_INTERFACE_TABLE_ENTRY(ImageDocument, imgIDecoderObserver)
-    NS_INTERFACE_TABLE_ENTRY(ImageDocument, imgIContainerObserver)
+    NS_INTERFACE_TABLE_ENTRY(ImageDocument, imgINotificationObserver)
     NS_INTERFACE_TABLE_ENTRY(ImageDocument, nsIDOMEventListener)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
@@ -509,6 +506,45 @@ ImageDocument::ToggleImageSize()
 }
 
 NS_IMETHODIMP
+ImageDocument::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData)
+{
+  if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
+    nsCOMPtr<imgIContainer> image;
+    aRequest->GetImage(getter_AddRefs(image));
+    return OnStartContainer(aRequest, image);
+  }
+
+  if (aType == imgINotificationObserver::DECODE_COMPLETE) {
+    if (mImageContent) {
+      // Update the background-color of the image only after the
+      // image has been decoded to prevent flashes of just the
+      // background-color.
+      mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                             NS_LITERAL_STRING("decoded"), true);
+    }
+  }
+
+  if (aType == imgINotificationObserver::DISCARD) {
+    // mImageContent can be null if the document is already destroyed
+    if (mImageContent) {
+      // Remove any decoded-related styling when the image is unloaded.
+      mImageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                               true);
+    }
+  }
+
+  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
+    uint32_t reqStatus;
+    aRequest->GetImageStatus(&reqStatus);
+    nsresult status =
+        reqStatus & imgIRequest::STATUS_ERROR ? NS_ERROR_FAILURE : NS_OK;
+    return OnStopRequest(aRequest, status);
+  }
+
+  return NS_OK;
+}
+
+nsresult
 ImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
 {
   aImage->GetWidth(&mImageWidth);
@@ -521,24 +557,9 @@ ImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ImageDocument::OnStopContainer(imgIRequest* aRequest, imgIContainer* aImage)
-{
-  if (mImageContent) {
-    // Update the background-color of the image only after the
-    // image has been decoded to prevent flashes of just the
-    // background-color.
-    mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                           NS_LITERAL_STRING("decoded"), true);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ImageDocument::OnStopDecode(imgIRequest *aRequest,
-                            nsresult aStatus,
-                            const PRUnichar *aStatusArg)
+nsresult
+ImageDocument::OnStopRequest(imgIRequest *aRequest,
+                             nsresult aStatus)
 {
   UpdateTitleAndCharset();
 
@@ -556,18 +577,6 @@ ImageDocument::OnStopDecode(imgIRequest *aRequest,
     mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::alt, errorMsg, false);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ImageDocument::OnDiscard(imgIRequest *aRequest)
-{
-  // mImageContent can be null if the document is already destroyed
-  if (mImageContent) {
-    // Remove any decoded-related styling when the image is unloaded.
-    mImageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                             true);
-  }
   return NS_OK;
 }
 

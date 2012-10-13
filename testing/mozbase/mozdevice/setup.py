@@ -33,6 +33,6 @@ setup(name='mozdevice',
       entry_points="""
       # -*- Entry points: -*-
       [console_scripts]
-      sut = mozdevice.sutcli:cli
+      dm = mozdevice.dmcli:cli
       """,
       )

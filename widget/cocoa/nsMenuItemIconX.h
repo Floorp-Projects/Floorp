@@ -11,7 +11,7 @@
 #define nsMenuItemIconX_h_
 
 #include "nsCOMPtr.h"
-#include "imgIDecoderObserver.h"
+#include "imgINotificationObserver.h"
 
 class nsIURI;
 class nsIContent;
@@ -20,7 +20,7 @@ class nsMenuObjectX;
 
 #import <Cocoa/Cocoa.h>
 
-class nsMenuItemIconX : public imgIDecoderObserver
+class nsMenuItemIconX : public imgINotificationObserver
 {
 public:
   nsMenuItemIconX(nsMenuObjectX* aMenuItem,
@@ -31,8 +31,7 @@ private:
 
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGICONTAINEROBSERVER
-  NS_DECL_IMGIDECODEROBSERVER
+  NS_DECL_IMGINOTIFICATIONOBSERVER
 
   // SetupIcon succeeds if it was able to set up the icon, or if there should
   // be no icon, in which case it clears any existing icon but still succeeds.
@@ -52,6 +51,8 @@ public:
   void Destroy();
 
 protected:
+  nsresult OnStopFrame(imgIRequest* aRequest);
+
   nsCOMPtr<nsIContent>  mContent;
   nsCOMPtr<imgIRequest> mIconRequest;
   nsMenuObjectX*        mMenuObject; // [weak]

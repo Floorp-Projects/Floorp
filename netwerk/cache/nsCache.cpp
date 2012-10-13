@@ -45,25 +45,18 @@ CacheLogPrintPath(PRLogModuleLevel level, const char * format, nsIFile * item)
 uint32_t
 SecondsFromPRTime(PRTime prTime)
 {
-  int64_t  microSecondsPerSecond, intermediateResult;
-  uint32_t seconds;
-
-  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-  intermediateResult = prTime / microSecondsPerSecond;
-  LL_L2UI(seconds, intermediateResult);
-  return seconds;
+  int64_t  microSecondsPerSecond = PR_USEC_PER_SEC;
+  return uint32_t(prTime / microSecondsPerSecond);
 }
 
 
 PRTime
 PRTimeFromSeconds(uint32_t seconds)
 {
-  int64_t microSecondsPerSecond, intermediateResult;
-  PRTime  prTime;
+  int64_t intermediateResult;
 
-  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
   LL_UI2L(intermediateResult, seconds);
-  prTime = intermediateResult * microSecondsPerSecond;
+  PRTime prTime = intermediateResult * PR_USEC_PER_SEC;
   return prTime;
 }
 
