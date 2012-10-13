@@ -33,7 +33,7 @@ let tab, browser, hudId, hud, hudBox, filterBox, outputNode, cs;
 function addTab(aURL)
 {
   gBrowser.selectedTab = gBrowser.addTab();
-  content.location = aURL;
+  content.location.assign(aURL);
   tab = gBrowser.selectedTab;
   browser = gBrowser.getBrowserForTab(tab);
 }

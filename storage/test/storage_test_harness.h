@@ -54,6 +54,12 @@ static int gPassedTests = 0;
 #else
 #include <sstream>
 
+// Print nsresult as uint32_t
+std::ostream& operator<<(std::ostream& aStream, const nsresult aInput)
+{
+  return aStream << static_cast<uint32_t>(aInput);
+}
+
 #define do_check_eq(aExpected, aActual) \
   PR_BEGIN_MACRO \
     gTotalTests++; \

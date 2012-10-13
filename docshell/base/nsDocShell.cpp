@@ -1390,16 +1390,6 @@ nsDocShell::LoadURI(nsIURI * aURI,
                 }
             } // parent
         } //parentDS
-        else {  
-            // This is the root docshell. If we got here while  
-            // executing an onLoad Handler,this load will not go 
-            // into session history.
-            bool inOnLoadHandler=false;
-            GetIsExecutingOnLoadHandler(&inOnLoadHandler);
-            if (inOnLoadHandler) {
-                loadType = LOAD_NORMAL_REPLACE;
-            }
-        } 
     } // !shEntry
 
     if (shEntry) {
@@ -6487,7 +6477,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
 
     // Notify the ContentViewer that the Document has finished loading.  This
-    // will cause any OnLoad(...) and PopState(...) handlers to fire.
+    // will cause any OnLoad(...) handlers to fire.
     if (!mEODForCurrentDocument && mContentViewer) {
         mIsExecutingOnLoadHandler = true;
         mContentViewer->LoadComplete(aStatus);

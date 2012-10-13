@@ -4014,19 +4014,25 @@ nsImageRenderer::~nsImageRenderer()
 bool
 nsImageRenderer::PrepareImage()
 {
-  if (mImage->IsEmpty() || !mImage->IsComplete()) {
-    // Make sure the image is actually decoding
-    mImage->RequestDecode();
+  if (mImage->IsEmpty())
+    return false;
 
-    // We can not prepare the image for rendering if it is not fully loaded.
-    //
-    // Special case: If we requested a sync decode and we have an image, push
-    // on through
-    nsCOMPtr<imgIContainer> img;
-    if (!((mFlags & FLAG_SYNC_DECODE_IMAGES) &&
-          (mType == eStyleImageType_Image) &&
-          (NS_SUCCEEDED(mImage->GetImageData()->GetImage(getter_AddRefs(img))) && img)))
-      return false;
+  if (!mImage->IsComplete()) {
+    // Make sure the image is actually decoding
+    mImage->StartDecoding();
+
+    // check again to see if we finished
+    if (!mImage->IsComplete()) {
+      // We can not prepare the image for rendering if it is not fully loaded.
+      //
+      // Special case: If we requested a sync decode and we have an image, push
+      // on through because the Draw() will do a sync decode then
+      nsCOMPtr<imgIContainer> img;
+      if (!((mFlags & FLAG_SYNC_DECODE_IMAGES) &&
+            (mType == eStyleImageType_Image) &&
+            (NS_SUCCEEDED(mImage->GetImageData()->GetImage(getter_AddRefs(img))) && img)))
+        return false;
+    }
   }
 
   switch (mType) {

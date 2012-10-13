@@ -656,3 +656,8 @@ void
 BluetoothOppManager::OnConnectError()
 {
 }
+
+void
+BluetoothOppManager::OnDisconnect()
+{
+}
