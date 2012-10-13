@@ -246,7 +246,6 @@ see the nsIEnumerator for more details*/
 private:
   int32_t             mIndex;
   mozilla::Selection* mDomSelection;
-  SelectionType       mType;
 };
 
 
