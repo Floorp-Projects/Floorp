@@ -582,7 +582,7 @@ AsyncChannel::MaybeHandleError(Result code, const char* channelName)
     if (MsgProcessed == code)
         return true;
 
-    const char* errorMsg;
+    const char* errorMsg = nullptr;
     switch (code) {
     case MsgNotKnown:
         errorMsg = "Unknown message: not processed";
@@ -618,7 +618,7 @@ AsyncChannel::MaybeHandleError(Result code, const char* channelName)
 void
 AsyncChannel::ReportConnectionError(const char* channelName) const
 {
-    const char* errorMsg;
+    const char* errorMsg = nullptr;
     switch (mChannelState) {
     case ChannelClosed:
         errorMsg = "Closed channel: cannot send/recv";
