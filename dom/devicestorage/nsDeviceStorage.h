@@ -32,6 +32,7 @@ class nsPIDOMWindow;
 
 #include "DeviceStorageRequestChild.h"
 
+#define POST_ERROR_EVENT_FILE_EXISTS                 "File already exists"
 #define POST_ERROR_EVENT_FILE_DOES_NOT_EXIST         "File location doesn't exists"
 #define POST_ERROR_EVENT_FILE_NOT_ENUMERABLE         "File location is not enumerable"
 #define POST_ERROR_EVENT_PERMISSION_DENIED           "Permission Denied"
