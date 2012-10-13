@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onunload="unload()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
 <p id="display"></p>
 <div id="content" style="display: none">
@@ -21,6 +21,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+
+function unload() {
+  delete gDataBlob;
+  gDataBlob = null;
+
+  delete gFileReader;
+  gFileReader = null;
+}
+
 
 devicestorage_setup();
 
