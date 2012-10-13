@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/SVGNumberListBinding.h"
-#include "dombindings.h"
 
 // See the comment in this file's header.
 
@@ -78,21 +77,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 DOMSVGNumberList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
 {
-  JSObject* obj = mozilla::dom::SVGNumberListBinding::Wrap(cx, scope, this,
-                                                           triedToWrap);
-  if (obj || *triedToWrap) {
-    return obj;
-  }
-
-  *triedToWrap = true;
-  return mozilla::dom::oldproxybindings::SVGNumberList::create(cx, scope, this);
-}
-
-nsIDOMSVGNumber*
-DOMSVGNumberList::GetItemAt(uint32_t aIndex)
-{
-  ErrorResult rv;
-  return GetItem(aIndex, rv);
+  return mozilla::dom::SVGNumberListBinding::Wrap(cx, scope, this, triedToWrap);
 }
 
 void

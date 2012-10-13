@@ -7,10 +7,9 @@
 
 interface nsIDOMPaintRequest;
 
-[scriptable, uuid(01627136-fdd8-44b4-aac0-7d613608a3d4)]
+[scriptable, uuid(1d6a6e10-e9f0-468b-b8e5-da39c945690e)]
 interface nsIDOMPaintRequestList : nsISupports
 {
   readonly attribute unsigned long length;
-  [getter,forward(getItemAt)] nsIDOMPaintRequest        item(in unsigned long index);
-  [noscript,notxpcom,nostdcall] nsIDOMPaintRequest getItemAt(in unsigned long index);
+  nsIDOMPaintRequest        item(in unsigned long index);
 };

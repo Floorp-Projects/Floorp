@@ -7,10 +7,9 @@
 
 interface nsIDOMFile;
 
-[scriptable, uuid(3bfef9fa-8ad3-4e49-bd62-d6cd75b29298)]
+[scriptable, uuid(283aa7b2-da81-4c72-aea2-9797b440fe34)]
 interface nsIDOMFileList : nsISupports
 {
   readonly attribute unsigned long length;
-  [getter,forward(getItemAt)] nsIDOMFile item(in unsigned long index);
-  [noscript,notxpcom,nostdcall] nsIDOMFile getItemAt(in unsigned long index);
+  nsIDOMFile item(in unsigned long index);
 };
