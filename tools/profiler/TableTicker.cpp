@@ -290,7 +290,6 @@ public:
 
     JSObject *sample = NULL;
     JSObject *frames = NULL;
-    JSObject *marker = NULL;
 
     int readPos = mReadPos;
     while (readPos != mLastFlushPos) {
@@ -316,19 +315,6 @@ public:
           frames = b.CreateArray();
           b.DefineProperty(sample, "frames", frames);
           b.ArrayPush(samples, sample);
-          // Created lazily
-          marker = NULL;
-          break;
-        case 'm':
-          {
-            if (sample) {
-              if (!marker) {
-                marker = b.CreateArray();
-                b.DefineProperty(sample, "marker", marker);
-              }
-              b.ArrayPush(marker, tagStringData);
-            }
-          }
           break;
         case 'r':
           {
@@ -1024,13 +1010,9 @@ void mozilla_sampler_init()
     return;
   }
 
-  const char* features[] = {"js"
-#if defined(XP_WIN) || defined(XP_MACOSX)
-                         , "stackwalk"
-#endif
-                         };
+  const char* features = "js";
   mozilla_sampler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
-                        features, mozilla::ArrayLength(features));
+                        &features, 1);
 }
 
 void mozilla_sampler_deinit()
