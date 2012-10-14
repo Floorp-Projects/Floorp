@@ -50,6 +50,8 @@ MOCHITEST_CHROME_FILES = \
 		selectAtPoint.html \
 		test_bug799299.xul \
 		file_bug799299.xul \
+		test_bug800817.xul \
+		file_bug800817.xul \
 		$(NULL)
 
 ifeq (WINNT,$(OS_ARCH))
