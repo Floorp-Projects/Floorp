@@ -17,6 +17,13 @@ SimpleTest.waitForExplicitFinish();
 
 function runTests() {
   var pluginElement = document.getElementById("plugin1");
+  // Poll to see if the plugin is in the right place yet.
+  // Check if x-coordinate 0 in plugin space is 0 in window space. If it is,
+  // the plugin hasn't been placed yet.
+  if (pluginElement.convertPointX(1, 0, 0, 2) == 0) {
+    setTimeout(runTests, 0);
+    return;
+  }
 
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 

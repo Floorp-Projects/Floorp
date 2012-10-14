@@ -22,7 +22,7 @@ public:
      * Mozilla helper.
      */
     virtual void setModal(bool);
-    virtual bool SetCursor(nsCursor aCursor);
+    virtual void SetCursor(nsCursor aCursor);
     virtual void dropReceiver() { mReceiver = 0x0; };
     virtual nsWindow* getReceiver() { return mReceiver; };
 
@@ -75,7 +75,7 @@ protected:
     virtual bool event(QEvent* aEvent);
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery aQuery) const;
 
-    bool SetCursor(const QPixmap& aPixmap, int, int);
+    void SetCursor(const QPixmap& aPixmap, int, int);
 
 private:
     void sendPressReleaseKeyEvent(int key, const QChar* letter = 0, bool autorep = false, ushort count = 1);

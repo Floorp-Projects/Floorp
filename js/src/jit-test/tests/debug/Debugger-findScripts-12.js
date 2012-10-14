@@ -18,7 +18,8 @@ var g3 = newGlobal('new-compartment');
 var dbg = new Debugger(g1, g2, g3);
 
 function script(func) {
-    var script = dbg.addDebuggee(func).script;
+    var gw = dbg.addDebuggee(func.global);
+    var script = gw.makeDebuggeeValue(func).script;
     script.toString = function ()
         "[Debugger.Script for " + func.name + " in " + uneval(func.global) + "]";
     return script;

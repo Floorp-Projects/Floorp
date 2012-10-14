@@ -114,10 +114,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-// 7E29E8A8-9C77-4445-A523-41B363E0C98A
+// ebc1bbe4-5456-4c62-ba1f-c2ef7387963e
 #define NS_IPRESSHELL_IID \
-  { 0x7e29e8a8, 0x9c77, 0x4445, \
-    { 0xa5, 0x23, 0x41, 0xb3, 0x63, 0xe0, 0xc9, 0x8a } }
+{ 0xebc1bbe4, 0x5456, 0x4c62, \
+  { 0xba, 0x1f, 0xc2, 0xef, 0x73, 0x87, 0x96, 0x3e } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1230,15 +1230,29 @@ public:
                                nsEventStatus*  aEventStatus) = 0;
   virtual bool ShouldIgnoreInvalidation() = 0;
   /**
-   * Notify that the NS_WILL_PAINT event was received. Fires on every
-   * visible presshell in the document tree.
+   * Notify that we're going to call Paint with PaintType_NoComposite
+   * or PaintType_Full on the root pres shell (which might not be this one, since
+   * WillPaint is called on all descendant presshells). This is issued at a time when
+   * it's safe to modify widget geometry.
    */
   virtual void WillPaint(bool aWillSendDidPaint) = 0;
   /**
-   * Notify that the NS_DID_PAINT event was received. Only fires on the
-   * root pres shell.
+   * Notify that we called Paint with PaintType_NoComposite. Only fires on the
+   * root pres shell. This is issued at a time when it's safe to modify
+   * widget geometry.
    */
   virtual void DidPaint() = 0;
+  /**
+   * Notify that we're going to call Paint with PaintType_Composite
+   * or PaintType_Full.  This is issued at a time when it's safe to
+   * modify widget geometry.
+   */
+  virtual void WillPaintWindow(bool aWillSendDidPaint) = 0;
+  /**
+   * Notify that we called Paint with PaintType_Composite or PaintType_Full.
+   * This is issued at a time when it's safe to modify widget geometry.
+   */
+  virtual void DidPaintWindow() = 0;
 
   /**
    * Ensures that the refresh driver is running, and schedules a view 
