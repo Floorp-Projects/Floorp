@@ -28,7 +28,7 @@ namespace a11y {
  */
 
 class ApplicationAccessible : public AccessibleWrap,
-                             public nsIAccessibleApplication
+                              public nsIAccessibleApplication
 {
 public:
 
@@ -38,8 +38,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessible
-  NS_IMETHOD GetDOMNode(nsIDOMNode** aDOMNode);
-  NS_IMETHOD GetDocument(nsIAccessibleDocument** aDocument);
   NS_IMETHOD GetRootDocument(nsIAccessibleDocument** aRootDocument);
   NS_IMETHOD ScrollTo(uint32_t aScrollType);
   NS_IMETHOD ScrollToPoint(uint32_t aCoordinateType, int32_t aX, int32_t aY);

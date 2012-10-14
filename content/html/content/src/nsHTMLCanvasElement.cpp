@@ -601,7 +601,6 @@ nsHTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
 
 nsresult
 nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
-                                      bool aForceThebes,
                                       nsICanvasRenderingContextInternal **aContext)
 {
   NS_ENSURE_ARG(aContext);
@@ -623,10 +622,6 @@ nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
 
   nsCString ctxString("@mozilla.org/content/canvas-rendering-context;1?id=");
   ctxString.Append(ctxId);
-
-  if (aForceThebes && ctxId.EqualsASCII("2d")) {
-    ctxString.AssignASCII("@mozilla.org/content/2dthebes-canvas-rendering-context;1");
-  }
 
   nsresult rv;
   nsCOMPtr<nsICanvasRenderingContextInternal> ctx =
@@ -653,10 +648,8 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
 {
   nsresult rv;
 
-  bool forceThebes = false;
-
-  while (mCurrentContextId.IsEmpty()) {
-    rv = GetContextHelper(aContextId, forceThebes, getter_AddRefs(mCurrentContext));
+  if (mCurrentContextId.IsEmpty()) {
+    rv = GetContextHelper(aContextId, getter_AddRefs(mCurrentContext));
     NS_ENSURE_SUCCESS(rv, rv);
     if (!mCurrentContext) {
       return NS_OK;
@@ -720,17 +713,12 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
 
     rv = UpdateContext(contextProps);
     if (NS_FAILED(rv)) {
-      if (!forceThebes) {
-        // Try again with a Thebes context
-        forceThebes = true;
-        continue;
-      }
       return rv;
     }
 
     mCurrentContextId.Assign(aContextId);
-    break;
   }
+
   if (!mCurrentContextId.Equals(aContextId)) {
     //XXX eventually allow for more than one active context on a given canvas
     return NS_OK;
@@ -754,7 +742,7 @@ nsHTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
     return NS_ERROR_INVALID_ARG;
 
   if (mCurrentContextId.IsEmpty()) {
-    nsresult rv = GetContextHelper(aContextId, false, getter_AddRefs(mCurrentContext));
+    nsresult rv = GetContextHelper(aContextId, getter_AddRefs(mCurrentContext));
     NS_ENSURE_SUCCESS(rv, rv);
     if (!mCurrentContext) {
       return NS_OK;
@@ -948,16 +936,3 @@ nsHTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, gfxPattern::Gr
   return mCurrentContext->Render(aContext, aFilter, aFlags);
 }
 
-nsresult NS_NewCanvasRenderingContext2DThebes(nsIDOMCanvasRenderingContext2D** aResult);
-nsresult NS_NewCanvasRenderingContext2DAzure(nsIDOMCanvasRenderingContext2D** aResult);
-
-nsresult
-NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
-{
-  Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
-  if (AzureCanvasEnabled()) {
-    return NS_NewCanvasRenderingContext2DAzure(aResult);
-  }
-
-  return NS_NewCanvasRenderingContext2DThebes(aResult);
-}

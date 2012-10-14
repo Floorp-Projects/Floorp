@@ -318,12 +318,14 @@ pref("gfx.color_management.mode", 0);
 
 // 0=fixed margin, 1=velocity bias, 2=dynamic resolution, 3=no margins, 4=prediction bias
 pref("gfx.displayport.strategy", 1);
+
 // all of the following displayport strategy prefs will be divided by 1000
 // to obtain some multiplier which is then used in the strategy.
 // fixed margin strategy options
 pref("gfx.displayport.strategy_fm.multiplier", -1); // displayport dimension multiplier
 pref("gfx.displayport.strategy_fm.danger_x", -1); // danger zone on x-axis when multiplied by viewport width
 pref("gfx.displayport.strategy_fm.danger_y", -1); // danger zone on y-axis when multiplied by viewport height
+
 // velocity bias strategy options
 pref("gfx.displayport.strategy_vb.multiplier", -1); // displayport dimension multiplier
 pref("gfx.displayport.strategy_vb.threshold", -1); // velocity threshold in inches/frame
@@ -332,8 +334,11 @@ pref("gfx.displayport.strategy_vb.danger_x_base", -1); // danger zone on x-axis 
 pref("gfx.displayport.strategy_vb.danger_y_base", -1); // danger zone on y-axis when multiplied by viewport height
 pref("gfx.displayport.strategy_vb.danger_x_incr", -1); // additional danger zone on x-axis when multiplied by viewport width and velocity
 pref("gfx.displayport.strategy_vb.danger_y_incr", -1); // additional danger zone on y-axis when multiplied by viewport height and velocity
+
 // prediction bias strategy options
 pref("gfx.displayport.strategy_pb.threshold", -1); // velocity threshold in inches/frame
+
+pref("gfx.java.screenshot.enabled", true);
 
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);

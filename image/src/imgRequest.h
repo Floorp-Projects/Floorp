@@ -7,8 +7,6 @@
 #ifndef imgRequest_h__
 #define imgRequest_h__
 
-#include "imgIDecoderObserver.h"
-
 #include "nsIChannelEventSink.h"
 #include "nsIContentSniffer.h"
 #include "nsIInterfaceRequestor.h"
@@ -22,8 +20,6 @@
 #include "nsCategoryCache.h"
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
-#include "nsTObserverArray.h"
-#include "nsWeakReference.h"
 #include "nsError.h"
 #include "imgIRequest.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -42,9 +38,7 @@ class Image;
 } // namespace image
 } // namespace mozilla
 
-class imgRequest : public imgIDecoderObserver,
-                   public nsIStreamListener,
-                   public nsSupportsWeakReference,
+class imgRequest : public nsIStreamListener,
                    public nsIChannelEventSink,
                    public nsIInterfaceRequestor,
                    public nsIAsyncVerifyRedirectCallback
@@ -110,6 +104,22 @@ public:
     return principal.forget();
   }
 
+  // Return the imgStatusTracker associated with this imgRequest. It may live
+  // in |mStatusTracker| or in |mImage.mStatusTracker|, depending on whether
+  // mImage has been instantiated yet.
+  imgStatusTracker& GetStatusTracker();
+
+  // Get the current principal of the image. No AddRefing.
+  inline nsIPrincipal* GetPrincipal() const { return mPrincipal.get(); };
+
+  // Resize the cache entry to 0 if it exists
+  void ResetCacheEntry();
+
+  // Update the cache entry size based on the image container
+  void UpdateCacheEntrySize();
+
+  nsresult GetURI(nsIURI **aURI);
+
 private:
   friend class imgCacheEntry;
   friend class imgRequestProxy;
@@ -125,7 +135,6 @@ private:
   void Cancel(nsresult aStatus);
   void RemoveFromCache();
 
-  nsresult GetURI(nsIURI **aURI);
   nsresult GetSecurityInfo(nsISupports **aSecurityInfo);
 
   inline const char *GetMimeType() const {
@@ -134,11 +143,6 @@ private:
   inline nsIProperties *Properties() {
     return mProperties;
   }
-
-  // Return the imgStatusTracker associated with this imgRequest.  It may live
-  // in |mStatusTracker| or in |mImage.mStatusTracker|, depending on whether
-  // mImage has been instantiated yet..
-  imgStatusTracker& GetStatusTracker();
     
   // Reset the cache entry after we've dropped our reference to it. Used by the
   // imgLoader when our cache entry is re-requested after we've dropped our
@@ -147,10 +151,6 @@ private:
 
   // Returns whether we've got a reference to the cache entry.
   bool HasCacheEntry() const;
-
-  // Return true if at least one of our proxies, excluding
-  // aProxyToIgnore, has an observer.  aProxyToIgnore may be null.
-  bool HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const;
 
   // Return the priority of the underlying network request, or return
   // PRIORITY_NORMAL if it doesn't support nsISupportsPriority.
@@ -168,12 +168,10 @@ private:
   // try to update or modify the image cache.
   void SetIsInCache(bool cacheable);
 
-  // Update the cache entry size based on the image container
-  void UpdateCacheEntrySize();
+  bool IsBlockingOnload() const;
+  void SetBlockingOnload(bool block) const;
 
 public:
-  NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_IMGICONTAINEROBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSICHANNELEVENTSINK
@@ -202,8 +200,6 @@ private:
   nsCOMPtr<nsISupports> mSecurityInfo;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIInterfaceRequestor> mPrevChannelSink;
-
-  nsTObserverArray<imgRequestProxy*> mObservers;
 
   nsCOMPtr<nsITimedChannel> mTimedChannel;
 

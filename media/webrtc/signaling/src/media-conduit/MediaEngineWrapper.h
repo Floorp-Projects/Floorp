@@ -16,7 +16,7 @@ namespace mozilla
  * with a function of Type F
  * ScopedCustomReleasePtr<webrtc::VoENetwork> ptr =
  *               webrtc::VoENetwork->GetInterface(voiceEngine);
- *         
+ *
  */
 template<typename T>
 struct ScopedCustomReleaseTraits0 : public ScopedFreePtrTraits<T>

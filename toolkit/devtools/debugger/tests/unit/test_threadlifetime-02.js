@@ -28,13 +28,14 @@ function test_thread_lifetime()
   gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
     let pauseGrip = aPacket.frame.arguments[0];
 
+    // Create a thread-lifetime actor for this object.
     gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function(aResponse) {
-      let threadGrip = aResponse.threadGrip;
-      // Create a thread-lifetime actor for this object.
+      // Successful promotion won't return an error.
+      do_check_eq(aResponse.error, undefined);
       gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
         // Now that we've resumed, release the thread-lifetime grip.
-        gClient.request({ to: threadGrip.actor, type: "release" }, function(aResponse) {
-          gClient.request({ to: threadGrip.actor, type: "bogusRequest" }, function(aResponse) {
+        gClient.release(pauseGrip.actor, function(aResponse) {
+          gClient.request({ to: pauseGrip.actor, type: "bogusRequest" }, function(aResponse) {
             do_check_eq(aResponse.error, "noSuchActor");
             gThreadClient.resume(function(aResponse) {
               finishClient(gClient);

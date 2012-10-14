@@ -70,8 +70,7 @@ static nsresult Make8Dot3Name(nsIFile *aFile, nsACString& aPath)
 
     // this salting code was ripped directly from the profile manager.
     // turn PR_Now() into milliseconds since epoch 1058 & salt rand with that
-    double fpTime;
-    LL_L2D(fpTime, PR_Now());
+    double fpTime = double(PR_Now());
     srand((uint)(fpTime * 1e-6 + 0.5));
 
     for (int32_t i=0; i < SALT_SIZE; i++)

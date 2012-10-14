@@ -17,8 +17,6 @@ LIBRARY_NAME	= gkconcvs_s
 LIBXUL_LIBRARY  = 1
 
 EXPORTS = \
-	CustomQS_Canvas.h \
-	CustomQS_Canvas2D.h \
 	WebGLContext.h \
 	WebGLElementArrayCache.h \
 	WebGLExtensions.h \
@@ -27,14 +25,14 @@ EXPORTS = \
 EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
+	CanvasRenderingContext2D.h \
   ImageData.h \
   $(NULL)
 
 CPPSRCS	= \
 	CanvasImageCache.cpp \
+	CanvasRenderingContext2D.cpp \
 	CanvasUtils.cpp \
-	nsCanvasRenderingContext2D.cpp \
-	nsCanvasRenderingContext2DAzure.cpp \
 	DocumentRendererParent.cpp \
 	DocumentRendererChild.cpp \
 	ImageData.cpp \

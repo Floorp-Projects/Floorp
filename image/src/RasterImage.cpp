@@ -514,7 +514,7 @@ RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
     #endif
 
     UpdateImageContainer();
-    observer->FrameChanged(nullptr, this, &dirtyRect);
+    observer->FrameChanged(&dirtyRect);
   }
 }
 
@@ -1500,7 +1500,7 @@ RasterImage::ResetAnimation()
   // Update display if we were animating before
   nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
   if (mAnimating && observer)
-    observer->FrameChanged(nullptr, this, &(mAnim->firstFrameRefreshArea));
+    observer->FrameChanged(&(mAnim->firstFrameRefreshArea));
 
   if (ShouldAnimate()) {
     StartAnimation();
@@ -2284,7 +2284,7 @@ RasterImage::Discard(bool force)
   // Notify that we discarded
   nsCOMPtr<imgIDecoderObserver> observer(do_QueryReferent(mObserver));
   if (observer)
-    observer->OnDiscard(nullptr);
+    observer->OnDiscard();
 
   if (force)
     DiscardTracker::Remove(&mDiscardTrackerNode);
@@ -2552,9 +2552,15 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   if (!StoringSourceData())
     return NS_OK;
 
-  // If we've already got a full decoder running, we have nothing to do
-  if (mDecoder && !mDecoder->IsSizeDecode())
+  // If we've already got a full decoder running, we'll spend a bit of time
+  // decoding because the caller want's an image soon.
+  if (mDecoder && !mDecoder->IsSizeDecode()) {
+    if (!mDecoded && !mInDecoder && mHasSourceData && aDecodeType == SOMEWHAT_SYNCHRONOUS) {
+      SAMPLE_LABEL_PRINTF("RasterImage", "DecodeABitOf", "%s", GetURIString());
+      DecodeWorker::Singleton()->DecodeABitOf(this);
+    }
     return NS_OK;
+  }
 
   // mFinishing protects against the case when we enter RequestDecode from
   // ShutdownDecoder -- in that case, we're done with the decode, we're just
@@ -2774,7 +2780,7 @@ RasterImage::DrawWorker::Run()
       imgFrame *scaledFrame = request->dstFrame.get();
       scaledFrame->ImageUpdated(scaledFrame->GetRect());
       nsIntRect frameRect = request->srcFrame->GetRect();
-      observer->FrameChanged(nullptr, request->image, &frameRect);
+      observer->FrameChanged(&frameRect);
     }
   }
 

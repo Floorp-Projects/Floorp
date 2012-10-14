@@ -237,7 +237,7 @@ class ProcessHandlerMixin(object):
                                                 0,    # job mem limit (ignored)
                                                 0,    # peak process limit (ignored)
                                                 0)    # peak job limit (ignored)
-                                                
+
                         winprocess.SetInformationJobObject(self._job,
                                                            JobObjectExtendedLimitInformation,
                                                            addressof(jeli),
@@ -605,13 +605,19 @@ falling back to not using job objects for managing child processes"""
         """
         self.didTimeout = False
         self.startTime = datetime.now()
-        self.proc = self.Process(self.cmd,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT,
-                                 cwd=self.cwd,
-                                 env=self.env,
-                                 ignore_children = self._ignore_children,
-                                 **self.keywordargs)
+
+        # default arguments
+        args = dict(stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    cwd=self.cwd,
+                    env=self.env,
+                    ignore_children=self._ignore_children)
+
+        # build process arguments
+        args.update(self.keywordargs)
+
+        # launch the process
+        self.proc = self.Process(self.cmd, **args)
 
         self.processOutput(timeout=timeout, outputTimeout=outputTimeout)
 

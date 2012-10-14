@@ -10,6 +10,8 @@ exit DOM full-screen mode.
 <head>
   <title>Test for Bug 700764</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
   <style>
   body:-moz-full-screen, div:-moz-full-screen {
     background-color: red;
@@ -35,14 +37,12 @@ function finish() {
 function fullscreenchange1(event) {
   ok(document.mozFullScreen, "Should have entered full-screen mode");
   is(document.mozFullScreenElement, document.body, "FSE should be doc");
-  document.removeEventListener("mozfullscreenchange", fullscreenchange1, false);
-  document.addEventListener("mozfullscreenchange", fullscreenchange2, false);
+  addFullscreenChangeContinuation("exit", fullscreenchange2);
   ok(!document.getElementById("subdoc").contentWindow.escKeySent, "Should not yet have sent ESC key press.");
   document.getElementById("subdoc").contentWindow.startTest();
 }
 
 function fullscreenchange2(event) {
-  document.removeEventListener("mozfullscreenchange", fullscreenchange2, false);
   ok(document.getElementById("subdoc").contentWindow.escKeySent, "Should have sent ESC key press.");
   ok(!document.getElementById("subdoc").contentWindow.escKeyReceived, "ESC key press to exit should not be delivered.");
   ok(!document.mozFullScreen, "Should have left full-screen mode on ESC key press");
@@ -50,7 +50,7 @@ function fullscreenchange2(event) {
 }
 
 function begin() {
-  document.addEventListener("mozfullscreenchange", fullscreenchange1, false);
+  addFullscreenChangeContinuation("enter", fullscreenchange1);
   document.body.mozRequestFullScreen();
 }
 

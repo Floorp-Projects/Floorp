@@ -1337,9 +1337,10 @@ nsDOMImplementation::HasFeature(const nsAString& aFeature,
                                 const nsAString& aVersion,
                                 bool* aReturn)
 {
-  return nsGenericElement::InternalIsSupported(
+  *aReturn = nsContentUtils::InternalIsSupported(
            static_cast<nsIDOMDOMImplementation*>(this),
-           aFeature, aVersion, aReturn);
+           aFeature, aVersion);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5969,8 +5970,9 @@ NS_IMETHODIMP
 nsDocument::IsSupported(const nsAString& aFeature, const nsAString& aVersion,
                         bool* aReturn)
 {
-  return nsGenericElement::InternalIsSupported(static_cast<nsIDOMDocument*>(this),
-                                               aFeature, aVersion, aReturn);
+  *aReturn = nsContentUtils::InternalIsSupported(static_cast<nsIDOMDocument*>(this),
+                                                 aFeature, aVersion);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -6874,9 +6876,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
         rv = file->GetLastModifiedTime(&msecs);
 
         if (NS_SUCCEEDED(rv)) {
-          int64_t intermediateValue;
-          LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
-          modDate = msecs * intermediateValue;
+          modDate = msecs * int64_t(PR_USEC_PER_MSEC);
         }
       }
     } else {

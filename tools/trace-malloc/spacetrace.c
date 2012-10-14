@@ -111,7 +111,6 @@ showHelp(void)
 uint32_t
 ticks2xsec(tmreader * aReader, uint32_t aTicks, uint32_t aResolution)
 {
-    uint32_t retval = 0;
     uint64_t bigone;
     uint64_t tmp64;
 
@@ -120,8 +119,7 @@ ticks2xsec(tmreader * aReader, uint32_t aTicks, uint32_t aResolution)
     bigone *= tmp64;
     LL_UI2L(tmp64, aReader->ticksPerSec);
     bigone /= tmp64;
-    LL_L2UI(retval, bigone);
-    return retval;
+    return (uint32)bigone;
 }
 
 #define ticks2msec(reader, ticks) ticks2xsec((reader), (ticks), 1000)
@@ -3871,13 +3869,13 @@ graphFootprint(STRequest * inRequest, STRun * aRun)
                         /*
                          ** Need to do this math in 64 bits.
                          */
-                        LL_I2L(ydata64, YData[traverse]);
-                        LL_I2L(spacey64, STGD_SPACE_Y);
-                        LL_I2L(mem64, (maxMemory - minMemory));
+                        ydata64 = (int64_t)YData[traverse];
+                        spacey64 = (int64_t)STGD_SPACE_Y;
+                        mem64 = (int64_t)(maxMemory - minMemory);
 
                         in64 = ydata64 * spacey64;
                         in64 /= mem64;
-                        LL_L2I(in32, in64);
+                        in32 = int32_t(in64);
 
                         x2 = x1;
                         y2 = y1 - in32;
@@ -4087,13 +4085,13 @@ graphTimeval(STRequest * inRequest, STRun * aRun)
                         /*
                          ** Need to do this math in 64 bits.
                          */
-                        LL_I2L(ydata64, YData[traverse]);
-                        LL_I2L(spacey64, STGD_SPACE_Y);
-                        LL_I2L(mem64, (maxMemory - minMemory));
+                        ydata64 = (int64_t)YData[traverse];
+                        spacey64 = (int64_t)STGD_SPACE_Y;
+                        mem64 = (int64_t)(maxMemory - minMemory);
 
                         in64 = ydata64 * spacey64;
                         in64 /= mem64;
-                        LL_L2I(in32, in64);
+                        in32 = int32_t(in64);
 
                         x2 = x1;
                         y2 = y1 - in32;
@@ -4305,13 +4303,13 @@ graphLifespan(STRequest * inRequest, STRun * aRun)
                         /*
                          ** Need to do this math in 64 bits.
                          */
-                        LL_I2L(ydata64, YData[traverse]);
-                        LL_I2L(spacey64, STGD_SPACE_Y);
-                        LL_I2L(mem64, (maxMemory - minMemory));
+                        ydata64 = (int64_t)YData[traverse];
+                        spacey64 = (int64_t)STGD_SPACE_Y;
+                        mem64 = (int64_t)(maxMemory - minMemory);
 
                         in64 = ydata64 * spacey64;
                         in64 /= mem64;
-                        LL_L2I(in32, in64);
+                        in32 = int32_t(in64);
 
                         x2 = x1;
                         y2 = y1 - in32;
@@ -4538,12 +4536,12 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                         /*
                          ** Need to do this math in 64 bits.
                          */
-                        LL_I2L(spacey64, STGD_SPACE_Y);
+                        spacey64 = (int64_t)STGD_SPACE_Y;
                         weight64 = maxWeight64 - minWeight64;
 
                         in64 = YData64[traverse] * spacey64;
                         in64 /= weight64;
-                        LL_L2I(in32, in64);
+                        in32 = int32_t(in64);
 
                         x2 = x1;
                         y2 = y1 - in32;

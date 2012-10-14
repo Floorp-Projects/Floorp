@@ -48,17 +48,6 @@ struct SetListBaseInformation
 SetListBaseInformation gSetListBaseInformation;
 
 
-bool
-DefineConstructor(JSContext* cx, JSObject* obj, DefineInterface aDefine, nsresult* aResult)
-{
-  bool enabled;
-  bool defined = aDefine(cx, obj, &enabled);
-  MOZ_ASSERT(!defined || enabled,
-             "We defined a constructor but the new bindings are disabled?");
-  *aResult = defined ? NS_OK : NS_ERROR_FAILURE;
-  return enabled;
-}
-
 // static
 JSObject*
 DOMProxyHandler::EnsureExpandoObject(JSContext* cx, JSObject* obj)

@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <errno.h>
 #include <limits.h>
@@ -53,7 +18,7 @@
  *         addr     : pointer to the IP address
  *
  *  @return  none
- *  
+ *
  *  @pre     none
  *
  */
@@ -97,7 +62,7 @@ ipaddr2dotted (char *addr_str, cpr_ip_addr_t *addr)
  *  @param addr_str ip address string
  *
  *  @return  address
- *  
+ *
  *  @pre      none
  *
  */
@@ -168,7 +133,7 @@ dotted2ipaddr (const char *addr_str)
  *  @param ip_addr_in, ip_addr_out : IP addresses
  *
  *  @return  none
- *  
+ *
  *  @pre none
  *
  */
@@ -205,12 +170,12 @@ void util_ntohl (cpr_ip_addr_t *ip_addr_out, cpr_ip_addr_t *ip_addr_in)
  *  Check if the IP address passed is valid. For IPv4& IPv6 check if value 0 if so
  *   return FALSE. If the type is CPR_IP_ADDR_INVALID or any other non defined type
  *   return FALSE.
- *   
+ *
  *
  *  @param ip_addr  IP address
  *
  *  @return  boolean False if not a valid IP, or else true
- *  
+ *
  *  @pre     none
  *
  */
@@ -220,13 +185,13 @@ boolean util_check_if_ip_valid (cpr_ip_addr_t *ip_addr)
     if (ip_addr->type == CPR_IP_ADDR_INVALID) {
         return(FALSE);
     }
-    if (ip_addr->type == CPR_IP_ADDR_IPV4 && 
+    if (ip_addr->type == CPR_IP_ADDR_IPV4 &&
         ip_addr->u.ip4 == 0) {
 
         return(FALSE);
     }
 
-    if ((ip_addr->type == CPR_IP_ADDR_IPV6) && 
+    if ((ip_addr->type == CPR_IP_ADDR_IPV6) &&
         (ip_addr->u.ip6.addr.base16[7] == 0) &&
         (ip_addr->u.ip6.addr.base16[6] == 0) &&
         (ip_addr->u.ip6.addr.base16[5] == 0) &&
@@ -239,7 +204,7 @@ boolean util_check_if_ip_valid (cpr_ip_addr_t *ip_addr)
         return(FALSE);
     }
 
-    if ((ip_addr->type != CPR_IP_ADDR_INVALID) && 
+    if ((ip_addr->type != CPR_IP_ADDR_INVALID) &&
         (ip_addr->type != CPR_IP_ADDR_IPV4) &&
         (ip_addr->type != CPR_IP_ADDR_IPV6)) {
 
@@ -255,7 +220,7 @@ boolean util_check_if_ip_valid (cpr_ip_addr_t *ip_addr)
  *  @param ip_addr1 & ip_addr2 2 ip addresses to compare
  *
  *  @return  true if that matches or else false
- *  
+ *
  *  @pre     (ip_addr1 != NULL) && (ip_addr2 != NULL)
  *
  */
@@ -275,7 +240,7 @@ boolean util_compare_ip (cpr_ip_addr_t *ip_addr1, cpr_ip_addr_t *ip_addr2)
     } else if (ip_addr1->type == CPR_IP_ADDR_IPV6 &&
             ip_addr2->type == CPR_IP_ADDR_IPV6) {
 
-        return((boolean)memcmp((void *)&(ip_addr1->u.ip6.addr.base8), 
+        return((boolean)memcmp((void *)&(ip_addr1->u.ip6.addr.base8),
                     (void *)&(ip_addr2->u.ip6.addr.base8), 16));
     }
 
@@ -287,19 +252,19 @@ boolean util_compare_ip (cpr_ip_addr_t *ip_addr1, cpr_ip_addr_t *ip_addr2)
  *
  *  @param ip_addr  ip address to be filled.
  *          cpr_sockaddr_storage storage structure pointer
- * 
+ *
  *  @return  none
- *  
+ *
  *  @pre     (ip_addr != NULL)
  *
  */
-void util_extract_ip (cpr_ip_addr_t *ip_addr, 
+void util_extract_ip (cpr_ip_addr_t *ip_addr,
                         cpr_sockaddr_storage *from)
 {
     switch (from->ss_family) {
     case AF_INET6:
         ip_addr->type = CPR_IP_ADDR_IPV6;
-        ip_addr->u.ip6 = ((cpr_sockaddr_in6_t *)from)->sin6_addr;   
+        ip_addr->u.ip6 = ((cpr_sockaddr_in6_t *)from)->sin6_addr;
         break;
     case AF_INET:
         ip_addr->type = CPR_IP_ADDR_IPV4;
@@ -316,7 +281,7 @@ void util_extract_ip (cpr_ip_addr_t *ip_addr,
  *  @param sock_storage
  *
  *  @return  port number
- *  
+ *
  *  @pre     (sock_storage != NULL)
  *
  */
@@ -382,7 +347,7 @@ diff_current_time (unsigned long t1, unsigned long *difference)
     return 0;
 }
 
-boolean 
+boolean
 is_empty_str (char *str)
 {
     if (str == NULL) {
@@ -394,7 +359,7 @@ is_empty_str (char *str)
     return FALSE;
 }
 
-void 
+void
 init_empty_str (char *str)
 {
     strcpy(str,EMPTY_STR);

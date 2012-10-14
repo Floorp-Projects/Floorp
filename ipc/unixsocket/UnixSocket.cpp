@@ -265,6 +265,8 @@ public:
       mImpl->mConsumer->NotifySuccess();
     } else if (mEvent == CONNECT_ERROR) {
       mImpl->mConsumer->NotifyError();
+    } else if (mEvent == DISCONNECT) {
+      mImpl->mConsumer->NotifyDisconnect();
     }
     return NS_OK;
   }
@@ -324,6 +326,26 @@ private:
   nsRefPtr<UnixSocketConsumer> mConsumer;
   UnixSocketImpl* mImpl;
   UnixSocketRawData* mData;
+};
+
+class SocketCloseTask : public nsRunnable
+{
+public:
+  SocketCloseTask(UnixSocketImpl* aImpl)
+    : mImpl(aImpl)
+  {
+    MOZ_ASSERT(aImpl);
+  }
+
+  NS_IMETHOD
+  Run()
+  {
+    mImpl->mConsumer->CloseSocket();
+    return NS_OK;
+  }
+
+private:
+  UnixSocketImpl* mImpl;
 };
 
 class StartImplReadingTask : public Task
@@ -559,19 +581,21 @@ UnixSocketConsumer::SendSocketData(const nsACString& aStr)
 void
 UnixSocketConsumer::CloseSocket()
 {
+  // Needed due to refcount change
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mImpl) {
     return;
   }
   UnixSocketImpl* impl = mImpl;
+  // To make sure the owner doesn't die on the IOThread, remove pointer here
   mImpl = nullptr;
+  // Line it up to be destructed on the IO Thread
   impl->mConsumer.forget();
   impl->StopTask();
-  // To make sure the owner doesn't die on the IOThread, remove pointer here
-  // Line it up to be destructed on the IO Thread
-  // Kill our pointer to it
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                    NewRunnableFunction(DestroyImpl,
                                                        impl));
+  NotifyDisconnect();
 }
 
 void
@@ -608,7 +632,8 @@ UnixSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
         mIncoming.forget();
         mReadWatcher.StopWatchingFileDescriptor();
         mWriteWatcher.StopWatchingFileDescriptor();
-        mConsumer->CloseSocket();
+        nsRefPtr<SocketCloseTask> t = new SocketCloseTask(this);
+        NS_DispatchToMainThread(t);
         return;
       }
       mIncoming->mData[ret] = 0;
@@ -683,6 +708,15 @@ UnixSocketConsumer::NotifyError()
   mConnectionStatus = SOCKET_DISCONNECTED;
   OnConnectError();
 }
+
+void
+UnixSocketConsumer::NotifyDisconnect()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mConnectionStatus = SOCKET_DISCONNECTED;
+  OnDisconnect();
+}
+
 bool
 UnixSocketConsumer::ConnectSocket(UnixSocketConnector* aConnector,
                                   const char* aAddress)

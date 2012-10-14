@@ -42,7 +42,7 @@ static const uint32_t kIconBytes = kIconBytesPerRow * kIconHeight;
 typedef NS_STDCALL_FUNCPROTO(nsresult, GetRectSideMethod, nsIDOMRect,
                              GetBottom, (nsIDOMCSSPrimitiveValue**));
 
-NS_IMPL_ISUPPORTS2(nsMenuItemIconX, imgIContainerObserver, imgIDecoderObserver)
+NS_IMPL_ISUPPORTS1(nsMenuItemIconX, imgINotificationObserver)
 
 nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem,
                                  nsIContent*    aContent,
@@ -318,57 +318,28 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
 }
 
 //
-// imgIContainerObserver
+// imgINotificationObserver
 //
 
 NS_IMETHODIMP
-nsMenuItemIconX::FrameChanged(imgIRequest* aRequest,
-                              imgIContainer*   aContainer,
-                              const nsIntRect* aDirtyRect)
+nsMenuItemIconX::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
 {
+  if (aType == imgINotificationObserver::FRAME_COMPLETE) {
+    return OnStopFrame(aRequest);
+  }
+
+  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
+    if (mIconRequest && mIconRequest == aRequest) {
+      mIconRequest->Cancel(NS_BINDING_ABORTED);
+      mIconRequest = nullptr;
+    }
+  }
+
   return NS_OK;
 }
 
-//
-// imgIDecoderObserver
-//
-
-NS_IMETHODIMP
-nsMenuItemIconX::OnStartRequest(imgIRequest* aRequest)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuItemIconX::OnStartDecode(imgIRequest* aRequest)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuItemIconX::OnStartContainer(imgIRequest*   aRequest,
-                                  imgIContainer* aContainer)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuItemIconX::OnStartFrame(imgIRequest* aRequest, uint32_t aFrame)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuItemIconX::OnDataAvailable(imgIRequest*     aRequest,
-                                 bool             aCurrentFrame,
-                                 const nsIntRect* aRect)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
-                             uint32_t        aFrame)
+nsresult
+nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -490,42 +461,4 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-NS_IMETHODIMP
-nsMenuItemIconX::OnStopContainer(imgIRequest*   aRequest,
-                                imgIContainer* aContainer)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuItemIconX::OnStopDecode(imgIRequest*     aRequest,
-                             nsresult         status,
-                             const PRUnichar* statusArg)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuItemIconX::OnStopRequest(imgIRequest* aRequest,
-                              bool         aIsLastPart)
-{
-  if (mIconRequest && mIconRequest == aRequest) {
-    mIconRequest->Cancel(NS_BINDING_ABORTED);
-    mIconRequest = nullptr;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuItemIconX::OnDiscard(imgIRequest* aRequest)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuItemIconX::OnImageIsAnimated(imgIRequest* aRequest)
-{
-  return NS_OK;
 }

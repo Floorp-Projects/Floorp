@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -93,7 +58,7 @@ enum AUDIOFLAGS {
     HEADSET_AUDIOFLAG              = 0x0001<<2,
     SPEAKER_ON_REQUEST_AUDIOFLAG   = 0x0001<<3,
     SPEAKER_OFF_REQUEST_AUDIOFLAG  = 0x0001<<4,
-    ANY_AUDIOFLAGS                 = (HANDSET_AUDIOFLAG      | 
+    ANY_AUDIOFLAGS                 = (HANDSET_AUDIOFLAG      |
                                       SPEAKERPHONE_AUDIOFLAG |
                                       HEADSET_AUDIOFLAG)
 };
@@ -116,23 +81,23 @@ void cfg_sanity_check_media_range (void)
 {
     int32_t start_port = 0;
     int32_t end_port = 0;
-    boolean changed = FALSE;  
+    boolean changed = FALSE;
 
-    config_get_value(CFGID_MEDIA_PORT_RANGE_START, 
+    config_get_value(CFGID_MEDIA_PORT_RANGE_START,
                      &start_port, sizeof(start_port));
-    config_get_value(CFGID_MEDIA_PORT_RANGE_END, 
+    config_get_value(CFGID_MEDIA_PORT_RANGE_END,
                      &end_port, sizeof(end_port));
-                     
+
     // Ensure that the ports are on an even port boundary
-    if (start_port & 0x1) {                  
+    if (start_port & 0x1) {
         start_port =  start_port & ~0x1;
         changed = TRUE;
     }
-    if (end_port & 0x1) { 
+    if (end_port & 0x1) {
         end_port = end_port & ~0x1;
         changed = TRUE;
     }
-                  
+
     /*
      * If the ranges are swapped, swap them for convenience here
      */
@@ -140,15 +105,15 @@ void cfg_sanity_check_media_range (void)
         unsigned int temp = end_port;
         end_port = start_port;
         start_port = temp;
-        changed = TRUE; 
+        changed = TRUE;
     }
-    
+
     if ((end_port - start_port) < 4) {
         start_port  = RTP_START_PORT;
         end_port = RTP_END_PORT;
-        changed = TRUE; 
+        changed = TRUE;
     }
-    
+
     /*
      * We are trying to ensure that the start_port and the end_port
      * are in the range of 0x4000 through and including 0x7ffe.
@@ -167,20 +132,20 @@ void cfg_sanity_check_media_range (void)
      */
     if ((start_port < RTP_START_PORT) || (start_port > (RTP_END_PORT - 4))) {
         start_port = RTP_START_PORT;
-        changed = TRUE; 
+        changed = TRUE;
     }
 
     if ((end_port < (RTP_START_PORT + 4)) || (end_port > RTP_END_PORT)) {
         end_port = RTP_END_PORT;
-        changed = TRUE; 
-    } 
-    
+        changed = TRUE;
+    }
+
     if (changed) {
-        config_set_value(CFGID_MEDIA_PORT_RANGE_START, 
+        config_set_value(CFGID_MEDIA_PORT_RANGE_START,
                          &start_port, sizeof(start_port));
-        config_set_value(CFGID_MEDIA_PORT_RANGE_END, 
+        config_set_value(CFGID_MEDIA_PORT_RANGE_END,
                          &end_port, sizeof(end_port));
-    }      
+    }
 }
 
 
@@ -197,7 +162,7 @@ static debug_entry_t debug_table[MAX_DEBUG_CMDS];
 
 /*================================================================
  * From timer_platform.c which used to be included and needs to be FIXED
- *===============================================================*/	
+ *===============================================================*/
 
 
 extern struct tm *gmtime_r(const time_t *timer, struct tm *pts)
@@ -252,7 +217,7 @@ unsigned long seconds_to_gmt_string (unsigned long seconds, char *gmt_string)
 int PhoneAudioFlags = NO_AUDIOFLAGS;
 
 #include "lsm.h"
-void OnTerminateCall() 
+void OnTerminateCall()
 {
 	terminate_active_calls();
 }

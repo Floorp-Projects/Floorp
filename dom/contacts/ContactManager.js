@@ -437,18 +437,18 @@ ContactManager.prototype = {
     this.removeRequest(msg.requestID);
   },
 
-  askPermission: function (aAccess, aReqeust, aAllowCallback, aCancelCallback) {
+  askPermission: function (aAccess, aRequest, aAllowCallback, aCancelCallback) {
     if (DEBUG) debug("askPermission for contacts");
     let requestID = this.getRequestId({
-      request: aReqeust,
+      request: aRequest,
       allow: function() {
         aAllowCallback();
       }.bind(this),
       cancel : function() {
         if (aCancelCallback) {
           aCancelCallback()
-        } else if (request) {
-          Services.DOMRequest.fireError(request, "Not Allowed");
+        } else if (aRequest) {
+          Services.DOMRequest.fireError(aRequest, "Not Allowed");
         }
       }.bind(this)
     });

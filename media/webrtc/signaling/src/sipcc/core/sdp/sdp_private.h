@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef _SDP_PRIVATE_H_
 #define _SDP_PRIVATE_H_
@@ -46,7 +11,6 @@
 /* SDP Defines */
 
 #define SDP_MAX_STRING_LEN      256  /* Max len for SDP string       */
-#define SDP_MAX_CANDIDATE_LEN      256  /* Max len for SDP string       */
 #define SDP_MAX_SHORT_STRING_LEN      12  /* Max len for a short SDP string  */
 #define SDP_MAX_PAYLOAD_TYPES   23  /* Max payload types in m= line */
 #define SDP_TOKEN_LEN           2   /* Len of <token>=              */
@@ -125,7 +89,7 @@ typedef struct sdp_encryptspec {
 } sdp_encryptspec_t;
 
 
-/* FMTP attribute deals with named events in the range of 0-255 as 
+/* FMTP attribute deals with named events in the range of 0-255 as
  * defined in RFC 2833 */
 #define SDP_MIN_NE_VALUE      0
 #define SDP_MAX_NE_VALUES     256
@@ -150,9 +114,9 @@ typedef struct sdp_fmtp {
 
     tinybool                  annexa;
     tinybool                  annexb;
-    u32                       bitrate;   
-    u32                       mode;   
-    
+    u32                       bitrate;
+    u32                       mode;
+
     /* some OPUS specific fmtp params */
     u32                       maxaveragebitrate;
     u16                       usedtx;
@@ -177,10 +141,10 @@ typedef struct sdp_fmtp {
     u16                       custom_y;
     u16                       custom_mpi;
     /* CUSTOM=360,240,4 implies X-AXIS=360, Y-AXIS=240; MPI=4 */
-    u16                       par_width; 
-    u16                       par_height; 
+    u16                       par_width;
+    u16                       par_height;
     /* PAR=12:11 implies par_width=12, par_height=11 */
-  
+
     /* CPCF should be a float. IOS does not support float and so it is u16 */
     /* For portable stack, CPCF should be defined as float and the parsing should
      * be modified accordingly */
@@ -214,14 +178,14 @@ typedef struct sdp_fmtp {
 
     tinybool                  annex_d;
 
-    tinybool                  annex_f;   
-    tinybool                  annex_i;   
-    tinybool                  annex_j;   
+    tinybool                  annex_f;
+    tinybool                  annex_i;
+    tinybool                  annex_j;
     tinybool                  annex_t;
 
-    /* H.263 codec requires annex K,N and P to have values */   
-    u16                       annex_k_val; 
-    u16                       annex_n_val;  
+    /* H.263 codec requires annex K,N and P to have values */
+    u16                       annex_k_val;
+    u16                       annex_n_val;
 
     /* Annex P can take one or more values in the range 1-4 . e.g P=1,3 */
     u16                       annex_p_val_picture_resize; /* 1 = four; 2 = sixteenth */
@@ -394,12 +358,12 @@ typedef struct sdp_media_profiles {
  *  This type is used to hold cryptographic context information.
  *
  */
- 
+
 typedef struct sdp_srtp_crypto_context_t_ {
     int32                   tag;
     unsigned long           selection_flags;
     sdp_srtp_crypto_suite_t suite;
-    unsigned char           master_key[SDP_SRTP_MAX_KEY_SIZE_BYTES]; 
+    unsigned char           master_key[SDP_SRTP_MAX_KEY_SIZE_BYTES];
     unsigned char           master_salt[SDP_SRTP_MAX_SALT_SIZE_BYTES];
     unsigned char           master_key_size_bytes;
     unsigned char           master_salt_size_bytes;
@@ -416,7 +380,7 @@ typedef struct sdp_srtp_crypto_context_t_ {
 
 
 /* m= line info and associated attribute list */
-/* Note: Most of the port parameter values are 16-bit values.  We set 
+/* Note: Most of the port parameter values are 16-bit values.  We set
  * the type to int32 so we can return either a 16-bit value or the
  * choose value. */
 typedef struct sdp_mca {
@@ -453,7 +417,7 @@ typedef struct sdp_attr {
         tinybool              boolean_val;
         u32                   u32_val;
         char                  string_val[SDP_MAX_STRING_LEN+1];
-        char                  ice_attr[SDP_MAX_CANDIDATE_LEN];
+        char                  ice_attr[SDP_MAX_STRING_LEN+1];
         sdp_fmtp_t            fmtp;
         sdp_qos_t             qos;
         sdp_curr_t            curr;
@@ -465,14 +429,14 @@ typedef struct sdp_attr {
         sdp_t38_udpec_e       t38udpec;
         sdp_pccodec_t         pccodec;
         sdp_silencesupp_t     silencesupp;
-        sdp_mca_t            *cap_p;	/* A X-CAP or CDSC attribute */	
+        sdp_mca_t            *cap_p;	/* A X-CAP or CDSC attribute */
         sdp_rtr_t             rtr;
-	sdp_comediadir_t      comediadir; 
+	sdp_comediadir_t      comediadir;
 	sdp_srtp_crypto_context_t srtp_context;
         sdp_mptime_t          mptime;
         sdp_stream_data_t     stream_data;
         char                  unknown[SDP_MAX_STRING_LEN+1];
-        sdp_source_filter_t   source_filter; 
+        sdp_source_filter_t   source_filter;
     } attr;
     struct sdp_attr          *next_p;
 } sdp_attr_t;
@@ -541,7 +505,7 @@ typedef struct {
     u16                       last_cap_inst;
     /* Info to help building X-cpar/cpar attrs. */
     sdp_attr_e		      last_cap_type;
-    
+
     /* MCA - Media, connection, and attributes */
     sdp_mca_t                *mca_p;
     ushort                    mca_count;
@@ -552,7 +516,7 @@ typedef struct {
 typedef struct {
     char *name;
     sdp_result_e (*parse_func)(sdp_t *sdp_p, u16 level, const char *ptr);
-    sdp_result_e (*build_func)(sdp_t *sdp_p, u16 level, char **ptr, u16 len);
+    sdp_result_e (*build_func)(sdp_t *sdp_p, u16 level, flex_string *fs);
 } sdp_tokenarray_t;
 
 
@@ -560,10 +524,10 @@ typedef struct {
 typedef struct {
     char *name;
     u16 strlen;
-    sdp_result_e (*parse_func)(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+    sdp_result_e (*parse_func)(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                const char *ptr);
-    sdp_result_e (*build_func)(sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                               char **ptr, u16 len);
+    sdp_result_e (*build_func)(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                               flex_string *fs);
 } sdp_attrarray_t;
 
 
@@ -592,7 +556,7 @@ extern const sdp_namearray_t sdp_silencesupp_siduse[];
 extern const sdp_namearray_t sdp_srtp_context_crypto_suite[];
 extern const sdp_namearray_t sdp_bw_modifier_val[];
 extern const sdp_namearray_t sdp_group_attr_val[];
-extern const sdp_namearray_t sdp_src_filter_mode_val[]; 
+extern const sdp_namearray_t sdp_src_filter_mode_val[];
 extern const sdp_namearray_t sdp_rtcp_unicast_mode_val[];
 
 extern const  sdp_srtp_crypto_suite_list sdp_srtp_crypto_suite_array[];
@@ -603,144 +567,144 @@ extern sdp_mca_t *sdp_find_media_level(sdp_t *sdp_p, u16 level);
 extern sdp_bw_data_t* sdp_find_bw_line (void *sdp_ptr, u16 level, u16 inst_num);
 
 /* sdp_attr.c */
-extern sdp_result_e sdp_parse_attribute(sdp_t *sdp_p, u16 level, 
+extern sdp_result_e sdp_parse_attribute(sdp_t *sdp_p, u16 level,
                                         const char *ptr);
-extern sdp_result_e sdp_parse_attr_simple_string(sdp_t *sdp_p, 
+extern sdp_result_e sdp_parse_attr_simple_string(sdp_t *sdp_p,
                                      sdp_attr_t *attr_p, const char *ptr);
-extern sdp_result_e sdp_build_attr_simple_string(sdp_t *sdp_p, 
-                                     sdp_attr_t *attr_p, char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_simple_u32(sdp_t *sdp_p, 
+extern sdp_result_e sdp_build_attr_simple_string(sdp_t *sdp_p,
+                                     sdp_attr_t *attr_p, flex_string *fs);
+extern sdp_result_e sdp_parse_attr_simple_u32(sdp_t *sdp_p,
                                      sdp_attr_t *attr_p, const char *ptr);
-extern sdp_result_e sdp_build_attr_simple_u32(sdp_t *sdp_p, 
-                                     sdp_attr_t *attr_p, char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_simple_bool(sdp_t *sdp_p, 
+extern sdp_result_e sdp_build_attr_simple_u32(sdp_t *sdp_p,
+                                     sdp_attr_t *attr_p, flex_string *fs);
+extern sdp_result_e sdp_parse_attr_simple_bool(sdp_t *sdp_p,
                                      sdp_attr_t *attr_p, const char *ptr);
-extern sdp_result_e sdp_build_attr_simple_bool(sdp_t *sdp_p, 
-                                     sdp_attr_t *attr_p, char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_maxprate(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+extern sdp_result_e sdp_build_attr_simple_bool(sdp_t *sdp_p,
+                                     sdp_attr_t *attr_p, flex_string *fs);
+extern sdp_result_e sdp_parse_attr_maxprate(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
-extern sdp_result_e sdp_parse_attr_fmtp(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+extern sdp_result_e sdp_parse_attr_fmtp(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
-extern sdp_result_e sdp_build_attr_fmtp(sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                                     char **ptr, u16 len);
+extern sdp_result_e sdp_build_attr_fmtp(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                     flex_string *fs);
 extern sdp_result_e sdp_parse_attr_direction(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
 extern sdp_result_e sdp_build_attr_direction(sdp_t *sdp_p, sdp_attr_t *attr_p,
-                                     char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_qos(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+                                     flex_string *fs);
+extern sdp_result_e sdp_parse_attr_qos(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
-extern sdp_result_e sdp_build_attr_qos(sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                                     char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_curr(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+extern sdp_result_e sdp_build_attr_qos(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                     flex_string *fs);
+extern sdp_result_e sdp_parse_attr_curr(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
-extern sdp_result_e sdp_build_attr_curr (sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                                     char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_des(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+extern sdp_result_e sdp_build_attr_curr (sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                     flex_string *fs);
+extern sdp_result_e sdp_parse_attr_des(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
-extern sdp_result_e sdp_build_attr_des (sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                                     char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_conf(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+extern sdp_result_e sdp_build_attr_des (sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                     flex_string *fs);
+extern sdp_result_e sdp_parse_attr_conf(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
-extern sdp_result_e sdp_build_attr_conf (sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                                     char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_transport_map(sdp_t *sdp_p, 
+extern sdp_result_e sdp_build_attr_conf (sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                     flex_string *fs);
+extern sdp_result_e sdp_parse_attr_transport_map(sdp_t *sdp_p,
 				     sdp_attr_t *attr_p, const char *ptr);
-extern sdp_result_e sdp_build_attr_transport_map(sdp_t *sdp_p, 
-				     sdp_attr_t *attr_p, char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_subnet(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+extern sdp_result_e sdp_build_attr_transport_map(sdp_t *sdp_p,
+				     sdp_attr_t *attr_p, flex_string *fs);
+extern sdp_result_e sdp_parse_attr_subnet(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
-extern sdp_result_e sdp_build_attr_subnet(sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                                     char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_t38_ratemgmt(sdp_t *sdp_p, 
+extern sdp_result_e sdp_build_attr_subnet(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                     flex_string *fs);
+extern sdp_result_e sdp_parse_attr_t38_ratemgmt(sdp_t *sdp_p,
                                      sdp_attr_t *attr_p, const char *ptr);
-extern sdp_result_e sdp_build_attr_t38_ratemgmt(sdp_t *sdp_p, 
-                                     sdp_attr_t *attr_p, char **ptr, u16 len);
+extern sdp_result_e sdp_build_attr_t38_ratemgmt(sdp_t *sdp_p,
+                                     sdp_attr_t *attr_p, flex_string *fs);
 extern sdp_result_e sdp_parse_attr_t38_udpec(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
 extern sdp_result_e sdp_build_attr_t38_udpec(sdp_t *sdp_p, sdp_attr_t *attr_p,
-                                     char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_cap(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+                                     flex_string *fs);
+extern sdp_result_e sdp_parse_attr_cap(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
-extern sdp_result_e sdp_build_attr_cap(sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                                     char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_cpar(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+extern sdp_result_e sdp_build_attr_cap(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                     flex_string *fs);
+extern sdp_result_e sdp_parse_attr_cpar(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
-extern sdp_result_e sdp_build_attr_cpar(sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                                     char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_pc_codec(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+extern sdp_result_e sdp_build_attr_cpar(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                     flex_string *fs);
+extern sdp_result_e sdp_parse_attr_pc_codec(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
-extern sdp_result_e sdp_build_attr_pc_codec(sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                                     char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_xcap(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+extern sdp_result_e sdp_build_attr_pc_codec(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                     flex_string *fs);
+extern sdp_result_e sdp_parse_attr_xcap(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                         const char *ptr);
-extern sdp_result_e sdp_build_attr_xcap(sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                                        char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_xcpar(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+extern sdp_result_e sdp_build_attr_xcap(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                        flex_string *fs);
+extern sdp_result_e sdp_parse_attr_xcpar(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                          const char *ptr);
-extern sdp_result_e sdp_build_attr_xcpar(sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                                         char **ptr, u16 len);
-extern sdp_result_e sdp_parse_attr_rtr(sdp_t *sdp_p, sdp_attr_t *attr_p, 
+extern sdp_result_e sdp_build_attr_xcpar(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                         flex_string *fs);
+extern sdp_result_e sdp_parse_attr_rtr(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
-extern sdp_result_e sdp_build_attr_rtr(sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                                     char **ptr, u16 len);
+extern sdp_result_e sdp_build_attr_rtr(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                     flex_string *fs);
 extern sdp_result_e sdp_parse_attr_comediadir(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                               const char *ptr);
 extern sdp_result_e sdp_build_attr_comediadir(sdp_t *sdp_p, sdp_attr_t *attr_p,
-                                              char **ptr, u16 len);
+                                              flex_string *fs);
 extern sdp_result_e sdp_parse_attr_silencesupp(sdp_t *sdp_p,
                                                sdp_attr_t *attr_p,
                                                const char *ptr);
 extern sdp_result_e sdp_build_attr_silencesupp(sdp_t *sdp_p,
-                                               sdp_attr_t *attr_p, 
-                                               char **ptr, u16 len);
+                                               sdp_attr_t *attr_p,
+                                               flex_string *fs);
 extern sdp_result_e sdp_parse_attr_srtpcontext(sdp_t *sdp_p,
                                                sdp_attr_t *attr_p,
                                                const char *ptr);
 extern sdp_result_e sdp_build_attr_srtpcontext(sdp_t *sdp_p,
-                                               sdp_attr_t *attr_p, 
-                                               char **ptr, u16 len);
+                                               sdp_attr_t *attr_p,
+                                               flex_string *fs);
 extern sdp_result_e sdp_parse_attr_mptime(
     sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 extern sdp_result_e sdp_build_attr_mptime(
-    sdp_t *sdp_p, sdp_attr_t *attr_p, char **ptr, u16 len);
+    sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string *fs);
 
 extern sdp_result_e sdp_parse_attr_x_sidin(
     sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 extern sdp_result_e sdp_build_attr_x_sidin(
-    sdp_t *sdp_p, sdp_attr_t *attr_p, char **ptr, u16 len);
+    sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string *fs);
 
 extern sdp_result_e sdp_parse_attr_x_sidout(
     sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 extern sdp_result_e sdp_build_attr_x_sidout(
-    sdp_t *sdp_p, sdp_attr_t *attr_p, char **ptr, u16 len);
+    sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string *fs);
 
 extern sdp_result_e sdp_parse_attr_x_confid(
     sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 extern sdp_result_e sdp_build_attr_x_confid(
-    sdp_t *sdp_p, sdp_attr_t *attr_p, char **ptr, u16 len);
+    sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string *fs);
 
 extern sdp_result_e sdp_parse_attr_group(
     sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 extern sdp_result_e sdp_build_attr_group(
-    sdp_t *sdp_p, sdp_attr_t *attr_p, char **ptr, u16 len);
+    sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string *fs);
 
 extern sdp_result_e sdp_parse_attr_source_filter(
     sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 extern sdp_result_e sdp_build_source_filter(
-    sdp_t *sdp_p, sdp_attr_t *attr_p, char **ptr, u16 len);
+    sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string *fs);
 
 extern sdp_result_e sdp_parse_attr_rtcp_unicast(
     sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 extern sdp_result_e sdp_build_attr_rtcp_unicast(
-    sdp_t *sdp_p, sdp_attr_t *attr_p, char **ptr, u16 len);
+    sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string *fs);
 
 extern sdp_result_e sdp_build_attr_ice_attr (
-	sdp_t *sdp_p, sdp_attr_t *attr_p, char **ptr, u16 len);
+	sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string *fs);
 extern sdp_result_e sdp_parse_attr_ice_attr (
 	sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 
 extern sdp_result_e sdp_build_attr_rtcp_mux_attr (
-	sdp_t *sdp_p, sdp_attr_t *attr_p, char **ptr, u16 len);
+	sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string *fs);
 extern sdp_result_e sdp_parse_attr_rtcp_mux_attr (
 	sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 extern sdp_result_e sdp_parse_attr_fingerprint_attr (
@@ -748,7 +712,7 @@ extern sdp_result_e sdp_parse_attr_fingerprint_attr (
 
 /* sdp_attr_access.c */
 extern void sdp_free_attr(sdp_attr_t *attr_p);
-extern sdp_result_e sdp_find_attr_list(sdp_t *sdp_p, u16 level, u8 cap_num, 
+extern sdp_result_e sdp_find_attr_list(sdp_t *sdp_p, u16 level, u8 cap_num,
                                        sdp_attr_t **attr_p, char *fname);
 extern sdp_attr_t *sdp_find_attr(sdp_t *sdp_p, u16 level, u8 cap_num,
                                  sdp_attr_e attr_type, u16 inst_num);
@@ -787,98 +751,83 @@ extern tinybool sdp_verify_sdp_ptr(sdp_t *sdp_p);
 
 
 /* sdp_tokens.c */
-extern sdp_result_e sdp_parse_version(sdp_t *sdp_p, u16 token, 
+extern sdp_result_e sdp_parse_version(sdp_t *sdp_p, u16 token,
                                       const char *ptr);
-extern sdp_result_e sdp_build_version(sdp_t *sdp_p, u16 token, char **ptr, 
-                                      u16 len);
-extern sdp_result_e sdp_parse_owner(sdp_t *sdp_p, u16 token, 
+extern sdp_result_e sdp_build_version(sdp_t *sdp_p, u16 token, flex_string *fs);
+extern sdp_result_e sdp_parse_owner(sdp_t *sdp_p, u16 token,
                                     const char *ptr);
-extern sdp_result_e sdp_build_owner(sdp_t *sdp_p, u16 token, char **ptr, 
-                                    u16 len);
-extern sdp_result_e sdp_parse_sessname(sdp_t *sdp_p, u16 token, 
+extern sdp_result_e sdp_build_owner(sdp_t *sdp_p, u16 token, flex_string *fs);
+extern sdp_result_e sdp_parse_sessname(sdp_t *sdp_p, u16 token,
                                        const char *ptr);
-extern sdp_result_e sdp_build_sessname(sdp_t *sdp_p, u16 token, char **ptr, 
-                                       u16 len);
-extern sdp_result_e sdp_parse_sessinfo(sdp_t *sdp_p, u16 token, 
+extern sdp_result_e sdp_build_sessname(sdp_t *sdp_p, u16 token, flex_string *fs);
+extern sdp_result_e sdp_parse_sessinfo(sdp_t *sdp_p, u16 token,
                                        const char *ptr);
-extern sdp_result_e sdp_build_sessinfo(sdp_t *sdp_p, u16 token, char **ptr, 
-                                       u16 len);
+extern sdp_result_e sdp_build_sessinfo(sdp_t *sdp_p, u16 token, flex_string *fs);
 extern sdp_result_e sdp_parse_uri(sdp_t *sdp_p, u16 token, const char *ptr);
-extern sdp_result_e sdp_build_uri(sdp_t *sdp_p, u16 token, char **ptr, 
-                                  u16 len);
+extern sdp_result_e sdp_build_uri(sdp_t *sdp_p, u16 token, flex_string *fs);
 extern sdp_result_e sdp_parse_email(sdp_t *sdp_p, u16 token, const char *ptr);
-extern sdp_result_e sdp_build_email(sdp_t *sdp_p, u16 token, char **ptr, 
-                                    u16 len);
-extern sdp_result_e sdp_parse_phonenum(sdp_t *sdp_p, u16 token, 
+extern sdp_result_e sdp_build_email(sdp_t *sdp_p, u16 token, flex_string *fs);
+extern sdp_result_e sdp_parse_phonenum(sdp_t *sdp_p, u16 token,
                                        const char *ptr);
-extern sdp_result_e sdp_build_phonenum(sdp_t *sdp_p, u16 token, char **ptr, 
-                                       u16 len);
-extern sdp_result_e sdp_parse_connection(sdp_t *sdp_p, u16 token, 
+extern sdp_result_e sdp_build_phonenum(sdp_t *sdp_p, u16 token, flex_string *fs);
+extern sdp_result_e sdp_parse_connection(sdp_t *sdp_p, u16 token,
                                          const char *ptr);
-extern sdp_result_e sdp_build_connection(sdp_t *sdp_p, u16 token, char **ptr, 
-                                         u16 len);
-extern sdp_result_e sdp_parse_bandwidth(sdp_t *sdp_p, u16 token, 
+extern sdp_result_e sdp_build_connection(sdp_t *sdp_p, u16 token, flex_string *fs);
+extern sdp_result_e sdp_parse_bandwidth(sdp_t *sdp_p, u16 token,
                                         const char *ptr);
-extern sdp_result_e sdp_build_bandwidth(sdp_t *sdp_p, u16 token, char **ptr, 
-                                        u16 len);
-extern sdp_result_e sdp_parse_timespec(sdp_t *sdp_p, u16 token, 
+extern sdp_result_e sdp_build_bandwidth(sdp_t *sdp_p, u16 token, flex_string *fs);
+extern sdp_result_e sdp_parse_timespec(sdp_t *sdp_p, u16 token,
                                        const char *ptr);
-extern sdp_result_e sdp_build_timespec(sdp_t *sdp_p, u16 token, char **ptr, 
-                                       u16 len);
-extern sdp_result_e sdp_parse_repeat_time(sdp_t *sdp_p, u16 token, 
+extern sdp_result_e sdp_build_timespec(sdp_t *sdp_p, u16 token, flex_string *fs);
+extern sdp_result_e sdp_parse_repeat_time(sdp_t *sdp_p, u16 token,
                                           const char *ptr);
-extern sdp_result_e sdp_build_repeat_time(sdp_t *sdp_p, u16 token, char **ptr, 
-                                          u16 len);
-extern sdp_result_e sdp_parse_timezone_adj(sdp_t *sdp_p, u16 token, 
+extern sdp_result_e sdp_build_repeat_time(sdp_t *sdp_p, u16 token, flex_string *fs);
+extern sdp_result_e sdp_parse_timezone_adj(sdp_t *sdp_p, u16 token,
                                            const char *ptr);
-extern sdp_result_e sdp_build_timezone_adj(sdp_t *sdp_p, u16 token, char **ptr,
-                                           u16 len);
-extern sdp_result_e sdp_parse_encryption(sdp_t *sdp_p, u16 token, 
+extern sdp_result_e sdp_build_timezone_adj(sdp_t *sdp_p, u16 token, flex_string *fs);
+extern sdp_result_e sdp_parse_encryption(sdp_t *sdp_p, u16 token,
                                          const char *ptr);
-extern sdp_result_e sdp_build_encryption(sdp_t *sdp_p, u16 token, char **ptr, 
-                                         u16 len);
+extern sdp_result_e sdp_build_encryption(sdp_t *sdp_p, u16 token, flex_string *fs);
 extern sdp_result_e sdp_parse_media(sdp_t *sdp_p, u16 token, const char *ptr);
-extern sdp_result_e sdp_build_media(sdp_t *sdp_p, u16 token, char **ptr, 
-                                    u16 len);
-extern sdp_result_e sdp_parse_attribute(sdp_t *sdp_p, u16 token, 
+extern sdp_result_e sdp_build_media(sdp_t *sdp_p, u16 token, flex_string *fs);
+extern sdp_result_e sdp_parse_attribute(sdp_t *sdp_p, u16 token,
                                         const char *ptr);
-extern sdp_result_e sdp_build_attribute(sdp_t *sdp_p, u16 token, char **ptr, 
-                                        u16 len);
+extern sdp_result_e sdp_build_attribute(sdp_t *sdp_p, u16 token, flex_string *fs);
 
-extern void sdp_parse_payload_types(sdp_t *sdp_p, sdp_mca_t *mca_p, 
+extern void sdp_parse_payload_types(sdp_t *sdp_p, sdp_mca_t *mca_p,
                                      const char *ptr);
-extern sdp_result_e sdp_parse_multiple_profile_payload_types(sdp_t *sdp_p, 
-                                               sdp_mca_t *mca_p, 
+extern sdp_result_e sdp_parse_multiple_profile_payload_types(sdp_t *sdp_p,
+                                               sdp_mca_t *mca_p,
                                                const char *ptr);
-extern sdp_result_e 
+extern sdp_result_e
 sdp_parse_attr_sdescriptions(sdp_t *sdp_p, sdp_attr_t *attr_p,
                              const char *ptr);
-			      
+
 extern sdp_result_e
-sdp_build_attr_sdescriptions(sdp_t *sdp_p, sdp_attr_t *attr_p, 
-                             char **ptr, u16 len);
-			     
+sdp_build_attr_sdescriptions(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                             flex_string *fs);
+
 
 /* sdp_utils.c */
 extern sdp_mca_t *sdp_alloc_mca(void);
 extern tinybool sdp_validate_maxprate(const char *string_parm);
 extern char *sdp_findchar(const char *ptr, char *char_list);
-extern const char *sdp_getnextstrtok(const char *str, char *tokenstr, unsigned tokenstr_len, 
+extern const char *sdp_getnextstrtok(const char *str, char *tokenstr, unsigned tokenstr_len,
                                const char *delim, sdp_result_e *result);
-extern u32 sdp_getnextnumtok(const char *str, const char **str_end, 
+extern u32 sdp_getnextnumtok(const char *str, const char **str_end,
                              const char *delim, sdp_result_e *result);
-extern u32 sdp_getnextnumtok_or_null(const char *str, const char **str_end, 
+extern u32 sdp_getnextnumtok_or_null(const char *str, const char **str_end,
                                      const char *delim, tinybool *null_ind,
                                      sdp_result_e *result);
-extern tinybool sdp_getchoosetok(const char *str, const char **str_end, 
+extern tinybool sdp_getchoosetok(const char *str, const char **str_end,
                                  const char *delim, sdp_result_e *result);
 
-extern 
+extern
 tinybool verify_sdescriptions_mki(char *buf, char *mkiVal, u16 *mkiLen);
 
 extern
 tinybool verify_sdescriptions_lifetime(char *buf);
-			     
+
 /* sdp_services_xxx.c */
 extern void sdp_log_errmsg(sdp_errmsg_e err_msg, char *str);
 extern void sdp_dump_buffer(char *_ptr, int _size_bytes);

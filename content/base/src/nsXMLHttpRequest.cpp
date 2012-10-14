@@ -4110,7 +4110,7 @@ NS_IMETHODIMP nsXMLHttpProgressEvent::GetPosition(uint32_t *aPosition)
 {
   WarnAboutLSProgressEvent(nsIDocument::ePosition);
   // XXX can we change the iface?
-  LL_L2UI(*aPosition, mCurProgress);
+  *aPosition = uint32_t(mCurProgress);
   return NS_OK;
 }
 
@@ -4118,7 +4118,7 @@ NS_IMETHODIMP nsXMLHttpProgressEvent::GetTotalSize(uint32_t *aTotalSize)
 {
   WarnAboutLSProgressEvent(nsIDocument::eTotalSize);
   // XXX can we change the iface?
-  LL_L2UI(*aTotalSize, mMaxProgress);
+  *aTotalSize = uint32_t(mMaxProgress);
   return NS_OK;
 }
 

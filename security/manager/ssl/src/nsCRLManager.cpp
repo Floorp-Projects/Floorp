@@ -393,10 +393,8 @@ nsCRLManager::ComputeNextAutoUpdateTime(nsICRLInfo *info,
   int64_t temp;
   int64_t cycleCnt = 0;
   int64_t secsInDayCnt;
-  double tmpData;
-  
-  LL_L2F(tmpData,secsInDay);
-  tmpData = dayCnt * tmpData;
+  double tmpData = double(secsInDay);
+  tmpData *= dayCnt;
   LL_F2L(secsInDayCnt,tmpData);
   microsecInDayCnt = secsInDayCnt * PR_USEC_PER_SEC;
     

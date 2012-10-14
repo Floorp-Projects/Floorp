@@ -225,9 +225,9 @@ struct nsStyleImage {
                                bool* aIsEntireImage = nullptr) const;
 
   /**
-   * Requests a decode on the image.
+   * Starts the decoding of a image.
    */
-  nsresult RequestDecode() const;
+  nsresult StartDecoding() const;
   /**
    * @return true if the item is definitely opaque --- i.e., paints every
    * pixel within its bounds opaquely, and the bounds contains at least a pixel.
