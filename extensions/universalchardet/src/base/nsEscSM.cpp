@@ -55,7 +55,7 @@ const SMModel HZSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, HZ_cls },
    6,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, HZ_st },
-  HZCharLenTable,
+  CHAR_LEN_TABLE(HZCharLenTable),
   "HZ-GB-2312",
 };
 
@@ -113,7 +113,7 @@ const SMModel ISO2022CNSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, ISO2022CN_cls },
   9,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, ISO2022CN_st },
-  ISO2022CNCharLenTable,
+  CHAR_LEN_TABLE(ISO2022CNCharLenTable),
   "ISO-2022-CN",
 };
 
@@ -171,7 +171,7 @@ const SMModel ISO2022JPSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, ISO2022JP_cls },
   10,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, ISO2022JP_st },
-  ISO2022JPCharLenTable,
+  CHAR_LEN_TABLE(ISO2022JPCharLenTable),
   "ISO-2022-JP",
 };
 
@@ -225,7 +225,7 @@ const SMModel ISO2022KRSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, ISO2022KR_cls },
    6,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, ISO2022KR_st },
-  ISO2022KRCharLenTable,
+  CHAR_LEN_TABLE(ISO2022KRCharLenTable),
   "ISO-2022-KR",
 };
 
