@@ -29,7 +29,6 @@ public:
 
   // Accessible
   virtual void Description(nsString& aDescription);
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
   virtual uint64_t NativeInteractiveState() const;
@@ -46,6 +45,10 @@ public:
   virtual bool IsActiveWidget() const;
   virtual bool AreItemsOperable() const;
   virtual Accessible* ContainerWidget() const;
+
+protected:
+  // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
 };
 
 /**
@@ -61,12 +64,15 @@ public:
   NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
 
   // Accessible
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
 
   // ActionAccessible
   virtual uint8_t ActionCount();
+
+protected:
+  // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
 };
 
 
@@ -79,7 +85,6 @@ public:
   XULMenupopupAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
 
@@ -89,6 +94,10 @@ public:
   virtual bool AreItemsOperable() const;
 
   virtual Accessible* ContainerWidget() const;
+
+protected:
+  // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
 };
 
 /**
@@ -100,7 +109,6 @@ public:
   XULMenubarAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
 
   // Widget
@@ -108,6 +116,10 @@ public:
   virtual bool AreItemsOperable() const;
   virtual Accessible* CurrentItem();
   virtual void SetCurrentItem(Accessible* aItem);
+
+protected:
+  // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
 };
 
 } // namespace a11y

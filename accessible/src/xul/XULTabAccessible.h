@@ -48,11 +48,14 @@ public:
 
   // Accessible
   virtual void Value(nsString& aValue);
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
 
   // ActionAccessible
   virtual uint8_t ActionCount();
+
+protected:
+  // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
 };
 
 

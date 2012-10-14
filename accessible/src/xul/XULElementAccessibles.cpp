@@ -32,13 +32,13 @@ XULLabelAccessible::
 {
 }
 
-nsresult
-XULLabelAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+XULLabelAccessible::NativeName(nsString& aName)
 {
   // if the value attr doesn't exist, the screen reader must get the accessible text
   // from the accessible text interface or from the children
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
-  return NS_OK;
+  return eNameOK;
 }
 
 role
@@ -121,14 +121,14 @@ XULLinkAccessible::Value(nsString& aValue)
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, aValue);
 }
 
-nsresult
-XULLinkAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+XULLinkAccessible::NativeName(nsString& aName)
 {
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
-  if (!aName.IsEmpty())
-    return NS_OK;
+  if (aName.IsEmpty())
+    nsTextEquivUtils::GetNameFromSubtree(this, aName);
 
-  return nsTextEquivUtils::GetNameFromSubtree(this, aName);
+  return eNameOK;
 }
 
 role

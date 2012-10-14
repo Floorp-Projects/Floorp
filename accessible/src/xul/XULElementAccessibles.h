@@ -21,10 +21,13 @@ public:
   XULLabelAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
   virtual Relation RelationByType(uint32_t aRelationType);
+
+protected:
+  // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
 };
 
 /**
@@ -55,7 +58,6 @@ public:
 
   // Accessible
   virtual void Value(nsString& aValue);
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
   virtual uint64_t NativeLinkState() const;
 
@@ -69,6 +71,9 @@ public:
   virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex);
 
 protected:
+  // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
+
   enum { eAction_Jump = 0 };
 
 };

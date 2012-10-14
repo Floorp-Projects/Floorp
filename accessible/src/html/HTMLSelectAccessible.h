@@ -84,7 +84,6 @@ public:
   NS_IMETHOD SetSelected(bool aSelect);
 
   // Accessible
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
   virtual uint64_t NativeInteractiveState() const;
@@ -97,6 +96,10 @@ public:
 
   // Widgets
   virtual Accessible* ContainerWidget() const;
+
+protected:
+  // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
 
 private:
 

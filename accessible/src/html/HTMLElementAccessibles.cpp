@@ -41,11 +41,11 @@ HTMLBRAccessible::NativeState()
   return states::READONLY;
 }
 
-nsresult
-HTMLBRAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+HTMLBRAccessible::NativeName(nsString& aName)
 {
   aName = static_cast<PRUnichar>('\n');    // Newline char
-  return NS_OK;
+  return eNameOK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,10 +54,11 @@ HTMLBRAccessible::GetNameInternal(nsAString& aName)
 
 NS_IMPL_ISUPPORTS_INHERITED0(HTMLLabelAccessible, HyperTextAccessible)
 
-nsresult
-HTMLLabelAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+HTMLLabelAccessible::NativeName(nsString& aName)
 {
-  return nsTextEquivUtils::GetNameFromSubtree(this, aName);
+  nsTextEquivUtils::GetNameFromSubtree(this, aName);
+  return eNameOK;
 }
 
 role
