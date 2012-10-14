@@ -21,11 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=380383
 <pre id="test">
 <script class="testbody" type="text/javascript">
   /** Test for Bug 380383 **/
-  is($("f1").contentDocument.characterSet, "UTF-8",
+  is($("f1").contentDocument.characterSet, "utf-8",
      "Unexpected charset for f1");
 
   function runTest() {
-    is($("f2").contentDocument.characterSet, "UTF-8",
+    is($("f2").contentDocument.characterSet, "utf-8",
        "Unexpected charset for f2");
   }
      

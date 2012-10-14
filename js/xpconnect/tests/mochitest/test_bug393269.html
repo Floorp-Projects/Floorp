@@ -16,10 +16,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=393269
 (function () {
     /** Test for Bug 393269 **/
     var doc = $("ifr").contentDocument;
-    is("UTF-8", doc.characterSet, "control, getting a property");
+    is("utf-8", doc.characterSet, "control, getting a property");
     doc.open();
     try {
-        is("UTF-8", doc.characterSet,
+        is("utf-8", doc.characterSet,
            "can get a property after 1 document.open")
     } catch (e) {
         fail("Shouldn't have thrown: " + e);
@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=393269
 
     doc.open();
     try {
-        is("UTF-8", doc.characterSet,
+        is("utf-8", doc.characterSet,
            "can get a property after 2 document.opens")
     } catch (e) {
         fail("Shouldn't have thrown: " + e);
