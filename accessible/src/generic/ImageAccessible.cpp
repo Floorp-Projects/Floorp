@@ -69,26 +69,24 @@ ImageAccessible::NativeState()
   return state;
 }
 
-nsresult
-ImageAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+ImageAccessible::NativeName(nsString& aName)
 {
   bool hasAltAttrib =
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);
   if (!aName.IsEmpty())
-    return NS_OK;
+    return eNameOK;
 
-  nsresult rv = Accessible::GetNameInternal(aName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  Accessible::NativeName(aName);
   if (aName.IsEmpty() && hasAltAttrib) {
     // No accessible name but empty 'alt' attribute is present. If further name
     // computation algorithm doesn't provide non empty name then it means
     // an empty 'alt' attribute was used to indicate a decorative image (see
     // nsIAccessible::name attribute for details).
-    return NS_OK_EMPTY_NAME;
+    return eNoNameOnPurpose;
   }
 
-  return NS_OK;
+  return eNameOK;
 }
 
 role

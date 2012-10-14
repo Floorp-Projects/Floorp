@@ -52,7 +52,6 @@ public:
   // Accessible
   virtual int32_t GetLevelInternal();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
   virtual uint64_t NativeState();
 
@@ -243,6 +242,9 @@ public:
   virtual already_AddRefed<nsIEditor> GetEditor() const;
 
 protected:
+  // Accessible
+  virtual mozilla::a11y::ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
+
   // HyperTextAccessible
 
   /**

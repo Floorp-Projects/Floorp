@@ -133,12 +133,12 @@ nsXFormsComboboxPopupWidgetAccessible::NativeInteractiveState() const
   return NativelyUnavailable() ? states::UNAVAILABLE : states::FOCUSABLE;
 }
 
-nsresult
-nsXFormsComboboxPopupWidgetAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+nsXFormsComboboxPopupWidgetAccessible::NativeName(nsString& aName)
 {
   // Override nsXFormsAccessible::GetName() to prevent name calculation by
   // XForms rules.
-  return NS_OK;
+  return eNameOK;
 }
 
 void

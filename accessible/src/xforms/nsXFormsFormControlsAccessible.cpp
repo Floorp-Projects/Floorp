@@ -27,11 +27,11 @@ nsXFormsLabelAccessible::NativeRole()
   return roles::LABEL;
 }
 
-nsresult
-nsXFormsLabelAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+nsXFormsLabelAccessible::NativeName(nsString& aName)
 {
   // XXX Correct name calculation for this, see bug 453594.
-  return NS_OK;
+  return eNameOK;
 }
 
 void

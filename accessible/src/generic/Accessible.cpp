@@ -273,7 +273,7 @@ Accessible::Name(nsString& aName)
       return eNameOK;
   }
 
-  nsresult rv = GetNameInternal(aName);
+  ENameValueFlag nameFlag = NativeName(aName);
   if (!aName.IsEmpty())
     return eNameOK;
 
@@ -292,7 +292,7 @@ Accessible::Name(nsString& aName)
     return eNameOK;
   }
 
-  if (rv != NS_OK_EMPTY_NAME)
+  if (nameFlag != eNoNameOnPurpose)
     aName.SetIsVoid(true);
 
   return eNameOK;
@@ -1055,26 +1055,19 @@ Accessible::TakeFocus()
   return NS_OK;
 }
 
-nsresult
-Accessible::GetHTMLName(nsAString& aLabel)
+void
+Accessible::GetHTMLName(nsString& aLabel)
 {
-  nsAutoString label;
-
   Accessible* labelAcc = nullptr;
   HTMLLabelIterator iter(Document(), this);
   while ((labelAcc = iter.Next())) {
-    nsresult rv = nsTextEquivUtils::
-      AppendTextEquivFromContent(this, labelAcc->GetContent(), &label);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    label.CompressWhitespace();
+    nsTextEquivUtils::AppendTextEquivFromContent(this, labelAcc->GetContent(),
+                                                 &aLabel);
+    aLabel.CompressWhitespace();
   }
 
-  if (label.IsEmpty())
-    return nsTextEquivUtils::GetNameFromSubtree(this, aLabel);
-
-  aLabel = label;
-  return NS_OK;
+  if (aLabel.IsEmpty())
+    nsTextEquivUtils::GetNameFromSubtree(this, aLabel);
 }
 
 /**
@@ -1089,60 +1082,53 @@ Accessible::GetHTMLName(nsAString& aLabel)
   *  the control that uses the control="controlID" syntax will use
   *  the child label for its Name.
   */
-nsresult
-Accessible::GetXULName(nsAString& aLabel)
+void
+Accessible::GetXULName(nsString& aName)
 {
   // CASE #1 (via label attribute) -- great majority of the cases
-  nsresult rv = NS_OK;
-
-  nsAutoString label;
-  nsCOMPtr<nsIDOMXULLabeledControlElement> labeledEl(do_QueryInterface(mContent));
+  nsCOMPtr<nsIDOMXULLabeledControlElement> labeledEl =
+    do_QueryInterface(mContent);
   if (labeledEl) {
-    rv = labeledEl->GetLabel(label);
-  }
-  else {
-    nsCOMPtr<nsIDOMXULSelectControlItemElement> itemEl(do_QueryInterface(mContent));
+    labeledEl->GetLabel(aName);
+  } else {
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> itemEl =
+      do_QueryInterface(mContent);
     if (itemEl) {
-      rv = itemEl->GetLabel(label);
-    }
-    else {
-      nsCOMPtr<nsIDOMXULSelectControlElement> select(do_QueryInterface(mContent));
+      itemEl->GetLabel(aName);
+    } else {
+      nsCOMPtr<nsIDOMXULSelectControlElement> select =
+        do_QueryInterface(mContent);
       // Use label if this is not a select control element which 
       // uses label attribute to indicate which option is selected
       if (!select) {
         nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(mContent));
-        if (xulEl) {
-          rv = xulEl->GetAttribute(NS_LITERAL_STRING("label"), label);
-        }
+        if (xulEl)
+          xulEl->GetAttribute(NS_LITERAL_STRING("label"), aName);
       }
     }
   }
 
   // CASES #2 and #3 ------ label as a child or <label control="id" ... > </label>
-  if (NS_FAILED(rv) || label.IsEmpty()) {
-    label.Truncate();
-
+  if (aName.IsEmpty()) {
     Accessible* labelAcc = nullptr;
     XULLabelIterator iter(Document(), mContent);
     while ((labelAcc = iter.Next())) {
       nsCOMPtr<nsIDOMXULLabelElement> xulLabel =
         do_QueryInterface(labelAcc->GetContent());
       // Check if label's value attribute is used
-      if (xulLabel && NS_SUCCEEDED(xulLabel->GetValue(label)) && label.IsEmpty()) {
+      if (xulLabel && NS_SUCCEEDED(xulLabel->GetValue(aName)) && aName.IsEmpty()) {
         // If no value attribute, a non-empty label must contain
         // children that define its text -- possibly using HTML
         nsTextEquivUtils::
-          AppendTextEquivFromContent(this, labelAcc->GetContent(), &label);
+          AppendTextEquivFromContent(this, labelAcc->GetContent(), &aName);
       }
     }
   }
 
   // XXX If CompressWhiteSpace worked on nsAString we could avoid a copy
-  label.CompressWhitespace();
-  if (!label.IsEmpty()) {
-    aLabel = label;
-    return NS_OK;
-  }
+  aName.CompressWhitespace();
+  if (!aName.IsEmpty())
+    return;
 
   // Can get text from title of <toolbaritem> if we're a child of a <toolbaritem>
   nsIContent *bindingParent = mContent->GetBindingParent();
@@ -1150,15 +1136,14 @@ Accessible::GetXULName(nsAString& aLabel)
                                       mContent->GetParent();
   while (parent) {
     if (parent->Tag() == nsGkAtoms::toolbaritem &&
-        parent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, label)) {
-      label.CompressWhitespace();
-      aLabel = label;
-      return NS_OK;
+        parent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aName)) {
+      aName.CompressWhitespace();
+      return;
     }
     parent = parent->GetParent();
   }
 
-  return nsTextEquivUtils::GetNameFromSubtree(this, aLabel);
+  nsTextEquivUtils::GetNameFromSubtree(this, aName);
 }
 
 nsresult
@@ -2433,9 +2418,6 @@ Accessible::Shutdown()
   nsAccessNodeWrap::Shutdown();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Accessible public methods
-
 // Accessible protected
 void
 Accessible::ARIAName(nsAString& aName)
@@ -2458,16 +2440,16 @@ Accessible::ARIAName(nsAString& aName)
   }
 }
 
-nsresult
-Accessible::GetNameInternal(nsAString& aName)
+// Accessible protected
+ENameValueFlag
+Accessible::NativeName(nsString& aName)
 {
   if (mContent->IsHTML())
-    return GetHTMLName(aName);
+    GetHTMLName(aName);
+  else if (mContent->IsXUL())
+    GetXULName(aName);
 
-  if (mContent->IsXUL())
-    return GetXULName(aName);
-
-  return NS_OK;
+  return eNameOK;
 }
 
 // Accessible protected
@@ -2490,6 +2472,7 @@ Accessible::BindToParent(Accessible* aParent, uint32_t aIndexInParent)
   mIndexInParent = aIndexInParent;
 }
 
+// Accessible protected
 void
 Accessible::UnbindFromParent()
 {
@@ -2498,6 +2481,9 @@ Accessible::UnbindFromParent()
   mIndexOfEmbeddedChild = -1;
   mGroupInfo = nullptr;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Accessible public methods
 
 void
 Accessible::InvalidateChildren()

@@ -134,11 +134,11 @@ XULMenuitemAccessible::NativeInteractiveState() const
   return states::FOCUSABLE | states::SELECTABLE;
 }
 
-nsresult
-XULMenuitemAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+XULMenuitemAccessible::NativeName(nsString& aName)
 {
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
-  return NS_OK;
+  return eNameOK;
 }
 
 void
@@ -396,10 +396,10 @@ XULMenuSeparatorAccessible::NativeState()
     (states::OFFSCREEN | states::INVISIBLE);
 }
 
-nsresult
-XULMenuSeparatorAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+XULMenuSeparatorAccessible::NativeName(nsString& aName)
 {
-  return NS_OK;
+  return eNameOK;
 }
 
 role
@@ -469,16 +469,16 @@ XULMenupopupAccessible::NativeState()
   return state;
 }
 
-nsresult
-XULMenupopupAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+XULMenupopupAccessible::NativeName(nsString& aName)
 {
-  nsIContent *content = mContent;
+  nsIContent* content = mContent;
   while (content && aName.IsEmpty()) {
     content->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
     content = content->GetParent();
   }
 
-  return NS_OK;
+  return eNameOK;
 }
 
 role
@@ -572,11 +572,11 @@ XULMenubarAccessible::
 {
 }
 
-nsresult
-XULMenubarAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+XULMenubarAccessible::NativeName(nsString& aName)
 {
   aName.AssignLiteral("Application");
-  return NS_OK;
+  return eNameOK;
 }
 
 role

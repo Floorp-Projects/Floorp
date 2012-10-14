@@ -385,12 +385,12 @@ HTMLTableAccessible::NativeState()
   return Accessible::NativeState() | states::READONLY;
 }
 
-nsresult
-HTMLTableAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+HTMLTableAccessible::NativeName(nsString& aName)
 {
-  Accessible::GetNameInternal(aName);
+  Accessible::NativeName(aName);
   if (!aName.IsEmpty())
-    return NS_OK;
+    return eNameOK;
 
   // Use table caption as a name.
   Accessible* caption = Caption();
@@ -399,13 +399,13 @@ HTMLTableAccessible::GetNameInternal(nsAString& aName)
     if (captionContent) {
       nsTextEquivUtils::AppendTextEquivFromContent(this, captionContent, &aName);
       if (!aName.IsEmpty())
-        return NS_OK;
+        return eNameOK;
     }
   }
 
   // If no caption then use summary as a name.
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::summary, aName);
-  return NS_OK;
+  return eNameOK;
 }
 
 nsresult
