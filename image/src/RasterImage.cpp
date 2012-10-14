@@ -1145,16 +1145,19 @@ RasterImage::HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeO
   return n;
 }
 
-static size_t
-SizeOfDecodedWithComputedFallbackIfHeap(
-  const nsTArray<imgFrame*>& aFrames, gfxASurface::MemoryLocation aLocation,
-  nsMallocSizeOfFun aMallocSizeOf)
+size_t
+RasterImage::SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
+                                                     nsMallocSizeOfFun aMallocSizeOf) const
 {
   size_t n = 0;
-  for (uint32_t i = 0; i < aFrames.Length(); ++i) {
-    imgFrame* frame = aFrames.SafeElementAt(i, nullptr);
+  for (uint32_t i = 0; i < mFrames.Length(); ++i) {
+    imgFrame* frame = mFrames.SafeElementAt(i, nullptr);
     NS_ABORT_IF_FALSE(frame, "Null frame in frame array!");
     n += frame->SizeOfExcludingThisWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);
+  }
+
+  if (mScaleResult.status == SCALE_DONE) {
+    n += mScaleResult.frame->SizeOfExcludingThisWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);
   }
 
   return n;
@@ -1163,20 +1166,22 @@ SizeOfDecodedWithComputedFallbackIfHeap(
 size_t
 RasterImage::HeapSizeOfDecodedWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  return SizeOfDecodedWithComputedFallbackIfHeap(
-           mFrames, gfxASurface::MEMORY_IN_PROCESS_HEAP, aMallocSizeOf);
+  return SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MEMORY_IN_PROCESS_HEAP,
+                                                 aMallocSizeOf);
 }
 
 size_t
 RasterImage::NonHeapSizeOfDecoded() const
 {
-  return SizeOfDecodedWithComputedFallbackIfHeap(mFrames, gfxASurface::MEMORY_IN_PROCESS_NONHEAP, NULL);
+  return SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MEMORY_IN_PROCESS_NONHEAP,
+                                                 NULL);
 }
 
 size_t
 RasterImage::OutOfProcessSizeOfDecoded() const
 {
-  return SizeOfDecodedWithComputedFallbackIfHeap(mFrames, gfxASurface::MEMORY_OUT_OF_PROCESS, NULL);
+  return SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MEMORY_OUT_OF_PROCESS,
+                                                 NULL);
 }
 
 void

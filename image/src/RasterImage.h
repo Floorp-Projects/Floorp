@@ -535,7 +535,10 @@ private:
   imgFrame* GetCurrentDrawableImgFrame();
   uint32_t GetCurrentImgFrameIndex() const;
   mozilla::TimeStamp GetCurrentImgFrameEndTime() const;
-  
+
+  size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
+                                                 nsMallocSizeOfFun aMallocSizeOf) const;
+
   inline void EnsureAnimExists()
   {
     if (!mAnim) {
