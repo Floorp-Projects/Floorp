@@ -76,7 +76,6 @@ public:
   NS_DECL_NSIDOCUMENTOBSERVER
 
   // nsAccessNode
-  virtual void Init();
   virtual void Shutdown();
   virtual nsIFrame* GetFrame() const;
   virtual nsINode* GetNode() const { return mDocument; }
@@ -322,7 +321,6 @@ protected:
   virtual void CacheChildren();
 
   // DocAccessible
-  virtual nsresult AddEventListeners();
   virtual nsresult RemoveEventListeners();
 
   /**

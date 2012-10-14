@@ -1099,6 +1099,7 @@ XULTreeItemAccessible::
   XULTreeItemAccessibleBase(aContent, aDoc, aParent, aTree, aTreeView, aRow)
 {
   mColumn = nsCoreUtils::GetFirstSensibleColumn(mTree);
+  GetCellName(mColumn, mCachedName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1135,13 +1136,6 @@ XULTreeItemAccessible::Name(nsString& aName)
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeItemAccessible: nsAccessNode implementation
-
-void
-XULTreeItemAccessible::Init()
-{
-  XULTreeItemAccessibleBase::Init();
-  Name(mCachedName);
-}
 
 void
 XULTreeItemAccessible::Shutdown()

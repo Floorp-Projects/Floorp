@@ -233,7 +233,6 @@ public:
                                            XULTreeItemAccessibleBase)
 
   // nsAccessNode
-  virtual void Init();
   virtual void Shutdown();
 
   // Accessible

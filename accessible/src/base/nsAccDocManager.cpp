@@ -383,8 +383,7 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
   // Cache the document accessible into document cache.
   mDocAccessibleCache.Put(aDocument, docAcc);
 
-  // Initialize the document accessible.
-  docAcc->Init();
+  // Set role map entry of document accessible.
   docAcc->SetRoleMapEntry(aria::GetRoleMap(aDocument));
 
   // Bind the document to the tree.

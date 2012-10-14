@@ -107,6 +107,49 @@ DocAccessible::
   // We provide a virtual cursor if this is a root doc or if it's a tab doc.
   mIsCursorable = (!(mDocument->GetParentDocument()) ||
                    nsCoreUtils::IsTabDocument(mDocument));
+#ifdef A11Y_LOG
+  if (logging::IsEnabled(logging::eDocCreate))
+    logging::DocCreate("document initialize", mDocument, this);
+#endif
+
+  // Initialize notification controller.
+  mNotificationController = new NotificationController(this, mPresShell);
+
+  // Mark the document accessible as loaded if its DOM document was loaded at
+  // this point (this can happen because a11y is started late or DOM document
+  // having no container was loaded.
+  if (mDocument->GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE)
+    mLoadState |= eDOMLoaded;
+
+  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
+
+  // We only want to be a command observer for content docshells with an
+  // editor.
+  int32_t itemType;
+  docShellTreeItem->GetItemType(&itemType);
+
+  bool isContent = (itemType == nsIDocShellTreeItem::typeContent);
+  if (isContent) {
+    nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
+    if (commandManager)
+      commandManager->AddCommandObserver(this, "obs_documentCreated");
+  }
+
+  a11y::RootAccessible* rootAccessible = RootAccessible();
+
+  // XXX we might be the root accessible in which case eRootAccessible hasn't
+  // been added to mFlags yet, so the downcast failed, and RootAccessible()
+  // returned NULL.  Bug 678477 should
+  // remove this hack.
+  if (rootAccessible) {
+    nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
+    if (caretAccessible)
+      caretAccessible->AddDocSelectionListener(mPresShell);
+  }
+
+  // Add document observer.
+  mDocument->AddObserver(this);
 }
 
 DocAccessible::~DocAccessible()
@@ -583,26 +626,6 @@ DocAccessible::GetAccessible(nsINode* aNode) const
 // nsAccessNode
 
 void
-DocAccessible::Init()
-{
-#ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::eDocCreate))
-    logging::DocCreate("document initialize", mDocument, this);
-#endif
-
-  // Initialize notification controller.
-  mNotificationController = new NotificationController(this, mPresShell);
-
-  // Mark the document accessible as loaded if its DOM document was loaded at
-  // this point (this can happen because a11y is started late or DOM document
-  // having no container was loaded.
-  if (mDocument->GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE)
-    mLoadState |= eDOMLoaded;
-
-  AddEventListeners();
-}
-
-void
 DocAccessible::Shutdown()
 {
   if (!mPresShell) // already shutdown
@@ -711,50 +734,6 @@ DocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
 
     document = parentDoc = document->GetParentDocument();
   }
-}
-
-// DocAccessible protected member
-nsresult
-DocAccessible::AddEventListeners()
-{
-  // 1) Set up scroll position listener
-  // 2) Check for editor and listen for changes to editor
-
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
-  NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
-
-  // Make sure we're a content docshell
-  // We don't want to listen to chrome progress
-  int32_t itemType;
-  docShellTreeItem->GetItemType(&itemType);
-
-  bool isContent = (itemType == nsIDocShellTreeItem::typeContent);
-
-  if (isContent) {
-    // We're not an editor yet, but we might become one
-    nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
-    if (commandManager) {
-      commandManager->AddCommandObserver(this, "obs_documentCreated");
-    }
-  }
-
-  nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-  docShellTreeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
-  if (rootTreeItem) {
-    a11y::RootAccessible* rootAccessible = RootAccessible();
-    NS_ENSURE_TRUE(rootAccessible, NS_ERROR_FAILURE);
-    nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
-    if (caretAccessible) {
-      caretAccessible->AddDocSelectionListener(mPresShell);
-    }
-  }
-
-  // add document observer
-  mDocument->AddObserver(this);
-  return NS_OK;
 }
 
 // DocAccessible protected member
@@ -1387,9 +1366,6 @@ DocAccessible::BindToDocument(Accessible* aAccessible,
 
   // Put into unique ID cache.
   mAccessibleCache.Put(aAccessible->UniqueID(), aAccessible);
-
-  // Initialize the accessible.
-  aAccessible->Init();
 
   aAccessible->SetRoleMapEntry(aRoleMapEntry);
   if (aAccessible->IsElement())
