@@ -905,9 +905,6 @@
   /* see Accessible::GetAttrValue */
   ERROR(NS_OK_NO_ARIA_VALUE,           SUCCESS(33)),
   ERROR(NS_OK_DEFUNCT_OBJECT,          SUCCESS(34)),
-  /* see Accessible::GetNameInternal */
-  ERROR(NS_OK_EMPTY_NAME,              SUCCESS(35)),
-  ERROR(NS_OK_NO_NAME_CLAUSE_HANDLED,  SUCCESS(36)),
-  /* see Accessible::GetNameInternal */
-  ERROR(NS_OK_NAME_FROM_TOOLTIP,       SUCCESS(37))
+  /* see nsTextEquivUtils */
+  ERROR(NS_OK_NO_NAME_CLAUSE_HANDLED,  SUCCESS(35))
 #undef MODULE

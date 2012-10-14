@@ -154,11 +154,11 @@ XULTabsAccessible::Value(nsString& aValue)
   aValue.Truncate();
 }
 
-nsresult
-XULTabsAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+XULTabsAccessible::NativeName(nsString& aName)
 {
   // no name
-  return NS_OK;
+  return eNameOK;
 }
 
 

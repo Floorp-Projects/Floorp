@@ -256,37 +256,32 @@ HTMLButtonAccessible::NativeRole()
   return roles::PUSHBUTTON;
 }
 
-nsresult
-HTMLButtonAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+HTMLButtonAccessible::NativeName(nsString& aName)
 {
-  Accessible::GetNameInternal(aName);
+  Accessible::NativeName(aName);
   if (!aName.IsEmpty() || mContent->Tag() != nsGkAtoms::input)
-    return NS_OK;
+    return eNameOK;
 
   // No name from HTML or ARIA
-  nsAutoString name;
-  if (!mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
-                         name) &&
-      !mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt,
-                         name)) {
+  if (!mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName) &&
+      !mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName)) {
     // Use the button's (default) label if nothing else works
     nsIFrame* frame = GetFrame();
     if (frame) {
       nsIFormControlFrame* fcFrame = do_QueryFrame(frame);
       if (fcFrame)
-        fcFrame->GetFormProperty(nsGkAtoms::defaultLabel, name);
+        fcFrame->GetFormProperty(nsGkAtoms::defaultLabel, aName);
     }
   }
 
-  if (name.IsEmpty() &&
-      !mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, name)) {
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::data, name);
+  if (aName.IsEmpty() &&
+      !mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, aName)) {
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::data, aName);
   }
 
-  name.CompressWhitespace();
-  aName = name;
-
-  return NS_OK;
+  aName.CompressWhitespace();
+  return eNameOK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -325,17 +320,14 @@ HTMLTextFieldAccessible::NativeRole()
   return roles::ENTRY;
 }
 
-nsresult
-HTMLTextFieldAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+HTMLTextFieldAccessible::NativeName(nsString& aName)
 {
-  nsresult rv = Accessible::GetNameInternal(aName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  Accessible::NativeName(aName);
   if (!aName.IsEmpty())
-    return NS_OK;
+    return eNameOK;
 
-  if (mContent->GetBindingParent())
-  {
+  if (mContent->GetBindingParent()) {
     // XXX: bug 459640
     // There's a binding parent.
     // This means we're part of another control, so use parent accessible for name.
@@ -347,12 +339,11 @@ HTMLTextFieldAccessible::GetNameInternal(nsAString& aName)
   }
 
   if (!aName.IsEmpty())
-    return NS_OK;
+    return eNameOK;
 
   // text inputs and textareas might have useful placeholder text
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, aName);
-
-  return NS_OK;
+  return eNameOK;
 }
 
 void
@@ -619,22 +610,18 @@ HTMLGroupboxAccessible::GetLegend()
   return nullptr;
 }
 
-nsresult
-HTMLGroupboxAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+HTMLGroupboxAccessible::NativeName(nsString& aName)
 {
-  nsresult rv = Accessible::GetNameInternal(aName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  Accessible::NativeName(aName);
   if (!aName.IsEmpty())
-    return NS_OK;
+    return eNameOK;
 
-  nsIContent *legendContent = GetLegend();
-  if (legendContent) {
-    return nsTextEquivUtils::
-      AppendTextEquivFromContent(this, legendContent, &aName);
-  }
+  nsIContent* legendContent = GetLegend();
+  if (legendContent)
+    nsTextEquivUtils::AppendTextEquivFromContent(this, legendContent, &aName);
 
-  return NS_OK;
+  return eNameOK;
 }
 
 Relation
@@ -706,22 +693,18 @@ HTMLFigureAccessible::NativeRole()
   return roles::FIGURE;
 }
 
-nsresult
-HTMLFigureAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+HTMLFigureAccessible::NativeName(nsString& aName)
 {
-  nsresult rv = HyperTextAccessibleWrap::GetNameInternal(aName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  HyperTextAccessibleWrap::NativeName(aName);
   if (!aName.IsEmpty())
-    return NS_OK;
+    return eNameOK;
 
   nsIContent* captionContent = Caption();
-  if (captionContent) {
-    return nsTextEquivUtils::
-      AppendTextEquivFromContent(this, captionContent, &aName);
-  }
+  if (captionContent)
+    nsTextEquivUtils::AppendTextEquivFromContent(this, captionContent, &aName);
 
-  return NS_OK;
+  return eNameOK;
 }
 
 Relation
