@@ -401,7 +401,7 @@ BrowserElementChild.prototype = {
     var menuData = {systemTargets: [], contextmenu: null};
     var ctxMenuId = null;
 
-    while (elem && elem.hasAttribute) {
+    while (elem && elem.parentNode) {
       var ctxData = this._getSystemCtxMenuData(elem);
       if (ctxData) {
         menuData.systemTargets.push({
@@ -410,7 +410,7 @@ BrowserElementChild.prototype = {
         });
       }
 
-      if (!ctxMenuId && elem.hasAttribute('contextmenu')) {
+      if (!ctxMenuId && 'hasAttribute' in elem && elem.hasAttribute('contextmenu')) {
         ctxMenuId = elem.getAttribute('contextmenu');
       }
       elem = elem.parentNode;
