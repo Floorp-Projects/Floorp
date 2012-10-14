@@ -15,10 +15,10 @@
 #include "nsIScriptContext.h"
 #include "nsCOMPtr.h"
 #include "nsDOMEventTargetHelper.h"
+#include "nsRect.h"
 
 class nsIDocShell;
 class nsDeviceContext;
-struct nsRect;
 
 // Script "screen" object
 class nsScreen : public nsDOMEventTargetHelper
@@ -31,15 +31,100 @@ public:
 
   void Reset();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSCREEN
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
 
+  nsPIDOMWindow* GetParentObject() const
+  {
+    return GetOwner();
+  }
+
+  int32_t GetTop(ErrorResult& aRv)
+  {
+    nsRect rect;
+    aRv = GetRect(rect);
+    return rect.y;
+  }
+
+  int32_t GetLeft(ErrorResult& aRv)
+  {
+    nsRect rect;
+    aRv = GetRect(rect);
+    return rect.x;
+  }
+
+  int32_t GetWidth(ErrorResult& aRv)
+  {
+    nsRect rect;
+    aRv = GetRect(rect);
+    return rect.width;
+  }
+
+  int32_t GetHeight(ErrorResult& aRv)
+  {
+    nsRect rect;
+    aRv = GetRect(rect);
+    return rect.height;
+  }
+
+  int32_t GetPixelDepth(ErrorResult& aRv);
+  int32_t GetColorDepth(ErrorResult& aRv)
+  {
+    return GetPixelDepth(aRv);
+  }
+
+  int32_t GetAvailTop(ErrorResult& aRv)
+  {
+    nsRect rect;
+    aRv = GetAvailRect(rect);
+    return rect.y;
+  }
+
+  int32_t GetAvailLeft(ErrorResult& aRv)
+  {
+    nsRect rect;
+    aRv = GetAvailRect(rect);
+    return rect.x;
+  }
+
+  int32_t GetAvailWidth(ErrorResult& aRv)
+  {
+    nsRect rect;
+    aRv = GetAvailRect(rect);
+    return rect.width;
+  }
+
+  int32_t GetAvailHeight(ErrorResult& aRv)
+  {
+    nsRect rect;
+    aRv = GetAvailRect(rect);
+    return rect.height;
+  }
+
+  void GetMozOrientation(nsString& aOrientation);
+
+  JSObject* GetOnmozorientationchange(JSContext* aCx)
+  {
+    JS::Value val;
+    nsresult rv = GetOnmozorientationchange(aCx, &val);
+    return NS_SUCCEEDED(rv) ? val.toObjectOrNull() : nullptr;
+  }
+  void SetOnmozorientationchange(JSContext* aCx, JSObject* aCallback,
+                                 ErrorResult& aRv)
+  {
+    aRv = SetOnmozorientationchange(aCx, JS::ObjectOrNullValue(aCallback));
+  }
+
   bool MozLockOrientation(const nsAString& aOrientation, ErrorResult& aRv);
   bool MozLockOrientation(const mozilla::dom::Sequence<nsString>& aOrientations, ErrorResult& aRv);
+  void MozUnlockOrientation();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsScreen,
                                            nsDOMEventTargetHelper)
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
+                               bool* aTriedToWrap);
 
   void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration);
 
