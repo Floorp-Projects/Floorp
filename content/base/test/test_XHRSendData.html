@@ -30,7 +30,7 @@ xhr = new XMLHttpRequest();
 xhr.open("GET", "file_XHRSendData_doc.xml", false);
 xhr.send();
 testDoc1 = xhr.responseXML;
-is(testDoc1.inputEncoding, "ISO-8859-1", "wrong encoding");
+is(testDoc1.inputEncoding, "iso-8859-1", "wrong encoding");
 
 testDoc2 = document.implementation.createDocument("", "", null);
 testDoc2.appendChild(testDoc2.createComment(" doc 2 "));
@@ -121,17 +121,17 @@ tests = [{ body: null,
          },
          { body: testDoc1,
            resBody: "<!-- comment -->\n<out>hi</out>",
-           resContentType: "application/xml; charset=ISO-8859-1",
+           resContentType: "application/xml; charset=iso-8859-1",
          },
          { body: testDoc1,
            contentType: "foo/bar",
            resBody: "<!-- comment -->\n<out>hi</out>",
-           resContentType: "foo/bar; charset=ISO-8859-1",
+           resContentType: "foo/bar; charset=iso-8859-1",
          },
          { body: testDoc1,
            contentType: "foo/bar; charset=ascii; baz=bin",
            resBody: "<!-- comment -->\n<out>hi</out>",
-           resContentType: "foo/bar; charset=ISO-8859-1; baz=bin",
+           resContentType: "foo/bar; charset=iso-8859-1; baz=bin",
          },
          { body: testDoc1,
            contentType: "foo/bar; charset=IsO-8859-1",

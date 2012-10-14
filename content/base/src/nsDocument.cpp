@@ -4940,6 +4940,7 @@ NS_IMETHODIMP
 nsDocument::GetCharacterSet(nsAString& aCharacterSet)
 {
   CopyASCIItoUTF16(GetDocumentCharacterSet(), aCharacterSet);
+  ToLowerCase(aCharacterSet);
   return NS_OK;
 }
 
