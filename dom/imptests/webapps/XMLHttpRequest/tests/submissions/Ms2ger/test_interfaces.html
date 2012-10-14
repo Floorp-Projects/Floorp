@@ -6,6 +6,13 @@
 <script src=/resources/testharnessreport.js></script>
 <script src=/resources/WebIDLParser.js></script>
 <script src=/resources/idlharness.js></script>
+<script type=text/plain class=untested>
+interface EventTarget {
+  void addEventListener(DOMString type, EventListener? callback, optional boolean capture /* = false */);
+  void removeEventListener(DOMString type, EventListener? callback, optional boolean capture /* = false */);
+  boolean dispatchEvent(Event event);
+};
+</script>
 <script type=text/plain>
 [NoInterfaceObject]
 interface XMLHttpRequestEventTarget : EventTarget {
@@ -79,11 +86,17 @@ interface FormData {
 "use strict";
 var form = document.createElement("form");
 var idlArray = new IdlArray();
-idlArray.add_idls(document.querySelector("script[type=text\\/plain]").textContent);
+[].forEach.call(document.querySelectorAll("script[type=text\\/plain]"), function(node) {
+  if (node.className == "untested") {
+    idlArray.add_untested_idls(node.textContent);
+  } else {
+    idlArray.add_idls(node.textContent);
+  }
+});
 idlArray.add_objects({
-	XMLHttpRequest: ['new XMLHttpRequest()'],
-	XMLHttpRequestUpload: ['(new XMLHttpRequest()).upload'],
-	FormData: ['new FormData()', 'new FormData(form)']
+  XMLHttpRequest: ['new XMLHttpRequest()'],
+  XMLHttpRequestUpload: ['(new XMLHttpRequest()).upload'],
+  FormData: ['new FormData()', 'new FormData(form)']
 });
 idlArray.test();
 </script>

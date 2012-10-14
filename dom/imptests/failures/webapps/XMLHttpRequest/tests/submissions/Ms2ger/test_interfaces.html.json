@@ -1,7 +1,5 @@
 {
-  "XMLHttpRequestUpload interface: existence and properties of interface prototype object": true,
   "XMLHttpRequest interface constructor": true,
-  "XMLHttpRequest interface: existence and properties of interface prototype object": true,
   "XMLHttpRequest interface: attribute onreadystatechange": true,
   "XMLHttpRequest interface: attribute readyState": true,
   "XMLHttpRequest interface: operation open(DOMString,DOMString,boolean,DOMString,DOMString)": true,
