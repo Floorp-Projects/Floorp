@@ -1233,20 +1233,23 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     shadowGfxRectPlusBlur.RoundOut();
 
     gfxContext* renderContext = aRenderingContext.ThebesContext();
-    nsRefPtr<gfxContext> shadowContext;
     nsContextBoxBlur blurringArea;
 
     // When getting the widget shape from the native theme, we're going
     // to draw the widget into the shadow surface to create a mask.
     // We need to ensure that there actually *is* a shadow surface
     // and that we're not going to draw directly into renderContext.
-    shadowContext = 
+    gfxContext* shadowContext =
       blurringArea.Init(shadowRect, pixelSpreadRadius,
                         blurRadius, twipsPerPixel, renderContext, aDirtyRect,
                         useSkipGfxRect ? &skipGfxRect : nullptr,
                         nativeTheme ? nsContextBoxBlur::FORCE_MASK : 0);
     if (!shadowContext)
       continue;
+
+    // shadowContext is owned by either blurringArea or aRenderingContext.
+    MOZ_ASSERT(shadowContext == renderContext ||
+               shadowContext == blurringArea.GetContext());
 
     // Set the shadow color; if not specified, use the foreground color
     nscolor shadowColor;

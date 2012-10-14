@@ -43,6 +43,30 @@ wrap(_ZdaPv)(void *ptr)
 {
   wrap(free)(ptr);
 }
+/*operator new(unsigned int, std::nothrow_t const&)*/
+MOZ_EXPORT_API(void *)
+wrap(_ZnwjRKSt9nothrow_t)(unsigned int size)
+{
+  return wrap(malloc)(size);
+}
+/*operator new[](unsigned int, std::nothrow_t const&)*/
+MOZ_EXPORT_API(void *)
+wrap(_ZnajRKSt9nothrow_t)(unsigned int size)
+{
+  return wrap(malloc)(size);
+}
+/* operator delete(void*, std::nothrow_t const&) */
+MOZ_EXPORT_API(void)
+wrap(_ZdlPvRKSt9nothrow_t)(void *ptr)
+{
+  wrap(free)(ptr);
+}
+/* operator delete[](void*, std::nothrow_t const&) */
+MOZ_EXPORT_API(void)
+wrap(_ZdaPvRKSt9nothrow_t)(void *ptr)
+{
+  wrap(free)(ptr);
+}
 #endif
 
 #ifdef wrap

@@ -36,13 +36,16 @@ public:
   NS_DECL_NSIACCESSIBLEIMAGE
 
   // Accessible
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
   // ActionAccessible
   virtual uint8_t ActionCount();
+
+protected:
+  // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
 
 private:
   /**

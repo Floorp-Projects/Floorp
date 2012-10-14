@@ -36,7 +36,7 @@ using namespace mozilla;
 
 static nsINativeKeyBindings *sNativeEditorBindings = nullptr;
 
-class nsXBLSpecialDocInfo
+class nsXBLSpecialDocInfo : public nsIObserver
 {
 public:
   nsRefPtr<nsXBLDocumentInfo> mHTMLBindings;
@@ -48,6 +48,9 @@ public:
   bool mInitialized;
 
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
   void LoadDocInfo();
   void GetAllHandlers(const char* aType,
                       nsXBLPrototypeHandler** handler,
@@ -57,16 +60,38 @@ public:
                    nsXBLPrototypeHandler** aResult);
 
   nsXBLSpecialDocInfo() : mInitialized(false) {}
+
+  virtual ~nsXBLSpecialDocInfo() {}
+
 };
 
 const char nsXBLSpecialDocInfo::sHTMLBindingStr[] =
   "chrome://global/content/platformHTMLBindings.xml";
+
+NS_IMPL_ISUPPORTS1(nsXBLSpecialDocInfo, nsIObserver)
+
+NS_IMETHODIMP
+nsXBLSpecialDocInfo::Observe(nsISupports* aSubject,
+                             const char* aTopic,
+                             const PRUnichar* aData)
+{
+  MOZ_ASSERT(!strcmp(aTopic, "xpcom-shutdown"), "wrong topic");
+
+  // On shutdown, clear our fields to avoid an extra cycle collection.
+  mHTMLBindings = nullptr;
+  mUserHTMLBindings = nullptr;
+  mInitialized = false;
+  nsContentUtils::UnregisterShutdownObserver(this);
+
+  return NS_OK;
+}
 
 void nsXBLSpecialDocInfo::LoadDocInfo()
 {
   if (mInitialized)
     return;
   mInitialized = true;
+  nsContentUtils::RegisterShutdownObserver(this);
 
   nsXBLService* xblService = nsXBLService::GetInstance();
   if (!xblService)
@@ -155,8 +180,7 @@ nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
 
   --sRefCnt;
   if (!sRefCnt) {
-    delete sXBLSpecialDocInfo;
-    sXBLSpecialDocInfo = nullptr;
+    NS_IF_RELEASE(sXBLSpecialDocInfo);
   }
 }
 
@@ -221,13 +245,9 @@ nsXBLWindowKeyHandler::EnsureHandlers(bool *aIsEditor)
     nsCOMPtr<nsIContent> content(do_QueryInterface(el));
     BuildHandlerChain(content, &mHandler);
   } else { // We are an XBL file of handlers.
-    if (!sXBLSpecialDocInfo)
-      sXBLSpecialDocInfo = new nsXBLSpecialDocInfo();
     if (!sXBLSpecialDocInfo) {
-      if (aIsEditor) {
-        *aIsEditor = false;
-      }
-      return NS_ERROR_OUT_OF_MEMORY;
+      sXBLSpecialDocInfo = new nsXBLSpecialDocInfo();
+      NS_ADDREF(sXBLSpecialDocInfo);
     }
     sXBLSpecialDocInfo->LoadDocInfo();
 

@@ -622,18 +622,20 @@ XULListitemAccessible::Description(nsString& aDesc)
   * If there is a Listcell as a child ( not anonymous ) use it, otherwise
   *   default to getting the name from GetXULName
   */
-nsresult
-XULListitemAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+XULListitemAccessible::NativeName(nsString& aName)
 {
   nsIContent* childContent = mContent->GetFirstChild();
   if (childContent) {
     if (childContent->NodeInfo()->Equals(nsGkAtoms::listcell,
                                          kNameSpaceID_XUL)) {
       childContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
-      return NS_OK;
+      return eNameOK;
     }
   }
-  return GetXULName(aName);
+
+  GetXULName(aName);
+  return eNameOK;
 }
 
 role
