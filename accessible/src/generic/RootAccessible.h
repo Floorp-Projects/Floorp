@@ -50,9 +50,8 @@ public:
 protected:
 
   /**
-   * Add/remove DOM event listeners.
+   * Remove DOM event listeners.
    */
-  virtual nsresult AddEventListeners();
   virtual nsresult RemoveEventListeners();
 
   /**

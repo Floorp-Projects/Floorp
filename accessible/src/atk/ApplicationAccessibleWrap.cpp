@@ -511,12 +511,54 @@ add_listener (GSignalEmissionHook listener,
 
 static nsresult LoadGtkModule(GnomeAccessibilityModule& aModule);
 
+static gboolean toplevel_event_watcher(GSignalInvocationHint*, guint,
+                                       const GValue*, gpointer);
+
 // ApplicationAccessibleWrap
 
 ApplicationAccessibleWrap::ApplicationAccessibleWrap():
   ApplicationAccessible()
 {
   MAI_LOG_DEBUG(("======Create AppRootAcc=%p\n", (void*)this));
+
+  if (ShouldA11yBeEnabled()) {
+      // Load and initialize gail library.
+      nsresult rv = LoadGtkModule(sGail);
+      if (NS_SUCCEEDED(rv)) {
+          (*sGail.init)();
+      } else {
+          MAI_LOG_DEBUG(("Fail to load lib: %s\n", sGail.libName));
+      }
+
+      MAI_LOG_DEBUG(("Mozilla Atk Implementation initializing\n"));
+
+      // Initialize the MAI Utility class, it will overwrite gail_util.
+      g_type_class_unref(g_type_class_ref(MAI_TYPE_UTIL));
+
+      // Init atk-bridge now
+      PR_SetEnv("NO_AT_BRIDGE=0");
+
+      // load and initialize atk-bridge library
+      rv = LoadGtkModule(sAtkBridge);
+      if (NS_SUCCEEDED(rv)) {
+          (*sAtkBridge.init)();
+      } else {
+          MAI_LOG_DEBUG(("Fail to load lib: %s\n", sAtkBridge.libName));
+      }
+
+      if (!sToplevel_event_hook_added) {
+        sToplevel_event_hook_added = true;
+        sToplevel_show_hook =
+          g_signal_add_emission_hook(g_signal_lookup("show", GTK_TYPE_WINDOW),
+            0, toplevel_event_watcher,
+            reinterpret_cast<gpointer>(nsIAccessibleEvent::EVENT_SHOW), NULL);
+        sToplevel_hide_hook =
+          g_signal_add_emission_hook(g_signal_lookup("hide", GTK_TYPE_WINDOW),
+            0, toplevel_event_watcher,
+            reinterpret_cast<gpointer>(nsIAccessibleEvent::EVENT_HIDE), NULL);
+      }
+  }
+
 }
 
 ApplicationAccessibleWrap::~ApplicationAccessibleWrap()
@@ -571,52 +613,6 @@ toplevel_event_watcher(GSignalInvocationHint* ihint,
   }
 
   return TRUE;
-}
-
-void
-ApplicationAccessibleWrap::Init()
-{
-    if (ShouldA11yBeEnabled()) {
-        // load and initialize gail library
-        nsresult rv = LoadGtkModule(sGail);
-        if (NS_SUCCEEDED(rv)) {
-            (*sGail.init)();
-        }
-        else {
-            MAI_LOG_DEBUG(("Fail to load lib: %s\n", sGail.libName));
-        }
-
-        MAI_LOG_DEBUG(("Mozilla Atk Implementation initializing\n"));
-        // Initialize the MAI Utility class
-        // it will overwrite gail_util
-        g_type_class_unref(g_type_class_ref(MAI_TYPE_UTIL));
-
-        // Init atk-bridge now
-        PR_SetEnv("NO_AT_BRIDGE=0");
-
-        // load and initialize atk-bridge library
-        rv = LoadGtkModule(sAtkBridge);
-        if (NS_SUCCEEDED(rv)) {
-            // init atk-bridge
-            (*sAtkBridge.init)();
-        } else {
-            MAI_LOG_DEBUG(("Fail to load lib: %s\n", sAtkBridge.libName));
-        }
-
-        if (!sToplevel_event_hook_added) {
-          sToplevel_event_hook_added = true;
-          sToplevel_show_hook =
-            g_signal_add_emission_hook(g_signal_lookup("show", GTK_TYPE_WINDOW),
-              0, toplevel_event_watcher,
-              reinterpret_cast<gpointer>(nsIAccessibleEvent::EVENT_SHOW), NULL);
-          sToplevel_hide_hook =
-            g_signal_add_emission_hook(g_signal_lookup("hide", GTK_TYPE_WINDOW),
-              0, toplevel_event_watcher,
-              reinterpret_cast<gpointer>(nsIAccessibleEvent::EVENT_HIDE), NULL);
-        }
-    }
-
-    ApplicationAccessible::Init();
 }
 
 void
