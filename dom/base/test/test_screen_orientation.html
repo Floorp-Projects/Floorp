@@ -55,70 +55,29 @@ try {
   ok(!window.screen.mozLockOrientation([""]), "Cannot lock to an empty string");
   is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
 
-  var exception = false;
-  try {
-    ok(!window.screen.mozLockOrientation(42), "Cannot lock to a number");
-    is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
-  } catch(e) {
-    exception = true;
-  }
-  is(exception, true, "We should get an exception");
+  ok(!window.screen.mozLockOrientation(42), "Cannot lock to a number");
+  is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
 
-  exception = false;
-  try {
-    ok(!window.screen.mozLockOrientation(undefined), "Cannot lock to undefined");
-    is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
-  } catch(e) {
-    exception = true;
-  }
-  is(exception, true, "We should get an exception");
+  ok(!window.screen.mozLockOrientation(undefined), "Cannot lock to undefined");
+  is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
 
-  exception = false;
-  try {
-    ok(!window.screen.mozLockOrientation(null), "Cannot lock to null");
-    is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
-  } catch(e) {
-    exception = true;
-  }
-  is(exception, true, "We should get an exception");
+  ok(!window.screen.mozLockOrientation(null), "Cannot lock to null");
+  is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
 
-  exception = false;
-  try {
-    ok(!window.screen.mozLockOrientation({}), "Cannot lock to a non-Array object");
-    is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
-  } catch(e) {
-    exception = true;
-  }
-  is(exception, true, "We should get an exception");
+  ok(!window.screen.mozLockOrientation({}), "Cannot lock to a non-Array object");
+  is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
 
-  exception = false;
-  try {
-    ok(!window.screen.mozLockOrientation(["Foobar", 42]), "Cannot lock to a number");
-    is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
-  } catch(e) {
-    exception = true;
-  }
-  is(exception, true, "We should get an exception");
+  ok(!window.screen.mozLockOrientation(["Foobar", 42]), "Cannot lock to a number");
+  is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
 
-  exception = false;
-  try {
-    ok(!window.screen.mozLockOrientation(["Foobar", null]), "Cannot lock to null");
-    is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
-  } catch(e) {
-    exception = true;
-  }
-  is(exception, true, "We should get an exception");
+  ok(!window.screen.mozLockOrientation(["Foobar", null]), "Cannot lock to null");
+  is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
 
-  exception = false;
-  try {
-    ok(!window.screen.mozLockOrientation(["Foobar", undefined]), "Cannot lock to undefined");
-    is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
-  } catch(e) {
-    exception = true;
-  }
-  is(exception, true, "We should get an exception");
-}
-finally {
+  ok(!window.screen.mozLockOrientation(["Foobar", undefined]), "Cannot lock to undefined");
+  is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
+} catch (e) {
+  ok(false, "Got unexpected exception: " + e);
+} finally {
   window.screen.removeEventListener("mozorientationchange", unexpectedEvent);
 }
 </script>
