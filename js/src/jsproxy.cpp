@@ -2367,11 +2367,10 @@ Proxy::hasOwn(JSContext *cx, JSObject *proxy_, jsid id, bool *bp)
 }
 
 bool
-Proxy::get(JSContext *cx, HandleObject proxy_, HandleObject receiver, HandleId id,
+Proxy::get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
            MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
-    RootedObject proxy(cx, proxy_);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
     bool own = false;
     if (!handler->hasPrototype() || (handler->hasOwn(cx, proxy, id, &own) && own))
@@ -2380,12 +2379,11 @@ Proxy::get(JSContext *cx, HandleObject proxy_, HandleObject receiver, HandleId i
 }
 
 bool
-Proxy::getElementIfPresent(JSContext *cx, HandleObject proxy_, HandleObject receiver, uint32_t index,
+Proxy::getElementIfPresent(JSContext *cx, HandleObject proxy, HandleObject receiver, uint32_t index,
                            MutableHandleValue vp, bool *present)
 {
     JS_CHECK_RECURSION(cx, return false);
 
-    RootedObject proxy(cx, proxy_);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
 
     if (!handler->hasPrototype()) {
@@ -2411,11 +2409,10 @@ Proxy::getElementIfPresent(JSContext *cx, HandleObject proxy_, HandleObject rece
 }
 
 bool
-Proxy::set(JSContext *cx, HandleObject proxy_, HandleObject receiver, HandleId id, bool strict,
+Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id, bool strict,
            MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
-    RootedObject proxy(cx, proxy_);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
     RootedObject proto(cx);
     if (handler->hasPrototype()) {
@@ -2445,10 +2442,9 @@ Proxy::keys(JSContext *cx, JSObject *proxy_, AutoIdVector &props)
 }
 
 bool
-Proxy::iterate(JSContext *cx, HandleObject proxy_, unsigned flags, MutableHandleValue vp)
+Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
-    RootedObject proxy(cx, proxy_);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
     if (!handler->hasPrototype())
         return GetProxyHandler(proxy)->iterate(cx, proxy, flags, vp.address());
