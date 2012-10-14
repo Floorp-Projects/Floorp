@@ -2406,6 +2406,10 @@ RasterImage::Discard(bool force)
     delete mFrames[i];
   mFrames.Clear();
 
+  // Clear our downscaled frame.
+  mScaleResult.status = SCALE_INVALID;
+  mScaleResult.frame = nullptr;
+
   // Flag that we no longer have decoded frames for this image
   mDecoded = false;
 
