@@ -14,6 +14,7 @@ FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY   = 1
 
 include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 # Need this to find all our DOM source files.
 include $(topsrcdir)/dom/dom-config.mk
@@ -72,7 +73,9 @@ EXPORTS_$(binding_include_path) = \
 LOCAL_INCLUDES += -I$(topsrcdir)/js/xpconnect/src \
   -I$(topsrcdir)/js/xpconnect/wrappers \
   -I$(topsrcdir)/content/canvas/src \
-  -I$(topsrcdir)/content/html/content/src
+  -I$(topsrcdir)/content/html/content/src \
+  -I$(topsrcdir)/dom/base \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

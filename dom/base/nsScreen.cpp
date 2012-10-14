@@ -14,6 +14,7 @@
 #include "nsDOMEvent.h"
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
+#include "mozilla/dom/ScreenBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -111,120 +112,42 @@ NS_IMPL_RELEASE_INHERITED(nsScreen, nsDOMEventTargetHelper)
 
 NS_IMPL_EVENT_HANDLER(nsScreen, mozorientationchange)
 
-NS_IMETHODIMP
-nsScreen::GetTop(int32_t* aTop)
-{
-  nsRect rect;
-  nsresult rv = GetRect(rect);
-
-  *aTop = rect.y;
-
-  return rv;
-}
-
-
-NS_IMETHODIMP
-nsScreen::GetLeft(int32_t* aLeft)
-{
-  nsRect rect;
-  nsresult rv = GetRect(rect);
-
-  *aLeft = rect.x;
-
-  return rv;
-}
-
-
-NS_IMETHODIMP
-nsScreen::GetWidth(int32_t* aWidth)
-{
-  nsRect rect;
-  nsresult rv = GetRect(rect);
-
-  *aWidth = rect.width;
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsScreen::GetHeight(int32_t* aHeight)
-{
-  nsRect rect;
-  nsresult rv = GetRect(rect);
-
-  *aHeight = rect.height;
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsScreen::GetPixelDepth(int32_t* aPixelDepth)
+int32_t
+nsScreen::GetPixelDepth(ErrorResult& aRv)
 {
   nsDeviceContext* context = GetDeviceContext();
 
   if (!context) {
-    *aPixelDepth = -1;
-
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return -1;
   }
 
   uint32_t depth;
   context->GetDepth(depth);
-
-  *aPixelDepth = depth;
-
-  return NS_OK;
+  return depth;
 }
 
-NS_IMETHODIMP
-nsScreen::GetColorDepth(int32_t* aColorDepth)
-{
-  return GetPixelDepth(aColorDepth);
-}
+#define FORWARD_LONG_GETTER(_name)                                              \
+  NS_IMETHODIMP                                                                 \
+  nsScreen::Get ## _name(int32_t* aOut)                                         \
+  {                                                                             \
+    ErrorResult rv;                                                             \
+    *aOut = Get ## _name(rv);                                                   \
+    return rv.ErrorCode();                                                      \
+  }
 
-NS_IMETHODIMP
-nsScreen::GetAvailWidth(int32_t* aAvailWidth)
-{
-  nsRect rect;
-  nsresult rv = GetAvailRect(rect);
+FORWARD_LONG_GETTER(AvailWidth)
+FORWARD_LONG_GETTER(AvailHeight)
+FORWARD_LONG_GETTER(Width)
+FORWARD_LONG_GETTER(Height)
 
-  *aAvailWidth = rect.width;
+FORWARD_LONG_GETTER(Top)
+FORWARD_LONG_GETTER(Left)
+FORWARD_LONG_GETTER(AvailTop)
+FORWARD_LONG_GETTER(AvailLeft)
 
-  return rv;
-}
-
-NS_IMETHODIMP
-nsScreen::GetAvailHeight(int32_t* aAvailHeight)
-{
-  nsRect rect;
-  nsresult rv = GetAvailRect(rect);
-
-  *aAvailHeight = rect.height;
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsScreen::GetAvailLeft(int32_t* aAvailLeft)
-{
-  nsRect rect;
-  nsresult rv = GetAvailRect(rect);
-
-  *aAvailLeft = rect.x;
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsScreen::GetAvailTop(int32_t* aAvailTop)
-{
-  nsRect rect;
-  nsresult rv = GetAvailRect(rect);
-
-  *aAvailTop = rect.y;
-
-  return rv;
-}
+FORWARD_LONG_GETTER(PixelDepth)
+FORWARD_LONG_GETTER(ColorDepth)
 
 nsDeviceContext*
 nsScreen::GetDeviceContext()
@@ -287,28 +210,34 @@ nsScreen::Notify(const hal::ScreenConfiguration& aConfiguration)
   }
 }
 
-NS_IMETHODIMP
-nsScreen::GetMozOrientation(nsAString& aOrientation)
+void
+nsScreen::GetMozOrientation(nsString& aOrientation)
 {
   switch (mOrientation) {
-    case eScreenOrientation_PortraitPrimary:
-      aOrientation.AssignLiteral("portrait-primary");
-      break;
-    case eScreenOrientation_PortraitSecondary:
-      aOrientation.AssignLiteral("portrait-secondary");
-      break;
-    case eScreenOrientation_LandscapePrimary:
-      aOrientation.AssignLiteral("landscape-primary");
-      break;
-    case eScreenOrientation_LandscapeSecondary:
-      aOrientation.AssignLiteral("landscape-secondary");
-      break;
-    case eScreenOrientation_None:
-    default:
-      MOZ_ASSERT(false);
-      return NS_ERROR_FAILURE;
+  case eScreenOrientation_PortraitPrimary:
+    aOrientation.AssignLiteral("portrait-primary");
+    break;
+  case eScreenOrientation_PortraitSecondary:
+    aOrientation.AssignLiteral("portrait-secondary");
+    break;
+  case eScreenOrientation_LandscapePrimary:
+    aOrientation.AssignLiteral("landscape-primary");
+    break;
+  case eScreenOrientation_LandscapeSecondary:
+    aOrientation.AssignLiteral("landscape-secondary");
+    break;
+  case eScreenOrientation_None:
+  default:
+    MOZ_NOT_REACHED("Unacceptable mOrientation value");
   }
+}
 
+NS_IMETHODIMP
+nsScreen::GetSlowMozOrientation(nsAString& aOrientation)
+{
+  nsString orientation;
+  GetMozOrientation(orientation);
+  aOrientation = orientation;
   return NS_OK;
 }
 
@@ -478,11 +407,24 @@ nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
   return false;
 }
 
-NS_IMETHODIMP
+void
 nsScreen::MozUnlockOrientation()
 {
   hal::UnlockScreenOrientation();
+}
+
+NS_IMETHODIMP
+nsScreen::SlowMozUnlockOrientation()
+{
+  MozUnlockOrientation();
   return NS_OK;
+}
+
+/* virtual */
+JSObject*
+nsScreen::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+{
+  return ScreenBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
 NS_IMPL_ISUPPORTS1(nsScreen::FullScreenEventListener, nsIDOMEventListener)
