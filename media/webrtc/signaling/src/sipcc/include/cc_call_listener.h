@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef _CC_CALL_LISTENER_H_
 #define _CC_CALL_LISTENER_H_
@@ -52,7 +17,7 @@
  */
 
 /**
- * Notification for the creation of a new call 
+ * Notification for the creation of a new call
  * @param call_handle call handle that is created.
  * @param call_state the call state
  * @param cc_cause cause that the call is created
@@ -140,9 +105,9 @@ void CC_CallListener_callInfoChanged(cc_call_handle_t call_handle,
 		cc_call_type_t call_type);
 
 /**
- * Update Global Call Identification for a call. GCID can be used to collapse 
- * multiple call bubbles for the same call to a single call bubble. Please refer 
- * to the collpased call bubble as specified by the roundtable UI Spec. 
+ * Update Global Call Identification for a call. GCID can be used to collapse
+ * multiple call bubbles for the same call to a single call bubble. Please refer
+ * to the collpased call bubble as specified by the roundtable UI Spec.
  * @param call_handle
  * @param gcid global call identification
  * @return void
@@ -150,7 +115,7 @@ void CC_CallListener_callInfoChanged(cc_call_handle_t call_handle,
 void CC_CallListener_callGCIDChanged(cc_call_handle_t call_handle, char* gcid);
 
 /**
- * Update the placed call information. This API reports the dialed digits for the 
+ * Update the placed call information. This API reports the dialed digits for the
  * placed call. The number specified by this API should be logged in the placed call information.
  * @param call_handle call_handle
  * @param cld_name called party name

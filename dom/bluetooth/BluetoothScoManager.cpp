@@ -218,3 +218,8 @@ void
 BluetoothScoManager::OnConnectError()
 {
 }
+
+void
+BluetoothScoManager::OnDisconnect()
+{
+}

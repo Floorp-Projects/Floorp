@@ -1898,11 +1898,10 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
 }
 
 static bool
-IsContextZoomedToHighResolution(nsDeviceContext* aContext)
+IsHiDPIContext(nsDeviceContext* aContext)
 {
-  const float devPixelsPerCSSPixel = 1.0f *
-    nsPresContext::AppUnitsPerCSSPixel() / aContext->AppUnitsPerDevPixel();
-  return devPixelsPerCSSPixel > 1.5f;
+  return nsPresContext::AppUnitsPerCSSPixel() >=
+    2 * aContext->UnscaledAppUnitsPerDevPixel();
 }
 
 NS_IMETHODIMP
@@ -1932,7 +1931,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 
   gfxContextMatrixAutoSaveRestore save(thebesCtx);
 
-  if (IsContextZoomedToHighResolution(aContext->DeviceContext())) {
+  if (IsHiDPIContext(aContext->DeviceContext())) {
     // Use high-resolution drawing.
     nativeWidgetRect.ScaleInverse(2.0f);
     nativeDirtyRect.ScaleInverse(2.0f);
@@ -2487,7 +2486,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
       break;
   }
 
-  if (IsContextZoomedToHighResolution(aContext)) {
+  if (IsHiDPIContext(aContext)) {
     *aResult = *aResult + *aResult; // doubled
   }
 
@@ -2760,7 +2759,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
     }
   }
 
-  if (IsContextZoomedToHighResolution(aContext->DeviceContext())) {
+  if (IsHiDPIContext(aContext->DeviceContext())) {
     *aResult = *aResult * 2;
   }
 

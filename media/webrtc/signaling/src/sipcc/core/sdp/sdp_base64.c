@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "sdp_base64.h"
 
@@ -118,16 +83,16 @@ int base64_est_encode_size_bytes (int raw_size_bytes)
 {
     int length;
 
-    /* 
+    /*
      * Find the number of bytes needed to represent the data
-     * using a 4/3 expansion ratio. That result must be 
+     * using a 4/3 expansion ratio. That result must be
      * rounded to the next higher multiple of four to account
      * for padding. Then add in a term to account for any '\n's
      * added.
      */
-    length = ((((raw_size_bytes * 4 + 2)/ 3) + 3) & ~(0x3)) + 
+    length = ((((raw_size_bytes * 4 + 2)/ 3) + 3) & ~(0x3)) +
 	raw_size_bytes / MAX_BASE64_LINE_LENGTH;
-    
+
     return length;
 }
 
@@ -148,7 +113,7 @@ int base64_est_decode_size_bytes (int base64_size_bytes)
 {
     int length;
 
-    length = (base64_size_bytes * 3 + 3) / 4; 
+    length = (base64_size_bytes * 3 + 3) / 4;
     return length;
 }
 
@@ -172,8 +137,8 @@ int base64_est_decode_size_bytes (int base64_size_bytes)
  *	but at completion holds the number of bytes converted.
  *
  * RETURN VALUE
- *  base64_success if the buffer was successfully converted, the 
- *  appropriate error code otherwise. 
+ *  base64_success if the buffer was successfully converted, the
+ *  appropriate error code otherwise.
  *
  *  The dest parameter holds the converted data.
  *
@@ -204,7 +169,7 @@ base64_result_t base64_encode(unsigned char *src, int src_bytes, unsigned char *
 	line_count += 4;
 
 	if ((j+3) < dmax) {
-	    
+
 	    /* Find mapping of upper 6 bits */
 	    index = (src[i] >> 2) & 0x3F;
 	    dest[j++] = raw_to_base64_table[index];
@@ -227,7 +192,7 @@ base64_result_t base64_encode(unsigned char *src, int src_bytes, unsigned char *
 
     /* Check to see if any more work must be done */
     if (i<src_bytes) {
-	
+
 	/* Check to see if a newline should be output */
 	if (line_count>=MAX_BASE64_LINE_LENGTH) {
 	    if (j<dmax){
@@ -290,8 +255,8 @@ base64_result_t base64_encode(unsigned char *src, int src_bytes, unsigned char *
  *	but at completion holds the number of bytes converted.
  *
  * RETURN VALUE
- *  base64_success if the buffer was successfully converted, the 
- *  appropriate error code otherwise. 
+ *  base64_success if the buffer was successfully converted, the
+ *  appropriate error code otherwise.
  *
  *  The dest parameter holds the converted data.
  *
@@ -300,14 +265,14 @@ base64_result_t base64_encode(unsigned char *src, int src_bytes, unsigned char *
 base64_result_t base64_decode(unsigned char *src, int src_bytes, unsigned char *dest, int *dest_bytes)
 {
     int i, j = 0;
-    int sindex = 0;			/* Current NON-whitespace source 
+    int sindex = 0;			/* Current NON-whitespace source
 					 * index */
-    int pad_count=0;			/* Number of padding characters 
+    int pad_count=0;			/* Number of padding characters
 					 * encountered */
     int dest_size_bytes = *dest_bytes;	/* Save size of destination buffer */
     unsigned char cindex;		/* The current Base64 character to
 					 * process */
-    unsigned char val;			/* The value of the current Base64 
+    unsigned char val;			/* The value of the current Base64
 					 * character */
 
     *dest_bytes = 0;
@@ -365,9 +330,9 @@ base64_result_t base64_decode(unsigned char *src, int src_bytes, unsigned char *
 		/* Fill Top 4 bits */
 		dest[j] = (val << 4) & 0xF0;
 	    } else {
-		/* 
+		/*
 		 * Check to see if there is any more data present.
-		 * Next base64 character MUST be a pad character and 
+		 * Next base64 character MUST be a pad character and
 		 * the rest of this data MUST be zero.
 		 *
 		 * If this is not the end of data then a buffer overrun
@@ -388,9 +353,9 @@ base64_result_t base64_decode(unsigned char *src, int src_bytes, unsigned char *
 		/* Fill Top 2 bits */
 		dest[j] = (val << 6) & 0xC0;
 	    } else {
-		/* 
+		/*
 		 * Check to see if there is any more data present.
-		 * Next base64 character MUST be a pad character and 
+		 * Next base64 character MUST be a pad character and
 		 * the rest of this data MUST be zero.
 		 *
 		 * If this is not the end of data then a buffer overrun

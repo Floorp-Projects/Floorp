@@ -94,7 +94,7 @@ class NrIceMediaStream {
   // work for trickle ICE yet--called internally
   void EmitAllCandidates();
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceMediaStream);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceMediaStream)
 
  private:
   NrIceMediaStream(NrIceCtx *ctx,  const std::string& name,

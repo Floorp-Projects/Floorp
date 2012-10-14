@@ -63,7 +63,13 @@ public class LayerView extends FrameLayout {
     public static final int PAINT_BEFORE_FIRST = 0;
     public static final int PAINT_AFTER_FIRST = 1;
 
-    boolean shouldUseTextureView() {
+    public boolean shouldUseTextureView() {
+        // Disable TextureView support for now as it causes panning/zooming
+        // performance regressions (see bug 792259). Uncomment the code below
+        // once this bug is fixed.
+        return false;
+
+        /*
         // we can only use TextureView on ICS or higher
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             Log.i(LOGTAG, "Not using TextureView: not on ICS+");
@@ -77,19 +83,30 @@ public class LayerView extends FrameLayout {
         } catch (Exception e) {
             Log.i(LOGTAG, "Not using TextureView: caught exception checking for hw accel: " + e.toString());
             return false;
-        }
+        } */
     }
 
     public LayerView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
+        mGLController = new GLController(this);
+        mPaintState = PAINT_BEFORE_FIRST;
+        mCheckerboardColor = Color.WHITE;
+        mCheckerboardShouldShowChecks = true;
+    }
+
+    public void initializeView(EventDispatcher eventDispatcher) {
+        // This check should not be done while the view tree is still being
+        // created as hardware acceleration will not be enabled at this point.
+        // initializeView() is called on the initialization phase of GeckoApp,
+        // which is late enough to detect hardware acceleration properly.
         if (shouldUseTextureView()) {
-            mTextureView = new TextureView(context);
+            mTextureView = new TextureView(getContext());
             mTextureView.setSurfaceTextureListener(new SurfaceTextureListener());
             mTextureView.setBackgroundColor(Color.WHITE);
             addView(mTextureView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         } else {
-            mSurfaceView = new SurfaceView(context);
+            mSurfaceView = new SurfaceView(getContext());
             mSurfaceView.setBackgroundColor(Color.WHITE);
             addView(mSurfaceView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
@@ -98,13 +115,6 @@ public class LayerView extends FrameLayout {
             holder.setFormat(PixelFormat.RGB_565);
         }
 
-        mGLController = new GLController(this);
-        mPaintState = PAINT_BEFORE_FIRST;
-        mCheckerboardColor = Color.WHITE;
-        mCheckerboardShouldShowChecks = true;
-    }
-
-    public void createLayerClient(EventDispatcher eventDispatcher) {
         mLayerClient = new GeckoLayerClient(getContext(), this, eventDispatcher);
 
         mTouchEventHandler = new TouchEventHandler(getContext(), this, mLayerClient);

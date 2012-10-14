@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "cpr_types.h"
 #include "cpr_stdlib.h"
@@ -204,7 +169,7 @@ fsm_get_fcb_by_call_id_and_type (callid_t call_id, fsm_types_t type)
  *      NULL:  fcb not found
  *
  */
-void 
+void
 fsm_get_fcb_by_selected_or_connected_call_fcb (callid_t call_id, fsm_fcb_t **con_fcb_found,
                                                fsm_fcb_t **sel_fcb_found)
 {
@@ -220,7 +185,7 @@ fsm_get_fcb_by_selected_or_connected_call_fcb (callid_t call_id, fsm_fcb_t **con
             /* Do not count current call_id */
             continue;
         }
-        if (fcb->fsm_type == FSM_TYPE_DEF && 
+        if (fcb->fsm_type == FSM_TYPE_DEF &&
             (fcb->state == FSMDEF_S_CONNECTED ||
              fcb->state == FSMDEF_S_CONNECTED_MEDIA_PEND ||
              fcb->state == FSMDEF_S_OUTGOING_ALERTING)) {
@@ -376,7 +341,7 @@ fsm_change_state (fsm_fcb_t *fcb, int fname, int new_state)
     DEF_DEBUG(DEB_L_C_F_PREFIX"%s: %s -> %s\n",
                  DEB_L_C_F_PREFIX_ARGS(FSM, ((fcb->dcb == NULL)? CC_NO_LINE: fcb->dcb->line),
                  fcb->call_id, "fsm_change_state"),
-                 fsm_type_name(fcb->fsm_type), 
+                 fsm_type_name(fcb->fsm_type),
                  fsm_state_name(fcb->fsm_type, fcb->state),
                  fsm_state_name(fcb->fsm_type, new_state));
 
@@ -884,7 +849,7 @@ fsmutil_init_groupid (fsmdef_dcb_t *dcb, callid_t call_id,
  * @pre     none
  */
 int
-fsmutil_get_call_attr (fsmdef_dcb_t *dcb, 
+fsmutil_get_call_attr (fsmdef_dcb_t *dcb,
                     line_t line, callid_t call_id)
 {
     int call_attr;
@@ -1148,7 +1113,7 @@ fsmutil_free_ci_id (uint16_t id, line_t line)
 }
 
 #ifdef LOCAL_UI_CALLINSTANCE_ID
-/*This routine is not needed now as the local assignment 
+/*This routine is not needed now as the local assignment
  *of call instance id is no longer supported.
  */
 /*

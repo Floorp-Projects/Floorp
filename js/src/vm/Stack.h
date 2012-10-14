@@ -1439,8 +1439,12 @@ class StackSpace
     /* Called during GC: sets active flag on compartments with active frames. */
     void markActiveCompartments();
 
-    /* We only report the committed size;  uncommitted size is uninteresting. */
-    JS_FRIEND_API(size_t) sizeOfCommitted();
+    /*
+     * On Windows, report the committed size; on *nix, we report the resident
+     * size (which means that if part of the stack is swapped to disk, we say
+     * it's shrunk).
+     */
+    JS_FRIEND_API(size_t) sizeOf();
 
 #ifdef DEBUG
     /* Only used in assertion of debuggers API. */

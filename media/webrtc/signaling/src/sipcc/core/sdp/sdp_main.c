@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "sdp_os_defs.h"
 #include "sdp.h"
@@ -66,121 +31,121 @@ const sdp_tokenarray_t sdp_token[SDP_MAX_TOKENS] =
 /* Note: These *must* be in the same order as the enum types. */
 const sdp_attrarray_t sdp_attr[SDP_MAX_ATTR_TYPES] =
 {
-    {"bearer", sizeof("bearer"), 
+    {"bearer", sizeof("bearer"),
      sdp_parse_attr_simple_string, sdp_build_attr_simple_string },
-    {"called", sizeof("called"), 
+    {"called", sizeof("called"),
      sdp_parse_attr_simple_string, sdp_build_attr_simple_string },
-    {"connection_type", sizeof("connection_type"), 
+    {"connection_type", sizeof("connection_type"),
      sdp_parse_attr_simple_string, sdp_build_attr_simple_string },
-    {"dialed", sizeof("dialed"), 
+    {"dialed", sizeof("dialed"),
      sdp_parse_attr_simple_string, sdp_build_attr_simple_string },
-    {"dialing", sizeof("dialing"), 
+    {"dialing", sizeof("dialing"),
      sdp_parse_attr_simple_string, sdp_build_attr_simple_string },
-    {"direction", sizeof("direction"), 
+    {"direction", sizeof("direction"),
      sdp_parse_attr_comediadir, sdp_build_attr_comediadir },
-    {"eecid", sizeof("eecid"), 
+    {"eecid", sizeof("eecid"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"fmtp", sizeof("fmtp"), 
+    {"fmtp", sizeof("fmtp"),
      sdp_parse_attr_fmtp, sdp_build_attr_fmtp },
-    {"framing", sizeof("framing"), 
+    {"framing", sizeof("framing"),
      sdp_parse_attr_simple_string, sdp_build_attr_simple_string },
-    {"inactive", sizeof("inactive"), 
+    {"inactive", sizeof("inactive"),
      sdp_parse_attr_direction, sdp_build_attr_direction },
-    {"ptime", sizeof("ptime"), 
+    {"ptime", sizeof("ptime"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"qos", sizeof("qos"), 
+    {"qos", sizeof("qos"),
      sdp_parse_attr_qos, sdp_build_attr_qos },
-    {"curr", sizeof("curr"), 
-     sdp_parse_attr_curr, sdp_build_attr_curr }, 
-    {"des", sizeof("des"), 
+    {"curr", sizeof("curr"),
+     sdp_parse_attr_curr, sdp_build_attr_curr },
+    {"des", sizeof("des"),
      sdp_parse_attr_des, sdp_build_attr_des},
-    {"conf", sizeof("conf"), 
+    {"conf", sizeof("conf"),
      sdp_parse_attr_conf, sdp_build_attr_conf},
-    {"recvonly", sizeof("recvonly"), 
+    {"recvonly", sizeof("recvonly"),
      sdp_parse_attr_direction, sdp_build_attr_direction },
-    {"rtpmap", sizeof("rtpmap"), 
+    {"rtpmap", sizeof("rtpmap"),
      sdp_parse_attr_transport_map, sdp_build_attr_transport_map },
-    {"secure", sizeof("secure"), 
+    {"secure", sizeof("secure"),
      sdp_parse_attr_qos, sdp_build_attr_qos },
-    {"sendonly", sizeof("sendonly"), 
+    {"sendonly", sizeof("sendonly"),
      sdp_parse_attr_direction, sdp_build_attr_direction },
-    {"sendrecv", sizeof("sendrecv"), 
+    {"sendrecv", sizeof("sendrecv"),
      sdp_parse_attr_direction, sdp_build_attr_direction },
-    {"subnet", sizeof("subnet"), 
+    {"subnet", sizeof("subnet"),
      sdp_parse_attr_subnet, sdp_build_attr_subnet },
-    {"T38FaxVersion", sizeof("T38FaxVersion"), 
+    {"T38FaxVersion", sizeof("T38FaxVersion"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"T38MaxBitRate", sizeof("T38MaxBitRate"), 
+    {"T38MaxBitRate", sizeof("T38MaxBitRate"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"T38FaxFillBitRemoval", sizeof("T38FaxFillBitRemoval"), 
+    {"T38FaxFillBitRemoval", sizeof("T38FaxFillBitRemoval"),
      sdp_parse_attr_simple_bool, sdp_build_attr_simple_bool },
-    {"T38FaxTranscodingMMR", sizeof("T38FaxTranscodingMMR"), 
+    {"T38FaxTranscodingMMR", sizeof("T38FaxTranscodingMMR"),
      sdp_parse_attr_simple_bool, sdp_build_attr_simple_bool },
-    {"T38FaxTranscodingJBIG", sizeof("T38FaxTranscodingJBIG"), 
+    {"T38FaxTranscodingJBIG", sizeof("T38FaxTranscodingJBIG"),
      sdp_parse_attr_simple_bool, sdp_build_attr_simple_bool },
-    {"T38FaxRateManagement", sizeof("T38FaxRateManagement"), 
+    {"T38FaxRateManagement", sizeof("T38FaxRateManagement"),
      sdp_parse_attr_t38_ratemgmt, sdp_build_attr_t38_ratemgmt },
-    {"T38FaxMaxBuffer", sizeof("T38FaxMaxBuffer"), 
+    {"T38FaxMaxBuffer", sizeof("T38FaxMaxBuffer"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"T38FaxMaxDatagram", sizeof("T38FaxMaxDatagram"), 
+    {"T38FaxMaxDatagram", sizeof("T38FaxMaxDatagram"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"T38FaxUdpEC", sizeof("T38FaxUdpEC"), 
+    {"T38FaxUdpEC", sizeof("T38FaxUdpEC"),
      sdp_parse_attr_t38_udpec, sdp_build_attr_t38_udpec },
-    {"X-cap", sizeof("X-cap"), 
+    {"X-cap", sizeof("X-cap"),
      sdp_parse_attr_cap, sdp_build_attr_cap },
-    {"X-cpar", sizeof("X-cpar"), 
+    {"X-cpar", sizeof("X-cpar"),
      sdp_parse_attr_cpar, sdp_build_attr_cpar },
-    {"X-pc-codec", sizeof("X-pc-codec"), 
+    {"X-pc-codec", sizeof("X-pc-codec"),
      sdp_parse_attr_pc_codec, sdp_build_attr_pc_codec },
-    {"X-pc-qos", sizeof("X-pc-qos"), 
+    {"X-pc-qos", sizeof("X-pc-qos"),
      sdp_parse_attr_qos, sdp_build_attr_qos },
-    {"X-qos", sizeof("X-qos"), 
+    {"X-qos", sizeof("X-qos"),
      sdp_parse_attr_qos, sdp_build_attr_qos },
-    {"X-sqn", sizeof("X-sqn"), 
+    {"X-sqn", sizeof("X-sqn"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"TMRGwXid", sizeof("TMRGwXid"), 
+    {"TMRGwXid", sizeof("TMRGwXid"),
      sdp_parse_attr_simple_bool, sdp_build_attr_simple_bool },
-    {"TC1PayloadBytes", sizeof("TC1PayloadBytes"), 
+    {"TC1PayloadBytes", sizeof("TC1PayloadBytes"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"TC1WindowSize", sizeof("TC1WindowSize"), 
+    {"TC1WindowSize", sizeof("TC1WindowSize"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"TC2PayloadBytes", sizeof("TC2PayloadBytes"), 
+    {"TC2PayloadBytes", sizeof("TC2PayloadBytes"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"TC2WindowSize", sizeof("TC2WindowSize"), 
+    {"TC2WindowSize", sizeof("TC2WindowSize"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"rtcp", sizeof("rtcp"), 
+    {"rtcp", sizeof("rtcp"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"rtr", sizeof("rtr"), 
+    {"rtr", sizeof("rtr"),
      sdp_parse_attr_rtr, sdp_build_attr_rtr},
     {"silenceSupp", sizeof("silenceSupp"),
      sdp_parse_attr_silencesupp, sdp_build_attr_silencesupp },
     {"X-crypto", sizeof("X-crypto"),
      sdp_parse_attr_srtpcontext, sdp_build_attr_srtpcontext },
-    {"mptime", sizeof("mptime"), 
+    {"mptime", sizeof("mptime"),
       sdp_parse_attr_mptime, sdp_build_attr_mptime },
-    {"X-sidin", sizeof("X-sidin"), 
+    {"X-sidin", sizeof("X-sidin"),
       sdp_parse_attr_x_sidin, sdp_build_attr_x_sidin },
-    {"X-sidout", sizeof("X-sidout"), 
+    {"X-sidout", sizeof("X-sidout"),
       sdp_parse_attr_x_sidout, sdp_build_attr_x_sidout },
-    {"X-confid", sizeof("X-confid"), 
+    {"X-confid", sizeof("X-confid"),
       sdp_parse_attr_x_confid, sdp_build_attr_x_confid },
-    {"group", sizeof("group"), 
+    {"group", sizeof("group"),
       sdp_parse_attr_group, sdp_build_attr_group },
-    {"mid", sizeof("mid"), 
+    {"mid", sizeof("mid"),
       sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"source-filter", sizeof("source-filter"), 
+    {"source-filter", sizeof("source-filter"),
       sdp_parse_attr_source_filter, sdp_build_source_filter},
     {"rtcp-unicast", sizeof("rtcp-unicast"),
       sdp_parse_attr_rtcp_unicast, sdp_build_attr_rtcp_unicast},
     {"maxprate", sizeof("maxprate"),
       sdp_parse_attr_maxprate, sdp_build_attr_simple_string},
-    {"sqn", sizeof("sqn"), 
+    {"sqn", sizeof("sqn"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
-    {"cdsc", sizeof("cdsc"), 
+    {"cdsc", sizeof("cdsc"),
      sdp_parse_attr_cap, sdp_build_attr_cap },
-    {"cpar", sizeof("cpar"), 
+    {"cpar", sizeof("cpar"),
      sdp_parse_attr_cpar, sdp_build_attr_cpar },
-    {"sprtmap", sizeof("sprtmap"), 
+    {"sprtmap", sizeof("sprtmap"),
      sdp_parse_attr_transport_map, sdp_build_attr_transport_map },
     {"crypto", sizeof("crypto"),
      sdp_parse_attr_sdescriptions, sdp_build_attr_sdescriptions },
@@ -387,7 +352,7 @@ const sdp_namearray_t sdp_fmtp_codec_param[SDP_MAX_FMTP_PARAM] =
     {"PROFILE",             sizeof("PROFILE")}, /* 14 */
     {"LEVEL",               sizeof("LEVEL")}, /* 15 */
     {"INTERLACE",           sizeof("INTERLACE")}, /* 16 */
-    
+
     /* H.264 related */
     {"profile-level-id",      sizeof("profile-level-id")}, /* 17 */
     {"sprop-parameter-sets",  sizeof("sprop-parameter-sets")}, /* 18 */
@@ -427,7 +392,7 @@ const sdp_namearray_t sdp_fmtp_codec_param[SDP_MAX_FMTP_PARAM] =
     {"cbr",                             sizeof("cbr")}, /* 48 */
     {"streams",                         sizeof("streams")}, /* 49 */
     {"protocol",                        sizeof("protocol")} /* 50 */
-   
+
 } ;
 
 /* Note: These *must* be in the same order as the enum type. */
@@ -488,15 +453,15 @@ const sdp_srtp_crypto_suite_list sdp_srtp_crypto_suite_array[SDP_SRTP_MAX_NUM_CR
       SDP_SRTP_F8_128_HMAC_SHA1_80_SALT_BYTES}
 };
 
-const char* sdp_result_name[SDP_MAX_RC] = 
-    {"SDP_SUCCESS", 
-     "SDP_FAILURE", 
-     "SDP_INVALID_SDP_PTR", 
-     "SDP_NOT_SDP_DESCRIPTION", 
-     "SDP_INVALID_TOKEN_ORDERING", 
-     "SDP_INVALID_PARAMETER", 
-     "SDP_INVALID_MEDIA_LEVEL", 
-     "SDP_INVALID_CAPABILITY", 
+const char* sdp_result_name[SDP_MAX_RC] =
+    {"SDP_SUCCESS",
+     "SDP_FAILURE",
+     "SDP_INVALID_SDP_PTR",
+     "SDP_NOT_SDP_DESCRIPTION",
+     "SDP_INVALID_TOKEN_ORDERING",
+     "SDP_INVALID_PARAMETER",
+     "SDP_INVALID_MEDIA_LEVEL",
+     "SDP_INVALID_CAPABILITY",
      "SDP_NO_RESOURCE",
      "SDP_UNRECOGNIZED_TOKEN",
      "SDP_NULL_BUF_PTR",
@@ -694,7 +659,7 @@ const char *sdp_get_bw_modifier_name (sdp_bw_modifier_e bw_modifier_type)
 {
     if (bw_modifier_type == SDP_BW_MODIFIER_UNSUPPORTED) {
         return (SDP_UNSUPPORTED);
-    } else if (bw_modifier_type < SDP_BW_MODIFIER_AS || 
+    } else if (bw_modifier_type < SDP_BW_MODIFIER_AS ||
             bw_modifier_type >= SDP_MAX_BW_MODIFIER_VAL) {
         return ("Invalid bw modifier type");
     } else {
@@ -740,7 +705,7 @@ const char *sdp_get_rtcp_unicast_mode_name (sdp_rtcp_unicast_mode_e type)
  * Parameters:	sdp_p    The SDP structure handle.
  * Returns:	TRUE or FALSE.
  */
-inline tinybool sdp_verify_sdp_ptr (sdp_t *sdp_p) 
+inline tinybool sdp_verify_sdp_ptr (sdp_t *sdp_p)
 {
     if ((sdp_p != NULL) && (sdp_p->magic_num == SDP_MAGIC_NUM)) {
         return (TRUE);
@@ -752,8 +717,8 @@ inline tinybool sdp_verify_sdp_ptr (sdp_t *sdp_p)
 
 /* Function:    sdp_init_description
  * Description:	Allocates a new SDP structure that can be used for either
- *              parsing or building an SDP description.  This routine 
- *              saves the config pointer passed in the SDP structure so 
+ *              parsing or building an SDP description.  This routine
+ *              saves the config pointer passed in the SDP structure so
  *              SDP will know how to parse/build based on the options defined.
  *              An SDP structure must be allocated before parsing or building
  *              since the handle must be passed to these routines.
@@ -799,7 +764,7 @@ void *sdp_init_description (void *config_p)
 
     sdp_p->bw.bw_data_count   = 0;
     sdp_p->bw.bw_data_list    = NULL;
-   
+
     sdp_p->timespec_p         = NULL;
     sdp_p->sess_attrs_p       = NULL;
     sdp_p->mca_p              = NULL;
@@ -809,18 +774,18 @@ void *sdp_init_description (void *config_p)
     for (i=0; i < SDP_MAX_DEBUG_TYPES; i++) {
         sdp_p->debug_flag[i] = conf_p->debug_flag[i];
     }
-    
+
     return (sdp_p);
 }
 
 
 /* Function:    void sdp_debug(void *sdp_p, sdp_debug_e debug_type,
  *                             tinybool my_bool);
- * Description:	Define the type of debug for this particular SDP structure.  
+ * Description:	Define the type of debug for this particular SDP structure.
  *              By default, each SDP description has the settings that are
  *              set for the application.
- *              Valid debug types are ERRORS, WARNINGS, and TRACE.  Each 
- *              debug type can be turned on/off individually.  The 
+ *              Valid debug types are ERRORS, WARNINGS, and TRACE.  Each
+ *              debug type can be turned on/off individually.  The
  *              debug level can be redefined at any time.
  * Parameters:	sdp_ptr    The SDP handle returned by sdp_init_description.
  *              debug_type Specifies the debug type being enabled/disabled.
@@ -842,12 +807,12 @@ void sdp_debug (void *sdp_ptr, sdp_debug_e debug_type, tinybool debug_flag)
 
 
 /* Function:    void sdp_set_string_debug(void *sdp_p, char *debug_str)
- * Description: Define a string to be associated with all debug output 
- *              for this SDP. The string will be copied into the SDP 
- *              structure and so the library will not be dependent on 
+ * Description: Define a string to be associated with all debug output
+ *              for this SDP. The string will be copied into the SDP
+ *              structure and so the library will not be dependent on
  *              the application's memory for this string.
  * Parameters:  sdp_ptr    The SDP handle returned by sdp_init_description.
- *              debug_str  Pointer to a string that should be printed out 
+ *              debug_str  Pointer to a string that should be printed out
  *                         with every debug msg.
  * Returns:     Nothing.
  */
@@ -866,7 +831,7 @@ void sdp_set_string_debug (void *sdp_ptr, char *debug_str)
 /* Function:    sdp_validate_sdp
  * Description: Validate an SDP structure.
  * Parameters:  sdp_p    The SDP handle of the struct to validate.
- * Returns:     A result value indicating if the validation was successful. 
+ * Returns:     A result value indicating if the validation was successful.
  *              If not, what type of error was encountered.
  */
 sdp_result_e sdp_validate_sdp (sdp_t *sdp_p)
@@ -892,7 +857,7 @@ sdp_result_e sdp_validate_sdp (sdp_t *sdp_p)
     }
 
     /* Validate required lines were specified */
-    if ((sdp_owner_valid((void *)sdp_p) == FALSE) && 
+    if ((sdp_owner_valid((void *)sdp_p) == FALSE) &&
         (sdp_p->conf_p->owner_reqd == TRUE)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s o= owner line not specified, validation "
@@ -901,7 +866,7 @@ sdp_result_e sdp_validate_sdp (sdp_t *sdp_p)
         return (SDP_FAILURE);
     }
 
-    if ((sdp_session_name_valid((void *)sdp_p) == FALSE) && 
+    if ((sdp_session_name_valid((void *)sdp_p) == FALSE) &&
         (sdp_p->conf_p->session_name_reqd == TRUE)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s s= session name line not specified, validation "
@@ -910,7 +875,7 @@ sdp_result_e sdp_validate_sdp (sdp_t *sdp_p)
         return (SDP_FAILURE);
     }
 
-    if ((sdp_timespec_valid((void *)sdp_p) == FALSE) && 
+    if ((sdp_timespec_valid((void *)sdp_p) == FALSE) &&
         (sdp_p->conf_p->timespec_reqd == TRUE)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             SDP_ERROR("%s t= timespec line not specified, validation "
@@ -925,11 +890,11 @@ sdp_result_e sdp_validate_sdp (sdp_t *sdp_p)
 /* Function:    sdp_parse
  * Description: Parse an SDP description in the specified buffer.
  * Parameters:  sdp_ptr  The SDP handle returned by sdp_init_description
- *              bufp     Pointer to the buffer containing the SDP 
+ *              bufp     Pointer to the buffer containing the SDP
  *                       description to parse.
  *              len      The length of the buffer.
- * Returns:     A result value indicating if the parse was successful and 
- *              if not, what type of error was encountered.  The 
+ * Returns:     A result value indicating if the parse was successful and
+ *              if not, what type of error was encountered.  The
  *              information from the parse is stored in the sdp_p structure.
  */
 sdp_result_e sdp_parse (void *sdp_ptr, char **bufp, u16 len)
@@ -962,7 +927,7 @@ sdp_result_e sdp_parse (void *sdp_ptr, char **bufp, u16 len)
     next_ptr = *bufp;
     sdp_p->conf_p->num_parses++;
 
-    /* Initialize the last valid capability instance to zero.  Used 
+    /* Initialize the last valid capability instance to zero.  Used
      * to help in parsing X-cpar attrs. */
     sdp_p->cap_valid = FALSE;
     sdp_p->last_cap_inst = 0;
@@ -978,7 +943,7 @@ sdp_result_e sdp_parse (void *sdp_ptr, char **bufp, u16 len)
         line_end = sdp_findchar(ptr, "\n");
         if (line_end >= (*bufp + len)) {
             if (sdp_p->debug_flag[SDP_DEBUG_WARNINGS]) {
-                SDP_WARN("%s End of line beyond end of buffer.", 
+                SDP_WARN("%s End of line beyond end of buffer.",
                          sdp_p->debug_str);
             }
             end_found = TRUE;
@@ -986,14 +951,14 @@ sdp_result_e sdp_parse (void *sdp_ptr, char **bufp, u16 len)
         }
 
         /* Print the line if we're tracing. */
-        if ((parse_done == FALSE) && 
+        if ((parse_done == FALSE) &&
 	  (sdp_p->debug_flag[SDP_DEBUG_TRACE])) {
 	    SDP_PRINT("%s ", sdp_p->debug_str);
 
 	    SDP_PRINT("%*s", line_end - ptr, ptr);
-	    
+
         }
-	
+
         /* Find out which token this line has, if any. */
         for (i=0; i < SDP_MAX_TOKENS; i++) {
             if (strncmp(ptr, sdp_token[i].name, SDP_TOKEN_LEN) == 0) {
@@ -1010,14 +975,14 @@ sdp_result_e sdp_parse (void *sdp_ptr, char **bufp, u16 len)
                 if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
                     SDP_ERROR("%s Attempt to parse text not recognized as "
                               "SDP text, parse fails.", sdp_p->debug_str);
-                    /* If we haven't already printed out the line we 
+                    /* If we haven't already printed out the line we
                      * were trying to parse, do it now.
                      */
                     if (!sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
 			SDP_PRINT("%s ", sdp_p->debug_str);
 
 		        SDP_PRINT("%*s", line_end - ptr, ptr);
-			
+
                     }
                 }
                 sdp_p->conf_p->num_not_sdp_desc++;
@@ -1040,7 +1005,7 @@ sdp_result_e sdp_parse (void *sdp_ptr, char **bufp, u16 len)
             end_found = TRUE;
         }
 
-        /* If we've finished parsing and are just looking for the end of 
+        /* If we've finished parsing and are just looking for the end of
          * the SDP description, we don't need to do anything else here.
          */
         if (parse_done == TRUE) {
@@ -1120,14 +1085,14 @@ sdp_result_e sdp_parse (void *sdp_ptr, char **bufp, u16 len)
         sdp_p->conf_p->num_not_sdp_desc++;
         return (SDP_NOT_SDP_DESCRIPTION);
     }
-    
+
     /* If no errors were found yet, validate the overall sdp. */
     if (result == SDP_SUCCESS) {
         result = sdp_validate_sdp(sdp_p);
     }
     /* Return the pointer where we left off. */
     *bufp = next_ptr;
-    /* If the SDP is valid, but the next line following was an 
+    /* If the SDP is valid, but the next line following was an
      * unrecognized <token>= line, indicate this on the return. */
     if ((result == SDP_SUCCESS) && (unrec_token == TRUE)) {
         return (SDP_UNRECOGNIZED_TOKEN);
@@ -1138,21 +1103,17 @@ sdp_result_e sdp_parse (void *sdp_ptr, char **bufp, u16 len)
 
 
 /* Function:    sdp_build
- * Description: Build an SDP description in the specified buffer based 
+ * Description: Build an SDP description in the specified buffer based
  *              on the information in the given SDP structure.
  * Parameters:  sdp_ptr  The SDP handle returned by sdp_init_description
- *              bufp     Pointer to the buffer where the SDP description
- *                       should be built.
- *              len      The maximum length of the SDP/length of the buffer.
- * Returns:     A result value indicating if the build was successful and 
- *              if not, what type of error was encountered - e.g., 
+ *              fs A flex_string where the SDP description should be built.
+ * Returns:     A result value indicating if the build was successful and
+ *              if not, what type of error was encountered - e.g.,
  *              description was too long for the given buffer.
  */
-sdp_result_e sdp_build (void *sdp_ptr, char **bufp, u16 len)
+sdp_result_e sdp_build (void *sdp_ptr, flex_string *fs)
 {
     int i, j;
-    char               *ptr = NULL;
-    char               *endbuf_p;
     sdp_t              *sdp_p = (sdp_t *)sdp_ptr;
     sdp_result_e        result = SDP_SUCCESS;
 
@@ -1160,34 +1121,30 @@ sdp_result_e sdp_build (void *sdp_ptr, char **bufp, u16 len)
         return (SDP_INVALID_SDP_PTR);
     }
 
-    if ((bufp == NULL) || (*bufp == NULL)) {
+    if (!fs) {
         return (SDP_NULL_BUF_PTR);
     }
 
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
         SDP_PRINT("%s Trace SDP Build:", sdp_p->debug_str);
     }
-    
-    ptr = *bufp;
+
     sdp_p->conf_p->num_builds++;
 
-    /* Find ptr to the end of the buf for recalculating len remaining. */
-    endbuf_p = ptr + len;
-
     for (i=0; ((i < SDP_TOKEN_M) &&
-               (result == SDP_SUCCESS) && (endbuf_p - ptr > 0)); i++) {
-        result = sdp_token[i].build_func(sdp_p, SDP_SESSION_LEVEL, &ptr, (u16)(endbuf_p - ptr));
+               (result == SDP_SUCCESS)); i++) {
+        result = sdp_token[i].build_func(sdp_p, SDP_SESSION_LEVEL, fs);
         /* ok not to check buffer space (yet) as the if() checks it */
     }
     /* If the session level was ok, build the media lines. */
-    if ((result == SDP_SUCCESS) && (endbuf_p - ptr > 0)) {
+    if (result == SDP_SUCCESS) {
         for (i=1; ((i <= sdp_p->mca_count) &&
-                   (result == SDP_SUCCESS) && (endbuf_p - ptr > 0)); i++) {
-            result = sdp_token[SDP_TOKEN_M].build_func(sdp_p, (u16)i, &ptr, (u16)(endbuf_p - ptr));
+                   (result == SDP_SUCCESS)); i++) {
+            result = sdp_token[SDP_TOKEN_M].build_func(sdp_p, (u16)i, fs);
 
             /* ok not to check buffer space (yet) as the for() checks it */
             for (j=SDP_TOKEN_I;
-                 ((j < SDP_TOKEN_M) && (result == SDP_SUCCESS) && (endbuf_p - ptr > 0));
+                 ((j < SDP_TOKEN_M) && (result == SDP_SUCCESS));
                  j++) {
                 if ((j == SDP_TOKEN_U) || (j == SDP_TOKEN_E) ||
                     (j == SDP_TOKEN_P) || (j == SDP_TOKEN_T) ||
@@ -1195,22 +1152,9 @@ sdp_result_e sdp_build (void *sdp_ptr, char **bufp, u16 len)
                     /* These tokens not valid at media level. */
                     continue;
                 }
-                result = sdp_token[j].build_func(sdp_p, (u16)i, &ptr, (u16)(endbuf_p - ptr));
+                result = sdp_token[j].build_func(sdp_p, (u16)i, fs);
                 /* ok not to check buffer space (yet) as the for() checks it */
             }
-        }
-    }
-
-    /* Return the pointer where we left off. */
-    *bufp = ptr;
-    
-    if (result == SDP_SUCCESS) {
-        if ((endbuf_p - ptr) <= 1) {
-            /*
-             * The buffer was too small, or just big enough, to hold
-             * the sdp.  Some of the sdp may have gotten dropped.
-             */
-            result = SDP_POTENTIAL_SDP_OVERFLOW;
         }
     }
 
@@ -1277,10 +1221,10 @@ void *sdp_copy (void *sdp_ptr)
              orig_sdp_p->default_conn.conn_addr,
              SDP_MAX_LINE_LEN+1);
 
-    new_sdp_p->default_conn.is_multicast = 
+    new_sdp_p->default_conn.is_multicast =
         orig_sdp_p->default_conn.is_multicast;
     new_sdp_p->default_conn.ttl      = orig_sdp_p->default_conn.ttl;
-    new_sdp_p->default_conn.num_of_addresses  
+    new_sdp_p->default_conn.num_of_addresses
         = orig_sdp_p->default_conn.num_of_addresses;
     new_sdp_p->encrypt.encrypt_type = orig_sdp_p->encrypt.encrypt_type;
     sstrncpy(new_sdp_p->encrypt.encrypt_key,
@@ -1293,7 +1237,7 @@ void *sdp_copy (void *sdp_ptr)
         sdp_free_description(new_sdp_p);
         return (NULL);
     }
- 
+
     /* Copy timespec structures. */
     orig_time_p = orig_sdp_p->timespec_p;
     while (orig_time_p != NULL) {
@@ -1438,8 +1382,8 @@ void *sdp_copy (void *sdp_ptr)
 /* Function:    sdp_free_description
  * Description:	Free an SDP description and all memory associated with it.
  * Parameters:  sdp_ptr  The SDP handle returned by sdp_init_description
- * Returns:     A result value indicating if the free was successful and 
- *              if not, what type of error was encountered - e.g., sdp_p 
+ * Returns:     A result value indicating if the free was successful and
+ *              if not, what type of error was encountered - e.g., sdp_p
  *              was invalid and didn't point to an SDP structure.
 */
 sdp_result_e sdp_free_description (void *sdp_ptr)
@@ -1469,7 +1413,7 @@ sdp_result_e sdp_free_description (void *sdp_ptr)
     bw_data_p = bw_p->bw_data_list;
     while (bw_data_p != NULL) {
         bw_p->bw_data_list = bw_data_p->next_p;
-        SDP_FREE(bw_data_p); 
+        SDP_FREE(bw_data_p);
         bw_data_p = bw_p->bw_data_list;
     }
 
@@ -1503,7 +1447,7 @@ sdp_result_e sdp_free_description (void *sdp_ptr)
         bw_data_p = bw_p->bw_data_list;
         while (bw_data_p != NULL) {
             bw_p->bw_data_list = bw_data_p->next_p;
-            SDP_FREE(bw_data_p); 
+            SDP_FREE(bw_data_p);
             bw_data_p = bw_p->bw_data_list;
         }
 

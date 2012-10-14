@@ -1,42 +1,7 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
- 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "capability_set.h"
 #include "CCProvider.h"
 
@@ -67,7 +32,7 @@ static const unsigned int               CONFERENCE_LIST_FCP_INDEX   = 4;
 static const unsigned int               SPEED_DIAL_FCP_INDEX        = 5;
 static const unsigned int               CALL_BACK_FCP_INDEX         = 6;
 static const unsigned int               REDIAL_FCP_INDEX            = 7;
-  
+
 static int                              fcp_index = -1;
 
 // --------------------------------------------------------------------------------
@@ -113,22 +78,22 @@ static void fcp_set_index (unsigned int fcpCapabilityId, cc_boolean state)
    // range check the capability index
    if ((fcpCapabilityId <= 0) || (fcpCapabilityId > FCP_FEATURE_MAX))
    {
-        CONFIG_ERROR(CFG_F_PREFIX "Unable to set capability of unknown feature [%d] in FCP \n", "fcp_set_index", fcpCapabilityId);                    
-        return;   
+        CONFIG_ERROR(CFG_F_PREFIX "Unable to set capability of unknown feature [%d] in FCP \n", "fcp_set_index", fcpCapabilityId);
+        return;
    }
 
-   // convert the fcp index to an fcp capability id      
+   // convert the fcp index to an fcp capability id
    capabilityId = cc_fcp_id_to_capability_map[fcpCapabilityId];
-   
-       
-   // based on the capability id, invoke the appropate method specific to that capability      
+
+
+   // based on the capability id, invoke the appropate method specific to that capability
    switch (capabilityId)
    {
        case CCAPI_CALL_CAP_CALLFWD  :  capset_set_fcp_forwardall (state);      break;
        case CCAPI_CALL_CAP_REDIAL   :  capset_set_fcp_redial (state);          break;
        default :
        {
-           CONFIG_ERROR(CFG_F_PREFIX "Unable to update settings for capability [%d]\n", "fcp_set_index", (int)capabilityId);                    
+           CONFIG_ERROR(CFG_F_PREFIX "Unable to update settings for capability [%d]\n", "fcp_set_index", (int)capabilityId);
            break;
        }
     }
@@ -138,7 +103,7 @@ static void fcp_set_index (unsigned int fcpCapabilityId, cc_boolean state)
  * capset_init - initialize the internal capability data structures to defaults
  *
  */
-static void capset_init () 
+static void capset_init ()
 {
    // initialize the 4 tables related to capability set to false
    memset(capability_idleset, 0, sizeof(capability_idleset));
@@ -147,19 +112,19 @@ static void capset_init ()
    // ----------------------------------------------------------------------
    // FCP based capabilities
    // ----------------------------------------------------------------------
-   
+
    CONFIG_DEBUG(DEB_F_PREFIX"FCP Initializing Capabilities to default\n", DEB_F_PREFIX_ARGS(JNI, "capset_init"));
-      
+
    // ----------------------------------------------------------------------
    // Non-FCP-based Capabilities
    // ----------------------------------------------------------------------
-   
+
    // Now, set all the non-FCP based capabilities to appropriate default settings
    // (some of which may be enabled by default)
-   
+
    capability_idleset[CCAPI_CALL_CAP_NEWCALL]                    = TRUE;
 
-   // call-state based settings   
+   // call-state based settings
    // offhook
    capability_set[OFFHOOK][CCAPI_CALL_CAP_ENDCALL]               = TRUE;
 
@@ -198,7 +163,7 @@ static void capset_init ()
    capability_set[DIALING][CCAPI_CALL_CAP_SENDDIGIT] = TRUE;
    capability_set[DIALING][CCAPI_CALL_CAP_BACKSPACE] = TRUE;
 
-   // holdrevert 
+   // holdrevert
    capability_set[HOLDREVERT][CCAPI_CALL_CAP_ANSWER] = TRUE;
 
    // preservation
@@ -234,7 +199,7 @@ void capset_get_idleset ( cc_cucm_mode_t mode, cc_boolean features[])
  * capset_get_allowed_features - get the set of features
  *
  */
-void capset_get_allowed_features ( cc_cucm_mode_t mode, cc_call_state_t state, cc_boolean features[]) 
+void capset_get_allowed_features ( cc_cucm_mode_t mode, cc_call_state_t state, cc_boolean features[])
 {
   static const char fname[] = "capset_get_allowed_features";
   int i;
@@ -253,7 +218,7 @@ void capset_get_allowed_features ( cc_cucm_mode_t mode, cc_call_state_t state, c
 // --------------------------------------------------------------------------------------------------------
 
 /*
- * fcp_set_capabilities - updates the capabilities structure, based on the now parsed information 
+ * fcp_set_capabilities - updates the capabilities structure, based on the now parsed information
  * from fcp xml file
  *
  */
@@ -264,16 +229,16 @@ static void fcp_set_capabilities()
 
     if ( (fcp_index+1) >= FCP_FEATURE_MAX) {
         fcp_index = (FCP_FEATURE_MAX -1);
-        CONFIG_ERROR(CFG_F_PREFIX "Received more than the maximum supported features [%d] in FCP \n", "fcp_set_capabilities", FCP_FEATURE_MAX);                    
-        
+        CONFIG_ERROR(CFG_F_PREFIX "Received more than the maximum supported features [%d] in FCP \n", "fcp_set_capabilities", FCP_FEATURE_MAX);
+
     }
-   // loop over all the FCP features parsed, and for each one, based on ID, and enabled settings, 
+   // loop over all the FCP features parsed, and for each one, based on ID, and enabled settings,
    // update the corresponding call capability flags
    for (my_fcp_index = 0; my_fcp_index <= fcp_index; my_fcp_index++)
    {   // set the capability if fcp file has it marked as 'enabled'
-       fcp_set_index(cc_feat_control_policy[my_fcp_index].featureId, (cc_feat_control_policy[my_fcp_index].featureEnabled == TRUE));       
+       fcp_set_index(cc_feat_control_policy[my_fcp_index].featureId, (cc_feat_control_policy[my_fcp_index].featureEnabled == TRUE));
    }
-}   
+}
 
 /*
  * fcp_init - initialize the data structure used to store the fcp parse info
@@ -283,14 +248,14 @@ static void fcp_init()
 {
    // master index; set to null
    fcp_index = -1;
-      
+
    // initialize the map of fcp xml feature indexes to internal call capabilities
    cc_fcp_id_to_capability_map[CALL_FORWARD_ALL_FCP_INDEX]   = CCAPI_CALL_CAP_CALLFWD;
    cc_fcp_id_to_capability_map[REDIAL_FCP_INDEX]             = CCAPI_CALL_CAP_REDIAL;
 
    // initialize the capability set data structures
    capset_init();
-   
+
    // initialize the version
    g_fp_version_stamp[0] = '\0';
 }
@@ -301,14 +266,14 @@ static void fcp_init()
  */
 int fcp_init_template (const char* fcp_plan_string)
 {
-    fcp_init();    
-        
+    fcp_init();
+
     if (fcp_plan_string == NULL)
     {   // set up the default fcp
-       return (0);  
+       return (0);
     }
 
-    // update the fcp capabilities structure, based on the parsed feature information    
+    // update the fcp capabilities structure, based on the parsed feature information
     fcp_set_capabilities();
 
     return (0);

@@ -393,10 +393,10 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   PK11_GenerateRandom(handle_bin, sizeof(handle_bin));
 
   char hex[17];
-  PR_snprintf(hex,sizeof(hex),"%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x", 
-    handle_bin[0], 
+  PR_snprintf(hex,sizeof(hex),"%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x",
+    handle_bin[0],
     handle_bin[1],
-    handle_bin[2], 
+    handle_bin[2],
     handle_bin[3],
     handle_bin[4],
     handle_bin[5],
@@ -456,7 +456,8 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   );
 
   if (NS_FAILED(res)) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": StartGathering failed: " << res);
+    CSFLogErrorS(logTag, __FUNCTION__ << ": StartGathering failed: " <<
+        static_cast<uint32_t>(res));
     return res;
   }
 
@@ -482,7 +483,8 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
                                       &fingerprint_length);
 
   if (NS_FAILED(res)) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": ComputeFingerprint failed: " << res);
+    CSFLogErrorS(logTag, __FUNCTION__ << ": ComputeFingerprint failed: " <<
+        static_cast<uint32_t>(res));
     return res;
   }
 
@@ -493,7 +495,8 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   mSTSThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &res);
 
   if (NS_FAILED(res)) {
-    CSFLogErrorS(logTag, __FUNCTION__ << ": do_GetService failed: " << res);
+    CSFLogErrorS(logTag, __FUNCTION__ << ": do_GetService failed: " <<
+        static_cast<uint32_t>(res));
     return res;
   }
 

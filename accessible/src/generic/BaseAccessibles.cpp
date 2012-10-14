@@ -237,3 +237,30 @@ EnumRoleAccessible::NativeRole()
 {
   return mRole;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// DummyAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+uint64_t
+DummyAccessible::NativeState()
+{
+  return 0;
+}
+uint64_t
+DummyAccessible::NativeInteractiveState() const
+{
+  return 0;
+}
+
+uint64_t
+DummyAccessible::NativeLinkState() const
+{
+  return 0;
+}
+
+bool
+DummyAccessible::NativelyUnavailable() const
+{
+  return false;
+}

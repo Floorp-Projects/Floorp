@@ -515,7 +515,18 @@ AsyncFetchAndSetIconForPage::AsyncFetchAndSetIconForPage(
   if (pbService) {
     bool inPrivateBrowsing = false;
     if (NS_SUCCEEDED(pbService->GetPrivateBrowsingEnabled(&inPrivateBrowsing))) {
-      MOZ_ASSERT(inPrivateBrowsing == mFaviconLoadPrivate);
+      // In one specific case that we know of, it is possible for these flags
+      // to not match (bug 801151).  We mostly care about the cases where the
+      // global private browsing mode is on, but the favicon load is not marked
+      // as private, as those cases will cause privacy leaks.  But because
+      // fixing bug 801151 properly is going to mean tons of really dirty and
+      // fragile work which might cause other types of problems, we fatally
+      // assert the condition which would be a privacy leak, and non-fatally
+      // assert the other side of the condition which would designate a bug,
+      // but not a privacy sensitive one.
+      MOZ_ASSERT_IF(inPrivateBrowsing && !mFaviconLoadPrivate, false);
+      NS_ASSERTION(inPrivateBrowsing == mFaviconLoadPrivate,
+                   "The favicon load flag and the global PB flag do not match");
     }
   }
 #endif

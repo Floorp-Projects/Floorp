@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <errno.h>
 #include <limits.h>
@@ -147,22 +112,22 @@ static sdp_result_e next_token(const char **string_of_tokens, char *token, unsig
 
 /*
  * verify_sdescriptions_mki
- * 
+ *
  * Verifies the syntax of the MKI parameter.
  *
- * mki            = mki-value ":" mki-length 
- * mki-value      = 1*DIGIT 
+ * mki            = mki-value ":" mki-length
+ * mki-value      = 1*DIGIT
  * mki-length     = 1*3DIGIT   ; range 1..128
  *
  * Inputs:
- *   buf      - ptr to start of MKI string assumes NULL 
+ *   buf      - ptr to start of MKI string assumes NULL
  *              terminated string
- *   mkiValue - buffer to store the MKI value, assumes calling 
+ *   mkiValue - buffer to store the MKI value, assumes calling
  *              function has provided memory for this.
  *   mkiLen   - integer to store the MKI length
  *
  * Outputs:
- *   Returns TRUE if syntax is correct and stores the 
+ *   Returns TRUE if syntax is correct and stores the
  *   MKI value in mkiVal and stores the length in mkiLen.
  *   Returns FALSE otherwise.
  */
@@ -177,13 +142,13 @@ verify_sdescriptions_mki (char *buf, char *mkiVal, u16 *mkiLen)
     int        idx = 0;
     unsigned long strtoul_result;
     char *strtoul_end;
-    
+
     ptr = buf;
     /* MKI must begin with a digit */
     if (!ptr || (!isdigit((int) *ptr))) {
         return FALSE;
     }
-   
+
     /* scan until we reach a non-digit or colon */
     while (*ptr) {
         if (*ptr == ':') {
@@ -196,17 +161,17 @@ verify_sdescriptions_mki (char *buf, char *mkiVal, u16 *mkiLen)
 	} else {
 	     return FALSE;
 	}
-	   
+
 	ptr++;
     }
-    
+
     /* there has to be a mki length */
     if (*ptr == 0) {
         return FALSE;
-    } 
-	
+    }
+
     idx = 0;
-    
+
     /* verify the mki length (max 3 digits) */
     while (*ptr) {
         if (isdigit((int) *ptr) && (idx < 3)) {
@@ -214,10 +179,10 @@ verify_sdescriptions_mki (char *buf, char *mkiVal, u16 *mkiLen)
 	} else {
 	    return FALSE;
 	}
-	
+
 	ptr++;
     }
-    
+
     mkiLenBuf[idx] = 0;
 
     errno = 0;
@@ -243,24 +208,24 @@ verify_sdescriptions_mki (char *buf, char *mkiVal, u16 *mkiLen)
  *  lifetime = ["2^"] 1*(DIGIT)
  *
  * Inputs:
- *   buf - pointer to start of lifetime string. Assumes string is 
+ *   buf - pointer to start of lifetime string. Assumes string is
  *         NULL terminated.
  * Outputs:
  *   Returns TRUE if syntax is correct. Returns FALSE otherwise.
  */
- 
+
 tinybool
 verify_sdescriptions_lifetime (char *buf)
 {
 
     char     *ptr;
     tinybool tokenFound = FALSE;
-	    
+
     ptr = buf;
     if (!ptr || *ptr == 0) {
         return FALSE;
     }
-    
+
     while (*ptr) {
         if (*ptr == '^') {
 	    if (tokenFound) {
@@ -271,7 +236,7 @@ verify_sdescriptions_lifetime (char *buf)
                 /* Lifetime is in power of 2 format, make sure first and second
 		 * chars are 2^
 		 */
-		 
+
                 if (buf[0] != '2' || buf[1] != '^') {
 		    return FALSE;
                 }
@@ -279,18 +244,18 @@ verify_sdescriptions_lifetime (char *buf)
         } else if (!isdigit((int) *ptr)) {
 	           return FALSE;
         }
-    
+
         ptr++;
-	
+
     }
-    
+
     /* Make sure if the format is 2^ that there is a number after the ^. */
     if (tokenFound) {
         if (strlen(buf) <= 2) {
 	    return FALSE;
 	}
     }
-    
+
     return TRUE;
 }
 
@@ -316,7 +281,7 @@ sdp_validate_maxprate(const char *string_parm)
             while (isdigit((int)*string_parm)) {
                 string_parm++;
             }
-        } 
+        }
 
         if (*string_parm == '\0') {
             retval = TRUE;
@@ -343,7 +308,7 @@ char *sdp_findchar (const char *ptr, char *char_list)
 }
 
 /* Locate the next token in a line.  The delim characters are passed in
- * as a param.  The token also will not go past a new line char or the 
+ * as a param.  The token also will not go past a new line char or the
  * end of the string.  Skip any delimiters before the token.
  */
 const char *sdp_getnextstrtok (const char *str, char *tokenstr, unsigned tokenstr_len,
@@ -370,7 +335,7 @@ const char *sdp_getnextstrtok (const char *str, char *tokenstr, unsigned tokenst
  * a new line char or the end of the string.  Skip any delimiters before
  * the token.
  */
-u32 sdp_getnextnumtok_or_null (const char *str, const char **str_end, 
+u32 sdp_getnextnumtok_or_null (const char *str, const char **str_end,
                                const char *delim, tinybool *null_ind,
                                sdp_result_e *result)
 {
@@ -416,11 +381,11 @@ u32 sdp_getnextnumtok_or_null (const char *str, const char **str_end,
 }
 
 
-/* Locate the next numeric token in a string.  The delim characters are 
- * passed in as a param.  The token also will not go past a new line char 
+/* Locate the next numeric token in a string.  The delim characters are
+ * passed in as a param.  The token also will not go past a new line char
  * or the end of the string.  Skip any delimiters before the token.
  */
-u32 sdp_getnextnumtok (const char *str, const char **str_end, 
+u32 sdp_getnextnumtok (const char *str, const char **str_end,
                        const char *delim, sdp_result_e *result)
 {
   const char *token_list = str;
@@ -455,9 +420,9 @@ u32 sdp_getnextnumtok (const char *str, const char **str_end,
 }
 
 
-/* See if the next token in a string is the choose character.  The delim 
- * characters are passed in as a param.  The check also will not go past 
- * a new line char or the end of the string.  Skip any delimiters before 
+/* See if the next token in a string is the choose character.  The delim
+ * characters are passed in as a param.  The check also will not go past
+ * a new line char or the end of the string.  Skip any delimiters before
  * the token.
  */
 tinybool sdp_getchoosetok (const char *str, const char **str_end,
@@ -524,10 +489,10 @@ tinybool sdp_getchoosetok (const char *str, const char **str_end,
  * First a few common definitions.
  */
 
-/* 
- * Constants 
+/*
+ * Constants
  *
- * crypto_string = The string used to identify the start of sensative 
+ * crypto_string = The string used to identify the start of sensative
  *	crypto data.
  *
  * inline_string = The string used to identify the start of key/salt
@@ -536,7 +501,7 @@ tinybool sdp_getchoosetok (const char *str, const char **str_end,
  * star_string = The string used to overwrite sensative data.
  *
  * '*_strlen' = The length of '*_string' in bytes (not including '\0')
- */ 
+ */
 static const char crypto_string[] = "X-crypto:";
 static const int crypto_strlen = sizeof(crypto_string) - 1;
 static const char inline_string[] = "inline:";
@@ -558,19 +523,19 @@ static const int star_strlen = sizeof(star_string) - 1;
  *	one character and one space is used before the "inline:",
  *	then this translates to a size of (aligned by collumn from
  *	the format shown above):
- * 
+ *
  * 9+       1+                 1+7+    1+                2 = 21
  *
  */
 #define MIN_CRYPTO_STRING_SIZE_BYTES 21
 
-/* 
- * Utility macros 
+/*
+ * Utility macros
  *
  * CHAR_IS_WHITESPACE = macro to determine if the passed _test_char
  *	is whitespace.
  *
- * SKIP_WHITESPACE = Macro to advance _cptr to the next non-whitespace 
+ * SKIP_WHITESPACE = Macro to advance _cptr to the next non-whitespace
  *	character. _cptr will not be advanced past _max_cptr.
  *
  * FIND_WHITESPACE = Macro to advance _cptr until whitespace is found.
@@ -594,8 +559,8 @@ static const int star_strlen = sizeof(star_string) - 1;
 /* Function:    sdp_crypto_debug
  * Description: Check the passed buffer for sensitive data that should
  *		not be output (such as SRTP Master Key/Salt) and output
- *		the buffer as debug. Sensitive data will be replaced 
- *		with the '*' character(s). This function may be used 
+ *		the buffer as debug. Sensitive data will be replaced
+ *		with the '*' character(s). This function may be used
  *		to display very large buffers so this function ensures
  *		that buginf is not overloaded.
  * Parameters:  buffer		pointer to the message buffer to filter.
@@ -613,8 +578,8 @@ void sdp_crypto_debug (char *buffer, ulong length_bytes)
      * X-crypto:<crypto_suite_name> inline:<master_key_salt>||
      * Where <master_key_salt> is the data to elide (filter).
      */
-    for (start=current=buffer; 
-	 current<=last-MIN_CRYPTO_STRING_SIZE_BYTES; 
+    for (start=current=buffer;
+	 current<=last-MIN_CRYPTO_STRING_SIZE_BYTES;
 	 current++) {
 	if ((*current == 'x') || (*current == 'X')) {
 	    result = cpr_strncasecmp(current, crypto_string, crypto_strlen);
@@ -643,7 +608,7 @@ void sdp_crypto_debug (char *buffer, ulong length_bytes)
 			if (*current == '|' || *current == '\n') {
 			    /* Done, print the stars */
 			    while (star_count > star_strlen) {
-				/* 
+				/*
 				 * This code is only for the case where
 				 * too much base64 data was supplied
 				 */
@@ -670,14 +635,14 @@ void sdp_crypto_debug (char *buffer, ulong length_bytes)
     }
 }
 
-/* 
+/*
  * sdp_debug_msg_filter
  *
  * DESCRIPTION
  *     Check the passed message buffer for sensitive data that should
  *     not be output (such as SRTP Master Key/Salt). Sensitive data
  *     will be replaced with the '*' character(s).
- *     
+ *
  * PARAMETERS
  *     buffer: pointer to the message buffer to filter.
  *
@@ -740,18 +705,18 @@ char * sdp_debug_msg_filter (char *buffer, ulong length_bytes)
 
 
 /* Function:    sdp_checkrange
- * Description: This checks the range of a ulong value to make sure its 
+ * Description: This checks the range of a ulong value to make sure its
  *              within the range of 0 and 4Gig. stroul cannot be used since
- *              for values greater greater than 4G, stroul will either wrap 
- *              around or return ULONG_MAX. 
+ *              for values greater greater than 4G, stroul will either wrap
+ *              around or return ULONG_MAX.
  * Parameters:  sdp_p       Pointer to the sdp structure
  *              num         The number to check the range for
  *              u_val       This variable get populated with the ulong value
- *                          if the number is within the range. 
+ *                          if the number is within the range.
  * Returns:     tinybool - returns TRUE if the number passed is within the
  *                         range, FALSE otherwise
  */
-tinybool sdp_checkrange (sdp_t *sdp_p, char *num, ulong *u_val)  
+tinybool sdp_checkrange (sdp_t *sdp_p, char *num, ulong *u_val)
 {
     ulong l_val;
     char *endP = NULL;
