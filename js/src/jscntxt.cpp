@@ -354,7 +354,7 @@ JSRuntime::initSelfHosting(JSContext *cx)
      */
     JSErrorReporter oldReporter = JS_SetErrorReporter(cx, selfHosting_ErrorReporter);
     Value rv;
-    bool ok;
+    bool ok = false;
 
     char *filename = getenv("MOZ_SELFHOSTEDJS");
     if (filename) {
