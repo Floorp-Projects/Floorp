@@ -837,6 +837,10 @@
 ; Adds a pinned shortcut to Task Bar on update for Windows 7 and above if this
 ; macro has never been called before and the application is default (see
 ; PinToTaskBar for more details).
+; Since defaults handling is handled by Windows in Win8 and later, we always
+; attempt to pin a taskbar on that OS.  If Windows sets the defaults at
+; installation time, then we don't get the opportunity to run this code at
+; that time.
 !macro MigrateTaskBarShortcut
   ${GetShortcutsLogPath} $0
   ${If} ${FileExists} "$0"
@@ -846,13 +850,17 @@
       ClearErrors
       WriteIniStr "$0" "TASKBAR" "Migrated" "true"
       ${If} ${AtLeastWin7}
-        ; Check if the Firefox is the http handler for this user
-        SetShellVarContext current ; Set SHCTX to the current user
-        ${IsHandlerForInstallDir} "http" $R9
-        ${If} $TmpVal == "HKLM"
-          SetShellVarContext all ; Set SHCTX to all users
+        ; No need to check the default on Win8 and later
+        ${If} ${AtMostWin2008R2}
+          ; Check if the Firefox is the http handler for this user
+          SetShellVarContext current ; Set SHCTX to the current user
+          ${IsHandlerForInstallDir} "http" $R9
+          ${If} $TmpVal == "HKLM"
+            SetShellVarContext all ; Set SHCTX to all users
+          ${EndIf}
         ${EndIf}
         ${If} "$R9" == "true"
+        ${OrIf} ${AtLeastWin8}
           ${PinToTaskBar}
         ${EndIf}
       ${EndIf}

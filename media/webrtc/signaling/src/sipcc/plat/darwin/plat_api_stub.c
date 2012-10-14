@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <string.h>
 
@@ -54,7 +19,7 @@ int platThreadInit(char * tname)
 }
 
 /**
- * The initial initialization function for any platform related 
+ * The initial initialization function for any platform related
  * modules
  *
  *
@@ -198,8 +163,8 @@ boolean platGetMWIStatus(cc_lineid_t line)
 
 /**
  * platSecIsServerSecure
- * 
- * @brief Lookup the secure status of the server 
+ *
+ * @brief Lookup the secure status of the server
  *
  * This function looks at the the CCM server type by using the security library
  * and returns appropriate indication to the pSIPCC.
@@ -207,7 +172,7 @@ boolean platGetMWIStatus(cc_lineid_t line)
  *
  * @return   Server is security enabled or not
  *           PLAT_SOCK_SECURE or PLAT_SOCK_NONSECURE
- *             
+ *
  * @note This API maps to the following HandyIron API:
  *  int secIsServerSecure(SecServerType type) where type should be SRVR_TYPE_CCM
  */
@@ -222,10 +187,10 @@ plat_soc_status_e platSecIsServerSecure(void)
  * @brief  Securely connect to a remote server
  *
  * This function uses the security library APIs to connect to a remote server.
- * @param[in]  host         server addr 
+ * @param[in]  host         server addr
  * @param[in]  port         port number
  * @param[in]  ipMode       IP mode to indicate v6, v4 or both
- * @param[in]  mode         blocking connect or not 
+ * @param[in]  mode         blocking connect or not
  *                          FALSE: non-blocking; TRUE: blocking
  * @param[in]  tos          TOS value
  * @param[in]  connectionType Are we talking to Call-Agent
@@ -239,23 +204,23 @@ plat_soc_status_e platSecIsServerSecure(void)
  *
  * @pre        (hostAndPort not_eq NULL)
  * @pre        (localPort   not_eq NULL)
- *             
+ *
  * @note localPort is undefined when the return value is INVALID_SOCKET
  *
  * @note This API maps to the HandyIron APIs as follows:
- * If mode == TRUE (blocking): 
+ * If mode == TRUE (blocking):
  *    int secEstablishSecureConnection(const char* serverAddr, *uint32_t port, secConnectionType type)
  *    @li ipMode is UNUSED
  *    @li "host" maps to "serverAddr", "connectionType" maps to "type"
  *    @li localPort is passed in as 0
- * If mode == FALSE (non-blocking): 
+ * If mode == FALSE (non-blocking):
  *     int secConnect(const char* serverAddr, uint32_t port, *secConnectionType type, uint32_t localPort)
  *    @li ipMode is UNUSED
  *    @li "host" maps to "serverAddr", "connectionType" maps to "type"
  *
  * @note The implementation should use the "setsockopt" to set the "tos" value passed
  * in this API on the created socket.
- *               
+ *
  */
 cpr_socket_t
 platSecSocConnect (char *host,
@@ -274,13 +239,13 @@ platSecSocConnect (char *host,
  * Determine the status of a secure connection that was initiated
  * in non-blocking mode
  *
- * @param[in]    sock   socket descriptor 
+ * @param[in]    sock   socket descriptor
  *
  * @return   connection status
  *           @li connection complete: PLAT_SOCK_CONN_OK
  *           @li connection waiting:  PLAT_SOCK_CONN_WAITING
  *           @li connection failed:   PLAT_SOCK_CONN_FAILED
- *               
+ *
  * @note This API maps to the following HandyIron API:
  * int secIsConnectionReady (int connDesc)
  * The "sock" is the connection descriptor.
@@ -337,9 +302,9 @@ platSecSocSend (cpr_socket_t soc,
  *
  * @brief The platSecSocRecv() function shall receive a message from a secure socket.
  *
- * This function is normally used with connected sockets because it does not permit 
+ * This function is normally used with connected sockets because it does not permit
  * the application to retrieve the source address of received data.  The
- * platSecSocRecv() function shall return the length of the message written to 
+ * platSecSocRecv() function shall return the length of the message written to
  * the buffer pointed to by the "buf" argument.
  *
  * @param[in] soc  - Specifies the socket to receive data
@@ -374,11 +339,11 @@ platSecSocRecv (cpr_socket_t soc,
  * @brief The platSecSocClose function shall close a secure socket
  *
  * The platSecSocClose() function shall destroy the socket descriptor indicated
- * by socket.  
+ * by socket.
  *
  * @param[in] soc  - The socket that needs to be destroyed
  *
- * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case. 
+ * @return CPR_SUCCESS on success otherwise, CPR_FAILURE. cpr_errno needs to be set in this case.
  *
  * @note The possible error values this function should return are
  *         @li [CPR_EBADF]      socket is not a valid socket descriptor.
@@ -464,7 +429,7 @@ int platGetAudioDeviceStatus(plat_audio_device_t device_type)
 
 /*
  * Returns the default gateway
- * 
+ *
  * @param void
  * @return u_long
  */

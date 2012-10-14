@@ -714,7 +714,7 @@ SetJsObject(JSContext* aContext,
       JSString* JsData = JS_NewStringCopyN(aContext,
                                            NS_ConvertUTF16toUTF8(data).get(),
                                            data.Length());
-      NS_ENSURE_TRUE(JsData, NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(JsData, false);
       v = STRING_TO_JSVAL(JsData);
     } else if (aData[i].value().type() == BluetoothValue::Tuint32_t) {
       int data = aData[i].value().get_uint32_t();

@@ -259,7 +259,10 @@ Accessible::Name(nsString& aName)
 {
   aName.Truncate();
 
-  GetARIAName(aName);
+  if (!HasOwnContent())
+    return eNameOK;
+
+  ARIAName(aName);
   if (!aName.IsEmpty())
     return eNameOK;
 
@@ -317,7 +320,7 @@ Accessible::Description(nsString& aDescription)
   // 3. it doesn't have an accName; or
   // 4. its title attribute already equals to its accName nsAutoString name; 
 
-  if (mContent->IsNodeOfType(nsINode::eTEXT))
+  if (!HasOwnContent() || mContent->IsNodeOfType(nsINode::eTEXT))
     return;
 
   nsTextEquivUtils::
@@ -366,6 +369,9 @@ Accessible::GetAccessKey(nsAString& aAccessKey)
 KeyBinding
 Accessible::AccessKey() const
 {
+  if (!HasOwnContent())
+    return KeyBinding();
+
   uint32_t key = nsCoreUtils::GetAccessKeyFor(mContent);
   if (!key && mContent->IsElement()) {
     Accessible* label = nullptr;
@@ -678,7 +684,7 @@ Accessible::NativeState()
   if (!IsInDocument())
     state |= states::STALE;
 
-  if (mContent->IsElement()) {
+  if (HasOwnContent() && mContent->IsElement()) {
     nsEventStates elementState = mContent->AsElement()->State();
 
     if (elementState.HasState(NS_EVENT_STATE_INVALID))
@@ -702,7 +708,7 @@ Accessible::NativeState()
 
     // XXX we should look at layout for non XUL box frames, but need to decide
     // how that interacts with ARIA.
-    if (mContent->IsXUL() && frame->IsBoxFrame()) {
+    if (HasOwnContent() && mContent->IsXUL() && frame->IsBoxFrame()) {
       const nsStyleXUL* xulStyle = frame->GetStyleXUL();
       if (xulStyle && frame->IsBoxFrame()) {
         // In XUL all boxes are either vertical or horizontal
@@ -715,9 +721,9 @@ Accessible::NativeState()
   }
 
   // Check if a XUL element has the popup attribute (an attached popup menu).
-      if (mContent->IsXUL() && mContent->HasAttr(kNameSpaceID_None,
-                                                 nsGkAtoms::popup))
-        state |= states::HASPOPUP;
+  if (HasOwnContent() && mContent->IsXUL() &&
+      mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popup))
+    state |= states::HASPOPUP;
 
   // Bypass the link states specialization for non links.
   if (!mRoleMapEntry || mRoleMapEntry->roleRule == kUseNativeRole ||
@@ -943,8 +949,6 @@ Accessible::GetBounds(int32_t* aX, int32_t* aY,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsIPresShell* presShell = mDoc->PresShell();
-
   // This routine will get the entire rectangle for all the frames in this node.
   // -------------------------------------------------------------------------
   //      Primary Frame for node
@@ -956,7 +960,7 @@ Accessible::GetBounds(int32_t* aX, int32_t* aY,
   GetBoundsRect(unionRectTwips, &boundingFrame);   // Unions up all primary frames for this node and all siblings after it
   NS_ENSURE_STATE(boundingFrame);
 
-  nsPresContext* presContext = presShell->GetPresContext();
+  nsPresContext* presContext = mDoc->PresContext();
   *aX = presContext->AppUnitsToDevPixels(unionRectTwips.x);
   *aY = presContext->AppUnitsToDevPixels(unionRectTwips.y);
   *aWidth = presContext->AppUnitsToDevPixels(unionRectTwips.width);
@@ -976,6 +980,9 @@ Accessible::SetSelected(bool aSelect)
 {
   if (IsDefunct())
     return NS_ERROR_FAILURE;
+
+  if (!HasOwnContent())
+    return NS_OK;
 
   Accessible* select = nsAccUtils::GetSelectableContainer(this, State());
   if (select) {
@@ -1224,8 +1231,7 @@ Accessible::GetAttributes(nsIPersistentProperties **aAttributes)
     attributes->SetStringProperty(NS_LITERAL_CSTRING("xml-roles"),  xmlRoles, oldValueUnused);          
   }
 
-  nsCOMPtr<nsIAccessibleValue> supportsValue = do_QueryInterface(static_cast<nsIAccessible*>(this));
-  if (supportsValue) {
+  if (HasNumericValue()) {
     // We support values, so expose the string value as well, via the valuetext object attribute
     // We test for the value interface because we don't want to expose traditional get_accValue()
     // information such as URL's on links and documents, or text in an input
@@ -1270,7 +1276,7 @@ Accessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
   // If the accessible isn't primary for its node (such as list item bullet or
   // xul tree item then don't calculate content based attributes.
-  if (!IsPrimaryForNode())
+  if (!HasOwnContent())
     return NS_OK;
 
   // Attributes set by this method will not be used to override attributes on a sub-document accessible
@@ -2430,8 +2436,9 @@ Accessible::Shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible public methods
 
-nsresult
-Accessible::GetARIAName(nsAString& aName)
+// Accessible protected
+void
+Accessible::ARIAName(nsAString& aName)
 {
   nsAutoString label;
 
@@ -2449,8 +2456,6 @@ Accessible::GetARIAName(nsAString& aName)
     label.CompressWhitespace();
     aName = label;
   }
-  
-  return NS_OK;
 }
 
 nsresult

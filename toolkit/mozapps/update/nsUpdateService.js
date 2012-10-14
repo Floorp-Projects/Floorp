@@ -132,21 +132,26 @@ const SERVICE_UPDATER_NOT_FIXED_DRIVE      = 31;
 const SERVICE_COULD_NOT_LOCK_UPDATER       = 32;
 const SERVICE_INSTALLDIR_ERROR             = 33;
 
-const WRITE_ERROR_ACCESS_DENIED        = 35;
-const WRITE_ERROR_SHARING_VIOLATION    = 36;
-const WRITE_ERROR_CALLBACK_APP         = 37;
-const INVALID_UPDATER_STATUS_CODE      = 38;
-const UNEXPECTED_BZIP_ERROR            = 39;
-const UNEXPECTED_MAR_ERROR             = 40;
-const UNEXPECTED_BSPATCH_ERROR         = 41;
-const UNEXPECTED_FILE_OPERATION_ERROR  = 42;
-const FILESYSTEM_MOUNT_READWRITE_ERROR = 43;
-const FOTA_GENERAL_ERROR               = 44;
-const FOTA_UNKNOWN_ERROR               = 45;
+const WRITE_ERROR_ACCESS_DENIED                     = 35;
+// const WRITE_ERROR_SHARING_VIOLATION                 = 36; // Replaced with errors 46-48
+const WRITE_ERROR_CALLBACK_APP                      = 37;
+const INVALID_UPDATER_STATUS_CODE                   = 38;
+const UNEXPECTED_BZIP_ERROR                         = 39;
+const UNEXPECTED_MAR_ERROR                          = 40;
+const UNEXPECTED_BSPATCH_ERROR                      = 41;
+const UNEXPECTED_FILE_OPERATION_ERROR               = 42;
+const FILESYSTEM_MOUNT_READWRITE_ERROR              = 43;
+const FOTA_GENERAL_ERROR                            = 44;
+const FOTA_UNKNOWN_ERROR                            = 45;
+const WRITE_ERROR_SHARING_VIOLATION_SIGNALED        = 46;
+const WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID = 47;
+const WRITE_ERROR_SHARING_VIOLATION_NOPID           = 48;
+
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
 const BACKGROUNDCHECK_MULTIPLE_FAILURES = 110;
+const NETWORK_ERROR_OFFLINE             = 111;
 
 const DOWNLOAD_CHUNK_SIZE           = 300000; // bytes
 const DOWNLOAD_BACKGROUND_INTERVAL  = 600;    // seconds
@@ -958,7 +963,9 @@ function handleUpdateFailure(update, errorCode) {
   update.errorCode = parseInt(errorCode);
   if (update.errorCode == WRITE_ERROR || 
       update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
-      update.errorCode == WRITE_ERROR_SHARING_VIOLATION ||
+      update.errorCode == WRITE_ERROR_SHARING_VIOLATION_SIGNALED ||
+      update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID ||
+      update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPID ||
       update.errorCode == WRITE_ERROR_CALLBACK_APP ||
       update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR ||
       update.errorCode == FOTA_GENERAL_ERROR ||
@@ -1491,6 +1498,11 @@ UpdateService.prototype = {
   _incompatAddonsCount: 0,
 
   /**
+   * Whether or not the service registered the "online" observer.
+   */
+  _registeredOnlineObserver: false,
+
+  /**
    * Handle Observer Service notifications
    * @param   subject
    *          The subject of the notification
@@ -1504,6 +1516,9 @@ UpdateService.prototype = {
     case "post-update-processing":
       // Clean up any extant updates
       this._postUpdateProcessing();
+      break;
+    case "network:offline-status-changed":
+      this._offlineStatusChanged(data);
       break;
     case "xpcom-shutdown":
       Services.obs.removeObserver(this, "xpcom-shutdown");
@@ -1784,6 +1799,83 @@ UpdateService.prototype = {
   },
 
   /**
+   * Register an observer when the network comes online, so we can short-circuit
+   * the app.update.interval when there isn't connectivity
+   */
+  _registerOnlineObserver: function AUS__registerOnlineObserver() {
+    if (this._registeredOnlineObserver) {
+      LOG("UpdateService:_registerOnlineObserver - observer already registered");
+      return;
+    }
+
+    LOG("UpdateService:_registerOnlineObserver - waiting for the network to " +
+        "be online, then forcing another check");
+
+    Services.obs.addObserver(this, "network:offline-status-changed", false);
+    this._registeredOnlineObserver = true;
+  },
+
+  /**
+   * Called from the network:offline-status-changed observer.
+   */
+  _offlineStatusChanged: function AUS__offlineStatusChanged(status) {
+    if (status !== "online") {
+      return;
+    }
+
+    Services.obs.removeObserver(this, "network:offline-status-changed");
+    this._registeredOnlineObserver = false;
+
+    LOG("UpdateService:_offlineStatusChanged - network is online, forcing " +
+        "another background check");
+
+    // the background checker is contained in notify
+    this.notify(null);
+  },
+
+  // nsIUpdateCheckListener
+  onProgress: function AUS_onProgress(request, position, totalSize) {
+  },
+
+  onCheckComplete: function AUS_onCheckComplete(request, updates, updateCount) {
+    this._selectAndInstallUpdate(updates);
+  },
+
+  onError: function AUS_onError(request, update) {
+    LOG("UpdateService:onError - error during background update: " +
+        update.statusText);
+
+    var maxErrors;
+    var errCount;
+    if (update.errorCode == NETWORK_ERROR_OFFLINE) {
+      // Register an online observer to try again
+      this._registerOnlineObserver();
+      return;
+    }
+    else if (update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE ||
+             update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE) {
+      errCount = getPref("getIntPref", PREF_APP_UPDATE_CERT_ERRORS, 0);
+      errCount++;
+      Services.prefs.setIntPref(PREF_APP_UPDATE_CERT_ERRORS, errCount);
+      maxErrors = getPref("getIntPref", PREF_APP_UPDATE_CERT_MAXERRORS, 5);
+    }
+    else {
+      update.errorCode = BACKGROUNDCHECK_MULTIPLE_FAILURES;
+      errCount = getPref("getIntPref", PREF_APP_UPDATE_BACKGROUNDERRORS, 0);
+      errCount++;
+      Services.prefs.setIntPref(PREF_APP_UPDATE_BACKGROUNDERRORS, errCount);
+      maxErrors = getPref("getIntPref", PREF_APP_UPDATE_BACKGROUNDMAXERRORS,
+                          10);
+    }
+
+    if (errCount >= maxErrors) {
+      var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
+                     createInstance(Ci.nsIUpdatePrompt);
+      prompter.showUpdateError(update);
+    }
+  },
+
+  /**
    * Notified when a timer fires
    * @param   timer
    *          The timer that fired
@@ -1793,55 +1885,7 @@ UpdateService.prototype = {
     if (this.isDownloading || this._downloader && this._downloader.patchIsStaged)
       return;
 
-    var self = this;
-    var listener = {
-      /**
-       * See nsIUpdateService.idl
-       */
-      onProgress: function AUS_notify_onProgress(request, position, totalSize) {
-      },
-
-      /**
-       * See nsIUpdateService.idl
-       */
-      onCheckComplete: function AUS_notify_onCheckComplete(request, updates,
-                                                           updateCount) {
-        self._selectAndInstallUpdate(updates);
-      },
-
-      /**
-       * See nsIUpdateService.idl
-       */
-      onError: function AUS_notify_onError(request, update) {
-        LOG("UpdateService:notify:listener - error during background update: " +
-            update.statusText);
-
-        var maxErrors;
-        var errCount;
-        if (update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE ||
-            update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE) {
-          errCount = getPref("getIntPref", PREF_APP_UPDATE_CERT_ERRORS, 0);
-          errCount++;
-          Services.prefs.setIntPref(PREF_APP_UPDATE_CERT_ERRORS, errCount);
-          maxErrors = getPref("getIntPref", PREF_APP_UPDATE_CERT_MAXERRORS, 5);
-        }
-        else {
-          update.errorCode = BACKGROUNDCHECK_MULTIPLE_FAILURES;
-          errCount = getPref("getIntPref", PREF_APP_UPDATE_BACKGROUNDERRORS, 0);
-          errCount++;
-          Services.prefs.setIntPref(PREF_APP_UPDATE_BACKGROUNDERRORS, errCount);
-          maxErrors = getPref("getIntPref", PREF_APP_UPDATE_BACKGROUNDMAXERRORS,
-                              10);
-        }
-
-        if (errCount >= maxErrors) {
-          var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
-                         createInstance(Ci.nsIUpdatePrompt);
-          prompter.showUpdateError(update);
-        }
-      }
-    };
-    this.backgroundChecker.checkForUpdates(listener, false);
+    this.backgroundChecker.checkForUpdates(this, false);
   },
 
   /**
@@ -2301,6 +2345,7 @@ UpdateService.prototype = {
 
   _xpcom_factory: UpdateServiceFactory,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIApplicationUpdateService,
+                                         Ci.nsIUpdateCheckListener,
                                          Ci.nsIAddonUpdateCheckListener,
                                          Ci.nsITimerCallback,
                                          Ci.nsIObserver])
@@ -2837,6 +2882,11 @@ Checker.prototype = {
     // "looks" fine but there was probably an XML error or a bogus file.
     var update = new Update(null);
     update.statusText = getStatusTextFromCode(status, 200);
+    if (status == Cr.NS_ERROR_OFFLINE) {
+      // We use a separate constant here because nsIUpdate.errorCode is signed
+      update.errorCode = NETWORK_ERROR_OFFLINE;
+    }
+
     this._callback.onError(request, update);
 
     this._request = null;
@@ -3506,7 +3556,9 @@ UpdatePrompt.prototype = {
     if (update.state == STATE_FAILED &&
         (update.errorCode == WRITE_ERROR ||
          update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
-         update.errorCode == WRITE_ERROR_SHARING_VIOLATION ||
+         update.errorCode == WRITE_ERROR_SHARING_VIOLATION_SIGNALED ||
+         update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID ||
+         update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPID ||
          update.errorCode == WRITE_ERROR_CALLBACK_APP ||
          update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR ||
          update.errorCode == FOTA_GENERAL_ERROR ||

@@ -45,12 +45,18 @@ function checkClone(other_listener, aRequest)
   // For as long as clone notification is synchronous, we can't test the clone state reliably.
   var listener = new ImageListener(null, function(foo, bar) { do_test_finished(); } /*getCloneStopCallback(other_listener)*/);
   listener.synchronous = false;
-  var clone = aRequest.clone(listener);
+  var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                .createScriptedObserver(listener);
+  var clone = aRequest.clone(outer);
 }
 
 // Ensure that all the callbacks were called on aRequest.
 function checkAllCallbacks(listener, aRequest)
 {
+  do_check_neq(listener.state & SIZE_AVAILABLE, 0);
+  do_check_neq(listener.state & FRAME_COMPLETE, 0);
+  do_check_neq(listener.state & DECODE_COMPLETE, 0);
+  do_check_neq(listener.state & LOAD_COMPLETE, 0);
   do_check_eq(listener.state, ALL_BITS);
 
   do_test_finished();
@@ -67,7 +73,9 @@ function secondLoadDone(oldlistener, aRequest)
     // clone state reliably.
     var listener = new ImageListener(null, checkAllCallbacks);
     listener.synchronous = false;
-    var staticrequestclone = staticrequest.clone(listener);
+    var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                  .createScriptedObserver(listener);
+    var staticrequestclone = staticrequest.clone(outer);
   } catch(e) {
     // We can't create a static request. Most likely the request we started
     // with didn't load successfully.
@@ -86,7 +94,9 @@ function checkSecondLoad()
   do_test_pending();
 
   var listener = new ImageListener(checkClone, secondLoadDone);
-  requests.push(gCurrentLoader.loadImage(uri, null, null, null, null, listener, null, 0, null, null, null));
+  var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                .createScriptedObserver(listener);
+  requests.push(gCurrentLoader.loadImage(uri, null, null, null, null, outer, null, 0, null, null, null));
   listener.synchronous = false;
 }
 
@@ -102,10 +112,10 @@ function firstLoadDone(oldlistener, aRequest)
 function getChannelLoadImageStartCallback(streamlistener)
 {
   return function channelLoadStart(imglistener, aRequest) {
-    // We must not have received any status before we get this start callback.
+    // We must not have received all status before we get this start callback.
     // If we have, we've broken people's expectations by delaying events from a
     // channel we were given.
-    do_check_eq(streamlistener.requestStatus, 0);
+    do_check_eq(streamlistener.requestStatus & STOP_REQUEST, 0);
 
     checkClone(imglistener, aRequest);
   }
@@ -141,8 +151,10 @@ function checkSecondChannelLoad()
   var listener = new ImageListener(getChannelLoadImageStartCallback(channellistener),
                                    getChannelLoadImageStopCallback(channellistener,
                                                                    all_done_callback));
+  var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                .createScriptedObserver(listener);
   var outlistener = {};
-  requests.push(gCurrentLoader.loadImageWithChannel(channel, listener, null, outlistener));
+  requests.push(gCurrentLoader.loadImageWithChannel(channel, outer, null, outlistener));
   channellistener.outputListener = outlistener.value;
 
   listener.synchronous = false;
@@ -163,8 +175,10 @@ function run_loadImageWithChannel_tests()
   var listener = new ImageListener(getChannelLoadImageStartCallback(channellistener),
                                    getChannelLoadImageStopCallback(channellistener,
                                                                    checkSecondChannelLoad));
+  var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                .createScriptedObserver(listener);
   var outlistener = {};
-  requests.push(gCurrentLoader.loadImageWithChannel(channel, listener, null, outlistener));
+  requests.push(gCurrentLoader.loadImageWithChannel(channel, outer, null, outlistener));
   channellistener.outputListener = outlistener.value;
 
   listener.synchronous = false;
@@ -182,7 +196,9 @@ function startImageCallback(otherCb)
     // Make sure we can load the same image immediately out of the cache.
     do_test_pending();
     var listener2 = new ImageListener(null, function(foo, bar) { do_test_finished(); });
-    requests.push(gCurrentLoader.loadImage(uri, null, null, null, null, listener2, null, 0, null, null, null));
+    var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                  .createScriptedObserver(listener2);
+    requests.push(gCurrentLoader.loadImage(uri, null, null, null, null, outer, null, 0, null, null, null));
     listener2.synchronous = false;
 
     // Now that we've started another load, chain to the callback.
@@ -198,7 +214,9 @@ function run_test()
 
   do_test_pending();
   var listener = new ImageListener(startImageCallback(checkClone), firstLoadDone);
-  var req = gCurrentLoader.loadImage(uri, null, null, null, null, listener, null, 0, null, null, null);
+  var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                .createScriptedObserver(listener);
+  var req = gCurrentLoader.loadImage(uri, null, null, null, null, outer, null, 0, null, null, null);
   requests.push(req);
 
   // Ensure that we don't cause any mayhem when we lock an image.

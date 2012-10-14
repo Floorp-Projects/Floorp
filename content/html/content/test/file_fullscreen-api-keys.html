@@ -9,6 +9,7 @@ Test that restricted key pressed drop documents out of DOM full-screen mode.
 <head>
   <title>Test for Bug 545812</title>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
   <style>
   body {
     background-color: black;
@@ -51,7 +52,6 @@ function checkKeyEffect() {
   if (gKeyTestIndex < keyList.length) {
     setTimeout(testNextKey, 0);
   } else {
-    document.mozCancelFullScreen();
     opener.nextTest();
   }
 }
@@ -59,8 +59,8 @@ function checkKeyEffect() {
 function testTrustedKeyEvents() {
   document.body.focus();
   gKeyReceived = false;
+  addFullscreenChangeContinuation("exit", checkKeyEffect);
   synthesizeKey(gKeyName, {});
-  setTimeout(checkKeyEffect, 0);
 }
 
 function testScriptInitiatedKeyEvents() {
@@ -92,7 +92,7 @@ function testScriptInitiatedKeyEvents() {
 
 function testNextKey() {
   if (!document.mozFullScreen) {
-    document.addEventListener("mozfullscreenchange", reallyTestNextKey, false);
+    addFullscreenChangeContinuation("enter", reallyTestNextKey);
     document.body.mozRequestFullScreen();
   }
   else {
@@ -101,8 +101,6 @@ function testNextKey() {
 }
 
 function reallyTestNextKey() {
-  document.removeEventListener("mozfullscreenchange", reallyTestNextKey, false);
-
   ok(document.mozFullScreen, "Must be in full-screen mode");
 
   gKeyName = keyList[gKeyTestIndex].code;

@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "string.h"
 #include "string_lib.h"
@@ -64,7 +29,7 @@ cc_string_t lineLabels[MAX_CONFIG_LINES+1] = {0};
 
 
 void ccsnap_set_line_label(int btn, cc_string_t label) {
-   
+
    CCAPP_ERROR(DEB_F_PREFIX"btn=%d label=%s\n", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_set_line_label"), btn, label);
    if ( btn > 0 && btn <= MAX_CONFIG_LINES+1 ) {
        if ( label == NULL ) {
@@ -86,7 +51,7 @@ cc_string_t ccsnap_get_line_label(int btn) {
 
 /*
  * The below two functions are borrowed from CUCM/CUP as they both perform
- * identical functions.  That is, taking a DN 1555 and 
+ * identical functions.  That is, taking a DN 1555 and
  * a mask 919476XXXX to build a true external number 9194761555.
  */
 static void stringInsert(char *string, int num, char ch)
@@ -173,7 +138,7 @@ DEB_F_PREFIX_ARGS(SIP_CC_PROV, "CCAPI_ApplyTranslationMask"));
         else
             translatedString[j++] = translationMask[i];
     }
- 
+
     translatedString[j] = 0;
     result = strlib_malloc(translatedString, strlen(translatedString));
     return result;
@@ -198,11 +163,11 @@ void ccsnap_line_pre_init () {
         if ((lineInfo[i].cfwd_dest) && (strlen(lineInfo[i].cfwd_dest) > 0)) {
             strlib_free(lineInfo[i].cfwd_dest);
         }
-        if ((lineInfo[i].externalNumber) && 
+        if ((lineInfo[i].externalNumber) &&
             (strlen(lineInfo[i].externalNumber) > 0)) {
             strlib_free(lineInfo[i].externalNumber);
         }
-        if ((featureInfo[i].speedDialNumber) && 
+        if ((featureInfo[i].speedDialNumber) &&
             (strlen(featureInfo[i].speedDialNumber) > 0)) {
             strlib_free(featureInfo[i].speedDialNumber);
         }
@@ -212,7 +177,7 @@ void ccsnap_line_pre_init () {
         if ((featureInfo[i].name) && (strlen(featureInfo[i].name) > 0)) {
             strlib_free(featureInfo[i].name);
         }
-        if ((featureInfo[i].retrievalPrefix) && 
+        if ((featureInfo[i].retrievalPrefix) &&
             (strlen(featureInfo[i].retrievalPrefix) > 0)) {
             strlib_free(featureInfo[i].retrievalPrefix);
         }
@@ -337,14 +302,14 @@ cc_line_info_t* ccsnap_getLineInfoFromBtn(int btnID)
      return NULL;
 }
 
-cc_boolean allowedFeature(int fid){ 
+cc_boolean allowedFeature(int fid){
     return TRUE;
 }
 
 cc_feature_info_t* ccsnap_getFeatureInfo(int featureIndex)
 {
-	if ( ( featureIndex<=MAX_CONFIG_LINES ) && 
-			( featureIndex>= 1 ) && 
+	if ( ( featureIndex<=MAX_CONFIG_LINES ) &&
+			( featureIndex>= 1 ) &&
 		( featureInfo[featureIndex].button == featureIndex ) ) {
             if ( allowedFeature(featureInfo[featureIndex].feature_id) ){
 		return &featureInfo[featureIndex];
@@ -370,7 +335,7 @@ void ccsnap_device_pre_init () {
 
     i = 0;
     while (i < CCAPI_MAX_SERVERS) {
-        if ((g_deviceInfo.ucm[i].name) && 
+        if ((g_deviceInfo.ucm[i].name) &&
             (strlen(g_deviceInfo.ucm[i].name) > 0)) {
             strlib_free(g_deviceInfo.ucm[i].name);
         }
@@ -511,7 +476,7 @@ void ccsnap_update_ccm_status(cc_string_t addr, cc_ccm_status_t status)
     }
 }
 
-void ccsnap_handle_mnc_reached (cc_line_info_t *line_info, cc_boolean mnc_reached, cc_cucm_mode_t mode) 
+void ccsnap_handle_mnc_reached (cc_line_info_t *line_info, cc_boolean mnc_reached, cc_cucm_mode_t mode)
 {
     cc_call_handle_t handles[MAX_CALLS];
     int count = MAX_CALLS, i;

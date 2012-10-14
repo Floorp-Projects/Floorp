@@ -352,9 +352,7 @@ int main(int argc, char **argv)
         PumpEvents();
 
         finish = PR_Now();
-        uint32_t totalTime32;
-        uint64_t totalTime64 = finish - start;
-        LL_L2UI(totalTime32, totalTime64);
+        uint32_t totalTime32 = uint32_t(finish - start);
 
         printf("\n\n--------------------\nAll done:\nnum found:%d\nnum start:%d\n", numFound, numStart);
 

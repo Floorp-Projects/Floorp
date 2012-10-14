@@ -259,12 +259,17 @@ function getJSON(element) {
     }
   }
 
-  // If Gecko knows about the inputmode attribute, use that value.
-  // Otherwise, query the attribute explicitly, but be sure to convert
-  // to lowercase
-  let inputmode = element.inputmode || element.getAttribute('inputmode');
+  // Gecko supports the inputmode attribute on text fields (but not textareas).
+  // But it doesn't recognize "verbatim" and other modes that we're interested
+  // in in Gaia, and the inputmode property returns "auto" for any value
+  // that gecko does not support. So we must query the inputmode attribute
+  // with getAttribute() rather than just using the inputmode property here.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=746142
+  let inputmode = element.getAttribute('inputmode');
   if (inputmode) {
     inputmode = inputmode.toLowerCase();
+  } else {
+    inputmode = '';
   }
 
   return {

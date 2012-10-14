@@ -91,7 +91,8 @@ XPCOMUtils.defineLazyGetter(this, "gAUS", function test_gAUS() {
   return AUS_Cc["@mozilla.org/updates/update-service;1"].
          getService(AUS_Ci.nsIApplicationUpdateService).
          QueryInterface(AUS_Ci.nsITimerCallback).
-         QueryInterface(AUS_Ci.nsIObserver);
+         QueryInterface(AUS_Ci.nsIObserver).
+         QueryInterface(AUS_Ci.nsIUpdateCheckListener);
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUpdateManager",

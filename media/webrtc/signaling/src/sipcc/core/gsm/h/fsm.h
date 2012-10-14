@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef _FSM_H_
 #define _FSM_H_
@@ -173,7 +138,7 @@ typedef struct fsmdef_previous_sdp_ {
 
 typedef struct fsmdef_media_t_ {
     sll_lite_node_t node;     /* link node, must be first member of struct */
-    media_refid_t   refid;    /* media reference id                        */ 
+    media_refid_t   refid;    /* media reference id                        */
     sdp_media_e     type;     /* audio, video etc. media                   */
     sdp_addrtype_e  addr_type;/* ipv4, ipv6                                */
     /*
@@ -283,7 +248,7 @@ struct fsm_fcb_t_;
 
 typedef struct {
     callid_t        call_id;
-    callid_t        join_call_id;    
+    callid_t        join_call_id;
     line_t          line;
     cc_caller_id_t  caller_id;
     groupid_t       group_id;
@@ -428,13 +393,13 @@ typedef struct {
     cprTimer_t revertTimer;
 
     boolean dsp_out_of_resources;
-    
+
     boolean selected;
 
     boolean select_pending;
 
     boolean call_not_counted_in_mnc_bt;
-     
+
     /*
      * The media_cap holds the current media caps of the call
      */
@@ -450,8 +415,8 @@ typedef struct {
      */
     cc_media_local_track_table_t *local_media_track_tbl;
 
-#define FSMDEF_F_HOLD_REQ_PENDING  (1 << 0)/* hold feature pending    */ 
-#define FSMDEF_F_XFER_COMPLETE     (1 << 1)/* hold feature pending    */ 
+#define FSMDEF_F_HOLD_REQ_PENDING  (1 << 0)/* hold feature pending    */
+#define FSMDEF_F_XFER_COMPLETE     (1 << 1)/* hold feature pending    */
     uint32_t                flags;         /* misc. flags.            */
 
     int log_disp;
@@ -623,7 +588,7 @@ fsmdef_dcb_t *fsm_get_dcb(callid_t call_id);
 void fsm_init_scb(fim_icb_t *icb, callid_t call_id);
 fsm_fcb_t *fsm_get_fcb_by_call_id(callid_t call_id);
 fsm_fcb_t *fsm_get_fcb_by_call_id_and_type(callid_t call_id, fsm_types_t type);
-void 
+void
 fsm_get_fcb_by_selected_or_connected_call_fcb(callid_t call_id, fsm_fcb_t **con_fcb_found,
                                                fsm_fcb_t **sel_fcb_found);
 fsm_fcb_t *fsm_get_new_fcb(callid_t call_id, fsm_types_t fsm_type);

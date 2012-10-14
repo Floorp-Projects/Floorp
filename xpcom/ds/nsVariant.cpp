@@ -88,7 +88,7 @@ static nsresult ToManageableNumber(const nsDiscriminatedUnion& inData,
     case nsIDataType::VTYPE_UINT64:
         // XXX Need boundary checking here.
         // We may need to return NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA
-        LL_L2D(outData->u.mDoubleValue, inData.u.mInt64Value);
+        outData->u.mDoubleValue = double(inData.u.mInt64Value);
         outData->mType = nsIDataType::VTYPE_DOUBLE;
         return NS_OK;
     case nsIDataType::VTYPE_FLOAT:
@@ -647,7 +647,7 @@ nsVariant::ConvertToInt64(const nsDiscriminatedUnion& data, int64_t *_retval)
     switch(tempData.mType)
     {
     case nsIDataType::VTYPE_INT32:
-        LL_I2L(*_retval, tempData.u.mInt32Value);
+        *_retval = tempData.u.mInt32Value;
         return rv;
     case nsIDataType::VTYPE_UINT32:
         LL_UI2L(*_retval, tempData.u.mUint32Value);

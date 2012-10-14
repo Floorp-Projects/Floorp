@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "debug.h"
 #include "phone_debug.h"
@@ -52,8 +17,8 @@ cc_int32_t SipDebugTask             = 1; /* SIP Task output */
 cc_int32_t SipDebugRegState         = 0; /* SIP Registration State Mach. output */
 
 /**
- * SipRelDevEnabled flag is not a debug print flag. It actually turns 
- * on and off reliable delivery module in sip layer. We will keep 
+ * SipRelDevEnabled flag is not a debug print flag. It actually turns
+ * on and off reliable delivery module in sip layer. We will keep
  * this on as retransmissions are enabled on CUCM by default even for TCP transport
  */
 int32_t SipRelDevEnabled           = 1; /* Is reliable delivery on? */
@@ -92,7 +57,7 @@ cc_int32_t g_dcsmDebug              = 0;
  *           valid cc_remote_ipaddr)
  */
 
-void ccsip_dump_send_msg_info (char *msg, sipMessage_t *pSIPMessage, 
+void ccsip_dump_send_msg_info (char *msg, sipMessage_t *pSIPMessage,
                                cpr_ip_addr_t *cc_remote_ipaddr,
                                uint16_t cc_remote_port)
 {
@@ -119,7 +84,7 @@ void ccsip_dump_send_msg_info (char *msg, sipMessage_t *pSIPMessage,
     if (callid == NULL) {
         /* No REQ CSEQ, fill with blank */
         callid = "";
-    } 
+    }
 
     /* For messages starting with SIP add 8 byte. default
      * debugs do not show all the SIP message information
@@ -132,7 +97,7 @@ void ccsip_dump_send_msg_info (char *msg, sipMessage_t *pSIPMessage,
             disp_buf = &msg[8];
         } else {
             disp_buf = msg;
-        } 
+        }
         if ((strncmp(disp_buf, SIP_METHOD_REGISTER, sizeof(SIP_METHOD_REGISTER)-1) == 0) &&
             (!dump_reg_msg)) {
             return;
@@ -142,18 +107,18 @@ void ccsip_dump_send_msg_info (char *msg, sipMessage_t *pSIPMessage,
         disp_buf = NULL;
     }
 
-        
+
     if (disp_buf != NULL) {
         DEF_DEBUG(DEB_F_PREFIX"<%s:%-4d>:%c%c%c%c%c%c%c: %-10s :%-6s::%s\n",
                     DEB_F_PREFIX_ARGS(SIP_MSG_SEND, fname),
                     ipaddr_str, cc_remote_port,
-                    disp_buf[0], 
-                    disp_buf[1], 
-                    disp_buf[2], 
-                    disp_buf[3], 
-                    disp_buf[4], 
-                    disp_buf[5], 
-                    disp_buf[6], 
+                    disp_buf[0],
+                    disp_buf[1],
+                    disp_buf[2],
+                    disp_buf[3],
+                    disp_buf[4],
+                    disp_buf[5],
+                    disp_buf[6],
                     req_uri,
                     cseq, callid);
     } else {
@@ -179,7 +144,7 @@ void ccsip_dump_send_msg_info (char *msg, sipMessage_t *pSIPMessage,
  *           valid cc_remote_ipaddr)
  */
 
-void ccsip_dump_recv_msg_info (sipMessage_t *pSIPMessage, 
+void ccsip_dump_recv_msg_info (sipMessage_t *pSIPMessage,
                                cpr_ip_addr_t *cc_remote_ipaddr,
                                uint16_t cc_remote_port)
 {
@@ -208,7 +173,7 @@ void ccsip_dump_recv_msg_info (sipMessage_t *pSIPMessage,
     if (callid == NULL) {
         /* No REQ CSEQ, fill with blank */
         callid = "";
-    } 
+    }
 
     if (!dump_reg_msg) {
        if (strstr(cseq, SIP_METHOD_REGISTER) != NULL) {
@@ -230,23 +195,23 @@ void ccsip_dump_recv_msg_info (sipMessage_t *pSIPMessage,
         }
     } else {
         /*
-         * It is possible that this function is called with 
+         * It is possible that this function is called with
          * invalid message or partially received.
          */
         disp_buf = NULL;
     }
-        
+
     if (disp_buf != NULL) {
         DEF_DEBUG(DEB_F_PREFIX"<%s:%-4d>:%c%c%c%c%c%c%c: %-10s :%-6s::%s\n",
                     DEB_F_PREFIX_ARGS(SIP_MSG_RECV, fname),
                     ipaddr_str, cc_remote_port,
-                    disp_buf[0], 
-                    disp_buf[1], 
-                    disp_buf[2], 
-                    disp_buf[3], 
-                    disp_buf[4], 
-                    disp_buf[5], 
-                    disp_buf[6], 
+                    disp_buf[0],
+                    disp_buf[1],
+                    disp_buf[2],
+                    disp_buf[3],
+                    disp_buf[4],
+                    disp_buf[5],
+                    disp_buf[6],
                     req_uri,
                     cseq, callid);
     } else {

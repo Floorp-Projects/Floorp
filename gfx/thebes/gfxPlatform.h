@@ -198,7 +198,6 @@ public:
       CreateDrawTargetForData(unsigned char* aData, const mozilla::gfx::IntSize& aSize, 
                               int32_t aStride, mozilla::gfx::SurfaceFormat aFormat);
 
-    bool SupportsAzureCanvas();
     bool SupportsAzureContent() {
       return GetContentBackend() != mozilla::gfx::BACKEND_NONE;
     }
@@ -494,9 +493,10 @@ protected:
     static mozilla::gfx::BackendType GetContentBackendPref(uint32_t aBackendBitmask);
 
     /**
-     * Checks the aEnabledPrefName pref and returns BACKEND_NONE if the pref is
-     * not enabled. Otherwise it will return the first backend named in
-     * aBackendPrefName allowed by aBackendBitmask, a bitmask of backend types.
+     * If aEnabledPrefName is non-null, checks the aEnabledPrefName pref and
+     * returns BACKEND_NONE if the pref is not enabled.
+     * Otherwise it will return the first backend named in aBackendPrefName
+     * allowed by aBackendBitmask, a bitmask of backend types.
      */
     static mozilla::gfx::BackendType GetBackendPref(const char* aEnabledPrefName,
                                                     const char* aBackendPrefName,

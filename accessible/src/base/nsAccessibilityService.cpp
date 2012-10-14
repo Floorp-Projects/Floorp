@@ -9,9 +9,6 @@
 #include "Accessible-inl.h"
 #include "ApplicationAccessibleWrap.h"
 #include "ARIAGridAccessibleWrap.h"
-#ifdef MOZ_ACCESSIBILITY_ATK
-#include "AtkSocketAccessible.h"
-#endif
 #include "DocAccessible-inl.h"
 #include "FocusManager.h"
 #include "HTMLCanvasAccessible.h"
@@ -34,10 +31,15 @@
 #include "RootAccessibleWrap.h"
 #include "States.h"
 #include "Statistics.h"
-#ifdef XP_WIN
-#include "nsHTMLWin32ObjectAccessible.h"
-#endif
 #include "TextLeafAccessibleWrap.h"
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+#include "AtkSocketAccessible.h"
+#endif
+
+#ifdef XP_WIN
+#include "HTMLWin32ObjectAccessible.h"
+#endif
 
 #ifdef A11Y_LOG
 #include "Logging.h"
@@ -333,9 +335,8 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
     aFrame->GetPluginPort(&pluginPort);
 
     Accessible* accessible =
-      new nsHTMLWin32ObjectOwnerAccessible(aContent,
-                                           GetDocAccessible(aPresShell),
-                                           pluginPort);
+      new HTMLWin32ObjectOwnerAccessible(aContent, GetDocAccessible(aPresShell),
+                                         pluginPort);
     NS_ADDREF(accessible);
     return accessible;
 
@@ -1669,13 +1670,11 @@ nsAccessibilityService::AddNativeRootAccessible(void* aAtkAccessible)
   if (!applicationAcc)
     return nullptr;
 
-  nsRefPtr<NativeRootAccessibleWrap> nativeRootAcc =
-    new NativeRootAccessibleWrap(static_cast<AtkObject*>(aAtkAccessible));
-  if (!nativeRootAcc)
-    return nullptr;
+  GtkWindowAccessible* nativeWnd =
+    new GtkWindowAccessible(static_cast<AtkObject*>(aAtkAccessible));
 
-  if (applicationAcc->AppendChild(nativeRootAcc))
-    return nativeRootAcc;
+  if (applicationAcc->AppendChild(nativeWnd))
+    return nativeWnd;
 #endif
 
   return nullptr;

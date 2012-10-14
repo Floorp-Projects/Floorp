@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <limits.h>
 #include <errno.h>
@@ -126,32 +91,32 @@ parse_call_info_parm (char *parm_p, cc_call_info_data_t * feature_data_p)
                     feature_data_p->call_info_feat_data.security = CC_SECURITY_NOT_AUTHENTICATED;
                 } else {
                             CCSIP_DEBUG_ERROR(SIP_F_PREFIX "Unknown security"
-                                              " value %s\n", fname, parm_p); 
+                                              " value %s\n", fname, parm_p);
                     feature_data_p->call_info_feat_data.security = CC_SECURITY_UNKNOWN;
                 }
             } else {
                 break;
             }
-        } else if (!cpr_strncasecmp(parm_p, SIP_CI_POLICY,	
-			sizeof(SIP_CI_POLICY) - 1)) {	
-	    parm_p = parm_p + sizeof(SIP_CI_POLICY) - 1;	
-	    SKIP_LWS(parm_p);	
-				
-	    if (*parm_p) {	
-		feature_data_p->call_info_feat_data.feature_flag |= CC_POLICY;	
-		if (!cpr_strncasecmp(parm_p, SIP_CI_POLICY_CHAPERONE ,	
-				sizeof(SIP_CI_POLICY_CHAPERONE) - 1)) {	
-		    feature_data_p->call_info_feat_data.policy = CC_POLICY_CHAPERONE;	
-		} else if (!cpr_strncasecmp(parm_p, SIP_CI_POLICY_UNKNOWN,	
-				sizeof(SIP_CI_POLICY_UNKNOWN) - 1)) {	
-		    feature_data_p->call_info_feat_data.policy = CC_POLICY_UNKNOWN;	
-		} else {	
-		    CCSIP_DEBUG_ERROR("%s ERROR: Unknown policy"	
-			" value %s\n", fname, parm_p) ;	
-		    feature_data_p->call_info_feat_data.policy = CC_POLICY_UNKNOWN;	
-		}	
-	    } else {	
-		break;	
+        } else if (!cpr_strncasecmp(parm_p, SIP_CI_POLICY,
+			sizeof(SIP_CI_POLICY) - 1)) {
+	    parm_p = parm_p + sizeof(SIP_CI_POLICY) - 1;
+	    SKIP_LWS(parm_p);
+
+	    if (*parm_p) {
+		feature_data_p->call_info_feat_data.feature_flag |= CC_POLICY;
+		if (!cpr_strncasecmp(parm_p, SIP_CI_POLICY_CHAPERONE ,
+				sizeof(SIP_CI_POLICY_CHAPERONE) - 1)) {
+		    feature_data_p->call_info_feat_data.policy = CC_POLICY_CHAPERONE;
+		} else if (!cpr_strncasecmp(parm_p, SIP_CI_POLICY_UNKNOWN,
+				sizeof(SIP_CI_POLICY_UNKNOWN) - 1)) {
+		    feature_data_p->call_info_feat_data.policy = CC_POLICY_UNKNOWN;
+		} else {
+		    CCSIP_DEBUG_ERROR("%s ERROR: Unknown policy"
+			" value %s\n", fname, parm_p) ;
+		    feature_data_p->call_info_feat_data.policy = CC_POLICY_UNKNOWN;
+		}
+	    } else {
+		break;
 	    }
        	} else if (!cpr_strncasecmp(parm_p, SIP_CI_ORIENTATION,
                                     sizeof(SIP_CI_ORIENTATION) - 1)) {
@@ -168,7 +133,7 @@ parse_call_info_parm (char *parm_p, cc_call_info_data_t * feature_data_p)
                     feature_data_p->call_info_feat_data.orientation = CC_ORIENTATION_TO;
                 } else {
                     CCSIP_DEBUG_ERROR(SIP_F_PREFIX  "Unknown orientation info"
-                                      " value %s\n", fname, parm_p); 
+                                      " value %s\n", fname, parm_p);
                     feature_data_p->call_info_feat_data.orientation = CC_ORIENTATION_NONE;
                 }
             } else {
@@ -192,11 +157,11 @@ parse_call_info_parm (char *parm_p, cc_call_info_data_t * feature_data_p)
                     feature_data_p->call_info_feat_data.ui_state = CC_UI_STATE_BUSY;
                 } else {
                     CCSIP_DEBUG_ERROR(SIP_F_PREFIX  "Unknown call state"
-                                      " value %s\n", fname, parm_p); 
+                                      " value %s\n", fname, parm_p);
                     /* Unknown value, ignore the call state */
-                    feature_data_p->call_info_feat_data.feature_flag &= 
+                    feature_data_p->call_info_feat_data.feature_flag &=
                          ~(CC_UI_STATE);
-                    feature_data_p->call_info_feat_data.ui_state = 
+                    feature_data_p->call_info_feat_data.ui_state =
                          CC_UI_STATE_NONE;
                 }
             } else {
@@ -213,7 +178,7 @@ parse_call_info_parm (char *parm_p, cc_call_info_data_t * feature_data_p)
 
                 feature_data_p->call_info_feat_data.feature_flag |= CC_CALL_INSTANCE;
                 /* Initialized the call instance id, just in case */
-                feature_data_p->call_info_feat_data.caller_id.call_instance_id 
+                feature_data_p->call_info_feat_data.caller_id.call_instance_id
                     = 0;
                 /* Parse instance id from line */
                 temp_p = parm_p;
@@ -225,7 +190,7 @@ parse_call_info_parm (char *parm_p, cc_call_info_data_t * feature_data_p)
                     /* Did not find any digit after "call_instance=" */
                     CCSIP_DEBUG_ERROR(SIP_F_PREFIX  "no digits found for"
                                       " call_instance parameter.\n", fname);
-                    feature_data_p->call_info_feat_data.feature_flag &= 
+                    feature_data_p->call_info_feat_data.feature_flag &=
                              ~(CC_CALL_INSTANCE);
                     break;
                 } else {
@@ -252,7 +217,7 @@ parse_call_info_parm (char *parm_p, cc_call_info_data_t * feature_data_p)
             if (*parm_p) {
                 temp_p = parm_p;
                 if ((!cpr_strncasecmp(parm_p, SIP_CI_PRIORITY_URGENT,
-                                      sizeof(SIP_CI_PRIORITY_URGENT) - 1)) || 
+                                      sizeof(SIP_CI_PRIORITY_URGENT) - 1)) ||
                     (!cpr_strncasecmp(parm_p, SIP_CI_PRIORITY_EMERGENCY,
                                       sizeof(SIP_CI_PRIORITY_EMERGENCY) - 1))) {
                     feature_data_p->call_info_feat_data.priority = CC_CALL_PRIORITY_URGENT;
@@ -262,20 +227,20 @@ parse_call_info_parm (char *parm_p, cc_call_info_data_t * feature_data_p)
                     strtoul_result = strtoul(temp_p, &strtoul_end, 10);
 
                     if (errno || temp_p == strtoul_end || strtoul_result > MAX_INSTANCES) {
-                        /* 
+                        /*
                          * Call instance ID should not exceed max instances
                          * or calls.
                          */
                         CCSIP_DEBUG_ERROR(SIP_F_PREFIX  "invalid call_instance"
                                           " value %u\n", fname, (unsigned) strtoul_result);
-                        feature_data_p->call_info_feat_data.feature_flag &= 
+                        feature_data_p->call_info_feat_data.feature_flag &=
                                  ~(CC_CALL_INSTANCE);
                     } else {
                         instance_id = (uint16_t) strtoul_result;
                         feature_data_p->call_info_feat_data.caller_id.call_instance_id = instance_id;
                     }
                 }
-            }        
+            }
         } else if (!cpr_strncasecmp(parm_p, SIP_CI_GCID,
                                     sizeof(SIP_CI_GCID) - 1)) {
             parm_p = parm_p + sizeof(SIP_CI_GCID) - 1;
@@ -284,7 +249,7 @@ parse_call_info_parm (char *parm_p, cc_call_info_data_t * feature_data_p)
             if (*parm_p) {
               temp_p = strchr(parm_p, SEMI_COLON);
               if (temp_p) {
-                unsigned int length = ((temp_p - parm_p)<CC_GCID_LEN) ? 
+                unsigned int length = ((temp_p - parm_p)<CC_GCID_LEN) ?
                                           (temp_p - parm_p):(CC_GCID_LEN);
                 sstrncpy(feature_data_p->call_info_feat_data.global_call_id, parm_p, length);
               } else {
@@ -561,18 +526,18 @@ ccsip_encode_call_info_hdr (cc_call_info_t *call_info_p,
                 sstrncat(header, SIP_CI_SILENT_STR,
                         MAX_SIP_HEADER_LENGTH - strlen(header));
                 break;
-			
+
             case CC_MONITOR_COACHING :
                 sstrncat(header, SIP_CI_COACHING_STR,
                         MAX_SIP_HEADER_LENGTH - strlen(header));
                 break;
-			
+
             default:
                 break;
-            }        
-        }        
+            }
+        }
         break;
-        
+
     case CC_FEAT_TOGGLE_TO_WHISPER_COACHING:
         sstrncat(header, "callinfo>",
         	MAX_SIP_HEADER_LENGTH - strlen(header));
@@ -580,9 +545,9 @@ ccsip_encode_call_info_hdr (cc_call_info_t *call_info_p,
             MAX_SIP_HEADER_LENGTH - strlen(header));
         sstrncat(header, SIP_CI_COACHING_STR,
             MAX_SIP_HEADER_LENGTH - strlen(header));
-            
+
         break;
-            
+
     case CC_FEAT_TOGGLE_TO_SILENT_MONITORING:
         sstrncat(header, "callinfo>",
             MAX_SIP_HEADER_LENGTH - strlen(header));
@@ -590,9 +555,9 @@ ccsip_encode_call_info_hdr (cc_call_info_t *call_info_p,
             MAX_SIP_HEADER_LENGTH - strlen(header));
         sstrncat(header, SIP_CI_SILENT_STR,
             MAX_SIP_HEADER_LENGTH - strlen(header));
-            
-        break;    
-    
+
+        break;
+
     default:
         cpr_free(header);
         return NULL;
@@ -659,7 +624,7 @@ ccsip_process_call_info_header (sipMessage_t *request_p, ccsipCCB_t *ccb)
                                                               SIP_HEADER_CALL_INFO,
                                                               call_info_hdrs,
                                                               MAX_CALL_INFO_HEADERS);
-    
+
     if (num_call_info_headers > 0) {
         ccb->in_call_info = (cc_call_info_t *)
             cpr_calloc(1, sizeof(cc_call_info_t));
@@ -669,16 +634,16 @@ ccsip_process_call_info_header (sipMessage_t *request_p, ccsipCCB_t *ccb)
 
             // Parse each Call-Info header
             for (i = 0; i < MAX_CALL_INFO_HEADERS; i++) {
-                if (call_info_hdrs[i]) {                    
+                if (call_info_hdrs[i]) {
                     ccsip_decode_call_info_hdr(call_info_hdrs[i], ccb->in_call_info);
                 }
             }
-            
+
         } else {
             ccb->in_call_info = NULL;
         }
     }
-    
+
 }
 
 /*

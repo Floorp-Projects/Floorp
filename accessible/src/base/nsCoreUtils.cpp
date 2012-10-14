@@ -164,11 +164,8 @@ nsCoreUtils::DispatchMouseEvent(uint32_t aEventType, int32_t aX, int32_t aY,
 }
 
 uint32_t
-nsCoreUtils::GetAccessKeyFor(nsIContent *aContent)
+nsCoreUtils::GetAccessKeyFor(nsIContent* aContent)
 {
-  if (!aContent)
-    return 0;
-
   // Accesskeys are registered by @accesskey attribute only. At first check
   // whether it is presented on the given element to avoid the slow
   // nsEventStateManager::GetRegisteredAccessKey() method.

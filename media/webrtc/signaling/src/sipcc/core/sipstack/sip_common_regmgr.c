@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "cpr_types.h"
 #include "phntask.h"
@@ -277,8 +242,8 @@ sip_regmgr_find_fallback_ccb_by_addr_port (cpr_ip_addr_t *ipaddr, uint16_t port,
 
 /**
  ** sip_regmgr_find_fallback_ccb_by_ccmid
- *  finds the fallback ccb that matched a ccm id 
- *  
+ *  finds the fallback ccb that matched a ccm id
+ *
  *  @param  ccm_id ccm id to match and ccb_ret - ccb if found
  *
  *  @return TRUE if found; else  FALSE
@@ -302,7 +267,7 @@ sip_regmgr_find_fallback_ccb_by_ccmid (CCM_ID ccm_id, ccsipCCB_t **ccb_ret)
                (cfg_table_entry->ti_specific.ti_ccm.ccm_id == ccm_id)) {
 				if(ccb_ret != NULL){
 					*ccb_ret = list_ccb;
-				}	
+				}
                 found_ccb = TRUE;
                 break;
             }
@@ -361,7 +326,7 @@ sip_regmgr_return_fallback_line_num (line_t num)
 {
     const char fname[] = "sip_regmgr_return_fallback_line_num";
 
-    if (((num - MAX_CCBS) > -1) && 
+    if (((num - MAX_CCBS) > -1) &&
         ((num - MAX_CCBS) < (MAX_CCM - 1))) {
         fallback_lines_available[(int)(num - MAX_CCBS)].available = TRUE;
         CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Returned fallback line %d at index %d\n",
@@ -518,7 +483,7 @@ sip_regmgr_create_fallback_ccb (CCM_ID ccm_id, line_t dn_line)
         CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"couldn't get fallback line for ccmid %d\n",
                               DEB_F_PREFIX_ARGS(SIP_FALLBACK, fname), ccm_id);
         return(FALSE);
-    }  
+    }
     fallback_ccb = (fallback_ccb_t *) cpr_calloc(1, sizeof(fallback_ccb_t));
     if (fallback_ccb) {
         fallback_ccb->WaitTimer.timer = cprCreateTimer(sipWaitTimerName,
@@ -622,7 +587,7 @@ sip_regmgr_trigger_fallback_monitor (void)
             ccb = fallback_ccb->ccb;
             if (ccb->state == (int) SIP_REG_PRE_FALLBACK) {
                 char user[MAX_LINE_NAME_SIZE];
-                
+
                 /*
                  * If state is TokenWait,
                  * Then transition back into InFallback state.
@@ -639,13 +604,13 @@ sip_regmgr_trigger_fallback_monitor (void)
                 if (ccm_table_entry->ti_common.handle != INVALID_SOCKET) {
                     (void) sipSPISendRegister(ccb, 0, user, 0);
                 }
-                
+
                 /*
                  * Start the ack, retry timer
                  */
                 sip_regmgr_retry_timer_start(fallback_ccb);
                 CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Started monitoring %s:%d\n",
-                                      DEB_F_PREFIX_ARGS(SIP_FALLBACK, fname), 
+                                      DEB_F_PREFIX_ARGS(SIP_FALLBACK, fname),
                                       ccb->reg.proxy, ccb->reg.port);
             } else {
                 CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"fallback is in progress ccb idx=%d",
@@ -722,7 +687,7 @@ sip_regmgr_setup_new_active_ccb (ti_config_table_t *cfg_table_entry)
                                                          &(line_ccb->reg.addr),
                                                          line_ccb->reg.port);
             CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Updated active to %s:%d\n",
-                              DEB_F_PREFIX_ARGS(SIP_FALLBACK, fname), 
+                              DEB_F_PREFIX_ARGS(SIP_FALLBACK, fname),
                               line_ccb->reg.proxy, line_ccb->reg.port);
         }
     }
@@ -779,7 +744,7 @@ sip_regmgr_setup_new_standby_ccb (CCM_ID ccm_index)
     ccb->dest_sip_port = cfg_table_entry->ti_common.port;
     ccb->local_port = cfg_table_entry->ti_common.listen_port;
     CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"For ccb_index=REG_BACKUP_CCB=%d, updated standby to %s:%d\n",
-                          DEB_F_PREFIX_ARGS(SIP_FALLBACK, fname), 
+                          DEB_F_PREFIX_ARGS(SIP_FALLBACK, fname),
                          REG_BACKUP_CCB, ccb->reg.proxy, ccb->reg.port);
     CCM_Active_Standby_Table.standby_ccm_entry = cfg_table_entry;
 }
@@ -834,13 +799,13 @@ sip_regmgr_ccm_get_next (ccsipCCB_t *ccb, CC_POSITION from_cc)
 
         connid = sip_tcp_fd_to_connid(ccm_table_ptr->ti_common.handle);
         CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"clear the socket and port for "
-            "current active cucm_id=%d connid=%d\n", 
+            "current active cucm_id=%d connid=%d\n",
              DEB_F_PREFIX_ARGS(SIP_FAILOVER, fname),ccm_id, connid );
         sip_tcp_purge_entry(connid);
         sipTransportSetServerHandleAndPort(INVALID_SOCKET, 0,
                                            ccm_table_ptr);
     }
-    
+
     // Update CCM status
 
     ui_set_ccm_conn_status(ccm_table_ptr->ti_common.addr_str, CCM_STATUS_NONE);
@@ -851,7 +816,7 @@ sip_regmgr_ccm_get_next (ccsipCCB_t *ccb, CC_POSITION from_cc)
     if (from_cc == ACTIVE_CC) {
         CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Came here from cucm\n", DEB_F_PREFIX_ARGS(SIP_FAILOVER, fname));
         if (CCM_Active_Standby_Table.standby_ccm_entry) {
-            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"old ccm_id=%d new_ccm_id=%d Standby=NULL\n", 
+            CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"old ccm_id=%d new_ccm_id=%d Standby=NULL\n",
                 DEB_F_PREFIX_ARGS(SIP_FAILOVER, fname), ccm_id,
                 CCM_Active_Standby_Table.standby_ccm_entry->ti_specific.ti_ccm.ccm_id);
             ccm_table_ptr = CCM_Active_Standby_Table.standby_ccm_entry;
@@ -904,7 +869,7 @@ sip_regmgr_ccm_get_next (ccsipCCB_t *ccb, CC_POSITION from_cc)
                 CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Could not set transport"
                     "connection to this standby. Ignore this. Continue search \n",
                     DEB_F_PREFIX_ARGS(SIP_FAILOVER, fname) );
-                
+
                 (void) sip_regmgr_create_fallback_ccb(ccm_index, ccb->dn_line);
             } else {
                 /*
@@ -1024,11 +989,11 @@ sip_regmgr_retry_timer_start (fallback_ccb_t *fallback_ccb)
     if (!fallback_ccb) {
         return;
     }
-    
+
     ccb = fallback_ccb->ccb;
 
     timeout = sip_config_get_keepalive_expires();
-    
+
     if (timeout > MAX_FALLBACK_MONITOR_PERIOD) {
        timeout = MAX_FALLBACK_MONITOR_PERIOD;
     }
@@ -1113,7 +1078,7 @@ sip_regmgr_set_stability_total_msgs (fallback_ccb_t *fallback_ccb)
     /* Stability count is used to wait to make sure that wan is not flapping */
     fallback_ccb->StabilityMsgCount = connection_mode_duration / timer_keepalive_expires;
     CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"Starting stability msg count as %d\n",
-                          DEB_L_C_F_PREFIX_ARGS(SIP_FALLBACK, ccb->index, ccb->dn_line, fname), 
+                          DEB_L_C_F_PREFIX_ARGS(SIP_FALLBACK, ccb->index, ccb->dn_line, fname),
                           fallback_ccb->StabilityMsgCount);
 }
 
@@ -1196,7 +1161,7 @@ sip_regmgr_fallback_generic_timer_stop (cprTimer_t timer)
     return;
 }
 
-			
+
 /*
  ** sip_regmgr_ev_fallback_retry
  *
@@ -1235,7 +1200,7 @@ sip_regmgr_ev_default (ccsipCCB_t *ccb, sipSMEvent_t *event)
 
     CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"Received a default event in state %d\n",
                           DEB_L_C_F_PREFIX_ARGS(SIP_EVT, ccb->index, ccb->dn_line, fname), ccb->state);
-    
+
     sip_reg_sm_change_state(ccb, SIP_REG_STATE_IN_FALLBACK);
     sip_regmgr_ev_tmr_ack_retry(ccb, event);
     /* only free SIP messages, timeouts are internal */
@@ -1299,7 +1264,7 @@ sip_regmgr_ev_tmr_ack_retry (ccsipCCB_t *ccb, sipSMEvent_t *event)
         ccm_table_ptr = NULL;
 
         ccm_table_ptr = sip_regmgr_ccm_get_next(ccb, ACTIVE_CC);
-        
+
         if (ccm_table_ptr == NULL) {
 				/*
              	 * Send indication of REG_ALLFAIL so platform can
@@ -1312,10 +1277,10 @@ sip_regmgr_ev_tmr_ack_retry (ccsipCCB_t *ccb, sipSMEvent_t *event)
             	sip_regmgr_handle_reg_all_fail();
             	break;
         }
-		
-		CCSIP_DEBUG_REG_STATE("%s: ccb information: ccb->dn_line=%d, ccb->index=%d, retry_times=%d\n", 
-							   fname, ccb->dn_line, ccb->index, retry_times);	
-        
+
+		CCSIP_DEBUG_REG_STATE("%s: ccb information: ccb->dn_line=%d, ccb->index=%d, retry_times=%d\n",
+							   fname, ccb->dn_line, ccb->index, retry_times);
+
 		CCM_Failover_Table.failover_ccm_entry = ccm_table_ptr;
         CCM_Failover_Table.failover_started = TRUE;
         CCM_Failover_Table.prime_registered = FALSE;
@@ -1331,12 +1296,12 @@ sip_regmgr_ev_tmr_ack_retry (ccsipCCB_t *ccb, sipSMEvent_t *event)
         *   Active CCB failover
         *   previous standby CCM is set as CCM_Active_Standby_Table.active_ccm_entry (#1 IPAddr A)
         *   Third CCM would be set as  CCM_Active_Standby_Table.standby_ccm_entry (#2 IPAddr B)
-        *   
-        *   if (#2) failover before Jphone callback, 
+        *
+        *   if (#2) failover before Jphone callback,
         *   The REG_BACKUP_CCB would still store the #1's info
         *   So the call flows would prompt the wrong info(#1 IPAddr A) to Jphone, in this case, (#2 IPAddr B)
         *      should be prompted
-        *   
+        *
         *   We need to update the REG_BACKUP_CCB's info here
         */
         if (CCM_Active_Standby_Table.standby_ccm_entry)
@@ -1449,7 +1414,7 @@ sip_regmgr_ev_tmr_ack_retry (ccsipCCB_t *ccb, sipSMEvent_t *event)
                      * Clean the current fallback ccb and free it
                      */
                     DEF_DEBUG(DEB_F_PREFIX"Freeing the fallback ccb for %d ccm as current standby"
-                                " is %d ccm!\n", 
+                                " is %d ccm!\n",
                                 DEB_F_PREFIX_ARGS(SIP_REG_FREE_FALLBACK, fname),
                                 fallback_ccm_id, current_standby_ccm_id);
                     sip_regmgr_free_fallback_ccb(ccb);
@@ -1487,7 +1452,7 @@ sip_regmgr_ev_tmr_ack_retry (ccsipCCB_t *ccb, sipSMEvent_t *event)
                     sip_msg.context = NULL;
                     if (fallback_ccb2 && (fallback_ccb2->tls_socket_waiting)) {
                         /* socket invalid after TLS_CONN_TIME
-                         * Restart timer for the remaining time 
+                         * Restart timer for the remaining time
                          */
                         sip_regmgr_tls_retry_timer_start(fallback_ccb2);
                         break;
@@ -1499,7 +1464,7 @@ sip_regmgr_ev_tmr_ack_retry (ccsipCCB_t *ccb, sipSMEvent_t *event)
                 } else {
                     server_conn_handle = sip_tcp_create_connection(&sip_msg);
                 }
-                phone_local_tcp_port[ccm_table_entry->ti_specific.ti_ccm.ccm_id] = 
+                phone_local_tcp_port[ccm_table_entry->ti_specific.ti_ccm.ccm_id] =
                     sip_msg.createConnMsg.local_listener_port;
                 if (server_conn_handle != INVALID_SOCKET) {
                     listener_port = sip_msg.createConnMsg.local_listener_port;
@@ -1759,7 +1724,7 @@ sip_regmgr_ev_cleanup (ccsipCCB_t *ccb, sipSMEvent_t *event)
         CCSIP_DEBUG_REG_STATE("%s: invalid ccb or line_ccb\n", fname);
         return;
     }
-    
+
     cfg_table_entry = (ti_config_table_t *) line_ccb->cc_cfg_table_entry;
     /*
      * Setup the new active cc
@@ -1800,7 +1765,7 @@ sip_regmgr_ev_cleanup (ccsipCCB_t *ccb, sipSMEvent_t *event)
         if (ti_common->conn_type != CONN_UDP) {
             if (ti_common->handle != INVALID_SOCKET) {
                 int connid;
-            
+
                 CCSIP_DEBUG_REG_STATE("%s: Close the TCP connection\n", fname);
                 connid = sip_tcp_fd_to_connid(ti_common->handle);
                 sip_tcp_purge_entry(connid);
@@ -2171,7 +2136,7 @@ sip_regmgr_ev_failure_response (ccsipCCB_t *ccb, sipSMEvent_t *event)
     const char     *fname = "sip_regmgr_ev_failure_response";
     int             timeout;
 
-    CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"Received event\n", 
+    CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"Received event\n",
                           DEB_L_C_F_PREFIX_ARGS(SIP_EVT, ccb->index, ccb->dn_line, fname));
     if (ccb->index == REG_BACKUP_CCB) {
         /*
@@ -2191,7 +2156,7 @@ sip_regmgr_ev_failure_response (ccsipCCB_t *ccb, sipSMEvent_t *event)
         if (sip_regmgr_get_cc_mode(1) == REG_MODE_CCM) {
             config_update_required = TRUE;
         }
-                
+
         /*
          * Send indication of REG_ALLFAIL so platform can
          * initiate a reboot.
@@ -2201,7 +2166,7 @@ sip_regmgr_ev_failure_response (ccsipCCB_t *ccb, sipSMEvent_t *event)
          sip_regmgr_free_fallback_ccb_list();
          sip_reg_all_failed = TRUE;
          sip_regmgr_handle_reg_all_fail();
-        
+
     }
 }
 
@@ -2315,7 +2280,7 @@ sip_regmgr_setup_cc_conns ()
          */
         for (cc_index = PRIMARY_CCM; cc_index < MAX_CCM; cc_index++) {
             line = 1;
-            
+
             /*
              * Note: The opening of sockets will fail only in the
              * case of tcp/tls connections. In the case of udp,
@@ -2459,7 +2424,7 @@ sip_regmgr_destroy_cc_conns (void)
     }
 
     for (dn = 1; dn <= max_iteration; dn++) {
-        /* 
+        /*
          * Not checking if it is the active ccm connection that is getting torn down.
          * Here we are killing everything so does'nt matter.
          * Something else has triggered the closing of the tcp conns.
@@ -2801,7 +2766,7 @@ sip_regmgr_rsp (int rsp_id, int rsp_type, boolean waited)
 
     CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"rsp id=%s rsp type=%s waited=%d\n",
         DEB_F_PREFIX_ARGS(SIP_RESP, "sip_regmgr_rsp"),
-        rsp_id == FAILOVER_RSP ? "FAILOVER_RSP" : "FALLBACK_RSP", 
+        rsp_id == FAILOVER_RSP ? "FAILOVER_RSP" : "FALLBACK_RSP",
         rsp_type == RSP_START ? "RSP_START" : "RSP_COMPLETE", waited);
 
     if (rsp_type == RSP_START) {
@@ -2818,7 +2783,7 @@ sip_regmgr_rsp (int rsp_id, int rsp_type, boolean waited)
              * primary CCM.
              */
             (void) sip_subsManager_rollover();
-            publish_reset();            
+            publish_reset();
         }
     } else if (rsp_type == RSP_COMPLETE) {
 
@@ -2840,7 +2805,7 @@ sip_regmgr_rsp (int rsp_id, int rsp_type, boolean waited)
  *                   the address in string format.
  *
  *  @return  none
- *  
+ *
  *  @pre     (addr_str != NULL) (1< ccm_id < 4)
  *
  */
@@ -2852,7 +2817,7 @@ void sip_regmgr_get_config_addr (int ccm_id, char *addr_str) {
 
 
 
-    config_get_value(CFGID_IP_ADDR_MODE, 
+    config_get_value(CFGID_IP_ADDR_MODE,
                          &ip_mode, sizeof(ip_mode));
     if (ip_mode == CPR_IP_MODE_IPV4) {
 #endif
@@ -2899,7 +2864,7 @@ sip_regmgr_check_config_change (void)
 #ifdef IPV6_STACK_ENABLED
     int        ip_mode = CPR_IP_MODE_IPV4;
 
-    config_get_value(CFGID_IP_ADDR_MODE, 
+    config_get_value(CFGID_IP_ADDR_MODE,
                      &ip_mode, sizeof(ip_mode));
 #endif
 
@@ -2949,7 +2914,7 @@ void
 sip_regmgr_process_config_change (void)
 {
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"!!!Process_config_change\n", 
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"!!!Process_config_change\n",
                           DEB_F_PREFIX_ARGS(SIP_CONFIG, "sip_regmgr_process_config_change"));
 
     /* Register manager configuration changes need to restart sip task */
@@ -3118,7 +3083,7 @@ sip_regmgr_ccm_restarted (ccsipCCB_t *new_reg_ccb)
         ccb->reg.registered = 0;
 
         /* Restart the register timer */
-        (void) sip_platform_register_expires_timer_start(ccb->reg.tmr_expire * 
+        (void) sip_platform_register_expires_timer_start(ccb->reg.tmr_expire *
                                                          1000, ccb->index);
 
         /* Update UI to indicates that this line is not register */
@@ -3178,7 +3143,7 @@ sip_regmgr_notify_timer_callback (void *data)
                 sstrncpy(scp->dialplanVersionStamp, versionStamp, versionStampLen + 1);
                 sstrncpy(scp->softkeyVersionStamp, versionStamp, versionStampLen + 1);
                 sip_platform_handle_service_control_notify(scp);
-                CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Fake NOTIFY TO Platform\n", 
+                CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Fake NOTIFY TO Platform\n",
                                       DEB_F_PREFIX_ARGS(SIP_FALLBACK, fname));
             }
             sippmh_free_service_control_info(scp);
@@ -3261,7 +3226,7 @@ void
 sip_regmgr_regallfail_timer_callback (void *data)
 {
     const char *fname = "sip_regmgr_regallfail_timer_callback";
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Registration Failed. Restarting the System now!\n", 
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"Registration Failed. Restarting the System now!\n",
                           DEB_F_PREFIX_ARGS(SIP_REG, fname));
     sip_regmgr_send_status(REG_SRC_SIP, REG_ALL_FAIL);
 }
@@ -3334,7 +3299,7 @@ sip_regmgr_handle_reg_all_fail (void)
     } else {
         /* Send the Indication to the platform immediately */
         sip_regmgr_send_status(REG_SRC_SIP, REG_ALL_FAIL);
-    }	
+    }
 }
 
 /*
@@ -3356,7 +3321,7 @@ void notify_register_update(int last_line_available)
     if (ccsip_register_send_msg(SIP_REG_UPDATE, (line_t)last_line_available) != SIP_REG_OK) {
         CCSIP_DEBUG_ERROR("%s : Unable to send register update message\n", fname);
     } else {
-        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"last_available_line: %d\n", 
+        CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"last_available_line: %d\n",
                               DEB_F_PREFIX_ARGS(SIP_REG, fname), last_line_available);
     }
 }
@@ -3397,7 +3362,7 @@ void update_ui_line_reg_state(int start_line, int end_line, boolean registered)
  *
  *  PARAMETERS: last_available_line - last available line button on the phone
  *
- *  DESCRIPTION: This function is used to handle any registration updates needed  
+ *  DESCRIPTION: This function is used to handle any registration updates needed
  *               when a sidecar is plugged in or unplugged
  *
  *  RETURNS: None
@@ -3412,7 +3377,7 @@ void regmgr_handle_register_update(line_t last_available_line)
     int         last_line_button_present;
     //boolean     reg_update_needed = TRUE;
 
-    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"last_available_line: %d\n", 
+    CCSIP_DEBUG_REG_STATE(DEB_F_PREFIX"last_available_line: %d\n",
                           DEB_F_PREFIX_ARGS(SIP_REG, fname), last_available_line);
 
     if (last_available_line == 1) {
@@ -3431,7 +3396,7 @@ void regmgr_handle_register_update(line_t last_available_line)
                  if (line_ccb) {
                     if (sip_config_check_line(line_ccb->dn_line)) {
                         CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d: 0x%x\n",
-                                              DEB_L_C_F_PREFIX_ARGS(SIP_CONFIG, line_ccb->index, line_ccb->dn_line, fname), 
+                                              DEB_L_C_F_PREFIX_ARGS(SIP_CONFIG, line_ccb->index, line_ccb->dn_line, fname),
                                               line_index, line_ccb);
                    }
                 }
@@ -3449,7 +3414,7 @@ void regmgr_handle_register_update(line_t last_available_line)
                  if (line_ccb) {
                     if (sip_config_check_line(line_ccb->dn_line)) {
                         CCSIP_DEBUG_REG_STATE(DEB_L_C_F_PREFIX"%d: 0x%x\n",
-                                              DEB_L_C_F_PREFIX_ARGS(SIP_CONFIG, line_ccb->index, line_ccb->dn_line, fname), 
+                                              DEB_L_C_F_PREFIX_ARGS(SIP_CONFIG, line_ccb->index, line_ccb->dn_line, fname),
                                               line_index, line_ccb);
 
                         ui_set_sip_registration_state(line_ccb->dn_line, FALSE);
@@ -3493,7 +3458,7 @@ void regmgr_handle_register_update(line_t last_available_line)
             }
         }
 
-	
+
 }
 
 

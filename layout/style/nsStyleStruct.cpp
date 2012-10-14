@@ -1610,7 +1610,7 @@ nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
 }
 
 nsresult
-nsStyleImage::RequestDecode() const
+nsStyleImage::StartDecoding() const
 {
   if ((mType == eStyleImageType_Image) && mImage)
     return mImage->StartDecoding();

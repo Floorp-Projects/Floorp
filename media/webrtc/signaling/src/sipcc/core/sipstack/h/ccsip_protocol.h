@@ -1,41 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Cisco Systems SIP Stack.
- *
- * The Initial Developer of the Original Code is
- * Cisco Systems (CSCO).
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Enda Mannion <emannion@cisco.com>
- *  Suhas Nandakumar <snandaku@cisco.com>
- *  Ethan Hugg <ehugg@cisco.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef _CCSIP_PROTOCOL_H_
 #define _CCSIP_PROTOCOL_H_
@@ -437,7 +402,7 @@ typedef struct sip_header_
 #define REQ_SUPP_PARAM_CISCO_CONFIG "X-cisco-config"
 #define REQ_SUPP_PARAM_SDP_ANAT "sdp-anat"
 /* Add defines for the SIP Interfcae Specification (SIS) protocol version tags*/
-#define REQ_SUPP_PARAM_CISCO_SISTAG "X-cisco-sis-" 
+#define REQ_SUPP_PARAM_CISCO_SISTAG "X-cisco-sis-"
 #define SIS_CURRENT_PROTOCOL_VERSION  "5.2.0"
 #define SIS_PROTOCOL_MAJOR_VERSION_SEADRAGON  1
 #define SIS_PROTOCOL_MAJOR_VERSION_MUSTER  2
@@ -447,7 +412,7 @@ typedef struct sip_header_
 #define SIS_PROTOCOL_MINOR_VERSION_ANGELFIRE   1
 #define SIS_PROTOCOL_MINOR_VERSION_MONTBLANC   1
 #define REQ_SUPP_PARAM_CISCO_SIPVER REQ_SUPP_PARAM_CISCO_SISTAG SIS_CURRENT_PROTOCOL_VERSION
-#define REQ_SUPP_PARAM_CISCO_MONREC "X-cisco-monrec" 
+#define REQ_SUPP_PARAM_CISCO_MONREC "X-cisco-monrec"
 /* Add define for CME version negotiation */
 #define REQ_SUPP_PARAM_CISCO_CME_SISTAG "X-cisco-cme-sis-"
 
@@ -676,5 +641,5 @@ typedef struct sip_header_
 #define SIP_CLI_ERR_BAD_REQ_NO_BODY               "Bad Request - 'Body Expected'"
 #define SIP_CLI_ERR_BAD_REQ_NO_SUBSCRIPTION_HEADER "Bad Request - 'Malformed/Missing Subscription-State Header'"
 #define SIP_CLI_ERR_BAD_REQ_CONTENT_ID_ERROR      "Bad Request - 'Invalid Content-Id field'"
-#define SIP_CLI_ERR_BAD_REQ_REQUIRE_HDR           "Bad Request - 'Malformed/Missing Require header'"             
+#define SIP_CLI_ERR_BAD_REQ_REQUIRE_HDR           "Bad Request - 'Malformed/Missing Require header'"
 #endif /*_CCSIP_PROTOCOL_H_*/
