@@ -171,6 +171,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIParserService.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsSandboxFlags.h"
+#include "nsSVGFeatures.h"
 
 #include "nsWrapperCacheInlines.h"
 
@@ -7124,4 +7125,64 @@ nsContentUtils::GetHTMLEditor(nsPresContext* aPresContext)
   nsCOMPtr<nsIEditor> editor;
   editorDocShell->GetEditor(getter_AddRefs(editor));
   return editor;
+}
+
+bool
+nsContentUtils::InternalIsSupported(nsISupports* aObject,
+                                    const nsAString& aFeature,
+                                    const nsAString& aVersion)
+{
+  // Convert the incoming UTF16 strings to raw char*'s to save us some
+  // code when doing all those string compares.
+  NS_ConvertUTF16toUTF8 feature(aFeature);
+  NS_ConvertUTF16toUTF8 version(aVersion);
+
+  const char *f = feature.get();
+  const char *v = version.get();
+
+  if (PL_strcasecmp(f, "XML") == 0 ||
+      PL_strcasecmp(f, "HTML") == 0) {
+    if (aVersion.IsEmpty() ||
+        PL_strcmp(v, "1.0") == 0 ||
+        PL_strcmp(v, "2.0") == 0) {
+      return true;
+    }
+  } else if (PL_strcasecmp(f, "Views") == 0 ||
+             PL_strcasecmp(f, "StyleSheets") == 0 ||
+             PL_strcasecmp(f, "Core") == 0 ||
+             PL_strcasecmp(f, "CSS") == 0 ||
+             PL_strcasecmp(f, "CSS2") == 0 ||
+             PL_strcasecmp(f, "Events") == 0 ||
+             PL_strcasecmp(f, "UIEvents") == 0 ||
+             PL_strcasecmp(f, "MouseEvents") == 0 ||
+             // Non-standard!
+             PL_strcasecmp(f, "MouseScrollEvents") == 0 ||
+             PL_strcasecmp(f, "HTMLEvents") == 0 ||
+             PL_strcasecmp(f, "Range") == 0 ||
+             PL_strcasecmp(f, "XHTML") == 0) {
+    if (aVersion.IsEmpty() ||
+        PL_strcmp(v, "2.0") == 0) {
+      return true;
+    }
+  } else if (PL_strcasecmp(f, "XPath") == 0) {
+    if (aVersion.IsEmpty() ||
+        PL_strcmp(v, "3.0") == 0) {
+      return true;
+    }
+  } else if (PL_strcasecmp(f, "SVGEvents") == 0 ||
+             PL_strcasecmp(f, "SVGZoomEvents") == 0 ||
+             nsSVGFeatures::HasFeature(aObject, aFeature)) {
+    if (aVersion.IsEmpty() ||
+        PL_strcmp(v, "1.0") == 0 ||
+        PL_strcmp(v, "1.1") == 0) {
+      return true;
+    }
+  }
+  else if (NS_SMILEnabled() && PL_strcasecmp(f, "TimeControl") == 0) {
+    if (aVersion.IsEmpty() || PL_strcmp(v, "1.0") == 0) {
+      return true;
+    }
+  }
+
+  return false;
 }

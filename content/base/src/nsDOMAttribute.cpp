@@ -446,8 +446,9 @@ nsDOMAttribute::IsSupported(const nsAString& aFeature,
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eIsSupported);
 
-  return nsGenericElement::InternalIsSupported(static_cast<nsIDOMAttr*>(this), 
-                                               aFeature, aVersion, aReturn);
+  *aReturn = nsContentUtils::InternalIsSupported(static_cast<nsIDOMAttr*>(this), 
+                                                 aFeature, aVersion);
+  return NS_OK;
 }
 
 already_AddRefed<nsIURI>
