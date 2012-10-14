@@ -264,7 +264,7 @@ __try {
 
   // The name was not provided, e.g. no alt attribute for an image. A screen
   // reader may choose to invent its own accessible name, e.g. from an image src
-  // attribute. Refer to NS_OK_EMPTY_NAME return value.
+  // attribute. Refer to eNoNameOnPurpose return value.
   if (name.IsVoid())
     return S_FALSE;
 

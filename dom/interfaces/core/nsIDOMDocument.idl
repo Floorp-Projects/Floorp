@@ -27,7 +27,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(FDB92F4F-C6B4-4509-A29D-A309981E28AC)]
+[scriptable, uuid(22af46a3-64ac-430a-bcc7-d0a9aefe474f)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -68,6 +68,8 @@ interface nsIDOMDocument : nsIDOMNode
   readonly attribute DOMString       inputEncoding;
   // Introduced in DOM Level 3:
   readonly attribute DOMString       documentURI;
+  // Alias introduced for all documents in recent DOM standards
+  readonly attribute DOMString       URL;
   // Introduced in DOM Level 3:
   nsIDOMNode         adoptNode(in nsIDOMNode source)
                                         raises(DOMException);
@@ -385,4 +387,10 @@ interface nsIDOMDocument : nsIDOMNode
    */
   readonly attribute boolean mozHidden;
   readonly attribute DOMString mozVisibilityState;
+
+  /**
+   * Returns "BackCompat" if we're in quirks mode or "CSS1Compat" if we're in
+   * strict mode.  (XML documents are always in strict mode.)
+   */
+  readonly attribute DOMString compatMode;
 };

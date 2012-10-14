@@ -11,12 +11,15 @@ g2.eval('function g2f() {}');
 url2 = scriptdir + "Debugger-findScripts-08-script2";
 load(url2);
 
-var dbg = new Debugger(g1, g2, g3);
+var dbg = new Debugger();
+var g1w = dbg.addDebuggee(g1);
+var g2w = dbg.addDebuggee(g2);
+var g3w = dbg.addDebuggee(g3);
 
-var g1fw = dbg.addDebuggee(g1.g1f);
-var g1gw = dbg.addDebuggee(g1.g1g);
-var g2fw = dbg.addDebuggee(g2.g2f);
-var g2gw = dbg.addDebuggee(g2.g2g);
+var g1fw = g1w.makeDebuggeeValue(g1.g1f);
+var g1gw = g1w.makeDebuggeeValue(g1.g1g);
+var g2fw = g2w.makeDebuggeeValue(g2.g2f);
+var g2gw = g2w.makeDebuggeeValue(g2.g2g);
 
 // Find the url of this file.
 url = g1fw.script.url;

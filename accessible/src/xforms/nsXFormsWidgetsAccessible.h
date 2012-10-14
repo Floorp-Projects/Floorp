@@ -61,13 +61,13 @@ public:
   // Accessible
   virtual void Description(nsString& aDescription);
   virtual void Value(nsString& aValue);
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
   virtual uint64_t NativeState();
   virtual uint64_t NativeInteractiveState() const;
 
 protected:
   // Accessible
+  virtual mozilla::a11y::ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
   virtual void CacheChildren();
 };
 

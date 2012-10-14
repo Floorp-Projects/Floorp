@@ -58,23 +58,6 @@ nsSVGDocument::GetDomain(nsAString& aDomain)
   return NS_OK;
 }
 
-/* readonly attribute DOMString URL; */
-NS_IMETHODIMP
-nsSVGDocument::GetURL(nsAString& aURL)
-{
-  SetDOMStringToNull(aURL);
-
-  if (mDocumentURI) {
-    nsAutoCString url;
-    nsresult rv = mDocumentURI->GetSpec(url);
-    if (url.IsEmpty() || NS_FAILED(rv))
-      return rv;
-    CopyUTF8toUTF16(url, aURL);
-  }
-
-  return NS_OK;
-}
-
 /* readonly attribute SVGSVGElement rootElement; */
 NS_IMETHODIMP
 nsSVGDocument::GetRootElement(nsIDOMSVGSVGElement** aRootElement)

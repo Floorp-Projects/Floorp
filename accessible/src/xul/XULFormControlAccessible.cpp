@@ -413,16 +413,16 @@ XULGroupboxAccessible::NativeRole()
   return roles::GROUPING;
 }
 
-nsresult
-XULGroupboxAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+XULGroupboxAccessible::NativeName(nsString& aName)
 {
   // XXX: we use the first related accessible only.
   Accessible* label =
     RelationByType(nsIAccessibleRelation::RELATION_LABELLED_BY).Next();
   if (label)
-    return label->GetName(aName);
+    return label->Name(aName);
 
-  return NS_OK;
+  return eNameOK;
 }
 
 Relation
@@ -639,16 +639,13 @@ XULToolbarAccessible::NativeRole()
   return roles::TOOLBAR;
 }
 
-nsresult
-XULToolbarAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+XULToolbarAccessible::NativeName(nsString& aName)
 {
-  nsAutoString name;
-  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::toolbarname, name)) {
-    name.CompressWhitespace();
-    aName = name;
-  }
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::toolbarname, aName))
+    aName.CompressWhitespace();
 
-  return NS_OK;
+  return eNameOK;
 }
 
 

@@ -61,7 +61,7 @@ SMModel const Big5SMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, BIG5_cls },
     5,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, BIG5_st },
-  Big5CharLenTable,
+  CHAR_LEN_TABLE(Big5CharLenTable),
   "Big5",
 };
 
@@ -116,7 +116,7 @@ const SMModel EUCJPSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, EUCJP_cls },
    6,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, EUCJP_st },
-  EUCJPCharLenTable,
+  CHAR_LEN_TABLE(EUCJPCharLenTable),
   "EUC-JP",
 };
 
@@ -168,7 +168,7 @@ const SMModel EUCKRSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, EUCKR_cls },
   4,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, EUCKR_st },
-  EUCKRCharLenTable,
+  CHAR_LEN_TABLE(EUCKRCharLenTable),
   "EUC-KR",
 };
 
@@ -224,7 +224,7 @@ const SMModel EUCTWSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, EUCTW_cls },
    7,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, EUCTW_st },
-  EUCTWCharLenTable,
+  CHAR_LEN_TABLE(EUCTWCharLenTable),
   "x-euc-tw",
 };
 
@@ -277,7 +277,7 @@ SMModel GB2312SMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, GB2312_cls },
    4,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, GB2312_st },
-  GB2312CharLenTable,
+  CHAR_LEN_TABLE(GB2312CharLenTable),
   "GB2312",
 };
 */
@@ -340,7 +340,7 @@ const SMModel GB18030SMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, GB18030_cls },
    7,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, GB18030_st },
-  GB18030CharLenTable,
+  CHAR_LEN_TABLE(GB18030CharLenTable),
   "GB18030",
 };
 
@@ -397,7 +397,7 @@ const SMModel SJISSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, SJIS_cls },
    6,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, SJIS_st },
-  SJISCharLenTable,
+  CHAR_LEN_TABLE(SJISCharLenTable),
   "Shift_JIS",
 };
 
@@ -475,7 +475,7 @@ const SMModel UTF8SMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, UTF8_cls },
    16,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, UTF8_st },
-  UTF8CharLenTable,
+  CHAR_LEN_TABLE(UTF8CharLenTable),
   "UTF-8",
 };
 

@@ -32,14 +32,16 @@ public:
 class HTMLBRAccessible : public LeafAccessible
 {
 public:
-
   HTMLBRAccessible(nsIContent* aContent, DocAccessible* aDoc) :
     LeafAccessible(aContent, aDoc) {};
 
   // Accessible
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
+
+protected:
+  // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
 };
 
 /**
@@ -55,8 +57,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
+
+protected:
+  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
 };
 
 /**

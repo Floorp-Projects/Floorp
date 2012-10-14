@@ -49,10 +49,19 @@ enum ENameValueFlag {
    * Name either
    *  a) present (not empty): !name.IsEmpty()
    *  b) no name (was missed): name.IsVoid()
-   *  c) was left empty by the author on demand: name.IsEmpty() && !name.IsVoid()
    */
  eNameOK,
- eNameFromTooltip // Tooltip was used as a name
+
+ /**
+  * Name was left empty by the author on purpose:
+  * name.IsEmpty() && !name.IsVoid().
+  */
+ eNoNameOnPurpose,
+
+ /**
+  * Tooltip was used as a name.
+  */
+ eNameFromTooltip
 };
 
 /**
@@ -132,6 +141,9 @@ public:
 
   /**
    * Get the name of this accessible.
+   *
+   * Note: aName.IsVoid() when name was left empty by the author on purpose.
+   * aName.IsEmpty() when the author missed name, AT can try to repair a name.
    */
   virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
 
@@ -154,18 +166,6 @@ public:
    * @param  [in/out] where to fill the states into.
    */
   virtual void ApplyARIAState(uint64_t* aState) const;
-
-  /**
-   * Returns the accessible name provided by native markup. It doesn't take
-   * into account ARIA markup used to specify the name.
-   *
-   * @param  aName             [out] the accessible name
-   *
-   * @return NS_OK_EMPTY_NAME  points empty name was specified by native markup
-   *                           explicitly (see nsIAccessible::name attribute for
-   *                           details)
-   */
-  virtual nsresult GetNameInternal(nsAString& aName);
 
   /**
    * Return enumerated accessible role (see constants in Role.h).
@@ -794,19 +794,21 @@ protected:
   // Name helpers
 
   /**
+   * Return the accessible name provided by native markup. It doesn't take
+   * into account ARIA markup used to specify the name.
+   */
+  virtual mozilla::a11y::ENameValueFlag NativeName(nsString& aName);
+
+  /**
    * Returns the accessible name specified by ARIA.
    */
   void ARIAName(nsAString& aName);
 
   /**
-   * Compute the name of HTML node.
+   * Compute the name of HTML/XUL node.
    */
-  nsresult GetHTMLName(nsAString& aName);
-
-  /**
-   * Compute the name for XUL node.
-   */
-  nsresult GetXULName(nsAString& aName);
+  void GetHTMLName(nsString& aName);
+  void GetXULName(nsString& aName);
 
   // helper method to verify frames
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);

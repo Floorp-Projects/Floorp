@@ -13,15 +13,11 @@
  */
 interface nsISelection;
 
-[scriptable, uuid(ecae54c6-2ab9-4167-b0ef-61960aadbb68)]
+[scriptable, uuid(3f8666a9-76f0-4733-ae11-4aea8753062d)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
-  readonly attribute DOMString            URL;
            attribute DOMString            domain;
            attribute DOMString            cookie;
-  // returns "BackCompat" if we're in quirks mode,
-  // or "CSS1Compat" if we're in strict mode
-  readonly attribute DOMString            compatMode;
 
   readonly attribute nsIDOMHTMLHeadElement head;
            attribute nsIDOMHTMLElement    body;
