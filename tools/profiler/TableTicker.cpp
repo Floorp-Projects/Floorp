@@ -290,6 +290,7 @@ public:
 
     JSObject *sample = NULL;
     JSObject *frames = NULL;
+    JSObject *marker = NULL;
 
     int readPos = mReadPos;
     while (readPos != mLastFlushPos) {
@@ -315,6 +316,19 @@ public:
           frames = b.CreateArray();
           b.DefineProperty(sample, "frames", frames);
           b.ArrayPush(samples, sample);
+          // Created lazily
+          marker = NULL;
+          break;
+        case 'm':
+          {
+            if (sample) {
+              if (!marker) {
+                marker = b.CreateArray();
+                b.DefineProperty(sample, "marker", marker);
+              }
+              b.ArrayPush(marker, tagStringData);
+            }
+          }
           break;
         case 'r':
           {
