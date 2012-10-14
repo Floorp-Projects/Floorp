@@ -12,7 +12,6 @@
 #include "nsBuiltinDecoder.h"
 #include "nsBuiltinDecoderReader.h"
 
-using namespace mozilla;
 
 class nsAudioAvailableEventManager
 {
@@ -79,7 +78,7 @@ private:
 
   // ReentrantMonitor for shared access to mPendingEvents queue or
   // buffer length.
-  ReentrantMonitor mReentrantMonitor;
+  mozilla::ReentrantMonitor mReentrantMonitor;
 
   // True if something in the owning document has a listener on the
   // "MozAudioAvailable" event. If not, we don't need to bother copying played
