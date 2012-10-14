@@ -21,7 +21,6 @@
 
 #include "mozilla/scache/StartupCache.h"
 
-using namespace mozilla::scache;
 
 class nsCSSStyleSheet;
 
@@ -112,7 +111,7 @@ public:
     nsresult FinishOutputStream(nsIURI* aURI);
     nsresult HasData(nsIURI* aURI, bool* exists);
 
-    static StartupCache* GetStartupCache();
+    static mozilla::scache::StartupCache* GetStartupCache();
 
     static nsXULPrototypeCache* GetInstance();
 
@@ -144,7 +143,7 @@ protected:
     // this is really a hash set, with a dummy data parameter
     nsDataHashtable<nsURIHashKey,uint32_t> mCacheURITable;
 
-    static StartupCache* gStartupCache;
+    static mozilla::scache::StartupCache* gStartupCache;
     nsInterfaceHashtable<nsURIHashKey, nsIStorageStream> mOutputStreamTable;
     nsInterfaceHashtable<nsURIHashKey, nsIObjectInputStream> mInputStreamTable;
  
