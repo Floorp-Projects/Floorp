@@ -168,13 +168,6 @@ public class AboutHomeContent extends ScrollView
         mLastTabs = (AboutHomeSection) findViewById(R.id.last_tabs);
         mRemoteTabs = (AboutHomeSection) findViewById(R.id.remote_tabs);
 
-        TextView allTopSitesText = (TextView) findViewById(R.id.all_top_sites_text);
-        allTopSitesText.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mActivity.showAwesomebar(AwesomeBar.Target.CURRENT_TAB);
-            }
-        });
-
         mAddons.setOnMoreTextClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (mUriLoadCallback != null)
@@ -213,7 +206,6 @@ public class AboutHomeContent extends ScrollView
 
         findViewById(R.id.top_sites_title).setVisibility(visibility);
         findViewById(R.id.top_sites_grid).setVisibility(visibility);
-        findViewById(R.id.all_top_sites_text).setVisibility(visibility);
     }
 
     private void updateLayout(boolean syncIsSetup) {
