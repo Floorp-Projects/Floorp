@@ -997,9 +997,6 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
                                 "layout.css.devPixelsPerPx",
                                 this);
-  Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
-                                "font.size.inflation",
-                                this);
 
   nsresult rv = mEventManager->Init();
   NS_ENSURE_SUCCESS(rv, rv);
