@@ -662,9 +662,6 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
         // resulting function will have the same semantics.
         bool addUseStrict = script->strictModeCode && !script->explicitUseStrict;
 
-        // Functions created with the constructor can't have inherited strict
-        // mode.
-        JS_ASSERT(!funCon || !addUseStrict);
         bool buildBody = funCon && !bodyOnly;
         if (buildBody) {
             // This function was created with the Function constructor. We don't
@@ -692,10 +689,17 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
         if ((bodyOnly && !funCon) || addUseStrict) {
             // We need to get at the body either because we're only supposed to
             // return the body or we need to insert "use strict" into the body.
-            JS_ASSERT(!buildBody);
-            size_t bodyStart = 0, bodyEnd = 0;
-            if (!FindBody(cx, fun, chars, src->length(), &bodyStart, &bodyEnd))
-                return NULL;
+            size_t bodyStart = 0, bodyEnd;
+
+            // If the function is defined in the Function constructor, we
+            // already have a body.
+            if (!funCon) {
+                JS_ASSERT(!buildBody);
+                if (!FindBody(cx, fun, chars, src->length(), &bodyStart, &bodyEnd))
+                    return NULL;
+            } else {
+                bodyEnd = src->length();
+            }
 
             if (addUseStrict) {
                 // Output source up to beginning of body.
@@ -715,7 +719,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
 
             // Output just the body (for bodyOnly) or the body and possibly
             // closing braces (for addUseStrict).
-            size_t dependentEnd = (bodyOnly) ? bodyEnd : src->length();
+            size_t dependentEnd = bodyOnly ? bodyEnd : src->length();
             if (!out.append(chars + bodyStart, dependentEnd - bodyStart))
                 return NULL;
         } else {
