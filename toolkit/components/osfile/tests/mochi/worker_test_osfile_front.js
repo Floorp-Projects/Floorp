@@ -441,7 +441,7 @@ function test_iter_dir()
   let tmp_file = OS.File.open(tmp_file_name, {write: true, trunc:true});
   tmp_file.close();
 
-  let parent = OS.File.curDir;
+  let parent = OS.File.getCurrentDirectory();
   ok(true, "test_iter_dir: directory " + parent);
   let iterator = new OS.File.DirectoryIterator(parent);
   ok(true, "test_iter_dir: iterator created");
@@ -671,7 +671,7 @@ function test_info() {
      "test_info: file 2 has changed between the start of the test and now - " + start + ", " + stop + ", " + change);
 
   // Test OS.File.stat on directory
-  info = OS.File.stat(OS.File.curDir);
+  info = OS.File.stat(OS.File.getCurrentDirectory());
   ok(!!info, "test_info: info on directory acquired");
   ok(info.isDir, "test_info: directory is a directory");
 
