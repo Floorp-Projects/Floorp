@@ -10,6 +10,8 @@ function testRunOptionStrictMode(str, arg, result) {
 }
 assertEq(eval(uneval(testRunOptionStrictMode()))(), true);
 
-assertEq(decompileBody(new Function('x', 'return x*2;')).contains('\n"use strict"'), true)
+if (typeof decompileBody !== "undefined") {
+    assertEq(decompileBody(new Function('x', 'return x*2;')).contains('\n"use strict"'), true);
+}
 
 reportCompare(true, true);
