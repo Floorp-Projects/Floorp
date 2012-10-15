@@ -597,8 +597,7 @@ nsHTMLCanvasElement::ToBlob(nsIFileCallback* aCallback,
   bool fallbackToPNG = false;
 
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = ExtractData(type, EmptyString(), getter_AddRefs(stream),
-                            fallbackToPNG);
+  rv = ExtractData(type, EmptyString(), getter_AddRefs(stream), fallbackToPNG);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (fallbackToPNG) {
