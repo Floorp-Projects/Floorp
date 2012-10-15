@@ -263,6 +263,12 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     resolution.height *= metrics.mResolution.height;
   }
 
+  // If the resolution has changed, discard all the old tiles.
+  // They will end up being retained on the shadow side by ReusableTileStoreOGL
+  if (mTiledBuffer.GetResolution() != resolution) {
+    mValidRegion = nsIntRegion();
+  }
+
   // Calculate the scroll offset since the last transaction. Progressive tile
   // painting is only used when scrolling.
   gfx::Point scrollOffset(0, 0);
