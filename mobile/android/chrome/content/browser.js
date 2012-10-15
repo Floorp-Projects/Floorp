@@ -245,8 +245,7 @@ var BrowserApp = {
     // Init FormHistory
     Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
-    let loadParams = {};
-    let url = "about:home";
+    let url = null;
     let restoreMode = 0;
     let pinned = false;
     if ("arguments" in window) {
@@ -269,9 +268,6 @@ var BrowserApp = {
       SearchEngines.init();
       this.initContextMenu();
     }
-
-    if (url == "about:empty")
-      loadParams.flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
 
     // XXX maybe we don't do this if the launch was kicked off from external
     Services.io.offline = false;
@@ -296,12 +292,8 @@ var BrowserApp = {
         }
       });
 
-      // Open any commandline URLs, except the homepage
-      if (url && url != "about:home") {
-        loadParams.pinned = pinned;
-        this.addTab(url, loadParams);
-      } else {
-        // Let the session make a restored tab active
+      // Make the restored tab active if we aren't loading an external URL
+      if (url == null) {
         restoreToFront = true;
       }
 
@@ -328,10 +320,6 @@ var BrowserApp = {
       // Start the restore
       ss.restoreLastSession(restoreToFront, restoreMode == 1);
     } else {
-      loadParams.showProgress = shouldShowProgress(url);
-      loadParams.pinned = pinned;
-      this.addTab(url, loadParams);
-
       // show telemetry door hanger if we aren't restoring a session
 #ifdef MOZ_TELEMETRY_REPORTING
       Telemetry.prompt();
@@ -1067,8 +1055,6 @@ var BrowserApp = {
 
   observe: function(aSubject, aTopic, aData) {
     let browser = this.selectedBrowser;
-    if (!browser)
-      return;
 
     if (aTopic == "Session:Back") {
       browser.goBack();
@@ -1092,7 +1078,8 @@ var BrowserApp = {
         parentId: ("parentId" in data) ? data.parentId : -1,
         flags: flags,
         tabID: data.tabID,
-        isPrivate: data.isPrivate
+        isPrivate: data.isPrivate,
+        pinned: data.pinned
       };
 
       let url = data.url;
