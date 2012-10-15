@@ -51,8 +51,7 @@
 #include "nsIDOMDragEvent.h"
 #include "nsContentList.h"
 
-namespace a11y = mozilla::a11y;
-namespace dom = mozilla::dom;
+using namespace mozilla;
 
 #define SYNC_TEXT 0x1
 #define SYNC_BUTTON 0x2
