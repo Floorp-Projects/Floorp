@@ -76,4 +76,14 @@
         <item>private.data.offlineApps</item>
         <item>private.data.siteSettings</item>
     </string-array>
+    <string-array name="pref_update_autodownload_entries">
+        <item>@string/pref_update_autodownload_wifi</item>
+        <item>@string/pref_update_autodownload_disabled</item>
+        <item>@string/pref_update_autodownload_enabled</item>
+    </string-array>
+    <string-array name="pref_update_autodownload_values">
+        <item>wifi</item>
+        <item>disabled</item>
+        <item>enabled</item>
+    </string-array>
 </resources>
