@@ -112,6 +112,11 @@ size. -->
 <!ENTITY pref_private_data_offlineApps "Offline website data">
 <!ENTITY pref_private_data_siteSettings "Site preferences">
 
+<!ENTITY pref_update_autodownload "Automatic updates">
+<!ENTITY pref_update_autodownload_wifi "Only over Wi-Fi">
+<!ENTITY pref_update_autodownload_disabled "Disabled">
+<!ENTITY pref_update_autodownload_enabled "Enabled">
+
 <!ENTITY quit "Quit">
 
 <!ENTITY addons "Add-ons">
