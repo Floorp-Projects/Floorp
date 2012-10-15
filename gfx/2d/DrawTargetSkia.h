@@ -11,6 +11,7 @@
 #include "PathSkia.h"
 #include <sstream>
 #include <vector>
+using namespace std;
 
 namespace mozilla {
 namespace gfx {
@@ -104,7 +105,7 @@ private:
   SkBitmap mBitmap;
   SkRefPtr<SkCanvas> mCanvas;
   SkRefPtr<SkDevice> mDevice;
-  std::vector<SourceSurfaceSkia*> mSnapshots;
+  vector<SourceSurfaceSkia*> mSnapshots;
 };
 
 }
