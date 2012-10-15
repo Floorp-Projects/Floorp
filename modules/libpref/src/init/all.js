@@ -1816,6 +1816,19 @@ pref("font.size.inflation.lineThreshold", 400);
  */
 pref("font.size.inflation.mappingIntercept", 1);
 
+
+/*
+ * This controls the percentage that fonts will be inflated, if font
+ * size inflation is enabled. Essentially, if we have a specified font
+ * size, s, and an inflated font size, i, this specifies that the ratio
+ * i/s * 100 should never exceed the value of this preference.
+ *
+ * In order for this preference to have any effect, its value must be
+ * greater than 100, since font inflation can never decrease the ratio
+ * i/s.
+ */
+pref("font.size.inflation.maxRatio", 0);
+
 /*
  * When enabled, the touch.radius and mouse.radius prefs allow events to be dispatched
  * to nearby elements that are sensitive to the event. See PositionedEventTargeting.cpp.
