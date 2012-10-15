@@ -25,7 +25,7 @@
 #include "nsIDOMNode.h"
 #include "mozilla/dom/Element.h"
 #include "nsIFrame.h"
-#include "nsFrameIterator.h"
+#include "nsFrameTraversal.h"
 #include "nsIImageDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
@@ -62,6 +62,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsTypeAheadFind)
 NS_IMPL_RELEASE(nsTypeAheadFind)
+
+static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 #define NS_FIND_CONTRACTID "@mozilla.org/embedcomp/rangefind;1"
 
@@ -1112,12 +1114,23 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   // We know that the target range isn't usable because it's not in the
   // view port. Move range forward to first visible point,
   // this speeds us up a lot in long documents
-  nsFrameIterator frameTraversal(aPresContext, frame,
-                                 eLeaf, nsFrameIterator::FLAG_NONE);
+  nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+  nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID));
+  if (trav)
+    trav->NewFrameTraversal(getter_AddRefs(frameTraversal),
+                            aPresContext, frame,
+                            eLeaf,
+                            false, // aVisual
+                            false, // aLockInScrollView
+                            false     // aFollowOOFs
+                            );
+
+  if (!frameTraversal)
+    return false;
 
   while (rectVisibility == nsRectVisibility_kAboveViewport) {
-    frameTraversal.Next();
-    frame = frameTraversal.CurrentItem();
+    frameTraversal->Next();
+    frame = frameTraversal->CurrentItem();
     if (!frame)
       return false;
 
