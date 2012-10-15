@@ -14,7 +14,6 @@
 #include "nsXULAppAPI.h"
 
 using namespace mozilla::gfx;
-using namespace mozilla::gl;
 
 namespace mozilla {
 namespace layers {
