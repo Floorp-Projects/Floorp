@@ -157,9 +157,7 @@ using mozilla::DefaultXDisplay;
 static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 #endif /* PR_LOGGING */
 
-#if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
-
-#define MAC_CARBON_PLUGINS
+#if defined(XP_MACOSX) && !defined(__LP64__)
 
 // The header files QuickdrawAPI.h and QDOffscreen.h are missing on OS X 10.7
 // and up (though the QuickDraw APIs defined in them are still present) -- so
@@ -194,7 +192,7 @@ extern "C" {
   #endif /* __QDOFFSCREEN__ */
 }
 
-#endif /* #if defined(XP_MACOSX) && !defined(NP_NO_CARBON) */
+#endif /* #if defined(XP_MACOSX) && !defined(__LP64__) */
 
 using namespace mozilla;
 using namespace mozilla::plugins;
@@ -1345,7 +1343,7 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   window.clipRect.left = 0; window.clipRect.right = 0;
 
 // platform specific printing code
-#ifdef MAC_CARBON_PLUGINS
+#if defined(XP_MACOSX) && !defined(__LP64__)
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
   // Don't use this code if any of the QuickDraw APIs it currently requires
   // are missing (as they probably will be on OS X 10.8 and up).
@@ -1815,30 +1813,6 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
         nativeDrawing.EndNativeDrawing();
         return;
       }
-#ifndef NP_NO_CARBON
-      if (mInstanceOwner->GetEventModel() == NPEventModelCarbon &&
-          !mInstanceOwner->SetPluginPortAndDetectChange()) {
-        NS_WARNING("null plugin port during PaintPlugin");
-        nativeDrawing.EndNativeDrawing();
-        return;
-      }
-
-      // In the Carbon event model...
-      // If gfxQuartzNativeDrawing hands out a CGContext different from the
-      // one set by SetPluginPortAndDetectChange(), we need to pass it to the
-      // plugin via SetWindow().  This will happen in nsPluginInstanceOwner::
-      // FixUpPluginWindow(), called from nsPluginInstanceOwner::Paint().
-      // (If SetPluginPortAndDetectChange() made any changes itself, this has
-      // already been detected in that method, and will likewise result in a
-      // call to SetWindow() from FixUpPluginWindow().)
-      NP_CGContext* windowContext = static_cast<NP_CGContext*>(window->window);
-      if (mInstanceOwner->GetEventModel() == NPEventModelCarbon &&
-          windowContext->context != cgContext) {
-        windowContext->context = cgContext;
-        cgPluginPortCopy->context = cgContext;
-        mInstanceOwner->SetPluginPortChanged(true);
-      }
-#endif
 
       mInstanceOwner->BeginCGPaint();
       if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation ||
@@ -2121,16 +2095,6 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
     return rv;
   }
 #endif
-
-/*
-  // XXXndeakin review note: I don't see how this would ever be called.
-  if (anEvent->message == NS_DESTROY) {
-#ifdef MAC_CARBON_PLUGINS
-    mInstanceOwner->CancelTimer();
-#endif
-    return rv;
-  }
-*/
 
   return nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
 }
