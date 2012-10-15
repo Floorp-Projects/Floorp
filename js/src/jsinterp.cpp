@@ -3850,7 +3850,7 @@ js::Throw(JSContext *cx, HandleValue v)
 }
 
 bool
-js::GetProperty(JSContext *cx, HandleValue v, PropertyName *name, MutableHandleValue vp)
+js::GetProperty(JSContext *cx, HandleValue v, HandlePropertyName name, MutableHandleValue vp)
 {
     if (name == cx->names().length) {
         // Fast path for strings, arrays and arguments.
