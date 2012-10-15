@@ -132,7 +132,7 @@ static ContentMap& GetContentMap() {
 
 // When the pref "layout.css.flexbox.enabled" changes, this function is invoked
 // to let us update kDisplayKTable, to selectively disable or restore the
-// entries for "-moz-flex" and "-moz-inline-flex" in that table.
+// entries for "flex" and "inline-flex" in that table.
 #ifdef MOZ_FLEXBOX
 static int
 FlexboxEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
@@ -146,13 +146,13 @@ FlexboxEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
     Preferences::GetBool(FLEXBOX_ENABLED_PREF_NAME, false);
 
   if (!sAreFlexKeywordIndicesInitialized) {
-    // First run: find the position of "-moz-flex" and "-moz-inline-flex" in
+    // First run: find the position of "flex" and "inline-flex" in
     // kDisplayKTable.
     sIndexOfFlexInDisplayTable =
-      nsCSSProps::FindIndexOfKeyword(eCSSKeyword__moz_flex,
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_flex,
                                      nsCSSProps::kDisplayKTable);
     sIndexOfInlineFlexInDisplayTable =
-      nsCSSProps::FindIndexOfKeyword(eCSSKeyword__moz_inline_flex,
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_inline_flex,
                                      nsCSSProps::kDisplayKTable);
 
     sAreFlexKeywordIndicesInitialized = true;
@@ -162,11 +162,11 @@ FlexboxEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
   // depending on whether the flexbox pref is enabled vs. disabled.
   if (sIndexOfFlexInDisplayTable >= 0) {
     nsCSSProps::kDisplayKTable[sIndexOfFlexInDisplayTable] =
-      isFlexboxEnabled ? eCSSKeyword__moz_flex : eCSSKeyword_UNKNOWN;
+      isFlexboxEnabled ? eCSSKeyword_flex : eCSSKeyword_UNKNOWN;
   }
   if (sIndexOfInlineFlexInDisplayTable >= 0) {
     nsCSSProps::kDisplayKTable[sIndexOfInlineFlexInDisplayTable] =
-      isFlexboxEnabled ? eCSSKeyword__moz_inline_flex : eCSSKeyword_UNKNOWN;
+      isFlexboxEnabled ? eCSSKeyword_inline_flex : eCSSKeyword_UNKNOWN;
   }
 
   return 0;
