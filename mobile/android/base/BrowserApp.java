@@ -552,6 +552,8 @@ abstract public class BrowserApp extends GeckoApp
         // here considerably improves the frame rate of the animation.
         if (Build.VERSION.SDK_INT >= 11)
             mTabsPanel.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        else
+            mTabsPanel.setDrawingCacheEnabled(true);
     }
 
     @Override
@@ -559,6 +561,8 @@ abstract public class BrowserApp extends GeckoApp
         // Destroy the hardware layer used during the animation
         if (Build.VERSION.SDK_INT >= 11)
             mTabsPanel.setLayerType(View.LAYER_TYPE_NONE, null);
+        else
+            mTabsPanel.setDrawingCacheEnabled(false);
 
         if (hasTabsSideBar() && mTabsPanel.isShown()) {
             boolean usingTextureView = mLayerView.shouldUseTextureView();
