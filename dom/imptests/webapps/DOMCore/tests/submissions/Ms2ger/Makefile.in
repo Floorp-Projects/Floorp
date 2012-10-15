@@ -36,7 +36,6 @@ MOCHITEST_FILES := \
   test_DOMImplementation-createDocument.html \
   test_DOMImplementation-createDocumentType.html \
   test_DOMImplementation-createHTMLDocument.html \
-  test_DOMImplementation-hasFeature.html \
   test_Element-childElementCount-dynamic-add.html \
   test_Element-childElementCount-dynamic-add.svg \
   test_Element-childElementCount-dynamic-add.xhtml \
