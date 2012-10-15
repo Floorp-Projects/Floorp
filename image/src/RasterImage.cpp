@@ -256,6 +256,7 @@ RasterImage::~RasterImage()
 
   for (unsigned int i = 0; i < mFrames.Length(); ++i)
     delete mFrames[i];
+  mFrames.Clear();
 
   // Discardable statistics
   if (mDiscardable) {
