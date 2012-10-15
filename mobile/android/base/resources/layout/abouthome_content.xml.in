@@ -51,15 +51,6 @@
                   android:id="@+id/top_sites_grid"
                   style="@style/AboutHome.Thumbnail.Grid"/>
 
-            <org.mozilla.gecko.LinkTextView android:id="@+id/all_top_sites_text"
-                                            android:text="@string/abouthome_top_sites_browse"
-                                            android:layout_width="fill_parent"
-                                            android:layout_height="30dip"
-                                            android:layout_marginTop="7dip"
-                                            android:textColor="#22629e"
-                                            android:textSize="12sp"
-                                            android:gravity="top|center_horizontal"/>
-
             <org.mozilla.gecko.AboutHomePromoBox android:id="@+id/promo_box"
                                                  android:orientation="horizontal"
                                                  android:background="@drawable/abouthome_promo_box"
