@@ -2008,11 +2008,11 @@ nsHTMLCopyEncoder::GetImmediateContextCount(const nsTArray<nsINode*>& aAncestorA
       break;
     }
     nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-    if (!content || !content->IsHTML() || content->Tag() != nsGkAtoms::tr    &&
-                                          content->Tag() != nsGkAtoms::thead &&
-                                          content->Tag() != nsGkAtoms::tbody &&
-                                          content->Tag() != nsGkAtoms::tfoot &&
-                                          content->Tag() != nsGkAtoms::table) {
+    if (!content || !content->IsHTML() || (content->Tag() != nsGkAtoms::tr    &&
+                                           content->Tag() != nsGkAtoms::thead &&
+                                           content->Tag() != nsGkAtoms::tbody &&
+                                           content->Tag() != nsGkAtoms::tfoot &&
+                                           content->Tag() != nsGkAtoms::table)) {
       break;
     }
     ++j;
