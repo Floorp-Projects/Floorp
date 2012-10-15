@@ -279,10 +279,8 @@ nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot)
   DestroyAbsoluteFrames(aDestructRoot);
   mFloats.DestroyFramesFrom(aDestructRoot);
   nsPresContext* presContext = PresContext();
-  nsLineBox::DeleteLineList(presContext, mLines, aDestructRoot);
-
-  // Now clear mFrames, since we've destroyed all the frames in it.
-  mFrames.Clear();
+  nsLineBox::DeleteLineList(presContext, mLines, aDestructRoot,
+                            &mFrames);
 
   nsFrameList* pushedFloats = RemovePushedFloats();
   if (pushedFloats) {
@@ -293,7 +291,7 @@ nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot)
   FrameLines* overflowLines = RemoveOverflowLines();
   if (overflowLines) {
     nsLineBox::DeleteLineList(presContext, overflowLines->mLines,
-                              aDestructRoot);
+                              aDestructRoot, &overflowLines->mFrames);
     delete overflowLines;
   }
 

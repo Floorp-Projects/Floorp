@@ -484,7 +484,7 @@ public:
   }
 
   static void DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
-                             nsIFrame* aDestructRoot);
+                             nsIFrame* aDestructRoot, nsFrameList* aFrames);
 
   // search from end to beginning of [aBegin, aEnd)
   // Returns true if it found the line and false if not.
