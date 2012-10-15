@@ -554,8 +554,6 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "nsIDOMDataChannel.h"
 #endif
 
-#undef None // something included above defines this preprocessor symbol, maybe Xlib headers
-#include "WebGLContext.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
