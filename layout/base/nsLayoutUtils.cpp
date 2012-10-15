@@ -106,7 +106,8 @@ typedef FrameMetrics::ViewID ViewID;
 /* static */ uint32_t nsLayoutUtils::sFontSizeInflationEmPerLine;
 /* static */ uint32_t nsLayoutUtils::sFontSizeInflationMinTwips;
 /* static */ uint32_t nsLayoutUtils::sFontSizeInflationLineThreshold;
-/* static */ int32_t nsLayoutUtils::sFontSizeInflationMappingIntercept;
+/* static */ int32_t  nsLayoutUtils::sFontSizeInflationMappingIntercept;
+/* static */ uint32_t nsLayoutUtils::sFontSizeInflationMaxRatio;
 
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
 
@@ -4739,6 +4740,8 @@ nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
 void
 nsLayoutUtils::Initialize()
 {
+  Preferences::AddUintVarCache(&sFontSizeInflationMaxRatio,
+                               "font.size.inflation.maxRatio");
   Preferences::AddUintVarCache(&sFontSizeInflationEmPerLine,
                                "font.size.inflation.emPerLine");
   Preferences::AddUintVarCache(&sFontSizeInflationMinTwips,
@@ -5017,8 +5020,10 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
   }
 
   int32_t interceptParam = nsLayoutUtils::FontSizeInflationMappingIntercept();
+  float maxRatio = (float)nsLayoutUtils::FontSizeInflationMaxRatio() / 100.0f;
 
   float ratio = float(styleFontSize) / float(aMinFontSize);
+  float inflationRatio;
 
   // Given a minimum inflated font size m, a specified font size s, we want to
   // find the inflated font size i and then return the ratio of i to s (i/s).
@@ -5041,12 +5046,18 @@ nsLayoutUtils::FontSizeInflationInner(const nsIFrame *aFrame,
     // graph is a line from (0, m), to that point). We calculate the
     // intersection point to be ((1+P/2)m, (1+P/2)m), where P is the
     // intercept parameter above. We then need to return i/s.
-    return (1.0f + (ratio * (intercept - 1) / intercept)) / ratio;
+    inflationRatio = (1.0f + (ratio * (intercept - 1) / intercept)) / ratio;
   } else {
     // This is the case where P is negative. We essentially want to implement
     // the case for P=infinity here, so we make i = s + m, which means that
     // i/s = s/s + m/s = 1 + 1/ratio
-    return 1 + 1.0f / ratio;
+    inflationRatio = 1 + 1.0f / ratio;
+  }
+
+  if (maxRatio > 1.0 && inflationRatio > maxRatio) {
+    return maxRatio;
+  } else {
+    return inflationRatio;
   }
 }
 
