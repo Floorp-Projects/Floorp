@@ -285,9 +285,12 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
       regionToPaint.Sub(regionToPaint, staleRegion);
     }
 
-    // Find out if we should just abort this paint, usually due to there being
-    // an incoming, more relevant paint.
-    if (BasicManager()->ShouldAbortProgressiveUpdate(hasNewContent)) {
+    // Find out the current view transform to determine which tiles to draw
+    // first, and see if we should just abort this paint. Aborting is usually
+    // caused by there being an incoming, more relevant paint.
+    gfx::Rect viewport;
+    float scaleX, scaleY;
+    if (BasicManager()->ProgressiveUpdateCallback(hasNewContent, viewport, scaleX, scaleY)) {
       return;
     }
 
