@@ -270,7 +270,7 @@ namespace CSF
 
         virtual void createOffer (const cc_media_constraints_t* constraints) = 0;
 
-        virtual void createAnswer(const cc_media_constraints_t* constraints, const std::string & offersdp) = 0;
+        virtual void createAnswer(const cc_media_constraints_t* constraints) = 0;
 
         virtual void setLocalDescription(cc_jsep_action_t action, const std::string & sdp) = 0;
 
