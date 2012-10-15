@@ -43,6 +43,7 @@
 #include "nsIURI.h"
 #include "nsIWebNavigation.h"
 #include "nsFocusManager.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/dom/Element.h"
 
 #ifdef A11Y_LOG
@@ -85,8 +86,8 @@ DocAccessible::
   mPresShell(aPresShell)
 {
   mFlags |= eDocAccessible | eNotNodeMapEntry;
-  if (mPresShell)
-    mPresShell->SetDocAccessible(this);
+  MOZ_ASSERT(mPresShell, "should have been given a pres shell");
+  mPresShell->SetDocAccessible(this);
 
   mDependentIDsHash.Init();
   // XXX aaronl should we use an algorithm for the initial cache size?
