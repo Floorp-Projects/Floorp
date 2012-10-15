@@ -1612,14 +1612,6 @@ public:
   static bool FontSizeInflationEnabled(nsPresContext *aPresContext);
 
   /**
-   * See comment above "font.size.inflation.maxRatio" in
-   * modules/libpref/src/init/all.js .
-   */
-  static uint32_t FontSizeInflationMaxRatio() {
-    return sFontSizeInflationMaxRatio;
-  }
-
-  /**
    * See comment above "font.size.inflation.emPerLine" in
    * modules/libpref/src/init/all.js .
    */
@@ -1759,8 +1751,7 @@ private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;
   static uint32_t sFontSizeInflationLineThreshold;
-  static int32_t  sFontSizeInflationMappingIntercept;
-  static uint32_t sFontSizeInflationMaxRatio;
+  static int32_t sFontSizeInflationMappingIntercept;
 };
 
 template<typename PointType, typename RectType, typename CoordType>
