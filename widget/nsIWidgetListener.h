@@ -124,6 +124,7 @@ public:
   enum {
     SENT_WILL_PAINT = 1 << 0, /* WillPaintWindow has already been called */
     WILL_SEND_DID_PAINT = 1 << 1, /* A call to DidPaintWindow will be made afterwards. */
+    PAINT_IS_ALTERNATE = 1 << 2 /* We are painting something other than the normal widget */
   };
   virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags) { return false; }
 

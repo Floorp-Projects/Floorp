@@ -307,7 +307,11 @@ public:
    */
   bool HasWidget() const { return mWindow != nullptr; }
   
-  void SetForcedRepaint(bool aForceRepaint) { mForcedRepaint = aForceRepaint; }
+  void SetForcedRepaint(bool aForceRepaint) { 
+    if (!mInAlternatePaint) { 
+      mForcedRepaint = aForceRepaint; 
+    }
+  }
   bool ForcedRepaint() { return mForcedRepaint; }
 
   /**
@@ -367,6 +371,7 @@ protected:
   uint32_t          mVFlags;
   bool              mWidgetIsTopLevel;
   bool              mForcedRepaint;
+  bool              mInAlternatePaint;
 
   virtual ~nsIView() {}
 

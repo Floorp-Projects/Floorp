@@ -489,7 +489,7 @@ public:
   
   virtual bool      DispatchWindowEvent(nsGUIEvent& event);
 
-  bool PaintWindow(nsIntRegion aRegion);
+  bool PaintWindow(nsIntRegion aRegion, bool aIsAlternate);
 
 #ifdef ACCESSIBILITY
   already_AddRefed<Accessible> GetDocumentAccessible();
