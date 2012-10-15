@@ -136,7 +136,7 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 
 - (void)processPendingRedraws;
 
-- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
+- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext alternate:(BOOL)aIsAlternate;
 
 // Called using performSelector:withObject:afterDelay:0 to release
 // aWidgetArray (and its contents) the next time through the run loop.
@@ -1418,7 +1418,7 @@ bool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
   return ConvertStatus(status);
 }
 
-bool nsChildView::PaintWindow(nsIntRegion aRegion)
+bool nsChildView::PaintWindow(nsIntRegion aRegion, bool aIsAlternate)
 {
   nsIWidget* widget = this;
   nsIWidgetListener* listener = mWidgetListener;
@@ -1439,7 +1439,11 @@ bool nsChildView::PaintWindow(nsIntRegion aRegion)
   bool returnValue = false;
   bool oldDispatchPaint = mIsDispatchPaint;
   mIsDispatchPaint = true;
-  returnValue = listener->PaintWindow(widget, aRegion, SENT_WILL_PAINT);
+  uint32_t flags = nsIWidgetListener::SENT_WILL_PAINT;
+  if (aIsAlternate) {
+    flags |= nsIWidgetListener::PAINT_IS_ALTERNATE; 
+  }
+  returnValue = listener->PaintWindow(widget, aRegion, flags);
   mIsDispatchPaint = oldDispatchPaint;
   return returnValue;
 }
@@ -2374,7 +2378,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 - (void)drawRect:(NSRect)aRect
 {
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-  [self drawRect:aRect inContext:cgContext];
+  [self drawRect:aRect inContext:cgContext alternate:false];
 
   // If we're a transparent window and our contents have changed, we need
   // to make sure the shadow is updated to the new contents.
@@ -2391,10 +2395,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Title bar drawing only works if we really draw into aContext, which only
   // the basic layer manager will do.
   nsBaseWidget::AutoUseBasicLayerManager setupLayerManager(mGeckoChild);
-  [self drawRect:aRect inContext:aContext];
+  [self drawRect:aRect inContext:aContext alternate:true];
 }
 
-- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext
+- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext alternate:(BOOL)aIsAlternate
 {
   SAMPLE_LABEL("widget", "ChildView::drawRect");
   if (!mGeckoChild || !mGeckoChild->IsVisible())
@@ -2448,7 +2452,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     [glContext setView:self];
     [glContext update];
 
-    mGeckoChild->PaintWindow(region);
+    mGeckoChild->PaintWindow(region, aIsAlternate);
 
     // Force OpenGL to refresh the very first time we draw. This works around a
     // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
@@ -2492,7 +2496,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   {
     nsBaseWidget::AutoLayerManagerSetup
       setupLayerManager(mGeckoChild, targetContext, BUFFER_NONE);
-    painted = mGeckoChild->PaintWindow(region);
+    painted = mGeckoChild->PaintWindow(region, aIsAlternate);
   }
 
   // Force OpenGL to refresh the very first time we draw. This works around a
