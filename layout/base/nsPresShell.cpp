@@ -3748,7 +3748,7 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
     "Display"
   };
   // Make sure that we don't miss things added to mozFlushType!
-  MOZ_ASSERT(aType <= ArrayLength(flushTypeNames));
+  MOZ_ASSERT(static_cast<uint32_t>(aType) <= ArrayLength(flushTypeNames));
 
   SAMPLE_LABEL_PRINTF("layout", "Flush", "(Flush_%s)",
                       flushTypeNames[aType - 1]);
