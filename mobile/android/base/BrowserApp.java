@@ -263,8 +263,7 @@ abstract public class BrowserApp extends GeckoApp
 
     // We don't want to call super.initializeChrome in here because we don't
     // want to create two DoorHangerPopup instances.
-    @Override
-    protected void initializeChrome(String uri, Boolean isExternalURL) {
+    @Override void initializeChrome(String uri, Boolean isExternalURL) {
         mBrowserToolbar.updateBackButton(false);
         mBrowserToolbar.updateForwardButton(false);
 
@@ -279,17 +278,21 @@ abstract public class BrowserApp extends GeckoApp
             }
         }
 
+        if (uri != null && uri.length() > 0) {
+            mBrowserToolbar.setTitle(uri);
+        }
+
         if (!isExternalURL) {
             // show about:home if we aren't restoring previous session
             if (mRestoreMode == GeckoAppShell.RESTORE_NONE) {
-                Tab tab = Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB);
-                tab.updateTitle(null);
+                mBrowserToolbar.updateTabCount(1);
                 showAboutHome();
             }
         } else {
-            hideAboutHome();
-            Tabs.getInstance().loadUrl(uri, Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED);
+            mBrowserToolbar.updateTabCount(1);
         }
+
+        mBrowserToolbar.setProgressVisibility(isExternalURL || (mRestoreMode != GeckoAppShell.RESTORE_NONE));
 
         mDoorHangerPopup = new DoorHangerPopup(this, mBrowserToolbar.mFavicon);
     }
