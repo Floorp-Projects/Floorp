@@ -1343,7 +1343,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
   return layer.forget();
 }
 
-#ifdef DEBUG
+#ifdef MOZ_DUMP_PAINTING
 /**
  * Returns the appunits per dev pixel for the item's frame. The item must
  * have a frame because only nsDisplayClip items don't have a frame,
