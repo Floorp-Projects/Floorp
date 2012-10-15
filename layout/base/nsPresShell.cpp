@@ -937,14 +937,14 @@ PresShell::Destroy()
     return;
 
 #ifdef ACCESSIBILITY
-  if (mAccDocument) {
+  if (mDocAccessible) {
 #ifdef DEBUG
     if (a11y::logging::IsEnabled(a11y::logging::eDocDestroy))
       a11y::logging::DocDestroy("presshell destroyed", mDocument);
 #endif
 
-    mAccDocument->Shutdown();
-    mAccDocument = nullptr;
+    mDocAccessible->Shutdown();
+    mDocAccessible = nullptr;
   }
 #endif // ACCESSIBILITY
 

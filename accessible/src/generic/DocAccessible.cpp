@@ -86,7 +86,7 @@ DocAccessible::
 {
   mFlags |= eDocAccessible | eNotNodeMapEntry;
   if (mPresShell)
-    mPresShell->SetAccDocument(this);
+    mPresShell->SetDocAccessible(this);
 
   mDependentIDsHash.Init();
   // XXX aaronl should we use an algorithm for the initial cache size?
@@ -636,7 +636,7 @@ DocAccessible::Shutdown()
     logging::DocDestroy("document shutdown", mDocument, this);
 #endif
 
-  mPresShell->SetAccDocument(nullptr);
+  mPresShell->SetDocAccessible(nullptr);
 
   if (mNotificationController) {
     mNotificationController->Shutdown();
