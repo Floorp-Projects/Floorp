@@ -635,11 +635,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     public void setTitle(CharSequence title) {
         Tab tab = Tabs.getInstance().getSelectedTab();
 
-        // We use about:empty as a placeholder for an external page load and
-        // we don't want to change the title
-        if (tab != null && "about:empty".equals(tab.getURL()))
-            return;
-
         // Keep the title unchanged if the tab is entering reader mode
         if (tab != null && tab.isEnteringReaderMode())
             return;
