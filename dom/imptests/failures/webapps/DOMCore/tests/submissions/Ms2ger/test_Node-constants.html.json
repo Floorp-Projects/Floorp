@@ -1,4 +1,4 @@
 {
-  "Constants for createDocumentPosition on Node prototype object.": true,
-  "Constants for nodeType on Node prototype object.": true
+  "Constants for nodeType on Node prototype object.": true,
+  "Constants for createDocumentPosition on Node prototype object.": true
 }
