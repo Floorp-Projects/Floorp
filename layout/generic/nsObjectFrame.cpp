@@ -1343,12 +1343,13 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
 
   window.clipRect.bottom = 0; window.clipRect.top = 0;
   window.clipRect.left = 0; window.clipRect.right = 0;
-  
+
 // platform specific printing code
 #ifdef MAC_CARBON_PLUGINS
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   // Don't use this code if any of the QuickDraw APIs it currently requires
   // are missing (as they probably will be on OS X 10.8 and up).
-  if (!::SetRect || !::NewGWorldFromPtr || !::DisposeGWorld) {
+  if (!&::SetRect || !&::NewGWorldFromPtr || !&::DisposeGWorld) {
     NS_WARNING("Cannot print plugin -- required QuickDraw APIs are missing!");
     return;
   }
@@ -1443,6 +1444,7 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   ::DisposeGWorld(gWorld);
 
   nativeDraw.EndNativeDrawing();
+#pragma clang diagnostic warning "-Wdeprecated-declarations"
 #elif defined(XP_UNIX)
 
   /* XXX this just flat-out doesn't work in a thebes world --
