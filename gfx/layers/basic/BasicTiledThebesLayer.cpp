@@ -329,49 +329,44 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
 
     // The following code decides what order to draw tiles in, based on the
     // current scroll direction of the primary scrollable layer.
-    // XXX While this code is of a reasonable size currently, it is likely
-    //     we'll want to add more comprehensive methods of deciding what
-    //     tiles to draw. This is a good candidate for splitting out into a
-    //     separate function.
+    NS_ASSERTION(!regionToPaint.IsEmpty(), "Unexpectedly empty paint region!");
+    nsIntRect paintBounds = regionToPaint.GetBounds();
 
-    // First, decide whether to iterate on the region from the beginning or end
-    // of the rect list. This relies on the specific behaviour of nsRegion when
-    // subtracting rects. If we're moving more in the X direction, we draw
-    // tiles by column, otherwise by row.
-    nsIntRegionRectIterator it(regionToPaint);
-    const nsIntRect* rect;
-    if ((NS_ABS(scrollDiffY) > NS_ABS(scrollDiffX) && scrollDiffY >= 0)) {
-      rect = it.Next();
-    } else {
-      const nsIntRect* lastRect;
-      while ((lastRect = it.Next())) {
-        rect = lastRect;
-      }
-    }
-
-    // Second, decide what direction to start drawing rects from by checking
-    // the scroll offset difference of the primary scrollable layer. If we're
-    // scrolling to the right, make sure to start from the left, downwards
-    // start from the top, etc.
-    int paintTileStartX, paintTileStartY;
+    int startX, incX, startY, incY;
     if (scrollOffset.x >= mLastScrollOffset.x) {
-      paintTileStartX = mTiledBuffer.RoundDownToTileEdge(rect->x);
+      startX = mTiledBuffer.RoundDownToTileEdge(paintBounds.x);
+      incX = mTiledBuffer.GetTileLength();
     } else {
-      paintTileStartX = mTiledBuffer.RoundDownToTileEdge(rect->XMost() - 1);
+      startX = mTiledBuffer.RoundDownToTileEdge(paintBounds.XMost() - 1);
+      incX = -mTiledBuffer.GetTileLength();
     }
 
     if (scrollOffset.y >= mLastScrollOffset.y) {
-      paintTileStartY = mTiledBuffer.RoundDownToTileEdge(rect->y);
+      startY = mTiledBuffer.RoundDownToTileEdge(paintBounds.y);
+      incY = mTiledBuffer.GetTileLength();
     } else {
-      paintTileStartY = mTiledBuffer.RoundDownToTileEdge(rect->YMost() - 1);
+      startY = mTiledBuffer.RoundDownToTileEdge(paintBounds.YMost() - 1);
+      incY = -mTiledBuffer.GetTileLength();
     }
 
-    nsIntRegion maxPaint(
-      nsIntRect(paintTileStartX, paintTileStartY,
-                mTiledBuffer.GetTileLength(), mTiledBuffer.GetTileLength()));
-
-    // Expand the paint region to tile boundaries
-    regionToPaint.And(invalidRegion, maxPaint);
+    // Find a tile to draw.
+    nsIntRect tileBounds(startX, startY,
+                         mTiledBuffer.GetTileLength(),
+                         mTiledBuffer.GetTileLength());
+    // This loop will always terminate, as there is at least one tile area
+    // along the first/last row/column intersecting with regionToPaint, or its
+    // bounds would have been smaller.
+    while (true) {
+      regionToPaint.And(invalidRegion, tileBounds);
+      if (!regionToPaint.IsEmpty()) {
+        break;
+      }
+      if (NS_ABS(scrollDiffY) >= NS_ABS(scrollDiffX)) {
+        tileBounds.x += incX;
+      } else {
+        tileBounds.y += incY;
+      }
+    }
 
     if (!regionToPaint.Contains(invalidRegion)) {
       // The region needed to paint is larger then our progressive chunk size
