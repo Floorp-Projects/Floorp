@@ -1009,7 +1009,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
                     AutoLayerManagerSetup
                       setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
 
-                    painted = mWidgetListener->PaintWindow(this, region, false, false);
+                    painted = mWidgetListener->PaintWindow(this, region, 0);
                 }
 
                 // XXX uhh.. we can't just ignore this because we no longer have
@@ -1029,7 +1029,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
                 static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nullptr))->
                     SetClippingRegion(nsIntRegion(boundsRect));
 
-                painted = mWidgetListener->PaintWindow(this, region, false, false);
+                painted = mWidgetListener->PaintWindow(this, region, 0);
                 break;
             }
 

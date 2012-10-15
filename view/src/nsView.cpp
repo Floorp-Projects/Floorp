@@ -1030,10 +1030,10 @@ nsView::WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint)
 }
 
 bool
-nsView::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, bool aSentWillPaint, bool aWillSendDidPaint)
+nsView::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags)
 {
   nsCOMPtr<nsViewManager> vm = mViewManager;
-  return vm->PaintWindow(aWidget, aRegion, aSentWillPaint, aWillSendDidPaint);
+  return vm->PaintWindow(aWidget, aRegion, aFlags);
 }
 
 void
