@@ -462,7 +462,7 @@ BrowserElementChild.prototype = {
                    content.innerHeight, "rgb(255,255,255)");
     sendAsyncMsg('got-screenshot', {
       id: data.json.id,
-      rv: canvas.toDataURL("image/png")
+      rv: canvas.toDataURL("image/jpeg")
     });
   },
 
