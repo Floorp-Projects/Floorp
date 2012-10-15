@@ -50,6 +50,7 @@ MOCHITEST_FILES = \
 	test_2d.composite.uncovered.image.source-out.html \
 	test_2d.drawImage.zerocanvas.html \
 	test_2d.strokeRect.zero.5.html \
+	test_toBlob.html \
 	test_toDataURL_alpha.html \
 	test_toDataURL_lowercase_ascii.html \
 	test_toDataURL_parameters.html \
