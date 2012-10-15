@@ -398,7 +398,7 @@ public:
 
   NS_IMETHODIMP CreateOffer(MediaConstraints& constraints);
 
-  NS_IMETHODIMP CreateAnswer(MediaConstraints& constraints, const char* offer);
+  NS_IMETHODIMP CreateAnswer(MediaConstraints& constraints);
 
 private:
   PeerConnectionImpl(const PeerConnectionImpl&rhs);
