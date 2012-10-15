@@ -43,7 +43,8 @@ EXPORTS		= \
 		nsDisplayListInvalidation.h \
 		nsFrameManager.h \
 		nsFrameManagerBase.h \
-		nsFrameIterator.h \
+		nsFrameTraversal.h \
+		nsIFrameTraversal.h \
 		nsILayoutDebugger.h \
 		nsILayoutHistoryState.h \
 		nsIPercentHeightObserver.h  \
@@ -79,7 +80,7 @@ CPPSRCS		= \
 		nsDisplayListInvalidation.cpp \
 		nsDocumentViewer.cpp \
 		nsFrameManager.cpp \
-		nsFrameIterator.cpp \
+		nsFrameTraversal.cpp \
 		nsGenConList.cpp \
 		nsLayoutDebugger.cpp \
 		nsLayoutHistoryState.cpp \
