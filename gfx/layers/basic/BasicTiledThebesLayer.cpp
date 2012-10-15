@@ -250,10 +250,11 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     mValidRegion = nsIntRegion();
   }
 
-  nsIntRegion regionToPaint = mVisibleRegion;
-  regionToPaint.Sub(regionToPaint, mValidRegion);
-  if (regionToPaint.IsEmpty())
+  nsIntRegion invalidRegion = mVisibleRegion;
+  invalidRegion.Sub(invalidRegion, mValidRegion);
+  if (invalidRegion.IsEmpty())
     return;
+  nsIntRegion regionToPaint = invalidRegion;
 
   gfxSize resolution(1, 1);
   for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
@@ -277,21 +278,53 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   if (gfxPlatform::UseProgressiveTilePainting() &&
       mTiledBuffer.GetResolution() == resolution &&
       (scrollDiffX != 0 || scrollDiffY != 0)) {
-    // Paint tiles that have no content before tiles that only have stale content.
-    nsIntRegion staleRegion = mTiledBuffer.GetValidRegion();
-    staleRegion.And(staleRegion, regionToPaint);
-    bool hasNewContent = !staleRegion.Contains(regionToPaint);
-    if (!staleRegion.IsEmpty() && hasNewContent) {
-      regionToPaint.Sub(regionToPaint, staleRegion);
-    }
+    // Find out if we have any non-stale content to update.
+    nsIntRegion freshRegion = mTiledBuffer.GetValidRegion();
+    freshRegion.And(freshRegion, invalidRegion);
+    freshRegion.Sub(invalidRegion, freshRegion);
 
     // Find out the current view transform to determine which tiles to draw
     // first, and see if we should just abort this paint. Aborting is usually
     // caused by there being an incoming, more relevant paint.
     gfx::Rect viewport;
     float scaleX, scaleY;
-    if (BasicManager()->ProgressiveUpdateCallback(hasNewContent, viewport, scaleX, scaleY)) {
+    if (BasicManager()->ProgressiveUpdateCallback(!freshRegion.IsEmpty(), viewport, scaleX, scaleY)) {
       return;
+    }
+
+    // Prioritise tiles that are currently visible on the screen.
+
+    // Get the transform to the current layer.
+    gfx3DMatrix transform = GetEffectiveTransform();
+    // XXX Not sure if this code for intermediate surfaces is correct.
+    //     It rarely gets hit though, and shouldn't have terrible consequences
+    //     even if it is wrong.
+    for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
+      if (parent->UseIntermediateSurface()) {
+        transform.PreMultiply(parent->GetEffectiveTransform());
+      }
+    }
+    transform.Invert();
+
+    // Transform the screen coordinates into local layer coordinates.
+    gfxRect transformedViewport(viewport.x - (scrollOffset.x * resolution.width),
+                                viewport.y - (scrollOffset.y * resolution.height),
+                                viewport.width, viewport.height);
+    transformedViewport.Scale((scaleX / resolution.width) / resolution.width,
+                              (scaleY / resolution.height) / resolution.height);
+    transformedViewport = transform.TransformBounds(transformedViewport);
+
+    nsIntRect roundedTransformedViewport((int32_t)floor(transformedViewport.x),
+                                         (int32_t)floor(transformedViewport.y),
+                                         (int32_t)ceil(transformedViewport.width),
+                                         (int32_t)ceil(transformedViewport.height));
+
+    // Paint tiles that have no content before tiles that only have stale content.
+    if (!freshRegion.IsEmpty()) {
+      regionToPaint = freshRegion;
+    }
+    if (regionToPaint.Intersects(roundedTransformedViewport)) {
+      regionToPaint.And(regionToPaint, roundedTransformedViewport);
     }
 
     // The following code decides what order to draw tiles in, based on the
@@ -337,10 +370,12 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
       nsIntRect(paintTileStartX, paintTileStartY,
                 mTiledBuffer.GetTileLength(), mTiledBuffer.GetTileLength()));
 
-    if (!maxPaint.Contains(regionToPaint)) {
+    // Expand the paint region to tile boundaries
+    regionToPaint.And(invalidRegion, maxPaint);
+
+    if (!regionToPaint.Contains(invalidRegion)) {
       // The region needed to paint is larger then our progressive chunk size
       // therefore update what we want to paint and ask for a new paint transaction.
-      regionToPaint.And(regionToPaint, maxPaint);
       BasicManager()->SetRepeatTransaction();
 
       // Make sure that tiles that fall outside of the visible region are discarded.
