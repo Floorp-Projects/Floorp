@@ -154,6 +154,7 @@ FENNEC_JAVA_FILES = \
   gfx/NinePatchTileLayer.java \
   gfx/PanningPerfAPI.java \
   gfx/PointUtils.java \
+  gfx/ProgressiveUpdateData.java \
   gfx/RectUtils.java \
   gfx/ScreenshotLayer.java \
   gfx/ScrollbarLayer.java \
