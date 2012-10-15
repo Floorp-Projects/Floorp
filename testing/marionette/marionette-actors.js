@@ -482,6 +482,31 @@ MarionetteDriverActor.prototype = {
     this.sendResponse(value);
   },
 
+  getStatus: function MDA_getStatus(){
+    let arch;
+    try {
+      arch = (Services.appinfo.XPCOMABI || 'unknown').split('-')[0]
+    }
+    catch (ignored) {
+      arch = 'unknown'
+    };
+
+    let value = {
+          'os': {
+            'arch': arch,
+            'name': Services.appinfo.OS,
+            'version': 'unknown'
+          },
+          'build': {
+            'revision': 'unknown',
+            'time': Services.appinfo.platformBuildID,
+            'version': Services.appinfo.version
+          }
+    };
+
+    this.sendResponse(value);
+  },
+
   /**
    * Log message. Accepts user defined log-level.
    *
@@ -1620,6 +1645,7 @@ MarionetteDriverActor.prototype = {
 MarionetteDriverActor.prototype.requestTypes = {
   "newSession": MarionetteDriverActor.prototype.newSession,
   "getSessionCapabilities": MarionetteDriverActor.prototype.getSessionCapabilities,
+  "getStatus": MarionetteDriverActor.prototype.getStatus,
   "log": MarionetteDriverActor.prototype.log,
   "getLogs": MarionetteDriverActor.prototype.getLogs,
   "addPerfData": MarionetteDriverActor.prototype.addPerfData,
