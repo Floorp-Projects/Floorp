@@ -5,6 +5,7 @@
 # with the lineThreshold preference explicitly set to zero.  However,
 # newer tests should probably focus more on testing nonzero values of
 # that preference.
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) test-pref(font.size.inflation.maxRatio,200) == maxRatio-1.html maxRatio-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == text-1.html text-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == text-2.html text-2-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,0) == text-3.html text-3-ref.html
