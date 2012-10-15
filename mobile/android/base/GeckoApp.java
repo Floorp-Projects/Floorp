@@ -2603,6 +2603,14 @@ abstract public class GeckoApp
                 return true;
             return super.onTouchEvent(event);
         }
+
+        @Override
+        public void setDrawingCacheEnabled(boolean enabled) {
+            // Instead of setting drawing cache in the view itself, we simply
+            // enable drawing caching on its children. This is mainly used in
+            // animations (see PropertyAnimator)
+            super.setChildrenDrawnWithCacheEnabled(enabled);
+        }
     }
 
     public boolean linkerExtract() {
