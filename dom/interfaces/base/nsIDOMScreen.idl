@@ -24,6 +24,7 @@ interface nsIDOMScreen : nsIDOMEventTarget
    * Can be: landscape-primary, landscape-secondary,
    *         portrait-primary or portrait-secondary.
    */
+  [binaryname(SlowMozOrientation)]
   readonly attribute DOMString       mozOrientation;
 
   [implicit_jscontext] attribute jsval      onmozorientationchange;
@@ -57,5 +58,6 @@ interface nsIDOMScreen : nsIDOMEventTarget
   /**
    * Unlock the screen orientation.
    */
+  [binaryname(SlowMozUnlockOrientation)]
   void mozUnlockOrientation();
 };
