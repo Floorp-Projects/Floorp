@@ -147,7 +147,6 @@ cc_return_t cc_invokeFeatureSDPMode(cc_call_handle_t call_handle, group_cc_featu
     case CC_FEATURE_CONF:
     case CC_FEATURE_XFER:
     case CC_FEATURE_HOLD:
-    case CC_FEATURE_CREATEANSWER:
     case CC_FEATURE_SETLOCALDESC:
     case CC_FEATURE_SETREMOTEDESC:
     case CC_FEATURE_SETPEERCONNECTION:
@@ -304,12 +303,12 @@ cc_return_t CC_CallFeature_CreateOffer(cc_call_handle_t call_handle, const cc_me
                                    0, 0, NO_STREAM, 0, constraints, NULL, NULL);
 }
 
-cc_return_t CC_CallFeature_CreateAnswer(cc_call_handle_t call_handle, const cc_media_constraints_t *constraints, string_t sdp) {
+cc_return_t CC_CallFeature_CreateAnswer(cc_call_handle_t call_handle, const cc_media_constraints_t *constraints) {
     CCAPP_DEBUG(DEB_L_C_F_PREFIX, DEB_L_C_F_PREFIX_ARGS(SIP_CC_PROV, GET_CALL_ID(call_handle),
                 GET_LINE_ID(call_handle), __FUNCTION__));
 
     return cc_invokeFeatureSDPMode(call_handle, CC_FEATURE_CREATEANSWER, JSEP_NO_ACTION,
-                                   0, 0, NO_STREAM, 0, constraints, sdp, NULL);
+                                   0, 0, NO_STREAM, 0, constraints, NULL, NULL);
 }
 
 cc_return_t CC_CallFeature_SetLocalDescription(cc_call_handle_t call_handle, cc_jsep_action_t action, string_t sdp) {
