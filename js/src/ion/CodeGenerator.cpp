@@ -3062,7 +3062,7 @@ typedef bool (*GetPropertyOrNameFn)(JSContext *, HandleObject, HandlePropertyNam
 bool
 CodeGenerator::visitCallGetProperty(LCallGetProperty *lir)
 {
-    typedef bool (*pf)(JSContext *, HandleValue, PropertyName *, MutableHandleValue);
+    typedef bool (*pf)(JSContext *, HandleValue, HandlePropertyName, MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(GetProperty);
 
     pushArg(ImmGCPtr(lir->mir()->name()));
