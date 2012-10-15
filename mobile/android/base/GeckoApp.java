@@ -1732,7 +1732,11 @@ abstract public class GeckoApp
                                            (TextSelectionHandle) findViewById(R.id.end_handle),
                                            GeckoAppShell.getEventDispatcher());
 
-        UpdateServiceHelper.registerForUpdates(this);
+        PrefsHelper.getPref("app.update.autodownload", new PrefsHelper.PrefHandlerBase() {
+            @Override public void prefValue(String pref, String value) {
+                UpdateServiceHelper.registerForUpdates(GeckoApp.this, value);
+            }
+        });
 
         final GeckoApp self = this;
 
