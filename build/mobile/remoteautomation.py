@@ -74,13 +74,22 @@ class RemoteAutomation(Automation):
         return status
 
     def checkForCrashes(self, directory, symbolsPath):
-        dumpDir = tempfile.mkdtemp()
-        self._devicemanager.getDirectory(self._remoteProfile + '/minidumps/', dumpDir)
-        automationutils.checkForCrashes(dumpDir, symbolsPath, self.lastTestSeen)
-        try:
-          shutil.rmtree(dumpDir)
-        except:
-          print "WARNING: unable to remove directory: %s" % (dumpDir)
+        remoteCrashDir = self._remoteProfile + '/minidumps/'
+        if self._devicemanager.dirExists(remoteCrashDir):
+            dumpDir = tempfile.mkdtemp()
+            self._devicemanager.getDirectory(remoteCrashDir, dumpDir)
+            automationutils.checkForCrashes(dumpDir, symbolsPath,
+                                            self.lastTestSeen)
+            try:
+                shutil.rmtree(dumpDir)
+            except:
+                print "WARNING: unable to remove directory: %s" % dumpDir
+        else:
+            # As of this writing, the minidumps directory is automatically
+            # created when fennec (first) starts, so its lack of presence
+            # is a hint that something went wrong.
+            print "WARNING: No crash directory (%s) on remote " \
+                "device" % remoteCrashDir
 
     def buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs):
         # If remote profile is specified, use that instead
