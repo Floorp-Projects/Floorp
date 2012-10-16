@@ -1199,7 +1199,7 @@ void nsParser::HandleParserContinueEvent(nsParserContinueEvent *ev)
 bool
 nsParser::IsInsertionPointDefined()
 {
-  return true;
+  return false;
 }
 
 void
