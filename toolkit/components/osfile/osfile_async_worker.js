@@ -210,6 +210,9 @@ if (this.Components) {
        read: function read(path, bytes) {
          return File.read(Type.path.fromMsg(path), bytes);
        },
+       exists: function exists(path) {
+         return File.exists(Type.path.fromMsg(path));
+       },
        writeAtomic: function writeAtomic(path, buffer, options) {
          if (options.tmpPath) {
            options.tmpPath = Type.path.fromMsg(options.tmpPath);
