@@ -27,8 +27,6 @@ function setDefaultPrefs() {
     // Disable addon updates and prefetching so we don't leak them
     branch.setBoolPref("extensions.update.enabled", false);
     branch.setBoolPref("extensions.getAddons.cache.enabled", false);
-    // Make url-classifier updates so rare that they won't affect tests
-    user_pref("urlclassifier.updateinterval", 172800);
     // Disable high-quality downscaling, since it makes reftests more difficult.
     branch.setBoolPref("image.high_quality_downscaling.enabled", false);
 }
