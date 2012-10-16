@@ -1499,7 +1499,7 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
                                              static_cast<nsINode*>(this),
                                              getter_AddRefs(ignored));
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = nsContentUtils::ReparentContentWrappersInScope(cx, oldScope, newScope);
+      rv = xpc->RescueOrphansInScope(cx, oldScope->GetGlobalJSObject());
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

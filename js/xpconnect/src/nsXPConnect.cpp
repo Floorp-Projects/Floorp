@@ -1551,150 +1551,33 @@ MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
     return JS_DHASH_NEXT;
 }
 
-static nsresult
-MoveWrapper(XPCCallContext& ccx, XPCWrappedNative *wrapper,
-            XPCWrappedNativeScope *newScope, XPCWrappedNativeScope *oldScope)
-{
-    // First, check to see if this wrapper really needs to be
-    // reparented.
-
-    if (wrapper->GetScope() == newScope) {
-        // The wrapper already got moved, nothing to do here.
-        return NS_OK;
-    }
-
-    // For performance reasons, we wait to fix up orphaned wrappers (wrappers
-    // whose parents have moved to another scope) until right before they
-    // threaten to confuse us.
-    //
-    // If this wrapper is an orphan, reunite it with its parent. If, following
-    // that, the wrapper is no longer in the old scope, then we don't need to
-    // reparent it.
-    MOZ_ASSERT(wrapper->GetScope() == oldScope);
-    nsresult rv = wrapper->RescueOrphans(ccx);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (wrapper->GetScope() != oldScope)
-        return NS_OK;
-
-    nsISupports *identity = wrapper->GetIdentityObject();
-    nsCOMPtr<nsIClassInfo> info(do_QueryInterface(identity));
-
-    // ClassInfo is implemented as singleton objects. If the identity
-    // object here is the same object as returned by the QI, then it
-    // is the singleton classinfo, so we don't need to reparent it.
-    if (SameCOMIdentity(identity, info))
-        info = nullptr;
-
-    if (!info)
-        return NS_OK;
-
-    XPCNativeScriptableCreateInfo sciProto;
-    XPCNativeScriptableCreateInfo sci;
-    const XPCNativeScriptableCreateInfo& sciWrapper =
-        XPCWrappedNative::GatherScriptableCreateInfo(identity, info,
-                                                     sciProto, sci);
-
-    // If the wrapper doesn't want precreate, then we don't need to
-    // worry about reparenting it.
-    if (!sciWrapper.GetFlags().WantPreCreate())
-        return NS_OK;
-
-    JSObject *newParent = oldScope->GetGlobalJSObject();
-    rv = sciWrapper.GetCallback()->PreCreate(identity, ccx,
-                                             newParent,
-                                             &newParent);
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (newParent == oldScope->GetGlobalJSObject()) {
-        // The old scope still works for this wrapper. We have to
-        // assume that the wrapper will continue to return the old
-        // scope from PreCreate, so don't move it.
-        return NS_OK;
-    }
-
-    // These are pretty special circumstances. Make sure that the parent here
-    // is a bonafide WN with a proper parent chain.
-    MOZ_ASSERT(!js::IsCrossCompartmentWrapper(newParent));
-    MOZ_ASSERT(IS_WRAPPER_CLASS(js::GetObjectClass(newParent)));
-    if (!IS_WN_WRAPPER_OBJECT(newParent))
-        NS_ENSURE_STATE(MorphSlimWrapper(ccx, newParent));
-    XPCWrappedNative *parentWrapper =
-      static_cast<XPCWrappedNative*>(js::GetObjectPrivate(newParent));
-    rv = parentWrapper->RescueOrphans(ccx);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // The wrapper returned a new parent. If the new parent is in a
-    // different scope, then we need to reparent it, otherwise, the
-    // old scope is fine.
-
-    XPCWrappedNativeScope *betterScope = parentWrapper->GetScope();
-    if (betterScope == oldScope) {
-        // The wrapper asked for a different object, but that object
-        // was in the same scope. This means that the new parent
-        // simply hasn't been reparented yet, so reparent it first,
-        // and then continue reparenting the wrapper itself.
-
-        rv = MoveWrapper(ccx, parentWrapper, newScope, oldScope);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // If the parent wanted to stay in the old scope, we have to stay with
-        // it. This can happen when doing document.write when the old detached
-        // about:blank document is still floating around in the scope. Leave it
-        // behind to die.
-        if (parentWrapper->GetScope() == oldScope)
-            return NS_OK;
-        NS_ASSERTION(parentWrapper->GetScope() == newScope,
-                     "A _third_ scope? Oh dear...");
-
-    } else
-        NS_ASSERTION(betterScope == newScope, "Weird scope returned");
-
-    // Now, reparent the wrapper, since we know that it wants to be
-    // reparented.
-
-    nsRefPtr<XPCWrappedNative> junk;
-    rv = XPCWrappedNative::ReparentWrapperIfFound(ccx, oldScope,
-                                                  newScope, parentWrapper->GetFlatJSObject(),
-                                                  wrapper->GetIdentityObject(),
-                                                  getter_AddRefs(junk));
-    return rv;
-}
-
-/* void moveWrappers(in JSContextPtr aJSContext, in JSObjectPtr  aOldScope, in JSObjectPtr  aNewScope); */
+/* void rescueOrphansInScope(in JSContextPtr aJSContext, in JSObjectPtr  aScope); */
 NS_IMETHODIMP
-nsXPConnect::MoveWrappers(JSContext *aJSContext,
-                          JSObject *aOldScope,
-                          JSObject *aNewScope)
+nsXPConnect::RescueOrphansInScope(JSContext *aJSContext, JSObject *aScope)
 {
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
     if (!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    XPCWrappedNativeScope *oldScope =
-        XPCWrappedNativeScope::FindInJSObjectScope(ccx, aOldScope);
-    if (!oldScope)
+    XPCWrappedNativeScope *scope =
+        XPCWrappedNativeScope::FindInJSObjectScope(ccx, aScope);
+    if (!scope)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    XPCWrappedNativeScope *newScope =
-        XPCWrappedNativeScope::FindInJSObjectScope(ccx, aNewScope);
-    if (!newScope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    // First, look through the old scope and find all of the wrappers that
-    // we're going to move.
+    // First, look through the old scope and find all of the wrappers that we
+    // might need to rescue.
     nsTArray<nsRefPtr<XPCWrappedNative> > wrappersToMove;
 
     {   // scoped lock
         XPCAutoLock lock(GetRuntime()->GetMapLock());
-        Native2WrappedNativeMap *map = oldScope->GetWrappedNativeMap();
+        Native2WrappedNativeMap *map = scope->GetWrappedNativeMap();
         wrappersToMove.SetCapacity(map->Count());
         map->Enumerate(MoveableWrapperFinder, &wrappersToMove);
     }
 
     // Now that we have the wrappers, reparent them to the new scope.
     for (uint32_t i = 0, stop = wrappersToMove.Length(); i < stop; ++i) {
-        nsresult rv = MoveWrapper(ccx, wrappersToMove[i], newScope, oldScope);
+        nsresult rv = wrappersToMove[i]->RescueOrphans(ccx);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
