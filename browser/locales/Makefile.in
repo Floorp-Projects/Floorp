@@ -67,6 +67,8 @@ UNINSTALLER_PACKAGE_HOOK = $(RM) -r $(STAGEDIST)/uninstall; \
     cp ../installer/windows/l10ngen/helper.exe $(STAGEDIST)/uninstall; \
     $(RM) $(_ABS_DIST)/l10n-stage/setup.exe; \
     cp ../installer/windows/l10ngen/setup.exe $(_ABS_DIST)/l10n-stage; \
+    cp ../installer/windows/l10ngen/stub.exe $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME)-stub.exe; \
+    chmod 0755 $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME)-stub.exe; \
     $(NULL)
 endif
 
