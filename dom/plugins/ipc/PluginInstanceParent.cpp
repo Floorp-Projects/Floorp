@@ -447,7 +447,7 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginEventModel(
 {
 #ifdef XP_MACOSX
     *result = mNPNIface->setvalue(mNPP, NPPVpluginEventModel,
-                                  (void*)eventModel);
+                                  (void*)(intptr_t)eventModel);
     return true;
 #else
     *result = NPERR_GENERIC_ERROR;
