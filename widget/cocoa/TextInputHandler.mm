@@ -336,7 +336,7 @@ GetWindowLevelName(NSInteger aWindowLevel)
 #endif // #ifdef PR_LOGGING
 
 static uint32_t gHandlerInstanceCount = 0;
-static TISInputSourceWrapper gCurrentKeyboardLayout;
+static TISInputSourceWrapper gCurrentInputSource;
 
 static void
 InitLogModule()
@@ -352,18 +352,18 @@ InitLogModule()
 }
 
 static void
-InitCurrentKeyboardLayout()
+InitCurrentInputSource()
 {
   if (gHandlerInstanceCount > 0 &&
-      !gCurrentKeyboardLayout.IsInitializedByCurrentKeyboardLayout()) {
-    gCurrentKeyboardLayout.InitByCurrentKeyboardLayout();
+      !gCurrentInputSource.IsInitializedByCurrentInputSource()) {
+    gCurrentInputSource.InitByCurrentInputSource();
   }
 }
 
 static void
-FinalizeCurrentKeyboardLayout()
+FinalizeCurrentInputSource()
 {
-  gCurrentKeyboardLayout.Clear();
+  gCurrentInputSource.Clear();
 }
 
 
@@ -378,10 +378,10 @@ FinalizeCurrentKeyboardLayout()
 
 // static
 TISInputSourceWrapper&
-TISInputSourceWrapper::CurrentKeyboardLayout()
+TISInputSourceWrapper::CurrentInputSource()
 {
-  InitCurrentKeyboardLayout();
-  return gCurrentKeyboardLayout;
+  InitCurrentInputSource();
+  return gCurrentInputSource;
 }
 
 bool
@@ -485,6 +485,9 @@ TISInputSourceWrapper::InitByInputSourceID(const CFStringRef aID)
   if (::CFArrayGetCount(mInputSourceList) > 0) {
     mInputSource = static_cast<TISInputSourceRef>(
       const_cast<void *>(::CFArrayGetValueAtIndex(mInputSourceList, 0)));
+    if (IsKeyboardLayout()) {
+      mKeyboardLayout = mInputSource;
+    }
   }
 }
 
@@ -524,6 +527,21 @@ TISInputSourceWrapper::InitByCurrentInputSource()
 {
   Clear();
   mInputSource = ::TISCopyCurrentKeyboardInputSource();
+  mKeyboardLayout = ::TISCopyInputMethodKeyboardLayoutOverride();
+  if (!mKeyboardLayout) {
+    mKeyboardLayout = ::TISCopyCurrentKeyboardLayoutInputSource();
+  }
+  // If this causes composition, the current keyboard layout may input non-ASCII
+  // characters such as Japanese Kana characters or Hangul characters.
+  // However, we need to set ASCII characters to DOM key events for consistency
+  // with other platforms.
+  if (IsOpenedIMEMode()) {
+    TISInputSourceWrapper tis(mKeyboardLayout);
+    if (!tis.IsASCIICapable()) {
+      mKeyboardLayout =
+        ::TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
+    }
+  }
 }
 
 void
@@ -531,6 +549,7 @@ TISInputSourceWrapper::InitByCurrentKeyboardLayout()
 {
   Clear();
   mInputSource = ::TISCopyCurrentKeyboardLayoutInputSource();
+  mKeyboardLayout = mInputSource;
 }
 
 void
@@ -538,6 +557,17 @@ TISInputSourceWrapper::InitByCurrentASCIICapableInputSource()
 {
   Clear();
   mInputSource = ::TISCopyCurrentASCIICapableKeyboardInputSource();
+  mKeyboardLayout = ::TISCopyInputMethodKeyboardLayoutOverride();
+  if (mKeyboardLayout) {
+    TISInputSourceWrapper tis(mKeyboardLayout);
+    if (!tis.IsASCIICapable()) {
+      mKeyboardLayout = nullptr;
+    }
+  }
+  if (!mKeyboardLayout) {
+    mKeyboardLayout =
+      ::TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
+  }
 }
 
 void
@@ -545,6 +575,15 @@ TISInputSourceWrapper::InitByCurrentASCIICapableKeyboardLayout()
 {
   Clear();
   mInputSource = ::TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
+  mKeyboardLayout = mInputSource;
+}
+
+void
+TISInputSourceWrapper::InitByCurrentInputMethodKeyboardLayoutOverride()
+{
+  Clear();
+  mInputSource = ::TISCopyInputMethodKeyboardLayoutOverride();
+  mKeyboardLayout = mInputSource;
 }
 
 void
@@ -552,6 +591,9 @@ TISInputSourceWrapper::InitByTISInputSourceRef(TISInputSourceRef aInputSource)
 {
   Clear();
   mInputSource = aInputSource;
+  if (IsKeyboardLayout()) {
+    mKeyboardLayout = mInputSource;
+  }
 }
 
 void
@@ -559,17 +601,20 @@ TISInputSourceWrapper::InitByLanguage(CFStringRef aLanguage)
 {
   Clear();
   mInputSource = ::TISCopyInputSourceForLanguage(aLanguage);
+  if (IsKeyboardLayout()) {
+    mKeyboardLayout = mInputSource;
+  }
 }
 
 const UCKeyboardLayout*
 TISInputSourceWrapper::GetUCKeyboardLayout()
 {
-  NS_ENSURE_TRUE(mInputSource, nullptr);
+  NS_ENSURE_TRUE(mKeyboardLayout, nullptr);
   if (mUCKeyboardLayout) {
     return mUCKeyboardLayout;
   }
   CFDataRef uchr = static_cast<CFDataRef>(
-    ::TISGetInputSourceProperty(mInputSource,
+    ::TISGetInputSourceProperty(mKeyboardLayout,
                                 kTISPropertyUnicodeKeyLayoutData));
 
   // We should be always able to get the layout here.
@@ -627,6 +672,17 @@ TISInputSourceWrapper::IsIMEMode()
 }
 
 bool
+TISInputSourceWrapper::IsKeyboardLayout()
+{
+  NS_ENSURE_TRUE(mInputSource, false);
+  CFStringRef str;
+  GetInputSourceType(str);
+  NS_ENSURE_TRUE(str, false);
+  return ::CFStringCompare(kTISTypeKeyboardLayout,
+                           str, 0) == kCFCompareEqualTo;
+}
+
+bool
 TISInputSourceWrapper::GetLanguageList(CFArrayRef &aLanguageList)
 {
   NS_ENSURE_TRUE(mInputSource, false);
@@ -675,9 +731,9 @@ TISInputSourceWrapper::IsForRTLLanguage()
 }
 
 bool
-TISInputSourceWrapper::IsInitializedByCurrentKeyboardLayout()
+TISInputSourceWrapper::IsInitializedByCurrentInputSource()
 {
-  return mInputSource == ::TISCopyCurrentKeyboardLayoutInputSource();
+  return mInputSource == ::TISCopyCurrentKeyboardInputSource();
 }
 
 void
@@ -699,6 +755,7 @@ TISInputSourceWrapper::Clear()
   }
   mInputSourceList = nullptr;
   mInputSource = nullptr;
+  mKeyboardLayout = nullptr;
   mIsRTL = -1;
   mUCKeyboardLayout = nullptr;
   mOverrideKeyboard = false;
@@ -746,13 +803,29 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     // change it.
     insertString = *aInsertString;
   } else if (isPrintableKey) {
-    // If the caller isn't sure what string will be input, let's use characters
-    // of NSEvent.
-    // XXX This is wrong at Hiragana or Katakana with Kana-Nyuryoku mode or
-    //     Chinese or Koran IME modes.  We should use ASCII characters at that
-    //     time.
-    nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
-                                       insertString);
+    // If IME is open, [aNativeKeyEvent characters] may be a character
+    // which will be appended to the composition string.  However, especially,
+    // while IME is disabled, most users and developers expect the key event
+    // works as IME closed.  So, we should compute the insertString with
+    // the ASCII capable keyboard layout.
+    // NOTE: Such keyboard layouts typically change the layout to its ASCII
+    //       capable layout when Command key is pressed.  And we don't worry
+    //       when Control key is pressed too because it causes inputting
+    //       control characters.
+    if (!aKeyEvent.IsMeta() && !aKeyEvent.IsControl() && IsOpenedIMEMode()) {
+      UInt32 state =
+        nsCocoaUtils::ConvertToCarbonModifier([aNativeKeyEvent modifierFlags]);
+      PRUint32 ch = TranslateToChar(nativeKeyCode, state, kbType);
+      if (ch) {
+        insertString = ch;
+      }
+    } else {
+      // If the caller isn't sure what string will be input, let's use
+      // characters of NSEvent.
+      nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
+                                         insertString);
+    }
+
     // If control key is pressed and the eventChars is a non-printable control
     // character, we should convert it to ASCII alphabet.
     if (aKeyEvent.IsControl() &&
@@ -877,7 +950,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
                                          UInt32 aKbType)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-  
+
   NS_ASSERTION(aKeyEvent.message == NS_KEY_PRESS,
                "aKeyEvent must be NS_KEY_PRESS event");
 
@@ -1256,7 +1329,8 @@ TextInputHandler::DebugPrintAllKeyboardLayouts()
               NS_ConvertUTF16toUTF8(name).get(),
               NS_ConvertUTF16toUTF8(isid).get(),
               tis.IsASCIICapable() ? "" : "\t(Isn't ASCII capable)",
-              tis.GetUCKeyboardLayout() ? "" : "\t(uchr is NOT AVAILABLE)"));
+              tis.IsKeyboardLayout() && tis.GetUCKeyboardLayout() ?
+                "" : "\t(uchr is NOT AVAILABLE)"));
     }
     ::CFRelease(list);
   }
@@ -1756,15 +1830,21 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
     tis.GetInputSourceID(newTIS);
     if (!sLastTIS ||
         ::CFStringCompare(sLastTIS, newTIS, 0) != kCFCompareEqualTo) {
-      TISInputSourceWrapper tis1, tis2, tis3;
+      TISInputSourceWrapper tis1, tis2, tis3, tis4, tis5;
       tis1.InitByCurrentKeyboardLayout();
       tis2.InitByCurrentASCIICapableInputSource();
       tis3.InitByCurrentASCIICapableKeyboardLayout();
-      CFStringRef is0, is1, is2, is3, type0, lang0, bundleID0;
+      tis4.InitByCurrentInputMethodKeyboardLayoutOverride();
+      tis5.InitByTISInputSourceRef(tis.GetKeyboardLayoutInputSource());
+      CFStringRef is0 = nullptr, is1 = nullptr, is2 = nullptr, is3 = nullptr,
+                  is4 = nullptr, is5 = nullptr, type0 = nullptr,
+                  lang0 = nullptr, bundleID0 = nullptr;
       tis.GetInputSourceID(is0);
       tis1.GetInputSourceID(is1);
       tis2.GetInputSourceID(is2);
       tis3.GetInputSourceID(is3);
+      tis4.GetInputSourceID(is4);
+      tis5.GetInputSourceID(is5);
       tis.GetInputSourceType(type0);
       tis.GetPrimaryLanguage(lang0);
       tis.GetBundleID(bundleID0);
@@ -1775,6 +1855,8 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
          "    currentInputManager=%p\n"
          "    %s\n"
          "      type=%s %s\n"
+         "      overridden keyboard layout=%s\n"
+         "      used keyboard layout for translation=%s\n"
          "    primary language=%s\n"
          "    bundle ID=%s\n"
          "    current ASCII capable Input Source=%s\n"
@@ -1782,6 +1864,7 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
          "    current ASCII capable Keyboard Layout=%s",
          [NSInputManager currentInputManager], GetCharacters(is0),
          GetCharacters(type0), tis.IsASCIICapable() ? "- ASCII capable " : "",
+         GetCharacters(is4), GetCharacters(is5),
          GetCharacters(lang0), GetCharacters(bundleID0),
          GetCharacters(is2), GetCharacters(is1), GetCharacters(is3)));
     }
@@ -3261,8 +3344,8 @@ PluginTextInputHandler::HandleCarbonPluginKeyEvent(EventRef aKeyEvent)
                                &macKeyCode);
   NS_ENSURE_TRUE(status == noErr, );
 
-  TISInputSourceWrapper currentKeyboardLayout;
-  currentKeyboardLayout.InitByCurrentKeyboardLayout();
+  TISInputSourceWrapper& currentInputSource =
+    TISInputSourceWrapper::CurrentInputSource();
 
   EventRef cloneEvent = ::CopyEvent(aKeyEvent);
   for (uint32_t i = 0; i < numCharCodes; ++i) {
@@ -3276,8 +3359,8 @@ PluginTextInputHandler::HandleCarbonPluginKeyEvent(EventRef aKeyEvent)
       nsCocoaUtils::InitInputEvent(keydownEvent, cocoaModifiers);
 
       uint32_t keyCode =
-        currentKeyboardLayout.ComputeGeckoKeyCode(macKeyCode, ::LMGetKbdType(),
-                                                  keydownEvent.IsMeta());
+        currentInputSource.ComputeGeckoKeyCode(macKeyCode, ::LMGetKbdType(),
+                                               keydownEvent.IsMeta());
       uint32_t charCode(charCodes.ElementAt(i));
 
       keydownEvent.time = PR_IntervalNow();
@@ -3627,7 +3710,7 @@ TextInputHandlerBase::~TextInputHandlerBase()
 {
   [mView release];
   if (--gHandlerInstanceCount == 0) {
-    FinalizeCurrentKeyboardLayout();
+    FinalizeCurrentInputSource();
   }
 }
 
@@ -3668,13 +3751,14 @@ TextInputHandlerBase::InitKeyEvent(NSEvent *aNativeKeyEvent,
 {
   NS_ASSERTION(aNativeKeyEvent, "aNativeKeyEvent must not be NULL");
 
-  TISInputSourceWrapper tis;
   if (mKeyboardOverride.mOverrideEnabled) {
+    TISInputSourceWrapper tis;
     tis.InitByLayoutID(mKeyboardOverride.mKeyboardLayout, true);
-  } else {
-    tis.InitByCurrentKeyboardLayout();
+    tis.InitKeyEvent(aNativeKeyEvent, aKeyEvent, aInsertString);
+    return;
   }
-  tis.InitKeyEvent(aNativeKeyEvent, aKeyEvent, aInsertString);
+  TISInputSourceWrapper::CurrentInputSource().
+    InitKeyEvent(aNativeKeyEvent, aKeyEvent, aInsertString);
 }
 
 nsresult
