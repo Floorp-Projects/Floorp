@@ -47,7 +47,7 @@ nsAccessNodeWrap::~nsAccessNodeWrap()
 // nsISupports methods
 //-----------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsAccessNodeWrap, nsAccessNode, nsIWinAccessNode);
+NS_IMPL_ISUPPORTS_INHERITED1(nsAccessNodeWrap, nsAccessNode, nsIWinAccessNode)
 
 //-----------------------------------------------------
 // nsIWinAccessNode methods
@@ -92,7 +92,7 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
   // A use case for this is for screen readers that need to switch context or
   // 'virtual buffer' when focus moves from one browser tab area to another.
   static const GUID SID_IAccessibleContentDocument =
-    { 0xa5d8e1f3,0x3571,0x4d8f,0x95,0x21,0x07,0xed,0x28,0xfb,0x07,0x2e };
+    { 0xa5d8e1f3,0x3571,0x4d8f,{0x95,0x21,0x07,0xed,0x28,0xfb,0x07,0x2e} };
   if (guidService == SID_IAccessibleContentDocument) {
     if (iid != IID_IAccessible)
       return E_NOINTERFACE;
@@ -153,7 +153,7 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
    */
 
   static const GUID IID_SimpleDOMDeprecated =
-    { 0x0c539790,0x12e4,0x11cf,0xb6,0x61,0x00,0xaa,0x00,0x4c,0xd6,0xd8 };
+    { 0x0c539790,0x12e4,0x11cf,{0xb6,0x61,0x00,0xaa,0x00,0x4c,0xd6,0xd8} };
   if (guidService == IID_ISimpleDOMNode ||
       guidService == IID_SimpleDOMDeprecated ||
       guidService == IID_IAccessible ||  guidService == IID_IAccessible2)
