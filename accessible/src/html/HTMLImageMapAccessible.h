@@ -55,7 +55,6 @@ public:
 
   // Accessible
   virtual void Description(nsString& aDescription);
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild);
   virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
@@ -65,8 +64,8 @@ public:
   virtual uint32_t EndOffset();
 
 protected:
-
   // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
   virtual void CacheChildren();
 };
 

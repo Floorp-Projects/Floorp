@@ -49,9 +49,9 @@ function InitDetectorTests()
             gExpectedCharset = prefService
                 .getComplexValue("intl.charset.default",
                                  Ci.nsIPrefLocalizedString)
-                .data;
+                .data.toLowerCase();
         } catch (e) {
-            gExpectedCharset = "ISO-8859-8";
+            gExpectedCharset = "iso-8859-8";
         }
     }
 

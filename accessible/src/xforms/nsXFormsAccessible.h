@@ -46,9 +46,6 @@ public:
   // Returns value of instance node that xforms element is bound to.
   virtual void Value(nsString& aValue);
 
-  // Returns value of child xforms 'label' element.
-  virtual nsresult GetNameInternal(nsAString& aName);
-
   // Returns state of xforms element taking into account state of instance node
   // that it is bound to.
   virtual uint64_t NativeState();
@@ -58,7 +55,12 @@ public:
   // always returning false value.
   virtual bool CanHaveAnonChildren();
 
+
 protected:
+  // Accessible
+  // Returns value of child xforms 'label' element.
+  virtual mozilla::a11y::ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
+
   // Returns value of first child xforms element by tagname that is bound to
   // instance node.
   nsresult GetBoundChildElementValue(const nsAString& aTagName,

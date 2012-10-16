@@ -158,11 +158,12 @@ nsXFormsAccessible::NativelyUnavailable() const
   return !isRelevant;
 }
 
-nsresult
-nsXFormsAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+nsXFormsAccessible::NativeName(nsString& aName)
 {
   // search the xforms:label element
-  return GetBoundChildElementValue(NS_LITERAL_STRING("label"), aName);
+  GetBoundChildElementValue(NS_LITERAL_STRING("label"), aName);
+  return eNameOK;
 }
 
 void

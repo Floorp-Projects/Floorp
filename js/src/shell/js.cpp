@@ -793,6 +793,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
     jschar *sourceMapURL = NULL;
     unsigned lineNumber = 1;
     RootedObject global(cx, NULL);
+    bool catchTermination = false;
 
     global = JS_GetGlobalForObject(cx, &args.callee());
     if (!global)
@@ -878,6 +879,15 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
                 return false;
             }
         }
+
+        if (!JS_GetProperty(cx, options, "catchTermination", &v))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            JSBool b;
+            if (!JS_ValueToBoolean(cx, v, &b))
+                return false;
+            catchTermination = b;
+        }
     }
 
     RootedString code(cx, args[0].toString());
@@ -913,8 +923,13 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             if (!script->scriptSource()->setSourceMap(cx, sourceMapURL, script->filename))
                 return false;
         }
-        if (!JS_ExecuteScript(cx, global, script, vp))
+        if (!JS_ExecuteScript(cx, global, script, vp)) {
+            if (catchTermination && !JS_IsExceptionPending(cx)) {
+                *vp = StringValue(JS_NewStringCopyZ(cx, "terminated"));
+                return true;
+            }
             return false;
+        }
     }
 
     return JS_WrapValue(cx, vp);
@@ -3441,7 +3456,10 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "      fileName: filename for error messages and debug info\n"
 "      lineNumber: starting line number for error messages and debug info\n"
 "      global: global in which to execute the code\n"
-"      newContext: if true, create and use a new cx (default: false)\n"),
+"      newContext: if true, create and use a new cx (default: false)\n"
+"      catchTermination: if true, catch termination (failure without\n"
+"         an exception value, as for slow scripts or out-of-memory)\n"
+"          and return 'terminated'\n"),
 
     JS_FN_HELP("run", Run, 1, 0,
 "run('foo.js')",
