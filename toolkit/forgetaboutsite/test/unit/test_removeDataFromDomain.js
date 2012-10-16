@@ -624,6 +624,8 @@ let tests = [
 
 function run_test()
 {
+  Services.prefs.setBoolPref("places.history.enabled", true);
+
   for (let i = 0; i < tests.length; i++)
     tests[i]();
 
