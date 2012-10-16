@@ -101,6 +101,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsICSSDeclaration.h"
 
 namespace css = mozilla::css;
 

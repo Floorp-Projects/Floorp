@@ -50,6 +50,15 @@ nsDOMTokenList::DropReference()
   mElement = nullptr;
 }
 
+const nsAttrValue*
+nsDOMTokenList::GetParsedAttr()
+{
+  if (!mElement) {
+    return nullptr;
+  }
+  return mElement->GetAttrInfo(kNameSpaceID_None, mAttrAtom).mValue;
+}
+
 uint32_t
 nsDOMTokenList::Length()
 {

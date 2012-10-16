@@ -32,6 +32,7 @@ class nsICSSDeclaration;
 class nsIDocument;
 class nsDOMStringMap;
 class nsIDOMNamedNodeMap;
+class nsIHTMLCollection;
 class nsINodeInfo;
 class nsIURI;
 
@@ -220,6 +221,8 @@ public:
   virtual const nsAttrValue* DoGetClasses() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
 
+  nsIHTMLCollection* Children();
+
 public:
   /**
    * If there are listeners for DOMNodeInserted event, fires the event on all
@@ -369,8 +372,6 @@ protected:
    * Array containing all attributes and children for this element
    */
   nsAttrAndChildArray mAttrsAndChildren;
-
-  nsContentList* GetChildrenList();
 };
 
 } // namespace dom
