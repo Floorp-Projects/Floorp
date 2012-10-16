@@ -18,9 +18,6 @@
 #include "nsTableColFrame.h"
 #include "nsCOMPtr.h"
 #include "nsDisplayList.h"
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
 
 using namespace mozilla;
 
@@ -1343,16 +1340,10 @@ void nsTableRowFrame::SetContinuousBCBorderWidth(uint8_t     aForSide,
   }
 }
 #ifdef ACCESSIBILITY
-already_AddRefed<Accessible>
-nsTableRowFrame::CreateAccessible()
+a11y::AccType
+nsTableRowFrame::AccessibleType()
 {
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  if (accService) {
-    return accService->CreateHTMLTableRowAccessible(mContent,
-                                                    PresContext()->PresShell());
-  }
-
-  return nullptr;
+  return a11y::eHTMLTableRowAccessible;
 }
 #endif
 /**

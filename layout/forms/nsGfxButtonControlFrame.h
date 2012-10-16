@@ -12,10 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAnonymousContentCreator.h"
 
-#ifdef ACCESSIBILITY
-class nsIAccessible;
-#endif
-
 // Class which implements the input[type=button, reset, submit] and
 // browse button for input[type=file].
 // The label for button is specified through generated content

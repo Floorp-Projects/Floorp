@@ -78,6 +78,15 @@ var tests = {
   },
 
   testCloseSelf: function(next) {
+    // window.close is affected by the pref dom.allow_scripts_to_close_windows,
+    // which defaults to false, but is set to true by the test harness.
+    // so temporarily set it back.
+    const ALLOW_SCRIPTS_TO_CLOSE_PREF = "dom.allow_scripts_to_close_windows";
+    // note clearUserPref doesn't do what we expect, as the test harness itself
+    // changes the pref value - so clearUserPref resets it to false rather than
+    // the true setup by the test harness.
+    let oldAllowScriptsToClose = Services.prefs.getBoolPref(ALLOW_SCRIPTS_TO_CLOSE_PREF);    
+    Services.prefs.setBoolPref(ALLOW_SCRIPTS_TO_CLOSE_PREF, false);
     let panel = document.getElementById("social-flyout-panel");
     let port = Social.provider.getWorkerPort();
     ok(port, "provider has a port");
@@ -92,6 +101,7 @@ var tests = {
           iframe.contentDocument.addEventListener("SocialTest-DoneCloseSelf", function _doneHandler() {
             iframe.contentDocument.removeEventListener("SocialTest-DoneCloseSelf", _doneHandler, false);
             is(panel.state, "closed", "flyout should have closed itself");
+            Services.prefs.setBoolPref(ALLOW_SCRIPTS_TO_CLOSE_PREF, oldAllowScriptsToClose);
             next();
           }, false);
           is(panel.state, "open", "flyout should be open");

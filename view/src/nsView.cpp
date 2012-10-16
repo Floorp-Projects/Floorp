@@ -29,6 +29,7 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
   mViewManager = aViewManager;
   mDirtyRegion = nullptr;
   mWidgetIsTopLevel = false;
+  mInAlternatePaint = false;
 }
 
 void nsView::DropMouseGrabbing()
@@ -1030,10 +1031,13 @@ nsView::WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint)
 }
 
 bool
-nsView::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, bool aSentWillPaint, bool aWillSendDidPaint)
+nsView::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags)
 {
+  mInAlternatePaint = aFlags & PAINT_IS_ALTERNATE;
   nsCOMPtr<nsViewManager> vm = mViewManager;
-  return vm->PaintWindow(aWidget, aRegion, aSentWillPaint, aWillSendDidPaint);
+  bool result = vm->PaintWindow(aWidget, aRegion, aFlags);
+  mInAlternatePaint = false;
+  return result;
 }
 
 void

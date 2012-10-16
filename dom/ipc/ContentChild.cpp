@@ -20,6 +20,7 @@
 #endif
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryInfoDumper.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/StorageChild.h"
@@ -447,12 +448,17 @@ ContentChild::RecvDumpMemoryReportsToFile(const nsString& aIdentifier,
                                           const bool& aMinimizeMemoryUsage,
                                           const bool& aDumpChildProcesses)
 {
-    nsCOMPtr<nsIMemoryReporterManager> mgr =
-        do_GetService("@mozilla.org/memory-reporter-manager;1");
-    NS_ENSURE_TRUE(mgr, true);
-    mgr->DumpMemoryReportsToFile(aIdentifier,
-                                 aMinimizeMemoryUsage,
-                                 aDumpChildProcesses);
+    MemoryInfoDumper::DumpMemoryReportsToFile(
+        aIdentifier, aMinimizeMemoryUsage, aDumpChildProcesses);
+    return true;
+}
+
+bool
+ContentChild::RecvDumpGCAndCCLogsToFile(const nsString& aIdentifier,
+                                        const bool& aDumpChildProcesses)
+{
+    MemoryInfoDumper::DumpGCAndCCLogsToFile(
+        aIdentifier, aDumpChildProcesses);
     return true;
 }
 

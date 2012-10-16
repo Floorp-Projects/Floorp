@@ -8,7 +8,7 @@ interface nsIURI;
 interface nsIObserver;
 interface nsIHttpChannel;
 
-[scriptable, uuid(16955eee-6c48-4152-9309-c42a465138a1)]
+[scriptable, uuid(aee925d1-2bc9-469e-9582-b27b1d6b5192)]
 interface nsIStrictTransportSecurityService : nsISupports
 {
     /**
@@ -20,13 +20,17 @@ interface nsIStrictTransportSecurityService : nsISupports
      *
      * @param aSourceURI the URI of the resource with the HTTP header.
      * @param aHeader the HTTP response header specifying STS data.
+     * @param aMaxAge the parsed max-age directive of the header.
+     * @param aIncludeSubdomains the parsed includeSubdomains directive.
      * @return NS_OK            if it succeeds
      *         NS_ERROR_FAILURE if it can't be parsed
      *         NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA
      *                          if there are unrecognized tokens in the header.
      */
     void processStsHeader(in nsIURI aSourceURI,
-                          in string aHeader);
+                          in string aHeader,
+                          [optional] out unsigned long long aMaxAge,
+                          [optional] out boolean aIncludeSubdomains);
 
     /**
      * Removes the STS state of a host, including the includeSubdomains state

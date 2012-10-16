@@ -705,14 +705,14 @@ bool nsWebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
 
       b.mPlanes[1].mData = img->planes[1];
       b.mPlanes[1].mStride = img->stride[1];
-      b.mPlanes[1].mHeight = img->d_h >> img->y_chroma_shift;
-      b.mPlanes[1].mWidth = img->d_w >> img->x_chroma_shift;
+      b.mPlanes[1].mHeight = (img->d_h + 1) >> img->y_chroma_shift;
+      b.mPlanes[1].mWidth = (img->d_w + 1) >> img->x_chroma_shift;
       b.mPlanes[1].mOffset = b.mPlanes[1].mSkip = 0;
  
       b.mPlanes[2].mData = img->planes[2];
       b.mPlanes[2].mStride = img->stride[2];
-      b.mPlanes[2].mHeight = img->d_h >> img->y_chroma_shift;
-      b.mPlanes[2].mWidth = img->d_w >> img->x_chroma_shift;
+      b.mPlanes[2].mHeight = (img->d_h + 1) >> img->y_chroma_shift;
+      b.mPlanes[2].mWidth = (img->d_w + 1) >> img->x_chroma_shift;
       b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
   
       nsIntRect picture = mPicture;

@@ -3,8 +3,8 @@
      Any copyright is dedicated to the Public Domain.
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
-<!-- Testcase with a variety of 'display: -moz-flex' examples testing each
-     possible value of the '-moz-justify-content' property, and with each
+<!-- Testcase with a variety of 'display: flex' examples testing each
+     possible value of the 'justify-content' property, and with each
      individual flex item being wider than the flexbox itself (so that
      there isn't any packing space available).
        * For 'flex-start'/'space-between', we should overflow on the end
@@ -18,22 +18,22 @@
       body { margin-left: 100px; } /* So we can see left-overflowed stuff */
       div.flexbox {
         width: 30px;
-        display: -moz-flex;
+        display: flex;
         margin-bottom: 2px;
       }
       div.a {
         height: 20px;
-        -moz-flex: 0 0 35px;
+        flex: 0 0 35px;
         background: lightgreen;
       }
       div.b {
         height: 20px;
-        -moz-flex: 0 0 40px;
+        flex: 0 0 40px;
         background: pink;
       }
       div.c {
         height: 20px;
-        -moz-flex: 0 0 45px;
+        flex: 0 0 45px;
         background: orange;
       }
     </style>
@@ -52,57 +52,57 @@
     </div>
 
     <!-- flex-start -->
-    <div class="flexbox" style="-moz-justify-content: flex-start">
+    <div class="flexbox" style="justify-content: flex-start">
       <div class="a"/>
     </div>
-    <div class="flexbox" style="-moz-justify-content: flex-start">
+    <div class="flexbox" style="justify-content: flex-start">
       <div class="a"/><div class="b"/>
     </div>
-    <div class="flexbox" style="-moz-justify-content: flex-start">
+    <div class="flexbox" style="justify-content: flex-start">
       <div class="a"/><div class="b"/><div class="c"/>
     </div>
 
     <!-- flex-end -->
-    <div class="flexbox" style="-moz-justify-content: flex-end">
+    <div class="flexbox" style="justify-content: flex-end">
       <div class="a"/>
     </div>
-    <div class="flexbox" style="-moz-justify-content: flex-end">
+    <div class="flexbox" style="justify-content: flex-end">
       <div class="a"/><div class="b"/>
     </div>
-    <div class="flexbox" style="-moz-justify-content: flex-end">
+    <div class="flexbox" style="justify-content: flex-end">
       <div class="a"/><div class="b"/><div class="c"/>
     </div>
 
     <!-- center -->
-    <div class="flexbox" style="-moz-justify-content: center">
+    <div class="flexbox" style="justify-content: center">
       <div class="a"/>
     </div>
-    <div class="flexbox" style="-moz-justify-content: center">
+    <div class="flexbox" style="justify-content: center">
       <div class="a"/><div class="b"/>
     </div>
-    <div class="flexbox" style="-moz-justify-content: center">
+    <div class="flexbox" style="justify-content: center">
       <div class="a"/><div class="b"/><div class="c"/>
     </div>
 
     <!-- space-between -->
-    <div class="flexbox" style="-moz-justify-content: space-between">
+    <div class="flexbox" style="justify-content: space-between">
       <div class="a"/>
     </div>
-    <div class="flexbox" style="-moz-justify-content: space-between">
+    <div class="flexbox" style="justify-content: space-between">
       <div class="a"/><div class="b"/>
     </div>
-    <div class="flexbox" style="-moz-justify-content: space-between">
+    <div class="flexbox" style="justify-content: space-between">
       <div class="a"/><div class="b"/><div class="c"/>
     </div>
 
     <!-- space-around -->
-    <div class="flexbox" style="-moz-justify-content: space-around">
+    <div class="flexbox" style="justify-content: space-around">
       <div class="a"/>
     </div>
-    <div class="flexbox" style="-moz-justify-content: space-around">
+    <div class="flexbox" style="justify-content: space-around">
       <div class="a"/><div class="b"/>
     </div>
-    <div class="flexbox" style="-moz-justify-content: space-around">
+    <div class="flexbox" style="justify-content: space-around">
       <div class="a"/><div class="b"/><div class="c"/>
     </div>
 

@@ -135,11 +135,11 @@ public:
   virtual bool CanContinueTextRun() const MOZ_OVERRIDE;
 
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<Accessible> CreateAccessible() MOZ_OVERRIDE
+  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE
   {
     nsIFrame* realFrame = GetRealFrameForPlaceholder(this);
-    return realFrame ? realFrame->CreateAccessible() :
-                       nsFrame::CreateAccessible();
+    return realFrame ? realFrame->AccessibleType() :
+                       nsFrame::AccessibleType();
   }
 #endif
 

@@ -14,6 +14,13 @@
 
 namespace mozilla {
 
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gMediaManagerLog;
+#define LOG(msg) PR_LOG(gMediaManagerLog, PR_LOG_DEBUG, msg)
+#else
+#define LOG(msg)
+#endif
+
 /**
  * Webrtc audio source.
  */
@@ -207,9 +214,7 @@ MediaEngineWebRTCAudioSource::Process(const int channel,
   nsRefPtr<SharedBuffer> buffer = SharedBuffer::Create(length * sizeof(sample));
 
   sample* dest = static_cast<sample*>(buffer->Data());
-  for (int i = 0; i < length; i++) {
-    dest[i] = audio10ms[i];
-  }
+  memcpy(dest, audio10ms, length * sizeof(sample));
 
   AudioSegment segment;
   segment.Init(CHANNELS);

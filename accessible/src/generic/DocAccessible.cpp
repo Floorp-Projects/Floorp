@@ -43,6 +43,7 @@
 #include "nsIURI.h"
 #include "nsIWebNavigation.h"
 #include "nsFocusManager.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/dom/Element.h"
 
 #ifdef A11Y_LOG
@@ -85,8 +86,8 @@ DocAccessible::
   mPresShell(aPresShell)
 {
   mFlags |= eDocAccessible | eNotNodeMapEntry;
-  if (mPresShell)
-    mPresShell->SetAccDocument(this);
+  MOZ_ASSERT(mPresShell, "should have been given a pres shell");
+  mPresShell->SetDocAccessible(this);
 
   mDependentIDsHash.Init();
   // XXX aaronl should we use an algorithm for the initial cache size?
@@ -636,7 +637,7 @@ DocAccessible::Shutdown()
     logging::DocDestroy("document shutdown", mDocument, this);
 #endif
 
-  mPresShell->SetAccDocument(nullptr);
+  mPresShell->SetDocAccessible(nullptr);
 
   if (mNotificationController) {
     mNotificationController->Shutdown();
@@ -1120,6 +1121,14 @@ DocAccessible::AttributeChangedImpl(nsIContent* aContent, int32_t aNameSpaceID, 
       new AccStateChangeEvent(aContent, states::EDITABLE);
     FireDelayedAccessibleEvent(editableChangeEvent);
     return;
+  }
+
+  if (aAttribute == nsGkAtoms::value) {
+    Accessible* accessible = GetAccessible(aContent);
+    if(accessible->IsProgress()) {
+      FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
+                                 aContent);
+    }
   }
 }
 

@@ -14,6 +14,7 @@ MOCHITEST_FILES = \
   test_domrequest.html \
   test_gsp-standards.html \
   test_gsp-quirks.html \
+  test_gsp-qualified.html \
   test_nondomexception.html \
   test_screen_orientation.html \
   $(NULL)

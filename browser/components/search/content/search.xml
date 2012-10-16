@@ -623,6 +623,20 @@
       </method>
 
       <!--
+        This overrides the searchParam property in autocomplete.xml.  We're
+        hijacking this property as a vehicle for delivering the privacy
+        information about the window into the guys of nsSearchSuggestions.
+
+        Note that the setter is the same as the parent.  We were not sure whether
+        we can override just the getter.  If that proves to be the case, the setter
+        can be removed.
+      -->
+      <property name="searchParam"
+                onget="return this.getAttribute('autocompletesearchparam') +
+                       (PrivateBrowsingUtils.isWindowPrivate(window) ? '|private' : '');"
+                onset="this.setAttribute('autocompletesearchparam', val); return val;"/>
+
+      <!--
         This method overrides the autocomplete binding's openPopup (essentially
         duplicating the logic from the autocomplete popup binding's
         openAutocompletePopup method), modifying it so that the popup is aligned with

@@ -2121,7 +2121,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
           setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
 
         if (mWidgetListener)
-            mWidgetListener->PaintWindow(this, region, true, true);
+            mWidgetListener->PaintWindow(this, region, nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
 
         g_free(rects);
 
@@ -2135,7 +2135,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         manager->SetClippingRegion(region);
 
         if (mWidgetListener)
-            mWidgetListener->PaintWindow(this, region, true, true);
+            mWidgetListener->PaintWindow(this, region, nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
 
         g_free(rects);
 
@@ -2203,7 +2203,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
       AutoLayerManagerSetup setupLayerManager(this, ctx, layerBuffering);
 
       if (mWidgetListener)
-        painted = mWidgetListener->PaintWindow(this, region, true, true);
+        painted = mWidgetListener->PaintWindow(this, region, nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
     }
 
 #ifdef MOZ_X11

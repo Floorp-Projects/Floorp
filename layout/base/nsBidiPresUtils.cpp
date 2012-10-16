@@ -2102,7 +2102,8 @@ bool nsBidiPresUtils::WriteLogicalToVisual(const PRUnichar* aSrc,
     }
   }
 
-  NS_ASSERTION(dest - aDest == aSrcLength, "whole string not copied");
+  NS_ASSERTION(static_cast<uint32_t>(dest - aDest) == aSrcLength,
+               "whole string not copied");
   return true;
 }
 

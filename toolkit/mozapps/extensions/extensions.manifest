@@ -1,5 +1,6 @@
 component {66354bc9-7ed1-4692-ae1d-8da97d6b205e} nsBlocklistService.js
 contract @mozilla.org/extensions/blocklist;1 {66354bc9-7ed1-4692-ae1d-8da97d6b205e}
+#ifndef MOZ_WIDGET_GONK
 category update-timer nsBlocklistService @mozilla.org/extensions/blocklist;1,getService,blocklist-background-update-timer,extensions.blocklist.interval,86400
 component {4399533d-08d1-458c-a87a-235f74451cfa} addonManager.js
 contract @mozilla.org/addons/integration;1 {4399533d-08d1-458c-a87a-235f74451cfa}
@@ -9,3 +10,4 @@ contract @mozilla.org/uriloader/content-handler;1?type=application/x-xpinstall {
 component {0f38e086-89a3-40a5-8ffc-9b694de1d04a} amWebInstallListener.js
 contract @mozilla.org/addons/web-install-listener;1 {0f38e086-89a3-40a5-8ffc-9b694de1d04a}
 category addon-provider-module PluginProvider resource://gre/modules/PluginProvider.jsm
+#endif
