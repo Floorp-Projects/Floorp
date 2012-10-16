@@ -66,6 +66,15 @@ public:
   }
 
   virtual void GetSupportedNames(nsTArray<nsString>& aNames) = 0;
+
+  JSObject* GetWrapper()
+  {
+    nsWrapperCache* cache;
+    CallQueryInterface(this, &cache);
+    return cache->GetWrapper();
+  }
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
+                               bool *triedToWrap) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLCollection, NS_IHTMLCOLLECTION_IID)

@@ -2014,48 +2014,71 @@ nsINode::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   return n;
 }
 
-#define EVENT(name_, id_, type_, struct_)                                    \
+#define EVENT_HELPER(name_, handlerClass_)                                   \
   NS_IMETHODIMP nsINode::GetOn##name_(JSContext *cx, jsval *vp) {            \
-    nsEventListenerManager *elm = GetListenerManager(false);                 \
-    if (elm) {                                                               \
-      EventHandlerNonNull* h = elm->GetEventHandler(nsGkAtoms::on##name_);   \
-      if (h) {                                                               \
-        *vp = JS::ObjectValue(*h->Callable());                               \
-        return NS_OK;                                                        \
-      }                                                                      \
-    }                                                                        \
-    *vp = JSVAL_NULL;                                                        \
+    handlerClass_* h = GetOn##name_();                                       \
+    vp->setObjectOrNull(h ? h->Callable() : nullptr);                        \
     return NS_OK;                                                            \
   }                                                                          \
   NS_IMETHODIMP nsINode::SetOn##name_(JSContext *cx, const jsval &v) {       \
-    nsEventListenerManager *elm = GetListenerManager(true);                  \
-    if (!elm) {                                                              \
-      return NS_ERROR_OUT_OF_MEMORY;                                         \
-    }                                                                        \
-                                                                             \
     JSObject *obj = GetWrapper();                                            \
     if (!obj) {                                                              \
       /* Just silently do nothing */                                         \
       return NS_OK;                                                          \
     }                                                                        \
-    nsRefPtr<EventHandlerNonNull> handler;                                   \
+    nsRefPtr<handlerClass_> handler;                                         \
     JSObject *callable;                                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
       bool ok;                                                               \
-      handler = new EventHandlerNonNull(cx, obj, callable, &ok);             \
+      handler = new handlerClass_(cx, obj, callable, &ok);                   \
       if (!ok) {                                                             \
         return NS_ERROR_OUT_OF_MEMORY;                                       \
       }                                                                      \
     }                                                                        \
-    return elm->SetEventHandler(nsGkAtoms::on##name_, handler);              \
+    ErrorResult rv;                                                          \
+    SetOn##name_(handler, rv);                                               \
+    return rv.ErrorCode();                                                   \
   }
+
+#define EVENT(name_, id_, type_, struct_)                                    \
+  EventHandlerNonNull* nsINode::GetOn##name_() {                             \
+    nsEventListenerManager *elm = GetListenerManager(false);                 \
+    return elm ? elm->GetEventHandler(nsGkAtoms::on##name_) : nullptr;       \
+  }                                                                          \
+  void nsINode::SetOn##name_(EventHandlerNonNull* handler,                   \
+                             ErrorResult& error) {                           \
+    nsEventListenerManager *elm = GetListenerManager(true);                  \
+    if (elm) {                                                               \
+      error = elm->SetEventHandler(nsGkAtoms::on##name_, handler);           \
+    } else {                                                                 \
+      error.Throw(NS_ERROR_OUT_OF_MEMORY);                                   \
+    }                                                                        \
+  }                                                                          \
+  EVENT_HELPER(name_, EventHandlerNonNull)
 #define TOUCH_EVENT EVENT
 #define DOCUMENT_ONLY_EVENT EVENT
+#define ERROR_EVENT(name_, id_, type_, struct_)                              \
+  OnErrorEventHandlerNonNull* nsINode::GetOn##name_() {                      \
+    nsEventListenerManager *elm = GetListenerManager(false);                 \
+    return elm ? elm->GetOnErrorEventHandler() : nullptr;                    \
+  }                                                                          \
+  void nsINode::SetOn##name_(OnErrorEventHandlerNonNull* handler,            \
+                             ErrorResult& error) {                           \
+    nsEventListenerManager *elm = GetListenerManager(true);                  \
+    if (elm) {                                                               \
+      error = elm->SetEventHandler(handler);                                 \
+    } else {                                                                 \
+      error.Throw(NS_ERROR_OUT_OF_MEMORY);                                   \
+    }                                                                        \
+  }                                                                          \
+  EVENT_HELPER(name_, OnErrorEventHandlerNonNull)
 #include "nsEventNameList.h"
+#undef ERROR_EVENT  
 #undef DOCUMENT_ONLY_EVENT
 #undef TOUCH_EVENT
 #undef EVENT
+#undef EVENT_HELPER
 
 bool
 nsINode::Contains(const nsINode* aOther) const
@@ -2132,21 +2155,18 @@ NS_IMETHODIMP
 nsNodeSelectorTearoff::QuerySelector(const nsAString& aSelector,
                                      nsIDOMElement **aReturn)
 {
-  nsresult rv;
-  nsIContent* result = mNode->QuerySelector(aSelector, &rv);
-  if (!result) {
-    *aReturn = nullptr;
-    return rv;
-  }
-
-  return CallQueryInterface(result, aReturn);
+  ErrorResult rv;
+  nsIContent* result = mNode->QuerySelector(aSelector, rv);
+  return result ? CallQueryInterface(result, aReturn) : rv.ErrorCode();
 }
 
 NS_IMETHODIMP
 nsNodeSelectorTearoff::QuerySelectorAll(const nsAString& aSelector,
                                         nsIDOMNodeList **aReturn)
 {
-  return mNode->QuerySelectorAll(aSelector, aReturn);
+  ErrorResult rv;
+  *aReturn = mNode->QuerySelectorAll(aSelector, rv).get();
+  return rv.ErrorCode();
 }
 
 // NOTE: The aPresContext pointer is NOT addrefed.
@@ -2190,9 +2210,8 @@ ParseSelectorList(nsINode* aNode,
 // null) and which are descendants of aRoot and put them in aList.  If
 // onlyFirstMatch, then stop once the first one is found.
 template<bool onlyFirstMatch, class T>
-inline static nsresult FindMatchingElements(nsINode* aRoot,
-                                            const nsAString& aSelector,
-                                            T &aList)
+inline static nsresult
+FindMatchingElements(nsINode* aRoot, const nsAString& aSelector, T &aList)
 {
   nsAutoPtr<nsCSSSelectorList> selectorList;
   nsresult rv = ParseSelectorList(aRoot, aSelector,
@@ -2273,35 +2292,28 @@ struct ElementHolder {
   ElementHolder() : mElement(nullptr) {}
   void AppendElement(Element* aElement) {
     NS_ABORT_IF_FALSE(!mElement, "Should only get one element");
-    mElement = aElement;
+    mElement = static_cast<nsGenericElement*>(aElement);
   }
-  Element* mElement;
+  nsGenericElement* mElement;
 };
 
-nsIContent*
-nsINode::QuerySelector(const nsAString& aSelector,
-                       nsresult *aResult)
+nsGenericElement*
+nsINode::QuerySelector(const nsAString& aSelector, ErrorResult& aResult)
 {
-  NS_PRECONDITION(aResult, "Null out param?");
-
   ElementHolder holder;
-  *aResult = FindMatchingElements<true>(this, aSelector, holder);
+  aResult = FindMatchingElements<true>(this, aSelector, holder);
 
   return holder.mElement;
 }
 
-/* static */
-nsresult
-nsINode::QuerySelectorAll(const nsAString& aSelector,
-                          nsIDOMNodeList **aReturn)
+already_AddRefed<nsINodeList>
+nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
 {
-  NS_PRECONDITION(aReturn, "Null out param?");
+  nsRefPtr<nsSimpleContentList> contentList = new nsSimpleContentList(this);
 
-  nsSimpleContentList* contentList = new nsSimpleContentList(this);
-  NS_ENSURE_TRUE(contentList, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aReturn = contentList);
+  aResult = FindMatchingElements<false>(this, aSelector, *contentList);
 
-  return FindMatchingElements<false>(this, aSelector, *contentList);
+  return contentList.forget();
 }
 
 JSObject*

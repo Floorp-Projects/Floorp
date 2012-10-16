@@ -42,7 +42,7 @@ public:
 
   // Forward interface implementations to base class
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT(nsSVGMpathElementBase::)
+  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGMpathElementBase::)
 
   // nsIContent interface
