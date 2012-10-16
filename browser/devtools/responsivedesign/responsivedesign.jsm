@@ -446,7 +446,15 @@ ResponsiveUI.prototype = {
 
     let title = this.strings.GetStringFromName("responsiveUI.customNamePromptTitle");
     let message = this.strings.formatStringFromName("responsiveUI.customNamePromptMsg", [w, h], 2);
-    Services.prompt.prompt(null, title, message, newName, null, {});
+    let promptOk = Services.prompt.prompt(null, title, message, newName, null, {});
+
+    if (!promptOk) {
+      // Prompt has been cancelled
+      let menuitem = this.customMenuitem;
+      this.menulist.selectedItem = menuitem;
+      this.currentPresetKey = this.customPreset.key;
+      return;
+    }
 
     let newPreset = {
       key: w + "x" + h,
