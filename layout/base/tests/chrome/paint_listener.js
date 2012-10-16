@@ -1,6 +1,9 @@
 var accumulatedRect = null;
 var onpaint = function() {};
 var debug = false;
+var CI = Components.interfaces;
+var utils = window.QueryInterface(CI.nsIInterfaceRequestor)
+            .getInterface(CI.nsIDOMWindowUtils);
 
 function paintListener(event) {
   if (event.target != window)
@@ -27,9 +30,6 @@ function waitForAllPaintsFlushed(callback, subdoc) {
   if (subdoc) {
     subdoc.documentElement.getBoundingClientRect();
   }
-  var CI = Components.interfaces;
-  var utils = window.QueryInterface(CI.nsIInterfaceRequestor)
-              .getInterface(CI.nsIDOMWindowUtils);
   if (!utils.isMozAfterPaintPending) {
     if (debug) {
       dump("done...\n");
@@ -48,3 +48,36 @@ function waitForAllPaintsFlushed(callback, subdoc) {
   }
   onpaint = function() { waitForAllPaintsFlushed(callback, subdoc); };
 }
+
+var notPaintedList = new Array();
+var paintedList = new Array();
+
+function ensureNotPainted(element)
+{
+  utils.checkAndClearPaintedState(element);
+  notPaintedList.push(element);
+}
+
+function ensurePainted(element)
+{
+  utils.checkAndClearPaintedState(element);
+  paintedList.push(element);
+}
+
+function checkInvalidation()
+{
+  for (var i = 0; i < notPaintedList.length; i++) {
+    ok(!utils.checkAndClearPaintedState(notPaintedList[i]), "Should not have repainted element!");
+  }
+  notPaintedList = new Array();
+  for (var i = 0; i < paintedList.length; i++) {
+    ok(utils.checkAndClearPaintedState(notPaintedList[i]), "Should have repainted element!");
+  }
+  paintedList = new Array();
+}
+
+function testInvalidation(callback)
+{
+  waitForAllPaintsFlushed(function() { checkInvalidation(); callback(); }); 
+}
+

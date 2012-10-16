@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Check if we're over invalidating form controls</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="../chrome/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body onload="waitForAllPaintsFlushed(runTest)">
+<!-- Make sure we can always scroll even on large monitors -->
+<div style="position: absolute; z-index: -100; height: 5000px; width: 1px; background-color: white;"></div>
+
+<div id="test" style="height: 100px; width: 1px; background-color: white;"></div>
+
+<select id="combo"name="product">
+</select>
+<input value="Save Changes" id="button" type="submit">
+<input type="checkbox" id="checkbox"/>
+<select id="listbox" size="7">
+</select>
+<input type="radio" id="radio" value="radio">Radio
+<input type="text" id="text"/>
+<a id="link" href="#">Link</a>
+
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var NO_REPAINT_ITEMS = ["combo", "button", "checkbox", "listbox", "radio", "text", "link"];
+var SCROLL_TO = 40;
+var SCROLL_INC = 2;
+var posY = 0;
+
+function runTest() {
+  if (window.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIDOMWindowUtils).layerManagerType == "Basic") {
+    ok(true, "Skipping test on BasicLayers because it fails due to component alpha flattening.");
+    SimpleTest.finish();
+    return;
+  }
+  // Scroll 
+  posY += SCROLL_INC;
+  if (posY >= SCROLL_TO) {
+    SimpleTest.finish();
+    return;
+  }
+
+  // Add all the items to the no-repaint list unless it's the first few
+  // paints
+  if (posY > (SCROLL_INC * 4)) {
+    for (var i = 0; i < NO_REPAINT_ITEMS.length; i++) {
+      ensureNotPainted(document.getElementById(NO_REPAINT_ITEMS[i]));
+    }
+  }
+
+  window.scrollTo(0, posY);
+  testInvalidation(runTest);
+}
+
+</script>
+</body>
+</html>
