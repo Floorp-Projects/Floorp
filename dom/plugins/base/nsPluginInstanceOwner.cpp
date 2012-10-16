@@ -1370,6 +1370,14 @@ bool nsPluginInstanceOwner::IsRemoteDrawingCoreAnimation()
   return coreAnimation;
 }
 
+nsresult nsPluginInstanceOwner::ContentsScaleFactorChanged(double aContentsScaleFactor)
+{
+  if (!mInstance) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  return mInstance->ContentsScaleFactorChanged(aContentsScaleFactor);
+}
+
 NPEventModel nsPluginInstanceOwner::GetEventModel()
 {
   return mEventModel;

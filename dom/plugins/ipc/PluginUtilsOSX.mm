@@ -269,6 +269,14 @@ size_t nsDoubleBufferCARenderer::GetFrontSurfaceHeight() {
   return mFrontSurface->GetHeight();
 }
 
+double nsDoubleBufferCARenderer::GetFrontSurfaceContentsScaleFactor() {
+  if (!HasFrontSurface()) {
+    return 1.0;
+  }
+
+  return mFrontSurface->GetContentsScaleFactor();
+}
+
 size_t nsDoubleBufferCARenderer::GetBackSurfaceWidth() {
   if (!HasBackSurface()) {
     return 0;
@@ -283,6 +291,14 @@ size_t nsDoubleBufferCARenderer::GetBackSurfaceHeight() {
   }
 
   return mBackSurface->GetHeight();
+}
+
+double nsDoubleBufferCARenderer::GetBackSurfaceContentsScaleFactor() {
+  if (!HasBackSurface()) {
+    return 1.0;
+  }
+
+  return mBackSurface->GetContentsScaleFactor();
 }
 
 IOSurfaceID nsDoubleBufferCARenderer::GetFrontSurfaceID() {
