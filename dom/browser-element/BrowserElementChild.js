@@ -621,6 +621,10 @@ BrowserElementChild.prototype = {
         return;
       }
 
+      // Remove password and wyciwyg from uri.
+      location = Cc["@mozilla.org/docshell/urifixup;1"]
+        .getService(Ci.nsIURIFixup).createExposableURI(location);
+
       sendAsyncMsg('locationchange', location.spec);
     },
 
