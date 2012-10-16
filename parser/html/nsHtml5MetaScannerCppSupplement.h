@@ -56,7 +56,10 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
       preferred.LowerCaseEqualsLiteral("utf-16be") ||
       preferred.LowerCaseEqualsLiteral("utf-16le") ||
       preferred.LowerCaseEqualsLiteral("utf-7") ||
-      preferred.LowerCaseEqualsLiteral("x-imap4-modified-utf7")) {
+      preferred.LowerCaseEqualsLiteral("jis_x0212-1990") ||
+      preferred.LowerCaseEqualsLiteral("x-jis0208") ||
+      preferred.LowerCaseEqualsLiteral("x-imap4-modified-utf7") ||
+      preferred.LowerCaseEqualsLiteral("x-user-defined")) {
     return false;
   }
   res = convManager->GetUnicodeDecoderRaw(preferred.get(), getter_AddRefs(mUnicodeDecoder));
