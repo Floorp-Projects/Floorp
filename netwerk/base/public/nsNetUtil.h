@@ -1033,7 +1033,7 @@ NS_BackgroundOutputStream(nsIOutputStream **result,
     return rv;
 }
 
-inline nsresult
+MOZ_WARN_UNUSED_RESULT inline nsresult
 NS_NewBufferedInputStream(nsIInputStream **result,
                           nsIInputStream  *str,
                           uint32_t         bufferSize)
