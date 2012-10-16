@@ -11,6 +11,7 @@
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
 #include "xpcprivate.h"
+#include "nsContentUtils.h"
 #include "XPCQuickStubs.h"
 #include "nsIXPConnect.h"
 
@@ -737,6 +738,25 @@ SetXrayExpandoChain(JSObject* obj, JSObject* chain)
   } else {
     js::SetReservedSlot(obj, DOM_XRAY_EXPANDO_SLOT, v);
   }
+}
+
+JSContext*
+MainThreadDictionaryBase::ParseJSON(const nsAString& aJSON,
+                                    mozilla::Maybe<JSAutoRequest>& aAr,
+                                    mozilla::Maybe<JSAutoCompartment>& aAc,
+                                    JS::Value& aVal)
+{
+  JSContext* cx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
+  NS_ENSURE_TRUE(cx, nullptr);
+  JSObject* global = JS_GetGlobalObject(cx);
+  aAr.construct(cx);
+  aAc.construct(cx, global);
+  if (!JS_ParseJSON(cx,
+                    static_cast<const jschar*>(PromiseFlatString(aJSON).get()),
+                    aJSON.Length(), &aVal)) {
+    return nullptr;
+  }
+  return cx;
 }
 
 } // namespace dom

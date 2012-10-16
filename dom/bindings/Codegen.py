@@ -5390,6 +5390,8 @@ class CGDictionary(CGThing):
         d = self.dictionary
         if d.parent:
             inheritance = ": public %s " % self.makeClassName(d.parent)
+        elif not self.workers:
+            inheritance = ": public MainThreadDictionaryBase "
         else:
             inheritance = ""
         memberDecls = ["  %s %s;" %
@@ -5400,6 +5402,19 @@ class CGDictionary(CGThing):
                 "struct ${selfName} ${inheritance}{\n"
                 "  ${selfName}() {}\n"
                 "  bool Init(JSContext* cx, const JS::Value& val);\n"
+                "  \n" +
+                ("  bool Init(const nsAString& aJSON)\n"
+                 "  {\n"
+                 "    if (aJSON.IsEmpty()) {\n"
+                 "      return true;\n"
+                 "    }\n"
+                 "    mozilla::Maybe<JSAutoRequest> ar;\n"
+                 "    mozilla::Maybe<JSAutoCompartment> ac;\n"
+                 "    jsval json = JSVAL_VOID;\n"
+                 "    JSContext* cx = ParseJSON(aJSON, ar, ac, json);\n"
+                 "    NS_ENSURE_TRUE(cx, false);\n"
+                 "    return Init(cx, json);\n"
+                 "  }\n" if not self.workers else "") +
                 "\n" +
                 "\n".join(memberDecls) + "\n"
                 "private:\n"
