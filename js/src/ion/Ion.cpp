@@ -1018,7 +1018,7 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
     }
     builder->clearForBackEnd();
 
-    if (js_IonOptions.parallelCompilation) {
+    if (js_IonOptions.parallelCompilation && OffThreadCompilationAvailable(cx)) {
         builder->script()->ion = ION_COMPILING_SCRIPT;
 
         if (!StartOffThreadIonCompile(cx, builder)) {
