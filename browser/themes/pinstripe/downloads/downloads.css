@@ -153,7 +153,6 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
 
 /*** Status and progress indicator ***/
 
-#downloads-button,
 #downloads-indicator {
   width: 35px;
 }
