@@ -52,7 +52,7 @@ enum
 class TISInputSourceWrapper
 {
 public:
-  static TISInputSourceWrapper& CurrentKeyboardLayout();
+  static TISInputSourceWrapper& CurrentInputSource();
 
   TISInputSourceWrapper()
   {
@@ -102,13 +102,27 @@ public:
   void InitByCurrentKeyboardLayout();
   void InitByCurrentASCIICapableInputSource();
   void InitByCurrentASCIICapableKeyboardLayout();
+  void InitByCurrentInputMethodKeyboardLayoutOverride();
   void InitByTISInputSourceRef(TISInputSourceRef aInputSource);
   void InitByLanguage(CFStringRef aLanguage);
 
+  /**
+   * If the instance is initialized with a keyboard layout input source,
+   * returns it.
+   * If the instance is initialized with an IME mode input source, the result
+   * references the keyboard layout for the IME mode.  However, this can be
+   * initialized only when the IME mode is actually selected.  I.e, if IME mode
+   * input source is initialized with LayoutID or SourceID, this returns null.
+   */
+  TISInputSourceRef GetKeyboardLayoutInputSource() const
+  {
+    return mKeyboardLayout;
+  }
   const UCKeyboardLayout* GetUCKeyboardLayout();
 
   bool IsOpenedIMEMode();
   bool IsIMEMode();
+  bool IsKeyboardLayout();
 
   bool IsASCIICapable()
   {
@@ -175,7 +189,7 @@ public:
   }
 
   bool IsForRTLLanguage();
-  bool IsInitializedByCurrentKeyboardLayout();
+  bool IsInitializedByCurrentInputSource();
 
   enum {
     // 40 is an actual result of the ::LMGetKbdType() when we connect an
@@ -273,6 +287,7 @@ protected:
   bool GetStringProperty(const CFStringRef aKey, nsAString &aStr);
 
   TISInputSourceRef mInputSource;
+  TISInputSourceRef mKeyboardLayout;
   CFArrayRef mInputSourceList;
   const UCKeyboardLayout* mUCKeyboardLayout;
   int8_t mIsRTL;
