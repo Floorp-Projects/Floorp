@@ -1721,23 +1721,6 @@ nsContentUtils::TraceSafeJSContext(JSTracer* aTrc)
   }
 }
 
-nsresult
-nsContentUtils::ReparentContentWrappersInScope(JSContext *cx,
-                                               nsIScriptGlobalObject *aOldScope,
-                                               nsIScriptGlobalObject *aNewScope)
-{
-  JSObject *oldScopeObj = aOldScope->GetGlobalJSObject();
-  JSObject *newScopeObj = aNewScope->GetGlobalJSObject();
-
-  if (!newScopeObj || !oldScopeObj) {
-    // We can't really do anything without the JSObjects.
-
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  return sXPConnect->MoveWrappers(cx, oldScopeObj, newScopeObj);
-}
-
 nsPIDOMWindow *
 nsContentUtils::GetWindowFromCaller()
 {
