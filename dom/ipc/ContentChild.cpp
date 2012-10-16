@@ -456,6 +456,17 @@ ContentChild::RecvDumpMemoryReportsToFile(const nsString& aIdentifier,
     return true;
 }
 
+bool
+ContentChild::RecvDumpGCAndCCLogsToFile(const nsString& aIdentifier,
+                                        const bool& aDumpChildProcesses)
+{
+    nsCOMPtr<nsIMemoryReporterManager> mgr =
+        do_GetService("@mozilla.org/memory-reporter-manager;1");
+    NS_ENSURE_TRUE(mgr, true);
+    mgr->DumpGCAndCCLogsToFile(aIdentifier, aDumpChildProcesses);
+    return true;
+}
+
 PCompositorChild*
 ContentChild::AllocPCompositor(mozilla::ipc::Transport* aTransport,
                                base::ProcessId aOtherProcess)

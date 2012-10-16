@@ -208,6 +208,15 @@ child:
                                   bool minimizeMemoryUsage,
                                   bool dumpChildProcesses);
 
+    /**
+     * Dump this process's GC and CC logs.
+     *
+     * For documentation on the args, see
+     * nsIMemoryReporterManager::dumpGCAndCCLogsToFile.
+     */
+    async DumpGCAndCCLogsToFile(nsString identifier,
+                                bool dumpChildProcesses);
+
     PTestShell();
 
     RegisterChrome(ChromePackage[] packages, ResourceMapping[] resources,
