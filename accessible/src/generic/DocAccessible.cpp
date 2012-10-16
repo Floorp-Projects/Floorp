@@ -1122,6 +1122,14 @@ DocAccessible::AttributeChangedImpl(nsIContent* aContent, int32_t aNameSpaceID, 
     FireDelayedAccessibleEvent(editableChangeEvent);
     return;
   }
+
+  if (aAttribute == nsGkAtoms::value) {
+    Accessible* accessible = GetAccessible(aContent);
+    if(accessible->IsProgress()) {
+      FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
+                                 aContent);
+    }
+  }
 }
 
 // DocAccessible protected member
