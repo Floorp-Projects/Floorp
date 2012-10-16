@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=800817
+-->
+<window title="Mozilla Bug 800817"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=800817"
+     target="_blank">Mozilla Bug 800817</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 800817 **/
+
+  function sendClick(win) {
+    var wu = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    wu.sendMouseEventToWindow("mousedown", 10, 10, 0, 0, 0);
+    wu.sendMouseEventToWindow("mouseup", 10, 10, 0, 0, 0);
+  }
+
+  function runTests() {
+    var b1 = document.getElementById("b1");
+    var b2 = document.getElementById("b2");
+
+    var mozbrowserAttr = opener.wrappedJSObject.testMozBrowser ? "true" : "false";
+    b1.setAttribute("mozbrowser", mozbrowserAttr);
+    b2.setAttribute("mozbrowser", mozbrowserAttr);
+
+    opener.wrappedJSObject.ok(true, "Testing with mozbrowser="+ mozbrowserAttr);
+
+    b1.contentWindow.focus();
+    opener.wrappedJSObject.is(document.activeElement, b1,
+                              "Focused first iframe");
+
+    var didCallDummy = false;
+    b2.contentWindow.addEventListener("mousedown", function(e) { didCallDummy = true; });
+    sendClick(b2.contentWindow);
+    opener.wrappedJSObject.ok(didCallDummy);
+    opener.wrappedJSObject.is(document.activeElement, b2,
+                              "Focus shifted to second iframe");
+
+    b1.contentWindow.focus();
+    opener.wrappedJSObject.is(document.activeElement, b1,
+                              "Re-focused first iframe for the first time");
+
+    var didCallListener = false;
+    b2.contentWindow.addEventListener("mousedown", function(e) { didCallListener = true; e.preventDefault(); });
+    sendClick(b2.contentWindow);
+    opener.wrappedJSObject.ok(didCallListener);
+    opener.wrappedJSObject.is(document.activeElement, b1,
+                              "Did not move focus to the second iframe");
+
+    window.close();
+    opener.wrappedJSObject.finishedTests();
+  }
+
+  SimpleTest.waitForFocus(runTests);
+  ]]>
+  </script>
+  <iframe xmlns="http://www.w3.org/1999/xhtml"
+          id="b1" type="content" src="about:blank"
+          style="width: 300px; height: 550px; border: 1px solid black;"/>
+  <iframe xmlns="http://www.w3.org/1999/xhtml"
+          id="b2" type="content" src="about:blank"
+          style="width: 300px; height: 550px; border: 1px solid black;"/>
+</window>

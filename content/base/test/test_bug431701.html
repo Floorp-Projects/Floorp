@@ -62,17 +62,17 @@ function xhrDoc(idx) {
 // inputEncoding expected for that document.
 
 var tests = [
- [ frameDoc("one"), "ISO-8859-1", "ISO-8859-1" ],
- [ frameDoc("two"), "UTF-8", "UTF-8" ],
- [ frameDoc("three"), "ISO-8859-1", "ISO-8859-1" ],
- [ frameDoc("four"), "UTF-8", "UTF-8" ],
- [ frameDoc("five"), "UTF-8", "UTF-8" ],
- [ frameDoc("six"), "UTF-8", "UTF-8" ],
- [ frameDoc("seven"), "ISO-8859-1", "ISO-8859-1" ],
- [ createDoc, "UTF-8", null ],
- [ xhrDoc(4), "UTF-8", "UTF-8" ],
- [ xhrDoc(5), "UTF-8", "UTF-8" ],
- [ xhrDoc(6), "ISO-8859-1", "ISO-8859-1" ],
+ [ frameDoc("one"), "iso-8859-1", "iso-8859-1" ],
+ [ frameDoc("two"), "utf-8", "utf-8" ],
+ [ frameDoc("three"), "iso-8859-1", "iso-8859-1" ],
+ [ frameDoc("four"), "utf-8", "utf-8" ],
+ [ frameDoc("five"), "utf-8", "utf-8" ],
+ [ frameDoc("six"), "utf-8", "utf-8" ],
+ [ frameDoc("seven"), "iso-8859-1", "iso-8859-1" ],
+ [ createDoc, "utf-8", null ],
+ [ xhrDoc(4), "utf-8", "utf-8" ],
+ [ xhrDoc(5), "utf-8", "utf-8" ],
+ [ xhrDoc(6), "iso-8859-1", "iso-8859-1" ],
 ];
 
 function doTest(idx) {

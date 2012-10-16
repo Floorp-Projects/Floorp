@@ -185,34 +185,24 @@ HTMLSelectOptionAccessible::NativeRole()
   return roles::OPTION;
 }
 
-nsresult
-HTMLSelectOptionAccessible::GetNameInternal(nsAString& aName)
+ENameValueFlag
+HTMLSelectOptionAccessible::NativeName(nsString& aName)
 {
   // CASE #1 -- great majority of the cases
   // find the label attribute - this is what the W3C says we should use
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
   if (!aName.IsEmpty())
-    return NS_OK;
+    return eNameOK;
 
   // CASE #2 -- no label parameter, get the first child, 
   // use it if it is a text node
   nsIContent* text = mContent->GetFirstChild();
-  if (!text)
-    return NS_OK;
-
-  if (text->IsNodeOfType(nsINode::eTEXT)) {
-    nsAutoString txtValue;
-    nsresult rv = nsTextEquivUtils::
-      AppendTextEquivFromTextContent(text, &txtValue);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Temp var (txtValue) needed until CompressWhitespace built for nsAString
-    txtValue.CompressWhitespace();
-    aName.Assign(txtValue);
-    return NS_OK;
+  if (text && text->IsNodeOfType(nsINode::eTEXT)) {
+    nsTextEquivUtils::AppendTextEquivFromTextContent(text, &aName);
+    aName.CompressWhitespace();
   }
 
-  return NS_OK;
+  return eNameOK;
 }
 
 uint64_t

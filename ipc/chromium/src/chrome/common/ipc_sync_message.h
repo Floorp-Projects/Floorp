@@ -85,6 +85,7 @@ class SyncMessage : public Message {
 class MessageReplyDeserializer {
  public:
   bool SerializeOutputParameters(const Message& msg);
+  virtual ~MessageReplyDeserializer() {}
  private:
   // Derived classes need to implement this, using the given iterator (which
   // is skipped past the header for synchronous messages).
