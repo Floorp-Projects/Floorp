@@ -743,6 +743,21 @@ void nsCARenderer::SetBounds(int aWidth, int aHeight) {
         layer.contentsScale = mContentsScaleFactor;
       }
     }
+  } else {
+    // These settings are the default values.  But they might have been
+    // changed as above if we were previously running in a HiDPI mode
+    // (i.e. if we just switched from that to a non-HiDPI mode).
+    [layer setAffineTransform:CGAffineTransformIdentity];
+    if ([layer respondsToSelector:@selector(setContentsScale:)]) {
+#if !defined(MAC_OS_X_VERSION_10_7) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
+      Class CGBridgeLayerClass = ::NSClassFromString(@"CGBridgeLayer");
+      if (!CGBridgeLayerClass || ![layer isKindOfClass:CGBridgeLayerClass])
+#endif
+      {
+        layer.contentsScale = 1.0;
+      }
+    }
   }
   [CATransaction commit];
 
@@ -838,11 +853,19 @@ nsresult nsCARenderer::Render(int aWidth, int aHeight,
   int renderer_width = caRenderer.bounds.size.width / intScaleFactor;
   int renderer_height = caRenderer.bounds.size.height / intScaleFactor;
 
-  if (renderer_width != aWidth || renderer_height != aHeight) {
+  if (renderer_width != aWidth || renderer_height != aHeight ||
+      mContentsScaleFactor != aContentsScaleFactor) {
     // XXX: This should be optimized to not rescale the buffer
     //      if we are resizing down.
+    // caLayer is the CALayer* provided by the plugin, so we need to preserve
+    // it across the call to Destroy().
     CALayer* caLayer = [caRenderer layer];
+    // mIOSurface is set by AttachIOSurface(), not by SetupRenderer().  So
+    // since it may have been set by a prior call to AttachIOSurface(), we
+    // need to preserve it across the call to Destroy().
+    mozilla::RefPtr<MacIOSurface> ioSurface = mIOSurface;
     Destroy();
+    mIOSurface = ioSurface;
     if (SetupRenderer(caLayer, aWidth, aHeight, aContentsScaleFactor,
                       mAllowOfflineRenderer) != NS_OK) {
       return NS_ERROR_FAILURE;

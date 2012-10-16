@@ -799,7 +799,14 @@ PluginInstanceParent::IsRemoteDrawingCoreAnimation(bool *aDrawing)
                  NPDrawingModelInvalidatingCoreAnimation == (NPDrawingModel)mDrawingModel);
     return NS_OK;
 }
-#endif
+
+nsresult
+PluginInstanceParent::ContentsScaleFactorChanged(double aContentsScaleFactor)
+{
+    bool rv = SendContentsScaleFactorChanged(aContentsScaleFactor);
+    return rv ? NS_OK : NS_ERROR_FAILURE;
+}
+#endif // #ifdef XP_MACOSX
 
 nsresult
 PluginInstanceParent::SetBackgroundUnknown()

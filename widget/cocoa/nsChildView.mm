@@ -778,13 +778,18 @@ nsChildView::BackingScaleFactorChanged()
 
   mBackingScaleFactor = newScale;
 
-  if (!mWidgetListener || mWidgetListener->GetXULWindow()) {
-    return;
+  if (mWidgetListener && !mWidgetListener->GetXULWindow()) {
+    nsIPresShell* presShell = mWidgetListener->GetPresShell();
+    if (presShell) {
+      presShell->BackingScaleFactorChanged();
+    }
   }
 
-  nsIPresShell* presShell = mWidgetListener->GetPresShell();
-  if (presShell) {
-    presShell->BackingScaleFactorChanged();
+  if (IsPluginView()) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsGUIEvent guiEvent(true, NS_PLUGIN_RESOLUTION_CHANGED, this);
+    guiEvent.time = PR_IntervalNow();
+    DispatchEvent(&guiEvent, status);
   }
 }
 
