@@ -1023,45 +1023,48 @@ NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(bool aAllowSlop,
 
   nsIntRect screenBounds;
 
+  int32_t width, height;
+
+  NSRect frame = [mWindow frame];
+
+  // zero size rects confuse the screen manager
+  width = NS_MAX<int32_t>(frame.size.width, 1);
+  height = NS_MAX<int32_t>(frame.size.height, 1);
+
   nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
   if (screenMgr) {
     nsCOMPtr<nsIScreen> screen;
-    int32_t width, height;
-
-    // zero size rects confuse the screen manager
-    width = mBounds.width > 0 ? mBounds.width : 1;
-    height = mBounds.height > 0 ? mBounds.height : 1;
     screenMgr->ScreenForRect(*aX, *aY, width, height, getter_AddRefs(screen));
 
     if (screen) {
-      screen->GetRect(&(screenBounds.x), &(screenBounds.y),
-                      &(screenBounds.width), &(screenBounds.height));
+      screen->GetRectDisplayPix(&(screenBounds.x), &(screenBounds.y),
+                                &(screenBounds.width), &(screenBounds.height));
     }
   }
 
   if (aAllowSlop) {
-    if (*aX < screenBounds.x - mBounds.width + kWindowPositionSlop) {
-      *aX = screenBounds.x - mBounds.width + kWindowPositionSlop;
+    if (*aX < screenBounds.x - width + kWindowPositionSlop) {
+      *aX = screenBounds.x - width + kWindowPositionSlop;
     } else if (*aX >= screenBounds.x + screenBounds.width - kWindowPositionSlop) {
       *aX = screenBounds.x + screenBounds.width - kWindowPositionSlop;
     }
 
-    if (*aY < screenBounds.y - mBounds.height + kWindowPositionSlop) {
-      *aY = screenBounds.y - mBounds.height + kWindowPositionSlop;
+    if (*aY < screenBounds.y - height + kWindowPositionSlop) {
+      *aY = screenBounds.y - height + kWindowPositionSlop;
     } else if (*aY >= screenBounds.y + screenBounds.height - kWindowPositionSlop) {
       *aY = screenBounds.y + screenBounds.height - kWindowPositionSlop;
     }
   } else {
     if (*aX < screenBounds.x) {
       *aX = screenBounds.x;
-    } else if (*aX >= screenBounds.x + screenBounds.width - mBounds.width) {
-      *aX = screenBounds.x + screenBounds.width - mBounds.width;
+    } else if (*aX >= screenBounds.x + screenBounds.width - width) {
+      *aX = screenBounds.x + screenBounds.width - width;
     }
 
     if (*aY < screenBounds.y) {
       *aY = screenBounds.y;
-    } else if (*aY >= screenBounds.y + screenBounds.height - mBounds.height) {
-      *aY = screenBounds.y + screenBounds.height - mBounds.height;
+    } else if (*aY >= screenBounds.y + screenBounds.height - height) {
+      *aY = screenBounds.y + screenBounds.height - height;
     }
   }
 

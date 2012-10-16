@@ -112,7 +112,6 @@ protected:
    void       SetContentScrollbarVisibility(bool aVisible);
    bool       GetContentScrollbarVisibility();
    void       PersistentAttributesDirty(uint32_t aDirtyFlags);
-   uint32_t   AppUnitsPerDevPixel();
 
    nsChromeTreeOwner*      mChromeTreeOwner;
    nsContentTreeOwner*     mContentTreeOwner;
@@ -143,8 +142,6 @@ protected:
    uint32_t                mPersistentAttributesDirty; // persistentAttributes
    uint32_t                mPersistentAttributesMask;
    uint32_t                mChromeFlags;
-   uint32_t                mAppPerDev; // sometimes needed when we can't get
-                                       // it from the widget
    nsString                mTitle;
    nsIntRect               mOpenerScreenRect; // the screen rect of the opener
 
