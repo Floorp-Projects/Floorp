@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=799875
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 799875</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=799875">Mozilla Bug 799875</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe src="data:text/html,<div id='test2'>"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 799875 **/
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  is(window.test, document.getElementById("test"),
+     "Global scope polluter should map ids even when qualified")
+  isnot(document.getElementById("test"), null,
+        "Should have element");
+  is(window[0].test2, window[0].document.getElementById("test2"),
+     "Global scope polluter should map ids across globals");
+  isnot(window[0].document.getElementById("test2"), null,
+        "Should have element in subframe");
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

@@ -15,23 +15,23 @@
       }
       div.flex {
         display: none;
-        display: -moz-flex;
+        display: flex;
       }
       div.inlineFlex {
         display: none;
-        display: -moz-inline-flex;
+        display: inline-flex;
       }
     </style>
   </head>
   <body>
     <p>
-      "display: -moz-flex" is:
+      "display: flex" is:
       <!-- If rendered, this will cover up "disabled" below: -->
       <div class="mask flex">enabled</div>
       <div>disabled</div>
     </p>
     <p>
-      "display: -moz-inline-flex" is:<br/>
+      "display: inline-flex" is:<br/>
       <!-- If rendered, this will cover up "disabled" below: -->
       <div class="mask inlineFlex">enabled</div>
       <div>disabled</div>

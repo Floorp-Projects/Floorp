@@ -47,6 +47,8 @@ public class Tabs implements GeckoEventListener {
 
     private GeckoApp mActivity;
 
+    static private int sThumbnailWidth = -1;
+
     private Tabs() {
         registerEventListener("SessionHistory:New");
         registerEventListener("SessionHistory:Back");
@@ -63,6 +65,25 @@ public class Tabs implements GeckoEventListener {
         registerEventListener("Reader:Removed");
         registerEventListener("Reader:Share");
     }
+
+    static public void setThumbnailWidth(int val) {
+      // Round this to the next highest power of two
+      sThumbnailWidth = (int)(Math.pow( 2, Math.ceil(Math.log(val)/Math.log(2) )));
+    }
+
+    static public int getThumbnailWidth() {
+        if (sThumbnailWidth < 0) {
+            sThumbnailWidth = (int) (GeckoApp.mAppContext.getResources().getDimension(R.dimen.tab_thumbnail_width));
+            return sThumbnailWidth & ~0x1;
+        }
+        return sThumbnailWidth;
+    }
+
+    static public int getThumbnailHeight() {
+        return Math.round(getThumbnailWidth() * getThumbnailAspectRatio());
+    }
+
+    static public float getThumbnailAspectRatio() { return 0.714f; }
 
     public void attachToActivity(GeckoApp activity) {
         mActivity = activity;

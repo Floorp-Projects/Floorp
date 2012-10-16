@@ -33,9 +33,12 @@ XPIDLSRCS = \
   nsITelemetry.idl \
   $(NULL)
 
+EXTRA_PP_COMPONENTS = \
+  TelemetryPing.js \
+  $(NULL)
+
 EXTRA_COMPONENTS = \
   TelemetryPing.manifest \
-  TelemetryPing.js \
   $(NULL)
 
 EXTRA_JS_MODULES = \

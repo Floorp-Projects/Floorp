@@ -325,7 +325,7 @@
           }
           cb = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "chatbox");
           if (aMode == "minimized")
-            cb.minimized = true;
+            cb.setAttribute("minimized", "true");
           this.selectedChat = cb;
           this.insertBefore(cb, this.firstChild);
           cb.init(aProvider, aURL, aCallback);

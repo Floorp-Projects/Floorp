@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<title>Canvas test: mozGetAsFile</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+var gCompares = 2;
+
+function BlobListener(type, canvas, file)
+{
+  is(file.type, type,
+     "When a valid type is specified that should be returned");
+  var reader = new FileReader();
+  reader.onload = 
+    function(e) {
+      is(e.target.result, canvas.toDataURL(type),
+ "<canvas>.mozGetAsFile().getAsDataURL() should equal <canvas>.toDataURL()");
+      if (--gCompares == 0) {
+        SimpleTest.finish();
+      }
+    };
+  reader.readAsDataURL(file);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+ctx.drawImage(document.getElementById('yellow75.png'), 0, 0);
+
+canvas.toBlob(BlobListener.bind(undefined, "image/png", canvas));
+canvas.toBlob(BlobListener.bind(undefined, "image/jpeg", canvas), "image/jpeg");
+
+});
+</script>
+<img src="image_yellow75.png" id="yellow75.png" class="resource">
+

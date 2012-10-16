@@ -316,7 +316,7 @@ nsAppShell::Init()
 
   rv = nsBaseAppShell::Init();
 
-#ifndef NP_NO_CARBON
+#ifndef __LP64__
   TextInputHandler::InstallPluginKeyEventsHandler();
 #endif
 
@@ -778,7 +778,7 @@ nsAppShell::Exit(void)
   delete gCocoaAppModalWindowList;
   gCocoaAppModalWindowList = NULL;
 
-#ifndef NP_NO_CARBON
+#ifndef __LP64__
   TextInputHandler::RemovePluginKeyEventsHandler();
 #endif
 

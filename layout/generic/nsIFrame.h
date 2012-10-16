@@ -32,6 +32,10 @@
 #include "mozilla/layout/FrameChildList.h"
 #include "FramePropertyTable.h"
 
+#ifdef ACCESSIBILITY
+#include "mozilla/a11y/AccTypes.h"
+#endif
+
 /**
  * New rules of reflow:
  * 1. you get a WillReflow() followed by a Reflow() followed by a DidReflow() in order
@@ -64,9 +68,6 @@ class nsISelectionController;
 class nsBoxLayoutState;
 class nsBoxLayout;
 class nsILineIterator;
-#ifdef ACCESSIBILITY
-class Accessible;
-#endif
 class nsDisplayListBuilder;
 class nsDisplayListSet;
 class nsDisplayList;
@@ -2508,7 +2509,7 @@ public:
    * Use a mediatior of some kind.
    */
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<Accessible> CreateAccessible() = 0;
+  virtual mozilla::a11y::AccType AccessibleType() = 0;
 #endif
 
   /**

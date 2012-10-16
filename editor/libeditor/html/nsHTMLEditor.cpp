@@ -1228,7 +1228,8 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
   if (NS_FAILED(res))
   {
 #ifdef DEBUG
-    printf("Couldn't create contextual fragment: error was %d\n", res);
+    printf("Couldn't create contextual fragment: error was %X\n",
+           static_cast<uint32_t>(res));
 #endif
     return res;
   }

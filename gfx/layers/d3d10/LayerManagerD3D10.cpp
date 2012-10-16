@@ -25,6 +25,9 @@
 #include "../d3d9/Nv3DVUtils.h"
 
 #include "gfxCrashReporterUtils.h"
+#ifdef MOZ_METRO
+#include "DXGI1_2.h"
+#endif
 
 using namespace std;
 using namespace mozilla::gfx;

@@ -19,7 +19,7 @@ class nsPluginEvent;
 
 // Do not make this interface scriptable, because the virtual functions in C++
 // blocks will make script call the wrong functions.
-[uuid(CE1EE148-B201-4DC7-8A65-311143EA01BF)]
+[uuid(59BE4CA5-3CB0-40E6-A111-9A88C8477610)]
 interface nsIPluginInstanceOwner : nsISupports
 {
   /**
@@ -110,10 +110,6 @@ interface nsIPluginInstanceOwner : nsISupports
 %}
 
   void setEventModel(in int32_t eventModel);
-
-%{C++
-  virtual void SendIdleEvent() = 0;
-%}
 
   /**
    * Call NPP_SetWindow on the plugin.

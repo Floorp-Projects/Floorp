@@ -200,6 +200,32 @@ private:
     static jfieldID jScaleField;
 };
 
+class AndroidProgressiveUpdateData : public WrappedJavaObject {
+public:
+    static void InitProgressiveUpdateDataClass(JNIEnv *jEnv);
+
+    void Init(jobject jobj);
+
+    AndroidProgressiveUpdateData() {}
+    AndroidProgressiveUpdateData(jobject jobj) { Init(jobj); }
+
+    float GetX(JNIEnv *env);
+    float GetY(JNIEnv *env);
+    float GetWidth(JNIEnv *env);
+    float GetHeight(JNIEnv *env);
+    float GetScale(JNIEnv *env);
+    bool GetShouldAbort(JNIEnv *env);
+
+private:
+    static jclass jProgressiveUpdateDataClass;
+    static jfieldID jXField;
+    static jfieldID jYField;
+    static jfieldID jWidthField;
+    static jfieldID jHeightField;
+    static jfieldID jScaleField;
+    static jfieldID jShouldAbortField;
+};
+
 class AndroidLayerRendererFrame : public WrappedJavaObject {
 public:
     static void InitLayerRendererFrameClass(JNIEnv *jEnv);
@@ -233,7 +259,7 @@ public:
     void SetPageRect(const gfx::Rect& aCssPageRect);
     void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                           nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
-    bool ShouldAbortProgressiveUpdate(bool aHasPendingNewThebesContent, const gfx::Rect& aDisplayPort, float aDisplayResolution);
+    bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const gfx::Rect& aDisplayPort, float aDisplayResolution, gfx::Rect& aViewport, float& aScaleX, float& aScaleY);
     bool CreateFrame(AutoLocalJNIFrame *jniFrame, AndroidLayerRendererFrame& aFrame);
     bool ActivateProgram(AutoLocalJNIFrame *jniFrame);
     bool DeactivateProgram(AutoLocalJNIFrame *jniFrame);
@@ -248,7 +274,7 @@ protected:
     static jmethodID jActivateProgramMethod;
     static jmethodID jDeactivateProgramMethod;
     static jmethodID jGetDisplayPort;
-    static jmethodID jShouldAbortProgressiveUpdate;
+    static jmethodID jProgressiveUpdateCallbackMethod;
 
 public:
     static jclass jViewportClass;

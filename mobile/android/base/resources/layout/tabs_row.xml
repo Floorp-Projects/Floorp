@@ -25,7 +25,7 @@
                    android:layout_alignParentLeft="true"
                    android:layout_centerVertical="true"
                    android:src="@drawable/tab_thumbnail_default"
-                   android:scaleType="fitCenter"/>
+                   android:scaleType="centerCrop"/>
 
         <ImageView android:id="@+id/shadow"
                    android:layout_width="138dip"
