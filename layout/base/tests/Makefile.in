@@ -13,7 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 
 PARALLEL_DIRS += \
   chrome \
-  invalidation \
   $(NULL)
 
 TOOL_DIRS := \
