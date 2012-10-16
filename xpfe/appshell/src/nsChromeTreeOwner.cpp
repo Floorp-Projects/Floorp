@@ -348,6 +348,12 @@ NS_IMETHODIMP nsChromeTreeOwner::Destroy()
    return mXULWindow->Destroy();
 }
 
+NS_IMETHODIMP nsChromeTreeOwner::GetUnscaledDevicePixelsPerCSSPixel(double *aScale)
+{
+   NS_ENSURE_STATE(mXULWindow);
+   return mXULWindow->GetUnscaledDevicePixelsPerCSSPixel(aScale);
+}
+
 NS_IMETHODIMP nsChromeTreeOwner::SetPosition(int32_t x, int32_t y)
 {
    NS_ENSURE_STATE(mXULWindow);

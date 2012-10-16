@@ -21,7 +21,7 @@ typedef voidPtr nativeWindow;
  * but rather a common set that nearly all windowed objects support.    
  */
 
-[scriptable, uuid(7144AC8B-6702-4A4B-A73D-D1D4E9717E46)]
+[scriptable, uuid(9DA319F3-EEE6-4504-81A5-6A19CF6215BF)]
 interface nsIBaseWindow : nsISupports
 {
 	/*
@@ -182,7 +182,16 @@ interface nsIBaseWindow : nsISupports
 	lives if it has not had to create its own widget.
 	*/
 	[noscript] readonly attribute nsIWidget mainWidget;
-	
+
+	/*
+	The number of	device pixels per CSS pixel used on this window's current
+	screen at the default zoom level.
+	This is the value returned by GetDefaultScale() of the underlying widget.
+	Note that this may change if the window is moved between screens with
+	differing resolutions.
+	*/
+	readonly attribute double unscaledDevicePixelsPerCSSPixel;
+
 	/**
 	* Give the window focus.
 	*/

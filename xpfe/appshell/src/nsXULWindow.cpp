@@ -531,6 +531,12 @@ NS_IMETHODIMP nsXULWindow::Destroy()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsXULWindow::GetUnscaledDevicePixelsPerCSSPixel(double *aScale)
+{
+  *aScale = mWindow ? mWindow->GetDefaultScale() : 1.0;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsXULWindow::SetPosition(int32_t aX, int32_t aY)
 {
   // Don't reset the window's size mode here - platforms that don't want to move
