@@ -1165,9 +1165,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
       tmp->DeleteProperty(nsGkAtoms::itemtype);
       tmp->DeleteProperty(nsGkAtoms::itemref);
       tmp->DeleteProperty(nsGkAtoms::itemprop);
-    } else if (tmp->IsXUL()) {
-      tmp->DeleteProperty(nsGkAtoms::contextmenulistener);
-      tmp->DeleteProperty(nsGkAtoms::popuplistener);
     }
   }
 
@@ -1707,13 +1704,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
       property = static_cast<nsISupports*>(tmp->GetProperty(nsGkAtoms::itemprop));
       cb.NoteXPCOMChild(property);
       property = static_cast<nsISupports*>(tmp->GetProperty(nsGkAtoms::itemtype));
-      cb.NoteXPCOMChild(property);
-    } else if (tmp->IsXUL()) {
-      nsISupports* property = static_cast<nsISupports*>
-                                         (tmp->GetProperty(nsGkAtoms::contextmenulistener));
-      cb.NoteXPCOMChild(property);
-      property = static_cast<nsISupports*>
-                            (tmp->GetProperty(nsGkAtoms::popuplistener));
       cb.NoteXPCOMChild(property);
     }
   }
