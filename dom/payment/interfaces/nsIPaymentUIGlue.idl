@@ -12,15 +12,17 @@ interface nsIPaymentUIGlueCallback : nsISupports
     void onresult(in DOMString result);
 };
 
-[scriptable, uuid(c3ff92b3-f24f-4f93-afda-e92a112a80f8)]
+[scriptable, uuid(344e5442-7cc2-4636-bc42-e2249cb67813)]
 interface nsIPaymentUIGlue : nsISupports
 {
     // The 'paymentRequestsInfo' contains the payment request information
-    // for each JWT provided via navigator.mozPay call.    
+    // for each JWT provided via navigator.mozPay call.
     void confirmPaymentRequest(in jsval paymentRequestsInfo,
                                in nsIPaymentUIGlueCallback successCb,
                                in nsIPaymentUIGlueCallback errorCb);
 
     void showPaymentFlow(in nsIPaymentFlowInfo paymentFlowInfo,
                          in nsIPaymentUIGlueCallback errorCb);
+
+    void cleanup();
 };
