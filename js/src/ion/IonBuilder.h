@@ -288,6 +288,21 @@ class IonBuilder : public MIRGenerator
     bool loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType);
     bool storeSlot(MDefinition *obj, Shape *shape, MDefinition *value, bool needsBarrier);
 
+    // jsop_getprop() helpers.
+    bool getPropTryArgumentsLength(bool *emitted);
+    bool getPropTryConstant(bool *emitted, HandleId id, types::StackTypeSet *barrier,
+                            types::StackTypeSet *types, TypeOracle::UnaryTypes unaryTypes);
+    bool getPropTryDefiniteSlot(bool *emitted, HandlePropertyName name,
+                            types::StackTypeSet *barrier, types::StackTypeSet *types,
+                            TypeOracle::Unary unary, TypeOracle::UnaryTypes unaryTypes);
+    bool getPropTryCommonGetter(bool *emitted, HandleId id, types::StackTypeSet *barrier,
+                                types::StackTypeSet *types, TypeOracle::UnaryTypes unaryTypes);
+    bool getPropTryMonomorphic(bool *emitted, HandleId id, types::StackTypeSet *barrier,
+                               TypeOracle::Unary unary, TypeOracle::UnaryTypes unaryTypes);
+    bool getPropTryPolymorphic(bool *emitted, HandlePropertyName name, HandleId id,
+                               types::StackTypeSet *barrier, types::StackTypeSet *types,
+                               TypeOracle::Unary unary, TypeOracle::UnaryTypes unaryTypes);
+
     bool jsop_add(MDefinition *left, MDefinition *right);
     bool jsop_bitnot();
     bool jsop_bitop(JSOp op);
