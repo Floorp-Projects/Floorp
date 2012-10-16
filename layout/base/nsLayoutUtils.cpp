@@ -2592,19 +2592,19 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
         if (GetAbsoluteCoord(styleMaxHeight, h) ||
             GetPercentHeight(styleMaxHeight, aFrame, h)) {
           h = NS_MAX(0, h - heightTakenByBoxSizing);
-          nscoord maxHeight =
+          nscoord maxWidth =
             NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
-          if (maxHeight < result)
-            result = maxHeight;
+          if (maxWidth < result)
+            result = maxWidth;
         }
 
         if (GetAbsoluteCoord(styleMinHeight, h) ||
             GetPercentHeight(styleMinHeight, aFrame, h)) {
           h = NS_MAX(0, h - heightTakenByBoxSizing);
-          nscoord minHeight =
+          nscoord minWidth =
             NSToCoordRound(h * (float(ratio.width) / float(ratio.height)));
-          if (minHeight > result)
-            result = minHeight;
+          if (minWidth > result)
+            result = minWidth;
         }
       }
     }
