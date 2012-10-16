@@ -46,8 +46,6 @@ public:
     virtual ~nsMemoryReporterManager();
 
 private:
-    nsresult DumpMemoryReportsToFileImpl(const nsAString& aIdentifier);
-
     nsCOMArray<nsIMemoryReporter>      mReporters;
     nsCOMArray<nsIMemoryMultiReporter> mMultiReporters;
     Mutex                              mMutex;
