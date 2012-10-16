@@ -20,6 +20,8 @@
 #include "nsIObserverService.h"
 #include "nsThread.h"
 #include "nsGZFileWriter.h"
+#include "nsJSEnvironment.h"
+#include "nsICycleCollectorListener.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Services.h"
@@ -675,6 +677,29 @@ private:
   const bool mDumpChildProcesses;
 };
 
+class GCAndCCLogDumpRunnable : public nsRunnable
+{
+public:
+  GCAndCCLogDumpRunnable(const nsAString& aIdentifier,
+                         bool aDumpChildProcesses)
+    : mIdentifier(aIdentifier)
+    , mDumpChildProcesses(aDumpChildProcesses)
+  {}
+
+  NS_IMETHOD Run()
+  {
+      nsCOMPtr<nsIMemoryReporterManager> mgr =
+          do_GetService("@mozilla.org/memory-reporter-manager;1");
+      NS_ENSURE_STATE(mgr);
+      mgr->DumpGCAndCCLogsToFile(mIdentifier, mDumpChildProcesses);
+      return NS_OK;
+  }
+
+private:
+  const nsString mIdentifier;
+  const bool mDumpChildProcesses;
+};
+
 } // anonymous namespace
 
 #ifdef XP_LINUX // {
@@ -683,12 +708,17 @@ namespace {
 /*
  * The following code supports dumping about:memory upon receiving a signal.
  *
- * We listen for the signals SIGRTMIN and SIGRTMIN +1.  (The latter causes us
- * to minimize memory usage before dumping about:memory.)
+ * We listen for the following signals:
+ *
+ *  - SIGRTMIN:     Dump our memory reporters (and those of our child
+ *                  processes),
+ *  - SIGRTMIN + 1: Dump our memory reporters (and those of our child
+ *                  processes) after minimizing memory usage, and
+ *  - SIGRTMIN + 2: Dump the GC and CC logs in this and our child processes.
  *
  * When we receive one of these signals, we write the signal number to a pipe.
  * The IO thread then notices that the pipe has been written to, and kicks off
- * a DumpMemoryReports task on the main thread.
+ * the appropriate task on the main thread.
  *
  * This scheme is similar to using signalfd(), except it's portable and it
  * doesn't require the use of sigprocmask, which is problematic because it
@@ -703,6 +733,7 @@ namespace {
 // constant, so these have to be set at runtime.
 static int sDumpAboutMemorySignum;         // SIGRTMIN
 static int sDumpAboutMemoryAfterMMUSignum; // SIGRTMIN + 1
+static int sGCAndCCDumpSignum;             // SIGRTMIN + 2
 
 // This is the write-end of a pipe that we use to notice when a
 // dump-about-memory signal occurs.
@@ -749,6 +780,7 @@ public:
 
     sDumpAboutMemorySignum = SIGRTMIN;
     sDumpAboutMemoryAfterMMUSignum = SIGRTMIN + 1;
+    sGCAndCCDumpSignum = SIGRTMIN + 2;
 
     // Create a pipe.  When we receive a signal in our signal handler, we'll
     // write the signum to the write-end of this pipe.
@@ -776,6 +808,9 @@ public:
     if (sigaction(sDumpAboutMemoryAfterMMUSignum, &action, nullptr)) {
       NS_WARNING("Failed to register about:memory dump after MMU signal handler.");
     }
+    if (sigaction(sGCAndCCDumpSignum, &action, nullptr)) {
+      NS_WARNING("Failed to register GC+CC dump signal handler.");
+    }
 
     // Start watching the read end of the pipe on the IO thread.
     return MessageLoopForIO::current()->WatchFileDescriptor(
@@ -796,19 +831,27 @@ public:
       return;
     }
 
-    if (signum != sDumpAboutMemorySignum &&
-        signum != sDumpAboutMemoryAfterMMUSignum) {
-      NS_WARNING("Got unexpected signum.");
-      return;
+    if (signum == sDumpAboutMemorySignum ||
+        signum == sDumpAboutMemoryAfterMMUSignum) {
+      // Dump our memory reports (but run this on the main thread!).
+      nsRefPtr<DumpMemoryReportsRunnable> runnable =
+        new DumpMemoryReportsRunnable(
+            /* identifier = */ EmptyString(),
+            signum == sDumpAboutMemoryAfterMMUSignum,
+            /* dumpChildProcesses = */ true);
+      NS_DispatchToMainThread(runnable);
     }
-
-    // Dump about:memory (but run this on the main thread!).
-    nsRefPtr<DumpMemoryReportsRunnable> runnable =
-      new DumpMemoryReportsRunnable(
-          /* identifier = */ EmptyString(),
-          signum == sDumpAboutMemoryAfterMMUSignum,
-          /* dumpChildProcesses = */ true);
-    NS_DispatchToMainThread(runnable);
+    else if (signum == sGCAndCCDumpSignum) {
+      // Dump GC and CC logs (from the main thread).
+      nsRefPtr<GCAndCCLogDumpRunnable> runnable =
+        new GCAndCCLogDumpRunnable(
+            /* identifier = */ EmptyString(),
+            /* dumpChildProcesses = */ true);
+      NS_DispatchToMainThread(runnable);
+    }
+    else {
+      NS_WARNING("Got unexpected signum.");
+    }
   }
 
   virtual void OnFileCanWriteWithoutBlocking(int aFd)
@@ -1180,6 +1223,37 @@ nsMemoryReporterManager::DumpMemoryReportsToFile(
     }
 
     return DumpMemoryReportsToFileImpl(identifier);
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::DumpGCAndCCLogsToFile(
+    const nsAString& aIdentifier,
+    bool aDumpChildProcesses)
+{
+    // If the identifier is empty, set it to the number of whole seconds since
+    // the epoch.  This identifier will appear in our logs as well as our
+    // children's, allowing us to identify which files are from the same
+    // request.
+    nsString identifier(aIdentifier);
+    if (identifier.IsEmpty()) {
+        identifier.AppendInt(static_cast<int64_t>(PR_Now()) / 1000000);
+    }
+
+    if (aDumpChildProcesses) {
+        nsTArray<ContentParent*> children;
+        ContentParent::GetAll(children);
+        for (uint32_t i = 0; i < children.Length(); i++) {
+            unused << children[i]->SendDumpGCAndCCLogsToFile(
+                identifier, aDumpChildProcesses);
+        }
+    }
+
+    nsCOMPtr<nsICycleCollectorListener> logger =
+      do_CreateInstance("@mozilla.org/cycle-collector-logger;1");
+    logger->SetFilenameIdentifier(identifier);
+
+    nsJSContext::CycleCollectNow(logger);
+    return NS_OK;
 }
 
 #define DUMP(o, s) \
