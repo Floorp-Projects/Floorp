@@ -33,10 +33,16 @@ PaymentUI.prototype = {
   confirmPaymentRequest: function confirmPaymentRequest(aRequests,
                                                         aSuccessCb,
                                                         aErrorCb) {
+    let _error = function _error(errorMsg) {
+      if (aErrorCb) {
+        aErrorCb.onresult(errorMsg);
+      }
+    };
+
     let browser = Services.wm.getMostRecentWindow("navigator:browser");
     let content = browser.getContentWindow();
-    if (!content && aErrorCb) {
-      aErrorCb.onresult("NO_CONTENT_WINDOW");
+    if (!content) {
+      _error("NO_CONTENT_WINDOW");
       return;
     }
 
@@ -56,15 +62,13 @@ PaymentUI.prototype = {
     content.addEventListener("mozContentEvent", function handleSelection(evt) {
       let msg = evt.detail;
       if (msg.id != id) {
-        debug("mozContentEvent. evt.detail.id != " + id);
-        content.removeEventListener("mozContentEvent", handleSelection);
         return;
       }
 
       if (msg.userSelection && aSuccessCb) {
         aSuccessCb.onresult(msg.userSelection);
-      } else if (msg.errorMsg && aErrorCb) {
-        aErrorCb.onresult(msg.errorMsg);
+      } else if (msg.errorMsg) {
+        _error(msg.errorMsg);
       }
 
       content.removeEventListener("mozContentEvent", handleSelection);
@@ -75,11 +79,18 @@ PaymentUI.prototype = {
 
   showPaymentFlow: function showPaymentFlow(aPaymentFlowInfo, aErrorCb) {
     debug("showPaymentFlow. uri " + aPaymentFlowInfo.uri);
+
+    let _error = function _error(errorMsg) {
+      if (aErrorCb) {
+        aErrorCb.onresult(errorMsg);
+      }
+    };
+
     // We ask the UI to browse to the selected payment flow.
     let browser = Services.wm.getMostRecentWindow("navigator:browser");
     let content = browser.getContentWindow();
-    if (!content && aErrorCb) {
-      aErrorCb.onresult("NO_CONTENT_WINDOW");
+    if (!content) {
+      _error("NO_CONTENT_WINDOW");
       return;
     }
 
@@ -95,14 +106,18 @@ PaymentUI.prototype = {
     // At some point the UI would send the created iframe back so the
     // callbacks for firing DOMRequest events can be loaded on its
     // content.
-    content.addEventListener("mozContentEvent", function loadPaymentShim(evt) {
-      if (evt.detail.id != id || !evt.detail.frame) {
+    content.addEventListener("mozContentEvent", (function loadPaymentShim(evt) {
+      if (evt.detail.id != id) {
         content.removeEventListener("mozContentEvent", loadPaymentShim);
         return;
       }
 
       // Try to load the payment shim file containing the payment callbacks
       // in the content script.
+      if (!evt.detail.frame && !evt.detail.errorMsg) {
+        _error("ERROR_LOADING_PAYMENT_SHIM");
+        return;
+      }
       let frame = evt.detail.frame;
       let frameLoader = frame.QueryInterface(Ci.nsIFrameLoaderOwner)
                         .frameLoader;
@@ -111,15 +126,38 @@ PaymentUI.prototype = {
         mm.loadFrameScript(kPaymentShimFile, true);
       } catch (e) {
         debug("Error loading " + kPaymentShimFile + " as a frame script: " + e);
-        if (aErrorCb) {
-          aErrorCb.onresult("ERROR_LOADING_PAYMENT_SHIM");
-        }
+        _error("ERROR_LOADING_PAYMENT_SHIM");
       } finally {
         content.removeEventListener("mozContentEvent", loadPaymentShim);
       }
-    });
+    }).bind(this));
+
+    // We also listen for UI notifications about a closed payment flow. The UI
+    // should provide the reason of the closure within the 'errorMsg' parameter
+    this._notifyPayFlowClosed = function _notifyPayFlowClosed (evt) {
+      if (evt.detail.id != id) {
+        return;
+      }
+      if (evt.detail.errorMsg) {
+        _error(evt.detail.errorMsg);
+        content.removeEventListener("mozContentEvent",
+                                    this._notifyPayFlowClosed);
+        return;
+      }
+    };
+    content.addEventListener("mozContentEvent",
+                             this._notifyPayFlowClosed.bind(this));
 
     browser.shell.sendChromeEvent(detail);
+  },
+
+  cleanup: function cleanup() {
+    let browser = Services.wm.getMostRecentWindow("navigator:browser");
+    let content = browser.getContentWindow();
+    if (!content) {
+      return;
+    }
+    content.removeEventListener("mozContentEvent", this._notifyPayFlowClosed);
   },
 
   getRandomId: function getRandomId() {
