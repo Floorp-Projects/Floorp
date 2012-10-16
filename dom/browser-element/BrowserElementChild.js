@@ -462,6 +462,9 @@ BrowserElementChild.prototype = {
                    content.innerHeight, "rgb(255,255,255)");
     sendAsyncMsg('got-screenshot', {
       id: data.json.id,
+      // Hack around the fact that we can't specify opaque PNG, this requires
+      // us to unpremultiply the alpha channel which is expensive on ARM
+      // processors because they lack a hardware integer division instruction.
       rv: canvas.toDataURL("image/jpeg")
     });
   },
