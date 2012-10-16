@@ -24,6 +24,7 @@
 
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Util.h"
+#include "mozilla/Likely.h"
 
 using namespace xpc;
 
@@ -1759,6 +1760,20 @@ XPCWrappedNative::RescueOrphans(XPCCallContext& ccx)
     if (!parentObj)
         return NS_OK; // Global object. We're done.
     parentObj = js::UnwrapObject(parentObj, /* stopAtOuter = */ false);
+
+    // There's one little nasty twist here. For reasons described in bug 752764,
+    // we nuke SOW-ed objects after transplanting them. This means that nodes
+    // parented to an element (such as XUL elements), can end up with a nuked proxy
+    // in the parent chain, depending on the order of fixup. Because the proxy is
+    // nuked, we can't follow it anywhere. But we _can_ find the new wrapper for
+    // the underlying native parent, which is exactly what PreCreate does.
+    // So do that here.
+    if (MOZ_UNLIKELY(JS_IsDeadWrapper(parentObj))) {
+        rv = mScriptableInfo->GetCallback()->PreCreate(mIdentity, ccx,
+                                                       GetScope()->GetGlobalJSObject(),
+                                                       &parentObj);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     // Morph any slim wrappers, lest they confuse us.
     MOZ_ASSERT(IS_WRAPPER_CLASS(js::GetObjectClass(parentObj)));
