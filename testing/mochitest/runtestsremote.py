@@ -386,6 +386,41 @@ class MochiRemote(Mochitest):
         if failed > 0:
             return 1
         return 0
+
+    def buildRobotiumConfig(self, options, browserEnv):
+        deviceRoot = self._dm.getDeviceRoot()
+        fHandle = tempfile.NamedTemporaryFile(suffix='.config',
+                                              prefix='robotium-',
+                                              dir=os.getcwd(),
+                                              delete=False)
+        fHandle.write("profile=%s\n" % (self.remoteProfile))
+        fHandle.write("logfile=%s\n" % (options.remoteLogFile))
+        fHandle.write("host=http://mochi.test:8888/tests\n")
+        fHandle.write("rawhost=http://%s:%s/tests\n" % (options.remoteWebServer, options.httpPort))
+
+        if browserEnv:
+            envstr = ""
+            delim = ""
+            for key, value in browserEnv.items():
+                try:
+                    value.index(',')
+                    print "Found: Error an ',' in our value, unable to process value."
+                except ValueError, e:
+                    envstr += "%s%s=%s" % (delim, key, value)
+                    delim = ","
+
+            fHandle.write("envvars=%s\n" % envstr)
+        fHandle.close()
+
+        self._dm.removeFile(os.path.join(deviceRoot, "robotium.config"))
+        self._dm.pushFile(fHandle.name, os.path.join(deviceRoot, "robotium.config"))
+        os.unlink(fHandle.name)
+
+    def buildBrowserEnv(self, options):
+        browserEnv = Mochitest.buildBrowserEnv(self, options)
+        self.buildRobotiumConfig(options, browserEnv)
+        return browserEnv
+
         
 def main():
     scriptdir = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
@@ -434,21 +469,8 @@ def main():
         mp.read(options.robocop)
         robocop_tests = mp.active_tests(exists=False)
 
-        fHandle = tempfile.NamedTemporaryFile(suffix='.config',
-                                              prefix='robotium-',
-                                              dir=os.getcwd(),
-                                              delete=False)
-        fHandle.write("profile=%s\n" % (mochitest.remoteProfile))
-        fHandle.write("logfile=%s\n" % (options.remoteLogFile))
-        fHandle.write("host=http://mochi.test:8888/tests\n")
-        fHandle.write("rawhost=http://%s:%s/tests\n" % (options.remoteWebServer, options.httpPort))
-        fHandle.close()
-        deviceRoot = dm.getDeviceRoot()
-      
+        deviceRoot = dm.getDeviceRoot()      
         dm.removeFile(os.path.join(deviceRoot, "fennec_ids.txt"))
-        dm.removeFile(os.path.join(deviceRoot, "robotium.config"))
-        dm.pushFile(fHandle.name, os.path.join(deviceRoot, "robotium.config"))
-        os.unlink(fHandle.name)
         fennec_ids = os.path.abspath("fennec_ids.txt")
         if not os.path.exists(fennec_ids) and options.robocopIds:
             fennec_ids = options.robocopIds
