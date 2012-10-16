@@ -5405,9 +5405,6 @@ class CGDictionary(CGThing):
                 "  \n" +
                 ("  bool Init(const nsAString& aJSON)\n"
                  "  {\n"
-                 "    if (aJSON.IsEmpty()) {\n"
-                 "      return true;\n"
-                 "    }\n"
                  "    mozilla::Maybe<JSAutoRequest> ar;\n"
                  "    mozilla::Maybe<JSAutoCompartment> ac;\n"
                  "    jsval json = JSVAL_VOID;\n"
