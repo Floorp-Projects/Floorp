@@ -24,7 +24,7 @@ const Cu = Components.utils;
 const Cm = Components.manager;
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init();
+MockFilePicker.init(window);
 
 var ioSvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
