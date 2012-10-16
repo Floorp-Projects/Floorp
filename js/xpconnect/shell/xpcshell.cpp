@@ -1850,7 +1850,7 @@ main(int argc, char **argv, char **envp)
         nsresult rv = rtsvc->GetBackstagePass(getter_AddRefs(backstagePass));
         if (NS_FAILED(rv)) {
             fprintf(gErrFile, "+++ Failed to get backstage pass from rtsvc: %8x\n",
-                    static_cast<uint32_t>(rv));
+                    rv);
             return 1;
         }
 
