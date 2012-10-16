@@ -29,13 +29,6 @@
 namespace mozilla {
 namespace gfx {
 
-SkColor ColorToSkColor(const Color &color, Float aAlpha)
-{
-  //XXX: do a better job converting to int
-  return SkColorSetARGB(U8CPU(color.a*aAlpha*255.0), U8CPU(color.r*255.0),
-                        U8CPU(color.g*255.0), U8CPU(color.b*255.0));
-}
-
 class GradientStopsSkia : public GradientStops
 {
 public:
@@ -81,68 +74,6 @@ public:
   ExtendMode mExtendMode;
 };
 
-SkXfermode::Mode
-GfxOpToSkiaOp(CompositionOp op)
-{
-  switch (op)
-  {
-    case OP_OVER:
-      return SkXfermode::kSrcOver_Mode;
-    case OP_ADD:
-      return SkXfermode::kPlus_Mode;
-    case OP_ATOP:
-      return SkXfermode::kSrcATop_Mode;
-    case OP_OUT:
-      return SkXfermode::kSrcOut_Mode;
-    case OP_IN:
-      return SkXfermode::kSrcIn_Mode;
-    case OP_SOURCE:
-      return SkXfermode::kSrc_Mode;
-    case OP_DEST_IN:
-      return SkXfermode::kDstIn_Mode;
-    case OP_DEST_OUT:
-      return SkXfermode::kDstOut_Mode;
-    case OP_DEST_OVER:
-      return SkXfermode::kDstOver_Mode;
-    case OP_DEST_ATOP:
-      return SkXfermode::kDstATop_Mode;
-    case OP_XOR:
-      return SkXfermode::kXor_Mode;
-    case OP_COUNT:
-      return SkXfermode::kSrcOver_Mode;
-  }
-  return SkXfermode::kSrcOver_Mode;
-}
-
-
-SkRect
-RectToSkRect(const Rect& aRect)
-{
-  return SkRect::MakeXYWH(SkFloatToScalar(aRect.x), SkFloatToScalar(aRect.y), 
-                          SkFloatToScalar(aRect.width), SkFloatToScalar(aRect.height));
-}
-
-SkRect
-IntRectToSkRect(const IntRect& aRect)
-{
-  return SkRect::MakeXYWH(SkIntToScalar(aRect.x), SkIntToScalar(aRect.y), 
-                          SkIntToScalar(aRect.width), SkIntToScalar(aRect.height));
-}
-
-SkIRect
-RectToSkIRect(const Rect& aRect)
-{
-  return SkIRect::MakeXYWH(int32_t(aRect.x), int32_t(aRect.y),
-                           int32_t(aRect.width), int32_t(aRect.height));
-}
-
-SkIRect
-IntRectToSkIRect(const IntRect& aRect)
-{
-  return SkIRect::MakeXYWH(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-
 DrawTargetSkia::DrawTargetSkia()
 {
 }
@@ -168,21 +99,6 @@ DrawTargetSkia::Snapshot()
   }
   AppendSnapshot(source);
   return source;
-}
-
-SkShader::TileMode
-ExtendModeToTileMode(ExtendMode aMode)
-{
-  switch (aMode)
-  {
-    case EXTEND_CLAMP:
-      return SkShader::kClamp_TileMode;
-    case EXTEND_REPEAT:
-      return SkShader::kRepeat_TileMode;
-    case EXTEND_REFLECT:
-      return SkShader::kMirror_TileMode;
-  }
-  return SkShader::kClamp_TileMode;
 }
 
 void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
