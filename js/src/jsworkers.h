@@ -104,13 +104,19 @@ struct WorkerThread
  * Schedule an Ion compilation for a script, given a builder which has been
  * generated and read everything needed from the VM state.
  */
-bool StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder);
+bool
+StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder);
 
 /*
  * Cancel a scheduled or in progress Ion compilation for script. If script is
  * NULL, all compilations for the compartment are cancelled.
  */
-void CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script);
+void
+CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script);
+
+/* Return true iff off-thread compilation is possible. */
+bool
+OffThreadCompilationAvailable(JSContext *cx);
 
 class AutoLockWorkerThreadState
 {

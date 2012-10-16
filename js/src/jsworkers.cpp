@@ -15,6 +15,13 @@ using namespace js;
 #ifdef JS_PARALLEL_COMPILATION
 
 bool
+js::OffThreadCompilationAvailable(JSContext *cx)
+{
+    WorkerThreadState &state = *cx->runtime->workerThreadState;
+    return state.numThreads > 0;
+}
+
+bool
 js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
 {
     JSRuntime *rt = cx->runtime;
@@ -111,6 +118,11 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 bool
 WorkerThreadState::init(JSRuntime *rt)
 {
+    if (!rt->useHelperThreads()) {
+        numThreads = 0;
+        return true;
+    }
+
     workerLock = PR_NewLock();
     if (!workerLock)
         return false;
@@ -317,6 +329,12 @@ js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
 void
 js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 {
+}
+
+bool
+js::OffThreadCompilationAvailable(JSContext *cx)
+{
+    return false;
 }
 
 #endif /* JS_PARALLEL_COMPILATION */
