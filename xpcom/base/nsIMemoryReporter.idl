@@ -226,7 +226,7 @@ interface nsIMemoryMultiReporter : nsISupports
   readonly attribute int64_t explicitNonHeap;
 };
 
-[scriptable, uuid(7aa2fcfc-eb8f-4bc8-95cc-2bc5e3374df7)]
+[scriptable, builtinclass, uuid(8b670411-ea2a-44c2-a36b-529db0670821)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -291,118 +291,13 @@ interface nsIMemoryReporterManager : nsISupports
   /*
    * This attribute indicates if moz_malloc_usable_size() works.
    */
-  readonly attribute boolean hasMozMallocUsableSize;
+  [infallible] readonly attribute boolean hasMozMallocUsableSize;
 
   /*
    * Run a series of GC/CC's in an attempt to minimize the application's memory
    * usage.  When we're finished, we invoke the given runnable.
    */
   void minimizeMemoryUsage(in nsIRunnable callback);
-
-  /*
-   * This dumps the memory reports for this process and possibly all our child
-   * processes (and all their children, recursively) to a file in the tmp
-   * directory called memory-reports-<identifier>-<pid>.json.gz (or something
-   * similar, such as memory-reports-<identifier>-<pid>-1.json.gz;  no existing
-   * file will be overwritten).
-   *
-   * @param identifier this identifier will appear in the filename of our
-   *   about:memory dump and those of our children (if dumpChildProcesses is
-   *   true).
-   *
-   *   If the identifier is empty, the dumpMemoryReportsToFile implementation
-   *   may set it arbitrarily and use that new value for its own dump and the
-   *   dumps of its child processes.  For example, the dumpMemoryReportsToFile
-   *   implementation may set |identifier| to the number of seconds since the
-   *   epoch.
-   *
-   * @param minimizeMemoryUsage indicates whether we should run a series of
-   *   gc/cc's in an attempt to reduce our memory usage before collecting our
-   *   memory report.
-   *
-   * @param dumpChildProcesses indicates whether we should call
-   *   dumpMemoryReportsToFile in our child processes.  If so, the child
-   *   processes will also dump their children, and so on.
-   *
-   *
-   * Sample output:
-   *
-   * {
-   *   "hasMozMallocUsableSize":true,
-   *   "reports": [
-   *     {"process":"", "path":"explicit/foo/bar", "kind":1, "units":0,
-   *      "amount":2000000, "description":"Foo bar."},
-   *     {"process":"", "path":"heap-allocated", "kind":1, "units":0,
-   *      "amount":3000000, "description":"Heap allocated."},
-   *     {"process":"", "path":"vsize", "kind":1, "units":0,
-   *      "amount":10000000, "description":"Vsize."}
-   *   ]
-   * }
-   *
-   * JSON schema for the output.
-   *
-   * {
-   *   "properties": {
-   *     "hasMozMallocUsableSize": {
-   *       "type": "boolean",
-   *       "description": "nsIMemoryReporterManager::hasMozMallocUsableSize",
-   *       "required": true
-   *     },
-   *     "reports": {
-   *       "type": "array",
-   *       "description": "The memory reports.",
-   *       "required": true
-   *       "minItems": 1,
-   *       "items": {
-   *         "type": "object",
-   *         "properties": {
-   *           "process": {
-   *             "type": "string",
-   *             "description": "nsIMemoryReporter::process",
-   *             "required": true
-   *           },
-   *           "path": {
-   *             "type": "string",
-   *             "description": "nsIMemoryReporter::path",
-   *             "required": true,
-   *             "minLength": 1
-   *           },
-   *           "kind": {
-   *             "type": "integer",
-   *             "description": "nsIMemoryReporter::kind",
-   *             "required": true
-   *           },
-   *           "units": {
-   *             "type": "integer",
-   *             "description": "nsIMemoryReporter::units",
-   *             "required": true
-   *           },
-   *           "amount": {
-   *             "type": "integer",
-   *             "description": "nsIMemoryReporter::amount",
-   *             "required": true
-   *           },
-   *           "description": {
-   *             "type": "string",
-   *             "description": "nsIMemoryReporter::description",
-   *             "required": true
-   *           }
-   *         }
-   *       }
-   *     }
-   *   }
-   * }
-   */
-  void dumpMemoryReportsToFile (in AString identifier,
-                                in bool minimizeMemoryUsage,
-                                in bool dumpChildProcesses);
-
-  /**
-   * Dump GC and CC logs to files in the OS's temp directory (or in
-   * $MOZ_CC_LOG_DIRECTORY, if that environment variable is specified).
-   */
-  void dumpGCAndCCLogsToFile (in AString identifier,
-                              in bool dumpChildProcesses);
 };
 
 %{C++
