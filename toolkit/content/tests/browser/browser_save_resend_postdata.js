@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init();
+MockFilePicker.init(window);
 
 /**
  * Test for bug 471962 <https://bugzilla.mozilla.org/show_bug.cgi?id=471962>:
