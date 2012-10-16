@@ -195,8 +195,8 @@ pref("media.video-queue.default-size", 10);
 // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI display;
 //   <= 0 : hidpi mode disabled, display will just use pixel-based upscaling
 //   == 1 : hidpi supported if all screens share the same backingScaleFactor
-//   >= 2 : hidpi supported even with mixed backingScaleFactors (currently broken)
-pref("gfx.hidpi.enabled", 1);
+//   >= 2 : hidpi supported even with mixed backingScaleFactors (somewhat broken)
+pref("gfx.hidpi.enabled", 2);
 #endif
 
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
