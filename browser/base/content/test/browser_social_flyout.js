@@ -111,5 +111,40 @@ var tests = {
       }
     }
     port.postMessage({topic: "test-init"});
+  },
+
+  testCloseOnLinkTraversal: function(next) {
+
+    function onTabOpen(event) {
+      gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, true);
+      is(panel.state, "closed", "flyout should be closed");
+      ok(true, "Link should open a new tab");
+      executeSoon(function(){
+        gBrowser.removeTab(event.target);
+        next();
+      });
+    }
+
+    let panel = document.getElementById("social-flyout-panel");
+    let port = Social.provider.getWorkerPort();
+    ok(port, "provider has a port");
+    port.onmessage = function (e) {
+      let topic = e.data.topic;
+      switch (topic) {
+        case "test-init-done":
+          port.postMessage({topic: "test-flyout-open"});
+          break;
+        case "got-flyout-visibility":
+          if (e.data.result == "shown") {
+            // click on our test link
+            is(panel.state, "open", "flyout should be open");
+            gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true); 
+            let iframe = panel.firstChild;
+            iframe.contentDocument.getElementById('traversal').click();
+          }
+          break;
+      }
+    }
+    port.postMessage({topic: "test-init"});
   }
 }
