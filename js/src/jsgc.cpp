@@ -3677,6 +3677,8 @@ JSCompartment::findOutgoingEdges(ComponentFinder& finder)
         JS_ASSERT_IF(IsFunctionProxy(wrapper), &GetProxyCall(wrapper).toObject() == other);
 #endif
     }
+
+    Debugger::findCompartmentEdges(this, finder);
 }
 
 static void

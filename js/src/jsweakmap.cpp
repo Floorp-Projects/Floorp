@@ -247,6 +247,8 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
         }
     }
 
+    JS_ASSERT(key->compartment() == thisObj->compartment());
+    JS_ASSERT_IF(value.isObject(), value.toObject().compartment() == thisObj->compartment());
     if (!map->put(key, value)) {
         JS_ReportOutOfMemory(cx);
         return false;
