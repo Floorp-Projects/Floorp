@@ -143,7 +143,6 @@ public:
   // Accessible
   virtual TableAccessible* AsTable() { return this; }
   virtual void Description(nsString& aDescription);
-  virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
@@ -163,8 +162,8 @@ public:
   nsITableLayout* GetTableLayout();
 
 protected:
-
   // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
   virtual void CacheChildren();
 
   // HTMLTableAccessible

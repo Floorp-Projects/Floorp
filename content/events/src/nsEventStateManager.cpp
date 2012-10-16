@@ -3262,8 +3262,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
               !nsContentUtils::IsChromeDoc(mDocument)) {
             nsCOMPtr<nsIDOMWindow> currentTop;
             nsCOMPtr<nsIDOMWindow> newTop;
-            currentWindow->GetScriptableTop(getter_AddRefs(currentTop));
-            mDocument->GetWindow()->GetScriptableTop(getter_AddRefs(newTop));
+            currentWindow->GetTop(getter_AddRefs(currentTop));
+            mDocument->GetWindow()->GetTop(getter_AddRefs(newTop));
             nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(currentWindow);
             nsCOMPtr<nsIDocument> currentDoc = do_QueryInterface(win->GetExtantDocument());
             if (nsContentUtils::IsChromeDoc(currentDoc) ||

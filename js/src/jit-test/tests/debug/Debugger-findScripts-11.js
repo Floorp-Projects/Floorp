@@ -1,13 +1,14 @@
 // Debugger.prototype.findScripts can filter scripts by line number.
-var g = newGlobal('new-compartment');
-var dbg = new Debugger(g);
+var g = newGlobal();
+var dbg = new Debugger();
+var gw = dbg.addDebuggee(g);
 
 var scriptname = scriptdir + 'Debugger-findScripts-11-script2';
 g.load(scriptname);
 
-var gfw = dbg.addDebuggee(g.f);
-var ggw = dbg.addDebuggee(g.f());
-var ghw = dbg.addDebuggee(g.h);
+var gfw = gw.makeDebuggeeValue(g.f);
+var ggw = gw.makeDebuggeeValue(g.f());
+var ghw = gw.makeDebuggeeValue(g.h);
 
 // Specifying a line outside of all functions screens out all function scripts.
 assertEq(dbg.findScripts({url:scriptname, line:3}).indexOf(gfw.script) != -1, false);
