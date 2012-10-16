@@ -437,6 +437,10 @@ public:
     // Intersection of all rects in this clip ignoring any rounded corners.
     nsRect NonRoundedIntersection() const;
 
+    // Intersect the given rects with all rects in this clip, ignoring any
+    // rounded corners.
+    nsRect ApplyNonRoundedIntersection(const nsRect& aRect) const;
+
     // Gets rid of any rounded corners in this clip.
     void RemoveRoundedCorners();
 

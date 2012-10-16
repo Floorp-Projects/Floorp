@@ -798,6 +798,21 @@ InvalidatePostTransformRegion(ThebesLayer* aLayer, const nsIntRegion& aRegion,
 #endif
 }
 
+static void
+InvalidatePostTransformRegion(ThebesLayer* aLayer, const nsRect& aRect, 
+                              const FrameLayerBuilder::Clip& aClip,
+                              const nsIntPoint& aTranslation)
+{
+  ThebesDisplayItemLayerUserData* data =
+      static_cast<ThebesDisplayItemLayerUserData*>(aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
+
+  nsRect rect = aClip.ApplyNonRoundedIntersection(aRect);
+
+  nsIntRect pixelRect = rect.ScaleToOutsidePixels(data->mXScale, data->mYScale, data->mAppUnitsPerDevPixel);
+  InvalidatePostTransformRegion(aLayer, pixelRect, aTranslation);
+}
+
+
 static nsIntPoint
 GetTranslationForThebesLayer(ThebesLayer* aLayer)
 {
@@ -949,12 +964,10 @@ FrameLayerBuilder::ProcessRemovedDisplayItems(nsRefPtrHashKey<DisplayItemData>* 
 #ifdef DEBUG_INVALIDATIONS
     printf("Invalidating unused display item (%i) belonging to frame %p from layer %p\n", item->mDisplayItemKey, item->mFrameList[0], t);
 #endif
-    ThebesDisplayItemLayerUserData* data =
-        static_cast<ThebesDisplayItemLayerUserData*>(t->GetUserData(&gThebesDisplayItemLayerUserData));
-    InvalidatePostTransformRegion(t,
-        item->mGeometry->ComputeInvalidationRegion().
-          ScaleToOutsidePixels(data->mXScale, data->mYScale, data->mAppUnitsPerDevPixel),
-        layerBuilder->GetLastPaintOffset(t));
+    InvalidatePostTransformRegion(t, 
+                                  item->mGeometry->ComputeInvalidationRegion(), 
+                                  item->mClip, 
+                                  layerBuilder->GetLastPaintOffset(t));
   }
   return PL_DHASH_NEXT;
 }
@@ -2090,6 +2103,37 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
   }
 }
 
+/**
+ * Combine two clips and returns true if clipping
+ * needs to be applied.
+ *
+ * @param aClip Current clip
+ * @param aOldClip Optional clip from previous paint.
+ * @param aShift Offet to apply to aOldClip
+ * @param aCombined Outparam - Computed clip region
+ * @return True if the clip should be applied, false
+ *         otherwise.
+ */
+static bool ComputeCombinedClip(const FrameLayerBuilder::Clip& aClip,
+                                FrameLayerBuilder::Clip* aOldClip,
+                                const nsPoint& aShift,
+                                nsRegion& aCombined)
+{
+  if (!aClip.mHaveClipRect ||
+      (aOldClip && !aOldClip->mHaveClipRect)) {
+    return false;
+  }
+
+  if (aOldClip) {
+    aCombined = aOldClip->NonRoundedIntersection();
+    aCombined.MoveBy(aShift);
+    aCombined.Or(aCombined, aClip.NonRoundedIntersection());
+  } else {
+    aCombined = aClip.NonRoundedIntersection();
+  }
+  return true;
+}
+
 void
 ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, 
                                          Layer* aNewLayer,
@@ -2115,21 +2159,17 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
 #ifdef DEBUG_INVALIDATIONS
       printf("Display item type %s(%p) changed layers %p to %p!\n", aItem->Name(), aItem->GetUnderlyingFrame(), t, aNewLayer);
 #endif
-      ThebesDisplayItemLayerUserData* data =
-          static_cast<ThebesDisplayItemLayerUserData*>(t->GetUserData(&gThebesDisplayItemLayerUserData));
       InvalidatePostTransformRegion(t,
-          oldGeometry->ComputeInvalidationRegion().
-            ScaleToOutsidePixels(data->mXScale, data->mYScale, mAppUnitsPerDevPixel),
+          oldGeometry->ComputeInvalidationRegion(),
+          *oldClip,
           mLayerBuilder->GetLastPaintOffset(t));
     }
     if (aNewLayer) {
       ThebesLayer* newThebesLayer = aNewLayer->AsThebesLayer();
       if (newThebesLayer) {
-        ThebesDisplayItemLayerUserData* data =
-            static_cast<ThebesDisplayItemLayerUserData*>(newThebesLayer->GetUserData(&gThebesDisplayItemLayerUserData));
         InvalidatePostTransformRegion(newThebesLayer,
-            aGeometry->ComputeInvalidationRegion().
-              ScaleToOutsidePixels(data->mXScale, data->mYScale, mAppUnitsPerDevPixel),
+            aGeometry->ComputeInvalidationRegion(),
+            aClip,
             GetTranslationForThebesLayer(newThebesLayer));
       }
     }
@@ -2151,23 +2191,25 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
   // If we do get an invalid rect, then we want to add this on top of the change areas.
   nsRect invalid;
   nsRegion combined;
+  nsPoint shift = aTopLeft - data->mLastActiveScrolledRootOrigin;
   if (!oldLayer) {
     // This item is being added for the first time, invalidate its entire area.
     //TODO: We call GetGeometry again in AddThebesDisplayItem, we should reuse this.
-    combined = aGeometry->ComputeInvalidationRegion();
+    combined = aClip.ApplyNonRoundedIntersection(aGeometry->ComputeInvalidationRegion());
 #ifdef DEBUG_INVALIDATIONS
     printf("Display item type %s(%p) added to layer %p!\n", aItem->Name(), aItem->GetUnderlyingFrame(), aNewLayer);
 #endif
   } else if (aItem->IsInvalid(invalid) && invalid.IsEmpty()) {
     // Either layout marked item as needing repainting, invalidate the entire old and new areas.
-    combined.Or(aGeometry->ComputeInvalidationRegion(), oldGeometry->ComputeInvalidationRegion());
+    combined = oldClip->ApplyNonRoundedIntersection(oldGeometry->ComputeInvalidationRegion());
+    combined.MoveBy(shift);
+    combined.Or(combined, aClip.ApplyNonRoundedIntersection(aGeometry->ComputeInvalidationRegion()));
 #ifdef DEBUG_INVALIDATIONS
     printf("Display item type %s(%p) (in layer %p) belongs to an invalidated frame!\n", aItem->Name(), aItem->GetUnderlyingFrame(), aNewLayer);
 #endif
   } else {
     // Let the display item check for geometry changes and decide what needs to be
     // repainted.
-    nsPoint shift = aTopLeft - data->mLastActiveScrolledRootOrigin;
     oldGeometry->MoveBy(shift);
     aItem->ComputeInvalidationRegion(mBuilder, oldGeometry, &combined);
     oldClip->AddOffsetAndComputeDifference(shift, oldGeometry->ComputeInvalidationRegion(),
@@ -2175,7 +2217,13 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
                                            &combined);
 
     // Add in any rect that the frame specified
-    combined = combined.Or(combined, invalid);
+    combined.Or(combined, invalid);
+
+    // Restrict invalidation to the clipped region
+    nsRegion clip;
+    if (ComputeCombinedClip(aClip, oldClip, shift, clip)) {
+      combined.And(combined, clip);
+    }
 #ifdef DEBUG_INVALIDATIONS
     if (!combined.IsEmpty()) {
       printf("Display item type %s(%p) (in layer %p) changed geometry!\n", aItem->Name(), aItem->GetUnderlyingFrame(), aNewLayer);
@@ -2225,7 +2273,11 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
                                         const nsPoint& aTopLeft,
                                         nsAutoPtr<nsDisplayItemGeometry> aGeometry)
 {
+  ThebesDisplayItemLayerUserData* thebesData =
+    static_cast<ThebesDisplayItemLayerUserData*>(aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
   nsRefPtr<LayerManager> tempManager;
+  nsIntRect intClip;
+  bool hasClip = false;
   if (aLayerState != LAYER_NONE) {
     DisplayItemData *data = GetDisplayItemDataForManager(aItem, aLayer->Manager());
     if (data) {
@@ -2233,6 +2285,20 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     }
     if (!tempManager) {
       tempManager = new BasicLayerManager();
+    }
+        
+    // We need to grab these before calling AddLayerDisplayItem because it will overwrite them.
+    nsRegion clip;
+    FrameLayerBuilder::Clip* oldClip = nullptr;
+    GetOldLayerFor(aItem, nullptr, &oldClip);
+    hasClip = ComputeCombinedClip(aClip, oldClip, 
+                                  aTopLeft - thebesData->mLastActiveScrolledRootOrigin,
+                                  clip);
+
+    if (hasClip) {
+      intClip = clip.GetBounds().ScaleToOutsidePixels(thebesData->mXScale, 
+                                                      thebesData->mYScale, 
+                                                      thebesData->mAppUnitsPerDevPixel);
     }
   }
 
@@ -2291,9 +2357,11 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
 #ifdef DEBUG_INVALIDATIONS
         printf("Inactive LayerManager(%p) for display item %s(%p) has an invalid region - invalidating layer %p\n", tempManager.get(), aItem->Name(), aItem->GetUnderlyingFrame(), aLayer);
 #endif
-        ThebesDisplayItemLayerUserData* data =
-          static_cast<ThebesDisplayItemLayerUserData*>(aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
-        invalid.ScaleRoundOut(data->mXScale, data->mYScale);
+        if (hasClip) {
+          invalid = invalid.Intersect(intClip);
+        }
+
+        invalid.ScaleRoundOut(thebesData->mXScale, thebesData->mYScale);
         InvalidatePostTransformRegion(aLayer, invalid,
                                       GetTranslationForThebesLayer(aLayer));
       }
@@ -3366,10 +3434,26 @@ FrameLayerBuilder::Clip::IsRectClippedByRoundedCorner(const nsRect& aRect) const
 nsRect
 FrameLayerBuilder::Clip::NonRoundedIntersection() const
 {
+  NS_ASSERTION(mHaveClipRect, "Must have a clip rect!");
   nsRect result = mClipRect;
   for (uint32_t i = 0, iEnd = mRoundedClipRects.Length();
        i < iEnd; ++i) {
     result.IntersectRect(result, mRoundedClipRects[i].mRect);
+  }
+  return result;
+}
+
+nsRect
+FrameLayerBuilder::Clip::ApplyNonRoundedIntersection(const nsRect& aRect) const
+{
+  if (!mHaveClipRect) {
+    return aRect;
+  }
+
+  nsRect result = aRect.Intersect(mClipRect);
+  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length();
+       i < iEnd; ++i) {
+    result.Intersect(mRoundedClipRects[i].mRect);
   }
   return result;
 }
