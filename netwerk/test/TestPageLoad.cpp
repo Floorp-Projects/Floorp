@@ -180,7 +180,8 @@ MyListener::OnDataAvailable(nsIRequest *req, nsISupports *ctxt,
     }
 
     if (NS_FAILED(rv)) {
-      printf(">>> stream->Read failed with rv=%x\n", rv);
+      printf(">>> stream->Read failed with rv=%x\n",
+             static_cast<uint32_t>(rv));
       return rv;
     }
 
