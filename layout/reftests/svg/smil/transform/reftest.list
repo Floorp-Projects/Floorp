@@ -12,4 +12,4 @@ fuzzy-if(Android,16,2) == rotate-angle-4.svg rotate-angle-ref.svg
 fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,45) == skew-1.svg skew-1-ref.svg
 random-if(Android&&!browserIsRemote) == translate-clipPath-1.svg lime.svg # bug 760266
 fails-if(OSX==10.6) == translate-gradient-1.svg lime.svg
-== translate-pattern-1.svg lime.svg
+fails-if(smallScreen) == translate-pattern-1.svg lime.svg
