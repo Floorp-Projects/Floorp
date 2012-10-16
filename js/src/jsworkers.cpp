@@ -295,7 +295,7 @@ WorkerThread::threadLoop()
 
         {
             ion::IonContext ictx(NULL, ionScript->compartment(), &builder->temp());
-            ion::CompileBackEnd(builder);
+            builder->backgroundCompiledLir = ion::CompileBackEnd(builder);
         }
 
         state.lock();
