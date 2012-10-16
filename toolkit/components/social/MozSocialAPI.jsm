@@ -179,6 +179,15 @@ function attachToWindow(provider, targetWindow) {
     // set a timer which will fire after the unload events have all fired.
     schedule(function () { port.close(); });
   });
+  // We allow window.close() to close the panel, so add an event handler for
+  // this, then cancel the event (so the window itself doesn't die) and
+  // close the panel instead.
+  // However, this is typically affected by the dom.allow_scripts_to_close_windows
+  // preference, but we can avoid that check by setting a flag on the window.
+  let dwu = targetWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDOMWindowUtils);
+  dwu.allowScriptsToClose();
+
   targetWindow.addEventListener("DOMWindowClose", function _mozSocialDOMWindowClose(evt) {
     let elt = targetWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                 .getInterface(Ci.nsIWebNavigation)
