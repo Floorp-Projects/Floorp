@@ -18,7 +18,7 @@ BEGIN_TEST(testOOM)
 
 virtual JSRuntime * createRuntime()
 {
-    JSRuntime *rt = JS_NewRuntime(0);
+    JSRuntime *rt = JS_NewRuntime(0, JS_USE_HELPER_THREADS);
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, (uint32_t)-1);
     return rt;
 }
