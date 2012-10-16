@@ -1546,8 +1546,7 @@ nsCacheService::CreateDiskDevice()
     if (NS_FAILED(rv)) {
 #if DEBUG
         printf("###\n");
-        printf("### mDiskDevice->Init() failed (0x%.8x)\n",
-               static_cast<uint32_t>(rv));
+        printf("### mDiskDevice->Init() failed (0x%.8x)\n", rv);
         printf("###    - disabling disk cache for this session.\n");
         printf("###\n");
 #endif        
