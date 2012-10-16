@@ -793,7 +793,7 @@ class CGClassConstructHook(CGAbstractStaticMethod):
     JS::Value val = OBJECT_TO_JSVAL(obj);
     rv = xpc_qsUnwrapArg<nsISupports>(cx, val, &global, &globalRef.ptr, &val);
     if (NS_FAILED(rv)) {
-      return Throw<true>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
+      return ThrowErrorMessage(cx, MSG_GLOBAL_NOT_NATIVE);
     }
   }
 """
@@ -1639,8 +1639,8 @@ class FailureFatalCastableObjectUnwrapper(CastableObjectUnwrapper):
     """
     def __init__(self, descriptor, source, target):
         CastableObjectUnwrapper.__init__(self, descriptor, source, target,
-                                         "return Throw<%s>(cx, rv);" %
-                                         toStringBool(not descriptor.workers))
+            "return ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE," +
+              '"%s");' % descriptor.name)
 
 class CallbackObjectUnwrapper:
     """
@@ -1651,8 +1651,9 @@ class CallbackObjectUnwrapper:
     """
     def __init__(self, descriptor, source, target, codeOnFailure=None):
         if codeOnFailure is None:
-            codeOnFailure = ("return Throw<%s>(cx, rv);" %
-                             toStringBool(not descriptor.workers))
+            codeOnFailure = ("return ThrowErrorMessage(cx," +
+              'MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' %
+              descriptor.name)
         self.descriptor = descriptor
         self.substitution = { "nativeType" : descriptor.nativeType,
                               "source" : source,
@@ -1908,7 +1909,7 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
 
         templateBody = ("""JSObject* seq = &${val}.toObject();\n
 if (!IsArrayLike(cx, seq)) {
-  return Throw<%s>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
+  return ThrowErrorMessage(cx, MSG_NOT_SEQUENCE);
 }
 uint32_t length;
 // JS_GetArrayLength actually works on all objects
@@ -1917,18 +1918,17 @@ if (!JS_GetArrayLength(cx, seq, &length)) {
 }
 Sequence< %s > &arr = const_cast< Sequence< %s >& >(%s);
 if (!arr.SetCapacity(length)) {
-  return Throw<%s>(cx, NS_ERROR_OUT_OF_MEMORY);
+  JS_ReportOutOfMemory(cx);
+  return false;
 }
 for (uint32_t i = 0; i < length; ++i) {
   jsval temp;
   if (!JS_GetElement(cx, seq, i, &temp)) {
     return false;
   }
-""" % (toStringBool(descriptorProvider.workers),
+""" % (elementDeclType.define(),
        elementDeclType.define(),
-       elementDeclType.define(),
-       arrayRef,
-       toStringBool(descriptorProvider.workers)))
+       arrayRef))
 
         templateBody += CGIndenter(CGGeneric(
                 string.Template(elementTemplate).substitute(
@@ -3489,8 +3489,9 @@ class CGMethodCall(CGThing):
             else:
                 # Just throw; we have no idea what we're supposed to
                 # do with this.
-                caseBody.append(CGGeneric("return Throw<%s>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);" %
-                                          toStringBool(not descriptor.workers)))
+                caseBody.append(CGGeneric(
+                  'return ThrowErrorMessage(cx, MSG_INVALID_ARG, "%s", "%s");'
+                  % (str(distinguishingIndex), str(argCount))))
 
             argCountCases.append(CGCase(str(argCount),
                                         CGList(caseBody, "\n")))
@@ -3576,8 +3577,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
 
         if unwrapFailureCode is None:
-            self.unwrapFailureCode = ("return Throw<%s>(cx, rv);" %
-                                      toStringBool(not descriptor.workers))
+            self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' % self.descriptor.name
         else:
             self.unwrapFailureCode = unwrapFailureCode
 
@@ -5466,7 +5466,7 @@ class CGDictionary(CGThing):
             "  JS::Value temp;\n"
             "  bool isNull = val.isNullOrUndefined();\n"
             "  if (!isNull && !val.isObject()) {\n"
-            "    return Throw<${isMainThread}>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);\n"
+            "    return ThrowErrorMessage(cx, MSG_NOT_OBJECT);\n"
             "  }\n"
             "\n"
             "${initMembers}\n"
