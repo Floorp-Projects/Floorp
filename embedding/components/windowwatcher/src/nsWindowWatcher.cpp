@@ -59,6 +59,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsSandboxFlags.h"
+#include "mozilla/Preferences.h"
 
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
@@ -898,8 +899,10 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
   }
 
   if (windowIsNew) {
-    // See if the caller has requested a private browsing window.
+    // See if the caller has requested a private browsing window, or if all
+    // windows should be private.
     bool isPrivateBrowsingWindow =
+      Preferences::GetBool("browser.privatebrowsing.autostart") ||
       !!(chromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW);
     // Otherwise, propagate the privacy status of the parent window, if
     // available, to the child.
