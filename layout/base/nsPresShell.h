@@ -697,6 +697,7 @@ protected:
   virtual void WindowSizeMoveDone();
   virtual void SysColorChanged() { mPresContext->SysColorChanged(); }
   virtual void ThemeChanged() { mPresContext->ThemeChanged(); }
+  virtual void BackingScaleFactorChanged() { mPresContext->UIResolutionChanged(); }
 
 #ifdef DEBUG
   // The reflow root under which we're currently reflowing.  Null when
