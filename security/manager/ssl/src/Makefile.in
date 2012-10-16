@@ -56,7 +56,6 @@ CPPSRCS = 				\
   nsNSSCertificateDB.cpp \
   nsNSSCertTrust.cpp \
   nsNSSCertValidity.cpp \
-  nsOCSPResponder.cpp \
   nsUsageArrayHelper.cpp \
   nsCRLManager.cpp \
   nsNSSShutDown.cpp \
