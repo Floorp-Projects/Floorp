@@ -28,11 +28,12 @@
 
 namespace mozilla {
 
-// We only support 1 audio and 1 video track for now.
-enum {
-  kVideoTrack = 1,
-  kAudioTrack = 2
-};
+#ifdef PR_LOGGING
+PRLogModuleInfo* gMediaManagerLog = PR_NewLogModule("MediaManager");
+#define LOG(msg) PR_LOG(gMediaManagerLog, PR_LOG_DEBUG, msg)
+#else
+#define LOG(msg)
+#endif
 
 
 /**
@@ -204,6 +205,13 @@ MediaDevice::GetSource()
  * be released correctly.
  *
  * All of this must be done on the main thread!
+ *
+ * Note that the various GetUserMedia Runnable classes currently allow for
+ * two streams.  If we ever need to support getting more than two streams
+ * at once, we could convert everything to nsTArray<nsRefPtr<blah> >'s,
+ * though that would complicate the constructors some.  Currently the 
+ * GetUserMedia spec does not allow for more than 2 streams to be obtained in
+ * one call, to simplify handling of constraints.
  */
 class GetUserMediaStreamRunnable : public nsRunnable
 {
@@ -211,14 +219,16 @@ public:
   GetUserMediaStreamRunnable(
     already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aSuccess,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
-    MediaEngineSource* aSource, StreamListeners* aListeners,
-    uint64_t aWindowID, TrackID aTrackID)
+    StreamListeners* aListeners,
+    uint64_t aWindowID,
+    MediaEngineSource* aAudioSource,
+    MediaEngineSource* aVideoSource)
     : mSuccess(aSuccess)
     , mError(aError)
-    , mSource(aSource)
+    , mAudioSource(aAudioSource)
+    , mVideoSource(aVideoSource)
     , mListeners(aListeners)
-    , mWindowID(aWindowID)
-    , mTrackID(aTrackID) {}
+    , mWindowID(aWindowID) {}
 
   ~GetUserMediaStreamRunnable() {}
 
@@ -229,18 +239,23 @@ public:
 
     // Create a media stream.
     nsCOMPtr<nsDOMMediaStream> stream;
-    if (mTrackID == kVideoTrack) {
-      stream = nsDOMMediaStream::CreateInputStream(
-        nsDOMMediaStream::HINT_CONTENTS_VIDEO
-      );
-    } else {
-      stream = nsDOMMediaStream::CreateInputStream(
-        nsDOMMediaStream::HINT_CONTENTS_AUDIO
-      );
-    }
+    uint32_t hints = (mAudioSource ? nsDOMMediaStream::HINT_CONTENTS_AUDIO : 0);
+    hints |= (mVideoSource ? nsDOMMediaStream::HINT_CONTENTS_VIDEO : 0);
+
+    stream = nsDOMMediaStream::CreateInputStream(hints);
 
     nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
       (nsGlobalWindow::GetInnerWindowWithId(mWindowID));
+    WindowTable* activeWindows = MediaManager::Get()->GetActiveWindows();
+
+    if (!stream) {
+      if (activeWindows->Get(mWindowID)) {
+        nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
+        LOG(("Returning error for getUserMedia() - no stream"));
+        error->OnError(NS_LITERAL_STRING("NO_STREAM"));
+      }
+      return NS_OK;
+    }
 
     if (window && window->GetExtantDoc()) {
       stream->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
@@ -250,7 +265,8 @@ public:
     // that the MediaStream has started consuming. The listener is freed
     // when the page is invalidated (on navigation or close).
     GetUserMediaCallbackMediaStreamListener* listener =
-      new GetUserMediaCallbackMediaStreamListener(mSource, stream, mTrackID);
+      new GetUserMediaCallbackMediaStreamListener(stream, mAudioSource,
+                                                  mVideoSource);
     stream->GetStream()->AddListener(listener);
 
     // No need for locking because we always do this in the main thread.
@@ -260,8 +276,8 @@ public:
     nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> success(mSuccess);
     nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
 
-    WindowTable* activeWindows = MediaManager::Get()->GetActiveWindows();
     if (activeWindows->Get(mWindowID)) {
+      LOG(("Returning success for getUserMedia()"));
       success->OnSuccess(stream);
     }
 
@@ -271,10 +287,10 @@ public:
 private:
   already_AddRefed<nsIDOMGetUserMediaSuccessCallback> mSuccess;
   already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
-  nsRefPtr<MediaEngineSource> mSource;
+  nsRefPtr<MediaEngineSource> mAudioSource;
+  nsRefPtr<MediaEngineSource> mVideoSource;
   StreamListeners* mListeners;
   uint64_t mWindowID;
-  TrackID mTrackID;
 };
 
 /**
@@ -296,7 +312,8 @@ public:
   GetUserMediaRunnable(bool aAudio, bool aVideo, bool aPicture,
     already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aSuccess,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
-    StreamListeners* aListeners, uint64_t aWindowID, MediaDevice* aDevice)
+    StreamListeners* aListeners, uint64_t aWindowID, 
+    MediaDevice* aAudioDevice, MediaDevice* aVideoDevice)
     : mAudio(aAudio)
     , mVideo(aVideo)
     , mPicture(aPicture)
@@ -304,9 +321,16 @@ public:
     , mError(aError)
     , mListeners(aListeners)
     , mWindowID(aWindowID)
-    , mDevice(aDevice)
     , mDeviceChosen(true)
-    , mBackendChosen(false) {}
+    , mBackendChosen(false)
+    {
+      if (mAudio) {
+        mAudioDevice = aAudioDevice;
+      } 
+      if (mVideo) {
+        mVideoDevice = aVideoDevice;
+      }
+    }
 
   GetUserMediaRunnable(bool aAudio, bool aVideo, bool aPicture,
     already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aSuccess,
@@ -375,29 +399,13 @@ public:
       return NS_OK;
     }
 
-    // XXX: Implement merging two streams (See bug 758391).
-    if (mAudio && mVideo) {
-      NS_DispatchToMainThread(new ErrorCallbackRunnable(
-        mSuccess, mError, NS_LITERAL_STRING("NOT_IMPLEMENTED"), mWindowID
-      ));
-      return NS_OK;
-    }
-
     if (mPicture) {
-      ProcessGetUserMediaSnapshot(mDevice->GetSource(), 0);
+      ProcessGetUserMediaSnapshot(mVideoDevice->GetSource(), 0);
       return NS_OK;
     }
 
-    if (mVideo) {
-      ProcessGetUserMedia(mDevice->GetSource(), kVideoTrack);
-      return NS_OK;
-    }
-
-    if (mAudio) {
-      ProcessGetUserMedia(mDevice->GetSource(), kAudioTrack);
-      return NS_OK;
-    }
-
+    ProcessGetUserMedia(mAudio ? mAudioDevice->GetSource() : nullptr,
+                        mVideo ? mVideoDevice->GetSource() : nullptr);
     return NS_OK;
   }
 
@@ -417,9 +425,17 @@ public:
   }
 
   nsresult
-  SetDevice(MediaDevice* aDevice)
+  SetAudioDevice(MediaDevice* aAudioDevice)
   {
-    mDevice = aDevice;
+    mAudioDevice = aAudioDevice;
+    mDeviceChosen = true;
+    return NS_OK;
+  }
+
+  nsresult
+  SetVideoDevice(MediaDevice* aVideoDevice)
+  {
+    mVideoDevice = aVideoDevice;
     mDeviceChosen = true;
     return NS_OK;
   }
@@ -439,8 +455,10 @@ public:
         ));
         return NS_ERROR_FAILURE;
       }
-      mDevice = new MediaDevice(videoSources[0]);
-    } else {
+      mVideoDevice = new MediaDevice(videoSources[0]);
+      LOG(("Selected video device"));
+    }
+    if (mAudio) {
       nsTArray<nsRefPtr<MediaEngineAudioSource> > audioSources;
       mBackend->EnumerateAudioDevices(&audioSources);
 
@@ -451,7 +469,8 @@ public:
         ));
         return NS_ERROR_FAILURE;
       }
-      mDevice = new MediaDevice(audioSources[0]);
+      mAudioDevice = new MediaDevice(audioSources[0]);
+      LOG(("Selected audio device"));
     }
 
     return NS_OK;
@@ -462,18 +481,35 @@ public:
    * a GetUserMediaStreamRunnable. Runs off the main thread.
    */
   void
-  ProcessGetUserMedia(MediaEngineSource* aSource, TrackID aTrackID)
+  ProcessGetUserMedia(MediaEngineSource* aAudioSource, MediaEngineSource* aVideoSource)
   {
-    nsresult rv = aSource->Allocate();
-    if (NS_FAILED(rv)) {
-      NS_DispatchToMainThread(new ErrorCallbackRunnable(
-        mSuccess, mError, NS_LITERAL_STRING("HARDWARE_UNAVAILABLE"), mWindowID
-      ));
-      return;
+    nsresult rv;
+    if (aAudioSource) {
+      rv = aAudioSource->Allocate();
+      if (NS_FAILED(rv)) {
+        LOG(("Failed to allocate audiosource %d",rv));
+        NS_DispatchToMainThread(new ErrorCallbackRunnable(
+                                  mSuccess, mError, NS_LITERAL_STRING("HARDWARE_UNAVAILABLE"), mWindowID
+                                                          ));
+        return;
+      }
+    }
+    if (aVideoSource) {
+      rv = aVideoSource->Allocate();
+      if (NS_FAILED(rv)) {
+        LOG(("Failed to allocate videosource %d\n",rv));
+        if (aAudioSource) {
+          aAudioSource->Deallocate();
+        }
+        NS_DispatchToMainThread(new ErrorCallbackRunnable(
+          mSuccess, mError, NS_LITERAL_STRING("HARDWARE_UNAVAILABLE"), mWindowID
+                                                          ));
+        return;
+      }
     }
 
     NS_DispatchToMainThread(new GetUserMediaStreamRunnable(
-      mSuccess, mError, aSource, mListeners, mWindowID, aTrackID
+      mSuccess, mError, mListeners, mWindowID, aAudioSource, aVideoSource
     ));
     return;
   }
@@ -515,7 +551,8 @@ private:
   already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
   StreamListeners* mListeners;
   uint64_t mWindowID;
-  nsRefPtr<MediaDevice> mDevice;
+  nsRefPtr<MediaDevice> mAudioDevice;
+  nsRefPtr<MediaDevice> mVideoDevice;
 
   bool mDeviceChosen;
   bool mBackendChosen;
@@ -616,19 +653,28 @@ MediaManager::GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
   rv = aParams->GetVideo(&video);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIMediaDevice> device;
-  rv = aParams->GetDevice(getter_AddRefs(device));
+  nsCOMPtr<nsIMediaDevice> audiodevice;
+  rv = aParams->GetAudioDevice(getter_AddRefs(audiodevice));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIMediaDevice> videodevice;
+  rv = aParams->GetVideoDevice(getter_AddRefs(videodevice));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If a device was provided, make sure it support the type of stream requested.
-  if (device) {
+  // Doesn't handle hard-specifying both audio and video
+  if (audiodevice) {
     nsString type;
-    device->GetType(type);
-    if ((picture || video) && !type.EqualsLiteral("video")) {
-      return NS_ERROR_FAILURE;
-    }
+    audiodevice->GetType(type);
     if (audio && !type.EqualsLiteral("audio")) {
       return NS_ERROR_FAILURE;
+    }
+  }
+  if (videodevice) {
+    nsString type;
+    videodevice->GetType(type);
+    if ((picture || video) && !type.EqualsLiteral("video")) {
+        return NS_ERROR_FAILURE;
     }
   }
 
@@ -696,11 +742,13 @@ MediaManager::GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
       audio, video, onSuccess.forget(), onError.forget(), listeners,
       windowID, new MediaEngineDefault()
     );
-  } else if (device) {
+  } else if (audiodevice || videodevice) {
     // Stream from provided device.
     gUMRunnable = new GetUserMediaRunnable(
       audio, video, picture, onSuccess.forget(), onError.forget(), listeners,
-      windowID, static_cast<MediaDevice*>(device.get())
+      windowID, 
+      static_cast<MediaDevice*>(audiodevice.get()),
+      static_cast<MediaDevice*>(videodevice.get())
     );
   } else {
     // Stream from default device from WebRTC backend.
@@ -710,10 +758,15 @@ MediaManager::GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
     );
   }
 
+#ifdef ANDROID
   if (picture) {
     // ShowFilePickerForMimeType() must run on the Main Thread! (on Android)
     NS_DispatchToMainThread(gUMRunnable);
-  } else if (aPrivileged || fake) {
+  }
+  // XXX No support for Audio or Video in Android yet
+#else
+  // XXX No full support for picture in Desktop yet (needs proper UI)
+  if (aPrivileged || fake) {
     if (!mMediaThread) {
       nsresult rv = NS_NewThread(getter_AddRefs(mMediaThread));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -756,6 +809,7 @@ MediaManager::GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     obs->NotifyObservers(aParams, "getUserMedia:request", data.get());
   }
+#endif
 
   return NS_OK;
 }
@@ -862,11 +916,20 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
 
     if (aSubject) {
       // A particular device was chosen by the user.
+      // NOTE: does not allow setting a device to null; assumes nullptr
       nsCOMPtr<nsIMediaDevice> device = do_QueryInterface(aSubject);
       if (device) {
         GetUserMediaRunnable* gUMRunnable =
           static_cast<GetUserMediaRunnable*>(runnable.get());
-        gUMRunnable->SetDevice(static_cast<MediaDevice*>(device.get()));
+        nsString type;
+        device->GetType(type);
+        if (type.EqualsLiteral("video")) {
+          gUMRunnable->SetVideoDevice(static_cast<MediaDevice*>(device.get()));
+        } else if (type.EqualsLiteral("audio")) {
+          gUMRunnable->SetAudioDevice(static_cast<MediaDevice*>(device.get()));
+        } else {
+          NS_WARNING("Unknown device type in getUserMedia");
+        }
       }
     }
 

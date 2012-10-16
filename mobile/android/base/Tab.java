@@ -154,7 +154,7 @@ public class Tab {
     }
 
     synchronized public ByteBuffer getThumbnailBuffer() {
-        int capacity = getThumbnailWidth() * getThumbnailHeight() * 2 /* 16 bpp */;
+        int capacity = Tabs.getThumbnailWidth() * Tabs.getThumbnailHeight() * 2 /* 16 bpp */;
         if (mThumbnailBuffer != null && mThumbnailBuffer.capacity() == capacity)
             return mThumbnailBuffer;
         freeBuffer();
@@ -165,7 +165,7 @@ public class Tab {
     public Bitmap getThumbnailBitmap() {
         if (mThumbnailBitmap != null)
             return mThumbnailBitmap;
-        return mThumbnailBitmap = Bitmap.createBitmap(getThumbnailWidth(), getThumbnailHeight(), Bitmap.Config.RGB_565);
+        return mThumbnailBitmap = Bitmap.createBitmap(Tabs.getThumbnailWidth(), Tabs.getThumbnailHeight(), Bitmap.Config.RGB_565);
     }
 
     public void finalize() {
@@ -175,16 +175,6 @@ public class Tab {
     synchronized void freeBuffer() {
         DirectBufferAllocator.free(mThumbnailBuffer);
         mThumbnailBuffer = null;
-    }
-
-    int getThumbnailWidth() {
-        int desiredWidth = (int) (GeckoApp.mAppContext.getResources().getDimension(R.dimen.tab_thumbnail_width));
-        return desiredWidth & ~0x1;
-    }
-
-    int getThumbnailHeight() {
-        int desiredHeight = (int) (GeckoApp.mAppContext.getResources().getDimension(R.dimen.tab_thumbnail_height));
-        return desiredHeight & ~0x1;
     }
 
     public void updateThumbnail(final Bitmap b) {

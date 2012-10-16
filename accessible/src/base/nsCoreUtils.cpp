@@ -481,26 +481,6 @@ nsCoreUtils::IsErrorPage(nsIDocument *aDocument)
   return StringBeginsWith(path, neterror) || StringBeginsWith(path, certerror);
 }
 
-already_AddRefed<nsIDOMNode>
-nsCoreUtils::GetDOMNodeForContainer(nsIDocShellTreeItem *aContainer)
-{
-  nsCOMPtr<nsIDocShell> shell = do_QueryInterface(aContainer);
-
-  nsCOMPtr<nsIContentViewer> cv;
-  shell->GetContentViewer(getter_AddRefs(cv));
-
-  if (!cv)
-    return nullptr;
-
-  nsIDocument* doc = cv->GetDocument();
-  if (!doc)
-    return nullptr;
-
-  nsIDOMNode* node = nullptr;
-  CallQueryInterface(doc, &node);
-  return node;
-}
-
 bool
 nsCoreUtils::GetID(nsIContent *aContent, nsAString& aID)
 {

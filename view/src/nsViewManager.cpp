@@ -683,7 +683,7 @@ void nsViewManager::WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint)
 }
 
 bool nsViewManager::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion,
-                                bool aSentWillPaint, bool aWillSendDidPaint)
+                                uint32_t aFlags)
  {
   if (!aWidget || !mContext)
     return false;
@@ -691,15 +691,15 @@ bool nsViewManager::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion,
   NS_ASSERTION(IsPaintingAllowed(),
                "shouldn't be receiving paint events while painting is disallowed!");
 
-  if (!aSentWillPaint && !IsRefreshDriverPaintingEnabled()) {
-    WillPaintWindow(aWidget, aWillSendDidPaint);
+  if (!(aFlags & nsIWidgetListener::SENT_WILL_PAINT) && !IsRefreshDriverPaintingEnabled()) {
+    WillPaintWindow(aWidget, (aFlags & nsIWidgetListener::WILL_SEND_DID_PAINT));
   }
 
   // Get the view pointer here since NS_WILL_PAINT might have
   // destroyed it during CallWillPaintOnObservers (bug 378273).
   nsView* view = nsView::GetViewFor(aWidget);
   if (view && !aRegion.IsEmpty()) {
-    Refresh(view, aRegion, aWillSendDidPaint);
+    Refresh(view, aRegion, (aFlags & nsIWidgetListener::WILL_SEND_DID_PAINT));
   }
 
   return true;

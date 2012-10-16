@@ -29,10 +29,9 @@
 #include "nsIDOMHTMLButtonElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsStyleSet.h"
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
 #include "nsDisplayList.h"
+
+using namespace mozilla;
 
 nsIFrame*
 NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -77,16 +76,10 @@ NS_QUERYFRAME_HEAD(nsHTMLButtonControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef ACCESSIBILITY
-already_AddRefed<Accessible>
-nsHTMLButtonControlFrame::CreateAccessible()
+a11y::AccType
+nsHTMLButtonControlFrame::AccessibleType()
 {
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  if (accService) {
-    return accService->CreateHTMLButtonAccessible(mContent,
-                                                  PresContext()->PresShell()); 
-  }
-
-  return nullptr;
+  return a11y::eHTMLButtonAccessible;
 }
 #endif
 

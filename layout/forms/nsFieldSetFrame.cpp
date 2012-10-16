@@ -24,9 +24,6 @@
 #include "nsStyleConsts.h"
 #include "nsFont.h"
 #include "nsCOMPtr.h"
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
 #include "nsIServiceManager.h"
 #include "nsDisplayList.h"
 #include "nsRenderingContext.h"
@@ -80,7 +77,7 @@ public:
   virtual nsIAtom* GetType() const;
 
 #ifdef ACCESSIBILITY  
-  virtual already_AddRefed<Accessible> CreateAccessible();
+  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
 #ifdef DEBUG
@@ -632,16 +629,10 @@ nsFieldSetFrame::RemoveFrame(ChildListID    aListID,
 }
 
 #ifdef ACCESSIBILITY
-already_AddRefed<Accessible>
-nsFieldSetFrame::CreateAccessible()
+a11y::AccType
+nsFieldSetFrame::AccessibleType()
 {
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  if (accService) {
-    return accService->CreateHTMLGroupboxAccessible(mContent,
-                                                    PresContext()->PresShell());
-  }
-
-  return nullptr;
+  return a11y::eHTMLGroupboxAccessible;
 }
 #endif
 

@@ -9,9 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "nsFormControlFrame.h"
 
-#ifdef ACCESSIBILITY
-class nsIAccessible;
-#endif
 
 // nsGfxRadioControlFrame
 
@@ -24,7 +21,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<Accessible> CreateAccessible();
+  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,

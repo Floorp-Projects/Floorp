@@ -2138,7 +2138,6 @@ nsresult nsBuiltinDecoderStateMachine::RunStateMachine()
         int64_t videoTime = HasVideo() ? mVideoFrameEndTime : 0;
         int64_t clockTime = NS_MAX(mEndTime, NS_MAX(videoTime, GetAudioClock()));
         UpdatePlaybackPosition(clockTime);
-        printf("nsBuiltinDecoderStateMachine::RunStateMachine queuing nsBuiltinDecoder::PlaybackEnded\n");
         nsCOMPtr<nsIRunnable> event =
           NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::PlaybackEnded);
         NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);

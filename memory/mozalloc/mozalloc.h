@@ -39,8 +39,8 @@
 #endif
 
 
-#if defined(MOZ_ALWAYS_INLINE)
-#  define MOZALLOC_INLINE MOZ_ALWAYS_INLINE
+#if defined(NS_ALWAYS_INLINE)
+#  define MOZALLOC_INLINE NS_ALWAYS_INLINE inline
 #elif defined(HAVE_FORCEINLINE)
 #  define MOZALLOC_INLINE __forceinline
 #else

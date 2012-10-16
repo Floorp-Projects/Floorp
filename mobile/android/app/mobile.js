@@ -493,6 +493,10 @@ pref("browser.search.param.yahoo-fr-ja", "mozff");
 pref("app.update.timerFirstInterval", 30000); // milliseconds
 pref("app.update.timerMinimumDelay", 30); // seconds
 
+// used by update service to decide whether or not to
+// automatically download an update
+pref("app.update.autodownload", "wifi");
+
 #ifdef MOZ_UPDATER
 /* prefs used specifically for updating the app */
 pref("app.update.enabled", false);

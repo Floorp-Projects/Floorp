@@ -61,17 +61,17 @@
 #define MINVALUE_GL_MAX_RENDERBUFFER_SIZE             1024  // Different from the spec, which sets it to 1 on page 164
 #define MINVALUE_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS  8     // Page 164
 
-#define DECL_WEBGL_TYPEDEF(type) typedef type Web##type;
-DECL_WEBGL_TYPEDEF(GLenum)
-DECL_WEBGL_TYPEDEF(GLbitfield)
-DECL_WEBGL_TYPEDEF(GLint)
-DECL_WEBGL_TYPEDEF(GLsizei)
-DECL_WEBGL_TYPEDEF(GLsizeiptr)
-DECL_WEBGL_TYPEDEF(GLintptr)
-DECL_WEBGL_TYPEDEF(GLuint)
-DECL_WEBGL_TYPEDEF(GLfloat)
-DECL_WEBGL_TYPEDEF(GLclampf)
-typedef realGLboolean WebGLboolean;
+// Manual reflection of WebIDL typedefs
+typedef uint32_t WebGLenum;
+typedef uint32_t WebGLbitfield;
+typedef int32_t WebGLint;
+typedef int32_t WebGLsizei;
+typedef int64_t WebGLsizeiptr;
+typedef int64_t WebGLintptr;
+typedef uint32_t WebGLuint;
+typedef float WebGLfloat;
+typedef float WebGLclampf;
+typedef bool WebGLboolean;
 
 class nsIPropertyBag;
 

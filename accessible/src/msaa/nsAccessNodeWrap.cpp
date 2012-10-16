@@ -125,7 +125,7 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
     *ppv = static_cast<IAccessible*>(docAcc);
 
     (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
-    return NS_OK;
+    return S_OK;
   }
 
   // Can get to IAccessibleApplication from any node via QS

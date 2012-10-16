@@ -38,8 +38,6 @@ static jsid s_length_id = JSID_VOID;
 
 static jsid s_iterator_id = JSID_VOID;
 
-static jsid s_VOID_id = JSID_VOID;
-
 bool
 DefineStaticJSVal(JSContext *cx, jsid &id, const char *string)
 {
@@ -136,14 +134,14 @@ Unwrap(JSContext *cx, jsval v, NoType **ppArg, nsISupports **ppArgRef, jsval *vp
 
 template<class LC>
 typename ListBase<LC>::Properties ListBase<LC>::sProtoProperties[] = {
-    { s_VOID_id, NULL, NULL }
+    { JSID_VOID, NULL, NULL }
 };
 template<class LC>
 size_t ListBase<LC>::sProtoPropertiesCount = 0;
 
 template<class LC>
 typename ListBase<LC>::Methods ListBase<LC>::sProtoMethods[] = {
-    { s_VOID_id, NULL, 0 }
+    { JSID_VOID, NULL, 0 }
 };
 template<class LC>
 size_t ListBase<LC>::sProtoMethodsCount = 0;

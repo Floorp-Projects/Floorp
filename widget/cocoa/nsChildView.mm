@@ -136,7 +136,7 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 
 - (void)processPendingRedraws;
 
-- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
+- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext alternate:(BOOL)aIsAlternate;
 
 // Called using performSelector:withObject:afterDelay:0 to release
 // aWidgetArray (and its contents) the next time through the run loop.
@@ -153,11 +153,6 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 #endif
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
-
-#ifndef NP_NO_CARBON
-- (void)sendCarbonWheelEvent:(SInt32)delta
-                     forAxis:(EventMouseWheelAxis)carbonAxis;
-#endif
 
 @end
 
@@ -284,8 +279,7 @@ nsresult nsChildView::Create(nsIWidget *aParent,
       nsToolkit::SwizzleMethods([NSEvent class], @selector(removeMonitor:),
                                 @selector(nsChildView_NSEvent_removeMonitor:), true);
     }
-#endif
-#ifndef NP_NO_CARBON
+#else
     TextInputHandler::SwizzleMethods();
 #endif
     gChildViewMethodsSwizzled = true;
@@ -562,14 +556,6 @@ void nsChildView::UpdatePluginPort()
   // graphics context.  See bug 500130.
   mPluginCGContext.context = NULL;
   mPluginCGContext.window = NULL;
-#ifndef NP_NO_CARBON
-  NSWindow* cocoaWindow = [mView window];
-  WindowRef carbonWindow = cocoaWindow ? (WindowRef)[cocoaWindow windowRef] : NULL;
-  if (carbonWindow) {
-    mPluginCGContext.context = (CGContextRef)[[cocoaWindow graphicsContext] graphicsPort];
-    mPluginCGContext.window = carbonWindow;
-  }
-#endif
 }
 
 static void HideChildPluginViews(NSView* aView)
@@ -960,20 +946,6 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-
-#ifndef NP_NO_CARBON
-static void InitializeEventRecord(EventRecord* event, Point* aMousePosition)
-{
-  memset(event, 0, sizeof(EventRecord));
-  if (aMousePosition) {
-    event->where = *aMousePosition;
-  } else {
-    ::GetGlobalMouse(&event->where);
-  }
-  event->when = ::TickCount();
-  event->modifiers = ::GetCurrentKeyModifiers();
-}
-#endif
 
 NS_IMETHODIMP nsChildView::StartDrawPlugin()
 {
@@ -1418,7 +1390,7 @@ bool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
   return ConvertStatus(status);
 }
 
-bool nsChildView::PaintWindow(nsIntRegion aRegion)
+bool nsChildView::PaintWindow(nsIntRegion aRegion, bool aIsAlternate)
 {
   nsIWidget* widget = this;
   nsIWidgetListener* listener = mWidgetListener;
@@ -1439,7 +1411,11 @@ bool nsChildView::PaintWindow(nsIntRegion aRegion)
   bool returnValue = false;
   bool oldDispatchPaint = mIsDispatchPaint;
   mIsDispatchPaint = true;
-  returnValue = listener->PaintWindow(widget, aRegion, true, false);
+  uint32_t flags = nsIWidgetListener::SENT_WILL_PAINT;
+  if (aIsAlternate) {
+    flags |= nsIWidgetListener::PAINT_IS_ALTERNATE; 
+  }
+  returnValue = listener->PaintWindow(widget, aRegion, flags);
   mIsDispatchPaint = oldDispatchPaint;
   return returnValue;
 }
@@ -1916,6 +1892,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mGeckoChild = inChild;
     mIsPluginView = NO;
 #ifndef NP_NO_CARBON
+    // We don't support the Carbon event model but it's still the default
+    // model for i386 per NPAPI.
     mPluginEventModel = NPEventModelCarbon;
 #else
     mPluginEventModel = NPEventModelCocoa;
@@ -2374,7 +2352,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 - (void)drawRect:(NSRect)aRect
 {
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-  [self drawRect:aRect inContext:cgContext];
+  [self drawRect:aRect inContext:cgContext alternate:false];
 
   // If we're a transparent window and our contents have changed, we need
   // to make sure the shadow is updated to the new contents.
@@ -2391,10 +2369,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Title bar drawing only works if we really draw into aContext, which only
   // the basic layer manager will do.
   nsBaseWidget::AutoUseBasicLayerManager setupLayerManager(mGeckoChild);
-  [self drawRect:aRect inContext:aContext];
+  [self drawRect:aRect inContext:aContext alternate:true];
 }
 
-- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext
+- (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext alternate:(BOOL)aIsAlternate
 {
   SAMPLE_LABEL("widget", "ChildView::drawRect");
   if (!mGeckoChild || !mGeckoChild->IsVisible())
@@ -2448,7 +2426,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     [glContext setView:self];
     [glContext update];
 
-    mGeckoChild->PaintWindow(region);
+    mGeckoChild->PaintWindow(region, aIsAlternate);
 
     // Force OpenGL to refresh the very first time we draw. This works around a
     // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
@@ -2492,7 +2470,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   {
     nsBaseWidget::AutoLayerManagerSetup
       setupLayerManager(mGeckoChild, targetContext, BUFFER_NONE);
-    painted = mGeckoChild->PaintWindow(region);
+    painted = mGeckoChild->PaintWindow(region, aIsAlternate);
   }
 
   // Force OpenGL to refresh the very first time we draw. This works around a
@@ -3132,17 +3110,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
   // event type.
-#ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-  if (mPluginEventModel == NPEventModelCarbon) {
-    carbonEvent.what = mouseDown;
-    carbonEvent.message = 0;
-    carbonEvent.when = ::TickCount();
-    ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = ::GetCurrentKeyModifiers();
-    geckoEvent.pluginEvent = &carbonEvent;
-  }
-#endif
   NPCocoaEvent cocoaEvent;
   if (mPluginEventModel == NPEventModelCocoa) {
     nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
@@ -3176,9 +3143,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-#ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-#endif // ifndef NP_NO_CARBON
   NPCocoaEvent cocoaEvent;
 	
   nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_UP, mGeckoChild, nsMouseEvent::eReal);
@@ -3192,16 +3156,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // This is going to our child view so we don't need to look up the destination
   // event type.
   if (mIsPluginView) {
-#ifndef NP_NO_CARBON
-    if (mPluginEventModel == NPEventModelCarbon) {
-      carbonEvent.what = mouseUp;
-      carbonEvent.message = 0;
-      carbonEvent.when = ::TickCount();
-      ::GetGlobalMouse(&carbonEvent.where);
-      carbonEvent.modifiers = ::GetCurrentKeyModifiers();
-      geckoEvent.pluginEvent = &carbonEvent;
-    }
-#endif
     if (mPluginEventModel == NPEventModelCocoa) {
       nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
       NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
@@ -3225,10 +3179,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // happen if it came at the end of a dragging operation), also send our
   // Gecko frame a mouse-exit event.
   if (mGeckoChild && mIsPluginView) {
-#ifndef NP_NO_CARBON
-    if (mPluginEventModel == NPEventModelCocoa)
-#endif
-    {
+    if (mPluginEventModel == NPEventModelCocoa) {
       if (ChildViewMouseTracker::ViewForEvent(theEvent) != self) {
         nsMouseEvent geckoExitEvent(true, NS_MOUSE_EXIT, mGeckoChild, nsMouseEvent::eReal);
         [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoExitEvent];
@@ -3271,21 +3222,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
   // event type.
-#ifndef NP_NO_CARBON  
-  EventRecord carbonEvent;
-#endif
   NPCocoaEvent cocoaEvent;
   if (mIsPluginView) {
-#ifndef NP_NO_CARBON  
-    if (mPluginEventModel == NPEventModelCarbon) {
-      carbonEvent.what = NPEventType_AdjustCursorEvent;
-      carbonEvent.message = 0;
-      carbonEvent.when = ::TickCount();
-      ::GetGlobalMouse(&carbonEvent.where);
-      carbonEvent.modifiers = ::GetCurrentKeyModifiers();
-      event.pluginEvent = &carbonEvent;
-    }
-#endif
     if (mPluginEventModel == NPEventModelCocoa) {
       nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
       cocoaEvent.type = ((msg == NS_MOUSE_ENTER) ? NPCocoaEventMouseEntered : NPCocoaEventMouseExited);
@@ -3319,21 +3257,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
   // event type.
-#ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-#endif
   NPCocoaEvent cocoaEvent;
   if (mIsPluginView) {
-#ifndef NP_NO_CARBON
-    if (mPluginEventModel == NPEventModelCarbon) {
-      carbonEvent.what = NPEventType_AdjustCursorEvent;
-      carbonEvent.message = 0;
-      carbonEvent.when = ::TickCount();
-      ::GetGlobalMouse(&carbonEvent.where);
-      carbonEvent.modifiers = ::GetCurrentKeyModifiers();
-      geckoEvent.pluginEvent = &carbonEvent;
-    }
-#endif
     if (mPluginEventModel == NPEventModelCocoa) {
       nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
       NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
@@ -3363,9 +3288,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   gLastDragView = self;
 
-#ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-#endif // ifndef NP_NO_CARBON
   NPCocoaEvent cocoaEvent;
 
   nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, mGeckoChild, nsMouseEvent::eReal);
@@ -3373,16 +3295,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   // create event for use by plugins
   if (mIsPluginView) {
-#ifndef NP_NO_CARBON
-    if (mPluginEventModel == NPEventModelCarbon) {
-      carbonEvent.what = NPEventType_AdjustCursorEvent;
-      carbonEvent.message = 0;
-      carbonEvent.when = ::TickCount();
-      ::GetGlobalMouse(&carbonEvent.where);
-      carbonEvent.modifiers = btnState | ::GetCurrentKeyModifiers();
-      geckoEvent.pluginEvent = &carbonEvent;
-    }
-#endif
     if (mPluginEventModel == NPEventModelCocoa) {
       nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
       NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
@@ -3427,17 +3339,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   geckoEvent.clickCount = [theEvent clickCount];
 
   // create event for use by plugins
-#ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-  if (mPluginEventModel == NPEventModelCarbon) {
-    carbonEvent.what = mouseDown;
-    carbonEvent.message = 0;
-    carbonEvent.when = ::TickCount();
-    ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = controlKey;  // fake a context menu click
-    geckoEvent.pluginEvent = &carbonEvent;    
-  }
-#endif
   NPCocoaEvent cocoaEvent;
   if (mPluginEventModel == NPEventModelCocoa) {
     nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
@@ -3471,9 +3372,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-#ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-#endif // ifndef NP_NO_CARBON
   NPCocoaEvent cocoaEvent;
 
   nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_UP, mGeckoChild, nsMouseEvent::eReal);
@@ -3483,16 +3381,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   // create event for use by plugins
   if (mIsPluginView) {
-#ifndef NP_NO_CARBON
-    if (mPluginEventModel == NPEventModelCarbon) {
-      carbonEvent.what = mouseUp;
-      carbonEvent.message = 0;
-      carbonEvent.when = ::TickCount();
-      ::GetGlobalMouse(&carbonEvent.where);
-      carbonEvent.modifiers = controlKey;  // fake a context menu click
-      geckoEvent.pluginEvent = &carbonEvent;
-    }
-#endif
     if (mPluginEventModel == NPEventModelCocoa) {
       nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
       NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
@@ -3672,22 +3560,6 @@ static int32_t RoundUp(double aDouble)
     return;
   }
 
-#ifndef NP_NO_CARBON
-  // dispatch scroll wheel carbon event for plugins
-  if (mPluginEventModel == NPEventModelCarbon) {
-    [self sendCarbonWheelEvent:RoundUp([theEvent deltaY])
-                       forAxis:kEventMouseWheelAxisY];
-    if (!mGeckoChild) {
-      return;
-    }
-    [self sendCarbonWheelEvent:RoundUp([theEvent deltaX])
-                       forAxis:kEventMouseWheelAxisX];
-    if (!mGeckoChild) {
-      return;
-    }
-  }
-#endif
-
 #ifdef __LP64__
   // overflowDeltaX tells us when the user has tried to scroll past the edge
   // of a page to the left or the right (in those cases it's non-zero).
@@ -3751,51 +3623,6 @@ static int32_t RoundUp(double aDouble)
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
-
-#ifndef NP_NO_CARBON
-
-- (void)sendCarbonWheelEvent:(SInt32)delta
-                     forAxis:(EventMouseWheelAxis)carbonAxis
-{
-  if (!delta) {
-    return;
-  }
-
-  EventRef theEvent;
-  OSStatus err = ::CreateEvent(NULL,
-                               kEventClassMouse,
-                               kEventMouseWheelMoved,
-                               TicksToEventTime(TickCount()),
-                               kEventAttributeUserEvent,
-                               &theEvent);
-  if (err != noErr) {
-    return;
-  }
-
-  SetEventParameter(theEvent,
-                    kEventParamMouseWheelAxis,
-                    typeMouseWheelAxis,
-                    sizeof(EventMouseWheelAxis),
-                    &carbonAxis);
-  SetEventParameter(theEvent,
-                    kEventParamMouseWheelDelta,
-                    typeLongInteger,
-                    sizeof(SInt32),
-                    &delta);
-  Point mouseLoc;
-  ::GetGlobalMouse(&mouseLoc);
-  SetEventParameter(theEvent,
-                    kEventParamMouseLocation,
-                    typeQDPoint,
-                    sizeof(Point),
-                    &mouseLoc);
-
-  ::SendEventToEventTarget(theEvent,
-      GetWindowEventTarget((WindowRef)[[self window] windowRef]));
-  ReleaseEvent(theEvent);
-}
-
-#endif // #ifndef NP_NO_CARBON
 
 - (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent
 {
@@ -3973,7 +3800,7 @@ static int32_t RoundUp(double aDouble)
 
 #pragma mark -
 
-#ifdef NP_NO_CARBON
+#ifdef __LP64__
 - (NSTextInputContext *)inputContext
 {
   if (mIsPluginView && mPluginEventModel == NPEventModelCocoa)

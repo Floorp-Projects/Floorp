@@ -77,6 +77,15 @@ nsBaseChannel::Redirect(nsIChannel *newChannel, uint32_t redirectFlags,
   newChannel->SetNotificationCallbacks(mCallbacks);
   newChannel->SetLoadFlags(mLoadFlags | LOAD_REPLACE);
 
+  // Try to preserve the privacy bit if it has been overridden
+  if (mPrivateBrowsingOverriden) {
+    nsCOMPtr<nsIPrivateBrowsingChannel> newPBChannel =
+      do_QueryInterface(newChannel);
+    if (newPBChannel) {
+      newPBChannel->SetPrivate(mPrivateBrowsing);
+    }
+  }
+
   nsCOMPtr<nsIWritablePropertyBag> bag = ::do_QueryInterface(newChannel);
   if (bag)
     mPropertyHash.EnumerateRead(CopyProperties, bag.get());

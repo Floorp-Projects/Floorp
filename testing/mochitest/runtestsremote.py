@@ -202,8 +202,12 @@ class MochiRemote(Mochitest):
         self.localLog = options.logFile
 
     def cleanup(self, manifest, options):
-        self._dm.getFile(self.remoteLog, self.localLog)
-        self._dm.removeFile(self.remoteLog)
+        if self._dm.fileExists(self.remoteLog):
+            self._dm.getFile(self.remoteLog, self.localLog)
+            self._dm.removeFile(self.remoteLog)
+        else:
+            print "WARNING: Unable to retrieve log file (%s) from remote " \
+                "device" % self.remoteLog
         self._dm.removeDir(self.remoteProfile)
 
         if (options.pidFile != ""):

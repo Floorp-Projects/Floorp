@@ -23,16 +23,36 @@
 
 #ifdef __LP64__
 #include "ComplexTextInputPanel.h"
-#endif // __LP64__
-
-#ifndef NP_NO_CARBON
 #include <objc/runtime.h>
-#endif // NP_NO_CARBON
+#endif // __LP64__
 
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
 #endif
 #include "prlog.h"
+
+#ifndef __LP64__
+enum {
+  // Currently focused ChildView (while this TSM document is active).
+  // Transient (only set while TSMProcessRawKeyEvent() is processing a key
+  // event), and the ChildView will be retained and released around the call
+  // to TSMProcessRawKeyEvent() -- so it can be weak.
+  kFocusedChildViewTSMDocPropertyTag  = 'GKFV', // type ChildView* [WEAK]
+};
+
+// Undocumented HIToolbox function used by WebKit to allow Carbon-based IME
+// to work in a Cocoa-based browser (like Safari or Cocoa-widgets Firefox).
+// (Recent WebKit versions actually use a thin wrapper around this function
+// called WKSendKeyEventToTSM().)
+//
+// Calling TSMProcessRawKeyEvent() from ChildView's keyDown: and keyUp:
+// methods (when the ChildView is a plugin view) bypasses Cocoa's IME
+// infrastructure and (instead) causes Carbon TSM events to be sent on each
+// NSKeyDown event.  We install a Carbon event handler
+// (PluginKeyEventsHandler()) to catch these events and pass them to Gecko
+// (which in turn passes them to the plugin).
+extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
+#endif // __LP64__
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -316,7 +336,7 @@ GetWindowLevelName(NSInteger aWindowLevel)
 #endif // #ifdef PR_LOGGING
 
 static uint32_t gHandlerInstanceCount = 0;
-static TISInputSourceWrapper gCurrentKeyboardLayout;
+static TISInputSourceWrapper gCurrentInputSource;
 
 static void
 InitLogModule()
@@ -332,18 +352,18 @@ InitLogModule()
 }
 
 static void
-InitCurrentKeyboardLayout()
+InitCurrentInputSource()
 {
   if (gHandlerInstanceCount > 0 &&
-      !gCurrentKeyboardLayout.IsInitializedByCurrentKeyboardLayout()) {
-    gCurrentKeyboardLayout.InitByCurrentKeyboardLayout();
+      !gCurrentInputSource.IsInitializedByCurrentInputSource()) {
+    gCurrentInputSource.InitByCurrentInputSource();
   }
 }
 
 static void
-FinalizeCurrentKeyboardLayout()
+FinalizeCurrentInputSource()
 {
-  gCurrentKeyboardLayout.Clear();
+  gCurrentInputSource.Clear();
 }
 
 
@@ -358,10 +378,10 @@ FinalizeCurrentKeyboardLayout()
 
 // static
 TISInputSourceWrapper&
-TISInputSourceWrapper::CurrentKeyboardLayout()
+TISInputSourceWrapper::CurrentInputSource()
 {
-  InitCurrentKeyboardLayout();
-  return gCurrentKeyboardLayout;
+  InitCurrentInputSource();
+  return gCurrentInputSource;
 }
 
 bool
@@ -465,6 +485,9 @@ TISInputSourceWrapper::InitByInputSourceID(const CFStringRef aID)
   if (::CFArrayGetCount(mInputSourceList) > 0) {
     mInputSource = static_cast<TISInputSourceRef>(
       const_cast<void *>(::CFArrayGetValueAtIndex(mInputSourceList, 0)));
+    if (IsKeyboardLayout()) {
+      mKeyboardLayout = mInputSource;
+    }
   }
 }
 
@@ -504,6 +527,21 @@ TISInputSourceWrapper::InitByCurrentInputSource()
 {
   Clear();
   mInputSource = ::TISCopyCurrentKeyboardInputSource();
+  mKeyboardLayout = ::TISCopyInputMethodKeyboardLayoutOverride();
+  if (!mKeyboardLayout) {
+    mKeyboardLayout = ::TISCopyCurrentKeyboardLayoutInputSource();
+  }
+  // If this causes composition, the current keyboard layout may input non-ASCII
+  // characters such as Japanese Kana characters or Hangul characters.
+  // However, we need to set ASCII characters to DOM key events for consistency
+  // with other platforms.
+  if (IsOpenedIMEMode()) {
+    TISInputSourceWrapper tis(mKeyboardLayout);
+    if (!tis.IsASCIICapable()) {
+      mKeyboardLayout =
+        ::TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
+    }
+  }
 }
 
 void
@@ -511,6 +549,7 @@ TISInputSourceWrapper::InitByCurrentKeyboardLayout()
 {
   Clear();
   mInputSource = ::TISCopyCurrentKeyboardLayoutInputSource();
+  mKeyboardLayout = mInputSource;
 }
 
 void
@@ -518,6 +557,17 @@ TISInputSourceWrapper::InitByCurrentASCIICapableInputSource()
 {
   Clear();
   mInputSource = ::TISCopyCurrentASCIICapableKeyboardInputSource();
+  mKeyboardLayout = ::TISCopyInputMethodKeyboardLayoutOverride();
+  if (mKeyboardLayout) {
+    TISInputSourceWrapper tis(mKeyboardLayout);
+    if (!tis.IsASCIICapable()) {
+      mKeyboardLayout = nullptr;
+    }
+  }
+  if (!mKeyboardLayout) {
+    mKeyboardLayout =
+      ::TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
+  }
 }
 
 void
@@ -525,6 +575,15 @@ TISInputSourceWrapper::InitByCurrentASCIICapableKeyboardLayout()
 {
   Clear();
   mInputSource = ::TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
+  mKeyboardLayout = mInputSource;
+}
+
+void
+TISInputSourceWrapper::InitByCurrentInputMethodKeyboardLayoutOverride()
+{
+  Clear();
+  mInputSource = ::TISCopyInputMethodKeyboardLayoutOverride();
+  mKeyboardLayout = mInputSource;
 }
 
 void
@@ -532,6 +591,9 @@ TISInputSourceWrapper::InitByTISInputSourceRef(TISInputSourceRef aInputSource)
 {
   Clear();
   mInputSource = aInputSource;
+  if (IsKeyboardLayout()) {
+    mKeyboardLayout = mInputSource;
+  }
 }
 
 void
@@ -539,17 +601,20 @@ TISInputSourceWrapper::InitByLanguage(CFStringRef aLanguage)
 {
   Clear();
   mInputSource = ::TISCopyInputSourceForLanguage(aLanguage);
+  if (IsKeyboardLayout()) {
+    mKeyboardLayout = mInputSource;
+  }
 }
 
 const UCKeyboardLayout*
 TISInputSourceWrapper::GetUCKeyboardLayout()
 {
-  NS_ENSURE_TRUE(mInputSource, nullptr);
+  NS_ENSURE_TRUE(mKeyboardLayout, nullptr);
   if (mUCKeyboardLayout) {
     return mUCKeyboardLayout;
   }
   CFDataRef uchr = static_cast<CFDataRef>(
-    ::TISGetInputSourceProperty(mInputSource,
+    ::TISGetInputSourceProperty(mKeyboardLayout,
                                 kTISPropertyUnicodeKeyLayoutData));
 
   // We should be always able to get the layout here.
@@ -607,6 +672,17 @@ TISInputSourceWrapper::IsIMEMode()
 }
 
 bool
+TISInputSourceWrapper::IsKeyboardLayout()
+{
+  NS_ENSURE_TRUE(mInputSource, false);
+  CFStringRef str;
+  GetInputSourceType(str);
+  NS_ENSURE_TRUE(str, false);
+  return ::CFStringCompare(kTISTypeKeyboardLayout,
+                           str, 0) == kCFCompareEqualTo;
+}
+
+bool
 TISInputSourceWrapper::GetLanguageList(CFArrayRef &aLanguageList)
 {
   NS_ENSURE_TRUE(mInputSource, false);
@@ -655,9 +731,9 @@ TISInputSourceWrapper::IsForRTLLanguage()
 }
 
 bool
-TISInputSourceWrapper::IsInitializedByCurrentKeyboardLayout()
+TISInputSourceWrapper::IsInitializedByCurrentInputSource()
 {
-  return mInputSource == ::TISCopyCurrentKeyboardLayoutInputSource();
+  return mInputSource == ::TISCopyCurrentKeyboardInputSource();
 }
 
 void
@@ -679,6 +755,7 @@ TISInputSourceWrapper::Clear()
   }
   mInputSourceList = nullptr;
   mInputSource = nullptr;
+  mKeyboardLayout = nullptr;
   mIsRTL = -1;
   mUCKeyboardLayout = nullptr;
   mOverrideKeyboard = false;
@@ -726,13 +803,29 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     // change it.
     insertString = *aInsertString;
   } else if (isPrintableKey) {
-    // If the caller isn't sure what string will be input, let's use characters
-    // of NSEvent.
-    // XXX This is wrong at Hiragana or Katakana with Kana-Nyuryoku mode or
-    //     Chinese or Koran IME modes.  We should use ASCII characters at that
-    //     time.
-    nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
-                                       insertString);
+    // If IME is open, [aNativeKeyEvent characters] may be a character
+    // which will be appended to the composition string.  However, especially,
+    // while IME is disabled, most users and developers expect the key event
+    // works as IME closed.  So, we should compute the insertString with
+    // the ASCII capable keyboard layout.
+    // NOTE: Such keyboard layouts typically change the layout to its ASCII
+    //       capable layout when Command key is pressed.  And we don't worry
+    //       when Control key is pressed too because it causes inputting
+    //       control characters.
+    if (!aKeyEvent.IsMeta() && !aKeyEvent.IsControl() && IsOpenedIMEMode()) {
+      UInt32 state =
+        nsCocoaUtils::ConvertToCarbonModifier([aNativeKeyEvent modifierFlags]);
+      PRUint32 ch = TranslateToChar(nativeKeyCode, state, kbType);
+      if (ch) {
+        insertString = ch;
+      }
+    } else {
+      // If the caller isn't sure what string will be input, let's use
+      // characters of NSEvent.
+      nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
+                                         insertString);
+    }
+
     // If control key is pressed and the eventChars is a non-printable control
     // character, we should convert it to ASCII alphabet.
     if (aKeyEvent.IsControl() &&
@@ -857,7 +950,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
                                          UInt32 aKbType)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-  
+
   NS_ASSERTION(aKeyEvent.message == NS_KEY_PRESS,
                "aKeyEvent must be NS_KEY_PRESS event");
 
@@ -1236,7 +1329,8 @@ TextInputHandler::DebugPrintAllKeyboardLayouts()
               NS_ConvertUTF16toUTF8(name).get(),
               NS_ConvertUTF16toUTF8(isid).get(),
               tis.IsASCIICapable() ? "" : "\t(Isn't ASCII capable)",
-              tis.GetUCKeyboardLayout() ? "" : "\t(uchr is NOT AVAILABLE)"));
+              tis.IsKeyboardLayout() && tis.GetUCKeyboardLayout() ?
+                "" : "\t(uchr is NOT AVAILABLE)"));
     }
     ::CFRelease(list);
   }
@@ -1298,14 +1392,6 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
 
     nsKeyEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
     InitKeyEvent(aNativeEvent, keydownEvent);
-
-#ifndef NP_NO_CARBON
-    EventRecord carbonEvent;
-    if ([mView pluginEventModel] == NPEventModelCarbon) {
-      ConvertCocoaKeyEventToCarbonEvent(aNativeEvent, carbonEvent, true);
-      keydownEvent.pluginEvent = &carbonEvent;
-    }
-#endif // #ifndef NP_NO_CARBON
 
     currentKeyEvent->mKeyDownHandled = DispatchEvent(keydownEvent);
     if (Destroyed()) {
@@ -1542,9 +1628,6 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
 
   uint32_t message = aDispatchKeyDown ? NS_KEY_DOWN : NS_KEY_UP;
 
-#ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-#endif // ifndef NP_NO_CARBON
   NPCocoaEvent cocoaEvent;
 
   // Fire a key event.
@@ -1553,13 +1636,6 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
 
   // create event for use by plugins
   if ([mView isPluginView]) {
-#ifndef NP_NO_CARBON
-    if ([mView pluginEventModel] == NPEventModelCarbon) {
-      ConvertCocoaKeyEventToCarbonEvent(aNativeEvent, carbonEvent,
-                                        aDispatchKeyDown);
-      keyEvent.pluginEvent = &carbonEvent;
-    }
-#endif // ifndef NP_NO_CARBON
     if ([mView pluginEventModel] == NPEventModelCocoa) {
       ConvertCocoaKeyEventToNPCocoaEvent(aNativeEvent, cocoaEvent);
       keyEvent.pluginEvent = &cocoaEvent;
@@ -1623,26 +1699,9 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
   // -insertText: they've already been taken into account in creating
   // the input string.
 
-  // create event for use by plugins
-#ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-#endif // #ifndef NP_NO_CARBON
-
   if (currentKeyEvent) {
     NSEvent* keyEvent = currentKeyEvent->mKeyEvent;
     InitKeyEvent(keyEvent, keypressEvent, &str);
-
-    // XXX The ASCII characters inputting mode of egbridge (Japanese IME)
-    // might send the keyDown event with wrong keyboard layout if other
-    // keyboard layouts are already loaded. In that case, the native event
-    // doesn't match to this gecko event...
-#ifndef NP_NO_CARBON
-    if ([mView pluginEventModel] == NPEventModelCarbon) {
-      ConvertCocoaKeyEventToCarbonEvent(keyEvent, carbonEvent, true);
-      keypressEvent.pluginEvent = &carbonEvent;
-    }
-#endif // #ifndef NP_NO_CARBON
-
     if (currentKeyEvent->mKeyDownHandled) {
       keypressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
     }
@@ -1771,15 +1830,21 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
     tis.GetInputSourceID(newTIS);
     if (!sLastTIS ||
         ::CFStringCompare(sLastTIS, newTIS, 0) != kCFCompareEqualTo) {
-      TISInputSourceWrapper tis1, tis2, tis3;
+      TISInputSourceWrapper tis1, tis2, tis3, tis4, tis5;
       tis1.InitByCurrentKeyboardLayout();
       tis2.InitByCurrentASCIICapableInputSource();
       tis3.InitByCurrentASCIICapableKeyboardLayout();
-      CFStringRef is0, is1, is2, is3, type0, lang0, bundleID0;
+      tis4.InitByCurrentInputMethodKeyboardLayoutOverride();
+      tis5.InitByTISInputSourceRef(tis.GetKeyboardLayoutInputSource());
+      CFStringRef is0 = nullptr, is1 = nullptr, is2 = nullptr, is3 = nullptr,
+                  is4 = nullptr, is5 = nullptr, type0 = nullptr,
+                  lang0 = nullptr, bundleID0 = nullptr;
       tis.GetInputSourceID(is0);
       tis1.GetInputSourceID(is1);
       tis2.GetInputSourceID(is2);
       tis3.GetInputSourceID(is3);
+      tis4.GetInputSourceID(is4);
+      tis5.GetInputSourceID(is5);
       tis.GetInputSourceType(type0);
       tis.GetPrimaryLanguage(lang0);
       tis.GetBundleID(bundleID0);
@@ -1790,6 +1855,8 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
          "    currentInputManager=%p\n"
          "    %s\n"
          "      type=%s %s\n"
+         "      overridden keyboard layout=%s\n"
+         "      used keyboard layout for translation=%s\n"
          "    primary language=%s\n"
          "    bundle ID=%s\n"
          "    current ASCII capable Input Source=%s\n"
@@ -1797,6 +1864,7 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
          "    current ASCII capable Keyboard Layout=%s",
          [NSInputManager currentInputManager], GetCharacters(is0),
          GetCharacters(type0), tis.IsASCIICapable() ? "- ASCII capable " : "",
+         GetCharacters(is4), GetCharacters(is5),
          GetCharacters(lang0), GetCharacters(bundleID0),
          GetCharacters(is2), GetCharacters(is1), GetCharacters(is3)));
     }
@@ -3054,20 +3122,20 @@ PluginTextInputHandler::PluginTextInputHandler(nsChildView* aWidget,
                                                NSView<mozView> *aNativeView) :
   TextInputHandlerBase(aWidget, aNativeView),
   mIgnoreNextKeyUpEvent(false),
-#ifndef NP_NO_CARBON
+#ifndef __LP64__
   mPluginTSMDoc(0), mPluginTSMInComposition(false),
-#endif // #ifndef NP_NO_CARBON
+#endif // #ifndef __LP64__
   mPluginComplexTextInputRequested(false)
 {
 }
 
 PluginTextInputHandler::~PluginTextInputHandler()
 {
-#ifndef NP_NO_CARBON
+#ifndef __LP64__
   if (mPluginTSMDoc) {
     ::DeleteTSMDocument(mPluginTSMDoc);
   }
-#endif // #ifndef NP_NO_CARBON
+#endif // #ifndef __LP64__
 }
 
 /* static */ void
@@ -3102,100 +3170,7 @@ PluginTextInputHandler::ConvertCocoaKeyEventToNPCocoaEvent(
   }
 }
 
-#ifndef NP_NO_CARBON
-
-/* static */ bool
-PluginTextInputHandler::ConvertUnicodeToCharCode(PRUnichar aUniChar,
-                                                 unsigned char* aOutChar)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  UnicodeToTextInfo converterInfo;
-  TextEncoding      systemEncoding;
-  Str255            convertedString;
-
-  *aOutChar = '\0';
-
-  OSStatus err =
-    ::UpgradeScriptInfoToTextEncoding(smSystemScript,
-                                      kTextLanguageDontCare,
-                                      kTextRegionDontCare,
-                                      NULL,
-                                      &systemEncoding);
-  NS_ENSURE_TRUE(err == noErr, false);
-
-  err = ::CreateUnicodeToTextInfoByEncoding(systemEncoding, &converterInfo);
-  NS_ENSURE_TRUE(err == noErr, false);
-
-  err = ::ConvertFromUnicodeToPString(converterInfo, sizeof(PRUnichar),
-                                      &aUniChar, convertedString);
-  NS_ENSURE_TRUE(err == noErr, false);
-
-  *aOutChar = convertedString[1];
-  ::DisposeUnicodeToTextInfo(&converterInfo);
-  return true;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
-}
-
-/* static */ void
-PluginTextInputHandler::ConvertCocoaKeyEventToCarbonEvent(
-                          NSEvent* aCocoaKeyEvent,
-                          EventRecord& aCarbonKeyEvent,
-                          bool aMakeKeyDownEventIfNSFlagsChanged)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  UInt32 charCode = 0;
-  if ([aCocoaKeyEvent type] == NSFlagsChanged) {
-    aCarbonKeyEvent.what = aMakeKeyDownEventIfNSFlagsChanged ? keyDown : keyUp;
-  } else {
-    if ([[aCocoaKeyEvent characters] length] > 0) {
-      charCode = [[aCocoaKeyEvent characters] characterAtIndex:0];
-    }
-    if ([aCocoaKeyEvent type] == NSKeyDown) {
-      aCarbonKeyEvent.what = [aCocoaKeyEvent isARepeat] ? autoKey : keyDown;
-    } else {
-      aCarbonKeyEvent.what = keyUp;
-    }
-  }
-
-  if (charCode >= 0x0080) {
-    switch (charCode) {
-      case NSUpArrowFunctionKey:
-        charCode = kUpArrowCharCode;
-        break;
-      case NSDownArrowFunctionKey:
-        charCode = kDownArrowCharCode;
-        break;
-      case NSLeftArrowFunctionKey:
-        charCode = kLeftArrowCharCode;
-        break;
-      case NSRightArrowFunctionKey:
-        charCode = kRightArrowCharCode;
-        break;
-      default:
-        unsigned char convertedCharCode;
-        if (ConvertUnicodeToCharCode(charCode, &convertedCharCode)) {
-          charCode = convertedCharCode;
-        }
-        //NSLog(@"charcode is %d, converted to %c, char is %@",
-        //      charCode, convertedCharCode, [aCocoaKeyEvent characters]);
-        break;
-    }
-  }
-
-  aCarbonKeyEvent.message =
-    (charCode & 0x00FF) | ([aCocoaKeyEvent keyCode] << 8);
-  aCarbonKeyEvent.when = ::TickCount();
-  ::GetGlobalMouse(&aCarbonKeyEvent.where);
-  // XXX Is this correct? If ::GetCurrentKeyModifiers() returns "current"
-  //     state and there is one or more pending modifier key events,
-  //     the result is mismatch with the state at current key event.
-  aCarbonKeyEvent.modifiers = ::GetCurrentKeyModifiers();
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
+#ifndef __LP64__
 
 EventHandlerRef PluginTextInputHandler::sPluginKeyEventsHandler = NULL;
 
@@ -3369,8 +3344,8 @@ PluginTextInputHandler::HandleCarbonPluginKeyEvent(EventRef aKeyEvent)
                                &macKeyCode);
   NS_ENSURE_TRUE(status == noErr, );
 
-  TISInputSourceWrapper currentKeyboardLayout;
-  currentKeyboardLayout.InitByCurrentKeyboardLayout();
+  TISInputSourceWrapper& currentInputSource =
+    TISInputSourceWrapper::CurrentInputSource();
 
   EventRef cloneEvent = ::CopyEvent(aKeyEvent);
   for (uint32_t i = 0; i < numCharCodes; ++i) {
@@ -3384,8 +3359,8 @@ PluginTextInputHandler::HandleCarbonPluginKeyEvent(EventRef aKeyEvent)
       nsCocoaUtils::InitInputEvent(keydownEvent, cocoaModifiers);
 
       uint32_t keyCode =
-        currentKeyboardLayout.ComputeGeckoKeyCode(macKeyCode, ::LMGetKbdType(),
-                                                  keydownEvent.IsMeta());
+        currentInputSource.ComputeGeckoKeyCode(macKeyCode, ::LMGetKbdType(),
+                                               keydownEvent.IsMeta());
       uint32_t charCode(charCodes.ElementAt(i));
 
       keydownEvent.time = PR_IntervalNow();
@@ -3431,7 +3406,7 @@ PluginTextInputHandler::ActivatePluginTSMDocument()
   }
 }
 
-#endif // #ifndef NP_NO_CARBON
+#endif // #ifndef __LP64__
 
 void
 PluginTextInputHandler::HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent)
@@ -3442,7 +3417,7 @@ PluginTextInputHandler::HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent)
 
   NS_ASSERTION(mView, "mView must not be NULL");
 
-#ifdef NP_NO_CARBON
+#ifdef __LP64__
 
   if ([mView pluginEventModel] != NPEventModelCocoa) {
     return;
@@ -3491,7 +3466,7 @@ PluginTextInputHandler::HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent)
     }
   }
 
-#else // #ifdef NP_NO_CARBON
+#else // #ifdef __LP64__
 
   bool wasInComposition = false;
   if ([mView pluginEventModel] == NPEventModelCocoa) {
@@ -3550,7 +3525,7 @@ PluginTextInputHandler::HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent)
   ::TSMRemoveDocumentProperty(mPluginTSMDoc,
                               kFocusedChildViewTSMDocPropertyTag);
 
-#endif // #ifdef NP_NO_CARBON else
+#endif // #ifdef __LP64__ else
 }
 
 void
@@ -3582,54 +3557,17 @@ PluginTextInputHandler::HandleKeyUpEventForPlugin(NSEvent* aNativeKeyEvent)
     DispatchEvent(keyupEvent);
     return;
   }
-
-#ifndef NP_NO_CARBON
-  if (eventModel == NPEventModelCarbon) {
-    // I'm not sure the call to TSMProcessRawKeyEvent() is needed here (though
-    // WebKit makes one).
-    ::TSMProcessRawKeyEvent([aNativeKeyEvent _eventRef]);
-
-    // Don't send a keyUp event if the corresponding keyDown event(s) is/are
-    // still being processed (idea borrowed from WebKit).
-    ChildView* keydownTarget = nil;
-    OSStatus status =
-      ::TSMGetDocumentProperty(mPluginTSMDoc,
-                               kFocusedChildViewTSMDocPropertyTag,
-                               sizeof(ChildView *), nil, &keydownTarget);
-    NS_ENSURE_TRUE(status == noErr, );
-    if (keydownTarget == mView) {
-      return;
-    }
-
-    // PluginKeyEventsHandler() never sends keyUp events to
-    // HandleCarbonPluginKeyEvent(), so we need to send them to Gecko here.
-    // (This means that when commiting text from IME, several keyDown events
-    // may be sent to Gecko (in processPluginKeyEvent) for one keyUp event here.
-    // But this is how the WebKit does it, and games expect a keyUp event to
-    // be sent when it actually happens (they need to be able to detect how
-    // long a key has been held down) -- which wouldn't be possible if we sent
-    // them from processPluginKeyEvent.)
-    nsKeyEvent keyupEvent(true, NS_KEY_UP, mWidget);
-    InitKeyEvent(aNativeKeyEvent, keyupEvent);
-    EventRecord pluginEvent;
-    ConvertCocoaKeyEventToCarbonEvent(aNativeKeyEvent, pluginEvent, false);
-    keyupEvent.pluginEvent = &pluginEvent;
-    DispatchEvent(keyupEvent);
-    return;
-  }
-#endif // #ifndef NP_NO_CARBON
-
 }
 
 bool
 PluginTextInputHandler::IsInPluginComposition()
 {
   return
-#ifdef NP_NO_CARBON
+#ifdef __LP64__
     [[ComplexTextInputPanel sharedComplexTextInputPanel] inComposition] != NO;
-#else // #ifdef NP_NO_CARBON
+#else // #ifdef __LP64__
     mPluginTSMInComposition;
-#endif // #ifdef NP_NO_CARBON else
+#endif // #ifdef __LP64__ else
 }
 
 bool
@@ -3653,7 +3591,7 @@ PluginTextInputHandler::DispatchCocoaNPAPITextEvent(NSString* aString)
 #pragma mark -
 
 
-#ifndef NP_NO_CARBON
+#ifndef __LP64__
 
 /******************************************************************************
  *
@@ -3748,7 +3686,7 @@ PluginTextInputHandler::DispatchCocoaNPAPITextEvent(NSString* aString)
 
 @end
 
-#endif // #ifndef NP_NO_CARBON
+#endif // #ifndef __LP64__
 
 
 #pragma mark -
@@ -3772,7 +3710,7 @@ TextInputHandlerBase::~TextInputHandlerBase()
 {
   [mView release];
   if (--gHandlerInstanceCount == 0) {
-    FinalizeCurrentKeyboardLayout();
+    FinalizeCurrentInputSource();
   }
 }
 
@@ -3813,13 +3751,14 @@ TextInputHandlerBase::InitKeyEvent(NSEvent *aNativeKeyEvent,
 {
   NS_ASSERTION(aNativeKeyEvent, "aNativeKeyEvent must not be NULL");
 
-  TISInputSourceWrapper tis;
   if (mKeyboardOverride.mOverrideEnabled) {
+    TISInputSourceWrapper tis;
     tis.InitByLayoutID(mKeyboardOverride.mKeyboardLayout, true);
-  } else {
-    tis.InitByCurrentKeyboardLayout();
+    tis.InitKeyEvent(aNativeKeyEvent, aKeyEvent, aInsertString);
+    return;
   }
-  tis.InitKeyEvent(aNativeKeyEvent, aKeyEvent, aInsertString);
+  TISInputSourceWrapper::CurrentInputSource().
+    InitKeyEvent(aNativeKeyEvent, aKeyEvent, aInsertString);
 }
 
 nsresult

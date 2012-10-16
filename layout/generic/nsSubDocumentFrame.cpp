@@ -56,11 +56,6 @@
 #include "nsContentUtils.h"
 #include "LayerTreeInvalidation.h"
 
-// For Accessibility
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
-
 using namespace mozilla;
 using mozilla::layout::RenderFrameParent;
 
@@ -86,13 +81,10 @@ nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
 }
 
 #ifdef ACCESSIBILITY
-already_AddRefed<Accessible>
-nsSubDocumentFrame::CreateAccessible()
+a11y::AccType
+nsSubDocumentFrame::AccessibleType()
 {
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  return accService ?
-    accService->CreateOuterDocAccessible(mContent, PresContext()->PresShell()) :
-    nullptr;
+  return a11y::eOuterDocAccessible;
 }
 #endif
 

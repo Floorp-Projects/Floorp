@@ -34,6 +34,14 @@ public class UpdateServiceHelper {
     public static final int FLAG_REINSTALL = 1 << 2;
     public static final int FLAG_RETRY = 1 << 3;
 
+    // Name of the Intent extra for the autodownload policy, used with ACTION_REGISTER_FOR_UPDATES
+    public static final String EXTRA_AUTODOWNLOAD_NAME = "autodownload";
+
+    // Values for EXTRA_AUTODOWNLOAD_NAME
+    public static final int AUTODOWNLOAD_WIFI = 0;
+    public static final int AUTODOWNLOAD_DISABLED = 1;
+    public static final int AUTODOWNLOAD_ENABLED = 2;
+
     // Name of the Intent extra that holds the flags for ACTION_CHECK_FOR_UPDATE
     public static final String EXTRA_UPDATE_FLAGS_NAME = "updateFlags";
 
@@ -92,10 +100,33 @@ public class UpdateServiceHelper {
 #endif
     }
 
-    public static void registerForUpdates(Context context) {
+    public static void registerForUpdates(Context context, String policy) {
+        if (policy == null)
+            return;
+
+        int intPolicy;
+        if (policy.equals("wifi")) {
+            intPolicy = AUTODOWNLOAD_WIFI;
+        } else if (policy.equals("disabled")) {
+            intPolicy = AUTODOWNLOAD_DISABLED;
+        } else if (policy.equals("enabled")) {
+            intPolicy = AUTODOWNLOAD_ENABLED;
+        } else {
+            Log.w(LOGTAG, "Unhandled autoupdate policy: " + policy);
+            return;
+        }
+
+        registerForUpdates(context, intPolicy);
+    }
+
+    // 'policy' should one of AUTODOWNLOAD_WIFI, AUTODOWNLOAD_DISABLED, AUTODOWNLOAD_ENABLED
+    public static void registerForUpdates(Context context, int policy) {
         if (!isUpdaterEnabled())
             return;
 
-        context.startService(new Intent(UpdateServiceHelper.ACTION_REGISTER_FOR_UPDATES, null, context, UpdateService.class));
+        Intent intent = new Intent(UpdateServiceHelper.ACTION_REGISTER_FOR_UPDATES, null, context, UpdateService.class);
+        intent.putExtra(EXTRA_AUTODOWNLOAD_NAME, policy);
+
+        context.startService(intent);
     }
 }

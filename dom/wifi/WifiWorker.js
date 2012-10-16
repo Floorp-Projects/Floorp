@@ -128,11 +128,12 @@ var WifiManager = (function() {
   }
 
   function unloadDriver(callback) {
-    // Otoro ICS can't unload and then load the driver, so never unload it.
-    if (device === "otoro") {
-      callback(0);
-      return;
-    }
+    // Unloading drivers is generally unnecessary and
+    // can trigger bugs in some drivers.
+    // On properly written drivers, bringing the interface
+    // down powers down the interface.
+    callback(0);
+    return;
 
     voidControlMessage("unload_driver", function(status) {
       driverLoaded = (status < 0);

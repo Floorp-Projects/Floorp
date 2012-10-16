@@ -278,6 +278,13 @@ class nsCocoaUtils
   static NSUInteger GetCurrentModifiers();
 
   /**
+   * ConvertToCarbonModifier() returns carbon modifier flags for the cocoa
+   * modifier flags.
+   * NOTE: The result never includes right*Key.
+   */
+  static UInt32 ConvertToCarbonModifier(NSUInteger aCocoaModifier);
+
+  /**
    * Whether to support HiDPI rendering. For testing purposes, to be removed
    * once we're comfortable with the HiDPI behavior.
    */

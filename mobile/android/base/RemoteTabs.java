@@ -89,18 +89,7 @@ public class RemoteTabs extends LinearLayout
             return true;
         }
 
-        String url = tab.get("url");
-        JSONObject args = new JSONObject();
-        try {
-            args.put("url", url);
-            args.put("engine", null);
-            args.put("userEntered", false);
-        } catch (Exception e) {
-            Log.e(LOGTAG, "error building JSON arguments");
-        }
-
-        Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
+        Tabs.getInstance().loadUrl(tab.get("url"), Tabs.LOADURL_NEW_TAB);
         autoHidePanel();
         return true;
     }

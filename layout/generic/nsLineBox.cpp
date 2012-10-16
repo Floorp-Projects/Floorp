@@ -353,38 +353,28 @@ nsLineBox::CachedIsEmpty()
 
 void
 nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
-                          nsIFrame* aDestructRoot)
+                          nsIFrame* aDestructRoot, nsFrameList* aFrames)
 {
-  if (! aLines.empty()) {
-    // Delete our child frames before doing anything else. In particular
-    // we do all of this before our base class releases it's hold on the
-    // view.
-#ifdef DEBUG
-    int32_t numFrames = 0;
-#endif
-    for (nsIFrame* child = aLines.front()->mFirstChild; child; ) {
-      nsIFrame* nextChild = child->GetNextSibling();
-      child->SetNextSibling(nullptr);
-      child->DestroyFrom((aDestructRoot) ? aDestructRoot : child);
-      child = nextChild;
-#ifdef DEBUG
-      numFrames++;
-#endif
+  nsIPresShell* shell = aPresContext->PresShell();
+
+  // Keep our line list and frame list up to date as we
+  // remove frames, in case something wants to traverse the
+  // frame tree while we're destroying.
+  while (!aLines.empty()) {
+    nsLineBox* line = aLines.front();
+    if (NS_UNLIKELY(line->mFlags.mHasHashedFrames)) {
+      line->SwitchToCounter();  // Avoid expensive has table removals.
+    }
+    while (line->GetChildCount() > 0) {
+      nsIFrame* child = aFrames->RemoveFirstChild();
+      MOZ_ASSERT(child == line->mFirstChild, "Lines out of sync");
+      line->mFirstChild = aFrames->FirstChild();
+      line->NoteFrameRemoved(child);
+      child->DestroyFrom(aDestructRoot);
     }
 
-    nsIPresShell *shell = aPresContext->PresShell();
-
-    do {
-      nsLineBox* line = aLines.front();
-#ifdef DEBUG
-      numFrames -= line->GetChildCount();
-#endif
-      aLines.pop_front();
-      line->Destroy(shell);
-    } while (! aLines.empty());
-#ifdef DEBUG
-    NS_ASSERTION(numFrames == 0, "number of frames deleted does not match");
-#endif
+    aLines.pop_front();
+    line->Destroy(shell);
   }
 }
 

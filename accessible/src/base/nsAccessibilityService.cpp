@@ -168,140 +168,9 @@ nsAccessibilityService::GetRootDocumentAccessible(nsIPresShell* aPresShell,
 }
 
 already_AddRefed<Accessible>
-nsAccessibilityService::CreateOuterDocAccessible(nsIContent* aContent,
-                                                 nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new OuterDocAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLButtonAccessible(nsIContent* aContent,
-                                                   nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLButtonAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLLIAccessible(nsIContent* aContent,
-                                               nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLLIAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHyperTextAccessible(nsIContent* aContent,
-                                                  nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HyperTextAccessibleWrap(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLCheckboxAccessible(nsIContent* aContent,
-                                                     nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLCheckboxAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLComboboxAccessible(nsIContent* aContent,
-                                                     nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLComboboxAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLCanvasAccessible(nsIContent* aContent,
-                                                   nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLCanvasAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLFileInputAccessible(nsIContent* aContent,
-                                                      nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLFileInputAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLImageAccessible(nsIContent* aContent,
-                                                  nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new ImageAccessibleWrap(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLImageMapAccessible(nsIContent* aContent,
-                                                     nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLImageMapAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLGroupboxAccessible(nsIContent* aContent,
-                                                     nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLGroupboxAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLListboxAccessible(nsIContent* aContent,
-                                                    nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLSelectListAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLMediaAccessible(nsIContent* aContent,
-                                                  nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new EnumRoleAccessible(aContent, GetDocAccessible(aPresShell),
-                           roles::GROUPING);
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
 nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
                                                         nsIContent* aContent,
-                                                        nsIPresShell* aPresShell)
+                                                        DocAccessible* aDoc)
 {
   // We can have several cases here:
   // 1) a text or html embedded document where the contentDocument variable in
@@ -314,14 +183,16 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
   if (aFrame->GetRect().IsEmpty())
     return nullptr;
 
-
   // 1) for object elements containing either HTML or TXT documents
   nsCOMPtr<nsIDOMHTMLObjectElement> obj(do_QueryInterface(aContent));
   if (obj) {
     nsCOMPtr<nsIDOMDocument> domDoc;
     obj->GetContentDocument(getter_AddRefs(domDoc));
-    if (domDoc)
-      return CreateOuterDocAccessible(aContent, aPresShell);
+    if (domDoc) {
+      Accessible* newAcc = new OuterDocAccessible(aContent, aDoc);
+      NS_ADDREF(newAcc);
+      return newAcc;
+    }
   }
 
 #if defined(XP_WIN) || defined(MOZ_ACCESSIBILITY_ATK)
@@ -335,8 +206,7 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
     aFrame->GetPluginPort(&pluginPort);
 
     Accessible* accessible =
-      new HTMLWin32ObjectOwnerAccessible(aContent, GetDocAccessible(aPresShell),
-                                         pluginPort);
+      new HTMLWin32ObjectOwnerAccessible(aContent, aDoc, pluginPort);
     NS_ADDREF(accessible);
     return accessible;
 
@@ -349,8 +219,7 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
       NPPVpluginNativeAccessibleAtkPlugId, &plugId);
     if (NS_SUCCEEDED(rv) && !plugId.IsEmpty()) {
       AtkSocketAccessible* socketAccessible =
-        new AtkSocketAccessible(aContent, GetDocAccessible(aPresShell),
-                                plugId);
+        new AtkSocketAccessible(aContent, aDoc, plugId);
 
       NS_ADDREF(socketAccessible);
       return socketAccessible;
@@ -361,108 +230,9 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
 
   // 3) for images and imagemaps, or anything else with a child frame
   // we have the object frame, get the image frame
-  nsIFrame* frame = aFrame->GetFirstPrincipalChild();
-  return frame ? frame->CreateAccessible() : nullptr;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLRadioButtonAccessible(nsIContent* aContent,
-                                                        nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLRadioButtonAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLTableAccessible(nsIContent* aContent,
-                                                  nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLTableAccessibleWrap(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLTableCellAccessible(nsIContent* aContent,
-                                                      nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLTableCellAccessibleWrap(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLTableRowAccessible(nsIContent* aContent,
-                                                     nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new EnumRoleAccessible(aContent, GetDocAccessible(aPresShell), roles::ROW);
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateTextLeafAccessible(nsIContent* aContent,
-                                                 nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new TextLeafAccessibleWrap(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLTextFieldAccessible(nsIContent* aContent,
-                                                      nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLTextFieldAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLLabelAccessible(nsIContent* aContent,
-                                                  nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLLabelAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLHRAccessible(nsIContent* aContent,
-                                               nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLHRAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLBRAccessible(nsIContent* aContent,
-                                               nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLBRAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<Accessible>
-nsAccessibilityService::CreateHTMLCaptionAccessible(nsIContent* aContent,
-                                                    nsIPresShell* aPresShell)
-{
-  Accessible* accessible =
-    new HTMLCaptionAccessible(aContent, GetDocAccessible(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
+  nsIFrame* childFrame = aFrame->GetFirstPrincipalChild();
+  return childFrame ? CreateAccessibleByFrameType(childFrame, aContent, aDoc) :
+    nullptr;
 }
 
 void
@@ -953,7 +723,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       return nullptr;
     }
 
-    newAcc = frame->CreateAccessible();
+    newAcc = CreateAccessibleByFrameType(frame, content, aDoc);
     if (aDoc->BindToDocument(newAcc, nullptr)) {
       newAcc->AsTextLeaf()->SetText(text);
       return newAcc;
@@ -1110,7 +880,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
         }
 
         // Try using frame to do it.
-        newAcc = frame->CreateAccessible();
+        newAcc = CreateAccessibleByFrameType(frame, content, aDoc);
       }
     }
   }
@@ -1658,6 +1428,95 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
 
   return nullptr;
  }
+
+already_AddRefed<Accessible>
+nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
+                                                    nsIContent* aContent,
+                                                    DocAccessible* aDoc)
+{
+  nsRefPtr<Accessible> newAcc;
+  switch (aFrame->AccessibleType()) {
+    case eNoAccessible:
+      return nullptr;
+    case eHTMLBRAccessible:
+      newAcc = new HTMLBRAccessible(aContent, aDoc);
+      break;
+    case eHTMLButtonAccessible:
+      newAcc = new HTMLButtonAccessible(aContent, aDoc);
+      break;
+    case eHTMLCanvasAccessible:
+      newAcc = new HTMLCanvasAccessible(aContent, aDoc);
+      break;
+    case eHTMLCaptionAccessible:
+      newAcc = new HTMLCaptionAccessible(aContent, aDoc);
+      break;
+    case eHTMLCheckboxAccessible:
+      newAcc = new HTMLCheckboxAccessible(aContent, aDoc);
+      break;
+    case eHTMLComboboxAccessible:
+      newAcc = new HTMLComboboxAccessible(aContent, aDoc);
+      break;
+    case eHTMLFileInputAccessible:
+      newAcc = new HTMLFileInputAccessible(aContent, aDoc);
+      break;
+    case eHTMLGroupboxAccessible:
+      newAcc = new HTMLGroupboxAccessible(aContent, aDoc);
+      break;
+    case eHTMLHRAccessible:
+      newAcc = new HTMLHRAccessible(aContent, aDoc);
+      break;
+    case eHTMLImageMapAccessible:
+      newAcc = new HTMLImageMapAccessible(aContent, aDoc);
+      break;
+    case eHTMLLabelAccessible:
+      newAcc = new HTMLLabelAccessible(aContent, aDoc);
+      break;
+    case eHTMLLiAccessible:
+      newAcc = new HTMLLIAccessible(aContent, aDoc);
+      break;
+    case eHTMLSelectListAccessible:
+      newAcc = new HTMLSelectListAccessible(aContent, aDoc);
+      break;
+    case eHTMLMediaAccessible:
+      newAcc = new EnumRoleAccessible(aContent, aDoc, roles::GROUPING);
+      break;
+    case eHTMLObjectFrameAccessible: {
+      nsObjectFrame* objectFrame = do_QueryFrame(aFrame);
+      newAcc = CreateHTMLObjectFrameAccessible(objectFrame, aContent, aDoc);
+      break;
+    }
+
+    case eHTMLRadioButtonAccessible:
+      newAcc = new HTMLRadioButtonAccessible(aContent, aDoc);
+      break;
+    case eHTMLTableAccessible:
+      newAcc = new HTMLTableAccessibleWrap(aContent, aDoc);
+      break;
+    case eHTMLTableCellAccessible:
+      newAcc = new HTMLTableCellAccessibleWrap(aContent, aDoc);
+      break;
+    case eHTMLTableRowAccessible:
+      newAcc = new EnumRoleAccessible(aContent, aDoc, roles::ROW);
+      break;
+    case eHTMLTextFieldAccessible:
+      newAcc = new HTMLTextFieldAccessible(aContent, aDoc);
+      break;
+    case eHyperTextAccessible:
+      newAcc = new HyperTextAccessibleWrap(aContent, aDoc);
+      break;
+    case eImageAccessible:
+      newAcc = new ImageAccessibleWrap(aContent, aDoc);
+      break;
+    case eOuterDocAccessible:
+      newAcc = new OuterDocAccessible(aContent, aDoc);
+      break;
+    case eTextLeafAccessible:
+      newAcc = new TextLeafAccessibleWrap(aContent, aDoc);
+      break;
+  }
+
+  return newAcc.forget();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibilityService (DON'T put methods here)

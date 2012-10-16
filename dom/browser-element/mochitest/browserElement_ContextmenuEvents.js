@@ -20,7 +20,7 @@ var iframeScript = function() {
 
   content.fireContextMenu(content.document.body);
   content.fireContextMenu(content.document.getElementById('menu1-trigger'));
-  content.fireContextMenu(content.document.getElementById('inner-link'));
+  content.fireContextMenu(content.document.getElementById('inner-link').childNodes[0]);
   content.fireContextMenu(content.document.getElementById('menu2-trigger'));
 }
 

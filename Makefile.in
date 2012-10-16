@@ -80,7 +80,7 @@ default alldep all:: $(topsrcdir)/configure config.status
 	$(RM) -r $(DIST)/include
 	$(RM) -r $(DIST)/private
 	$(RM) -r $(DIST)/public
-	$(RM) $(DIST)/chrome.manifest
+	$(RM) $(DIST)/bin/chrome.manifest $(DIST)/bin/components/components.manifest
 	$(RM) -r _tests
 
 $(topsrcdir)/configure: $(topsrcdir)/configure.in
