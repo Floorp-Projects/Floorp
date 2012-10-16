@@ -277,6 +277,13 @@ PluginPRLibrary::IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing)
   *aDrawing = false; 
   return NS_OK;
 }
+nsresult
+PluginPRLibrary::ContentsScaleFactorChanged(NPP instance, double aContentsScaleFactor)
+{
+  nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*)instance->ndata;
+  NS_ENSURE_TRUE(inst, NS_ERROR_NULL_POINTER);
+  return NS_OK;
+}
 #endif
 
 nsresult

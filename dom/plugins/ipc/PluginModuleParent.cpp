@@ -1185,7 +1185,17 @@ PluginModuleParent::IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing)
 
     return i->IsRemoteDrawingCoreAnimation(aDrawing);
 }
-#endif
+
+nsresult
+PluginModuleParent::ContentsScaleFactorChanged(NPP instance, double aContentsScaleFactor)
+{
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return NS_ERROR_FAILURE;
+
+    return i->ContentsScaleFactorChanged(aContentsScaleFactor);
+}
+#endif // #if defined(XP_MACOSX)
 
 bool
 PluginModuleParent::AnswerNPN_GetValue_WithBoolReturn(const NPNVariable& aVariable,

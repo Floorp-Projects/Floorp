@@ -118,6 +118,9 @@ child:
     returns (int16_t handled);
   // this is only used on windows to forward WM_WINDOWPOSCHANGE
   async WindowPosChanged(NPRemoteEvent event);
+  // used on OS X to tell the child the contents scale factor
+  // of its parent has changed
+  async ContentsScaleFactorChanged(double aContentsScaleFactor);
 
   // ********************** Async plugins rendering
   // see https://wiki.mozilla.org/Gecko:AsyncPluginPainting
