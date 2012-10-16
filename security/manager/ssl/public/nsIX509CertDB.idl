@@ -19,7 +19,7 @@ interface nsIInterfaceRequestor;
  * This represents a service to access and manipulate 
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(da48b3c0-1284-11d5-ac67-000064657374)]
+[scriptable, uuid(eb426311-69cd-4a74-a7db-a4a215854c78)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -239,14 +239,6 @@ interface nsIX509CertDB : nsISupports {
                         in nsIFile aFile,
                         in unsigned long count,
                         [array, size_is(count)] in nsIX509Cert aCerts);
-
-  /**
-   *  An array of all known OCSP responders within the scope of the 
-   *  certificate database.
-   *
-   *  @return Array of OCSP responders, entries are QIable to nsIOCSPResponder.
-   */
-  nsIArray getOCSPResponders();
 
   /**
    *  Whether OCSP is enabled in preferences.
