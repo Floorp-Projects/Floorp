@@ -1280,7 +1280,8 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
     // we ensure that mInvalidThebesContent is updated according to the
     // scroll position as of the most recent paint.
     if (!FuzzyEqual(data->mXScale, mParameters.mXScale, 0.00001) ||
-        !FuzzyEqual(data->mYScale, mParameters.mYScale, 0.00001)) {
+        !FuzzyEqual(data->mYScale, mParameters.mYScale, 0.00001) ||
+        data->mAppUnitsPerDevPixel != mAppUnitsPerDevPixel) {
       InvalidateEntireThebesLayer(layer, aActiveScrolledRoot);
       didResetScrollPositionForLayerPixelAlignment = true;
     }
