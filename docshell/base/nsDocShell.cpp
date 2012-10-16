@@ -5007,6 +5007,13 @@ NS_IMETHODIMP
 nsDocShell::GetPositionAndSize(int32_t * x, int32_t * y, int32_t * cx,
                                int32_t * cy)
 {
+    if (mParentWidget) {
+        // ensure size is up-to-date if window has changed resolution
+        nsIntRect r;
+        mParentWidget->GetClientBounds(r);
+        SetPositionAndSize(mBounds.x, mBounds.y, r.width, r.height, false);
+    }
+
     // We should really consider just getting this information from
     // our window instead of duplicating the storage and code...
     if (cx || cy) {

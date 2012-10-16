@@ -243,6 +243,7 @@ public:
     NS_IMETHOD              SetCursor(imgIContainer* aCursor, uint32_t aHotspotX, uint32_t aHotspotY);
 
     CGFloat                 BackingScaleFactor();
+    void                    BackingScaleFactorChanged();
     virtual double          GetDefaultScale();
 
     NS_IMETHOD              SetTitle(const nsAString& aTitle);

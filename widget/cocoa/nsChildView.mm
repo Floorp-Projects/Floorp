@@ -765,6 +765,29 @@ nsChildView::BackingScaleFactor()
   return mBackingScaleFactor;
 }
 
+void
+nsChildView::BackingScaleFactorChanged()
+{
+  CGFloat newScale = nsCocoaUtils::GetBackingScaleFactor(mView);
+
+  // ignore notification if it hasn't really changed (or maybe we have
+  // disabled HiDPI mode via prefs)
+  if (mBackingScaleFactor == newScale) {
+    return;
+  }
+
+  mBackingScaleFactor = newScale;
+
+  if (!mWidgetListener || mWidgetListener->GetXULWindow()) {
+    return;
+  }
+
+  nsIPresShell* presShell = mWidgetListener->GetPresShell();
+  if (presShell) {
+    presShell->BackingScaleFactorChanged();
+  }
+}
+
 NS_IMETHODIMP nsChildView::ConstrainPosition(bool aAllowSlop,
                                              int32_t *aX, int32_t *aY)
 {
@@ -2345,6 +2368,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
 - (BOOL)wantsBestResolutionOpenGLSurface
 {
   return nsCocoaUtils::HiDPIEnabled() ? YES : NO;
+}
+
+- (void)viewDidChangeBackingProperties
+{
+  [super viewDidChangeBackingProperties];
+  if (mGeckoChild) {
+    // actually, it could be the color space that's changed,
+    // but we can't tell the difference here except by retrieving
+    // the backing scale factor and comparing to the old value
+    mGeckoChild->BackingScaleFactorChanged();
+  }
 }
 
 // The display system has told us that a portion of our view is dirty. Tell

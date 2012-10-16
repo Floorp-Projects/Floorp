@@ -30,6 +30,7 @@
 #include "nsCocoaFeatures.h"
 #include "nsIScreenManager.h"
 #include "nsIWidgetListener.h"
+#include "nsIPresShell.h"
 
 #include "gfxPlatform.h"
 #include "qcms.h"
@@ -425,6 +426,10 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   mWindow = [[windowClass alloc] initWithContentRect:contentRect styleMask:features 
                                  backing:NSBackingStoreBuffered defer:YES];
 
+  // setup our notification delegate. Note that setDelegate: does NOT retain.
+  mDelegate = [[WindowDelegate alloc] initWithGeckoWindow:this];
+  [mWindow setDelegate:mDelegate];
+
   // Make sure that the content rect we gave has been honored.
   NSRect wantedFrame = [mWindow frameRectForContentRect:contentRect];
   if (!NSEqualRects([mWindow frame], wantedFrame)) {
@@ -444,10 +449,6 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   [mWindow setOpaque:NO];
   [mWindow setContentMinSize:NSMakeSize(60, 60)];
   [mWindow disableCursorRects];
-
-  // setup our notification delegate. Note that setDelegate: does NOT retain.
-  mDelegate = [[WindowDelegate alloc] initWithGeckoWindow:this];
-  [mWindow setDelegate:mDelegate];
 
   [[WindowDataMap sharedWindowDataMap] ensureDataForWindow:mWindow];
   mWindowMadeHere = true;
@@ -1415,6 +1416,29 @@ nsCocoaWindow::BackingScaleFactor()
   return mBackingScaleFactor;
 }
 
+void
+nsCocoaWindow::BackingScaleFactorChanged()
+{
+  CGFloat newScale = nsCocoaUtils::GetBackingScaleFactor(mWindow);
+
+  // ignore notification if it hasn't really changed (or maybe we have
+  // disabled HiDPI mode via prefs)
+  if (mBackingScaleFactor == newScale) {
+    return;
+  }
+
+  mBackingScaleFactor = newScale;
+
+  if (!mWidgetListener || mWidgetListener->GetXULWindow()) {
+    return;
+  }
+
+  nsIPresShell* presShell = mWidgetListener->GetPresShell();
+  if (presShell) {
+    presShell->BackingScaleFactorChanged();
+  }
+}
+
 NS_IMETHODIMP nsCocoaWindow::SetCursor(nsCursor aCursor)
 {
   if (mPopupContentView)
@@ -2236,6 +2260,24 @@ bool nsCocoaWindow::ShouldFocusPlugin()
   [sheet orderOut:self];
   if (contextInfo)
     [TopLevelWindowData activateInWindow:(NSWindow*)contextInfo];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void)windowDidChangeBackingProperties:(NSNotification *)aNotification
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  NSWindow *window = (NSWindow *)[aNotification object];
+
+  if ([window respondsToSelector:@selector(backingScaleFactor)]) {
+    CGFloat oldFactor =
+      [[[aNotification userInfo]
+         objectForKey:@"NSBackingPropertyOldScaleFactorKey"] doubleValue];
+    if ([window backingScaleFactor] != oldFactor) {
+      mGeckoWindow->BackingScaleFactorChanged();
+    }
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
