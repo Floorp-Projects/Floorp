@@ -4934,6 +4934,23 @@ nsDocShell::Destroy()
 }
 
 NS_IMETHODIMP
+nsDocShell::GetUnscaledDevicePixelsPerCSSPixel(double *aScale)
+{
+    if (mParentWidget) {
+        *aScale = mParentWidget->GetDefaultScale();
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIBaseWindow> ownerWindow(do_QueryInterface(mTreeOwner));
+    if (ownerWindow) {
+        return ownerWindow->GetUnscaledDevicePixelsPerCSSPixel(aScale);
+    }
+
+    *aScale = 1.0;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::SetPosition(int32_t x, int32_t y)
 {
     mBounds.x = x;
