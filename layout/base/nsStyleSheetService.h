@@ -41,6 +41,7 @@ class nsStyleSheetService MOZ_FINAL : public nsIStyleSheetService
 
   static size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
 
+  static nsStyleSheetService *GetInstance();
   static nsStyleSheetService *gInstance;
 
  private:

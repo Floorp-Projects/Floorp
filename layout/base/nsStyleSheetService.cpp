@@ -240,6 +240,21 @@ nsStyleSheetService::UnregisterSheet(nsIURI *sheetURI, uint32_t aSheetType)
   return NS_OK;
 }
 
+//static
+nsStyleSheetService *
+nsStyleSheetService::GetInstance()
+{
+  static bool first = true;
+  if (first) {
+    // make sure at first call that it's inited
+    nsCOMPtr<nsIStyleSheetService> dummy =
+      do_GetService(NS_STYLESHEETSERVICE_CONTRACTID);
+    first = false;
+  }
+
+  return gInstance;
+}
+
 size_t
 nsStyleSheetService::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
 {
