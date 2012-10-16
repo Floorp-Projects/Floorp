@@ -1041,7 +1041,15 @@ public:
                                const float* data);
 
     void UseProgram(WebGLProgram *prog);
+    bool ValidateAttribArraySetter(const char* name, uint32_t cnt, uint32_t arrayLength);
+    bool ValidateUniformArraySetter(const char* name, uint32_t expectedElemSize, WebGLUniformLocation *location_object,
+                                    GLint& location, uint32_t& numElementsToUpload, uint32_t arrayLength);
+    bool ValidateUniformMatrixArraySetter(const char* name, int dim, WebGLUniformLocation *location_object,
+                                          GLint& location, uint32_t& numElementsToUpload, uint32_t arrayLength,
+                                          WebGLboolean aTranspose);
+    bool ValidateUniformSetter(const char* name, WebGLUniformLocation *location_object, GLint& location);
     void ValidateProgram(WebGLProgram *prog);
+    bool ValidateUniformLocation(const char* info, WebGLUniformLocation *location_object);
 
     void VertexAttrib1f(WebGLuint index, WebGLfloat x0);
     void VertexAttrib2f(WebGLuint index, WebGLfloat x0, WebGLfloat x1);
