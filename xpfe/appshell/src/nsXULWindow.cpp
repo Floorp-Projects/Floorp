@@ -1022,7 +1022,7 @@ bool nsXULWindow::LoadPositionFromXUL()
   nsAutoString posString;
   int32_t appPerDev = AppUnitsPerDevPixel();
 
-  rv = windowElement->GetAttribute(NS_LITERAL_STRING("screenX"), posString);
+  rv = windowElement->GetAttribute(SCREENX_ATTRIBUTE, posString);
   if (NS_SUCCEEDED(rv)) {
     temp = posString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode)) {
@@ -1030,7 +1030,7 @@ bool nsXULWindow::LoadPositionFromXUL()
       gotPosition = true;
     }
   }
-  rv = windowElement->GetAttribute(NS_LITERAL_STRING("screenY"), posString);
+  rv = windowElement->GetAttribute(SCREENY_ATTRIBUTE, posString);
   if (NS_SUCCEEDED(rv)) {
     temp = posString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode)) {
@@ -1086,7 +1086,7 @@ bool nsXULWindow::LoadSizeFromXUL()
   nsAutoString sizeString;
   int32_t appPerDev = AppUnitsPerDevPixel();
 
-  rv = windowElement->GetAttribute(NS_LITERAL_STRING("width"), sizeString);
+  rv = windowElement->GetAttribute(WIDTH_ATTRIBUTE, sizeString);
   if (NS_SUCCEEDED(rv)) {
     temp = sizeString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0) {
@@ -1094,7 +1094,7 @@ bool nsXULWindow::LoadSizeFromXUL()
       gotSize = true;
     }
   }
-  rv = windowElement->GetAttribute(NS_LITERAL_STRING("height"), sizeString);
+  rv = windowElement->GetAttribute(HEIGHT_ATTRIBUTE, sizeString);
   if (NS_SUCCEEDED(rv)) {
     temp = sizeString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0) {
@@ -1154,7 +1154,7 @@ bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
   nsAutoString stateString;
 
   // sizemode
-  rv = windowElement->GetAttribute(NS_LITERAL_STRING("sizemode"), stateString);
+  rv = windowElement->GetAttribute(MODE_ATTRIBUTE, stateString);
   if (NS_SUCCEEDED(rv)) {
     int32_t sizeMode = nsSizeMode_Normal;
     /* ignore request to minimize, to not confuse novices
@@ -1202,7 +1202,7 @@ bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
   }
 
   // zlevel
-  rv = windowElement->GetAttribute(NS_LITERAL_STRING("zlevel"), stateString);
+  rv = windowElement->GetAttribute(ZLEVEL_ATTRIBUTE, stateString);
   if (NS_SUCCEEDED(rv) && stateString.Length() > 0) {
     nsresult errorCode;
     uint32_t zLevel = stateString.ToInteger(&errorCode);
@@ -1365,7 +1365,7 @@ void nsXULWindow::SyncAttributesToWidget()
   }
 
   // "windowtype" attribute
-  rv = windowElement->GetAttribute(NS_LITERAL_STRING("windowtype"), attr);
+  rv = windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, attr);
   if (NS_SUCCEEDED(rv) && !attr.IsEmpty()) {
     mWindow->SetWindowClass(attr);
   }
