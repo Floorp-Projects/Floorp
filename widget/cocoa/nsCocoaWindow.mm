@@ -176,12 +176,32 @@ nsCocoaWindow::~nsCocoaWindow()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// fits the rect to the screen that contains the largest area of it
+// Find the screen that overlaps aRect the most,
+// if none are found default to the mainScreen.
+static NSScreen *FindTargetScreenForRect(const nsIntRect& aRect)
+{
+  NSScreen *targetScreen = [NSScreen mainScreen];
+  NSEnumerator *screenEnum = [[NSScreen screens] objectEnumerator];
+  int largestIntersectArea = 0;
+  while (NSScreen *screen = [screenEnum nextObject]) {
+    nsIntRect screenRect(nsCocoaUtils::CocoaRectToGeckoRect([screen visibleFrame]));
+    screenRect = screenRect.Intersect(aRect);
+    int area = screenRect.width * screenRect.height;
+    if (area > largestIntersectArea) {
+      largestIntersectArea = area;
+      targetScreen = screen;
+    }
+  }
+  return targetScreen;
+}
+
+// fits the rect to the screen that contains the largest area of it,
+// or to aScreen if a screen is passed in
 // NB: this operates with aRect in global CSS pixels
 static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *aScreen)
 {
   if (!aScreen) {
-    return;
+    aScreen = FindTargetScreenForRect(aRect);
   }
 
   nsIntRect screenBounds(nsCocoaUtils::CocoaRectToGeckoRect([aScreen visibleFrame]));
@@ -234,23 +254,8 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
   // we have to provide an autorelease pool (see bug 559075).
   nsAutoreleasePool localPool;
 
-  // Find the screen that overlaps aRect the most,
-  // if none are found default to the mainScreen.
-  NSScreen *targetScreen = [NSScreen mainScreen];
-  NSEnumerator *screenEnum = [[NSScreen screens] objectEnumerator];
-  int largestIntersectArea = 0;
-  while (NSScreen *screen = [screenEnum nextObject]) {
-    nsIntRect screenRect(nsCocoaUtils::CocoaRectToGeckoRect([screen visibleFrame]));
-    screenRect = screenRect.Intersect(aRect);
-    int area = screenRect.width * screenRect.height;
-    if (area > largestIntersectArea) {
-      largestIntersectArea = area;
-      targetScreen = screen;
-    }
-  }
-
   nsIntRect newBounds = aRect;
-  FitRectToVisibleAreaForScreen(newBounds, targetScreen);
+  FitRectToVisibleAreaForScreen(newBounds, nullptr);
 
   // Set defaults which can be overriden from aInitData in BaseCreate
   mWindowType = eWindowType_toplevel;
@@ -1286,7 +1291,9 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, bool aRepaint)
+nsresult nsCocoaWindow::DoResize(int32_t aX, int32_t aY,
+                                 int32_t aWidth, int32_t aHeight,
+                                 bool aRepaint, bool aConstrainToCurrentScreen)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1298,9 +1305,12 @@ NS_IMETHODIMP nsCocoaWindow::Resize(int32_t aX, int32_t aY, int32_t aWidth, int3
   CGFloat scaleFactor = BackingScaleFactor();
   NSRect cocoaBounds = nsCocoaUtils::DevPixelsToCocoaPoints(newBounds, scaleFactor);
 
-  // constrain to the visible area of the window's current screen
+  // constrain to the visible area of the window's current screen if requested,
+  // or to the screen that contains the largest area of the new rect
   nsCocoaUtils::NSRectToGeckoRect(cocoaBounds, newBounds);
-  FitRectToVisibleAreaForScreen(newBounds, [mWindow screen]);
+  FitRectToVisibleAreaForScreen(newBounds,
+                                aConstrainToCurrentScreen ?
+                                    [mWindow screen] : nullptr);
 
   // then convert back to device pixels
   nsCocoaUtils::GeckoRectToNSRect(newBounds, cocoaBounds);
@@ -1324,13 +1334,16 @@ NS_IMETHODIMP nsCocoaWindow::Resize(int32_t aX, int32_t aY, int32_t aWidth, int3
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+NS_IMETHODIMP nsCocoaWindow::Resize(int32_t aX, int32_t aY,
+                                    int32_t aWidth, int32_t aHeight,
+                                    bool aRepaint)
+{
+  return DoResize(aX, aY, aWidth, aHeight, aRepaint, false);
+}
+
 NS_IMETHODIMP nsCocoaWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-  
-  return Resize(mBounds.x, mBounds.y, aWidth, aHeight, aRepaint);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  return DoResize(mBounds.x, mBounds.y, aWidth, aHeight, aRepaint, true);
 }
 
 NS_IMETHODIMP nsCocoaWindow::GetClientBounds(nsIntRect &aRect)

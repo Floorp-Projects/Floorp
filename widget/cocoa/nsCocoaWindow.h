@@ -314,6 +314,9 @@ protected:
   void                 CleanUpWindowFilter();
   void                 UpdateBounds();
 
+  nsresult             DoResize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
+                                bool aRepaint, bool aConstrainToCurrentScreen);
+
   virtual already_AddRefed<nsIWidget>
   AllocateChildPopupWidget()
   {
