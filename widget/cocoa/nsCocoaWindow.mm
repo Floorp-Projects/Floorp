@@ -1427,6 +1427,25 @@ nsCocoaWindow::BackingScaleFactorChanged()
     return;
   }
 
+  if (mBackingScaleFactor > 0.0) {
+    // convert size constraints to the new device pixel coordinate space
+    double scaleFactor = newScale / mBackingScaleFactor;
+    mSizeConstraints.mMinSize.width =
+      NSToIntRound(mSizeConstraints.mMinSize.width * scaleFactor);
+    mSizeConstraints.mMinSize.height =
+      NSToIntRound(mSizeConstraints.mMinSize.height * scaleFactor);
+    if (mSizeConstraints.mMaxSize.width < NS_MAXSIZE) {
+      mSizeConstraints.mMaxSize.width =
+        NS_MIN(NS_MAXSIZE,
+               NSToIntRound(mSizeConstraints.mMaxSize.width * scaleFactor));
+    }
+    if (mSizeConstraints.mMaxSize.height < NS_MAXSIZE) {
+      mSizeConstraints.mMaxSize.height =
+        NS_MIN(NS_MAXSIZE,
+               NSToIntRound(mSizeConstraints.mMaxSize.height * scaleFactor));
+    }
+  }
+
   mBackingScaleFactor = newScale;
 
   if (!mWidgetListener || mWidgetListener->GetXULWindow()) {
