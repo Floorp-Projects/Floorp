@@ -37,7 +37,7 @@ public:
 
   // XXX: I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT(nsSVGAElementBase::)
+  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGAElementBase::)
 
   // nsINode interface methods

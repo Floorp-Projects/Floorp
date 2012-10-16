@@ -315,36 +315,6 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericHTMLElement::SetAttribute(const nsAString& aName,
-                                   const nsAString& aValue)
-{
-  const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
-
-  if (!name) {
-    nsresult rv = nsContentUtils::CheckQName(aName, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIAtom> nameAtom;
-    if (IsInHTMLDocument()) {
-      nsAutoString lower;
-      rv = nsContentUtils::ASCIIToLower(aName, lower);
-      if (NS_SUCCEEDED(rv)) {
-        nameAtom = do_GetAtom(lower);
-      }
-    }
-    else {
-      nameAtom = do_GetAtom(aName);
-    }
-    NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
-
-    return SetAttr(kNameSpaceID_None, nameAtom, aValue, true);
-  }
-
-  return SetAttr(name->NamespaceID(), name->LocalName(), name->GetPrefix(),
-                 aValue, true);
-}
-
 already_AddRefed<nsDOMStringMap>
 nsGenericHTMLElement::Dataset()
 {
@@ -1576,31 +1546,11 @@ nsGenericHTMLElement::InsertAdjacentHTML(const nsAString& aPosition,
 nsresult
 nsGenericHTMLElement::ScrollIntoView(bool aTop, uint8_t optional_argc)
 {
-  nsIDocument *document = GetCurrentDoc();
-
-  if (!document) {
-    return NS_OK;
-  }
-
-  // Get the presentation shell
-  nsCOMPtr<nsIPresShell> presShell = document->GetShell();
-  if (!presShell) {
-    return NS_OK;
-  }
-
   if (!optional_argc) {
     aTop = true;
   }
 
-  int16_t vpercent = aTop ? nsIPresShell::SCROLL_TOP :
-    nsIPresShell::SCROLL_BOTTOM;
-
-  presShell->ScrollContentIntoView(this,
-                                   nsIPresShell::ScrollAxis(
-                                     vpercent,
-                                     nsIPresShell::SCROLL_ALWAYS),
-                                   nsIPresShell::ScrollAxis(),
-                                   nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+  nsGenericElement::ScrollIntoView(aTop);
 
   return NS_OK;
 }

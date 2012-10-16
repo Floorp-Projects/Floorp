@@ -8105,38 +8105,6 @@ IDBEventTargetSH::PreCreate(nsISupports *aNativeObj, JSContext *aCx,
 
 // Element helper
 
-static bool
-GetBindingURL(Element *aElement, nsIDocument *aDocument,
-              mozilla::css::URLValue **aResult)
-{
-  // If we have a frame the frame has already loaded the binding.  And
-  // otherwise, don't do anything else here unless we're dealing with
-  // XUL or an HTML element that may have a plugin-related overlay
-  // (i.e. object, embed, or applet).
-  bool isXULorPluginElement = (aElement->IsXUL() ||
-                               aElement->IsHTML(nsGkAtoms::object) ||
-                               aElement->IsHTML(nsGkAtoms::embed) ||
-                               aElement->IsHTML(nsGkAtoms::applet));
-  nsIPresShell *shell = aDocument->GetShell();
-  if (!shell || aElement->GetPrimaryFrame() || !isXULorPluginElement) {
-    *aResult = nullptr;
-
-    return true;
-  }
-
-  // Get the computed -moz-binding directly from the style context
-  nsPresContext *pctx = shell->GetPresContext();
-  NS_ENSURE_TRUE(pctx, false);
-
-  nsRefPtr<nsStyleContext> sc = pctx->StyleSet()->ResolveStyleFor(aElement,
-                                                                  nullptr);
-  NS_ENSURE_TRUE(sc, false);
-
-  *aResult = sc->GetStyleDisplay()->mBinding;
-
-  return true;
-}
-
 NS_IMETHODIMP
 nsElementSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj)
@@ -8172,7 +8140,7 @@ nsElementSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   }
 
   mozilla::css::URLValue *bindingURL;
-  bool ok = GetBindingURL(element, doc, &bindingURL);
+  bool ok = element->GetBindingURL(doc, &bindingURL);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
   // Only allow slim wrappers if there's no binding.
@@ -8237,7 +8205,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // Make sure the style context goes away _before_ we load the binding
   // since that can destroy the relevant presshell.
   mozilla::css::URLValue *bindingURL;
-  bool ok = GetBindingURL(element, doc, &bindingURL);
+  bool ok = element->GetBindingURL(doc, &bindingURL);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
   if (!bindingURL) {
@@ -8547,7 +8515,7 @@ nsNamedNodeMapSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
   nsDOMAttributeMap* map = nsDOMAttributeMap::FromSupports(aNative);
 
   nsINode *attr;
-  *aCache = attr = map->GetNamedItem(aName, aResult);
+  *aCache = attr = map->GetNamedItem(aName);
   return attr;
 }
 

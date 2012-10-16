@@ -508,10 +508,10 @@ WrapNewBindingObject(JSContext* cx, JSObject* scope, T* value, JS::Value* vp)
   MOZ_ASSERT(slot != eNonDOMObject, "Totally unexpected object here");
   MOZ_ASSERT(clasp, "What happened here?");
   MOZ_ASSERT_IF(clasp->mDOMObjectIsISupports, IsISupports<T>::Value);
-  MOZ_ASSERT_IF(!clasp->mDOMObjectIsISupports,
-                reinterpret_cast<uintptr_t>(
-                  static_cast<nsWrapperCache*>(
-                    reinterpret_cast<T*>(1))) == 1);
+//  MOZ_ASSERT_IF(!clasp->mDOMObjectIsISupports,
+//                reinterpret_cast<uintptr_t>(
+//                  static_cast<nsWrapperCache*>(
+//                    reinterpret_cast<T*>(1))) == 1);
 #endif
 
   // When called via XrayWrapper, we end up here while running in the
