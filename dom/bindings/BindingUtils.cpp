@@ -751,6 +751,9 @@ MainThreadDictionaryBase::ParseJSON(const nsAString& aJSON,
   JSObject* global = JS_GetGlobalObject(cx);
   aAr.construct(cx);
   aAc.construct(cx, global);
+  if (aJSON.IsEmpty()) {
+    return cx;
+  }
   if (!JS_ParseJSON(cx,
                     static_cast<const jschar*>(PromiseFlatString(aJSON).get()),
                     aJSON.Length(), &aVal)) {
