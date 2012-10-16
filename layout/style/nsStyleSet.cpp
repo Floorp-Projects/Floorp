@@ -27,6 +27,7 @@
 #include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
 #include "nsEventStates.h"
+#include "nsStyleSheetService.h"
 #include "mozilla/dom/Element.h"
 #include "sampler.h"
 
@@ -362,8 +363,11 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
   nsCOMArray<nsIStyleSheet>& docSheets = mSheets[eDocSheet];
 
   docSheets.RemoveObject(aSheet);
+  nsStyleSheetService *sheetService = nsStyleSheetService::gInstance;
+
   // lowest index first
   int32_t newDocIndex = aDocument->GetIndexOfStyleSheet(aSheet);
+
   int32_t count = docSheets.Count();
   int32_t index;
   for (index = 0; index < count; index++) {
@@ -371,6 +375,14 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
     int32_t sheetDocIndex = aDocument->GetIndexOfStyleSheet(sheet);
     if (sheetDocIndex > newDocIndex)
       break;
+
+    // If the sheet is not owned by the document it can be an author
+    // sheet registered at nsStyleSheetService, which means the new 
+    // doc sheet should end up before it.
+    if (sheetDocIndex < 0 &&
+        sheetService &&
+        sheetService->AuthorStyleSheets()->IndexOf(sheet) >= 0)
+        break;
   }
   if (!docSheets.InsertObjectAt(aSheet, index))
     return NS_ERROR_OUT_OF_MEMORY;

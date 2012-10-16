@@ -42,7 +42,7 @@ nsStyleSheetService *nsStyleSheetService::gInstance = nullptr;
 
 nsStyleSheetService::nsStyleSheetService()
 {
-  PR_STATIC_ASSERT(0 == AGENT_SHEET && 1 == USER_SHEET);
+  PR_STATIC_ASSERT(0 == AGENT_SHEET && 1 == USER_SHEET && 2 == AUTHOR_SHEET);
   NS_ASSERTION(!gInstance, "Someone is using CreateInstance instead of GetService");
   gInstance = this;
   nsLayoutStatics::AddRef();
@@ -129,6 +129,9 @@ nsStyleSheetService::Init()
   catMan->EnumerateCategory("user-style-sheets", getter_AddRefs(sheets));
   RegisterFromEnumerator(catMan, "user-style-sheets", sheets, USER_SHEET);
 
+  catMan->EnumerateCategory("author-style-sheets", getter_AddRefs(sheets));
+  RegisterFromEnumerator(catMan, "author-style-sheets", sheets, AUTHOR_SHEET);
+
   return NS_OK;
 }
 
@@ -138,8 +141,20 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
 {
   nsresult rv = LoadAndRegisterSheetInternal(aSheetURI, aSheetType);
   if (NS_SUCCEEDED(rv)) {
-    const char* message = (aSheetType == AGENT_SHEET) ?
-      "agent-sheet-added" : "user-sheet-added";
+    const char* message;
+    switch (aSheetType) {
+      case AGENT_SHEET:
+        message = "agent-sheet-added";
+        break;
+      case USER_SHEET:
+        message = "user-sheet-added";
+        break;
+      case AUTHOR_SHEET:
+        message = "author-sheet-added";
+        break;
+      default:
+        return NS_ERROR_INVALID_ARG;
+    }
     nsCOMPtr<nsIObserverService> serv =
       mozilla::services::GetObserverService();
     if (serv) {
@@ -156,7 +171,9 @@ nsresult
 nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
                                                   uint32_t aSheetType)
 {
-  NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
+                aSheetType == USER_SHEET ||
+                aSheetType == AUTHOR_SHEET);
   NS_ENSURE_ARG_POINTER(aSheetURI);
 
   nsRefPtr<mozilla::css::Loader> loader = new mozilla::css::Loader();
@@ -178,7 +195,9 @@ NS_IMETHODIMP
 nsStyleSheetService::SheetRegistered(nsIURI *sheetURI,
                                      uint32_t aSheetType, bool *_retval)
 {
-  NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
+                aSheetType == USER_SHEET ||
+                aSheetType == AUTHOR_SHEET);
   NS_ENSURE_ARG_POINTER(sheetURI);
   NS_PRECONDITION(_retval, "Null out param");
 
@@ -190,7 +209,9 @@ nsStyleSheetService::SheetRegistered(nsIURI *sheetURI,
 NS_IMETHODIMP
 nsStyleSheetService::UnregisterSheet(nsIURI *sheetURI, uint32_t aSheetType)
 {
-  NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
+                aSheetType == USER_SHEET ||
+                aSheetType == AUTHOR_SHEET);
   NS_ENSURE_ARG_POINTER(sheetURI);
 
   int32_t foundIndex = FindSheetByURI(mSheets[aSheetType], sheetURI);
@@ -198,8 +219,19 @@ nsStyleSheetService::UnregisterSheet(nsIURI *sheetURI, uint32_t aSheetType)
   nsCOMPtr<nsIStyleSheet> sheet = mSheets[aSheetType][foundIndex];
   mSheets[aSheetType].RemoveObjectAt(foundIndex);
 
-  const char* message = (aSheetType == AGENT_SHEET) ?
-      "agent-sheet-removed" : "user-sheet-removed";
+  const char* message;
+  switch (aSheetType) {
+    case AGENT_SHEET:
+      message = "agent-sheet-removed";
+      break;
+    case USER_SHEET:
+      message = "user-sheet-removed";
+      break;
+    case AUTHOR_SHEET:
+      message = "author-sheet-removed";
+      break;
+  }
+
   nsCOMPtr<nsIObserverService> serv =
     mozilla::services::GetObserverService();
   if (serv)
@@ -234,6 +266,8 @@ nsStyleSheetService::SizeOfIncludingThisHelper(nsMallocSizeOfFun aMallocSizeOf) 
                                                 aMallocSizeOf);
   n += mSheets[USER_SHEET].SizeOfExcludingThis(SizeOfElementIncludingThis,
                                                aMallocSizeOf);
+  n += mSheets[AUTHOR_SHEET].SizeOfExcludingThis(SizeOfElementIncludingThis,
+                                                 aMallocSizeOf);
   return n;
 }
 
