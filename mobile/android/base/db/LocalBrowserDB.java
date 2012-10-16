@@ -680,6 +680,12 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return b;
     }
 
+    public void removeThumbnails(ContentResolver cr) {
+        ContentValues values = new ContentValues();
+        values.putNull(Images.THUMBNAIL);
+        cr.update(mImagesUriWithProfile, values, null, null);
+    }
+
     // Utility function for updating existing history using batch operations
     public void updateHistoryInBatch(ContentResolver cr,
                                      Collection<ContentProviderOperation> operations,

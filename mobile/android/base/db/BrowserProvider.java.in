@@ -1662,10 +1662,10 @@ public class BrowserProvider extends ContentProvider {
 
                 String url = values.getAsString(Images.URL);
 
+                // if no URL is provided, update all of the entries
                 if (TextUtils.isEmpty(url))
-                    throw new IllegalArgumentException("Images.URL is required");
-
-                if (shouldUpdateOrInsert(uri))
+                    updated = updateExistingImage(uri, values, null, null);
+                else if (shouldUpdateOrInsert(uri))
                     updated = updateOrInsertImage(uri, values, Images.URL + " = ?",
                                                   new String[] { url });
                 else
