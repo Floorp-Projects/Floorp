@@ -24,7 +24,7 @@ using namespace mozilla;
 #define RETURN_IF_FAILED(rv, what) \
     PR_BEGIN_MACRO \
     if (NS_FAILED(rv)) { \
-        printf(what ": failed - %08x\n", static_cast<uint32_t>(rv)); \
+        printf(what ": failed - %08x\n", rv); \
         return -1; \
     } \
     PR_END_MACRO
