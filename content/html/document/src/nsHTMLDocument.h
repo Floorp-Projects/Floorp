@@ -218,9 +218,7 @@ protected:
 
   static uint32_t gWyciwygSessionCnt;
 
-  static bool IsAsciiCompatible(const nsACString& aPreferredName);
-
-  static void TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
+  static bool TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                int32_t& aCharsetSource,
                                nsACString& aCharset);
   static bool TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
@@ -231,10 +229,10 @@ protected:
                                 int32_t& aCharsetSource,
                                 nsACString& aCharset);
   // aParentDocument could be null.
-  void TryParentCharset(nsIDocShell*  aDocShell,
+  bool TryParentCharset(nsIDocShell*  aDocShell,
                           nsIDocument* aParentDocument,
                           int32_t& charsetSource, nsACString& aCharset);
-  static void UseWeakDocTypeDefault(int32_t& aCharsetSource,
+  static bool UseWeakDocTypeDefault(int32_t& aCharsetSource,
                                       nsACString& aCharset);
   static bool TryDefaultCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                   int32_t& aCharsetSource,
