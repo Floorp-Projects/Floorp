@@ -73,21 +73,6 @@ using namespace mozilla;
 #define MODE_ATTRIBUTE     NS_LITERAL_STRING("sizemode")
 #define ZLEVEL_ATTRIBUTE   NS_LITERAL_STRING("zlevel")
 
-// Unit conversion helpers
-static int32_t
-CSSToDevPixels(int32_t aPixels, int32_t aAppPerDev)
-{
-  return NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aPixels),
-                               aAppPerDev);
-}
-
-static int32_t
-DevToCSSPixels(int32_t aPixels, int32_t aAppPerDev)
-{
-  return nsPresContext::AppUnitsToIntCSSPixels(
-    NSIntPixelsToAppUnits(aPixels, aAppPerDev));
-}
-
 
 //*****************************************************************************
 //***    nsXULWindow: Object Management
@@ -113,9 +98,7 @@ nsXULWindow::nsXULWindow(uint32_t aChromeFlags)
     mContextFlags(0),
     mPersistentAttributesDirty(0),
     mPersistentAttributesMask(0),
-    mChromeFlags(aChromeFlags),
-    // best guess till we have a widget
-    mAppPerDev(nsPresContext::AppUnitsPerCSSPixel())
+    mChromeFlags(aChromeFlags)
 {
 }
 
@@ -662,6 +645,14 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, bool aScreen, bool aA
       // get window rect
       result = base->GetPositionAndSize(&left, &top, &width, &height);
       if (NS_SUCCEEDED(result)) {
+        double scale;
+        if (NS_SUCCEEDED(base->GetUnscaledDevicePixelsPerCSSPixel(&scale))) {
+          // convert device-pixel coordinates to global display pixels
+          left = NSToIntRound(left / scale);
+          top = NSToIntRound(top / scale);
+          width = NSToIntRound(width / scale);
+          height = NSToIntRound(height / scale);
+        }
         // if centering on screen, convert that to the corresponding screen
         if (aScreen)
           screenmgr->ScreenForRect(left, top, width, height, getter_AddRefs(screen));
@@ -677,6 +668,7 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, bool aScreen, bool aA
   }
   if (!aRelative) {
     if (!mOpenerScreenRect.IsEmpty()) {
+      // FIXME - check if these are device or display pixels
       screenmgr->ScreenForRect(mOpenerScreenRect.x, mOpenerScreenRect.y,
                                mOpenerScreenRect.width, mOpenerScreenRect.height,
                                getter_AddRefs(screen));
@@ -686,17 +678,22 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, bool aScreen, bool aA
   }
 
   if (aScreen && screen) {
-    screen->GetAvailRect(&left, &top, &width, &height);
+    screen->GetAvailRectDisplayPix(&left, &top, &width, &height);
     screenCoordinates = true;
   }
 
   if (screenCoordinates || windowCoordinates) {
+    NS_ASSERTION(mWindow, "what, no window?");
+    double scale = mWindow->GetDefaultScale();
     GetSize(&ourWidth, &ourHeight);
+    ourWidth = NSToIntRound(ourWidth / scale);
+    ourHeight = NSToIntRound(ourHeight / scale);
     left += (width - ourWidth) / 2;
     top += (height - ourHeight) / (aAlert ? 3 : 2);
-    if (windowCoordinates)
+    if (windowCoordinates) {
       mWindow->ConstrainPosition(false, &left, &top);
-    SetPosition(left, top);
+    }
+    SetPosition(left * scale, top * scale);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -1022,17 +1019,24 @@ bool nsXULWindow::LoadPositionFromXUL()
 
   GetPositionAndSize(&currX, &currY, &currWidth, &currHeight);
 
+  // Convert to global display pixels for consistent window management across
+  // screens with diverse resolutions
+  double scale = mWindow->GetDefaultScale();
+  currX = NSToIntRound(currX / scale);
+  currY = NSToIntRound(currY / scale);
+  currWidth = NSToIntRound(currWidth / scale);
+  currHeight = NSToIntRound(currHeight / scale);
+
   // Obtain the position information from the <xul:window> element.
   int32_t specX = currX;
   int32_t specY = currY;
   nsAutoString posString;
-  int32_t appPerDev = AppUnitsPerDevPixel();
 
   rv = windowElement->GetAttribute(SCREENX_ATTRIBUTE, posString);
   if (NS_SUCCEEDED(rv)) {
     temp = posString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode)) {
-      specX = CSSToDevPixels(temp, appPerDev);
+      specX = temp;
       gotPosition = true;
     }
   }
@@ -1040,7 +1044,7 @@ bool nsXULWindow::LoadPositionFromXUL()
   if (NS_SUCCEEDED(rv)) {
     temp = posString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode)) {
-      specY = CSSToDevPixels(temp, appPerDev);
+      specY = temp;
       gotPosition = true;
     }
   }
@@ -1051,6 +1055,11 @@ bool nsXULWindow::LoadPositionFromXUL()
     if (parent) {
       int32_t parentX, parentY;
       if (NS_SUCCEEDED(parent->GetPosition(&parentX, &parentY))) {
+        double scale;
+        if (NS_SUCCEEDED(parent->GetUnscaledDevicePixelsPerCSSPixel(&scale))) {
+          parentX = NSToIntRound(parentX / scale);
+          parentY = NSToIntRound(parentY / scale);
+        }
         specX += parentX;
         specY += parentY;
       }
@@ -1060,8 +1069,10 @@ bool nsXULWindow::LoadPositionFromXUL()
     }
   }
   mWindow->ConstrainPosition(false, &specX, &specY);
-  if (specX != currX || specY != currY)
-    SetPosition(specX, specY);
+  if (specX != currX || specY != currY) {
+    double scale = mWindow->GetDefaultScale();
+    SetPosition(specX * scale, specY * scale);
+  }
 
   return gotPosition;
 }
@@ -1084,19 +1095,23 @@ bool nsXULWindow::LoadSizeFromXUL()
   nsresult errorCode;
   int32_t temp;
 
+  NS_ASSERTION(mWindow, "we expected to have a window already");
+
+  double scale = mWindow ? mWindow->GetDefaultScale() : 1.0;
   GetSize(&currWidth, &currHeight);
+  currWidth = NSToIntRound(currWidth / scale);
+  currHeight = NSToIntRound(currHeight / scale);
 
   // Obtain the position and sizing information from the <xul:window> element.
   int32_t specWidth = currWidth;
   int32_t specHeight = currHeight;
   nsAutoString sizeString;
-  int32_t appPerDev = AppUnitsPerDevPixel();
 
   rv = windowElement->GetAttribute(WIDTH_ATTRIBUTE, sizeString);
   if (NS_SUCCEEDED(rv)) {
     temp = sizeString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0) {
-      specWidth = CSSToDevPixels(NS_MAX(temp, 100), appPerDev);
+      specWidth = NS_MAX(temp, 100);
       gotSize = true;
     }
   }
@@ -1104,7 +1119,7 @@ bool nsXULWindow::LoadSizeFromXUL()
   if (NS_SUCCEEDED(rv)) {
     temp = sizeString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0) {
-      specHeight = CSSToDevPixels(NS_MAX(temp, 100), appPerDev);
+      specHeight = NS_MAX(temp, 100);
       gotSize = true;
     }
   }
@@ -1121,8 +1136,6 @@ bool nsXULWindow::LoadSizeFromXUL()
         int32_t screenHeight;
         screen->GetAvailWidth(&screenWidth);
         screen->GetAvailHeight(&screenHeight);
-        screenWidth = CSSToDevPixels(screenWidth, appPerDev);
-        screenHeight = CSSToDevPixels(screenHeight, appPerDev);
         if (specWidth > screenWidth)
           specWidth = screenWidth;
         if (specHeight > screenHeight)
@@ -1131,8 +1144,10 @@ bool nsXULWindow::LoadSizeFromXUL()
     }
 
     mIntrinsicallySized = false;
-    if (specWidth != currWidth || specHeight != currHeight)
-      SetSize(specWidth, specHeight, false);
+    if (specWidth != currWidth || specHeight != currHeight) {
+      double scale = mWindow->GetDefaultScale();
+      SetSize(specWidth * scale, specHeight * scale, false);
+    }
   }
 
   return gotSize;
@@ -1227,9 +1242,8 @@ bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
 void nsXULWindow::StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
                                   int32_t aSpecWidth, int32_t aSpecHeight)
 {
-  const int32_t appPerDev = AppUnitsPerDevPixel();
-  const int32_t kOffset = CSSToDevPixels(22, appPerDev);
-  const int32_t kSlop   = CSSToDevPixels(4, appPerDev);
+  const int32_t kOffset = 22;
+  const int32_t kSlop   = 4;
 
   nsresult rv;
   bool     keepTrying;
@@ -1263,13 +1277,14 @@ void nsXULWindow::StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
                                          "@mozilla.org/gfx/screenmanager;1"));
     if (screenMgr) {
       nsCOMPtr<nsIScreen> ourScreen;
+      // the coordinates here are already display pixels
       screenMgr->ScreenForRect(aRequestedX, aRequestedY,
                                aSpecWidth, aSpecHeight,
                                getter_AddRefs(ourScreen));
       if (ourScreen) {
         int32_t screenWidth, screenHeight;
-        ourScreen->GetAvailRect(&screenLeft, &screenTop,
-                                &screenWidth, &screenHeight);
+        ourScreen->GetAvailRectDisplayPix(&screenLeft, &screenTop,
+                                          &screenWidth, &screenHeight);
         screenBottom = screenTop + screenHeight;
         screenRight = screenLeft + screenWidth;
         gotScreen = true;
@@ -1301,6 +1316,11 @@ void nsXULWindow::StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
         int32_t listX, listY;
         nsCOMPtr<nsIBaseWindow> listBaseWindow(do_QueryInterface(supportsWindow));
         listBaseWindow->GetPosition(&listX, &listY);
+        double scale;
+        if (NS_SUCCEEDED(listBaseWindow->GetUnscaledDevicePixelsPerCSSPixel(&scale))) {
+          listX = NSToIntRound(listX / scale);
+          listY = NSToIntRound(listY / scale);
+        }
 
         if (NS_ABS(listX - aRequestedX) <= kSlop &&
             NS_ABS(listY - aRequestedY) <= kSlop) {
@@ -1426,6 +1446,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   // get our size, position and mode to persist
   NS_ENSURE_SUCCESS(GetPositionAndSize(&x, &y, &cx, &cy), NS_ERROR_FAILURE);
   mWindow->GetSizeMode(&sizeMode);
+  double scale = mWindow->GetDefaultScale();
 
   // make our position relative to our parent, if any
   nsCOMPtr<nsIBaseWindow> parent(do_QueryReferent(mParentWindow));
@@ -1441,7 +1462,6 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   nsAutoString                sizeString;
   nsAutoString                windowElementId;
   nsCOMPtr<nsIDOMXULDocument> ownerXULDoc;
-  int32_t appPerDev = AppUnitsPerDevPixel();
 
   { // fetch docShellElement's ID and XUL owner document
     nsCOMPtr<nsIDOMDocument> ownerDoc;
@@ -1456,16 +1476,14 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   if ((mPersistentAttributesDirty & PAD_POSITION) &&
       sizeMode == nsSizeMode_Normal) {
     if (persistString.Find("screenX") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld",
-                  (long)DevToCSSPixels(x, appPerDev));
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(x / scale));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString);
       if (ownerXULDoc) // force persistence in case the value didn't change
         ownerXULDoc->Persist(windowElementId, SCREENX_ATTRIBUTE);
     }
     if (persistString.Find("screenY") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld",
-                  (long)DevToCSSPixels(y, appPerDev));
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(y / scale));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString);
       if (ownerXULDoc)
@@ -1476,16 +1494,14 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   if ((mPersistentAttributesDirty & PAD_SIZE) &&
       sizeMode == nsSizeMode_Normal) {
     if (persistString.Find("width") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld",
-                  (long)DevToCSSPixels(cx, appPerDev));
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(cx / scale));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString);
       if (ownerXULDoc)
         ownerXULDoc->Persist(windowElementId, WIDTH_ATTRIBUTE);
     }
     if (persistString.Find("height") >= 0) {
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld",
-                  (long)DevToCSSPixels(cy, appPerDev));
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(cy / scale));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString);
       if (ownerXULDoc)
@@ -2045,21 +2061,6 @@ NS_IMETHODIMP nsXULWindow::SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowser
 {
   mXULBrowserWindow = aXULBrowserWindow;
   return NS_OK;
-}
-
-//*****************************************************************************
-// nsXULWindow: Accessors
-//*****************************************************************************
-
-uint32_t nsXULWindow::AppUnitsPerDevPixel()
-{
-  if (mWindow && mWindow->GetDeviceContext()) {
-    mAppPerDev = mWindow->GetDeviceContext()->AppUnitsPerDevPixel();
-  } else {
-    NS_ERROR("nsXULWindow::AppUnitsPerDevPixel called with no window "
-             "or no dev context");
-  }
-  return mAppPerDev;
 }
 
 //*****************************************************************************
