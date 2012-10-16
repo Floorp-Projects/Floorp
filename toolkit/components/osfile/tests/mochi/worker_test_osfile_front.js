@@ -37,6 +37,7 @@ self.onmessage = function onmessage_start(msg) {
     test_mkdir();
     test_info();
     test_path();
+    test_exists_file();
   } catch (x) {
     log("Catching error: " + x);
     log("Stack: " + x.stack);
@@ -771,4 +772,17 @@ function test_path()
   is(OS.Path.normalize(adotsdotsdots), OS.Path.join("..", ".."), "normalize a/../../..");
 
   ok(true, "test_path: Complete");
+}
+
+/**
+ * Test the file |exists| method.
+ */
+function test_exists_file()
+{
+  let file_name = OS.Path.join("chrome", "toolkit", "components" ,"osfile",
+                               "tests", "mochi", "test_osfile_front.xul");
+  ok(true, "test_exists_file: starting");
+  ok(OS.File.exists(file_name), "test_exists_file: file exists (OS.File.exists)");
+  ok(!OS.File.exists(file_name + ".tmp"), "test_exists_file: file does not exists (OS.File.exists)");
+  ok(true, "test_exists_file: complete");
 }
