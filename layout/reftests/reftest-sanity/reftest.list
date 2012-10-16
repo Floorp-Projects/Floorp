@@ -68,8 +68,8 @@ include urlprefixtests.list
 # test that all corners are visible
 != corners-1.html corners-1-ref.html
 != corners-2.html corners-2-ref.html
-!= corners-3.html corners-3-ref.html
-!= corners-4.html corners-4-ref.html
+fails-if(smallScreen) != corners-3.html corners-3-ref.html
+fails-if(smallScreen) != corners-4.html corners-4-ref.html 
 
 # Test that the harness gives the correct page dimensions.
 != page-width-3.9in.html page-width-4in.html
