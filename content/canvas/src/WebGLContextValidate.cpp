@@ -657,6 +657,151 @@ bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, in
     return false;
 }
 
+bool
+WebGLContext::ValidateUniformLocation(const char* info, WebGLUniformLocation *location_object)
+{
+    if (!ValidateObjectAllowNull(info, location_object))
+        return false;
+    if (!location_object)
+        return false;
+    /* the need to check specifically for !mCurrentProgram here is explained in bug 657556 */
+    if (!mCurrentProgram) {
+        ErrorInvalidOperation("%s: no program is currently bound", info);
+        return false;
+    }
+    if (mCurrentProgram != location_object->Program()) {
+        ErrorInvalidOperation("%s: this uniform location doesn't correspond to the current program", info);
+        return false;
+    }
+    if (mCurrentProgram->Generation() != location_object->ProgramGeneration()) {
+        ErrorInvalidOperation("%s: This uniform location is obsolete since the program has been relinked", info);
+        return false;
+    }
+    return true;
+}
+
+bool
+WebGLContext::ValidateAttribArraySetter(const char* name, uint32_t cnt, uint32_t arrayLength)
+{
+    if (!IsContextStable()) {
+        return false;
+    }
+    if (arrayLength < cnt) {
+        ErrorInvalidOperation("%s: array must be >= %d elements", name, cnt);
+        return false;
+    }
+    return true;
+}
+
+bool
+WebGLContext::ValidateUniformArraySetter(const char* name, uint32_t expectedElemSize, WebGLUniformLocation *location_object,
+                                         GLint& location, uint32_t& numElementsToUpload, uint32_t arrayLength)
+{
+    if (!IsContextStable())
+        return false;
+    nsCString nameString(name);
+    nsCString suffix = NS_LITERAL_CSTRING(": location");
+    nsCString concatenated = nameString + suffix;
+    if (!ValidateUniformLocation(concatenated.get(), location_object))
+        return false;
+    location = location_object->Location();
+    uint32_t uniformElemSize = location_object->ElementSize();
+    if (expectedElemSize != uniformElemSize) {
+        ErrorInvalidOperation("%s: this function expected a uniform of element size %d,"
+                              " got a uniform of element size %d", name,
+                              expectedElemSize,
+                              uniformElemSize);
+        return false;
+    }
+    const WebGLUniformInfo& info = location_object->Info();
+    if (arrayLength == 0 ||
+        arrayLength % expectedElemSize)
+    {
+        ErrorInvalidValue("%s: expected an array of length a multiple"
+                          " of %d, got an array of length %d", name,
+                          expectedElemSize,
+                          arrayLength);
+        return false;
+    }
+    if (!info.isArray &&
+        arrayLength != expectedElemSize) {
+        ErrorInvalidOperation("%s: expected an array of length exactly"
+                              " %d (since this uniform is not an array"
+                              " uniform), got an array of length %d", name,
+                              expectedElemSize,
+                              arrayLength);
+        return false;
+    }
+    numElementsToUpload =
+        NS_MIN(info.arraySize, arrayLength / expectedElemSize);
+    return true;
+}
+
+bool
+WebGLContext::ValidateUniformMatrixArraySetter(const char* name, int dim, WebGLUniformLocation *location_object,
+                                              GLint& location, uint32_t& numElementsToUpload, uint32_t arrayLength,
+                                              WebGLboolean aTranspose)
+{
+    uint32_t expectedElemSize = (dim)*(dim);
+    if (!IsContextStable())
+        return false;
+    nsCString nameString(name);
+    nsCString suffix = NS_LITERAL_CSTRING(": location");
+    nsCString concatenated = nameString + suffix;
+    if (!ValidateUniformLocation(concatenated.get(), location_object))
+        return false;
+    location = location_object->Location();
+    uint32_t uniformElemSize = location_object->ElementSize();
+    if (expectedElemSize != uniformElemSize) {
+        ErrorInvalidOperation("%s: this function expected a uniform of element size %d,"
+                              " got a uniform of element size %d", name,
+                              expectedElemSize,
+                              uniformElemSize);
+        return false;
+    }
+    const WebGLUniformInfo& info = location_object->Info();
+    if (arrayLength == 0 ||
+        arrayLength % expectedElemSize)
+    {
+        ErrorInvalidValue("%s: expected an array of length a multiple"
+                          " of %d, got an array of length %d", name,
+                          expectedElemSize,
+                          arrayLength);
+        return false;
+    }
+    if (!info.isArray &&
+        arrayLength != expectedElemSize) {
+        ErrorInvalidOperation("%s: expected an array of length exactly"
+                              " %d (since this uniform is not an array"
+                              " uniform), got an array of length %d", name,
+                              expectedElemSize,
+                              arrayLength);
+        return false;
+    }
+    if (aTranspose) {
+        ErrorInvalidValue("%s: transpose must be FALSE as per the "
+                          "OpenGL ES 2.0 spec", name);
+        return false;
+    }
+    numElementsToUpload =
+        NS_MIN(info.arraySize, arrayLength / (expectedElemSize));
+    return true;
+}
+
+bool
+WebGLContext::ValidateUniformSetter(const char* name, WebGLUniformLocation *location_object, GLint& location)
+{
+    if (!IsContextStable())
+        return false;
+    nsCString nameString(name);
+    nsCString suffix = NS_LITERAL_CSTRING(": location");
+    nsCString concatenated = nameString + suffix;
+    if (!ValidateUniformLocation(concatenated.get(), location_object))
+        return false;
+    location = location_object->Location();
+    return true;
+}
+
 bool WebGLContext::ValidateAttribIndex(WebGLuint index, const char *info)
 {
     if (index >= mAttribBuffers.Length()) {
