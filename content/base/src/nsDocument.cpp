@@ -72,6 +72,7 @@
 #include "nsIRefreshURI.h"
 #include "nsIWebNavigation.h"
 #include "nsIScriptError.h"
+#include "nsStyleSheetService.h"
 
 #include "nsNetUtil.h"     // for NS_MakeAbsoluteURI
 
@@ -2318,6 +2319,14 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   return NS_OK;
 }
 
+static bool
+AppendAuthorSheet(nsIStyleSheet *aSheet, void *aData)
+{
+  nsStyleSet *styleSet = static_cast<nsStyleSet*>(aData);
+  styleSet->AppendStyleSheet(nsStyleSet::eDocSheet, aSheet);
+  return true;
+}
+
 void
 nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
 {
@@ -2331,6 +2340,12 @@ nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
   NS_PRECONDITION(mStyleAttrStyleSheet, "No style attr stylesheet?");
   NS_PRECONDITION(mAttrStyleSheet, "No attr stylesheet?");
 
+  nsCOMPtr<nsIStyleSheetService> dummy =
+    do_GetService(NS_STYLESHEETSERVICE_CONTRACTID);
+
+  nsStyleSheetService *sheetService = nsStyleSheetService::gInstance;
+
+
   aStyleSet->AppendStyleSheet(nsStyleSet::ePresHintSheet, mAttrStyleSheet);
 
   aStyleSet->AppendStyleSheet(nsStyleSet::eStyleAttrSheet,
@@ -2342,6 +2357,11 @@ nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
     if (sheet->IsApplicable()) {
       aStyleSet->AddDocStyleSheet(sheet, this);
     }
+  }
+
+  if (sheetService) {
+    sheetService->AuthorStyleSheets()->EnumerateForwards(AppendAuthorSheet,
+                                                         aStyleSet);
   }
 
   for (i = mCatalogSheets.Count() - 1; i >= 0; --i) {
