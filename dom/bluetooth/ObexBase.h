@@ -139,6 +139,56 @@ public:
   {
     mHeaders.AppendElement(aHeader);
   }
+
+  void GetName(nsString& aRetName)
+  {
+    int length = mHeaders.Length();
+
+    for (int i = 0; i < length; ++i) {
+      if (mHeaders[i]->mId == ObexHeaderId::Name) {
+        uint8_t* ptr = mHeaders[i]->mData.get();
+        int nameLength = mHeaders[i]->mDataLength / 2;
+
+        for (int j = 0; j < nameLength; ++j) {
+          PRUnichar c = ((((uint32_t)ptr[j * 2]) << 8) | ptr[j * 2 + 1]);
+          aRetName += c;
+        }
+
+        break;
+      }
+    }
+  }
+
+  void GetContentType(nsString& aRetContentType)
+  {
+    int length = mHeaders.Length();
+
+    for (int i = 0; i < length; ++i) {
+      if (mHeaders[i]->mId == ObexHeaderId::Type) {
+        uint8_t* ptr = mHeaders[i]->mData.get();
+        aRetContentType.AssignASCII((const char*)ptr);
+        break;
+      }
+    }
+  }
+
+  // @return file length, 0 means file length is unknown.
+  void GetLength(uint32_t* aRetLength)
+  {
+    int length = mHeaders.Length();
+    *aRetLength = 0;
+
+    for (int i = 0; i < length; ++i) {
+      if (mHeaders[i]->mId == ObexHeaderId::Length) {
+        uint8_t* ptr = mHeaders[i]->mData.get();
+        *aRetLength = ((uint32_t)ptr[0] << 24) |
+                      ((uint32_t)ptr[1] << 16) |
+                      ((uint32_t)ptr[2] << 8) |
+                      ((uint32_t)ptr[3]);
+        break;
+      }
+    }
+  }
 };
 
 int AppendHeaderName(uint8_t* retBuf, const char* name, int length);
