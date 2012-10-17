@@ -181,7 +181,7 @@ class CallObject : public ScopeObject
     static const uint32_t CALLEE_SLOT = 1;
 
     static CallObject *
-    create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleFunction callee);
+    create(JSContext *cx, HandleScript script, HandleObject enclosing, HandleFunction callee);
 
   public:
     /* These functions are internal and are exposed only for JITs. */

@@ -66,6 +66,10 @@ function closePaymentFlowDialog(aCallback) {
 
     content.removeEventListener("mozContentEvent",
                                 closePaymentFlowReturn);
+
+    let glue = Cc["@mozilla.org/payment/ui-glue;1"]
+                 .createInstance(Ci.nsIPaymentUIGlue);
+    glue.cleanup();
   });
 
   browser.shell.sendChromeEvent(detail);

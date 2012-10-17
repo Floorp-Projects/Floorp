@@ -66,6 +66,14 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mProfile = (String)config.get("profile");
         i.putExtra("args", "-no-remote -profile " + mProfile);
 
+        String envString = (String)config.get("envvars");
+        if (envString != "") {
+            String[] envStrings = envString.split(",");
+            for (int iter = 0; iter < envStrings.length; iter++) {
+                i.putExtra("env" + iter, envStrings[iter]);
+            }
+        }
+
         // Start the activity
         setActivityIntent(i);
         mActivity = getActivity();

@@ -146,11 +146,13 @@ IonBuilder::CFGState::LookupSwitch(jsbytecode *exitpc)
 JSFunction *
 IonBuilder::getSingleCallTarget(uint32 argc, jsbytecode *pc)
 {
+    AutoAssertNoGC nogc;
+
     types::StackTypeSet *calleeTypes = oracle->getCallTarget(script(), argc, pc);
     if (!calleeTypes)
         return NULL;
 
-    JSObject *obj = calleeTypes->getSingleton();
+    RawObject obj = calleeTypes->getSingleton();
     if (!obj || !obj->isFunction())
         return NULL;
 
@@ -186,6 +188,8 @@ IonBuilder::getPolyCallTargets(uint32 argc, jsbytecode *pc,
 bool
 IonBuilder::canInlineTarget(JSFunction *target)
 {
+    AssertCanGC();
+
     if (!target->isInterpreted()) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to non-interpreted");
         return false;
@@ -196,7 +200,7 @@ IonBuilder::canInlineTarget(JSFunction *target)
         return false;
     }
 
-    JSScript *inlineScript = target->script();
+    RootedScript inlineScript(cx, target->script());
 
     if (!inlineScript->canIonCompile()) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to disable Ion compilation");
@@ -756,6 +760,8 @@ IonBuilder::markPhiBytecodeUses(jsbytecode *pc)
 bool
 IonBuilder::inspectOpcode(JSOp op)
 {
+    AssertCanGC();
+
     // Don't compile fat opcodes, run the decomposed version instead.
     if (js_CodeSpec[op].format & JOF_DECOMPOSE)
         return true;
@@ -2797,6 +2803,8 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
                              MConstant *constFun, MBasicBlock *bottom,
                              Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns)
 {
+    AssertCanGC();
+
     // Rewrite the stack position containing the function with the constant
     // function definition, before we take the inlineResumePoint
     current->rewriteAtDepth(-((int) argc + 2), constFun);
@@ -2822,7 +2830,8 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
 
     // Compilation information is allocated for the duration of the current tempLifoAlloc
     // lifetime.
-    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(callee->script(), callee,
+    RootedScript calleeScript(cx, callee->script());
+    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(calleeScript.get(), callee,
                                                               (jsbytecode *)NULL, constructing);
     if (!info)
         return false;
@@ -2831,7 +2840,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
     AutoAccumulateExits aae(graph(), saveExits);
 
     TypeInferenceOracle oracle;
-    if (!oracle.init(cx, callee->script()))
+    if (!oracle.init(cx, calleeScript))
         return false;
 
     IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle,
@@ -2887,6 +2896,8 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
 bool
 IonBuilder::makeInliningDecision(AutoObjectVector &targets, uint32 argc)
 {
+    AssertCanGC();
+
     if (inliningDepth >= js_IonOptions.maxInlineDepth)
         return false;
 
@@ -2906,12 +2917,14 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets, uint32 argc)
     uint32_t totalSize = 0;
     uint32_t checkUses = js_IonOptions.usesBeforeInlining;
     bool allFunctionsAreSmall = true;
+    RootedFunction target(cx);
+    RootedScript script(cx);
     for (size_t i = 0; i < targets.length(); i++) {
-        JSFunction *target = targets[i]->toFunction();
+        target = targets[i]->toFunction();
         if (!target->isInterpreted())
             return false;
 
-        JSScript *script = target->script();
+        script = target->script();
         uint32_t calleeUses = script->getUseCount();
 
         if (target->nargs < argc) {
@@ -3530,7 +3543,7 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, HandleObject prot
     types::TypeObject *type = proto->getNewType(cx, target);
     if (!type)
         return NULL;
-    if (!types::TypeScript::ThisTypes(target->script())->hasType(types::Type::ObjectType(type)))
+    if (!types::TypeScript::ThisTypes(target->script().unsafeGet())->hasType(types::Type::ObjectType(type)))
         return NULL;
 
     RootedObject templateObject(cx, js_CreateThisForFunctionWithProto(cx, target, proto));
@@ -3695,6 +3708,8 @@ IonBuilder::jsop_funapply(uint32 argc)
 bool
 IonBuilder::jsop_call(uint32 argc, bool constructing)
 {
+    AssertCanGC();
+
     // Acquire known call target if existent.
     AutoObjectVector targets(cx);
     uint32_t numTargets = getPolyCallTargets(argc, pc, targets, 4);

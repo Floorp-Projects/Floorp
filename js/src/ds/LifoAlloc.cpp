@@ -21,7 +21,7 @@ BumpChunk::new_(size_t chunkSize)
         return NULL;
     BumpChunk *result = new (mem) BumpChunk(chunkSize - sizeof(BumpChunk));
 
-    /* 
+    /*
      * We assume that the alignment of sAlign is less than that of
      * the underlying memory allocator -- creating a new BumpChunk should
      * always satisfy the sAlign alignment constraint.

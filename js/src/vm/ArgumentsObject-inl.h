@@ -69,6 +69,7 @@ ArgumentsObject::setArg(unsigned i, const Value &v)
 inline const Value &
 ArgumentsObject::element(uint32_t i) const
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(!isElementDeleted(i));
     const Value &v = data()->args[i];
     if (v.isMagic(JS_FORWARD_TO_CALL_OBJECT)) {
@@ -84,6 +85,7 @@ ArgumentsObject::element(uint32_t i) const
 inline void
 ArgumentsObject::setElement(uint32_t i, const Value &v)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(!isElementDeleted(i));
     HeapValue &lhs = data()->args[i];
     if (lhs.isMagic(JS_FORWARD_TO_CALL_OBJECT)) {
