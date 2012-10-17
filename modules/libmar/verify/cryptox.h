@@ -35,6 +35,8 @@ CryptoX_Result NSS_VerifySignature(VFYContext * const *ctx ,
   CryptoX_Success
 #define CryptoX_VerifyBegin(CryptoHandle, SignatureHandle, PublicKey) \
   NSS_VerifyBegin(SignatureHandle, PublicKey)
+#define CryptoX_FreeSignatureHandle(SignatureHandle) \
+  VFY_DestroyContext(SignatureHandle, PR_TRUE)
 #define CryptoX_VerifyUpdate(SignatureHandle, buf, len) \
   VFY_Update(*SignatureHandle, (const unsigned char*)(buf), len)
 #define CryptoX_LoadPublicKey(CryptoHandle, certData, dataSize, \
@@ -75,6 +77,7 @@ CryptoX_Result CyprtoAPI_VerifySignature(HCRYPTHASH *hash,
   CryptoAPI_InitCryptoContext(CryptoHandle)
 #define CryptoX_VerifyBegin(CryptoHandle, SignatureHandle, PublicKey) \
   CryptoAPI_VerifyBegin(CryptoHandle, SignatureHandle)
+#define CryptoX_FreeSignatureHandle(SignatureHandle)
 #define CryptoX_VerifyUpdate(SignatureHandle, buf, len) \
   CryptoAPI_VerifyUpdate(SignatureHandle, (BYTE *)(buf), len)
 #define CryptoX_LoadPublicKey(CryptoHandle, certData, dataSize, \
@@ -105,6 +108,7 @@ CryptoX_Result CyprtoAPI_VerifySignature(HCRYPTHASH *hash,
   CryptoX_Error
 #define CryptoX_VerifyBegin(CryptoHandle, SignatureHandle, PublicKey) \
   CryptoX_Error
+#define CryptoX_FreeSignatureHandle(SignatureHandle)
 #define CryptoX_VerifyUpdate(SignatureHandle, buf, len) CryptoX_Error
 #define CryptoX_LoadPublicKey(CryptoHandle, certData, dataSize, \
                               publicKey, certName, cert) \

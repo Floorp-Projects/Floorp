@@ -3918,7 +3918,7 @@ ListenerEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
     nsINode* n = static_cast<nsINode*>(entry->mListenerManager->GetTarget());
     if (n && n->IsInDoc() &&
         nsCCUncollectableMarker::InGeneration(n->OwnerDoc()->GetMarkedCCGeneration())) {
-      entry->mListenerManager->UnmarkGrayJSListeners();
+      entry->mListenerManager->MarkForCC();
     }
   }
   return PL_DHASH_NEXT;

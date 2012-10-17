@@ -485,6 +485,7 @@ customIncludes = [
     'nsSVGStylableElement.h',
     'nsHTMLDocument.h',
     'nsDOMQS.h',
+    'nsDOMStringMap.h',
     'mozilla/dom/ImageData.h'
     ]
 
@@ -848,6 +849,11 @@ customMethodCalls = {
         'code': '    mozilla::ErrorResult error;\n'
                 '    self->SetInnerHTML(arg0, error);\n'
                 '    rv = error.ErrorCode();'
+        },
+    'nsIDOMHTMLElement_GetDataset': {
+        'thisType' : 'nsGenericHTMLElement',
+        'code': '    nsRefPtr<nsDOMStringMap> result = self->Dataset();',
+        'canFail': False
         },
     'nsIDOMElementCSSInlineStyle_GetStyle': {
         'thisType': 'nsStyledElement',
