@@ -24,11 +24,13 @@ CPPSRCS = \
   TimeManager.cpp \
   TimeService.cpp \
   TimeChangeObserver.cpp \
+  DateCacheCleaner.cpp \
   $(NULL)
 
 EXPORTS_mozilla/dom/time = \
   TimeService.h \
   TimeChangeObserver.h \
+  DateCacheCleaner.h \
   $(NULL)
 
 XPIDLSRCS = \
