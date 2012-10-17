@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "mar.h"
 #include "mar_cmdline.h"
 
@@ -22,7 +23,8 @@ int NSSInitCryptoContext(const char *NSSConfigDir);
 #endif
 
 int mar_repackage_and_sign(const char *NSSConfigDir,
-                           const char *certName, 
+                           const char * const *certNames,
+                           uint32_t certCount,
                            const char *src, 
                            const char * dest);
 
@@ -37,13 +39,20 @@ static void print_usage() {
          "signed_input_archive.mar output_archive.mar\n");
 #if defined(XP_WIN) && !defined(MAR_NSS)
   printf("  mar [-C workingDir] -D DERFilePath -v signed_archive.mar\n");
+  printf("At most %d signature certificate DER files are specified by "
+         "-D0 DERFilePath1 -D1 DERFilePath2, ...\n", MAX_SIGNATURES);
 #else 
   printf("  mar [-C workingDir] -d NSSConfigDir -n certname "
     "-v signed_archive.mar\n");
+  printf("At most %d signature certificate names are specified by "
+         "-n0 certName -n1 certName2, ...\n", MAX_SIGNATURES);
 #endif
+  printf("At most %d verification certificate names are specified by "
+         "-n0 certName -n1 certName2, ...\n", MAX_SIGNATURES);
 #endif
   printf("  mar [-H MARChannelID] [-V ProductVersion] [-C workingDir] "
          "-i unsigned_archive_to_refresh.mar\n");
+  printf("This program does not handle unicode file paths properly\n");
 }
 
 static int mar_test_callback(MarFile *mar, 
@@ -69,15 +78,28 @@ static int mar_test(const char *path) {
 
 int main(int argc, char **argv) {
   char *NSSConfigDir = NULL;
-  char *certName = NULL;
+  const char *certNames[MAX_SIGNATURES];
   char *MARChannelID = MAR_CHANNEL_ID;
   char *productVersion = MOZ_APP_VERSION;
+  uint32_t i, k;
+  int rv = -1;
+  uint32_t certCount = 0;
 #if defined(XP_WIN) && !defined(MAR_NSS) && !defined(NO_SIGN_VERIFY)
   HANDLE certFile;
-  DWORD fileSize;
+  /* We use DWORD here instead of uint64_t because it simplifies code with
+     the Win32 API ReadFile which takes a DWORD.  DER files will not be too
+     large anyway. */
+  DWORD fileSizes[MAX_SIGNATURES];
   DWORD read;
-  char *certBuffer;
-  char *DERFilePath = NULL;
+  uint8_t *certBuffers[MAX_SIGNATURES];
+  char *DERFilePaths[MAX_SIGNATURES];
+#endif
+
+  memset(certNames, 0, sizeof(certNames));
+#if defined(XP_WIN) && !defined(MAR_NSS) && !defined(NO_SIGN_VERIFY)
+  memset(fileSizes, 0, sizeof(fileSizes));
+  memset(certBuffers, 0, sizeof(certBuffers));
+  memset(DERFilePaths, 0, sizeof(DERFilePaths));
 #endif
 
   if (argc < 3) {
@@ -99,9 +121,17 @@ int main(int argc, char **argv) {
       argc -= 2;
     } 
 #if defined(XP_WIN) && !defined(MAR_NSS) && !defined(NO_SIGN_VERIFY)
-    /* -D DERFilePath */
-    else if (argv[1][0] == '-' && argv[1][1] == 'D') {
-      DERFilePath = argv[2];
+    /* -D DERFilePath, also matches -D[index] DERFilePath
+       We allow an index for verifying to be symmetric
+       with the import and export command line arguments. */
+    else if (argv[1][0] == '-' &&
+             argv[1][1] == 'D' &&
+             (argv[1][2] == '0' + certCount || argv[1][2] == '\0')) {
+      if (certCount >= MAX_SIGNATURES) {
+        print_usage();
+        return -1;
+      }
+      DERFilePaths[certCount++] = argv[2];
       argv += 2;
       argc -= 2;
     }
@@ -111,9 +141,17 @@ int main(int argc, char **argv) {
       NSSConfigDir = argv[2];
       argv += 2;
       argc -= 2;
-     /* -n certName */
-    } else if (argv[1][0] == '-' && argv[1][1] == 'n') {
-      certName = argv[2];
+     /* -n certName, also matches -n[index] certName
+        We allow an index for verifying to be symmetric
+        with the import and export command line arguments. */
+    } else if (argv[1][0] == '-' &&
+               argv[1][1] == 'n' &&
+               (argv[1][2] == '0' + certCount || argv[1][2] == '\0')) {
+      if (certCount >= MAX_SIGNATURES) {
+        print_usage();
+        return -1;
+      }
+      certNames[certCount++] = argv[2];
       argv += 2;
       argc -= 2;
     /* MAR channel ID */
@@ -152,7 +190,6 @@ int main(int argc, char **argv) {
     return refresh_product_info_block(argv[2], &infoBlock);
   }
   case 'T': {
-    int rv;
     struct ProductInformationBlock infoBlock;
     uint32_t numSignatures, numAdditionalBlocks;
     int hasSignatureBlock, hasAdditionalBlock;
@@ -196,36 +233,45 @@ int main(int argc, char **argv) {
   case 'v':
 
 #if defined(XP_WIN) && !defined(MAR_NSS)
-    if (!DERFilePath) {
+    if (certCount == 0) {
       print_usage();
       return -1;
     }
-    /* If the mar program was built using CryptoAPI, then read in the buffer
-       containing the cert from disk. */
-    certFile = CreateFileA(DERFilePath, GENERIC_READ, 
-                           FILE_SHARE_READ | 
-                           FILE_SHARE_WRITE | 
-                           FILE_SHARE_DELETE, 
-                           NULL, 
-                           OPEN_EXISTING, 
-                           0, NULL);
-    if (INVALID_HANDLE_VALUE == certFile) {
-      return -1;
-    }
-    fileSize = GetFileSize(certFile, NULL);
-    certBuffer = malloc(fileSize);
-    if (!ReadFile(certFile, certBuffer, fileSize, &read, NULL) || 
-        fileSize != read) {
-      CloseHandle(certFile);
-      free(certBuffer);
-      return -1;
-    }
-    CloseHandle(certFile);
 
-    if (mar_verify_signature(argv[2], certBuffer, fileSize, NULL)) {
+    for (k = 0; k < certCount; ++k) {
+      /* If the mar program was built using CryptoAPI, then read in the buffer
+        containing the cert from disk. */
+      certFile = CreateFileA(DERFilePaths[k], GENERIC_READ,
+                             FILE_SHARE_READ |
+                             FILE_SHARE_WRITE |
+                             FILE_SHARE_DELETE,
+                             NULL,
+                             OPEN_EXISTING,
+                             0, NULL);
+      if (INVALID_HANDLE_VALUE == certFile) {
+        return -1;
+      }
+      fileSizes[k] = GetFileSize(certFile, NULL);
+      certBuffers[k] = malloc(fileSizes[k]);
+      if (!ReadFile(certFile, certBuffers[k], fileSizes[k], &read, NULL) ||
+          fileSizes[k] != read) {
+        CloseHandle(certFile);
+        for (i = 0; i <= k; i++) {
+          free(certBuffers[i]);
+        }
+        return -1;
+      }
+      CloseHandle(certFile);
+    }
+
+    rv = mar_verify_signatures(argv[2], certBuffers, fileSizes,
+                               NULL, certCount);
+    for (k = 0; k < certCount; ++k) {
+      free(certBuffers[k]);
+    }
+    if (rv) {
       /* Determine if the source MAR file has the new fields for signing */
       int hasSignatureBlock;
-      free(certBuffer);
       if (get_mar_file_info(argv[2], &hasSignatureBlock, 
                             NULL, NULL, NULL, NULL)) {
         fprintf(stderr, "ERROR: could not determine if MAR is old or new.\n");
@@ -236,10 +282,9 @@ int main(int argc, char **argv) {
       return -1;
     }
 
-    free(certBuffer);
     return 0;
 #else
-    if (!NSSConfigDir || !certName) {
+    if (!NSSConfigDir || certCount == 0) {
       print_usage();
       return -1;
     }
@@ -249,16 +294,17 @@ int main(int argc, char **argv) {
       return -1;
     }
 
-    return mar_verify_signature(argv[2], NULL, 0, 
-                                certName);
+    return mar_verify_signatures(argv[2], NULL, 0,
+                                 certNames, certCount);
 
 #endif /* defined(XP_WIN) && !defined(MAR_NSS) */
   case 's':
-    if (!NSSConfigDir || !certName || argc < 4) {
+    if (!NSSConfigDir || certCount == 0 || argc < 4) {
       print_usage();
       return -1;
     }
-    return mar_repackage_and_sign(NSSConfigDir, certName, argv[2], argv[3]);
+    return mar_repackage_and_sign(NSSConfigDir, certNames, certCount,
+                                  argv[2], argv[3]);
 
   case 'r':
     return strip_signature_block(argv[2], argv[3]);
