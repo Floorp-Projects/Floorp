@@ -50,6 +50,10 @@ if test -z "$MOZ_ARCH"; then
     esac
 fi
 
+if test "$MOZ_ARCH" = "armv6" -a "$OS_TARGET" = "Android"; then
+   MOZ_FPU=vfp
+fi
+
 MOZ_ARG_WITH_STRING(thumb,
 [  --with-thumb[[=yes|no|toolchain-default]]]
 [                          Use Thumb instruction set (-mthumb)],
