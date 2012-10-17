@@ -47,14 +47,15 @@
 extern "C" {
 #endif
 
-#if defined(MOZ_NATIVE_JEMALLOC) || defined(MOZ_MEMORY_LINUX)
+#if defined(MOZ_NATIVE_JEMALLOC) \
+  || defined(MOZ_MEMORY_LINUX) || defined(MOZ_MEMORY_BSD)
 __attribute__((weak))
 #endif
 void	jemalloc_stats(jemalloc_stats_t *stats);
 
 /* Computes the usable size in advance. */
 #if !defined(MOZ_MEMORY_DARWIN)
-#if defined(MOZ_MEMORY_LINUX)
+#if defined(MOZ_MEMORY_LINUX) || defined(MOZ_MEMORY_BSD)
 __attribute__((weak))
 #endif
 #if defined(MOZ_JEMALLOC)
