@@ -93,7 +93,7 @@ YoutubeProtocolHandler.prototype = {
         let index;
         if (url && type && ((index = recognizedTypes.indexOf(type)) != -1) &&
             index > bestType) {
-          uri = url;
+          uri = url + '&signature=' + (params["sig"] ? params['sig'] : '');
           mimeType = type;
           bestType = index;
         }
