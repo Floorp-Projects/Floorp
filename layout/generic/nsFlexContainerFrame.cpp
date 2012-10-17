@@ -1555,7 +1555,8 @@ SingleLineCrossAxisPositionTracker::
   // XXXdholbert This assumes cross axis is Top-To-Bottom.
   // For bottom-to-top support, probably want to make this depend on
   //   AxisGrowsInPositiveDirection(mAxis)
-  return aItem.GetAscent() + aItem.GetMarginComponentForSide(crossStartSide);
+  return NSCoordSaturatingAdd(aItem.GetAscent(),
+                              aItem.GetMarginComponentForSide(crossStartSide));
 }
 
 void
@@ -1656,8 +1657,9 @@ SingleLineCrossAxisPositionTracker::
           aItem.GetMarginBorderPaddingSizeInAxis(mAxis))) / 2;
       break;
     case NS_STYLE_ALIGN_ITEMS_BASELINE:
-      MOZ_ASSERT(mCrossStartToFurthestBaseline != nscoord_MIN,
-                 "using uninitialized baseline offset");
+      NS_WARN_IF_FALSE(mCrossStartToFurthestBaseline != nscoord_MIN,
+                       "using uninitialized baseline offset (or working with "
+                       "content that has bogus huge values)");
       MOZ_ASSERT(mCrossStartToFurthestBaseline >=
                  GetBaselineOffsetFromCrossStart(aItem),
                  "failed at finding largest ascent");
