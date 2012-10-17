@@ -10065,6 +10065,23 @@ nsDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
   aWindowSizes->mStyleSheets +=
     mStyleSheets.SizeOfExcludingThis(SizeOfStyleSheetsElementIncludingThis,
                                      aWindowSizes->mMallocSizeOf);
+  aWindowSizes->mStyleSheets +=
+    mCatalogSheets.SizeOfExcludingThis(SizeOfStyleSheetsElementIncludingThis,
+                                       aWindowSizes->mMallocSizeOf);
+  aWindowSizes->mStyleSheets +=
+    mAdditionalSheets[eAgentSheet].
+      SizeOfExcludingThis(SizeOfStyleSheetsElementIncludingThis,
+                          aWindowSizes->mMallocSizeOf);
+  aWindowSizes->mStyleSheets +=
+    mAdditionalSheets[eUserSheet].
+      SizeOfExcludingThis(SizeOfStyleSheetsElementIncludingThis,
+                          aWindowSizes->mMallocSizeOf);
+  // Lumping in the loader with the style-sheets size is not ideal,
+  // but most of the things in there are in fact stylesheets, so it
+  // doesn't seem worthwhile to separate it out.
+  aWindowSizes->mStyleSheets +=
+    CSSLoader()->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf);
+
   aWindowSizes->mDOMOther +=
     mAttrStyleSheet ?
     mAttrStyleSheet->DOMSizeOfIncludingThis(aWindowSizes->mMallocSizeOf) :

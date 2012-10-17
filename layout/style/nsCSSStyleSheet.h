@@ -177,6 +177,7 @@ public:
   void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
   void SetMedia(nsMediaList* aMedia);
   void SetOwningNode(nsIDOMNode* aOwningNode) { mOwningNode = aOwningNode; /* Not ref counted */ }
+  nsIDOMNode* GetOwningNode() const { return mOwningNode; }
 
   void SetOwnerRule(mozilla::css::ImportRule* aOwnerRule) { mOwnerRule = aOwnerRule; /* Not ref counted */ }
   mozilla::css::ImportRule* GetOwnerRule() const { return mOwnerRule; }
