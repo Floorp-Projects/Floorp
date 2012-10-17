@@ -39,7 +39,6 @@
         './include',
         './src/sipcc/include',
         './src/sipcc/cpr/include',
-        '../../../nsprpub/pr/include',
         '../../../ipc/chromium/src',
         '../../../ipc/chromium/src/base/third_party/nspr',
         '../../../xpcom/base',
@@ -161,6 +160,11 @@
         'HAVE_UINT64_T=1',
       ],
 
+      'cflags_mozilla': [
+        '$(NSPR_CFLAGS)',
+        '$(NSS_CFLAGS)',
+      ],
+
       #
       # Conditionals
       #
@@ -245,7 +249,6 @@
         './src/sipcc/core/sdp',
         './src/sipcc/core/gsm/h',
         './src/sipcc/plat/common',
-        '../../../nsprpub/pr/include',
         '../../../media/mtransport',
         '../../../dom/base',
         '../trunk/third_party/libsrtp/srtp/include',
@@ -577,6 +580,10 @@
       #
       
       'defines' : [
+      ],
+
+      'cflags_mozilla': [
+        '$(NSPR_CFLAGS)',
       ],
 
       #
