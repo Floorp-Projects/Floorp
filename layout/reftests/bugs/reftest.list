@@ -1589,6 +1589,9 @@ skip-if(!browserIsRemote) == 593243-2.html 593243-2-ref.html # bug 593168
 random-if(winWidget) needs-focus == 598726-1.html 598726-1-ref.html # Fails on Windows, bug 782196
 == 599113-1.html 599113-1-ref.html
 fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
+== 599882-1a.html 599882-1-ref.html
+== 599882-1b.html 599882-1-ref.html
+== 599882-2.html 599882-2-ref.html
 == 600045-1.html 600045-1-ref.html
 == 600803-1.html 600803-1-ref.html
 == 603423-1.html 603423-1-ref.html
