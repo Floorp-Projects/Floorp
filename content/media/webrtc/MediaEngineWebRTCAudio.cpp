@@ -89,6 +89,7 @@ MediaEngineWebRTCAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
   segment->Init(CHANNELS);
   mSource->AddTrack(aID, SAMPLE_FREQUENCY, 0, segment);
   mSource->AdvanceKnownTracksTime(STREAM_TIME_MAX);
+  LOG(("Initial audio"));
   mTrackID = aID;
 
   if (mVoEBase->StartReceive(mChannel)) {
@@ -126,6 +127,13 @@ MediaEngineWebRTCAudioSource::Stop()
 
   mState = kStopped;
   return NS_OK;
+}
+
+void
+MediaEngineWebRTCAudioSource::NotifyPull(MediaStreamGraph* aGraph,
+                                         StreamTime aDesiredTime)
+{
+  // Ignore - we push audio data
 }
 
 nsresult
