@@ -399,7 +399,8 @@ DumpReport(nsIGZFileWriter *aWriter, bool aIsFirst,
 
   DUMP(aWriter, "\", \"path\": \"");
   nsCString path(aPath);
-  path.ReplaceSubstring("\\", "\\\\");    // escape backslashes for JSON
+  path.ReplaceSubstring("\\", "\\\\");    /* <backslash> --> \\ */
+  path.ReplaceSubstring("\"", "\\\"");    // " --> \"
   DUMP(aWriter, path);
 
   DUMP(aWriter, "\", \"kind\": ");
