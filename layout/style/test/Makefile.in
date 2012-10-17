@@ -188,6 +188,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_bug732153.html \
 		test_bug732209.html \
 		bug732209-css.sjs \
+		test_bug795520.html \
 		$(NULL)
 
 ifdef MOZ_FLEXBOX
