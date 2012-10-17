@@ -911,9 +911,10 @@ class AutoDestroyAllocator
 void
 AttachFinishedCompilations(JSContext *cx)
 {
+#ifdef JS_THREADSAFE
     AssertCanGC();
     IonCompartment *ion = cx->compartment->ionCompartment();
-    if (!ion)
+    if (!ion || !cx->runtime->workerThreadState)
         return;
 
     AutoLockWorkerThreadState lock(cx->runtime);
@@ -957,6 +958,7 @@ AttachFinishedCompilations(JSContext *cx)
     }
 
     compilations.clear();
+#endif
 }
 
 static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
