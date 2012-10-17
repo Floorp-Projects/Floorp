@@ -8,7 +8,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = @relativesrcdir@
-DIRS		+= webgl crossorigin
+DIRS		+= webgl crossorigin chrome
 
 # TEST_DIRS += compiled
 
