@@ -1830,6 +1830,21 @@ LIRGenerator::visitThrow(MThrow *ins)
 }
 
 bool
+LIRGenerator::visitIn(MIn *ins)
+{
+    MDefinition *lhs = ins->lhs();
+    MDefinition *rhs = ins->rhs();
+
+    JS_ASSERT(lhs->type() == MIRType_Value);
+    JS_ASSERT(rhs->type() == MIRType_Object);
+
+    LIn *lir = new LIn(useRegisterAtStart(rhs));
+    if (!useBoxAtStart(lir, LIn::LHS, lhs))
+        return false;
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitInstanceOf(MInstanceOf *ins)
 {
     MDefinition *lhs = ins->lhs();
@@ -1842,10 +1857,10 @@ LIRGenerator::visitInstanceOf(MInstanceOf *ins)
     if (lhs->type() == MIRType_Object) {
         LInstanceOfO *lir = new LInstanceOfO(useRegister(lhs), useRegister(rhs), temp(), temp());
         return define(lir, ins) && assignSafepoint(lir, ins);
-    } else {
-        LInstanceOfV *lir = new LInstanceOfV(useRegister(rhs), temp(), temp());
-        return useBox(lir, LInstanceOfV::LHS, lhs) && define(lir, ins) && assignSafepoint(lir, ins);
     }
+
+    LInstanceOfV *lir = new LInstanceOfV(useRegister(rhs), temp(), temp());
+    return useBox(lir, LInstanceOfV::LHS, lhs) && define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
