@@ -129,21 +129,23 @@ VisualPresenter.prototype = {
   BORDER_PADDING: 2,
 
   viewportChanged: function VisualPresenter_viewportChanged(aWindow) {
-    if (this._currentContext)
+    if (this._currentAccessible) {
+      let context = new PresenterContext(this._currentAccessible);
       return {
         type: this.type,
         details: {
           method: 'show',
-          bounds: this._currentContext.bounds,
+          bounds: context.bounds,
           padding: this.BORDER_PADDING
         }
       };
+    }
 
     return null;
   },
 
   pivotChanged: function VisualPresenter_pivotChanged(aContext, aReason) {
-    this._currentContext = aContext;
+    this._currentAccessible = aContext.accessible;
 
     if (!aContext.accessible)
       return {type: this.type, details: {method: 'hide'}};
