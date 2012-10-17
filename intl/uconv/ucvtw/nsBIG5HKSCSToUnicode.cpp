@@ -20,7 +20,7 @@ static const uScanClassID g_BIG5HKSCSScanClassIDs[] = {
 };
 
 static const uint16_t *g_BIG5HKSCSMappingTableSet [] ={
-  g_ASCIIMapping,
+  g_ASCIIMappingTable,
   g_utBig5HKSCSMapping,
   g_utBIG5Mapping,
   g_utBig5HKSCSMapping,
@@ -29,7 +29,7 @@ static const uint16_t *g_BIG5HKSCSMappingTableSet [] ={
 };
 
 static const uRange g_BIG5HKSCSRanges[] = {
-  { 0x00, 0x7E },
+  { 0x00, 0x7F },
   { 0x81, 0xA0 },
   { 0xA1, 0xC6 },
   { 0xC6, 0xC8 },
