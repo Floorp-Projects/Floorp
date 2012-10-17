@@ -21,29 +21,6 @@ extern PRLogModuleInfo* gMediaManagerLog;
  */
 NS_IMPL_THREADSAFE_ISUPPORTS1(MediaEngineWebRTCVideoSource, nsIRunnable)
 
-MediaEngineWebRTCVideoSource::MediaEngineWebRTCVideoSource(webrtc::VideoEngine* aVideoEnginePtr,
-                                                           int aIndex, int aMinFps)
-  : mVideoEngine(aVideoEnginePtr)
-  , mCaptureIndex(aIndex)
-  , mCapabilityChosen(false)
-  , mWidth(640)
-  , mHeight(480)
-  , mState(kReleased)
-  , mMonitor("WebRTCCamera.Monitor")
-  , mFps(DEFAULT_VIDEO_FPS)
-  , mMinFps(aMinFps)
-  , mInitDone(false)
-  , mInSnapshotMode(false)
-  , mSnapshotPath(NULL)
-{
-  Init();
-}
-
-MediaEngineWebRTCVideoSource::~MediaEngineWebRTCVideoSource()
-{
-  Shutdown();
-}
-
 // ViEExternalRenderer Callback.
 int
 MediaEngineWebRTCVideoSource::FrameSizeChange(
@@ -191,10 +168,6 @@ MediaEngineWebRTCVideoSource::Allocate()
     return NS_ERROR_FAILURE;
   }
 
-  if (mViECapture->StartCapture(mCaptureIndex, mCapability) < 0) {
-    return NS_ERROR_FAILURE;
-  }
-
   mState = kAllocated;
   return NS_OK;
 }
@@ -206,7 +179,6 @@ MediaEngineWebRTCVideoSource::Deallocate()
     return NS_ERROR_FAILURE;
   }
 
-  mViECapture->StopCapture(mCaptureIndex);
   mViECapture->ReleaseCaptureDevice(mCaptureIndex);
   mState = kReleased;
   return NS_OK;
@@ -254,6 +226,10 @@ MediaEngineWebRTCVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
     return NS_ERROR_FAILURE;
   }
 
+  if (mViECapture->StartCapture(mCaptureIndex, mCapability) < 0) {
+    return NS_ERROR_FAILURE;
+  }
+
   mState = kStarted;
   return NS_OK;
 }
@@ -270,6 +246,7 @@ MediaEngineWebRTCVideoSource::Stop()
 
   mViERender->StopRender(mCaptureIndex);
   mViERender->RemoveRenderer(mCaptureIndex);
+  mViECapture->StopCapture(mCaptureIndex);
 
   mState = kStopped;
   return NS_OK;
