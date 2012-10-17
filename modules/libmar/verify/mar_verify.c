@@ -240,7 +240,7 @@ mar_verify_signature_fp(FILE *fp,
     return CryptoX_Error;
   }
 
-  for (i = 0; i < signatureCount && numVerified == 0; i++) {
+  for (i = 0; i < signatureCount && numVerified == i; i++) {
     /* Get the signature algorithm ID */
     if (fread(&signatureAlgorithmID, sizeof(uint32_t), 1, fp) != 1) {
       fprintf(stderr, "ERROR: Could not read signatures algorithm ID.\n");
@@ -293,12 +293,12 @@ mar_verify_signature_fp(FILE *fp,
     }
   }
 
-  /* If we reached here and we verified at least one 
+  /* If we reached here and we verified every
      signature, return success. */
-  if (numVerified > 0) {
+  if (numVerified == signatureCount) {
     return CryptoX_Success;
   } else {
-    fprintf(stderr, "ERROR: No signatures were verified.\n");
+    fprintf(stderr, "ERROR: Not all signatures were verified.\n");
     return CryptoX_Error;
   }
 }
