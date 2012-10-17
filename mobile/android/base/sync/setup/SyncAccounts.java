@@ -12,6 +12,7 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.CredentialException;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.GlobalConstants;
+import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.ThreadPool;
@@ -54,7 +55,7 @@ public class SyncAccounts {
    * @return Sync accounts.
    */
   public static Account[] syncAccounts(final Context c) {
-    return AccountManager.get(c).getAccountsByType(GlobalConstants.ACCOUNTTYPE_SYNC);
+    return AccountManager.get(c).getAccountsByType(SyncConstants.ACCOUNTTYPE_SYNC);
   }
 
   /**
@@ -65,7 +66,7 @@ public class SyncAccounts {
    * Do not call this method from the main thread.
    */
   public static boolean syncAccountsExist(Context c) {
-    final boolean accountsExist = AccountManager.get(c).getAccountsByType(GlobalConstants.ACCOUNTTYPE_SYNC).length > 0;
+    final boolean accountsExist = AccountManager.get(c).getAccountsByType(SyncConstants.ACCOUNTTYPE_SYNC).length > 0;
     if (accountsExist) {
       return true;
     }
@@ -220,7 +221,7 @@ public class SyncAccounts {
       try {
         return createSyncAccount(syncAccount, syncAutomatically);
       } catch (Exception e) {
-        Log.e(Logger.GLOBAL_LOG_TAG, "Unable to create account.", e);
+        Log.e(SyncConstants.GLOBAL_LOG_TAG, "Unable to create account.", e);
         return null;
       }
     }
@@ -301,13 +302,13 @@ public class SyncAccounts {
       Logger.info(LOG_TAG, "Setting explicit server URL: " + serverURL);
     }
 
-    final Account account = new Account(username, GlobalConstants.ACCOUNTTYPE_SYNC);
+    final Account account = new Account(username, SyncConstants.ACCOUNTTYPE_SYNC);
     final Bundle userbundle = new Bundle();
 
     // Add sync key and server URL.
     userbundle.putString(Constants.OPTION_SYNCKEY, syncKey);
     userbundle.putString(Constants.OPTION_SERVER, serverURL);
-    Logger.debug(LOG_TAG, "Adding account for " + GlobalConstants.ACCOUNTTYPE_SYNC);
+    Logger.debug(LOG_TAG, "Adding account for " + SyncConstants.ACCOUNTTYPE_SYNC);
     boolean result = false;
     try {
       result = accountManager.addAccountExplicitly(account, password, userbundle);
@@ -315,13 +316,13 @@ public class SyncAccounts {
       // We use Log rather than Logger here to avoid possibly hiding these errors.
       final String message = e.getMessage();
       if (message != null && (message.indexOf("is different than the authenticator's uid") > 0)) {
-        Log.wtf(Logger.GLOBAL_LOG_TAG,
+        Log.wtf(SyncConstants.GLOBAL_LOG_TAG,
                 "Unable to create account. " +
                 "If you have more than one version of " +
                 "Firefox/Beta/Aurora/Nightly/Fennec installed, that's why.",
                 e);
       } else {
-        Log.e(Logger.GLOBAL_LOG_TAG, "Unable to create account.", e);
+        Log.e(SyncConstants.GLOBAL_LOG_TAG, "Unable to create account.", e);
       }
     }
 
@@ -560,9 +561,9 @@ public class SyncAccounts {
    * @return <code>Intent</code> to broadcast.
    */
   public static Intent makeSyncAccountDeletedIntent(final Context context, final AccountManager accountManager, final Account account) {
-    final Intent intent = new Intent(GlobalConstants.SYNC_ACCOUNT_DELETED_ACTION);
+    final Intent intent = new Intent(SyncConstants.SYNC_ACCOUNT_DELETED_ACTION);
 
-    intent.putExtra(Constants.JSON_KEY_VERSION, Long.valueOf(GlobalConstants.SYNC_ACCOUNT_DELETED_INTENT_VERSION));
+    intent.putExtra(Constants.JSON_KEY_VERSION, Long.valueOf(SyncConstants.SYNC_ACCOUNT_DELETED_INTENT_VERSION));
     intent.putExtra(Constants.JSON_KEY_TIMESTAMP, Long.valueOf(System.currentTimeMillis()));
     intent.putExtra(Constants.JSON_KEY_ACCOUNT, account.name);
 
