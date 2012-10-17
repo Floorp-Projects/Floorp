@@ -3768,20 +3768,21 @@ fi
 
 dnl Check for the existence of various allocation headers/functions
 
+MALLOC_HEADERS="malloc.h malloc_np.h malloc/malloc.h sys/malloc.h"
 MALLOC_H=
-MOZ_CHECK_HEADER(malloc.h,        [MALLOC_H=malloc.h])
-if test "$MALLOC_H" = ""; then
-  MOZ_CHECK_HEADER(malloc/malloc.h, [MALLOC_H=malloc/malloc.h])
-  if test "$MALLOC_H" = ""; then
-    MOZ_CHECK_HEADER(sys/malloc.h,    [MALLOC_H=sys/malloc.h])
+
+for file in $MALLOC_HEADERS; do
+  MOZ_CHECK_HEADER($file, [MALLOC_H=$file])
+  if test "$MALLOC_H" != ""; then
+    AC_DEFINE_UNQUOTED(MALLOC_H, <$MALLOC_H>)
+    break
   fi
-fi
-if test "$MALLOC_H" != ""; then
-   AC_DEFINE_UNQUOTED(MALLOC_H, <$MALLOC_H>)
-fi
+done
 
 MOZ_ALLOCATING_FUNCS="strndup posix_memalign memalign valloc"
 AC_CHECK_FUNCS(strndup posix_memalign memalign valloc)
+
+AC_CHECK_FUNCS(malloc_usable_size)
 
 dnl See if compiler supports some gcc-style attributes
 
