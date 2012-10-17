@@ -9,15 +9,12 @@
 
 #include "mozilla/Scoped.h"
 
-extern "C" {
 #include "prio.h"
 #include "cert.h"
 #include "cms.h"
 #include "keyhi.h"
 #include "pk11pub.h"
 #include "sechash.h"
-} // extern "C"
-
 
 // Alphabetical order by NSS type
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc,
