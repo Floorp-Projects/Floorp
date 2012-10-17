@@ -30,18 +30,27 @@ int mar_repackage_and_sign(const char *NSSConfigDir,
 
 static void print_usage() {
   printf("usage:\n");
+  printf("Create a MAR file:\n");
   printf("  mar [-H MARChannelID] [-V ProductVersion] [-C workingDir] "
          "{-c|-x|-t|-T} archive.mar [files...]\n");
 #ifndef NO_SIGN_VERIFY
+  printf("Sign a MAR file:\n");
   printf("  mar [-C workingDir] -d NSSConfigDir -n certname -s "
          "archive.mar out_signed_archive.mar\n");
+  printf("Strip a MAR signature:\n");
   printf("  mar [-C workingDir] -r "
          "signed_input_archive.mar output_archive.mar\n");
+  printf("Extract a MAR signature:\n");
+  printf("  mar [-C workingDir] -n(i) -X "
+         "signed_input_archive.mar base_64_encoded_signature_file\n");
+  printf("(i) is the index of the certificate to extract\n");
 #if defined(XP_WIN) && !defined(MAR_NSS)
+  printf("Verify a MAR file:\n");
   printf("  mar [-C workingDir] -D DERFilePath -v signed_archive.mar\n");
   printf("At most %d signature certificate DER files are specified by "
          "-D0 DERFilePath1 -D1 DERFilePath2, ...\n", MAX_SIGNATURES);
 #else 
+  printf("Verify a MAR file:\n");
   printf("  mar [-C workingDir] -d NSSConfigDir -n certname "
     "-v signed_archive.mar\n");
   printf("At most %d signature certificate names are specified by "
@@ -50,6 +59,7 @@ static void print_usage() {
   printf("At most %d verification certificate names are specified by "
          "-n0 certName -n1 certName2, ...\n", MAX_SIGNATURES);
 #endif
+  printf("Print information on a MAR file:\n");
   printf("  mar [-H MARChannelID] [-V ProductVersion] [-C workingDir] "
          "-i unsigned_archive_to_refresh.mar\n");
   printf("This program does not handle unicode file paths properly\n");
@@ -84,6 +94,7 @@ int main(int argc, char **argv) {
   uint32_t i, k;
   int rv = -1;
   uint32_t certCount = 0;
+  int32_t sigIndex = -1;
 #if defined(XP_WIN) && !defined(MAR_NSS) && !defined(NO_SIGN_VERIFY)
   HANDLE certFile;
   /* We use DWORD here instead of uint64_t because it simplifies code with
@@ -112,7 +123,7 @@ int main(int argc, char **argv) {
         argv[1][1] == 't' || argv[1][1] == 'x' || 
         argv[1][1] == 'v' || argv[1][1] == 's' ||
         argv[1][1] == 'i' || argv[1][1] == 'T' ||
-        argv[1][1] == 'r')) {
+        argv[1][1] == 'r' || argv[1][1] == 'X')) {
       break;
     /* -C workingdirectory */
     } else if (argv[1][0] == '-' && argv[1][1] == 'C') {
@@ -146,14 +157,24 @@ int main(int argc, char **argv) {
         with the import and export command line arguments. */
     } else if (argv[1][0] == '-' &&
                argv[1][1] == 'n' &&
-               (argv[1][2] == '0' + certCount || argv[1][2] == '\0')) {
+               (argv[1][2] == '0' + certCount ||
+                argv[1][2] == '\0' ||
+                !strcmp(argv[2], "-X"))) {
       if (certCount >= MAX_SIGNATURES) {
         print_usage();
         return -1;
       }
       certNames[certCount++] = argv[2];
-      argv += 2;
-      argc -= 2;
+      if (strlen(argv[1]) > 2 &&
+        !strcmp(argv[2], "-X") &&
+        argv[1][2] >= '0' && argv[1][2] <= '9') {
+        sigIndex = argv[1][2] - '0';
+        argv++;
+        argc--;
+      } else {
+        argv += 2;
+        argc -= 2;
+      }
     /* MAR channel ID */
     } else if (argv[1][0] == '-' && argv[1][1] == 'H') {
       MARChannelID = argv[2];
@@ -226,10 +247,24 @@ int main(int argc, char **argv) {
   case 't':
     return mar_test(argv[2]);
 
+  /* Extract a MAR file */
   case 'x':
     return mar_extract(argv[2]);
 
 #ifndef NO_SIGN_VERIFY
+  /* Extract a MAR signature */
+  case 'X':
+    if (sigIndex == -1) {
+      fprintf(stderr, "ERROR: Signature index was not passed.\n");
+      return -1;
+    }
+    if (sigIndex >= MAX_SIGNATURES || sigIndex < -1) {
+      fprintf(stderr, "ERROR: Signature index is out of range: %d.\n",
+              sigIndex);
+      return -1;
+    }
+    return extract_signature(argv[2], sigIndex, argv[3]);
+
   case 'v':
 
 #if defined(XP_WIN) && !defined(MAR_NSS)
