@@ -2539,17 +2539,20 @@ for (uint32_t i = 0; i < length; ++i) {
         conversionBehavior = "eClamp"
 
     if type.nullable():
-        dataLoc = "${declName}.SetValue()"
+        declType = CGGeneric("Nullable<" + typeName + ">")
+        mutableType = declType.define() + "&"
+        if not isOptional and not isMember:
+            declType = CGWrapper(declType, pre="const ")
+        dataLoc = ("const_cast< %s >(${declName}).SetValue()" % mutableType)
         nullCondition = "${val}.isNullOrUndefined()"
         if defaultValue is not None and isinstance(defaultValue, IDLNullValue):
             nullCondition = "!(${haveValue}) || " + nullCondition
         template = (
             "if (%s) {\n"
-            "  ${declName}.SetNull();\n"
+            "  const_cast< %s >(${declName}).SetNull();\n"
             "} else if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
             "  return false;\n"
-            "}" % (nullCondition, typeName, conversionBehavior, dataLoc))
-        declType = CGGeneric("Nullable<" + typeName + ">")
+            "}" % (nullCondition, mutableType, typeName, conversionBehavior, dataLoc))
     else:
         assert(defaultValue is None or
                not isinstance(defaultValue, IDLNullValue))
