@@ -200,6 +200,7 @@ HTMLSelectOptionAccessible::NativeName(nsString& aName)
   if (text && text->IsNodeOfType(nsINode::eTEXT)) {
     nsTextEquivUtils::AppendTextEquivFromTextContent(text, &aName);
     aName.CompressWhitespace();
+    return aName.IsEmpty() ? eNameOK : eNameFromSubtree;
   }
 
   return eNameOK;

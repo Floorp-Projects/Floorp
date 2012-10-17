@@ -1953,12 +1953,14 @@ HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartIndex,
 ENameValueFlag
 HyperTextAccessible::NativeName(nsString& aName)
 {
-  AccessibleWrap::NativeName(aName);
+  ENameValueFlag nameFlag = AccessibleWrap::NativeName(aName);
+  if (!aName.IsEmpty())
+    return nameFlag;
 
   // Get name from title attribute for HTML abbr and acronym elements making it
   // a valid name from markup. Otherwise their name isn't picked up by recursive
   // name computation algorithm. See NS_OK_NAME_FROM_TOOLTIP.
-  if (aName.IsEmpty() && IsAbbreviation() &&
+  if (IsAbbreviation() &&
       mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aName))
     aName.CompressWhitespace();
 
