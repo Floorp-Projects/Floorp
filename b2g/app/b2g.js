@@ -266,10 +266,11 @@ pref("media.video-queue.default-size", 3);
 pref("widget.ime.android.landscape_fullscreen", -1);
 pref("widget.ime.android.fullscreen_threshold", 250); // in hundreths of inches
 
-// optimize images memory usage
+// optimize images' memory usage
 pref("image.mem.decodeondraw", true);
 pref("content.image.allow_locking", false);
 pref("image.mem.min_discard_timeout_ms", 10000);
+pref("image.mem.max_decoded_image_kb", 5120); /* 5MB */
 
 // enable touch events interfaces
 pref("dom.w3c_touch_events.enabled", true);
