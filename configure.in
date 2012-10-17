@@ -7025,6 +7025,18 @@ else
 fi
 
 if test -z "$MOZ_MEMORY"; then
+  if test -n "$MOZ_JEMALLOC"; then
+    MOZ_NATIVE_JEMALLOC=1
+    AC_CHECK_FUNCS(mallctl nallocm,,
+      [MOZ_NATIVE_JEMALLOC=
+       break])
+    if test -n "$MOZ_NATIVE_JEMALLOC"; then
+      MOZ_MEMORY=1
+      AC_DEFINE(MOZ_MEMORY)
+      AC_DEFINE(MOZ_JEMALLOC)
+      AC_DEFINE(MOZ_NATIVE_JEMALLOC)
+    fi
+  fi
   case "${target}" in
     *-mingw*)
       if test -z "$WIN32_REDIST_DIR" -a -z "$MOZ_DEBUG"; then
@@ -7119,6 +7131,7 @@ else
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_JEMALLOC)
+AC_SUBST(MOZ_NATIVE_JEMALLOC)
 AC_SUBST(MOZ_GLUE_LDFLAGS)
 AC_SUBST(MOZ_GLUE_PROGRAM_LDFLAGS)
 AC_SUBST(WIN32_CRT_LIBS)
@@ -8952,7 +8965,7 @@ fi
 
 # Run jemalloc configure script
 
-if test "$MOZ_JEMALLOC" -a "$MOZ_MEMORY"; then
+if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_JEMALLOC" -a "$MOZ_MEMORY" ; then
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --build=$build --host=$target --enable-stats --with-jemalloc-prefix=je_"
   if test "$OS_ARCH" = "Linux"; then
     MANGLE="malloc calloc valloc free realloc memalign posix_memalign malloc_usable_size"
