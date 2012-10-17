@@ -1790,9 +1790,9 @@ nsFlexContainerFrame::ComputeFlexContainerMainSize(
     return mainSize;
   }
 
-  MOZ_ASSERT(!IsAxisHorizontal(aAxisTracker.GetMainAxis()),
-             "Computed width should always be constrained, so horizontal "
-             "flex containers should always have a constrained main-size");
+  NS_WARN_IF_FALSE(!IsAxisHorizontal(aAxisTracker.GetMainAxis()),
+                   "Computed width should always be constrained, so horizontal "
+                   "flex containers should have a constrained main-size");
 
   // Otherwise, use the sum of our items' hypothetical main sizes, clamped
   // to our computed min/max main-size properties.
