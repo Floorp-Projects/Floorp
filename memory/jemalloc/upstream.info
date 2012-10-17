@@ -1,2 +1,2 @@
 UPSTREAM_REPO=git://canonware.com/jemalloc.git
-UPSTREAM_COMMIT=3.0.0
+UPSTREAM_COMMIT=d0ffd8ed4f6aa4cf7248028eddfcb35f93247fe4

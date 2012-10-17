@@ -4448,6 +4448,7 @@ MKLIB='ar crus $@'
 CC_MM=1
 
 default_munmap="1"
+JEMALLOC_USABLE_SIZE_CONST="const"
 case "${host}" in
   *-*-darwin*)
 	CFLAGS="$CFLAGS"
@@ -4477,6 +4478,7 @@ case "${host}" in
 
 	$as_echo "#define JEMALLOC_THREADED_INIT  " >>confdefs.h
 
+	JEMALLOC_USABLE_SIZE_CONST=""
 	default_munmap="0"
 	;;
   *-*-netbsd*)
@@ -4552,6 +4554,10 @@ $as_echo "Unsupported operating system: ${host}" >&6; }
 	abi="elf"
 	;;
 esac
+cat >>confdefs.h <<_ACEOF
+#define JEMALLOC_USABLE_SIZE_CONST $JEMALLOC_USABLE_SIZE_CONST
+_ACEOF
+
 
 
 

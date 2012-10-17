@@ -827,6 +827,27 @@ ctl_boot(void)
 	return (false);
 }
 
+void
+ctl_prefork(void)
+{
+
+	malloc_mutex_lock(&ctl_mtx);
+}
+
+void
+ctl_postfork_parent(void)
+{
+
+	malloc_mutex_postfork_parent(&ctl_mtx);
+}
+
+void
+ctl_postfork_child(void)
+{
+
+	malloc_mutex_postfork_child(&ctl_mtx);
+}
+
 /******************************************************************************/
 /* *_ctl() functions. */
 
@@ -1032,8 +1053,8 @@ thread_tcache_enabled_ctl(const size_t *mib, size_t miblen, void *oldp,
 	}
 	READ(oldval, bool);
 
-label_return:
 	ret = 0;
+label_return:
 	return (ret);
 }
 
