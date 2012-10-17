@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<script>
+
+// This file has the portion of the test_webgl_renderer_info chrome mochitest
+// that has to run as non-chrome to check that this WebGL extension is not exposed to content
+
+// we can't call the chrome Mochitest ok() function ourselves from non-chrome code.
+// So we remote it to the chrome test.
+
+function ok(res, msg) {
+  // Note we post to ourselves as posting to the chrome code doesn't seem to work here.
+  // This works by having the chrome code put an event handler on our own window.
+  window.postMessage({ subTestFinished: true, result: res, message: msg }, "*");
+}
+
+function messageListener(e) {
+  // This is how the chrome test tells us to start running -- we have to wait for this
+  // message to avoid running before it's set up its event handler.
+  if (e.data == "run") {
+    run();
+  }
+}
+
+window.addEventListener("message", messageListener, true);
+
+function run() {
+  const UNMASKED_VENDOR_WEBGL = 0x9245;
+  const UNMASKED_RENDERER_WEBGL = 0x9246;
+
+  var canvas = document.createElement("canvas");
+  var gl = canvas.getContext("experimental-webgl");
+
+  ok(!gl.getError(), "getError on newly created WebGL context should return NO_ERROR");
+
+  ok(!gl.getParameter(UNMASKED_VENDOR_WEBGL) && gl.getError() == gl.INVALID_ENUM,
+      "Should not be able to query UNMASKED_VENDOR_WEBGL without having enabled the WEBGL_debug_renderer_info extension");
+  ok(!gl.getParameter(UNMASKED_RENDERER_WEBGL) && gl.getError() == gl.INVALID_ENUM,
+      "Should not be able to query UNMASKED_RENDERER_WEBGL without having enabled the WEBGL_debug_renderer_info extension");
+
+  var exts = gl.getSupportedExtensions();
+  ok(exts.indexOf("WEBGL_debug_renderer_info") == -1,
+      "WEBGL_debug_renderer_info should not be listed by getSupportedExtensions in non-chrome contexts");
+  var debugRendererInfoExtension = gl.getExtension("WEBGL_debug_renderer_info");
+  ok(!debugRendererInfoExtension,
+      "WEBGL_debug_renderer_info should not be available through getExtension in non-chrome contexts");
+
+  ok(!gl.getParameter(UNMASKED_VENDOR_WEBGL) && gl.getError() == gl.INVALID_ENUM,
+      "Should not be able to query UNMASKED_VENDOR_WEBGL if enabling WEBGL_debug_renderer_info failed");
+  ok(!gl.getParameter(UNMASKED_RENDERER_WEBGL) && gl.getError() == gl.INVALID_ENUM,
+      "Should not be able to query UNMASKED_RENDERER_WEBGL if enabling WEBGL_debug_renderer_info failed");
+
+  window.postMessage({allTestsFinished: true}, "*");
+}
+
+</script>
+</html>
