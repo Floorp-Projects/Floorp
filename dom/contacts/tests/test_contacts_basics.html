@@ -21,10 +21,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={674720}
 
 "use strict";
 
-var comp = SpecialPowers.wrap(SpecialPowers.Components);
-comp.utils.import("resource://gre/modules/ContactService.jsm");
-comp.utils.import("resource://gre/modules/PermissionPromptHelper.jsm");
-SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
+// this shouldn't be necessary when bug 792594 is fixed
+if (!SpecialPowers.getBoolPref("dom.mozContacts.enabled")) {
+  var comp = SpecialPowers.wrap(SpecialPowers.Components);
+  comp.utils.import("resource://gre/modules/ContactService.jsm");
+  comp.utils.import("resource://gre/modules/PermissionPromptHelper.jsm");
+  SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
+}
+    
 SpecialPowers.addPermission("contacts", true, document);
 
 // For Sorting
