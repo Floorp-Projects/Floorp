@@ -1718,7 +1718,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDocument)
   if (nsGenericElement::CanSkip(tmp, aRemovingAllowed)) {
     nsEventListenerManager* elm = tmp->GetListenerManager(false);
     if (elm) {
-      elm->UnmarkGrayJSListeners();
+      elm->MarkForCC();
     }
     return true;
   }

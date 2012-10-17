@@ -226,7 +226,7 @@ public:
 
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
-  void UnmarkGrayJSListeners();
+  void MarkForCC();
 
   nsISupports* GetTarget() { return mTarget; }
 protected:
