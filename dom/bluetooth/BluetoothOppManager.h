@@ -96,6 +96,8 @@ private:
   bool mAbortFlag;
   int mPacketLeftLength;
   nsString mConnectedDeviceAddress;
+  bool mReceiving;
+  bool mPutFinal;
 
   nsCOMPtr<nsIDOMBlob> mBlob;
   nsCOMPtr<nsIThread> mReadFileThread;
