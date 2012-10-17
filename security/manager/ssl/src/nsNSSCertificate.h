@@ -14,6 +14,7 @@
 #include "nsIASN1Object.h"
 #include "nsISMimeCert.h"
 #include "nsIIdentityInfo.h"
+#include "nsCOMPtr.h"
 #include "nsNSSShutDown.h"
 #include "nsISimpleEnumerator.h"
 #include "nsISerializable.h"

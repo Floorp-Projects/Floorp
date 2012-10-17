@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsMemory.h"
-#include "nsAutoPtr.h"
 #include "nsCertVerificationThread.h"
 #include "nsThreadUtils.h"
 
@@ -47,7 +45,7 @@ void nsCertVerificationJob::Run()
   PRUnichar **usages;
 
   nsCOMPtr<nsICertVerificationResult> ires;
-  nsRefPtr<nsCertVerificationResult> vres = new nsCertVerificationResult;
+  RefPtr<nsCertVerificationResult> vres(new nsCertVerificationResult);
   if (vres)
   {
     nsresult rv = mCert->GetUsagesArray(false, // do not ignore OCSP

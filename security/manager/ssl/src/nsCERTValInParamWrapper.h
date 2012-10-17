@@ -26,7 +26,7 @@
  * In order to protect against the race, we use a reference counted wrapper.
  * Each user of a foreign nsCERTValInParamWrapper object
  * (e.g. the current global default object)
- * must use nsRefPtr<nsCERTValInParamWrapper> = other-object
+ * must use RefPtr<nsCERTValInParamWrapper> = other-object
  * prior to calling CERT_PKIXVerifyCert.
  * 
  * This guarantees the object will still be alive after the call,

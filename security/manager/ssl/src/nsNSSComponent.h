@@ -8,6 +8,7 @@
 #define _nsNSSComponent_h_
 
 #include "mozilla/Mutex.h"
+#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsISignatureVerifier.h"
 #include "nsIURIContentListener.h"
@@ -159,8 +160,10 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
   NS_IMETHOD IsNSSInitialized(bool *initialized) = 0;
 
-  NS_IMETHOD GetDefaultCERTValInParam(nsRefPtr<nsCERTValInParamWrapper> &out) = 0;
-  NS_IMETHOD GetDefaultCERTValInParamLocalOnly(nsRefPtr<nsCERTValInParamWrapper> &out) = 0;
+  NS_IMETHOD GetDefaultCERTValInParam(
+                  mozilla::RefPtr<nsCERTValInParamWrapper> &out) = 0;
+  NS_IMETHOD GetDefaultCERTValInParamLocalOnly(
+                  mozilla::RefPtr<nsCERTValInParamWrapper> &out) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINSSComponent, NS_INSSCOMPONENT_IID)
@@ -260,8 +263,10 @@ public:
   NS_IMETHOD EnsureIdentityInfoLoaded();
   NS_IMETHOD IsNSSInitialized(bool *initialized);
 
-  NS_IMETHOD GetDefaultCERTValInParam(nsRefPtr<nsCERTValInParamWrapper> &out);
-  NS_IMETHOD GetDefaultCERTValInParamLocalOnly(nsRefPtr<nsCERTValInParamWrapper> &out);
+  NS_IMETHOD GetDefaultCERTValInParam(
+                  mozilla::RefPtr<nsCERTValInParamWrapper> &out);
+  NS_IMETHOD GetDefaultCERTValInParamLocalOnly(
+                  mozilla::RefPtr<nsCERTValInParamWrapper> &out);
 private:
 
   nsresult InitializeNSS(bool showWarningBox);
@@ -322,9 +327,9 @@ private:
   nsCertVerificationThread *mCertVerificationThread;
 
   nsNSSHttpInterface mHttpForNSS;
-  nsRefPtr<nsClientAuthRememberService> mClientAuthRememberService;
-  nsRefPtr<nsCERTValInParamWrapper> mDefaultCERTValInParam;
-  nsRefPtr<nsCERTValInParamWrapper> mDefaultCERTValInParamLocalOnly;
+  mozilla::RefPtr<nsClientAuthRememberService> mClientAuthRememberService;
+  mozilla::RefPtr<nsCERTValInParamWrapper> mDefaultCERTValInParam;
+  mozilla::RefPtr<nsCERTValInParamWrapper> mDefaultCERTValInParamLocalOnly;
 
   static PRStatus IdentityInfoInit(void);
   PRCallOnceType mIdentityInfoCallOnce;

@@ -15,10 +15,8 @@
 
 #include "nss.h"
 
-extern "C" {
 #include "pkcs12.h"
 #include "p12plcy.h"
-}
 
 class nsIX509Cert;
 
