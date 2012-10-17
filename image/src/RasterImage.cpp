@@ -252,12 +252,6 @@ RasterImage::~RasterImage()
 {
   ScaleRequest::Stop(mScaleRequest.image);
 
-  delete mAnim;
-
-  for (unsigned int i = 0; i < mFrames.Length(); ++i)
-    delete mFrames[i];
-  mFrames.Clear();
-
   // Discardable statistics
   if (mDiscardable) {
     num_discardable_containers--;
@@ -281,6 +275,11 @@ RasterImage::~RasterImage()
     if (NS_FAILED(rv))
       NS_WARNING("Failed to shut down decoder in destructor!");
   }
+
+  delete mAnim;
+
+  for (unsigned int i = 0; i < mFrames.Length(); ++i)
+    delete mFrames[i];
 
   // Total statistics
   num_containers--;
