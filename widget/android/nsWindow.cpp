@@ -1421,6 +1421,10 @@ nsWindow::DispatchMultitouchEvent(nsTouchEvent &event, AndroidGeckoEvent *ae)
 
     event.modifiers = 0;
     event.time = ae->Time();
+    event.InitBasicModifiers(ae->IsCtrlPressed(),
+                             ae->IsAltPressed(),
+                             ae->IsShiftPressed(),
+                             ae->IsMetaPressed());
 
     int action = ae->Action() & AndroidMotionEvent::ACTION_MASK;
     if (action == AndroidMotionEvent::ACTION_UP ||
