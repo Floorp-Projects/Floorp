@@ -21,11 +21,11 @@ NS_DEFINE_NAMED_CID(NS_SECURE_BROWSER_UI_CID);
 NS_DEFINE_NAMED_CID(NS_STRICT_TRANSPORT_SECURITY_CID);
 
 static const mozilla::Module::CIDEntry kBOOTCIDs[] = {
-  { &kNS_ENTROPYCOLLECTOR_CID, false, NULL, nsEntropyCollectorConstructor },
-  { &kNS_SECURITYWARNINGDIALOGS_CID, false, NULL, nsSecurityWarningDialogsConstructor },
-  { &kNS_SECURE_BROWSER_UI_CID, false, NULL, nsSecureBrowserUIImplConstructor },
-  { &kNS_STRICT_TRANSPORT_SECURITY_CID, false, NULL, nsStrictTransportSecurityServiceConstructor },
-  { NULL }
+  { &kNS_ENTROPYCOLLECTOR_CID, false, nullptr, nsEntropyCollectorConstructor },
+  { &kNS_SECURITYWARNINGDIALOGS_CID, false, nullptr, nsSecurityWarningDialogsConstructor },
+  { &kNS_SECURE_BROWSER_UI_CID, false, nullptr, nsSecureBrowserUIImplConstructor },
+  { &kNS_STRICT_TRANSPORT_SECURITY_CID, false, nullptr, nsStrictTransportSecurityServiceConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kBOOTContracts[] = {
@@ -33,7 +33,7 @@ static const mozilla::Module::ContractIDEntry kBOOTContracts[] = {
   { NS_SECURITYWARNINGDIALOGS_CONTRACTID, &kNS_SECURITYWARNINGDIALOGS_CID },
   { NS_SECURE_BROWSER_UI_CONTRACTID, &kNS_SECURE_BROWSER_UI_CID },
   { NS_STSSERVICE_CONTRACTID, &kNS_STRICT_TRANSPORT_SECURITY_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kBootModule = {

@@ -16,12 +16,16 @@
 #include "nsCERTValInParamWrapper.h"
 
 #include "prlog.h"
+
+#include "nsNSSCleaner.h"
+#include "nsNSSComponent.h"
+
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
-#include "nsNSSCleaner.h"
-#include "nsNSSComponent.h"
+using namespace mozilla;
+
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
@@ -180,7 +184,7 @@ NS_IMETHODIMP nsCMSMessage::GetSignerCert(nsIX509Cert **scert)
   }
   else {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::GetSignerCert no signer cert, do we have a cert list? %s\n",
-      (si->certList != nullptr ? "yes" : "no") ));
+      (si->certList ? "yes" : "no") ));
 
     *scert = nullptr;
   }
@@ -217,7 +221,7 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, uint32_
   NSSCMSSignerInfo *si;
   int32_t nsigners;
   nsresult rv = NS_ERROR_FAILURE;
-  nsRefPtr<nsCERTValInParamWrapper> survivingParams;
+  RefPtr<nsCERTValInParamWrapper> survivingParams;
   nsCOMPtr<nsINSSComponent> inss;
 
   if (!NSS_CMSMessage_IsSigned(m_cmsMsg)) {
@@ -265,7 +269,7 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, uint32_
   if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
     if (CERT_VerifyCertificateNow(CERT_GetDefaultCertDB(), si->cert, true, 
                                   certificateUsageEmailSigner,
-                                  si->cmsg->pwfn_arg, NULL) != SECSuccess) {
+                                  si->cmsg->pwfn_arg, nullptr) != SECSuccess) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - signing cert not trusted now\n"));
       rv = NS_ERROR_CMS_VERIFY_UNTRUSTED;
       goto loser;
@@ -367,18 +371,10 @@ nsresult nsCMSMessage::CommonAsyncVerifySignature(nsISMimeVerificationListener *
                                                   unsigned char* aDigestData, uint32_t aDigestDataLen)
 {
   nsSMimeVerificationJob *job = new nsSMimeVerificationJob;
-  if (!job)
-    return NS_ERROR_OUT_OF_MEMORY;
   
   if (aDigestData)
   {
     job->digest_data = new unsigned char[aDigestDataLen];
-    if (!job->digest_data)
-    {
-      delete job;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    
     memcpy(job->digest_data, aDigestData, aDigestDataLen);
   }
   else
@@ -557,8 +553,8 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
     goto loser;
   }
 
-  m_cmsMsg = NSS_CMSMessage_Create(NULL);
-  if (m_cmsMsg == nullptr) {
+  m_cmsMsg = NSS_CMSMessage_Create(nullptr);
+  if (!m_cmsMsg) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateEncrypted - can't create new cms message\n"));
     rv = NS_ERROR_OUT_OF_MEMORY;
     goto loser;
@@ -640,8 +636,8 @@ NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert*
   /*
    * create the message object
    */
-  m_cmsMsg = NSS_CMSMessage_Create(NULL); /* create a message on its own pool */
-  if (m_cmsMsg == NULL) {
+  m_cmsMsg = NSS_CMSMessage_Create(nullptr); /* create a message on its own pool */
+  if (!m_cmsMsg) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateSigned - can't create new message\n"));
     rv = NS_ERROR_OUT_OF_MEMORY;
     goto loser;
@@ -650,7 +646,7 @@ NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert*
   /*
    * build chain of objects: message->signedData->data
    */
-  if ((sigd = NSS_CMSSignedData_Create(m_cmsMsg)) == NULL) {
+  if ((sigd = NSS_CMSSignedData_Create(m_cmsMsg)) == nullptr) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateSigned - can't create signed data\n"));
     goto loser;
   }
@@ -674,7 +670,7 @@ NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert*
    * create & attach signer information
    */
   if ((signerinfo = NSS_CMSSignerInfo_Create(m_cmsMsg, scert, SEC_OID_SHA1)) 
-          == NULL) {
+          == nullptr) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateSigned - can't create signer info\n"));
     goto loser;
   }
@@ -881,7 +877,7 @@ NS_IMETHODIMP nsCMSEncoder::Start(nsICMSMessage *aMsg, NSSCMSContentCallback cb,
   m_ctx = new PipUIContext();
 
   m_ecx = NSS_CMSEncoder_Start(cmsMsg->getCMS(), cb, arg, 0, 0, 0, m_ctx, 0, 0, 0, 0);
-  if (m_ecx == nullptr) {
+  if (!m_ecx) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSEncoder::Start - can't start encoder\n"));
     return NS_ERROR_FAILURE;
   }

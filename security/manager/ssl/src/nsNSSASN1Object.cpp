@@ -116,7 +116,7 @@ buildASN1ObjectFromDER(unsigned char *data,
   uint32_t type;
 
   rv = parent->GetASN1Objects(getter_AddRefs(parentObjects));
-  if (NS_FAILED(rv) || parentObjects == nullptr)
+  if (NS_FAILED(rv) || !parentObjects)
     return NS_ERROR_FAILURE;
   while (data < end) {
     code = *data;
@@ -193,7 +193,7 @@ CreateFromDER(unsigned char *data,
     sequence->GetASN1Objects(getter_AddRefs(elements));
     nsCOMPtr<nsIASN1Object> asn1Obj = do_QueryElementAt(elements, 0);
     *retval = asn1Obj;
-    if (*retval == nullptr)
+    if (!*retval)
       return NS_ERROR_FAILURE;
 
     NS_ADDREF(*retval);
@@ -218,7 +218,7 @@ nsNSSASN1Sequence::~nsNSSASN1Sequence()
 NS_IMETHODIMP 
 nsNSSASN1Sequence::GetASN1Objects(nsIMutableArray * *aASN1Objects)
 {
-  if (mASN1Objects == nullptr) {
+  if (!mASN1Objects) {
     mASN1Objects = do_CreateInstance(NS_ARRAY_CONTRACTID);
   }
   *aASN1Objects = mASN1Objects;

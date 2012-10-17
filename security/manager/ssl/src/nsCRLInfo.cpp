@@ -14,7 +14,6 @@
 #include "nsNSSShutDown.h"
 
 #include "nspr.h"
-extern "C" {
 #include "pk11func.h"
 #include "certdb.h"
 #include "cert.h"
@@ -22,7 +21,6 @@ extern "C" {
 #include "nssb64.h"
 #include "secasn1.h"
 #include "secder.h"
-}
 
 NS_IMPL_ISUPPORTS1(nsCRLInfo, nsICRLInfo)
 
