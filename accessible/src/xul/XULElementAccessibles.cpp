@@ -125,10 +125,11 @@ ENameValueFlag
 XULLinkAccessible::NativeName(nsString& aName)
 {
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
-  if (aName.IsEmpty())
-    nsTextEquivUtils::GetNameFromSubtree(this, aName);
+  if (!aName.IsEmpty())
+    return eNameOK;
 
-  return eNameOK;
+  nsTextEquivUtils::GetNameFromSubtree(this, aName);
+  return aName.IsEmpty() ? eNameOK : eNameFromSubtree;
 }
 
 role
