@@ -7225,6 +7225,8 @@ JS_IsIdentifier(JSContext *cx, JSString *str, JSBool *isIdentifier)
 JS_PUBLIC_API(JSBool)
 JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno)
 {
+    AutoAssertNoGC nogc;
+
     if (script)
         *script = NULL;
     if (lineno)

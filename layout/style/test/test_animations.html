@@ -112,6 +112,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
     to { -moz-transform: rotate(270deg) translate3d(0px, 0px, 0px) scale(1)
       translateY(0px) scaleY(1); }
   }
+
+  @keyframes important1 {
+    from { margin-top: 50px; }
+    50%  { margin-top: 150px !important; } /* ignored */
+    to   { margin-top: 100px; }
+  }
+
+  @keyframes important2 {
+    from { margin-top: 50px;
+           margin-bottom: 100px; }
+    to   { margin-top: 150px !important; /* ignored */
+           margin-bottom: 50px; }
+  }
   </style>
 </head>
 <body>
@@ -1420,6 +1433,22 @@ is(cs.getPropertyValue("-moz-transform"),
 advance_clock(1000);
 is(cs.getPropertyValue("-moz-transform"), "matrix(0, -1, 1, 0, 0, 0)",
     "primitives1 at 0s");
+done_div();
+
+new_div("animation: important1 1s linear forwards");
+is(cs.marginTop, "50px", "important1 test at 0s");
+advance_clock(500);
+is(cs.marginTop, "75px", "important1 test at 0.5s");
+advance_clock(500);
+is(cs.marginTop, "100px", "important1 test at 1s");
+done_div();
+
+new_div("animation: important2 1s linear forwards");
+is(cs.marginTop, "50px", "important2 (margin-top) test at 0s");
+is(cs.marginBottom, "100px", "important2 (margin-bottom) test at 0s");
+advance_clock(1000);
+is(cs.marginTop, "0px", "important2 (margin-top) test at 1s");
+is(cs.marginBottom, "50px", "important2 (margin-bottom) test at 1s");
 done_div();
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();

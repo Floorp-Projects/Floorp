@@ -11,10 +11,6 @@
 #endif
 #include "mozilla/Attributes.h"
 
-#if defined(__cplusplus)
-#include "mozilla/Attributes.h" // for MOZ_HAVE_CXX11_STRONG_ENUMS
-#endif
-
 /*
  * To add error code to your module, you need to do the following:
  *
@@ -132,6 +128,7 @@
   typedef enum tag_nsresult
 #endif
   {
+    #undef ERROR
     #define ERROR(key, val) key = val
     #include "ErrorList.h"
     #undef ERROR

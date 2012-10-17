@@ -1172,10 +1172,10 @@ pref("pdfjs.previousHandler.alwaysAskBeforeHandling", false);
 pref("image.mem.max_decoded_image_kb", 256000);
 
 // Example social provider
-pref("social.manifest.motown", "{\"origin\":\"https://motown-dev.mozillalabs.com\",\"name\":\"MoTown\",\"workerURL\":\"https://motown-dev.mozillalabs.com/social/worker.js\",\"iconURL\":\"https://motown-dev.mozillalabs.com/images/motown-icon.png\",\"sidebarURL\":\"https://motown-dev.mozillalabs.com/social/sidebar\"}");
+pref("social.manifest.facebook", "{\"origin\":\"https://www.facebook.com\",\"name\":\"Facebook Messenger\",\"workerURL\":\"https://www.facebook.com/desktop/fbdesktop2/socialfox/fbworker.js.php\",\"iconURL\":\"data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAAX0lEQVQ4jWP4%2F%2F8%2FAyUYTFhHzjgDxP9JxGeQDSBVMxgTbUBCxer%2Fr999%2BQ8DJBuArJksA9A10s8AXIBoA0B%2BR%2FY%2FjD%2BEwoBoA1yT5v3PbdmCE8MAshhID%2FUMoDgzUYIBj0Cgi7ar4coAAAAASUVORK5CYII%3D\",\"sidebarURL\":\"https://www.facebook.com/desktop/fbdesktop2/?socialfox=true\"}");
 // Comma-separated list of nsIURI::prePaths that are allowed to activate
 // built-in social functionality.
-pref("social.activation.whitelist", "https://motown-dev.mozillalabs.com");
+pref("social.activation.whitelist", "https://www.facebook.com");
 pref("social.sidebar.open", true);
 pref("social.active", false);
 pref("social.toast-notifications.enabled", true);

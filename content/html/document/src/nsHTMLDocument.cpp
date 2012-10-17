@@ -1492,7 +1492,14 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
 
     nsCOMPtr<nsIScriptGlobalObject> newScope(do_QueryReferent(mScopeObject));
     if (oldScope && newScope != oldScope) {
-      rv = nsContentUtils::ReparentContentWrappersInScope(cx, oldScope, newScope);
+      nsIXPConnect *xpc = nsContentUtils::XPConnect();
+      nsCOMPtr<nsIXPConnectJSObjectHolder> ignored;
+      rv = xpc->ReparentWrappedNativeIfFound(cx, oldScope->GetGlobalJSObject(),
+                                             newScope->GetGlobalJSObject(),
+                                             static_cast<nsINode*>(this),
+                                             getter_AddRefs(ignored));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = xpc->RescueOrphansInScope(cx, oldScope->GetGlobalJSObject());
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

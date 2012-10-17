@@ -181,6 +181,10 @@ PollSensors()
     }
 
     for (int i = 0; i < n; ++i) {
+      // FIXME: bug 802004, add proper support for the magnetic field sensor.
+      if (buffer[i].type == SENSOR_TYPE_MAGNETIC_FIELD)
+        continue;
+
       NS_DispatchToMainThread(new SensorRunnable(buffer[i], sensors, size));
     }
   } while (true);

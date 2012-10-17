@@ -359,15 +359,11 @@ DeviceStorageFile::Write(nsIInputStream* aInputStream)
   }
 
   nsCOMPtr<nsIOutputStream> bufferedOutputStream;
-  NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream),
-                             outputStream,
-                             4096*4);
+  rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream),
+                                  outputStream,
+                                  4096*4);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!bufferedOutputStream) {
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = NS_OK;
   while (bufSize) {
     uint32_t wrote;
     rv = bufferedOutputStream->WriteFrom(aInputStream,
