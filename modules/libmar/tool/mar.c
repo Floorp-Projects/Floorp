@@ -43,6 +43,10 @@ static void print_usage() {
   printf("Extract a MAR signature:\n");
   printf("  mar [-C workingDir] -n(i) -X "
          "signed_input_archive.mar base_64_encoded_signature_file\n");
+  printf("Import a MAR signature:\n");
+  printf("  mar [-C workingDir] -n(i) -I "
+         "signed_input_archive.mar base_64_encoded_signature_file "
+         "changed_signed_output.mar\n");
   printf("(i) is the index of the certificate to extract\n");
 #if defined(XP_WIN) && !defined(MAR_NSS)
   printf("Verify a MAR file:\n");
@@ -123,7 +127,8 @@ int main(int argc, char **argv) {
         argv[1][1] == 't' || argv[1][1] == 'x' || 
         argv[1][1] == 'v' || argv[1][1] == 's' ||
         argv[1][1] == 'i' || argv[1][1] == 'T' ||
-        argv[1][1] == 'r' || argv[1][1] == 'X')) {
+        argv[1][1] == 'r' || argv[1][1] == 'X' ||
+        argv[1][1] == 'I')) {
       break;
     /* -C workingdirectory */
     } else if (argv[1][0] == '-' && argv[1][1] == 'C') {
@@ -159,15 +164,16 @@ int main(int argc, char **argv) {
                argv[1][1] == 'n' &&
                (argv[1][2] == '0' + certCount ||
                 argv[1][2] == '\0' ||
-                !strcmp(argv[2], "-X"))) {
+                !strcmp(argv[2], "-X") ||
+                !strcmp(argv[2], "-I"))) {
       if (certCount >= MAX_SIGNATURES) {
         print_usage();
         return -1;
       }
       certNames[certCount++] = argv[2];
       if (strlen(argv[1]) > 2 &&
-        !strcmp(argv[2], "-X") &&
-        argv[1][2] >= '0' && argv[1][2] <= '9') {
+          (!strcmp(argv[2], "-X") || !strcmp(argv[2], "-I")) &&
+          argv[1][2] >= '0' && argv[1][2] <= '9') {
         sigIndex = argv[1][2] - '0';
         argv++;
         argc--;
@@ -264,6 +270,23 @@ int main(int argc, char **argv) {
       return -1;
     }
     return extract_signature(argv[2], sigIndex, argv[3]);
+
+  /* Import a MAR signature */
+  case 'I':
+    if (sigIndex == -1) {
+      fprintf(stderr, "ERROR: signature index was not passed.\n");
+      return -1;
+    }
+    if (sigIndex >= MAX_SIGNATURES || sigIndex < -1) {
+      fprintf(stderr, "ERROR: Signature index is out of range: %d.\n",
+              sigIndex);
+      return -1;
+    }
+    if (argc < 5) {
+      print_usage();
+      return -1;
+    }
+    return import_signature(argv[2], sigIndex, argv[3], argv[4]);
 
   case 'v':
 
