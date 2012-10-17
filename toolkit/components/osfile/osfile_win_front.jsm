@@ -318,6 +318,23 @@
      };
 
      /**
+      * Checks if a file exists
+      *
+      * @param {string} path The path to the file.
+      *
+      * @return {bool} true if the file exists, false otherwise.
+      */
+     File.exists = function Win_exists(path) {
+       try {
+         let file = File.open(path);
+         file.close();
+         return true;
+       } catch (x) {
+         return false;
+       }
+     };
+
+     /**
       * Remove an existing file.
       *
       * @param {string} path The name of the file.
@@ -822,7 +839,6 @@
      };
 
      File.read = exports.OS.Shared.AbstractFile.read;
-     File.exists = exports.OS.Shared.AbstractFile.exists;
      File.writeAtomic = exports.OS.Shared.AbstractFile.writeAtomic;
 
      /**

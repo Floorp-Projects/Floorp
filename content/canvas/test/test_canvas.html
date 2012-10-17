@@ -40,17 +40,6 @@ function IsMacOSX10_5orOlder() {
 }
 
 
-function IsAzureEnabled() {
-  var enabled = false;
-
-  try {
-    var backend = Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).getInfo().AzureCanvasBackend;
-    enabled = (backend != "none");
-  } catch (e) { }
-
-  return enabled;
-}
-
 function IsAzureSkia() {
   var enabled = false;
   
@@ -3538,11 +3527,7 @@ var _thrown = undefined; try {
   ctx.drawImage(null, 0, 0);
 } catch (e) { _thrown = e };
 
-if (IsAzureEnabled()) {
-  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-} else {
-  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-}
+ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 }
 </script>
@@ -3719,38 +3704,22 @@ var ctx = canvas.getContext('2d');
 var _thrown = undefined; try {
   ctx.drawImage(undefined, 0, 0);
 } catch (e) { _thrown = e }; 
-if (IsAzureEnabled()) {
-  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-} else {
-  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-}
+ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 var _thrown = undefined; try {
   ctx.drawImage(0, 0, 0);
 } catch (e) { _thrown = e };
-if (IsAzureEnabled()) {
-  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-} else {
-  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-}
+ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 var _thrown = undefined; try {
   ctx.drawImage("", 0, 0);
 } catch (e) { _thrown = e };
-if (IsAzureEnabled()) {
-  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-} else {
-  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-}
+ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 var _thrown = undefined; try {
   ctx.drawImage(document.createElement('p'), 0, 0);
 } catch (e) { _thrown = e };
-if (IsAzureEnabled()) {
-  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-} else {
-  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-}
+ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 }
 </script>
@@ -6151,16 +6120,9 @@ ctx.fillRect(0, 0, 100, 50);
 ctx.translate(-50, 0);
 ctx.fillRect(50, 0, 100, 50);
 
-if (IsAzureEnabled()) {
-  isPixel(ctx, 25,25, 0,255,0,255, 0);
-} else {
-  todo_isPixel(ctx, 25,25, 0,255,0,255, 0);
-}
-
+isPixel(ctx, 25,25, 0,255,0,255, 0);
 isPixel(ctx, 50,25, 0,255,0,255, 0);
 isPixel(ctx, 75,25, 0,255,0,255, 0);
-
-
 }
 </script>
 
@@ -7348,15 +7310,9 @@ ctx.translate(50, 25);
 ctx.scale(10, 10);
 ctx.fillRect(-5, -2.5, 10, 5);
 
-if (IsAzureEnabled()) {
-  isPixel(ctx, 25,25, 0,255,0,255, 0);
-  isPixel(ctx, 50,25, 0,255,0,255, 0);
-  isPixel(ctx, 75,25, 0,255,0,255, 0);
-} else {
-  todo_isPixel(ctx, 25,25, 0,255,0,255, 0);
-  todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
-  todo_isPixel(ctx, 75,25, 0,255,0,255, 0);
-}
+isPixel(ctx, 25,25, 0,255,0,255, 0);
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+isPixel(ctx, 75,25, 0,255,0,255, 0);
 
 }
 </script>
@@ -7717,11 +7673,7 @@ var ctx = canvas.getContext('2d');
 var _thrown = undefined; try {
   ctx.createImageData(null);
 } catch (e) { _thrown = e };
-if (IsAzureEnabled()) {
-  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-} else {
-  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-}
+ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 
 }
@@ -9233,11 +9185,7 @@ var ctx = canvas.getContext('2d');
 var _thrown = undefined; try {
   ctx.putImageData(null, 0, 0);
 } catch (e) { _thrown = e };
-if (IsAzureEnabled()) {
-  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-} else {
-  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-}
+ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 }
 </script>
@@ -9349,32 +9297,17 @@ var imgdata = { width: 1, height: 1, data: [255, 0, 0, 255] };
 var _thrown = undefined; try {
   ctx.putImageData(imgdata, 0, 0);
 } catch (e) { _thrown = e }; 
-if (IsAzureEnabled()) {
-  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-} else {
-  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-}
+ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 var _thrown = undefined; try {
   ctx.putImageData("cheese", 0, 0);
 } catch (e) { _thrown = e };
-if (IsAzureEnabled()) {
-  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-} else {
-  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-}
+ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 
 var _thrown = undefined; try {
   ctx.putImageData(42, 0, 0);
 } catch (e) { _thrown = e };
-if (IsAzureEnabled()) {
-  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-} else {
-  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-}
-
-
-
+ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 }
 </script>
 
@@ -11681,13 +11614,7 @@ ctx.moveTo(0, 25);
 ctx.arc(200, 25, 0, 0, Math.PI, true);
 ctx.stroke();
 
-if (IsAzureEnabled()) {
-  isPixel(ctx, 50,25, 0,255,0,255, 0);
-} else {
-  todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
-}
-
-
+isPixel(ctx, 50,25, 0,255,0,255, 0);
 }
 </script>
 
@@ -14425,7 +14352,7 @@ ctx.lineTo(50, 25);
 ctx.closePath();
 ctx.stroke();
 
-if (IsAzureEnabled() && IsAzureSkia()) {
+if (IsAzureSkia()) {
   isPixel(ctx, 50,25, 0,255,0,255, 0);
 } else {
   todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
@@ -14501,7 +14428,7 @@ ctx.moveTo(50, 25);
 ctx.bezierCurveTo(50, 25, 50, 25, 50, 25);
 ctx.stroke();
 
-if (IsAzureEnabled() && IsAzureSkia()) {
+if (IsAzureSkia()) {
   isPixel(ctx, 50,25, 0,255,0,255, 0);
 } else {
   todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
@@ -14538,7 +14465,7 @@ ctx.moveTo(50, 25);
 ctx.lineTo(50, 25);
 ctx.stroke();
 
-if (IsAzureEnabled() && IsAzureSkia()) {
+if (IsAzureSkia()) {
   isPixel(ctx, 50,25, 0,255,0,255, 0);
 } else {
   todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
@@ -14575,7 +14502,7 @@ ctx.stroke();
 
 ctx.strokeRect(50, 25, 0, 0);
 
-if (IsAzureEnabled() && IsAzureSkia()) {
+if (IsAzureSkia()) {
   isPixel(ctx, 50,25, 0,255,0,255, 0);
 } else {
   todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
@@ -15173,13 +15100,7 @@ var ctx = canvas.getContext('2d');
 var _thrown = undefined; try {
   ctx.createPattern(null, 'repeat');
 } catch (e) { _thrown = e };
-if (IsAzureEnabled()) {
-  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-} else {
-  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-}
-
-
+ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 }
 </script>
 
@@ -15197,13 +15118,7 @@ var ctx = canvas.getContext('2d');
 var _thrown = undefined; try {
   ctx.createPattern('image_red.png', 'repeat');
 } catch (e) { _thrown = e };
-if (IsAzureEnabled()) {
-  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-} else {
-  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-}
-
-
+ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 }
 </script>
 
@@ -15221,13 +15136,7 @@ var ctx = canvas.getContext('2d');
 var _thrown = undefined; try {
   ctx.createPattern(undefined, 'repeat');
 } catch (e) { _thrown = e };
-if (IsAzureEnabled()) {
-  ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-} else {
-  todo(_thrown && _thrown.name == "TypeError", "should throw TypeError");
-}
-
-
+ok(_thrown && _thrown.name == "TypeError", "should throw TypeError");
 }
 </script>
 
@@ -15727,18 +15636,10 @@ ctx.fillRect(0, 0, 100, 50);
 ctx.translate(-128, -78);
 ctx.fillRect(128, 78, 100, 50);
 
-if (IsAzureEnabled()) {
-  isPixel(ctx, 1,1, 0,255,0,255, 0);
-  isPixel(ctx, 98,1, 0,255,0,255, 0);
-  isPixel(ctx, 1,48, 0,255,0,255, 0);
-  isPixel(ctx, 98,48, 0,255,0,255, 0);
-} else {
-  todo_isPixel(ctx, 1,1, 0,255,0,255, 0);
-  todo_isPixel(ctx, 98,1, 0,255,0,255, 0);
-  todo_isPixel(ctx, 1,48, 0,255,0,255, 0);
-  todo_isPixel(ctx, 98,48, 0,255,0,255, 0);
-}
-
+isPixel(ctx, 1,1, 0,255,0,255, 0);
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
 }
 </script>
 <img src="image_rgrg-256x256.png" id="rgrg-256x256_4.png" class="resource">
@@ -15831,22 +15732,12 @@ ctx.fillRect(0, -16, 100, 50);
 ctx.fillStyle = '#0f0';
 ctx.fillRect(0, 0, 100, 16);
 
-if (IsAzureEnabled()) {
-  isPixel(ctx, 1,1, 0,255,0,255, 0);
-  isPixel(ctx, 98,1, 0,255,0,255, 0);
-  isPixel(ctx, 1,48, 0,255,0,255, 0);
-  isPixel(ctx, 98,48, 0,255,0,255, 0);
-} else {
-  todo_isPixel(ctx, 1,1, 0,255,0,255, 0);
-  todo_isPixel(ctx, 98,1, 0,255,0,255, 0);
-  todo_isPixel(ctx, 1,48, 0,255,0,255, 0);
-  todo_isPixel(ctx, 98,48, 0,255,0,255, 0);
-}
-
+isPixel(ctx, 1,1, 0,255,0,255, 0);
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
 isPixel(ctx, 1,25, 0,255,0,255, 0);
 isPixel(ctx, 98,25, 0,255,0,255, 0);
-
-
 }
 </script>
 <img src="image_red-16x16.png" id="red-16x16_1.png" class="resource">
@@ -15877,16 +15768,8 @@ ctx.fillRect(0, 0, 100, 16);
 
 isPixel(ctx, 1,1, 0,255,0,255, 0);
 isPixel(ctx, 98,1, 0,255,0,255, 0);
-
-if (IsAzureEnabled()) {
-  isPixel(ctx, 1,48, 0,255,0,255, 0);
-  isPixel(ctx, 98,48, 0,255,0,255, 0);
-} else {
-  todo_isPixel(ctx, 1,48, 0,255,0,255, 0);
-  todo_isPixel(ctx, 98,48, 0,255,0,255, 0);
-}
-
-
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
 }
 </script>
 <img src="image_red-16x16.png" id="red-16x16_2.png" class="resource">
@@ -15951,19 +15834,10 @@ ctx.fillRect(0, 0, 16, 50);
 isPixel(ctx, 50,1, 0,255,0,255, 0);
 isPixel(ctx, 50,48, 0,255,0,255, 0);
 
-if (IsAzureEnabled()) {
-  isPixel(ctx, 1,1, 0,255,0,255, 0);
-  isPixel(ctx, 98,1, 0,255,0,255, 0);
-  isPixel(ctx, 1,48, 0,255,0,255, 0);
-  isPixel(ctx, 98,48, 0,255,0,255, 0);
-} else {
-  todo_isPixel(ctx, 1,1, 0,255,0,255, 0);
-  todo_isPixel(ctx, 98,1, 0,255,0,255, 0);
-  todo_isPixel(ctx, 1,48, 0,255,0,255, 0);
-  todo_isPixel(ctx, 98,48, 0,255,0,255, 0);
-}
-
-
+isPixel(ctx, 1,1, 0,255,0,255, 0);
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 1,48, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
 }
 </script>
 <img src="image_red-16x16.png" id="red-16x16_3.png" class="resource">
@@ -15994,15 +15868,8 @@ ctx.fillRect(0, 0, 16, 50);
 
 isPixel(ctx, 1,1, 0,255,0,255, 0);
 isPixel(ctx, 1,48, 0,255,0,255, 0);
-
-if (IsAzureEnabled()) {
-  isPixel(ctx, 98,1, 0,255,0,255, 0);
-  isPixel(ctx, 98,48, 0,255,0,255, 0);
-} else {
-  todo_isPixel(ctx, 98,1, 0,255,0,255, 0);
-  todo_isPixel(ctx, 98,48, 0,255,0,255, 0);
-}
-
+isPixel(ctx, 98,1, 0,255,0,255, 0);
+isPixel(ctx, 98,48, 0,255,0,255, 0);
 }
 </script>
 <img src="image_red-16x16.png" id="red-16x16_4.png" class="resource">
@@ -19648,11 +19515,7 @@ ok(window.CanvasRenderingContext2D.prototype, "window.CanvasRenderingContext2D.p
 window.CanvasRenderingContext2D.prototype.fill = 1;
 ok(window.CanvasRenderingContext2D.prototype.fill === 1, "window.CanvasRenderingContext2D.prototype.fill === 1");
 delete window.CanvasRenderingContext2D.prototype.fill;
-if (IsAzureEnabled()) {
-  ok(window.CanvasRenderingContext2D.prototype.fill === undefined, "window.CanvasRenderingContext2D.prototype.fill === undefined");
-} else {
-  todo(window.CanvasRenderingContext2D.prototype.fill === undefined, "window.CanvasRenderingContext2D.prototype.fill === undefined");
-}
+ok(window.CanvasRenderingContext2D.prototype.fill === undefined, "window.CanvasRenderingContext2D.prototype.fill === undefined");
 
 //restore the original method to ensure that other tests can run successfully
 window.CanvasRenderingContext2D.prototype.fill = fill;

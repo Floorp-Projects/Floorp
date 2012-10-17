@@ -552,6 +552,14 @@ public:
         META_SHIFT_LEFT_ON         = 0x00000040,
         META_SHIFT_RIGHT_ON        = 0x00000080,
         META_SHIFT_MASK            = META_SHIFT_RIGHT_ON | META_SHIFT_LEFT_ON | META_SHIFT_ON,
+        META_CTRL_ON               = 0x00001000,
+        META_CTRL_LEFT_ON          = 0x00002000,
+        META_CTRL_RIGHT_ON         = 0x00004000,
+        META_CTRL_MASK             = META_CTRL_RIGHT_ON | META_CTRL_LEFT_ON | META_CTRL_ON,
+        META_META_ON               = 0x00010000,
+        META_META_LEFT_ON          = 0x00020000,
+        META_META_RIGHT_ON         = 0x00040000,
+        META_META_MASK             = META_META_RIGHT_ON | META_META_LEFT_ON | META_META_ON,
         META_SYM_ON                = 0x00000004,
         FLAG_WOKE_HERE             = 0x00000001,
         FLAG_SOFT_KEYBOARD         = 0x00000002,
@@ -663,6 +671,8 @@ public:
     int DomKeyLocation() { return mDomKeyLocation; }
     bool IsAltPressed() const { return (mMetaState & AndroidKeyEvent::META_ALT_MASK) != 0; }
     bool IsShiftPressed() const { return (mMetaState & AndroidKeyEvent::META_SHIFT_MASK) != 0; }
+    bool IsCtrlPressed() const { return (mMetaState & AndroidKeyEvent::META_CTRL_MASK) != 0; }
+    bool IsMetaPressed() const { return (mMetaState & AndroidKeyEvent::META_META_MASK) != 0; }
     int Flags() { return mFlags; }
     int UnicodeChar() { return mUnicodeChar; }
     int RepeatCount() const { return mRepeatCount; }

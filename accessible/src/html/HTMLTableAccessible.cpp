@@ -388,9 +388,9 @@ HTMLTableAccessible::NativeState()
 ENameValueFlag
 HTMLTableAccessible::NativeName(nsString& aName)
 {
-  Accessible::NativeName(aName);
+  ENameValueFlag nameFlag = Accessible::NativeName(aName);
   if (!aName.IsEmpty())
-    return eNameOK;
+    return nameFlag;
 
   // Use table caption as a name.
   Accessible* caption = Caption();

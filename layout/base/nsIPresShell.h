@@ -1353,6 +1353,7 @@ public:
   virtual void WindowSizeMoveDone() = 0;
   virtual void SysColorChanged() = 0;
   virtual void ThemeChanged() = 0;
+  virtual void BackingScaleFactorChanged() = 0;
 
   nscoord MaxLineBoxWidth() {
     return mMaxLineBoxWidth;

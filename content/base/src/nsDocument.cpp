@@ -72,6 +72,7 @@
 #include "nsIRefreshURI.h"
 #include "nsIWebNavigation.h"
 #include "nsIScriptError.h"
+#include "nsStyleSheetService.h"
 
 #include "nsNetUtil.h"     // for NS_MakeAbsoluteURI
 
@@ -2318,6 +2319,14 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   return NS_OK;
 }
 
+static bool
+AppendAuthorSheet(nsIStyleSheet *aSheet, void *aData)
+{
+  nsStyleSet *styleSet = static_cast<nsStyleSet*>(aData);
+  styleSet->AppendStyleSheet(nsStyleSet::eDocSheet, aSheet);
+  return true;
+}
+
 void
 nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
 {
@@ -2342,6 +2351,12 @@ nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
     if (sheet->IsApplicable()) {
       aStyleSet->AddDocStyleSheet(sheet, this);
     }
+  }
+
+  nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
+  if (sheetService) {
+    sheetService->AuthorStyleSheets()->EnumerateForwards(AppendAuthorSheet,
+                                                         aStyleSet);
   }
 
   for (i = mCatalogSheets.Count() - 1; i >= 0; --i) {
@@ -3583,14 +3598,6 @@ nsDocument::GetStyleSheetAt(int32_t aIndex) const
 int32_t
 nsDocument::GetIndexOfStyleSheet(nsIStyleSheet* aSheet) const
 {
-  if (mAdditionalSheets[eUserSheet].IndexOf(aSheet) >= 0 ||
-      mAdditionalSheets[eAgentSheet].IndexOf(aSheet) >= 0 ) {
-    // Returning INT32_MAX to make sure that additional sheets are
-    // in the style set of the PresShell will be always after the
-    // document sheets (even if document sheets are added dynamically).
-    return INT32_MAX;
-  }
-
   return mStyleSheets.IndexOf(aSheet);
 }
 

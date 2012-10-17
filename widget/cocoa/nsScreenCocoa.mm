@@ -56,6 +56,36 @@ nsScreenCocoa::GetAvailRect(int32_t *outX, int32_t *outY, int32_t *outWidth, int
 }
 
 NS_IMETHODIMP
+nsScreenCocoa::GetRectDisplayPix(int32_t *outX, int32_t *outY, int32_t *outWidth, int32_t *outHeight)
+{
+  NSRect frame = [mScreen frame];
+
+  nsIntRect r = nsCocoaUtils::CocoaRectToGeckoRect(frame);
+
+  *outX = r.x;
+  *outY = r.y;
+  *outWidth = r.width;
+  *outHeight = r.height;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScreenCocoa::GetAvailRectDisplayPix(int32_t *outX, int32_t *outY, int32_t *outWidth, int32_t *outHeight)
+{
+  NSRect frame = [mScreen visibleFrame];
+
+  nsIntRect r = nsCocoaUtils::CocoaRectToGeckoRect(frame);
+
+  *outX = r.x;
+  *outY = r.y;
+  *outWidth = r.width;
+  *outHeight = r.height;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsScreenCocoa::GetPixelDepth(int32_t *aPixelDepth)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;

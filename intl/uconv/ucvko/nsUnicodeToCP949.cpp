@@ -20,7 +20,7 @@ static const uint16_t g_ufCP949NoKSCHangulMapping[] = {
 
 
 static const uint16_t *g_CP949MappingTable[3] = {
-  g_ucvko_AsciiMapping,
+  g_ASCIIMappingTable,
   g_ufKSC5601Mapping,
   g_ufCP949NoKSCHangulMapping
 };

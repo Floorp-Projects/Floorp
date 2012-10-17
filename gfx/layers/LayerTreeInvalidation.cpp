@@ -95,7 +95,7 @@ struct LayerPropertiesBase : public LayerProperties
 
   nsIntRect ComputeChange(NotifySubDocInvalidationFunc aCallback)
   {
-    bool transformChanged = mTransform != mLayer->GetTransform();
+    bool transformChanged = !mTransform.FuzzyEqual(mLayer->GetTransform());
     Layer* otherMask = mLayer->GetMaskLayer();
     const nsIntRect* otherClip = mLayer->GetClipRect();
     nsIntRect result;

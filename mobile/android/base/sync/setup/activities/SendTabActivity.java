@@ -9,7 +9,7 @@ import java.util.List;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.CommandRunner;
-import org.mozilla.gecko.sync.GlobalConstants;
+import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.SyncConfiguration;
@@ -46,6 +46,7 @@ public class SendTabActivity extends Activity {
 
   @Override
   public void onResume() {
+    ActivityUtils.prepareLogging();
     Logger.info(LOG_TAG, "Called SendTabActivity.onResume.");
     super.onResume();
 
@@ -90,7 +91,7 @@ public class SendTabActivity extends Activity {
 
   private void redirectIfNoSyncAccount() {
     accountManager = AccountManager.get(getApplicationContext());
-    Account[] accts = accountManager.getAccountsByType(GlobalConstants.ACCOUNTTYPE_SYNC);
+    Account[] accts = accountManager.getAccountsByType(SyncConstants.ACCOUNTTYPE_SYNC);
 
     // A Sync account exists.
     if (accts.length > 0) {
