@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=666446
+-->
+<head>
+  <title>Test for WEBGL_debug_renderer_info chrome-only extension</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<pre id="test">
+<script>
+
+const UNMASKED_VENDOR_WEBGL = 0x9245;
+const UNMASKED_RENDERER_WEBGL = 0x9246;
+
+function isNonEmptyString(s)
+{
+  return s && (typeof s) == "string";
+}
+
+function messageListener(e) {
+  if (e.data.allTestsFinished) {
+    SimpleTest.finish();
+  } else if (e.data.subTestFinished) {
+    ok(e.data.result, "content iframe: " + e.data.message);
+  }
+}
+
+function checkChromeCase(canvas) {
+
+  var gl = canvas.getContext("experimental-webgl");
+  ok(!gl.getError(), "getError on newly created WebGL context should return NO_ERROR");
+
+  ok(!gl.getParameter(UNMASKED_VENDOR_WEBGL) && gl.getError() == gl.INVALID_ENUM,
+     "Should not be able to query UNMASKED_VENDOR_WEBGL without having enabled the WEBGL_debug_renderer_info extension");
+  ok(!gl.getParameter(UNMASKED_RENDERER_WEBGL) && gl.getError() == gl.INVALID_ENUM,
+     "Should not be able to query UNMASKED_RENDERER_WEBGL without having enabled the WEBGL_debug_renderer_info extension");
+
+  var exts = gl.getSupportedExtensions();
+  ok(exts.indexOf("WEBGL_debug_renderer_info") != -1,
+     "WEBGL_debug_renderer_info should be listed by getSupportedExtensions in chrome contexts");
+  var debugRendererInfoExtension = gl.getExtension("WEBGL_debug_renderer_info");
+  ok(debugRendererInfoExtension,
+     "WEBGL_debug_renderer_info should be available through getExtension in chrome contexts");
+
+  ok(debugRendererInfoExtension.UNMASKED_VENDOR_WEBGL == UNMASKED_VENDOR_WEBGL,
+     "UNMASKED_VENDOR_WEBGL has the correct value");
+  ok(debugRendererInfoExtension.UNMASKED_RENDERER_WEBGL == UNMASKED_RENDERER_WEBGL,
+     "UNMASKED_RENDERER_WEBGL has the correct value");
+
+  ok(isNonEmptyString(gl.getParameter(UNMASKED_VENDOR_WEBGL)) && gl.getError() == gl.NO_ERROR,
+     "Should be able to query UNMASKED_VENDOR_WEBGL in chrome context with WEBGL_debug_renderer_info enabled");
+  ok(isNonEmptyString(gl.getParameter(UNMASKED_RENDERER_WEBGL)) && gl.getError() == gl.NO_ERROR,
+     "Should be able to query UNMASKED_RENDERER_WEBGL in chrome context with WEBGL_debug_renderer_info enabled");
+}
+
+function main()
+{
+  SimpleTest.waitForExplicitFinish();
+
+  checkChromeCase(document.createElement("canvas"));
+
+  // Now run the non-chrome code to verify the security of this WebGL chrome-only extension.
+
+  var iframe = document.createElement("iframe");
+  iframe.src = "http://mochi.test:8888/chrome/content/canvas/test/chrome/nonchrome_webgl_debug_renderer_info.html";
+
+  iframe.onload = function () {
+
+    // test that chrome can get WEBGL_debug_renderer_info on a canvas on the iframe...
+    // this is useful to check in itself, and is also useful so the subsequent non-chrome test
+    // will also test that doing so doesn't confuse our chrome-only check.
+    checkChromeCase(iframe.contentDocument.createElement("canvas"));
+
+    iframe.contentWindow.addEventListener("message", messageListener, false);
+    iframe.contentWindow.postMessage("run", "*");
+  };
+
+  document.body.appendChild(iframe);
+}
+
+window.onload = main;
+</script>
+</pre>
+</body>
+</html>
