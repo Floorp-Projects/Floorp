@@ -19,6 +19,8 @@
 #include "nsJSON.h"
 #include "jsapi.h"
 
+#include "mozilla/dom/USSDReceivedEventBinding.h"
+
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 
 #define VOICECHANGE_EVENTNAME      NS_LITERAL_STRING("voicechange")
@@ -157,13 +159,15 @@ MobileConnection::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, kUssdReceivedTopic)) {
-    nsString ussd;
-    ussd.Assign(aData);
-    nsRefPtr<USSDReceivedEvent> event = USSDReceivedEvent::Create(ussd);
+    mozilla::dom::USSDReceivedEventDict dict;
+    bool ok = dict.Init(nsDependentString(aData));
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+    nsRefPtr<USSDReceivedEvent> event =
+      USSDReceivedEvent::Create(dict.message, dict.sessionEnded);
     NS_ASSERTION(event, "This should never fail!");
 
-    nsresult rv =
-      event->Dispatch(ToIDOMEventTarget(), USSDRECEIVED_EVENTNAME);
+    nsresult rv = event->Dispatch(ToIDOMEventTarget(), USSDRECEIVED_EVENTNAME);
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
