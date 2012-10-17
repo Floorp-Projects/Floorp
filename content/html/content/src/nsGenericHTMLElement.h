@@ -219,6 +219,7 @@ public:
   nsresult GetIsContentEditable(bool* aContentEditable);
   nsresult SetContentEditable(const nsAString &aContentEditable);
   nsresult GetDataset(nsIDOMDOMStringMap** aDataset);
+  already_AddRefed<nsDOMStringMap> Dataset();
   // Callback for destructor of of dataset to ensure to null out weak pointer.
   nsresult ClearDataset();
   nsresult GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu);
