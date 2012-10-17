@@ -22,6 +22,7 @@
 #endif
 
 #include "nss_secutil.h"
+#include "base64.h"
 
 /**
  * Initializes the NSS context.
@@ -476,6 +477,119 @@ failure:
   }
   return rv;
 }
+
+/**
+ * Extracts a signature from a MAR file, base64 encodes it, and writes it out
+ *
+ * @param  src       The path of the source MAR file
+ * @param  sigIndex  The index of the signature to extract
+ * @param  dest      The path of file to write the signature to
+ * @return 0 on success
+ *         -1 on error
+*/
+int
+extract_signature(const char *src, uint32_t sigIndex, const char * dest)
+{
+  FILE *fpSrc = NULL, *fpDest = NULL;
+  uint32_t i;
+  uint32_t signatureCount;
+  uint32_t signatureLen;
+  uint8_t *extractedSignature = NULL;
+  char *base64Encoded = NULL;
+  int rv = -1;
+  if (!src || !dest) {
+    fprintf(stderr, "ERROR: Invalid parameter passed in.\n");
+    goto failure;
+  }
+
+  fpSrc = fopen(src, "rb");
+  if (!fpSrc) {
+    fprintf(stderr, "ERROR: could not open source file: %s\n", src);
+    goto failure;
+  }
+
+  fpDest = fopen(dest, "wb");
+  if (!fpDest) {
+    fprintf(stderr, "ERROR: could not create target file: %s\n", dest);
+    goto failure;
+  }
+
+  /* Skip to the start of the signature block */
+  if (fseeko(fpSrc, SIGNATURE_BLOCK_OFFSET, SEEK_SET)) {
+    fprintf(stderr, "ERROR: could not seek to signature block\n");
+    goto failure;
+  }
+
+  /* Get the number of signatures */
+  if (fread(&signatureCount, sizeof(signatureCount), 1, fpSrc) != 1) {
+    fprintf(stderr, "ERROR: could not read signature count\n");
+    goto failure;
+  }
+  signatureCount = ntohl(signatureCount);
+  if (sigIndex >= signatureCount) {
+    fprintf(stderr, "ERROR: Signature index was out of range\n");
+    goto failure;
+  }
+
+  /* Skip to the correct signature */
+  for (i = 0; i <= sigIndex; i++) {
+    /* skip past the signature algorithm ID */
+    if (fseeko(fpSrc, sizeof(uint32_t), SEEK_CUR)) {
+      fprintf(stderr, "ERROR: Could not seek past sig algorithm ID.\n");
+      goto failure;
+    }
+
+    /* Get the signature length */
+    if (fread(&signatureLen, sizeof(signatureLen), 1, fpSrc) != 1) {
+      fprintf(stderr, "ERROR: could not read signature length\n");
+      goto failure;
+    }
+    signatureLen = ntohl(signatureLen);
+
+    /* Get the signature */
+    extractedSignature = malloc(signatureLen);
+    if (fread(extractedSignature, signatureLen, 1, fpSrc) != 1) {
+      fprintf(stderr, "ERROR: could not read signature\n");
+      goto failure;
+    }
+  }
+
+  base64Encoded = BTOA_DataToAscii(extractedSignature, signatureLen);
+  if (!base64Encoded) {
+    fprintf(stderr, "ERROR: could not obtain base64 encoded data\n");
+    goto failure;
+  }
+
+  if (fwrite(base64Encoded, strlen(base64Encoded), 1, fpDest) != 1) {
+    fprintf(stderr, "ERROR: Could not write base64 encoded string\n");
+    goto failure;
+  }
+
+  rv = 0;
+failure:
+  if (base64Encoded) {
+    PORT_Free(base64Encoded);
+  }
+
+  if (extractedSignature) {
+    free(extractedSignature);
+  }
+
+  if (fpSrc) {
+    fclose(fpSrc);
+  }
+
+  if (fpDest) {
+    fclose(fpDest);
+  }
+
+  if (rv) {
+    remove(dest);
+  }
+
+  return rv;
+}
+
 
 /**
  * Writes out a copy of the MAR at src but with embedded signatures.

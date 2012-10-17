@@ -16,8 +16,11 @@ extern "C" {
 #endif
 
 /* We have a MAX_SIGNATURES limit so that an invalid MAR will never
-   waste too much of either updater's or signmar's time.
-   It is also used at various places internally and will affect memory usage. */
+ * waste too much of either updater's or signmar's time.
+ * It is also used at various places internally and will affect memory usage.
+ * If you want to increase this value above 9 then you need to adjust parsing
+ * code in tool/mar.c.
+*/
 #define MAX_SIGNATURES 8
 PR_STATIC_ASSERT(MAX_SIGNATURES <= 9);
 

@@ -108,6 +108,18 @@ refresh_product_info_block(const char *path,
 int
 strip_signature_block(const char *src, const char * dest);
 
+/**
+ * Extracts a signature from a MAR file, base64 encodes it, and writes it out
+ *
+ * @param  src       The path of the source MAR file
+ * @param  sigIndex  The index of the signature to extract
+ * @param  dest      The path of file to write the signature to
+ * @return 0 on success
+ *         -1 on error
+*/
+int
+extract_signature(const char *src, uint32_t sigIndex, const char * dest);
+
 #ifdef __cplusplus
 }
 #endif
