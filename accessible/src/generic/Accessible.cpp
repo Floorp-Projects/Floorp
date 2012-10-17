@@ -275,7 +275,7 @@ Accessible::Name(nsString& aName)
 
   ENameValueFlag nameFlag = NativeName(aName);
   if (!aName.IsEmpty())
-    return eNameOK;
+    return nameFlag;
 
   // In the end get the name from tooltip.
   if (mContent->IsHTML()) {
@@ -288,14 +288,12 @@ Accessible::Name(nsString& aName)
       aName.CompressWhitespace();
       return eNameFromTooltip;
     }
-  } else {
-    return eNameOK;
   }
 
   if (nameFlag != eNoNameOnPurpose)
     aName.SetIsVoid(true);
 
-  return eNameOK;
+  return nameFlag;
 }
 
 NS_IMETHODIMP
@@ -1055,7 +1053,7 @@ Accessible::TakeFocus()
   return NS_OK;
 }
 
-void
+ENameValueFlag
 Accessible::GetHTMLName(nsString& aLabel)
 {
   Accessible* labelAcc = nullptr;
@@ -1066,8 +1064,11 @@ Accessible::GetHTMLName(nsString& aLabel)
     aLabel.CompressWhitespace();
   }
 
-  if (aLabel.IsEmpty())
-    nsTextEquivUtils::GetNameFromSubtree(this, aLabel);
+  if (!aLabel.IsEmpty())
+    return eNameOK;
+
+  nsTextEquivUtils::GetNameFromSubtree(this, aLabel);
+  return aLabel.IsEmpty() ? eNameOK : eNameFromSubtree;
 }
 
 /**
@@ -1082,7 +1083,7 @@ Accessible::GetHTMLName(nsString& aLabel)
   *  the control that uses the control="controlID" syntax will use
   *  the child label for its Name.
   */
-void
+ENameValueFlag
 Accessible::GetXULName(nsString& aName)
 {
   // CASE #1 (via label attribute) -- great majority of the cases
@@ -1125,10 +1126,9 @@ Accessible::GetXULName(nsString& aName)
     }
   }
 
-  // XXX If CompressWhiteSpace worked on nsAString we could avoid a copy
   aName.CompressWhitespace();
   if (!aName.IsEmpty())
-    return;
+    return eNameOK;
 
   // Can get text from title of <toolbaritem> if we're a child of a <toolbaritem>
   nsIContent *bindingParent = mContent->GetBindingParent();
@@ -1138,12 +1138,13 @@ Accessible::GetXULName(nsString& aName)
     if (parent->Tag() == nsGkAtoms::toolbaritem &&
         parent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aName)) {
       aName.CompressWhitespace();
-      return;
+      return eNameOK;
     }
     parent = parent->GetParent();
   }
 
   nsTextEquivUtils::GetNameFromSubtree(this, aName);
+  return aName.IsEmpty() ? eNameOK : eNameFromSubtree;
 }
 
 nsresult
@@ -1228,6 +1229,13 @@ Accessible::GetAttributes(nsIPersistentProperties **aAttributes)
   // Expose checkable object attribute if the accessible has checkable state
   if (State() & states::CHECKABLE)
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::checkable, NS_LITERAL_STRING("true"));
+
+  // Expose 'explicit-name' attribute.
+  if (!nsTextEquivUtils::IsNameFromSubtreeAllowed(this) ||
+      Name(oldValueUnused) != eNameFromSubtree) {
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("explicit-name"),
+                                  NS_LITERAL_STRING("true"), oldValueUnused);
+  }
 
   // Group attributes (level/setsize/posinset)
   GroupPos groupPos = GroupPosition();
@@ -2420,23 +2428,18 @@ Accessible::Shutdown()
 
 // Accessible protected
 void
-Accessible::ARIAName(nsAString& aName)
+Accessible::ARIAName(nsString& aName)
 {
-  nsAutoString label;
-
   // aria-labelledby now takes precedence over aria-label
   nsresult rv = nsTextEquivUtils::
-    GetTextEquivFromIDRefs(this, nsGkAtoms::aria_labelledby, label);
+    GetTextEquivFromIDRefs(this, nsGkAtoms::aria_labelledby, aName);
   if (NS_SUCCEEDED(rv)) {
-    label.CompressWhitespace();
-    aName = label;
+    aName.CompressWhitespace();
   }
 
-  if (label.IsEmpty() &&
-      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_label,
-                        label)) {
-    label.CompressWhitespace();
-    aName = label;
+  if (aName.IsEmpty() &&
+      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_label, aName)) {
+    aName.CompressWhitespace();
   }
 }
 
@@ -2445,9 +2448,10 @@ ENameValueFlag
 Accessible::NativeName(nsString& aName)
 {
   if (mContent->IsHTML())
-    GetHTMLName(aName);
-  else if (mContent->IsXUL())
-    GetXULName(aName);
+    return GetHTMLName(aName);
+
+  if (mContent->IsXUL())
+    return GetXULName(aName);
 
   return eNameOK;
 }
