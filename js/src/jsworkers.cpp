@@ -17,11 +17,21 @@ using namespace js;
 bool
 js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
 {
+    JSRuntime *rt = cx->runtime;
+    if (!rt->workerThreadState) {
+        rt->workerThreadState = rt->new_<WorkerThreadState>();
+        if (!rt->workerThreadState)
+            return false;
+        if (!rt->workerThreadState->init(rt)) {
+            js_delete(rt->workerThreadState);
+            rt->workerThreadState = NULL;
+        }
+    }
     WorkerThreadState &state = *cx->runtime->workerThreadState;
 
     JS_ASSERT(state.numThreads);
 
-    AutoLockWorkerThreadState lock(cx->runtime);
+    AutoLockWorkerThreadState lock(rt);
 
     if (!state.ionWorklist.append(builder))
         return false;
@@ -40,6 +50,7 @@ static void
 FinishOffThreadIonCompile(ion::IonBuilder *builder)
 {
     JSCompartment *compartment = builder->script()->compartment();
+    JS_ASSERT(compartment->rt->workerThreadState);
     JS_ASSERT(compartment->rt->workerThreadState->isLocked());
 
     compartment->ionCompartment()->finishedOffThreadCompilations().append(builder);
@@ -56,6 +67,9 @@ CompiledScriptMatches(JSCompartment *compartment, JSScript *script, JSScript *ta
 void
 js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 {
+    if (!compartment->rt->workerThreadState)
+        return;
+
     WorkerThreadState &state = *compartment->rt->workerThreadState;
 
     ion::IonCompartment *ion = compartment->ionCompartment();
