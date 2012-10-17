@@ -335,10 +335,12 @@ class AsyncCloseConnection : public nsRunnable
 public:
   AsyncCloseConnection(Connection *aConnection,
                        nsIEventTarget *aCallingThread,
-                       nsIRunnable *aCallbackEvent)
+                       nsIRunnable *aCallbackEvent,
+                       already_AddRefed<nsIThread> aAsyncExecutionThread)
   : mConnection(aConnection)
   , mCallingThread(aCallingThread)
   , mCallbackEvent(aCallbackEvent)
+  , mAsyncExecutionThread(aAsyncExecutionThread)
   {
   }
 
@@ -350,6 +352,13 @@ public:
     bool onCallingThread = false;
     (void)mCallingThread->IsOnCurrentThread(&onCallingThread);
     if (!onCallingThread) {
+#ifdef DEBUG
+      {
+        bool onAsyncThread = false;
+        (void)mAsyncExecutionThread->IsOnCurrentThread(&onAsyncThread);
+        MOZ_ASSERT(onAsyncThread);
+      }
+#endif
       (void)mCallingThread->Dispatch(this, NS_DISPATCH_NORMAL);
       return NS_OK;
     }
@@ -357,6 +366,7 @@ public:
     (void)mConnection->internalClose();
     if (mCallbackEvent)
       (void)mCallingThread->Dispatch(mCallbackEvent, NS_DISPATCH_NORMAL);
+    (void)mAsyncExecutionThread->Shutdown();
 
     // Because we have no guarantee that the invocation of this method on the
     // asynchronous thread has fully completed (including the Release of the
@@ -376,6 +386,7 @@ private:
   nsRefPtr<Connection> mConnection;
   nsCOMPtr<nsIEventTarget> mCallingThread;
   nsCOMPtr<nsIRunnable> mCallbackEvent;
+  nsCOMPtr<nsIThread> mAsyncExecutionThread;
 };
 
 } // anonymous namespace
@@ -402,6 +413,8 @@ Connection::Connection(Service *aService,
 Connection::~Connection()
 {
   (void)Close();
+
+  MOZ_ASSERT(!mAsyncExecutionThread);
 }
 
 NS_IMPL_THREADSAFE_ADDREF(Connection)
@@ -912,13 +925,17 @@ Connection::AsyncClose(mozIStorageCompletionCallback *aCallback)
   nsCOMPtr<nsIRunnable> completeEvent;
   if (aCallback) {
     completeEvent = newCompletionEvent(aCallback);
-    NS_ENSURE_TRUE(completeEvent, NS_ERROR_OUT_OF_MEMORY);
   }
 
   // Create and dispatch our close event to the background thread.
-  nsCOMPtr<nsIRunnable> closeEvent =
-    new AsyncCloseConnection(this, NS_GetCurrentThread(), completeEvent);
-  NS_ENSURE_TRUE(closeEvent, NS_ERROR_OUT_OF_MEMORY);
+  nsCOMPtr<nsIRunnable> closeEvent;
+  {
+    // We need to lock because we're modifying mAsyncExecutionThread
+    MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
+    closeEvent = new AsyncCloseConnection(this, NS_GetCurrentThread(),
+                                          completeEvent,
+                                          mAsyncExecutionThread.forget());
+  }
 
   rv = asyncThread->Dispatch(closeEvent, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
