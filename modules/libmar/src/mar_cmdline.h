@@ -120,6 +120,22 @@ strip_signature_block(const char *src, const char * dest);
 int
 extract_signature(const char *src, uint32_t sigIndex, const char * dest);
 
+/**
+ * Imports a base64 encoded signature into a MAR file
+ *
+ * @param  src           The path of the source MAR file
+ * @param  sigIndex      The index of the signature to import
+ * @param  base64SigFile A file which contains the signature to import
+ * @param  dest          The path of the destination MAR file with replaced signature
+ * @return 0 on success
+ *         -1 on error
+*/
+int
+import_signature(const char *src,
+                 uint32_t sigIndex,
+                 const char * base64SigFile,
+                 const char *dest);
+
 #ifdef __cplusplus
 }
 #endif
