@@ -2736,8 +2736,19 @@ Checker.prototype = {
     var allowNonBuiltIn = !getPref("getBoolPref",
                                    PREF_APP_UPDATE_CERT_REQUIREBUILTIN, true);
     this._request.channel.notificationCallbacks = new gCertUtils.BadCertHandler(allowNonBuiltIn);
+    // Prevent the request from reading from the cache.
+    this._request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
+    // Prevent the request from writing to the cache.
+    this._request.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
+
     this._request.overrideMimeType("text/xml");
+    // The Cache-Control header is only interpreted by proxies and the
+    // final destination. It does not help if a resource is already
+    // cached locally.
     this._request.setRequestHeader("Cache-Control", "no-cache");
+    // HTTP/1.0 servers might not implement Cache-Control and
+    // might only implement Pragma: no-cache
+    this._request.setRequestHeader("Pragma", "no-cache");
 
     var self = this;
     this._request.addEventListener("error", function(event) { self.onError(event); } ,false);
