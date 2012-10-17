@@ -96,29 +96,6 @@ public class LayerView extends FrameLayout {
     }
 
     public void initializeView(EventDispatcher eventDispatcher) {
-        // This check should not be done while the view tree is still being
-        // created as hardware acceleration will not be enabled at this point.
-        // initializeView() is called on the initialization phase of GeckoApp,
-        // which is late enough to detect hardware acceleration properly.
-        if (shouldUseTextureView()) {
-            mTextureView = new TextureView(getContext());
-            mTextureView.setSurfaceTextureListener(new SurfaceTextureListener());
-            mTextureView.setBackgroundColor(Color.WHITE);
-            addView(mTextureView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        } else {
-            // This will stop PropertyAnimator from creating a drawing cache (i.e. a bitmap)
-            // from a SurfaceView, which is just not possible (the bitmap will be transparent).
-            setWillNotCacheDrawing(false);
-
-            mSurfaceView = new SurfaceView(getContext());
-            mSurfaceView.setBackgroundColor(Color.WHITE);
-            addView(mSurfaceView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-
-            SurfaceHolder holder = mSurfaceView.getHolder();
-            holder.addCallback(new SurfaceListener());
-            holder.setFormat(PixelFormat.RGB_565);
-        }
-
         mLayerClient = new GeckoLayerClient(getContext(), this, eventDispatcher);
 
         mTouchEventHandler = new TouchEventHandler(getContext(), this, mLayerClient);
@@ -152,6 +129,32 @@ public class LayerView extends FrameLayout {
     @Override
     public boolean onHoverEvent(MotionEvent event) {
         return mTouchEventHandler == null ? false : mTouchEventHandler.handleEvent(event);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        // This check should not be done before the view is attached to a window
+        // as hardware acceleration will not be enabled at that point.
+        // We must create and add the SurfaceView instance before the view tree
+        // is fully created to avoid flickering (see bug 801477).
+        if (shouldUseTextureView()) {
+            mTextureView = new TextureView(getContext());
+            mTextureView.setSurfaceTextureListener(new SurfaceTextureListener());
+            mTextureView.setBackgroundColor(Color.WHITE);
+            addView(mTextureView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        } else {
+            // This will stop PropertyAnimator from creating a drawing cache (i.e. a bitmap)
+            // from a SurfaceView, which is just not possible (the bitmap will be transparent).
+            setWillNotCacheDrawing(false);
+
+            mSurfaceView = new SurfaceView(getContext());
+            mSurfaceView.setBackgroundColor(Color.WHITE);
+            addView(mSurfaceView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+
+            SurfaceHolder holder = mSurfaceView.getHolder();
+            holder.addCallback(new SurfaceListener());
+            holder.setFormat(PixelFormat.RGB_565);
+        }
     }
 
     public GeckoLayerClient getLayerClient() { return mLayerClient; }
