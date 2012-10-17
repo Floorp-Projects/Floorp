@@ -35,3 +35,4 @@ asserts-if(Android,2) load 493123-1.xhtml
 load 495354-1.xhtml
 load 507628-1.xhtml
 load 507991-1.xhtml
+load set-field-bad-this.xhtml
