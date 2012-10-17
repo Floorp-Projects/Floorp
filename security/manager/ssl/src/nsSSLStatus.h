@@ -8,8 +8,7 @@
 #define _NSSSLSTATUS_H
 
 #include "nsISSLStatus.h"
-
-#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIX509Cert.h"
 #include "nsISerializable.h"

@@ -89,11 +89,8 @@ SmartCardThreadList::Add(SmartCardMonitoringThread *thread)
 {
   SmartCardThreadEntry *current = new SmartCardThreadEntry(thread, head, nullptr,
                                                            &head);
-  if (current) {  
-     // OK to forget current here, it's on the list
-    return thread->Start();
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
+  // OK to forget current here, it's on the list
+  return thread->Start();
 }
 
 
@@ -275,7 +272,7 @@ void SmartCardMonitoringThread::Execute()
   // loop starts..
   do {
     slot = SECMOD_WaitForAnyTokenEvent(mModule, 0, PR_SecondsToInterval(1)  );
-    if (slot == nullptr) {
+    if (!slot) {
       break;
     }
 

@@ -20,7 +20,7 @@ nsresult
 nsPKIParamBlock::Init()
 {
   mDialogParamBlock = do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
-  return (mDialogParamBlock == nullptr) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+  return !mDialogParamBlock ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
 nsPKIParamBlock::~nsPKIParamBlock()
@@ -79,7 +79,7 @@ nsPKIParamBlock::SetISupportAtIndex(int32_t index, nsISupports *object)
 {
   if (!mSupports) {
     mSupports = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
-    if (mSupports == nullptr) {
+    if (!mSupports) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
