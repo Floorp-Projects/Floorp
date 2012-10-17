@@ -64,7 +64,8 @@ static nsComputedDOMStyle *sCachedComputedDOMStyle;
 
 already_AddRefed<nsComputedDOMStyle>
 NS_NewComputedDOMStyle(dom::Element* aElement, const nsAString& aPseudoElt,
-                       nsIPresShell* aPresShell)
+                       nsIPresShell* aPresShell,
+                       nsComputedDOMStyle::StyleType aStyleType)
 {
   nsRefPtr<nsComputedDOMStyle> computedStyle;
   if (sCachedComputedDOMStyle) {
@@ -73,13 +74,14 @@ NS_NewComputedDOMStyle(dom::Element* aElement, const nsAString& aPseudoElt,
 
     // Oh yeah baby, placement new!
     computedStyle = new (sCachedComputedDOMStyle)
-      nsComputedDOMStyle(aElement, aPseudoElt, aPresShell);
+      nsComputedDOMStyle(aElement, aPseudoElt, aPresShell, aStyleType);
 
     sCachedComputedDOMStyle = nullptr;
   } else {
     // No nsComputedDOMStyle cached, create a new one.
 
-    computedStyle = new nsComputedDOMStyle(aElement, aPseudoElt, aPresShell);
+    computedStyle = new nsComputedDOMStyle(aElement, aPseudoElt, aPresShell,
+                                           aStyleType);
   }
 
   return computedStyle.forget();
@@ -95,9 +97,11 @@ GetContainingBlockFor(nsIFrame* aFrame) {
 
 nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
                                        const nsAString& aPseudoElt,
-                                       nsIPresShell* aPresShell)
+                                       nsIPresShell* aPresShell,
+                                       StyleType aStyleType)
   : mDocumentWeak(nullptr), mOuterFrame(nullptr),
     mInnerFrame(nullptr), mPresShell(nullptr),
+    mStyleType(aStyleType),
     mExposeVisitedStyle(false)
 {
   MOZ_ASSERT(aElement && aPresShell);
@@ -268,7 +272,8 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
 already_AddRefed<nsStyleContext>
 nsComputedDOMStyle::GetStyleContextForElement(Element* aElement,
                                               nsIAtom* aPseudo,
-                                              nsIPresShell* aPresShell)
+                                              nsIPresShell* aPresShell,
+                                              StyleType aStyleType)
 {
   // If the content has a pres shell, we must use it.  Otherwise we'd
   // potentially mix rule trees by using the wrong pres shell's style
@@ -284,14 +289,16 @@ nsComputedDOMStyle::GetStyleContextForElement(Element* aElement,
 
   presShell->FlushPendingNotifications(Flush_Style);
 
-  return GetStyleContextForElementNoFlush(aElement, aPseudo, presShell);
+  return GetStyleContextForElementNoFlush(aElement, aPseudo, presShell,
+                                          aStyleType);
 }
 
 /* static */
 already_AddRefed<nsStyleContext>
 nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
                                                      nsIAtom* aPseudo,
-                                                     nsIPresShell* aPresShell)
+                                                     nsIPresShell* aPresShell,
+                                                     StyleType aStyleType)
 {
   NS_ABORT_IF_FALSE(aElement, "NULL element");
   // If the content has a pres shell, we must use it.  Otherwise we'd
@@ -306,7 +313,7 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
       return nullptr;
   }
 
-  if (!aPseudo) {
+  if (!aPseudo && aStyleType == eAll) {
     nsIFrame* frame = aElement->GetPrimaryFrame();
     if (frame) {
       nsStyleContext* result =
@@ -322,14 +329,15 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
     }
   }
 
-  // No frame has been created or we have a pseudo, so resolve the
-  // style ourselves
+  // No frame has been created, or we have a pseudo, or we're looking
+  // for the default style, so resolve the style ourselves.
   nsRefPtr<nsStyleContext> parentContext;
   nsIContent* parent = aPseudo ? aElement : aElement->GetParent();
   // Don't resolve parent context for document fragments.
   if (parent && parent->IsElement())
     parentContext = GetStyleContextForElementNoFlush(parent->AsElement(),
-                                                     nullptr, presShell);
+                                                     nullptr, presShell,
+                                                     aStyleType);
 
   nsPresContext *presContext = presShell->GetPresContext();
   if (!presContext)
@@ -337,15 +345,42 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
 
   nsStyleSet *styleSet = presShell->StyleSet();
 
+  nsRefPtr<nsStyleContext> sc;
   if (aPseudo) {
     nsCSSPseudoElements::Type type = nsCSSPseudoElements::GetPseudoType(aPseudo);
     if (type >= nsCSSPseudoElements::ePseudo_PseudoElementCount) {
       return nullptr;
     }
-    return styleSet->ResolvePseudoElementStyle(aElement, type, parentContext);
+    sc = styleSet->ResolvePseudoElementStyle(aElement, type, parentContext);
+  } else {
+    sc = styleSet->ResolveStyleFor(aElement, parentContext);
   }
 
-  return styleSet->ResolveStyleFor(aElement, parentContext);
+  if (aStyleType == eDefaultOnly) {
+    // We really only want the user and UA rules.  Filter out the other ones.
+    nsTArray< nsCOMPtr<nsIStyleRule> > rules;
+    for (nsRuleNode* ruleNode = sc->GetRuleNode();
+         !ruleNode->IsRoot();
+         ruleNode = ruleNode->GetParent()) {
+      if (ruleNode->GetLevel() == nsStyleSet::eAgentSheet ||
+          ruleNode->GetLevel() == nsStyleSet::eUserSheet) {
+        rules.AppendElement(ruleNode->GetRule());
+      }
+    }
+
+    // We want to build a list of user/ua rules that is in order from least to
+    // most important, so we have to reverse the list.
+    // Integer division to get "stop" is purposeful here: if length is odd, we
+    // don't have to do anything with the middle element of the array.
+    for (uint32_t i = 0, length = rules.Length(), stop = length / 2;
+         i < stop; ++i) {
+      rules[i].swap(rules[length - i - 1]);
+    }
+    
+    sc = styleSet->ResolveStyleForRules(parentContext, rules);
+  }
+
+  return sc.forget();
 }
 
 /* static */
@@ -454,7 +489,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   NS_ENSURE_TRUE(mPresShell && mPresShell->GetPresContext(),
                  NS_ERROR_NOT_AVAILABLE);
 
-  if (!mPseudo) {
+  if (!mPseudo && mStyleType == eAll) {
     mOuterFrame = mContent->GetPrimaryFrame();
     mInnerFrame = mOuterFrame;
     if (mOuterFrame) {
@@ -495,7 +530,8 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
     mStyleContextHolder =
       nsComputedDOMStyle::GetStyleContextForElement(mContent->AsElement(),
                                                     mPseudo,
-                                                    mPresShell);
+                                                    mPresShell,
+                                                    mStyleType);
     NS_ENSURE_TRUE(mStyleContextHolder, NS_ERROR_OUT_OF_MEMORY);
     NS_ASSERTION(mPseudo || !mStyleContextHolder->HasPseudoElementData(),
                  "should not have pseudo-element data");
