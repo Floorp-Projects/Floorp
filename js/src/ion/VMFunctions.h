@@ -445,6 +445,7 @@ JSObject *NewStringObject(JSContext *cx, HandleString str);
 bool SPSEnter(JSContext *cx, HandleScript script);
 bool SPSExit(JSContext *cx, HandleScript script);
 
+bool OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, JSBool *out);
 
 } // namespace ion
 } // namespace js

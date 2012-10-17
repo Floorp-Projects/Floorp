@@ -3938,6 +3938,18 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8 *lir)
 }
 
 bool
+CodeGenerator::visitIn(LIn *ins)
+{
+    typedef bool (*pf)(JSContext *, HandleValue, HandleObject, JSBool *);
+    static const VMFunction OperatorInInfo = FunctionInfo<pf>(OperatorIn);
+
+    pushArg(ToRegister(ins->rhs()));
+    pushArg(ToValue(ins, LIn::LHS));
+
+    return callVM(OperatorInInfo, ins);
+}
+
+bool
 CodeGenerator::visitInstanceOfO(LInstanceOfO *ins)
 {
     Register rhs = ToRegister(ins->getOperand(1));
