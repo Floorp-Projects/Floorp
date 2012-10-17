@@ -266,14 +266,6 @@ public class LayerView extends FrameLayout {
         return mRenderer.getPixels();
     }
 
-    public void setLayerRenderer(LayerRenderer renderer) {
-        mRenderer = renderer;
-    }
-
-    public LayerRenderer getLayerRenderer() {
-        return mRenderer;
-    }
-
     /* paintState must be a PAINT_xxx constant. */
     public void setPaintState(int paintState) {
         Log.d(LOGTAG, "LayerView paint state set to " + paintState);
@@ -283,7 +275,6 @@ public class LayerView extends FrameLayout {
     public int getPaintState() {
         return mPaintState;
     }
-
 
     public LayerRenderer getRenderer() {
         return mRenderer;
