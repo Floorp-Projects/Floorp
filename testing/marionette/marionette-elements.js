@@ -429,7 +429,7 @@ ElementManager.prototype = {
         }
         break;
       case SELECTOR:
-        elements = Array.slice(rootNode.querySelectorAll(value));
+        elements = Array.slice(startNode.querySelectorAll(value));
         break;
       default:
         throw new ElementException("No such strategy", 500, null);
