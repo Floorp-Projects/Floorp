@@ -124,6 +124,7 @@ class AutoLockWorkerThreadState
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
 #ifdef JS_PARALLEL_COMPILATION
+        JS_ASSERT(rt->workerThreadState);
         rt->workerThreadState->lock();
 #else
         (void)this->rt;
@@ -150,6 +151,7 @@ class AutoUnlockWorkerThreadState
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
 #ifdef JS_PARALLEL_COMPILATION
+        JS_ASSERT(rt->workerThreadState);
         rt->workerThreadState->unlock();
 #else
         (void)this->rt;
