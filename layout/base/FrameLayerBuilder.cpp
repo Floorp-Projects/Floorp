@@ -2028,8 +2028,6 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         topLeft = activeScrolledRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
       }
     }
-  
-    nsAutoPtr<nsDisplayItemGeometry> geometry(item->AllocateGeometry(mBuilder));
 
     // Assign the item to a layer
     if (layerState == LAYER_ACTIVE_FORCE ||
@@ -2047,7 +2045,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       // InvalidateForLayerChange doesn't need the new layer pointer.
       // We also need to check the old data now, because BuildLayer
       // can overwrite it.
-      InvalidateForLayerChange(item, nullptr, aClip, topLeft, geometry);
+      InvalidateForLayerChange(item, nullptr, aClip, topLeft, nullptr);
 
       // If the item would have its own layer but is invisible, just hide it.
       // Note that items without their own layers can't be skipped this
@@ -2121,16 +2119,24 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                    "Layer already in list???");
 
       mNewChildLayers.AppendElement(ownLayer);
+
+      /**
+       * No need to allocate geometry for items that aren't
+       * part of a ThebesLayer.
+       */
+      nsAutoPtr<nsDisplayItemGeometry> dummy;
       mLayerBuilder->AddLayerDisplayItem(ownLayer, item, 
                                          aClip, layerState, 
                                          topLeft, nullptr,
-                                         geometry);
+                                         dummy);
     } else {
       ThebesLayerData* data =
         FindThebesLayerFor(item, itemVisibleRect, itemDrawRect, aClip,
                            activeScrolledRoot, topLeft);
 
       data->mLayer->SetIsFixedPosition(isFixed);
+
+      nsAutoPtr<nsDisplayItemGeometry> geometry(item->AllocateGeometry(mBuilder));
 
       InvalidateForLayerChange(item, data->mLayer, aClip, topLeft, geometry);
 
