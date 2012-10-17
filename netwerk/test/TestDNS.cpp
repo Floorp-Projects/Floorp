@@ -34,7 +34,7 @@ public:
                                 nsresult       status)
     {
         printf("%d: OnLookupComplete called [host=%s status=%x rec=%p]\n",
-            mIndex, mHost.get(), status, (void*)rec);
+            mIndex, mHost.get(), static_cast<uint32_t>(status), (void*)rec);
 
         if (NS_SUCCEEDED(status)) {
             nsAutoCString buf;
@@ -111,7 +111,8 @@ int main(int argc, char **argv)
                                                 nsIDNSService::RESOLVE_CANONICAL_NAME,
                                                 listener, nullptr, getter_AddRefs(req));
                 if (NS_FAILED(rv))
-                    printf("### AsyncResolve failed [rv=%x]\n", rv);
+                    printf("### AsyncResolve failed [rv=%x]\n",
+                           static_cast<uint32_t>(rv));
             }
 
             printf("main thread sleeping for %d seconds...\n", sleepLen);

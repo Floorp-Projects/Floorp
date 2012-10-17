@@ -1233,6 +1233,7 @@ TypeConstraintSetElement::newType(JSContext *cx, TypeSet *source, Type type)
 void
 TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
 {
+    AssertCanGC();
     RootedScript script(cx, callsite->script);
     jsbytecode *pc = callsite->pc;
 
@@ -1321,7 +1322,8 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
         return;
     }
 
-    if (!callee->script()->ensureHasTypes(cx))
+    RootedScript calleeScript(cx, callee->script());
+    if (!calleeScript->ensureHasTypes(cx))
         return;
 
     unsigned nargs = callee->nargs;
@@ -1329,18 +1331,18 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, Type type)
     /* Add bindings for the arguments of the call. */
     for (unsigned i = 0; i < callsite->argumentCount && i < nargs; i++) {
         StackTypeSet *argTypes = callsite->argumentTypes[i];
-        StackTypeSet *types = TypeScript::ArgTypes(callee->script(), i);
+        StackTypeSet *types = TypeScript::ArgTypes(calleeScript, i);
         argTypes->addSubsetBarrier(cx, script, pc, types);
     }
 
     /* Add void type for any formals in the callee not supplied at the call site. */
     for (unsigned i = callsite->argumentCount; i < nargs; i++) {
-        TypeSet *types = TypeScript::ArgTypes(callee->script(), i);
+        TypeSet *types = TypeScript::ArgTypes(calleeScript, i);
         types->addType(cx, Type::UndefinedType());
     }
 
-    StackTypeSet *thisTypes = TypeScript::ThisTypes(callee->script());
-    HeapTypeSet *returnTypes = TypeScript::ReturnTypes(callee->script());
+    StackTypeSet *thisTypes = TypeScript::ThisTypes(calleeScript);
+    HeapTypeSet *returnTypes = TypeScript::ReturnTypes(calleeScript);
 
     if (callsite->isNew) {
         /*
@@ -1400,7 +1402,7 @@ TypeConstraintPropagateThis::newType(JSContext *cx, TypeSet *source, Type type)
     if (!callee->script()->ensureHasTypes(cx))
         return;
 
-    TypeSet *thisTypes = TypeScript::ThisTypes(callee->script());
+    TypeSet *thisTypes = TypeScript::ThisTypes(callee->script().unsafeGet());
     if (this->types)
         this->types->addSubset(cx, thisTypes);
     else
@@ -1702,6 +1704,8 @@ HeapTypeSet::HasObjectFlags(JSContext *cx, TypeObject *object, TypeObjectFlags f
 static inline void
 ObjectStateChange(JSContext *cx, TypeObject *object, bool markingUnknown, bool force)
 {
+    AutoAssertNoGC nogc;
+
     if (object->unknownProperties())
         return;
 
@@ -2538,6 +2542,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 void
 TypeCompartment::addPendingRecompile(JSContext *cx, HandleScript script, jsbytecode *pc)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(script);
     if (!constrainedOutputs)
         return;
@@ -2577,6 +2582,8 @@ void
 TypeCompartment::monitorBytecode(JSContext *cx, HandleScript script, uint32_t offset,
                                  bool returnOnly)
 {
+    AutoAssertNoGC nogc;
+
     if (!script->ensureRanInference(cx))
         return;
 
@@ -5576,7 +5583,7 @@ JSScript::makeAnalysis(JSContext *cx)
 /* static */ bool
 JSFunction::setTypeForScriptedFunction(JSContext *cx, HandleFunction fun, bool singleton)
 {
-    JS_ASSERT(fun->script());
+    JS_ASSERT(fun->script().unsafeGet());
     JS_ASSERT(fun->script()->function() == fun);
 
     if (!cx->typeInferenceEnabled())

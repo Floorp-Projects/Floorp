@@ -452,13 +452,9 @@
   "NodeFilter interface: constant SHOW_DOCUMENT_FRAGMENT on interface prototype object": true,
   "NodeFilter interface: constant SHOW_NOTATION on interface prototype object": true,
   "NodeFilter interface: operation acceptNode(Node)": true,
-  "NodeList interface: attribute length": true,
-  "HTMLCollection interface: attribute length": true,
   "DOMStringList interface: existence and properties of interface object": true,
   "DOMStringList interface: existence and properties of interface prototype object": true,
   "DOMStringList interface: existence and properties of interface prototype object's \"constructor\" property": true,
   "DOMStringList interface: attribute length": true,
-  "DOMTokenList interface: attribute length": true,
-  "Stringification of document.body.classList": true,
-  "DOMSettableTokenList interface: attribute value": true
+  "Stringification of document.body.classList": true
 }
