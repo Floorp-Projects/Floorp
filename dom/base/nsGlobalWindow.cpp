@@ -8285,7 +8285,26 @@ nsGlobalWindow::GetComputedStyle(nsIDOMElement* aElt,
   mDocShell->GetPresShell(getter_AddRefs(presShell));
 
   if (!presShell) {
-    return NS_OK;
+    // Try flushing frames on our parent in case there's a pending
+    // style change that will create the presshell.
+    nsGlobalWindow *parent =
+      static_cast<nsGlobalWindow *>(GetPrivateParent());
+    if (!parent) {
+      return NS_OK;
+    }
+
+    parent->FlushPendingNotifications(Flush_Frames);
+
+    // Might have killed mDocShell
+    if (!mDocShell) {
+      return NS_OK;
+    }
+
+    mDocShell->GetPresShell(getter_AddRefs(presShell));
+
+    if (!presShell) {
+      return NS_OK;
+    }
   }
 
   nsCOMPtr<dom::Element> element = do_QueryInterface(aElt);
