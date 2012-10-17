@@ -36,8 +36,6 @@ int
 MediaEngineWebRTCVideoSource::DeliverFrame(
    unsigned char* buffer, int size, uint32_t time_stamp, int64_t render_time)
 {
-  ReentrantMonitorAutoEnter enter(mMonitor);
-
   if (mInSnapshotMode) {
     // Set the condition variable to false and notify Snapshot().
     PR_Lock(mSnapshotLock);
@@ -55,6 +53,7 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
 
   // Create a video frame and append it to the track.
   ImageFormat format = PLANAR_YCBCR;
+
   nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&format, 1);
 
   layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
@@ -78,10 +77,46 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
 
   videoImage->SetData(data);
 
-  VideoSegment segment;
-  segment.AppendFrame(image.forget(), 1, gfxIntSize(mWidth, mHeight));
-  mSource->AppendToTrack(mTrackID, &(segment));
+#ifdef LOG_ALL_FRAMES
+  static uint32_t frame_num = 0;
+  LOG(("frame %d; timestamp %u, render_time %lu", frame_num++, time_stamp, render_time));
+#endif
+
+  // we don't touch anything in 'this' until here (except for snapshot,
+  // which has it's own lock)
+  ReentrantMonitorAutoEnter enter(mMonitor);
+
+  // implicitly releases last image
+  mImage = image.forget();
+
   return 0;
+}
+
+// Called if the graph thinks it's running out of buffered video; repeat
+// the last frame for whatever minimum period it think it needs.  Note that
+// this means that no *real* frame can be inserted during this period.
+void
+MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
+                                         StreamTime aDesiredTime)
+{
+  VideoSegment segment;
+
+  ReentrantMonitorAutoEnter enter(mMonitor);
+
+  if (mState != kStarted)
+    return;
+
+  // Note: we're not giving up mImage here
+  nsRefPtr<layers::Image> image = mImage;
+  TrackTicks target = TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
+  TrackTicks delta = target - mLastEndTime;
+#ifdef LOG_ALL_FRAMES
+  LOG(("NotifyPull, target = %lu, delta = %lu", (uint64_t) target, (uint64_t) delta));
+#endif
+  // NULL images are allowed
+  segment.AppendFrame(image ? image.forget() : nullptr, delta, gfxIntSize(mWidth, mHeight));
+  mSource->AppendToTrack(mTrackID, &(segment));
+  mLastEndTime = target;
 }
 
 void
@@ -213,8 +248,10 @@ MediaEngineWebRTCVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   mTrackID = aID;
 
   mImageContainer = layers::LayerManager::CreateImageContainer();
-  mSource->AddTrack(aID, mFps, 0, new VideoSegment());
+
+  mSource->AddTrack(aID, USECS_PER_S, 0, new VideoSegment());
   mSource->AdvanceKnownTracksTime(STREAM_TIME_MAX);
+  mLastEndTime = 0;
 
   error = mViERender->AddRenderer(mCaptureIndex, webrtc::kVideoI420, (webrtc::ExternalRenderer*)this);
   if (error == -1) {

@@ -45,6 +45,7 @@ public:
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop();
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
+  virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
@@ -79,6 +80,7 @@ public:
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop();
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
+  virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK

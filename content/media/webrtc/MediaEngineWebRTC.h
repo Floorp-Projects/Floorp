@@ -53,7 +53,7 @@ class MediaEngineWebRTCVideoSource : public MediaEngineVideoSource,
                                      public nsRunnable
 {
 public:
-  static const int DEFAULT_VIDEO_FPS = 30;
+  static const int DEFAULT_VIDEO_FPS = 60;
   static const int DEFAULT_MIN_VIDEO_FPS = 10;
 
   // ViEExternalRenderer.
@@ -67,6 +67,7 @@ public:
     , mCapabilityChosen(false)
     , mWidth(640)
     , mHeight(480)
+    , mLastEndTime(0)
     , mMonitor("WebRTCCamera.Monitor")
     , mFps(DEFAULT_VIDEO_FPS)
     , mMinFps(aMinFps)
@@ -86,6 +87,7 @@ public:
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop();
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
+  virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime);
 
   NS_DECL_ISUPPORTS
 
@@ -128,6 +130,7 @@ private:
   bool mCapabilityChosen;
   int mWidth, mHeight;
   TrackID mTrackID;
+  TrackTicks mLastEndTime;
 
   mozilla::ReentrantMonitor mMonitor; // Monitor for processing WebRTC frames.
   SourceMediaStream* mSource;
@@ -138,6 +141,7 @@ private:
   bool mInSnapshotMode;
   nsString* mSnapshotPath;
 
+  nsRefPtr<layers::Image> mImage;
   nsRefPtr<layers::ImageContainer> mImageContainer;
 
   PRLock* mSnapshotLock;
@@ -177,6 +181,7 @@ public:
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop();
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
+  virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime);
 
   // VoEMediaProcess.
   void Process(const int channel, const webrtc::ProcessingTypes type,
