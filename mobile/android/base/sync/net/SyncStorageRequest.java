@@ -10,7 +10,7 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 
-import org.mozilla.gecko.sync.GlobalConstants;
+import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.Logger;
 
 import ch.boye.httpclientandroidlib.HttpEntity;
@@ -131,7 +131,7 @@ public class SyncStorageRequest implements Resource {
 
     @Override
     public void addHeaders(HttpRequestBase request, DefaultHttpClient client) {
-      client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, GlobalConstants.SYNC_USER_AGENT);
+      client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, SyncConstants.SYNC_USER_AGENT);
 
       // Clients can use their delegate interface to specify X-If-Unmodified-Since.
       String ifUnmodifiedSince = this.request.delegate.ifUnmodifiedSince();

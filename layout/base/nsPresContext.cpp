@@ -1605,6 +1605,45 @@ nsPresContext::SysColorChangedInternal()
 }
 
 void
+nsPresContext::UIResolutionChanged()
+{
+  if (!mPendingUIResolutionChanged) {
+    nsCOMPtr<nsIRunnable> ev =
+      NS_NewRunnableMethod(this, &nsPresContext::UIResolutionChangedInternal);
+    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+      mPendingUIResolutionChanged = true;
+    }
+  }
+}
+
+/*static*/ bool
+nsPresContext::UIResolutionChangedSubdocumentCallback(nsIDocument* aDocument,
+                                                      void* aData)
+{
+  nsIPresShell* shell = aDocument->GetShell();
+  if (shell) {
+    nsPresContext* pc = shell->GetPresContext();
+    if (pc) {
+      pc->UIResolutionChangedInternal();
+    }
+  }
+  return true;
+}
+
+void
+nsPresContext::UIResolutionChangedInternal()
+{
+  mPendingUIResolutionChanged = false;
+
+  if (mDeviceContext->CheckDPIChange()) {
+    AppUnitsPerDevPixelChanged();
+  }
+
+  mDocument->EnumerateSubDocuments(UIResolutionChangedSubdocumentCallback,
+                                   nullptr);
+}
+
+void
 nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
 {
   if (!mShell) {

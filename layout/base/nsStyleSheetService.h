@@ -37,9 +37,11 @@ class nsStyleSheetService MOZ_FINAL : public nsIStyleSheetService
 
   nsCOMArray<nsIStyleSheet>* AgentStyleSheets() { return &mSheets[AGENT_SHEET]; }
   nsCOMArray<nsIStyleSheet>* UserStyleSheets() { return &mSheets[USER_SHEET]; }
+  nsCOMArray<nsIStyleSheet>* AuthorStyleSheets() { return &mSheets[AUTHOR_SHEET]; }
 
   static size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
 
+  static nsStyleSheetService *GetInstance();
   static nsStyleSheetService *gInstance;
 
  private:
@@ -59,7 +61,7 @@ class nsStyleSheetService MOZ_FINAL : public nsIStyleSheetService
 
   size_t SizeOfIncludingThisHelper(nsMallocSizeOfFun aMallocSizeOf) const;
 
-  nsCOMArray<nsIStyleSheet> mSheets[2];
+  nsCOMArray<nsIStyleSheet> mSheets[3];
 
   nsIMemoryReporter* mReporter;
 };

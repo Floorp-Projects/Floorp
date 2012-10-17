@@ -751,7 +751,8 @@ nsresult nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsIView* aView, nsEven
        NS_IS_IME_RELATED_EVENT(aEvent) ||
        NS_IS_NON_RETARGETED_PLUGIN_EVENT(aEvent) ||
        aEvent->message == NS_PLUGIN_ACTIVATE ||
-       aEvent->message == NS_PLUGIN_FOCUS)) {
+       aEvent->message == NS_PLUGIN_FOCUS ||
+       aEvent->message == NS_PLUGIN_RESOLUTION_CHANGED)) {
     while (view && !view->GetFrame()) {
       view = view->GetParent();
     }

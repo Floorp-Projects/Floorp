@@ -243,7 +243,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   defineMethod('goForward', this._goForward);
   defineMethod('reload', this._reload);
   defineMethod('stop', this._stop);
-  defineDOMRequestMethod('getScreenshot', 'get-screenshot');
+  defineMethod('getScreenshot', this._getScreenshot);
   defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
   defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
 
@@ -470,15 +470,18 @@ BrowserElementParent.prototype = {
    * Kick off a DOMRequest in the child process.
    *
    * We'll fire an event called |msgName| on the child process, passing along
-   * an object with a single field, id, containing the ID of this request.
+   * an object with two fields:
+   *
+   *  - id:  the ID of this request.
+   *  - arg: arguments to pass to the child along with this request.
    *
    * We expect the child to pass the ID back to us upon completion of the
-   * request; see _gotDOMRequestResult.
+   * request.  See _gotDOMRequestResult.
    */
-  _sendDOMRequest: function(msgName) {
+  _sendDOMRequest: function(msgName, args) {
     let id = 'req_' + this._domRequestCounter++;
     let req = Services.DOMRequest.createRequest(this._window);
-    if (this._sendAsyncMsg(msgName, {id: id})) {
+    if (this._sendAsyncMsg(msgName, {id: id, args: args})) {
       this._pendingDOMRequests[id] = req;
     } else {
       Services.DOMRequest.fireErrorAsync(req, "fail");
@@ -487,17 +490,30 @@ BrowserElementParent.prototype = {
   },
 
   /**
-   * Called when the child process finishes handling a DOMRequest.  We expect
-   * data.json to have two fields:
+   * Called when the child process finishes handling a DOMRequest.  data.json
+   * must have the fields [id, successRv], if the DOMRequest was successful, or
+   * [id, errorMsg], if the request was not successful.
    *
-   *  - id: the ID of the DOM request (see _sendDOMRequest), and
-   *  - rv: the request's return value.
+   * The fields have the following meanings:
+   *
+   *  - id:        the ID of the DOM request (see _sendDOMRequest)
+   *  - successRv: the request's return value, if the request succeeded
+   *  - errorMsg:  the message to pass to DOMRequest.fireError(), if the request
+   *               failed.
    *
    */
   _gotDOMRequestResult: function(data) {
     let req = this._pendingDOMRequests[data.json.id];
     delete this._pendingDOMRequests[data.json.id];
-    Services.DOMRequest.fireSuccess(req, data.json.rv);
+
+    if ('successRv' in data.json) {
+      debug("Successful gotDOMRequestResult.");
+      Services.DOMRequest.fireSuccess(req, data.json.successRv);
+    }
+    else {
+      debug("Got error in gotDOMRequestResult.");
+      Services.DOMRequest.fireErrorAsync(req, data.json.errorMsg);
+    }
   },
 
   _setVisible: function(visible) {
@@ -546,6 +562,18 @@ BrowserElementParent.prototype = {
 
   _stop: function() {
     this._sendAsyncMsg('stop');
+  },
+
+  _getScreenshot: function(_width, _height) {
+    let width = parseInt(_width);
+    let height = parseInt(_height);
+    if (isNaN(width) || isNaN(height) || width < 0 || height < 0) {
+      throw Components.Exception("Invalid argument",
+                                 Cr.NS_ERROR_INVALID_ARG);
+    }
+
+    return this._sendDOMRequest('get-screenshot',
+                                {width: width, height: height});
   },
 
   _fireKeyEvent: function(data) {

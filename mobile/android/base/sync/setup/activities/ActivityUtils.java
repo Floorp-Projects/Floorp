@@ -4,9 +4,15 @@
 
 package org.mozilla.gecko.sync.setup.activities;
 
+import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.setup.InvalidSyncKeyException;
 
 public class ActivityUtils {
+  public static void prepareLogging() {
+    Logger.setThreadLogTag(SyncConstants.GLOBAL_LOG_TAG);
+  }
+
   /**
    * Sync key should be a 26-character string, and can include arbitrary
    * capitalization and hyphenation.

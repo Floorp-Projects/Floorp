@@ -2072,6 +2072,15 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
       return fm->FocusPlugin(GetContent());
   }
 
+#ifdef XP_MACOSX
+  if (anEvent->message == NS_PLUGIN_RESOLUTION_CHANGED) {
+    double scaleFactor = 1.0;
+    mInstanceOwner->GetContentsScaleFactor(&scaleFactor);
+    mInstanceOwner->ContentsScaleFactorChanged(scaleFactor);
+    return NS_OK;
+  }
+#endif
+
   if (mInstanceOwner->SendNativeEvents() &&
       NS_IS_PLUGIN_EVENT(anEvent)) {
     *anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);

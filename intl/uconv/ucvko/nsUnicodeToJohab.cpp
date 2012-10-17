@@ -11,7 +11,7 @@
 // Global functions and data [declaration]
 
 static const uint16_t *g_JohabMappingTable[4] = {
-  g_ucvko_AsciiMapping,
+  g_ASCIIMappingTable,
   g_HangulNullMapping,
   g_ufJohabJamoMapping,
   g_ufKSC5601Mapping
