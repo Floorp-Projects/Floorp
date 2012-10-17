@@ -86,6 +86,45 @@ function run_test() {
   }
 
   /**
+   * Import a MAR signature.
+   *
+   * @param inMAR        The MAR file who's signature should be imported to
+   * @param sigIndex     The index of the signature to import to
+   * @param sigFile      The file where the base64 signature exists
+   * @param outMAR       The same as inMAR but with the specified signature
+   *                     swapped at the specified index.
+   * @param wantSuccess  True if a successful signmar return code is desired
+  */
+  function importMARSignature(inMAR, sigIndex, sigFile, outMAR, wantSuccess) {
+    // Get a process to the signmar binary from the dist/bin directory.
+    let process = Cc["@mozilla.org/process/util;1"].
+                  createInstance(Ci.nsIProcess);
+    let signmarBin = do_get_file("signmar" + BIN_SUFFIX);
+
+    // Make sure the signmar binary exists and is an executable.
+    do_check_true(signmarBin.exists());
+    do_check_true(signmarBin.isExecutable());
+
+    // Setup the command line arguments to import the signature in the MAR.
+    let args = ["-n" + sigIndex, "-I", inMAR.path, sigFile.path, outMAR.path];
+
+    process.init(signmarBin);
+    try {
+      process.run(true, args, args.length);
+    } catch(e) {
+      // On Windows negative return value throws an exception
+      process.exitValue = -1;
+    }
+
+    // Verify signmar returned 0 for success.
+    if (wantSuccess) {
+      do_check_eq(process.exitValue, 0);
+    } else {
+      do_check_neq(process.exitValue, 0);
+    }
+  }
+
+  /**
    * Verifies a MAR file.
    *
    * @param signedMAR Verifies a MAR file
@@ -396,6 +435,102 @@ function run_test() {
     test_verify_multiple_subset: function() {
       let signedMAR = do_get_file("data/multiple_signed_pib_mar.mar");
       verifyMAR(signedMAR, wantFailure, ["mycert", "mycert2"]);
+    },
+    // Test importing the first signature in a MAR that has only
+    // a single signature
+    test_import_sig_single: function() {
+      // Make sure the input MAR was signed with mycert only
+      let inMAR = do_get_file("data/signed_pib_mar.mar");
+      verifyMAR(inMAR, wantSuccess, ["mycert"], false);
+      verifyMAR(inMAR, wantFailure, ["mycert2"], false);
+      verifyMAR(inMAR, wantFailure, ["mycert3"], false);
+
+      // Get the signature file for this MAR signed with the key from mycert2
+      let sigFile = do_get_file("data/signed_pib_mar.signature.mycert2");
+      do_check_true(sigFile.exists());
+      let outMAR = do_get_file("data/sigchanged_signed_pib_mar.mar", true);
+      if (outMAR.exists()) {
+        outMAR.remove(false);
+      }
+
+      //Run the import operation
+      importMARSignature(inMAR, 0, sigFile, outMAR, wantSuccess);
+
+      // Verify we have a new MAR file and that mycert no longer verifies
+      // and that mycert2 does verify
+      do_check_true(outMAR.exists());
+      verifyMAR(outMAR, wantFailure, ["mycert"], false);
+      verifyMAR(outMAR, wantSuccess, ["mycert2"], false);
+      verifyMAR(outMAR, wantFailure, ["mycert3"], false);
+
+      // Compare the binary data to something that was signed originally
+      // with the private key from mycert2
+      let refMAR = do_get_file("data/signed_pib_mar_with_mycert2.mar");
+      do_check_true(refMAR.exists());
+      let refMARData = getBinaryFileData(refMAR);
+      let outMARData = getBinaryFileData(outMAR);
+      compareBinaryData(outMARData, refMARData);
+    },
+    // Test importing a signature that doesn't belong to the file
+    // fails to verify.
+    test_import_wrong_sig: function() {
+      // Make sure the input MAR was signed with mycert only
+      let inMAR = do_get_file("data/signed_pib_mar.mar");
+      verifyMAR(inMAR, wantSuccess, ["mycert"], false);
+      verifyMAR(inMAR, wantFailure, ["mycert2"], false);
+      verifyMAR(inMAR, wantFailure, ["mycert3"], false);
+
+      // Get the signature file for this MAR signed with the key from mycert2
+      let sigFile = do_get_file("data/multiple_signed_pib_mar.sig.0");
+      do_check_true(sigFile.exists());
+      let outMAR = do_get_file("data/sigchanged_signed_pib_mar.mar", true);
+      if (outMAR.exists()) {
+        outMAR.remove(false);
+      }
+
+      //Run the import operation
+      importMARSignature(inMAR, 0, sigFile, outMAR, wantSuccess);
+
+      // Verify we have a new MAR file and that mycert no longer verifies
+      // and that mycert2 does verify
+      do_check_true(outMAR.exists());
+      verifyMAR(outMAR, wantFailure, ["mycert"], false);
+      verifyMAR(outMAR, wantFailure, ["mycert2"], false);
+      verifyMAR(outMAR, wantFailure, ["mycert3"], false);
+    },
+    // Test importing to the second signature in a MAR that has multiple
+    // signature
+    test_import_sig_multiple: function() {
+      // Make sure the input MAR was signed with mycert only
+      let inMAR = do_get_file("data/multiple_signed_pib_mar.mar");
+      verifyMAR(inMAR, wantSuccess, ["mycert", "mycert2", "mycert3"], false);
+      verifyMAR(inMAR, wantFailure, ["mycert", "mycert", "mycert3"], false);
+
+      // Get the signature file for this MAR signed with the key from mycert
+      let sigFile = do_get_file("data/multiple_signed_pib_mar.sig.0");
+      do_check_true(sigFile.exists());
+      let outMAR = do_get_file("data/sigchanged_signed_pib_mar.mar", true);
+      if (outMAR.exists()) {
+        outMAR.remove(false);
+      }
+
+      //Run the import operation
+      const secondSigPos = 1;
+      importMARSignature(inMAR, secondSigPos, sigFile, outMAR, wantSuccess);
+
+      // Verify we have a new MAR file and that mycert no longer verifies
+      // and that mycert2 does verify
+      do_check_true(outMAR.exists());
+      verifyMAR(outMAR, wantSuccess, ["mycert", "mycert", "mycert3"], false);
+      verifyMAR(outMAR, wantFailure, ["mycert", "mycert2", "mycert3"], false);
+
+      // Compare the binary data to something that was signed originally
+      // with the private keys from mycert, mycert, mycert3
+      let refMAR = do_get_file("data/multiple_signed_pib_mar_2.mar");
+      do_check_true(refMAR.exists());
+      let refMARData = getBinaryFileData(refMAR);
+      let outMARData = getBinaryFileData(outMAR);
+      compareBinaryData(outMARData, refMARData);
     },
     // Test stripping a MAR that doesn't exist fails 
     test_bad_path_strip_fails: function() {
