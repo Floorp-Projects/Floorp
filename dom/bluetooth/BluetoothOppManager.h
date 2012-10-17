@@ -76,6 +76,10 @@ private:
                       bool aReceived,
                       uint32_t aProcessedLength,
                       uint32_t aFileLength);
+  void ReceivingFileConfirmation(const nsString& aAddress,
+                                 const nsString& aFileName,
+                                 uint32_t aFileLength,
+                                 const nsString& aContentType);
   void ReplyToConnect();
   void ReplyToDisconnect();
   void ReplyToPut(bool aFinal);
