@@ -79,7 +79,7 @@ nsIMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
 
   if (aPresContext != sPresContext)
     return NS_OK;
-  nsCOMPtr<nsIWidget> widget = GetWidget(sPresContext);
+  nsCOMPtr<nsIWidget> widget = sPresContext->GetNearestWidget();
   if (widget) {
     IMEState newState = GetNewIMEState(sPresContext, nullptr);
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
@@ -138,7 +138,7 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
   }
 
   // Current IME transaction should commit
-  nsCOMPtr<nsIWidget> widget = GetWidget(sPresContext);
+  nsCOMPtr<nsIWidget> widget = sPresContext->GetNearestWidget();
   if (widget) {
     IMEState newState = GetNewIMEState(sPresContext, nullptr);
     InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
@@ -168,7 +168,7 @@ nsIMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
 
-  nsCOMPtr<nsIWidget> widget = GetWidget(aPresContext);
+  nsCOMPtr<nsIWidget> widget = aPresContext->GetNearestWidget();
   if (!widget) {
     return NS_OK;
   }
@@ -220,7 +220,7 @@ nsIMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     if (sPresContext == aPresContext)
       oldWidget = widget;
     else
-      oldWidget = GetWidget(sPresContext);
+      oldWidget = sPresContext->GetNearestWidget();
     if (oldWidget) {
       NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, oldWidget);
     }
@@ -258,7 +258,7 @@ nsIMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
     return;
   }
 
-  nsCOMPtr<nsIWidget> widget = GetWidget(aPresContext);
+  nsCOMPtr<nsIWidget> widget = aPresContext->GetNearestWidget();
   NS_ENSURE_TRUE_VOID(widget);
 
   bool isTrusted;
@@ -296,7 +296,7 @@ nsIMEStateManager::UpdateIMEState(const IMEState &aNewIMEState,
     NS_WARNING("ISM doesn't know which editor has focus");
     return;
   }
-  nsCOMPtr<nsIWidget> widget = GetWidget(sPresContext);
+  nsCOMPtr<nsIWidget> widget = sPresContext->GetNearestWidget();
   if (!widget) {
     NS_WARNING("focused widget is not found");
     return;
@@ -425,21 +425,6 @@ nsIMEStateManager::SetIMEState(const IMEState &aState,
     nsContentUtils::AddScriptRunner(
       new IMEEnabledStateChangedEvent(context.mIMEState.mEnabled));
   }
-}
-
-nsIWidget*
-nsIMEStateManager::GetWidget(nsPresContext* aPresContext)
-{
-  nsIPresShell* shell = aPresContext->GetPresShell();
-  NS_ENSURE_TRUE(shell, nullptr);
-
-  nsIViewManager* vm = shell->GetViewManager();
-  if (!vm)
-    return nullptr;
-  nsCOMPtr<nsIWidget> widget = nullptr;
-  nsresult rv = vm->GetRootWidget(getter_AddRefs(widget));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  return widget;
 }
 
 void
