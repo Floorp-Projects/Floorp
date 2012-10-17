@@ -167,6 +167,7 @@ enum FMRadioCountry {
 };
 
 typedef Observer<FMRadioOperationInformation> FMRadioObserver;
+typedef Observer<SystemTimeChange> SystemTimeChangeObserver;
 } // namespace hal
 } // namespace mozilla
 
