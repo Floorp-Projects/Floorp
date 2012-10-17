@@ -182,7 +182,7 @@ let dataProviders = {
       // include the suggested version, which the consumer likely needs to plug
       // into a format string from a localization file.  Rather than returning
       // a string in some cases and an array in others, return an array always.
-      let msg = ["no information"];
+      let msg = [""];
       try {
         var status = gfxInfo.getFeatureStatus(feature);
       }
