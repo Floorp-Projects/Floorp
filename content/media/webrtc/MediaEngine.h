@@ -73,6 +73,9 @@ public:
    */
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile) = 0;
 
+  /* Called when the stream wants more data */
+  virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) = 0;
+
   /* Stop the device and release the corresponding MediaStream */
   virtual nsresult Stop() = 0;
 
