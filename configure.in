@@ -8967,8 +8967,20 @@ fi
 
 if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_JEMALLOC" -a "$MOZ_MEMORY" ; then
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --build=$build --host=$target --enable-stats --with-jemalloc-prefix=je_"
-  if test "$OS_ARCH" = "Linux"; then
-    MANGLE="malloc calloc valloc free realloc memalign posix_memalign malloc_usable_size"
+  case "$OS_ARCH" in
+    Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
+      MANGLE="malloc calloc valloc free realloc posix_memalign"
+      case "$OS_ARCH" in
+        Linux)
+          MANGLE="$MANGLE memalign malloc_usable_size"
+          ;;
+        FreeBSD)
+          MANGLE="$MANGLE malloc_usable_size"
+          ;;
+      esac
+      ;;
+  esac
+  if test -n "$MANGLE"; then
     MANGLED=
     JEMALLOC_WRAPPER=
     if test -n "$_WRAP_MALLOC"; then
