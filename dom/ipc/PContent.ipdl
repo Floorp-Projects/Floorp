@@ -202,11 +202,20 @@ child:
      * Dump the contents of about:memory to a file in our temp directory.
      *
      * For documentation on the args, see
-     * nsIMemoryReporterManager::dumpMemoryReportsToFile.
+     * MemoryInfoDumper::dumpMemoryReportsToFile.
      */
     async DumpMemoryReportsToFile(nsString identifier,
                                   bool minimizeMemoryUsage,
                                   bool dumpChildProcesses);
+
+    /**
+     * Dump this process's GC and CC logs.
+     *
+     * For documentation on the args, see
+     * MemoryInfoDumper::dumpGCAndCCLogsToFile.
+     */
+    async DumpGCAndCCLogsToFile(nsString identifier,
+                                bool dumpChildProcesses);
 
     PTestShell();
 

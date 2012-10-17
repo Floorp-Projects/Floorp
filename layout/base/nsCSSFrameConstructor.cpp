@@ -7995,11 +7995,11 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
 NS_DECLARE_FRAME_PROPERTY(ChangeListProperty, nullptr)
 
 /**
- * Return true if aFrame's subtree has placeholders for abs-pos or fixed-pos
- * content.
+ * Return true if aFrame's subtree has placeholders for out-of-flow content
+ * whose 'position' style's bit in aPositionMask is set.
  */
 static bool
-FrameHasAbsPosPlaceholderDescendants(nsIFrame* aFrame)
+FrameHasPositionedPlaceholderDescendants(nsIFrame* aFrame, uint32_t aPositionMask)
 {
   const nsIFrame::ChildListIDs skip(nsIFrame::kAbsoluteList |
                                     nsIFrame::kFixedList);
@@ -8008,15 +8008,50 @@ FrameHasAbsPosPlaceholderDescendants(nsIFrame* aFrame)
       for (nsFrameList::Enumerator childFrames(lists.CurrentList());
            !childFrames.AtEnd(); childFrames.Next()) {
         nsIFrame* f = childFrames.get();
-        if ((f->GetType() == nsGkAtoms::placeholderFrame &&
-             nsPlaceholderFrame::GetRealFrameForPlaceholder(f)->IsAbsolutelyPositioned()) ||
-            FrameHasAbsPosPlaceholderDescendants(f)) {
+        if (f->GetType() == nsGkAtoms::placeholderFrame) {
+          nsIFrame* outOfFlow = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
+          // If SVG text frames could appear here, they could confuse us since
+          // they ignore their position style ... but they can't.
+          NS_ASSERTION(!outOfFlow->IsSVGText(),
+                       "SVG text frames can't be out of flow");
+          if (aPositionMask & (1 << outOfFlow->GetStyleDisplay()->mPosition)) {
+            return true;
+          }
+        }
+        if (FrameHasPositionedPlaceholderDescendants(f, aPositionMask)) {
           return true;
         }
       }
     }
   }
   return false;
+}
+
+static bool
+NeedToReframeForAddingOrRemovingTransform(nsIFrame* aFrame)
+{
+  MOZ_STATIC_ASSERT(0 <= NS_STYLE_POSITION_ABSOLUTE &&
+                    NS_STYLE_POSITION_ABSOLUTE < 32, "Style constant out of range");
+  MOZ_STATIC_ASSERT(0 <= NS_STYLE_POSITION_FIXED &&
+                    NS_STYLE_POSITION_FIXED < 32, "Style constant out of range");
+
+  uint32_t positionMask;
+  // Don't call aFrame->IsPositioned here, since that returns true if
+  // the frame already has a transform, and we want to ignore that here
+  if (aFrame->IsAbsolutelyPositioned() ||
+      aFrame->IsRelativelyPositioned()) {
+    // This frame is a container for abs-pos descendants whether or not it
+    // has a transform.
+    // So abs-pos descendants are no problem; we only need to reframe if
+    // we have fixed-pos descendants.
+    positionMask = 1 << NS_STYLE_POSITION_FIXED;
+  } else {
+    // This frame may not be a container for abs-pos descendants already.
+    // So reframe if we have abs-pos or fixed-pos descendants.
+    positionMask = (1 << NS_STYLE_POSITION_FIXED) |
+        (1 << NS_STYLE_POSITION_ABSOLUTE);
+  }
+  return FrameHasPositionedPlaceholderDescendants(aFrame, positionMask);
 }
 
 nsresult
@@ -8081,7 +8116,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 
     if ((hint & nsChangeHint_AddOrRemoveTransform) && frame &&
         !(hint & nsChangeHint_ReconstructFrame)) {
-      if (FrameHasAbsPosPlaceholderDescendants(frame)) {
+      if (NeedToReframeForAddingOrRemovingTransform(frame)) {
         NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
       } else {
         // We can just add this state bit unconditionally, since it's

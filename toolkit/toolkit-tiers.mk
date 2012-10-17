@@ -19,6 +19,11 @@ ifdef MOZ_TREE_FREETYPE
 tier_platform_staticdirs += modules/freetype2
 endif
 
+# this must precede xpcom
+ifdef MOZ_DMDV
+tier_platform_dirs += tools/dmdv
+endif
+
 tier_platform_dirs += xpcom
 
 tier_platform_dirs += \
@@ -206,7 +211,7 @@ endif
 
 tier_platform_dirs += profile
 
-# This must preceed xpfe
+# This must precede xpfe
 ifdef MOZ_JPROF
 tier_platform_dirs        += tools/jprof
 endif

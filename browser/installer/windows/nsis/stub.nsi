@@ -331,6 +331,7 @@ Function .onUserAbort
   ${NSD_KillTimer} StartInstall
   ${NSD_KillTimer} CheckInstall
   ${NSD_KillTimer} FinishInstall
+  ${NSD_KillTimer} DisplayDownloadError
 
   Delete "$PLUGINSDIR\download.exe"
   Delete "$PLUGINSDIR\${CONFIG_INI}"
@@ -927,12 +928,8 @@ Function OnDownload
 
       ${If} $0 == 0
       ${OrIf} $1 == 0
-        MessageBox MB_OKCANCEL|MB_ICONSTOP "$(ERROR_DOWNLOAD)" IDCANCEL +2 IDOK 0
-        ExecShell "open" "${URLManualDownload}"
-        ; The following will exit the installer
-        SetAutoClose true
-        StrCpy $R9 2
-        Call RelativeGotoPage
+        ; Use a timer so the UI has a chance to update
+        ${NSD_CreateTimer} DisplayDownloadError ${InstallIntervalMS}
         Return
       ${EndIf}
 
@@ -1020,12 +1017,8 @@ Function CheckInstall
     ${NSD_KillTimer} CheckInstall
     ; Close the handle that prevents modification of the full installer
     System::Call 'kernel32::CloseHandle(i $HandleDownload)'
-    MessageBox MB_OKCANCEL|MB_ICONSTOP "$(ERROR_DOWNLOAD)" IDCANCEL +2 IDOK 0
-    ExecShell "open" "${URLManualDownload}"
-    ; The following will exit the installer
-    SetAutoClose true
-    StrCpy $R9 2
-    Call RelativeGotoPage
+    ; Use a timer so the UI has a chance to update
+    ${NSD_CreateTimer} DisplayDownloadError ${InstallIntervalMS}
     Return
   ${EndIf}
 
@@ -1334,6 +1327,33 @@ Function LaunchAppFromElevatedProcess
   ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
   ${GetPathFromString} "$0" $0
   Exec "$\"$0$\""
+FunctionEnd
+
+Function DisplayDownloadError
+  ${NSD_KillTimer} DisplayDownloadError
+  StrCpy $R9 "false"
+  MessageBox MB_OKCANCEL|MB_ICONSTOP "$(ERROR_DOWNLOAD)" IDCANCEL +2 IDOK 0
+  StrCpy $R9 "true"
+
+  ${If} "$R9" == "true"
+    ClearErrors
+    ${GetParameters} $0
+    ${GetOptions} "$0" "/UAC:" $1
+    ${If} ${Errors}
+      Call OpenManualDownloadURL
+    ${Else}
+      GetFunctionAddress $0 OpenManualDownloadURL
+      UAC::ExecCodeSegment $0
+    ${EndIf}
+  ${EndIf}
+
+  SetAutoClose true
+  StrCpy $R9 2
+  Call RelativeGotoPage
+FunctionEnd
+
+Function OpenManualDownloadURL
+  ExecShell "open" "${URLManualDownload}"
 FunctionEnd
 
 Section

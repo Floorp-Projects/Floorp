@@ -551,7 +551,8 @@ TypeInferenceOracle::canInlineCall(JSScript *caller, jsbytecode *pc)
 bool
 TypeInferenceOracle::canEnterInlinedFunction(JSFunction *target)
 {
-    JSScript *script = target->script();
+    AssertCanGC();
+    RootedScript script(cx, target->script());
     if (!script->hasAnalysis() || !script->analysis()->ranInference())
         return false;
 

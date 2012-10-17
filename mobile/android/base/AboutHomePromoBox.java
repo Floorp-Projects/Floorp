@@ -65,17 +65,7 @@ public class AboutHomePromoBox extends LinearLayout implements View.OnClickListe
                 break;
 
             case APPS:
-                final String url = "https://marketplace.mozilla.org";
-                final JSONObject args = new JSONObject();
-                try {
-                    args.put("url", url);
-                    args.put("engine", null);
-                    args.put("userEntered", false);
-                } catch (Exception e) {
-                    Log.e(LOGTAG, "error building JSON arguments");
-                }
-                Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
+                Tabs.getInstance().loadUrl("https://marketplace.mozilla.org", Tabs.LOADURL_NEW_TAB);
                 break;
 
             default:

@@ -285,13 +285,14 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
             } else {
                 frame.funName = NULL;
             }
-            const char *cfilename = i.script()->filename;
+            RootedScript script(cx, i.script());
+            const char *cfilename = script->filename;
             if (!cfilename)
                 cfilename = "";
             frame.filename = SaveScriptFilename(cx, cfilename);
             if (!frame.filename)
                 return false;
-            frame.ulineno = PCToLineNumber(i.script(), i.pc());
+            frame.ulineno = PCToLineNumber(script, i.pc());
         }
     }
 
@@ -573,6 +574,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     SkipRoot skip(cx, &iter);
 
     /* Set the 'fileName' property. */
+    RootedScript script(cx, iter.script());
     RootedString filename(cx);
     if (args.length() > 1) {
         filename = ToString(cx, args[1]);
@@ -582,7 +584,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     } else {
         filename = cx->runtime->emptyString;
         if (!iter.done()) {
-            if (const char *cfilename = iter.script()->filename) {
+            if (const char *cfilename = script->filename) {
                 filename = FilenameToString(cx, cfilename);
                 if (!filename)
                     return false;
@@ -596,7 +598,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
         if (!ToUint32(cx, args[2], &lineno))
             return false;
     } else {
-        lineno = iter.done() ? 0 : PCToLineNumber(iter.script(), iter.pc(), &column);
+        lineno = iter.done() ? 0 : PCToLineNumber(script, iter.pc(), &column);
     }
 
     int exnType = args.callee().toFunction()->getExtendedSlot(0).toInt32();

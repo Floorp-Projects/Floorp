@@ -288,7 +288,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(d94c13ae-7585-4e7b-b7ad-482976bc6f1b)]
+[uuid(e28a33ce-dfe9-4816-ae20-0f1dc8077230)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -524,9 +524,7 @@ interface nsIXPConnect : nsISupports
                                  in JSObjectPtr  aNewParent,
                                  in nsISupports  aCOMObj);
     void
-    moveWrappers(in JSContextPtr aJSContext,
-                 in JSObjectPtr  aOldScope,
-                 in JSObjectPtr  aNewScope);
+    rescueOrphansInScope(in JSContextPtr aJSContext, in JSObjectPtr  aScope);
 
     void clearAllWrappedNativeSecurityPolicies();
 

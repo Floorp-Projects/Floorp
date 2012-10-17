@@ -99,6 +99,7 @@ var AccessFu = {
     Services.obs.addObserver(this, 'Accessibility:NextObject', false);
     Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
     Services.obs.addObserver(this, 'Accessibility:CurrentObject', false);
+    this.chromeWin.addEventListener('TabOpen', this);
   },
 
   /**
@@ -117,6 +118,8 @@ var AccessFu = {
       mm.sendAsyncMessage('AccessFu:Stop');
 
     Input.detach();
+
+    this.chromeWin.removeEventListener('TabOpen', this);
 
     Services.obs.removeObserver(this, 'remote-browser-frame-shown');
     Services.obs.removeObserver(this, 'Accessibility:NextObject');
@@ -205,10 +208,20 @@ var AccessFu = {
   },
 
   handleEvent: function handleEvent(aEvent) {
-    if (aEvent.type == 'mozContentEvent' &&
-        aEvent.detail.type == 'accessibility-screenreader') {
-      this._systemPref = aEvent.detail.enabled;
-      this._enableOrDisable();
+    switch (aEvent.type) {
+      case 'mozContentEvent':
+      {
+        if (aEvent.detail.type == 'accessibility-screenreader') {
+          this._systemPref = aEvent.detail.enabled;
+          this._enableOrDisable();
+        }
+        break;
+      }
+      case 'TabOpen':
+      {
+        this._loadFrameScript(Utils.getMessageManager(aEvent.target));
+        break;
+      }
     }
   },
 

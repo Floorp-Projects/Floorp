@@ -1312,11 +1312,11 @@ AssertJit(JSContext *cx, unsigned argc, jsval *vp)
 static JSScript *
 ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
 {
-    JSFunction *fun = JS_ValueToFunction(cx, v);
+    RootedFunction fun(cx, JS_ValueToFunction(cx, v));
     if (!fun)
         return NULL;
 
-    JSScript *script = fun->maybeScript();
+    RootedScript script(cx, fun->maybeScript());
     if (!script)
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_SCRIPTS_ONLY);
 
@@ -1399,7 +1399,7 @@ TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rval,
 
     /* Debug-mode currently disables Ion compilation. */
     JSStackFrame *caller = Jsvalify(iter.interpFrame());
-    JSScript *script = iter.script();
+    RawScript script = iter.script().unsafeGet();
 
     size_t length;
     const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
@@ -1778,11 +1778,11 @@ DisassembleScript(JSContext *cx, JSScript *script_, JSFunction *fun, bool lines,
     if (recursive && script->hasObjects()) {
         ObjectArray *objects = script->objects();
         for (unsigned i = 0; i != objects->length; ++i) {
-            JSObject *obj = objects->vector[i];
+            RawObject obj = objects->vector[i];
             if (obj->isFunction()) {
                 Sprint(sp, "\n");
-                JSFunction *fun = obj->toFunction();
-                JSScript *nested = fun->maybeScript();
+                RawFunction fun = obj->toFunction();
+                RawScript nested = fun->maybeScript().unsafeGet();
                 if (!DisassembleScript(cx, nested, fun, lines, recursive, sp))
                     return false;
             }
@@ -2537,9 +2537,10 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 
     StackFrame *fp = fi.interpFrame();
+    RootedScript fpscript(cx, fp->script());
     bool ok = !!JS_EvaluateUCInStackFrame(cx, Jsvalify(fp), chars, length,
-                                          fp->script()->filename,
-                                          JS_PCToLineNumber(cx, fp->script(),
+                                          fpscript->filename,
+                                          JS_PCToLineNumber(cx, fpscript,
                                                             fi.pc()),
                                           vp);
 

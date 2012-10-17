@@ -52,7 +52,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStartDecode()
   NS_ABORT_IF_FALSE(mTracker->GetImage(),
                     "OnStartDecode callback before we've created our image");
 
-  if (!mTracker->GetRequest()->GetMultipart()) {
+  if (mTracker->GetRequest() && !mTracker->GetRequest()->GetMultipart()) {
     MOZ_ASSERT(!mTracker->mBlockingOnload);
     mTracker->mBlockingOnload = true;
 
@@ -69,7 +69,9 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStartDecode()
      The cache entry's size therefore needs to be reset to 0 here.  If we do not do this,
      the code in imgStatusTrackerObserver::OnStopFrame will continue to increase the data size cumulatively.
   */
-  mTracker->GetRequest()->ResetCacheEntry();
+  if (mTracker->GetRequest()) {
+    mTracker->GetRequest()->ResetCacheEntry();
+  }
 
   return NS_OK;
 }
@@ -156,7 +158,9 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStopDecode(nsresult aStatus)
 
   // We finished the decode, and thus have the decoded frames. Update the cache
   // entry size to take this into account.
-  mTracker->GetRequest()->UpdateCacheEntrySize();
+  if (mTracker->GetRequest()) {
+    mTracker->GetRequest()->UpdateCacheEntrySize();
+  }
 
   bool preexistingError = mTracker->GetImageStatus() == imgIRequest::STATUS_ERROR;
 
@@ -171,7 +175,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStopDecode(nsresult aStatus)
   // block onload, but then hit an error before we get to our first frame.
   mTracker->MaybeUnblockOnload();
 
-  if (NS_FAILED(aStatus) && !preexistingError) {
+  if (NS_FAILED(aStatus) && !preexistingError && mTracker->GetRequest()) {
     FireFailureNotification(mTracker->GetRequest());
   }
 
@@ -193,7 +197,9 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnDiscard()
   mTracker->RecordDiscard();
 
   // Update the cache entry size, since we just got rid of frame data
-  mTracker->GetRequest()->UpdateCacheEntrySize();
+  if (mTracker->GetRequest()) {
+    mTracker->GetRequest()->UpdateCacheEntrySize();
+  }
 
   nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
   while (iter.HasMore()) {
@@ -702,7 +708,7 @@ imgStatusTracker::OnStopRequest(bool aLastPart,
     SendStopRequest(srIter.GetNext(), aLastPart, aStatus);
   }
 
-  if (NS_FAILED(aStatus) && !preexistingError) {
+  if (NS_FAILED(aStatus) && !preexistingError && GetRequest()) {
     FireFailureNotification(GetRequest());
   }
 }

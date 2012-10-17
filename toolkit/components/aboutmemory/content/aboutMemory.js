@@ -1573,7 +1573,8 @@ function updateAboutCompartments()
   let ghostWindowsByProcess = getGhostWindowsByProcess();
 
   function handleProcess(aProcess) {
-    appendProcessAboutCompartmentsElements(body, aProcess,
+    let section = appendElement(body, 'div', 'section');
+    appendProcessAboutCompartmentsElements(section, aProcess,
                                            compartmentsByProcess[aProcess],
                                            ghostWindowsByProcess[aProcess]);
   }
@@ -1587,15 +1588,12 @@ function updateAboutCompartments()
     }
   }
 
-  appendElement(body, "hr");
-
-  let div1 = appendElement(body, "div");
-  let a;
+  let section = appendElement(body, 'div', 'footer');
   if (gVerbose) {
-    let a = appendElementWithText(div1, "a", "option", "Less verbose");
+    let a = appendElementWithText(section, "a", "option", "Less verbose");
     a.href = "about:compartments";
   } else {
-    let a = appendElementWithText(div1, "a", "option", "More verbose");
+    let a = appendElementWithText(section, "a", "option", "More verbose");
     a.href = "about:compartments?verbose";
   }
 }

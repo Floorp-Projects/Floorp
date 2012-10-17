@@ -16,10 +16,6 @@
 #include "nsDisplayList.h"
 #include "nsIReflowCallback.h"
 
-#ifdef ACCESSIBILITY
-class nsIAccessible;
-#endif
-
 class nsPluginHost;
 class nsPresContext;
 class nsRootPresContext;
@@ -52,6 +48,7 @@ public:
   friend nsIFrame* NS_NewObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
+  NS_DECL_QUERYFRAME_TARGET(nsObjectFrame)
 
   NS_IMETHOD Init(nsIContent* aContent,
                   nsIFrame* aParent,
@@ -137,7 +134,7 @@ public:
 
   // accessibility support
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<Accessible> CreateAccessible();
+  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #ifdef XP_WIN
   NS_IMETHOD GetPluginPort(HWND *aPort);
 #endif

@@ -655,6 +655,8 @@ UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
 inline bool
 UseNewTypeForClone(JSFunction *fun)
 {
+    AutoAssertNoGC nogc;
+
     if (fun->hasSingletonType() || !fun->isInterpreted())
         return false;
 
@@ -877,6 +879,7 @@ TypeScript::MonitorUnknown(JSContext *cx, HandleScript script, jsbytecode *pc)
 /* static */ inline void
 TypeScript::GetPcScript(JSContext *cx, MutableHandleScript script, jsbytecode **pc)
 {
+    AutoAssertNoGC nogc;
 #ifdef JS_ION
     if (cx->fp()->beginsIonActivation()) {
         ion::GetPcScript(cx, script, pc);

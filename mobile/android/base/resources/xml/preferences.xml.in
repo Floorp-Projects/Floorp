@@ -16,6 +16,14 @@
         <org.mozilla.gecko.SyncPreference android:title="@string/pref_sync"
                                           android:persistent="false" />
 
+#ifdef MOZ_UPDATER
+        <ListPreference android:key="app.update.autodownload"
+                        android:title="@string/pref_update_autodownload"
+                        android:entries="@array/pref_update_autodownload_entries"
+                        android:entryValues="@array/pref_update_autodownload_values"
+                        android:persistent="false" />
+#endif
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_content">
@@ -109,5 +117,4 @@
           android:persistent="false" />
 
     </PreferenceCategory>
-
 </PreferenceScreen>

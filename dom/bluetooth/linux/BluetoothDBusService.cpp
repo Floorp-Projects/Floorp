@@ -757,6 +757,12 @@ public:
     if (h) {
       h->Listen();
     }
+
+    BluetoothOppManager* opp = BluetoothOppManager::Get();
+    if (opp) {
+      opp->Listen();
+    }
+
     return NS_OK;
   }
 };
@@ -771,6 +777,12 @@ public:
     if (h) {
       h->CloseSocket();
     }
+
+    BluetoothOppManager* opp = BluetoothOppManager::Get();
+    if (opp) {
+      opp->CloseSocket();
+    }
+
     return NS_OK;
   }
 };
@@ -793,6 +805,7 @@ public:
 
     uuids.AppendElement((uint32_t)(BluetoothServiceUuid::HandsfreeAG >> 32));
     uuids.AppendElement((uint32_t)(BluetoothServiceUuid::HeadsetAG >> 32));
+    uuids.AppendElement((uint32_t)(BluetoothServiceUuid::ObjectPush >> 32));
 
     // TODO/qdot: This needs to be held for the life of the bluetooth connection
     // so we could clean it up. For right now though, we can throw it away.

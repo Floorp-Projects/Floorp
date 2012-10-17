@@ -1537,9 +1537,9 @@ CSS_PROP_TABLEBORDER(
     eStyleAnimType_None)
 #ifdef MOZ_FLEXBOX
 CSS_PROP_POSITION(
-    -moz-align-items,
+    align-items,
     align_items,
-    CSS_PROP_DOMPROP_PREFIXED(AlignItems),
+    AlignItems,
     CSS_PROPERTY_PARSE_VALUE,
     "layout.css.flexbox.enabled",
     VARIANT_HK,
@@ -1547,9 +1547,9 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mAlignItems),
     eStyleAnimType_EnumU8)
 CSS_PROP_POSITION(
-    -moz-align-self,
+    align-self,
     align_self,
-    CSS_PROP_DOMPROP_PREFIXED(AlignSelf),
+    AlignSelf,
     CSS_PROPERTY_PARSE_VALUE,
     "layout.css.flexbox.enabled",
     VARIANT_HK,
@@ -1557,15 +1557,15 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mAlignSelf),
     eStyleAnimType_EnumU8)
 CSS_PROP_SHORTHAND(
-    -moz-flex,
     flex,
-    CSS_PROP_DOMPROP_PREFIXED(Flex),
+    flex,
+    Flex,
     CSS_PROPERTY_PARSE_FUNCTION,
     "layout.css.flexbox.enabled")
 CSS_PROP_POSITION(
-    -moz-flex-basis,
+    flex-basis,
     flex_basis,
-    CSS_PROP_DOMPROP_PREFIXED(FlexBasis),
+    FlexBasis,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
@@ -1578,9 +1578,9 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mFlexBasis),
     eStyleAnimType_Coord)
 CSS_PROP_POSITION(
-    -moz-flex-direction,
+    flex-direction,
     flex_direction,
-    CSS_PROP_DOMPROP_PREFIXED(FlexDirection),
+    FlexDirection,
     CSS_PROPERTY_PARSE_VALUE,
     "layout.css.flexbox.enabled",
     VARIANT_HK,
@@ -1588,9 +1588,9 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mFlexDirection),
     eStyleAnimType_EnumU8)
 CSS_PROP_POSITION(
-    -moz-flex-grow,
+    flex-grow,
     flex_grow,
-    CSS_PROP_DOMPROP_PREFIXED(FlexGrow),
+    FlexGrow,
     CSS_PROPERTY_PARSE_VALUE |
       CSS_PROPERTY_VALUE_NONNEGATIVE,
     "layout.css.flexbox.enabled",
@@ -1602,9 +1602,9 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mFlexGrow),
     eStyleAnimType_float) // float, except animations to/from 0 shouldn't work
 CSS_PROP_POSITION(
-    -moz-flex-shrink,
+    flex-shrink,
     flex_shrink,
-    CSS_PROP_DOMPROP_PREFIXED(FlexShrink),
+    FlexShrink,
     CSS_PROPERTY_PARSE_VALUE |
       CSS_PROPERTY_VALUE_NONNEGATIVE,
     "layout.css.flexbox.enabled",
@@ -1616,9 +1616,9 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mFlexShrink),
     eStyleAnimType_float) // float, except animations to/from 0 shouldn't work
 CSS_PROP_POSITION(
-    -moz-order,
     order,
-    CSS_PROP_DOMPROP_PREFIXED(Order),
+    order,
+    Order,
     CSS_PROPERTY_PARSE_VALUE,
     "layout.css.flexbox.enabled",
     VARIANT_HI,
@@ -1626,9 +1626,9 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mOrder),
     eStyleAnimType_Custom) // <integer>
 CSS_PROP_POSITION(
-    -moz-justify-content,
+    justify-content,
     justify_content,
-    CSS_PROP_DOMPROP_PREFIXED(JustifyContent),
+    JustifyContent,
     CSS_PROPERTY_PARSE_VALUE,
     "layout.css.flexbox.enabled",
     VARIANT_HK,

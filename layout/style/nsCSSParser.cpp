@@ -396,11 +396,16 @@ protected:
   bool ParseSelectorGroup(nsCSSSelectorList*& aListHead);
   bool ParseSelector(nsCSSSelectorList* aList, PRUnichar aPrevCombinator);
 
-  css::Declaration* ParseDeclarationBlock(bool aCheckForBraces);
+  enum {
+    eParseDeclaration_InBraces       = 1 << 0,
+    eParseDeclaration_AllowImportant = 1 << 1
+  };
+
+  css::Declaration* ParseDeclarationBlock(uint32_t aFlags);
   bool ParseDeclaration(css::Declaration* aDeclaration,
-                          bool aCheckForBraces,
-                          bool aMustCallValueAppended,
-                          bool* aChanged);
+                        uint32_t aFlags,
+                        bool aMustCallValueAppended,
+                        bool* aChanged);
 
   bool ParseProperty(nsCSSProperty aPropID);
   bool ParsePropertyByFunction(nsCSSProperty aPropID);
@@ -987,7 +992,12 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
     haveBraces = false;
   }
 
-  css::Declaration* declaration = ParseDeclarationBlock(haveBraces);
+  uint32_t parseFlags = eParseDeclaration_AllowImportant;
+  if (haveBraces) {
+    parseFlags |= eParseDeclaration_InBraces;
+  }
+
+  css::Declaration* declaration = ParseDeclarationBlock(parseFlags);
   if (declaration) {
     // Create a style rule for the declaration
     NS_ADDREF(*aResult = new css::StyleRule(nullptr, declaration));
@@ -1026,7 +1036,8 @@ CSSParserImpl::ParseDeclarations(const nsAString&  aBuffer,
   for (;;) {
     // If we cleared the old decl, then we want to be calling
     // ValueAppended as we parse.
-    if (!ParseDeclaration(aDeclaration, false, true, aChanged)) {
+    if (!ParseDeclaration(aDeclaration, eParseDeclaration_AllowImportant,
+                          true, aChanged)) {
       if (!SkipDeclaration(false)) {
         break;
       }
@@ -2301,7 +2312,9 @@ CSSParserImpl::ParseKeyframeRule()
     return nullptr;
   }
 
-  nsAutoPtr<css::Declaration> declaration(ParseDeclarationBlock(true));
+  // Ignore !important in keyframe rules
+  uint32_t parseFlags = eParseDeclaration_InBraces;
+  nsAutoPtr<css::Declaration> declaration(ParseDeclarationBlock(parseFlags));
   if (!declaration) {
     REPORT_UNEXPECTED(PEBadSelectorKeyframeRuleIgnored);
     return nullptr;
@@ -2757,7 +2770,9 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
   CLEAR_ERROR();
 
   // Next parse the declaration block
-  css::Declaration* declaration = ParseDeclarationBlock(true);
+  uint32_t parseFlags = eParseDeclaration_InBraces |
+                        eParseDeclaration_AllowImportant;
+  css::Declaration* declaration = ParseDeclarationBlock(parseFlags);
   if (nullptr == declaration) {
     delete slist;
     return false;
@@ -3877,9 +3892,11 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
 }
 
 css::Declaration*
-CSSParserImpl::ParseDeclarationBlock(bool aCheckForBraces)
+CSSParserImpl::ParseDeclarationBlock(uint32_t aFlags)
 {
-  if (aCheckForBraces) {
+  bool checkForBraces = (aFlags & eParseDeclaration_InBraces) != 0;
+
+  if (checkForBraces) {
     if (!ExpectSymbol('{', true)) {
       REPORT_UNEXPECTED_TOKEN(PEBadDeclBlockStart);
       OUTPUT_ERROR();
@@ -3891,12 +3908,11 @@ CSSParserImpl::ParseDeclarationBlock(bool aCheckForBraces)
   if (declaration) {
     for (;;) {
       bool changed;
-      if (!ParseDeclaration(declaration, aCheckForBraces,
-                            true, &changed)) {
-        if (!SkipDeclaration(aCheckForBraces)) {
+      if (!ParseDeclaration(declaration, aFlags, true, &changed)) {
+        if (!SkipDeclaration(checkForBraces)) {
           break;
         }
-        if (aCheckForBraces) {
+        if (checkForBraces) {
           if (ExpectSymbol('}', true)) {
             break;
           }
@@ -4281,10 +4297,12 @@ CSSParserImpl::ParseTreePseudoElement(nsAtomList **aPseudoElementArgs)
 
 bool
 CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
-                                bool aCheckForBraces,
+                                uint32_t aFlags,
                                 bool aMustCallValueAppended,
                                 bool* aChanged)
 {
+  bool checkForBraces = (aFlags & eParseDeclaration_InBraces) != 0;
+
   mTempData.AssertInitialState();
 
   // Get property name
@@ -4292,7 +4310,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   nsAutoString propertyName;
   for (;;) {
     if (!GetToken(true)) {
-      if (aCheckForBraces) {
+      if (checkForBraces) {
         REPORT_UNEXPECTED_EOF(PEDeclEndEOF);
       }
       return false;
@@ -4353,7 +4371,13 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   CLEAR_ERROR();
 
   // Look for "!important".
-  PriorityParsingStatus status = ParsePriority();
+  PriorityParsingStatus status;
+  if ((aFlags & eParseDeclaration_AllowImportant) != 0) {
+    status = ParsePriority();
+  }
+  else {
+    status = ePriority_None;
+  }
 
   // Look for a semicolon or close brace.
   if (status != ePriority_Error) {
@@ -4362,9 +4386,9 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
     } else if (mToken.IsSymbol(';')) {
       // semicolon is always ok
     } else if (mToken.IsSymbol('}')) {
-      // brace is ok if aCheckForBraces, but don't eat it
+      // brace is ok if checkForBraces, but don't eat it
       UngetToken();
-      if (!aCheckForBraces) {
+      if (!checkForBraces) {
         status = ePriority_Error;
       }
     } else {
@@ -4374,7 +4398,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   }
 
   if (status == ePriority_Error) {
-    if (aCheckForBraces) {
+    if (checkForBraces) {
       REPORT_UNEXPECTED_TOKEN(PEBadDeclOrRuleEnd2);
     } else {
       REPORT_UNEXPECTED_TOKEN(PEBadDeclEnd);

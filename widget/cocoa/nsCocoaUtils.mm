@@ -521,6 +521,35 @@ nsCocoaUtils::GetCurrentModifiers()
   return cocoaModifiers;
 }
 
+// static
+UInt32
+nsCocoaUtils::ConvertToCarbonModifier(NSUInteger aCocoaModifier)
+{
+  UInt32 carbonModifier = 0;
+  if (aCocoaModifier & NSAlphaShiftKeyMask) {
+    carbonModifier |= alphaLock;
+  }
+  if (aCocoaModifier & NSControlKeyMask) {
+    carbonModifier |= controlKey;
+  }
+  if (aCocoaModifier & NSAlternateKeyMask) {
+    carbonModifier |= optionKey;
+  }
+  if (aCocoaModifier & NSShiftKeyMask) {
+    carbonModifier |= shiftKey;
+  }
+  if (aCocoaModifier & NSCommandKeyMask) {
+    carbonModifier |= cmdKey;
+  }
+  if (aCocoaModifier & NSNumericPadKeyMask) {
+    carbonModifier |= kEventKeyModifierNumLockMask;
+  }
+  if (aCocoaModifier & NSFunctionKeyMask) {
+    carbonModifier |= kEventKeyModifierFnMask;
+  }
+  return carbonModifier;
+}
+
 // While HiDPI support is not 100% complete and tested, we'll have a pref
 // to allow it to be turned off in case of problems (or for testing purposes).
 

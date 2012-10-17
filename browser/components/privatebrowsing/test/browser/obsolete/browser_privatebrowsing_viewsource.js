@@ -52,22 +52,15 @@ function test() {
           Services.ww.unregisterNotification(observer);
 
           step2();
-        }
-        else if (aTopic == "domwindowopened")
+        } else if (aTopic == "domwindowopened") {
           ok(false, "Entering the private browsing mode should not open any view source window");
+        } else if (aTopic == "private-browsing-transition-complete") {
+          Services.obs.removeObserver(observer, "private-browsing-transition-complete");
+          step3();
+        }
       }
       Services.ww.registerNotification(observer);
-
-      gBrowser.addTabsProgressListener({
-        onStateChange: function(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
-          if (aStateFlags & (Ci.nsIWebProgressListener.STATE_STOP |
-                             Ci.nsIWebProgressListener.STATE_IS_WINDOW)) {
-            gBrowser.removeTabsProgressListener(this);
-
-            step3();
-          }
-        }
-      });
+      Services.obs.addObserver(observer, "private-browsing-transition-complete", false);
 
       // enter private browsing mode
       pb.privateBrowsingEnabled = true;

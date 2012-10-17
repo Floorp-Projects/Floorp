@@ -170,7 +170,7 @@ public: // NOT in nsIViewManager, so private to the view module
 
   void WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint);
   bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion,
-                   bool aSentWillPaint, bool aWillSendDidPaint);
+                   uint32_t aFlags);
   void DidPaintWindow();
 
   // Call this when you need to let the viewmanager know that it now has

@@ -44,6 +44,8 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new AboutHomeContent(context, attrs);
             else if (TextUtils.equals(viewName, "AboutHomeContent$TopSitesGridView"))
                 return new AboutHomeContent.TopSitesGridView(context, attrs);
+            else if (TextUtils.equals(viewName, "AboutHomeContent$TopSitesThumbnail"))
+                return new AboutHomeContent.TopSitesThumbnail(context, attrs);
             else if (TextUtils.equals(viewName, "AboutHomeSection"))
                 return new AboutHomeSection(context, attrs);
             else if (TextUtils.equals(viewName, "AwesomeBarTabs"))
@@ -52,6 +54,8 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new BrowserToolbarBackground(context, attrs);
             else if (TextUtils.equals(viewName, "FormAssistPopup"))
                 return new FormAssistPopup(context, attrs);
+            else if (TextUtils.equals(viewName, "GeckoApp$MainLayout"))
+                return new GeckoApp.MainLayout(context, attrs);
             else if (TextUtils.equals(viewName, "LinkTextView"))
                 return new LinkTextView(context, attrs);
             else if (TextUtils.equals(viewName, "FindInPageBar"))

@@ -65,6 +65,7 @@
 #include "nsCaret.h"
 
 #include "nsSubDocumentFrame.h"
+#include "nsIFrameTraversal.h"
 #include "nsLayoutCID.h"
 #include "nsLayoutUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -112,6 +113,8 @@ using namespace mozilla::dom;
 #define NS_USER_INTERACTION_INTERVAL 5000 // ms
 
 static const nsIntPoint kInvalidRefPoint = nsIntPoint(-1,-1);
+
+static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 static bool sLeftClickOnly = true;
 static bool sKeyCausesActivation = true;

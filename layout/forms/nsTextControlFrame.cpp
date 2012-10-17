@@ -55,9 +55,6 @@
 #include "nsIDOMNodeList.h" //for selection setting helper func
 #include "nsIDOMRange.h" //for selection setting helper func
 #include "nsPIDOMWindow.h" //needed for notify selection changed to update the menus ect.
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
 #include "nsIDOMNode.h"
 
 #include "nsITransactionManager.h"
@@ -94,16 +91,10 @@ NS_QUERYFRAME_HEAD(nsTextControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef ACCESSIBILITY
-already_AddRefed<Accessible>
-nsTextControlFrame::CreateAccessible()
+a11y::AccType
+nsTextControlFrame::AccessibleType()
 {
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  if (accService) {
-    return accService->CreateHTMLTextFieldAccessible(mContent,
-                                                     PresContext()->PresShell());
-  }
-
-  return nullptr;
+  return a11y::eHTMLTextFieldAccessible;
 }
 #endif
 

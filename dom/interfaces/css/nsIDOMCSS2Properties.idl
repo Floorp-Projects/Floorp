@@ -14,7 +14,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[builtinclass, scriptable, uuid(2ae61565-1a66-4e6e-960d-b999c631e5c6)]
+[builtinclass, scriptable, uuid(df3491fd-2243-427f-bd93-b0dd3c3e7834)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -803,30 +803,30 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        MozBorderImage;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozAlignItems;
+           attribute DOMString        alignItems;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozAlignSelf;
+           attribute DOMString        alignSelf;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozFlex;
+           attribute DOMString        flex;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozFlexBasis;
+           attribute DOMString        flexBasis;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozFlexDirection;
+           attribute DOMString        flexDirection;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozFlexGrow;
+           attribute DOMString        flexGrow;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozFlexShrink;
+           attribute DOMString        flexShrink;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozOrder;
+           attribute DOMString        order;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozJustifyContent;
+           attribute DOMString        justifyContent;
                                         // raises(DOMException) on setting
 };

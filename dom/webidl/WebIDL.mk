@@ -55,6 +55,12 @@ webidl_files += \
   $(NULL)
 endif
 
+ifdef MOZ_WEBRTC
+webidl_files += \
+  MediaStreamList.webidl \
+  $(NULL)
+endif
+
 ifdef ENABLE_TESTS
 test_webidl_files := \
   TestCodeGen.webidl \

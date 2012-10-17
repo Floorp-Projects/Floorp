@@ -74,11 +74,13 @@ stubs::BindGlobalName(VMFrame &f)
 void JS_FASTCALL
 stubs::SetName(VMFrame &f, PropertyName *name)
 {
+    AssertCanGC();
     JSContext *cx = f.cx;
     RootedObject scope(cx, &f.regs.sp[-2].toObject());
     HandleValue value = HandleValue::fromMarkedLocation(&f.regs.sp[-1]);
+    RootedScript fscript(cx, f.script());
 
-    if (!SetNameOperation(cx, f.script(), f.pc(), scope, value))
+    if (!SetNameOperation(cx, fscript, f.pc(), scope, value))
         THROW();
 
     f.regs.sp[-2] = f.regs.sp[-1];
@@ -117,7 +119,7 @@ stubs::SetElem(VMFrame &f)
 
     RootedId id(cx);
 
-    Rooted<JSObject*> obj(cx, ToObjectFromStack(cx, objval));
+    RootedObject obj(cx, ToObjectFromStack(cx, objval));
     if (!obj)
         THROW();
 
@@ -286,7 +288,7 @@ stubs::Ursh(VMFrame &f)
 
 template<JSBool strict>
 void JS_FASTCALL
-stubs::DefFun(VMFrame &f, JSFunction *fun_)
+stubs::DefFun(VMFrame &f, JSFunction *funArg)
 {
     /*
      * A top-level function defined in Global or Eval code (see ECMA-262
@@ -296,7 +298,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
      */
     JSContext *cx = f.cx;
     StackFrame *fp = f.fp();
-    RootedFunction fun(f.cx, fun_);
+    RootedFunction fun(f.cx, funArg);
 
     /*
      * If static link is not current scope, clone fun's object to link to the
@@ -747,14 +749,17 @@ stubs::Mod(VMFrame &f)
 void JS_FASTCALL
 stubs::DebuggerStatement(VMFrame &f, jsbytecode *pc)
 {
+    AssertCanGC();
     JSDebuggerHandler handler = f.cx->runtime->debugHooks.debuggerHandler;
     if (handler || !f.cx->compartment->getDebuggees().empty()) {
         JSTrapStatus st = JSTRAP_CONTINUE;
-        Value rval;
-        if (handler)
-            st = handler(f.cx, f.script(), pc, &rval, f.cx->runtime->debugHooks.debuggerHandlerData);
+        RootedValue rval(f.cx);
+        if (handler) {
+            RootedScript fscript(f.cx, f.script());
+            st = handler(f.cx, fscript, pc, rval.address(), f.cx->runtime->debugHooks.debuggerHandlerData);
+        }
         if (st == JSTRAP_CONTINUE)
-            st = Debugger::onDebuggerStatement(f.cx, &rval);
+            st = Debugger::onDebuggerStatement(f.cx, rval.address());
 
         switch (st) {
           case JSTRAP_THROW:
@@ -790,7 +795,8 @@ stubs::Interrupt(VMFrame &f, jsbytecode *pc)
 void JS_FASTCALL
 stubs::TriggerIonCompile(VMFrame &f)
 {
-    JSScript *script = f.script();
+    AssertCanGC();
+    RootedScript script(f.cx, f.script());
 
     if (ion::js_IonOptions.parallelCompilation) {
         JS_ASSERT(!script->ion);
@@ -829,6 +835,7 @@ stubs::TriggerIonCompile(VMFrame &f)
 void JS_FASTCALL
 stubs::RecompileForInline(VMFrame &f)
 {
+    AutoAssertNoGC nogc;
     ExpandInlineFrames(f.cx->compartment);
     Recompiler::clearStackReferences(f.cx->runtime->defaultFreeOp(), f.script());
     f.jit()->destroyChunk(f.cx->runtime->defaultFreeOp(), f.chunkIndex(), /* resetUses = */ false);
@@ -851,8 +858,10 @@ stubs::Trap(VMFrame &f, uint32_t trapTypes)
          * setting the interruptHook to NULL.
          */
         JSInterruptHook hook = f.cx->runtime->debugHooks.interruptHook;
-        if (hook)
-            result = hook(f.cx, f.script(), f.pc(), &rval, f.cx->runtime->debugHooks.interruptHookData);
+        if (hook) {
+            RootedScript fscript(f.cx, f.script());
+            result = hook(f.cx, fscript, f.pc(), &rval, f.cx->runtime->debugHooks.interruptHookData);
+        }
 
         if (result == JSTRAP_CONTINUE)
             result = Debugger::onSingleStep(f.cx, &rval);
@@ -1034,7 +1043,8 @@ stubs::GetProp(VMFrame &f, PropertyName *name)
     MutableHandleValue objval = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-1]);
 
     RootedValue rval(cx);
-    if (!GetPropertyOperation(cx, f.script(), f.pc(), objval, &rval))
+    RootedScript fscript(cx, f.script());
+    if (!GetPropertyOperation(cx, fscript, f.pc(), objval, &rval))
         THROW();
 
     regs.sp[-1] = rval;
@@ -1293,6 +1303,7 @@ FindNativeCode(VMFrame &f, jsbytecode *target)
 void * JS_FASTCALL
 stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
 {
+    AutoAssertNoGC nogc;
     jsbytecode *jpc = pc;
     JSScript *script = f.fp()->script();
 
@@ -1545,12 +1556,12 @@ stubs::TypeBarrierHelper(VMFrame &f, uint32_t which)
      * script have been destroyed, as we will reanalyze and prune type barriers
      * as they are regenerated.
      */
-    if (f.script()->hasAnalysis() && f.script()->analysis()->ranInference()) {
+    RootedScript fscript(f.cx, f.script());
+    if (fscript->hasAnalysis() && fscript->analysis()->ranInference()) {
         AutoEnterTypeInference enter(f.cx);
-        f.script()->analysis()->breakTypeBarriers(f.cx, f.pc() - f.script()->code, false);
+        fscript->analysis()->breakTypeBarriers(f.cx, f.pc() - fscript->code, false);
     }
 
-    RootedScript fscript(f.cx, f.script());
     TypeScript::Monitor(f.cx, fscript, f.pc(), result);
 }
 
@@ -1559,12 +1570,12 @@ stubs::StubTypeHelper(VMFrame &f, int32_t which)
 {
     const Value &result = f.regs.sp[which];
 
-    if (f.script()->hasAnalysis() && f.script()->analysis()->ranInference()) {
+    RootedScript fscript(f.cx, f.script());
+    if (fscript->hasAnalysis() && fscript->analysis()->ranInference()) {
         AutoEnterTypeInference enter(f.cx);
-        f.script()->analysis()->breakTypeBarriers(f.cx, f.pc() - f.script()->code, false);
+        fscript->analysis()->breakTypeBarriers(f.cx, f.pc() - fscript->code, false);
     }
 
-    RootedScript fscript(f.cx, f.script());
     TypeScript::Monitor(f.cx, fscript, f.pc(), result);
 }
 
@@ -1617,9 +1628,10 @@ stubs::CheckArgumentTypes(VMFrame &f)
 void JS_FASTCALL
 stubs::AssertArgumentTypes(VMFrame &f)
 {
+    AutoAssertNoGC nogc;
     StackFrame *fp = f.fp();
     JSFunction *fun = fp->fun();
-    JSScript *script = fun->script();
+    RawScript script = fun->script();
 
     /*
      * Don't check the type of 'this' for constructor frames, the 'this' value
@@ -1649,6 +1661,7 @@ void JS_FASTCALL stubs::MissedBoundsCheckHead(VMFrame &f) {}
 void * JS_FASTCALL
 stubs::InvariantFailure(VMFrame &f, void *rval)
 {
+    AutoAssertNoGC nogc;
     /*
      * Patch this call to the return site of the call triggering the invariant
      * failure (or a MissedBoundsCheck* function if the failure occurred on
@@ -1663,7 +1676,7 @@ stubs::InvariantFailure(VMFrame &f, void *rval)
     *frameAddr = repatchCode;
 
     /* Recompile the outermost script, and don't hoist any bounds checks. */
-    JSScript *script = f.fp()->script();
+    RawScript script = f.fp()->script();
     JS_ASSERT(!script->failedBoundsCheck);
     script->failedBoundsCheck = true;
 

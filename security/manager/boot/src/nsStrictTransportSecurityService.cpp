@@ -16,6 +16,7 @@
 #include "nsThreadUtils.h"
 #include "nsStringGlue.h"
 #include "nsIScriptSecurityManager.h"
+#include "mozilla/Preferences.h"
 
 // A note about the preload list:
 // When a site specifically disables sts by sending a header with
@@ -67,7 +68,7 @@ nsSTSHostEntry::nsSTSHostEntry(const nsSTSHostEntry& toCopy)
 
 
 nsStrictTransportSecurityService::nsStrictTransportSecurityService()
-  : mInPrivateMode(false)
+  : mInPrivateMode(false), mUsePreloadList(true)
 {
 }
 
@@ -93,6 +94,8 @@ nsStrictTransportSecurityService::Init()
    if (pbs)
      pbs->GetPrivateBrowsingEnabled(&mInPrivateMode);
 
+   mUsePreloadList = mozilla::Preferences::GetBool("network.stricttransportsecurity.preloadlist", true);
+   mozilla::Preferences::AddStrongObserver(this, "network.stricttransportsecurity.preloadlist");
    mObserverService = mozilla::services::GetObserverService();
    if (mObserverService)
      mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, false);
@@ -209,22 +212,35 @@ nsStrictTransportSecurityService::RemoveStsState(nsIURI* aURI)
 
 NS_IMETHODIMP
 nsStrictTransportSecurityService::ProcessStsHeader(nsIURI* aSourceURI,
-                                                   const char* aHeader)
+                                                   const char* aHeader,
+                                                   uint64_t *aMaxAge,
+                                                   bool *aIncludeSubdomains)
 {
   // Should be called on the main thread (or via proxy) since the permission
   // manager is used and it's not threadsafe.
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_UNEXPECTED);
 
+  if (aMaxAge != nullptr) {
+    *aMaxAge = 0;
+  }
+
+  if (aIncludeSubdomains != nullptr) {
+    *aIncludeSubdomains = false;
+  }
+
   char * header = NS_strdup(aHeader);
   if (!header) return NS_ERROR_OUT_OF_MEMORY;
-  nsresult rv = ProcessStsHeaderMutating(aSourceURI, header);
+  nsresult rv = ProcessStsHeaderMutating(aSourceURI, header, aMaxAge,
+                                         aIncludeSubdomains);
   NS_Free(header);
   return rv;
 }
 
 nsresult
 nsStrictTransportSecurityService::ProcessStsHeaderMutating(nsIURI* aSourceURI,
-                                                           char* aHeader)
+                                                           char* aHeader,
+                                                           uint64_t *aMaxAge,
+                                                           bool *aIncludeSubdomains)
 {
   STSLOG(("STS: ProcessStrictTransportHeader(%s)\n", aHeader));
 
@@ -317,6 +333,14 @@ nsStrictTransportSecurityService::ProcessStsHeaderMutating(nsIURI* aSourceURI,
   // record the successfully parsed header data.
   SetStsState(aSourceURI, maxAge, includeSubdomains);
 
+  if (aMaxAge != nullptr) {
+    *aMaxAge = (uint64_t)maxAge;
+  }
+
+  if (aIncludeSubdomains != nullptr) {
+    *aIncludeSubdomains = includeSubdomains;
+  }
+
   return foundUnrecognizedTokens ?
          NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA :
          NS_OK;
@@ -350,11 +374,16 @@ int STSPreloadCompare(const void *key, const void *entry)
 const nsSTSPreload *
 nsStrictTransportSecurityService::GetPreloadListEntry(const char *aHost)
 {
-  return (const nsSTSPreload *) bsearch(aHost,
-                                        kSTSPreloadList,
-                                        PR_ARRAY_SIZE(kSTSPreloadList),
-                                        sizeof(nsSTSPreload),
-                                        STSPreloadCompare);
+  if (mUsePreloadList) {
+    return (const nsSTSPreload *) bsearch(aHost,
+                                          kSTSPreloadList,
+                                          PR_ARRAY_SIZE(kSTSPreloadList),
+                                          sizeof(nsSTSPreload),
+                                          STSPreloadCompare);
+  }
+  else {
+    return nullptr;
+  }
 }
 
 NS_IMETHODIMP
@@ -551,6 +580,9 @@ nsStrictTransportSecurityService::Observe(nsISupports *subject,
       mPrivateModeHostTable.Clear();
       mInPrivateMode = false;
     }
+  }
+  else if (strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
+    mUsePreloadList = mozilla::Preferences::GetBool("network.stricttransportsecurity.preloadlist", true);
   }
 
   return NS_OK;

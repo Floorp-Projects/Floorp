@@ -72,7 +72,8 @@ nsBufferedStream::Init(nsISupports* stream, uint32_t bufferSize)
     mBufferSize = bufferSize;
     mBufferStartOffset = 0;
     mCursor = 0;
-    mBuffer = new char[bufferSize];
+    const mozilla::fallible_t fallible = mozilla::fallible_t();
+    mBuffer = new (fallible) char[bufferSize];
     if (mBuffer == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;

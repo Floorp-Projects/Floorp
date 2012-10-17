@@ -58,10 +58,6 @@ To upgrade to a new revision of libjpeg-turbo, do the following:
 
     $ hg addremove
 
-== October 13, 2012 ==
-
-* Modified config.h to use MOZ_ALWAYS_INLINE (bug 800106).
-
 == July 4, 2012 (libjpeg-turbo v1.2.1 r853 2012-06-30) ==
 
 * Updated to v1.2.1 stable release.
