@@ -1,12 +1,13 @@
+. "$topsrcdir/browser/config/mozconfigs/common"
+
 ac_add_options --with-l10n-base=../../l10n-central
+
+if [ "${MOZ_UPDATE_CHANNEL}" = "release" -o "${MOZ_UPDATE_CHANNEL}" = "beta" ]; then
 ac_add_options --enable-official-branding
+fi
+
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
-
-# Avoid dependency on libstdc++ 4.5
-ac_add_options --enable-stdcxx-compat
-
-. $topsrcdir/build/unix/mozconfig.linux
-
+ac_add_options --with-ccache
 
 . "$topsrcdir/build/mozconfig.common.override"
