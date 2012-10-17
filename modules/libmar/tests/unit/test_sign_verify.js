@@ -31,7 +31,44 @@ function run_test() {
     }
     args.push("-s", inMAR.path, outMAR.path);
 
-    do_print('Running sign operation: ' + signmarBin.path);
+    process.init(signmarBin);
+    try {
+      process.run(true, args, args.length);
+    } catch(e) {
+      // On Windows negative return value throws an exception
+      process.exitValue = -1;
+    }
+
+    // Verify signmar returned 0 for success.
+    if (wantSuccess) {
+      do_check_eq(process.exitValue, 0);
+    } else {
+      do_check_neq(process.exitValue, 0);
+    }
+  }
+
+
+  /**
+   * Extract a MAR signature.
+   *
+   * @param inMAR        The MAR file who's signature should be extracted
+   * @param sigIndex     The index of the signature to extract
+   * @param extractedSig The file where the extracted signature will be stored
+   * @param wantSuccess  True if a successful signmar return code is desired
+  */
+  function extractMARSignature(inMAR, sigIndex, extractedSig, wantSuccess) {
+    // Get a process to the signmar binary from the dist/bin directory.
+    let process = Cc["@mozilla.org/process/util;1"].
+                  createInstance(Ci.nsIProcess);
+    let signmarBin = do_get_file("signmar" + BIN_SUFFIX);
+
+    // Make sure the signmar binary exists and is an executable.
+    do_check_true(signmarBin.exists());
+    do_check_true(signmarBin.isExecutable());
+
+    // Setup the command line arguments to extract the signature in the MAR.
+    let args = ["-n" + sigIndex, "-X", inMAR.path, extractedSig.path];
+
     process.init(signmarBin);
     try {
       process.run(true, args, args.length);
@@ -97,7 +134,6 @@ function run_test() {
       args.push("-v", signedMAR.path);
     }
 
-    do_print('Running verify operation: ' + signmarBin.path);
     process.init(signmarBin);
     try {
       // We put this in a try block because nsIProcess doesn't like -1 returns
@@ -133,9 +169,7 @@ function run_test() {
 
     // Setup the command line arguments to create the MAR.
     let args = ["-r", signedMAR.path, outMAR.path];
-    do_print('=----- -r ' + signedMAR.path + ' ' + outMAR.path + '\n\n\n');
 
-    do_print('Running sign operation: ' + signmarBin.path);
     process.init(signmarBin);
     try {
       process.run(true, args, args.length);
@@ -308,6 +342,46 @@ function run_test() {
       let originalMARData = getBinaryFileData(originalMAR);
       compareBinaryData(outMARData, originalMARData);
     },
+    // Test extracting the first signature in a MAR that has only a single signature
+    test_extract_sig_single: function() {
+      let inMAR = do_get_file("data/signed_pib_mar.mar");
+      let extractedSig = do_get_file("extracted_signature", true);
+      if (extractedSig.exists()) {
+        extractedSig.remove(false);
+      }
+      extractMARSignature(inMAR, 0, extractedSig, wantSuccess);
+      do_check_true(extractedSig.exists());
+
+      let referenceSig = do_get_file("data/signed_pib_mar.signature.0"); +
+      compareBinaryData(extractedSig, referenceSig);
+    },
+    // Test extracting the all signatures in a multi signature MAR
+    // The input MAR has 3 signatures.
+    test_extract_sig_multi: function() {
+      for (let i = 0; i < 3; i++) {
+        let inMAR = do_get_file("data/multiple_signed_pib_mar.mar");
+        let extractedSig = do_get_file("extracted_signature", true);
+        if (extractedSig.exists()) {
+          extractedSig.remove(false);
+        }
+        extractMARSignature(inMAR, i, extractedSig, wantSuccess);
+        do_check_true(extractedSig.exists());
+
+        let referenceSig = do_get_file("data/multiple_signed_pib_mar.sig." + i); +
+        compareBinaryData(extractedSig, referenceSig);
+      }
+    },
+    // Test extracting a signature that is out of range fails
+    test_extract_sig_out_of_range: function() {
+      let inMAR = do_get_file("data/signed_pib_mar.mar");
+      let extractedSig = do_get_file("extracted_signature", true);
+      if (extractedSig.exists()) {
+        extractedSig.remove(false);
+      }
+      const outOfBoundsIndex = 5;
+      extractMARSignature(inMAR, outOfBoundsIndex, extractedSig, wantFailure);
+      do_check_false(extractedSig.exists());
+    },
     // Test signing a file that doesn't exist fails
     test_bad_path_sign_fails: function() {
       let inMAR = do_get_file("data/does_not_exist_.mar", true);
@@ -329,6 +403,17 @@ function run_test() {
       do_check_false(noMAR.exists());
       let outMAR = do_get_file("out.mar", true);
       stripMARSignature(noMAR, outMAR, wantFailure);
+    },
+    // Test extracting from a bad path fails
+    test_extract_bad_path: function() {
+      let noMAR = do_get_file("data/does_not_exist.mar", true);
+      let extractedSig = do_get_file("extracted_signature", true);
+      do_check_false(noMAR.exists());
+      if (extractedSig.exists()) {
+        extractedSig.remove(false);
+      }
+      extractMARSignature(noMAR, 0, extractedSig, wantFailure);
+      do_check_false(extractedSig.exists());
     },
     // Between each test make sure the out MAR does not exist.
     cleanup_per_test: function() {
