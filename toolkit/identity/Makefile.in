@@ -35,7 +35,6 @@ EXTRA_JS_MODULES = \
 	IdentityStore.jsm \
 	jwcrypto.jsm \
 	LogUtils.jsm \
-	MinimalIdentity.jsm \
 	RelyingParty.jsm \
 	Sandbox.jsm \
 	$(NULL)
