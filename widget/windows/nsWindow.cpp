@@ -1084,6 +1084,13 @@ NS_METHOD nsWindow::Show(bool bState)
         sDropShadowEnabled = true;
       }
     }
+
+    // WS_EX_COMPOSITED conflicts with the WS_EX_LAYERED style and causes
+    // some popup menus to become invisible.
+    LONG_PTR exStyle = ::GetWindowLongPtrW(mWnd, GWL_EXSTYLE);
+    if (exStyle & WS_EX_LAYERED) {
+      ::SetWindowLongPtrW(mWnd, GWL_EXSTYLE, exStyle & ~WS_EX_COMPOSITED);
+    }
   }
 
   bool syncInvalidate = false;
