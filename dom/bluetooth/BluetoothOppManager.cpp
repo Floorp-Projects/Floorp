@@ -682,3 +682,36 @@ void
 BluetoothOppManager::OnDisconnect()
 {
 }
+
+void
+BluetoothOppManager::ReceivingFileConfirmation(const nsString& aAddress,
+                                               const nsString& aFileName,
+                                               uint32_t aFileLength,
+                                               const nsString& aContentType)
+{
+  nsString type, name;
+  BluetoothValue v;
+  InfallibleTArray<BluetoothNamedValue> parameters;
+  type.AssignLiteral("bluetooth-opp-receiving-file-confirmation");
+
+  name.AssignLiteral("address");
+  v = aAddress;
+  parameters.AppendElement(BluetoothNamedValue(name, v));
+
+  name.AssignLiteral("fileName");
+  v = aFileName;
+  parameters.AppendElement(BluetoothNamedValue(name, v));
+
+  name.AssignLiteral("fileLength");
+  v = aFileLength;
+  parameters.AppendElement(BluetoothNamedValue(name, v));
+
+  name.AssignLiteral("contentType");
+  v = aContentType;
+  parameters.AppendElement(BluetoothNamedValue(name, v));
+
+  if (!BroadcastSystemMessage(type, parameters)) {
+    NS_WARNING("Failed to broadcast [bluetooth-opp-receiving-file-confirmation]");
+    return;
+  }
+}
