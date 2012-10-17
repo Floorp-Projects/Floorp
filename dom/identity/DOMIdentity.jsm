@@ -12,22 +12,12 @@ let EXPORTED_SYMBOLS = ["DOMIdentity"];
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-/*
 XPCOMUtils.defineLazyModuleGetter(this, "IdentityService",
                                   "resource://gre/modules/identity/Identity.jsm");
-*/
-
-// minimal Identity.jsm
-XPCOMUtils.defineLazyModuleGetter(this, "IdentityService",
-                                  "resource://gre/modules/identity/MinimalIdentity.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this,
                                   "Logger",
                                   "resource://gre/modules/identity/LogUtils.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
-                                   "@mozilla.org/parentprocessmessagemanager;1",
-                                   "nsIMessageListenerManager");
 
 function log(...aMessageArgs) {
   Logger.log.apply(Logger, ["DOMIdentity"].concat(aMessageArgs));
@@ -128,15 +118,13 @@ RPWatchContext.prototype = {
 let DOMIdentity = {
   // nsIMessageListener
   receiveMessage: function DOMIdentity_receiveMessage(aMessage) {
-      log("**received message", aMessage);
     let msg = aMessage.json;
 
     // Target is the frame message manager that called us and is
     // used to send replies back to the proper window.
-    /* let targetMM = aMessage.target
+    let targetMM = aMessage.target
                            .QueryInterface(Ci.nsIFrameLoaderOwner)
-                           .frameLoader.messageManager;*/
-    let targetMM = aMessage.target;
+                           .frameLoader.messageManager;
 
     switch (aMessage.name) {
       // RP
@@ -211,11 +199,8 @@ let DOMIdentity = {
     let func = aWindow.messageManager[aRegister ? "addMessageListener"
                                                 : "removeMessageListener"];
 
-      log("in _configureMessages *****", aRegister, this.messages);
-
     for (let message of this.messages) {
-      // func.call(aWindow.messageManager, message, this);
-	    ppmm.addMessageListener(message, this);
+      func.call(aWindow.messageManager, message, this);
     }
   },
 

@@ -46,8 +46,8 @@ function test_select_identity() {
     let mockedDoc = mock_doc(null, TEST_URL, call_sequentially(
       function(action, params) {
         // ready emitted from first watch() call
-        do_check_eq(action, 'ready');
-        do_check_null(params);
+	do_check_eq(action, 'ready');
+	do_check_null(params);
       },
       // first the login call
       function(action, params) {
