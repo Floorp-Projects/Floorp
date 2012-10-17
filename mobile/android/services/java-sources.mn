@@ -62,8 +62,10 @@ sync/log/writers/AndroidLogWriter.java
 sync/log/writers/LevelFilteringLogWriter.java
 sync/log/writers/LogWriter.java
 sync/log/writers/PrintLogWriter.java
-sync/log/writers/SingleTagLogWriter.java
+sync/log/writers/SimpleTagLogWriter.java
 sync/log/writers/StringLogWriter.java
+sync/log/writers/TagLogWriter.java
+sync/log/writers/ThreadLocalTagLogWriter.java
 sync/Logger.java
 sync/MetaGlobal.java
 sync/MetaGlobalException.java
@@ -184,6 +186,7 @@ sync/setup/activities/SendTabActivity.java
 sync/setup/activities/SetupFailureActivity.java
 sync/setup/activities/SetupSuccessActivity.java
 sync/setup/activities/SetupSyncActivity.java
+sync/setup/activities/SyncActivity.java
 sync/setup/activities/WebViewActivity.java
 sync/setup/auth/AccountAuthenticator.java
 sync/setup/auth/AuthenticateAccountStage.java

@@ -181,17 +181,6 @@ public class BaseResource implements Resource {
   private static Object connManagerMonitor = new Object();
   private static ClientConnectionManager connManager;
 
-  /**
-   * This method exists for test code.
-   */
-  public static ClientConnectionManager enablePlainHTTPConnectionManager() {
-    synchronized (connManagerMonitor) {
-      ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager();
-      connManager = cm;
-      return cm;
-    }
-  }
-
   // Call within a synchronized block on connManagerMonitor.
   private static ClientConnectionManager enableTLSConnectionManager() throws KeyManagementException, NoSuchAlgorithmException  {
     SSLContext sslContext = SSLContext.getInstance("TLS");
