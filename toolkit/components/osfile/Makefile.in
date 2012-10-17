@@ -19,10 +19,6 @@ EXTRA_PP_JS_MODULES = \
    osfile.jsm \
    $(NULL)
 
-CPPSRCS = \
-	osfileutils.cpp \
-	$(NULL)
-
 ifdef ENABLE_TESTS
 DIRS += tests
 endif
