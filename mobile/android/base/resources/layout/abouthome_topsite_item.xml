@@ -3,36 +3,15 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="146dip"
-                android:layout_height="wrap_content"
-                android:paddingTop="4dip">
+<view class="org.mozilla.gecko.AboutHomeContent$TopSitesThumbnail"
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                style="@style/AboutHome.Thumbnail">
 
-    <ImageView android:id="@+id/thumbnail"
-               android:layout_width="@dimen/tab_thumbnail_width"
-               android:layout_height="@dimen/tab_thumbnail_height"
-               android:layout_centerHorizontal="true"
-               android:paddingTop="2dip"
-               android:layout_alignParentTop="true"
-               android:src="@drawable/tab_thumbnail_default"
-               android:scaleType="fitCenter"/>
+    <ImageView
+          android:id="@+id/thumbnail"
+          style="@style/AboutHome.Thumbnail.Image"/>
 
-    <ImageView android:id="@+id/shadow"
-               android:layout_width="138dip"
-               android:layout_height="80dip"
-               android:layout_centerHorizontal="true"
-               android:layout_alignParentTop="true"
-               android:src="@drawable/tab_thumbnail_shadow"
-               android:scaleType="fitCenter"/>
+    <TextView android:id="@+id/title"
+              style="@style/AboutHome.Thumbnail.Label"/>
 
-   <TextView android:id="@+id/title"
-             android:layout_width="fill_parent"
-             android:layout_height="15dip"
-             android:layout_marginTop="3dip"
-             android:layout_below="@id/shadow"
-             android:singleLine="true"
-             android:textColor="#000000"
-             android:textSize="9sp"
-             android:gravity="center_horizontal"/>
-
-</RelativeLayout>
+</view>

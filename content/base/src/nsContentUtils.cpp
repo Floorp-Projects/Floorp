@@ -1721,23 +1721,6 @@ nsContentUtils::TraceSafeJSContext(JSTracer* aTrc)
   }
 }
 
-nsresult
-nsContentUtils::ReparentContentWrappersInScope(JSContext *cx,
-                                               nsIScriptGlobalObject *aOldScope,
-                                               nsIScriptGlobalObject *aNewScope)
-{
-  JSObject *oldScopeObj = aOldScope->GetGlobalJSObject();
-  JSObject *newScopeObj = aNewScope->GetGlobalJSObject();
-
-  if (!newScopeObj || !oldScopeObj) {
-    // We can't really do anything without the JSObjects.
-
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  return sXPConnect->MoveWrappers(cx, oldScopeObj, newScopeObj);
-}
-
 nsPIDOMWindow *
 nsContentUtils::GetWindowFromCaller()
 {
@@ -6525,8 +6508,8 @@ nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
   }
 }
 
-nsIWidget *
-nsContentUtils::WidgetForDocument(nsIDocument *aDoc)
+nsIPresShell*
+nsContentUtils::FindPresShellForDocument(nsIDocument* aDoc)
 {
   nsIDocument* doc = aDoc;
   nsIDocument* displayDoc = doc->GetDisplayDocument();
@@ -6535,25 +6518,35 @@ nsContentUtils::WidgetForDocument(nsIDocument *aDoc)
   }
 
   nsIPresShell* shell = doc->GetShell();
+  if (shell) {
+    return shell;
+  }
+
   nsCOMPtr<nsISupports> container = doc->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = do_QueryInterface(container);
-  while (!shell && docShellTreeItem) {
+  while (docShellTreeItem) {
     // We may be in a display:none subdocument, or we may not have a presshell
     // created yet.
     // Walk the docshell tree to find the nearest container that has a presshell,
-    // and find the root widget from that.
+    // and return that.
     nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(docShellTreeItem);
     nsCOMPtr<nsIPresShell> presShell;
     docShell->GetPresShell(getter_AddRefs(presShell));
     if (presShell) {
-      shell = presShell;
-    } else {
-      nsCOMPtr<nsIDocShellTreeItem> parent;
-      docShellTreeItem->GetParent(getter_AddRefs(parent));
-      docShellTreeItem = parent;
+      return presShell;
     }
+    nsCOMPtr<nsIDocShellTreeItem> parent;
+    docShellTreeItem->GetParent(getter_AddRefs(parent));
+    docShellTreeItem = parent;
   }
 
+  return nullptr;
+}
+
+nsIWidget*
+nsContentUtils::WidgetForDocument(nsIDocument* aDoc)
+{
+  nsIPresShell* shell = FindPresShellForDocument(aDoc);
   if (shell) {
     nsIViewManager* VM = shell->GetViewManager();
     if (VM) {

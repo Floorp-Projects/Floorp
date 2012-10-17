@@ -35,10 +35,10 @@ XPIDLSRCS = \
 
 EXTRA_PP_COMPONENTS = \
   nsBlocklistService.js \
+  extensions.manifest \
   $(NULL)
 
 EXTRA_COMPONENTS = \
-  extensions.manifest \
   addonManager.js \
   amContentHandler.js \
   amWebInstallListener.js \

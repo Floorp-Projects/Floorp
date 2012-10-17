@@ -393,7 +393,7 @@ public class FennecNativeDriver implements Driver {
 
         String[] lines = data.split("\n");
         for (int i = 0; i < lines.length; i++) {
-            String[] parts = lines[i].split("=");
+            String[] parts = lines[i].split("=", 2);
             retVal.put(parts[0].trim(), parts[1].trim());
         }
         return retVal;

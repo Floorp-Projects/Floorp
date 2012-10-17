@@ -159,6 +159,27 @@ BluetoothOppManager::Disconnect()
 }
 
 bool
+BluetoothOppManager::Listen()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  CloseSocket();
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    NS_WARNING("BluetoothService not available!");
+    return false;
+  }
+
+  nsresult rv = bs->ListenSocketViaService(BluetoothReservedChannels::OPUSH,
+                                           BluetoothSocketType::RFCOMM,
+                                           true,
+                                           false,
+                                           this);
+  return NS_FAILED(rv) ? false : true;
+}
+
+bool
 BluetoothOppManager::SendFile(BlobParent* aActor,
                               BluetoothReplyRunnable* aRunnable)
 {

@@ -30,7 +30,7 @@
       height: 30px;
     }
     div#flexContainer {
-      display: -moz-flex;
+      display: flex;
       width: 100px;
       height: 30px;
     }
@@ -145,18 +145,18 @@ function runOrderTestcase(aOrderTestcase) {
   ok(Array.isArray(aOrderTestcase), "expecting testcase to be an array");
   is(aOrderTestcase.length, 4, "expecting testcase to have 4 elements");
 
-  document.getElementById("a").style.MozOrder = aOrderTestcase[0];
-  document.getElementById("b").style.MozOrder = aOrderTestcase[1];
-  document.getElementById("c").style.MozOrder = aOrderTestcase[2];
+  document.getElementById("a").style.order = aOrderTestcase[0];
+  document.getElementById("b").style.order = aOrderTestcase[1];
+  document.getElementById("c").style.order = aOrderTestcase[2];
 
   var snapshot = snapshotWindow(window, false);
   complainIfSnapshotsDiffer(snapshot, gRefSnapshots[aOrderTestcase[3]],
                             aOrderTestcase);
 
   // Clean up
-  document.getElementById("a").style.MozOrder = "";
-  document.getElementById("b").style.MozOrder = "";
-  document.getElementById("c").style.MozOrder = "";
+  document.getElementById("a").style.order = "";
+  document.getElementById("b").style.order = "";
+  document.getElementById("c").style.order = "";
 }
 
 // Main Function

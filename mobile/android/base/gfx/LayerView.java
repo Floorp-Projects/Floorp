@@ -106,6 +106,10 @@ public class LayerView extends FrameLayout {
             mTextureView.setBackgroundColor(Color.WHITE);
             addView(mTextureView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         } else {
+            // This will stop PropertyAnimator from creating a drawing cache (i.e. a bitmap)
+            // from a SurfaceView, which is just not possible (the bitmap will be transparent).
+            setWillNotCacheDrawing(false);
+
             mSurfaceView = new SurfaceView(getContext());
             mSurfaceView.setBackgroundColor(Color.WHITE);
             addView(mSurfaceView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);

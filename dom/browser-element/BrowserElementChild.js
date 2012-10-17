@@ -401,7 +401,7 @@ BrowserElementChild.prototype = {
     var menuData = {systemTargets: [], contextmenu: null};
     var ctxMenuId = null;
 
-    while (elem && elem.hasAttribute) {
+    while (elem && elem.parentNode) {
       var ctxData = this._getSystemCtxMenuData(elem);
       if (ctxData) {
         menuData.systemTargets.push({
@@ -410,7 +410,7 @@ BrowserElementChild.prototype = {
         });
       }
 
-      if (!ctxMenuId && elem.hasAttribute('contextmenu')) {
+      if (!ctxMenuId && 'hasAttribute' in elem && elem.hasAttribute('contextmenu')) {
         ctxMenuId = elem.getAttribute('contextmenu');
       }
       elem = elem.parentNode;
@@ -462,7 +462,10 @@ BrowserElementChild.prototype = {
                    content.innerHeight, "rgb(255,255,255)");
     sendAsyncMsg('got-screenshot', {
       id: data.json.id,
-      rv: canvas.toDataURL("image/png")
+      // Hack around the fact that we can't specify opaque PNG, this requires
+      // us to unpremultiply the alpha channel which is expensive on ARM
+      // processors because they lack a hardware integer division instruction.
+      rv: canvas.toDataURL("image/jpeg")
     });
   },
 
@@ -620,6 +623,10 @@ BrowserElementChild.prototype = {
       if (!this._seenLoadStart) {
         return;
       }
+
+      // Remove password and wyciwyg from uri.
+      location = Cc["@mozilla.org/docshell/urifixup;1"]
+        .getService(Ci.nsIURIFixup).createExposableURI(location);
 
       sendAsyncMsg('locationchange', location.spec);
     },

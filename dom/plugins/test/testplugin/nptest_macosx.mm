@@ -69,20 +69,6 @@ pluginInstanceInit(InstanceData* instanceData)
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
   }
 
-#ifndef NP_NO_CARBON
-  // The test plugin will test using Carbon NPAPI if it is available. This
-  // is simply because we want to test Gecko's Carbon NPAPI support. You can
-  // override this behavior with an environment variable.
-  if (!getenv("TEST_COCOA_NPAPI")) {
-    NPBool supportsCarbonEvents = false;
-    if ((NPN_GetValue(npp, NPNVsupportsCarbonBool, &supportsCarbonEvents) == NPERR_NO_ERROR) &&
-        supportsCarbonEvents) {
-      instanceData->eventModel = NPEventModelCarbon;
-      return NPERR_NO_ERROR;
-    }
-  }
-#endif
-
   NPBool supportsCocoaEvents = false;
   if ((NPN_GetValue(npp, NPNVsupportsCocoaBool, &supportsCocoaEvents) == NPERR_NO_ERROR) &&
       supportsCocoaEvents) {
@@ -158,16 +144,7 @@ pluginDraw(InstanceData* instanceData, NPCocoaEvent* event)
 
   NPWindow window = instanceData->window;
 
-  CGContextRef cgContext = NULL;
-#ifndef NP_NO_CARBON
-  if (instanceData->eventModel == NPEventModelCocoa) {
-    cgContext = event->data.draw.context;
-  } else {
-    cgContext = ((NP_CGContext*)(window.window))->context;
-  }
-#else
-  cgContext = event->data.draw.context;
-#endif
+  CGContextRef cgContext = event->data.draw.context;
 
   float windowWidth = window.width;
   float windowHeight = window.height;
@@ -255,40 +232,6 @@ pluginDraw(InstanceData* instanceData, NPCocoaEvent* event)
 int16_t
 pluginHandleEvent(InstanceData* instanceData, void* event)
 {
-#ifndef NP_NO_CARBON
-  if (instanceData->eventModel == NPEventModelCarbon) {
-    EventRecord* carbonEvent = (EventRecord*)event;
-    if (!carbonEvent)
-      return kNPEventNotHandled;
-
-    NPWindow* w = &instanceData->window;
-    switch (carbonEvent->what) {
-      case updateEvt:
-        pluginDraw(instanceData, NULL);
-        break;
-      case mouseDown:
-      case mouseUp:
-      case osEvt:
-      {
-        Rect globalBounds = {0};
-        WindowRef nativeWindow = static_cast<WindowRef>(static_cast<NP_CGContext*>(w->window)->window);
-        if (nativeWindow)
-          ::GetWindowBounds(nativeWindow, kWindowStructureRgn, &globalBounds);
-        instanceData->lastMouseX = carbonEvent->where.h - w->x - globalBounds.left;
-        instanceData->lastMouseY = carbonEvent->where.v - w->y - globalBounds.top;
-        if (carbonEvent->what == mouseUp) {
-          instanceData->mouseUpEventCount++;
-        }
-        break;
-      }
-      default:
-        return kNPEventNotHandled;
-    }
-
-    return kNPEventHandled;
-  }
-#endif
-
   NPCocoaEvent* cocoaEvent = (NPCocoaEvent*)event;
   if (!cocoaEvent)
     return kNPEventNotHandled;

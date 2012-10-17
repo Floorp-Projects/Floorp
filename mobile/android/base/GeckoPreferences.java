@@ -54,6 +54,7 @@ public class GeckoPreferences
     public static String PREFS_MP_ENABLED         = "privacy.masterpassword.enabled";
     public static String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
     public static String PREFS_ANNOUNCEMENTS_ENABLED = NON_PREF_PREFIX + "privacy.announcements.enabled";
+    public static String PREFS_UPDATER_AUTODOWNLOAD  = "app.update.autodownload";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -210,6 +211,8 @@ public class GeckoPreferences
             // Send a broadcast intent to the product announcements service, either to start or
             // to stop the repeated background checks.
             broadcastAnnouncementsPref(GeckoApp.mAppContext, ((Boolean) newValue).booleanValue());
+        } else if (prefName != null && prefName.equals(PREFS_UPDATER_AUTODOWNLOAD)) {
+            org.mozilla.gecko.updater.UpdateServiceHelper.registerForUpdates(GeckoApp.mAppContext, (String)newValue);
         }
 
         if (!TextUtils.isEmpty(prefName)) {

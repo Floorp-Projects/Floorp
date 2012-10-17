@@ -54,9 +54,11 @@ function testFlexboxTestcase(aFlexboxTestcase, aFlexDirection, aPropertyMapping)
 
   // Create flex container
   let flexContainer = document.createElement("div");
-  flexContainer.style.display = "-moz-flex";
-  flexContainer.style.MozFlexDirection = aFlexDirection;
-  setPossiblyAliasedProperty(flexContainer, "_main-size", gDefaultFlexContainerSize, aPropertyMapping);
+  flexContainer.style.display = "flex";
+  flexContainer.style.flexDirection = aFlexDirection;
+  setPossiblyAliasedProperty(flexContainer, "_main-size",
+                             gDefaultFlexContainerSize,
+                             aPropertyMapping);
 
   // Apply testcase's customizations for flex container (if any).
   if (aFlexboxTestcase.container_properties) {

@@ -22,6 +22,8 @@ class nsICategoryManager;
 #define NS_STYLESHEETSERVICE_CONTRACTID \
   "@mozilla.org/content/style-sheet-service;1"
 
+class nsIMemoryReporter;
+
 class nsStyleSheetService MOZ_FINAL : public nsIStyleSheetService
 {
  public:
@@ -35,6 +37,8 @@ class nsStyleSheetService MOZ_FINAL : public nsIStyleSheetService
 
   nsCOMArray<nsIStyleSheet>* AgentStyleSheets() { return &mSheets[AGENT_SHEET]; }
   nsCOMArray<nsIStyleSheet>* UserStyleSheets() { return &mSheets[USER_SHEET]; }
+
+  static size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
 
   static nsStyleSheetService *gInstance;
 
@@ -52,8 +56,12 @@ class nsStyleSheetService MOZ_FINAL : public nsIStyleSheetService
   // new sheet will be the last sheet in mSheets[aSheetType].
   NS_HIDDEN_(nsresult) LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
                                                     uint32_t aSheetType);
-  
+
+  size_t SizeOfIncludingThisHelper(nsMallocSizeOfFun aMallocSizeOf) const;
+
   nsCOMArray<nsIStyleSheet> mSheets[2];
+
+  nsIMemoryReporter* mReporter;
 };
 
 #endif

@@ -11,6 +11,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
+Cu.import("resource://gre/modules/Webapps.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -40,7 +41,18 @@ ActivityProxy.prototype = {
     this.id = Cc["@mozilla.org/uuid-generator;1"]
                 .getService(Ci.nsIUUIDGenerator)
                 .generateUUID().toString();
-    cpmm.sendAsyncMessage("Activity:Start", { id: this.id, options: aOptions });
+    // Retrieve the app's manifest url from the principal, so that we can
+    // later notify when the activity handler called postResult or postError
+    let principal = aWindow.document.nodePrincipal;
+    let appId = principal.appId;
+    let manifestURL = (appId != Ci.nsIScriptSecurityManager.NO_APP_ID &&
+                       appId != Ci.nsIScriptSecurityManager.UNKNOWN_APP_ID)
+                        ? DOMApplicationRegistry.getManifestURLByLocalId(appId)
+                        : null;
+    cpmm.sendAsyncMessage("Activity:Start", { id: this.id,
+                                              options: aOptions,
+                                              manifestURL: manifestURL,
+                                              pageURL: aWindow.document.location.href });
 
     cpmm.addMessageListener("Activity:FireSuccess", this);
     cpmm.addMessageListener("Activity:FireError", this);

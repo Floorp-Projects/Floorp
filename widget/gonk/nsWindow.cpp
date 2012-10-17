@@ -250,7 +250,7 @@ nsWindow::DoDraw(void)
         oglm->SetWorldTransform(sRotationMatrix);
 
         if (nsIWidgetListener* listener = gWindowToRedraw->GetWidgetListener())
-          listener->PaintWindow(gWindowToRedraw, region, false, false);
+          listener->PaintWindow(gWindowToRedraw, region, 0);
     } else if (mozilla::layers::LAYERS_BASIC == lm->GetBackendType()) {
         MOZ_ASSERT(sFramebufferOpen || sUsingOMTC);
         nsRefPtr<gfxASurface> targetSurface;
@@ -271,7 +271,7 @@ nsWindow::DoDraw(void)
                 ScreenRotation(EffectiveScreenRotation()));
 
             if (nsIWidgetListener* listener = gWindowToRedraw->GetWidgetListener())
-              listener->PaintWindow(gWindowToRedraw, region, false, false);
+              listener->PaintWindow(gWindowToRedraw, region, 0);
         }
 
         if (!sUsingOMTC) {

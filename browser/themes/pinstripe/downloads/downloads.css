@@ -133,31 +133,22 @@ richlistitem[type="download"][state="1"]:hover {
 .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
-.downloadButton.downloadCancel:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-.downloadButton.downloadCancel:active {
-  -moz-image-region: rect(0px, 48px, 16px, 28px);
-}
 
 .downloadButton.downloadShow {
   -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
-.downloadButton.downloadShow:hover {
+richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
-.downloadButton.downloadShow:active {
+richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:hover {
   -moz-image-region: rect(16px, 48px, 32px, 32px);
+}
+richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:active {
+  -moz-image-region: rect(16px, 64px, 32px, 48px);
 }
 
 .downloadButton.downloadRetry {
   -moz-image-region: rect(32px, 16px, 48px, 0px);
-}
-.downloadButton.downloadRetry:hover {
-  -moz-image-region: rect(32px, 32px, 48px, 16px);
-}
-.downloadButton.downloadRetry:active {
-  -moz-image-region: rect(32px, 48px, 48px, 32px);
 }
 
 /*** Status and progress indicator ***/

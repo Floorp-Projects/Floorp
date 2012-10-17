@@ -1753,7 +1753,8 @@ ParseXMLSource(JSContext *cx, HandleString src)
         op = (JSOp) *i.pc();
         if (op == JSOP_TOXML || op == JSOP_TOXMLLIST) {
             filename = i.script()->filename;
-            lineno = PCToLineNumber(i.script(), i.pc());
+            RootedScript script(cx, i.script());
+            lineno = PCToLineNumber(script, i.pc());
             for (endp = srcp + srclen; srcp < endp; srcp++) {
                 if (*srcp == '\n')
                     --lineno;

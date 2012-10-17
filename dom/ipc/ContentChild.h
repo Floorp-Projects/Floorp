@@ -111,9 +111,12 @@ public:
     RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* child);
 
     virtual bool
-    RecvDumpMemoryReportsToFile(const nsString& identifier,
+    RecvDumpMemoryReportsToFile(const nsString& aIdentifier,
                                 const bool& aMinimizeMemoryUsage,
                                 const bool& aDumpChildProcesses);
+    virtual bool
+    RecvDumpGCAndCCLogsToFile(const nsString& aIdentifier,
+                              const bool& aDumpChildProcesses);
 
     virtual PTestShellChild* AllocPTestShell();
     virtual bool DeallocPTestShell(PTestShellChild*);

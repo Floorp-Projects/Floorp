@@ -12,17 +12,17 @@
         border: 1px dashed blue;
         height: 200px;
         width: -moz-fit-content;
-        display: -moz-flex;
+        display: flex;
         font-size: 10px;
         line-height: 10px;
 
         /* Any children whose align-self is 'auto' (or unspecified, or
            -moz-initial) will end up taking this value from us: */
-        -moz-align-items: center;
+        align-items: center;
 
         /* Any children whose align-self is 'inherit' will end up
            inheriting this value from us: */
-        -moz-align-self: flex-end;
+        align-self: flex-end;
       }
 
       .flexbox > * {
@@ -39,39 +39,39 @@
       /* Classes for each of the various align-self values */
       .flex-start {
         background: lime;
-        -moz-align-self: flex-start;
+        align-self: flex-start;
       }
       .flex-end {
         background: orange;
-        -moz-align-self: flex-end;
+        align-self: flex-end;
       }
       .center {
         background: lightblue;
-        -moz-align-self: center;
+        align-self: center;
       }
       .baseline {
         background: teal;
-        -moz-align-self: baseline;
+        align-self: baseline;
       }
       .stretch {
         background: pink;
-        -moz-align-self: stretch;
+        align-self: stretch;
         display: block; /* XXXdholbert Hackaround for bug 799725 */
       }
       .auto {
         background: yellow;
-        -moz-align-self: auto;
+        align-self: auto;
       }
       .unspecified {
         background: lightgreen;
       }
       .initial {
         background: aqua;
-        -moz-align-self: -moz-initial;
+        align-self: -moz-initial;
       }
       .inherit {
         background: violet;
-        -moz-align-self: inherit;
+        align-self: inherit;
       }
    </style>
   </head>

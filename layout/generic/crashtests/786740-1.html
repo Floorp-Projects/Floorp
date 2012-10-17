@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<style>
+#d {
+  transition:opacity 1s;
+}
+#p {
+  position:absolute;
+}
+</style>
+</head>
+<body>
+<div id="d">
+  Hello
+  <span id="s"><div id="p">Kitty</div></span>
+</div>
+<script>
+var d = document.getElementById("d");
+d.getBoundingClientRect();
+d.style.opacity = 0.3;
+window.addEventListener("MozReftestInvalidate",
+  function() {
+    setTimeout(function() {
+      document.body.removeChild(d);
+      document.documentElement.removeAttribute("class");
+    }, 50);
+  }, false);
+</script>
+</body>
+</html>

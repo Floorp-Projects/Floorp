@@ -505,6 +505,8 @@ public:
 
   inline bool IsMenuPopup() const { return mFlags & eMenuPopupAccessible; }
 
+  inline bool IsProgress() const { return mFlags & eProgressAccessible; }
+
   inline bool IsRoot() const { return mFlags & eRootAccessible; }
   mozilla::a11y::RootAccessible* AsRoot();
 
@@ -776,10 +778,11 @@ protected:
     eListControlAccessible = 1 << 17,
     eMenuButtonAccessible = 1 << 18,
     eMenuPopupAccessible = 1 << 19,
-    eRootAccessible = 1 << 20,
-    eTextLeafAccessible = 1 << 21,
-    eXULDeckAccessible = 1 << 22,
-    eXULTreeAccessible = 1 << 23
+    eProgressAccessible = 1 << 20,
+    eRootAccessible = 1 << 21,
+    eTextLeafAccessible = 1 << 22,
+    eXULDeckAccessible = 1 << 23,
+    eXULTreeAccessible = 1 << 24
   };
 
   //////////////////////////////////////////////////////////////////////////////

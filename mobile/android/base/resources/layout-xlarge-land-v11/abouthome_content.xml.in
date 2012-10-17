@@ -38,23 +38,7 @@
 
             <view class="org.mozilla.gecko.AboutHomeContent$TopSitesGridView"
                   android:id="@+id/top_sites_grid"
-                  android:layout_width="fill_parent"
-                  android:layout_height="wrap_content"
-                  android:layout_marginTop="12dp"
-                  android:verticalSpacing="8dip"
-                  android:horizontalSpacing="0dip"
-                  android:isScrollContainer="false"
-                  android:gravity="center"
-                  android:listSelector="@drawable/action_bar_button"/>
-
-            <org.mozilla.gecko.LinkTextView android:id="@+id/all_top_sites_text"
-                                            android:text="@string/abouthome_top_sites_browse"
-                                            android:layout_width="fill_parent"
-                                            android:layout_height="30dip"
-                                            android:layout_marginTop="7dip"
-                                            android:textColor="#22629e"
-                                            android:textSize="12sp"
-                                            android:gravity="top|center_horizontal"/>
+                  style="@style/AboutHome.Thumbnail.Grid"/>
 
             <org.mozilla.gecko.AboutHomePromoBox android:id="@+id/promo_box"
                                                  android:orientation="horizontal"

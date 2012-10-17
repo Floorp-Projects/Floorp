@@ -20,6 +20,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
+interface nsIDOMBlob;
 interface nsIDOMFile;
 interface nsIVariant;
 interface nsIInputStreamCallback;
@@ -38,6 +39,11 @@ interface nsIDOMMozCanvasPrintState : nsISupports
 interface nsIPrintCallback : nsISupports
 {
   void render(in nsIDOMMozCanvasPrintState ctx);
+};
+
+[scriptable, function, uuid(6e9ffb59-2067-4aef-a51c-65e65a3e0d81)]
+interface nsIFileCallback : nsISupports {
+  void receive(in nsIDOMBlob file);
 };
 
 [scriptable, uuid(a7062fca-41c6-4520-b777-3bb30fd77273)]
@@ -63,6 +69,10 @@ interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
   // mozGetAsFile(name, type);        -- uses given type
   [optional_argc] nsIDOMFile mozGetAsFile(in DOMString name,
                                           [optional] in DOMString type);
+
+  [optional_argc] void toBlob(in nsIFileCallback callback,
+                              [optional] in DOMString type,
+                              [optional] in nsIVariant params);
 
   // A Mozilla-only extension to get a canvas context backed by double-buffered
   // shared memory. Only privileged callers can call this.

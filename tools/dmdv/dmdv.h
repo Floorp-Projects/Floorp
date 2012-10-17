@@ -1,6 +1,6 @@
 /*
    ----------------------------------------------------------------
-   The following BSD-style license applies to this one file (dmd.h) only.
+   The following BSD-style license applies to this one file (dmdv.h) only.
    ----------------------------------------------------------------
 
    The Initial Developer of the Original Code is
@@ -18,16 +18,16 @@
    1. Redistributions of source code must retain the above copyright
       notice, this list of conditions and the following disclaimer.
 
-   2. The origin of this software must not be misrepresented; you must 
-      not claim that you wrote the original software.  If you use this 
-      software in a product, an acknowledgment in the product 
+   2. The origin of this software must not be misrepresented; you must
+      not claim that you wrote the original software.  If you use this
+      software in a product, an acknowledgment in the product
       documentation would be appreciated but is not required.
 
    3. Altered source versions must be plainly marked as such, and must
       not be misrepresented as being the original software.
 
-   4. The name of the author may not be used to endorse or promote 
-      products derived from this software without specific prior written 
+   4. The name of the author may not be used to endorse or promote
+      products derived from this software without specific prior written
       permission.
 
    THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
@@ -43,40 +43,40 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef __DMD_H
-#define __DMD_H
+#ifndef __DMDV_H
+#define __DMDV_H
 
 #include "valgrind/valgrind.h"
 
-/* !! ABIWARNING !! ABIWARNING !! ABIWARNING !! ABIWARNING !! 
+/* !! ABIWARNING !! ABIWARNING !! ABIWARNING !! ABIWARNING !!
    This enum comprises an ABI exported by Valgrind to programs
    which use client requests.  DO NOT CHANGE THE ORDER OF THESE
    ENTRIES, NOR DELETE ANY -- add new ones at the end. */
 typedef
-   enum { 
-      VG_USERREQ__DMD_REPORT = VG_USERREQ_TOOL_BASE('D','M'),
-      VG_USERREQ__DMD_UNREPORT,
-      VG_USERREQ__DMD_CHECK_REPORTING
-   } Vg_DMDClientRequest;
+   enum {
+      VG_USERREQ__DMDV_REPORT = VG_USERREQ_TOOL_BASE('D','M'),
+      VG_USERREQ__DMDV_UNREPORT,
+      VG_USERREQ__DMDV_CHECK_REPORTING
+   } Vg_DMDVClientRequest;
 
 
 /* Mark heap block at _qzz_addr as reported for _qzz_len bytes.
  * _qzz_name is the name of the reporter. */
-#define VALGRIND_DMD_REPORT(_qzz_addr,_qzz_len,_qzz_name)        \
+#define VALGRIND_DMDV_REPORT(_qzz_addr,_qzz_len,_qzz_name)       \
     VALGRIND_DO_CLIENT_REQUEST_EXPR(0 /* default return */,      \
-                            VG_USERREQ__DMD_REPORT,              \
+                            VG_USERREQ__DMDV_REPORT,             \
                             (_qzz_addr), (_qzz_len), (_qzz_name), 0, 0)
 
 /* Mark heap block at _qzz_addr as not reported. */
-#define VALGRIND_DMD_UNREPORT(_qzz_addr)                         \
+#define VALGRIND_DMDV_UNREPORT(_qzz_addr)                        \
     VALGRIND_DO_CLIENT_REQUEST_EXPR(0 /* default return */,      \
-                            VG_USERREQ__DMD_UNREPORT,            \
+                            VG_USERREQ__DMDV_UNREPORT,           \
                             (_qzz_addr), 0, 0, 0, 0)
 
 /* Do a reporting check. */
-#define VALGRIND_DMD_CHECK_REPORTING                             \
+#define VALGRIND_DMDV_CHECK_REPORTING                            \
     VALGRIND_DO_CLIENT_REQUEST_EXPR(0 /* default return */,      \
-                            VG_USERREQ__DMD_CHECK_REPORTING,     \
+                            VG_USERREQ__DMDV_CHECK_REPORTING,    \
                             0, 0, 0, 0, 0)
 
 #endif

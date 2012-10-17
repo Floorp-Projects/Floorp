@@ -103,7 +103,7 @@ PrintBacktrace()
     int32_t OOM_traceIdx = 0;
     OOM_traceSize = backtrace(OOM_trace, JS_OOM_BACKTRACE_SIZE);
     OOM_traceSymbols = backtrace_symbols(OOM_trace, OOM_traceSize);
-    
+
     if (!OOM_traceSymbols)
         return;
 

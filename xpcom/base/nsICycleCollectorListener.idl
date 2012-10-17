@@ -34,7 +34,7 @@ interface nsICycleCollectorHandler : nsISupports
  * a call to end().  If begin() returns an error none of the other
  * functions will be called.
  */
-[scriptable, builtinclass, uuid(5d1c5d51-2022-4242-8c33-0a942b5fed06)]
+[scriptable, builtinclass, uuid(4282249c-7f80-4093-b620-96c573ad683e)]
 interface nsICycleCollectorListener : nsISupports
 {
     nsICycleCollectorListener allTraces();
@@ -45,6 +45,9 @@ interface nsICycleCollectorListener : nsISupports
     // a log to a file unless disableLog is set to true.
     attribute boolean disableLog;
     attribute boolean wantAfterProcessing;
+
+    // This string will appear somewhere in the log's filename.
+    attribute AString filenameIdentifier;
 
     void begin();
     void noteRefCountedObject (in unsigned long long aAddress,

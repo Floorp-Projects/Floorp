@@ -14,8 +14,22 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMNavigatorUserMedia.h"
 #include "mozilla/Attributes.h"
+#include "prlog.h"
 
 namespace mozilla {
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gMediaManagerLog;
+#define MM_LOG(msg) PR_LOG(gMediaManagerLog, PR_LOG_DEBUG, msg)
+#else
+#define MM_LOG(msg)
+#endif
+
+// We only support 1 audio and 1 video track for now.
+enum {
+  kVideoTrack = 1,
+  kAudioTrack = 2
+};
 
 class GetUserMediaNotificationEvent: public nsRunnable
 {
@@ -59,11 +73,12 @@ class GetUserMediaNotificationEvent: public nsRunnable
 class GetUserMediaCallbackMediaStreamListener : public MediaStreamListener
 {
 public:
-  GetUserMediaCallbackMediaStreamListener(MediaEngineSource* aSource,
-    nsDOMMediaStream* aStream, TrackID aListenId)
-    : mSource(aSource)
+  GetUserMediaCallbackMediaStreamListener(nsDOMMediaStream* aStream,
+    MediaEngineSource* aAudioSource,
+    MediaEngineSource* aVideoSource)
+    : mAudioSource(aAudioSource)
+    , mVideoSource(aVideoSource)
     , mStream(aStream)
-    , mID(aListenId)
     , mValid(true) {}
 
   void
@@ -74,9 +89,14 @@ public:
     }
 
     mValid = false;
-    mSource->Stop();
-    mSource->Deallocate();
-
+    if (mAudioSource) {
+      mAudioSource->Stop();
+      mAudioSource->Deallocate();
+    }
+    if (mVideoSource) {
+      mVideoSource->Stop();
+      mVideoSource->Deallocate();
+    }
     nsCOMPtr<GetUserMediaNotificationEvent> event =
       new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STOPPING);
 
@@ -87,8 +107,22 @@ public:
   NotifyConsumptionChanged(MediaStreamGraph* aGraph, Consumption aConsuming)
   {
     if (aConsuming == CONSUMED) {
+      nsresult rv;
+
       SourceMediaStream* stream = mStream->GetStream()->AsSourceStream();
-      mSource->Start(stream, mID);
+      if (mAudioSource) {
+        rv = mAudioSource->Start(stream, kAudioTrack);
+        if (NS_FAILED(rv)) {
+          MM_LOG(("Starting audio failed, rv=%d",rv));
+        }
+      }
+      if (mVideoSource) {
+        rv = mVideoSource->Start(stream, kVideoTrack);
+        if (NS_FAILED(rv)) {
+          MM_LOG(("Starting video failed, rv=%d",rv));
+        }
+      }
+      MM_LOG(("started all sources"));
       nsCOMPtr<GetUserMediaNotificationEvent> event =
         new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STARTING);
 
@@ -101,17 +135,10 @@ public:
     return;
   }
 
-  void NotifyBlockingChanged(MediaStreamGraph* aGraph, Blocking aBlocked) {}
-  void NotifyOutput(MediaStreamGraph* aGraph) {}
-  void NotifyFinished(MediaStreamGraph* aGraph) {}
-  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-    TrackRate aTrackRate, TrackTicks aTrackOffset,
-    uint32_t aTrackEvents, const MediaSegment& aQueuedMedia) {}
-
 private:
-  nsRefPtr<MediaEngineSource> mSource;
+  nsRefPtr<MediaEngineSource> mAudioSource;
+  nsRefPtr<MediaEngineSource> mVideoSource;
   nsCOMPtr<nsDOMMediaStream> mStream;
-  TrackID mID;
   bool mValid;
 };
 

@@ -31,6 +31,11 @@
 
 #include "nsPIDOMWindow.h"
 #include "nsDOMDataChannel.h"
+#ifdef MOZILLA_INTERNAL_API
+#include "MediaStreamList.h"
+#include "nsIScriptGlobalObject.h"
+#include "jsapi.h"
+#endif
 
 #ifndef USE_FAKE_MEDIA_STREAMS
 #include "MediaSegment.h"
@@ -1130,7 +1135,7 @@ PeerConnectionImpl::IceStreamReady(NrIceMediaStream *aStream)
   CSFLogDebugS(logTag, __FUNCTION__ << ": "  << aStream->name().c_str());
 }
 
-nsRefPtr<LocalSourceStreamInfo>
+LocalSourceStreamInfo*
 PeerConnectionImpl::GetLocalStream(int aIndex)
 {
   if(aIndex < 0 || aIndex >= (int) mLocalSourceStreams.Length()) {
@@ -1141,7 +1146,7 @@ PeerConnectionImpl::GetLocalStream(int aIndex)
   return mLocalSourceStreams[aIndex];
 }
 
-nsRefPtr<RemoteSourceStreamInfo>
+RemoteSourceStreamInfo*
 PeerConnectionImpl::GetRemoteStream(int aIndex)
 {
   if(aIndex < 0 || aIndex >= (int) mRemoteSourceStreams.Length()) {
@@ -1163,6 +1168,47 @@ PeerConnectionImpl::AddRemoteStream(nsRefPtr<RemoteSourceStreamInfo> aInfo,
   mRemoteSourceStreams.AppendElement(aInfo);
 
   return NS_OK;
+}
+
+#ifdef MOZILLA_INTERNAL_API
+static nsresult
+GetStreams(JSContext* cx, PeerConnectionImpl* peerConnection,
+           MediaStreamList::StreamType type, JS::Value* streams)
+{
+  nsAutoPtr<MediaStreamList> list(new MediaStreamList(peerConnection, type));
+
+  ErrorResult rv;
+  JSObject* obj = list->WrapObject(cx, rv);
+  if (rv.Failed()) {
+    streams->setNull();
+    return rv.ErrorCode();
+  }
+
+  // Transfer ownership to the binding.
+  streams->setObject(*obj);
+  list.forget();
+  return NS_OK;
+}
+#endif
+
+NS_IMETHODIMP
+PeerConnectionImpl::GetLocalStreams(JSContext* cx, JS::Value* streams)
+{
+#ifdef MOZILLA_INTERNAL_API
+  return GetStreams(cx, this, MediaStreamList::Local, streams);
+#else
+  return NS_ERROR_FAILURE;
+#endif
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::GetRemoteStreams(JSContext* cx, JS::Value* streams)
+{
+#ifdef MOZILLA_INTERNAL_API
+  return GetStreams(cx, this, MediaStreamList::Remote, streams);
+#else
+  return NS_ERROR_FAILURE;
+#endif
 }
 
 void

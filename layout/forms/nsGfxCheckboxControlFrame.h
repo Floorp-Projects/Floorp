@@ -8,10 +8,6 @@
 #include "mozilla/Attributes.h"
 #include "nsFormControlFrame.h"
 
-#ifdef ACCESSIBILITY
-class nsIAccessible;
-#endif
-
 class nsGfxCheckboxControlFrame : public nsFormControlFrame
 {
 public:
@@ -31,7 +27,7 @@ public:
                               const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<Accessible> CreateAccessible() MOZ_OVERRIDE;
+  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
 protected:
