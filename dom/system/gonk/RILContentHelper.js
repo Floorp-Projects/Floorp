@@ -717,7 +717,7 @@ RILContentHelper.prototype = {
       case "RIL:CancelMMI:Return:OK":
         request = this.takeRequest(msg.json.requestId);
         if (request) {
-          Services.DOMRequest.fireSuccess(request, msg.json);
+          Services.DOMRequest.fireSuccess(request, msg.json.result);
         }
         break;
       case "RIL:SendMMI:Return:KO":
