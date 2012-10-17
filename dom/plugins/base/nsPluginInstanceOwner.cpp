@@ -984,7 +984,7 @@ static const moz2javaCharset charsets[] =
     {"x-mac-greek",     "MacGreek"},
     {"x-mac-hebrew",    "MacHebrew"},
     {"x-mac-icelandic", "MacIceland"},
-    {"x-mac-roman",     "MacRoman"},
+    {"macintosh",       "MacRoman"},
     {"x-mac-romanian",  "MacRomania"},
     {"x-mac-ukrainian", "MacUkraine"},
     {"Shift_JIS",       "SJIS"},
