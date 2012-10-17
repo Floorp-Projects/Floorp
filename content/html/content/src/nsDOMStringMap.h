@@ -13,16 +13,42 @@
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "nsString.h"
+#include "nsWrapperCache.h"
+#include "nsGenericHTMLElement.h"
 
-class nsGenericHTMLElement;
-
-class nsDOMStringMap : public nsIDOMDOMStringMap
+class nsDOMStringMap : public nsIDOMDOMStringMap,
+                       public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMDOMSTRINGMAP
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMStringMap)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMStringMap)
 
+  nsINode* GetParentObject()
+  {
+    return mElement;
+  }
+
+  static nsDOMStringMap* FromSupports(nsISupports* aSupports)
+  {
+    nsIDOMDOMStringMap* map =
+      static_cast<nsDOMStringMap*>(aSupports);
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIDOMDOMStringMap> map_qi =
+        do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsIDOMDOMStringMap pointer as the
+      // nsISupports pointer. That must be fixed, or we'll crash...
+      NS_ASSERTION(map_qi == map, "Uh, fix QI!");
+    }
+#endif
+
+    return static_cast<nsDOMStringMap*>(map);
+  }
+
+  
   nsDOMStringMap(nsGenericHTMLElement* aElement);
 
   // GetDataPropList is not defined in IDL due to difficulty
