@@ -158,7 +158,9 @@ pref(layout.css.flexbox.enabled,true) == flexbox-resizeviewport-1.xhtml flexbox-
 
 # Tests for sizing of flex containers, e.g. under min/max size constraints
 test-pref(layout.css.flexbox.enabled,true) == flexbox-sizing-horiz-1.xhtml flexbox-sizing-horiz-1-ref.xhtml
+test-pref(layout.css.flexbox.enabled,true) == flexbox-sizing-horiz-2.xhtml flexbox-sizing-horiz-2-ref.xhtml
 test-pref(layout.css.flexbox.enabled,true) == flexbox-sizing-vert-1.xhtml  flexbox-sizing-vert-1-ref.xhtml
+test-pref(layout.css.flexbox.enabled,true) == flexbox-sizing-vert-2.xhtml  flexbox-sizing-vert-2-ref.xhtml
 
 test-pref(layout.css.flexbox.enabled,true) == flexbox-table-fixup-1a.xhtml flexbox-table-fixup-1-ref.xhtml
 test-pref(layout.css.flexbox.enabled,true) == flexbox-table-fixup-1b.xhtml flexbox-table-fixup-1-ref.xhtml

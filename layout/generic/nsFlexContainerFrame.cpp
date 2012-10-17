@@ -2046,10 +2046,20 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
                                            aReflowState.ComputedHeight()));
 
     if (mCachedContentBoxCrossSize == NS_AUTOHEIGHT) {
-      // unconstrained 'auto' cross-size: shrink-wrap our line(s)
+      // Unconstrained 'auto' cross-size: shrink-wrap our line(s), subject
+      // to our min-size / max-size constraints in that axis.
+      nscoord minCrossSize =
+        axisTracker.GetCrossComponent(nsSize(aReflowState.mComputedMinWidth,
+                                             aReflowState.mComputedMinHeight));
+      nscoord maxCrossSize =
+        axisTracker.GetCrossComponent(nsSize(aReflowState.mComputedMaxWidth,
+                                             aReflowState.mComputedMaxHeight));
       mCachedContentBoxCrossSize =
-        lineCrossAxisPosnTracker.GetLineCrossSize();
-    } else {
+        NS_CSS_MINMAX(lineCrossAxisPosnTracker.GetLineCrossSize(),
+                      minCrossSize, maxCrossSize);
+    }
+    if (lineCrossAxisPosnTracker.GetLineCrossSize() !=
+        mCachedContentBoxCrossSize) {
       // XXXdholbert When we support multi-line flex containers, we should
       // distribute any extra space among or between our lines here according
       // to 'align-content'. For now, we do the single-line special behavior:
