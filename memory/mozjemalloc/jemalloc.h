@@ -37,11 +37,17 @@
 #endif
 #include "jemalloc_types.h"
 
+#if defined(MOZ_NATIVE_JEMALLOC)
+#define wrap(a) a
+#else
+#define wrap(a) je_ ## a
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if defined(MOZ_MEMORY_LINUX)
+#if defined(MOZ_NATIVE_JEMALLOC) || defined(MOZ_MEMORY_LINUX)
 __attribute__((weak))
 #endif
 void	jemalloc_stats(jemalloc_stats_t *stats);
@@ -52,7 +58,7 @@ void	jemalloc_stats(jemalloc_stats_t *stats);
 __attribute__((weak))
 #endif
 #if defined(MOZ_JEMALLOC)
-int je_nallocm(size_t *rsize, size_t size, int flags);
+MOZ_IMPORT_API(int) wrap(nallocm)(size_t *rsize, size_t size, int flags);
 #else
 size_t je_malloc_good_size(size_t size);
 #endif
@@ -62,11 +68,11 @@ static inline size_t je_malloc_usable_size_in_advance(size_t size) {
 #if defined(MOZ_MEMORY_DARWIN)
   return malloc_good_size(size);
 #elif defined(MOZ_JEMALLOC)
-  if (je_nallocm) {
+  if (wrap(nallocm)) {
     size_t ret;
     if (size == 0)
       size = 1;
-    if (!je_nallocm(&ret, size, 0))
+    if (!wrap(nallocm)(&ret, size, 0))
       return ret;
   }
   return size;
@@ -112,5 +118,7 @@ void    jemalloc_purge_freed_pages();
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
+
+#undef wrap
 
 #endif /* _JEMALLOC_H_ */
