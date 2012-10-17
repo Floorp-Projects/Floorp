@@ -41,6 +41,15 @@ Cu.import("resource:///modules/services-common/log4moz.js");
 let logger = Log4Moz.repository.getLogger("Marionette");
 logger.info('marionette-actors.js loaded');
 
+// This is used to prevent newSession from returning before the telephony
+// API's are ready; see bug 792647.  This assumes that marionette-actors.js
+// will be loaded before the 'system-message-listener-ready' message
+// is fired.  If this stops being true, this approach will have to change.
+let systemMessageListenerReady = false;
+Services.obs.addObserver(function() {
+  systemMessageListenerReady = true;
+}, "system-message-listener-ready", false);
+
 /**
  * Creates the root actor once a connection is established
  */
@@ -438,7 +447,10 @@ MarionetteDriverActor.prototype = {
     function waitForWindow() {
       let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       let win = this.getCurrentWindow();
-      if (!win || (appName == "Firefox" && !win.gBrowser) || (appName == "Fennec" && !win.BrowserApp)) { 
+      if (!win ||
+          (appName == "Firefox" && !win.gBrowser) ||
+          (appName == "Fennec" && !win.BrowserApp) ||
+          (appName == "B2G" && !systemMessageListenerReady)) { 
         checkTimer.initWithCallback(waitForWindow.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
       }
       else {
