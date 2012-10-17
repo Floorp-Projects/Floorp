@@ -167,7 +167,7 @@ let Activities = {
 
     this.db = new ActivitiesDb();
     this.db.init();
-    this.mm = {};
+    this.callers = {};
   },
 
   observe: function activities_observe(aSubject, aTopic, aData) {
@@ -194,11 +194,11 @@ let Activities = {
 
       // We have no matching activity registered, let's fire an error.
       if (aResults.options.length === 0) {
-        Activities.mm[aMsg.id].sendAsyncMessage("Activity:FireError", {
+        Activities.callers[aMsg.id].mm.sendAsyncMessage("Activity:FireError", {
           "id": aMsg.id,
           "error": "NO_PROVIDER"
         });
-        delete Activities.mm[aMsg.id];
+        delete Activities.callers[aMsg.id];
         return;
       }
 
@@ -207,11 +207,11 @@ let Activities = {
 
         // The user has cancelled the choice, fire an error.
         if (aChoice === -1) {
-          Activities.mm[aMsg.id].sendAsyncMessage("Activity:FireError", {
+          Activities.callers[aMsg.id].mm.sendAsyncMessage("Activity:FireError", {
             "id": aMsg.id,
             "error": "USER_ABORT"
           });
-          delete Activities.mm[aMsg.id];
+          delete Activities.callers[aMsg.id];
           return;
         }
 
@@ -233,11 +233,13 @@ let Activities = {
           Services.io.newURI(result.manifest, null, null));
 
         if (!result.description.returnValue) {
-          Activities.mm[aMsg.id].sendAsyncMessage("Activity:FireSuccess", {
+          Activities.callers[aMsg.id].mm.sendAsyncMessage("Activity:FireSuccess", {
             "id": aMsg.id,
             "result": null
           });
-          delete Activities.mm[aMsg.id];
+          // No need to notify observers, since we don't want the caller
+          // to be raised on the foreground that quick.
+          delete Activities.callers[aMsg.id];
         }
       };
 
@@ -271,19 +273,37 @@ let Activities = {
   receiveMessage: function activities_receiveMessage(aMessage) {
     let mm = aMessage.target;
     let msg = aMessage.json;
+
+    let caller;
+    let obsData;
+
+    if (aMessage.name == "Activity:FireSuccess" ||
+        aMessage.name == "Activity:FireError") {
+      caller = this.callers[msg.id];
+      if (caller) {
+        obsData = JSON.stringify({ manifestURL: caller.manifestURL,
+                                   pageURL: caller.pageURL,
+                                   success: aMessage.name == "Activity:FireSuccess" });
+      }
+    }
+
     switch(aMessage.name) {
       case "Activity:Start":
-        this.mm[msg.id] = aMessage.target;
+        this.callers[msg.id] = { mm: aMessage.target,
+                                 manifestURL: msg.manifestURL,
+                                 pageURL: msg.pageURL };
         this.startActivity(msg);
         break;
 
       case "Activity:PostResult":
-        this.mm[msg.id].sendAsyncMessage("Activity:FireSuccess", msg);
-        delete this.mm[msg.id];
+        caller.mm.sendAsyncMessage("Activity:FireSuccess", msg);
+        Services.obs.notifyObservers(null, "activity-done", obsData);
+        delete this.callers[msg.id];
         break;
       case "Activity:PostError":
-        this.mm[msg.id].sendAsyncMessage("Activity:FireError", msg);
-        delete this.mm[msg.id];
+        caller.mm.sendAsyncMessage("Activity:FireError", msg);
+        Services.obs.notifyObservers(null, "activity-done", obsData);
+        delete this.callers[msg.id];
         break;
 
       case "Activities:Register":

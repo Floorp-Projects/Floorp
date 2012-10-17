@@ -58,6 +58,7 @@ EXPORTS_NAMESPACES = mozilla/a11y
 
 EXPORTS_mozilla/a11y = \
   FocusManager.h \
+  AccTypes.h \
   States.h \
   Role.h \
   $(NULL)

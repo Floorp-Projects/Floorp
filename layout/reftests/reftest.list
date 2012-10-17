@@ -322,3 +322,6 @@ include ../../content/html/content/reftests/reftest.list
 
 # editor/
 include ../../editor/reftests/reftest.list
+
+# box-sizing
+include box-sizing/reftest.list

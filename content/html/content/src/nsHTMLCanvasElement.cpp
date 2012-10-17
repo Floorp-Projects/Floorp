@@ -40,6 +40,32 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 
+namespace {
+
+class ToBlobRunnable : public nsRunnable
+{
+public:
+  ToBlobRunnable(nsIFileCallback* aCallback,
+                 nsIDOMBlob* aBlob)
+    : mCallback(aCallback),
+      mBlob(aBlob)
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  }
+
+  NS_IMETHOD Run()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    mCallback->Receive(mBlob);
+    return NS_OK;
+  }
+private:
+  nsCOMPtr<nsIFileCallback> mCallback;
+  nsCOMPtr<nsIDOMBlob> mBlob;
+};
+
+} // anonymous namespace
+
 class nsHTMLCanvasPrintState : public nsIDOMMozCanvasPrintState
 {
 public:
@@ -548,6 +574,51 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
   NS_ENSURE_TRUE(count <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   return Base64EncodeInputStream(stream, aDataURL, (uint32_t)count, aDataURL.Length());
+}
+
+// XXXkhuey the encoding should be off the main thread, but we're lazy.
+NS_IMETHODIMP
+nsHTMLCanvasElement::ToBlob(nsIFileCallback* aCallback,
+                            const nsAString& aType,
+                            nsIVariant* aParams,
+                            uint8_t optional_argc)
+{
+  // do a trust check if this is a write-only canvas
+  if (mWriteOnly && !nsContentUtils::IsCallerTrustedForRead()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsAutoString type;
+  nsresult rv = nsContentUtils::ASCIIToLower(aType, type);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  bool fallbackToPNG = false;
+
+  nsCOMPtr<nsIInputStream> stream;
+  rv = ExtractData(type, EmptyString(), getter_AddRefs(stream), fallbackToPNG);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (fallbackToPNG) {
+    type.AssignLiteral("image/png");
+  }
+
+  uint64_t imgSize;
+  rv = stream->Available(&imgSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(imgSize <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
+
+  void* imgData = nullptr;
+  rv = NS_ReadInputStreamToBuffer(stream, &imgData, imgSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // The DOMFile takes ownership of the buffer
+  nsRefPtr<nsDOMMemoryFile> blob =
+    new nsDOMMemoryFile(imgData, imgSize, type);
+
+  nsRefPtr<ToBlobRunnable> runnable = new ToBlobRunnable(aCallback, blob);
+  return NS_DispatchToCurrentThread(runnable);
 }
 
 NS_IMETHODIMP

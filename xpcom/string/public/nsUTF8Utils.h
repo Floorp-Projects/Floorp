@@ -286,7 +286,7 @@ class ConvertUTF8toUTF16
 
     bool ErrorEncountered() const { return mErrorEncountered; }
 
-    void MOZ_ALWAYS_INLINE write( const value_type* start, uint32_t N )
+    void NS_ALWAYS_INLINE write( const value_type* start, uint32_t N )
       {
         if ( mErrorEncountered )
           return;
@@ -345,7 +345,7 @@ class CalculateUTF8Length
 
     size_t Length() const { return mLength; }
 
-    void MOZ_ALWAYS_INLINE write( const value_type* start, uint32_t N )
+    void NS_ALWAYS_INLINE write( const value_type* start, uint32_t N )
       {
           // ignore any further requests
         if ( mErrorEncountered )
@@ -449,7 +449,7 @@ class ConvertUTF16toUTF8
 
     size_t Size() const { return mBuffer - mStart; }
 
-    void MOZ_ALWAYS_INLINE write( const value_type* start, uint32_t N )
+    void NS_ALWAYS_INLINE write( const value_type* start, uint32_t N )
       {
         buffer_type *out = mBuffer; // gcc isn't smart enough to do this!
 
@@ -566,7 +566,7 @@ class CalculateUTF8Size
 
     size_t Size() const { return mSize; }
 
-    void MOZ_ALWAYS_INLINE write( const value_type* start, uint32_t N )
+    void NS_ALWAYS_INLINE write( const value_type* start, uint32_t N )
       {
         // Assume UCS2 surrogate pairs won't be spread across fragments.
         for (const value_type *p = start, *end = start + N; p < end; ++p )

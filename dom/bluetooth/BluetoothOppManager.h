@@ -46,6 +46,7 @@ public:
   bool Connect(const nsAString& aDeviceObjectPath,
                BluetoothReplyRunnable* aRunnable);
   void Disconnect();
+  bool Listen();
 
   bool SendFile(BlobParent* aBlob,
                 BluetoothReplyRunnable* aRunnable);

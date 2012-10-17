@@ -92,29 +92,6 @@ class LayerManagerOGL;
 }
 }
 
-#ifndef NP_NO_CARBON
-enum {
-  // Currently focused ChildView (while this TSM document is active).
-  // Transient (only set while TSMProcessRawKeyEvent() is processing a key
-  // event), and the ChildView will be retained and released around the call
-  // to TSMProcessRawKeyEvent() -- so it can be weak.
-  kFocusedChildViewTSMDocPropertyTag  = 'GKFV', // type ChildView* [WEAK]
-};
-
-// Undocumented HIToolbox function used by WebKit to allow Carbon-based IME
-// to work in a Cocoa-based browser (like Safari or Cocoa-widgets Firefox).
-// (Recent WebKit versions actually use a thin wrapper around this function
-// called WKSendKeyEventToTSM().)
-//
-// Calling TSMProcessRawKeyEvent() from ChildView's keyDown: and keyUp:
-// methods (when the ChildView is a plugin view) bypasses Cocoa's IME
-// infrastructure and (instead) causes Carbon TSM events to be sent on each
-// NSKeyDown event.  We install a Carbon event handler
-// (PluginKeyEventsHandler()) to catch these events and pass them to Gecko
-// (which in turn passes them to the plugin).
-extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
-#endif // NP_NO_CARBON
-
 @interface NSEvent (Undocumented)
 
 // Return Cocoa event's corresponding Carbon event.  Not initialized (on
@@ -489,7 +466,7 @@ public:
   
   virtual bool      DispatchWindowEvent(nsGUIEvent& event);
 
-  bool PaintWindow(nsIntRegion aRegion);
+  bool PaintWindow(nsIntRegion aRegion, bool aIsAlternate);
 
 #ifdef ACCESSIBILITY
   already_AddRefed<Accessible> GetDocumentAccessible();

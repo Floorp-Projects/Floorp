@@ -71,7 +71,7 @@ public:
   nsRect GetInnerArea() const;
 
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<Accessible> CreateAccessible() MOZ_OVERRIDE;
+  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;

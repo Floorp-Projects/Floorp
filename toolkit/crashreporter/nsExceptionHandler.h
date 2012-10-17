@@ -107,7 +107,7 @@ ThreadId CurrentThreadId();
 
 // Create a hang report with two minidumps that are snapshots of the state
 // of this parent process and |childPid|. The "main" minidump will be the
-// child process, and this parent process will have the _browser extension.
+// child process, and this parent process will have the -browser extension.
 //
 // Returns true on success. If this function fails, it will attempt to delete
 // any files that were created.
@@ -118,6 +118,15 @@ ThreadId CurrentThreadId();
 bool CreatePairedMinidumps(ProcessHandle childPid,
                            ThreadId childBlamedThread,
                            nsIFile** childDump);
+
+// Create an additional minidump for a child of a process which already has
+// a minidump (|parentMinidump|).
+// The resulting dump will get the id of the parent and use the |name| as
+// an extension.
+bool CreateAdditionalChildMinidump(ProcessHandle childPid,
+                                   ThreadId childBlamedThread,
+                                   nsIFile* parentMinidump,
+                                   const nsACString& name);
 
 #  if defined(XP_WIN32) || defined(XP_MACOSX)
 // Parent-side API for children

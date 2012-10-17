@@ -24,6 +24,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -32,6 +33,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
@@ -207,6 +209,8 @@ abstract public class BrowserApp extends GeckoApp
 
         LinearLayout actionBar = (LinearLayout) getActionBarLayout();
         mMainLayout.addView(actionBar, 0);
+
+        ((GeckoApp.MainLayout) mMainLayout).setOnInterceptTouchListener(new HideTabsTouchListener());
 
         mBrowserToolbar = new BrowserToolbar(this);
         mBrowserToolbar.from(actionBar);
@@ -548,6 +552,8 @@ abstract public class BrowserApp extends GeckoApp
         // here considerably improves the frame rate of the animation.
         if (Build.VERSION.SDK_INT >= 11)
             mTabsPanel.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        else
+            mTabsPanel.setDrawingCacheEnabled(true);
     }
 
     @Override
@@ -555,6 +561,8 @@ abstract public class BrowserApp extends GeckoApp
         // Destroy the hardware layer used during the animation
         if (Build.VERSION.SDK_INT >= 11)
             mTabsPanel.setLayerType(View.LAYER_TYPE_NONE, null);
+        else
+            mTabsPanel.setDrawingCacheEnabled(false);
 
         if (hasTabsSideBar() && mTabsPanel.isShown()) {
             boolean usingTextureView = mLayerView.shouldUseTextureView();
@@ -675,7 +683,6 @@ abstract public class BrowserApp extends GeckoApp
                              mAboutHomeStartupTimer.stop();
                          }
                     });
-                    mAboutHomeContent.setOnInterceptTouchListener(new ContentTouchListener());
                 } else {
                     mAboutHomeContent.update(EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES,
                                                         AboutHomeContent.UpdateFlags.REMOTE_TABS));
@@ -685,6 +692,51 @@ abstract public class BrowserApp extends GeckoApp
                 findViewById(R.id.abouthome_content).setVisibility(View.GONE);
             }
         } 
+    }
+
+    private class HideTabsTouchListener implements OnInterceptTouchListener {
+        private boolean mIsHidingTabs = false;
+
+        @Override
+        public boolean onInterceptTouchEvent(View view, MotionEvent event) {
+            // We need to account for scroll state for the touched view otherwise
+            // tapping on an "empty" part of the view will still be considered a
+            // valid touch event.
+            if (view.getScrollX() != 0 || view.getScrollY() != 0) {
+                Rect rect = new Rect();
+                view.getHitRect(rect);
+                rect.offset(-view.getScrollX(), -view.getScrollY());
+
+                int[] viewCoords = new int[2];
+                view.getLocationOnScreen(viewCoords);
+
+                int x = (int) event.getRawX() - viewCoords[0];
+                int y = (int) event.getRawY() - viewCoords[1];
+
+                if (!rect.contains(x, y))
+                    return false;
+            }
+
+            // If the tab tray is showing, hide the tab tray and don't send the event to content.
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN && autoHideTabs()) {
+                mIsHidingTabs = true;
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean onTouch(View view, MotionEvent event) {
+            if (mIsHidingTabs) {
+                // Keep consuming events until the gesture finishes.
+                int action = event.getActionMasked();
+                if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                    mIsHidingTabs = false;
+                }
+                return true;
+            }
+            return false;
+        }
     }
 
     private void addAddonMenuItem(final int id, final String label, final String icon) {

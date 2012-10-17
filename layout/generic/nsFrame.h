@@ -229,7 +229,7 @@ public:
   virtual void ChildIsDirty(nsIFrame* aChild);
 
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<Accessible> CreateAccessible();
+  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
   virtual nsIFrame* GetParentStyleContextFrame() const {

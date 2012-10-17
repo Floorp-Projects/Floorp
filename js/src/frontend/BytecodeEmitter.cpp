@@ -2668,7 +2668,7 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
     /* Initialize fun->script() so that the debugger has a valid fun->script(). */
     RootedFunction fun(cx, bce->script->function());
     JS_ASSERT(fun->isInterpreted());
-    JS_ASSERT(!fun->script());
+    JS_ASSERT(!fun->script().unsafeGet());
     fun->setScript(bce->script);
     if (!JSFunction::setTypeForScriptedFunction(cx, fun, singleton))
         return false;
@@ -4835,9 +4835,10 @@ EmitFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 static JS_NEVER_INLINE bool
 EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
+    AssertCanGC();
     RootedFunction fun(cx, pn->pn_funbox->function());
     JS_ASSERT(fun->isInterpreted());
-    if (fun->script()) {
+    if (fun->script().unsafeGet()) {
         /*
          * This second pass is needed to emit JSOP_NOP with a source note
          * for the already-emitted function definition prolog opcode. See

@@ -146,6 +146,7 @@ function PeerConnection() {
   this.onstatechange = null;
   this.ongatheringchange = null;
   this.onicechange = null;
+  this.remoteDescription = null;
 
   // Data channel.
   this.ondatachannel = null;
@@ -248,30 +249,34 @@ PeerConnection.prototype = {
     });
   },
 
-  createAnswer: function(offer, onSuccess, onError, constraints, provisional) {
+  createAnswer: function(onSuccess, onError, constraints, provisional) {
     if (this._onCreateAnswerSuccess) {
       if (onError) {
-        onError.onCallback("createAnswer already called");
+        try {
+          onError.onCallback("createAnswer already called");
+        } catch(e) {}
       }
       return;
+    }
+
+    if (!this.remoteDescription) {
+      if (onError) {
+        try {
+          onError.onCallback("setRemoteDescription not called");
+        } catch(e) {}
+      }
+    }
+
+    if (this.remoteDescription.type != "offer") {
+      if (onError) {
+        try {
+          onError.onCallback("No outstanding offer");
+        } catch(e) {}
+      }
     }
 
     this._onCreateAnswerSuccess = onSuccess;
     this._onCreateAnswerFailure = onError;
-
-    if (offer.type != "offer") {
-      if (onError) {
-        onError.onCallback("Invalid type " + offer.type + " passed");
-      }
-      return;
-    }
-
-    if (!offer.sdp) {
-      if (onError) {
-        onError.onCallback("SDP not provided to createAnswer");
-      }
-      return;
-    }
 
     if (!constraints) {
       constraints = "";
@@ -283,7 +288,7 @@ PeerConnection.prototype = {
     // TODO: Implement provisional answer & constraints.
     this._queueOrRun({
       func: this._pc.createAnswer,
-      args: ["", offer.sdp],
+      args: ["", this.remoteDescription.sdp],
       wait: true
     });
   },
@@ -291,7 +296,9 @@ PeerConnection.prototype = {
   setLocalDescription: function(desc, onSuccess, onError) {
     if (this._onSetLocalDescriptionSuccess) {
       if (onError) {
-        onError.onCallback("setLocalDescription already called");
+        try {
+          onError.onCallback("setLocalDescription already called");
+        } catch(e) {}
       }
       return;
     }
@@ -309,9 +316,11 @@ PeerConnection.prototype = {
         break;
       default:
         if (onError) {
-          onError.onCallback(
-            "Invalid type " + desc.type + " provided to setLocalDescription"
-          );
+          try {
+            onError.onCallback(
+              "Invalid type " + desc.type + " provided to setLocalDescription"
+            );
+          } catch(e) {}
           return;
         }
         break;
@@ -327,7 +336,9 @@ PeerConnection.prototype = {
   setRemoteDescription: function(desc, onSuccess, onError) {
     if (this._onSetRemoteDescriptionSuccess) {
       if (onError) {
-        onError.onCallback("setRemoteDescription already called");
+        try {
+          onError.onCallback("setRemoteDescription already called");
+        } catch(e) {}
       }
       return;
     }
@@ -345,13 +356,20 @@ PeerConnection.prototype = {
         break;
       default:
         if (onError) {
-          onError.onCallback(
-            "Invalid type " + desc.type + " provided to setLocalDescription"
-          );
+          try {
+            onError.onCallback(
+              "Invalid type " + desc.type + " provided to setRemoteDescription"
+            );
+          } catch(e) {}
           return;
         }
         break;
     }
+
+    this.remoteDescription = {
+      type: desc.type, sdp: desc.sdp,
+      __exposedProps__: { type: "rw", sdp: "rw" }
+    };
 
     this._queueOrRun({
       func: this._pc.setRemoteDescription,
@@ -402,6 +420,13 @@ PeerConnection.prototype = {
       args: [],
       wait: false
     });
+  },
+
+  get localStreams() {
+    return this._pc.localStreams;
+  },
+  get remoteStreams() {
+    return this._pc.remoteStreams;
   },
 
   createDataChannel: function(label, dict) {

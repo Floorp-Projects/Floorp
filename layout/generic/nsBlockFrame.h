@@ -173,7 +173,7 @@ public:
 #endif
 
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<Accessible> CreateAccessible();
+  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
   // line cursor methods to speed up searching for the line(s)

@@ -413,7 +413,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     uint32_t scriptBits = 0;
 
     JSContext *cx = xdr->cx();
-    Rooted<JSScript*> script(cx);
+    RootedScript script(cx);
     nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nconsts = 0;
     jssrcnote *notes = NULL;
 
@@ -1773,6 +1773,8 @@ JSScript::isShortRunning()
 bool
 JSScript::enclosingScriptsCompiledSuccessfully() const
 {
+    AutoAssertNoGC nogc;
+
     /*
      * When a nested script is succesfully compiled, it is eagerly given the
      * static JSFunction of its enclosing script. The enclosing function's
@@ -2051,6 +2053,7 @@ namespace js {
 unsigned
 CurrentLine(JSContext *cx)
 {
+    AutoAssertNoGC nogc;
     return PCToLineNumber(cx->fp()->script(), cx->regs().pc);
 }
 
@@ -2058,6 +2061,7 @@ void
 CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *linenop,
                                 JSPrincipals **origin)
 {
+    AutoAssertNoGC nogc;
     NonBuiltinScriptFrameIter iter(cx);
 
     if (iter.done()) {
@@ -2067,7 +2071,7 @@ CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *line
         return;
     }
 
-    RootedScript script(cx, iter.script());
+    RawScript script = iter.script();
     *file = script->filename;
     *linenop = PCToLineNumber(iter.script(), iter.pc());
     *origin = script->originPrincipals;
@@ -2086,6 +2090,8 @@ Rebase(RawScript dst, RawScript src, T *srcp)
 JSScript *
 js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript src)
 {
+    AssertCanGC();
+
     /* NB: Keep this in sync with XDRScript. */
 
     uint32_t nconsts   = src->hasConsts()   ? src->consts()->length   : 0;
@@ -2549,6 +2555,7 @@ JSScript::setNeedsArgsObj(bool needsArgsObj)
 /* static */ bool
 JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 {
+    AssertCanGC();
     JS_ASSERT(script->analyzedArgsUsage());
     JS_ASSERT(script->argumentsHasVarBinding());
     JS_ASSERT(!script->isGenerator);

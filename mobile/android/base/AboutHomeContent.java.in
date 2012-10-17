@@ -21,11 +21,19 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.Path;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.RectF;
 import android.os.SystemClock;
 import android.text.SpannableString;
 import android.text.TextUtils;
@@ -36,6 +44,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AbsListView;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -85,7 +94,7 @@ public class AboutHomeContent extends ScrollView
     private OnAccountsUpdateListener mAccountListener = null;
 
     protected SimpleCursorAdapter mTopSitesAdapter;
-    protected GridView mTopSitesGrid;
+    protected TopSitesGridView mTopSitesGrid;
 
     private AboutHomePromoBox mPromoBox;
     private AboutHomePromoBox.Type mPrelimPromoBoxType;
@@ -94,7 +103,6 @@ public class AboutHomeContent extends ScrollView
     protected AboutHomeSection mRemoteTabs;
 
     private View.OnClickListener mRemoteTabClickListener;
-    private OnInterceptTouchListener mOnInterceptTouchListener;
 
     public interface UriLoadCallback {
         public void callback(String uriSpec);
@@ -130,18 +138,7 @@ public class AboutHomeContent extends ScrollView
         mRemoteTabClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String url = ((String) v.getTag());
-                JSONObject args = new JSONObject();
-                try {
-                    args.put("url", url);
-                    args.put("engine", null);
-                    args.put("userEntered", false);
-                } catch (Exception e) {
-                    Log.e(LOGTAG, "error building JSON arguments");
-                }
-    
-                Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
+                Tabs.getInstance().loadUrl((String) v.getTag(), Tabs.LOADURL_NEW_TAB);
             }
         };
 
@@ -153,7 +150,7 @@ public class AboutHomeContent extends ScrollView
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mInflater.inflate(R.layout.abouthome_content, this);
 
-        mTopSitesGrid = (GridView)findViewById(R.id.top_sites_grid);
+        mTopSitesGrid = (TopSitesGridView)findViewById(R.id.top_sites_grid);
         mTopSitesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 Cursor c = (Cursor) parent.getItemAtPosition(position);
@@ -170,13 +167,6 @@ public class AboutHomeContent extends ScrollView
         mAddons = (AboutHomeSection) findViewById(R.id.recommended_addons);
         mLastTabs = (AboutHomeSection) findViewById(R.id.last_tabs);
         mRemoteTabs = (AboutHomeSection) findViewById(R.id.remote_tabs);
-
-        TextView allTopSitesText = (TextView) findViewById(R.id.all_top_sites_text);
-        allTopSitesText.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                mActivity.showAwesomebar(AwesomeBar.Target.CURRENT_TAB);
-            }
-        });
 
         mAddons.setOnMoreTextClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -216,7 +206,6 @@ public class AboutHomeContent extends ScrollView
 
         findViewById(R.id.top_sites_title).setVisibility(visibility);
         findViewById(R.id.top_sites_grid).setVisibility(visibility);
-        findViewById(R.id.all_top_sites_text).setVisibility(visibility);
     }
 
     private void updateLayout(boolean syncIsSetup) {
@@ -345,24 +334,6 @@ public class AboutHomeContent extends ScrollView
         inflate();
         mTopSitesGrid.setAdapter(mTopSitesAdapter); // mTopSitesGrid is a new instance (from loadTopSites()).
         update(AboutHomeContent.UpdateFlags.ALL); // Refresh all elements.
-    }
-
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent event) {
-        if (mOnInterceptTouchListener != null && mOnInterceptTouchListener.onInterceptTouchEvent(this, event))
-            return true;
-        return super.onInterceptTouchEvent(event);
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (mOnInterceptTouchListener != null && mOnInterceptTouchListener.onTouch(this, event))
-            return true;
-        return super.onTouchEvent(event);
-    }
-
-    public void setOnInterceptTouchListener(OnInterceptTouchListener listener) {
-        mOnInterceptTouchListener = listener;
     }
 
     private String readFromZipFile(String filename) {
@@ -632,13 +603,106 @@ public class AboutHomeContent extends ScrollView
         mRemoteTabs.show();
     }
 
+    // On Gingerbread TopSitesThumbnail doesn't receive onConfigurationChanged events
+    // Since the thumbnail size might change when orientation does, invalidate the
+    // thumbnail mask here
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        TopSitesThumbnail.mRoundedCorners = null;
+    }
+
+    public static class TopSitesThumbnail extends RelativeLayout {
+        static private int sRadius = 0;
+        static private int sShadowOffset = 0;
+        static public Bitmap mRoundedCorners = null;
+        static private Paint mClipPaint = null;
+        static private Paint mShadowPaint = null;
+
+        public TopSitesThumbnail(Context context, AttributeSet attrs) {
+            super(context, attrs);
+
+            Resources res = context.getResources();
+            if (sRadius <= 0) {
+                sRadius = (int) (res.getDimension(R.dimen.abouthome_icon_radius));
+            }
+            if (sShadowOffset <= 0) {
+                sShadowOffset = (int) (res.getDimension(R.dimen.abouthome_topsite_shadow_offset));
+            }
+
+            if (mShadowPaint == null) {
+                mShadowPaint = new Paint();
+                mShadowPaint.setColor(res.getColor(R.color.abouthome_topsite_shadow));
+            }
+        }
+
+        // Override drawChild to mask the child nodes with a rounded rect
+        @Override
+        protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
+            // draw a shadow behind the thumbnail
+            canvas.drawRoundRect(new RectF(getPaddingLeft(),
+                                           getHeight() - getPaddingBottom() - 2*sShadowOffset,
+                                           getWidth() - getPaddingRight(),
+                                           getHeight()- getPaddingBottom()),
+                                 sRadius, sRadius,
+                                 mShadowPaint);
+
+            int count = canvas.saveLayer(0, 0, getWidth(), getHeight(), null,
+                                         Canvas.MATRIX_SAVE_FLAG |
+                                         Canvas.CLIP_SAVE_FLAG |
+                                         Canvas.HAS_ALPHA_LAYER_SAVE_FLAG |
+                                         Canvas.FULL_COLOR_LAYER_SAVE_FLAG |
+                                         Canvas.CLIP_TO_LAYER_SAVE_FLAG);
+
+            // cache the mask rect in a static variable so that we only have to draw it once
+            if (mRoundedCorners == null) {
+                Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+                p.setColor(Color.WHITE);
+                mRoundedCorners = Bitmap.createBitmap(getWidth(),getHeight(),Bitmap.Config.ARGB_8888);
+                Canvas c2 = new Canvas(mRoundedCorners);
+                
+                c2.drawRoundRect(new RectF(getPaddingLeft(),
+                                           getPaddingTop(),
+                                           getWidth() - getPaddingRight(),
+                                           getHeight() - getPaddingBottom() - sShadowOffset), sRadius, sRadius, p);
+            }
+
+            if (mClipPaint == null) {
+                mClipPaint = new Paint();
+                mClipPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+            }
+
+            super.drawChild(canvas, child, drawingTime);
+            canvas.drawBitmap(mRoundedCorners, 0, 0, mClipPaint);
+
+            canvas.restoreToCount(count);
+            return false;
+        }
+
+    }
+
     public static class TopSitesGridView extends GridView {
         public TopSitesGridView(Context context, AttributeSet attrs) {
             super(context, attrs);
         }
 
+        public int getColumnWidth() {
+            return getColumnWidth(getWidth());
+        }
+
+        public int getColumnWidth(int width) {
+            int s = -1;
+            if (android.os.Build.VERSION.SDK_INT >= 16)
+                s= super.getColumnWidth();
+            else
+                s = width / mNumberOfCols;
+
+            return s;
+        }
+
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            int measuredWidth = View.MeasureSpec.getSize(widthMeasureSpec);
             int numRows;
 
             SimpleCursorAdapter adapter = (SimpleCursorAdapter) getAdapter();
@@ -654,11 +718,13 @@ public class AboutHomeContent extends ScrollView
             numRows = (int) Math.round((double) nSites / mNumberOfCols);
             setNumColumns(mNumberOfCols);
 
-            int expandedHeightSpec = MeasureSpec.makeMeasureSpec(numRows * getResources().
-                    getDimensionPixelSize(R.dimen.abouthome_content_top_sites_item_height),
-                    MeasureSpec.EXACTLY);
-
-            super.onMeasure(widthMeasureSpec, expandedHeightSpec);
+            // Just using getWidth() will use incorrect values during onMeasure when rotating the device
+            // Instead we pass in the measuredWidth, which is correct
+            int w = getColumnWidth(measuredWidth);
+            Tabs.setThumbnailWidth(w);
+            heightMeasureSpec = MeasureSpec.makeMeasureSpec((int)(w*Tabs.getThumbnailAspectRatio()*numRows) + getPaddingTop() + getPaddingBottom(),
+                                                                 MeasureSpec.EXACTLY);
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         }
     }
 
@@ -679,6 +745,13 @@ public class AboutHomeContent extends ScrollView
             // our history database is updated.
             return;
         }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+            super.bindView(view, context, cursor);
+            view.setLayoutParams(new AbsListView.LayoutParams(mTopSitesGrid.getColumnWidth(),
+                                                            Math.round(mTopSitesGrid.getColumnWidth()*Tabs.getThumbnailAspectRatio())));
+        }
     }
 
     class TopSitesViewBinder implements SimpleCursorAdapter.ViewBinder {
@@ -687,14 +760,17 @@ public class AboutHomeContent extends ScrollView
             ImageView thumbnail = (ImageView) view;
 
             if (b == null) {
-                thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
+                thumbnail.setImageResource(R.drawable.abouthome_thumbnail_bg);
+                thumbnail.setScaleType(ImageView.ScaleType.FIT_CENTER);
             } else {
                 try {
                     Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
                     thumbnail.setImageBitmap(bitmap);
+                    thumbnail.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 } catch (OutOfMemoryError oom) {
                     Log.e(LOGTAG, "Unable to load thumbnail bitmap", oom);
-                    thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
+                    thumbnail.setImageResource(R.drawable.abouthome_thumbnail_bg);
+                    thumbnail.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 }
             }
 

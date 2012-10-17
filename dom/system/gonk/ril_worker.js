@@ -7016,8 +7016,12 @@ let StkProactiveCmdHelper = {
       return null;
     }
 
+    let eventList = [];
+    for (let i = 0; i < length; i++) {
+      eventList.push(GsmPDUHelper.readHexOctet());
+    }
     return {
-      eventList: GsmPDUHelper.readHexOctetArray(length)
+      eventList: eventList
     };
   },
 

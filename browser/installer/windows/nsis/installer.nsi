@@ -724,11 +724,12 @@ Function CheckExistingInstall
 FunctionEnd
 
 Function LaunchApp
+  ${ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
+
   ClearErrors
   ${GetParameters} $0
   ${GetOptions} "$0" "/UAC:" $1
   ${If} ${Errors}
-    ${ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
     Exec "$\"$INSTDIR\${FileMainEXE}$\""
   ${Else}
     GetFunctionAddress $0 LaunchAppFromElevatedProcess
@@ -737,8 +738,6 @@ Function LaunchApp
 FunctionEnd
 
 Function LaunchAppFromElevatedProcess
-  ${ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
-
   ; Find the installation directory when launching using GetFunctionAddress
   ; from an elevated installer since $INSTDIR will not be set in this installer
   ${StrFilter} "${FileMainEXE}" "+" "" "" $R9

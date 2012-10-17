@@ -154,6 +154,7 @@ FENNEC_JAVA_FILES = \
   gfx/NinePatchTileLayer.java \
   gfx/PanningPerfAPI.java \
   gfx/PointUtils.java \
+  gfx/ProgressiveUpdateData.java \
   gfx/RectUtils.java \
   gfx/ScreenshotLayer.java \
   gfx/ScrollbarLayer.java \
@@ -423,6 +424,7 @@ RES_VALUES_V11 = \
 RES_VALUES_LARGE_V11 = \
   $(SYNC_RES_VALUES_LARGE_V11) \
   res/values-large-v11/dimens.xml \
+  res/values-large-v11/styles.xml \
   $(NULL)
 
 RES_VALUES_XLARGE_V11 = \
@@ -461,6 +463,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/abouthome_promo_logo_apps.png \
   res/drawable/abouthome_promo_logo_sync.png \
   res/drawable/abouthome_thumbnail.png \
+  res/drawable/abouthome_thumbnail_bg.png \
   res/drawable/address_bar_bg_shadow.png \
   res/drawable/alert_addon.png \
   res/drawable/alert_app.png \
@@ -541,6 +544,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/abouthome_promo_logo_apps.png \
   res/drawable-hdpi/abouthome_promo_logo_sync.png \
   res/drawable-hdpi/abouthome_thumbnail.png \
+  res/drawable-hdpi/abouthome_thumbnail_bg.png \
   res/drawable-hdpi/address_bar_bg_shadow.png \
   res/drawable-hdpi/alert_addon.png \
   res/drawable-hdpi/alert_app.png \
@@ -603,6 +607,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/abouthome_promo_logo_apps.png \
   res/drawable-xhdpi/abouthome_promo_logo_sync.png \
   res/drawable-xhdpi/abouthome_thumbnail.png \
+  res/drawable-xhdpi/abouthome_thumbnail_bg.png \
   res/drawable-xhdpi/address_bar_bg_shadow.png \
   res/drawable-xhdpi/address_bar_texture_port.png \
   res/drawable-xhdpi/address_bar_url_default.9.png \

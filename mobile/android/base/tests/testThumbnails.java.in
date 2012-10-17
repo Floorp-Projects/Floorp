@@ -3,6 +3,7 @@ package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -17,6 +18,7 @@ import android.widget.TextView;
  * - verifies thumbnails are updated for both pages
  * - loads pages again; first page yields HTTP 200, second yields HTTP 404
  * - verifies thumbnail is updated for HTTP 200, but not HTTP 404
+ * - finally, test that BrowserDB.removeThumbnails drops the thumbnails
  */
 public class testThumbnails extends BaseTest {
     private int mTopSitesId;
@@ -66,6 +68,28 @@ public class testThumbnails extends BaseTest {
         mAsserter.is(getTopSiteThumbnailColor(site1Title), Color.RED, "Top site thumbnail updated for HTTP 200");
         waitForTest(new ThumbnailTest(site2Title, Color.GREEN), 5000);
         mAsserter.is(getTopSiteThumbnailColor(site2Title), Color.GREEN, "Top site thumbnail not updated for HTTP 404");
+
+        // test dropping thumbnails
+        try {
+            ClassLoader cl = getActivity().getApplicationContext().getClassLoader();
+            Class browserDB = cl.loadClass("org.mozilla.gecko.db.BrowserDB");
+            // check that the thumbnail is non-null
+            byte[] thumbnailData = (byte[])browserDB
+                .getMethod("getThumbnailForUrl", ContentResolver.class, String.class)
+                .invoke(null, getActivity().getContentResolver(), site1Url);
+            mAsserter.ok(thumbnailData != null && thumbnailData.length > 0, "Checking for thumbnail data", "No thumbnail data found");
+            // drop thumbnails
+            browserDB.getMethod("removeThumbnails", ContentResolver.class)
+                .invoke(null, getActivity().getContentResolver());
+            // check that the thumbnail is now null
+            thumbnailData = (byte[])browserDB
+                .getMethod("getThumbnailForUrl", ContentResolver.class, String.class)
+                .invoke(null, getActivity().getContentResolver(), site1Url);
+            mAsserter.ok(thumbnailData == null || thumbnailData.length == 0, "Checking for thumbnail data", "Thumbnail data found");
+        } catch (Exception e) {
+            mAsserter.ok(false, "Testing removing thumbnails", e.toString());
+            mAsserter.dumpLog(e.toString(), e);
+        }
     }
 
     private class ThumbnailTest implements BooleanTest {

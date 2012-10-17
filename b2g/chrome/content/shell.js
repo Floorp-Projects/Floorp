@@ -855,3 +855,13 @@ window.addEventListener('ContentStart', function update_onContentStart() {
     });
 }, 'volume-state-changed', false);
 })();
+
+Services.obs.addObserver(function(aSubject, aTopic, aData) {
+  let data = JSON.parse(aData);
+  shell.sendChromeEvent({
+    type: "activity-done",
+    success: data.success,
+    manifestURL: data.manifestURL,
+    pageURL: data.pageURL
+  });
+}, "activity-done", false);

@@ -121,6 +121,8 @@
 #include "nsIXPConnect.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIMemoryReporter.h"
+#include "nsIFile.h"
+#include "nsDirectoryServiceDefs.h"
 #include "xpcpublic.h"
 #include "nsXPCOMPrivate.h"
 #include "sampler.h"
@@ -1293,6 +1295,18 @@ public:
         return NS_OK;
     }
 
+    NS_IMETHOD GetFilenameIdentifier(nsAString& aIdentifier)
+    {
+        aIdentifier = mFilenameIdentifier;
+        return NS_OK;
+    }
+
+    NS_IMETHOD SetFilenameIdentifier(const nsAString& aIdentifier)
+    {
+        mFilenameIdentifier = aIdentifier;
+        return NS_OK;
+    }
+
     NS_IMETHOD Begin()
     {
         mCurrentAddress.AssignLiteral("0x");
@@ -1301,58 +1315,52 @@ public:
         if (mDisableLog) {
             return NS_OK;
         }
-        char basename[MAXPATHLEN] = {'\0'};
-        char ccname[MAXPATHLEN] = {'\0'};
-        char* env;
-        if ((env = PR_GetEnv("MOZ_CC_LOG_DIRECTORY"))) {
-            strcpy(basename, env);
-        } else {
-#ifdef XP_WIN
-            // On Windows, tmpnam returns useless stuff, such as "\\s164.".
-            // Therefore we need to call the APIs directly.
-            GetTempPathA(mozilla::ArrayLength(basename), basename);
-#else
-            tmpnam(basename);
-            char *lastSlash = strrchr(basename, XPCOM_FILE_PATH_SEPARATOR[0]);
-            if (lastSlash) {
-                *lastSlash = '\0';
-            }
-#endif
-        }
 
-        ++gLogCounter;
+        // Initially create the log in a file starting with
+        // "incomplete-gc-edges".  We'll move the file and strip off the
+        // "incomplete-" once the dump completes.  (We do this because we don't
+        // want scripts which poll the filesystem looking for gc/cc dumps to
+        // grab a file before we're finished writing to it.)
+        nsCOMPtr<nsIFile> gcLogFile = CreateTempFile("incomplete-gc-edges");
+        NS_ENSURE_STATE(gcLogFile);
 
         // Dump the JS heap.
-        char gcname[MAXPATHLEN] = {'\0'};
-        sprintf(gcname, "%s%sgc-edges-%d.%d.log", basename,
-                XPCOM_FILE_PATH_SEPARATOR,
-                gLogCounter, base::GetCurrentProcId());
+        FILE* gcLogANSIFile = nullptr;
+        gcLogFile->OpenANSIFileDesc("w", &gcLogANSIFile);
+        NS_ENSURE_STATE(gcLogANSIFile);
+        xpc::DumpJSHeap(gcLogANSIFile);
+        fclose(gcLogANSIFile);
 
-        FILE* gcDumpFile = fopen(gcname, "w");
-        if (!gcDumpFile)
-            return NS_ERROR_FAILURE;
-        xpc::DumpJSHeap(gcDumpFile);
-        fclose(gcDumpFile);
+        // Strip off "incomplete-".
+        nsCOMPtr<nsIFile> gcLogFileFinalDestination =
+            CreateTempFile("gc-edges");
+        NS_ENSURE_STATE(gcLogFileFinalDestination);
 
-        // Open a file for dumping the CC graph.
-        sprintf(ccname, "%s%scc-edges-%d.%d.log", basename,
-                XPCOM_FILE_PATH_SEPARATOR,
-                gLogCounter, base::GetCurrentProcId());
-        mStream = fopen(ccname, "w");
-        if (!mStream)
-            return NS_ERROR_FAILURE;
+        nsAutoString gcLogFileFinalDestinationName;
+        gcLogFileFinalDestination->GetLeafName(gcLogFileFinalDestinationName);
+        NS_ENSURE_STATE(!gcLogFileFinalDestinationName.IsEmpty());
 
+        gcLogFile->MoveTo(/* directory */ nullptr, gcLogFileFinalDestinationName);
+
+        // Log to the error console.
         nsCOMPtr<nsIConsoleService> cs =
             do_GetService(NS_CONSOLESERVICE_CONTRACTID);
         if (cs) {
-            nsString msg = NS_LITERAL_STRING("Cycle Collector log dumped to ");
-            AppendUTF8toUTF16(ccname, msg);
-            cs->LogStringMessage(msg.get());
+            nsAutoString gcLogPath;
+            gcLogFileFinalDestination->GetPath(gcLogPath);
 
-            msg = NS_LITERAL_STRING("Garbage Collector log dumped to ");
-            AppendUTF8toUTF16(gcname, msg);
+            nsString msg = NS_LITERAL_STRING("Garbage Collector log dumped to ") +
+                           gcLogPath;
             cs->LogStringMessage(msg.get());
         }
+
+        // Open a file for dumping the CC graph.  We again prefix with
+        // "incomplete-".
+        mOutFile = CreateTempFile("incomplete-cc-edges");
+        NS_ENSURE_STATE(mOutFile);
+        MOZ_ASSERT(!mStream);
+        mOutFile->OpenANSIFileDesc("w", &mStream);
+        NS_ENSURE_STATE(mStream);
 
         return NS_OK;
     }
@@ -1446,12 +1454,39 @@ public:
     NS_IMETHOD End()
     {
         if (!mDisableLog) {
+            MOZ_ASSERT(mStream);
+            MOZ_ASSERT(mOutFile);
+
             fclose(mStream);
             mStream = nullptr;
+
+            // Strip off "incomplete-" from the log file's name.
+            nsCOMPtr<nsIFile> logFileFinalDestination =
+                CreateTempFile("cc-edges");
+            NS_ENSURE_STATE(logFileFinalDestination);
+
+            nsAutoString logFileFinalDestinationName;
+            logFileFinalDestination->GetLeafName(logFileFinalDestinationName);
+            NS_ENSURE_STATE(!logFileFinalDestinationName.IsEmpty());
+
+            mOutFile->MoveTo(/* directory = */ nullptr,
+                             logFileFinalDestinationName);
+            mOutFile = nullptr;
+
+            // Log to the error console.
+            nsCOMPtr<nsIConsoleService> cs =
+                do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+            if (cs) {
+                nsAutoString ccLogPath;
+                logFileFinalDestination->GetPath(ccLogPath);
+
+                nsString msg = NS_LITERAL_STRING("Cycle Collector log dumped to ") +
+                               ccLogPath;
+                cs->LogStringMessage(msg.get());
+            }
         }
         return NS_OK;
     }
-
     NS_IMETHOD ProcessNext(nsICycleCollectorHandler* aHandler,
                            bool* aCanContinue)
     {
@@ -1496,19 +1531,55 @@ public:
         return NS_OK;
     }
 private:
+    /**
+     * Create a new file named something like aPrefix.$PID.$IDENTIFIER.log in
+     * $MOZ_CC_LOG_DIRECTORY or in the system's temp directory.  No existing
+     * file will be overwritten; if aPrefix.$PID.$IDENTIFIER.log exists, we'll
+     * try a file named something like aPrefix.$PID.$IDENTIFIER-1.log, and so
+     * on.
+     */
+    already_AddRefed<nsIFile>
+    CreateTempFile(const char* aPrefix)
+    {
+        nsPrintfCString filename("%s.%d%s%s.log",
+            aPrefix,
+            base::GetCurrentProcId(),
+            mFilenameIdentifier.IsEmpty() ? "" : ".",
+            NS_ConvertUTF16toUTF8(mFilenameIdentifier).get());
+
+        // Get the log directory either from $MOZ_CC_LOG_DIRECTORY or from our
+        // platform's temp directory.
+        nsCOMPtr<nsIFile> logFile;
+        if (char* env = PR_GetEnv("MOZ_CC_LOG_DIRECTORY")) {
+            NS_NewNativeLocalFile(nsCString(env), /* followLinks = */ true,
+                                  getter_AddRefs(logFile));
+        } else {
+            // Ask NSPR to point us to the temp directory.
+            NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(logFile));
+        }
+        NS_ENSURE_TRUE(logFile, nullptr);
+
+        nsresult rv = logFile->AppendNative(filename);
+        NS_ENSURE_SUCCESS(rv, nullptr);
+
+        rv = logFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+        NS_ENSURE_SUCCESS(rv, nullptr);
+
+        return logFile.forget();
+    }
+
     FILE *mStream;
+    nsCOMPtr<nsIFile> mOutFile;
     bool mWantAllTraces;
     bool mDisableLog;
     bool mWantAfterProcessing;
+    nsString mFilenameIdentifier;
     nsCString mCurrentAddress; 
     nsTArray<CCGraphDescriber> mDescribers;
     uint32_t mNextIndex;
-    static uint32_t gLogCounter;
 };
 
 NS_IMPL_ISUPPORTS1(nsCycleCollectorLogger, nsICycleCollectorListener)
-
-uint32_t nsCycleCollectorLogger::gLogCounter = 0;
 
 nsresult
 nsCycleCollectorLoggerConstructor(nsISupports* aOuter,

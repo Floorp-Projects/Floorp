@@ -20,9 +20,8 @@
 #include "nsIServiceManager.h"
 #include "nsContainerFrame.h"
 #include "nsLayoutUtils.h"
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
+
+using namespace mozilla;
 
 void
 IntPointDtorFunc(void *aObject, nsIAtom *aPropertyName,
@@ -61,7 +60,7 @@ public:
   virtual nsIAtom* GetType() const;
 
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<Accessible> CreateAccessible();
+  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
 #ifdef DEBUG
@@ -129,19 +128,15 @@ NS_QUERYFRAME_HEAD(nsImageControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsImageControlFrameSuper)
 
 #ifdef ACCESSIBILITY
-already_AddRefed<Accessible>
-nsImageControlFrame::CreateAccessible()
+a11y::AccType
+nsImageControlFrame::AccessibleType()
 {
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  if (accService) {
-    if (mContent->Tag() == nsGkAtoms::button || 
-        mContent->Tag() == nsGkAtoms::input) {
-      return accService->CreateHTMLButtonAccessible(mContent, 
-                                                    PresContext()->PresShell());
-    }
+  if (mContent->Tag() == nsGkAtoms::button ||
+      mContent->Tag() == nsGkAtoms::input) {
+    return a11y::eHTMLButtonAccessible;
   }
 
-  return nullptr;
+  return a11y::eNoAccessible;
 }
 #endif
 
