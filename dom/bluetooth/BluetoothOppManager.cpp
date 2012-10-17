@@ -27,7 +27,7 @@ static mozilla::RefPtr<BluetoothOppManager> sInstance;
 static nsCOMPtr<nsIInputStream> stream = nullptr;
 static uint32_t sSentFileLength = 0;
 static nsString sFileName;
-static uint64_t sFileLength = 0;
+static uint32_t sFileLength = 0;
 static nsString sContentType;
 static int sUpdateProgressCounter = 0;
 
@@ -98,6 +98,8 @@ BluetoothOppManager::BluetoothOppManager() : mConnected(false)
                                            , mAbortFlag(false)
                                            , mReadFileThread(nullptr)
                                            , mPacketLeftLength(0)
+                                           , mReceiving(false)
+                                           , mPutFinal(false)
 {
   // FIXME / Bug 800249:
   //   mConnectedDeviceAddress is Bluetooth address of connected device,
@@ -222,7 +224,7 @@ BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
   int receivedLength = aMessage->mSize;
 
   if (mPacketLeftLength > 0) {
-    opCode = ObexRequestCode::Put;
+    opCode = mPutFinal ? ObexRequestCode::PutFinal : ObexRequestCode::Put;
     packetLength = mPacketLeftLength;
   } else {
     opCode = aMessage->mData[0];
@@ -254,17 +256,31 @@ BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
           sFileName.AssignLiteral("Unknown");
         }
 
-        rv = mBlob->GetSize(&sFileLength);
-        if (NS_FAILED(rv)) {
-          NS_WARNING("Can't get file size");
-          return;
-        }
-
         rv = mBlob->GetType(sContentType);
         if (NS_FAILED(rv)) {
           NS_WARNING("Can't get content type");
           return;
         }
+
+        uint64_t fileLength;
+        rv = mBlob->GetSize(&fileLength);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Can't get file size");
+          return;
+        }
+
+        // Currently we keep the size of files which were sent/received via
+        // Bluetooth not exceed UINT32_MAX because the Length header in OBEX
+        // is only 4-byte long. Although it is possible to transfer a file
+        // larger than UINT32_MAX, it needs to parse another OBEX Header
+        // and I would like to leave it as a feature.
+        if (fileLength <= UINT32_MAX) {
+          NS_WARNING("The file size is too large for now");
+          SendDisconnectRequest();
+          return;
+        }
+
+        sFileLength = fileLength;
 
         if (NS_FAILED(NS_NewThread(getter_AddRefs(mReadFileThread)))) {
           NS_WARNING("Can't create thread");
@@ -286,6 +302,7 @@ BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
       NS_WARNING("[OPP] Disconnect failed");
     } else {
       mConnected = false;
+      mReceiving = false;
       mLastCommand = 0;
       mBlob = nullptr;
       mReadFileThread = nullptr;
@@ -330,35 +347,53 @@ BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
     SendDisconnectRequest();
   } else {
     // Remote request or unknown mLastCommand
+    ObexHeaderSet pktHeaders(opCode);
+
     if (opCode == ObexRequestCode::Connect) {
+      ParseHeaders(&aMessage->mData[7], receivedLength - 7, &pktHeaders);
       ReplyToConnect();
     } else if (opCode == ObexRequestCode::Disconnect) {
+      ParseHeaders(&aMessage->mData[3], receivedLength - 3, &pktHeaders);
       ReplyToDisconnect();
     } else if (opCode == ObexRequestCode::Put ||
                opCode == ObexRequestCode::PutFinal) {
+      if (!mReceiving) {
+        MOZ_ASSERT(mPacketLeftLength == 0);
+        ParseHeaders(&aMessage->mData[3], receivedLength - 3, &pktHeaders);
+
+        pktHeaders.GetName(sFileName);
+        pktHeaders.GetContentType(sContentType);
+        pktHeaders.GetLength(&sFileLength);
+
+        ReceivingFileConfirmation(mConnectedDeviceAddress, sFileName, sFileLength, sContentType);
+        mReceiving = true;
+      }
+
       /*
        * A PUT request from remote devices may be divided into multiple parts.
        * In other words, one request may need to be received multiple times,
        * so here we keep a variable mPacketLeftLength to indicate if current
        * PUT request is done.
        */
-      bool final = (opCode == ObexRequestCode::PutFinal);
+      mPutFinal = (opCode == ObexRequestCode::PutFinal);
 
       if (mPacketLeftLength == 0) {
-        if (receivedLength < packetLength) {
-          mPacketLeftLength = packetLength - receivedLength;
-        } else {
-          ReplyToPut(final);
-        }
-      } else {
-        NS_ASSERTION(mPacketLeftLength < receivedLength,
+        NS_ASSERTION(mPacketLeftLength >= receivedLength,
                      "Invalid packet length");
+        mPacketLeftLength = packetLength - receivedLength;
+      } else {
+        NS_ASSERTION(mPacketLeftLength >= receivedLength,
+                     "Invalid packet length");
+        mPacketLeftLength -= receivedLength;
+      }
 
-        if (mPacketLeftLength <= receivedLength) {
-          ReplyToPut(final);
-          mPacketLeftLength = 0;
-        } else {
-          mPacketLeftLength -= receivedLength;
+      if (mPacketLeftLength == 0) {
+        ReplyToPut(mPutFinal);
+
+        if (mPutFinal) {
+          mReceiving = false;
+          FileTransferComplete(mConnectedDeviceAddress, true, true, sFileName,
+                               sSentFileLength, sContentType);
         }
       }
     }
@@ -669,21 +704,6 @@ BluetoothOppManager::UpdateProgress(const nsString& aDeviceAddress,
 }
 
 void
-BluetoothOppManager::OnConnectSuccess()
-{
-}
-
-void
-BluetoothOppManager::OnConnectError()
-{
-}
-
-void
-BluetoothOppManager::OnDisconnect()
-{
-}
-
-void
 BluetoothOppManager::ReceivingFileConfirmation(const nsString& aAddress,
                                                const nsString& aFileName,
                                                uint32_t aFileLength,
@@ -714,4 +734,19 @@ BluetoothOppManager::ReceivingFileConfirmation(const nsString& aAddress,
     NS_WARNING("Failed to broadcast [bluetooth-opp-receiving-file-confirmation]");
     return;
   }
+}
+
+void
+BluetoothOppManager::OnConnectSuccess()
+{
+}
+
+void
+BluetoothOppManager::OnConnectError()
+{
+}
+
+void
+BluetoothOppManager::OnDisconnect()
+{
 }
