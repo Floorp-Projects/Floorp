@@ -35,7 +35,9 @@ t.scrollTop = 0;
 var targetY = target.getBoundingClientRect().top;
 
 SimpleTest.waitForFocus(function() {
+  is(target.getBoundingClientRect().top, targetY, "Target should not have scrolled due to waitForFocus");
   t.focus();
+  is(target.getBoundingClientRect().top, targetY, "Target should not have scrolled due to focus change");
 
   // Move the caret to scroll it into view
   sel.collapse(target.firstChild, 2);
