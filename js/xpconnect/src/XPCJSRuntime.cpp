@@ -1390,7 +1390,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSUserCompartmentCount,
 // compartments;  they aggregate any entries smaller than SUNDRIES_THRESHOLD
 // into "gc-heap/sundries" and "other-sundries" entries for the compartment.
 
-static const size_t SUNDRIES_THRESHOLD = 8192;
+#define SUNDRIES_THRESHOLD js::MemoryReportingSundriesThreshold()
 
 #define REPORT(_path, _kind, _units, _amount, _desc)                          \
     do {                                                                      \
@@ -1415,9 +1415,22 @@ static const size_t SUNDRIES_THRESHOLD = 8192;
         gcTotal += amount;                                                    \
     } while (0)
 
+// Report compartment bytes.  Note that _descLiteral must be a literal string.
+//
 // Nb: all non-GC compartment reports are currently KIND_HEAP, and this macro
 // relies on that.
-#define CREPORT_BYTES(_path, _amount, _desc)                                  \
+#define CREPORT_BYTES(_path, _amount, _descLiteral)                           \
+    do {                                                                      \
+        /* Assign _descLiteral plus "" into a char* to prove that it's */     \
+        /* actually a literal. */                                             \
+        const char* unusedDesc = _descLiteral "";                             \
+        (void) unusedDesc;                                                    \
+        CREPORT_BYTES2(_path, _amount, NS_LITERAL_CSTRING(_descLiteral));     \
+    } while (0)
+
+// CREPORT_BYTES2 is identical to CREPORT_BYTES, except the description is a
+// nsCString instead of a literal string.
+#define CREPORT_BYTES2(_path, _amount, _desc)                                 \
     do {                                                                      \
         size_t amount = _amount;  /* evaluate _amount only once */            \
         if (amount >= SUNDRIES_THRESHOLD) {                                   \
@@ -1425,7 +1438,7 @@ static const size_t SUNDRIES_THRESHOLD = 8192;
             rv = cb->Callback(EmptyCString(), _path,                          \
                               nsIMemoryReporter::KIND_HEAP,                   \
                               nsIMemoryReporter::UNITS_BYTES, amount,         \
-                              NS_LITERAL_CSTRING(_desc), closure);            \
+                              _desc, closure);                                \
             NS_ENSURE_SUCCESS(rv, rv);                                        \
         } else {                                                              \
             otherSundries += amount;                                          \
@@ -1571,15 +1584,6 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   "Memory used by orphan DOM nodes that are only reachable "
                   "from JavaScript objects.");
 
-    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("string-chars"),
-                  cStats.stringChars,
-                  "Memory allocated to hold string "
-                  "characters.  Sometimes more memory is allocated than "
-                  "necessary, to simplify string concatenation.  Each string "
-                  "also includes a header which is stored on the "
-                  "compartment's JavaScript heap;  that header is not counted "
-                  "here, but in 'gc-heap/strings' instead.");
-
     CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes-extra/tree-tables"),
                   cStats.shapesExtraTreeTables,
                   "Memory allocated for the property tables "
@@ -1650,6 +1654,42 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   cStats.typeInferenceSizes.temporary,
                   "Memory used during type inference and compilation to hold "
                   "transient analysis information.  Cleared on GC.");
+
+    CREPORT_BYTES2(cJSPathPrefix + NS_LITERAL_CSTRING("string-chars/non-huge"),
+                   cStats.nonHugeStringChars, nsPrintfCString(
+                   "Memory allocated to hold characters of strings whose "
+                   "characters take up less than than %d bytes of memory.\n\n"
+                   "Sometimes more memory is allocated than necessary, to "
+                   "simplify string concatenation.  Each string also includes a "
+                   "header which is stored on the compartment's JavaScript heap; "
+                   "that header is not counted here, but in 'gc-heap/strings' "
+                   "instead.",
+                   JS::HugeStringInfo::MinSize()));
+
+    for (size_t i = 0; i < cStats.hugeStrings.length(); i++) {
+        const JS::HugeStringInfo& info = cStats.hugeStrings[i];
+
+        nsDependentCString hugeString(info.buffer);
+
+        // Escape / to \/ before we put hugeString into the memory reporter
+        // path, because we don't want any forward slashes in the string to
+        // count as path separators.
+        nsCString escapedString(hugeString);
+        escapedString.ReplaceSubstring("/", "\\/");
+
+        CREPORT_BYTES2(
+            cJSPathPrefix +
+            nsPrintfCString("string-chars/huge/string(length=%d, \"%s...\")",
+                            info.length, escapedString.get()),
+            info.size,
+            nsPrintfCString("Memory allocated to hold characters of "
+            "a length-%d string which begins \"%s\".\n\n"
+            "Sometimes more memory is allocated than necessary, to simplify "
+            "string concatenation.  Each string also includes a header which is "
+            "stored on the compartment's JavaScript heap; that header is not "
+            "counted here, but in 'gc-heap/strings' instead.",
+            info.length, hugeString.get()));
+    }
 
     if (gcHeapSundries > 0) {
         // We deliberately don't use CREPORT_GC_BYTES here.

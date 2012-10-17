@@ -237,7 +237,9 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   // There are many different kinds of frames, but it is very likely
   // that only a few matter.  Implement a cutoff so we don't bloat
   // about:memory with many uninteresting entries.
-  static const size_t FRAME_SUNDRIES_THRESHOLD = 8192;
+  const size_t FRAME_SUNDRIES_THRESHOLD =
+    js::MemoryReportingSundriesThreshold();
+
   size_t frameSundriesSize = 0;
 #define FRAME_ID(classname)                                             \
   {                                                                     \
