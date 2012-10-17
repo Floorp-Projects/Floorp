@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=792280
+-->
+<window title="Mozilla Bug 792280"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=792280"
+     target="_blank">Mozilla Bug 792280</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 792280 **/
+  const Cu = Components.utils;
+
+  function checkSb(sb, allowed) {
+    var target = new Cu.Sandbox('http://www.example.com');
+    Cu.evalInSandbox('function fun() { return arguments.callee.caller; };', target);
+    sb.fun = target.fun;
+    var uncensored = Cu.evalInSandbox('function doTest() { return fun() == doTest; }; doTest()', sb);
+    is(uncensored, allowed, "should censor appropriately");
+  }
+
+  checkSb(new Cu.Sandbox('http://www.example.com'), true);
+  checkSb(new Cu.Sandbox('http://www.example.org'), false);
+  checkSb(new Cu.Sandbox(window), false);
+
+  ]]>
+  </script>
+</window>
