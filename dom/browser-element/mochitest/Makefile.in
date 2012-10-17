@@ -43,6 +43,8 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_Iconchange.html \
 		browserElement_GetScreenshot.js \
 		test_browserElement_inproc_GetScreenshot.html \
+		browserElement_BadScreenshot.js \
+		test_browserElement_inproc_BadScreenshot.html \
 		browserElement_SetVisible.js \
 		test_browserElement_inproc_SetVisible.html \
 		browserElement_SetVisibleFrames.js \
@@ -169,6 +171,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_TopBarrier.html \
 		test_browserElement_oop_Iconchange.html \
 		test_browserElement_oop_GetScreenshot.html \
+		test_browserElement_oop_BadScreenshot.html \
 		test_browserElement_oop_SetVisible.html \
 		test_browserElement_oop_SetVisibleFrames.html \
 		test_browserElement_oop_SetVisibleFrames2.html \

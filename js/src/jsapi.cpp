@@ -830,6 +830,9 @@ JSRuntime::JSRuntime()
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
 #ifdef JS_THREADSAFE
+#ifdef JS_ION
+    workerThreadState(NULL),
+#endif
     sourceCompressorThread(thisFromCtor()),
 #endif
     defaultFreeOp_(thisFromCtor(), false),
@@ -930,12 +933,6 @@ JSRuntime::init(uint32_t maxbytes)
         return false;
 
 #ifdef JS_THREADSAFE
-# ifdef JS_ION
-    workerThreadState = this->new_<WorkerThreadState>();
-    if (!workerThreadState || !workerThreadState->init(this))
-        return false;
-# endif
-
     if (!sourceCompressorThread.init())
         return false;
 #endif
@@ -969,7 +966,8 @@ JSRuntime::~JSRuntime()
 
 #ifdef JS_THREADSAFE
 # ifdef JS_ION
-    js_delete(workerThreadState);
+    if (workerThreadState)
+        js_delete(workerThreadState);
 # endif
     sourceCompressorThread.finish();
 #endif

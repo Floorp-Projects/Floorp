@@ -1239,6 +1239,12 @@ NS_IMETHODIMP nsWebBrowser::Destroy()
    return NS_OK;
 }
 
+NS_IMETHODIMP nsWebBrowser::GetUnscaledDevicePixelsPerCSSPixel(double *aScale)
+{
+  *aScale = mParentWidget ? mParentWidget->GetDefaultScale() : 1.0;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsWebBrowser::SetPosition(int32_t aX, int32_t aY)
 {
    int32_t cx = 0;

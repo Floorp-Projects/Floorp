@@ -1883,8 +1883,8 @@ let RIL = {
     Buf.simpleRequest(REQUEST_SIGNAL_STRENGTH);
   },
 
-  getIMEI: function getIMEI() {
-    Buf.simpleRequest(REQUEST_GET_IMEI);
+  getIMEI: function getIMEI(options) {
+    Buf.simpleRequest(REQUEST_GET_IMEI, options);
   },
 
   getIMEISV: function getIMEISV() {
@@ -2369,8 +2369,16 @@ let RIL = {
 
       // IMEI
       case MMI_SC_IMEI:
-        // TODO: Bug 793189 - MMI Codes: get IMEI.
-        _sendMMIError("GET_IMEI_NOT_SUPPORTED_VIA_MMI");
+        // A device's IMEI can't change, so we only need to request it once.
+        if (this.IMEI == null) {
+          this.getIMEI({mmi: true});
+          return;
+        }
+        // If we already had the device's IMEI, we just send it to the DOM.
+        options.rilMessageType = "sendMMI";
+        options.success = true;
+        options.result = this.IMEI;
+        this.sendDOMMessage(options);
         return;
 
       // Call barring
@@ -4420,11 +4428,20 @@ RIL[REQUEST_SET_CALL_WAITING] = function REQUEST_SET_CALL_WAITING(length, option
 };
 RIL[REQUEST_SMS_ACKNOWLEDGE] = null;
 RIL[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI(length, options) {
-  if (options.rilRequestError) {
+  this.IMEI = Buf.readString();
+  // So far we only send the IMEI back to the DOM if it was requested via MMI.
+  if (!options.mmi) {
     return;
   }
 
-  this.IMEI = Buf.readString();
+  options.rilMessageType = "sendMMI";
+  options.success = options.rilRequestError == 0;
+  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  if ((!options.success || this.IMEI == null) && !options.errorMsg) {
+    options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+  }
+  options.result = this.IMEI;
+  this.sendDOMMessage(options);
 };
 RIL[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV(length, options) {
   if (options.rilRequestError) {
@@ -4828,14 +4845,11 @@ RIL[UNSOLICITED_ON_USSD] = function UNSOLICITED_ON_USSD() {
     debug("On USSD. Type Code: " + typeCode + " Message: " + message);
   }
 
-  this._ussdSession = (typeCode != "0" || typeCode != "2");
+  this._ussdSession = (typeCode != "0" && typeCode != "2");
 
-  // Empty message should not be progressed to the DOM.
-  if (!message || message == "") {
-    return;
-  }
   this.sendDOMMessage({rilMessageType: "USSDReceived",
-                       message: message});
+                       message: message,
+                       sessionEnded: !this._ussdSession});
 };
 RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() {
   let dateString = Buf.readString();

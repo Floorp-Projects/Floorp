@@ -297,7 +297,10 @@ public:
    * and each subsequent merged frame if no layer is found for the underlying
    * frame.
    */
-  Layer* GetOldLayerFor(nsDisplayItem* aItem, nsDisplayItemGeometry** aOldGeometry = nullptr, Clip** aOldClip = nullptr);
+  Layer* GetOldLayerFor(nsDisplayItem* aItem, 
+                        nsDisplayItemGeometry** aOldGeometry = nullptr, 
+                        Clip** aOldClip = nullptr,
+                        nsTArray<nsIFrame*>* aChangedFrames = nullptr);
 
   static Layer* GetDebugOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKey);
 
@@ -499,7 +502,8 @@ protected:
      * to the LayerManagerDataProperty list on the frame.
      */
     void AddFrame(nsIFrame* aFrame);
-    bool FrameListMatches(nsDisplayItem* aOther);
+    void RemoveFrame(nsIFrame* aFrame);
+    void GetFrameListChanges(nsDisplayItem* aOther, nsTArray<nsIFrame*>& aOut);
 
     /**
      * Updates the contents of this item to a new set of data, instead of allocating a new
@@ -508,7 +512,8 @@ protected:
      * and clip.
      * Parent, frame list and display item key are assumed to be the same.
      */
-    void UpdateContents(Layer* aLayer, LayerState aState, uint32_t aContainerLayerGeneration);
+    void UpdateContents(Layer* aLayer, LayerState aState,
+                        uint32_t aContainerLayerGeneration, nsDisplayItem* aItem = nullptr);
 
     LayerManagerData* mParent;
     nsRefPtr<Layer> mLayer;
