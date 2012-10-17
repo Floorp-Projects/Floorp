@@ -153,6 +153,12 @@
         'WEBRTC_RELATIVE_PATH',
       	'HAVE_WEBRTC_VIDEO',
         'HAVE_WEBRTC_VOICE',
+        'HAVE_STDLIB_H=1',
+        'INTEGER_TYPES_H="\\"mozilla/StandardInteger.h\\""',
+        'HAVE_UINT8_T=1',
+        'HAVE_UINT16_T=1',
+        'HAVE_UINT32_T=1',
+        'HAVE_UINT64_T=1',
       ],
 
       #
