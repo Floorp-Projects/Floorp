@@ -253,7 +253,7 @@ TransportSecurityInfo::GetErrorMessage(PRUnichar** aText)
   }
 
   *aText = ToNewUnicode(mErrorMessageCached);
-  return *aText != nullptr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return *aText ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 void
@@ -338,9 +338,6 @@ TransportSecurityInfo::GetInterface(const nsIID & uuid, void * *result)
   nsresult rv;
   if (!mCallbacks) {
     nsCOMPtr<nsIInterfaceRequestor> ir = new PipUIContext();
-    if (!ir)
-      return NS_ERROR_OUT_OF_MEMORY;
-
     rv = ir->GetInterface(uuid, result);
   } else {
     rv = mCallbacks->GetInterface(uuid, result);
@@ -360,7 +357,7 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* stream)
 
   MutexAutoLock lock(mMutex);
 
-  nsRefPtr<nsSSLStatus> status = mSSLStatus;
+  RefPtr<nsSSLStatus> status(mSSLStatus);
   nsCOMPtr<nsISerializable> certSerializable;
 
   // Write a redundant copy of the certificate for backward compatibility
@@ -742,7 +739,7 @@ GetSubjectAltNames(CERTCertificate *nssCert,
   nameCount = 0;
 
   PLArenaPool *san_arena = nullptr;
-  SECItem altNameExtension = {siBuffer, NULL, 0 };
+  SECItem altNameExtension = {siBuffer, nullptr, 0 };
   CERTGeneralName *sanNameList = nullptr;
 
   SECStatus rv = CERT_FindCertExtension(nssCert, SEC_OID_X509_SUBJECT_ALT_NAME,
@@ -820,7 +817,7 @@ AppendErrorTextMismatch(const nsString &host,
   const PRUnichar *params[1];
   nsresult rv;
 
-  CERTCertificate *nssCert = NULL;
+  CERTCertificate *nssCert = nullptr;
   CERTCertificateCleaner nssCertCleaner(nssCert);
 
   nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(ix509, &rv);
@@ -1055,8 +1052,8 @@ formatOverridableCertErrorMessage(nsISSLStatus & sslStatus,
 
   returnedMessage.Append(NS_LITERAL_STRING("\n\n"));
 
-  nsRefPtr<nsIX509Cert> ix509;
-  rv = sslStatus.GetServerCert(getter_AddRefs(ix509));
+  RefPtr<nsIX509Cert> ix509;
+  rv = sslStatus.GetServerCert(byRef(ix509));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool isUntrusted;
