@@ -218,15 +218,25 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
       if (parentMetrics.IsScrollable())
         scrollableLayer = parent;
       if (!parentMetrics.mDisplayPort.IsEmpty() && scrollableLayer) {
-          displayPort = parent->GetEffectiveTransform().
-            TransformBounds(gfxRect(
-              parentMetrics.mDisplayPort.x, parentMetrics.mDisplayPort.y,
-              parentMetrics.mDisplayPort.width, parentMetrics.mDisplayPort.height));
+          // Get the display-port bounds
+          displayPort = gfxRect(parentMetrics.mDisplayPort.x,
+                                parentMetrics.mDisplayPort.y,
+                                parentMetrics.mDisplayPort.width,
+                                parentMetrics.mDisplayPort.height);
+
+          // Check the scale transform applied to the root layer to determine
+          // the content resolution.
+          Layer* rootLayer = aLayer->Manager()->GetRoot();
+          const gfx3DMatrix& rootTransform = rootLayer->GetTransform();
+          float scaleX = rootTransform.GetXScale();
+          float scaleY = rootTransform.GetYScale();
+
+          // Get the content document bounds
           const FrameMetrics& metrics = scrollableLayer->GetFrameMetrics();
           const nsIntSize& contentSize = metrics.mContentRect.Size();
           gfx::Point scrollOffset =
-            gfx::Point(metrics.mScrollOffset.x * metrics.LayersPixelsPerCSSPixel().width,
-                       metrics.mScrollOffset.y * metrics.LayersPixelsPerCSSPixel().height);
+            gfx::Point((metrics.mScrollOffset.x * metrics.LayersPixelsPerCSSPixel().width) / scaleX,
+                       (metrics.mScrollOffset.y * metrics.LayersPixelsPerCSSPixel().height) / scaleY);
           const nsIntPoint& contentOrigin = metrics.mContentRect.TopLeft() -
             nsIntPoint(NS_lround(scrollOffset.x), NS_lround(scrollOffset.y));
           gfxRect contentRect = gfxRect(contentOrigin.x, contentOrigin.y,
