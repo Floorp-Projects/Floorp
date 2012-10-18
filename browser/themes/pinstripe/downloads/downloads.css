@@ -43,6 +43,7 @@
 }
 
 #downloadsHistory:-moz-focusring > .button-box {
+  outline: 1px -moz-dialogtext dotted;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
 }
@@ -74,7 +75,7 @@ richlistitem[type="download"]:last-child {
 }
 
 #downloadsListBox:-moz-focusring > richlistitem[type="download"][selected] {
-  outline: 1px #999 dotted;
+  outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
   -moz-outline-radius: 3px;
 }
@@ -114,6 +115,10 @@ richlistitem[type="download"]:last-child {
 
 .downloadButton > .button-box {
   padding: 0;
+}
+
+.downloadButton:-moz-focusring > .button-box {
+  outline: 1px -moz-dialogtext dotted;
 }
 
 /*** Highlighted list items ***/
