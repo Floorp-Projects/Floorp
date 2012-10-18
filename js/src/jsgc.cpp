@@ -2921,6 +2921,11 @@ GetCPUCount()
 bool
 GCHelperThread::init()
 {
+    if (!rt->useHelperThreads()) {
+        backgroundAllocation = false;
+        return true;
+    }
+
 #ifdef JS_THREADSAFE
     if (!(wakeup = PR_NewCondVar(rt->gcLock)))
         return false;
@@ -2933,8 +2938,6 @@ GCHelperThread::init()
         return false;
 
     backgroundAllocation = (GetCPUCount() >= 2);
-#else
-    backgroundAllocation = false;
 #endif /* JS_THREADSAFE */
     return true;
 }
@@ -2942,6 +2945,12 @@ GCHelperThread::init()
 void
 GCHelperThread::finish()
 {
+    if (!rt->useHelperThreads()) {
+        JS_ASSERT(state == IDLE);
+        return;
+    }
+
+
 #ifdef JS_THREADSAFE
     PRThread *join = NULL;
     {
@@ -2966,11 +2975,6 @@ GCHelperThread::finish()
         PR_DestroyCondVar(wakeup);
     if (done)
         PR_DestroyCondVar(done);
-#else
-    /*
-     * In non-threadsafe configurations, we do all work synchronously, so we must be IDLE
-     */
-    JS_ASSERT(state == IDLE);
 #endif /* JS_THREADSAFE */
 }
 
@@ -3036,6 +3040,8 @@ GCHelperThread::threadLoop()
 void
 GCHelperThread::startBackgroundSweep(bool shouldShrink)
 {
+    JS_ASSERT(rt->useHelperThreads());
+
 #ifdef JS_THREADSAFE
     AutoLockGC lock(rt);
     JS_ASSERT(state == IDLE);
@@ -3044,16 +3050,16 @@ GCHelperThread::startBackgroundSweep(bool shouldShrink)
     shrinkFlag = shouldShrink;
     state = SWEEPING;
     PR_NotifyCondVar(wakeup);
-#else
-    JS_NOT_REACHED("No background sweep if !JS_THREADSAFE");
 #endif /* JS_THREADSAFE */
 }
 
-#ifdef JS_THREADSAFE
 /* Must be called with the GC lock taken. */
 void
 GCHelperThread::startBackgroundShrink()
 {
+    JS_ASSERT(rt->useHelperThreads());
+
+#ifdef JS_THREADSAFE
     switch (state) {
       case IDLE:
         JS_ASSERT(!sweepFlag);
@@ -3074,26 +3080,34 @@ GCHelperThread::startBackgroundShrink()
       case SHUTDOWN:
         JS_NOT_REACHED("No shrink on shutdown");
     }
-}
 #endif /* JS_THREADSAFE */
+}
 
 void
 GCHelperThread::waitBackgroundSweepEnd()
 {
+    if (!rt->useHelperThreads()) {
+        JS_ASSERT(state == IDLE);
+        return;
+    }
+
 #ifdef JS_THREADSAFE
     AutoLockGC lock(rt);
     while (state == SWEEPING)
         PR_WaitCondVar(done, PR_INTERVAL_NO_TIMEOUT);
     if (rt->gcIncrementalState == NO_INCREMENTAL)
         AssertBackgroundSweepingFinished(rt);
-#else
-    JS_ASSERT(state == IDLE);
 #endif /* JS_THREADSAFE */
 }
 
 void
 GCHelperThread::waitBackgroundSweepOrAllocEnd()
 {
+    if (!rt->useHelperThreads()) {
+        JS_ASSERT(state == IDLE);
+        return;
+    }
+
 #ifdef JS_THREADSAFE
     AutoLockGC lock(rt);
     if (state == ALLOCATING)
@@ -3102,8 +3116,6 @@ GCHelperThread::waitBackgroundSweepOrAllocEnd()
         PR_WaitCondVar(done, PR_INTERVAL_NO_TIMEOUT);
     if (rt->gcIncrementalState == NO_INCREMENTAL)
         AssertBackgroundSweepingFinished(rt);
-#else
-    JS_ASSERT(state == IDLE);
 #endif /* JS_THREADSAFE */
 }
 
@@ -3111,13 +3123,13 @@ GCHelperThread::waitBackgroundSweepOrAllocEnd()
 inline void
 GCHelperThread::startBackgroundAllocationIfIdle()
 {
+    JS_ASSERT(rt->useHelperThreads());
+
 #ifdef JS_THREADSAFE
     if (state == IDLE) {
         state = ALLOCATING;
         PR_NotifyCondVar(wakeup);
     }
-#else
-    JS_ASSERT(state == IDLE);
 #endif /* JS_THREADSAFE */
 }
 
@@ -3803,7 +3815,7 @@ BeginSweepPhase(JSRuntime *rt)
     JS_ASSERT_IF(isFull, rt->gcIsFull);
 
 #ifdef JS_THREADSAFE
-    rt->gcSweepOnBackgroundThread = rt->hasContexts();
+    rt->gcSweepOnBackgroundThread = rt->hasContexts() && rt->useHelperThreads();
 #endif
 
     /* Purge the ArenaLists before sweeping. */
@@ -4004,14 +4016,16 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
         if (!lastGC)
             SweepCompartments(&fop, lastGC);
 
-#ifndef JS_THREADSAFE
-        /*
-         * Destroy arenas after we finished the sweeping so finalizers can safely
-         * use IsAboutToBeFinalized().
-         * This is done on the GCHelperThread if JS_THREADSAFE is defined.
-         */
-        ExpireChunksAndArenas(rt, gckind == GC_SHRINK);
-#endif
+        if (!rt->gcSweepOnBackgroundThread) {
+            /*
+             * Destroy arenas after we finished the sweeping so finalizers can
+             * safely use IsAboutToBeFinalized(). This is done on the
+             * GCHelperThread if possible. We acquire the lock only because
+             * Expire needs to unlock it for other callers.
+             */
+            AutoLockGC lock(rt);
+            ExpireChunksAndArenas(rt, gckind == GC_SHRINK);
+        }
     }
 
     /*
@@ -4722,11 +4736,11 @@ ShrinkGCBuffers(JSRuntime *rt)
 {
     AutoLockGC lock(rt);
     JS_ASSERT(!rt->isHeapBusy());
-#ifndef JS_THREADSAFE
-    ExpireChunksAndArenas(rt, true);
-#else
-    rt->gcHelperThread.startBackgroundShrink();
-#endif
+
+    if (!rt->useHelperThreads())
+        ExpireChunksAndArenas(rt, true);
+    else
+        rt->gcHelperThread.startBackgroundShrink();
 }
 
 struct AutoFinishGC

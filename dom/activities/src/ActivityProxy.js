@@ -11,7 +11,6 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
-Cu.import("resource://gre/modules/Webapps.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -30,6 +29,11 @@ function debug(aMsg) {
 function ActivityProxy() {
   debug("ActivityProxy");
   this.activity = null;
+  let inParent = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+                   .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+  debug("inParent: " + inParent);
+  Cu.import(inParent ? "resource://gre/modules/Webapps.jsm"
+                     : "resource://gre/modules/AppsServiceChild.jsm");
 }
 
 ActivityProxy.prototype = {

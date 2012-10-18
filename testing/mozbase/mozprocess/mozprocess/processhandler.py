@@ -198,7 +198,7 @@ class ProcessHandlerMixin(object):
                 self.pid = pid
                 self.tid = tid
 
-                if canCreateJob:
+                if not self._ignore_children and canCreateJob:
                     try:
                         # We create a new job for this process, so that we can kill
                         # the process and any sub-processes
@@ -392,10 +392,11 @@ falling back to not using job objects for managing child processes"""
 
                 # Python 2.5 uses isAlive versus is_alive use the proper one
                 threadalive = False
-                if hasattr(self._procmgrthread, 'is_alive'):
-                    threadalive = self._procmgrthread.is_alive()
-                else:
-                    threadalive = self._procmgrthread.isAlive()
+                if hasattr(self, "_procmgrthread"):
+                    if hasattr(self._procmgrthread, 'is_alive'):
+                        threadalive = self._procmgrthread.is_alive()
+                    else:
+                        threadalive = self._procmgrthread.isAlive()
                 if self._job and threadalive: 
                     # Then we are managing with IO Completion Ports
                     # wait on a signal so we know when we have seen the last
@@ -426,7 +427,7 @@ falling back to not using job objects for managing child processes"""
                     # Not managing with job objects, so all we can reasonably do
                     # is call waitforsingleobject and hope for the best
 
-                    if MOZPROCESS_DEBUG:
+                    if MOZPROCESS_DEBUG and not self._ignore_children:
                         print "DBG::MOZPROC NOT USING JOB OBJECTS!!!"
                     # First, make sure we have not already ended
                     if self.returncode != winprocess.STILL_ACTIVE:

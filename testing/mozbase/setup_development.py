@@ -100,7 +100,7 @@ def dependency_info(dep):
             retval['Version'] = version
             break
     else:
-        retval['name'] = dep.strip()
+        retval['Name'] = dep.strip()
     return retval
 
 def unroll_dependencies(dependencies):

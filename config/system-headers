@@ -481,6 +481,7 @@ MacTCP.h
 MacTypes.h
 MacWindows.h
 malloc.h
+malloc_np.h
 map
 mapicode.h
 mapidefs.h
