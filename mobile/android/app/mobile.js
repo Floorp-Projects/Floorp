@@ -409,13 +409,28 @@ pref("font.size.inflation.minTwips", 120);
 // When true, zooming will be enabled on all sites, even ones that declare user-scalable=no.
 pref("browser.ui.zoom.force-user-scalable", false);
 
-// Touch radius (area around the touch location to look for target elements),
-// in 1/240-inch pixels:
-pref("browser.ui.touch.left", 32);
-pref("browser.ui.touch.right", 32);
-pref("browser.ui.touch.top", 48);
-pref("browser.ui.touch.bottom", 16);
-pref("browser.ui.touch.weight.visited", 120); // percentage
+/*
+ * When enabled, the touch.radius and mouse.radius prefs allow events to be dispatched
+ * to nearby elements that are sensitive to the event. See PositionedEventTargeting.cpp.
+ * The 'mm' prefs define a rectangle around the nominal event target point within which
+ * we will search for suitable elements. 'visitedWeight' is a percentage weight;
+ * a value > 100 makes a visited link be treated as further away from the event target
+ * than it really is, while a value < 100 makes a visited link be treated as closer
+ * to the event target than it really is.
+ */
+pref("ui.touch.radius.enabled", true);
+pref("ui.touch.radius.leftmm", 4);
+pref("ui.touch.radius.topmm", 5);
+pref("ui.touch.radius.rightmm", 4);
+pref("ui.touch.radius.bottommm", 3);
+pref("ui.touch.radius.visitedWeight", 120);
+
+pref("ui.mouse.radius.enabled", true);
+pref("ui.mouse.radius.leftmm", 4);
+pref("ui.mouse.radius.topmm", 5);
+pref("ui.mouse.radius.rightmm", 4);
+pref("ui.mouse.radius.bottommm", 3);
+pref("ui.mouse.radius.visitedWeight", 120);
 
 // plugins
 pref("plugin.disable", false);
