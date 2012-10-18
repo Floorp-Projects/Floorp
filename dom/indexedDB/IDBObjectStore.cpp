@@ -604,12 +604,14 @@ ActorFromRemoteBlob(nsIDOMBlob* aBlob)
 
 inline
 bool
-ResolveMysteryBlob(nsIDOMBlob* aBlob, const nsString& aName,
-                   const nsString& aContentType, uint64_t aSize)
+ResolveMysteryFile(nsIDOMBlob* aBlob, const nsString& aName,
+                   const nsString& aContentType, uint64_t aSize,
+                   uint64_t aLastModifiedDate)
 {
   BlobChild* actor = ActorFromRemoteBlob(aBlob);
   if (actor) {
-    return actor->SetMysteryBlobInfo(aName, aContentType, aSize);
+    return actor->SetMysteryBlobInfo(aName, aContentType,
+                                     aSize, aLastModifiedDate);
   }
   return true;
 }
@@ -1095,7 +1097,18 @@ IDBObjectStore::StructuredCloneReadCallback(JSContext* aCx,
                                             uint32_t aData,
                                             void* aClosure)
 {
-  if (aTag == SCTAG_DOM_FILEHANDLE || aTag == SCTAG_DOM_BLOB ||
+  // We need to statically assert that our tag values are what we expect
+  // so that if people accidentally change them they notice.
+  MOZ_STATIC_ASSERT(SCTAG_DOM_BLOB == 0xFFFF8001 &&
+                    SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE == 0xFFFF8002 &&
+                    SCTAG_DOM_FILEHANDLE == 0xFFFF8004 &&
+                    SCTAG_DOM_FILE == 0xFFFF8005,
+                    "You changed our structured clone tag values and just ate "
+                    "everyone's IndexedDB data.  I hope you are happy.");
+
+  if (aTag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
+      aTag == SCTAG_DOM_FILEHANDLE ||
+      aTag == SCTAG_DOM_BLOB ||
       aTag == SCTAG_DOM_FILE) {
     StructuredCloneReadInfo* cloneReadInfo =
       reinterpret_cast<StructuredCloneReadInfo*>(aClosure);
@@ -1141,6 +1154,7 @@ IDBObjectStore::StructuredCloneReadCallback(JSContext* aCx,
       return JSVAL_TO_OBJECT(wrappedFileHandle);
     }
 
+    // If it's not a FileHandle, it's a Blob or a File.
     uint64_t size;
     if (!JS_ReadBytes(aReader, &size, sizeof(uint64_t))) {
       NS_WARNING("Failed to read size!");
@@ -1196,7 +1210,15 @@ IDBObjectStore::StructuredCloneReadCallback(JSContext* aCx,
       return JSVAL_TO_OBJECT(wrappedBlob);
     }
 
-    NS_ASSERTION(aTag == SCTAG_DOM_FILE, "Huh?!");
+    NS_ASSERTION(aTag == SCTAG_DOM_FILE ||
+                 aTag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE, "Huh?!");
+
+    uint64_t lastModifiedDate = UINT64_MAX;
+    if (aTag != SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE &&
+        !JS_ReadBytes(aReader, &lastModifiedDate, sizeof(lastModifiedDate))) {
+      NS_WARNING("Failed to read lastModifiedDate");
+      return nullptr;
+    }
 
     nsCString name;
     if (!StructuredCloneReadString(aReader, name)) {
@@ -1206,7 +1228,7 @@ IDBObjectStore::StructuredCloneReadCallback(JSContext* aCx,
 
     nsCOMPtr<nsIDOMFile> domFile;
     if (file.mFile) {
-      if (!ResolveMysteryBlob(file.mFile, convName, convType, size)) {
+      if (!ResolveMysteryFile(file.mFile, convName, convType, size, lastModifiedDate)) {
         return nullptr;
       }
       domFile = do_QueryInterface(file.mFile);
@@ -1320,6 +1342,14 @@ IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
       }
 
       if (file) {
+        uint64_t lastModifiedDate = 0;
+        if (NS_FAILED(file->GetMozLastModifiedDate(&lastModifiedDate))) {
+          NS_WARNING("Failed to get last modified date!");
+          return false;
+        }
+
+        lastModifiedDate = SwapBytes(lastModifiedDate);
+
         nsString name;
         if (NS_FAILED(file->GetName(name))) {
           NS_WARNING("Failed to get name!");
@@ -1328,7 +1358,8 @@ IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
         NS_ConvertUTF16toUTF8 convName(name);
         uint32_t convNameLength = SwapBytes(convName.Length());
 
-        if (!JS_WriteBytes(aWriter, &convNameLength, sizeof(convNameLength)) ||
+        if (!JS_WriteBytes(aWriter, &lastModifiedDate, sizeof(lastModifiedDate)) || 
+            !JS_WriteBytes(aWriter, &convNameLength, sizeof(convNameLength)) ||
             !JS_WriteBytes(aWriter, convName.get(), convName.Length())) {
           return false;
         }
