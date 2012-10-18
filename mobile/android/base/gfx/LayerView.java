@@ -112,6 +112,9 @@ public class LayerView extends FrameLayout {
         if (mLayerClient != null) {
             mLayerClient.destroy();
         }
+        if (mRenderer != null) {
+            mRenderer.destroy();
+        }
     }
 
     @Override
