@@ -71,6 +71,7 @@ ifdef ENABLE_TESTS
 test_webidl_files := \
   TestCodeGen.webidl \
   TestDictionary.webidl \
+  TestExampleGen.webidl \
   TestTypedef.webidl \
   $(NULL)
 else
