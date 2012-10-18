@@ -38,9 +38,15 @@ public:
   NS_DECL_NSIDOMCSSSTYLEDECLARATION
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName);
 
+  enum StyleType {
+    eDefaultOnly, // Only includes UA and user sheets
+    eAll // Includes all stylesheets
+  };
+
   nsComputedDOMStyle(mozilla::dom::Element* aElement,
                      const nsAString& aPseudoElt,
-                     nsIPresShell* aPresShell);
+                     nsIPresShell* aPresShell,
+                     StyleType aStyleType);
   virtual ~nsComputedDOMStyle();
 
   static void Shutdown();
@@ -52,12 +58,14 @@ public:
 
   static already_AddRefed<nsStyleContext>
   GetStyleContextForElement(mozilla::dom::Element* aElement, nsIAtom* aPseudo,
-                            nsIPresShell* aPresShell);
+                            nsIPresShell* aPresShell,
+                            StyleType aStyleType = eAll);
 
   static already_AddRefed<nsStyleContext>
   GetStyleContextForElementNoFlush(mozilla::dom::Element* aElement,
                                    nsIAtom* aPseudo,
-                                   nsIPresShell* aPresShell);
+                                   nsIPresShell* aPresShell,
+                                   StyleType aStyleType = eAll);
 
   static nsIPresShell*
   GetPresShellForContent(nsIContent* aContent);
@@ -505,6 +513,11 @@ private:
    */
   nsIPresShell* mPresShell;
 
+  /*
+   * The kind of styles we should be returning.
+   */
+  StyleType mStyleType;
+
   bool mExposeVisitedStyle;
 
 #ifdef DEBUG
@@ -515,7 +528,9 @@ private:
 already_AddRefed<nsComputedDOMStyle>
 NS_NewComputedDOMStyle(mozilla::dom::Element* aElement,
                        const nsAString& aPseudoElt,
-                       nsIPresShell* aPresShell);
+                       nsIPresShell* aPresShell,
+                       nsComputedDOMStyle::StyleType aStyleType =
+                         nsComputedDOMStyle::eAll);
 
 #endif /* nsComputedDOMStyle_h__ */
 

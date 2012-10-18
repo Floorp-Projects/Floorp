@@ -5161,7 +5161,7 @@ class MIteratorEnd
 {
     MIteratorEnd(MDefinition *iter)
       : MUnaryInstruction(iter)
-    {}
+    { }
 
   public:
     INSTRUCTION_HEADER(IteratorEnd);
@@ -5175,6 +5175,25 @@ class MIteratorEnd
     }
     MDefinition *iterator() const {
         return getOperand(0);
+    }
+};
+
+// Implementation for 'in' operator.
+class MIn
+  : public MBinaryInstruction,
+    public MixPolicy<BoxPolicy<0>, ObjectPolicy<1> >
+{
+  public:
+    MIn(MDefinition *key, MDefinition *obj)
+      : MBinaryInstruction(key, obj)
+    {
+        setResultType(MIRType_Boolean);
+    }
+
+    INSTRUCTION_HEADER(In);
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 

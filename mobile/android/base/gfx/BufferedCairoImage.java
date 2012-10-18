@@ -16,7 +16,6 @@ public class BufferedCairoImage extends CairoImage {
     private ByteBuffer mBuffer;
     private IntSize mSize;
     private int mFormat;
-    private boolean mNeedToFreeBuffer;
 
     /** Creates a buffered Cairo image from a byte buffer. */
     public BufferedCairoImage(ByteBuffer inBuffer, int inWidth, int inHeight, int inFormat) {
@@ -29,9 +28,7 @@ public class BufferedCairoImage extends CairoImage {
     }
 
     private void freeBuffer() {
-        if (mNeedToFreeBuffer)
-            DirectBufferAllocator.free(mBuffer);
-        mNeedToFreeBuffer = false;
+        DirectBufferAllocator.free(mBuffer);
         mBuffer = null;
     }
 
@@ -61,7 +58,6 @@ public class BufferedCairoImage extends CairoImage {
     public void setBitmap(Bitmap bitmap) {
         mFormat = CairoUtils.bitmapConfigToCairoFormat(bitmap.getConfig());
         mSize = new IntSize(bitmap.getWidth(), bitmap.getHeight());
-        mNeedToFreeBuffer = true;
 
         int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat);
         mBuffer = DirectBufferAllocator.allocate(mSize.getArea() * bpp);

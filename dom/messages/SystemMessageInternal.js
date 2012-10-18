@@ -51,6 +51,7 @@ function SystemMessageInternal() {
   this._bufferedSysMsgs = [];
 
   Services.obs.addObserver(this, "xpcom-shutdown", false);
+  Services.obs.addObserver(this, "webapps-registry-start", false);
   Services.obs.addObserver(this, "webapps-registry-ready", false);
   kMessages.forEach(function(aMsg) {
     ppmm.addMessageListener(aMsg, this);
@@ -236,10 +237,14 @@ SystemMessageInternal.prototype = {
           ppmm.removeMessageListener(aMsg, this);
         }, this);
         Services.obs.removeObserver(this, "xpcom-shutdown");
+        Services.obs.removeObserver(this, "webapps-registry-start");
         Services.obs.removeObserver(this, "webapps-registry-ready");
         ppmm = null;
         this._pages = null;
         this._bufferedSysMsgs = null;
+        break;
+      case "webapps-registry-start":
+        this._webappsRegistryReady = false;
         break;
       case "webapps-registry-ready":
         // After the webapps' registration has been done for sure,
@@ -256,7 +261,7 @@ SystemMessageInternal.prototype = {
               break;
           }
         }, this);
-        this._bufferedSysMsgs = null;
+        this._bufferedSysMsgs.length = 0;
         break;
     }
   },

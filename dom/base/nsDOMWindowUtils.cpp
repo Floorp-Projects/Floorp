@@ -1598,6 +1598,8 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
     compositionEvent.data = aData;
   }
 
+  compositionEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
+
   nsEventStatus status;
   nsresult rv = widget->DispatchEvent(&compositionEvent, status);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1674,6 +1676,8 @@ nsDOMWindowUtils::SendTextEvent(const nsAString& aCompositionString,
 
   textEvent.rangeCount = textRanges.Length();
   textEvent.rangeArray = textRanges.Elements();
+
+  textEvent.flags |= NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT;
 
   nsEventStatus status;
   nsresult rv = widget->DispatchEvent(&textEvent, status);

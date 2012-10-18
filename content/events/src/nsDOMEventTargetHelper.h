@@ -33,7 +33,7 @@ public:
   NS_DECL_NSIDOMEVENTTARGET
   void AddEventListener(const nsAString& aType,
                         nsIDOMEventListener* aCallback, // XXX nullable
-                        bool aCapture, Nullable<bool>& aWantsUntrusted,
+                        bool aCapture, const Nullable<bool>& aWantsUntrusted,
                         mozilla::ErrorResult& aRv)
   {
     aRv = AddEventListener(aType, aCallback, aCapture,

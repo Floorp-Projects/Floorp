@@ -128,6 +128,14 @@ $(binding_cpp_files): %Binding.cpp: $(bindinggen_dependencies) \
 
 $(globalgen_targets): ParserResults.pkl
 
+%-example: $(bindinggen_dependencies) \
+           $(all_webidl_files) \
+           $(NULL)
+	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	  $(PLY_INCLUDE) -I$(srcdir)/parser \
+	  $(srcdir)/ExampleGen.py \
+	  $(srcdir)/Bindings.conf $*
+
 CACHE_DIR = _cache
 
 globalgen_dependencies := \
@@ -160,6 +168,8 @@ GARBAGE += \
   ParserResults.pkl \
   webidlyacc.py \
   parser.out \
+  $(wildcard *-example.h) \
+  $(wildcard *-example.cpp) \
   $(NULL)
 
 # Make sure all binding header files are created during the export stage, so we

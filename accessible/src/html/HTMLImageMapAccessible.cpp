@@ -163,9 +163,9 @@ HTMLAreaAccessible::
 ENameValueFlag
 HTMLAreaAccessible::NativeName(nsString& aName)
 {
-  Accessible::NativeName(aName);
+  ENameValueFlag nameFlag = Accessible::NativeName(aName);
   if (!aName.IsEmpty())
-    return eNameOK;
+    return nameFlag;
 
   if (!mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName))
     GetValue(aName);

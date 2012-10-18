@@ -77,16 +77,15 @@ ImageAccessible::NativeName(nsString& aName)
   if (!aName.IsEmpty())
     return eNameOK;
 
-  Accessible::NativeName(aName);
-  if (aName.IsEmpty() && hasAltAttrib) {
-    // No accessible name but empty 'alt' attribute is present. If further name
-    // computation algorithm doesn't provide non empty name then it means
-    // an empty 'alt' attribute was used to indicate a decorative image (see
-    // nsIAccessible::name attribute for details).
-    return eNoNameOnPurpose;
-  }
+  ENameValueFlag nameFlag = Accessible::NativeName(aName);
+  if (!aName.IsEmpty())
+    return nameFlag;
 
-  return eNameOK;
+  // No accessible name but empty 'alt' attribute is present. If further name
+  // computation algorithm doesn't provide non empty name then it means
+  // an empty 'alt' attribute was used to indicate a decorative image (see
+  // Accessible::Name() method for details).
+  return hasAltAttrib ? eNoNameOnPurpose : eNameOK;
 }
 
 role

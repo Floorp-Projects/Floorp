@@ -59,6 +59,11 @@ enum ENameValueFlag {
  eNoNameOnPurpose,
 
  /**
+  * Name was computed from the subtree.
+  */
+ eNameFromSubtree,
+
+ /**
   * Tooltip was used as a name.
   */
  eNameFromTooltip
@@ -805,13 +810,13 @@ protected:
   /**
    * Returns the accessible name specified by ARIA.
    */
-  void ARIAName(nsAString& aName);
+  void ARIAName(nsString& aName);
 
   /**
    * Compute the name of HTML/XUL node.
    */
-  void GetHTMLName(nsString& aName);
-  void GetXULName(nsString& aName);
+  mozilla::a11y::ENameValueFlag GetHTMLName(nsString& aName);
+  mozilla::a11y::ENameValueFlag GetXULName(nsString& aName);
 
   // helper method to verify frames
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);

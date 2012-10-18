@@ -129,6 +129,7 @@ namespace ion {
     _(GetArgument)                                                          \
     _(Floor)                                                                \
     _(Round)                                                                \
+    _(In)                                                                   \
     _(InstanceOf)                                                           \
     _(InterruptCheck)                                                       \
     _(FunctionBoundary)                                                     \

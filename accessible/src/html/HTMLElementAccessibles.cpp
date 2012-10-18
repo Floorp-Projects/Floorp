@@ -58,7 +58,7 @@ ENameValueFlag
 HTMLLabelAccessible::NativeName(nsString& aName)
 {
   nsTextEquivUtils::GetNameFromSubtree(this, aName);
-  return eNameOK;
+  return aName.IsEmpty() ? eNameOK : eNameFromSubtree;
 }
 
 role

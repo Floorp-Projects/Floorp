@@ -27,7 +27,6 @@
 #include "nsIconDecoder.h"
 
 #include "gfxContext.h"
-#include "gfx2DGlue.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/StandardInteger.h"
@@ -35,59 +34,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/gfx/Scale.h"
-
-// The high-quality scaler requires Skia.
-#ifdef MOZ_ENABLE_SKIA
-
-static bool
-ScaleFrameImage(imgFrame *aSrcFrame, imgFrame *aDstFrame,
-                const gfxSize &aScaleFactors)
-{
-  if (aScaleFactors.width <= 0 || aScaleFactors.height <= 0)
-    return false;
-
-  imgFrame *srcFrame = aSrcFrame;
-  nsIntRect srcRect = srcFrame->GetRect();
-  uint32_t dstWidth = NSToIntRoundUp(srcRect.width * aScaleFactors.width);
-  uint32_t dstHeight = NSToIntRoundUp(srcRect.height * aScaleFactors.height);
-
-  // Destination is unconditionally ARGB32 because that's what the scaler
-  // outputs.
-  nsresult rv = aDstFrame->Init(0, 0, dstWidth, dstHeight,
-                                gfxASurface::ImageFormatARGB32);
-  if (!NS_FAILED(rv)) {
-    uint8_t* srcData;
-    uint32_t srcDataLength;
-    // Source frame data is locked/unlocked on the main thread.
-    srcFrame->GetImageData(&srcData, &srcDataLength);
-    NS_ASSERTION(srcData != nullptr, "Source data is unavailable! Is it locked?");
-
-    uint8_t* dstData;
-    uint32_t dstDataLength;
-    aDstFrame->LockImageData();
-    aDstFrame->GetImageData(&dstData, &dstDataLength);
-
-    // This returns an SkBitmap backed by dstData; since it wrote to dstData,
-    // we don't need to look at that SkBitmap.
-    mozilla::gfx::Scale(srcData, srcRect.width, srcRect.height, aSrcFrame->GetImageBytesPerRow(),
-                        dstData, dstWidth, dstHeight, aDstFrame->GetImageBytesPerRow(),
-                        mozilla::gfx::ImageFormatToSurfaceFormat(aSrcFrame->GetFormat()));
-
-    aDstFrame->UnlockImageData();
-    return true;
-  }
-
-  return false;
-}
-#else // MOZ_ENABLE_SKIA
-static bool
-ScaleFrameImage(imgFrame *aSrcFrame, imgFrame *aDstFrame,
-                const gfxSize &aScaleFactors)
-{
-  return false;
-}
-#endif // MOZ_ENABLE_SKIA
-
 
 #include "sampler.h"
 
@@ -194,12 +140,199 @@ DiscardingEnabled()
   return enabled;
 }
 
+struct ScaleRequest
+{
+  ScaleRequest(RasterImage* aImage, const gfxSize& aScale, imgFrame* aSrcFrame)
+    : scale(aScale)
+    , dstLocked(false)
+    , done(false)
+    , stopped(false)
+  {
+    MOZ_ASSERT(!aSrcFrame->GetIsPaletted());
+    MOZ_ASSERT(aScale.width > 0 && aScale.height > 0);
+
+    weakImage = aImage->asWeakPtr();
+    srcRect = aSrcFrame->GetRect();
+    dstSize.width = NSToIntRoundUp(srcRect.width * scale.width);
+    dstSize.height = NSToIntRoundUp(srcRect.height * scale.height);
+  }
+
+  // This can only be called on the main thread.
+  bool GetSurfaces(imgFrame* srcFrame)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsRefPtr<RasterImage> image = weakImage.get();
+    if (!image) {
+      return false;
+    }
+
+    bool success = false;
+    if (!dstLocked) {
+      bool srcLocked = NS_SUCCEEDED(srcFrame->LockImageData());
+      dstLocked = NS_SUCCEEDED(dstFrame->LockImageData());
+
+      nsRefPtr<gfxASurface> dstASurf;
+      nsRefPtr<gfxASurface> srcASurf;
+      success = srcLocked && NS_SUCCEEDED(srcFrame->GetSurface(getter_AddRefs(srcASurf)));
+      success = success && dstLocked && NS_SUCCEEDED(dstFrame->GetSurface(getter_AddRefs(dstASurf)));
+
+      success = success && srcLocked && dstLocked && srcASurf && dstASurf;
+
+      if (success) {
+        srcSurface = srcASurf->GetAsImageSurface();
+        dstSurface = dstASurf->GetAsImageSurface();
+        srcData = srcSurface->Data();
+        dstData = dstSurface->Data();
+        srcStride = srcSurface->Stride();
+        dstStride = dstSurface->Stride();
+        srcFormat = mozilla::gfx::ImageFormatToSurfaceFormat(srcFrame->GetFormat());
+      }
+
+      // We have references to the Thebes surfaces, so we don't need to leave
+      // the source frame (that we don't own) locked. We'll unlock the
+      // destination frame in ReleaseSurfaces(), below.
+      if (srcLocked) {
+        success = NS_SUCCEEDED(srcFrame->UnlockImageData()) && success;
+      }
+
+      success = success && srcSurface && dstSurface;
+    }
+
+    return success;
+  }
+
+  // This can only be called on the main thread.
+  bool ReleaseSurfaces()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsRefPtr<RasterImage> image = weakImage.get();
+    if (!image) {
+      return false;
+    }
+
+    bool success = false;
+    if (dstLocked) {
+      success = NS_SUCCEEDED(dstFrame->UnlockImageData());
+
+      dstLocked = false;
+      srcData = nullptr;
+      dstData = nullptr;
+      srcSurface = nullptr;
+      dstSurface = nullptr;
+    }
+    return success;
+  }
+
+  // These values may only be touched on the main thread.
+  WeakPtr<RasterImage> weakImage;
+  nsAutoPtr<imgFrame> dstFrame;
+  nsRefPtr<gfxImageSurface> srcSurface;
+  nsRefPtr<gfxImageSurface> dstSurface;
+
+  // Below are the values that may be touched on the scaling thread.
+  gfxSize scale;
+  uint8_t* srcData;
+  uint8_t* dstData;
+  nsIntRect srcRect;
+  gfxIntSize dstSize;
+  uint32_t srcStride;
+  uint32_t dstStride;
+  mozilla::gfx::SurfaceFormat srcFormat;
+  bool dstLocked;
+  bool done;
+  // This boolean is accessed from both threads simultaneously without locking.
+  // That's safe because stopping a ScaleRequest is strictly an optimization;
+  // if we're not cache-coherent, at worst we'll do extra work.
+  bool stopped;
+};
+
+class DrawRunner : public nsRunnable
+{
+public:
+  DrawRunner(ScaleRequest* request)
+   : mScaleRequest(request)
+  {}
+
+  NS_IMETHOD Run()
+  {
+    // ScaleWorker is finished with this request, so we can unlock the data now.
+    mScaleRequest->ReleaseSurfaces();
+
+    nsRefPtr<RasterImage> image = mScaleRequest->weakImage.get();
+
+    if (image) {
+      RasterImage::ScaleStatus status;
+      if (mScaleRequest->done) {
+        status = RasterImage::SCALE_DONE;
+      } else {
+        status = RasterImage::SCALE_INVALID;
+      }
+
+      image->ScalingDone(mScaleRequest, status);
+    }
+
+    return NS_OK;
+  }
+
+private: /* members */
+  nsAutoPtr<ScaleRequest> mScaleRequest;
+};
+
+class ScaleRunner : public nsRunnable
+{
+public:
+  ScaleRunner(RasterImage* aImage, const gfxSize& aScale, imgFrame* aSrcFrame)
+  {
+    nsAutoPtr<ScaleRequest> request(new ScaleRequest(aImage, aScale, aSrcFrame));
+
+    // Destination is unconditionally ARGB32 because that's what the scaler
+    // outputs.
+    request->dstFrame = new imgFrame();
+    nsresult rv = request->dstFrame->Init(0, 0, request->dstSize.width, request->dstSize.height,
+                                          gfxASurface::ImageFormatARGB32);
+
+    if (NS_FAILED(rv) || !request->GetSurfaces(aSrcFrame)) {
+      return;
+    }
+
+    aImage->ScalingStart(request);
+
+    mScaleRequest = request;
+  }
+
+  NS_IMETHOD Run()
+  {
+    // An alias just for ease of typing
+    ScaleRequest* request = mScaleRequest;
+
+    if (!request->stopped) {
+      request->done = mozilla::gfx::Scale(request->srcData, request->srcRect.width, request->srcRect.height, request->srcStride,
+                                          request->dstData, request->dstSize.width, request->dstSize.height, request->dstStride,
+                                          request->srcFormat);
+    } else {
+      request->done = false;
+    }
+
+    // OK, we've got a new scaled image. Let's get the main thread to unlock and
+    // redraw it.
+    nsRefPtr<DrawRunner> runner = new DrawRunner(mScaleRequest.forget());
+    NS_DispatchToMainThread(runner, NS_DISPATCH_NORMAL);
+
+    return NS_OK;
+  }
+
+  bool IsOK() const { return !!mScaleRequest; }
+
+private:
+  nsAutoPtr<ScaleRequest> mScaleRequest;
+};
+
 namespace mozilla {
 namespace image {
 
 /* static */ StaticRefPtr<RasterImage::DecodeWorker> RasterImage::DecodeWorker::sSingleton;
-/* static */ nsRefPtr<RasterImage::ScaleWorker> RasterImage::ScaleWorker::sSingleton;
-/* static */ nsRefPtr<RasterImage::DrawWorker> RasterImage::DrawWorker::sSingleton;
 static nsCOMPtr<nsIThread> sScaleWorkerThread = nullptr;
 
 #ifndef DEBUG
@@ -236,7 +369,7 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
   mAnimationFinished(false),
   mFinishing(false),
   mInUpdateImageContainer(false),
-  mScaleRequest(this)
+  mScaleRequest(nullptr)
 {
   // Set up the discard tracker node.
   mDiscardTrackerNode.img = this;
@@ -244,20 +377,11 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
 
   // Statistics
   num_containers++;
-
 }
 
 //******************************************************************************
 RasterImage::~RasterImage()
 {
-  ScaleRequest::Stop(mScaleRequest.image);
-
-  delete mAnim;
-
-  for (unsigned int i = 0; i < mFrames.Length(); ++i)
-    delete mFrames[i];
-  mFrames.Clear();
-
   // Discardable statistics
   if (mDiscardable) {
     num_discardable_containers--;
@@ -282,6 +406,11 @@ RasterImage::~RasterImage()
       NS_WARNING("Failed to shut down decoder in destructor!");
   }
 
+  delete mAnim;
+
+  for (unsigned int i = 0; i < mFrames.Length(); ++i)
+    delete mFrames[i];
+
   // Total statistics
   num_containers--;
   total_source_bytes -= mSourceData.Length();
@@ -295,8 +424,6 @@ RasterImage::Initialize()
   // Create our singletons now, so we don't have to worry about what thread
   // they're created on.
   DecodeWorker::Singleton();
-  DrawWorker::Singleton();
-  ScaleWorker::Singleton();
 }
 
 nsresult
@@ -1018,16 +1145,19 @@ RasterImage::HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeO
   return n;
 }
 
-static size_t
-SizeOfDecodedWithComputedFallbackIfHeap(
-  const nsTArray<imgFrame*>& aFrames, gfxASurface::MemoryLocation aLocation,
-  nsMallocSizeOfFun aMallocSizeOf)
+size_t
+RasterImage::SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
+                                                     nsMallocSizeOfFun aMallocSizeOf) const
 {
   size_t n = 0;
-  for (uint32_t i = 0; i < aFrames.Length(); ++i) {
-    imgFrame* frame = aFrames.SafeElementAt(i, nullptr);
+  for (uint32_t i = 0; i < mFrames.Length(); ++i) {
+    imgFrame* frame = mFrames.SafeElementAt(i, nullptr);
     NS_ABORT_IF_FALSE(frame, "Null frame in frame array!");
     n += frame->SizeOfExcludingThisWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);
+  }
+
+  if (mScaleResult.status == SCALE_DONE) {
+    n += mScaleResult.frame->SizeOfExcludingThisWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);
   }
 
   return n;
@@ -1036,20 +1166,22 @@ SizeOfDecodedWithComputedFallbackIfHeap(
 size_t
 RasterImage::HeapSizeOfDecodedWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  return SizeOfDecodedWithComputedFallbackIfHeap(
-           mFrames, gfxASurface::MEMORY_IN_PROCESS_HEAP, aMallocSizeOf);
+  return SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MEMORY_IN_PROCESS_HEAP,
+                                                 aMallocSizeOf);
 }
 
 size_t
 RasterImage::NonHeapSizeOfDecoded() const
 {
-  return SizeOfDecodedWithComputedFallbackIfHeap(mFrames, gfxASurface::MEMORY_IN_PROCESS_NONHEAP, NULL);
+  return SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MEMORY_IN_PROCESS_NONHEAP,
+                                                 NULL);
 }
 
 size_t
 RasterImage::OutOfProcessSizeOfDecoded() const
 {
-  return SizeOfDecodedWithComputedFallbackIfHeap(mFrames, gfxASurface::MEMORY_OUT_OF_PROCESS, NULL);
+  return SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MEMORY_OUT_OF_PROCESS,
+                                                 NULL);
 }
 
 void
@@ -2279,6 +2411,10 @@ RasterImage::Discard(bool force)
     delete mFrames[i];
   mFrames.Clear();
 
+  // Clear our downscaled frame.
+  mScaleResult.status = SCALE_INVALID;
+  mScaleResult.frame = nullptr;
+
   // Flag that we no longer have decoded frames for this image
   mDecoded = false;
 
@@ -2680,144 +2816,6 @@ RasterImage::SyncDecode()
   return mError ? NS_ERROR_FAILURE : NS_OK;
 }
 
-/* static */ RasterImage::ScaleWorker*
-RasterImage::ScaleWorker::Singleton()
-{
-  if (!sSingleton) {
-    sSingleton = new ScaleWorker();
-    ClearOnShutdown(&sSingleton);
-  }
-
-  return sSingleton;
-}
-
-nsresult
-RasterImage::ScaleWorker::Run()
-{
-  if (!mInitialized) {
-    PR_SetCurrentThreadName("Image Scaler");
-    mInitialized = true;
-  }
-
-  ScaleRequest* request;
-  gfxSize scale;
-  imgFrame* frame;
-  {
-    MutexAutoLock lock(ScaleWorker::Singleton()->mRequestsMutex);
-    request = mScaleRequests.popFirst();
-    if (!request)
-      return NS_OK;
-
-    scale = request->scale;
-    frame = request->srcFrame;
-  }
-
-  nsAutoPtr<imgFrame> scaledFrame(new imgFrame());
-  bool scaled = ScaleFrameImage(frame, scaledFrame, scale);
-
-  // OK, we've got a new scaled image. Let's get the main thread to unlock and
-  // redraw it.
-  {
-    MutexAutoLock lock(ScaleWorker::Singleton()->mRequestsMutex);
-    if (scaled && scale == request->scale && !request->isInList()) {
-      request->dstFrame = scaledFrame;
-      request->done = true;
-    }
-
-    DrawWorker::Singleton()->RequestDraw(request->image);
-  }
-  return NS_OK;
-}
-
-// Note: you MUST call RequestScale with the ScaleWorker mutex held.
-void
-RasterImage::ScaleWorker::RequestScale(RasterImage* aImg)
-{
-  mRequestsMutex.AssertCurrentThreadOwns();
-
-  ScaleRequest* request = &aImg->mScaleRequest;
-  if (request->isInList())
-    return;
-
-  mScaleRequests.insertBack(request);
-
-  if (!sScaleWorkerThread) {
-    NS_NewThread(getter_AddRefs(sScaleWorkerThread), this, NS_DISPATCH_NORMAL);
-    ClearOnShutdown(&sScaleWorkerThread);
-  }
-  else {
-    sScaleWorkerThread->Dispatch(this, NS_DISPATCH_NORMAL);
-  }
-}
-
-/* static */ RasterImage::DrawWorker*
-RasterImage::DrawWorker::Singleton()
-{
-  if (!sSingleton) {
-    sSingleton = new DrawWorker();
-    ClearOnShutdown(&sSingleton);
-  }
-
-  return sSingleton;
-}
-
-nsresult
-RasterImage::DrawWorker::Run()
-{
-  ScaleRequest* request;
-  {
-    MutexAutoLock lock(ScaleWorker::Singleton()->mRequestsMutex);
-    request = mDrawRequests.popFirst();
-  }
-  if (request) {
-    // ScaleWorker is finished with this request, so we can unlock the data now.
-    request->UnlockSourceData();
-    // We have to reset dstFrame if request was stopped while ScaleWorker was scaling.
-    if (request->stopped) {
-      ScaleRequest::Stop(request->image);
-    }
-    nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(request->image->mObserver));
-    if (request->done && observer) {
-      imgFrame *scaledFrame = request->dstFrame.get();
-      scaledFrame->ImageUpdated(scaledFrame->GetRect());
-      nsIntRect frameRect = request->srcFrame->GetRect();
-      observer->FrameChanged(&frameRect);
-    }
-  }
-
-  return NS_OK;
-}
-
-void
-RasterImage::DrawWorker::RequestDraw(RasterImage* aImg)
-{
-  ScaleRequest* request = &aImg->mScaleRequest;
-  mDrawRequests.insertBack(request);
-  NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
-}
-
-void
-RasterImage::ScaleRequest::Stop(RasterImage* aImg)
-{
-  ScaleRequest* request = &aImg->mScaleRequest;
-  // It's safe to unlock source image data only if request is in the list.
-  // Otherwise we may be reading from the source while performing scaling
-  // and can't interrupt immediately.
-  if (request->isInList()) {
-    request->remove();
-    request->UnlockSourceData();
-  }
-  // We have to check if request is finished before dropping the destination
-  // frame. Otherwise we may be writing to the dest while performing scaling.
-  if (request->done) {
-    request->done = false;
-    request->dstFrame = nullptr;
-    request->scale.width = 0;
-    request->scale.height = 0;
-  }
-  request->stopped = true;
-}
-
 static inline bool
 IsDownscale(const gfxSize& scale)
 {
@@ -2848,6 +2846,47 @@ RasterImage::CanScale(gfxPattern::GraphicsFilter aFilter,
 }
 
 void
+RasterImage::ScalingStart(ScaleRequest* request)
+{
+  MOZ_ASSERT(request);
+  mScaleResult.scale = request->scale;
+  mScaleResult.status = SCALE_PENDING;
+  mScaleRequest = request;
+}
+
+void
+RasterImage::ScalingDone(ScaleRequest* request, ScaleStatus status)
+{
+  MOZ_ASSERT(status == SCALE_DONE || status == SCALE_INVALID);
+  MOZ_ASSERT(request);
+
+  if (status == SCALE_DONE) {
+    MOZ_ASSERT(request->done);
+
+    nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
+    if (observer) {
+      imgFrame *scaledFrame = request->dstFrame.get();
+      scaledFrame->ImageUpdated(scaledFrame->GetRect());
+      observer->FrameChanged(&request->srcRect);
+    }
+
+    mScaleResult.status = SCALE_DONE;
+    mScaleResult.frame = request->dstFrame;
+    mScaleResult.scale = request->scale;
+  } else {
+    mScaleResult.status = SCALE_INVALID;
+    mScaleResult.frame = nullptr;
+  }
+
+  // If we were waiting for this scale to come through, forget the scale
+  // request. Otherwise, we still have a scale outstanding that it's possible
+  // for us to (want to) stop.
+  if (mScaleRequest == request) {
+    mScaleRequest = nullptr;
+  }
+}
+
+void
 RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
                                           gfxContext *aContext,
                                           gfxPattern::GraphicsFilter aFilter,
@@ -2864,37 +2903,41 @@ RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
   nsIntRect subimage = aSubimage;
 
   if (CanScale(aFilter, scale)) {
-    MutexAutoLock lock(ScaleWorker::Singleton()->mRequestsMutex);
     // If scale factor is still the same that we scaled for and
-    // ScaleWorker has done it's job, then we can use pre-downscaled frame.
+    // ScaleWorker isn't still working, then we can use pre-downscaled frame.
     // If scale factor has changed, order new request.
-    if (mScaleRequest.scale == scale) {
-      if (mScaleRequest.done) {
-        frame = mScaleRequest.dstFrame.get();
-        userSpaceToImageSpace.Multiply(gfxMatrix().Scale(scale.width, scale.height));
+    // FIXME: Current implementation doesn't support pre-downscale
+    // mechanism for multiple sizes from same src, since we cache
+    // pre-downscaled frame only for the latest requested scale.
+    // The solution is to cache more than one scaled image frame
+    // for each RasterImage.
+    if (mScaleResult.status == SCALE_DONE && mScaleResult.scale == scale) {
+      frame = mScaleResult.frame;
+      userSpaceToImageSpace.Multiply(gfxMatrix().Scale(scale.width, scale.height));
 
-        // Since we're switching to a scaled image, we we need to transform the
-        // area of the subimage to draw accordingly, since imgFrame::Draw()
-        // doesn't know about scaled frames.
-        subimage.ScaleRoundOut(scale.width, scale.height);
+      // Since we're switching to a scaled image, we we need to transform the
+      // area of the subimage to draw accordingly, since imgFrame::Draw()
+      // doesn't know about scaled frames.
+      subimage.ScaleRoundOut(scale.width, scale.height);
+    }
+
+    // If we're not waiting for exactly this result, and there's only one
+    // instance of this image on this page, ask for a scale.
+    else if (!(mScaleResult.status == SCALE_PENDING && mScaleResult.scale == scale) &&
+             mLockCount == 1) {
+      // If we have an oustanding request, signal it to stop (if it can).
+      if (mScaleRequest) {
+        mScaleRequest->stopped = true;
       }
-    } else {
-      // FIXME: Current implementation doesn't support pre-downscale
-      // mechanism for multiple images from same src, since we cache
-      // pre-downscaled frame only for the latest requested scale.
-      // The solution is to cache more than one scaled image frame
-      // for each RasterImage.
-      int scaling = mScaleRequest.srcDataLocked ? 1 : 0;
-      if (mLockCount - scaling == 1) {
-        ScaleRequest::Stop(this);
-        mScaleRequest.srcFrame = frame;
-        mScaleRequest.scale = scale;
-        mScaleRequest.stopped = false;
 
-        // We need to make sure that source data is available before asking to scale.
-        if (mScaleRequest.LockSourceData()) {
-          ScaleWorker::Singleton()->RequestScale(this);
+      nsRefPtr<ScaleRunner> runner = new ScaleRunner(this, scale, frame);
+      if (runner->IsOK()) {
+        if (!sScaleWorkerThread) {
+          NS_NewNamedThread("Image Scaler", getter_AddRefs(sScaleWorkerThread));
+          ClearOnShutdown(&sScaleWorkerThread);
         }
+
+        sScaleWorkerThread->Dispatch(runner, NS_DISPATCH_NORMAL);
       }
     }
   }
@@ -3033,11 +3076,6 @@ RasterImage::UnlockImage()
 
   // Decrement our lock count
   mLockCount--;
-
-  if (ScaleWorker::sSingleton && mLockCount == 0) {
-    MutexAutoLock lock(ScaleWorker::Singleton()->mRequestsMutex);
-    ScaleRequest::Stop(this);
-  }
 
   // If we've decoded this image once before, we're currently decoding again,
   // and our lock count is now zero (so nothing is forcing us to keep the

@@ -74,6 +74,11 @@ function loadAndRegisterAgentSheet(win, style)
   loadAndRegisterSheet(win, style, "AGENT_SHEET");
 }
 
+function loadAndRegisterAuthorSheet(win, style)
+{
+  loadAndRegisterSheet(win, style, "AUTHOR_SHEET");
+}
+
 function unregisterUserSheet(win, style)
 {
   unregisterSheet(win, style, "USER_SHEET");
@@ -82,6 +87,11 @@ function unregisterUserSheet(win, style)
 function unregisterAgentSheet(win, style)
 {
   unregisterSheet(win, style, "AGENT_SHEET");
+}
+
+function unregisterAuthorSheet(win, style)
+{
+  unregisterSheet(win, style, "AUTHOR_SHEET");
 }
 
 function loadAndRegisterSheet(win, style, type)
@@ -157,6 +167,13 @@ var author = {
   color: 'rgb(0, 255, 255)',
   addRules: setDocSheet,
   removeRules: removeDocSheet
+};
+
+var authorFromManager = {
+  type: 'authorFromManager',
+  color: 'rgb(255, 0, 255)',
+  addRules: loadAndRegisterAuthorSheet,
+  removeRules: unregisterAuthorSheet
 };
 
 function loadAndCheck(win, firstType, secondType, swap, result1, result2)
@@ -239,6 +256,15 @@ function run()
 
   testStyleVsStyle(win, additionalAgent, additionalUser,
                    {AB:{rr:1, ii:0, ri:1, ir:0}, BA:{rr:1, ii:0, ri:1, ir:0}});
+
+  testStyleVsStyle(win, authorFromManager, author,
+                   {AB:{rr:0, ii:0, ri:1, ir:0}, BA:{rr:0, ii:0, ri:1, ir:0}});
+
+  testStyleVsStyle(win, authorFromManager, user,
+                   {AB:{rr:0, ii:1, ri:1, ir:0}, BA:{rr:0, ii:1, ri:1, ir:0}});
+
+  testStyleVsStyle(win, authorFromManager, additionalUser,
+                   {AB:{rr:0, ii:1, ri:1, ir:0}, BA:{rr:0, ii:1, ri:1, ir:0}});
 
 
   SimpleTest.finish();

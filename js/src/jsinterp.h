@@ -318,7 +318,7 @@ bool
 Throw(JSContext *cx, HandleValue v);
 
 bool
-GetProperty(JSContext *cx, HandleValue value, PropertyName *name, MutableHandleValue vp);
+GetProperty(JSContext *cx, HandleValue value, HandlePropertyName name, MutableHandleValue vp);
 
 bool
 GetScopeName(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue vp);

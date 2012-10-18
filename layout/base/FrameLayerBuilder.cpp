@@ -82,7 +82,21 @@ FrameLayerBuilder::DisplayItemData::AddFrame(nsIFrame* aFrame)
 }
 
 void
-FrameLayerBuilder::DisplayItemData::UpdateContents(Layer* aLayer, LayerState aState, uint32_t aContainerLayerGeneration)
+FrameLayerBuilder::DisplayItemData::RemoveFrame(nsIFrame* aFrame)
+{
+  DebugOnly<bool> result = mFrameList.RemoveElement(aFrame);
+  NS_ASSERTION(result, "Can't remove a frame that wasn't added!");
+
+  nsTArray<DisplayItemData*> *array = 
+    reinterpret_cast<nsTArray<DisplayItemData*>*>(aFrame->Properties().Get(FrameLayerBuilder::LayerManagerDataProperty()));
+  NS_ASSERTION(array, "Must be already stored on the frame!");
+  array->RemoveElement(this);
+}
+
+void
+FrameLayerBuilder::DisplayItemData::UpdateContents(Layer* aLayer, LayerState aState, 
+                                                   uint32_t aContainerLayerGeneration,
+                                                   nsDisplayItem* aItem /* = nullptr */)
 {
   mLayer = aLayer;
   mOptLayer = nullptr;
@@ -93,6 +107,27 @@ FrameLayerBuilder::DisplayItemData::UpdateContents(Layer* aLayer, LayerState aSt
   mClip.mHaveClipRect = false;
   mClip.mRoundedClipRects.Clear();
   mUsed = true;
+
+  if (!aItem) {
+    return;
+  }
+
+  nsAutoTArray<nsIFrame*, 4> copy = mFrameList;
+  if (!copy.RemoveElement(aItem->GetUnderlyingFrame())) {
+    AddFrame(aItem->GetUnderlyingFrame());
+  }
+
+  nsAutoTArray<nsIFrame*,4> mergedFrames;
+  aItem->GetMergedFrames(&mergedFrames);
+  for (uint32_t i = 0; i < mergedFrames.Length(); ++i) {
+    if (!copy.RemoveElement(mergedFrames[i])) {
+      AddFrame(mergedFrames[i]);
+    }
+  }
+
+  for (uint32_t i = 0; i < copy.Length(); i++) {
+    RemoveFrame(copy[i]); 
+  }
 }
 
 static nsIFrame* sDestroyedFrame = NULL;
@@ -109,23 +144,25 @@ FrameLayerBuilder::DisplayItemData::~DisplayItemData()
   }
 }
 
-bool
-FrameLayerBuilder::DisplayItemData::FrameListMatches(nsDisplayItem* aOther)
+void
+FrameLayerBuilder::DisplayItemData::GetFrameListChanges(nsDisplayItem* aOther, 
+                                                        nsTArray<nsIFrame*>& aOut)
 {
-  nsAutoTArray<nsIFrame*, 4> copy = mFrameList;
-  if (!copy.RemoveElement(aOther->GetUnderlyingFrame())) {
-    return false;
+  aOut = mFrameList;
+  nsAutoTArray<nsIFrame*, 4> added;
+  if (!aOut.RemoveElement(aOther->GetUnderlyingFrame())) {
+    added.AppendElement(aOther->GetUnderlyingFrame());
   }
 
   nsAutoTArray<nsIFrame*,4> mergedFrames;
   aOther->GetMergedFrames(&mergedFrames);
   for (uint32_t i = 0; i < mergedFrames.Length(); ++i) {
-    if (!copy.RemoveElement(mergedFrames[i])) {
-      return false;
+    if (!aOut.RemoveElement(mergedFrames[i])) {
+      added.AppendElement(mergedFrames[i]);
     }
   }
 
-  return copy.IsEmpty();
+  aOut.AppendElements(added); 
 }
 
 /**
@@ -1052,8 +1089,7 @@ FrameLayerBuilder::GetDisplayItemDataForManager(nsDisplayItem* aItem,
     for (uint32_t i = 0; i < array->Length(); i++) {
       DisplayItemData* item = array->ElementAt(i);
       if (item->mDisplayItemKey == aItem->GetPerFrameKey() &&
-          item->mLayer->Manager() == aManager &&
-          item->FrameListMatches(aItem)) {
+          item->mLayer->Manager() == aManager) {
         return item;
       }
     }
@@ -1093,19 +1129,25 @@ FrameLayerBuilder::GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKe
 }
 
 Layer*
-FrameLayerBuilder::GetOldLayerFor(nsDisplayItem* aItem, nsDisplayItemGeometry** aOldGeometry, Clip** aOldClip)
+FrameLayerBuilder::GetOldLayerFor(nsDisplayItem* aItem, 
+                                  nsDisplayItemGeometry** aOldGeometry, 
+                                  Clip** aOldClip,
+                                  nsTArray<nsIFrame*>* aChangedFrames)
 {
   uint32_t key = aItem->GetPerFrameKey();
   nsIFrame* frame = aItem->GetUnderlyingFrame();
 
   if (frame) {
     DisplayItemData* oldData = GetOldLayerForFrame(frame, key);
-    if (oldData && oldData->FrameListMatches(aItem)) {
+    if (oldData) {
       if (aOldGeometry) {
         *aOldGeometry = oldData->mGeometry.get();
       }
       if (aOldClip) {
         *aOldClip = &oldData->mClip;
+      }
+      if (aChangedFrames) {
+        oldData->GetFrameListChanges(aItem, *aChangedFrames); 
       }
       return oldData->mLayer;
     }
@@ -1986,8 +2028,6 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         topLeft = activeScrolledRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
       }
     }
-  
-    nsAutoPtr<nsDisplayItemGeometry> geometry(item->AllocateGeometry(mBuilder));
 
     // Assign the item to a layer
     if (layerState == LAYER_ACTIVE_FORCE ||
@@ -2005,7 +2045,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       // InvalidateForLayerChange doesn't need the new layer pointer.
       // We also need to check the old data now, because BuildLayer
       // can overwrite it.
-      InvalidateForLayerChange(item, nullptr, aClip, topLeft, geometry);
+      InvalidateForLayerChange(item, nullptr, aClip, topLeft, nullptr);
 
       // If the item would have its own layer but is invisible, just hide it.
       // Note that items without their own layers can't be skipped this
@@ -2079,16 +2119,24 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                    "Layer already in list???");
 
       mNewChildLayers.AppendElement(ownLayer);
+
+      /**
+       * No need to allocate geometry for items that aren't
+       * part of a ThebesLayer.
+       */
+      nsAutoPtr<nsDisplayItemGeometry> dummy;
       mLayerBuilder->AddLayerDisplayItem(ownLayer, item, 
                                          aClip, layerState, 
                                          topLeft, nullptr,
-                                         geometry);
+                                         dummy);
     } else {
       ThebesLayerData* data =
         FindThebesLayerFor(item, itemVisibleRect, itemDrawRect, aClip,
                            activeScrolledRoot, topLeft);
 
       data->mLayer->SetIsFixedPosition(isFixed);
+
+      nsAutoPtr<nsDisplayItemGeometry> geometry(item->AllocateGeometry(mBuilder));
 
       InvalidateForLayerChange(item, data->mLayer, aClip, topLeft, geometry);
 
@@ -2148,7 +2196,8 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
                "Display items that render using Thebes must have a key");
   nsDisplayItemGeometry *oldGeometry = NULL;
   FrameLayerBuilder::Clip* oldClip = NULL;
-  Layer* oldLayer = mLayerBuilder->GetOldLayerFor(aItem, &oldGeometry, &oldClip);
+  nsAutoTArray<nsIFrame*,4> changedFrames;
+  Layer* oldLayer = mLayerBuilder->GetOldLayerFor(aItem, &oldGeometry, &oldClip, &changedFrames);
   if (aNewLayer != oldLayer && oldLayer) {
     // The item has changed layers.
     // Invalidate the old bounds in the old layer and new bounds in the new layer.
@@ -2219,6 +2268,10 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
 
     // Add in any rect that the frame specified
     combined.Or(combined, invalid);
+ 
+    for (uint32_t i = 0; i < changedFrames.Length(); i++) {
+      combined.Or(combined, changedFrames[i]->GetVisualOverflowRect());
+    } 
 
     // Restrict invalidation to the clipped region
     nsRegion clip;

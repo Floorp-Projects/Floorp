@@ -179,6 +179,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitArgumentsLength(MArgumentsLength *ins);
     bool visitGetArgument(MGetArgument *ins);
     bool visitThrow(MThrow *ins);
+    bool visitIn(MIn *ins);
     bool visitInstanceOf(MInstanceOf *ins);
     bool visitFunctionBoundary(MFunctionBoundary *ins);
     bool visitSetDOMProperty(MSetDOMProperty *ins);

@@ -28,7 +28,7 @@ function runTest() {
       // taking the screenshot).
       e.preventDefault();
 
-      iframe.getScreenshot().onsuccess = function(sshot) {
+      iframe.getScreenshot(1000, 1000).onsuccess = function(sshot) {
         initialScreenshot = sshot.target.result;
         e.detail.unblock();
       };
@@ -36,7 +36,7 @@ function runTest() {
     case 'step 2':
       // The page has now attempted to load the X-Frame-Options page; take
       // another screenshot.
-      iframe.getScreenshot().onsuccess = function(sshot) {
+      iframe.getScreenshot(1000, 1000).onsuccess = function(sshot) {
         is(sshot.target.result, initialScreenshot, "Screenshots should be identical");
         SimpleTest.finish();
       };

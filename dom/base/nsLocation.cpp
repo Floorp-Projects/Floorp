@@ -212,10 +212,13 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
     // URI.
 
     JSScript* script = nullptr;
-    if (!JS_DescribeScriptedCaller(cx, &script, nullptr))
-      return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIDocument> doc = GetScriptDocument(cx, script);
+    nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsIURI> docOriginalURI, docCurrentURI, principalURI;
+    // NB: A false return value from JS_DescribeScriptedCaller means no caller
+    // was found. It does not signal that an exception was thrown.
+    if (JS_DescribeScriptedCaller(cx, &script, nullptr)) {
+      doc = GetScriptDocument(cx, script);
+    }
     if (doc) {
       docOriginalURI = doc->GetOriginalURI();
       docCurrentURI = doc->GetDocumentURI();

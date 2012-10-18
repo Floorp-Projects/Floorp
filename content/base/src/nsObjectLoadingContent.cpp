@@ -1470,9 +1470,15 @@ nsObjectLoadingContent::UpdateObjectParameters()
     mURI = newURI;
   }
 
-  if (mContentType != newMime) {
+  // We don't update content type when loading, as the type is not final and we
+  // don't want to superfluously change between mOriginalContentType ->
+  // mContentType when doing |obj.data = obj.data| with a channel and differing
+  // type.
+  if (mType != eType_Loading && mContentType != newMime) {
     retval = (ParameterUpdateFlags)(retval | eParamStateChanged);
-    LOG(("OBJLC [%p]: Object effective mime type changed (%s -> %s)", this, mContentType.get(), newMime.get()));
+    retval = (ParameterUpdateFlags)(retval | eParamContentTypeChanged);
+    LOG(("OBJLC [%p]: Object effective mime type changed (%s -> %s)",
+         this, mContentType.get(), newMime.get()));
     mContentType = newMime;
   }
 
@@ -1551,6 +1557,12 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     } else {
       fallbackType = eFallbackUnsupported;
     }
+  }
+
+  // Explicit user activation should reset if the object changes content types
+  if (mActivated && (stateChange & eParamContentTypeChanged)) {
+    LOG(("OBJLC [%p]: Content type changed, clearing activation state", this));
+    mActivated = false;
   }
 
   // We synchronously start/stop plugin instances below, which may spin the
@@ -1659,6 +1671,13 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     LOG(("OBJLC [%p]: Marking plugin as click-to-play", this));
     mType = eType_Null;
     fallbackType = clickToPlayReason;
+  }
+
+  if (!mActivated && mType != eType_Null) {
+    // Object passed ShouldPlay and !ShouldPreview, so it should be considered
+    // activated until it changes content type
+    LOG(("OBJLC [%p]: Object implicitly activated", this));
+    mActivated = true;
   }
 
   // Sanity check: We shouldn't have any loaded resources, pending events, or
@@ -2464,15 +2483,25 @@ nsObjectLoadingContent::PlayPlugin()
   if (!nsContentUtils::IsCallerChrome())
     return NS_OK;
 
-  mActivated = true;
-  return LoadObject(true, true);
+  if (!mActivated) {
+    mActivated = true;
+    LOG(("OBJLC [%p]: Activated by user", this));
+  }
+
+  // If we're in a click-to-play or play preview state, we need to reload
+  // Fallback types >= eFallbackClickToPlay are plugin-replacement types, see
+  // header
+  if (mType == eType_Null && mFallbackType >= eFallbackClickToPlay) {
+    return LoadObject(true, true);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsObjectLoadingContent::GetActivated(bool *aActivated)
 {
-  FallbackType reason;
-  *aActivated = ShouldPlay(reason) && !ShouldPreview();
+  *aActivated = mActivated;
   return NS_OK;
 }
 
@@ -2490,11 +2519,14 @@ nsObjectLoadingContent::CancelPlayPreview()
   if (!nsContentUtils::IsCallerChrome())
     return NS_ERROR_NOT_AVAILABLE;
 
-  if (mPlayPreviewCanceled || mActivated)
-    return NS_OK;
-
   mPlayPreviewCanceled = true;
-  return LoadObject(true, true);
+  
+  // If we're in play preview state already, reload
+  if (mType == eType_Null && mFallbackType == eFallbackPlayPreview) {
+    return LoadObject(true, true);
+  }
+
+  return NS_OK;
 }
 
 bool

@@ -35,8 +35,10 @@ const MediaEngineVideoOptions MediaEngineDefaultVideoSource::mOpts = {
 };
 
 MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
-  : mTimer(nullptr), mState(kReleased)
-{}
+  : mTimer(nullptr)
+{
+  mState = kReleased;
+}
 
 MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource()
 {}
@@ -201,10 +203,35 @@ MediaEngineDefaultVideoSource::Notify(nsITimer* aTimer)
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(MediaEngineDefaultAudioSource, nsITimerCallback)
+void
+MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
+                                          StreamTime aDesiredTime)
+{
+  // Ignore - we push video data
+}
+
+
 /**
  * Default audio source.
  */
+NS_IMPL_THREADSAFE_ISUPPORTS1(MediaEngineDefaultAudioSource, nsITimerCallback)
+
+MediaEngineDefaultAudioSource::MediaEngineDefaultAudioSource()
+  : mTimer(nullptr)
+{
+  mState = kReleased;
+}
+
+MediaEngineDefaultAudioSource::~MediaEngineDefaultAudioSource()
+{}
+
+void
+MediaEngineDefaultAudioSource::NotifyPull(MediaStreamGraph* aGraph,
+                                          StreamTime aDesiredTime)
+{
+  // Ignore - we push audio data
+}
+
 void
 MediaEngineDefaultAudioSource::GetName(nsAString& aName)
 {
@@ -312,13 +339,43 @@ MediaEngineDefaultAudioSource::Notify(nsITimer* aTimer)
 
 void
 MediaEngineDefault::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSource> >* aVSources) {
-  aVSources->AppendElement(mVSource);
+  int32_t found = false;
+  int32_t len = mVSources.Length();
+  for (int32_t i = 0; i < len; i++) {
+    nsRefPtr<MediaEngineVideoSource> source = mVSources.ElementAt(i);
+    aVSources->AppendElement(source);
+    if (source->IsAvailable()) {
+      found = true;
+    }
+  }
+
+  // All streams are currently busy, just make a new one.
+  if (!found) {
+    nsRefPtr<MediaEngineVideoSource> newSource =
+      new MediaEngineDefaultVideoSource();
+    mVSources.AppendElement(newSource);
+    aVSources->AppendElement(newSource);
+  }
   return;
 }
 
 void
 MediaEngineDefault::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSource> >* aASources) {
-  aASources->AppendElement(mASource);
+  int32_t len = mVSources.Length();
+  for (int32_t i = 0; i < len; i++) {
+    nsRefPtr<MediaEngineAudioSource> source = mASources.ElementAt(i);
+    if (source->IsAvailable()) {
+      aASources->AppendElement(source);
+    }
+  }
+
+  // All streams are currently busy, just make a new one.
+  if (aASources->Length() == 0) {
+    nsRefPtr<MediaEngineAudioSource> newSource =
+      new MediaEngineDefaultAudioSource();
+    mASources.AppendElement(newSource);
+    aASources->AppendElement(newSource);
+  }
   return;
 }
 

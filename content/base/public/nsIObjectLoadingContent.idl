@@ -49,6 +49,8 @@ interface nsIObjectLoadingContent : nsISupports
   const unsigned long PLUGIN_SUPPRESSED           = 6;
   // Blocked by content policy
   const unsigned long PLUGIN_USER_DISABLED        = 7;
+  /// ** All values >= PLUGIN_CLICK_TO_PLAY are plugin placeholder types that
+  ///    would be replaced by a real plugin if activated (playPlugin())
   // The plugin is disabled until the user clicks on it
   const unsigned long PLUGIN_CLICK_TO_PLAY        = 8;
   // The plugin is vulnerable (update available)
@@ -110,13 +112,14 @@ interface nsIObjectLoadingContent : nsISupports
 
   /**
    * This method will play a plugin that has been stopped by the
-   * click-to-play plugins feature.
+   * click-to-play plugins or play-preview features.
    */
   void playPlugin();
 
   /**
-   * This attribute will return true if the plugin has been activated and
-   * false if the plugin is still in the click-to-play or play preview state.
+   * This attribute will return true if the current content type has been
+   * activated, either explicitly or by passing checks that would have it be
+   * click-to-play or play-preview.
    */
   readonly attribute boolean activated;
 

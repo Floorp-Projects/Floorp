@@ -97,6 +97,9 @@ public:
       mVideoSource->Stop();
       mVideoSource->Deallocate();
     }
+    // Do this after stopping all tracks with EndTrack()
+    mStream->GetStream()->AsSourceStream()->Finish();
+
     nsCOMPtr<GetUserMediaNotificationEvent> event =
       new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STOPPING);
 
@@ -110,6 +113,8 @@ public:
       nsresult rv;
 
       SourceMediaStream* stream = mStream->GetStream()->AsSourceStream();
+      stream->SetPullEnabled(true);
+
       if (mAudioSource) {
         rv = mAudioSource->Start(stream, kAudioTrack);
         if (NS_FAILED(rv)) {
@@ -122,6 +127,7 @@ public:
           MM_LOG(("Starting video failed, rv=%d",rv));
         }
       }
+
       MM_LOG(("started all sources"));
       nsCOMPtr<GetUserMediaNotificationEvent> event =
         new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STARTING);
@@ -133,6 +139,20 @@ public:
     // NOT_CONSUMED
     Invalidate();
     return;
+  }
+
+  // Proxy NotifyPull() to sources
+  void
+  NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime)
+  {
+    // Currently audio sources ignore NotifyPull, but they could
+    // watch it especially for fake audio.
+    if (mAudioSource) {
+      mAudioSource->NotifyPull(aGraph, aDesiredTime);
+    }
+    if (mVideoSource) {
+      mVideoSource->NotifyPull(aGraph, aDesiredTime);
+    }
   }
 
 private:

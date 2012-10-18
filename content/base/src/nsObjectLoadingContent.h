@@ -77,6 +77,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       eFallbackSuppressed = nsIObjectLoadingContent::PLUGIN_SUPPRESSED,
       // Blocked by content policy
       eFallbackUserDisabled = nsIObjectLoadingContent::PLUGIN_USER_DISABLED,
+      /// ** All values >= eFallbackClickToPlay are plugin placeholder types
+      ///    that would be replaced by a real plugin if activated (PlayPlugin())
       // The plugin is disabled until the user clicks on it
       eFallbackClickToPlay = nsIObjectLoadingContent::PLUGIN_CLICK_TO_PLAY,
       // The plugin is vulnerable (update available)
@@ -222,7 +224,14 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       eParamChannelChanged     = PR_BIT(0),
       // Parameters that affect displayed content changed
       // - mURI, mContentType, mType, mBaseURI
-      eParamStateChanged       = PR_BIT(1)
+      eParamStateChanged       = PR_BIT(1),
+      // The effective content type changed, independant of object type. This
+      // can happen when changing from Loading -> Final type, but doesn't
+      // necessarily happen when changing between object types. E.g., if a PDF
+      // handler was installed between the last load of this object and now, we
+      // might change from eType_Document -> eType_Plugin without changing
+      // ContentType
+      eParamContentTypeChanged = PR_BIT(2)
     };
 
     /**

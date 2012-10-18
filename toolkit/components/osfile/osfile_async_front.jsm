@@ -619,6 +619,18 @@ File.read = function read(path, bytes) {
 };
 
 /**
+ * Find outs if a file exists.
+ *
+ * @param {string} path The path to the file.
+ *
+ * @return {bool} true if the file exists, false otherwise.
+ */
+File.exists = function exists(path) {
+  return Scheduler.post("exists",
+    [Type.path.toMsg(path)], path);
+};
+
+/**
  * Write a file, atomically.
  *
  * By opposition to a regular |write|, this operation ensures that,

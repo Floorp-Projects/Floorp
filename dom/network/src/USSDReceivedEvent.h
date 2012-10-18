@@ -16,6 +16,7 @@ class USSDReceivedEvent : public nsDOMEvent,
                           public nsIDOMUSSDReceivedEvent
 {
   nsString mMessage;
+  bool mSessionEnded;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -23,7 +24,7 @@ public:
   NS_DECL_NSIDOMUSSDRECEIVEDEVENT
 
   static already_AddRefed<USSDReceivedEvent>
-  Create(nsAString& aMessage);
+  Create(nsAString& aMessage, bool aSessionEnded);
 
   nsresult
   Dispatch(nsIDOMEventTarget* aTarget, const nsAString& aEventType)

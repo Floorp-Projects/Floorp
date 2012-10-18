@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <limits.h>
-
+#include "CCProvider.h"
 #include "cpr_types.h"
 #include "cpr_stdlib.h"
 #include "cpr_stdio.h"
@@ -37,6 +37,7 @@
 #include "platform_api.h"
 #include "peer_connection_types.h"
 #include "prlog.h"
+#include "sessionHash.h"
 
 extern void update_kpmlconfig(int kpmlVal);
 extern boolean g_disable_mass_reg_debug_print;
@@ -2764,7 +2765,7 @@ fsmdef_dialstring (fsm_fcb_t *fcb, const char *dialstring,
         break;
     }
 
-    cause = gsmsdp_create_local_sdp(dcb, FALSE);
+    cause = gsmsdp_create_local_sdp(dcb, FALSE, TRUE, TRUE, TRUE);
     if (cause != CC_CAUSE_OK) {
         FSM_DEBUG_SM(get_debug_string(FSM_DBG_SDP_BUILD_ERR));
         /* Force clean up call without sending release */
@@ -2869,6 +2870,7 @@ fsmdef_ev_createoffer (sm_event_t *event) {
     char                *ufrag = NULL;
     char                *ice_pwd = NULL;
     short               vcm_res;
+    session_data_t      *sess_data_p = NULL;
 
     FSM_DEBUG_SM(DEB_F_PREFIX"Entered.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
@@ -2881,6 +2883,19 @@ fsmdef_ev_createoffer (sm_event_t *event) {
     if (dcb == NULL) {
       FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
       return SM_RC_CLEANUP;
+    }
+
+   if (msg->data.session.has_constraints) {
+        sess_data_p = (session_data_t *)findhash(msg->data.session.sessionid);
+        if (sess_data_p) {
+            gsmsdp_process_cap_constraints(dcb, sess_data_p->cc_constraints);
+
+            if (0 > delhash(msg->data.session.sessionid)) {
+                FSM_DEBUG_SM (DEB_F_PREFIX"failed to delete hash sessid=0x%08x\n",
+                DEB_F_PREFIX_ARGS(SIP_CC_PROV, __FUNCTION__), msg->data.session.sessionid);
+            }
+            cpr_free(sess_data_p);
+        }
     }
 
     vcmGetIceParams(dcb->peerconnection, &ufrag, &ice_pwd);
@@ -2913,7 +2928,7 @@ fsmdef_ev_createoffer (sm_event_t *event) {
         return SM_RC_END;
     }
 
-    cause = gsmsdp_create_local_sdp(dcb, FALSE);
+    cause = gsmsdp_create_local_sdp(dcb, FALSE, TRUE, TRUE, TRUE);
     if (cause != CC_CAUSE_OK) {
         ui_create_offer(evCreateOfferError, line, call_id, dcb->caller_id.call_instance_id, NULL);
         FSM_DEBUG_SM(get_debug_string(FSM_DBG_SDP_BUILD_ERR));
@@ -2959,6 +2974,7 @@ fsmdef_ev_createanswer (sm_event_t *event) {
     char                *ufrag = NULL;
     char                *ice_pwd = NULL;
     short               vcm_res;
+    session_data_t      *sess_data_p;
 
     FSM_DEBUG_SM(DEB_F_PREFIX"Entered.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
@@ -2970,6 +2986,19 @@ fsmdef_ev_createanswer (sm_event_t *event) {
     if (dcb == NULL) {
         FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
         return SM_RC_CLEANUP;
+    }
+
+    if (msg->data.session.has_constraints) {
+        sess_data_p = (session_data_t *)findhash(msg->data.session.sessionid);
+        if (sess_data_p) {
+            gsmsdp_process_cap_constraints(dcb, sess_data_p->cc_constraints);
+
+            if (0 > delhash(msg->data.session.sessionid)) {
+                FSM_DEBUG_SM (DEB_F_PREFIX"failed to delete hash sessid=0x%08x\n",
+                DEB_F_PREFIX_ARGS(SIP_CC_PROV, __FUNCTION__), msg->data.session.sessionid);
+            }
+            cpr_free(sess_data_p);
+        }
     }
 
     vcmGetIceParams(dcb->peerconnection, &ufrag, &ice_pwd);
@@ -3006,7 +3035,7 @@ fsmdef_ev_createanswer (sm_event_t *event) {
      * The sdp member of the dcb has local and remote sdp
      * this next function fills in the local part
      */
-    cause = gsmsdp_create_local_sdp(dcb, FALSE);
+    cause = gsmsdp_create_local_sdp(dcb, FALSE, TRUE, TRUE, TRUE);
     if (cause != CC_CAUSE_OK) {
         ui_create_answer(evCreateAnswerError, line, call_id, dcb->caller_id.call_instance_id, NULL);
         FSM_DEBUG_SM(get_debug_string(FSM_DBG_SDP_BUILD_ERR));
@@ -3164,12 +3193,16 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
     cc_msgbody_t        *part;
     uint32_t            body_length;
     cc_msgbody_info_t   msg_body;
+    boolean             has_audio;
+    boolean             has_video;
+    boolean             has_data;
 
     FSM_DEBUG_SM(DEB_F_PREFIX"Entered.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
     if (!sdpmode) {
-        ui_set_remote_description(evSetRemoteDescError, line, call_id, dcb->caller_id.call_instance_id, NULL, PC_SETREMOTEDESCERROR);
+        ui_set_remote_description(evSetRemoteDescError, line, call_id,
+            dcb->caller_id.call_instance_id, NULL, PC_SETREMOTEDESCERROR);
         return (SM_RC_END);
     }
 
@@ -3193,27 +3226,36 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
 
     if (JSEP_OFFER == action) {
 
+        cause = gsmsdp_process_offer_sdp(fcb, &msg_body, TRUE);
+        if (cause != CC_CAUSE_OK) {
+            ui_set_remote_description(evSetRemoteDescError, line, call_id,
+                dcb->caller_id.call_instance_id, NULL, PC_SETREMOTEDESCERROR);
+            return (SM_RC_END);
+        }
+
+        /*
+         * Determine what media types are offered, used to create matching local SDP
+         * for negotiation.
+         */
+        gsmsdp_get_offered_media_types(fcb, dcb->sdp, &has_audio, &has_video, &has_data);
+
         /*
          * The sdp member of the dcb has local and remote sdp
          * this next function fills in the local part
          */
-        cause = gsmsdp_create_local_sdp(dcb, TRUE);
+        cause = gsmsdp_create_local_sdp(dcb, TRUE, has_audio, has_video, has_data);
         if (cause != CC_CAUSE_OK) {
-            ui_set_remote_description(evSetRemoteDescError, line, call_id, dcb->caller_id.call_instance_id, NULL, PC_SETREMOTEDESCERROR);
+            ui_set_remote_description(evSetRemoteDescError, line, call_id, dcb->caller_id.call_instance_id,
+                NULL, PC_SETREMOTEDESCERROR);
             FSM_DEBUG_SM(get_debug_string(FSM_DBG_SDP_BUILD_ERR));
             // Force clean up call without sending release
             return (fsmdef_release(fcb, cause, FALSE));
         }
 
-        cause = gsmsdp_process_offer_sdp(fcb, &msg_body, TRUE);
-        if (cause != CC_CAUSE_OK) {
-            ui_set_remote_description(evSetRemoteDescError, line, call_id, dcb->caller_id.call_instance_id, NULL, PC_SETREMOTEDESCERROR);
-            return (SM_RC_END);
-        }
-
         cause = gsmsdp_negotiate_media_lines(fcb, dcb->sdp, TRUE, TRUE, TRUE);
         if (cause != CC_CAUSE_OK) {
-            ui_set_remote_description(evSetRemoteDescError, line, call_id, dcb->caller_id.call_instance_id, NULL, PC_SETREMOTEDESCERROR);
+            ui_set_remote_description(evSetRemoteDescError, line, call_id, dcb->caller_id.call_instance_id,
+                NULL, PC_SETREMOTEDESCERROR);
             return (fsmdef_release(fcb, cause, FALSE));
         }
 
@@ -3225,7 +3267,8 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
 
         cause = gsmsdp_negotiate_answer_sdp(fcb, &msg_body);
         if (cause != CC_CAUSE_OK) {
-            ui_set_remote_description(evSetRemoteDescError, line, call_id, dcb->caller_id.call_instance_id, NULL, PC_SETREMOTEDESCERROR);
+            ui_set_remote_description(evSetRemoteDescError, line, call_id, dcb->caller_id.call_instance_id,
+                NULL, PC_SETREMOTEDESCERROR);
             return (SM_RC_END);
         }
 
@@ -3235,7 +3278,8 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
          */
         cause = gsmsdp_install_peer_ice_attributes(fcb);
         if (cause != CC_CAUSE_OK) {
-            ui_set_remote_description(evSetRemoteDescError, line, call_id, dcb->caller_id.call_instance_id, NULL, PC_SETREMOTEDESCERROR);
+            ui_set_remote_description(evSetRemoteDescError, line, call_id, dcb->caller_id.call_instance_id,
+                NULL, PC_SETREMOTEDESCERROR);
             return (SM_RC_END);
         }
 
@@ -3437,12 +3481,12 @@ fsmdef_ev_removestream(sm_event_t *event) {
      * will be re-implemented.
      */
     if (msg->data.track.media_type == VIDEO) {
-        dcb->media_cap_tbl->cap[CC_VIDEO_1].enabled = FALSE;
-        dcb->media_cap_tbl->cap[CC_VIDEO_1].support_direction = SDP_DIRECTION_INACTIVE;
-        dcb->video_pref = SDP_DIRECTION_SENDRECV;
-    } else if (msg->data.track.media_type == AUDIO) {
         dcb->media_cap_tbl->cap[CC_AUDIO_1].enabled = FALSE;
         dcb->media_cap_tbl->cap[CC_AUDIO_1].support_direction = SDP_DIRECTION_INACTIVE;
+        dcb->video_pref = SDP_DIRECTION_SENDRECV;
+    } else if (msg->data.track.media_type == AUDIO) {
+        dcb->media_cap_tbl->cap[CC_VIDEO_1].enabled = FALSE;
+        dcb->media_cap_tbl->cap[CC_VIDEO_1].support_direction = SDP_DIRECTION_INACTIVE;
     } else {
         return (SM_RC_END);
     }
@@ -7703,7 +7747,7 @@ fsmdef_cfwd_clear_ccm (fsm_fcb_t *fcb)
     // From here on all we need to do is send INVITE out.
     // Since, its not a real call there is no need to update UI etc.
     // Response to this call will be 5xx so it will be released by the SIP stack.
-    cause = gsmsdp_create_local_sdp(dcb, FALSE);
+    cause = gsmsdp_create_local_sdp(dcb, FALSE, TRUE, TRUE, TRUE);
     if (cause != CC_CAUSE_OK) {
         FSM_DEBUG_SM(get_debug_string(FSM_DBG_SDP_BUILD_ERR));
         return (fsmdef_release(fcb, cause, dcb->send_release));

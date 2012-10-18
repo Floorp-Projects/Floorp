@@ -5,7 +5,6 @@
 #include <string>
 #include <iostream>
 
-
 #include "vcm.h"
 #include "CSFLog.h"
 #include "CSFLogStream.h"
@@ -13,6 +12,8 @@
 #include "CC_SIPCCCallInfo.h"
 #include "ccapi_device_info.h"
 #include "CC_SIPCCDeviceInfo.h"
+#include "cpr_string.h"
+#include "cpr_stdlib.h"
 
 #include "nspr.h"
 #include "nss.h"
@@ -57,6 +58,45 @@ static const int DTLS_FINGERPRINT_LENGTH = 64;
 static const int MEDIA_STREAM_MUTE = 0x80;
 
 namespace sipcc {
+
+void MediaConstraints::setBooleanConstraint(const std::string& constraint, bool enabled, bool mandatory) {
+
+  ConstraintInfo booleanconstraint;
+  booleanconstraint.mandatory = mandatory;
+
+  if (enabled)
+    booleanconstraint.value = "TRUE";
+  else
+    booleanconstraint.value = "FALSE";
+
+  mConstraints[constraint] = booleanconstraint;
+}
+
+void MediaConstraints::buildArray(cc_media_constraints_t** constraintarray) {
+
+  if (0 == mConstraints.size())
+    return;
+
+  short i = 0;
+  std::string tmpStr;
+  *constraintarray = (cc_media_constraints_t*) cpr_malloc(sizeof(cc_media_constraints_t));
+
+  (*constraintarray)->constraints = (cc_media_constraint_t**) cpr_malloc(mConstraints.size() * sizeof(cc_media_constraint_t));
+
+  for (constraints_map::iterator it = mConstraints.begin();
+          it != mConstraints.end(); ++it) {
+    (*constraintarray)->constraints[i] = (cc_media_constraint_t*) cpr_malloc(sizeof(cc_media_constraint_t));
+    tmpStr = it->first;
+    (*constraintarray)->constraints[i]->name = (char*) cpr_malloc(tmpStr.size());
+    sstrncpy((*constraintarray)->constraints[i]->name, tmpStr.c_str(), tmpStr.size()+1);
+    tmpStr = it->second.value;
+    (*constraintarray)->constraints[i]->value = (char*) cpr_malloc(tmpStr.size());
+    sstrncpy((*constraintarray)->constraints[i]->value, tmpStr.c_str(), tmpStr.size()+1);
+    (*constraintarray)->constraints[i]->mandatory = it->second.mandatory;
+    i++;
+  }
+  (*constraintarray)->constraint_count = i;
+}
 
 typedef enum {
   PC_OBSERVER_CALLBACK,
@@ -685,26 +725,53 @@ PeerConnectionImpl::NotifyDataChannel(mozilla::DataChannel *aChannel)
 }
 
 /*
- * CC_SDP_DIRECTION_SENDRECV will not be used when Constraints are implemented
+ * the Constraints UI IDL work is being done. The CreateOffer below is the one
+ * currently called by the signaling unit tests.
  */
 NS_IMETHODIMP
-PeerConnectionImpl::CreateOffer(const char* aHints) {
-  MOZ_ASSERT(aHints);
+PeerConnectionImpl::CreateOffer(const char* constraints) {
+  MOZ_ASSERT(constraints);
 
   CheckIceState();
   mRole = kRoleOfferer;  // TODO(ekr@rtfm.com): Interrogate SIPCC here?
-  mCall->createOffer(aHints);
+  MediaConstraints aconstraints;
+  CreateOffer(aconstraints);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::CreateAnswer(const char* aHints, const char* aOffer) {
-  MOZ_ASSERT(aHints);
+PeerConnectionImpl::CreateOffer(MediaConstraints& constraints) {
+
+  cc_media_constraints_t* cc_constraints = nullptr;
+  constraints.buildArray(&cc_constraints);
+
+  mCall->createOffer(cc_constraints);
+  return NS_OK;
+}
+
+/*
+ * the Constraints UI IDL work is being done. The CreateAnswer below is the one
+ * currently called by the signaling unit tests.
+ */
+NS_IMETHODIMP
+PeerConnectionImpl::CreateAnswer(const char* constraints, const char* aOffer) {
+  MOZ_ASSERT(constraints);
   MOZ_ASSERT(aOffer);
 
   CheckIceState();
   mRole = kRoleAnswerer;  // TODO(ekr@rtfm.com): Interrogate SIPCC here?
-  mCall->createAnswer(aHints, aOffer);
+  MediaConstraints aconstraints;
+  CreateAnswer(aconstraints, aOffer);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::CreateAnswer(MediaConstraints& constraints, const char* offer) {
+
+  cc_media_constraints_t* cc_constraints = nullptr;
+  constraints.buildArray(&cc_constraints);
+
+  mCall->createAnswer(cc_constraints, offer);
   return NS_OK;
 }
 

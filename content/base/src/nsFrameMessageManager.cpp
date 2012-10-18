@@ -1326,5 +1326,8 @@ nsFrameMessageManager::MarkForCC()
   for (uint32_t i = 0; i < len; ++i) {
     xpc_TryUnmarkWrappedGrayObject(mListeners[i].mListener);
   }
+  if (mRefCnt.IsPurple()) {
+    mRefCnt.RemovePurple();
+  }
   return true;
 }

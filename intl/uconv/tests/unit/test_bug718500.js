@@ -14,7 +14,7 @@ var detectList = [
 var encoderList = [
   "ISO-8859-1",
   "windows-1252",
-  "x-mac-roman",
+  "macintosh",
   "UTF-8",
   "us-ascii",
   "ISO-8859-2",
@@ -105,7 +105,7 @@ var encoderList = [
 var decoderList = [
   "ISO-8859-1",
   "windows-1252",
-  "x-mac-roman",
+  "macintosh",
   "UTF-8",
   "us-ascii",
   "ISO-8859-2",

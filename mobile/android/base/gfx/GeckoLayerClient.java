@@ -129,13 +129,11 @@ public class GeckoLayerClient
         mGeckoIsReady = true;
 
         mRootLayer = new VirtualLayer(new IntSize(mView.getWidth(), mView.getHeight()));
-        mLayerRenderer = new LayerRenderer(mView);
+        mLayerRenderer = mView.getRenderer();
 
         registerEventListener("Checkerboard:Toggle");
 
         mView.setListener(this);
-        mView.setLayerRenderer(mLayerRenderer);
-
         sendResizeEventIfNecessary(true);
 
         DisplayPortCalculator.initPrefs();

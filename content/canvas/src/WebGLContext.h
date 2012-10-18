@@ -487,7 +487,9 @@ class WebGLContext :
         UNPACK_PREMULTIPLY_ALPHA_WEBGL = 0x9241,
         CONTEXT_LOST_WEBGL = 0x9242,
         UNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243,
-        BROWSER_DEFAULT_WEBGL = 0x9244
+        BROWSER_DEFAULT_WEBGL = 0x9244,
+        UNMASKED_VENDOR_WEBGL = 0x9245,
+        UNMASKED_RENDERER_WEBGL = 0x9246
     };
 
 public:
@@ -642,8 +644,8 @@ public:
         
     JSObject *GetContextAttributes(ErrorResult &rv);
     bool IsContextLost() const { return !IsContextStable(); }
-    void GetSupportedExtensions(dom::Nullable< nsTArray<nsString> > &retval);
-    JSObject* GetExtension(JSContext* ctx, const nsAString& aName, ErrorResult& rv);
+    void GetSupportedExtensions(JSContext *cx, dom::Nullable< nsTArray<nsString> > &retval);
+    JSObject* GetExtension(JSContext* cx, const nsAString& aName, ErrorResult& rv);
     void ActiveTexture(WebGLenum texture);
     void AttachShader(WebGLProgram* program, WebGLShader* shader);
     void BindAttribLocation(WebGLProgram* program, WebGLuint location,
@@ -1187,14 +1189,15 @@ protected:
 
     // extensions
     enum WebGLExtensionID {
-        OES_texture_float,
-        OES_standard_derivatives,
         EXT_texture_filter_anisotropic,
-        WEBGL_lose_context,
-        WEBGL_compressed_texture_s3tc,
+        OES_standard_derivatives,
+        OES_texture_float,
         WEBGL_compressed_texture_atc,
         WEBGL_compressed_texture_pvrtc,
+        WEBGL_compressed_texture_s3tc,
+        WEBGL_debug_renderer_info,
         WEBGL_depth_texture,
+        WEBGL_lose_context,
         WebGLExtensionID_unknown_extension
     };
     nsTArray<nsRefPtr<WebGLExtensionBase> > mExtensions;
@@ -1202,8 +1205,8 @@ protected:
     // returns true if the extension has been enabled by calling getExtension.
     bool IsExtensionEnabled(WebGLExtensionID ext) const;
 
-    // returns true if the extension is supported (as returned by getSupportedExtensions)
-    bool IsExtensionSupported(WebGLExtensionID ext) const;
+    // returns true if the extension is supported for this JSContext (this decides what getSupportedExtensions exposes)
+    bool IsExtensionSupported(JSContext *cx, WebGLExtensionID ext) const;
 
     nsTArray<WebGLenum> mCompressedTextureFormats;
 

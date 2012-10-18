@@ -191,6 +191,16 @@ public:
   nsPresContext* GetToplevelContentDocumentPresContext();
 
   /**
+   * Returns the nearest widget for the root frame of this.
+   *
+   * @param aOffset     If non-null the offset from the origin of the root
+   *                    frame's view to the widget's origin (usually positive)
+   *                    expressed in appunits of this will be returned in
+   *                    aOffset.
+   */
+  nsIWidget* GetNearestWidget(nsPoint* aOffset = nullptr);
+
+  /**
    * Return the presentation context for the root of the view manager
    * hierarchy that contains this presentation context, or nullptr if it can't
    * be found (e.g. it's detached).
@@ -723,6 +733,13 @@ public:
   NS_HIDDEN_(void) ThemeChanged();
 
   /*
+   * Notify the pres context that the resolution of the user interface has
+   * changed. This happens if a window is moved between HiDPI and non-HiDPI
+   * displays, so that the ratio of points to device pixels changes.
+   */
+  NS_HIDDEN_(void) UIResolutionChanged();
+
+  /*
    * Notify the pres context that a system color has changed
    */
   NS_HIDDEN_(void) SysColorChanged();
@@ -930,6 +947,10 @@ protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();
   NS_HIDDEN_(void) SysColorChangedInternal();
+  NS_HIDDEN_(void) UIResolutionChangedInternal();
+
+  static NS_HIDDEN_(bool)
+  UIResolutionChangedSubdocumentCallback(nsIDocument* aDocument, void* aData);
 
   NS_HIDDEN_(void) SetImgAnimations(nsIContent *aParent, uint16_t aMode);
   NS_HIDDEN_(void) SetSMILAnimations(nsIDocument *aDoc, uint16_t aNewMode,
@@ -1165,6 +1186,7 @@ protected:
   unsigned              mPrefScrollbarSide : 2;
   unsigned              mPendingSysColorChanged : 1;
   unsigned              mPendingThemeChanged : 1;
+  unsigned              mPendingUIResolutionChanged : 1;
   unsigned              mPendingMediaFeatureValuesChanged : 1;
   unsigned              mPrefChangePendingNeedsReflow : 1;
   unsigned              mMayHaveFixedBackgroundFrames : 1;

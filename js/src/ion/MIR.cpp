@@ -921,7 +921,7 @@ MMul::foldsTo(bool useValueNumbers)
     if (specialization() != MIRType_Int32)
         return this;
 
-    if (lhs()->congruentTo(rhs()))
+    if (EqualValues(useValueNumbers, lhs(), rhs()))
         canBeNegativeZero_ = false;
 
     return this;

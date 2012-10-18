@@ -234,7 +234,7 @@
 NS_CONVERTER_REGISTRY_START
 NS_UCONV_REG_UNREG("ISO-8859-1", NS_ISO88591TOUNICODE_CID, NS_UNICODETOISO88591_CID)
 NS_UCONV_REG_UNREG("windows-1252", NS_CP1252TOUNICODE_CID, NS_UNICODETOCP1252_CID)
-NS_UCONV_REG_UNREG("x-mac-roman", NS_MACROMANTOUNICODE_CID, NS_UNICODETOMACROMAN_CID)
+NS_UCONV_REG_UNREG("macintosh", NS_MACROMANTOUNICODE_CID, NS_UNICODETOMACROMAN_CID)
 NS_UCONV_REG_UNREG("UTF-8", NS_UTF8TOUNICODE_CID, NS_UNICODETOUTF8_CID)
 
   // ucvlatin
@@ -486,10 +486,6 @@ const uint16_t g_ufBig5HKSCSMapping[] = {
 #include "hkscs.uf"
 };
 
-const uint16_t g_ASCIIMapping[] = {
-  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
-};
-
 const uint16_t g_utBig5HKSCSMapping[] = {
 #include "hkscs.ut"
 };
@@ -501,10 +497,6 @@ const uint16_t g_utKSC5601Mapping[] = {
 
 const uint16_t g_ufKSC5601Mapping[] = {
 #include "u20kscgl.uf"
-};
-
-const uint16_t g_ucvko_AsciiMapping[] = {
-  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
 };
 
 const uint16_t g_HangulNullMapping[] ={
