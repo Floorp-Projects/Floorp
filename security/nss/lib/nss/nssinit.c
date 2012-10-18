@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: nssinit.c,v 1.118 2012/09/21 21:58:44 wtc%google.com Exp $ */
+/* $Id: nssinit.c,v 1.119 2012/10/09 18:22:46 emaldona%redhat.com Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -636,15 +636,19 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 	passwordRequired = pk11_password_required;
     }
 
-    /* we always try to initialize the modules */
-    rv = nss_InitModules(configdir, certPrefix, keyPrefix, secmodName, 
+    /* Skip the module init if we are already initted and we are trying
+     * to init with not noCertDB and noModDB */
+    if (!(isReallyInitted && noCertDB && noModDB)) {
+	/* we always try to initialize the modules */
+	rv = nss_InitModules(configdir, certPrefix, keyPrefix, secmodName, 
 		updateDir, updCertPrefix, updKeyPrefix, updateID, 
 		updateName, configName, configStrings, passwordRequired,
 		readOnly, noCertDB, noModDB, forceOpen, optimizeSpace, 
 		(initContextPtr != NULL));
 
-    if (rv != SECSuccess) {
-	goto loser;
+	if (rv != SECSuccess) {
+	    goto loser;
+	}
     }
 
 
@@ -917,6 +921,12 @@ NSS_RegisterShutdown(NSS_ShutdownFunc sFunc, void *appData)
 {
     int i;
 
+    /* make sure our lock and condition variable are initialized one and only
+     * one time */ 
+    if (PR_CallOnce(&nssInitOnce, nss_doLockInit) != PR_SUCCESS) {
+	return SECFailure;
+    }
+
     PZ_Lock(nssInitLock);
     if (!NSS_IsInitialized()) {
 	PZ_Unlock(nssInitLock);
@@ -975,6 +985,11 @@ NSS_UnregisterShutdown(NSS_ShutdownFunc sFunc, void *appData)
 {
     int i;
 
+    /* make sure our lock and condition variable are initialized one and only
+     * one time */ 
+    if (PR_CallOnce(&nssInitOnce, nss_doLockInit) != PR_SUCCESS) {
+	return SECFailure;
+    }
     PZ_Lock(nssInitLock);
     if (!NSS_IsInitialized()) {
 	PZ_Unlock(nssInitLock);
@@ -1113,6 +1128,11 @@ SECStatus
 NSS_Shutdown(void)
 {
     SECStatus rv;
+    /* make sure our lock and condition variable are initialized one and only
+     * one time */ 
+    if (PR_CallOnce(&nssInitOnce, nss_doLockInit) != PR_SUCCESS) {
+	return SECFailure;
+    }
     PZ_Lock(nssInitLock);
 
     if (!nssIsInitted) {
@@ -1165,6 +1185,11 @@ NSS_ShutdownContext(NSSInitContext *context)
 {
     SECStatus rv = SECSuccess;
 
+    /* make sure our lock and condition variable are initialized one and only
+     * one time */ 
+    if (PR_CallOnce(&nssInitOnce, nss_doLockInit) != PR_SUCCESS) {
+	return SECFailure;
+    }
     PZ_Lock(nssInitLock);
     /* If one or more threads are in the middle of init, wait for them
      * to complete */
