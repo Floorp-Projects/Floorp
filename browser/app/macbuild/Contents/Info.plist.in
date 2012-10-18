@@ -203,6 +203,8 @@
 	<string>%MAC_BUNDLE_VERSION%</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.6</string>
 	<key>LSMinimumSystemVersionByArchitecture</key>
