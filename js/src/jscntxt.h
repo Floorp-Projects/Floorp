@@ -981,7 +981,7 @@ struct JSRuntime : js::RuntimeFriendFields
         ionReturnOverride_ = v;
     }
 
-    JSRuntime();
+    JSRuntime(JSUseHelperThreads useHelperThreads);
     ~JSRuntime();
 
     bool init(uint32_t maxbytes);
@@ -1098,6 +1098,17 @@ struct JSRuntime : js::RuntimeFriendFields
 
     void sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, JS::RuntimeSizes *runtime);
     size_t sizeOfExplicitNonHeap();
+
+  private:
+    JSUseHelperThreads useHelperThreads_;
+  public:
+    bool useHelperThreads() const {
+#ifdef JS_THREADSAFE
+        return useHelperThreads_ == JS_USE_HELPER_THREADS;
+#else
+        return false;
+#endif
+    }
 };
 
 /* Common macros to access thread-local caches in JSRuntime. */

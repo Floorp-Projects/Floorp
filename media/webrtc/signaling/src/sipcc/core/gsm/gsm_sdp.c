@@ -1330,12 +1330,9 @@ gsmsdp_set_media_attributes (uint32_t media_type, void *sdp_p, uint16_t level,
  * level - The media level of the SDP where the media attribute is to be added.
  */
 static void
-gsmsdp_set_sctp_attributes (void *sdp_p, uint16_t level)
+gsmsdp_set_sctp_attributes (void *sdp_p, uint16_t level, fsmdef_media_t *media)
 {
     uint16_t a_inst;
-    int      sctp_port = 0;
-
-    config_get_value(CFGID_SCTP_PORT, &sctp_port, sizeof(sctp_port));
 
     if (sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_FMTP, &a_inst)
         != SDP_SUCCESS) {
@@ -1343,7 +1340,7 @@ gsmsdp_set_sctp_attributes (void *sdp_p, uint16_t level)
     }
 
     /* Use SCTP port in place of fmtp payload type */
-    (void) sdp_attr_set_fmtp_payload_type(sdp_p, level, 0, a_inst, sctp_port);
+    (void) sdp_attr_set_fmtp_payload_type(sdp_p, level, 0, a_inst, media->sctp_port);
 
     sdp_attr_set_fmtp_data_channel_protocol (sdp_p, level, 0, a_inst, WEBRTC_DATA_CHANNEL_PROT);
 
@@ -2296,7 +2293,7 @@ gsmsdp_update_local_sdp_media (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
                                                           media);
             break;
         case SDP_MEDIA_APPLICATION:
-            gsmsdp_set_sctp_attributes (sdp_p, level);
+            gsmsdp_set_sctp_attributes (sdp_p, level, media);
             break;
         default:
             GSM_ERR_MSG(GSM_L_C_F_PREFIX"SDP ERROR media %d for level %d is not"
@@ -2333,7 +2330,7 @@ gsmsdp_update_local_sdp_media (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
                             (uint16_t)dynamic_payload_type);
             break;
         case SDP_MEDIA_APPLICATION:
-            gsmsdp_set_sctp_attributes (sdp_p, level);
+            gsmsdp_set_sctp_attributes (sdp_p, level, media);
             break;
         default:
             GSM_ERR_MSG(GSM_L_C_F_PREFIX"SDP ERROR media %d for level %d is not"
@@ -2430,8 +2427,8 @@ gsmsdp_update_local_sdp (fsmdef_dcb_t *dcb_p, boolean offer,
      * Update Transmit SRTP transmit key if this SRTP session.
      */
     if (media->transport == SDP_TRANSPORT_RTPSAVP) {
-    gsmsdp_update_crypto_transmit_key(dcb_p, media, offer,
-                                      initial_offer, direction);
+        gsmsdp_update_crypto_transmit_key(dcb_p, media, offer,
+                                       initial_offer, direction);
     }
 
     if (offer == TRUE) {
@@ -2982,6 +2979,9 @@ gsmsdp_negotiate_datachannel_attribs(fsmdef_dcb_t* dcb_p, cc_sdp_t* sdp_p, uint1
     sdp_attr_get_fmtp_data_channel_protocol(sdp_p->dest_sdp, level, 0, 1, media->protocol);
 
     media->sctp_port = sdp_attr_get_fmtp_payload_type (sdp_p->dest_sdp, level, 0, 1);
+
+    /* Increment port for answer SDP */
+    media->sctp_port++;
 }
 
 /*
@@ -4615,12 +4615,12 @@ gsmsdp_add_media_line (fsmdef_dcb_t *dcb_p, const cc_media_cap_t *media_cap,
 
         /* allocate port successful, save the port */
 
-    	media->src_port = data.open_rcv.port;
+        media->src_port = data.open_rcv.port;
 
-    	if(media_cap->type == SDP_MEDIA_APPLICATION) {
+        if(media_cap->type == SDP_MEDIA_APPLICATION) {
             config_get_value(CFGID_SCTP_PORT, &sctp_port, sizeof(sctp_port));
             media->sctp_port = sctp_port;
-    	}
+        }
 
         /*
          * Setup the local soruce address.
