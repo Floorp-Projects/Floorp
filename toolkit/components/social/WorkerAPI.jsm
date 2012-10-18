@@ -63,8 +63,7 @@ WorkerAPI.prototype = {
       this._provider.setAmbientNotification(data);
     },
     "social.cookies-get": function(data) {
-      let document = getFrameWorkerHandle(this._provider.workerURL, null).
-                        _worker.frame.contentDocument;
+      let document = this._port._window.document;
       let cookies = document.cookie.split(";");
       let results = [];
       cookies.forEach(function(aCookie) {

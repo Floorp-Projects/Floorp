@@ -3,35 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
-typedef long myLong;
-typedef TestInterface AnotherNameForTestInterface;
-typedef TestInterface? NullableTestInterface;
-
-interface TestExternalInterface;
-
-interface TestNonCastableInterface {
-};
-
-callback interface TestCallbackInterface {
-  readonly attribute long foo;
-  void doSomething();
-};
-
-enum TestEnum {
-  "a",
-  "b"
-};
-
-callback TestCallback = void();
-[TreatNonCallableAsNull] callback TestTreatAsNullCallback = void();
-
-TestInterface implements ImplementedInterface;
-
-// This interface is only for use in the constructor below
-interface OnlyForUseInConstructor {
-};
-
 [Constructor,
  Constructor(DOMString str),
  Constructor(unsigned long num, boolean? boolArg),
@@ -39,7 +10,7 @@ interface OnlyForUseInConstructor {
  Constructor(TestNonCastableInterface iface)
  // , Constructor(long arg1, long arg2, (TestInterface or OnlyForUseInConstructor) arg3)
  ]
-interface TestInterface {
+interface TestExampleInterface {
   // Integer types
   // XXXbz add tests for throwing versions of all the integer stuff
   readonly attribute byte readonlyByte;
@@ -333,118 +304,5 @@ interface TestInterface {
   // Miscellania
   [LenientThis] attribute long attrWithLenientThis;
 
-  // If you add things here, add them to TestExampleGen as well
-};
-
-interface TestNonWrapperCacheInterface {
-};
-
-interface ImplementedInterfaceParent {
-  void implementedParentMethod();
-  attribute boolean implementedParentProperty;
-
-  const long implementedParentConstant = 8;
-};
-
-ImplementedInterfaceParent implements IndirectlyImplementedInterface;
-
-[NoInterfaceObject]
-interface IndirectlyImplementedInterface {
-  void indirectlyImplementedMethod();
-  attribute boolean indirectlyImplementedProperty;
-
-  const long indirectlyImplementedConstant = 9;
-};
-
-interface ImplementedInterface : ImplementedInterfaceParent {
-  void implementedMethod();
-  attribute boolean implementedProperty;
-
-  const long implementedConstant = 5;
-};
-
-interface DiamondImplements {
-  readonly attribute long diamondImplementedProperty;
-};
-interface DiamondBranch1A {
-};
-interface DiamondBranch1B {
-};
-interface DiamondBranch2A : DiamondImplements {
-};
-interface DiamondBranch2B : DiamondImplements {
-};
-TestInterface implements DiamondBranch1A;
-TestInterface implements DiamondBranch1B;
-TestInterface implements DiamondBranch2A;
-TestInterface implements DiamondBranch2B;
-DiamondBranch1A implements DiamondImplements;
-DiamondBranch1B implements DiamondImplements;
-
-dictionary Dict : ParentDict {
-  TestEnum someEnum;
-  long x;
-  long a;
-  long b = 8;
-  long z = 9;
-  DOMString str;
-  DOMString empty = "";
-  TestEnum otherEnum = "b";
-  DOMString otherStr = "def";
-  DOMString? yetAnotherStr = null;
-};
-
-dictionary ParentDict : GrandparentDict {
-  long c = 5;
-  TestInterface someInterface;
-  TestExternalInterface someExternalInterface;
-};
-
-dictionary DictContainingDict {
-  Dict memberDict;
-};
-
-dictionary DictContainingSequence {
-  sequence<long> ourSequence;
-};
-
-interface TestIndexedGetterInterface {
-  getter long item(unsigned long index);
-  [Infallible]
-  readonly attribute unsigned long length;
-};
-
-interface TestNamedGetterInterface {
-  getter DOMString (DOMString name);
-};
-
-interface TestIndexedAndNamedGetterInterface {
-  getter long (unsigned long index);
-  getter DOMString namedItem(DOMString name);
-  [Infallible]
-  readonly attribute unsigned long length;
-};
-
-interface TestIndexedSetterInterface {
-  setter creator void setItem(unsigned long index, DOMString item);
-};
-
-interface TestNamedSetterInterface {
-  setter creator void (DOMString name, TestIndexedSetterInterface item);
-};
-
-interface TestIndexedAndNamedSetterInterface {
-  setter creator void (unsigned long index, TestIndexedSetterInterface item);
-  setter creator void setNamedItem(DOMString name, TestIndexedSetterInterface item);
-};
-
-interface TestIndexedAndNamedGetterAndSetterInterface : TestIndexedSetterInterface {
-  getter long item(unsigned long index);
-  getter DOMString namedItem(DOMString name);
-  setter creator void (unsigned long index, long item);
-  setter creator void (DOMString name, DOMString item);
-  [Infallible]
-  stringifier DOMString ();
-  [Infallible]
-  readonly attribute unsigned long length;
+  // If you add things here, add them to TestCodeGen as well
 };

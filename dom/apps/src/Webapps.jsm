@@ -751,6 +751,8 @@ let DOMApplicationRegistry = {
 
   checkForUpdate: function(aData, aMm) {
     let app = this.getAppByManifestURL(aData.manifestURL);
+    let installOrigin = app.installOrigin;
+
     if (!app) {
       aData.error = "NO_SUCH_APP";
       aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
@@ -850,7 +852,7 @@ let DOMApplicationRegistry = {
       if (xhr.status == 200) {
         let manifest;
         try {
-          JSON.parse(xhr.responseText, installOrigin);
+          manifest = JSON.parse(xhr.responseText);
         } catch(e) {
           sendError("MANIFEST_PARSE_ERROR");
           return;

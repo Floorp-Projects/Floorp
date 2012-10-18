@@ -60,8 +60,9 @@ public class LayerView extends FrameLayout {
     private Listener mListener;
 
     /* Flags used to determine when to show the painted surface. */
-    public static final int PAINT_BEFORE_FIRST = 0;
-    public static final int PAINT_AFTER_FIRST = 1;
+    public static final int PAINT_START = 0;
+    public static final int PAINT_BEFORE_FIRST = 1;
+    public static final int PAINT_AFTER_FIRST = 2;
 
     public boolean shouldUseTextureView() {
         // Disable TextureView support for now as it causes panning/zooming
@@ -90,7 +91,7 @@ public class LayerView extends FrameLayout {
         super(context, attrs);
 
         mGLController = new GLController(this);
-        mPaintState = PAINT_BEFORE_FIRST;
+        mPaintState = PAINT_START;
         mCheckerboardColor = Color.WHITE;
         mCheckerboardShouldShowChecks = true;
     }
@@ -111,6 +112,9 @@ public class LayerView extends FrameLayout {
     public void destroy() {
         if (mLayerClient != null) {
             mLayerClient.destroy();
+        }
+        if (mRenderer != null) {
+            mRenderer.destroy();
         }
     }
 

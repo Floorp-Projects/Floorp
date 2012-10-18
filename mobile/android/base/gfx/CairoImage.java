@@ -13,6 +13,8 @@ import java.nio.ByteBuffer;
 public abstract class CairoImage {
     public abstract ByteBuffer getBuffer();
 
+    public abstract void destroy();
+
     public abstract IntSize getSize();
     public abstract int getFormat();
 
