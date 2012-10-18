@@ -49,8 +49,8 @@ PRLogModuleInfo *gSTSLog = PR_NewLogModule("nsSTSService");
 nsSTSHostEntry::nsSTSHostEntry(const char* aHost)
   : mHost(aHost)
   , mExpireTime(0)
-  , mExpired(false)
   , mStsPermission(STS_UNSET)
+  , mExpired(false)
   , mIncludeSubdomains(false)
 {
 }
@@ -58,8 +58,8 @@ nsSTSHostEntry::nsSTSHostEntry(const char* aHost)
 nsSTSHostEntry::nsSTSHostEntry(const nsSTSHostEntry& toCopy)
   : mHost(toCopy.mHost)
   , mExpireTime(toCopy.mExpireTime)
-  , mExpired(toCopy.mExpired)
   , mStsPermission(toCopy.mStsPermission)
+  , mExpired(toCopy.mExpired)
   , mIncludeSubdomains(toCopy.mIncludeSubdomains)
 {
 }
