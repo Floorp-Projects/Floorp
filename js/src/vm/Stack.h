@@ -1724,8 +1724,8 @@ class StackIter
 
     StackSegment *seg_;
     jsbytecode   *pc_;
-    JSScript     *script_;
-    CallArgs     args_;
+    RootedScript  script_;
+    CallArgs      args_;
 
 #ifdef JS_ION
     ion::IonActivationIterator ionActivations_;
@@ -1746,6 +1746,7 @@ class StackIter
   public:
     StackIter(JSContext *cx, SavedOption = STOP_AT_SAVED);
     StackIter(JSRuntime *rt, StackSegment &seg);
+    StackIter(const StackIter &iter);
 
     bool done() const { return state_ == DONE; }
     StackIter &operator++();

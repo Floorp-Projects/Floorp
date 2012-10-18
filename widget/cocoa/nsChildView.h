@@ -396,6 +396,10 @@ public:
   // pixels" and the Cocoa "points" coordinate system.
   CGFloat                 BackingScaleFactor();
 
+  // Call if the window's backing scale factor changes - i.e., it is moved
+  // between HiDPI and non-HiDPI screens
+  void                    BackingScaleFactorChanged();
+
   virtual double          GetDefaultScale();
 
   NS_IMETHOD              Invalidate(const nsIntRect &aRect);

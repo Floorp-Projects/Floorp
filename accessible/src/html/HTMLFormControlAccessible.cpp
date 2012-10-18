@@ -259,13 +259,13 @@ HTMLButtonAccessible::NativeRole()
 ENameValueFlag
 HTMLButtonAccessible::NativeName(nsString& aName)
 {
-  Accessible::NativeName(aName);
+  ENameValueFlag nameFlag = Accessible::NativeName(aName);
   if (!aName.IsEmpty() || mContent->Tag() != nsGkAtoms::input)
-    return eNameOK;
+    return nameFlag;
 
-  // No name from HTML or ARIA
-  if (!mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName) &&
-      !mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName)) {
+  // Note: No need to check @value attribute since it results in anonymous text
+  // node. The name is calculated from subtree in this case.
+  if (!mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName)) {
     // Use the button's (default) label if nothing else works
     nsIFrame* frame = GetFrame();
     if (frame) {
@@ -323,9 +323,9 @@ HTMLTextFieldAccessible::NativeRole()
 ENameValueFlag
 HTMLTextFieldAccessible::NativeName(nsString& aName)
 {
-  Accessible::NativeName(aName);
+  ENameValueFlag nameFlag = Accessible::NativeName(aName);
   if (!aName.IsEmpty())
-    return eNameOK;
+    return nameFlag;
 
   if (mContent->GetBindingParent()) {
     // XXX: bug 459640
@@ -613,9 +613,9 @@ HTMLGroupboxAccessible::GetLegend()
 ENameValueFlag
 HTMLGroupboxAccessible::NativeName(nsString& aName)
 {
-  Accessible::NativeName(aName);
+  ENameValueFlag nameFlag = Accessible::NativeName(aName);
   if (!aName.IsEmpty())
-    return eNameOK;
+    return nameFlag;
 
   nsIContent* legendContent = GetLegend();
   if (legendContent)
@@ -696,9 +696,9 @@ HTMLFigureAccessible::NativeRole()
 ENameValueFlag
 HTMLFigureAccessible::NativeName(nsString& aName)
 {
-  HyperTextAccessibleWrap::NativeName(aName);
+  ENameValueFlag nameFlag = HyperTextAccessibleWrap::NativeName(aName);
   if (!aName.IsEmpty())
-    return eNameOK;
+    return nameFlag;
 
   nsIContent* captionContent = Caption();
   if (captionContent)

@@ -12,6 +12,7 @@
     -Gagan Saksena 04/29/99
 */
 
+#include "NSPRFormatTime.h" // must include before any headers that include prtime.h
 #include "TestCommon.h"
 
 #define FORCE_PR_LOG
@@ -56,7 +57,6 @@
 #include "nsStringAPI.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
-#include "prtime.h"
 
 using namespace mozilla;
 

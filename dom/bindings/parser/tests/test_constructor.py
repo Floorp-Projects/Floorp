@@ -11,7 +11,7 @@ def WebIDLTest(parser, harness):
         harness.check(argument.variadic, variadic, "Argument has the right variadic value")
 
     def checkMethod(method, QName, name, signatures,
-                    static=False, getter=False, setter=False, creator=False,
+                    static=True, getter=False, setter=False, creator=False,
                     deleter=False, legacycaller=False, stringifier=False):
         harness.ok(isinstance(method, WebIDL.IDLMethod),
                    "Should be an IDLMethod")

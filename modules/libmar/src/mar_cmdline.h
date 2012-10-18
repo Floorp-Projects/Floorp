@@ -40,24 +40,36 @@ int get_mar_file_info(const char *path,
                       uint32_t *numAdditionalBlocks);
 
 /**
- * Verifies the embedded signature of the specified file path.
+ * Verifies a MAR file by verifying each signature with the corresponding
+ * certificate. That is, the first signature will be verified using the first
+ * certificate given, the second signature will be verified using the second
+ * certificate given, etc. The signature count must exactly match the number of
+ * certificates given, and all signature verifications must succeed.
  * This is only used by the signmar program when used with arguments to verify 
  * a MAR. This should not be used to verify a MAR that will be extracted in the 
  * same operation by updater code. This function prints the error message if 
  * verification fails.
  * 
- * @param pathToMAR  The path of the MAR file whose signature should be checked
- * @param certData       The certificate file data.
- * @param sizeOfCertData The size of the cert data.
- * @param certName   Used only if compiled as NSS, specifies the certName
+ * @param pathToMAR     The path of the MAR file whose signature should be
+ *                      checked
+ * @param certData      Pointer to the first element in an array of certificate
+ *                      file data.
+ * @param certDataSizes Pointer to the first element in an array for size of
+ *                      the cert data.
+ * @param certNames     Pointer to the first element in an array of certificate
+ *                      names.
+ *                      Used only if compiled with NSS support
+ * @param certCount     The number of elements in certData, certDataSizes,
+ *                      and certNames
  * @return 0 on success
  *         a negative number if there was an error
  *         a positive number if the signature does not verify
  */
-int mar_verify_signature(const char *pathToMAR, 
-                         const char *certData,
-                         uint32_t sizeOfCertData,
-                         const char *certName);
+int mar_verify_signatures(const char *pathToMAR,
+                          const uint8_t * const *certData,
+                          const uint32_t *certDataSizes,
+                          const char * const *certNames,
+                          uint32_t certCount);
 
 /** 
  * Reads the product info block from the MAR file's additional block section.
@@ -95,6 +107,34 @@ refresh_product_info_block(const char *path,
 */
 int
 strip_signature_block(const char *src, const char * dest);
+
+/**
+ * Extracts a signature from a MAR file, base64 encodes it, and writes it out
+ *
+ * @param  src       The path of the source MAR file
+ * @param  sigIndex  The index of the signature to extract
+ * @param  dest      The path of file to write the signature to
+ * @return 0 on success
+ *         -1 on error
+*/
+int
+extract_signature(const char *src, uint32_t sigIndex, const char * dest);
+
+/**
+ * Imports a base64 encoded signature into a MAR file
+ *
+ * @param  src           The path of the source MAR file
+ * @param  sigIndex      The index of the signature to import
+ * @param  base64SigFile A file which contains the signature to import
+ * @param  dest          The path of the destination MAR file with replaced signature
+ * @return 0 on success
+ *         -1 on error
+*/
+int
+import_signature(const char *src,
+                 uint32_t sigIndex,
+                 const char * base64SigFile,
+                 const char *dest);
 
 #ifdef __cplusplus
 }

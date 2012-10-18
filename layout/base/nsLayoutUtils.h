@@ -1082,7 +1082,7 @@ public:
     }
   };
   static bool GetFirstLinePosition(const nsIFrame* aFrame,
-                                     LinePosition* aResult);
+                                   LinePosition* aResult);
 
 
   /**

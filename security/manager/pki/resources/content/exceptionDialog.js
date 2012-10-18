@@ -14,6 +14,8 @@ var gNeedReset;
 var gSecHistogram;
 var gNsISecTel;
 
+Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+
 function badCertListener() {}
 badCertListener.prototype = {
   getInterface: function (aIID) {
@@ -379,22 +381,8 @@ function addException() {
 }
 
 /**
- * Returns true if the private browsing mode is currently active and
- * we have been instructed to handle it.
+ * Returns true if this dialog is in private browsing mode.
  */
 function inPrivateBrowsingMode() {
-  // first, check to see if we should handle the private browsing mode
-  var args = window.arguments;
-  if (args && args[0] && args[0].handlePrivateBrowsing) {
-    // detect if the private browsing mode is active
-    try {
-      var pb = Components.classes["@mozilla.org/privatebrowsing;1"].
-               getService(Components.interfaces.nsIPrivateBrowsingService);
-      return pb.privateBrowsingEnabled;
-    } catch (ex) {
-      Components.utils.reportError("Could not get the Private Browsing service");
-    }
-  }
-
-  return false;
+  return PrivateBrowsingUtils.isWindowPrivate(window);
 }

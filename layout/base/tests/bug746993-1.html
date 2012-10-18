@@ -13,18 +13,7 @@
         iframe.focus();
         doc.body.focus();
         win.getSelection().collapse(doc.body, 0);
-        synthesizeText(
-          { "composition":
-            {
-              "string": "Here's some text.",
-              "clauses":
-              [
-                { "length": 17, "attr": COMPOSITION_ATTR_RAWINPUT }
-              ]
-            },
-            "caret": { "start": 2, "length": 0 }
-          }
-         )
+        sendString("Here's some text.");
         synthesizeKey("VK_RETURN", {});
         document.documentElement.removeAttribute("class");
       }

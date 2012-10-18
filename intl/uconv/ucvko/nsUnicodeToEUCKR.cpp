@@ -12,7 +12,7 @@
 
 
 static const uint16_t *g_EUCKRMappingTable[3] = {
-  g_ucvko_AsciiMapping,
+  g_ASCIIMappingTable,
   g_ufKSC5601Mapping,
   g_HangulNullMapping
 };

@@ -2604,8 +2604,6 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
   }
   nsIDocument* document = presShell->GetDocument();
 
-  nsCOMArray<nsIStyleRule> rules;
-
   nsRefPtr<css::StyleRule> rule;
   error = CreateFontStyleRule(font, document, getter_AddRefs(rule));
 
@@ -2629,7 +2627,8 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
     return;
   }
 
-  rules.AppendObject(rule);
+  nsTArray< nsCOMPtr<nsIStyleRule> > rules;
+  rules.AppendElement(rule);
 
   nsStyleSet* styleSet = presShell->StyleSet();
 
@@ -2654,8 +2653,8 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
       return;
     }
 
-    nsCOMArray<nsIStyleRule> parentRules;
-    parentRules.AppendObject(parentRule);
+    nsTArray< nsCOMPtr<nsIStyleRule> > parentRules;
+    parentRules.AppendElement(parentRule);
     parentContext = styleSet->ResolveStyleForRules(nullptr, parentRules);
   }
 

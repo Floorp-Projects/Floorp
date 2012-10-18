@@ -116,6 +116,7 @@ public:
   
   NPDrawingModel GetDrawingModel();
   bool IsRemoteDrawingCoreAnimation();
+  nsresult ContentsScaleFactorChanged(double aContentsScaleFactor);
   NPEventModel GetEventModel();
   static void CARefresh(nsITimer *aTimer, void *aClosure);
   void AddToCARefreshTimer();

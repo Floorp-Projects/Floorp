@@ -710,14 +710,15 @@ RILContentHelper.prototype = {
         }
         break;
       case "RIL:USSDReceived":
-        Services.obs.notifyObservers(null, kUssdReceivedTopic,
-                                     msg.json.message);
+        let res = JSON.stringify({message: msg.json.message,
+                                  sessionEnded: msg.json.sessionEnded});
+        Services.obs.notifyObservers(null, kUssdReceivedTopic, res);
         break;
       case "RIL:SendMMI:Return:OK":
       case "RIL:CancelMMI:Return:OK":
         request = this.takeRequest(msg.json.requestId);
         if (request) {
-          Services.DOMRequest.fireSuccess(request, msg.json);
+          Services.DOMRequest.fireSuccess(request, msg.json.result);
         }
         break;
       case "RIL:SendMMI:Return:KO":

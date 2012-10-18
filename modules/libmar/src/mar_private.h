@@ -26,10 +26,6 @@ PR_STATIC_ASSERT(sizeof(uint64_t) == 8);
    which is 16 bytes */
 #define SIGNATURE_BLOCK_OFFSET 16
 
-/* We have a MAX_SIGNATURES limit so that an invalid MAR will never
-   waste too much of either updater's or signmar's time. */
-#define MAX_SIGNATURES 8
-
 /* Make sure the file is less than 500MB.  We do this to protect against
    invalid MAR files. */
 #define MAX_SIZE_OF_MAR_FILE ((int64_t)524288000)

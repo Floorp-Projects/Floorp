@@ -1902,6 +1902,26 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
         case LOCAL_GL_SHADING_LANGUAGE_VERSION:
             return StringValue(cx, "WebGL GLSL ES 1.0", rv);
 
+        // Privileged string params exposed by WEBGL_debug_renderer_info:
+        case UNMASKED_VENDOR_WEBGL:
+        case UNMASKED_RENDERER_WEBGL:
+        {
+            // The privilege check is done in WebGLContext::IsExtensionSupported.
+            // So here we just have to check that the extension is enabled.
+            if (!IsExtensionEnabled(WEBGL_debug_renderer_info)) {
+                ErrorInvalidEnumInfo("getParameter: parameter", pname);
+                return JS::NullValue();
+            }
+            GLenum glstringname = LOCAL_GL_NONE;
+            if (pname == UNMASKED_VENDOR_WEBGL) {
+                glstringname = LOCAL_GL_VENDOR;
+            } else if (pname == UNMASKED_RENDERER_WEBGL) {
+                glstringname = LOCAL_GL_RENDERER;
+            }
+            const char* string = reinterpret_cast<const char*>(gl->fGetString(glstringname));
+            return StringValue(cx, string, rv);
+        }
+
         //
         // Single-value params
         //
@@ -2011,7 +2031,7 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
                 gl->fGetFloatv(pname, &f);
                 return JS::DoubleValue(f);
             } else {
-                ErrorInvalidEnum("getParameter: parameter", pname);
+                ErrorInvalidEnumInfo("getParameter: parameter", pname);
                 return JS::NullValue();
             }
         case LOCAL_GL_DEPTH_CLEAR_VALUE:

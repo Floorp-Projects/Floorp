@@ -288,7 +288,7 @@ TestEarlyShutdown() {
 bool
 SetupJS(JSContext **cxp)
 {
-  JSRuntime *rt = JS_NewRuntime(32 * 1024 * 1024);
+  JSRuntime *rt = JS_NewRuntime(32 * 1024 * 1024, JS_NO_HELPER_THREADS);
   if (!rt)
     return false;
   JSContext *cx = JS_NewContext(rt, 8192);

@@ -1,6 +1,6 @@
 == intrinsic-1a.html intrinsic-1-ref.html
 == intrinsic-1b.html intrinsic-1-ref.html
 == intrinsic-1c.html intrinsic-1-ref.html
-fails == intrinsic-1d.html intrinsic-1-ref.html # Bug 801994
-fails == intrinsic-1e.html intrinsic-1-ref.html # Bug 801994
+== intrinsic-1d.html intrinsic-1-ref.html
+== intrinsic-1e.html intrinsic-1-ref.html
 == intrinsic-1f.html intrinsic-1-ref.html

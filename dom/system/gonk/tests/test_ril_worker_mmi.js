@@ -324,8 +324,55 @@ add_test(function test_sendMMI_sim_function() {
 });
 
 add_test(function test_sendMMI_get_IMEI() {
-  // TODO: Bug 793189 - MMI Codes: get IMEI
-  testSendMMI("*#06#", "GET_IMEI_NOT_SUPPORTED_VIA_MMI");
+  let postedMessage;
+  let mmiOptions;
+  let worker = newWorker({
+    postRILMessage: function fakePostRILMessage(data) {
+    },
+    postMessage: function fakePostMessage(message) {
+      postedMessage = message;
+    },
+  });
+
+  worker.RIL.getIMEI = function getIMEI(options){
+    mmiOptions = options;
+    worker.RIL[REQUEST_SEND_USSD](0, {
+      rilRequestError: ERROR_SUCCESS,
+    });
+  }
+
+  worker.RIL.sendMMI({mmi: "*#06#"});
+
+  do_check_true(mmiOptions.mmi);
+  do_check_eq (postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
+  do_check_true(postedMessage.success);
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_get_IMEI_error() {
+  let postedMessage;
+  let mmiOptions;
+  let worker = newWorker({
+    postRILMessage: function fakePostRILMessage(data) {
+    },
+    postMessage: function fakePostMessage(message) {
+      postedMessage = message;
+    },
+  });
+
+  worker.RIL.getIMEI = function getIMEI(options){
+    mmiOptions = options;
+    worker.RIL[REQUEST_SEND_USSD](0, {
+      rilRequestError: ERROR_RADIO_NOT_AVAILABLE,
+    });
+  }
+
+  worker.RIL.sendMMI({mmi: "*#06#"});
+
+  do_check_true(mmiOptions.mmi);
+  do_check_eq (postedMessage.errorMsg, GECKO_ERROR_RADIO_NOT_AVAILABLE);
+  do_check_false(postedMessage.success);
 
   run_next_test();
 });

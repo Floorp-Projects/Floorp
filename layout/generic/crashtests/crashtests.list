@@ -393,3 +393,7 @@ test-pref(layout.css.flexbox.enabled,true) load 737313-2.html
 test-pref(layout.css.flexbox.enabled,true) load 737313-3.html
 load 762764-1.html
 load 786740-1.html
+asserts(8) test-pref(layout.css.flexbox.enabled,true) load 798020-1.html
+test-pref(layout.css.flexbox.enabled,true) load 798235-1.html
+test-pref(layout.css.flexbox.enabled,true) load 799207-1.html
+asserts(12) test-pref(layout.css.flexbox.enabled,true) load 799207-2.html

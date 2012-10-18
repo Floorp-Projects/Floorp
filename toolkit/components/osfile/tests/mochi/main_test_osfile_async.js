@@ -172,7 +172,7 @@ let test = maketest("Main",
     let tests = [test_constants, test_path, test_open, test_stat,
                  test_read_write, test_read_write_all,
                  test_position, test_copy,
-                 test_iter];
+                 test_iter, test_exists];
     let current = 0;
     let aux = function aux() {
       if (current >= tests.length) {
@@ -962,5 +962,26 @@ let test_iter = maketest("iter",
       }
     );
 
+    return promise;
+});
+
+/**
+ * Test OS.File.prototype.{exists}
+ */
+let test_exists = maketest("exists",
+  function exists(test) {
+    let promise;
+
+    promise = OS.File.exists(EXISTING_FILE);
+    promise = promise.then(function exists_worked(aExists) {
+      test.ok(aExists, "file exists");
+      return OS.File.exists(EXISTING_FILE + ".tmp");
+    });
+
+    promise = promise.then(function exists_on_absent_file_worked(aExists) {
+      test.ok(!aExists, "file does not exists");
+    });
+
+    // Do not forget to return the promise.
     return promise;
 });

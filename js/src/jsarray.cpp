@@ -3093,7 +3093,7 @@ array_readonlyCommon(JSContext *cx, CallArgs &args)
         return false;
 
     /* Step 5. */
-    Value thisv = args.length() >= 2 ? args[1] : UndefinedValue();
+    RootedValue thisv(cx, args.length() >= 2 ? args[1] : UndefinedValue());
 
     /* Step 6. */
     uint32_t k = 0;
@@ -3186,7 +3186,7 @@ array_map(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Step 5. */
-    Value thisv = args.length() >= 2 ? args[1] : UndefinedValue();
+    RootedValue thisv(cx, args.length() >= 2 ? args[1] : UndefinedValue());
 
     /* Step 6. */
     RootedObject arr(cx, NewDenseAllocatedArray(cx, len));
@@ -3264,7 +3264,7 @@ array_filter(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Step 5. */
-    Value thisv = args.length() >= 2 ? args[1] : UndefinedValue();
+    RootedValue thisv(cx, args.length() >= 2 ? args[1] : UndefinedValue());
 
     /* Step 6. */
     RootedObject arr(cx, NewDenseAllocatedArray(cx, 0));

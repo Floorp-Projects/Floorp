@@ -498,6 +498,10 @@ Services.obs.addObserver(function(aSubject, aTopic, aData) {
                           fullscreenorigin: aData });
 }, "fullscreen-origin-change", false);
 
+Services.obs.addObserver(function onWebappsStart(subject, topic, data) {
+  shell.sendChromeEvent({ type: 'webapps-registry-start' });
+}, 'webapps-registry-start', false);
+
 Services.obs.addObserver(function onWebappsReady(subject, topic, data) {
   shell.sendChromeEvent({ type: 'webapps-registry-ready' });
 }, 'webapps-registry-ready', false);

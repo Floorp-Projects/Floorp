@@ -1269,7 +1269,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsGlobalWindow)
     }
     nsEventListenerManager* elm = tmp->GetListenerManager(false);
     if (elm) {
-      elm->UnmarkGrayJSListeners();
+      elm->MarkForCC();
     }
     tmp->UnmarkGrayTimers();
     return true;
@@ -8267,7 +8267,25 @@ nsGlobalWindow::GetComputedStyle(nsIDOMElement* aElt,
                                  const nsAString& aPseudoElt,
                                  nsIDOMCSSStyleDeclaration** aReturn)
 {
-  FORWARD_TO_OUTER(GetComputedStyle, (aElt, aPseudoElt, aReturn),
+  return GetComputedStyleHelper(aElt, aPseudoElt, false, aReturn);
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetDefaultComputedStyle(nsIDOMElement* aElt,
+                                        const nsAString& aPseudoElt,
+                                        nsIDOMCSSStyleDeclaration** aReturn)
+{
+  return GetComputedStyleHelper(aElt, aPseudoElt, true, aReturn);
+}
+
+nsresult
+nsGlobalWindow::GetComputedStyleHelper(nsIDOMElement* aElt,
+                                       const nsAString& aPseudoElt,
+                                       bool aDefaultStylesOnly,
+                                       nsIDOMCSSStyleDeclaration** aReturn)
+{
+  FORWARD_TO_OUTER(GetComputedStyleHelper, (aElt, aPseudoElt,
+                                            aDefaultStylesOnly, aReturn),
                    NS_ERROR_NOT_INITIALIZED);
 
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -8285,13 +8303,34 @@ nsGlobalWindow::GetComputedStyle(nsIDOMElement* aElt,
   mDocShell->GetPresShell(getter_AddRefs(presShell));
 
   if (!presShell) {
-    return NS_OK;
+    // Try flushing frames on our parent in case there's a pending
+    // style change that will create the presshell.
+    nsGlobalWindow *parent =
+      static_cast<nsGlobalWindow *>(GetPrivateParent());
+    if (!parent) {
+      return NS_OK;
+    }
+
+    parent->FlushPendingNotifications(Flush_Frames);
+
+    // Might have killed mDocShell
+    if (!mDocShell) {
+      return NS_OK;
+    }
+
+    mDocShell->GetPresShell(getter_AddRefs(presShell));
+
+    if (!presShell) {
+      return NS_OK;
+    }
   }
 
   nsCOMPtr<dom::Element> element = do_QueryInterface(aElt);
   NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
   nsRefPtr<nsComputedDOMStyle> compStyle =
-    NS_NewComputedDOMStyle(element, aPseudoElt, presShell);
+    NS_NewComputedDOMStyle(element, aPseudoElt, presShell,
+                           aDefaultStylesOnly ? nsComputedDOMStyle::eDefaultOnly :
+                                                nsComputedDOMStyle::eAll);
 
   *aReturn = compStyle.forget().get();
 

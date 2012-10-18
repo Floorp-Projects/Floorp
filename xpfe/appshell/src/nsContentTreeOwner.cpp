@@ -565,6 +565,12 @@ NS_IMETHODIMP nsContentTreeOwner::Destroy()
    return mXULWindow->Destroy();
 }
 
+NS_IMETHODIMP nsContentTreeOwner::GetUnscaledDevicePixelsPerCSSPixel(double* aScale)
+{
+   NS_ENSURE_STATE(mXULWindow);
+   return mXULWindow->GetUnscaledDevicePixelsPerCSSPixel(aScale);
+}
+
 NS_IMETHODIMP nsContentTreeOwner::SetPosition(int32_t aX, int32_t aY)
 {
    NS_ENSURE_STATE(mXULWindow);
