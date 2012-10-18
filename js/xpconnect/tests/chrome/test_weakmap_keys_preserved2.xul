@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=673468
+-->
+<window title="Mozilla Bug "
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a id="testelem" href="https://bugzilla.mozilla.org/show_bug.cgi?id="
+     target="_blank">Mozilla Bug 673468</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 673468 **/
+
+  let Cc = Components.classes;
+  let Cu = Components.utils;
+  let Ci = Components.interfaces;
+
+  SpecialPowers.DOMWindowUtils.garbageCollect();
+
+  let get_live_dom = function () {
+    return document.getElementById("testelem");
+  };
+
+  let wrappers_as_keys_test = function () {
+    let e = document.createEvent("MessageEvent");
+    e.initMessageEvent("foo", false, false, { dummy: document.createElement("foo") }, null, null, null);
+    window.eeeevent = e;
+
+    let live_dom = e.data.dummy;
+    let dead_dom = document.createElement("div");
+    let dead_child = document.createElement("div");
+    dead_dom.appendChild(dead_child);
+    is(dead_dom.children.length, 1, "children have wrong length");
+    let wrappee = new Object();
+
+    dead_dom.abcxyz = wrappee;
+
+    let system = Cc["@mozilla.org/systemprincipal;1"].createInstance();
+    let sandbox = Cu.Sandbox(system);
+
+    sandbox.wrapper = wrappee;
+    sandbox.value = dead_dom;
+    let map = Cu.evalInSandbox("wm = new WeakMap(); wm.set(wrapper, value); wm", sandbox);
+    sandbox.wrapper = null;
+    sandbox.value = null;
+
+    live_dom.xyzabc = {wrappee: wrappee, m: map, sb: sandbox};
+
+    let key = Cu.nondeterministicGetWeakMapKeys(map)[0];
+    let value = map.get(key);
+    is(value.children.length, 1, "children have wrong length");
+  }
+
+  wrappers_as_keys_test();
+
+  let check_wrappers_as_keys = function () {
+    let live_dom = window.eeeevent.data.dummy;
+    let live_map = live_dom.xyzabc.m;
+    let sandbox = live_dom.xyzabc.sb;
+    is(Cu.nondeterministicGetWeakMapKeys(live_map).length, 1,
+      "Map should not be empty.");
+    let key = Cu.nondeterministicGetWeakMapKeys(live_map)[0];
+    let value = live_map.get(key);
+    is(value.children.length, 1, "children have wrong length");
+  }
+
+  Cu.schedulePreciseGC(function () {
+    SpecialPowers.DOMWindowUtils.cycleCollect();
+    SpecialPowers.DOMWindowUtils.garbageCollect();
+
+    check_wrappers_as_keys();
+  });
+
+  ]]>
+  </script>
+</window>
