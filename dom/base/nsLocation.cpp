@@ -241,7 +241,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
       sourceURI = principalURI;
     }
 
-    owner = do_QueryInterface(doc ? doc->NodePrincipal() : secMan->GetCxSubjectPrincipal(cx));
+    owner = do_QueryInterface(secMan->GetCxSubjectPrincipal(cx));
   }
 
   // Create load info
