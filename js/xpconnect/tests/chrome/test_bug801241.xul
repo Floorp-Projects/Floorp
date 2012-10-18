@@ -32,6 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=801241
   }
 
   function go() {
+    document.getElementById('ifr').onload = null;
     var sb = new Cu.Sandbox(this);
     sb.win = document.getElementById('ifr').contentWindow;
     sb.ok = ok;
