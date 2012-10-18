@@ -9,7 +9,7 @@ let NetUtil = tempScope.NetUtil;
 let FileUtils = tempScope.FileUtils;
 
 // only finish() when correct number of tests are done
-const expected = 6;
+const expected = 5;
 var count = 0;
 function done()
 {
@@ -69,7 +69,6 @@ function testSavedFile()
 function testUnsaved()
 {
   testUnsavedFileCancel();
-  testCancelAfterLoad();
   testUnsavedFileSave();
   testUnsavedFileDontSave();
 }
@@ -87,33 +86,6 @@ function testUnsavedFileCancel()
       win.close();
       done();
     });
-  }, {noFocus: true});
-}
-
-// Test a regression where our confirmation dialog wasn't appearing
-// after openFile calls. See bug 801982.
-function testCancelAfterLoad()
-{
-  openScratchpad(function(win) {
-    win.Scratchpad.setRecentFile(gFile);
-    win.Scratchpad.openFile(0);
-    win.Scratchpad.editor.dirty = true;
-    promptButton = win.BUTTON_POSITION_CANCEL;
-
-    let EventStub = {
-      called: false,
-      preventDefault: function() {
-        EventStub.called = true;
-      }
-    };
-
-    win.Scratchpad.onClose(EventStub);
-    ok(!win.closed, "cancelling dialog shouldn't close scratchpad");
-    ok(EventStub.called, "aEvent.preventDefault was called");
-
-    win.Scratchpad.editor.dirty = false;
-    win.close();
-    done();
   }, {noFocus: true});
 }
 
