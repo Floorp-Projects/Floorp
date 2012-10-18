@@ -326,7 +326,7 @@ static unsigned long _pagesize;
 static void *
 ReserveRegion(uintptr_t request, bool accessible)
 {
-  return mmap((caddr_t)request, PAGESIZE,
+  return mmap(reinterpret_cast<void*>(request), PAGESIZE,
               accessible ? PROT_READ|PROT_WRITE : PROT_NONE,
               MAP_PRIVATE|MAP_ANON, -1, 0);
 }
@@ -334,13 +334,13 @@ ReserveRegion(uintptr_t request, bool accessible)
 static void
 ReleaseRegion(void *page)
 {
-  munmap((caddr_t)page, PAGESIZE);
+  munmap(page, PAGESIZE);
 }
 
 static bool
 ProbeRegion(uintptr_t page)
 {
-  if (madvise((caddr_t)page, PAGESIZE, MADV_NORMAL)) {
+  if (madvise(reinterpret_cast<void*>(page), PAGESIZE, MADV_NORMAL)) {
     return true;
   } else {
     return false;
