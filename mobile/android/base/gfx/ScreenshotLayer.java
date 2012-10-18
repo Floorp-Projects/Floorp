@@ -115,6 +115,16 @@ public class ScreenshotLayer extends SingleTileLayer {
             }
         }
 
+        @Override
+        public void destroy() {
+            try {
+                DirectBufferAllocator.free(mBuffer);
+                mBuffer = null;
+            } catch (Exception ex) {
+                Log.e(LOGTAG, "error clearing buffers: ", ex);
+            }
+        }
+
         void copyBuffer(ByteBuffer src, ByteBuffer dst, Rect rect, int stride) {
             int start = (rect.top * stride) + (rect.left * BYTES_FOR_16BPP);
             int end = ((rect.bottom - 1) * stride) + (rect.right * BYTES_FOR_16BPP);
