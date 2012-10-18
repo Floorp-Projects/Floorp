@@ -44,10 +44,10 @@ AbstractPort.prototype = {
     // Further, we allow the workers to override exactly how the JSON parsing
     // is done - we try and do such parsing in the client window so things
     // like prototype overrides on Array work as expected.
-    data = this._JSONParse(data);
     if (!this._handler) {
       this._pendingMessagesIncoming.push(data);
     } else {
+      data = this._JSONParse(data);
       try {
         this._handler({
           data: data,

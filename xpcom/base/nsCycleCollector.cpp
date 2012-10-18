@@ -669,6 +669,7 @@ struct WeakMapping
     // map and key will be null if the corresponding objects are GC marked
     PtrInfo *mMap;
     PtrInfo *mKey;
+    PtrInfo *mKeyDelegate;
     PtrInfo *mVal;
 };
 
@@ -1678,7 +1679,7 @@ public:
                                       nsCycleCollectionParticipant *participant);
 
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name);
-    NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *val);
+    NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *kdelegate, void *val);
 
 private:
     NS_IMETHOD_(void) NoteRoot(void *root,
@@ -1968,7 +1969,7 @@ GCGraphBuilder::AddWeakMapNode(void *node)
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::NoteWeakMapping(void *map, void *key, void *val)
+GCGraphBuilder::NoteWeakMapping(void *map, void *key, void *kdelegate, void *val)
 {
     PtrInfo *valNode = AddWeakMapNode(val);
 
@@ -1978,6 +1979,7 @@ GCGraphBuilder::NoteWeakMapping(void *map, void *key, void *val)
     WeakMapping *mapping = mWeakMaps.AppendElement();
     mapping->mMap = map ? AddWeakMapNode(map) : nullptr;
     mapping->mKey = key ? AddWeakMapNode(key) : nullptr;
+    mapping->mKeyDelegate = kdelegate ? AddWeakMapNode(kdelegate) : mapping->mKey;
     mapping->mVal = valNode;
 }
 
@@ -2021,7 +2023,7 @@ public:
     NS_IMETHOD_(void) NoteNativeRoot(void *root,
                                      nsCycleCollectionParticipant *helper) {}
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name) {}
-    NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *val) {}
+    NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *kdelegate, void *val) {}
     bool MayHaveChild() {
         return mMayHaveChild;
     }
@@ -2206,15 +2208,22 @@ nsCycleCollector::ScanWeakMaps()
             // If mMap or mKey are null, the original object was marked black.
             uint32_t mColor = wm->mMap ? wm->mMap->mColor : black;
             uint32_t kColor = wm->mKey ? wm->mKey->mColor : black;
+            uint32_t kdColor = wm->mKeyDelegate ? wm->mKeyDelegate->mColor : black;
             PtrInfo *v = wm->mVal;
 
             // All non-null weak mapping maps, keys and values are
             // roots (in the sense of WalkFromRoots) in the cycle
             // collector graph, and thus should have been colored
             // either black or white in ScanRoots().
-            NS_ASSERTION(mColor != grey, "Uncolored weak map");
-            NS_ASSERTION(kColor != grey, "Uncolored weak map key");
-            NS_ASSERTION(v->mColor != grey, "Uncolored weak map value");
+            MOZ_ASSERT(mColor != grey, "Uncolored weak map");
+            MOZ_ASSERT(kColor != grey, "Uncolored weak map key");
+            MOZ_ASSERT(kdColor != grey, "Uncolored weak map key delegate");
+            MOZ_ASSERT(v->mColor != grey, "Uncolored weak map value");
+
+            if (mColor == black && kColor != black && kdColor == black) {
+                GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount)).Walk(wm->mKey);
+                anyChanged = true;
+            }
 
             if (mColor == black && kColor == black && v->mColor != black) {
                 GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount)).Walk(v);
@@ -2471,7 +2480,7 @@ public:
     NS_IMETHOD_(void) NoteNativeChild(void *child,
                                      nsCycleCollectionParticipant *participant) {}
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name) {}
-    NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *val) {}
+    NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *kdelegate, void *val) {}
 };
 
 char *Suppressor::sSuppressionList = nullptr;
