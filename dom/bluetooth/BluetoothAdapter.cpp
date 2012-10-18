@@ -20,6 +20,7 @@
 #include "nsIDOMBluetoothDeviceAddressEvent.h"
 #include "nsIDOMBluetoothDeviceEvent.h"
 #include "nsIDOMDOMRequest.h"
+#include "nsTArrayHelpers.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 
@@ -102,8 +103,7 @@ public:
       return false;
     }
 
-    rv = BluetoothDeviceArrayToJSArray(sc->GetNativeContext(),
-                                       sc->GetNativeGlobal(), devices, &JsDevices);
+    rv = nsTArrayToJSArray(sc->GetNativeContext(), devices, &JsDevices);
 
     if (JsDevices) {
       aValue->setObject(*JsDevices);
@@ -211,8 +211,7 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     nsIScriptContext* sc = GetContextForEventHandlers(&rv);
     if (sc) {
       rv =
-        StringArrayToJSArray(sc->GetNativeContext(),
-                             sc->GetNativeGlobal(), mUuids, &mJsUuids);
+        nsTArrayToJSArray(sc->GetNativeContext(), mUuids, &mJsUuids);
       if (NS_FAILED(rv)) {
         NS_WARNING("Cannot set JS UUIDs object!");
         return;
@@ -227,8 +226,8 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     nsIScriptContext* sc = GetContextForEventHandlers(&rv);
     if (sc) {
       rv =
-        StringArrayToJSArray(sc->GetNativeContext(),
-                             sc->GetNativeGlobal(), mDeviceAddresses, &mJsDeviceAddresses);
+        nsTArrayToJSArray(sc->GetNativeContext(), mDeviceAddresses,
+                          &mJsDeviceAddresses);
       if (NS_FAILED(rv)) {
         NS_WARNING("Cannot set JS Device Addresses object!");
         return;
