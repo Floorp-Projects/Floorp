@@ -218,20 +218,20 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
       if (parentMetrics.IsScrollable())
         scrollableLayer = parent;
       if (!parentMetrics.mDisplayPort.IsEmpty() && scrollableLayer) {
-          // Get the display-port bounds
+          // Get the display-port bounds in screen-space.
           displayPort = gfxRect(parentMetrics.mDisplayPort.x,
                                 parentMetrics.mDisplayPort.y,
                                 parentMetrics.mDisplayPort.width,
                                 parentMetrics.mDisplayPort.height);
 
-          // Check the scale transform applied to the root layer to determine
+          // Calculate the scale transform applied to the root layer to determine
           // the content resolution.
           Layer* rootLayer = aLayer->Manager()->GetRoot();
           const gfx3DMatrix& rootTransform = rootLayer->GetTransform();
           float scaleX = rootTransform.GetXScale();
           float scaleY = rootTransform.GetYScale();
 
-          // Get the content document bounds
+          // Get the content document bounds, in screen-space.
           const FrameMetrics& metrics = scrollableLayer->GetFrameMetrics();
           const nsIntSize& contentSize = metrics.mContentRect.Size();
           gfx::Point scrollOffset =
@@ -269,6 +269,7 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
 
     // Subtract the display-port from the tile region.
     if (!displayPort.IsEmpty()) {
+      // Transform the display-port from screen space to layer space.
       gfxRect transformedRenderBounds = transform.Inverse().TransformBounds(displayPort);
       tileRegion.Sub(tileRegion, nsIntRect(transformedRenderBounds.x,
                                            transformedRenderBounds.y,
@@ -278,6 +279,7 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
 
     // Intersect the tile region with the content area.
     if (!contentBounds.IsEmpty()) {
+      // Transform the content bounds from screen space to layer space.
       gfxRect transformedRenderBounds = transform.Inverse().TransformBounds(contentBounds);
       tileRegion.And(tileRegion, nsIntRect(transformedRenderBounds.x,
                                            transformedRenderBounds.y,
