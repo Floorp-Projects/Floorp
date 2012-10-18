@@ -159,6 +159,17 @@ class MarionetteJSTestCase(CommonTestCase):
         if self.marionette.session is None:
             self.marionette.start_session()
         self.marionette.execute_script("log('TEST-START: %s');" % self.jsFile.replace('\\', '\\\\'))
+
+        self.marionette.set_context(self.marionette.CONTEXT_CHROME)
+        self.marionette.set_script_timeout(30000)
+        self.marionette.execute_async_script("""
+waitFor(
+    function() { marionetteScriptFinished(true); },
+    function() { return isSystemMessageListenerReady(); }
+);
+            """)
+        self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
+
         f = open(self.jsFile, 'r')
         js = f.read()
         args = []
