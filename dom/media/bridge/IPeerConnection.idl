@@ -51,7 +51,7 @@ interface IPeerConnectionObserver : nsISupports
   void foundIceCandidate(in string candidate);
 };
 
-[scriptable, uuid(f6819246-f5af-40f2-ab82-e166d5da7ba0)]
+[scriptable, uuid(cb3f0048-1009-11e2-b822-87ee49eface7)]
 interface IPeerConnection : nsISupports
 {
   const unsigned long kHintAudio = 0x00000001;
@@ -73,8 +73,8 @@ interface IPeerConnection : nsISupports
                   [optional] in nsIThread thread);
 
   /* JSEP calls */
-  void createOffer(in nsIPropertyBag2 constraints);
-  void createAnswer(in nsIPropertyBag2 constraints, in string offer);
+  void createOffer(in string hints);
+  void createAnswer(in string hints, in string offer);
   void setLocalDescription(in long action, in string sdp);
   void setRemoteDescription(in long action, in string sdp);
 
