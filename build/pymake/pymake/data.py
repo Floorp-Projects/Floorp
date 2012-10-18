@@ -1404,24 +1404,24 @@ class _NativeWrapper(_CommandWrapper):
                  pycommandpath, **kwargs):
         _CommandWrapper.__init__(self, cline, ignoreErrors, loc, context,
                                  **kwargs)
-        # get the module and method to call
-        parts, badchar = process.clinetoargv(cline, blacklist_gray=False)
-        if parts is None:
-            raise DataError("native command '%s': shell metacharacter '%s' in command line" % (cline, badchar), self.loc)
-        if len(parts) < 2:
-            raise DataError("native command '%s': no method name specified" % cline, self.loc)
         if pycommandpath:
             self.pycommandpath = re.split('[%s\s]+' % os.pathsep,
                                           pycommandpath)
         else:
             self.pycommandpath = None
-        self.module = parts[0]
-        self.method = parts[1]
-        self.cline_list = parts[2:]
 
     def __call__(self, cb):
+        # get the module and method to call
+        parts, badchar = process.clinetoargv(self.cline, self.kwargs['cwd'])
+        if parts is None:
+            raise DataError("native command '%s': shell metacharacter '%s' in command line" % (cline, badchar), self.loc)
+        if len(parts) < 2:
+            raise DataError("native command '%s': no method name specified" % cline, self.loc)
+        module = parts[0]
+        method = parts[1]
+        cline_list = parts[2:]
         self.usercb = cb
-        process.call_native(self.module, self.method, self.cline_list,
+        process.call_native(module, method, cline_list,
                             loc=self.loc, cb=self._cb, context=self.context,
                             pycommandpath=self.pycommandpath, **self.kwargs)
 
