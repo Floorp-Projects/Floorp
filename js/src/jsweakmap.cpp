@@ -271,6 +271,7 @@ WeakMap_set(JSContext *cx, unsigned argc, Value *vp)
 JS_FRIEND_API(JSBool)
 JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *obj, JSObject **ret)
 {
+    obj = UnwrapObject(obj);
     if (!obj || !obj->isWeakMap()) {
         *ret = NULL;
         return true;
@@ -281,7 +282,10 @@ JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *obj, JSObject **ret)
     ObjectValueMap *map = GetObjectMap(obj);
     if (map) {
         for (ObjectValueMap::Base::Range r = map->all(); !r.empty(); r.popFront()) {
-            if (!js_NewbornArrayPush(cx, arr, ObjectValue(*r.front().key)))
+            RootedObject key(cx, r.front().key);
+            if (!JS_WrapObject(cx, key.address()))
+                return false;
+            if (!js_NewbornArrayPush(cx, arr, ObjectValue(*key)))
                 return false;
         }
     }
