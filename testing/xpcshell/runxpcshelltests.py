@@ -898,6 +898,64 @@ class XPCShellTests(object):
             self.log.error(message)
             print_stdout(stdout)
             print_stdout(traceback.format_exc())
+
+            # What follows is code to dump the directory listing similar to ls.
+            # This should only be needed until we track down the source of
+            # failures on the buildbot machines.
+            try:
+                import pwd
+                import grp
+            except ImportError:
+                pwd = None
+                grp = None
+
+            def get_username(uid):
+                if pwd is None:
+                    return None
+
+                try:
+                    return pwd.getpwuid(uid).pw_name
+                except KeyError:
+                    return '%d missing' % uid
+
+            def get_groupname(gid):
+                if grp is None:
+                    return None
+
+                try:
+                    return grp.getgrgid(gid).gr_name
+                except KeyError:
+                    return '%d missing' % gid
+
+            self.log.info('Files in profile directory:')
+            def on_error(error):
+                self.log.info('OS Error while performing os.walk!')
+                self.log.info(traceback.format_exc())
+
+            for d, dirs, files in os.walk(self.profileDir, onerror=on_error):
+                try:
+                    d_stat = os.stat(d)
+                except Exception:
+                    self.log.info('Could not stat directory %s' % d)
+                    self.log.info(traceback.format_exc())
+                else:
+                    self.log.info('%o %s %s %s/' % (d_stat.st_mode,
+                        get_username(d_stat.st_uid),
+                        get_groupname(d_stat.st_gid), d))
+
+                for f in files:
+                    path = os.path.join(d, f)
+
+                    try:
+                        f_stat = os.stat(path)
+                    except Exception:
+                        self.log.info('Could not stat file %s' % path)
+                        self.log.info(traceback.format_exc())
+                    else:
+                        self.log.info('%o %s %s %s' % (f_stat.st_mode,
+                            get_username(f_stat.st_uid),
+                            get_groupname(f_stat.st_gid), path))
+
             self.failCount += 1
             xunitResult["passed"] = False
             xunitResult["failure"] = {

@@ -308,23 +308,6 @@ AbstractFile.read = function read(path, bytes) {
 };
 
 /**
- * Find outs if a file exists.
- *
- * @param {string} path The path to the file.
- *
- * @return {bool} true if the file exists, false otherwise.
- */
-AbstractFile.exists = function exists(path) {
-  try {
-    let file = exports.OS.File.open(path);
-    file.close();
-    return true;
-  } catch (x) {
-    return false;
-  }
-};
-
-/**
  * Write a file, atomically.
  *
  * By opposition to a regular |write|, this operation ensures that,

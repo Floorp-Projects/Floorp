@@ -92,6 +92,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_compute_data_with_start_struct.html \
 		test_computed_style.html \
 		test_computed_style_no_pseudo.html \
+		test_default_computed_style.html \
 		test_css_cross_domain.html \
 		test_css_eof_handling.html \
 		test_default_bidi_css.html \
@@ -188,6 +189,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_bug732153.html \
 		test_bug732209.html \
 		bug732209-css.sjs \
+		test_bug795520.html \
 		$(NULL)
 
 ifdef MOZ_FLEXBOX

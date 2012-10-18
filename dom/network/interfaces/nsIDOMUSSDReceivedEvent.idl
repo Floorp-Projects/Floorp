@@ -4,8 +4,9 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, builtinclass, uuid(1b8ea6e4-8142-4aba-b174-4d580b5bc294)]
+[scriptable, builtinclass, uuid(c0de7fba-725f-4180-b1f1-83163014d1e2)]
 interface nsIDOMUSSDReceivedEvent : nsIDOMEvent
 {
   readonly attribute DOMString message;
+  [infallible] readonly attribute boolean sessionEnded;
 };

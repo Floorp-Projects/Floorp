@@ -83,9 +83,11 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
                                               tmpStr);
           tmpStr.AppendLiteral(")");
         } else {
-          // XXXldb Any better ideas?  It's good to have something that
-          // doesn't parse so that things round-trip "correctly".
-          tmpStr.Assign(NS_LITERAL_STRING("url(invalid-url:)"));
+          // http://dev.w3.org/csswg/css3-values/#attr defines
+          // 'about:invalid' as the default value for url attributes,
+          // so let's also use it here as the default computed value
+          // for invalid URLs.
+          tmpStr.Assign(NS_LITERAL_STRING("url(about:invalid)"));
         }
         break;
       }

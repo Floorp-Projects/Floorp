@@ -1170,6 +1170,15 @@ nsPresContext::GetToplevelContentDocumentPresContext()
   }
 }
 
+nsIWidget*
+nsPresContext::GetNearestWidget(nsPoint* aOffset)
+{
+  NS_ENSURE_TRUE(mShell, nullptr);
+  nsIFrame* frame = mShell->GetRootFrame();
+  NS_ENSURE_TRUE(frame, nullptr);
+  return frame->GetView()->GetNearestWidget(aOffset);
+}
+
 // We may want to replace this with something faster, maybe caching the root prescontext
 nsRootPresContext*
 nsPresContext::GetRootPresContext()
@@ -1602,6 +1611,45 @@ nsPresContext::SysColorChangedInternal()
   // The system color values are computed to colors in the style data,
   // so normal style data comparison is sufficient here.
   RebuildAllStyleData(nsChangeHint(0));
+}
+
+void
+nsPresContext::UIResolutionChanged()
+{
+  if (!mPendingUIResolutionChanged) {
+    nsCOMPtr<nsIRunnable> ev =
+      NS_NewRunnableMethod(this, &nsPresContext::UIResolutionChangedInternal);
+    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+      mPendingUIResolutionChanged = true;
+    }
+  }
+}
+
+/*static*/ bool
+nsPresContext::UIResolutionChangedSubdocumentCallback(nsIDocument* aDocument,
+                                                      void* aData)
+{
+  nsIPresShell* shell = aDocument->GetShell();
+  if (shell) {
+    nsPresContext* pc = shell->GetPresContext();
+    if (pc) {
+      pc->UIResolutionChangedInternal();
+    }
+  }
+  return true;
+}
+
+void
+nsPresContext::UIResolutionChangedInternal()
+{
+  mPendingUIResolutionChanged = false;
+
+  if (mDeviceContext->CheckDPIChange()) {
+    AppUnitsPerDevPixelChanged();
+  }
+
+  mDocument->EnumerateSubDocuments(UIResolutionChangedSubdocumentCallback,
+                                   nullptr);
 }
 
 void

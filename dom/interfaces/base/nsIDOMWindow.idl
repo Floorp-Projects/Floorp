@@ -32,7 +32,7 @@ interface nsIDOMMozURLProperty : nsISupports
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(25404a1b-6c73-4850-af95-69aa095c8ad0)]
+[scriptable, uuid(43933989-912e-4b6a-b889-3c9fc9dd9ed4)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -316,6 +316,8 @@ interface nsIDOMWindow : nsISupports
    */
   nsIDOMCSSStyleDeclaration getComputedStyle(in nsIDOMElement elt, 
                                              [optional] in DOMString pseudoElt);
+  nsIDOMCSSStyleDeclaration getDefaultComputedStyle(in nsIDOMElement elt,
+                                                    [optional] in DOMString pseudoElt);
 
 
   // Mozilla extensions

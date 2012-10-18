@@ -716,7 +716,7 @@ JS_FRIEND_API(bool) NeedRelaxedRootChecks() { return false; }
 
 static const JSSecurityCallbacks NullSecurityCallbacks = { };
 
-JSRuntime::JSRuntime()
+JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
   : atomsCompartment(NULL),
 #ifdef JS_THREADSAFE
     ownerThread_(NULL),
@@ -830,6 +830,9 @@ JSRuntime::JSRuntime()
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
 #ifdef JS_THREADSAFE
+#ifdef JS_ION
+    workerThreadState(NULL),
+#endif
     sourceCompressorThread(thisFromCtor()),
 #endif
     defaultFreeOp_(thisFromCtor(), false),
@@ -860,7 +863,8 @@ JSRuntime::JSRuntime()
     ionStackLimit(0),
     ionActivation(NULL),
     ionPcScriptCache(NULL),
-    ionReturnOverride_(MagicValue(JS_ARG_POISON))
+    ionReturnOverride_(MagicValue(JS_ARG_POISON)),
+    useHelperThreads_(useHelperThreads)
 {
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&contextList);
@@ -930,12 +934,6 @@ JSRuntime::init(uint32_t maxbytes)
         return false;
 
 #ifdef JS_THREADSAFE
-# ifdef JS_ION
-    workerThreadState = this->new_<WorkerThreadState>();
-    if (!workerThreadState || !workerThreadState->init(this))
-        return false;
-# endif
-
     if (!sourceCompressorThread.init())
         return false;
 #endif
@@ -969,7 +967,8 @@ JSRuntime::~JSRuntime()
 
 #ifdef JS_THREADSAFE
 # ifdef JS_ION
-    js_delete(workerThreadState);
+    if (workerThreadState)
+        js_delete(workerThreadState);
 # endif
     sourceCompressorThread.finish();
 #endif
@@ -1062,7 +1061,7 @@ JSRuntime::assertValidThread() const
 #endif  /* JS_THREADSAFE */
 
 JS_PUBLIC_API(JSRuntime *)
-JS_NewRuntime(uint32_t maxbytes)
+JS_NewRuntime(uint32_t maxbytes, JSUseHelperThreads useHelperThreads)
 {
     if (!js_NewRuntimeWasCalled) {
 #ifdef DEBUG
@@ -1100,7 +1099,7 @@ JS_NewRuntime(uint32_t maxbytes)
         js_NewRuntimeWasCalled = JS_TRUE;
     }
 
-    JSRuntime *rt = js_new<JSRuntime>();
+    JSRuntime *rt = js_new<JSRuntime>(useHelperThreads);
     if (!rt)
         return NULL;
 

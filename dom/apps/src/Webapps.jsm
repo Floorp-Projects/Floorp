@@ -124,15 +124,20 @@ let DOMApplicationRegistry = {
     }
   },
 
-  // We are done with loading and initializing. Notify and
-  // save a copy of the registry.
-  onInitDone: function onInitDone() {
+  // Notify we are starting with registering apps.
+  notifyAppsRegistryStart: function notifyAppsRegistryStart() {
+    Services.obs.notifyObservers(this, "webapps-registry-start", null);
+  },
+
+  // Notify we are done with registering apps and save a copy of the registry.
+  notifyAppsRegistryReady: function notifyAppsRegistryReady() {
     Services.obs.notifyObservers(this, "webapps-registry-ready", null);
     this._saveApps();
   },
 
-  // registers all the activities and system messages
+  // Registers all the activities and system messages.
   registerAppsHandlers: function registerAppsHandlers() {
+    this.notifyAppsRegistryStart();
 #ifdef MOZ_SYS_MSG
     let ids = [];
     for (let id in this.webapps) {
@@ -141,7 +146,7 @@ let DOMApplicationRegistry = {
     this._processManifestForIds(ids);
 #else
     // Nothing else to do but notifying we're ready.
-    this.onInitDone();
+    this.notifyAppsRegistryReady();
 #endif
   },
 
@@ -248,7 +253,6 @@ let DOMApplicationRegistry = {
   },
 
 #ifdef MOZ_SYS_MSG
-
   // aEntryPoint is either the entry_point name or the null, in which case we
   // use the root of the manifest.
   _registerSystemMessagesForEntryPoint: function(aManifest, aApp, aEntryPoint) {
@@ -370,10 +374,14 @@ let DOMApplicationRegistry = {
     }
   },
 
-  _processManifestForIds: function(aIds) {
+  _initRegisterActivities: function() {
     this.activitiesToRegister = 0;
     this.activitiesRegistered = 0;
     this.allActivitiesSent = false;
+  },
+
+  _processManifestForIds: function(aIds) {
+    this._initRegisterActivities();
     this._readManifests(aIds, (function registerManifests(aResults) {
       aResults.forEach(function registerManifest(aResult) {
         let app = this.webapps[aResult.id];
@@ -540,7 +548,7 @@ let DOMApplicationRegistry = {
         this.activitiesRegistered++;
         if (this.allActivitiesSent &&
             this.activitiesRegistered === this.activitiesToRegister) {
-          this.onInitDone();
+          this.notifyAppsRegistryReady();
         }
         break;
       case "child-process-shutdown":
@@ -775,13 +783,19 @@ let DOMApplicationRegistry = {
       debug("updateHostedApp");
       let id = this._appId(app.origin);
 
+      // Update the web apps' registration.
+      this.notifyAppsRegistryStart();
 #ifdef MOZ_SYS_MSG
-      // Update the Web Activities
+      this._initRegisterActivities();
       this._readManifests([{ id: id }], (function unregisterManifest(aResult) {
         this._unregisterActivities(aResult[0].manifest, app);
         this._registerSystemMessages(aManifest, app);
         this._registerActivities(aManifest, app);
+        this.allActivitiesSent = true;
       }).bind(this));
+#else
+      // Nothing else to do but notifying we're ready.
+      this.notifyAppsRegistryReady();
 #endif
 
       // Store the new manifest.
@@ -982,12 +996,18 @@ let DOMApplicationRegistry = {
         this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
       }).bind(this));
 
-#ifdef MOZ_SYS_MSG
     if (!aData.isPackage) {
+      this.notifyAppsRegistryStart();
+#ifdef MOZ_SYS_MSG
+      this._initRegisterActivities();
       this._registerSystemMessages(app.manifest, app);
       this._registerActivities(app.manifest, app);
-    }
+      this.allActivitiesSent = true;
+#else
+      // Nothing else to do but notifying we're ready.
+      this.notifyAppsRegistryReady();
 #endif
+    }
 
     this.startOfflineCacheDownload(manifest, appObject, aProfileDir, aOfflineCacheObserver);
     if (manifest.package_path) {

@@ -90,7 +90,7 @@ class nsStyleSet
   // sequence of style rules in the |aRules| array.
   already_AddRefed<nsStyleContext>
   ResolveStyleForRules(nsStyleContext* aParentContext,
-                       const nsCOMArray<nsIStyleRule> &aRules);
+                       const nsTArray< nsCOMPtr<nsIStyleRule> > &aRules);
 
   // Get a style context that represents aBaseContext, but as though
   // it additionally matched the rules in the aRules array (in that

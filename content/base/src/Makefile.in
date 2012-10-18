@@ -187,6 +187,7 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/ipc \
   -I$(topsrcdir)/image/src \
   -I$(topsrcdir)/js/xpconnect/src \
+  -I$(topsrcdir)/layout/base \
   -I$(topsrcdir)/layout/generic \
   -I$(topsrcdir)/layout/style \
   -I$(topsrcdir)/layout/svg \

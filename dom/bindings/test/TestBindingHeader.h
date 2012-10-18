@@ -112,7 +112,8 @@ public:
                                               ErrorResult&);
   static
   already_AddRefed<TestInterface> Constructor(nsISupports*, uint32_t,
-                                              Nullable<bool>&, ErrorResult&);
+                                              const Nullable<bool>&,
+                                              ErrorResult&);
   static
   already_AddRefed<TestInterface> Constructor(nsISupports*, TestInterface*,
                                               ErrorResult&);
@@ -135,7 +136,7 @@ public:
   int8_t ReceiveByte();
   void PassOptionalByte(const Optional<int8_t>&);
   void PassOptionalByteWithDefault(int8_t);
-  void PassNullableByte(Nullable<int8_t>&);
+  void PassNullableByte(const Nullable<int8_t>&);
   void PassOptionalNullableByte(const Optional< Nullable<int8_t> >&);
 
   int16_t ReadonlyShort();
@@ -326,7 +327,7 @@ public:
   void PassOptionalNullableString(const Optional<nsAString>&);
   void PassOptionalNullableStringWithDefaultValue(const nsAString&);
 
-  // Enumarated types
+  // Enumerated types
   void PassEnum(TestEnum);
   void PassOptionalEnum(const Optional<TestEnum>&);
   void PassEnumWithDefault(TestEnum);
@@ -440,6 +441,7 @@ private:
   void SetWritableByte(T) MOZ_DELETE;
   template<typename T>
   void PassByte(T) MOZ_DELETE;
+  void PassNullableByte(Nullable<int8_t>&) MOZ_DELETE;
   template<typename T>
   void PassOptionalByte(const Optional<T>&) MOZ_DELETE;
   template<typename T>

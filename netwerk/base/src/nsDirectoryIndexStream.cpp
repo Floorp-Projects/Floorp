@@ -14,6 +14,7 @@
 
  */
 
+#include "NSPRFormatTime.h" // must include before any headers that include prtime.h
 #include "nsEscape.h"
 #include "nsDirectoryIndexStream.h"
 #include "nsXPIDLString.h"

@@ -452,20 +452,56 @@ BrowserElementChild.prototype = {
 
   _recvGetScreenshot: function(data) {
     debug("Received getScreenshot message: (" + data.json.id + ")");
+
+    // You can think of the screenshotting algorithm as carrying out the
+    // following steps:
+    //
+    // - Let max-width be data.json.args.width, and let max-height be
+    //   data.json.args.height.
+    //
+    // - Let scale-width be the factor by which we'd need to downscale the
+    //   viewport so it would fit within max-width.  (If the viewport's width
+    //   is less than max-width, let scale-width be 1.) Compute scale-height
+    //   the same way.
+    //
+    // - Scale the viewport by max(scale-width, scale-height).  Now either the
+    //   viewport's width is no larger than max-width, the viewport's height is
+    //   no larger than max-height, or both.
+    //
+    // - Crop the viewport so its width is no larger than max-width and its
+    //   height is no larger than max-height.
+    //
+    // - Return a screenshot of the page's viewport scaled and cropped per
+    //   above.
+
+    let maxWidth = data.json.args.width;
+    let maxHeight = data.json.args.height;
+
+    let scaleWidth = Math.min(1, maxWidth / content.innerWidth);
+    let scaleHeight = Math.min(1, maxHeight / content.innerHeight);
+
+    let scale = Math.max(scaleWidth, scaleHeight);
+
+    let canvasWidth = Math.min(maxWidth, Math.round(content.innerWidth * scale));
+    let canvasHeight = Math.min(maxHeight, Math.round(content.innerHeight * scale));
+
     var canvas = content.document
       .createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    var ctx = canvas.getContext("2d");
     canvas.mozOpaque = true;
-    canvas.height = content.innerHeight;
-    canvas.width = content.innerWidth;
-    ctx.drawWindow(content, 0, 0, content.innerWidth,
-                   content.innerHeight, "rgb(255,255,255)");
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    var ctx = canvas.getContext("2d");
+    ctx.scale(scale, scale);
+    ctx.drawWindow(content, 0, 0, content.innerWidth, content.innerHeight,
+                   "rgb(255,255,255)");
+
     sendAsyncMsg('got-screenshot', {
       id: data.json.id,
       // Hack around the fact that we can't specify opaque PNG, this requires
       // us to unpremultiply the alpha channel which is expensive on ARM
       // processors because they lack a hardware integer division instruction.
-      rv: canvas.toDataURL("image/jpeg")
+      successRv: canvas.toDataURL("image/jpeg")
     });
   },
 
@@ -550,7 +586,7 @@ BrowserElementChild.prototype = {
     var webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
     sendAsyncMsg('got-can-go-back', {
       id: data.json.id,
-      rv: webNav.canGoBack
+      successRv: webNav.canGoBack
     });
   },
 
@@ -558,7 +594,7 @@ BrowserElementChild.prototype = {
     var webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
     sendAsyncMsg('got-can-go-forward', {
       id: data.json.id,
-      rv: webNav.canGoForward
+      successRv: webNav.canGoForward
     });
   },
 

@@ -471,6 +471,17 @@ nsDocShellTreeOwner::Destroy()
 }
 
 NS_IMETHODIMP
+nsDocShellTreeOwner::GetUnscaledDevicePixelsPerCSSPixel(double *aScale)
+{
+  if (mWebBrowser) {
+    return mWebBrowser->GetUnscaledDevicePixelsPerCSSPixel(aScale);
+  }
+
+  *aScale = 1.0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShellTreeOwner::SetPosition(int32_t aX, int32_t aY)
 {
   nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();

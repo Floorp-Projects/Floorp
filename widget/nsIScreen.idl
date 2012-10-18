@@ -29,8 +29,17 @@ interface nsIScreen : nsISupports
   const unsigned long ROTATION_180_DEG = 2;
   const unsigned long ROTATION_270_DEG = 3;
 
+  /**
+   * These report screen dimensions in (screen-specific) device pixels
+   */
   void GetRect(out long left, out long top, out long width, out long height);
   void GetAvailRect(out long left, out long top, out long width, out long height);
+
+  /**
+   * And these report in global display pixels
+   */
+  void GetRectDisplayPix(out long left, out long top, out long width, out long height);
+  void GetAvailRectDisplayPix(out long left, out long top, out long width, out long height);
 
   /**
    * Locks the minimum brightness of the screen, forcing it to be at

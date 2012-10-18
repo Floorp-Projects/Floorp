@@ -24,7 +24,6 @@ self.onmessage = function onmessage_start(msg) {
   };
   try {
     test_init();
-    test_unicode();
     test_offsetby();
     test_open_existing_file();
     test_open_non_existing_file();
@@ -37,6 +36,7 @@ self.onmessage = function onmessage_start(msg) {
     test_mkdir();
     test_info();
     test_path();
+    test_exists_file();
   } catch (x) {
     log("Catching error: " + x);
     log("Stack: " + x.stack);
@@ -63,30 +63,6 @@ function isnot(a, b, description) {
 function test_init() {
   ok(true, "Starting test_init");
   importScripts("resource://gre/modules/osfile.jsm");
-}
-
-
-function test_unicode() {
-  ok(true, "Starting test_unicode");
-  function test_go_round(encoding, sentence)  {
-    let bytes = new OS.Shared.Type.uint32_t.implementation();
-    let pBytes = bytes.address();
-    ok(true, "test_unicode: testing encoding of " + sentence + " with encoding " + encoding);
-    let encoded = OS.Shared.Utils.Strings.encodeAll(encoding, sentence, pBytes);
-    let decoded = OS.Shared.Utils.Strings.decodeAll(encoding, encoded, bytes);
-    isnot(decoded, null, "test_unicode: Decoding returned a string");
-    is(decoded.length, sentence.length, "test_unicode: Decoding + encoding returns strings with the same length");
-    is(decoded, sentence, "test_unicode: Decoding + encoding returns the same string");
-  }
-  let tests = ["This is a simple test","àáâäèéêëíìîïòóôöùúûüçß","骥䥚ぶ 䤦べ祌褦鋨 きょげヒャ蟥誨 もゴ 栩を愦 堦馺ぢょ䰯蟤 禺つみゃ期楥 勩谨障り䶥 蟤れ, 訦き モじゃむ㧦ゔ 勩谨障り䶥 堥駪グェ 竨ぢゅ嶥鏧䧦 捨ヴョに䋯ざ 䦧樚 焯じゅ妦 っ勯杯 堦馺ぢょ䰯蟤 滩シャ饥鎌䧺 珦ひゃ, ざやぎ えゐ へ簯ホゥ馯夦 槎褤せ檨壌","Νισλ αλικυιδ περτινασια ναμ ετ, νε ιρασυνδια νεγλεγενθυρ ηας, νο νυμκυαμ εφφισιενδι φις. Εως μινιμυμ ελειφενδ ατ, κυωτ μαλυισετ φυλπυτατε συμ ιδ."];
-  let encodings = ["utf-8", "utf-16"];
-  for each (let encoding in encodings) {
-    for each (let i in tests) {
-      test_go_round(encoding, i);
-    }
-    test_go_round(encoding, tests.join());
-  }
-  ok(true, "test_unicode: complete");
 }
 
 function test_offsetby() {
@@ -771,4 +747,17 @@ function test_path()
   is(OS.Path.normalize(adotsdotsdots), OS.Path.join("..", ".."), "normalize a/../../..");
 
   ok(true, "test_path: Complete");
+}
+
+/**
+ * Test the file |exists| method.
+ */
+function test_exists_file()
+{
+  let file_name = OS.Path.join("chrome", "toolkit", "components" ,"osfile",
+                               "tests", "mochi", "test_osfile_front.xul");
+  ok(true, "test_exists_file: starting");
+  ok(OS.File.exists(file_name), "test_exists_file: file exists (OS.File.exists)");
+  ok(!OS.File.exists(file_name + ".tmp"), "test_exists_file: file does not exists (OS.File.exists)");
+  ok(true, "test_exists_file: complete");
 }

@@ -14,6 +14,7 @@ LIBRARY_NAME	= imgjpege_s
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= imgEncoderJPEGModule
 LIBXUL_LIBRARY = 1
+FAIL_ON_WARNINGS = 1
 
 CPPSRCS		= nsJPEGEncoder.cpp
 

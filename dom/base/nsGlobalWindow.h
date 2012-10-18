@@ -932,6 +932,12 @@ protected:
   // Outer windows only.
   nsDOMWindowList* GetWindowList();
 
+  // Helper for getComputedStyle and getDefaultComputedStyle
+  nsresult GetComputedStyleHelper(nsIDOMElement* aElt,
+                                  const nsAString& aPseudoElt,
+                                  bool aDefaultStylesOnly,
+                                  nsIDOMCSSStyleDeclaration** aReturn);
+
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
   // could own objects that are implemented in JavaScript, then those

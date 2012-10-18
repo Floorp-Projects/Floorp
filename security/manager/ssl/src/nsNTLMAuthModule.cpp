@@ -223,7 +223,7 @@ static void LogToken(const char *name, const void *token, uint32_t tokenLen)
   if (!LOG_ENABLED())
     return;
 
-  char *b64data = PL_Base64Encode((const char *) token, tokenLen, NULL);
+  char *b64data = PL_Base64Encode((const char *) token, tokenLen, nullptr);
   if (b64data)
   {
     PR_LogPrint("%s: %s\n", name, b64data);
@@ -528,7 +528,7 @@ ParseType2Msg(const void *inBuf, uint32_t inLen, Type2Msg *msg)
   {
     // Do not error out, for (conservative) backward compatibility.
     msg->targetLen = 0;
-    msg->target = NULL;
+    msg->target = nullptr;
   }
 
   // read flags

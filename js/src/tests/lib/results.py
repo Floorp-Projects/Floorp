@@ -113,7 +113,7 @@ class ResultsSink:
             result = TestResult.from_output(output)
 
             show = self.options.show
-            if self.options.failed_only and result == 'PASS':
+            if self.options.failed_only and result.result == 'PASS':
                 show = False
 
             if show and self.options.show_output:

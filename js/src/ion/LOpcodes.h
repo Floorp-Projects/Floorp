@@ -164,6 +164,7 @@
     _(ToIdV)                        \
     _(Floor)                        \
     _(Round)                        \
+    _(In)                           \
     _(InstanceOfO)                  \
     _(InstanceOfV)                  \
     _(InterruptCheck)               \

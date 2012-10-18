@@ -15,7 +15,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsThreadUtils.h"
-#include "nsAutoPtr.h"
 
 #include "mozilla/Telemetry.h"
 #include "nsISecurityUITelemetry.h"
@@ -264,7 +263,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
   // prefName, showAgainName are null if there is no preference for this dialog
   bool prefValue = true;
   
-  if (prefName != nullptr) {
+  if (prefName) {
     rv = mPrefBranch->GetBoolPref(prefName, &prefValue);
     if (NS_FAILED(rv)) prefValue = true;
   }
@@ -298,7 +297,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
                                    getter_Copies(windowTitle));
   mStringBundle->GetStringFromName(messageName,
                                    getter_Copies(message));
-  if (showAgainName != nullptr) {
+  if (showAgainName) {
     mStringBundle->GetStringFromName(showAgainName,
                                      getter_Copies(alertMe));
   }
@@ -339,7 +338,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::SECURITY_UI, aBucket + 1);
   }
 
-  if (!prefValue && prefName != nullptr) {
+  if (!prefValue && prefName) {
     mPrefBranch->SetBoolPref(prefName, false);
   } else if (prefValue && showOnce) {
     mPrefBranch->SetBoolPref(showOncePref.get(), false);
