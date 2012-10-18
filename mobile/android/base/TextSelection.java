@@ -111,12 +111,13 @@ class TextSelection extends Layer implements GeckoEventListener {
                         try {
                             for (int i=0; i < positions.length(); i++) {
                                 JSONObject position = positions.getJSONObject(i);
-                                String handle = position.getString("handle");
                                 int left = position.getInt("left");
                                 int top = position.getInt("top");
 
-                                getHandle(handle).positionFromGecko(left, top);
-                             }
+                                TextSelectionHandle handle = getHandle(position.getString("handle"));
+                                handle.setVisibility(position.getBoolean("hidden") ? View.GONE : View.VISIBLE);
+                                handle.positionFromGecko(left, top);
+                            }
                         } catch (Exception e) { }
                     }
                 });
