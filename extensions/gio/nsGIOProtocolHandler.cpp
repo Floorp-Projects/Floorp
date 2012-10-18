@@ -7,7 +7,7 @@
  * This code is based on original Mozilla gnome-vfs extension. It implements
  * input stream provided by GVFS/GIO.
 */
-#include "NSPRFormatTime.h" // must include before any headers that include prtime.h
+#include "NSPRFormatTime.h" // must be before anything that includes prtime.h
 #include "mozilla/ModuleUtils.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"

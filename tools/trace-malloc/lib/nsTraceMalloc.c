@@ -96,8 +96,8 @@ struct logfile {
     char        *buf;
     int         bufsize;
     int         pos;
-    uint32_t      size;
-    uint32_t      simsize;
+    uint32_t    size;
+    uint32_t    simsize;
     logfile     *next;
     logfile     **prevp;
 };
@@ -268,7 +268,7 @@ tm_get_thread(void)
 }
 
 /* We don't want more than 32 logfiles open at once, ok? */
-typedef uint32_t          lfd_set;
+typedef uint32_t        lfd_set;
 
 #define LFD_SET_STATIC_INITIALIZER 0
 #define LFD_SET_SIZE    32
