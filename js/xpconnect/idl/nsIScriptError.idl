@@ -11,7 +11,7 @@
 #include "nsISupports.idl"
 #include "nsIConsoleMessage.idl"
 
-[scriptable, uuid(ddc19b34-e22e-46d5-9f7f-c7768a7dc50a)]
+[scriptable, uuid(ec640482-be5f-49a0-a9cb-c87eacce9291)]
 interface nsIScriptError : nsIConsoleMessage
 {
     /** pseudo-flag for default case */
@@ -65,6 +65,8 @@ interface nsIScriptError : nsIConsoleMessage
     /* Get the inner window id this was initialized with.  Zero will be
        returned if init() was used instead of initWithWindowID(). */
     readonly attribute unsigned long long innerWindowID;
+
+    readonly attribute boolean isFromPrivateWindow;
 
     void init(in AString message,
               in AString sourceName,
