@@ -212,6 +212,12 @@ public:
    * Called by implementation to notify consumer of disconnect.
    */
   void NotifyDisconnect();
+
+  /**
+   * Get the current sockaddr for the socket
+   */
+  void GetSocketAddr(struct sockaddr& aAddr, socklen_t& aAddrSize);
+  
 private:
   UnixSocketImpl* mImpl;
   SocketConnectionStatus mConnectionStatus;
