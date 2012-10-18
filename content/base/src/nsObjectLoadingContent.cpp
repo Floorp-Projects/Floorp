@@ -1869,8 +1869,20 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     // (this is otherwise unset by the stack class)
     mIsLoading = false;
     mFinalListener = finalListener;
-    finalListener->OnStartRequest(mChannel, nullptr);
+    rv = finalListener->OnStartRequest(mChannel, nullptr);
     mSrcStreamLoading = false;
+    if (NS_FAILED(rv)) {
+      // Failed to load new content, but since we've already notified of our
+      // transition, we can just Unload and call LoadFallback (which will notify
+      // again)
+      mType = eType_Null;
+      // This could *also* technically re-enter if OnStartRequest fails after
+      // spawning a plugin.
+      mIsLoading = true;
+      UnloadObject(false);
+      NS_ENSURE_TRUE(mIsLoading, NS_OK);
+      LoadFallback(fallbackType, true);
+    }
   }
 
   return NS_OK;
