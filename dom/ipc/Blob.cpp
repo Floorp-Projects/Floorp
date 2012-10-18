@@ -585,6 +585,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   RemoteBlob(const nsAString& aName, const nsAString& aContentType,
+             uint64_t aLength, uint64_t aModDate)
+  : nsDOMFile(aName, aContentType, aLength, aModDate), mActor(nullptr)
+  {
+    mImmutable = true;
+  }
+
+  RemoteBlob(const nsAString& aName, const nsAString& aContentType,
              uint64_t aLength)
   : nsDOMFile(aName, aContentType, aLength), mActor(nullptr)
   {
@@ -598,7 +605,8 @@ public:
   }
 
   RemoteBlob()
-  : nsDOMFile(EmptyString(), EmptyString(), UINT64_MAX), mActor(nullptr)
+  : nsDOMFile(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX)
+  , mActor(nullptr)
   {
     mImmutable = true;
   }
@@ -651,6 +659,21 @@ public:
   {
     return static_cast<typename ActorType::ProtocolType*>(mActor);
   }
+
+  NS_IMETHOD
+  GetLastModifiedDate(JSContext* cx, JS::Value* aLastModifiedDate)
+  {
+    if (IsDateUnknown()) {
+      aLastModifiedDate->setNull();
+    } else {
+      JSObject* date = JS_NewDateObjectMsec(cx, mLastModificationDate);
+      if (!date) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      aLastModifiedDate->setObject(*date);
+    }
+    return NS_OK;
+  }
 };
 
 template <ActorFlavorEnum ActorFlavor>
@@ -686,7 +709,7 @@ Blob<ActorFlavor>::Blob(const BlobConstructorParams& aParams)
         aParams.get_FileBlobConstructorParams();
       remoteBlob =
         new RemoteBlobType(params.name(), params.contentType(),
-                           params.length());
+                           params.length(), params.modDate());
       mBlobIsFile = true;
       break;
     }
@@ -770,16 +793,20 @@ template <ActorFlavorEnum ActorFlavor>
 bool
 Blob<ActorFlavor>::SetMysteryBlobInfo(const nsString& aName,
                                       const nsString& aContentType,
-                                      uint64_t aLength)
+                                      uint64_t aLength,
+                                      uint64_t aLastModifiedDate)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mBlob);
   MOZ_ASSERT(mRemoteBlob);
   MOZ_ASSERT(aLength);
+  MOZ_ASSERT(aLastModifiedDate != UINT64_MAX);
 
-  ToConcreteBlob(mBlob)->SetLazyData(aName, aContentType, aLength);
+  ToConcreteBlob(mBlob)->SetLazyData(aName, aContentType,
+                                     aLength, aLastModifiedDate);
 
-  FileBlobConstructorParams params(aName, aContentType, aLength);
+  FileBlobConstructorParams params(aName, aContentType,
+                                   aLength, aLastModifiedDate);
   return ProtocolType::SendResolveMystery(params);
 }
 
@@ -796,7 +823,8 @@ Blob<ActorFlavor>::SetMysteryBlobInfo(const nsString& aContentType,
   nsString voidString;
   voidString.SetIsVoid(true);
 
-  ToConcreteBlob(mBlob)->SetLazyData(voidString, aContentType, aLength);
+  ToConcreteBlob(mBlob)->SetLazyData(voidString, aContentType,
+                                     aLength, UINT64_MAX);
 
   NormalBlobConstructorParams params(aContentType, aLength);
   return ProtocolType::SendResolveMystery(params);
@@ -890,14 +918,16 @@ Blob<ActorFlavor>::RecvResolveMystery(const ResolveMysteryParams& aParams)
         aParams.get_NormalBlobConstructorParams();
       nsString voidString;
       voidString.SetIsVoid(true);
-      blob->SetLazyData(voidString, params.contentType(), params.length());
+      blob->SetLazyData(voidString, params.contentType(),
+                        params.length(), UINT64_MAX);
       break;
     }
 
     case ResolveMysteryParams::TFileBlobConstructorParams: {
       const FileBlobConstructorParams& params =
         aParams.get_FileBlobConstructorParams();
-      blob->SetLazyData(params.name(), params.contentType(), params.length());
+      blob->SetLazyData(params.name(), params.contentType(),
+                        params.length(), params.modDate());
       break;
     }
 
