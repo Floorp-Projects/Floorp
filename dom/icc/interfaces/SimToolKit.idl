@@ -369,7 +369,6 @@ dictionary MozStkCommand
    * When typeOfCommand is
    * - STK_CMD_DISPLAY_TEXT
    * - STK_CMD_SET_UP_IDLE_MODE_TEXT
-   * - STK_CMD_REFRESH
    * - STK_CMD_SEND_{SS|USSD|SMS|DTMF},
    * options is MozStkTextMessage.
    *
@@ -480,10 +479,10 @@ dictionary MozStkCallEvent
   /**
    * This field is available in 'STK_EVENT_TYPE_CALL_CONNECTED' and
    * 'STK_EVENT_TYPE_CALL_DISCONNECTED' events.
-   * For STK_EVENT_TYPE_CALL_DISCONNECTED event, setting this to true means the
+   * For the STK_EVENT_TYPE_CALL_CONNECTED event, setting this to true means the
    * connection is answered by remote end, that is, this is an outgoing call.
-   * For STK_EVENT_TYPE_CALL_DISCONNECTED event, setting this to true indicates
-   * the connection is hung up by remote.
+   * For the STK_EVENT_TYPE_CALL_DISCONNECTED event, setting this to true
+   * indicates the connection is hung up by remote.
    */
   boolean isIssuedByRemote;
 
