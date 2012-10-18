@@ -157,7 +157,6 @@ class TransportLayerDtls : public TransportLayer {
   ScopedPRFileDesc ssl_fd_;
 
   ScopedCERTCertificate peer_cert_;
-  nsCOMPtr<nsIEventTarget> target_;
   nsCOMPtr<nsITimer> timer_;
   bool auth_hook_called_;
   bool cert_ok_;

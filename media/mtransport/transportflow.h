@@ -10,6 +10,7 @@
 #define transportflow_h__
 
 #include <deque>
+#include <queue>
 #include <string>
 
 #include "nscore.h"
@@ -33,7 +34,18 @@ class TransportFlow : public sigslot::has_slots<> {
   // either:
   // (a) Do it in the thread handling the I/O
   // (b) Do it before you activate the I/O system
+  //
+  // The flow takes ownership of the layers after a successful
+  // push.
   nsresult PushLayer(TransportLayer *layer);
+
+  // Convenience function to push multiple layers on. Layers
+  // are pushed on in the order that they are in the queue.
+  // Any layers which cannot be pushed on are just deleted
+  // and an error is returned.
+  // TODO(ekr@rtfm.com): Change layers to be ref-counted.
+  nsresult PushLayers(std::queue<TransportLayer *> layers);
+
   TransportLayer *top() const;
   TransportLayer *GetLayer(const std::string& id) const;
 
