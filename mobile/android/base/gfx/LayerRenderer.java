@@ -179,6 +179,20 @@ public class LayerRenderer {
         }
     }
 
+    public void destroy() {
+        DirectBufferAllocator.free(mCoordByteBuffer);
+        mCoordByteBuffer = null;
+        mCoordBuffer = null;
+        mScreenshotLayer.destroy();
+        mBackgroundLayer.destroy();
+        mShadowLayer.destroy();
+        mHorizScrollLayer.destroy();
+        mVertScrollLayer.destroy();
+        if (mFrameRateLayer != null) {
+            mFrameRateLayer.destroy();
+        }
+    }
+
     void onSurfaceCreated(EGLConfig config) {
         checkMonitoringEnabled();
         createDefaultProgram();
