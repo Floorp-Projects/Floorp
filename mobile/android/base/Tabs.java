@@ -130,7 +130,7 @@ public class Tabs implements GeckoEventListener {
         final Tab tab = mTabs.get(id);
         // This avoids a NPE below, but callers need to be careful to
         // handle this case
-        if (tab == null)
+        if (tab == null || oldTab == tab)
             return null;
 
         mSelectedTab = tab;

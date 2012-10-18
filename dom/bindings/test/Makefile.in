@@ -75,9 +75,13 @@ include $(topsrcdir)/config/rules.mk
 
 $(CPPSRCS): ../%Binding.cpp: $(bindinggen_dependencies) \
                              ../%.webidl \
+                             TestExampleInterface-example \
                              $(NULL)
 	$(MAKE) -C .. $*Binding.h
 	$(MAKE) -C .. $*Binding.cpp
+
+TestExampleInterface-example:
+	$(MAKE) -C .. TestExampleInterface-example
 
 check::
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \

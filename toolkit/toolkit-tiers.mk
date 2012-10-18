@@ -252,6 +252,10 @@ tier_platform_dirs += js/ductwork/debugger
 
 tier_platform_dirs += other-licenses/snappy
 
+ifdef MOZ_GIO_COMPONENT
+tier_platform_dirs += extensions/gio
+endif
+
 ifdef APP_LIBXUL_STATICDIRS
 # Applications can cheat and ask for code to be
 # built before libxul so libxul can be linked against it.

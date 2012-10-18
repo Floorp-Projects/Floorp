@@ -210,16 +210,16 @@ interface nsITCPSocketEvent : nsISupports {
   /**
    * The socket object which produced this event.
    */
-  readonly attribute nsIDOMTCPSocket socket;
+  readonly attribute nsIDOMTCPSocket target;
 
   /**
    * The type of this event. One of:
    *
-   * onopen
-   * onerror
-   * ondata
-   * ondrain
-   * onclose
+   * open
+   * error
+   * data
+   * drain
+   * close
    */
   readonly attribute DOMString type;
 
