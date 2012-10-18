@@ -245,7 +245,7 @@ endif
 
 DEFINES += -DAPP_VERSION=$(MOZ_APP_VERSION)
 
-DEFINES += -DAPP_ID=$(MOZ_APP_ID)
+DEFINES += -DAPP_ID="$(MOZ_APP_ID)"
 
 $(srcdir)/nsAppRunner.cpp: $(DEPTH)/config/buildid $(milestone_txt)
 
