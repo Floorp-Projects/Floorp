@@ -11,8 +11,6 @@
 #include "xpcprivate.h"
 #include "nsGlobalWindow.h"
 #include "nsPIDOMWindow.h"
-#include "nsILoadContext.h"
-#include "nsIDocShell.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsScriptError, nsIConsoleMessage, nsIScriptError)
 
@@ -26,8 +24,7 @@ nsScriptError::nsScriptError()
        mCategory(),
        mOuterWindowID(0),
        mInnerWindowID(0),
-       mTimeStamp(0),
-       mIsFromPrivateWindow(false)
+       mTimeStamp(0)
 {
 }
 
@@ -133,10 +130,6 @@ nsScriptError::InitWithWindowID(const nsAString& message,
             nsPIDOMWindow* outer = window->GetOuterWindow();
             if (outer)
                 mOuterWindowID = outer->WindowID();
-
-            nsIDocShell* docShell = window->GetDocShell();
-            nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
-            mIsFromPrivateWindow = loadContext->UsePrivateBrowsing();
         }
     }
 
@@ -222,12 +215,5 @@ NS_IMETHODIMP
 nsScriptError::GetTimeStamp(int64_t *aTimeStamp)
 {
     *aTimeStamp = mTimeStamp;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScriptError::GetIsFromPrivateWindow(bool *aIsFromPrivateWindow)
-{
-    *aIsFromPrivateWindow = mIsFromPrivateWindow;
     return NS_OK;
 }
