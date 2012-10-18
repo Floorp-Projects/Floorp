@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "NSPRFormatTime.h" // must include before any headers that include prtime.h
 #include "nsAboutCache.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
@@ -13,7 +14,6 @@
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
-#include "prtime.h"
 #include "nsEscape.h"
 
 #include "nsICacheService.h"

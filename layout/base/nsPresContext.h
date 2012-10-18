@@ -191,6 +191,16 @@ public:
   nsPresContext* GetToplevelContentDocumentPresContext();
 
   /**
+   * Returns the nearest widget for the root frame of this.
+   *
+   * @param aOffset     If non-null the offset from the origin of the root
+   *                    frame's view to the widget's origin (usually positive)
+   *                    expressed in appunits of this will be returned in
+   *                    aOffset.
+   */
+  nsIWidget* GetNearestWidget(nsPoint* aOffset = nullptr);
+
+  /**
    * Return the presentation context for the root of the view manager
    * hierarchy that contains this presentation context, or nullptr if it can't
    * be found (e.g. it's detached).

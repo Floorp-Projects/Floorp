@@ -3062,7 +3062,7 @@ typedef bool (*GetPropertyOrNameFn)(JSContext *, HandleObject, HandlePropertyNam
 bool
 CodeGenerator::visitCallGetProperty(LCallGetProperty *lir)
 {
-    typedef bool (*pf)(JSContext *, HandleValue, PropertyName *, MutableHandleValue);
+    typedef bool (*pf)(JSContext *, HandleValue, HandlePropertyName, MutableHandleValue);
     static const VMFunction Info = FunctionInfo<pf>(GetProperty);
 
     pushArg(ImmGCPtr(lir->mir()->name()));
@@ -3935,6 +3935,18 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8 *lir)
 
     masm.bind(&done);
     return true;
+}
+
+bool
+CodeGenerator::visitIn(LIn *ins)
+{
+    typedef bool (*pf)(JSContext *, HandleValue, HandleObject, JSBool *);
+    static const VMFunction OperatorInInfo = FunctionInfo<pf>(OperatorIn);
+
+    pushArg(ToRegister(ins->rhs()));
+    pushArg(ToValue(ins, LIn::LHS));
+
+    return callVM(OperatorInInfo, ins);
 }
 
 bool

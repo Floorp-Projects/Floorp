@@ -10,7 +10,7 @@
 NS_IMPL_ISUPPORTS1(nsStreamCipher, nsIStreamCipher)
 
 nsStreamCipher::nsStreamCipher()
-  : mContext(NULL)
+  : mContext(nullptr)
 {
 }
 
@@ -89,8 +89,6 @@ NS_IMETHODIMP nsStreamCipher::Update(const uint8_t *aData, uint32_t aLen)
     return NS_ERROR_NOT_INITIALIZED;
 
   unsigned char* output = new unsigned char[aLen];
-  if (!output)
-    return NS_ERROR_OUT_OF_MEMORY;
   unsigned char* input = (unsigned char*)aData;
   
   int32_t setLen;
@@ -132,8 +130,6 @@ NS_IMETHODIMP nsStreamCipher::UpdateFromString(const nsACString& aInput)
   uint32_t len = aInput.Length();
 
   unsigned char* output = new unsigned char[len];
-  if (!output)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   int32_t setLen;
 
@@ -173,14 +169,7 @@ NS_IMETHODIMP nsStreamCipher::Discard(int32_t aLen)
     return NS_ERROR_NOT_INITIALIZED;
 
   unsigned char* output = new unsigned char[aLen];
-  if (!output)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   unsigned char* input = new unsigned char[aLen];
-  if (!input) {
-    delete [] output;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   int32_t setLen;
 

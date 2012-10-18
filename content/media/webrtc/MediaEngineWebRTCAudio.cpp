@@ -125,7 +125,12 @@ MediaEngineWebRTCAudioSource::Stop()
     return NS_ERROR_FAILURE;
   }
 
-  mState = kStopped;
+  {
+    ReentrantMonitorAutoEnter enter(mMonitor);
+    mState = kStopped;
+    mSource->EndTrack(mTrackID);
+  }
+
   return NS_OK;
 }
 
@@ -224,6 +229,8 @@ MediaEngineWebRTCAudioSource::Process(const int channel,
   const int length, const int samplingFreq, const bool isStereo)
 {
   ReentrantMonitorAutoEnter enter(mMonitor);
+  if (mState != kStarted)
+    return;
 
   nsRefPtr<SharedBuffer> buffer = SharedBuffer::Create(length * sizeof(sample));
 

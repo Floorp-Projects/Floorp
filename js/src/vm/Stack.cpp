@@ -1470,7 +1470,8 @@ StackIter::settleOnNewState()
 
 StackIter::StackIter(JSContext *cx, SavedOption savedOption)
   : maybecx_(cx),
-    savedOption_(savedOption)
+    savedOption_(savedOption),
+    script_(cx, NULL)
 #ifdef JS_ION
     , ionActivations_(cx),
     ionFrames_((uint8_t *)NULL),
@@ -1492,7 +1493,8 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
 }
 
 StackIter::StackIter(JSRuntime *rt, StackSegment &seg)
-  : maybecx_(NULL), savedOption_(STOP_AT_SAVED)
+  : maybecx_(NULL), savedOption_(STOP_AT_SAVED),
+    script_(rt, NULL)
 #ifdef JS_ION
     , ionActivations_(rt),
     ionFrames_((uint8_t *)NULL),
@@ -1506,6 +1508,24 @@ StackIter::StackIter(JSRuntime *rt, StackSegment &seg)
 #endif
     startOnSegment(&seg);
     settleOnNewState();
+}
+
+StackIter::StackIter(const StackIter &other)
+  : maybecx_(other.maybecx_),
+    savedOption_(other.savedOption_),
+    state_(other.state_),
+    fp_(other.fp_),
+    calls_(other.calls_),
+    seg_(other.seg_),
+    pc_(other.pc_),
+    script_(other.maybecx_ ? other.maybecx_->runtime : TlsRuntime.get(), other.script_),
+    args_(other.args_)
+#ifdef JS_ION
+    , ionActivations_(other.ionActivations_),
+    ionFrames_(other.ionFrames_),
+    ionInlineFrames_(other.ionInlineFrames_)
+#endif
+{
 }
 
 #ifdef JS_ION

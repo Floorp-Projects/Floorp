@@ -115,6 +115,7 @@ function starttest() {
       $("testKeyEvent").value = "";
     
       /* test synthesizeComposition */
+      $("textBoxB").focus();
       check = false;
       window.addEventListener("compositionstart", function() { check = true; }, false);
       synthesizeComposition({ type: "compositionstart" });
@@ -122,30 +123,41 @@ function starttest() {
     
       check = false;
       window.addEventListener("compositionupdate", function() { check = true; }, false);
-      synthesizeComposition({ type: "compositionupdate" });
+      synthesizeComposition({ type: "compositionupdate", data: "a" });
       is(check, true, 'synthesizeComposition() should dispatch compositionupdate');
-    
+
       check = false;
-      window.addEventListener("compositionend", function() { check = true; }, false);
-      synthesizeComposition({ type: "compositionend" });
-      is(check, true, 'synthesizeComposition() should dispatch compositionend');
-      check = false;
-    
-      $("textBoxB").focus();
-      const nsIDOMWindowUtils = SpecialPowers.Ci.nsIDOMWindowUtils;
+      window.addEventListener("text", function() { check = true; }, false);
       synthesizeText(
         { "composition":
           { "string": "a",
             "clauses":
             [
-              { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+              { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
             ]
           },
           "caret": { "start": 1, "length": 0 }
         }
       );
-      is(check, false, "synthesizeText shouldn't start or end composition");
-      is($("textBoxB").value, "a", "synthesizeText should send text");
+      is(check, true, "synthesizeText should dispatch text event");
+
+      synthesizeText(
+        { "composition":
+          { "string": "a",
+            "clauses":
+            [
+              { "length": 0, "attr": 0 }
+            ]
+          },
+          "caret": { "start": 1, "length": 0 }
+        }
+      );
+
+      check = false;
+      window.addEventListener("compositionend", function() { check = true; }, false);
+      synthesizeComposition({ type: "compositionend", data: "a" });
+      is(check, true, 'synthesizeComposition() should dispatch compositionend');
+
       var querySelectedText = synthesizeQuerySelectedText();
       ok(querySelectedText, "query selected text event result is null");
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect'); //get permission to check members of querySelectedText

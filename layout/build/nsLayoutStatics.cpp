@@ -102,12 +102,15 @@
 #include "nsPermissionManager.h"
 #include "nsCookieService.h"
 #include "nsApplicationCacheService.h"
+#include "mozilla/dom/time/DateCacheCleaner.h"
+#include "nsIMEStateManager.h"
 
 extern void NS_ShutdownChainItemPool();
 
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
+using namespace mozilla::dom::time;
 
 nsrefcnt nsLayoutStatics::sLayoutStaticRefcnt = 0;
 
@@ -262,6 +265,8 @@ nsLayoutStatics::Initialize()
 
   nsDOMStorageBaseDB::Init();
 
+  InitializeDateCacheCleaner();
+
   return NS_OK;
 }
 
@@ -280,6 +285,7 @@ nsLayoutStatics::Shutdown()
   txMozillaXSLTProcessor::Shutdown();
   nsDOMAttribute::Shutdown();
   nsEventListenerManager::Shutdown();
+  nsIMEStateManager::Shutdown();
   nsComputedDOMStyle::Shutdown();
   nsCSSParser::Shutdown();
   nsCSSRuleProcessor::Shutdown();

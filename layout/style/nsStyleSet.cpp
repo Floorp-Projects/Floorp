@@ -969,7 +969,7 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
 
 already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
-                                 const nsCOMArray<nsIStyleRule> &aRules)
+                                 const nsTArray< nsCOMPtr<nsIStyleRule> > &aRules)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
@@ -977,8 +977,8 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
   // FIXME: Perhaps this should be passed in, but it probably doesn't
   // matter.
   ruleWalker.SetLevel(eDocSheet, false, false);
-  for (int32_t i = 0; i < aRules.Count(); i++) {
-    ruleWalker.ForwardOnPossiblyCSSRule(aRules.ObjectAt(i));
+  for (uint32_t i = 0; i < aRules.Length(); i++) {
+    ruleWalker.ForwardOnPossiblyCSSRule(aRules.ElementAt(i));
   }
 
   return GetContext(aParentContext, ruleWalker.CurrentNode(), nullptr,

@@ -97,6 +97,9 @@ public:
       mVideoSource->Stop();
       mVideoSource->Deallocate();
     }
+    // Do this after stopping all tracks with EndTrack()
+    mStream->GetStream()->AsSourceStream()->Finish();
+
     nsCOMPtr<GetUserMediaNotificationEvent> event =
       new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STOPPING);
 

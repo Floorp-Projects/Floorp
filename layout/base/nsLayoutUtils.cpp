@@ -2326,13 +2326,18 @@ static bool GetAbsoluteCoord(const nsStyleCoord& aStyle, nscoord& aResult)
   return true;
 }
 
+// Only call on style coords for which GetAbsoluteCoord returned false.
 static bool
 GetPercentHeight(const nsStyleCoord& aStyle,
                  nsIFrame* aFrame,
                  nscoord& aResult)
 {
-  if (eStyleUnit_Percent != aStyle.GetUnit())
+  if (eStyleUnit_Percent != aStyle.GetUnit() &&
+      !aStyle.IsCalcUnit())
     return false;
+
+  MOZ_ASSERT(!aStyle.IsCalcUnit() || aStyle.CalcHasPercent(),
+             "GetAbsoluteCoord should have handled this");
 
   nsIFrame *f = aFrame->GetContainingBlock();
   if (!f) {
@@ -2389,6 +2394,11 @@ GetPercentHeight(const nsStyleCoord& aStyle,
     NS_ASSERTION(pos->mMinHeight.HasPercent() ||
                  pos->mMinHeight.GetUnit() == eStyleUnit_Auto,
                  "unknown min-height unit");
+  }
+
+  if (aStyle.IsCalcUnit()) {
+    aResult = NS_MAX(nsRuleNode::ComputeComputedCalc(aStyle, h), 0);
+    return true;
   }
 
   aResult = NSToCoordRound(aStyle.GetPercentValue() * h);
@@ -3418,7 +3428,8 @@ nsLayoutUtils::GetFirstLinePosition(const nsIFrame* aFrame,
       nsIFrame* kid = aFrame->GetFirstPrincipalChild();
       // kid might be a legend frame here, but that's ok.
       if (GetFirstLinePosition(kid, &kidPosition)) {
-        *aResult = kidPosition + kid->GetPosition().y;
+        *aResult = kidPosition + (kid->GetPosition().y -
+                                  kid->GetRelativeOffset().y);
         return true;
       }
       return false;
@@ -3435,7 +3446,8 @@ nsLayoutUtils::GetFirstLinePosition(const nsIFrame* aFrame,
       nsIFrame *kid = line->mFirstChild;
       LinePosition kidPosition;
       if (GetFirstLinePosition(kid, &kidPosition)) {
-        *aResult = kidPosition + kid->GetPosition().y;
+        *aResult = kidPosition + (kid->GetPosition().y -
+                                  kid->GetRelativeOffset().y);
         return true;
       }
     } else {
@@ -3468,12 +3480,14 @@ nsLayoutUtils::GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
       nsIFrame *kid = line->mFirstChild;
       nscoord kidBaseline;
       if (GetLastLineBaseline(kid, &kidBaseline)) {
-        *aResult = kidBaseline + kid->GetPosition().y;
+        // Ignore relative positioning for baseline calculations
+        *aResult = kidBaseline + kid->GetPosition().y -
+          kid->GetRelativeOffset().y;
         return true;
       } else if (kid->GetType() == nsGkAtoms::scrollFrame) {
         // Use the bottom of the scroll frame.
         // XXX CSS2.1 really doesn't say what to do here.
-        *aResult = kid->GetRect().YMost();
+        *aResult = kid->GetRect().YMost() - kid->GetRelativeOffset().y;
         return true;
       }
     } else {

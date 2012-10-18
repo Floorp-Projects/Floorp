@@ -60,7 +60,7 @@ int32_t nsSHistory::sHistoryMaxTotalViewers = -1;
 // entries were touched, so that we can evict older entries first.
 static uint32_t gTouchCounter = 0;
 
-static PRLogModuleInfo* gLogModule = PR_LOG_DEFINE("nsSHistory");
+static PRLogModuleInfo* gLogModule = PR_NewLogModule("nsSHistory");
 #define LOG(format) PR_LOG(gLogModule, PR_LOG_DEBUG, format)
 
 // This macro makes it easier to print a log message which includes a URI's

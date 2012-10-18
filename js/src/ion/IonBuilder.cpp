@@ -1068,6 +1068,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_ENDITER:
         return jsop_iterend();
 
+      case JSOP_IN:
+        return jsop_in();
+
       case JSOP_INSTANCEOF:
         return jsop_instanceof();
 
@@ -6450,6 +6453,18 @@ IonBuilder::jsop_setaliasedvar(ScopeCoordinate sc)
     return resumeAfter(store);
 }
 
+bool
+IonBuilder::jsop_in()
+{
+    MDefinition *obj = current->pop();
+    MDefinition *id = current->pop();
+    MIn *ins = new MIn(id, obj);
+
+    current->add(ins);
+    current->push(ins);
+
+    return resumeAfter(ins);
+}
 
 bool
 IonBuilder::jsop_instanceof()

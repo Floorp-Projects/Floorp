@@ -102,7 +102,6 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   VideoSegment segment;
 
   ReentrantMonitorAutoEnter enter(mMonitor);
-
   if (mState != kStarted)
     return;
 
@@ -278,14 +277,16 @@ MediaEngineWebRTCVideoSource::Stop()
     return NS_ERROR_FAILURE;
   }
 
-  mSource->EndTrack(mTrackID);
-  mSource->Finish();
+  {
+    ReentrantMonitorAutoEnter enter(mMonitor);
+    mState = kStopped;
+    mSource->EndTrack(mTrackID);
+  }
 
   mViERender->StopRender(mCaptureIndex);
   mViERender->RemoveRenderer(mCaptureIndex);
   mViECapture->StopCapture(mCaptureIndex);
 
-  mState = kStopped;
   return NS_OK;
 }
 

@@ -7,13 +7,13 @@ from marionette_test import MarionetteTestCase
 class TestGetStatus(MarionetteTestCase):
     def test_getStatus(self):
         status = self.marionette.status()
-        self.assertIn("os", status)
+        self.assertTrue("os" in status)
         status_os = status['os']
-        self.assertIn("version", status_os)
-        self.assertIn("name", status_os)
-        self.assertIn("arch", status_os)
-        self.assertIn("build", status)
+        self.assertTrue("version" in status_os)
+        self.assertTrue("name" in status_os)
+        self.assertTrue("arch" in status_os)
+        self.assertTrue("build" in status)
         status_build = status['build']
-        self.assertIn("revision", status_build)
-        self.assertIn("time", status_build)
-        self.assertIn("version", status_build)
+        self.assertTrue("revision" in status_build)
+        self.assertTrue("time" in status_build)
+        self.assertTrue("version" in status_build)

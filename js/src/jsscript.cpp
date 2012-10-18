@@ -1152,7 +1152,7 @@ ScriptSource::setSourceCopy(JSContext *cx, StableCharPtr src, uint32_t length,
     argumentsNotIncluded_ = argumentsNotIncluded;
 
 #ifdef JS_THREADSAFE
-    if (tok) {
+    if (tok && cx->runtime->useHelperThreads()) {
 #ifdef DEBUG
         ready_ = false;
 #endif
