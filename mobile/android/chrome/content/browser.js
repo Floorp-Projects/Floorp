@@ -3703,12 +3703,9 @@ var BrowserEventHandler = {
       if (element) {
         try {
           let data = JSON.parse(aData);
-          let isClickable = ElementTouchHelper.isElementClickable(element);
-
-          if (isClickable) {
+          if (ElementTouchHelper.isElementClickable(element)) {
             [data.x, data.y] = this._moveClickPoint(element, data.x, data.y);
             element = ElementTouchHelper.anyElementFromPoint(data.x, data.y);
-            isClickable = ElementTouchHelper.isElementClickable(element);
           }
 
           this._sendMouseEvent("mousemove", element, data.x, data.y);
@@ -3718,9 +3715,6 @@ var BrowserEventHandler = {
           // See if its a input element
           if ((element instanceof HTMLInputElement && element.mozIsTextField(false)) || (element instanceof HTMLTextAreaElement))
              SelectionHandler.showThumb(element);
-  
-          if (isClickable)
-            Haptic.performSimpleAction(Haptic.LongPress);
         } catch(e) {
           Cu.reportError(e);
         }
@@ -3729,13 +3723,10 @@ var BrowserEventHandler = {
     } else if (aTopic == "Gesture:DoubleTap") {
       this._cancelTapHighlight();
       this.onDoubleTap(aData);
-    } else if (aTopic == "MozMagnifyGestureStart" ||
-               aTopic == "MozMagnifyGestureUpdate") {
+    } else if (aTopic == "MozMagnifyGestureStart" || aTopic == "MozMagnifyGestureUpdate") {
       this.onPinch(aData);
     } else if (aTopic == "MozMagnifyGesture") {
-      this.onPinchFinish(aData,
-                         this._mLastPinchPoint.x,
-                         this._mLastPinchPoint.y);
+      this.onPinchFinish(aData, this._mLastPinchPoint.x, this._mLastPinchPoint.y);
     } else if (aTopic == "nsPref:changed") {
       if (aData == "browser.zoom.reflowOnZoom") {
         this.updateReflozPref();
