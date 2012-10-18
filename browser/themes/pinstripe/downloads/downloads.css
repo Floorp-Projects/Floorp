@@ -173,11 +173,6 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
                               0, 140, 20, 120) center no-repeat;
 }
 
-#downloads-indicator-icon:-moz-lwtheme-brighttext {
-  background: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"),
-                              0, 140, 20, 120) center no-repeat;
-}
-
 #downloads-indicator[attention]
 #downloads-indicator-icon {
   background: -moz-image-rect(url("chrome://browser/skin/downloads/download-glow.png"),
