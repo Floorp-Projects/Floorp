@@ -133,8 +133,6 @@ struct gcmHashContextStr {
 
 /* f = x^128 + x^7 + x^2 + x + 1 */
 static const unsigned int poly_128[] = { 128, 7, 2, 1, 0 };
-/* f = x^64 + x^4 + x^3 + x + 1 */
-static const unsigned int poly_64[] = { 64, 4, 3, 1, 0 };
 
 /* sigh, GCM defines the bit strings exactly backwards from everything else */
 static void
@@ -167,13 +165,10 @@ gcmHash_InitContext(gcmHashContext *ghash, const unsigned char *H,
     CHECK_MPI_OK( mp_read_unsigned_octets(&ghash->H, H_rev, blocksize) );
 
     /* set the irreducible polynomial. Each blocksize has its own polynomial.
-     * for now only blocksizes 16 (=128 bits) and 8 (=64 bits) are defined */
+     * for now only blocksize 16 (=128 bits) is defined */
     switch (blocksize) {
     case 16: /* 128 bits */
 	ghash->poly = poly_128;
-	break;
-    case 8: /* 64 bits */
-	ghash->poly = poly_64;
 	break;
     default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -347,14 +342,11 @@ gcmHash_InitContext(gcmHashContext *ghash, const unsigned char *H,
     PORT_Memset(ghash->H, 0, sizeof(ghash->H));
     gcm_bytes_to_longs(ghash->H, H, blocksize);
 
-    /* set the irreducible polynomial. Each blocksize has it's own polynommial
-     * for now only blocksizes 16 (=128 bits) and 8 (=64 bits) are defined */
+    /* set the irreducible polynomial. Each blocksize has its own polynommial
+     * for now only blocksize 16 (=128 bits) is defined */
     switch (blocksize) {
     case 16: /* 128 bits */
 	ghash->R = (unsigned long) 0x87; /* x^7 + x^2 + x +1 */
-	break;
-    case 8: /* 64 bits */
-	ghash->R = (unsigned long) 0x1b; /* x^4 + x^3 + x + 1 */
 	break;
     default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -613,7 +605,7 @@ GCM_CreateContext(void *context, freeblCipherFunc cipher,
     unsigned int tmp;
     PRBool freeCtr = PR_FALSE;
     PRBool freeHash = PR_FALSE;
-    const CK_AES_GCM_PARAMS *gcmParams = (const CK_AES_GCM_PARAMS *)params;
+    const CK_GCM_PARAMS *gcmParams = (const CK_GCM_PARAMS *)params;
     CK_AES_CTR_PARAMS ctrParams;
     SECStatus rv;
 
@@ -641,10 +633,7 @@ GCM_CreateContext(void *context, freeblCipherFunc cipher,
     /* fill in the Counter context */
     ctrParams.ulCounterBits = 32;
     PORT_Memset(ctrParams.cb, 0, sizeof(ctrParams.cb));
-    if ((blocksize == 8) && (gcmParams->ulIvLen == 4)) {
-	ctrParams.cb[3] = 1;
-	PORT_Memcpy(&ctrParams.cb[4], gcmParams->pIv, gcmParams->ulIvLen);
-    } else if ((blocksize == 16) && (gcmParams->ulIvLen == 12)) {
+    if ((blocksize == 16) && (gcmParams->ulIvLen == 12)) {
 	PORT_Memcpy(ctrParams.cb, gcmParams->pIv, gcmParams->ulIvLen);
 	ctrParams.cb[blocksize-1] = 1;
     } else {

@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: blapi.h,v 1.48 2012/06/28 17:55:05 rrelyea%redhat.com Exp $ */
+/* $Id: blapi.h,v 1.49 2012/10/11 00:10:26 rrelyea%redhat.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -1271,6 +1271,10 @@ PQG_ParamGenSeedLen(
  * 2048         224
  * 2048         256
  * 3072         256
+ *
+ * If N or seedBytes are set to zero, then PQG_ParamGenSeedLen will
+ * pick a default value (typically the smallest secure value for these
+ * variables).
  *
  * The verify parameters will conform to FIPS186-3 using the smallest 
  * permissible hash for the key strength.
