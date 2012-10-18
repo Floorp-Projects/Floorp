@@ -151,10 +151,15 @@ public:
    */
   bool SetNonblockFlags();
 
-  void GetSocketAddr(struct sockaddr& aAddr, socklen_t& aAddrSize)
+  void GetSocketAddr(nsAString& aAddrStr)
   {
-    aAddr = mAddr;
-    aAddrSize = mAddrSize;
+    if (!mConnector)
+    {
+      NS_WARNING("No connector to get socket address from!");
+      aAddrStr = nsString();
+      return;
+    }
+    mConnector->GetSocketAddr(mAddr, aAddrStr);
   }
 
   /**
@@ -242,7 +247,7 @@ private:
   /**
    * Address struct of the socket currently in use
    */
-  struct sockaddr mAddr;
+  sockaddr mAddr;
 
 };
 
@@ -707,13 +712,14 @@ UnixSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
 }
 
 void
-UnixSocketConsumer::GetSocketAddr(struct sockaddr& aAddr, socklen_t &aAddrSize)
+UnixSocketConsumer::GetSocketAddr(nsAString& aAddrStr)
 {
-  if (!mImpl) {
+  if (!mImpl || mConnectionStatus != SOCKET_CONNECTED) {
     NS_WARNING("No socket currently open!");
+    aAddrStr = nsString();
     return;
   }
-  mImpl->GetSocketAddr(aAddr, aAddrSize);
+  mImpl->GetSocketAddr(aAddrStr);
 }
 
 void

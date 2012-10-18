@@ -26,6 +26,9 @@ public:
                           struct sockaddr* aAddr,
                           const char* aAddress) MOZ_OVERRIDE;
   virtual bool SetUp(int aFd) MOZ_OVERRIDE;
+  virtual void GetSocketAddr(const sockaddr& aAddr,
+                             nsAString& aAddrStr) MOZ_OVERRIDE;
+
 private:
   BluetoothSocketType mType;
   int mChannel;
