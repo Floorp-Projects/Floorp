@@ -484,6 +484,10 @@ public:
     return sSecurityManager;
   }
 
+  // Returns the subject principal. Guaranteed to return non-null. May only
+  // be called when nsContentUtils is initialized.
+  static nsIPrincipal* GetSubjectPrincipal();
+
   static nsresult GenerateStateKey(nsIContent* aContent,
                                    const nsIDocument* aDocument,
                                    nsIStatefulFrame::SpecialStateID aID,
