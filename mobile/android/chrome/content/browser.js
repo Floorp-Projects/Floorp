@@ -1426,30 +1426,17 @@ var NativeWindow = {
       }
     },
 
-    get _target() {
-      if (this._targetRef)
-        return this._targetRef.get();
-      return null;
-    },
-  
-    set _target(aTarget) {
-      if (aTarget)
-        this._targetRef = Cu.getWeakReference(aTarget);
-      else this._targetRef = null;
-    },
-
     _sendToContent: function(aX, aY) {
-      // _highlightElement should already be fluffed to find nearby clickable elements
-      let target = BrowserEventHandler._highlightElement;
-      if (!target)
-        return;
+      // initially we look for nearby clickable elements. If we don't find one we fall back to using whatever this click was on
+      let rootElement = ElementTouchHelper.elementFromPoint(aX, aY);
+      if (!rootElement)
+        rootElement = ElementTouchHelper.anyElementFromPoint(aX, aY)
 
       this.menuitems = {};
       let menuitemsSet = false;
-      this._target = target;
-
-      // now walk up the tree and for each node look for any context menu items that apply
-      let element = target;
+      let element = rootElement;
+      if (!element)
+        return;
 
       while (element) {
         for each (let item in this.items) {
@@ -1466,46 +1453,34 @@ var NativeWindow = {
 
       // only send the contextmenu event to content if we are planning to show a context menu (i.e. not on every long tap)
       if (menuitemsSet) {
-        let event = target.ownerDocument.createEvent("MouseEvent");
+        let event = rootElement.ownerDocument.createEvent("MouseEvent");
         event.initMouseEvent("contextmenu", true, true, content,
                              0, aX, aY, aX, aY, false, false, false, false,
                              0, null);
-        target.ownerDocument.defaultView.addEventListener("contextmenu", this, false);
-        target.dispatchEvent(event);
-      } else {
-        this._target = null;
-        BrowserEventHandler._cancelTapHighlight();
-
-        if (SelectionHandler.canSelect(target))
-          SelectionHandler.startSelection(target, aX, aY);
+        rootElement.ownerDocument.defaultView.addEventListener("contextmenu", this, false);
+        rootElement.dispatchEvent(event);
+      } else if (SelectionHandler.canSelect(rootElement)) {
+        SelectionHandler.startSelection(rootElement, aX, aY);
       }
     },
 
     _show: function(aEvent) {
-      BrowserEventHandler._cancelTapHighlight();
-      let popupNode = this._target;
-      this._target = null;
-      if (aEvent.defaultPrevented || !popupNode)
+      if (aEvent.defaultPrevented)
         return;
 
       Haptic.performSimpleAction(Haptic.LongPress);
 
+      let popupNode = aEvent.originalTarget;
       let title = "";
-
-      // spin through the tree looking for a title for this context menu
-      let node = popupNode;
-      while(node && !title) {
-        if (node.hasAttribute("title")) {
-          title = node.getAttribute("title")
-        } else if ((node instanceof Ci.nsIDOMHTMLAnchorElement && node.href) ||
-                (node instanceof Ci.nsIDOMHTMLAreaElement && node.href)) {
-          title = this._getLinkURL(node);
-        } else if (node instanceof Ci.nsIImageLoadingContent && node.currentURI) {
-          title = node.currentURI.spec;
-        } else if (node instanceof Ci.nsIDOMHTMLMediaElement) {
-          title = (node.currentSrc || node.src);
-        }
-        node = node.parentNode;
+      if (popupNode.hasAttribute("title")) {
+        title = popupNode.getAttribute("title")
+      } else if ((popupNode instanceof Ci.nsIDOMHTMLAnchorElement && popupNode.href) ||
+              (popupNode instanceof Ci.nsIDOMHTMLAreaElement && popupNode.href)) {
+        title = this._getLinkURL(popupNode);
+      } else if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
+        title = popupNode.currentURI.spec;
+      } else if (popupNode instanceof Ci.nsIDOMHTMLMediaElement) {
+        title = (popupNode.currentSrc || popupNode.src);
       }
 
       // convert this.menuitems object to an array for sending to native code
@@ -1543,6 +1518,7 @@ var NativeWindow = {
     },
 
     observe: function(aSubject, aTopic, aData) {
+      BrowserEventHandler._cancelTapHighlight();
       let data = JSON.parse(aData);
       // content gets first crack at cancelling context menus
       this._sendToContent(data.x, data.y);
@@ -3617,24 +3593,35 @@ var BrowserEventHandler = {
     if (!BrowserApp.isBrowserContentDocumentDisplayed() || aEvent.touches.length > 1 || aEvent.defaultPrevented)
       return;
 
-    // Touch event targets are already fluffed out to find targets that have registered for mouse events as well
-    // If we've pressed a scrollable element, let Java know that we may
-    // want to override the scroll behaviour (for document sub-frames)
-    this._scrollableElement = this._findScrollableElement(aEvent.target, true);
-    this._firstScrollEvent = true;
+    let closest = aEvent.target;
 
-    if (this._scrollableElement != null) {
-      // Discard if it's the top-level scrollable, we let Java handle this
-      let doc = BrowserApp.selectedBrowser.contentDocument;
-      if (this._scrollableElement != doc.body && this._scrollableElement != doc.documentElement)
-        sendMessageToJava({ gecko: { type: "Panning:Override" } });
+    if (closest) {
+      // If we've pressed a scrollable element, let Java know that we may
+      // want to override the scroll behaviour (for document sub-frames)
+      this._scrollableElement = this._findScrollableElement(closest, true);
+      this._firstScrollEvent = true;
+
+      if (this._scrollableElement != null) {
+        // Discard if it's the top-level scrollable, we let Java handle this
+        let doc = BrowserApp.selectedBrowser.contentDocument;
+        if (this._scrollableElement != doc.body && this._scrollableElement != doc.documentElement)
+          sendMessageToJava({ gecko: { type: "Panning:Override" } });
+      }
     }
 
-    let uri = this._getLinkURI(aEvent.target);
-    if (uri) {
-      Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null, null);
+    if (!ElementTouchHelper.isElementClickable(closest, null, false))
+      closest = ElementTouchHelper.elementFromPoint(aEvent.changedTouches[0].screenX,
+                                                    aEvent.changedTouches[0].screenY);
+    if (!closest)
+      closest = aEvent.target;
+
+    if (closest) {
+      let uri = this._getLinkURI(closest);
+      if (uri) {
+        Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null, null);
+      }
+      this._doTapHighlight(closest);
     }
-    this._doTapHighlight(aEvent.target);
   },
 
   _getLinkURI: function(aElement) {
@@ -3716,6 +3703,10 @@ var BrowserEventHandler = {
       if (element) {
         try {
           let data = JSON.parse(aData);
+          if (ElementTouchHelper.isElementClickable(element)) {
+            [data.x, data.y] = this._moveClickPoint(element, data.x, data.y);
+            element = ElementTouchHelper.anyElementFromPoint(data.x, data.y);
+          }
 
           this._sendMouseEvent("mousemove", element, data.x, data.y);
           this._sendMouseEvent("mousedown", element, data.x, data.y);
@@ -3914,6 +3905,34 @@ var BrowserEventHandler = {
     this.motionBuffer.push({ dx: dx, dy: dy, time: this.lastTime });
   },
 
+  _moveClickPoint: function(aElement, aX, aY) {
+    // the element can be out of the aX/aY point because of the touch radius
+    // if outside, we gracefully move the touch point to the edge of the element
+    if (!(aElement instanceof HTMLHtmlElement)) {
+      let isTouchClick = true;
+      let rects = ElementTouchHelper.getContentClientRects(aElement);
+      for (let i = 0; i < rects.length; i++) {
+        let rect = rects[i];
+        let inBounds =
+          (aX > rect.left && aX < (rect.left + rect.width)) &&
+          (aY > rect.top && aY < (rect.top + rect.height));
+        if (inBounds) {
+          isTouchClick = false;
+          break;
+        }
+      }
+
+      if (isTouchClick) {
+        let rect = rects[0];
+        if (rect.width != 0 || rect.height != 0) {
+          aX = Math.min(Math.floor(rect.left + rect.width), Math.max(Math.ceil(rect.left), aX));
+          aY = Math.min(Math.floor(rect.top + rect.height), Math.max(Math.ceil(rect.top),  aY));
+        }
+      }
+    }
+    return [aX, aY];
+  },
+
   _sendMouseEvent: function _sendMouseEvent(aName, aElement, aX, aY) {
     let window = aElement.ownerDocument.defaultView;
     try {
@@ -4028,6 +4047,184 @@ const ElementTouchHelper = {
     }
 
     return elem;
+  },
+
+  /* Return the most appropriate clickable element (if any), starting from the given window
+     and drilling down through iframes as necessary. If no window is provided, the top-level
+     window of the currently selected tab is used. The coordinates provided should be CSS
+     pixels relative to the window's scroll position. The element returned may not actually
+     contain the coordinates passed in because of touch radius and clickability heuristics. */
+  elementFromPoint: function(aX, aY, aWindow) {
+    // browser's elementFromPoint expect browser-relative client coordinates.
+    // subtract browser's scroll values to adjust
+    let win = (aWindow ? aWindow : BrowserApp.selectedBrowser.contentWindow);
+    let cwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let elem = this.getClosest(cwu, aX, aY);
+
+    // step through layers of IFRAMEs and FRAMES to find innermost element
+    while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
+      // adjust client coordinates' origin to be top left of iframe viewport
+      let rect = elem.getBoundingClientRect();
+      aX -= rect.left;
+      aY -= rect.top;
+      cwu = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      elem = this.getClosest(cwu, aX, aY);
+    }
+
+    return elem;
+  },
+
+  /* Returns the touch radius in content px. */
+  getTouchRadius: function getTouchRadius() {
+    let dpiRatio = ViewportHandler.displayDPI / kReferenceDpi;
+    let zoom = BrowserApp.selectedTab._zoom;
+    return {
+      top: this.radius.top * dpiRatio / zoom,
+      right: this.radius.right * dpiRatio / zoom,
+      bottom: this.radius.bottom * dpiRatio / zoom,
+      left: this.radius.left * dpiRatio / zoom
+    };
+  },
+
+  /* Returns the touch radius in reference pixels. */
+  get radius() {
+    let prefs = Services.prefs;
+    delete this.radius;
+    return this.radius = { "top": prefs.getIntPref("browser.ui.touch.top"),
+                           "right": prefs.getIntPref("browser.ui.touch.right"),
+                           "bottom": prefs.getIntPref("browser.ui.touch.bottom"),
+                           "left": prefs.getIntPref("browser.ui.touch.left")
+                         };
+  },
+
+  get weight() {
+    delete this.weight;
+    return this.weight = { "visited": Services.prefs.getIntPref("browser.ui.touch.weight.visited") };
+  },
+
+  /* Retrieve the closest element to a point by looking at borders position */
+  getClosest: function getClosest(aWindowUtils, aX, aY) {
+    let target = aWindowUtils.elementFromPoint(aX, aY,
+                                               true,   /* ignore root scroll frame*/
+                                               false); /* don't flush layout */
+
+    // if this element is clickable we return quickly. also, if it isn't,
+    // use a cache to speed up future calls to isElementClickable in the
+    // loop below.
+    let unclickableCache = new Array();
+    if (this.isElementClickable(target, unclickableCache, false))
+      return target;
+
+    target = null;
+    let radius = this.getTouchRadius();
+    let nodes = aWindowUtils.nodesFromRect(aX, aY, radius.top, radius.right, radius.bottom, radius.left, true, false);
+
+    let threshold = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < nodes.length; i++) {
+      let current = nodes[i];
+      if (!current.mozMatchesSelector || !this.isElementClickable(current, unclickableCache, true))
+        continue;
+
+      let rect = current.getBoundingClientRect();
+      let distance = this._computeDistanceFromRect(aX, aY, rect);
+
+      // increase a little bit the weight for already visited items
+      if (current && current.mozMatchesSelector("*:visited"))
+        distance *= (this.weight.visited / 100);
+
+      if (distance < threshold) {
+        target = current;
+        threshold = distance;
+      }
+    }
+
+    return target;
+  },
+
+  isElementClickable: function isElementClickable(aElement, aUnclickableCache, aAllowBodyListeners) {
+    const selector = "a,:link,:visited,[role=button],button,input,select,textarea";
+
+    let stopNode = null;
+    if (!aAllowBodyListeners && aElement && aElement.ownerDocument)
+      stopNode = aElement.ownerDocument.body;
+
+    for (let elem = aElement; elem && elem != stopNode; elem = elem.parentNode) {
+      if (aUnclickableCache && aUnclickableCache.indexOf(elem) != -1)
+        continue;
+      if (this._hasMouseListener(elem))
+        return true;
+      if (elem.mozMatchesSelector && elem.mozMatchesSelector(selector))
+        return true;
+      if (elem instanceof HTMLLabelElement && elem.control != null)
+        return true;
+      if (aUnclickableCache)
+        aUnclickableCache.push(elem);
+    }
+    return false;
+  },
+
+  _computeDistanceFromRect: function _computeDistanceFromRect(aX, aY, aRect) {
+    let x = 0, y = 0;
+    let xmost = aRect.left + aRect.width;
+    let ymost = aRect.top + aRect.height;
+
+    // compute horizontal distance from left/right border depending if X is
+    // before/inside/after the element's rectangle
+    if (aRect.left < aX && aX < xmost)
+      x = Math.min(xmost - aX, aX - aRect.left);
+    else if (aX < aRect.left)
+      x = aRect.left - aX;
+    else if (aX > xmost)
+      x = aX - xmost;
+
+    // compute vertical distance from top/bottom border depending if Y is
+    // above/inside/below the element's rectangle
+    if (aRect.top < aY && aY < ymost)
+      y = Math.min(ymost - aY, aY - aRect.top);
+    else if (aY < aRect.top)
+      y = aRect.top - aY;
+    if (aY > ymost)
+      y = aY - ymost;
+
+    return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+  },
+
+  _els: Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService),
+  _clickableEvents: ["mousedown", "mouseup", "click"],
+  _hasMouseListener: function _hasMouseListener(aElement) {
+    let els = this._els;
+    let listeners = els.getListenerInfoFor(aElement, {});
+    for (let i = 0; i < listeners.length; i++) {
+      if (this._clickableEvents.indexOf(listeners[i].type) != -1)
+        return true;
+    }
+    return false;
+  },
+
+  getContentClientRects: function(aElement) {
+    let offset = { x: 0, y: 0 };
+
+    let nativeRects = aElement.getClientRects();
+    // step out of iframes and frames, offsetting scroll values
+    for (let frame = aElement.ownerDocument.defaultView; frame.frameElement; frame = frame.parent) {
+      // adjust client coordinates' origin to be top left of iframe viewport
+      let rect = frame.frameElement.getBoundingClientRect();
+      let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
+      let top = frame.getComputedStyle(frame.frameElement, "").borderTopWidth;
+      offset.x += rect.left + parseInt(left);
+      offset.y += rect.top + parseInt(top);
+    }
+
+    let result = [];
+    for (let i = nativeRects.length - 1; i >= 0; i--) {
+      let r = nativeRects[i];
+      result.push({ left: r.left + offset.x,
+                    top: r.top + offset.y,
+                    width: r.width,
+                    height: r.height
+                  });
+    }
+    return result;
   },
 
   getBoundingContentRect: function(aElement) {
