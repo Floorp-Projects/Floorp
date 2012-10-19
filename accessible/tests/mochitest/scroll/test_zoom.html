@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test scrollToPoint when page is zoomed</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../layout.js"></script>
+
+  <script type="application/javascript">
+    function testScrollToPoint()
+    {
+      // scrollToPoint relative screen
+      var anchor = getAccessible("bottom1");
+      var [x, y] = getPos(anchor);
+      var [docX, docY] = getPos(document);
+
+      anchor.scrollToPoint(COORDTYPE_SCREEN_RELATIVE, docX, docY);
+      testPos(anchor, [x, docY]);
+
+      // scrollToPoint relative window
+      anchor = getAccessible("bottom2");
+      var [x, y] = getPos(anchor);
+      var wnd = getRootAccessible().DOMDocument.defaultView;
+      var scrollToX = docX - wnd.screenX, scrollToY = docY - wnd.screenY;
+
+      anchor.scrollToPoint(COORDTYPE_WINDOW_RELATIVE, scrollToX, scrollToY);
+      testPos(anchor, [x, docY]);
+
+      // scrollToPoint relative parent
+      anchor = getAccessible("bottom3");
+      var [x, y] = getPos(anchor);
+      var [parentX, parentY] = getPos(anchor.parent);
+      var scrollToX = parentX - docX, scrollToY = parentY - docY;
+
+      anchor.scrollToPoint(COORDTYPE_PARENT_RELATIVE, scrollToX, scrollToY);
+      testPos(anchor, [x, docY]);
+    }
+
+    function doTest()
+    {
+      testScrollToPoint();
+      zoomDocument(document, 2.0);
+      testScrollToPoint(); // zoom and test again
+
+      zoomDocument(document, 1.0);
+      SimpleTest.finish();
+    }
+
+    addA11yLoadEvent(doTest);
+    SimpleTest.waitForExplicitFinish();
+  </script>
+
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=727942"
+     title="scrollToPoint is broken when page is zoomed">
+    Mozilla Bug 727942
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <h1>Below there is a bunch of named anchors</h1>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  This is in the middle anchor #1<a id="bottom1"></a>
+  <br><br><br><br><br><br><br><br><br><br>
+  This is in the middle anchor #2<a id="bottom2"></a>
+  <br><br><br><br><br><br><br><br><br><br>
+  This is in the middle anchor #3<a id="bottom3"></a>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+</body>
+</html>
