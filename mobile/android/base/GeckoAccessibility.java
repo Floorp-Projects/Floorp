@@ -193,7 +193,9 @@ public class GeckoAccessibility {
             super.onPopulateAccessibilityEvent(host, event);
             if (mEventMessage != null)
                 populateEventFromJSON(event, mEventMessage);
-            mEventMessage = null;
+            // We save the hover enter event so that we could reuse it for a subsequent accessibility focus event.
+            if (event.getEventType() != AccessibilityEvent.TYPE_VIEW_HOVER_ENTER)
+                mEventMessage = null;
             // No matter where the a11y focus is requested, we always force it back to the current vc position.
             event.setSource(host, VIRTUAL_CURSOR_POSITION);
         }
@@ -248,10 +250,6 @@ public class GeckoAccessibility {
                                 case VIRTUAL_CURSOR_PREVIOUS:
                                     GeckoAppShell.
                                         sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:PreviousObject", null));
-                                    return true;
-                                case VIRTUAL_CURSOR_POSITION:
-                                    GeckoAppShell.
-                                        sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:CurrentObject", null));
                                     return true;
                                 case VIRTUAL_CURSOR_NEXT:
                                     GeckoAppShell.
