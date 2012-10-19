@@ -20,10 +20,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
       : LIRGeneratorShared(gen, graph, lirGraph)
     {}
 
-    LTableSwitch *newLTableSwitch(const LAllocation &in, const LDefinition &inputCopy,
-                                  MTableSwitch *ins);
-    LTableSwitchV *newLTableSwitchV(MTableSwitch *ins);
-
+    bool visitTableSwitch(MTableSwitch *tableswitch);
     bool visitRecompileCheck(MRecompileCheck *ins);
     bool visitInterruptCheck(MInterruptCheck *ins);
     bool visitGuardShape(MGuardShape *ins);

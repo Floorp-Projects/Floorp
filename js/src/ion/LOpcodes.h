@@ -20,7 +20,6 @@
     _(Parameter)                    \
     _(Callee)                       \
     _(TableSwitch)                  \
-    _(TableSwitchV)                 \
     _(Goto)                         \
     _(NewArray)                     \
     _(NewObject)                    \
