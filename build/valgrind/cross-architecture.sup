@@ -203,12 +203,6 @@
    ...
 }
 {
-   Bug 799157
-   Memcheck:Cond
-   fun:_ZN2js3ion5Range6updateEPKS1_
-   ...
-}
-{
    Bug 803386
    Memcheck:Free
    fun:_ZdlPv
