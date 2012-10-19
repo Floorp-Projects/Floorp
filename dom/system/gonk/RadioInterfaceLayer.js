@@ -2257,6 +2257,9 @@ RadioInterfaceLayer.prototype = {
   },
 
   getDataCallStateByType: function getDataCallStateByType(apntype) {
+    if (apntype != "default" && this.usingDefaultAPN(apntype)) {
+      return this.dataNetworkInterface.state;
+    }
     switch (apntype) {
       case "default":
         return this.dataNetworkInterface.state;
