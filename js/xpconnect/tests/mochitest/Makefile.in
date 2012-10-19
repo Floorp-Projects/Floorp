@@ -11,16 +11,21 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOCHITEST_FILES =	bug500931_helper.html \
-		inner.html \
-		bug92773_helper.html \
-		bug504877_helper.html \
-		bug571849_helper.html \
-		chrome_wrappers_helper.html \
+MOCHITEST_FILES =	chrome_wrappers_helper.html \
+		file_documentdomain.html \
 		file_doublewrappedcompartments.html \
+		file_empty.html \
 		file_evalInSandbox.html \
+		file_exnstack.html \
+		file_expandosharing.html \
+		file_mozMatchesSelector.html \
+		file_nodelists.html \
 		file_wrappers-2.html \
+		inner.html \
+		test_frameWrapping.html \
+		test_lookupMethod.html \
 		test_bug92773.html \
+		bug92773_helper.html \
 		test_bug384632.html \
 		test_bug390488.html \
 		test_bug393269.html \
@@ -30,21 +35,23 @@ MOCHITEST_FILES =	bug500931_helper.html \
 		test_bug462428.html \
 		test_bug478438.html \
 		test_bug500691.html \
+		bug500931_helper.html \
 		test_bug502959.html \
 		test_bug503926.html \
 		test_bug504877.html \
+		bug504877_helper.html \
 		test_bug505915.html \
 		file_bug505915.html \
 		test_bug553407.html \
 		test_bug560351.html \
-		test_frameWrapping.html \
+		bug571849_helper.html \
 		test_bug585745.html \
 		test_bug589028.html \
-		test_bug628410.html \
 		bug589028_helper.html \
+		test_bug601299.html \
 		test_bug605167.html \
 		test_bug623437.html \
-		test_bug601299.html \
+		test_bug628410.html \
 		test_bug628794.html \
 		test_bug629227.html \
 		file1_bug629227.html \
@@ -56,31 +63,24 @@ MOCHITEST_FILES =	bug500931_helper.html \
 		test_bug661980.html \
 		test_bug650273.html \
 		file_bug650273.html \
-		file_bug658560.html \
 		test_bug655297.html \
+		file_bug658560.html \
 		test_bug691059.html \
 		file_bug706301.html \
+		file_bug720619.html \
+		test_bug720619.html \
+		file_bug738244.html \
 		test_bug745483.html \
 		file_bug760131.html \
 		test_bug764389.html \
 		test_bug772288.html \
 		test_bug781476.html \
 		file_bug781476.html \
+		test_bug785096.html \
 		test_bug789713.html \
 		file_bug795275.html \
 		file_bug795275.xml \
 		file_bug799348.html \
-		file_nodelists.html \
-		file_exnstack.html \
-		file_expandosharing.html \
-		file_empty.html \
-		file_documentdomain.html \
-		test_lookupMethod.html \
-		file_bug738244.html \
-		file_mozMatchesSelector.html \
-		file_bug720619.html \
-		test_bug720619.html \
-		test_bug785096.html \
 		$(NULL)
 
 ifneq ($(OS_TARGET),Android)
