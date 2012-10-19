@@ -425,12 +425,14 @@ sftk_InitGeneric(SFTKSession *session,SFTKSessionContext **contextPtr,
     }
     context->type = ctype;
     context->multi = PR_TRUE;
+    context->rsa = PR_FALSE;
     context->cipherInfo = NULL;
     context->hashInfo = NULL;
     context->doPad = PR_FALSE;
     context->padDataLength = 0;
     context->key = key;
     context->blockSize = 0;
+    context->maxLen = 0;
 
     *contextPtr = context;
     return CKR_OK;
@@ -507,6 +509,7 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	    break;
 	}
 	context->multi = PR_FALSE;
+	context->rsa = PR_TRUE;
 	if (isEncrypt) {
 	    NSSLOWKEYPublicKey *pubKey = sftk_GetPubKey(key,CKK_RSA,&crv);
 	    if (pubKey == NULL) {
@@ -772,6 +775,9 @@ finish_des:
     case CKM_AES_CTS:
     case CKM_AES_CTR:
     case CKM_AES_GCM:
+	if (pMechanism->mechanism == CKM_AES_GCM) {
+	    context->multi = PR_FALSE;
+	}
 	if (key_type != CKK_AES) {
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
@@ -1002,8 +1008,8 @@ CK_RV NSC_Encrypt (CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData,
     if (crv != CKR_OK) return crv;
 
     if (!pEncryptedData) {
-	*pulEncryptedDataLen = context->multi ? 
-		ulDataLen + 2 * context->blockSize : context->maxLen;
+	*pulEncryptedDataLen = context->rsa ? context->maxLen :
+		ulDataLen + 2 * context->blockSize;
 	goto finish;
     }
 
@@ -2015,6 +2021,7 @@ finish_rsa:
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
 	}
+	context->rsa = PR_TRUE;
 	privKey = sftk_GetPrivKey(key,CKK_RSA,&crv);
 	if (privKey == NULL) {
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
@@ -2039,6 +2046,7 @@ finish_rsa:
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
 	} 
+	context->rsa = PR_TRUE;
 	if (pMechanism->ulParameterLen != sizeof(CK_RSA_PKCS_PSS_PARAMS)) {
 	    crv = CKR_MECHANISM_PARAM_INVALID;
 	    break;
@@ -2532,6 +2540,7 @@ finish_rsa:
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
 	}
+	context->rsa = PR_TRUE;
 	pubKey = sftk_GetPubKey(key,CKK_RSA,&crv);
 	if (pubKey == NULL) {
 	    if (info) PORT_Free(info);
@@ -2552,6 +2561,7 @@ finish_rsa:
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
 	} 
+	context->rsa = PR_TRUE;
 	if (pMechanism->ulParameterLen != sizeof(CK_RSA_PKCS_PSS_PARAMS)) {
 	    crv = CKR_MECHANISM_PARAM_INVALID;
 	    break;
@@ -2781,6 +2791,7 @@ CK_RV NSC_VerifyRecoverInit(CK_SESSION_HANDLE hSession,
 	    break;
 	}
 	context->multi = PR_FALSE;
+	context->rsa = PR_TRUE;
 	pubKey = sftk_GetPubKey(key,CKK_RSA,&crv);
 	if (pubKey == NULL) {
 	    break;

@@ -812,6 +812,7 @@ MediaManager::GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
     if (!mMediaThread) {
       nsresult rv = NS_NewThread(getter_AddRefs(mMediaThread));
       NS_ENSURE_SUCCESS(rv, rv);
+      LOG(("New Media thread for gum"));
     }
     mMediaThread->Dispatch(gUMRunnable, NS_DISPATCH_NORMAL);
   } else {
@@ -952,8 +953,11 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
 
     // Reuse the same thread to save memory.
     if (!mMediaThread) {
+      LOG(("New Media thread for gum on allow"));
       nsresult rv = NS_NewThread(getter_AddRefs(mMediaThread));
       NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      LOG(("Reused Media thread for gum on allow"));
     }
 
     if (aSubject) {

@@ -19,7 +19,7 @@ class MIRGenerator;
 class MIRGraph;
 
 bool
-SplitCriticalEdges(MIRGenerator *gen, MIRGraph &graph);
+SplitCriticalEdges(MIRGraph &graph);
 
 bool
 EliminatePhis(MIRGraph &graph);
