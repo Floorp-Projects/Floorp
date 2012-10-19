@@ -357,11 +357,8 @@ TypeInferenceOracle::elementReadIsString(JSScript *script, jsbytecode *pc)
     if (id->getKnownTypeTag() != JSVAL_TYPE_INT32)
         return false;
 
-    // This function is used for jsop_getelem_string which should return
-    // undefined if this is out-side the string bounds. Currently we just
-    // fallback to a CallGetElement.
-    StackTypeSet *pushed = script->analysis()->pushedTypes(pc, 0);
-    if (pushed->getKnownTypeTag() != JSVAL_TYPE_STRING)
+    types::TypeSet *pushed = script->analysis()->pushedTypes(pc, 0);
+    if (!pushed->hasType(types::Type::StringType()))
         return false;
 
     return true;
