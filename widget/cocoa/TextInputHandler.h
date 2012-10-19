@@ -1097,6 +1097,46 @@ public:
   }
 
 protected:
+  // Stores the association of device dependent modifier flags with a modifier
+  // keyCode.  Being device dependent, this association may differ from one kind
+  // of hardware to the next.
+  struct ModifierKey
+  {
+    NSUInteger flags;
+    unsigned short keyCode;
+
+    ModifierKey(NSUInteger aFlags, unsigned short aKeyCode) :
+      flags(aFlags), keyCode(aKeyCode)
+    {
+    }
+
+    NSUInteger GetDeviceDependentFlags() const
+    {
+      return (flags & ~NSDeviceIndependentModifierFlagsMask);
+    }
+
+    NSUInteger GetDeviceIndependentFlags() const
+    {
+      return (flags & NSDeviceIndependentModifierFlagsMask);
+    }
+  };
+  typedef nsTArray<ModifierKey> ModifierKeyArray;
+  ModifierKeyArray mModifierKeys;
+
+  /**
+   * GetModifierKeyForNativeKeyCode() returns the stored ModifierKey for
+   * the key.
+   */
+  ModifierKey*
+    GetModifierKeyForNativeKeyCode(unsigned short aKeyCode) const;
+
+  /**
+   * GetModifierKeyForDeviceDependentFlags() returns the stored ModifierKey for
+   * the device dependent flags.
+   */
+  ModifierKey*
+    GetModifierKeyForDeviceDependentFlags(NSUInteger aFlags) const;
+
   /**
    * DispatchKeyEventForFlagsChanged() dispatches keydown event or keyup event
    * for the aNativeEvent.

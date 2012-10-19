@@ -2712,8 +2712,8 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, HPS aHPS)
 
   NPEvent pluginEvent;
   pluginEvent.event = WM_PAINT;
-  pluginEvent.wParam = (uint32)aHPS;
-  pluginEvent.lParam = (uint32)&rectl;
+  pluginEvent.wParam = (uint32_t)aHPS;
+  pluginEvent.lParam = (uint32_t)&rectl;
   mInstance->HandleEvent(&pluginEvent, nullptr);
 }
 #endif

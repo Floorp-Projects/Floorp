@@ -1163,7 +1163,7 @@ int32_t nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
                                                          &b_type), 0);
       }
       // We better make the API not support this state, really
-      // XXXmano: this is actually wrong for double<->int and int64<->int32
+      // XXXmano: this is actually wrong for double<->int and int64_t<->int32_t
       if (a_hasAnno && b_type != annoType)
         return 0;
       annoType = b_type;

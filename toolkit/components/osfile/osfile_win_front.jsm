@@ -842,14 +842,9 @@
      File.writeAtomic = exports.OS.Shared.AbstractFile.writeAtomic;
 
      /**
-      * Get/set the current directory.
+      * Get the current directory by getCurrentDirectory.
       */
-     Object.defineProperty(File, "curDir", {
-         set: function(path) {
-           throw_on_zero("set curDir",
-             WinFile.SetCurrentDirectory(path));
-         },
-         get: function() {
+     File.getCurrentDirectory = function getCurrentDirectory() {
            // This function is more complicated than one could hope.
            //
            // This is due to two facts:
@@ -862,11 +857,10 @@
            //  the function with a larger buffer, in the (unlikely byt possible)
            //  case in which the process changes directory to a directory with
            //  a longer name between both calls.
-
            let buffer_size = 4096;
            while (true) {
              let array = new (ctypes.ArrayType(ctypes.jschar, buffer_size))();
-             let expected_size = throw_on_zero("get curDir",
+         let expected_size = throw_on_zero("getCurrentDirectory",
                WinFile.GetCurrentDirectory(buffer_size, array)
              );
              if (expected_size <= buffer_size) {
@@ -880,6 +874,25 @@
              // converge, as the length of the paths cannot increase infinitely.
              buffer_size = expected_size;
            }
+     };
+
+     /**
+      * Set the current directory by setCurrentDirectory.
+      */
+     File.setCurrentDirectory = function setCurrentDirectory(path) {
+       throw_on_zero("setCurrentDirectory",
+         WinFile.SetCurrentDirectory(path));
+     };
+
+     /**
+      * Get/set the current directory by |curDir|.
+      */
+     Object.defineProperty(File, "curDir", {
+         set: function(path) {
+           this.setCurrentDirectory(path);
+         },
+         get: function() {
+           return this.getCurrentDirectory();
          }
        }
      );

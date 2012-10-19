@@ -130,7 +130,7 @@ private:
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 
-    int32 slot = JSID_TO_INT(aIdval);
+    int32_t slot = JSID_TO_INT(aIdval);
 
     JSClass* classPtr = JS_GetClass(aObj);
 

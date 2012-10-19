@@ -1078,7 +1078,8 @@
               observes="socialSidebarBroadcaster"/>
     <vbox id="social-sidebar-box"
           class="chromeclass-extrachrome"
-          observes="socialSidebarBroadcaster">
+          observes="socialSidebarBroadcaster"
+          persist="width">
       <browser id="social-sidebar-browser"
                type="content"
                disableglobalhistory="true"

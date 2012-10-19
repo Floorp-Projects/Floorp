@@ -41,7 +41,7 @@ invoke_copy_to_stack(uint64_t* gpregs,
 {
     uint64_t tempu64;
 
-    for(uint32 i = 0; i < paramCount; i++, s++) {
+    for(uint32_t i = 0; i < paramCount; i++, s++) {
         if(s->IsPtrData())
             tempu64 = (uint64_t) s->ptr;
         else {

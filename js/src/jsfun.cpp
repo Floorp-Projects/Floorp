@@ -545,11 +545,6 @@ fun_trace(JSTracer *trc, RawObject obj)
     obj->toFunction()->trace(trc);
 }
 
-/*
- * Reserve two slots in all function objects for XPConnect.  Note that this
- * does not bloat every instance, only those on which reserved slots are set,
- * and those on which ad-hoc properties are defined.
- */
 JS_FRIEND_DATA(Class) js::FunctionClass = {
     js_Function_str,
     JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |

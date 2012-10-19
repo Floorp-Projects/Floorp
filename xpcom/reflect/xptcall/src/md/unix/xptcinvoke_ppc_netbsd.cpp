@@ -40,7 +40,7 @@ invoke_copy_to_stack(uint32_t* d,
     uint32_t tempu32;
     uint64_t tempu64;
     
-    for(uint32 i = 0; i < paramCount; i++, s++) {
+    for(uint32_t i = 0; i < paramCount; i++, s++) {
         if(s->IsPtrData())
             tempu32 = (uint32_t) s->ptr;
         else {
