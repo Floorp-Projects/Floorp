@@ -435,12 +435,12 @@ static void qcms_transform_data_clut(qcms_transform *transform, unsigned char *s
 		unsigned char in_b = *src++;
 		float linear_r = in_r/255.0f, linear_g=in_g/255.0f, linear_b = in_b/255.0f;
 
-		int x = floor(linear_r * (transform->grid_size-1));
-		int y = floor(linear_g * (transform->grid_size-1));
-		int z = floor(linear_b * (transform->grid_size-1));
-		int x_n = ceil(linear_r * (transform->grid_size-1));
-		int y_n = ceil(linear_g * (transform->grid_size-1));
-		int z_n = ceil(linear_b * (transform->grid_size-1));
+		int x = floorf(linear_r * (transform->grid_size-1));
+		int y = floorf(linear_g * (transform->grid_size-1));
+		int z = floorf(linear_b * (transform->grid_size-1));
+		int x_n = ceilf(linear_r * (transform->grid_size-1));
+		int y_n = ceilf(linear_g * (transform->grid_size-1));
+		int z_n = ceilf(linear_b * (transform->grid_size-1));
 		float x_d = linear_r * (transform->grid_size-1) - x; 
 		float y_d = linear_g * (transform->grid_size-1) - y;
 		float z_d = linear_b * (transform->grid_size-1) - z; 
@@ -496,12 +496,12 @@ static void qcms_transform_data_tetra_clut_rgba(qcms_transform *transform, unsig
 		unsigned char in_a = *src++;
 		float linear_r = in_r/255.0f, linear_g=in_g/255.0f, linear_b = in_b/255.0f;
 
-		int x = floor(linear_r * (transform->grid_size-1));
-		int y = floor(linear_g * (transform->grid_size-1));
-		int z = floor(linear_b * (transform->grid_size-1));
-		int x_n = ceil(linear_r * (transform->grid_size-1));
-		int y_n = ceil(linear_g * (transform->grid_size-1));
-		int z_n = ceil(linear_b * (transform->grid_size-1));
+		int x = floorf(linear_r * (transform->grid_size-1));
+		int y = floorf(linear_g * (transform->grid_size-1));
+		int z = floorf(linear_b * (transform->grid_size-1));
+		int x_n = ceilf(linear_r * (transform->grid_size-1));
+		int y_n = ceilf(linear_g * (transform->grid_size-1));
+		int z_n = ceilf(linear_b * (transform->grid_size-1));
 		float rx = linear_r * (transform->grid_size-1) - x; 
 		float ry = linear_g * (transform->grid_size-1) - y;
 		float rz = linear_b * (transform->grid_size-1) - z; 
@@ -611,12 +611,12 @@ static void qcms_transform_data_tetra_clut(qcms_transform *transform, unsigned c
 		unsigned char in_b = *src++;
 		float linear_r = in_r/255.0f, linear_g=in_g/255.0f, linear_b = in_b/255.0f;
 
-		int x = floor(linear_r * (transform->grid_size-1));
-		int y = floor(linear_g * (transform->grid_size-1));
-		int z = floor(linear_b * (transform->grid_size-1));
-		int x_n = ceil(linear_r * (transform->grid_size-1));
-		int y_n = ceil(linear_g * (transform->grid_size-1));
-		int z_n = ceil(linear_b * (transform->grid_size-1));
+		int x = floorf(linear_r * (transform->grid_size-1));
+		int y = floorf(linear_g * (transform->grid_size-1));
+		int z = floorf(linear_b * (transform->grid_size-1));
+		int x_n = ceilf(linear_r * (transform->grid_size-1));
+		int y_n = ceilf(linear_g * (transform->grid_size-1));
+		int z_n = ceilf(linear_b * (transform->grid_size-1));
 		float rx = linear_r * (transform->grid_size-1) - x; 
 		float ry = linear_g * (transform->grid_size-1) - y;
 		float rz = linear_b * (transform->grid_size-1) - z; 
