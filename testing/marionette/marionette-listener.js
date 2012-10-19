@@ -738,10 +738,10 @@ function switchToFrame(msg) {
   if (msg.json.element != undefined) {
     if (elementManager.seenItems[msg.json.element] != undefined) {
       let wantedFrame = elementManager.getKnownElement(msg.json.element, curWindow); //HTMLIFrameElement
-      let numFrames = curWindow.frames.length;
-      for (let i = 0; i < numFrames; i++) {
-        if (curWindow.frames[i].frameElement == wantedFrame) {
-          curWindow = curWindow.frames[i]; 
+      let frames = curWindow.document.getElementsByTagName("iframe");
+      for (let i = 0; i < frames.length; i++) {
+        if (frames[i] == wantedFrame) {
+          curWindow = frames[i]; 
           curWindow.focus();
           sendOk();
           return;
