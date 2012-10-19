@@ -83,11 +83,6 @@ MOCHITEST_FILES =	bug500931_helper.html \
 		test_bug785096.html \
 		$(NULL)
 
-MOCHITEST_CHROME_FILES	= \
-		test_bug361111.xul \
-		test_bug760131.html \
-		$(NULL)
-
 ifneq ($(OS_TARGET),Android)
 ifndef MOZ_PLATFORM_MAEMO
 MOCHITEST_FILES +=	test_bug564330.html \
