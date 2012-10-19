@@ -244,6 +244,17 @@ var EventManager = {
     }
   },
 
+  presentVirtualCursorPosition: function presentVirtualCursorPosition(aVirtualCursor) {
+    let presenterContext =
+      new PresenterContext(aVirtualCursor.position, null);
+
+    this.present(
+      function(p) {
+        return p.pivotChanged(presenterContext, Ci.nsIAccessiblePivot.REASON_NONE);
+      }
+    );
+  },
+
   onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     let tabstate = '';
 
