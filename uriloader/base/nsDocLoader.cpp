@@ -62,64 +62,21 @@ void GetURIStringFromRequest(nsIRequest* request, nsACString &name)
 }
 #endif /* DEBUG */
 
-struct nsStatusInfo : public PRCList
-{
-  nsString mStatusMessage;
-  nsresult mStatusCode;
-  // Weak mRequest is ok; we'll be told if it decides to go away.
-  nsIRequest * const mRequest;
-
-  nsStatusInfo(nsIRequest *aRequest) :
-    mRequest(aRequest)
-  {
-    MOZ_COUNT_CTOR(nsStatusInfo);
-    PR_INIT_CLIST(this);
-  }
-  ~nsStatusInfo()
-  {
-    MOZ_COUNT_DTOR(nsStatusInfo);
-    PR_REMOVE_LINK(this);
-  }
-};
-
-struct nsRequestInfo : public PLDHashEntryHdr
-{
-  nsRequestInfo(const void *key)
-    : mKey(key), mCurrentProgress(0), mMaxProgress(0), mUploading(false)
-    , mLastStatus(nullptr)
-  {
-    MOZ_COUNT_CTOR(nsRequestInfo);
-  }
-
-  ~nsRequestInfo()
-  {
-    MOZ_COUNT_DTOR(nsRequestInfo);
-  }
-
-  nsIRequest* Request() {
-    return static_cast<nsIRequest*>(const_cast<void*>(mKey));
-  }
-
-  const void* mKey; // Must be first for the pldhash stubs to work
-  int64_t mCurrentProgress;
-  int64_t mMaxProgress;
-  bool mUploading;
-
-  nsAutoPtr<nsStatusInfo> mLastStatus;
-};
 
 
-static bool
-RequestInfoHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
-                         const void *key)
+bool
+nsDocLoader::RequestInfoHashInitEntry(PLDHashTable* table,
+                                      PLDHashEntryHdr* entry,
+                                      const void* key)
 {
   // Initialize the entry with placement new
   new (entry) nsRequestInfo(key);
   return true;
 }
 
-static void
-RequestInfoHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+void
+nsDocLoader::RequestInfoHashClearEntry(PLDHashTable* table,
+                                       PLDHashEntryHdr* entry)
 {
   nsRequestInfo* info = static_cast<nsRequestInfo *>(entry);
   info->~nsRequestInfo();
@@ -177,8 +134,6 @@ nsDocLoader::nsDocLoader()
   }
 
   ClearInternalProgress();
-
-  PR_INIT_CLIST(&mStatusInfoList);
 
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: created.\n", this));
@@ -892,9 +847,8 @@ void nsDocLoader::doStopURLLoad(nsIRequest *request, nsresult aStatus)
 
   // Fire a status change message for the most recent unfinished
   // request to make sure that the displayed status is not outdated.
-  if (!PR_CLIST_IS_EMPTY(&mStatusInfoList)) {
-    nsStatusInfo* statusInfo =
-      static_cast<nsStatusInfo*>(PR_LIST_HEAD(&mStatusInfoList));
+  if (!mStatusInfoList.isEmpty()) {
+    nsStatusInfo* statusInfo = mStatusInfoList.getFirst();
     FireOnStatusChange(this, statusInfo->mRequest,
                        statusInfo->mStatusCode,
                        statusInfo->mStatusMessage.get());
@@ -1179,12 +1133,12 @@ NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
       } else {
         // We're going to move it to the front of the list, so remove
         // it from wherever it is now.
-        PR_REMOVE_LINK(info->mLastStatus);
+        info->mLastStatus->remove();
       }
       info->mLastStatus->mStatusMessage = msg;
       info->mLastStatus->mStatusCode = aStatus;
       // Put the info at the front of the list
-      PR_INSERT_LINK(info->mLastStatus, &mStatusInfoList);
+      mStatusInfoList.insertFront(info->mLastStatus);
     }
     FireOnStatusChange(this, aRequest, aStatus, msg);
   }
@@ -1535,10 +1489,10 @@ void nsDocLoader::RemoveRequestInfo(nsIRequest *aRequest)
   PL_DHashTableOperate(&mRequestInfoHash, aRequest, PL_DHASH_REMOVE);
 }
 
-nsRequestInfo * nsDocLoader::GetRequestInfo(nsIRequest *aRequest)
+nsDocLoader::nsRequestInfo* nsDocLoader::GetRequestInfo(nsIRequest* aRequest)
 {
-  nsRequestInfo *info =
-    static_cast<nsRequestInfo *>
+  nsRequestInfo* info =
+    static_cast<nsRequestInfo*>
                (PL_DHashTableOperate(&mRequestInfoHash, aRequest,
                                         PL_DHASH_LOOKUP));
 
@@ -1574,12 +1528,12 @@ void nsDocLoader::ClearRequestInfoHash(void)
 }
 
 // PLDHashTable enumeration callback that calculates the max progress.
-static PLDHashOperator
-CalcMaxProgressCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                        uint32_t number, void *arg)
+PLDHashOperator
+nsDocLoader::CalcMaxProgressCallback(PLDHashTable* table, PLDHashEntryHdr* hdr,
+                                     uint32_t number, void* arg)
 {
-  const nsRequestInfo *info = static_cast<const nsRequestInfo *>(hdr);
-  int64_t *max = static_cast<int64_t *>(arg);
+  const nsRequestInfo* info = static_cast<const nsRequestInfo*>(hdr);
+  int64_t* max = static_cast<int64_t* >(arg);
 
   if (info->mMaxProgress < info->mCurrentProgress) {
     *max = int64_t(-1);
