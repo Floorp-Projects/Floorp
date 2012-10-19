@@ -414,8 +414,10 @@ public:
     if (!r.IsEqualEdges(mVisibleArea)) {
       mVisibleArea = r;
       // Visible area does not affect media queries when paginated.
-      if (!IsPaginated() && HasCachedStyleData())
+      if (!IsPaginated() && HasCachedStyleData()) {
+        mPendingViewportChange = true;
         PostMediaFeatureValuesChangedEvent();
+      }
     }
   }
 
@@ -943,6 +945,14 @@ public:
     mIsGlyph = aValue;
   }
 
+  bool UsesViewportUnits() const {
+    return mUsesViewportUnits;
+  }
+
+  void SetUsesViewportUnits(bool aValue) {
+    mUsesViewportUnits = aValue;
+  }
+
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();
@@ -1194,6 +1204,12 @@ protected:
 
   // Are we currently drawing an SVG glyph?
   unsigned              mIsGlyph : 1;
+
+  // Does the associated document use viewport units?
+  unsigned              mUsesViewportUnits : 1;
+
+  // Has there been a change to the viewport's dimensions?
+  unsigned              mPendingViewportChange : 1;
 
   // Is the current mUserFontSet valid?
   unsigned              mUserFontSetDirty : 1;
