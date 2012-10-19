@@ -67,6 +67,7 @@ let DOMApplicationRegistry = {
                      "Webapps:Launch", "Webapps:GetAll",
                      "Webapps:InstallPackage", "Webapps:GetBasePath",
                      "Webapps:GetList", "Webapps:RegisterForMessages",
+                     "Webapps:UnregisterForMessages",
                      "Webapps:CancelDownload", "Webapps:CheckForUpdate",
                      "Webapps::Download", "Webapps::ApplyDownload",
                      "child-process-shutdown"];
@@ -482,21 +483,65 @@ let DOMApplicationRegistry = {
       if (!(aMsgName in this.children)) {
         this.children[aMsgName] = [];
       }
-      this.children[aMsgName].push(aMm);
+
+      let mmFound = this.children[aMsgName].some(function(mmRef) {
+        if (mmRef.mm === aMm) {
+          mmRef.refCount++;
+          return true;
+        }
+        return false;
+      });
+
+      if (!mmFound) {
+        this.children[aMsgName].push({
+          mm: aMm,
+          refCount: 1
+        });
+      }
     }, this);
   },
 
+  removeMessageListener: function(aMsgNames, aMm) {
+    if (aMsgNames.length === 1 &&
+        aMsgNames[0] === "Webapps:Internal:AllMessages") {
+      for (let i = this.children.length - 1; i >= 0; i -= 1) {
+        let msg = this.children[i];
 
-  removeMessageListener: function(aMm) {
-    for (let i = this.children.length - 1; i >= 0; i -= 1) {
-      msg = this.children[i];
+        for (let mmI = msg.length - 1; mmI >= 0; mmI -= 1) {
+          let mmRef = msg[mmI];
+          if (mmRef.mm === aMm) {
+            msg.splice(mmI, 1);
+          }
+        }
 
-      let index;
-      if ((index = msg.indexOf(aMm)) != -1) {
-         debug("Remove dead mm at index " + index);
-         msg.splice(index, 1);
+        if (msg.length === 0) {
+          this.children.splice(i, 1);
+        }
       }
-    };
+      return;
+    }
+
+    aMsgNames.forEach(function(aMsgName) {
+      if (!(aMsgName in this.children)) {
+        return;
+      }
+
+      let removeIndex;
+      this.children[aMsgName].some(function(mmRef, index) {
+        if (mmRef.mm === aMm) {
+          mmRef.refCount--;
+          if (mmRef.refCount === 0) {
+            removeIndex = index;
+          }
+          return true;
+        }
+        return false;
+      });
+
+      if (removeIndex) {
+        this.children[aMsgName].splice(removeIndex, 1);
+      }
+    }, this);
   },
 
   receiveMessage: function(aMessage) {
@@ -560,6 +605,12 @@ let DOMApplicationRegistry = {
       case "Webapps:RegisterForMessages":
         this.addMessageListener(msg, mm);
         break;
+      case "Webapps:UnregisterForMessages":
+        this.removeMessageListener(msg, mm);
+        break;
+      case "child-process-shutdown":
+        this.removeMessageListener(["Webapps:Internal:AllMessages"], mm);
+        break;
       case "Webapps:GetList":
         this.addMessageListener(["Webapps:AddApp", "Webapps:RemoveApp"], mm);
         return this.webapps;
@@ -578,9 +629,6 @@ let DOMApplicationRegistry = {
       case "Activities:Register:OK":
         this.notifyAppsRegistryReady();
         break;
-      case "child-process-shutdown":
-        this.removeMessageListener(mm);
-        break;
     }
   },
 
@@ -594,20 +642,9 @@ let DOMApplicationRegistry = {
     if (!(aMsgName in this.children)) {
       return;
     }
-    let i;
-    for (i = this.children[aMsgName].length - 1; i >= 0; i -= 1) {
-      let msgMgr = this.children[aMsgName][i];
-      try {
-        msgMgr.sendAsyncMessage(aMsgName, aContent);
-      } catch (e) {
-        // Remove once 777508 lands.
-        let index;
-        if ((index = this.children[aMsgName].indexOf(msgMgr)) != -1) {
-          this.children[aMsgName].splice(index, 1);
-          dump("Remove dead MessageManager!\n");
-        }
-      }
-    };
+    this.children[aMsgName].forEach(function(mmRef) {
+      mmRef.mm.sendAsyncMessage(aMsgName, aContent);
+    });
   },
 
   _getAppDir: function(aId) {
