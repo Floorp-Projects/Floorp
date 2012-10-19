@@ -114,10 +114,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-// ebc1bbe4-5456-4c62-ba1f-c2ef7387963e
+// f50f99bc-e178-4e67-89ea-f2aee5923f6d
 #define NS_IPRESSHELL_IID \
-{ 0xebc1bbe4, 0x5456, 0x4c62, \
-  { 0xba, 0x1f, 0xc2, 0xef, 0x73, 0x87, 0x96, 0x3e } }
+{ 0xf50f99bc, 0xe178, 0x4e67, \
+  { 0x89, 0xea, 0xf2, 0xae, 0xe5, 0x92, 0x3f, 0x6d } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1228,39 +1228,45 @@ public:
    */
   virtual void SynthesizeMouseMove(bool aFromScroll) = 0;
 
-  enum PaintType {
-    PaintType_Composite, /* Just composite the layers, don't do ThebesLayer painting. */
-    PaintType_NoComposite, /* Only paint ThebesLayers, don't composite. */
-    PaintType_Full /* Do a full transaction. */
+  enum PaintFlags {
+    /* Update the layer tree and paint ThebesLayers. If this is not specified,
+     * we may still have to do it if the layer tree lost ThebesLayer contents
+     * we need for compositing. */
+    PAINT_LAYERS = 0x01,
+    /* Composite layers to the window. */
+    PAINT_COMPOSITE = 0x02,
+    PAINT_WILL_SEND_DID_PAINT = 0x80
   };
   virtual void Paint(nsIView* aViewToPaint, const nsRegion& aDirtyRegion,
-                     PaintType aType, bool aWillSendDidPaint) = 0;
+                     uint32_t aFlags) = 0;
   virtual nsresult HandleEvent(nsIFrame*       aFrame,
                                nsGUIEvent*     aEvent,
                                bool            aDontRetargetEvents,
                                nsEventStatus*  aEventStatus) = 0;
   virtual bool ShouldIgnoreInvalidation() = 0;
   /**
-   * Notify that we're going to call Paint with PaintType_NoComposite
-   * or PaintType_Full on the root pres shell (which might not be this one, since
-   * WillPaint is called on all descendant presshells). This is issued at a time when
-   * it's safe to modify widget geometry.
+   * Notify that we're going to call Paint with PAINT_LAYERS
+   * on the pres shell for a widget (which might not be this one, since
+   * WillPaint is called on all presshells in the same toplevel window as the
+   * painted widget). This is issued at a time when it's safe to modify
+   * widget geometry.
    */
   virtual void WillPaint(bool aWillSendDidPaint) = 0;
   /**
-   * Notify that we called Paint with PaintType_NoComposite. Only fires on the
-   * root pres shell. This is issued at a time when it's safe to modify
-   * widget geometry.
+   * Notify that we called Paint with PAINT_LAYERS. Only fires on the
+   * pres shell for the painted widget. This is issued at a time when it's
+   * safe to modify widget geometry.
    */
   virtual void DidPaint() = 0;
   /**
-   * Notify that we're going to call Paint with PaintType_Composite
-   * or PaintType_Full.  This is issued at a time when it's safe to
-   * modify widget geometry.
+   * Notify that we're going to call Paint with PAINT_COMPOSITE.
+   * Fires on the presshell for the painted widget.
+   * This is issued at a time when it's safe to modify widget geometry.
    */
   virtual void WillPaintWindow(bool aWillSendDidPaint) = 0;
   /**
-   * Notify that we called Paint with PaintType_Composite or PaintType_Full.
+   * Notify that we called Paint with PAINT_COMPOSITE.
+   * Fires on the presshell for the painted widget.
    * This is issued at a time when it's safe to modify widget geometry.
    */
   virtual void DidPaintWindow() = 0;
