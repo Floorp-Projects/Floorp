@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 
 class nsIIDNService;
+class nsIMemoryReporter;
 
 #define ETLD_ENTRY_N_INDEX_BITS 30
 
@@ -109,11 +110,14 @@ public:
   nsEffectiveTLDService() { }
   nsresult Init();
 
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+
 private:
   nsresult GetBaseDomainInternal(nsCString &aHostname, uint32_t aAdditionalParts, nsACString &aBaseDomain);
   nsresult NormalizeHostname(nsCString &aHostname);
-  ~nsEffectiveTLDService() { }
+  ~nsEffectiveTLDService();
 
+  nsIMemoryReporter*          mReporter;
   nsTHashtable<nsDomainEntry> mHash;
   nsCOMPtr<nsIIDNService>     mIDNService;
 };
