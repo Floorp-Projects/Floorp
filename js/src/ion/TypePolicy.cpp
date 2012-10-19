@@ -223,28 +223,6 @@ BitwisePolicy::adjustInputs(MInstruction *ins)
 }
 
 bool
-TableSwitchPolicy::adjustInputs(MInstruction *ins)
-{
-    MDefinition *in = ins->getOperand(0);
-    MInstruction *replace;
-
-    // Tableswitch can consume all types, except:
-    // - Value: unbox to int32
-    switch (in->type()) {
-      case MIRType_Value:
-        replace = MUnbox::New(in, MIRType_Int32, MUnbox::Fallible);
-        break;
-      default:
-        return true;
-    }
-    
-    ins->block()->insertBefore(ins, replace);
-    ins->replaceOperand(0, replace);
-
-    return true;
-}
-
-bool
 PowPolicy::adjustInputs(MInstruction *ins)
 {
     JS_ASSERT(specialization_ == MIRType_Int32 || specialization_ == MIRType_Double);

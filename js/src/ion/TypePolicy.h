@@ -75,12 +75,6 @@ class BitwisePolicy : public BoxInputsPolicy
     }
 };
 
-class TableSwitchPolicy : public BoxInputsPolicy
-{
-  public:
-    bool adjustInputs(MInstruction *def);
-};
-
 class ComparePolicy : public BoxInputsPolicy
 {
   protected:
