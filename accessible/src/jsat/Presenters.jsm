@@ -104,12 +104,7 @@ Presenter.prototype = {
   /**
    * We have entered or left text editing mode.
    */
-  editingModeChanged: function editingModeChanged(aIsEditing) {},
-
-  /**
-   * Re-present the last pivot change.
-   */
-  presentLastPivot: function AndroidPresenter_presentLastPivot() {}
+  editingModeChanged: function editingModeChanged(aIsEditing) {}
 };
 
 /**
@@ -207,8 +202,6 @@ AndroidPresenter.prototype = {
   pivotChanged: function AndroidPresenter_pivotChanged(aContext, aReason) {
     if (!aContext.accessible)
       return null;
-
-    this._currentContext = aContext;
 
     let androidEvents = [];
 
@@ -335,13 +328,6 @@ AndroidPresenter.prototype = {
         fromIndex: 0
       }]
     };
-  },
-
-  presentLastPivot: function AndroidPresenter_presentLastPivot() {
-    if (this._currentContext)
-      return this.pivotChanged(this._currentContext);
-    else
-      return null;
   }
 };
 
