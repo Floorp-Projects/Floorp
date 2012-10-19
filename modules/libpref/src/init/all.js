@@ -3780,6 +3780,8 @@ pref("memory.low_memory_notification_interval_ms", 10000);
 pref("memory.ghost_window_timeout_seconds", 60);
 
 pref("social.enabled", false);
+pref("social.debug.monitorUsage", false);
+pref("social.debug.monitorUsageTimeThresholdMS", 10000);
 
 // Disable idle observer fuzz, because only privileged content can access idle
 // observers (bug 780507).

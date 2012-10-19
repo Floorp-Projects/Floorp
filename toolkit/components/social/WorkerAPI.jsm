@@ -22,6 +22,9 @@ function WorkerAPI(provider, port) {
   this._provider = provider;
   this._port = port;
   this._port.onmessage = this._handleMessage.bind(this);
+  this._usageMonitor = Services.prefs.getBoolPref("social.debug.monitorUsage") ?
+    new WorkerAPIUsageMonitor(provider) :
+    null;
 
   // Send an "intro" message so the worker knows this is the port
   // used for the api.
@@ -42,6 +45,8 @@ WorkerAPI.prototype = {
       return;
     }
     try {
+      if (this._usageMonitor)
+        this._usageMonitor.logMessage(topic);
       handler.call(this, data);
     } catch (ex) {
       Cu.reportError("WorkerAPI: failed to handle message '" + topic + "': " + ex);
@@ -69,7 +74,7 @@ WorkerAPI.prototype = {
       cookies.forEach(function(aCookie) {
         let [name, value] = aCookie.split("=");
         results.push({name: unescape(name.trim()),
-                      value: unescape(value.trim())});
+                      value: value ? unescape(value.trim()) : ""});
       });
       this._port.postMessage({topic: "social.cookies-get-response",
                               data: results});
@@ -130,3 +135,35 @@ WorkerAPI.prototype = {
     },
   }
 }
+
+function WorkerAPIUsageMonitor(provider) {
+  if (!provider)
+    throw new Error("Can't initialize WorkerAPIUsageMonitor with a null provider");
+  this._providerName = provider.name;
+  this.TIME_THRESHOLD_MS = Services.prefs.getIntPref("social.debug.monitorUsageTimeThresholdMS");
+  this._messages = {};
+}
+
+WorkerAPIUsageMonitor.prototype = {
+  logMessage: function WorkerAPIUsage_logMessage(aMessage) {
+    if (!(aMessage in this._messages)) {
+      this._messages[aMessage] = [];
+    }
+    let messageList = this._messages[aMessage];
+    messageList.push(Date.now());
+    if (messageList.length > 10) {
+      if (messageList[9] - messageList[0] < this.TIME_THRESHOLD_MS) {
+        let alertsService = Cc["@mozilla.org/alerts-service;1"]
+                              .getService(Ci.nsIAlertsService);
+        const SOCIAL_BUNDLE = "chrome://global/locale/social.properties";
+        let socialBundle = Services.strings.createBundle(SOCIAL_BUNDLE);
+        let seconds = (this.TIME_THRESHOLD_MS / 1000).toString();
+        let text = socialBundle.formatStringFromName("social.usageAbuse",
+                                                     [aMessage, seconds], 2);
+        alertsService.showAlertNotification("chrome://branding/content/icon48.png",
+                                            this._providerName, text);
+      }
+      messageList.shift();
+    }
+  }
+};
