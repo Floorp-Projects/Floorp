@@ -204,9 +204,9 @@ UpdateDepth(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t target)
     }
 
     /*
-     * Specially handle any case that would call js_GetIndexFromBytecode since
-     * it requires a well-formed script. This allows us to safely pass NULL as
-     * the 'script' parameter.
+     * Specially handle any case in which StackUses or StackDefs would call
+     * NumBlockSlots, since that requires a well-formed script. This allows us
+     * to safely pass NULL as the 'script' parameter to StackUses and StackDefs.
      */
     int nuses, ndefs;
     if (op == JSOP_ENTERBLOCK) {

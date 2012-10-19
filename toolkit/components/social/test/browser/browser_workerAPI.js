@@ -114,13 +114,20 @@ let tests = {
     // the worker was loaded again and ports reconnected
     let reloading = false;
     let worker = fw.getFrameWorkerHandle(provider.workerURL, undefined, "testWorkerReload");
-    let win = worker._worker.frame.contentWindow;
+    let frame =  worker._worker.frame;
+    let win = frame.contentWindow;
+    let port = provider.getWorkerPort();
     win.addEventListener("unload", function workerUnload(e) {
       win.removeEventListener("unload", workerUnload);
       ok(true, "worker unload event has fired");
-      reloading = true;
+      is(port._pendingMessagesOutgoing.length, 0, "port has no pending outgoing message");
     });
-    let port = provider.getWorkerPort();
+    frame.addEventListener("DOMWindowCreated", function workerLoaded(e) {
+      frame.removeEventListener("DOMWindowCreated", workerLoaded);
+      // send a message which should end up pending
+      port.postMessage({topic: "test-pending-msg"});
+      ok(port._pendingMessagesOutgoing.length > 0, "port has pending outgoing message");
+    });
     ok(port, "provider has a port");
     port.onmessage = function (e) {
       let topic = e.data.topic;
@@ -129,13 +136,9 @@ let tests = {
           // tell the worker to send the reload msg
           port.postMessage({topic: "test-reload-init"});
           break;
-        case "worker.connected":
-          // we'll get this message from the worker on every load of the worker,
-          // so we need to ignore it unless we have requested the reload.
-          if (reloading) {
-            ok(true, "worker reloaded and testPort was reconnected");
-            next();
-          }
+        case "test-pending-response":
+          ok(true, "worker reloaded and testPort was reconnected");
+          next();
           break;
       }
     }

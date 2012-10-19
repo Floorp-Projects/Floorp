@@ -22,6 +22,7 @@ include $(topsrcdir)/config/rules.mk
 TEST_HARNESS_FILES := \
   runxpcshelltests.py \
   remotexpcshelltests.py \
+  runtestsb2g.py \
   head.js \
   node-spdy \
   moz-spdy \
@@ -33,9 +34,10 @@ EXTRA_BUILD_FILES := \
   manifestparser.py \
   $(NULL)
 
-# And files for running xpcshell remotely from $(topsrcdir)/build/mobile
-MOBILE_BUILD_FILES := \
+MOZDEVICE_FILES := \
   devicemanager.py \
+  devicemanagerADB.py \
+  devicemanagerSUT.py \
   $(NULL)
 
 # Components / typelibs that don't get packaged with
@@ -66,6 +68,6 @@ stage-package:
 	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	@(cd $(topsrcdir)/build && tar $(TAR_CREATE_FLAGS) - $(EXTRA_BUILD_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	@cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/xpcshell
-	@(cd $(topsrcdir)/build/mobile && tar $(TAR_CREATE_FLAGS) - $(MOBILE_BUILD_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
+	@(cd $(topsrcdir)/testing/mozbase/mozdevice/mozdevice && tar $(TAR_CREATE_FLAGS) - $(MOZDEVICE_FILES)) | (cd $(PKG_STAGE)/xpcshell && tar -xf -)
 	(cd $(DEPTH)/_tests/xpcshell/ && tar $(TAR_CREATE_FLAGS_QUIET) - *) | (cd $(PKG_STAGE)/xpcshell/tests && tar -xf -)
 	@(cd $(DIST)/bin/components && tar $(TAR_CREATE_FLAGS) - $(TEST_HARNESS_COMPONENTS)) | (cd $(PKG_STAGE)/bin/components && tar -xf -)

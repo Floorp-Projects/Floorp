@@ -5,7 +5,7 @@
 /*
  * PQG parameter generation/verification.  Based on FIPS 186-3.
  *
- * $Id: pqg.c,v 1.23 2012/09/25 23:38:38 wtc%google.com Exp $
+ * $Id: pqg.c,v 1.25 2012/10/11 00:18:23 rrelyea%redhat.com Exp $
  */
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -73,7 +73,7 @@ int prime_testcount_q(int L, int N)
  * this gives us one place to go if we need to bump the requirements in the
  * future.
  */
-SECStatus static
+static SECStatus
 pqg_validate_dsa2(unsigned int L, unsigned int N)
 {
 
@@ -101,6 +101,27 @@ pqg_validate_dsa2(unsigned int L, unsigned int N)
 	return SECFailure;
     }
     return SECSuccess;
+}
+
+static unsigned int
+pqg_get_default_N(unsigned int L)
+{
+    unsigned int N = 0;
+    switch (L) {
+    case 1024:
+	N = DSA1_Q_BITS;
+	break;
+    case 2048:
+	N = 224;
+	break;
+    case 3072:
+	N = 256;
+	break;
+    default:
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	break; /* N already set to zero */
+    }
+    return N;
 }
 
 /*
@@ -221,7 +242,7 @@ PQG_Check(const PQGParams *params)
 	    return SECFailure;
 	}
 	j = PQG_PBITS_TO_INDEX(L);
-	if ( j >= 0 && j <= 8 ) {
+	if ( j < 0 ) { 
 	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	    rv = SECFailure;
 	}
@@ -1223,7 +1244,10 @@ pqg_ParamGen(unsigned int L, unsigned int N, pqgGenType type,
     PQGVerify    *verify = NULL;
     PRBool passed;
     SECItem hit = { 0, 0, 0 };
-    mp_int P, Q, G, H, l;
+    SECItem firstseed = { 0, 0, 0 };
+    SECItem qseed = { 0, 0, 0 };
+    SECItem pseed = { 0, 0, 0 };
+    mp_int P, Q, G, H, l, p0;
     mp_err    err = MP_OKAY;
     SECStatus rv  = SECFailure;
     int iterations = 0;
@@ -1271,11 +1295,13 @@ pqg_ParamGen(unsigned int L, unsigned int N, pqgGenType type,
     MP_DIGITS(&G) = 0;
     MP_DIGITS(&H) = 0;
     MP_DIGITS(&l) = 0;
+    MP_DIGITS(&p0) = 0;
     CHECK_MPI_OK( mp_init(&P) );
     CHECK_MPI_OK( mp_init(&Q) );
     CHECK_MPI_OK( mp_init(&G) );
     CHECK_MPI_OK( mp_init(&H) );
     CHECK_MPI_OK( mp_init(&l) );
+    CHECK_MPI_OK( mp_init(&p0) );
 
     /* Select Hash and Compute lengths. */
     /* getFirstHash gives us the smallest acceptable hash for this key
@@ -1314,11 +1340,48 @@ step_5:
     ** "q = 2**(N-1) + U + 1 - (U mod 2) (186-3)
     **
     ** Note: Both formulations are the same for U < 2**(N-1) and N=160
+    **
+    ** If using Shawe-Taylor, We do the entire A.1.2.1.2 setps in the block
+    ** FIPS186_3_ST_TYPE. 
     */
     if (type == FIPS186_1_TYPE) {
 	CHECK_SEC_OK( makeQfromSeed(seedlen, seed, &Q) );
-    } else {
+    } else if (type == FIPS186_3_TYPE) {
 	CHECK_SEC_OK( makeQ2fromSeed(hashtype, N, seed, &Q) );
+    } else {
+	/* FIPS186_3_ST_TYPE */
+	int qgen_counter, pgen_counter;
+
+        /* Step 1 (L,N) already checked for acceptability */
+
+	firstseed = *seed;
+	qgen_counter = 0;
+	/* Step 2. Use N and firstseed to  generate random prime q
+	 * using Apendix C.6 */
+	CHECK_SEC_OK( makePrimefromSeedShaweTaylor(hashtype, N, &firstseed, &Q,
+		&qseed, &qgen_counter) );
+	/* Step 3. Use floor(L/2+1) and qseed to generate random prime p0
+	 * using Appendix C.6 */
+	pgen_counter = 0;
+	CHECK_SEC_OK( makePrimefromSeedShaweTaylor(hashtype, (L+1)/2+1,
+			&qseed, &p0, &pseed, &pgen_counter) );
+	/* Steps 4-22 FIPS 186-3 appendix A.1.2.1.2 */
+	CHECK_SEC_OK( makePrimefromPrimesShaweTaylor(hashtype, L, 
+		&p0, &Q, &P, &pseed, &pgen_counter) );
+
+	/* combine all the seeds */
+	seed->len = firstseed.len +qseed.len + pseed.len;
+	seed->data = PORT_ArenaZAlloc(verify->arena, seed->len);
+	if (seed->data == NULL) {
+	    goto cleanup;
+	}
+	PORT_Memcpy(seed->data, firstseed.data, firstseed.len);
+	PORT_Memcpy(seed->data+firstseed.len, pseed.data, pseed.len);
+	PORT_Memcpy(seed->data+firstseed.len+pseed.len, qseed.data, qseed.len);
+	counter = 0 ; /* (qgen_counter << 16) | pgen_counter; */
+
+	/* we've generated both P and Q now, skip to generating G */
+	goto generate_G;
     }
     /* ******************************************************************
     ** Step 8. (Step 4 in 186-1)
@@ -1403,6 +1466,8 @@ step_11_9:
     */
     if (counter > maxCount) 
 	     goto step_5;
+
+generate_G:
     /* ******************************************************************
     ** returning p, q, seed and counter
     */
@@ -1435,11 +1500,18 @@ step_11_9:
     *pParams = params;
     *pVfy = verify;
 cleanup:
+    if (pseed.data) {
+	PORT_Free(pseed.data);
+    }
+    if (qseed.data) {
+	PORT_Free(qseed.data);
+    }
     mp_clear(&P);
     mp_clear(&Q);
     mp_clear(&G);
     mp_clear(&H);
     mp_clear(&l);
+    mp_clear(&p0);
     if (err) {
 	MP_TO_SEC_ERROR(err);
 	rv = SECFailure;
@@ -1489,11 +1561,18 @@ SECStatus
 PQG_ParamGenV2(unsigned int L, unsigned int N, unsigned int seedBytes,
                     PQGParams **pParams, PQGVerify **pVfy)
 {
+    if (N == 0) {
+	N = pqg_get_default_N(L);
+    }
+    if (seedBytes == 0) {
+	/* seedBytes == L/8 for probable primes, N/8 for Shawe-Taylor Primes */
+	seedBytes = N/8;
+    }
     if (pqg_validate_dsa2(L,N) != SECSuccess) {
 	/* error code already set */
 	return SECFailure;
     }
-    return pqg_ParamGen(L, N, FIPS186_3_TYPE, seedBytes, pParams, pVfy);
+    return pqg_ParamGen(L, N, FIPS186_3_ST_TYPE, seedBytes, pParams, pVfy);
 }
 
 

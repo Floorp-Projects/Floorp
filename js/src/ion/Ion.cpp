@@ -756,42 +756,42 @@ ion::ToggleBarriers(JSCompartment *comp, bool needs)
 namespace js {
 namespace ion {
 
-bool
-CompileBackEnd(IonBuilder *builder)
+LIRGraph *
+CompileBackEnd(MIRGenerator *mir)
 {
     IonSpewPass("BuildSSA");
     // Note: don't call AssertGraphCoherency before SplitCriticalEdges,
     // the graph is not in RPO at this point.
 
-    MIRGraph &graph = builder->graph();
+    MIRGraph &graph = mir->graph();
 
-    if (!SplitCriticalEdges(builder, graph))
-        return false;
+    if (!SplitCriticalEdges(graph))
+        return NULL;
     IonSpewPass("Split Critical Edges");
     AssertGraphCoherency(graph);
 
     if (!RenumberBlocks(graph))
-        return false;
+        return NULL;
     IonSpewPass("Renumber Blocks");
     AssertGraphCoherency(graph);
 
     if (!BuildDominatorTree(graph))
-        return false;
+        return NULL;
     // No spew: graph not changed.
 
     // This must occur before any code elimination.
     if (!EliminatePhis(graph))
-        return false;
+        return NULL;
     IonSpewPass("Eliminate phis");
     AssertGraphCoherency(graph);
 
     if (!BuildPhiReverseMapping(graph))
-        return false;
+        return NULL;
     // No spew: graph not changed.
 
     // This pass also removes copies.
     if (!ApplyTypeInformation(graph))
-        return false;
+        return NULL;
     IonSpewPass("Apply types");
     AssertGraphCoherency(graph);
 
@@ -800,7 +800,7 @@ CompileBackEnd(IonBuilder *builder)
     if (js_IonOptions.licm || js_IonOptions.gvn) {
         AliasAnalysis analysis(graph);
         if (!analysis.analyze())
-            return false;
+            return NULL;
         IonSpewPass("Alias analysis");
         AssertGraphCoherency(graph);
     }
@@ -808,7 +808,7 @@ CompileBackEnd(IonBuilder *builder)
     if (js_IonOptions.edgeCaseAnalysis) {
         EdgeCaseAnalysis edgeCaseAnalysis(graph);
         if (!edgeCaseAnalysis.analyzeEarly())
-            return false;
+            return NULL;
         IonSpewPass("Edge Case Analysis (Early)");
         AssertGraphCoherency(graph);
     }
@@ -816,7 +816,7 @@ CompileBackEnd(IonBuilder *builder)
     if (js_IonOptions.gvn) {
         ValueNumberer gvn(graph, js_IonOptions.gvnIsOptimistic);
         if (!gvn.analyze())
-            return false;
+            return NULL;
         IonSpewPass("GVN");
         AssertGraphCoherency(graph);
     }
@@ -824,30 +824,30 @@ CompileBackEnd(IonBuilder *builder)
     if (js_IonOptions.rangeAnalysis) {
         RangeAnalysis r(graph);
         if (!r.addBetaNobes())
-            return false;
+            return NULL;
         IonSpewPass("Beta");
         AssertGraphCoherency(graph);
 
         if (!r.analyze())
-            return false;
+            return NULL;
         IonSpewPass("Range Analysis");
         AssertGraphCoherency(graph);
 
         if (!r.removeBetaNobes())
-            return false;
+            return NULL;
         IonSpewPass("De-Beta");
         AssertGraphCoherency(graph);
     }
 
     if (!EliminateDeadCode(graph))
-        return false;
+        return NULL;
     IonSpewPass("DCE");
     AssertGraphCoherency(graph);
 
     if (js_IonOptions.licm) {
         LICM licm(graph);
         if (!licm.analyze())
-            return false;
+            return NULL;
         IonSpewPass("LICM");
         AssertGraphCoherency(graph);
     }
@@ -855,7 +855,7 @@ CompileBackEnd(IonBuilder *builder)
     if (js_IonOptions.edgeCaseAnalysis) {
         EdgeCaseAnalysis edgeCaseAnalysis(graph);
         if (!edgeCaseAnalysis.analyzeLate())
-            return false;
+            return NULL;
         IonSpewPass("Edge Case Analysis (Late)");
         AssertGraphCoherency(graph);
     }
@@ -865,28 +865,27 @@ CompileBackEnd(IonBuilder *builder)
     // index, code motion after this pass could incorrectly move a load or
     // store before its bounds check.
     if (!EliminateRedundantBoundsChecks(graph))
-        return false;
+        return NULL;
     IonSpewPass("Bounds Check Elimination");
     AssertGraphCoherency(graph);
 
-    LIRGraph *lir = builder->temp().lifoAlloc()->new_<LIRGraph>(&graph);
+    LIRGraph *lir = mir->temp().lifoAlloc()->new_<LIRGraph>(&graph);
     if (!lir)
-        return false;
+        return NULL;
 
-    LIRGenerator lirgen(builder, graph, *lir);
+    LIRGenerator lirgen(mir, graph, *lir);
     if (!lirgen.generate())
-        return false;
+        return NULL;
     IonSpewPass("Generate LIR");
 
     if (js_IonOptions.lsra) {
         LinearScanAllocator regalloc(&lirgen, *lir);
         if (!regalloc.go())
-            return false;
+            return NULL;
         IonSpewPass("Allocate Registers", &regalloc);
     }
 
-    builder->lir = lir;
-    return true;
+    return lir;
 }
 
 class AutoDestroyAllocator
@@ -927,11 +926,11 @@ AttachFinishedCompilations(JSContext *cx)
     while (!compilations.empty()) {
         IonBuilder *builder = compilations.popCopy();
 
-        if (builder->lir) {
+        if (builder->backgroundCompiledLir) {
             RootedScript script(cx, builder->script());
             IonContext ictx(cx, cx->compartment, &builder->temp());
 
-            CodeGenerator codegen(builder, *builder->lir);
+            CodeGenerator codegen(builder, *builder->backgroundCompiledLir);
 
             types::AutoEnterCompilation enterCompiler(cx, types::AutoEnterCompilation::Ion);
             enterCompiler.initExisting(builder->recompileInfo);
@@ -1033,12 +1032,13 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
         return true;
     }
 
-    if (!CompileBackEnd(builder)) {
+    LIRGraph *lir = CompileBackEnd(builder);
+    if (!lir) {
         IonSpew(IonSpew_Abort, "Failed during back-end compilation.");
         return false;
     }
 
-    CodeGenerator codegen(builder, *builder->lir);
+    CodeGenerator codegen(builder, *lir);
     if (!codegen.generate()) {
         IonSpew(IonSpew_Abort, "Failed during code generation.");
         return false;

@@ -17,7 +17,7 @@ using namespace js::ion;
 // nor its predecessor's only successor. Critical edges must be split to
 // prevent copy-insertion and code motion from affecting other edges.
 bool
-ion::SplitCriticalEdges(MIRGenerator *gen, MIRGraph &graph)
+ion::SplitCriticalEdges(MIRGraph &graph)
 {
     for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
         if (block->numSuccessors() < 2)

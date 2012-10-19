@@ -54,14 +54,14 @@ public:
 
   void
   SetLazyData(const nsAString& aName, const nsAString& aContentType,
-              uint64_t aLength)
+              uint64_t aLength, uint64_t aLastModifiedDate)
   {
     NS_ASSERTION(aLength, "must have length");
 
     mName = aName;
     mContentType = aContentType;
     mLength = aLength;
-
+    mLastModificationDate = aLastModifiedDate;
     mIsFile = !aName.IsVoid();
   }
 
@@ -70,11 +70,25 @@ public:
     return mLength == UINT64_MAX;
   }
 
+  bool IsDateUnknown() const
+  {
+    return mIsFile && mLastModificationDate == UINT64_MAX;
+  }
+
 protected:
+  nsDOMFileBase(const nsAString& aName, const nsAString& aContentType,
+                uint64_t aLength, uint64_t aLastModifiedDate)
+    : mIsFile(true), mImmutable(false), mContentType(aContentType),
+      mName(aName), mStart(0), mLength(aLength), mLastModificationDate(aLastModifiedDate)
+  {
+    // Ensure non-null mContentType by default
+    mContentType.SetIsVoid(false);
+  }
+
   nsDOMFileBase(const nsAString& aName, const nsAString& aContentType,
                 uint64_t aLength)
     : mIsFile(true), mImmutable(false), mContentType(aContentType),
-      mName(aName), mStart(0), mLength(aLength)
+      mName(aName), mStart(0), mLength(aLength), mLastModificationDate(UINT64_MAX)
   {
     // Ensure non-null mContentType by default
     mContentType.SetIsVoid(false);
@@ -82,7 +96,7 @@ protected:
 
   nsDOMFileBase(const nsAString& aContentType, uint64_t aLength)
     : mIsFile(false), mImmutable(false), mContentType(aContentType),
-      mStart(0), mLength(aLength)
+      mStart(0), mLength(aLength), mLastModificationDate(UINT64_MAX)
   {
     // Ensure non-null mContentType by default
     mContentType.SetIsVoid(false);
@@ -91,7 +105,7 @@ protected:
   nsDOMFileBase(const nsAString& aContentType, uint64_t aStart,
                 uint64_t aLength)
     : mIsFile(false), mImmutable(false), mContentType(aContentType),
-      mStart(aStart), mLength(aLength)
+      mStart(aStart), mLength(aLength), mLastModificationDate(UINT64_MAX)
   {
     NS_ASSERTION(aLength != UINT64_MAX,
                  "Must know length when creating slice");
@@ -127,11 +141,14 @@ protected:
 
   bool mIsFile;
   bool mImmutable;
+
   nsString mContentType;
   nsString mName;
 
   uint64_t mStart;
   uint64_t mLength;
+
+  uint64_t mLastModificationDate;
 
   // Protected by IndexedDatabaseManager::FileMutex()
   nsTArray<nsRefPtr<FileInfo> > mFileInfos;
@@ -140,6 +157,11 @@ protected:
 class nsDOMFile : public nsDOMFileBase
 {
 public:
+  nsDOMFile(const nsAString& aName, const nsAString& aContentType,
+            uint64_t aLength, uint64_t aLastModifiedDate)
+  : nsDOMFileBase(aName, aContentType, aLength, aLastModifiedDate)
+  { }
+
   nsDOMFile(const nsAString& aName, const nsAString& aContentType,
             uint64_t aLength)
   : nsDOMFileBase(aName, aContentType, aLength)
@@ -183,7 +205,7 @@ class nsDOMFileFile : public nsDOMFile,
 public:
   // Create as a file
   nsDOMFileFile(nsIFile *aFile)
-    : nsDOMFile(EmptyString(), EmptyString(), UINT64_MAX),
+    : nsDOMFile(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX),
       mFile(aFile), mWholeFile(true), mStoredFile(false)
   {
     NS_ASSERTION(mFile, "must have file");
@@ -195,7 +217,15 @@ public:
   // Create as a file
   nsDOMFileFile(const nsAString& aName, const nsAString& aContentType,
                 uint64_t aLength, nsIFile *aFile)
-    : nsDOMFile(aName, aContentType, aLength),
+    : nsDOMFile(aName, aContentType, aLength, UINT64_MAX),
+      mFile(aFile), mWholeFile(true), mStoredFile(false)
+  {
+    NS_ASSERTION(mFile, "must have file");
+  }
+
+  nsDOMFileFile(const nsAString& aName, const nsAString& aContentType,
+                uint64_t aLength, nsIFile *aFile, uint64_t aLastModificationDate)
+    : nsDOMFile(aName, aContentType, aLength, aLastModificationDate),
       mFile(aFile), mWholeFile(true), mStoredFile(false)
   {
     NS_ASSERTION(mFile, "must have file");
@@ -213,7 +243,7 @@ public:
 
   // Create as a file with custom name
   nsDOMFileFile(nsIFile *aFile, const nsAString& aName)
-    : nsDOMFile(aName, EmptyString(), UINT64_MAX),
+    : nsDOMFile(aName, EmptyString(), UINT64_MAX, UINT64_MAX),
       mFile(aFile), mWholeFile(true), mStoredFile(false)
   {
     NS_ASSERTION(mFile, "must have file");
@@ -225,7 +255,7 @@ public:
   nsDOMFileFile(const nsAString& aName, const nsAString& aContentType,
                 uint64_t aLength, nsIFile* aFile,
                 FileInfo* aFileInfo)
-    : nsDOMFile(aName, aContentType, aLength),
+    : nsDOMFile(aName, aContentType, aLength, UINT64_MAX),
       mFile(aFile), mWholeFile(true), mStoredFile(true)
   {
     NS_ASSERTION(mFile, "must have file");
@@ -244,7 +274,7 @@ public:
 
   // Create as a file to be later initialized
   nsDOMFileFile()
-    : nsDOMFile(EmptyString(), EmptyString(), UINT64_MAX),
+    : nsDOMFile(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX),
       mWholeFile(true), mStoredFile(false)
   {
     // Lazily get the content type and size
@@ -264,7 +294,8 @@ public:
   // Overrides
   NS_IMETHOD GetSize(uint64_t* aSize);
   NS_IMETHOD GetType(nsAString& aType);
-  NS_IMETHOD GetLastModifiedDate(JSContext* cx, JS::Value *aLastModifiedDate);
+  NS_IMETHOD GetLastModifiedDate(JSContext* cx, JS::Value* aLastModifiedDate);
+  NS_IMETHOD GetMozLastModifiedDate(uint64_t* aLastModifiedDate);
   NS_IMETHOD GetMozFullPathInternal(nsAString& aFullPath);
   NS_IMETHOD GetInternalStream(nsIInputStream**);
 
@@ -328,7 +359,7 @@ public:
                   uint64_t aLength,
                   const nsAString& aName,
                   const nsAString& aContentType)
-    : nsDOMFile(aName, aContentType, aLength),
+    : nsDOMFile(aName, aContentType, aLength, UINT64_MAX),
       mDataOwner(new DataOwner(aMemoryBuffer))
   {
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");

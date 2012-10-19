@@ -2035,19 +2035,42 @@ var SelectionHandler = {
     let scrollX = {}, scrollY = {};
     this._view.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).getScrollXY(false, scrollX, scrollY);
 
+    // the checkHidden function tests to see if the given point is hidden inside an
+    // iframe/subdocument. this is so that if we select some text inside an iframe and
+    // scroll the iframe so the selection is out of view, we hide the handles rather
+    // than having them float on top of the main page content.
+    let checkHidden = function(x, y) {
+      return false;
+    };
+    if (this._view.frameElement) {
+      let bounds = this._view.frameElement.getBoundingClientRect();
+      checkHidden = function(x, y) {
+        return x < 0 || y < 0 || x > bounds.width || y > bounds.height;
+      }
+    }
+
     let positions = null;
     if (this._activeType == this.TYPE_CURSOR) {
       let cursor = this._cwu.sendQueryContentEvent(this._cwu.QUERY_CARET_RECT, this._target.selectionEnd, 0, 0, 0);
+      let x = cursor.left;
+      let y = cursor.top + cursor.height;
       positions = [ { handle: this.HANDLE_TYPE_MIDDLE,
-                     left: cursor.left + offset.x + scrollX.value,
-                     top: cursor.top + cursor.height + offset.y + scrollY.value } ];
+                     left: x + offset.x + scrollX.value,
+                     top: y + offset.y + scrollY.value,
+                     hidden: checkHidden(x, y) } ];
     } else {
+      let sx = this.cache.start.x;
+      let sy = this.cache.start.y;
+      let ex = this.cache.end.x;
+      let ey = this.cache.end.y;
       positions = [ { handle: this.HANDLE_TYPE_START,
-                     left: this.cache.start.x + offset.x + scrollX.value,
-                     top: this.cache.start.y + offset.y + scrollY.value },
+                     left: sx + offset.x + scrollX.value,
+                     top: sy + offset.y + scrollY.value,
+                     hidden: checkHidden(sx, sy) },
                    { handle: this.HANDLE_TYPE_END,
-                     left: this.cache.end.x + offset.x + scrollX.value,
-                     top: this.cache.end.y + offset.y + scrollY.value } ];
+                     left: ex + offset.x + scrollX.value,
+                     top: ey + offset.y + scrollY.value,
+                     hidden: checkHidden(ex, ey) } ];
     }
 
     sendMessageToJava({
@@ -2056,6 +2079,29 @@ var SelectionHandler = {
         positions: positions
       }
     });
+  },
+
+  subdocumentScrolled: function sh_subdocumentScrolled(aElement) {
+    if (this._activeType == this.TYPE_NONE) {
+      return;
+    }
+    let scrollView = aElement.ownerDocument.defaultView;
+    let view = this._view;
+    while (true) {
+      if (view == scrollView) {
+        // The selection is in a view (or sub-view) of the view that scrolled.
+        // So we need to reposition the handles.
+        if (this._activeType == this.TYPE_SELECTION) {
+          this.updateCacheForSelection();
+        }
+        this.positionHandles();
+        break;
+      }
+      if (view == view.parent) {
+        break;
+      }
+      view = view.parent;
+    }
   }
 };
 
@@ -2800,12 +2846,9 @@ Tab.prototype = {
         // event fires; it's not clear that doing so is worth the effort.
         var backgroundColor = null;
         try {
-          let browser = BrowserApp.selectedBrowser;
-          if (browser) {
-            let { contentDocument, contentWindow } = browser;
-            let computedStyle = contentWindow.getComputedStyle(contentDocument.body);
-            backgroundColor = computedStyle.backgroundColor;
-          }
+          let { contentDocument, contentWindow } = this.browser;
+          let computedStyle = contentWindow.getComputedStyle(contentDocument.body);
+          backgroundColor = computedStyle.backgroundColor;
         } catch (e) {
           // Ignore. Catching and ignoring exceptions here ensures that Talos succeeds.
         }
@@ -3649,6 +3692,7 @@ var BrowserEventHandler = {
       if (this._elementCanScroll(this._scrollableElement, data.x, data.y)) {
         this._scrollElementBy(this._scrollableElement, data.x, data.y);
         sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: true } });
+        SelectionHandler.subdocumentScrolled(this._scrollableElement);
       } else {
         sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: false } });
       }
@@ -3659,12 +3703,9 @@ var BrowserEventHandler = {
       if (element) {
         try {
           let data = JSON.parse(aData);
-          let isClickable = ElementTouchHelper.isElementClickable(element);
-
-          if (isClickable) {
+          if (ElementTouchHelper.isElementClickable(element)) {
             [data.x, data.y] = this._moveClickPoint(element, data.x, data.y);
             element = ElementTouchHelper.anyElementFromPoint(data.x, data.y);
-            isClickable = ElementTouchHelper.isElementClickable(element);
           }
 
           this._sendMouseEvent("mousemove", element, data.x, data.y);
@@ -3674,9 +3715,6 @@ var BrowserEventHandler = {
           // See if its a input element
           if ((element instanceof HTMLInputElement && element.mozIsTextField(false)) || (element instanceof HTMLTextAreaElement))
              SelectionHandler.showThumb(element);
-  
-          if (isClickable)
-            Haptic.performSimpleAction(Haptic.LongPress);
         } catch(e) {
           Cu.reportError(e);
         }
@@ -3685,13 +3723,10 @@ var BrowserEventHandler = {
     } else if (aTopic == "Gesture:DoubleTap") {
       this._cancelTapHighlight();
       this.onDoubleTap(aData);
-    } else if (aTopic == "MozMagnifyGestureStart" ||
-               aTopic == "MozMagnifyGestureUpdate") {
+    } else if (aTopic == "MozMagnifyGestureStart" || aTopic == "MozMagnifyGestureUpdate") {
       this.onPinch(aData);
     } else if (aTopic == "MozMagnifyGesture") {
-      this.onPinchFinish(aData,
-                         this._mLastPinchPoint.x,
-                         this._mLastPinchPoint.y);
+      this.onPinchFinish(aData, this._mLastPinchPoint.x, this._mLastPinchPoint.y);
     } else if (aTopic == "nsPref:changed") {
       if (aData == "browser.zoom.reflowOnZoom") {
         this.updateReflozPref();
