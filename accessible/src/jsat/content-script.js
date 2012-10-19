@@ -54,6 +54,15 @@ function virtualCursorControl(aMessage) {
     case 'moveToPoint':
       moved = vc.moveToPoint(rule, details.x, details.y, true);
       break;
+    case 'whereIsIt':
+      if (!forwardMessage(vc, aMessage)) {
+        if (!vc.position && aMessage.json.move)
+          vc.moveFirst(TraversalRules.Simple);
+        else
+          EventManager.presentVirtualCursorPosition(vc);
+      }
+
+      break;
     default:
       break;
     }
