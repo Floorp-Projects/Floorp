@@ -714,10 +714,6 @@ void nsViewManager::DidPaintWindow()
   if (shell) {
     shell->DidPaintWindow();
   }
-
-  if (!IsRefreshDriverPaintingEnabled()) {
-    mRootViewManager->CallDidPaintOnObserver();
-  }
 }
 
 nsresult nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsIView* aView, nsEventStatus* aStatus)
@@ -1214,7 +1210,6 @@ nsViewManager::ProcessPendingUpdates()
       CallWillPaintOnObservers(true);
     }
     ProcessPendingUpdatesForView(mRootView, true);
-    CallDidPaintOnObserver();
   } else {
     ProcessPendingUpdatesForView(mRootView, true);
   }
@@ -1255,19 +1250,6 @@ nsViewManager::CallWillPaintOnObservers(bool aWillSendDidPaint)
           shell->WillPaint(aWillSendDidPaint);
         }
       }
-    }
-  }
-}
-
-void
-nsViewManager::CallDidPaintOnObserver()
-{
-  NS_PRECONDITION(IsRootVM(), "Must be root VM for this to be called!");
-
-  if (mRootView && mRootView->IsEffectivelyVisible()) {
-    nsCOMPtr<nsIPresShell> shell = GetPresShell();
-    if (shell) {
-      shell->DidPaint();
     }
   }
 }

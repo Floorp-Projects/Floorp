@@ -7043,11 +7043,6 @@ PresShell::WillPaint(bool aWillSendDidPaint)
 }
 
 void
-PresShell::DidPaint()
-{
-}
-
-void
 PresShell::WillPaintWindow(bool aWillSendDidPaint)
 {
   nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
