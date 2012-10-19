@@ -61,9 +61,6 @@ nsTArrayToJSArray<nsString>(JSContext* aCx,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  JSObject* global = JS_GetGlobalForScopeChain(aCx);
-  MOZ_ASSERT(global);
-
   for (uint32_t index = 0; index < aSourceArray.Length(); index++) {
     JSString* s = JS_NewUCStringCopyN(aCx, aSourceArray[index].BeginReading(),
                                       aSourceArray[index].Length());
