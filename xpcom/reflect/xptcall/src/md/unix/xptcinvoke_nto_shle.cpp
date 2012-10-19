@@ -98,7 +98,7 @@ XPTC_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
  __asm__ __volatile__(
     /* Make space for parameters to be passed to the method.  Assume worst case 
 	   8 bytes per parameter.  Also leave space for 3 longs and 8 floats that
-	   will be put into registers.  The worst case is all int64 parameters
+	   will be put into registers.  The worst case is all int64_t parameters
 	   and even in this case 8 bytes are passed in registers so we can
 	   deduct this from our allocation.
 	*/

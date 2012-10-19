@@ -514,6 +514,21 @@ RILContentHelper.prototype = {
     this.unregisterCallback("_voicemailCallbacks", callback);
   },
 
+  registerTelephonyMsg: function registerTelephonyMsg() {
+    debug("Registering for telephony-related messages");
+    cpmm.sendAsyncMessage("RIL:RegisterTelephonyMsg");
+  },
+
+  registerMobileConnectionMsg: function registerMobileConnectionMsg() {
+    debug("Registering for mobile connection-related messages");
+    cpmm.sendAsyncMessage("RIL:RegisterMobileConnectionMsg");
+  },
+
+  registerVoicemailMsg: function registerVoicemailMsg() {
+    debug("Registering for voicemail-related messages");
+    cpmm.sendAsyncMessage("RIL:RegisterVoicemailMsg");
+  },
+
   enumerateCalls: function enumerateCalls(callback) {
     debug("Requesting enumeration of calls for callback: " + callback);
     // We need 'requestId' to meet the 'RILContentHelper <--> RadioInterfaceLayer'

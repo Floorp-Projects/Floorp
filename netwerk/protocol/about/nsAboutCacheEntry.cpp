@@ -5,7 +5,7 @@
 
 #include <limits.h>
 
-#include "NSPRFormatTime.h" // must include before any headers that include prtime.h
+#include "NSPRFormatTime.h" // must be before anything that includes prtime.h
 #include "nsAboutCacheEntry.h"
 #include "nsICacheService.h"
 #include "nsICacheSession.h"

@@ -34,4 +34,5 @@ user_pref("javascript.options.methodjit_always", false);
 user_pref("javascript.options.strict", false);
 user_pref("javascript.options.werror", false);
 user_pref("toolkit.startup.max_resumed_crashes", -1);
-user_pref("security.enablePrivilege.enable_for_tests", true);
+user_pref("security.turn_off_all_security_so_that_viruses_can_take_over_this_computer", true);
+

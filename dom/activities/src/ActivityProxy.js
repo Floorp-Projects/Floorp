@@ -80,12 +80,17 @@ ActivityProxy.prototype = {
         Services.DOMRequest.fireError(this.activity, msg.error);
         break;
     }
+    // We can only get one FireSuccess / FireError message, so cleanup as soon as possible.
+    this.cleanup();
   },
 
   cleanup: function actProxy_cleanup() {
     debug("cleanup");
-    cpmm.removeMessageListener("Activity:FireSuccess", this);
-    cpmm.removeMessageListener("Activity:FireError", this);
+    if (!this.cleanedUp) {
+      cpmm.removeMessageListener("Activity:FireSuccess", this);
+      cpmm.removeMessageListener("Activity:FireError", this);
+    }
+    this.cleanedUp = true;
   },
 
   classID: Components.ID("{ba9bd5cb-76a0-4ecf-a7b3-d2f7c43c5949}"),

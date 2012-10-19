@@ -9,7 +9,7 @@
 
 
 /*=====================================*/
-#define PACK(h,l)   (int16)(( (h) << 8) | (l))
+#define PACK(h,l)   (int16_t)(( (h) << 8) | (l))
 
 #if defined(IS_LITTLE_ENDIAN)
 #define ShiftInCell(sub,len,min,max)  \

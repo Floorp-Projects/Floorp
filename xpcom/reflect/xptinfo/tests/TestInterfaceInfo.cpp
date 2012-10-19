@@ -76,7 +76,7 @@ int main (int argc, char **argv) {
         return 1;
     }
 
-    uint16 methodcount;
+    uint16_t methodcount;
     info5->GetMethodCount(&methodcount);
     const nsXPTMethodInfo *mi;
     for (i = 0; i < methodcount; i++) {
@@ -105,7 +105,7 @@ int main (int argc, char **argv) {
         // Not returning an error, because this could legitamately change
     }
     // lets see what arg this refers to
-    uint8 argnum;
+    uint8_t argnum;
     info5->GetInterfaceIsArgNumberForParam(6, &param3, &argnum);
     fprintf(stderr, "param 3 referrs to param %d of method 6 - createInstanceByContractID\n", (uint32_t)argnum);
     // Get the type of the parameter referred to

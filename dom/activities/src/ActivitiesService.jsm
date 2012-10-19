@@ -86,31 +86,35 @@ ActivitiesDb.prototype = {
     return hasher.finish(true);
   },
 
-  add: function actdb_add(aObject, aSuccess, aError) {
+  // Add all the activities carried in the |aObjects| array.
+  add: function actdb_add(aObjects, aSuccess, aError) {
     this.newTxn("readwrite", function (txn, store) {
-      let object = {
-        manifest: aObject.manifest,
-        name: aObject.name,
-        title: aObject.title || "",
-        icon: aObject.icon || "",
-        description: aObject.description
-      };
-      object.id = this.createId(object);
-      debug("Going to add " + JSON.stringify(object));
-
-      store.put(object);
+      aObjects.forEach(function (aObject) {
+        let object = {
+          manifest: aObject.manifest,
+          name: aObject.name,
+          title: aObject.title || "",
+          icon: aObject.icon || "",
+          description: aObject.description
+        };
+        object.id = this.createId(object);
+        debug("Going to add " + JSON.stringify(object));
+        store.put(object);
+      }, this);
     }.bind(this), aSuccess, aError);
   },
 
-  // we want to remove all activities for (manifest, name)
-  remove: function actdb_remove(aObject) {
+  // Remove all the activities carried in the |aObjects| array.
+  remove: function actdb_remove(aObjects) {
     this.newTxn("readwrite", function (txn, store) {
-      let object = {
-        manifest: aObject.manifest,
-        name: aObject.name
-      };
-      debug("Going to remove " + JSON.stringify(object));
-      store.delete(this.createId(object));
+      aObjects.forEach(function (aObject) {
+        let object = {
+          manifest: aObject.manifest,
+          name: aObject.name
+        };
+        debug("Going to remove " + JSON.stringify(object));
+        store.delete(this.createId(object));
+      }, this);
     }.bind(this), function() {}, function() {});
   },
 
@@ -307,13 +311,14 @@ let Activities = {
         break;
 
       case "Activities:Register":
-        this.db.add(msg, function onSuccess(aEvent) {
-          mm.sendAsyncMessage("Activities:Register:OK", msg);
-        },
-        function onError(aEvent) {
-          msg.error = "REGISTER_ERROR";
-          mm.sendAsyncMessage("Activities:Register:KO", msg);
-        });
+        this.db.add(msg,
+          function onSuccess(aEvent) {
+            mm.sendAsyncMessage("Activities:Register:OK", null);
+          },
+          function onError(aEvent) {
+            msg.error = "REGISTER_ERROR";
+            mm.sendAsyncMessage("Activities:Register:KO", msg);
+          });
         break;
       case "Activities:Unregister":
         this.db.remove(msg);

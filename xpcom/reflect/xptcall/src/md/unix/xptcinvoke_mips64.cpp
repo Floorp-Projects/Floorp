@@ -11,7 +11,7 @@
 #error "This code is for MIPS N32 only"
 #endif
 
-extern "C" uint32
+extern "C" uint32_t
 invoke_count_words(uint32_t paramCount, nsXPTCVariant* s)
 {
     return paramCount;

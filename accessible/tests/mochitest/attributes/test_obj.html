@@ -38,8 +38,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("sortNone", {"sort" : "none"}, true);
       testAttrs("sortOther", {"sort" : "other"}, true);
 
+      // inherited attributes by subdocuments
+      var subdoc = getAccessible("iframe").firstChild;
+      testAttrs(subdoc, {"busy" : "true"}, true);
+
       // live object attribute
-      
+
       // HTML
       testAttrs("output", {"live" : "polite"}, true);
 
@@ -171,6 +175,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   <div id="sortDescending" role="columnheader" aria-sort="descending"></div>
   <div id="sortNone" role="columnheader" aria-sort="none"></div>
   <div id="sortOther" role="columnheader" aria-sort="other"></div>
+
+  <!-- inherited from iframe -->
+  <iframe id="iframe" src="data:text/html,<html><body></body></html>"
+          aria-busy="true"></iframe>
 
   <!-- html -->
   <output id="output"></output>

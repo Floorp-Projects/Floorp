@@ -354,10 +354,10 @@ WebappsApplication.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
   init: function(aWindow, aApp) {
+    this._window = aWindow;
     this.origin = aApp.origin;
-    this.manifest = ObjectWrapper.wrap(aApp.manifest, aWindow);
-    this.updateManifest = aApp.updateManifest ? ObjectWrapper.wrap(aApp.updateManifest, aWindow)
-                                              : null;
+    this._manifest = aApp.manifest;
+    this._updateManifest = aApp.updateManifest;
     this.manifestURL = aApp.manifestURL;
     this.receipts = aApp.receipts;
     this.installOrigin = aApp.installOrigin;
@@ -389,6 +389,15 @@ WebappsApplication.prototype = {
     cpmm.sendAsyncMessage("Webapps:RegisterForMessages",
                           ["Webapps:Uninstall:Return:OK", "Webapps:OfflineCache",
                            "Webapps:PackageEvent"]);
+  },
+
+  get manifest() {
+    return this.manifest = ObjectWrapper.wrap(this._manifest, this._window);
+  },
+
+  get updateManifest() {
+    return this.updateManifest = this._updateManifest ? ObjectWrapper.wrap(this._updateManifest, this._window)
+                                                      : null;
   },
 
   set onprogress(aCallback) {

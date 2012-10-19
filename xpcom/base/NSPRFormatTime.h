@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Temporarily undefine to build successfully with NO_NSPR_10_SUPPORT
+#ifdef prtime_h___
+#error NSPRFormatTime.h must be included before any header that includes prtime.h
+#endif
 #undef NO_NSPR_10_SUPPORT
 #include "prtime.h"
 #define NO_NSPR_10_SUPPORT

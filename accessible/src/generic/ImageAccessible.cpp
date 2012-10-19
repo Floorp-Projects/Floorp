@@ -169,21 +169,18 @@ ImageAccessible::GetImageSize(int32_t* aWidth, int32_t* aHeight)
 }
 
 // Accessible
-nsresult
-ImageAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
+already_AddRefed<nsIPersistentProperties>
+ImageAccessible::NativeAttributes()
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsresult rv = LinkableAccessible::GetAttributesInternal(aAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    LinkableAccessible::NativeAttributes();
 
   nsAutoString src;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
   if (!src.IsEmpty())
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::src, src);
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::src, src);
 
-  return NS_OK;
+  return attributes.forget();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -686,7 +686,6 @@ static const struct JSOption {
     uint32_t    flag;
 } js_options[] = {
     {"atline",          JSOPTION_ATLINE},
-    {"relimit",         JSOPTION_RELIMIT},
     {"strict",          JSOPTION_STRICT},
     {"werror",          JSOPTION_WERROR},
     {"allow_xml",       JSOPTION_ALLOW_XML},
