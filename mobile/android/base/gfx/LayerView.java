@@ -17,6 +17,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.util.AttributeSet;
@@ -403,5 +404,11 @@ public class LayerView extends FrameLayout {
         if (mLayerClient != null)
             return mLayerClient.getPanZoomController().getOverScrollMode();
         return super.getOverScrollMode();
+    }
+
+    @Override
+    public void onFocusChanged (boolean gainFocus, int direction, Rect previouslyFocusedRect) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+        GeckoAccessibility.onLayerViewFocusChanged(this, gainFocus);
     }
 }

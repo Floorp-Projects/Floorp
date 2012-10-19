@@ -30,10 +30,11 @@ public class GeckoAccessibility {
     private static final int VIRTUAL_CURSOR_POSITION = 2;
     private static final int VIRTUAL_CURSOR_NEXT = 3;
 
+    private static boolean mEnabled = false;
     private static JSONObject mEventMessage = null;
     private static AccessibilityNodeInfo mVirtualCursorNode = null;
 
-    private static final HashSet<String> ServiceWhitelist =
+    private static final HashSet<String> sServiceWhitelist =
         new HashSet<String>(Arrays.asList(new String[] {
                     "com.google.android.marvin.talkback.TalkBackService", // Google Talkback screen reader
                     "com.mot.readout.ScreenReader", // Motorola screen reader
@@ -45,7 +46,7 @@ public class GeckoAccessibility {
         GeckoAppShell.getHandler().post(new Runnable() {
                 public void run() {
                     JSONObject ret = new JSONObject();
-                    boolean enabled = false;
+                    mEnabled = false;
                     AccessibilityManager accessibilityManager =
                         (AccessibilityManager) GeckoApp.mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
                     if (accessibilityManager.isEnabled()) {
@@ -54,14 +55,14 @@ public class GeckoAccessibility {
                         List<RunningServiceInfo> runningServices = activityManager.getRunningServices(Integer.MAX_VALUE);
 
                         for (RunningServiceInfo runningServiceInfo : runningServices) {
-                            enabled = ServiceWhitelist.contains(runningServiceInfo.service.getClassName());
-                            if (enabled)
+                            mEnabled = sServiceWhitelist.contains(runningServiceInfo.service.getClassName());
+                            if (mEnabled)
                                 break;
                         }
                     }
 
                     try {
-                        ret.put("enabled", enabled);
+                        ret.put("enabled", mEnabled);
                     } catch (Exception ex) {
                         Log.e(LOGTAG, "Error building JSON arguments for Accessibility:Settings:", ex);
                     }
@@ -183,6 +184,12 @@ public class GeckoAccessibility {
             layerview.setAccessibilityDelegate(new GeckoAccessibilityDelegate());
             layerview.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         }
+    }
+
+    public static void onLayerViewFocusChanged(LayerView layerview, boolean gainFocus) {
+        if (mEnabled)
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:Focus",
+                                                                           gainFocus ? "true" : "false"));
     }
 
     public static class GeckoAccessibilityDelegate extends View.AccessibilityDelegate {
