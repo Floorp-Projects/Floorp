@@ -92,6 +92,19 @@ function getChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild)
 }
 
 /**
+ * Test the accessible position.
+ */
+function testPos(aID, aPoint)
+{
+  var [expectedX, expectedY] =
+    (aPoint != undefined) ? aPoint : getBoundsForDOMElm(aID);
+
+  var [x, y] = getBounds(aID);
+  is(x, expectedX, "Wrong x coordinate of " + prettyName(aID));
+  is(y, expectedY, "Wrong y coordinate of " + prettyName(aID));
+}
+
+/**
  * Test the accessible boundaries.
  */
 function testBounds(aID, aRect)
@@ -107,7 +120,19 @@ function testBounds(aID, aRect)
 }
 
 /**
- * Return the accessible coordinates and size relative to the screen.
+ * Return the accessible coordinates relative to the screen in device pixels.
+ */
+function getPos(aID)
+{
+  var accessible = getAccessible(aID);
+  var x = {}, y = {};
+  accessible.getBounds(x, y, {}, {});
+  return [x.value, y.value];
+}
+
+/**
+ * Return the accessible coordinates and size relative to the screen in device
+ * pixels.
  */
 function getBounds(aID)
 {
