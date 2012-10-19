@@ -59,6 +59,7 @@
 #include "nsIContent.h"
 #include "nsIIDBFactory.h"
 #include "nsFrameMessageManager.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
 #include "nsIDOMTouchEvent.h"
 #include "nsIInlineEventHandlers.h"
@@ -133,7 +134,7 @@ NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
  * timeout.  Holds a strong reference to an nsIScriptTimeoutHandler, which
  * abstracts the language specific cruft.
  */
-struct nsTimeout : PRCList
+struct nsTimeout : mozilla::LinkedListElement<nsTimeout>
 {
   nsTimeout();
   ~nsTimeout();
@@ -144,13 +145,11 @@ struct nsTimeout : PRCList
   nsrefcnt AddRef();
 
   nsTimeout* Next() {
-    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return static_cast<nsTimeout*>(PR_NEXT_LINK(this));
+    return getNext();
   }
 
   nsTimeout* Prev() {
-    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return static_cast<nsTimeout*>(PR_PREV_LINK(this));
+    return getPrevious();
   }
 
   nsresult InitTimer(nsTimerCallbackFunc aFunc, uint64_t delay) {
@@ -870,17 +869,11 @@ protected:
   bool IsInModalState();
 
   nsTimeout* FirstTimeout() {
-    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return static_cast<nsTimeout*>(PR_LIST_HEAD(&mTimeouts));
+    return mTimeouts.getFirst();
   }
 
   nsTimeout* LastTimeout() {
-    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return static_cast<nsTimeout*>(PR_LIST_TAIL(&mTimeouts));
-  }
-
-  bool IsTimeout(PRCList* aList) {
-    return aList != &mTimeouts;
+    return mTimeouts.getLast();
   }
 
   // Convenience functions for the many methods that need to scale
@@ -1050,7 +1043,7 @@ protected:
   // non-null.  In that case, the dummy timeout pointed to by
   // mTimeoutInsertionPoint may have a later mWhen than some of the timeouts
   // that come after it.
-  PRCList                       mTimeouts;
+  mozilla::LinkedList<nsTimeout> mTimeouts;
   // If mTimeoutInsertionPoint is non-null, insertions should happen after it.
   // This is a dummy timeout at the moment; if that ever changes, the logic in
   // ResetTimersForNonBackgroundWindow needs to change.
