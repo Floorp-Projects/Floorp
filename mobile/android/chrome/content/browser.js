@@ -676,6 +676,8 @@ var BrowserApp = {
     evt.initUIEvent("TabOpen", true, false, window, null);
     newTab.browser.dispatchEvent(evt);
 
+    Tabs.zombifyLru();
+
     return newTab;
   },
 
