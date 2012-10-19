@@ -152,6 +152,10 @@ public:
   StopSendingFile(const nsAString& aDeviceAddress,
                   BluetoothReplyRunnable* aRunnable);
 
+  virtual void
+  ConfirmReceivingFile(const nsAString& aDeviceAddress, bool aConfirm,
+                       BluetoothReplyRunnable* aRunnable);
+
 private:
   nsresult SendGetPropertyMessage(const nsAString& aPath,
                                   const char* aInterface,

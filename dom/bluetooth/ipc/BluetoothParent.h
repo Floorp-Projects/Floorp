@@ -177,6 +177,12 @@ protected:
 
   bool
   DoRequest(const StopSendingFileRequest& aRequest);
+
+  bool
+  DoRequest(const ConfirmReceivingFileRequest& aRequest);
+
+  bool
+  DoRequest(const DenyReceivingFileRequest& aRequest);
 };
 
 END_BLUETOOTH_NAMESPACE

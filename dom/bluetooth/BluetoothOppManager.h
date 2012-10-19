@@ -51,6 +51,7 @@ public:
   bool SendFile(BlobParent* aBlob,
                 BluetoothReplyRunnable* aRunnable);
   bool StopSendingFile(BluetoothReplyRunnable* aRunnable);
+  void ConfirmReceivingFile(bool aConfirm, BluetoothReplyRunnable* aRunnable);
 
   void SendConnectRequest();
   void SendPutHeaderRequest(const nsAString& aFileName, int aFileSize);
