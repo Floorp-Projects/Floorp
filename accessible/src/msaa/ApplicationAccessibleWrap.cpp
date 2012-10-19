@@ -21,15 +21,11 @@ using namespace mozilla::a11y;
 NS_IMPL_ISUPPORTS_INHERITED0(ApplicationAccessibleWrap,
                              ApplicationAccessible)
 
-NS_IMETHODIMP
-ApplicationAccessibleWrap::GetAttributes(nsIPersistentProperties** aAttributes)
+already_AddRefed<nsIPersistentProperties>
+ApplicationAccessibleWrap::NativeAttributes()
 {
-  NS_ENSURE_ARG_POINTER(aAttributes);
-  *aAttributes = nullptr;
-
   nsCOMPtr<nsIPersistentProperties> attributes =
     do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
-  NS_ENSURE_STATE(attributes);
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
   if (gfxInfo) {
@@ -42,8 +38,7 @@ ApplicationAccessibleWrap::GetAttributes(nsIPersistentProperties** aAttributes)
         unused);
   }
 
-  attributes.swap(*aAttributes);
-  return NS_OK;
+  return attributes.forget();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
