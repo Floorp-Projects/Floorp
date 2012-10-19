@@ -3859,6 +3859,7 @@ private:
     uint64_t mOuterWindowID;
     uint64_t mInnerWindowID;
     int64_t mTimeStamp;
+    bool mIsFromPrivateWindow;
 };
 
 /******************************************************************************
