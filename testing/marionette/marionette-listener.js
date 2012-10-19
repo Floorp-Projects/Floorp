@@ -105,6 +105,7 @@ function startListeners() {
   addMessageListenerId("Marionette:getElementText", getElementText);
   addMessageListenerId("Marionette:getElementTagName", getElementTagName);
   addMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
+  addMessageListenerId("Marionette:getElementSize", getElementSize);
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   addMessageListenerId("Marionette:isElementSelected", isElementSelected);
   addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
@@ -168,6 +169,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getElementAttribute", getElementAttribute);
   removeMessageListenerId("Marionette:getElementTagName", getElementTagName);
   removeMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
+  removeMessageListenerId("Marionette:getElementSize", getElementSize);
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   removeMessageListenerId("Marionette:isElementSelected", isElementSelected);
   removeMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
@@ -665,6 +667,20 @@ function isElementDisplayed(msg) {
   try {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
     sendResponse({value: utils.isElementDisplayed(el)});
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack);
+  }
+}
+
+/**
+ * Get the size of the element and return it
+ */
+function getElementSize(msg){
+  try {
+    let el = elementManager.getKnownElement(msg.json.element, curWindow);
+    let clientRect = el.getBoundingClientRect();  
+    sendResponse({value: {width: clientRect.width, height: clientRect.height}});
   }
   catch (e) {
     sendError(e.message, e.code, e.stack);

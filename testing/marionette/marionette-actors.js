@@ -1337,6 +1337,22 @@ MarionetteDriverActor.prototype = {
     }
   },
 
+  getElementSize: function MDA_getElementSize(aRequest) {
+    if (this.context == "chrome") {
+      try {
+        let el = this.curBrowser.elementManager.getKnownElement(aRequest.element, this.getCurrentWindow());
+        let clientRect = el.getBoundingClientRect();  
+        this.sendResponse({width: clientRect.width, height: clientRect.height});
+      }
+      catch (e) {
+        this.sendError(e.message, e.code, e.stack);
+      }
+    }
+    else {
+      this.sendAsync("getElementSize", {element:aRequest.element});
+    }
+  },
+
   /**
    * Send key presses to element after focusing on it
    *
@@ -1688,6 +1704,7 @@ MarionetteDriverActor.prototype.requestTypes = {
   "getElementText": MarionetteDriverActor.prototype.getElementText,
   "getElementTagName": MarionetteDriverActor.prototype.getElementTagName,
   "isElementDisplayed": MarionetteDriverActor.prototype.isElementDisplayed,
+  "getElementSize": MarionetteDriverActor.prototype.getElementSize,
   "isElementEnabled": MarionetteDriverActor.prototype.isElementEnabled,
   "isElementSelected": MarionetteDriverActor.prototype.isElementSelected,
   "sendKeysToElement": MarionetteDriverActor.prototype.sendKeysToElement,
