@@ -68,6 +68,44 @@ LIRGenerator::visitGoto(MGoto *ins)
 }
 
 bool
+LIRGenerator::visitTableSwitch(MTableSwitch *tableswitch)
+{
+    MDefinition *opd = tableswitch->getOperand(0);
+
+    // There should be at least 1 successor. The default case!
+    JS_ASSERT(tableswitch->numSuccessors() > 0);
+
+    // If there are no cases, the default case is always taken.
+    if (tableswitch->numSuccessors() == 1)
+        return add(new LGoto(tableswitch->getDefault()));
+
+    // If we don't know the type.
+    if (opd->type() == MIRType_Value) {
+        LTableSwitchV *lir = newLTableSwitchV(tableswitch);
+        if (!useBox(lir, LTableSwitchV::InputValue, opd))
+            return false;
+        return add(lir);
+    }
+
+    // Case indices are numeric, so other types will always go to the default case.
+    if (opd->type() != MIRType_Int32 && opd->type() != MIRType_Double)
+        return add(new LGoto(tableswitch->getDefault()));
+
+    // Return an LTableSwitch, capable of handling either an integer or
+    // floating-point index.
+    LAllocation index;
+    LDefinition tempInt;
+    if (opd->type() == MIRType_Int32) {
+        index = useRegisterAtStart(opd);
+        tempInt = tempCopy(opd, 0);
+    } else {
+        index = useRegister(opd);
+        tempInt = temp(LDefinition::GENERAL);
+    }
+    return add(newLTableSwitch(index, tempInt, tableswitch));
+}
+
+bool
 LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed *ins)
 {
     LCheckOverRecursed *lir = new LCheckOverRecursed(temp());
