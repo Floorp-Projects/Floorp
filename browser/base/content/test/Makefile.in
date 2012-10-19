@@ -15,6 +15,7 @@ DIRS += \
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
+		head.js \
 		test_feed_discovery.html \
 		feed_discovery.html \
 		test_bug395533.html \
@@ -39,6 +40,7 @@ MOCHITEST_FILES = \
 		gZipOfflineChild.html^headers^ \
 		gZipOfflineChild.cacheManifest \
 		gZipOfflineChild.cacheManifest^headers^ \
+		test_bug787619.html \
 		$(NULL)
 
 # test_contextmenu.html is disabled on Linux due to bug 513558
