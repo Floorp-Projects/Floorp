@@ -43,6 +43,7 @@
 }
 
 #downloadsHistory:-moz-focusring > .button-box {
+  outline: 1px -moz-dialogtext dotted;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
 }
@@ -74,7 +75,7 @@ richlistitem[type="download"]:last-child {
 }
 
 #downloadsListBox:-moz-focusring > richlistitem[type="download"][selected] {
-  outline: 1px #999 dotted;
+  outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
   -moz-outline-radius: 3px;
 }
@@ -114,6 +115,10 @@ richlistitem[type="download"]:last-child {
 
 .downloadButton > .button-box {
   padding: 0;
+}
+
+.downloadButton:-moz-focusring > .button-box {
+  outline: 1px -moz-dialogtext dotted;
 }
 
 /*** Highlighted list items ***/
@@ -170,11 +175,6 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
 
 #downloads-indicator-icon {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
-                              0, 140, 20, 120) center no-repeat;
-}
-
-#downloads-indicator-icon:-moz-lwtheme-brighttext {
-  background: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"),
                               0, 140, 20, 120) center no-repeat;
 }
 

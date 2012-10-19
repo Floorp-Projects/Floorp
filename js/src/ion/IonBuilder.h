@@ -445,7 +445,7 @@ class IonBuilder : public MIRGenerator
     types::RecompileInfo const recompileInfo;
 
     // If off thread compilation is successful, final LIR is attached here.
-    LIRGraph *lir;
+    LIRGraph *backgroundCompiledLir;
 
     void clearForBackEnd();
 

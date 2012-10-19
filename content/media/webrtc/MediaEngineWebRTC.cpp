@@ -29,6 +29,8 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
 {
   webrtc::ViEBase* ptrViEBase;
   webrtc::ViECapture* ptrViECapture;
+  // We spawn threads to handle gUM runnables, so we must protect the member vars
+  MutexAutoLock lock(mMutex);
 
   if (!mVideoEngine) {
     if (!(mVideoEngine = webrtc::VideoEngine::Create())) {
@@ -123,6 +125,8 @@ MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSourc
 {
   webrtc::VoEBase* ptrVoEBase = NULL;
   webrtc::VoEHardware* ptrVoEHw = NULL;
+  // We spawn threads to handle gUM runnables, so we must protect the member vars
+  MutexAutoLock lock(mMutex);
 
   if (!mVoiceEngine) {
     mVoiceEngine = webrtc::VoiceEngine::Create();
@@ -181,6 +185,9 @@ MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSourc
 void
 MediaEngineWebRTC::Shutdown()
 {
+  // This is likely paranoia
+  MutexAutoLock lock(mMutex);
+
   if (mVideoEngine) {
     mVideoSources.Clear();
     webrtc::VideoEngine::Delete(mVideoEngine);
