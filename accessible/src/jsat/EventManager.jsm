@@ -77,9 +77,17 @@ var EventManager = {
       case 'scroll':
       case 'resize':
       {
+        // the target could be an element, document or window
+        let window = null;
+        if (aEvent.target instanceof Ci.nsIDOMWindow)
+          window = aEvent.target;
+        else if (aEvent.target instanceof Ci.nsIDOMDocument)
+          window = aEvent.target.defaultView;
+        else if (aEvent.target instanceof Ci.nsIDOMElement)
+          window = aEvent.target.ownerDocument.defaultView;
         this.present(
           function(p) {
-            return p.viewportChanged();;
+            return p.viewportChanged(window);
           }
         );
         break;
