@@ -281,34 +281,17 @@ LIRGeneratorARM::visitPowHalf(MPowHalf *ins)
     return defineReuseInput(lir, ins, 0);
 }
 
-bool
-LIRGeneratorARM::visitTableSwitch(MTableSwitch *tableswitch)
+LTableSwitch *
+LIRGeneratorARM::newLTableSwitch(const LAllocation &in, const LDefinition &inputCopy,
+                                       MTableSwitch *tableswitch)
 {
-    MDefinition *opd = tableswitch->getOperand(0);
+    return new LTableSwitch(in, inputCopy, tableswitch);
+}
 
-    // There should be at least 1 successor. The default case!
-    JS_ASSERT(tableswitch->numSuccessors() > 0);
-
-    // If there are no cases, the default case is always taken.
-    if (tableswitch->numSuccessors() == 1)
-        return add(new LGoto(tableswitch->getDefault()));
-
-    // Case indices are numeric, so other types will always go to the default case.
-    if (opd->type() != MIRType_Int32 && opd->type() != MIRType_Double)
-        return add(new LGoto(tableswitch->getDefault()));
-
-    // Return an LTableSwitch, capable of handling either an integer or
-    // floating-point index.
-    LAllocation index;
-    LDefinition tempInt;
-    if (opd->type() == MIRType_Int32) {
-        index = useRegisterAtStart(opd);
-        tempInt = tempCopy(opd, 0);
-    } else {
-        index = useRegister(opd);
-        tempInt = temp(LDefinition::GENERAL);
-    }
-    return add(new LTableSwitch(index, tempInt, tableswitch));
+LTableSwitchV *
+LIRGeneratorARM::newLTableSwitchV(MTableSwitch *tableswitch)
+{
+    return new LTableSwitchV(temp(), tempFloat(), tableswitch);
 }
 
 bool
