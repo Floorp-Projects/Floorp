@@ -1956,6 +1956,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                                         ae->Offset() + ae->Count());
             selEvent.mLength = uint32_t(NS_ABS(ae->Count()));
             selEvent.mReversed = ae->Count() >= 0 ? false : true;
+            selEvent.mExpandToClusterBoundary = false;
 
             DispatchEvent(&selEvent);
         }
