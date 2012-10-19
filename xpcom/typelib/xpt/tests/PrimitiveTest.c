@@ -29,9 +29,9 @@
 XPTString in_str = { 4, "bazz" };
 
 struct TestData {
-    uint32	bit32;
-    uint16      bit16;
-    uint8       bit8[2];
+    uint32_t	bit32;
+    uint16_t      bit16;
+    uint8_t       bit8[2];
     char	*cstr;
     XPTString   *str;
 } input = { 0xdeadbeef, 0xcafe, {0xba, 0xbe}, "foobar", &in_str},
@@ -64,7 +64,7 @@ main(int argc, char **argv)
     XPTState *state;
     XPTCursor curs, *cursor = &curs;
     char *header, *data, *whole;
-    uint32 hlen, dlen, i;
+    uint32_t hlen, dlen, i;
 
     TRY("XPT_NewArena", (arena = XPT_NewArena(1024, sizeof(double), "main")));
     
@@ -84,7 +84,7 @@ main(int argc, char **argv)
     fprintf(stderr, "XDR header %d bytes at %p:",
 	    hlen, header);
     for (i = 0; i < hlen; i++)
-	fprintf(stderr, "%c%02x", i ? ',' : ' ', (uint8)header[i]);
+	fprintf(stderr, "%c%02x", i ? ',' : ' ', (uint8_t)header[i]);
     fprintf(stderr, "\n");
 
     XPT_GetXDRData(state, XPT_DATA, &data, &dlen);
@@ -92,8 +92,8 @@ main(int argc, char **argv)
     fprintf(stderr, "XDR data %d bytes at %p:",
 	    dlen, data);
     for (i = 0; i < dlen; i++)
-	fprintf(stderr, "%c%02x/%c", i ? ',' : ' ', (uint8)data[i],
-		(uint8)data[i]);
+	fprintf(stderr, "%c%02x/%c", i ? ',' : ' ', (uint8_t)data[i],
+		(uint8_t)data[i]);
     fprintf(stderr, "\n");
 
     whole = malloc(dlen + hlen);

@@ -181,10 +181,10 @@ if (this.Components) {
            exports.OS.File.stat(Type.path.fromMsg(path)));
        },
        getCurrentDirectory: function getCurrentDirectory() {
-         return exports.OS.Shared.Type.path.toMsg(exports.OS.File.curDir);
+         return exports.OS.Shared.Type.path.toMsg(File.getCurrentDirectory());
        },
        setCurrentDirectory: function setCurrentDirectory(path) {
-         exports.OS.File.curDir = exports.OS.Shared.Type.path.fromMsg(path);
+         File.setCurrentDirectory(exports.OS.Shared.Type.path.fromMsg(path));
        },
        copy: function copy(sourcePath, destPath, options) {
          return File.copy(Type.path.fromMsg(sourcePath),

@@ -41,10 +41,6 @@ function test()
     '</body>\n' +
     '</html>\n';
 
-  if (!options().match(/relimit/)) {
-    options('relimit');
-  }
-
   try
   {
     /<!--(.*|\n)*-->/.exec(s);
