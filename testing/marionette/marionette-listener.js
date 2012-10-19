@@ -108,6 +108,7 @@ function startListeners() {
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   addMessageListenerId("Marionette:isElementSelected", isElementSelected);
   addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
+  addMessageListenerId("Marionette:getElementPosition", getElementPosition);
   addMessageListenerId("Marionette:clearElement", clearElement);
   addMessageListenerId("Marionette:switchToFrame", switchToFrame);
   addMessageListenerId("Marionette:deleteSession", deleteSession);
@@ -170,6 +171,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   removeMessageListenerId("Marionette:isElementSelected", isElementSelected);
   removeMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
+  removeMessageListenerId("Marionette:getElementPosition", getElementPosition);
   removeMessageListenerId("Marionette:clearElement", clearElement);
   removeMessageListenerId("Marionette:switchToFrame", switchToFrame);
   removeMessageListenerId("Marionette:deleteSession", deleteSession);
@@ -703,6 +705,45 @@ function sendKeysToElement(msg) {
     let el = elementManager.getKnownElement(msg.json.element, curWindow);
     utils.type(curWindow.document, el, msg.json.value.join(""), true);
     sendOk();
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack);
+  }
+}
+
+/**
+ * Get the position of an element
+ */
+function getElementPosition(msg) {
+  try{
+    let el = elementManager.getKnownElement(msg.json.element, curWindow);
+    var x = el.offsetLeft;
+    var y = el.offsetTop;
+    var elementParent = el.offsetParent;
+    while (elementParent != null) {
+      if (elementParent.tagName == "TABLE") {
+        var parentBorder = parseInt(elementParent.border);
+        if (isNaN(parentBorder)) {
+          var parentFrame = elementParent.getAttribute('frame');
+          if (parentFrame != null) {
+            x += 1;
+            y += 1;
+          }
+        } else if (parentBorder > 0) {
+          x += parentBorder;
+          y += parentBorder;
+        }
+      }
+      x += elementParent.offsetLeft;
+      y += elementParent.offsetTop;
+      elementParent = elementParent.offsetParent;
+    }
+
+    let location = {};
+    location.x = x;
+    location.y = y;
+
+    sendResponse({value: location});
   }
   catch (e) {
     sendError(e.message, e.code, e.stack);

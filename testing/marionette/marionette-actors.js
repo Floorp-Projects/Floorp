@@ -1391,6 +1391,10 @@ MarionetteDriverActor.prototype = {
     }
   },
 
+  getElementPosition: function MDA_getElementPosition(aRequest) {
+      this.sendAsync("getElementPosition", {element:aRequest.element});
+  },
+
   /**
    * Closes the Browser Window.
    *
@@ -1687,6 +1691,7 @@ MarionetteDriverActor.prototype.requestTypes = {
   "isElementEnabled": MarionetteDriverActor.prototype.isElementEnabled,
   "isElementSelected": MarionetteDriverActor.prototype.isElementSelected,
   "sendKeysToElement": MarionetteDriverActor.prototype.sendKeysToElement,
+  "getElementPosition": MarionetteDriverActor.prototype.getElementPosition,
   "clearElement": MarionetteDriverActor.prototype.clearElement,
   "getTitle": MarionetteDriverActor.prototype.getTitle,
   "getPageSource": MarionetteDriverActor.prototype.getPageSource,
