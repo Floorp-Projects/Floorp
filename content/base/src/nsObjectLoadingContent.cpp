@@ -1296,6 +1296,14 @@ nsObjectLoadingContent::UpdateObjectParameters()
     }
   }
 
+  // For eAllowPluginSkipChannel tags, if we have a non-plugin type, but can get
+  // a plugin type from the extension, prefer that to falling back to a channel.
+  if (GetTypeOfContent(newMime) != eType_Plugin && newURI &&
+      (caps & eAllowPluginSkipChannel) &&
+      IsPluginEnabledByExtension(newURI, newMime)) {
+    LOG(("OBJLC [%p]: Using extension as type hint (%s)", this, newMime.get()));
+  }
+
   ///
   /// Check if the original (pre-channel) content-type or URI changed, and
   /// record mOriginal{ContentType,URI}
