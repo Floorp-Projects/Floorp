@@ -573,7 +573,6 @@ static const struct JSOption {
     {"atline",          JSOPTION_ATLINE},
     {"methodjit",       JSOPTION_METHODJIT},
     {"methodjit_always",JSOPTION_METHODJIT_ALWAYS},
-    {"relimit",         JSOPTION_RELIMIT},
     {"strict",          JSOPTION_STRICT},
     {"typeinfer",       JSOPTION_TYPE_INFERENCE},
     {"werror",          JSOPTION_WERROR},
