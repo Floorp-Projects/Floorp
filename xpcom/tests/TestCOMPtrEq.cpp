@@ -75,7 +75,6 @@ main()
               (s == rkc) &&
               (s == d) &&
               (r == s) &&
-              (r == r) &&
               (r == sc) &&
               (r == rc) &&
               (r == rk) &&
@@ -91,7 +90,6 @@ main()
               (rc == s) &&
               (rc == r) &&
               (rc == sc) &&
-              (rc == rc) &&
               (rc == rk) &&
               (rc == rkc) &&
               (rc == d) &&
@@ -99,7 +97,6 @@ main()
               (rk == r) &&
               (rk == sc) &&
               (rk == rc) &&
-              (rk == rk) &&
               (rk == rkc) &&
               (rk == d) &&
               (rkc == s) &&
@@ -107,7 +104,6 @@ main()
               (rkc == sc) &&
               (rkc == rc) &&
               (rkc == rk) &&
-              (rkc == rkc) &&
               (rkc == d) &&
               (d == s) &&
               (d == r) &&
@@ -115,7 +111,6 @@ main()
               (d == rc) &&
               (d == rk) &&
               (d == rkc) &&
-              (d == d) &&
 #ifdef NSCAP_EQTEST_TEST_ACROSS_TYPES
               (s == s2) &&
               (s == r2) &&
