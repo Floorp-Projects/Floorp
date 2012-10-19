@@ -9,7 +9,6 @@
 <p id="display"></p>
 <div id="content" style="display: none">
 </div>
-<iframe onload="startTest()"></iframe>
 <pre id="test">
 <script type="application/javascript">
 
@@ -18,34 +17,17 @@
 ok('mozPower' in navigator, "navigator.mozPower should exist");
 
 /** Test permission **/
-// In b2g, addPermission 'power' is only working after a document reload
-// See bug 802312
 
-SimpleTest.waitForExplicitFinish();
+SpecialPowers.removePermission("power", document);
 
-function startTest() {
-  window.frames[0].frameElement.setAttribute('onload', 'doTest2()');
-  power = window.frames[0].navigator.mozPower;
-  ok(!power, "Shouldn't be able to access power manager without permission.");
+power = navigator.mozPower;
+ok(!power, "Shouldn't be able to access power manager without permission.");
 
-  SpecialPowers.addPermission("power", true, window.frames[0].document);
-  window.frames[0].location.reload();
-}
+SpecialPowers.addPermission("power", true, document);
 
-function doTest2() {
-  window.frames[0].frameElement.setAttribute('onload', 'doTest3()');
-  power = window.frames[0].navigator.mozPower;
-  ok(power, "Should be able to access power manager with permission.");
+power = navigator.mozPower;
+ok(power, "Shouldn be able to access power manager with permission.");
 
-  SpecialPowers.removePermission("power", window.frames[0].document);
-  window.frames[0].location.reload();
-}
-
-function doTest3() {
-  power = window.frames[0].navigator.mozPower;
-  ok(!power, "Shouldn't be able to access power manager without permission.");
-  SimpleTest.finish();
-}
 </script>
 </pre>
 </body>
