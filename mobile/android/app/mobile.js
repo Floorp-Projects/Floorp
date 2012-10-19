@@ -658,7 +658,7 @@ pref("media.plugins.enabled", true);
 pref("media.stagefright.omxcodec.flags", 0);
 
 // Coalesce touch events to prevent them from flooding the event queue
-pref("dom.event.touch.coalescing.enabled", true);
+pref("dom.event.touch.coalescing.enabled", false);
 
 // default orientation for the app, default to undefined
 // the java GeckoScreenOrientationListener needs this to be defined
