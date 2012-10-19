@@ -25,6 +25,7 @@ let AppsUtils = {
   cloneAppObject: function cloneAppObject(aApp) {
     return {
       name: aApp.name,
+      csp: aApp.csp,
       installOrigin: aApp.installOrigin,
       origin: aApp.origin,
       receipts: aApp.receipts ? JSON.parse(JSON.stringify(aApp.receipts)) : null,
@@ -88,6 +89,18 @@ let AppsUtils = {
     }
 
     return Ci.nsIScriptSecurityManager.NO_APP_ID;
+  },
+
+  getCSPByLocalId: function getCSPByLocalId(aApps, aLocalId) {
+    debug("getCSPByLocalId " + aLocalId);
+    for (let id in aApps) {
+      let app = aApps[id];
+      if (app.localId == aLocalId) {
+	  return ( app.csp || "" );
+      }
+    }
+
+    return "";
   },
 
   getAppByLocalId: function getAppByLocalId(aApps, aLocalId) {

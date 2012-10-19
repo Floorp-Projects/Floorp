@@ -68,6 +68,11 @@ let DOMApplicationRegistry = {
     return AppsUtils.getAppLocalIdByManifestURL(this.webapps, aManifestURL);
   },
 
+  getCSPByLocalId: function(aLocalId) {
+    debug("getCSPByLocalId:" + aLocalId);
+    return AppsUtils.getCSPByLocalId(this.webapps, aLocalId);
+  },
+
   getAppByLocalId: function getAppByLocalId(aLocalId) {
     debug("getAppByLocalId " + aLocalId);
     return AppsUtils.getAppByLocalId(this.webapps, aLocalId);

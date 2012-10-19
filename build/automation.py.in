@@ -304,11 +304,13 @@ class Automation(object):
 "installTime": 132333986000,
 "manifestURL": "$manifestURL",
 "localId": $localId,
-"appStatus": $appStatus
+"appStatus": $appStatus,
+"csp": "$csp"
 }""")
 
     manifestTemplate = Template("""{
   "name": "$name",
+  "csp": "$csp",
   "description": "$description",
   "launch_path": "/",
   "developer": {
@@ -530,6 +532,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     apps = [
       {
         'name': 'http_example_org',
+        'csp': '',
         'origin': 'http://example.org',
         'manifestURL': 'http://example.org/manifest.webapp',
         'description': 'http://example.org App',
@@ -537,6 +540,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       },
       {
         'name': 'https_example_com',
+        'csp': '',
         'origin': 'https://example.com',
         'manifestURL': 'https://example.com/manifest.webapp',
         'description': 'https://example.com App',
@@ -544,6 +548,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       },
       {
         'name': 'http_test1_example_org',
+        'csp': '',
         'origin': 'http://test1.example.org',
         'manifestURL': 'http://test1.example.org/manifest.webapp',
         'description': 'http://test1.example.org App',
@@ -551,6 +556,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       },
       {
         'name': 'http_test1_example_org_8000',
+        'csp': '',
         'origin': 'http://test1.example.org:8000',
         'manifestURL': 'http://test1.example.org:8000/manifest.webapp',
         'description': 'http://test1.example.org:8000 App',
@@ -558,6 +564,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       },
       {
         'name': 'http_sub1_test1_example_org',
+        'csp': '',
         'origin': 'http://sub1.test1.example.org',
         'manifestURL': 'http://sub1.test1.example.org/manifest.webapp',
         'description': 'http://sub1.test1.example.org App',
@@ -565,6 +572,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       },
       {
         'name': 'https_example_com_privileged',
+        'csp': '',
         'origin': 'https://example.com',
         'manifestURL': 'https://example.com/manifest_priv.webapp',
         'description': 'https://example.com Privileged App',
@@ -572,11 +580,36 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       },
       {
         'name': 'https_example_com_certified',
+        'csp': '',
         'origin': 'https://example.com',
         'manifestURL': 'https://example.com/manifest_cert.webapp',
         'description': 'https://example.com Certified App',
         'appStatus': _APP_STATUS_CERTIFIED
       },
+      {
+        'name': 'https_example_csp_certified',
+        'csp': "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'",
+        'origin': 'https://example.com',
+        'manifestURL': 'https://example.com/manifest_csp_cert.webapp',
+        'description': 'https://example.com Certified App with manifest policy',
+        'appStatus': _APP_STATUS_CERTIFIED
+      }, 
+      {
+        'name': 'https_example_csp_installed',
+        'csp': "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'",
+        'origin': 'https://example.com',
+        'manifestURL': 'https://example.com/manifest_csp_inst.webapp',
+        'description': 'https://example.com Installed App with manifest policy',
+        'appStatus': _APP_STATUS_INSTALLED
+      }, 
+      {
+        'name': 'https_example_csp_privileged',
+        'csp': "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'",
+        'origin': 'https://example.com',
+        'manifestURL': 'https://example.com/manifest_csp_priv.webapp',
+        'description': 'https://example.com Privileged App with manifest policy',
+        'appStatus': _APP_STATUS_PRIVILEGED
+      }, 
     ];
     self.setupTestApps(profileDir, apps)
 
