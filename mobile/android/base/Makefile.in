@@ -191,6 +191,7 @@ FENNEC_PP_JAVA_FILES = \
   WebApp.java \
   WebApps.java \
   GeckoActivity.java \
+  GeckoAppWidgetProvider.java \
   LauncherShortcuts.java \
   NotificationHandler.java \
   Restarter.java \
@@ -347,6 +348,7 @@ RES_LAYOUT = \
   res/layout/doorhanger.xml \
   res/layout/find_in_page_content.xml \
   res/layout/font_size_preference.xml \
+  res/layout/gecko_appwidget.xml \
   res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
@@ -439,6 +441,7 @@ RES_VALUES_LAND_V14 = \
   $(NULL)
 
 RES_XML = \
+        res/xml/gecko_appwidget_info.xml \
 	$(SYNC_RES_XML) \
 	$(NULL)
 
@@ -469,6 +472,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/alert_addon.png \
   res/drawable/alert_app.png \
   res/drawable/alert_download.png \
+  res/drawable/appwidget_bg.9.png \
   res/drawable/awesomebar_tab_center.9.png \
   res/drawable/awesomebar_tab_left.9.png \
   res/drawable/awesomebar_tab_right.9.png \
@@ -550,6 +554,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/alert_addon.png \
   res/drawable-hdpi/alert_app.png \
   res/drawable-hdpi/alert_download.png \
+  res/drawable-hdpi/appwidget_bg.9.png \
   res/drawable-hdpi/awesomebar_tab_center.9.png \
   res/drawable-hdpi/awesomebar_tab_left.9.png \
   res/drawable-hdpi/awesomebar_tab_right.9.png \
@@ -616,6 +621,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/alert_addon.png \
   res/drawable-xhdpi/alert_app.png \
   res/drawable-xhdpi/alert_download.png \
+  res/drawable-xhdpi/appwidget_bg.9.png \
   res/drawable-xhdpi/awesomebar_tab_center.9.png \
   res/drawable-xhdpi/awesomebar_tab_left.9.png \
   res/drawable-xhdpi/awesomebar_tab_right.9.png \
