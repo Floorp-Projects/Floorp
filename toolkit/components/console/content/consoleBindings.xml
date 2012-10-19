@@ -162,7 +162,13 @@
             // filter chrome urls
             if (!this.showChromeErrors && scriptError.sourceName.substr(0, 9) == "chrome://")
               return;
- 
+
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+            // filter private windows
+            if (scriptError.isFromPrivateWindow)
+              return;
+#endif
+
             this.appendError(scriptError);
           } catch (ex) {
             try {
@@ -511,4 +517,3 @@
   </binding>
 
 </bindings>
-
