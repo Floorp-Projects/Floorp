@@ -326,8 +326,11 @@ var gPluginHandler = {
       overlay.addEventListener("click", function(aEvent) {
         // Have to check that the target is not the link to update the plugin
         if (!(aEvent.originalTarget instanceof HTMLAnchorElement) &&
-            aEvent.button == 0 && aEvent.isTrusted)
+            aEvent.button == 0 && aEvent.isTrusted) {
           gPluginHandler.activateSinglePlugin(aEvent.target.ownerDocument.defaultView.top, aPlugin);
+          aEvent.stopPropagation();
+          aEvent.preventDefault();
+        }
       }, true);
     }
 
