@@ -83,7 +83,7 @@ private:
                                  const nsString& aContentType);
   void ReplyToConnect();
   void ReplyToDisconnect();
-  void ReplyToPut(bool aFinal);
+  void ReplyToPut(bool aFinal, bool aContinue);
   virtual void OnConnectSuccess() MOZ_OVERRIDE;
   virtual void OnConnectError() MOZ_OVERRIDE;
   virtual void OnDisconnect() MOZ_OVERRIDE;
@@ -99,6 +99,7 @@ private:
   nsString mConnectedDeviceAddress;
   bool mReceiving;
   bool mPutFinal;
+  bool mWaitingForConfirmationFlag;
 
   nsCOMPtr<nsIDOMBlob> mBlob;
   nsCOMPtr<nsIThread> mReadFileThread;
