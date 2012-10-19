@@ -339,8 +339,10 @@ MediaEngineDefaultAudioSource::Notify(nsITimer* aTimer)
 
 void
 MediaEngineDefault::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSource> >* aVSources) {
+  MutexAutoLock lock(mMutex);
   int32_t found = false;
   int32_t len = mVSources.Length();
+
   for (int32_t i = 0; i < len; i++) {
     nsRefPtr<MediaEngineVideoSource> source = mVSources.ElementAt(i);
     aVSources->AppendElement(source);
@@ -361,7 +363,9 @@ MediaEngineDefault::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSour
 
 void
 MediaEngineDefault::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSource> >* aASources) {
-  int32_t len = mVSources.Length();
+  MutexAutoLock lock(mMutex);
+  int32_t len = mASources.Length();
+
   for (int32_t i = 0; i < len; i++) {
     nsRefPtr<MediaEngineAudioSource> source = mASources.ElementAt(i);
     if (source->IsAvailable()) {
