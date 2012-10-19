@@ -1033,7 +1033,7 @@ function handleFallbackToCompleteUpdate(update, postStaging) {
   if (update.selectedPatch && oldType == "partial" && update.patchCount == 2) {
     // Partial patch application failed, try downloading the complete
     // update in the background instead.
-    LOG("UpdateService:_postUpdateProcessing - install of partial patch " +
+    LOG("handleFallbackToCompleteUpdate - install of partial patch " +
         "failed, downloading complete patch");
     var status = Cc["@mozilla.org/updates/update-service;1"].
                  getService(Ci.nsIApplicationUpdateService).
@@ -1628,8 +1628,15 @@ UpdateService.prototype = {
     }
 #endif
 
-    if (!update)
+    if (!update) {
+      if (status != STATE_SUCCEEDED) {
+        LOG("UpdateService:_postUpdateProcessing - previous patch failed " +
+            "and no patch available");
+        cleanupActiveUpdate();
+        return;
+      }
       update = new Update(null);
+    }
 
     var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                    createInstance(Ci.nsIUpdatePrompt);
@@ -2490,13 +2497,21 @@ UpdateManager.prototype = {
   get activeUpdate() {
     if (this._activeUpdate &&
         this._activeUpdate.channel != UpdateChannel.get()) {
-      // User switched channels, clear out any old active updates and remove
-      // partial downloads
-      this._activeUpdate = null;
-      this.saveUpdates();
+      LOG("UpdateManager:get activeUpdate - channel has changed, " +
+          "reloading default preferences to workaround bug 802022");
+      // Workaround to get distribution preferences loaded (Bug 774618). This
+      // can be removed after bug 802022 is fixed.
+      let prefSvc = Services.prefs.QueryInterface(Ci.nsIObserver);
+      prefSvc.observe(null, "reload-default-prefs", null);
+      if (this._activeUpdate.channel != UpdateChannel.get()) {
+        // User switched channels, clear out any old active updates and remove
+        // partial downloads
+        this._activeUpdate = null;
+        this.saveUpdates();
 
-      // Destroy the updates directory, since we're done with it.
-      cleanUpUpdatesDir();
+        // Destroy the updates directory, since we're done with it.
+        cleanUpUpdatesDir();
+      }
     }
     return this._activeUpdate;
   },
