@@ -306,7 +306,6 @@ nsMIMEInfoAndroid::GetPrimaryExtension(nsACString & aPrimaryExtension)
 NS_IMETHODIMP
 nsMIMEInfoAndroid::SetPrimaryExtension(const nsACString & aExtension)
 {
-  NS_ASSERTION(!aExtension.IsEmpty(), "no extension");
   uint32_t extCount = mExtensions.Length();
   uint8_t i;
   bool found = false;
