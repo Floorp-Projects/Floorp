@@ -98,7 +98,6 @@ var AccessFu = {
     Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
     Services.obs.addObserver(this, 'Accessibility:NextObject', false);
     Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
-    Services.obs.addObserver(this, 'Accessibility:CurrentObject', false);
     this.chromeWin.addEventListener('TabOpen', this);
   },
 
@@ -124,7 +123,6 @@ var AccessFu = {
     Services.obs.removeObserver(this, 'remote-browser-frame-shown');
     Services.obs.removeObserver(this, 'Accessibility:NextObject');
     Services.obs.removeObserver(this, 'Accessibility:PreviousObject');
-    Services.obs.removeObserver(this, 'Accessibility:CurrentObject');
   },
 
   _enableOrDisable: function _enableOrDisable() {
@@ -186,11 +184,6 @@ var AccessFu = {
       case 'Accessibility:PreviousObject':
         Input.moveCursor('movePrevious', 'Simple', 'gesture');
         break;
-      case 'Accessibility:CurrentObject':
-        let mm = Utils.getCurrentBrowser(this.chromeWin).
-          frameLoader.messageManager;
-        mm.sendAsyncMessage('AccessFu:VirtualCursor',
-                            {action: 'presentLastPivot'});
         break;
       case 'nsPref:changed':
         if (aData == 'activate') {

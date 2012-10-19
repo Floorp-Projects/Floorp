@@ -104,14 +104,6 @@ var EventManager = {
     }
   },
 
-  presentLastPivot: function presentLastPivot() {
-    this.present(
-      function(p) {
-        return p.presentLastPivot();
-      }
-    );
-  },
-
   handleAccEvent: function handleAccEvent(aEvent) {
     if (Logger.logLevel >= Logger.DEBUG)
       Logger.debug('A11yEvent', Logger.eventToString(aEvent),
