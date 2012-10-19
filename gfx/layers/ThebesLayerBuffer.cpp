@@ -312,7 +312,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
 
   // If we have no buffered data already, then destBuffer will be a fresh buffer
   // and we do not need to clear it below.
-  bool isClear = mBuffer == nullptr;
+  bool isClear = !HaveBuffer();
 
   if (destBuffer) {
     if (HaveBuffer()) {

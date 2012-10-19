@@ -11,6 +11,7 @@
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 
+#include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
 #include "nsDOMFile.h"
 #include "nsThreadUtils.h"
@@ -218,10 +219,12 @@ class MediaEngineWebRTC : public MediaEngine
 {
 public:
   MediaEngineWebRTC()
-  : mVideoEngine(NULL)
+  : mMutex("mozilla::MediaEngineWebRTC")
+  , mVideoEngine(NULL)
   , mVoiceEngine(NULL)
   , mVideoEngineInit(false)
-  , mAudioEngineInit(false) {
+  , mAudioEngineInit(false)
+  {
     mVideoSources.Init();
     mAudioSources.Init();
   }
@@ -235,6 +238,9 @@ public:
   virtual void EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSource> >*);
 
 private:
+  Mutex mMutex;
+  // protected with mMutex:
+
   webrtc::VideoEngine* mVideoEngine;
   webrtc::VoiceEngine* mVoiceEngine;
 

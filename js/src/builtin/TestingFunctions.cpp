@@ -167,8 +167,8 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
     /*
      * If the first argument is 'compartment', we collect any compartments
      * previously scheduled for GC via schedulegc. If the first argument is an
-     * object, we collect the object's compartment (any any other compartments
-     * scheduled for GC). Otherwise, we collect call compartments.
+     * object, we collect the object's compartment (and any other compartments
+     * scheduled for GC). Otherwise, we collect all compartments.
      */
     JSBool compartment = false;
     if (argc == 1) {

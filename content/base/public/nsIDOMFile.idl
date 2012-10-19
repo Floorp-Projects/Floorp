@@ -28,7 +28,7 @@ interface nsIURI;
 interface nsIPrincipal;
 interface nsIDOMBlob;
 
-[scriptable, builtinclass, uuid(16e3f8d1-7f31-48cc-93f5-9c931a977cf6)]
+[scriptable, builtinclass, uuid(52d22585-7737-460e-9731-c658df03304a)]
 interface nsIDOMBlob : nsISupports
 {
   readonly attribute unsigned long long size;
@@ -73,4 +73,6 @@ interface nsIDOMFile : nsIDOMBlob
 
   // This performs no security checks!
   [noscript] readonly attribute DOMString mozFullPathInternal;
+
+  [noscript] readonly attribute uint64_t mozLastModifiedDate;
 };

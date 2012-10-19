@@ -84,7 +84,7 @@ public:
     // flags.
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name) = 0;
 
-    NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *val) = 0;
+    NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *kdelegate, void *val) = 0;
 
     enum {
         // Values for flags:

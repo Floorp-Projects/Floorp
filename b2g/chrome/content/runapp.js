@@ -1,6 +1,9 @@
+"use strict";
+
 // runapp.js:
 // Provide a --runapp APPNAME command-line option.
 
+let runAppObj;
 window.addEventListener('load', function() {
   // Get the command line arguments that were passed to the b2g client
   let args = window.arguments[0].QueryInterface(Ci.nsICommandLine);
@@ -13,27 +16,52 @@ window.addEventListener('load', function() {
     // it was the last argument or the next argument starts with '-').
     // However, someone could still explicitly pass an empty argument!
     appname = args.handleFlagWithParam('runapp', false);
-  }
-  catch(e) {
+  } catch(e) {
     // treat a missing parameter like an empty parameter (=> show usage)
     appname = '';
   }
 
   // not specified, bail.
-  if (appname === null)
+  if (appname === null) {
     return;
+  }
 
-  // - Get the list of apps since the parameter was specified
-  let appsReq = navigator.mozApps.mgmt.getAll();
-  appsReq.onsuccess = function() {
-    let apps = appsReq.result;
+  runAppObj = new AppRunner(appname);
+  Services.obs.addObserver(runAppObj, 'webapps-registry-ready', false);
+});
+
+window.addEventListener('unload', function() {
+  Services.obs.removeObserver(runAppObj, 'webapps-registry-ready');
+});
+
+function AppRunner(aName) {
+  this._req = null;
+  this._appName = aName;
+}
+AppRunner.prototype = {
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == 'webapps-registry-ready') {
+      this.doRunApp();
+    }
+  },
+
+  doRunApp: function() {
+    // - Get the list of apps since the parameter was specified
+    this._req = navigator.mozApps.mgmt.getAll();
+    this._req.onsuccess = this.getAllSuccess.bind(this);
+    this._req.onerror = this.getAllError.bind(this);
+  },
+
+  getAllSuccess: function() {
+    let apps = this._req.result;
+
     function findAppWithName(name) {
       let normalizedSearchName = name.replace(/[- ]+/g, '').toLowerCase();
 
       for (let i = 0; i < apps.length; i++) {
         let app = apps[i];
         let normalizedAppName =
-              app.manifest.name.replace(/[- ]+/g, '').toLowerCase();
+          app.manifest.name.replace(/[- ]+/g, '').toLowerCase();
         if (normalizedSearchName === normalizedAppName) {
           return app;
         }
@@ -59,14 +87,14 @@ window.addEventListener('load', function() {
       Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
     }
 
-    if (appname === '') {
+    if (this._appName === '') {
       usageAndDie();
       return;
     }
 
-    let app = findAppWithName(appname);
+    let app = findAppWithName(this._appName);
     if (!app) {
-      dump('Could not find app: "' + appname + '". Maybe you meant one of:\n');
+      dump('Could not find app: "' + this._appName + '". Maybe you meant one of:\n');
       usageAndDie(true);
       return;
     }
@@ -74,11 +102,11 @@ window.addEventListener('load', function() {
     let setReq =
       navigator.mozSettings.createLock().set({'lockscreen.enabled': false});
     setReq.onsuccess = function() {
-      // give the event loop another turn to disable the lock screen
+      // give the event loop 100ms to disable the lock screen
       window.setTimeout(function() {
         dump('--runapp launching app: ' + app.manifest.name + '\n');
         app.launch();
-      }, 0);
+      }, 100);
     };
     setReq.onerror = function() {
       dump('--runapp failed to disable lock-screen.  Giving up.\n');
@@ -86,8 +114,9 @@ window.addEventListener('load', function() {
 
     dump('--runapp found app: ' + app.manifest.name +
          ', disabling lock screen...\n');
- };
- appsReq.onerror = function() {
-   dump('Problem getting the list of all apps!');
- };
-});
+  },
+
+  getAllError: function() {
+    dump('Problem getting the list of all apps!');
+  }
+};

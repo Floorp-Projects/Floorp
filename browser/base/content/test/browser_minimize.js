@@ -20,6 +20,10 @@ function waitForInactive() {
 }
 
 function test() {
+    registerCleanupFunction(function() {
+      window.restore();
+    });
+
     waitForExplicitFinish();
     is(gBrowser.docShell.isActive, true, "Docshell should be active");
     window.minimize();
