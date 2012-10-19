@@ -137,7 +137,7 @@ var AccessFu = {
       else
         this._disable();
     } catch (x) {
-      Logger.error(x);
+      Logger.logException(x);
     }
   },
 
@@ -157,7 +157,7 @@ var AccessFu = {
           Output[presenter.type](presenter.details, aMessage.target);
         }
       } catch (x) {
-        Logger.error(x);
+        Logger.logException(x);
       }
       break;
       case 'AccessFu:Input':
@@ -341,7 +341,7 @@ var Input = {
         break;
       }
     } catch (x) {
-      Logger.error(x);
+      Logger.logException(x);
     }
   },
 

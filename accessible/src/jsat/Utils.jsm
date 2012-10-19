@@ -98,7 +98,7 @@ var Utils = {
       return aBrowser.QueryInterface(Ci.nsIFrameLoaderOwner).
          frameLoader.messageManager;
     } catch (x) {
-      Logger.error(x);
+      Logger.logException(x);
       return null;
     }
   },
@@ -192,6 +192,16 @@ var Logger = {
   error: function error() {
     this.log.apply(
       this, [this.ERROR].concat(Array.prototype.slice.call(arguments)));
+  },
+
+  logException: function logException(aException) {
+    try {
+      this.error(
+        aException.message,
+        '(' + aException.fileName + ':' + aException.lineNumber + ')');
+    } catch (x) {
+      this.error(x);
+    }
   },
 
   accessibleToString: function accessibleToString(aAccessible) {
