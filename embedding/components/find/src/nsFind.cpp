@@ -63,7 +63,7 @@ PR_STATIC_ASSERT(CH_SHY <= 255);
 // called via FindNext with the current selection inside a <textarea>
 // or a text <input>. This means that we can be given an initial search
 // range that stretches across the anonymous DOM and the normal DOM. To
-// cater for this situation, we split the anonymous part into the 
+// cater for this situation, we split the anonymous part into the
 // inner-iterator and then reposition the outer-iterator outside.
 //
 // 5) The implementation assumes that First() and Next() are only called
@@ -117,7 +117,7 @@ private:
   int32_t mStartOffset;
   nsCOMPtr<nsIDOMNode> mEndNode;
   int32_t mEndOffset;
-  
+
   nsCOMPtr<nsIContent> mStartOuterContent;
   nsCOMPtr<nsIContent> mEndOuterContent;
   bool mFindBackward;
@@ -183,7 +183,7 @@ nsFindContentIterator::Next()
   else {
     mOuterIterator->Next();
   }
-  MaybeSetupInnerIterator();  
+  MaybeSetupInnerIterator();
 }
 
 void
@@ -359,7 +359,7 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
   if (!innerRange || !outerRange) {
     return;
   }
-     
+
   // now create the inner-iterator
   mInnerIterator = do_CreateInstance(kCPreContentIteratorCID);
 
@@ -374,7 +374,7 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
     if (aContent == mEndOuterContent) {
       innerRange->SetEnd(mEndNode, mEndOffset);
     }
-    // Note: we just init here. We do First() or Last() later. 
+    // Note: we just init here. We do First() or Last() later.
     mInnerIterator->Init(innerRange);
 
     // make sure to place the outer-iterator outside
@@ -392,7 +392,7 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
       res2 = outerRange->SetEndBefore(outerNode);
     }
     if (NS_FAILED(res1) || NS_FAILED(res2)) {
-      // we are done with the outer-iterator, the 
+      // we are done with the outer-iterator, the
       // inner-iterator will traverse what we want
       outerRange->Collapse(true);
     }
@@ -473,7 +473,7 @@ nsFind::InitIterator(nsIDOMNode* aStartNode, int32_t aStartOffset,
   NS_ENSURE_ARG_POINTER(aEndNode);
 
 #ifdef DEBUG_FIND
-  printf("InitIterator search range:\n"); 
+  printf("InitIterator search range:\n");
   printf(" -- start %d, ", aStartOffset); DumpNode(aStartNode);
   printf(" -- end %d, ", aEndOffset); DumpNode(aEndNode);
 #endif
@@ -549,7 +549,7 @@ nsFind::SetWordBreaker(nsIWordBreaker* aWordBreaker)
 // iterator to go back to a previously visited node,
 // so we always save the "match anchor" node and offset.
 //
-// Text nodes store their text in an nsTextFragment, which is 
+// Text nodes store their text in an nsTextFragment, which is
 // effectively a union of a one-byte string or a two-byte string.
 // Single and double strings are intermixed in the dom.
 // We don't have string classes which can deal with intermixed strings,
@@ -859,7 +859,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
   if (!mCaseSensitive)
     ToLowerCase(patAutoStr);
 
-  // Ignore soft hyphens in the pattern  
+  // Ignore soft hyphens in the pattern
   static const char kShy[] = { char(CH_SHY), 0 };
   patAutoStr.StripChars(kShy);
 
@@ -945,7 +945,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
         pindex = (mFindBackward ? patLen : 0);
         inWhitespace = false;
       }
- 
+
       // Get the text content:
       tc = do_QueryInterface(mIterNode);
       if (!tc || !(frag = tc->GetText())) // Out of nodes
@@ -1139,7 +1139,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
             matchStartOffset = mao;
             matchEndOffset = findex+1;
           }
-          if (startParent && endParent && 
+          if (startParent && endParent &&
               IsVisibleNode(startParent) && IsVisibleNode(endParent))
           {
             range->SetStart(startParent, matchStartOffset);
@@ -1180,7 +1180,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
           printf("Advancing pindex to %d\n", pindex);
 #endif
         }
-      
+
         continue;
       }
     }
@@ -1222,7 +1222,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
     pindex = (mFindBackward ? patLen : 0);
 #ifdef DEBUG_FIND
     printf("Setting findex back to %d, pindex to %d\n", findex, pindex);
-           
+
 #endif
   } // end while loop
 
