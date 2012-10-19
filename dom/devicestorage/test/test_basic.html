@@ -61,6 +61,9 @@ function getSuccess(e) {
   ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 
   ok(e.target.result.name == gFileName, "File name should match");
+  ok(e.target.result.size > 0, "File size be greater than zero");
+  ok(e.target.result.type, "File should have a mime type");
+  ok(e.target.result.lastModifiedDate, "File should have a last modified date");
 
   var name = e.target.result.name;
 
