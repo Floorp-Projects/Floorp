@@ -54,9 +54,6 @@ function virtualCursorControl(aMessage) {
     case 'moveToPoint':
       moved = vc.moveToPoint(rule, details.x, details.y, true);
       break;
-    case 'presentLastPivot':
-      EventManager.presentLastPivot();
-      break;
     default:
       break;
     }
