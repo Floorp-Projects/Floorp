@@ -883,9 +883,10 @@ BluetoothAdapter::ConfirmReceivingFile(const nsAString& aDeviceAddress,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<BluetoothVoidReplyRunnable> results =
+  nsRefPtr<BluetoothVoidReplyRunnable> result =
     new BluetoothVoidReplyRunnable(req);
-  //bs->ConfirmReceivingFile(aDeviceAddress, aConfirmation, result);
+  bs->ConfirmReceivingFile(aDeviceAddress, aConfirmation, result);
+
   req.forget(aRequest);
 
   return NS_OK;
