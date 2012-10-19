@@ -134,12 +134,86 @@ static inline bool IsItWindowsNT()
 }
 #endif
 
+// Delayed load libraries are loaded when the first symbol is used.
+// The following ensures that we load the delayed loaded libraries from the
+// system directory.
+struct AutoLoadSystemDependencies
+{
+  AutoLoadSystemDependencies()
+  {
+    static LPCWSTR delayDLLs[] = { L"dwmapi.dll" };
+    WCHAR systemDirectory[MAX_PATH + 1] = { L'\0' };
+    // If GetSystemDirectory fails we accept that we'll load the DLLs from the
+    // normal search path.
+    GetSystemDirectoryW(systemDirectory, MAX_PATH + 1);
+    size_t systemDirLen = wcslen(systemDirectory);
+
+    // Make the system directory path terminate with a slash
+    if (systemDirectory[systemDirLen - 1] != L'\\' && systemDirLen) {
+      systemDirectory[systemDirLen] = L'\\';
+      ++systemDirLen;
+      // No need to re-NULL terminate
+    }
+
+    // For each known DLL ensure it is loaded from the system32 directory
+    for (size_t i = 0; i < sizeof(delayDLLs) / sizeof(delayDLLs[0]); ++i) {
+      size_t fileLen = wcslen(delayDLLs[i]);
+      wcsncpy(systemDirectory + systemDirLen, delayDLLs[i],
+      MAX_PATH - systemDirLen);
+      if (systemDirLen + fileLen <= MAX_PATH) {
+        systemDirectory[systemDirLen + fileLen] = L'\0';
+      } else {
+        systemDirectory[MAX_PATH] = L'\0';
+      }
+      LPCWSTR fullModulePath = systemDirectory; // just for code readability
+      LoadLibraryW(fullModulePath);
+    }
+  }
+} loadDLLs;
+
+BOOL
+RemoveCurrentDirFromSearchPath()
+{
+  // kernel32.dll is in the knownDLL list so it is safe to load without a full path
+  HMODULE kernel32 = LoadLibraryW(L"kernel32.dll");
+  if (!kernel32) {
+    return FALSE;
+  }
+
+  typedef BOOL (WINAPI *SetDllDirectoryType)(LPCWSTR);
+  SetDllDirectoryType SetDllDirectoryFn =
+    (SetDllDirectoryType)GetProcAddress(kernel32, "SetDllDirectoryW");
+  if (!SetDllDirectoryFn) {
+    FreeLibrary(kernel32);
+    return FALSE;
+  }
+
+  // If this call fails we can't do much about it, so ignore it.
+  // It is unlikely to fail and this is just a precaution anyway.
+  SetDllDirectoryFn(L"");
+  FreeLibrary(kernel32);
+  return TRUE;
+}
+
 int APIENTRY WinMain(
   HINSTANCE hInstance,
   HINSTANCE hPrevInstance,
   LPSTR lpCmdLine,
   int nCmdShow)
 {
+  // Disable current directory from being in the search path.
+  // This call does not help with implicitly loaded DLLs.
+  if (!RemoveCurrentDirFromSearchPath()) {
+    WCHAR minOSTitle[512] = { '\0' };
+    WCHAR minOSText[512] = { '\0' };
+    LoadStringW(NULL, IDS_MIN_OS_TITLE, minOSTitle,
+                sizeof(minOSTitle) / sizeof(minOSTitle[0]));
+    LoadStringW(NULL, IDS_MIN_OS_TEXT, minOSText,
+                sizeof(minOSText) / sizeof(minOSText[0]));
+    MessageBoxW(NULL, minOSText, minOSTitle, MB_OK | MB_ICONERROR);
+    return 1;
+  }
+
   g_hInstance = (HINSTANCE)hInstance;
   #ifndef _UNICODE
   g_IsNT = IsItWindowsNT();
