@@ -1,4 +1,4 @@
-/* -*- Mode: JavaScript; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: JavaScript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -215,10 +215,7 @@ FrameWorker.prototype = {
 
       // so finally we are ready to roll - dequeue all the pending connects
       worker.loaded = true;
-
-      let pending = worker.pendingPorts;
-      while (pending.length) {
-        let port = pending.shift();
+      for (let port of worker.pendingPorts) {
         if (port._portid) { // may have already been closed!
           try {
             port._createWorkerAndEntangle(worker);
@@ -228,6 +225,7 @@ FrameWorker.prototype = {
           }
         }
       }
+      worker.pendingPorts = [];
     });
 
     // the 'unload' listener cleans up the worker and the sandbox.  This
@@ -419,9 +417,10 @@ ClientPort.prototype = {
     this._window = worker.frame.contentWindow;
     worker.ports[this._portid] = this;
     this._postControlMessage("port-create");
-    while (this._pendingMessagesOutgoing.length) {
-      this._dopost(this._pendingMessagesOutgoing.shift());
+    for (let message of this._pendingMessagesOutgoing) {
+      this._dopost(message);
     }
+    this._pendingMessagesOutgoing = [];
   },
 
   _dopost: function fw_ClientPort_dopost(data) {

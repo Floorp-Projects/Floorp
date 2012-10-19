@@ -512,7 +512,7 @@ SpecialPowersAPI.prototype = {
     var pref_string = [];
     pref_string[prefs.PREF_INT] = "INT";
     pref_string[prefs.PREF_BOOL] = "BOOL";
-    pref_string[prefs.PREF_STRING] = "STRING";
+    pref_string[prefs.PREF_STRING] = "CHAR";
 
     var pendingActions = [];
     var cleanupActions = [];

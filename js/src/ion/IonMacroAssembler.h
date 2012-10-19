@@ -625,7 +625,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         store32(Imm32(ProfileEntry::NullPCIndex),
                 Address(temp, ProfileEntry::offsetOfPCIdx()));
 
-        /* Always increment the stack size, tempardless if we actually pushed */
+        /* Always increment the stack size, whether or not we actually pushed. */
         bind(&stackFull);
         movePtr(ImmWord(p->sizePointer()), temp);
         add32(Imm32(1), Address(temp, 0));

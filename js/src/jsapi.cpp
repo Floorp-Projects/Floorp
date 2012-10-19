@@ -1603,6 +1603,7 @@ JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
         AutoCompartment ac(cx, origobj);
         if (!JS_WrapObject(cx, newIdentityWrapper.address()))
             MOZ_CRASH();
+        JS_ASSERT(Wrapper::wrappedObject(newIdentityWrapper) == newIdentity);
         if (!origobj->swap(cx, newIdentityWrapper))
             MOZ_CRASH();
         origobj->compartment()->crossCompartmentWrappers.put(ObjectValue(*newIdentity), origv);
@@ -1692,6 +1693,7 @@ js_TransplantObjectWithWrapper(JSContext *cx,
         RootedObject wrapperGuts(cx, targetobj);
         if (!JS_WrapObject(cx, wrapperGuts.address()))
             MOZ_CRASH();
+        JS_ASSERT(Wrapper::wrappedObject(wrapperGuts) == targetobj);
         if (!origwrapper->swap(cx, wrapperGuts))
             MOZ_CRASH();
         origwrapper->compartment()->crossCompartmentWrappers.put(ObjectValue(*targetobj),
