@@ -189,7 +189,7 @@ public:
   HTMLFigureAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual nsresult GetAttributesInternal(nsIPersistentProperties* aAttributes);
+  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
   virtual mozilla::a11y::role NativeRole();
   virtual Relation RelationByType(uint32_t aType);
 

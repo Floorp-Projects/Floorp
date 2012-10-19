@@ -857,22 +857,20 @@ XULListCellAccessible::NativeRole()
   return roles::CELL;
 }
 
-nsresult
-XULListCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
+already_AddRefed<nsIPersistentProperties>
+XULListCellAccessible::NativeAttributes()
 {
-  NS_ENSURE_ARG_POINTER(aAttributes);
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    HyperTextAccessibleWrap::NativeAttributes();
 
   // "table-cell-index" attribute
   TableAccessible* table = Table();
-  NS_ENSURE_STATE(table); // we expect to be in a listbox (table)
+  if (!table) // we expect to be in a listbox (table)
+    return attributes.forget();
 
   nsAutoString stringIdx;
   stringIdx.AppendInt(table->CellIndexAt(RowIdx(), ColIdx()));
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::tableCellIndex,
-                         stringIdx);
+  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::tableCellIndex, stringIdx);
 
-  return NS_OK;
+  return attributes.forget();
 }

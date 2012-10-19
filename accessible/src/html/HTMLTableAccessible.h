@@ -42,7 +42,7 @@ public:
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
   virtual uint64_t NativeInteractiveState() const;
-  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
 
   // TableCellAccessible
   virtual TableAccessible* Table() const MOZ_OVERRIDE;
@@ -145,7 +145,7 @@ public:
   virtual void Description(nsString& aDescription);
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
-  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
   virtual Relation RelationByType(uint32_t aRelationType);
 
   // HTMLTableAccessible
