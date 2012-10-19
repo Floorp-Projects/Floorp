@@ -45,10 +45,6 @@ function test()
 
   expect = 'InternalError: regular expression too complex';
 
-  if (!options().match(/relimit/)) {
-    options('relimit');
-  }
-
   for (var i = 0; i < strings.length; i++)
   {
     try
