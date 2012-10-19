@@ -983,50 +983,27 @@ nsLocation::ToString(nsAString& aReturn)
 }
 
 nsresult
-nsLocation::GetSourceDocument(JSContext* cx, nsIDocument** aDocument)
-{
-  // XXX Code duplicated from nsHTMLDocument
-  // XXX Tom said this reminded him of the "Six Degrees of
-  // Kevin Bacon" game. We try to get from here to there using
-  // whatever connections possible. The problem is that this
-  // could break if any of the connections along the way change.
-  // I wish there were a better way.
-
-  nsresult rv = NS_ERROR_FAILURE;
-
-  // We need to use the dynamically scoped global and assume that the
-  // current JSContext is a DOM context with a nsIScriptGlobalObject so
-  // that we can get the url of the caller.
-  // XXX This will fail on non-DOM contexts :(
-
-  nsCOMPtr<nsIDOMWindow> window =
-    do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx), &rv);
-
-  if (window) {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    rv = window->GetDocument(getter_AddRefs(domDoc));
-    if (domDoc) {
-      return CallQueryInterface(domDoc, aDocument);
-    }
-  } else {
-    *aDocument = nullptr;
-  }
-
-  return rv;
-}
-
-nsresult
 nsLocation::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
 {
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = GetSourceDocument(cx, getter_AddRefs(doc));
-  if (doc) {
-    *sourceURL = doc->GetBaseURI().get();
-  } else {
-    *sourceURL = nullptr;
-  }
 
-  return rv;
+  *sourceURL = nullptr;
+  nsCOMPtr<nsIScriptGlobalObject> sgo = nsJSUtils::GetDynamicScriptGlobal(cx);
+  // If this JS context doesn't have an associated DOM window, we effectively
+  // have no script entry point stack. This doesn't generally happen with the DOM,
+  // but can sometimes happen with extension code in certain IPC configurations.
+  // If this happens, try falling back on the current document associated with
+  // the docshell. If that fails, just return null and hope that the caller passed
+  // an absolute URI.
+  if (!sgo && GetDocShell()) {
+    sgo = do_GetInterface(GetDocShell());
+  }
+  NS_ENSURE_TRUE(sgo, NS_OK);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(sgo);
+  NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
+  nsIDocument* doc = window->GetDoc();
+  NS_ENSURE_TRUE(doc, NS_OK);
+  *sourceURL = doc->GetBaseURI().get();
+  return NS_OK;
 }
 
 bool
