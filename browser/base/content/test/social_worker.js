@@ -76,10 +76,6 @@ onconnect = function(e) {
       case "test-worker-chat":
         apiPort.postMessage({topic: "social.request-chat", data: event.data.data });
         break;
-      case "test-worker-spam-message":
-        // Just use a random api message, but one that has little side-effects.
-        apiPort.postMessage({topic: "social.cookies-get"});
-        break;
       case "social.initialize":
         // This is the workerAPI port, respond and set up a notification icon.
         apiPort = port;

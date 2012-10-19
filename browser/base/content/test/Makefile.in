@@ -275,7 +275,6 @@ _BROWSER_FILES = \
                  browser_social_mozSocial_API.js \
                  browser_social_isVisible.js \
                  browser_social_chatwindow.js \
-                 browser_social_usageMonitor.js \
                  social_panel.html \
                  social_share_image.png \
                  social_sidebar.html \
