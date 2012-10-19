@@ -142,7 +142,6 @@ MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(gStringChars) == ID_COUNT,
 enum {
   PREF_strict = 0,
   PREF_werror,
-  PREF_relimit,
   PREF_methodjit,
   PREF_methodjit_always,
   PREF_typeinference,
@@ -163,7 +162,6 @@ enum {
 const char* gPrefsToWatch[] = {
   JS_OPTIONS_DOT_STR "strict",
   JS_OPTIONS_DOT_STR "werror",
-  JS_OPTIONS_DOT_STR "relimit",
   JS_OPTIONS_DOT_STR "methodjit.content",
   JS_OPTIONS_DOT_STR "methodjit_always",
   JS_OPTIONS_DOT_STR "typeinference",
@@ -205,9 +203,6 @@ PrefCallback(const char* aPrefName, void* aClosure)
     }
     if (Preferences::GetBool(gPrefsToWatch[PREF_werror])) {
       newOptions |= JSOPTION_WERROR;
-    }
-    if (Preferences::GetBool(gPrefsToWatch[PREF_relimit])) {
-      newOptions |= JSOPTION_RELIMIT;
     }
     if (Preferences::GetBool(gPrefsToWatch[PREF_methodjit])) {
       newOptions |= JSOPTION_METHODJIT;
