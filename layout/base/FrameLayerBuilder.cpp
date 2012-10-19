@@ -2433,7 +2433,7 @@ FrameLayerBuilder::StoreDataForFrame(nsDisplayItem* aItem, Layer* aLayer, LayerS
   DisplayItemData* oldData = GetDisplayItemDataForManager(aItem, mRetainingManager);
   if (oldData) {
     if (!oldData->mUsed) {
-      oldData->UpdateContents(aLayer, aState, mContainerLayerGeneration);
+      oldData->UpdateContents(aLayer, aState, mContainerLayerGeneration, aItem);
     }
     return oldData;
   }
