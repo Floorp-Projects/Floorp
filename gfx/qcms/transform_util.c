@@ -76,8 +76,8 @@ float lut_interp_linear_float(float value, float *table, int length)
 {
         int upper, lower;
         value = value * (length - 1);
-        upper = ceil(value);
-        lower = floor(value);
+        upper = ceilf(value);
+        lower = floorf(value);
         //XXX: can we be more performant here?
         value = table[upper]*(1. - (upper - value)) + table[lower]*(upper - value);
         /* scale the value */
