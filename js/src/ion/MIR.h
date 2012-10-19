@@ -1501,6 +1501,37 @@ class MGuardObject : public MUnaryInstruction, public SingleObjectPolicy
     }
 };
 
+class MGuardString
+  : public MUnaryInstruction,
+    public StringPolicy
+{
+    MGuardString(MDefinition *ins)
+      : MUnaryInstruction(ins)
+    {
+        setGuard();
+        setMovable();
+        setResultType(MIRType_String);
+    }
+
+  public:
+    INSTRUCTION_HEADER(GuardString);
+
+    static MGuardString *New(MDefinition *ins) {
+        return new MGuardString(ins);
+    }
+
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 // Caller-side allocation of |this| for |new|:
 // Given a prototype operand, construct |this| for JSOP_NEW.
 // For native constructors, returns MagicValue(JS_IS_CONSTRUCTING).
