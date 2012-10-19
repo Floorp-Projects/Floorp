@@ -5054,6 +5054,9 @@ IonBuilder::jsop_getelem_string()
     MStringLength *length = MStringLength::New(str);
     current->add(length);
 
+    // This will cause an invalidation of this script once the 'undefined' type
+    // is monitored by the interpreter.
+    JS_ASSERT(oracle->propertyRead(script_, pc)->getKnownTypeTag() == JSVAL_TYPE_STRING);
     id = addBoundsCheck(id, length);
 
     MCharCodeAt *charCode = MCharCodeAt::New(str, id);
