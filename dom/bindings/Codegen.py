@@ -1073,16 +1073,18 @@ class MethodDefiner(PropertyDefiner):
         methods = [m for m in descriptor.interface.members if
                    m.isMethod() and m.isStatic() == static and
                    not m.isIdentifierLess()]
-        self.chrome = [{"name": m.identifier.name,
-                        "length": methodLength(m),
-                        "flags": "JSPROP_ENUMERATE",
-                        "pref": PropertyDefiner.getControllingPref(m) }
-                       for m in methods if isChromeOnly(m)]
-        self.regular = [{"name": m.identifier.name,
-                         "length": methodLength(m),
-                         "flags": "JSPROP_ENUMERATE",
-                         "pref": PropertyDefiner.getControllingPref(m) }
-                        for m in methods if not isChromeOnly(m)]
+        self.chrome = []
+        self.regular = []
+        for m in methods:
+            method = { "name": m.identifier.name,
+                       "methodInfo": not m.isStatic(),
+                       "length": methodLength(m),
+                       "flags": "JSPROP_ENUMERATE",
+                       "pref": PropertyDefiner.getControllingPref(m) }
+            if isChromeOnly(m):
+                self.chrome.append(method)
+            else:
+                self.regular.append(method)
 
         # FIXME Check for an existing iterator on the interface first.
         if any(m.isGetter() and m.isIndexed() for m in methods):
@@ -1146,14 +1148,26 @@ class MethodDefiner(PropertyDefiner):
             pref, specData, doIdArrays)
 
 class AttrDefiner(PropertyDefiner):
-    def __init__(self, descriptor, name, unforgeable):
+    def __init__(self, descriptor, name, static, unforgeable=False):
+        assert not (static and unforgeable)
         PropertyDefiner.__init__(self, descriptor, name)
         self.name = name
-        attributes = [m for m in descriptor.interface.members
-                      if m.isAttr() and m.isUnforgeable() == unforgeable]
+        attributes = [m for m in descriptor.interface.members if
+                      m.isAttr() and m.isStatic() == static and
+                      m.isUnforgeable() == unforgeable]
         self.chrome = [m for m in attributes if isChromeOnly(m)]
         self.regular = [m for m in attributes if not isChromeOnly(m)]
+        self.static = static
         self.unforgeable = unforgeable
+
+        if static:
+            if not descriptor.interface.hasInterfaceObject():
+                # static attributes go on the interface object
+                assert not self.hasChromeOnly() and not self.hasNonChromeOnly()
+        else:
+            if not descriptor.interface.hasInterfacePrototypeObject():
+                # non-static attributes go on the interface prototype object
+                assert not self.hasChromeOnly() and not self.hasNonChromeOnly()
 
         if unforgeable and len(attributes) != 0 and descriptor.proxy:
             raise TypeError("Unforgeable properties are not supported on "
@@ -1172,20 +1186,26 @@ class AttrDefiner(PropertyDefiner):
                     unforgeable)
 
         def getter(attr):
-            native = ("genericLenientGetter" if attr.hasLenientThis()
-                      else "genericGetter")
-            return ("{(JSPropertyOp)%(native)s, &%(name)s_getterinfo}"
-                    % {"name" : attr.identifier.name,
-                       "native" : native})
+            if self.static:
+                accessor = 'get_' + attr.identifier.name
+                jitinfo = "nullptr"
+            else:
+                accessor = ("genericLenientGetter" if attr.hasLenientThis()
+                            else "genericGetter")
+                jitinfo = "&%s_getterinfo" % attr.identifier.name
+            return "{ (JSPropertyOp)%s, %s }" % (accessor, jitinfo)
 
         def setter(attr):
-            if attr.readonly and attr.getExtendedAttribute("PutForwards") is None:
-                return "JSOP_NULLWRAPPER"
-            native = ("genericLenientSetter" if attr.hasLenientThis()
-                      else "genericSetter")
-            return ("{(JSStrictPropertyOp)%(native)s, &%(name)s_setterinfo}"
-                    % {"name" : attr.identifier.name,
-                       "native" : native})
+            if self.static:
+                accessor = 'set_' + attr.identifier.name
+                jitinfo = "nullptr"
+            else:
+                if attr.readonly and attr.getExtendedAttribute("PutForwards") is None:
+                    return "JSOP_NULLWRAPPER"
+                accessor = ("genericLenientSetter" if attr.hasLenientThis()
+                            else "genericSetter")
+                jitinfo = "&%s_setterinfo" % attr.identifier.name
+            return "{ (JSStrictPropertyOp)%s, %s }" % (accessor, jitinfo)
 
         def specData(attr):
             return (attr.identifier.name, flags(attr), getter(attr),
@@ -1226,18 +1246,20 @@ class ConstDefiner(PropertyDefiner):
 
 class PropertyArrays():
     def __init__(self, descriptor):
-        self.staticMethods = MethodDefiner(descriptor, "StaticMethods", True)
-        self.staticAttrs = None
-        self.methods = MethodDefiner(descriptor, "Methods", False)
-        self.attrs = AttrDefiner(descriptor, "Attributes", unforgeable=False)
+        self.staticMethods = MethodDefiner(descriptor, "StaticMethods",
+                                           static=True)
+        self.staticAttrs = AttrDefiner(descriptor, "StaticAttributes",
+                                       static=True)
+        self.methods = MethodDefiner(descriptor, "Methods", static=False)
+        self.attrs = AttrDefiner(descriptor, "Attributes", static=False)
         self.unforgeableAttrs = AttrDefiner(descriptor, "UnforgeableAttributes",
-                                            unforgeable=True)
+                                            static=False, unforgeable=True)
         self.consts = ConstDefiner(descriptor, "Constants")
 
     @staticmethod
     def arrayNames():
-        return [ "staticMethods", "methods", "attrs", "unforgeableAttrs",
-                 "consts" ]
+        return [ "staticMethods", "staticAttrs", "methods", "attrs",
+                 "unforgeableAttrs", "consts" ]
 
     @staticmethod
     def xrayRelevantArrayNames():
@@ -3681,9 +3703,13 @@ class CGGetterCall(CGPerSignatureCall):
     getter.
     """
     def __init__(self, returnType, nativeMethodName, descriptor, attr):
-        CGPerSignatureCall.__init__(self, returnType, [], [],
-                                    nativeMethodName, False, descriptor,
-                                    attr, getter=True)
+        if attr.isStatic():
+            argsPre = [ "global" ]
+        else:
+            argsPre = []
+        CGPerSignatureCall.__init__(self, returnType, argsPre, [],
+                                    nativeMethodName, attr.isStatic(),
+                                    descriptor, attr, getter=True)
 
 class FakeArgument():
     """
@@ -3710,10 +3736,14 @@ class CGSetterCall(CGPerSignatureCall):
     setter.
     """
     def __init__(self, argType, nativeMethodName, descriptor, attr):
-        CGPerSignatureCall.__init__(self, None, [],
+        if attr.isStatic():
+            argsPre = [ "global" ]
+        else:
+            argsPre = []
+        CGPerSignatureCall.__init__(self, None, argsPre,
                                     [FakeArgument(argType, attr)],
-                                    nativeMethodName, False, descriptor, attr,
-                                    setter=True)
+                                    nativeMethodName, attr.isStatic(),
+                                    descriptor, attr, setter=True)
     def wrap_return_value(self):
         # We have no return value
         return "\nreturn true;"
@@ -3752,21 +3782,60 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         # we're someone's consequential interface.  But for this-unwrapping, we
         # know that we're the real deal.  So fake a descriptor here for
         # consumption by FailureFatalCastableObjectUnwrapper.
-        unwrapThis = CGIndenter(CGGeneric(
+        getThis = CGGeneric("""js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+if (!obj) {
+  return false;
+}
+
+%s* self;""" % self.descriptor.nativeType)
+        unwrapThis = CGGeneric(
             str(CastableObjectUnwrapper(
                         FakeCastableDescriptor(self.descriptor),
-                        "obj", "self", self.unwrapFailureCode))))
-        return CGList([ self.getThis(), unwrapThis,
+                        "obj", "self", self.unwrapFailureCode)))
+        return CGList([ CGIndenter(getThis), CGIndenter(unwrapThis),
                         self.generate_code() ], "\n").define()
 
-    def getThis(self):
-        return CGIndenter(
-            CGGeneric("js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));\n"
-                      "if (!obj) {\n"
-                      "  return false;\n"
-                      "}\n"
-                      "\n"
-                      "%s* self;" % self.descriptor.nativeType))
+    def generate_code(self):
+        assert(False) # Override me
+
+class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
+    """
+    Common class to generate the JSNatives for all our static methods, getters
+    and setters.  This will generate the function declaration and unwrap the
+    global object.  Subclasses are expected to override the generate_code
+    function to do the rest of the work.  This function should return a
+    CGThing which is already properly indented.
+    """
+    def __init__(self, descriptor, name, args):
+        CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
+
+    def definition_body(self):
+        isMainThread = toStringBool(not self.descriptor.workers)
+        unwrap = CGGeneric("""js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+if (!obj) {
+  return false;
+}
+
+if (js::IsWrapper(obj)) {
+  obj = XPCWrapper::Unwrap(cx, obj, false);
+  if (!obj) {
+    return Throw<%s>(cx, NS_ERROR_XPC_SECURITY_MANAGER_VETO);
+  }
+}
+
+nsISupports* global;
+xpc_qsSelfRef globalRef;
+{
+  JS::Value val;
+  val.setObjectOrNull(JS_GetGlobalForObject(cx, obj));
+  nsresult rv = xpc_qsUnwrapArg<nsISupports>(cx, val, &global, &globalRef.ptr,
+                                             &val);
+  if (NS_FAILED(rv)) {
+    return Throw<%s>(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
+  }
+}""" % (isMainThread, isMainThread))
+        return CGList([ CGIndenter(unwrap),
+                        self.generate_code() ], "\n\n").define()
 
     def generate_code(self):
         assert(False) # Override me
@@ -3812,6 +3881,23 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     def makeNativeName(descriptor, method):
         name = method.identifier.name
         return MakeNativeName(descriptor.binaryNames.get(name, name))
+
+class CGStaticMethod(CGAbstractStaticBindingMethod):
+    """
+    A class for generating the C++ code for an IDL static method.
+    """
+    def __init__(self, descriptor, method):
+        self.method = method
+        name = method.identifier.name
+        args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
+                Argument('JS::Value*', 'vp')]
+        CGAbstractStaticBindingMethod.__init__(self, descriptor, name, args)
+
+    def generate_code(self):
+        nativeName = CGSpecializedMethod.makeNativeName(self.descriptor,
+                                                        self.method)
+        return CGMethodCall([ "global" ], nativeName, True, self.descriptor,
+                            self.method)
 
 class CGGenericGetter(CGAbstractBindingMethod):
     """
@@ -3871,6 +3957,23 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
             nativeName = "Get" + nativeName
         return nativeName
 
+class CGStaticGetter(CGAbstractStaticBindingMethod):
+    """
+    A class for generating the C++ code for an IDL static attribute getter.
+    """
+    def __init__(self, descriptor, attr):
+        self.attr = attr
+        name = 'get_' + attr.identifier.name
+        args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
+                Argument('JS::Value*', 'vp')]
+        CGAbstractStaticBindingMethod.__init__(self, descriptor, name, args)
+
+    def generate_code(self):
+        nativeName = CGSpecializedGetter.makeNativeName(self.descriptor,
+                                                        self.attr)
+        return CGIndenter(CGGetterCall(self.attr.type, nativeName,
+                                       self.descriptor, self.attr))
+
 class CGGenericSetter(CGAbstractBindingMethod):
     """
     A class for generating the C++ code for an IDL attribute setter.
@@ -3928,6 +4031,29 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
     def makeNativeName(descriptor, attr):
         name = attr.identifier.name
         return "Set" + MakeNativeName(descriptor.binaryNames.get(name, name))
+
+class CGStaticSetter(CGAbstractStaticBindingMethod):
+    """
+    A class for generating the C++ code for an IDL static attribute setter.
+    """
+    def __init__(self, descriptor, attr):
+        self.attr = attr
+        name = 'set_' + attr.identifier.name
+        args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
+                Argument('JS::Value*', 'vp')]
+        CGAbstractStaticBindingMethod.__init__(self, descriptor, name, args)
+
+    def generate_code(self):
+        nativeName = CGSpecializedSetter.makeNativeName(self.descriptor,
+                                                        self.attr)
+        argv = CGGeneric("""JS::Value* argv = JS_ARGV(cx, vp);
+JS::Value undef = JS::UndefinedValue();
+if (argc == 0) {
+  argv = &undef;
+}""")
+        call = CGSetterCall(self.attr.type, nativeName, self.descriptor,
+                            self.attr)
+        return CGIndenter(CGList([ argv, call ], "\n"))
 
 class CGSpecializedForwardingSetter(CGSpecializedSetter):
     """
@@ -5334,30 +5460,42 @@ class CGDescriptor(CGThing):
 
         cgThings = []
         if descriptor.interface.hasInterfacePrototypeObject():
+            # These are set to true if at least one non-static
+            # method/getter/setter exist on the interface.
             (hasMethod, hasGetter, hasLenientGetter,
              hasSetter, hasLenientSetter) = False, False, False, False, False
             for m in descriptor.interface.members:
-                if (m.isMethod() and not m.isStatic() and
+                if (m.isMethod() and
                     (not m.isIdentifierLess() or m == descriptor.operations['Stringifier'])):
-                    cgThings.append(CGSpecializedMethod(descriptor, m))
-                    cgThings.append(CGMemberJITInfo(descriptor, m))
-                    hasMethod = True
-                elif m.isAttr():
-                    cgThings.append(CGSpecializedGetter(descriptor, m))
-                    if m.hasLenientThis():
-                        hasLenientGetter = True
+                    if m.isStatic():
+                        cgThings.append(CGStaticMethod(descriptor, m))
                     else:
-                        hasGetter = True
-                    if not m.readonly:
-                        cgThings.append(CGSpecializedSetter(descriptor, m))
+                        cgThings.append(CGSpecializedMethod(descriptor, m))
+                        cgThings.append(CGMemberJITInfo(descriptor, m))
+                        hasMethod = True
+                elif m.isAttr():
+                    if m.isStatic():
+                        cgThings.append(CGStaticGetter(descriptor, m))
+                    else:
+                        cgThings.append(CGSpecializedGetter(descriptor, m))
                         if m.hasLenientThis():
-                            hasLenientSetter = True
+                            hasLenientGetter = True
                         else:
-                            hasSetter = True
+                            hasGetter = True
+                    if not m.readonly:
+                        if m.isStatic():
+                            cgThings.append(CGStaticSetter(descriptor, m))
+                        else:
+                            cgThings.append(CGSpecializedSetter(descriptor, m))
+                            if m.hasLenientThis():
+                                hasLenientSetter = True
+                            else:
+                                hasSetter = True
                     elif m.getExtendedAttribute("PutForwards"):
                         cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
                         hasSetter = True
-                    cgThings.append(CGMemberJITInfo(descriptor, m))
+                    if not m.isStatic():
+                        cgThings.append(CGMemberJITInfo(descriptor, m))
             if hasMethod: cgThings.append(CGGenericMethod(descriptor))
             if hasGetter: cgThings.append(CGGenericGetter(descriptor))
             if hasLenientGetter: cgThings.append(CGGenericGetter(descriptor,
@@ -6028,7 +6166,7 @@ class CGExampleMember(CGThing):
         static = "static " if self.member.isStatic() else ""
         # Mark our getters, which are attrs that have a non-void return type,
         # as const.
-        if self.member.isAttr() and not self.signatures[0][0].isVoid():
+        if not self.member.isStatic() and self.member.isAttr() and not self.signatures[0][0].isVoid():
             const = " const"
         else:
             const = ""
@@ -6558,7 +6696,7 @@ struct PrototypeIDMap;
 
         curr = CGWrapper(curr, post='\n')
 
-        curr = CGHeaders([], [], ["nsDebug.h", "mozilla/dom/UnionTypes.h", "nsDOMQS.h"], [], curr)
+        curr = CGHeaders([], [], ["nsDebug.h", "mozilla/dom/UnionTypes.h", "nsDOMQS.h", "XPCWrapper.h"], [], curr)
 
         # Add include guards.
         curr = CGIncludeGuard('UnionConversions', curr)
