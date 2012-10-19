@@ -218,6 +218,11 @@ CreateInterfaceObject(JSContext* cx, JSObject* global,
       return nullptr;
     }
 
+    if (properties->staticAttributes &&
+        !DefinePrefable(cx, constructor, properties->staticAttributes)) {
+      return nullptr;
+    }
+
     if (properties->constants &&
         !DefinePrefable(cx, constructor, properties->constants)) {
       return nullptr;
@@ -227,6 +232,12 @@ CreateInterfaceObject(JSContext* cx, JSObject* global,
   if (chromeOnlyProperties) {
     if (chromeOnlyProperties->staticMethods &&
         !DefinePrefable(cx, constructor, chromeOnlyProperties->staticMethods)) {
+      return nullptr;
+    }
+
+    if (chromeOnlyProperties->staticAttributes &&
+        !DefinePrefable(cx, constructor,
+                        chromeOnlyProperties->staticAttributes)) {
       return nullptr;
     }
 
@@ -322,8 +333,11 @@ CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* protoProto,
                 (chromeOnlyProperties->methods ||
                  chromeOnlyProperties->attributes))) || protoClass,
              "Methods or properties but no protoClass!");
-  MOZ_ASSERT(!((properties && properties->staticMethods) ||
-               (chromeOnlyProperties && chromeOnlyProperties->staticMethods)) ||
+  MOZ_ASSERT(!((properties &&
+                (properties->staticMethods || properties->staticAttributes)) ||
+               (chromeOnlyProperties &&
+                (chromeOnlyProperties->staticMethods ||
+                 chromeOnlyProperties->staticAttributes))) ||
              constructorClass || constructor,
              "Static methods but no constructorClass or constructor!");
   MOZ_ASSERT(bool(name) == bool(constructorClass || constructor),
@@ -637,7 +651,19 @@ XrayResolveProperty(JSContext* cx, JSObject* wrapper, jsid id,
     }
   }
 
-  if (type != eInterface) {
+  if (type == eInterface) {
+    if (nativeProperties->staticAttributes) {
+      if (!XrayResolveAttribute(cx, wrapper, id,
+                                nativeProperties->staticAttributes,
+                                nativeProperties->staticAttributeIds,
+                                nativeProperties->staticAttributeSpecs, desc)) {
+        return false;
+      }
+      if (desc->obj) {
+        return true;
+      }
+    }
+  } else {
     if (nativeProperties->attributes) {
       if (!XrayResolveAttribute(cx, wrapper, id,
                                 nativeProperties->attributes,
@@ -836,7 +862,15 @@ XrayEnumerateProperties(JS::AutoIdVector& props, DOMObjectType type,
     }
   }
 
-  if (type != eInterface) {
+  if (type == eInterface) {
+    if (nativeProperties->staticAttributes &&
+        !XrayEnumerateAttributes(nativeProperties->staticAttributes,
+                                 nativeProperties->staticAttributeIds,
+                                 nativeProperties->staticAttributeSpecs,
+                                 props)) {
+      return false;
+    }
+  } else {
     if (nativeProperties->attributes &&
         !XrayEnumerateAttributes(nativeProperties->attributes,
                                  nativeProperties->attributeIds,

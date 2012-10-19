@@ -71,6 +71,9 @@ struct NativeProperties
   Prefable<JSFunctionSpec>* staticMethods;
   jsid* staticMethodIds;
   JSFunctionSpec* staticMethodsSpecs;
+  Prefable<JSPropertySpec>* staticAttributes;
+  jsid* staticAttributeIds;
+  JSPropertySpec* staticAttributeSpecs;
   Prefable<JSFunctionSpec>* methods;
   jsid* methodIds;
   JSFunctionSpec* methodsSpecs;
