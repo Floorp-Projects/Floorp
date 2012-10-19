@@ -42,7 +42,8 @@ var EventManager = {
         }
       );
     } catch (x) {
-      Logger.error('Failed to start EventManager:', x);
+      Logger.error('Failed to start EventManager');
+      Logger.logException(x);
     }
   },
 
@@ -94,7 +95,8 @@ var EventManager = {
       }
       }
     } catch (x) {
-      Logger.error('Error handling DOM event:', x);
+      Logger.error('Error handling DOM event');
+      Logger.logException(x);
     }
   },
 
@@ -106,7 +108,8 @@ var EventManager = {
           event = aSubject.QueryInterface(Ci.nsIAccessibleEvent);
           this.handleAccEvent(event);
         } catch (x) {
-          Logger.error('Error handing accessible event:', x);
+          Logger.error('Error handing accessible event');
+          Logger.logException(x);
           return;
         }
     }
@@ -248,7 +251,7 @@ var EventManager = {
         [aPresenterFunc(p) for each (p in this.presenters)].
           filter(function(d) {return !!d;}));
     } catch (x) {
-      Logger.error(x);
+      Logger.logException(x);
     }
   },
 
