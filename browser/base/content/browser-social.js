@@ -62,7 +62,7 @@ let SocialUI = {
         break;
       case "social:ambient-notification-changed":
         SocialToolbar.updateButton();
-        SocialMenu.populate();
+        SocialMenu.updateMenu();
         break;
       case "social:profile-changed":
         SocialToolbar.updateProfile();
@@ -72,8 +72,6 @@ let SocialUI = {
       case "nsPref:changed":
         SocialSidebar.updateSidebar();
         SocialToolbar.updateButton();
-        SocialMenu.populate();
-        break;
     }
   },
 
@@ -609,31 +607,24 @@ var SocialMenu = {
   populate: function SocialMenu_populate() {
     // This menu is only accessible through keyboard navigation.
     let submenu = document.getElementById("menu_socialAmbientMenuPopup");
-    let ambientMenuItems = submenu.getElementsByClassName("ambient-menuitem");
-
-    for (let ambientMenuItem of ambientMenuItems) {
-      submenu.removeChild(ambientMenuItem);
-    }
-
+    while (submenu.hasChildNodes())
+      submenu.removeChild(submenu.firstChild);
     let provider = Social.provider;
     if (Social.active && provider) {
       let iconNames = Object.keys(provider.ambientNotificationIcons);
-      let separator = document.getElementById("socialAmbientMenuSeparator");
       for (let name of iconNames) {
         let icon = provider.ambientNotificationIcons[name];
         if (!icon.label || !icon.menuURL)
           continue;
         let menuitem = document.createElement("menuitem");
         menuitem.setAttribute("label", icon.label);
-        menuitem.classList.add("ambient-menuitem");
         menuitem.addEventListener("command", function() {
           openUILinkIn(icon.menuURL, "tab");
         }, false);
-        submenu.insertBefore(menuitem, separator);
+        submenu.appendChild(menuitem);
       }
-      separator.hidden = !iconNames.length;
     }
-    document.getElementById("menu_socialAmbientMenu").hidden = !Social.enabled;
+    document.getElementById("menu_socialAmbientMenu").hidden = !submenu.querySelector("menuitem");
   }
 };
 
@@ -642,7 +633,6 @@ var SocialToolbar = {
   init: function SocialToolbar_init() {
     this.button.setAttribute("image", Social.provider.iconURL);
     this.updateButton();
-    SocialMenu.populate();
     this.updateProfile();
     this._dynamicResizer = new DynamicResizeWatcher();
   },
