@@ -209,6 +209,12 @@ enum nsCSSUnit {
   eCSSUnit_PhysicalMillimeter = 200,   // (float) 1/25.4 inch
 
   // Length units - relative
+  // Viewport relative measure
+  eCSSUnit_ViewportWidth  = 700,    // (float) 1% of the width of the initial containing block
+  eCSSUnit_ViewportHeight = 701,    // (float) 1% of the height of the initial containing block
+  eCSSUnit_ViewportMin    = 702,    // (float) smaller of ViewportWidth and ViewportHeight
+  eCSSUnit_ViewportMax    = 703,    // (float) larger of ViewportWidth and ViewportHeight
+
   // Font relative measure
   eCSSUnit_EM           = 800,    // (float) == current font size
   eCSSUnit_XHeight      = 801,    // (float) distance from top of lower case x to baseline

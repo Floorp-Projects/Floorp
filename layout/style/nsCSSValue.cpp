@@ -1120,6 +1120,11 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_Point:        aResult.AppendLiteral("pt");   break;
     case eCSSUnit_Pica:         aResult.AppendLiteral("pc");   break;
 
+    case eCSSUnit_ViewportWidth:  aResult.AppendLiteral("vw");   break;
+    case eCSSUnit_ViewportHeight: aResult.AppendLiteral("vh");   break;
+    case eCSSUnit_ViewportMin:    aResult.AppendLiteral("vmin"); break;
+    case eCSSUnit_ViewportMax:    aResult.AppendLiteral("vmax"); break;
+
     case eCSSUnit_EM:           aResult.AppendLiteral("em");   break;
     case eCSSUnit_XHeight:      aResult.AppendLiteral("ex");   break;
     case eCSSUnit_Char:         aResult.AppendLiteral("ch");   break;
@@ -1248,6 +1253,10 @@ nsCSSValue::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
     case eCSSUnit_Percent:
     case eCSSUnit_Number:
     case eCSSUnit_PhysicalMillimeter:
+    case eCSSUnit_ViewportWidth:
+    case eCSSUnit_ViewportHeight:
+    case eCSSUnit_ViewportMin:
+    case eCSSUnit_ViewportMax:
     case eCSSUnit_EM:
     case eCSSUnit_XHeight:
     case eCSSUnit_Char:
