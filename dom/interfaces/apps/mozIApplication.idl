@@ -11,7 +11,7 @@
  * We expose Gecko-internal helpers related to "web apps" through this
  * sub-interface.
  */
-[scriptable, uuid(efe22f80-f973-11e1-8a00-b7888ac0d2b9)]
+[scriptable, uuid(8ac7827f-f982-40fb-be11-ba16dd665635)]
 interface mozIApplication: mozIDOMApplication
 {
   /* Return true if this app has |permission|. */
@@ -25,4 +25,7 @@ interface mozIApplication: mozIDOMApplication
 
   /* Name copied from the manifest */
   readonly attribute DOMString name;
+
+  /* CSP copied from the manifest */
+  readonly attribute DOMString csp;
 };

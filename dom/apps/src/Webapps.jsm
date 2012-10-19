@@ -139,13 +139,22 @@ let DOMApplicationRegistry = {
   // Registers all the activities and system messages.
   registerAppsHandlers: function registerAppsHandlers() {
     this.notifyAppsRegistryStart();
-#ifdef MOZ_SYS_MSG
     let ids = [];
     for (let id in this.webapps) {
       ids.push({ id: id });
     }
+#ifdef MOZ_SYS_MSG
     this._processManifestForIds(ids);
 #else
+    // Read the CSPs. If MOZ_SYS_MSG is defined this is done on
+    // _processManifestForIds so as to not reading the manifests
+    // twice
+    this._readManifests(ids, (function readCSPs(aResults) {
+      aResults.forEach(function registerManifest(aResult) {
+        this.webapps[aResult.id].csp = manifest.csp || "";
+      }, this);
+    }).bind(this));
+
     // Nothing else to do but notifying we're ready.
     this.notifyAppsRegistryReady();
 #endif
@@ -419,6 +428,7 @@ let DOMApplicationRegistry = {
         let app = this.webapps[aResult.id];
         let manifest = aResult.manifest;
         app.name = manifest.name;
+        app.csp = manifest.csp || "";
         this._registerSystemMessages(manifest, app);
         appsToRegister.push({ manifest: manifest, app: app });
       }, this);
@@ -884,6 +894,7 @@ let DOMApplicationRegistry = {
       }
 
       app.name = aManifest.name;
+      app.csp = aManifest.csp || "";
 
       // Update the registry.
       this.webapps[id] = app;
@@ -1037,6 +1048,7 @@ let DOMApplicationRegistry = {
     }
 
     appObject.name = manifest.name;
+    appObject.csp = manifest.csp || "";
 
     this.webapps[id] = appObject;
 
@@ -1504,6 +1516,11 @@ let DOMApplicationRegistry = {
 
   getAppByManifestURL: function(aManifestURL) {
     return AppsUtils.getAppByManifestURL(this.webapps, aManifestURL);
+  },
+
+  getCSPByLocalId: function(aLocalId) {
+    debug("getCSPByLocalId:" + aLocalId);
+    return AppsUtils.getCSPByLocalId(this.webapps, aLocalId);
   },
 
   getAppByLocalId: function(aLocalId) {

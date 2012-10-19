@@ -170,6 +170,7 @@
 #include "imgILoader.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsSandboxFlags.h"
+#include "nsIAppsService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2276,6 +2277,22 @@ nsDocument::InitCSP(nsIChannel* aChannel)
       NS_SUCCEEDED(principal->GetAppStatus(&appStatus))) {
     applyAppDefaultCSP = ( appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED ||
                            appStatus == nsIPrincipal::APP_STATUS_CERTIFIED);
+
+    // Bug 773981. Allow a per-app policy from the manifest.
+    // Just read the CSP from the manifest into cspHeaderValue.
+    // That way we don't have to change the rest of the function logic
+    if (applyAppDefaultCSP || appStatus == nsIPrincipal::APP_STATUS_INSTALLED) {
+      nsCOMPtr<nsIAppsService> appsService =
+        do_GetService(APPS_SERVICE_CONTRACTID);
+
+      if (appsService)  {
+        uint32_t appId;
+
+        if ( NS_SUCCEEDED(principal->GetAppId(&appId)) ) {
+          appsService->GetCSPByLocalId(appId, cspHeaderValue);
+        }
+      }
+    }
   }
 #ifdef PR_LOGGING
   else
