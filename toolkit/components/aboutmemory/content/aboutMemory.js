@@ -4,6 +4,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // This file is used for both about:memory and about:compartments.
+//
+//
+// about:memory will by default show information about the browser's current
+// memory usage, but you can direct it to load information from a file by
+// providing a file= query string.  For example,
+//
+//     about:memory?file=/foo/bar
+//     about:memory?verbose&file=/foo/bar
+//
+// The order of "verbose" and "file=" isn't significant, and neither "verbose"
+// nor "file=" is case-sensitive.  Obviously the filename is case-sensitive iff
+// you're on a case-sensitive filesystem.  If you specify more than one "file="
+// argument, only the first one is used.
+//
+// about:compartments doesn't support the "verbose" or "file=" parameters and
+// will ignore them if they're provided.
 
 "use strict";
 
@@ -35,7 +51,16 @@ let gVerbose;
 {
   let split = document.location.href.split('?');
   document.title = split[0].toLowerCase();
-  gVerbose = split.length == 2 && split[1].toLowerCase() == 'verbose';
+
+  gVerbose = false;
+  if (split.length == 2) {
+    let searchSplit = split[1].split('&');
+    for (let i = 0; i < searchSplit.length; i++) {
+      if (searchSplit[i].toLowerCase() == 'verbose') {
+        gVerbose = true;
+      }
+    }
+  }
 }
 
 let gChildMemoryListener = undefined;
@@ -336,6 +361,21 @@ function isSmapsPath(aUnsafePath)
 
 function onLoadAboutMemory()
 {
+  // Check location.href to see if we're loading from a file.
+  let search = location.href.split('?')[1];
+  if (search) {
+    let searchSplit = search.split('&');
+    for (let i = 0; i < searchSplit.length; i++) {
+      if (searchSplit[i].toLowerCase().startsWith('file=')) {
+        let filename = searchSplit[i].substring('file='.length);
+        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+        file.initWithPath(filename);
+        updateAboutMemoryFromFile(file);
+        return;
+      }
+    }
+  }
+
   addChildObserversAndUpdate(updateAboutMemory);
 }
 
@@ -428,7 +468,9 @@ function updateAboutMemoryFromJSONString(aJSONString)
  * memory reporters.
  *
  * @param aFile
- *        The File being read from.  Accepted format is described in the
+ *        The File or nsILocalFile being read from.
+ *
+ *        The expected format of the file's contents is described in the
  *        comment describing nsIMemoryReporterManager::dumpReports.
  */
 function updateAboutMemoryFromFile(aFile)
@@ -438,13 +480,19 @@ function updateAboutMemoryFromFile(aFile)
   // surrounding the |reader.readAsText(aFile)| call.
 
   try {
+    // Convert nsILocalFile to a File object, if necessary.
+    let file = aFile;
+    if (aFile instanceof Ci.nsILocalFile) {
+      file = new File(aFile);
+    }
+
     let reader = new FileReader();
     reader.onerror = function(aEvent) { throw "FileReader.onerror"; };
     reader.onabort = function(aEvent) { throw "FileReader.onabort"; };
     reader.onload = function(aEvent) {
       updateAboutMemoryFromJSONString(aEvent.target.result);
     };
-    reader.readAsText(aFile);
+    reader.readAsText(file);
 
   } catch (ex) {
     let body = clearBody();
