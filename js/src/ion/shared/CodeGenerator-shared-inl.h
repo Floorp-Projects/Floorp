@@ -41,12 +41,6 @@ ToRegister(const LDefinition *def)
     return ToRegister(*def->output());
 }
 
-static inline Register
-ToRegisterOrInvalid(const LAllocation *a)
-{
-    return a ? ToRegister(*a) : InvalidReg;
-}
-
 static inline FloatRegister
 ToFloatRegister(const LAllocation &a)
 {
