@@ -1557,38 +1557,227 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TextInputHandler::HandleFlagsChanged, aNativeEvent=%p, "
-     "type=%s, keyCode=%s (0x%X), sLastModifierState=0x%X, IsIMEComposing()=%s",
+     "type=%s, keyCode=%s (0x%X), modifierFlags=0x%08X, "
+     "sLastModifierState=0x%08X, IsIMEComposing()=%s",
      this, aNativeEvent, GetNativeKeyEventType(aNativeEvent),
      GetKeyNameForNativeKeyCode([aNativeEvent keyCode]), [aNativeEvent keyCode],
-     sLastModifierState, TrueOrFalse(IsIMEComposing())));
+     [aNativeEvent modifierFlags], sLastModifierState,
+     TrueOrFalse(IsIMEComposing())));
 
-  // CapsLock state and other modifier states are different:
-  // CapsLock state does not revert when the CapsLock key goes up, as the
-  // modifier state does for other modifier keys on key up.
-  if ([aNativeEvent keyCode] == kVK_CapsLock) {
-    // Fire key down event for caps lock.
-    DispatchKeyEventForFlagsChanged(aNativeEvent, true);
-    if (Destroyed()) {
-      return;
+  MOZ_ASSERT([aNativeEvent type] == NSFlagsChanged);
+
+  NSUInteger diff = [aNativeEvent modifierFlags] ^ sLastModifierState;
+  // Device dependent flags for left-control key, both shift keys, both command
+  // keys and both option keys have been defined in Next's SDK.  But we
+  // shouldn't use it directly as far as possible since Cocoa SDK doesn't
+  // define them.  Fortunately, we need them only when we dispatch keyup
+  // events.  So, we can usually know the actual relation between keyCode and
+  // device dependent flags.  However, we need to remove following flags first
+  // since the differences don't indicate modifier key state.
+  // NX_STYLUSPROXIMITYMASK: Probably used for pen like device.
+  // kCGEventFlagMaskNonCoalesced (= NX_NONCOALSESCEDMASK): See the document for
+  // Quartz Event Services.
+  diff &= ~(NX_STYLUSPROXIMITYMASK | kCGEventFlagMaskNonCoalesced);
+
+  switch ([aNativeEvent keyCode]) {
+    // CapsLock state and other modifier states are different:
+    // CapsLock state does not revert when the CapsLock key goes up, as the
+    // modifier state does for other modifier keys on key up.
+    case kVK_CapsLock: {
+      // Fire key down event for caps lock.
+      DispatchKeyEventForFlagsChanged(aNativeEvent, true);
+      // XXX should we fire keyup event too? The keyup event for CapsLock key
+      // is never dispatched on Gecko.
+      // XXX WebKit dispatches keydown event when CapsLock is locked, otherwise,
+      // keyup event.  If we do so, we cannot keep the consistency with other
+      // platform's behavior...
+      break;
     }
-    // XXX should we fire keyup event too? The keyup event for CapsLock key
-    // is never dispatched on Gecko.
-  } else if ([aNativeEvent type] == NSFlagsChanged) {
-    // Fire key up/down events for the modifier keys (shift, alt, ctrl, command)
-    NSUInteger modifiers =
-      [aNativeEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
-    const NSUInteger kModifierMaskTable[] =
-      { NSShiftKeyMask, NSControlKeyMask,
-        NSAlternateKeyMask, NSCommandKeyMask };
-    const uint32_t kModifierCount = ArrayLength(kModifierMaskTable);
 
-    for (uint32_t i = 0; i < kModifierCount; i++) {
-      NSUInteger modifierBit = kModifierMaskTable[i];
-      if ((modifiers & modifierBit) != (sLastModifierState & modifierBit)) {
-        bool isKeyDown = ((modifiers & modifierBit) != 0);
-        DispatchKeyEventForFlagsChanged(aNativeEvent, isKeyDown);
+    // If the event is caused by pressing or releasing a modifier key, just
+    // dispatch the key's event.
+    case kVK_Shift:
+    case kVK_RightShift:
+    case kVK_Command:
+    case kVK_RightCommand:
+    case kVK_Control:
+    case kVK_RightControl:
+    case kVK_Option:
+    case kVK_RightOption:
+    case kVK_Help: {
+      // We assume that at most one modifier is changed per event if the event
+      // is caused by pressing or releasing a modifier key.
+      bool isKeyDown = ([aNativeEvent modifierFlags] & diff) != 0;
+      DispatchKeyEventForFlagsChanged(aNativeEvent, isKeyDown);
+      if (isKeyDown && ((diff & ~NSDeviceIndependentModifierFlagsMask) != 0)) {
+        unsigned short keyCode = [aNativeEvent keyCode];
+        ModifierKey* modifierKey = GetModifierKeyForDeviceDependentFlags(diff);
+        if (modifierKey) {
+          MOZ_ASSERT(modifierKey->keyCode == keyCode);
+        } else {
+          mModifierKeys.AppendElement(ModifierKey(diff, keyCode));
+        }
+      }
+      break;
+    }
+
+    // Currently we don't support Fn key since other browsers don't dispatch
+    // events for it and we don't have keyCode for this key.
+    // It should be supported when we implement .key and .char.
+    case kVK_Function:
+      break;
+
+    // If the event is caused by something else than pressing or releasing a
+    // single modifier key (for example by the app having been deactivated
+    // using command-tab), use the modifiers themselves to determine which
+    // key's event to dispatch, and whether it's a keyup or keydown event.
+    // In all cases we assume one or more modifiers are being deactivated
+    // (never activated) -- otherwise we'd have received one or more events
+    // corresponding to a single modifier key being pressed.
+    default: {
+      NSUInteger modifiers = sLastModifierState;
+      for (int32_t bit = 0; bit < 32; ++bit) {
+        NSUInteger flag = 1 << bit;
+        if (!(diff & flag)) {
+          continue;
+        }
+
+        unsigned short keyCode = 0;
+        bool dispatchKeyDown = false;
+        if (flag & NSDeviceIndependentModifierFlagsMask) {
+          switch (flag) {
+            case NSAlphaShiftKeyMask:
+              keyCode = kVK_CapsLock;
+              dispatchKeyDown = true;
+              break;
+            case NSNumericPadKeyMask:
+              keyCode = kVK_ANSI_KeypadClear;
+              dispatchKeyDown = true;
+              break;
+            case NSHelpKeyMask:
+              // NSHelpKeyMask change here must be a deactivation.
+              MOZ_ASSERT(!(flag & [aNativeEvent modifierFlags]));
+              keyCode = kVK_Help;
+              break;
+            case NSFunctionKeyMask:
+              // NSFunctionKeyMask change here must be a deactivation.
+              MOZ_ASSERT(!(flag & [aNativeEvent modifierFlags]));
+              // We don't dispatch function key event for now.
+              continue;
+            default:
+              // The other cases (NSShiftKeyMask, NSControlKeyMask,
+              // NSAlternateKeyMask and NSCommandKeyMask) are handled by the
+              // other branch of the if statement, below (which handles device
+              // dependent flags).
+              continue;
+          }
+        } else {
+          // Any modifier change here must be a deactivation.
+          MOZ_ASSERT(!(flag & [aNativeEvent modifierFlags]));
+          ModifierKey* modifierKey =
+            GetModifierKeyForDeviceDependentFlags(flag);
+          if (!modifierKey) {
+            continue;
+          }
+          keyCode = modifierKey->keyCode;
+        }
+
+        // Remove flags
+        modifiers &= ~flag;
+        switch (keyCode) {
+          case kVK_Shift: {
+            ModifierKey* modifierKey =
+              GetModifierKeyForNativeKeyCode(kVK_RightShift);
+            if (!modifierKey ||
+                !(modifiers & modifierKey->GetDeviceDependentFlags())) {
+              modifiers &= ~NSShiftKeyMask;
+            }
+            break;
+          }
+          case kVK_RightShift: {
+            ModifierKey* modifierKey =
+              GetModifierKeyForNativeKeyCode(kVK_Shift);
+            if (!modifierKey ||
+                !(modifiers & modifierKey->GetDeviceDependentFlags())) {
+              modifiers &= ~NSShiftKeyMask;
+            }
+            break;
+          }
+          case kVK_Command: {
+            ModifierKey* modifierKey =
+              GetModifierKeyForNativeKeyCode(kVK_RightCommand);
+            if (!modifierKey ||
+                !(modifiers & modifierKey->GetDeviceDependentFlags())) {
+              modifiers &= ~NSCommandKeyMask;
+            }
+            break;
+          }
+          case kVK_RightCommand: {
+            ModifierKey* modifierKey =
+              GetModifierKeyForNativeKeyCode(kVK_Command);
+            if (!modifierKey ||
+                !(modifiers & modifierKey->GetDeviceDependentFlags())) {
+              modifiers &= ~NSCommandKeyMask;
+            }
+            break;
+          }
+          case kVK_Control: {
+            ModifierKey* modifierKey =
+              GetModifierKeyForNativeKeyCode(kVK_RightControl);
+            if (!modifierKey ||
+                !(modifiers & modifierKey->GetDeviceDependentFlags())) {
+              modifiers &= ~NSControlKeyMask;
+            }
+            break;
+          }
+          case kVK_RightControl: {
+            ModifierKey* modifierKey =
+              GetModifierKeyForNativeKeyCode(kVK_Control);
+            if (!modifierKey ||
+                !(modifiers & modifierKey->GetDeviceDependentFlags())) {
+              modifiers &= ~NSControlKeyMask;
+            }
+            break;
+          }
+          case kVK_Option: {
+            ModifierKey* modifierKey =
+              GetModifierKeyForNativeKeyCode(kVK_RightOption);
+            if (!modifierKey ||
+                !(modifiers & modifierKey->GetDeviceDependentFlags())) {
+              modifiers &= ~NSAlternateKeyMask;
+            }
+            break;
+          }
+          case kVK_RightOption: {
+            ModifierKey* modifierKey =
+              GetModifierKeyForNativeKeyCode(kVK_Option);
+            if (!modifierKey ||
+                !(modifiers & modifierKey->GetDeviceDependentFlags())) {
+              modifiers &= ~NSAlternateKeyMask;
+            }
+            break;
+          }
+          case kVK_Help:
+            modifiers &= ~NSHelpKeyMask;
+            break;
+          default:
+            break;
+        }
+
+        NSEvent* event =
+          [NSEvent keyEventWithType:NSFlagsChanged
+                           location:[aNativeEvent locationInWindow]
+                      modifierFlags:modifiers
+                          timestamp:[aNativeEvent timestamp]
+                       windowNumber:[aNativeEvent windowNumber]
+                            context:[aNativeEvent context]
+                         characters:nil
+        charactersIgnoringModifiers:nil
+                          isARepeat:NO
+                            keyCode:keyCode];
+        DispatchKeyEventForFlagsChanged(event, dispatchKeyDown);
         if (Destroyed()) {
-          return;
+          break;
         }
 
         // Stop if focus has changed.
@@ -1596,13 +1785,39 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
         if (![mView isFirstResponder]) {
           break;
         }
-      }
-    }
 
-    sLastModifierState = modifiers;
+      }
+      break;
+    }
   }
 
+  // Be aware, the widget may have been destroyed.
+  sLastModifierState = [aNativeEvent modifierFlags];
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+TextInputHandler::ModifierKey*
+TextInputHandler::GetModifierKeyForNativeKeyCode(unsigned short aKeyCode) const
+{
+  for (ModifierKeyArray::index_type i = 0; i < mModifierKeys.Length(); ++i) {
+    if (mModifierKeys[i].keyCode == aKeyCode) {
+      return &((ModifierKey&)mModifierKeys[i]);
+    }
+  }
+  return nullptr;
+}
+
+TextInputHandler::ModifierKey*
+TextInputHandler::GetModifierKeyForDeviceDependentFlags(NSUInteger aFlags) const
+{
+  for (ModifierKeyArray::index_type i = 0; i < mModifierKeys.Length(); ++i) {
+    if (mModifierKeys[i].GetDeviceDependentFlags() ==
+          (aFlags & ~NSDeviceIndependentModifierFlagsMask)) {
+      return &((ModifierKey&)mModifierKeys[i]);
+    }
+  }
+  return nullptr;
 }
 
 void
@@ -3773,14 +3988,14 @@ TextInputHandlerBase::SynthesizeNativeKeyEvent(
 
   static const uint32_t sModifierFlagMap[][2] = {
     { nsIWidget::CAPS_LOCK,       NSAlphaShiftKeyMask },
-    { nsIWidget::SHIFT_L,         NSShiftKeyMask },
-    { nsIWidget::SHIFT_R,         NSShiftKeyMask },
-    { nsIWidget::CTRL_L,          NSControlKeyMask },
-    { nsIWidget::CTRL_R,          NSControlKeyMask },
-    { nsIWidget::ALT_L,           NSAlternateKeyMask },
-    { nsIWidget::ALT_R,           NSAlternateKeyMask },
-    { nsIWidget::COMMAND_L,       NSCommandKeyMask },
-    { nsIWidget::COMMAND_R,       NSCommandKeyMask },
+    { nsIWidget::SHIFT_L,         NSShiftKeyMask      | 0x0002 },
+    { nsIWidget::SHIFT_R,         NSShiftKeyMask      | 0x0004 },
+    { nsIWidget::CTRL_L,          NSControlKeyMask    | 0x0001 },
+    { nsIWidget::CTRL_R,          NSControlKeyMask    | 0x2000 },
+    { nsIWidget::ALT_L,           NSAlternateKeyMask  | 0x0020 },
+    { nsIWidget::ALT_R,           NSAlternateKeyMask  | 0x0040 },
+    { nsIWidget::COMMAND_L,       NSCommandKeyMask    | 0x0008 },
+    { nsIWidget::COMMAND_R,       NSCommandKeyMask    | 0x0010 },
     { nsIWidget::NUMERIC_KEY_PAD, NSNumericPadKeyMask },
     { nsIWidget::HELP,            NSHelpKeyMask },
     { nsIWidget::FUNCTION,        NSFunctionKeyMask }
@@ -3854,6 +4069,7 @@ TextInputHandlerBase::IsSpecialGeckoKey(UInt32 aNativeKeyCode)
     case kVK_Option:
     case kVK_RightOption:
     case kVK_ANSI_KeypadClear:
+    case kVK_Function:
 
     // function keys
     case kVK_F1:
@@ -3929,6 +4145,7 @@ TextInputHandlerBase::IsModifierKey(UInt32 aNativeKeyCode)
     case kVK_RightShift:
     case kVK_RightOption:
     case kVK_RightControl:
+    case kVK_Function:
       return true;
   }
   return false;
