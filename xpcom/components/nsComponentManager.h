@@ -38,6 +38,7 @@
 
 struct nsFactoryEntry;
 class nsIServiceManager;
+class nsIMemoryReporter;
 struct PRThread;
 
 #define NS_COMPONENTMANAGER_CID                      \
@@ -252,8 +253,12 @@ public:
 
     nsTArray<PendingServiceInfo> mPendingServices;
 
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+
 private:
     ~nsComponentManagerImpl();
+
+    nsIMemoryReporter* mReporter;
 };
 
 
@@ -272,6 +277,8 @@ struct nsFactoryEntry
     ~nsFactoryEntry();
 
     already_AddRefed<nsIFactory> GetFactory();
+
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
 
     const mozilla::Module::CIDEntry* mCIDEntry;
     nsComponentManagerImpl::KnownModule* mModule;
