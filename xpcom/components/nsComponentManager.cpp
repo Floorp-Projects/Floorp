@@ -715,8 +715,6 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     mKnownModules.Clear();
     mKnownStaticModules.Clear();
 
-    mLoaderData.Clear();
-
     delete sStaticModules;
     delete sModuleLocations;
 
