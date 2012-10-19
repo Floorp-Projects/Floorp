@@ -11,12 +11,13 @@
 // providing a file= query string.  For example,
 //
 //     about:memory?file=/foo/bar
-//     about:memory?verbose&file=/foo/bar
+//     about:memory?verbose&file=/foo/bar%26baz
 //
 // The order of "verbose" and "file=" isn't significant, and neither "verbose"
-// nor "file=" is case-sensitive.  Obviously the filename is case-sensitive iff
-// you're on a case-sensitive filesystem.  If you specify more than one "file="
-// argument, only the first one is used.
+// nor "file=" is case-sensitive.  We'll URI-unescape the contents of the
+// "file=" argument, and obviously the filename is case-sensitive iff you're on
+// a case-sensitive filesystem.  If you specify more than one "file=" argument,
+// only the first one is used.
 //
 // about:compartments doesn't support the "verbose" or "file=" parameters and
 // will ignore them if they're provided.
@@ -369,7 +370,7 @@ function onLoadAboutMemory()
       if (searchSplit[i].toLowerCase().startsWith('file=')) {
         let filename = searchSplit[i].substring('file='.length);
         let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-        file.initWithPath(filename);
+        file.initWithPath(decodeURIComponent(filename));
         updateAboutMemoryFromFile(file);
         return;
       }
