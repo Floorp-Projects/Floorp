@@ -5216,19 +5216,22 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
 class nsAutoNotifyDidPaint
 {
 public:
-  nsAutoNotifyDidPaint(bool aWillSendDidPaint)
-    : mWillSendDidPaint(aWillSendDidPaint)
+  nsAutoNotifyDidPaint(PresShell* aShell, uint32_t aFlags)
+    : mShell(aShell), mFlags(aFlags)
   {
   }
   ~nsAutoNotifyDidPaint()
   {
-    if (!mWillSendDidPaint && nsContentUtils::XPConnect()) {
+    mShell->GetPresContext()->NotifyDidPaintForSubtree(mFlags);
+    if (!(mFlags & nsIPresShell::PAINT_WILL_SEND_DID_PAINT) &&
+        nsContentUtils::XPConnect()) {
       nsContentUtils::XPConnect()->NotifyDidPaint();
     }
   }
 
 private:
-  bool mWillSendDidPaint;
+  PresShell* mShell;
+  uint32_t mFlags;
 };
 
 void
@@ -5240,7 +5243,7 @@ PresShell::Paint(nsIView*        aViewToPaint,
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aViewToPaint, "null view");
 
-  nsAutoNotifyDidPaint notifyDidPaint((aFlags & PAINT_WILL_SEND_DID_PAINT) != 0);
+  nsAutoNotifyDidPaint notifyDidPaint(this, aFlags);
 
   nsPresContext* presContext = GetPresContext();
   AUTO_LAYOUT_PHASE_ENTRY_POINT(presContext, Paint);
@@ -5309,7 +5312,6 @@ PresShell::Paint(nsIView*        aViewToPaint,
         }
 
         frame->UpdatePaintCountForPaintedPresShells();
-        presContext->NotifyDidPaintForSubtree();
         return;
       }
     }
@@ -5338,9 +5340,6 @@ PresShell::Paint(nsIView*        aViewToPaint,
     nsLayoutUtils::PaintFrame(nullptr, frame, aDirtyRegion, bgcolor, flags);
 
     frame->EndDeferringInvalidatesForDisplayRoot();
-    if (aFlags & PAINT_LAYERS) {
-      presContext->NotifyDidPaintForSubtree();
-    }
     return;
   }
 
@@ -5356,10 +5355,6 @@ PresShell::Paint(nsIView*        aViewToPaint,
   }
   layerManager->EndTransaction(NULL, NULL, (aFlags & PAINT_COMPOSITE) ?
     LayerManager::END_DEFAULT : LayerManager::END_NO_COMPOSITE);
-
-  if (aFlags & PAINT_LAYERS) {
-    presContext->NotifyDidPaintForSubtree();
-  }
 }
 
 // static
