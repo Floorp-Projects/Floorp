@@ -51,8 +51,46 @@ BrowserElementPrompt.prototype = {
     return this.confirm(title, text);
   },
 
-  confirmEx: function(title, text, buttonFlags, button0Title, button1Title, button2Title, checkMsg, checkState) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  // Each button is described by an object with the following schema
+  // {
+  //   string messageType,  // 'builtin' or 'custom'
+  //   string message, // 'ok', 'cancel', 'yes', 'no', 'save', 'dontsave', 
+  //                   // 'revert' or a string from caller if messageType was 'custom'.
+  // }
+  //
+  // Expected result from embedder:
+  // {
+  //   int button, // Index of the button that user pressed.
+  //   boolean checked, // True if the check box is checked.
+  // }
+  confirmEx: function(title, text, buttonFlags, button0Title, button1Title,
+                      button2Title, checkMsg, checkState) {
+    let buttonProperties = this._buildConfirmExButtonProperties(buttonFlags,
+                                                                button0Title,
+                                                                button1Title,
+                                                                button2Title);
+    let defaultReturnValue = { selectedButton: buttonProperties.defaultButton };
+    if (checkMsg) {
+      defaultReturnValue.checked = checkState.value;
+    }
+    let ret = this._browserElementChild.showModalPrompt(
+      this._win,
+      {
+        promptType: "custom-prompt",
+        title: title,
+        message: text,
+        defaultButton: buttonProperties.defaultButton,
+        buttons: buttonProperties.buttons,
+        showCheckbox: !!checkMsg,
+        checkboxMessage: checkMsg,
+        checkboxCheckedByDefault: !!checkState.value,
+        returnValue: defaultReturnValue
+      }
+    );
+    if (checkMsg) {
+      checkState.value = ret.checked;
+    }
+    return buttonProperties.indexToButtonNumberMap[ret.selectedButton];
   },
 
   prompt: function(title, text, value, checkMsg, checkState) {
@@ -84,6 +122,92 @@ BrowserElementPrompt.prototype = {
 
   select: function(title, text, aCount, aSelectList, aOutSelection) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  _buildConfirmExButtonProperties: function(buttonFlags, button0Title,
+                                            button1Title, button2Title) {
+    let r = {
+      defaultButton: -1,
+      buttons: [],
+      // This map is for translating array index to the button number that
+      // is recognized by Gecko. This shouldn't be exposed to embedder.
+      indexToButtonNumberMap: []
+    };
+
+    let defaultButton = 0;  // Default to Button 0.
+    if (buttonFlags & Ci.nsIPrompt.BUTTON_POS_1_DEFAULT) {
+      defaultButton = 1;
+    } else if (buttonFlags & Ci.nsIPrompt.BUTTON_POS_2_DEFAULT) {
+      defaultButton = 2;
+    }
+
+    // Properties of each button.
+    let buttonPositions = [
+      Ci.nsIPrompt.BUTTON_POS_0,
+      Ci.nsIPrompt.BUTTON_POS_1,
+      Ci.nsIPrompt.BUTTON_POS_2
+    ];
+
+    function buildButton(buttonTitle, buttonNumber) {
+      let ret = {};
+      let buttonPosition = buttonPositions[buttonNumber];
+      let mask = 0xff * buttonPosition;  // 8 bit mask
+      let titleType = (buttonFlags & mask) / buttonPosition;
+
+      ret.messageType = 'builtin';
+      switch(titleType) {
+      case Ci.nsIPrompt.BUTTON_TITLE_OK:
+        ret.message = 'ok';
+        break;
+      case Ci.nsIPrompt.BUTTON_TITLE_CANCEL:
+        ret.message = 'cancel';
+        break;
+      case Ci.nsIPrompt.BUTTON_TITLE_YES:
+        ret.message = 'yes';
+        break;
+      case Ci.nsIPrompt.BUTTON_TITLE_NO:
+        ret.message = 'no';
+        break;
+      case Ci.nsIPrompt.BUTTON_TITLE_SAVE:
+        ret.message = 'save';
+        break;
+      case Ci.nsIPrompt.BUTTON_TITLE_DONT_SAVE:
+        ret.message = 'dontsave';
+        break;
+      case Ci.nsIPrompt.BUTTON_TITLE_REVERT:
+        ret.message = 'revert';
+        break;
+      case Ci.nsIPrompt.BUTTON_TITLE_IS_STRING:
+        ret.message = buttonTitle;
+        ret.messageType = 'custom';
+        break;
+      default:
+        // This button is not shown.
+        return;
+      }
+
+      // If this is the default button, set r.defaultButton to
+      // the index of this button in the array. This value is going to be
+      // exposed to the embedder.
+      if (defaultButton === buttonNumber) {
+        r.defaultButton = r.buttons.length;
+      }
+      r.buttons.push(ret);
+      r.indexToButtonNumberMap.push(buttonNumber);
+    }
+
+    buildButton(button0Title, 0);
+    buildButton(button1Title, 1);
+    buildButton(button2Title, 2);
+
+    // If defaultButton is still -1 here, it means the default button won't
+    // be shown.
+    if (r.defaultButton === -1) {
+      throw new Components.Exception("Default button won't be shown",
+                                     Cr.NS_ERROR_FAILURE);
+    }
+
+    return r;
   },
 };
 
