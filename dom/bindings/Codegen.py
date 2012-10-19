@@ -5964,7 +5964,9 @@ class CGExampleMember(CGThing):
             if type.nullable():
                 typeDecl = "%s*"
             else:
-                typeDecl = "%s&"
+                typeDecl = "%s"
+                if not optional:
+                    typeDecl += "&"
             return (typeDecl % type.name), False, False
 
         if type.isString():
@@ -5978,7 +5980,14 @@ class CGExampleMember(CGThing):
             return type.inner.identifier.name, False, True
 
         if type.isCallback():
-            return "JSObject*", False, False
+            if type.nullable():
+                declType = "JSObject*"
+            else:
+                if optional:
+                    declType = "NonNull<JSObject>"
+                else:
+                    declType = "JSObject&"
+            return declType, False, False
 
         if type.isAny():
             return "JS::Value", False, False
@@ -6097,11 +6106,8 @@ class CGExampleClass(CGThing):
                     "  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
                     "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(${ifaceName})\n"
                     "\n"
-                    "  void* GetParentObject() const\n"
-                    "  {\n"
-                    "    // TODO: return something sensible here, and change the return type\n"
-                    "    return somethingSensible;\n"
-                    "  }\n"
+                    "  // TODO: return something sensible here, and change the return type\n"
+                    "  ${ifaceName}* GetParentObject() const;\n"
                     "\n" +
                     wrapFunc +
                     "\n").substitute({ "ifaceName": descriptor.name })),

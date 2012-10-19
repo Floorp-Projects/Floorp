@@ -218,15 +218,25 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
       if (parentMetrics.IsScrollable())
         scrollableLayer = parent;
       if (!parentMetrics.mDisplayPort.IsEmpty() && scrollableLayer) {
-          displayPort = parent->GetEffectiveTransform().
-            TransformBounds(gfxRect(
-              parentMetrics.mDisplayPort.x, parentMetrics.mDisplayPort.y,
-              parentMetrics.mDisplayPort.width, parentMetrics.mDisplayPort.height));
+          // Get the display-port bounds in screen-space.
+          displayPort = gfxRect(parentMetrics.mDisplayPort.x,
+                                parentMetrics.mDisplayPort.y,
+                                parentMetrics.mDisplayPort.width,
+                                parentMetrics.mDisplayPort.height);
+
+          // Calculate the scale transform applied to the root layer to determine
+          // the content resolution.
+          Layer* rootLayer = aLayer->Manager()->GetRoot();
+          const gfx3DMatrix& rootTransform = rootLayer->GetTransform();
+          float scaleX = rootTransform.GetXScale();
+          float scaleY = rootTransform.GetYScale();
+
+          // Get the content document bounds, in screen-space.
           const FrameMetrics& metrics = scrollableLayer->GetFrameMetrics();
           const nsIntSize& contentSize = metrics.mContentRect.Size();
           gfx::Point scrollOffset =
-            gfx::Point(metrics.mScrollOffset.x * metrics.LayersPixelsPerCSSPixel().width,
-                       metrics.mScrollOffset.y * metrics.LayersPixelsPerCSSPixel().height);
+            gfx::Point((metrics.mScrollOffset.x * metrics.LayersPixelsPerCSSPixel().width) / scaleX,
+                       (metrics.mScrollOffset.y * metrics.LayersPixelsPerCSSPixel().height) / scaleY);
           const nsIntPoint& contentOrigin = metrics.mContentRect.TopLeft() -
             nsIntPoint(NS_lround(scrollOffset.x), NS_lround(scrollOffset.y));
           gfxRect contentRect = gfxRect(contentOrigin.x, contentOrigin.y,
@@ -259,6 +269,7 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
 
     // Subtract the display-port from the tile region.
     if (!displayPort.IsEmpty()) {
+      // Transform the display-port from screen space to layer space.
       gfxRect transformedRenderBounds = transform.Inverse().TransformBounds(displayPort);
       tileRegion.Sub(tileRegion, nsIntRect(transformedRenderBounds.x,
                                            transformedRenderBounds.y,
@@ -268,6 +279,7 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
 
     // Intersect the tile region with the content area.
     if (!contentBounds.IsEmpty()) {
+      // Transform the content bounds from screen space to layer space.
       gfxRect transformedRenderBounds = transform.Inverse().TransformBounds(contentBounds);
       tileRegion.And(tileRegion, nsIntRect(transformedRenderBounds.x,
                                            transformedRenderBounds.y,

@@ -120,6 +120,14 @@ public:
   void GetWidgetConfiguration(nsTArray<nsIWidget::Configuration>* aConfigurations)
   {
     if (mWidget) {
+      if (!mWidget->GetParent()) {
+        // Plugin widgets should not be toplevel except when they're out of the
+        // document, in which case the plugin should not be registered for
+        // geometry updates and this should not be called. But apparently we
+        // have bugs where mWidget sometimes is toplevel here. Bail out.
+        NS_ERROR("Plugin widgets registered for geometry updates should not be toplevel");
+        return;
+      }
       nsIWidget::Configuration* configuration = aConfigurations->AppendElement();
       configuration->mChild = mWidget;
       configuration->mBounds = mNextConfigurationBounds;
@@ -299,6 +307,7 @@ public:
     : nsDisplayItem(aBuilder, aFrame)
   {
     MOZ_COUNT_CTOR(nsDisplayPlugin);
+    aBuilder->SetContainsPluginItem();
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayPlugin() {

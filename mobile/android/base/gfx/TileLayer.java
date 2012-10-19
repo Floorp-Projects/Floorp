@@ -7,6 +7,7 @@ package org.mozilla.gecko.gfx;
 
 import android.graphics.Rect;
 import android.opengl.GLES20;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 
@@ -47,6 +48,16 @@ public abstract class TileLayer extends Layer {
                 TextureReaper.get().add(mTextureIDs);
         } finally {
             super.finalize();
+        }
+    }
+
+    public void destroy() {
+        try {
+            if (mImage != null) {
+                mImage.destroy();
+            }
+        } catch (Exception ex) {
+            Log.e(LOGTAG, "error clearing buffers: ", ex);
         }
     }
 

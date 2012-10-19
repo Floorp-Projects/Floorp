@@ -7,6 +7,7 @@
 %ifndef WINSTRIPE_AERO
 #downloadsHistory,
 #downloadsHistory:-moz-focusring > .button-box {
+  outline: 1px -moz-dialogtext dotted;
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
 }
@@ -69,7 +70,7 @@ richlistitem[type="download"]:first-child {
 }
 
 #downloadsListBox:-moz-focusring > richlistitem[type="download"][selected] {
-  outline: 1px #999 dotted;
+  outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
   -moz-outline-radius: 3px;
 }
@@ -109,6 +110,10 @@ richlistitem[type="download"]:first-child {
 
 .downloadButton > .button-box {
   padding: 0;
+}
+
+.downloadButton:-moz-focusring > .button-box {
+  outline: 1px -moz-dialogtext dotted;
 }
 
 /*** Highlighted list items ***/
