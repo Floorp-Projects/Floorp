@@ -114,10 +114,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-// f50f99bc-e178-4e67-89ea-f2aee5923f6d
+// 307910dd-7355-4535-84e7-6b95a4edffbe
 #define NS_IPRESSHELL_IID \
-{ 0xf50f99bc, 0xe178, 0x4e67, \
-  { 0x89, 0xea, 0xf2, 0xae, 0xe5, 0x92, 0x3f, 0x6d } }
+{ 0x307910dd, 0x7355, 0x4535, \
+  { 0x84, 0xe7, 0x6b, 0x95, 0xa4, 0xed, 0xff, 0xbe } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1252,12 +1252,6 @@ public:
    * widget geometry.
    */
   virtual void WillPaint(bool aWillSendDidPaint) = 0;
-  /**
-   * Notify that we called Paint with PAINT_LAYERS. Only fires on the
-   * pres shell for the painted widget. This is issued at a time when it's
-   * safe to modify widget geometry.
-   */
-  virtual void DidPaint() = 0;
   /**
    * Notify that we're going to call Paint with PAINT_COMPOSITE.
    * Fires on the presshell for the painted widget.
