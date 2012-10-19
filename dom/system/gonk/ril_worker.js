@@ -2328,6 +2328,28 @@ let RIL = {
       this.sendDOMMessage(options);
     }).bind(this);
 
+    function _isValidPINPUKRequest() {
+      // The only allowed MMI procedure for ICC PIN, PIN2, PUK and PUK2 handling
+      // is "Registration" (**).
+      if (!mmi.procedure || mmi.procedure != MMI_PROCEDURE_REGISTRATION ) {
+        _sendMMIError("WRONG_MMI_PROCEDURE");
+        return;
+      }
+
+      if (!mmi.sia || !mmi.sia.length || !mmi.sib || !mmi.sib.length ||
+          !mmi.sic || !mmi.sic.length) {
+        _sendMMIError("MISSING_SUPPLEMENTARY_INFORMATION");
+        return;
+      }
+
+      if (mmi.sib != mmi.sic) {
+        _sendMMIError("NEW_PIN_MISMATCH");
+        return;
+      }
+
+      return true;
+    }
+
     if (mmi == null) {
       if (this._ussdSession) {
         options.ussd = mmiString;
@@ -2358,13 +2380,68 @@ let RIL = {
         _sendMMIError("CALL_FORWARDING_NOT_SUPPORTED_VIA_MMI");
         return;
 
-      // PIN/PIN2/PUK/PUK2
+      // Change the current ICC PIN number.
       case MMI_SC_PIN:
+        // As defined in TS.122.030 6.6.2 to change the ICC PIN we should expect
+        // an MMI code of the form **04*OLD_PIN*NEW_PIN*NEW_PIN#, where old PIN
+        // should be entered as the SIA parameter and the new PIN as SIB and
+        // SIC.
+        if (!_isValidPINPUKRequest()) {
+          return;
+        }
+
+        options.rilRequestType = "sendMMI";
+        options.pin = mmi.sia;
+        options.newPin = mmi.sib;
+        this.changeICCPIN(options);
+        return;
+
+      // Change the current ICC PIN2 number.
       case MMI_SC_PIN2:
+        // As defined in TS.122.030 6.6.2 to change the ICC PIN2 we should
+        // enter and MMI code of the form **042*OLD_PIN2*NEW_PIN2*NEW_PIN2#,
+        // where the old PIN2 should be entered as the SIA parameter and the
+        // new PIN2 as SIB and SIC.
+        if (!_isValidPINPUKRequest()) {
+          return;
+        }
+
+        options.rilRequestType = "sendMMI";
+        options.pin = mmi.sia;
+        options.newPin = mmi.sib;
+        this.changeICCPIN2(options);
+        return;
+
+      // Unblock ICC PIN.
       case MMI_SC_PUK:
+        // As defined in TS.122.030 6.6.3 to unblock the ICC PIN we should
+        // enter an MMI code of the form **05*PUK*NEW_PIN*NEW_PIN#, where PUK
+        // should be entered as the SIA parameter and the new PIN as SIB and
+        // SIC.
+        if (!_isValidPINPUKRequest()) {
+          return;
+        }
+
+        options.rilRequestType = "sendMMI";
+        options.puk = mmi.sia;
+        options.newPin = mmi.sib;
+        this.enterICCPUK(options);
+        return;
+
+      // Unblock ICC PIN2.
       case MMI_SC_PUK2:
-        // TODO: Bug 793187 - MMI Codes: Support PIN/PIN2/PUK handling.
-        _sendMMIError("SIM_FUNCTION_NOT_SUPPORTED_VIA_MMI");
+        // As defined in TS.122.030 6.6.3 to unblock the ICC PIN2 we should
+        // enter an MMI code of the form **052*PUK2*NEW_PIN2*NEW_PIN2#, where
+        // PUK2 should be entered as the SIA parameter and the new PIN2 as SIB
+        // and SIC.
+        if (!_isValidPINPUKRequest()) {
+          return;
+        }
+
+        options.rilRequestType = "sendMMI";
+        options.puk = mmi.sia;
+        options.newPin = mmi.sib;
+        this.enterICCPUK2(options);
         return;
 
       // IMEI
