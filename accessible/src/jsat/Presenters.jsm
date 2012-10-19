@@ -268,28 +268,25 @@ AndroidPresenter.prototype = {
   textChanged: function AndroidPresenter_textChanged(aIsInserted, aStart,
                                                      aLength, aText,
                                                      aModifiedText) {
-    let androidEvent = {
-      type: this.type,
-      details: [{
-        eventType: this.ANDROID_VIEW_TEXT_CHANGED,
-        text: [aText],
-        fromIndex: aStart,
-        removedCount: 0,
-        addedCount: 0
-      }]
+    let eventDetails = {
+      eventType: this.ANDROID_VIEW_TEXT_CHANGED,
+      text: [aText],
+      fromIndex: aStart,
+      removedCount: 0,
+      addedCount: 0
     };
 
     if (aIsInserted) {
-      androidEvent.addedCount = aLength;
-      androidEvent.beforeText =
+      eventDetails.addedCount = aLength;
+      eventDetails.beforeText =
         aText.substring(0, aStart) + aText.substring(aStart + aLength);
     } else {
-      androidEvent.removedCount = aLength;
-      androidEvent.beforeText =
+      eventDetails.removedCount = aLength;
+      eventDetails.beforeText =
         aText.substring(0, aStart) + aModifiedText + aText.substring(aStart);
     }
 
-    return androidEvent;
+    return {type: this.type, details: [eventDetails]};
   },
 
   viewportChanged: function AndroidPresenter_viewportChanged(aWindow) {
