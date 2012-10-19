@@ -214,7 +214,8 @@ BrowserElementChild.prototype = {
     let returnValue = this._waitForResult(win);
 
     if (args.promptType == 'prompt' ||
-        args.promptType == 'confirm') {
+        args.promptType == 'confirm' ||
+        args.promptType == 'custom-prompt') {
       return returnValue;
     }
   },
