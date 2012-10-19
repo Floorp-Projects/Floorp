@@ -1238,9 +1238,11 @@ ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
 
   BlobConstructorParams params;
 
-  if (blob->IsSizeUnknown()) {
-    // We don't want to call GetSize yet since that may stat a file on the main
-    // thread here. Instead we'll learn the size lazily from the other process.
+  if (blob->IsSizeUnknown() || /*blob->IsDateUnknown()*/ 0) {
+    // We don't want to call GetSize or GetLastModifiedDate
+    // yet since that may stat a file on the main thread
+    // here. Instead we'll learn the size lazily from the
+    // other process.
     params = MysteryBlobConstructorParams();
   }
   else {
@@ -1255,6 +1257,9 @@ ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
     nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
     if (file) {
       FileBlobConstructorParams fileParams;
+
+      rv = file->GetMozLastModifiedDate(&fileParams.modDate());
+      NS_ENSURE_SUCCESS(rv, nullptr);
 
       rv = file->GetName(fileParams.name());
       NS_ENSURE_SUCCESS(rv, nullptr);
