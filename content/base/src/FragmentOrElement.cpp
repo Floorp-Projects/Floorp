@@ -888,11 +888,15 @@ nsIContent::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // Event may need to be retargeted if this is the root of a native
   // anonymous content subtree or event is dispatched somewhere inside XBL.
   if (isAnonForEvents) {
+#ifdef DEBUG
     // If a DOM event is explicitly dispatched using node.dispatchEvent(), then
     // all the events are allowed even in the native anonymous content..
-    NS_ASSERTION(aVisitor.mEvent->eventStructType != NS_MUTATION_EVENT ||
+    nsCOMPtr<nsIContent> t = do_QueryInterface(aVisitor.mEvent->originalTarget);
+    NS_ASSERTION(!t || !t->ChromeOnlyAccess() ||
+                 aVisitor.mEvent->eventStructType != NS_MUTATION_EVENT ||
                  aVisitor.mDOMEvent,
                  "Mutation event dispatched in native anonymous content!?!");
+#endif
     aVisitor.mEventTargetAtParent = parent;
   } else if (parent && aVisitor.mOriginalTargetIsInAnon) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->target));
