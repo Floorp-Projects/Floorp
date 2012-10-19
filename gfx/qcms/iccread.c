@@ -836,7 +836,7 @@ static uint16_t float_to_u8Fixed8Number(float a)
 	else if (a < 0.f)
 		return 0;
 	else
-		return floor(a*256.f + .5f);
+		return floorf(a*256.f + .5f);
 }
 
 static struct curveType *curve_from_gamma(float gamma)

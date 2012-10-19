@@ -41,11 +41,45 @@ static inline float lerp(float a, float b, float t)
         return a*(1.f-t) + b*t;
 }
 
-unsigned char clamp_u8(float v);
-float clamp_float(float a);
+static inline unsigned char clamp_u8(float v)
+{
+  if (v > 255.)
+    return 255;
+  else if (v < 0)
+    return 0;
+  else
+    return floorf(v+.5);
+}
 
-float u8Fixed8Number_to_float(uint16_t x);
+static inline float clamp_float(float a)
+{
+  /* One would naturally write this function as the following:
+  if (a > 1.)
+    return 1.;
+  else if (a < 0)
+    return 0;
+  else
+    return a;
 
+  However, that version will let NaNs pass through which is undesirable
+  for most consumers.
+  */
+
+  if (a > 1.)
+    return 1.;
+  else if (a >= 0)
+    return a;
+  else // a < 0 or a is NaN
+    return 0;
+}
+
+static inline float u8Fixed8Number_to_float(uint16_t x)
+{
+  // 0x0000 = 0.
+  // 0x0100 = 1.
+  // 0xffff = 255  + 255/256
+  return x/256.;
+}
 
 float *build_input_gamma_table(struct curveType *TRC);
 struct matrix build_colorant_matrix(qcms_profile *p);
