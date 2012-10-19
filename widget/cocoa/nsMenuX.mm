@@ -35,6 +35,7 @@
 #include "nsIDOMElement.h"
 #include "nsBindingManager.h"
 #include "nsIServiceManager.h"
+#include "nsXULPopupManager.h"
 
 #include "jsapi.h"
 #include "nsIScriptGlobalObject.h"
@@ -573,7 +574,7 @@ bool nsMenuX::OnOpen()
     return false;
 
   // If the open is going to succeed we need to walk our menu items, checking to
-  // see if any of them have a command attribute. If so, several apptributes
+  // see if any of them have a command attribute. If so, several attributes
   // must potentially be updated.
 
   // Get new popup content first since it might have changed as a result of the
@@ -582,56 +583,9 @@ bool nsMenuX::OnOpen()
   if (!popupContent)
     return true;
 
-  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(popupContent->GetDocument()));
-  if (!domDoc)
-    return true;
-
-  uint32_t count = popupContent->GetChildCount();
-  for (uint32_t i = 0; i < count; i++) {
-    nsIContent *grandChild = popupContent->GetChildAt(i);
-    if (grandChild->Tag() == nsGkAtoms::menuitem) {
-      // See if we have a command attribute.
-      nsAutoString command;
-      grandChild->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
-      if (!command.IsEmpty()) {
-        // We do! Look it up in our document
-        nsCOMPtr<nsIDOMElement> commandElt;
-        domDoc->GetElementById(command, getter_AddRefs(commandElt));
-        nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
-        
-        if (commandContent) {
-          nsAutoString commandDisabled, menuDisabled;
-          commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::disabled, commandDisabled);
-          grandChild->GetAttr(kNameSpaceID_None, nsGkAtoms::disabled, menuDisabled);
-          if (!commandDisabled.Equals(menuDisabled)) {
-            // The menu's disabled state needs to be updated to match the command.
-            if (commandDisabled.IsEmpty()) 
-              grandChild->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
-            else
-              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, commandDisabled, true);
-          }
-          
-          // The menu's value and checked states need to be updated to match the command.
-          // Note that (unlike the disabled state) if the command has *no* value for either, we
-          // assume the menu is supplying its own.
-          nsAutoString commandChecked, menuChecked;
-          commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::checked, commandChecked);
-          grandChild->GetAttr(kNameSpaceID_None, nsGkAtoms::checked, menuChecked);
-          if (!commandChecked.Equals(menuChecked)) {
-            if (!commandChecked.IsEmpty()) 
-              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::checked, commandChecked, true);
-          }
-          
-          nsAutoString commandValue, menuValue;
-          commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, commandValue);
-          grandChild->GetAttr(kNameSpaceID_None, nsGkAtoms::label, menuValue);
-          if (!commandValue.Equals(menuValue)) {
-            if (!commandValue.IsEmpty()) 
-              grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::label, commandValue, true);
-          }
-        }
-      }
-    }
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (pm) {
+    pm->UpdateMenuItems(popupContent);
   }
 
   return true;
