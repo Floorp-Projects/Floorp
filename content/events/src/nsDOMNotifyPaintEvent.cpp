@@ -22,7 +22,7 @@ nsDOMNotifyPaintEvent::nsDOMNotifyPaintEvent(nsPresContext* aPresContext,
     mEvent->message = aEventType;
   }
   if (aInvalidateRequests) {
-    mInvalidateRequests.SwapElements(aInvalidateRequests->mRequests);
+    mInvalidateRequests.MoveElementsFrom(aInvalidateRequests->mRequests);
   }
 }
 

@@ -134,14 +134,15 @@ nsPresContext::MakeColorPref(const nsString& aColor)
 bool
 nsPresContext::IsDOMPaintEventPending() 
 {
-  if (!mInvalidateRequests.mRequests.IsEmpty()) {
-    return true;    
+  if (mFireAfterPaintEvents) {
+    return true;
   }
   if (GetDisplayRootPresContext()->GetRootPresContext()->mRefreshDriver->ViewManagerFlushIsPending()) {
     // Since we're promising that there will be a MozAfterPaint event
     // fired, we record an empty invalidation in case display list
     // invalidation doesn't invalidate anything further.
     NotifyInvalidation(nsRect(0, 0, 0, 0), 0);
+    NS_ASSERTION(mFireAfterPaintEvents, "Why aren't we planning to fire the event?");
     return true;
   }
   return false;
@@ -2033,7 +2034,7 @@ nsPresContext::EnsureSafeToHandOutCSSRules()
 }
 
 void
-nsPresContext::FireDOMPaintEvent()
+nsPresContext::FireDOMPaintEvent(nsInvalidateRequestList* aList)
 {
   nsPIDOMWindow* ourWindow = mDocument->GetWindow();
   if (!ourWindow)
@@ -2058,9 +2059,7 @@ nsPresContext::FireDOMPaintEvent()
   // (hopefully it won't, or we're likely to get an infinite loop! At least
   // it won't be blocking app execution though).
   NS_NewDOMNotifyPaintEvent(getter_AddRefs(event), this, nullptr,
-                            NS_AFTERPAINT,
-                            &mInvalidateRequests);
-  mAllInvalidated = false;
+                            NS_AFTERPAINT, aList);
   if (!event) {
     return;
   }
@@ -2199,7 +2198,7 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, uint32_t aFlags)
   }
 
   nsInvalidateRequestList::Request* request =
-    mInvalidateRequests.mRequests.AppendElement();
+    mInvalidateRequestsSinceLastPaint.mRequests.AppendElement();
   if (!request)
     return;
 
@@ -2231,36 +2230,81 @@ nsPresContext::NotifySubDocInvalidation(ContainerLayer* aContainer,
   }
 }
 
+struct NotifyDidPaintSubdocumentCallbackClosure {
+  uint32_t mFlags;
+  bool mNeedsAnotherDidPaintNotification;
+};
 static bool
 NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* aData)
 {
+  NotifyDidPaintSubdocumentCallbackClosure* closure =
+    static_cast<NotifyDidPaintSubdocumentCallbackClosure*>(aData);
   nsIPresShell* shell = aDocument->GetShell();
   if (shell) {
     nsPresContext* pc = shell->GetPresContext();
     if (pc) {
-      pc->NotifyDidPaintForSubtree();
+      pc->NotifyDidPaintForSubtree(closure->mFlags);
+      if (pc->IsDOMPaintEventPending()) {
+        closure->mNeedsAnotherDidPaintNotification = true;
+      }
     }
   }
   return true;
 }
 
+class DelayedFireDOMPaintEvent : public nsRunnable {
+public:
+  DelayedFireDOMPaintEvent(nsPresContext* aPresContext,
+                           nsInvalidateRequestList* aList)
+    : mPresContext(aPresContext)
+  {
+    mList.TakeFrom(aList);
+  }
+  NS_IMETHOD Run()
+  {
+    mPresContext->FireDOMPaintEvent(&mList);
+    return NS_OK;
+  }
+
+  nsRefPtr<nsPresContext> mPresContext;
+  nsInvalidateRequestList mList;
+};
+
 void
-nsPresContext::NotifyDidPaintForSubtree()
+nsPresContext::NotifyDidPaintForSubtree(uint32_t aFlags)
 {
   if (IsRoot()) {
-    if (!mFireAfterPaintEvents)
-      return;
-
     static_cast<nsRootPresContext*>(this)->CancelDidPaintTimer();
   }
 
-  mFireAfterPaintEvents = false;
+  if (!mFireAfterPaintEvents) {
+    return;
+  }
 
-  nsCOMPtr<nsIRunnable> ev =
-    NS_NewRunnableMethod(this, &nsPresContext::FireDOMPaintEvent);
-  nsContentUtils::AddScriptRunner(ev);
+  if (aFlags & nsIPresShell::PAINT_LAYERS) {
+    mUndeliveredInvalidateRequestsBeforeLastPaint.TakeFrom(
+        &mInvalidateRequestsSinceLastPaint);
+    mAllInvalidated = false;
+  }
+  if (aFlags & nsIPresShell::PAINT_COMPOSITE) {
+    nsCOMPtr<nsIRunnable> ev =
+      new DelayedFireDOMPaintEvent(this, &mUndeliveredInvalidateRequestsBeforeLastPaint);
+    nsContentUtils::AddScriptRunner(ev);
+  }
 
-  mDocument->EnumerateSubDocuments(NotifyDidPaintSubdocumentCallback, nullptr);
+  NotifyDidPaintSubdocumentCallbackClosure closure = { aFlags, false };
+  mDocument->EnumerateSubDocuments(NotifyDidPaintSubdocumentCallback, &closure);
+
+  if (!closure.mNeedsAnotherDidPaintNotification &&
+      mInvalidateRequestsSinceLastPaint.IsEmpty() &&
+      mUndeliveredInvalidateRequestsBeforeLastPaint.IsEmpty()) {
+    // Nothing more to do for the moment.
+    mFireAfterPaintEvents = false;
+  } else {
+    if (IsRoot()) {
+      static_cast<nsRootPresContext*>(this)->EnsureEventualDidPaintEvent();
+    }
+  }
 }
 
 bool
@@ -2725,7 +2769,10 @@ NotifyDidPaintForSubtreeCallback(nsITimer *aTimer, void *aClosure)
 {
   nsPresContext* presContext = (nsPresContext*)aClosure;
   nsAutoScriptBlocker blockScripts;
-  presContext->NotifyDidPaintForSubtree();
+  // This is a fallback if we don't get paint events for some reason
+  // so we'll just pretend both layer painting and compositing happened.
+  presContext->NotifyDidPaintForSubtree(
+      nsIPresShell::PAINT_LAYERS | nsIPresShell::PAINT_COMPOSITE);
 }
 
 void
