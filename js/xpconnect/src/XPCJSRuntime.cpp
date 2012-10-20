@@ -425,6 +425,34 @@ SuspectDOMExpandos(nsPtrHashKey<JSObject> *key, void *arg)
     return PL_DHASH_NEXT;
 }
 
+bool
+CanSkipWrappedJS(nsXPCWrappedJS *wrappedJS)
+{
+    JSObject *obj = wrappedJS->GetJSObjectPreserveColor();
+    // If traversing wrappedJS wouldn't release it, nor
+    // cause any other objects to be added to the graph, no
+    // need to add it to the graph at all.
+    if (nsCCUncollectableMarker::sGeneration &&
+        (!obj || !xpc_IsGrayGCThing(obj)) &&
+        !wrappedJS->IsSubjectToFinalization() &&
+        wrappedJS->GetRootWrapper() == wrappedJS) {
+        if (!wrappedJS->IsAggregatedToNative()) {
+            return true;
+        } else {
+            nsISupports* agg = wrappedJS->GetAggregatedNativeObject();
+            nsXPCOMCycleCollectionParticipant* cp = nullptr;
+            CallQueryInterface(agg, &cp);
+            nsISupports* canonical = nullptr;
+            agg->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
+                                reinterpret_cast<void**>(&canonical));
+            if (cp && canonical && cp->CanSkipInCC(canonical)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void
 XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionTraversalCallback &cb)
 {
@@ -458,15 +486,8 @@ XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionTraversalCallback &cb)
 
     for (XPCRootSetElem *e = mWrappedJSRoots; e ; e = e->GetNextRoot()) {
         nsXPCWrappedJS *wrappedJS = static_cast<nsXPCWrappedJS*>(e);
-        JSObject *obj = wrappedJS->GetJSObjectPreserveColor();
-        // If traversing wrappedJS wouldn't release it, nor
-        // cause any other objects to be added to the graph, no
-        // need to add it to the graph at all.
-        if (nsCCUncollectableMarker::sGeneration &&
-            !cb.WantAllTraces() && (!obj || !xpc_IsGrayGCThing(obj)) &&
-            !wrappedJS->IsSubjectToFinalization() &&
-            wrappedJS->GetRootWrapper() == wrappedJS &&
-            !wrappedJS->IsAggregatedToNative()) {
+        if (!cb.WantAllTraces() &&
+            CanSkipWrappedJS(wrappedJS)) {
             continue;
         }
 
