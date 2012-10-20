@@ -142,6 +142,32 @@ class Marionette(object):
 
         self.client = MarionetteClient(self.host, self.port)
 
+        if emulator:
+            # When launching an emulator, telephony API's are not
+            # available immediately.  They start working after the
+            # system-message-listener-ready event is observed.  See
+            # bug 792647.  This code causes us to wait for this event
+            # after launching an emulator, before allowing any tests
+            # to run.
+            self.start_session()
+            self.set_context(self.CONTEXT_CHROME)
+            self.set_script_timeout(30000)
+            try:
+                self.execute_async_script("""
+    waitFor(
+        function() { marionetteScriptFinished(true); },
+        function() { return isSystemMessageListenerReady(); }
+    );
+                """)
+            except ScriptTimeoutException:
+                # We silently ignore the timeout if it occurs, since
+                # isSystemMessageListenerReady() isn't available on
+                # older emulators.  30s *should* be enough of a delay
+                # to allow telephony API's to work.
+                pass
+            self.set_context(self.CONTEXT_CONTENT)
+            self.delete_session()
+
     def __del__(self):
         if self.emulator:
             self.emulator.close()
