@@ -875,7 +875,7 @@ static inline bool
 IsLegalSchemeCharacter(const char aChar)
 {
     uint8_t mask = kLegalSchemeChars[aChar >> 3];
-    uint8_t bit = PR_BIT(aChar & 0x7);
+    uint8_t bit = 1u << (aChar & 0x7);
     return bool((mask & bit) != 0);
 }
 
