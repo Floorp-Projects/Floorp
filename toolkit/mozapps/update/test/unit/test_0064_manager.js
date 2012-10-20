@@ -13,7 +13,6 @@ function run_test() {
               "same version of the application with the same application " +
               "build id on startup (bug 536547)");
   removeUpdateDirsAndFiles();
-  setUpdateChannel();
 
   var patches, updates;
 
