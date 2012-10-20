@@ -118,7 +118,7 @@ SharedImage* ImageContainerParent::SwapSharedImage(uint64_t aID,
   int idx = IndexOf(aID);
   if (idx == SHAREDIMAGEMAP_INVALID_INDEX) {
     sSharedImageMap->AppendElement(ImageIDPair(aImage,aID));
-  return nullptr;
+    return nullptr;
   }
   SharedImage *prev = (*sSharedImageMap)[idx].image;
   (*sSharedImageMap)[idx].image = aImage;
