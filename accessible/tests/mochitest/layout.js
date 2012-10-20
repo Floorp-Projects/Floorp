@@ -47,6 +47,18 @@ function hitTest(aContainerID, aChildID, aGrandChildID)
 }
 
 /**
+ * Test if getOffsetAtPoint returns the given text offset at given coordinates.
+ */
+function testOffsetAtPoint(aHyperTextID, aX, aY, aCoordType, aExpectedOffset)
+{
+  var hyperText = getAccessible(aHyperTextID, [nsIAccessibleText]);
+  var offset = hyperText.getOffsetAtPoint(aX, aY, aCoordType);
+  is(offset, aExpectedOffset,
+     "Wrong offset at given point (" + aX + ", " + aY + ") for " +
+     prettyName(aHyperTextID));
+}
+
+/**
  * Zoom the given document.
  */
 function zoomDocument(aDocument, aZoom)
