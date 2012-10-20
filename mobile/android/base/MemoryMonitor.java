@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.BrowserContract;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentCallbacks2;
@@ -53,6 +54,7 @@ class MemoryMonitor extends BroadcastReceiver {
     private final PressureDecrementer mPressureDecrementer;
     private int mMemoryPressure;
     private boolean mStoragePressure;
+    private Context mContext;
 
     private MemoryMonitor() {
         mPressureDecrementer = new PressureDecrementer();
@@ -61,6 +63,7 @@ class MemoryMonitor extends BroadcastReceiver {
     }
 
     public void init(Context context) {
+        mContext = context;
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_DEVICE_STORAGE_LOW);
         filter.addAction(Intent.ACTION_DEVICE_STORAGE_OK);
@@ -217,6 +220,8 @@ class MemoryMonitor extends BroadcastReceiver {
                 return;
             }
 
+            BrowserDB.expireHistory(mContext.getContentResolver(),
+                                    BrowserContract.ExpirePriority.AGGRESSIVE);
             BrowserDB.removeThumbnails(Tabs.getInstance().getContentResolver());
             // TODO: drop or shrink disk caches
         }
