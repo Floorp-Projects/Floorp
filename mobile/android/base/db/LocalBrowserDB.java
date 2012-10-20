@@ -12,6 +12,7 @@ import org.mozilla.gecko.db.BrowserContract.ImageColumns;
 import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
+import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
@@ -54,6 +55,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     private final Uri mBookmarksUriWithProfile;
     private final Uri mParentsUriWithProfile;
     private final Uri mHistoryUriWithProfile;
+    private final Uri mHistoryExpireUriWithProfile;
     private final Uri mImagesUriWithProfile;
     private final Uri mCombinedUriWithProfile;
     private final Uri mDeletedHistoryUriWithProfile;
@@ -78,6 +80,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         mBookmarksUriWithProfile = appendProfile(Bookmarks.CONTENT_URI);
         mParentsUriWithProfile = appendProfile(Bookmarks.PARENTS_CONTENT_URI);
         mHistoryUriWithProfile = appendProfile(History.CONTENT_URI);
+        mHistoryExpireUriWithProfile = appendProfile(History.CONTENT_OLD_URI);
         mImagesUriWithProfile = appendProfile(Images.CONTENT_URI);
         mCombinedUriWithProfile = appendProfile(Combined.CONTENT_URI);
 
@@ -283,6 +286,12 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                             History.DATE_LAST_VISITED + " DESC");
 
         return new LocalDBCursor(c);
+    }
+
+    public void expireHistory(ContentResolver cr, ExpirePriority priority) {
+        Uri url = mHistoryExpireUriWithProfile;
+        url = url.buildUpon().appendQueryParameter(BrowserContract.PARAM_EXPIRE_PRIORITY, priority.toString()).build();
+        cr.delete(url, null, null);
     }
 
     public void removeHistoryEntry(ContentResolver cr, int id) {
