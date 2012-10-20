@@ -37,6 +37,7 @@ public class testBrowserProvider extends ContentProviderTest {
     private Uri mBookmarksUri;
     private Uri mBookmarksPositionUri;
     private Uri mHistoryUri;
+    private Uri mHistoryOldUri;
     private Uri mImagesUri;
     private Uri mCombinedUri;
 
@@ -96,6 +97,7 @@ public class testBrowserProvider extends ContentProviderTest {
     private void loadContractInfo() throws Exception {
         mBookmarksUri = getContentUri("Bookmarks");
         mHistoryUri = getContentUri("History");
+        mHistoryOldUri = getUriColumn("History", "CONTENT_OLD_URI");
         mImagesUri = getContentUri("Images");
         mCombinedUri = getContentUri("Combined");
 
@@ -323,6 +325,7 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestCombinedViewDisplay());
         mTests.add(new TestCombinedViewWithDeletedBookmark());
         mTests.add(new TestCombinedViewWithDeletedReadingListItem());
+        mTests.add(new TestExpireHistory());
     }
 
     public void testBrowserProvider() throws Exception {
@@ -1584,6 +1587,76 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Bookmark id should not be set to removed bookmark id");
             mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedDisplayCol))), new Long(mCombinedDisplayNormal),
                          "Combined entry should have reader display type");
+        }
+    }
+
+    class TestExpireHistory extends Test {
+        private void createFakeHistory(long timeShift, int count) {
+            // Insert a bunch of very new entries
+            ContentValues allVals[] = new ContentValues[count];
+            long time = System.currentTimeMillis() - timeShift;
+            for (int i = 0; i < count; i++) {
+                allVals[i] = new ContentValues();
+                allVals[i].put(mHistoryTitleCol, "Test " + i);
+                allVals[i].put(mHistoryUrlCol, "http://www.test.org/" + i);
+                allVals[i].put(mHistoryVisitsCol, i);
+                allVals[i].put(mHistoryLastVisitedCol, time);
+            }
+
+            int inserts = mProvider.bulkInsert(mHistoryUri, allVals);
+            mAsserter.is(inserts, count, "Excepted number of inserts matches");
+
+            // inserting a new entry sets the date created and modified automatically
+            // reset all of them
+            for (int i = 0; i < count; i++) {
+                ContentValues cv = new ContentValues();
+                cv.put(mHistoryDateCreatedCol, time);
+                cv.put(mHistoryDateModifiedCol, time);
+                mProvider.update(mHistoryUri, cv, mHistoryUrlCol + " = ?",
+                                 new String[] { "http://www.test.org/" + i });
+            }
+
+            Cursor c = mProvider.query(mHistoryUri, null, "", null, null);
+            mAsserter.is(c.getCount(), count, count + " history entries found");
+        }
+
+        public void test() throws Exception {
+            final int count = 3000;
+
+            // insert a bunch of new entries
+            createFakeHistory(0, count);
+
+            // expiring with a normal priority should not delete new entries
+            Uri url = appendUriParam(mHistoryOldUri, "PARAM_EXPIRE_PRIORITY", "NORMAL");
+            mProvider.delete(url, null, null);
+            Cursor c = mProvider.query(mHistoryUri, null, "", null, null);
+            mAsserter.is(c.getCount(), count, count + " history entries found");
+
+            // expiring with a aggressive priority should leave 500 entries
+            url = appendUriParam(mHistoryOldUri, "PARAM_EXPIRE_PRIORITY", "AGGRESSIVE");
+            mProvider.delete(url, null, null);
+            c = mProvider.query(mHistoryUri, null, "", null, null);
+            mAsserter.is(c.getCount(), 500, "500 history entries found");
+
+            ensureEmptyDatabase();
+
+            // insert a bunch of entries with an old time created/modified
+            long time = 1000L * 60L * 60L * 24L * 30L * 3L;
+            createFakeHistory(time, count);
+
+            // expiring with an normal priority should remove at most 1000 entries
+            // entries leaving at least 2000
+            url = appendUriParam(mHistoryOldUri, "PARAM_EXPIRE_PRIORITY", "NORMAL");
+            mProvider.delete(url, null, null);
+            c = mProvider.query(mHistoryUri, null, "", null, null);
+            mAsserter.is(c.getCount(), 2000, "2000 history entries found");
+
+            // expiring with an agressive priority should remove old
+            // entries leaving at least 500
+            url = appendUriParam(mHistoryOldUri, "PARAM_EXPIRE_PRIORITY", "AGGRESSIVE");
+            mProvider.delete(url, null, null);
+            c = mProvider.query(mHistoryUri, null, "", null, null);
+            mAsserter.is(c.getCount(), 500, "500 history entries found");
         }
     }
 }
