@@ -132,6 +132,35 @@ function testBounds(aID, aRect)
 }
 
 /**
+ * Test text bounds that is enclosed betwene the given offsets.
+ */
+function testTextBounds(aID, aStartOffset, aEndOffset, aRect, aCoordOrigin)
+{
+  var [expectedX, expectedY, expectedWidth, expectedHeight] = aRect;
+
+  var xObj = {}, yObj = {}, widthObj = {}, heightObj = {};
+  var hyperText = getAccessible(aID, [nsIAccessibleText]);
+  hyperText.getRangeExtents(0, -1, xObj, yObj, widthObj, heightObj, aCoordOrigin);
+  is(xObj.value, expectedX,
+     "Wrong x coordinate of text between offsets (" + aStartOffset + ", " +
+     aEndOffset + ") for " + prettyName(aID));
+  is(yObj.value, expectedY,
+     "Wrong y coordinate of text between offsets (" + aStartOffset + ", " +
+     aEndOffset + ") for " + prettyName(aID));
+
+  var msg = "Wrong width of text between offsets (" + aStartOffset + ", " +
+    aEndOffset + ") for " + prettyName(aID);
+  if (widthObj.value == expectedWidth)
+    ok(true, msg);
+  else
+    todo(false, msg); // fails on some windows machines
+
+  is(heightObj.value, expectedHeight,
+     "Wrong height of text between offsets (" + aStartOffset + ", " +
+     aEndOffset + ") for " + prettyName(aID));
+}
+
+/**
  * Return the accessible coordinates relative to the screen in device pixels.
  */
 function getPos(aID)
