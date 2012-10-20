@@ -617,7 +617,7 @@ public class AboutHomeContent extends ScrollView
             if (android.os.Build.VERSION.SDK_INT >= 16)
                 s= super.getColumnWidth();
             else
-                s = width / mNumberOfCols;
+                s = (width - getPaddingLeft() - getPaddingRight()) / mNumberOfCols;
 
             return s;
         }
