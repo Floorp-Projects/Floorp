@@ -34,6 +34,7 @@ import org.mozilla.gecko.db.BrowserContract.Schema;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.DBUtils;
 import org.mozilla.gecko.ProfileMigrator;
 import org.mozilla.gecko.sync.Utils;
@@ -82,6 +83,13 @@ public class BrowserProvider extends ContentProvider {
     // query (currently 3).
     static final int MAX_POSITION_UPDATES_PER_QUERY = 100;
 
+    // Minimum number of records to keep when expiring history.
+    static final int DEFAULT_EXPIRY_RETAIN_COUNT = 2000;
+    static final int AGGRESSIVE_EXPIRY_RETAIN_COUNT = 500;
+
+    // Minimum duration to keep when expiring.
+    static final long DEFAULT_EXPIRY_PRESERVE_WINDOW = 1000L * 60L * 60L * 24L * 28L;     // Four weeks.
+
     static final String TABLE_BOOKMARKS = "bookmarks";
     static final String TABLE_HISTORY = "history";
     static final String TABLE_IMAGES = "images";
@@ -104,6 +112,7 @@ public class BrowserProvider extends ContentProvider {
     // History matches
     static final int HISTORY = 200;
     static final int HISTORY_ID = 201;
+    static final int HISTORY_OLD = 202;
 
     // Image matches
     static final int IMAGES = 300;
@@ -176,6 +185,7 @@ public class BrowserProvider extends ContentProvider {
         // History
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "history", HISTORY);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "history/#", HISTORY_ID);
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "history/old", HISTORY_OLD);
 
         map = new HashMap<String, String>();
         map.put(History._ID, History._ID);
@@ -1324,6 +1334,49 @@ public class BrowserProvider extends ContentProvider {
         }
     }
 
+    /**
+     * Remove enough history items to bring the database count below <code>retain</code>,
+     * removing no items with a modified time after <code>keepAfter</code>.
+     *
+     * Provide <code>keepAfter</code> less than or equal to zero to skip that check.
+     *
+     * Items will be removed according to an approximate frecency calculation.
+     *
+     * Call this method within a transaction.
+     */
+    public void expireHistory(final SQLiteDatabase db, final int retain, final long keepAfter) {
+        final long rows = DatabaseUtils.queryNumEntries(db, TABLE_HISTORY);
+        if (retain >= rows) {
+            debug("Not expiring history: only have " + rows + " rows.");
+            return;
+        }
+
+        final long toRemove = rows - retain;
+        final long now = System.currentTimeMillis();
+        debug("Expiring at most " + toRemove + " rows earlier than " + keepAfter + ".");
+
+        final String age = "(" + Combined.DATE_LAST_VISITED + " - " + now + ") / 86400000";
+        final String sortOrder = Combined.VISITS + " * MAX(1, 100 * 225 / (" + age + "*" + age + " + 225)) ASC";
+
+        final String sql;
+        if (keepAfter > 0) {
+            // If we don't bind these paramaters dynamically, the WHERE clause here can return null
+            sql = "DELETE FROM " + TABLE_HISTORY + " " + 
+                  "WHERE MAX(" + History.DATE_LAST_VISITED + ", " + History.DATE_MODIFIED +") < " + keepAfter + " " +
+                  " AND " + History._ID + " " + "IN ( SELECT " +
+                    History._ID + " FROM " + TABLE_HISTORY + " " +
+                    "ORDER BY " + sortOrder + " LIMIT " + toRemove +
+                  ")";
+        } else {
+            sql = "DELETE FROM " + TABLE_HISTORY + " WHERE " + History._ID + " " +
+                  "IN ( SELECT " + History._ID + " FROM " + TABLE_HISTORY + " " +
+                  "ORDER BY " + sortOrder + " LIMIT " + toRemove + ")";
+        }
+
+        trace("Deleting using query: " + sql);
+        db.execSQL(sql);
+    }
+
     private boolean isCallerSync(Uri uri) {
         String isSync = uri.getQueryParameter(BrowserContract.PARAM_IS_SYNC);
         return !TextUtils.isEmpty(isSync);
@@ -1412,16 +1465,16 @@ public class BrowserProvider extends ContentProvider {
             trace("Beginning delete transaction: " + uri);
             db.beginTransaction();
             try {
-                deleted = deleteInTransaction(uri, selection, selectionArgs);
+                deleted = deleteInTransaction(db, uri, selection, selectionArgs);
                 db.setTransactionSuccessful();
                 trace("Successful delete transaction: " + uri);
             } finally {
                 db.endTransaction();
             }
         } else {
-            deleted = deleteInTransaction(uri, selection, selectionArgs);
+            deleted = deleteInTransaction(db, uri, selection, selectionArgs);
         }
-        
+
         if (deleted > 0)
             getContext().getContentResolver().notifyChange(uri, null);
 
@@ -1429,7 +1482,7 @@ public class BrowserProvider extends ContentProvider {
     }
 
     @SuppressWarnings("fallthrough")
-    public int deleteInTransaction(Uri uri, String selection, String[] selectionArgs) {
+    public int deleteInTransaction(SQLiteDatabase db, Uri uri, String selection, String[] selectionArgs) {
         trace("Calling delete in transaction on URI: " + uri);
 
         final int match = URI_MATCHER.match(uri);
@@ -1461,6 +1514,19 @@ public class BrowserProvider extends ContentProvider {
                 trace("Deleting history: " + uri);
                 deleted = deleteHistory(uri, selection, selectionArgs);
                 deleteUnusedImages(uri);
+                break;
+            }
+
+            case HISTORY_OLD: {
+                String priority = uri.getQueryParameter(BrowserContract.PARAM_EXPIRE_PRIORITY);
+                long keepAfter = System.currentTimeMillis() - DEFAULT_EXPIRY_PRESERVE_WINDOW;
+                int retainCount = DEFAULT_EXPIRY_RETAIN_COUNT;
+
+                if (BrowserContract.ExpirePriority.AGGRESSIVE.toString().equals(priority)) {
+                    keepAfter = 0;
+                    retainCount = AGGRESSIVE_EXPIRY_RETAIN_COUNT;
+                }
+                expireHistory(db, retainCount, keepAfter);
                 break;
             }
 
@@ -2071,10 +2137,6 @@ public class BrowserProvider extends ContentProvider {
         long now = System.currentTimeMillis();
         if (!values.containsKey(Bookmarks.DATE_CREATED)) {
             values.put(Bookmarks.DATE_CREATED, now);
-        }
-
-        if (!values.containsKey(Bookmarks.DATE_MODIFIED)) {
-            values.put(Bookmarks.DATE_MODIFIED, now);
         }
 
         if (!values.containsKey(Bookmarks.GUID)) {
