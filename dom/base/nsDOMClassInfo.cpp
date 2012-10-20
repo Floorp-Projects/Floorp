@@ -7163,6 +7163,29 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
+  if (sTop_id == id && !(flags & JSRESOLVE_ASSIGNING)) {
+    nsCOMPtr<nsIDOMWindow> top;
+    rv = win->GetScriptableTop(getter_AddRefs(top));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    jsval v;
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    rv = WrapNative(cx, obj, top, &NS_GET_IID(nsIDOMWindow), true,
+                    &v, getter_AddRefs(holder));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Hold on to the top window object as a global property so we
+    // don't need to worry about losing expando properties etc.
+    if (!JS_DefinePropertyById(cx, obj, id, v, nullptr, nullptr,
+                               JSPROP_READONLY | JSPROP_PERMANENT |
+                               JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+    *objp = obj;
+
+    return NS_OK;
+  }
+
   // Hmm, we do an awful lot of QIs here; maybe we should add a
   // method on an interface that would let us just call into the
   // window code directly...
@@ -7307,29 +7330,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Hold on to the navigator object as a global property so we
-      // don't need to worry about losing expando properties etc.
-      if (!::JS_DefinePropertyById(cx, obj, id, v, nullptr, nullptr,
-                                   JSPROP_READONLY | JSPROP_PERMANENT |
-                                   JSPROP_ENUMERATE)) {
-        return NS_ERROR_FAILURE;
-      }
-      *objp = obj;
-
-      return NS_OK;
-    }
-
-    if (sTop_id == id) {
-      nsCOMPtr<nsIDOMWindow> top;
-      rv = win->GetScriptableTop(getter_AddRefs(top));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      jsval v;
-      nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-      rv = WrapNative(cx, obj, top, &NS_GET_IID(nsIDOMWindow), true,
-                      &v, getter_AddRefs(holder));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // Hold on to the top window object as a global property so we
       // don't need to worry about losing expando properties etc.
       if (!::JS_DefinePropertyById(cx, obj, id, v, nullptr, nullptr,
                                    JSPROP_READONLY | JSPROP_PERMANENT |
