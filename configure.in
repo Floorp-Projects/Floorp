@@ -63,7 +63,7 @@ dnl ========================================================
 GLIB_VERSION=1.2.0
 PERL_VERSION=5.006
 PYTHON_VERSION_MAJOR=2
-PYTHON_VERSION_MINOR=5
+PYTHON_VERSION_MINOR=6
 CAIRO_VERSION=1.10
 PANGO_VERSION=1.14.0
 GTK2_VERSION=2.10.0
@@ -75,7 +75,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.18
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.7.14
+SQLITE_VERSION=3.7.14.1
 
 MSMANIFEST_TOOL=
 
@@ -185,6 +185,7 @@ if test -n "$gonkdir" ; then
     AR="$gonk_toolchain_prefix"ar
     RANLIB="$gonk_toolchain_prefix"ranlib
     STRIP="$gonk_toolchain_prefix"strip
+    OBJCOPY="$gonk_toolchain_prefix"objcopy
 
     STLPORT_CPPFLAGS="-I$gonkdir/ndk/sources/cxx-stl/stlport/stlport/ -I$gonkdir/external/stlport/stlport/"
     STLPORT_LIBS="-lstlport"
@@ -802,7 +803,7 @@ else
     AC_MSG_RESULT([yes])
 fi
 
-MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python2.6 python2.5 python)
+MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python2.6 python)
 if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
@@ -1675,18 +1676,19 @@ fi
 AC_SUBST(MOZ_VALGRIND)
 
 dnl ========================================================
-dnl = Use DMD
+dnl = Enable DMDV
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(dmd,
-[  --enable-dmd            Enable DMD; also disables jemalloc (default=no)],
-    MOZ_DMD=1,
-    MOZ_DMD= )
-if test -n "$MOZ_DMD"; then
+MOZ_ARG_ENABLE_BOOL(dmdv,
+[  --enable-dmdv           Enable DMDV; also disables jemalloc (default=no)],
+    MOZ_DMDV=1,
+    MOZ_DMDV= )
+if test -n "$MOZ_DMDV"; then
     MOZ_CHECK_HEADER([valgrind/valgrind.h], [],
         AC_MSG_ERROR(
-            [--enable-dmd specified but Valgrind is not installed]))
-    AC_DEFINE(MOZ_DMD)
+            [--enable-dmdv specified but Valgrind is not installed]))
+    AC_DEFINE(MOZ_DMDV)
 fi
+AC_SUBST(MOZ_DMDV)
 
 dnl ========================================================
 dnl jprof
@@ -1837,7 +1839,7 @@ case "$host" in
     ;;
 esac
 
-dnl We require version 2.5 or newer of Python to build.
+dnl We require version 2.6 or newer of Python to build.
 AC_MSG_CHECKING([for Python version >= $PYTHON_VERSION_MAJOR.$PYTHON_VERSION_MINOR but not 3.x])
 
 changequote(:)
@@ -3767,22 +3769,30 @@ fi
 
 dnl Check for the existence of various allocation headers/functions
 
+MALLOC_HEADERS="malloc.h malloc_np.h malloc/malloc.h sys/malloc.h"
 MALLOC_H=
-MOZ_CHECK_HEADER(malloc.h,        [MALLOC_H=malloc.h])
-if test "$MALLOC_H" = ""; then
-  MOZ_CHECK_HEADER(malloc/malloc.h, [MALLOC_H=malloc/malloc.h])
-  if test "$MALLOC_H" = ""; then
-    MOZ_CHECK_HEADER(sys/malloc.h,    [MALLOC_H=sys/malloc.h])
+
+for file in $MALLOC_HEADERS; do
+  MOZ_CHECK_HEADER($file, [MALLOC_H=$file])
+  if test "$MALLOC_H" != ""; then
+    AC_DEFINE_UNQUOTED(MALLOC_H, <$MALLOC_H>)
+    break
   fi
-fi
-if test "$MALLOC_H" != ""; then
-   AC_DEFINE_UNQUOTED(MALLOC_H, <$MALLOC_H>)
-fi
+done
 
 MOZ_ALLOCATING_FUNCS="strndup posix_memalign memalign valloc"
 AC_CHECK_FUNCS(strndup posix_memalign memalign valloc)
 
+AC_CHECK_FUNCS(malloc_usable_size)
+
 dnl See if compiler supports some gcc-style attributes
+
+AC_CACHE_CHECK(for __attribute__((always_inline)),
+               ac_cv_attribute_always_inline,
+               [AC_TRY_COMPILE([inline void f(void) __attribute__((always_inline));],
+                               [],
+                               ac_cv_attribute_always_inline=yes,
+                               ac_cv_attribute_always_inline=no)])
 
 AC_CACHE_CHECK(for __attribute__((malloc)),
                ac_cv_attribute_malloc,
@@ -3835,6 +3845,12 @@ dnl are defined in build/autoconf/altoptions.m4.
 
 dnl If the compiler supports these attributes, define them as
 dnl convenience macros.
+if test "$ac_cv_attribute_always_inline" = yes ; then
+  AC_DEFINE(NS_ALWAYS_INLINE, [__attribute__((always_inline))])
+else
+  AC_DEFINE(NS_ALWAYS_INLINE,)
+fi
+
 if test "$ac_cv_attribute_malloc" = yes ; then
   AC_DEFINE(NS_ATTR_MALLOC, [__attribute__((malloc))])
 else
@@ -5829,7 +5845,7 @@ if test -n "$MOZ_ANGLE_RENDERER" -a -z "$CROSS_COMPILE"; then
   if test -n "`echo $MOZ_DIRECTX_SDK_REG_KEY | grep 'February 2010'`" ; then
     AC_MSG_ERROR([Found the February 2010 DirectX SDK. Need the June 2010 DirectX SDK, or newer.  Upgrade your SDK or reconfigure with --disable-webgl.])
   else
-    MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's/.*\([[a-zA-Z]]\)\\:\\\\/\\1\\:\\\\/'`
+    MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's/.*\([[a-zA-Z]]\)\\:\\\\/\\1\\:\\\\/' | sed 's,\\\\,/,g'`
   fi
 
   if test -n "$MOZ_DIRECTX_SDK_PATH" &&
@@ -6070,6 +6086,12 @@ dnl Do not build gio with libxul based apps
 if test -n "$LIBXUL_SDK_DIR" -a `echo "$MOZ_EXTENSIONS" | grep -c gio` -ne 0; then
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|gio||'`
 fi
+
+if test `echo "$MOZ_EXTENSIONS" | grep -c gio` -ne 0; then
+    MOZ_GIO_COMPONENT=1
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|gio||'`
+fi
+AC_SUBST(MOZ_GIO_COMPONENT)
 
 if test -z "$MOZ_JSDEBUGGER" -a `echo "$MOZ_EXTENSIONS" | grep -c venkman` -ne 0; then
     AC_MSG_WARN([Cannot build venkman without JavaScript debug library. Removing venkman from MOZ_EXTENSIONS.])
@@ -6978,7 +7000,7 @@ MOZ_ARG_ENABLE_BOOL(jemalloc,
 if test "$NS_TRACE_MALLOC"; then
     MOZ_MEMORY=
 fi
-if test "$MOZ_DMD"; then
+if test "$MOZ_DMDV"; then
     MOZ_MEMORY=
 fi
 
@@ -7011,6 +7033,18 @@ else
 fi
 
 if test -z "$MOZ_MEMORY"; then
+  if test -n "$MOZ_JEMALLOC"; then
+    MOZ_NATIVE_JEMALLOC=1
+    AC_CHECK_FUNCS(mallctl nallocm,,
+      [MOZ_NATIVE_JEMALLOC=
+       break])
+    if test -n "$MOZ_NATIVE_JEMALLOC"; then
+      MOZ_MEMORY=1
+      AC_DEFINE(MOZ_MEMORY)
+      AC_DEFINE(MOZ_JEMALLOC)
+      AC_DEFINE(MOZ_NATIVE_JEMALLOC)
+    fi
+  fi
   case "${target}" in
     *-mingw*)
       if test -z "$WIN32_REDIST_DIR" -a -z "$MOZ_DEBUG"; then
@@ -7105,6 +7139,7 @@ else
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_JEMALLOC)
+AC_SUBST(MOZ_NATIVE_JEMALLOC)
 AC_SUBST(MOZ_GLUE_LDFLAGS)
 AC_SUBST(MOZ_GLUE_PROGRAM_LDFLAGS)
 AC_SUBST(WIN32_CRT_LIBS)
@@ -7536,7 +7571,7 @@ dnl done during packaging with omnijar.
 if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
     MOZ_OMNIJAR=1
     AC_DEFINE(MOZ_OMNIJAR)
-    if test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2" -o "$OS_TARGET" = "Android"; then
+    if test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2" -o "$MOZ_WIDGET_TOOLKIT" = "android"; then
         MOZ_CHROME_FILE_FORMAT=flat
     else
         MOZ_CHROME_FILE_FORMAT=symlink
@@ -8938,10 +8973,22 @@ fi
 
 # Run jemalloc configure script
 
-if test "$MOZ_JEMALLOC" -a "$MOZ_MEMORY"; then
+if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_JEMALLOC" -a "$MOZ_MEMORY" ; then
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --build=$build --host=$target --enable-stats --with-jemalloc-prefix=je_"
-  if test "$OS_ARCH" = "Linux"; then
-    MANGLE="malloc calloc valloc free realloc memalign posix_memalign malloc_usable_size"
+  case "$OS_ARCH" in
+    Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
+      MANGLE="malloc calloc valloc free realloc posix_memalign"
+      case "$OS_ARCH" in
+        Linux)
+          MANGLE="$MANGLE memalign malloc_usable_size"
+          ;;
+        FreeBSD)
+          MANGLE="$MANGLE malloc_usable_size"
+          ;;
+      esac
+      ;;
+  esac
+  if test -n "$MANGLE"; then
     MANGLED=
     JEMALLOC_WRAPPER=
     if test -n "$_WRAP_MALLOC"; then

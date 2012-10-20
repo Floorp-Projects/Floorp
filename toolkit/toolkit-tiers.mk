@@ -19,6 +19,11 @@ ifdef MOZ_TREE_FREETYPE
 tier_platform_staticdirs += modules/freetype2
 endif
 
+# this must precede xpcom
+ifdef MOZ_DMDV
+tier_platform_dirs += tools/dmdv
+endif
+
 tier_platform_dirs += xpcom
 
 tier_platform_dirs += \
@@ -206,7 +211,7 @@ endif
 
 tier_platform_dirs += profile
 
-# This must preceed xpfe
+# This must precede xpfe
 ifdef MOZ_JPROF
 tier_platform_dirs        += tools/jprof
 endif
@@ -246,6 +251,10 @@ tier_platform_dirs += startupcache
 tier_platform_dirs += js/ductwork/debugger
 
 tier_platform_dirs += other-licenses/snappy
+
+ifdef MOZ_GIO_COMPONENT
+tier_platform_dirs += extensions/gio
+endif
 
 ifdef APP_LIBXUL_STATICDIRS
 # Applications can cheat and ask for code to be

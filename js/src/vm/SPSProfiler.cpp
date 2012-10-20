@@ -222,7 +222,9 @@ JMChunkInfo::JMChunkInfo(mjit::JSActiveFrame *frame,
 jsbytecode*
 SPSProfiler::ipToPC(JSScript *script, size_t ip)
 {
-    JS_ASSERT(jminfo.initialized());
+    if (!jminfo.initialized())
+        return NULL;
+
     JITInfoMap::Ptr ptr = jminfo.lookup(script);
     if (!ptr)
         return NULL;

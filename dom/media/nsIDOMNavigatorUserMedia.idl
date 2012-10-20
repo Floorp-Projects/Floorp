@@ -35,7 +35,7 @@ interface nsIDOMGetUserMediaErrorCallback : nsISupports
   void onError(in DOMString error);
 };
 
-[scriptable, uuid(36d9c3b7-7594-4035-8a7e-92c2cecdb2c5)]
+[scriptable, uuid(f34a3616-395a-43cd-b275-bf81750ac8b9)]
 interface nsIMediaStreamOptions : nsISupports
 {
   readonly attribute boolean fake;
@@ -43,7 +43,8 @@ interface nsIMediaStreamOptions : nsISupports
   readonly attribute boolean video;
   readonly attribute boolean picture;
   readonly attribute DOMString camera;
-  readonly attribute nsIMediaDevice device;
+  readonly attribute nsIMediaDevice audioDevice;
+  readonly attribute nsIMediaDevice videoDevice;
 };
 
 [scriptable, uuid(381e0071-0be5-4f6b-ae21-8e3407a37faa)]

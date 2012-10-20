@@ -582,6 +582,9 @@ public:
     return aItem == mGlassDisplayItem;
   }
 
+  void SetContainsPluginItem() { mContainsPluginItem = true; }
+  bool ContainsPluginItem() { return mContainsPluginItem; }
+
 private:
   void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                     const nsRect& aDirtyRect);
@@ -635,6 +638,7 @@ private:
   bool                           mHasFixedItems;
   bool                           mIsInFixedPosition;
   bool                           mIsCompositingCheap;
+  bool                           mContainsPluginItem;
 };
 
 class nsDisplayItem;
@@ -1049,6 +1053,11 @@ public:
    * establishes the coordinate system for the display list
    */
   const nsIFrame* ReferenceFrame() const { return mReferenceFrame; }
+
+  /**
+   * Returns the reference frame for display item children of this item.
+   */
+  virtual const nsIFrame* ReferenceFrameForChildren() const { return mReferenceFrame; }
 
   /**
    * Checks if this display item (or any children) contains content that might
@@ -2153,6 +2162,12 @@ public:
                                    nsRegion* aVisibleRegion,
                                    const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;  
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) MOZ_OVERRIDE;
+  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                         const nsDisplayItemGeometry* aGeometry,
+                                         nsRegion* aInvalidRegion) MOZ_OVERRIDE
+  {
+    // We don't need to compute an invalidation region since we have LayerTreeInvalidation
+  }
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
 
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder);
@@ -2502,6 +2517,13 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+  
+  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                         const nsDisplayItemGeometry* aGeometry,
+                                         nsRegion* aInvalidRegion) MOZ_OVERRIDE
+  {
+    // We don't need to compute an invalidation region since we have LayerTreeInvalidation
+  }
 
   void PaintAsLayer(nsDisplayListBuilder* aBuilder,
                     nsRenderingContext* aCtx,
@@ -2588,6 +2610,23 @@ public:
   virtual bool TryMerge(nsDisplayListBuilder *aBuilder, nsDisplayItem *aItem) MOZ_OVERRIDE;
   
   virtual uint32_t GetPerFrameKey() MOZ_OVERRIDE { return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); }
+  
+  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                         const nsDisplayItemGeometry* aGeometry,
+                                         nsRegion* aInvalidRegion) MOZ_OVERRIDE
+  {
+    // We don't need to compute an invalidation region since we have LayerTreeInvalidation
+  }
+
+  virtual const nsIFrame* ReferenceFrameForChildren() const MOZ_OVERRIDE {
+    // If we were created using a transform-getter, then we don't
+    // belong to a transformed frame, and aren't a reference frame
+    // for our children.
+    if (!mTransformGetter) {
+      return mFrame;
+    }
+    return nsDisplayItem::ReferenceFrameForChildren(); 
+  }
 
   enum {
     INDEX_MAX = UINT32_MAX >> nsDisplayItem::TYPE_BITS

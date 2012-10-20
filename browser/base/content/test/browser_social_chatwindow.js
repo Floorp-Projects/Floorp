@@ -104,6 +104,7 @@ var tests = {
         case "got-chatbox-message":
           ok(true, "got a chat window opened");
           let chats = document.getElementById("pinnedchats");
+          ok(chats.selectedChat.minimized, "chatbox from worker opened as minimized");
           while (chats.selectedChat) {
             chats.selectedChat.close();
           }

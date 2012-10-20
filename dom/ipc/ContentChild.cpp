@@ -20,6 +20,7 @@
 #endif
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryInfoDumper.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/StorageChild.h"
@@ -447,12 +448,17 @@ ContentChild::RecvDumpMemoryReportsToFile(const nsString& aIdentifier,
                                           const bool& aMinimizeMemoryUsage,
                                           const bool& aDumpChildProcesses)
 {
-    nsCOMPtr<nsIMemoryReporterManager> mgr =
-        do_GetService("@mozilla.org/memory-reporter-manager;1");
-    NS_ENSURE_TRUE(mgr, true);
-    mgr->DumpMemoryReportsToFile(aIdentifier,
-                                 aMinimizeMemoryUsage,
-                                 aDumpChildProcesses);
+    MemoryInfoDumper::DumpMemoryReportsToFile(
+        aIdentifier, aMinimizeMemoryUsage, aDumpChildProcesses);
+    return true;
+}
+
+bool
+ContentChild::RecvDumpGCAndCCLogsToFile(const nsString& aIdentifier,
+                                        const bool& aDumpChildProcesses)
+{
+    MemoryInfoDumper::DumpGCAndCCLogsToFile(
+        aIdentifier, aDumpChildProcesses);
     return true;
 }
 
@@ -534,9 +540,11 @@ ContentChild::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
 
   BlobConstructorParams params;
 
-  if (blob->IsSizeUnknown()) {
-    // We don't want to call GetSize yet since that may stat a file on the main
-    // thread here. Instead we'll learn the size lazily from the other process.
+  if (blob->IsSizeUnknown() || blob->IsDateUnknown()) {
+    // We don't want to call GetSize or GetLastModifiedDate
+    // yet since that may stat a file on the main thread
+    // here. Instead we'll learn the size lazily from the
+    // other process.
     params = MysteryBlobConstructorParams();
   }
   else {
@@ -553,6 +561,9 @@ ContentChild::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
       FileBlobConstructorParams fileParams;
 
       rv = file->GetName(fileParams.name());
+      NS_ENSURE_SUCCESS(rv, nullptr);
+
+      rv = file->GetMozLastModifiedDate(&fileParams.modDate());
       NS_ENSURE_SUCCESS(rv, nullptr);
 
       fileParams.contentType() = contentType;

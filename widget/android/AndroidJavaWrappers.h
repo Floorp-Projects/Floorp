@@ -200,6 +200,32 @@ private:
     static jfieldID jScaleField;
 };
 
+class AndroidProgressiveUpdateData : public WrappedJavaObject {
+public:
+    static void InitProgressiveUpdateDataClass(JNIEnv *jEnv);
+
+    void Init(jobject jobj);
+
+    AndroidProgressiveUpdateData() {}
+    AndroidProgressiveUpdateData(jobject jobj) { Init(jobj); }
+
+    float GetX(JNIEnv *env);
+    float GetY(JNIEnv *env);
+    float GetWidth(JNIEnv *env);
+    float GetHeight(JNIEnv *env);
+    float GetScale(JNIEnv *env);
+    bool GetShouldAbort(JNIEnv *env);
+
+private:
+    static jclass jProgressiveUpdateDataClass;
+    static jfieldID jXField;
+    static jfieldID jYField;
+    static jfieldID jWidthField;
+    static jfieldID jHeightField;
+    static jfieldID jScaleField;
+    static jfieldID jShouldAbortField;
+};
+
 class AndroidLayerRendererFrame : public WrappedJavaObject {
 public:
     static void InitLayerRendererFrameClass(JNIEnv *jEnv);
@@ -233,7 +259,7 @@ public:
     void SetPageRect(const gfx::Rect& aCssPageRect);
     void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                           nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
-    bool ShouldAbortProgressiveUpdate(bool aHasPendingNewThebesContent, const gfx::Rect& aDisplayPort, float aDisplayResolution);
+    bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const gfx::Rect& aDisplayPort, float aDisplayResolution, gfx::Rect& aViewport, float& aScaleX, float& aScaleY);
     bool CreateFrame(AutoLocalJNIFrame *jniFrame, AndroidLayerRendererFrame& aFrame);
     bool ActivateProgram(AutoLocalJNIFrame *jniFrame);
     bool DeactivateProgram(AutoLocalJNIFrame *jniFrame);
@@ -248,7 +274,7 @@ protected:
     static jmethodID jActivateProgramMethod;
     static jmethodID jDeactivateProgramMethod;
     static jmethodID jGetDisplayPort;
-    static jmethodID jShouldAbortProgressiveUpdate;
+    static jmethodID jProgressiveUpdateCallbackMethod;
 
 public:
     static jclass jViewportClass;
@@ -526,6 +552,14 @@ public:
         META_SHIFT_LEFT_ON         = 0x00000040,
         META_SHIFT_RIGHT_ON        = 0x00000080,
         META_SHIFT_MASK            = META_SHIFT_RIGHT_ON | META_SHIFT_LEFT_ON | META_SHIFT_ON,
+        META_CTRL_ON               = 0x00001000,
+        META_CTRL_LEFT_ON          = 0x00002000,
+        META_CTRL_RIGHT_ON         = 0x00004000,
+        META_CTRL_MASK             = META_CTRL_RIGHT_ON | META_CTRL_LEFT_ON | META_CTRL_ON,
+        META_META_ON               = 0x00010000,
+        META_META_LEFT_ON          = 0x00020000,
+        META_META_RIGHT_ON         = 0x00040000,
+        META_META_MASK             = META_META_RIGHT_ON | META_META_LEFT_ON | META_META_ON,
         META_SYM_ON                = 0x00000004,
         FLAG_WOKE_HERE             = 0x00000001,
         FLAG_SOFT_KEYBOARD         = 0x00000002,
@@ -637,6 +671,8 @@ public:
     int DomKeyLocation() { return mDomKeyLocation; }
     bool IsAltPressed() const { return (mMetaState & AndroidKeyEvent::META_ALT_MASK) != 0; }
     bool IsShiftPressed() const { return (mMetaState & AndroidKeyEvent::META_SHIFT_MASK) != 0; }
+    bool IsCtrlPressed() const { return (mMetaState & AndroidKeyEvent::META_CTRL_MASK) != 0; }
+    bool IsMetaPressed() const { return (mMetaState & AndroidKeyEvent::META_META_MASK) != 0; }
     int Flags() { return mFlags; }
     int UnicodeChar() { return mUnicodeChar; }
     int RepeatCount() const { return mRepeatCount; }

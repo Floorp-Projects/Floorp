@@ -10,6 +10,7 @@
 #include <algorithm>
 
 using namespace std;
+using namespace mozilla;
 using namespace mozilla::gfx;
 
 /* Force small values to zero.  We do this to avoid having sin(360deg)
@@ -121,6 +122,19 @@ gfx3DMatrix::operator!=(const gfx3DMatrix& o) const
   return !((*this) == o);
 }
 
+bool
+gfx3DMatrix::FuzzyEqual(const gfx3DMatrix& o) const
+{
+  static const float error = 1e-4;
+  return gfx::FuzzyEqual(_11, o._11, error) && gfx::FuzzyEqual(_12, o._12, error) && 
+         gfx::FuzzyEqual(_13, o._13, error) && gfx::FuzzyEqual(_14, o._14, error) &&
+         gfx::FuzzyEqual(_21, o._21, error) && gfx::FuzzyEqual(_22, o._22, error) && 
+         gfx::FuzzyEqual(_23, o._23, error) && gfx::FuzzyEqual(_24, o._24, error) &&
+         gfx::FuzzyEqual(_31, o._31, error) && gfx::FuzzyEqual(_32, o._32, error) && 
+         gfx::FuzzyEqual(_33, o._33, error) && gfx::FuzzyEqual(_34, o._34, error) &&
+         gfx::FuzzyEqual(_41, o._41, error) && gfx::FuzzyEqual(_42, o._42, error) && 
+         gfx::FuzzyEqual(_43, o._43, error) && gfx::FuzzyEqual(_44, o._44, error);
+}
 
 gfx3DMatrix&
 gfx3DMatrix::operator/=(const gfxFloat scalar)

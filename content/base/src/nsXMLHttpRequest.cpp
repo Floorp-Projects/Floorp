@@ -583,7 +583,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsXMLHttpRequest)
   bool isBlack = tmp->IsBlack();
   if (isBlack || tmp->mWaitingForOnStopRequest) {
     if (tmp->mListenerManager) {
-      tmp->mListenerManager->UnmarkGrayJSListeners();
+      tmp->mListenerManager->MarkForCC();
     }
     if (!isBlack && tmp->PreservingWrapper()) {
       xpc_UnmarkGrayObject(tmp->GetWrapperPreserveColor());
@@ -3903,7 +3903,7 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
 }
 
 JS::Value
-nsXMLHttpRequest::GetInterface(JSContext* aCx, nsIJSIID* aIID, ErrorResult& aRv)
+nsXMLHttpRequest::GetInterface(JSContext* aCx, nsIJSID* aIID, ErrorResult& aRv)
 {
   const nsID* iid = aIID->GetID();
   nsCOMPtr<nsISupports> result;

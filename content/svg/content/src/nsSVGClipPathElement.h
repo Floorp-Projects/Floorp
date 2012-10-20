@@ -33,7 +33,7 @@ public:
   NS_DECL_NSIDOMSVGCLIPPATHELEMENT
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE(nsSVGClipPathElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGClipPathElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGClipPathElementBase::)
 

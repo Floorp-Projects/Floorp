@@ -122,6 +122,8 @@ public class PropertyAnimator implements Runnable {
 
             if (shouldEnableHardwareLayer(element))
                 element.view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            else
+                element.view.setDrawingCacheEnabled(true);
         }
 
         if (mDuration != 0) {
@@ -138,8 +140,11 @@ public class PropertyAnimator implements Runnable {
         // Make sure to snap to the end position.
         for (ElementHolder element : mElementsList) { 
             invalidate(element, element.to);
+
             if (shouldEnableHardwareLayer(element))
                 element.view.setLayerType(View.LAYER_TYPE_NONE, null);
+            else
+                element.view.setDrawingCacheEnabled(false);
         }
 
         mElementsList.clear();

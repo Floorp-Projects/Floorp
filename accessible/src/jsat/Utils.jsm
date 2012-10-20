@@ -89,7 +89,8 @@ var Utils = {
   },
 
   getCurrentContentDoc: function getCurrentContentDoc(aWindow) {
-    return this.getCurrentBrowser(aWindow).contentDocument;
+    let browser = this.getCurrentBrowser(aWindow);
+    return browser ? browser.contentDocument : null;
   },
 
   getMessageManager: function getMessageManager(aBrowser) {
@@ -97,7 +98,7 @@ var Utils = {
       return aBrowser.QueryInterface(Ci.nsIFrameLoaderOwner).
          frameLoader.messageManager;
     } catch (x) {
-      Logger.error(x);
+      Logger.logException(x);
       return null;
     }
   },
@@ -108,13 +109,14 @@ var Utils = {
     for (let i = 0; i < aWindow.messageManager.childCount; i++)
       messageManagers.push(aWindow.messageManager.getChildAt(i));
 
-    let remoteframes = this.getCurrentContentDoc(aWindow).
-      querySelectorAll('iframe[remote=true]');
+    let document = this.getCurrentContentDoc(aWindow);
 
-    for (let i = 0; i < remoteframes.length; ++i)
-      messageManagers.push(this.getMessageManager(remoteframes[i]));
+    if (document) {
+      let remoteframes = document.querySelectorAll('iframe[remote=true]');
 
-    Logger.info(messageManagers.length);
+      for (let i = 0; i < remoteframes.length; ++i)
+        messageManagers.push(this.getMessageManager(remoteframes[i]));
+    }
 
     return messageManagers;
   },
@@ -190,6 +192,16 @@ var Logger = {
   error: function error() {
     this.log.apply(
       this, [this.ERROR].concat(Array.prototype.slice.call(arguments)));
+  },
+
+  logException: function logException(aException) {
+    try {
+      this.error(
+        aException.message,
+        '(' + aException.fileName + ':' + aException.lineNumber + ')');
+    } catch (x) {
+      this.error(x);
+    }
   },
 
   accessibleToString: function accessibleToString(aAccessible) {

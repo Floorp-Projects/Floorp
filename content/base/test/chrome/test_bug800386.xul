@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=800386
+-->
+<window title="Mozilla Bug 800386"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=800386"
+     target="_blank">Mozilla Bug 800386</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 800386 **/
+  Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+  SimpleTest.waitForExplicitFinish();
+
+  var triedForwarding = false;
+  var forwardFailed = false;
+
+  var xhr = new XMLHttpRequest;
+  var eventSink = xhr.getInterface(Components.interfaces.nsIProgressEventSink);
+  isnot(eventSink, null, "Should get event sink directly!");
+
+  // Now jump through some hoops to get us a getInterface call from C++
+
+  var requestor = {
+    getInterface: function(aIID) {
+      if (aIID.equals(Components.interfaces.nsIProgressEventSink)) {
+        triedForwarding = true;
+        try {
+          return xhr.getInterface(aIID);
+        } catch (e) {
+          forwardFailed = true;
+        }
+      }
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    },
+
+    QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsISupports,
+                                           Components.interfaces.nsIInterfaceRequestor])
+  };
+
+  // HTTP URI so that we get progress callbacks
+  xhr.open("GET", "http://mochi.test:8888/", false);
+  xhr.channel.notificationCallbacks = requestor;
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      ok(triedForwarding,
+         "Should have had an attempt to treat us as a progress event sink");
+      ok(!forwardFailed,
+         "Should have been able to forward getInterface on to the XHR");
+      SimpleTest.finish();
+    }
+  }
+  xhr.send();
+  ]]>
+  </script>
+</window>

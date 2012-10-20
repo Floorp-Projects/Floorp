@@ -933,7 +933,6 @@ static const char js_strict_option_str[] = JS_OPTIONS_DOT_STR "strict";
 static const char js_strict_debug_option_str[] = JS_OPTIONS_DOT_STR "strict.debug";
 #endif
 static const char js_werror_option_str[] = JS_OPTIONS_DOT_STR "werror";
-static const char js_relimit_option_str[]= JS_OPTIONS_DOT_STR "relimit";
 #ifdef JS_GC_ZEAL
 static const char js_zeal_option_str[]        = JS_OPTIONS_DOT_STR "gczeal";
 static const char js_zeal_frequency_str[]     = JS_OPTIONS_DOT_STR "gczeal.frequency";
@@ -1052,12 +1051,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_WERROR;
   else
     newDefaultJSOptions &= ~JSOPTION_WERROR;
-
-  bool relimit = Preferences::GetBool(js_relimit_option_str);
-  if (relimit)
-    newDefaultJSOptions |= JSOPTION_RELIMIT;
-  else
-    newDefaultJSOptions &= ~JSOPTION_RELIMIT;
 
   ::JS_SetOptions(context->mContext,
                   newDefaultJSOptions & (JSRUNOPTION_MASK | JSOPTION_ALLOW_XML));
@@ -2719,24 +2712,24 @@ static JSFunctionSpec JProfFunctions[] = {
 
 #endif /* defined(MOZ_JPROF) */
 
-#ifdef MOZ_DMD
+#ifdef MOZ_DMDV
 
 // See https://wiki.mozilla.org/Performance/MemShrink/DMD for instructions on
-// how to use DMD.
+// how to use DMDV.
 
 static JSBool
-DMDCheckJS(JSContext *cx, unsigned argc, jsval *vp)
+DMDVCheckAndDumpJS(JSContext *cx, unsigned argc, jsval *vp)
 {
-  mozilla::DMDCheckAndDump();
+  mozilla::DMDVCheckAndDump();
   return JS_TRUE;
 }
 
-static JSFunctionSpec DMDFunctions[] = {
-    JS_FS("DMD",                        DMDCheckJS,                 0, 0),
+static JSFunctionSpec DMDVFunctions[] = {
+    JS_FS("DMDV",                       DMDVCheckAndDumpJS,         0, 0),
     JS_FS_END
 };
 
-#endif /* defined(MOZ_DMD) */
+#endif /* defined(MOZ_DMDV) */
 
 nsresult
 nsJSContext::InitClasses(JSObject* aGlobalObj)
@@ -2761,9 +2754,9 @@ nsJSContext::InitClasses(JSObject* aGlobalObj)
   ::JS_DefineFunctions(mContext, aGlobalObj, JProfFunctions);
 #endif
 
-#ifdef MOZ_DMD
-  // Attempt to initialize DMD functions
-  ::JS_DefineFunctions(mContext, aGlobalObj, DMDFunctions);
+#ifdef MOZ_DMDV
+  // Attempt to initialize DMDV functions
+  ::JS_DefineFunctions(mContext, aGlobalObj, DMDVFunctions);
 #endif
 
   return rv;

@@ -84,6 +84,7 @@ IonFrameIterator::frameSize() const
 inline JSScript *
 GetTopIonJSScript(JSContext *cx, const SafepointIndex **safepointIndexOut, void **returnAddrOut)
 {
+    AutoAssertNoGC nogc;
     IonFrameIterator iter(cx->runtime->ionTop);
     JS_ASSERT(iter.type() == IonFrame_Exit);
     ++iter;

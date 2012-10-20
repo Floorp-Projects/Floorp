@@ -26,11 +26,11 @@
     var gQueue = null;
 
     // Value change invoker
-    function changeValue(aNodeOrID, aValuenow, aValuetext)
+    function changeARIAValue(aNodeOrID, aValuenow, aValuetext)
     {
       this.DOMNode = getNode(aNodeOrID);
 
-      this.invoke = function changeValue_invoke() {
+      this.invoke = function changeARIAValue_invoke() {
 
         // Note: this should not fire an EVENT_VALUE_CHANGE when aria-valuetext
         // is not empty
@@ -42,7 +42,7 @@
           this.DOMNode.setAttribute("aria-valuetext", aValuetext);
       }
 
-      this.check = function changeValue_check() {
+      this.check = function changeARIAValue_check() {
         var acc = getAccessible(aNodeOrID, [nsIAccessibleValue]);
         if (!acc)
           return;
@@ -53,30 +53,47 @@
             "Wrong value of " + prettyName(aNodeOrID));
       }
 
-      this.getID = function changeValue_getID() {
+      this.getID = function changeARIAValue_getID() {
         return prettyName(aNodeOrID) + " value changed";
       }
     }
 
-    function changeInputValue(aID, aValue)
+    function changeValue(aID, aValue)
     {
       this.DOMNode = getNode(aID);
 
-      this.invoke = function changeInputValue_invoke()
+      this.invoke = function changeValue_invoke()
       {
         this.DOMNode.value = aValue;
       }
 
-      this.check = function changeInputValue_check()
+      this.check = function changeValue_check()
       {
         var acc = getAccessible(this.DOMNode);
         is(acc.value, aValue, "Wrong value for " + prettyName(aID));
       }
 
-      this.getID = function changeInputValue_getID()
+      this.getID = function changeValue_getID()
       {
         return prettyName(aID) + " value changed";
       }
+    }
+
+    function changeProcessValue(aID, aValue) {
+        this.DOMNode = getNode(aID);
+
+        this.invoke = function changeProcessValue_invoke() {
+            this.DOMNode.value = aValue;
+        }
+
+        this.check = function changeProcessValue_check() {
+            var acc = getAccessible(this.DOMNode);
+            is(acc.value, aValue+"%", "Wrong value for " + prettyName(aID));
+        }
+
+        this.getID = function changeProcessValue_getID() {
+            return prettyName(aID) + " value changed";
+        }
     }
 
     function doTests()
@@ -86,16 +103,19 @@
       testValue("slider_vnvt", "plain", 0, 0, 5, 0);
       testValue("slider_vt", "hi", 0, 0, 3, 0);
       testValue("scrollbar", "5", 5, 0, 1000, 0);
+      testValue("progress", "22%", 22, 0, 100, 0);
 
       // Test value change events
       gQueue = new eventQueue(nsIAccessibleEvent.EVENT_VALUE_CHANGE);
 
-      gQueue.push(new changeValue("slider_vn", "6", undefined));
-      gQueue.push(new changeValue("slider_vt", undefined, "hey!"));
-      gQueue.push(new changeValue("slider_vnvt", "3", "sweet"));
-      gQueue.push(new changeValue("scrollbar", "6", undefined));
+      gQueue.push(new changeARIAValue("slider_vn", "6", undefined));
+      gQueue.push(new changeARIAValue("slider_vt", undefined, "hey!"));
+      gQueue.push(new changeARIAValue("slider_vnvt", "3", "sweet"));
+      gQueue.push(new changeARIAValue("scrollbar", "6", undefined));
 
-      gQueue.push(new changeInputValue("combobox", "hello"));
+      gQueue.push(new changeValue("combobox", "hello"));
+
+      gQueue.push(new changeProcessValue("progress", "50"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -122,6 +142,12 @@
     title="ARIA comboboxes don't fire value change events">
    Mozilla Bug 703202
   </a>
+  <a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=761901"
+    title=" HTML5 progress accessible should fire value change event">
+   Mozilla Bug 761901
+  </a>
+
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -145,5 +171,9 @@
 
   <!-- ARIA combobox -->
   <input id="combobox" role="combobox" aria-autocomplete="inline">
+
+  <!-- progress bar -->
+  <progress id="progress" value="22" max="100"></progress>
+
 </body>
 </html>

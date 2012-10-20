@@ -105,15 +105,18 @@ function startListeners() {
   addMessageListenerId("Marionette:getElementText", getElementText);
   addMessageListenerId("Marionette:getElementTagName", getElementTagName);
   addMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
+  addMessageListenerId("Marionette:getElementSize", getElementSize);
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   addMessageListenerId("Marionette:isElementSelected", isElementSelected);
   addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
+  addMessageListenerId("Marionette:getElementPosition", getElementPosition);
   addMessageListenerId("Marionette:clearElement", clearElement);
   addMessageListenerId("Marionette:switchToFrame", switchToFrame);
   addMessageListenerId("Marionette:deleteSession", deleteSession);
   addMessageListenerId("Marionette:sleepSession", sleepSession);
   addMessageListenerId("Marionette:emulatorCmdResult", emulatorCmdResult);
   addMessageListenerId("Marionette:importScript", importScript);
+  addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
 }
 
 /**
@@ -166,15 +169,18 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getElementAttribute", getElementAttribute);
   removeMessageListenerId("Marionette:getElementTagName", getElementTagName);
   removeMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
+  removeMessageListenerId("Marionette:getElementSize", getElementSize);
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   removeMessageListenerId("Marionette:isElementSelected", isElementSelected);
   removeMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
+  removeMessageListenerId("Marionette:getElementPosition", getElementPosition);
   removeMessageListenerId("Marionette:clearElement", clearElement);
   removeMessageListenerId("Marionette:switchToFrame", switchToFrame);
   removeMessageListenerId("Marionette:deleteSession", deleteSession);
   removeMessageListenerId("Marionette:sleepSession", sleepSession);
   removeMessageListenerId("Marionette:emulatorCmdResult", emulatorCmdResult);
   removeMessageListenerId("Marionette:importScript", importScript);
+  removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   this.elementManager.reset();
   try {
     importedScripts.remove(false);
@@ -668,6 +674,20 @@ function isElementDisplayed(msg) {
 }
 
 /**
+ * Get the size of the element and return it
+ */
+function getElementSize(msg){
+  try {
+    let el = elementManager.getKnownElement(msg.json.element, curWindow);
+    let clientRect = el.getBoundingClientRect();  
+    sendResponse({value: {width: clientRect.width, height: clientRect.height}});
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack);
+  }
+}
+
+/**
  * Check if element is enabled
  */
 function isElementEnabled(msg) {
@@ -708,6 +728,45 @@ function sendKeysToElement(msg) {
 }
 
 /**
+ * Get the position of an element
+ */
+function getElementPosition(msg) {
+  try{
+    let el = elementManager.getKnownElement(msg.json.element, curWindow);
+    var x = el.offsetLeft;
+    var y = el.offsetTop;
+    var elementParent = el.offsetParent;
+    while (elementParent != null) {
+      if (elementParent.tagName == "TABLE") {
+        var parentBorder = parseInt(elementParent.border);
+        if (isNaN(parentBorder)) {
+          var parentFrame = elementParent.getAttribute('frame');
+          if (parentFrame != null) {
+            x += 1;
+            y += 1;
+          }
+        } else if (parentBorder > 0) {
+          x += parentBorder;
+          y += parentBorder;
+        }
+      }
+      x += elementParent.offsetLeft;
+      y += elementParent.offsetTop;
+      elementParent = elementParent.offsetParent;
+    }
+
+    let location = {};
+    location.x = x;
+    location.y = y;
+
+    sendResponse({value: location});
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack);
+  }
+}
+
+/**
  * Clear the text of an element
  */
 function clearElement(msg) {
@@ -736,10 +795,10 @@ function switchToFrame(msg) {
   if (msg.json.element != undefined) {
     if (elementManager.seenItems[msg.json.element] != undefined) {
       let wantedFrame = elementManager.getKnownElement(msg.json.element, curWindow); //HTMLIFrameElement
-      let numFrames = curWindow.frames.length;
-      for (let i = 0; i < numFrames; i++) {
-        if (curWindow.frames[i].frameElement == wantedFrame) {
-          curWindow = curWindow.frames[i]; 
+      let frames = curWindow.document.getElementsByTagName("iframe");
+      for (let i = 0; i < frames.length; i++) {
+        if (frames[i] == wantedFrame) {
+          curWindow = frames[i]; 
           curWindow.focus();
           sendOk();
           return;
@@ -794,6 +853,10 @@ function switchToFrame(msg) {
     sendOk();
   }
 }
+
+function getAppCacheStatus() {
+  sendResponse({ value: curWindow.applicationCache.status });  
+} 
 
 // emulator callbacks
 let _emu_cb_id = 0;

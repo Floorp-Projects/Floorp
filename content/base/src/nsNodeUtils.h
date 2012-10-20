@@ -150,10 +150,10 @@ public:
   static nsresult Clone(nsINode *aNode, bool aDeep,
                         nsNodeInfoManager *aNewNodeInfoManager,
                         nsCOMArray<nsINode> &aNodesWithProperties,
-                        nsIDOMNode **aResult)
+                        nsINode **aResult)
   {
     return CloneAndAdopt(aNode, true, aDeep, aNewNodeInfoManager, nullptr,
-                         nullptr, aNodesWithProperties, aResult);
+                         nullptr, aNodesWithProperties, nullptr, aResult);
   }
 
   /**
@@ -179,9 +179,10 @@ public:
                         JSContext *aCx, JSObject *aNewScope,
                         nsCOMArray<nsINode> &aNodesWithProperties)
   {
+    nsCOMPtr<nsINode> node;
     nsresult rv = CloneAndAdopt(aNode, false, true, aNewNodeInfoManager,
                                 aCx, aNewScope, aNodesWithProperties,
-                                nullptr);
+                                nullptr, getter_AddRefs(node));
 
     nsMutationGuard::DidMutate();
 
@@ -228,7 +229,7 @@ public:
    */
   static nsresult CloneNodeImpl(nsINode *aNode, bool aDeep,
                                 bool aCallUserDataHandlers,
-                                nsIDOMNode **aResult);
+                                nsINode **aResult);
 
   /**
    * Release the UserData and UserDataHandlers for aNode.
@@ -263,31 +264,6 @@ private:
    *                             descendants) with properties. If aClone is
    *                             true every node will be followed by its
    *                             clone.
-   * @param aResult If aClone is false then aResult must be null, else
-   *                *aResult will contain the cloned node.
-   */
-  static nsresult CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
-                                nsNodeInfoManager *aNewNodeInfoManager,
-                                JSContext *aCx, JSObject *aNewScope,
-                                nsCOMArray<nsINode> &aNodesWithProperties,
-                                nsIDOMNode **aResult)
-  {
-    NS_ASSERTION(!aClone == !aResult,
-                 "aResult must be null when adopting and non-null when "
-                 "cloning");
-
-    nsCOMPtr<nsINode> clone;
-    nsresult rv = CloneAndAdopt(aNode, aClone, aDeep, aNewNodeInfoManager,
-                                aCx, aNewScope, aNodesWithProperties,
-                                nullptr, getter_AddRefs(clone));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return clone ? CallQueryInterface(clone, aResult) : NS_OK;
-  }
-
-  /**
-   * See above for arguments that aren't described here.
-   *
    * @param aParent If aClone is true the cloned node will be appended to
    *                aParent's children. May be null. If not null then aNode
    *                must be an nsIContent.

@@ -1883,8 +1883,8 @@ let RIL = {
     Buf.simpleRequest(REQUEST_SIGNAL_STRENGTH);
   },
 
-  getIMEI: function getIMEI() {
-    Buf.simpleRequest(REQUEST_GET_IMEI);
+  getIMEI: function getIMEI(options) {
+    Buf.simpleRequest(REQUEST_GET_IMEI, options);
   },
 
   getIMEISV: function getIMEISV() {
@@ -2328,6 +2328,28 @@ let RIL = {
       this.sendDOMMessage(options);
     }).bind(this);
 
+    function _isValidPINPUKRequest() {
+      // The only allowed MMI procedure for ICC PIN, PIN2, PUK and PUK2 handling
+      // is "Registration" (**).
+      if (!mmi.procedure || mmi.procedure != MMI_PROCEDURE_REGISTRATION ) {
+        _sendMMIError("WRONG_MMI_PROCEDURE");
+        return;
+      }
+
+      if (!mmi.sia || !mmi.sia.length || !mmi.sib || !mmi.sib.length ||
+          !mmi.sic || !mmi.sic.length) {
+        _sendMMIError("MISSING_SUPPLEMENTARY_INFORMATION");
+        return;
+      }
+
+      if (mmi.sib != mmi.sic) {
+        _sendMMIError("NEW_PIN_MISMATCH");
+        return;
+      }
+
+      return true;
+    }
+
     if (mmi == null) {
       if (this._ussdSession) {
         options.ussd = mmiString;
@@ -2358,19 +2380,82 @@ let RIL = {
         _sendMMIError("CALL_FORWARDING_NOT_SUPPORTED_VIA_MMI");
         return;
 
-      // PIN/PIN2/PUK/PUK2
+      // Change the current ICC PIN number.
       case MMI_SC_PIN:
+        // As defined in TS.122.030 6.6.2 to change the ICC PIN we should expect
+        // an MMI code of the form **04*OLD_PIN*NEW_PIN*NEW_PIN#, where old PIN
+        // should be entered as the SIA parameter and the new PIN as SIB and
+        // SIC.
+        if (!_isValidPINPUKRequest()) {
+          return;
+        }
+
+        options.rilRequestType = "sendMMI";
+        options.pin = mmi.sia;
+        options.newPin = mmi.sib;
+        this.changeICCPIN(options);
+        return;
+
+      // Change the current ICC PIN2 number.
       case MMI_SC_PIN2:
+        // As defined in TS.122.030 6.6.2 to change the ICC PIN2 we should
+        // enter and MMI code of the form **042*OLD_PIN2*NEW_PIN2*NEW_PIN2#,
+        // where the old PIN2 should be entered as the SIA parameter and the
+        // new PIN2 as SIB and SIC.
+        if (!_isValidPINPUKRequest()) {
+          return;
+        }
+
+        options.rilRequestType = "sendMMI";
+        options.pin = mmi.sia;
+        options.newPin = mmi.sib;
+        this.changeICCPIN2(options);
+        return;
+
+      // Unblock ICC PIN.
       case MMI_SC_PUK:
+        // As defined in TS.122.030 6.6.3 to unblock the ICC PIN we should
+        // enter an MMI code of the form **05*PUK*NEW_PIN*NEW_PIN#, where PUK
+        // should be entered as the SIA parameter and the new PIN as SIB and
+        // SIC.
+        if (!_isValidPINPUKRequest()) {
+          return;
+        }
+
+        options.rilRequestType = "sendMMI";
+        options.puk = mmi.sia;
+        options.newPin = mmi.sib;
+        this.enterICCPUK(options);
+        return;
+
+      // Unblock ICC PIN2.
       case MMI_SC_PUK2:
-        // TODO: Bug 793187 - MMI Codes: Support PIN/PIN2/PUK handling.
-        _sendMMIError("SIM_FUNCTION_NOT_SUPPORTED_VIA_MMI");
+        // As defined in TS.122.030 6.6.3 to unblock the ICC PIN2 we should
+        // enter an MMI code of the form **052*PUK2*NEW_PIN2*NEW_PIN2#, where
+        // PUK2 should be entered as the SIA parameter and the new PIN2 as SIB
+        // and SIC.
+        if (!_isValidPINPUKRequest()) {
+          return;
+        }
+
+        options.rilRequestType = "sendMMI";
+        options.puk = mmi.sia;
+        options.newPin = mmi.sib;
+        this.enterICCPUK2(options);
         return;
 
       // IMEI
       case MMI_SC_IMEI:
-        // TODO: Bug 793189 - MMI Codes: get IMEI.
-        _sendMMIError("GET_IMEI_NOT_SUPPORTED_VIA_MMI");
+        // A device's IMEI can't change, so we only need to request it once.
+        if (this.IMEI == null) {
+          this.getIMEI({mmi: true});
+          return;
+        }
+        // If we already had the device's IMEI, we just send it to the DOM.
+        options.rilMessageType = "sendMMI";
+        options.success = true;
+        options.result = this.IMEI;
+        this.sendDOMMessage(options);
         return;
 
       // Call barring
@@ -4420,11 +4505,20 @@ RIL[REQUEST_SET_CALL_WAITING] = function REQUEST_SET_CALL_WAITING(length, option
 };
 RIL[REQUEST_SMS_ACKNOWLEDGE] = null;
 RIL[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI(length, options) {
-  if (options.rilRequestError) {
+  this.IMEI = Buf.readString();
+  // So far we only send the IMEI back to the DOM if it was requested via MMI.
+  if (!options.mmi) {
     return;
   }
 
-  this.IMEI = Buf.readString();
+  options.rilMessageType = "sendMMI";
+  options.success = options.rilRequestError == 0;
+  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  if ((!options.success || this.IMEI == null) && !options.errorMsg) {
+    options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+  }
+  options.result = this.IMEI;
+  this.sendDOMMessage(options);
 };
 RIL[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV(length, options) {
   if (options.rilRequestError) {
@@ -4828,14 +4922,11 @@ RIL[UNSOLICITED_ON_USSD] = function UNSOLICITED_ON_USSD() {
     debug("On USSD. Type Code: " + typeCode + " Message: " + message);
   }
 
-  this._ussdSession = (typeCode != "0" || typeCode != "2");
+  this._ussdSession = (typeCode != "0" && typeCode != "2");
 
-  // Empty message should not be progressed to the DOM.
-  if (!message || message == "") {
-    return;
-  }
   this.sendDOMMessage({rilMessageType: "USSDReceived",
-                       message: message});
+                       message: message,
+                       sessionEnded: !this._ussdSession});
 };
 RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() {
   let dateString = Buf.readString();
@@ -7016,8 +7107,12 @@ let StkProactiveCmdHelper = {
       return null;
     }
 
+    let eventList = [];
+    for (let i = 0; i < length; i++) {
+      eventList.push(GsmPDUHelper.readHexOctet());
+    }
     return {
-      eventList: GsmPDUHelper.readHexOctetArray(length)
+      eventList: eventList
     };
   },
 

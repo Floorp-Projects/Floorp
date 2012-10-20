@@ -92,11 +92,13 @@ MarkUserDataHandler(void* aNode, nsIAtom* aKey, void* aValue, void* aData)
 static void
 MarkMessageManagers()
 {
-  nsCOMPtr<nsIMessageBroadcaster> globalMM =
+  nsCOMPtr<nsIMessageBroadcaster> strongGlobalMM =
     do_GetService("@mozilla.org/globalmessagemanager;1");
-  if (!globalMM) {
+  if (!strongGlobalMM) {
     return;
   }
+  nsIMessageBroadcaster* globalMM = strongGlobalMM;
+  strongGlobalMM = nullptr;
 
   globalMM->MarkForCC();
   uint32_t childCount = 0;
@@ -107,7 +109,10 @@ MarkMessageManagers()
     if (!childMM) {
       continue;
     }
-    nsCOMPtr<nsIMessageBroadcaster> windowMM = do_QueryInterface(childMM);
+    nsCOMPtr<nsIMessageBroadcaster> strongWindowMM = do_QueryInterface(childMM);
+    nsIMessageBroadcaster* windowMM = strongWindowMM;
+    childMM = nullptr;
+    strongWindowMM = nullptr;
     windowMM->MarkForCC();
     uint32_t tabChildCount = 0;
     windowMM->GetChildCount(&tabChildCount);
@@ -117,12 +122,15 @@ MarkMessageManagers()
       if (!childMM) {
         continue;
       }
-      nsCOMPtr<nsIMessageSender> tabMM = do_QueryInterface(childMM);
+      nsCOMPtr<nsIMessageSender> strongTabMM = do_QueryInterface(childMM);
+      nsIMessageSender* tabMM = strongTabMM;
+      childMM = nullptr;
+      strongTabMM = nullptr;
       tabMM->MarkForCC();
       //XXX hack warning, but works, since we know that
       //    callback is frameloader.
       mozilla::dom::ipc::MessageManagerCallback* cb =
-        static_cast<nsFrameMessageManager*>(tabMM.get())->GetCallback();
+        static_cast<nsFrameMessageManager*>(tabMM)->GetCallback();
       if (cb) {
         nsFrameLoader* fl = static_cast<nsFrameLoader*>(cb);
         nsIDOMEventTarget* et = fl->GetTabChildGlobalAsEventTarget();
@@ -132,10 +140,32 @@ MarkMessageManagers()
         static_cast<nsInProcessTabChildGlobal*>(et)->MarkForCC();
         nsEventListenerManager* elm = et->GetListenerManager(false);
         if (elm) {
-          elm->UnmarkGrayJSListeners();
+          elm->MarkForCC();
         }
       }
     }
+  }
+  if (nsFrameMessageManager::sParentProcessManager) {
+    nsFrameMessageManager::sParentProcessManager->MarkForCC();
+    uint32_t childCount = 0;
+    nsFrameMessageManager::sParentProcessManager->GetChildCount(&childCount);
+    for (uint32_t i = 0; i < childCount; ++i) {
+      nsCOMPtr<nsIMessageListenerManager> childMM;
+      nsFrameMessageManager::sParentProcessManager->
+        GetChildAt(i, getter_AddRefs(childMM));
+      if (!childMM) {
+        continue;
+      }
+      nsIMessageListenerManager* child = childMM;
+      childMM = nullptr;
+      child->MarkForCC();
+    }
+  }
+  if (nsFrameMessageManager::sSameProcessParentManager) {
+    nsFrameMessageManager::sSameProcessParentManager->MarkForCC();
+  }
+  if (nsFrameMessageManager::sChildProcessManager) {
+    nsFrameMessageManager::sChildProcessManager->MarkForCC();
   }
 }
 
@@ -154,13 +184,13 @@ MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS,
     if (aCleanupJS) {
       nsEventListenerManager* elm = doc->GetListenerManager(false);
       if (elm) {
-        elm->UnmarkGrayJSListeners();
+        elm->MarkForCC();
       }
       nsCOMPtr<nsIDOMEventTarget> win = do_QueryInterface(doc->GetInnerWindow());
       if (win) {
         elm = win->GetListenerManager(false);
         if (elm) {
-          elm->UnmarkGrayJSListeners();
+          elm->MarkForCC();
         }
         static_cast<nsGlobalWindow*>(win.get())->UnmarkGrayTimers();
       }

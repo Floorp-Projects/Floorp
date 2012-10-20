@@ -1495,6 +1495,7 @@ typedef struct CK_AES_CBC_ENCRYPT_DATA_PARAMS {
 
 typedef CK_AES_CBC_ENCRYPT_DATA_PARAMS CK_PTR CK_AES_CBC_ENCRYPT_DATA_PARAMS_PTR;
 
+/* CK_AES_CTR_PARAMS is new for PKCS #11 v2.20 amendment 3 */
 typedef struct CK_AES_CTR_PARAMS {
   CK_ULONG     ulCounterBits;
   CK_BYTE      cb[16];
@@ -1502,26 +1503,28 @@ typedef struct CK_AES_CTR_PARAMS {
 
 typedef CK_AES_CTR_PARAMS CK_PTR CK_AES_CTR_PARAMS_PTR;
 
-typedef struct CK_AES_GCM_PARAMS {
+/* CK_GCM_PARAMS is new for version 2.30 */
+typedef struct CK_GCM_PARAMS {
   CK_BYTE_PTR  pIv;
   CK_ULONG     ulIvLen;
   CK_BYTE_PTR  pAAD;
   CK_ULONG     ulAADLen;
   CK_ULONG     ulTagBits;
-} CK_AES_GCM_PARAMS;
+} CK_GCM_PARAMS;
 
-typedef CK_AES_GCM_PARAMS CK_PTR CK_AES_GCM_PARAMS_PTR;
+typedef CK_GCM_PARAMS CK_PTR CK_GCM_PARAMS_PTR;
 
-typedef struct CK_AES_CCM_PARAMS {
+/* CK_CCM_PARAMS is new for version 2.30 */
+typedef struct CK_CCM_PARAMS {
   CK_ULONG     ulDataLen;
   CK_BYTE_PTR  pNonce;
   CK_ULONG     ulNonceLen;
   CK_BYTE_PTR  pAAD;
   CK_ULONG     ulAADLen;
   CK_ULONG     ulMACLen;
-} CK_AES_CCM_PARAMS;
+} CK_CCM_PARAMS;
 
-typedef CK_AES_CCM_PARAMS CK_PTR CK_AES_CCM_PARAMS_PTR;
+typedef CK_CCM_PARAMS CK_PTR CK_CCM_PARAMS_PTR;
 
 /* CK_SKIPJACK_PRIVATE_WRAP_PARAMS provides the parameters to the
  * CKM_SKIPJACK_PRIVATE_WRAP mechanism */

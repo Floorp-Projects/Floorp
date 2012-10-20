@@ -378,7 +378,6 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 
 #full-screen-warning-container {
-  pointer-events: none;
   position: fixed;
   top: 0;
   left: 0;
@@ -393,10 +392,9 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 }
 
 #full-screen-warning-message {
-  pointer-events: auto;
   /* We must specify a max-width, otherwise word-wrap:break-word doesn't
      work in descendant <description> and <label> elements. Bug 630864. */
-  max-width: 800px;  
+  max-width: 800px;
 }
 
 #full-screen-domain-text,

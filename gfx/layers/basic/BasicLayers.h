@@ -93,7 +93,7 @@ public:
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
-  virtual bool AreComponentAlphaLayersEnabled() { return HasShadowManager(); }
+  virtual bool AreComponentAlphaLayersEnabled() { return HasShadowManager() || !IsWidgetLayerManager(); }
 
   void AbortTransaction();
 
@@ -273,12 +273,19 @@ public:
   void SetRepeatTransaction() { mRepeatTransaction = true; }
 
   /**
-   * Determines if a progressive update should be cancelled. This is only called
-   * if gfxPlatform::UseProgressiveTilePainting() returns true.
-   * aHasPendingNewThebesContent is true if there is a Thebes layer update
-   * that will cause its valid region to expand.
+   * Called for each iteration of a progressive tile update. Fills
+   * aViewport, aScaleX and aScaleY with the current scale and viewport
+   * being used to composite the layers in this manager, to determine what area
+   * intersects with the target render rectangle.
+   * Returns true if the update should continue, or false if it should be
+   * cancelled.
+   * This is only called if gfxPlatform::UseProgressiveTilePainting() returns
+   * true.
    */
-  bool ShouldAbortProgressiveUpdate(bool aHasPendingNewThebesContent);
+  bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
+                                 gfx::Rect& aViewport,
+                                 float& aScaleX,
+                                 float& aScaleY);
 
 private:
   /**

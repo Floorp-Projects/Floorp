@@ -312,7 +312,7 @@ HRESULT nsDataObj::CreateStream(IStream **outStream)
 
   rv = GetDownloadDetails(getter_AddRefs(sourceURI),
                           wideFileName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, E_FAIL);
 
   nsDataObj::CStream *pStream = new nsDataObj::CStream();
   NS_ENSURE_TRUE(pStream, E_OUTOFMEMORY);
@@ -1111,10 +1111,10 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   mozilla::widget::FaviconHelper::ObtainCachedIconFile(aUri, aUriHash, mIOThread, true);
 
   nsresult rv = mozilla::widget::FaviconHelper::GetOutputIconPath(aUri, icoFile, true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, E_FAIL);
   nsCString path;
   rv = icoFile->GetNativePath(path);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, E_FAIL);
 
   static char* shortcutFormatStr = "[InternetShortcut]\r\nURL=%s\r\n" 
                                    "IDList=\r\nHotKey=0\r\nIconFile=%s\r\n" 

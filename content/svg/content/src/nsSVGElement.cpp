@@ -1015,7 +1015,8 @@ nsSVGElement::sLightingEffectsMap[] = {
 NS_IMETHODIMP
 nsSVGElement::IsSupported(const nsAString& aFeature, const nsAString& aVersion, bool* aReturn)
 {
-  return nsGenericElement::IsSupported(aFeature, aVersion, aReturn); 
+  *aReturn = nsGenericElement::IsSupported(aFeature, aVersion);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

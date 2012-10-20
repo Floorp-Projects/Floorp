@@ -1135,21 +1135,19 @@ HyperTextAccessible::GetLevelInternal()
   return AccessibleWrap::GetLevelInternal();
 }
 
-nsresult
-HyperTextAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
+already_AddRefed<nsIPersistentProperties>
+HyperTextAccessible::NativeAttributes()
 {
-  nsresult rv = AccessibleWrap::GetAttributesInternal(aAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    AccessibleWrap::NativeAttributes();
 
-  // Indicate when the current object uses block-level formatting
-  // via formatting: block
-  // XXX: 'formatting' attribute is deprecated and will be removed in Mozilla2,
-  // use 'display' attribute instead.
+  // 'formatting' attribute is deprecated, 'display' attribute should be
+  // instead.
   nsIFrame *frame = GetFrame();
   if (frame && frame->GetType() == nsGkAtoms::blockFrame) {
-    nsAutoString oldValueUnused;
-    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("formatting"), NS_LITERAL_STRING("block"),
-                                   oldValueUnused);
+    nsAutoString unused;
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("formatting"),
+                                  NS_LITERAL_STRING("block"), unused);
   }
 
   if (FocusMgr()->IsFocused(this)) {
@@ -1157,8 +1155,7 @@ HyperTextAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
     if (lineNumber >= 1) {
       nsAutoString strLineNumber;
       strLineNumber.AppendInt(lineNumber);
-      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::lineNumber,
-                             strLineNumber);
+      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::lineNumber, strLineNumber);
     }
   }
 
@@ -1167,22 +1164,22 @@ HyperTextAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
   // a landmark since it usually contains headings. We're not yet sure how the
   // web will use html:footer but our best bet right now is as contentinfo.
   if (mContent->Tag() == nsGkAtoms::nav)
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("navigation"));
   else if (mContent->Tag() == nsGkAtoms::section) 
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("region"));
   else if (mContent->Tag() == nsGkAtoms::footer) 
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("contentinfo"));
   else if (mContent->Tag() == nsGkAtoms::aside) 
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("complementary"));
   else if (mContent->Tag() == nsGkAtoms::article)
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("article"));
 
-  return  NS_OK;
+  return attributes.forget();
 }
 
 /*
@@ -1953,12 +1950,14 @@ HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartIndex,
 ENameValueFlag
 HyperTextAccessible::NativeName(nsString& aName)
 {
-  AccessibleWrap::NativeName(aName);
+  ENameValueFlag nameFlag = AccessibleWrap::NativeName(aName);
+  if (!aName.IsEmpty())
+    return nameFlag;
 
   // Get name from title attribute for HTML abbr and acronym elements making it
   // a valid name from markup. Otherwise their name isn't picked up by recursive
   // name computation algorithm. See NS_OK_NAME_FROM_TOOLTIP.
-  if (aName.IsEmpty() && IsAbbreviation() &&
+  if (IsAbbreviation() &&
       mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aName))
     aName.CompressWhitespace();
 

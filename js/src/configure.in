@@ -55,7 +55,7 @@ NSPR_VERSION=4
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 PERL_VERSION=5.006
-PYTHON_VERSION=2.5
+PYTHON_VERSION=2.6
 WINDRES_VERSION=2.14.90
 W32API_VERSION=3.14
 
@@ -167,6 +167,7 @@ if test -n "$gonkdir" ; then
     AR="$gonk_toolchain_prefix"ar
     RANLIB="$gonk_toolchain_prefix"ranlib
     STRIP="$gonk_toolchain_prefix"strip
+    OBJCOPY="$gonk_toolchain_prefix"objcopy
 
     STLPORT_CPPFLAGS="-I$gonkdir/external/stlport/stlport"
     STLPORT_LIBS="-lstlport"
@@ -1404,8 +1405,8 @@ dnl System overrides of the defaults for host
 dnl ========================================================
 case "$host" in
 *mingw*)
-    # we need Python 2.5 on Windows
-    PYTHON_VERSION=2.5
+    # we need Python 2.6 on Windows
+    PYTHON_VERSION=2.6
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:"$@"'
@@ -3075,24 +3076,14 @@ if test "$ac_cv_thread_keyword" = yes; then
   esac
 fi
 
-dnl Check for the existence of various allocation headers/functions
-
-MALLOC_H=
-MOZ_CHECK_HEADER(malloc.h,        [MALLOC_H=malloc.h])
-if test "$MALLOC_H" = ""; then
-  MOZ_CHECK_HEADER(malloc/malloc.h, [MALLOC_H=malloc/malloc.h])
-  if test "$MALLOC_H" = ""; then
-    MOZ_CHECK_HEADER(sys/malloc.h,    [MALLOC_H=sys/malloc.h])
-  fi
-fi
-if test "$MALLOC_H" != ""; then
-   AC_DEFINE_UNQUOTED(MALLOC_H, <$MALLOC_H>)
-fi
-
-MOZ_ALLOCATING_FUNCS="strndup posix_memalign memalign valloc"
-AC_CHECK_FUNCS(strndup posix_memalign memalign valloc)
-
 dnl See if compiler supports some gcc-style attributes
+
+AC_CACHE_CHECK(for __attribute__((always_inline)),
+               ac_cv_attribute_always_inline,
+               [AC_TRY_COMPILE([inline void f(void) __attribute__((always_inline));],
+                               [],
+                               ac_cv_attribute_always_inline=yes,
+                               ac_cv_attribute_always_inline=no)])
 
 AC_CACHE_CHECK(for __attribute__((malloc)),
                ac_cv_attribute_malloc,
@@ -3145,6 +3136,12 @@ dnl are defined in build/autoconf/altoptions.m4.
 
 dnl If the compiler supports these attributes, define them as
 dnl convenience macros.
+if test "$ac_cv_attribute_always_inline" = yes ; then
+  AC_DEFINE(NS_ALWAYS_INLINE, [__attribute__((always_inline))])
+else
+  AC_DEFINE(NS_ALWAYS_INLINE,)
+fi
+
 if test "$ac_cv_attribute_malloc" = yes ; then
   AC_DEFINE(NS_ATTR_MALLOC, [__attribute__((malloc))])
 else

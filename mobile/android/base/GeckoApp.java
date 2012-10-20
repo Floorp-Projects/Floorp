@@ -140,6 +140,7 @@ abstract public class GeckoApp
     public static final String ACTION_BOOKMARK      = "org.mozilla.gecko.BOOKMARK";
     public static final String ACTION_LOAD          = "org.mozilla.gecko.LOAD";
     public static final String ACTION_INIT_PW       = "org.mozilla.gecko.INIT_PW";
+    public static final String ACTION_WIDGET        = "org.mozilla.gecko.WIDGET";
     public static final String SAVED_STATE_TITLE         = "title";
     public static final String SAVED_STATE_IN_BACKGROUND = "inBackground";
     public static final String SAVED_STATE_PRIVATE_SESSION = "privateSession";
@@ -726,8 +727,8 @@ abstract public class GeckoApp
             return;
         }
 
-        int dw = tab.getThumbnailWidth();
-        int dh = tab.getThumbnailHeight();
+        int dw = Tabs.getThumbnailWidth();
+        int dh = Tabs.getThumbnailHeight();
         GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), 0, 0, 0, 0, 0, 0, dw, dh, dw, dh, ScreenshotHandler.SCREENSHOT_THUMBNAIL, tab.getThumbnailBuffer()));
     }
 
@@ -1555,7 +1556,7 @@ abstract public class GeckoApp
         });
     }
 
-    void initializeChrome(String uri, Boolean isExternalURL) {
+    protected void initializeChrome(String uri, Boolean isExternalURL) {
         mDoorHangerPopup = new DoorHangerPopup(this, null);
     }
 
@@ -1610,8 +1611,6 @@ abstract public class GeckoApp
         }
 
         boolean isExternalURL = passedUri != null && !passedUri.equals("about:home");
-        initializeChrome(uri, isExternalURL);
-
         StartupAction startupAction;
         if (isExternalURL) {
             startupAction = StartupAction.URL;
@@ -1635,11 +1634,18 @@ abstract public class GeckoApp
                 // loading it twice
                 intent.setAction(Intent.ACTION_MAIN);
                 intent.setData(null);
-                passedUri = "about:empty";
+                passedUri = null;
             } else {
                 startupAction = StartupAction.PREFETCH;
                 GeckoAppShell.getHandler().post(new PrefetchRunnable(copy));
             }
+        }
+
+        initializeChrome(passedUri, isExternalURL);
+
+        if (mRestoreMode == GeckoAppShell.RESTORE_NONE) {
+            // show telemetry door hanger if we aren't restoring a session
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Telemetry:Prompt", null));
         }
 
         Telemetry.HistogramAdd("FENNEC_STARTUP_GECKOAPP_ACTION", startupAction.ordinal());
@@ -1732,7 +1738,11 @@ abstract public class GeckoApp
                                            (TextSelectionHandle) findViewById(R.id.end_handle),
                                            GeckoAppShell.getEventDispatcher());
 
-        UpdateServiceHelper.registerForUpdates(this);
+        PrefsHelper.getPref("app.update.autodownload", new PrefsHelper.PrefHandlerBase() {
+            @Override public void prefValue(String pref, String value) {
+                UpdateServiceHelper.registerForUpdates(GeckoApp.this, value);
+            }
+        });
 
         final GeckoApp self = this;
 
@@ -1987,6 +1997,9 @@ abstract public class GeckoApp
                     alertCookie = "";
             }
             handleNotification(ACTION_ALERT_CALLBACK, alertName, alertCookie);
+        }
+        else if (ACTION_WIDGET.equals(action)) {
+            addTab();
         }
     }
 
@@ -2539,15 +2552,17 @@ abstract public class GeckoApp
     protected void connectGeckoLayerClient() {
         mLayerView.getLayerClient().notifyGeckoReady();
 
-        mLayerView.getTouchEventHandler().setOnTouchListener(new ContentTouchListener() {
+        mLayerView.getTouchEventHandler().setOnTouchListener(new OnInterceptTouchListener() {
             private PointF initialPoint = null;
+
+            @Override
+            public boolean onInterceptTouchEvent(View view, MotionEvent event) {
+                return false;
+            }
 
             @Override
             public boolean onTouch(View view, MotionEvent event) {
                 if (event == null)
-                    return true;
-
-                if (super.onTouch(view, event))
                     return true;
 
                 int action = event.getAction();
@@ -2572,30 +2587,38 @@ abstract public class GeckoApp
         });
     }
 
-    protected class ContentTouchListener implements OnInterceptTouchListener {
-        private boolean mIsHidingTabs = false;
+    public static class MainLayout extends LinearLayout {
+        private OnInterceptTouchListener mOnInterceptTouchListener;
 
-        @Override
-        public boolean onInterceptTouchEvent(View view, MotionEvent event) {
-            // If the tab tray is showing, hide the tab tray and don't send the event to content.
-            if (event.getActionMasked() == MotionEvent.ACTION_DOWN && autoHideTabs()) {
-                mIsHidingTabs = true;
-                return true;
-            }
-            return false;
+        public MainLayout(Context context, AttributeSet attrs) {
+            super(context, attrs);
+            mOnInterceptTouchListener = null;
+        }
+
+        public void setOnInterceptTouchListener(OnInterceptTouchListener listener) {
+            mOnInterceptTouchListener = listener;
         }
 
         @Override
-        public boolean onTouch(View view, MotionEvent event) {
-            if (mIsHidingTabs) {
-                // Keep consuming events until the gesture finishes.
-                int action = event.getActionMasked();
-                if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                    mIsHidingTabs = false;
-                }
+        public boolean onInterceptTouchEvent(MotionEvent event) {
+            if (mOnInterceptTouchListener != null && mOnInterceptTouchListener.onInterceptTouchEvent(this, event))
                 return true;
-            }
-            return false;
+            return super.onInterceptTouchEvent(event);
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            if (mOnInterceptTouchListener != null && mOnInterceptTouchListener.onTouch(this, event))
+                return true;
+            return super.onTouchEvent(event);
+        }
+
+        @Override
+        public void setDrawingCacheEnabled(boolean enabled) {
+            // Instead of setting drawing cache in the view itself, we simply
+            // enable drawing caching on its children. This is mainly used in
+            // animations (see PropertyAnimator)
+            super.setChildrenDrawnWithCacheEnabled(enabled);
         }
     }
 

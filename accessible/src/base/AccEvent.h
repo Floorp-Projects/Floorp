@@ -62,7 +62,7 @@ public:
   AccEvent(uint32_t aEventType, Accessible* aAccessible,
            EIsFromUserInput aIsFromUserInput = eAutoDetect,
            EEventRule aEventRule = eRemoveDupes);
-  // Initialize with an nsIDOMNode
+  // Initialize with an nsINode
   AccEvent(uint32_t aEventType, nsINode* aNode,
            EIsFromUserInput aIsFromUserInput = eAutoDetect,
            EEventRule aEventRule = eRemoveDupes);

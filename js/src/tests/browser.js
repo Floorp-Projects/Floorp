@@ -194,7 +194,6 @@ function optionsInit() {
     werror:     true,
     atline:     true,
     moar_xml:   true,
-    relimit:    true,
     methodjit:  true,
     methodjit_always: true,
     strict_mode: true

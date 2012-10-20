@@ -226,7 +226,7 @@ status_t GonkRecorder::setOutputFile(int fd, int64_t offset, int64_t length) {
     return OK;
 }
 
-// Attempt to parse an int64 literal optionally surrounded by whitespace,
+// Attempt to parse an int64_t literal optionally surrounded by whitespace,
 // returns true on success, false otherwise.
 static bool safe_strtoi64(const char *s, int64_t *val) {
     char *end;
@@ -246,7 +246,7 @@ static bool safe_strtoi64(const char *s, int64_t *val) {
     }
 
     // For a successful return, the string must contain nothing but a valid
-    // int64 literal optionally surrounded by whitespace.
+    // int64_t literal optionally surrounded by whitespace.
 
     return *end == '\0';
 }

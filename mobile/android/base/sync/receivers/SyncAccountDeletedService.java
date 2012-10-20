@@ -6,6 +6,7 @@ package org.mozilla.gecko.sync.receivers;
 
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.GlobalConstants;
+import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.Utils;
@@ -32,7 +33,7 @@ public class SyncAccountDeletedService extends IntentService {
     final Context context = this;
 
     long intentVersion = intent.getLongExtra(Constants.JSON_KEY_VERSION, 0);
-    long expectedVersion = GlobalConstants.SYNC_ACCOUNT_DELETED_INTENT_VERSION;
+    long expectedVersion = SyncConstants.SYNC_ACCOUNT_DELETED_INTENT_VERSION;
     if (intentVersion != expectedVersion) {
       Logger.warn(LOG_TAG, "Intent malformed: version " + intentVersion + " given but version " + expectedVersion + "expected. " +
           "Not cleaning up after deleted Account.");

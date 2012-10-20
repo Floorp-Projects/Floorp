@@ -1394,13 +1394,14 @@ nsHttpChannelAuthProvider::DNSCallback::OnLookupComplete(nsICancelable *request,
         LOG(("nsHttpChannelAuthProvider::OnLookupComplete this=%p "
              "resolved to %s\n", mAuthProvider.get(), cname.get()));
         mAuthProvider->SetCanonicalizedHost(cname);
-        mAuthProvider->OnAuthAvailable(nullptr, nullptr);
     }
     else {
         LOG(("nsHttpChannelAuthProvider::OnLookupComplete this=%p "
              "GetCanonicalName failed\n", mAuthProvider.get()));
-        mAuthProvider->OnAuthCancelled(nullptr, false);
     }
+
+    // Proceed whether or not DNS canonicalization succeeded
+    mAuthProvider->OnAuthAvailable(nullptr, nullptr);
     return NS_OK;
 }
 

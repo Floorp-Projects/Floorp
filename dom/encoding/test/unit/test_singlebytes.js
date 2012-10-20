@@ -345,9 +345,6 @@ test(
           continue;
         if (encoding === "iso-2022-kr" && (i === 0x0E || i === 0x0F || i === 0x1B))
           continue;
-        // TODO: Gecko decoder bugs
-        if ((encoding === "big5" || encoding === "euc-kr") && i === 0x7F)
-          continue;
 
         string += String.fromCharCode(i);
         bytes.push(i);

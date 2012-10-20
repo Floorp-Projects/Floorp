@@ -3786,7 +3786,7 @@ WorkerPrivate::SetTimeout(JSContext* aCx, unsigned aArgc, jsval* aVp,
 }
 
 bool
-WorkerPrivate::ClearTimeout(JSContext* aCx, uint32 aId)
+WorkerPrivate::ClearTimeout(JSContext* aCx, uint32_t aId)
 {
   AssertIsOnWorkerThread();
 

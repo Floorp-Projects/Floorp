@@ -39,6 +39,7 @@
 
 bool
 TestSuccess(const char* hdr, bool extraTokens,
+            uint64_t expectedMaxAge, bool expectedIncludeSubdomains,
             nsIStrictTransportSecurityService* stss,
             nsIPermissionManager* pm)
 {
@@ -46,8 +47,13 @@ TestSuccess(const char* hdr, bool extraTokens,
   nsresult rv = NS_NewURI(getter_AddRefs(dummyUri), "https://foo.com/bar.html");
   EXPECT_SUCCESS(rv, "Failed to create URI");
 
-  rv = stss->ProcessStsHeader(dummyUri, hdr);
+  uint64_t maxAge = 0;
+  bool includeSubdomains = false;
+  rv = stss->ProcessStsHeader(dummyUri, hdr, &maxAge, &includeSubdomains);
   EXPECT_SUCCESS(rv, "Failed to process valid header: %s", hdr);
+
+  REQUIRE_EQUAL(maxAge, expectedMaxAge, "Did not correctly parse maxAge");
+  REQUIRE_EQUAL(includeSubdomains, expectedIncludeSubdomains, "Did not correctly parse presence/absence of includeSubdomains");
 
   if (extraTokens) {
     REQUIRE_EQUAL(rv, NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA,
@@ -68,7 +74,7 @@ bool TestFailure(const char* hdr,
   nsresult rv = NS_NewURI(getter_AddRefs(dummyUri), "https://foo.com/bar.html");
   EXPECT_SUCCESS(rv, "Failed to create URI");
 
-  rv = stss->ProcessStsHeader(dummyUri, hdr);
+  rv = stss->ProcessStsHeader(dummyUri, hdr, NULL, NULL);
   EXPECT_FAILURE(rv, "Parsed invalid header: %s", hdr);
   passed(hdr);
   return true;
@@ -106,36 +112,36 @@ main(int32_t argc, char *argv[])
     printf("*** Attempting to parse valid STS headers ...\n");
 
     // SHOULD SUCCEED:
-    rvs.AppendElement(TestSuccess("max-age=100", false, stss, pm));
-    rvs.AppendElement(TestSuccess("max-age  =100", false, stss, pm));
-    rvs.AppendElement(TestSuccess(" max-age=100", false, stss, pm));
-    rvs.AppendElement(TestSuccess("max-age = 100 ", false, stss, pm));
-    rvs.AppendElement(TestSuccess("max-age  =       100             ", false, stss, pm));
+    rvs.AppendElement(TestSuccess("max-age=100", false, 100, false, stss, pm));
+    rvs.AppendElement(TestSuccess("max-age  =100", false, 100, false, stss, pm));
+    rvs.AppendElement(TestSuccess(" max-age=100", false, 100, false, stss, pm));
+    rvs.AppendElement(TestSuccess("max-age = 100 ", false, 100, false, stss, pm));
+    rvs.AppendElement(TestSuccess("max-age  =       100             ", false, 100, false, stss, pm));
 
-    rvs.AppendElement(TestSuccess("maX-aGe=100", false, stss, pm));
-    rvs.AppendElement(TestSuccess("MAX-age  =100", false, stss, pm));
-    rvs.AppendElement(TestSuccess("max-AGE=100", false, stss, pm));
-    rvs.AppendElement(TestSuccess("Max-Age = 100 ", false, stss, pm));
-    rvs.AppendElement(TestSuccess("MAX-AGE = 100 ", false, stss, pm));
+    rvs.AppendElement(TestSuccess("maX-aGe=100", false, 100, false, stss, pm));
+    rvs.AppendElement(TestSuccess("MAX-age  =100", false, 100, false, stss, pm));
+    rvs.AppendElement(TestSuccess("max-AGE=100", false, 100, false, stss, pm));
+    rvs.AppendElement(TestSuccess("Max-Age = 100 ", false, 100, false, stss, pm));
+    rvs.AppendElement(TestSuccess("MAX-AGE = 100 ", false, 100, false, stss, pm));
 
-    rvs.AppendElement(TestSuccess("max-age=100;includeSubdomains", false, stss, pm));
-    rvs.AppendElement(TestSuccess("max-age=100; includeSubdomains", false, stss, pm));
-    rvs.AppendElement(TestSuccess(" max-age=100; includeSubdomains", false, stss, pm));
-    rvs.AppendElement(TestSuccess("max-age = 100 ; includeSubdomains", false, stss, pm));
-    rvs.AppendElement(TestSuccess("max-age  =       100             ; includeSubdomains", false, stss, pm));
+    rvs.AppendElement(TestSuccess("max-age=100;includeSubdomains", false, 100, true, stss, pm));
+    rvs.AppendElement(TestSuccess("max-age=100; includeSubdomains", false, 100, true, stss, pm));
+    rvs.AppendElement(TestSuccess(" max-age=100; includeSubdomains", false, 100, true, stss, pm));
+    rvs.AppendElement(TestSuccess("max-age = 100 ; includeSubdomains", false, 100, true, stss, pm));
+    rvs.AppendElement(TestSuccess("max-age  =       100             ; includeSubdomains", false, 100, true, stss, pm));
 
-    rvs.AppendElement(TestSuccess("maX-aGe=100; includeSUBDOMAINS", false, stss, pm));
-    rvs.AppendElement(TestSuccess("MAX-age  =100; includeSubDomains", false, stss, pm));
-    rvs.AppendElement(TestSuccess("max-AGE=100; iNcLuDeSuBdoMaInS", false, stss, pm));
-    rvs.AppendElement(TestSuccess("Max-Age = 100; includesubdomains ", false, stss, pm));
-    rvs.AppendElement(TestSuccess("INCLUDESUBDOMAINS;MaX-AgE = 100 ", false, stss, pm));
+    rvs.AppendElement(TestSuccess("maX-aGe=100; includeSUBDOMAINS", false, 100, true, stss, pm));
+    rvs.AppendElement(TestSuccess("MAX-age  =100; includeSubDomains", false, 100, true, stss, pm));
+    rvs.AppendElement(TestSuccess("max-AGE=100; iNcLuDeSuBdoMaInS", false, 100, true, stss, pm));
+    rvs.AppendElement(TestSuccess("Max-Age = 100; includesubdomains ", false, 100, true, stss, pm));
+    rvs.AppendElement(TestSuccess("INCLUDESUBDOMAINS;MaX-AgE = 100 ", false, 100, true, stss, pm));
 
     // these are weird tests, but are testing that some extended syntax is
     // still allowed (but it is ignored)
-    rvs.AppendElement(TestSuccess("max-age=100randomstuffhere", true, stss, pm));
-    rvs.AppendElement(TestSuccess("max-age=100 includesubdomains", true, stss, pm));
-    rvs.AppendElement(TestSuccess("max-age=100 bar foo", true, stss, pm));
-    rvs.AppendElement(TestSuccess("max-age=100 ; includesubdomainsSomeStuff", true, stss, pm));
+    rvs.AppendElement(TestSuccess("max-age=100randomstuffhere", true, 100, false, stss, pm));
+    rvs.AppendElement(TestSuccess("max-age=100 includesubdomains", true, 100, false, stss, pm));
+    rvs.AppendElement(TestSuccess("max-age=100 bar foo", true, 100, false, stss, pm));
+    rvs.AppendElement(TestSuccess("max-age=100 ; includesubdomainsSomeStuff", true, 100, false, stss, pm));
 
     rv0 = rvs.Contains(false) ? 1 : 0;
     if (rv0 == 0)

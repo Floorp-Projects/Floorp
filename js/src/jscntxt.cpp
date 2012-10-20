@@ -561,6 +561,8 @@ static void
 ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
             JSErrorCallback callback, void *userRef)
 {
+    AssertCanGC();
+
     /*
      * Check the error report, and set a JavaScript-catchable exception
      * if the error is defined to have an associated exception.  If an
@@ -605,6 +607,8 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
 static void
 PopulateReportBlame(JSContext *cx, JSErrorReport *report)
 {
+    AutoAssertNoGC nogc;
+
     /*
      * Walk stack until we find a frame that is associated with a non-builtin
      * rather than a builtin frame.
@@ -628,6 +632,8 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
 void
 js_ReportOutOfMemory(JSContext *cx)
 {
+    AutoAssertNoGC nogc;
+
     cx->runtime->hadOutOfMemory = true;
 
     JSErrorReport report;
@@ -645,20 +651,10 @@ js_ReportOutOfMemory(JSContext *cx)
     PopulateReportBlame(cx, &report);
 
     /*
-     * If debugErrorHook is present then we give it a chance to veto sending
-     * the error on to the regular ErrorReporter. We also clear a pending
-     * exception if any now so the hooks can replace the out-of-memory error
-     * by a script-catchable exception.
+     * We clear a pending exception, if any, now so the hook can replace the
+     * out-of-memory error by a script-catchable exception.
      */
     cx->clearPendingException();
-    if (onError) {
-        JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook;
-        if (hook &&
-            !hook(cx, msg, &report, cx->runtime->debugHooks.debugErrorHookData)) {
-            onError = NULL;
-        }
-    }
-
     if (onError) {
         AutoAtomicIncrement incr(&cx->runtime->inOOMReport);
         onError(cx, msg, &report);

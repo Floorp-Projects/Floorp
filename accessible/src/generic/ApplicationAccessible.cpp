@@ -110,12 +110,10 @@ ApplicationAccessible::State()
   return IsDefunct() ? states::DEFUNCT : 0;
 }
 
-NS_IMETHODIMP
-ApplicationAccessible::GetAttributes(nsIPersistentProperties** aAttributes)
+already_AddRefed<nsIPersistentProperties>
+ApplicationAccessible::NativeAttributes()
 {
-  NS_ENSURE_ARG_POINTER(aAttributes);
-  *aAttributes = nullptr;
-  return NS_OK;
+  return nullptr;
 }
 
 GroupPos
