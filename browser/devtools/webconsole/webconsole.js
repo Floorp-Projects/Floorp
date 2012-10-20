@@ -21,6 +21,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
                                   "resource://gre/modules/devtools/dbg-client.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "debuggerSocketConnect",
+                                  "resource://gre/modules/devtools/dbg-client.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
                                    "@mozilla.org/widget/clipboardhelper;1",
                                    "nsIClipboardHelper");
@@ -360,8 +363,11 @@ WebConsoleFrame.prototype = {
    */
   _initConnection: function WCF__initConnection()
   {
-    this.proxy = new WebConsoleConnectionProxy(this);
-    this.proxy.initServer();
+    this.proxy = new WebConsoleConnectionProxy(this, {
+      host: this.owner.remoteHost,
+      port: this.owner.remotePort,
+    });
+
     this.proxy.connect(function() {
       this.saveRequestAndResponseBodies = this._saveRequestAndResponseBodies;
       this._onInitComplete();
@@ -959,9 +965,9 @@ WebConsoleFrame.prototype = {
 
   /**
    * Filter the console node from the output node if it is a repeat. Console
-   * messages are filtered from the output if and only if they match the
-   * immediately preceding message. The output node's last occurrence should
-   * have its timestamp updated.
+   * messages are filtered from the output if they match the immediately
+   * preceding message that came from the same source. The output node's
+   * last occurrence should have its timestamp updated.
    *
    * @param nsIDOMNode aNode
    *        The message node to be filtered or not.
@@ -972,11 +978,31 @@ WebConsoleFrame.prototype = {
   {
     let lastMessage = this.outputNode.lastChild;
 
-    // childNodes[2] is the description element
-    if (lastMessage && lastMessage.childNodes[2] &&
-        !aNode.classList.contains("webconsole-msg-inspector") &&
-        aNode.childNodes[2].textContent ==
-        lastMessage.childNodes[2].textContent) {
+    if (!lastMessage) {
+      return false;
+    }
+
+    let body = aNode.querySelector(".webconsole-msg-body");
+    let lastBody = lastMessage.querySelector(".webconsole-msg-body");
+
+    if (aNode.classList.contains("webconsole-msg-inspector")) {
+      return false;
+    }
+
+    if (!body || !lastBody) {
+      return false;
+    }
+
+    if (body.textContent == lastBody.textContent) {
+      let loc = aNode.querySelector(".webconsole-location");
+      let lastLoc = lastMessage.querySelector(".webconsole-location");
+
+      if (loc && lastLoc) {
+        if (loc.getAttribute("value") !== lastLoc.getAttribute("value")) {
+          return false;
+        }
+      }
+
       this.mergeFilteredMessageNode(lastMessage, aNode);
       return true;
     }
@@ -2367,11 +2393,20 @@ WebConsoleFrame.prototype = {
     let locationNode = this.document.createElementNS(XUL_NS, "label");
 
     // Create the text, which consists of an abbreviated version of the URL
-    // plus an optional line number.
-    let text = WebConsoleUtils.abbreviateSourceURL(aSourceURL);
+    // plus an optional line number. Scratchpad URLs should not be abbreviated.
+    let text;
+
+    if (/^Scratchpad\/\d+$/.test(aSourceURL)) {
+      text = aSourceURL;
+    }
+    else {
+      text = WebConsoleUtils.abbreviateSourceURL(aSourceURL);
+    }
+
     if (aSourceLine) {
       text += ":" + aSourceLine;
     }
+
     locationNode.setAttribute("value", text);
 
     // Style appropriately.
@@ -2383,10 +2418,16 @@ WebConsoleFrame.prototype = {
 
     // Make the location clickable.
     locationNode.addEventListener("click", function() {
-      if (aSourceURL == "Scratchpad") {
-        let win = Services.wm.getMostRecentWindow("devtools:scratchpad");
-        if (win) {
-          win.focus();
+      if (/^Scratchpad\/\d+$/.test(aSourceURL)) {
+        let wins = Services.wm.getEnumerator("devtools:scratchpad");
+
+        while (wins.hasMoreElements()) {
+          let win = wins.getNext();
+
+          if (win.Scratchpad.uniqueName === aSourceURL) {
+            win.focus();
+            return;
+          }
         }
       }
       else if (locationNode.parentNode.category == CATEGORY_CSS) {
@@ -3859,10 +3900,14 @@ CommandController.prototype = {
  * @constructor
  * @param object aWebConsole
  *        The Web Console instance that owns this connection proxy.
+ * @param object aOptions
+ *        Connection options: host and port.
  */
-function WebConsoleConnectionProxy(aWebConsole)
+function WebConsoleConnectionProxy(aWebConsole, aOptions = {})
 {
   this.owner = aWebConsole;
+  this.remoteHost = aOptions.host;
+  this.remotePort = aOptions.port;
 
   this._onPageError = this._onPageError.bind(this);
   this._onConsoleAPICall = this._onConsoleAPICall.bind(this);
@@ -3938,7 +3983,15 @@ WebConsoleConnectionProxy.prototype = {
    */
   connect: function WCCP_connect(aCallback)
   {
-    let transport = DebuggerServer.connectPipe();
+    let transport;
+    if (this.remoteHost) {
+      transport = debuggerSocketConnect(this.remoteHost, this.remotePort);
+    }
+    else {
+      this.initServer();
+      transport = DebuggerServer.connectPipe();
+    }
+
     let client = this.client = new DebuggerClient(transport);
 
     client.addListener("pageError", this._onPageError);
@@ -3948,18 +4001,58 @@ WebConsoleConnectionProxy.prototype = {
     client.addListener("fileActivity", this._onFileActivity);
     client.addListener("locationChange", this._onLocationChange);
 
+    client.connect(function(aType, aTraits) {
+      client.listTabs(this._onListTabs.bind(this, aCallback));
+    }.bind(this));
+  },
+
+  /**
+   * The "listTabs" response handler.
+   *
+   * @private
+   * @param function [aCallback]
+   *        Optional function to invoke once the connection is established.
+   * @param object aResponse
+   *        The JSON response object received from the server.
+   */
+  _onListTabs: function WCCP__onListTabs(aCallback, aResponse)
+  {
+    let selectedTab;
+
+    if (this.remoteHost) {
+      let tabs = [];
+      for (let tab of aResponse.tabs) {
+        tabs.push(tab.title);
+      }
+
+      tabs.push(l10n.getStr("listTabs.globalConsoleActor"));
+
+      let selected = {};
+      let result = Services.prompt.select(null,
+        l10n.getStr("remoteWebConsoleSelectTabTitle"),
+        l10n.getStr("remoteWebConsoleSelectTabMessage"),
+        tabs.length, tabs, selected);
+
+      if (result && selected.value < aResponse.tabs.length) {
+        selectedTab = aResponse.tabs[selected.value];
+      }
+    }
+    else {
+      selectedTab = aResponse.tabs[aResponse.selected];
+    }
+
+    if (selectedTab) {
+      this._consoleActor = selectedTab.consoleActor;
+      this.owner.onLocationChange(selectedTab.url, selectedTab.title);
+    }
+    else {
+      this._consoleActor = aResponse.consoleActor;
+    }
+
     let listeners = ["PageError", "ConsoleAPI", "NetworkActivity",
                      "FileActivity", "LocationChange"];
-
-    client.connect(function(aType, aTraits) {
-      client.listTabs(function(aResponse) {
-        let tab = aResponse.tabs[aResponse.selected];
-        this._consoleActor = tab.consoleActor;
-        this.owner.onLocationChange(tab.url, tab.title);
-        client.attachConsole(tab.consoleActor, listeners,
-                             this._onAttachConsole.bind(this, aCallback));
-      }.bind(this));
-    }.bind(this));
+    this.client.attachConsole(this._consoleActor, listeners,
+                              this._onAttachConsole.bind(this, aCallback));
   },
 
   /**
