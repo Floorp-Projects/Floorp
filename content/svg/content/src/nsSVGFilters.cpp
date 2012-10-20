@@ -356,7 +356,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEGaussianBlurElementBase::)
 
-  NS_FORWARD_NSIDOMNODE(nsSVGFEGaussianBlurElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEGaussianBlurElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -834,7 +834,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEBlendElementBase::)
 
-  NS_FORWARD_NSIDOMNODE(nsSVGFEBlendElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEBlendElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -1051,7 +1051,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEColorMatrixElementBase::)
 
-  NS_FORWARD_NSIDOMNODE(nsSVGFEColorMatrixElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEColorMatrixElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -1371,7 +1371,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFECompositeElementBase::)
 
-  NS_FORWARD_NSIDOMNODE(nsSVGFECompositeElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFECompositeElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -1682,7 +1682,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEComponentTransferElementBase::)
 
-  NS_FORWARD_NSIDOMNODE(nsSVGFEComponentTransferElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEComponentTransferElementBase::)
 
   // nsIContent
@@ -2096,7 +2096,7 @@ public:
   virtual int32_t GetChannel() { return 0; }
   
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
-  NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -2143,7 +2143,7 @@ public:
   virtual int32_t GetChannel() { return 1; }
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
-  NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -2190,7 +2190,7 @@ public:
   virtual int32_t GetChannel() { return 2; }
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
-  NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -2237,7 +2237,7 @@ public:
   virtual int32_t GetChannel() { return 3; }
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGComponentTransferFunctionElement::)
-  NS_FORWARD_NSIDOMNODE(nsSVGComponentTransferFunctionElement::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGComponentTransferFunctionElement::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -2295,7 +2295,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEMergeElementBase::)
 
-  NS_FORWARD_NSIDOMNODE(nsSVGFEMergeElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEMergeElementBase::)
 
   // nsIContent
@@ -2337,7 +2337,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEMergeNodeElementBase::)
 
-  NS_FORWARD_NSIDOMNODE(nsSVGFEMergeNodeElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEMergeNodeElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -2532,7 +2532,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEOffsetElementBase::)
 
-  NS_FORWARD_NSIDOMNODE(nsSVGFEOffsetElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEOffsetElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -2731,7 +2731,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEFloodElementBase::)
   
-  NS_FORWARD_NSIDOMNODE(nsSVGFEFloodElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEFloodElementBase::)
 
   // nsIContent interface
@@ -2881,7 +2881,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFETileElementBase::)
 
-  NS_FORWARD_NSIDOMNODE(nsSVGFETileElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFETileElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -3080,7 +3080,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFETurbulenceElementBase::)
 
-  NS_FORWARD_NSIDOMNODE(nsSVGFETurbulenceElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFETurbulenceElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -3629,7 +3629,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEMorphologyElementBase::)
 
-  NS_FORWARD_NSIDOMNODE(nsSVGFEMorphologyElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEMorphologyElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -3941,7 +3941,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEConvolveMatrixElementBase::)
 
-  NS_FORWARD_NSIDOMNODE(nsSVGFEConvolveMatrixElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEConvolveMatrixElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -4435,7 +4435,7 @@ public:
   NS_DECL_NSIDOMSVGFEDISTANTLIGHTELEMENT
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEDistantLightElementBase::)
-  NS_FORWARD_NSIDOMNODE(nsSVGFEDistantLightElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEDistantLightElementBase::)
 
   virtual bool AttributeAffectsRendering(
@@ -4540,7 +4540,7 @@ public:
   NS_DECL_NSIDOMSVGFEPOINTLIGHTELEMENT
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEPointLightElementBase::)
-  NS_FORWARD_NSIDOMNODE(nsSVGFEPointLightElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEPointLightElementBase::)
 
   virtual bool AttributeAffectsRendering(
@@ -4652,7 +4652,7 @@ public:
   NS_DECL_NSIDOMSVGFESPOTLIGHTELEMENT
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFESpotLightElementBase::)
-  NS_FORWARD_NSIDOMNODE(nsSVGFESpotLightElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFESpotLightElementBase::)
 
   virtual bool AttributeAffectsRendering(
@@ -4820,7 +4820,6 @@ public:
           const nsSVGFilterInstance& aInstance);
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFELightingElementBase::)
-  NS_FORWARD_NSIDOMNODE(nsSVGFELightingElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFELightingElementBase::)
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -5200,7 +5199,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEDiffuseLightingElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEDiffuseLightingElementBase::)
-  NS_FORWARD_NSIDOMNODE(nsSVGFEDiffuseLightingElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEDiffuseLightingElementBase::)
 
   virtual bool AttributeAffectsRendering(
@@ -5331,7 +5330,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFESpecularLightingElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFESpecularLightingElementBase::)
-  NS_FORWARD_NSIDOMNODE(nsSVGFESpecularLightingElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFESpecularLightingElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
@@ -5832,7 +5831,7 @@ public:
 
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEDisplacementMapElementBase::)
 
-  NS_FORWARD_NSIDOMNODE(nsSVGFEDisplacementMapElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEDisplacementMapElementBase::)
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;

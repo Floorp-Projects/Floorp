@@ -201,6 +201,15 @@ private:
 public:
   // nsIDOMElement method implementation
   NS_DECL_NSIDOMELEMENT
+  nsDOMAttributeMap* GetAttributes()
+  {
+    nsDOMSlots *slots = DOMSlots();
+    if (!slots->mAttributeMap) {
+      slots->mAttributeMap = new nsDOMAttributeMap(this);
+    }
+
+    return slots->mAttributeMap;
+  }
 
   //----------------------------------------
 

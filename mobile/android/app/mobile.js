@@ -28,6 +28,11 @@ pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.tabs.remote", false);
 
+// If a tab has not been active for this long (seconds), then it may be
+// turned into a zombie tab to preemptively free up memory. -1 disables time-based
+// zombification (low-memory conditions may still require the tab to be zombified).
+pref("browser.tabs.zombieTime", -1);
+
 // From libpref/src/init/all.js, extended to allow a slightly wider zoom range.
 pref("zoom.minPercent", 20);
 pref("zoom.maxPercent", 400);
@@ -658,7 +663,7 @@ pref("media.plugins.enabled", true);
 pref("media.stagefright.omxcodec.flags", 0);
 
 // Coalesce touch events to prevent them from flooding the event queue
-pref("dom.event.touch.coalescing.enabled", true);
+pref("dom.event.touch.coalescing.enabled", false);
 
 // default orientation for the app, default to undefined
 // the java GeckoScreenOrientationListener needs this to be defined

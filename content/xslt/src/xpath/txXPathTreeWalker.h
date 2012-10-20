@@ -231,7 +231,7 @@ txXPathNodeUtils::localNameEquals(const txXPathNode& aNode,
 inline bool
 txXPathNodeUtils::isRoot(const txXPathNode& aNode)
 {
-    return !aNode.isAttribute() && !aNode.mNode->GetNodeParent();
+    return !aNode.isAttribute() && !aNode.mNode->GetParentNode();
 }
 
 /* static */

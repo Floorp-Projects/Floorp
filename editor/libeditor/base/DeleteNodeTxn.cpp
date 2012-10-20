@@ -10,6 +10,7 @@
 #include "nsSelectionState.h" // nsRangeUpdater
 #include "nsAString.h"
 
+using namespace mozilla;
 
 DeleteNodeTxn::DeleteNodeTxn()
   : EditTxn(), mNode(), mParent(), mRefNode(), mRangeUpdater(nullptr)
@@ -42,7 +43,7 @@ DeleteNodeTxn::Init(nsEditor* aEditor, nsINode* aNode,
   NS_ENSURE_TRUE(aEditor && aNode, NS_ERROR_NULL_POINTER);
   mEditor = aEditor;
   mNode = aNode;
-  mParent = aNode->GetNodeParent();
+  mParent = aNode->GetParentNode();
 
   // do nothing if the node has a parent and it's read-only
   NS_ENSURE_TRUE(!mParent || mEditor->IsModifiableNode(mParent),
@@ -74,7 +75,9 @@ DeleteNodeTxn::DoTransaction()
     mRangeUpdater->SelAdjDeleteNode(mNode->AsDOMNode());
   }
 
-  return mParent->RemoveChild(mNode);
+  ErrorResult error;
+  mParent->RemoveChild(*mNode, error);
+  return error.ErrorCode();
 }
 
 NS_IMETHODIMP
@@ -88,9 +91,9 @@ DeleteNodeTxn::UndoTransaction()
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsresult res;
-  mParent->InsertBefore(mNode, mRefNode, &res);
-  return res;
+  ErrorResult error;
+  mParent->InsertBefore(*mNode, mRefNode, error);
+  return error.ErrorCode();
 }
 
 NS_IMETHODIMP
@@ -108,7 +111,9 @@ DeleteNodeTxn::RedoTransaction()
     mRangeUpdater->SelAdjDeleteNode(mNode->AsDOMNode());
   }
 
-  return mParent->RemoveChild(mNode);
+  ErrorResult error;
+  mParent->RemoveChild(*mNode, error);
+  return error.ErrorCode();
 }
 
 NS_IMETHODIMP
