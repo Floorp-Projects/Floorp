@@ -12,7 +12,6 @@ import org.mozilla.gecko.db.BrowserContract.ImageColumns;
 import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
-import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
@@ -55,7 +54,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     private final Uri mBookmarksUriWithProfile;
     private final Uri mParentsUriWithProfile;
     private final Uri mHistoryUriWithProfile;
-    private final Uri mHistoryExpireUriWithProfile;
     private final Uri mImagesUriWithProfile;
     private final Uri mCombinedUriWithProfile;
     private final Uri mDeletedHistoryUriWithProfile;
@@ -80,7 +78,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         mBookmarksUriWithProfile = appendProfile(Bookmarks.CONTENT_URI);
         mParentsUriWithProfile = appendProfile(Bookmarks.PARENTS_CONTENT_URI);
         mHistoryUriWithProfile = appendProfile(History.CONTENT_URI);
-        mHistoryExpireUriWithProfile = appendProfile(History.CONTENT_OLD_URI);
         mImagesUriWithProfile = appendProfile(Images.CONTENT_URI);
         mCombinedUriWithProfile = appendProfile(Combined.CONTENT_URI);
 
@@ -165,7 +162,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         // Using 15 as our scale parameter, we get a constant 15^2 = 225. Following this math,
         // frecencyScore = numVisits * max(1, 100 * 225 / (age*age + 225)). (See bug 704977)
         // We also give bookmarks an extra bonus boost by adding 100 points to their frecency score.
-        final String sortOrder = BrowserContract.getFrecencySortOrder(true, false);
+        final String age = "(" + Combined.DATE_LAST_VISITED + " - " + System.currentTimeMillis() + ") / 86400000";
+        final String sortOrder = "(CASE WHEN " + Combined.BOOKMARK_ID + " > -1 THEN 100 ELSE 0 END) + " +
+                                 Combined.VISITS + " * MAX(1, 100 * 225 / (" + age + "*" + age + " + 225)) DESC";
 
         Cursor c = cr.query(combinedUriWithLimit(limit),
                             projection,
@@ -284,12 +283,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                             History.DATE_LAST_VISITED + " DESC");
 
         return new LocalDBCursor(c);
-    }
-
-    public void expireHistory(ContentResolver cr, ExpirePriority priority) {
-        Uri url = mHistoryExpireUriWithProfile;
-        url = url.buildUpon().appendQueryParameter(BrowserContract.PARAM_EXPIRE_PRIORITY, priority.toString()).build();
-        cr.delete(url, null, null);
     }
 
     public void removeHistoryEntry(ContentResolver cr, int id) {
