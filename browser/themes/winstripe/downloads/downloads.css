@@ -112,10 +112,6 @@ richlistitem[type="download"]:first-child {
   padding: 0;
 }
 
-.downloadButton:-moz-focusring > .button-box {
-  outline: 1px -moz-dialogtext dotted;
-}
-
 /*** Highlighted list items ***/
 
 richlistitem[type="download"][state="1"]:hover {
