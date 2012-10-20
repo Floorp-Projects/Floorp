@@ -2295,7 +2295,9 @@ public class BrowserProvider extends ContentProvider {
                 selectionArgs, null, null, null);
 
         try {
-            values.put(History.DATE_MODIFIED, System.currentTimeMillis());
+            if (!values.containsKey(Bookmarks.DATE_MODIFIED)) {
+                values.put(Bookmarks.DATE_MODIFIED,  System.currentTimeMillis());
+            }
 
             boolean updatingUrl = values.containsKey(History.URL);
             String url = null;
