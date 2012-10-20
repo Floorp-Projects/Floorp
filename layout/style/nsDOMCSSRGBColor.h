@@ -8,18 +8,18 @@
 #ifndef nsDOMCSSRGBColor_h__
 #define nsDOMCSSRGBColor_h__
 
+#include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsIDOMNSRGBAColor.h"
-#include "nsCOMPtr.h"
 
-class nsIDOMCSSPrimitiveValue;
+class nsROCSSPrimitiveValue;
 
 class nsDOMCSSRGBColor : public nsIDOMNSRGBAColor {
 public:
-  nsDOMCSSRGBColor(nsIDOMCSSPrimitiveValue* aRed,
-                   nsIDOMCSSPrimitiveValue* aGreen,
-                   nsIDOMCSSPrimitiveValue* aBlue,
-                   nsIDOMCSSPrimitiveValue* aAlpha,
+  nsDOMCSSRGBColor(nsROCSSPrimitiveValue* aRed,
+                   nsROCSSPrimitiveValue* aGreen,
+                   nsROCSSPrimitiveValue* aBlue,
+                   nsROCSSPrimitiveValue* aAlpha,
                    bool aHasAlpha);
 
   virtual ~nsDOMCSSRGBColor(void);
@@ -30,11 +30,29 @@ public:
 
   bool HasAlpha() const { return mHasAlpha; }
 
+  // RGBColor webidl interface
+  nsROCSSPrimitiveValue* Red() const
+  {
+    return mRed;
+  }
+  nsROCSSPrimitiveValue* Green() const
+  {
+    return mGreen;
+  }
+  nsROCSSPrimitiveValue* Blue() const
+  {
+    return mBlue;
+  }
+  nsROCSSPrimitiveValue* Alpha() const
+  {
+    return mAlpha;
+  }
+
 private:
-  nsCOMPtr<nsIDOMCSSPrimitiveValue> mRed;
-  nsCOMPtr<nsIDOMCSSPrimitiveValue> mGreen;
-  nsCOMPtr<nsIDOMCSSPrimitiveValue> mBlue;
-  nsCOMPtr<nsIDOMCSSPrimitiveValue> mAlpha;
+  nsRefPtr<nsROCSSPrimitiveValue> mRed;
+  nsRefPtr<nsROCSSPrimitiveValue> mGreen;
+  nsRefPtr<nsROCSSPrimitiveValue> mBlue;
+  nsRefPtr<nsROCSSPrimitiveValue> mAlpha;
   bool mHasAlpha;
 };
 

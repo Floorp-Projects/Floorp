@@ -10,12 +10,13 @@
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsDOMCSSRGBColor.h"
 #include "nsContentUtils.h"
+#include "nsROCSSPrimitiveValue.h"
 #include "nsDOMClassInfoID.h"
 
-nsDOMCSSRGBColor::nsDOMCSSRGBColor(nsIDOMCSSPrimitiveValue* aRed,
-                                   nsIDOMCSSPrimitiveValue* aGreen,
-                                   nsIDOMCSSPrimitiveValue* aBlue,
-                                   nsIDOMCSSPrimitiveValue* aAlpha,
+nsDOMCSSRGBColor::nsDOMCSSRGBColor(nsROCSSPrimitiveValue* aRed,
+                                   nsROCSSPrimitiveValue* aGreen,
+                                   nsROCSSPrimitiveValue* aBlue,
+                                   nsROCSSPrimitiveValue* aAlpha,
                                    bool aHasAlpha)
   : mRed(aRed), mGreen(aGreen), mBlue(aBlue), mAlpha(aAlpha)
   , mHasAlpha(aHasAlpha)
