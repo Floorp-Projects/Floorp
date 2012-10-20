@@ -30,12 +30,12 @@ class Image;
 #include "imgIDecoderObserver.h"
 
 enum {
-  stateRequestStarted    = PR_BIT(0),
-  stateHasSize           = PR_BIT(1),
-  stateDecodeStopped     = PR_BIT(3),
-  stateFrameStopped      = PR_BIT(4),
-  stateRequestStopped    = PR_BIT(5),
-  stateBlockingOnload    = PR_BIT(6)
+  stateRequestStarted    = 1u << 0,
+  stateHasSize           = 1u << 1,
+  stateDecodeStopped     = 1u << 3,
+  stateFrameStopped      = 1u << 4,
+  stateRequestStopped    = 1u << 5,
+  stateBlockingOnload    = 1u << 6
 };
 
 class imgStatusTrackerObserver : public imgIDecoderObserver,

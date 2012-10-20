@@ -256,7 +256,7 @@ bool nsVoidArray::GrowArrayBy(int32_t aGrowBy)
     else
     {
       PR_CEILING_LOG2(newSize, newSize);
-      newCapacity = CAPACITYOF_IMPL(PR_BIT(newSize));
+      newCapacity = CAPACITYOF_IMPL(1u << newSize);
     }
   }
   // frees old mImpl IF this succeeds
