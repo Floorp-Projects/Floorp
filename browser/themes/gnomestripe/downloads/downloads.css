@@ -33,6 +33,10 @@
   margin: 1em;
 }
 
+#downloadsHistory:-moz-focusring > .button-box {
+  outline: 1px -moz-dialogtext dotted;
+}
+
 /*** List items ***/
 
 richlistitem[type="download"] {
@@ -55,7 +59,7 @@ richlistitem[type="download"]:last-child {
 }
 
 #downloadsListBox:-moz-focusring > richlistitem[type="download"][selected] {
-  outline: 1px #999 dotted;
+  outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
   -moz-outline-radius: 3px;
 }
@@ -98,6 +102,9 @@ richlistitem[type="download"]:last-child {
   padding: 0;
 }
 
+.downloadButton:-moz-focusring > .button-box {
+  outline: 1px -moz-dialogtext dotted;
+}
 /*** Highlighted list items ***/
 
 richlistitem[type="download"][state="1"]:hover {
@@ -171,11 +178,6 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
 
 #downloads-indicator-icon {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar-small.png"),
-                              0, 16, 16, 0) center no-repeat;
-}
-
-#downloads-indicator-icon:-moz-lwtheme-brighttext {
-  background: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"),
                               0, 16, 16, 0) center no-repeat;
 }
 

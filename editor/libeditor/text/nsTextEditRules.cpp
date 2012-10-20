@@ -931,7 +931,7 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
     nsCOMPtr<nsIDOMElement> theRoot = do_QueryInterface(mEditor->GetRoot());
     NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
     
-    nsCOMPtr<nsIDOMNodeList> nodeList;
+    nsCOMPtr<nsIDOMHTMLCollection> nodeList;
     res = theRoot->GetElementsByTagName(NS_LITERAL_STRING("br"),
                                         getter_AddRefs(nodeList));
     NS_ENSURE_SUCCESS(res, res);
@@ -946,10 +946,12 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
         return NS_OK;  
       }
 
-      nsCOMPtr<nsIContent> content = nodeList->GetNodeAt(0);
+      nsCOMPtr<nsIDOMNode> node;
+      nodeList->Item(0, getter_AddRefs(node));
+      nsCOMPtr<nsIContent> content = do_QueryInterface(node);
       MOZ_ASSERT(content);
       if (mEditor->IsMozEditorBogusNode(content)) {
-        mBogusNode = do_QueryInterface(content);
+        mBogusNode = node;
       } else {
         mBogusNode = nullptr;
       }

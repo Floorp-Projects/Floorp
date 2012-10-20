@@ -686,7 +686,6 @@ static const struct JSOption {
     uint32_t    flag;
 } js_options[] = {
     {"atline",          JSOPTION_ATLINE},
-    {"relimit",         JSOPTION_RELIMIT},
     {"strict",          JSOPTION_STRICT},
     {"werror",          JSOPTION_WERROR},
     {"allow_xml",       JSOPTION_ALLOW_XML},
@@ -1850,7 +1849,7 @@ main(int argc, char **argv, char **envp)
         nsresult rv = rtsvc->GetBackstagePass(getter_AddRefs(backstagePass));
         if (NS_FAILED(rv)) {
             fprintf(gErrFile, "+++ Failed to get backstage pass from rtsvc: %8x\n",
-                    rv);
+                    static_cast<uint32_t>(rv));
             return 1;
         }
 

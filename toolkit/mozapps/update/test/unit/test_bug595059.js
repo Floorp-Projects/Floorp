@@ -17,7 +17,6 @@ function run_test() {
               " and the update.errorCode = " + WRITE_ERROR);
 
   removeUpdateDirsAndFiles();
-  setUpdateChannel();
 
   let registrar = Components.manager.QueryInterface(AUS_Ci.nsIComponentRegistrar);
   registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),

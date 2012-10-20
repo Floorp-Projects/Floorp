@@ -742,22 +742,20 @@ ConvertToAtkAttributeSet(nsIPersistentProperties* aAttributes)
 AtkAttributeSet*
 GetAttributeSet(Accessible* aAccessible)
 {
-    nsCOMPtr<nsIPersistentProperties> attributes;
-    aAccessible->GetAttributes(getter_AddRefs(attributes));
-
-    if (attributes) {
-        // Deal with attributes that we only need to expose in ATK
-        if (aAccessible->State() & states::HASPOPUP) {
-          // There is no ATK state for haspopup, must use object attribute to expose the same info
-          nsAutoString oldValueUnused;
-          attributes->SetStringProperty(NS_LITERAL_CSTRING("haspopup"), NS_LITERAL_STRING("true"),
-                                        oldValueUnused);
-        }
-
-        return ConvertToAtkAttributeSet(attributes);
+  nsCOMPtr<nsIPersistentProperties> attributes = aAccessible->Attributes();
+  if (attributes) {
+    // There is no ATK state for haspopup, must use object attribute to expose
+    // the same info.
+    if (aAccessible->State() & states::HASPOPUP) {
+      nsAutoString unused;
+      attributes->SetStringProperty(NS_LITERAL_CSTRING("haspopup"),
+                                    NS_LITERAL_STRING("true"), unused);
     }
 
-    return nullptr;
+    return ConvertToAtkAttributeSet(attributes);
+  }
+
+  return nullptr;
 }
 
 AtkAttributeSet *

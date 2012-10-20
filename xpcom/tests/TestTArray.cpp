@@ -721,11 +721,11 @@ static bool test_swap() {
 
   // Swap two big auto arrays.
   {
-    const int size = 8192;
-    nsAutoTArray<int, size> a;
-    nsAutoTArray<int, size> b;
+    const unsigned size = 8192;
+    nsAutoTArray<unsigned, size> a;
+    nsAutoTArray<unsigned, size> b;
 
-    for (int i = 0; i < size; i++) {
+    for (unsigned i = 0; i < size; i++) {
       a.AppendElement(i);
       b.AppendElement(i + 1);
     }
@@ -741,7 +741,7 @@ static bool test_swap() {
     CHECK_EQ_INT(a.Length(), size);
     CHECK_EQ_INT(b.Length(), size);
 
-    for (int i = 0; i < size; i++) {
+    for (unsigned i = 0; i < size; i++) {
       CHECK_EQ_INT(a[i], i + 1);
       CHECK_EQ_INT(b[i], i);
     }

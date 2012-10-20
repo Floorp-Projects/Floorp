@@ -62,6 +62,7 @@ MOCHITEST_FILES := \
   test_sequence_wrapping.html \
   file_bug775543.html \
   test_bug788369.html \
+  test_bug742191.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \
@@ -74,9 +75,13 @@ include $(topsrcdir)/config/rules.mk
 
 $(CPPSRCS): ../%Binding.cpp: $(bindinggen_dependencies) \
                              ../%.webidl \
+                             TestExampleInterface-example \
                              $(NULL)
 	$(MAKE) -C .. $*Binding.h
 	$(MAKE) -C .. $*Binding.cpp
+
+TestExampleInterface-example:
+	$(MAKE) -C .. TestExampleInterface-example
 
 check::
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \

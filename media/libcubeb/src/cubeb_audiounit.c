@@ -7,7 +7,6 @@
 #undef NDEBUG
 #include <assert.h>
 #include <pthread.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <CoreServices/CoreServices.h>
 #include <AudioUnit/AudioUnit.h>
@@ -183,25 +182,25 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
 
   r = OpenAComponent(comp, &stm->unit);
   if (r != 0) {
-    fprintf(stderr, "cubeb_audiounit: FATAL: OpenAComponent returned %ld\n", (long) r);
+    cubeb_stream_destroy(stm);
+    return CUBEB_ERROR;
   }
-  assert(r == 0);
 
   input.inputProc = audio_unit_output_callback;
   input.inputProcRefCon = stm;
   r = AudioUnitSetProperty(stm->unit, kAudioUnitProperty_SetRenderCallback,
                            kAudioUnitScope_Global, 0, &input, sizeof(input));
   if (r != 0) {
-    fprintf(stderr, "cubeb_audiounit: FATAL: AudioUnitSetProperty(SetRenderCallback) returned %ld\n", (long) r);
+    cubeb_stream_destroy(stm);
+    return CUBEB_ERROR;
   }
-  assert(r == 0);
 
   r = AudioUnitSetProperty(stm->unit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input,
                            0, &ss, sizeof(ss));
   if (r != 0) {
-    fprintf(stderr, "cubeb_audiounit: FATAL: AudioUnitSetProperty(StreamFormat) returned %ld\n", (long) r);
+    cubeb_stream_destroy(stm);
+    return CUBEB_ERROR;
   }
-  assert(r == 0);
 
   buffer_size = ss.mSampleRate / 1000.0 * latency * ss.mBytesPerFrame / NBUFS;
   if (buffer_size % ss.mBytesPerFrame != 0) {
@@ -211,9 +210,9 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
 
   r = AudioUnitInitialize(stm->unit);
   if (r != 0) {
-    fprintf(stderr, "cubeb_audiounit: FATAL: AudioUnitInitialize returned %ld\n", (long) r);
+    cubeb_stream_destroy(stm);
+    return CUBEB_ERROR;
   }
-  assert(r == 0);
 
   *stream = stm;
 
@@ -227,14 +226,16 @@ cubeb_stream_destroy(cubeb_stream * stm)
 
   stm->shutdown = 1;
 
-  r = AudioOutputUnitStop(stm->unit);
-  assert(r == 0);
+  if (stm->unit) {
+    r = AudioOutputUnitStop(stm->unit);
+    assert(r == 0);
 
-  r = AudioUnitUninitialize(stm->unit);
-  assert(r == 0);
+    r = AudioUnitUninitialize(stm->unit);
+    assert(r == 0);
 
-  r = CloseComponent(stm->unit);
-  assert(r == 0);
+    r = CloseComponent(stm->unit);
+    assert(r == 0);
+  }
 
   r = pthread_mutex_destroy(&stm->mutex);
   assert(r == 0);

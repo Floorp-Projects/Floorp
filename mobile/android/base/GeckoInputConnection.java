@@ -509,8 +509,8 @@ class GeckoInputConnection
                 if (imm != null && imm.isFullscreenMode()) {
                     int newStart;
                     int newEnd;
-                    if (hasCompositionString()) {
-                        Span span = getComposingSpan();
+                    Span span = getComposingSpan();
+                    if (span != null && hasCompositionString()) {
                         newStart = span.start;
                         newEnd = span.end;
                     } else {

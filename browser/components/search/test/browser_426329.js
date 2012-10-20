@@ -193,7 +193,7 @@ function test() {
   function testSearchHistory() {
     var textbox = searchBar._textbox;
     for (var i = 0; i < searchEntries.length; i++) {
-      let exists = textbox._formHistSvc.entryExists(textbox.searchParam, searchEntries[i]);
+      let exists = textbox._formHistSvc.entryExists(textbox.getAttribute("autocompletesearchparam"), searchEntries[i]);
       ok(exists, "form history entry '" + searchEntries[i] + "' should exist");
     }
     testAutocomplete();

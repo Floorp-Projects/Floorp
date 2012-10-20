@@ -19,6 +19,8 @@
 #include "nsJSON.h"
 #include "jsapi.h"
 
+#include "mozilla/dom/USSDReceivedEventBinding.h"
+
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 
 #define VOICECHANGE_EVENTNAME      NS_LITERAL_STRING("voicechange")
@@ -57,6 +59,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MobileConnection)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozMobileConnection)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMozMobileConnection)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozMobileConnection)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
@@ -80,6 +83,8 @@ MobileConnection::MobileConnection()
   // for it explicitly below.
   if (!mProvider) {
     NS_WARNING("Could not acquire nsIMobileConnectionProvider!");
+  } else {
+    mProvider->RegisterMobileConnectionMsg();
   }
 }
 
@@ -157,13 +162,15 @@ MobileConnection::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, kUssdReceivedTopic)) {
-    nsString ussd;
-    ussd.Assign(aData);
-    nsRefPtr<USSDReceivedEvent> event = USSDReceivedEvent::Create(ussd);
+    mozilla::dom::USSDReceivedEventDict dict;
+    bool ok = dict.Init(nsDependentString(aData));
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+    nsRefPtr<USSDReceivedEvent> event =
+      USSDReceivedEvent::Create(dict.message, dict.sessionEnded);
     NS_ASSERTION(event, "This should never fail!");
 
-    nsresult rv =
-      event->Dispatch(ToIDOMEventTarget(), USSDRECEIVED_EVENTNAME);
+    nsresult rv = event->Dispatch(ToIDOMEventTarget(), USSDRECEIVED_EVENTNAME);
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }

@@ -353,7 +353,7 @@ txMozillaXMLOutput::endElement()
 
         // Check to make sure that script hasn't inserted the node somewhere
         // else in the tree
-        if (!mCurrentNode->GetNodeParent()) {
+        if (!mCurrentNode->GetParentNode()) {
             parent->AppendChildTo(mNonAddedNode, true);
         }
         mNonAddedNode = nullptr;

@@ -451,6 +451,10 @@ nsDiskCacheStreamIO::Flush()
                 NS_WARNING("cacheMap->DeleteStorage() failed.");
                 return rv;
             }
+            if (mFD) {
+                PR_Close(mFD);
+                mFD = nullptr;
+            }
         }
 
         // flush buffer to block files

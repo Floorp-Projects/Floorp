@@ -3078,11 +3078,32 @@ class LPhi : public LInstruction
     }
 };
 
+class LIn : public LCallInstructionHelper<1, BOX_PIECES+1, 0>
+{
+  public:
+    LIR_HEADER(In);
+    LIn(const LAllocation &rhs) {
+        setOperand(RHS, rhs);
+    }
+
+    const LAllocation *lhs() {
+        return getOperand(LHS);
+    }
+    const LAllocation *rhs() {
+        return getOperand(RHS);
+    }
+
+    static const size_t LHS = 0;
+    static const size_t RHS = BOX_PIECES;
+};
+
 class LInstanceOfO : public LInstructionHelper<1, 2, 2>
 {
   public:
     LIR_HEADER(InstanceOfO);
-    LInstanceOfO(const LAllocation &lhs, const LAllocation &rhs, const LDefinition &temp, const LDefinition &temp2) {
+    LInstanceOfO(const LAllocation &lhs, const LAllocation &rhs,
+                 const LDefinition &temp, const LDefinition &temp2)
+    {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp);

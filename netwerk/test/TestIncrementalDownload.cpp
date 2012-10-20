@@ -57,7 +57,8 @@ NS_IMETHODIMP
 FetchObserver::OnStopRequest(nsIRequest *request, nsISupports *context,
                              nsresult status)
 {
-  printf("FetchObserver::OnStopRequest [status=%x]\n", status);
+  printf("FetchObserver::OnStopRequest [status=%x]\n",
+         static_cast<uint32_t>(status));
 
   QuitPumpingEvents();
   return NS_OK;
@@ -121,7 +122,8 @@ main(int argc, char **argv)
 
   rv = DoIncrementalFetch(argv[1], argv[2], chunkSize, interval);
   if (NS_FAILED(rv))
-    fprintf(stderr, "ERROR: DoIncrementalFetch failed [%x]\n", rv);
+    fprintf(stderr, "ERROR: DoIncrementalFetch failed [%x]\n",
+            static_cast<uint32_t>(rv));
 
   NS_ShutdownXPCOM(nullptr);
   return 0;

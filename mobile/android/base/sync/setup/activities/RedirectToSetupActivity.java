@@ -4,13 +4,13 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.setup.Constants;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
-public class RedirectToSetupActivity extends Activity {
+public class RedirectToSetupActivity extends SyncActivity {
   public static final String LOG_TAG = "RedirectToSetupActivity";
+
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);

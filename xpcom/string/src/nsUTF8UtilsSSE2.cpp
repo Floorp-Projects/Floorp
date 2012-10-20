@@ -37,9 +37,9 @@ LossyConvertEncoding16to8::write_sse2(const PRUnichar* aSource,
     source4 = _mm_and_si128(source4, vectmask);
 
 
-    // Pack the source data.  SSE2 views this as a saturating uint16 to
-    // uint8 conversion, but since we masked off the high-order byte of every
-    // uint16, we're really just grabbing the low-order bytes of source1 and
+    // Pack the source data.  SSE2 views this as a saturating uint16_t to
+    // uint8_t conversion, but since we masked off the high-order byte of every
+    // uint16_t, we're really just grabbing the low-order bytes of source1 and
     // source2.
     __m128i packed1 = _mm_packus_epi16(source1, source2);
     __m128i packed2 = _mm_packus_epi16(source3, source4);

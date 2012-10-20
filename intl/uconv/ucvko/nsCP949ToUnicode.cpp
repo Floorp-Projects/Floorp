@@ -28,7 +28,7 @@ static const uint16_t g_utCP949NoKSCHangulMapping[] = {
 };
 
 static const uRange g_CP949Ranges[] = {
-  { 0x00, 0x7E },
+  { 0x00, 0x7F },
   { 0xA4, 0xA4 },   // 8byte seq. for Hangul syllables not available
                     // in pre-composed form in KS X 1001
   { 0xA1, 0xFE },
@@ -37,7 +37,7 @@ static const uRange g_CP949Ranges[] = {
 };
 
 static const uint16_t *g_CP949MappingTableSet [] ={
-  g_ucvko_AsciiMapping,
+  g_ASCIIMappingTable,
   g_HangulNullMapping,
   g_utKSC5601Mapping,
   g_utCP949NoKSCHangulMapping,

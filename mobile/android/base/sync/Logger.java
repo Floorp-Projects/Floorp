@@ -11,7 +11,8 @@ import java.util.Set;
 import org.mozilla.gecko.sync.log.writers.AndroidLevelCachingLogWriter;
 import org.mozilla.gecko.sync.log.writers.AndroidLogWriter;
 import org.mozilla.gecko.sync.log.writers.LogWriter;
-import org.mozilla.gecko.sync.log.writers.SingleTagLogWriter;
+import org.mozilla.gecko.sync.log.writers.SimpleTagLogWriter;
+import org.mozilla.gecko.sync.log.writers.ThreadLocalTagLogWriter;
 
 import android.util.Log;
 
@@ -19,30 +20,62 @@ import android.util.Log;
  * Logging helper class. Serializes all log operations (by synchronizing).
  */
 public class Logger {
-  public static final String LOG_TAG = "Logger";
-
-  public static final String GLOBAL_LOG_TAG = "FxSync";
+  public static final String LOGGER_TAG = "Logger";
+  public static final String DEFAULT_LOG_TAG = "GeckoLogger";
 
   // For extra debugging.
   public static boolean LOG_PERSONAL_INFORMATION = false;
 
   /**
-   * Current set of writers logged to.
+   * Allow each thread to use its own global log tag. This allows
+   * independent services to log as different sources.
+   *
+   * When your thread sets up logging, it should do something like the following:
+   *
+   *   Logger.setThreadLogTag("MyTag");
+   *
+   * The value is inheritable, so worker threads and such do not need to
+   * set the same log tag as their parent.
+   */
+  private static final InheritableThreadLocal<String> logTag = new InheritableThreadLocal<String>() {
+    @Override
+    protected String initialValue() {
+      return DEFAULT_LOG_TAG;
+    }
+  };
+
+  public static void setThreadLogTag(final String logTag) {
+    Logger.logTag.set(logTag);
+  }
+  public static String getThreadLogTag() {
+    return Logger.logTag.get();
+  }
+
+  /**
+   * Current set of writers to which we will log.
    * <p>
-   * We want logging to be available while running tests, so we set initialize
+   * We want logging to be available while running tests, so we initialize
    * this set statically.
    */
-  protected final static Set<LogWriter> logWriters = new LinkedHashSet<LogWriter>(Logger.defaultLogWriters());
+  protected final static Set<LogWriter> logWriters;
+  static {
+    final Set<LogWriter> defaultWriters = Logger.defaultLogWriters();
+    logWriters = new LinkedHashSet<LogWriter>(defaultWriters);
+  }
 
   /**
    * Default set of log writers to log to.
    */
-  protected final static Set<LogWriter> defaultLogWriters() {
-    final Set<LogWriter> defaultLogWriters = new LinkedHashSet<LogWriter>();
-    LogWriter log = new AndroidLogWriter();
-    LogWriter cache = new AndroidLevelCachingLogWriter(log);
+  public final static Set<LogWriter> defaultLogWriters() {
     final String processedPackage = GlobalConstants.BROWSER_INTENT_PACKAGE.replace("org.mozilla.", "");
-    LogWriter single = new SingleTagLogWriter(processedPackage, new SingleTagLogWriter(GLOBAL_LOG_TAG, cache));
+
+    final Set<LogWriter> defaultLogWriters = new LinkedHashSet<LogWriter>();
+
+    final LogWriter log = new AndroidLogWriter();
+    final LogWriter cache = new AndroidLevelCachingLogWriter(log);
+
+    final LogWriter single = new SimpleTagLogWriter(processedPackage, new ThreadLocalTagLogWriter(Logger.logTag, cache));
+
     defaultLogWriters.add(single);
     return defaultLogWriters;
   }
@@ -51,11 +84,15 @@ public class Logger {
     logWriters.add(logWriter);
   }
 
+  public static synchronized void startLoggingToWriters(Set<LogWriter> writers) {
+    logWriters.addAll(writers);
+  }
+
   public static synchronized void stopLoggingTo(LogWriter logWriter) {
     try {
       logWriter.close();
     } catch (Exception e) {
-      Log.e(LOG_TAG, "Got exception closing and removing LogWriter " + logWriter + ".", e);
+      Log.e(LOGGER_TAG, "Got exception closing and removing LogWriter " + logWriter + ".", e);
     }
     logWriters.remove(logWriter);
   }
@@ -65,7 +102,7 @@ public class Logger {
       try {
         logWriter.close();
       } catch (Exception e) {
-        Log.e(LOG_TAG, "Got exception closing and removing LogWriter " + logWriter + ".", e);
+        Log.e(LOGGER_TAG, "Got exception closing and removing LogWriter " + logWriter + ".", e);
       }
     }
     logWriters.clear();
@@ -89,92 +126,92 @@ public class Logger {
     return false;
   }
 
-  public static void error(String logTag, String message) {
-    Logger.error(logTag, message, null);
+  public static void error(String tag, String message) {
+    Logger.error(tag, message, null);
   }
 
-  public static void warn(String logTag, String message) {
-    Logger.warn(logTag, message, null);
+  public static void warn(String tag, String message) {
+    Logger.warn(tag, message, null);
   }
 
-  public static void info(String logTag, String message) {
-    Logger.info(logTag, message, null);
+  public static void info(String tag, String message) {
+    Logger.info(tag, message, null);
   }
 
-  public static void debug(String logTag, String message) {
-    Logger.debug(logTag, message, null);
+  public static void debug(String tag, String message) {
+    Logger.debug(tag, message, null);
   }
 
-  public static void trace(String logTag, String message) {
-    Logger.trace(logTag, message, null);
+  public static void trace(String tag, String message) {
+    Logger.trace(tag, message, null);
   }
 
-  public static void pii(String logTag, String message) {
+  public static void pii(String tag, String message) {
     if (LOG_PERSONAL_INFORMATION) {
-      Logger.debug(logTag, "$$PII$$: " + message);
+      Logger.debug(tag, "$$PII$$: " + message);
     }
   }
 
-  public static synchronized void error(String logTag, String message, Throwable error) {
+  public static synchronized void error(String tag, String message, Throwable error) {
     Iterator<LogWriter> it = logWriters.iterator();
     while (it.hasNext()) {
       LogWriter writer = it.next();
       try {
-        writer.error(logTag, message, error);
+        writer.error(tag, message, error);
       } catch (Exception e) {
-        Log.e(LOG_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
+        Log.e(LOGGER_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
         it.remove();
       }
     }
   }
 
-  public static synchronized void warn(String logTag, String message, Throwable error) {
+  public static synchronized void warn(String tag, String message, Throwable error) {
     Iterator<LogWriter> it = logWriters.iterator();
     while (it.hasNext()) {
       LogWriter writer = it.next();
       try {
-        writer.warn(logTag, message, error);
+        writer.warn(tag, message, error);
       } catch (Exception e) {
-        Log.e(LOG_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
+        Log.e(LOGGER_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
         it.remove();
       }
     }
   }
 
-  public static synchronized void info(String logTag, String message, Throwable error) {
+  public static synchronized void info(String tag, String message, Throwable error) {
     Iterator<LogWriter> it = logWriters.iterator();
     while (it.hasNext()) {
       LogWriter writer = it.next();
       try {
-        writer.info(logTag, message, error);
+        writer.info(tag, message, error);
       } catch (Exception e) {
-        Log.e(LOG_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
+        Log.e(LOGGER_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
         it.remove();
       }
     }
   }
 
-  public static synchronized void debug(String logTag, String message, Throwable error) {
+  public static synchronized void debug(String tag, String message, Throwable error) {
     Iterator<LogWriter> it = logWriters.iterator();
     while (it.hasNext()) {
       LogWriter writer = it.next();
       try {
-        writer.debug(logTag, message, error);
+        writer.debug(tag, message, error);
       } catch (Exception e) {
-        Log.e(LOG_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
+        Log.e(LOGGER_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
         it.remove();
       }
     }
   }
 
-  public static synchronized void trace(String logTag, String message, Throwable error) {
+  public static synchronized void trace(String tag, String message, Throwable error) {
     Iterator<LogWriter> it = logWriters.iterator();
     while (it.hasNext()) {
       LogWriter writer = it.next();
       try {
-        writer.trace(logTag, message, error);
+        writer.trace(tag, message, error);
       } catch (Exception e) {
-        Log.e(LOG_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
+        Log.e(LOGGER_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
         it.remove();
       }
     }

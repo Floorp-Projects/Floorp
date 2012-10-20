@@ -7,8 +7,8 @@ const inString = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\
 const expectedString = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\xa0\xa4\xac\xad\xbb\xbf\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2";
 
 const aliases = [ "ISO-8859-6", "iso-8859-6", "iso_8859-6", "iso8859-6",
-		  "arabic", "iso-ir-127", "ecma-114", "asmo-708",
-		  "csisolatinarabic", "iso88596" ];
+                  "arabic", "iso-ir-127", "ecma-114", "asmo-708",
+                  "csisolatinarabic", "iso88596", "iso_8859-6:1987" ];
 
 function run_test() {
   testEncodeAliases();

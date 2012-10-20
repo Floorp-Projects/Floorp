@@ -6,10 +6,16 @@
 #define NSSBridge_h
 
 #include "nss.h"
-#include "seccomon.h"
-#include "secmodt.h"
-#include "secutil.h"
 #include "pk11func.h"
+#include "pk11sdr.h"
+#include "seccomon.h"
+#include "secitem.h"
+#include "secmodt.h"
+
+#include "prerror.h"
+#include "plstr.h"
+#include "prmem.h"
+
 #include <jni.h>
 
 int setup_nss_functions(void *nss_handle, void *nssutil_handle, void *plc_handle);

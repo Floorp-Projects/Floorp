@@ -118,13 +118,15 @@ public:
   virtual void WillPaintWindow(nsIWidget* aWidget, bool aWillSendDidPaint) { }
 
   /**
-   * Paint the specified region of the window. If aSentWillPaint is true,
-   * then WillPaintWindow has already been called. If aWillSendDidPaint is true,
-   * then a call to DidPaintWindow will be made afterwards. Returns true if the
+   * Paint the specified region of the window. Returns true if the
    * notification was handled.
    */
-  virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion,
-                           bool aSentWillPaint, bool aWillSendDidPaint) { return false; }
+  enum {
+    SENT_WILL_PAINT = 1 << 0, /* WillPaintWindow has already been called */
+    WILL_SEND_DID_PAINT = 1 << 1, /* A call to DidPaintWindow will be made afterwards. */
+    PAINT_IS_ALTERNATE = 1 << 2 /* We are painting something other than the normal widget */
+  };
+  virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion, uint32_t aFlags) { return false; }
 
   /**
    * On some platforms, indicates that a paint occurred.

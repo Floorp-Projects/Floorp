@@ -10,7 +10,6 @@ function run_test() {
   do_register_cleanup(end_test);
 
   removeUpdateDirsAndFiles();
-  setUpdateChannel();
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   var patches = getLocalPatchString(null, null, null, null, null, null,

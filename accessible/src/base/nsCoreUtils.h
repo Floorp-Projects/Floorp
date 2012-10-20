@@ -16,7 +16,6 @@
 #include "nsTArray.h"
 
 class nsRange;
-class nsIDOMNode;
 class nsIFrame;
 class nsIDocShellTreeItem;
 class nsITreeColumn;
@@ -169,7 +168,8 @@ public:
                                           nsIPresShell::ScrollAxis *aHorizontal);
 
   /**
-   * Returns coordinates relative screen for the top level window.
+   * Returns coordinates in device pixels relative screen for the top level
+   * window.
    *
    * @param aNode  the DOM node hosted in the window.
    */
@@ -208,12 +208,6 @@ public:
   {
     return aNode->OwnerDoc()->GetShell();
   }
-
-  /**
-   * Return document node for the given document shell tree item.
-   */
-  static already_AddRefed<nsIDOMNode>
-    GetDOMNodeForContainer(nsIDocShellTreeItem *aContainer);
 
   /**
    * Get the ID for an element, in some types of XML this may not be the ID attribute

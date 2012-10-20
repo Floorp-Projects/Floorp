@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795785
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=795785">Mozilla Bug 795785</a>
 <div id="display">
-  <textarea id="textarea" style="overflow: hidden; height: 3em; width: 5em;"></textarea>
+  <textarea id="textarea" style="overflow: hidden; height: 3em; width: 5em; word-wrap: normal;"></textarea>
   <div id="div" contenteditable style="overflow: hidden; height: 3em; width: 5em;"></div>
 </div>
 <div id="content" style="display: none">
@@ -38,7 +38,7 @@ function hitEventLoop(aFunc, aTimes)
   }
 }
 
-function doEnterKeyAndArrowKeyTest(aElement, aElementDescription, aCallback)
+function doKeyEventTest(aElement, aElementDescription, aCallback)
 {
   aElement.focus();
   aElement.scrollTop = 0;
@@ -71,7 +71,29 @@ function doEnterKeyAndArrowKeyTest(aElement, aElementDescription, aCallback)
         hitEventLoop(function () {
           is(aElement.scrollTop, scrollTop,
              aElementDescription + " was not scrolled by down key events");
-          aCallback();
+          var longWord = "aaaaaaaaaaaaaaaaaaaa";
+          sendString(longWord);
+          hitEventLoop(function () {
+            isnot(aElement.scrollLeft, 0,
+                  aElementDescription + " was not scrolled by typing long word");
+            var scrollLeft = aElement.scrollLeft;
+            var i;
+            for (i = 0; i < longWord.length; i++) {
+              synthesizeKey("VK_LEFT", { });
+            }
+            hitEventLoop(function () {
+              isnot(aElement.scrollLeft, scrollLeft,
+                    aElementDescription + " was not scrolled by left key events");
+              for (i = 0; i < longWord.length; i++) {
+                synthesizeKey("VK_RIGHT", { });
+              }
+              hitEventLoop(function () {
+                is(aElement.scrollLeft, scrollLeft,
+                   aElementDescription + " was not scrolled by right key events");
+                aCallback();
+              }, 20);
+            }, 20);
+          }, 20);
         }, 20);
       }, 20);
     }, 20);
@@ -124,10 +146,10 @@ function doCompositionTest(aElement, aElementDescription, aCallback)
 
 function runTests()
 {
-  doEnterKeyAndArrowKeyTest(textarea, "textarea",
+  doKeyEventTest(textarea, "textarea",
     function () {
       textarea.value = "";
-      doEnterKeyAndArrowKeyTest(div, "div (contenteditable)",
+      doKeyEventTest(div, "div (contenteditable)",
         function () {
           div.innerHTML = "";
           doCompositionTest(textarea, "textarea",

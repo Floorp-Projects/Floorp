@@ -124,14 +124,8 @@ MOZ_UNICHARUTIL_LIBS = $(LIBXUL_DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFI
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)
 
 ifdef _MSC_VER
-ifdef .PYMAKE
-PYCOMMANDPATH += $(topsrcdir)/build
-CC_WRAPPER ?= %cl InvokeClWithDependencyGeneration
-CXX_WRAPPER ?= %cl InvokeClWithDependencyGeneration
-else
 CC_WRAPPER ?= $(PYTHON) -O $(topsrcdir)/build/cl.py
 CXX_WRAPPER ?= $(PYTHON) -O $(topsrcdir)/build/cl.py
-endif # .PYMAKE
 endif # _MSC_VER
 
 CC := $(CC_WRAPPER) $(CC)
@@ -829,3 +823,5 @@ export CL_INCLUDES_PREFIX
 ifeq ($(MOZ_WIDGET_GTK),2)
 MOZ_GTK2_CFLAGS := -I$(topsrcdir)/widget/gtk2/compat $(MOZ_GTK2_CFLAGS)
 endif
+
+DEFINES += -DNO_NSPR_10_SUPPORT

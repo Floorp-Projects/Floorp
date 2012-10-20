@@ -45,6 +45,7 @@
 #include "nsContentAreaDragDrop.h"
 #include "nsContentList.h"
 #include "nsBox.h"
+#include "nsIFrameTraversal.h"
 #include "nsLayoutCID.h"
 #include "nsStyleSheetService.h"
 #include "nsFocusManager.h"
@@ -243,6 +244,10 @@ static void Shutdown();
 #include "mozilla/dom/alarm/AlarmHalService.h"
 #include "mozilla/dom/time/TimeService.h"
 
+#ifdef MOZ_WIDGET_GONK
+#include "GonkGPSGeolocationProvider.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::file;
@@ -318,6 +323,11 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIAlarmHalService,
                                          AlarmHalService::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITimeService,
                                          TimeService::GetInstance)
+
+#ifdef MOZ_WIDGET_GONK
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIGeolocationProvider,
+                                         GonkGPSGeolocationProvider::GetSingleton)
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -435,6 +445,8 @@ nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult);
 nsresult NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult);
 
+nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
+
 nsresult NS_NewDomSelection(nsISelection** aResult);
 nsresult NS_NewContentViewer(nsIContentViewer** aResult);
 nsresult NS_NewGenRegularIterator(nsIContentIterator** aResult);
@@ -489,6 +501,7 @@ MAKE_CTOR(CreateNewFrameUtil,             nsIFrameUtil,                NS_NewFra
 MAKE_CTOR(CreateNewLayoutDebugger,        nsILayoutDebugger,           NS_NewLayoutDebugger)
 #endif
 
+MAKE_CTOR(CreateNewFrameTraversal,      nsIFrameTraversal,      NS_CreateFrameTraversal)
 MAKE_CTOR(CreateNewPresShell,           nsIPresShell,           NS_NewPresShell)
 MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
 
@@ -683,6 +696,7 @@ Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID,
 NS_DEFINE_NAMED_CID(NS_FRAME_UTIL_CID);
 NS_DEFINE_NAMED_CID(NS_LAYOUT_DEBUGGER_CID);
 #endif
+NS_DEFINE_NAMED_CID(NS_FRAMETRAVERSAL_CID);
 NS_DEFINE_NAMED_CID(NS_PRESSHELL_CID);
 NS_DEFINE_NAMED_CID(NS_BOXOBJECT_CID);
 #ifdef MOZ_XUL
@@ -829,6 +843,9 @@ NS_DEFINE_NAMED_CID(OSFILECONSTANTSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_ALARMHALSERVICE_CID);
 NS_DEFINE_NAMED_CID(TCPSOCKETCHILD_CID);
 NS_DEFINE_NAMED_CID(NS_TIMESERVICE_CID);
+#ifdef MOZ_WIDGET_GONK
+NS_DEFINE_NAMED_CID(GONK_GPS_GEOLOCATION_PROVIDER_CID);
+#endif
 
 static nsresult
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
@@ -965,6 +982,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_FRAME_UTIL_CID, false, NULL, CreateNewFrameUtil },
   { &kNS_LAYOUT_DEBUGGER_CID, false, NULL, CreateNewLayoutDebugger },
 #endif
+  { &kNS_FRAMETRAVERSAL_CID, false, NULL, CreateNewFrameTraversal },
   { &kNS_PRESSHELL_CID, false, NULL, CreateNewPresShell },
   { &kNS_BOXOBJECT_CID, false, NULL, CreateNewBoxObject },
 #ifdef MOZ_XUL
@@ -1108,6 +1126,9 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_ALARMHALSERVICE_CID, false, NULL, nsIAlarmHalServiceConstructor },
   { &kTCPSOCKETCHILD_CID, false, NULL, TCPSocketChildConstructor },
   { &kNS_TIMESERVICE_CID, false, NULL, nsITimeServiceConstructor },
+#ifdef MOZ_WIDGET_GONK
+  { &kGONK_GPS_GEOLOCATION_PROVIDER_CID, false, NULL, nsIGeolocationProviderConstructor },
+#endif
   { NULL }
 };
 
@@ -1252,6 +1273,9 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { ALARMHALSERVICE_CONTRACTID, &kNS_ALARMHALSERVICE_CID },
   { "@mozilla.org/tcp-socket-child;1", &kTCPSOCKETCHILD_CID },
   { TIMESERVICE_CONTRACTID, &kNS_TIMESERVICE_CID },
+#ifdef MOZ_WIDGET_GONK
+  { GONK_GPS_GEOLOCATION_PROVIDER_CONTRACTID, &kGONK_GPS_GEOLOCATION_PROVIDER_CID },
+#endif
   { NULL }
 };
 

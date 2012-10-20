@@ -11,6 +11,7 @@
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 
+#include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
 #include "nsDOMFile.h"
 #include "nsThreadUtils.h"
@@ -53,16 +54,31 @@ class MediaEngineWebRTCVideoSource : public MediaEngineVideoSource,
                                      public nsRunnable
 {
 public:
-  static const int DEFAULT_VIDEO_FPS = 30;
+  static const int DEFAULT_VIDEO_FPS = 60;
   static const int DEFAULT_MIN_VIDEO_FPS = 10;
 
   // ViEExternalRenderer.
   virtual int FrameSizeChange(unsigned int, unsigned int, unsigned int);
   virtual int DeliverFrame(unsigned char*, int, uint32_t, int64_t);
 
-  MediaEngineWebRTCVideoSource(webrtc::VideoEngine* videoEnginePtr,
-    int index, int aMinFps = DEFAULT_MIN_VIDEO_FPS);
-  ~MediaEngineWebRTCVideoSource();
+  MediaEngineWebRTCVideoSource(webrtc::VideoEngine* aVideoEnginePtr,
+    int aIndex, int aMinFps = DEFAULT_MIN_VIDEO_FPS)
+    : mVideoEngine(aVideoEnginePtr)
+    , mCaptureIndex(aIndex)
+    , mCapabilityChosen(false)
+    , mWidth(640)
+    , mHeight(480)
+    , mLastEndTime(0)
+    , mMonitor("WebRTCCamera.Monitor")
+    , mFps(DEFAULT_VIDEO_FPS)
+    , mMinFps(aMinFps)
+    , mInitDone(false)
+    , mInSnapshotMode(false)
+    , mSnapshotPath(NULL) {
+    mState = kReleased;
+    Init();
+  }
+  ~MediaEngineWebRTCVideoSource() { Shutdown(); }
 
   virtual void GetName(nsAString&);
   virtual void GetUUID(nsAString&);
@@ -72,6 +88,7 @@ public:
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop();
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
+  virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime);
 
   NS_DECL_ISUPPORTS
 
@@ -114,8 +131,8 @@ private:
   bool mCapabilityChosen;
   int mWidth, mHeight;
   TrackID mTrackID;
+  TrackTicks mLastEndTime;
 
-  MediaEngineState mState;
   mozilla::ReentrantMonitor mMonitor; // Monitor for processing WebRTC frames.
   SourceMediaStream* mSource;
 
@@ -125,6 +142,7 @@ private:
   bool mInSnapshotMode;
   nsString* mSnapshotPath;
 
+  nsRefPtr<layers::Image> mImage;
   nsRefPtr<layers::ImageContainer> mImageContainer;
 
   PRLock* mSnapshotLock;
@@ -148,15 +166,12 @@ public:
     , mMonitor("WebRTCMic.Monitor")
     , mCapIndex(aIndex)
     , mChannel(-1)
-    , mInitDone(false)
-    , mState(kReleased) {
-
-    mVoEBase = webrtc::VoEBase::GetInterface(mVoiceEngine);
+    , mInitDone(false) {
+    mState = kReleased;
     mDeviceName.Assign(NS_ConvertUTF8toUTF16(name));
     mDeviceUUID.Assign(NS_ConvertUTF8toUTF16(uuid));
-    mInitDone = true;
+    Init();
   }
-
   ~MediaEngineWebRTCAudioSource() { Shutdown(); }
 
   virtual void GetName(nsAString&);
@@ -167,6 +182,7 @@ public:
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop();
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
+  virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime);
 
   // VoEMediaProcess.
   void Process(const int channel, const webrtc::ProcessingTypes type,
@@ -192,7 +208,6 @@ private:
   int mChannel;
   TrackID mTrackID;
   bool mInitDone;
-  MediaEngineState mState;
 
   nsString mDeviceName;
   nsString mDeviceUUID;
@@ -204,11 +219,15 @@ class MediaEngineWebRTC : public MediaEngine
 {
 public:
   MediaEngineWebRTC()
-  : mVideoEngine(NULL)
+  : mMutex("mozilla::MediaEngineWebRTC")
+  , mVideoEngine(NULL)
   , mVoiceEngine(NULL)
   , mVideoEngineInit(false)
-  , mAudioEngineInit(false) {}
-
+  , mAudioEngineInit(false)
+  {
+    mVideoSources.Init();
+    mAudioSources.Init();
+  }
   ~MediaEngineWebRTC() { Shutdown(); }
 
   // Clients should ensure to clean-up sources video/audio sources
@@ -219,12 +238,20 @@ public:
   virtual void EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSource> >*);
 
 private:
+  Mutex mMutex;
+  // protected with mMutex:
+
   webrtc::VideoEngine* mVideoEngine;
   webrtc::VoiceEngine* mVoiceEngine;
 
   // Need this to avoid unneccesary WebRTC calls while enumerating.
   bool mVideoEngineInit;
   bool mAudioEngineInit;
+
+  // Store devices we've already seen in a hashtable for quick return.
+  // Maps UUID to MediaEngineSource (one set for audio, one for video).
+  nsRefPtrHashtable<nsStringHashKey, MediaEngineWebRTCVideoSource > mVideoSources;
+  nsRefPtrHashtable<nsStringHashKey, MediaEngineWebRTCAudioSource > mAudioSources;
 };
 
 }

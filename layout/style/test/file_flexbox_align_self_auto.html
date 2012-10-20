@@ -49,7 +49,7 @@ var ok = parent.ok;
  * Utility function for getting computed style of "align-self":
  */
 function getComputedAlignSelf(elem) {
-  return window.getComputedStyle(elem, "").MozAlignSelf;
+  return window.getComputedStyle(elem, "").alignSelf;
 }
 
 /*
@@ -63,18 +63,18 @@ function testGeneralNode(elem) {
      "if we haven't explicitly set any style on the parent");
 
   // Test value after setting align-self explicitly to "auto"
-  elem.style.MozAlignSelf = "auto";
+  elem.style.alignSelf = "auto";
   is(getComputedAlignSelf(elem), "stretch",
      "computed value of 'align-self: auto' should be 'stretch', " +
      "if we haven't explicitly set any style on the parent");
-  elem.style.MozAlignSelf = ""; // clean up
+  elem.style.alignSelf = ""; // clean up
 
   // Test value after setting align-self explicitly to "inherit"
-  elem.style.MozAlignSelf = "inherit";
+  elem.style.alignSelf = "inherit";
   is(getComputedAlignSelf(elem), "stretch",
      "computed value of 'align-self: inherit' should be 'stretch', " +
      "if we haven't explicitly set any style on the parent");
-  elem.style.MozAlignSelf = ""; // clean up
+  elem.style.alignSelf = ""; // clean up
 }
 
 /*
@@ -88,30 +88,30 @@ function testNodeThatHasParent(elem) {
   // Test initial computed style when "align-items" has been set on our parent.
   // (elem's initial "align-self" value should be "auto", which should compute
   // to its parent's "align-items" value, which in this case is "center".)
-  elem.parentNode.style.MozAlignItems = "center";
+  elem.parentNode.style.alignItems = "center";
   is(getComputedAlignSelf(elem), "center",
      "initial computed value of 'align-self' should match parent's " +
      "specified 'align-items' value");
 
   // ...and now test computed style after setting "align-self" explicitly to
   // "auto" (with parent "align-items" still at "center")
-  elem.style.MozAlignSelf = "auto";
+  elem.style.alignSelf = "auto";
   is(getComputedAlignSelf(elem), "center",
      "computed value of 'align-self: auto' should match parent's " +
      "specified 'align-items' value");
 
-  elem.style.MozAlignSelf = ""; // clean up
-  elem.parentNode.style.MozAlignItems = ""; // clean up
+  elem.style.alignSelf = ""; // clean up
+  elem.parentNode.style.alignItems = ""; // clean up
 
   // Finally: test computed style after setting "align-self" to "inherit"
   // and leaving parent at its initial value (which should be "auto", which
   // should compute to "stretch")
-  elem.style.MozAlignSelf = "inherit";
+  elem.style.alignSelf = "inherit";
   is(getComputedAlignSelf(elem), "stretch",
      "computed value of 'align-self: inherit' should take parent's " +
      "computed 'align-self' value (which should be 'stretch', " +
      "if we haven't explicitly set any other style");
-  elem.style.MozAlignSelf = ""; // clean up
+  elem.style.alignSelf = ""; // clean up
  }
 
 /*
@@ -128,34 +128,34 @@ function testNodeThatHasGrandparent(elem) {
   // grandparent. The parent's "auto" value should resolve to "baseline", and
   // that's what our elem should inherit.
 
-  elem.style.MozAlignSelf = "inherit";
-  elem.parentNode.style.MozAlignSelf = "auto";
-  elem.parentNode.parentNode.style.MozAlignItems = "baseline";
+  elem.style.alignSelf = "inherit";
+  elem.parentNode.style.alignSelf = "auto";
+  elem.parentNode.parentNode.style.alignItems = "baseline";
 
   is(getComputedAlignSelf(elem), "baseline",
      "computed value of 'align-self:inherit' on node when parent has " +
      "'align-self:auto' and grandparent has 'align-items:baseline'")
 
   // clean up:
-  elem.style.MozAlignSelf = "";
-  elem.parentNode.style.MozAlignSelf = "";
-  elem.parentNode.parentNode.style.MozAlignItems = "";
+  elem.style.alignSelf = "";
+  elem.parentNode.style.alignSelf = "";
+  elem.parentNode.parentNode.style.alignItems = "";
 
   // Test computed "align-self" after we set it to "auto" on our node, set
   // "align-items" to "inherit" on its parent, and "align-items" to "baseline"
   // on its grandparent. The parent's "inherit" should compute to "baseline",
   // and our elem's "auto" value should resolve to that.
-  elem.style.MozAlignSelf = "auto";
-  elem.parentNode.style.MozAlignItems = "inherit";
-  elem.parentNode.parentNode.style.MozAlignItems = "baseline";
+  elem.style.alignSelf = "auto";
+  elem.parentNode.style.alignItems = "inherit";
+  elem.parentNode.parentNode.style.alignItems = "baseline";
   is(getComputedAlignSelf(elem), "baseline",
      "computed value of 'align-self:auto on node when parent has " +
      "'align-items:inherit' and grandparent has 'align-items:baseline'")
 
   // clean up:
-  elem.style.MozAlignSelf = "";
-  elem.parentNode.style.MozAlignItems = "";
-  elem.parentNode.parentNode.style.MozAlignItems = "";
+  elem.style.alignSelf = "";
+  elem.parentNode.style.alignItems = "";
+  elem.parentNode.parentNode.style.alignItems = "";
 }
 
 /*

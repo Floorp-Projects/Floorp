@@ -175,9 +175,11 @@ DeviceStorageRequestParent::PostSuccessEvent::CancelableRun() {
 DeviceStorageRequestParent::PostBlobSuccessEvent::PostBlobSuccessEvent(DeviceStorageRequestParent* aParent,
                                                                        DeviceStorageFile* aFile,
                                                                        uint32_t aLength,
-                                                                       nsACString& aMimeType)
+                                                                       nsACString& aMimeType,
+                                                                       uint64_t aLastModifiedDate)
   : CancelableRunnable(aParent)
   , mLength(aLength)
+  , mLastModificationDate(aLastModifiedDate)
   , mFile(aFile)
   , mMimeType(aMimeType)
 {
@@ -192,7 +194,7 @@ DeviceStorageRequestParent::PostBlobSuccessEvent::CancelableRun() {
   nsString mime;
   CopyASCIItoUTF16(mMimeType, mime);
 
-  nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(mFile->mPath, mime, mLength, mFile->mFile);
+  nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(mFile->mPath, mime, mLength, mFile->mFile, mLastModificationDate);
 
   ContentParent* cp = static_cast<ContentParent*>(mParent->Manager());
   BlobParent* actor = cp->GetOrCreateActorForBlob(blob);
@@ -245,6 +247,14 @@ DeviceStorageRequestParent::WriteFileEvent::CancelableRun()
   if (!mInputStream) {
     r = new PostErrorEvent(mParent, POST_ERROR_EVENT_UNKNOWN);
     NS_DispatchToMainThread(r);
+    return NS_OK;
+  }
+
+  bool check = false;
+  mFile->mFile->Exists(&check);
+  if (check) {
+    nsCOMPtr<PostErrorEvent> event = new PostErrorEvent(mParent, POST_ERROR_EVENT_FILE_EXISTS);
+    NS_DispatchToMainThread(event);
     return NS_OK;
   }
 
@@ -366,7 +376,15 @@ DeviceStorageRequestParent::ReadFileEvent::CancelableRun()
     return NS_OK;
   }
 
-  r = new PostBlobSuccessEvent(mParent, mFile, fileSize, mMimeType);
+  PRTime modDate;
+  rv = mFile->mFile->GetLastModifiedTime(&modDate);
+  if (NS_FAILED(rv)) {
+    r = new PostErrorEvent(mParent, POST_ERROR_EVENT_UNKNOWN);
+    NS_DispatchToMainThread(r);
+    return NS_OK;
+  }
+
+  r = new PostBlobSuccessEvent(mParent, mFile, fileSize, mMimeType, modDate);
   NS_DispatchToMainThread(r);
   return NS_OK;
 }

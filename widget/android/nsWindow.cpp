@@ -1009,7 +1009,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
                     AutoLayerManagerSetup
                       setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
 
-                    painted = mWidgetListener->PaintWindow(this, region, false, false);
+                    painted = mWidgetListener->PaintWindow(this, region, 0);
                 }
 
                 // XXX uhh.. we can't just ignore this because we no longer have
@@ -1029,7 +1029,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
                 static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nullptr))->
                     SetClippingRegion(nsIntRegion(boundsRect));
 
-                painted = mWidgetListener->PaintWindow(this, region, false, false);
+                painted = mWidgetListener->PaintWindow(this, region, 0);
                 break;
             }
 
@@ -1241,16 +1241,12 @@ nsWindow::OnSizeChanged(const gfxIntSize& aSize)
 {
     ALOG("nsWindow: %p OnSizeChanged [%d %d]", (void*)this, aSize.width, aSize.height);
 
-    SchedulePauseComposition();
-
     mBounds.width = aSize.width;
     mBounds.height = aSize.height;
 
     if (mWidgetListener) {
         mWidgetListener->WindowResized(this, aSize.width, aSize.height);
     }
-
-    ScheduleResumeComposition(aSize.width, aSize.height);
 }
 
 void
@@ -1421,6 +1417,10 @@ nsWindow::DispatchMultitouchEvent(nsTouchEvent &event, AndroidGeckoEvent *ae)
 
     event.modifiers = 0;
     event.time = ae->Time();
+    event.InitBasicModifiers(ae->IsCtrlPressed(),
+                             ae->IsAltPressed(),
+                             ae->IsShiftPressed(),
+                             ae->IsMetaPressed());
 
     int action = ae->Action() & AndroidMotionEvent::ACTION_MASK;
     if (action == AndroidMotionEvent::ACTION_UP ||
@@ -1956,6 +1956,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                                         ae->Offset() + ae->Count());
             selEvent.mLength = uint32_t(NS_ABS(ae->Count()));
             selEvent.mReversed = ae->Count() >= 0 ? false : true;
+            selEvent.mExpandToClusterBoundary = false;
 
             DispatchEvent(&selEvent);
         }

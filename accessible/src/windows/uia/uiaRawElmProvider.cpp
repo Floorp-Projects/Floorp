@@ -188,8 +188,7 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
     case UIA_AriaRolePropertyId: {
       nsAutoString xmlRoles;
 
-      nsCOMPtr<nsIPersistentProperties> attributes;
-      mAcc->GetAttributes(getter_AddRefs(attributes));
+      nsCOMPtr<nsIPersistentProperties> attributes = mAcc->Attributes();
       attributes->GetStringProperty(NS_LITERAL_CSTRING("xml-roles"), xmlRoles);
 
       if(!xmlRoles.IsEmpty()) {

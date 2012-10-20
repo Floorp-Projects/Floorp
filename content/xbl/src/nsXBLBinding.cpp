@@ -690,7 +690,7 @@ RealizeDefaultContent(nsISupports* aKey,
           return PL_DHASH_STOP;
         }
         nsIDocument *document = insParent->OwnerDoc();
-        nsCOMPtr<nsIDOMNode> clonedNode;
+        nsCOMPtr<nsINode> clonedNode;
         nsCOMArray<nsINode> nodesWithProperties;
         nsNodeUtils::Clone(defContent, true, document->NodeInfoManager(),
                            nodesWithProperties, getter_AddRefs(clonedNode));
@@ -806,7 +806,7 @@ nsXBLBinding::GenerateAnonymousContent()
     }
 
     if (hasContent || hasInsertionPoints) {
-      nsCOMPtr<nsIDOMNode> clonedNode;
+      nsCOMPtr<nsINode> clonedNode;
       nsCOMArray<nsINode> nodesWithProperties;
       nsNodeUtils::Clone(content, true, doc->NodeInfoManager(),
                          nodesWithProperties, getter_AddRefs(clonedNode));
@@ -1689,7 +1689,7 @@ nsINodeList*
 nsXBLBinding::GetAnonymousNodes()
 {
   if (mContent) {
-    return mContent->GetChildNodesList();
+    return mContent->ChildNodes();
   }
 
   if (mNextBinding)

@@ -15,6 +15,7 @@
 #include "nsIDOMDOMRequest.h"
 #include "nsDOMClassInfo.h"
 #include "nsContentUtils.h"
+#include "nsTArrayHelpers.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 
 USING_BLUETOOTH_NAMESPACE
@@ -118,8 +119,7 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
     nsIScriptContext* sc = GetContextForEventHandlers(&rv);
     if (sc) {
       rv =
-        StringArrayToJSArray(sc->GetNativeContext(),
-                             sc->GetNativeGlobal(), mUuids, &mJsUuids);
+        nsTArrayToJSArray(sc->GetNativeContext(), mUuids, &mJsUuids);
       if (NS_FAILED(rv)) {
         NS_WARNING("Cannot set JS UUIDs object!");
         return;
@@ -134,8 +134,7 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
     nsIScriptContext* sc = GetContextForEventHandlers(&rv);
     if (sc) {
       rv =
-        StringArrayToJSArray(sc->GetNativeContext(),
-                             sc->GetNativeGlobal(), mServices, &mJsServices);
+        nsTArrayToJSArray(sc->GetNativeContext(), mServices, &mJsServices);
       if (NS_FAILED(rv)) {
         NS_WARNING("Cannot set JS Services object!");
         return;

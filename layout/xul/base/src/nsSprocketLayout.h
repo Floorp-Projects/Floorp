@@ -110,8 +110,7 @@ protected:
                     bool& aFinished);
 
   void AlignChildren(nsIFrame* aBox,
-                     nsBoxLayoutState& aState,
-                     bool* aNeedsRedraw);
+                     nsBoxLayoutState& aState);
 
   virtual void ComputeChildSizes(nsIFrame* aBox, 
                          nsBoxLayoutState& aState, 

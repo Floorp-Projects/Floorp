@@ -6,10 +6,14 @@
  * The origin of this IDL file is
  * http://www.whatwg.org/specs/web-apps/current-work/#eventhandler
  *
- * © Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
+ * Â© Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
  * Opera Software ASA. You are granted a license to use, reproduce
  * and create derivative works of this document.
  */
 [TreatNonCallableAsNull]
 callback EventHandlerNonNull = any (Event event);
 typedef EventHandlerNonNull? EventHandler;
+
+[TreatNonCallableAsNull]
+callback OnErrorEventHandlerNonNull = any ((Event or DOMString) event, DOMString source, unsigned long lineno, unsigned long column);
+typedef OnErrorEventHandlerNonNull? OnErrorEventHandler;

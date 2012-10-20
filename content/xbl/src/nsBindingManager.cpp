@@ -692,7 +692,7 @@ nsBindingManager::GetContentListFor(nsIContent* aContent)
   }
 
   if (!result) {
-    result = aContent->GetChildNodesList();
+    result = aContent->ChildNodes();
   }
 
   return result;

@@ -49,12 +49,12 @@ protected:
                               bool aReplace);
 
   nsresult GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL);
-  nsresult GetSourceDocument(JSContext* cx, nsIDocument** aDocument);
-
   nsresult CheckURL(nsIURI *url, nsIDocShellLoadInfo** aLoadInfo);
+  bool CallerSubsumes();
 
   nsString mCachedHash;
   nsWeakPtr mDocShell;
+  nsWeakPtr mOuter;
 };
 
 #endif // nsLocation_h__

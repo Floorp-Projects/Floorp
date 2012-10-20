@@ -67,7 +67,6 @@ LOCAL_INCLUDES = \
 
 DEFINES += \
   -DHAVE_STDLIB_H=1 \
-  -DHAVE_STRING_H=1 \
   -DINTEGER_TYPES_H="\"mozilla/StandardInteger.h\"" \
   -DHAVE_UINT8_T=1 \
   -DHAVE_UINT16_T=1 \

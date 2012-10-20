@@ -36,9 +36,6 @@
 #include "nsFrameManager.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutUtils.h"
-#ifdef ACCESSIBILITY
-#include "nsIAccessible.h"
-#endif
 
 #include "nsIDOMNode.h"
 #include "nsIEditorDocShell.h"
@@ -52,7 +49,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSFrameConstructor.h"
 
-#include "nsFrameIterator.h"
+#include "nsFrameTraversal.h"
 #include "nsStyleChangeList.h"
 #include "nsIDOMRange.h"
 #include "nsRange.h"
@@ -3959,11 +3956,24 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
       flexDirection == NS_STYLE_FLEX_DIRECTION_ROW ||
       flexDirection == NS_STYLE_FLEX_DIRECTION_ROW_REVERSE;
 
-    if (stylePos->mFlexBasis.GetUnit() != eStyleUnit_Auto) {
+    // NOTE: The logic here should match the similar chunk for determining
+    // widthStyleCoord and heightStyleCoord in
+    // nsLayoutUtils::ComputeSizeWithIntrinsicDimensions().
+    const nsStyleCoord* flexBasis = &(stylePos->mFlexBasis);
+    if (flexBasis->GetUnit() != eStyleUnit_Auto) {
       if (isHorizontalFlexItem) {
-        widthStyleCoord = &(stylePos->mFlexBasis);
+        widthStyleCoord = flexBasis;
       } else {
-        heightStyleCoord = &(stylePos->mFlexBasis);
+        // One caveat for vertical flex items: We don't support enumerated
+        // values (e.g. "max-content") for height properties yet. So, if our
+        // computed flex-basis is an enumerated value, we'll just behave as if
+        // it were "auto", which means "use the main-size property after all"
+        // (which is "height", in this case).
+        // NOTE: Once we support intrinsic sizing keywords for "height",
+        // we should remove this check.
+        if (flexBasis->GetUnit() != eStyleUnit_Enumerated) {
+          heightStyleCoord = flexBasis;
+        }
       }
     }
   }
@@ -4783,13 +4793,15 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
     if (aHasDisplayItem) {
       parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
     }
+    nsSVGEffects::InvalidateDirectRenderingObservers(parent);
+
     // If we're inside a popup, then we need to make sure that we
     // call schedule paint so that the NS_FRAME_UPDATE_LAYER_TREE
     // flag gets added to the popup display root frame.
     if (nsLayoutUtils::IsPopup(parent)) {
       needsSchedulePaint = true;
+      break;
     }
-    nsSVGEffects::InvalidateDirectRenderingObservers(parent);
     parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
   }
   if (!aHasDisplayItem) {
@@ -5814,12 +5826,17 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       //resultFrame is not a block frame
       result = NS_ERROR_FAILURE;
 
-      uint32_t flags = nsFrameIterator::FLAG_NONE;
-      if (aPos->mScrollViewStop) {
-        flags |= nsFrameIterator::FLAG_LOCK_SCROLL;
-      }
-      nsFrameIterator frameTraversal(aPresContext, resultFrame,
-                                     ePostOrder, flags);
+      nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+      result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
+                                    aPresContext, resultFrame,
+                                    ePostOrder,
+                                    false, // aVisual
+                                    aPos->mScrollViewStop,
+                                    false     // aFollowOOFs
+                                    );
+      if (NS_FAILED(result))
+        return result;
+
       nsIFrame *storeOldResultFrame = resultFrame;
       while ( !found ){
         nsPoint point;
@@ -5833,7 +5850,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
           return result;
         point.y = tempRect.height + offset.y;
 
-        //special check. if we allow non-text selection then we can allow a hit location to fall before a table. 
+        //special check. if we allow non-text selection then we can allow a hit location to fall before a table.
         //otherwise there is no way to get and click signal to fall before a table (it being a line iterator itself)
         nsIPresShell *shell = aPresContext->GetPresShell();
         if (!shell)
@@ -5896,8 +5913,8 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         if (aPos->mDirection == eDirNext && (resultFrame == nearStoppingFrame))
           break;
         //always try previous on THAT line if that fails go the other way
-        frameTraversal.Prev();
-        resultFrame = frameTraversal.CurrentItem();
+        frameTraversal->Prev();
+        resultFrame = frameTraversal->CurrentItem();
         if (!resultFrame)
           return NS_ERROR_FAILURE;
       }
@@ -5905,12 +5922,13 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       if (!found){
         resultFrame = storeOldResultFrame;
 
-        uint32_t flags = nsFrameIterator::FLAG_NONE;
-        if (aPos->mScrollViewStop) {
-          flags |= nsFrameIterator::FLAG_LOCK_SCROLL;
-        }
-        frameTraversal = nsFrameIterator(aPresContext, resultFrame,
-                                         eLeaf, flags);
+        result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
+                                      aPresContext, resultFrame,
+                                      eLeaf,
+                                      false, // aVisual
+                                      aPos->mScrollViewStop,
+                                      false     // aFollowOOFs
+                                      );
       }
       while ( !found ){
         nsPoint point(aPos->mDesiredX, 0);
@@ -5941,8 +5959,8 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         if (aPos->mDirection == eDirNext && (resultFrame == farStoppingFrame))
           break;
         //previous didnt work now we try "next"
-        frameTraversal.Next();
-        nsIFrame *tempFrame = frameTraversal.CurrentItem();
+        frameTraversal->Next();
+        nsIFrame *tempFrame = frameTraversal->CurrentItem();
         if (!tempFrame)
           break;
         resultFrame = tempFrame;
@@ -6666,22 +6684,23 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, bool aVisual,
         return NS_ERROR_FAILURE; //we are done. cannot jump lines
     }
 
-    uint32_t flags = nsFrameIterator::FLAG_FOLLOW_OUT_OF_FLOW;
-    if (aScrollViewStop) {
-      flags |= nsFrameIterator::FLAG_LOCK_SCROLL;
-    }
-    if (aVisual && presContext->BidiEnabled()) {
-      flags |= nsFrameIterator::FLAG_VISUAL;
-    }
-    nsFrameIterator frameTraversal(presContext, traversedFrame,
-                                   eLeaf, flags);
+    nsCOMPtr<nsIFrameEnumerator> frameTraversal;
+    result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
+                                  presContext, traversedFrame,
+                                  eLeaf,
+                                  aVisual && presContext->BidiEnabled(),
+                                  aScrollViewStop,
+                                  true     // aFollowOOFs
+                                  );
+    if (NS_FAILED(result))
+      return result;
 
     if (aDirection == eDirNext)
-      frameTraversal.Next();
+      frameTraversal->Next();
     else
-      frameTraversal.Prev();
+      frameTraversal->Prev();
 
-    traversedFrame = frameTraversal.CurrentItem();
+    traversedFrame = frameTraversal->CurrentItem();
     if (!traversedFrame)
       return NS_ERROR_FAILURE;
     traversedFrame->IsSelectable(&selectable, nullptr);
@@ -6727,10 +6746,10 @@ nsFrame::ChildIsDirty(nsIFrame* aChild)
 
 
 #ifdef ACCESSIBILITY
-already_AddRefed<Accessible>
-nsFrame::CreateAccessible()
+a11y::AccType
+nsFrame::AccessibleType()
 {
-  return nullptr;
+  return a11y::eNoAccessible;
 }
 #endif
 

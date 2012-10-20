@@ -5,6 +5,7 @@
 
 #include <limits.h>
 
+#include "NSPRFormatTime.h" // must be before anything that includes prtime.h
 #include "nsAboutCacheEntry.h"
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
@@ -12,7 +13,6 @@
 #include "nsNetUtil.h"
 #include "nsAutoPtr.h"
 #include "prprf.h"
-#include "prtime.h"
 #include "nsEscape.h"
 
 #define HEXDUMP_MAX_ROWS 16

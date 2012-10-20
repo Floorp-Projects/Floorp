@@ -66,6 +66,7 @@ EXPORTS = \
   nsIScriptObjectPrincipal.h \
   nsIScriptRuntime.h \
   nsIScriptTimeoutHandler.h \
+  nsJSEnvironment.h \
   nsJSUtils.h \
   nsPIDOMWindow.h \
   nsPIWindowRoot.h \

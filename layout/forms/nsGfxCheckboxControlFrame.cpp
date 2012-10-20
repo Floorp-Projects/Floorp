@@ -8,13 +8,12 @@
 #include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
 #include "nsRenderingContext.h"
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
 #include "nsIServiceManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsDisplayList.h"
 #include "nsCSSAnonBoxes.h"
+
+using namespace mozilla;
 
 static void
 PaintCheckMark(nsIFrame* aFrame,
@@ -88,16 +87,10 @@ nsGfxCheckboxControlFrame::~nsGfxCheckboxControlFrame()
 }
 
 #ifdef ACCESSIBILITY
-already_AddRefed<Accessible>
-nsGfxCheckboxControlFrame::CreateAccessible()
+a11y::AccType
+nsGfxCheckboxControlFrame::AccessibleType()
 {
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  if (accService) {
-    return accService->CreateHTMLCheckboxAccessible(mContent,
-                                                    PresContext()->PresShell());
-  }
-
-  return nullptr;
+  return a11y::eHTMLCheckboxAccessible;
 }
 #endif
 

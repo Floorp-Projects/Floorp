@@ -107,11 +107,14 @@ void PeerConnectionCtx::onDeviceEvent(ccapi_device_event_e aDeviceEvent,
       ChangeSipccState(PeerConnectionImpl::kStarted);
     } else {
       CSFLogError(logTag, "%s PeerConnection in wrong state", __FUNCTION__);
-      Cleanup();
+      /*
+       * Cleanup is causing a deadlock, commenting for now, see Bug 801620
+       */
+      //Cleanup();
       MOZ_ASSERT(PR_FALSE);
     }
   } else {
-    Cleanup();
+    //Cleanup();
     NS_NOTREACHED("Unsupported Signaling State Transition");
   }
 }

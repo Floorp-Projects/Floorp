@@ -48,7 +48,9 @@ endif
 ifdef MOZ_MEMORY
 tier_base_dirs += memory/mozjemalloc
 ifdef MOZ_JEMALLOC
+ifndef MOZ_NATIVE_JEMALLOC
 tier_base_dirs += memory/jemalloc
+endif
 endif
 tier_base_dirs += memory/build
 endif
@@ -80,7 +82,7 @@ default alldep all:: $(topsrcdir)/configure config.status
 	$(RM) -r $(DIST)/include
 	$(RM) -r $(DIST)/private
 	$(RM) -r $(DIST)/public
-	$(RM) $(DIST)/chrome.manifest
+	$(RM) $(DIST)/bin/chrome.manifest $(DIST)/bin/components/components.manifest
 	$(RM) -r _tests
 
 $(topsrcdir)/configure: $(topsrcdir)/configure.in

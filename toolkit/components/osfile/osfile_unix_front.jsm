@@ -258,6 +258,21 @@
      };
 
      /**
+      * Checks if a file exists
+      *
+      * @param {string} path The path to the file.
+      *
+      * @return {bool} true if the file exists, false otherwise.
+      */
+     File.exists = function Unix_exists(path) {
+       if (UnixFile.access(path, OS.Constants.libc.F_OK) == -1) {
+         return false;
+       } else {
+         return true;
+       }
+     };
+
+     /**
       * Remove an existing file.
       *
       * @param {string} path The name of the file.
@@ -828,23 +843,36 @@
      };
 
      File.read = exports.OS.Shared.AbstractFile.read;
-     File.exists = exports.OS.Shared.AbstractFile.exists;
      File.writeAtomic = exports.OS.Shared.AbstractFile.writeAtomic;
+
+     /**
+      * Get the current directory by getCurrentDirectory.
+      */
+     File.getCurrentDirectory = function getCurrentDirectory() {
+       let path = UnixFile.get_current_dir_name?UnixFile.get_current_dir_name():
+         UnixFile.getwd_auto(null);
+       throw_on_null("getCurrentDirectory",path);
+       return path.readString();
+     };
+
+     /**
+      * Set the current directory by setCurrentDirectory.
+      */
+     File.setCurrentDirectory = function setCurrentDirectory(path) {
+       throw_on_negative("setCurrentDirectory",
+         UnixFile.chdir(path)
+       );
+     };
 
      /**
       * Get/set the current directory.
       */
      Object.defineProperty(File, "curDir", {
          set: function(path) {
-           throw_on_negative("curDir",
-             UnixFile.chdir(path)
-           );
+           this.setCurrentDirectory(path);
          },
          get: function() {
-           let path = UnixFile.get_current_dir_name?UnixFile.get_current_dir_name():
-             UnixFile.getwd_auto(null);
-           throw_on_null("curDir",path);
-           return path.readString();
+           return this.getCurrentDirectory();
          }
        }
      );
