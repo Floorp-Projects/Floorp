@@ -1122,6 +1122,26 @@ nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
   return NS_OK;
 }
 
+struct PreDestroyer
+{
+  void Init(nsIEditor* aEditor)
+  {
+    mNewEditor = aEditor;
+  }
+  ~PreDestroyer()
+  {
+    if (mNewEditor) {
+      mNewEditor->PreDestroy(true);
+    }
+  }
+  void Swap(nsCOMPtr<nsIEditor>& aEditor)
+  {
+    return mNewEditor.swap(aEditor);
+  }
+private:
+  nsCOMPtr<nsIEditor> mNewEditor;
+};
+
 nsresult
 nsTextEditorState::PrepareEditor(const nsAString *aValue)
 {
@@ -1168,12 +1188,14 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   bool shouldInitializeEditor = false;
   nsCOMPtr<nsIEditor> newEditor; // the editor that we might create
   nsresult rv = NS_OK;
+  PreDestroyer preDestroyer;
   if (!mEditor) {
     shouldInitializeEditor = true;
 
     // Create an editor
     newEditor = do_CreateInstance(kTextEditorCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+    preDestroyer.Init(newEditor);
 
     // Make sure we clear out the non-breaking space before we initialize the editor
     rv = mBoundFrame->UpdateValueDisplay(false, true);
@@ -1302,7 +1324,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
 
   if (shouldInitializeEditor) {
     // Hold on to the newly created editor
-    mEditor = newEditor;
+    preDestroyer.Swap(mEditor);
   }
 
   // If we have a default value, insert it under the div we created
