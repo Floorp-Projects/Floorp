@@ -329,12 +329,6 @@ public:
   // SetProperty is suspect and jst believes should not be needed.  Currenly
   // used only for "arguments".
   virtual nsresult SetProperty(JSObject* aTarget, const char* aPropName, nsISupports* aVal) = 0;
-  /** 
-   * Called to set/get information if the script context is
-   * currently processing a script tag
-   */
-  virtual bool GetProcessingScriptTag() = 0;
-  virtual void SetProcessingScriptTag(bool aResult) = 0;
 
   /**
    * Called to find out if this script context might be executing script.
