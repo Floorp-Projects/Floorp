@@ -307,6 +307,10 @@ function cleanUp() {
   // writing the old data to the files that have just been removed.
   reloadUpdateManagerData();
 
+  if (gChannel) {
+    gPrefRoot.removeObserver(PREF_APP_UPDATE_CHANNEL, observer);
+  }
+
   // Call app update's observe method passing xpcom-shutdown to test that the
   // shutdown of app update runs without throwing or leaking. The observer
   // method is used directly instead of calling notifyObservers so components
