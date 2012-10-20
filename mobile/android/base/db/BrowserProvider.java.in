@@ -1352,11 +1352,9 @@ public class BrowserProvider extends ContentProvider {
         }
 
         final long toRemove = rows - retain;
-        final long now = System.currentTimeMillis();
         debug("Expiring at most " + toRemove + " rows earlier than " + keepAfter + ".");
 
-        final String age = "(" + Combined.DATE_LAST_VISITED + " - " + now + ") / 86400000";
-        final String sortOrder = Combined.VISITS + " * MAX(1, 100 * 225 / (" + age + "*" + age + " + 225)) ASC";
+        final String sortOrder = BrowserContract.getFrecencySortOrder(false, true);
 
         final String sql;
         if (keepAfter > 0) {
