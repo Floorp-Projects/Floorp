@@ -30,29 +30,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
-
-  // BEGIN NS_DECL_IMGICONTAINER (minus GetAnimationMode/SetAnimationMode)
-  // ** Don't edit this chunk except to mirror changes in imgIContainer.idl **
-  NS_IMETHOD GetWidth(int32_t *aWidth);
-  NS_IMETHOD GetHeight(int32_t *aHeight);
-  NS_IMETHOD GetType(uint16_t *aType);
-  NS_IMETHOD_(uint16_t) GetType(void);
-  NS_IMETHOD GetAnimated(bool *aAnimated);
-  NS_IMETHOD GetCurrentFrameIsOpaque(bool *aCurrentFrameIsOpaque);
-  NS_IMETHOD GetFrame(uint32_t aWhichFrame, uint32_t aFlags, gfxASurface **_retval);
-  NS_IMETHOD GetImageContainer(mozilla::layers::ImageContainer **_retval) { *_retval = NULL; return NS_OK; }
-  NS_IMETHOD CopyFrame(uint32_t aWhichFrame, uint32_t aFlags, gfxImageSurface **_retval);
-  NS_IMETHOD ExtractFrame(uint32_t aWhichFrame, const nsIntRect & aRect, uint32_t aFlags, imgIContainer **_retval);
-  NS_IMETHOD Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, const gfxMatrix & aUserSpaceToImageSpace, const gfxRect & aFill, const nsIntRect & aSubimage, const nsIntSize & aViewportSize, uint32_t aFlags);
-  NS_IMETHOD_(nsIFrame *) GetRootLayoutFrame(void);
-  NS_IMETHOD RequestDecode();
-  NS_IMETHOD StartDecoding();
-  NS_IMETHOD LockImage(void);
-  NS_IMETHOD UnlockImage(void);
-  NS_IMETHOD RequestDiscard(void);
-  NS_IMETHOD ResetAnimation(void);
-  NS_IMETHOD_(void) RequestRefresh(const mozilla::TimeStamp& aTime);
-  // END NS_DECL_IMGICONTAINER
+  NS_DECL_IMGICONTAINER
 
   VectorImage(imgStatusTracker* aStatusTracker = nullptr);
   virtual ~VectorImage();
@@ -100,6 +78,14 @@ private:
   bool           mHaveRestrictedRegion:1; // Are we a restricted-region clone
                                           // created via ExtractFrame?
 };
+
+inline NS_IMETHODIMP VectorImage::GetAnimationMode(uint16_t *aAnimationMode) {
+  return GetAnimationModeInternal(aAnimationMode);
+}
+
+inline NS_IMETHODIMP VectorImage::SetAnimationMode(uint16_t aAnimationMode) {
+  return SetAnimationModeInternal(aAnimationMode);
+}
 
 } // namespace image
 } // namespace mozilla

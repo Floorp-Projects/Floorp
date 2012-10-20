@@ -823,3 +823,5 @@ export CL_INCLUDES_PREFIX
 ifeq ($(MOZ_WIDGET_GTK),2)
 MOZ_GTK2_CFLAGS := -I$(topsrcdir)/widget/gtk2/compat $(MOZ_GTK2_CFLAGS)
 endif
+
+DEFINES += -DNO_NSPR_10_SUPPORT

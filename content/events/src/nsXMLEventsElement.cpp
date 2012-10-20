@@ -11,7 +11,6 @@ class nsXMLEventsElement : public nsXMLElement {
 public:
   nsXMLEventsElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsXMLEventsElement();
-  NS_FORWARD_NSIDOMNODE(nsXMLElement::)
 
   virtual nsIAtom *GetIDAttributeName() const;
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName, 

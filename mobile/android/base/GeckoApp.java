@@ -140,6 +140,7 @@ abstract public class GeckoApp
     public static final String ACTION_BOOKMARK      = "org.mozilla.gecko.BOOKMARK";
     public static final String ACTION_LOAD          = "org.mozilla.gecko.LOAD";
     public static final String ACTION_INIT_PW       = "org.mozilla.gecko.INIT_PW";
+    public static final String ACTION_WIDGET        = "org.mozilla.gecko.WIDGET";
     public static final String SAVED_STATE_TITLE         = "title";
     public static final String SAVED_STATE_IN_BACKGROUND = "inBackground";
     public static final String SAVED_STATE_PRIVATE_SESSION = "privateSession";
@@ -1996,6 +1997,9 @@ abstract public class GeckoApp
                     alertCookie = "";
             }
             handleNotification(ACTION_ALERT_CALLBACK, alertName, alertCookie);
+        }
+        else if (ACTION_WIDGET.equals(action)) {
+            addTab();
         }
     }
 

@@ -27,7 +27,7 @@ public:
     return mAttrMap;
   }
 
-  nsINodeInfo *NodeInfo()
+  nsINodeInfo *NodeInfo() const
   {
     return mNodeInfo;
   }

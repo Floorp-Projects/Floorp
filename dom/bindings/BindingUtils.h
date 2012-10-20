@@ -743,26 +743,96 @@ bool
 WrapCallbackInterface(JSContext *cx, JSObject *scope, nsISupports* callback,
                       JS::Value* vp);
 
-// This checks whether class T implements WrapObject itself, if so then
-// HasWrapObject<T>::Value will be true. Note that if T inherits WrapObject from
-// a base class but doesn't override it then HasWrapObject<T>::Value will be
-// false. This is a little annoying in some cases (multiple C++ classes using
-// the same binding), but it saves us in the case where a class inherits from
-// nsWrapperCache but doesn't actually override WrapObject. For now we assume
-// that HasWrapObject<T>::Value being false means we have an nsISupports object.
+#ifdef _MSC_VER
+#define HAS_MEMBER_CHECK(_name)                                           \
+  template<typename V> static yes& Check(char (*)[(&V::_name == 0) + 1])
+#else
+#define HAS_MEMBER_CHECK(_name)                                           \
+  template<typename V> static yes& Check(char (*)[sizeof(&V::_name) + 1])
+#endif
+
+#define HAS_MEMBER(_name)                                                 \
+template<typename T>                                                      \
+class Has##_name##Member {                                                \
+  typedef char yes[1];                                                    \
+  typedef char no[2];                                                     \
+  HAS_MEMBER_CHECK(_name);                                                \
+  template<typename V> static no& Check(...);                             \
+                                                                          \
+public:                                                                   \
+  static bool const Value = sizeof(Check<T>(nullptr)) == sizeof(yes);     \
+};
+
+HAS_MEMBER(AddRef)
+HAS_MEMBER(Release)
+HAS_MEMBER(QueryInterface)
+
+template<typename T>
+struct IsRefCounted
+{
+  static bool const Value = HasAddRefMember<T>::Value &&
+                            HasReleaseMember<T>::Value;
+};
+
+template<typename T>
+struct IsISupports
+{
+  static bool const Value = IsRefCounted<T>::Value &&
+                            HasQueryInterfaceMember<T>::Value;
+};
+
+HAS_MEMBER(WrapObject)
+
+// HasWrapObject<T>::Value will be true if T has a WrapObject member but it's
+// not nsWrapperCache::WrapObject.
 template<typename T>
 struct HasWrapObject
 {
 private:
   typedef char yes[1];
   typedef char no[2];
-  typedef JSObject* (T::*WrapObject)(JSContext*, JSObject*, bool*);
+  typedef JSObject* (nsWrapperCache::*WrapObject)(JSContext*, JSObject*, bool*);
   template<typename U, U> struct SFINAE;
-  template <typename V> static yes& Check(SFINAE<WrapObject, &V::WrapObject>*);
-  template <typename V> static no& Check(...);
+  template <typename V> static no& Check(SFINAE<WrapObject, &V::WrapObject>*);
+  template <typename V> static yes& Check(...);
 
 public:
-  static bool const Value = sizeof(Check<T>(nullptr)) == sizeof(yes);
+  static bool const Value = HasWrapObjectMember<T>::Value &&
+                            sizeof(Check<T>(nullptr)) == sizeof(yes);
+};
+
+template<typename T>
+static inline JSObject*
+WrapNativeISupportsParent(JSContext* cx, JSObject* scope, T* p,
+                          nsWrapperCache* cache)
+{
+  qsObjectHelper helper(ToSupports(p), cache);
+  JS::Value v;
+  return XPCOMObjectToJsval(cx, scope, helper, nullptr, false, &v) ?
+         JSVAL_TO_OBJECT(v) :
+         nullptr;
+}
+
+template<typename T, bool isISupports=IsISupports<T>::Value >
+struct WrapNativeParentFallback
+{
+  static inline JSObject* Wrap(JSContext* cx, JSObject* scope, T* parent,
+                               nsWrapperCache* cache)
+  {
+    MOZ_NOT_REACHED("Don't know how to deal with triedToWrap == false for "
+                    "non-nsISupports classes");
+    return nullptr;
+  }
+};
+
+template<typename T >
+struct WrapNativeParentFallback<T, true >
+{
+  static inline JSObject* Wrap(JSContext* cx, JSObject* scope, T* parent,
+                               nsWrapperCache* cache)
+  {
+    return WrapNativeISupportsParent(cx, scope, parent, cache);
+  }
 };
 
 template<typename T, bool hasWrapObject=HasWrapObject<T>::Value >
@@ -779,12 +849,16 @@ struct WrapNativeParentHelper
     }
 
     bool triedToWrap;
-    return parent->WrapObject(cx, scope, &triedToWrap);
+    obj = parent->WrapObject(cx, scope, &triedToWrap);
+    if (!triedToWrap) {
+      obj = WrapNativeParentFallback<T>::Wrap(cx, scope, parent, cache);
+    }
+    return obj;
   }
 };
 
 template<typename T>
-struct WrapNativeParentHelper<T, false>
+struct WrapNativeParentHelper<T, false >
 {
   static inline JSObject* Wrap(JSContext* cx, JSObject* scope, T* parent,
                                nsWrapperCache* cache)
@@ -792,21 +866,13 @@ struct WrapNativeParentHelper<T, false>
     JSObject* obj;
     if (cache && (obj = cache->GetWrapper())) {
 #ifdef DEBUG
-      qsObjectHelper helper(ToSupports(parent), cache);
-      JS::Value debugVal;
-
-      bool ok = XPCOMObjectToJsval(cx, scope, helper, NULL, false, &debugVal);
-      NS_ASSERTION(ok && JSVAL_TO_OBJECT(debugVal) == obj,
+      NS_ASSERTION(WrapNativeISupportsParent(cx, scope, parent, cache) == obj,
                    "Unexpected object in nsWrapperCache");
 #endif
       return obj;
     }
 
-    qsObjectHelper helper(ToSupports(parent), cache);
-    JS::Value v;
-    return XPCOMObjectToJsval(cx, scope, helper, NULL, false, &v) ?
-           JSVAL_TO_OBJECT(v) :
-           NULL;
+    return WrapNativeISupportsParent(cx, scope, parent, cache);
   }
 };
 
