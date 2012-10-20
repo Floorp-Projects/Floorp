@@ -901,7 +901,7 @@ static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
     nsINode* node = aContent;
     while (node && IsEditable(node)) {
       root = node;
-      node = node->GetNodeParent();
+      node = node->GetParentNode();
     }
     return root;
   }

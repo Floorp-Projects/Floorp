@@ -168,7 +168,8 @@ public:
                                           nsIPresShell::ScrollAxis *aHorizontal);
 
   /**
-   * Returns coordinates relative screen for the top level window.
+   * Returns coordinates in device pixels relative screen for the top level
+   * window.
    *
    * @param aNode  the DOM node hosted in the window.
    */

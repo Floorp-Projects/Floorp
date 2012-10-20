@@ -409,7 +409,7 @@ __try {
   if (!node)
     return E_FAIL;
 
-  *aNode = MakeAccessNode(node->GetNodeParent());
+  *aNode = MakeAccessNode(node->GetParentNode());
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 

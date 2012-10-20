@@ -6,12 +6,63 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/TypeTraits.h"
 
+using mozilla::IsBaseOf;
 using mozilla::IsConvertible;
+
+namespace CPlusPlus11IsBaseOf {
+
+// Adapted from C++11 § 20.9.6.
+struct B {};
+struct B1 : B {};
+struct B2 : B {};
+struct D : private B1, private B2 {};
+
+static void
+StandardIsBaseOfTests()
+{
+  MOZ_ASSERT((IsBaseOf<B, D>::value) == true);
+  MOZ_ASSERT((IsBaseOf<const B, D>::value) == true);
+  MOZ_ASSERT((IsBaseOf<B, const D>::value) == true);
+  MOZ_ASSERT((IsBaseOf<B, const B>::value) == true);
+  MOZ_ASSERT((IsBaseOf<D, B>::value) == false);
+  MOZ_ASSERT((IsBaseOf<B&, D&>::value) == false);
+  MOZ_ASSERT((IsBaseOf<B[3], D[3]>::value) == false);
+  // We fail at the following test.  To fix it, we need to specialize IsBaseOf
+  // for all built-in types.
+  // MOZ_ASSERT((IsBaseOf<int, int>::value) == false);
+}
+
+} /* namespace CPlusPlus11IsBaseOf */
 
 class A { };
 class B : public A { };
 class C : private A { };
 class D { };
+class E : public A { };
+class F : public B, public E { };
+
+static void
+TestIsBaseOf()
+{
+  MOZ_ASSERT((IsBaseOf<A, B>::value),
+             "A is a base of B");
+  MOZ_ASSERT((!IsBaseOf<B, A>::value),
+             "B is not a base of A");
+  MOZ_ASSERT((IsBaseOf<A, C>::value),
+             "A is a base of C");
+  MOZ_ASSERT((!IsBaseOf<C, A>::value),
+             "C is not a base of A");
+  MOZ_ASSERT((IsBaseOf<A, F>::value),
+             "A is a base of F");
+  MOZ_ASSERT((!IsBaseOf<F, A>::value),
+             "F is not a base of A");
+  MOZ_ASSERT((!IsBaseOf<A, D>::value),
+             "A is not a base of D");
+  MOZ_ASSERT((!IsBaseOf<D, A>::value),
+             "D is not a base of A");
+  MOZ_ASSERT((IsBaseOf<B, B>::value),
+             "B is the same as B (and therefore, a base of B)");
+}
 
 static void
 TestIsConvertible()
@@ -51,5 +102,7 @@ TestIsConvertible()
 int
 main()
 {
+  CPlusPlus11IsBaseOf::StandardIsBaseOfTests();
+  TestIsBaseOf();
   TestIsConvertible();
 }

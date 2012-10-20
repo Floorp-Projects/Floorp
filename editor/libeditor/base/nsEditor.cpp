@@ -1434,9 +1434,9 @@ nsEditor::JoinNodes(nsINode* aNodeToKeep, nsIContent* aNodeToMove)
   // We don't really need aNodeToMove's parent to be non-null -- we could just
   // skip adjusting any ranges in aNodeToMove's parent if there is none.  But
   // the current implementation requires it.
-  MOZ_ASSERT(aNodeToKeep && aNodeToMove && aNodeToMove->GetNodeParent());
+  MOZ_ASSERT(aNodeToKeep && aNodeToMove && aNodeToMove->GetParentNode());
   nsresult res = JoinNodes(aNodeToKeep->AsDOMNode(), aNodeToMove->AsDOMNode(),
-                           aNodeToMove->GetNodeParent()->AsDOMNode());
+                           aNodeToMove->GetParentNode()->AsDOMNode());
   NS_ASSERTION(NS_SUCCEEDED(res), "JoinNodes failed");
   NS_ENSURE_SUCCESS(res, res);
   return NS_OK;
@@ -1611,7 +1611,7 @@ nsEditor::RemoveContainer(nsINode* aNode)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsINode> parent = aNode->GetNodeParent();
+  nsCOMPtr<nsINode> parent = aNode->GetParentNode();
   NS_ENSURE_STATE(parent);
 
   int32_t offset = parent->IndexOf(aNode);
@@ -3189,7 +3189,7 @@ nsEditor::GetNextNode(nsINode* aParentNode,
 
   // if aParentNode is a text node, use its location instead
   if (aParentNode->NodeType() == nsIDOMNode::TEXT_NODE) {
-    nsINode* parent = aParentNode->GetNodeParent();
+    nsINode* parent = aParentNode->GetParentNode();
     NS_ENSURE_TRUE(parent, nullptr);
     aOffset = parent->IndexOf(aParentNode) + 1; // _after_ the text node
     aParentNode = parent;
@@ -3290,7 +3290,7 @@ nsEditor::FindNextLeafNode(nsINode  *aCurrentNode,
       return leaf;
     }
 
-    nsINode *parent = cur->GetNodeParent();
+    nsINode *parent = cur->GetParentNode();
     if (!parent) {
       return nullptr;
     }
@@ -4044,7 +4044,7 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
       }
     }
 
-    nsINode* parentNode = nodeToSplit->GetNodeParent();
+    nsINode* parentNode = nodeToSplit->GetParentNode();
     NS_ENSURE_TRUE(parentNode, NS_ERROR_FAILURE);
 
     if (!bDoSplit && offset) {
@@ -4359,29 +4359,29 @@ nsEditor::DeleteSelectionAndPrepareToCreateNode()
   MOZ_ASSERT(node, "Selection has no ranges in it");
 
   if (node && node->IsNodeOfType(nsINode::eDATA_NODE)) {
-    NS_ASSERTION(node->GetNodeParent(),
+    NS_ASSERTION(node->GetParentNode(),
                  "It's impossible to insert into chardata with no parent -- "
                  "fix the caller");
-    NS_ENSURE_STATE(node->GetNodeParent());
+    NS_ENSURE_STATE(node->GetParentNode());
 
     int32_t offset = selection->GetAnchorOffset();
 
     if (offset == 0) {
-      res = selection->Collapse(node->GetNodeParent(),
-                                node->GetNodeParent()->IndexOf(node));
+      res = selection->Collapse(node->GetParentNode(),
+                                node->GetParentNode()->IndexOf(node));
       MOZ_ASSERT(NS_SUCCEEDED(res));
       NS_ENSURE_SUCCESS(res, res);
     } else if (offset == (int32_t)node->Length()) {
-      res = selection->Collapse(node->GetNodeParent(),
-                                node->GetNodeParent()->IndexOf(node) + 1);
+      res = selection->Collapse(node->GetParentNode(),
+                                node->GetParentNode()->IndexOf(node) + 1);
       MOZ_ASSERT(NS_SUCCEEDED(res));
       NS_ENSURE_SUCCESS(res, res);
     } else {
       nsCOMPtr<nsIDOMNode> tmp;
       res = SplitNode(node->AsDOMNode(), offset, getter_AddRefs(tmp));
       NS_ENSURE_SUCCESS(res, res);
-      res = selection->Collapse(node->GetNodeParent(),
-                                node->GetNodeParent()->IndexOf(node));
+      res = selection->Collapse(node->GetParentNode(),
+                                node->GetParentNode()->IndexOf(node));
       MOZ_ASSERT(NS_SUCCEEDED(res));
       NS_ENSURE_SUCCESS(res, res);
     }

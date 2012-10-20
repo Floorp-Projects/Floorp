@@ -398,7 +398,7 @@ public:
     bool GetTemplateGenerated() { return HasFlag(XUL_ELEMENT_TEMPLATE_GENERATED); }
 
     // nsIDOMNode
-    NS_FORWARD_NSIDOMNODE(nsGenericElement::)
+    NS_FORWARD_NSIDOMNODE_TO_NSINODE
 
     // nsIDOMElement
     NS_FORWARD_NSIDOMELEMENT(nsGenericElement::)
