@@ -104,7 +104,7 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor)
   mEditor = aEditor;  // we hold a non-refcounted reference back to our editor
   nsCOMPtr<nsISelection> selection;
   mEditor->GetSelection(getter_AddRefs(selection));
-  NS_ASSERTION(selection, "editor cannot get selection");
+  NS_WARN_IF_FALSE(selection, "editor cannot get selection");
 
   // Put in a magic br if needed. This method handles null selection,
   // which should never happen anyway
