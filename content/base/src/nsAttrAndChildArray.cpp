@@ -753,7 +753,7 @@ nsAttrAndChildArray::GrowBy(uint32_t aGrowSize)
     } while (size < minSize);
   }
   else {
-    size = PR_BIT(PR_CeilingLog2(minSize));
+    size = 1u << PR_CeilingLog2(minSize);
   }
 
   bool needToInitialize = !mImpl;

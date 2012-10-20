@@ -19,10 +19,10 @@
  * in sync.
  */
 typedef enum {
- 	url_All       = 0         /**< %-escape every byte unconditionally */
-,	url_XAlphas   = PR_BIT(0) /**< Normal escape - leave alphas intact, escape the rest */
-,	url_XPAlphas  = PR_BIT(1) /**< As url_XAlphas, but convert spaces (0x20) to '+' and plus to %2B */
-,	url_Path      = PR_BIT(2) /**< As url_XAlphas, but don't escape slash ('/') */
+ 	url_All       = 0       /**< %-escape every byte unconditionally */
+,	url_XAlphas   = 1u << 0 /**< Normal escape - leave alphas intact, escape the rest */
+,	url_XPAlphas  = 1u << 1 /**< As url_XAlphas, but convert spaces (0x20) to '+' and plus to %2B */
+,	url_Path      = 1u << 2 /**< As url_XAlphas, but don't escape slash ('/') */
 } nsEscapeMask;
 
 #ifdef __cplusplus
@@ -73,27 +73,27 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer,
  */
 enum EscapeMask {
   /** url components **/
-  esc_Scheme         = PR_BIT(0),
-  esc_Username       = PR_BIT(1),
-  esc_Password       = PR_BIT(2),
-  esc_Host           = PR_BIT(3),
-  esc_Directory      = PR_BIT(4),
-  esc_FileBaseName   = PR_BIT(5),
-  esc_FileExtension  = PR_BIT(6),
+  esc_Scheme         = 1u << 0,
+  esc_Username       = 1u << 1,
+  esc_Password       = 1u << 2,
+  esc_Host           = 1u << 3,
+  esc_Directory      = 1u << 4,
+  esc_FileBaseName   = 1u << 5,
+  esc_FileExtension  = 1u << 6,
   esc_FilePath       = esc_Directory | esc_FileBaseName | esc_FileExtension,
-  esc_Param          = PR_BIT(7),
-  esc_Query          = PR_BIT(8),
-  esc_Ref            = PR_BIT(9),
+  esc_Param          = 1u << 7,
+  esc_Query          = 1u << 8,
+  esc_Ref            = 1u << 9,
   /** special flags **/
   esc_Minimal        = esc_Scheme | esc_Username | esc_Password | esc_Host | esc_FilePath | esc_Param | esc_Query | esc_Ref, 
-  esc_Forced         = PR_BIT(10), /* forces escaping of existing escape sequences */
-  esc_OnlyASCII      = PR_BIT(11), /* causes non-ascii octets to be skipped */
-  esc_OnlyNonASCII   = PR_BIT(12), /* causes _graphic_ ascii octets (0x20-0x7E) 
+  esc_Forced         = 1u << 10, /* forces escaping of existing escape sequences */
+  esc_OnlyASCII      = 1u << 11, /* causes non-ascii octets to be skipped */
+  esc_OnlyNonASCII   = 1u << 12, /* causes _graphic_ ascii octets (0x20-0x7E) 
                                     * to be skipped when escaping. causes all
                                     * ascii octets (<= 0x7F) to be skipped when unescaping */
-  esc_AlwaysCopy     = PR_BIT(13), /* copy input to result buf even if escaping is unnecessary */
-  esc_Colon          = PR_BIT(14), /* forces escape of colon */
-  esc_SkipControl    = PR_BIT(15)  /* skips C0 and DEL from unescaping */
+  esc_AlwaysCopy     = 1u << 13, /* copy input to result buf even if escaping is unnecessary */
+  esc_Colon          = 1u << 14, /* forces escape of colon */
+  esc_SkipControl    = 1u << 15  /* skips C0 and DEL from unescaping */
 };
 
 /**

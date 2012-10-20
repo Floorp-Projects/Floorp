@@ -72,8 +72,8 @@ private:
   nsTArray<nsTimerImpl*> mTimers;
 
 #define DELAY_LINE_LENGTH_LOG2  5
-#define DELAY_LINE_LENGTH_MASK  PR_BITMASK(DELAY_LINE_LENGTH_LOG2)
-#define DELAY_LINE_LENGTH       PR_BIT(DELAY_LINE_LENGTH_LOG2)
+#define DELAY_LINE_LENGTH_MASK  ((1u << DELAY_LINE_LENGTH_LOG2) - 1)
+#define DELAY_LINE_LENGTH       (1u << DELAY_LINE_LENGTH_LOG2)
 
   int32_t  mDelayLine[DELAY_LINE_LENGTH]; // milliseconds
   uint32_t mDelayLineCounter;
