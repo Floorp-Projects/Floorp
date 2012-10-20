@@ -2137,6 +2137,10 @@ public class BrowserProvider extends ContentProvider {
             values.put(Bookmarks.DATE_CREATED, now);
         }
 
+        if (!values.containsKey(Bookmarks.DATE_MODIFIED)) {
+            values.put(Bookmarks.DATE_MODIFIED, now);
+        }
+
         if (!values.containsKey(Bookmarks.GUID)) {
             values.put(Bookmarks.GUID, Utils.generateGuid());
         }
