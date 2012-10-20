@@ -2590,16 +2590,16 @@ _global.NetworkResponseListener = NetworkResponseListener;
  * location changes.
  *
  * @constructor
- * @param object aBrowser
- *        The xul:browser for which we need to track location changes.
+ * @param object aWindow
+ *        The window for which we need to track location changes.
  * @param object aOwner
  *        The listener owner which needs to implement two methods:
  *        - onFileActivity(aFileURI)
  *        - onLocationChange(aState, aTabURI, aPageTitle)
  */
-function ConsoleProgressListener(aBrowser, aOwner)
+function ConsoleProgressListener(aWindow, aOwner)
 {
-  this.browser = aBrowser;
+  this.window = aWindow;
   this.owner = aOwner;
 }
 
@@ -2637,6 +2637,8 @@ ConsoleProgressListener.prototype = {
    */
   _initialized: false,
 
+  _webProgress: null,
+
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference]),
 
@@ -2650,8 +2652,13 @@ ConsoleProgressListener.prototype = {
       return;
     }
 
+    this._webProgress = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIWebNavigation)
+                        .QueryInterface(Ci.nsIWebProgress);
+    this._webProgress.addProgressListener(this,
+                                          Ci.nsIWebProgress.NOTIFY_STATE_ALL);
+
     this._initialized = true;
-    this.browser.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_ALL);
   },
 
   /**
@@ -2768,8 +2775,7 @@ ConsoleProgressListener.prototype = {
     let isWindow = aState & Ci.nsIWebProgressListener.STATE_IS_WINDOW;
 
     // Skip non-interesting states.
-    if (!isNetwork || !isWindow ||
-        aProgress.DOMWindow != this.browser.contentWindow) {
+    if (!isNetwork || !isWindow || aProgress.DOMWindow != this.window) {
       return;
     }
 
@@ -2777,9 +2783,8 @@ ConsoleProgressListener.prototype = {
       this.owner.onLocationChange("start", aRequest.URI.spec, "");
     }
     else if (isStop) {
-      let window = this.browser.contentWindow;
-      this.owner.onLocationChange("stop", window.location.href,
-                                  window.document.title);
+      this.owner.onLocationChange("stop", this.window.location.href,
+                                  this.window.document.title);
     }
   },
 
@@ -2801,11 +2806,15 @@ ConsoleProgressListener.prototype = {
     this._fileActivity = false;
     this._locationChange = false;
 
-    if (this.browser.removeProgressListener) {
-      this.browser.removeProgressListener(this);
+    try {
+      this._webProgress.removeProgressListener(this);
+    }
+    catch (ex) {
+      // This can throw during browser shutdown.
     }
 
-    this.browser = null;
+    this._webProgress = null;
+    this.window = null;
     this.owner = null;
   },
 };
