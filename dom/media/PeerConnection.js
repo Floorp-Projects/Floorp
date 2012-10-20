@@ -123,6 +123,7 @@ function PeerConnection() {
 
   this._pc = null;
   this._observer = null;
+  this._closed = false;
 
   this._onCreateOfferSuccess = null;
   this._onCreateOfferFailure = null;
@@ -203,6 +204,9 @@ PeerConnection.prototype = {
    * call _executeNext, false if it doesn't have a callback.
    */
   _queueOrRun: function(obj) {
+    if (this._closed) {
+	return;
+    }
     if (!this._pending) {
       obj.func.apply(this, obj.args);
       if (obj.wait) {
@@ -420,6 +424,7 @@ PeerConnection.prototype = {
       args: [],
       wait: false
     });
+    this._closed = true;
   },
 
   get localStreams() {
