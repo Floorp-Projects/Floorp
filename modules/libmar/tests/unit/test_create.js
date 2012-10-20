@@ -71,6 +71,6 @@ function run_test() {
     }
   };
 
-  // Run all the tests, there should be 5.
-  do_check_eq(run_tests(tests), 5);
+  // Run all the tests
+  do_check_eq(run_tests(tests), Object.keys(tests).length - 1);
 }

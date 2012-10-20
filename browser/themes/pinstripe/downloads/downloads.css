@@ -43,6 +43,7 @@
 }
 
 #downloadsHistory:-moz-focusring > .button-box {
+  outline: 1px -moz-dialogtext dotted;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
 }
@@ -74,7 +75,7 @@ richlistitem[type="download"]:last-child {
 }
 
 #downloadsListBox:-moz-focusring > richlistitem[type="download"][selected] {
-  outline: 1px #999 dotted;
+  outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
   -moz-outline-radius: 3px;
 }
@@ -116,6 +117,10 @@ richlistitem[type="download"]:last-child {
   padding: 0;
 }
 
+.downloadButton:-moz-focusring > .button-box {
+  outline: 1px -moz-dialogtext dotted;
+}
+
 /*** Highlighted list items ***/
 
 richlistitem[type="download"][state="1"]:hover {
@@ -133,36 +138,26 @@ richlistitem[type="download"][state="1"]:hover {
 .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
-.downloadButton.downloadCancel:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-.downloadButton.downloadCancel:active {
-  -moz-image-region: rect(0px, 48px, 16px, 28px);
-}
 
 .downloadButton.downloadShow {
   -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
-.downloadButton.downloadShow:hover {
+richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
-.downloadButton.downloadShow:active {
+richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:hover {
   -moz-image-region: rect(16px, 48px, 32px, 32px);
+}
+richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:active {
+  -moz-image-region: rect(16px, 64px, 32px, 48px);
 }
 
 .downloadButton.downloadRetry {
   -moz-image-region: rect(32px, 16px, 48px, 0px);
 }
-.downloadButton.downloadRetry:hover {
-  -moz-image-region: rect(32px, 32px, 48px, 16px);
-}
-.downloadButton.downloadRetry:active {
-  -moz-image-region: rect(32px, 48px, 48px, 32px);
-}
 
 /*** Status and progress indicator ***/
 
-#downloads-button,
 #downloads-indicator {
   width: 35px;
 }
@@ -180,11 +175,6 @@ richlistitem[type="download"][state="1"]:hover {
 
 #downloads-indicator-icon {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
-                              0, 140, 20, 120) center no-repeat;
-}
-
-#downloads-indicator-icon:-moz-lwtheme-brighttext {
-  background: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"),
                               0, 140, 20, 120) center no-repeat;
 }
 

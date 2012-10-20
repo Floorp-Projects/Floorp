@@ -86,11 +86,12 @@ private:
   class PostBlobSuccessEvent : public CancelableRunnable
   {
     public:
-      PostBlobSuccessEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile, uint32_t aLength, nsACString& aMimeType);
+      PostBlobSuccessEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile, uint32_t aLength, nsACString& aMimeType, uint64_t aLastModifiedDate);
       virtual ~PostBlobSuccessEvent();
       virtual nsresult CancelableRun();
     private:
       uint32_t mLength;
+      uint64_t mLastModificationDate;
       nsRefPtr<DeviceStorageFile> mFile;
       nsCString mMimeType;
   };

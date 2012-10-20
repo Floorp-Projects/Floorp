@@ -31,8 +31,6 @@ const PREF_PREFIX = 'pdfjs';
 const PDF_VIEWER_WEB_PAGE = 'resource://pdf.js/web/viewer.html';
 const MAX_DATABASE_LENGTH = 4096;
 const FIREFOX_ID = '{ec8030f7-c20a-464f-9b0e-13a3a9e97384}';
-const SEAMONKEY_ID = '{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}';
-const METRO_ID = '{99bceaaa-e3c6-48c1-b981-ef9b46b67d60}';
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
@@ -41,20 +39,28 @@ Cu.import('resource://gre/modules/NetUtil.jsm');
 
 let appInfo = Cc['@mozilla.org/xre/app-info;1']
                   .getService(Ci.nsIXULAppInfo);
-let privateBrowsing, inPrivateBrowsing;
 let Svc = {};
 XPCOMUtils.defineLazyServiceGetter(Svc, 'mime',
                                    '@mozilla.org/mime;1',
                                    'nsIMIMEService');
 
+let isInPrivateBrowsing;
 if (appInfo.ID === FIREFOX_ID) {
-  privateBrowsing = Cc['@mozilla.org/privatebrowsing;1']
-                          .getService(Ci.nsIPrivateBrowsingService);
-  inPrivateBrowsing = privateBrowsing.privateBrowsingEnabled;
-} else if (appInfo.ID === SEAMONKEY_ID ||
-           appInfo.ID === METRO_ID) {
-  privateBrowsing = null;
-  inPrivateBrowsing = false;
+  let privateBrowsing = Cc['@mozilla.org/privatebrowsing;1']
+                            .getService(Ci.nsIPrivateBrowsingService);
+  isInPrivateBrowsing = function getInPrivateBrowsing() {
+    return privateBrowsing.privateBrowsingEnabled;
+  };
+} else {
+  isInPrivateBrowsing = function() { return false; };
+}
+
+function getChromeWindow(domWindow) {
+  var containingBrowser = domWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIWebNavigation)
+                                   .QueryInterface(Ci.nsIDocShell)
+                                   .chromeEventHandler;
+  return containingBrowser.ownerDocument.defaultView;
 }
 
 function getBoolPref(pref, def) {
@@ -273,7 +279,7 @@ ChromeActions.prototype = {
     });
   },
   setDatabase: function(data) {
-    if (inPrivateBrowsing)
+    if (isInPrivateBrowsing())
       return;
     // Protect against something sending tons of data to setDatabase.
     if (data.length > MAX_DATABASE_LENGTH)
@@ -281,7 +287,7 @@ ChromeActions.prototype = {
     setStringPref(PREF_PREFIX + '.database', data);
   },
   getDatabase: function() {
-    if (inPrivateBrowsing)
+    if (isInPrivateBrowsing())
       return '{}';
     return getStringPref(PREF_PREFIX + '.database', '{}');
   },
@@ -336,8 +342,11 @@ ChromeActions.prototype = {
   pdfBugEnabled: function() {
     return getBoolPref(PREF_PREFIX + '.pdfBugEnabled', false);
   },
-  searchEnabled: function() {
-    return getBoolPref(PREF_PREFIX + '.searchEnabled', false);
+  supportsIntegratedFind: function() {
+    // Integrated find is only supported when we're not in a frame and when the
+    // new find events code exists.
+    return this.domWindow.frameElement === null &&
+           'updateControlState' in getChromeWindow(this.domWindow).gFindBar;
   },
   fallback: function(url, sendResponse) {
     var self = this;
@@ -391,6 +400,20 @@ ChromeActions.prototype = {
       if (!sentResponse)
         sendResponse(false);
     });
+  },
+  updateFindControlState: function(data) {
+    if (!this.supportsIntegratedFind())
+      return;
+    // Verify what we're sending to the findbar.
+    var result = data.result;
+    var findPrevious = data.findPrevious;
+    var findPreviousType = typeof findPrevious;
+    if ((typeof result !== 'number' || result < 0 || result > 3) ||
+        (findPreviousType !== 'undefined' && findPreviousType !== 'boolean')) {
+      return;
+    }
+    getChromeWindow(this.domWindow).gFindBar
+                                   .updateControlState(result, findPrevious);
   }
 };
 
@@ -428,6 +451,57 @@ RequestListener.prototype.receive = function(event) {
       }
     }
     actions[action].call(this.actions, data, response);
+  }
+};
+
+// Forwards events from the eventElement to the contentWindow only if the
+// content window matches the currently selected browser window.
+function FindEventManager(eventElement, contentWindow, chromeWindow) {
+  this.types = ['find',
+                'findagain',
+                'findhighlightallchange',
+                'findcasesensitivitychange'];
+  this.chromeWindow = chromeWindow;
+  this.contentWindow = contentWindow;
+  this.eventElement = eventElement;
+}
+
+FindEventManager.prototype.bind = function() {
+  var unload = function(e) {
+    this.unbind();
+    this.contentWindow.removeEventListener(e.type, unload);
+  }.bind(this);
+  this.contentWindow.addEventListener('unload', unload);
+
+  for (var i = 0; i < this.types.length; i++) {
+    var type = this.types[i];
+    this.eventElement.addEventListener(type, this, true);
+  }
+};
+
+FindEventManager.prototype.handleEvent = function(e) {
+  var chromeWindow = this.chromeWindow;
+  var contentWindow = this.contentWindow;
+  // Only forward the events if they are for our dom window.
+  if (chromeWindow.gBrowser.selectedBrowser.contentWindow === contentWindow) {
+    var detail = e.detail;
+    detail.__exposedProps__ = {
+      query: 'r',
+      caseSensitive: 'r',
+      highlightAll: 'r',
+      findPrevious: 'r'
+    };
+    var forward = contentWindow.document.createEvent('CustomEvent');
+    forward.initCustomEvent(e.type, true, true, detail);
+    contentWindow.dispatchEvent(forward);
+    e.preventDefault();
+  }
+};
+
+FindEventManager.prototype.unbind = function() {
+  for (var i = 0; i < this.types.length; i++) {
+    var type = this.types[i];
+    this.eventElement.removeEventListener(type, this, true);
   }
 };
 
@@ -543,6 +617,13 @@ PdfStreamConverter.prototype = {
           domWindow.addEventListener(PDFJS_EVENT_ID, function(event) {
             requestListener.receive(event);
           }, false, true);
+          if (actions.supportsIntegratedFind()) {
+            var chromeWindow = getChromeWindow(domWindow);
+            var findEventManager = new FindEventManager(chromeWindow.gFindBar,
+                                                        domWindow,
+                                                        chromeWindow);
+            findEventManager.bind();
+          }
         }
         listener.onStopRequest.apply(listener, arguments);
       }
@@ -557,7 +638,8 @@ PdfStreamConverter.prototype = {
       var securityManager = Cc['@mozilla.org/scriptsecuritymanager;1']
                             .getService(Ci.nsIScriptSecurityManager);
       var uri = ioService.newURI(PDF_VIEWER_WEB_PAGE, null, null);
-      // FF16 and below had getCodebasePrincipal (bug 774585)
+      // FF16 and below had getCodebasePrincipal, it was replaced by
+      // getNoAppCodebasePrincipal (bug 758258).
       var resourcePrincipal = 'getNoAppCodebasePrincipal' in securityManager ?
                               securityManager.getNoAppCodebasePrincipal(uri) :
                               securityManager.getCodebasePrincipal(uri);

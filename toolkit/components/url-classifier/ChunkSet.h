@@ -15,7 +15,7 @@ namespace mozilla {
 namespace safebrowsing {
 
 /**
- * Store the chunks as an array of uint32.
+ * Store the chunks as an array of uint32_t.
  * XXX: We should optimize this further to compress the
  * many consecutive numbers.
  */
@@ -33,7 +33,7 @@ public:
 
   bool Has(uint32_t chunk) const;
 
-  uint32 Length() const { return mChunks.Length(); }
+  uint32_t Length() const { return mChunks.Length(); }
 
   nsresult Write(nsIOutputStream* aOut) {
     return WriteTArray(aOut, mChunks);
@@ -43,11 +43,11 @@ public:
     return ReadTArray(aIn, &mChunks, aNumElements);
   }
 
-  uint32 *Begin() { return mChunks.Elements(); }
-  uint32 *End() { return mChunks.Elements() + mChunks.Length(); }
+  uint32_t *Begin() { return mChunks.Elements(); }
+  uint32_t *End() { return mChunks.Elements() + mChunks.Length(); }
 
 private:
-  nsTArray<uint32> mChunks;
+  nsTArray<uint32_t> mChunks;
 };
 
 }

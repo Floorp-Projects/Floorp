@@ -13,7 +13,7 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 
 import org.mozilla.apache.commons.codec.binary.Base64;
-import org.mozilla.gecko.sync.GlobalConstants;
+import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.SyncResourceDelegate;
@@ -102,7 +102,7 @@ public class AuthenticateAccountStage implements AuthenticatorStage {
         // Make reference to request, to abort if necessary.
         httpRequest = request;
         client.log.enableDebug(true);
-        request.setHeader(new BasicHeader("User-Agent", GlobalConstants.SYNC_USER_AGENT));
+        request.setHeader(new BasicHeader("User-Agent", SyncConstants.SYNC_USER_AGENT));
         // Host header is not set for some reason, so do it explicitly.
         try {
           URI authServerUri = new URI(authRequestUrl);

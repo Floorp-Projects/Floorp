@@ -417,6 +417,7 @@ public class TabsTray extends LinearLayout
                     if (mSwipeView == null)
                         break;
 
+                    cancelCheckForTap();
                     mSwipeView.setPressed(false);
 
                     if (!mSwiping) {

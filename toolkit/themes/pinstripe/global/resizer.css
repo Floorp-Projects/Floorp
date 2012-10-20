@@ -7,6 +7,7 @@
 resizer {
   -moz-appearance: resizer;
   background: url("chrome://global/skin/icons/resizer.png") no-repeat;
+  background-size: 100% 100%;
   cursor: se-resize;
   width: 15px;
   height: 15px;

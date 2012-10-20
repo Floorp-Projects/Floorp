@@ -570,7 +570,7 @@ nsUrlClassifierDBServiceWorker::FinishStream()
     // XXX: Only allow forwards from the initial update?
     const nsTArray<ProtocolParser::ForwardedUpdate> &forwards =
       mProtocolParser->Forwards();
-    for (uint32 i = 0; i < forwards.Length(); i++) {
+    for (uint32_t i = 0; i < forwards.Length(); i++) {
       const ProtocolParser::ForwardedUpdate &forward = forwards[i];
       mUpdateObserver->UpdateUrlRequested(forward.url, forward.table, forward.mac);
     }
@@ -983,7 +983,7 @@ nsUrlClassifierLookupCallback::HandleResults()
   // until the next update.
   nsAutoPtr<PrefixArray> cacheMisses(new PrefixArray());
   if (cacheMisses) {
-    for (uint32 i = 0; i < mResults->Length(); i++) {
+    for (uint32_t i = 0; i < mResults->Length(); i++) {
       LookupResult &result = mResults->ElementAt(i);
       if (!result.Confirmed()) {
         cacheMisses->AppendElement(result.PrefixHash());

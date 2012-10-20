@@ -17,7 +17,6 @@
 #ifndef mozilla_imagelib_RasterImage_h_
 #define mozilla_imagelib_RasterImage_h_
 
-#include "mozilla/Mutex.h"
 #include "Image.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
@@ -34,6 +33,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WeakPtr.h"
+#include "gfx2DGlue.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
 #endif
@@ -125,6 +125,8 @@ class nsIInputStream;
  * in Init().
  */
 
+class ScaleRequest;
+
 namespace mozilla {
 namespace layers {
 class LayerManager;
@@ -145,32 +147,10 @@ class RasterImage : public Image
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROPERTIES
+  NS_DECL_IMGICONTAINER
 #ifdef DEBUG
   NS_DECL_IMGICONTAINERDEBUG
 #endif
-
-  // BEGIN NS_DECL_IMGICONTAINER (minus GetAnimationMode/SetAnimationMode)
-  // ** Don't edit this chunk except to mirror changes in imgIContainer.idl **
-  NS_IMETHOD GetWidth(int32_t *aWidth);
-  NS_IMETHOD GetHeight(int32_t *aHeight);
-  NS_IMETHOD GetType(uint16_t *aType);
-  NS_IMETHOD_(uint16_t) GetType(void);
-  NS_IMETHOD GetAnimated(bool *aAnimated);
-  NS_IMETHOD GetCurrentFrameIsOpaque(bool *aCurrentFrameIsOpaque);
-  NS_IMETHOD GetFrame(uint32_t aWhichFrame, uint32_t aFlags, gfxASurface **_retval);
-  NS_IMETHOD GetImageContainer(mozilla::layers::ImageContainer **_retval);
-  NS_IMETHOD CopyFrame(uint32_t aWhichFrame, uint32_t aFlags, gfxImageSurface **_retval);
-  NS_IMETHOD ExtractFrame(uint32_t aWhichFrame, const nsIntRect & aRect, uint32_t aFlags, imgIContainer **_retval);
-  NS_IMETHOD Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, const gfxMatrix & aUserSpaceToImageSpace, const gfxRect & aFill, const nsIntRect & aSubimage, const nsIntSize & aViewportSize, uint32_t aFlags);
-  NS_IMETHOD_(nsIFrame *) GetRootLayoutFrame(void);
-  NS_IMETHOD RequestDecode();
-  NS_IMETHOD StartDecoding();
-  NS_IMETHOD LockImage(void);
-  NS_IMETHOD UnlockImage(void);
-  NS_IMETHOD RequestDiscard(void);
-  NS_IMETHOD ResetAnimation(void);
-  NS_IMETHOD_(void) RequestRefresh(const mozilla::TimeStamp& aTime);
-  // END NS_DECL_IMGICONTAINER
 
   RasterImage(imgStatusTracker* aStatusTracker = nullptr);
   virtual ~RasterImage();
@@ -313,6 +293,23 @@ public:
 
   // Called from module startup. Sets up RasterImage to be used.
   static void Initialize();
+
+  enum ScaleStatus
+  {
+    SCALE_INVALID,
+    SCALE_PENDING,
+    SCALE_DONE
+  };
+
+  // Call this with a new ScaleRequest to mark this RasterImage's scale result
+  // as waiting for the results of this request. You call to ScalingDone before
+  // request is destroyed!
+  void ScalingStart(ScaleRequest* request);
+
+  // Call this with a finished ScaleRequest to set this RasterImage's scale
+  // result. Give it a ScaleStatus of SCALE_DONE if everything succeeded, and
+  // SCALE_INVALID otherwise.
+  void ScalingDone(ScaleRequest* request, ScaleStatus status);
 
 private:
   struct Anim
@@ -473,102 +470,6 @@ private:
     bool mPendingInEventLoop;
   };
 
-  struct ScaleRequest : public LinkedListElement<ScaleRequest>
-  {
-    ScaleRequest(RasterImage* aImage)
-      : image(aImage)
-      , srcFrame(nullptr)
-      , dstFrame(nullptr)
-      , scale(0, 0)
-      , done(false)
-      , stopped(false)
-      , srcDataLocked(false)
-    {};
-
-    bool LockSourceData()
-    {
-      if (!srcDataLocked) {
-        bool success = true;
-        success = success && NS_SUCCEEDED(image->LockImage());
-        success = success && NS_SUCCEEDED(srcFrame->LockImageData());
-        srcDataLocked = success;
-      }
-      return srcDataLocked;
-    }
-
-    bool UnlockSourceData()
-    {
-      bool success = true;
-      if (srcDataLocked) {
-        success = success && NS_SUCCEEDED(image->UnlockImage());
-        success = success && NS_SUCCEEDED(srcFrame->UnlockImageData());
-
-        // If unlocking fails, there's nothing we can do to make it work, so we
-        // claim that we're not locked regardless.
-        srcDataLocked = false;
-      }
-      return success;
-    }
-
-    static void Stop(RasterImage* aImg);
-
-    RasterImage* const image;
-    imgFrame *srcFrame;
-    nsAutoPtr<imgFrame> dstFrame;
-    gfxSize scale;
-    bool done;
-    bool stopped;
-    bool srcDataLocked;
-  };
-
-  class ScaleWorker : public nsRunnable
-  {
-  public:
-    static ScaleWorker* Singleton();
-
-    NS_IMETHOD Run();
-
-  /* statics */
-    static nsRefPtr<ScaleWorker> sSingleton;
-
-  private: /* methods */
-    ScaleWorker()
-      : mRequestsMutex("RasterImage.ScaleWorker.mRequestsMutex")
-      , mInitialized(false)
-    {};
-
-    // Note: you MUST call RequestScale with the ScaleWorker mutex held.
-    void RequestScale(RasterImage* aImg);
-
-  private: /* members */
-
-    friend class RasterImage;
-    LinkedList<ScaleRequest> mScaleRequests;
-    Mutex mRequestsMutex;
-    bool mInitialized;
-  };
-
-  class DrawWorker : public nsRunnable
-  {
-  public:
-    static DrawWorker* Singleton();
-
-    NS_IMETHOD Run();
-
-  /* statics */
-    static nsRefPtr<DrawWorker> sSingleton;
-
-  private: /* methods */
-    DrawWorker() {};
-
-    void RequestDraw(RasterImage* aImg);
-
-  private: /* members */
-
-    friend class RasterImage;
-    LinkedList<ScaleRequest> mDrawRequests;
-  };
-
   void DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
                                     gfxContext *aContext,
                                     gfxPattern::GraphicsFilter aFilter,
@@ -612,7 +513,10 @@ private:
   imgFrame* GetCurrentDrawableImgFrame();
   uint32_t GetCurrentImgFrameIndex() const;
   mozilla::TimeStamp GetCurrentImgFrameEndTime() const;
-  
+
+  size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
+                                                 nsMallocSizeOfFun aMallocSizeOf) const;
+
   inline void EnsureAnimExists()
   {
     if (!mAnim) {
@@ -787,7 +691,24 @@ private: // data
   TimeStamp mDrawStartTime;
 
   inline bool CanScale(gfxPattern::GraphicsFilter aFilter, gfxSize aScale);
-  ScaleRequest mScaleRequest;
+
+  struct ScaleResult
+  {
+    ScaleResult()
+     : status(SCALE_INVALID)
+    {}
+
+    gfxSize scale;
+    nsAutoPtr<imgFrame> frame;
+    ScaleStatus status;
+  };
+
+  ScaleResult mScaleResult;
+
+  // We hold on to a bare pointer to a ScaleRequest while it's outstanding so
+  // we can mark it as stopped if necessary. The ScaleWorker/DrawWorker duo
+  // will inform us when to let go of this pointer.
+  ScaleRequest* mScaleRequest;
 
   // Decoder shutdown
   enum eShutdownIntent {
@@ -808,6 +729,14 @@ private: // data
 protected:
   bool ShouldAnimate();
 };
+
+inline NS_IMETHODIMP RasterImage::GetAnimationMode(uint16_t *aAnimationMode) {
+  return GetAnimationModeInternal(aAnimationMode);
+}
+
+inline NS_IMETHODIMP RasterImage::SetAnimationMode(uint16_t aAnimationMode) {
+  return SetAnimationModeInternal(aAnimationMode);
+}
 
 // Asynchronous Decode Requestor
 //

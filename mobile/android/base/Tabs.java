@@ -38,6 +38,7 @@ public class Tabs implements GeckoEventListener {
     public static final int LOADURL_NEW_TAB = 1;
     public static final int LOADURL_USER_ENTERED = 2;
     public static final int LOADURL_PRIVATE = 4;
+    public static final int LOADURL_PINNED = 8;
 
     private static final int SCORE_INCREMENT_TAB_LOCATION_CHANGE = 5;
     private static final int SCORE_INCREMENT_TAB_SELECTED = 10;
@@ -46,6 +47,8 @@ public class Tabs implements GeckoEventListener {
     private static AtomicInteger sTabId = new AtomicInteger(0);
 
     private GeckoApp mActivity;
+
+    static private int sThumbnailWidth = -1;
 
     private Tabs() {
         registerEventListener("SessionHistory:New");
@@ -63,6 +66,25 @@ public class Tabs implements GeckoEventListener {
         registerEventListener("Reader:Removed");
         registerEventListener("Reader:Share");
     }
+
+    static public void setThumbnailWidth(int val) {
+      // Round this to the next highest power of two
+      sThumbnailWidth = (int)(Math.pow( 2, Math.ceil(Math.log(val)/Math.log(2) )));
+    }
+
+    static public int getThumbnailWidth() {
+        if (sThumbnailWidth < 0) {
+            sThumbnailWidth = (int) (GeckoApp.mAppContext.getResources().getDimension(R.dimen.tab_thumbnail_width));
+            return sThumbnailWidth & ~0x1;
+        }
+        return sThumbnailWidth;
+    }
+
+    static public int getThumbnailHeight() {
+        return Math.round(getThumbnailWidth() * getThumbnailAspectRatio());
+    }
+
+    static public float getThumbnailAspectRatio() { return 0.714f; }
 
     public void attachToActivity(GeckoApp activity) {
         mActivity = activity;
@@ -108,7 +130,7 @@ public class Tabs implements GeckoEventListener {
         final Tab tab = mTabs.get(id);
         // This avoids a NPE below, but callers need to be careful to
         // handle this case
-        if (tab == null)
+        if (tab == null || oldTab == tab)
             return null;
 
         mSelectedTab = tab;
@@ -439,9 +461,11 @@ public class Tabs implements GeckoEventListener {
      *
      * @param url   URL of page to load, or search term used if searchEngine is given
      * @param flags flags used to load tab
+     *
+     * @return      the Tab if a new one was created; null otherwise
      */
-    public void loadUrl(String url, int flags) {
-        loadUrl(url, null, -1, flags);
+    public Tab loadUrl(String url, int flags) {
+        return loadUrl(url, null, -1, flags);
     }
 
     /**
@@ -452,25 +476,30 @@ public class Tabs implements GeckoEventListener {
      *                     to search for the url string; if null, the URL is loaded directly
      * @param parentId     ID of this tab's parent, or -1 if it has no parent
      * @param flags        flags used to load tab
+     *
+     * @return             the Tab if a new one was created; null otherwise
      */
-    public void loadUrl(String url, String searchEngine, int parentId, int flags) {
+    public Tab loadUrl(String url, String searchEngine, int parentId, int flags) {
         JSONObject args = new JSONObject();
         int tabId = -1;
+        Tab added = null;
 
         try {
             boolean isPrivate = (flags & LOADURL_PRIVATE) != 0;
+            boolean userEntered = (flags & LOADURL_USER_ENTERED) != 0;
 
             args.put("url", url);
             args.put("engine", searchEngine);
             args.put("parentId", parentId);
-            args.put("userEntered", (flags & LOADURL_USER_ENTERED) != 0);
+            args.put("userEntered", userEntered);
             args.put("newTab", (flags & LOADURL_NEW_TAB) != 0);
             args.put("isPrivate", isPrivate);
+            args.put("pinned", (flags & LOADURL_PINNED) != 0);
 
             if ((flags & LOADURL_NEW_TAB) != 0) {
                 tabId = getNextTabId();
                 args.put("tabID", tabId);
-                addTab(tabId, null, false, parentId, url, isPrivate);
+                added = addTab(tabId, (userEntered ? null : url), false, parentId, url, isPrivate);
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "error building JSON arguments");
@@ -482,6 +511,8 @@ public class Tabs implements GeckoEventListener {
         if (tabId != -1) {
             selectTab(tabId);
         }
+
+        return added;
     }
 
     /**

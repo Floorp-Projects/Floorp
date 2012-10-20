@@ -101,7 +101,7 @@ function testHideMenu()
   let menu = gScratchpadWindow.document.getElementById("sp-open_recent-menu");
   ok(menu.hasAttribute("hidden"), "The menu was hidden successfully.");
 
-  Services.prefs.setIntPref("devtools.scratchpad.recentFilesMax", 2);
+  Services.prefs.setIntPref("devtools.scratchpad.recentFilesMax", 1);
 }
 
 // We have set the recentFilesMax-pref to one (1), this enables the feature,
@@ -114,7 +114,7 @@ function testChangedMaxRecent()
 
   lists.recentFiles04 = gScratchpad.getRecentFiles();
 
-  is(lists.recentFiles04.length, 2,
+  is(lists.recentFiles04.length, 1,
      "Two recent files were successfully removed from the 'recent files'-list");
 
   let doc = gScratchpadWindow.document;
@@ -123,38 +123,12 @@ function testChangedMaxRecent()
   let menuitemLabel = popup.children[0].getAttribute("label");
   let correctMenuItem = false;
   if (menuitemLabel === lists.recentFiles03[2] &&
-      menuitemLabel === lists.recentFiles04[1]) {
+      menuitemLabel === lists.recentFiles04[0]) {
     correctMenuItem = true;
   }
 
   is(correctMenuItem, true,
      "Two recent files were successfully removed from the 'Open Recent'-menu");
-
-  // We now remove one file from the harddrive and use the recent-menuitem for
-  // it to make sure the user is notified that the file no longer exists.
-  // This is tested in testOpenDeletedFile().
-  gFile02.remove(false);
-  gFile02 = null;
-  gScratchpad.openFile(1);
-}
-
-// By now we should have two recent files stored in the list but one of the
-// files should be missing on the harddrive.
-function testOpenDeletedFile() {
-  let doc = gScratchpadWindow.document;
-  let popup = doc.getElementById("sp-menu-open_recentPopup");
-
-  is(gScratchpad.getRecentFiles().length, 1,
-     "The missing file was successfully removed from the list.");
-  // The number of recent files stored, plus the separator and the
-  // clearRecentMenuItems-item.
-  is(popup.children.length, 3,
-     "The missing file was successfully removed from the menu.");
-  ok(gScratchpad.notificationBox.currentNotification,
-     "The notification was successfully displayed.");
-  is(gScratchpad.notificationBox.currentNotification.label,
-     gScratchpad.strings.GetStringFromName("fileNoLongerExists.notification"),
-     "The notification label is correct.");
 
   gScratchpad.clearRecentFiles();
 }
@@ -286,10 +260,6 @@ var PreferenceObserver = {
         break;
       case 7:
         this.timesFired = 8;
-        testOpenDeletedFile();
-        break;
-      case 8:
-        this.timesFired = 9;
         testClearedAll();
         break;
     }
@@ -307,7 +277,8 @@ function test()
   registerCleanupFunction(function () {
     gFile01.remove(false);
     gFile01 = null;
-    // gFile02 was removed earlier.
+    gFile02.remove(false);
+    gFile02 = null;
     gFile03.remove(false);
     gFile03 = null;
     gFile04.remove(false);

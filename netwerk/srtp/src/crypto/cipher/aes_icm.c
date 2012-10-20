@@ -165,7 +165,7 @@ aes_icm_dealloc(cipher_t *c) {
 err_status_t
 aes_icm_context_init(aes_icm_ctx_t *c, const uint8_t *key, int key_len) {
   err_status_t status;
-  int base_key_len;
+  int base_key_len, copy_len;
 
   if (key_len > 16 && key_len < 30) /* Ismacryp */
     base_key_len = 16;
@@ -174,15 +174,21 @@ aes_icm_context_init(aes_icm_ctx_t *c, const uint8_t *key, int key_len) {
   else
     return err_status_bad_param;
 
-  /* set counter and initial values to 'offset' value */
-  /* Note this copies past the end of the 'key' array by 2 bytes! */
-  v128_copy_octet_string(&c->counter, key + base_key_len);
-  v128_copy_octet_string(&c->offset, key + base_key_len);
+  /*
+   * set counter and initial values to 'offset' value, being careful not to
+   * go past the end of the key buffer
+   */
+  v128_set_to_zero(&c->counter);
+  v128_set_to_zero(&c->offset);
 
-  /* force last two octets of the offset to zero (for srtp compatibility) */
-  c->offset.v8[14] = c->offset.v8[15] = 0;
-  c->counter.v8[14] = c->counter.v8[15] = 0;
-  
+  copy_len = key_len - base_key_len;
+  /* force last two octets of the offset to be left zero (for srtp compatibility) */
+  if (copy_len > 14)
+    copy_len = 14;
+
+  memcpy(&c->counter, key + base_key_len, copy_len);
+  memcpy(&c->offset, key + base_key_len, copy_len);
+
   debug_print(mod_aes_icm, 
 	      "key:  %s", octet_string_hex_string(key, base_key_len)); 
   debug_print(mod_aes_icm, 

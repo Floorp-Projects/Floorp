@@ -514,6 +514,21 @@ RILContentHelper.prototype = {
     this.unregisterCallback("_voicemailCallbacks", callback);
   },
 
+  registerTelephonyMsg: function registerTelephonyMsg() {
+    debug("Registering for telephony-related messages");
+    cpmm.sendAsyncMessage("RIL:RegisterTelephonyMsg");
+  },
+
+  registerMobileConnectionMsg: function registerMobileConnectionMsg() {
+    debug("Registering for mobile connection-related messages");
+    cpmm.sendAsyncMessage("RIL:RegisterMobileConnectionMsg");
+  },
+
+  registerVoicemailMsg: function registerVoicemailMsg() {
+    debug("Registering for voicemail-related messages");
+    cpmm.sendAsyncMessage("RIL:RegisterVoicemailMsg");
+  },
+
   enumerateCalls: function enumerateCalls(callback) {
     debug("Requesting enumeration of calls for callback: " + callback);
     // We need 'requestId' to meet the 'RILContentHelper <--> RadioInterfaceLayer'
@@ -710,14 +725,15 @@ RILContentHelper.prototype = {
         }
         break;
       case "RIL:USSDReceived":
-        Services.obs.notifyObservers(null, kUssdReceivedTopic,
-                                     msg.json.message);
+        let res = JSON.stringify({message: msg.json.message,
+                                  sessionEnded: msg.json.sessionEnded});
+        Services.obs.notifyObservers(null, kUssdReceivedTopic, res);
         break;
       case "RIL:SendMMI:Return:OK":
       case "RIL:CancelMMI:Return:OK":
         request = this.takeRequest(msg.json.requestId);
         if (request) {
-          Services.DOMRequest.fireSuccess(request, msg.json);
+          Services.DOMRequest.fireSuccess(request, msg.json.result);
         }
         break;
       case "RIL:SendMMI:Return:KO":

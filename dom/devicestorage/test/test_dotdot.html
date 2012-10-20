@@ -45,9 +45,11 @@ function fail(e) {
 
 function next(e) {
 
-  if (e != undefined)
-    ok(true, "addError was called");
-  
+  if (e != undefined) {
+    ok(true, "addError was called");  
+    ok(e.target.error.name == "SecurityError", "Error must be SecurityError");
+  }
+
   var f = tests.pop();
 
   if (f == undefined) {

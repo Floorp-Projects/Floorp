@@ -573,7 +573,6 @@ static const struct JSOption {
     {"atline",          JSOPTION_ATLINE},
     {"methodjit",       JSOPTION_METHODJIT},
     {"methodjit_always",JSOPTION_METHODJIT_ALWAYS},
-    {"relimit",         JSOPTION_RELIMIT},
     {"strict",          JSOPTION_STRICT},
     {"typeinfer",       JSOPTION_TYPE_INFERENCE},
     {"werror",          JSOPTION_WERROR},
@@ -1312,11 +1311,11 @@ AssertJit(JSContext *cx, unsigned argc, jsval *vp)
 static JSScript *
 ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
 {
-    JSFunction *fun = JS_ValueToFunction(cx, v);
+    RootedFunction fun(cx, JS_ValueToFunction(cx, v));
     if (!fun)
         return NULL;
 
-    JSScript *script = fun->maybeScript();
+    RootedScript script(cx, fun->maybeScript());
     if (!script)
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_SCRIPTS_ONLY);
 
@@ -1399,7 +1398,7 @@ TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rval,
 
     /* Debug-mode currently disables Ion compilation. */
     JSStackFrame *caller = Jsvalify(iter.interpFrame());
-    JSScript *script = iter.script();
+    RawScript script = iter.script().unsafeGet();
 
     size_t length;
     const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
@@ -1778,11 +1777,11 @@ DisassembleScript(JSContext *cx, JSScript *script_, JSFunction *fun, bool lines,
     if (recursive && script->hasObjects()) {
         ObjectArray *objects = script->objects();
         for (unsigned i = 0; i != objects->length; ++i) {
-            JSObject *obj = objects->vector[i];
+            RawObject obj = objects->vector[i];
             if (obj->isFunction()) {
                 Sprint(sp, "\n");
-                JSFunction *fun = obj->toFunction();
-                JSScript *nested = fun->maybeScript();
+                RawFunction fun = obj->toFunction();
+                RawScript nested = fun->maybeScript().unsafeGet();
                 if (!DisassembleScript(cx, nested, fun, lines, recursive, sp))
                     return false;
             }
@@ -2033,6 +2032,7 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
     void *thingToIgnore;
     FILE *dumpFile;
     bool ok;
+    AssertCanGC();
 
     const char *fileName = NULL;
     JSAutoByteString fileNameBytes;
@@ -2048,6 +2048,20 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
             if (!fileNameBytes.encode(cx, str))
                 return false;
             fileName = fileNameBytes.ptr();
+        }
+    }
+
+    // Grab the depth param first, because JS_ValueToECMAUint32 can GC, and
+    // there's no easy way to root the traceable void* parameters below.
+    maxDepth = (size_t)-1;
+    if (argc > 3) {
+        v = JS_ARGV(cx, vp)[3];
+        if (!JSVAL_IS_NULL(v)) {
+            uint32_t depth;
+
+            if (!JS_ValueToECMAUint32(cx, v, &depth))
+                return false;
+            maxDepth = depth;
         }
     }
 
@@ -2072,18 +2086,6 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
         } else if (!JSVAL_IS_NULL(v)) {
             badTraceArg = "toFind";
             goto not_traceable_arg;
-        }
-    }
-
-    maxDepth = (size_t)-1;
-    if (argc > 3) {
-        v = JS_ARGV(cx, vp)[3];
-        if (!JSVAL_IS_NULL(v)) {
-            uint32_t depth;
-
-            if (!JS_ValueToECMAUint32(cx, v, &depth))
-                return false;
-            maxDepth = depth;
         }
     }
 
@@ -2520,6 +2522,13 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
 
     JS_ASSERT(cx->hasfp());
 
+    /* This is a copy of CheckDebugMode. */
+    if (!JS_GetDebugMode(cx)) {
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage,
+                                     NULL, JSMSG_NEED_DEBUG_MODE);
+        return false;
+    }
+
     /* Debug-mode currently disables Ion compilation. */
     ScriptFrameIter fi(cx);
     for (uint32_t i = 0; i < upCount; ++i, ++fi) {
@@ -2537,9 +2546,10 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 
     StackFrame *fp = fi.interpFrame();
+    RootedScript fpscript(cx, fp->script());
     bool ok = !!JS_EvaluateUCInStackFrame(cx, Jsvalify(fp), chars, length,
-                                          fp->script()->filename,
-                                          JS_PCToLineNumber(cx, fp->script(),
+                                          fpscript->filename,
+                                          JS_PCToLineNumber(cx, fpscript,
                                                             fi.pc()),
                                           vp);
 
@@ -4940,7 +4950,7 @@ main(int argc, char **argv, char **envp)
 #endif
 
     /* Use the same parameters as the browser in xpcjsruntime.cpp. */
-    rt = JS_NewRuntime(32L * 1024L * 1024L);
+    rt = JS_NewRuntime(32L * 1024L * 1024L, JS_USE_HELPER_THREADS);
     if (!rt)
         return 1;
 

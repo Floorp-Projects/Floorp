@@ -98,6 +98,13 @@ enum Modifier {
 
 typedef uint16_t Modifiers;
 
+// NotificationToIME is shared by nsIMEStateManager and TextComposition.
+enum NotificationToIME {
+  NOTIFY_IME_OF_CURSOR_POS_CHANGED,
+  REQUEST_TO_COMMIT_COMPOSITION,
+  REQUEST_TO_CANCEL_COMPOSITION
+};
+
 } // namespace widget
 } // namespace mozilla
 

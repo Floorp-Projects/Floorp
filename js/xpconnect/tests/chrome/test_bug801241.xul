@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=801241
+-->
+<window title="Mozilla Bug 801241"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=801241"
+     target="_blank">Mozilla Bug 801241</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 801241 **/
+  SimpleTest.waitForExplicitFinish();
+  const Cu = Components.utils;
+
+  // This is decompiled and run inside the sandbox;
+  function sbCode() {
+    try {
+      win.location = win.location;
+      ok(true, "Didn't throw setting from location");
+    } catch (e) {
+      ok(false, "Threw setting location from sandbox");
+    }
+  }
+
+  function go() {
+    document.getElementById('ifr').onload = null;
+    var sb = new Cu.Sandbox(this);
+    sb.win = document.getElementById('ifr').contentWindow;
+    sb.ok = ok;
+    Cu.evalInSandbox('(' + sbCode.toSource() + ')()', sb);
+    SimpleTest.finish();
+  }
+
+  ]]>
+  </script>
+  <iframe id="ifr" onload="go();" type="content" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</window>

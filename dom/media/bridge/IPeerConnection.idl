@@ -83,6 +83,9 @@ interface IPeerConnection : nsISupports
   void removeStream(in nsIDOMMediaStream stream);
   void closeStreams();
 
+  [implicit_jscontext] readonly attribute jsval localStreams; // MediaStream[]
+  [implicit_jscontext] readonly attribute jsval remoteStreams; // MediaStream[]
+
   /* As the ICE candidates roll in this one should be called each time
    * in order to keep the candidate list up-to-date for the next SDP-related
    * call PeerConnectionImpl does not parse ICE candidates, just sticks them

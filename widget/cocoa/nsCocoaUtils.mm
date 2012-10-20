@@ -521,6 +521,35 @@ nsCocoaUtils::GetCurrentModifiers()
   return cocoaModifiers;
 }
 
+// static
+UInt32
+nsCocoaUtils::ConvertToCarbonModifier(NSUInteger aCocoaModifier)
+{
+  UInt32 carbonModifier = 0;
+  if (aCocoaModifier & NSAlphaShiftKeyMask) {
+    carbonModifier |= alphaLock;
+  }
+  if (aCocoaModifier & NSControlKeyMask) {
+    carbonModifier |= controlKey;
+  }
+  if (aCocoaModifier & NSAlternateKeyMask) {
+    carbonModifier |= optionKey;
+  }
+  if (aCocoaModifier & NSShiftKeyMask) {
+    carbonModifier |= shiftKey;
+  }
+  if (aCocoaModifier & NSCommandKeyMask) {
+    carbonModifier |= cmdKey;
+  }
+  if (aCocoaModifier & NSNumericPadKeyMask) {
+    carbonModifier |= kEventKeyModifierNumLockMask;
+  }
+  if (aCocoaModifier & NSFunctionKeyMask) {
+    carbonModifier |= kEventKeyModifierFnMask;
+  }
+  return carbonModifier;
+}
+
 // While HiDPI support is not 100% complete and tested, we'll have a pref
 // to allow it to be turned off in case of problems (or for testing purposes).
 
@@ -534,68 +563,12 @@ nsCocoaUtils::GetCurrentModifiers()
 static bool sHiDPIEnabled = false;
 static bool sHiDPIPrefInitialized = false;
 
-@interface ScreenParamChangeWatcher : NSObject
-- (id)init;
-@end
-
-@implementation ScreenParamChangeWatcher
-- (id)init
-{
-  [super init];
-  [[NSNotificationCenter defaultCenter]
-    addObserver:self
-       selector:@selector(applicationDidChangeScreenParameters:)
-           name:NSApplicationDidChangeScreenParametersNotification
-         object:NSApp];
-  return self;
-}
-
-- (void)applicationDidChangeScreenParameters:(NSNotification *)notification
-{
-  // reset flags so that the next call to HiDPIEnabled() will re-evaluate
-  sHiDPIEnabled = false;
-  sHiDPIPrefInitialized = false;
-}
-@end
-
-class HiDPIPrefObserver MOZ_FINAL : public nsIObserver {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-};
-
-NS_IMPL_ISUPPORTS1(HiDPIPrefObserver, nsIObserver)
-
-NS_IMETHODIMP
-HiDPIPrefObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                           const PRUnichar* aData)
-{
-  // reset flags so that the next call to HiDPIEnabled() will re-evaluate
-  sHiDPIEnabled = false;
-  sHiDPIPrefInitialized = false;
-  return NS_OK;
-}
-
 // static
 bool
 nsCocoaUtils::HiDPIEnabled()
 {
-  static ScreenParamChangeWatcher* sChangeWatcher = nil;
-
   if (!sHiDPIPrefInitialized) {
     sHiDPIPrefInitialized = true;
-
-    if (!sChangeWatcher) {
-      // Create an object to watch for changes in screen configuration.
-      // Note that we'll leak this object at shutdown;
-      // this is all a temporary hack until we have multi-screen HiDPI working
-      // properly and can dispense with this code.
-      sChangeWatcher = [[ScreenParamChangeWatcher alloc] init];
-
-      // And create an observer for changes to the preference.
-      nsCOMPtr<nsIObserver> obs(new HiDPIPrefObserver());
-      Preferences::AddStrongObserver(obs, "gfx.hidpi.enabled");
-    }
 
     int prefSetting = Preferences::GetInt("gfx.hidpi.enabled", 1);
     if (prefSetting <= 0) {

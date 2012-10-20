@@ -696,18 +696,6 @@ var Scratchpad = {
             file.initWithPath(filePath);
           }
 
-          if (!file.exists()) {
-            this.notificationBox.appendNotification(
-              this.strings.GetStringFromName("fileNoLongerExists.notification"),
-              "file-no-longer-exists",
-              null,
-              this.notificationBox.PRIORITY_WARNING_HIGH,
-              null);
-
-            this.clearFiles(aIndex, 1);
-            return;
-          }
-
           this.setFilename(file.path);
           this.importFromFile(file, false);
           this.setRecentFile(file);
@@ -850,23 +838,6 @@ var Scratchpad = {
   },
 
   /**
-   * Clear a range of files from the list.
-   *
-   * @param integer aIndex
-   *        Index of file in menu to remove.
-   * @param integer aLength
-   *        Number of files from the index 'aIndex' to remove.
-   */
-  clearFiles: function SP_clearFile(aIndex, aLength)
-  {
-    let filePaths = this.getRecentFiles();
-    let branch = Services.prefs.
-                 getBranch("devtools.scratchpad.");
-    filePaths.splice(aIndex, aLength);
-    branch.setCharPref("recentFilePaths", JSON.stringify(filePaths));
-  },
-
-  /**
    * Clear all recent files.
    */
   clearRecentFiles: function SP_clearRecentFiles()
@@ -896,8 +867,11 @@ var Scratchpad = {
 
       let filePaths = this.getRecentFiles();
       if (maxRecent < filePaths.length) {
+        let branch = Services.prefs.
+                     getBranch("devtools.scratchpad.");
         let diff = filePaths.length - maxRecent;
-        this.clearFiles(0, diff);
+        filePaths.splice(0, diff);
+        branch.setCharPref("recentFilePaths", JSON.stringify(filePaths));
       }
     }
   },

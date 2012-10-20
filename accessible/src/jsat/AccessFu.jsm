@@ -98,7 +98,9 @@ var AccessFu = {
     Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
     Services.obs.addObserver(this, 'Accessibility:NextObject', false);
     Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
-    Services.obs.addObserver(this, 'Accessibility:CurrentObject', false);
+    Services.obs.addObserver(this, 'Accessibility:Focus', false);
+    this.chromeWin.addEventListener('TabOpen', this);
+    this.chromeWin.addEventListener('TabSelect', this);
   },
 
   /**
@@ -118,10 +120,13 @@ var AccessFu = {
 
     Input.detach();
 
+    this.chromeWin.removeEventListener('TabOpen', this);
+    this.chromeWin.removeEventListener('TabSelect', this);
+
     Services.obs.removeObserver(this, 'remote-browser-frame-shown');
     Services.obs.removeObserver(this, 'Accessibility:NextObject');
     Services.obs.removeObserver(this, 'Accessibility:PreviousObject');
-    Services.obs.removeObserver(this, 'Accessibility:CurrentObject');
+    Services.obs.removeObserver(this, 'Accessibility:Focus');
   },
 
   _enableOrDisable: function _enableOrDisable() {
@@ -132,7 +137,7 @@ var AccessFu = {
       else
         this._disable();
     } catch (x) {
-      Logger.error(x);
+      Logger.logException(x);
     }
   },
 
@@ -152,7 +157,7 @@ var AccessFu = {
           Output[presenter.type](presenter.details, aMessage.target);
         }
       } catch (x) {
-        Logger.error(x);
+        Logger.logException(x);
       }
       break;
       case 'AccessFu:Input':
@@ -183,11 +188,13 @@ var AccessFu = {
       case 'Accessibility:PreviousObject':
         Input.moveCursor('movePrevious', 'Simple', 'gesture');
         break;
-      case 'Accessibility:CurrentObject':
-        let mm = Utils.getCurrentBrowser(this.chromeWin).
-          frameLoader.messageManager;
-        mm.sendAsyncMessage('AccessFu:VirtualCursor',
-                            {action: 'presentLastPivot'});
+      case 'Accessibility:Focus':
+        this._focused = JSON.parse(aData);
+        if (this._focused) {
+          let mm = Utils.getMessageManager(Utils.getCurrentBrowser(this.chromeWin));
+          mm.sendAsyncMessage('AccessFu:VirtualCursor',
+                              {action: 'whereIsIt', move: true});
+        }
         break;
       case 'nsPref:changed':
         if (aData == 'activate') {
@@ -205,15 +212,42 @@ var AccessFu = {
   },
 
   handleEvent: function handleEvent(aEvent) {
-    if (aEvent.type == 'mozContentEvent' &&
-        aEvent.detail.type == 'accessibility-screenreader') {
-      this._systemPref = aEvent.detail.enabled;
-      this._enableOrDisable();
+    switch (aEvent.type) {
+      case 'mozContentEvent':
+      {
+        if (aEvent.detail.type == 'accessibility-screenreader') {
+          this._systemPref = aEvent.detail.enabled;
+          this._enableOrDisable();
+        }
+        break;
+      }
+      case 'TabOpen':
+      {
+        this._loadFrameScript(Utils.getMessageManager(aEvent.target));
+        break;
+      }
+      case 'TabSelect':
+      {
+        if (this._focused) {
+          let mm = Utils.getMessageManager(Utils.getCurrentBrowser(this.chromeWin));
+          // We delay this for half a second so the awesomebar could close,
+          // and we could use the current coordinates for the content item.
+          // XXX TODO figure out how to avoid magic wait here.
+          this.chromeWin.setTimeout(
+            function () {
+              mm.sendAsyncMessage('AccessFu:VirtualCursor', {action: 'whereIsIt'});
+            }, 500);
+        }
+        break;
+      }
     }
   },
 
   // So we don't enable/disable twice
-  _enabled: false
+  _enabled: false,
+
+  // Layerview is focused
+  _focused: false
 };
 
 var Output = {
@@ -307,7 +341,7 @@ var Input = {
         break;
       }
     } catch (x) {
-      Logger.error(x);
+      Logger.logException(x);
     }
   },
 

@@ -181,10 +181,10 @@ if (this.Components) {
            exports.OS.File.stat(Type.path.fromMsg(path)));
        },
        getCurrentDirectory: function getCurrentDirectory() {
-         return exports.OS.Shared.Type.path.toMsg(exports.OS.File.curDir);
+         return exports.OS.Shared.Type.path.toMsg(File.getCurrentDirectory());
        },
        setCurrentDirectory: function setCurrentDirectory(path) {
-         exports.OS.File.curDir = exports.OS.Shared.Type.path.fromMsg(path);
+         File.setCurrentDirectory(exports.OS.Shared.Type.path.fromMsg(path));
        },
        copy: function copy(sourcePath, destPath, options) {
          return File.copy(Type.path.fromMsg(sourcePath),
@@ -209,6 +209,9 @@ if (this.Components) {
        },
        read: function read(path, bytes) {
          return File.read(Type.path.fromMsg(path), bytes);
+       },
+       exists: function exists(path) {
+         return File.exists(Type.path.fromMsg(path));
        },
        writeAtomic: function writeAtomic(path, buffer, options) {
          if (options.tmpPath) {

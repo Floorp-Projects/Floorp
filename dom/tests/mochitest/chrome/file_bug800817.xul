@@ -31,11 +31,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=800817
     var b1 = document.getElementById("b1");
     var b2 = document.getElementById("b2");
 
-    var mozbrowserAttr = opener.wrappedJSObject.testMozBrowser ? "true" : "false";
-    b1.setAttribute("mozbrowser", mozbrowserAttr);
-    b2.setAttribute("mozbrowser", mozbrowserAttr);
+    var testMozBrowser = opener.wrappedJSObject.testMozBrowser;
+    if (testMozBrowser) {
+      b1.setAttribute("mozbrowser", "true");
+      b2.setAttribute("mozbrowser", "true");
+    }
 
-    opener.wrappedJSObject.ok(true, "Testing with mozbrowser="+ mozbrowserAttr);
+    if (testMozBrowser)
+      opener.wrappedJSObject.info("Testing with mozbrowser=true");
+    else
+      opener.wrappedJSObject.info("Testing without mozbrowser");
 
     b1.contentWindow.focus();
     opener.wrappedJSObject.is(document.activeElement, b1,
@@ -44,7 +49,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=800817
     var didCallDummy = false;
     b2.contentWindow.addEventListener("mousedown", function(e) { didCallDummy = true; });
     sendClick(b2.contentWindow);
-    opener.wrappedJSObject.ok(didCallDummy);
+    opener.wrappedJSObject.ok(didCallDummy, "dummy mousedown handler should fire");
     opener.wrappedJSObject.is(document.activeElement, b2,
                               "Focus shifted to second iframe");
 
@@ -55,7 +60,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=800817
     var didCallListener = false;
     b2.contentWindow.addEventListener("mousedown", function(e) { didCallListener = true; e.preventDefault(); });
     sendClick(b2.contentWindow);
-    opener.wrappedJSObject.ok(didCallListener);
+    opener.wrappedJSObject.ok(didCallListener, "mousedown handler should fire");
     opener.wrappedJSObject.is(document.activeElement, b1,
                               "Did not move focus to the second iframe");
 

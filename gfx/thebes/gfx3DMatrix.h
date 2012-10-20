@@ -57,6 +57,8 @@ public:
    */
   bool operator==(const gfx3DMatrix& aMatrix) const;
   bool operator!=(const gfx3DMatrix& aMatrix) const;
+
+  bool FuzzyEqual(const gfx3DMatrix& aMatrix) const;
   
   /**
    * Divide all values in the matrix by a scalar value

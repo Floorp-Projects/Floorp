@@ -243,6 +243,7 @@ public:
     NS_IMETHOD              SetCursor(imgIContainer* aCursor, uint32_t aHotspotX, uint32_t aHotspotY);
 
     CGFloat                 BackingScaleFactor();
+    void                    BackingScaleFactorChanged();
     virtual double          GetDefaultScale();
 
     NS_IMETHOD              SetTitle(const nsAString& aTitle);
@@ -313,6 +314,9 @@ protected:
   void                 SetUpWindowFilter();
   void                 CleanUpWindowFilter();
   void                 UpdateBounds();
+
+  nsresult             DoResize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
+                                bool aRepaint, bool aConstrainToCurrentScreen);
 
   virtual already_AddRefed<nsIWidget>
   AllocateChildPopupWidget()

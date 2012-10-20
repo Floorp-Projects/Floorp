@@ -50,12 +50,14 @@ public:
   // Returns height in "display pixels".  Multiply by
   // mContentsScaleFactor to get device pixels.
   size_t GetFrontSurfaceHeight();
+  double GetFrontSurfaceContentsScaleFactor();
   // Returns width in "display pixels".  Multiply by
   // mContentsScaleFactor to get device pixels.
   size_t GetBackSurfaceWidth();
   // Returns height in "display pixels".  Multiply by
   // mContentsScaleFactor to get device pixels.
   size_t GetBackSurfaceHeight();
+  double GetBackSurfaceContentsScaleFactor();
   IOSurfaceID GetFrontSurfaceID();
 
   bool HasBackSurface();

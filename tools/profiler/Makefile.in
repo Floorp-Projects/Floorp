@@ -27,6 +27,10 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/ipc/chromium/src \
   $(NULL)
 
+ifneq (,$(filter armeabi,$(ANDROID_CPU_ARCH)))
+DEFINES += -DARCH_ARMV6
+endif
+
 ifneq (,$(MOZ_PROFILING))
 ifneq (,$(filter Android,$(OS_TARGET)))
 LOCAL_INCLUDES += \

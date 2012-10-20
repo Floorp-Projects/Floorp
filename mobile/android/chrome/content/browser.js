@@ -245,8 +245,7 @@ var BrowserApp = {
     // Init FormHistory
     Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
-    let loadParams = {};
-    let url = "about:home";
+    let url = null;
     let restoreMode = 0;
     let pinned = false;
     if ("arguments" in window) {
@@ -269,9 +268,6 @@ var BrowserApp = {
       SearchEngines.init();
       this.initContextMenu();
     }
-
-    if (url == "about:empty")
-      loadParams.flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
 
     // XXX maybe we don't do this if the launch was kicked off from external
     Services.io.offline = false;
@@ -296,12 +292,8 @@ var BrowserApp = {
         }
       });
 
-      // Open any commandline URLs, except the homepage
-      if (url && url != "about:home") {
-        loadParams.pinned = pinned;
-        this.addTab(url, loadParams);
-      } else {
-        // Let the session make a restored tab active
+      // Make the restored tab active if we aren't loading an external URL
+      if (url == null) {
         restoreToFront = true;
       }
 
@@ -327,15 +319,6 @@ var BrowserApp = {
 
       // Start the restore
       ss.restoreLastSession(restoreToFront, restoreMode == 1);
-    } else {
-      loadParams.showProgress = shouldShowProgress(url);
-      loadParams.pinned = pinned;
-      this.addTab(url, loadParams);
-
-      // show telemetry door hanger if we aren't restoring a session
-#ifdef MOZ_TELEMETRY_REPORTING
-      Telemetry.prompt();
-#endif
     }
 
     if (updated)
@@ -569,13 +552,16 @@ var BrowserApp = {
     if (this._selectedTab == aTab)
       return;
 
-    if (this._selectedTab)
+    if (this._selectedTab) {
+      Tabs.touch(this._selectedTab);
       this._selectedTab.setActive(false);
+    }
 
     this._selectedTab = aTab;
     if (!aTab)
       return;
 
+    Tabs.touch(aTab);
     aTab.setActive(true);
     aTab.setResolution(aTab._zoom, true);
     this.displayedDocumentChanged();
@@ -689,6 +675,8 @@ var BrowserApp = {
     let evt = document.createEvent("UIEvents");
     evt.initUIEvent("TabOpen", true, false, window, null);
     newTab.browser.dispatchEvent(evt);
+
+    Tabs.zombifyLru();
 
     return newTab;
   },
@@ -1067,8 +1055,6 @@ var BrowserApp = {
 
   observe: function(aSubject, aTopic, aData) {
     let browser = this.selectedBrowser;
-    if (!browser)
-      return;
 
     if (aTopic == "Session:Back") {
       browser.goBack();
@@ -1092,7 +1078,8 @@ var BrowserApp = {
         parentId: ("parentId" in data) ? data.parentId : -1,
         flags: flags,
         tabID: data.tabID,
-        isPrivate: data.isPrivate
+        isPrivate: data.isPrivate,
+        pinned: data.pinned
       };
 
       let url = data.url;
@@ -2053,19 +2040,42 @@ var SelectionHandler = {
     let scrollX = {}, scrollY = {};
     this._view.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).getScrollXY(false, scrollX, scrollY);
 
+    // the checkHidden function tests to see if the given point is hidden inside an
+    // iframe/subdocument. this is so that if we select some text inside an iframe and
+    // scroll the iframe so the selection is out of view, we hide the handles rather
+    // than having them float on top of the main page content.
+    let checkHidden = function(x, y) {
+      return false;
+    };
+    if (this._view.frameElement) {
+      let bounds = this._view.frameElement.getBoundingClientRect();
+      checkHidden = function(x, y) {
+        return x < 0 || y < 0 || x > bounds.width || y > bounds.height;
+      }
+    }
+
     let positions = null;
     if (this._activeType == this.TYPE_CURSOR) {
       let cursor = this._cwu.sendQueryContentEvent(this._cwu.QUERY_CARET_RECT, this._target.selectionEnd, 0, 0, 0);
+      let x = cursor.left;
+      let y = cursor.top + cursor.height;
       positions = [ { handle: this.HANDLE_TYPE_MIDDLE,
-                     left: cursor.left + offset.x + scrollX.value,
-                     top: cursor.top + cursor.height + offset.y + scrollY.value } ];
+                     left: x + offset.x + scrollX.value,
+                     top: y + offset.y + scrollY.value,
+                     hidden: checkHidden(x, y) } ];
     } else {
+      let sx = this.cache.start.x;
+      let sy = this.cache.start.y;
+      let ex = this.cache.end.x;
+      let ey = this.cache.end.y;
       positions = [ { handle: this.HANDLE_TYPE_START,
-                     left: this.cache.start.x + offset.x + scrollX.value,
-                     top: this.cache.start.y + offset.y + scrollY.value },
+                     left: sx + offset.x + scrollX.value,
+                     top: sy + offset.y + scrollY.value,
+                     hidden: checkHidden(sx, sy) },
                    { handle: this.HANDLE_TYPE_END,
-                     left: this.cache.end.x + offset.x + scrollX.value,
-                     top: this.cache.end.y + offset.y + scrollY.value } ];
+                     left: ex + offset.x + scrollX.value,
+                     top: ey + offset.y + scrollY.value,
+                     hidden: checkHidden(ex, ey) } ];
     }
 
     sendMessageToJava({
@@ -2074,6 +2084,29 @@ var SelectionHandler = {
         positions: positions
       }
     });
+  },
+
+  subdocumentScrolled: function sh_subdocumentScrolled(aElement) {
+    if (this._activeType == this.TYPE_NONE) {
+      return;
+    }
+    let scrollView = aElement.ownerDocument.defaultView;
+    let view = this._view;
+    while (true) {
+      if (view == scrollView) {
+        // The selection is in a view (or sub-view) of the view that scrolled.
+        // So we need to reposition the handles.
+        if (this._activeType == this.TYPE_SELECTION) {
+          this.updateCacheForSelection();
+        }
+        this.positionHandles();
+        break;
+      }
+      if (view == view.parent) {
+        break;
+      }
+      view = view.parent;
+    }
   }
 };
 
@@ -2260,6 +2293,7 @@ let gScreenHeight = 1;
 function Tab(aURL, aParams) {
   this.browser = null;
   this.id = 0;
+  this.lastTouchedAt = Date.now();
   this.showProgress = true;
   this._zoom = 1.0;
   this._drawZoom = 1.0;
@@ -2818,12 +2852,9 @@ Tab.prototype = {
         // event fires; it's not clear that doing so is worth the effort.
         var backgroundColor = null;
         try {
-          let browser = BrowserApp.selectedBrowser;
-          if (browser) {
-            let { contentDocument, contentWindow } = browser;
-            let computedStyle = contentWindow.getComputedStyle(contentDocument.body);
-            backgroundColor = computedStyle.backgroundColor;
-          }
+          let { contentDocument, contentWindow } = this.browser;
+          let computedStyle = contentWindow.getComputedStyle(contentDocument.body);
+          backgroundColor = computedStyle.backgroundColor;
         } catch (e) {
           // Ignore. Catching and ignoring exceptions here ensures that Talos succeeds.
         }
@@ -3667,6 +3698,7 @@ var BrowserEventHandler = {
       if (this._elementCanScroll(this._scrollableElement, data.x, data.y)) {
         this._scrollElementBy(this._scrollableElement, data.x, data.y);
         sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: true } });
+        SelectionHandler.subdocumentScrolled(this._scrollableElement);
       } else {
         sendMessageToJava({ gecko: { type: "Gesture:ScrollAck", scrolled: false } });
       }
@@ -3677,12 +3709,9 @@ var BrowserEventHandler = {
       if (element) {
         try {
           let data = JSON.parse(aData);
-          let isClickable = ElementTouchHelper.isElementClickable(element);
-
-          if (isClickable) {
+          if (ElementTouchHelper.isElementClickable(element)) {
             [data.x, data.y] = this._moveClickPoint(element, data.x, data.y);
             element = ElementTouchHelper.anyElementFromPoint(data.x, data.y);
-            isClickable = ElementTouchHelper.isElementClickable(element);
           }
 
           this._sendMouseEvent("mousemove", element, data.x, data.y);
@@ -3692,9 +3721,6 @@ var BrowserEventHandler = {
           // See if its a input element
           if ((element instanceof HTMLInputElement && element.mozIsTextField(false)) || (element instanceof HTMLTextAreaElement))
              SelectionHandler.showThumb(element);
-  
-          if (isClickable)
-            Haptic.performSimpleAction(Haptic.LongPress);
         } catch(e) {
           Cu.reportError(e);
         }
@@ -3703,13 +3729,10 @@ var BrowserEventHandler = {
     } else if (aTopic == "Gesture:DoubleTap") {
       this._cancelTapHighlight();
       this.onDoubleTap(aData);
-    } else if (aTopic == "MozMagnifyGestureStart" ||
-               aTopic == "MozMagnifyGestureUpdate") {
+    } else if (aTopic == "MozMagnifyGestureStart" || aTopic == "MozMagnifyGestureUpdate") {
       this.onPinch(aData);
     } else if (aTopic == "MozMagnifyGesture") {
-      this.onPinchFinish(aData,
-                         this._mLastPinchPoint.x,
-                         this._mLastPinchPoint.y);
+      this.onPinchFinish(aData, this._mLastPinchPoint.x, this._mLastPinchPoint.y);
     } else if (aTopic == "nsPref:changed") {
       if (aData == "browser.zoom.reflowOnZoom") {
         this.updateReflozPref();
@@ -6815,11 +6838,13 @@ var Telemetry = {
   init: function init() {
     Services.obs.addObserver(this, "Preferences:Set", false);
     Services.obs.addObserver(this, "Telemetry:Add", false);
+    Services.obs.addObserver(this, "Telemetry:Prompt", false);
   },
 
   uninit: function uninit() {
     Services.obs.removeObserver(this, "Preferences:Set");
     Services.obs.removeObserver(this, "Telemetry:Add");
+    Services.obs.removeObserver(this, "Telemetry:Prompt");
   },
 
   observe: function observe(aSubject, aTopic, aData) {
@@ -6833,6 +6858,10 @@ var Telemetry = {
       var telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
       let histogram = telemetry.getHistogramById(json.name);
       histogram.add(json.value);
+    } else if (aTopic == "Telemetry:Prompt") {
+#ifdef MOZ_TELEMETRY_REPORTING
+      this.prompt();
+#endif
     }
   },
 
@@ -7388,6 +7417,7 @@ var MemoryObserver = {
   },
 
   zombify: function(tab) {
+    dump("Zombifying tab at index [" + tab.id + "]");
     let browser = tab.browser;
     let data = browser.__SS_data;
     let extra = browser.__SS_extdata;
@@ -7482,4 +7512,50 @@ var Distribution = {
     defaults.setCharPref("distribution.id", aData.id);
     defaults.setCharPref("distribution.version", aData.version);
   }
+};
+
+var Tabs = {
+  // This object provides functions to manage a most-recently-used list
+  // of tabs. Each tab has a timestamp associated with it that indicates when
+  // it was last touched.
+
+  touch: function(aTab) {
+    aTab.lastTouchedAt = Date.now();
+  },
+
+  zombifyLru: function() {
+    let zombieTimeMs = Services.prefs.getIntPref("browser.tabs.zombieTime") * 1000;
+    if (zombieTimeMs < 0) {
+      // this behaviour is disabled
+      return false;
+    }
+    let tabs = BrowserApp.tabs;
+    let selected = BrowserApp.selectedTab;
+    let lruTab = null;
+    // find the least recently used non-zombie tab
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i] == selected || tabs[i].browser.__SS_restore) {
+        // this tab is selected or already a zombie, skip it
+        continue;
+      }
+      if (lruTab == null || tabs[i].lastTouchedAt < lruTab.lastTouchedAt) {
+        lruTab = tabs[i];
+      }
+    }
+    // if the tab was last touched more than browser.tabs.zombieTime seconds ago,
+    // zombify it
+    if (lruTab && (Date.now() - lruTab.lastTouchedAt) > zombieTimeMs) {
+      MemoryObserver.zombify(lruTab);
+      return true;
+    }
+    return false;
+  },
+
+  // for debugging
+  dump: function(aPrefix) {
+    let tabs = BrowserApp.tabs;
+    for (let i = 0; i < tabs.length; i++) {
+      dump(aPrefix + " | " + "Tab [" + tabs[i].browser.contentWindow.location.href + "]: lastTouchedAt:" + tabs[i].lastTouchedAt + ", zombie:" + tabs[i].browser.__SS_restore);
+    }
+  },
 };

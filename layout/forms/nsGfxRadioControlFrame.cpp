@@ -8,13 +8,12 @@
 #include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
 #include "nsRenderingContext.h"
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
 #include "nsIServiceManager.h"
 #include "nsITheme.h"
 #include "nsDisplayList.h"
 #include "nsCSSAnonBoxes.h"
+
+using namespace mozilla;
 
 nsIFrame*
 NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -34,16 +33,10 @@ nsGfxRadioControlFrame::~nsGfxRadioControlFrame()
 }
 
 #ifdef ACCESSIBILITY
-already_AddRefed<Accessible>
-nsGfxRadioControlFrame::CreateAccessible()
+a11y::AccType
+nsGfxRadioControlFrame::AccessibleType()
 {
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  if (accService) {
-    return accService->CreateHTMLRadioButtonAccessible(mContent,
-                                                       PresContext()->PresShell());
-  }
-
-  return nullptr;
+  return a11y::eHTMLRadioButtonAccessible;
 }
 #endif
 

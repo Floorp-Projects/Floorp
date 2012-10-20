@@ -689,6 +689,12 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrImage::Data& aData,
                             unsigned char* aDestBuffer,
                             int32_t aStride)
 {
+  // ConvertYCbCrToRGB et al. assume the chroma planes are rounded up if the
+  // luma plane is odd sized.
+  MOZ_ASSERT((aData.mCbCrSize.width == aData.mYSize.width ||
+              aData.mCbCrSize.width == (aData.mYSize.width + 1) >> 1) &&
+             (aData.mCbCrSize.height == aData.mYSize.height ||
+              aData.mCbCrSize.height == (aData.mYSize.height + 1) >> 1));
   gfx::YUVType yuvtype =
     gfx::TypeFromSize(aData.mYSize.width,
                       aData.mYSize.height,

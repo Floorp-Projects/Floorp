@@ -226,7 +226,7 @@ interface nsIMemoryMultiReporter : nsISupports
   readonly attribute int64_t explicitNonHeap;
 };
 
-[scriptable, uuid(7aa2fcfc-eb8f-4bc8-95cc-2bc5e3374df7)]
+[scriptable, builtinclass, uuid(8b670411-ea2a-44c2-a36b-529db0670821)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -291,111 +291,13 @@ interface nsIMemoryReporterManager : nsISupports
   /*
    * This attribute indicates if moz_malloc_usable_size() works.
    */
-  readonly attribute boolean hasMozMallocUsableSize;
+  [infallible] readonly attribute boolean hasMozMallocUsableSize;
 
   /*
    * Run a series of GC/CC's in an attempt to minimize the application's memory
    * usage.  When we're finished, we invoke the given runnable.
    */
   void minimizeMemoryUsage(in nsIRunnable callback);
-
-  /*
-   * This dumps the memory reports for this process and possibly all our child
-   * processes (and all their children, recursively) to a file in the tmp
-   * directory called memory-reports-<identifier>-<pid>.json.gz (or something
-   * similar, such as memory-reports-<identifier>-<pid>-1.json.gz;  no existing
-   * file will be overwritten).
-   *
-   * @param identifier this identifier will appear in the filename of our
-   *   about:memory dump and those of our children (if dumpChildProcesses is
-   *   true).
-   *
-   *   If the identifier is empty, the dumpMemoryReportsToFile implementation
-   *   may set it arbitrarily and use that new value for its own dump and the
-   *   dumps of its child processes.  For example, the dumpMemoryReportsToFile
-   *   implementation may set |identifier| to the number of seconds since the
-   *   epoch.
-   *
-   * @param minimizeMemoryUsage indicates whether we should run a series of
-   *   gc/cc's in an attempt to reduce our memory usage before collecting our
-   *   memory report.
-   *
-   * @param dumpChildProcesses indicates whether we should call
-   *   dumpMemoryReportsToFile in our child processes.  If so, the child
-   *   processes will also dump their children, and so on.
-   *
-   *
-   * Sample output:
-   *
-   * {
-   *   "hasMozMallocUsableSize":true,
-   *   "reports": [
-   *     {"process":"", "path":"explicit/foo/bar", "kind":1, "units":0,
-   *      "amount":2000000, "description":"Foo bar."},
-   *     {"process":"", "path":"heap-allocated", "kind":1, "units":0,
-   *      "amount":3000000, "description":"Heap allocated."},
-   *     {"process":"", "path":"vsize", "kind":1, "units":0,
-   *      "amount":10000000, "description":"Vsize."}
-   *   ]
-   * }
-   *
-   * JSON schema for the output.
-   *
-   * {
-   *   "properties": {
-   *     "hasMozMallocUsableSize": {
-   *       "type": "boolean",
-   *       "description": "nsIMemoryReporterManager::hasMozMallocUsableSize",
-   *       "required": true
-   *     },
-   *     "reports": {
-   *       "type": "array",
-   *       "description": "The memory reports.",
-   *       "required": true
-   *       "minItems": 1,
-   *       "items": {
-   *         "type": "object",
-   *         "properties": {
-   *           "process": {
-   *             "type": "string",
-   *             "description": "nsIMemoryReporter::process",
-   *             "required": true
-   *           },
-   *           "path": {
-   *             "type": "string",
-   *             "description": "nsIMemoryReporter::path",
-   *             "required": true,
-   *             "minLength": 1
-   *           },
-   *           "kind": {
-   *             "type": "integer",
-   *             "description": "nsIMemoryReporter::kind",
-   *             "required": true
-   *           },
-   *           "units": {
-   *             "type": "integer",
-   *             "description": "nsIMemoryReporter::units",
-   *             "required": true
-   *           },
-   *           "amount": {
-   *             "type": "integer",
-   *             "description": "nsIMemoryReporter::amount",
-   *             "required": true
-   *           },
-   *           "description": {
-   *             "type": "string",
-   *             "description": "nsIMemoryReporter::description",
-   *             "required": true
-   *           }
-   *         }
-   *       }
-   *     }
-   *   }
-   * }
-   */
-  void dumpMemoryReportsToFile (in AString identifier,
-                                in bool minimizeMemoryUsage,
-                                in bool dumpChildProcesses);
 };
 
 %{C++
@@ -444,20 +346,24 @@ interface nsIMemoryReporterManager : nsISupports
 
 #define NS_MEMORY_REPORTER_NAME(_classname)  MemoryReporter_##_classname
 
+// Note that the memory reporters are held in an nsCOMArray, which means
+// that individual reporters should be referenced with |nsIMemoryReporter *|
+// instead of nsCOMPtr<nsIMemoryReporter>.
+
 nsresult NS_RegisterMemoryReporter(nsIMemoryReporter *reporter);
 nsresult NS_RegisterMemoryMultiReporter(nsIMemoryMultiReporter *reporter);
 
 nsresult NS_UnregisterMemoryReporter(nsIMemoryReporter *reporter);
 nsresult NS_UnregisterMemoryMultiReporter(nsIMemoryMultiReporter *reporter);
 
-// Because DMD is not a tool that comes with the standard Valgrind
-// distribution, we have to #include our own local copy of dmd.h.  Ugly but
+// Because DMDV is not a tool that comes with the standard Valgrind
+// distribution, we have to #include our own local copy of dmdv.h.  Ugly but
 // unavoidable.
-#ifdef MOZ_DMD
+#ifdef MOZ_DMDV
 #if MOZ_MEMORY
-#error "--disable-jemalloc should have been forced when --enable-dmd was specified"
+#error "--disable-jemalloc should have been forced when --enable-dmdv was specified"
 #endif
-#include "dmd.h"
+#include "dmdv.h"
 #endif
 
 namespace mozilla {
@@ -469,7 +375,7 @@ namespace mozilla {
  *
  * You might be wondering why we have a macro that creates multiple functions
  * distinguished only by |name|, instead of a single MemoryReporterMallocSizeOf
- * function.  It's mostly to help with DMD integration, though it sometimes
+ * function.  It's mostly to help with DMDV integration, though it sometimes
  * also helps with debugging and temporary ad hoc profiling.  The |name| chosen
  * doesn't matter greatly, but it's best to make it similar to the path used by
  * the relevant memory reporter(s).
@@ -478,38 +384,38 @@ namespace mozilla {
   static size_t fn(const void *ptr)                                           \
   {                                                                           \
       size_t usable = moz_malloc_size_of(ptr);                                \
-      VALGRIND_DMD_REPORT(ptr, usable, name);                                 \
+      VALGRIND_DMDV_REPORT(ptr, usable, name);                                \
       return usable;                                                          \
   }
 
 /*
  * Like NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN, but the created function sends an
- * "unreport" message to DMD.
+ * "unreport" message to DMDV.
  */
 #define NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN_UN(fn)                           \
   static size_t fn(const void *ptr)                                           \
   {                                                                           \
       size_t usable = moz_malloc_size_of(ptr);                                \
-      VALGRIND_DMD_UNREPORT(ptr);                                             \
+      VALGRIND_DMDV_UNREPORT(ptr);                                            \
       return usable;                                                          \
   }
 
-#ifdef MOZ_DMD
+#ifdef MOZ_DMDV
 
 /*
  * This runs all the memory reporters but does nothing with the results;  i.e.
- * it does the minimal amount of work possible for DMD to do its thing.  Then
- * it dumps the DMD output to stderr (or somewhere else, if one of
- * DMD/Valgrind's logging options was used).
+ * it does the minimal amount of work possible for DMDV to do its thing.  Then
+ * it dumps the DMDV output to stderr (or somewhere else, if one of
+ * DMDV/Valgrind's logging options was used).
  */
-void DMDCheckAndDump();
+void DMDVCheckAndDump();
 
 #else
 
-#define VALGRIND_DMD_REPORT(ptr, usable, name)
-#define VALGRIND_DMD_UNREPORT(ptr)
+#define VALGRIND_DMDV_REPORT(ptr, usable, name)
+#define VALGRIND_DMDV_UNREPORT(ptr)
 
-#endif  /* defined(MOZ_DMD) */
+#endif  /* defined(MOZ_DMDV) */
 }
 
 %}

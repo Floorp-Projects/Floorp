@@ -125,7 +125,7 @@
     <!-- specific -->
     <ruleset id="htmlinputbutton">
       <ruleset ref="htmlelm_start"/>
-      <rule attr="value" type="string"/>
+      <rule attr="value" type="string" explict-name="false"/>
       <rule attr="alt" type="string"/>
       <rule attr="src" type="string"/>
       <rule attr="data" type="string"/>

@@ -7,5 +7,6 @@
 
     <dimen name="tabs_counter_size">22sp</dimen>
     <dimen name="menu_popup_arrow_margin">5dip</dimen>
+    <dimen name="widget_padding">0dp</dimen>
 
 </resources>

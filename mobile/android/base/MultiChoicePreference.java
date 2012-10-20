@@ -169,6 +169,12 @@ class MultiChoicePreference extends DialogPreference {
 
     @Override
     protected void onDialogClosed(boolean positiveResult) {
+        if (mPrevValues == null || mInitialValues == null) {
+            // Initialization is done asynchronously, so these values may not
+            // have been set before the dialog was closed.
+            return;
+        }
+
         if (!positiveResult) {
             // user cancelled; reset checkbox values to their previous state
             mValues = mPrevValues.clone();

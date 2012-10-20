@@ -77,16 +77,15 @@ ImageAccessible::NativeName(nsString& aName)
   if (!aName.IsEmpty())
     return eNameOK;
 
-  Accessible::NativeName(aName);
-  if (aName.IsEmpty() && hasAltAttrib) {
-    // No accessible name but empty 'alt' attribute is present. If further name
-    // computation algorithm doesn't provide non empty name then it means
-    // an empty 'alt' attribute was used to indicate a decorative image (see
-    // nsIAccessible::name attribute for details).
-    return eNoNameOnPurpose;
-  }
+  ENameValueFlag nameFlag = Accessible::NativeName(aName);
+  if (!aName.IsEmpty())
+    return nameFlag;
 
-  return eNameOK;
+  // No accessible name but empty 'alt' attribute is present. If further name
+  // computation algorithm doesn't provide non empty name then it means
+  // an empty 'alt' attribute was used to indicate a decorative image (see
+  // Accessible::Name() method for details).
+  return hasAltAttrib ? eNoNameOnPurpose : eNameOK;
 }
 
 role
@@ -170,21 +169,18 @@ ImageAccessible::GetImageSize(int32_t* aWidth, int32_t* aHeight)
 }
 
 // Accessible
-nsresult
-ImageAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
+already_AddRefed<nsIPersistentProperties>
+ImageAccessible::NativeAttributes()
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsresult rv = LinkableAccessible::GetAttributesInternal(aAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    LinkableAccessible::NativeAttributes();
 
   nsAutoString src;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
   if (!src.IsEmpty())
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::src, src);
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::src, src);
 
-  return NS_OK;
+  return attributes.forget();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
