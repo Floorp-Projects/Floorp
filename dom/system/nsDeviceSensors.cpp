@@ -119,14 +119,13 @@ nsDeviceSensors::~nsDeviceSensors()
   }
 }
 
-NS_IMETHODIMP nsDeviceSensors::ListenerCount(uint32_t aType, int32_t *aRetVal)
+NS_IMETHODIMP nsDeviceSensors::HasWindowListener(uint32_t aType, nsIDOMWindow *aWindow, bool *aRetVal)
 {
-  if (!mEnabled) {
-    *aRetVal = 0;
-    return NS_OK;
-  }
+  if (!mEnabled)
+    *aRetVal = false;
+  else
+    *aRetVal = mWindowListeners[aType]->IndexOf(aWindow) != NoIndex;
 
-  *aRetVal = mWindowListeners[aType]->Length();
   return NS_OK;
 }
 
