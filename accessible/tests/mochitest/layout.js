@@ -132,6 +132,24 @@ function testBounds(aID, aRect)
 }
 
 /**
+ * Test text position at the given offset.
+ */
+function testTextPos(aID, aOffset, aPoint, aCoordOrigin)
+{
+  var [expectedX, expectedY] = aPoint;
+
+  var xObj = {}, yObj = {};
+  var hyperText = getAccessible(aID, [nsIAccessibleText]);
+  hyperText.getCharacterExtents(aOffset, xObj, yObj, {}, {}, aCoordOrigin);
+  is(xObj.value, expectedX,
+     "Wrong x coordinate at offset " + aOffset + " for " + prettyName(aID));
+  ok(yObj.value - expectedY < 2 && expectedY - yObj.value < 2,
+     "Wrong y coordinate at offset " + aOffset + " for " + prettyName(aID) +
+     " - got " + yObj.value + ", expected " + expectedY +
+     "The difference doesn't exceed 1.");
+}
+
+/**
  * Test text bounds that is enclosed betwene the given offsets.
  */
 function testTextBounds(aID, aStartOffset, aEndOffset, aRect, aCoordOrigin)
