@@ -3067,7 +3067,8 @@ bool HTMLMediaElement::CanActivateAutoplay()
   // For stream inputs, we activate autoplay on HAVE_CURRENT_DATA because
   // this element itself might be blocking the stream from making progress by
   // being paused.
-  return mAutoplaying &&
+  return !mPausedForInactiveDocumentOrChannel &&
+         mAutoplaying &&
          mPaused &&
          (mDownloadSuspendedByCache ||
           (mDecoder && mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) ||
