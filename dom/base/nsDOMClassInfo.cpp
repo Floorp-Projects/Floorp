@@ -187,7 +187,6 @@
 #include "nsIDOMBarProp.h"
 #include "nsIDOMScreen.h"
 #include "nsIDOMDocumentType.h"
-#include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsDOMAttribute.h"
 #include "nsIDOMText.h"
@@ -791,8 +790,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOCUMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DocumentType, nsNodeSH,
                            NODE_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(DOMImplementation, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DOMException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DOMTokenList, nsDOMGenericSH,
@@ -2520,10 +2517,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(DocumentType, nsIDOMDocumentType)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentType)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(DOMImplementation, nsIDOMDOMImplementation)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMImplementation)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(DOMException, nsIDOMDOMException)
