@@ -10,8 +10,6 @@
 #include "nsDOMClassInfoID.h"
 #include "nsIDOMDocumentType.h"
 
-DOMCI_DATA(DOMImplementation, mozilla::dom::DOMImplementation)
-
 namespace mozilla {
 namespace dom {
 
@@ -19,8 +17,7 @@ namespace dom {
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMImplementation)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMDOMImplementation)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMDOMImplementation)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMImplementation)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(DOMImplementation, mOwner)

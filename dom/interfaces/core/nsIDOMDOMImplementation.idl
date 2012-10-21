@@ -14,7 +14,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, uuid(03a6f574-99ec-42f8-9e6c-812a4a9bcbf7)]
+[uuid(03a6f574-99ec-42f8-9e6c-812a4a9bcbf7)]
 interface nsIDOMDOMImplementation : nsISupports
 {
   boolean                   hasFeature(in DOMString feature, 
