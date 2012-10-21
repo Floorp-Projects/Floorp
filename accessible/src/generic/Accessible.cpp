@@ -191,12 +191,6 @@ Accessible::~Accessible()
 }
 
 void
-Accessible::SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
-{
-  mRoleMapEntry = aRoleMapEntry;
-}
-
-void
 Accessible::Init()
 {
 }
