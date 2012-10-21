@@ -54,7 +54,6 @@ class MemoryMonitor extends BroadcastReceiver {
     private final PressureDecrementer mPressureDecrementer;
     private int mMemoryPressure;
     private boolean mStoragePressure;
-    private Context mContext;
 
     private MemoryMonitor() {
         mPressureDecrementer = new PressureDecrementer();
@@ -63,7 +62,6 @@ class MemoryMonitor extends BroadcastReceiver {
     }
 
     public void init(Context context) {
-        mContext = context;
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_DEVICE_STORAGE_LOW);
         filter.addAction(Intent.ACTION_DEVICE_STORAGE_OK);
@@ -111,7 +109,7 @@ class MemoryMonitor extends BroadcastReceiver {
         if (Intent.ACTION_DEVICE_STORAGE_LOW.equals(intent.getAction())) {
             Log.d(LOGTAG, "Device storage is low");
             mStoragePressure = true;
-            GeckoAppShell.getHandler().post(new StorageReducer());
+            GeckoAppShell.getHandler().post(new StorageReducer(context));
         } else if (Intent.ACTION_DEVICE_STORAGE_OK.equals(intent.getAction())) {
             Log.d(LOGTAG, "Device storage is ok");
             mStoragePressure = false;
@@ -207,6 +205,11 @@ class MemoryMonitor extends BroadcastReceiver {
     }
 
     class StorageReducer implements Runnable {
+        private final Context mContext;
+        public StorageReducer(final Context context) {
+            this.mContext = context;
+        }
+
         @Override
         public void run() {
             // this might get run right on startup, if so wait 10 seconds and try again
