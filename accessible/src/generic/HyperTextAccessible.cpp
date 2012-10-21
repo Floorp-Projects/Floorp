@@ -1898,7 +1898,9 @@ HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartIndex,
   rv = HypertextOffsetsToDOMRange(aStartIndex, aEndIndex, range);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsPresContext *presContext = frame->PresContext();
+  nsPresContext* presContext = frame->PresContext();
+  nsPoint coordsInAppUnits =
+    coords.ToAppUnits(presContext->AppUnitsPerDevPixel());
 
   bool initialScrolled = false;
   nsIFrame *parentFrame = frame;
@@ -1908,12 +1910,9 @@ HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartIndex,
       if (!initialScrolled) {
         // Scroll substring to the given point. Turn the point into percents
         // relative scrollable area to use nsCoreUtils::ScrollSubstringTo.
-        nsIntRect frameRect = parentFrame->GetScreenRectExternal();
-        int32_t devOffsetX = coords.x - frameRect.x;
-        int32_t devOffsetY = coords.y - frameRect.y;
-
-        nsPoint offsetPoint(presContext->DevPixelsToAppUnits(devOffsetX),
-                            presContext->DevPixelsToAppUnits(devOffsetY));
+        nsRect frameRect = parentFrame->GetScreenRectInAppUnits();
+        nscoord offsetPointX = coordsInAppUnits.x - frameRect.x;
+        nscoord offsetPointY = coordsInAppUnits.y - frameRect.y;
 
         nsSize size(parentFrame->GetSize());
 
@@ -1921,8 +1920,8 @@ HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartIndex,
         size.width = size.width ? size.width : 1;
         size.height = size.height ? size.height : 1;
 
-        int16_t hPercent = offsetPoint.x * 100 / size.width;
-        int16_t vPercent = offsetPoint.y * 100 / size.height;
+        int16_t hPercent = offsetPointX * 100 / size.width;
+        int16_t vPercent = offsetPointY * 100 / size.height;
 
         rv = nsCoreUtils::ScrollSubstringTo(frame, range, vPercent, hPercent);
         NS_ENSURE_SUCCESS(rv, rv);
