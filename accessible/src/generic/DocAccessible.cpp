@@ -243,29 +243,6 @@ DocAccessible::NativeRole()
   return roles::PANE; // Fall back;
 }
 
-// Accessible public method
-void
-DocAccessible::SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
-{
-  NS_ASSERTION(mDocument, "No document during initialization!");
-  if (!mDocument)
-    return;
-
-  mRoleMapEntry = aRoleMapEntry;
-
-  nsIDocument *parentDoc = mDocument->GetParentDocument();
-  if (!parentDoc)
-    return; // No parent document for the root document
-
-  // Allow use of ARIA role from outer to override
-  nsIContent *ownerContent = parentDoc->FindContentForSubDocument(mDocument);
-  if (ownerContent) {
-    nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(ownerContent);
-    if (roleMapEntry)
-      mRoleMapEntry = roleMapEntry; // Override
-  }
-}
-
 void
 DocAccessible::Description(nsString& aDescription)
 {
