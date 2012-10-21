@@ -115,7 +115,6 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
         mPrototypeJSObject(nullptr),
         mPrototypeNoHelper(nullptr),
         mScriptObjectPrincipal(nullptr),
-        mNewDOMBindingsEnabled(ccx.GetRuntime()->NewDOMBindingsEnabled()),
         mExperimentalBindingsEnabled(ccx.GetRuntime()->ExperimentalBindingsEnabled())
 {
     // add ourselves to the scopes list
