@@ -46,11 +46,13 @@ EXPORTS		= \
 EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
+  DOMImplementation.h \
   Link.h \
   $(NULL)
 
 CPPSRCS		= \
 		DirectionalityUtils.cpp \
+		DOMImplementation.cpp \
 		nsAtomListUtils.cpp \
 		nsAttrAndChildArray.cpp \
 		nsAttrValue.cpp \
