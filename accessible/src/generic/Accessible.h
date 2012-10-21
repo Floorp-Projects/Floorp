@@ -311,7 +311,8 @@ public:
    * @param aRoleMapEntry The ARIA nsRoleMapEntry* for the accessible, or
    *                      nullptr if none.
    */
-  virtual void SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry);
+  void SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
+    { mRoleMapEntry = aRoleMapEntry; }
 
   /**
    * Update the children cache.

@@ -28,7 +28,7 @@ void
 nsWindowMemoryReporter::Init()
 {
   // The memory reporter manager will own this object.
-  nsWindowMemoryReporter *windowReporter = new nsWindowMemoryReporter();
+  nsRefPtr<nsWindowMemoryReporter> windowReporter = new nsWindowMemoryReporter();
   NS_RegisterMemoryMultiReporter(windowReporter);
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
@@ -41,11 +41,11 @@ nsWindowMemoryReporter::Init()
                     /* weakRef = */ true);
   }
 
-  GhostURLsReporter *ghostMultiReporter =
+  nsRefPtr<GhostURLsReporter> ghostMultiReporter =
     new GhostURLsReporter(windowReporter);
   NS_RegisterMemoryMultiReporter(ghostMultiReporter);
 
-  NumGhostsReporter *ghostReporter =
+  nsRefPtr<NumGhostsReporter> ghostReporter =
     new NumGhostsReporter(windowReporter);
   NS_RegisterMemoryReporter(ghostReporter);
 }
