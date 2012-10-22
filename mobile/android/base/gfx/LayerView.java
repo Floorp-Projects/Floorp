@@ -110,6 +110,16 @@ public class LayerView extends FrameLayout {
         GeckoAccessibility.setDelegate(this);
     }
 
+    public void show() {
+        // Fix this if TextureView support is turned back on above
+        mSurfaceView.setVisibility(View.VISIBLE);
+    }
+
+    public void hide() {
+        // Fix this if TextureView support is turned back on above
+        mSurfaceView.setVisibility(View.INVISIBLE);
+    }
+
     public void destroy() {
         if (mLayerClient != null) {
             mLayerClient.destroy();
