@@ -43,19 +43,19 @@ public:
   NS_DECL_NSIDOMIMAGEDATA
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ImageData)
 
-  uint32_t GetWidth()
+  uint32_t Width() const
   {
     return mWidth;
   }
-  uint32_t GetHeight()
+  uint32_t Height() const
   {
     return mHeight;
   }
-  JSObject* GetData(JSContext* cx)
+  JSObject* Data(JSContext* cx) const
   {
     return GetDataObject();
   }
-  JSObject* GetDataObject()
+  JSObject* GetDataObject() const
   {
     xpc_UnmarkGrayObject(mData);
     return mData;

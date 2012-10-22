@@ -1000,12 +1000,12 @@ customMethodCalls = {
         },
     'nsIDOMImageData_GetWidth': {
         'thisType': 'nsIDOMImageData',
-        'code': 'uint32_t result = static_cast<mozilla::dom::ImageData*>(self)->GetWidth();',
+        'code': 'uint32_t result = static_cast<mozilla::dom::ImageData*>(self)->Width();',
         'canFail': False
         },
     'nsIDOMImageData_GetHeight': {
         'thisType': 'nsIDOMImageData',
-        'code': 'uint32_t result = static_cast<mozilla::dom::ImageData*>(self)->GetHeight();',
+        'code': 'uint32_t result = static_cast<mozilla::dom::ImageData*>(self)->Height();',
         'canFail': False
         },
     'nsIDOMImageData_GetData': {

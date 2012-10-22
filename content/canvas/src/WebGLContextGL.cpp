@@ -4889,8 +4889,8 @@ WebGLContext::TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
     }
     
     Uint8ClampedArray arr(cx, pixels->GetDataObject());
-    return TexImage2D_base(target, level, internalformat, pixels->GetWidth(),
-                           pixels->GetHeight(), 4*pixels->GetWidth(), 0,
+    return TexImage2D_base(target, level, internalformat, pixels->Width(),
+                           pixels->Height(), 4*pixels->Width(), 0,
                            format, type, arr.Data(), arr.Length(), -1,
                            WebGLTexelConversions::RGBA8, false);
 }
@@ -5043,8 +5043,8 @@ WebGLContext::TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
 
     Uint8ClampedArray arr(cx, pixels->GetDataObject());
     return TexSubImage2D_base(target, level, xoffset, yoffset,
-                              pixels->GetWidth(), pixels->GetHeight(),
-                              4*pixels->GetWidth(), format, type,
+                              pixels->Width(), pixels->Height(),
+                              4*pixels->Width(), format, type,
                               arr.Data(), arr.Length(),
                               -1,
                               WebGLTexelConversions::RGBA8, false);
