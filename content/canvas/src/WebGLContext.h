@@ -93,6 +93,10 @@ class WebGLActiveInfo;
 class WebGLShaderPrecisionFormat;
 class WebGLExtensionBase;
 
+namespace dom {
+struct WebGLContextAttributes;
+}
+
 enum FakeBlackStatus { DoNotNeedFakeBlack, DoNeedFakeBlack, DontKnowIfNeedFakeBlack };
 
 struct VertexAttrib0Status {
@@ -642,7 +646,7 @@ public:
         return mHeight;
     }
         
-    JSObject *GetContextAttributes(ErrorResult &rv);
+    void GetContextAttributes(dom::WebGLContextAttributes& retval);
     bool IsContextLost() const { return !IsContextStable(); }
     void GetSupportedExtensions(JSContext *cx, dom::Nullable< nsTArray<nsString> > &retval);
     JSObject* GetExtension(JSContext* cx, const nsAString& aName, ErrorResult& rv);
