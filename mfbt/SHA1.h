@@ -49,7 +49,7 @@ class SHA1Sum
     typedef uint8_t Hash[HashSize];
 
     /* Add len bytes of dataIn to the data sequence being hashed. */
-    void update(const uint8_t* dataIn, uint32_t len);
+    void update(const void* dataIn, uint32_t len);
 
     /* Compute the final hash of all data into hashOut. */
     void finish(SHA1Sum::Hash& hashOut);
