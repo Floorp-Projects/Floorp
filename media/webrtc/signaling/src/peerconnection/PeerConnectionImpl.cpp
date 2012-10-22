@@ -80,18 +80,24 @@ void MediaConstraints::buildArray(cc_media_constraints_t** constraintarray) {
   short i = 0;
   std::string tmpStr;
   *constraintarray = (cc_media_constraints_t*) cpr_malloc(sizeof(cc_media_constraints_t));
+  int tmpStrAllocLength;
 
   (*constraintarray)->constraints = (cc_media_constraint_t**) cpr_malloc(mConstraints.size() * sizeof(cc_media_constraint_t));
 
   for (constraints_map::iterator it = mConstraints.begin();
           it != mConstraints.end(); ++it) {
     (*constraintarray)->constraints[i] = (cc_media_constraint_t*) cpr_malloc(sizeof(cc_media_constraint_t));
+
     tmpStr = it->first;
-    (*constraintarray)->constraints[i]->name = (char*) cpr_malloc(tmpStr.size());
-    sstrncpy((*constraintarray)->constraints[i]->name, tmpStr.c_str(), tmpStr.size()+1);
+    tmpStrAllocLength = tmpStr.size() + 1;
+    (*constraintarray)->constraints[i]->name = (char*) cpr_malloc(tmpStrAllocLength);
+    sstrncpy((*constraintarray)->constraints[i]->name, tmpStr.c_str(), tmpStrAllocLength);
+
     tmpStr = it->second.value;
-    (*constraintarray)->constraints[i]->value = (char*) cpr_malloc(tmpStr.size());
-    sstrncpy((*constraintarray)->constraints[i]->value, tmpStr.c_str(), tmpStr.size()+1);
+    tmpStrAllocLength = tmpStr.size() + 1;
+    (*constraintarray)->constraints[i]->value = (char*) cpr_malloc(tmpStrAllocLength);
+    sstrncpy((*constraintarray)->constraints[i]->value, tmpStr.c_str(), tmpStrAllocLength);
+
     (*constraintarray)->constraints[i]->mandatory = it->second.mandatory;
     i++;
   }
