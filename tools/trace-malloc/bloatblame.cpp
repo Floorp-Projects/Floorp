@@ -36,7 +36,7 @@ static int    js_mode = 0;
 static int    do_tree_dump = 0;
 static int    unified_output = 0;
 static char   *function_dump = NULL;
-static uint32 min_subtotal = 0;
+static uint32_t min_subtotal = 0;
 
 static void compute_callsite_totals(tmcallsite *site)
 {
@@ -205,7 +205,7 @@ static int tabulate_node(PLHashEntry *he, int i, void *arg)
 static int node_table_compare(const void *p1, const void *p2)
 {
     const tmgraphnode *node1, *node2;
-    uint32 key1, key2;
+    uint32_t key1, key2;
 
     node1 = *(const tmgraphnode**) p1;
     node2 = *(const tmgraphnode**) p2;
@@ -239,7 +239,7 @@ static int mean_size_compare(const void *p1, const void *p2)
     return 0;
 }
 
-static const char *prettybig(uint32 num, char *buf, size_t limit)
+static const char *prettybig(uint32_t num, char *buf, size_t limit)
 {
     if (num >= 1000000000)
         PR_snprintf(buf, limit, "%1.2fG", (double) num / 1e9);
@@ -252,7 +252,7 @@ static const char *prettybig(uint32 num, char *buf, size_t limit)
     return buf;
 }
 
-static double percent(uint32 num, uint32 total)
+static double percent(uint32_t num, uint32_t total)
 {
     if (num == 0)
         return 0.0;
@@ -311,7 +311,7 @@ static void dump_graphlink_list(tmgraphlink *list, int which, const char *name,
 static void dump_graph(tmreader *tmr, PLHashTable *hashtbl, const char *varname,
                        const char *title, FILE *fp)
 {
-    uint32 i, count;
+    uint32_t i, count;
     tmgraphnode **table, *node;
     char *name;
     size_t namelen;
@@ -461,8 +461,8 @@ static void dump_graph(tmreader *tmr, PLHashTable *hashtbl, const char *varname,
                     "</tr>\n",
                     (namelen > 65) ? 45 : (int)namelen, name,
                     (namelen > 65) ? "<i>...</i>" : "",
-                    prettybig((uint32)mean, buf1, sizeof buf1),
-                    prettybig((uint32)sigma, buf2, sizeof buf2),
+                    prettybig((uint32_t)mean, buf1, sizeof buf1),
+                    prettybig((uint32_t)sigma, buf2, sizeof buf2),
                     prettybig(node->allocs.calls.direct, buf3, sizeof buf3));
         }
         fputs("</table>\n", fp);

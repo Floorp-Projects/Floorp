@@ -361,7 +361,7 @@ gfxFontUtils::ReadCMAPTableFormat4(const uint8_t *aBuf, uint32_t aLength,
     const uint16_t segCount = segCountX2 / 2;
 
     const uint16_t *endCounts = reinterpret_cast<const uint16_t*>(aBuf + 14);
-    const uint16_t *startCounts = endCounts + 1 /* skip one uint16 for reservedPad */ + segCount;
+    const uint16_t *startCounts = endCounts + 1 /* skip one uint16_t for reservedPad */ + segCount;
     const uint16_t *idDeltas = startCounts + segCount;
     const uint16_t *idRangeOffsets = idDeltas + segCount;
     uint16_t prevEndCount = 0;

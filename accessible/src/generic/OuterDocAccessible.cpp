@@ -67,19 +67,6 @@ OuterDocAccessible::ChildAtPoint(int32_t aX, int32_t aY,
   return child;
 }
 
-nsresult
-OuterDocAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
-{
-  nsAutoString tag;
-  aAttributes->GetStringProperty(NS_LITERAL_CSTRING("tag"), tag);
-  if (!tag.IsEmpty()) {
-    // We're overriding the ARIA attributes on an sub document, but we don't want to
-    // override the other attributes
-    return NS_OK;
-  }
-  return Accessible::GetAttributesInternal(aAttributes);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 

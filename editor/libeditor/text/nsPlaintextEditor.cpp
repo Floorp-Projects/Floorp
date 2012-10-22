@@ -260,17 +260,19 @@ nsPlaintextEditor::UpdateMetaCharset(nsIDOMDocument* aDocument,
 {
   MOZ_ASSERT(aDocument);
   // get a list of META tags
-  nsCOMPtr<nsIDOMNodeList> metaList;
+  nsCOMPtr<nsIDOMNodeList> list;
   nsresult rv = aDocument->GetElementsByTagName(NS_LITERAL_STRING("meta"),
-                                                getter_AddRefs(metaList));
+                                                getter_AddRefs(list));
   NS_ENSURE_SUCCESS(rv, false);
-  NS_ENSURE_TRUE(metaList, false);
+  NS_ENSURE_TRUE(list, false);
+
+  nsCOMPtr<nsINodeList> metaList = do_QueryInterface(list);
 
   uint32_t listLength = 0;
   metaList->GetLength(&listLength);
 
   for (uint32_t i = 0; i < listLength; ++i) {
-    nsCOMPtr<nsIContent> metaNode = metaList->GetNodeAt(i);
+    nsCOMPtr<nsIContent> metaNode = metaList->Item(i);
     MOZ_ASSERT(metaNode);
 
     if (!metaNode->IsElement()) {

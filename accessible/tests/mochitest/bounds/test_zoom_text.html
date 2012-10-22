@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>The text range boundary when page is zoomed</title>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../layout.js"></script>
+  <script type="application/javascript"
+          src="../browser.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      var tabDocument = currentTabDocument();
+      var hyperTextNode = tabDocument.getElementById("paragraph");
+      var textNode = hyperTextNode.firstChild;
+
+      var [x, y, width, height] = getBounds(textNode);
+      testTextBounds(hyperTextNode, 0, -1, [x, y, width, height],
+                     COORDTYPE_SCREEN_RELATIVE);
+
+      zoomDocument(tabDocument, 2.0);
+
+      var [x, y, width, height] = getBounds(textNode);
+      testTextBounds(hyperTextNode, 0, -1, [x, y, width, height],
+                     COORDTYPE_SCREEN_RELATIVE);
+
+      zoomDocument(tabDocument, 1.0);
+
+      closeBrowserWindow();
+      SimpleTest.finish();
+    }
+
+    var url = "data:text/html,<html>" +
+      "<meta http-equiv='Content-Type' content='text/html;charset=utf-8'>" +
+      "</meta><body>" +
+      "<p id='paragraph' style='font-family: monospace;'>Tilimilitryamdiya</p>" +
+      "</body></html>";
+
+    SimpleTest.waitForExplicitFinish();
+    openBrowserWindow(doTest,
+                      url,
+                      { left: 0, top: 0, width: 600, height: 600 });
+
+  </script>
+
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=727942"
+     title="Text range boundaries are incorrect when page is zoomed">
+    Mozilla Bug 727942
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

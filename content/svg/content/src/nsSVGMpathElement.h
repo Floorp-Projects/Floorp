@@ -41,7 +41,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
   // Forward interface implementations to base class
-  NS_FORWARD_NSIDOMNODE(nsSVGMpathElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGMpathElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGMpathElementBase::)
 

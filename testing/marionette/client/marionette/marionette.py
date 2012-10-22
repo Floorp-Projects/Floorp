@@ -74,10 +74,18 @@ class HTMLElement(object):
 
     def is_displayed(self):
         return self.marionette._send_message('isElementDisplayed', 'value', element=self.id)
+     
+    @property
+    def size(self):
+        return self.marionette._send_message('getElementSize', 'value', element=self.id)
 
     @property
     def tag_name(self):
         return self.marionette._send_message('getElementTagName', 'value', element=self.id)
+
+    @property
+    def location(self):
+        return self.marionette._send_message('getElementPosition', 'value', element=self.id)
 
 
 class Marionette(object):
@@ -133,6 +141,32 @@ class Marionette(object):
             assert(self.emulator.wait_for_port())
 
         self.client = MarionetteClient(self.host, self.port)
+
+        if emulator:
+            # When launching an emulator, telephony API's are not
+            # available immediately.  They start working after the
+            # system-message-listener-ready event is observed.  See
+            # bug 792647.  This code causes us to wait for this event
+            # after launching an emulator, before allowing any tests
+            # to run.
+            self.start_session()
+            self.set_context(self.CONTEXT_CHROME)
+            self.set_script_timeout(30000)
+            try:
+                self.execute_async_script("""
+    waitFor(
+        function() { marionetteScriptFinished(true); },
+        function() { return isSystemMessageListenerReady(); }
+    );
+                """)
+            except ScriptTimeoutException:
+                # We silently ignore the timeout if it occurs, since
+                # isSystemMessageListenerReady() isn't available on
+                # older emulators.  30s *should* be enough of a delay
+                # to allow telephony API's to work.
+                pass
+            self.set_context(self.CONTEXT_CONTENT)
+            self.delete_session()
 
     def __del__(self):
         if self.emulator:

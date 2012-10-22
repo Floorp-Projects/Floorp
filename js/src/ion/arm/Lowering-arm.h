@@ -48,7 +48,10 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool lowerModI(MMod *mod);
     bool lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs);
     bool visitPowHalf(MPowHalf *ins);
-    bool visitTableSwitch(MTableSwitch *tableswitch);
+
+    LTableSwitch *newLTableSwitch(const LAllocation &in, const LDefinition &inputCopy,
+                                  MTableSwitch *ins);
+    LTableSwitchV *newLTableSwitchV(MTableSwitch *ins);
 
   public:
     bool visitConstant(MConstant *ins);

@@ -316,9 +316,194 @@ add_test(function test_sendMMI_call_forwarding() {
   run_next_test();
 });
 
-add_test(function test_sendMMI_sim_function() {
-  // TODO: Bug 793187 - MMI Codes: Support PIN/PIN2/PUK handling via MMI codes
-  testSendMMI("*04#", "SIM_FUNCTION_NOT_SUPPORTED_VIA_MMI");
+add_test(function test_sendMMI_change_PIN() {
+  let postedMessage;
+  let worker = newWorker({
+    postRILMessage: function fakePostRILMessage(data) {
+    },
+    postMessage: function fakePostMessage(message) {
+      postedMessage = message;
+    },
+  });
+
+  worker.RIL.changeICCPIN = function fakeChangeICCPIN(options){
+    worker.RIL[REQUEST_ENTER_SIM_PIN](0, {
+      rilRequestError: ERROR_SUCCESS
+    });
+  }
+
+  worker.RIL.sendMMI({mmi: "**04*1234*4567*4567#"});
+
+  do_check_eq (postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
+  do_check_true(postedMessage.success);
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_change_PIN_no_new_PIN() {
+  testSendMMI("**04*1234**4567#", "MISSING_SUPPLEMENTARY_INFORMATION");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_change_PIN_no_old_PIN() {
+  testSendMMI("**04**1234*4567#", "MISSING_SUPPLEMENTARY_INFORMATION");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_change_PIN_wrong_procedure() {
+  testSendMMI("*04*1234*4567*4567#", "WRONG_MMI_PROCEDURE");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_change_PIN_new_PIN_mismatch() {
+  testSendMMI("**04*4567*1234*4567#", "NEW_PIN_MISMATCH");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_change_PIN2() {
+  let postedMessage;
+  let worker = newWorker({
+    postRILMessage: function fakePostRILMessage(data) {
+    },
+    postMessage: function fakePostMessage(message) {
+      postedMessage = message;
+    },
+  });
+
+  worker.RIL.changeICCPIN2 = function fakeChangeICCPIN2(options){
+    worker.RIL[REQUEST_ENTER_SIM_PIN2](0, {
+      rilRequestError: ERROR_SUCCESS
+    });
+  }
+
+  worker.RIL.sendMMI({mmi: "**042*1234*4567*4567#"});
+
+  do_check_eq (postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
+  do_check_true(postedMessage.success);
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_change_PIN2_no_new_PIN2() {
+  testSendMMI("**042*1234**4567#", "MISSING_SUPPLEMENTARY_INFORMATION");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_change_PIN2_no_old_PIN2() {
+  testSendMMI("**042**1234*4567#", "MISSING_SUPPLEMENTARY_INFORMATION");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_change_PIN2_wrong_procedure() {
+  testSendMMI("*042*1234*4567*4567#", "WRONG_MMI_PROCEDURE");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_change_PIN2_new_PIN2_mismatch() {
+  testSendMMI("**042*4567*1234*4567#", "NEW_PIN_MISMATCH");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_unblock_PIN() {
+  let postedMessage;
+  let worker = newWorker({
+    postRILMessage: function fakePostRILMessage(data) {
+    },
+    postMessage: function fakePostMessage(message) {
+      postedMessage = message;
+    },
+  });
+
+  worker.RIL.enterICCPUK = function fakeEnterICCPUK(options){
+    worker.RIL[REQUEST_ENTER_SIM_PUK](0, {
+      rilRequestError: ERROR_SUCCESS
+    });
+  }
+
+  worker.RIL.sendMMI({mmi: "**05*1234*4567*4567#"});
+
+  do_check_eq (postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
+  do_check_true(postedMessage.success);
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_unblock_PIN_no_new_PIN() {
+  testSendMMI("**05*1234**4567#", "MISSING_SUPPLEMENTARY_INFORMATION");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_unblock_PIN_no_PUK() {
+  testSendMMI("**05**1234*4567#", "MISSING_SUPPLEMENTARY_INFORMATION");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_unblock_PIN_wrong_procedure() {
+  testSendMMI("*05*1234*4567*4567#", "WRONG_MMI_PROCEDURE");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_unblock_PIN_new_PIN_mismatch() {
+  testSendMMI("**05*4567*1234*4567#", "NEW_PIN_MISMATCH");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_unblock_PIN2() {
+  let postedMessage;
+  let worker = newWorker({
+    postRILMessage: function fakePostRILMessage(data) {
+    },
+    postMessage: function fakePostMessage(message) {
+      postedMessage = message;
+    },
+  });
+
+  worker.RIL.enterICCPUK2 = function fakeEnterICCPUK2(options){
+    worker.RIL[REQUEST_ENTER_SIM_PUK2](0, {
+      rilRequestError: ERROR_SUCCESS
+    });
+  }
+
+  worker.RIL.sendMMI({mmi: "**052*1234*4567*4567#"});
+
+  do_check_eq (postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
+  do_check_true(postedMessage.success);
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_unblock_PIN2_no_new_PIN2() {
+  testSendMMI("**052*1234**4567#", "MISSING_SUPPLEMENTARY_INFORMATION");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_unblock_PIN2_no_PUK2() {
+  testSendMMI("**052**1234*4567#", "MISSING_SUPPLEMENTARY_INFORMATION");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_unblock_PIN2_wrong_procedure() {
+  testSendMMI("*052*1234*4567*4567#", "WRONG_MMI_PROCEDURE");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_unblock_PIN2_new_PIN_mismatch() {
+  testSendMMI("**052*4567*1234*4567#", "NEW_PIN_MISMATCH");
 
   run_next_test();
 });

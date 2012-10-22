@@ -488,8 +488,7 @@ nsWindow::Create(nsIWidget *aParent,
       parent = NULL;
     }
 
-    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
-        mPopupType == ePopupTypeMenu && aInitData->mDropShadow) {
+    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
       extendedStyle |= WS_EX_COMPOSITED;
     }
 
@@ -1083,6 +1082,13 @@ NS_METHOD nsWindow::Show(bool bState)
         ::SetClassLongA(mWnd, GCL_STYLE, CS_DROPSHADOW);
         sDropShadowEnabled = true;
       }
+    }
+
+    // WS_EX_COMPOSITED conflicts with the WS_EX_LAYERED style and causes
+    // some popup menus to become invisible.
+    LONG_PTR exStyle = ::GetWindowLongPtrW(mWnd, GWL_EXSTYLE);
+    if (exStyle & WS_EX_LAYERED) {
+      ::SetWindowLongPtrW(mWnd, GWL_EXSTYLE, exStyle & ~WS_EX_COMPOSITED);
     }
   }
 

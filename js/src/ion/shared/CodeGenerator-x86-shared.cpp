@@ -22,19 +22,19 @@ namespace ion {
 
 class DeferredJumpTable : public DeferredData
 {
-    LTableSwitch *lswitch;
+    MTableSwitch *mswitch;
 
   public:
-    DeferredJumpTable(LTableSwitch *lswitch)
-      : lswitch(lswitch)
+    DeferredJumpTable(MTableSwitch *mswitch)
+      : mswitch(mswitch)
     { }
-    
+
     void copy(IonCode *code, uint8 *buffer) const {
         void **jumpData = (void **)buffer;
 
         // For every case write the pointer to the start in the table
-        for (size_t j = 0; j < lswitch->mir()->numCases(); j++) { 
-            LBlock *caseblock = lswitch->mir()->getCase(j)->lir();
+        for (size_t j = 0; j < mswitch->numCases(); j++) {
+            LBlock *caseblock = mswitch->getCase(j)->lir();
             Label *caseheader = caseblock->label();
 
             uint32 offset = caseheader->offset();
@@ -933,40 +933,28 @@ CodeGeneratorX86Shared::visitMoveGroup(LMoveGroup *group)
 }
 
 bool
-CodeGeneratorX86Shared::visitTableSwitch(LTableSwitch *ins)
+CodeGeneratorX86Shared::emitTableSwitchDispatch(MTableSwitch *mir, const Register &index,
+                                                const Register &base)
 {
-    MTableSwitch *mir = ins->mir();
     Label *defaultcase = mir->getDefault()->lir()->label();
-    const LAllocation *temp;
-
-    if (ins->index()->isDouble()) {
-        temp = ins->tempInt();
-
-        // The input is a double, so try and convert it to an integer.
-        // If it does not fit in an integer, take the default case.
-        emitDoubleToInt32(ToFloatRegister(ins->index()), ToRegister(temp), defaultcase, false);
-    } else {
-        temp = ins->index();
-    }
 
     // Lower value with low value
     if (mir->low() != 0)
-        masm.subl(Imm32(mir->low()), ToRegister(temp));
+        masm.subl(Imm32(mir->low()), index);
 
     // Jump to default case if input is out of range
     int32 cases = mir->numCases();
-    masm.cmpl(ToRegister(temp), Imm32(cases));
+    masm.cmpl(index, Imm32(cases));
     masm.j(AssemblerX86Shared::AboveOrEqual, defaultcase);
 
     // Create a JumpTable that during linking will get written.
-    DeferredJumpTable *d = new DeferredJumpTable(ins);
+    DeferredJumpTable *d = new DeferredJumpTable(mir);
     if (!masm.addDeferredData(d, (1 << ScalePointer) * cases))
         return false;
 
     // Compute the position where a pointer to the right case stands.
-    const LAllocation *base = ins->tempPointer();
-    masm.mov(d->label(), ToRegister(base));
-    Operand pointer = Operand(ToRegister(base), ToRegister(temp), ScalePointer);
+    masm.mov(d->label(), base);
+    Operand pointer = Operand(base, index, ScalePointer);
 
     // Jump to the right case
     masm.jmp(pointer);

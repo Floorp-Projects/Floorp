@@ -3249,14 +3249,14 @@ AncestorFilter::Init(Element *aElement)
   if (NS_LIKELY(aElement)) {
     MOZ_ASSERT(aElement->IsInDoc(),
                "aElement must be in the document for the assumption that "
-               "GetNodeParent() is non-null on all element ancestors of "
+               "GetParentNode() is non-null on all element ancestors of "
                "aElement to be true");
     // Collect up the ancestors
     nsAutoTArray<Element*, 50> ancestors;
     Element* cur = aElement;
     do {
       ancestors.AppendElement(cur);
-      nsINode* parent = cur->GetNodeParent();
+      nsINode* parent = cur->GetParentNode();
       if (!parent->IsElement()) {
         break;
       }
@@ -3325,10 +3325,10 @@ AncestorFilter::PopAncestor()
 void
 AncestorFilter::AssertHasAllAncestors(Element *aElement) const
 {
-  nsINode* cur = aElement->GetNodeParent();
+  nsINode* cur = aElement->GetParentNode();
   while (cur && cur->IsElement()) {
     MOZ_ASSERT(mElements.Contains(cur));
-    cur = cur->GetNodeParent();
+    cur = cur->GetParentNode();
   }
 }
 #endif

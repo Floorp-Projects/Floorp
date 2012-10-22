@@ -681,7 +681,6 @@ pref("dom.min_background_timeout_value", 1000);
 
 // Use the new DOM bindings (only affects any scopes created after the pref is
 // changed)
-pref("dom.new_bindings", true);
 pref("dom.experimental_bindings", true);
 
 // Don't use new input types
@@ -709,7 +708,6 @@ pref("javascript.options.strict",           false);
 #ifdef DEBUG
 pref("javascript.options.strict.debug",     true);
 #endif
-pref("javascript.options.relimit",          true);
 pref("javascript.options.methodjit.content", true);
 pref("javascript.options.methodjit.chrome",  true);
 pref("javascript.options.ion.content",      true);
@@ -1816,6 +1814,19 @@ pref("font.size.inflation.lineThreshold", 400);
  * large enough. This means that when s=0, i is always equal to m.
  */
 pref("font.size.inflation.mappingIntercept", 1);
+
+
+/*
+ * This controls the percentage that fonts will be inflated, if font
+ * size inflation is enabled. Essentially, if we have a specified font
+ * size, s, and an inflated font size, i, this specifies that the ratio
+ * i/s * 100 should never exceed the value of this preference.
+ *
+ * In order for this preference to have any effect, its value must be
+ * greater than 100, since font inflation can never decrease the ratio
+ * i/s.
+ */
+pref("font.size.inflation.maxRatio", 0);
 
 /*
  * When enabled, the touch.radius and mouse.radius prefs allow events to be dispatched

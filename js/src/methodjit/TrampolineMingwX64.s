@@ -38,6 +38,32 @@ JaegerTrampoline:
     # .PUSHREG rsi
     push    rbx
     # .PUSHREG rbx
+    sub     rsp, 16*10+8
+    # .ALLOCSTACK 168
+    # .SAVEXMM128 only supports 16 byte alignment offset
+    movdqa  xmmword ptr [rsp], xmm6
+    # .SAVEXMM128 xmm6, 0
+    movdqa  xmmword ptr [rsp+16], xmm7
+    # .SAVEXMM128 xmm7, 16
+    movdqa  xmmword ptr [rsp+16*2], xmm8
+    # .SAVEXMM128 xmm8, 32
+    movdqa  xmmword ptr [rsp+16*3], xmm9
+    # .SAVEXMM128 xmm9, 48
+    movdqa  xmmword ptr [rsp+16*4], xmm10
+    # .SAVEXMM128 xmm10, 64
+    movdqa  xmmword ptr [rsp+16*5], xmm11
+    # .SAVEXMM128 xmm11, 80
+    movdqa  xmmword ptr [rsp+16*6], xmm12
+    # .SAVEXMM128 xmm12, 96
+    movdqa  xmmword ptr [rsp+16*7], xmm13
+    # .SAVEXMM128 xmm13, 112
+    movdqa  xmmword ptr [rsp+16*8], xmm14
+    # .SAVEXMM128 xmm14, 128
+    movdqa  xmmword ptr [rsp+16*9], xmm15
+    # .SAVEXMM128 xmm15, 144
+    # stack aligment  for Win64 ABI
+    sub     rsp, 8
+    # .ALLOCSTACK 8
     # .ENDPROLOG
 
     # Load mask registers
@@ -88,7 +114,17 @@ JaegerTrampolineReturn:
     lea     rcx, [rsp+0x20]
     call    PopActiveVMFrame
 
-    add     rsp, 0x68+0x20
+    add     rsp, 0x68+0x20+8+16*10+8
+    movdqa  xmm6, xmmword ptr [rsp-16*10-8]
+    movdqa  xmm7, xmmword ptr [rsp-16*9-8]
+    movdqa  xmm8, xmmword ptr [rsp-16*8-8]
+    movdqa  xmm9, xmmword ptr [rsp-16*7-8]
+    movdqa  xmm10, xmmword ptr [rsp-16*6-8]
+    movdqa  xmm11, xmmword ptr [rsp-16*5-8]
+    movdqa  xmm12, xmmword ptr [rsp-16*4-8]
+    movdqa  xmm13, xmmword ptr [rsp-16*3-8]
+    movdqa  xmm14, xmmword ptr [rsp-16*2-8]
+    movdqa  xmm15, xmmword ptr [rsp-16*1-8]
     pop     rbx
     pop     rsi
     pop     rdi
@@ -121,7 +157,17 @@ JaegerThrowpoline:
 throwpoline_exit:
     lea     rcx, [rsp+0x20]
     call    PopActiveVMFrame
-    add     rsp, 0x68+0x20
+    add     rsp, 0x68+0x20+8+16*10+8
+    movdqa  xmm6, xmmword ptr [rsp-16*10-8]
+    movdqa  xmm7, xmmword ptr [rsp-16*9-8]
+    movdqa  xmm8, xmmword ptr [rsp-16*8-8]
+    movdqa  xmm9, xmmword ptr [rsp-16*7-8]
+    movdqa  xmm10, xmmword ptr [rsp-16*6-8]
+    movdqa  xmm11, xmmword ptr [rsp-16*5-8]
+    movdqa  xmm12, xmmword ptr [rsp-16*4-8]
+    movdqa  xmm13, xmmword ptr [rsp-16*3-8]
+    movdqa  xmm14, xmmword ptr [rsp-16*2-8]
+    movdqa  xmm15, xmmword ptr [rsp-16*1-8]
     pop     rbx
     pop     rsi
     pop     rdi
@@ -160,7 +206,17 @@ JaegerInterpoline:
 interpoline_exit:
     lea     rcx, [rsp+0x20]
     call    PopActiveVMFrame
-    add     rsp, 0x68+0x20
+    add     rsp, 0x68+0x20+8+16*10+8
+    movdqa  xmm6, xmmword ptr [rsp-16*10-8]
+    movdqa  xmm7, xmmword ptr [rsp-16*9-8]
+    movdqa  xmm8, xmmword ptr [rsp-16*8-8]
+    movdqa  xmm9, xmmword ptr [rsp-16*7-8]
+    movdqa  xmm10, xmmword ptr [rsp-16*6-8]
+    movdqa  xmm11, xmmword ptr [rsp-16*5-8]
+    movdqa  xmm12, xmmword ptr [rsp-16*4-8]
+    movdqa  xmm13, xmmword ptr [rsp-16*3-8]
+    movdqa  xmm14, xmmword ptr [rsp-16*2-8]
+    movdqa  xmm15, xmmword ptr [rsp-16*1-8]
     pop     rbx
     pop     rsi
     pop     rdi

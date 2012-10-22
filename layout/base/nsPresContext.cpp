@@ -1660,6 +1660,7 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
     return;
   }
 
+  mUsesViewportUnits = false;
   RebuildUserFontSet();
   AnimationManager()->KeyframesListIsDirty();
 
@@ -1680,11 +1681,17 @@ void
 nsPresContext::MediaFeatureValuesChanged(bool aCallerWillRebuildStyleData)
 {
   mPendingMediaFeatureValuesChanged = false;
-  if (mShell &&
-      mShell->StyleSet()->MediumFeaturesChanged(this) &&
-      !aCallerWillRebuildStyleData) {
+
+  // MediumFeaturesChanged updates the applied rules, so it always gets called.
+  bool mediaFeaturesDidChange = mShell ? mShell->StyleSet()->MediumFeaturesChanged(this)
+                                       : false;
+
+  if (!aCallerWillRebuildStyleData &&
+      (mediaFeaturesDidChange || (mUsesViewportUnits && mPendingViewportChange))) {
     RebuildAllStyleData(nsChangeHint(0));
   }
+
+  mPendingViewportChange = false;
 
   if (!nsContentUtils::IsSafeToRunScript()) {
     NS_ABORT_IF_FALSE(mDocument->IsBeingUsedAsImage(),

@@ -187,6 +187,8 @@ WebappsRegistry.prototype = {
 
   uninit: function() {
     this._mgmt = null;
+    cpmm.sendAsyncMessage("Webapps:UnregisterForMessages",
+                          ["Webapps:Install:Return:OK"]);
   },
 
   // mozIDOMApplicationRegistry2 implementation
@@ -354,10 +356,10 @@ WebappsApplication.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
   init: function(aWindow, aApp) {
+    this._window = aWindow;
     this.origin = aApp.origin;
-    this.manifest = ObjectWrapper.wrap(aApp.manifest, aWindow);
-    this.updateManifest = aApp.updateManifest ? ObjectWrapper.wrap(aApp.updateManifest, aWindow)
-                                              : null;
+    this._manifest = aApp.manifest;
+    this._updateManifest = aApp.updateManifest;
     this.manifestURL = aApp.manifestURL;
     this.receipts = aApp.receipts;
     this.installOrigin = aApp.installOrigin;
@@ -389,6 +391,15 @@ WebappsApplication.prototype = {
     cpmm.sendAsyncMessage("Webapps:RegisterForMessages",
                           ["Webapps:Uninstall:Return:OK", "Webapps:OfflineCache",
                            "Webapps:PackageEvent"]);
+  },
+
+  get manifest() {
+    return this.manifest = ObjectWrapper.wrap(this._manifest, this._window);
+  },
+
+  get updateManifest() {
+    return this.updateManifest = this._updateManifest ? ObjectWrapper.wrap(this._updateManifest, this._window)
+                                                      : null;
   },
 
   set onprogress(aCallback) {
@@ -482,6 +493,9 @@ WebappsApplication.prototype = {
 
   uninit: function() {
     this._onprogress = null;
+    cpmm.sendAsyncMessage("Webapps:UnregisterForMessages",
+                          ["Webapps:Uninstall:Return:OK", "Webapps:OfflineCache",
+                           "Webapps:PackageEvent"]);
   },
 
   _fireEvent: function(aName, aHandler) {
@@ -646,6 +660,8 @@ WebappsApplicationMgmt.prototype = {
   uninit: function() {
     this._oninstall = null;
     this._onuninstall = null;
+    cpmm.sendAsyncMessage("Webapps:UnregisterForMessages",
+                          ["Webapps:Install:Return:OK", "Webapps:Uninstall:Return:OK"]);
   },
 
   applyDownload: function(aApp) {

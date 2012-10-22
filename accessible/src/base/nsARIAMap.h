@@ -92,7 +92,7 @@ const bool kUseNativeRole = false;
 
 /**
  * This mask indicates the attribute should not be exposed as an object
- * attribute via the catch-all logic in Accessible::GetAttributes.
+ * attribute via the catch-all logic in Accessible::Attributes().
  * This means it either isn't mean't to be exposed as an object attribute, or
  * that it should, but is already handled in other code.
  */
@@ -100,7 +100,7 @@ const uint8_t ATTR_BYPASSOBJ  = 0x0001;
 
 /**
  * This mask indicates the attribute is expected to have an NMTOKEN or bool value.
- * (See for example usage in Accessible::GetAttributes)
+ * (See for example usage in Accessible::Attributes())
  */
 const uint8_t ATTR_VALTOKEN   = 0x0010;
 

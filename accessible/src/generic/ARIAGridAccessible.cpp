@@ -614,19 +614,16 @@ ARIAGridCellAccessible::ApplyARIAState(uint64_t* aState) const
     *aState |= states::SELECTABLE | states::SELECTED;
 }
 
-nsresult
-ARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
+already_AddRefed<nsIPersistentProperties>
+ARIAGridCellAccessible::NativeAttributes()
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsresult rv = HyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    HyperTextAccessibleWrap::NativeAttributes();
 
   // Expose "table-cell-index" attribute.
   Accessible* thisRow = Row();
   if (!thisRow)
-    return NS_OK;
+    return attributes.forget();
 
   int32_t colIdx = 0, colCount = 0;
   uint32_t childCount = thisRow->ChildCount();
@@ -645,10 +642,9 @@ ARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
 
   nsAutoString stringIdx;
   stringIdx.AppendInt(rowIdx * colCount + colIdx);
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::tableCellIndex,
-                         stringIdx);
+  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::tableCellIndex, stringIdx);
 
-  return NS_OK;
+  return attributes.forget();
 }
 
 void

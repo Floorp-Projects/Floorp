@@ -339,17 +339,24 @@ DocAccessible::ApplyARIAState(uint64_t* aState) const
   // Allow iframe/frame etc. to have final state override via ARIA
   if (mParent)
     mParent->ApplyARIAState(aState);
-
 }
 
-NS_IMETHODIMP
-DocAccessible::GetAttributes(nsIPersistentProperties** aAttributes)
+already_AddRefed<nsIPersistentProperties>
+DocAccessible::Attributes()
 {
-  Accessible::GetAttributes(aAttributes);
-  if (mParent) {
-    mParent->GetAttributes(aAttributes); // Add parent attributes (override inner)
-  }
-  return NS_OK;
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    HyperTextAccessibleWrap::Attributes();
+
+  if (!mParent)
+    return attributes.forget();
+
+  // Override ARIA object attributes from outerdoc.
+  aria::AttrIterator attribIter(mParent->GetContent());
+  nsAutoString name, value, unused;
+  while(attribIter.Next(name, value))
+    attributes->SetStringProperty(NS_ConvertUTF16toUTF8(name), value, unused);
+
+  return attributes.forget();
 }
 
 Accessible*
@@ -1387,7 +1394,7 @@ DocAccessible::GetAccessibleOrContainer(nsINode* aNode)
   nsINode* currNode = aNode;
   Accessible* accessible = nullptr;
   while (!(accessible = GetAccessible(currNode)) &&
-         (currNode = currNode->GetNodeParent()));
+         (currNode = currNode->GetParentNode()));
 
   return accessible;
 }

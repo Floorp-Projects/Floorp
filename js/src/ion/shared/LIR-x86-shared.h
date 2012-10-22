@@ -117,6 +117,38 @@ class LTableSwitch : public LInstructionHelper<0, 1, 2>
     }
 };
 
+// Takes a tableswitch with a value to decide
+class LTableSwitchV : public LInstructionHelper<0, BOX_PIECES, 3>
+{
+  public:
+    LIR_HEADER(TableSwitchV);
+
+    LTableSwitchV(const LDefinition &inputCopy, const LDefinition &floatCopy,
+                  const LDefinition &jumpTablePointer, MTableSwitch *ins)
+    {
+        setTemp(0, inputCopy);
+        setTemp(1, floatCopy);
+        setTemp(2, jumpTablePointer);
+        setMir(ins);
+    }
+
+    MTableSwitch *mir() const {
+        return mir_->toTableSwitch();
+    }
+
+    static const size_t InputValue = 0;
+
+    const LAllocation *tempInt() {
+        return getTemp(0)->output();
+    }
+    const LAllocation *tempFloat() {
+        return getTemp(1)->output();
+    }
+    const LAllocation *tempPointer() {
+        return getTemp(2)->output();
+    }
+};
+
 // Guard against an object's shape.
 class LGuardShape : public LInstructionHelper<0, 1, 0>
 {

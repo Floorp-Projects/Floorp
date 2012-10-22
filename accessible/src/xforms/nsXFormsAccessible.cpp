@@ -60,15 +60,14 @@ nsXFormsAccessible::GetBoundChildElementValue(const nsAString& aTagName,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsINodeList* nodes = mContent->GetChildNodesList();
-  NS_ENSURE_STATE(nodes);
+  nsINodeList* nodes = mContent->ChildNodes();
 
   uint32_t length;
   nsresult rv = nodes->GetLength(&length);
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (uint32_t index = 0; index < length; index++) {
-    nsIContent* content = nodes->GetNodeAt(index);
+    nsIContent* content = nodes->Item(index);
     if (content->NodeInfo()->Equals(aTagName) &&
         content->NodeInfo()->NamespaceEquals(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS))) {
       nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(content));
@@ -545,7 +544,7 @@ nsXFormsSelectableItemAccessible::IsSelected()
   nsresult rv;
 
   nsINode* parent = mContent;
-  while ((parent = parent->GetNodeParent())) {
+  while ((parent = parent->GetParentNode())) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(parent));
     if (!content)
       return false;

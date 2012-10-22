@@ -605,7 +605,7 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple)
   }
 
   // restore the scroll position to the start of the page
-  synthesizeKey("VK_HOME", {});
+  sendKey("HOME");
 
   window.removeEventListener("keypress", keyPressListener, false);
   is(keyPressDefaultPrevented, multiple ? 63 : 40, "key press default prevented");
@@ -640,10 +640,10 @@ function testtag_tree_UI_editing(tree, testid, rowInfo)
     tree.currentIndex = rowIndex;
 
     const isMac = (navigator.platform.indexOf("Mac") >= 0);
-    const StartEditingKey = isMac ? "VK_ENTER" : "VK_F2";
-    synthesizeKey(StartEditingKey, {});
+    const StartEditingKey = isMac ? "ENTER" : "F2";
+    sendKey(StartEditingKey);
     is(tree.editingColumn, ecolumn, "Should be editing tree cell now");
-    synthesizeKey("VK_ESCAPE", {});
+    sendKey("ESCAPE");
     ok(!tree.editingColumn, "Should not be editing tree cell now");
     is(tree.currentIndex, rowIndex, "Current index should not have changed");
     is(tree.view.selection.currentColumn, ecolumn, "Current column should not have changed");
@@ -860,7 +860,7 @@ function testtag_tree_TreeSelection_UI_cell(tree, testid, rowInfo)
   }
 
   // restore the scroll position to the start of the page
-  synthesizeKey("VK_HOME", {});
+  sendKey("HOME");
 }
 
 function testtag_tree_TreeView(tree, testid, rowInfo)

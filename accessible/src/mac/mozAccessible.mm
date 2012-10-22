@@ -439,11 +439,10 @@ GetClosestInterestingAccessible(id anObject)
 
   // XXX maybe we should cache the subrole.
   nsAutoString xmlRoles;
-  nsCOMPtr<nsIPersistentProperties> attributes;
 
   // XXX we don't need all the attributes (see bug 771113)
-  nsresult rv = mGeckoAccessible->GetAttributes(getter_AddRefs(attributes));
-  if (NS_SUCCEEDED(rv) && attributes)
+  nsCOMPtr<nsIPersistentProperties> attributes = mGeckoAccessible->Attributes();
+  if (attributes)
     nsAccUtils::GetAccAttr(attributes, nsGkAtoms::xmlroles, xmlRoles);
 
   nsWhitespaceTokenizer tokenizer(xmlRoles);

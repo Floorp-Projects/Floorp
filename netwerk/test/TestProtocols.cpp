@@ -12,7 +12,7 @@
     -Gagan Saksena 04/29/99
 */
 
-#include "NSPRFormatTime.h" // must include before any headers that include prtime.h
+#include "NSPRFormatTime.h" // must be before anything that includes prtime.h
 #include "TestCommon.h"
 
 #define FORCE_PR_LOG

@@ -95,8 +95,8 @@ invoke_copy_to_stack(uint32_t* d,
         --dest;
         ++regwords;
       }
-      *((uint32*) dest) = ((DU *) source)->lo;
-      *((uint32*) --dest) = ((DU *) source)->hi;
+      *((uint32_t*) dest) = ((DU *) source)->lo;
+      *((uint32_t*) --dest) = ((DU *) source)->hi;
       /* big endian - hi word in low addr */
       regwords += 2;
       continue;
@@ -112,8 +112,8 @@ invoke_copy_to_stack(uint32_t* d,
       case 2:
         floatflags |= 1;
       }
-      *((uint32*) dest) = ((DU *) source)->lo;
-      *((uint32*) --dest) = ((DU *) source)->hi;
+      *((uint32_t*) dest) = ((DU *) source)->lo;
+      *((uint32_t*) --dest) = ((DU *) source)->hi;
       /* big endian - hi word in low addr */
       regwords += 2;
       continue;

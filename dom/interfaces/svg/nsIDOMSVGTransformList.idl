@@ -8,7 +8,7 @@
 interface nsIDOMSVGTransform;
 interface nsIDOMSVGMatrix;
 
-[scriptable, uuid(6302eb5d-25d5-4df6-ab8b-e57e37c1a48d)]
+[scriptable, uuid(e6ea8113-ccd8-4084-a15f-07ca7db1d3fe)]
 interface nsIDOMSVGTransformList : nsISupports
 { 
   readonly attribute unsigned long numberOfItems;
@@ -20,7 +20,6 @@ interface nsIDOMSVGTransformList : nsISupports
       // raises( DOMException, SVGException );
   nsIDOMSVGTransform getItem(in unsigned long index);
       // raises( DOMException );
-  [getter,noscript,notxpcom,nostdcall] nsIDOMSVGTransform getItemAt(in unsigned long index);
   nsIDOMSVGTransform insertItemBefore(in nsIDOMSVGTransform newItem,
                                       in unsigned long index);
       //  raises( DOMException, SVGException );

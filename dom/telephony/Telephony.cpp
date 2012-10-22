@@ -94,6 +94,9 @@ Telephony::Create(nsPIDOMWindow* aOwner, nsIRILContentHelper* aRIL)
   rv = aRIL->RegisterTelephonyCallback(telephony->mRILTelephonyCallback);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
+  rv = aRIL->RegisterTelephonyMsg();
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
   return telephony.forget();
 }
 

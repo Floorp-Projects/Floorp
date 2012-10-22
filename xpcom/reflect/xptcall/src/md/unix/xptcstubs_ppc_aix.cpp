@@ -20,8 +20,8 @@ extern "C" nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args, uint32_t *gprData, double *fprData)
 {
     typedef struct {
-        uint32 hi;
-        uint32 lo;      // have to move 64 bit entities as 32 bit halves since
+        uint32_t hi;
+        uint32_t lo;      // have to move 64 bit entities as 32 bit halves since
     } DU;               // stack slots are not guaranteed 16 byte aligned
 
 #define PARAM_BUFFER_COUNT     16

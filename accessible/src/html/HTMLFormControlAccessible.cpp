@@ -675,16 +675,16 @@ HTMLFigureAccessible::
 {
 }
 
-nsresult
-HTMLFigureAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
+already_AddRefed<nsIPersistentProperties>
+HTMLFigureAccessible::NativeAttributes()
 {
-  nsresult rv = HyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    HyperTextAccessibleWrap::NativeAttributes();
 
   // Expose figure xml-role.
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                          NS_LITERAL_STRING("figure"));
-  return NS_OK;
+  return attributes.forget();
 }
 
 role

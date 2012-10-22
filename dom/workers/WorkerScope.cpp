@@ -110,7 +110,7 @@ protected:
   : EventTarget(aCx), mWorker(aWorker)
   {
     MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerGlobalScope);
-    for (int32 i = 0; i < SLOT_COUNT; i++) {
+    for (int32_t i = 0; i < SLOT_COUNT; i++) {
       mSlots[i] = JSVAL_VOID;
     }
   }
@@ -123,7 +123,7 @@ protected:
   virtual void
   _trace(JSTracer* aTrc) MOZ_OVERRIDE
   {
-    for (int32 i = 0; i < SLOT_COUNT; i++) {
+    for (int32_t i = 0; i < SLOT_COUNT; i++) {
       JS_CALL_VALUE_TRACER(aTrc, mSlots[i], "WorkerGlobalScope instance slot");
     }
     mWorker->TraceInternal(aTrc);

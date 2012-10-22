@@ -376,12 +376,12 @@ struct XPTTypeDescriptor {
  * The types of the method parameter are restricted to the following subset 
  * of TypeDescriptors: 
  *
- * int8, uint8, int16, uint16, int32, uint32, 
- * int64, uint64, wchar_t, char, string
+ * int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, 
+ * int64_t, uint64_t, wchar_t, char, string
  * 
  * The type (and thus the size) of the value record is determined by the 
  * contents of the associated TypeDescriptor record. For instance, if type 
- * corresponds to int16, then value is a two-byte record consisting of a 
+ * corresponds to int16_t, then value is a two-byte record consisting of a 
  * 16-bit signed integer.  For a ConstDescriptor type of string, the value 
  * record is of type String*, i.e. an offset within the data pool to a 
  * String record containing the constant string.

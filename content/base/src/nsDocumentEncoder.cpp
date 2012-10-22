@@ -535,7 +535,7 @@ nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode,
       node = current->GetNextSibling();
       if (!node) {
         // Perhaps parent node has siblings.
-        current = current->GetNodeParent();
+        current = current->GetParentNode();
       }
     }
   }
@@ -1091,7 +1091,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
           if (!prevNode) {
             // Went from a non-<tr> to a <tr>
             mCommonAncestors.Clear();
-            nsContentUtils::GetAncestors(n->GetNodeParent(), mCommonAncestors);
+            nsContentUtils::GetAncestors(n->GetParentNode(), mCommonAncestors);
             rv = SerializeRangeContextStart(mCommonAncestors, output);
             NS_ENSURE_SUCCESS(rv, rv);
             // Don't let SerializeRangeToString serialize the context again
@@ -1104,7 +1104,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
         } else if (prevNode) {
           // Went from a <tr> to a non-<tr>
           mCommonAncestors.Clear();
-          nsContentUtils::GetAncestors(p->GetNodeParent(), mCommonAncestors);
+          nsContentUtils::GetAncestors(p->GetParentNode(), mCommonAncestors);
           mDisableContextSerialize = false;
           rv = SerializeRangeContextEnd(mCommonAncestors, output);
           NS_ENSURE_SUCCESS(rv, rv);
@@ -1122,7 +1122,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
       rv = SerializeNodeEnd(p, output);
       NS_ENSURE_SUCCESS(rv, rv);
       mCommonAncestors.Clear();
-      nsContentUtils::GetAncestors(p->GetNodeParent(), mCommonAncestors);
+      nsContentUtils::GetAncestors(p->GetParentNode(), mCommonAncestors);
       mDisableContextSerialize = false; 
       rv = SerializeRangeContextEnd(mCommonAncestors, output);
       NS_ENSURE_SUCCESS(rv, rv);

@@ -37,6 +37,8 @@ interface nsIB2GKeyboard : nsISupports
   // Forms Validation), the value will simply be ignored by the element. 
   void setValue(in jsval value);
 
+  void removeFocus();
+
   attribute nsIDOMEventListener onfocuschange;
 };
 

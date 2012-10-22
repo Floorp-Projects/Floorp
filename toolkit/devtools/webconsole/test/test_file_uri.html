@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for file activity tracking</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for file activity tracking</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+
+let gState;
+let gTmpFile;
+
+function doFileActivity()
+{
+  info("doFileActivity");
+  let fileContent = "<p>hello world from bug 798764";
+
+  gTmpFile = FileUtils.getFile("TmpD", ["bug798764.html"]);
+  gTmpFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+
+  let fout = FileUtils.openSafeFileOutputStream(gTmpFile,
+    FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE);
+
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                  createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = "UTF-8";
+  let fileContentStream = converter.convertToInputStream(fileContent);
+
+  NetUtil.asyncCopy(fileContentStream, fout, addIframe);
+}
+
+function addIframe(aStatus)
+{
+  ok(Components.isSuccessCode(aStatus),
+     "the temporary file was saved successfully");
+
+  let iframe = document.createElement("iframe");
+  iframe.src = NetUtil.newURI(gTmpFile).spec;
+  document.body.appendChild(iframe);
+}
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+
+  attachConsole(["FileActivity"], onAttach);
+}
+
+function onAttach(aState, aResponse)
+{
+  gState = aState;
+  gState.dbgClient.addListener("fileActivity", onFileActivity);
+  doFileActivity();
+}
+
+function onFileActivity(aType, aPacket)
+{
+  is(aPacket.from, gState.actor, "fileActivity actor");
+
+  gState.dbgClient.removeListener("fileActivity", onFileActivity);
+
+  ok(/bug798764\.html$/.test(aPacket.uri), "file URI match");
+
+  testEnd();
+}
+
+function testEnd()
+{
+  if (gTmpFile) {
+    gTmpFile.remove(false);
+    gTmpFile = null;
+  }
+
+  if (gState) {
+    closeDebugger(gState, function() {
+      gState = null;
+      SimpleTest.finish();
+    });
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>

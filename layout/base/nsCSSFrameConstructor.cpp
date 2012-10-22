@@ -3914,8 +3914,7 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
 
     // least-surprise CSS binding until we do the SVG specified
     // cascading rules for <svg:use> - bug 265894
-    if (aParent &&
-        aParent->NodeInfo()->Equals(nsGkAtoms::use, kNameSpaceID_SVG)) {
+    if (aParentFrame->GetType() == nsGkAtoms::svgUseFrame) {
       content->SetFlags(NODE_IS_ANONYMOUS);
     } else {
       content->SetNativeAnonymous();
@@ -7711,6 +7710,42 @@ UpdateViewsForTree(nsIFrame* aFrame,
   }
 }
 
+/**
+ * To handle nsChangeHint_ChildrenOnlyTransform we must iterate over the child
+ * frames of the SVG frame concerned. This helper function is used to find that
+ * SVG frame when we encounter nsChangeHint_ChildrenOnlyTransform to ensure
+ * that we iterate over the intended children, since sometimes we end up
+ * handling that hint while processing hints for one of the SVG frame's
+ * ancestor frames.
+ *
+ * The reason that we sometimes end up trying to process the hint for an
+ * ancestor of the SVG frame that the hint is intended for is due to the way we
+ * process restyle events. ApplyRenderingChangeToTree adjusts the frame from
+ * the restyled element's principle frame to one of its ancestor frames based
+ * on what nsCSSRendering::FindBackground returns, since the background style
+ * may have been propagated up to an ancestor frame. Processing hints using an
+ * ancestor frame is fine in general, but nsChangeHint_ChildrenOnlyTransform is
+ * a special case since it is intended to update the children of a specific
+ * frame.
+ */
+static nsIFrame*
+GetFrameForChildrenOnlyTransformHint(nsIFrame *aFrame)
+{
+  if (aFrame->GetType() == nsGkAtoms::viewportFrame) {
+    // This happens if the root-<svg> is fixed positioned, in which case we
+    // can't use aFrame->GetContent() to find the primary frame, since
+    // GetContent() returns nullptr for ViewportFrame.
+    aFrame = aFrame->GetFirstPrincipalChild();
+  }
+  // For an nsHTMLScrollFrame, this will get the SVG frame that has the
+  // children-only transforms:
+  aFrame = aFrame->GetContent()->GetPrimaryFrame();
+  NS_ABORT_IF_FALSE(aFrame->IsFrameOfType(nsIFrame::eSVG |
+                                          nsIFrame::eSVGContainer),
+                    "Children-only transforms only expected on SVG frames");
+  return aFrame;
+}
+
 static void
 DoApplyRenderingChangeToTree(nsIFrame* aFrame,
                              nsFrameManager* aFrameManager,
@@ -7773,13 +7808,8 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     }
     if (aChange & nsChangeHint_ChildrenOnlyTransform) {
       needInvalidatingPaint = true;
-      // The long comment in ProcessRestyledFrames that precedes the
-      // |frame->GetContent()->GetPrimaryFrame()| and abort applies here too.
-      nsIFrame *f = aFrame->GetContent()->GetPrimaryFrame();
-      NS_ABORT_IF_FALSE(f->IsFrameOfType(nsIFrame::eSVG |
-                                         nsIFrame::eSVGContainer),
-                        "Children-only transforms only expected on SVG frames");
-      nsIFrame* childFrame = f->GetFirstPrincipalChild();
+      nsIFrame* childFrame =
+        GetFrameForChildrenOnlyTransformHint(aFrame)->GetFirstPrincipalChild();
       for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
         childFrame->MarkLayersActive(nsChangeHint_UpdateTransformLayer);
       }
@@ -8161,25 +8191,9 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
                    "nsChangeHint_UpdateOverflow should be passed too");
       if ((hint & nsChangeHint_UpdateOverflow) && !didReflowThisFrame) {
         if (hint & nsChangeHint_ChildrenOnlyTransform) {
-          // When we process restyle events starting from the root of the frame
-          // tree, we start at a ViewportFrame and traverse down the tree from
-          // there. When we reach its nsHTMLScrollFrame child, that frame's
-          // GetContent() returns the root element of the document, even though
-          // that frame is not the root element's primary frame. The result of
-          // this quirk is that we remove any pending change hints for the
-          // root element and process them for the nsHTMLScrollFrame instead of
-          // the root element's primary frame. For most change hints this is
-          // not a problem, but for nsChangeHint_ChildrenOnlyTransform it is,
-          // since the children that we want to call UpdateOverflow on are the
-          // frames for the children of the root element, not the nsCanvasFrame
-          // child of the nsHTMLScrollFrame. As a result we need to ignore
-          // |frame| here and use frame->GetContent()->GetPrimaryFrame().
-          nsIFrame *f = frame->GetContent()->GetPrimaryFrame();
-          NS_ABORT_IF_FALSE(f->IsFrameOfType(nsIFrame::eSVG |
-                                             nsIFrame::eSVGContainer),
-                            "Children-only transforms only expected on SVG frames");
           // Update overflow areas of children first:
-          nsIFrame* childFrame = f->GetFirstPrincipalChild();
+          nsIFrame* childFrame =
+            GetFrameForChildrenOnlyTransformHint(frame)->GetFirstPrincipalChild();
           for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
             NS_ABORT_IF_FALSE(childFrame->IsFrameOfType(nsIFrame::eSVG),
                               "Not expecting non-SVG children");
@@ -9370,7 +9384,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
     return rv;
   }
 
-  nsINode* containerNode = aContent->GetNodeParent();
+  nsINode* containerNode = aContent->GetParentNode();
   // XXXbz how can containerNode be null here?
   if (containerNode) {
     // Before removing the frames associated with the content object,

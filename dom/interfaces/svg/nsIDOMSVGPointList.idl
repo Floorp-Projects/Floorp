@@ -7,7 +7,7 @@
 
 interface nsIDOMSVGPoint;
 
-[scriptable, uuid(7bb28750-7238-4083-b5f4-4def4646a637)]
+[scriptable, uuid(1cc66e7d-c874-4429-9f73-a0e5f2c77a85)]
 interface nsIDOMSVGPointList : nsISupports
 {
   readonly attribute unsigned long numberOfItems;
@@ -19,7 +19,6 @@ interface nsIDOMSVGPointList : nsISupports
       // raises( DOMException, SVGException );
   nsIDOMSVGPoint getItem (in unsigned long index);
       // raises( DOMException );
-  [getter,noscript,notxpcom,nostdcall] nsIDOMSVGPoint getItemAt(in unsigned long index);
   nsIDOMSVGPoint insertItemBefore(in nsIDOMSVGPoint newItem, in unsigned long index);
       // raises( DOMException, SVGException );
   nsIDOMSVGPoint replaceItem(in nsIDOMSVGPoint newItem, in unsigned long index);

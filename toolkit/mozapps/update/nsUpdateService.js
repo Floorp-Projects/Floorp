@@ -1033,7 +1033,7 @@ function handleFallbackToCompleteUpdate(update, postStaging) {
   if (update.selectedPatch && oldType == "partial" && update.patchCount == 2) {
     // Partial patch application failed, try downloading the complete
     // update in the background instead.
-    LOG("UpdateService:_postUpdateProcessing - install of partial patch " +
+    LOG("handleFallbackToCompleteUpdate - install of partial patch " +
         "failed, downloading complete patch");
     var status = Cc["@mozilla.org/updates/update-service;1"].
                  getService(Ci.nsIApplicationUpdateService).
@@ -1628,8 +1628,15 @@ UpdateService.prototype = {
     }
 #endif
 
-    if (!update)
+    if (!update) {
+      if (status != STATE_SUCCEEDED) {
+        LOG("UpdateService:_postUpdateProcessing - previous patch failed " +
+            "and no patch available");
+        cleanupActiveUpdate();
+        return;
+      }
       update = new Update(null);
+    }
 
     var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                    createInstance(Ci.nsIUpdatePrompt);
@@ -2490,13 +2497,21 @@ UpdateManager.prototype = {
   get activeUpdate() {
     if (this._activeUpdate &&
         this._activeUpdate.channel != UpdateChannel.get()) {
-      // User switched channels, clear out any old active updates and remove
-      // partial downloads
-      this._activeUpdate = null;
-      this.saveUpdates();
+      LOG("UpdateManager:get activeUpdate - channel has changed, " +
+          "reloading default preferences to workaround bug 802022");
+      // Workaround to get distribution preferences loaded (Bug 774618). This
+      // can be removed after bug 802022 is fixed.
+      let prefSvc = Services.prefs.QueryInterface(Ci.nsIObserver);
+      prefSvc.observe(null, "reload-default-prefs", null);
+      if (this._activeUpdate.channel != UpdateChannel.get()) {
+        // User switched channels, clear out any old active updates and remove
+        // partial downloads
+        this._activeUpdate = null;
+        this.saveUpdates();
 
-      // Destroy the updates directory, since we're done with it.
-      cleanUpUpdatesDir();
+        // Destroy the updates directory, since we're done with it.
+        cleanUpUpdatesDir();
+      }
     }
     return this._activeUpdate;
   },
@@ -2973,9 +2988,13 @@ Downloader.prototype = {
   /**
    * Cancels the active download.
    */
-  cancel: function Downloader_cancel() {
-    if (this._request && this._request instanceof Ci.nsIRequest)
-      this._request.cancel(Cr.NS_BINDING_ABORTED);
+  cancel: function Downloader_cancel(cancelError) {
+    if (cancelError === undefined) {
+      cancelError = Cr.NS_BINDING_ABORTED;
+    }
+    if (this._request && this._request instanceof Ci.nsIRequest) {
+      this._request.cancel(cancelError);
+    }
   },
 
   /**
@@ -3256,6 +3275,26 @@ Downloader.prototype = {
                                              maxProgress) {
     LOG("Downloader:onProgress - progress: " + progress + "/" + maxProgress);
 
+    if (progress > this._patch.size) {
+      LOG("Downloader:onProgress - progress: " + progress +
+          " is higher than patch size: " + this._patch.size);
+      // It's important that we use a different code than
+      // NS_ERROR_CORRUPTED_CONTENT so that tests can verify the difference
+      // between a hash error and a wrong download error.
+      this.cancel(Cr.NS_ERROR_UNEXPECTED);
+      return;
+    }
+
+    if (maxProgress != this._patch.size) {
+      LOG("Downloader:onProgress - maxProgress: " + maxProgress +
+          " is not equal to expectd patch size: " + this._patch.size);
+      // It's important that we use a different code than
+      // NS_ERROR_CORRUPTED_CONTENT so that tests can verify the difference
+      // between a hash error and a wrong download error.
+      this.cancel(Cr.NS_ERROR_UNEXPECTED);
+      return;
+    }
+
     var listeners = this._listeners.concat();
     var listenerCount = listeners.length;
     for (var i = 0; i < listenerCount; ++i) {
@@ -3328,8 +3367,7 @@ Downloader.prototype = {
         LOG("Downloader:onStopRequest - download verification failed");
         state = STATE_DOWNLOAD_FAILED;
 
-        // TODO: use more informative error code here
-        status = Cr.NS_ERROR_UNEXPECTED;
+        status = Cr.NS_ERROR_CORRUPTED_CONTENT;
 
         // Yes, this code is a string.
         const vfCode = "verification_failed";

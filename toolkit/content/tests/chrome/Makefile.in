@@ -156,6 +156,7 @@ MOCHITEST_CHROME_FILES = 	findbar_window.xul \
 		test_mousescroll.xul \
 		test_mousecapture.xul \
 		test_arrowpanel.xul \
+		test_menuitem_commands.xul \
 		$(NULL)
 
 # test_panel_focus.xul won't work if the Full Keyboard Access preference is set to

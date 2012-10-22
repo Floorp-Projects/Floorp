@@ -43,7 +43,7 @@ class CommonTestCase(unittest.TestCase):
         return m is not None
 
     @classmethod
-    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette):
+    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars):
         """
         Adds all the tests in the specified file to the specified suite.
         """
@@ -95,10 +95,11 @@ class MarionetteTestCase(CommonTestCase):
         self.extra_emulator_index = -1
         self.methodName = methodName
         self.filepath = filepath
+        self.testvars = kwargs.pop('testvars', None)
         CommonTestCase.__init__(self, methodName, **kwargs)
 
     @classmethod
-    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette):
+    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars):
         test_mod = imp.load_source(mod_name, filepath)
 
         for name in dir(test_mod):
@@ -109,8 +110,8 @@ class MarionetteTestCase(CommonTestCase):
                 for testname in testnames:
                     suite.addTest(obj(weakref.ref(marionette),
                                   methodName=testname,
-                                  filepath=filepath))
-
+                                  filepath=filepath,
+                                  testvars=testvars))
     def setUp(self):
         CommonTestCase.setUp(self)
         self.marionette.execute_script("log('TEST-START: %s:%s')" % 
@@ -159,16 +160,6 @@ class MarionetteJSTestCase(CommonTestCase):
         if self.marionette.session is None:
             self.marionette.start_session()
         self.marionette.execute_script("log('TEST-START: %s');" % self.jsFile.replace('\\', '\\\\'))
-
-        self.marionette.set_context(self.marionette.CONTEXT_CHROME)
-        self.marionette.set_script_timeout(30000)
-        self.marionette.execute_async_script("""
-waitFor(
-    function() { marionetteScriptFinished(true); },
-    function() { return isSystemMessageListenerReady(); }
-);
-            """)
-        self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
 
         f = open(self.jsFile, 'r')
         js = f.read()

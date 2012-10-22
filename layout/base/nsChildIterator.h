@@ -94,7 +94,7 @@ public:
 
   nsIContent* get() const {
     if (XBLInvolved()) {
-      return mNodes->GetNodeAt(mIndex);
+      return mNodes->Item(mIndex);
     }
 
     return mChild;

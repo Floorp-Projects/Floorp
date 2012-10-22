@@ -1186,69 +1186,39 @@ Accessible::GetRole(uint32_t *aRole)
 }
 
 NS_IMETHODIMP
-Accessible::GetAttributes(nsIPersistentProperties **aAttributes)
+Accessible::GetAttributes(nsIPersistentProperties** aAttributes)
 {
-  NS_ENSURE_ARG_POINTER(aAttributes);  // In/out param. Created if necessary.
-  
+  NS_ENSURE_ARG_POINTER(aAttributes);
+  *aAttributes = nullptr;
+
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPersistentProperties> attributes = *aAttributes;
-  if (!attributes) {
-    // Create only if an array wasn't already passed in
-    attributes = do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
-    NS_ENSURE_TRUE(attributes, NS_ERROR_OUT_OF_MEMORY);
-    NS_ADDREF(*aAttributes = attributes);
-  }
- 
-  nsresult rv = GetAttributesInternal(attributes);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPersistentProperties> attributes = Attributes();
+  attributes.swap(*aAttributes);
 
-  nsAutoString id;
-  nsAutoString oldValueUnused;
-  if (nsCoreUtils::GetID(mContent, id)) {
-    // Expose ID. If an <iframe id> exists override the one on the <body> of the source doc,
-    // because the specific instance is what makes the ID useful for scripts
-    attributes->SetStringProperty(NS_LITERAL_CSTRING("id"), id, oldValueUnused);
-  }
-  
-  nsAutoString xmlRoles;
+  return NS_OK;
+}
+
+already_AddRefed<nsIPersistentProperties>
+Accessible::Attributes()
+{
+  nsCOMPtr<nsIPersistentProperties> attributes = NativeAttributes();
+  if (!HasOwnContent() || !mContent->IsElement())
+    return attributes.forget();
+
+  // 'xml-roles' attribute coming from ARIA.
+  nsAutoString xmlRoles, unused;
   if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::role, xmlRoles)) {
-    attributes->SetStringProperty(NS_LITERAL_CSTRING("xml-roles"),  xmlRoles, oldValueUnused);          
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("xml-roles"),
+                                  xmlRoles, unused);
   }
-
-  if (HasNumericValue()) {
-    // We support values, so expose the string value as well, via the valuetext object attribute
-    // We test for the value interface because we don't want to expose traditional get_accValue()
-    // information such as URL's on links and documents, or text in an input
-    nsAutoString valuetext;
-    GetValue(valuetext);
-    attributes->SetStringProperty(NS_LITERAL_CSTRING("valuetext"), valuetext, oldValueUnused);
-  }
-
-  // Expose checkable object attribute if the accessible has checkable state
-  if (State() & states::CHECKABLE)
-    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::checkable, NS_LITERAL_STRING("true"));
-
-  // Expose 'explicit-name' attribute.
-  if (!nsTextEquivUtils::IsNameFromSubtreeAllowed(this) ||
-      Name(oldValueUnused) != eNameFromSubtree) {
-    attributes->SetStringProperty(NS_LITERAL_CSTRING("explicit-name"),
-                                  NS_LITERAL_STRING("true"), oldValueUnused);
-  }
-
-  // Group attributes (level/setsize/posinset)
-  GroupPos groupPos = GroupPosition();
-  nsAccUtils::SetAccGroupAttrs(attributes, groupPos.level,
-                               groupPos.setSize, groupPos.posInSet);
 
   // Expose object attributes from ARIA attributes.
   aria::AttrIterator attribIter(mContent);
   nsAutoString name, value;
-  while(attribIter.Next(name, value)) {
-    attributes->SetStringProperty(NS_ConvertUTF16toUTF8(name), value, 
-                                  oldValueUnused);
-  }
+  while(attribIter.Next(name, value))
+    attributes->SetStringProperty(NS_ConvertUTF16toUTF8(name), value, unused);
 
   // If there is no aria-live attribute then expose default value of 'live'
   // object attribute used for ARIA role of this accessible.
@@ -1261,43 +1231,67 @@ Accessible::GetAttributes(nsIPersistentProperties **aAttributes)
     }
   }
 
-  return NS_OK;
+  return attributes.forget();
 }
 
-nsresult
-Accessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
+already_AddRefed<nsIPersistentProperties>
+Accessible::NativeAttributes()
 {
-  // If the accessible isn't primary for its node (such as list item bullet or
-  // xul tree item then don't calculate content based attributes.
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
+
+  nsAutoString unused;
+
+  // We support values, so expose the string value as well, via the valuetext
+  // object attribute. We test for the value interface because we don't want
+  // to expose traditional Value() information such as URL's on links and
+  // documents, or text in an input.
+  if (HasNumericValue()) {
+    nsAutoString valuetext;
+    GetValue(valuetext);
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("valuetext"), valuetext,
+                                  unused);
+  }
+
+  // Expose checkable object attribute if the accessible has checkable state
+  if (State() & states::CHECKABLE) {
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::checkable,
+                           NS_LITERAL_STRING("true"));
+  }
+
+  // Expose 'explicit-name' attribute.
+  if (!nsTextEquivUtils::IsNameFromSubtreeAllowed(this) ||
+      Name(unused) != eNameFromSubtree) {
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("explicit-name"),
+                                  NS_LITERAL_STRING("true"), unused);
+  }
+
+  // Group attributes (level/setsize/posinset)
+  GroupPos groupPos = GroupPosition();
+  nsAccUtils::SetAccGroupAttrs(attributes, groupPos.level,
+                               groupPos.setSize, groupPos.posInSet);
+
+  // If the accessible doesn't have own content (such as list item bullet or
+  // xul tree item) then don't calculate content based attributes.
   if (!HasOwnContent())
-    return NS_OK;
+    return attributes.forget();
 
-  // Attributes set by this method will not be used to override attributes on a sub-document accessible
-  // when there is a <frame>/<iframe> element that spawned the sub-document
+  nsEventShell::GetEventAttributes(GetNode(), attributes);
 
-  nsEventShell::GetEventAttributes(GetNode(), aAttributes);
- 
-  // Expose class because it may have useful microformat information
-  // Let the class from an iframe's document be exposed, don't override from <iframe class>
-  nsAutoString _class;
-  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, _class))
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::_class, _class);
-
-  // Get container-foo computed live region properties based on the closest container with
-  // the live region attribute. 
-  // Inner nodes override outer nodes within the same document --
-  //   The inner nodes can be used to override live region behavior on more general outer nodes
-  // However, nodes in outer documents override nodes in inner documents:
-  //   Outer doc author may want to override properties on a widget they used in an iframe
+  // Get container-foo computed live region properties based on the closest
+  // container with the live region attribute. Inner nodes override outer nodes
+  // within the same document. The inner nodes can be used to override live
+  // region behavior on more general outer nodes. However, nodes in outer
+  // documents override nodes in inner documents: outer doc author may want to
+  // override properties on a widget they used in an iframe.
   nsIContent* startContent = mContent;
   while (startContent) {
     nsIDocument* doc = startContent->GetDocument();
-    nsIContent* rootContent = nsCoreUtils::GetRoleContent(doc);
-    if (!rootContent)
-      return NS_OK;
+    if (!doc)
+      break;
 
-    nsAccUtils::SetLiveContainerAttributes(aAttributes, startContent,
-                                           rootContent);
+    nsAccUtils::SetLiveContainerAttributes(attributes, startContent,
+                                           nsCoreUtils::GetRoleContent(doc));
 
     // Allow ARIA live region markup from outer documents to override
     nsCOMPtr<nsISupports> container = doc->GetContainer(); 
@@ -1311,28 +1305,37 @@ Accessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
     if (!sameTypeParent || sameTypeParent == docShellTreeItem)
       break;
 
-    nsIDocument *parentDoc = doc->GetParentDocument();
+    nsIDocument* parentDoc = doc->GetParentDocument();
     if (!parentDoc)
       break;
 
-    startContent = parentDoc->FindContentForSubDocument(doc);      
+    startContent = parentDoc->FindContentForSubDocument(doc);
   }
 
   if (!mContent->IsElement())
-    return NS_OK;
+    return attributes.forget();
+
+  nsAutoString id;
+  if (nsCoreUtils::GetID(mContent, id))
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("id"), id, unused);
+
+  // Expose class because it may have useful microformat information.
+  nsAutoString _class;
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, _class))
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::_class, _class);
 
   // Expose tag.
   nsAutoString tagName;
   mContent->NodeInfo()->GetName(tagName);
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::tag, tagName);
+  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::tag, tagName);
 
-  // Expose draggable object attribute?
+  // Expose draggable object attribute.
   nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mContent);
   if (htmlElement) {
     bool draggable = false;
     htmlElement->GetDraggable(&draggable);
     if (draggable) {
-      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::draggable,
+      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::draggable,
                              NS_LITERAL_STRING("true"));
     }
   }
@@ -1340,7 +1343,7 @@ Accessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   // Don't calculate CSS-based object attributes when no frame (i.e.
   // the accessible is unattached from the tree).
   if (!mContent->GetPrimaryFrame())
-    return NS_OK;
+    return attributes.forget();
 
   // CSS style based object attributes.
   nsAutoString value;
@@ -1348,33 +1351,33 @@ Accessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 
   // Expose 'display' attribute.
   styleInfo.Display(value);
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::display, value);
+  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::display, value);
 
   // Expose 'text-align' attribute.
   styleInfo.TextAlign(value);
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textAlign, value);
+  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textAlign, value);
 
   // Expose 'text-indent' attribute.
   styleInfo.TextIndent(value);
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textIndent, value);
+  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textIndent, value);
 
   // Expose 'margin-left' attribute.
   styleInfo.MarginLeft(value);
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginLeft, value);
+  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::marginLeft, value);
 
   // Expose 'margin-right' attribute.
   styleInfo.MarginRight(value);
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginRight, value);
+  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::marginRight, value);
 
   // Expose 'margin-top' attribute.
   styleInfo.MarginTop(value);
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginTop, value);
+  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::marginTop, value);
 
   // Expose 'margin-bottom' attribute.
   styleInfo.MarginBottom(value);
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginBottom, value);
+  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::marginBottom, value);
 
-  return NS_OK;
+  return attributes.forget();
 }
 
 GroupPos

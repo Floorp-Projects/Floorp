@@ -304,28 +304,10 @@ namespace dom {
 extern int HandlerFamily;
 inline void* ProxyFamily() { return &HandlerFamily; }
 
-class DOMBaseProxyHandler : public js::BaseProxyHandler {
-protected:
-    DOMBaseProxyHandler(bool aNewDOMProxy) : js::BaseProxyHandler(ProxyFamily()),
-                                             mNewDOMProxy(aNewDOMProxy)
-    {
-    }
-
-public:
-    bool mNewDOMProxy;
-};
-
-inline bool IsNewProxyBinding(js::BaseProxyHandler* handler)
-{
-  MOZ_ASSERT(handler->family() == ProxyFamily());
-  return static_cast<DOMBaseProxyHandler*>(handler)->mNewDOMProxy;
-}
-
 inline bool IsDOMProxy(JSObject *obj)
 {
     return js::IsProxy(obj) &&
-           js::GetProxyHandler(obj)->family() == ProxyFamily() &&
-           IsNewProxyBinding(js::GetProxyHandler(obj));
+           js::GetProxyHandler(obj)->family() == ProxyFamily();
 }
 
 typedef bool
@@ -338,21 +320,6 @@ extern bool
 DefineStaticJSVals(JSContext *cx);
 void
 Register(nsScriptNameSpaceManager* aNameSpaceManager);
-
-namespace oldproxybindings {
-
-inline bool instanceIsProxy(JSObject *obj)
-{
-    return js::IsProxy(obj) &&
-           js::GetProxyHandler(obj)->family() == ProxyFamily() &&
-           !IsNewProxyBinding(js::GetProxyHandler(obj));
-}
-extern bool
-DefineStaticJSVals(JSContext *cx);
-void
-Register(nsScriptNameSpaceManager* aNameSpaceManager);
-
-} // namespace oldproxybindings
 
 } // namespace dom
 } // namespace mozilla

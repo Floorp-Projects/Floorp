@@ -51,7 +51,7 @@ public:
 
   // Accessible
   virtual int32_t GetLevelInternal();
-  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
   virtual mozilla::a11y::role NativeRole();
   virtual uint64_t NativeState();
 

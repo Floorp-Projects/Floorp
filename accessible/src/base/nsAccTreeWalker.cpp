@@ -74,7 +74,7 @@ nsAccTreeWalker::NextChildInternal(bool aNoWalkUp)
     mState->childList->GetLength(&length);
 
   while (mState->childIdx < length) {
-    nsIContent* childNode = mState->childList->GetNodeAt(mState->childIdx);
+    nsIContent* childNode = mState->childList->Item(mState->childIdx);
     mState->childIdx++;
 
     bool isSubtreeHidden = false;

@@ -117,7 +117,7 @@ DeviceTabActor.prototype.grip = function DTA_grip() {
 
   // Walk over tab actors added by extensions and add them to a new ActorPool.
   let actorPool = new ActorPool(this.conn);
-  this._createExtraActors(DebuggerServer.globalActorFactories, actorPool);
+  this._createExtraActors(DebuggerServer.tabActorFactories, actorPool);
   if (!actorPool.isEmpty()) {
     this._tabActorPool = actorPool;
     this.conn.addActorPool(this._tabActorPool);

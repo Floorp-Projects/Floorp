@@ -113,7 +113,7 @@ nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
     // uses enablePrivilege. If you're not doing test automation, you _must_ not
     // flip this pref, or you will be exposing all your users to security
     // vulnerabilities.
-    if (!Preferences::GetBool("security.enablePrivilege.enable_for_tests"))
+    if (!Preferences::GetBool("security.turn_off_all_security_so_that_viruses_can_take_over_this_computer"))
         return NS_OK;
 
     /* Define PrivilegeManager object with the necessary "static" methods. */

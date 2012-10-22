@@ -20,7 +20,6 @@ EXPORTS = \
 
 DEFINES += \
   -D_IMPL_NS_WIDGET \
-  -DNO_NSPR_10_SUPPORT=1 \
   $(NULL)
 
 CPPSRCS		= \

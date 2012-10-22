@@ -87,10 +87,22 @@ nsMultiplexInputStream::GetCount(uint32_t *aCount)
     return NS_OK;
 }
 
+static bool
+SeekableStreamAtBeginning(nsIInputStream *aStream)
+{
+    int64_t streamPos;
+    nsCOMPtr<nsISeekableStream> stream = do_QueryInterface(aStream);
+    if (stream && NS_SUCCEEDED(stream->Tell(&streamPos)) && streamPos != 0) {
+        return false;
+    }
+    return true;
+}
+
 /* void appendStream (in nsIInputStream stream); */
 NS_IMETHODIMP
 nsMultiplexInputStream::AppendStream(nsIInputStream *aStream)
 {
+    NS_ASSERTION(SeekableStreamAtBeginning(aStream), "Appended stream not at beginning.");
     return mStreams.AppendElement(aStream) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -98,6 +110,7 @@ nsMultiplexInputStream::AppendStream(nsIInputStream *aStream)
 NS_IMETHODIMP
 nsMultiplexInputStream::InsertStream(nsIInputStream *aStream, uint32_t aIndex)
 {
+    NS_ASSERTION(SeekableStreamAtBeginning(aStream), "Inserted stream not at beginning.");
     bool result = mStreams.InsertElementAt(aIndex, aStream);
     NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
     if (mCurrentStream > aIndex ||
@@ -378,23 +391,27 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
                 remaining = 0;
             }
             else if (remaining > streamPos) {
-                uint64_t avail;
-                rv = mStreams[i]->Available(&avail);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                int64_t newPos;
-                if (remaining < (streamPos + (int64_t) avail)) {
-                    newPos = remaining - streamPos;
-                    remaining = 0;
-                } else {
-                    newPos = streamPos + (int64_t)avail;
-                    remaining -= streamPos + avail;
+                if (i < oldCurrentStream) {
+                    // We're already at end so no need to seek this stream
+                    remaining -= streamPos;
+                    NS_ASSERTION(remaining >= 0, "Remaining invalid");
                 }
-                rv = stream->Seek(NS_SEEK_CUR, newPos);
-                NS_ENSURE_SUCCESS(rv, rv);
+                else {
+                    uint64_t avail;
+                    rv = mStreams[i]->Available(&avail);
+                    NS_ENSURE_SUCCESS(rv, rv);
 
-                mCurrentStream = i;
-                mStartedReadingCurrent = true;
+                    int64_t newPos = NS_MIN(remaining, streamPos + (int64_t)avail);
+
+                    rv = stream->Seek(NS_SEEK_SET, newPos);
+                    NS_ENSURE_SUCCESS(rv, rv);
+
+                    mCurrentStream = i;
+                    mStartedReadingCurrent = true;
+
+                    remaining -= newPos;
+                    NS_ASSERTION(remaining >= 0, "Remaining invalid");
+                }
             }
             else {
                 NS_ASSERTION(remaining == streamPos, "Huh?");

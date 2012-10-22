@@ -24,6 +24,7 @@ DIRS	= \
   pivot \
   relations \
   role \
+  scroll \
   selectable \
   states \
   table \

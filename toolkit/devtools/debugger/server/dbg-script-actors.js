@@ -1052,6 +1052,9 @@ ThreadActor.prototype = {
    * @returns true, if the script was added, false otherwise.
    */
   _addScript: function TA__addScript(aScript) {
+    // Ignore anything we don't have a URL for (eval scripts, for example).
+    if (!aScript.url)
+      return false;
     // Ignore XBL bindings for content debugging.
     if (aScript.url.indexOf("chrome://") == 0) {
       return false;

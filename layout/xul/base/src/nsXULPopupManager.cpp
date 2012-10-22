@@ -1623,7 +1623,7 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
           else
             grandChild->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
 
-          // The menu's label, accesskey and checked states need to be updated
+          // The menu's label, accesskey checked and hidden states need to be updated
           // to match the command. Note that unlike the disabled state if the
           // command has *no* value, we assume the menu is supplying its own.
           if (commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, commandValue))
@@ -1634,6 +1634,9 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
 
           if (commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::checked, commandValue))
             grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::checked, commandValue, true);
+
+          if (commandContent->GetAttr(kNameSpaceID_None, nsGkAtoms::hidden, commandValue))
+            grandChild->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden, commandValue, true);
         }
       }
     }
