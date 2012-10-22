@@ -1714,6 +1714,11 @@ nsOfflineCacheUpdate::ProcessNextURI()
     NS_ASSERTION(mState == STATE_DOWNLOADING,
                  "ProcessNextURI should only be called from the DOWNLOADING state");
 
+    if (mState != STATE_DOWNLOADING) {
+        LOG(("  should only be called from the DOWNLOADING state, ignoring"));
+        return NS_ERROR_UNEXPECTED;
+    }
+
     nsOfflineCacheUpdateItem * runItem = nullptr;
     uint32_t completedItems = 0;
     for (uint32_t i = 0; i < mItems.Length(); ++i) {
