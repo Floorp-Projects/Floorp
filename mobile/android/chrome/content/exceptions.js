@@ -49,9 +49,9 @@ SSLExceptions.prototype = {
   _checkCert: function SSLE_checkCert(aURI) {
     this._sslStatus = null;
   
-    var req = new XMLHttpRequest();
+    let req = new XMLHttpRequest();
     try {
-      if(aURI) {
+      if (aURI) {
         req.open("GET", aURI.prePath, false);
         req.channel.notificationCallbacks = this;
         req.send(null);
@@ -71,22 +71,22 @@ SSLExceptions.prototype = {
   /**
     Internal method to create an override.
   */
-  _addOverride: function SSLE_addOverride(aURI, aWindow, temporary) {
-    var SSLStatus = this._checkCert(aURI);
-    var certificate = SSLStatus.serverCert;
+  _addOverride: function SSLE_addOverride(aURI, aWindow, aTemporary) {
+    let SSLStatus = this._checkCert(aURI);
+    let certificate = SSLStatus.serverCert;
 
-    var flags = 0;
+    let flags = 0;
 
     // in private browsing do not store exceptions permanently ever
     if (PrivateBrowsingUtils.isWindowPrivate(aWindow)) {
-      temporary = true;
+      aTemporary = true;
     }
 
-    if(SSLStatus.isUntrusted)
+    if (SSLStatus.isUntrusted)
       flags |= this._overrideService.ERROR_UNTRUSTED;
-    if(SSLStatus.isDomainMismatch)
+    if (SSLStatus.isDomainMismatch)
       flags |= this._overrideService.ERROR_MISMATCH;
-    if(SSLStatus.isNotValidAtThisTime)
+    if (SSLStatus.isNotValidAtThisTime)
       flags |= this._overrideService.ERROR_TIME;
 
     this._overrideService.rememberValidityOverride(
@@ -94,7 +94,7 @@ SSLExceptions.prototype = {
       aURI.port,
       certificate,
       flags,
-      temporary);
+      aTemporary);
   },
 
   /**
