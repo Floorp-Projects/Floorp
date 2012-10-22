@@ -1642,6 +1642,8 @@ abstract public class GeckoApp
             }
         }
 
+        Tabs.registerOnTabsChangedListener(this);
+
         initializeChrome(passedUri, isExternalURL);
 
         if (mRestoreMode == GeckoAppShell.RESTORE_NONE) {
@@ -1668,8 +1670,6 @@ abstract public class GeckoApp
             }, 1000 * 5 /* 5 seconds */);
             Log.i(LOGTAG, "Intent : ACTION_DEBUG - waiting 5s before launching");
         }
-
-        Tabs.registerOnTabsChangedListener(this);
 
         if (cameraView == null) {
             cameraView = new SurfaceView(this);
