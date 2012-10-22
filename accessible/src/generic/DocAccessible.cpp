@@ -324,7 +324,9 @@ DocAccessible::Attributes()
   nsCOMPtr<nsIPersistentProperties> attributes =
     HyperTextAccessibleWrap::Attributes();
 
-  if (!mParent)
+  // No attributes if document is not attached to the tree or if it's a root
+  // document.
+  if (!mParent || IsRoot())
     return attributes.forget();
 
   // Override ARIA object attributes from outerdoc.
