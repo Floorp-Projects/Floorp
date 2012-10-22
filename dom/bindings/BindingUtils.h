@@ -1042,6 +1042,15 @@ protected:
 #endif
 };
 
+// Helper for OwningNonNull
+template <class T>
+inline bool
+WrapNewBindingObject(JSContext* cx, JSObject* scope, OwningNonNull<T>& value,
+                     JS::Value* vp)
+{
+  return WrapNewBindingObject(cx, scope, &static_cast<T&>(value), vp);
+}
+
 // A struct that has the same layout as an nsDependentString but much
 // faster constructor and destructor behavior
 struct FakeDependentString {
