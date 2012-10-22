@@ -99,9 +99,11 @@ SHA1Sum::SHA1Sum()
  *  SHA: Add data to context.
  */
 void
-SHA1Sum::update(const uint8_t* dataIn, uint32_t len)
+SHA1Sum::update(const void* dataIn, uint32_t len)
 {
   MOZ_ASSERT(!mDone, "SHA1Sum can only be used to compute a single hash.");
+
+  const uint8_t* data = static_cast<const uint8_t*>(dataIn);
 
   if (len == 0)
     return;
@@ -117,9 +119,9 @@ SHA1Sum::update(const uint8_t* dataIn, uint32_t len)
     togo = 64U - lenB;
     if (len < togo)
       togo = len;
-    memcpy(u.b + lenB, dataIn, togo);
+    memcpy(u.b + lenB, data, togo);
     len -= togo;
-    dataIn += togo;
+    data += togo;
     lenB = (lenB + togo) & 63U;
     if (!lenB)
       shaCompress(&H[H2X], u.w);
@@ -127,12 +129,12 @@ SHA1Sum::update(const uint8_t* dataIn, uint32_t len)
 
   while (len >= 64U) {
     len -= 64U;
-    shaCompress(&H[H2X], reinterpret_cast<const uint32_t*>(dataIn));
-    dataIn += 64U;
+    shaCompress(&H[H2X], reinterpret_cast<const uint32_t*>(data));
+    data += 64U;
   }
 
   if (len > 0)
-    memcpy(u.b, dataIn, len);
+    memcpy(u.b, data, len);
 }
 
 
