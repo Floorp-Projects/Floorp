@@ -1893,75 +1893,6 @@ nsScriptSecurityManager::DoGetCertificatePrincipal(const nsACString& aCertFinger
                                     aPrettyName, aCertificate, aURI,
                                     UNKNOWN_APP_ID, false);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // Check to see if we already have this principal.
-    nsCOMPtr<nsIPrincipal> fromTable;
-    mPrincipals.Get(certificate, getter_AddRefs(fromTable));
-    if (fromTable) {
-        // Bingo.  We found the certificate in the table, which means
-        // that it has escalated privileges.
-
-        if (aModifyTable) {
-            // Make sure this principal has names, so if we ever go to save it
-            // we'll save them.  If we get a name mismatch here we'll throw,
-            // but that's desirable.
-            rv = static_cast<nsPrincipal*>
-                            (static_cast<nsIPrincipal*>(fromTable))
-                ->EnsureCertData(aSubjectName, aPrettyName, aCertificate);
-            if (NS_FAILED(rv)) {
-                // We have a subject name mismatch for the same cert id.
-                // Hand back the |certificate| object we created and don't give
-                // it any rights from the table.
-                NS_ADDREF(*result = certificate);
-                return NS_OK;
-            }                
-        }
-        
-        if (!aURI) {
-            // We were asked to just get the base certificate, so output
-            // what we have in the table.
-            certificate = static_cast<nsPrincipal*>
-                                     (static_cast<nsIPrincipal*>
-                                                 (fromTable));
-        } else {
-            // We found a certificate and now need to install a codebase
-            // on it.  We don't want to modify the principal in the hash
-            // table, so create a new principal and clone the pertinent
-            // things.
-            nsXPIDLCString prefName;
-            nsXPIDLCString id;
-            nsXPIDLCString subjectName;
-            nsXPIDLCString granted;
-            nsXPIDLCString denied;
-            bool isTrusted;
-            rv = fromTable->GetPreferences(getter_Copies(prefName),
-                                           getter_Copies(id),
-                                           getter_Copies(subjectName),
-                                           getter_Copies(granted),
-                                           getter_Copies(denied),
-                                           &isTrusted);
-            // XXXbz assert something about subjectName and aSubjectName here?
-            if (NS_SUCCEEDED(rv)) {
-                NS_ASSERTION(!isTrusted, "Shouldn't have isTrusted true here");
-                
-                certificate = new nsPrincipal();
-                if (!certificate)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                rv = certificate->InitFromPersistent(prefName, id,
-                                                     subjectName, aPrettyName,
-                                                     granted, denied,
-                                                     aCertificate,
-                                                     true, false,
-                                                     UNKNOWN_APP_ID, false);
-                if (NS_FAILED(rv))
-                    return rv;
-                
-                certificate->SetURI(aURI);
-            }
-        }
-    }
-
     NS_ADDREF(*result = certificate);
 
     return rv;
@@ -2070,52 +2001,6 @@ nsScriptSecurityManager::GetCodebasePrincipalInternal(nsIURI *aURI,
     rv = CreateCodebasePrincipal(aURI, aAppId, aInMozBrowser,
                                  getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    if (mPrincipals.Count() > 0)
-    {
-        //-- Check to see if we already have this principal.
-        nsCOMPtr<nsIPrincipal> fromTable;
-        mPrincipals.Get(principal, getter_AddRefs(fromTable));
-        if (fromTable) {
-            // We found an existing codebase principal.  But it might have a
-            // generic codebase for this origin on it.  Install our particular
-            // codebase.
-            // XXXbz this is kinda similar to the code in
-            // GetCertificatePrincipal, but just ever so slightly different.
-            // Oh, well.
-            nsXPIDLCString prefName;
-            nsXPIDLCString id;
-            nsXPIDLCString subjectName;
-            nsXPIDLCString granted;
-            nsXPIDLCString denied;
-            bool isTrusted;
-            rv = fromTable->GetPreferences(getter_Copies(prefName),
-                                           getter_Copies(id),
-                                           getter_Copies(subjectName),
-                                           getter_Copies(granted),
-                                           getter_Copies(denied),
-                                           &isTrusted);
-            if (NS_SUCCEEDED(rv)) {
-                nsRefPtr<nsPrincipal> codebase = new nsPrincipal();
-                if (!codebase)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                rv = codebase->InitFromPersistent(prefName, id,
-                                                  subjectName, EmptyCString(),
-                                                  granted, denied,
-                                                  nullptr, false,
-                                                  isTrusted,
-                                                  aAppId,
-                                                  aInMozBrowser);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                codebase->SetURI(aURI);
-                principal = codebase;
-            }
-
-        }
-    }
-
     NS_IF_ADDREF(*result = principal);
 
     return NS_OK;
@@ -2718,14 +2603,12 @@ nsScriptSecurityManager::AsyncOnChannelRedirect(nsIChannel* oldChannel,
 const char sJSEnabledPrefName[] = "javascript.enabled";
 const char sFileOriginPolicyPrefName[] =
     "security.fileuri.strict_origin_policy";
-static const char sPrincipalPrefix[] = "capability.principal";
 static const char sPolicyPrefix[] = "capability.policy.";
 
 static const char* kObservedPrefs[] = {
   sJSEnabledPrefName,
   sFileOriginPolicyPrefName,
   sPolicyPrefix,
-  sPrincipalPrefix,
   nullptr
 };
 
@@ -2750,19 +2633,6 @@ nsScriptSecurityManager::Observe(nsISupports* aObject, const char* aTopic,
         // This will force re-initialization of the pref table
         mPolicyPrefsChanged = true;
     }
-    else if ((PL_strncmp(message, sPrincipalPrefix, sizeof(sPrincipalPrefix)-1) == 0) &&
-             !mIsWritingPrefs)
-    {
-        static const char id[] = "id";
-        char* lastDot = PL_strrchr(message, '.');
-        //-- This check makes sure the string copy below doesn't overwrite its bounds
-        if(PL_strlen(lastDot) >= sizeof(id))
-        {
-            PL_strcpy(lastDot + 1, id);
-            const char** idPrefArray = (const char**)&message;
-            rv = InitPrincipals(1, idPrefArray);
-        }
-    }
     return rv;
 }
 
@@ -2781,7 +2651,6 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
     MOZ_STATIC_ASSERT(sizeof(intptr_t) == sizeof(void*),
                       "intptr_t and void* have different lengths on this platform. "
                       "This may cause a security failure with the SecurityLevel union.");
-    mPrincipals.Init(31);
 }
 
 nsresult nsScriptSecurityManager::Init()
@@ -3214,145 +3083,6 @@ nsScriptSecurityManager::InitDomainPolicy(JSContext* cx,
     return NS_OK;
 }
 
-
-// XXXbz We should really just get a prefbranch to handle this...
-nsresult
-nsScriptSecurityManager::GetPrincipalPrefNames(const char* prefBase,
-                                               nsCString& grantedPref,
-                                               nsCString& deniedPref,
-                                               nsCString& subjectNamePref)
-{
-    char* lastDot = PL_strrchr(prefBase, '.');
-    if (!lastDot) return NS_ERROR_FAILURE;
-    int32_t prefLen = lastDot - prefBase + 1;
-
-    grantedPref.Assign(prefBase, prefLen);
-    deniedPref.Assign(prefBase, prefLen);
-    subjectNamePref.Assign(prefBase, prefLen);
-
-#define GRANTED "granted"
-#define DENIED "denied"
-#define SUBJECTNAME "subjectName"
-
-    grantedPref.AppendLiteral(GRANTED);
-    if (grantedPref.Length() != prefLen + sizeof(GRANTED) - 1) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    deniedPref.AppendLiteral(DENIED);
-    if (deniedPref.Length() != prefLen + sizeof(DENIED) - 1) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    subjectNamePref.AppendLiteral(SUBJECTNAME);
-    if (subjectNamePref.Length() != prefLen + sizeof(SUBJECTNAME) - 1) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-#undef SUBJECTNAME
-#undef DENIED
-#undef GRANTED
-    
-    return NS_OK;
-}
-
-nsresult
-nsScriptSecurityManager::InitPrincipals(uint32_t aPrefCount, const char** aPrefNames)
-{
-    /* This is the principal preference syntax:
-     * capability.principal.[codebase|codebaseTrusted|certificate].<name>.[id|granted|denied]
-     * For example:
-     * user_pref("capability.principal.certificate.p1.id","12:34:AB:CD");
-     * user_pref("capability.principal.certificate.p1.granted","Capability1 Capability2");
-     * user_pref("capability.principal.certificate.p1.denied","Capability3");
-     */
-
-    /* codebaseTrusted means a codebase principal that can enable capabilities even if
-     * codebase principals are disabled. Don't use trustedCodebase except with unspoofable
-     * URLs such as HTTPS URLs.
-     */
-
-    static const char idSuffix[] = ".id";
-    for (uint32_t c = 0; c < aPrefCount; c++)
-    {
-        int32_t prefNameLen = PL_strlen(aPrefNames[c]) - 
-            (ArrayLength(idSuffix) - 1);
-        if (PL_strcasecmp(aPrefNames[c] + prefNameLen, idSuffix) != 0)
-            continue;
-
-        nsAdoptingCString id = Preferences::GetCString(aPrefNames[c]);
-        if (!id) {
-            return NS_ERROR_FAILURE;
-        }
-
-        nsAutoCString grantedPrefName;
-        nsAutoCString deniedPrefName;
-        nsAutoCString subjectNamePrefName;
-        nsresult rv = GetPrincipalPrefNames(aPrefNames[c],
-                                            grantedPrefName,
-                                            deniedPrefName,
-                                            subjectNamePrefName);
-        if (rv == NS_ERROR_OUT_OF_MEMORY)
-            return rv;
-        if (NS_FAILED(rv))
-            continue;
-
-        nsAdoptingCString grantedList =
-            Preferences::GetCString(grantedPrefName.get());
-        nsAdoptingCString deniedList =
-            Preferences::GetCString(deniedPrefName.get());
-        nsAdoptingCString subjectName =
-            Preferences::GetCString(subjectNamePrefName.get());
-
-        //-- Delete prefs if their value is the empty string
-        if (id.IsEmpty() || (grantedList.IsEmpty() && deniedList.IsEmpty()))
-        {
-            Preferences::ClearUser(aPrefNames[c]);
-            Preferences::ClearUser(grantedPrefName.get());
-            Preferences::ClearUser(deniedPrefName.get());
-            Preferences::ClearUser(subjectNamePrefName.get());
-            continue;
-        }
-
-        //-- Create a principal based on the prefs
-        static const char certificateName[] = "capability.principal.certificate";
-        static const char codebaseName[] = "capability.principal.codebase";
-        static const char codebaseTrustedName[] = "capability.principal.codebaseTrusted";
-
-        bool isCert = false;
-        bool isTrusted = false;
-        
-        if (PL_strncmp(aPrefNames[c], certificateName,
-                       sizeof(certificateName) - 1) == 0)
-        {
-            isCert = true;
-        }
-        else if (PL_strncmp(aPrefNames[c], codebaseName,
-                            sizeof(codebaseName) - 1) == 0)
-        {
-            isTrusted = (PL_strncmp(aPrefNames[c], codebaseTrustedName,
-                                    sizeof(codebaseTrustedName) - 1) == 0);
-        }
-        else
-        {
-          NS_ERROR("Not a codebase or a certificate?!");
-        }
-
-        nsRefPtr<nsPrincipal> newPrincipal = new nsPrincipal();
-        if (!newPrincipal)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        rv = newPrincipal->InitFromPersistent(aPrefNames[c], id, subjectName,
-                                              EmptyCString(),
-                                              grantedList, deniedList, nullptr, 
-                                              isCert, isTrusted, UNKNOWN_APP_ID,
-                                              false);
-        if (NS_SUCCEEDED(rv))
-            mPrincipals.Put(newPrincipal, newPrincipal);
-    }
-    return NS_OK;
-}
-
 inline void
 nsScriptSecurityManager::ScriptSecurityPrefChanged()
 {
@@ -3378,7 +3108,6 @@ nsScriptSecurityManager::ScriptSecurityPrefChanged()
 nsresult
 nsScriptSecurityManager::InitPrefs()
 {
-    nsresult rv;
     nsIPrefBranch* branch = Preferences::GetRootBranch();
     NS_ENSURE_TRUE(branch, NS_ERROR_FAILURE);
 
@@ -3389,17 +3118,6 @@ nsScriptSecurityManager::InitPrefs()
 
     // set observer callbacks in case the value of the prefs change
     Preferences::AddStrongObservers(this, kObservedPrefs);
-
-    uint32_t prefCount;
-    char** prefNames;
-    //-- Initialize the principals database from prefs
-    rv = branch->GetChildList(sPrincipalPrefix, &prefCount, &prefNames);
-    if (NS_SUCCEEDED(rv) && prefCount > 0)
-    {
-        rv = InitPrincipals(prefCount, (const char**)prefNames);
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
 
     return NS_OK;
 }

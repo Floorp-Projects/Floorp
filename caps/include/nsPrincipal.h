@@ -32,12 +32,8 @@ protected:
 public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
-  NS_IMETHOD GetPreferences(char** prefBranch, char** id, char** subjectName, char** grantedList, char** deniedList, bool* isTrusted);
   NS_IMETHOD GetSecurityPolicy(void** aSecurityPolicy);
   NS_IMETHOD SetSecurityPolicy(void* aSecurityPolicy);
-  NS_IMETHOD CanEnableCapability(const char* capability, int16_t* _retval);
-  NS_IMETHOD IsCapabilityEnabled(const char* capability, void* annotation, bool* _retval);
-  NS_IMETHOD EnableCapability(const char* capability, void** annotation);
   NS_IMETHOD GetHasCertificate(bool* aHasCertificate);
   NS_IMETHOD GetFingerprint(nsACString& aFingerprint);
   NS_IMETHOD GetPrettyName(nsACString& aPrettyName);
@@ -54,21 +50,9 @@ public:
                           const nsACString& aPrettyName,
                           nsISupports* aCert);
 
-  enum AnnotationValue { AnnotationEnabled=1, AnnotationDisabled };
-
-  nsresult SetCapability(const char* capability, void** annotation, 
-                         AnnotationValue value);
-
   static const char sInvalid[];
 
 protected:
-  // Formerly an IDL method. Now just a protected helper.
-  nsresult SetCanEnableCapability(const char* capability, int16_t canEnable);
-
-  nsTArray< nsAutoPtr<nsHashtable> > mAnnotations;
-  nsHashtable* mCapabilities;
-  nsCString mPrefName;
-  static int32_t sCapabilitiesOrdinal;
 
   // XXXcaa This is a semi-hack.  The best solution here is to keep
   // a reference to an interface here, except there is no interface
@@ -109,7 +93,6 @@ protected:
   DomainPolicy* mSecurityPolicy;
 
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
-  bool mTrusted;
 };
 
 class nsPrincipal : public nsBasePrincipal
@@ -138,8 +121,7 @@ public:
 
   nsPrincipal();
 
-  // Either Init() or InitFromPersistent() must be called before
-  // the principal is in a usable state.
+  // Init() must be called before the principal is in a usable state.
   nsresult Init(const nsACString& aCertFingerprint,
                 const nsACString& aSubjectName,
                 const nsACString& aPrettyName,
@@ -147,17 +129,6 @@ public:
                 nsIURI* aCodebase,
                 uint32_t aAppId,
                 bool aInMozBrowser);
-  nsresult InitFromPersistent(const char* aPrefName,
-                              const nsCString& aFingerprint,
-                              const nsCString& aSubjectName,
-                              const nsACString& aPrettyName,
-                              const char* aGrantedList,
-                              const char* aDeniedList,
-                              nsISupports* aCert,
-                              bool aIsCert,
-                              bool aTrusted,
-                              uint32_t aAppId,
-                              bool aInMozBrowser);
 
   virtual void GetScriptLocation(nsACString& aStr) MOZ_OVERRIDE;
   void SetURI(nsIURI* aURI);

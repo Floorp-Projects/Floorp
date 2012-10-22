@@ -534,21 +534,12 @@ private:
     nsresult
     InitPrefs();
 
-    static nsresult 
-    GetPrincipalPrefNames(const char* prefBase,
-                          nsCString& grantedPref,
-                          nsCString& deniedPref,
-                          nsCString& subjectNamePref);
-
     nsresult
     InitPolicies();
 
     nsresult
     InitDomainPolicy(JSContext* cx, const char* aPolicyName,
                      DomainPolicy* aDomainPolicy);
-
-    nsresult
-    InitPrincipals(uint32_t prefCount, const char** prefNames);
 
 #ifdef DEBUG_CAPS_HACKER
     void
@@ -567,7 +558,6 @@ private:
 
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
     nsCOMPtr<nsIPrincipal> mSystemCertificate;
-    nsInterfaceHashtable<PrincipalKey, nsIPrincipal> mPrincipals;
     bool mPrefInitialized;
     bool mIsJavaScriptEnabled;
     bool mIsWritingPrefs;

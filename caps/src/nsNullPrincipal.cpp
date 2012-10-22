@@ -124,23 +124,6 @@ void nsNullPrincipal::dumpImpl()
  */
 
 NS_IMETHODIMP
-nsNullPrincipal::GetPreferences(char** aPrefName, char** aID,
-                                char** aSubjectName,
-                                char** aGrantedList, char** aDeniedList,
-                                bool* aIsTrusted)
-{
-  // The null principal should never be written to preferences.
-  *aPrefName = nullptr;
-  *aID = nullptr;
-  *aSubjectName = nullptr;
-  *aGrantedList = nullptr;
-  *aDeniedList = nullptr;
-  *aIsTrusted = false;
-
-  return NS_ERROR_FAILURE; 
-}
-
-NS_IMETHODIMP
 nsNullPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
 {
   // Just equal to ourselves.  Note that nsPrincipal::Equals will return false
@@ -176,33 +159,6 @@ nsNullPrincipal::SetSecurityPolicy(void* aSecurityPolicy)
 {
   // We don't actually do security policy caching.  And it's not like anyone
   // can set a security policy for us anyway.
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsNullPrincipal::CanEnableCapability(const char *aCapability, 
-                                     int16_t *aResult)
-{
-  // Null principal can enable no capabilities.
-  *aResult = nsIPrincipal::ENABLE_DENIED;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsNullPrincipal::IsCapabilityEnabled(const char *aCapability, 
-                                     void *aAnnotation, 
-                                     bool *aResult)
-{
-  // Nope.  No capabilities, I say!
-  *aResult = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsNullPrincipal::EnableCapability(const char *aCapability, void **aAnnotation)
-{
-  NS_NOTREACHED("Didn't I say it?  NO CAPABILITIES!");
-  *aAnnotation = nullptr;
   return NS_OK;
 }
 
