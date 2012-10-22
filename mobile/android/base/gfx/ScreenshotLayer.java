@@ -136,8 +136,9 @@ public class ScreenshotLayer extends SingleTileLayer {
             // This allocates a lot of memory and can fail sometimes. Handling the
             // exception is better than crashing.
             try {
-              dst.put(src);
-            } catch (java.lang.OutOfMemoryError e) {}
+                dst.put(src);
+            } catch (OutOfMemoryError e) {
+            }
         }
 
         synchronized void setBitmap(ByteBuffer data, int width, int height, int format, Rect rect) {
@@ -153,12 +154,10 @@ public class ScreenshotLayer extends SingleTileLayer {
             if (mBuffer == null) {
                 return;
             }
-            Bitmap tmp;
             mSize = new IntSize(width, height);
             mFormat = format;
             if (width == bitmap.getWidth() && height == bitmap.getHeight()) {
-                tmp = bitmap;
-                tmp.copyPixelsToBuffer(mBuffer.asIntBuffer());
+                bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
             } else {
                 throw new IllegalArgumentException("### unexpected size in setBitmap: w="+width+" h="+height);
             }
