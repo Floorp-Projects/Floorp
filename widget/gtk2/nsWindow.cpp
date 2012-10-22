@@ -2350,14 +2350,11 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
 }
 
 void
-nsWindow::OnContainerUnrealize(GtkWidget *aWidget)
+nsWindow::OnContainerUnrealize()
 {
     // The GdkWindows are about to be destroyed (but not deleted), so remove
     // their references back to their container widget while the GdkWindow
     // hierarchy is still available.
-
-    NS_ASSERTION(mContainer == MOZ_CONTAINER(aWidget),
-                 "unexpected \"unrealize\" signal");
 
     if (mGdkWindow) {
         DestroyChildWindows();
@@ -2368,7 +2365,7 @@ nsWindow::OnContainerUnrealize(GtkWidget *aWidget)
 }
 
 void
-nsWindow::OnSizeAllocate(GtkWidget *aWidget, GtkAllocation *aAllocation)
+nsWindow::OnSizeAllocate(GtkAllocation *aAllocation)
 {
     LOG(("size_allocate [%p] %d %d %d %d\n",
          (void *)this, aAllocation->x, aAllocation->y,
@@ -2388,14 +2385,14 @@ nsWindow::OnSizeAllocate(GtkWidget *aWidget, GtkAllocation *aAllocation)
 }
 
 void
-nsWindow::OnDeleteEvent(GtkWidget *aWidget, GdkEventAny *aEvent)
+nsWindow::OnDeleteEvent()
 {
     if (mWidgetListener)
         mWidgetListener->RequestWindowClose(this);
 }
 
 void
-nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
+nsWindow::OnEnterNotifyEvent(GdkEventCrossing *aEvent)
 {
     // This skips NotifyVirtual and NotifyNonlinearVirtual enter notify events
     // when the pointer enters a child window.  If the destination window is a
@@ -2441,7 +2438,7 @@ is_top_level_mouse_exit(GdkWindow* aWindow, GdkEventCrossing *aEvent)
 }
 
 void
-nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
+nsWindow::OnLeaveNotifyEvent(GdkEventCrossing *aEvent)
 {
     // This ignores NotifyVirtual and NotifyNonlinearVirtual leave notify
     // events when the pointer leaves a child window.  If the destination
@@ -2471,7 +2468,7 @@ nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 }
 
 void
-nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
+nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
 {
     // see if we can compress this event
     // XXXldb Why skip every other motion event when we have multiple,
@@ -2657,7 +2654,7 @@ static guint ButtonMaskFromGDKButton(guint button)
 }
 
 void
-nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
+nsWindow::OnButtonPressEvent(GdkEventButton *aEvent)
 {
     LOG(("Button %u press on %p\n", aEvent->button, (void *)this));
 
@@ -2740,7 +2737,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 }
 
 void
-nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
+nsWindow::OnButtonReleaseEvent(GdkEventButton *aEvent)
 {
     LOG(("Button %u release on %p\n", aEvent->button, (void *)this));
 
@@ -2774,7 +2771,7 @@ nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 }
 
 void
-nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
+nsWindow::OnContainerFocusInEvent(GdkEventFocus *aEvent)
 {
     NS_ASSERTION(mWindowType != eWindowType_popup,
                  "Unexpected focus on a popup window");
@@ -2812,7 +2809,7 @@ nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
 }
 
 void
-nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
+nsWindow::OnContainerFocusOutEvent(GdkEventFocus *aEvent)
 {
     LOGFOCUS(("OnContainerFocusOutEvent [%p]\n", (void *)this));
 
@@ -2905,7 +2902,7 @@ nsWindow::DispatchKeyDownEvent(GdkEventKey *aEvent, bool *aCancelled)
 }
 
 gboolean
-nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
+nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
 {
     LOGFOCUS(("OnKeyPressEvent [%p]\n", (void *)this));
 
@@ -3042,7 +3039,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 }
 
 gboolean
-nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
+nsWindow::OnKeyReleaseEvent(GdkEventKey *aEvent)
 {
     LOGFOCUS(("OnKeyReleaseEvent [%p]\n", (void *)this));
 
@@ -3066,7 +3063,7 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 }
 
 void
-nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
+nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
 {
     // check to see if we should rollup
     bool rolledUp =
@@ -3115,8 +3112,7 @@ nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
 }
 
 void
-nsWindow::OnVisibilityNotifyEvent(GtkWidget *aWidget,
-                                  GdkEventVisibility *aEvent)
+nsWindow::OnVisibilityNotifyEvent(GdkEventVisibility *aEvent)
 {
     LOGDRAW(("Visibility event %i on [%p] %p\n",
              aEvent->state, this, aEvent->window));
@@ -5150,7 +5146,7 @@ container_unrealize_cb (GtkWidget *widget)
     if (!window)
         return;
 
-    window->OnContainerUnrealize(widget);
+    window->OnContainerUnrealize();
 }
 
 static void
@@ -5160,7 +5156,7 @@ size_allocate_cb (GtkWidget *widget, GtkAllocation *allocation)
     if (!window)
         return;
 
-    window->OnSizeAllocate(widget, allocation);
+    window->OnSizeAllocate(allocation);
 }
 
 static gboolean
@@ -5170,7 +5166,7 @@ delete_event_cb(GtkWidget *widget, GdkEventAny *event)
     if (!window)
         return FALSE;
 
-    window->OnDeleteEvent(widget, event);
+    window->OnDeleteEvent();
 
     return TRUE;
 }
@@ -5183,7 +5179,7 @@ enter_notify_event_cb(GtkWidget *widget,
     if (!window)
         return TRUE;
 
-    window->OnEnterNotifyEvent(widget, event);
+    window->OnEnterNotifyEvent(event);
 
     return TRUE;
 }
@@ -5210,7 +5206,7 @@ leave_notify_event_cb(GtkWidget *widget,
     if (!window)
         return TRUE;
 
-    window->OnLeaveNotifyEvent(widget, event);
+    window->OnLeaveNotifyEvent(event);
 
     return TRUE;
 }
@@ -5241,7 +5237,7 @@ motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
     if (!window)
         return FALSE;
 
-    window->OnMotionNotifyEvent(widget, event);
+    window->OnMotionNotifyEvent(event);
 
 #ifdef MOZ_PLATFORM_MAEMO
     gdk_event_request_motions(event);
@@ -5258,7 +5254,7 @@ button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
     if (!window)
         return FALSE;
 
-    window->OnButtonPressEvent(widget, event);
+    window->OnButtonPressEvent(event);
 
     return TRUE;
 }
@@ -5272,7 +5268,7 @@ button_release_event_cb(GtkWidget *widget, GdkEventButton *event)
     if (!window)
         return FALSE;
 
-    window->OnButtonReleaseEvent(widget, event);
+    window->OnButtonReleaseEvent(event);
 
     return TRUE;
 }
@@ -5284,7 +5280,7 @@ focus_in_event_cb(GtkWidget *widget, GdkEventFocus *event)
     if (!window)
         return FALSE;
 
-    window->OnContainerFocusInEvent(widget, event);
+    window->OnContainerFocusInEvent(event);
 
     return FALSE;
 }
@@ -5296,7 +5292,7 @@ focus_out_event_cb(GtkWidget *widget, GdkEventFocus *event)
     if (!window)
         return FALSE;
 
-    window->OnContainerFocusOutEvent(widget, event);
+    window->OnContainerFocusOutEvent(event);
 
     return FALSE;
 }
@@ -5509,7 +5505,7 @@ key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
     }
 #endif
 
-    return focusWindow->OnKeyPressEvent(widget, event);
+    return focusWindow->OnKeyPressEvent(event);
 }
 
 static gboolean
@@ -5526,7 +5522,7 @@ key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
 
     nsRefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
 
-    return focusWindow->OnKeyReleaseEvent(widget, event);
+    return focusWindow->OnKeyReleaseEvent(event);
 }
 
 static gboolean
@@ -5536,7 +5532,7 @@ scroll_event_cb(GtkWidget *widget, GdkEventScroll *event)
     if (!window)
         return FALSE;
 
-    window->OnScrollEvent(widget, event);
+    window->OnScrollEvent(event);
 
     return TRUE;
 }
@@ -5548,7 +5544,7 @@ visibility_notify_event_cb (GtkWidget *widget, GdkEventVisibility *event)
     if (!window)
         return FALSE;
 
-    window->OnVisibilityNotifyEvent(widget, event);
+    window->OnVisibilityNotifyEvent(event);
 
     return TRUE;
 }
