@@ -75,16 +75,13 @@ imgRequestProxy::~imgRequestProxy()
   NullOutListener();
 
   if (mOwner) {
-    if (!mCanceled) {
-      mCanceled = true;
-
-      /* Call RemoveProxy with a successful status.  This will keep the
-         channel, if still downloading data, from being canceled if 'this' is
-         the last observer.  This allows the image to continue to download and
-         be cached even if no one is using it currently.
-       */
-      mOwner->RemoveProxy(this, NS_OK);
-    }
+    /* Call RemoveProxy with a successful status.  This will keep the
+       channel, if still downloading data, from being canceled if 'this' is
+       the last observer.  This allows the image to continue to download and
+       be cached even if no one is using it currently.
+    */
+    mCanceled = true;
+    mOwner->RemoveProxy(this, NS_OK);
   }
 }
 
@@ -122,6 +119,12 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
 {
   NS_PRECONDITION(mOwner, "Cannot ChangeOwner on a proxy without an owner!");
 
+  if (mCanceled) {
+    // Ensure that this proxy has received all notifications to date before
+    // we clean it up when removing it from the old owner below.
+    SyncNotifyListener();
+  }
+
   // If we're holding locks, unlock the old image.
   // Note that UnlockImage decrements mLockCount each time it's called.
   uint32_t oldLockCount = mLockCount;
@@ -132,23 +135,6 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
   uint32_t oldAnimationConsumers = mAnimationConsumers;
   ClearAnimationConsumers();
 
-  nsRefPtr<imgRequest> oldOwner = mOwner;
-  mOwner = aNewOwner;
-  mOwnerHasImage = !!GetStatusTracker().GetImage();
-
-  // If we were locked, apply the locks here
-  for (uint32_t i = 0; i < oldLockCount; i++)
-    LockImage();
-
-  if (mCanceled) {
-    // If we had animation requests, restore them before exiting
-    // (otherwise we restore them later below)
-    for (uint32_t i = 0; i < oldAnimationConsumers; i++)
-      IncrementAnimationConsumers();
-
-    return NS_OK;
-  }
-
   // Were we decoded before?
   bool wasDecoded = false;
   if (GetImage() &&
@@ -156,7 +142,14 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
     wasDecoded = true;
   }
 
-  oldOwner->RemoveProxy(this, NS_IMAGELIB_CHANGING_OWNER);
+  mOwner->RemoveProxy(this, NS_IMAGELIB_CHANGING_OWNER);
+
+  mOwner = aNewOwner;
+  mOwnerHasImage = !!GetStatusTracker().GetImage();
+
+  // If we were locked, apply the locks here
+  for (uint32_t i = 0; i < oldLockCount; i++)
+    LockImage();
 
   // If we had animation requests, restore them here. Note that we
   // do this *after* RemoveProxy, which clears out animation consumers
