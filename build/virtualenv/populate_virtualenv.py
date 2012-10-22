@@ -89,11 +89,17 @@ class VirtualenvManager(object):
         called out to), the path to create the virtualenv in, and a handle to
         write output to.
         """
+        env = dict(os.environ)
+        try:
+            del env['PYTHONDONTWRITEBYTECODE']
+        except KeyError:
+            pass
+
         args = [sys.executable, self.virtualenv_script_path,
             '--system-site-packages', self.virtualenv_root]
 
         result = subprocess.call(args, stdout=self.log_handle,
-            stderr=subprocess.STDOUT)
+            stderr=subprocess.STDOUT, env=env)
 
         if result != 0:
             raise Exception('Error creating virtualenv.')
