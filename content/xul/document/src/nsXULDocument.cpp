@@ -3463,9 +3463,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
         aStatus = rv;
         if (NS_SUCCEEDED(rv)) {
-            if (nsScriptLoader::ShouldExecuteScript(this, channel)) {
-                rv = ExecuteScript(scriptProto);
-            }
+            rv = ExecuteScript(scriptProto);
 
             // If the XUL cache is enabled, save the script object there in
             // case different XUL documents source the same script.
@@ -3544,8 +3542,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         doc->mNextSrcLoadWaiter = nullptr;
 
         // Execute only if we loaded and compiled successfully, then resume
-        if (NS_SUCCEEDED(aStatus) && scriptProto->mScriptObject.mObject &&
-            nsScriptLoader::ShouldExecuteScript(doc, channel)) {
+        if (NS_SUCCEEDED(aStatus) && scriptProto->mScriptObject.mObject) {
             doc->ExecuteScript(scriptProto);
         }
         doc->ResumeWalk();
