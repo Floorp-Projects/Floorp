@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=777467
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test app principal's equality</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=777467">Mozilla Bug 777467</a>
+<p id="display"></p>
+<script>
+  // Initialization.
+  SpecialPowers.addPermission("browser", true, document);
+  SpecialPowers.addPermission("embed-apps", true, document);
+
+  var previousPrefs = {
+    mozBrowserFramesEnabled: undefined,
+    oop_by_default: undefined,
+  };
+  try {
+    previousPrefs.mozBrowserFramesEnabled = SpecialPowers.getBoolPref('dom.mozBrowserFramesEnabled');
+  } catch(e) {}
+
+  try {
+    previousPrefs.oop_by_default = SpecialPowers.getBoolPref('dom.ipc.browser_frames.oop_by_default');
+  } catch(e) {}
+
+  SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
+  SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", false);
+</script>
+<div id="content" style="display: none;">
+  <iframe src="error404"></iframe>
+  <iframe mozbrowser src="error404"></iframe>
+  <iframe mozapp="http://example.org/manifest.webapp" mozbrowser src="error404"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for app principal's equality **/
+
+SimpleTest.waitForExplicitFinish();
+
+function canAccessDocument(win) {
+  var result = true;
+  try {
+    win.document;
+  } catch(e) {
+    result = false;
+  }
+  return result;
+}
+
+addLoadEvent(function() {
+  // Test the witness frame (we can access same-origin frame).
+  is(canAccessDocument(frames[0]), true,
+     "should be able to access the first frame");
+
+  // Test different app/browserElement frames.
+  for (var i=1; i<frames.length; ++i) {
+    is(canAccessDocument(frames[i]), false,
+       "should not be able to access the other frames");
+  }
+
+  // Cleanup.
+  if (previousPrefs.mozBrowserFramesEnabled !== undefined) {
+    SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', previousPrefs.mozBrowserFramesEnabled);
+  }
+  if (previousPrefs.oop_by_default !== undefined) {
+    SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", previousPrefs.oop_by_default);
+  }
+
+  SpecialPowers.removePermission("browser", window.document);
+  SpecialPowers.removePermission("embed-apps", window.document);
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
