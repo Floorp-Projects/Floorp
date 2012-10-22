@@ -117,16 +117,10 @@ GeneratePrototypeGuards(JSContext *cx, MacroAssembler &masm, JSObject *obj, JSOb
     JS_ASSERT(pobj);
     while (pobj != holder) {
         if (pobj->hasUncacheableProto()) {
-            if (pobj->hasSingletonType()) {
-                types::TypeObject *type = pobj->getType(cx);
-                masm.movePtr(ImmGCPtr(type), scratchReg);
-                Address proto(scratchReg, offsetof(types::TypeObject, proto));
-                masm.branchPtr(Assembler::NotEqual, proto, ImmGCPtr(obj->getProto()), failures);
-            } else {
-                masm.movePtr(ImmGCPtr(pobj), scratchReg);
-                Address objType(scratchReg, JSObject::offsetOfType());
-                masm.branchPtr(Assembler::NotEqual, objType, ImmGCPtr(pobj->type()), failures);
-            }
+            JS_ASSERT(!pobj->hasSingletonType());
+            masm.movePtr(ImmGCPtr(pobj), scratchReg);
+            Address objType(scratchReg, JSObject::offsetOfType());
+            masm.branchPtr(Assembler::NotEqual, objType, ImmGCPtr(pobj->type()), failures);
         }
         pobj = pobj->getProto();
     }

@@ -12,7 +12,7 @@
 extern "C" {
 static nsresult ATTRIBUTE_USED
 __attribute__ ((regparm (3)))
-PrepareAndDispatch(uint32 methodIndex, nsXPTCStubBase* self, uint32_t* args)
+PrepareAndDispatch(uint32_t methodIndex, nsXPTCStubBase* self, uint32_t* args)
 {
 #define PARAM_BUFFER_COUNT     16
 

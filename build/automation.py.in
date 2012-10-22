@@ -438,6 +438,8 @@ user_pref("extensions.update.url", "http://%(server)s/extensions-dummy/updateURL
 user_pref("extensions.update.background.url", "http://%(server)s/extensions-dummy/updateBackgroundURL");
 user_pref("extensions.blocklist.url", "http://%(server)s/extensions-dummy/blocklistURL");
 user_pref("extensions.hotfix.url", "http://%(server)s/extensions-dummy/hotfixURL");
+// Turn off extension updates so they don't bother tests
+user_pref("extensions.update.enabled", false);
 // Make sure opening about:addons won't hit the network
 user_pref("extensions.webservice.discoverURL", "http://%(server)s/extensions-dummy/discoveryURL");
 // Make sure AddonRepository won't hit the network
@@ -448,7 +450,7 @@ user_pref("extensions.getAddons.search.browseURL", "http://%(server)s/extensions
 user_pref("extensions.getAddons.search.url", "http://%(server)s/extensions-dummy/repositorySearchURL");
 
 // Make enablePrivilege continue to work for test code. :-(
-user_pref("security.enablePrivilege.enable_for_tests", true);
+user_pref("security.turn_off_all_security_so_that_viruses_can_take_over_this_computer", true);
 
 // Get network events.
 user_pref("network.activity.blipIntervalMilliseconds", 250);

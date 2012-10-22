@@ -30,10 +30,7 @@
         ok("2" in list, "in operator works");
 
         is(win.document.body.removeChild(win.document.body.lastChild), list2, "remove last paragraph element");
-        if (SpecialPowers.getBoolPref("dom.new_bindings"))
-            ok(!("2" in list), "in operator doesn't see phantom element");
-        else
-            todo(!("2" in list), "in operator doesn't see phantom element");
+        ok(!("2" in list), "in operator doesn't see phantom element");
         is(list[2], undefined, "no node there!");
         SimpleTest.finish();
       }

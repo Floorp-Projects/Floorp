@@ -9,6 +9,8 @@
 
 #include "nsAccessNode.h"
 
+#include "nsIBaseWindow.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
@@ -248,7 +250,7 @@ nsCoreUtils::IsAncestorOf(nsINode *aPossibleAncestorNode,
   NS_ENSURE_TRUE(aPossibleAncestorNode && aPossibleDescendantNode, false);
 
   nsINode *parentNode = aPossibleDescendantNode;
-  while ((parentNode = parentNode->GetNodeParent()) &&
+  while ((parentNode = parentNode->GetParentNode()) &&
          parentNode != aRootNode) {
     if (parentNode == aPossibleAncestorNode)
       return true;
@@ -303,19 +305,14 @@ nsCoreUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
                                 nsIFrame *aFrame,
                                 const nsIntPoint& aPoint)
 {
-  nsIScrollableFrame *scrollableFrame = do_QueryFrame(aScrollableFrame);
+  nsIScrollableFrame* scrollableFrame = do_QueryFrame(aScrollableFrame);
   if (!scrollableFrame)
     return;
 
-  nsPresContext *presContext = aFrame->PresContext();
-
-  nsIntRect frameRect = aFrame->GetScreenRectExternal();
-  int32_t devDeltaX = aPoint.x - frameRect.x;
-  int32_t devDeltaY = aPoint.y - frameRect.y;
-
-  nsPoint deltaPoint;
-  deltaPoint.x = presContext->DevPixelsToAppUnits(devDeltaX);
-  deltaPoint.y = presContext->DevPixelsToAppUnits(devDeltaY);
+  nsPoint point =
+    aPoint.ToAppUnits(aFrame->PresContext()->AppUnitsPerDevPixel());
+  nsRect frameRect = aFrame->GetScreenRectInAppUnits();
+  nsPoint deltaPoint(point.x - frameRect.x, point.y - frameRect.y);
 
   nsPoint scrollPoint = scrollableFrame->GetScrollPosition();
   scrollPoint -= deltaPoint;
@@ -386,19 +383,15 @@ nsCoreUtils::GetScreenCoordsForWindow(nsINode *aNode)
   if (!treeItem)
     return coords;
 
-  nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-  treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
-  nsCOMPtr<nsIDOMDocument> domDoc = do_GetInterface(rootTreeItem);
-  if (!domDoc)
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  if (!treeOwner)
     return coords;
 
-  nsCOMPtr<nsIDOMWindow> window;
-  domDoc->GetDefaultView(getter_AddRefs(window));
-  if (!window)
-    return coords;
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(treeOwner);
+  if (baseWindow)
+    baseWindow->GetPosition(&coords.x, &coords.y); // in device pixels
 
-  window->GetScreenX(&coords.x);
-  window->GetScreenY(&coords.y);
   return coords;
 }
 

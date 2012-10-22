@@ -122,9 +122,6 @@ public:
 
   virtual nsresult SetProperty(JSObject* aTarget, const char* aPropName, nsISupports* aVal);
 
-  virtual bool GetProcessingScriptTag();
-  virtual void SetProcessingScriptTag(bool aResult);
-
   virtual bool GetExecutingScript();
 
   virtual void SetGCOnDestruction(bool aGCOnDestruction);
@@ -285,7 +282,6 @@ private:
   bool mIsInitialized;
   bool mScriptsEnabled;
   bool mGCOnDestruction;
-  bool mProcessingScriptTag;
 
   uint32_t mExecuteDepth;
   uint32_t mDefaultJSOptions;

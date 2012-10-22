@@ -3,8 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<view class="org.mozilla.gecko.AboutHomeContent$TopSitesThumbnail"
-                xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 style="@style/AboutHome.Thumbnail">
 
     <ImageView
@@ -14,4 +13,4 @@
     <TextView android:id="@+id/title"
               style="@style/AboutHome.Thumbnail.Label"/>
 
-</view>
+</RelativeLayout>

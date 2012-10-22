@@ -208,8 +208,8 @@ struct TypedArray : public BufferView {
         TYPE_FLOAT64,
 
         /*
-         * Special type that's a uint8, but assignments are clamped to 0 .. 255.
-         * Treat the raw data type as a uint8.
+         * Special type that's a uint8_t, but assignments are clamped to 0 .. 255.
+         * Treat the raw data type as a uint8_t.
          */
         TYPE_UINT8_CLAMPED,
 

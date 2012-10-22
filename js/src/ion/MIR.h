@@ -695,8 +695,7 @@ class MControlInstruction : public MInstruction
 };
 
 class MTableSwitch
-  : public MControlInstruction,
-    public TableSwitchPolicy
+  : public MControlInstruction
 {
     // The successors of the tableswitch
     // - First successor = the default case
@@ -799,10 +798,6 @@ class MTableSwitch
 
     size_t numOperands() const {
         return 1;
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
     }
 };
 
@@ -1492,6 +1487,37 @@ class MGuardObject : public MUnaryInstruction, public SingleObjectPolicy
 
     static MGuardObject *New(MDefinition *ins) {
         return new MGuardObject(ins);
+    }
+
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+class MGuardString
+  : public MUnaryInstruction,
+    public StringPolicy
+{
+    MGuardString(MDefinition *ins)
+      : MUnaryInstruction(ins)
+    {
+        setGuard();
+        setMovable();
+        setResultType(MIRType_String);
+    }
+
+  public:
+    INSTRUCTION_HEADER(GuardString);
+
+    static MGuardString *New(MDefinition *ins) {
+        return new MGuardString(ins);
     }
 
     MDefinition *input() const {

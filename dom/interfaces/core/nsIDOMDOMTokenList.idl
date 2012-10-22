@@ -17,11 +17,11 @@ interface nsIDOMDOMTokenList : nsISupports
 {
   readonly attribute unsigned long length;
 
-  [getter,binaryname(MozItem)] DOMString item(in unsigned long index);
+  [binaryname(MozItem)] DOMString item(in unsigned long index);
   boolean            contains([Null(Stringify)] in DOMString token);
   void               add([Null(Stringify)] in DOMString token);
   void               remove([Null(Stringify)] in DOMString token);
   boolean            toggle([Null(Stringify)] in DOMString token);
 
-  [stringifier] DOMString          toString();
+  DOMString          toString();
 };

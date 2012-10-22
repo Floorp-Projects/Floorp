@@ -47,6 +47,7 @@ const char* XPCJSRuntime::mStrings[] = {
     "constructor",          // IDX_CONSTRUCTOR
     "toString",             // IDX_TO_STRING
     "toSource",             // IDX_TO_SOURCE
+    "valueOf",              // IDX_VALUE_OF
     "lastResult",           // IDX_LAST_RESULT
     "returnCode",           // IDX_RETURN_CODE
     "value",                // IDX_VALUE
@@ -416,18 +417,40 @@ SuspectDOMExpandos(nsPtrHashKey<JSObject> *key, void *arg)
 {
     Closure *closure = static_cast<Closure*>(arg);
     JSObject* obj = key->GetKey();
-    nsISupports* native = nullptr;
-    if (dom::oldproxybindings::instanceIsProxy(obj)) {
-        native = static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
-    }
-    else {
-        const dom::DOMClass* clasp;
-        dom::DOMObjectSlot slot = GetDOMClass(obj, clasp);
-        MOZ_ASSERT(slot != dom::eNonDOMObject && clasp->mDOMObjectIsISupports);
-        native = dom::UnwrapDOMObject<nsISupports>(obj, slot);
-    }
+    const dom::DOMClass* clasp;
+    dom::DOMObjectSlot slot = GetDOMClass(obj, clasp);
+    MOZ_ASSERT(slot != dom::eNonDOMObject && clasp->mDOMObjectIsISupports);
+    nsISupports* native = dom::UnwrapDOMObject<nsISupports>(obj, slot);
     closure->cb->NoteXPCOMRoot(native);
     return PL_DHASH_NEXT;
+}
+
+bool
+CanSkipWrappedJS(nsXPCWrappedJS *wrappedJS)
+{
+    JSObject *obj = wrappedJS->GetJSObjectPreserveColor();
+    // If traversing wrappedJS wouldn't release it, nor
+    // cause any other objects to be added to the graph, no
+    // need to add it to the graph at all.
+    if (nsCCUncollectableMarker::sGeneration &&
+        (!obj || !xpc_IsGrayGCThing(obj)) &&
+        !wrappedJS->IsSubjectToFinalization() &&
+        wrappedJS->GetRootWrapper() == wrappedJS) {
+        if (!wrappedJS->IsAggregatedToNative()) {
+            return true;
+        } else {
+            nsISupports* agg = wrappedJS->GetAggregatedNativeObject();
+            nsXPCOMCycleCollectionParticipant* cp = nullptr;
+            CallQueryInterface(agg, &cp);
+            nsISupports* canonical = nullptr;
+            agg->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
+                                reinterpret_cast<void**>(&canonical));
+            if (cp && canonical && cp->CanSkipInCC(canonical)) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 void
@@ -463,15 +486,8 @@ XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionTraversalCallback &cb)
 
     for (XPCRootSetElem *e = mWrappedJSRoots; e ; e = e->GetNextRoot()) {
         nsXPCWrappedJS *wrappedJS = static_cast<nsXPCWrappedJS*>(e);
-        JSObject *obj = wrappedJS->GetJSObjectPreserveColor();
-        // If traversing wrappedJS wouldn't release it, nor
-        // cause any other objects to be added to the graph, no
-        // need to add it to the graph at all.
-        if (nsCCUncollectableMarker::sGeneration &&
-            !cb.WantAllTraces() && (!obj || !xpc_IsGrayGCThing(obj)) &&
-            !wrappedJS->IsSubjectToFinalization() &&
-            wrappedJS->GetRootWrapper() == wrappedJS &&
-            !wrappedJS->IsAggregatedToNative()) {
+        if (!cb.WantAllTraces() &&
+            CanSkipWrappedJS(wrappedJS)) {
             continue;
         }
 
@@ -2394,7 +2410,6 @@ JSBool
 XPCJSRuntime::OnJSContextNew(JSContext *cx)
 {
     // if it is our first context then we need to generate our string ids
-    JSBool ok = true;
     if (JSID_IS_VOID(mStrIDs[0])) {
         JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
         {
@@ -2405,22 +2420,17 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
                 JSString* str = JS_InternString(cx, mStrings[i]);
                 if (!str || !JS_ValueToId(cx, STRING_TO_JSVAL(str), &mStrIDs[i])) {
                     mStrIDs[0] = JSID_VOID;
-                    ok = false;
-                    break;
+                    return false;
                 }
                 mStrJSVals[i] = STRING_TO_JSVAL(str);
             }
         }
 
-        ok = mozilla::dom::DefineStaticJSVals(cx) &&
-             mozilla::dom::oldproxybindings::DefineStaticJSVals(cx);
-        if (!ok)
+        if (!mozilla::dom::DefineStaticJSVals(cx) ||
+            !InternStaticDictionaryJSVals(cx)) {
             return false;
-
-        ok = InternStaticDictionaryJSVals(cx);
+        }
     }
-    if (!ok)
-        return false;
 
     XPCContext* xpc = new XPCContext(this, cx);
     if (!xpc)

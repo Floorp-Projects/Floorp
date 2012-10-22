@@ -10,7 +10,7 @@
 
 extern "C" {
     nsresult
-    PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint32* args)
+    PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args)
     {
 #define PARAM_BUFFER_COUNT     16
 
@@ -85,7 +85,7 @@ extern "C" {
 nsresult nsXPTCStubBase::Stub##n() \
 { \
   void *frame = __builtin_frame_address(0); \
-  return PrepareAndDispatch(this, n, (uint32*)frame + 3); \
+  return PrepareAndDispatch(this, n, (uint32_t*)frame + 3); \
 }
 
 #define SENTINEL_ENTRY(n) \

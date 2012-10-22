@@ -22,8 +22,8 @@ public:
   // nsISupporst
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIAccessible
-  NS_IMETHOD GetAttributes(nsIPersistentProperties** aAttributes);
+  // nsAccessible
+  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
 
   // IUnknown
   STDMETHODIMP QueryInterface(REFIID, void**);

@@ -31,7 +31,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // interface nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(FragmentOrElement::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
 
   // interface nsIDOMDocumentFragment
   // NS_DECL_NSIDOCUMENTFRAGMENT  Empty

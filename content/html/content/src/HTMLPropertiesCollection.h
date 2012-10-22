@@ -59,6 +59,8 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap);
 
+  virtual nsGenericElement* GetElementAt(uint32_t aIndex);
+
   NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMNode** aResult);
   void SetDocument(nsIDocument* aDocument);
   nsINode* GetParentObject();
@@ -141,6 +143,7 @@ public:
   void GetValues(JSContext* aCx, nsTArray<JS::Value >& aResult,
                  ErrorResult& aError);
 
+  virtual nsIContent* Item(uint32_t aIndex);
   NS_DECL_NSIDOMPROPERTYNODELIST
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

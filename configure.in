@@ -63,7 +63,7 @@ dnl ========================================================
 GLIB_VERSION=1.2.0
 PERL_VERSION=5.006
 PYTHON_VERSION_MAJOR=2
-PYTHON_VERSION_MINOR=5
+PYTHON_VERSION_MINOR=6
 CAIRO_VERSION=1.10
 PANGO_VERSION=1.14.0
 GTK2_VERSION=2.10.0
@@ -803,7 +803,7 @@ else
     AC_MSG_RESULT([yes])
 fi
 
-MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python2.6 python2.5 python)
+MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python2.6 python)
 if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
@@ -1839,7 +1839,7 @@ case "$host" in
     ;;
 esac
 
-dnl We require version 2.5 or newer of Python to build.
+dnl We require version 2.6 or newer of Python to build.
 AC_MSG_CHECKING([for Python version >= $PYTHON_VERSION_MAJOR.$PYTHON_VERSION_MINOR but not 3.x])
 
 changequote(:)
@@ -7571,7 +7571,7 @@ dnl done during packaging with omnijar.
 if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
     MOZ_OMNIJAR=1
     AC_DEFINE(MOZ_OMNIJAR)
-    if test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2" -o "$OS_TARGET" = "Android"; then
+    if test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2" -o "$MOZ_WIDGET_TOOLKIT" = "android"; then
         MOZ_CHROME_FILE_FORMAT=flat
     else
         MOZ_CHROME_FILE_FORMAT=symlink

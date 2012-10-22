@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menuitem Commands Test"
+        onload="runOrOpen()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+<script>
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+function checkAttributes(elem, label, accesskey, disabled, hidden, isAfter)
+{
+  var is = window.opener.wrappedJSObject.SimpleTest.is;
+
+  is(elem.getAttribute("label"), label, elem.id + " label " + (isAfter ? "after" : "before") + " open");
+  is(elem.getAttribute("accesskey"), accesskey, elem.id + " accesskey " + (isAfter ? "after" : "before") + " open");
+  is(elem.getAttribute("disabled"), disabled, elem.id + " disabled " + (isAfter ? "after" : "before") + " open");
+  is(elem.getAttribute("hidden"), hidden, elem.id + " hidden " + (isAfter ? "after" : "before") + " open");
+}
+
+function runOrOpen()
+{
+  if (window.opener) {
+    SimpleTest.waitForFocus(runTest);
+  }
+  else {
+    window.open("test_menuitem_commands.xul", "", "chrome");
+  }
+}
+
+function runTest()
+{
+  runTestSet("");
+  runTestSet("bar");
+  window.close();
+  window.opener.wrappedJSObject.SimpleTest.finish();
+}
+
+function runTestSet(suffix)
+{
+  var isMac = (navigator.platform.indexOf("Mac") >= 0);
+
+  var one = $("one" + suffix);
+  var two = $("two" + suffix);
+  var three = $("three" + suffix);
+  var four = $("four" + suffix);
+
+  checkAttributes(one, "One", "", "", "true", false);
+  checkAttributes(two, "", "", "false", "", false);
+  checkAttributes(three, "Three", "T", "true", "", false);
+  checkAttributes(four, "Four", "F", "", "", false);
+
+  if (isMac && suffix) {
+    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                       getInterface(Components.interfaces.nsIDOMWindowUtils);
+    utils.forceUpdateNativeMenuAt("0");
+  }
+  else {
+    $("menu" + suffix).open = true;
+  }
+
+  checkAttributes(one, "One", "", "", "false", true);
+  checkAttributes(two, "Cat", "C", "", "", true);
+  checkAttributes(three, "Dog", "D", "false", "true", true);
+  checkAttributes(four, "Four", "F", "true", "", true);
+
+  $("menu" + suffix).open = false;
+}
+]]>
+</script>
+
+<command id="cmd_one" hidden="false"/>
+<command id="cmd_two" label="Cat" accesskey="C"/>
+<command id="cmd_three" label="Dog" accesskey="D" disabled="false" hidden="true"/>
+<command id="cmd_four" disabled="true"/>
+
+<button id="menu" type="menu">
+  <menupopup>
+    <menuitem id="one" label="One" hidden="true" command="cmd_one"/>
+    <menuitem id="two" disabled="false" command="cmd_two"/>
+    <menuitem id="three" label="Three" accesskey="T"  disabled="true" command="cmd_three"/>
+    <menuitem id="four" label="Four" accesskey="F" command="cmd_four"/>
+  </menupopup>
+</button>
+
+<menubar>
+  <menu id="menubar" label="Sample">
+    <menupopup>
+      <menuitem id="onebar" label="One" hidden="true" command="cmd_one"/>
+      <menuitem id="twobar" disabled="false" command="cmd_two"/>
+      <menuitem id="threebar" label="Three" accesskey="T"  disabled="true" command="cmd_three"/>
+      <menuitem id="fourbar" label="Four" accesskey="F" command="cmd_four"/>
+    </menupopup>
+  </menu>
+</menubar>
+
+<body xmlns="http://www.w3.org/1999/xhtml"><p id="display"/></body>
+
+</window>

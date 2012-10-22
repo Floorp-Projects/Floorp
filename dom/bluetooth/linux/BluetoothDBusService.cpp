@@ -2527,6 +2527,8 @@ BluetoothDBusService::SendFile(const nsAString& aDeviceAddress,
                                BlobChild* aBlobChild,
                                BluetoothReplyRunnable* aRunnable)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Must be called from main thread!");
+
   // Currently we only support one device sending one file at a time,
   // so we don't need aDeviceAddress here because the target device
   // has been determined when calling 'Connect()'. Nevertheless, keep
@@ -2541,6 +2543,8 @@ bool
 BluetoothDBusService::StopSendingFile(const nsAString& aDeviceAddress,
                                       BluetoothReplyRunnable* aRunnable)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Must be called from main thread!");
+
   // Currently we only support one device sending one file at a time,
   // so we don't need aDeviceAddress here because the target device
   // has been determined when calling 'Connect()'. Nevertheless, keep
@@ -2549,6 +2553,21 @@ BluetoothDBusService::StopSendingFile(const nsAString& aDeviceAddress,
   opp->StopSendingFile(aRunnable);
 
   return true;
+}
+
+void
+BluetoothDBusService::ConfirmReceivingFile(const nsAString& aDeviceAddress,
+                                           bool aConfirm,
+                                           BluetoothReplyRunnable* aRunnable)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Must be called from main thread!");
+
+  // Currently we only support one device sending one file at a time,
+  // so we don't need aDeviceAddress here because the target device
+  // has been determined when calling 'Connect()'. Nevertheless, keep
+  // it for future use.
+  BluetoothOppManager* opp = BluetoothOppManager::Get();
+  opp->ConfirmReceivingFile(aConfirm, aRunnable);
 }
 
 nsresult

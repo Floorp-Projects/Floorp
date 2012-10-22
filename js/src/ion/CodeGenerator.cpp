@@ -362,6 +362,49 @@ CodeGenerator::visitGoto(LGoto *lir)
 }
 
 bool
+CodeGenerator::visitTableSwitch(LTableSwitch *ins)
+{
+    MTableSwitch *mir = ins->mir();
+    Label *defaultcase = mir->getDefault()->lir()->label();
+    const LAllocation *temp;
+
+    if (ins->index()->isDouble()) {
+        temp = ins->tempInt();
+
+        // The input is a double, so try and convert it to an integer.
+        // If it does not fit in an integer, take the default case.
+        emitDoubleToInt32(ToFloatRegister(ins->index()), ToRegister(temp), defaultcase, false);
+    } else {
+        temp = ins->index();
+    }
+
+    return emitTableSwitchDispatch(mir, ToRegister(temp), ToRegisterOrInvalid(ins->tempPointer()));
+}
+
+bool
+CodeGenerator::visitTableSwitchV(LTableSwitchV *ins)
+{
+    MTableSwitch *mir = ins->mir();
+    Label *defaultcase = mir->getDefault()->lir()->label();
+
+    Register index = ToRegister(ins->tempInt());
+    ValueOperand value = ToValue(ins, LTableSwitchV::InputValue);
+    Register tag = masm.extractTag(value, index);
+    masm.branchTestNumber(Assembler::NotEqual, tag, defaultcase);
+
+    Label isInt;
+    masm.branchTestInt32(Assembler::Equal, tag, &isInt);
+    {
+        FloatRegister floatIndex = ToFloatRegister(ins->tempFloat());
+        masm.unboxDouble(value, floatIndex);
+        emitDoubleToInt32(floatIndex, index, defaultcase, false);
+    }
+    masm.bind(&isInt);
+
+    return emitTableSwitchDispatch(mir, index, ToRegisterOrInvalid(ins->tempPointer()));
+}
+
+bool
 CodeGenerator::visitParameter(LParameter *lir)
 {
     return true;

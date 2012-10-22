@@ -224,7 +224,7 @@ private:
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 
-    int32 slot = JSID_TO_INT(aIdval);
+    int32_t slot = JSID_TO_INT(aIdval);
 
     const char*& name = sProperties[slot - SLOT_FIRST].name;
     if (!GetInstancePrivate(aCx, aObj, name)) {
@@ -517,7 +517,7 @@ private:
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 
-    int32 slot = JSID_TO_INT(aIdval);
+    int32_t slot = JSID_TO_INT(aIdval);
 
     JS_ASSERT(slot >= SLOT_data && slot < SLOT_COUNT);
 
@@ -637,7 +637,7 @@ public:
 
   static JSObject*
   Create(JSContext* aCx, JSObject* aParent, JSString* aMessage,
-         JSString* aFilename, uint32 aLineNumber, bool aMainRuntime)
+         JSString* aFilename, uint32_t aLineNumber, bool aMainRuntime)
   {
     JSString* type = JS_InternString(aCx, "error");
     if (!type) {
@@ -697,7 +697,7 @@ private:
   InitErrorEventCommon(JSObject* aObj, Event* aEvent, JSString* aType,
                        JSBool aBubbles, JSBool aCancelable,
                        JSString* aMessage, JSString* aFilename,
-                       uint32 aLineNumber, bool aIsTrusted)
+                       uint32_t aLineNumber, bool aIsTrusted)
   {
     Event::InitEventCommon(aObj, aEvent, aType, aBubbles, aCancelable,
                            aIsTrusted);
@@ -726,7 +726,7 @@ private:
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 
-    int32 slot = JSID_TO_INT(aIdval);
+    int32_t slot = JSID_TO_INT(aIdval);
 
     JS_ASSERT(slot >= SLOT_message && slot < SLOT_COUNT);
 
@@ -906,7 +906,7 @@ private:
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
 
-    int32 slot = JSID_TO_INT(aIdval);
+    int32_t slot = JSID_TO_INT(aIdval);
 
     JS_ASSERT(slot >= SLOT_lengthComputable && slot < SLOT_COUNT);
 
@@ -1023,7 +1023,7 @@ CreateMessageEvent(JSContext* aCx, JSAutoStructuredCloneBuffer& aData,
 
 JSObject*
 CreateErrorEvent(JSContext* aCx, JSString* aMessage, JSString* aFilename,
-                 uint32 aLineNumber, bool aMainRuntime)
+                 uint32_t aLineNumber, bool aMainRuntime)
 {
   JSObject* global = JS_GetGlobalForScopeChain(aCx);
   return ErrorEvent::Create(aCx, global, aMessage, aFilename, aLineNumber,

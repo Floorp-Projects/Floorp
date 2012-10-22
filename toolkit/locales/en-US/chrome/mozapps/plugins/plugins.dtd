@@ -56,3 +56,6 @@
 <!ENTITY report.disabled                                     "Crash reporting disabled.">
 <!ENTITY report.failed                                       "Submission failed.">
 <!ENTITY report.unavailable                                  "No report available.">
+
+<!ENTITY plugin.file                                         "File">
+<!ENTITY plugin.mimeTypes                                    "MIME Types">

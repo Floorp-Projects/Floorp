@@ -482,14 +482,7 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         }
 
         nsISupports *identity;
-        if (mozilla::dom::oldproxybindings::instanceIsProxy(obj)) {
-            identity =
-                static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
-        } else if (!mozilla::dom::UnwrapDOMObjectToISupports(obj, identity)) {
-            identity = nullptr;
-        }
-
-        if (identity) {
+        if (mozilla::dom::UnwrapDOMObjectToISupports(obj, identity)) {
             nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(identity);
 
             XPCCallContext ccx(JS_CALLER, cx);

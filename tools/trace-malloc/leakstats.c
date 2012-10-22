@@ -25,12 +25,12 @@ int optind=1;
 static char *program;
 
 typedef struct handler_data {
-    uint32 current_heapsize;
-    uint32 max_heapsize;
-    uint32 bytes_allocated;
-    uint32 current_allocations;
-    uint32 total_allocations;
-    uint32 unmatched_frees;
+    uint32_t current_heapsize;
+    uint32_t max_heapsize;
+    uint32_t bytes_allocated;
+    uint32_t current_allocations;
+    uint32_t total_allocations;
+    uint32_t unmatched_frees;
     int finished;
 } handler_data;
 

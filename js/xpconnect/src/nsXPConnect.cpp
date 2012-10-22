@@ -31,7 +31,6 @@
 #endif
 
 #include "XPCQuickStubs.h"
-#include "dombindings.h"
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/TextDecoderBinding.h"
@@ -847,11 +846,6 @@ NoteGCThingXPCOMChildren(js::Class *clasp, JSObject *obj,
              clasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)");
         cb.NoteXPCOMChild(static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
-    } else if (oldproxybindings::instanceIsProxy(obj)) {
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "js::GetProxyPrivate(obj)");
-        nsISupports *identity =
-            static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
-        cb.NoteXPCOMChild(identity);
     } else {
         const DOMClass* domClass;
         DOMObjectSlot slot = GetDOMClass(obj, domClass);
@@ -1423,21 +1417,10 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
     if (obj2)
         return (nsISupports*)xpc_GetJSPrivate(obj2);
 
-    if (mozilla::dom::IsDOMProxy(aJSObj) ||
-        mozilla::dom::oldproxybindings::instanceIsProxy(aJSObj)) {
-        // FIXME: Provide a fast non-refcounting way to get the canonical
-        //        nsISupports from the proxy.
-        nsISupports *supports =
-            static_cast<nsISupports*>(js::GetProxyPrivate(aJSObj).toPrivate());
-        nsCOMPtr<nsISupports> canonical = do_QueryInterface(supports);
-        return canonical.get();
-    }
-
     nsISupports* supports = nullptr;
-    if (mozilla::dom::UnwrapDOMObjectToISupports(aJSObj, supports))
-        return supports;
-
-    return nullptr;
+    mozilla::dom::UnwrapDOMObjectToISupports(aJSObj, supports);
+    nsCOMPtr<nsISupports> canonical = do_QueryInterface(supports);
+    return canonical;
 }
 
 /* JSObjectPtr getJSObjectOfWrapper (in JSContextPtr aJSContext, in JSObjectPtr aJSObj); */
@@ -1466,8 +1449,7 @@ nsXPConnect::GetJSObjectOfWrapper(JSContext * aJSContext,
         *_retval = obj2;
         return NS_OK;
     }
-    if (mozilla::dom::IsDOMProxy(aJSObj) ||
-        mozilla::dom::oldproxybindings::instanceIsProxy(aJSObj)) {
+    if (mozilla::dom::IsDOMObject(aJSObj)) {
         *_retval = aJSObj;
         return NS_OK;
     }

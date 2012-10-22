@@ -5091,7 +5091,7 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
         /*
          * Check if we are accessing the 'length' property of a known dense array.
          * Note that if the types are known to indicate dense arrays, their lengths
-         * must fit in an int32.
+         * must fit in an int32_t.
          */
         if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY)) {
             bool isObject = top->isTypeKnown();
@@ -5119,7 +5119,7 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
 
         /*
          * Check if we're accessing the 'length' property of a typed array.
-         * The typed array length always fits in an int32.
+         * The typed array length always fits in an int32_t.
          */
         if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
             if (top->isConstant()) {

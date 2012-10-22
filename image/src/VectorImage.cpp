@@ -382,6 +382,15 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
 }
 
 //******************************************************************************
+/* [noscript] ImageContainer getImageContainer(); */
+NS_IMETHODIMP
+VectorImage::GetImageContainer(mozilla::layers::ImageContainer** _retval)
+{
+  *_retval = nullptr;
+  return NS_OK;
+}
+
+//******************************************************************************
 /* [noscript] gfxImageSurface copyFrame(in uint32_t aWhichFrame,
  *                                      in uint32_t aFlags); */
 NS_IMETHODIMP

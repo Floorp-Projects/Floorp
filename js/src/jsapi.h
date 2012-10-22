@@ -3128,11 +3128,8 @@ JS_StringToVersion(const char *string);
                                                    being converted to error
                                                    reports */
 
-#define JSOPTION_RELIMIT        JS_BIT(9)       /* Throw exception on any
-                                                   regular expression which
-                                                   backtracks more than n^3
-                                                   times, where n is length
-                                                   of the input string */
+/* JS_BIT(9) is currently unused. */
+
 /* JS_BIT(10) is currently unused. */
 
 /* JS_BIT(11) is currently unused. */

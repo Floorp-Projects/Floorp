@@ -36,7 +36,6 @@
 #include "plbase64.h"
 #include "prmem.h"
 #include "mozilla/dom/FileListBinding.h"
-#include "dombindings.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -709,19 +708,7 @@ JSObject*
 nsDOMFileList::WrapObject(JSContext *cx, JSObject *scope,
                           bool *triedToWrap)
 {
-  JSObject* obj = FileListBinding::Wrap(cx, scope, this, triedToWrap);
-  if (obj || *triedToWrap) {
-    return obj;
-  }
-
-  *triedToWrap = true;
-  return oldproxybindings::FileList::create(cx, scope, this);
-}
-
-nsIDOMFile*
-nsDOMFileList::GetItemAt(uint32_t aIndex)
-{
-  return Item(aIndex);
+  return FileListBinding::Wrap(cx, scope, this, triedToWrap);
 }
 
 NS_IMETHODIMP

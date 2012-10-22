@@ -43,7 +43,7 @@ public:
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
   // forward here :-(
-  NS_FORWARD_NSIDOMNODE(nsSVGViewElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGViewElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGViewElementBase::)
 

@@ -174,7 +174,7 @@ public:
   // Accessible
   virtual TableCellAccessible* AsTableCell() { return this; }
   virtual void Shutdown();
-  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
   virtual a11y::role NativeRole();
 
   // TableCellAccessible

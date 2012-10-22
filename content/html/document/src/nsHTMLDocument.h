@@ -87,7 +87,7 @@ public:
   NS_FORWARD_NSIDOMDOCUMENT(nsDocument::)
 
   // nsIDOMNode interface
-  NS_FORWARD_NSIDOMNODE(nsDocument::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
 
   // nsIDOMHTMLDocument interface
   NS_DECL_NSIDOMHTMLDOCUMENT

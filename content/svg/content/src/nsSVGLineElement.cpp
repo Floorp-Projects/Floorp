@@ -29,7 +29,7 @@ public:
   NS_DECL_NSIDOMSVGLINEELEMENT
 
   // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE(nsSVGLineElementBase::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT(nsSVGLineElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGLineElementBase::)
 

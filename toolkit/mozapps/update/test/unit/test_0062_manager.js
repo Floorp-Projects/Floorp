@@ -12,7 +12,6 @@ function run_test() {
   logTestInfo("testing resuming an update download in progress for the same " +
               "version of the application on startup (bug 485624)");
   removeUpdateDirsAndFiles();
-  setUpdateChannel();
 
   var patches, updates;
 

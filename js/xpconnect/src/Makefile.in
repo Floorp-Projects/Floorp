@@ -20,8 +20,6 @@ EXPORTS = \
 		xpcObjectHelper.h \
 		xpcpublic.h \
 		XPCJSMemoryReporter.h \
-		dombindings.h \
-		dombindings_gen.h \
 		GeneratedEvents.h
 
 CPPSRCS		= \
@@ -56,7 +54,6 @@ CPPSRCS		= \
 		XPCWrapper.cpp \
 		XPCQuickStubs.cpp \
 		dom_quickstubs.cpp \
-		dombindings.cpp \
 		DictionaryHelpers.cpp \
 		GeneratedEvents.cpp \
 		$(NULL)
@@ -83,7 +80,7 @@ SHARED_LIBRARY_LIBS = \
   ../wrappers/$(LIB_PREFIX)xpcwrappers_s.$(LIB_SUFFIX) \
   $(NULL)
 
-EXTRA_MDDEPEND_FILES = dom_qsgen.pp dombindingsgen.pp dictionary_helper_gen.pp event_impl_gen.pp
+EXTRA_MDDEPEND_FILES = dom_qsgen.pp dictionary_helper_gen.pp event_impl_gen.pp
 
 include $(topsrcdir)/config/rules.mk
 
@@ -91,7 +88,6 @@ DEFINES += \
   -DJSFILE \
   -DJS_THREADSAFE \
   -DEXPORT_XPC_API \
-  -DNO_NSPR_10_SUPPORT \
   $(NULL)
 
 ifdef MOZ_JSDEBUGGER
@@ -120,38 +116,6 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
 	  $(ENABLE_TRACEABLE_FLAGS) \
 	  $(srcdir)/dom_quickstubs.qsconf
 
-dombindings.$(OBJ_SUFFIX): dombindings_gen.h \
-                           dombindings_gen.cpp
-
-dombindings_gen.h: $(srcdir)/dombindings.conf \
-                   $(srcdir)/dombindingsgen.py \
-                   $(srcdir)/codegen.py \
-                   $(LIBXUL_DIST)/sdk/bin/header.py \
-                   $(LIBXUL_DIST)/sdk/bin/xpidl.py \
-                   $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  $(PLY_INCLUDE) \
-	  -I$(LIBXUL_DIST)/sdk/bin \
-	  $(srcdir)/dombindingsgen.py \
-	  --idlpath=$(DEPTH)/dist/idl \
-	  --header-output dombindings_gen.h \
-	  $(srcdir)/dombindings.conf
-
-dombindings_gen.cpp: $(srcdir)/dombindings.conf \
-                     $(srcdir)/dombindingsgen.py \
-                     $(srcdir)/codegen.py \
-                     $(LIBXUL_DIST)/sdk/bin/header.py \
-                     $(LIBXUL_DIST)/sdk/bin/xpidl.py \
-                     $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  $(PLY_INCLUDE) \
-	  -I$(LIBXUL_DIST)/sdk/bin \
-	  $(srcdir)/dombindingsgen.py \
-	  --idlpath=$(DEPTH)/dist/idl \
-	  --stub-output dombindings_gen.cpp \
-	  --makedepend-output $(MDDEPDIR)/dombindingsgen.pp \
-	  $(srcdir)/dombindings.conf
-
 DictionaryHelpers.$(OBJ_SUFFIX): DictionaryHelpers.cpp
 
 DictionaryHelpers.h: DictionaryHelpers.cpp
@@ -159,7 +123,6 @@ DictionaryHelpers.h: DictionaryHelpers.cpp
 DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
                        event_impl_gen.conf \
                        $(srcdir)/dictionary_helper_gen.py \
-                       $(srcdir)/codegen.py \
                        $(LIBXUL_DIST)/sdk/bin/header.py \
                        $(LIBXUL_DIST)/sdk/bin/xpidl.py \
                        $(DEPTH)/js/src/js-confdefs.h
@@ -184,7 +147,6 @@ GeneratedEvents.h: $(srcdir)/dictionary_helper_gen.conf \
                    event_impl_gen.conf \
                    $(srcdir)/dictionary_helper_gen.py \
                    $(srcdir)/event_impl_gen.py \
-                   $(srcdir)/codegen.py \
                    $(LIBXUL_DIST)/sdk/bin/header.py \
                    $(LIBXUL_DIST)/sdk/bin/xpidl.py \
                    $(DEPTH)/js/src/js-confdefs.h
@@ -201,7 +163,6 @@ GeneratedEvents.cpp: DictionaryHelpers.h \
                      event_impl_gen.conf \
                      $(srcdir)/dictionary_helper_gen.py \
                      $(srcdir)/event_impl_gen.py \
-                     $(srcdir)/codegen.py \
                      $(LIBXUL_DIST)/sdk/bin/header.py \
                      $(LIBXUL_DIST)/sdk/bin/xpidl.py \
                      $(DEPTH)/js/src/js-confdefs.h
@@ -225,8 +186,6 @@ libs:: $(_EXTRA_EXPORT_FILES)
 GARBAGE += \
 		dom_quickstubs.h \
 		dom_quickstubs.cpp \
-		dombindings_gen.h \
-		dombindings_gen.cpp \
 		DictionaryHelpers.h \
 		DictionaryHelpers.cpp \
 		GeneratedEvents.h \

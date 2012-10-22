@@ -36,7 +36,13 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsIDOMNode interface
-  NS_DECL_NSIDOMNODE
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
+  virtual void GetTextContentInternal(nsAString& aTextContent);
+  virtual void SetTextContentInternal(const nsAString& aTextContent,
+                                      mozilla::ErrorResult& aError);
+  virtual void GetNodeValueInternal(nsAString& aNodeValue);
+  virtual void SetNodeValueInternal(const nsAString& aNodeValue,
+                                    mozilla::ErrorResult& aError);
 
   // nsIDOMAttr interface
   NS_DECL_NSIDOMATTR

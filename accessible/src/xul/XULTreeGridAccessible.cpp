@@ -727,31 +727,29 @@ XULTreeGridCellAccessible::Init()
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridCellAccessible: Accessible public implementation
 
-nsresult
-XULTreeGridCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
+already_AddRefed<nsIPersistentProperties>
+XULTreeGridCellAccessible::NativeAttributes()
 {
-  NS_ENSURE_ARG_POINTER(aAttributes);
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
 
   // "table-cell-index" attribute
   TableAccessible* table = Table();
   if (!table)
-    return NS_ERROR_FAILURE;
+    return attributes.forget();
 
   nsAutoString stringIdx;
   stringIdx.AppendInt(table->CellIndexAt(mRow, ColIdx()));
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::tableCellIndex, stringIdx);
+  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::tableCellIndex, stringIdx);
 
   // "cycles" attribute
   bool isCycler = false;
   nsresult rv = mColumn->GetCycler(&isCycler);
   if (NS_SUCCEEDED(rv) && isCycler)
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::cycles,
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::cycles,
                            NS_LITERAL_STRING("true"));
 
-  return NS_OK;
+  return attributes.forget();
 }
 
 role

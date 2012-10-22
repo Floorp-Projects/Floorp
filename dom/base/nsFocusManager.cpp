@@ -324,7 +324,7 @@ nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
 
         nsINodeList* children = doc->BindingManager()->GetXBLChildNodesFor(aContent);
         if (children) {
-          nsIContent* child = children->GetNodeAt(0);
+          nsIContent* child = children->Item(0);
           if (child && child->Tag() == nsGkAtoms::slider)
             return child;
         }
@@ -1774,7 +1774,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
     mFocusedContent = aContent;
 
     nsIContent* focusedNode = aWindow->GetFocusedNode();
-    bool isRefocus = focusedNode && focusedNode->IsEqualTo(aContent);
+    bool isRefocus = focusedNode && focusedNode->IsEqualNode(aContent);
 
     aWindow->SetFocusedNode(aContent, focusMethod);
 

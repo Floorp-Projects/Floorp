@@ -9,11 +9,6 @@
       android:sharedUserId="@MOZ_ANDROID_SHARED_ID@"
 #endif
       >
-
-#ifdef ARMV7_ONLY
-    <supports-screens android:smallScreens="false" />
-#endif
-
     <uses-sdk android:minSdkVersion="8"
               android:targetSdkVersion="14"/>
 
@@ -159,6 +154,15 @@
             <intent-filter>
                 <action android:name="com.android.vending.INSTALL_REFERRER" />
             </intent-filter>
+        </receiver>
+
+        <receiver android:name="GeckoAppWidgetProvider"
+                  android:label="@MOZ_APP_DISPLAYNAME@">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                       android:resource="@xml/gecko_appwidget_info" />
         </receiver>
 
         <activity android:name="Restarter"
