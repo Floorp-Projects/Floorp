@@ -2377,17 +2377,31 @@ nsWindow::OnSizeAllocate(GtkAllocation *aAllocation)
          (void *)this, aAllocation->x, aAllocation->y,
          aAllocation->width, aAllocation->height));
 
-    nsIntRect rect(aAllocation->x, aAllocation->y,
-                   aAllocation->width, aAllocation->height);
+    nsIntSize size(aAllocation->width, aAllocation->height);
+    if (mBounds.Size() == size)
+        return;
 
-    mBounds.width = rect.width;
-    mBounds.height = rect.height;
+    // Invalidate the new part of the window now for the pending paint to
+    // minimize background flashes (GDK does not do this for external resizes
+    // of toplevels.)
+    if (mBounds.width < size.width) {
+        GdkRectangle rect =
+            { mBounds.width, 0, size.width - mBounds.width, size.height };
+        gdk_window_invalidate_rect(mGdkWindow, &rect, FALSE);
+    }
+    if (mBounds.height < size.height) {
+        GdkRectangle rect =
+            { 0, mBounds.height, size.width, size.height - mBounds.height };
+        gdk_window_invalidate_rect(mGdkWindow, &rect, FALSE);
+    }
+
+    mBounds.SizeTo(size);
 
     if (!mGdkWindow)
         return;
 
     if (mWidgetListener)
-        mWidgetListener->WindowResized(this, rect.width, rect.height);
+        mWidgetListener->WindowResized(this, size.width, size.height);
 }
 
 void
