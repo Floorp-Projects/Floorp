@@ -1,11 +1,15 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 const PARENT_ANNO = "sync/parent";
 
-Engines.register(BookmarksEngine);
-let engine = Engines.get("bookmarks");
+Service.engineManager.register(BookmarksEngine);
+let engine = Service.engineManager.get("bookmarks");
 let store = engine._store;
 let fxuri = Utils.makeURI("http://getfirefox.com/");
 let tburi = Utils.makeURI("http://getthunderbird.com/");
@@ -160,7 +164,7 @@ function test_folder_create() {
     let newrecord = store.createRecord(folder.id);
     do_check_true(newrecord instanceof BookmarkFolder);
     for each (let property in ["title", "parentName", "parentid"])
-      do_check_eq(newrecord[property], folder[property]);      
+      do_check_eq(newrecord[property], folder[property]);
 
     _("Folders have high sort index to ensure they're synced first.");
     do_check_eq(newrecord.sortindex, 1000000);

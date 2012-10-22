@@ -1,11 +1,13 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
-Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-common/log4moz.js");
-Cu.import("resource://services-sync/util.js");
-
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
 var IOService = Cc["@mozilla.org/network/io-service;1"]
@@ -13,8 +15,8 @@ var IOService = Cc["@mozilla.org/network/io-service;1"]
 ("http://www.mozilla.com", null, null);
 
 
-Engines.register(BookmarksEngine);
-let engine = Engines.get("bookmarks");
+Service.engineManager.register(BookmarksEngine);
+let engine = Service.engineManager.get("bookmarks");
 let store = engine._store;
 
 // Clean up after other tests. Only necessary in XULRunner.
@@ -61,9 +63,9 @@ add_test(function test_annotation_uploaded() {
   new SyncTestingInfrastructure();
 
   let startCount = smartBookmarkCount();
-  
+
   _("Start count is " + startCount);
-  
+
   if (startCount > 0) {
     // This can happen in XULRunner.
     clearBookmarks();
@@ -128,7 +130,7 @@ add_test(function test_annotation_uploaded() {
     do_check_eq(smartBookmarkCount(), startCount + 1);
 
     _("Clear local records; now we can't find it.");
-    
+
     // "Clear" by changing attributes: if we delete it, apparently it sticks
     // around as a deleted record...
     PlacesUtils.bookmarks.setItemTitle(mostVisitedID, "Not Most Visited");
@@ -153,7 +155,7 @@ add_test(function test_annotation_uploaded() {
       newID, SMART_BOOKMARKS_ANNO);
     do_check_eq(newAnnoValue, "MostVisited");
     do_check_eq(PlacesUtils.bookmarks.getBookmarkURI(newID).spec, uri.spec);
-    
+
     _("Test updating.");
     let newRecord = store.createRecord(serverGUID);
     do_check_eq(newRecord.queryId, newAnnoValue);
@@ -161,13 +163,13 @@ add_test(function test_annotation_uploaded() {
     store.update(newRecord);
     do_check_eq("LeastVisited", PlacesUtils.annotations.getItemAnnotation(
       newID, SMART_BOOKMARKS_ANNO));
-    
+
 
   } finally {
     // Clean up.
     store.wipe();
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
     server.stop(run_next_test);
   }
 });
@@ -183,24 +185,24 @@ add_test(function test_smart_bookmarks_duped() {
   let title = "Most Visited";
   let mostVisitedID = newSmartBookmark(parent, uri, -1, title, "MostVisited");
   let mostVisitedGUID = store.GUIDForId(mostVisitedID);
-  
+
   let record = store.createRecord(mostVisitedGUID);
-  
+
   _("Prepare sync.");
   let server = serverForFoo(engine);
   let collection = server.user("foo").collection("bookmarks");
 
   try {
     engine._syncStartup();
-    
+
     _("Verify that mapDupe uses the anno, discovering a dupe regardless of URI.");
     do_check_eq(mostVisitedGUID, engine._mapDupe(record));
-    
+
     record.bmkUri = "http://foo/";
     do_check_eq(mostVisitedGUID, engine._mapDupe(record));
     do_check_neq(PlacesUtils.bookmarks.getBookmarkURI(mostVisitedID).spec,
                  record.bmkUri);
-    
+
     _("Verify that different annos don't dupe.");
     let other = new BookmarkQuery("bookmarks", "abcdefabcdef");
     other.queryId = "LeastVisited";
@@ -208,12 +210,12 @@ add_test(function test_smart_bookmarks_duped() {
     other.bmkUri = "place:foo";
     other.title = "";
     do_check_eq(undefined, engine._findDupe(other));
-    
+
     _("Handle records without a queryId entry.");
     record.bmkUri = uri;
     delete record.queryId;
     do_check_eq(mostVisitedGUID, engine._mapDupe(record));
-    
+
     engine._syncFinish();
 
   } finally {
@@ -221,7 +223,7 @@ add_test(function test_smart_bookmarks_duped() {
     store.wipe();
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
   }
 });
 
@@ -229,7 +231,7 @@ function run_test() {
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Sync.Engine.Bookmarks").level = Log4Moz.Level.Trace;
 
-  generateNewKeys();
+  generateNewKeys(Service.collectionKeys);
 
   run_next_test();
 }

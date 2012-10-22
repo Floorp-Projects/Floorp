@@ -38,17 +38,22 @@ function dial() {
   is(telephony.calls.length, 1);
   is(telephony.calls[0], outgoing);
 
-  runEmulatorCmd("gsm list", function(result) {
-    log("Call list is now: " + result);
-    is(result[0], "outbound to  " + number + " : unknown");
-    is(result[1], "OK");
-    reject();
-  });
+  outgoing.onalerting = function onalerting(event) {
+    log("Received 'onalerting' call event.");
+    is(outgoing, event.call);
+    is(outgoing.state, "alerting");
+
+    runEmulatorCmd("gsm list", function(result) {
+      log("Call list is now: " + result);
+      is(result[0], "outbound to  " + number + " : ringing");
+      is(result[1], "OK");
+      reject();
+    });
+  };
 }
 
 function reject() {
   log("Reject the outgoing call on the other end.");
-
   // We get no "disconnecting" event when the remote party rejects the call.
 
   outgoing.ondisconnected = function ondisconnected(event) {
@@ -65,21 +70,8 @@ function reject() {
       cleanUp();
     });
   };
-  runEmulatorCmd("gsm list", cmdCallback);
+  runEmulatorCmd("gsm cancel " + number);
 };
-
-function cmdCallback(result) {
-  let state = "outbound to  " + number + " : unknown";
-  log("Call list is now: " + result);
-
-  // The outgoing call cannot be canceled when call state is unknown.
-  // Wait until the call connection is established.
-  if (result[0] == state) {
-    runEmulatorCmd("gsm list", cmdCallback);
-  } else {
-    runEmulatorCmd("gsm cancel " + number);
-  }
-}
 
 function cleanUp() {
   SpecialPowers.removePermission("telephony", document);

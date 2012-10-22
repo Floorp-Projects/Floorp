@@ -39,6 +39,7 @@ sync_modules := \
   rest.js \
   service.js \
   status.js \
+  userapi.js \
   util.js \
   $(NULL)
 
@@ -54,6 +55,17 @@ sync_engine_modules := \
   passwords.js \
   prefs.js \
   tabs.js \
+  $(NULL)
+
+sync_stage_modules := \
+  cluster.js \
+  enginesync.js \
+  $(NULL)
+
+sync_testing_modules := \
+  fakeservices.js \
+  rotaryengine.js \
+  utils.js \
   $(NULL)
 
 DIRS += locales
@@ -74,5 +86,12 @@ INSTALL_TARGETS += SYNC_MAIN
 SYNC_ENGINES_FILES := $(addprefix modules/engines/,$(sync_engine_modules))
 SYNC_ENGINES_DEST = $(FINAL_TARGET)/modules/services-sync/engines
 INSTALL_TARGETS += SYNC_ENGINES
+
+SYNC_STAGES_FILES := $(addprefix modules/stages/,$(sync_stage_modules))
+SYNC_STAGES_DEST = $(FINAL_TARGET)/modules/services-sync/stages
+INSTALL_TARGETS += SYNC_STAGES
+
+TESTING_JS_MODULES := $(addprefix modules-testing/,$(sync_testing_modules))
+TESTING_JS_MODULE_DIR := services/sync
 
 include $(topsrcdir)/config/rules.mk

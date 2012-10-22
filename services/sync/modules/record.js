@@ -2,8 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["WBORecord", "RecordManager", "Records",
-                          "CryptoWrapper", "CollectionKeys", "Collection"];
+const EXPORTED_SYMBOLS = [
+  "WBORecord",
+  "RecordManager",
+  "CryptoWrapper",
+  "CollectionKeyManager",
+  "Collection",
+];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -13,10 +18,9 @@ const Cu = Components.utils;
 const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 
-Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/identity.js");
-Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -37,8 +41,12 @@ WBORecord.prototype = {
 
   // Get thyself from your URI, then deserialize.
   // Set thine 'response' field.
-  fetch: function fetch(uri) {
-    let r = new Resource(uri).get();
+  fetch: function fetch(resource) {
+    if (!resource instanceof Resource) {
+      throw new Error("First argument must be a Resource instance.");
+    }
+
+    let r = resource.get();
     if (r.success) {
       this.deserialize(r);   // Warning! Muffles exceptions!
     }
@@ -46,8 +54,12 @@ WBORecord.prototype = {
     return this;
   },
 
-  upload: function upload(uri) {
-    return new Resource(uri).put(this);
+  upload: function upload(resource) {
+    if (!resource instanceof Resource) {
+      throw new Error("First argument must be a Resource instance.");
+    }
+
+    return resource.put(this);
   },
 
   // Take a base URI string, with trailing slash, and return the URI of this
@@ -93,11 +105,12 @@ WBORecord.prototype = {
 
 Utils.deferGetSet(WBORecord, "data", ["id", "modified", "sortindex", "payload"]);
 
-XPCOMUtils.defineLazyGetter(this, "Records", function () {
-  return new RecordManager();
-});
+/**
+ * An interface and caching layer for records.
+ */
+function RecordManager(service) {
+  this.service = service;
 
-function RecordManager() {
   this._log = Log4Moz.repository.getLogger(this._logName);
   this._records = {};
 }
@@ -110,7 +123,7 @@ RecordManager.prototype = {
     try {
       // Clear out the last response with empty object if GET fails
       this.response = {};
-      this.response = new Resource(url).get();
+      this.response = this.service.resource(url).get();
 
       // Don't parse and save the record on failure
       if (!this.response.success)
@@ -183,9 +196,8 @@ CryptoWrapper.prototype = {
    * Optional key bundle overrides the collection key lookup.
    */
   encrypt: function encrypt(keyBundle) {
-    keyBundle = keyBundle || CollectionKeys.keyForCollection(this.collection);
     if (!keyBundle) {
-      throw new Error("Key bundle is null for " + this.uri.spec);
+      throw new Error("A key bundle must be supplied to encrypt.");
     }
 
     this.IV = Svc.Crypto.generateRandomIV();
@@ -201,9 +213,8 @@ CryptoWrapper.prototype = {
       throw "No ciphertext: nothing to decrypt?";
     }
 
-    keyBundle = keyBundle || CollectionKeys.keyForCollection(this.collection);
     if (!keyBundle) {
-      throw new Error("Key bundle is null for " + this.collection + "/" + this.id);
+      throw new Error("A key bundle must be supplied to decrypt.");
     }
 
     // Authenticate the encrypted blob with the expected HMAC
@@ -258,10 +269,6 @@ CryptoWrapper.prototype = {
 Utils.deferGetSet(CryptoWrapper, "payload", ["ciphertext", "IV", "hmac"]);
 Utils.deferGetSet(CryptoWrapper, "cleartext", "deleted");
 
-XPCOMUtils.defineLazyGetter(this, "CollectionKeys", function () {
-  return new CollectionKeyManager();
-});
-
 
 /**
  * Keeps track of mappings between collection names ('tabs') and KeyBundles.
@@ -274,7 +281,7 @@ function CollectionKeyManager() {
   this._collections = {};
   this._default = null;
 
-  this._log = Log4Moz.repository.getLogger("Sync.CollectionKeys");
+  this._log = Log4Moz.repository.getLogger("Sync.CollectionKeyManager");
 }
 
 // TODO: persist this locally as an Identity. Bug 610913.
@@ -313,7 +320,7 @@ CollectionKeyManager.prototype = {
   },
 
   clear: function clear() {
-    this._log.info("Clearing CollectionKeys...");
+    this._log.info("Clearing collection keys...");
     this.lastModified = 0;
     this._collections = {};
     this._default = null;
@@ -416,16 +423,16 @@ CollectionKeyManager.prototype = {
 
     let self = this;
 
-    this._log.info("Setting CollectionKeys contents. Our last modified: " +
+    this._log.info("Setting collection keys contents. Our last modified: " +
                    this.lastModified + ", input modified: " + modified + ".");
 
     if (!payload)
-      throw "No payload in CollectionKeys.setContents().";
+      throw "No payload in CollectionKeyManager.setContents().";
 
     if (!payload.default) {
       this._log.warn("No downloaded default key: this should not occur.");
       this._log.warn("Not clearing local keys.");
-      throw "No default key in CollectionKeys.setContents(). Cannot proceed.";
+      throw "No default key in CollectionKeyManager.setContents(). Cannot proceed.";
     }
 
     // Process the incoming default key.
@@ -498,9 +505,19 @@ CollectionKeyManager.prototype = {
   }
 }
 
-function Collection(uri, recordObj) {
+function Collection(uri, recordObj, service) {
+  if (!service) {
+    throw new Error("Collection constructor requires a service.");
+  }
+
   Resource.call(this, uri);
+
+  // This is a bit hacky, but gets the job done.
+  let res = service.resource(uri);
+  this.authenticator = res.authenticator;
+
   this._recordObj = recordObj;
+  this._service = service;
 
   this._full = false;
   this._ids = null;
@@ -608,5 +625,5 @@ Collection.prototype = {
         onRecord(record);
       }
     };
-  }
+  },
 };

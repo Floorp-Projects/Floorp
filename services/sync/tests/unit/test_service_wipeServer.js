@@ -1,6 +1,8 @@
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://testing-common/services/sync/fakeservices.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
@@ -118,7 +120,7 @@ add_test(function test_wipeServer_list_503() {
 
 add_test(function test_wipeServer_all_success() {
   _("Service.wipeServer() deletes all the things.");
-  
+
   /**
    * Handle the bulk DELETE request sent by wipeServer.
    */
@@ -148,7 +150,7 @@ add_test(function test_wipeServer_all_success() {
 
 add_test(function test_wipeServer_all_404() {
   _("Service.wipeServer() accepts a 404.");
-  
+
   /**
    * Handle the bulk DELETE request sent by wipeServer. Returns a 404.
    */
@@ -180,7 +182,7 @@ add_test(function test_wipeServer_all_404() {
 
 add_test(function test_wipeServer_all_503() {
   _("Service.wipeServer() throws if it encounters a non-200/404 response.");
-  
+
   /**
    * Handle the bulk DELETE request sent by wipeServer. Returns a 503.
    */

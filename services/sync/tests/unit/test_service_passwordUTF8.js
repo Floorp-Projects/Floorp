@@ -1,6 +1,10 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 const JAPANESE = "\u34ff\u35ff\u36ff\u37ff";
 const APPLES = "\uf8ff\uf8ff\uf8ff\uf8ff";
@@ -53,7 +57,7 @@ function run_test() {
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;
   let collections = collectionsHelper.collections;
-  
+
   do_test_pending();
   let server = httpd_setup({
     "/1.1/johndoe/info/collections":    login_handling(collectionsHelper.handler),
@@ -78,7 +82,7 @@ function run_test() {
 
     _("Can't use a password that has the same low bytes as ours.");
     server_password = Utils.encodeUTF8(JAPANESE);
-    Identity.basicPassword = APPLES;
+    Service.identity.basicPassword = APPLES;
     do_check_false(Service.verifyLogin());
     do_check_eq(server_password, Utils.encodeUTF8(JAPANESE));
 

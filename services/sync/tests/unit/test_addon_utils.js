@@ -3,8 +3,9 @@
 
 "use strict";
 
-Cu.import("resource://services-sync/addonutils.js");
 Cu.import("resource://services-common/preferences.js");
+Cu.import("resource://services-sync/addonutils.js");
+Cu.import("resource://services-sync/util.js");
 
 const HTTP_PORT = 8888;
 const SERVER_ADDRESS = "http://127.0.0.1:8888";

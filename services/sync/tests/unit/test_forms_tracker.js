@@ -1,10 +1,14 @@
-Cu.import("resource://services-sync/engines/forms.js");
-Cu.import("resource://services-sync/util.js");
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-sync/engines/forms.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   _("Verify we've got an empty tracker to work with.");
-  let tracker = new FormEngine()._tracker;
+  let tracker = new FormEngine(Service)._tracker;
   do_check_empty(tracker.changedIDs);
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
@@ -34,11 +38,11 @@ function run_test() {
     Svc.Obs.notify("weave:engine:stop-tracking");
     Svc.Form.removeEntry("email", "john@doe.com");
     do_check_empty(tracker.changedIDs);
-  
+
     _("Test error detection.");
     // This throws an exception without the fix for Bug 597400.
     tracker.trackEntry("foo", "bar");
-    
+
   } finally {
     _("Clean up.");
     Svc.Form.removeAllEntries();

@@ -1,5 +1,11 @@
-Cu.import("resource://services-sync/main.js");
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/policies.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 function login_handling(handler) {
   return function (request, response) {
@@ -33,46 +39,46 @@ function run_test() {
   try {
     _("Set up test fixtures.");
     new SyncTestingInfrastructure("johndoe", "ilovejane", "foo");
-    SyncScheduler.globalScore = GLOBAL_SCORE;
+    Service.scheduler.globalScore = GLOBAL_SCORE;
     // Avoid daily ping
-    Weave.Svc.Prefs.set("lastPing", Math.floor(Date.now() / 1000));
+    Svc.Prefs.set("lastPing", Math.floor(Date.now() / 1000));
 
     let threw = false;
-    Weave.Svc.Obs.add("weave:service:sync:error", function (subject, data) {
+    Svc.Obs.add("weave:service:sync:error", function (subject, data) {
       threw = true;
     });
 
     _("Initial state: We're successfully logged in.");
-    Weave.Service.login();
-    do_check_true(Weave.Service.isLoggedIn);
-    do_check_eq(Weave.Status.login, Weave.LOGIN_SUCCEEDED);
+    Service.login();
+    do_check_true(Service.isLoggedIn);
+    do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
 
     _("Simulate having changed the password somewhere else.");
-    Identity.basicPassword = "ilovejosephine";
+    Service.identity.basicPassword = "ilovejosephine";
 
     _("Let's try to sync.");
-    Weave.Service.sync();
+    Service.sync();
 
     _("Verify that sync() threw an exception.");
     do_check_true(threw);
 
     _("We're no longer logged in.");
-    do_check_false(Weave.Service.isLoggedIn);
+    do_check_false(Service.isLoggedIn);
 
     _("Sync status won't have changed yet, because we haven't tried again.");
 
     _("globalScore is reset upon starting a sync.");
-    do_check_eq(SyncScheduler.globalScore, 0);
+    do_check_eq(Service.scheduler.globalScore, 0);
 
     _("Our next sync will fail appropriately.");
     try {
-      Weave.Service.sync();
+      Service.sync();
     } catch (ex) {
     }
-    do_check_eq(Weave.Status.login, Weave.LOGIN_FAILED_LOGIN_REJECTED);
+    do_check_eq(Service.status.login, LOGIN_FAILED_LOGIN_REJECTED);
 
   } finally {
-    Weave.Svc.Prefs.resetBranch("");
+    Svc.Prefs.resetBranch("");
     server.stop(do_test_finished);
   }
 }

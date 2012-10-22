@@ -1,9 +1,12 @@
-Cu.import("resource://services-sync/constants.js");
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/status.js");
-Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/policies.js");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 function login_handling(handler) {
   return function (request, response) {
@@ -31,7 +34,7 @@ add_test(function test_offline() {
     _("The right bits are set when we're offline.");
     Services.io.offline = true;
     do_check_false(!!Service.login());
-    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_eq(Service.status.login, LOGIN_FAILED_NETWORK_ERROR);
     Services.io.offline = false;
   } finally {
     Svc.Prefs.resetBranch("");
@@ -69,41 +72,41 @@ add_test(function test_login_logout() {
 
   try {
     _("Force the initial state.");
-    Status.service = STATUS_OK;
-    do_check_eq(Status.service, STATUS_OK);
+    Service.status.service = STATUS_OK;
+    do_check_eq(Service.status.service, STATUS_OK);
 
     _("Try logging in. It won't work because we're not configured yet.");
     Service.login();
-    do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
-    do_check_eq(Status.login, LOGIN_FAILED_NO_USERNAME);
+    do_check_eq(Service.status.service, CLIENT_NOT_CONFIGURED);
+    do_check_eq(Service.status.login, LOGIN_FAILED_NO_USERNAME);
     do_check_false(Service.isLoggedIn);
 
     _("Try again with username and password set.");
-    Identity.account = "johndoe";
-    Identity.basicPassword = "ilovejane";
+    Service.identity.account = "johndoe";
+    Service.identity.basicPassword = "ilovejane";
     Service.login();
-    do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);
-    do_check_eq(Status.login, LOGIN_FAILED_NO_PASSPHRASE);
+    do_check_eq(Service.status.service, CLIENT_NOT_CONFIGURED);
+    do_check_eq(Service.status.login, LOGIN_FAILED_NO_PASSPHRASE);
     do_check_false(Service.isLoggedIn);
 
     _("Success if passphrase is set.");
-    Identity.syncKey = "foo";
+    Service.identity.syncKey = "foo";
     Service.login();
-    do_check_eq(Status.service, STATUS_OK);
-    do_check_eq(Status.login, LOGIN_SUCCEEDED);
+    do_check_eq(Service.status.service, STATUS_OK);
+    do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
     do_check_true(Service.isLoggedIn);
 
     _("We can also pass username, password and passphrase to login().");
     Service.login("janedoe", "incorrectpassword", "bar");
     setBasicCredentials("janedoe", "incorrectpassword", "bar");
-    do_check_eq(Status.service, LOGIN_FAILED);
-    do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
+    do_check_eq(Service.status.service, LOGIN_FAILED);
+    do_check_eq(Service.status.login, LOGIN_FAILED_LOGIN_REJECTED);
     do_check_false(Service.isLoggedIn);
 
     _("Try again with correct password.");
     Service.login("janedoe", "ilovejohn");
-    do_check_eq(Status.service, STATUS_OK);
-    do_check_eq(Status.login, LOGIN_SUCCEEDED);
+    do_check_eq(Service.status.service, STATUS_OK);
+    do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
     do_check_true(Service.isLoggedIn);
 
     _("Calling login() with parameters when the client is unconfigured sends notification.");
@@ -114,8 +117,8 @@ add_test(function test_login_logout() {
     setBasicCredentials(null, null, null);
     Service.login("janedoe", "ilovejohn", "bar");
     do_check_true(notified);
-    do_check_eq(Status.service, STATUS_OK);
-    do_check_eq(Status.login, LOGIN_SUCCEEDED);
+    do_check_eq(Service.status.service, STATUS_OK);
+    do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
     do_check_true(Service.isLoggedIn);
 
     _("Logout.");
@@ -142,7 +145,7 @@ add_test(function test_login_on_sync() {
     let loginCalled = false;
     Service.login = function() {
       loginCalled = true;
-      Status.login = LOGIN_SUCCEEDED;
+      Service.status.login = LOGIN_SUCCEEDED;
       this._loggedIn = false;           // So that sync aborts.
       return true;
     };
@@ -159,9 +162,9 @@ add_test(function test_login_on_sync() {
 
     // Stub scheduleNextSync. This gets called within checkSyncStatus if we're
     // ready to sync, so use it as an indicator.
-    let scheduleNextSyncF = SyncScheduler.scheduleNextSync;
+    let scheduleNextSyncF = Service.scheduler.scheduleNextSync;
     let scheduleCalled = false;
-    SyncScheduler.scheduleNextSync = function(wait) {
+    Service.scheduler.scheduleNextSync = function(wait) {
       scheduleCalled = true;
       scheduleNextSyncF.call(this, wait);
     };
@@ -181,15 +184,15 @@ add_test(function test_login_on_sync() {
     _("We're ready to sync if locked.");
     Service.enabled = true;
     Services.io.offline = false;
-    SyncScheduler.checkSyncStatus();
+    Service.scheduler.checkSyncStatus();
     do_check_true(scheduleCalled);
 
     _("... and also if we're not locked.");
     scheduleCalled = false;
     mpLocked = false;
-    SyncScheduler.checkSyncStatus();
+    Service.scheduler.checkSyncStatus();
     do_check_true(scheduleCalled);
-    SyncScheduler.scheduleNextSync = scheduleNextSyncF;
+    Service.scheduler.scheduleNextSync = scheduleNextSyncF;
 
     // TODO: need better tests around master password prompting. See Bug 620583.
 
@@ -197,27 +200,27 @@ add_test(function test_login_on_sync() {
 
     // Testing exception handling if master password dialog is canceled.
     // Do this by monkeypatching.
-    let oldGetter = Identity.__lookupGetter__("syncKey");
-    let oldSetter = Identity.__lookupSetter__("syncKey");
+    let oldGetter = Service.identity.__lookupGetter__("syncKey");
+    let oldSetter = Service.identity.__lookupSetter__("syncKey");
     _("Old passphrase function is " + oldGetter);
-    Identity.__defineGetter__("syncKey",
+    Service.identity.__defineGetter__("syncKey",
                            function() {
                              throw "User canceled Master Password entry";
                            });
 
-    let oldClearSyncTriggers = SyncScheduler.clearSyncTriggers;
+    let oldClearSyncTriggers = Service.scheduler.clearSyncTriggers;
     let oldLockedSync = Service._lockedSync;
 
     let cSTCalled = false;
     let lockedSyncCalled = false;
 
-    SyncScheduler.clearSyncTriggers = function() { cSTCalled = true; };
+    Service.scheduler.clearSyncTriggers = function() { cSTCalled = true; };
     Service._lockedSync = function() { lockedSyncCalled = true; };
 
     _("If master password is canceled, login fails and we report lockage.");
     do_check_false(!!Service.login());
-    do_check_eq(Status.login, MASTER_PASSWORD_LOCKED);
-    do_check_eq(Status.service, LOGIN_FAILED);
+    do_check_eq(Service.status.login, MASTER_PASSWORD_LOCKED);
+    do_check_eq(Service.status.service, LOGIN_FAILED);
     _("Locked? " + Utils.mpLocked());
     _("checkSync reports the correct term.");
     do_check_eq(Service._checkSync(), kSyncMasterPasswordLocked);
@@ -228,8 +231,8 @@ add_test(function test_login_on_sync() {
     do_check_true(cSTCalled);
     do_check_false(lockedSyncCalled);
 
-    Identity.__defineGetter__("syncKey", oldGetter);
-    Identity.__defineSetter__("syncKey", oldSetter);
+    Service.identity.__defineGetter__("syncKey", oldGetter);
+    Service.identity.__defineSetter__("syncKey", oldSetter);
 
     // N.B., a bunch of methods are stubbed at this point. Be careful putting
     // new tests after this point!
