@@ -196,6 +196,8 @@ setlcdfilter_in_tree.patch: bug 790139; force cairo to use FT_Library_SetLcdFilt
 
 dwrite-font-match-robustness.patch: bug 717178, don't crash when _name_tables_match is passed a nil scaled-font
 
+win32-font-hashtable.patch: bug 717178, use a hashtable to memoize creation of win32 fonts
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
