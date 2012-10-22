@@ -168,10 +168,6 @@ public class Tab {
         return mThumbnailBitmap = Bitmap.createBitmap(Tabs.getThumbnailWidth(), Tabs.getThumbnailHeight(), Bitmap.Config.RGB_565);
     }
 
-    public void finalize() {
-        freeBuffer();
-    }
-
     synchronized void freeBuffer() {
         DirectBufferAllocator.free(mThumbnailBuffer);
         mThumbnailBuffer = null;
