@@ -106,16 +106,6 @@ public class ScreenshotLayer extends SingleTileLayer {
         }
 
         @Override
-        protected void finalize() throws Throwable {
-            try {
-                DirectBufferAllocator.free(mBuffer);
-                mBuffer = null;
-            } finally {
-                super.finalize();
-            }
-        }
-
-        @Override
         public synchronized void destroy() {
             try {
                 DirectBufferAllocator.free(mBuffer);
