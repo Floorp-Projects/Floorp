@@ -447,6 +447,5 @@
   "DOMStringList interface: existence and properties of interface object": true,
   "DOMStringList interface: existence and properties of interface prototype object": true,
   "DOMStringList interface: existence and properties of interface prototype object's \"constructor\" property": true,
-  "DOMStringList interface: attribute length": true,
-  "Stringification of document.body.classList": true
+  "DOMStringList interface: attribute length": true
 }

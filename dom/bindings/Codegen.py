@@ -1038,6 +1038,19 @@ class MethodDefiner(PropertyDefiner):
                                 "flags": "0",
                                 "pref": None })
 
+        if not static:
+            stringifier = descriptor.operations['Stringifier']
+            if stringifier:
+                toStringDesc = { "name": "toString",
+                                 "nativeName": stringifier.identifier.name,
+                                 "length": 0,
+                                 "flags": "JSPROP_ENUMERATE",
+                                 "pref": PropertyDefiner.getControllingPref(stringifier) }
+                if isChromeOnly(stringifier):
+                    self.chrome.append(toStringDesc)
+                else:
+                    self.regular.append(toStringDesc)
+
         if static:
             if not descriptor.interface.hasInterfaceObject():
                 # static methods go on the interface object
@@ -1055,12 +1068,12 @@ class MethodDefiner(PropertyDefiner):
             return m["pref"]
 
         def specData(m):
+            accessor = m.get("nativeName", m["name"])
             if m.get("methodInfo", True):
-                jitinfo = ("&%s_methodinfo" % m["name"])
+                jitinfo = ("&%s_methodinfo" % accessor)
                 accessor = "genericMethod"
             else:
                 jitinfo = "nullptr"
-                accessor = m.get("nativeName", m["name"])
             return (m["name"], accessor, jitinfo, m["length"], m["flags"])
 
         return self.generatePrefableArray(
@@ -5100,26 +5113,6 @@ class CGDOMJSProxyHandler_obj_toString(ClassMethod):
         ClassMethod.__init__(self, "obj_toString", "JSString*", args)
         self.descriptor = descriptor
     def getBody(self):
-        stringifier = self.descriptor.operations['Stringifier']
-        if stringifier:
-            name = stringifier.identifier.name
-            nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
-            signature = stringifier.signatures()[0]
-            returnType = signature[0]
-            extendedAttributes = self.descriptor.getExtendedAttributes(stringifier)
-            infallible = 'infallible' in extendedAttributes
-            if not infallible:
-                error = CGGeneric(
-                    ('ThrowMethodFailedWithDetails(cx, rv, "%s", "toString");\n' +
-                     "return NULL;") % self.descriptor.interface.identifier.name)
-            else:
-                error = None
-            call = CGCallGenerator(error, [], "", returnType, extendedAttributes, self.descriptor, nativeName, False, object="UnwrapProxy(proxy)")
-            return call.define() + """
-
-JSString* jsresult;
-return xpc_qsStringToJsstring(cx, result, &jsresult) ? jsresult : NULL;""" 
-
         return "return mozilla::dom::DOMProxyHandler::obj_toString(cx, \"%s\");" % self.descriptor.name
 
 class CGDOMJSProxyHandler_finalize(ClassMethod):
@@ -5232,7 +5225,8 @@ class CGDescriptor(CGThing):
             (hasMethod, hasGetter, hasLenientGetter,
              hasSetter, hasLenientSetter) = False, False, False, False, False
             for m in descriptor.interface.members:
-                if m.isMethod() and not m.isStatic() and not m.isIdentifierLess():
+                if (m.isMethod() and not m.isStatic() and
+                    (not m.isIdentifierLess() or m == descriptor.operations['Stringifier'])):
                     cgThings.append(CGSpecializedMethod(descriptor, m))
                     cgThings.append(CGMemberJITInfo(descriptor, m))
                     hasMethod = True
