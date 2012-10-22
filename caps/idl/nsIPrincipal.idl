@@ -21,33 +21,9 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, uuid(115d1081-373e-4837-8d12-d0f4874f3467)]
+[scriptable, uuid(96a92f0c-adcb-44ac-a034-37627647ec97)]
 interface nsIPrincipal : nsISerializable
 {
-    /**
-     * Values of capabilities for each principal. Order is
-     * significant: if an operation is performed on a set
-     * of capabilities, the minimum is computed.
-     */
-    const short ENABLE_DENIED                = 1;
-    const short ENABLE_UNKNOWN               = 2;
-    const short ENABLE_WITH_USER_PERMISSION  = 3;
-    const short ENABLE_GRANTED               = 4;
-
-    /**
-     * Returns the security preferences associated with this principal.
-     * prefBranch will be set to the pref branch to which these preferences
-     * pertain.  id is a pseudo-unique identifier, pertaining to either the
-     * fingerprint or the origin.  subjectName is a name that identifies the
-     * entity this principal represents (may be empty).  grantedList and
-     * deniedList are space-separated lists of capabilities which were
-     * explicitly granted or denied by a pref.  isTrusted is a boolean that
-     * indicates whether this is a codebaseTrusted certificate.
-     */
-    void getPreferences(out string prefBranch, out string id,
-                        out string subjectName, out string grantedList,
-                        out string deniedList, out boolean isTrusted);
-
     /**
      * Returns whether the other principal is equivalent to this principal.
      * Principals are considered equal if they are the same principal,
@@ -80,14 +56,6 @@ interface nsIPrincipal : nsISerializable
     // method.
     [noscript] attribute voidPtr securityPolicy;
 
-    // XXXcaa probably should be turned into {get|set}CapabilityFlags
-    // XXXbz again, what if this lives in our hashtable and someone
-    // messes with it?  Is that OK?
-    [noscript] short canEnableCapability(in string capability);
-    [noscript] boolean isCapabilityEnabled(in string capability,
-                                           in voidPtr annotation);
-    [noscript] void enableCapability(in string capability,
-                                     inout voidPtr annotation);
     /**
      * The codebase URI to which this principal pertains.  This is
      * generally the document URI.
