@@ -124,6 +124,15 @@ using mozilla::layers::LayerManagerOGL;
 // out to the bounding-box if there are more
 #define MAX_RECTS_IN_REGION 100
 
+const gint kEvents = GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
+                     GDK_VISIBILITY_NOTIFY_MASK |
+                     GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
+                     GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+#ifdef MOZ_PLATFORM_MAEMO
+                     GDK_POINTER_MOTION_HINT_MASK |
+#endif
+                     GDK_POINTER_MOTION_MASK;
+
 /* utility functions */
 static bool       check_for_rollup(gdouble aMouseX, gdouble aMouseY,
                                    bool aIsWheel, bool aAlwaysRollup);
@@ -809,10 +818,7 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
     
     nsWindow* newParent = static_cast<nsWindow*>(aNewParent);
     GdkWindow* newParentWindow = newParent->mGdkWindow;
-    GtkWidget* newContainer = NULL;
-    if (newParentWindow) {
-        newContainer = get_gtk_widget_for_gdk_window(newParentWindow);
-    }
+    GtkWidget* newContainer = newParent->GetMozContainerWidget();
 
     if (mTransientParent) {
       GtkWindow* topLevelParent =
@@ -3301,14 +3307,7 @@ CreateGdkWindow(GdkWindow *parent, GtkWidget *widget)
     GdkWindowAttr attributes;
     gint          attributes_mask = GDK_WA_VISUAL;
 
-    attributes.event_mask = (GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
-                             GDK_VISIBILITY_NOTIFY_MASK |
-                             GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
-                             GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-#ifdef MOZ_PLATFORM_MAEMO
-                             GDK_POINTER_MOTION_HINT_MASK |
-#endif
-                             GDK_POINTER_MOTION_MASK);
+    attributes.event_mask = kEvents;
 
     attributes.width = 1;
     attributes.height = 1;
@@ -3378,25 +3377,32 @@ nsWindow::Create(nsIWidget        *aParent,
     GtkContainer   *parentGtkContainer = nullptr;
     GdkWindow      *parentGdkWindow = nullptr;
     GtkWindow      *topLevelParent = nullptr;
+    nsWindow       *parentnsWindow = nullptr;
+    GtkWidget      *eventWidget = nullptr;
 
-    if (aParent)
-        parentGdkWindow = GDK_WINDOW(aParent->GetNativeData(NS_NATIVE_WINDOW));
-    else if (aNativeParent && GDK_IS_WINDOW(aNativeParent))
+    if (aParent) {
+        parentnsWindow = static_cast<nsWindow*>(aParent);
+        parentGdkWindow = parentnsWindow->mGdkWindow;
+    } else if (aNativeParent && GDK_IS_WINDOW(aNativeParent)) {
         parentGdkWindow = GDK_WINDOW(aNativeParent);
-    else if (aNativeParent && GTK_IS_CONTAINER(aNativeParent))
+        parentnsWindow = get_window_for_gdk_window(parentGdkWindow);
+        if (!parentnsWindow)
+            return NS_ERROR_FAILURE;
+
+    } else if (aNativeParent && GTK_IS_CONTAINER(aNativeParent)) {
         parentGtkContainer = GTK_CONTAINER(aNativeParent);
+    }
 
     if (parentGdkWindow) {
         // get the widget for the window - it should be a moz container
-        parentMozContainer = get_gtk_widget_for_gdk_window(parentGdkWindow);
-
-        if (!IS_MOZ_CONTAINER(parentMozContainer))
+        parentMozContainer = parentnsWindow->GetMozContainerWidget();
+        if (!parentMozContainer)
             return NS_ERROR_FAILURE;
 
         // get the toplevel window just in case someone needs to use it
         // for setting transients or whatever.
         topLevelParent =
-            GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(parentMozContainer)));
+            GTK_WINDOW(gtk_widget_get_toplevel(parentMozContainer));
     }
 
     // ok, create our windows
@@ -3432,11 +3438,7 @@ nsWindow::Create(nsIWidget        *aParent,
                 gdk_window_set_group(dialoglead, dialoglead);
             }
             if (parentGdkWindow) {
-                nsWindow *parentnsWindow =
-                    get_window_for_gdk_window(parentGdkWindow);
-                NS_ASSERTION(parentnsWindow,
-                             "no nsWindow for parentGdkWindow!");
-                if (parentnsWindow && parentnsWindow->mWindowGroup) {
+                if (parentnsWindow->mWindowGroup) {
                     gtk_window_group_add_window(parentnsWindow->mWindowGroup,
                                                 GTK_WINDOW(mShell));
                     // store this in case any children are created
@@ -3561,22 +3563,24 @@ nsWindow::Create(nsIWidget        *aParent,
             gtk_window_group_add_window(mWindowGroup, GTK_WINDOW(mShell));
         }
 
-        // create our container
+        // Prevent GtkWindow from painting a background to flicker.
+        gtk_widget_set_app_paintable(mShell, TRUE);
+
+        // Create a container to hold child windows and child GtkWidgets.
         GtkWidget *container = moz_container_new();
         mContainer = MOZ_CONTAINER(container);
+        // Use mShell's window for drawing and events.
+        gtk_widget_set_has_window(container, FALSE);
+        eventWidget = mShell;
+        gtk_widget_add_events(eventWidget, kEvents);
         gtk_container_add(GTK_CONTAINER(mShell), container);
         gtk_widget_realize(container);
-
-#if defined(MOZ_WIDGET_GTK2)
-        // Don't let GTK mess with the shapes of our GdkWindows
-        GTK_PRIVATE_SET_FLAG(container, GTK_HAS_SHAPE_MASK);
-#endif
 
         // make sure this is the focus widget in the container
         gtk_window_set_focus(GTK_WINDOW(mShell), container);
 
         // the drawing window
-        mGdkWindow = gtk_widget_get_window(container);
+        mGdkWindow = gtk_widget_get_window(mShell);
 
         if (mWindowType == eWindowType_popup) {
             // gdk does not automatically set the cursor for "temporary"
@@ -3600,21 +3604,18 @@ nsWindow::Create(nsIWidget        *aParent,
     case eWindowType_child: {
         if (parentMozContainer) {
             mGdkWindow = CreateGdkWindow(parentGdkWindow, parentMozContainer);
-            nsWindow *parentnsWindow =
-                get_window_for_gdk_window(parentGdkWindow);
-            if (parentnsWindow)
-                mHasMappedToplevel = parentnsWindow->mHasMappedToplevel;
+            mHasMappedToplevel = parentnsWindow->mHasMappedToplevel;
         }
         else if (parentGtkContainer) {
+            // This MozContainer has its own window for drawing and receives
+            // events because there is no mShell widget (corresponding to this
+            // nsWindow).
             GtkWidget *container = moz_container_new();
             mContainer = MOZ_CONTAINER(container);
+            eventWidget = container;
+            gtk_widget_add_events(eventWidget, kEvents);
             gtk_container_add(parentGtkContainer, container);
             gtk_widget_realize(container);
-
-#if defined(MOZ_WIDGET_GTK2)
-            // Don't let GTK mess with the shapes of our GdkWindows
-            GTK_PRIVATE_SET_FLAG(container, GTK_HAS_SHAPE_MASK);
-#endif
 
             mGdkWindow = gtk_widget_get_window(container);
         }
@@ -3627,15 +3628,6 @@ nsWindow::Create(nsIWidget        *aParent,
     default:
         break;
     }
-    // Disable the double buffer because it will make the caret crazy
-    // For bug#153805 (Gtk2 double buffer makes carets misbehave)
-    // DirectFB's expose code depends on gtk double buffering
-    // XXX - I think this bug is probably dead, we can just use gtk's
-    // double-buffering everywhere
-#ifdef MOZ_X11
-    if (mContainer)
-        gtk_widget_set_double_buffered (GTK_WIDGET(mContainer),FALSE);
-#endif
 
     // label the drawing window with this object so we can find our way home
     g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", this);
@@ -3684,10 +3676,17 @@ nsWindow::Create(nsIWidget        *aParent,
     }
 
     if (mContainer) {
+        // Widget signals
         g_signal_connect(mContainer, "unrealize",
                          G_CALLBACK(container_unrealize_cb), NULL);
         g_signal_connect_after(mContainer, "size_allocate",
                                G_CALLBACK(size_allocate_cb), NULL);
+        g_signal_connect(mContainer, "hierarchy-changed",
+                         G_CALLBACK(hierarchy_changed_cb), NULL);
+        // Initialize mHasMappedToplevel.
+        hierarchy_changed_cb(GTK_WIDGET(mContainer), NULL);
+        // Expose, focus, key, and drag events are sent even to GTK_NO_WINDOW
+        // widgets.
 #if defined(MOZ_WIDGET_GTK2)
         g_signal_connect(mContainer, "expose_event",
                          G_CALLBACK(expose_event_cb), NULL);
@@ -3695,16 +3694,6 @@ nsWindow::Create(nsIWidget        *aParent,
         g_signal_connect(G_OBJECT(mContainer), "draw",
                          G_CALLBACK(expose_event_cb), NULL);
 #endif
-        g_signal_connect(mContainer, "enter_notify_event",
-                         G_CALLBACK(enter_notify_event_cb), NULL);
-        g_signal_connect(mContainer, "leave_notify_event",
-                         G_CALLBACK(leave_notify_event_cb), NULL);
-        g_signal_connect(mContainer, "motion_notify_event",
-                         G_CALLBACK(motion_notify_event_cb), NULL);
-        g_signal_connect(mContainer, "button_press_event",
-                         G_CALLBACK(button_press_event_cb), NULL);
-        g_signal_connect(mContainer, "button_release_event",
-                         G_CALLBACK(button_release_event_cb), NULL);
         g_signal_connect(mContainer, "focus_in_event",
                          G_CALLBACK(focus_in_event_cb), NULL);
         g_signal_connect(mContainer, "focus_out_event",
@@ -3713,14 +3702,6 @@ nsWindow::Create(nsIWidget        *aParent,
                          G_CALLBACK(key_press_event_cb), NULL);
         g_signal_connect(mContainer, "key_release_event",
                          G_CALLBACK(key_release_event_cb), NULL);
-        g_signal_connect(mContainer, "scroll_event",
-                         G_CALLBACK(scroll_event_cb), NULL);
-        g_signal_connect(mContainer, "visibility_notify_event",
-                         G_CALLBACK(visibility_notify_event_cb), NULL);
-        g_signal_connect(mContainer, "hierarchy_changed",
-                         G_CALLBACK(hierarchy_changed_cb), NULL);
-        // Initialize mHasMappedToplevel.
-        hierarchy_changed_cb(GTK_WIDGET(mContainer), NULL);
 
         gtk_drag_dest_set((GtkWidget *)mContainer,
                           (GtkDestDefaults)0,
@@ -3737,6 +3718,19 @@ nsWindow::Create(nsIWidget        *aParent,
         g_signal_connect(mContainer, "drag_data_received",
                          G_CALLBACK(drag_data_received_event_cb), NULL);
 
+        GtkWidget *widgets[] = { GTK_WIDGET(mContainer), mShell };
+        for (size_t i = 0; i < ArrayLength(widgets) && widgets[i]; ++i) {
+            // Visibility events are sent to the owning widget of the relevant
+            // window but do not propagate to parent widgets so connect on
+            // mShell (if it exists) as well as mContainer.
+            g_signal_connect(widgets[i], "visibility-notify-event",
+                             G_CALLBACK(visibility_notify_event_cb), NULL);
+            // Similarly double buffering is controlled by the window's owning
+            // widget.  Disable double buffering for painting directly to the
+            // X Window.
+            gtk_widget_set_double_buffered(widgets[i], FALSE);
+        }
+
         // We create input contexts for all containers, except for
         // toplevel popup windows
         if (mWindowType != eWindowType_popup) {
@@ -3747,6 +3741,28 @@ nsWindow::Create(nsIWidget        *aParent,
         if (container) {
             mIMModule = container->mIMModule;
         }
+    }
+
+    if (eventWidget) {
+        // Don't let GTK mess with the shapes of our GdkWindows
+        GTK_PRIVATE_SET_FLAG(eventWidget, GTK_HAS_SHAPE_MASK);
+
+        // These events are sent to the owning widget of the relevant window
+        // and propagate up to the first widget that handles the events, so we
+        // need only connect on mShell, if it exists, to catch events on its
+        // window and windows of mContainer.
+        g_signal_connect(eventWidget, "enter-notify-event",
+                         G_CALLBACK(enter_notify_event_cb), NULL);
+        g_signal_connect(eventWidget, "leave-notify-event",
+                         G_CALLBACK(leave_notify_event_cb), NULL);
+        g_signal_connect(eventWidget, "motion-notify-event",
+                         G_CALLBACK(motion_notify_event_cb), NULL);
+        g_signal_connect(eventWidget, "button-press-event",
+                         G_CALLBACK(button_press_event_cb), NULL);
+        g_signal_connect(eventWidget, "button-release-event",
+                         G_CALLBACK(button_release_event_cb), NULL);
+        g_signal_connect(eventWidget, "scroll-event",
+                         G_CALLBACK(scroll_event_cb), NULL);
     }
 
     LOG(("nsWindow [%p]\n", (void *)this));
@@ -4481,6 +4497,9 @@ nsWindow::GetMozContainerWidget()
     if (!mGdkWindow)
         return NULL;
 
+    if (mContainer)
+        return GTK_WIDGET(mContainer);
+
     GtkWidget *owningWidget =
         get_gtk_widget_for_gdk_window(mGdkWindow);
     return owningWidget;
@@ -5072,14 +5091,6 @@ expose_event_cb(GtkWidget *widget, GdkEventExpose *event)
     if (!window)
         return FALSE;
 
-    // XXX We are so getting lucky here.  We are doing all of
-    // mozilla's painting and then allowing default processing to occur.
-    // This means that Mozilla paints in all of it's stuff and then
-    // NO_WINDOW widgets (like scrollbars, for example) are painted by
-    // Gtk on top of what we painted.
-
-    // This return window->OnExposeEvent(widget, event); */
-
     window->OnExposeEvent(event);
     return FALSE;
 }
@@ -5087,13 +5098,6 @@ expose_event_cb(GtkWidget *widget, GdkEventExpose *event)
 void
 draw_window_of_widget(GtkWidget *widget, GdkWindow *aWindow, cairo_t *cr)
 {
-    gpointer windowWidget;
-    gdk_window_get_user_data(aWindow, &windowWidget);
-
-    // aWindow is in another widget
-    if (windowWidget != widget)
-        return;
-    
     if (gtk_cairo_should_draw_window(cr, aWindow)) {
         nsRefPtr<nsWindow> window = get_window_for_gdk_window(aWindow);
         if (!window) {
@@ -5112,11 +5116,15 @@ draw_window_of_widget(GtkWidget *widget, GdkWindow *aWindow, cairo_t *cr)
     GList *children = gdk_window_get_children(aWindow);
     GList *child = children;
     while (child) {
-        draw_window_of_widget(widget, GDK_WINDOW(child->data), cr);
+        GdkWindow *window = GDK_WINDOW(child->data);
+        gpointer windowWidget;
+        gdk_window_get_user_data(window, &windowWidget);
+        if (windowWidget == widget) {
+            draw_window_of_widget(widget, window, cr);
+        }
         child = g_list_next(child);
     }  
     g_list_free(children);
-
 }
 
 /* static */

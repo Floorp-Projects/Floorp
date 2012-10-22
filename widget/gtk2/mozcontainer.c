@@ -196,7 +196,9 @@ moz_container_map (GtkWidget *widget)
         tmp_list = tmp_list->next;
     }
 
-    gdk_window_show (gtk_widget_get_window(widget));
+    if (gtk_widget_get_has_window (widget)) {
+        gdk_window_show (gtk_widget_get_window(widget));
+    }
 }
 
 void
@@ -206,65 +208,56 @@ moz_container_unmap (GtkWidget *widget)
 
     gtk_widget_set_mapped(widget, FALSE);
 
-    gdk_window_hide (gtk_widget_get_window(widget));
+    if (gtk_widget_get_has_window (widget)) {
+        gdk_window_hide (gtk_widget_get_window(widget));
+    }
 }
 
 void
 moz_container_realize (GtkWidget *widget)
 {
-    GdkWindowAttr attributes;
-    gint attributes_mask = 0;
-    MozContainer *container;
-    GtkAllocation allocation;
-
-    g_return_if_fail(IS_MOZ_CONTAINER(widget));
-
-    container = MOZ_CONTAINER(widget);
+    GdkWindow *parent = gtk_widget_get_parent_window (widget);
+    GdkWindow *window;
 
     gtk_widget_set_realized(widget, TRUE);
 
-    /* create the shell window */
+    if (gtk_widget_get_has_window (widget)) {
+        GdkWindowAttr attributes;
+        gint attributes_mask = GDK_WA_VISUAL | GDK_WA_X | GDK_WA_Y;
+        GtkAllocation allocation;
 
-    attributes.event_mask = (gtk_widget_get_events (widget) |
-                             GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
-                             GDK_VISIBILITY_NOTIFY_MASK |
-                             GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
-                             GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-#ifdef MOZ_PLATFORM_MAEMO
-                             GDK_POINTER_MOTION_HINT_MASK |
-#endif
-                             GDK_POINTER_MOTION_MASK);
-    gtk_widget_get_allocation(widget, &allocation);
-    attributes.x = allocation.x;
-    attributes.y = allocation.y;
-    attributes.width = allocation.width;
-    attributes.height = allocation.height;
-    attributes.wclass = GDK_INPUT_OUTPUT;
-    attributes.visual = gtk_widget_get_visual (widget);
+        gtk_widget_get_allocation (widget, &allocation);
+        attributes.event_mask = gtk_widget_get_events (widget);
+        attributes.x = allocation.x;
+        attributes.y = allocation.y;
+        attributes.width = allocation.width;
+        attributes.height = allocation.height;
+        attributes.wclass = GDK_INPUT_OUTPUT;
+        attributes.visual = gtk_widget_get_visual (widget);
+        attributes.window_type = GDK_WINDOW_CHILD;
+
 #if defined(MOZ_WIDGET_GTK2)    
-    attributes.colormap = gtk_widget_get_colormap (widget);
+        attributes.colormap = gtk_widget_get_colormap (widget);
+        attributes_mask |= GDK_WA_COLORMAP;
 #endif
-    attributes.window_type = GDK_WINDOW_CHILD;
 
-    attributes_mask |= GDK_WA_VISUAL | GDK_WA_X | GDK_WA_Y;
+        window = gdk_window_new (parent, &attributes, attributes_mask);
+        gdk_window_set_user_data (window, widget);
 #if defined(MOZ_WIDGET_GTK2)
-    attributes_mask |= GDK_WA_COLORMAP;
+        /* TODO GTK3? */
+        /* set the back pixmap to None so that you don't end up with the gtk
+           default which is BlackPixel */
+        gdk_window_set_back_pixmap (window, NULL, FALSE);
 #endif
+    } else {
+        window = parent;
+        g_object_ref (window);
+    }
 
-    gtk_widget_set_window(widget, gdk_window_new (gtk_widget_get_parent_window (widget),
-                                                  &attributes, attributes_mask));
-    /*  printf("widget->window is %p\n", (void *)widget->window); */
-    gdk_window_set_user_data (gtk_widget_get_window(widget), container);
+    gtk_widget_set_window (widget, window);
 
 #if defined(MOZ_WIDGET_GTK2)    
     widget->style = gtk_style_attach (widget->style, widget->window);
-#endif
-
-/* TODO GTK3? */
-#if defined(MOZ_WIDGET_GTK2)    
-    /* set the back pixmap to None so that you don't end up with the gtk
-       default which is BlackPixel */
-    gdk_window_set_back_pixmap (widget->window, NULL, FALSE);
 #endif
 }
 
@@ -310,7 +303,9 @@ moz_container_size_allocate (GtkWidget     *widget,
         tmp_list = tmp_list->next;
     }
 
-    if (gtk_widget_get_realized(widget)) {
+    if (gtk_widget_get_has_window (widget) &&
+        gtk_widget_get_realized (widget)) {
+
         gdk_window_move_resize(gtk_widget_get_window(widget),
                                allocation->x,
                                allocation->y,
