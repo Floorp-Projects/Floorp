@@ -105,10 +105,8 @@ public:
   unsigned int GetTileCount() const { return mRetainedTiles.Length(); }
 
   const nsIntRegion& GetValidRegion() const { return mValidRegion; }
-  const nsIntRegion& GetLastPaintRegion() const { return mLastPaintRegion; }
-  void SetLastPaintRegion(const nsIntRegion& aLastPaintRegion) {
-    mLastPaintRegion = aLastPaintRegion;
-  }
+  const nsIntRegion& GetPaintedRegion() const { return mPaintedRegion; }
+  void ClearPaintedRegion() { mPaintedRegion.SetEmpty(); }
 
   // Given a position i, this function returns the position inside the current tile.
   int GetTileStart(int i) const {
@@ -127,7 +125,7 @@ protected:
   void Update(const nsIntRegion& aNewValidRegion, const nsIntRegion& aPaintRegion);
 
   nsIntRegion     mValidRegion;
-  nsIntRegion     mLastPaintRegion;
+  nsIntRegion     mPaintedRegion;
 
   /**
    * mRetainedTiles is a rectangular buffer of mRetainedWidth x mRetainedHeight
@@ -403,7 +401,7 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
 
   mRetainedTiles = newRetainedTiles;
   mValidRegion = aNewValidRegion;
-  mLastPaintRegion = aPaintRegion;
+  mPaintedRegion.Or(mPaintedRegion, aPaintRegion);
 }
 
 } // layers

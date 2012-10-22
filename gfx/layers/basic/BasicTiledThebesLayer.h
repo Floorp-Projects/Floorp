@@ -163,6 +163,7 @@ public:
   BasicTiledThebesLayer(BasicShadowLayerManager* const aManager)
     : ThebesLayer(aManager, static_cast<BasicImplData*>(this))
     , mLastScrollOffset(0, 0)
+    , mFirstPaint(true)
   {
     MOZ_COUNT_CTOR(BasicTiledThebesLayer);
   }
@@ -212,9 +213,39 @@ private:
               void* aCallbackData)
   { NS_RUNTIMEABORT("Not reached."); }
 
+  /**
+   * Calculates the region to update in a single progressive update transaction.
+   * This employs some heuristics to update the most 'sensible' region to
+   * update at this point in time, and how large an update should be performed
+   * at once to maintain visual coherency.
+   *
+   * aInvalidRegion is the current invalid region.
+   * aOldValidRegion is the valid region of mTiledBuffer at the beginning of the
+   * current transaction.
+   * aRegionToPaint will be filled with the region to update. This may be empty,
+   * which indicates that there is no more work to do.
+   * aTransform is the transform required to convert from screen-space to
+   * layer-space.
+   * aScrollOffset is the current scroll offset of the primary scrollable layer.
+   * aResolution is the render resolution of the layer.
+   * aIsRepeated should be true if this function has already been called during
+   * this transaction.
+   *
+   * Returns true if it should be called again, false otherwise. In the case
+   * that aRegionToPaint is empty, this will return aIsRepeated for convenience.
+   */
+  bool ComputeProgressiveUpdateRegion(const nsIntRegion& aInvalidRegion,
+                                      const nsIntRegion& aOldValidRegion,
+                                      nsIntRegion& aRegionToPaint,
+                                      const gfx3DMatrix& aTransform,
+                                      const gfx::Point& aScrollOffset,
+                                      const gfxSize& aResolution,
+                                      bool aIsRepeated);
+
   // Members
   BasicTiledLayerBuffer mTiledBuffer;
   gfx::Point mLastScrollOffset;
+  bool mFirstPaint;
 };
 
 } // layers
