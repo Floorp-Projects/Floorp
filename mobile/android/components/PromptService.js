@@ -755,9 +755,15 @@ let PromptUtils = {
   },
 
   fireDialogEvent: function(aDomWin, aEventName) {
-    let event = aDomWin.document.createEvent("Events");
-    event.initEvent(aEventName, true, true);
-    aDomWin.dispatchEvent(event);
+    // accessing the document object can throw if this window no longer exists. See bug 789888.
+    try {
+      if (!aDomWin.document)
+        return;
+      let event = aDomWin.document.createEvent("Events");
+      event.initEvent(aEventName, true, true);
+      aDomWin.dispatchEvent(event);
+    } catch(ex) {
+    }
   }
 };
 
