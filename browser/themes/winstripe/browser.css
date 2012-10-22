@@ -726,7 +726,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 @navbarLargeIcons@ .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before,
-@navbarLargeIcons@ > #social-toolbar-item > .toolbarbutton-1:not(:first-child)::before {
+@navbarLargeIcons@ > #social-toolbar-item > .toolbarbutton-1:not(:hover) + .toolbarbutton-1:not(:hover)::before {
   content: "";
   display: -moz-box;
   width: 1px;
