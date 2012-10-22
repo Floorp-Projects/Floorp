@@ -2207,15 +2207,9 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
     imgRequestProxy *proxy = static_cast<imgRequestProxy *>(mProxies[i]);
     proxy->ChangeOwner(mNewRequest);
 
-    // Proxies waiting on cache validation should be deferring notifications.
-    // Undefer them.
-    NS_ABORT_IF_FALSE(proxy->NotificationsDeferred(),
-                      "Proxies waiting on cache validation should be "
-                      "deferring notifications!");
-    proxy->SetNotificationsDeferred(false);
-
     // Notify synchronously, because we're already in OnStartRequest, an
     // asynchronously-called function.
+    proxy->SetNotificationsDeferred(false);
     proxy->SyncNotifyListener();
   }
 
