@@ -172,17 +172,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         Tabs.registerOnTabsChangedListener(this);
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            DirectBufferAllocator.free(mCoordByteBuffer);
-            mCoordByteBuffer = null;
-            mCoordBuffer = null;
-        } finally {
-            super.finalize();
-        }
-    }
-
     public void destroy() {
         DirectBufferAllocator.free(mCoordByteBuffer);
         mCoordByteBuffer = null;

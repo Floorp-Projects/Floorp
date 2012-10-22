@@ -35,14 +35,6 @@ public class BufferedCairoImage extends CairoImage {
         mBuffer = null;
     }
 
-    protected void finalize() throws Throwable {
-        try {
-            freeBuffer();
-        } finally {
-            super.finalize();
-        }
-    }
-
     @Override
     public void destroy() {
         try {
