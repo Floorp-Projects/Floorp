@@ -723,19 +723,8 @@ nsXBLContentSink::ConstructImplementation(const PRUnichar **aAtts)
     }
     else if (localName == nsGkAtoms::implements) {
       // Only allow implementation of interfaces via XBL if the principal of
-      // our XBL document has UniversalXPConnect privileges.  No principal
-      // means no privs!
-      
-      // XXX this api is so badly tied to JS it's not even funny.  We don't
-      // have a concept of enabling capabilities on a per-principal basis,
-      // but only on a per-principal-and-JS-stackframe basis!  So for now
-      // this is basically equivalent to testing that we have the system
-      // principal, since there is no JS stackframe in sight here...
-      bool hasUniversalXPConnect;
-      nsresult rv = mDocument->NodePrincipal()->
-        IsCapabilityEnabled("UniversalXPConnect", nullptr,
-                            &hasUniversalXPConnect);
-      if (NS_SUCCEEDED(rv) && hasUniversalXPConnect) {
+      // our XBL document is the system principal.
+      if (nsContentUtils::IsSystemPrincipal(mDocument->NodePrincipal())) {
         mBinding->ConstructInterfaceTable(nsDependentString(aAtts[1]));
       }
     }
