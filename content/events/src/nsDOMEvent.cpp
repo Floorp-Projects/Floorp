@@ -472,12 +472,7 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, bool aCanBubbleArg, bool a
 
   if (NS_IS_TRUSTED_EVENT(mEvent)) {
     // Ensure the caller is permitted to dispatch trusted DOM events.
-
-    bool enabled = false;
-    nsContentUtils::GetSecurityManager()->
-      IsCapabilityEnabled("UniversalXPConnect", &enabled);
-
-    if (!enabled) {
+    if (!nsContentUtils::IsCallerChrome()) {
       SetTrusted(false);
     }
   }

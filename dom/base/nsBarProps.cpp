@@ -15,6 +15,7 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMWindow.h"
 #include "nsDOMClassInfoID.h"
+#include "nsContentUtils.h"
 
 //
 //  Basic (virtual) BarProp class implementation
@@ -68,13 +69,7 @@ nsBarProp::SetVisibleByFlag(bool aVisible, uint32_t aChromeFlag)
   nsCOMPtr<nsIWebBrowserChrome> browserChrome = GetBrowserChrome();
   NS_ENSURE_TRUE(browserChrome, NS_OK);
 
-  bool enabled = false;
-
-  nsCOMPtr<nsIScriptSecurityManager>
-           securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-  if (securityManager)
-    securityManager->IsCapabilityEnabled("UniversalXPConnect", &enabled);
-  if (!enabled)
+  if (!nsContentUtils::IsCallerChrome())
     return NS_OK;
 
   uint32_t chromeFlags;
@@ -285,13 +280,7 @@ nsScrollbarsProp::GetVisible(bool *aVisible)
 NS_IMETHODIMP
 nsScrollbarsProp::SetVisible(bool aVisible)
 {
-  bool     enabled = false;
-
-  nsCOMPtr<nsIScriptSecurityManager>
-           securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-  if (securityManager)
-    securityManager->IsCapabilityEnabled("UniversalXPConnect", &enabled);
-  if (!enabled)
+  if (!nsContentUtils::IsCallerChrome())
     return NS_OK;
 
   /* Scrollbars, unlike the other barprops, implement visibility directly
