@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
   <head>
     <title>Testcases for SVG fragment identifiers</title>
   </head>
@@ -7,5 +7,17 @@
       <object type="image/svg+xml" width="100" height="100" data="fragmentIdentifier-rect-01.svg#limeView" />
       <object type="image/svg+xml" width="100" height="100" data="fragmentIdentifier-rect-01.svg#svgView(viewBox(0,200,100,100))" />
     </div>
+    <div>
+      <object type="image/svg+xml" width="100" height="100" data="fragmentIdentifier-rect-01.svg#svgView(viewBox(0,0,100,100);transform(translate(0,200)))" />
+      <object id="replace" type="image/svg+xml" width="100" height="100" data="fragmentIdentifier-rect-01.svg#svgView(viewBox(0,0,100,100);transform(translate(0,0))" />
+      <object id="remove" type="image/svg+xml" width="100" height="100" data="fragmentIdentifier-rect-01.svg#svgView(viewBox(0,200,100,100);transform(translate(0,200)))" />
+    </div>
+    <script type="text/javascript">
+      window.onload = function() {
+        document.getElementById("replace").setAttribute("data","fragmentIdentifier-rect-01.svg#svgView(viewBox(0,0,100,100);transform(translate(0,200)))");
+        document.getElementById("remove").setAttribute("data","fragmentIdentifier-rect-01.svg#svgView(viewBox(0,200,100,100))");
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
   </body>
 </html>

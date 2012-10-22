@@ -1234,7 +1234,9 @@ nsSVGSVGElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
     gfxMatrix zoomPanTM;
     zoomPanTM.Translate(gfxPoint(mCurrentTranslate.GetX(), mCurrentTranslate.GetY()));
     zoomPanTM.Scale(mCurrentScale, mCurrentScale);
-    return GetViewBoxTransform() * zoomPanTM * aMatrix;
+    gfxMatrix matrix = mFragmentIdentifierTransform ? 
+                         *mFragmentIdentifierTransform * aMatrix : aMatrix;
+    return GetViewBoxTransform() * zoomPanTM * matrix;
   }
 
   // outer-<svg>, but inline in some other content:
