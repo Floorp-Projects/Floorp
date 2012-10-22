@@ -143,19 +143,19 @@ nsIntRect
 HyperTextAccessible::GetBoundsForString(nsIFrame* aFrame, uint32_t aStartRenderedOffset,
                                         uint32_t aEndRenderedOffset)
 {
-  nsIntRect screenRect;
-  NS_ENSURE_TRUE(aFrame, screenRect);
+  nsPresContext* presContext = mDoc->PresContext();
   if (aFrame->GetType() != nsGkAtoms::textFrame) {
     // XXX fallback for non-text frames, happens for bullets right now
     // but in the future bullets will have proper text frames
-    return aFrame->GetScreenRectExternal();
+    return aFrame->GetScreenRectInAppUnits().
+      ToNearestPixels(presContext->AppUnitsPerDevPixel());
   }
 
   int32_t startContentOffset, endContentOffset;
   nsresult rv = RenderedToContentOffset(aFrame, aStartRenderedOffset, &startContentOffset);
-  NS_ENSURE_SUCCESS(rv, screenRect);
+  NS_ENSURE_SUCCESS(rv, nsIntRect());
   rv = RenderedToContentOffset(aFrame, aEndRenderedOffset, &endContentOffset);
-  NS_ENSURE_SUCCESS(rv, screenRect);
+  NS_ENSURE_SUCCESS(rv, nsIntRect());
 
   nsIFrame *frame;
   int32_t startContentOffsetInFrame;
@@ -163,16 +163,15 @@ HyperTextAccessible::GetBoundsForString(nsIFrame* aFrame, uint32_t aStartRendere
   // the primary frame passed in
   rv = aFrame->GetChildFrameContainingOffset(startContentOffset, false,
                                              &startContentOffsetInFrame, &frame);
-  NS_ENSURE_SUCCESS(rv, screenRect);
+  NS_ENSURE_SUCCESS(rv, nsIntRect());
 
-  nsPresContext* context = mDoc->PresContext();
-
+  nsRect screenRect;
   while (frame && startContentOffset < endContentOffset) {
     // Start with this frame's screen rect, which we will 
     // shrink based on the substring we care about within it.
     // We will then add that frame to the total screenRect we
     // are returning.
-    nsIntRect frameScreenRect = frame->GetScreenRectExternal();
+    nsRect frameScreenRect = frame->GetScreenRectInAppUnits();
 
     // Get the length of the substring in this frame that we want the bounds for
     int32_t startFrameTextOffset, endFrameTextOffset;
@@ -185,13 +184,13 @@ HyperTextAccessible::GetBoundsForString(nsIFrame* aFrame, uint32_t aStartRendere
     nsPoint frameTextStartPoint;
     rv = frame->GetPointFromOffset(startContentOffset, &frameTextStartPoint);
     NS_ENSURE_SUCCESS(rv, nsIntRect());
-    frameScreenRect.x += context->AppUnitsToDevPixels(frameTextStartPoint.x);
+    frameScreenRect.x += frameTextStartPoint.x;
 
     // Use the point for the end offset to calculate the width
     nsPoint frameTextEndPoint;
     rv = frame->GetPointFromOffset(startContentOffset + frameSubStringLength, &frameTextEndPoint);
     NS_ENSURE_SUCCESS(rv, nsIntRect());
-    frameScreenRect.width = context->AppUnitsToDevPixels(frameTextEndPoint.x - frameTextStartPoint.x);
+    frameScreenRect.width = frameTextEndPoint.x - frameTextStartPoint.x;
 
     screenRect.UnionRect(frameScreenRect, screenRect);
 
@@ -201,7 +200,7 @@ HyperTextAccessible::GetBoundsForString(nsIFrame* aFrame, uint32_t aStartRendere
     frame = frame->GetNextContinuation();
   }
 
-  return screenRect;
+  return screenRect.ToNearestPixels(presContext->AppUnitsPerDevPixel());
 }
 
 /*
@@ -376,8 +375,9 @@ HyperTextAccessible::GetPosAndText(int32_t& aStartOffset, int32_t& aEndOffset,
             }
           }
           if (aBoundsRect) {
-            aBoundsRect->UnionRect(*aBoundsRect,
-                                   frame->GetScreenRectExternal());
+            nsIntRect frameScreenRect = frame->GetScreenRectInAppUnits().
+              ToNearestPixels(frame->PresContext()->AppUnitsPerDevPixel());
+            aBoundsRect->UnionRect(*aBoundsRect, frameScreenRect);
           }
         }
         if (!startFrame) {
@@ -1135,21 +1135,19 @@ HyperTextAccessible::GetLevelInternal()
   return AccessibleWrap::GetLevelInternal();
 }
 
-nsresult
-HyperTextAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
+already_AddRefed<nsIPersistentProperties>
+HyperTextAccessible::NativeAttributes()
 {
-  nsresult rv = AccessibleWrap::GetAttributesInternal(aAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    AccessibleWrap::NativeAttributes();
 
-  // Indicate when the current object uses block-level formatting
-  // via formatting: block
-  // XXX: 'formatting' attribute is deprecated and will be removed in Mozilla2,
-  // use 'display' attribute instead.
+  // 'formatting' attribute is deprecated, 'display' attribute should be
+  // instead.
   nsIFrame *frame = GetFrame();
   if (frame && frame->GetType() == nsGkAtoms::blockFrame) {
-    nsAutoString oldValueUnused;
-    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("formatting"), NS_LITERAL_STRING("block"),
-                                   oldValueUnused);
+    nsAutoString unused;
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("formatting"),
+                                  NS_LITERAL_STRING("block"), unused);
   }
 
   if (FocusMgr()->IsFocused(this)) {
@@ -1157,8 +1155,7 @@ HyperTextAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
     if (lineNumber >= 1) {
       nsAutoString strLineNumber;
       strLineNumber.AppendInt(lineNumber);
-      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::lineNumber,
-                             strLineNumber);
+      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::lineNumber, strLineNumber);
     }
   }
 
@@ -1167,22 +1164,22 @@ HyperTextAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
   // a landmark since it usually contains headings. We're not yet sure how the
   // web will use html:footer but our best bet right now is as contentinfo.
   if (mContent->Tag() == nsGkAtoms::nav)
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("navigation"));
   else if (mContent->Tag() == nsGkAtoms::section) 
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("region"));
   else if (mContent->Tag() == nsGkAtoms::footer) 
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("contentinfo"));
   else if (mContent->Tag() == nsGkAtoms::aside) 
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("complementary"));
   else if (mContent->Tag() == nsGkAtoms::article)
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("article"));
 
-  return  NS_OK;
+  return attributes.forget();
 }
 
 /*
@@ -1237,23 +1234,22 @@ HyperTextAccessible::GetOffsetAtPoint(int32_t aX, int32_t aY,
   if (!hyperFrame) {
     return NS_ERROR_FAILURE;
   }
-  nsIntRect frameScreenRect = hyperFrame->GetScreenRectExternal();
 
   nsIntPoint coords;
   nsresult rv = nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordType,
                                                   this, &coords);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // coords are currently screen coordinates, and we need to turn them into
-  // frame coordinates relative to the current accessible
-  if (!frameScreenRect.Contains(coords.x, coords.y)) {
+  nsPresContext* presContext = mDoc->PresContext();
+  nsPoint coordsInAppUnits =
+    coords.ToAppUnits(presContext->AppUnitsPerDevPixel());
+
+  nsRect frameScreenRect = hyperFrame->GetScreenRectInAppUnits();
+  if (!frameScreenRect.Contains(coordsInAppUnits.x, coordsInAppUnits.y))
     return NS_OK;   // Not found, will return -1
-  }
-  nsIntPoint pxInHyperText(coords.x - frameScreenRect.x,
-                           coords.y - frameScreenRect.y);
-  nsPresContext* context = mDoc->PresContext();
-  nsPoint pointInHyperText(context->DevPixelsToAppUnits(pxInHyperText.x),
-                           context->DevPixelsToAppUnits(pxInHyperText.y));
+
+  nsPoint pointInHyperText(coordsInAppUnits.x - frameScreenRect.x,
+                           coordsInAppUnits.y - frameScreenRect.y);
 
   // Go through the frames to check if each one has the point.
   // When one does, add up the character offsets until we have a match
@@ -1272,7 +1268,7 @@ HyperTextAccessible::GetOffsetAtPoint(int32_t aX, int32_t aY,
     while (frame) {
       nsIContent *content = frame->GetContent();
       NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
-      nsPoint pointInFrame = pointInHyperText - frame->GetOffsetToExternal(hyperFrame);
+      nsPoint pointInFrame = pointInHyperText - frame->GetOffsetTo(hyperFrame);
       nsSize frameSize = frame->GetSize();
       if (pointInFrame.x < frameSize.width && pointInFrame.y < frameSize.height) {
         // Finished

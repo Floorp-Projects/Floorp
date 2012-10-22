@@ -68,7 +68,6 @@ public:
   virtual ~DocAccessible();
 
   // nsIAccessible
-  NS_IMETHOD GetAttributes(nsIPersistentProperties** aAttributes);
   NS_IMETHOD TakeFocus(void);
 
   // nsIScrollPositionListener
@@ -94,6 +93,7 @@ public:
   virtual uint64_t NativeInteractiveState() const;
   virtual bool NativelyUnavailable() const;
   virtual void ApplyARIAState(uint64_t* aState) const;
+  virtual already_AddRefed<nsIPersistentProperties> Attributes();
 
   virtual void SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry);
 
@@ -269,7 +269,7 @@ public:
    */
   Accessible* GetContainerAccessible(nsINode* aNode)
   {
-    return aNode ? GetAccessibleOrContainer(aNode->GetNodeParent()) : nullptr;
+    return aNode ? GetAccessibleOrContainer(aNode->GetParentNode()) : nullptr;
   }
 
   /**

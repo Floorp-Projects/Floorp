@@ -139,7 +139,7 @@ interface nsIRILContactCallback : nsISupports
  * Helper that runs in the content process and exposes information
  * to the DOM.
  */
-[scriptable, uuid(31ea634b-e710-49ce-bb7d-bfcbaa40fb00)]
+[scriptable, uuid(2abe554b-e07c-44b0-9719-02190460188d)]
 interface nsIRILContentHelper : nsIMobileConnectionProvider
 {
   void registerTelephonyCallback(in nsIRILTelephonyCallback callback);
@@ -147,6 +147,24 @@ interface nsIRILContentHelper : nsIMobileConnectionProvider
 
   void registerVoicemailCallback(in nsIRILVoicemailCallback callback);
   void unregisterVoicemailCallback(in nsIRILVoicemailCallback callback);
+
+  /**
+   * Called when a content process registers receiving unsolicited messages from
+   * RadioInterfaceLayer in the chrome process. Only content granted telephony
+   * permission is allowed to register. Note that a content doesn't need to
+   * unregister because the chrome process will remove it from the registration
+   * list once the chrome receives a 'child-process-shutdown' message.
+   */
+   void registerTelephonyMsg();
+
+  /**
+   * Called when a content process registers receiving unsolicited messages from
+   * RadioInterfaceLayer in the chrome process. Only a content granted voice
+   * mail permission is allowed to register. Note that a content doesn't need to
+   * unregister because the chrome process will remove it from the registration
+   * list once the chrome receives a 'child-process-shutdown' message.
+   */
+   void registerVoicemailMsg();
 
   /**
    * Will continue calling callback.enumerateCallState until the callback

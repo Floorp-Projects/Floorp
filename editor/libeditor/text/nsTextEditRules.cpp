@@ -104,7 +104,7 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor)
   mEditor = aEditor;  // we hold a non-refcounted reference back to our editor
   nsCOMPtr<nsISelection> selection;
   mEditor->GetSelection(getter_AddRefs(selection));
-  NS_ASSERTION(selection, "editor cannot get selection");
+  NS_WARN_IF_FALSE(selection, "editor cannot get selection");
 
   // Put in a magic br if needed. This method handles null selection,
   // which should never happen anyway
@@ -931,7 +931,7 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
     nsCOMPtr<nsIDOMElement> theRoot = do_QueryInterface(mEditor->GetRoot());
     NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
     
-    nsCOMPtr<nsIDOMNodeList> nodeList;
+    nsCOMPtr<nsIDOMHTMLCollection> nodeList;
     res = theRoot->GetElementsByTagName(NS_LITERAL_STRING("br"),
                                         getter_AddRefs(nodeList));
     NS_ENSURE_SUCCESS(res, res);
@@ -946,10 +946,12 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
         return NS_OK;  
       }
 
-      nsCOMPtr<nsIContent> content = nodeList->GetNodeAt(0);
+      nsCOMPtr<nsIDOMNode> node;
+      nodeList->Item(0, getter_AddRefs(node));
+      nsCOMPtr<nsIContent> content = do_QueryInterface(node);
       MOZ_ASSERT(content);
       if (mEditor->IsMozEditorBogusNode(content)) {
-        mBogusNode = do_QueryInterface(content);
+        mBogusNode = node;
       } else {
         mBogusNode = nullptr;
       }

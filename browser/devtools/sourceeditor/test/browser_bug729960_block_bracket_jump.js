@@ -58,13 +58,13 @@ function test() {
        "JS : Jump to closing bracket of the code block when caret at block start");
 
     EventUtils.synthesizeKey("[", {accelKey: true}, testWin);
-    is(editor.getCaretOffset(), 19,
+    is(editor.getCaretOffset(), 20,
        "JS : Jump to opening bracket of the code block when caret at block end");
 
     // Setting caret at Line 10 start.
     editor.setCaretOffset(161);
     EventUtils.synthesizeKey("[", {accelKey: true}, testWin);
-    is(editor.getCaretOffset(), 19,
+    is(editor.getCaretOffset(), 20,
        "JS : Jump to opening bracket of code block when inside the function");
 
     editor.setCaretOffset(161);
@@ -80,7 +80,7 @@ function test() {
 
     editor.setCaretOffset(67);
     EventUtils.synthesizeKey("[", {accelKey: true}, testWin);
-    is(editor.getCaretOffset(), 61,
+    is(editor.getCaretOffset(), 62,
        "JS : Jump to opening bracket in a nested function with caret inside");
 
     let CSSText = "#object {\n" +
@@ -98,13 +98,13 @@ function test() {
        "CSS : Jump to closing bracket of the code block when caret at block start");
 
     EventUtils.synthesizeKey("[", {accelKey: true}, testWin);
-    is(editor.getCaretOffset(), 8,
+    is(editor.getCaretOffset(), 9,
        "CSS : Jump to opening bracket of the code block when caret at block end");
 
     // Setting caret at Line 3 start.
     editor.setCaretOffset(28);
     EventUtils.synthesizeKey("[", {accelKey: true}, testWin);
-    is(editor.getCaretOffset(), 8,
+    is(editor.getCaretOffset(), 9,
        "CSS : Jump to opening bracket of code block when inside the function");
 
     editor.setCaretOffset(28);

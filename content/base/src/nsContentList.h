@@ -64,7 +64,8 @@ public:
 
   // nsINodeList
   virtual int32_t IndexOf(nsIContent* aContent);
-  
+  virtual nsIContent* Item(uint32_t aIndex);
+
   uint32_t Length() const { 
     return mElements.Length();
   }
@@ -273,7 +274,8 @@ public:
     return mRootNode;
   }
 
-  virtual nsIContent* GetNodeAt(uint32_t aIndex);
+  virtual nsIContent* Item(uint32_t aIndex);
+  virtual nsGenericElement* GetElementAt(uint32_t index);
   virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
                               mozilla::ErrorResult& error);
 
@@ -479,6 +481,7 @@ typedef void* (*nsFuncStringContentListDataAllocator)(nsINode* aRootNode,
                                                       const nsString* aString);
 
 // aDestroyFunc is allowed to be null
+// aDataAllocator must always return a non-null pointer
 class nsCacheableFuncStringContentList : public nsContentList {
 public:
   virtual ~nsCacheableFuncStringContentList();
@@ -487,8 +490,6 @@ public:
     return mRootNode == aKey->mRootNode && mFunc == aKey->mFunc &&
       mString == aKey->mString;
   }
-
-  bool AllocatedData() const { return !!mData; }
 
 #ifdef DEBUG
   enum ContentListType {
@@ -508,6 +509,7 @@ protected:
     mString(aString)
   {
     mData = (*aDataAllocator)(aRootNode, &mString);
+    MOZ_ASSERT(mData);
   }
 
   virtual void RemoveFromCaches() {

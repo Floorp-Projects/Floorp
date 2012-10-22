@@ -384,7 +384,7 @@ JSObject::setArrayLength(JSContext *cx, js::HandleObject obj, uint32_t length)
 inline void
 JSObject::setDenseArrayLength(uint32_t length)
 {
-    /* Variant of setArrayLength for use on dense arrays where the length cannot overflow int32. */
+    /* Variant of setArrayLength for use on dense arrays where the length cannot overflow int32_t. */
     JS_ASSERT(isDenseArray());
     JS_ASSERT(length <= INT32_MAX);
     getElementsHeader()->length = length;

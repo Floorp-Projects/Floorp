@@ -46,7 +46,6 @@ class DOMXrayTraits;
 
 enum XrayType {
     XrayForDOMObject,
-    XrayForDOMProxyObject,
     XrayForWrappedNative,
     NotXray
 };
@@ -94,7 +93,6 @@ class XrayWrapper : public Base {
                    JS::AutoIdVector &props);
 };
 
-typedef XrayWrapper<js::CrossCompartmentWrapper, ProxyXrayTraits > XrayProxy;
 typedef XrayWrapper<js::CrossCompartmentWrapper, DOMXrayTraits > XrayDOM;
 
 class SandboxProxyHandler : public js::IndirectWrapper {

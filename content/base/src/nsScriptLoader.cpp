@@ -829,9 +829,6 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  bool oldProcessingScriptTag = context->GetProcessingScriptTag();
-  context->SetProcessingScriptTag(true);
-
   // Update our current script.
   nsCOMPtr<nsIScriptElement> oldCurrent = mCurrentScript;
   mCurrentScript = aRequest->mElement;
@@ -852,10 +849,6 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   // Put the old script back in case it wants to do anything else.
   mCurrentScript = oldCurrent;
 
-  JSContext *cx = nullptr; // Initialize this to keep GCC happy.
-  cx = context->GetNativeContext();
-  JSAutoRequest ar(cx);
-  context->SetProcessingScriptTag(oldProcessingScriptTag);
   return rv;
 }
 

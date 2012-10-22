@@ -43,5 +43,6 @@
     <dimen name="text_selection_handle_shadow">2dp</dimen>
     <dimen name="validation_message_height">50dp</dimen>
     <dimen name="validation_message_margin_top">6dp</dimen>
+    <dimen name="widget_padding">8dp</dimen>
 
 </resources>

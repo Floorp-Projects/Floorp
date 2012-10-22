@@ -64,6 +64,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     // true, and the false block if |cond| is false.
     void emitBranch(Assembler::Condition cond, MBasicBlock *ifTrue, MBasicBlock *ifFalse);
 
+    bool emitTableSwitchDispatch(MTableSwitch *mir, const Register &index, const Register &base);
+
   public:
     // Instruction visitors.
     virtual bool visitMinMaxD(LMinMaxD *ins);
@@ -99,7 +101,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitMathD(LMathD *math);
     virtual bool visitFloor(LFloor *lir);
     virtual bool visitRound(LRound *lir);
-    virtual bool visitTableSwitch(LTableSwitch *ins);
     virtual bool visitTruncateDToInt32(LTruncateDToInt32 *ins);
 
     // Out of line visitors.

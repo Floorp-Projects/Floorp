@@ -191,7 +191,7 @@ struct FreeSpan
      * there as offsets from the arena start.
      */
     static size_t encodeOffsets(size_t firstOffset, size_t lastOffset) {
-        /* Check that we can pack the offsets into uint16. */
+        /* Check that we can pack the offsets into uint16_t. */
         JS_STATIC_ASSERT(ArenaShift < 16);
         JS_ASSERT(firstOffset <= ArenaSize);
         JS_ASSERT(lastOffset < ArenaSize);

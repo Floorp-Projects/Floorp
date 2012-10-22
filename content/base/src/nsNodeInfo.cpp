@@ -107,6 +107,11 @@ nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
     mInner.mName->ToString(mQualifiedName);
   }
 
+  MOZ_ASSERT_IF(aNodeType != nsIDOMNode::ELEMENT_NODE &&
+                aNodeType != nsIDOMNode::ATTRIBUTE_NODE &&
+                aNodeType != UINT16_MAX,
+                aNamespaceID == kNameSpaceID_None && !aPrefix);
+
   switch (aNodeType) {
     case nsIDOMNode::ELEMENT_NODE:
     case nsIDOMNode::ATTRIBUTE_NODE:

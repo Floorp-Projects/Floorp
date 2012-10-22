@@ -248,10 +248,9 @@ public:
   virtual bool NativelyUnavailable() const;
 
   /**
-   * Returns attributes for accessible without explicitly setted ARIA
-   * attributes.
+   * Return object attributes for the accessible.
    */
-  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  virtual already_AddRefed<nsIPersistentProperties> Attributes();
 
   /**
    * Return group position (level, position in set and set size).
@@ -712,6 +711,18 @@ public:
 
 protected:
 
+  /**
+   * Return the accessible name provided by native markup. It doesn't take
+   * into account ARIA markup used to specify the name.
+   */
+  virtual mozilla::a11y::ENameValueFlag NativeName(nsString& aName);
+
+  /**
+   * Return object attributes provided by native markup. It doesn't take into
+   * account ARIA.
+   */
+  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes();
+
   //////////////////////////////////////////////////////////////////////////////
   // Initializing, cache and tree traverse methods
 
@@ -800,12 +811,6 @@ protected:
 
   //////////////////////////////////////////////////////////////////////////////
   // Name helpers
-
-  /**
-   * Return the accessible name provided by native markup. It doesn't take
-   * into account ARIA markup used to specify the name.
-   */
-  virtual mozilla::a11y::ENameValueFlag NativeName(nsString& aName);
 
   /**
    * Returns the accessible name specified by ARIA.

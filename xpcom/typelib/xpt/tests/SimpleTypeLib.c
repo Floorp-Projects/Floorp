@@ -48,7 +48,7 @@ main(int argc, char **argv)
     XPTCursor curs, *cursor = &curs;
     char *data, *head;
     FILE *out;
-    uint32 len, header_sz;
+    uint32_t len, header_sz;
 
     PRBool ok;
 
@@ -91,7 +91,7 @@ main(int argc, char **argv)
     meth->result->flags = 0;
     meth->result->type.prefix.flags = TD_VOID;
 
-    /* wstring method2(in uint32, in bool) */
+    /* wstring method2(in uint32_t, in bool) */
     meth = &id->method_descriptors[1];
     ok = XPT_FillMethodDescriptor(arena, meth, 0, "method2", 2);
     TRY("FillMethodDescriptor", ok);

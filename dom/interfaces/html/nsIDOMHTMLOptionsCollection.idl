@@ -21,7 +21,7 @@ interface nsIDOMHTMLSelectElement;
  */
 
 // Introduced in DOM Level 2:
-[scriptable, uuid(429b041b-06df-486c-9a3a-a1d901cc76a2)]
+[scriptable, uuid(4173cc53-30f6-4d12-a770-981ba53164e2)]
 interface nsIDOMHTMLOptionsCollection : nsISupports
 {
            attribute unsigned long   length;
@@ -32,18 +32,12 @@ interface nsIDOMHTMLOptionsCollection : nsISupports
 
   // FIXME namedItem (and getNamedItem) should return a NodeList if there are
   //       multiple matching items
-  [getter,forward(getNamedItem)] nsIDOMNode namedItem(in DOMString name);
-
-  /**
-   * Get the node for the name.  Returns null if no node exists for the name.
-   */
-  [noscript,notxpcom,nostdcall] nsISupports getNamedItem(in DOMString name,
-                                                         out nsWrapperCachePtr cache);
+  nsIDOMNode namedItem(in DOMString name);
 
            attribute long             selectedIndex;
 
-  [setter,noscript] void    setOption(in unsigned long index,
-                                      in nsIDOMHTMLOptionElement option);
+  [noscript] void    setOption(in unsigned long index,
+                               in nsIDOMHTMLOptionElement option);
 
   [noscript] readonly attribute nsIDOMHTMLSelectElement select;
 

@@ -147,32 +147,10 @@ class RasterImage : public Image
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROPERTIES
+  NS_DECL_IMGICONTAINER
 #ifdef DEBUG
   NS_DECL_IMGICONTAINERDEBUG
 #endif
-
-  // BEGIN NS_DECL_IMGICONTAINER (minus GetAnimationMode/SetAnimationMode)
-  // ** Don't edit this chunk except to mirror changes in imgIContainer.idl **
-  NS_IMETHOD GetWidth(int32_t *aWidth);
-  NS_IMETHOD GetHeight(int32_t *aHeight);
-  NS_IMETHOD GetType(uint16_t *aType);
-  NS_IMETHOD_(uint16_t) GetType(void);
-  NS_IMETHOD GetAnimated(bool *aAnimated);
-  NS_IMETHOD GetCurrentFrameIsOpaque(bool *aCurrentFrameIsOpaque);
-  NS_IMETHOD GetFrame(uint32_t aWhichFrame, uint32_t aFlags, gfxASurface **_retval);
-  NS_IMETHOD GetImageContainer(mozilla::layers::ImageContainer **_retval);
-  NS_IMETHOD CopyFrame(uint32_t aWhichFrame, uint32_t aFlags, gfxImageSurface **_retval);
-  NS_IMETHOD ExtractFrame(uint32_t aWhichFrame, const nsIntRect & aRect, uint32_t aFlags, imgIContainer **_retval);
-  NS_IMETHOD Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, const gfxMatrix & aUserSpaceToImageSpace, const gfxRect & aFill, const nsIntRect & aSubimage, const nsIntSize & aViewportSize, uint32_t aFlags);
-  NS_IMETHOD_(nsIFrame *) GetRootLayoutFrame(void);
-  NS_IMETHOD RequestDecode();
-  NS_IMETHOD StartDecoding();
-  NS_IMETHOD LockImage(void);
-  NS_IMETHOD UnlockImage(void);
-  NS_IMETHOD RequestDiscard(void);
-  NS_IMETHOD ResetAnimation(void);
-  NS_IMETHOD_(void) RequestRefresh(const mozilla::TimeStamp& aTime);
-  // END NS_DECL_IMGICONTAINER
 
   RasterImage(imgStatusTracker* aStatusTracker = nullptr);
   virtual ~RasterImage();
@@ -751,6 +729,14 @@ private: // data
 protected:
   bool ShouldAnimate();
 };
+
+inline NS_IMETHODIMP RasterImage::GetAnimationMode(uint16_t *aAnimationMode) {
+  return GetAnimationModeInternal(aAnimationMode);
+}
+
+inline NS_IMETHODIMP RasterImage::SetAnimationMode(uint16_t aAnimationMode) {
+  return SetAnimationModeInternal(aAnimationMode);
+}
 
 // Asynchronous Decode Requestor
 //

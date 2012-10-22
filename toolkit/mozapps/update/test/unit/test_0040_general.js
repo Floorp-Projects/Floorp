@@ -149,7 +149,7 @@ function run_test_pt6() {
   var url = URL_PREFIX + "%CHANNEL%/";
   logTestInfo("testing url constructed with %CHANNEL% - " + url);
   setUpdateURLOverride(url);
-  setUpdateChannel();
+  setUpdateChannel("test_channel");
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 

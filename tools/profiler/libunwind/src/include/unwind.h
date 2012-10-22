@@ -71,7 +71,7 @@ typedef _Unwind_Reason_Code (*_Unwind_Stop_Fn) (int, _Unwind_Action,
 						void *);
 
 /* The C++ ABI requires exception_class, private_1, and private_2 to
-   be of type uint64 and the entire structure to be
+   be of type uint64_t and the entire structure to be
    double-word-aligned. Please note that exception_class stays 64-bit 
    even on 32-bit machines for gcc compatibility.  */
 struct _Unwind_Exception

@@ -100,6 +100,7 @@ BluetoothOppManager::BluetoothOppManager() : mConnected(false)
                                            , mPacketLeftLength(0)
                                            , mReceiving(false)
                                            , mPutFinal(false)
+                                           , mWaitingForConfirmationFlag(false)
 {
   // FIXME / Bug 800249:
   //   mConnectedDeviceAddress is Bluetooth address of connected device,
@@ -213,6 +214,28 @@ BluetoothOppManager::StopSendingFile(BluetoothReplyRunnable* aRunnable)
   mAbortFlag = true;
 
   return true;
+}
+
+void
+BluetoothOppManager::ConfirmReceivingFile(bool aConfirm,
+                                          BluetoothReplyRunnable* aRunnable)
+{
+  if (!mWaitingForConfirmationFlag) {
+    NS_WARNING("We are not waiting for a confirmation now.");
+    return;
+  }
+
+  NS_ASSERTION(mPacketLeftLength == 0,
+               "Should not be in the middle of receiving a PUT packet.");
+
+  mWaitingForConfirmationFlag = false;
+  ReplyToPut(mPutFinal, aConfirm);
+
+  if (mPutFinal || !aConfirm) {
+    mReceiving = false;
+    FileTransferComplete(mConnectedDeviceAddress, aConfirm, true, sFileName,
+                         sSentFileLength, sContentType);
+  }
 }
 
 // Virtual function of class SocketConsumer
@@ -365,8 +388,8 @@ BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
         pktHeaders.GetContentType(sContentType);
         pktHeaders.GetLength(&sFileLength);
 
-        ReceivingFileConfirmation(mConnectedDeviceAddress, sFileName, sFileLength, sContentType);
         mReceiving = true;
+        mWaitingForConfirmationFlag = true;
       }
 
       /*
@@ -388,12 +411,17 @@ BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
       }
 
       if (mPacketLeftLength == 0) {
-        ReplyToPut(mPutFinal);
+        if (mWaitingForConfirmationFlag) {
+          ReceivingFileConfirmation(mConnectedDeviceAddress, sFileName,
+                                    sFileLength, sContentType);
+        } else {
+          ReplyToPut(mPutFinal, true);
 
-        if (mPutFinal) {
-          mReceiving = false;
-          FileTransferComplete(mConnectedDeviceAddress, true, true, sFileName,
-                               sSentFileLength, sContentType);
+          if (mPutFinal) {
+            mReceiving = false;
+            FileTransferComplete(mConnectedDeviceAddress, true, true, sFileName,
+                                 sSentFileLength, sContentType);
+          }
         }
       }
     }
@@ -569,7 +597,7 @@ BluetoothOppManager::ReplyToDisconnect()
 }
 
 void
-BluetoothOppManager::ReplyToPut(bool aFinal)
+BluetoothOppManager::ReplyToPut(bool aFinal, bool aContinue)
 {
   if (!mConnected) return;
 
@@ -578,10 +606,18 @@ BluetoothOppManager::ReplyToPut(bool aFinal)
   uint8_t req[255];
   int index = 3;
 
-  if (aFinal) {
-    SetObexPacketInfo(req, ObexResponseCode::Success, index);
+  if (aContinue) {
+    if (aFinal) {
+      SetObexPacketInfo(req, ObexResponseCode::Success, index);
+    } else {
+      SetObexPacketInfo(req, ObexResponseCode::Continue, index);
+    }
   } else {
-    SetObexPacketInfo(req, ObexResponseCode::Continue, index);
+    if (aFinal) {
+      SetObexPacketInfo(req, ObexResponseCode::Unauthorized, index);
+    } else {
+      SetObexPacketInfo(req, ObexResponseCode::Unauthorized & (~FINAL_BIT), index);
+    }
   }
 
   UnixSocketRawData* s = new UnixSocketRawData(index);

@@ -13,7 +13,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#interface-element
  */
 
-[scriptable, uuid(69D44CE2-B544-49A8-BB5F-87804B971EE4)]
+[scriptable, uuid(f1465e67-577f-4546-a7a3-bb1293c0dd15)]
 interface nsIDOMElement : nsIDOMNode
 {
   readonly attribute DOMString        tagName;
@@ -47,14 +47,14 @@ interface nsIDOMElement : nsIDOMNode
   nsIDOMAttr         setAttributeNodeNS(in nsIDOMAttr newAttr)
                                         raises(DOMException);
 
-  nsIDOMNodeList     getElementsByTagName(in DOMString name);
-  nsIDOMNodeList     getElementsByTagNameNS(in DOMString namespaceURI, 
-                                            in DOMString localName);
+  nsIDOMHTMLCollection getElementsByTagName(in DOMString name);
+  nsIDOMHTMLCollection getElementsByTagNameNS(in DOMString namespaceURI, 
+                                              in DOMString localName);
   /**
    * Retrieve elements matching all classes listed in a
    * space-separated string.
    */
-  nsIDOMNodeList getElementsByClassName(in DOMString classes);
+  nsIDOMHTMLCollection getElementsByClassName(in DOMString classes);
 
   /**
    * Returns a live nsIDOMNodeList of the current child elements.

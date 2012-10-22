@@ -3916,7 +3916,7 @@ BeginSweepPhase(JSRuntime *rt)
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_END);
         if (rt->gcFinalizeCallback)
-            rt->gcFinalizeCallback(&fop, JSFINALIZE_END, !rt->gcIsFull);
+            rt->gcFinalizeCallback(&fop, JSFINALIZE_END, !isFull);
     }
 }
 

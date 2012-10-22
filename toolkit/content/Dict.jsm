@@ -29,10 +29,13 @@ function unconvert(aProp) {
  * @param aInitial An object containing the initial keys and values of this
  *                 dictionary. Only the "own" enumerable properties of the
  *                 object are considered.
+ *                 If |aInitial| is a string, it is assumed to be JSON and parsed into an object.
  */
 function Dict(aInitial) {
   if (aInitial === undefined)
     aInitial = {};
+  if (typeof aInitial == "string")
+    aInitial = JSON.parse(aInitial);
   var items = {}, count = 0;
   // That we don't look up the prototype chain is guaranteed by Iterator.
   for (var [key, val] in Iterator(aInitial)) {
@@ -225,11 +228,22 @@ Dict.prototype = Object.freeze({
   },
 
   /**
-   * Returns a string representation of this dictionary.
+   * Returns a String representation of this dictionary.
    */
   toString: function Dict_toString() {
     return "{" +
       [(key + ": " + val) for ([key, val] in this.items)].join(", ") +
       "}";
+  },
+
+  /**
+   * Returns a JSON representation of this dictionary.
+   */
+  toJSON: function Dict_toJSON() {
+    let obj = {};
+    for (let [key, item] of Iterator(this._state.items)) {
+      obj[unconvert(key)] = item;
+    }
+    return JSON.stringify(obj);
   },
 });

@@ -199,12 +199,13 @@ TextLeafAccessibleWrap::GetCharacterExtents(int32_t aStartOffset,
                                             int32_t* aWidth,
                                             int32_t* aHeight)
 {
+  if (!aX || !aY || !aWidth || !aHeight)
+    return E_INVALIDARG;
+
   *aX = *aY = *aWidth = *aHeight = 0;
 
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
-
-  nsPresContext* presContext = mDoc->PresContext();
 
   nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, E_FAIL);
@@ -215,24 +216,24 @@ TextLeafAccessibleWrap::GetCharacterExtents(int32_t aStartOffset,
   if (!startFrame || !endFrame) {
     return E_FAIL;
   }
-  
-  nsIntRect sum(0, 0, 0, 0);
+
+  nsRect sum;
   nsIFrame *iter = startFrame;
   nsIFrame *stopLoopFrame = endFrame->GetNextContinuation();
   for (; iter != stopLoopFrame; iter = iter->GetNextContinuation()) {
-    nsIntRect rect = iter->GetScreenRectExternal();
-    nscoord start = (iter == startFrame) ? presContext->AppUnitsToDevPixels(startPoint.x) : 0;
-    nscoord end = (iter == endFrame) ? presContext->AppUnitsToDevPixels(endPoint.x) :
-                                       rect.width;
+    nsRect rect = iter->GetScreenRectInAppUnits();
+    nscoord start = (iter == startFrame) ? startPoint.x : 0;
+    nscoord end = (iter == endFrame) ? endPoint.x : rect.width;
     rect.x += start;
     rect.width = end - start;
     sum.UnionRect(sum, rect);
   }
 
-  *aX      = sum.x;
-  *aY      = sum.y;
-  *aWidth  = sum.width;
-  *aHeight = sum.height;
+  nsPresContext* presContext = mDoc->PresContext();
+  *aX = presContext->AppUnitsToDevPixels(sum.x);
+  *aY = presContext->AppUnitsToDevPixels(sum.y);
+  *aWidth = presContext->AppUnitsToDevPixels(sum.width);
+  *aHeight = presContext->AppUnitsToDevPixels(sum.height);
 
   return S_OK;
 }

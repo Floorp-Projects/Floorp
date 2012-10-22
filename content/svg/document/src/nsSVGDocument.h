@@ -20,7 +20,7 @@ public:
 
   NS_DECL_NSIDOMSVGDOCUMENT
   NS_FORWARD_NSIDOMDOCUMENT(nsXMLDocument::)
-  NS_FORWARD_NSIDOMNODE(nsXMLDocument::)
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_DECL_ISUPPORTS_INHERITED
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();

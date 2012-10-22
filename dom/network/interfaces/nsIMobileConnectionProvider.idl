@@ -14,9 +14,19 @@ interface nsIDOMWindow;
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(bc1a82aa-2a1f-4a27-a5e7-614d06b72e0a)]
+[scriptable, uuid(3db24bfe-abc4-43a3-9183-07e516a33af9)]
 interface nsIMobileConnectionProvider : nsISupports
 {
+  /**
+   * Called when a content process registers receiving unsolicited messages from
+   * RadioInterfaceLayer in the chrome process. Only a content granted
+   * mobileconnection permission is allowed to register. Note that a content
+   * doesn't need to unregister because the chrome process will remove it from
+   * the registration list once the chrome receives a 'child-process-shutdown'
+   * message.
+   */
+  void registerMobileConnectionMsg();
+
   readonly attribute DOMString cardState;
   readonly attribute nsIDOMMozMobileICCInfo iccInfo;
   readonly attribute nsIDOMMozMobileConnectionInfo voiceConnectionInfo;

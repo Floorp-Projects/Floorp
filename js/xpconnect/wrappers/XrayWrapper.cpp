@@ -22,7 +22,6 @@
 #include "nsJSUtils.h"
 
 #include "mozilla/dom/BindingUtils.h"
-#include "dombindings.h"
 
 using namespace mozilla::dom;
 
@@ -52,9 +51,6 @@ GetXrayType(JSObject *obj)
     obj = js::UnwrapObject(obj, /* stopAtOuter = */ false);
     if (mozilla::dom::IsDOMObject(obj))
         return XrayForDOMObject;
-
-    if (mozilla::dom::oldproxybindings::instanceIsProxy(obj))
-        return XrayForDOMProxyObject;
 
     js::Class* clasp = js::GetObjectClass(obj);
     if (IS_WRAPPER_CLASS(clasp) || clasp->ext.innerObject) {
@@ -223,38 +219,6 @@ public:
     static XPCWrappedNativeXrayTraits singleton;
 };
 
-class ProxyXrayTraits : public XrayTraits
-{
-public:
-    static bool resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
-                                      bool set, JSPropertyDescriptor *desc);
-    virtual bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
-                                    JSObject *holder, jsid id, bool set,
-                                    JSPropertyDescriptor *desc);
-    static bool enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
-                               JS::AutoIdVector &props);
-
-    static bool isResolving(JSContext *cx, JSObject *holder, jsid id)
-    {
-        return false;
-    }
-
-    virtual void preserveWrapper(JSObject *target) { };
-
-    typedef ResolvingIdDummy ResolvingIdImpl;
-
-    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
-
-    virtual JSObject* getExpandoChain(JSObject *obj) {
-        return mozilla::dom::oldproxybindings::GetXrayExpandoChain(obj);
-    }
-    virtual void setExpandoChain(JSObject *obj, JSObject *chain) {
-        mozilla::dom::oldproxybindings::SetXrayExpandoChain(obj, chain);
-    }
-
-    static ProxyXrayTraits singleton;
-};
-
 class DOMXrayTraits : public XrayTraits
 {
 public:
@@ -288,7 +252,6 @@ public:
 };
 
 XPCWrappedNativeXrayTraits XPCWrappedNativeXrayTraits::singleton;
-ProxyXrayTraits ProxyXrayTraits::singleton;
 DOMXrayTraits DOMXrayTraits::singleton;
 
 XrayTraits*
@@ -297,8 +260,6 @@ GetXrayTraits(JSObject *obj)
     switch (GetXrayType(obj)) {
       case XrayForDOMObject:
         return &DOMXrayTraits::singleton;
-      case XrayForDOMProxyObject:
-        return &ProxyXrayTraits::singleton;
       case XrayForWrappedNative:
         return &XPCWrappedNativeXrayTraits::singleton;
       default:
@@ -767,6 +728,13 @@ XPCWrappedNativeXrayTraits::preserveWrapper(JSObject *target)
         ci->PreserveWrapper(wn->Native());
 }
 
+static JSBool
+IdentityValueOf(JSContext *cx, unsigned argc, jsval *vp)
+{
+    JS_SET_RVAL(cx, vp, JS_THIS(cx, vp));
+    return true;
+}
+
 bool
 XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapper,
                                                   JSObject *holder, jsid id, bool set,
@@ -794,6 +762,23 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapp
         desc->getter = NULL;
         desc->setter = NULL;
         desc->shortid = 0;
+        return true;
+    }
+
+    // Explicitly make valueOf an identity operation so that it plays better
+    // with the rest of the Xray infrastructure.
+    if (id == rt->GetStringID(XPCJSRuntime::IDX_VALUE_OF) &&
+        Is<nsIDOMLocation>(wrapper))
+    {
+        JSFunction *fun = JS_NewFunctionById(cx, &IdentityValueOf, 0, 0, NULL, id);
+        if (!fun)
+            return false;
+        desc->obj = wrapper;
+        desc->attrs = 0;
+        desc->getter = NULL;
+        desc->setter = NULL;
+        desc->shortid = 0;
+        desc->value = ObjectValue(*JS_GetFunctionObject(fun));
         return true;
     }
 
@@ -1187,57 +1172,6 @@ XPCWrappedNativeXrayTraits::construct(JSContext *cx, JSObject *wrapper,
 }
 
 bool
-ProxyXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder,
-                                       jsid id, bool set, JSPropertyDescriptor *desc)
-{
-    JSObject *obj = getTargetObject(wrapper);
-    return js::GetProxyHandler(obj)->getPropertyDescriptor(cx, wrapper, id, set, desc);
-}
-
-bool
-ProxyXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
-                                    JSObject *holder, jsid id, bool set, PropertyDescriptor *desc)
-{
-    // Call the common code.
-    bool ok = XrayTraits::resolveOwnProperty(cx, jsWrapper, wrapper, holder,
-                                             id, set, desc);
-    if (!ok || desc->obj)
-        return ok;
-
-    JSObject *obj = getTargetObject(wrapper);
-    ok = js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, set, desc);
-    if (ok) {
-        // The 'not found' property descriptor has obj == NULL.
-        if (desc->obj)
-            desc->obj = wrapper;
-    }
-
-    // Own properties don't get cached on the holder. Just return.
-    return ok;
-}
-
-bool
-ProxyXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
-                                JS::AutoIdVector &props)
-{
-    JSObject *obj = getTargetObject(wrapper);
-    if (flags & (JSITER_OWNONLY | JSITER_HIDDEN))
-        return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);
-
-    return js::GetProxyHandler(obj)->enumerate(cx, wrapper, props);
-}
-
-// The 'holder' here isn't actually of [[Class]] HolderClass like those used by
-// XPCWrappedNativeXrayTraits. Instead, it's a funny hybrid of the 'expando' and
-// 'holder' properties. However, we store it in the same slot. Exercise caution.
-JSObject*
-ProxyXrayTraits::createHolder(JSContext *cx, JSObject *wrapper)
-{
-    return JS_NewObjectWithGivenProto(cx, nullptr, nullptr,
-                                      JS_GetGlobalForObject(cx, wrapper));
-}
-
-bool
 DOMXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject *holder, jsid id,
                                      bool set, JSPropertyDescriptor *desc)
 {
@@ -1368,7 +1302,7 @@ XrayToString(JSContext *cx, unsigned argc, jsval *vp)
 
     nsAutoString result(NS_LITERAL_STRING("[object XrayWrapper "));
     JSObject *obj = &js::GetProxyPrivate(wrapper).toObject();
-    if (IsDOMProxy(obj) || oldproxybindings::instanceIsProxy(obj)) {
+    if (IsDOMProxy(obj)) {
         JSString *wrapperStr = js::GetProxyHandler(wrapper)->obj_toString(cx, wrapper);
         size_t length;
         const jschar* chars = JS_GetStringCharsAndLength(cx, wrapperStr, &length);
@@ -1789,11 +1723,6 @@ template <> XRAY XRAY::singleton(0);
 template class XRAY;
 #undef XRAY
 
-#define XRAY XrayWrapper<CrossCompartmentWrapper, ProxyXrayTraits >
-template <> XRAY XRAY::singleton(0);
-template class XRAY;
-#undef XRAY
-
 #define XRAY XrayWrapper<CrossCompartmentWrapper, DOMXrayTraits >
 template <> XRAY XRAY::singleton(0);
 template class XRAY;
@@ -1802,11 +1731,6 @@ template class XRAY;
 /* Same-compartment non-filtering versions. */
 
 #define XRAY XrayWrapper<DirectWrapper, XPCWrappedNativeXrayTraits >
-template <> XRAY XRAY::singleton(0);
-template class XRAY;
-#undef XRAY
-
-#define XRAY XrayWrapper<DirectWrapper, ProxyXrayTraits >
 template <> XRAY XRAY::singleton(0);
 template class XRAY;
 #undef XRAY

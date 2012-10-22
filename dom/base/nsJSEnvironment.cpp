@@ -933,7 +933,6 @@ static const char js_strict_option_str[] = JS_OPTIONS_DOT_STR "strict";
 static const char js_strict_debug_option_str[] = JS_OPTIONS_DOT_STR "strict.debug";
 #endif
 static const char js_werror_option_str[] = JS_OPTIONS_DOT_STR "werror";
-static const char js_relimit_option_str[]= JS_OPTIONS_DOT_STR "relimit";
 #ifdef JS_GC_ZEAL
 static const char js_zeal_option_str[]        = JS_OPTIONS_DOT_STR "gczeal";
 static const char js_zeal_frequency_str[]     = JS_OPTIONS_DOT_STR "gczeal.frequency";
@@ -1053,12 +1052,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   else
     newDefaultJSOptions &= ~JSOPTION_WERROR;
 
-  bool relimit = Preferences::GetBool(js_relimit_option_str);
-  if (relimit)
-    newDefaultJSOptions |= JSOPTION_RELIMIT;
-  else
-    newDefaultJSOptions &= ~JSOPTION_RELIMIT;
-
   ::JS_SetOptions(context->mContext,
                   newDefaultJSOptions & (JSRUNOPTION_MASK | JSOPTION_ALLOW_XML));
 
@@ -1118,7 +1111,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
   mOperationCallbackTime = 0;
   mModalStateTime = 0;
   mModalStateDepth = 0;
-  mProcessingScriptTag = false;
 }
 
 nsJSContext::~nsJSContext()
@@ -2844,18 +2836,6 @@ nsJSContext::SetScriptsEnabled(bool aEnabled, bool aFireTimeouts)
   }
 }
 
-
-bool
-nsJSContext::GetProcessingScriptTag()
-{
-  return mProcessingScriptTag;
-}
-
-void
-nsJSContext::SetProcessingScriptTag(bool aFlag)
-{
-  mProcessingScriptTag = aFlag;
-}
 
 bool
 nsJSContext::GetExecutingScript()

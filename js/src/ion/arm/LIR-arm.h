@@ -200,6 +200,41 @@ class LTableSwitch : public LInstructionHelper<0, 1, 1>
     const LAllocation *tempInt() {
         return getTemp(0)->output();
     }
+    // This is added to share the same CodeGenerator prefixes.
+    const LAllocation *tempPointer() {
+        return NULL;
+    }
+};
+
+// Takes a tableswitch with an integer to decide
+class LTableSwitchV : public LInstructionHelper<0, BOX_PIECES, 2>
+{
+  public:
+    LIR_HEADER(TableSwitchV);
+
+    LTableSwitchV(const LDefinition &inputCopy, const LDefinition &floatCopy,
+                  MTableSwitch *ins)
+    {
+        setTemp(0, inputCopy);
+        setTemp(1, floatCopy);
+        setMir(ins);
+    }
+
+    MTableSwitch *mir() const {
+        return mir_->toTableSwitch();
+    }
+
+    static const size_t InputValue = 0;
+
+    const LAllocation *tempInt() {
+        return getTemp(0)->output();
+    }
+    const LAllocation *tempFloat() {
+        return getTemp(1)->output();
+    }
+    const LAllocation *tempPointer() {
+        return NULL;
+    }
 };
 
 // Guard against an object's shape.

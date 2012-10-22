@@ -93,27 +93,25 @@ HTMLTableCellAccessible::NativeInteractiveState() const
   return HyperTextAccessibleWrap::NativeInteractiveState() | states::SELECTABLE;
 }
 
-nsresult
-HTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
+already_AddRefed<nsIPersistentProperties>
+HTMLTableCellAccessible::NativeAttributes()
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsresult rv = HyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    HyperTextAccessibleWrap::NativeAttributes();
 
   // table-cell-index attribute
   TableAccessible* table = Table();
   if (!table)
-    return NS_OK;
+    return attributes.forget();
 
   int32_t rowIdx = -1, colIdx = -1;
-  rv = GetCellIndexes(rowIdx, colIdx);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = GetCellIndexes(rowIdx, colIdx);
+  if (NS_FAILED(rv))
+    return attributes.forget();
 
   nsAutoString stringIdx;
   stringIdx.AppendInt(table->CellIndexAt(rowIdx, colIdx));
-  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::tableCellIndex, stringIdx);
+  nsAccUtils::SetAccAttr(attributes, nsGkAtoms::tableCellIndex, stringIdx);
 
   // abbr attribute
 
@@ -132,15 +130,15 @@ HTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribu
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::abbr, abbrText);
 
   if (!abbrText.IsEmpty())
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::abbr, abbrText);
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::abbr, abbrText);
 
   // axis attribute
   nsAutoString axisText;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::axis, axisText);
   if (!axisText.IsEmpty())
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::axis, axisText);
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::axis, axisText);
 
-  return NS_OK;
+  return attributes.forget();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -408,19 +406,18 @@ HTMLTableAccessible::NativeName(nsString& aName)
   return eNameOK;
 }
 
-nsresult
-HTMLTableAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
+already_AddRefed<nsIPersistentProperties>
+HTMLTableAccessible::NativeAttributes()
 {
-  nsresult rv = AccessibleWrap::GetAttributesInternal(aAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    AccessibleWrap::NativeAttributes();
   if (IsProbablyLayoutTable()) {
-    nsAutoString oldValueUnused;
-    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("layout-guess"),
-                                   NS_LITERAL_STRING("true"), oldValueUnused);
+    nsAutoString unused;
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("layout-guess"),
+                                  NS_LITERAL_STRING("true"), unused);
   }
 
-  return NS_OK;
+  return attributes.forget();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -962,7 +959,7 @@ HTMLTableAccessible::HasDescendant(const nsAString& aTagName, bool aAllowEmpty)
   nsCOMPtr<nsIDOMElement> tableElt(do_QueryInterface(mContent));
   NS_ENSURE_TRUE(tableElt, false);
 
-  nsCOMPtr<nsIDOMNodeList> nodeList;
+  nsCOMPtr<nsIDOMHTMLCollection> nodeList;
   tableElt->GetElementsByTagName(aTagName, getter_AddRefs(nodeList));
   NS_ENSURE_TRUE(nodeList, false);
 

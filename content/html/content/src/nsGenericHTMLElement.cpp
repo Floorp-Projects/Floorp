@@ -1241,7 +1241,7 @@ Serialize(Element* aRoot, bool aDescendentsOnly, nsAString& aOut)
         break;
       }
 
-      current = current->GetNodeParent();
+      current = current->GetParentNode();
       if (aDescendentsOnly && current == aRoot) {
         return builder.ToString(aOut);
       }
@@ -1392,9 +1392,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML,
       // listeners on the fragment that comes from the parser.
       nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
 
-      nsresult rv = NS_OK;
-      static_cast<nsINode*>(this)->AppendChild(fragment, &rv);
-      aError = rv;
+      static_cast<nsINode*>(this)->AppendChild(*fragment, aError);
       mb.NodesAdded();
     }
   }
@@ -1403,7 +1401,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML,
 NS_IMETHODIMP
 nsGenericHTMLElement::SetOuterHTML(const nsAString& aOuterHTML)
 {
-  nsCOMPtr<nsINode> parent = GetNodeParent();
+  nsCOMPtr<nsINode> parent = GetParentNode();
   if (!parent) {
     return NS_OK;
   }
@@ -1437,8 +1435,9 @@ nsGenericHTMLElement::SetOuterHTML(const nsAString& aOuterHTML)
                                         eCompatibility_NavQuirks,
                                       true);
     nsAutoMutationBatch mb(parent, true, false);
-    parent->ReplaceChild(fragment, this, &rv);
-    return rv;
+    ErrorResult error;
+    parent->ReplaceChild(*fragment, *this, error);
+    return error.ErrorCode();
   }
 
   nsCOMPtr<nsINode> context;
@@ -1463,8 +1462,9 @@ nsGenericHTMLElement::SetOuterHTML(const nsAString& aOuterHTML)
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
   nsAutoMutationBatch mb(parent, true, false);
-  parent->ReplaceChild(fragment, this, &rv);
-  return rv;
+  ErrorResult error;
+  parent->ReplaceChild(*fragment, *this, error);
+  return error.ErrorCode();
 }
 
 enum nsAdjacentPosition {
@@ -1551,22 +1551,23 @@ nsGenericHTMLElement::InsertAdjacentHTML(const nsAString& aPosition,
   // listeners on the fragment that comes from the parser.
   nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
 
+  ErrorResult error;
   nsAutoMutationBatch mb(destination, true, false);
   switch (position) {
     case eBeforeBegin:
-      destination->InsertBefore(fragment, this, &rv);
+      destination->InsertBefore(*fragment, this, error);
       break;
     case eAfterBegin:
-      static_cast<nsINode*>(this)->InsertBefore(fragment, GetFirstChild(), &rv);
+      static_cast<nsINode*>(this)->InsertBefore(*fragment, GetFirstChild(), error);
       break;
     case eBeforeEnd:
-      static_cast<nsINode*>(this)->AppendChild(fragment, &rv);
+      static_cast<nsINode*>(this)->AppendChild(*fragment, error);
       break;
     case eAfterEnd:
-      destination->InsertBefore(fragment, GetNextSibling(), &rv);
+      destination->InsertBefore(*fragment, GetNextSibling(), error);
       break;
   }
-  return rv;
+  return error.ErrorCode();
 }
 
 nsresult
@@ -4232,13 +4233,14 @@ nsGenericHTMLElement::SetItemValue(nsIVariant* aValue)
 void
 nsGenericHTMLElement::GetItemValueText(nsAString& text)
 {
-  GetTextContent(text);
+  GetTextContentInternal(text);
 }
 
 void
 nsGenericHTMLElement::SetItemValueText(const nsAString& text)
 {
-  SetTextContent(text);
+  mozilla::ErrorResult rv;
+  SetTextContentInternal(text, rv);
 }
 
 static void

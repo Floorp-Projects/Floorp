@@ -56,7 +56,7 @@ mjit::Compiler::ensureInteger(FrameEntry *fe, Uses uses)
         /*
          * Try an OOL path to convert doubles representing integers within 2^32
          * of a signed integer, by adding/subtracting 2^32 and then trying to
-         * convert to int32. This has to be an exact conversion, as otherwise
+         * convert to int32_t. This has to be an exact conversion, as otherwise
          * the truncation works incorrectly on the modified value.
          */
 
@@ -1616,7 +1616,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
         stubcc.linkExit(j, Uses(3));
     }
 
-    // Guard that the id is int32.
+    // Guard that the id is int32_t.
     if (!id->isTypeKnown()) {
         Jump j = frame.testInt32(Assembler::NotEqual, id);
         stubcc.linkExit(j, Uses(3));

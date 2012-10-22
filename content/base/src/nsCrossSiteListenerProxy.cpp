@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"
+#include "mozilla/LinkedList.h"
+
 #include "nsCrossSiteListenerProxy.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
@@ -19,7 +22,6 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsAsyncRedirectVerifyHelper.h"
-#include "prclist.h"
 #include "prtime.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
@@ -45,7 +47,7 @@ public:
     PRTime expirationTime;
   };
 
-  struct CacheEntry : public PRCList
+  struct CacheEntry : public LinkedListElement<CacheEntry>
   {
     CacheEntry(nsCString& aKey)
       : mKey(aKey)
@@ -70,7 +72,6 @@ public:
   nsPreflightCache()
   {
     MOZ_COUNT_CTOR(nsPreflightCache);
-    PR_INIT_CLIST(&mList);
   }
 
   ~nsPreflightCache()
@@ -100,7 +101,7 @@ private:
                             bool aWithCredentials, nsACString& _retval);
 
   nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
-  PRCList mList;
+  LinkedList<CacheEntry> mList;
 };
 
 // Will be initialized in EnsurePreflightCache.
@@ -188,8 +189,8 @@ nsPreflightCache::GetEntry(nsIURI* aURI,
     // Entry already existed so just return it. Also update the LRU list.
 
     // Move to the head of the list.
-    PR_REMOVE_LINK(entry);
-    PR_INSERT_LINK(entry, &mList);
+    entry->remove();
+    mList.insertFront(entry);
 
     return entry;
   }
@@ -218,8 +219,8 @@ nsPreflightCache::GetEntry(nsIURI* aURI,
     // If that didn't remove anything then kick out the least recently used
     // entry.
     if (mTable.Count() == PREFLIGHT_CACHE_SIZE) {
-      CacheEntry* lruEntry = static_cast<CacheEntry*>(PR_LIST_TAIL(&mList));
-      PR_REMOVE_LINK(lruEntry);
+      CacheEntry* lruEntry = static_cast<CacheEntry*>(mList.popLast());
+      MOZ_ASSERT(lruEntry);
 
       // This will delete 'lruEntry'.
       mTable.Remove(lruEntry->mKey);
@@ -230,7 +231,7 @@ nsPreflightCache::GetEntry(nsIURI* aURI,
   }
   
   mTable.Put(key, entry);
-  PR_INSERT_LINK(entry, &mList);
+  mList.insertFront(entry);
 
   return entry;
 }
@@ -242,13 +243,13 @@ nsPreflightCache::RemoveEntries(nsIURI* aURI, nsIPrincipal* aPrincipal)
   nsCString key;
   if (GetCacheKey(aURI, aPrincipal, true, key) &&
       mTable.Get(key, &entry)) {
-    PR_REMOVE_LINK(entry);
+    entry->remove();
     mTable.Remove(key);
   }
 
   if (GetCacheKey(aURI, aPrincipal, false, key) &&
       mTable.Get(key, &entry)) {
-    PR_REMOVE_LINK(entry);
+    entry->remove();
     mTable.Remove(key);
   }
 }
@@ -256,7 +257,7 @@ nsPreflightCache::RemoveEntries(nsIURI* aURI, nsIPrincipal* aPrincipal)
 void
 nsPreflightCache::Clear()
 {
-  PR_INIT_CLIST(&mList);
+  mList.clear();
   mTable.Clear();
 }
 
@@ -272,7 +273,7 @@ nsPreflightCache::RemoveExpiredEntries(const nsACString& aKey,
   if (aValue->mHeaders.IsEmpty() &&
       aValue->mMethods.IsEmpty()) {
     // Expired, remove from the list as well as the hash table.
-    PR_REMOVE_LINK(aValue);
+    aValue->remove();
     return PL_DHASH_REMOVE;
   }
   

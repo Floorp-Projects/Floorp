@@ -39,7 +39,7 @@ function getBinaryFileData(file) {
   let fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
                    createInstance(Ci.nsIFileInputStream);
   // Open as RD_ONLY with default permissions.
-  fileStream.init(file, 0x01, -1, null);
+  fileStream.init(file, -1, -1, null);
 
   // Check the returned size versus the expected size.
   let stream = Cc["@mozilla.org/binaryinputstream;1"].
@@ -102,6 +102,17 @@ function createMAR(outMAR, dataDir, files) {
   // Make sure the signmar binary exists and is an executable.
   do_check_true(signmarBin.exists());
   do_check_true(signmarBin.isExecutable());
+
+  // Ensure on non Windows platforms we encode the same permissions
+  // as the refernence MARs contain.  On Windows this is also safe.
+  // The reference MAR files have permissions of 0664, so in case
+  // someone is running these tests locally with another permission
+  // (perhaps 0777), make sure that we encode them as 0664.
+  for (filePath of files) {
+    let f = dataDir.clone();
+    f.append(filePath);
+    f.permissions = 0664;
+  }
 
   // Setup the command line arguments to create the MAR.
   let args = ["-C", dataDir.path, "-H", "\@MAR_CHANNEL_ID\@", 

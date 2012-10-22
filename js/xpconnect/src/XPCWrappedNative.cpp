@@ -18,7 +18,6 @@
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
 #include "XrayWrapper.h"
-#include "dombindings.h"
 
 #include "nsContentUtils.h"
 

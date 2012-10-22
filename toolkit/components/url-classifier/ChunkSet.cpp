@@ -40,7 +40,7 @@ nsresult
 ChunkSet::Set(uint32_t aChunk)
 {
   uint32_t idx = mChunks.BinaryIndexOf(aChunk);
-  if (idx == nsTArray<uint32>::NoIndex) {
+  if (idx == nsTArray<uint32_t>::NoIndex) {
     mChunks.InsertElementSorted(aChunk);
   }
   return NS_OK;
@@ -57,16 +57,16 @@ ChunkSet::Unset(uint32_t aChunk)
 bool
 ChunkSet::Has(uint32_t aChunk) const
 {
-  return mChunks.BinaryIndexOf(aChunk) != nsTArray<uint32>::NoIndex;
+  return mChunks.BinaryIndexOf(aChunk) != nsTArray<uint32_t>::NoIndex;
 }
 
 nsresult
 ChunkSet::Merge(const ChunkSet& aOther)
 {
-  const uint32 *dupIter = aOther.mChunks.Elements();
-  const uint32 *end = aOther.mChunks.Elements() + aOther.mChunks.Length();
+  const uint32_t *dupIter = aOther.mChunks.Elements();
+  const uint32_t *end = aOther.mChunks.Elements() + aOther.mChunks.Length();
 
-  for (const uint32 *iter = dupIter; iter != end; iter++) {
+  for (const uint32_t *iter = dupIter; iter != end; iter++) {
     nsresult rv = Set(*iter);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -77,10 +77,10 @@ ChunkSet::Merge(const ChunkSet& aOther)
 nsresult
 ChunkSet::Remove(const ChunkSet& aOther)
 {
-  uint32 *addIter = mChunks.Elements();
-  uint32 *end = mChunks.Elements() + mChunks.Length();
+  uint32_t *addIter = mChunks.Elements();
+  uint32_t *end = mChunks.Elements() + mChunks.Length();
 
-  for (uint32 *iter = addIter; iter != end; iter++) {
+  for (uint32_t *iter = addIter; iter != end; iter++) {
     if (!aOther.Has(*iter)) {
       *addIter = *iter;
       addIter++;

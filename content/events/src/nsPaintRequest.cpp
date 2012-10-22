@@ -10,7 +10,6 @@
 #include "nsIFrame.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/PaintRequestListBinding.h"
-#include "dombindings.h"
 
 DOMCI_DATA(PaintRequest, nsPaintRequest)
 
@@ -59,15 +58,8 @@ JSObject*
 nsPaintRequestList::WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
 {
-  JSObject* obj = mozilla::dom::PaintRequestListBinding::Wrap(cx, scope, this,
-                                                              triedToWrap);
-  if (obj || *triedToWrap) {
-    return obj;
-  }
-
-  *triedToWrap = true;
-  return mozilla::dom::oldproxybindings::PaintRequestList::create(cx, scope,
-                                                                  this);
+  return mozilla::dom::PaintRequestListBinding::Wrap(cx, scope, this,
+                                                     triedToWrap);
 }
 
 NS_IMETHODIMP    
@@ -82,10 +74,4 @@ nsPaintRequestList::Item(uint32_t aIndex, nsIDOMPaintRequest** aReturn)
 {
   NS_IF_ADDREF(*aReturn = Item(aIndex));
   return NS_OK;
-}
-
-nsIDOMPaintRequest*
-nsPaintRequestList::GetItemAt(uint32_t aIndex)
-{
-  return Item(aIndex);
 }

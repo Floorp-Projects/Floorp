@@ -116,7 +116,7 @@ public:
   virtual TableCellAccessible* AsTableCell() { return this; }
   virtual void Shutdown();
   virtual void ApplyARIAState(uint64_t* aState) const;
-  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
 
 protected:
 

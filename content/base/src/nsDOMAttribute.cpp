@@ -29,6 +29,7 @@
 #include "nsAsyncDOMEvent.h"
 #include "nsWrapperCacheInlines.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
@@ -210,167 +211,20 @@ nsDOMAttribute::GetOwnerElement(nsIDOMElement** aOwnerElement)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMAttribute::GetNodeName(nsAString& aNodeName)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eNodeName);
-
-  return GetName(aNodeName);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetNodeValue(nsAString& aNodeValue)
+void
+nsDOMAttribute::GetNodeValueInternal(nsAString& aNodeValue)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eNodeValue);
 
-  return GetValue(aNodeValue);
+  GetValue(aNodeValue);
 }
 
-NS_IMETHODIMP
-nsDOMAttribute::SetNodeValue(const nsAString& aNodeValue)
+void
+nsDOMAttribute::SetNodeValueInternal(const nsAString& aNodeValue, ErrorResult& aError)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eNodeValue);
 
-  return SetValue(aNodeValue);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetNodeType(uint16_t* aNodeType)
-{
-  NS_ENSURE_ARG_POINTER(aNodeType);
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eNodeType);
-
-  *aNodeType = (uint16_t)nsIDOMNode::ATTRIBUTE_NODE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetParentNode(nsIDOMNode** aParentNode)
-{
-  NS_ENSURE_ARG_POINTER(aParentNode);
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eParentNode);
-
-  *aParentNode = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetParentElement(nsIDOMElement** aParentElement)
-{
-  *aParentElement = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetChildNodes(nsIDOMNodeList** aChildNodes)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eChildNodes);
-
-  return nsINode::GetChildNodes(aChildNodes);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::HasChildNodes(bool* aHasChildNodes)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eHasChildNodes);
-
-  *aHasChildNodes = false;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::HasAttributes(bool* aHasAttributes)
-{
-  NS_ENSURE_ARG_POINTER(aHasAttributes);
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eHasAttributes);
-
-  *aHasAttributes = false;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetFirstChild(nsIDOMNode** aFirstChild)
-{
-  *aFirstChild = nullptr;
-
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eFirstChild);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetLastChild(nsIDOMNode** aLastChild)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eLastChild);
-
-  return GetFirstChild(aLastChild);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
-{
-  NS_ENSURE_ARG_POINTER(aPreviousSibling);
-
-  OwnerDoc()->WarnOnceAbout(nsIDocument::ePreviousSibling);
-
-  *aPreviousSibling = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetNextSibling(nsIDOMNode** aNextSibling)
-{
-  NS_ENSURE_ARG_POINTER(aNextSibling);
-
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eNextSibling);
-
-  *aNextSibling = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
-{
-  NS_ENSURE_ARG_POINTER(aAttributes);
-
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eAttributes);
-
-  *aAttributes = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eInsertBefore);
-
-  return ReplaceOrInsertBefore(false, aNewChild, aRefChild, aReturn);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eReplaceChild);
-
-  return ReplaceOrInsertBefore(true, aNewChild, aOldChild, aReturn);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eRemoveChild);
-
-  return nsINode::RemoveChild(aOldChild, aReturn);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eAppendChild);
-
-  return InsertBefore(aNewChild, nullptr, aReturn);
+  aError = SetValue(aNodeValue);
 }
 
 nsresult
@@ -390,67 +244,6 @@ nsDOMAttribute::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMAttribute::CloneNode(bool aDeep, uint8_t aOptionalArgc, nsIDOMNode** aResult)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eCloneNode);
-
-  if (!aOptionalArgc) {
-    aDeep = true;
-  }
-
-  return nsNodeUtils::CloneNodeImpl(this, aDeep, true, aResult);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eOwnerDocument);
-
-  return nsINode::GetOwnerDocument(aOwnerDocument);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetNamespaceURI(nsAString& aNamespaceURI)
-{
-  return mNodeInfo->GetNamespaceURI(aNamespaceURI);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetPrefix(nsAString& aPrefix)
-{
-  mNodeInfo->GetPrefix(aPrefix);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetLocalName(nsAString& aLocalName)
-{
-  mNodeInfo->GetName(aLocalName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::Normalize()
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eNormalize);
-
-  // Nothing to do here
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::IsSupported(const nsAString& aFeature,
-                            const nsAString& aVersion,
-                            bool* aReturn)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eIsSupported);
-
-  *aReturn = nsContentUtils::InternalIsSupported(static_cast<nsIDOMAttr*>(this), 
-                                                 aFeature, aVersion);
-  return NS_OK;
-}
-
 already_AddRefed<nsIURI>
 nsDOMAttribute::GetBaseURI() const
 {
@@ -459,85 +252,21 @@ nsDOMAttribute::GetBaseURI() const
   return parent ? parent->GetBaseURI() : nullptr;
 }
 
-NS_IMETHODIMP
-nsDOMAttribute::GetDOMBaseURI(nsAString &aURI)
-{
-  return nsINode::GetDOMBaseURI(aURI);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::CompareDocumentPosition(nsIDOMNode *other,
-                                        uint16_t *aResult)
-{
-  return nsINode::CompareDocumentPosition(other, aResult);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::IsEqualNode(nsIDOMNode* aOther, bool* aResult)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eIsEqualNode);
-
-  return nsINode::IsEqualNode(aOther, aResult);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetTextContent(nsAString &aTextContent)
+void
+nsDOMAttribute::GetTextContentInternal(nsAString& aTextContent)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eTextContent);
 
-  return GetNodeValue(aTextContent);
+  GetValue(aTextContent);
 }
 
-NS_IMETHODIMP
-nsDOMAttribute::SetTextContent(const nsAString& aTextContent)
+void
+nsDOMAttribute::SetTextContentInternal(const nsAString& aTextContent,
+                                       ErrorResult& aError)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eTextContent);
 
-  return SetNodeValue(aTextContent);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::Contains(nsIDOMNode* aOther, bool* aReturn)
-{
-  return nsINode::Contains(aOther, aReturn);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::LookupPrefix(const nsAString & namespaceURI,
-                             nsAString & aResult)
-{
-  SetDOMStringToNull(aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::IsDefaultNamespace(const nsAString & namespaceURI,
-                                   bool *aResult)
-{
-  *aResult = namespaceURI.IsEmpty();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::LookupNamespaceURI(const nsAString & prefix,
-                              nsAString & aResult)
-{
-  SetDOMStringToNull(aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::SetUserData(const nsAString & key,
-                            nsIVariant *data, nsIDOMUserDataHandler *handler,
-                            nsIVariant **aResult)
-{
-  return nsINode::SetUserData(key, data, handler, aResult);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetUserData(const nsAString & key, nsIVariant **aResult)
-{
-  return nsINode::GetUserData(key, aResult);
+  SetNodeValueInternal(aTextContent, aError);
 }
 
 NS_IMETHODIMP

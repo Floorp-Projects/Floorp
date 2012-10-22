@@ -588,6 +588,10 @@ nsHTMLCanvasElement::ToBlob(nsIFileCallback* aCallback,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
+  if (!aCallback) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   nsAutoString type;
   nsresult rv = nsContentUtils::ASCIIToLower(aType, type);
   if (NS_FAILED(rv)) {

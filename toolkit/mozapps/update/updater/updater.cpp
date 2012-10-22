@@ -48,6 +48,14 @@
 #include <limits.h>
 #include <errno.h>
 
+#ifdef XP_MACOSX
+#include <sys/resource.h>
+#endif
+
+#ifdef XP_WIN
+#include "nsWindowsHelpers.h"
+#endif
+
 #include "updatelogging.h"
 
 // Amount of the progress bar to use in each of the 3 update stages,
@@ -2050,6 +2058,17 @@ ReadMARChannelIDs(const NS_tchar *path, MARChannelStringTable *results)
 #endif
 
 static void
+LowerIOPriority()
+{
+#ifdef XP_WIN
+  if (IsVistaOrLater())
+      SetPriorityClass(GetCurrentProcess(), PROCESS_MODE_BACKGROUND_BEGIN);
+#elif XP_MACOSX
+  setiopolicy_np(IOPOL_TYPE_DISK, IOPOL_SCOPE_PROCESS, IOPOL_THROTTLE);
+#endif
+}
+
+static void
 UpdateThreadFunc(void *param)
 {
   // open ZIP archive and process...
@@ -2057,6 +2076,9 @@ UpdateThreadFunc(void *param)
   if (sReplaceRequest) {
     rv = ProcessReplaceRequest();
   } else {
+    if (sBackgroundUpdate) {
+        LowerIOPriority();
+    }
     NS_tchar dataFile[MAXPATHLEN];
     NS_tsnprintf(dataFile, sizeof(dataFile)/sizeof(dataFile[0]),
                  NS_T("%s/update.mar"), gSourcePath);

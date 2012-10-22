@@ -36,7 +36,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/dom/HTMLOptionsCollectionBinding.h"
-#include "dombindings.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2014,13 +2013,7 @@ JSObject*
 nsHTMLOptionCollection::WrapObject(JSContext *cx, JSObject *scope,
                                    bool *triedToWrap)
 {
-  JSObject* obj = HTMLOptionsCollectionBinding::Wrap(cx, scope, this, triedToWrap);
-  if (obj || *triedToWrap) {
-    return obj;
-  }
-
-  *triedToWrap = true;
-  return oldproxybindings::HTMLOptionsCollection::create(cx, scope, this);
+  return HTMLOptionsCollectionBinding::Wrap(cx, scope, this, triedToWrap);
 }
 
 NS_IMETHODIMP
@@ -2168,15 +2161,6 @@ GetNamedItemHelper(nsTArray<nsRefPtr<nsHTMLOptionElement> > &aElements,
   }
 
   return nullptr;
-}
-
-nsISupports*
-nsHTMLOptionCollection::GetNamedItem(const nsAString& aName,
-                                     nsWrapperCache **aCache)
-{
-  nsINode *item = GetNamedItemHelper(mElements, aName);
-  *aCache = item;
-  return item;
 }
 
 nsINode*

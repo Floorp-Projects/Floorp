@@ -4032,7 +4032,7 @@ nsWebBrowserPersist::SetDocumentBase(
     // Find or create the BASE element
     NS_NAMED_LITERAL_STRING(kBase, "base");
     nsCOMPtr<nsIDOMElement> baseElement;
-    nsCOMPtr<nsIDOMNodeList> baseList;
+    nsCOMPtr<nsIDOMHTMLCollection> baseList;
     if (xmlDoc)
     {
         headElement->GetElementsByTagNameNS(

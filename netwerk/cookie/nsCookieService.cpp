@@ -10,7 +10,7 @@
 #define FORCE_PR_LOG // Allow logging in the release build
 #endif
 
-#include "NSPRFormatTime.h" // must include before any headers that include prtime.h
+#include "NSPRFormatTime.h" // must be before anything that includes prtime.h
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/NeckoCommon.h"
 
