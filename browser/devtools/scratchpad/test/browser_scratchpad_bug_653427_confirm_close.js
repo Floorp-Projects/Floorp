@@ -9,7 +9,7 @@ let NetUtil = tempScope.NetUtil;
 let FileUtils = tempScope.FileUtils;
 
 // only finish() when correct number of tests are done
-const expected = 6;
+const expected = 9;
 var count = 0;
 function done()
 {
@@ -68,16 +68,42 @@ function testSavedFile()
 
 function testUnsaved()
 {
-  testUnsavedFileCancel();
+  function setFilename(aScratchpad, aFile) {
+    aScratchpad.setFilename(aFile);
+  }
+
+  testUnsavedFileCancel(setFilename);
+  testUnsavedFileSave(setFilename);
+  testUnsavedFileDontSave(setFilename);
   testCancelAfterLoad();
-  testUnsavedFileSave();
+
+  function mockSaveFile(aScratchpad) {
+    let SaveFileStub = function (aCallback) {
+      /*
+       * An argument for aCallback must pass Components.isSuccessCode
+       *
+       * A version of isSuccessCode in JavaScript:
+       *  function isSuccessCode(returnCode) {
+       *    return (returnCode & 0x80000000) == 0;
+       *  }
+       */
+      aCallback(1);
+    };
+
+    aScratchpad.saveFile = SaveFileStub;
+  }
+
+  // Run these tests again but this time without setting a filename to
+  // test that Scratchpad always asks for confirmation on dirty editor.
+  testUnsavedFileCancel(mockSaveFile);
+  testUnsavedFileSave(mockSaveFile);
   testUnsavedFileDontSave();
 }
 
-function testUnsavedFileCancel()
+function testUnsavedFileCancel(aCallback=function () {})
 {
   openScratchpad(function(win) {
-    win.Scratchpad.setFilename("test.js");
+    aCallback(win.Scratchpad, "test.js");
     win.Scratchpad.editor.dirty = true;
 
     promptButton = win.BUTTON_POSITION_CANCEL;
@@ -118,11 +144,11 @@ function testCancelAfterLoad()
   }, {noFocus: true});
 }
 
-function testUnsavedFileSave()
+function testUnsavedFileSave(aCallback=function () {})
 {
   openScratchpad(function(win) {
     win.Scratchpad.importFromFile(gFile, true, function(status, content) {
-      win.Scratchpad.setFilename(gFile.path);
+      aCallback(win.Scratchpad, gFile.path);
 
       let text = "new text";
       win.Scratchpad.setText(text);
@@ -140,10 +166,10 @@ function testUnsavedFileSave()
   }, {noFocus: true});
 }
 
-function testUnsavedFileDontSave()
+function testUnsavedFileDontSave(aCallback=function () {})
 {
   openScratchpad(function(win) {
-    win.Scratchpad.setFilename(gFile.path);
+    aCallback(win.Scratchpad, gFile.path);
     win.Scratchpad.editor.dirty = true;
 
     promptButton = win.BUTTON_POSITION_DONT_SAVE;
