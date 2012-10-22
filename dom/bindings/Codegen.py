@@ -5554,6 +5554,8 @@ class CGDictionary(CGThing):
             "${ensureObject}"
             "\n"
             "${defineMembers}\n"
+            "\n"
+            "  *vp = JS::ObjectValue(*obj);\n"
             "  return true;\n"
             "}").substitute({
                 "selfName": self.makeClassName(d),
