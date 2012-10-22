@@ -4347,7 +4347,7 @@ CanvasRenderingContext2D::PutImageData(JSContext* cx,
   dom::Uint8ClampedArray arr(cx, imageData->GetDataObject());
 
   error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
-                                imageData->GetWidth(), imageData->GetHeight(),
+                                imageData->Width(), imageData->Height(),
                                 arr.Data(), arr.Length(), false, 0, 0, 0, 0);
 }
 
@@ -4367,7 +4367,7 @@ CanvasRenderingContext2D::PutImageData(JSContext* cx,
   dom::Uint8ClampedArray arr(cx, imageData->GetDataObject());
 
   error = PutImageData_explicit(JS_DoubleToInt32(dx), JS_DoubleToInt32(dy),
-                                imageData->GetWidth(), imageData->GetHeight(),
+                                imageData->Width(), imageData->Height(),
                                 arr.Data(), arr.Length(), true,
                                 JS_DoubleToInt32(dirtyX),
                                 JS_DoubleToInt32(dirtyY),
@@ -4578,8 +4578,8 @@ CanvasRenderingContext2D::CreateImageData(JSContext* cx,
                                           ImageData* imagedata,
                                           ErrorResult& error)
 {
-  return mozilla::dom::CreateImageData(cx, this, imagedata->GetWidth(),
-                                       imagedata->GetHeight(), error);
+  return mozilla::dom::CreateImageData(cx, this, imagedata->Width(),
+                                       imagedata->Height(), error);
 }
 
 NS_IMETHODIMP
