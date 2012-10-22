@@ -532,7 +532,16 @@ public class Tabs implements GeckoEventListener {
             }
         }
 
-        loadUrl(url, null, getSelectedTab().getId(), LOADURL_NEW_TAB);
+        // getSelectedTab() can return null if no tab has been created yet
+        // (i.e., we're restoring a session after a crash). In these cases,
+        // don't mark any tabs as a parent.
+        int parentId = -1;
+        Tab selectedTab = getSelectedTab();
+        if (selectedTab != null) {
+            parentId = selectedTab.getId();
+        }
+
+        loadUrl(url, null, parentId, LOADURL_NEW_TAB);
     }
 
     /**
