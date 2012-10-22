@@ -42,51 +42,52 @@ function testViewSource(hud) {
 function checkStyleEditorForSheetAndLine(aStyleSheetIndex, aLine, aCallback) {
 
   function doCheck(aEditor) {
-    if (aEditor.styleSheetIndex != aStyleSheetIndex) {
-      ok(false, "Correct Style Sheet was not selected.");
+    function checkLineAndCallback() {
+      info("In checkLineAndCallback()");
+      ok(aEditor.sourceEditor != null, "sourceeditor not null");
+      ok(aEditor.sourceEditor.getCaretPosition() != null, "position not null");
+      ok(aEditor.sourceEditor.getCaretPosition().line != null, "line not null");
+      is(aEditor.sourceEditor.getCaretPosition().line, aLine,
+         "Correct line is selected");
       if (aCallback) {
-        executeSoon(aCallback);
+        aCallback();
       }
-      return;
     }
 
-    ok(true, "Correct Style Sheet is selected in the editor");
-
-    // Editor is already loaded, check the current line of caret.
-    if (aEditor.sourceEditor) {
-      ok(true, "Editor is already loaded, check the current line of caret");
-      executeSoon(function() {
-        ok(true, "Execute soon occured");
-        ok(aEditor.sourceEditor != null, "sourceeditor not null");
-        ok(aEditor.sourceEditor.getCaretPosition() != null, "position not null");
-        ok(aEditor.sourceEditor.getCaretPosition().line != null, "line not null");
-        is(aEditor.sourceEditor.getCaretPosition().line, aLine,
-           "Correct line is selected");
-        if (aCallback) {
-          aCallback();
-        }
-      });
-      return;
-    }
-
-    ok(true, "Editor is not loaded, waiting for it.");
     ok(aEditor, "aEditor is defined.");
+
+    // Source-editor is already loaded, check the current line of caret.
+    if (aEditor.sourceEditor) {
+      if (aEditor.styleSheetIndex != SEC.selectedStyleSheetIndex) {
+        ok(false, "Correct Style Sheet was not selected.");
+        if (aCallback) {
+          executeSoon(aCallback);
+        }
+        return;
+      }
+
+      info("Correct Style Sheet is selected in the editor");
+      info("Editor is already loaded, check the current line of caret");
+      executeSoon(checkLineAndCallback);
+      return;
+    }
+
+    info("source editor is not loaded, waiting for it.");
     // Wait for source editor to be loaded.
     aEditor.addActionListener({
       onAttach: function onAttach() {
-        ok(true, "on attach happened");
+        info("on attach happened");
         aEditor.removeActionListener(this);
-        ok(true, "this removed");
+        info("this removed");
         executeSoon(function() {
-          ok(true, "execute soon");
-          ok(aEditor.sourceEditor != null, "sourceeditor not null");
-          ok(aEditor.sourceEditor.getCaretPosition() != null, "position not null");
-          ok(aEditor.sourceEditor.getCaretPosition().line != null, "line not null");
-          is(aEditor.sourceEditor.getCaretPosition().line, aLine,
-             "Correct line is selected");
-          if (aCallback) {
-            aCallback();
+          if (aEditor.styleSheetIndex != SEC.selectedStyleSheetIndex) {
+            ok(false, "Correct Style Sheet was not selected.");
+            if (aCallback) {
+              aCallback();
+            }
+            return;
           }
+          checkLineAndCallback()
         });
       }
     });
@@ -98,19 +99,27 @@ function checkStyleEditorForSheetAndLine(aStyleSheetIndex, aLine, aCallback) {
 
   // Editors are not ready, so wait for them.
   if (!SEC.editors.length) {
+    info("Editor is not ready, waiting before doing check.");
     SEC.addChromeListener({
       onEditorAdded: function onEditorAdded(aChrome, aEditor) {
+        info("Editor loaded now. Removing listener and doing check.");
         aChrome.removeChromeListener(this);
-        doCheck(aEditor);
+        executeSoon(function() {
+          doCheck(aEditor);
+        });
       }
     });
   }
   // Execute soon so that selectedStyleSheetIndex has correct value.
   else {
-    executeSoon(function() {
-      let aEditor = SEC.editors[SEC.selectedStyleSheetIndex];
-      doCheck(aEditor);
-    });
+    info("Editor is defined, opening the desired editor for now and " +
+         "checking later if it is correct");
+    for (let aEditor of SEC.editors) {
+      if (aEditor.styleSheetIndex == aStyleSheetIndex) {
+        doCheck(aEditor);
+        break;
+      }
+    }
   }
 }
 
@@ -120,26 +129,28 @@ let observer = {
       return;
     }
     Services.ww.unregisterNotification(observer);
-    ok(true, "Style Editor window was opened in response to clicking " +
-             "the location node");
+    info("Style Editor window was opened in response to clicking " +
+         "the location node");
 
     executeSoon(function() {
       styleEditorWin = window.StyleEditor
                              .StyleEditorManager
                              .getEditorForWindow(content.window);
       ok(styleEditorWin, "Style Editor Window is defined");
-      styleEditorWin.addEventListener("load", function onStyleEditorWinLoad() {
-        styleEditorWin.removeEventListener("load", onStyleEditorWinLoad);
+      waitForFocus(function() {
+        //styleEditorWin.addEventListener("load", function onStyleEditorWinLoad() {
+          //styleEditorWin.removeEventListener("load", onStyleEditorWinLoad);
 
-        checkStyleEditorForSheetAndLine(0, 7, function() {
-          checkStyleEditorForSheetAndLine(1, 6, function() {
-            window.StyleEditor.toggle();
-            styleEditorWin = null;
-            finishTest();
+          checkStyleEditorForSheetAndLine(0, 7, function() {
+            checkStyleEditorForSheetAndLine(1, 6, function() {
+              window.StyleEditor.toggle();
+              styleEditorWin = null;
+              finishTest();
+            });
+            EventUtils.sendMouseEvent({ type: "click" }, nodes[1]);
           });
-          EventUtils.sendMouseEvent({ type: "click" }, nodes[1]);
-        });
-      });
+        //});
+      }, styleEditorWin);
     });
   }
 };
