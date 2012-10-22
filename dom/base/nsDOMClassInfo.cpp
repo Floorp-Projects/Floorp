@@ -1619,8 +1619,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
 #ifdef MOZ_B2G_RIL
-  NS_DEFINE_CLASSINFO_DATA(MozWifiStatusChangeEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozWifiConnectionInfoEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Telephony, nsEventTargetSH,
@@ -1734,7 +1732,6 @@ NS_DEFINE_EVENT_CTOR(UIEvent)
 NS_DEFINE_EVENT_CTOR(MouseEvent)
 NS_DEFINE_EVENT_CTOR(WheelEvent)
 #ifdef MOZ_B2G_RIL
-NS_DEFINE_EVENT_CTOR(MozWifiStatusChangeEvent)
 NS_DEFINE_EVENT_CTOR(MozWifiConnectionInfoEvent)
 #endif
 

@@ -28,6 +28,7 @@ simple_events = [
 #endif
 #ifdef MOZ_B2G_RIL
     'ICCCardLockErrorEvent',
+    'MozWifiStatusChangeEvent',
 #endif
     'DeviceStorageChangeEvent',
     'PopupBlockedEvent'
