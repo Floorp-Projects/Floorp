@@ -629,13 +629,13 @@ nsIconChannel::GetContentDispositionHeader(nsACString &aContentDispositionHeader
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP nsIconChannel::GetContentLength(int32_t *aContentLength)
+NS_IMETHODIMP nsIconChannel::GetContentLength(int64_t *aContentLength)
 {
   *aContentLength = mContentLength;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIconChannel::SetContentLength(int32_t aContentLength)
+NS_IMETHODIMP nsIconChannel::SetContentLength(int64_t aContentLength)
 {
   NS_NOTREACHED("nsIconChannel::SetContentLength");
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -187,7 +187,7 @@ WyciwygChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext
   nsresult status;
   chan->GetStatus(&status);
 
-  int32_t contentLength = -1;
+  int64_t contentLength = -1;
   chan->GetContentLength(&contentLength);
 
   int32_t charsetSource = kCharsetUninitialized;

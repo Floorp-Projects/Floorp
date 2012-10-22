@@ -923,19 +923,12 @@ nsHttpChannel::CallOnStartRequest()
     if (mResponseHead && mResponseHead->ContentCharset().IsEmpty())
         mResponseHead->SetContentCharset(mContentCharsetHint);
 
-    if (mResponseHead) {
-        SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
-                           mResponseHead->ContentLength());
+    if (mResponseHead && mCacheEntry) {
         // If we have a cache entry, set its predicted size to ContentLength to
         // avoid caching an entry that will exceed the max size limit.
-        if (mCacheEntry) {
-            nsresult rv;
-            int64_t predictedDataSize = -1; // -1 in case GetAsInt64 fails.
-            GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, 
-                               &predictedDataSize);
-            rv = mCacheEntry->SetPredictedDataSize(predictedDataSize);
-            if (NS_FAILED(rv)) return rv;
-        }
+        nsresult rv = mCacheEntry->SetPredictedDataSize(
+            mResponseHead->ContentLength());
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     // Allow consumers to override our content type
     if ((mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) &&

@@ -372,7 +372,7 @@ nsViewSourceChannel::GetContentDispositionHeader(nsACString &aContentDisposition
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetContentLength(int32_t *aContentLength)
+nsViewSourceChannel::GetContentLength(int64_t *aContentLength)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
@@ -380,7 +380,7 @@ nsViewSourceChannel::GetContentLength(int32_t *aContentLength)
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::SetContentLength(int32_t aContentLength)
+nsViewSourceChannel::SetContentLength(int64_t aContentLength)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 

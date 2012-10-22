@@ -52,8 +52,6 @@ ExternalHelperAppParent::Init(ContentParent *parent,
     do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID);
   NS_ASSERTION(helperAppService, "No Helper App Service!");
 
-  SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, mContentLength);
-
   nsCOMPtr<nsIURI> referrer = DeserializeURI(aReferrer);
   if (referrer)
     SetPropertyAsInterface(NS_LITERAL_STRING("docshell.internalReferrer"), referrer);
@@ -317,17 +315,17 @@ ExternalHelperAppParent::GetContentDispositionHeader(nsACString& aContentDisposi
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::GetContentLength(int32_t *aContentLength)
+ExternalHelperAppParent::GetContentLength(int64_t *aContentLength)
 {
-  if (mContentLength > INT32_MAX || mContentLength < 0)
+  if (mContentLength < 0)
     *aContentLength = -1;
   else
-    *aContentLength = (int32_t)mContentLength;
+    *aContentLength = mContentLength;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::SetContentLength(int32_t aContentLength)
+ExternalHelperAppParent::SetContentLength(int64_t aContentLength)
 {
   mContentLength = aContentLength;
   return NS_OK;

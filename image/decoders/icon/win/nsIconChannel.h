@@ -41,7 +41,7 @@ public:
 protected:
   nsCOMPtr<nsIURI> mUrl;
   nsCOMPtr<nsIURI> mOriginalURI;
-  int32_t          mContentLength;
+  int64_t          mContentLength;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsISupports>  mOwner; 

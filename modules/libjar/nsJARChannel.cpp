@@ -83,7 +83,7 @@ public:
         NS_IF_ADDREF(*result = mJarReader);
     }
 
-    int32_t GetContentLength()
+    int64_t GetContentLength()
     {
         return mContentLength;
     }
@@ -97,7 +97,7 @@ private:
     nsCString                   mJarDirSpec;
     nsCOMPtr<nsIInputStream>    mJarStream;
     nsCString                   mJarEntry;
-    int32_t                     mContentLength;
+    int64_t                     mContentLength;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARInputThunk, nsIInputStream)
@@ -136,7 +136,7 @@ nsJARInputThunk::EnsureJarStream()
     rv = mJarStream->Available((uint64_t *) &avail);
     if (NS_FAILED(rv)) return rv;
 
-    mContentLength = avail < INT32_MAX ? (int32_t) avail : -1;
+    mContentLength = avail < INT64_MAX ? (int64_t) avail : -1;
 
     return NS_OK;
 }
@@ -639,7 +639,7 @@ nsJARChannel::GetContentDispositionHeader(nsACString &aContentDispositionHeader)
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetContentLength(int32_t *result)
+nsJARChannel::GetContentLength(int64_t *result)
 {
     // if content length is unknown, query mJarInput...
     if (mContentLength < 0 && mJarInput)
@@ -650,7 +650,7 @@ nsJARChannel::GetContentLength(int32_t *result)
 }
 
 NS_IMETHODIMP
-nsJARChannel::SetContentLength(int32_t aContentLength)
+nsJARChannel::SetContentLength(int64_t aContentLength)
 {
     // XXX does this really make any sense at all?
     mContentLength = aContentLength;
