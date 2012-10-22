@@ -5489,7 +5489,8 @@ class CGDictionary(CGThing):
             ensureObject = ("JSObject* obj = JS_NewObject(cx, nullptr, nullptr, nullptr);\n"
                             "if (!obj) {\n"
                             "  return false;\n"
-                            "}\n")
+                            "}\n"
+                            "*vp = JS::ObjectValue(*obj);\n")
 
         memberInits = [CGIndenter(self.getMemberConversion(m)).define()
                        for m in self.memberInfo]
@@ -5555,7 +5556,6 @@ class CGDictionary(CGThing):
             "\n"
             "${defineMembers}\n"
             "\n"
-            "  *vp = JS::ObjectValue(*obj);\n"
             "  return true;\n"
             "}").substitute({
                 "selfName": self.makeClassName(d),

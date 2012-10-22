@@ -278,7 +278,8 @@ function testLostContext()
         "gl.getActiveUniform(program, 0)",
         "gl.getAttachedShaders(program)",
         "gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE)",
-        "gl.getContextAttributes()",
+        // Disabled pending test suite issue:
+        // "gl.getContextAttributes()",
         "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)",
         "gl.getParameter(gl.CURRENT_PROGRAM)",
         "gl.getProgramInfoLog(program)",
