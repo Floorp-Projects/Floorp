@@ -787,29 +787,6 @@ FullTrustSecMan::GetDocShellCodebasePrincipal(nsIURI *aURI,
 }
 
 NS_IMETHODIMP
-FullTrustSecMan::RequestCapability(nsIPrincipal *principal,
-                                   const char *capability,
-                                   int16_t *_retval)
-{
-    *_retval = nsIPrincipal::ENABLE_GRANTED;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::IsCapabilityEnabled(const char *capability,
-                                     bool *_retval)
-{
-    *_retval = true;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::EnableCapability(const char *capability)
-{
-    return NS_OK;;
-}
-
-NS_IMETHODIMP
 FullTrustSecMan::GetObjectPrincipal(JSContext * cx,
                                     JSObject * obj,
                                     nsIPrincipal **_retval)
