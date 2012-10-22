@@ -890,10 +890,6 @@ nsScriptSecurityManager::CheckSameOriginPrincipal(nsIPrincipal* aSubject,
     if (aSubject == aObject)
         return NS_OK;
 
-    if (!AppAttributesEqual(aSubject, aObject)) {
-        return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-    }
-
     // Default to false, and change if that turns out wrong.
     bool subjectSetDomain = false;
     bool objectSetDomain = false;
@@ -952,26 +948,6 @@ nsScriptSecurityManager::HashPrincipalByOrigin(nsIPrincipal* aPrincipal)
     if (!uri)
         aPrincipal->GetURI(getter_AddRefs(uri));
     return SecurityHashURI(uri);
-}
-
-/* static */ bool
-nsScriptSecurityManager::AppAttributesEqual(nsIPrincipal* aFirst,
-                                            nsIPrincipal* aSecond)
-{
-    MOZ_ASSERT(aFirst && aSecond, "Don't pass null pointers!");
-
-    uint32_t firstAppId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
-    if (!aFirst->GetUnknownAppId()) {
-        firstAppId = aFirst->GetAppId();
-    }
-
-    uint32_t secondAppId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
-    if (!aSecond->GetUnknownAppId()) {
-        secondAppId = aSecond->GetAppId();
-    }
-
-    return ((firstAppId == secondAppId) &&
-            (aFirst->GetIsInBrowserElement() == aSecond->GetIsInBrowserElement()));
 }
 
 nsresult
