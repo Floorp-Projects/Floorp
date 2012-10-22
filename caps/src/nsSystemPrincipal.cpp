@@ -71,23 +71,6 @@ void nsSystemPrincipal::dumpImpl()
 ///////////////////////////////////////
 
 NS_IMETHODIMP
-nsSystemPrincipal::GetPreferences(char** aPrefName, char** aID,
-                                  char** aSubjectName,
-                                  char** aGrantedList, char** aDeniedList,
-                                  bool* aIsTrusted)
-{
-    // The system principal should never be streamed out
-    *aPrefName = nullptr;
-    *aID = nullptr;
-    *aSubjectName = nullptr;
-    *aGrantedList = nullptr;
-    *aDeniedList = nullptr;
-    *aIsTrusted = false;
-
-    return NS_ERROR_FAILURE; 
-}
-
-NS_IMETHODIMP
 nsSystemPrincipal::Equals(nsIPrincipal *other, bool *result)
 {
     *result = (other == this);
@@ -124,31 +107,6 @@ NS_IMETHODIMP
 nsSystemPrincipal::GetHashValue(uint32_t *result)
 {
     *result = NS_PTR_TO_INT32(this);
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsSystemPrincipal::CanEnableCapability(const char *capability, 
-                                       int16_t *result)
-{
-    // System principal can enable all capabilities.
-    *result = nsIPrincipal::ENABLE_GRANTED;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsSystemPrincipal::IsCapabilityEnabled(const char *capability, 
-                                       void *annotation, 
-                                       bool *result)
-{
-    *result = true;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsSystemPrincipal::EnableCapability(const char *capability, void **annotation)
-{
-    *annotation = nullptr;
     return NS_OK;
 }
 

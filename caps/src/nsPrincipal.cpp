@@ -49,7 +49,6 @@ static bool URIIsImmutable(nsIURI* aURI)
 }
 
 // Static member variables
-int32_t nsBasePrincipal::sCapabilitiesOrdinal = 0;
 const char nsBasePrincipal::sInvalid[] = "Invalid";
 
 NS_IMETHODIMP_(nsrefcnt)
@@ -75,10 +74,7 @@ nsBasePrincipal::Release()
   return count;
 }
 
-nsBasePrincipal::nsBasePrincipal()
-  : mCapabilities(nullptr),
-    mSecurityPolicy(nullptr),
-    mTrusted(false)
+nsBasePrincipal::nsBasePrincipal() : mSecurityPolicy(nullptr)
 {
   if (!gIsObservingCodeBasePrincipalSupport) {
     nsresult rv =
@@ -94,7 +90,6 @@ nsBasePrincipal::nsBasePrincipal()
 nsBasePrincipal::~nsBasePrincipal(void)
 {
   SetSecurityPolicy(nullptr); 
-  delete mCapabilities;
 }
 
 NS_IMETHODIMP
@@ -139,8 +134,7 @@ nsBasePrincipal::CertificateEquals(nsIPrincipal *aOther)
   if (!str.Equals(mCert->fingerprint))
     return false;
 
-  // If either subject name is empty, just let the result stand (so that
-  // nsScriptSecurityManager::SetCanEnableCapability works), but if they're
+  // If either subject name is empty, just let the result stand, but if they're
   // both non-empty, only claim equality if they're equal.
   if (!mCert->subjectName.IsEmpty()) {
     // Check the other principal's subject name
@@ -149,181 +143,6 @@ nsBasePrincipal::CertificateEquals(nsIPrincipal *aOther)
   }
 
   return true;
-}
-
-NS_IMETHODIMP
-nsBasePrincipal::CanEnableCapability(const char *capability, int16_t *result)
-{
-  // If this principal is marked invalid, can't enable any capabilities
-  if (mCapabilities) {
-    nsCStringKey invalidKey(sInvalid);
-    if (mCapabilities->Exists(&invalidKey)) {
-      *result = nsIPrincipal::ENABLE_DENIED;
-
-      return NS_OK;
-    }
-  }
-
-  if (!mCert && !mTrusted) {
-    // If we are a non-trusted codebase principal, capabilities can not
-    // be enabled if the user has not set the pref allowing scripts to
-    // request enhanced capabilities; however, the file: and resource:
-    // schemes are special and may be able to get extra capabilities
-    // even with the pref disabled.
-    nsCOMPtr<nsIURI> codebase;
-    GetURI(getter_AddRefs(codebase));
-    if (!gCodeBasePrincipalSupport && codebase) {
-      bool mightEnable = false;     
-      nsresult rv = codebase->SchemeIs("file", &mightEnable);
-      if (NS_FAILED(rv) || !mightEnable) {
-        rv = codebase->SchemeIs("resource", &mightEnable);
-        if (NS_FAILED(rv) || !mightEnable) {
-          *result = nsIPrincipal::ENABLE_DENIED;
-          return NS_OK;
-        }
-      }
-    }
-  }
-
-  const char *start = capability;
-  *result = nsIPrincipal::ENABLE_GRANTED;
-  for(;;) {
-    const char *space = PL_strchr(start, ' ');
-    int32_t len = space ? space - start : strlen(start);
-    nsAutoCString capString(start, len);
-    nsCStringKey key(capString);
-    int16_t value =
-      mCapabilities ? (int16_t)NS_PTR_TO_INT32(mCapabilities->Get(&key)) : 0;
-    if (value == 0 || value == nsIPrincipal::ENABLE_UNKNOWN) {
-      // We don't know whether we can enable this capability,
-      // so we should ask the user.
-      value = nsIPrincipal::ENABLE_WITH_USER_PERMISSION;
-    }
-
-    if (value < *result) {
-      *result = value;
-    }
-
-    if (!space) {
-      break;
-    }
-
-    start = space + 1;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsBasePrincipal::SetCanEnableCapability(const char *capability,
-                                        int16_t canEnable)
-{
-  // If this principal is marked invalid, can't enable any capabilities
-  if (!mCapabilities) {
-    mCapabilities = new nsHashtable(7);  // XXXbz gets bumped up to 16 anyway
-    NS_ENSURE_TRUE(mCapabilities, NS_ERROR_OUT_OF_MEMORY);
-  }
-
-  nsCStringKey invalidKey(sInvalid);
-  if (mCapabilities->Exists(&invalidKey)) {
-    return NS_OK;
-  }
-
-  if (PL_strcmp(capability, sInvalid) == 0) {
-    mCapabilities->Reset();
-  }
-
-  const char *start = capability;
-  for(;;) {
-    const char *space = PL_strchr(start, ' ');
-    int len = space ? space - start : strlen(start);
-    nsAutoCString capString(start, len);
-    nsCStringKey key(capString);
-    mCapabilities->Put(&key, NS_INT32_TO_PTR(canEnable));
-    if (!space) {
-      break;
-    }
-
-    start = space + 1;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBasePrincipal::IsCapabilityEnabled(const char *capability, void *annotation,
-                                     bool *result)
-{
-  *result = false;
-  nsHashtable *ht = (nsHashtable *) annotation;
-  if (!ht) {
-    return NS_OK;
-  }
-  const char *start = capability;
-  for(;;) {
-    const char *space = PL_strchr(start, ' ');
-    int len = space ? space - start : strlen(start);
-    nsAutoCString capString(start, len);
-    nsCStringKey key(capString);
-    *result = (ht->Get(&key) == (void *) AnnotationEnabled);
-    if (!*result) {
-      // If any single capability is not enabled, then return false.
-      return NS_OK;
-    }
-
-    if (!space) {
-      return NS_OK;
-    }
-
-    start = space + 1;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBasePrincipal::EnableCapability(const char *capability, void **annotation)
-{
-  return SetCapability(capability, annotation, AnnotationEnabled);
-}
-
-nsresult
-nsBasePrincipal::SetCapability(const char *capability, void **annotation,
-                               AnnotationValue value)
-{
-  if (*annotation == nullptr) {
-    nsHashtable* ht = new nsHashtable(5);
-
-    if (!ht) {
-       return NS_ERROR_OUT_OF_MEMORY;
-     }
-
-    // This object owns its annotations. Save them so we can release
-    // them when we destroy this object.
-    if (!mAnnotations.AppendElement(ht)) {
-      delete ht;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    *annotation = ht;
-  }
-
-  const char *start = capability;
-  for(;;) {
-    const char *space = PL_strchr(start, ' ');
-    int len = space ? space - start : strlen(start);
-    nsAutoCString capString(start, len);
-    nsCStringKey key(capString);
-    nsHashtable *ht = static_cast<nsHashtable *>(*annotation);
-    ht->Put(&key, (void *) value);
-    if (!space) {
-      break;
-    }
-
-    start = space + 1;
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -431,172 +250,6 @@ nsBasePrincipal::EnsureCertData(const nsACString& aSubjectName,
   mCert->prettyName = aPrettyName;
   mCert->cert = aCert;
   return NS_OK;
-}
-
-struct CapabilityList
-{
-  nsCString* granted;
-  nsCString* denied;
-};
-
-static bool
-AppendCapability(nsHashKey *aKey, void *aData, void *capListPtr)
-{
-  CapabilityList* capList = (CapabilityList*)capListPtr;
-  int16_t value = (int16_t)NS_PTR_TO_INT32(aData);
-  nsCStringKey* key = (nsCStringKey *)aKey;
-  if (value == nsIPrincipal::ENABLE_GRANTED) {
-    capList->granted->Append(key->GetString(), key->GetStringLength());
-    capList->granted->Append(' ');
-  }
-  else if (value == nsIPrincipal::ENABLE_DENIED) {
-    capList->denied->Append(key->GetString(), key->GetStringLength());
-    capList->denied->Append(' ');
-  }
-
-  return true;
-}
-
-NS_IMETHODIMP
-nsBasePrincipal::GetPreferences(char** aPrefName, char** aID,
-                                char** aSubjectName,
-                                char** aGrantedList, char** aDeniedList,
-                                bool* aIsTrusted)
-{
-  if (mPrefName.IsEmpty()) {
-    if (mCert) {
-      mPrefName.Assign("capability.principal.certificate.p");
-    }
-    else {
-      mPrefName.Assign("capability.principal.codebase.p");
-    }
-
-    mPrefName.AppendInt(sCapabilitiesOrdinal++);
-    mPrefName.Append(".id");
-  }
-
-  *aPrefName = nullptr;
-  *aID = nullptr;
-  *aSubjectName = nullptr;
-  *aGrantedList = nullptr;
-  *aDeniedList = nullptr;
-  *aIsTrusted = mTrusted;
-
-  char *prefName = nullptr;
-  char *id = nullptr;
-  char *subjectName = nullptr;
-  char *granted = nullptr;
-  char *denied = nullptr;
-
-  //-- Preference name
-  prefName = ToNewCString(mPrefName);
-  if (!prefName) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  //-- ID
-  nsresult rv = NS_OK;
-  if (mCert) {
-    id = ToNewCString(mCert->fingerprint);
-    if (!id) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-  else {
-    rv = GetOrigin(&id);
-  }
-
-  if (NS_FAILED(rv)) {
-    nsMemory::Free(prefName);
-    return rv;
-  }
-
-  if (mCert) {
-    subjectName = ToNewCString(mCert->subjectName);
-  } else {
-    subjectName = ToNewCString(EmptyCString());
-  }
-
-  if (!subjectName) {
-    nsMemory::Free(prefName);
-    nsMemory::Free(id);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  //-- Capabilities
-  nsAutoCString grantedListStr, deniedListStr;
-  if (mCapabilities) {
-    CapabilityList capList = CapabilityList();
-    capList.granted = &grantedListStr;
-    capList.denied = &deniedListStr;
-    mCapabilities->Enumerate(AppendCapability, (void*)&capList);
-  }
-
-  if (!grantedListStr.IsEmpty()) {
-    grantedListStr.Truncate(grantedListStr.Length() - 1);
-    granted = ToNewCString(grantedListStr);
-    if (!granted) {
-      nsMemory::Free(prefName);
-      nsMemory::Free(id);
-      nsMemory::Free(subjectName);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  if (!deniedListStr.IsEmpty()) {
-    deniedListStr.Truncate(deniedListStr.Length() - 1);
-    denied = ToNewCString(deniedListStr);
-    if (!denied) {
-      nsMemory::Free(prefName);
-      nsMemory::Free(id);
-      nsMemory::Free(subjectName);
-      if (granted) {
-        nsMemory::Free(granted);
-      }
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  *aPrefName = prefName;
-  *aID = id;
-  *aSubjectName = subjectName;
-  *aGrantedList = granted;
-  *aDeniedList = denied;
-
-  return NS_OK;
-}
-
-static nsresult
-ReadAnnotationEntry(nsIObjectInputStream* aStream, nsHashKey** aKey,
-                    void** aData)
-{
-  nsresult rv;
-  nsCStringKey* key = new nsCStringKey(aStream, &rv);
-  if (!key)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  if (NS_FAILED(rv)) {
-    delete key;
-    return rv;
-  }
-
-  uint32_t value;
-  rv = aStream->Read32(&value);
-  if (NS_FAILED(rv)) {
-    delete key;
-    return rv;
-  }
-
-  *aKey = key;
-  *aData = (void*) value;
-  return NS_OK;
-}
-
-static void
-FreeAnnotationEntry(nsIObjectInputStream* aStream, nsHashKey* aKey,
-                    void* aData)
-{
-  delete aKey;
 }
 
 #ifdef DEBUG
@@ -1004,75 +657,6 @@ nsPrincipal::SetDomain(nsIURI* aDomain)
   return NS_OK;
 }
 
-nsresult
-nsPrincipal::InitFromPersistent(const char* aPrefName,
-                                const nsCString& aToken,
-                                const nsCString& aSubjectName,
-                                const nsACString& aPrettyName,
-                                const char* aGrantedList,
-                                const char* aDeniedList,
-                                nsISupports* aCert,
-                                bool aIsCert,
-                                bool aTrusted,
-                                uint32_t aAppId,
-                                bool aInMozBrowser)
-{
-  NS_PRECONDITION(!mCapabilities || mCapabilities->Count() == 0,
-                  "mCapabilities was already initialized?");
-  NS_PRECONDITION(mAnnotations.Length() == 0,
-                  "mAnnotations was already initialized?");
-  NS_PRECONDITION(!mInitialized, "We were already initialized?");
-
-  mInitialized = true;
-
-  mAppId = aAppId;
-  mInMozBrowser = aInMozBrowser;
-
-  nsresult rv;
-  if (aIsCert) {
-    rv = SetCertificate(aToken, aSubjectName, aPrettyName, aCert);
-    
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-  else {
-    rv = NS_NewURI(getter_AddRefs(mCodebase), aToken, nullptr);
-    if (NS_FAILED(rv)) {
-      NS_ERROR("Malformed URI in capability.principal preference.");
-      return rv;
-    }
-
-    NS_TryToSetImmutable(mCodebase);
-    mCodebaseImmutable = URIIsImmutable(mCodebase);
-
-    mTrusted = aTrusted;
-  }
-
-  //-- Save the preference name
-  mPrefName = aPrefName;
-
-  const char* ordinalBegin = PL_strpbrk(aPrefName, "1234567890");
-  if (ordinalBegin) {
-    int n = atoi(ordinalBegin);
-    if (sCapabilitiesOrdinal <= n) {
-      sCapabilitiesOrdinal = n + 1;
-    }
-  }
-
-  //-- Store the capabilities
-  rv = NS_OK;
-  if (aGrantedList) {
-    rv = SetCanEnableCapability(aGrantedList, nsIPrincipal::ENABLE_GRANTED);
-  }
-
-  if (NS_SUCCEEDED(rv) && aDeniedList) {
-    rv = SetCanEnableCapability(aDeniedList, nsIPrincipal::ENABLE_DENIED);
-  }
-
-  return rv;
-}
-
 NS_IMETHODIMP
 nsPrincipal::GetExtendedOrigin(nsACString& aExtendedOrigin)
 {
@@ -1121,33 +705,8 @@ nsPrincipal::GetUnknownAppId(bool* aUnknownAppId)
 NS_IMETHODIMP
 nsPrincipal::Read(nsIObjectInputStream* aStream)
 {
-  bool hasCapabilities;
-  nsresult rv = aStream->ReadBoolean(&hasCapabilities);
-  if (NS_SUCCEEDED(rv) && hasCapabilities) {
-    mCapabilities = new nsHashtable(aStream, ReadAnnotationEntry,
-                                    FreeAnnotationEntry, &rv);
-    NS_ENSURE_TRUE(mCapabilities, NS_ERROR_OUT_OF_MEMORY);
-  }
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = NS_ReadOptionalCString(aStream, mPrefName);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  const char* ordinalBegin = PL_strpbrk(mPrefName.get(), "1234567890");
-  if (ordinalBegin) {
-    int n = atoi(ordinalBegin);
-    if (sCapabilitiesOrdinal <= n) {
-      sCapabilitiesOrdinal = n + 1;
-    }
-  }
-
   bool haveCert;
-  rv = aStream->ReadBoolean(&haveCert);
+  nsresult rv = aStream->ReadBoolean(&haveCert);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1203,46 +762,15 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
 
   SetDomain(domain);
 
-  rv = aStream->ReadBoolean(&mTrusted);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   return NS_OK;
-}
-
-static nsresult
-WriteScalarValue(nsIObjectOutputStream* aStream, void* aData)
-{
-  uint32_t value = NS_PTR_TO_INT32(aData);
-
-  return aStream->Write32(value);
 }
 
 NS_IMETHODIMP
 nsPrincipal::Write(nsIObjectOutputStream* aStream)
 {
   NS_ENSURE_STATE(mCert || mCodebase);
-  
-  // mAnnotations is transient data associated to specific JS stack frames.  We
-  // don't want to serialize that.
-  
-  bool hasCapabilities = (mCapabilities && mCapabilities->Count() > 0);
-  nsresult rv = aStream->WriteBoolean(hasCapabilities);
-  if (NS_SUCCEEDED(rv) && hasCapabilities) {
-    rv = mCapabilities->Write(aStream, WriteScalarValue);
-  }
 
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = NS_WriteOptionalStringZ(aStream, mPrefName.get());
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = aStream->WriteBoolean(mCert != nullptr);
+  nsresult rv = aStream->WriteBoolean(mCert != nullptr);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1290,11 +818,6 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
 
   aStream->Write32(mAppId);
   aStream->WriteBoolean(mInMozBrowser);
-
-  rv = aStream->Write8(mTrusted);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 
   // mCodebaseImmutable and mDomainImmutable will be recomputed based
   // on the deserialized URIs in Read().
