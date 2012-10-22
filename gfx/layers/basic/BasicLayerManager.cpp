@@ -1022,7 +1022,7 @@ BasicLayerManager::CreateReadbackLayer()
 
 BasicShadowLayerManager::BasicShadowLayerManager(nsIWidget* aWidget) :
   BasicLayerManager(aWidget), mTargetRotation(ROTATION_0),
-  mRepeatTransaction(false)
+  mRepeatTransaction(false), mIsRepeatTransaction(false)
 {
   MOZ_COUNT_CTOR(BasicShadowLayerManager);
 }
@@ -1132,8 +1132,10 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
 
   if (mRepeatTransaction) {
     mRepeatTransaction = false;
+    mIsRepeatTransaction = true;
     BasicLayerManager::BeginTransaction();
     BasicShadowLayerManager::EndTransaction(aCallback, aCallbackData, aFlags);
+    mIsRepeatTransaction = false;
   } else if (mShadowTarget) {
     if (mWidget) {
       if (CompositorChild* remoteRenderer = mWidget->GetRemoteRenderer()) {

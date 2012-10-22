@@ -272,6 +272,8 @@ public:
 
   void SetRepeatTransaction() { mRepeatTransaction = true; }
 
+  bool IsRepeatTransaction() { return mIsRepeatTransaction; }
+
   /**
    * Called for each iteration of a progressive tile update. Fills
    * aViewport, aScaleX and aScaleY with the current scale and viewport
@@ -307,6 +309,7 @@ private:
   // Used to repeat the transaction right away (to avoid rebuilding
   // a display list) to support progressive drawing.
   bool mRepeatTransaction;
+  bool mIsRepeatTransaction;
 };
 
 class BasicShadowableThebesLayer;
