@@ -4,14 +4,15 @@
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/policies.js");
-Cu.import("resource://services-sync/status.js");
-
-Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/rotaryengine.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
-Engines.register(RotaryEngine);
-let engine = Engines.get("rotary");
+Service.engineManager.clear();
+Service.engineManager.register(RotaryEngine);
+let engine = Service.engineManager.get("rotary");
 let tracker = engine._tracker;
 engine.enabled = true;
 
@@ -83,7 +84,7 @@ add_test(function test_sync_triggered() {
 
   Service.login();
 
-  SyncScheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
+  Service.scheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
   Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
     Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
     _("Sync completed!");
@@ -112,9 +113,9 @@ add_test(function test_clients_engine_sync_triggered() {
     server.stop(run_next_test);
   });
 
-  SyncScheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
+  Service.scheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
   do_check_eq(Status.login, LOGIN_SUCCEEDED);
-  Clients._tracker.score += SCORE_INCREMENT_XLARGE;
+  Service.clientsEngine._tracker.score += SCORE_INCREMENT_XLARGE;
 });
 
 add_test(function test_incorrect_credentials_sync_not_triggered() {

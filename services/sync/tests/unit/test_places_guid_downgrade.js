@@ -1,8 +1,12 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/service.js");
 
 const kDBName = "places.sqlite";
 const storageSvc = Cc["@mozilla.org/storage/service;1"]
@@ -83,7 +87,7 @@ add_test(function test_initial_state() {
 });
 
 add_test(function test_history_guids() {
-  let engine = new HistoryEngine();
+  let engine = new HistoryEngine(Service);
   let store = engine._store;
 
   let places = [
@@ -152,7 +156,7 @@ add_test(function test_history_guids() {
 });
 
 add_test(function test_bookmark_guids() {
-  let engine = new BookmarksEngine();
+  let engine = new BookmarksEngine(Service);
   let store = engine._store;
 
   let fxid = PlacesUtils.bookmarks.insertBookmark(

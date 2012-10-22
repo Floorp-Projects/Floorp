@@ -5,11 +5,13 @@
 
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://services-sync/addonsreconciler.js");
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://services-common/preferences.js");
+Cu.import("resource://services-sync/addonsreconciler.js");
+Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 let prefs = new Preferences();
 prefs.set("extensions.getAddons.get.url",
@@ -18,8 +20,10 @@ prefs.set("extensions.getAddons.get.url",
 loadAddonTestFunctions();
 startupManager();
 
-Engines.register(AddonsEngine);
-let engine = Engines.get("addons");
+let engineManager = Service.engineManager;
+
+engineManager.register(AddonsEngine);
+let engine = engineManager.get("addons");
 let reconciler = engine._reconciler;
 let tracker = engine._tracker;
 
@@ -156,7 +160,7 @@ add_test(function test_disabled_install_semantics() {
 
   new SyncTestingInfrastructure(USER, PASSWORD, PASSPHRASE);
 
-  generateNewKeys();
+  generateNewKeys(Service.collectionKeys);
 
   let contents = {
     meta: {global: {engines: {addons: {version: engine.version,

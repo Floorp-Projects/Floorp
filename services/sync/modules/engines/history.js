@@ -12,12 +12,12 @@ const Cr = Components.results;
 const HISTORY_TTL = 5184000; // 60 days
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-common/log4moz.js");
 
 function HistoryRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
@@ -31,8 +31,8 @@ HistoryRec.prototype = {
 Utils.deferGetSet(HistoryRec, "cleartext", ["histUri", "title", "visits"]);
 
 
-function HistoryEngine() {
-  SyncEngine.call(this, "History");
+function HistoryEngine(service) {
+  SyncEngine.call(this, "History", service);
 }
 HistoryEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -43,8 +43,8 @@ HistoryEngine.prototype = {
   applyIncomingBatchSize: HISTORY_STORE_BATCH_SIZE
 };
 
-function HistoryStore(name) {
-  Store.call(this, name);
+function HistoryStore(name, engine) {
+  Store.call(this, name, engine);
 
   // Explicitly nullify our references to our cached services so we don't leak
   Svc.Obs.add("places-shutdown", function() {
@@ -354,8 +354,8 @@ HistoryStore.prototype = {
   }
 };
 
-function HistoryTracker(name) {
-  Tracker.call(this, name);
+function HistoryTracker(name, engine) {
+  Tracker.call(this, name, engine);
   Svc.Obs.add("weave:engine:start-tracking", this);
   Svc.Obs.add("weave:engine:stop-tracking", this);
 }

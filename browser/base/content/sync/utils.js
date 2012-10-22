@@ -27,8 +27,8 @@ let gSyncUtils = {
 
   changeName: function changeName(input) {
     // Make sure to update to a modified name, e.g., empty-string -> default
-    Weave.Clients.localName = input.value;
-    input.value = Weave.Clients.localName;
+    Weave.Service.clientsEngine.localName = input.value;
+    input.value = Weave.Service.clientsEngine.localName;
   },
 
   openChange: function openChange(type, duringSetup) {
@@ -193,11 +193,11 @@ let gSyncUtils = {
 
     if (!el2)
       valid = val1.length >= Weave.MIN_PASS_LENGTH;
-    else if (val1 && val1 == Weave.Identity.username)
+    else if (val1 && val1 == Weave.Service.identity.username)
       error = "change.password.pwSameAsUsername";
-    else if (val1 && val1 == Weave.Identity.account)
+    else if (val1 && val1 == Weave.Service.identity.account)
       error = "change.password.pwSameAsEmail";
-    else if (val1 && val1 == Weave.Identity.basicPassword)
+    else if (val1 && val1 == Weave.Service.identity.basicPassword)
       error = "change.password.pwSameAsPassword";
     else if (val1 && val2) {
       if (val1 == val2 && val1.length >= Weave.MIN_PASS_LENGTH)

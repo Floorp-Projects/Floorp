@@ -6,6 +6,8 @@
 Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-sync/addonutils.js");
 Cu.import("resource://services-sync/engines/addons.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 const HTTP_PORT = 8888;
 
@@ -16,8 +18,8 @@ prefs.set("extensions.getAddons.get.url", "http://localhost:8888/search/guid:%ID
 loadAddonTestFunctions();
 startupManager();
 
-Engines.register(AddonsEngine);
-let engine     = Engines.get("addons");
+Service.engineManager.register(AddonsEngine);
+let engine     = Service.engineManager.get("addons");
 let tracker    = engine._tracker;
 let store      = engine._store;
 let reconciler = engine._reconciler;

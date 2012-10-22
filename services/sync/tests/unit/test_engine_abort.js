@@ -1,15 +1,23 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/rotaryengine.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 add_test(function test_processIncoming_abort() {
   _("An abort exception, raised in applyIncoming, will abort _processIncoming.");
   new SyncTestingInfrastructure();
-  generateNewKeys();
+  generateNewKeys(Service.collectionKeys);
 
-  let engine = new RotaryEngine();
+  let engine = new RotaryEngine(Service);
 
   _("Create some server data.");
-  let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
   meta_global.payload.engines = {rotary: {version: engine.version,
                                           syncID: engine.syncID}};
 
@@ -29,7 +37,7 @@ add_test(function test_processIncoming_abort() {
     _("Throwing: " + JSON.stringify(ex));
     throw ex;
   };
-  
+
   _("Trying _processIncoming. It will throw after aborting.");
   let err;
   try {
@@ -54,7 +62,7 @@ add_test(function test_processIncoming_abort() {
 
   server.stop(run_next_test);
   Svc.Prefs.resetBranch("");
-  Records.clearCache();
+  Service.recordManager.clearCache();
 });
 
 function run_test() {

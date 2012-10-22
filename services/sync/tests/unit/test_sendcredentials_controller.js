@@ -1,10 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */ 
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/jpakeclient.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 function run_test() {
   setBasicCredentials("johndoe", "ilovejane", Utils.generatePassphrase());
@@ -29,25 +30,25 @@ function make_sendCredentials_test(topic) {
         sendAndCompleteCalled = true;
 
         // Verify it sends the correct data.
-        do_check_eq(data.account,   Identity.account);
-        do_check_eq(data.password,  Identity.basicPassword);
-        do_check_eq(data.synckey,   Identity.syncKey);
+        do_check_eq(data.account,   Service.identity.account);
+        do_check_eq(data.password,  Service.identity.basicPassword);
+        do_check_eq(data.synckey,   Service.identity.syncKey);
         do_check_eq(data.serverURL, Service.serverURL);
 
         this.controller.onComplete();
         // Verify it schedules a sync for the expected interval.
-        let expectedInterval = SyncScheduler.activeInterval;
-        do_check_true(SyncScheduler.nextSync - Date.now() <= expectedInterval);
+        let expectedInterval = Service.scheduler.activeInterval;
+        do_check_true(Service.scheduler.nextSync - Date.now() <= expectedInterval);
 
         // Signal the end of another sync. We shouldn't be registered anymore,
         // so we shouldn't re-enter this method (cf sendAndCompleteCalled above)
         Svc.Obs.notify(topic);
 
-        SyncScheduler.setDefaults();
+        Service.scheduler.setDefaults();
         Utils.nextTick(run_next_test);
       }
     };
-    jpakeclient.controller = new SendCredentialsController(jpakeclient);
+    jpakeclient.controller = new SendCredentialsController(jpakeclient, Service);
     Svc.Obs.notify(topic);
   };
 }
@@ -64,7 +65,7 @@ add_test(function test_abort() {
       do_throw("Shouldn't get here!");
     }
   };
-  jpakeclient.controller = new SendCredentialsController(jpakeclient);
+  jpakeclient.controller = new SendCredentialsController(jpakeclient, Service);
 
   // Verify that the controller unregisters itself when the exchange
   // was aborted.
@@ -87,7 +88,7 @@ add_test(function test_startOver() {
       do_throw("Shouldn't get here!");
     }
   };
-  jpakeclient.controller = new SendCredentialsController(jpakeclient);
+  jpakeclient.controller = new SendCredentialsController(jpakeclient, Service);
 
   Svc.Obs.notify("weave:service:start-over");
   do_check_true(abortCalled);

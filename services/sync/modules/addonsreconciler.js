@@ -20,7 +20,6 @@
 const Cu = Components.utils;
 
 Cu.import("resource://services-common/log4moz.js");
-Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 
@@ -119,8 +118,6 @@ function AddonsReconciler() {
   let level = Svc.Prefs.get("log.logger.addonsreconciler", "Debug");
   this._log.level = Log4Moz.Level[level];
 
-  Svc.Obs.add("weave:engine:start-tracking", this.startListening, this);
-  Svc.Obs.add("weave:engine:stop-tracking", this.stopListening, this);
   Svc.Obs.add("xpcom-shutdown", this.stopListening, this);
 };
 AddonsReconciler.prototype = {
@@ -301,8 +298,7 @@ AddonsReconciler.prototype = {
    * This is typically called automatically when Sync is loaded.
    */
   startListening: function startListening() {
-    let engine = Engines.get("addons");
-    if (!engine || !engine.enabled || this._listening) {
+    if (this._listening) {
       return;
     }
 
