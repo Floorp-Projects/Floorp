@@ -34,61 +34,17 @@ public:
   NS_IMETHOD_(nsrefcnt) Release(void);
   NS_IMETHOD GetSecurityPolicy(void** aSecurityPolicy);
   NS_IMETHOD SetSecurityPolicy(void* aSecurityPolicy);
-  NS_IMETHOD GetHasCertificate(bool* aHasCertificate);
-  NS_IMETHOD GetFingerprint(nsACString& aFingerprint);
-  NS_IMETHOD GetPrettyName(nsACString& aPrettyName);
-  NS_IMETHOD GetSubjectName(nsACString& aSubjectName);
-  NS_IMETHOD GetCertificate(nsISupports** aCertificate);
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp);
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp);
 public:
-
-  // Call this to ensure that this principal has a subject name, a pretty name,
-  // and a cert pointer.  This method will throw if there is already a
-  // different subject name or if this principal has no certificate.
-  nsresult EnsureCertData(const nsACString& aSubjectName,
-                          const nsACString& aPrettyName,
-                          nsISupports* aCert);
 
   static const char sInvalid[];
 
 protected:
 
-  // XXXcaa This is a semi-hack.  The best solution here is to keep
-  // a reference to an interface here, except there is no interface
-  // that we can use yet.
-  struct Certificate
-  {
-    Certificate(const nsACString& aFingerprint, const nsACString& aSubjectName,
-                const nsACString& aPrettyName, nsISupports* aCert)
-      : fingerprint(aFingerprint),
-        subjectName(aSubjectName),
-        prettyName(aPrettyName),
-        cert(aCert)
-    {
-    }
-    nsCString fingerprint;
-    nsCString subjectName;
-    nsCString prettyName;
-    nsCOMPtr<nsISupports> cert;
-  };
-
-  nsresult SetCertificate(const nsACString& aFingerprint,
-                          const nsACString& aSubjectName,
-                          const nsACString& aPrettyName,
-                          nsISupports* aCert);
-
-  // Checks whether this principal's certificate equals aOther's.
-  bool CertificateEquals(nsIPrincipal *aOther);
-
 #ifdef DEBUG
   virtual void dumpImpl() = 0;
 #endif
-
-  // Keep this is a pointer, even though it may slightly increase the
-  // cost of keeping a certificate, this is a good tradeoff though since
-  // it is very rare that we actually have a certificate.
-  nsAutoPtr<Certificate> mCert;
 
   DomainPolicy* mSecurityPolicy;
 
@@ -122,11 +78,7 @@ public:
   nsPrincipal();
 
   // Init() must be called before the principal is in a usable state.
-  nsresult Init(const nsACString& aCertFingerprint,
-                const nsACString& aSubjectName,
-                const nsACString& aPrettyName,
-                nsISupports* aCert,
-                nsIURI* aCodebase,
+  nsresult Init(nsIURI* aCodebase,
                 uint32_t aAppId,
                 bool aInMozBrowser);
 

@@ -212,25 +212,6 @@ nsNullPrincipal::GetOrigin(char** aOrigin)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsNullPrincipal::GetHasCertificate(bool* aResult)
-{
-  *aResult = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsNullPrincipal::GetFingerprint(nsACString& aID)
-{
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP 
-nsNullPrincipal::GetPrettyName(nsACString& aName)
-{
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
 NS_IMETHODIMP
 nsNullPrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
 {
@@ -274,19 +255,6 @@ nsNullPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsP
   }
 
   return NS_ERROR_DOM_BAD_URI;
-}
-
-NS_IMETHODIMP 
-nsNullPrincipal::GetSubjectName(nsACString& aName)
-{
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::GetCertificate(nsISupports** aCertificate)
-{
-    *aCertificate = nullptr;
-    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -26,8 +26,8 @@ interface nsIPrincipal : nsISerializable
 {
     /**
      * Returns whether the other principal is equivalent to this principal.
-     * Principals are considered equal if they are the same principal,
-     * they have the same origin, or have the same certificate fingerprint ID
+     * Principals are considered equal if they are the same principal, or
+     * they have the same origin.
      */
     boolean equals(in nsIPrincipal other);
 
@@ -79,33 +79,9 @@ interface nsIPrincipal : nsISerializable
     readonly attribute string origin;
 
     /**
-     * Whether this principal is associated with a certificate.
-     */
-    readonly attribute boolean hasCertificate;
-
-    /**
-     * The fingerprint ID of this principal's certificate.
-     * Throws if there is no certificate associated with this principal.
-     */
-    // XXXcaa kaie says this may not be unique.  We should probably
-    // consider using something else for this....
-    readonly attribute AUTF8String fingerprint;
-
-    /**
-     * The pretty name for the certificate.  This sort of (but not really)
-     * identifies the subject of the certificate (the entity that stands behind
-     * the certificate).  Note that this may be empty; prefer to get the
-     * certificate itself and get this information from it, since that may
-     * provide more information.
-     *
-     * Throws if there is no certificate associated with this principal.
-     */
-    readonly attribute AUTF8String prettyName;
-
-    /**
      * Returns whether the other principal is equal to or weaker than this
-     * principal.  Principals are equal if they are the same object, they
-     * have the same origin, or they have the same certificate ID.
+     * principal. Principals are equal if they are the same object or they
+     * have the same origin.
      *
      * Thus a principal always subsumes itself.
      *
@@ -115,18 +91,6 @@ interface nsIPrincipal : nsISerializable
      * privileged, security context) is not equal to any other principal
      * (including other null principals), and therefore does not subsume
      * anything but itself.
-     *
-     * Both codebase and certificate principals are subsumed by the system
-     * principal, but no codebase or certificate principal yet subsumes any
-     * other codebase or certificate principal.  This may change in a future
-     * release; note that nsIPrincipal is unfrozen, not slated to be frozen.
-     *
-     * XXXbz except see bug 147145!
-     *
-     * Note for the future: Perhaps we should consider a certificate principal
-     * for a given URI subsuming a codebase principal for the same URI?  Not
-     * sure what the immediate benefit would be, but I think the setup could
-     * make some code (e.g. MaybeDowngradeToCodebase) clearer.
      */
     boolean subsumes(in nsIPrincipal other);
 
@@ -168,23 +132,6 @@ interface nsIPrincipal : nsISerializable
      */
     void checkMayLoad(in nsIURI uri, in boolean report,
                       in boolean allowIfInheritsPrincipal);
-
-    /**
-     * The subject name for the certificate.  This actually identifies the
-     * subject of the certificate.  This may well not be a string that would
-     * mean much to a typical user on its own (e.g. it may have a number of
-     * different names all concatenated together with some information on what
-     * they mean in between).
-     *
-     * Throws if there is no certificate associated with this principal.
-     */
-    readonly attribute AUTF8String subjectName;
-
-    /**
-     * The certificate associated with this principal, if any.  If there isn't
-     * one, this will return null.  Getting this attribute never throws.
-     */
-    readonly attribute nsISupports certificate;
 
     /**
      * A Content Security Policy associated with this principal.
