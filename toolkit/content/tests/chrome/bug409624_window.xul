@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="409624test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        title="409624 test">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript"><![CDATA[
+    var gFindBar = null;
+    var gBrowser;
+
+    var imports = ["SimpleTest", "ok", "is"];
+    for each (var name in imports) {
+      window[name] = window.opener.wrappedJSObject[name];
+    }
+
+    function finish() {
+      window.close();
+      SimpleTest.finish();
+    }
+
+    function startTest() {
+      gFindBar = document.getElementById("FindToolbar");
+      gBrowser = document.getElementById("content");
+      gBrowser.addEventListener("pageshow", onPageShow, false);
+      gBrowser.loadURI('data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
+    }
+
+    function onPageShow() {
+      gBrowser.removeEventListener("pageshow", onPageShow, false);
+      gFindBar.clear();
+      let textbox = gFindBar.getElement("findbar-textbox");
+
+      // canClear / clear should work regardless of whether or not editor has
+      // been lazily initialised yet
+      ok(!gFindBar.canClear, "canClear property false when findbar empty");
+      textbox.value = "mozilla";
+      ok(gFindBar.canClear, "canClear property true when findbar value set without editor init");
+      gFindBar.clear();
+      is(textbox.value, '', "findbar input value cleared after clear() call without editor init");
+      ok(!gFindBar.canClear, "canClear property false after clear() call");
+
+      gFindBar.open();
+      let matchCaseCheckbox = gFindBar.getElement("find-case-sensitive");
+      if (!matchCaseCheckbox.hidden && matchCaseCheckbox.checked)
+        matchCaseCheckbox.click();
+      ok(!matchCaseCheckbox.checked, "case-insensitivity correctly set");
+
+      // Simulate typical input
+      textbox.focus();
+      sendChar("m");
+      ok(gFindBar.canClear, "canClear property true after input");
+      let preSelection = gBrowser.contentWindow.getSelection();
+      ok(!preSelection.isCollapsed, "Found item and selected range");
+      gFindBar.clear();
+      is(textbox.value, '', "findbar input value cleared after clear() call");
+      let postSelection = gBrowser.contentWindow.getSelection();
+      ok(postSelection.isCollapsed, "item found deselected after clear() call");
+      let fp = gFindBar.getElement("find-previous");
+      ok(fp.disabled, "find-previous button disabled after clear() call");
+      let fn = gFindBar.getElement("find-next");
+      ok(fn.disabled, "find-next button disabled after clear() call");
+
+      // Test status updated after a search for text not in page
+      textbox.focus();
+      sendChar("x");
+      gFindBar.clear();
+      let ftext = gFindBar.getElement("find-status");
+      is(ftext.textContent, "", "status text disabled after clear() call");
+
+      // Test input empty with undo stack non-empty
+      textbox.focus();
+      sendChar("m");
+      sendKey("BACK_SPACE");
+      ok(gFindBar.canClear, "canClear property true when undo available");
+      gFindBar.clear();
+      gFindBar.close();
+
+      finish();
+    }
+
+    SimpleTest.waitForFocus(startTest, window);
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+  <findbar id="FindToolbar" browserid="content"/>
+</window>
