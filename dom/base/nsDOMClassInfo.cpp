@@ -179,7 +179,6 @@
 
 #ifdef MOZ_B2G_RIL
 #include "nsIWifi.h"
-#include "nsIWifiEventInits.h"
 #endif
 
 // includes needed for the prototype chain interfaces
@@ -1619,8 +1618,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
 #ifdef MOZ_B2G_RIL
-  NS_DEFINE_CLASSINFO_DATA(MozWifiConnectionInfoEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Telephony, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TelephonyCall, nsEventTargetSH,
@@ -1731,9 +1728,6 @@ NS_DEFINE_EVENT_CTOR(Event)
 NS_DEFINE_EVENT_CTOR(UIEvent)
 NS_DEFINE_EVENT_CTOR(MouseEvent)
 NS_DEFINE_EVENT_CTOR(WheelEvent)
-#ifdef MOZ_B2G_RIL
-NS_DEFINE_EVENT_CTOR(MozWifiConnectionInfoEvent)
-#endif
 
 #define MOZ_GENERATED_EVENT_LIST
 #define MOZ_GENERATED_EVENT(_event_interface) \
