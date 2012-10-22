@@ -1045,13 +1045,13 @@ nsJSChannel::GetContentDispositionHeader(nsACString &aContentDispositionHeader)
 }
 
 NS_IMETHODIMP
-nsJSChannel::GetContentLength(int32_t *aContentLength)
+nsJSChannel::GetContentLength(int64_t *aContentLength)
 {
     return mStreamChannel->GetContentLength(aContentLength);
 }
 
 NS_IMETHODIMP
-nsJSChannel::SetContentLength(int32_t aContentLength)
+nsJSChannel::SetContentLength(int64_t aContentLength)
 {
     return mStreamChannel->SetContentLength(aContentLength);
 }

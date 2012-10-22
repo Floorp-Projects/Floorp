@@ -238,14 +238,14 @@ NS_IMETHODIMP nsExtProtocolChannel::GetContentDispositionHeader(nsACString &aCon
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::GetContentLength(int32_t * aContentLength)
+NS_IMETHODIMP nsExtProtocolChannel::GetContentLength(int64_t * aContentLength)
 {
   *aContentLength = -1;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsExtProtocolChannel::SetContentLength(int32_t aContentLength)
+nsExtProtocolChannel::SetContentLength(int64_t aContentLength)
 {
   NS_NOTREACHED("SetContentLength");
   return NS_ERROR_NOT_IMPLEMENTED;

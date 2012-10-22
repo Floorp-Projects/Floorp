@@ -89,7 +89,7 @@ class WyciwygStartRequestEvent : public ChannelEvent
 public:
   WyciwygStartRequestEvent(WyciwygChannelChild* child,
                            const nsresult& statusCode,
-                           const int32_t& contentLength,
+                           const int64_t& contentLength,
                            const int32_t& source,
                            const nsCString& charset,
                            const nsCString& securityInfo)
@@ -100,7 +100,7 @@ public:
 private:
   WyciwygChannelChild* mChild;
   nsresult mStatusCode;
-  int32_t mContentLength;
+  int64_t mContentLength;
   int32_t mSource;
   nsCString mCharset;
   nsCString mSecurityInfo;
@@ -108,7 +108,7 @@ private:
 
 bool
 WyciwygChannelChild::RecvOnStartRequest(const nsresult& statusCode,
-                                        const int32_t& contentLength,
+                                        const int64_t& contentLength,
                                         const int32_t& source,
                                         const nsCString& charset,
                                         const nsCString& securityInfo)
@@ -125,7 +125,7 @@ WyciwygChannelChild::RecvOnStartRequest(const nsresult& statusCode,
 
 void
 WyciwygChannelChild::OnStartRequest(const nsresult& statusCode,
-                                    const int32_t& contentLength,
+                                    const int64_t& contentLength,
                                     const int32_t& source,
                                     const nsCString& charset,
                                     const nsCString& securityInfo)
@@ -548,14 +548,14 @@ WyciwygChannelChild::GetContentDispositionHeader(nsACString &aContentDisposition
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-/* attribute long contentLength; */
+/* attribute int64_t contentLength; */
 NS_IMETHODIMP
-WyciwygChannelChild::GetContentLength(int32_t *aContentLength)
+WyciwygChannelChild::GetContentLength(int64_t *aContentLength)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 NS_IMETHODIMP
-WyciwygChannelChild::SetContentLength(int32_t aContentLength)
+WyciwygChannelChild::SetContentLength(int64_t aContentLength)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
