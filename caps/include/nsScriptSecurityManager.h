@@ -34,23 +34,6 @@ struct ClassPolicy;
 class ClassInfoData;
 class DomainPolicy;
 
-#if defined(DEBUG_mstoltz) || defined(DEBUG_caillon)
-#define DEBUG_CAPS_HACKER
-#endif
-
-#ifdef DEBUG_CAPS_HACKER
-#define DEBUG_CAPS_CheckPropertyAccessImpl
-#define DEBUG_CAPS_LookupPolicy
-#define DEBUG_CAPS_CheckComponentPermissions
-#endif
-
-#if 0
-#define DEBUG_CAPS_CanCreateWrapper
-#define DEBUG_CAPS_CanCreateInstance
-#define DEBUG_CAPS_CanGetService
-#define DEBUG_CAPS_DomainPolicyLifeCycle
-#endif
-
 /////////////////////
 // PrincipalKey //
 /////////////////////
@@ -236,12 +219,6 @@ public:
                      mRefCount(0)
     {
         mGeneration = sGeneration;
-
-#ifdef DEBUG_CAPS_DomainPolicyLifeCycle
-        ++sObjects;
-        _printPopulationInfo();
-#endif
-
     }
 
     bool Init()
@@ -266,12 +243,6 @@ public:
     {
         PL_DHashTableFinish(this);
         NS_ASSERTION(mRefCount == 0, "Wrong refcount in DomainPolicy dtor");
-#ifdef DEBUG_CAPS_DomainPolicyLifeCycle
-        printf("DomainPolicy deleted with mRefCount = %d\n", mRefCount);
-        --sObjects;
-        _printPopulationInfo();
-#endif
-
     }
 
     void Hold()
@@ -301,12 +272,6 @@ private:
     uint32_t mRefCount;
     uint32_t mGeneration;
     static uint32_t sGeneration;
-    
-#ifdef DEBUG_CAPS_DomainPolicyLifeCycle
-    static uint32_t sObjects;
-    static void _printPopulationInfo();
-#endif
-
 };
 
 static void
@@ -528,11 +493,6 @@ private:
     nsresult
     InitDomainPolicy(JSContext* cx, const char* aPolicyName,
                      DomainPolicy* aDomainPolicy);
-
-#ifdef DEBUG_CAPS_HACKER
-    void
-    PrintPolicyDB();
-#endif
 
     // JS strings we need to clean up on shutdown
     static jsid sEnabledID;
