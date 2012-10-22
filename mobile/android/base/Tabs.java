@@ -75,13 +75,12 @@ public class Tabs implements GeckoEventListener {
     static public int getThumbnailWidth() {
         if (sThumbnailWidth < 0) {
             sThumbnailWidth = (int) (GeckoApp.mAppContext.getResources().getDimension(R.dimen.tab_thumbnail_width));
-            return sThumbnailWidth & ~0x1;
         }
-        return sThumbnailWidth;
+        return sThumbnailWidth & ~0x1;
     }
 
     static public int getThumbnailHeight() {
-        return Math.round(getThumbnailWidth() * getThumbnailAspectRatio());
+        return Math.round(getThumbnailWidth() * getThumbnailAspectRatio()) & ~0x1;
     }
 
     static public float getThumbnailAspectRatio() { return 0.714f; }
