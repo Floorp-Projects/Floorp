@@ -1,6 +1,14 @@
 <!DOCTYPE HTML>
-<html>
+<html class="reftest-wait">
 <body>
-<embed type="application/x-test" style="width:200px; height:400px;"></embed>
+<embed type="application/x-test" id="p"
+       style="width:200px; height:400px;"></embed>
+<script>
+var p = document.getElementById("p");
+function doTest() {
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
 </body>
 </html>
