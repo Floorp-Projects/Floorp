@@ -175,17 +175,9 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
 struct ScriptRange {
     uint32_t         rangeStart;
     uint32_t         rangeEnd;
-    uint32_t         minVersion; // minimum OS X version where OT shaping is
-                                 // supported for this range
     hb_tag_t         tags[3]; // one or two OpenType script tags to check,
                               // plus a NULL terminator
 };
-
-// shorthands for the minVersion field
-#define _ANY   0 // Arabic/Syriac works on any version because we use harfbuzz
-#define _10_7  MAC_OS_X_VERSION_10_7_HEX   // has Indic support in CoreText
-#define _NONE  MAC_OS_X_MAJOR_VERSION_MASK // currently not supported by
-                                           // any known version
 
 static const ScriptRange sComplexScripts[] = {
     // Actually, now that harfbuzz supports presentation-forms shaping for
@@ -193,38 +185,34 @@ static const ScriptRange sComplexScripts[] = {
     // want to mask the basic Arabic block here?
     // This affects the arabic-fallback-*.html reftests, which rely on
     // loading a font that *doesn't* have any GSUB table.
-    { 0x0600, 0x06FF, _ANY,  { TRUETYPE_TAG('a','r','a','b'), 0, 0 } },
-    { 0x0700, 0x074F, _ANY,  { TRUETYPE_TAG('s','y','r','c'), 0, 0 } },
-    { 0x0750, 0x077F, _ANY,  { TRUETYPE_TAG('a','r','a','b'), 0, 0 } },
-    { 0x08A0, 0x08FF, _ANY,  { TRUETYPE_TAG('a','r','a','b'), 0, 0 } },
-    { 0x0900, 0x097F, _10_7, { TRUETYPE_TAG('d','e','v','2'),
-                               TRUETYPE_TAG('d','e','v','a'), 0 } },
-    { 0x0980, 0x09FF, _10_7, { TRUETYPE_TAG('b','n','g','2'),
-                               TRUETYPE_TAG('b','e','n','g'), 0 } },
-    { 0x0A00, 0x0A7F, _10_7, { TRUETYPE_TAG('g','u','r','2'),
-                               TRUETYPE_TAG('g','u','r','u'), 0 } },
-    { 0x0A80, 0x0AFF, _10_7, { TRUETYPE_TAG('g','j','r','2'),
-                               TRUETYPE_TAG('g','u','j','r'), 0 } },
-    { 0x0B00, 0x0B7F, _10_7, { TRUETYPE_TAG('o','r','y','2'),
-                               TRUETYPE_TAG('o','r','y','a'), 0 } },
-    { 0x0B80, 0x0BFF, _10_7, { TRUETYPE_TAG('t','m','l','2'),
-                               TRUETYPE_TAG('t','a','m','l'), 0 } },
-    { 0x0C00, 0x0C7F, _10_7, { TRUETYPE_TAG('t','e','l','2'),
-                               TRUETYPE_TAG('t','e','l','u'), 0 } },
-    { 0x0C80, 0x0CFF, _10_7, { TRUETYPE_TAG('k','n','d','2'),
-                               TRUETYPE_TAG('k','n','d','a'), 0 } },
-    { 0x0D00, 0x0D7F, _10_7, { TRUETYPE_TAG('m','l','m','2'),
-                               TRUETYPE_TAG('m','l','y','m'), 0 } },
-    { 0x0D80, 0x0DFF, _NONE, { TRUETYPE_TAG('s','i','n','h'), 0, 0 } },
-    { 0x0E80, 0x0EFF, _10_7, { TRUETYPE_TAG('l','a','o',' '), 0, 0 } },
-    { 0x0F00, 0x0FFF, _10_7, { TRUETYPE_TAG('t','i','b','t'), 0, 0 } },
+    { 0x0600, 0x06FF, { TRUETYPE_TAG('a','r','a','b'), 0, 0 } },
+    { 0x0700, 0x074F, { TRUETYPE_TAG('s','y','r','c'), 0, 0 } },
+    { 0x0750, 0x077F, { TRUETYPE_TAG('a','r','a','b'), 0, 0 } },
+    { 0x08A0, 0x08FF, { TRUETYPE_TAG('a','r','a','b'), 0, 0 } },
+    { 0x0900, 0x097F, { TRUETYPE_TAG('d','e','v','2'),
+                        TRUETYPE_TAG('d','e','v','a'), 0 } },
+    { 0x0980, 0x09FF, { TRUETYPE_TAG('b','n','g','2'),
+                        TRUETYPE_TAG('b','e','n','g'), 0 } },
+    { 0x0A00, 0x0A7F, { TRUETYPE_TAG('g','u','r','2'),
+                        TRUETYPE_TAG('g','u','r','u'), 0 } },
+    { 0x0A80, 0x0AFF, { TRUETYPE_TAG('g','j','r','2'),
+                        TRUETYPE_TAG('g','u','j','r'), 0 } },
+    { 0x0B00, 0x0B7F, { TRUETYPE_TAG('o','r','y','2'),
+                        TRUETYPE_TAG('o','r','y','a'), 0 } },
+    { 0x0B80, 0x0BFF, { TRUETYPE_TAG('t','m','l','2'),
+                        TRUETYPE_TAG('t','a','m','l'), 0 } },
+    { 0x0C00, 0x0C7F, { TRUETYPE_TAG('t','e','l','2'),
+                        TRUETYPE_TAG('t','e','l','u'), 0 } },
+    { 0x0C80, 0x0CFF, { TRUETYPE_TAG('k','n','d','2'),
+                        TRUETYPE_TAG('k','n','d','a'), 0 } },
+    { 0x0D00, 0x0D7F, { TRUETYPE_TAG('m','l','m','2'),
+                        TRUETYPE_TAG('m','l','y','m'), 0 } },
+    { 0x0D80, 0x0DFF, { TRUETYPE_TAG('s','i','n','h'), 0, 0 } },
+    { 0x0E80, 0x0EFF, { TRUETYPE_TAG('l','a','o',' '), 0, 0 } },
+    { 0x0F00, 0x0FFF, { TRUETYPE_TAG('t','i','b','t'), 0, 0 } },
     // Thai seems to be "renderable" without AAT morphing tables
     // xxx - Khmer?
 };
-
-#undef _ANY
-#undef _10_7
-#undef _NONE
 
 static void
 DestroyBlobFunc(void* aUserData)
@@ -296,8 +284,6 @@ MacOSFontEntry::ReadCMAP()
         bool hasGSUB = HasFontTable(TRUETYPE_TAG('G','S','U','B'));
         bool hasGPOS = HasFontTable(TRUETYPE_TAG('G','P','O','S'));
 
-        uint32_t osxVersion = gfxPlatformMac::GetPlatform()->OSXVersion();
-
         if (hasAATLayout && !(hasGSUB || hasGPOS)) {
             mRequiresAAT = true; // prefer CoreText if font has no OTL tables
         }
@@ -318,13 +304,9 @@ MacOSFontEntry::ReadCMAP()
                     continue;
                 }
 
-                // Check whether the OS version is sufficient to support
-                // OpenType shaping for this range (provided GSUB available)
-                if (osxVersion >= sr.minVersion) {
-                    // We check for GSUB here, as GPOS alone would not be ok.
-                    if (hasGSUB && SupportsScriptInGSUB(this, sr.tags)) {
-                        continue;
-                    }
+                // We check for GSUB here, as GPOS alone would not be ok.
+                if (hasGSUB && SupportsScriptInGSUB(this, sr.tags)) {
+                    continue;
                 }
 
                 charmap->ClearRange(sr.rangeStart, sr.rangeEnd);
