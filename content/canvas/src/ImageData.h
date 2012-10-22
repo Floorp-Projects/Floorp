@@ -21,7 +21,7 @@
 namespace mozilla {
 namespace dom {
 
-class ImageData MOZ_FINAL : public nsIDOMImageData
+class ImageData MOZ_FINAL : public nsISupports
 {
 public:
   ImageData(uint32_t aWidth, uint32_t aHeight, JSObject& aData)
@@ -40,7 +40,6 @@ public:
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIDOMIMAGEDATA
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ImageData)
 
   uint32_t Width() const
@@ -60,6 +59,8 @@ public:
     xpc_UnmarkGrayObject(mData);
     return mData;
   }
+
+  JSObject* WrapObject(JSContext* cx, JSObject* scope);
 
 private:
   void HoldData();

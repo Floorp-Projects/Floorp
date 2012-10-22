@@ -5,7 +5,6 @@
 #ifndef nsDOMQS_h__
 #define nsDOMQS_h__
 
-#include "mozilla/dom/ImageData.h"
 #include "nsDOMClassInfoID.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLCanvasElement.h"
@@ -182,23 +181,6 @@ DEFINE_UNWRAP_CAST_HTML(img, nsHTMLImageElement)
 DEFINE_UNWRAP_CAST_HTML(optgroup, nsHTMLOptGroupElement)
 DEFINE_UNWRAP_CAST_HTML(option, nsHTMLOptionElement)
 DEFINE_UNWRAP_CAST_HTML(video, nsHTMLVideoElement)
-
-template <>
-inline nsresult
-xpc_qsUnwrapArg<mozilla::dom::ImageData>(JSContext *cx, jsval v,
-                                         mozilla::dom::ImageData **ppArg,
-                                         mozilla::dom::ImageData **ppArgRef,
-                                         jsval *vp)
-{
-    nsIDOMImageData* arg;
-    nsIDOMImageData* argRef;
-    nsresult rv = xpc_qsUnwrapArg<nsIDOMImageData>(cx, v, &arg, &argRef, vp);
-    if (NS_SUCCEEDED(rv)) {
-        *ppArg = static_cast<mozilla::dom::ImageData*>(arg);
-        *ppArgRef = static_cast<mozilla::dom::ImageData*>(argRef);
-    }
-    return rv;
-}
 
 inline nsISupports*
 ToSupports(nsContentList *p)
