@@ -284,17 +284,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
       // We weren't seeking and got a valid response status,
       // set the length of the content.
       int64_t cl = -1;
-      nsCOMPtr<nsIPropertyBag2> bag = do_QueryInterface(hc);
-
-      if (bag) {
-        bag->GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, &cl);
-      }
-
-      if (cl < 0) {
-        int32_t cl32;
-        hc->GetContentLength(&cl32);
-        cl = cl32;
-      }
+      hc->GetContentLength(&cl);
 
       if (cl >= 0) {
         mCacheStream.NotifyDataLength(cl);

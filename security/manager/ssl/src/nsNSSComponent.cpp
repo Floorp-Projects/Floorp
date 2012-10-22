@@ -3139,10 +3139,12 @@ PSMContentDownloader::OnStartRequest(nsIRequest* request, nsISupports* context)
   // Get the URI //
   channel->GetURI(getter_AddRefs(mURI));
 
-  int32_t contentLength;
+  int64_t contentLength;
   rv = channel->GetContentLength(&contentLength);
   if (NS_FAILED(rv) || contentLength <= 0)
     contentLength = kDefaultCertAllocLength;
+  if (contentLength > INT32_MAX)
+    return NS_ERROR_OUT_OF_MEMORY;
   
   mBufferOffset = 0;
   mBufferSize = 0;
@@ -3150,7 +3152,7 @@ PSMContentDownloader::OnStartRequest(nsIRequest* request, nsISupports* context)
   if (!mByteData)
     return NS_ERROR_OUT_OF_MEMORY;
   
-  mBufferSize = contentLength;
+  mBufferSize = int32_t(contentLength);
   return NS_OK;
 }
 

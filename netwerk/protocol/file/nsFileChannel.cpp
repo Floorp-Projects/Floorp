@@ -354,7 +354,7 @@ nsFileChannel::OpenContentStream(bool async, nsIInputStream **result,
     }
     stream = uploadStream;
 
-    SetContentLength64(0);
+    mContentLength = 0;
 
     // Since there isn't any content to speak of we just set the content-type
     // to something other than "unknown" to avoid triggering the content-type
@@ -371,12 +371,12 @@ nsFileChannel::OpenContentStream(bool async, nsIInputStream **result,
     EnableSynthesizedProgressEvents(true);
 
     // fixup content length and type
-    if (ContentLength64() < 0) {
+    if (mContentLength < 0) {
       int64_t size;
       rv = file->GetFileSize(&size);
       if (NS_FAILED(rv))
         return rv;
-      SetContentLength64(size);
+      mContentLength = size;
     }
     if (!contentType.IsEmpty())
       SetContentType(contentType);

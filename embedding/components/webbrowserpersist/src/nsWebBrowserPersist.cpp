@@ -876,7 +876,7 @@ nsWebBrowserPersist::OnDataAvailable(
             }
         }
 
-        int32_t channelContentLength = -1;
+        int64_t channelContentLength = -1;
         if (!cancel &&
             NS_SUCCEEDED(channel->GetContentLength(&channelContentLength)))
         {

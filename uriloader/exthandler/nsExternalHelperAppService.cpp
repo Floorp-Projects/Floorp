@@ -541,26 +541,6 @@ nsExternalHelperAppService::~nsExternalHelperAppService()
 {
 }
 
-static int64_t GetContentLengthAsInt64(nsIRequest *request)
-{
-  int64_t contentLength = -1;
-  nsresult rv;
-  nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
-  if (props)
-    rv = props->GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, &contentLength);
-
-  if (NS_FAILED(rv)) {
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    if (channel) {
-      int32_t smallLen;
-      channel->GetContentLength(&smallLen);
-      contentLength = smallLen;
-    }
-  }
-
-  return contentLength;
-}
-
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeContentType,
                                                     nsIRequest *aRequest,
                                                     nsIInterfaceRequestor *aWindowContext,
@@ -575,10 +555,11 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
   // Get the file extension and name that we will need later
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   nsCOMPtr<nsIURI> uri;
-  if (channel)
+  int64_t contentLength = -1;
+  if (channel) {
     channel->GetURI(getter_AddRefs(uri));
-
-  int64_t contentLength = GetContentLengthAsInt64(aRequest);
+    channel->GetContentLength(&contentLength);
+  }
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     // We need to get a hold of a ContentChild so that we can begin forwarding
     // this data to the parent.  In the HTTP case, this is unfortunate, since
@@ -1427,7 +1408,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   mIsFileChannel = fileChan != nullptr;
 
   // Get content length
-  mContentLength = GetContentLengthAsInt64(request);
+  if (aChannel) {
+    aChannel->GetContentLength(&mContentLength);
+  }
 
   nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
   // Determine whether a new window was opened specifically for this request
