@@ -40,9 +40,17 @@ function runTests()
       new Test("svgView(preserveAspectRatio(xMaxYMin slice))", true, null, "xMaxYMin slice", null),
       new Test("svgView(viewBox(1,2,3,4);preserveAspectRatio(xMinYMax))", true, "1 2 3 4", "xMinYMax meet", null),
       new Test("svgView(zoomAndPan(disable))", true, null, null, "disable"),
+      new Test("svgView(transform(translate(-10,-20) scale(2) rotate(45) translate(5,10)))", true, null, null, null),
+      // No duplicates allowed
+      new Test("svgView(zoomAndPan(disable);zoomAndPan(disable))", false, null, null, null),
+      new Test("svgView(viewBox(0,0,200,200);viewBox(0,0,200,200))", false, null, null, null),
+      new Test("svgView(preserveAspectRatio(xMaxYMin);preserveAspectRatio(xMaxYMin))", false, null, null, null),
+      new Test("svgView(transform(translate(0,200));transform(translate(0,200)))", false, null, null, null),
+      // No invalid values allowed
       new Test("svgView(viewBox(bad)", false, null, null, null),
       new Test("svgView(preserveAspectRatio(bad))", false, null, null, null),
       new Test("svgView(zoomAndPan(bad))", false, null, null, null),
+      new Test("svgView(transform(bad))", false, null, null, null),
       new Test("svgView", false, null, null, null),
       new Test("svgView(", false, null, null, null),
       new Test("svgView()", false, null, null, null),
