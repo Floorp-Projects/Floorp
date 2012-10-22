@@ -317,6 +317,14 @@ nsOfflineCacheUpdateItem::OpenChannel(nsOfflineCacheUpdate *aUpdate)
     }
 #endif
 
+    if (mUpdate) {
+        // Holding a reference to the update means this item is already
+        // in progress (has a channel, or is just in between OnStopRequest()
+        // and its Run() call.  We must never open channel on this item again.
+        LOG(("  %p is already running! ignoring", this));
+        return NS_ERROR_ALREADY_OPENED;
+    }
+
     nsresult rv = nsOfflineCacheUpdate::GetCacheKey(mURI, mCacheKey);
     NS_ENSURE_SUCCESS(rv, rv);
 
