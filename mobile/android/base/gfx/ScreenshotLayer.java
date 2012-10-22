@@ -116,7 +116,7 @@ public class ScreenshotLayer extends SingleTileLayer {
         }
 
         @Override
-        public void destroy() {
+        public synchronized void destroy() {
             try {
                 DirectBufferAllocator.free(mBuffer);
                 mBuffer = null;
@@ -125,7 +125,7 @@ public class ScreenshotLayer extends SingleTileLayer {
             }
         }
 
-        void copyBuffer(ByteBuffer src, ByteBuffer dst, Rect rect, int stride) {
+        private void copyBuffer(ByteBuffer src, ByteBuffer dst, Rect rect, int stride) {
             int start = (rect.top * stride) + (rect.left * BYTES_FOR_16BPP);
             int end = ((rect.bottom - 1) * stride) + (rect.right * BYTES_FOR_16BPP);
             // clamp stuff just to be safe
@@ -141,12 +141,18 @@ public class ScreenshotLayer extends SingleTileLayer {
         }
 
         synchronized void setBitmap(ByteBuffer data, int width, int height, int format, Rect rect) {
+            if (mBuffer == null) {
+                return;
+            }
             mSize = new IntSize(width, height);
             mFormat = format;
             copyBuffer(data.asReadOnlyBuffer(), mBuffer.duplicate(), rect, width * BYTES_FOR_16BPP);
         }
 
         synchronized void setBitmap(Bitmap bitmap, int width, int height, int format) throws IllegalArgumentException {
+            if (mBuffer == null) {
+                return;
+            }
             Bitmap tmp;
             mSize = new IntSize(width, height);
             mFormat = format;
