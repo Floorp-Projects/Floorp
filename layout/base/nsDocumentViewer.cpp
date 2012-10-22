@@ -1869,19 +1869,9 @@ DocumentViewerImpl::SetBounds(const nsIntRect& aBounds)
 
   mBounds = aBounds;
   if (mWindow) {
-    // When attached to a top level window, change the client area, not the
-    // window frame.
-    // Don't have the widget repaint. Layout will generate repaint requests
-    // during reflow.
-    if (mAttachedToParent) {
-      if (aBounds.x != 0 || aBounds.y != 0) {
-        mWindow->ResizeClient(aBounds.x, aBounds.y,
-                              aBounds.width, aBounds.height,
-                              false);
-      } else {
-        mWindow->ResizeClient(aBounds.width, aBounds.height, false);
-      }
-    } else {
+    if (!mAttachedToParent) {
+      // Don't have the widget repaint. Layout will generate repaint requests
+      // during reflow.
       mWindow->Resize(aBounds.x, aBounds.y,
                       aBounds.width, aBounds.height,
                       false);
