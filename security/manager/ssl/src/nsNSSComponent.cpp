@@ -42,7 +42,7 @@
 
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
-#include "nsIPrincipal.h"
+#include "nsCertificatePrincipal.h"
 #include "nsReadableUtils.h"
 #include "nsIDateTimeFormat.h"
 #include "prtypes.h"
@@ -2053,7 +2053,7 @@ NS_IMETHODIMP
 nsNSSComponent::VerifySignature(const char* aRSABuf, uint32_t aRSABufLen,
                                 const char* aPlaintext, uint32_t aPlaintextLen,
                                 int32_t* aErrorCode,
-                                nsIPrincipal** aPrincipal)
+                                nsICertificatePrincipal** aPrincipal)
 {
   if (!aPrincipal || !aErrorCode) {
     return NS_ERROR_NULL_POINTER;
@@ -2152,16 +2152,12 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, uint32_t aRSABufLen,
         break;
       }
     
-      nsCOMPtr<nsIPrincipal> certPrincipal;
-      rv2 = mScriptSecurityManager->
-        GetCertificatePrincipal(NS_ConvertUTF16toUTF8(fingerprint),
-                                NS_ConvertUTF16toUTF8(subjectName),
-                                NS_ConvertUTF16toUTF8(orgName),
-                                pCert, nullptr, getter_AddRefs(certPrincipal));
-      if (NS_FAILED(rv2) || !certPrincipal) {
-        break;
-      }
-      
+      nsCOMPtr<nsICertificatePrincipal> certPrincipal =
+        new nsCertificatePrincipal(NS_ConvertUTF16toUTF8(fingerprint),
+                                   NS_ConvertUTF16toUTF8(subjectName),
+                                   NS_ConvertUTF16toUTF8(orgName),
+                                   pCert);
+
       certPrincipal.swap(*aPrincipal);
     } while (0);
   }

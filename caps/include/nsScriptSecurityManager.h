@@ -443,18 +443,6 @@ private:
     CreateCodebasePrincipal(nsIURI* aURI, uint32_t aAppId, bool aInMozBrowser,
                             nsIPrincipal** result);
 
-    // This is just like the API method, but it doesn't check that the subject
-    // name is non-empty or aCertificate is non-null, and it doesn't change the
-    // certificate in the table (if any) in any way if aModifyTable is false.
-    nsresult
-    DoGetCertificatePrincipal(const nsACString& aCertFingerprint,
-                              const nsACString& aSubjectName,
-                              const nsACString& aPrettyName,
-                              nsISupports* aCertificate,
-                              nsIURI* aURI,
-                              bool aModifyTable,
-                              nsIPrincipal **result);
-
     // Returns null if a principal cannot be found.  Note that rv can be NS_OK
     // when this happens -- this means that there was no script for the
     // context.  Callers MUST pass in a non-null rv here.
@@ -557,7 +545,6 @@ private:
     nsObjectHashtable* mCapabilities;
 
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
-    nsCOMPtr<nsIPrincipal> mSystemCertificate;
     bool mPrefInitialized;
     bool mIsJavaScriptEnabled;
     bool mIsWritingPrefs;
