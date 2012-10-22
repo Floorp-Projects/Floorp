@@ -245,9 +245,6 @@ protected:
 
     static PRLogModuleInfo* gXULLog;
 
-    bool
-    IsCapabilityEnabled(const char* aCapabilityLabel);
-
     nsresult
     Persist(nsIContent* aElement, int32_t aNameSpaceID, nsIAtom* aAttribute);
 

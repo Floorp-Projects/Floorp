@@ -2460,10 +2460,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv)
 static JSBool
 CheckUniversalXPConnectForTraceMalloc(JSContext *cx)
 {
-    bool hasCap = false;
-    nsresult rv = nsContentUtils::GetSecurityManager()->
-                    IsCapabilityEnabled("UniversalXPConnect", &hasCap);
-    if (NS_SUCCEEDED(rv) && hasCap)
+    if (nsContentUtils::IsCallerChrome())
         return JS_TRUE;
     JS_ReportError(cx, "trace-malloc functions require UniversalXPConnect");
     return JS_FALSE;

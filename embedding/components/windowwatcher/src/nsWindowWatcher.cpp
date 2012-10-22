@@ -1607,13 +1607,7 @@ uint32_t nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow *aParent,
    */
 
   // Check security state for use in determing window dimensions
-  bool enabled = false;
-  if (securityManager) {
-    rv = securityManager->IsCapabilityEnabled("UniversalXPConnect",
-                                              &enabled);
-  }
-
-  if (NS_FAILED(rv) || !enabled || (isChrome && !aHasChromeParent)) {
+  if (!nsContentUtils::IsCallerChrome() || (isChrome && !aHasChromeParent)) {
     // If priv check fails (or if we're called from chrome, but the
     // parent is not a chrome window), set all elements to minimum
     // reqs., else leave them alone.
@@ -2045,31 +2039,14 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
   }
 
   bool positionSpecified = aSizeSpec.PositionSpecified();
-  
-  nsresult res;
-  bool enabled = false;
 
   // Check security state for use in determing window dimensions
-  nsCOMPtr<nsIScriptSecurityManager>
-    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-  if (securityManager) {
-    res = securityManager->IsCapabilityEnabled("UniversalXPConnect",
-                                               &enabled);
-    if (NS_FAILED(res))
-      enabled = false;
-    else if (enabled && aParent) {
-      nsCOMPtr<nsIDOMChromeWindow> chromeWin(do_QueryInterface(aParent));
-
-      bool isChrome = false;
-      nsresult rv = securityManager->SubjectPrincipalIsSystem(&isChrome);
-      if (NS_FAILED(rv)) {
-        isChrome = false;
-      }
-
-      // Only enable special priveleges for chrome when chrome calls
-      // open() on a chrome window
-      enabled = !(isChrome && chromeWin == nullptr);
-    }
+  bool enabled = false;
+  if (nsContentUtils::IsCallerChrome()) {
+    // Only enable special priveleges for chrome when chrome calls
+    // open() on a chrome window
+    nsCOMPtr<nsIDOMChromeWindow> chromeWin(do_QueryInterface(aParent));
+    enabled = !aParent || chromeWin;
   }
 
   if (!enabled) {

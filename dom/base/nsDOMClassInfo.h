@@ -518,13 +518,6 @@ protected:
   {
   }
 
-  // Helper to check whether a capability is enabled
-  bool IsCapabilityEnabled(const char* aCapability);
-
-  inline bool IsPrivilegedScript() {
-    return IsCapabilityEnabled("UniversalXPConnect");
-  }
-
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);

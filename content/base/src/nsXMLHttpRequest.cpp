@@ -174,15 +174,6 @@ static void AddLoadFlags(nsIRequest *request, nsLoadFlags newFlags)
   request->SetLoadFlags(flags);
 }
 
-static nsresult IsCapabilityEnabled(const char *capability, bool *enabled)
-{
-  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
-  if (!secMan)
-    return NS_ERROR_FAILURE;
-
-  return secMan->IsCapabilityEnabled(capability, enabled);
-}
-
 // Helper proxy class to be used when expecting an
 // multipart/x-mixed-replace stream of XML documents.
 
@@ -1475,9 +1466,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
   }
 
   // See bug #380418. Hide "Set-Cookie" headers from non-chrome scripts.
-  bool chrome = false; // default to false in case IsCapabilityEnabled fails
-  IsCapabilityEnabled("UniversalXPConnect", &chrome);
-  if (!chrome &&
+  if (!nsContentUtils::IsCallerChrome() &&
        (header.LowerCaseEqualsASCII("set-cookie") ||
         header.LowerCaseEqualsASCII("set-cookie2"))) {
     NS_WARNING("blocked access to response header");
@@ -3192,13 +3181,9 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   }
 
   // Prevent modification to certain HTTP headers (see bug 302263), unless
-  // the executing script has UniversalXPConnect.
+  // the executing script is privileged.
 
-  bool privileged;
-  if (NS_FAILED(IsCapabilityEnabled("UniversalXPConnect", &privileged)))
-    return NS_ERROR_FAILURE;
-
-  if (!privileged) {
+  if (!nsContentUtils::IsCallerChrome()) {
     // Step 5: Check for dangerous headers.
     const char *kInvalidHeaders[] = {
       "accept-charset", "accept-encoding", "access-control-request-headers",
@@ -3423,13 +3408,7 @@ nsXMLHttpRequest::SetMozBackgroundRequest(bool aMozBackgroundRequest)
 void
 nsXMLHttpRequest::SetMozBackgroundRequest(bool aMozBackgroundRequest, nsresult& aRv)
 {
-  bool privileged;
-  aRv = IsCapabilityEnabled("UniversalXPConnect", &privileged);
-  if (NS_FAILED(aRv)) {
-    return;
-  }
-
-  if (!privileged) {
+  if (!nsContentUtils::IsCallerChrome()) {
     aRv = NS_ERROR_DOM_SECURITY_ERR;
     return;
   }
@@ -4030,9 +4009,7 @@ NS_IMETHODIMP nsXMLHttpRequest::
 nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 {
     // See bug #380418. Hide "Set-Cookie" headers from non-chrome scripts.
-    bool chrome = false; // default to false in case IsCapabilityEnabled fails
-    IsCapabilityEnabled("UniversalXPConnect", &chrome);
-    if (!chrome &&
+    if (!nsContentUtils::IsCallerChrome() &&
          (header.LowerCaseEqualsASCII("set-cookie") ||
           header.LowerCaseEqualsASCII("set-cookie2"))) {
         NS_WARNING("blocked access to response header");

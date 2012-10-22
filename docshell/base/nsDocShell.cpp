@@ -1661,26 +1661,10 @@ bool
 nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
                            nsIDocShellTreeItem* aTargetTreeItem)
 {
-    nsCOMPtr<nsIScriptSecurityManager> securityManager =
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-    NS_ENSURE_TRUE(securityManager, false);
-
-    nsCOMPtr<nsIPrincipal> subjectPrincipal;
-    nsresult rv =
-        securityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
-    NS_ENSURE_SUCCESS(rv, false);
-
-    if (subjectPrincipal) {
-        // We're called from JS, check if UniversalXPConnect is
-        // enabled.
-        bool ubwEnabled = false;
-        rv = securityManager->IsCapabilityEnabled("UniversalXPConnect",
-                                                  &ubwEnabled);
-        NS_ENSURE_SUCCESS(rv, false);
-
-        if (ubwEnabled) {
-            return true;
-        }
+    // We want to bypass this check for chrome callers, but only if there's
+    // JS on the stack. System callers still need to do it.
+    if (nsContentUtils::GetCurrentJSContext() && nsContentUtils::IsCallerChrome()) {
+        return true;
     }
 
     // Get origin document principal
@@ -1692,8 +1676,8 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
     NS_ENSURE_TRUE(targetDocument, false);
 
     bool equal;
-    rv = originDocument->NodePrincipal()->
-            Equals(targetDocument->NodePrincipal(), &equal);
+    nsresult rv = originDocument->NodePrincipal()->Equals(targetDocument->NodePrincipal(),
+                                                          &equal);
     if (NS_SUCCEEDED(rv) && equal) {
         return true;
     }
@@ -8187,21 +8171,13 @@ nsDocShell::CheckLoadingPermissions()
         return rv;
     }
 
+    nsCOMPtr<nsIScriptSecurityManager> securityManager =
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // We're a frame. Check that the caller has write permission to
     // the parent before allowing it to load anything into this
     // docshell.
-
-    nsCOMPtr<nsIScriptSecurityManager> securityManager =
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool ubwEnabled = false;
-    rv = securityManager->IsCapabilityEnabled("UniversalXPConnect",
-                                              &ubwEnabled);
-    if (NS_FAILED(rv) || ubwEnabled) {
-        return rv;
-    }
-
     nsCOMPtr<nsIPrincipal> subjPrincipal;
     rv = securityManager->GetSubjectPrincipal(getter_AddRefs(subjPrincipal));
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && subjPrincipal, rv);
