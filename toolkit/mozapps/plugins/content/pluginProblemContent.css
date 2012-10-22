@@ -41,6 +41,8 @@ html|applet:not([height]), html|applet[height=""] {
   overflow: hidden;
   direction: ltr;
   unicode-bidi: embed;
+  /* used to block inherited properties */
+  text-transform: none;
 }
 
 .mainBox[chromedir="rtl"] {
