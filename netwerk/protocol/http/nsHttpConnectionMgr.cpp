@@ -127,27 +127,33 @@ nsHttpConnectionMgr::Shutdown()
 {
     LOG(("nsHttpConnectionMgr::Shutdown\n"));
 
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    bool shutdown = false;
+    {
+        ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-    // do nothing if already shutdown
-    if (!mSocketThreadTarget)
-        return NS_OK;
+        // do nothing if already shutdown
+        if (!mSocketThreadTarget)
+            return NS_OK;
 
-    nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgShutdown);
+        nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgShutdown,
+                                0, &shutdown);
 
-    // release our reference to the STS to prevent further events
-    // from being posted.  this is how we indicate that we are
-    // shutting down.
-    mIsShuttingDown = true;
-    mSocketThreadTarget = 0;
+        // release our reference to the STS to prevent further events
+        // from being posted.  this is how we indicate that we are
+        // shutting down.
+        mIsShuttingDown = true;
+        mSocketThreadTarget = 0;
 
-    if (NS_FAILED(rv)) {
-        NS_WARNING("unable to post SHUTDOWN message");
-        return rv;
+        if (NS_FAILED(rv)) {
+            NS_WARNING("unable to post SHUTDOWN message");
+            return rv;
+        }
     }
 
     // wait for shutdown event to complete
-    mon.Wait();
+    while (!shutdown)
+        NS_ProcessNextEvent(NS_GetCurrentThread());
+
     return NS_OK;
 }
 
@@ -1872,7 +1878,7 @@ nsHttpConnectionMgr::GetSpdyPreferredConn(nsConnectionEntry *ent)
 //-----------------------------------------------------------------------------
 
 void
-nsHttpConnectionMgr::OnMsgShutdown(int32_t, void *)
+nsHttpConnectionMgr::OnMsgShutdown(int32_t, void *param)
 {
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     LOG(("nsHttpConnectionMgr::OnMsgShutdown\n"));
@@ -1886,8 +1892,20 @@ nsHttpConnectionMgr::OnMsgShutdown(int32_t, void *)
     }
     
     // signal shutdown complete
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    mon.Notify();
+    nsRefPtr<nsIRunnable> runnable = 
+        new nsConnEvent(this, &nsHttpConnectionMgr::OnMsgShutdownConfirm,
+                        0, param);
+    NS_DispatchToMainThread(runnable);
+}
+
+void
+nsHttpConnectionMgr::OnMsgShutdownConfirm(int32_t priority, void *param)
+{
+    NS_ABORT_IF_FALSE(NS_IsMainThread(), "wrong thread");
+    LOG(("nsHttpConnectionMgr::OnMsgShutdownConfirm\n"));
+
+    bool *shutdown = static_cast<bool*>(param);
+    *shutdown = true;
 }
 
 void
