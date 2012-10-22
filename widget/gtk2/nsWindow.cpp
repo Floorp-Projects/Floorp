@@ -2794,14 +2794,19 @@ nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
         return;
     }
 
-    // This is not usually the correct window for dispatching key events,
-    // but the focus manager will call SetFocus to set the correct window if
-    // keyboard input will be accepted.  Setting a non-NULL value here
-    // prevents OnButtonPressEvent() from dispatching an activation
-    // notification if the widget is already active.
-    gFocusWindow = this;
+    // If keyboard input will be accepted, the focus manager will call
+    // SetFocus to set the correct window.
+    gFocusWindow = nullptr;
 
     DispatchActivateEvent();
+
+    if (!gFocusWindow) {
+        // We don't really have a window for dispatching key events, but
+        // setting a non-NULL value here prevents OnButtonPressEvent() from
+        // dispatching an activation notification if the widget is already
+        // active.
+        gFocusWindow = this;
+    }
 
     LOGFOCUS(("Events sent from focus in event [%p]\n", (void *)this));
 }
