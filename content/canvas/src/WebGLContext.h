@@ -1522,6 +1522,11 @@ struct WebGLVertexAttribData {
         if (stride) return stride;
         return size * componentSize();
     }
+
+    // for cycle collection
+    WebGLBuffer* get() {
+        return buf.get();
+    }
 };
 
 class WebGLBuffer MOZ_FINAL
@@ -2643,6 +2648,8 @@ class WebGLFramebufferAttachment
     WebGLint mTextureLevel;
     WebGLenum mTextureCubeMapFace;
 
+    friend class WebGLFramebuffer;
+
 public:
     WebGLFramebufferAttachment(WebGLenum aAttachmentPoint)
         : mAttachmentPoint(aAttachmentPoint)
@@ -3105,7 +3112,9 @@ public:
 
     virtual JSObject* WrapObject(JSContext *cx, JSObject *scope);
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(WebGLUniformLocation)
+
 protected:
     // nsRefPtr, not WebGLRefPtr, so that we don't prevent the program from being explicitly deleted.
     // we just want to avoid having a dangling pointer.
