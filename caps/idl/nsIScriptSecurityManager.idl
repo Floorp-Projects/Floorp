@@ -10,7 +10,7 @@ interface nsIURI;
 interface nsIChannel;
 interface nsIDocShell;
 
-[scriptable, uuid(2182f772-16c8-4b6d-be65-921d4da5751d)]
+[scriptable, uuid(c7180b79-2a8e-42b1-a91f-beade3a3e992)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -181,33 +181,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * The returned principal will have appId = NO_APP_ID.
      */
     nsIPrincipal getNoAppCodebasePrincipal(in nsIURI uri);
-
-    ///////////////// Capabilities API /////////////////////
-    /**
-     * Request that 'capability' can be enabled by scripts or applets
-     * running with 'principal'. Will prompt user if
-     * necessary. Returns nsIPrincipal::ENABLE_GRANTED or
-     * nsIPrincipal::ENABLE_DENIED based on user's choice.
-     */
-    [noscript] short requestCapability(in nsIPrincipal principal,
-                                       in string capability);
-
-    /**
-     * Return true if the currently executing script has 'capability' enabled.
-     */
-    boolean isCapabilityEnabled(in string capability);
-
-    /**
-     * Enable 'capability' in the innermost frame of the currently executing
-     * script.
-     */
-    void enableCapability(in string capability);
-
-    //////////////// Master Certificate Functions ////////////////////
-    /**
-     * Allow 'certificateID' to enable 'capability.' Can only be performed
-     * by code signed by the system certificate.
-     */
 
     ///////////////////////
     /**

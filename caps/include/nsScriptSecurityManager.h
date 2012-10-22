@@ -389,6 +389,8 @@ private:
     nsScriptSecurityManager();
     virtual ~nsScriptSecurityManager();
 
+    bool SubjectIsPrivileged();
+
     static JSBool
     CheckObjectAccess(JSContext *cx, JSHandleObject obj,
                       JSHandleId id, JSAccessMode mode,
@@ -488,9 +490,6 @@ private:
     GetPrincipalAndFrame(JSContext *cx,
                          JSStackFrame** frameResult,
                          nsresult* rv);
-
-    static void
-    FormatCapabilityString(nsAString& aCapability);
 
     /**
      * Check capability levels for an |aObj| that implements

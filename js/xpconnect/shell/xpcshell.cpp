@@ -1421,30 +1421,6 @@ FullTrustSecMan::GetDocShellCodebasePrincipal(nsIURI *aURI, nsIDocShell* aDocShe
     return GetSimpleCodebasePrincipal(aURI, _retval);
 }
 
-/* [noscript] short requestCapability (in nsIPrincipal principal, in string capability); */
-NS_IMETHODIMP
-FullTrustSecMan::RequestCapability(nsIPrincipal *principal,
-                                   const char *capability, int16_t *_retval)
-{
-    *_retval = nsIPrincipal::ENABLE_GRANTED;
-    return NS_OK;
-}
-
-/* boolean isCapabilityEnabled (in string capability); */
-NS_IMETHODIMP
-FullTrustSecMan::IsCapabilityEnabled(const char *capability, bool *_retval)
-{
-    *_retval = true;
-    return NS_OK;
-}
-
-/* void enableCapability (in string capability); */
-NS_IMETHODIMP
-FullTrustSecMan::EnableCapability(const char *capability)
-{
-    return NS_OK;;
-}
-
 /* [noscript] nsIPrincipal getObjectPrincipal (in JSContextPtr cx, in JSObjectPtr obj); */
 NS_IMETHODIMP
 FullTrustSecMan::GetObjectPrincipal(JSContext * cx, JSObject * obj,
