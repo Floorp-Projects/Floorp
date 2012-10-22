@@ -311,6 +311,7 @@ interface TestInterface {
   attribute byte attributeRenamedFrom;
 
   void passDictionary(optional Dict x);
+  Dict receiveDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
   void passDictionaryOrLong(optional Dict x);

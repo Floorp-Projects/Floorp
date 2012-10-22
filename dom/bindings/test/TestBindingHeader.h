@@ -399,6 +399,7 @@ public:
 
   // Dictionary tests
   void PassDictionary(const Dict&);
+  void ReceiveDictionary(Dict&);
   void PassOtherDictionary(const GrandparentDict&);
   void PassSequenceOfDictionaries(const Sequence<Dict>&);
   void PassDictionaryOrLong(const Dict&);
