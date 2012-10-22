@@ -8,12 +8,6 @@
 
 interface nsIVariant;
 
-dictionary MozWifiStatusChangeEventInit : EventInit
-{
-  nsIVariant network;
-  DOMString status;
-};
-
 dictionary MozWifiConnectionInfoEventInit : EventInit
 {
   nsIVariant network;
