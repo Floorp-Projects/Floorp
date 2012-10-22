@@ -340,7 +340,9 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedWord *aShapedWord,
                     d->mAdvance = appAdvance;
                     clusterLoc = xLocs[j];
                 } else {
-                    d->mXOffset = (xLocs[j] - clusterLoc - adv) * dev2appUnits;
+                    d->mXOffset = dev2appUnits *
+                        (rtl ? (xLocs[j] - clusterLoc) :
+                               (xLocs[j] - clusterLoc - adv));
                     d->mAdvance = 0;
                 }
             }
