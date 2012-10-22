@@ -13,8 +13,8 @@ namespace detail {
 
 /**
  * The trickery used to implement IsBaseOf here makes it possible to use it for
- * the cases of multiple inheritence.  This code was inspired by the sample code
- * here:
+ * the cases of private and multiple inheritance.  This code was inspired by the
+ * sample code here:
  *
  * http://stackoverflow.com/questions/2910979/how-is-base-of-works
  */
