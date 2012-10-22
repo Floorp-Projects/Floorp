@@ -2752,17 +2752,17 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     def setValue(value, callWrapValue=False):
         """
         Returns the code to set the jsval to value. If "callWrapValue" is true
-        JS_WrapValue will be called on the jsval.
+        MaybeWrapValue will be called on the jsval.
         """
         if not callWrapValue:
             tail = successCode
         elif haveSuccessCode:
-            tail = ("if (!JS_WrapValue(cx, ${jsvalPtr})) {\n" +
+            tail = ("if (!MaybeWrapValue(cx, ${obj}, ${jsvalPtr})) {\n" +
                     "  return false;\n" +
                     "}\n" +
                     successCode)
         else:
-            tail = "return JS_WrapValue(cx, ${jsvalPtr});"
+            tail = "return MaybeWrapValue(cx, ${obj}, ${jsvalPtr});"
         return ("${jsvalRef} = %s;\n" +
                 tail) % (value)
 
