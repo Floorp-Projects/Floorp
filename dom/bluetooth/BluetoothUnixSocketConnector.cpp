@@ -191,6 +191,6 @@ BluetoothUnixSocketConnector::GetSocketAddr(const sockaddr& aAddr,
                                             nsAString& aAddrStr)
 {
   char addr[18];
-  get_bdaddr_as_string((bdaddr_t*)&aAddr, addr);
+  get_bdaddr_as_string((bdaddr_t*)aAddr.sa_data, addr);
   aAddrStr.AssignASCII(addr);
 }
