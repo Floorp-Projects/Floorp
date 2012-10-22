@@ -153,6 +153,11 @@ function testClassList(e) {
 
   // [Stringifies]
 
+  ok(DOMTokenList.prototype.hasOwnProperty("toString"),
+     "Should have own toString on DOMTokenList")
+  ok(!DOMSettableTokenList.prototype.hasOwnProperty("toString"),
+     "Should not have own toString on DOMSettableTokenList")
+
   e.removeAttribute("class");
   is(e.classList.toString(), "", "wrong classList.toString() value");
   is(e.classList + "", "", "wrong classList string conversion value");
