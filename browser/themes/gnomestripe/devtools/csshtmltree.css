@@ -6,6 +6,8 @@
   -moz-appearance: none;
   background: -moz-Field;
   color: -moz-FieldText;
+  font: message-box;
+  font-family: monospace;
 }
 
 /* Take away these two :visited rules to get a core dumper     */
