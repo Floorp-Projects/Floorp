@@ -351,14 +351,14 @@ nsWyciwygChannel::GetContentDispositionHeader(nsACString &aContentDispositionHea
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::GetContentLength(int32_t *aContentLength)
+nsWyciwygChannel::GetContentLength(int64_t *aContentLength)
 {
   *aContentLength = mContentLength;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWyciwygChannel::SetContentLength(int32_t aContentLength)
+nsWyciwygChannel::SetContentLength(int64_t aContentLength)
 {
   mContentLength = aContentLength;
 

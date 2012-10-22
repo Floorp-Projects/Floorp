@@ -61,6 +61,7 @@ nsBaseChannel::nsBaseChannel()
   , mWaitingOnAsyncRedirect(false)
   , mStatus(NS_OK)
   , mContentDispositionHint(UINT32_MAX)
+  , mContentLength(-1)
 {
   mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
 }
@@ -163,23 +164,6 @@ nsBaseChannel::HasContentTypeHint() const
   return !mContentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE);
 }
 
-void
-nsBaseChannel::SetContentLength64(int64_t len)
-{
-  // XXX: Storing the content-length as a property may not be what we want.
-  //      It has the drawback of being copied if we redirect this channel.
-  //      Maybe it is time for nsIChannel2.
-  SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, len);
-}
-
-int64_t
-nsBaseChannel::ContentLength64()
-{
-  int64_t len;
-  nsresult rv = GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH, &len);
-  return NS_SUCCEEDED(rv) ? len : -1;
-}
-
 nsresult
 nsBaseChannel::PushStreamConverter(const char *fromType,
                                    const char *toType,
@@ -200,7 +184,7 @@ nsBaseChannel::PushStreamConverter(const char *fromType,
   if (NS_SUCCEEDED(rv)) {
     mListener = converter;
     if (invalidatesContentLength)
-      SetContentLength64(-1);
+      mContentLength = -1;
     if (result) {
       *result = nullptr;
       converter.swap(*result);
@@ -550,20 +534,16 @@ nsBaseChannel::GetContentDispositionHeader(nsACString &aContentDispositionHeader
 }
 
 NS_IMETHODIMP
-nsBaseChannel::GetContentLength(int32_t *aContentLength)
+nsBaseChannel::GetContentLength(int64_t *aContentLength)
 {
-  int64_t len = ContentLength64();
-  if (len > INT32_MAX || len < 0)
-    *aContentLength = -1;
-  else
-    *aContentLength = (int32_t) len;
+  *aContentLength = mContentLength;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseChannel::SetContentLength(int32_t aContentLength)
+nsBaseChannel::SetContentLength(int64_t aContentLength)
 {
-  SetContentLength64(aContentLength);
+  mContentLength = aContentLength;
   return NS_OK;
 }
 
@@ -794,8 +774,7 @@ nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                            offset, count);
   if (mSynthProgressEvents && NS_SUCCEEDED(rv)) {
     uint64_t prog = offset + count;
-    uint64_t progMax = ContentLength64();
-    OnTransportStatus(nullptr, NS_NET_STATUS_READING, prog, progMax);
+    OnTransportStatus(nullptr, NS_NET_STATUS_READING, prog, mContentLength);
   }
 
   return rv;

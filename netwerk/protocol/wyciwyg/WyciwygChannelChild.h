@@ -55,7 +55,7 @@ public:
 
 protected:
   bool RecvOnStartRequest(const nsresult& statusCode,
-                          const int32_t& contentLength,
+                          const int64_t& contentLength,
                           const int32_t& source,
                           const nsCString& charset,
                           const nsCString& securityInfo);
@@ -65,7 +65,7 @@ protected:
   bool RecvCancelEarly(const nsresult& statusCode);
 
   void OnStartRequest(const nsresult& statusCode,
-                      const int32_t& contentLength,
+                      const int64_t& contentLength,
                       const int32_t& source,
                       const nsCString& charset,
                       const nsCString& securityInfo);
@@ -81,7 +81,7 @@ private:
   bool                              mIsPending;
   bool                              mCanceled;
   uint32_t                          mLoadFlags;
-  int32_t                           mContentLength;
+  int64_t                           mContentLength;
   int32_t                           mCharsetSource;
   nsCString                         mCharset;
   nsCOMPtr<nsIURI>                  mURI;
