@@ -2,16 +2,16 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-sync/identity.js");
-Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/util.js");
-
-Svc.DefaultPrefs.set("registerEngines", "");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
+Service.engineManager.clear();
 
 function CanDecryptEngine() {
-  SyncEngine.call(this, "CanDecrypt");
+  SyncEngine.call(this, "CanDecrypt", Service);
 }
 CanDecryptEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -26,11 +26,11 @@ CanDecryptEngine.prototype = {
     this.wasWiped = true;
   }
 };
-Engines.register(CanDecryptEngine);
+Service.engineManager.register(CanDecryptEngine);
 
 
 function CannotDecryptEngine() {
-  SyncEngine.call(this, "CannotDecrypt");
+  SyncEngine.call(this, "CannotDecrypt", Service);
 }
 CannotDecryptEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -45,24 +45,24 @@ CannotDecryptEngine.prototype = {
     this.wasWiped = true;
   }
 };
-Engines.register(CannotDecryptEngine);
+Service.engineManager.register(CannotDecryptEngine);
 
 
 add_test(function test_withEngineList() {
   try {
     _("Ensure initial scenario.");
-    do_check_false(Engines.get("candecrypt").wasWiped);
-    do_check_false(Engines.get("cannotdecrypt").wasWiped);
+    do_check_false(Service.engineManager.get("candecrypt").wasWiped);
+    do_check_false(Service.engineManager.get("cannotdecrypt").wasWiped);
 
     _("Wipe local engine data.");
     Service.wipeClient(["candecrypt", "cannotdecrypt"]);
 
     _("Ensure only the engine that can decrypt was wiped.");
-    do_check_true(Engines.get("candecrypt").wasWiped);
-    do_check_false(Engines.get("cannotdecrypt").wasWiped);
+    do_check_true(Service.engineManager.get("candecrypt").wasWiped);
+    do_check_false(Service.engineManager.get("cannotdecrypt").wasWiped);
   } finally {
-    Engines.get("candecrypt").wasWiped = false;
-    Engines.get("cannotdecrypt").wasWiped = false;
+    Service.engineManager.get("candecrypt").wasWiped = false;
+    Service.engineManager.get("cannotdecrypt").wasWiped = false;
     Service.startOver();
   }
 
@@ -70,10 +70,10 @@ add_test(function test_withEngineList() {
 });
 
 add_test(function test_startOver_clears_keys() {
-  generateNewKeys();
-  do_check_true(!!CollectionKeys.keyForCollection());
+  generateNewKeys(Service.collectionKeys);
+  do_check_true(!!Service.collectionKeys.keyForCollection());
   Service.startOver();
-  do_check_false(!!CollectionKeys.keyForCollection());
+  do_check_false(!!Service.collectionKeys.keyForCollection());
 
   run_next_test();
 });
@@ -83,12 +83,11 @@ add_test(function test_credentials_preserved() {
 
   // Required for wipeClient().
   Service.clusterURL = TEST_CLUSTER_URL;
-
-  Identity.account = "testaccount";
-  Identity.basicPassword = "testpassword";
+  Service.identity.account = "testaccount";
+  Service.identity.basicPassword = "testpassword";
   let key = Utils.generatePassphrase();
-  Identity.syncKey = key;
-  Identity.persistCredentials();
+  Service.identity.syncKey = key;
+  Service.identity.persistCredentials();
 
   // Simulate passwords engine wipe without all the overhead. To do this
   // properly would require extra test infrastructure.

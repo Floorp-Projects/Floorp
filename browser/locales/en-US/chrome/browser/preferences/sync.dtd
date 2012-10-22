@@ -15,7 +15,7 @@
 
 <!-- Manage Account -->
 <!ENTITY manageAccount.label          "Manage Account">
-<!ENTITY manageAccount.accesskey      "A">
+<!ENTITY manageAccount.accesskey      "n">
 <!ENTITY viewQuota.label              "View Quota">
 <!ENTITY changePassword2.label        "Change Password…">
 <!ENTITY myRecoveryKey.label          "My Recovery Key">

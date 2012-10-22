@@ -1,6 +1,10 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-sync/engines/history.js");
+Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 const TIMESTAMP1 = (Date.now() - 103406528) * 1000;
@@ -64,7 +68,7 @@ function ensureThrows(func) {
   };
 }
 
-let store = new HistoryEngine()._store;
+let store = new HistoryEngine(Service)._store;
 function applyEnsureNoFailures(records) {
   do_check_eq(store.applyIncomingBatch(records).length, 0);
 }

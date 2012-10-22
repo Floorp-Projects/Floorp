@@ -1,21 +1,23 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
-Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-common/log4moz.js");
-Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-sync/util.js");
-
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
-Engines.register(BookmarksEngine);
+Service.engineManager.register(BookmarksEngine);
 var syncTesting = new SyncTestingInfrastructure();
 
 add_test(function bad_record_allIDs() {
   let syncTesting = new SyncTestingInfrastructure();
 
   _("Ensure that bad Places queries don't cause an error in getAllIDs.");
-  let engine = new BookmarksEngine();
+  let engine = new BookmarksEngine(Service);
   let store = engine._store;
   let badRecordID = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.toolbarFolder,
@@ -46,7 +48,7 @@ add_test(function test_ID_caching() {
   let syncTesting = new SyncTestingInfrastructure();
 
   _("Ensure that Places IDs are not cached.");
-  let engine = new BookmarksEngine();
+  let engine = new BookmarksEngine(Service);
   let store = engine._store;
   _("All IDs: " + JSON.stringify(store.getAllIDs()));
 
@@ -94,7 +96,7 @@ add_test(function test_processIncoming_error_orderChildren() {
   _("Ensure that _orderChildren() is called even when _processIncoming() throws an error.");
   new SyncTestingInfrastructure();
 
-  let engine = new BookmarksEngine();
+  let engine = new BookmarksEngine(Service);
   let store  = engine._store;
   let server = serverForFoo(engine);
 
@@ -155,7 +157,7 @@ add_test(function test_processIncoming_error_orderChildren() {
   } finally {
     store.wipe();
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
     server.stop(run_next_test);
   }
 });
@@ -164,7 +166,7 @@ add_test(function test_restorePromptsReupload() {
   _("Ensure that restoring from a backup will reupload all records.");
   new SyncTestingInfrastructure();
 
-  let engine = new BookmarksEngine();
+  let engine = new BookmarksEngine(Service);
   let store  = engine._store;
   let server = serverForFoo(engine);
 
@@ -286,7 +288,7 @@ add_test(function test_restorePromptsReupload() {
   } finally {
     store.wipe();
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
     server.stop(run_next_test);
   }
 });
@@ -329,7 +331,7 @@ add_test(function test_mismatched_types() {
 
   new SyncTestingInfrastructure();
 
-  let engine = new BookmarksEngine();
+  let engine = new BookmarksEngine(Service);
   let store  = engine._store;
   let server = serverForFoo(engine);
 
@@ -362,7 +364,7 @@ add_test(function test_mismatched_types() {
   } finally {
     store.wipe();
     Svc.Prefs.resetBranch("");
-    Records.clearCache();
+    Service.recordManager.clearCache();
     server.stop(run_next_test);
   }
 });
@@ -372,7 +374,7 @@ add_test(function test_bookmark_guidMap_fail() {
 
   new SyncTestingInfrastructure();
 
-  let engine = new BookmarksEngine();
+  let engine = new BookmarksEngine(Service);
   let store = engine._store;
 
   let store  = engine._store;
@@ -419,7 +421,7 @@ add_test(function test_bookmark_guidMap_fail() {
 });
 
 add_test(function test_bookmark_is_taggable() {
-  let engine = new BookmarksEngine();
+  let engine = new BookmarksEngine(Service);
   let store = engine._store;
 
   do_check_true(store.isTaggable("bookmark"));
@@ -437,12 +439,12 @@ add_test(function test_bookmark_is_taggable() {
 add_test(function test_bookmark_tag_but_no_uri() {
   _("Ensure that a bookmark record with tags, but no URI, doesn't throw an exception.");
 
-  let engine = new BookmarksEngine();
+  let engine = new BookmarksEngine(Service);
   let store = engine._store;
 
   // We're simply checking that no exception is thrown, so
   // no actual checks in this test.
- 
+
   store._tagURI(null, ["foo"]);
   store._tagURI(null, null);
   store._tagURI(Utils.makeURI("about:fake"), null);
@@ -472,7 +474,7 @@ function run_test() {
   Log4Moz.repository.getLogger("Sync.Store.Bookmarks").level   = Log4Moz.Level.Trace;
   Log4Moz.repository.getLogger("Sync.Tracker.Bookmarks").level = Log4Moz.Level.Trace;
 
-  generateNewKeys();
+  generateNewKeys(Service.collectionKeys);
 
   run_next_test();
 }

@@ -179,6 +179,8 @@ SEAMONKEY_ID:                          "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}",
 TEST_HARNESS_ID:                       "xuth@mozilla.org",
 
 MIN_PP_LENGTH:                         12,
-MIN_PASS_LENGTH:                       8
+MIN_PASS_LENGTH:                       8,
+
+LOG_DATE_FORMAT:                       "%Y-%m-%d %H:%M:%S",
 
 }))];

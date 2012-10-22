@@ -2,10 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/fakeservices.js");
 
 function test_urls() {
   _("URL related Service properties corresopnd to preference settings.");
@@ -18,7 +17,7 @@ function test_urls() {
     do_check_eq(Service.metaURL, undefined);
 
     _("The 'clusterURL' attribute updates preferences and cached URLs.");
-    Identity.username = "johndoe";
+    Service.identity.username = "johndoe";
 
     // Since we don't have a cluster URL yet, these will still not be defined.
     do_check_eq(Service.infoURL, undefined);
@@ -43,21 +42,21 @@ function test_urls() {
     Svc.Prefs.set("userURL", "relative/user/");
     do_check_eq(Service.miscAPI,
                 "http://weave.server/relative/misc/1.0/");
-    do_check_eq(Service.userAPI,
+    do_check_eq(Service.userAPIURI,
                 "http://weave.server/relative/user/1.0/");
 
     Svc.Prefs.set("miscURL", "http://weave.misc.services/");
     Svc.Prefs.set("userURL", "http://weave.user.services/");
     do_check_eq(Service.miscAPI, "http://weave.misc.services/1.0/");
-    do_check_eq(Service.userAPI, "http://weave.user.services/1.0/");
+    do_check_eq(Service.userAPIURI, "http://weave.user.services/1.0/");
 
     do_check_eq(Service.pwResetURL,
                 "http://weave.server/weave-password-reset");
 
     _("Empty/false value for 'username' resets preference.");
-    Identity.username = "";
+    Service.identity.username = "";
     do_check_eq(Svc.Prefs.get("username"), undefined);
-    do_check_eq(Identity.username, null);
+    do_check_eq(Service.identity.username, null);
 
     _("The 'serverURL' attributes updates/resets preferences.");
     // Identical value doesn't do anything

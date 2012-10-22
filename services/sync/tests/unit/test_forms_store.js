@@ -1,10 +1,14 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 _("Make sure the form store follows the Store api and correctly accesses the backend form storage");
 Cu.import("resource://services-sync/engines/forms.js");
+Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 function run_test() {
   let baseuri = "http://fake/uri/";
-  let store = new FormEngine()._store;
+  let store = new FormEngine(Service)._store;
 
   function applyEnsureNoFailures(records) {
     do_check_eq(store.applyIncomingBatch(records).length, 0);
