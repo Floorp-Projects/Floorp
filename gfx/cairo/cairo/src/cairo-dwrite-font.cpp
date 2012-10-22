@@ -1494,7 +1494,8 @@ _name_tables_match (cairo_scaled_font_t *font1,
     unsigned char *buffer2;
     cairo_bool_t result = false;
 
-    if (!font1->backend->load_truetype_table ||
+    if (!font1->backend || !font2->backend ||
+        !font1->backend->load_truetype_table ||
         !font2->backend->load_truetype_table)
         return false;
 
