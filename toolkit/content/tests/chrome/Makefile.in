@@ -29,6 +29,8 @@ MOCHITEST_CHROME_FILES = 	findbar_window.xul \
 		test_bug360437.xul \
 		bug366992_window.xul \
 		test_bug366992.xul \
+		test_bug409624.xul \
+		bug409624_window.xul \
 		test_bug418874.xul \
 		bug429723_window.xul \
 		test_bug429723.xul \

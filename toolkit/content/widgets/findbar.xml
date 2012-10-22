@@ -279,6 +279,20 @@
                 readonly="true"
                 onget="return this._findMode;"/>
 
+      <property name="canClear" readonly="true">
+        <getter><![CDATA[
+          if (this._findField.value)
+            return true;
+
+          // Watch out for lazy editor init
+          if (this._findField.editor) {
+            let tm = this._findField.editor.transactionManager;
+            return !!(tm.numberOfUndoItems || tm.numberOfRedoItems);
+          }
+          return false;
+        ]]></getter>
+      </property>
+
       <field name="_browser">null</field>
       <property name="browser">
         <getter><![CDATA[
@@ -1183,6 +1197,19 @@
           }
 
           this._findFailedString = null;
+        ]]></body>
+      </method>
+
+      <method name="clear">
+        <body><![CDATA[
+          this.browser.fastFind.collapseSelection();
+          this._findField.reset();
+          this.toggleHighlight(false);
+          this._updateStatusUI();
+          this._enableFindButtons(false);
+          this._setFoundLink(null);
+          this._foundEditable = null;
+          this._currentWindow = null;
         ]]></body>
       </method>
 
