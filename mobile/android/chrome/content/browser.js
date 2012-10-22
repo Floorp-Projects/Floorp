@@ -4288,9 +4288,9 @@ var ErrorPageEventHandler = {
               let sslExceptions = new SSLExceptions();
 
               if (target == perm)
-                sslExceptions.addPermanentException(uri);
+                sslExceptions.addPermanentException(uri, errorDoc.defaultView);
               else
-                sslExceptions.addTemporaryException(uri);
+                sslExceptions.addTemporaryException(uri, errorDoc.defaultView);
             } catch (e) {
               dump("Failed to set cert exception: " + e + "\n");
             }
