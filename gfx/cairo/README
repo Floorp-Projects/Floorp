@@ -192,7 +192,9 @@ dwrite-font-printing.patch: bug 468568; don't substitute a GDI font for a DWrite
 
 d2d-gradient-ensure-stops.patch: bug 792903, ensure we don't set num_stops to 0
 
-setlcdfilter_in_tree.patch bug 790139; force cairo to use FT_Library_SetLcdFilter from our in tree library rather than picking it up from the system
+setlcdfilter_in_tree.patch: bug 790139; force cairo to use FT_Library_SetLcdFilter from our in tree library rather than picking it up from the system
+
+dwrite-font-match-robustness.patch: bug 717178, don't crash when _name_tables_match is passed a nil scaled-font
 
 ==== pixman patches ====
 
