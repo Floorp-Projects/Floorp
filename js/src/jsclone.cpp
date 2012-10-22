@@ -331,7 +331,12 @@ SCInput::readChars(jschar *p, size_t nchars)
 bool
 SCInput::readPtr(void **p)
 {
-    return read((uint64_t *)p);
+    // On a 32 bit system the void* variable we have to write to is only
+    // 32 bits, so we create a 64 temporary and discard the unused bits.
+    uint64_t tmp;
+    bool ret = read(&tmp);
+    *p = (void *) tmp;
+    return ret;
 }
 
 SCOutput::SCOutput(JSContext *cx) : cx(cx), buf(cx) {}
