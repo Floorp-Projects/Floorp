@@ -3689,7 +3689,7 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
                                      const nsIntSize aImageSize)
 
 {
-  if (aDest.IsEmpty() || aFill.IsEmpty())
+  if (aDest.IsEmpty() || aFill.IsEmpty() || !aImageSize.width || !aImageSize.height)
     return SnappedImageDrawingParameters();
 
   gfxRect devPixelDest =
