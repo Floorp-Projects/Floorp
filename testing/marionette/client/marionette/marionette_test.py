@@ -153,7 +153,7 @@ class MarionetteJSTestCase(CommonTestCase):
         CommonTestCase.__init__(self, methodName)
 
     @classmethod
-    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette):
+    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars):
         suite.addTest(cls(weakref.ref(marionette), jsFile=filepath))
 
     def runTest(self):
