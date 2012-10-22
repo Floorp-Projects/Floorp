@@ -34,7 +34,7 @@ parent:
 
 child:
   OnStartRequest(nsresult  statusCode,
-                 int32_t   contentLength,
+                 int64_t   contentLength,
                  int32_t   source,
                  nsCString charset,
                  nsCString securityInfo);

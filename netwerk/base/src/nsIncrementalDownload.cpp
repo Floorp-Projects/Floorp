@@ -568,13 +568,9 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request,
       if (PR_sscanf(buf.get() + slash + 1, "%lld", (int64_t *) &mTotalSize) != 1)
         return NS_ERROR_UNEXPECTED;
     } else {
-      // Use nsIPropertyBag2 to fetch the content length as it exposes the
-      // value as a 64-bit number.
-      nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(request, &rv);
+      rv = http->GetContentLength(&mTotalSize);
       if (NS_FAILED(rv))
         return rv;
-      rv = props->GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
-                                     &mTotalSize);
       // We need to know the total size of the thing we're trying to download.
       if (mTotalSize == int64_t(-1)) {
         NS_WARNING("server returned no content-length header!");

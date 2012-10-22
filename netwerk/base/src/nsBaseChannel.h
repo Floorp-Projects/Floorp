@@ -257,7 +257,6 @@ private:
   bool                                mWaitingOnAsyncRedirect;
   bool                                mOpenRedirectChannel;
   uint32_t                            mRedirectFlags;
-  int64_t                             mContentLength;
 
 protected:
   nsCOMPtr<nsIURI>                    mURI;
@@ -268,6 +267,7 @@ protected:
   nsresult                            mStatus;
   uint32_t                            mContentDispositionHint;
   nsAutoPtr<nsString>                 mContentDispositionFilename;
+  int64_t                             mContentLength;
 
   friend class mozilla::net::PrivateBrowsingChannel<nsBaseChannel>;
 };

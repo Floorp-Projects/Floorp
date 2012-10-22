@@ -166,8 +166,8 @@ FTPChannelParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   LOG(("FTPChannelParent::OnStartRequest [this=%x]\n", this));
 
   nsFtpChannel* chan = static_cast<nsFtpChannel*>(aRequest);
-  int32_t aContentLength;
-  chan->GetContentLength(&aContentLength);
+  int64_t contentLength;
+  chan->GetContentLength(&contentLength);
   nsCString contentType;
   chan->GetContentType(contentType);
   nsCString entityID;
@@ -178,7 +178,7 @@ FTPChannelParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   URIParams uri;
   SerializeURI(chan->URI(), uri);
 
-  if (mIPCClosed || !SendOnStartRequest(aContentLength, contentType,
+  if (mIPCClosed || !SendOnStartRequest(contentLength, contentType,
                                        lastModified, entityID, uri)) {
     return NS_ERROR_UNEXPECTED;
   }
