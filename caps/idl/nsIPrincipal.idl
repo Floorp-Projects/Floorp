@@ -184,30 +184,10 @@ interface nsIPrincipal : nsISerializable
      */
     readonly attribute unsigned long appId;
 
-    %{C++
-    uint32_t GetAppId()
-    {
-      uint32_t appId;
-      mozilla::DebugOnly<nsresult> rv = GetAppId(&appId);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      return appId;
-    }
-    %}
-
     /**
      * Returns true iif the principal is inside a browser element.
      */
     readonly attribute boolean isInBrowserElement;
-
-    %{C++
-    bool GetIsInBrowserElement()
-    {
-      bool isInBrowserElement;
-      mozilla::DebugOnly<nsresult> rv = GetIsInBrowserElement(&isInBrowserElement);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      return isInBrowserElement;
-    }
-    %}
 
     /**
      * Returns true if this principal has an unknown appId. This shouldn't
@@ -215,16 +195,6 @@ interface nsIPrincipal : nsISerializable
      * appId everywhere where we construct principals.
      */
     readonly attribute boolean unknownAppId;
-
-    %{C++
-    bool GetUnknownAppId()
-    {
-      bool unkwnownAppId;
-      mozilla::DebugOnly<nsresult> rv = GetIsInBrowserElement(&unkwnownAppId);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      return unkwnownAppId;
-    }
-    %}
 };
 
 /**
