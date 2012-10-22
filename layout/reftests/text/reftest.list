@@ -171,6 +171,11 @@ HTTP(..) == graphite-05-lang.html graphite-05-ref.html
 HTTP(..) == graphite-05-badlang.html graphite-05-ref.html
 HTTP(..) == graphite-05-feat.html graphite-05-ref.html
 
+# comparing composed and decomposed characters that should render identically
+# under both OpenType and Graphite shaping
+pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == glyph-decomposition-opentype.html glyph-decomposition-opentype-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == glyph-decomposition-graphite.html glyph-decomposition-graphite-ref.html
+
 # Tests for hyphenation with -moz-hyphens
 == auto-hyphenation-1.html auto-hyphenation-1-ref.html
 != auto-hyphenation-1.html auto-hyphenation-1-notref.html
