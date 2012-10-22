@@ -1852,52 +1852,6 @@ nsScriptSecurityManager::SubjectPrincipalIsSystem(bool* aIsSystem)
     return mSystemPrincipal->Equals(subject, aIsSystem);
 }
 
-NS_IMETHODIMP
-nsScriptSecurityManager::GetCertificatePrincipal(const nsACString& aCertFingerprint,
-                                                 const nsACString& aSubjectName,
-                                                 const nsACString& aPrettyName,
-                                                 nsISupports* aCertificate,
-                                                 nsIURI* aURI,
-                                                 nsIPrincipal **result)
-{
-    *result = nullptr;
-    
-    NS_ENSURE_ARG(!aCertFingerprint.IsEmpty() &&
-                  !aSubjectName.IsEmpty() &&
-                  aCertificate);
-
-    return DoGetCertificatePrincipal(aCertFingerprint, aSubjectName,
-                                     aPrettyName, aCertificate, aURI, true,
-                                     result);
-}
-
-nsresult
-nsScriptSecurityManager::DoGetCertificatePrincipal(const nsACString& aCertFingerprint,
-                                                   const nsACString& aSubjectName,
-                                                   const nsACString& aPrettyName,
-                                                   nsISupports* aCertificate,
-                                                   nsIURI* aURI,
-                                                   bool aModifyTable,
-                                                   nsIPrincipal **result)
-{
-    NS_ENSURE_ARG(!aCertFingerprint.IsEmpty());
-    
-    // Create a certificate principal out of the certificate ID
-    // and URI given to us.  We will use this principal to test
-    // equality when doing our hashtable lookups below.
-    nsRefPtr<nsPrincipal> certificate = new nsPrincipal();
-    if (!certificate)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv = certificate->Init(aCertFingerprint, aSubjectName,
-                                    aPrettyName, aCertificate, aURI,
-                                    UNKNOWN_APP_ID, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ADDREF(*result = certificate);
-
-    return rv;
-}
-
 nsresult
 nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, uint32_t aAppId,
                                                  bool aInMozBrowser,
@@ -1924,9 +1878,7 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, uint32_t aAppId,
     if (!codebase)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = codebase->Init(EmptyCString(), EmptyCString(),
-                                 EmptyCString(), nullptr, aURI, aAppId,
-                                 aInMozBrowser);
+    nsresult rv = codebase->Init(aURI, aAppId, aInMozBrowser);
     if (NS_FAILED(rv))
         return rv;
 

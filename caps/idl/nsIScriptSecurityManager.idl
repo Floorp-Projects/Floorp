@@ -136,21 +136,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     nsIPrincipal getSystemPrincipal();
 
     /**
-     * Return a principal with the specified certificate fingerprint, subject
-     * name (the full name or concatenated set of names of the entity
-     * represented by the certificate), pretty name, certificate, and
-     * codebase URI.  The certificate fingerprint and subject name MUST be
-     * nonempty; otherwise an error will be thrown.  Similarly, aCert must
-     * not be null.
-     */
-    [noscript] nsIPrincipal
-         getCertificatePrincipal(in AUTF8String aCertFingerprint,
-                                 in AUTF8String aSubjectName,
-                                 in AUTF8String aPrettyName,
-                                 in nsISupports aCert,
-                                 in nsIURI aURI);
-
-    /**
      * Return a principal that has the same origin as aURI.
      * This principals should not be used for any data/permission check, it will
      * have appId = UNKNOWN_APP_ID.

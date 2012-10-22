@@ -72,6 +72,7 @@ CPPSRCS = 				\
   nsNSSCertificateFakeTransport.cpp \
   PSMRunnable.cpp \
   nsNSSVersion.cpp \
+  nsCertificatePrincipal.cpp \
   $(NULL)
 
 ifdef MOZ_XUL

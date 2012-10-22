@@ -4,20 +4,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* An interface for verifying signatures */
-#include "nsIPrincipal.idl"
 
-[uuid(dea87f65-e91e-4119-aa13-aaa2be80cac2)]
+#include "nsISupports.idl"
+
+// NB: This isn't actually a principal at all. The naming is just historical.
+interface nsICertificatePrincipal;
+
+[uuid(22870b07-b5ef-481b-9f7f-d41787d4e617)]
 interface nsISignatureVerifier : nsISupports
 {
    /* Sig Verification Error Codes */
   const long VERIFY_OK = 0;
   const long VERIFY_ERROR_UNKNOWN_CA  = -8172; /* -8172 is the error code returned by PSM */
   
-  nsIPrincipal verifySignature(in string aSignature,
-                               in unsigned long aSignatureLen,
-                               in string plaintext,
-                               in unsigned long plaintextLen,
-                               out long errorCode);
+  nsICertificatePrincipal verifySignature(in string aSignature,
+                                          in unsigned long aSignatureLen,
+                                          in string plaintext,
+                                          in unsigned long plaintextLen,
+                                          out long errorCode);
 };
 
 

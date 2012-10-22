@@ -124,38 +124,6 @@ nsSystemPrincipal::GetOrigin(char** aOrigin)
     return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP 
-nsSystemPrincipal::GetFingerprint(nsACString& aID)
-{
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP 
-nsSystemPrincipal::GetPrettyName(nsACString& aName)
-{
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP 
-nsSystemPrincipal::GetSubjectName(nsACString& aName)
-{
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::GetCertificate(nsISupports** aCertificate)
-{
-    *aCertificate = nullptr;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsSystemPrincipal::GetHasCertificate(bool* aResult)
-{
-    *aResult = false;
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsSystemPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 {

@@ -67,6 +67,8 @@ XPIDLSRCS = \
     nsIKeyModule.idl \
     nsIProtectedAuthThread.idl \
     nsIDataSignatureVerifier.idl \
+    nsISignatureVerifier.idl \
+    nsICertificatePrincipal.idl \
     $(NULL)
 
 ifdef MOZ_XUL

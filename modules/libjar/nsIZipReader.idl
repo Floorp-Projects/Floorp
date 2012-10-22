@@ -9,7 +9,7 @@
 interface nsIUTF8StringEnumerator;
 interface nsIInputStream;
 interface nsIFile;
-interface nsIPrincipal;
+interface nsICertificatePrincipal;
 
 [scriptable, uuid(e1c028bc-c478-11da-95a8-00e08161165f)]
 interface nsIZipEntry : nsISupports
@@ -53,7 +53,7 @@ interface nsIZipEntry : nsISupports
     readonly attribute boolean          isSynthetic;
 };
 
-[scriptable, uuid(8fbf5023-3827-4fbc-a464-5db546e7f747)]
+[scriptable, uuid(38d6d07a-8a58-4fe7-be8b-ef6472fa83ff)]
 interface nsIZipReader : nsISupports
 {
     /**
@@ -177,7 +177,7 @@ interface nsIZipReader : nsISupports
      * stored in the jar, verifyExternalFile (not yet implemented) must 
      * be called before getPrincipal.
      */
-    nsIPrincipal getCertificatePrincipal(in AUTF8String aEntryName);   
+    nsICertificatePrincipal getCertificatePrincipal(in AUTF8String aEntryName);   
     
     readonly attribute uint32_t manifestEntriesCount;
 };

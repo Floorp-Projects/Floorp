@@ -1,0 +1,33 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/*
+ * Historically, principals, certificates, and signed JARs were all linked
+ * together in one big mess. When that mess was cleaned up, it turned out that
+ * the principals used to store certificate information didn't overlap at all
+ * with the principals used for security policy. So this interface was created
+ * so that real principals wouldn't have to carry around all that baggage.
+ *
+ * The name here is totally a misnomer. This isn't a principal at all, and would
+ * better be called nsICertificateHolder or something. But that would require
+ * renaming some APIs, so let's just let this be for now.
+ */
+
+[scriptable, uuid(7cd4af5a-64d3-44a8-9700-804a42a6109a)]
+interface nsICertificatePrincipal : nsISupports
+{
+    readonly attribute AUTF8String fingerprint;
+    readonly attribute AUTF8String prettyName;
+    readonly attribute AUTF8String subjectName;
+    readonly attribute nsISupports certificate;
+    readonly attribute boolean     hasCertificate; // For compat; always true.
+
+    bool equals(in nsICertificatePrincipal aOther);
+};
+
+////////////////////////////////////////////////////////////////////////////////

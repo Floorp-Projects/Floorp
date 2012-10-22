@@ -116,105 +116,6 @@ nsBasePrincipal::SetSecurityPolicy(void* aSecurityPolicy)
   return NS_OK;
 }
 
-bool
-nsBasePrincipal::CertificateEquals(nsIPrincipal *aOther)
-{
-  bool otherHasCert;
-  aOther->GetHasCertificate(&otherHasCert);
-  if (otherHasCert != (mCert != nullptr)) {
-    // One has a cert while the other doesn't.  Not equal.
-    return false;
-  }
-
-  if (!mCert)
-    return true;
-
-  nsAutoCString str;
-  aOther->GetFingerprint(str);
-  if (!str.Equals(mCert->fingerprint))
-    return false;
-
-  // If either subject name is empty, just let the result stand, but if they're
-  // both non-empty, only claim equality if they're equal.
-  if (!mCert->subjectName.IsEmpty()) {
-    // Check the other principal's subject name
-    aOther->GetSubjectName(str);
-    return str.Equals(mCert->subjectName) || str.IsEmpty();
-  }
-
-  return true;
-}
-
-NS_IMETHODIMP
-nsBasePrincipal::GetHasCertificate(bool* aResult)
-{
-  *aResult = (mCert != nullptr);
-
-  return NS_OK;
-}
-
-nsresult
-nsBasePrincipal::SetCertificate(const nsACString& aFingerprint,
-                                const nsACString& aSubjectName,
-                                const nsACString& aPrettyName,
-                                nsISupports* aCert)
-{
-  NS_ENSURE_STATE(!mCert);
-
-  if (aFingerprint.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mCert = new Certificate(aFingerprint, aSubjectName, aPrettyName, aCert);
-  if (!mCert) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBasePrincipal::GetFingerprint(nsACString& aFingerprint)
-{
-  NS_ENSURE_STATE(mCert);
-
-  aFingerprint = mCert->fingerprint;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBasePrincipal::GetPrettyName(nsACString& aName)
-{
-  NS_ENSURE_STATE(mCert);
-
-  aName = mCert->prettyName;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBasePrincipal::GetSubjectName(nsACString& aName)
-{
-  NS_ENSURE_STATE(mCert);
-
-  aName = mCert->subjectName;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBasePrincipal::GetCertificate(nsISupports** aCertificate)
-{
-  if (mCert) {
-    NS_IF_ADDREF(*aCertificate = mCert->cert);
-  }
-  else {
-    *aCertificate = nullptr;
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsBasePrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 {
@@ -231,24 +132,6 @@ nsBasePrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
     return NS_ERROR_ALREADY_INITIALIZED;
 
   mCSP = aCsp;
-  return NS_OK;
-}
-
-nsresult
-nsBasePrincipal::EnsureCertData(const nsACString& aSubjectName,
-                                const nsACString& aPrettyName,
-                                nsISupports* aCert)
-{
-  NS_ENSURE_STATE(mCert);
-
-  if (!mCert->subjectName.IsEmpty() &&
-      !mCert->subjectName.Equals(aSubjectName)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mCert->subjectName = aSubjectName;
-  mCert->prettyName = aPrettyName;
-  mCert->cert = aCert;
   return NS_OK;
 }
 
@@ -284,16 +167,12 @@ nsPrincipal::~nsPrincipal()
 { }
 
 nsresult
-nsPrincipal::Init(const nsACString& aCertFingerprint,
-                  const nsACString& aSubjectName,
-                  const nsACString& aPrettyName,
-                  nsISupports* aCert,
-                  nsIURI *aCodebase,
+nsPrincipal::Init(nsIURI *aCodebase,
                   uint32_t aAppId,
                   bool aInMozBrowser)
 {
   NS_ENSURE_STATE(!mInitialized);
-  NS_ENSURE_ARG(!aCertFingerprint.IsEmpty() || aCodebase); // better have one of these.
+  NS_ENSURE_ARG(aCodebase);
 
   mInitialized = true;
 
@@ -303,20 +182,13 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
   mAppId = aAppId;
   mInMozBrowser = aInMozBrowser;
 
-  if (aCertFingerprint.IsEmpty())
-    return NS_OK;
-
-  return SetCertificate(aCertFingerprint, aSubjectName, aPrettyName, aCert);
+  return NS_OK;
 }
 
 void
 nsPrincipal::GetScriptLocation(nsACString &aStr)
 {
-  if (mCert) {
-    aStr.Assign(mCert->fingerprint);
-  } else {
-    mCodebase->GetSpec(aStr);
-  }
+  mCodebase->GetSpec(aStr);
 }
 
 /* static */ nsresult
@@ -398,29 +270,6 @@ nsPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
   }
 
   if (this != aOther) {
-    if (!CertificateEquals(aOther)) {
-      *aResult = false;
-      return NS_OK;
-    }
-
-    if (mCert) {
-      // If either principal has no URI, it's the saved principal from
-      // preferences; in that case, test true.  Do NOT test true if the two
-      // principals have URIs with different codebases.
-      nsCOMPtr<nsIURI> otherURI;
-      nsresult rv = aOther->GetURI(getter_AddRefs(otherURI));
-      if (NS_FAILED(rv)) {
-        *aResult = false;
-        return rv;
-      }
-
-      if (!otherURI || !mCodebase) {
-        *aResult = true;
-        return NS_OK;
-      }
-
-      // Fall through to the codebase comparison.
-    }
 
     // Codebases are equal if they have the same origin.
     *aResult =
@@ -442,9 +291,6 @@ nsPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
   }
 
   *aResult = false;
-  if (!CertificateEquals(aOther)) {
-    return NS_OK;
-  }
 
   nsCOMPtr<nsIURI> otherURI;
   nsresult rv = aOther->GetURI(getter_AddRefs(otherURI));
@@ -604,16 +450,9 @@ nsPrincipal::SetURI(nsIURI* aURI)
 NS_IMETHODIMP
 nsPrincipal::GetHashValue(uint32_t* aValue)
 {
-  NS_PRECONDITION(mCert || mCodebase, "Need a cert or codebase");
+  NS_PRECONDITION(mCodebase, "Need a codebase");
 
-  // If there is a certificate, it takes precendence over the codebase.
-  if (mCert) {
-    *aValue = HashString(mCert->fingerprint);
-  }
-  else {
-    *aValue = nsScriptSecurityManager::HashPrincipalByOrigin(this);
-  }
-
+  *aValue = nsScriptSecurityManager::HashPrincipalByOrigin(this);
   return NS_OK;
 }
 
@@ -705,40 +544,8 @@ nsPrincipal::GetUnknownAppId(bool* aUnknownAppId)
 NS_IMETHODIMP
 nsPrincipal::Read(nsIObjectInputStream* aStream)
 {
-  bool haveCert;
-  nsresult rv = aStream->ReadBoolean(&haveCert);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCString fingerprint;
-  nsCString subjectName;
-  nsCString prettyName;
-  nsCOMPtr<nsISupports> cert;
-  if (haveCert) {
-    rv = NS_ReadOptionalCString(aStream, fingerprint);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    rv = NS_ReadOptionalCString(aStream, subjectName);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    rv = NS_ReadOptionalCString(aStream, prettyName);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    rv = aStream->ReadObject(true, getter_AddRefs(cert));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
   nsCOMPtr<nsIURI> codebase;
-  rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(codebase));
+  nsresult rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(codebase));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -757,7 +564,7 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
   rv = aStream->ReadBoolean(&inMozBrowser);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = Init(fingerprint, subjectName, prettyName, cert, codebase, appId, inMozBrowser);
+  rv = Init(codebase, appId, inMozBrowser);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetDomain(domain);
@@ -768,44 +575,14 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
 NS_IMETHODIMP
 nsPrincipal::Write(nsIObjectOutputStream* aStream)
 {
-  NS_ENSURE_STATE(mCert || mCodebase);
+  NS_ENSURE_STATE(mCodebase);
 
-  nsresult rv = aStream->WriteBoolean(mCert != nullptr);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (mCert) {
-    NS_ENSURE_STATE(mCert->cert);
-    
-    rv = NS_WriteOptionalStringZ(aStream, mCert->fingerprint.get());
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    
-    rv = NS_WriteOptionalStringZ(aStream, mCert->subjectName.get());
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    
-    rv = NS_WriteOptionalStringZ(aStream, mCert->prettyName.get());
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    rv = aStream->WriteCompoundObject(mCert->cert, NS_GET_IID(nsISupports),
-                                      true);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }    
-  }
-  
   // mSecurityPolicy is an optimization; it'll get looked up again as needed.
   // Don't bother saving and restoring it, esp. since it might change if
   // preferences change.
 
-  rv = NS_WriteOptionalCompoundObject(aStream, mCodebase, NS_GET_IID(nsIURI),
-                                      true);
+  nsresult rv = NS_WriteOptionalCompoundObject(aStream, mCodebase, NS_GET_IID(nsIURI),
+                                               true);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1078,12 +855,8 @@ nsExpandedPrincipal::GetUnknownAppId(bool* aUnknownAppId)
 void
 nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 {
-  if (mCert) {
-    aStr.Assign(mCert->fingerprint);
-  } else {
-    // Is that a good idea to list it's principals?
-    aStr.Assign(EXPANDED_PRINCIPAL_SPEC);
-  }
+  // Is that a good idea to list it's principals?
+  aStr.Assign(EXPANDED_PRINCIPAL_SPEC);
 }
 
 #ifdef DEBUG
