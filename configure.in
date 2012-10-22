@@ -62,8 +62,6 @@ dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 GLIB_VERSION=1.2.0
 PERL_VERSION=5.006
-PYTHON_VERSION_MAJOR=2
-PYTHON_VERSION_MINOR=5
 CAIRO_VERSION=1.10
 PANGO_VERSION=1.14.0
 GTK2_VERSION=2.10.0
@@ -124,6 +122,30 @@ then
   fi
 fi
 MOZ_BUILD_ROOT=`pwd`
+
+MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python2.6 python2.5 python)
+if test -z "$PYTHON"; then
+    AC_MSG_ERROR([python was not found in \$PATH])
+fi
+
+AC_MSG_RESULT([Creating Python environment])
+dnl This verifies our Python version is sane and ensures the Python
+dnl virtualenv is present and up to date. It sanitizes the environment
+dnl for us, so we don't need to clean anything out.
+$PYTHON $_topsrcdir/build/virtualenv/populate_virtualenv.py \
+    $_topsrcdir $MOZ_BUILD_ROOT/_virtualenv || exit 1
+
+dnl Create a virtualenv where we can install local Python packages
+case "$host_os" in
+mingw*)
+    PYTHON=`cd $MOZ_BUILD_ROOT && pwd -W`/_virtualenv/Scripts/python.exe
+    ;;
+*)
+    PYTHON=$MOZ_BUILD_ROOT/_virtualenv/bin/python
+    ;;
+esac
+
+AC_SUBST(PYTHON)
 
 MOZ_DEFAULT_COMPILER
 
@@ -801,11 +823,6 @@ if test "$_perl_res" != 0; then
     AC_MSG_ERROR([Cannot find Config.pm or \$Config{archlib}.  A full perl installation is required.])
 else
     AC_MSG_RESULT([yes])
-fi
-
-MOZ_PATH_PROGS(PYTHON, $PYTHON python2.7 python2.6 python2.5 python)
-if test -z "$PYTHON"; then
-    AC_MSG_ERROR([python was not found in \$PATH])
 fi
 
 MOZ_ARG_WITH_BOOL(system-ply,
@@ -1838,24 +1855,6 @@ case "$host" in
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     ;;
 esac
-
-dnl We require version 2.5 or newer of Python to build.
-AC_MSG_CHECKING([for Python version >= $PYTHON_VERSION_MAJOR.$PYTHON_VERSION_MINOR but not 3.x])
-
-changequote(:)
-read python_version_major python_version_minor python_version_micro <<EOF
-`$PYTHON -c 'import sys; print sys.version_info[0], sys.version_info[1], sys.version_info[2]'`
-EOF
-changequote([,])
-
-if test $python_version_major -ne $PYTHON_VERSION_MAJOR; then
-    AC_MSG_ERROR([Cannot build on Python $python_version_major.])
-else
-    if test $python_version_minor -lt $PYTHON_VERSION_MINOR; then
-        AC_MSG_ERROR([Cannot build on Python $python_version_major.$python_version_minor. You need at least $PYTHON_VERSION_MAJOR.$PYTHON_VERSION_MINOR.])
-    fi
-fi
-AC_MSG_RESULT([yes])
 
 dnl Check for using a custom <stdint.h> implementation
 dnl ========================================================
@@ -8822,51 +8821,6 @@ case "$host" in
     FIXED_EGREP="egrep"
     ;;
 esac
-
-dnl Create a virtualenv where we can install local Python packages
-AC_MSG_RESULT([Creating Python virtualenv])
-rm -rf _virtualenv
-mkdir -p _virtualenv
-MACOSX_DEPLOYMENT_TARGET= PYTHONDONTWRITEBYTECODE= $PYTHON $_topsrcdir/python/virtualenv/virtualenv.py --system-site-packages ./_virtualenv
-case "$host_os" in
-mingw*)
-    PYTHON=$MOZ_BUILD_ROOT/_virtualenv/Scripts/python.exe
-    ;;
-*)
-    PYTHON=$MOZ_BUILD_ROOT/_virtualenv/bin/python
-    ;;
-esac
-
-AC_SUBST(PYTHON)
-
-dnl Populate the virtualenv
-
-dnl We always use the version Python was compiled with to ensure that compiled
-dnl extensions work properly. This works around a bug in Python. See also
-dnl http://bugs.python.org/issue9516 and bug 659881.
-dnl
-dnl Please note that this assumes nothing built during virtualenv population is
-dnl shipped as part of a release package. If it does ship, binaries built here
-dnl may not be compatible with the minimum supported OS X version.
-osx_deployment_target_system=
-
-if test $python_version_major -ne 2; then
-    AC_MSG_ERROR([Assertion failed: building with Python 2.])
-fi
-
-dnl sysconfig is only present on Python 2.7 and above.
-if test $python_version_minor -ge 7; then
-    osx_deployment_target_system=`$PYTHON -c 'import sysconfig; print sysconfig.get_config_var("MACOSX_DEPLOYMENT_TARGET")'`
-fi
-
-AC_MSG_RESULT([Populating Python virtualenv])
-MACOSX_DEPLOYMENT_TARGET=$osx_deployment_target_system \
-  LDFLAGS="${HOST_LDFLAGS}" \
-  CC="${HOST_CC}" CXX="${HOST_CXX}" \
-  CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" \
-  $PYTHON $_topsrcdir/build/virtualenv/populate_virtualenv.py \
-    $_topsrcdir $_topsrcdir/build/virtualenv/packages.txt \
-  || exit 1
 
 dnl Load the list of Makefiles to generate.
 dnl   To add new Makefiles, edit allmakefiles.sh.
