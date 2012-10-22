@@ -3767,18 +3767,15 @@ nsWindow::Create(nsIWidget        *aParent,
 
     LOG(("nsWindow [%p]\n", (void *)this));
     if (mShell) {
-        LOG(("\tmShell %p %p %lx\n", (void *)mShell, (void *)gtk_widget_get_window(mShell),
-             gdk_x11_window_get_xid(gtk_widget_get_window(mShell))));
-    }
-
-    if (mContainer) {
-        LOG(("\tmContainer %p %p %lx\n", (void *)mContainer,
-             (void *)gtk_widget_get_window(GTK_WIDGET(mContainer)),
-             gdk_x11_window_get_xid(gtk_widget_get_window(GTK_WIDGET(mContainer)))));
+        LOG(("\tmShell %p mContainer %p mGdkWindow %p 0x%lx\n",
+             mShell, mContainer, mGdkWindow,
+             gdk_x11_window_get_xid(mGdkWindow)));
+    } else if (mContainer) {
+        LOG(("\tmContainer %p mGdkWindow %p\n", mContainer, mGdkWindow));
     }
     else if (mGdkWindow) {
-        LOG(("\tmGdkWindow %p %lx\n", (void *)mGdkWindow,
-             gdk_x11_window_get_xid(mGdkWindow)));
+        LOG(("\tmGdkWindow %p parent %p\n",
+             mGdkWindow, gdk_window_get_parent(mGdkWindow)));
     }
 
     // resize so that everything is set to the right dimensions
