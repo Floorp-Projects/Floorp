@@ -44,7 +44,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMETHODIMP
 ImageData::GetWidth(uint32_t* aWidth)
 {
-  *aWidth = GetWidth();
+  *aWidth = Width();
   return NS_OK;
 }
 
@@ -52,7 +52,7 @@ ImageData::GetWidth(uint32_t* aWidth)
 NS_IMETHODIMP
 ImageData::GetHeight(uint32_t* aHeight)
 {
-  *aHeight = GetHeight();
+  *aHeight = Height();
   return NS_OK;
 }
 
