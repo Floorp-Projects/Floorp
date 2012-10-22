@@ -452,7 +452,17 @@ nsWindow::DispatchDeactivateEvent(void)
 #endif //ACCESSIBILITY
 }
 
-
+void
+nsWindow::DispatchResized(int32_t aWidth, int32_t aHeight)
+{
+    nsIWidgetListener *listeners[] =
+        { mWidgetListener, mAttachedWidgetListener };
+    for (size_t i = 0; i < ArrayLength(listeners); ++i) {
+        if (listeners[i]) {
+            listeners[i]->WindowResized(this, aWidth, aHeight);
+        }
+    }
+}
 
 nsresult
 nsWindow::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus)
@@ -463,8 +473,11 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus)
 #endif
 
     aStatus = nsEventStatus_eIgnore;
-    if (mWidgetListener)
-      aStatus = mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
+    nsIWidgetListener* listener =
+        mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
+    if (listener) {
+      aStatus = listener->HandleEvent(aEvent, mUseAttachedEvents);
+    }
 
     return NS_OK;
 }
@@ -1073,8 +1086,7 @@ nsWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
 
     // send a resize notification if this is a toplevel
     if (mIsTopLevel || mListenForResizes) {
-        if (mWidgetListener)
-            mWidgetListener->WindowResized(this, aWidth, aHeight);
+        DispatchResized(aWidth, aHeight);
     }
 
     return NS_OK;
@@ -1139,8 +1151,7 @@ nsWindow::Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
     NotifyRollupGeometryChange(gRollupListener);
 
     if (mIsTopLevel || mListenForResizes) {
-        if (mWidgetListener)
-            mWidgetListener->WindowResized(this, aWidth, aHeight);
+        DispatchResized(aWidth, aHeight);
     }
 
     return NS_OK;
@@ -2010,11 +2021,15 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     if (!mGdkWindow || mIsFullyObscured || !mHasMappedToplevel)
         return FALSE;
 
+    nsIWidgetListener *listener =
+        mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
+    if (!listener)
+        return FALSE;
+
     // Dispatch WillPaintWindow notification to allow scripts etc. to run
     // before we paint
     {
-        if (mWidgetListener)
-          mWidgetListener->WillPaintWindow(this, true);
+        listener->WillPaintWindow(this, true);
 
         // If the window has been destroyed during the will paint notification,
         // there is nothing left to do.
@@ -2126,28 +2141,20 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         nsBaseWidget::AutoLayerManagerSetup
           setupLayerManager(this, ctx, mozilla::layers::BUFFER_NONE);
 
-        if (mWidgetListener)
-            mWidgetListener->PaintWindow(this, region, nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
+        listener->PaintWindow(this, region, nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
+        listener->DidPaintWindow();
 
         g_free(rects);
-
-        if (mWidgetListener)
-            mWidgetListener->DidPaintWindow();
-
         return TRUE;
 
     } else if (GetLayerManager()->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {
         LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
         manager->SetClippingRegion(region);
 
-        if (mWidgetListener)
-            mWidgetListener->PaintWindow(this, region, nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
+        listener->PaintWindow(this, region, nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
+        listener->DidPaintWindow();
 
         g_free(rects);
-
-        if (mWidgetListener)
-            mWidgetListener->DidPaintWindow();
-
         return TRUE;
     }
 
@@ -2207,9 +2214,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     bool painted = false;
     {
       AutoLayerManagerSetup setupLayerManager(this, ctx, layerBuffering);
-
-      if (mWidgetListener)
-        painted = mWidgetListener->PaintWindow(this, region, nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
+      painted = listener->PaintWindow(this, region, nsIWidgetListener::SENT_WILL_PAINT | nsIWidgetListener::WILL_SEND_DID_PAINT);
     }
 
 #ifdef MOZ_X11
@@ -2261,8 +2266,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     cairo_rectangle_list_destroy(rects);
 #endif
 
-    if (mWidgetListener)
-      mWidgetListener->DidPaintWindow();
+    listener->DidPaintWindow();
 
     // Synchronously flush any new dirty areas
 #if defined(MOZ_WIDGET_GTK2)
@@ -2400,8 +2404,7 @@ nsWindow::OnSizeAllocate(GtkAllocation *aAllocation)
     if (!mGdkWindow)
         return;
 
-    if (mWidgetListener)
-        mWidgetListener->WindowResized(this, size.width, size.height);
+    DispatchResized(size.width, size.height);
 }
 
 void
