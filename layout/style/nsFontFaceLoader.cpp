@@ -103,10 +103,11 @@ nsFontFaceLoader::LoadTimerCallback(nsITimer *aTimer, void *aClosure)
   // If the entry is loading, check whether it's >75% done; if so,
   // we allow another timeout period before showing a fallback font.
   if (pe->mLoadingState == gfxProxyFontEntry::LOADING_STARTED) {
-    int32_t contentLength;
+    int64_t contentLength;
     uint32_t numBytesRead;
     if (NS_SUCCEEDED(loader->mChannel->GetContentLength(&contentLength)) &&
         contentLength > 0 &&
+        contentLength < UINT32_MAX &&
         NS_SUCCEEDED(loader->mStreamLoader->GetNumBytesRead(&numBytesRead)) &&
         numBytesRead > 3 * (uint32_t(contentLength) >> 2))
     {

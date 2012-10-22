@@ -206,7 +206,7 @@ FTPChannelChild::OpenContentStream(bool async,
 class FTPStartRequestEvent : public ChannelEvent
 {
  public:
-  FTPStartRequestEvent(FTPChannelChild* aChild, const int32_t& aContentLength,
+  FTPStartRequestEvent(FTPChannelChild* aChild, const int64_t& aContentLength,
                        const nsCString& aContentType, const PRTime& aLastModified,
                        const nsCString& aEntityID, const URIParams& aURI)
   : mChild(aChild), mContentLength(aContentLength), mContentType(aContentType),
@@ -215,7 +215,7 @@ class FTPStartRequestEvent : public ChannelEvent
                                        mLastModified, mEntityID, mURI); }
  private:
   FTPChannelChild* mChild;
-  int32_t mContentLength;
+  int64_t mContentLength;
   nsCString mContentType;
   PRTime mLastModified;
   nsCString mEntityID;
@@ -223,7 +223,7 @@ class FTPStartRequestEvent : public ChannelEvent
 };
 
 bool
-FTPChannelChild::RecvOnStartRequest(const int32_t& aContentLength,
+FTPChannelChild::RecvOnStartRequest(const int64_t& aContentLength,
                                     const nsCString& aContentType,
                                     const PRTime& aLastModified,
                                     const nsCString& aEntityID,
@@ -240,7 +240,7 @@ FTPChannelChild::RecvOnStartRequest(const int32_t& aContentLength,
 }
 
 void
-FTPChannelChild::DoOnStartRequest(const int32_t& aContentLength,
+FTPChannelChild::DoOnStartRequest(const int64_t& aContentLength,
                                   const nsCString& aContentType,
                                   const PRTime& aLastModified,
                                   const nsCString& aEntityID,
@@ -248,7 +248,7 @@ FTPChannelChild::DoOnStartRequest(const int32_t& aContentLength,
 {
   LOG(("FTPChannelChild::RecvOnStartRequest [this=%x]\n", this));
 
-  SetContentLength(aContentLength);
+  mContentLength = aContentLength;
   SetContentType(aContentType);
   mLastModifiedTime = aLastModified;
   mEntityID = aEntityID;

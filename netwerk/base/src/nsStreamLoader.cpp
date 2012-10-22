@@ -68,15 +68,21 @@ nsStreamLoader::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
   nsCOMPtr<nsIChannel> chan( do_QueryInterface(request) );
   if (chan) {
-    int32_t contentLength = -1;
+    int64_t contentLength = -1;
     chan->GetContentLength(&contentLength);
     if (contentLength >= 0) {
+      if (contentLength > UINT32_MAX) {
+        // Too big to fit into uint32, so let's bail.
+        // XXX we should really make mAllocated and mLength 64-bit instead.
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      uint32_t contentLength32 = uint32_t(contentLength);
       // preallocate buffer
-      mData = static_cast<uint8_t*>(NS_Alloc(contentLength));
+      mData = static_cast<uint8_t*>(NS_Alloc(contentLength32));
       if (!mData) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      mAllocated = contentLength;
+      mAllocated = contentLength32;
     }
   }
   mContext = ctxt;

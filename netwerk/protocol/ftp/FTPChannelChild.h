@@ -69,7 +69,7 @@ public:
   bool IsSuspended();
 
 protected:
-  bool RecvOnStartRequest(const int32_t& aContentLength,
+  bool RecvOnStartRequest(const int64_t& aContentLength,
                           const nsCString& aContentType,
                           const PRTime& aLastModified,
                           const nsCString& aEntityID,
@@ -81,7 +81,7 @@ protected:
   bool RecvFailedAsyncOpen(const nsresult& statusCode) MOZ_OVERRIDE;
   bool RecvDeleteSelf() MOZ_OVERRIDE;
 
-  void DoOnStartRequest(const int32_t& aContentLength,
+  void DoOnStartRequest(const int64_t& aContentLength,
                         const nsCString& aContentType,
                         const PRTime& aLastModified,
                         const nsCString& aEntityID,

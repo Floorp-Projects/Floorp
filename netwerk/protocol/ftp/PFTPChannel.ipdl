@@ -38,7 +38,7 @@ parent:
   Resume();
 
 child:
-  OnStartRequest(int32_t aContentLength, nsCString aContentType,
+  OnStartRequest(int64_t aContentLength, nsCString aContentType,
                  PRTime aLastModified, nsCString aEntityID, URIParams aURI);
   OnDataAvailable(nsCString data, uint64_t offset, uint32_t count);
   OnStopRequest(nsresult statusCode);
