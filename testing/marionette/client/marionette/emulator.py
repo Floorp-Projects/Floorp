@@ -152,6 +152,20 @@ class Emulator(object):
         else:
             return self.port is not None
 
+    def check_for_crash(self):
+        """
+        Checks if the emulator has crashed or not.  Always returns False if
+        we've connected to an already-running emulator, since we can't track
+        the emulator's pid in that case.  Otherwise, returns True iff
+        self.proc is not None (meaning the emulator hasn't been explicitly
+        closed), and self.proc.poll() is also not None (meaning the emulator
+        process has terminated).
+        """
+        if (self._emulator_launched and self.proc is not None
+                                    and self.proc.poll() is not None):
+            return True
+        return False
+
     def create_sdcard(self, sdcard):
         self._tmp_sdcard = tempfile.mktemp(prefix='sdcard')
         sdargs = [self.mksdcard, "-l", "mySdCard", sdcard, self._tmp_sdcard]

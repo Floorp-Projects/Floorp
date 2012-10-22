@@ -266,6 +266,22 @@ class Marionette(object):
                 raise MarionetteException(message=message, status=status, stacktrace=stacktrace)
         raise MarionetteException(message=response, status=500)
 
+    def check_for_crash(self):
+        returncode = None
+        name = None
+        if self.emulator:
+            if self.emulator.check_for_crash():
+                returncode = self.emulator.proc.returncode
+                name = 'emulator'
+        elif self.instance:
+            # In the future, a check for crashed Firefox processes
+            # should be here.
+            pass
+        if returncode is not None:
+            print ('TEST-UNEXPECTED-FAIL - PROCESS CRASH - %s has terminated with exit code %d' %
+                (name, returncode))
+        return returncode is not None
+
     def absolute_url(self, relative_url):
         return "%s%s" % (self.baseurl, relative_url)
 

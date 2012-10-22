@@ -33,8 +33,10 @@ from marionette_test import MarionetteJSTestCase, MarionetteTestCase
 
 class MarionetteTestResult(unittest._TextTestResult):
 
-    def __init__(self, *args):
-        super(MarionetteTestResult, self).__init__(*args)
+    def __init__(self, *args, **kwargs):
+        self.marionette = kwargs['marionette']
+        del kwargs['marionette']
+        super(MarionetteTestResult, self).__init__(*args, **kwargs)
         self.passed = 0
         self.perfdata = None
         self.tests_passed = []
@@ -88,6 +90,12 @@ class MarionetteTestResult(unittest._TextTestResult):
                 self.stream.writeln("%s" % line)
             self.stream.writeln("TEST-UNEXPECTED-FAIL : %s" % errlines[-1])
 
+    def stopTest(self, *args, **kwargs):
+        unittest._TextTestResult.stopTest(self, *args, **kwargs)
+        if self.marionette.check_for_crash():
+            # this tells unittest.TestSuite not to continue running tests
+            self.shouldStop = True
+
 
 class MarionetteTextTestRunner(unittest.TextTestRunner):
 
@@ -96,10 +104,15 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
     def __init__(self, **kwargs):
         self.perf = kwargs['perf']
         del kwargs['perf']
+        self.marionette = kwargs['marionette']
+        del kwargs['marionette']
         unittest.TextTestRunner.__init__(self, **kwargs)
 
     def _makeResult(self):
-        return self.resultclass(self.stream, self.descriptions, self.verbosity)
+        return self.resultclass(self.stream,
+                                self.descriptions,
+                                self.verbosity,
+                                marionette=self.marionette)
 
     def run(self, test):
         "Run the given test case or test suite."
@@ -359,7 +372,7 @@ class MarionetteTestRunner(object):
         if not self.httpd:
             print "starting httpd"
             self.start_httpd()
-        
+
         if not self.marionette:
             self.start_marionette()
 
@@ -372,6 +385,8 @@ class MarionetteTestRunner(object):
                         (filename.endswith('.py') or filename.endswith('.js'))):
                         filepath = os.path.join(root, filename)
                         self.run_test(filepath, testtype)
+                        if self.marionette.check_for_crash():
+                            return
             return
 
         mod_name,file_ext = os.path.splitext(os.path.split(filepath)[-1])
@@ -422,6 +437,8 @@ class MarionetteTestRunner(object):
 
             for i in manifest_tests:
                 self.run_test(i["path"], testtype)
+                if self.marionette.check_for_crash():
+                    return
             return
 
         self.logger.info('TEST-START %s' % os.path.basename(test))
@@ -432,7 +449,10 @@ class MarionetteTestRunner(object):
                 break
 
         if suite.countTestCases():
-            results = MarionetteTextTestRunner(verbosity=3, perf=self.perf).run(suite)
+            runner = MarionetteTextTestRunner(verbosity=3,
+                                              perf=self.perf,
+                                              marionette=self.marionette)
+            results = runner.run(suite)
             self.results.append(results)
 
             self.failed += len(results.failures) + len(results.errors)
