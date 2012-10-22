@@ -31,6 +31,7 @@ webidl_files = \
   HTMLCollection.webidl \
   HTMLOptionsCollection.webidl \
   HTMLPropertiesCollection.webidl \
+  ImageData.webidl \
   NodeList.webidl \
   PaintRequestList.webidl \
   Performance.webidl \
