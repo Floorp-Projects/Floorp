@@ -1,0 +1,55 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+interface nsIVariant;
+
+[scriptable, builtinclass, uuid(1717f9d9-5fd8-43d8-a098-55924c6d37de)]
+interface nsIDOMMozWifiConnectionInfoEvent : nsIDOMEvent
+{
+    /**
+     * Network object with an SSID field.
+     */
+    readonly attribute nsIVariant network;
+
+    /**
+     * Strength of the signal to network, in dBm between -55 and -100 dBm.
+     */
+    readonly attribute short signalStrength;
+
+    /**
+     * Relative signal strength between 0 and 100.
+     */
+    readonly attribute short relSignalStrength;
+
+    /**
+     * Link speed in Mb/s.
+     */
+    readonly attribute long linkSpeed;
+
+    /**
+     * IP address in the dotted quad format.
+     */
+    readonly attribute DOMString ipAddress;
+
+    [noscript] void initMozWifiConnectionInfoEvent(in DOMString aType,
+                                                   in boolean aCanBubble,
+                                                   in boolean aCancelable,
+                                                   in nsIVariant aNetwork,
+                                                   in short signalStrength,
+                                                   in short relSignalStrength,
+                                                   in long linkSpeed,
+                                                   in DOMString ipAddress);
+};
+
+dictionary MozWifiConnectionInfoEventInit : EventInit
+{
+  nsIVariant network;
+  short signalStrength;
+  short relSignalStrength;
+  long linkSpeed;
+  DOMString ipAddress;
+};
+
