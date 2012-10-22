@@ -175,33 +175,20 @@ public:
 #endif
     gboolean           OnConfigureEvent(GtkWidget *aWidget,
                                         GdkEventConfigure *aEvent);
-    void               OnContainerUnrealize(GtkWidget *aWidget);
-    void               OnSizeAllocate(GtkWidget *aWidget,
-                                      GtkAllocation *aAllocation);
-    void               OnDeleteEvent(GtkWidget *aWidget,
-                                     GdkEventAny *aEvent);
-    void               OnEnterNotifyEvent(GtkWidget *aWidget,
-                                          GdkEventCrossing *aEvent);
-    void               OnLeaveNotifyEvent(GtkWidget *aWidget,
-                                          GdkEventCrossing *aEvent);
-    void               OnMotionNotifyEvent(GtkWidget *aWidget,
-                                           GdkEventMotion *aEvent);
-    void               OnButtonPressEvent(GtkWidget *aWidget,
-                                          GdkEventButton *aEvent);
-    void               OnButtonReleaseEvent(GtkWidget *aWidget,
-                                            GdkEventButton *aEvent);
-    void               OnContainerFocusInEvent(GtkWidget *aWidget,
-                                               GdkEventFocus *aEvent);
-    void               OnContainerFocusOutEvent(GtkWidget *aWidget,
-                                                GdkEventFocus *aEvent);
-    gboolean           OnKeyPressEvent(GtkWidget *aWidget,
-                                       GdkEventKey *aEvent);
-    gboolean           OnKeyReleaseEvent(GtkWidget *aWidget,
-                                         GdkEventKey *aEvent);
-    void               OnScrollEvent(GtkWidget *aWidget,
-                                     GdkEventScroll *aEvent);
-    void               OnVisibilityNotifyEvent(GtkWidget *aWidget,
-                                               GdkEventVisibility *aEvent);
+    void               OnContainerUnrealize();
+    void               OnSizeAllocate(GtkAllocation *aAllocation);
+    void               OnDeleteEvent();
+    void               OnEnterNotifyEvent(GdkEventCrossing *aEvent);
+    void               OnLeaveNotifyEvent(GdkEventCrossing *aEvent);
+    void               OnMotionNotifyEvent(GdkEventMotion *aEvent);
+    void               OnButtonPressEvent(GdkEventButton *aEvent);
+    void               OnButtonReleaseEvent(GdkEventButton *aEvent);
+    void               OnContainerFocusInEvent(GdkEventFocus *aEvent);
+    void               OnContainerFocusOutEvent(GdkEventFocus *aEvent);
+    gboolean           OnKeyPressEvent(GdkEventKey *aEvent);
+    gboolean           OnKeyReleaseEvent(GdkEventKey *aEvent);
+    void               OnScrollEvent(GdkEventScroll *aEvent);
+    void               OnVisibilityNotifyEvent(GdkEventVisibility *aEvent);
     void               OnWindowStateEvent(GtkWidget *aWidget,
                                           GdkEventWindowState *aEvent);
     void               OnDragDataReceivedEvent(GtkWidget       *aWidget,
