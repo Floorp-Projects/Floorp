@@ -30,14 +30,6 @@ interface nsIDOMTextMetrics : nsISupports
   readonly attribute float width;
 };
 
-[scriptable, builtinclass, uuid(1ea11207-b3e3-4ffc-a256-bf5c7011e806)]
-interface nsIDOMImageData : nsISupports
-{
-  readonly attribute unsigned long width;
-  readonly attribute unsigned long height;
-  [implicit_jscontext] readonly attribute jsval data;
-};
-
 [scriptable, uuid(c835c768-2dcc-461c-82f5-3653710d2942)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
@@ -180,8 +172,9 @@ enum CanvasMultiGetterType {
   // void putImageData (in ImageData d, in float x, in float y);
   // ImageData = { width: #, height: #, data: [r, g, b, a, ...] }
 
+  // nsISupports is OK, because the binding code will deal correctly
   [implicit_jscontext]
-  nsIDOMImageData getImageData(in double sx, in double sy, in double sw, in double sh);
+  nsISupports getImageData(in double sx, in double sy, in double sw, in double sh);
 
 
   // void putImageData(ImageData imagedata, double dx, double dy);
@@ -200,8 +193,9 @@ enum CanvasMultiGetterType {
 
   // ImageData createImageData(double w, double h);
   // ImageData createImageData(ImageData data);
+  // nsISupports is OK, because the binding code will deal correctly
   [implicit_jscontext, optional_argc]
-  nsIDOMImageData createImageData(in jsval arg1, [optional] in jsval arg2);
+  nsISupports createImageData(in jsval arg1, [optional] in jsval arg2);
 
   // image smoothing mode -- if disabled, images won't be smoothed
   // if scaled.

@@ -61,7 +61,6 @@ members = [
     'nsIDOMTextMetrics.*',
     'nsIDOMCanvasGradient.*',
     'nsIDOMCanvasPattern.*',
-    'nsIDOMImageData.*',
 
     # dom/interfaces/core
     'nsIDOMCharacterData.data',
@@ -457,7 +456,6 @@ irregularFilenames = {
     'nsIDOMTextMetrics': 'nsIDOMCanvasRenderingContext2D',
     'nsIDOMCanvasGradient': 'nsIDOMCanvasRenderingContext2D',
     'nsIDOMCanvasPattern': 'nsIDOMCanvasRenderingContext2D',
-    'nsIDOMImageData': 'nsIDOMCanvasRenderingContext2D',
 
     'nsIDOMBlob': 'nsIDOMFile',
 
@@ -484,14 +482,12 @@ customIncludes = [
     'nsSVGStylableElement.h',
     'nsHTMLDocument.h',
     'nsDOMQS.h',
-    'nsDOMStringMap.h',
-    'mozilla/dom/ImageData.h'
+    'nsDOMStringMap.h'
     ]
 
 customReturnInterfaces = [
     'nsIDOMCanvasPattern',
     'nsIDOMCanvasGradient',
-    'nsIDOMImageData'
     ]
 
 nsIDOMNode_GetChildNodes_customMethodCallCode = """
@@ -997,18 +993,5 @@ customMethodCalls = {
     'nsIDOMWindow_SetOnmouseleave' : {
         'thisType' : 'nsIDOMWindow',
         'unwrapThisFailureFatal' : False
-        },
-    'nsIDOMImageData_GetWidth': {
-        'thisType': 'nsIDOMImageData',
-        'code': 'uint32_t result = static_cast<mozilla::dom::ImageData*>(self)->Width();',
-        'canFail': False
-        },
-    'nsIDOMImageData_GetHeight': {
-        'thisType': 'nsIDOMImageData',
-        'code': 'uint32_t result = static_cast<mozilla::dom::ImageData*>(self)->Height();',
-        'canFail': False
-        },
-    'nsIDOMImageData_GetData': {
-        'canFail': False
         }
     }
