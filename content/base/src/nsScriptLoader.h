@@ -162,13 +162,6 @@ public:
                                    const nsAString &aType);
 
   /**
-   * Check whether it's OK to execute a script loaded via aChannel in
-   * aDocument.
-   */
-  static bool ShouldExecuteScript(nsIDocument* aDocument,
-                                    nsIChannel* aChannel);
-
-  /**
    * Starts deferring deferred scripts and puts them in the mDeferredRequests
    * queue instead.
    */
