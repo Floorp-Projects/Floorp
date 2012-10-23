@@ -50,7 +50,8 @@ class WindowIdentifier;
 extern PRLogModuleInfo *sHalLog;
 #define HAL_LOG(msg) PR_LOG(mozilla::hal::sHalLog, PR_LOG_DEBUG, msg)
 
-typedef Observer<SystemTimeChange> SystemTimeObserver;
+typedef Observer<int64_t> SystemClockChangeObserver;
+typedef Observer<SystemTimezoneChangeInformation> SystemTimezoneChangeObserver;
 
 } // namespace hal
 
@@ -258,22 +259,45 @@ void SetTimezone(const nsCString& aTimezoneSpec);
 nsCString GetTimezone();
 
 /**
- * Register observer for system time changed notification.
+ * Register observer for system clock changed notification.
  * @param aObserver The observer that should be added.
  */
-void RegisterSystemTimeChangeObserver(hal::SystemTimeObserver* aObserver);
+void RegisterSystemClockChangeObserver(
+  hal::SystemClockChangeObserver* aObserver);
 
 /**
- * Unregister the observer for system time changed.
+ * Unregister the observer for system clock changed.
  * @param aObserver The observer that should be removed.
  */
-void UnregisterSystemTimeChangeObserver(hal::SystemTimeObserver* aObserver);
+void UnregisterSystemClockChangeObserver(
+  hal::SystemClockChangeObserver* aObserver);
 
 /**
- * Notify of a change in the system cloeck or time zone.
- * @param aReason
+ * Notify of a change in the system clock.
+ * @param aClockDeltaMS
  */
-void NotifySystemTimeChange(const hal::SystemTimeChange& aReason);
+void NotifySystemClockChange(const int64_t& aClockDeltaMS);
+
+/**
+ * Register observer for system timezone changed notification.
+ * @param aObserver The observer that should be added.
+ */
+void RegisterSystemTimezoneChangeObserver(
+  hal::SystemTimezoneChangeObserver* aObserver);
+
+/**
+ * Unregister the observer for system timezone changed.
+ * @param aObserver The observer that should be removed.
+ */
+void UnregisterSystemTimezoneChangeObserver(
+  hal::SystemTimezoneChangeObserver* aObserver);
+
+/**
+ * Notify of a change in the system timezone.
+ * @param aSystemTimezoneChangeInfo
+ */
+void NotifySystemTimezoneChange(
+  const hal::SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo);
 
 /**
  * Reboot the device.
