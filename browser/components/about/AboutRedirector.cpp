@@ -124,11 +124,24 @@ AboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
 
       // Keep the page from getting unnecessary privileges unless it needs them
       if (kRedirMap[i].flags & nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT) {
-        // Setting the owner to null means that we'll go through the normal
-        // path in GetChannelPrincipal and create a codebase principal based
-        // on the channel's originalURI
-        rv = tempChannel->SetOwner(nullptr);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (path.EqualsLiteral("feeds")) {
+          nsCOMPtr<nsIScriptSecurityManager> securityManager =
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
+  
+          nsCOMPtr<nsIPrincipal> principal;
+          rv = securityManager->GetNoAppCodebasePrincipal(aURI, getter_AddRefs(principal));
+          NS_ENSURE_SUCCESS(rv, rv);
+  
+          rv = tempChannel->SetOwner(principal);
+        }
+        else {
+          // Setting the owner to null means that we'll go through the normal
+          // path in GetChannelPrincipal and create a codebase principal based
+          // on the channel's originalURI
+          rv = tempChannel->SetOwner(nullptr);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
       }
 
       NS_ADDREF(*result = tempChannel);
