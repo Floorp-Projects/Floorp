@@ -40,7 +40,6 @@
 #include "nsNetUtil.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsIXULRuntime.h"
-#include "nsScriptLoader.h"
 
 #include "xpcpublic.h"
 
@@ -3827,103 +3826,6 @@ NS_DOMStructuredCloneError(JSContext* cx,
   xpc::Throw(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
 }
 
-static nsresult
-ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, uint32_t *len)
-{
-  nsresult rv;
-
-  // mozJSSubScriptLoader prefixes the filenames of the scripts it loads with
-  // the filename of its caller. Axe that if present.
-  const char *arrow;
-  while ((arrow = strstr(filename, " -> ")))
-    filename = arrow + strlen(" -> ");
-
-  // Get the URI.
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), filename);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIChannel> scriptChannel;
-  rv = NS_NewChannel(getter_AddRefs(scriptChannel), uri);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Only allow local reading.
-  nsCOMPtr<nsIURI> actualUri;
-  rv = scriptChannel->GetURI(getter_AddRefs(actualUri));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCString scheme;
-  rv = actualUri->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!scheme.EqualsLiteral("file") && !scheme.EqualsLiteral("jar"))
-    return NS_OK;
-
-  nsCOMPtr<nsIInputStream> scriptStream;
-  rv = scriptChannel->Open(getter_AddRefs(scriptStream));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint64_t rawLen;
-  rv = scriptStream->Available(&rawLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!rawLen)
-    return NS_ERROR_FAILURE;
-  if (rawLen > UINT32_MAX)
-    return NS_ERROR_FILE_TOO_BIG;
-
-  // Allocate an internal buf the size of the file.
-  nsAutoArrayPtr<unsigned char> buf(new unsigned char[rawLen]);
-  if (!buf)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  unsigned char *ptr = buf, *end = ptr + rawLen;
-  while (ptr < end) {
-    uint32_t bytesRead;
-    rv = scriptStream->Read(reinterpret_cast<char *>(ptr), end - ptr, &bytesRead);
-    if (NS_FAILED(rv))
-      return rv;
-    NS_ASSERTION(bytesRead > 0, "stream promised more bytes before EOF");
-    ptr += bytesRead;
-  }
-
-  nsString decoded;
-  rv = nsScriptLoader::ConvertToUTF16(scriptChannel, buf, rawLen, EmptyString(), NULL, decoded);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Copy to JS engine.
-  *len = decoded.Length();
-  *src = static_cast<jschar *>(JS_malloc(cx, decoded.Length()*sizeof(jschar)));
-  if (!*src)
-    return NS_ERROR_FAILURE;
-  memcpy(*src, decoded.get(), decoded.Length()*sizeof(jschar));
-
-  return NS_OK;
-}
-
-/*
-  The JS engine calls this function when it needs the source for a chrome JS
-  function. See the comment in nsJSRuntime::Init().
-*/
-static bool
-SourceHook(JSContext *cx, JSScript *script, jschar **src, uint32_t *length)
-{
-  *src = NULL;
-  *length = 0;
-
-  if (!nsContentUtils::IsCallerChrome())
-    return true;
-
-  const char *filename = JS_GetScriptFilename(cx, script);
-  if (!filename)
-    return true;
-
-  nsresult rv = ReadSourceFromFilename(cx, filename, src, length);
-  if (NS_FAILED(rv)) {
-    xpc::Throw(cx, rv);
-    return false;
-  }
-
-  return true;
-}
-
 //static
 nsresult
 nsJSRuntime::Init()
@@ -3945,24 +3847,6 @@ nsJSRuntime::Init()
 
   rv = sRuntimeService->GetRuntime(&sRuntime);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // The JS engine needs to keep the source code around in order to implement
-  // Function.prototype.toSource(). It'd be nice to not have to do this for
-  // chrome code and simply stub out requests for source on it. Life is not so
-  // easy, unfortunately. Nobody relies on chrome toSource() working in core
-  // browser code, but chrome tests use it. The worst offenders are addons,
-  // which like to monkeypatch chrome functions by calling toSource() on them
-  // and using regular expressions to modify them. We avoid keeping most browser
-  // JS source code in memory by setting LAZY_SOURCE on JS::CompileOptions when
-  // compiling some chrome code. This causes the JS engine not save the source
-  // code in memory. When the JS engine is asked to provide the source for a
-  // function compiled with LAZY_SOURCE, it calls SourceHook to load it.
-  ///
-  // Note we do have to retain the source code in memory for scripts compiled in
-  // compileAndGo mode and compiled function bodies (from
-  // JS_CompileFunction*). In practice, this means content scripts and event
-  // handlers.
-  JS_SetSourceHook(sRuntime, SourceHook);
 
   // Let's make sure that our main thread is the same as the xpcom main thread.
   NS_ASSERTION(NS_IsMainThread(), "bad");
