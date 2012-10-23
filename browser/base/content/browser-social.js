@@ -103,21 +103,9 @@ let SocialUI = {
 
   updateToggleCommand: function SocialUI_updateToggleCommand() {
     let toggleCommand = this.toggleCommand;
+    // We only need to update the command itself - all our menu items use it.
     toggleCommand.setAttribute("checked", Services.prefs.getBoolPref("social.enabled"));
-
-    // FIXME: bug 772808: menu items don't inherit the "hidden" state properly,
-    // need to update them manually.
-    // This should just be: toggleCommand.hidden = !Social.active;
-    for (let id of ["appmenu_socialToggle", "menu_socialToggle", "menu_socialAmbientMenu"]) {
-      let el = document.getElementById(id);
-      if (!el)
-        continue;
-
-      if (Social.active)
-        el.removeAttribute("hidden");
-      else
-        el.setAttribute("hidden", "true");
-    }
+    toggleCommand.setAttribute("hidden", Social.active ? "false" : "true");
   },
 
   // This handles "ActivateSocialFeature" events fired against content documents
@@ -924,7 +912,7 @@ var SocialSidebar = {
   updateSidebar: function SocialSidebar_updateSidebar() {
     // Hide the toggle menu item if the sidebar cannot appear
     let command = document.getElementById("Social:ToggleSidebar");
-    command.hidden = !this.canShow;
+    command.setAttribute("hidden", this.canShow ? "false" : "true");
 
     // Hide the sidebar if it cannot appear, or has been toggled off.
     // Also set the command "checked" state accordingly.
