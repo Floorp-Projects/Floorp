@@ -1943,8 +1943,7 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
   if (builder) {
     builder->DidEndTransaction();
   }
- 
-  basic->SetUserData(&gLayerManagerLayerBuilder, NULL);
+
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPainting) {
     DumpPaintedImage(aItem, surf);
@@ -2340,7 +2339,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     if (!tempManager) {
       tempManager = new BasicLayerManager();
     }
-        
+
     // We need to grab these before calling AddLayerDisplayItem because it will overwrite them.
     nsRegion clip;
     FrameLayerBuilder::Clip* oldClip = nullptr;
@@ -2423,7 +2422,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     ClippedDisplayItem* cdi =
       entry->mItems.AppendElement(ClippedDisplayItem(aItem, aClip,
                                                      mContainerLayerGeneration));
-    cdi->mInactiveLayer = tempManager;
+    cdi->mInactiveLayerManager = tempManager;
   }
 }
 
@@ -2484,11 +2483,11 @@ FrameLayerBuilder::StoreDataForFrame(nsIFrame* aFrame,
 
 FrameLayerBuilder::ClippedDisplayItem::~ClippedDisplayItem()
 {
-  if (mInactiveLayer) {
+  if (mInactiveLayerManager) {
     // We always start a transaction during layer construction for all inactive
     // layers, but we don't necessarily call EndTransaction during painting.
     // If the transaaction is still open, end it to avoid assertions.
-    BasicLayerManager* basic = static_cast<BasicLayerManager*>(mInactiveLayer.get());
+    BasicLayerManager* basic = static_cast<BasicLayerManager*>(mInactiveLayerManager.get());
     if (basic->InTransaction()) {
       basic->EndTransaction(nullptr, nullptr);
     }
@@ -3238,8 +3237,8 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       }
     }
 
-    if (cdi->mInactiveLayer) {
-      PaintInactiveLayer(builder, cdi->mInactiveLayer, cdi->mItem, aContext, rc);
+    if (cdi->mInactiveLayerManager) {
+      PaintInactiveLayer(builder, cdi->mInactiveLayerManager, cdi->mItem, aContext, rc);
     } else {
       nsIFrame* frame = cdi->mItem->GetUnderlyingFrame();
       if (frame) {
