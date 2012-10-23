@@ -84,13 +84,6 @@ enum WakeLockControl {
   NUM_WAKE_LOCK
 };
 
-enum SystemTimeChange {
-  SYS_TIME_CHANGE_UNKNOWN = -1,
-  SYS_TIME_CHANGE_CLOCK,
-  SYS_TIME_CHANGE_TZ,
-  SYS_TIME_CHANGE_GUARD
-};
-
 class FMRadioOperationInformation;
 
 enum FMRadioOperation {
@@ -167,7 +160,6 @@ enum FMRadioCountry {
 };
 
 typedef Observer<FMRadioOperationInformation> FMRadioObserver;
-typedef Observer<SystemTimeChange> SystemTimeChangeObserver;
 } // namespace hal
 } // namespace mozilla
 
@@ -250,16 +242,6 @@ struct ParamTraits<mozilla::hal::ProcessPriority>:
                         mozilla::hal::NUM_PROCESS_PRIORITY> {
 };
 
-/**
- * SystemTimeChange serializer.
- */
-template <>
-struct ParamTraits<mozilla::hal::SystemTimeChange>
-  : public EnumSerializer<mozilla::hal::SystemTimeChange,
-                          mozilla::hal::SYS_TIME_CHANGE_UNKNOWN,
-                          mozilla::hal::SYS_TIME_CHANGE_GUARD>
-{};
- 
 /**
  * Serializer for FMRadioOperation
  */
