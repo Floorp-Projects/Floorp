@@ -410,7 +410,10 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
     transform.Invert();
 
     // Store the old valid region, then clear it before painting.
+    // We clip the old valid region to the visible region, as it only gets
+    // used to decide stale content (currently valid and previously visible)
     nsIntRegion oldValidRegion = mTiledBuffer.GetValidRegion();
+    oldValidRegion.And(oldValidRegion, mVisibleRegion);
     mTiledBuffer.ClearPaintedRegion();
 
     // Make sure that tiles that fall outside of the visible region are
@@ -453,8 +456,14 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
       // Keep track of what we're about to refresh.
       mValidRegion.Or(mValidRegion, regionToPaint);
 
+      // mValidRegion would have been altered by InvalidateRegion, but we still
+      // want to display stale content until it gets progressively updated.
+      // Create a region that includes stale content.
+      nsIntRegion validOrStale;
+      validOrStale.Or(mValidRegion, oldValidRegion);
+
       // Paint the computed region and subtract it from the invalid region.
-      mTiledBuffer.PaintThebes(this, mValidRegion, regionToPaint, aCallback, aCallbackData);
+      mTiledBuffer.PaintThebes(this, validOrStale, regionToPaint, aCallback, aCallbackData);
       invalidRegion.Sub(invalidRegion, regionToPaint);
     } while (repeat);
   } else {
