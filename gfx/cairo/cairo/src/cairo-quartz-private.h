@@ -50,6 +50,9 @@ typedef CGFloat cairo_quartz_float_t;
 typedef float cairo_quartz_float_t;
 #endif
 
+/* define CTFontRef for pre-10.5 SDKs */
+typedef const struct __CTFont *CTFontRef;
+
 typedef struct cairo_quartz_surface {
     cairo_surface_t base;
 
@@ -103,6 +106,9 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
 
 CGFontRef
 _cairo_quartz_scaled_font_get_cg_font_ref (cairo_scaled_font_t *sfont);
+
+CTFontRef
+_cairo_quartz_scaled_font_get_ct_font_ref (cairo_scaled_font_t *sfont);
 
 #else
 
