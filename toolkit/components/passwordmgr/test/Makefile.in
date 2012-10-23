@@ -13,7 +13,6 @@ include $(topsrcdir)/config/config.mk
 
 DIRS = \
     browser \
-    auth2 \
     $(NULL)
 
 # Module name for xpcshell tests.
@@ -44,7 +43,6 @@ MOCHITEST_FILES = \
     test_bug_427033.html \
     test_bug_444968.html \
     test_bug_627616.html \
-    test_bug_776171.html \
     test_master_password.html \
     test_master_password_cleanup.html \
     test_maxforms_1.html \
