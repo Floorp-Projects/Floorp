@@ -18,9 +18,6 @@ CPPSRCS		= \
   jsheaptools.cpp \
   $(NULL)
 
-# unnecessary PGO for js shell
-NO_PROFILE_GUIDED_OPTIMIZE := 1
-
 DEFINES         += -DEXPORT_JS_API
 # Building against js_static requires that we declare mfbt sybols "exported"
 # on its behalf.
