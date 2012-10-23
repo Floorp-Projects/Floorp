@@ -35,6 +35,7 @@ UTIL_JAVA_FILES := \
   $(NULL)
 
 FENNEC_JAVA_FILES = \
+  AboutHomeContent.java \
   AboutHomePromoBox.java \
   AboutHomeSection.java \
   ActivityHandlerHelper.java \
@@ -186,7 +187,6 @@ endif
 
 FENNEC_PP_JAVA_FILES = \
   App.java \
-  AboutHomeContent.java \
   MarketplaceApp.java \
   WebApp.java \
   WebApps.java \

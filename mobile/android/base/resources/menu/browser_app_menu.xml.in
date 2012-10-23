@@ -42,12 +42,8 @@
     <item android:id="@+id/downloads"
           android:title="@string/downloads"/>
 
-#if MOZ_UPDATE_CHANNEL != beta
-#if MOZ_UPDATE_CHANNEL != release
     <item android:id="@+id/apps"
           android:title="@string/apps"/>
-#endif
-#endif
 
     <item android:id="@+id/char_encoding"
           android:visible="false"
