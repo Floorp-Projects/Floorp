@@ -2275,11 +2275,16 @@ nsPresContext::NotifyDidPaintForSubtree(uint32_t aFlags)
 {
   if (IsRoot()) {
     static_cast<nsRootPresContext*>(this)->CancelDidPaintTimer();
-  }
 
-  if (!mFireAfterPaintEvents) {
-    return;
+    if (!mFireAfterPaintEvents) {
+      return;
+    }
   }
+  // Non-root prescontexts fire MozAfterPaint to all their descendants
+  // unconditionally, even if no invalidations have been collected. This is
+  // because we don't want to eat the cost of collecting invalidations for
+  // every subdocument (which would require putting every subdocument in its
+  // own layer).
 
   if (aFlags & nsIPresShell::PAINT_LAYERS) {
     mUndeliveredInvalidateRequestsBeforeLastPaint.TakeFrom(
