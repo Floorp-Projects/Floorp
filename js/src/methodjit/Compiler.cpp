@@ -704,7 +704,7 @@ MakeJITScript(JSContext *cx, JSScript *script)
 
             Bytecode *code = analysis->maybeCode(offset);
             if (!code)
-                continue;
+                op = JSOP_NOP; /* Ignore edges from unreachable opcodes. */
 
             /* Whether this should be the last opcode in the chunk. */
             bool finishChunk = false;
