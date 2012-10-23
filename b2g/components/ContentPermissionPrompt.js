@@ -47,8 +47,19 @@ ContentPermissionPrompt.prototype = {
       evt.target.removeEventListener(evt.type, contentEvent);
 
       if (evt.detail.type == "permission-allow") {
+
+        if (evt.detail.remember) {
+          Services.perms.addFromPrincipal(request.principal, request.type,
+                                          Ci.nsIPermissionManager.ALLOW_ACTION);
+        }
+
         request.allow();
         return;
+      }
+
+      if (evt.detail.remember) {
+        Services.perms.addFromPrincipal(request.principal, request.type,
+                                        Ci.nsIPermissionManager.DENY_ACTION);
       }
 
       request.cancel();
