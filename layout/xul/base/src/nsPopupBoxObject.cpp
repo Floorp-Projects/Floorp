@@ -107,7 +107,7 @@ nsPopupBoxObject::OpenPopupAtScreen(int32_t aXPos, int32_t aYPos,
 NS_IMETHODIMP
 nsPopupBoxObject::MoveTo(int32_t aLeft, int32_t aTop)
 {
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
+  nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;
   if (menuPopupFrame) {
     menuPopupFrame->MoveTo(aLeft, aTop, true);
   }
@@ -135,7 +135,9 @@ nsPopupBoxObject::SizeTo(int32_t aWidth, int32_t aHeight)
 NS_IMETHODIMP
 nsPopupBoxObject::GetAutoPosition(bool* aShouldAutoPosition)
 {
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
+  *aShouldAutoPosition = true;
+
+  nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;
   if (menuPopupFrame) {
     *aShouldAutoPosition = menuPopupFrame->GetAutoPosition();
   }
@@ -146,7 +148,7 @@ nsPopupBoxObject::GetAutoPosition(bool* aShouldAutoPosition)
 NS_IMETHODIMP
 nsPopupBoxObject::SetAutoPosition(bool aShouldAutoPosition)
 {
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
+  nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;
   if (menuPopupFrame) {
     menuPopupFrame->SetAutoPosition(aShouldAutoPosition);
   }
@@ -194,7 +196,7 @@ nsPopupBoxObject::GetPopupState(nsAString& aState)
   // set this here in case there's no frame for the popup
   aState.AssignLiteral("closed");
 
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
+  nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;
   if (menuPopupFrame) {
     switch (menuPopupFrame->PopupState()) {
       case ePopupShowing:
@@ -224,7 +226,7 @@ nsPopupBoxObject::GetTriggerNode(nsIDOMNode** aTriggerNode)
 {
   *aTriggerNode = nullptr;
 
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
+  nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;
   nsIContent* triggerContent = nsMenuPopupFrame::GetTriggerContent(menuPopupFrame);
   if (triggerContent)
     CallQueryInterface(triggerContent, aTriggerNode);
@@ -237,7 +239,7 @@ nsPopupBoxObject::GetAnchorNode(nsIDOMElement** aAnchor)
 {
   *aAnchor = nullptr;
 
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
+  nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;
   if (!menuPopupFrame)
     return NS_OK;
 
