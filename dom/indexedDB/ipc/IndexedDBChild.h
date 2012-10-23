@@ -120,6 +120,9 @@ protected:
                     MOZ_OVERRIDE;
 
   virtual bool
+  RecvInvalidate() MOZ_OVERRIDE;
+
+  virtual bool
   RecvPIndexedDBTransactionConstructor(PIndexedDBTransactionChild* aActor,
                                        const TransactionParams& aParams)
                                        MOZ_OVERRIDE;
@@ -163,7 +166,7 @@ protected:
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   virtual bool
-  RecvComplete(const nsresult& aRv) MOZ_OVERRIDE;
+  RecvComplete(const CompleteParams& aParams) MOZ_OVERRIDE;
 
   virtual PIndexedDBObjectStoreChild*
   AllocPIndexedDBObjectStore(const ObjectStoreConstructorParams& aParams)

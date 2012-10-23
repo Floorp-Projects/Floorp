@@ -21,7 +21,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, uuid(96a92f0c-adcb-44ac-a034-37627647ec97)]
+[scriptable, uuid(3a283dc9-f733-4618-a36f-e2b68c280ab7)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -195,6 +195,12 @@ interface nsIPrincipal : nsISerializable
      * appId everywhere where we construct principals.
      */
     readonly attribute boolean unknownAppId;
+
+    /**
+     * Returns true iff this principal is a null principal (corresponding to an
+     * unknown, hence assumed minimally privileged, security context).
+     */
+    readonly attribute boolean isNullPrincipal;
 };
 
 /**
