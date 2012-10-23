@@ -3589,13 +3589,19 @@ var BrowserEventHandler = {
   },
 
   handleEvent: function(aEvent) {
-    if (aEvent.type && (aEvent.type === "MozMagnifyGesture" ||
-                        aEvent.type === "MozMagnifyGestureUpdate" ||
-                        aEvent.type === "MozMagnifyGestureStart")) {
-      this.observe(this, aEvent.type, JSON.stringify({x: aEvent.screenX, y: aEvent.screenY}));
-      return;
+    switch (aEvent.type) {
+      case 'touchstart':
+        this._handleTouchStart(aEvent);
+        break;
+      case 'MozMagnifyGesture':
+      case 'MozMagnifyGestureUpdate':
+      case 'MozMagnifyGestureStart':
+        this.observe(this, aEvent.type, JSON.stringify({x: aEvent.screenX, y: aEvent.screenY}));
+        break;
     }
+  },
 
+  _handleTouchStart: function(aEvent) {
     if (!BrowserApp.isBrowserContentDocumentDisplayed() || aEvent.touches.length > 1 || aEvent.defaultPrevented)
       return;
 
