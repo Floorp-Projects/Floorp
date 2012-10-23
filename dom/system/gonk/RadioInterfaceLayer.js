@@ -40,6 +40,7 @@ const kSmsSentObserverTopic              = "sms-sent";
 const kSmsDeliveredObserverTopic         = "sms-delivered";
 const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
 const kSysMsgListenerReadyObserverTopic  = "system-message-listener-ready";
+const kSysClockChangeObserverTopic       = "system-clock-change";
 const kTimeNitzAutomaticUpdateEnabled    = "time.nitz.automatic-update.enabled";
 const DOM_SMS_DELIVERY_RECEIVED          = "received";
 const DOM_SMS_DELIVERY_SENT              = "sent";
@@ -274,6 +275,7 @@ function RadioInterfaceLayer() {
   Services.obs.addObserver(this, "xpcom-shutdown", false);
   Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
   Services.obs.addObserver(this, kSysMsgListenerReadyObserverTopic, false);
+  Services.obs.addObserver(this, kSysClockChangeObserverTopic, false);
 
   this._sentSmsEnvelopes = {};
 
@@ -1366,12 +1368,9 @@ RadioInterfaceLayer.prototype = {
   },
 
   /**
-   * Handle the NITZ message.
+   * Set the NITZ message in our system time.
    */
-  handleNitzTime: function handleNitzTime(message) {
-    if (!this._nitzAutomaticUpdateEnabled) {
-      return;
-    }
+  setNitzTime: function setNitzTime(message) {
     // To set the system clock time. Note that there could be a time diff
     // between when the NITZ was received and when the time is actually set.
     gTimeService.set(
@@ -1391,6 +1390,19 @@ RadioInterfaceLayer.prototype = {
       timeZoneStr += ":";
       timeZoneStr += ("0" + absTimeZoneInMinutes % 60).slice(-2);
       gSettingsService.createLock().set("time.timezone", timeZoneStr, null);
+    }
+  },
+
+  /**
+   * Handle the NITZ message.
+   */
+  handleNitzTime: function handleNitzTime(message) {
+    // Cache the latest NITZ message whenever receiving it.
+    this._lastNitzMessage = message;
+
+    // Set the received NITZ time if the setting is enabled.
+    if (this._nitzAutomaticUpdateEnabled) {
+      this.setNitzTime(message);
     }
   },
 
@@ -1472,6 +1484,12 @@ RadioInterfaceLayer.prototype = {
         ppmm = null;
         Services.obs.removeObserver(this, "xpcom-shutdown");
         Services.obs.removeObserver(this, kMozSettingsChangedObserverTopic);
+        Services.obs.removeObserver(this, kSysClockChangeObserverTopic);
+        break;
+      case kSysClockChangeObserverTopic:
+        if (this._lastNitzMessage) {
+          this._lastNitzMessage.receiveTimeInMS += parseInt(data, 10);
+        }
         break;
     }
   },
@@ -1503,6 +1521,10 @@ RadioInterfaceLayer.prototype = {
   // Flag to determine whether to use NITZ. It corresponds to the
   // 'time.nitz.automatic-update.enabled' setting from the UI.
   _nitzAutomaticUpdateEnabled: null,
+
+  // Remember the last NITZ message so that we can set the time based on
+  // the network immediately when users enable network-based time.
+  _lastNitzMessage: null,
 
   // nsISettingsServiceCallback
   handle: function handle(aName, aResult) {
@@ -1559,6 +1581,11 @@ RadioInterfaceLayer.prototype = {
         break;
       case kTimeNitzAutomaticUpdateEnabled:
         this._nitzAutomaticUpdateEnabled = aResult;
+
+        // Set the latest cached NITZ time if the setting is enabled.
+        if (this._nitzAutomaticUpdateEnabled && this._lastNitzMessage) {
+          this.setNitzTime(this._lastNitzMessage);
+        }
         break;
     };
   },
