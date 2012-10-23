@@ -25,6 +25,8 @@
 #include "nsINetworkManager.h"
 #include "nsIRadioInterfaceLayer.h"
 #include "nsIDOMMobileConnection.h"
+#include "nsJSUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
 #ifdef AGPS_TYPE_INVALID
@@ -40,7 +42,10 @@ static const int kDefaultPeriod = 1000; // ms
 // While most methods of GonkGPSGeolocationProvider should only be
 // called from main thread, we deliberately put the Init and ShutdownGPS
 // methods off main thread to avoid blocking.
-NS_IMPL_THREADSAFE_ISUPPORTS2(GonkGPSGeolocationProvider, nsIGeolocationProvider, nsIRILDataCallback)
+NS_IMPL_THREADSAFE_ISUPPORTS3(GonkGPSGeolocationProvider,
+                              nsIGeolocationProvider,
+                              nsIRILDataCallback,
+                              nsISettingsServiceCallback)
 
 GonkGPSGeolocationProvider* GonkGPSGeolocationProvider::sSingleton;
 GpsCallbacks GonkGPSGeolocationProvider::mCallbacks = {
@@ -306,6 +311,57 @@ GonkGPSGeolocationProvider::GetGPSInterface()
   return result;
 }
 
+int32_t
+GonkGPSGeolocationProvider::GetDataConnectionState()
+{
+  if (!mRIL) {
+    return nsINetworkInterface::NETWORK_STATE_UNKNOWN;
+  }
+
+  int32_t state;
+  mRIL->GetDataCallStateByType(NS_LITERAL_STRING("supl"), &state);
+  return state;
+}
+
+void
+GonkGPSGeolocationProvider::SetAGpsDataConn(nsAString& aApn)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mAGpsInterface);
+
+  int32_t connectionState = GetDataConnectionState();
+  if (connectionState == nsINetworkInterface::NETWORK_STATE_CONNECTED) {
+    NS_ConvertUTF16toUTF8 apn(aApn);
+#ifdef AGPS_HAVE_DUAL_APN
+    mAGpsInterface->data_conn_open(AGPS_TYPE_SUPL,
+                                   apn.get(),
+                                   AGPS_APN_BEARER_IPV4);
+#else
+    mAGpsInterface->data_conn_open(apn.get());
+#endif
+  } else if (connectionState == nsINetworkInterface::NETWORK_STATE_DISCONNECTED) {
+#ifdef AGPS_HAVE_DUAL_APN
+    mAGpsInterface->data_conn_closed(AGPS_TYPE_SUPL);
+#else
+    mAGpsInterface->data_conn_closed();
+#endif
+  }
+}
+
+void
+GonkGPSGeolocationProvider::RequestSettingValue(char* aKey)
+{
+  MOZ_ASSERT(aKey);
+  nsCOMPtr<nsISettingsService> ss = do_GetService("@mozilla.org/settingsService;1");
+  if (!ss) {
+    MOZ_ASSERT(ss);
+    return;
+  }
+  nsCOMPtr<nsISettingsServiceLock> lock;
+  ss->CreateLock(getter_AddRefs(lock));
+  lock->Get(aKey, this);
+}
+
 void
 GonkGPSGeolocationProvider::RequestDataConnection()
 {
@@ -315,17 +371,12 @@ GonkGPSGeolocationProvider::RequestDataConnection()
     return;
   }
 
-  // TODO: Bug 772747 - We should ask NetworkManager or RIL to open
-  // SUPL type connection for us.
-  const nsAdoptingString& apnName = Preferences::GetString("geo.gps.apn.name");
-  const nsAdoptingString& apnUser = Preferences::GetString("geo.gps.apn.user");
-  const nsAdoptingString& apnPass = Preferences::GetString("geo.gps.apn.password");
-  if (apnName && apnUser && apnPass) {
-    mCid.Truncate();
-    mRIL->SetupDataCall(1 /* DATACALL_RADIOTECHNOLOGY_GSM */,
-                        apnName, apnUser, apnPass,
-                        3 /* DATACALL_AUTH_PAP_OR_CHAP */,
-                        NS_LITERAL_STRING("IP") /* pdptype */);
+  if (GetDataConnectionState() == nsINetworkInterface::NETWORK_STATE_CONNECTED) {
+    // Connection is already established, we don't need to setup again.
+    // We just get supl APN and make AGPS data connection state updated.
+    RequestSettingValue("ril.supl.apn");
+  } else {
+    mRIL->SetupDataCallByType(NS_LITERAL_STRING("supl"));
   }
 }
 
@@ -588,50 +639,45 @@ GonkGPSGeolocationProvider::DataCallStateChanged(nsIRILDataCallInfo* aDataCall)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aDataCall);
-  MOZ_ASSERT(mAGpsInterface);
-  nsCOMPtr<nsIRILDataCallInfo> datacall = aDataCall;
 
-  uint32_t callState;
-  nsresult rv = datacall->GetState(&callState);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString apn;
-  rv = datacall->GetApn(apn);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = datacall->GetCid(mCid);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ConvertUTF16toUTF8 currentApn(apn);
-  const nsAdoptingCString& agpsApn = Preferences::GetCString("geo.gps.apn.name");
-
-  // TODO: Bug 772748 - handle data call failed case.
-  if (currentApn == agpsApn) {
-    switch (callState) {
-      case nsINetworkInterface::NETWORK_STATE_CONNECTED:
-#ifdef AGPS_HAVE_DUAL_APN
-        mAGpsInterface->data_conn_open(AGPS_TYPE_SUPL,
-                                       agpsApn.get(),
-                                       AGPS_APN_BEARER_IPV4);
-#else
-        mAGpsInterface->data_conn_open(agpsApn.get());
-#endif
-        break;
-      case nsINetworkInterface::NETWORK_STATE_DISCONNECTED:
-#ifdef AGPS_HAVE_DUAL_APN
-        mAGpsInterface->data_conn_closed(AGPS_TYPE_SUPL);
-#else
-        mAGpsInterface->data_conn_closed();
-#endif
-        break;
-    }
-  }
+  // We call Setting Service before we get the state of supl data connection
+  // since it is possible that state of supl data connection haven't been
+  // updated and will be updated after we finished this function (code that
+  // updates the state is in another dataCallStateChanged callback).
+  RequestSettingValue("ril.supl.apn");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GonkGPSGeolocationProvider::ReceiveDataCallList(nsIRILDataCallInfo** aDataCalls,
                                                 uint32_t aLength)
+{
+  return NS_OK;
+}
+
+/** nsISettingsServiceCallback **/
+
+NS_IMETHODIMP
+GonkGPSGeolocationProvider::Handle(const nsAString& aName,
+                                   const JS::Value& aResult,
+                                   JSContext* cx)
+{
+  if (aName.EqualsLiteral("ril.supl.apn")) {
+    // When we get the APN, we attempt to call data_call_open of AGPS.
+    if (aResult.isString()) {
+      nsDependentJSString apn;
+      apn.init(cx, aResult.toString());
+      if (!apn.IsEmpty()) {
+        SetAGpsDataConn(apn);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GonkGPSGeolocationProvider::HandleError(const nsAString& aErrorMessage,
+                                        JSContext* cx)
 {
   return NS_OK;
 }
