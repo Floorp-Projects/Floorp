@@ -444,22 +444,6 @@ inline nscoord NSIntPixelsToAppUnits(int32_t aPixels, int32_t aAppUnitsPerPixel)
 {
   // The cast to nscoord makes sure we don't overflow if we ever change
   // nscoord to float
-#ifndef NS_COORD_IS_FLOAT
-  const int pixels_MAX = nscoord_MAX / aAppUnitsPerPixel;
-  // Bounds-check before converting out of float, to avoid overflow
-  NS_WARN_IF_FALSE(aPixels <= pixels_MAX,
-                   "Overflowed nscoord_MAX in conversion to nscoord");
-  if (aPixels >= pixels_MAX) {
-    aPixels = pixels_MAX;
-  } else {
-    const int pixels_MIN = nscoord_MIN / aAppUnitsPerPixel;
-    NS_WARN_IF_FALSE(aPixels >= pixels_MIN,
-                     "Overflowed nscoord_MIN in conversion to nscoord");
-    if (aPixels <= pixels_MIN) {
-      aPixels = pixels_MIN;
-    }
-  }
-#endif
   nscoord r = aPixels * (nscoord)aAppUnitsPerPixel;
   VERIFY_COORD(r);
   return r;
