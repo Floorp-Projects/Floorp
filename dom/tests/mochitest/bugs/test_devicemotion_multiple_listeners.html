@@ -20,7 +20,7 @@ try {
   if (ifr.contentWindow.document.location == 'about:blank') {
     ifr.parentNode.removeChild(ifr);
     ok(true, "no crash received");
-    SpecialPowers.executeSoon(SimpleTest.finish);
+    SimpleTest.executeSoon(SimpleTest.finish);
   }
 } catch(e) {
 ok(false, e);
