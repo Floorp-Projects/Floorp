@@ -522,7 +522,7 @@ pref("ui.dragThresholdY", 25);
 pref("layers.acceleration.disabled", false);
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-video.enabled", true);
-pref("layers.progressive-paint", false);
+pref("layers.progressive-paint", true);
 
 pref("notification.feature.enabled", true);
 
