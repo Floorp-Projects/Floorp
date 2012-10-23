@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test positioning of fixed-pos/abs-pos elements in a XUL dialog</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var root = getRootDirectory(window.location.href);
+window.openDialog(root + "dialog_with_positioning_window.xul", "dialog_with_positioning",
+                  "dialog,chrome");
+</script>
+</pre>
+</body>
+</html>
