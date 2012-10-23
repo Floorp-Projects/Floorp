@@ -111,7 +111,9 @@ MobileICCInfo.prototype = {
 
   iccid: null,
   mcc: 0,
-  mnc: 0
+  mnc: 0,
+  spn: null,
+  msisdn: null,
 };
 
 function MobileConnectionInfo() {}
