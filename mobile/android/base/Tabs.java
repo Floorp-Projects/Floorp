@@ -13,6 +13,7 @@ import org.json.JSONObject;
 
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
@@ -498,7 +499,13 @@ public class Tabs implements GeckoEventListener {
             if ((flags & LOADURL_NEW_TAB) != 0) {
                 tabId = getNextTabId();
                 args.put("tabID", tabId);
-                added = addTab(tabId, (userEntered ? null : url), false, parentId, url, isPrivate);
+
+                // The URL is updated for the tab once Gecko responds with the
+                // Tab:Added message. We can preliminarily set the tab's URL as
+                // long as it's a valid URI.
+                String tabUrl = (url != null && Uri.parse(url).getScheme() != null) ? url : null;
+
+                added = addTab(tabId, tabUrl, false, parentId, url, isPrivate);
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "error building JSON arguments");
