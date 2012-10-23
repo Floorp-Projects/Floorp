@@ -18,7 +18,6 @@ var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;
 var gDownloadMgr = null;
 var gContextMenu = null; // nsContextMenu instance
-var gDelayedStartupTimeoutId;
 var gStartupRan = false;
 
 #ifndef XP_MACOSX
@@ -1242,8 +1241,16 @@ var gBrowserInit = {
     gPrivateBrowsingUI.init();
     retrieveToolbarIconsizesFromTheme();
 
-    gDelayedStartupTimeoutId = setTimeout(this._delayedStartup.bind(this), 0, isLoadingBlank, mustLoadSidebar);
+    // Wait until chrome is painted before executing code not critical to making the window visible
+    this._boundDelayedStartup = this._delayedStartup.bind(this, isLoadingBlank, mustLoadSidebar);
+    window.addEventListener("MozAfterPaint", this._boundDelayedStartup);
+
     gStartupRan = true;
+  },
+
+  _cancelDelayedStartup: function () {
+    window.removeEventListener("MozAfterPaint", this._boundDelayedStartup);
+    this._boundDelayedStartup = null;
   },
 
   _delayedStartup: function(isLoadingBlank, mustLoadSidebar) {
@@ -1251,7 +1258,8 @@ var gBrowserInit = {
     Cu.import("resource:///modules/TelemetryTimestamps.jsm", tmp);
     let TelemetryTimestamps = tmp.TelemetryTimestamps;
     TelemetryTimestamps.add("delayedStartupStarted");
-    gDelayedStartupTimeoutId = null;
+
+    this._cancelDelayedStartup();
 
 #ifdef MOZ_SAFE_BROWSING
     // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
@@ -1586,8 +1594,8 @@ var gBrowserInit = {
 
     // Now either cancel delayedStartup, or clean up the services initialized from
     // it.
-    if (gDelayedStartupTimeoutId) {
-      clearTimeout(gDelayedStartupTimeoutId);
+    if (this._boundDelayedStartup) {
+      this._cancelDelayedStartup();
     } else {
       if (Win7Features)
         Win7Features.onCloseWindow();
@@ -1684,11 +1692,11 @@ var gBrowserInit = {
       }
     }
 
-    gDelayedStartupTimeoutId = setTimeout(this.nonBrowserWindowDelayedStartup.bind(this), 0);
+    this._delayedStartupTimeoutId = setTimeout(this.nonBrowserWindowDelayedStartup.bind(this), 0);
   },
 
   nonBrowserWindowDelayedStartup: function() {
-    gDelayedStartupTimeoutId = null;
+    this._delayedStartupTimeoutId = null;
 
     // initialise the offline listener
     BrowserOffline.init();
@@ -1710,8 +1718,8 @@ var gBrowserInit = {
   nonBrowserWindowShutdown: function() {
     // If nonBrowserWindowDelayedStartup hasn't run yet, we have no work to do -
     // just cancel the pending timeout and return;
-    if (gDelayedStartupTimeoutId) {
-      clearTimeout(gDelayedStartupTimeoutId);
+    if (this._delayedStartupTimeoutId) {
+      clearTimeout(this._delayedStartupTimeoutId);
       return;
     }
 
