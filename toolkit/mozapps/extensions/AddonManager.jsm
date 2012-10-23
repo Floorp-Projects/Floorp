@@ -966,7 +966,7 @@ var AddonManagerInternal = {
 
       pendingUpdates++;
       Components.utils.import("resource://gre/modules/AddonUpdateChecker.jsm");
-      AddonUpdateChecker.checkForUpdates(hotfixID, "extension", null, url, {
+      AddonUpdateChecker.checkForUpdates(hotfixID, null, url, {
         onUpdateCheckComplete: function(aUpdates) {
           let update = AddonUpdateChecker.getNewestCompatibleUpdate(aUpdates);
           if (!update) {
