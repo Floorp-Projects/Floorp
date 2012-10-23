@@ -2340,13 +2340,20 @@ abstract public class GeckoApp
                         !profileMigrator.hasMigrationRun()) {
                         // Show the "Setting up Fennec" screen if this takes
                         // a while.
-                        final SetupScreen setupScreen = new SetupScreen(app);
+
+                        // Create a "final" holder for the setup screen so that we can
+                        // create it in startCallback and still find a reference to it
+                        // in stopCallback. (We must create it on the UI thread to fix
+                        // bug 788216). Note that synchronization is not a problem here
+                        // since it is only ever touched on the UI thread.
+                        final SetupScreen[] setupScreenHolder = new SetupScreen[1];
 
                         final Runnable startCallback = new Runnable() {
                             public void run() {
                                 GeckoApp.mAppContext.runOnUiThread(new Runnable() {
                                     public void run() {
-                                       setupScreen.show();
+                                        setupScreenHolder[0] = new SetupScreen(app);
+                                        setupScreenHolder[0].show();
                                     }
                                 });
                             }
@@ -2356,7 +2363,12 @@ abstract public class GeckoApp
                             public void run() {
                                 GeckoApp.mAppContext.runOnUiThread(new Runnable() {
                                     public void run() {
-                                        setupScreen.dismiss();
+                                        SetupScreen screen = setupScreenHolder[0];
+                                        // screen will never be null if this code runs, but
+                                        // stranger things have happened...
+                                        if (screen != null) {
+                                            screen.dismiss();
+                                        }
                                     }
                                 });
                             }
