@@ -74,12 +74,12 @@ public:
     return mDatabaseInfo;
   }
 
-  const nsString& Name()
+  const nsString& Name() const
   {
     return mName;
   }
 
-  const nsString& FilePath()
+  const nsString& FilePath() const
   {
     return mFilePath;
   }
@@ -95,7 +95,7 @@ public:
     return doc.forget();
   }
 
-  nsCString& Origin()
+  const nsCString& Origin() const
   {
     return mASCIIOrigin;
   }
@@ -103,20 +103,24 @@ public:
   void Invalidate();
 
   // Whether or not the database has been invalidated. If it has then no further
-  // transactions for this database will be allowed to run.
-  bool IsInvalidated();
+  // transactions for this database will be allowed to run. This function may be
+  // called on any thread.
+  bool IsInvalidated() const
+  {
+    return mInvalidated;
+  }
 
   void DisconnectFromActor();
 
   // Whether or not the database has been disconnected from its actor.  If true
   // it is not safe to send any IPC messages to the actor representing this db
   // or any of its subactors.
-  bool IsDisconnectedFromActor();
+  bool IsDisconnectedFromActor() const;
 
   void CloseInternal(bool aIsDead);
 
   // Whether or not the database has had Close called on it.
-  bool IsClosed();
+  bool IsClosed() const;
 
   void EnterSetVersionTransaction();
   void ExitSetVersionTransaction();

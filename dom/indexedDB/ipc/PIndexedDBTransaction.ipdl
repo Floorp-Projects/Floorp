@@ -31,6 +31,20 @@ union ObjectStoreConstructorParams
   GetObjectStoreParams;
 };
 
+struct CompleteResult
+{ };
+
+struct AbortResult
+{
+  nsresult errorCode;
+};
+
+union CompleteParams
+{
+  CompleteResult;
+  AbortResult;
+};
+
 } // namespace ipc
 
 protocol PIndexedDBTransaction
@@ -51,7 +65,7 @@ parent:
   DeleteObjectStore(nsString name);
 
 child:
-  Complete(nsresult rv);
+  Complete(CompleteParams params);
 };
 
 } // namespace indexedDB
