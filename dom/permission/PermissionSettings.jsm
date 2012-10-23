@@ -4,11 +4,9 @@
 
 "use strict";
 
-let DEBUG = 0;
-if (DEBUG)
-  debug = function (s) { dump("-*- PermissionSettings Module: " + s + "\n"); }
-else
-  debug = function (s) {}
+function debug(s) {
+  //dump("-*- PermissionSettings Module: " + s + "\n");
+}
 
 const Cu = Components.utils;
 const Cc = Components.classes;
@@ -23,9 +21,20 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
 
-var permissionManager = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
-var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
-var appsService = Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
+XPCOMUtils.defineLazyServiceGetter(this,
+                                   "permissionManager",
+                                   "@mozilla.org/permissionmanager;1",
+                                   "nsIPermissionManager");
+
+XPCOMUtils.defineLazyServiceGetter(this,
+                                   "secMan",
+                                   "@mozilla.org/scriptsecuritymanager;1",
+                                   "nsIScriptSecurityManager");
+
+XPCOMUtils.defineLazyServiceGetter(this,
+                                   "appsService",
+                                   "@mozilla.org/AppsService;1",
+                                   "nsIAppsService");
 
 let PermissionSettingsModule = {
   init: function() {
@@ -60,6 +69,29 @@ let PermissionSettingsModule = {
     }
     debug("add: " + aData.origin + " " + appID + " " + action);
     permissionManager.addFromPrincipal(principal, aData.type, action);
+  },
+
+  getPermission: function getPermission(aPermission, aManifestURL, aOrigin, aBrowserFlag) {
+    debug("getPermission: " + aPermission + ", " + aManifestURL + ", " + aOrigin);
+    let uri = Services.io.newURI(aOrigin, null, null);
+    let appID = appsService.getAppLocalIdByManifestURL(aManifestURL);
+    let principal = secMan.getAppCodebasePrincipal(uri, appID, aBrowserFlag);
+    let result = permissionManager.testExactPermissionFromPrincipal(principal, aPermission);
+
+    switch (result)
+    {
+      case Ci.nsIPermissionManager.UNKNOWN_ACTION:
+        return "unknown";
+      case Ci.nsIPermissionManager.ALLOW_ACTION:
+        return "allow";
+      case Ci.nsIPermissionManager.DENY_ACTION:
+        return "deny";
+      case Ci.nsIPermissionManager.PROMPT_ACTION:
+        return "prompt";
+      default:
+        dump("Unsupported PermissionSettings Action!\n");
+        return "unknown";
+    }
   },
 
   observe: function(aSubject, aTopic, aData) {
