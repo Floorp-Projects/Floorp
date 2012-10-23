@@ -65,7 +65,7 @@ public:
   }
 
   template<int N>
-  NS_ALWAYS_INLINE already_AddRefed<StatementType>
+  MOZ_ALWAYS_INLINE already_AddRefed<StatementType>
   GetCachedStatement(const char (&aQuery)[N])
   {
     nsDependentCString query(aQuery, N - 1);
