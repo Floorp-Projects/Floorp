@@ -276,6 +276,7 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
   nsresult rv = OpenDb();
   if (NS_FAILED(rv)) {
     c->LookupComplete(nullptr);
+    NS_ERROR("Unable to open SafeBrowsing database.");
     return NS_ERROR_FAILURE;
   }
 
@@ -398,7 +399,7 @@ nsUrlClassifierDBServiceWorker::GetTables(nsIUrlClassifierCallback* c)
 
   nsresult rv = OpenDb();
   if (NS_FAILED(rv)) {
-    NS_ERROR("Unable to open database");
+    NS_ERROR("Unable to open SafeBrowsing database");
     return NS_ERROR_FAILURE;
   }
 
@@ -450,7 +451,7 @@ nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *obse
 
   nsresult rv = OpenDb();
   if (NS_FAILED(rv)) {
-    NS_ERROR("Unable to open database");
+    NS_ERROR("Unable to open SafeBrowsing database");
     return NS_ERROR_FAILURE;
   }
 
@@ -641,9 +642,10 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::ResetDatabase()
 {
   nsresult rv = OpenDb();
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  mClassifier->Reset();
+  if (NS_SUCCEEDED(rv)) {
+    mClassifier->Reset();
+  }
 
   rv = CloseDb();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -767,6 +769,10 @@ nsUrlClassifierDBServiceWorker::OpenDb()
 
   LOG(("Opening db"));
 
+  nsresult rv;
+  mCryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsAutoPtr<Classifier> classifier(new Classifier());
   if (!classifier) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -775,16 +781,11 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   classifier->SetFreshTime(gFreshnessGuarantee);
   classifier->SetPerClientRandomize(mPerClientRandomize);
 
-  nsresult rv = classifier->Open(*mCacheDir);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to open URL classifier.");
-  }
+  rv = classifier->Open(*mCacheDir);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mHashKey = classifier->GetHashKey();
   mClassifier = classifier;
-
-  mCryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
