@@ -216,6 +216,8 @@ pixman-16-bit-pipeline.patch: 16 bit pipeline for dithering
 
 pixman-dither.patch: Add dithering of 16 bit gradients
 
+quartz-support-color-emoji-font.patch: support Apple Color Emoji font in cairo-quartz backend
+
 ==== disable printing patch ====
 
 disable-printing.patch:  allows us to use NS_PRINTING to disable printing.
