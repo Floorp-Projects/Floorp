@@ -297,8 +297,6 @@ abstract public class GeckoApp
             }
         }
 
-        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start of getPluginDirectories");
-
         ArrayList<String> directories = new ArrayList<String>();
         PackageManager pm = mAppContext.getPackageManager();
         List<ResolveInfo> plugins = pm.queryIntentServices(new Intent(PLUGIN_ACTION),
@@ -315,7 +313,7 @@ abstract public class GeckoApp
                 // retrieve the plugin's service information
                 ServiceInfo serviceInfo = info.serviceInfo;
                 if (serviceInfo == null) {
-                    Log.w(LOGTAG, "Ignore bad plugin");
+                    Log.w(LOGTAG, "Ignoring bad plugin.");
                     continue;
                 }
 
@@ -327,10 +325,8 @@ abstract public class GeckoApp
                     continue;
                 }
 
-                Log.w(LOGTAG, "Loading plugin: " + serviceInfo.packageName);
 
-
-                // retrieve information from the plugin's manifest
+                // Retrieve information from the plugin's manifest.
                 PackageInfo pkgInfo;
                 try {
                     pkgInfo = pm.getPackageInfo(serviceInfo.packageName,
@@ -340,8 +336,9 @@ abstract public class GeckoApp
                     Log.w(LOGTAG, "Can't find plugin: " + serviceInfo.packageName);
                     continue;
                 }
+
                 if (pkgInfo == null) {
-                    Log.w(LOGTAG, "Loading plugin: " + serviceInfo.packageName + ". Could not load package information.");
+                    Log.w(LOGTAG, "Not loading plugin: " + serviceInfo.packageName + ". Could not load package information.");
                     continue;
                 }
 
@@ -355,6 +352,7 @@ abstract public class GeckoApp
                 final int appFlags = pkgInfo.applicationInfo.flags;
                 final int updatedSystemFlags = ApplicationInfo.FLAG_SYSTEM |
                                                ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
+
                 // preloaded system app with no user updates
                 if ((appFlags & updatedSystemFlags) == ApplicationInfo.FLAG_SYSTEM) {
                     directory = PLUGIN_SYSTEM_LIB + pkgInfo.packageName;
@@ -363,7 +361,7 @@ abstract public class GeckoApp
                 // check if the plugin has the required permissions
                 String permissions[] = pkgInfo.requestedPermissions;
                 if (permissions == null) {
-                    Log.w(LOGTAG, "Loading plugin: " + serviceInfo.packageName + ". Does not have required permission.");
+                    Log.w(LOGTAG, "Not loading plugin: " + serviceInfo.packageName + ". Does not have required permission.");
                     continue;
                 }
                 boolean permissionOk = false;
@@ -374,20 +372,20 @@ abstract public class GeckoApp
                     }
                 }
                 if (!permissionOk) {
-                    Log.w(LOGTAG, "Loading plugin: " + serviceInfo.packageName + ". Does not have required permission (2).");
+                    Log.w(LOGTAG, "Not loading plugin: " + serviceInfo.packageName + ". Does not have required permission (2).");
                     continue;
                 }
 
                 // check to ensure the plugin is properly signed
                 Signature signatures[] = pkgInfo.signatures;
                 if (signatures == null) {
-                    Log.w(LOGTAG, "Loading plugin: " + serviceInfo.packageName + ". Not signed.");
+                    Log.w(LOGTAG, "Not loading plugin: " + serviceInfo.packageName + ". Not signed.");
                     continue;
                 }
 
                 // determine the type of plugin from the manifest
                 if (serviceInfo.metaData == null) {
-                    Log.e(LOGTAG, "The plugin '" + serviceInfo.name + "' has no type defined");
+                    Log.e(LOGTAG, "The plugin '" + serviceInfo.name + "' has no defined type.");
                     continue;
                 }
 
@@ -422,9 +420,7 @@ abstract public class GeckoApp
             }
         }
 
-        String [] result = directories.toArray(new String[directories.size()]);
-        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - end of getPluginDirectories");
-        return result;
+        return directories.toArray(new String[directories.size()]);
     }
 
     String getPluginPackage(String pluginLib) {
@@ -699,8 +695,6 @@ abstract public class GeckoApp
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        Log.i(LOGTAG, "onSaveInstanceState");
-
         if (outState == null)
             outState = new Bundle();
 
@@ -745,7 +739,7 @@ abstract public class GeckoApp
         try {
             if (bitmap == null) {
                 if (compressed == null) {
-                    Log.e(LOGTAG, "processThumbnail: one of bitmap or compressed must be non-null!");
+                    Log.w(LOGTAG, "processThumbnail: one of bitmap or compressed must be non-null!");
                     return;
                 }
                 bitmap = BitmapFactory.decodeByteArray(compressed, 0, compressed.length);
@@ -797,7 +791,7 @@ abstract public class GeckoApp
                         args.put("url", url);
                         args.put("faviconUrl", faviconUrl);
                     } catch (JSONException e) {
-                        Log.e(LOGTAG, "error building json arguments");
+                        Log.w(LOGTAG, "Error building JSON favicon arguments.", e);
                     }
                 }
 
@@ -826,9 +820,11 @@ abstract public class GeckoApp
         getFavicons().clearFavicons();
     }
 
+    /**
+     * This function might perform synchronous IO. Don't call it
+     * from the main thread.
+     */
     public StartupMode getStartupMode() {
-        // This function might touch the disk and should not
-        // be called from UI's main thread.
 
         synchronized(this) {
             if (mStartupMode != null)
@@ -908,7 +904,6 @@ abstract public class GeckoApp
     }
 
     public void handleMessage(String event, JSONObject message) {
-        Log.i(LOGTAG, "Got message: " + event);
         try {
             if (event.equals("Toast:Show")) {
                 final String msg = message.getString("message");
@@ -948,7 +943,7 @@ abstract public class GeckoApp
             } else if (event.equals("log")) {
                 // generic log listener
                 final String msg = message.getString("msg");
-                Log.i(LOGTAG, "Log: " + msg);
+                Log.d(LOGTAG, "Log: " + msg);
             } else if (event.equals("Content:SecurityChange")) {
                 final int tabId = message.getInt("tabID");
                 final JSONObject identity = message.getJSONObject("identity");
@@ -967,14 +962,14 @@ abstract public class GeckoApp
                 final String uri = message.getString("uri");
                 final boolean success = message.getBoolean("success");
                 int state = message.getInt("state");
-                Log.i(LOGTAG, "State - " + state);
+                Log.d(LOGTAG, "State - " + state);
                 if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) != 0) {
                     if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
-                        Log.i(LOGTAG, "Got a document start");
+                        Log.d(LOGTAG, "Got a document start event.");
                         final boolean showProgress = message.getBoolean("showProgress");
                         handleDocumentStart(tabId, showProgress, uri);
                     } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
-                        Log.i(LOGTAG, "Got a document stop");
+                        Log.d(LOGTAG, "Got a document stop event.");
                         handleDocumentStop(tabId, success);
                     }
                 }
@@ -1109,7 +1104,6 @@ abstract public class GeckoApp
     }
 
     public String getResponse() {
-        Log.i(LOGTAG, "Return " + mCurrentResponse);
         String res = mCurrentResponse;
         mCurrentResponse = "";
         return res;
@@ -1141,12 +1135,11 @@ abstract public class GeckoApp
             boolean[] states = new boolean[aPermissions.length()];
             for (int i = 0; i < aPermissions.length(); i++) {
                 try {
-                    items[i] = aPermissions.getJSONObject(i).
-                               getString("setting");
-                    // Make all the items checked by default
+                    items[i] = aPermissions.getJSONObject(i).getString("setting");
+                    // Make all the items checked by default.
                     states[i] = true;
                 } catch (JSONException e) {
-                    Log.i(LOGTAG, "JSONException", e);
+                    Log.w(LOGTAG, "Exception populating settings items.", e);
                 }
             }
             builder.setMultiChoiceItems(items, states, new DialogInterface.OnMultiChoiceClickListener(){
@@ -1498,7 +1491,6 @@ abstract public class GeckoApp
         }
 
         mMainHandler = new Handler();
-        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onCreate");
 
         LayoutInflater.from(this).setFactory(GeckoViewsFactory.getInstance());
 
@@ -1519,12 +1511,10 @@ abstract public class GeckoApp
         // we were in the background, or a more harsh kill while we were
         // active
         if (savedInstanceState != null) {
-            Log.i(LOGTAG, "Restoring from OOM");
             mRestoreMode = GeckoAppShell.RESTORE_OOM;
 
             boolean wasInBackground =
                 savedInstanceState.getBoolean(SAVED_STATE_IN_BACKGROUND, false);
-            Log.i(LOGTAG, "Was in background: " + wasInBackground);
 
             // Don't log OOM-kills if only one activity was destroyed. (For example
             // from "Don't keep activities" on ICS)
@@ -1543,7 +1533,6 @@ abstract public class GeckoApp
                 boolean wasOOM = prefs.getBoolean(PREFS_OOM_EXCEPTION, false);
                 boolean wasStopped = prefs.getBoolean(PREFS_WAS_STOPPED, true);
                 if (wasOOM || !wasStopped) {
-                    Log.i(LOGTAG, "Crashed due to OOM last run");
                     Telemetry.HistogramAdd("FENNEC_WAS_KILLED", 1);
                 }
                 SharedPreferences.Editor editor = prefs.edit();
@@ -1607,7 +1596,6 @@ abstract public class GeckoApp
         }
 
         if (mRestoreMode == GeckoAppShell.RESTORE_NONE && getProfile().shouldRestoreSession()) {
-            Log.i(LOGTAG, "Restoring crash");
             mRestoreMode = GeckoAppShell.RESTORE_CRASH;
         }
 
@@ -1663,12 +1651,10 @@ abstract public class GeckoApp
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.WaitForDebugger)) {
             mMainHandler.postDelayed(new Runnable() {
                 public void run() {
-                    Log.i(LOGTAG, "Launching from debug intent after 5s wait");
                     setLaunchState(LaunchState.Launching);
                     sGeckoThread.start();
                 }
             }, 1000 * 5 /* 5 seconds */);
-            Log.i(LOGTAG, "Intent : ACTION_DEBUG - waiting 5s before launching");
         }
 
         if (cameraView == null) {
@@ -1684,8 +1670,6 @@ abstract public class GeckoApp
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
-
-        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - UI almost up");
 
         //register for events
         registerEventListener("DOMContentLoaded");
@@ -1752,7 +1736,6 @@ abstract public class GeckoApp
 
         GeckoAppShell.getHandler().postDelayed(new Runnable() {
             public void run() {
-                Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - pre checkLaunchState");
                 // Sync settings need Gecko to be loaded, so
                 // no hurry in starting this.
                 checkMigrateSync();
@@ -1760,7 +1743,6 @@ abstract public class GeckoApp
                 // Kick off our background service to fetch product announcements.
                 // We do this by invoking the broadcast receiver, which uses the
                 // system alarm infrastructure to perform tasks at intervals.
-                Log.d(LOGTAG, "Broadcasting announcements pref.");
                 GeckoPreferences.broadcastAnnouncementsPref(GeckoApp.mAppContext);
 
                 /*
@@ -1887,7 +1869,7 @@ abstract public class GeckoApp
                     mIntent.putExtra("prefetched", 1);
                 }
             } catch (IOException ioe) {
-                Log.i(LOGTAG, "exception trying to pre-fetch redirected url", ioe);
+                Log.w(LOGTAG, "Exception trying to pre-fetch redirected URL.", ioe);
                 mIntent.putExtra("prefetched", 1);
             }
         }
@@ -1921,8 +1903,6 @@ abstract public class GeckoApp
 
     @Override
     protected void onNewIntent(Intent intent) {
-        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onNewIntent");
-
         if (checkLaunchState(LaunchState.GeckoExiting)) {
             // We're exiting and shouldn't try to do anything else just incase
             // we're hung for some reason we'll force the process to exit
@@ -1962,7 +1942,6 @@ abstract public class GeckoApp
         final String action = intent.getAction();
 
         if (Intent.ACTION_MAIN.equals(action)) {
-            Log.i(LOGTAG, "Intent : ACTION_MAIN");
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(""));
         }
         else if (ACTION_LOAD.equals(action)) {
@@ -2029,8 +2008,6 @@ abstract public class GeckoApp
     @Override
     public void onResume()
     {
-        Log.i(LOGTAG, "resume");
-
         // After an onPause, the activity is back in the foreground.
         // Undo whatever we did in onPause.
         super.onResume();
@@ -2071,7 +2048,6 @@ abstract public class GeckoApp
     @Override
     public void onStop()
     {
-        Log.i(LOGTAG, "stop");
         // We're about to be stopped, potentially in preparation for
         // being destroyed.  We're killable after this point -- as I
         // understand it, in extreme cases the process can be terminated
@@ -2090,8 +2066,6 @@ abstract public class GeckoApp
     @Override
     public void onPause()
     {
-        Log.i(LOGTAG, "pause");
-
         // In some way it's sad that Android will trigger StrictMode warnings
         // here as the whole point is to save to disk while the activity is not
         // interacting with the user.
@@ -2116,8 +2090,6 @@ abstract public class GeckoApp
     @Override
     public void onRestart()
     {
-        Log.i(LOGTAG, "restart");
-
         GeckoBackgroundThread.getHandler().post(new Runnable() {
             public void run() {
                 SharedPreferences prefs =
@@ -2134,9 +2106,6 @@ abstract public class GeckoApp
     @Override
     public void onStart()
     {
-        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onStart");
-
-        Log.i(LOGTAG, "start");
         GeckoAppShell.sendEventToGecko(GeckoEvent.createStartEvent(isApplicationInBackground()));
         super.onStart();
     }
@@ -2144,8 +2113,6 @@ abstract public class GeckoApp
     @Override
     public void onDestroy()
     {
-        Log.i(LOGTAG, "destroy");
-
         // Tell Gecko to shutting down; we'll end up calling System.exit()
         // in onXreExit.
         if (isFinishing())
@@ -2256,10 +2223,7 @@ abstract public class GeckoApp
 
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig)
-    {
-        Log.i(LOGTAG, "configuration changed");
-
+    public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
         if (mOrientation != newConfig.orientation) {
@@ -2299,7 +2263,7 @@ abstract public class GeckoApp
     }
 
     public void doRestart(String action) {
-        Log.i(LOGTAG, "doRestart(\"" + action + "\")");
+        Log.d(LOGTAG, "doRestart(\"" + action + "\")");
         try {
             Intent intent = new Intent(action);
             intent.setClassName(getPackageName(),
@@ -2307,11 +2271,11 @@ abstract public class GeckoApp
             /* TODO: addEnvToIntent(intent); */
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
                             Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-            Log.i(LOGTAG, intent.toString());
+            Log.d(LOGTAG, "Restart intent: " + intent.toString());
             GeckoAppShell.killAnyZombies();
             startActivity(intent);
         } catch (Exception e) {
-            Log.e(LOGTAG, "error doing restart", e);
+            Log.e(LOGTAG, "Error effecting restart.", e);
         }
         finish();
         // Give the restart process time to start before we die
@@ -2324,15 +2288,12 @@ abstract public class GeckoApp
 
     private void checkMigrateProfile() {
         final File profileDir = getProfile().getDir();
-        final long currentTime = SystemClock.uptimeMillis();
 
         if (profileDir != null) {
             final GeckoApp app = GeckoApp.mAppContext;
 
             GeckoAppShell.getHandler().post(new Runnable() {
                 public void run() {
-                    Log.i(LOGTAG, "Checking profile migration in: " + profileDir.getAbsolutePath());
-
                     ProfileMigrator profileMigrator = new ProfileMigrator(app);
 
                     // Do a migration run on the first start after an upgrade.
@@ -2377,10 +2338,6 @@ abstract public class GeckoApp
                         profileMigrator.setLongOperationCallbacks(startCallback,
                                                                   stopCallback);
                         profileMigrator.launchPlaces(profileDir);
-
-                        long timeDiff = SystemClock.uptimeMillis() - currentTime;
-                        Log.i(LOGTAG, "Profile migration took " + timeDiff + " ms");
-
                         finishProfileMigration();
                     }
                 }}
@@ -2397,7 +2354,6 @@ abstract public class GeckoApp
             final GeckoApp app = GeckoApp.mAppContext;
             ProfileMigrator profileMigrator = new ProfileMigrator(app);
             if (!profileMigrator.hasSyncMigrated()) {
-                Log.i(LOGTAG, "Checking Sync settings in: " + profileDir.getAbsolutePath());
                 profileMigrator.launchSyncPrefs();
             }
         }
@@ -2520,18 +2476,17 @@ abstract public class GeckoApp
 
     public AbsoluteLayout getPluginContainer() { return mPluginContainer; }
 
-    // accelerometer
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+    // Accelerometer.
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    }
 
-    public void onSensorChanged(SensorEvent event)
-    {
+    public void onSensorChanged(SensorEvent event) {
         GeckoAppShell.sendEventToGecko(GeckoEvent.createSensorEvent(event));
     }
 
-    // geolocation
-    public void onLocationChanged(Location location)
-    {
-        Log.w(LOGTAG, "onLocationChanged "+location);
+    // Geolocation.
+    public void onLocationChanged(Location location) {
+        // No logging here: user-identifying information.
         GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(location));
     }
 
