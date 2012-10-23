@@ -10,7 +10,7 @@ interface nsIDOMNode;
 interface nsIDOMEvent;
 interface nsIDOMClientRect;
 
-[scriptable, uuid(6AD1B199-95D3-448B-98D7-896BCE3A1DCD)]
+[scriptable, uuid(ACCEA57B-C3D8-4B6E-9101-90F04EE9DEA0)]
 interface nsIPopupBoxObject : nsISupports
 {
   /**
@@ -151,11 +151,21 @@ interface nsIPopupBoxObject : nsISupports
    */
   readonly attribute nsIDOMElement anchorNode;
 
-  /*
+  /**
    * Retrieve the screen rectangle of the popup, including the area occupied by
    * any titlebar or borders present.
    */
   nsIDOMClientRect getOuterScreenRect();
+
+  /**
+   * Move an open popup to the given anchor position. The arguments have the same
+   * meaning as the corresponding argument to openPopup. This method has no effect
+   * on popups that are not open.
+   */
+  void moveToAnchor(in nsIDOMElement anchorElement,
+                    in AString position,
+                    in long x, in long y,
+                    in boolean attributesOverride);
 };
 
 %{C++

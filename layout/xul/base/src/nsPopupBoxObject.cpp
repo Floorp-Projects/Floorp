@@ -116,6 +116,25 @@ nsPopupBoxObject::MoveTo(int32_t aLeft, int32_t aTop)
 }
 
 NS_IMETHODIMP
+nsPopupBoxObject::MoveToAnchor(nsIDOMElement* aAnchorElement,
+                               const nsAString& aPosition,
+                               int32_t aXPos, int32_t aYPos,
+                               bool aAttributesOverride)
+{
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (pm && mContent) {
+    nsCOMPtr<nsIContent> anchorContent(do_QueryInterface(aAnchorElement));
+
+    nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(mContent->GetPrimaryFrame());
+    if (menuPopupFrame && menuPopupFrame->PopupState() == ePopupOpenAndVisible) {
+      menuPopupFrame->MoveToAnchor(anchorContent, aPosition, aXPos, aYPos, aAttributesOverride);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPopupBoxObject::SizeTo(int32_t aWidth, int32_t aHeight)
 {
   if (!mContent)
