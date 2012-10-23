@@ -137,7 +137,7 @@ class VirtualenvManager(object):
         into the wrong place. This is how virtualenv's work.
         """
         packages = []
-        fh = open(self.manifest_path, 'rUt')
+        fh = open(self.manifest_path, 'rU')
         for line in fh:
             packages.append(line.rstrip().split(':'))
         fh.close()
