@@ -312,11 +312,11 @@ FrameState::bestEvictReg(uint32_t mask, bool includePinned) const
          */
         Lifetime *lifetime = variableLive(fe, a->PC);
 
+        /* Evict variables whose value is no longer live. */
         if (!lifetime) {
-            JS_ASSERT(isConstructorThis(fe));
             fallback = reg;
             fallbackOffset = a->script->length;
-            JaegerSpew(JSpew_Regalloc, "    %s is 'this' in a constructor\n", reg.name());
+            JaegerSpew(JSpew_Regalloc, "    %s is dead\n", reg.name());
             continue;
         }
 
@@ -353,6 +353,21 @@ FrameState::bestEvictReg(uint32_t mask, bool includePinned) const
     return fallback;
 }
 
+/*
+ * Whether we can pretend the payload for a given entry is synced provided that
+ * the value in the entry is dead. The contents of dead variables can still be
+ * observed during stack scanning, so the payloads of values which might hold
+ * objects or strings must be preserved.
+ */
+static inline bool
+CanFakeSync(FrameEntry *fe)
+{
+    return fe->isNotType(JSVAL_TYPE_OBJECT)
+        && fe->isNotType(JSVAL_TYPE_STRING)
+        && fe->isNotType(JSVAL_TYPE_DOUBLE)
+        && fe->isNotType(JSVAL_TYPE_MAGIC);
+}
+
 void
 FrameState::evictDeadEntries(bool includePinned)
 {
@@ -374,25 +389,17 @@ FrameState::evictDeadEntries(bool includePinned)
         }
 
         Lifetime *lifetime = variableLive(fe, a->PC);
-        if (lifetime)
+        if (lifetime || !CanFakeSync(fe))
             continue;
 
-        /*
-         * If we are about to fake sync for an entry with known type, reset
-         * that type. We don't want to regard it as correctly synced later.
-         */
-        if (!fe->type.synced() && fe->isTypeKnown())
-            fe->type.setMemory();
+        JS_ASSERT(regstate(reg).type() == RematInfo::DATA);
 
         /*
          * Mark the entry as synced to avoid emitting a store, we don't need
          * to keep this value around.
          */
         fakeSync(fe);
-        if (regstate(reg).type() == RematInfo::DATA)
-            fe->data.setMemory();
-        else
-            fe->type.setMemory();
+        fe->data.setMemory();
         forgetReg(reg);
     }
 }
@@ -719,7 +726,7 @@ FrameState::syncForAllocation(RegisterAllocation *alloc, bool inlineReturn, Uses
         /* Force syncs for locals which are dead at the current PC. */
         if (isLocal(fe) && !fe->copied && !a->analysis->slotEscapes(entrySlot(fe))) {
             Lifetime *lifetime = a->analysis->liveness(entrySlot(fe)).live(a->PC - a->script->code);
-            if (!lifetime)
+            if (!lifetime && CanFakeSync(fe))
                 fakeSync(fe);
         }
 
@@ -729,7 +736,7 @@ FrameState::syncForAllocation(RegisterAllocation *alloc, bool inlineReturn, Uses
             !a->parent->analysis->slotEscapes(frameSlot(a->parent, fe))) {
             const LifetimeVariable &var = a->parent->analysis->liveness(frameSlot(a->parent, fe));
             Lifetime *lifetime = var.live(a->parent->PC - a->parent->script->code);
-            if (!lifetime)
+            if (!lifetime && CanFakeSync(fe))
                 fakeSync(fe);
         }
 
