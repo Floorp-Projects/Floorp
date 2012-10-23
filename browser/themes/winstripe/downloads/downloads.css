@@ -72,7 +72,6 @@ richlistitem[type="download"]:first-child {
 #downloadsListBox:-moz-focusring > richlistitem[type="download"][selected] {
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
-  -moz-outline-radius: 3px;
 }
 
 .downloadTypeIcon {
