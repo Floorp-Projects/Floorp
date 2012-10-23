@@ -79,6 +79,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/debug.js");
 Cu.import("resource:///modules/TelemetryTimestamps.jsm");
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
@@ -441,7 +442,16 @@ let SessionStoreInternal = {
         this._prefBranch.getBoolPref("sessionstore.resume_session_once"))
       this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
 
+    this._initEncoding();
+
     this._initialized = true;
+  },
+
+  _initEncoding : function ssi_initEncoding() {
+    // The (UTF-8) encoder used to write to files.
+    XPCOMUtils.defineLazyGetter(this, "_writeFileEncoder", function () {
+      return new TextEncoder();
+    });
   },
 
   _initPrefs : function() {
@@ -4433,27 +4443,21 @@ let SessionStoreInternal = {
   _writeFile: function ssi_writeFile(aFile, aData) {
     let refObj = {};
     TelemetryStopwatch.start("FX_SESSION_RESTORE_WRITE_FILE_MS", refObj);
-    // Initialize the file output stream.
-    var ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
-                  createInstance(Ci.nsIFileOutputStream);
-    ostream.init(aFile, 0x02 | 0x08 | 0x20, 0600, ostream.DEFER_OPEN);
+    let path = aFile.path;
+    let encoded = this._writeFileEncoder.encode(aData);
+    let promise = OS.File.writeAtomic(path, encoded, {tmpPath: path + ".tmp"});
 
-    // Obtain a converter to convert our data to a UTF-8 encoded input stream.
-    var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                    createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-
-    // Asynchronously copy the data to the file.
-    var istream = converter.convertToInputStream(aData);
-    var self = this;
-    NetUtil.asyncCopy(istream, ostream, function(rc) {
-      if (Components.isSuccessCode(rc)) {
+    promise.then(
+      function onSuccess() {
         TelemetryStopwatch.finish("FX_SESSION_RESTORE_WRITE_FILE_MS", refObj);
         Services.obs.notifyObservers(null,
-                                     "sessionstore-state-write-complete",
-                                     "");
-      }
-    });
+                                      "sessionstore-state-write-complete",
+                                      "");
+      },
+      function onFailure(reason) {
+        TelemetryStopwatch.cancel("FX_SESSION_RESTORE_WRITE_FILE_MS", refObj);
+        Components.reportError("ssi_writeFile failure " + reason);
+      });
   }
 };
 
