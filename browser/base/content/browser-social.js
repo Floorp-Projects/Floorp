@@ -692,11 +692,12 @@ var SocialToolbar = {
     const CACHE_PREF_NAME = "social.cached.notificationIcons";
     // provider.profile == undefined means no response yet from the provider
     // to tell us whether the user is logged in or not.
-    if (!SocialUI.haveLoggedInUser() && provider.profile !== undefined) {
-      // The provider has responded with a profile and the user isn't logged
-      // in.  The icons etc have already been removed by
-      // updateButtonHiddenState, so we want to nuke any cached icons we
-      // have and get out of here!
+    if (!Social.provider || !Social.provider.enabled ||
+        (!SocialUI.haveLoggedInUser() && provider.profile !== undefined)) {
+      // Either no enabled provider, or there is a provider and it has
+      // responded with a profile and the user isn't loggedin.  The icons
+      // etc have already been removed by updateButtonHiddenState, so we want
+      // to nuke any cached icons we have and get out of here!
       Services.prefs.clearUserPref(CACHE_PREF_NAME);
       return;
     }
