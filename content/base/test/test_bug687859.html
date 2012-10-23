@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=687859
+-->
+<head>
+  <meta charset="windows-1251">
+  <title>Test for Bug 687859</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=687859">Mozilla Bug 687859</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script charset="ISO-8859-2" src="file_bug687859-bom.js"></script>
+<script charset="ISO-8859-2" src="file_bug687859-16.js"></script>
+<script charset="ISO-8859-2" src="file_bug687859-http.js"></script>
+<script charset="ISO-8859-2" src="file_bug687859-charset.js"></script>
+<script src="file_bug687859-inherit.js"></script>
+<script type="application/javascript">
+is(stringFromBomScript, "\u20AC", "Bogus encoding for UTF-8 BOM case.");
+is(stringFrom16Script, "\u20AC", "Bogus encoding for UTF-16 BOM case.");
+is(stringFromHttpScript, "\u0E44", "Bogus encoding for HTTP case.");
+is(stringFromCharsetScript, "\u0104", "Bogus encoding for charset case.");
+is(stringFromInheritScript, "\u040E", "Bogus encoding for inherit case.");
+</script>
+</pre>
+</body>
+</html>
