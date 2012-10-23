@@ -331,7 +331,7 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     rv = params->GetBrowserOnly(&browserOnly);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    MOZ_ASSERT(appId != nsIScriptSecurityManager::NO_APP_ID);
+    MOZ_ASSERT(appId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
 
     return DOMStorageImpl::gStorageDB->RemoveAllForApp(appId, browserOnly);
   }

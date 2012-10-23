@@ -175,6 +175,44 @@ struct SerializedStructuredCloneWriteInfo
   uint64_t offsetToKeyProp;
 };
 
+class OriginOrPatternString : public nsCString
+{
+public:
+  static OriginOrPatternString
+  FromOrigin(const nsACString& aOrigin)
+  {
+    return OriginOrPatternString(aOrigin, true);
+  }
+
+  static OriginOrPatternString
+  FromPattern(const nsACString& aPattern)
+  {
+    return OriginOrPatternString(aPattern, false);
+  }
+
+  bool
+  IsOrigin() const
+  {
+    return mIsOrigin;
+  }
+
+  bool
+  IsPattern() const
+  {
+    return !mIsOrigin;
+  }
+
+private:
+  OriginOrPatternString(const nsACString& aOriginOrPattern, bool aIsOrigin)
+  : nsCString(aOriginOrPattern), mIsOrigin(aIsOrigin)
+  { }
+
+  bool
+  operator==(const OriginOrPatternString& aOther) MOZ_DELETE;
+
+  bool mIsOrigin;
+};
+
 END_INDEXEDDB_NAMESPACE
 
 #endif // mozilla_dom_indexeddb_indexeddatabase_h__

@@ -66,12 +66,13 @@ EXPORTS_mozilla/dom/indexedDB = \
   $(NULL)
 
 LOCAL_INCLUDES = \
-  -I$(topsrcdir)/db/sqlite3/src \
-  -I$(topsrcdir)/xpcom/build \
-  -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/dom/src/storage \
+  -I$(topsrcdir)/caps/include \
   -I$(topsrcdir)/content/base/src \
   -I$(topsrcdir)/content/events/src \
+  -I$(topsrcdir)/db/sqlite3/src \
+  -I$(topsrcdir)/dom/base \
+  -I$(topsrcdir)/dom/src/storage \
+  -I$(topsrcdir)/xpcom/build \
   $(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

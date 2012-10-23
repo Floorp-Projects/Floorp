@@ -2018,7 +2018,9 @@ OpenDatabaseHelper::Run()
     IndexedDatabaseManager* manager = IndexedDatabaseManager::Get();
     NS_ASSERTION(manager, "This should never be null!");
 
-    manager->AllowNextSynchronizedOp(mASCIIOrigin, mDatabaseId);
+    manager->AllowNextSynchronizedOp(
+                                OriginOrPatternString::FromOrigin(mASCIIOrigin),
+                                mDatabaseId);
 
     ReleaseMainThreadObjects();
 

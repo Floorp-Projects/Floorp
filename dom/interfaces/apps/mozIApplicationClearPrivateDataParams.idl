@@ -13,3 +13,7 @@ interface mozIApplicationClearPrivateDataParams : nsISupports
   readonly attribute unsigned long appId;
   readonly attribute boolean browserOnly;
 };
+
+%{C++
+#define TOPIC_WEB_APP_CLEAR_DATA "webapps-clear-data"
+%}

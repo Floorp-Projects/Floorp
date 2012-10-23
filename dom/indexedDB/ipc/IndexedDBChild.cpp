@@ -435,6 +435,15 @@ IndexedDBDatabaseChild::RecvVersionChange(const uint64_t& aOldVersion,
 }
 
 bool
+IndexedDBDatabaseChild::RecvInvalidate()
+{
+  if (mDatabase) {
+    mDatabase->Invalidate();
+  }
+  return true;
+}
+
+bool
 IndexedDBDatabaseChild::RecvPIndexedDBTransactionConstructor(
                                              PIndexedDBTransactionChild* aActor,
                                              const TransactionParams& aParams)
@@ -584,9 +593,30 @@ IndexedDBTransactionChild::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 bool
-IndexedDBTransactionChild::RecvComplete(const nsresult& aRv)
+IndexedDBTransactionChild::RecvComplete(const CompleteParams& aParams)
 {
-  FireCompleteEvent(aRv);
+  MOZ_ASSERT(mTransaction);
+  MOZ_ASSERT(mStrongTransaction);
+
+  nsresult resultCode;
+
+  switch (aParams.type()) {
+    case CompleteParams::TCompleteResult:
+      resultCode = NS_OK;
+      break;
+    case CompleteParams::TAbortResult:
+      resultCode = aParams.get_AbortResult().errorCode();
+      if (NS_SUCCEEDED(resultCode)) {
+        resultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
+      }
+      break;
+
+    default:
+      MOZ_NOT_REACHED("Unknown union type!");
+      return false;
+  }
+
+  FireCompleteEvent(resultCode);
   return true;
 }
 
