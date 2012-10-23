@@ -21,16 +21,7 @@ let worker;
 let test = function test() {
   SimpleTest.ok(true, "test_osfile_comms.xul: Starting test");
   Components.utils.import("resource://gre/modules/ctypes.jsm");
-  Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
-  if (OS.Constants.Win) {
-    // We are under Windows
-    Components.utils.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm");
-    OS.File = { Error: OS.Shared.Win.Error}; // Hack to be able to (de)serialize exceptions
-  } else {
-    // We are under Unix
-    Components.utils.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm");
-    OS.File = { Error: OS.Shared.Unix.Error}; // Hack to be able to (de)serialize exceptions
-  }
+  Components.utils.import("resource://gre/modules/osfile.jsm");
   worker = new ChromeWorker("worker_test_osfile_comms.js");
   SimpleTest.waitForExplicitFinish();
   try {
@@ -52,8 +43,6 @@ let test = function test() {
         SimpleTest.ok(msg.data.condition, msg.data.description);
         return;
       case "finish":
-        delete OS.File.Error; // Avoid leak
-        OS.File = null;
         SimpleTest.finish();
         return;
       case "value":
