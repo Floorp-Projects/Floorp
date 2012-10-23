@@ -218,6 +218,8 @@ pixman-dither.patch: Add dithering of 16 bit gradients
 
 quartz-support-color-emoji-font.patch: support Apple Color Emoji font in cairo-quartz backend
 
+use-show-text-glyphs-if-glyph-path-fails.patch: fall back to show_text_glyphs even at huge sizes if scaled_font_glyph_path didn't work
+
 ==== disable printing patch ====
 
 disable-printing.patch:  allows us to use NS_PRINTING to disable printing.
