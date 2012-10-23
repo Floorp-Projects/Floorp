@@ -1145,7 +1145,7 @@ struct SourceCompressionToken
     ScriptSource *ss;
     const jschar *chars;
   public:
-    SourceCompressionToken(JSContext *cx)
+    explicit SourceCompressionToken(JSContext *cx)
       : cx(cx), ss(NULL), chars(NULL) {}
     ~SourceCompressionToken()
     {
