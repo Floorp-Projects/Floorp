@@ -221,7 +221,7 @@ public:
 
   void Dispatch();
 private:
-  const RefPtr<TransportSecurityInfo> mInfoObject;
+  const nsRefPtr<TransportSecurityInfo> mInfoObject;
 public:
   const PRErrorCode mErrorCode;
   const SSLErrorMessageType mErrorMessageType;
@@ -248,13 +248,13 @@ class CertErrorRunnable : public SyncRunnableBase
   }
 
   virtual void RunOnTargetThread();
-  RefPtr<SSLServerCertVerificationResult> mResult; // out
+  nsRefPtr<SSLServerCertVerificationResult> mResult; // out
 private:
   SSLServerCertVerificationResult *CheckCertOverrides();
   
   const void * const mFdForLogging; // may become an invalid pointer; do not dereference
   const nsCOMPtr<nsIX509Cert> mCert;
-  const RefPtr<TransportSecurityInfo> mInfoObject;
+  const nsRefPtr<TransportSecurityInfo> mInfoObject;
   const PRErrorCode mDefaultErrorCodeToReport;
   const uint32_t mCollectedErrors;
   const PRErrorCode mErrorCodeTrust;
@@ -427,7 +427,8 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
     return nullptr;
   }
 
-  RefPtr<nsNSSCertificate> nssCert(nsNSSCertificate::Create(cert));
+  nsRefPtr<nsNSSCertificate> nssCert;
+  nssCert = nsNSSCertificate::Create(cert);
   if (!nssCert) {
     NS_ERROR("nsNSSCertificate::Create failed");
     PR_SetError(SEC_ERROR_NO_MEMORY, 0);
@@ -444,7 +445,7 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
     return nullptr;
   }
 
-  RefPtr<nsCERTValInParamWrapper> survivingParams;
+  nsRefPtr<nsCERTValInParamWrapper> survivingParams;
   nsrv = inss->GetDefaultCERTValInParam(survivingParams);
   if (NS_FAILED(nsrv)) {
     NS_ERROR("GetDefaultCERTValInParam failed");
@@ -471,7 +472,7 @@ CreateCertErrorRunnable(PRErrorCode defaultErrorCodeToReport,
     srv = CERT_VerifyCertificate(CERT_GetDefaultCertDB(), cert,
                                 true, certificateUsageSSLServer,
                                 PR_Now(), static_cast<void*>(infoObject),
-                                verify_log, nullptr);
+                                verify_log, NULL);
   }
   else {
     CERTValOutParam cvout[2];
@@ -590,7 +591,7 @@ private:
     }
     return rv;
   }
-  RefPtr<CertErrorRunnable> mCertErrorRunnable;
+  nsRefPtr<CertErrorRunnable> mCertErrorRunnable;
 };
 
 class SSLServerCertVerificationJob : public nsRunnable
@@ -610,7 +611,7 @@ private:
   ~SSLServerCertVerificationJob();
 
   const void * const mFdForLogging;
-  const RefPtr<TransportSecurityInfo> mInfoObject;
+  const nsRefPtr<TransportSecurityInfo> mInfoObject;
   CERTCertificate * const mCert;
 };
 
@@ -643,7 +644,7 @@ PSM_SSL_PKIX_AuthCertificate(CERTCertificate *peerCert, void * pinarg,
         nsCOMPtr<nsINSSComponent> inss = do_GetService(kNSSComponentCID, &nsrv);
         if (!inss)
           return SECFailure;
-        RefPtr<nsCERTValInParamWrapper> survivingParams;
+        nsRefPtr<nsCERTValInParamWrapper> survivingParams;
         if (NS_FAILED(inss->GetDefaultCERTValInParam(survivingParams)))
           return SECFailure;
 
@@ -776,7 +777,7 @@ BlockServerCertChangeForSpdy(nsNSSSocketInfo *infoObject,
   nsCOMPtr<nsIX509Cert> cert;
   nsCOMPtr<nsIX509Cert2> cert2;
 
-  RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
+  nsRefPtr<nsSSLStatus> status = infoObject->SSLStatus();
   if (!status) {
     // If we didn't have a status, then this is the
     // first handshake on this connection, not a
@@ -872,8 +873,8 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert)
   // complete chain at any time it might need it.
   // But we keep only those CA certs in the temp db, that we didn't already know.
 
-  RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
-  RefPtr<nsNSSCertificate> nsc;
+  nsRefPtr<nsSSLStatus> status = infoObject->SSLStatus();
+  nsRefPtr<nsNSSCertificate> nsc;
 
   if (!status || !status->mServerCert) {
     nsc = nsNSSCertificate::Create(cert);
@@ -991,8 +992,8 @@ SSLServerCertVerificationJob::Dispatch(const void * fdForLogging,
     return SECFailure;
   }
   
-  RefPtr<SSLServerCertVerificationJob> job(
-    new SSLServerCertVerificationJob(fdForLogging, infoObject, serverCert));
+  nsRefPtr<SSLServerCertVerificationJob> job
+    = new SSLServerCertVerificationJob(fdForLogging, infoObject, serverCert);
 
   nsresult nrv;
   if (!gCertVerificationThreadPool) {
@@ -1038,16 +1039,16 @@ SSLServerCertVerificationJob::Run()
     PR_SetError(0, 0); 
     SECStatus rv = AuthCertificate(mInfoObject, mCert);
     if (rv == SECSuccess) {
-      RefPtr<SSLServerCertVerificationResult> restart(
-        new SSLServerCertVerificationResult(mInfoObject, 0));
+      nsRefPtr<SSLServerCertVerificationResult> restart 
+        = new SSLServerCertVerificationResult(mInfoObject, 0);
       restart->Dispatch();
       return NS_OK;
     }
 
     error = PR_GetError();
     if (error != 0) {
-      RefPtr<CertErrorRunnable> runnable(CreateCertErrorRunnable(
-        error, mInfoObject, mCert, mFdForLogging));
+      nsRefPtr<CertErrorRunnable> runnable = CreateCertErrorRunnable(
+              error, mInfoObject, mCert, mFdForLogging);
       if (!runnable) {
         // CreateCertErrorRunnable set a new error code
         error = PR_GetError(); 
@@ -1083,8 +1084,8 @@ SSLServerCertVerificationJob::Run()
     error = PR_INVALID_STATE_ERROR;
   }
 
-  RefPtr<SSLServerCertVerificationResult> failure(
-    new SSLServerCertVerificationResult(mInfoObject, error));
+  nsRefPtr<SSLServerCertVerificationResult> failure
+    = new SSLServerCertVerificationResult(mInfoObject, error);
   failure->Dispatch();
   return NS_OK;
 }
@@ -1164,9 +1165,9 @@ AuthCertificateHook(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
 
   PRErrorCode error = PR_GetError();
   if (error != 0) {
-    RefPtr<CertErrorRunnable> runnable(CreateCertErrorRunnable(
+    nsRefPtr<CertErrorRunnable> runnable = CreateCertErrorRunnable(
                     error, socketInfo, serverCert,
-                    static_cast<const void *>(fd)));
+                    static_cast<const void *>(fd));
     if (!runnable) {
       // CreateCertErrorRunnable sets a new error code when it fails
       error = PR_GetError();
