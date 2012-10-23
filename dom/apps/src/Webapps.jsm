@@ -92,7 +92,7 @@ let DOMApplicationRegistry = {
   // aNext() is called after we load the current webapps list.
   loadCurrentRegistry: function loadCurrentRegistry(aNext) {
     let file = FileUtils.getFile(DIRECTORY_NAME, ["webapps", "webapps.json"], false);
-    if (file && file.exists) {
+    if (file && file.exists()) {
       this._loadJSONAsync(file, (function loadRegistry(aData) {
         if (aData) {
           this.webapps = aData;
@@ -196,7 +196,7 @@ let DOMApplicationRegistry = {
         file = FileUtils.getFile("coreAppsDir", ["webapps", "webapps.json"], false);
       } catch(e) { }
 
-      if (file && file.exists) {
+      if (file && file.exists()) {
         // 2.a
         this._loadJSONAsync(file, (function loadCoreRegistry(aData) {
           if (!aData) {
