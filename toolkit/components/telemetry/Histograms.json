@@ -2101,19 +2101,53 @@
     "kind": "boolean",
     "description": "DOM: Ranges that are detached on destruction (bug 702948)"
   },
-  "GLOBALDOMSTORAGE_KEY_SIZE_BYTES": {
+  "LOCALDOMSTORAGE_GETALLKEYS_MS": {
     "kind": "exponential",
-    "low": 1024,
-    "high": "32768",
+    "high": "3000",
     "n_buckets": 10,
-    "description": "DOM storage: size of keys stored in globalStorage"
+    "description": "Time to return a list of all keys in domain's LocalStorage (ms)"
   },
-  "GLOBALDOMSTORAGE_VALUE_SIZE_BYTES": {
+  "LOCALDOMSTORAGE_GETVALUE_MS": {
     "kind": "exponential",
-    "low": 1024,
-    "high": "32768",
+    "high": "3000",
     "n_buckets": 10,
-    "description": "DOM storage: size of values stored in globalStorage"
+    "description": "Time to return a value for a key in LocalStorage (ms)"
+  },
+  "LOCALDOMSTORAGE_SETVALUE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time to set a single key's value in LocalStorage (ms)"
+  },
+  "LOCALDOMSTORAGE_REMOVEKEY_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time to remove a single key from LocalStorage (ms)"
+  },
+  "LOCALDOMSTORAGE_REMOVEALL_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time to clear LocalStorage for all domains (ms)"
+  },
+  "LOCALDOMSTORAGE_FETCH_DOMAIN_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time to fetch LocalStorage data for a domain (ms)"
+  },
+  "LOCALDOMSTORAGE_FETCH_QUOTA_USE_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time to fetch quota use stats for a TLD (ms)"
+  },
+  "LOCALDOMSTORAGE_TIMER_FLUSH_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "description": "Time to flush dirty entries from the cache (ms)"
   },
   "LOCALDOMSTORAGE_KEY_SIZE_BYTES": {
     "kind": "exponential",
