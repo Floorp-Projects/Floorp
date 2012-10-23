@@ -248,6 +248,17 @@ interface nsIChannel : nsIRequest
     const unsigned long LOAD_TREAT_APPLICATION_OCTET_STREAM_AS_UNKNOWN = 1 << 23;
 
     /**
+     * Set to let explicitely provided credentials be used over credentials
+     * we have cached previously. In some situations like form login using HTTP
+     * auth via XMLHttpRequest we need to let consumers override the cached
+     * credentials explicitely. For form login 403 response instead of 401 is
+     * usually used to prevent an auth dialog. But any code other then 401/7
+     * will leave original credentials in the cache and there is then no way
+     * to override them for the same user name.
+     */
+    const unsigned long LOAD_EXPLICIT_CREDENTIALS = 1 << 24;
+
+    /**
      * Access to the type implied or stated by the Content-Disposition header
      * if available and if applicable. This allows determining inline versus
      * attachment.
