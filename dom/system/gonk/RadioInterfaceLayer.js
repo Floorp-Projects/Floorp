@@ -1430,7 +1430,7 @@ RadioInterfaceLayer.prototype = {
 
   handleUSSDReceived: function handleUSSDReceived(ussd) {
     debug("handleUSSDReceived " + JSON.stringify(ussd));
-    this._sendMobileConnectionMessage("RIL:UssdReceived", ussd);
+    this._sendMobileConnectionMessage("RIL:USSDReceived", ussd);
   },
 
   handleSendMMI: function handleSendMMI(message) {
