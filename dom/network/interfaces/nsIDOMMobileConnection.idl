@@ -374,7 +374,7 @@ interface nsIDOMMozMobileCellInfo: nsISupports
   readonly attribute unsigned long gsmCellId;
 };
 
-[scriptable, uuid(8854ee5f-8ffa-45c1-84d6-e87d82de6ae8)]
+[scriptable, uuid(a71c66ed-dfb0-4c33-9942-049e6f03dbed)]
 interface nsIDOMMozMobileICCInfo : nsISupports
 {
    /**
@@ -391,4 +391,15 @@ interface nsIDOMMozMobileICCInfo : nsISupports
    * Mobile Network Code (MNC) of the subscriber's home network.
    */
   readonly attribute unsigned short mnc;
+
+  /**
+   * Service Provider Name (SPN) of the subscriber's home network.
+   */
+  readonly attribute DOMString spn;
+
+  /**
+   * Mobile Station ISDN Number (MSISDN) of the subscriber's, aka
+   * his phone number.
+   */
+  readonly attribute DOMString msisdn;
 };

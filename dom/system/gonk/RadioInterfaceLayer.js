@@ -1401,7 +1401,9 @@ RadioInterfaceLayer.prototype = {
     let iccInfoChanged = !oldIcc ||
                          oldIcc.iccid != message.iccid ||
                          oldIcc.mcc != message.mcc || 
-                         oldIcc.mnc != message.mnc;
+                         oldIcc.mnc != message.mnc ||
+                         oldIcc.spn != message.spn ||
+                         oldIcc.msisdn != message.msisdn;
     if (!iccInfoChanged) {
       return;
     }

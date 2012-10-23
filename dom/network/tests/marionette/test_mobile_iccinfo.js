@@ -17,6 +17,10 @@ is(connection.iccInfo.iccid, 89014103211118510720);
 // See it here {B2G_HOME}/external/qemu/telephony/android_modem.c#L2465.
 is(connection.iccInfo.mcc, 310);
 is(connection.iccInfo.mnc, 260);
+is(connection.iccInfo.spn, "Android");
+// Phone number is hardcoded in MSISDN
+// See {B2G_HOME}/external/qemu/telephony/sim_card.c, in asimcard_io()
+is(connection.iccInfo.msisdn, "15555215554");
 
 SpecialPowers.removePermission("mobileconnection", document);
 finish();
