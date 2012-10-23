@@ -21,7 +21,7 @@ function reallyHandleRequest(request, response) {
 
   var expected_user = "", expected_pass = "", realm = "mochitest";
   var proxy_expected_user = "", proxy_expected_pass = "", proxy_realm = "mochi-proxy";
-  var huge = false, plugin = false, anonymous = false, formauth = false;
+  var huge = false, plugin = false, anonymous = false;
   var authHeaderCount = 1;
   // user=xxx
   match = /[^_]user=([^&]*)/.exec(query);
@@ -72,11 +72,6 @@ function reallyHandleRequest(request, response) {
   match = /anonymous=1/.exec(query);
   if (match)
     anonymous = true;
-
-  // formauth=1
-  match = /formauth=1/.exec(query);
-  if (match)
-    formauth = true;
 
   // Look for an authentication header, if any, in the request.
   //
@@ -139,10 +134,7 @@ function reallyHandleRequest(request, response) {
       for (i = 0; i < authHeaderCount; ++i)
         response.setHeader("Proxy-Authenticate", "basic realm=\"" + proxy_realm + "\"", true);
     } else if (requestAuth) {
-      if (formauth && authPresent)
-        response.setStatusLine("1.0", 403, "Form authentication required");
-      else
-        response.setStatusLine("1.0", 401, "Authentication required");
+      response.setStatusLine("1.0", 401, "Authentication required");
       for (i = 0; i < authHeaderCount; ++i)
         response.setHeader("WWW-Authenticate", "basic realm=\"" + realm + "\"", true);
     } else {
