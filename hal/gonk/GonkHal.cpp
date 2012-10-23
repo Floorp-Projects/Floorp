@@ -643,7 +643,21 @@ AdjustSystemClock(int64_t aDeltaMilliseconds)
     return;
   }
 
-  hal::NotifySystemTimeChange(hal::SYS_TIME_CHANGE_CLOCK);
+  hal::NotifySystemClockChange(aDeltaMilliseconds);
+}
+
+static int32_t
+GetTimezoneOffset()
+{
+  PRExplodedTime prTime;
+  PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &prTime);
+
+  // Daylight saving time (DST) will be taken into account.
+  int32_t offset = prTime.tm_params.tp_gmt_offset;
+  offset += prTime.tm_params.tp_dst_offset;
+
+  // Returns the timezone offset relative to UTC in minutes.
+  return -(offset / 60);
 }
 
 void
@@ -653,11 +667,15 @@ SetTimezone(const nsCString& aTimezoneSpec)
     return;
   }
 
+  int32_t oldTimezoneOffsetMinutes = GetTimezoneOffset();
   property_set("persist.sys.timezone", aTimezoneSpec.get());
   // this function is automatically called by the other time conversion
   // functions that depend on the timezone. To be safe, we call it manually.
   tzset();
-  hal::NotifySystemTimeChange(hal::SYS_TIME_CHANGE_TZ);
+  int32_t newTimezoneOffsetMinutes = GetTimezoneOffset();
+  hal::NotifySystemTimezoneChange(
+    hal::SystemTimezoneChangeInformation(
+      oldTimezoneOffsetMinutes, newTimezoneOffsetMinutes));
 }
 
 nsCString
@@ -669,12 +687,22 @@ GetTimezone()
 }
 
 void
-EnableSystemTimeChangeNotifications()
+EnableSystemClockChangeNotifications()
 {
 }
 
 void
-DisableSystemTimeChangeNotifications()
+DisableSystemClockChangeNotifications()
+{
+}
+
+void
+EnableSystemTimezoneChangeNotifications()
+{
+}
+
+void
+DisableSystemTimezoneChangeNotifications()
 {
 }
 
