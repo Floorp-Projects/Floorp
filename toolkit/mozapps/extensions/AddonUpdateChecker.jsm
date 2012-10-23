@@ -225,8 +225,6 @@ RDFSerializer.prototype = {
  *
  * @param  aId
  *         The ID of the add-on being checked for updates
- * @param  aType
- *         The type of the add-on being checked for updates
  * @param  aUpdateKey
  *         An optional update key for the add-on
  * @param  aRequest
@@ -234,7 +232,7 @@ RDFSerializer.prototype = {
  * @return an array of update objects
  * @throws if the update manifest is invalid in any way
  */
-function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
+function parseRDFManifest(aId, aUpdateKey, aRequest) {
   function EM_R(aProp) {
     return gRDF.GetResource(PREFIX_NS_EM + aProp);
   }
@@ -383,8 +381,6 @@ function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
  *
  * @param  aId
  *         The ID of the add-on being checked for updates
- * @param  aType
- *         The type of add-on being checked for updates
  * @param  aUpdateKey
  *         An optional update key for the add-on
  * @param  aUrl
@@ -392,9 +388,8 @@ function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
  * @param  aObserver
  *         An observer to pass results to
  */
-function UpdateParser(aId, aType, aUpdateKey, aUrl, aObserver) {
+function UpdateParser(aId, aUpdateKey, aUrl, aObserver) {
   this.id = aId;
-  this.type = aType;
   this.updateKey = aUpdateKey;
   this.observer = aObserver;
 
@@ -429,7 +424,6 @@ function UpdateParser(aId, aType, aUpdateKey, aUrl, aObserver) {
 
 UpdateParser.prototype = {
   id: null,
-  type: null,
   updateKey: null,
   observer: null,
   request: null,
@@ -484,7 +478,7 @@ UpdateParser.prototype = {
       let results = null;
 
       try {
-        results = parseRDFManifest(this.id, this.type, this.updateKey, request);
+        results = parseRDFManifest(this.id, this.updateKey, request);
       }
       catch (e) {
         WARN(e);
@@ -715,8 +709,6 @@ var AddonUpdateChecker = {
    *
    * @param  aId
    *         The ID of the add-on being checked for updates
-   * @param  aType
-   *         The type of add-on being checked for updates
    * @param  aUpdateKey
    *         An optional update key for the add-on
    * @param  aUrl
@@ -724,8 +716,8 @@ var AddonUpdateChecker = {
    * @param  aObserver
    *         An observer to notify of results
    */
-  checkForUpdates: function AUC_checkForUpdates(aId, aType, aUpdateKey, aUrl,
+  checkForUpdates: function AUC_checkForUpdates(aId, aUpdateKey, aUrl,
                                                 aObserver) {
-    new UpdateParser(aId, aType, aUpdateKey, aUrl, aObserver);
+    new UpdateParser(aId, aUpdateKey, aUrl, aObserver);
   }
 };
