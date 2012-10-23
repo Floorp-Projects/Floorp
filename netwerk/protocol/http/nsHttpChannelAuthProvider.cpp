@@ -718,15 +718,13 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
     if (identityInvalid) {
         if (entry) {
             if (ident->Equals(entry->Identity())) {
-                if (!identFromURI) {
-                    LOG(("  clearing bad auth cache entry\n"));
-                    // ok, we've already tried this user identity, so clear the
-                    // corresponding entry from the auth cache.
-                    authCache->ClearAuthEntry(scheme.get(), host,
-                                              port, realm.get());
-                    entry = nullptr;
-                    ident->Clear();
-                }
+                LOG(("  clearing bad auth cache entry\n"));
+                // ok, we've already tried this user identity, so clear the
+                // corresponding entry from the auth cache.
+                authCache->ClearAuthEntry(scheme.get(), host,
+                                          port, realm.get());
+                entry = nullptr;
+                ident->Clear();
             }
             else if (!identFromURI ||
                      nsCRT::strcmp(ident->User(),
