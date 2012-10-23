@@ -559,6 +559,15 @@ MOCHITEST_FILES_B = \
 		test_bug650386_redirect_307.html \
 		file_bug650386_content.sjs \
 		file_bug650386_report.sjs \
+		test_bug687859.html \
+		file_bug687859-bom.js \
+		file_bug687859-bom.js^headers^ \
+		file_bug687859-16.js \
+		file_bug687859-16.js^headers^ \
+		file_bug687859-http.js \
+		file_bug687859-http.js^headers^ \
+		file_bug687859-charset.js \
+		file_bug687859-inherit.js \
 		test_bug719533.html \
 		test_bug737087.html \
 		test_bug433662.html \
