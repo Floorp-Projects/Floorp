@@ -53,14 +53,9 @@
                   android:icon="@drawable/ic_menu_addons"
                   android:title="@string/addons"/>
 
-#if MOZ_UPDATE_CHANNEL != beta
-#if MOZ_UPDATE_CHANNEL != release
             <item android:id="@+id/apps"
                   android:icon="@drawable/ic_menu_apps"
                   android:title="@string/apps"/>
-#endif
-#endif
-
         </menu>
 
     </item>
