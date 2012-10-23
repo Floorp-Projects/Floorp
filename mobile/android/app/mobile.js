@@ -632,8 +632,6 @@ pref("ui.scrolling.min_scrollable_distance", -1);
 
 // Enable accessibility mode if platform accessibility is enabled.
 pref("accessibility.accessfu.activate", 2);
-// Enable explore by touch if it is enabled in the platform
-pref("accessibility.accessfu.explorebytouch", 2);
 
 // Mobile manages state by autodetection
 pref("network.manage-offline-status", true);
