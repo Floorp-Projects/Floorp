@@ -1697,13 +1697,6 @@ public:
     XPCContext *GetContext() { return mContext; }
     void ClearContext() { mContext = nullptr; }
 
-    nsDataHashtable<nsDepCharHashKey, JSObject*>& GetCachedDOMPrototypes()
-    {
-        return mCachedDOMPrototypes;
-    }
-
-    void TraceDOMPrototypes(JSTracer *trc);
-
     JSBool ExperimentalBindingsEnabled()
     {
         return mExperimentalBindingsEnabled;
@@ -1755,7 +1748,6 @@ private:
 
     XPCContext*                      mContext;
 
-    nsDataHashtable<nsDepCharHashKey, JSObject*> mCachedDOMPrototypes;
     nsAutoPtr<DOMExpandoMap> mDOMExpandoMap;
 
     JSBool mExperimentalBindingsEnabled;
