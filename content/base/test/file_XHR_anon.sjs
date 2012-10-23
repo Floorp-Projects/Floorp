@@ -6,8 +6,7 @@ function handleRequest(request, response) {
     if (request.hasHeader("Authorization")) {
       headers["authorization"] = request.getHeader("Authorization");
     } else {
-      response.setStatusLine(null, 401, "Authentication required");
-      response.setHeader("WWW-Authenticate", "basic realm=\"testrealm\"", true);
+      response.setStatusLine(null, 500, "Server Error");
     }
   } else {
     invalidHeaders.push("Authorization");
