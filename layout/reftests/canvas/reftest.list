@@ -49,6 +49,9 @@ fails-if(Android) != text-font-lang.html text-font-lang-notref.html
 
 == strokeText-path.html strokeText-path-ref.html
 
+# check that emoji character renders as something non-blank (for Apple Color Emoji font, bug 715798)
+random-if(!cocoaWidget) fails-if(OSX==10.6) random-if(OSX==10.7) != text-emoji.html text-emoji-notref.html
+
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
 # so we have less control over degenerate behaviour as tested by this
 # test
