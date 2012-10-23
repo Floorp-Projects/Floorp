@@ -38,6 +38,7 @@
 #include "nsXULAppAPI.h"
 
 #include "nspr.h"
+extern "C" {
 #include "pk11func.h"
 #include "certdb.h"
 #include "cert.h"
@@ -45,13 +46,12 @@
 #include "nssb64.h"
 #include "secasn1.h"
 #include "secder.h"
+}
 #include "ssl.h"
 #include "ocsp.h"
 #include "plbase64.h"
 #include "cms.h"
 #include "cert.h"
-
-using namespace mozilla;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -127,7 +127,7 @@ nsNSSCertificate::InitFromDER(char *certDER, int derLen)
   if (!aCert)
     return false;
 
-  if (!aCert->dbhandle)
+  if(aCert->dbhandle == nullptr)
   {
     aCert->dbhandle = CERT_GetDefaultCertDB();
   }
@@ -258,7 +258,7 @@ GetKeyUsagesString(CERTCertificate *cert, nsINSSComponent *nssComponent,
   text.Truncate();
 
   SECItem keyUsageItem;
-  keyUsageItem.data = nullptr;
+  keyUsageItem.data = NULL;
 
   SECStatus srv;
 
@@ -822,7 +822,7 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
   NS_ENSURE_ARG(_rvChain);
   nsresult rv;
   /* Get the cert chain from NSS */
-  CERTCertList *nssChain = nullptr;
+  CERTCertList *nssChain = NULL;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
   nssChain = CERT_GetCertChainFromCert(mCert, PR_Now(), certUsageSSLClient);
   if (!nssChain)
@@ -860,13 +860,13 @@ nsNSSCertificate::GetAllTokenNames(uint32_t *aLength, PRUnichar*** aTokenNames)
   NS_ENSURE_ARG(aLength);
   NS_ENSURE_ARG(aTokenNames);
   *aLength = 0;
-  *aTokenNames = nullptr;
+  *aTokenNames = NULL;
 
   /* Get the slots from NSS */
-  PK11SlotList *slots = nullptr;
+  PK11SlotList *slots = NULL;
   PK11SlotListCleaner slotCleaner(slots);
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting slots for \"%s\"\n", mCert->nickname));
-  slots = PK11_GetAllSlotsForCert(mCert, nullptr);
+  slots = PK11_GetAllSlotsForCert(mCert, NULL);
   if (!slots) {
     if (PORT_GetError() == SEC_ERROR_NO_TOKEN)
       return NS_OK; // List of slots is empty, return empty array
@@ -894,7 +894,7 @@ nsNSSCertificate::GetAllTokenNames(uint32_t *aLength, PRUnichar*** aTokenNames)
     if (!(*aTokenNames)[iToken]) {
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(iToken, *aTokenNames);
       *aLength = 0;
-      *aTokenNames = nullptr;
+      *aTokenNames = NULL;
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -1201,6 +1201,8 @@ nsNSSCertificate::GetValidity(nsIX509CertValidity **aValidity)
 
   NS_ENSURE_ARG(aValidity);
   nsX509CertValidity *validity = new nsX509CertValidity(mCert);
+  if (nullptr == validity)
+   return  NS_ERROR_OUT_OF_MEMORY; 
 
   NS_ADDREF(validity);
   *aValidity = static_cast<nsIX509CertValidity*>(validity);
@@ -1220,7 +1222,7 @@ nsNSSCertificate::VerifyForUsage(uint32_t usage, uint32_t *verificationResult)
   nsCOMPtr<nsINSSComponent> inss = do_GetService(kNSSComponentCID, &nsrv);
   if (!inss)
     return nsrv;
-  RefPtr<nsCERTValInParamWrapper> survivingParams;
+  nsRefPtr<nsCERTValInParamWrapper> survivingParams;
   nsrv = inss->GetDefaultCERTValInParam(survivingParams);
   if (NS_FAILED(nsrv))
     return nsrv;
@@ -1285,14 +1287,14 @@ nsNSSCertificate::VerifyForUsage(uint32_t usage, uint32_t *verificationResult)
   if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
     CERTCertDBHandle *defaultcertdb = CERT_GetDefaultCertDB();
     verify_result = CERT_VerifyCertificateNow(defaultcertdb, mCert, true, 
-                                              nss_usage, nullptr, nullptr);
+                                              nss_usage, NULL, NULL);
   }
   else {
     CERTValOutParam cvout[1];
     cvout[0].type = cert_po_end;
     verify_result = CERT_PKIXVerifyCert(mCert, nss_usage,
                                         survivingParams->GetRawPointerForNSS(),
-                                        cvout, nullptr);
+                                        cvout, NULL);
   }
   
   if (verify_result == SECSuccess)
@@ -1393,6 +1395,8 @@ nsNSSCertificate::RequestUsagesArrayAsync(nsICertVerificationListener *aResultLi
     return NS_ERROR_FAILURE;
   
   nsCertVerificationJob *job = new nsCertVerificationJob;
+  if (!job)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   job->mCert = this;
   job->mListener = aResultListener;
@@ -1477,7 +1481,7 @@ nsNSSCertificate::GetASN1Structure(nsIASN1Object * *aASN1Structure)
   nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
   NS_ENSURE_ARG_POINTER(aASN1Structure);
-  if (!mASN1Structure) {
+  if (mASN1Structure == nullptr) {
     // First create the recursive structure os ASN1Objects
     // which tells us the layout of the cert.
     rv = CreateASN1Struct();
@@ -1569,7 +1573,7 @@ char* nsNSSCertificate::defaultServerNickname(CERTCertificate* cert)
     else {
       nickname = PR_smprintf("%s #%d", servername, count);
     }
-    if (!nickname) {
+    if (nickname == NULL) {
       break;
     }
 
@@ -1617,12 +1621,12 @@ nsNSSCertList::AddCert(nsIX509Cert *aCert)
   CERTCertificate *cert;
 
   cert = nssCert->GetCert();
-  if (!cert) {
+  if (cert == nullptr) {
     NS_ERROR("Somehow got nullptr for mCertificate in nsNSSCertificate.");
     return NS_ERROR_FAILURE;
   }
 
-  if (!mCertList) {
+  if (mCertList == nullptr) {
     NS_ERROR("Somehow got nullptr for mCertList in nsNSSCertList.");
     return NS_ERROR_FAILURE;
   }
@@ -1640,12 +1644,12 @@ nsNSSCertList::DeleteCert(nsIX509Cert *aCert)
   CERTCertificate *cert = nssCert->GetCert();
   CERTCertListNode *node;
 
-  if (!cert) {
+  if (cert == nullptr) {
     NS_ERROR("Somehow got nullptr for mCertificate in nsNSSCertificate.");
     return NS_ERROR_FAILURE;
   }
 
-  if (!mCertList) {
+  if (mCertList == nullptr) {
     NS_ERROR("Somehow got nullptr for mCertList in nsNSSCertList.");
     return NS_ERROR_FAILURE;
   }
@@ -1668,7 +1672,7 @@ nsNSSCertList::DupCertList(CERTCertList *aCertList)
 
   CERTCertList *newList = CERT_NewCertList();
 
-  if (!newList) {
+  if (newList == nullptr) {
     return nullptr;
   }
 
@@ -1692,6 +1696,9 @@ NS_IMETHODIMP
 nsNSSCertList::GetEnumerator(nsISimpleEnumerator **_retval) 
 {
   nsCOMPtr<nsISimpleEnumerator> enumerator = new nsNSSCertListEnumerator(mCertList);
+  if (!enumerator) { 
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   *_retval = enumerator;
   NS_ADDREF(*_retval);
