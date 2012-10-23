@@ -2195,7 +2195,10 @@ static void HandleScrollPref(nsIScrollable *aScrollable, int32_t aOrientation,
 nsGfxScrollFrameInner::ScrollbarStyles
 nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
 {
-  ScrollbarStyles result;
+  // XXX EVIL COMPILER BUG BE CAREFUL WHEN CHANGING THIS METHOD
+  //     There's bugs in the Android compiler :(
+  //     It was first worked around in bug 642205, then it failed
+  //     on armv6 (bug 790624) *in a different way*.
 
   nsPresContext* presContext = mOuter->PresContext();
   if (!presContext->IsDynamic() &&
@@ -2203,28 +2206,20 @@ nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
     return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
   }
 
-  if (mIsRoot) {
-    result = presContext->GetViewportOverflowOverride();
-
-    nsCOMPtr<nsISupports> container = presContext->GetContainer();
-    nsCOMPtr<nsIScrollable> scrollable = do_QueryInterface(container);
-    if (scrollable) {
-      HandleScrollPref(scrollable, nsIScrollable::ScrollOrientation_X,
-                       result.mHorizontal);
-      HandleScrollPref(scrollable, nsIScrollable::ScrollOrientation_Y,
-                       result.mVertical);
-      // XXX EVIL COMPILER BUG BE CAREFUL WHEN CHANGING
-      //     There is a bug in the Android compiler :(
-      //     It seems that the compiler optimizes something out and uses
-      //     a bad value for result if we don't directly return here.
-      return result;
-    }
-  } else {
-    const nsStyleDisplay *disp = mOuter->GetStyleDisplay();
-    result.mHorizontal = disp->mOverflowX;
-    result.mVertical = disp->mOverflowY;
+  if (!mIsRoot) {
+    const nsStyleDisplay* disp = mOuter->GetStyleDisplay();
+    return ScrollbarStyles(disp->mOverflowX, disp->mOverflowY);
   }
 
+  ScrollbarStyles result = presContext->GetViewportOverflowOverride();
+  nsCOMPtr<nsISupports> container = presContext->GetContainer();
+  nsCOMPtr<nsIScrollable> scrollable = do_QueryInterface(container);
+  if (scrollable) {
+    HandleScrollPref(scrollable, nsIScrollable::ScrollOrientation_X,
+                     result.mHorizontal);
+    HandleScrollPref(scrollable, nsIScrollable::ScrollOrientation_Y,
+                     result.mVertical);
+  }
   return result;
 }
 
