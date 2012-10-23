@@ -17,6 +17,7 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import('resource://gre/modules/ActivitiesService.jsm');
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
+Cu.import("resource://gre/modules/OfflineCacheInstaller.jsm");
 
 function debug(aMsg) {
   //dump("-*-*- Webapps.jsm : " + aMsg + "\n");
@@ -175,6 +176,16 @@ let DOMApplicationRegistry = {
     }).bind(this));
   },
 
+  updateOfflineCacheForApp: function updateOfflineCacheForApp(aId) {
+    let app = this.webapps[aId];
+    OfflineCacheInstaller.installCache({
+      basePath: app.basePath,
+      appId: aId,
+      origin: app.origin,
+      localId: app.localId
+    });
+  },
+
   // Implements the core of bug 787439
   // if at first run, go through these steps:
   //   a. load the core apps registry.
@@ -243,6 +254,7 @@ let DOMApplicationRegistry = {
         // At first run, set up the permissions
         for (let id in this.webapps) {
           this.updatePermissionsForApp(id);
+          this.updateOfflineCacheForApp(id);
         }
       }
       this.registerAppsHandlers();
@@ -474,14 +486,14 @@ let DOMApplicationRegistry = {
             aCallback(data);
         } catch (ex) {
           Cu.reportError("DOMApplicationRegistry: Could not parse JSON: " +
-                         aFile.path + " " + ex);
+                         aFile.path + " " + ex + "\n" + ex.stack);
           if (aCallback)
             aCallback(null);
         }
       });
     } catch (ex) {
       Cu.reportError("DOMApplicationRegistry: Could not read from " +
-                     aFile.path + " : " + ex);
+                     aFile.path + " : " + ex + "\n" + ex.stack);
       if (aCallback)
         aCallback(null);
     }
