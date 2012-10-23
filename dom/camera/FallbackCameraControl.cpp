@@ -7,6 +7,10 @@
 
 using namespace mozilla;
 
+namespace mozilla {
+class RecorderProfileManager;
+}
+
 /**
  * Fallback camera control subclass.  Can be used as a template for the
  * definition of new camera support classes.
@@ -24,6 +28,7 @@ public:
   void SetParameter(uint32_t aKey, const char* aValue);
   void SetParameter(uint32_t aKey, double aValue);
   void SetParameter(uint32_t aKey, const nsTArray<dom::CameraRegion>& aRegions);
+  nsresult GetVideoSizes(nsTArray<CameraSize>& aVideoSizes);
   nsresult PushParameters();
 
 protected:
@@ -38,6 +43,7 @@ protected:
   nsresult StopRecordingImpl(StopRecordingTask* aStopRecording);
   nsresult PushParametersImpl();
   nsresult PullParametersImpl();
+  already_AddRefed<RecorderProfileManager> GetRecorderProfileManagerImpl();
 
 private:
   nsFallbackCameraControl(const nsFallbackCameraControl&) MOZ_DELETE;
@@ -172,4 +178,16 @@ nsresult
 nsFallbackCameraControl::PullParametersImpl()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsFallbackCameraControl::GetVideoSizes(nsTArray<CameraSize>& aVideoSizes)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+already_AddRefed<RecorderProfileManager> 
+nsFallbackCameraControl::GetRecorderProfileManagerImpl()
+{
+  return nullptr;
 }
