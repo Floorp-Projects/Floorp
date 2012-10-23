@@ -3790,43 +3790,50 @@ var BrowserEventHandler = {
     if (!element) {
       this._zoomOut();
     } else {
-      const margin = 15;
-      let rect = ElementTouchHelper.getBoundingContentRect(element);
+      this._zoomToElement(element, data.y);
+    }
+  },
 
-      let viewport = BrowserApp.selectedTab.getViewport();
-      let bRect = new Rect(Math.max(viewport.cssPageLeft, rect.x - margin),
-                           rect.y,
-                           rect.w + 2 * margin,
-                           rect.h);
-      // constrict the rect to the screen's right edge
-      bRect.width = Math.min(bRect.width, viewport.cssPageRight - bRect.x);
+  /* Zoom to an element, optionally keeping a particular part of it
+   * in view if it is really tall.
+   */
+  _zoomToElement: function(aElement, aClickY = -1) {
+    const margin = 15;
+    let rect = ElementTouchHelper.getBoundingContentRect(aElement);
 
-      // if the rect is already taking up most of the visible area and is stretching the
-      // width of the page, then we want to zoom out instead.
-      if (this._isRectZoomedIn(bRect, viewport)) {
-        this._zoomOut();
-        return;
-      }
+    let viewport = BrowserApp.selectedTab.getViewport();
+    let bRect = new Rect(Math.max(viewport.cssPageLeft, rect.x - margin),
+                         rect.y,
+                         rect.w + 2 * margin,
+                         rect.h);
+    // constrict the rect to the screen's right edge
+    bRect.width = Math.min(bRect.width, viewport.cssPageRight - bRect.x);
 
-      rect.type = "Browser:ZoomToRect";
-      rect.x = bRect.x;
-      rect.y = bRect.y;
-      rect.w = bRect.width;
-      rect.h = Math.min(bRect.width * viewport.cssHeight / viewport.cssWidth, bRect.height);
+    // if the rect is already taking up most of the visible area and is stretching the
+    // width of the page, then we want to zoom out instead.
+    if (this._isRectZoomedIn(bRect, viewport)) {
+      this._zoomOut();
+      return;
+    }
 
-      // if the block we're zooming to is really tall, and the user double-tapped
-      // more than a screenful of height from the top of it, then adjust the y-coordinate
-      // so that we center the actual point the user double-tapped upon. this prevents
-      // flying to the top of a page when double-tapping to zoom in (bug 761721).
+    rect.type = "Browser:ZoomToRect";
+    rect.x = bRect.x;
+    rect.y = bRect.y;
+    rect.w = bRect.width;
+    rect.h = Math.min(bRect.width * viewport.cssHeight / viewport.cssWidth, bRect.height);
+
+    if (aClickY >= 0) {
+      // if the block we're zooming to is really tall, and we want to keep a particular
+      // part of it in view, then adjust the y-coordinate of the target rect accordingly.
       // the 1.2 multiplier is just a little fuzz to compensate for bRect including horizontal
       // margins but not vertical ones.
-      let cssTapY = viewport.cssY + data.y;
+      let cssTapY = viewport.cssY + aClickY;
       if ((bRect.height > rect.h) && (cssTapY > rect.y + (rect.h * 1.2))) {
         rect.y = cssTapY - (rect.h / 2);
       }
-
-      sendMessageToJava({ gecko: rect });
     }
+
+    sendMessageToJava({ gecko: rect });
   },
 
   _zoomInAndSnapToElement: function(aX, aY, aElement) {
