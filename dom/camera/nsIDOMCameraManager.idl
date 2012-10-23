@@ -107,6 +107,12 @@ interface nsICameraCapabilities : nsISupports
        supported for video recording */
     [implicit_jscontext]
     readonly attribute jsval        videoSizes;
+
+    /* an object with attributes for each of the supported recorder
+       profiles, e.g. recorderProfiles.cif, recorderProfiles.qvga,
+       etc. */
+    [implicit_jscontext]
+    readonly attribute jsval        recorderProfiles;
 };
 
 /* These properties only affect the captured image;
@@ -146,12 +152,51 @@ dictionary CameraPictureOptions
     jsval     position;
 };
 
-/* These properties affect video recording. */
-dictionary CameraRecordingOptions
+/* These properties affect the video recording preview, e.g.
+      {
+         profile: "1080p",
+         rotation: 0
+      }
+
+   'profile' is one of the profiles returned by
+   nsICameraCapabilities.recorderProfiles'; if this profile is missing,
+   an arbitrary profile will be chosen.
+
+   'rotation' is the degrees clockwise to rotate the preview; if
+   this options is not supported, it will be ignored; if this option
+   is missing, the default is 0.
+*/
+dictionary CameraRecorderOptions
 {
-    long width;
-    long height;
-    long rotation;
+    DOMString profile;
+    long      rotation;
+};
+
+/* These properties affect the actual video recording, e.g.
+      {
+         rotation: 0,
+         maxFileSizeBytes: 1024 * 1024,
+         maxVideoLengthMs: 0
+      }
+
+   'rotation' is the degrees clockwise to rotate the recorded video; if
+   this options is not supported, it will be ignored; if this option is
+   missing, the default is 0.
+
+   'maxFileSizeBytes' is the maximum size in bytes to which the recorded
+   video file will be allowed to grow.
+
+   'maxVideoLengthMs' is the maximum length in milliseconds to which the
+   recorded video will be allowed to grow.
+
+   if either 'maxFileSizeBytes' or 'maxVideoLengthMs' is missing, zero,
+   or negative, that limit will be disabled.
+*/
+dictionary CameraStartRecordingOptions
+{
+    long      rotation;
+    long      maxFileSizeBytes;
+    long      maxVideoLengthMs;
 };
 
 [scriptable, function, uuid(0444a687-4bc9-462c-8246-5423f0fe46a4)]
@@ -308,21 +353,15 @@ interface nsICameraControl : nsISupports
     [implicit_jscontext]
     void takePicture(in jsval aOptions, in nsICameraTakePictureCallback onSuccess, [optional] in nsICameraErrorCallback onError);
 
-    /* get a media stream to be used as a camera viewfinder in video mode; 'aOptions' 
-       define the frame size of the video capture, chosen from capabilities.videoSizes, e.g.:
-        {
-            width: 640,
-            height: 480,
-            rotation: 90
-        }
-    */
+    /* get a media stream to be used as a camera viewfinder in video mode;
+       'aOptions' is an CameraRecorderOptions object. */
     [implicit_jscontext]
     void getPreviewStreamVideoMode(in jsval aOptions, in nsICameraPreviewStreamCallback onSuccess, [optional] in nsICameraErrorCallback onError);
 
-    /* start recording video; 
-    */
+    /* start recording video; 'aOptions' is a
+       CameraStartRecordingOptions object. */
     [implicit_jscontext]
-    void startRecording(in nsIDOMDeviceStorage storageArea, in DOMString filename, in nsICameraStartRecordingCallback onSuccess, [optional] in nsICameraErrorCallback onError);
+    void startRecording(in jsval aOptions, in nsIDOMDeviceStorage storageArea, in DOMString filename, in nsICameraStartRecordingCallback onSuccess, [optional] in nsICameraErrorCallback onError);
 
     /* stop precording video. */
     void stopRecording();

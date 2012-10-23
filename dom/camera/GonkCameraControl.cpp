@@ -34,6 +34,7 @@
 #include "GonkCameraHwMgr.h"
 #include "DOMCameraCapabilities.h"
 #include "DOMCameraControl.h"
+#include "GonkRecorderProfiles.h"
 #include "GonkCameraControl.h"
 #include "CameraCommon.h"
 
@@ -172,7 +173,14 @@ nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId, nsIThread* aCameraT
   , mWidth(0)
   , mHeight(0)
   , mFormat(PREVIEW_FORMAT_UNKNOWN)
+  , mFps(30)
   , mDiscardedFrameCount(0)
+  , mMediaProfiles(nullptr)
+  , mRecorder(nullptr)
+  , mVideoRotation(0)
+  , mVideoFile()
+  , mProfileManager(nullptr)
+  , mRecorderProfile(nullptr)
 {
   // Constructor runs on the main thread...
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
@@ -718,8 +726,7 @@ nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
    * The camera app needs to provide the file extension '.3gp' for now.
    * See bug 795202.
    */
-  nsCOMPtr<nsIFile> filename;
-  aStartRecording->mStorageArea->GetRootDirectory(getter_AddRefs(filename));
+  nsCOMPtr<nsIFile> filename = aStartRecording->mFolder;
   filename->AppendRelativePath(aStartRecording->mFilename);
 
   nsAutoCString nativeFilename;
@@ -743,12 +750,6 @@ nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
     return NS_ERROR_FAILURE;
   }
 
-  // dispatch the callback
-  nsCOMPtr<nsIRunnable> startRecordingResult = new StartRecordingResult(mStartRecordingOnSuccessCb, mWindowId);
-  nsresult rv = NS_DispatchToMainThread(startRecordingResult);
-  if (NS_FAILED(rv)) {
-    DOM_CAMERA_LOGE("Failed to dispatch start recording result to main thread (%d)!", rv);
-  }
   return NS_OK;
 }
 
@@ -871,84 +872,51 @@ nsGonkCameraControl::SetPreviewSize(uint32_t aWidth, uint32_t aHeight)
 }
 
 nsresult
-nsGonkCameraControl::SetupVideoMode()
+nsGonkCameraControl::SetupVideoMode(const nsAString& aProfile)
 {
   // read preferences for camcorder
   mMediaProfiles = MediaProfiles::getInstance();
 
-  /**
-   * Right now default to profile 3, which is 352x288 on Otoro.  In the
-   * future, allow the application to select a recording quality and
-   * configuration.
-   *
-   * See bug 795379.
-   */
-  int quality = 3;  // cif:352x288
-  camcorder_quality q = static_cast<camcorder_quality>(quality);
-  mDuration         = mMediaProfiles->getCamcorderProfileParamByName("duration",    (int)mCameraId, q);
-  mVideoFileFormat  = mMediaProfiles->getCamcorderProfileParamByName("file.format", (int)mCameraId, q);
-  mVideoCodec       = mMediaProfiles->getCamcorderProfileParamByName("vid.codec",   (int)mCameraId, q);
-  mVideoBitRate     = mMediaProfiles->getCamcorderProfileParamByName("vid.bps",     (int)mCameraId, q);
-  mVideoFrameRate   = mMediaProfiles->getCamcorderProfileParamByName("vid.fps",     (int)mCameraId, q);
-  mVideoFrameWidth  = mMediaProfiles->getCamcorderProfileParamByName("vid.width",   (int)mCameraId, q);
-  mVideoFrameHeight = mMediaProfiles->getCamcorderProfileParamByName("vid.height",  (int)mCameraId, q);
-  mAudioCodec       = mMediaProfiles->getCamcorderProfileParamByName("aud.codec",   (int)mCameraId, q);
-  mAudioBitRate     = mMediaProfiles->getCamcorderProfileParamByName("aud.bps",     (int)mCameraId, q);
-  mAudioSampleRate  = mMediaProfiles->getCamcorderProfileParamByName("aud.hz",      (int)mCameraId, q);
-  mAudioChannels    = mMediaProfiles->getCamcorderProfileParamByName("aud.ch",      (int)mCameraId, q);
+  nsAutoCString profile = NS_ConvertUTF16toUTF8(aProfile);
+  mRecorderProfile = GetGonkRecorderProfileManager().get()->Get(profile.get());
+  if (!mRecorderProfile) {
+    DOM_CAMERA_LOGE("Recorder profile '%s' is not supported\n", profile.get());
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  if (mVideoFrameRate == -1) {
-    DOM_CAMERA_LOGE("Failed to get a valid frame rate!\n");
-    DOM_CAMERA_LOGE("Also got width=%d, height=%d\n", mVideoFrameWidth, mVideoFrameHeight);
+  const GonkRecorderVideoProfile* video = mRecorderProfile->GetGonkVideoProfile();
+  int width = video->GetWidth();
+  int height = video->GetHeight();
+  int fps = video->GetFramerate();
+  if (fps == -1 || width == -1 || height == -1) {
+    DOM_CAMERA_LOGE("Can't configure preview with fps=%d, width=%d, height=%d\n", fps, width, height);
     return NS_ERROR_FAILURE;
   }
 
   PullParametersImpl();
 
-  // Configure camera video recording parameters.
+  // configure camera video recording parameters
   const size_t SIZE = 256;
   char buffer[SIZE];
 
-  /**
-   * Ignore the width and height settings from app, just use the one in profile.
-   * Eventually, will try to choose a profile which respects the settings from app.
-   * See bug 795330.
-   */
-  mParams.setPreviewSize(mVideoFrameWidth, mVideoFrameHeight);
-  mParams.setPreviewFrameRate(mVideoFrameRate);
-  snprintf(buffer, SIZE, "%dx%d", mVideoFrameWidth, mVideoFrameHeight);
+  mParams.setPreviewSize(width, height);
+  mParams.setPreviewFrameRate(fps);
 
   /**
    * "record-size" is probably deprecated in later ICS;
    * might need to set "video-size" instead of "record-size".
    * See bug 795332.
    */
+  snprintf(buffer, SIZE, "%dx%d", width, height);
   mParams.set("record-size", buffer);
 
-  /**
-   * If we want to enable picture-taking _while_ recording video, this sets the
-   * size of the captured picture.  For now, just set it to the same dimensions
-   * as the video we're recording; ideally, we should probably make sure it
-   * matches one of the supported picture sizes.
-   */
-  mParams.setPictureSize(mVideoFrameWidth, mVideoFrameHeight);
-
-  PushParametersImpl();
+  // push the updated camera configuration immediately
+  PushParameters();
   return NS_OK;
 }
 
-#ifndef CHECK_SETARG
-#define CHECK_SETARG(x)                 \
-  do {                                  \
-    if (x) {                            \
-      DOM_CAMERA_LOGE(#x " failed\n");  \
-      return NS_ERROR_INVALID_ARG;      \
-    }                                   \
-  } while(0)
-#endif
-
 nsresult
-nsGonkCameraControl::SetupRecording(int aFd)
+nsGonkCameraControl::SetupRecording(int aFd, int aMaxFileSizeBytes, int aMaxVideoLengthMs)
 {
   // choosing a size big enough to hold the params
   const size_t SIZE = 256;
@@ -957,27 +925,17 @@ nsGonkCameraControl::SetupRecording(int aFd)
   mRecorder = new GonkRecorder();
   CHECK_SETARG(mRecorder->init());
 
-  // set all the params
+  nsresult rv = mRecorderProfile->ConfigureRecorder(mRecorder);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   CHECK_SETARG(mRecorder->setCameraHandle((int32_t)mHwHandle));
-  CHECK_SETARG(mRecorder->setAudioSource(AUDIO_SOURCE_CAMCORDER));
-  CHECK_SETARG(mRecorder->setVideoSource(VIDEO_SOURCE_CAMERA));
-  CHECK_SETARG(mRecorder->setOutputFormat((output_format)mVideoFileFormat));
-  CHECK_SETARG(mRecorder->setVideoFrameRate(mVideoFrameRate));
-  CHECK_SETARG(mRecorder->setVideoSize(mVideoFrameWidth, mVideoFrameHeight));
-  snprintf(buffer, SIZE, "video-param-encoding-bitrate=%d", mVideoBitRate);
+
+  snprintf(buffer, SIZE, "max-duration=%d", aMaxVideoLengthMs);
   CHECK_SETARG(mRecorder->setParameters(String8(buffer)));
-  CHECK_SETARG(mRecorder->setVideoEncoder((video_encoder)mVideoCodec));
-  snprintf(buffer, SIZE, "audio-param-encoding-bitrate=%d", mAudioBitRate);
+
+  snprintf(buffer, SIZE, "max-duration=%d", aMaxFileSizeBytes);
   CHECK_SETARG(mRecorder->setParameters(String8(buffer)));
-  snprintf(buffer, SIZE, "audio-param-number-of-channels=%d", mAudioChannels);
-  CHECK_SETARG(mRecorder->setParameters(String8(buffer)));
-  snprintf(buffer, SIZE, "audio-param-sampling-rate=%d", mAudioSampleRate);
-  CHECK_SETARG(mRecorder->setParameters(String8(buffer)));
-  CHECK_SETARG(mRecorder->setAudioEncoder((audio_encoder)mAudioCodec));
-  // TODO: For now there is no limit on recording duration (See bug 795090)
-  CHECK_SETARG(mRecorder->setParameters(String8("max-duration=-1")));
-  // TODO: For now there is no limit on file size (See bug 795090)
-  CHECK_SETARG(mRecorder->setParameters(String8("max-filesize=-1")));
+
   snprintf(buffer, SIZE, "video-param-rotation-angle-degrees=%d", mVideoRotation);
   CHECK_SETARG(mRecorder->setParameters(String8(buffer)));
 
@@ -990,29 +948,77 @@ nsGonkCameraControl::SetupRecording(int aFd)
 nsresult
 nsGonkCameraControl::GetPreviewStreamVideoModeImpl(GetPreviewStreamVideoModeTask* aGetPreviewStreamVideoMode)
 {
-  nsCOMPtr<GetPreviewStreamResult> getPreviewStreamResult = nullptr;
-
   // stop any currently running preview
   StopPreviewInternal(true /* forced */);
 
-  // copy the recording preview options
-  mVideoRotation = aGetPreviewStreamVideoMode->mOptions.rotation;
-  mVideoWidth = aGetPreviewStreamVideoMode->mOptions.width;
-  mVideoHeight = aGetPreviewStreamVideoMode->mOptions.height;
-  DOM_CAMERA_LOGI("recording preview format: %d x %d (w x h) (rotated %d degrees)\n", mVideoWidth, mVideoHeight, mVideoRotation);
-
   // setup the video mode
-  nsresult rv = SetupVideoMode();
+  mVideoRotation = aGetPreviewStreamVideoMode->mOptions.rotation;
+  nsresult rv = SetupVideoMode(aGetPreviewStreamVideoMode->mOptions.profile);
   NS_ENSURE_SUCCESS(rv, rv);
+  
+  const RecorderVideoProfile* video = mRecorderProfile->GetVideoProfile();
+  int width = video->GetWidth();
+  int height = video->GetHeight();
+  int fps = video->GetFramerate();
+  DOM_CAMERA_LOGI("recording preview format: %d x %d (rotated %d degrees)\n", width, height, fps);
 
   // create and return new preview stream object
-  getPreviewStreamResult = new GetPreviewStreamResult(this, mVideoWidth, mVideoHeight, mVideoFrameRate, aGetPreviewStreamVideoMode->mOnSuccessCb, mWindowId);
+  nsCOMPtr<GetPreviewStreamResult> getPreviewStreamResult = new GetPreviewStreamResult(this, width, height, fps, aGetPreviewStreamVideoMode->mOnSuccessCb, mWindowId);
   rv = NS_DispatchToMainThread(getPreviewStreamResult);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch GetPreviewStreamVideoMode() onSuccess callback to main thread!");
     return rv;
   }
 
+  return NS_OK;
+}
+
+already_AddRefed<GonkRecorderProfileManager>
+nsGonkCameraControl::GetGonkRecorderProfileManager()
+{
+  if (!mProfileManager) {
+    nsTArray<CameraSize> sizes;
+    nsresult rv = GetVideoSizes(sizes);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+
+    mProfileManager = new GonkRecorderProfileManager(mCameraId);
+    mProfileManager->SetSupportedResolutions(sizes);
+  }
+
+  nsRefPtr<GonkRecorderProfileManager> profileMgr = mProfileManager;
+  return profileMgr.forget();
+}
+
+already_AddRefed<RecorderProfileManager>
+nsGonkCameraControl::GetRecorderProfileManagerImpl()
+{
+  nsRefPtr<RecorderProfileManager> profileMgr = GetGonkRecorderProfileManager();
+  return profileMgr.forget();
+}
+
+nsresult
+nsGonkCameraControl::GetVideoSizes(nsTArray<CameraSize>& aVideoSizes)
+{
+  aVideoSizes.Clear();
+
+  Vector<Size> sizes;
+  mParams.getSupportedVideoSizes(sizes);
+  if (sizes.size() == 0) {
+    DOM_CAMERA_LOGI("Camera doesn't support video independent of the preview\n");
+    mParams.getSupportedPreviewSizes(sizes);
+  }
+
+  if (sizes.size() == 0) {
+    DOM_CAMERA_LOGW("Camera doesn't report any supported video sizes at all\n");
+    return NS_OK;
+  }
+
+  for (size_t i = 0; i < sizes.size(); ++i) {
+    CameraSize size;
+    size.width = sizes[i].width;
+    size.height = sizes[i].height;
+    aVideoSizes.AppendElement(size);
+  }
   return NS_OK;
 }
 
