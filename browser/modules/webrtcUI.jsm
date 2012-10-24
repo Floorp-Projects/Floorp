@@ -77,14 +77,11 @@ function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
   let message = stringBundle.getFormattedString("getUserMedia." + requestType + ".message",
                                                 [ host ]);
 
-  let responseSent = false;
-
   let mainAction = {
     label: stringBundle.getString("getUserMedia." + requestType + ".label"),
     accessKey: stringBundle.getString("getUserMedia." + requestType + ".accesskey"),
     callback: function () {
       Services.obs.notifyObservers(null, "getUserMedia:response:allow", aCallID);
-      responseSent = true;
     }
   };
 
@@ -103,18 +100,19 @@ function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
         accessKey: selectableDeviceNumber,
         callback: function () {
           Services.obs.notifyObservers(device, "getUserMedia:response:allow", aCallID);
-          responseSent = true;
         }
       });
     }
   }
+  secondaryActions.push({
+    label: stringBundle.getString("getUserMedia.denyRequest.label"),
+    accessKey: stringBundle.getString("getUserMedia.denyRequest.accesskey"),
+    callback: function () {
+      Services.obs.notifyObservers(null, "getUserMedia:response:deny", aCallID);
+    }
+  });
 
   let options = {
-    removeOnDismissal: true,
-    eventCallback: function (aType) {
-      if (!responseSent && aType == "removed")
-        Services.obs.notifyObservers(null, "getUserMedia:response:deny", aCallID);
-    }
   };
 
   chromeWin.PopupNotifications.show(aBrowser, "webRTC-shareDevices", message,

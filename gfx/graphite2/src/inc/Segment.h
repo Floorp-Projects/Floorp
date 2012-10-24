@@ -150,8 +150,8 @@ public:       //only used by: GrSegment* makeAndInitialize(const GrFont *font, c
 private:
     Rect            m_bbox;             // ink box of the segment
     Position        m_advance;          // whole segment advance
-    SlotRope        m_slots;            // std::vector of slot buffers
-    AttributeRope   m_userAttrs;        // std::vector of userAttrs buffers
+    SlotRope        m_slots;            // Vector of slot buffers
+    AttributeRope   m_userAttrs;        // Vector of userAttrs buffers
     JustifyRope     m_justifies;        // Slot justification info buffers
     FeatureList     m_feats;            // feature settings referenced by charinfos in this segment
     Slot          * m_freeSlots;        // linked list of free slots

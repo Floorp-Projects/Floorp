@@ -20,6 +20,7 @@ MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		file_expandosharing.html \
 		file_mozMatchesSelector.html \
 		file_nodelists.html \
+		test_sameOriginPolicy.html \
 		file_wrappers-2.html \
 		inner.html \
 		test_frameWrapping.html \

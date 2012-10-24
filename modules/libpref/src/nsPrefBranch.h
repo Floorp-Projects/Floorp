@@ -187,6 +187,8 @@ public:
 
   static nsresult NotifyObserver(const char *newpref, void *data);
 
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+
 protected:
   nsPrefBranch()    /* disallow use of this constructer */
     { }

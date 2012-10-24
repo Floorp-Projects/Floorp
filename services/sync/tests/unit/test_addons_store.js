@@ -439,11 +439,14 @@ add_test(function test_wipe_and_install() {
   let deleted = getAddonFromAddonManagerByID(installed.id);
   do_check_null(deleted);
 
+  // Re-applying the record can require re-fetching the XPI.
+  let server = createAndStartHTTPServer(HTTP_PORT);
+
   store.applyIncoming(record);
 
   let fetched = getAddonFromAddonManagerByID(record.addonID);
   do_check_true(!!fetched);
 
   Svc.Prefs.reset("addons.ignoreRepositoryChecking");
-  run_next_test();
+  server.stop(run_next_test);
 });

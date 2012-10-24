@@ -400,14 +400,9 @@ function runTest() {
    * TEST 2 tests that pushstate's same-origin checks are correct.
    */
   var filename = 'file_bug500328_2.html';
-  // Get the directory we're currently in
   var dirname = document.location.pathname.replace(/[^\/]*$/, '');
   statusMsg("Dirname is: " + dirname);
-  var loc = 'http://example.com' + dirname + filename;
-  statusMsg("About to transfer iframe to " + loc);
-  iframeCw.location = loc;
-  // We have to register a listener like this because this file is hosted on a
-  // different domain and can't notify us on load.
+  iframeCw.location = filename;
   iframe.onload = onChildLoad;
   enableChildLoadCallback();
   yield;
@@ -434,13 +429,13 @@ function runTest() {
   }
 
   // We're currently at http://example.com/[dirname]/[filename]
-  tryBadPushAndReplaceState("https://example.com");
-  tryBadPushAndReplaceState("http://foo.example.com");
-  tryBadPushAndReplaceState("http://example.com:1234");
-  tryBadPushAndReplaceState("http://example.com.a");
-  tryBadPushAndReplaceState("http://example.con");
-  tryBadPushAndReplaceState("http://eexample.com");
-  tryBadPushAndReplaceState("http://me@example.com");
+  tryBadPushAndReplaceState("https://mochi.test:8888");
+  tryBadPushAndReplaceState("http://foo.mochitest:8888");
+  tryBadPushAndReplaceState("http://mochi.test:1234");
+  tryBadPushAndReplaceState("http://mochi.test.a:8888");
+  tryBadPushAndReplaceState("http://mochi.tes:8888");
+  tryBadPushAndReplaceState("http://mmochi.test:8888");
+  tryBadPushAndReplaceState("http://me@mochi.test:8888");
 
   /**
    * TEST 3 tests that the session history entries' titles are properly sync'ed
