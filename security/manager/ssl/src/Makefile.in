@@ -95,9 +95,5 @@ EXPORTS += \
   ScopedNSSTypes.h \
   $(NULL)
 
-# Use local includes because they are inserted before INCLUDES
-# so that Mozilla's nss.h is used, not glibc's
-LOCAL_INCLUDES += $(NSS_CFLAGS)
-
 include $(topsrcdir)/config/rules.mk
 
