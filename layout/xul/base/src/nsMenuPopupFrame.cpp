@@ -385,6 +385,8 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu, b
   if (!mGeneratedChildren)
     return;
 
+  SchedulePaint();
+
   bool shouldPosition = true;
   bool isOpen = IsOpen();
   if (!isOpen) {
