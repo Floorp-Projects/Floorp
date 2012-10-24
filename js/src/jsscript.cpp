@@ -932,42 +932,80 @@ SourceCompressorThread::internalCompress()
 
     ScriptSource *ss = tok->ss;
     JS_ASSERT(!ss->ready());
-    const size_t COMPRESS_THRESHOLD = 512;
     size_t compressedLength = 0;
     size_t nbytes = sizeof(jschar) * ss->length_;
 
     // Memory allocation functions on JSRuntime and JSContext are not
     // threadsafe. We have to use the js_* variants.
-    ss->data.compressed = static_cast<unsigned char *>(js_malloc(nbytes));
-    if (!ss->data.compressed)
-        return false;
 
 #ifdef USE_ZLIB
+    const size_t COMPRESS_THRESHOLD = 512;
     if (nbytes >= COMPRESS_THRESHOLD) {
-        Compressor comp(reinterpret_cast<const unsigned char *>(tok->chars),
-                        nbytes, ss->data.compressed);
-        if (comp.init()) {
-            while (!stop && comp.compressMore())
-                ;
-            compressedLength = comp.finish();
-            if (stop || compressedLength == nbytes)
-                compressedLength = 0;
+        // Try to keep the maximum memory usage down by only allocating half the
+        // size of the string, first.
+        size_t firstSize = nbytes / 2;
+        ss->data.compressed = static_cast<unsigned char *>(js_malloc(firstSize));
+        if (!ss->data.compressed)
+            return false;
+        Compressor comp(reinterpret_cast<const unsigned char *>(tok->chars), nbytes);
+        if (!comp.init())
+            return false;
+        comp.setOutput(ss->data.compressed, firstSize);
+        bool cont = !stop;
+        while (cont) {
+            switch (comp.compressMore()) {
+              case Compressor::CONTINUE:
+                break;
+              case Compressor::MOREOUTPUT: {
+                if (comp.outWritten() == nbytes) {
+                    cont = false;
+                    break;
+                }
+
+                // The compressed output is greater than half the size of the
+                // original string. Reallocate to the full size.
+                void *newmem = js_realloc(ss->data.compressed, nbytes);
+                if (!newmem) {
+                    js_free(ss->data.compressed);
+                    ss->data.compressed = NULL;
+                    return false;
+                }
+                ss->data.compressed = static_cast<unsigned char *>(newmem);
+                comp.setOutput(ss->data.compressed, nbytes);
+                break;
+              }
+              case Compressor::DONE:
+                cont = false;
+                break;
+              case Compressor::OOM:
+                return false;
+            }
+            cont = cont && !stop;
         }
+        compressedLength = comp.outWritten();
+        if (stop || compressedLength == nbytes)
+            compressedLength = 0;
     }
 #endif
-    ss->compressedLength_ = compressedLength;
     if (compressedLength == 0) {
-        PodCopy(ss->data.source, tok->chars, ss->length());
-    } else {
-        // Shrink the buffer to the size of the compressed data.
-        void *newmem = js_realloc(ss->data.compressed, compressedLength);
-        if (!newmem) {
-            js_free(ss->data.compressed);
-            ss->data.compressed = NULL;
+        // Note ss->data.source might be NULL.
+        jschar *buf = static_cast<jschar *>(js_realloc(ss->data.source, nbytes));
+        if (!buf) {
+            if (ss->data.source) {
+                js_free(ss->data.source);
+                ss->data.source = NULL;
+            }
             return false;
         }
+        ss->data.source = buf;
+        PodCopy(ss->data.source, tok->chars, ss->length());
+    } else {
+        // Shrink the buffer to the size of the compressed data. Shouldn't fail.
+        void *newmem = js_realloc(ss->data.compressed, compressedLength);
+        JS_ASSERT(newmem);
         ss->data.compressed = static_cast<unsigned char *>(newmem);
     }
+    ss->compressedLength_ = compressedLength;
     return true;
 }
 
@@ -1172,7 +1210,7 @@ ScriptSource::setSourceCopy(JSContext *cx, StableCharPtr src, uint32_t length,
     } else
 #endif
     {
-        data.source = cx->pod_malloc<jschar>(length);
+        data.source = cx->runtime->pod_malloc<jschar>(length);
         if (!data.source)
             return false;
         PodCopy(data.source, src.get(), length_);
