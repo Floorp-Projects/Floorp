@@ -47,6 +47,8 @@ static PRLogModuleInfo *sLog = PR_NewLogModule("nsThread");
 
 NS_DECL_CI_INTERFACE_GETTER(nsThread)
 
+nsIThreadObserver* nsThread::sMainThreadObserver = nullptr;
+
 namespace mozilla {
 
 // Fun fact: Android's GCC won't convert bool* to int32_t*, so we can't
@@ -580,6 +582,12 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
     }
   }
 
+  bool notifyMainThreadObserver =
+    (MAIN_THREAD == mIsMainThread) && sMainThreadObserver;
+  if (notifyMainThreadObserver) 
+   sMainThreadObserver->OnProcessNextEvent(this, mayWait && !ShuttingDown(),
+                                           mRunningEvent);
+
   nsCOMPtr<nsIThreadObserver> obs = mObserver;
   if (obs)
     obs->OnProcessNextEvent(this, mayWait && !ShuttingDown(), mRunningEvent);
@@ -623,6 +631,9 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
 
   if (obs)
     obs->AfterProcessNextEvent(this, mRunningEvent);
+
+  if (notifyMainThreadObserver && sMainThreadObserver)
+    sMainThreadObserver->AfterProcessNextEvent(this, mRunningEvent);
 
   return rv;
 }
@@ -729,6 +740,21 @@ nsThread::RemoveObserver(nsIThreadObserver *observer)
     NS_WARNING("Removing an observer that was never added!");
   }
 
+  return NS_OK;
+}
+
+nsresult
+nsThread::SetMainThreadObserver(nsIThreadObserver* aObserver)
+{
+  if (aObserver && nsThread::sMainThreadObserver) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsThread::sMainThreadObserver = aObserver;
   return NS_OK;
 }
 
