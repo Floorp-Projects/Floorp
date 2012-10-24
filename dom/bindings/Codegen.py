@@ -6130,7 +6130,9 @@ class CGExampleMember(CGThing):
                         typeDecl = "NonNull<%s>"
                 else:
                     typeDecl = "%s&"
-            return (typeDecl % iface.identifier.name), False, False
+            return ((typeDecl %
+                     self.descriptor.getDescriptor(iface.identifier.name).nativeType),
+                    False, False)
 
         if type.isSpiderMonkeyInterface():
             assert not isMember
