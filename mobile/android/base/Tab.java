@@ -237,7 +237,6 @@ public class Tab {
             mUrl = url;
             Log.d(LOGTAG, "Updated URL for tab with id: " + mId);
             updateBookmark();
-            updateHistory(mUrl, mTitle);
         }
     }
 
@@ -296,7 +295,7 @@ public class Tab {
 
         if (mState != Tab.STATE_LOADING)
             mEnteringReaderMode = false;
-        }
+    }
 
     public int getState() {
         return mState;
@@ -499,7 +498,6 @@ public class Tab {
             final String url = message.getString("url");
             mHistoryIndex++;
             mHistorySize = mHistoryIndex + 1;
-            addHistory(url);
         } else if (event.equals("Back")) {
             if (!canDoBack()) {
                 Log.e(LOGTAG, "Received unexpected back notification");
