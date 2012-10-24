@@ -25,7 +25,7 @@ if (DEBUG)
 else
   debug = function (s) {}
 
-const Cu = Components.utils; 
+const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
@@ -33,10 +33,15 @@ let EXPORTED_SYMBOLS = ["PermissionPromptHelper"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
+
+XPCOMUtils.defineLazyServiceGetter(this, "permissionPromptService",
+                                   "@mozilla.org/permission-prompt-service;1",
+                                   "nsIPermissionPromptService");
 
 var permissionManager = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
 var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
@@ -51,22 +56,59 @@ let PermissionPromptHelper = {
 
   askPermission: function(aMessage, aCallbacks) {
     let msg = aMessage.json;
-    debug("askPerm: " + JSON.stringify(aMessage.json));
-    let uri = Services.io.newURI(msg.origin, null, null);
-    let principal = secMan.getAppCodebasePrincipal(uri, msg.appID, msg.browserFlag);
-    let perm = permissionManager.testExactPermissionFromPrincipal(principal, msg.type);
 
-    switch(perm) {
-      case Ci.nsIPermissionManager.ALLOW_ACTION:
-        aCallbacks.allow();
-        return;
-      case Ci.nsIPermissionManager.DENY_ACTION:
-        aCallbacks.cancel();
-        return;
+    let access;
+    if (PermissionsTable[msg.type].access) {
+      access = "readwrite"; // XXXddahl: Not sure if this should be set to READWRITE
+    }
+    // expand Permissions:
+    var expandedPerms = expandPermissions(msg.type, access);
+    let installedPerms = [];
+    let principal;
+
+    for (let idx in expandedPerms) {
+      let uri = Services.io.newURI(msg.origin, null, null);
+      principal =
+        secMan.getAppCodebasePrincipal(uri, msg.appID, msg.browserFlag);
+      let perm =
+        permissionManager.testExactPermissionFromPrincipal(principal, msg.type);
+      installedPerms.push(perm);
     }
 
-  // FIXXMEE PROMPT MAGIC! Bug 773114.
-  // We have to diplay the prompt here.
+    // TODO: see bug 804623, We are preventing "read" operations
+    // even if just "write" has been set to DENY_ACTION
+    for (let idx in installedPerms) {
+      // if any of the installedPerms are deny, run aCallbacks.cancel
+      if (installedPerms[idx] == Ci.nsIPermissionManager.DENY_ACTION ||
+          installedPerms[idx] == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
+        aCallbacks.cancel();
+        return;
+      }
+    }
+
+    for (let idx in installedPerms) {
+      if (installedPerms[idx] == Ci.nsIPermissionManager.PROMPT_ACTION) {
+        // create a nsIContentPermissionRequest
+        let request = {
+          type: msg.type,
+          principal: principal,
+          QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionRequest]),
+          allow: aCallbacks.allow,
+          cancel: aCallbacks.cancel,
+          window: Services.wm.getMostRecentWindow("navigator:browser")
+        };
+
+        permissionPromptService.getPermission(request);
+        return;
+      }
+    }
+
+    for (let idx in installedPerms) {
+      if (installedPerms[idx] == Ci.nsIPermissionManager.ALLOW_ACTION) {
+        aCallbacks.allow();
+        return;
+      }
+    }
   },
 
   observe: function(aSubject, aTopic, aData) {

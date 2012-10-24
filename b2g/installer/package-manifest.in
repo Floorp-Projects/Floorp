@@ -335,6 +335,8 @@
 @BINPATH@/components/ContactManager.manifest
 @BINPATH@/components/PermissionSettings.js
 @BINPATH@/components/PermissionSettings.manifest
+@BINPATH@/components/PermissionPromptService.js
+@BINPATH@/components/PermissionPromptService.manifest
 @BINPATH@/components/AlarmsManager.js
 @BINPATH@/components/AlarmsManager.manifest
 @BINPATH@/components/FeedProcessor.manifest
