@@ -160,10 +160,6 @@ IsPermitted(const char *name, JSFlatString *prop, bool set)
     if (!propLength)
         return false;
     switch (name[0]) {
-        NAME('H', "History",
-             PROP('b', R("back"))
-             PROP('f', R("forward"))
-             PROP('g', R("go")))
         NAME('L', "Location",
              PROP('h', W("hash") W("href"))
              PROP('r', R("replace")))
@@ -171,7 +167,6 @@ IsPermitted(const char *name, JSFlatString *prop, bool set)
              PROP('b', R("blur"))
              PROP('c', R("close") R("closed"))
              PROP('f', R("focus") R("frames"))
-             PROP('h', R("history"))
              PROP('l', RW("location") R("length"))
              PROP('o', R("opener"))
              PROP('p', R("parent") R("postMessage"))
