@@ -280,14 +280,22 @@ static PhaseInfo phases[] = {
     { PHASE_MARK_ROOTS, "Mark Roots" },
     { PHASE_MARK_TYPES, "Mark Types" },
     { PHASE_MARK_DELAYED, "Mark Delayed" },
-    { PHASE_MARK_WEAK, "Mark Weak" },
-    { PHASE_MARK_GRAY, "Mark Gray" },
-    { PHASE_MARK_GRAY_WEAK, "Mark Gray and Weak" },
-    { PHASE_FINALIZE_START, "Finalize Start Callback" },
     { PHASE_SWEEP, "Sweep" },
+    { PHASE_SWEEP_MARK_INCOMING_BLACK, "Mark Incoming Black Pointers" },
+    { PHASE_SWEEP_MARK_WEAK, "Mark Weak" },
+    { PHASE_SWEEP_MARK_GRAY, "Mark Gray" },
+    { PHASE_SWEEP_MARK_GRAY_WEAK, "Mark Gray and Weak" },
+    { PHASE_SWEEP_MARK_INCOMING_GRAY, "Mark Incoming Gray Pointers" },
+    { PHASE_FINALIZE_START, "Finalize Start Callback" },
     { PHASE_SWEEP_ATOMS, "Sweep Atoms" },
     { PHASE_SWEEP_COMPARTMENTS, "Sweep Compartments" },
     { PHASE_SWEEP_TABLES, "Sweep Tables" },
+    { PHASE_SWEEP_TABLES_WRAPPER, "Sweep Cross Compartment Wrappers" },
+    { PHASE_SWEEP_TABLES_BASE_SHAPE, "Sweep Base Shapes" },
+    { PHASE_SWEEP_TABLES_INITIAL_SHAPE, "Sweep Intital Shapes" },
+    { PHASE_SWEEP_TABLES_TYPE_OBJECT, "Sweep Type Objects" },
+    { PHASE_SWEEP_TABLES_BREAKPOINT, "Sweep Breakpoints" },
+    { PHASE_SWEEP_TABLES_REGEXP, "Sweep Regexps" },
     { PHASE_SWEEP_OBJECT, "Sweep Object" },
     { PHASE_SWEEP_STRING, "Sweep String" },
     { PHASE_SWEEP_SCRIPT, "Sweep Script" },
@@ -536,7 +544,7 @@ Statistics::endGC()
         (*cb)(JS_TELEMETRY_GC_MARK_MS, t(phaseTimes[PHASE_MARK]));
         (*cb)(JS_TELEMETRY_GC_SWEEP_MS, t(phaseTimes[PHASE_SWEEP]));
         (*cb)(JS_TELEMETRY_GC_MARK_ROOTS_MS, t(phaseTimes[PHASE_MARK_ROOTS]));
-        (*cb)(JS_TELEMETRY_GC_MARK_GRAY_MS, t(phaseTimes[PHASE_MARK_GRAY]));
+        (*cb)(JS_TELEMETRY_GC_MARK_GRAY_MS, t(phaseTimes[PHASE_SWEEP_MARK_GRAY]));
         (*cb)(JS_TELEMETRY_GC_NON_INCREMENTAL, !!nonincrementalReason);
         (*cb)(JS_TELEMETRY_GC_INCREMENTAL_DISABLED, !runtime->gcIncrementalEnabled);
         (*cb)(JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS, t(sccTotal));
