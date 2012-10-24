@@ -7139,7 +7139,7 @@ let gPrivateBrowsingUI = {
   },
 
   get _disableUIOnToggle() {
-    if (this._privateBrowsingService.autoStarted)
+    if (PrivateBrowsingUtils.permanentPrivateBrowsing)
       return false;
 
     try {
@@ -7235,7 +7235,7 @@ let gPrivateBrowsingUI = {
     document.getElementById("Tools:Sanitize").setAttribute("disabled", "true");
 
     let docElement = document.documentElement;
-    if (this._privateBrowsingService.autoStarted) {
+    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
       // Disable the menu item in auto-start mode
       document.getElementById("privateBrowsingItem")
               .setAttribute("disabled", "true");
