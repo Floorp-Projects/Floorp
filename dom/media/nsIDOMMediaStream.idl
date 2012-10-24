@@ -10,3 +10,10 @@ interface nsIDOMMediaStream : nsISupports
 {
   readonly attribute double currentTime;
 };
+
+[scriptable, builtinclass, uuid(210a16e3-2a38-4ae9-b0f6-0fb5a8252814)]
+interface nsIDOMLocalMediaStream : nsIDOMMediaStream
+{
+  void stop();
+};
+
