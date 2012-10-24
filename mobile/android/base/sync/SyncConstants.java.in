@@ -33,7 +33,7 @@ public class SyncConstants {
    * can be received only by Firefox versions sharing the same Android Account
    * type.
    * <p>
-   * See {@link SyncAccounts#makeSyncAccountDeletedIntent(android.content.Context, android.accounts.AccountManager, android.accounts.Account)}
+   * See {@link org.mozilla.gecko.sync.setup.SyncAccounts#makeSyncAccountDeletedIntent(android.content.Context, android.accounts.AccountManager, android.accounts.Account)}
    * for contents of the intent.
    */
   public static final String SYNC_ACCOUNT_DELETED_ACTION = "@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@.accounts.SYNC_ACCOUNT_DELETED_ACTION";
@@ -41,7 +41,7 @@ public class SyncConstants {
   /**
    * Bug 790931: version number of contents of SYNC_ACCOUNT_DELETED_ACTION intent.
    * <p>
-   * See {@link SyncAccounts#makeSyncAccountDeletedIntent(android.content.Context, android.accounts.AccountManager, android.accounts.Account)}
+   * See {@link org.mozilla.gecko.sync.setup.SyncAccounts#makeSyncAccountDeletedIntent(android.content.Context, android.accounts.AccountManager, android.accounts.Account)}
    * for contents of the intent.
    */
   public static final long SYNC_ACCOUNT_DELETED_INTENT_VERSION = 1;
