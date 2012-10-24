@@ -62,6 +62,10 @@ function isCrossOriginWritable(obj, prop) {
 function testAll(sameOrigin) {
   var win = document.getElementById('ifr').contentWindow;
   for (var prop in window) {
+    // On android, this appears to be on the window but not on the iframe. It's
+    // not really relevant to this test, so just skip it.
+    if (prop === 'crypto')
+      continue;
     check(win, prop, sameOrigin || isCrossOriginReadable('Window', prop), /* write = */ false);
     if (!sameOrigin && !isCrossOriginWritable('Window', prop))
       check(win, prop, false, /* write = */ true);
