@@ -104,7 +104,7 @@ bool ValidWriteAssert(bool ok)
     nameAux.GetMutableData(&name);
 
     // We want the sha1 of the entire file, so please don't write to fd
-    // directly, use sha1Stream.
+    // directly; use sha1Stream.
     int fd = mkstemp(name);
     SHA1Stream sha1Stream(fd);
     fd = 0;
