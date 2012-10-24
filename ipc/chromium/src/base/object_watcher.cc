@@ -55,7 +55,7 @@ bool ObjectWatcher::StartWatching(HANDLE object, Delegate* delegate) {
 
   // Since our job is to just notice when an object is signaled and report the
   // result back to this thread, we can just run on a Windows wait thread.
-  DWORD wait_flags = WT_EXECUTEINWAITTHREAD | WT_EXECUTEONLYONCE;
+  DWORD wait_flags = WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE;
 
   if (!RegisterWaitForSingleObject(&watch->wait_object, object, DoneWaiting,
                                    watch, INFINITE, wait_flags)) {
