@@ -575,7 +575,7 @@ struct JSScript : public js::gc::Cell
 
     JSFlatString *sourceData(JSContext *cx);
 
-    bool loadSource(JSContext *cx, bool *worked);
+    static bool loadSource(JSContext *cx, js::HandleScript scr, bool *worked);
 
     js::ScriptSource *scriptSource() {
         return scriptSource_;
