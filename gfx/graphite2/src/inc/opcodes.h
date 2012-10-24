@@ -132,12 +132,12 @@ STARTOP(div_)
     binop(/);
 ENDOP
 
-STARTOP(min)
+STARTOP(min_)
     const int32 a = pop(), b = *sp;
     if (a < b) *sp = a;
 ENDOP
 
-STARTOP(max)
+STARTOP(max_)
     const int32 a = pop(), b = *sp;
     if (a > b) *sp = a;
 ENDOP

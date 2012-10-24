@@ -47,7 +47,7 @@ sparse::mapped_type sparse::operator [] (const key_type k) const throw()
 }
 
 
-size_t sparse::size() const throw()
+size_t sparse::capacity() const throw()
 {
 	size_t n = m_nchunks,
 		   s = 0;
