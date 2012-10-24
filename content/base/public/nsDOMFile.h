@@ -21,9 +21,7 @@
 #include "nsAutoPtr.h"
 
 #include "mozilla/GuardObjects.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/StandardInteger.h"
-#include "mozilla/StaticPtr.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/indexedDB/FileInfo.h"
 #include "mozilla/dom/indexedDB/FileManager.h"
@@ -362,7 +360,7 @@ public:
                   const nsAString& aName,
                   const nsAString& aContentType)
     : nsDOMFile(aName, aContentType, aLength, UINT64_MAX),
-      mDataOwner(new DataOwner(aMemoryBuffer, aLength))
+      mDataOwner(new DataOwner(aMemoryBuffer))
   {
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
   }
@@ -372,7 +370,7 @@ public:
                   uint64_t aLength,
                   const nsAString& aContentType)
     : nsDOMFile(aContentType, aLength),
-      mDataOwner(new DataOwner(aMemoryBuffer, aLength))
+      mDataOwner(new DataOwner(aMemoryBuffer))
   {
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
   }
@@ -393,40 +391,18 @@ protected:
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType);
 
-  // These classes need to see DataOwner.
-  friend class DataOwnerAdapter;
-  friend class nsDOMMemoryFileDataOwnerMemoryReporter;
-
-  class DataOwner : public mozilla::LinkedListElement<DataOwner> {
+  friend class DataOwnerAdapter; // Needs to see DataOwner
+  class DataOwner {
   public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataOwner)
-    DataOwner(void* aMemoryBuffer, uint64_t aLength)
+    DataOwner(void* aMemoryBuffer)
       : mData(aMemoryBuffer)
-      , mLength(aLength)
     {
-      if (!sDataOwners) {
-        sDataOwners = new mozilla::LinkedList<DataOwner>();
-        EnsureMemoryReporterRegistered();
-      }
-      sDataOwners->insertBack(this);
     }
-
     ~DataOwner() {
-      remove();
-      if (sDataOwners->isEmpty()) {
-        // Free the linked list if it's empty.
-        sDataOwners = nullptr;
-      }
-
       PR_Free(mData);
     }
-
-    static void EnsureMemoryReporterRegistered();
-
-    static bool sMemoryReporterRegistered;
-    static mozilla::StaticAutoPtr<mozilla::LinkedList<DataOwner> > sDataOwners;
     void* mData;
-    uint64_t mLength;
   };
 
   // Used when backed by a memory store
