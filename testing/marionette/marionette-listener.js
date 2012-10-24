@@ -895,7 +895,10 @@ function importScript(msg) {
     file = FileUtils.openFileOutputStream(importedScripts, FileUtils.MODE_APPEND | FileUtils.MODE_WRONLY);
   }
   else {
+    //Note: The permission bits here don't actually get set (bug 804563)
+    importedScripts.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, parseInt("0666", 8));
     file = FileUtils.openFileOutputStream(importedScripts, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
+    importedScripts.permissions = parseInt("0666", 8); //actually set permissions
   }
   file.write(msg.json.script, msg.json.script.length);
   file.close();
