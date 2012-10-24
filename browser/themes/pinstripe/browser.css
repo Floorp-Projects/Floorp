@@ -1319,7 +1319,7 @@ toolbar[mode="icons"] #zoom-in-button {
 }
 
 .urlbar-icon {
-  padding: 2px 3px;
+  padding: 0 3px;
 }
 
 .urlbar-icon[open="true"],
