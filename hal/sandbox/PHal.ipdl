@@ -24,7 +24,6 @@ using mozilla::hal::SwitchDevice;
 using mozilla::hal::ProcessPriority;
 using nsIntRect;
 using PRTime;
-using mozilla::hal::SystemTimeChange;
 using mozilla::hal::FMRadioCountry;
 using mozilla::hal::FMRadioOperation;
 using mozilla::hal::FMRadioOperationStatus;
@@ -92,6 +91,13 @@ struct FMRadioSettings {
   uint32_t preEmphasis;
 };
 
+struct SystemTimezoneChangeInformation {
+  // These timezone offsets are relative to UTC in minutes and
+  // have already taken daylight saving time (DST) into account.
+  int32_t oldTimezoneOffsetMinutes;
+  int32_t newTimezoneOffsetMinutes;
+};
+
 } // namespace hal
 
 namespace hal_sandbox {
@@ -105,7 +111,8 @@ child:
     NotifyWakeLockChange(WakeLockInformation aWakeLockInfo);
     NotifyScreenConfigurationChange(ScreenConfiguration aScreenOrientation);
     NotifySwitchChange(SwitchEvent aEvent);
-    NotifySystemTimeChange(SystemTimeChange aReason); 
+    NotifySystemClockChange(int64_t aClockDeltaMS); 
+    NotifySystemTimezoneChange(SystemTimezoneChangeInformation aSystemTimezoneChangeInfo); 
     NotifyFMRadioStatus(FMRadioOperationInformation aInfo);
 
 parent:
@@ -135,8 +142,10 @@ parent:
     SetTimezone(nsCString aTimezoneSpec);
     sync GetTimezone()
       returns (nsCString aTimezoneSpec);
-    EnableSystemTimeChangeNotifications();
-    DisableSystemTimeChangeNotifications();
+    EnableSystemClockChangeNotifications();
+    DisableSystemClockChangeNotifications();
+    EnableSystemTimezoneChangeNotifications();
+    DisableSystemTimezoneChangeNotifications();
 
     sync SetLight(LightType light, LightConfiguration aConfig)
       returns (bool status);

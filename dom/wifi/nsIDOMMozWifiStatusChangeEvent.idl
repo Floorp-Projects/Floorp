@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+interface nsIVariant;
+
+[scriptable, builtinclass, uuid(f3ef70b0-b2d3-4eb5-8ea4-008f8d330cd6)]
+interface nsIDOMMozWifiStatusChangeEvent : nsIDOMEvent
+{
+    /**
+     * Network object with a SSID field describing the network affected by
+     * this change. This might be null.
+     */
+    readonly attribute nsIVariant network;
+
+    /**
+     * String describing the current status of the wifi manager. See above for
+     * the possible values.
+     */
+    readonly attribute DOMString status;
+
+    [noscript] void initMozWifiStatusChangeEvent(in DOMString aType,
+                                                 in boolean aCanBubble,
+                                                 in boolean aCancelable,
+                                                 in nsIVariant aNetwork,
+                                                 in DOMString aStatus);
+};
+
+dictionary MozWifiStatusChangeEventInit : EventInit
+{
+  nsIVariant network;
+  DOMString  status;
+};

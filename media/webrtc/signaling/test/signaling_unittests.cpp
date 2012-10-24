@@ -524,7 +524,7 @@ class SignalingAgent {
     ASSERT_TRUE_WAIT(pObserver->state == TestObserver::stateError, kDefaultTimeout);
   }
 
-  void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer, bool audio, bool video) {
+  void CreateAnswer(sipcc::MediaConstraints& constraints, bool audio, bool video) {
     // Create a media stream as if it came from GUM
     nsRefPtr<nsDOMMediaStream> domMediaStream = new nsDOMMediaStream();
 
@@ -544,7 +544,7 @@ class SignalingAgent {
     pc->AddStream(domMediaStream);
 
     pObserver->state = TestObserver::stateNoResponse;
-    ASSERT_EQ(pc->CreateAnswer(constraints, offer.c_str()), NS_OK);
+    ASSERT_EQ(pc->CreateAnswer(constraints, NS_OK);
     ASSERT_TRUE_WAIT(pObserver->state == TestObserver::stateSuccess, kDefaultTimeout);
     SDPSanityCheck(pObserver->lastString, audio, video, false);
     answer_ = pObserver->lastString;
@@ -680,7 +680,7 @@ public:
     a1_.CreateOffer(aconstraints, audio, video);
     a1_.SetLocal(TestObserver::OFFER, a1_.offer());
     a2_.SetRemote(TestObserver::OFFER, a1_.offer());
-    a2_.CreateAnswer(bconstraints, a1_.offer(), audio, video);
+    a2_.CreateAnswer(bconstraints, audio, video);
     if(true == finishAfterAnswer) {
         a2_.SetLocal(TestObserver::ANSWER, a2_.answer());
         a1_.SetRemote(TestObserver::ANSWER, a2_.answer());
@@ -694,7 +694,7 @@ public:
     a1_.CreateOffer(aconstraints, true, true);
     a1_.SetLocal(TestObserver::OFFER, a1_.offer());
     a2_.SetRemote(TestObserver::OFFER, a1_.offer());
-    a2_.CreateAnswer(bconstraints, a1_.offer(), true, true);
+    a2_.CreateAnswer(bconstraints, true, true);
     a2_.SetLocal(TestObserver::ANSWER, a2_.answer());
     ParsedSDP sdpWrapper(a2_.answer());
     sdpWrapper.ReplaceLine("m=audio", "m=audio 65375 RTP/SAVPF 109 8 101\r\n");
@@ -710,7 +710,7 @@ public:
     a1_.SetLocal(TestObserver::OFFER, a1_.offer());
     ParsedSDP a1_offer(a1_.offer());
     a2_.SetRemote(TestObserver::OFFER, a1_offer.sdp_without_ice_);
-    a2_.CreateAnswer(bconstraints, a1_offer.sdp_without_ice_, true, true);
+    a2_.CreateAnswer(bconstraints, true, true);
     a2_.SetLocal(TestObserver::ANSWER, a2_.answer());
     ParsedSDP a2_answer(a2_.answer());
     a1_.SetRemote(TestObserver::ANSWER, a2_answer.sdp_without_ice_);

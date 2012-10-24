@@ -71,6 +71,7 @@ public:
   NS_IMETHOD GetAppId(uint32_t* aAppStatus);
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement);
   NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId);
+  NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal);
 #ifdef DEBUG
   virtual void dumpImpl();
 #endif
@@ -152,6 +153,7 @@ public:
   NS_IMETHOD GetAppId(uint32_t* aAppStatus);
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement);
   NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId);
+  NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal);
 #ifdef DEBUG
   virtual void dumpImpl();
 #endif

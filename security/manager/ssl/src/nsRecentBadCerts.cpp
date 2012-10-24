@@ -6,13 +6,14 @@
 
 #include "nsRecentBadCerts.h"
 #include "nsIX509Cert.h"
-#include "mozilla/RefPtr.h"
 #include "nsSSLStatus.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsNSSCertificate.h"
 #include "nsCRT.h"
 #include "nsPromiseFlatString.h"
 #include "nsStringBuffer.h"
+#include "nsAutoPtr.h"
 #include "nspr.h"
 #include "pk11pub.h"
 #include "certdb.h"
@@ -52,7 +53,9 @@ nsRecentBadCertsService::GetRecentBadCert(const nsAString & aHostNameWithPort,
     return NS_ERROR_INVALID_ARG;
 
   *aStatus = nullptr;
-  RefPtr<nsSSLStatus> status(new nsSSLStatus());
+  nsRefPtr<nsSSLStatus> status = new nsSSLStatus();
+  if (!status)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   SECItem foundDER;
   foundDER.len = 0;

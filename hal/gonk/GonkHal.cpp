@@ -83,6 +83,13 @@
 #define OOM_SCORE_ADJ_MAX  1000
 #endif
 
+#ifndef BATTERY_CHARGING_ARGB
+#define BATTERY_CHARGING_ARGB 0x00FF0000
+#endif
+#ifndef BATTERY_FULL_ARGB
+#define BATTERY_FULL_ARGB 0x0000FF00
+#endif
+
 using namespace mozilla;
 using namespace mozilla::hal;
 
@@ -250,6 +257,26 @@ public:
   {
     hal::BatteryInformation info;
     hal_impl::GetCurrentBatteryInformation(&info);
+
+    // Control the battery indicator (led light) here using BatteryInformation
+    // we just retrieved.
+    uint32_t color = 0; // Format: 0x00rrggbb.
+    if (info.charging() && (info.level() == 1)) {
+      // Charging and battery full.
+      color = BATTERY_FULL_ARGB;
+    } else if (info.charging() && (info.level() < 1)) {
+      // Charging but not full.
+      color = BATTERY_CHARGING_ARGB;
+    } // else turn off battery indicator.
+
+    hal::LightConfiguration aConfig(hal::eHalLightID_Battery,
+                                    hal::eHalLightMode_User,
+                                    hal::eHalLightFlash_None,
+                                    0,
+                                    0,
+                                    color);
+    hal_impl::SetLight(hal::eHalLightID_Battery, aConfig);
+
     hal::NotifyBatteryChange(info);
     return NS_OK;
   }
@@ -643,7 +670,21 @@ AdjustSystemClock(int64_t aDeltaMilliseconds)
     return;
   }
 
-  hal::NotifySystemTimeChange(hal::SYS_TIME_CHANGE_CLOCK);
+  hal::NotifySystemClockChange(aDeltaMilliseconds);
+}
+
+static int32_t
+GetTimezoneOffset()
+{
+  PRExplodedTime prTime;
+  PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &prTime);
+
+  // Daylight saving time (DST) will be taken into account.
+  int32_t offset = prTime.tm_params.tp_gmt_offset;
+  offset += prTime.tm_params.tp_dst_offset;
+
+  // Returns the timezone offset relative to UTC in minutes.
+  return -(offset / 60);
 }
 
 void
@@ -653,11 +694,15 @@ SetTimezone(const nsCString& aTimezoneSpec)
     return;
   }
 
+  int32_t oldTimezoneOffsetMinutes = GetTimezoneOffset();
   property_set("persist.sys.timezone", aTimezoneSpec.get());
   // this function is automatically called by the other time conversion
   // functions that depend on the timezone. To be safe, we call it manually.
   tzset();
-  hal::NotifySystemTimeChange(hal::SYS_TIME_CHANGE_TZ);
+  int32_t newTimezoneOffsetMinutes = GetTimezoneOffset();
+  hal::NotifySystemTimezoneChange(
+    hal::SystemTimezoneChangeInformation(
+      oldTimezoneOffsetMinutes, newTimezoneOffsetMinutes));
 }
 
 nsCString
@@ -669,12 +714,22 @@ GetTimezone()
 }
 
 void
-EnableSystemTimeChangeNotifications()
+EnableSystemClockChangeNotifications()
 {
 }
 
 void
-DisableSystemTimeChangeNotifications()
+DisableSystemClockChangeNotifications()
+{
+}
+
+void
+EnableSystemTimezoneChangeNotifications()
+{
+}
+
+void
+DisableSystemTimezoneChangeNotifications()
 {
 }
 

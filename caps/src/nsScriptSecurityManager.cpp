@@ -2992,11 +2992,13 @@ GetExtendedOrigin(nsIURI* aURI, uint32_t aAppId, bool aInMozBrowser,
     return;
   }
 
-  // aExtendedOrigin = appId + "+" + origin + "+" + { 't', 'f' }
+  // aExtendedOrigin = appId + "+" + { 't', 'f' } "+" + origin;
   aExtendedOrigin.Truncate();
   aExtendedOrigin.AppendInt(aAppId);
-  aExtendedOrigin.Append(NS_LITERAL_CSTRING("+") + origin + NS_LITERAL_CSTRING("+"));
+  aExtendedOrigin.Append('+');
   aExtendedOrigin.Append(aInMozBrowser ? 't' : 'f');
+  aExtendedOrigin.Append('+');
+  aExtendedOrigin.Append(origin);
 
   return;
 }

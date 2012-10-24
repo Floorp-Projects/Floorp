@@ -1,0 +1,103 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Clear Browser Data Test</title>
+
+  <script type="text/javascript;version=1.7">
+    "use strict";
+
+    function ok(cond, message)
+    {
+      alert(JSON.stringify({ type: "ok",
+                             args: [!!cond, "browserFrame: " + message] }));
+    }
+
+    function info(message)
+    {
+      alert(JSON.stringify({ type: "info",
+                             args: ["browserFrame: " + message] }));
+    }
+
+    function block()
+    {
+      info("about to block");
+
+      // This will block until the parent has cleared our database.
+      alert(JSON.stringify({ type: "block" }));
+
+      info("unblocked");
+    }
+
+    function finish()
+    {
+      alert(JSON.stringify({ type: "done" }));
+    }
+
+    window.onerror = ok.bind(window, false);
+
+    function testSteps()
+    {
+      const objectStoreName = "foo";
+      const testKey = 1;
+      const testValue = objectStoreName;
+
+      let request = indexedDB.open(window.location.pathname, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = unexpectedSuccessHandler;
+      let event = yield;
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+      db.onversionchange = function(event) {
+        event.target.close();
+      }
+
+      let objectStore = db.createObjectStore(objectStoreName);
+      objectStore.add(testValue, testKey);
+
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      ok(db === event.target.result, "created database");
+
+      objectStore =
+        db.transaction(objectStoreName).objectStore(objectStoreName);
+      objectStore.get(testKey).onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      ok(testValue == event.target.result, "data exists");
+
+      block();
+
+      request = indexedDB.open(window.location.pathname, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = unexpectedSuccessHandler;
+      event = yield;
+
+      ok(event.type == "upgradeneeded", "db doesn't exist");
+
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      db = event.target.result;
+      info(db.objectStoreNames.length);
+      ok(!db.objectStoreNames.length, "no object stores");
+
+      finish();
+
+      yield;
+    }
+
+  </script>
+
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+</head>
+
+<body onload="testGenerator.next();"></body>
+
+</html>

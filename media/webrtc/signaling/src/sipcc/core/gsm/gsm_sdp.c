@@ -1587,9 +1587,8 @@ gsmsdp_set_dtls_fingerprint_attribute (sdp_attr_e sdp_attr, uint16_t level, void
     sdp_result_e  result;
     char hash_and_fingerprint[FSMDEF_MAX_DIGEST_ALG_LEN + FSMDEF_MAX_DIGEST_LEN + 2];
 
-    sstrncpy(hash_and_fingerprint, (cc_string_t)hash_func, FSMDEF_MAX_DIGEST_ALG_LEN);
-    sstrncat(hash_and_fingerprint, (cc_string_t)" ", sizeof(hash_and_fingerprint) - strlen(hash_and_fingerprint) - 1);
-    sstrncat(hash_and_fingerprint, (cc_string_t)fingerprint, FSMDEF_MAX_DIGEST_LEN);
+    snprintf(hash_and_fingerprint, sizeof(hash_and_fingerprint),
+         "%s %s", hash_func, fingerprint);
 
     result = sdp_add_new_attr(sdp_p, level, 0, sdp_attr, &a_instance);
     if (result != SDP_SUCCESS) {

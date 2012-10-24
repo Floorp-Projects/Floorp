@@ -633,81 +633,14 @@ StackSpace::containingSegment(const StackFrame *target) const
 }
 
 void
-StackSpace::markAndClobberFrame(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbytecode *pc)
+StackSpace::markFrame(JSTracer *trc, StackFrame *fp, Value *slotsEnd)
 {
-    AutoAssertNoGC nogc;
     Value *slotsBegin = fp->slots();
-
-    /* If it's a scripted frame, we should have a pc. */
-    JS_ASSERT(pc);
-
-    RawScript script = fp->script();
-    if (!script->hasAnalysis() || !script->analysis()->ranLifetimes()) {
-        if (trc)
-            gc::MarkValueRootRange(trc, slotsBegin, slotsEnd, "vm_stack");
-        return;
-    }
-
-    /*
-     * If the JIT ran a lifetime analysis, then it may have left garbage in the
-     * slots considered not live. We need to avoid marking them. Additionally,
-     * in case the analysis information is thrown out later, we overwrite these
-     * dead slots with valid values so that future GCs won't crash. Analysis
-     * results are thrown away during the sweeping phase, so we always have at
-     * least one GC to do this.
-     */
-    JSRuntime *rt = script->compartment()->rt;
-    analyze::AutoEnterAnalysis aea(script->compartment());
-    analyze::ScriptAnalysis *analysis = script->analysis();
-    uint32_t offset = pc - script->code;
-    Value *fixedEnd = slotsBegin + script->nfixed;
-    for (Value *vp = slotsBegin; vp < fixedEnd; vp++) {
-        uint32_t slot = analyze::LocalSlot(script, vp - slotsBegin);
-
-        /* Will this slot be synced by the JIT? */
-        if (!analysis->trackSlot(slot) || analysis->liveness(slot).live(offset)) {
-            if (trc)
-                gc::MarkValueRoot(trc, vp, "vm_stack");
-        } else if (!trc || script->compartment()->isDiscardingJitCode(trc)) {
-            /*
-             * If we're throwing away analysis information, we need to replace
-             * non-live Values with ones that can safely be marked in later
-             * collections.
-             */
-            if (vp->isDouble()) {
-                *vp = DoubleValue(0.0);
-            } else {
-                /*
-                 * It's possible that *vp may not be a valid Value. For example,
-                 * it may be tagged as a NullValue but the low bits may be
-                 * nonzero so that isNull() returns false. This can cause
-                 * problems later on when marking the value. Extracting the type
-                 * in this way and then overwriting the value circumvents the
-                 * problem.
-                 */
-                JSValueType type = vp->extractNonDoubleType();
-                if (type == JSVAL_TYPE_INT32)
-                    *vp = Int32Value(0);
-                else if (type == JSVAL_TYPE_UNDEFINED)
-                    *vp = UndefinedValue();
-                else if (type == JSVAL_TYPE_BOOLEAN)
-                    *vp = BooleanValue(false);
-                else if (type == JSVAL_TYPE_STRING)
-                    *vp = StringValue(rt->atomState.null);
-                else if (type == JSVAL_TYPE_NULL)
-                    *vp = NullValue();
-                else if (type == JSVAL_TYPE_OBJECT)
-                    *vp = ObjectValue(fp->scopeChain()->global());
-            }
-        }
-    }
-
-    if (trc)
-        gc::MarkValueRootRange(trc, fixedEnd, slotsEnd, "vm_stack");
+    gc::MarkValueRootRange(trc, slotsBegin, slotsEnd, "vm_stack");
 }
 
 void
-StackSpace::markAndClobber(JSTracer *trc)
+StackSpace::mark(JSTracer *trc)
 {
     /* NB: this depends on the continuity of segments in memory. */
     Value *nextSegEnd = firstUnused();
@@ -726,18 +659,16 @@ StackSpace::markAndClobber(JSTracer *trc)
         jsbytecode *pc = seg->maybepc();
         for (StackFrame *fp = seg->maybefp(); (Value *)fp > (Value *)seg; fp = fp->prev()) {
             /* Mark from fp->slots() to slotsEnd. */
-            markAndClobberFrame(trc, fp, slotsEnd, pc);
+            markFrame(trc, fp, slotsEnd);
 
-            if (trc)
-                fp->mark(trc);
+            fp->mark(trc);
             slotsEnd = (Value *)fp;
 
             InlinedSite *site;
             pc = fp->prevpc(&site);
             JS_ASSERT_IF(fp->prev(), !site);
         }
-        if (trc)
-            gc::MarkValueRootRange(trc, seg->slotsBegin(), slotsEnd, "vm_stack");
+        gc::MarkValueRootRange(trc, seg->slotsBegin(), slotsEnd, "vm_stack");
         nextSegEnd = (Value *)seg;
     }
 }

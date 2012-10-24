@@ -704,7 +704,7 @@ MakeJITScript(JSContext *cx, JSScript *script)
 
             Bytecode *code = analysis->maybeCode(offset);
             if (!code)
-                continue;
+                op = JSOP_NOP; /* Ignore edges from unreachable opcodes. */
 
             /* Whether this should be the last opcode in the chunk. */
             bool finishChunk = false;
@@ -1292,17 +1292,7 @@ mjit::Compiler::markUndefinedLocal(uint32_t offset, uint32_t i)
     uint32_t depth = ssa.getFrame(a->inlineIndex).depth;
     uint32_t slot = LocalSlot(script_, i);
     Address local(JSFrameReg, sizeof(StackFrame) + (depth + i) * sizeof(Value));
-    if (!cx->typeInferenceEnabled() || !analysis->trackSlot(slot)) {
-        masm.storeValue(UndefinedValue(), local);
-    } else {
-        Lifetime *lifetime = analysis->liveness(slot).live(offset);
-        if (lifetime)
-            masm.storeValue(UndefinedValue(), local);
-#ifdef DEBUG
-        else
-            masm.storeValue(ObjectValueCrashOnTouch(), local);
-#endif
-    }
+    masm.storeValue(UndefinedValue(), local);
 }
 
 void

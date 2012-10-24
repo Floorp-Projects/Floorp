@@ -58,6 +58,8 @@ child:
 
   VersionChange(uint64_t oldVersion, uint64_t newVersion);
 
+  Invalidate();
+
 both:
   PIndexedDBTransaction(TransactionParams params);
 };

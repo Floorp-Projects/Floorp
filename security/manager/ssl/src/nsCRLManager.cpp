@@ -20,6 +20,7 @@
 #include "nsNSSCertHeader.h"
 
 #include "nspr.h"
+extern "C" {
 #include "pk11func.h"
 #include "certdb.h"
 #include "cert.h"
@@ -27,6 +28,7 @@
 #include "nssb64.h"
 #include "secasn1.h"
 #include "secder.h"
+}
 #include "ssl.h"
 #include "ocsp.h"
 #include "plbase64.h"
@@ -53,9 +55,9 @@ nsCRLManager::ImportCrl (uint8_t *aData, uint32_t aLength, nsIURI * aURI, uint32
   
   nsNSSShutDownPreventionLock locker;
   nsresult rv;
-  PLArenaPool *arena = nullptr;
+  PLArenaPool *arena = NULL;
   CERTCertificate *caCert;
-  SECItem derName = { siBuffer, nullptr, 0 };
+  SECItem derName = { siBuffer, NULL, 0 };
   SECItem derCrl;
   CERTSignedData sd;
   SECStatus sec_rv;
@@ -180,7 +182,7 @@ done:
       }
     }
   } else {
-    if (!crlKey) {
+    if(crlKey == nullptr){
       return NS_ERROR_FAILURE;
     }
     nsCOMPtr<nsIPrefService> prefSvc = do_GetService(NS_PREFSERVICE_CONTRACTID,&rv);
@@ -326,7 +328,7 @@ nsCRLManager::GetCrls(nsIArray ** aCrls)
   }
 
   if (head) {
-    for (node=head->first; node; node = node->next) {
+    for (node=head->first; node != nullptr; node = node->next) {
 
       nsCOMPtr<nsICRLInfo> entry = new nsCRLInfo((node->crl));
       crlsArray->AppendElement(entry, false);
@@ -361,7 +363,7 @@ nsCRLManager::DeleteCrl(uint32_t aCrlIndex)
   }
 
   if (head) {
-    for (i = 0, node=head->first; node; i++, node = node->next) {
+    for (i = 0, node=head->first; node != nullptr; i++, node = node->next) {
       if (i != aCrlIndex) {
         continue;
       }

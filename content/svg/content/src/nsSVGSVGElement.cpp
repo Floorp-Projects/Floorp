@@ -167,7 +167,9 @@ nsSVGSVGElement::nsSVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     mCurrentScale(1.0f),
     mPreviousTranslate(0.0f, 0.0f),
     mPreviousScale(1.0f),
-    mStartAnimationOnBindToTree(!aFromParser),
+    mStartAnimationOnBindToTree(aFromParser == NOT_FROM_PARSER ||
+                                aFromParser == FROM_PARSER_FRAGMENT ||
+                                aFromParser == FROM_PARSER_XSLT),
     mImageNeedsTransformInvalidation(false),
     mIsPaintingSVGImageElement(false),
     mHasChildrenOnlyTransform(false),

@@ -62,7 +62,7 @@ let SocialUI = {
         break;
       case "social:ambient-notification-changed":
         SocialToolbar.updateButton();
-        SocialMenu.updateMenu();
+        SocialMenu.populate();
         break;
       case "social:profile-changed":
         SocialToolbar.updateProfile();
@@ -72,6 +72,8 @@ let SocialUI = {
       case "nsPref:changed":
         SocialSidebar.updateSidebar();
         SocialToolbar.updateButton();
+        SocialMenu.populate();
+        break;
     }
   },
 
@@ -99,25 +101,14 @@ let SocialUI = {
     SocialToolbar.init();
     SocialShareButton.init();
     SocialSidebar.init();
+    SocialMenu.populate();
   },
 
   updateToggleCommand: function SocialUI_updateToggleCommand() {
     let toggleCommand = this.toggleCommand;
+    // We only need to update the command itself - all our menu items use it.
     toggleCommand.setAttribute("checked", Services.prefs.getBoolPref("social.enabled"));
-
-    // FIXME: bug 772808: menu items don't inherit the "hidden" state properly,
-    // need to update them manually.
-    // This should just be: toggleCommand.hidden = !Social.active;
-    for (let id of ["appmenu_socialToggle", "menu_socialToggle", "menu_socialAmbientMenu"]) {
-      let el = document.getElementById(id);
-      if (!el)
-        continue;
-
-      if (Social.active)
-        el.removeAttribute("hidden");
-      else
-        el.setAttribute("hidden", "true");
-    }
+    toggleCommand.setAttribute("hidden", Social.active ? "false" : "true");
   },
 
   // This handles "ActivateSocialFeature" events fired against content documents
@@ -610,24 +601,28 @@ var SocialMenu = {
   populate: function SocialMenu_populate() {
     // This menu is only accessible through keyboard navigation.
     let submenu = document.getElementById("menu_socialAmbientMenuPopup");
-    while (submenu.hasChildNodes())
-      submenu.removeChild(submenu.firstChild);
+    let ambientMenuItems = submenu.getElementsByClassName("ambient-menuitem");
+    for (let ambientMenuItem of ambientMenuItems)
+      submenu.removeChild(ambientMenuItem);
     let provider = Social.provider;
     if (Social.active && provider) {
       let iconNames = Object.keys(provider.ambientNotificationIcons);
+      let separator = document.getElementById("socialAmbientMenuSeparator");
       for (let name of iconNames) {
         let icon = provider.ambientNotificationIcons[name];
         if (!icon.label || !icon.menuURL)
           continue;
         let menuitem = document.createElement("menuitem");
         menuitem.setAttribute("label", icon.label);
+        menuitem.classList.add("ambient-menuitem");
         menuitem.addEventListener("command", function() {
           openUILinkIn(icon.menuURL, "tab");
         }, false);
-        submenu.appendChild(menuitem);
+        submenu.insertBefore(menuitem, separator);
       }
+      separator.hidden = !iconNames.length;
     }
-    document.getElementById("menu_socialAmbientMenu").hidden = !submenu.querySelector("menuitem");
+    document.getElementById("menu_socialAmbientMenu").hidden = !Social.enabled;
   }
 };
 
@@ -692,11 +687,12 @@ var SocialToolbar = {
     const CACHE_PREF_NAME = "social.cached.notificationIcons";
     // provider.profile == undefined means no response yet from the provider
     // to tell us whether the user is logged in or not.
-    if (!SocialUI.haveLoggedInUser() && provider.profile !== undefined) {
-      // The provider has responded with a profile and the user isn't logged
-      // in.  The icons etc have already been removed by
-      // updateButtonHiddenState, so we want to nuke any cached icons we
-      // have and get out of here!
+    if (!Social.provider || !Social.provider.enabled ||
+        (!SocialUI.haveLoggedInUser() && provider.profile !== undefined)) {
+      // Either no enabled provider, or there is a provider and it has
+      // responded with a profile and the user isn't loggedin.  The icons
+      // etc have already been removed by updateButtonHiddenState, so we want
+      // to nuke any cached icons we have and get out of here!
       Services.prefs.clearUserPref(CACHE_PREF_NAME);
       return;
     }
@@ -923,7 +919,7 @@ var SocialSidebar = {
   updateSidebar: function SocialSidebar_updateSidebar() {
     // Hide the toggle menu item if the sidebar cannot appear
     let command = document.getElementById("Social:ToggleSidebar");
-    command.hidden = !this.canShow;
+    command.setAttribute("hidden", this.canShow ? "false" : "true");
 
     // Hide the sidebar if it cannot appear, or has been toggled off.
     // Also set the command "checked" state accordingly.

@@ -1194,6 +1194,19 @@ SpecialPowersAPI.prototype = {
               .getService(Ci.nsIIOService)
               .newURI(arg, null, null)
               .spec;
+    } else if (arg.manifestURL) {
+      // It's a thing representing an app.
+      let tmp = {};
+      Components.utils.import("resource://gre/modules/Webapps.jsm", tmp);
+
+      let app = tmp.DOMApplicationRegistry.getAppByManifestURL(arg.manifestURL);
+      if (!app) {
+        throw "No app for this manifest!";
+      }
+
+      appId = app.localId;
+      url = app.origin;
+      isInBrowserElement = arg.isInBrowserElement || false;
     } else if (arg.nodePrincipal) {
       // It's a document.
       url = arg.nodePrincipal.URI.spec;

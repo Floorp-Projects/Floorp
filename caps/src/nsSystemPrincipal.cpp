@@ -198,6 +198,13 @@ nsSystemPrincipal::GetUnknownAppId(bool* aUnknownAppId)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSystemPrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
+{
+  *aIsNullPrincipal = false;
+  return NS_OK;
+}
+
 //////////////////////////////////////////
 // Methods implementing nsISerializable //
 //////////////////////////////////////////
