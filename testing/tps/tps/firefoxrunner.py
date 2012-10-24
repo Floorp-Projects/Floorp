@@ -3,14 +3,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import copy
+import httplib2
 import os
 import shutil
 import sys
 
+import mozinstall
+
 from mozprocess.pid import get_pids
 from mozprofile import Profile
-from mozregression.mozInstall import MozInstaller
-from mozregression.utils import download_url, get_platform
 from mozrunner import FirefoxRunner
 
 class TPSFirefoxRunner(object):
@@ -31,8 +32,18 @@ class TPSFirefoxRunner(object):
     if self.installdir:
       shutil.rmtree(self.installdir, True)
 
-  def download_build(self, installdir='downloadedbuild',
-                     appname='firefox', macAppName='Minefield.app'):
+  def download_url(self, url, dest=None):
+    h = httplib2.Http()
+    resp, content = h.request(url, "GET")
+    if dest == None:
+        dest = os.path.basename(url)
+
+    local = open(dest, 'wb')
+    local.write(content)
+    local.close()
+    return dest
+
+  def download_build(self, installdir='downloadedbuild', appname='firefox'):
     self.installdir = os.path.abspath(installdir)
     buildName = os.path.basename(self.url)
     pathToBuild = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -44,27 +55,15 @@ class TPSFirefoxRunner(object):
 
     # download the build
     print "downloading build"
-    download_url(self.url, pathToBuild)
+    self.download_url(self.url, pathToBuild)
 
     # install the build
     print "installing %s" % pathToBuild
     shutil.rmtree(self.installdir, True)
-    MozInstaller(src=pathToBuild, dest=self.installdir, dest_app=macAppName)
+    binary = mozinstall.install(src=pathToBuild, dest=self.installdir)
 
     # remove the downloaded archive
     os.remove(pathToBuild)
-
-    # calculate path to binary
-    platform = get_platform()
-    if platform['name'] == 'Mac':
-      binary = '%s/%s/Contents/MacOS/%s-bin' % (installdir,
-                                                macAppName,
-                                                appname)
-    else:
-      binary = '%s/%s/%s%s' % (installdir,
-                               appname,
-                               appname,
-                               '.exe' if platform['name'] == 'Windows' else '')
 
     return binary
 
