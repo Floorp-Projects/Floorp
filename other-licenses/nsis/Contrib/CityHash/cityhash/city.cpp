@@ -45,10 +45,10 @@ using namespace std;
 #endif
 
 // Some primes between 2^63 and 2^64 for various uses.
-static const uint64 k0 = 0xc3a5c85c97cb3127ULL;
-static const uint64 k1 = 0xb492b66fbe98f273ULL;
-static const uint64 k2 = 0x9ae16a3b2f90404fULL;
-static const uint64 k3 = 0xc949d7c7509e6557ULL;
+static const uint64 k0 = 0xc3a5c85c97cb3127;
+static const uint64 k1 = 0xb492b66fbe98f273;
+static const uint64 k2 = 0x9ae16a3b2f90404f;
+static const uint64 k3 = 0xc949d7c7509e6557;
 
 // Bitwise right rotate.  Normally this will compile to a single
 // instruction, especially if the shift is a manifest constant.
