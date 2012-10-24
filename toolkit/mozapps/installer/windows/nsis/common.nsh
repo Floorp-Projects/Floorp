@@ -6987,32 +6987,21 @@
 
       ${If} ${AtLeastWin7}
         ${${_MOZFUNC_UN}GetLongPath} "$R9" $R9
+        ; Always create a new AppUserModelID and overwrite the existing one
+        ; for the current installation path.
+        CityHash::GetCityHash64 "$R9"
+        Pop $AppUserModelID
+        ${If} $AppUserModelID == "error"
+          GoTo end
+        ${EndIf}
         ClearErrors
-        ReadRegStr $R7 HKLM "$R8" "$R9"
+        WriteRegStr HKLM "$R8" "$R9" "$AppUserModelID"
         ${If} ${Errors}
           ClearErrors
-          ReadRegStr $R7 HKCU "$R8" "$R9"
+          WriteRegStr HKCU "$R8" "$R9" "$AppUserModelID"
           ${If} ${Errors}
-            ; If it doesn't exist, create a new one and store it
-            CityHash::GetCityHash64 "$R9"
-            Pop $AppUserModelID
-            ${If} $AppUserModelID == "error"
-              GoTo end
-            ${EndIf}
-            ClearErrors
-            WriteRegStr HKLM "$R8" "$R9" "$AppUserModelID"
-            ${If} ${Errors}
-              ClearErrors
-              WriteRegStr HKCU "$R8" "$R9" "$AppUserModelID"
-              ${If} ${Errors}
-                StrCpy $AppUserModelID "error"
-              ${EndIf}
-            ${EndIf}
-          ${Else}
-            StrCpy $AppUserModelID $R7
+            StrCpy $AppUserModelID "error"
           ${EndIf}
-        ${Else}
-          StrCpy $AppUserModelID $R7
         ${EndIf}
       ${EndIf}
 
