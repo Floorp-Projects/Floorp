@@ -950,9 +950,15 @@ gov.gr
 // gs : http://en.wikipedia.org/wiki/.gs
 gs
 
-// gt : http://www.gt/politicas.html
-*.gt
-!www.gt
+// gt : http://www.gt/politicas_de_registro.html
+gt
+com.gt
+edu.gt
+gob.gt
+ind.gt
+mil.gt
+net.gt
+org.gt
 
 // gu : http://gadao.gov.gu/registration.txt
 *.gu
