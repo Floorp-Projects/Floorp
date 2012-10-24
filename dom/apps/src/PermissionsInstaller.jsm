@@ -232,6 +232,11 @@ const PermissionsTable = { "resource-lock": {
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
+                           "background-sensors": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
+                           },
                          };
 
 // Sometimes all permissions (fully expanded) need to be iterated through
