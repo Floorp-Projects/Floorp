@@ -43,8 +43,9 @@ let FormAssistant = {
   _focusedElement: null,
 
   get focusedElement() {
-    if (Cu.isDeadWrapper(this._focusedElement))
+    if (this._focusedElement && Cu.isDeadWrapper(this._focusedElement))
       this._focusedElement = null;
+
     return this._focusedElement;
   },
 
