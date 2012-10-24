@@ -20,6 +20,7 @@
 #include "nsCOMPtr.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "mozilla/SHA1.h"
 #include <sys/stat.h>
 #include <vector>
 #include <algorithm>
@@ -37,6 +38,40 @@ struct FuncData {
     void *Function;        // The function that will be replaced with 'Wrapper'
     void *Buffer;          // Will point to the jump buffer that lets us call
                            // 'Function' after it has been replaced.
+};
+
+// This a wrapper over a file descriptor that provides a Printf method and
+// computes the sha1 of the data that passes through it.
+class SHA1Stream
+{
+public:
+    SHA1Stream(int aFd) {
+        MozillaRegisterDebugFD(aFd);
+        mFile = fdopen(aFd, "w");
+    }
+    void Printf(const char *aFormat, ...)
+    {
+        MOZ_ASSERT(mFile);
+        va_list list;
+        va_start(list, aFormat);
+        nsAutoCString str;
+        str.AppendPrintf(aFormat, list);
+        va_end(list);
+        mSHA1.update(reinterpret_cast<const uint8_t*>(str.get()), str.Length());
+        fwrite(str.get(), 1, str.Length(), mFile);
+    }
+    void Finish(SHA1Sum::Hash &aHash)
+    {
+        int fd = fileno(mFile);
+        fflush(mFile);
+        MozillaUnRegisterDebugFD(fd);
+        fclose(mFile);
+        mSHA1.finish(aHash);
+        mFile = NULL;
+    }
+private:
+    FILE *mFile;
+    SHA1Sum mSHA1;
 };
 
 void RecordStackWalker(void *aPC, void *aSP, void *aClosure)
@@ -67,19 +102,22 @@ bool ValidWriteAssert(bool ok)
                             "/Telemetry.LateWriteTmpXXXXXX");
     char *name;
     nameAux.GetMutableData(&name);
+
+    // We want the sha1 of the entire file, so please don't write to fd
+    // directly, use sha1Stream.
     int fd = mkstemp(name);
-    MozillaRegisterDebugFD(fd);
-    FILE *f = fdopen(fd, "w");
+    SHA1Stream sha1Stream(fd);
+    fd = 0;
 
     size_t numModules = stack.GetNumModules();
-    fprintf(f, "%zu\n", numModules);
+    sha1Stream.Printf("%u\n", (unsigned)numModules);
     for (int i = 0; i < numModules; ++i) {
         Telemetry::ProcessedStack::Module module = stack.GetModule(i);
-        fprintf(f, "%s\n", module.mName.c_str());
+        sha1Stream.Printf("%s\n", module.mName.c_str());
     }
 
     size_t numFrames = stack.GetStackSize();
-    fprintf(f, "%zu\n", numFrames);
+    sha1Stream.Printf("%u\n", (unsigned)numFrames);
     for (size_t i = 0; i < numFrames; ++i) {
         const Telemetry::ProcessedStack::Frame &frame =
             stack.GetFrame(i);
@@ -92,18 +130,23 @@ bool ValidWriteAssert(bool ok)
         //      vmaddr 0x0000000100000000
         // so to print the line matching the offset 123 one has to run
         // atos -o firefox 0x100000123.
-        fprintf(f, "%d %jx\n", frame.mModIndex, frame.mOffset);
+        sha1Stream.Printf("%d %x\n", frame.mModIndex, (unsigned)frame.mOffset);
     }
 
-    fflush(f);
-    MozillaUnRegisterDebugFD(fd);
-    fclose(f);
+    SHA1Sum::Hash sha1;
+    sha1Stream.Finish(sha1);
 
-    // FIXME: For now we just record the last write. We should write the files
-    // to filenames that include the md5. That will provide a simple early
-    // deduplication if the same bug is found in multiple runs.
-    nsPrintfCString finalName("%s%s", sProfileDirectory,
-                              "/Telemetry.LateWriteFinal-last");
+    // Note: These files should be deleted by telemetry once it reads them. If
+    // there were no telemery runs by the time we shut down, we just add files
+    // to the existing ones instead of replacing them. Given that each of these
+    // files is a bug to be fixed, that is probably the right thing to do.
+
+    // We append the sha1 of the contents to the file name. This provides a simple
+    // client side deduplication.
+    nsPrintfCString finalName("%s%s", sProfileDirectory, "/Telemetry.LateWriteFinal-");
+    for (int i = 0; i < 20; ++i) {
+        finalName.AppendPrintf("%02x", sha1[i]);
+    }
     PR_Delete(finalName.get());
     PR_Rename(name, finalName.get());
     return false;
