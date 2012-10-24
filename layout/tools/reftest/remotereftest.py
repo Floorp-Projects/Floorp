@@ -13,7 +13,7 @@ SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])
 from runreftest import RefTest
 from runreftest import ReftestOptions
 from automation import Automation
-import devicemanager, devicemanagerADB, devicemanagerSUT, devicemanager
+import devicemanager, devicemanagerADB, devicemanagerSUT
 from remoteautomation import RemoteAutomation
 
 class RemoteOptions(ReftestOptions):
