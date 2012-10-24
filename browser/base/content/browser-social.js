@@ -593,7 +593,7 @@ let SocialShareButton = {
       shareButton.setAttribute("tooltiptext", this.promptMessages['shareTooltip']);
       imageURL = this.promptImages["share"]
     }
-    shareButton.src = imageURL;
+    shareButton.style.backgroundImage = 'url("' + encodeURI(imageURL) + '")';
   }
 };
 
