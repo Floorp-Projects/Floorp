@@ -355,6 +355,8 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   NS_PRECONDITION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
                   "Must have a computed width");
 
+  SchedulePaint();
+
   mHasPendingInterruptAtStartOfReflow = aPresContext->HasPendingInterrupt();
 
   // If all the content and frames are here 
