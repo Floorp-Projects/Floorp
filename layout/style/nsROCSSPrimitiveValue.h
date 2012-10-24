@@ -99,5 +99,11 @@ private:
   } mValue;
 };
 
+inline nsROCSSPrimitiveValue *mozilla::dom::CSSValue::AsPrimitiveValue()
+{
+  return CssValueType() == nsIDOMCSSValue::CSS_PRIMITIVE_VALUE ?
+    static_cast<nsROCSSPrimitiveValue*>(this) : nullptr;
+}
+
 #endif /* nsROCSSPrimitiveValue_h___ */
 
