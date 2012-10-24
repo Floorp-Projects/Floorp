@@ -164,8 +164,8 @@ protected:
 	public: // other methods
 
     // Gets the filename from the kFilePromiseURLMime flavour
-    nsresult GetDownloadDetails(nsIURI **aSourceURI,
-                                nsAString &aFilename);
+    HRESULT GetDownloadDetails(nsIURI **aSourceURI,
+                               nsAString &aFilename);
 
 	protected:
     // help determine the kind of drag
