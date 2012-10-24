@@ -203,8 +203,6 @@ public:
                                               LPARAM aLParam,
                                               bool aDispatchPendingEvents);
 
-  void                    SuppressBlurEvents(bool aSuppress); // Called from nsFilePicker
-  bool                    BlurEventsSuppressed();
 #ifdef ACCESSIBILITY
   Accessible* GetRootAccessible();
 #endif // ACCESSIBILITY
@@ -329,6 +327,7 @@ protected:
    * Event processing helpers
    */
   bool                    DispatchPluginEvent(const MSG &aMsg);
+  HWND                    GetTopLevelForFocus(HWND aCurWnd);
   void                    DispatchFocusToTopLevelWindow(bool aIsActivate);
   bool                    DispatchStandardEvent(uint32_t aMsg);
   bool                    DispatchCommandEvent(uint32_t aEventCommand);
@@ -470,7 +469,6 @@ protected:
   bool                  mFullscreenMode;
   bool                  mMousePresent;
   bool                  mDestroyCalled;
-  uint32_t              mBlurSuppressLevel;
   DWORD_PTR             mOldStyle;
   DWORD_PTR             mOldExStyle;
   InputContext mInputContext;
@@ -483,6 +481,7 @@ protected:
   uint32_t              mPickerDisplayCount;
   HICON                 mIconSmall;
   HICON                 mIconBig;
+  HWND                  mLastKillFocusWindow;
   static bool           sDropShadowEnabled;
   static uint32_t       sInstanceCount;
   static TriStateBool   sCanQuit;
