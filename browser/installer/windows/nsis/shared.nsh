@@ -1116,6 +1116,27 @@ Function SetAsDefaultAppUserHKCU
   ${EndUnless}
 
   SetShellVarContext current  ; Set SHCTX to the current user (e.g. HKCU)
+
+  ${If} ${AtLeastWin8}
+    ${SetStartMenuInternet} "HKCU"
+    ${FixShellIconHandler} "HKCU"
+    ${FixClassKeys} ; Does not use SHCTX
+; If MOZ_METRO is defined and we're at least win8, then we should re-create
+; the start menu shortcut so that the Metro browser is accessible.
+; This is also for zip builds who won't have a start menu shortcut yet.
+!ifdef MOZ_METRO
+    Delete "$SMPROGRAMS\${BrandFullName}.lnk"
+    CreateShortCut "$SMPROGRAMS\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}"
+    ${If} ${FileExists} "$SMPROGRAMS\${BrandFullName}.lnk"
+      ShellLink::SetShortCutWorkingDirectory "$SMPROGRAMS\${BrandFullName}.lnk" \
+                                             "$INSTDIR"
+      ${If} "$AppUserModelID" != ""
+        ApplicationID::Set "$SMPROGRAMS\${BrandFullName}.lnk" "$AppUserModelID" "true"
+      ${EndIf}
+    ${EndIf}
+!endif
+  ${EndIf}
+
   ${SetHandlers}
 
   ${If} ${AtLeastWinVista}
@@ -1148,9 +1169,28 @@ FunctionEnd
 !ifdef NO_LOG
 
 Function SetAsDefaultAppUser
-  ; It is only possible to set this installation of the application as the
-  ; StartMenuInternet handler if it was added to the HKLM StartMenuInternet
-  ; registry keys.
+  ; On Win8, we want to avoid having a UAC prompt since we'll already have
+  ; another action for control panel default browser selection popping up
+  ; to the user.  Win8 is the first OS where the start menu keys can be
+  ; added into HKCU.  The call to SetAsDefaultAppUserHKCU will have already
+  ; set the HKCU keys for SetStartMenuInternet.
+  ${If} ${AtLeastWin8}
+    ; Check if this is running in an elevated process
+    ClearErrors
+    ${GetParameters} $0
+    ${GetOptions} "$0" "/UAC:" $0
+    ${If} ${Errors} ; Not elevated
+      Call SetAsDefaultAppUserHKCU
+    ${Else} ; Elevated - execute the function in the unelevated process
+      GetFunctionAddress $0 SetAsDefaultAppUserHKCU
+      UAC::ExecCodeSegment $0
+    ${EndIf}
+    Return ; Nothing more needs to be done
+  ${EndIf}
+
+  ; Before Win8, it is only possible to set this installation of the application
+  ; as the StartMenuInternet handler if it was added to the HKLM
+  ; StartMenuInternet registry keys.
   ; http://support.microsoft.com/kb/297878
 
   ; Check if this install location registered as the StartMenuInternet client
@@ -1183,17 +1223,6 @@ Function SetAsDefaultAppUser
       ${EndIf}
     ${EndIf}
   ${EndUnless}
-
-  ; On Win8, we want to avoid having a UAC prompt since we'll already have
-  ; another action for control panel default browser selection popping up
-  ; to the user.  Win8 is the first OS where the start menu keys can be
-  ; added into HKCU.
-  ${If} ${AtLeastWin8}
-    ${SetStartMenuInternet} "HKCU"
-    ${FixShellIconHandler} "HKCU"
-    ${FixClassKeys} ; Does not use SHCTX
-    Return
-  ${EndIf}
 
   ; The code after ElevateUAC won't be executed on Vista and above when the
   ; user:
