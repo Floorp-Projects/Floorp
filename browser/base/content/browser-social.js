@@ -210,6 +210,10 @@ let SocialChatBar = {
   update: function() {
     if (!this.canShow)
       this.chatbar.removeAll();
+  },
+  focus: function SocialChatBar_focus() {
+    let commandDispatcher = gBrowser.ownerDocument.commandDispatcher;
+    commandDispatcher.advanceFocusIntoSubtree(this.chatbar);
   }
 }
 
@@ -882,12 +886,6 @@ var SocialToolbar = {
 var SocialSidebar = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SocialSidebar_init() {
-    let sbrowser = document.getElementById("social-sidebar-browser");
-    // setting isAppTab causes clicks on untargeted links to open new tabs
-    sbrowser.docShell.isAppTab = true;
-    sbrowser.webProgress.addProgressListener(new SocialErrorListener("sidebar"),
-                                             Ci.nsIWebProgress.NOTIFY_STATE_REQUEST |
-                                             Ci.nsIWebProgress.NOTIFY_LOCATION);
     this.updateSidebar();
   },
 
@@ -917,6 +915,7 @@ var SocialSidebar = {
   },
 
   updateSidebar: function SocialSidebar_updateSidebar() {
+    clearTimeout(this._unloadTimeoutId);
     // Hide the toggle menu item if the sidebar cannot appear
     let command = document.getElementById("Social:ToggleSidebar");
     command.setAttribute("hidden", this.canShow ? "false" : "true");
@@ -932,15 +931,26 @@ var SocialSidebar = {
     sbrowser.docShell.isActive = !hideSidebar;
     if (hideSidebar) {
       this.dispatchEvent("socialFrameHide");
-      // If we're disabled, unload the sidebar content
+      // If we've been disabled, unload the sidebar content immediately;
+      // if the sidebar was just toggled to invisible, wait a timeout
+      // before unloading.
       if (!this.canShow) {
-        sbrowser.removeAttribute("origin");
-        sbrowser.setAttribute("src", "about:blank");
+        this.unloadSidebar();
+      } else {
+        this._unloadTimeoutId = setTimeout(
+          this.unloadSidebar,
+          Services.prefs.getIntPref("social.sidebar.unload_timeout_ms")
+        );
       }
     } else {
       // Make sure the right sidebar URL is loaded
       if (sbrowser.getAttribute("origin") != Social.provider.origin) {
         sbrowser.setAttribute("origin", Social.provider.origin);
+        // setting isAppTab causes clicks on untargeted links to open new tabs
+        sbrowser.docShell.isAppTab = true;
+        sbrowser.webProgress.addProgressListener(new SocialErrorListener("sidebar"),
+                                                 Ci.nsIWebProgress.NOTIFY_STATE_REQUEST |
+                                                 Ci.nsIWebProgress.NOTIFY_LOCATION);
         sbrowser.setAttribute("src", Social.provider.sidebarURL);
         sbrowser.addEventListener("load", function sidebarOnShow() {
           sbrowser.removeEventListener("load", sidebarOnShow);
@@ -954,6 +964,25 @@ var SocialSidebar = {
       }
     }
   },
+
+  unloadSidebar: function SocialSidebar_unloadSidebar() {
+    let sbrowser = document.getElementById("social-sidebar-browser");
+    if (!sbrowser.hasAttribute("origin"))
+      return;
+
+    // Bug 803255 - If we don't remove the sidebar browser from the DOM,
+    // the previous document leaks because it's only released when the
+    // sidebar is made visible again.
+    let container = sbrowser.parentNode;
+    container.removeChild(sbrowser);
+    sbrowser.removeAttribute("origin");
+    sbrowser.removeAttribute("src");
+    container.appendChild(sbrowser);
+
+    SocialFlyout.unload();
+  },
+
+  _unloadTimeoutId: 0,
 
   setSidebarErrorMessage: function() {
     let sbrowser = document.getElementById("social-sidebar-browser");

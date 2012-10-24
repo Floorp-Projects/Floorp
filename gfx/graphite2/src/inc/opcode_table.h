@@ -55,8 +55,8 @@ static const opcode_t opcode_table[] =
     {{do2(sub)},                                    0, "SUB"},
     {{do2(mul)},                                    0, "MUL"},
     {{do2(div_)},                                   0, "DIV"},
-    {{do2(min)},                                    0, "MIN"},
-    {{do2(max)},                                    0, "MAX"},
+    {{do2(min_)},                                   0, "MIN"},
+    {{do2(max_)},                                   0, "MAX"},
     {{do2(neg)},                                    0, "NEG"},
     {{do2(trunc8)},                                 0, "TRUNC8"},
     {{do2(trunc16)},                                0, "TRUNC16"},
@@ -114,7 +114,7 @@ static const opcode_t opcode_table[] =
     {{do_(put_glyph), NILOP},                       2, "PUT_GLYPH"},                // output_class output_class
     {{do2(push_glyph_attr)},                        3, "PUSH_GLYPH_ATTR"},          // gattrnum gattrnum slot
     {{do2(push_att_to_glyph_attr)},                 3, "PUSH_ATT_TO_GLYPH_ATTR"},   // gattrnum gattrnum slot
-    // private internal private opcodes for internal use only, comes after all other on disk opcodes.
+    // private opcodes for internal use only, comes after all other on disk opcodes.
     {{do_(temp_copy), NILOP},                       0, "TEMP_COPY"}
 };
 

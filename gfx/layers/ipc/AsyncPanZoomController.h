@@ -364,8 +364,8 @@ protected:
   SingleTouchData& GetFirstSingleTouch(const MultiTouchInput& aEvent);
 
   /**
-   * Sets up anything needed for panning. This may lock one of the axes if the
-   * angle of movement is heavily skewed towards it.
+   * Sets up anything needed for panning. This takes us out of the "TOUCHING"
+   * state and starts actually panning us.
    */
   void StartPanning(const MultiTouchInput& aStartPoint);
 
@@ -442,7 +442,7 @@ private:
     NOTHING,        /* no touch-start events received */
     FLING,          /* all touches removed, but we're still scrolling page */
     TOUCHING,       /* one touch-start event received */
-    PANNING,        /* panning without axis lock */
+    PANNING,        /* panning the frame */
     PINCHING,       /* nth touch-start, where n > 1. this mode allows pan and zoom */
     ANIMATING_ZOOM, /* animated zoom to a new rect */
     WAITING_LISTENERS, /* a state halfway between NOTHING and TOUCHING - the user has

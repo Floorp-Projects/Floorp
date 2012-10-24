@@ -319,8 +319,13 @@
                 readonly="true">
         <getter>
         <![CDATA[
-          if (!this._webNavigation)
-            this._webNavigation = this.isRemoteBrowser ? this._remoteWebNavigation : this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+          try {
+            if (!this._webNavigation)
+              this._webNavigation = this.isRemoteBrowser ? this._remoteWebNavigation : this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+          } catch (e) {
+            window.dump(e.stack);
+            throw e;
+          }
           return this._webNavigation;
         ]]>
         </getter>

@@ -78,7 +78,7 @@ public:
     uint16 findClassIndex(uint16 cid, uint16 gid) const;
     uint16 getClassGlyph(uint16 cid, unsigned int index) const;
     uint16 findPseudo(uint32 uid) const;
-    size_t numUser() const { return m_aUser; }
+    uint8 numUser() const { return m_aUser; }
     uint8 aPseudo() const { return m_aPseudo; }
     uint8 aBreak() const { return m_aBreak; }
     uint8 aMirror() const {return m_aMirror; }
@@ -86,11 +86,11 @@ public:
     uint8 positionPass() const { return m_pPass; }
     uint8 justificationPass() const { return m_jPass; }
     uint8 bidiPass() const { return m_bPass; }
-    size_t numPasses() const { return m_numPasses; }
-    size_t maxCompPerLig() const { return m_iMaxComp; }
-    size_t numClasses() const { return m_nClass; }
-    uint8 flags() const { return m_flags; }
-    size_t numJustLevels() const { return m_numJusts; }
+    uint8 numPasses() const { return m_numPasses; }
+    uint8 maxCompPerLig() const { return m_iMaxComp; }
+    uint16 numClasses() const { return m_nClass; }
+    byte  flags() const { return m_flags; }
+    uint8 numJustLevels() const { return m_numJusts; }
     Justinfo *justAttrs() const { return m_justs; }
     uint16 endLineGlyphid() const { return m_gEndLine; }
     const gr_faceinfo *silfInfo() const { return &m_silfinfo; }

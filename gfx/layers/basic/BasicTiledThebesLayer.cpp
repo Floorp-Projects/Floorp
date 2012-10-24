@@ -274,6 +274,7 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInvali
   gfx::Rect viewport;
   float scaleX, scaleY;
   if (BasicManager()->ProgressiveUpdateCallback(!freshRegion.IsEmpty(), viewport, scaleX, scaleY)) {
+    SAMPLE_MARKER("Abort painting");
     aRegionToPaint.SetEmpty();
     return aIsRepeated;
   }

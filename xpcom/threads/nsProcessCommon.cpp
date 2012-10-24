@@ -443,15 +443,13 @@ nsProcess::RunProcess(bool blocking, char **my_argv, nsIObserver* observer,
      */
 
     // The program name in my_argv[0] is always UTF-8
-    int32_t numChars = MultiByteToWideChar(CP_UTF8, 0, my_argv[0], -1, NULL, 0); 
-    PRUnichar* wideFile = (PRUnichar *) PR_MALLOC(numChars * sizeof(PRUnichar));
-    MultiByteToWideChar(CP_UTF8, 0, my_argv[0], -1, wideFile, numChars); 
+    NS_ConvertUTF8toUTF16 wideFile(my_argv[0]);
 
     SHELLEXECUTEINFOW sinfo;
     memset(&sinfo, 0, sizeof(SHELLEXECUTEINFOW));
     sinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
     sinfo.hwnd   = NULL;
-    sinfo.lpFile = wideFile;
+    sinfo.lpFile = wideFile.get();
     sinfo.nShow  = SW_SHOWNORMAL;
     sinfo.fMask  = SEE_MASK_FLAG_DDEWAIT |
                    SEE_MASK_NO_CONSOLE |
@@ -467,7 +465,6 @@ nsProcess::RunProcess(bool blocking, char **my_argv, nsIObserver* observer,
 
     mProcess = sinfo.hProcess;
 
-    PR_Free(wideFile);
     if (cmdLine)
         PR_Free(cmdLine);
 
