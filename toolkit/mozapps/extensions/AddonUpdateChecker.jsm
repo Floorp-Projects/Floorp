@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
                                   "resource://gre/modules/AddonRepository.jsm");
 
 // Shared code for suppressing bad cert dialogs.
-XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
+XPCOMUtils.defineLazyGetter(this, "CertUtils", function certUtilsLazyGetter() {
   let certUtils = {};
   Components.utils.import("resource://gre/modules/CertUtils.jsm", certUtils);
   return certUtils;
@@ -45,7 +45,7 @@ var gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
            getService(Ci.nsIRDFService);
 
 ["LOG", "WARN", "ERROR"].forEach(function(aName) {
-  this.__defineGetter__(aName, function() {
+  this.__defineGetter__(aName, function logFuncGetter() {
     Components.utils.import("resource://gre/modules/AddonLogging.jsm");
 
     LogManager.getLogger("addons.updates", this);
@@ -413,8 +413,8 @@ function UpdateParser(aId, aUpdateKey, aUrl, aObserver) {
     this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     this.request.overrideMimeType("text/xml");
     var self = this;
-    this.request.addEventListener("load", function(event) { self.onLoad() }, false);
-    this.request.addEventListener("error", function(event) { self.onError() }, false);
+    this.request.addEventListener("load", function loadEventListener(event) { self.onLoad() }, false);
+    this.request.addEventListener("error", function errorEventListener(event) { self.onError() }, false);
     this.request.send(null);
   }
   catch (e) {
