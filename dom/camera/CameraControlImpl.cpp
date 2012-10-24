@@ -4,10 +4,36 @@
 
 #include "base/basictypes.h"
 #include "DOMCameraPreview.h"
+#include "CameraRecorderProfiles.h"
 #include "CameraControlImpl.h"
 #include "CameraCommon.h"
 
 using namespace mozilla;
+
+CameraControlImpl::CameraControlImpl(uint32_t aCameraId, nsIThread* aCameraThread, uint64_t aWindowId)
+  : mCameraId(aCameraId)
+  , mCameraThread(aCameraThread)
+  , mWindowId(aWindowId)
+  , mFileFormat()
+  , mMaxMeteringAreas(0)
+  , mMaxFocusAreas(0)
+  , mDOMPreview(nullptr)
+  , mAutoFocusOnSuccessCb(nullptr)
+  , mAutoFocusOnErrorCb(nullptr)
+  , mTakePictureOnSuccessCb(nullptr)
+  , mTakePictureOnErrorCb(nullptr)
+  , mStartRecordingOnSuccessCb(nullptr)
+  , mStartRecordingOnErrorCb(nullptr)
+  , mOnShutterCb(nullptr)
+  , mOnClosedCb(nullptr)
+{
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+}
+
+CameraControlImpl::~CameraControlImpl()
+{
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+}
 
 // Helpers for string properties.
 nsresult
@@ -195,6 +221,12 @@ CameraControlImpl::Get(nsICameraClosedCallback** aOnClosed)
   return NS_OK;
 }
 
+already_AddRefed<RecorderProfileManager>
+CameraControlImpl::GetRecorderProfileManager()
+{
+  return GetRecorderProfileManagerImpl();
+}
+
 void
 CameraControlImpl::Shutdown()
 {
@@ -276,9 +308,12 @@ CameraControlImpl::TakePicture(CameraSize aSize, int32_t aRotation, const nsAStr
 }
 
 nsresult
-CameraControlImpl::StartRecording(nsIDOMDeviceStorage* aStorageArea, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError)
+CameraControlImpl::StartRecording(CameraStartRecordingOptions* aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError)
 {
-  nsCOMPtr<nsIRunnable> startRecordingTask = new StartRecordingTask(this, aStorageArea, aFilename, onSuccess, onError);
+  nsCOMPtr<nsIFile> clone;
+  aFolder->Clone(getter_AddRefs(clone));
+
+  nsCOMPtr<nsIRunnable> startRecordingTask = new StartRecordingTask(this, *aOptions, clone, aFilename, onSuccess, onError, mWindowId);
   return mCameraThread->Dispatch(startRecordingTask, NS_DISPATCH_NORMAL);
 }
 
@@ -304,7 +339,7 @@ CameraControlImpl::StopPreview()
 }
 
 nsresult
-CameraControlImpl::GetPreviewStreamVideoMode(CameraRecordingOptions* aOptions, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError)
+CameraControlImpl::GetPreviewStreamVideoMode(CameraRecorderOptions* aOptions, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError)
 {
   nsCOMPtr<nsIRunnable> getPreviewStreamVideoModeTask = new GetPreviewStreamVideoModeTask(this, *aOptions, onSuccess, onError);
   return mCameraThread->Dispatch(getPreviewStreamVideoModeTask, NS_DISPATCH_NORMAL);

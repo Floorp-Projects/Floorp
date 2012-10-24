@@ -1177,6 +1177,7 @@ pref("social.manifest.facebook", "{\"origin\":\"https://www.facebook.com\",\"nam
 // built-in social functionality.
 pref("social.activation.whitelist", "https://www.facebook.com");
 pref("social.sidebar.open", true);
+pref("social.sidebar.unload_timeout_ms", 10000);
 pref("social.active", false);
 pref("social.toast-notifications.enabled", true);
 

@@ -59,6 +59,7 @@ function test() {
       is(searchItem.label, 'Search ' + ENGINE_NAME + ' for "test search"', "Check context menu label");
       is(searchItem.disabled, false, "Check that search context menu item is enabled");
       searchItem.click();
+      contextMenu.hidePopup();
     }
 
     function checkSearchURL(event){

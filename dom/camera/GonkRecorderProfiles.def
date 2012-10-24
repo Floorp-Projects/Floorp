@@ -1,0 +1,45 @@
+/*
+ * Copyright (C) 2012 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * DO NOT PUT RE-INCLUSION GUARD MACROS AROUND THIS HEADER!!!
+ */
+
+DEF_GONK_RECORDER_PROFILE(CAMCORDER_QUALITY_LOW,   "low")
+DEF_GONK_RECORDER_PROFILE(CAMCORDER_QUALITY_HIGH,  "high")
+DEF_GONK_RECORDER_PROFILE(CAMCORDER_QUALITY_QCIF,  "qcif")
+DEF_GONK_RECORDER_PROFILE(CAMCORDER_QUALITY_CIF,   "cif")
+DEF_GONK_RECORDER_PROFILE(CAMCORDER_QUALITY_480P,  "480p")
+DEF_GONK_RECORDER_PROFILE(CAMCORDER_QUALITY_720P,  "720p")
+DEF_GONK_RECORDER_PROFILE(CAMCORDER_QUALITY_1080P, "1080p")
+/**
+ * This profile is disabled because the CAMCORDER_QUALITY_QVGA value
+ * conflicts across AOSP and vendor-specific versions of MediaProfiles.h.
+ *
+ * See bug 804359.
+ */
+// DEF_GONK_RECORDER_PROFILE(CAMCORDER_QUALITY_QVGA,  "qvga")
+/**
+ * The following profiles do not appear in the AOSP version of
+ * MediaProfiles.h and are disabled.
+ *
+ * See bug 804359.
+ */
+// DEF_GONK_RECORDER_PROFILE(CAMCORDER_QUALITY_FWVGA, "fwvga")
+// DEF_GONK_RECORDER_PROFILE(CAMCORDER_QUALITY_WVGA,  "wvga")
+// DEF_GONK_RECORDER_PROFILE(CAMCORDER_QUALITY_VGA,   "vga")
+// DEF_GONK_RECORDER_PROFILE(CAMCORDER_QUALITY_WQVGA, "wqvga")
+#undef DEF_GONK_RECORDER_PROFILE

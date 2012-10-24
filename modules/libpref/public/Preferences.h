@@ -333,6 +333,8 @@ public:
   static void GetPreference(PrefSetting* aPref);
   static void SetPreference(const PrefSetting& aPref);
 
+  static int64_t GetPreferencesMemoryUsed();
+
 protected:
   nsresult NotifyServiceObservers(const char *aSubject);
   /**

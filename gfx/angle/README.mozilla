@@ -32,15 +32,100 @@ In this order:
     See bug 771406. Adds emulation for faceforward(float,float,float),
     which is needed to prevent crashing on Mac+Intel.
 
-In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
-Therefore, changes made to the Makefile.in files should not be stored in the local .patch files.
+In addition to these patches, the Makefile.in files are ours, they're not present in
+upsteam ANGLE. Therefore, changes made to the Makefile.in files should not be stored
+in the local .patch files.
 
 == How to update this ANGLE copy ==
 
 1. Unapply patches
+
+Unapply them in reverse order, so iterate over the above list of applied patch
+starting from the bottom. You most likely want to record these patch-unapply
+operations as individual patches themselves, in order to re-apply patches later.
+
+$ cd /path/to/mozilla-central
+
+$ patch -p1 -R < gfx/angle/angle-some-bug-fix.patch
+$ hg qnew unapply-angle-some-bug-fix.patch
+
 2. Apply diff with new ANGLE version
-3. Reapply patches.
-4. Check for changes in src/build_angle.gyp, update our Makefile.in files accordingly. Note that a single file may be recorded in more than one Makefile.
+
+Check at the top of this file what ANGLE revision we currently have. Let's say it's
+r123. Check at the ANGLE Web site what recent revisions look like to figure what
+revision seems safe. Let's say we want r456.
+
+$ cd
+$ svn checkout http://angleproject.googlecode.com/svn/trunk/ angleproject
+$ cd angleproject
+$ svn diff -r 123:456 > ~/angle-diff-from-123-to-456
+$ cd /path/to/mozilla-central
+$ cd gfx/angle
+$ patch -p0 < ~/angle-diff-from-123-to-456
+$ cd ../..
+$ hg status
+# hg add any new ANGLE files under gfx/angle
+$ hg qnew angle-diff-from-123-to-456
+
+3. Reapply patches
+
+You may have to skip reapplying certain patches there, for example if they have
+been integrated into ANGLE since our last update. The short patch descriptions above
+in this file should help you make that decision.
+
+If you have recorded the individual patch unapply operations in step 1 as separate
+Mercurial patches, this will be easy, just apply the inverse patches now, in reverse
+order:
+
+$ patch -p1 -R < .hg/patches/unapply-angle-some-bug-fix.patch
+$ hg status
+# hg add any new ANGLE files under gfx/angle
+$ hg qnew angle-some-bug-fix.patch
+
+Note that here you need to proceed in the reverse order of what you did in step 1.
+
+4. Update our Makefiles
+
+Open your ANGLE diff file (~/angle-diff-from-123-to-456), search for GYP files
+(e.g. build_angle.gyp), it's easy-to-read JSON. It may list additions of new files,
+or removal of old files. You have to reflect this in our Makefiles:
+
+gfx/angle/Makefile.in
+gfx/angle/src/libEGL/Makefile.in
+gfx/angle/src/libGLESv2/Makefile.in
+
+The first one is our main Makefile. It has basically the ANGLE shader compiler.
+Changes there will typically have to be applied also to the two other Makefiles.
+These two other Makefiles are Windows-only and build the ANGLE GLES2-on-top-of-D3D
+implementation.
+
+5. Update patch files
+
+Something like:
+
+$ cp .hg/patches/angle-some-bug-fix.patch gfx/angle
+
+For each patch that you reapplied.
+
+If a patch was removed (not reapplied), remove the corresponding patch file.
+
+6. Update this README.mozilla
+
+You'll have to update at least the ANGLE revision number and probably the patch
+list as well.
+
+7. Push to Try
+
+Make sure to test both Windows and non-Windows, and enable mochitest-1 in your
+Try options. You may want reftest as well, as we have WebGL reftests.
+
+8. Get reviews.
+
+Typically, you would get review on your Makefiles patch, and any
+new patches that you need to add to get this update to work.
+
+You do not need a review for the ANGLE diff itself and for trivial updates of
+existing patches.
 
 == Visual Studio Solution Files ==
 
