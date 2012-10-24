@@ -543,8 +543,6 @@ public class GeckoSmsManager
   }
 
   public int saveSentMessage(String aRecipient, String aBody, long aDate) {
-    class IdTooHighException extends Exception { }
-
     try {
       ContentValues values = new ContentValues();
       values.put("address", aRecipient);
@@ -586,11 +584,6 @@ public class GeckoSmsManager
 
       @Override
       public void run() {
-        class NotFoundException extends Exception { }
-        class UnmatchingIdException extends Exception { }
-        class TooManyResultsException extends Exception { }
-        class InvalidTypeException extends Exception { }
-
         Cursor cursor = null;
 
         try {
@@ -673,8 +666,6 @@ public class GeckoSmsManager
 
       @Override
       public void run() {
-        class TooManyResultsException extends Exception { }
-
         try {
           ContentResolver cr = GeckoApp.mAppContext.getContentResolver();
           Uri message = ContentUris.withAppendedId(kSmsContentUri, mMessageId);
@@ -726,9 +717,6 @@ public class GeckoSmsManager
 
       @Override
       public void run() {
-        class UnexpectedDeliveryStateException extends Exception { };
-        class InvalidTypeException extends Exception { }
-
         Cursor cursor = null;
         boolean closeCursor = true;
 
@@ -839,8 +827,6 @@ public class GeckoSmsManager
 
       @Override
       public void run() {
-        class UnexpectedDeliveryStateException extends Exception { };
-
         try {
           Cursor cursor = MessagesListManager.getInstance().get(mListId);
 
@@ -895,5 +881,29 @@ public class GeckoSmsManager
   public void shutdown() {
     SmsIOThread.getInstance().interrupt();
     MessagesListManager.getInstance().clear();
+  }
+
+  class IdTooHighException extends Exception {
+    private static final long serialVersionUID = 29935575131092050L;
+  }
+
+  class InvalidTypeException extends Exception {
+    private static final long serialVersionUID = 47436856832535912L;
+  }
+
+  class NotFoundException extends Exception {
+    private static final long serialVersionUID = 1940676816633984L;
+  }
+
+  class TooManyResultsException extends Exception {
+    private static final long serialVersionUID = 51883196784325305L;
+  }
+
+  class UnexpectedDeliveryStateException extends Exception {
+    private static final long serialVersionUID = 494122763684005716L;
+  }
+
+  class UnmatchingIdException extends Exception {
+    private static final long serialVersionUID = 158467542575633280L;
   }
 }
