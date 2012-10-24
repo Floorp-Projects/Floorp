@@ -25,14 +25,7 @@ License, as published by the Free Software Foundation, either version 2
 of the License or (at your option) any later version.
 */
 #include <cstring>
-//#include "graphite2/Segment.h"
-//#include "inc/CmapCache.h"
-//#include "inc/Endian.h"
 #include "inc/FileFace.h"
-//#include "inc/GlyphFace.h"
-//#include "inc/SegCacheStore.h"
-//#include "inc/Segment.h"
-//#include "inc/NameTable.h"
 
 
 #ifndef GRAPHITE2_NFILEFACE

@@ -48,9 +48,9 @@ public:
     GlyphCache(const Face & face, const uint32 face_options);
     ~GlyphCache();
 
-    size_t numGlyphs() const throw();
-    size_t numAttrs() const throw();
-    size_t unitsPerEm() const throw();
+    unsigned short  numGlyphs() const throw();
+    unsigned short  numAttrs() const throw();
+    unsigned short  unitsPerEm() const throw();
 
     const GlyphFace *glyph(unsigned short glyphid) const;      //result may be changed by subsequent call with a different glyphid
     const GlyphFace *glyphSafe(unsigned short glyphid) const;
@@ -67,19 +67,19 @@ private:
 };
 
 inline
-size_t GlyphCache::numGlyphs() const throw()
+unsigned short GlyphCache::numGlyphs() const throw()
 {
     return _num_glyphs;
 }
 
 inline
-size_t GlyphCache::numAttrs() const throw()
+unsigned short GlyphCache::numAttrs() const throw()
 {
     return _num_attrs;
 }
 
 inline
-size_t GlyphCache::unitsPerEm() const throw()
+unsigned short  GlyphCache::unitsPerEm() const throw()
 {
     return _upem;
 }
