@@ -1146,6 +1146,8 @@ BaseShape::getUnowned(JSContext *cx, const StackBaseShape &base)
 void
 JSCompartment::sweepBaseShapeTable()
 {
+    gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_BASE_SHAPE);
+
     if (baseShapes.initialized()) {
         for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
             UnownedBaseShape *base = e.front();
@@ -1301,6 +1303,8 @@ EmptyShape::insertInitialShape(JSContext *cx, Shape *shape, JSObject *proto)
 void
 JSCompartment::sweepInitialShapeTable()
 {
+    gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_INITIAL_SHAPE);
+
     if (initialShapes.initialized()) {
         for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
             const InitialShapeEntry &entry = e.front();

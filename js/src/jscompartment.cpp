@@ -687,7 +687,8 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 void
 JSCompartment::sweepCrossCompartmentWrappers()
 {
-    gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES);
+    gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_SWEEP_TABLES);
+    gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_WRAPPER);
 
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
@@ -888,6 +889,8 @@ JSCompartment::clearTraps(FreeOp *fop)
 void
 JSCompartment::sweepBreakpoints(FreeOp *fop)
 {
+    gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_BREAKPOINT);
+
     if (JS_CLIST_IS_EMPTY(&rt->debuggerList))
         return;
 
