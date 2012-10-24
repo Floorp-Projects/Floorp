@@ -544,7 +544,7 @@ class SignalingAgent {
     pc->AddStream(domMediaStream);
 
     pObserver->state = TestObserver::stateNoResponse;
-    ASSERT_EQ(pc->CreateAnswer(constraints, NS_OK);
+    ASSERT_EQ(pc->CreateAnswer(constraints), NS_OK);
     ASSERT_TRUE_WAIT(pObserver->state == TestObserver::stateSuccess, kDefaultTimeout);
     SDPSanityCheck(pObserver->lastString, audio, video, false);
     answer_ = pObserver->lastString;
