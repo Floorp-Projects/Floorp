@@ -415,6 +415,8 @@ public:
   // Miscellania
   int32_t AttrWithLenientThis();
   void SetAttrWithLenientThis(int32_t);
+  uint32_t UnforgeableAttr();
+  uint32_t UnforgeableAttr2();
 
   // Methods and properties imported via "implements"
   bool ImplementedProperty();
