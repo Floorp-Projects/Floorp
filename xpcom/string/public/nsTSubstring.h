@@ -407,7 +407,6 @@ class nsTSubstring_CharT
        * codes documented in prprf.h
        */
       void AppendPrintf( const char* format, ... );
-      void AppendPrintf( const char* format, va_list ap );
       void AppendInt( int32_t aInteger )
                  { AppendPrintf( "%d", aInteger ); }
       void AppendInt( int32_t aInteger, int aRadix )
@@ -767,6 +766,7 @@ class nsTSubstring_CharT
         }
 
       static int AppendFunc( void* arg, const char* s, uint32_t len);
+      void AppendPrintf( const char* format, va_list ap );
 
     public:
 
