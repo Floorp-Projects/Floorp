@@ -13,7 +13,7 @@ SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])
 from runreftest import RefTest
 from runreftest import ReftestOptions
 from automation import Automation
-import devicemanager, devicemanagerADB, devicemanagerSUT
+import devicemanager, devicemanagerADB, devicemanagerSUT, devicemanager
 from remoteautomation import RemoteAutomation
 
 class RemoteOptions(ReftestOptions):
@@ -435,23 +435,26 @@ def main(args):
 
 #an example manifest name to use on the cli
 #    manifest = "http://" + options.remoteWebServer + "/reftests/layout/reftests/reftest-sanity/reftest.list"
-    logcat = []
+    retVal = 0
     try:
         cmdlineArgs = ["-reftest", manifest]
         if options.bootstrap:
             cmdlineArgs = []
         dm.recordLogcat()
         reftest.runTests(manifest, options, cmdlineArgs)
-        logcat = dm.getLogcat()
     except:
         print "TEST-UNEXPECTED-FAIL | | exception while running reftests"
-        reftest.stopWebServer(options)
-        return 1
+        retVal = 1
 
     reftest.stopWebServer(options)
-    print ''.join(logcat[-500:-1])
-    print dm.getInfo()
-    return 0
+    try:
+        logcat = dm.getLogcat()
+        print ''.join(logcat[-500:-1])
+        print dm.getInfo()
+    except devicemanager.DMError:
+        print "WARNING: Error getting device information at end of test"
+
+    return retVal
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
