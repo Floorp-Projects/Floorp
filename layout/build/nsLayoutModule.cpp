@@ -91,6 +91,7 @@
 #include "nsDOMStorage.h"
 #include "nsJSON.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
+#include "mozIApplicationClearPrivateDataParams.h"
 #include "mozilla/dom/DOMRequest.h"
 #include "mozilla/OSFileConstants.h"
 #include "mozilla/dom/Activity.h"
@@ -1296,6 +1297,7 @@ static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
   { "net-channel-event-sinks", "CSPService", CSPSERVICE_CONTRACTID },
   { JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY, "PrivilegeManager", NS_SECURITYNAMESET_CONTRACTID },
   { "app-startup", "Script Security Manager", "service," NS_SCRIPTSECURITYMANAGER_CONTRACTID },
+  { TOPIC_WEB_APP_CLEAR_DATA, "IndexedDatabaseManager", "service," INDEXEDDB_MANAGER_CONTRACTID },
 #ifdef MOZ_WIDGET_GONK
   { "app-startup", "Volume Service", "service," NS_VOLUMESERVICE_CONTRACTID },
 #endif

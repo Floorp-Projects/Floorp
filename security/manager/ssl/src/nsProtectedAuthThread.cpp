@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "pk11func.h"
-#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "PSMRunnable.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -84,11 +84,13 @@ NS_IMETHODIMP nsProtectedAuthThread::GetTokenName(nsAString &_retval)
 
 NS_IMETHODIMP nsProtectedAuthThread::GetSlot(nsIPKCS11Slot **_retval)
 {
-    RefPtr<nsPKCS11Slot> slot;
+    nsRefPtr<nsPKCS11Slot> slot;
     {
         MutexAutoLock lock(mMutex);
         slot = new nsPKCS11Slot(mSlot);
     }
+    if (!slot)
+      return NS_ERROR_OUT_OF_MEMORY;
 
     return CallQueryInterface (slot.get(), _retval);
 }

@@ -1202,15 +1202,15 @@ WebGLContext::DummyFramebufferOperation(const char *info)
 // are met.
 // At a bare minimum, from context lost to context restores, it would take 3
 // full timer iterations: detection, webglcontextlost, webglcontextrestored.
-NS_IMETHODIMP
-WebGLContext::Notify(nsITimer* timer)
+void
+WebGLContext::RobustnessTimerCallback(nsITimer* timer)
 {
     TerminateContextLossTimer();
 
     if (!mCanvasElement) {
         // the canvas is gone. That happens when the page was closed before we got
         // this timer event. In this case, there's nothing to do here, just don't crash.
-        return NS_OK;
+        return;
     }
 
     // If the context has been lost and we're waiting for it to be restored, do
@@ -1243,7 +1243,7 @@ WebGLContext::Notify(nsITimer* timer)
         // Try to restore the context. If it fails, try again later.
         if (NS_FAILED(SetDimensions(mWidth, mHeight))) {
             SetupContextLossTimer();
-            return NS_OK;
+            return;
         }
         mContextStatus = ContextStable;
         nsContentUtils::DispatchTrustedEvent(mCanvasElement->OwnerDoc(),
@@ -1258,7 +1258,7 @@ WebGLContext::Notify(nsITimer* timer)
     }
 
     MaybeRestoreContext();
-    return NS_OK;
+    return;
 }
 
 void
@@ -1408,7 +1408,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLContext)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWebGLRenderingContext)
   NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextInternal)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   // If the exact way we cast to nsISupports here ever changes, fix our
   // PreCreate hook!
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports,

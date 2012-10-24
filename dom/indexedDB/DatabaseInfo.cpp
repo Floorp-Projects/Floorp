@@ -181,31 +181,6 @@ DatabaseInfo::Remove(nsIAtom* aId)
   }
 }
 
-PLDHashOperator
-EnumerateDatabasesRemoveOrigin(nsISupports* aId,
-                               DatabaseInfo*& aDatabaseInfo,
-                               void* aUserArg)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  const nsACString* origin = static_cast<const nsACString*>(aUserArg);
-  return aDatabaseInfo->origin.Equals(*origin) ?
-    PL_DHASH_REMOVE :
-    PL_DHASH_NEXT;
-}
-
-// static
-void
-DatabaseInfo::RemoveAllForOrigin(const nsACString& aOrigin)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (gDatabaseHash) {
-    gDatabaseHash->Enumerate(EnumerateDatabasesRemoveOrigin,
-                             const_cast<nsACString*>(&aOrigin));
-  }
-}
-
 bool
 DatabaseInfo::GetObjectStoreNames(nsTArray<nsString>& aNames)
 {

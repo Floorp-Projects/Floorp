@@ -44,8 +44,53 @@ XPCOMUtils.defineLazyServiceGetter(Services, "settings",
                                    "@mozilla.org/settingsService;1",
                                    "nsISettingsService");
 
+function UpdateCheckListener(updatePrompt) {
+  this._updatePrompt = updatePrompt;
+}
+
+UpdateCheckListener.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateCheckListener]),
+
+  _updatePrompt: null,
+
+  onCheckComplete: function UCL_onCheckComplete(request, updates, updateCount) {
+    if (Services.um.activeUpdate) {
+      return;
+    }
+
+    if (updateCount == 0) {
+      this._updatePrompt.setUpdateStatus("no-updates");
+      return;
+    }
+
+    let update = Services.aus.selectUpdate(updates, updateCount);
+    if (!update) {
+      this._updatePrompt.setUpdateStatus("already-latest-version");
+      return;
+    }
+
+    this._updatePrompt.setUpdateStatus("check-complete");
+    this._updatePrompt.showUpdateAvailable(update);
+  },
+
+  onError: function UCL_onError(request, update) {
+    if (update.errorCode == NETWORK_ERROR_OFFLINE) {
+      this._updatePrompt.setUpdateStatus("retry-when-online");
+    }
+
+    Services.aus.QueryInterface(Ci.nsIUpdateCheckListener);
+    Services.aus.onError(request, update);
+  },
+
+  onProgress: function UCL_onProgress(request, position, totalSize) {
+    Services.aus.QueryInterface(Ci.nsIUpdateCheckListener);
+    Services.aus.onProgress(request, position, totalSize);
+  }
+};
+
 function UpdatePrompt() {
   this.wrappedJSObject = this;
+  this._updateCheckListener = new UpdateCheckListener(this);
 }
 
 UpdatePrompt.prototype = {
@@ -60,6 +105,7 @@ UpdatePrompt.prototype = {
   _update: null,
   _applyPromptTimer: null,
   _waitingForIdle: false,
+  _updateCheckListner: null,
 
   // nsIUpdatePrompt
 
@@ -106,42 +152,6 @@ UpdatePrompt.prototype = {
 
   showUpdateHistory: function UP_showUpdateHistory(aParent) { },
   showUpdateInstalled: function UP_showUpdateInstalled() { },
-
-  // nsIUpdateCheckListener
-
-  onCheckComplete: function UP_onCheckComplete(request, updates, updateCount) {
-    if (Services.um.activeUpdate) {
-      return;
-    }
-
-    if (updateCount == 0) {
-      this.setUpdateStatus("no-updates");
-      return;
-    }
-
-    let update = Services.aus.selectUpdate(updates, updateCount);
-    if (!update) {
-      this.setUpdateStatus("already-latest-version");
-      return;
-    }
-
-    this.setUpdateStatus("check-complete");
-    this.showUpdateAvailable(update);
-  },
-
-  onError: function UP_onError(request, update) {
-    if (update.errorCode == NETWORK_ERROR_OFFLINE) {
-      this.setUpdateStatus("retry-when-online");
-    }
-
-    Services.aus.QueryInterface(Ci.nsIUpdateCheckListener);
-    Services.aus.onError(request, update);
-  },
-
-  onProgress: function UP_onProgress(request, position, totalSize) {
-    Services.aus.QueryInterface(Ci.nsIUpdateCheckListener);
-    Services.aus.onProgress(request, position, totalSize);
-  },
 
   // Custom functions
 
@@ -320,7 +330,7 @@ UpdatePrompt.prototype = {
 
     let checker = Cc["@mozilla.org/updates/update-checker;1"]
                     .createInstance(Ci.nsIUpdateChecker);
-    checker.checkForUpdates(this, true);
+    checker.checkForUpdates(this._updateCheckListener, true);
   },
 
   handleEvent: function UP_handleEvent(evt) {

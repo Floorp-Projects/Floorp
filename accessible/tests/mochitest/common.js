@@ -83,6 +83,8 @@ const kDiscBulletText = String.fromCharCode(0x2022) + " ";
 const kCircleBulletText = String.fromCharCode(0x25e6) + " ";
 const kSquareBulletText = String.fromCharCode(0x25aa) + " ";
 
+const MAX_TRIM_LENGTH = 100;
+
 /**
  * nsIAccessibleRetrieval service.
  */
@@ -607,7 +609,7 @@ function prettyName(aIdentifier)
     try {
       msg += ", role: " + roleToString(acc.role);
       if (acc.name)
-        msg += ", name: '" + acc.name + "'";
+        msg += ", name: '" + shortenString(acc.name) + "'";
     } catch (e) {
       msg += "defunct";
     }
@@ -625,6 +627,21 @@ function prettyName(aIdentifier)
   return " '" + aIdentifier + "' ";
 }
 
+/**
+ * Shorten a long string if it exceeds MAX_TRIM_LENGTH.
+ * @param aString the string to shorten.
+ * @returns the shortened string.
+ */
+function shortenString(aString, aMaxLength)
+{
+  if (aString.length <= MAX_TRIM_LENGTH)
+    return aString;
+
+  // Trim the string if its length is > MAX_TRIM_LENGTH characters.
+  var trimOffset = MAX_TRIM_LENGTH / 2;
+  return aString.substring(0, trimOffset - 1) + "..." +
+    aString.substring(aString.length - trimOffset, aString.length);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Private

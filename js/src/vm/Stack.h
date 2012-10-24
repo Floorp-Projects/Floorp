@@ -1382,7 +1382,7 @@ class StackSpace
         return (Value *)fp >= base_ && (Value *)fp <= trustedEnd_;
     }
 
-    void markAndClobberFrame(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbytecode *pc);
+    void markFrame(JSTracer *trc, StackFrame *fp, Value *slotsEnd);
 
   public:
     StackSpace();
@@ -1435,7 +1435,7 @@ class StackSpace
     bool tryBumpLimit(JSContext *cx, Value *from, unsigned nvals, Value **limit);
 
     /* Called during GC: mark segments, frames, and slots under firstUnused. */
-    void markAndClobber(JSTracer *trc);
+    void mark(JSTracer *trc);
 
     /* Called during GC: sets active flag on compartments with active frames. */
     void markActiveCompartments();

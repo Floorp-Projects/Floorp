@@ -162,6 +162,11 @@ fails-if(!cocoaWidget) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notr
 == 745555-1.html 745555-1-ref.html
 == 745555-2.html 745555-2-ref.html
 
+# ensure emoji chars don't render blank (bug 715798, bug 779042);
+# should at least render hexboxes if there's no font support
+!= emoji-01.html emoji-01-notref.html
+!= emoji-02.html emoji-02-notref.html
+
 # tests to compare graphite to opentype (will trivially pass when graphite not enabled)
 HTTP(..) == graphite-05-ot-only.html graphite-05-ref.html
 HTTP(..) != graphite-05-ot-only.html graphite-05-fail.html

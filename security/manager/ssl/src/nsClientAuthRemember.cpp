@@ -7,7 +7,6 @@
 #include "nsClientAuthRemember.h"
 
 #include "nsIX509Cert.h"
-#include "mozilla/RefPtr.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
@@ -95,7 +94,7 @@ GetCertFingerprintByOidTag(CERTCertificate* nsscert,
                            nsCString &fp)
 {
   unsigned int hash_len = HASH_ResultLenByOidTag(aOidTag);
-  RefPtr<nsStringBuffer> fingerprint(nsStringBuffer::Alloc(hash_len));
+  nsRefPtr<nsStringBuffer> fingerprint = nsStringBuffer::Alloc(hash_len);
   if (!fingerprint)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -114,7 +113,7 @@ nsresult
 nsClientAuthRememberService::RememberDecision(const nsACString & aHostName, 
                                               CERTCertificate *aServerCert, CERTCertificate *aClientCert)
 {
-  // aClientCert == nullptr means: remember that user does not want to use a cert
+  // aClientCert == NULL means: remember that user does not want to use a cert
   NS_ENSURE_ARG_POINTER(aServerCert);
   if (aHostName.IsEmpty())
     return NS_ERROR_INVALID_ARG;
@@ -128,7 +127,7 @@ nsClientAuthRememberService::RememberDecision(const nsACString & aHostName,
     ReentrantMonitorAutoEnter lock(monitor);
     if (aClientCert) {
       nsNSSCertificate pipCert(aClientCert);
-      char *dbkey = nullptr;
+      char *dbkey = NULL;
       rv = pipCert.GetDbKey(&dbkey);
       if (NS_SUCCEEDED(rv) && dbkey) {
         AddEntryToList(aHostName, fpStr, 

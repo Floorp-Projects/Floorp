@@ -374,8 +374,8 @@ NS_IMETHODIMP nsPK11Token::ChangePassword(const PRUnichar *oldPassword, const PR
   NS_ConvertUTF16toUTF8 aUtf8NewPassword(newPassword);
 
   rv = PK11_ChangePW(mSlot, 
-         (oldPassword ? const_cast<char *>(aUtf8OldPassword.get()) : nullptr),
-         (newPassword ? const_cast<char *>(aUtf8NewPassword.get()) : nullptr));
+         (oldPassword != NULL ? const_cast<char *>(aUtf8OldPassword.get()) : NULL), 
+         (newPassword != NULL ? const_cast<char *>(aUtf8NewPassword.get()) : NULL));
   return (rv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -447,6 +447,8 @@ NS_IMETHODIMP nsPK11TokenDB::GetInternalKeyToken(nsIPK11Token **_retval)
   if (!slot) { rv = NS_ERROR_FAILURE; goto done; }
 
   token = new nsPK11Token(slot);
+  if (!token) { rv = NS_ERROR_OUT_OF_MEMORY; goto done; }
+
   *_retval = token;
   NS_ADDREF(*_retval);
 
@@ -467,6 +469,8 @@ FindTokenByName(const PRUnichar* tokenName, nsIPK11Token **_retval)
   if (!slot) { rv = NS_ERROR_FAILURE; goto done; }
 
   *_retval = new nsPK11Token(slot);
+  if (!*_retval) { rv = NS_ERROR_OUT_OF_MEMORY; goto done; }
+
   NS_ADDREF(*_retval);
 
 done:
@@ -494,7 +498,10 @@ NS_IMETHODIMP nsPK11TokenDB::ListTokens(nsIEnumerator* *_retval)
 
   for (le = PK11_GetFirstSafe(list); le; le = PK11_GetNextSafe(list, le, false)) {
     nsCOMPtr<nsIPK11Token> token = new nsPK11Token(le->slot);
-    rv = array->AppendElement(token);
+    rv = token
+      ? array->AppendElement(token)
+      : NS_ERROR_OUT_OF_MEMORY;
+
     if (NS_FAILED(rv)) {
       PK11_FreeSlotListElement(list, le);
       rv = NS_ERROR_OUT_OF_MEMORY;

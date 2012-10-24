@@ -343,7 +343,7 @@ pref("gfx.displayport.strategy_vb.danger_y_incr", -1); // additional danger zone
 // prediction bias strategy options
 pref("gfx.displayport.strategy_pb.threshold", -1); // velocity threshold in inches/frame
 
-pref("gfx.java.screenshot.enabled", true);
+pref("gfx.java.screenshot.enabled", false);
 
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
@@ -522,7 +522,7 @@ pref("ui.dragThresholdY", 25);
 pref("layers.acceleration.disabled", false);
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-video.enabled", true);
-pref("layers.progressive-paint", false);
+pref("layers.progressive-paint", true);
 
 pref("notification.feature.enabled", true);
 
@@ -632,8 +632,6 @@ pref("ui.scrolling.min_scrollable_distance", -1);
 
 // Enable accessibility mode if platform accessibility is enabled.
 pref("accessibility.accessfu.activate", 2);
-// Enable explore by touch if it is enabled in the platform
-pref("accessibility.accessfu.explorebytouch", 2);
 
 // Mobile manages state by autodetection
 pref("network.manage-offline-status", true);

@@ -5,6 +5,7 @@
 
 #include "prlog.h"
 #include "nsEntropyCollector.h"
+#include "nsMemory.h"
 #include "nsAlgorithm.h"
 
 nsEntropyCollector::nsEntropyCollector()

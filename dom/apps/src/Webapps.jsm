@@ -17,6 +17,7 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import('resource://gre/modules/ActivitiesService.jsm');
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
+Cu.import("resource://gre/modules/OfflineCacheInstaller.jsm");
 
 function debug(aMsg) {
   //dump("-*-*- Webapps.jsm : " + aMsg + "\n");
@@ -92,7 +93,7 @@ let DOMApplicationRegistry = {
   // aNext() is called after we load the current webapps list.
   loadCurrentRegistry: function loadCurrentRegistry(aNext) {
     let file = FileUtils.getFile(DIRECTORY_NAME, ["webapps", "webapps.json"], false);
-    if (file && file.exists) {
+    if (file && file.exists()) {
       this._loadJSONAsync(file, (function loadRegistry(aData) {
         if (aData) {
           this.webapps = aData;
@@ -175,89 +176,99 @@ let DOMApplicationRegistry = {
     }).bind(this));
   },
 
+  updateOfflineCacheForApp: function updateOfflineCacheForApp(aId) {
+    let app = this.webapps[aId];
+    OfflineCacheInstaller.installCache({
+      basePath: app.basePath,
+      appId: aId,
+      origin: app.origin,
+      localId: app.localId
+    });
+  },
+
   // Implements the core of bug 787439
-  // 1. load the apps from the current registry.
-  // 2. if at first run, go through these steps:
+  // if at first run, go through these steps:
   //   a. load the core apps registry.
   //   b. uninstall any core app from the current registry but not in the
   //      new core apps registry.
   //   c. for all apps in the new core registry, install them if they are not
   //      yet in the current registry, and run installPermissions()
+  installSystemApps: function installSystemApps(aNext) {
+    let file;
+    try {
+      file = FileUtils.getFile("coreAppsDir", ["webapps", "webapps.json"], false);
+    } catch(e) { }
+
+    if (file && file.exists()) {
+      // a
+      this._loadJSONAsync(file, (function loadCoreRegistry(aData) {
+        if (!aData) {
+          aNext();
+          return;
+        }
+
+        // b : core apps are not removable.
+        for (let id in this.webapps) {
+          if (id in aData || this.webapps[id].removable)
+            continue;
+          delete this.webapps[id];
+          // Remove the permissions, cookies and private data for this app.
+          let localId = this.webapps[id].localId;
+          let permMgr = Cc["@mozilla.org/permissionmanager;1"]
+                          .getService(Ci.nsIPermissionManager);
+          permMgr.RemovePermissionsForApp(localId);
+          Services.cookies.removeCookiesForApp(localId, false);
+          this._clearPrivateData(localId, false);
+        }
+
+        let appDir = FileUtils.getDir("coreAppsDir", ["webapps"], false);
+        // c
+        for (let id in aData) {
+          // Core apps have ids matching their domain name (eg: dialer.gaiamobile.org)
+          // Use that property to check if they are new or not.
+          if (!(id in this.webapps)) {
+            this.webapps[id] = aData[id];
+            this.webapps[id].basePath = appDir.path;
+
+            // Create a new localId.
+            this.webapps[id].localId = this._nextLocalId();
+
+            // Core apps are not removable.
+            if (this.webapps[id].removable === undefined) {
+              this.webapps[id].removable = false;
+            }
+          }
+        }
+        aNext();
+      }).bind(this));
+    } else {
+      aNext();
+    }
+  },
+
   loadAndUpdateApps: function loadAndUpdateApps() {
     let runUpdate = AppsUtils.isFirstRun(Services.prefs);
 
-    // 1.
-    this.loadCurrentRegistry((function() {
-#ifdef MOZ_WIDGET_GONK
-    // if first run, merge the system apps.
-    if (runUpdate) {
-      let file;
-      try {
-        file = FileUtils.getFile("coreAppsDir", ["webapps", "webapps.json"], false);
-      } catch(e) { }
-
-      if (file && file.exists) {
-        // 2.a
-        this._loadJSONAsync(file, (function loadCoreRegistry(aData) {
-          if (!aData) {
-            this.registerAppsHandlers();
-            return;
-          }
-
-          // 2.b : core apps are not removable.
-          for (let id in this.webapps) {
-            if (id in aData || this.webapps[id].removable)
-              continue;
-            delete this.webapps[id];
-            // Remove the permissions, cookies and private data for this app.
-            let localId = this.webapps[id].localId;
-            let permMgr = Cc["@mozilla.org/permissionmanager;1"]
-                            .getService(Ci.nsIPermissionManager);
-            permMgr.RemovePermissionsForApp(localId);
-            Services.cookies.removeCookiesForApp(localId, false);
-            this._clearPrivateData(localId, false);
-          }
-
-          let appDir = FileUtils.getDir("coreAppsDir", ["webapps"], false);
-          // 2.c
-          for (let id in aData) {
-            // Core apps have ids matching their domain name (eg: dialer.gaiamobile.org)
-            // Use that property to check if they are new or not.
-            if (!(id in this.webapps)) {
-              this.webapps[id] = aData[id];
-              this.webapps[id].basePath = appDir.path;
-
-              // Create a new localId.
-              this.webapps[id].localId = this._nextLocalId();
-
-              // Core apps are not removable.
-              if (this.webapps[id].removable === undefined) {
-                this.webapps[id].removable = false;
-              }
-            }
-
-            this.updatePermissionsForApp(id);
-          }
-          this.registerAppsHandlers();
-        }).bind(this));
-      } else {
-        // At first run, set up the permissions for eng builds.
+    let onAppsLoaded = (function onAppsLoaded() {
+      if (runUpdate) {
+        // At first run, set up the permissions
         for (let id in this.webapps) {
           this.updatePermissionsForApp(id);
+          this.updateOfflineCacheForApp(id);
         }
-        this.registerAppsHandlers();
       }
-    } else {
       this.registerAppsHandlers();
-    }
+    }).bind(this);
+
+    this.loadCurrentRegistry((function() {
+#ifdef MOZ_WIDGET_GONK
+      // if first run, merge the system apps.
+      if (runUpdate)
+        this.installSystemApps(onAppsLoaded);
+      else
+        onAppsLoaded();
 #else
-    if (runUpdate) {
-      // At first run, set up the permissions for desktop builds.
-      for (let id in this.webapps) {
-        this.updatePermissionsForApp(id);
-      }
-    }
-    this.registerAppsHandlers();
+      onAppsLoaded();
 #endif
     }).bind(this));
   },
@@ -475,14 +486,14 @@ let DOMApplicationRegistry = {
             aCallback(data);
         } catch (ex) {
           Cu.reportError("DOMApplicationRegistry: Could not parse JSON: " +
-                         aFile.path + " " + ex);
+                         aFile.path + " " + ex + "\n" + ex.stack);
           if (aCallback)
             aCallback(null);
         }
       });
     } catch (ex) {
       Cu.reportError("DOMApplicationRegistry: Could not read from " +
-                     aFile.path + " : " + ex);
+                     aFile.path + " : " + ex + "\n" + ex.stack);
       if (aCallback)
         aCallback(null);
     }
@@ -1725,6 +1736,10 @@ let DOMApplicationRegistry = {
     switch (message.name) {
       case "Webapps:ClearBrowserData":
         this._clearPrivateData(appId, true);
+        // XXXbent This is a hack until bug 802366 is fixed. Currently all data
+        //         loaded in mozbrowser frames within an app believe that their
+        //         appId is 0.
+        this._clearPrivateData(0, true);
         break;
     }
   },

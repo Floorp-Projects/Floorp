@@ -5,14 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IndexedDatabaseManager.h"
-#include "DatabaseInfo.h"
 
+#include "mozIApplicationClearPrivateDataParams.h"
 #include "nsIAtom.h"
 #include "nsIConsoleService.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIFile.h"
 #include "nsIFileStorage.h"
 #include "nsIObserverService.h"
+#include "nsIPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptSecurityManager.h"
@@ -27,8 +28,10 @@
 #include "mozilla/storage.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsContentUtils.h"
+#include "nsCRTGlue.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsEventDispatcher.h"
+#include "nsScriptSecurityManager.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
@@ -133,32 +136,245 @@ EnumerateToTArray(const nsACString& aKey,
   NS_ASSERTION(aValue, "Null pointer!");
   NS_ASSERTION(aUserArg, "Null pointer!");
 
-  nsTArray<T>* array =
-    static_cast<nsTArray<T>*>(aUserArg);
-
-  if (!array->AppendElements(*aValue)) {
-    NS_WARNING("Out of memory!");
-    return PL_DHASH_STOP;
-  }
-
+  static_cast<nsTArray<T>*>(aUserArg)->AppendElements(*aValue);
   return PL_DHASH_NEXT;
 }
 
+bool
+PatternMatchesOrigin(const nsACString& aPatternString, const nsACString& aOrigin)
+{
+  // Aren't we smart!
+  return StringBeginsWith(aOrigin, aPatternString);
+}
+
+enum MozBrowserPatternFlag
+{
+  MozBrowser = 0,
+  NotMozBrowser,
+  IgnoreMozBrowser
+};
+
+// Use one of the friendly overloads below.
+void
+GetOriginPatternString(uint32_t aAppId, MozBrowserPatternFlag aBrowserFlag,
+                       const nsACString& aOrigin, nsAutoCString& _retval)
+{
+  NS_ASSERTION(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
+               "Bad appId!");
+  NS_ASSERTION(aOrigin.IsEmpty() || aBrowserFlag != IgnoreMozBrowser,
+               "Bad args!");
+
+  if (aOrigin.IsEmpty()) {
+    _retval.Truncate();
+
+    _retval.AppendInt(aAppId);
+    _retval.Append('+');
+
+    if (aBrowserFlag != IgnoreMozBrowser) {
+      if (aBrowserFlag == MozBrowser) {
+        _retval.Append('t');
+      }
+      else {
+        _retval.Append('f');
+      }
+      _retval.Append('+');
+    }
+
+    return;
+  }
+
+#ifdef DEBUG
+  if (aAppId != nsIScriptSecurityManager::NO_APP_ID ||
+      aBrowserFlag == MozBrowser) {
+    nsAutoCString pattern;
+    GetOriginPatternString(aAppId, aBrowserFlag, EmptyCString(), pattern);
+    NS_ASSERTION(PatternMatchesOrigin(pattern, aOrigin),
+                 "Origin doesn't match parameters!");
+  }
+#endif
+
+  _retval = aOrigin;
+}
+
+void
+GetOriginPatternString(uint32_t aAppId, nsAutoCString& _retval)
+{
+  return GetOriginPatternString(aAppId, IgnoreMozBrowser, EmptyCString(),
+                                _retval);
+}
+
+void
+GetOriginPatternString(uint32_t aAppId, bool aBrowserOnly,
+                       nsAutoCString& _retval)
+{
+  return GetOriginPatternString(aAppId,
+                                aBrowserOnly ? MozBrowser : NotMozBrowser,
+                                EmptyCString(), _retval);
+}
+
+void
+GetOriginPatternString(uint32_t aAppId, bool aBrowserOnly,
+                       const nsACString& aOrigin, nsAutoCString& _retval)
+{
+  return GetOriginPatternString(aAppId,
+                                aBrowserOnly ? MozBrowser : NotMozBrowser,
+                                aOrigin, _retval);
+}
+
+void
+GetOriginPatternStringMaybeIgnoreBrowser(uint32_t aAppId, bool aBrowserOnly,
+                                         nsAutoCString& _retval)
+{
+  return GetOriginPatternString(aAppId,
+                                aBrowserOnly ? MozBrowser : IgnoreMozBrowser,
+                                EmptyCString(), _retval);
+}
+
+template <class ValueType>
+class PatternMatchArray : public nsAutoTArray<ValueType, 20>
+{
+  typedef PatternMatchArray<ValueType> SelfType;
+
+  struct Closure
+  {
+    Closure(SelfType& aSelf, const nsACString& aPattern)
+    : mSelf(aSelf), mPattern(aPattern)
+    { }
+
+    SelfType& mSelf;
+    const nsACString& mPattern;
+  };
+
+public:
+  template <class T>
+  void
+  Find(const T& aHashtable,
+       const nsACString& aPattern)
+  {
+    SelfType::Clear();
+
+    Closure closure(*this, aPattern);
+    aHashtable.EnumerateRead(SelfType::Enumerate, &closure);
+  }
+
+private:
+  static PLDHashOperator
+  Enumerate(const nsACString& aKey,
+            nsTArray<ValueType>* aValue,
+            void* aUserArg)
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    NS_ASSERTION(!aKey.IsEmpty(), "Empty key!");
+    NS_ASSERTION(aValue, "Null pointer!");
+    NS_ASSERTION(aUserArg, "Null pointer!");
+
+    Closure* closure = static_cast<Closure*>(aUserArg);
+
+    if (PatternMatchesOrigin(closure->mPattern, aKey)) {
+      closure->mSelf.AppendElements(*aValue);
+    }
+
+    return PL_DHASH_NEXT;
+  }
+};
+
+typedef PatternMatchArray<IDBDatabase*> DatabasePatternMatchArray;
+
 PLDHashOperator
-InvalidateAllFileManagers(const nsACString& aKey,
-                          nsTArray<nsRefPtr<FileManager> >* aValue,
-                          void* aUserArg)
+InvalidateAndRemoveFileManagers(
+                           const nsACString& aKey,
+                           nsAutoPtr<nsTArray<nsRefPtr<FileManager> > >& aValue,
+                           void* aUserArg)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!aKey.IsEmpty(), "Empty key!");
   NS_ASSERTION(aValue, "Null pointer!");
 
-  for (uint32_t i = 0; i < aValue->Length(); i++) {
-    nsRefPtr<FileManager> fileManager = aValue->ElementAt(i);
-    fileManager->Invalidate();
+  const nsACString* pattern =
+    static_cast<const nsACString*>(aUserArg);
+
+  if (!pattern || PatternMatchesOrigin(*pattern, aKey)) {
+    for (uint32_t i = 0; i < aValue->Length(); i++) {
+      nsRefPtr<FileManager>& fileManager = aValue->ElementAt(i);
+      fileManager->Invalidate();
+    }
+    return PL_DHASH_REMOVE;
   }
 
   return PL_DHASH_NEXT;
+}
+
+void
+SanitizeOriginString(nsCString& aOrigin)
+{
+  // We want profiles to be platform-independent so we always need to replace
+  // the same characters on every platform. Windows has the most extensive set
+  // of illegal characters so we use its FILE_ILLEGAL_CHARACTERS and
+  // FILE_PATH_SEPARATOR.
+  static const char kReplaceChars[] = CONTROL_CHARACTERS "/:*?\"<>|\\";
+
+#ifdef XP_WIN
+  NS_ASSERTION(!strcmp(kReplaceChars,
+                       FILE_ILLEGAL_CHARACTERS FILE_PATH_SEPARATOR),
+               "Illegal file characters have changed!");
+#endif
+
+  aOrigin.ReplaceChar(kReplaceChars, '+');
+}
+
+nsresult
+GetASCIIOriginFromURI(nsIURI* aURI,
+                      uint32_t aAppId,
+                      bool aInMozBrowser,
+                      nsACString& aOrigin)
+{
+  NS_ASSERTION(aURI, "Null uri!");
+
+  nsCString origin;
+  mozilla::GetExtendedOrigin(aURI, aAppId, aInMozBrowser, origin);
+
+  if (origin.IsEmpty()) {
+    NS_WARNING("GetExtendedOrigin returned empty string!");
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  aOrigin.Assign(origin);
+  return NS_OK;
+}
+
+nsresult
+GetASCIIOriginFromPrincipal(nsIPrincipal* aPrincipal,
+                            nsACString& aOrigin)
+{
+  NS_ASSERTION(aPrincipal, "Don't hand me a null principal!");
+
+  static const char kChromeOrigin[] = "chrome";
+
+  nsCString origin;
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    origin.AssignLiteral(kChromeOrigin);
+  }
+  else {
+    bool isNullPrincipal;
+    nsresult rv = aPrincipal->GetIsNullPrincipal(&isNullPrincipal);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    if (isNullPrincipal) {
+      NS_WARNING("IndexedDB not supported from this principal!");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    rv = aPrincipal->GetExtendedOrigin(origin);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    if (origin.EqualsLiteral(kChromeOrigin)) {
+      NS_WARNING("Non-chrome principal can't use chrome origin!");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+  }
+
+  aOrigin.Assign(origin);
+  return NS_OK;
 }
 
 } // anonymous namespace
@@ -297,10 +513,10 @@ IndexedDatabaseManager::GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
   rv = directory->InitWithPath(GetBaseDirectory());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ConvertASCIItoUTF16 originSanitized(aASCIIOrigin);
-  originSanitized.ReplaceChar(":/", '+');
+  nsAutoCString originSanitized(aASCIIOrigin);
+  SanitizeOriginString(originSanitized);
 
-  rv = directory->Append(originSanitized);
+  rv = directory->Append(NS_ConvertASCIItoUTF16(originSanitized));
   NS_ENSURE_SUCCESS(rv, rv);
 
   directory.forget(aDirectory);
@@ -406,6 +622,37 @@ IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
   return consoleService->LogMessage(scriptError);
 }
 
+// static
+bool
+IndexedDatabaseManager::OriginMatchesApp(const nsACString& aOrigin,
+                                         uint32_t aAppId)
+{
+  NS_ASSERTION(!aOrigin.IsEmpty(), "Empty origin!");
+  NS_ASSERTION(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
+               "Bad appId!");
+
+  nsAutoCString pattern;
+  GetOriginPatternString(aAppId, pattern);
+
+  return PatternMatchesOrigin(pattern, aOrigin);
+}
+
+// static
+bool
+IndexedDatabaseManager::OriginMatchesApp(const nsACString& aOrigin,
+                                         uint32_t aAppId,
+                                         bool aInMozBrowser)
+{
+  NS_ASSERTION(!aOrigin.IsEmpty(), "Empty origin!");
+  NS_ASSERTION(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
+               "Bad appId!");
+
+  nsAutoCString pattern;
+  GetOriginPatternString(aAppId, aInMozBrowser, pattern);
+
+  return PatternMatchesOrigin(pattern, aOrigin);
+}
+
 bool
 IndexedDatabaseManager::RegisterDatabase(IDBDatabase* aDatabase)
 {
@@ -466,15 +713,16 @@ IndexedDatabaseManager::OnUsageCheckComplete(AsyncUsageRunnable* aRunnable)
 }
 
 nsresult
-IndexedDatabaseManager::WaitForOpenAllowed(const nsACString& aOrigin,
-                                           nsIAtom* aId,
-                                           nsIRunnable* aRunnable)
+IndexedDatabaseManager::WaitForOpenAllowed(
+                                  const OriginOrPatternString& aOriginOrPattern,
+                                  nsIAtom* aId,
+                                  nsIRunnable* aRunnable)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!aOrigin.IsEmpty(), "Empty origin!");
+  NS_ASSERTION(!aOriginOrPattern.IsEmpty(), "Empty pattern!");
   NS_ASSERTION(aRunnable, "Null pointer!");
 
-  nsAutoPtr<SynchronizedOp> op(new SynchronizedOp(aOrigin, aId));
+  nsAutoPtr<SynchronizedOp> op(new SynchronizedOp(aOriginOrPattern, aId));
 
   // See if this runnable needs to wait.
   bool delayed = false;
@@ -501,16 +749,18 @@ IndexedDatabaseManager::WaitForOpenAllowed(const nsACString& aOrigin,
 }
 
 void
-IndexedDatabaseManager::AllowNextSynchronizedOp(const nsACString& aOrigin,
-                                                nsIAtom* aId)
+IndexedDatabaseManager::AllowNextSynchronizedOp(
+                                  const OriginOrPatternString& aOriginOrPattern,
+                                  nsIAtom* aId)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!aOrigin.IsEmpty(), "Empty origin!");
+  NS_ASSERTION(!aOriginOrPattern.IsEmpty(), "Empty origin/pattern!");
 
   uint32_t count = mSynchronizedOps.Length();
   for (uint32_t index = 0; index < count; index++) {
     nsAutoPtr<SynchronizedOp>& op = mSynchronizedOps[index];
-    if (op->mOrigin.Equals(aOrigin)) {
+    if (op->mOriginOrPattern.IsOrigin() == aOriginOrPattern.IsOrigin() &&
+        op->mOriginOrPattern == aOriginOrPattern) {
       if (op->mId == aId) {
         NS_ASSERTION(op->mDatabases.IsEmpty(), "How did this happen?");
 
@@ -531,7 +781,7 @@ IndexedDatabaseManager::AllowNextSynchronizedOp(const nsACString& aOrigin,
 
 nsresult
 IndexedDatabaseManager::AcquireExclusiveAccess(
-                                           const nsACString& aOrigin,
+                                           const nsACString& aPattern,
                                            IDBDatabase* aDatabase,
                                            AsyncConnectionHelper* aHelper,
                                            nsIRunnable* aRunnable,
@@ -544,26 +794,26 @@ IndexedDatabaseManager::AcquireExclusiveAccess(
 
   // Find the right SynchronizedOp.
   SynchronizedOp* op =
-    FindSynchronizedOp(aOrigin, aDatabase ? aDatabase->Id() : nullptr);
+    FindSynchronizedOp(aPattern, aDatabase ? aDatabase->Id() : nullptr);
 
   NS_ASSERTION(op, "We didn't find a SynchronizedOp?");
   NS_ASSERTION(!op->mHelper, "SynchronizedOp already has a helper?!?");
   NS_ASSERTION(!op->mRunnable, "SynchronizedOp already has a runnable?!?");
 
-  nsTArray<IDBDatabase*>* array;
-  mLiveDatabases.Get(aOrigin, &array);
+  DatabasePatternMatchArray matches;
+  matches.Find(mLiveDatabases, aPattern);
 
   // We need to wait for the databases to go away.
   // Hold on to all database objects that represent the same database file
   // (except the one that is requesting this version change).
   nsTArray<nsRefPtr<IDBDatabase> > liveDatabases;
 
-  if (array) {
+  if (!matches.IsEmpty()) {
     if (aDatabase) {
       // Grab all databases that are not yet closed but whose database id match
       // the one we're looking for.
-      for (uint32_t index = 0; index < array->Length(); index++) {
-        IDBDatabase*& database = array->ElementAt(index);
+      for (uint32_t index = 0; index < matches.Length(); index++) {
+        IDBDatabase*& database = matches[index];
         if (!database->IsClosed() &&
             database != aDatabase &&
             database->Id() == aDatabase->Id()) {
@@ -574,7 +824,7 @@ IndexedDatabaseManager::AcquireExclusiveAccess(
     else {
       // We want *all* databases, even those that are closed, if we're going to
       // clear the origin.
-      liveDatabases.AppendElements(*array);
+      liveDatabases.AppendElements(matches);
     }
   }
 
@@ -986,18 +1236,8 @@ IndexedDatabaseManager::GetASCIIOriginFromWindow(nsPIDOMWindow* aWindow,
   nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
   NS_ENSURE_TRUE(principal, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  if (nsContentUtils::IsSystemPrincipal(principal)) {
-    aASCIIOrigin.AssignLiteral("chrome");
-  }
-  else {
-    nsresult rv = principal->GetExtendedOrigin(aASCIIOrigin);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-    if (aASCIIOrigin.EqualsLiteral("null")) {
-      NS_WARNING("IndexedDB databases not allowed for this principal!");
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-  }
+  nsresult rv = GetASCIIOriginFromPrincipal(principal, aASCIIOrigin);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -1053,17 +1293,12 @@ IndexedDatabaseManager::AddFileManager(const nsACString& aOrigin,
 }
 
 void
-IndexedDatabaseManager::InvalidateFileManagersForOrigin(
-                                                     const nsACString& aOrigin)
+IndexedDatabaseManager::InvalidateFileManagersForPattern(
+                                                     const nsACString& aPattern)
 {
-  nsTArray<nsRefPtr<FileManager> >* array;
-  if (mFileManagers.Get(aOrigin, &array)) {
-    for (uint32_t i = 0; i < array->Length(); i++) {
-      nsRefPtr<FileManager> fileManager = array->ElementAt(i);
-      fileManager->Invalidate();
-    }
-    mFileManagers.Remove(aOrigin);
-  }
+  NS_ASSERTION(!aPattern.IsEmpty(), "Empty pattern!");
+  mFileManagers.Enumerate(InvalidateAndRemoveFileManagers,
+                          const_cast<nsACString*>(&aPattern));
 }
 
 void
@@ -1173,39 +1408,103 @@ IndexedDatabaseManager::RunSynchronizedOp(IDBDatabase* aDatabase,
   return NS_OK;
 }
 
+IndexedDatabaseManager::SynchronizedOp*
+IndexedDatabaseManager::FindSynchronizedOp(const nsACString& aPattern,
+                                           nsIAtom* aId)
+{
+  for (uint32_t index = 0; index < mSynchronizedOps.Length(); index++) {
+    const nsAutoPtr<SynchronizedOp>& currentOp = mSynchronizedOps[index];
+    if (PatternMatchesOrigin(aPattern, currentOp->mOriginOrPattern) &&
+        (!currentOp->mId || currentOp->mId == aId)) {
+      return currentOp;
+    }
+  }
+
+  return nullptr;
+}
+
+nsresult
+IndexedDatabaseManager::ClearDatabasesForApp(uint32_t aAppId, bool aBrowserOnly)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
+               "Bad appId!");
+
+  // This only works from the main process.
+  NS_ENSURE_TRUE(IsMainProcess(), NS_ERROR_NOT_AVAILABLE);
+
+  nsAutoCString pattern;
+  GetOriginPatternStringMaybeIgnoreBrowser(aAppId, aBrowserOnly, pattern);
+
+  // If there is a pending or running clear operation for this app, return
+  // immediately.
+  if (IsClearOriginPending(pattern)) {
+    return NS_OK;
+  }
+
+  OriginOrPatternString oops = OriginOrPatternString::FromPattern(pattern);
+
+  // Queue up the origin clear runnable.
+  nsRefPtr<OriginClearRunnable> runnable = new OriginClearRunnable(oops);
+
+  nsresult rv = WaitForOpenAllowed(oops, nullptr, runnable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  runnable->AdvanceState();
+
+  // Give the runnable some help by invalidating any databases in the way.
+  DatabasePatternMatchArray matches;
+  matches.Find(mLiveDatabases, pattern);
+
+  for (uint32_t index = 0; index < matches.Length(); index++) {
+    // We need to grab references here to prevent the database from dying while
+    // we invalidate it.
+    nsRefPtr<IDBDatabase> database = matches[index];
+    database->Invalidate();
+  }
+
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS2(IndexedDatabaseManager, nsIIndexedDatabaseManager,
                                            nsIObserver)
 
 NS_IMETHODIMP
 IndexedDatabaseManager::GetUsageForURI(
                                      nsIURI* aURI,
-                                     nsIIndexedDatabaseUsageCallback* aCallback)
+                                     nsIIndexedDatabaseUsageCallback* aCallback,
+                                     uint32_t aAppId,
+                                     bool aInMozBrowserOnly,
+                                     uint8_t aOptionalArgCount)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_ARG_POINTER(aCallback);
 
+  // This only works from the main process.
+  NS_ENSURE_TRUE(IsMainProcess(), NS_ERROR_NOT_AVAILABLE);
+
+  if (!aOptionalArgCount) {
+    aAppId = nsIScriptSecurityManager::NO_APP_ID;
+  }
+
   // Figure out which origin we're dealing with.
   nsCString origin;
-  nsresult rv = nsContentUtils::GetASCIIOrigin(aURI, origin);
+  nsresult rv = GetASCIIOriginFromURI(aURI, aAppId, aInMozBrowserOnly, origin);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  OriginOrPatternString oops = OriginOrPatternString::FromOrigin(origin);
+
   nsRefPtr<AsyncUsageRunnable> runnable =
-    new AsyncUsageRunnable(aURI, origin, aCallback);
+    new AsyncUsageRunnable(aAppId, aInMozBrowserOnly, oops, aURI, aCallback);
 
   nsRefPtr<AsyncUsageRunnable>* newRunnable =
     mUsageRunnables.AppendElement(runnable);
   NS_ENSURE_TRUE(newRunnable, NS_ERROR_OUT_OF_MEMORY);
 
-  // Non-standard URIs can't create databases anyway so fire the callback
-  // immediately.
-  if (origin.EqualsLiteral("null")) {
-    return runnable->TakeShortcut();
-  }
-
   // Otherwise put the computation runnable in the queue.
-  rv = WaitForOpenAllowed(origin, nullptr, runnable);
+  rv = WaitForOpenAllowed(oops, nullptr, runnable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   runnable->AdvanceState();
@@ -1216,76 +1515,94 @@ IndexedDatabaseManager::GetUsageForURI(
 NS_IMETHODIMP
 IndexedDatabaseManager::CancelGetUsageForURI(
                                      nsIURI* aURI,
-                                     nsIIndexedDatabaseUsageCallback* aCallback)
+                                     nsIIndexedDatabaseUsageCallback* aCallback,
+                                     uint32_t aAppId,
+                                     bool aInMozBrowserOnly,
+                                     uint8_t aOptionalArgCount)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_ARG_POINTER(aCallback);
 
+  // This only works from the main process.
+  NS_ENSURE_TRUE(IsMainProcess(), NS_ERROR_NOT_AVAILABLE);
+
+  if (!aOptionalArgCount) {
+    aAppId = nsIScriptSecurityManager::NO_APP_ID;
+  }
+
   // See if one of our pending callbacks matches both the URI and the callback
   // given. Cancel an remove it if so.
   for (uint32_t index = 0; index < mUsageRunnables.Length(); index++) {
     nsRefPtr<AsyncUsageRunnable>& runnable = mUsageRunnables[index];
 
-    bool equals;
-    nsresult rv = runnable->mURI->Equals(aURI, &equals);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (runnable->mAppId == aAppId &&
+        runnable->mInMozBrowserOnly == aInMozBrowserOnly) {
+      bool equals;
+      nsresult rv = runnable->mURI->Equals(aURI, &equals);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    if (equals && SameCOMIdentity(aCallback, runnable->mCallback)) {
-      runnable->Cancel();
-      break;
+      if (equals && SameCOMIdentity(aCallback, runnable->mCallback)) {
+        runnable->Cancel();
+        break;
+      }
     }
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-IndexedDatabaseManager::ClearDatabasesForURI(nsIURI* aURI)
+IndexedDatabaseManager::ClearDatabasesForURI(nsIURI* aURI,
+                                             uint32_t aAppId,
+                                             bool aInMozBrowserOnly,
+                                             uint8_t aOptionalArgCount)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   NS_ENSURE_ARG_POINTER(aURI);
 
+  // This only works from the main process.
+  NS_ENSURE_TRUE(IsMainProcess(), NS_ERROR_NOT_AVAILABLE);
+
+  if (!aOptionalArgCount) {
+    aAppId = nsIScriptSecurityManager::NO_APP_ID;
+  }
+
   // Figure out which origin we're dealing with.
   nsCString origin;
-  nsresult rv = nsContentUtils::GetASCIIOrigin(aURI, origin);
+  nsresult rv = GetASCIIOriginFromURI(aURI, aAppId, aInMozBrowserOnly, origin);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Non-standard URIs can't create databases anyway, so return immediately.
-  if (origin.EqualsLiteral("null")) {
-    return NS_OK;
-  }
+  nsAutoCString pattern;
+  GetOriginPatternString(aAppId, aInMozBrowserOnly, origin, pattern);
 
   // If there is a pending or running clear operation for this origin, return
   // immediately.
-  if (IsClearOriginPending(origin)) {
+  if (IsClearOriginPending(pattern)) {
     return NS_OK;
   }
 
-  // Queue up the origin clear runnable.
-  nsRefPtr<OriginClearRunnable> runnable = new OriginClearRunnable(origin);
+  OriginOrPatternString oops = OriginOrPatternString::FromPattern(pattern);
 
-  rv = WaitForOpenAllowed(origin, nullptr, runnable);
+  // Queue up the origin clear runnable.
+  nsRefPtr<OriginClearRunnable> runnable = new OriginClearRunnable(oops);
+
+  rv = WaitForOpenAllowed(oops, nullptr, runnable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   runnable->AdvanceState();
 
-  // Give the runnable some help by invalidating any databases in the way. We
-  // need to grab references to any live databases here to prevent them from
-  // dying while we invalidate them.
-  nsTArray<nsRefPtr<IDBDatabase> > liveDatabases;
+  // Give the runnable some help by invalidating any databases in the way.
+  DatabasePatternMatchArray matches;
+  matches.Find(mLiveDatabases, pattern);
 
-  nsTArray<IDBDatabase*>* array;
-  if (mLiveDatabases.Get(origin, &array)) {
-    liveDatabases.AppendElements(*array);
+  for (uint32_t index = 0; index < matches.Length(); index++) {
+    // We need to grab references to any live databases here to prevent them
+    // from dying while we invalidate them.
+    nsRefPtr<IDBDatabase> database = matches[index];
+    database->Invalidate();
   }
-
-  for (uint32_t index = 0; index < liveDatabases.Length(); index++) {
-    liveDatabases[index]->Invalidate();
-  }
-
-  DatabaseInfo::RemoveAllForOrigin(origin);
 
   // After everything has been invalidated the helper should be dispatched to
   // the end of the event queue.
@@ -1361,7 +1678,7 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject,
       }
     }
 
-    mFileManagers.EnumerateRead(InvalidateAllFileManagers, nullptr);
+    mFileManagers.Enumerate(InvalidateAndRemoveFileManagers, nullptr);
 
     if (PR_ATOMIC_SET(&gClosed, 1)) {
       NS_ERROR("Close more than once?!");
@@ -1392,6 +1709,25 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
+  if (!strcmp(aTopic, TOPIC_WEB_APP_CLEAR_DATA)) {
+    nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
+      do_QueryInterface(aSubject);
+    NS_ENSURE_TRUE(params, NS_ERROR_UNEXPECTED);
+
+    uint32_t appId;
+    nsresult rv = params->GetAppId(&appId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    bool browserOnly;
+    rv = params->GetBrowserOnly(&browserOnly);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ClearDatabasesForApp(appId, browserOnly);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
   NS_NOTREACHED("Unknown topic!");
   return NS_ERROR_UNEXPECTED;
 }
@@ -1408,16 +1744,75 @@ OriginClearRunnable::InvalidateOpenedDatabases(
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  OriginClearRunnable* self = static_cast<OriginClearRunnable*>(aClosure);
-
   nsTArray<nsRefPtr<IDBDatabase> > databases;
   databases.SwapElements(aDatabases);
 
   for (uint32_t index = 0; index < databases.Length(); index++) {
     databases[index]->Invalidate();
   }
+}
 
-  DatabaseInfo::RemoveAllForOrigin(self->mOrigin);
+void
+IndexedDatabaseManager::
+OriginClearRunnable::DeleteFiles(IndexedDatabaseManager* aManager)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aManager, "Don't pass me null!");
+
+  nsresult rv;
+
+  nsCOMPtr<nsIFile> directory =
+    do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  rv = directory->InitWithPath(aManager->GetBaseDirectory());
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  if (!entries) {
+    return;
+  }
+
+  nsCString originSanitized(mOriginOrPattern);
+  SanitizeOriginString(originSanitized);
+
+  bool hasMore;
+  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
+    nsCOMPtr<nsISupports> entry;
+    rv = entries->GetNext(getter_AddRefs(entry));
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
+    NS_ASSERTION(file, "Don't know what this is!");
+
+    bool isDirectory;
+    rv = file->IsDirectory(&isDirectory);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    if (!isDirectory) {
+      NS_WARNING("Something in the IndexedDB directory that doesn't belong!");
+      continue;
+    }
+
+    nsString leafName;
+    rv = file->GetLeafName(leafName);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    // Skip databases for other apps.
+    if (!PatternMatchesOrigin(originSanitized,
+                              NS_ConvertUTF16toUTF8(leafName))) {
+      continue;
+    }
+
+    if (NS_FAILED(file->Remove(true))) {
+      // This should never fail if we've closed all database connections
+      // correctly...
+      NS_ERROR("Failed to remove directory!");
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -1439,9 +1834,9 @@ IndexedDatabaseManager::OriginClearRunnable::Run()
 
       // Now we have to wait until the thread pool is done with all of the
       // databases we care about.
-      nsresult rv =
-        mgr->AcquireExclusiveAccess(mOrigin, this, InvalidateOpenedDatabases,
-                                    this);
+      nsresult rv = mgr->AcquireExclusiveAccess(mOriginOrPattern, this,
+                                                InvalidateOpenedDatabases,
+                                                nullptr);
       NS_ENSURE_SUCCESS(rv, rv);
 
       return NS_OK;
@@ -1452,24 +1847,7 @@ IndexedDatabaseManager::OriginClearRunnable::Run()
 
       AdvanceState();
 
-      // Remove the directory that contains all our databases.
-      nsCOMPtr<nsIFile> directory;
-      nsresult rv =
-        mgr->GetDirectoryForOrigin(mOrigin, getter_AddRefs(directory));
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to get directory to remove!");
-
-      if (NS_SUCCEEDED(rv)) {
-        bool exists;
-        rv = directory->Exists(&exists);
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                         "Failed to check that the directory exists!");
-
-        if (NS_SUCCEEDED(rv) && exists && NS_FAILED(directory->Remove(true))) {
-          // This should never fail if we've closed all database connections
-          // correctly...
-          NS_ERROR("Failed to remove directory!");
-        }
-      }
+      DeleteFiles(mgr);
 
       // Now dispatch back to the main thread.
       if (NS_FAILED(NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL))) {
@@ -1483,10 +1861,10 @@ IndexedDatabaseManager::OriginClearRunnable::Run()
     case Complete: {
       NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-      mgr->InvalidateFileManagersForOrigin(mOrigin);
+      mgr->InvalidateFileManagersForPattern(mOriginOrPattern);
 
       // Tell the IndexedDatabaseManager that we're done.
-      mgr->AllowNextSynchronizedOp(mOrigin, nullptr);
+      mgr->AllowNextSynchronizedOp(mOriginOrPattern, nullptr);
 
       return NS_OK;
     }
@@ -1501,19 +1879,24 @@ IndexedDatabaseManager::OriginClearRunnable::Run()
 }
 
 IndexedDatabaseManager::AsyncUsageRunnable::AsyncUsageRunnable(
+                                     uint32_t aAppId,
+                                     bool aInMozBrowserOnly,
+                                     const OriginOrPatternString& aOrigin,
                                      nsIURI* aURI,
-                                     const nsACString& aOrigin,
                                      nsIIndexedDatabaseUsageCallback* aCallback)
 : mURI(aURI),
-  mOrigin(aOrigin),
   mCallback(aCallback),
   mUsage(0),
   mFileUsage(0),
+  mAppId(aAppId),
   mCanceled(0),
-  mCallbackState(Pending)
+  mOrigin(aOrigin),
+  mCallbackState(Pending),
+  mInMozBrowserOnly(aInMozBrowserOnly)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aURI, "Null pointer!");
+  NS_ASSERTION(aOrigin.IsOrigin(), "Expect origin only here!");
   NS_ASSERTION(!aOrigin.IsEmpty(), "Empty origin!");
   NS_ASSERTION(aCallback, "Null pointer!");
 }
@@ -1612,7 +1995,8 @@ IndexedDatabaseManager::AsyncUsageRunnable::RunInternal()
       if (!mCanceled) {
         uint64_t usage = mUsage;
         IncrementUsage(&usage, mFileUsage);
-        mCallback->OnUsageResult(mURI, usage, mFileUsage);
+        mCallback->OnUsageResult(mURI, usage, mFileUsage, mAppId,
+                                 mInMozBrowserOnly);
       }
 
       // Clean up.
@@ -1779,9 +2163,9 @@ IndexedDatabaseManager::WaitForLockedFilesToFinishRunnable::Run()
 }
 
 IndexedDatabaseManager::
-SynchronizedOp::SynchronizedOp(const nsACString& aOrigin,
+SynchronizedOp::SynchronizedOp(const OriginOrPatternString& aOriginOrPattern,
                                nsIAtom* aId)
-: mOrigin(aOrigin), mId(aId)
+: mOriginOrPattern(aOriginOrPattern), mId(aId)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   MOZ_COUNT_CTOR(IndexedDatabaseManager::SynchronizedOp);
@@ -1794,24 +2178,42 @@ IndexedDatabaseManager::SynchronizedOp::~SynchronizedOp()
 }
 
 bool
-IndexedDatabaseManager::SynchronizedOp::MustWaitFor(const SynchronizedOp& aRhs)
-  const
+IndexedDatabaseManager::
+SynchronizedOp::MustWaitFor(const SynchronizedOp& aExistingOp)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  bool match;
+
+  if (aExistingOp.mOriginOrPattern.IsOrigin()) {
+    if (mOriginOrPattern.IsOrigin()) {
+      match = aExistingOp.mOriginOrPattern.Equals(mOriginOrPattern);
+    }
+    else {
+      match = PatternMatchesOrigin(mOriginOrPattern, aExistingOp.mOriginOrPattern);
+    }
+  }
+  else if (mOriginOrPattern.IsOrigin()) {
+    match = PatternMatchesOrigin(aExistingOp.mOriginOrPattern, mOriginOrPattern);
+  }
+  else {
+    match = PatternMatchesOrigin(mOriginOrPattern, aExistingOp.mOriginOrPattern) ||
+            PatternMatchesOrigin(aExistingOp.mOriginOrPattern, mOriginOrPattern);
+  }
+
   // If the origins don't match, the second can proceed.
-  if (!aRhs.mOrigin.Equals(mOrigin)) {
+  if (!match) {
     return false;
   }
 
   // If the origins and the ids match, the second must wait.
-  if (aRhs.mId == mId) {
+  if (aExistingOp.mId == mId) {
     return true;
   }
 
   // Waiting is required if either one corresponds to an origin clearing
   // (a null Id).
-  if (!aRhs.mId || !mId) {
+  if (!aExistingOp.mId || !mId) {
     return true;
   }
 

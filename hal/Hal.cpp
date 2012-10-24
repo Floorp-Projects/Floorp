@@ -405,52 +405,86 @@ void SetScreenBrightness(double brightness)
   PROXY_IF_SANDBOXED(SetScreenBrightness(clamped(brightness, 0.0, 1.0)));
 }
 
-bool SetLight(LightType light, const hal::LightConfiguration& aConfig)
+bool SetLight(LightType light, const LightConfiguration& aConfig)
 {
   AssertMainThread();
   RETURN_PROXY_IF_SANDBOXED(SetLight(light, aConfig), false);
 }
 
-bool GetLight(LightType light, hal::LightConfiguration* aConfig)
+bool GetLight(LightType light, LightConfiguration* aConfig)
 {
   AssertMainThread();
   RETURN_PROXY_IF_SANDBOXED(GetLight(light, aConfig), false);
 }
 
-class SystemTimeObserversManager : public ObserversManager<SystemTimeChange>
+class SystemClockChangeObserversManager : public ObserversManager<int64_t>
 {
 protected:
   void EnableNotifications() {
-    PROXY_IF_SANDBOXED(EnableSystemTimeChangeNotifications());
+    PROXY_IF_SANDBOXED(EnableSystemClockChangeNotifications());
   }
 
   void DisableNotifications() {
-    PROXY_IF_SANDBOXED(DisableSystemTimeChangeNotifications());
+    PROXY_IF_SANDBOXED(DisableSystemClockChangeNotifications());
   }
 };
 
-static SystemTimeObserversManager sSystemTimeObservers;
+static SystemClockChangeObserversManager sSystemClockChangeObservers;
 
 void
-RegisterSystemTimeChangeObserver(SystemTimeObserver *aObserver)
+RegisterSystemClockChangeObserver(SystemClockChangeObserver* aObserver)
 {
   AssertMainThread();
-  sSystemTimeObservers.AddObserver(aObserver);
+  sSystemClockChangeObservers.AddObserver(aObserver);
 }
 
 void
-UnregisterSystemTimeChangeObserver(SystemTimeObserver *aObserver)
+UnregisterSystemClockChangeObserver(SystemClockChangeObserver* aObserver)
 {
   AssertMainThread();
-  sSystemTimeObservers.RemoveObserver(aObserver);
+  sSystemClockChangeObservers.RemoveObserver(aObserver);
 }
 
 void
-NotifySystemTimeChange(const hal::SystemTimeChange& aReason)
+NotifySystemClockChange(const int64_t& aClockDeltaMS)
 {
-  sSystemTimeObservers.BroadcastInformation(aReason);
+  sSystemClockChangeObservers.BroadcastInformation(aClockDeltaMS);
 }
- 
+
+class SystemTimezoneChangeObserversManager : public ObserversManager<SystemTimezoneChangeInformation>
+{
+protected:
+  void EnableNotifications() {
+    PROXY_IF_SANDBOXED(EnableSystemTimezoneChangeNotifications());
+  }
+
+  void DisableNotifications() {
+    PROXY_IF_SANDBOXED(DisableSystemTimezoneChangeNotifications());
+  }
+};
+
+static SystemTimezoneChangeObserversManager sSystemTimezoneChangeObservers;
+
+void
+RegisterSystemTimezoneChangeObserver(SystemTimezoneChangeObserver* aObserver)
+{
+  AssertMainThread();
+  sSystemTimezoneChangeObservers.AddObserver(aObserver);
+}
+
+void
+UnregisterSystemTimezoneChangeObserver(SystemTimezoneChangeObserver* aObserver)
+{
+  AssertMainThread();
+  sSystemTimezoneChangeObservers.RemoveObserver(aObserver);
+}
+
+void
+NotifySystemTimezoneChange(const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo)
+{
+  sSystemTimezoneChangeObservers.BroadcastInformation(aSystemTimezoneChangeInfo);
+}
+
 void 
 AdjustSystemClock(int64_t aDeltaMilliseconds)
 {
@@ -607,8 +641,8 @@ UnregisterWakeLockObserver(WakeLockObserver* aObserver)
 
 void
 ModifyWakeLock(const nsAString &aTopic,
-               hal::WakeLockControl aLockAdjust,
-               hal::WakeLockControl aHiddenAdjust)
+               WakeLockControl aLockAdjust,
+               WakeLockControl aHiddenAdjust)
 {
   AssertMainThread();
   PROXY_IF_SANDBOXED(ModifyWakeLock(aTopic, aLockAdjust, aHiddenAdjust));
@@ -671,18 +705,18 @@ UnlockScreenOrientation()
 }
 
 void
-EnableSwitchNotifications(hal::SwitchDevice aDevice) {
+EnableSwitchNotifications(SwitchDevice aDevice) {
   AssertMainThread();
   PROXY_IF_SANDBOXED(EnableSwitchNotifications(aDevice));
 }
 
 void
-DisableSwitchNotifications(hal::SwitchDevice aDevice) {
+DisableSwitchNotifications(SwitchDevice aDevice) {
   AssertMainThread();
   PROXY_IF_SANDBOXED(DisableSwitchNotifications(aDevice));
 }
 
-hal::SwitchState GetCurrentSwitchState(hal::SwitchDevice aDevice)
+SwitchState GetCurrentSwitchState(SwitchDevice aDevice)
 {
   AssertMainThread();
   RETURN_PROXY_IF_SANDBOXED(GetCurrentSwitchState(aDevice), SWITCH_STATE_UNKNOWN);
@@ -693,7 +727,7 @@ typedef mozilla::ObserverList<SwitchEvent> SwitchObserverList;
 static SwitchObserverList *sSwitchObserverLists = NULL;
 
 static SwitchObserverList&
-GetSwitchObserverList(hal::SwitchDevice aDevice) {
+GetSwitchObserverList(SwitchDevice aDevice) {
   MOZ_ASSERT(0 <= aDevice && aDevice < NUM_SWITCH_DEVICE); 
   if (sSwitchObserverLists == NULL) {
     sSwitchObserverLists = new SwitchObserverList[NUM_SWITCH_DEVICE];
@@ -714,7 +748,7 @@ ReleaseObserversIfNeeded() {
 }
 
 void
-RegisterSwitchObserver(hal::SwitchDevice aDevice, hal::SwitchObserver *aObserver)
+RegisterSwitchObserver(SwitchDevice aDevice, SwitchObserver *aObserver)
 {
   AssertMainThread();
   SwitchObserverList& observer = GetSwitchObserverList(aDevice);
@@ -725,7 +759,7 @@ RegisterSwitchObserver(hal::SwitchDevice aDevice, hal::SwitchObserver *aObserver
 }
 
 void
-UnregisterSwitchObserver(hal::SwitchDevice aDevice, hal::SwitchObserver *aObserver)
+UnregisterSwitchObserver(SwitchDevice aDevice, SwitchObserver *aObserver)
 {
   AssertMainThread();
 
@@ -743,7 +777,7 @@ UnregisterSwitchObserver(hal::SwitchDevice aDevice, hal::SwitchObserver *aObserv
 }
 
 void
-NotifySwitchChange(const hal::SwitchEvent& aEvent)
+NotifySwitchChange(const SwitchEvent& aEvent)
 {
   // When callback this notification, main thread may call unregister function
   // first. We should check if this pointer is valid.
