@@ -98,7 +98,7 @@ DownloadsStartup.prototype = {
         // database to see if there are completed downloads to recover and show
         // in the panel, in addition to in-progress downloads.
         if (gSessionStartup.sessionType != Ci.nsISessionStartup.NO_SESSION) {
-          this._recoverAllDownloads = true;
+          this._restoringSession = true;
         }
         this._ensureDataLoaded();
         break;
@@ -188,6 +188,14 @@ DownloadsStartup.prototype = {
         if (this._cleanupOnShutdown) {
           Services.downloads.cleanUp();
         }
+
+        if (!DownloadsCommon.useToolkitUI) {
+          // If we got this far, that means that we finished our first session
+          // with the Downloads Panel without crashing. This means that we don't
+          // have to force displaying only active downloads on the next startup
+          // now.
+          this._firstSessionCompleted = true;
+        }
         break;
     }
   },
@@ -196,10 +204,11 @@ DownloadsStartup.prototype = {
   //// Private
 
   /**
-   * Indicates whether we should load all downloads from the previous session,
-   * including completed items as well as active downloads.
+   * Indicates whether we're restoring a previous session. This is used by
+   * _recoverAllDownloads to determine whether or not we should load and
+   * display all downloads data, or restrict it to only the active downloads.
    */
-  _recoverAllDownloads: false,
+  _restoringSession: false,
 
   /**
    * Indicates whether the Download Manager service has been initialized.  This
@@ -218,6 +227,31 @@ DownloadsStartup.prototype = {
    * True during shutdown if we need to remove completed downloads.
    */
   _cleanupOnShutdown: false,
+
+  /**
+   * True if we should display all downloads, as opposed to just active
+   * downloads. We decide to display all downloads if we're restoring a session,
+   * or if we're using the Downloads Panel anytime after the first session with
+   * it has completed.
+   */
+  get _recoverAllDownloads() {
+    return this._restoringSession ||
+           (!DownloadsCommon.useToolkitUI && this._firstSessionCompleted);
+  },
+
+  /**
+   * True if we've ever completed a session with the Downloads Panel enabled.
+   */
+  get _firstSessionCompleted() {
+    return Services.prefs
+                   .getBoolPref("browser.download.panel.firstSessionCompleted");
+  },
+
+  set _firstSessionCompleted(aValue) {
+    Services.prefs.setBoolPref("browser.download.panel.firstSessionCompleted",
+                               aValue);
+    return aValue;
+  },
 
   /**
    * Ensures that persistent download data is reloaded at the appropriate time.
