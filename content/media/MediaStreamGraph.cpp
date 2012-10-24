@@ -2007,11 +2007,14 @@ void
 SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment)
 {
   MutexAutoLock lock(mMutex);
-  TrackData *track = FindDataForTrack(aID);
-  if (track) {
-    track->mData->AppendFrom(aSegment);
-  } else {
-    NS_ERROR("Append to non-existent track!");
+  // ::EndAllTrackAndFinished() can end these before the sources notice
+  if (!mFinished) {
+    TrackData *track = FindDataForTrack(aID);
+    if (track) {
+      track->mData->AppendFrom(aSegment);
+    } else {
+      NS_ERROR("Append to non-existent track!");
+    }
   }
   if (!mDestroyed) {
     GraphImpl()->EnsureNextIteration();
@@ -2052,11 +2055,14 @@ void
 SourceMediaStream::EndTrack(TrackID aID)
 {
   MutexAutoLock lock(mMutex);
-  TrackData *track = FindDataForTrack(aID);
-  if (track) {
-    track->mCommands |= TRACK_END;
-  } else {
-    NS_ERROR("End of non-existant track");
+  // ::EndAllTrackAndFinished() can end these before the sources call this
+  if (!mFinished) {
+    TrackData *track = FindDataForTrack(aID);
+    if (track) {
+      track->mCommands |= TRACK_END;
+    } else {
+      NS_ERROR("End of non-existant track");
+    }
   }
   if (!mDestroyed) {
     GraphImpl()->EnsureNextIteration();
@@ -2074,13 +2080,26 @@ SourceMediaStream::AdvanceKnownTracksTime(StreamTime aKnownTime)
 }
 
 void
-SourceMediaStream::Finish()
+SourceMediaStream::FinishWithLockHeld()
 {
-  MutexAutoLock lock(mMutex);
   mUpdateFinished = true;
   if (!mDestroyed) {
     GraphImpl()->EnsureNextIteration();
   }
+}
+
+void
+SourceMediaStream::EndAllTrackAndFinish()
+{
+  {
+    MutexAutoLock lock(mMutex);
+    for (uint32_t i = 0; i < mUpdateTracks.Length(); ++i) {
+      SourceMediaStream::TrackData* data = &mUpdateTracks[i];
+      data->mCommands |= TRACK_END;
+    }
+  }
+  FinishWithLockHeld();
+  // we will call NotifyFinished() to let GetUserMedia know
 }
 
 void
