@@ -52,17 +52,12 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
   : mPos(0.0f),
     mVelocity(0.0f),
     mAcceleration(0),
-    mAsyncPanZoomController(aAsyncPanZoomController),
-    mLockPanning(false)
+    mAsyncPanZoomController(aAsyncPanZoomController)
 {
 
 }
 
 void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeDelta) {
-  if (mLockPanning) {
-    return;
-  }
-
   float newVelocity = (mPos - aPos) / aTimeDelta.ToMilliseconds();
 
   bool curVelocityIsLow = fabsf(newVelocity) < 0.01f;
@@ -91,7 +86,6 @@ void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeD
 void Axis::StartTouch(int32_t aPos) {
   mStartPos = aPos;
   mPos = aPos;
-  mLockPanning = false;
 }
 
 float Axis::GetDisplacementForDuration(float aScale, const TimeDuration& aDelta) {
@@ -124,10 +118,6 @@ void Axis::EndTouch() {
 void Axis::CancelTouch() {
   mVelocity = 0.0f;
   mAcceleration = 0;
-}
-
-void Axis::LockPanning() {
-  mLockPanning = true;
 }
 
 bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta) {
