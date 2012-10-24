@@ -26,6 +26,9 @@ of the License or (at your option) any later version.
 */
 #pragma once
 
+namespace graphite2
+{
+
 template<typename T>
 inline unsigned int bit_set_count(T v)
 {
@@ -72,16 +75,16 @@ inline unsigned int log_binary(T v)
 }
 
 template<typename T>
-inline T haszero(const T x)
+inline T has_zero(const T x)
 {
 	return (x - T(~T(0)/255)) & ~x & T(~T(0)/255*128);
 }
 
 template<typename T>
-inline T zerobytes(const T x, unsigned char n)
+inline T zero_bytes(const T x, unsigned char n)
 {
 	const T t = T(~T(0)/255*n);
-	return T((haszero(x^t) >> 7)*n);
+	return T((has_zero(x^t) >> 7)*n);
 }
 
-
+}

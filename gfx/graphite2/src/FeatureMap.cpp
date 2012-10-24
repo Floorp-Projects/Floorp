@@ -185,23 +185,23 @@ bool SillMap::readFace(const Face & face)
 bool SillMap::readSill(const Face & face)
 {
 	const Face::Table sill(face, TtfUtil::Tag::Sill);
-    const byte *pSill = sill;
+    const byte *p = sill;
 
-    if (!pSill) return true;
+    if (!p) return true;
     if (sill.size() < 12) return false;
-    if (be::read<uint32>(pSill) != 0x00010000UL) return false;
-    m_numLanguages = be::read<uint16>(pSill);
+    if (be::read<uint32>(p) != 0x00010000UL) return false;
+    m_numLanguages = be::read<uint16>(p);
     m_langFeats = new LangFeaturePair[m_numLanguages];
     if (!m_langFeats || !m_FeatureMap.m_numFeats) { m_numLanguages = 0; return true; }        //defensive
 
-    pSill += 6;     // skip the fast search
+    p += 6;     // skip the fast search
     if (sill.size() < m_numLanguages * 8U + 12) return false;
 
     for (int i = 0; i < m_numLanguages; i++)
     {
-        uint32 langid = be::read<uint32>(pSill);
-        uint16 numSettings = be::read<uint16>(pSill);
-        uint16 offset = be::read<uint16>(pSill);
+        uint32 langid = be::read<uint32>(p);
+        uint16 numSettings = be::read<uint16>(p);
+        uint16 offset = be::read<uint16>(p);
         if (offset + 8U * numSettings > sill.size() && numSettings > 0) return false;
         Features* feats = new Features(*m_FeatureMap.m_defaultFeatures);
         const byte *pLSet = sill + offset;

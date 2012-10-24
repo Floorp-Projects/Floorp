@@ -24,7 +24,6 @@ Mozilla Public License (http://mozilla.org/MPL) or the GNU General Public
 License, as published by the Free Software Foundation, either version 2
 of the License or (at your option) any later version.
 */
-#include <algorithm>
 #include "inc/Face.h"
 #include "inc/Font.h"
 #include "inc/GlyphCache.h"
@@ -39,7 +38,7 @@ Font::Font(float ppm, const Face & f, const void * appFontHandle, const gr_font_
 {
     memset(&m_ops, 0, sizeof m_ops);
     if (m_hinted)
-        memcpy(&m_ops, ops, std::min(sizeof m_ops, ops->size));
+        memcpy(&m_ops, ops, min(sizeof m_ops, ops->size));
     else
         m_ops.glyph_advance_x = &Face::default_glyph_advance;
 
