@@ -40,6 +40,8 @@
  *       void removeObserver(Observer* observer) {
  *         // Will assert if |observer| is not part of some list.
  *         observer.remove();
+ *         // Or, will assert if |observer| is not part of |list| specifically.
+ *         // observer.removeFrom(list);
  *       }
  *
  *       void notifyObservers(char* topic) {
@@ -171,6 +173,15 @@ class LinkedListElement
       next->prev = prev;
       next = this;
       prev = this;
+    }
+
+    /*
+     * Identical to remove(), but also asserts in debug builds that this element
+     * is in list.
+     */
+    void removeFrom(const LinkedList<T>& list) {
+      list.assertContains(asT());
+      remove();
     }
 
     /*
@@ -393,6 +404,21 @@ class LinkedList
     }
 
   private:
+    friend class LinkedListElement<T>;
+
+    void assertContains(const T* t) const {
+#ifdef DEBUG
+      for (const T* elem = getFirst();
+           elem;
+           elem = elem->getNext())
+      {
+        if (elem == t)
+          return;
+      }
+      MOZ_NOT_REACHED("element wasn't found in this list!");
+#endif
+    }
+
     LinkedList& operator=(const LinkedList<T>& other) MOZ_DELETE;
     LinkedList(const LinkedList<T>& other) MOZ_DELETE;
 };
