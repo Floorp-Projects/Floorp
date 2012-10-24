@@ -612,7 +612,7 @@ let SocialShareButton = {
       shareButton.setAttribute("tooltiptext", this.promptMessages['shareTooltip']);
       imageURL = this.promptImages["share"]
     }
-    shareButton.style.backgroundImage = 'url("' + encodeURI(imageURL) + '")';
+    shareButton.src = imageURL;
   }
 };
 

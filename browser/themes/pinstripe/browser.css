@@ -1637,8 +1637,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 /* social recommending panel */
 
 #share-button {
-  width: 16px;
-  height: 16px;
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 #socialUserPortrait {
