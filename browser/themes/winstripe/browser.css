@@ -1272,7 +1272,7 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 }
 
 .urlbar-icon {
-  padding: 3px 3px;
+  padding: 0 3px;
 }
 
 .searchbar-engine-button,
