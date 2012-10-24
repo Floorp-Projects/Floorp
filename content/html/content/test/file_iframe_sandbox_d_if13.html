@@ -25,7 +25,8 @@ function ok_wrapper(result, msg) {
 function doIf11TestPart2() {
   var if_11 = document.getElementById('if_11');
   if_11.sandbox = 'allow-scripts allow-same-origin';
-  if_11.contentWindow.history.back();
+  // window.history is no longer cross-origin accessible in gecko.
+  SpecialPowers.wrap(if_11).contentWindow.history.back();
 } 
 </script>
 <body>
