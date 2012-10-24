@@ -534,8 +534,9 @@ void CC_SIPCCCall::createOffer (const cc_media_constraints_t *constraints) {
 /*
  * This method works asynchronously, there is onCallEvent with the resulting SDP
  */
-void CC_SIPCCCall::createAnswer (const cc_media_constraints_t *constraints, const std::string & offersdp) {
-    CCAPI_CreateAnswer(callHandle, constraints, offersdp.c_str());
+void CC_SIPCCCall::createAnswer (const cc_media_constraints_t *constraints) {
+    CCAPI_CreateAnswer(callHandle, constraints);
+
 }
 
 void CC_SIPCCCall::setLocalDescription(cc_jsep_action_t action, const std::string & sdp) {

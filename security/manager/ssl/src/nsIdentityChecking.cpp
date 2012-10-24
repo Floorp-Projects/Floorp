@@ -1060,7 +1060,7 @@ static SECStatus getFirstEVPolicy(CERTCertificate *cert, SECOidTag &outOidTag)
     return SECFailure;
 
   if (cert->extensions) {
-    for (int i=0; cert->extensions[i]; i++) {
+    for (int i=0; cert->extensions[i] != nullptr; i++) {
       const SECItem *oid = &cert->extensions[i]->id;
 
       SECOidTag oidTag = SECOID_FindOIDTag(oid);
@@ -1079,7 +1079,7 @@ static SECStatus getFirstEVPolicy(CERTCertificate *cert, SECOidTag &outOidTag)
       policyInfos = policies->policyInfos;
 
       bool found = false;
-      while (*policyInfos) {
+      while (*policyInfos != NULL) {
         policyInfo = *policyInfos++;
 
         SECOidTag oid_tag = policyInfo->oid;

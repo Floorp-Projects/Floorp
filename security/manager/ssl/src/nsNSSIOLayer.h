@@ -10,6 +10,7 @@
 #include "TransportSecurityInfo.h"
 #include "nsISSLSocketControl.h"
 #include "nsIClientAuthDialogs.h"
+#include "nsAutoPtr.h"
 #include "nsNSSCertificate.h"
 #include "nsDataHashtable.h"
 #include "nsTHashtable.h"

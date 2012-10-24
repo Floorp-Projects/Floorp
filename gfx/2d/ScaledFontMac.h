@@ -25,9 +25,23 @@ public:
   virtual SkTypeface* GetSkTypeface();
 #endif
   virtual TemporaryRef<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget);
+
 private:
   friend class DrawTargetCG;
   CGFontRef mFont;
+  CTFontRef mCTFont; // only created if CTFontDrawGlyphs is available, otherwise null
+
+  typedef void (CTFontDrawGlyphsFuncT)(CTFontRef,
+                                       const CGGlyph[], const CGPoint[],
+                                       size_t, CGContextRef);
+
+  static bool sSymbolLookupDone;
+
+public:
+  // function pointer for CTFontDrawGlyphs, if available;
+  // initialized the first time a ScaledFontMac is created,
+  // so it will be valid by the time DrawTargetCG wants to use it
+  static CTFontDrawGlyphsFuncT* CTFontDrawGlyphsPtr;
 };
 
 }

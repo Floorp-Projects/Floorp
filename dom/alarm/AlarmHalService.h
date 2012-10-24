@@ -13,17 +13,17 @@
 #include "nsIAlarmHalService.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "prtime.h"
 
 namespace mozilla {
 namespace dom {
 namespace alarm {
-
-using namespace hal;
+  
+typedef Observer<void_t> AlarmObserver;
+typedef Observer<hal::SystemTimezoneChangeInformation> SystemTimezoneChangeObserver;
 
 class AlarmHalService : public nsIAlarmHalService, 
                         public AlarmObserver,
-                        public SystemTimeObserver
+                        public SystemTimezoneChangeObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -32,13 +32,13 @@ public:
   void Init();
   virtual ~AlarmHalService();
 
-  static already_AddRefed<nsIAlarmHalService> GetInstance();
+  static already_AddRefed<AlarmHalService> GetInstance();
 
   // Implementing hal::AlarmObserver
-  void Notify(const mozilla::void_t& aVoid);
+  void Notify(const void_t& aVoid);
 
-  // Implementing hal::SystemTimeObserver
-  void Notify(const SystemTimeChange& aReason);
+  // Implementing hal::SystemTimezoneChangeObserver
+  void Notify(const hal::SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo);
 
 private:
   bool mAlarmEnabled;
@@ -46,8 +46,6 @@ private:
 
   nsCOMPtr<nsIAlarmFiredCb> mAlarmFiredCb;
   nsCOMPtr<nsITimezoneChangedCb> mTimezoneChangedCb;
-
-  int32_t GetTimezoneOffset(bool aIgnoreDST);
 };
 
 } // namespace alarm

@@ -4,7 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+extern "C" {
 #include "secdert.h"
+}
 #include "nspr.h"
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "keyhi.h"
@@ -12,7 +14,9 @@
 #include "cryptohi.h"
 #include "base64.h"
 #include "secasn1.h"
+extern "C" {
 #include "pk11pqg.h"
+}
 #include "nsKeygenHandler.h"
 #include "nsVoidArray.h"
 #include "nsIServiceManager.h"
@@ -33,7 +37,7 @@
 
 DERTemplate SECAlgorithmIDTemplate[] = {
     { DER_SEQUENCE,
-          0, nullptr, sizeof(SECAlgorithmID) },
+          0, NULL, sizeof(SECAlgorithmID) },
     { DER_OBJECT_ID,
           offsetof(SECAlgorithmID,algorithm), },
     { DER_OPTIONAL | DER_ANY,
@@ -61,7 +65,7 @@ DERTemplate CERTPublicKeyAndChallengeTemplate[] =
 };
 
 const SEC_ASN1Template SECKEY_PQGParamsTemplate[] = {
-    { SEC_ASN1_SEQUENCE, 0, nullptr, sizeof(PQGParams) },
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(PQGParams) },
     { SEC_ASN1_INTEGER, offsetof(PQGParams,prime) },
     { SEC_ASN1_INTEGER, offsetof(PQGParams,subPrime) },
     { SEC_ASN1_INTEGER, offsetof(PQGParams,base) },
@@ -222,7 +226,7 @@ SECKEYECParams *
 decode_ec_params(const char *curve)
 {
     SECKEYECParams *ecparams;
-    SECOidData *oidData = nullptr;
+    SECOidData *oidData = NULL;
     SECOidTag curveOidTag = SEC_OID_UNKNOWN; /* default */
     int i, numCurves;
 
@@ -235,13 +239,13 @@ decode_ec_params(const char *curve)
         }
     }
 
-    /* Return nullptr if curve name is not recognized */
+    /* Return NULL if curve name is not recognized */
     if ((curveOidTag == SEC_OID_UNKNOWN) || 
-        (oidData = SECOID_FindOIDByTag(curveOidTag)) == nullptr) {
+        (oidData = SECOID_FindOIDByTag(curveOidTag)) == NULL) {
         return nullptr;
     }
 
-    ecparams = SECITEM_AllocItem(nullptr, nullptr, (2 + oidData->oid.len));
+    ecparams = SECITEM_AllocItem(NULL, NULL, (2 + oidData->oid.len));
 
     if (!ecparams)
       return nullptr;
@@ -276,6 +280,8 @@ nsKeygenFormProcessor::Create(nsISupports* aOuter, const nsIID& aIID, void* *aRe
   nsresult rv;
   NS_ENSURE_NO_AGGREGATION(aOuter);
   nsKeygenFormProcessor* formProc = new nsKeygenFormProcessor();
+  if (!formProc)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsISupports> stabilize = formProc;
   rv = formProc->Init();
@@ -527,7 +533,7 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
         bool found_match = false;
         do {
             end = strchr(str, ',');
-            if (end)
+            if (end != nullptr)
                 *end = '\0';
             primeBits = pqg_prime_bits(str);
             if (keysize == primeBits) {
@@ -535,7 +541,7 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
                 break;
             }
             str = end + 1;
-        } while (end);
+        } while (end != nullptr);
         if (!found_match) {
             goto loser;
         }
@@ -748,7 +754,7 @@ loser:
     if ( arena ) {
         PORT_FreeArena(arena, true);
     }
-    if (slot) {
+    if (slot != nullptr) {
         PK11_FreeSlot(slot);
     }
     if (KeygenRunnable) {

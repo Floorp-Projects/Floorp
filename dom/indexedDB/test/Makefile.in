@@ -21,6 +21,8 @@ MOCHITEST_FILES = \
   event_propagation_iframe.html \
   exceptions_in_events_iframe.html \
   file.js \
+  file_app_isolation.html \
+  file_app_isolation.js \
   helpers.js \
   leaving_page_iframe.html \
   test_add_put.html \
@@ -100,12 +102,13 @@ MOCHITEST_FILES = \
   test_setVersion_events.html \
   test_setVersion_exclusion.html \
   test_unique_index_update.html \
+  test_webapp_clearBrowserData.html \
   third_party_iframe1.html \
   third_party_iframe2.html \
   test_app_isolation_inproc.html \
   test_app_isolation_oop.html \
-  file_app_isolation.html \
-  file_app_isolation.js \
+  webapp_clearBrowserData_appFrame.html \
+  webapp_clearBrowserData_browserFrame.html \
   $(NULL)
 
 #   test_writer_starvation.html  disabled for infinite loops, bug 595368

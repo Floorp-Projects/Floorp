@@ -1,0 +1,126 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Clear Browser Data Test</title>
+
+  <script type="text/javascript;version=1.7">
+    "use strict";
+
+    function ok(cond, message)
+    {
+      alert(JSON.stringify({ type: "ok",
+                             args: [!!cond, "appFrame: " + message] }));
+    }
+
+    function info(message)
+    {
+      alert(JSON.stringify({ type: "info",
+                             args: ["appFrame: " + message] }));
+    }
+
+    function finish()
+    {
+      alert(JSON.stringify({ type: "done" }));
+    }
+
+    window.onerror = ok.bind(window, false);
+
+    function testSteps()
+    {
+      const objectStoreName = "foo";
+      const testKey = 1;
+      const testValue = objectStoreName;
+
+      let request = indexedDB.open(window.location.pathname, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = unexpectedSuccessHandler;
+      let event = yield;
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+      db.onversionchange = function(event) {
+        event.target.close();
+      }
+
+      let objectStore = db.createObjectStore(objectStoreName);
+      objectStore.add(testValue, testKey);
+
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      ok(db === event.target.result, "created database");
+
+      objectStore =
+        db.transaction(objectStoreName).objectStore(objectStoreName);
+      objectStore.get(testKey).onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      ok(testValue == event.target.result, "data exists");
+
+      let iframe = document.createElement("iframe");
+      iframe.setAttribute("mozbrowser", "");
+      iframe.setAttribute("src", "webapp_clearBrowserData_browserFrame.html");
+      iframe.addEventListener("mozbrowsershowmodalprompt", function(event) {
+        let message = JSON.parse(event.detail.message);
+        switch (message.type) {
+          case "block":
+            info("blocking browserFrame");
+            event.preventDefault();
+
+            let request = navigator.mozApps.getSelf();
+            request.onsuccess = function() {
+              let app = request.result;
+              ok(app, "got app");
+
+              info("clearing browser data");
+              app.clearBrowserData();
+
+              info("unblocking browserFrame");
+              event.detail.unblock();
+            }
+            break;
+          case "done":
+            continueToNextStepSync();
+            break;
+          default:
+            alert(event.detail.message);
+        }
+      });
+
+      info("loading browser frame");
+
+      document.body.appendChild(iframe);
+      yield;
+
+      request = indexedDB.open(window.location.pathname, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = unexpectedSuccessHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      db = event.target.result;
+      db.onerror = errorHandler;
+
+      objectStore =
+        db.transaction(objectStoreName).objectStore(objectStoreName);
+      objectStore.get(testKey).onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      ok(testValue == event.target.result, "data still exists");
+
+      finish();
+      yield;
+    }
+
+  </script>
+
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+</head>
+
+<body onload="testGenerator.next();"></body>
+
+</html>

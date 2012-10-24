@@ -609,7 +609,7 @@ protected:
      * layer, then this stores the layer manager being
      * used for the inactive transaction.
      */
-    nsRefPtr<LayerManager> mInactiveLayer;
+    nsRefPtr<LayerManager> mInactiveLayerManager;
 
     Clip mClip;
     uint32_t mContainerLayerGeneration;

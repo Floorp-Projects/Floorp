@@ -9,7 +9,6 @@
 
 #include "certt.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/RefPtr.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsSSLStatus.h"
@@ -108,7 +107,7 @@ private:
   PRErrorCode mIsCertIssuerBlacklisted;
 
   /* SSL Status */
-  mozilla::RefPtr<nsSSLStatus> mSSLStatus;
+  nsRefPtr<nsSSLStatus> mSSLStatus;
 
   virtual void virtualDestroyNSSReference();
   void destructorSafeDestroyNSSReference();

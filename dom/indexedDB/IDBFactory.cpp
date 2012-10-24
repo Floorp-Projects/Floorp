@@ -541,8 +541,9 @@ IDBFactory::OpenCommon(const nsAString& aName,
     IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
     NS_ASSERTION(mgr, "This should never be null!");
 
-    rv = 
-      mgr->WaitForOpenAllowed(mASCIIOrigin, openHelper->Id(), permissionHelper);
+    rv =
+      mgr->WaitForOpenAllowed(OriginOrPatternString::FromOrigin(mASCIIOrigin),
+                              openHelper->Id(), permissionHelper);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
   else if (aDeleting) {

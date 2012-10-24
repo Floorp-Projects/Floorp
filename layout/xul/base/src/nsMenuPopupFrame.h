@@ -269,6 +269,11 @@ public:
   // The frame may be destroyed by this method.
   void MoveTo(int32_t aLeft, int32_t aTop, bool aUpdateAttrs);
 
+  void MoveToAnchor(nsIContent* aAnchorContent,
+                    const nsAString& aPosition,
+                    int32_t aXPos, int32_t aYPos,
+                    bool aAttributesOverride);
+
   bool GetAutoPosition();
   void SetAutoPosition(bool aShouldAutoPosition);
   void SetConsumeRollupEvent(uint32_t aConsumeMode);

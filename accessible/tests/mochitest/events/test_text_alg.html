@@ -56,8 +56,9 @@
 
       this.getID = function changeText_getID()
       {
-        return "change text '" + this.textData + "' -> " + this.textNode.data +
-          "for " + prettyName(this.containerNode);
+        return "change text '" + shortenString(this.textData) + "' -> '" +
+          shortenString(this.textNode.data) + "' for " +
+          prettyName(this.containerNode);
       }
     }
 
