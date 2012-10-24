@@ -15,6 +15,7 @@ GRE_MODULE     = 1
 
 XPIDLSRCS =                             \
             nsIDOMPermissionSettings.idl    \
+            nsIPermissionPromptService.idl \
             $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -11,8 +11,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/PermissionSettings.jsm");
 
-var EXPORTED_SYMBOLS = ["PermissionsInstaller"];
-
+var EXPORTED_SYMBOLS = ["PermissionsInstaller",
+                        "expandPermissions",
+                        "PermissionsTable",
+                       ];
 const UNKNOWN_ACTION = Ci.nsIPermissionManager.UNKNOWN_ACTION;
 const ALLOW_ACTION = Ci.nsIPermissionManager.ALLOW_ACTION;
 const DENY_ACTION = Ci.nsIPermissionManager.DENY_ACTION;
