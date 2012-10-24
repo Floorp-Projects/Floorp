@@ -8,7 +8,7 @@ var args
 
 var XPInstallConfirm = {};
 
-XPInstallConfirm.init = function ()
+XPInstallConfirm.init = function XPInstallConfirm_init()
 {
   var _installCountdown;
   var _installCountdownInterval;
@@ -136,7 +136,7 @@ XPInstallConfirm.init = function ()
     okButton.label = bundle.getString("installButtonLabel");
 }
 
-XPInstallConfirm.onOK = function ()
+XPInstallConfirm.onOK = function XPInstallConfirm_onOk()
 {
   Components.classes["@mozilla.org/base/telemetry;1"].
     getService(Components.interfaces.nsITelemetry).
@@ -147,7 +147,7 @@ XPInstallConfirm.onOK = function ()
   return true;
 }
 
-XPInstallConfirm.onCancel = function ()
+XPInstallConfirm.onCancel = function XPInstallConfirm_onCancel()
 {
   for (let install of args.installs)
     install.cancel();
