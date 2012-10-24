@@ -400,6 +400,8 @@ function runTest() {
    * TEST 2 tests that pushstate's same-origin checks are correct.
    */
   var filename = 'file_bug500328_2.html';
+  var dirname = document.location.pathname.replace(/[^\/]*$/, '');
+  statusMsg("Dirname is: " + dirname);
   iframeCw.location = filename;
   iframe.onload = onChildLoad;
   enableChildLoadCallback();
