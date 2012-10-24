@@ -97,7 +97,7 @@ let ImageCropper = {
       delete inProgress[aTargetFile.path];
     }
 
-    ImageFile.read(aURI, function (aInputStream, aContentType) {
+    ImageFile.read(aURI, function crop_readImageFile(aInputStream, aContentType) {
       if (aInputStream && aContentType) {
         let image = ImageTools.decode(aInputStream, aContentType);
         if (image && image.width && image.height) {
@@ -116,7 +116,7 @@ let ImageCropper = {
 
 let ImageFile = {
   read: function ImageFile_read(aURI, aCallback) {
-    this._netUtil.asyncFetch(aURI, function (aInputStream, aStatus, aRequest) {
+    this._netUtil.asyncFetch(aURI, function read_asyncFetch(aInputStream, aStatus, aRequest) {
       if (Components.isSuccessCode(aStatus) && aRequest instanceof Ci.nsIChannel) {
         let channel = aRequest.QueryInterface(Ci.nsIChannel);
         aCallback(aInputStream, channel.contentType);
@@ -128,7 +128,7 @@ let ImageFile = {
 
   write: function ImageFile_write(aFile, aInputStream, aCallback) {
     let fos = FileUtils.openSafeFileOutputStream(aFile);
-    this._netUtil.asyncCopy(aInputStream, fos, function (aResult) {
+    this._netUtil.asyncCopy(aInputStream, fos, function write_asyncCopy(aResult) {
       FileUtils.closeSafeFileOutputStream(fos);
 
       // Remove the file if writing was not successful.
