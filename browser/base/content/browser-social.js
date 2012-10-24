@@ -210,6 +210,10 @@ let SocialChatBar = {
   update: function() {
     if (!this.canShow)
       this.chatbar.removeAll();
+  },
+  focus: function SocialChatBar_focus() {
+    let commandDispatcher = gBrowser.ownerDocument.commandDispatcher;
+    commandDispatcher.advanceFocusIntoSubtree(this.chatbar);
   }
 }
 
