@@ -2042,12 +2042,11 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         rv = SetOuterObject(cx, mJSObject);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        xpc::CompartmentPrivate *priv = xpc::GetCompartmentPrivate(mJSObject);
-        if (priv && priv->waiverWrapperMap) {
-          NS_ASSERTION(!JS_IsExceptionPending(cx),
-                       "We might overwrite a pending exception!");
-          priv->waiverWrapperMap->Reparent(cx, newInnerWindow->mJSObject);
-        }
+        NS_ASSERTION(!JS_IsExceptionPending(cx),
+                     "We might overwrite a pending exception!");
+        XPCWrappedNativeScope* scope = xpc::ObjectScope(mJSObject);
+        if (scope->mWaiverWrapperMap)
+          scope->mWaiverWrapperMap->Reparent(cx, newInnerWindow->mJSObject);
       }
     }
 

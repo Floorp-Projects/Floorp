@@ -289,6 +289,14 @@ WrappedNativeJSGCThingTracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
     return JS_DHASH_NEXT;
 }
 
+static PLDHashOperator
+TraceDOMExpandos(nsPtrHashKey<JSObject> *expando, void *aClosure)
+{
+    JS_CALL_OBJECT_TRACER(static_cast<JSTracer *>(aClosure), expando->GetKey(),
+                          "DOM expando object");
+    return PL_DHASH_NEXT;
+}
+
 // static
 void
 XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSRuntime* rt)
@@ -297,9 +305,12 @@ XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSRuntim
     // access to JS runtime. See bug 380139.
     XPCAutoLock lock(rt->GetMapLock());
 
-    // Do JS_CallTracer for all wrapped natives with external references.
+    // Do JS_CallTracer for all wrapped natives with external references, as
+    // well as any DOM expando objects.
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         cur->mWrappedNativeMap->Enumerate(WrappedNativeJSGCThingTracer, trc);
+        if (cur->mDOMExpandoMap)
+            cur->mDOMExpandoMap->EnumerateEntries(TraceDOMExpandos, trc);
     }
 }
 
@@ -318,6 +329,20 @@ WrappedNativeSuspecter(JSDHashTable *table, JSDHashEntryHdr *hdr,
     return JS_DHASH_NEXT;
 }
 
+static PLDHashOperator
+SuspectDOMExpandos(nsPtrHashKey<JSObject> *key, void *arg)
+{
+    nsCycleCollectionTraversalCallback *cb =
+      static_cast<nsCycleCollectionTraversalCallback *>(arg);
+    JSObject* obj = key->GetKey();
+    const dom::DOMClass* clasp;
+    dom::DOMObjectSlot slot = GetDOMClass(obj, clasp);
+    MOZ_ASSERT(slot != dom::eNonDOMObject && clasp->mDOMObjectIsISupports);
+    nsISupports* native = dom::UnwrapDOMObject<nsISupports>(obj, slot);
+    cb->NoteXPCOMRoot(native);
+    return PL_DHASH_NEXT;
+}
+
 // static
 void
 XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt,
@@ -327,6 +352,8 @@ XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt,
 
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         cur->mWrappedNativeMap->Enumerate(WrappedNativeSuspecter, &cb);
+        if (cur->mDOMExpandoMap)
+            cur->mDOMExpandoMap->EnumerateEntries(SuspectDOMExpandos, &cb);
     }
 }
 
@@ -348,6 +375,10 @@ XPCWrappedNativeScope::StartFinalizationPhaseOfGC(JSFreeOp *fop, XPCJSRuntime* r
     XPCWrappedNativeScope* cur = gScopes;
 
     while (cur) {
+        // Sweep waivers.
+        if (cur->mWaiverWrapperMap)
+            cur->mWaiverWrapperMap->Sweep();
+
         XPCWrappedNativeScope* next = cur->mNext;
 
         if (cur->mGlobalJSObject &&
