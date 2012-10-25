@@ -8539,25 +8539,15 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
   if (aIID.Equals(NS_GET_IID(nsIDocCharset))) {
     FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
 
-    if (mDocShell) {
-      nsCOMPtr<nsIDocCharset> docCharset(do_QueryInterface(mDocShell));
-      if (docCharset) {
-        NS_WARNING("Using deprecated nsIDocCharset: use nsIDocShell.GetCharset() instead ");
-        *aSink = docCharset;
-        NS_ADDREF(((nsISupports *) *aSink));
-      }
-    }
+    NS_WARNING("Using deprecated nsIDocCharset: use nsIDocShell.GetCharset() instead ");
+    nsCOMPtr<nsIDocCharset> docCharset(do_QueryInterface(mDocShell));
+    docCharset.forget(aSink);
   }
   else if (aIID.Equals(NS_GET_IID(nsIWebNavigation))) {
     FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
 
-    if (mDocShell) {
-      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-      if (webNav) {
-        *aSink = webNav;
-        NS_ADDREF(((nsISupports *) *aSink));
-      }
-    }
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+    webNav.forget(aSink);
   }
   else if (aIID.Equals(NS_GET_IID(nsIDocShell))) {
     FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
@@ -8574,10 +8564,7 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
       mDocShell->GetContentViewer(getter_AddRefs(viewer));
       if (viewer) {
         nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint(do_QueryInterface(viewer));
-        if (webBrowserPrint) {
-          *aSink = webBrowserPrint;
-          NS_ADDREF(((nsISupports *) *aSink));
-        }
+        webBrowserPrint.forget(aSink);
       }
     }
   }
@@ -8591,6 +8578,12 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
 
     *aSink = mWindowUtils;
     NS_ADDREF(((nsISupports *) *aSink));
+  }
+  else if (aIID.Equals(NS_GET_IID(nsILoadContext))) {
+    FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
+
+    nsCOMPtr<nsILoadContext> loadContext(do_QueryInterface(mDocShell));
+    loadContext.forget(aSink);
   }
   else {
     return QueryInterface(aIID, aSink);
