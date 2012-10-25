@@ -55,11 +55,12 @@ class LoopAliasInfo : public TempObject {
 
 class AliasAnalysis
 {
+    MIRGenerator *mir;
     MIRGraph &graph_;
     LoopAliasInfo *loop_;
 
   public:
-    AliasAnalysis(MIRGraph &graph);
+    AliasAnalysis(MIRGenerator *mir, MIRGraph &graph);
     bool analyze();
 };
 
