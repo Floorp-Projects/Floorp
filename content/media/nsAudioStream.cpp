@@ -484,7 +484,7 @@ nsresult nsNativeAudioStream::Write(const void* aBuf, uint32_t aFrames)
       s_data[i] = short((int32_t(buf[i]) * volume) >> 16);
     }
 #else /* MOZ_SAMPLE_TYPE_FLOAT32 */
-    const SampleType* buf = static_cast<const SampleType*>(aBuf);
+    const float* buf = static_cast<const float*>(aBuf);
     for (uint32_t i = 0; i <  samples; ++i) {
       float scaled_value = floorf(0.5 + 32768 * buf[i] * scaled_volume);
       if (buf[i] < 0.0) {
@@ -634,7 +634,7 @@ nsRemotedAudioStream::Init(int32_t aNumChannels,
 {
   mRate = aRate;
   mChannels = aNumChannels;
-  mBytesPerFrame = sizeof(SampleType) * mChannels;
+  mBytesPerFrame = (Format() == FORMAT_FLOAT32 ? 4 : 2) * mChannels;
 
   nsCOMPtr<nsIRunnable> event = new AudioInitEvent(this);
   NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
