@@ -78,3 +78,4 @@
     COMPONENT(MEMORY_REPORTER_MANAGER, nsMemoryReporterManagerConstructor)
     COMPONENT(IOUTIL, nsIOUtilConstructor)
     COMPONENT(CYCLE_COLLECTOR_LOGGER, nsCycleCollectorLoggerConstructor)
+    COMPONENT(MESSAGE_LOOP, nsMessageLoopConstructor)
