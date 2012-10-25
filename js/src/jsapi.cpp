@@ -2216,6 +2216,12 @@ JS_GetGlobalForObject(JSContext *cx, JSRawObject obj)
     return &obj->global();
 }
 
+extern JS_PUBLIC_API(JSBool)
+JS_IsGlobalObject(JSRawObject obj)
+{
+    return obj->isGlobal();
+}
+
 JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForCompartmentOrNull(JSContext *cx, JSCompartment *c)
 {
