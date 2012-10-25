@@ -45,7 +45,7 @@ TransplantObjectWithWrapper(JSContext *cx,
 #define XPCONNECT_GLOBAL_FLAGS                                                \
     JSCLASS_DOM_GLOBAL | JSCLASS_HAS_PRIVATE |                                \
     JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_IMPLEMENTS_BARRIERS |            \
-    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(3)
+    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(2)
 
 void
 TraceXPCGlobal(JSTracer *trc, JSObject *obj);
