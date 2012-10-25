@@ -495,19 +495,19 @@ NS_IMETHODIMP
 nsROCSSPrimitiveValue::GetRGBColorValue(nsIDOMRGBColor** aColor)
 {
   ErrorResult error;
-  *aColor = GetRGBColorValue(error).get();
+  NS_IF_ADDREF(*aColor = GetRGBColorValue(error));
   return error.ErrorCode();
 }
 
-already_AddRefed<nsIDOMRGBColor>
+nsDOMCSSRGBColor*
 nsROCSSPrimitiveValue::GetRGBColorValue(ErrorResult& aRv)
 {
   if (mType != CSS_RGBCOLOR) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
+
   NS_ASSERTION(mValue.mColor, "mValue.mColor should never be null");
-  NS_ADDREF(mValue.mColor);
   return mValue.mColor;
 }
 
