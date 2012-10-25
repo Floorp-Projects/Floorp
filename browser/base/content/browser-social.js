@@ -98,11 +98,6 @@ let SocialUI = {
     toggleCommand.setAttribute("label", label);
     toggleCommand.setAttribute("accesskey", accesskey);
 
-    let kbMenuitem = document.getElementById("menu_socialAmbientMenu");
-    kbMenuitem.hidden = !Social.enabled;
-    kbMenuitem.setAttribute("label", label);
-    kbMenuitem.setAttribute("accesskey", accesskey);
-
     SocialToolbar.init();
     SocialShareButton.init();
     SocialSidebar.init();
@@ -613,7 +608,6 @@ var SocialMenu = {
     let ambientMenuItems = submenu.getElementsByClassName("ambient-menuitem");
     for (let ambientMenuItem of ambientMenuItems)
       submenu.removeChild(ambientMenuItem);
-    separator.hidden = true;
     let provider = Social.provider;
     if (Social.active && provider) {
       let iconNames = Object.keys(provider.ambientNotificationIcons);
@@ -622,7 +616,6 @@ var SocialMenu = {
         let icon = provider.ambientNotificationIcons[name];
         if (!icon.label || !icon.menuURL)
           continue;
-        separator.hidden = false;
         let menuitem = document.createElement("menuitem");
         menuitem.setAttribute("label", icon.label);
         menuitem.classList.add("ambient-menuitem");
@@ -631,7 +624,9 @@ var SocialMenu = {
         }, false);
         submenu.insertBefore(menuitem, separator);
       }
+      separator.hidden = !iconNames.length;
     }
+    document.getElementById("menu_socialAmbientMenu").hidden = !Social.enabled;
   }
 };
 
