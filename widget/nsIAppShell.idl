@@ -32,13 +32,13 @@ interface nsIAppShell : nsISupports
    * prevent native event starvation.
    *
    * Calls to this function may be nested. When the number of calls that pass
-   * PR_TRUE is subtracted from the number of calls that pass PR_FALSE is
+   * true is subtracted from the number of calls that pass false is
    * greater than 0, performance is given precedence over preventing event
    * starvation.
    *
    * The starvationDelay arg is only used when favorPerfOverStarvation is
-   * PR_FALSE. It is the amount of time in milliseconds to wait before the
-   * PR_FALSE actually takes effect.
+   * false. It is the amount of time in milliseconds to wait before the
+   * false actually takes effect.
    */
   void favorPerformanceHint(in boolean favorPerfOverStarvation,
                             in unsigned long starvationDelay);

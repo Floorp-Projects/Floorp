@@ -155,7 +155,7 @@ interface nsITransactionListener : nsISupports
    * @param aTransactionToMerge the transaction to merge.
    * @param aDidMerge true if transaction was merged, else false.
    * @param aMergeResult the nsresult returned after the merge attempt.
-   * @param aInterrupt listeners should set this to PR_TRUE if they
+   * @param aInterrupt listeners should set this to true if they
    * want to interrupt normal control flow, without throwing an error.
    */
   void didMerge(in nsITransactionManager aManager,

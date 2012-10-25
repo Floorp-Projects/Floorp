@@ -36,7 +36,7 @@ CryptoX_Result NSS_VerifySignature(VFYContext * const *ctx ,
 #define CryptoX_VerifyBegin(CryptoHandle, SignatureHandle, PublicKey) \
   NSS_VerifyBegin(SignatureHandle, PublicKey)
 #define CryptoX_FreeSignatureHandle(SignatureHandle) \
-  VFY_DestroyContext(SignatureHandle, PR_TRUE)
+  VFY_DestroyContext(SignatureHandle, true)
 #define CryptoX_VerifyUpdate(SignatureHandle, buf, len) \
   VFY_Update(*SignatureHandle, (const unsigned char*)(buf), len)
 #define CryptoX_LoadPublicKey(CryptoHandle, certData, dataSize, \

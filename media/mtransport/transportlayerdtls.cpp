@@ -268,7 +268,7 @@ static PRStatus TransportLayerGetsockname(PRFileDesc *f, PRNetAddr *addr) {
 static PRStatus TransportLayerGetsockoption(PRFileDesc *f, PRSocketOptionData *opt) {
   switch (opt->option) {
     case PR_SockOpt_Nonblocking:
-      opt->value.non_blocking = PR_TRUE;
+      opt->value.non_blocking = true;
       return PR_SUCCESS;
     default:
       UNIMPLEMENTED;
@@ -481,13 +481,13 @@ bool TransportLayerDtls::Setup() {
     }
 
     // Insist on a certificate from the client
-    rv = SSL_OptionSet(ssl_fd, SSL_REQUEST_CERTIFICATE, PR_TRUE);
+    rv = SSL_OptionSet(ssl_fd, SSL_REQUEST_CERTIFICATE, true);
     if (rv != SECSuccess) {
       MOZ_MTLOG(PR_LOG_ERROR, "Couldn't request certificate");
       return false;
     }
 
-    rv = SSL_OptionSet(ssl_fd, SSL_REQUIRE_CERTIFICATE, PR_TRUE);
+    rv = SSL_OptionSet(ssl_fd, SSL_REQUIRE_CERTIFICATE, true);
     if (rv != SECSuccess) {
       MOZ_MTLOG(PR_LOG_ERROR, "Couldn't require certificate");
       return false;
@@ -507,19 +507,19 @@ bool TransportLayerDtls::Setup() {
     return false;
   }
 
-  rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_SESSION_TICKETS, PR_FALSE);
+  rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_SESSION_TICKETS, false);
   if (rv != SECSuccess) {
     MOZ_MTLOG(PR_LOG_ERROR, "Couldn't disable session tickets");
     return false;
   }
 
-  rv = SSL_OptionSet(ssl_fd, SSL_NO_CACHE, PR_TRUE);
+  rv = SSL_OptionSet(ssl_fd, SSL_NO_CACHE, true);
   if (rv != SECSuccess) {
     MOZ_MTLOG(PR_LOG_ERROR, "Couldn't disable session caching");
     return false;
   }
 
-  rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_DEFLATE, PR_FALSE);
+  rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_DEFLATE, false);
   if (rv != SECSuccess) {
     MOZ_MTLOG(PR_LOG_ERROR, "Couldn't disable deflate");
     return false;
@@ -531,13 +531,13 @@ bool TransportLayerDtls::Setup() {
     return false;
   }
 
-  rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_FALSE_START, PR_FALSE);
+  rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_FALSE_START, false);
   if (rv != SECSuccess) {
     MOZ_MTLOG(PR_LOG_ERROR, "Couldn't disable false start");
     return false;
   }
 
-  rv = SSL_OptionSet(ssl_fd, SSL_NO_LOCKS, PR_TRUE);
+  rv = SSL_OptionSet(ssl_fd, SSL_NO_LOCKS, true);
   if (rv != SECSuccess) {
     MOZ_MTLOG(PR_LOG_ERROR, "Couldn't disable locks");
     return false;
@@ -564,7 +564,7 @@ bool TransportLayerDtls::Setup() {
   }
 
   // Now start the handshake
-  rv = SSL_ResetHandshake(ssl_fd, role_ == SERVER ? PR_TRUE : PR_FALSE);
+  rv = SSL_ResetHandshake(ssl_fd, role_ == SERVER ? true : false);
   if (rv != SECSuccess) {
     MOZ_MTLOG(PR_LOG_ERROR, "Couldn't reset handshake");
     return false;

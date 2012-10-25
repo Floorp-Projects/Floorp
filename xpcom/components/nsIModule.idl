@@ -69,12 +69,12 @@ interface nsIModule : nsISupports
     * @param aCompMgr  : The global component manager
     *
     * @return indicates to the caller if the module can be unloaded.
-    * 		Returning PR_TRUE isn't a guarantee that the module will be
+    * 		Returning true isn't a guarantee that the module will be
     *		unloaded. It constitues only willingness of the module to be
     *		unloaded.  It is very important to ensure that no outstanding 
     *       references to the module's code/data exist before returning 
-    *       PR_TRUE. 
-    *		Returning PR_FALSE guaratees that the module won't be unloaded.
+    *       true. 
+    *		Returning false guaratees that the module won't be unloaded.
     */
     boolean canUnload(in nsIComponentManager aCompMgr);
 };

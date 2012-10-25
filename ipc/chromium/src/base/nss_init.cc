@@ -28,7 +28,7 @@ SECMODModule *InitDefaultRootCerts() {
   char modparams[1024];
   snprintf(modparams, sizeof(modparams),
           "name=\"Root Certs\" library=\"%s\"", kModulePath);
-  SECMODModule *root = SECMOD_LoadUserModule(modparams, NULL, PR_FALSE);
+  SECMODModule *root = SECMOD_LoadUserModule(modparams, NULL, false);
   if (root)
     return root;
 
@@ -67,7 +67,7 @@ class NSSInitSingleton {
     }
 
     // Enable SSL
-    SSL_OptionSetDefault(SSL_SECURITY, PR_TRUE);
+    SSL_OptionSetDefault(SSL_SECURITY, true);
 
     // All other SSL options are set per-session by SSLClientSocket.
   }

@@ -32,7 +32,7 @@ class nsISupportsArray;
 #define NS_SUPPORTSARRAY_CONTRACTID "@mozilla.org/supports-array;1"
 #define NS_SUPPORTSARRAY_CLASSNAME "Supports Array"
  
-// Enumerator callback function. Return PR_FALSE to stop
+// Enumerator callback function. Return false to stop
 typedef bool (*nsISupportsArrayEnumFunc)(nsISupports* aElement, void *aData);
  
 nsresult
