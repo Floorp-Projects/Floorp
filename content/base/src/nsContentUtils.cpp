@@ -1780,12 +1780,6 @@ nsContentUtils::IsCallerChrome()
 }
 
 bool
-nsContentUtils::IsCallerTrustedForRead()
-{
-  return IsCallerChrome();
-}
-
-bool
 nsContentUtils::IsCallerTrustedForWrite()
 {
   return IsCallerChrome();
