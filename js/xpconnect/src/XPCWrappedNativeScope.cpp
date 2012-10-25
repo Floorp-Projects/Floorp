@@ -12,6 +12,7 @@
 #include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
+using namespace xpc;
 
 /***************************************************************************/
 
@@ -85,8 +86,9 @@ XPCWrappedNativeScope::GetNewOrUsed(JSContext *cx, JSObject* aGlobal)
 {
 
     XPCWrappedNativeScope* scope = FindInJSObjectScope(cx, aGlobal, true);
-    if (!scope)
+    if (!scope) {
         scope = new XPCWrappedNativeScope(cx, aGlobal);
+    }
     else {
         // We need to call SetGlobal in order to clear mPrototypeNoHelper (so we
         // get a new new one if requested in the new scope) in the case where
@@ -134,6 +136,10 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
 
     DEBUG_TrackNewScope(this);
     MOZ_COUNT_CTOR(XPCWrappedNativeScope);
+
+    // Attach ourselves to the compartment private.
+    CompartmentPrivate *priv = EnsureCompartmentPrivate(aGlobal);
+    priv->scope = this;
 }
 
 // static

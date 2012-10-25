@@ -4304,6 +4304,7 @@ public:
     CompartmentPrivate()
         : wantXrays(false)
         , universalXPConnectEnabled(false)
+        , scope(nullptr)
     {
         MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
     }
@@ -4318,6 +4319,9 @@ public:
     // the old scoping rules of enablePrivilege). Using it is inherently unsafe.
     bool universalXPConnectEnabled;
 
+    // Our XPCWrappedNativeScope. This is non-null if and only if this is an
+    // XPConnect compartment.
+    XPCWrappedNativeScope *scope;
     nsAutoPtr<JSObject2JSObjectMap> waiverWrapperMap;
     nsAutoPtr<DOMExpandoMap> domExpandoMap;
 
