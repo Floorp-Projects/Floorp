@@ -137,10 +137,16 @@ class IndexedDBParent : public PIndexedDBParent
 
   nsRefPtr<IDBFactory> mFactory;
   nsCString mASCIIOrigin;
+
+  ContentParent* mManagerContent;
+  TabParent* mManagerTab;
+
   bool mDisconnected;
 
 public:
-  IndexedDBParent();
+  IndexedDBParent(ContentParent* aContentParent);
+  IndexedDBParent(TabParent* aTabParent);
+
   virtual ~IndexedDBParent();
 
   const nsCString&
@@ -158,7 +164,29 @@ public:
     return mDisconnected;
   }
 
+  ContentParent*
+  GetManagerContent() const
+  {
+    return mManagerContent;
+  }
+
+  TabParent*
+  GetManagerTab() const
+  {
+    return mManagerTab;
+  }
+
+  bool
+  CheckReadPermission(const nsAString& aDatabaseName);
+
+  bool
+  CheckWritePermission(const nsAString& aDatabaseName);
+
 protected:
+  bool
+  CheckPermissionInternal(const nsAString& aDatabaseName,
+                          const nsDependentCString& aPermission);
+
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
@@ -211,6 +239,9 @@ public:
 
   void
   Disconnect();
+
+  bool
+  CheckWritePermission(const nsAString& aDatabaseName);
 
 protected:
   nsresult
