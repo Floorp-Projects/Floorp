@@ -508,7 +508,7 @@ pref("dom.experimental_forms", true);
 pref("gfx.gralloc.enabled", false);
 
 // XXXX REMOVE FOR PRODUCTION. Turns on GC and CC logging
-pref("javascript.options.mem.log", true);
+pref("javascript.options.mem.log", false);
 
 // Increase mark slice time from 10ms to 30ms
 pref("javascript.options.mem.gc_incremental_slice_ms", 30);
