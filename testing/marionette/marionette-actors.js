@@ -1543,7 +1543,10 @@ MarionetteDriverActor.prototype = {
         file = FileUtils.openFileOutputStream(this.importedScripts, FileUtils.MODE_APPEND | FileUtils.MODE_WRONLY);
       }
       else {
+        //Note: The permission bits here don't actually get set (bug 804563)
+        this.importedScripts.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, parseInt("0666", 8));
         file = FileUtils.openFileOutputStream(this.importedScripts, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
+        this.importedScripts.permissions = parseInt("0666", 8); //actually set permissions
       }
       file.write(aRequest.script, aRequest.script.length);
       file.close();

@@ -1041,20 +1041,20 @@ JSScript::setScriptSource(ScriptSource *ss)
     scriptSource_ = ss;
 }
 
-bool
-JSScript::loadSource(JSContext *cx, bool *worked)
+/* static */ bool
+JSScript::loadSource(JSContext *cx, HandleScript script, bool *worked)
 {
-    JS_ASSERT(!scriptSource_->hasSourceData());
+    JS_ASSERT(!script->scriptSource_->hasSourceData());
     *worked = false;
-    if (!cx->runtime->sourceHook || !scriptSource_->sourceRetrievable())
+    if (!cx->runtime->sourceHook || !script->scriptSource_->sourceRetrievable())
         return true;
     jschar *src = NULL;
     uint32_t length;
-    if (!cx->runtime->sourceHook(cx, this, &src, &length))
+    if (!cx->runtime->sourceHook(cx, script, &src, &length))
         return false;
     if (!src)
         return true;
-    ScriptSource *ss = scriptSource();
+    ScriptSource *ss = script->scriptSource();
     ss->setSource(src, length);
     *worked = true;
     return true;

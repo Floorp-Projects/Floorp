@@ -517,6 +517,22 @@ class IDLInterface(IDLObjectWithScope):
                                    self.parent.identifier.name),
                                   [self.location, self.parent.location])
 
+            # Now make sure our parent doesn't have any [Unforgeable]
+            # attributes.  We don't need to check its ancestors, because it has
+            # already checked those.  We don't need to check its consequential
+            # interfaces, because it has already imported those into its
+            # .members.
+            unforgeableParentMembers = [
+                attr for attr in parent.members
+                if attr.isAttr() and attr.isUnforgeable() ]
+            if len(unforgeableParentMembers) != 0:
+                locs = [self.location, parent.location]
+                locs.extend(attr.location for attr in unforgeableParentMembers)
+                raise WebIDLError("Interface %s inherits from %s, which has "
+                                  "[Unforgeable] members" %
+                                  (self.identifier.name, parent.identifier.name),
+                                  locs)
+
         for iface in self.implementedInterfaces:
             iface.finish(scope)
 
@@ -1946,6 +1962,7 @@ class IDLAttribute(IDLInterfaceMember):
         self.inherit = inherit
         self.static = static
         self.lenientThis = False
+        self._unforgeable = False
 
         if readonly and inherit:
             raise WebIDLError("An attribute cannot be both 'readonly' and 'inherit'",
@@ -2007,6 +2024,11 @@ class IDLAttribute(IDLInterfaceMember):
                 raise WebIDLError("[LenientThis] is only allowed on non-static "
                                   "attributes", [attr.location, self.location])
             self.lenientThis = True
+        elif identifier == "Unforgeable":
+            if not self.readonly:
+                raise WebIDLError("[Unforgeable] is only allowed on readonly "
+                                  "attributes", [attr.location, self.location])
+            self._unforgeable = True
         IDLInterfaceMember.handleExtendedAttribute(self, attr)
 
     def resolve(self, parentScope):
@@ -2020,6 +2042,9 @@ class IDLAttribute(IDLInterfaceMember):
 
     def hasLenientThis(self):
         return self.lenientThis
+
+    def isUnforgeable(self):
+        return self._unforgeable
 
 class IDLArgument(IDLObjectWithIdentifier):
     def __init__(self, location, identifier, type, optional=False, defaultValue=None, variadic=False, dictionaryMember=False):
@@ -2469,9 +2494,13 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             raise WebIDLError("Methods must not be flagged as "
                               "[GetterInfallible]",
                               [attr.location, self.location])
-        if identifier == "SetterInfallible":
+        elif identifier == "SetterInfallible":
             raise WebIDLError("Methods must not be flagged as "
                               "[SetterInfallible]",
+                              [attr.location, self.location])
+        elif identifier == "Unforgeable":
+            raise WebIDLError("Methods must not be flagged as "
+                              "[Unforgeable]",
                               [attr.location, self.location])
         IDLInterfaceMember.handleExtendedAttribute(self, attr)
 

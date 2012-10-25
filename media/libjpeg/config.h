@@ -3,4 +3,5 @@
 #define PACKAGE_NAME "libjpeg-turbo"
 
 /* Need to use Mozilla-specific function inlining. */
-#define INLINE NS_ALWAYS_INLINE
+#include "mozilla/Attributes.h"
+#define INLINE MOZ_ALWAYS_INLINE

@@ -32,6 +32,9 @@ In this order:
     See bug 771406. Adds emulation for faceforward(float,float,float),
     which is needed to prevent crashing on Mac+Intel.
 
+  angle-r1278.patch
+    Imports ANGLE r1278, which fixes ANGLE bug 350, a crasher.
+
 In addition to these patches, the Makefile.in files are ours, they're not present in
 upsteam ANGLE. Therefore, changes made to the Makefile.in files should not be stored
 in the local .patch files.

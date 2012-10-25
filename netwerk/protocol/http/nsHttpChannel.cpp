@@ -765,11 +765,11 @@ nsHttpChannel::SetupTransaction()
         // We need to send 'Pragma:no-cache' to inhibit proxy caching even if
         // no proxy is configured since we might be talking with a transparent
         // proxy, i.e. one that operates at the network level.  See bug #14772.
-        mRequestHead.SetHeader(nsHttp::Pragma, NS_LITERAL_CSTRING("no-cache"), true);
+        mRequestHead.SetHeaderOnce(nsHttp::Pragma, "no-cache", true);
         // If we're configured to speak HTTP/1.1 then also send 'Cache-control:
         // no-cache'
         if (mRequestHead.Version() >= NS_HTTP_VERSION_1_1)
-            mRequestHead.SetHeader(nsHttp::Cache_Control, NS_LITERAL_CSTRING("no-cache"), true);
+            mRequestHead.SetHeaderOnce(nsHttp::Cache_Control, "no-cache", true);
     }
     else if ((mLoadFlags & VALIDATE_ALWAYS) && (mCacheAccess & nsICache::ACCESS_READ)) {
         // We need to send 'Cache-Control: max-age=0' to force each cache along
@@ -778,9 +778,9 @@ nsHttpChannel::SetupTransaction()
         //
         // If we're configured to speak HTTP/1.0 then just send 'Pragma: no-cache'
         if (mRequestHead.Version() >= NS_HTTP_VERSION_1_1)
-            mRequestHead.SetHeader(nsHttp::Cache_Control, NS_LITERAL_CSTRING("max-age=0"), true);
+            mRequestHead.SetHeaderOnce(nsHttp::Cache_Control, "max-age=0", true);
         else
-            mRequestHead.SetHeader(nsHttp::Pragma, NS_LITERAL_CSTRING("no-cache"), true);
+            mRequestHead.SetHeaderOnce(nsHttp::Pragma, "no-cache", true);
     }
 
     if (mResuming) {
@@ -836,9 +836,9 @@ nsHttpChannel::SetupTransaction()
 
     if (mUpgradeProtocolCallback) {
         mRequestHead.SetHeader(nsHttp::Upgrade, mUpgradeProtocol, false);
-        mRequestHead.SetHeader(nsHttp::Connection,
-                               nsDependentCString(nsHttp::Upgrade.get()),
-                               true);
+        mRequestHead.SetHeaderOnce(nsHttp::Connection,
+                                   nsHttp::Upgrade.get(),
+                                   true);
         mCaps |=  NS_HTTP_STICKY_CONNECTION;
         mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
         mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
