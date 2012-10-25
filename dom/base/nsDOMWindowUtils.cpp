@@ -1506,7 +1506,7 @@ nsDOMWindowUtils::GetFullZoom(float* aFullZoom)
 {
   *aFullZoom = 1.0f;
 
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -1526,7 +1526,7 @@ nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
                                                bool aTrusted,
                                                bool* aRetVal)
 {
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -1847,7 +1847,7 @@ nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
 NS_IMETHODIMP
 nsDOMWindowUtils::GetClassName(const JS::Value& aObject, JSContext* aCx, char** aName)
 {
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 

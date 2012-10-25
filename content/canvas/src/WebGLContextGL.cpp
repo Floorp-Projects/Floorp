@@ -3137,7 +3137,7 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
         return;
     }
 
-    if (mCanvasElement->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
+    if (mCanvasElement->IsWriteOnly() && !nsContentUtils::IsCallerChrome()) {
         GenerateWarning("readPixels: Not allowed");
         return rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     }
