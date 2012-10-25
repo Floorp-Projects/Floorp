@@ -1000,29 +1000,6 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     return NS_OK;
 }
 
-static bool
-CreateNewGlobal(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
-                xpc::CompartmentPrivate *priv, JSObject **global,
-                JSCompartment **compartment)
-{
-    // We take ownership of |priv|. Ensure that either we free it in the case
-    // of failure or give ownership to the compartment in case of success (in
-    // that case it will be free'd in CompartmentCallback during GC).
-    MOZ_ASSERT(priv);
-    nsAutoPtr<xpc::CompartmentPrivate> priv_holder(priv);
-    JSObject *tempGlobal =
-        JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal));
-
-    if (!tempGlobal)
-        return false;
-
-    *global = tempGlobal;
-    *compartment = js::GetObjectCompartment(tempGlobal);
-
-    JS_SetCompartmentPrivate(*compartment, priv_holder.forget());
-    return true;
-}
-
 #ifdef DEBUG
 struct VerifyTraceXPCGlobalCalledTracer
 {
@@ -1108,9 +1085,11 @@ CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
 
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "using a principal off the main thread?");
 
-    xpc::CompartmentPrivate *priv = new xpc::CompartmentPrivate(wantXrays);
-    if (!CreateNewGlobal(cx, clasp, principal, priv, global, compartment))
+    *global = JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal));
+    if (!*global)
         return UnexpectedFailure(NS_ERROR_FAILURE);
+    *compartment = js::GetObjectCompartment(*global);
+    JS_SetCompartmentPrivate(*compartment, new xpc::CompartmentPrivate(wantXrays));
 
     XPCCompartmentSet& set = nsXPConnect::GetRuntimeInstance()->GetCompartmentSet();
     if (!set.put(*compartment))
