@@ -11,15 +11,9 @@
 #include "nsIThread.h"
 #include "nsAutoPtr.h"
 
-#ifdef MOZ_SAMPLE_TYPE_S16
-typedef short SampleType;
-#else
-typedef float SampleType;
-#endif
-
 // Access to a single instance of this class must be synchronized by
 // callers, or made from a single thread.  One exception is that access to
-// GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels,Format}
+// GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels}
 // is thread-safe without external synchronization.
 class nsAudioStream : public nsISupports
 {
