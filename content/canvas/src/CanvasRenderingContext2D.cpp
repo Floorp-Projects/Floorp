@@ -3894,7 +3894,7 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
   // -- rendering the user's theme and then extracting the results
   // -- rendering native anonymous content (e.g., file input paths;
   // scrollbars should be allowed)
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     // not permitted to use DrawWindow
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     error.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -3995,7 +3995,7 @@ CanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* elem,
   // -- rendering the user's theme and then extracting the results
   // -- rendering native anonymous content (e.g., file input paths;
   // scrollbars should be allowed)
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     // not permitted to use DrawWindow
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     error.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -4132,7 +4132,7 @@ CanvasRenderingContext2D::GetImageData(JSContext* aCx, double aSx,
   // Check only if we have a canvas element; if we were created with a docshell,
   // then it's special internal use.
   if (mCanvasElement && mCanvasElement->IsWriteOnly() &&
-      !nsContentUtils::IsCallerTrustedForRead())
+      !nsContentUtils::IsCallerChrome())
   {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     error.Throw(NS_ERROR_DOM_SECURITY_ERR);
