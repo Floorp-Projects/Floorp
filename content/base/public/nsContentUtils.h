@@ -203,8 +203,6 @@ public:
 
   static bool     IsCallerChrome();
 
-  static bool     IsCallerTrustedForWrite();
-
   static bool     IsImageSrcSetDisabled();
 
   /**

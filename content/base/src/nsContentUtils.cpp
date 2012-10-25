@@ -1780,12 +1780,6 @@ nsContentUtils::IsCallerChrome()
 }
 
 bool
-nsContentUtils::IsCallerTrustedForWrite()
-{
-  return IsCallerChrome();
-}
-
-bool
 nsContentUtils::IsImageSrcSetDisabled()
 {
   return Preferences::GetBool("dom.disable_image_src_set") &&

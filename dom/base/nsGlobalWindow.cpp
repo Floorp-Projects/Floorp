@@ -3472,7 +3472,7 @@ nsGlobalWindow::SetOpener(nsIDOMWindow* aOpener)
 {
   // check if we were called from a privileged chrome script.
   // If not, opener is settable only to null.
-  if (aOpener && !nsContentUtils::IsCallerTrustedForWrite()) {
+  if (aOpener && !nsContentUtils::IsCallerChrome()) {
     return NS_OK;
   }
 
@@ -4159,7 +4159,7 @@ nsresult
 nsGlobalWindow::CheckSecurityWidthAndHeight(int32_t* aWidth, int32_t* aHeight)
 {
 #ifdef MOZ_XUL
-  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     // if attempting to resize the window, hide any open popups
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
     nsContentUtils::HidePopupsInDocument(doc);
@@ -4170,7 +4170,7 @@ nsGlobalWindow::CheckSecurityWidthAndHeight(int32_t* aWidth, int32_t* aHeight)
   if ((aWidth && *aWidth < 100) || (aHeight && *aHeight < 100)) {
     // Check security state for use in determing window dimensions
 
-    if (!nsContentUtils::IsCallerTrustedForWrite()) {
+    if (!nsContentUtils::IsCallerChrome()) {
       //sec check failed
       if (aWidth && *aWidth < 100) {
         *aWidth = 100;
@@ -4225,7 +4225,7 @@ nsGlobalWindow::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop)
 
   // Check security state for use in determing window dimensions
 
-  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+  if (!nsContentUtils::IsCallerChrome()) {
 #ifdef MOZ_XUL
     // if attempting to move the window, hide any open popups
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
@@ -4531,7 +4531,7 @@ nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aRequireTrust)
   // Only chrome can change our fullScreen mode, unless we're running in
   // untrusted mode.
   if (aFullScreen == rootWinFullScreen || 
-      (aRequireTrust && !nsContentUtils::IsCallerTrustedForWrite())) {
+      (aRequireTrust && !nsContentUtils::IsCallerChrome())) {
     return NS_OK;
   }
 
@@ -4808,7 +4808,7 @@ bool
 nsGlobalWindow::CanMoveResizeWindows()
 {
   // When called from chrome, we can avoid the following checks.
-  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     // Don't allow scripts to move or resize windows that were not opened by a
     // script.
     if (!mHadOriginalOpener) {
@@ -5806,7 +5806,7 @@ bool
 nsGlobalWindow::CanSetProperty(const char *aPrefName)
 {
   // Chrome can set any property.
-  if (nsContentUtils::IsCallerTrustedForWrite()) {
+  if (nsContentUtils::IsCallerChrome()) {
     return true;
   }
 
@@ -6014,7 +6014,7 @@ NS_IMETHODIMP
 nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                            const nsAString& aOptions, nsIDOMWindow** _retval)
 {
-  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -6480,7 +6480,7 @@ nsGlobalWindow::PostMessageMoz(const jsval& aMessage,
                          origin,
                          this,
                          providedOrigin,
-                         nsContentUtils::IsCallerTrustedForWrite());
+                         nsContentUtils::IsCallerChrome());
 
   // We *must* clone the data here, or the jsval could be modified
   // by script
@@ -6585,7 +6585,7 @@ nsGlobalWindow::Close()
   // Don't allow scripts from content to close non-app windows that were not
   // opened by script.
   if (!mDocShell->GetIsApp() &&
-      !mHadOriginalOpener && !nsContentUtils::IsCallerTrustedForWrite()) {
+      !mHadOriginalOpener && !nsContentUtils::IsCallerChrome()) {
     bool allowClose = mAllowScriptsToClose ||
       Preferences::GetBool("dom.allow_scripts_to_close_windows", true);
     if (!allowClose) {

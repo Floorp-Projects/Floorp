@@ -1149,7 +1149,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
     }
     bool subsumes = false;
     focusedPrincipal->Subsumes(newPrincipal, &subsumes);
-    if (!subsumes && !nsContentUtils::IsCallerTrustedForWrite()) {
+    if (!subsumes && !nsContentUtils::IsCallerChrome()) {
       NS_WARNING("Not allowed to focus the new window!");
       return;
     }
