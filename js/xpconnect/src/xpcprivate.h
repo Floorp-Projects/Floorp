@@ -1631,13 +1631,6 @@ public:
     JSObject*
     GetGlobalJSObjectPreserveColor() const {return mGlobalJSObject;}
 
-    JSObject*
-    GetPrototypeJSObject() const
-        {return xpc_UnmarkGrayObject(mPrototypeJSObject);}
-
-    JSObject*
-    GetPrototypeJSObjectPreserveColor() const {return mPrototypeJSObject;}
-
     // Getter for the prototype that we use for wrappers that have no
     // helper.
     JSObject*
@@ -1676,10 +1669,6 @@ public:
         JSObject *obj = GetGlobalJSObjectPreserveColor();
         MOZ_ASSERT(obj);
         JS_CALL_OBJECT_TRACER(trc, obj, "XPCWrappedNativeScope::mGlobalJSObject");
-
-        JSObject *proto = GetPrototypeJSObjectPreserveColor();
-        if (proto)
-            JS_CALL_OBJECT_TRACER(trc, proto, "XPCWrappedNativeScope::mPrototypeJSObject");
     }
 
     static void
@@ -1776,8 +1765,6 @@ private:
     // constructor).
     js::ObjectPtr                    mGlobalJSObject;
 
-    // Cached value of Object.prototype
-    js::ObjectPtr                    mPrototypeJSObject;
     // Prototype to use for wrappers with no helper.
     JSObject*                        mPrototypeNoHelper;
 
@@ -4303,14 +4290,6 @@ xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsid id);
 
 inline jsid
 GetRTIdByIndex(JSContext *cx, unsigned index);
-
-// Wrapper for JS_NewObject to mark the new object as system when parent is
-// also a system object. If uniqueType is specified then a new type object will
-// be created which is used only by the result, so that its property types
-// will be tracked precisely.
-inline JSObject*
-xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-                                bool uniqueType, JSObject *parent);
 
 nsISupports *
 XPC_GetIdentityObject(JSContext *cx, JSObject *obj);
