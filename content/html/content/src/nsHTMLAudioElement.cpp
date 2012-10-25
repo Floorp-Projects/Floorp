@@ -12,6 +12,7 @@
 #include "jsfriendapi.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
+#include "AudioSampleFormat.h"
 
 using namespace mozilla::dom;
 
@@ -180,7 +181,7 @@ nsHTMLAudioElement::MozWriteAudio(const JS::Value& aData, JSContext* aCx, uint32
 
   float* frames = JS_GetFloat32ArrayData(tsrc, aCx);
   nsresult rv;
-  if (nsAudioStream::Format() == FORMAT_S16) {
+  if (nsAudioStream::Format() == AUDIO_FORMAT_S16) {
     // Convert the samples back to integers as we are using fixed point audio in
     // the nsAudioStream.
     nsAutoArrayPtr<short> shortsArray(new short[writeLen * mChannels]);

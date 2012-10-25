@@ -8,13 +8,15 @@
 
 #include "MediaSegment.h"
 #include "nsISupportsImpl.h"
-#include "nsAudioStream.h"
+#include "AudioSampleFormat.h"
 #include "SharedBuffer.h"
+
+class nsAudioStream;
 
 namespace mozilla {
 
 struct AudioChunk {
-  typedef nsAudioStream::SampleFormat SampleFormat;
+  typedef mozilla::AudioSampleFormat SampleFormat;
 
   // Generic methods
   void SliceTo(TrackTicks aStart, TrackTicks aEnd)
@@ -62,13 +64,13 @@ struct AudioChunk {
  */
 class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
 public:
-  typedef nsAudioStream::SampleFormat SampleFormat;
+  typedef mozilla::AudioSampleFormat SampleFormat;
 
   static int GetSampleSize(SampleFormat aFormat)
   {
     switch (aFormat) {
-    case nsAudioStream::FORMAT_S16: return 2;
-    case nsAudioStream::FORMAT_FLOAT32: return 4;
+    case AUDIO_FORMAT_S16: return 2;
+    case AUDIO_FORMAT_FLOAT32: return 4;
     }
     NS_ERROR("Bad format");
     return 0;
@@ -93,7 +95,7 @@ public:
   }
   /**
    * Returns the format of the first audio frame that has data, or
-   * FORMAT_FLOAT32 if there is none.
+   * AUDIO_FORMAT_FLOAT32 if there is none.
    */
   SampleFormat GetFirstFrameFormat()
   {
@@ -102,7 +104,7 @@ public:
         return ci->mBufferFormat;
       }
     }
-    return nsAudioStream::FORMAT_FLOAT32;
+    return AUDIO_FORMAT_FLOAT32;
   }
   void AppendFrames(already_AddRefed<SharedBuffer> aBuffer, int32_t aBufferLength,
                     int32_t aStart, int32_t aEnd, SampleFormat aFormat)

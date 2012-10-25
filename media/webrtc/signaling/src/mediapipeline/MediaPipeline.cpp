@@ -552,12 +552,12 @@ void MediaPipelineTransmit::ProcessAudioChunk(AudioSessionConduit *conduit,
 
   if (chunk.mBuffer) {
     switch(chunk.mBufferFormat) {
-      case nsAudioStream::FORMAT_FLOAT32:
+      case AUDIO_FORMAT_FLOAT32:
         MOZ_MTLOG(PR_LOG_ERROR, "Can't process audio except in 16-bit PCM yet");
         MOZ_ASSERT(PR_FALSE);
         return;
         break;
-      case nsAudioStream::FORMAT_S16:
+      case AUDIO_FORMAT_S16:
         {
           // Code based on nsAudioStream
           const short* buf = static_cast<const short *>(chunk.mBuffer->Data());
@@ -708,7 +708,7 @@ NotifyPull(MediaStreamGraph* graph, StreamTime total) {
     AudioSegment segment;
     segment.Init(1);
     segment.AppendFrames(samples.forget(), samples_length,
-                         0, samples_length, nsAudioStream::FORMAT_S16);
+                         0, samples_length, AUDIO_FORMAT_S16);
 
     char buf[32];
     PR_snprintf(buf, 32, "%p", source);
