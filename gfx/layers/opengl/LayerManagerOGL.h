@@ -361,6 +361,15 @@ public:
     CreateDrawTarget(const mozilla::gfx::IntSize &aSize,
                      mozilla::gfx::SurfaceFormat aFormat);
 
+  /**
+   * Calculates the 'completeness' of the rendering that intersected with the
+   * screen on the last render. This is only useful when progressive tile
+   * drawing is enabled, otherwise this will always return 1.0.
+   * This function's expense scales with the size of the layer tree and the
+   * complexity of individual layers' valid regions.
+   */
+  float ComputeRenderIntegrity();
+
 private:
   /** Widget associated with this layer manager */
   nsIWidget *mWidget;
@@ -439,6 +448,15 @@ private:
    * and adds them to mPrograms
    */
   void AddPrograms(gl::ShaderProgramType aType);
+
+  /**
+   * Recursive helper method for use by ComputeRenderIntegrity. Subtracts
+   * any incomplete rendering on aLayer from aScreenRegion. aTransform is the
+   * accumulated transform of intermediate surfaces beneath aLayer.
+   */
+  static void ComputeRenderIntegrityInternal(Layer* aLayer,
+                                             nsIntRegion& aScreenRegion,
+                                             const gfx3DMatrix& aTransform);
 
   /* Thebes layer callbacks; valid at the end of a transaciton,
    * while rendering */
