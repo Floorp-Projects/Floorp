@@ -2123,9 +2123,6 @@ LIRGenerator::generate()
 {
     // Create all blocks and prep all phis beforehand.
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
-        if (gen->shouldCancel("Lowering (preparation loop)"))
-            return false;
-
         current = LBlock::New(*block);
         if (!current)
             return false;
@@ -2146,9 +2143,6 @@ LIRGenerator::generate()
     }
 
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
-        if (gen->shouldCancel("Lowering (main loop)"))
-            return false;
-
         if (!visitBlock(*block))
             return false;
     }

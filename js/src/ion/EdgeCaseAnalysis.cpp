@@ -8,7 +8,6 @@
 #include <stdio.h>
 
 #include "Ion.h"
-#include "IonBuilder.h"
 #include "IonSpewer.h"
 #include "EdgeCaseAnalysis.h"
 #include "MIR.h"
@@ -17,8 +16,8 @@
 using namespace js;
 using namespace js::ion;
 
-EdgeCaseAnalysis::EdgeCaseAnalysis(MIRGenerator *mir, MIRGraph &graph)
-  : mir(mir), graph(graph)
+EdgeCaseAnalysis::EdgeCaseAnalysis(MIRGraph &graph)
+  : graph(graph)
 {
 }
 
@@ -26,15 +25,11 @@ bool
 EdgeCaseAnalysis::analyzeLate()
 {
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
-        if (mir->shouldCancel("Analyze Late (first loop)"))
-            return false;
         for (MDefinitionIterator iter(*block); iter; iter++)
             iter->analyzeEdgeCasesForward();
     }
 
     for (PostorderIterator block(graph.poBegin()); block != graph.poEnd(); block++) {
-        if (mir->shouldCancel("Analyze Late (second loop)"))
-            return false;
         for (MInstructionReverseIterator riter(block->rbegin()); riter != block->rend(); riter++)
             riter->analyzeEdgeCasesBackward();
     }
@@ -47,8 +42,6 @@ EdgeCaseAnalysis::analyzeEarly()
 {
 
     for (PostorderIterator block(graph.poBegin()); block != graph.poEnd(); block++) {
-        if (mir->shouldCancel("Analyze Early (main loop)"))
-            return false;
         for (MInstructionReverseIterator riter(block->rbegin()); riter != block->rend(); riter++)
             riter->analyzeTruncateBackward();
     }

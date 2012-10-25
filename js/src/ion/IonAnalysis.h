@@ -22,13 +22,13 @@ bool
 SplitCriticalEdges(MIRGraph &graph);
 
 bool
-EliminatePhis(MIRGenerator *mir, MIRGraph &graph);
+EliminatePhis(MIRGraph &graph);
 
 bool
-EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph);
+EliminateDeadCode(MIRGraph &graph);
 
 bool
-ApplyTypeInformation(MIRGenerator *mir, MIRGraph &graph);
+ApplyTypeInformation(MIRGraph &graph);
 
 bool
 RenumberBlocks(MIRGraph &graph);

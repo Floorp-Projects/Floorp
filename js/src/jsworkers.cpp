@@ -98,12 +98,8 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
     /* Wait for in progress entries to finish up. */
     for (size_t i = 0; i < state.numThreads; i++) {
         const WorkerThread &helper = state.threads[i];
-        while (helper.ionBuilder &&
-               CompiledScriptMatches(compartment, script, helper.ionBuilder->script()))
-        {
-            helper.ionBuilder->cancel();
+        while (helper.ionScript && CompiledScriptMatches(compartment, script, helper.ionScript))
             state.wait(WorkerThreadState::MAIN);
-        }
     }
 
     ion::OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
@@ -280,7 +276,7 @@ WorkerThread::threadLoop()
     state.lock();
 
     while (true) {
-        JS_ASSERT(!ionBuilder);
+        JS_ASSERT(!ionScript);
 
         while (state.ionWorklist.empty()) {
             if (terminate) {
@@ -290,21 +286,22 @@ WorkerThread::threadLoop()
             state.wait(WorkerThreadState::WORKER);
         }
 
-        ionBuilder = state.ionWorklist.popCopy();
+        ion::IonBuilder *builder = state.ionWorklist.popCopy();
+        ionScript = builder->script();
 
-        JS_ASSERT(ionBuilder->script()->ion == ION_COMPILING_SCRIPT);
+        JS_ASSERT(ionScript->ion == ION_COMPILING_SCRIPT);
 
         state.unlock();
 
         {
-            ion::IonContext ictx(NULL, ionBuilder->script()->compartment(), &ionBuilder->temp());
-            ionBuilder->backgroundCompiledLir = ion::CompileBackEnd(ionBuilder);
+            ion::IonContext ictx(NULL, ionScript->compartment(), &builder->temp());
+            builder->backgroundCompiledLir = ion::CompileBackEnd(builder);
         }
 
         state.lock();
 
-        FinishOffThreadIonCompile(ionBuilder);
-        ionBuilder = NULL;
+        ionScript = NULL;
+        FinishOffThreadIonCompile(builder);
 
         /*
          * Notify the main thread in case it is waiting for the compilation to
