@@ -62,18 +62,18 @@ var gChecking = {
   _addonCount: 0,
   _completeCount: 0,
 
-  show: function() {
+  show: function gChecking_show() {
     showButtons(true, false, false, false);
     this._progress = document.getElementById("checking-progress");
 
     let self = this;
-    AddonManager.getAllAddons(function(aAddons) {
+    AddonManager.getAllAddons(function gChecking_getAllAddons(aAddons) {
       if (aAddons.length == 0) {
         window.close();
         return;
       }
 
-      aAddons = aAddons.filter(function(aAddon) {
+      aAddons = aAddons.filter(function gChecking_filterAddons(aAddon) {
         if (aAddon.type == "plugin")
           return false;
 
@@ -97,8 +97,8 @@ var gChecking = {
       // Ensure compatibility overrides are up to date before checking for
       // individual addon updates.
       let ids = [addon.id for each (addon in aAddons)];
-      AddonRepository.repopulateCache(ids, function() {
-        AddonManagerPrivate.updateAddonRepositoryData(function() {
+      AddonRepository.repopulateCache(ids, function gChecking_repopulateCache() {
+        AddonManagerPrivate.updateAddonRepositoryData(function gChecking_updateAddonRepositoryData() {
 
           for (let addonItem of aAddons) {
             // Ignore disabled themes
@@ -117,13 +117,13 @@ var gChecking = {
     });
   },
 
-  onUpdateAvailable: function(aAddon, aInstall) {
+  onUpdateAvailable: function gChecking_onUpdateAvailable(aAddon, aInstall) {
     // If the add-on can be upgraded then remember the new version
     if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE)
       gAddons[aAddon.id].install = aInstall;
   },
 
-  onUpdateFinished: function(aAddon, aError) {
+  onUpdateFinished: function gChecking_onUpdateFinished(aAddon, aError) {
     this._completeCount++;
     this._progress.value = this._completeCount;
 
@@ -132,7 +132,7 @@ var gChecking = {
 
     var addons = [gAddons[id] for (id in gAddons)];
 
-    addons.sort(function(a, b) {
+    addons.sort(function sortAddons(a, b) {
       let orderA = orderForScope(a.addon.scope);
       let orderB = orderForScope(b.addon.scope);
 
@@ -171,11 +171,11 @@ var gChecking = {
 var gSelect = {
   nodeID: "select",
 
-  show: function() {
+  show: function gSelect_show() {
     this.updateButtons();
   },
 
-  updateButtons: function() {
+  updateButtons: function gSelect_updateButtons() {
     for (let row = document.getElementById("select-rows").firstChild;
          row; row = row.nextSibling) {
       if (row.localName == "separator")
@@ -190,11 +190,11 @@ var gSelect = {
     showButtons(false, false, false, true);
   },
 
-  next: function() {
+  next: function gSelect_next() {
     showView(gConfirm);
   },
 
-  done: function() {
+  done: function gSelect_done() {
     window.close();
   }
 };
@@ -202,7 +202,7 @@ var gSelect = {
 var gConfirm = {
   nodeID: "confirm",
 
-  show: function() {
+  show: function gConfirm_show() {
     showButtons(false, true, false, true);
 
     let box = document.getElementById("confirm-scrollbox").firstChild;
@@ -239,15 +239,15 @@ var gConfirm = {
     }
   },
 
-  back: function() {
+  back: function gConfirm_back() {
     showView(gSelect);
   },
 
-  next: function() {
+  next: function gConfirm_next() {
     showView(gUpdate);
   },
 
-  done: function() {
+  done: function gConfirm_done() {
     for (let row = document.getElementById("select-rows").firstChild;
          row; row = row.nextSibling) {
       if (row.localName != "separator")
@@ -266,7 +266,7 @@ var gUpdate = {
   _completeCount: 0,
   _errorCount: 0,
 
-  show: function() {
+  show: function gUpdate_show() {
     showButtons(true, false, false, false);
 
     this._progress = document.getElementById("update-progress");
@@ -282,7 +282,7 @@ var gUpdate = {
     this._progress.value = this._completeCount;
   },
 
-  checkComplete: function() {
+  checkComplete: function gUpdate_checkComplete() {
     this._progress.value = this._completeCount;
     if (this._completeCount < this._waitingCount)
       return;
@@ -295,23 +295,23 @@ var gUpdate = {
     window.close();
   },
 
-  onDownloadStarted: function(aInstall) {
+  onDownloadStarted: function gUpdate_onDownloadStarted(aInstall) {
     this._waitingCount++;
   },
 
-  onDownloadFailed: function(aInstall) {
+  onDownloadFailed: function gUpdate_onDownloadFailed(aInstall) {
     this._errorCount++;
     this._completeCount++;
     this.checkComplete();
   },
 
-  onInstallFailed: function(aInstall) {
+  onInstallFailed: function gUpdate_onInstallFailed(aInstall) {
     this._errorCount++;
     this._completeCount++;
     this.checkComplete();
   },
 
-  onInstallEnded: function(aInstall) {
+  onInstallEnded: function gUpdate_onInstallEnded(aInstall) {
     this._completeCount++;
     this.checkComplete();
   }
@@ -320,19 +320,20 @@ var gUpdate = {
 var gErrors = {
   nodeID: "errors",
 
-  show: function() {
+  show: function gErrors_show() {
     showButtons(false, false, false, true);
   },
 
-  done: function() {
+  done: function gErrors_done() {
     window.close();
   }
 };
 
-window.addEventListener("load", function() { showView(gChecking); }, false);
+window.addEventListener("load", function loadEventListener() {
+                                         showView(gChecking); }, false);
 
 // When closing the window cancel any pending or in-progress installs
-window.addEventListener("unload", function() {
+window.addEventListener("unload", function unloadEventListener() {
   for (let id in gAddons) {
     let entry = gAddons[id];
     if (!entry.install)

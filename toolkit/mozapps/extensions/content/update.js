@@ -36,7 +36,7 @@ var gUpdateWizard = {
   xpinstallEnabled: true,
   xpinstallLocked: false,
 
-  init: function ()
+  init: function gUpdateWizard_init()
   {
     this.inactiveAddonIDs = window.arguments[0];
 
@@ -60,13 +60,13 @@ var gUpdateWizard = {
       document.documentElement.currentPage = document.getElementById("versioninfo");
   },
 
-  onWizardFinish: function ()
+  onWizardFinish: function gUpdateWizard_onWizardFinish ()
   {
     if (this.shouldSuggestAutoChecking)
       Services.prefs.setBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED, this.shouldAutoCheck);
   },
 
-  _setUpButton: function (aButtonID, aButtonKey, aDisabled)
+  _setUpButton: function gUpdateWizard_setUpButton(aButtonID, aButtonKey, aDisabled)
   {
     var strings = document.getElementById("updateStrings");
     var button = document.documentElement.getButton(aButtonID);
@@ -81,7 +81,7 @@ var gUpdateWizard = {
     button.disabled = aDisabled;
   },
 
-  setButtonLabels: function (aBackButton, aBackButtonIsDisabled,
+  setButtonLabels: function gUpdateWizard_setButtonLabels(aBackButton, aBackButtonIsDisabled,
                              aNextButton, aNextButtonIsDisabled,
                              aCancelButton, aCancelButtonIsDisabled)
   {
@@ -94,18 +94,18 @@ var gUpdateWizard = {
   // Update Errors
   errorItems: [],
 
-  checkForErrors: function (aElementIDToShow)
+  checkForErrors: function gUpdateWizard_checkForErrors(aElementIDToShow)
   {
     if (this.errorItems.length > 0)
       document.getElementById(aElementIDToShow).hidden = false;
   },
 
-  onWizardClose: function (aEvent)
+  onWizardClose: function gUpdateWizard_onWizardClose(aEvent)
   {
     return this.onWizardCancel();
   },
 
-  onWizardCancel: function ()
+  onWizardCancel: function gUpdateWizard_onWizardCancel()
   {
     if (!gInteruptable) {
       gPendingClose = true;
@@ -124,13 +124,13 @@ var gUpdateWizard = {
 };
 
 var gOfflinePage = {
-  onPageAdvanced: function ()
+  onPageAdvanced: function gOfflinePage_onPageAdvanced()
   {
     Services.io.offline = false;
     return true;
   },
 
-  toggleOffline: function ()
+  toggleOffline: function gOfflinePage_toggleOffline()
   {
     var nextbtn = document.documentElement.getButton("next");
     nextbtn.disabled = !nextbtn.disabled;
@@ -140,7 +140,7 @@ var gOfflinePage = {
 var gVersionInfoPage = {
   _completeCount: 0,
   _totalCount: 0,
-  onPageShow: function ()
+  onPageShow: function gVersionInfoPage_onPageShow()
   {
     gUpdateWizard.setButtonLabels(null, true,
                                   "nextButtonText", true,
@@ -152,8 +152,8 @@ var gVersionInfoPage = {
     catch (e) { }
 
     // Retrieve all add-ons in order to sync their app compatibility information
-    AddonManager.getAllAddons(function(aAddons) {
-      gUpdateWizard.addons = aAddons.filter(function(a) {
+    AddonManager.getAllAddons(function gVersionInfoPage_getAllAddons(aAddons) {
+      gUpdateWizard.addons = aAddons.filter(function gVersionInfoPage_filterAddons(a) {
         return a.type != "plugin" && a.id != hotfixID;
       });
 
@@ -164,8 +164,8 @@ var gVersionInfoPage = {
       let ids = [addon.id for each (addon in gUpdateWizard.addons)];
 
       gInteruptable = false;
-      AddonRepository.repopulateCache(ids, function() {
-        AddonManagerPrivate.updateAddonRepositoryData(function() {
+      AddonRepository.repopulateCache(ids, function gVersionInfoPage_repolulateCache() {
+        AddonManagerPrivate.updateAddonRepositoryData(function gVersionInfoPage_updateAddonRepoData() {
           gInteruptable = true;
           if (gPendingClose) {
             window.close();
@@ -179,10 +179,10 @@ var gVersionInfoPage = {
     });
   },
 
-  onAllUpdatesFinished: function() {
+  onAllUpdatesFinished: function gVersionInfoPage_onAllUpdatesFinished() {
     // Filter out any add-ons that were disabled before the application was
     // upgraded or are already compatible
-    gUpdateWizard.addons = gUpdateWizard.addons.filter(function(a) {
+    gUpdateWizard.addons = gUpdateWizard.addons.filter(function onAllUpdatesFinished_filterAddons(a) {
       return a.appDisabled && gUpdateWizard.inactiveAddonIDs.indexOf(a.id) < 0;
     });
 
@@ -201,7 +201,7 @@ var gVersionInfoPage = {
 
   /////////////////////////////////////////////////////////////////////////////
   // UpdateListener
-  onUpdateFinished: function(aAddon, status) {
+  onUpdateFinished: function gVersionInfoPage_onUpdateFinished(aAddon, status) {
     // If the add-on is now active then it won't have been disabled by startup
     if (aAddon.active)
       AddonManagerPrivate.removeStartupChange("disabled", aAddon.id);
@@ -228,7 +228,7 @@ var gVersionInfoPage = {
 };
 
 var gMismatchPage = {
-  onPageShow: function ()
+  onPageShow: function gMismatchPage_onPageShow()
   {
     gUpdateWizard.setButtonLabels(null, true,
                                   "mismatchCheckNow", false,
@@ -247,7 +247,7 @@ var gMismatchPage = {
 var gUpdatePage = {
   _totalCount: 0,
   _completeCount: 0,
-  onPageShow: function ()
+  onPageShow: function gUpdatePage_onPageShow()
   {
     if (!gUpdateWizard.xpinstallEnabled && gUpdateWizard.xpinstallLocked) {
       document.documentElement.currentPage = document.getElementById("adminDisabled");
@@ -266,7 +266,7 @@ var gUpdatePage = {
       addon.findUpdates(this, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
   },
 
-  onAllUpdatesFinished: function() {
+  onAllUpdatesFinished: function gUpdatePage_onAllUpdatesFinished() {
     var nextPage = document.getElementById("noupdates");
     if (gUpdateWizard.addonsToUpdate.length > 0)
       nextPage = document.getElementById("found");
@@ -275,11 +275,11 @@ var gUpdatePage = {
 
   /////////////////////////////////////////////////////////////////////////////
   // UpdateListener
-  onUpdateAvailable: function(aAddon, aInstall) {
+  onUpdateAvailable: function gUpdatePage_onUpdateAvailable(aAddon, aInstall) {
     gUpdateWizard.addonsToUpdate.push(aInstall);
   },
 
-  onUpdateFinished: function(aAddon, status) {
+  onUpdateFinished: function gUpdatePage_onUpdateFinished(aAddon, status) {
     if (status != AddonManager.UPDATE_STATUS_NO_ERROR)
       gUpdateWizard.errorItems.push(aAddon);
 
@@ -300,7 +300,7 @@ var gUpdatePage = {
 };
 
 var gFoundPage = {
-  onPageShow: function ()
+  onPageShow: function gFoundPage_onPageShow()
   {
     gUpdateWizard.setButtonLabels(null, true,
                                   "installButtonText", false,
@@ -326,7 +326,7 @@ var gFoundPage = {
     }
   },
 
-  toggleXPInstallEnable: function(aEvent)
+  toggleXPInstallEnable: function gFoundPage_toggleXPInstallEnable(aEvent)
   {
     var enabled = aEvent.target.checked;
     gUpdateWizard.xpinstallEnabled = enabled;
@@ -336,7 +336,7 @@ var gFoundPage = {
     this.updateNextButton();
   },
 
-  updateNextButton: function ()
+  updateNextButton: function gFoundPage_updateNextButton()
   {
     if (!gUpdateWizard.xpinstallEnabled) {
       document.documentElement.getButton("next").disabled = true;
@@ -368,7 +368,7 @@ var gInstallingPage = {
   _currentInstall   : -1,
   _installing       : false,
 
-  onPageShow: function ()
+  onPageShow: function gInstallingPage_onPageShow()
   {
     gUpdateWizard.setButtonLabels(null, true,
                                   "nextButtonText", true,
@@ -388,7 +388,7 @@ var gInstallingPage = {
     this.startNextInstall();
   },
 
-  startNextInstall: function() {
+  startNextInstall: function gInstallingPage_startNextInstall() {
     if (this._currentInstall >= 0) {
       this._installs[this._currentInstall].removeListener(this);
     }
@@ -407,42 +407,42 @@ var gInstallingPage = {
     this._installs[this._currentInstall].install();
   },
 
-  cancelInstalls: function() {
+  cancelInstalls: function gInstallingPage_cancelInstalls() {
     this._installs[this._currentInstall].removeListener(this);
     this._installs[this._currentInstall].cancel();
   },
 
   /////////////////////////////////////////////////////////////////////////////
   // InstallListener
-  onDownloadStarted: function(aInstall) {
+  onDownloadStarted: function gInstallingPage_onDownloadStarted(aInstall) {
     var strings = document.getElementById("updateStrings");
     var label = strings.getFormattedString("downloadingPrefix", [aInstall.name]);
     var actionItem = document.getElementById("actionItem");
     actionItem.value = label;
   },
 
-  onDownloadProgress: function(aInstall) {
+  onDownloadProgress: function gInstallingPage_onDownloadProgress(aInstall) {
     var downloadProgress = document.getElementById("downloadProgress");
     downloadProgress.value = Math.ceil(100 * aInstall.progress / aInstall.maxProgress);
   },
 
-  onDownloadEnded: function(aInstall) {
+  onDownloadEnded: function gInstallingPage_onDownloadEnded(aInstall) {
   },
 
-  onDownloadFailed: function(aInstall) {
+  onDownloadFailed: function gInstallingPage_onDownloadFailed(aInstall) {
     this._errors.push(aInstall);
 
     this.startNextInstall();
   },
 
-  onInstallStarted: function(aInstall) {
+  onInstallStarted: function gInstallingPage_onInstallStarted(aInstall) {
     var strings = document.getElementById("updateStrings");
     var label = strings.getFormattedString("installingPrefix", [aInstall.name]);
     var actionItem = document.getElementById("actionItem");
     actionItem.value = label;
   },
 
-  onInstallEnded: function(aInstall, aAddon) {
+  onInstallEnded: function gInstallingPage_onInstallEnded(aInstall, aAddon) {
     // Remember that this add-on was updated during startup
     AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED,
                                          aAddon.id);
@@ -450,7 +450,7 @@ var gInstallingPage = {
     this.startNextInstall();
   },
 
-  onInstallFailed: function(aInstall) {
+  onInstallFailed: function gInstallingPage_onInstallFailed(aInstall) {
     this._errors.push(aInstall);
 
     this.startNextInstall();
@@ -458,7 +458,7 @@ var gInstallingPage = {
 };
 
 var gInstallErrorsPage = {
-  onPageShow: function ()
+  onPageShow: function gInstallErrorsPage_onPageShow()
   {
     gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
     document.documentElement.getButton("finish").focus();
@@ -468,7 +468,7 @@ var gInstallErrorsPage = {
 // Displayed when there are incompatible add-ons and the xpinstall.enabled
 // pref is false and locked.
 var gAdminDisabledPage = {
-  onPageShow: function ()
+  onPageShow: function gAdminDisabledPage_onPageShow()
   {
     gUpdateWizard.setButtonLabels(null, true, null, true,
                                   "cancelButtonText", true);
@@ -479,7 +479,7 @@ var gAdminDisabledPage = {
 // Displayed when selected add-on updates have been installed without error.
 // There can still be add-ons that are not compatible and don't have an update.
 var gFinishedPage = {
-  onPageShow: function ()
+  onPageShow: function gFinishedPage_onPageShow()
   {
     gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
     document.documentElement.getButton("finish").focus();
@@ -498,7 +498,7 @@ var gFinishedPage = {
 // Displayed when there are incompatible add-ons and there are no available
 // updates.
 var gNoUpdatesPage = {
-  onPageShow: function (aEvent)
+  onPageShow: function gNoUpdatesPage_onPageLoad(aEvent)
   {
     gUpdateWizard.setButtonLabels(null, true, null, true, null, true);
     if (gUpdateWizard.shouldSuggestAutoChecking) {
