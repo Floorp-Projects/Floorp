@@ -55,11 +55,11 @@ public:
   // on the main thread, which may attempt to acquire any held monitor.
   virtual void Shutdown() = 0;
 
-  // Write audio data to the audio hardware.  aBuf is an array of frames in
-  // the format MOZ_AUDIO_DATA_FORMAT of length aCount.  If aFrames is larger
+  // Write audio data to the audio hardware.  aBuf is an array of AudioDataValues
+  // AudioDataValue of length aFrames*mChannels.  If aFrames is larger
   // than the result of Available(), the write will block until sufficient
   // buffer space is available.
-  virtual nsresult Write(const void* aBuf, uint32_t aFrames) = 0;
+  virtual nsresult Write(const mozilla::AudioDataValue* aBuf, uint32_t aFrames) = 0;
 
   // Return the number of audio frames that can be written without blocking.
   virtual uint32_t Available() = 0;

@@ -181,16 +181,13 @@ nsHTMLAudioElement::MozWriteAudio(const JS::Value& aData, JSContext* aCx, uint32
   uint32_t writeLen = NS_MIN(mAudioStream->Available(), dataLength / mChannels);
 
   float* frames = JS_GetFloat32ArrayData(tsrc, aCx);
-  nsresult rv;
-  if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
-    // Convert the samples back to integers as we are using fixed point audio in
-    // the nsAudioStream.
-    nsAutoArrayPtr<AudioDataValue> shortsArray(new AudioDataValue[writeLen * mChannels]);
-    ConvertAudioSamples(frames, shortsArray.get(), writeLen * mChannels);
-    rv = mAudioStream->Write(shortsArray.get(), writeLen);
-  } else {
-    rv = mAudioStream->Write(frames, writeLen);
-  }
+  // Convert the samples back to integers as we are using fixed point audio in
+  // the nsAudioStream.
+  // This could be optimized to avoid allocation and memcpy when
+  // AudioDataValue is 'float', but it's not worth it for this deprecated API.
+  nsAutoArrayPtr<AudioDataValue> audioData(new AudioDataValue[writeLen * mChannels]);
+  ConvertAudioSamples(frames, audioData.get(), writeLen * mChannels);
+  nsresult rv = mAudioStream->Write(audioData.get(), writeLen);
 
   if (NS_FAILED(rv)) {
     return rv;
