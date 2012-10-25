@@ -275,6 +275,7 @@ public:
     if (!sSingleton) {
       sSingleton = new MediaManager();
 
+      NS_ASSERTION(NS_IsMainThread(), "Only create MediaManager on main thread");
       nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
       obs->AddObserver(sSingleton, "xpcom-shutdown", false);
       obs->AddObserver(sSingleton, "getUserMedia:response:allow", false);
