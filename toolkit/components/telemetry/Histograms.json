@@ -770,20 +770,6 @@
     "n_buckets": 50,
     "description": "SPDY: KB read per connection"
   },
-  "SPDY_PING_EXPERIMENT_PASS": {
-    "kind": "linear",
-    "low": 10,
-    "high": "355",
-    "n_buckets": 64,
-    "description": "SPDY: Ping Interval Passed"
-  },
-  "SPDY_PING_EXPERIMENT_FAIL": {
-    "kind": "linear",
-    "low": 10,
-    "high": "355",
-    "n_buckets": 64,
-    "description": "SPDY: Ping Interval Failed"
-  },
   "SPDY_SETTINGS_UL_BW": {
     "kind": "exponential",
     "high": "10000",
