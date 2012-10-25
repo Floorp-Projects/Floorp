@@ -94,10 +94,6 @@ XPCWrappedNativeScope::GetNewOrUsed(JSContext *cx, JSObject* aGlobal)
         // has been called). NOTE: We are only called by nsXPConnect::InitClasses.
         scope->SetGlobal(cx, aGlobal);
     }
-    if (js::GetObjectClass(aGlobal)->flags & JSCLASS_XPCONNECT_GLOBAL)
-        JS_SetReservedSlot(aGlobal,
-                           JSCLASS_GLOBAL_SLOT_COUNT,
-                           PRIVATE_TO_JSVAL(scope));
     return scope;
 }
 
@@ -560,18 +556,6 @@ XPCWrappedNativeScope::SystemIsBeingShutDown()
                 Enumerate(WrappedNativeProtoShutdownEnumerator,  &data);
         cur->mWrappedNativeMap->
                 Enumerate(WrappedNativeShutdownEnumerator,  &data);
-
-        // Since we're not gating the scope destruction on the finalization
-        // of the JS global in this case, it might stick around. And if it
-        // gets later on (or otherwise triggers an access to the scope), we'll
-        // crash. Null it out.
-        JSObject *global = cur->mGlobalJSObject;
-        if (global &&
-            js::GetObjectClass(global)->flags & JSCLASS_XPCONNECT_GLOBAL)
-        {
-            JS_SetReservedSlot(global, JSCLASS_GLOBAL_SLOT_COUNT,
-                               PRIVATE_TO_JSVAL(nullptr));
-        }
     }
 
     // Now it is safe to kill all the scopes.
