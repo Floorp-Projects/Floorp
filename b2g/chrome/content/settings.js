@@ -67,7 +67,22 @@ SettingsListener.observe('audio.volume.master', 0.5, function(value) {
 
 // =================== Languages ====================
 SettingsListener.observe('language.current', 'en-US', function(value) {
-  Services.prefs.setCharPref('intl.accept_languages', value);
+  Services.prefs.setCharPref('general.useragent.locale', value);
+
+  let prefName = 'intl.accept_languages';
+  if (Services.prefs.prefHasUserValue(prefName)) {
+    Services.prefs.clearUserPref(prefName);
+  }
+
+  let intl = '';
+  try {
+    intl = Services.prefs.getComplexValue(prefName,
+                                          Ci.nsIPrefLocalizedString).data;
+  } catch(e) {}
+
+  if (!((new RegExp('^' + value + '[^a-z-_] *[,;]?', 'i')).test(intl))) {
+    Services.prefs.setCharPref(prefName, value + ', ' + intl);
+  }
 });
 
 
