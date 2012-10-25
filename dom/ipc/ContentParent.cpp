@@ -1438,11 +1438,10 @@ ContentParent::DeallocPTestShell(PTestShellParent* shell)
  
 PAudioParent*
 ContentParent::AllocPAudio(const int32_t& numChannels,
-                           const int32_t& rate,
-                           const int32_t& format)
+                           const int32_t& rate)
 {
 #if defined(MOZ_SYDNEYAUDIO)
-    AudioParent *parent = new AudioParent(numChannels, rate, format);
+    AudioParent *parent = new AudioParent(numChannels, rate);
     NS_ADDREF(parent);
     return parent;
 #else
