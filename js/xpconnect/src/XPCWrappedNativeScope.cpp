@@ -81,19 +81,19 @@ XPCWrappedNativeScope* XPCWrappedNativeScope::gDyingScopes = nullptr;
 
 // static
 XPCWrappedNativeScope*
-XPCWrappedNativeScope::GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal, nsISupports* aNative)
+XPCWrappedNativeScope::GetNewOrUsed(JSContext *cx, JSObject* aGlobal, nsISupports* aNative)
 {
 
-    XPCWrappedNativeScope* scope = FindInJSObjectScope(ccx, aGlobal, true);
+    XPCWrappedNativeScope* scope = FindInJSObjectScope(cx, aGlobal, true);
     if (!scope)
-        scope = new XPCWrappedNativeScope(ccx, aGlobal, aNative);
+        scope = new XPCWrappedNativeScope(cx, aGlobal, aNative);
     else {
         // We need to call SetGlobal in order to refresh our cached
         // mPrototypeJSObject and to clear mPrototypeNoHelper (so we get a new
         // new one if requested in the new scope) in the case where the global
         // object is being reused (JS_SetAllNonReservedSlotsToUndefined has
         // been called).  NOTE: We are only called by nsXPConnect::InitClasses.
-        scope->SetGlobal(ccx, aGlobal, aNative);
+        scope->SetGlobal(cx, aGlobal, aNative);
     }
     if (js::GetObjectClass(aGlobal)->flags & JSCLASS_XPCONNECT_GLOBAL)
         JS_SetReservedSlot(aGlobal,
@@ -102,11 +102,10 @@ XPCWrappedNativeScope::GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal, nsIS
     return scope;
 }
 
-XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
+XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
                                              JSObject* aGlobal,
                                              nsISupports* aNative)
-    :   mRuntime(ccx.GetRuntime()),
-        mWrappedNativeMap(Native2WrappedNativeMap::newMap(XPC_NATIVE_MAP_SIZE)),
+      : mWrappedNativeMap(Native2WrappedNativeMap::newMap(XPC_NATIVE_MAP_SIZE)),
         mWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_SIZE)),
         mMainThreadWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_SIZE)),
         mComponents(nullptr),
@@ -115,11 +114,11 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
         mPrototypeJSObject(nullptr),
         mPrototypeNoHelper(nullptr),
         mScriptObjectPrincipal(nullptr),
-        mExperimentalBindingsEnabled(ccx.GetRuntime()->ExperimentalBindingsEnabled())
+        mExperimentalBindingsEnabled(XPCJSRuntime::Get()->ExperimentalBindingsEnabled())
 {
     // add ourselves to the scopes list
     {   // scoped lock
-        XPCAutoLock lock(mRuntime->GetMapLock());
+        XPCAutoLock lock(XPCJSRuntime::Get()->GetMapLock());
 
 #ifdef DEBUG
         for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
@@ -130,12 +129,12 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
         gScopes = this;
 
         // Grab the XPCContext associated with our context.
-        mContext = XPCContext::GetXPCContext(ccx.GetJSContext());
+        mContext = XPCContext::GetXPCContext(cx);
         mContext->AddScope(this);
     }
 
     if (aGlobal)
-        SetGlobal(ccx, aGlobal, aNative);
+        SetGlobal(cx, aGlobal, aNative);
 
     DEBUG_TrackNewScope(this);
     MOZ_COUNT_CTOR(XPCWrappedNativeScope);
@@ -214,7 +213,7 @@ js::Class XPC_WN_NoHelper_Proto_JSClass = {
 
 
 void
-XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal,
+XPCWrappedNativeScope::SetGlobal(JSContext *cx, JSObject* aGlobal,
                                  nsISupports* aNative)
 {
     // We allow for calling this more than once. This feature is used by
@@ -252,7 +251,7 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal,
 
     // Lookup 'globalObject.Object.prototype' for our wrapper's proto
     JSObject *objectPrototype =
-        JS_GetObjectPrototype(ccx.GetJSContext(), aGlobal);
+        JS_GetObjectPrototype(cx, aGlobal);
     if (objectPrototype)
         mPrototypeJSObject = objectPrototype;
     else
@@ -297,7 +296,7 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
     // XXX might not want to do this at xpconnect shutdown time???
     mComponents = nullptr;
 
-    JSRuntime *rt = mRuntime->GetJSRuntime();
+    JSRuntime *rt = XPCJSRuntime::Get()->GetJSRuntime();
     mGlobalJSObject.finalize(rt);
     mPrototypeJSObject.finalize(rt);
 }
@@ -774,7 +773,7 @@ WNProtoRemover(JSDHashTable *table, JSDHashEntryHdr *hdr,
 void
 XPCWrappedNativeScope::RemoveWrappedNativeProtos()
 {
-    XPCAutoLock al(mRuntime->GetMapLock());
+    XPCAutoLock al(XPCJSRuntime::Get()->GetMapLock());
 
     mWrappedNativeProtoMap->Enumerate(WNProtoRemover,
                                       GetRuntime()->GetDetachedWrappedNativeProtoMap());
@@ -847,7 +846,6 @@ XPCWrappedNativeScope::DebugDump(int16_t depth)
     depth-- ;
     XPC_LOG_ALWAYS(("XPCWrappedNativeScope @ %x", this));
     XPC_LOG_INDENT();
-        XPC_LOG_ALWAYS(("mRuntime @ %x", mRuntime));
         XPC_LOG_ALWAYS(("mNext @ %x", mNext));
         XPC_LOG_ALWAYS(("mComponents @ %x", mComponents.get()));
         XPC_LOG_ALWAYS(("mGlobalJSObject @ %x", mGlobalJSObject.get()));
