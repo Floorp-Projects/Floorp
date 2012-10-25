@@ -231,18 +231,8 @@ CompartmentDestroyedCallback(JSFreeOp *fop, JSCompartment *compartment)
     nsAutoPtr<CompartmentPrivate> priv(GetCompartmentPrivate(compartment));
     JS_SetCompartmentPrivate(compartment, nullptr);
 
-    // JSD creates compartments in our runtime without going through our creation
-    // code. This means that those compartments aren't in our set, and don't have
-    // compartment privates. JSD is on the way out, so let's just handle that
-    // case for now.
-    if (!priv) {
-        MOZ_ASSERT(!set.has(compartment));
-        return;
-    }
-
-    // Remove the compartment from the set.
-    MOZ_ASSERT(set.has(compartment));
-    set.remove(compartment);
+    if (set.has(compartment))
+        set.remove(compartment);
     return;
 }
 
