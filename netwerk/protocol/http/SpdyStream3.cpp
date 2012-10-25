@@ -517,7 +517,7 @@ SpdyStream3::UpdateTransportSendEvents(uint32_t count)
     mSentWaitingFor = 1;
     mTransaction->OnTransportStatus(mSocketTransport,
                                     NS_NET_STATUS_WAITING_FOR,
-                                    LL_ZERO);
+                                    0);
   }
 }
 
