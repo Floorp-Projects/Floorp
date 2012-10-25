@@ -14,6 +14,7 @@
 #include "nsJSUtils.h"
 #include "AudioSampleFormat.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 nsGenericHTMLElement*
@@ -181,24 +182,12 @@ nsHTMLAudioElement::MozWriteAudio(const JS::Value& aData, JSContext* aCx, uint32
 
   float* frames = JS_GetFloat32ArrayData(tsrc, aCx);
   nsresult rv;
-  if (nsAudioStream::Format() == AUDIO_FORMAT_S16) {
+  if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
     // Convert the samples back to integers as we are using fixed point audio in
     // the nsAudioStream.
-    nsAutoArrayPtr<short> shortsArray(new short[writeLen * mChannels]);
-    // Hard clip the samples.
-    for (uint32_t i = 0; i <  writeLen * mChannels; ++i) {
-      float scaled_value = floorf(0.5 + 32768 * frames[i]);
-      if (frames[i] < 0.0) {
-        shortsArray[i] = (scaled_value < -32768.0) ?
-          -32768 :
-          short(scaled_value);
-      } else {
-        shortsArray[i] = (scaled_value > 32767.0) ?
-          32767 :
-          short(scaled_value);
-      }
-    }
-    rv = mAudioStream->Write(shortsArray, writeLen);
+    nsAutoArrayPtr<AudioDataValue> shortsArray(new AudioDataValue[writeLen * mChannels]);
+    ConvertAudioSamples(frames, shortsArray.get(), writeLen * mChannels);
+    rv = mAudioStream->Write(shortsArray.get(), writeLen);
   } else {
     rv = mAudioStream->Write(frames, writeLen);
   }

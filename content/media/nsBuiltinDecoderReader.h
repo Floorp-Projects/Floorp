@@ -12,6 +12,7 @@
 #include "MediaStreamGraph.h"
 #include "SharedBuffer.h"
 #include "ImageLayers.h"
+#include "AudioSampleFormat.h"
 
 // Stores info relevant to presenting media frames.
 class nsVideoInfo {
@@ -56,7 +57,6 @@ public:
 #ifdef MOZ_SAMPLE_TYPE_S16
 #include <ogg/os_types.h>
 typedef ogg_int32_t VorbisPCMValue;
-typedef short AudioDataValue;
 
 #define MOZ_CLIP_TO_15(x) ((x)<-32768?-32768:(x)<=32767?(x):32767)
 // Convert the output of vorbis_synthesis_pcmout to a AudioDataValue
@@ -68,7 +68,6 @@ typedef short AudioDataValue;
 #else /* MOZ_SAMPLE_TYPE_FLOAT32 */
 
 typedef float VorbisPCMValue;
-typedef float AudioDataValue;
 
 #define MOZ_CONVERT_VORBIS_SAMPLE(x) (x)
 #define MOZ_CONVERT_AUDIO_SAMPLE(x) (x)
@@ -79,6 +78,7 @@ typedef float AudioDataValue;
 class AudioData {
 public:
   typedef mozilla::SharedBuffer SharedBuffer;
+  typedef mozilla::AudioDataValue AudioDataValue;
 
   AudioData(int64_t aOffset,
             int64_t aTime,
@@ -379,6 +379,7 @@ public:
   typedef mozilla::ReentrantMonitorAutoEnter ReentrantMonitorAutoEnter;
   typedef mozilla::VideoFrameContainer VideoFrameContainer;
   typedef mozilla::MediaByteRange MediaByteRange;
+  typedef mozilla::AudioDataValue AudioDataValue;
 
   nsBuiltinDecoderReader(nsBuiltinDecoder* aDecoder);
   virtual ~nsBuiltinDecoderReader();

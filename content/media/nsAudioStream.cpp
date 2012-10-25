@@ -474,30 +474,9 @@ nsresult nsNativeAudioStream::Write(const void* aBuf, uint32_t aFrames)
   uint32_t samples = aFrames * mChannels;
   nsAutoArrayPtr<short> s_data(new short[samples]);
 
-  if (s_data) {
-    double scaled_volume = GetVolumeScale() * mVolume;
-    if (Format() == AUDIO_FORMAT_S16) {
-      const short* buf = static_cast<const short*>(aBuf);
-      int32_t volume = int32_t((1 << 16) * scaled_volume);
-      for (uint32_t i = 0; i < samples; ++i) {
-        s_data[i] = short((int32_t(buf[i]) * volume) >> 16);
-      }
-    } else {
-      const float* buf = static_cast<const float*>(aBuf);
-      for (uint32_t i = 0; i <  samples; ++i) {
-        float scaled_value = floorf(0.5 + 32768 * buf[i] * scaled_volume);
-        if (buf[i] < 0.0) {
-          s_data[i] = (scaled_value < -32768.0) ?
-            -32768 :
-            short(scaled_value);
-        } else {
-          s_data[i] = (scaled_value > 32767.0) ?
-            32767 :
-            short(scaled_value);
-        }
-      }
-    }
-  }
+  float scaled_volume = float(GetVolumeScale() * mVolume);
+  const AudioDataValue* buf = static_cast<const AudioDataValue*>(aBuf);
+  ConvertAudioSamplesWithScale(buf, s_data.get(), samples, scaled_volume);
 
   if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
                       s_data.get(),
@@ -633,7 +612,7 @@ nsRemotedAudioStream::Init(int32_t aNumChannels,
 {
   mRate = aRate;
   mChannels = aNumChannels;
-  mBytesPerFrame = (Format() == FORMAT_FLOAT32 ? 4 : 2) * mChannels;
+  mBytesPerFrame = sizeof(AudioDataValue) * mChannels;
 
   nsCOMPtr<nsIRunnable> event = new AudioInitEvent(this);
   NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
@@ -947,13 +926,12 @@ nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate)
   cubeb_stream_params params;
   params.rate = aRate;
   params.channels = aNumChannels;
-  if (Format() == AUDIO_FORMAT_S16) {
-    params.format =  CUBEB_SAMPLE_S16NE;
-    mBytesPerFrame = sizeof(int16_t) * aNumChannels;
+  if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
+    params.format = CUBEB_SAMPLE_S16NE;
   } else {
     params.format = CUBEB_SAMPLE_FLOAT32NE;
-    mBytesPerFrame = sizeof(float) * aNumChannels;
   }
+  mBytesPerFrame = sizeof(AudioDataValue) * aNumChannels;
 
   {
     cubeb_stream* stream;
@@ -1170,37 +1148,21 @@ nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
 
   if (available > 0) {
     // Copy each sample from mBuffer to aBuffer, adjusting the volume during the copy.
-    double scaled_volume = GetVolumeScale() * mVolume;
+    float scaled_volume = float(GetVolumeScale() * mVolume);
 
     // Fetch input pointers from the ring buffer.
     void* input[2];
     uint32_t input_size[2];
     mBuffer.PopElements(available, &input[0], &input_size[0], &input[1], &input_size[1]);
 
-    uint8_t* output = reinterpret_cast<uint8_t*>(aBuffer);
+    uint8_t* output = static_cast<uint8_t*>(aBuffer);
     for (int i = 0; i < 2; ++i) {
-      // Fast path for unity volume case.
-      if (scaled_volume == 1.0) {
-        memcpy(output, input[i], input_size[i]);
-        output += input_size[i];
-      } else if (Format() == AUDIO_FORMAT_S16) {
-        // Adjust volume as each sample is copied out.
-        int32_t volume = int32_t(1 << 16) * scaled_volume;
+      const AudioDataValue* src = static_cast<const AudioDataValue*>(input[i]);
+      AudioDataValue* dst = reinterpret_cast<AudioDataValue*>(output);
 
-        const short* src = static_cast<const short*>(input[i]);
-        short* dst = reinterpret_cast<short*>(output);
-        for (uint32_t j = 0; j < input_size[i] / (mBytesPerFrame / mChannels); ++j) {
-          dst[j] = short((int32_t(src[j]) * volume) >> 16);
-        }
-        output += input_size[i];
-      } else {
-        const float* src = static_cast<const float*>(input[i]);
-        float* dst = reinterpret_cast<float*>(output);
-        for (uint32_t j = 0; j < input_size[i] / (mBytesPerFrame / mChannels); ++j) {
-          dst[j] = src[j] * scaled_volume;
-        }
-        output += input_size[i];
-      }
+      ConvertAudioSamplesWithScale(src, dst, input_size[i]/sizeof(AudioDataValue),
+                                   scaled_volume);
+      output += input_size[i];
     }
 
     NS_ABORT_IF_FALSE(mBuffer.Length() % mBytesPerFrame == 0, "Must copy complete frames");
