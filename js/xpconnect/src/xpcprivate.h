@@ -1602,10 +1602,10 @@ class XPCWrappedNativeScope : public PRCList
 public:
 
     static XPCWrappedNativeScope*
-    GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal, nsISupports* aNative = nullptr);
+    GetNewOrUsed(JSContext *cx, JSObject* aGlobal, nsISupports* aNative = nullptr);
 
     XPCJSRuntime*
-    GetRuntime() const {return mRuntime;}
+    GetRuntime() const {return XPCJSRuntime::Get();}
 
     Native2WrappedNativeMap*
     GetWrappedNativeMap() const {return mWrappedNativeMap;}
@@ -1719,7 +1719,7 @@ public:
     static JSBool
     IsDyingScope(XPCWrappedNativeScope *scope);
 
-    void SetGlobal(XPCCallContext& ccx, JSObject* aGlobal, nsISupports* aNative);
+    void SetGlobal(JSContext *cx, JSObject* aGlobal, nsISupports* aNative);
 
     static void InitStatics() { gScopes = nullptr; gDyingScopes = nullptr; }
 
@@ -1747,8 +1747,9 @@ public:
         return mExperimentalBindingsEnabled;
     }
 
+    XPCWrappedNativeScope(JSContext *cx, JSObject* aGlobal, nsISupports* aNative);
+
 protected:
-    XPCWrappedNativeScope(XPCCallContext& ccx, JSObject* aGlobal, nsISupports* aNative);
     virtual ~XPCWrappedNativeScope();
 
     static void KillDyingScopes();
