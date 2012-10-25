@@ -1351,7 +1351,7 @@ nsHTMLInputElement::MozIsTextField(bool aExcludePassword, bool* aResult)
 NS_IMETHODIMP 
 nsHTMLInputElement::SetUserInput(const nsAString& aValue)
 {
-  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 

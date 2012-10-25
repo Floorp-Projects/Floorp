@@ -2801,7 +2801,7 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
 {
   nsresult rv = NS_OK;
 
-  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     nsCOMPtr<nsIPrincipal> subject;
     nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
     rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
