@@ -484,7 +484,7 @@ nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
   // NOTE: it's not an error to say that we aren't going to dispatch
   // the event.
   {
-    nsCOMPtr<nsIDOMWindow> domWindow = domWin;
+    nsCOMPtr<nsIWindowCrypto> domWindow = do_QueryInterface(domWin);
     if (!domWindow) {
       return NS_OK; // nope, it's not an internal window
     }

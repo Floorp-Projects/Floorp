@@ -30,7 +30,7 @@ const READY_STATES = [
 ];
 
 ["LOG", "WARN", "ERROR"].forEach(function(aName) {
-  this.__defineGetter__(aName, function() {
+  this.__defineGetter__(aName, function logFuncGetter() {
     Components.utils.import("resource://gre/modules/AddonLogging.jsm");
 
     LogManager.getLogger("addons.weblistener", this);
@@ -88,7 +88,7 @@ Installer.prototype = {
   /**
    * Checks if all downloads are now complete and if so prompts to install.
    */
-  checkAllDownloaded: function() {
+  checkAllDownloaded: function Installer_checkAllDownloaded() {
     // Prevent re-entrancy caused by the confirmation dialog cancelling unwanted
     // installs.
     if (!this.isDownloading)
@@ -192,7 +192,7 @@ Installer.prototype = {
   /**
    * Checks if all installs are now complete and if so notifies observers.
    */
-  checkAllInstalled: function() {
+  checkAllInstalled: function Installer_checkAllInstalled() {
     var failed = [];
 
     for (let install of this.downloads) {
@@ -218,32 +218,32 @@ Installer.prototype = {
     this.installed = null;
   },
 
-  onDownloadCancelled: function(aInstall) {
+  onDownloadCancelled: function Installer_onDownloadCancelled(aInstall) {
     aInstall.removeListener(this);
     this.checkAllDownloaded();
   },
 
-  onDownloadFailed: function(aInstall) {
+  onDownloadFailed: function Installer_onDownloadFailed(aInstall) {
     aInstall.removeListener(this);
     this.checkAllDownloaded();
   },
 
-  onDownloadEnded: function(aInstall) {
+  onDownloadEnded: function Installer_onDownloadEnded(aInstall) {
     this.checkAllDownloaded();
     return false;
   },
 
-  onInstallCancelled: function(aInstall) {
+  onInstallCancelled: function Installer_onInstallCancelled(aInstall) {
     aInstall.removeListener(this);
     this.checkAllInstalled();
   },
 
-  onInstallFailed: function(aInstall) {
+  onInstallFailed: function Installer_onInstallFailed(aInstall) {
     aInstall.removeListener(this);
     this.checkAllInstalled();
   },
 
-  onInstallEnded: function(aInstall) {
+  onInstallEnded: function Installer_onInstallEnded(aInstall) {
     aInstall.removeListener(this);
     this.installed.push(aInstall);
 
@@ -265,7 +265,7 @@ extWebInstallListener.prototype = {
   /**
    * @see amIWebInstallListener.idl
    */
-  onWebInstallDisabled: function(aWindow, aUri, aInstalls) {
+  onWebInstallDisabled: function extWebInstallListener_onWebInstallDisabled(aWindow, aUri, aInstalls) {
     let info = {
       originatingWindow: aWindow,
       originatingURI: aUri,
@@ -279,13 +279,13 @@ extWebInstallListener.prototype = {
   /**
    * @see amIWebInstallListener.idl
    */
-  onWebInstallBlocked: function(aWindow, aUri, aInstalls) {
+  onWebInstallBlocked: function extWebInstallListener_onWebInstallBlocked(aWindow, aUri, aInstalls) {
     let info = {
       originatingWindow: aWindow,
       originatingURI: aUri,
       installs: aInstalls,
 
-      install: function() {
+      install: function onWebInstallBlocked_install() {
         new Installer(this.originatingWindow, this.originatingURI, this.installs);
       },
 
@@ -299,7 +299,7 @@ extWebInstallListener.prototype = {
   /**
    * @see amIWebInstallListener.idl
    */
-  onWebInstallRequested: function(aWindow, aUri, aInstalls) {
+  onWebInstallRequested: function extWebInstallListener_onWebInstallRequested(aWindow, aUri, aInstalls) {
     new Installer(aWindow, aUri, aInstalls);
 
     // We start the installs ourself

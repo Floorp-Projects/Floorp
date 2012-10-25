@@ -32,7 +32,7 @@ interface nsIDOMMozURLProperty : nsISupports
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(43933989-912e-4b6a-b889-3c9fc9dd9ed4)]
+[scriptable, uuid(148ab425-5d38-40fd-9fe0-0eae9fed81df)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -365,9 +365,6 @@ interface nsIDOMWindow : nsISupports
   [noscript] readonly attribute nsIPrompt               prompter;
 
   readonly attribute boolean                            closed;
-  // http://wiki.whatwg.org/wiki/Crypto
-  readonly attribute nsIDOMCrypto                       crypto;
-  readonly attribute nsIDOMPkcs11                       pkcs11;
 
   // XXX Shouldn't this be in nsIDOMChromeWindow?
   /* [replaceable] controllers */
@@ -515,6 +512,17 @@ interface nsIDOMWindowPerformance : nsISupports
    * A namespace to hold performance related data and statistics.
    */
   readonly attribute nsISupports performance;
+};
+
+[scriptable, uuid(2ed9ace1-172c-443f-b92f-c4f74bf8f2c5)]
+interface nsIWindowCrypto : nsISupports
+{
+  /**
+   * A namespace to hold crypto related data and statistics.
+   * http://wiki.whatwg.org/wiki/Crypto
+   */
+  readonly attribute nsIDOMCrypto                       crypto;
+  readonly attribute nsIDOMPkcs11                       pkcs11;
 };
 
 /**
