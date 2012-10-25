@@ -211,6 +211,7 @@ class B2GMochitest(Mochitest):
         self.localLog = None
         self.userJS = '/data/local/user.js'
         self.remoteMozillaPath = '/data/b2g/mozilla'
+        self.bundlesDir = '/system/b2g/distribution/bundles'
         self.remoteProfilesIniPath = os.path.join(self.remoteMozillaPath, 'profiles.ini')
         self.originalProfilesIni = None
 
@@ -227,6 +228,16 @@ class B2GMochitest(Mochitest):
         if self.localLog:
             self._dm.getFile(self.remoteLog, self.localLog)
             self._dm.removeFile(self.remoteLog)
+
+        # Delete any bundled extensions
+        extensionDir = os.path.join(options.profilePath, 'extensions', 'staged')
+        if os.access(extensionDir, os.F_OK):
+            for filename in os.listdir(extensionDir):
+                try:
+                    self._dm._checkCmdAs(['shell', 'rm', '-rf',
+                                          os.path.join(self.bundlesDir, filename)])
+                except devicemanager.DMError:
+                    pass
 
         if not options.emulator:
             # Remove the test profile
@@ -393,6 +404,19 @@ user_pref("network.dns.localDomains","app://system.gaiamobile.org");\n
             self._dm.pushDir(options.profilePath, self.remoteProfile)
         except devicemanager.DMError:
             print "Automation Error: Unable to copy profile to device."
+            raise
+
+        # Copy the extensions to the B2G bundles dir.
+        extensionDir = os.path.join(options.profilePath, 'extensions', 'staged')
+        # need to write to read-only dir
+        self._dm._checkCmdAs(['remount'])
+        for filename in os.listdir(extensionDir):
+            self._dm._checkCmdAs(['shell', 'rm', '-rf',
+                                  os.path.join(self.bundlesDir, filename)])
+        try:
+            self._dm.pushDir(extensionDir, self.bundlesDir)
+        except devicemanager.DMError:
+            print "Automation Error: Unable to copy extensions to device."
             raise
 
         # In B2G, user.js is always read from /data/local, not the profile
