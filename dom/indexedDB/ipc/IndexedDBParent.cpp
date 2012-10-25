@@ -12,8 +12,11 @@
 #include "nsIJSContextStack.h"
 #include "nsIXPConnect.h"
 
+#include "mozilla/AppProcessPermissions.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Util.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "nsContentUtils.h"
 
@@ -27,8 +30,14 @@
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
 
+#define CHROME_ORIGIN "chrome"
+#define PERMISSION_PREFIX "indexedDB-chrome-"
+#define PERMISSION_SUFFIX_READ "-read"
+#define PERMISSION_SUFFIX_WRITE "-write"
+
 USING_INDEXEDDB_NAMESPACE
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 /*******************************************************************************
@@ -51,10 +60,18 @@ AutoSetCurrentTransaction::~AutoSetCurrentTransaction()
  * IndexedDBParent
  ******************************************************************************/
 
-IndexedDBParent::IndexedDBParent()
-  : mDisconnected(false)
+IndexedDBParent::IndexedDBParent(ContentParent* aContentParent)
+: mManagerContent(aContentParent), mManagerTab(nullptr), mDisconnected(false)
 {
   MOZ_COUNT_CTOR(IndexedDBParent);
+  MOZ_ASSERT(aContentParent);
+}
+
+IndexedDBParent::IndexedDBParent(TabParent* aTabParent)
+: mManagerContent(nullptr), mManagerTab(aTabParent), mDisconnected(false)
+{
+  MOZ_COUNT_CTOR(IndexedDBParent);
+  MOZ_ASSERT(aTabParent);
 }
 
 IndexedDBParent::~IndexedDBParent()
@@ -75,6 +92,47 @@ IndexedDBParent::Disconnect()
   }
 }
 
+bool
+IndexedDBParent::CheckReadPermission(const nsAString& aDatabaseName)
+{
+  NS_NAMED_LITERAL_CSTRING(permission, PERMISSION_SUFFIX_READ);
+  return CheckPermissionInternal(aDatabaseName, permission);
+}
+
+bool
+IndexedDBParent::CheckWritePermission(const nsAString& aDatabaseName)
+{
+  // Write permission assumes read permission is granted as well.
+  MOZ_ASSERT(CheckReadPermission(aDatabaseName));
+
+  NS_NAMED_LITERAL_CSTRING(permission, PERMISSION_SUFFIX_WRITE);
+  return CheckPermissionInternal(aDatabaseName, permission);
+}
+
+bool
+IndexedDBParent::CheckPermissionInternal(const nsAString& aDatabaseName,
+                                         const nsDependentCString& aPermission)
+{
+  MOZ_ASSERT(!mASCIIOrigin.IsEmpty());
+  MOZ_ASSERT(mManagerContent || mManagerTab);
+
+  if (mASCIIOrigin.EqualsLiteral(CHROME_ORIGIN)) {
+    nsAutoCString fullPermission =
+      NS_LITERAL_CSTRING(PERMISSION_PREFIX) +
+      NS_ConvertUTF16toUTF8(aDatabaseName) +
+      aPermission;
+
+    if ((mManagerContent &&
+         !AssertAppProcessPermission(mManagerContent, fullPermission.get())) ||
+        (mManagerTab &&
+         !AssertAppProcessPermission(mManagerTab, fullPermission.get()))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void
 IndexedDBParent::ActorDestroy(ActorDestroyReason aWhy)
 {
@@ -87,6 +145,12 @@ IndexedDBParent::RecvPIndexedDBDatabaseConstructor(
                                                const nsString& aName,
                                                const uint64_t& aVersion)
 {
+  MOZ_ASSERT(mFactory);
+
+  if (!CheckReadPermission(aName)) {
+    return false;
+  }
+
   nsRefPtr<IDBOpenDBRequest> request;
   nsresult rv =
     mFactory->OpenCommon(aName, aVersion, false, nullptr,
@@ -107,6 +171,12 @@ IndexedDBParent::RecvPIndexedDBDeleteDatabaseRequestConstructor(
                                   PIndexedDBDeleteDatabaseRequestParent* aActor,
                                   const nsString& aName)
 {
+  MOZ_ASSERT(mFactory);
+
+  if (!CheckWritePermission(aName)) {
+    return false;
+  }
+
   IndexedDBDeleteDatabaseRequestParent* actor =
     static_cast<IndexedDBDeleteDatabaseRequestParent*>(aActor);
 
@@ -126,6 +196,11 @@ PIndexedDBDatabaseParent*
 IndexedDBParent::AllocPIndexedDBDatabase(const nsString& aName,
                                          const uint64_t& aVersion)
 {
+  if (!mFactory) {
+    // This can happen if the child process dies before we set the factory.
+    return nullptr;
+  }
+
   return new IndexedDBDatabaseParent();
 }
 
@@ -139,6 +214,11 @@ IndexedDBParent::DeallocPIndexedDBDatabase(PIndexedDBDatabaseParent* aActor)
 PIndexedDBDeleteDatabaseRequestParent*
 IndexedDBParent::AllocPIndexedDBDeleteDatabaseRequest(const nsString& aName)
 {
+  if (!mFactory) {
+    // This can happen if the child process dies before we set the factory.
+    return nullptr;
+  }
+
   return new IndexedDBDeleteDatabaseRequestParent(mFactory);
 }
 
@@ -239,6 +319,15 @@ IndexedDBDatabaseParent::Disconnect()
   if (mDatabase) {
     mDatabase->DisconnectFromActor();
   }
+}
+
+bool
+IndexedDBDatabaseParent::CheckWritePermission(const nsAString& aDatabaseName)
+{
+  IndexedDBParent* manager = static_cast<IndexedDBParent*>(Manager());
+  MOZ_ASSERT(manager);
+
+  return manager->CheckWritePermission(aDatabaseName);
 }
 
 nsresult
@@ -367,6 +456,20 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
   if (aType.EqualsLiteral(UPGRADENEEDED_EVT_STR)) {
     MOZ_ASSERT(!mDatabase);
 
+    IDBTransaction* transaction =
+      AsyncConnectionHelper::GetCurrentTransaction();
+    MOZ_ASSERT(transaction);
+
+    if (!CheckWritePermission(databaseConcrete->Name())) {
+      // If we get here then the child process is either dead or in the process
+      // of being killed. Abort the transaction now to prevent any changes to
+      // the database.
+      if (NS_FAILED(transaction->Abort())) {
+        NS_WARNING("Failed to abort transaction!");
+      }
+      return NS_ERROR_FAILURE;
+    }
+
     nsCOMPtr<nsIIDBVersionChangeEvent> changeEvent = do_QueryInterface(aEvent);
     NS_ENSURE_TRUE(changeEvent, NS_ERROR_FAILURE);
 
@@ -376,10 +479,6 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
 
     nsAutoPtr<IndexedDBVersionChangeTransactionParent> actor(
       new IndexedDBVersionChangeTransactionParent());
-
-    IDBTransaction* transaction =
-      AsyncConnectionHelper::GetCurrentTransaction();
-    MOZ_ASSERT(transaction);
 
     rv = actor->SetTransaction(transaction);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -482,6 +581,11 @@ IndexedDBDatabaseParent::RecvPIndexedDBTransactionConstructor(
 
   const NormalTransactionParams& params = aParams.get_NormalTransactionParams();
 
+  if (params.mode() != IDBTransaction::READ_ONLY &&
+      !CheckWritePermission(mDatabase->Name())) {
+    return false;
+  }
+
   nsTArray<nsString> storesToOpen;
   storesToOpen.AppendElements(params.names());
 
@@ -499,6 +603,11 @@ PIndexedDBTransactionParent*
 IndexedDBDatabaseParent::AllocPIndexedDBTransaction(
                                                const TransactionParams& aParams)
 {
+  if (!mDatabase) {
+    // This can happen if the child process dies before we set the database.
+    return nullptr;
+  }
+
   MOZ_ASSERT(aParams.type() ==
              TransactionParams::TNormalTransactionParams);
   return new IndexedDBTransactionParent();
@@ -642,6 +751,8 @@ IndexedDBTransactionParent::RecvPIndexedDBObjectStoreConstructor(
                                     PIndexedDBObjectStoreParent* aActor,
                                     const ObjectStoreConstructorParams& aParams)
 {
+  MOZ_ASSERT(mTransaction);
+
   IndexedDBObjectStoreParent* actor =
     static_cast<IndexedDBObjectStoreParent*>(aActor);
 
@@ -680,6 +791,11 @@ PIndexedDBObjectStoreParent*
 IndexedDBTransactionParent::AllocPIndexedDBObjectStore(
                                     const ObjectStoreConstructorParams& aParams)
 {
+  if (!mTransaction) {
+    // This can happen if the child process dies before we set the transaction.
+    return nullptr;
+  }
+
   return new IndexedDBObjectStoreParent();
 }
 
@@ -734,6 +850,8 @@ IndexedDBVersionChangeTransactionParent::RecvPIndexedDBObjectStoreConstructor(
                                     PIndexedDBObjectStoreParent* aActor,
                                     const ObjectStoreConstructorParams& aParams)
 {
+  MOZ_ASSERT(mTransaction);
+
   IndexedDBObjectStoreParent* actor =
     static_cast<IndexedDBObjectStoreParent*>(aActor);
 
@@ -776,7 +894,11 @@ PIndexedDBObjectStoreParent*
 IndexedDBVersionChangeTransactionParent::AllocPIndexedDBObjectStore(
                                     const ObjectStoreConstructorParams& aParams)
 {
-  MOZ_ASSERT(mTransaction);
+  if (!mTransaction) {
+    // This can happen if the child process dies before we set the transaction.
+    return nullptr;
+  }
+
   if (aParams.type() ==
       ObjectStoreConstructorParams::TCreateObjectStoreParams ||
       mTransaction->GetMode() == IDBTransaction::VERSION_CHANGE) {
@@ -829,6 +951,8 @@ IndexedDBObjectStoreParent::RecvPIndexedDBRequestConstructor(
                                         PIndexedDBRequestParent* aActor,
                                         const ObjectStoreRequestParams& aParams)
 {
+  MOZ_ASSERT(mObjectStore);
+
   IndexedDBObjectStoreRequestParent* actor =
     static_cast<IndexedDBObjectStoreRequestParent*>(aActor);
 
@@ -871,6 +995,8 @@ IndexedDBObjectStoreParent::RecvPIndexedDBIndexConstructor(
                                           PIndexedDBIndexParent* aActor,
                                           const IndexConstructorParams& aParams)
 {
+  MOZ_ASSERT(mObjectStore);
+
   IndexedDBIndexParent* actor = static_cast<IndexedDBIndexParent*>(aActor);
 
   if (aParams.type() == IndexConstructorParams::TGetIndexParams) {
@@ -905,7 +1031,11 @@ PIndexedDBRequestParent*
 IndexedDBObjectStoreParent::AllocPIndexedDBRequest(
                                         const ObjectStoreRequestParams& aParams)
 {
-  MOZ_ASSERT(mObjectStore);
+  if (!mObjectStore) {
+    // This can happen if the child process dies before we set the objectStore.
+    return nullptr;
+  }
+
   return new IndexedDBObjectStoreRequestParent(mObjectStore, aParams.type());
 }
 
@@ -921,6 +1051,11 @@ PIndexedDBIndexParent*
 IndexedDBObjectStoreParent::AllocPIndexedDBIndex(
                                           const IndexConstructorParams& aParams)
 {
+  if (!mObjectStore) {
+    // This can happen if the child process dies before we set the objectStore.
+    return nullptr;
+  }
+
   return new IndexedDBIndexParent();
 }
 
@@ -988,6 +1123,8 @@ IndexedDBVersionChangeObjectStoreParent::RecvPIndexedDBIndexConstructor(
                                           PIndexedDBIndexParent* aActor,
                                           const IndexConstructorParams& aParams)
 {
+  MOZ_ASSERT(mObjectStore);
+
   IndexedDBIndexParent* actor = static_cast<IndexedDBIndexParent*>(aActor);
 
   if (aParams.type() == IndexConstructorParams::TCreateIndexParams) {
@@ -1054,6 +1191,8 @@ IndexedDBIndexParent::RecvPIndexedDBRequestConstructor(
                                               PIndexedDBRequestParent* aActor,
                                               const IndexRequestParams& aParams)
 {
+  MOZ_ASSERT(mIndex);
+
   IndexedDBIndexRequestParent* actor =
     static_cast<IndexedDBIndexRequestParent*>(aActor);
 
@@ -1091,7 +1230,11 @@ IndexedDBIndexParent::RecvPIndexedDBRequestConstructor(
 PIndexedDBRequestParent*
 IndexedDBIndexParent::AllocPIndexedDBRequest(const IndexRequestParams& aParams)
 {
-  MOZ_ASSERT(mIndex);
+  if (!mIndex) {
+    // This can happen if the child process dies before we set the index.
+    return nullptr;
+  }
+
   return new IndexedDBIndexRequestParent(mIndex, aParams.type());
 }
 
@@ -1137,9 +1280,8 @@ IndexedDBCursorParent::~IndexedDBCursorParent()
 void
 IndexedDBCursorParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  if (mCursor) {
-    mCursor->SetActor(static_cast<IndexedDBCursorParent*>(NULL));
-  }
+  MOZ_ASSERT(mCursor);
+  mCursor->SetActor(static_cast<IndexedDBCursorParent*>(NULL));
 }
 
 bool
@@ -1147,6 +1289,8 @@ IndexedDBCursorParent::RecvPIndexedDBRequestConstructor(
                                              PIndexedDBRequestParent* aActor,
                                              const CursorRequestParams& aParams)
 {
+  MOZ_ASSERT(mCursor);
+
   IndexedDBCursorRequestParent* actor =
     static_cast<IndexedDBCursorRequestParent*>(aActor);
 
@@ -1167,6 +1311,7 @@ PIndexedDBRequestParent*
 IndexedDBCursorParent::AllocPIndexedDBRequest(
                                              const CursorRequestParams& aParams)
 {
+  MOZ_ASSERT(mCursor);
   return new IndexedDBCursorRequestParent(mCursor, aParams.type());
 }
 
