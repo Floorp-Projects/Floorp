@@ -130,7 +130,7 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(AudioDataValue* aAudioD
     float *signalBuffer = mSignalBuffer.get() + mSignalBufferPosition;
     if (audioData) {
       for (i = 0; i < signalBufferTail; ++i) {
-        signalBuffer[i] = MOZ_CONVERT_AUDIO_SAMPLE(audioData[i]);
+        signalBuffer[i] = AudioSampleToFloat(audioData[i]);
       }
     } else {
       memset(signalBuffer, 0, signalBufferTail*sizeof(signalBuffer[0]));
@@ -179,7 +179,7 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(AudioDataValue* aAudioD
     float *signalBuffer = mSignalBuffer.get() + mSignalBufferPosition;
     if (audioData) {
       for (i = 0; i < audioDataLength; ++i) {
-        signalBuffer[i] = MOZ_CONVERT_AUDIO_SAMPLE(audioData[i]);
+        signalBuffer[i] = AudioSampleToFloat(audioData[i]);
       }
     } else {
       memset(signalBuffer, 0, audioDataLength*sizeof(signalBuffer[0]));

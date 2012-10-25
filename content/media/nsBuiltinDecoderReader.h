@@ -62,15 +62,12 @@ typedef ogg_int32_t VorbisPCMValue;
 // Convert the output of vorbis_synthesis_pcmout to a AudioDataValue
 #define MOZ_CONVERT_VORBIS_SAMPLE(x) \
  (static_cast<AudioDataValue>(MOZ_CLIP_TO_15((x)>>9)))
-// Convert a AudioDataValue to a float for the Audio API
-#define MOZ_CONVERT_AUDIO_SAMPLE(x) ((x)*(1.F/32768))
 
 #else /* MOZ_SAMPLE_TYPE_FLOAT32 */
 
 typedef float VorbisPCMValue;
 
 #define MOZ_CONVERT_VORBIS_SAMPLE(x) (x)
-#define MOZ_CONVERT_AUDIO_SAMPLE(x) (x)
 
 #endif
 
