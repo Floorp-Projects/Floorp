@@ -74,7 +74,10 @@ function attachToWindow(provider, targetWindow) {
   // the mozSocial API.
   let origin = provider.origin;
   let targetDocURI = targetWindow.document.documentURIObject;
-  if (provider.origin != targetDocURI.prePath) {
+  // We allow data: URLs as it might be far more efficient for a provider to
+  // synthesize a data URL from content already loaded in its sidebar or
+  // worker.
+  if (provider.origin != targetDocURI.prePath && targetDocURI.scheme != "data") {
     let msg = "MozSocialAPI: not attaching mozSocial API for " + origin +
               " to " + targetDocURI.spec + " since origins differ."
     Services.console.logStringMessage(msg);
