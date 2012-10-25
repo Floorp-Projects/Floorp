@@ -598,22 +598,6 @@ xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsid id)
     return true;
 }
 
-inline JSObject*
-xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-                                bool uniqueType, JSObject *parent)
-{
-    // Global creation should go through XPCWrappedNative::WrapNewGlobal().
-    MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
-
-    JSObject *obj;
-    if (uniqueType) {
-        obj = JS_NewObjectWithUniqueType(cx, clasp, proto, parent);
-    } else {
-        obj = JS_NewObject(cx, clasp, proto, parent);
-    }
-    return obj;
-}
-
 inline jsid
 GetRTIdByIndex(JSContext *cx, unsigned index)
 {
