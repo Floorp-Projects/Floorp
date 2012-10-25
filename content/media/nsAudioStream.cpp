@@ -133,7 +133,7 @@ class AudioInitEvent : public nsRunnable
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
     mOwner->mAudioChild =  static_cast<AudioChild*>(cpc->SendPAudioConstructor(mOwner->mChannels,
                                                                                mOwner->mRate,
-                                                                               mOwner->mFormat));
+                                                                               MOZ_AUDIO_DATA_FORMAT));
     return NS_OK;
   }
 
@@ -430,7 +430,6 @@ nsresult nsNativeAudioStream::Init(int32_t aNumChannels, int32_t aRate)
 {
   mRate = aRate;
   mChannels = aNumChannels;
-  mFormat = MOZ_AUDIO_DATA_FORMAT;
 
   if (sa_stream_create_pcm(reinterpret_cast<sa_stream_t**>(&mAudioHandle),
                            NULL,
@@ -635,7 +634,6 @@ nsRemotedAudioStream::Init(int32_t aNumChannels,
 {
   mRate = aRate;
   mChannels = aNumChannels;
-  mFormat = MOZ_AUDIO_DATA_FORMAT;
   mBytesPerFrame = sizeof(SampleType) * mChannels;
 
   nsCOMPtr<nsIRunnable> event = new AudioInitEvent(this);
@@ -946,7 +944,6 @@ nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate)
 
   mRate = aRate;
   mChannels = aNumChannels;
-  mFormat = MOZ_AUDIO_DATA_FORMAT;
 
   cubeb_stream_params params;
   params.rate = aRate;

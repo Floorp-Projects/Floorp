@@ -71,7 +71,7 @@ public:
   virtual void Shutdown() = 0;
 
   // Write audio data to the audio hardware.  aBuf is an array of frames in
-  // the format specified by mFormat of length aCount.  If aFrames is larger
+  // the format MOZ_AUDIO_DATA_FORMAT of length aCount.  If aFrames is larger
   // than the result of Available(), the write will block until sufficient
   // buffer space is available.
   virtual nsresult Write(const void* aBuf, uint32_t aFrames) = 0;
@@ -119,7 +119,6 @@ protected:
   nsCOMPtr<nsIThread> mAudioPlaybackThread;
   int mRate;
   int mChannels;
-  SampleFormat mFormat;
 };
 
 #endif
