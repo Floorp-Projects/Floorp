@@ -55,53 +55,10 @@ struct BlobTraits<Parent>
   class BaseType : public ProtocolType
   {
   protected:
-    BaseType()
-    { }
+    BaseType();
+    virtual ~BaseType();
 
-    virtual ~BaseType()
-    { }
-
-    // Each instance of this class will be dispatched to the network stream
-    // thread pool to run the first time where it will open the file input
-    // stream. It will then dispatch itself back to the main thread to send the
-    // child process its response (assuming that the child has not crashed). The
-    // runnable will then dispatch itself to the thread pool again in order to
-    // close the file input stream.
-    class OpenStreamRunnable : public nsRunnable
-    {
-      friend class nsRevocableEventPtr<OpenStreamRunnable>;
-    public:
-      NS_DECL_NSIRUNNABLE
-
-      OpenStreamRunnable(BaseType* aOwner, StreamType* aActor,
-                         nsIInputStream* aStream,
-                         nsIIPCSerializableInputStream* aSerializable,
-                         nsIEventTarget* aTarget);
-
-    private:
-#ifdef DEBUG
-      void
-      Revoke();
-#else
-      void
-      Revoke()
-      {
-        mRevoked = true;
-      }
-#endif
-
-      // Only safe to access these two pointers if mRevoked is false!
-      BaseType* mOwner;
-      StreamType* mActor;
-
-      nsCOMPtr<nsIInputStream> mStream;
-      nsCOMPtr<nsIIPCSerializableInputStream> mSerializable;
-      nsCOMPtr<nsIEventTarget> mTarget;
-
-      bool mRevoked;
-      bool mClosing;
-    };
-
+    class OpenStreamRunnable;
     friend class OpenStreamRunnable;
 
     void
