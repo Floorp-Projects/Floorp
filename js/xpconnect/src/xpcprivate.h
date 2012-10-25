@@ -267,12 +267,6 @@ extern const char XPC_SCRIPT_ERROR_CONTRACTID[];
 extern const char XPC_ID_CONTRACTID[];
 extern const char XPC_XPCONNECT_CONTRACTID[];
 
-typedef js::HashSet<JSCompartment *,
-                    js::DefaultHasher<JSCompartment *>,
-                    js::SystemAllocPolicy> XPCCompartmentSet;
-
-typedef XPCCompartmentSet::Range XPCCompartmentRange;
-
 /***************************************************************************/
 // Useful macros...
 
@@ -718,9 +712,6 @@ public:
     XPCWrappedNativeProtoMap* GetDetachedWrappedNativeProtoMap() const
         {return mDetachedWrappedNativeProtoMap;}
 
-    XPCCompartmentSet& GetCompartmentSet()
-        {return mCompartmentSet;}
-
     XPCLock* GetMapLock() const {return mMapLock;}
 
     JSBool OnJSContextNew(JSContext* cx);
@@ -958,7 +949,6 @@ private:
     XPCNativeScriptableSharedMap* mNativeScriptableSharedMap;
     XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
     XPCWrappedNativeProtoMap* mDetachedWrappedNativeProtoMap;
-    XPCCompartmentSet        mCompartmentSet;
     XPCLock* mMapLock;
     PRThread* mThreadRunningGC;
     nsTArray<nsXPCWrappedJS*> mWrappedJSToReleaseArray;
