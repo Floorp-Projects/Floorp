@@ -110,6 +110,15 @@ const DB_MIGRATE_METADATA= ["installDate", "userDisabled", "softDisabled",
                             "sourceURI", "applyBackgroundUpdates",
                             "releaseNotesURI", "isForeignInstall", "syncGUID"];
 
+// Note: When adding/changing/removing items here, remember to change the
+// DB schema version to ensure changes are picked up ASAP.
+const STATIC_BLOCKLIST_PATTERNS = [
+  { creator: "Mozilla Corp.",
+    level: Ci.nsIBlocklistService.STATE_BLOCKED,
+    blockID: "i162" }
+];
+
+
 const BOOTSTRAP_REASONS = {
   APP_STARTUP     : 1,
   APP_SHUTDOWN    : 2,
@@ -177,6 +186,19 @@ for (let name of LAZY_OBJECTS) {
     let objs = loadLazyObjects();
     return objs[name];
   });
+}
+
+
+function findMatchingStaticBlocklistItem(aAddon) {
+  for (let item of STATIC_BLOCKLIST_PATTERNS) {
+    if ("creator" in item && typeof item.creator == "string") {
+      if ((aAddon.defaultLocale && aAddon.defaultLocale.creator == item.creator) ||
+          (aAddon.selectedLocale && aAddon.selectedLocale.creator == item.creator)) {
+        return item;
+      }
+    }
+  }
+  return null;
 }
 
 
@@ -5590,12 +5612,22 @@ AddonInternal.prototype = {
   },
 
   get blocklistState() {
+    let staticItem = findMatchingStaticBlocklistItem(this);
+    if (staticItem)
+      return staticItem.level;
+
     let bs = Cc["@mozilla.org/extensions/blocklist;1"].
              getService(Ci.nsIBlocklistService);
     return bs.getAddonBlocklistState(this.id, this.version);
   },
 
   get blocklistURL() {
+    let staticItem = findMatchingStaticBlocklistItem(this);
+    if (staticItem) {
+      let url = Services.urlFormatter.formatURLPref("extensions.blocklist.itemURL");
+      return url.replace(/%blockID%/g, staticItem.blockID);
+    }
+
     let bs = Cc["@mozilla.org/extensions/blocklist;1"].
              getService(Ci.nsIBlocklistService);
     return bs.getAddonBlocklistURL(this.id, this.version);
