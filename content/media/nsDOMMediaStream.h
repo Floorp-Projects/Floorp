@@ -11,8 +11,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPrincipal.h"
 
-class nsXPCClassInfo;
-
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with NS_DECL_NSIDOMMEDIASTREAM, containing
 // currentTime getter.
@@ -25,7 +23,6 @@ class nsXPCClassInfo;
  */
 class nsDOMMediaStream : public nsIDOMMediaStream
 {
-  friend class nsDOMLocalMediaStream;
   typedef mozilla::MediaStream MediaStream;
 
 public:
@@ -83,30 +80,6 @@ protected:
   // tells the SDP generator about whether this
   // MediaStream probably has audio and/or video
   uint32_t mHintContents;
-};
-
-class nsDOMLocalMediaStream : public nsDOMMediaStream,
-                              public nsIDOMLocalMediaStream
-{
-public:
-  nsDOMLocalMediaStream() {}
-  virtual ~nsDOMLocalMediaStream() {}
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMLocalMediaStream, nsDOMMediaStream)
-  NS_DECL_NSIDOMLOCALMEDIASTREAM
-
-  NS_FORWARD_NSIDOMMEDIASTREAM(nsDOMMediaStream::)
-
-  /**
-   * Create an nsDOMLocalMediaStream whose underlying stream is a SourceMediaStream.
-   */
-  static already_AddRefed<nsDOMLocalMediaStream> CreateInputStream(uint32_t aHintContents);
-
-  /**
-   * Create an nsDOMLocalMediaStream whose underlying stream is a TrackUnionStream.
-   */
-  static already_AddRefed<nsDOMLocalMediaStream> CreateTrackUnionStream();
 };
 
 #endif /* NSDOMMEDIASTREAM_H_ */

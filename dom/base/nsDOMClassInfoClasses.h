@@ -426,7 +426,6 @@ DOMCI_CLASS(TimeRanges)
 
 // Media streams
 DOMCI_CLASS(MediaStream)
-DOMCI_CLASS(LocalMediaStream)
 #endif
 
 DOMCI_CLASS(XMLHttpRequestUpload)

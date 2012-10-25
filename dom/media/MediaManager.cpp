@@ -244,11 +244,11 @@ public:
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
     // Create a media stream.
-    nsRefPtr<nsDOMLocalMediaStream> stream;
+    nsCOMPtr<nsDOMMediaStream> stream;
     uint32_t hints = (mAudioSource ? nsDOMMediaStream::HINT_CONTENTS_AUDIO : 0);
     hints |= (mVideoSource ? nsDOMMediaStream::HINT_CONTENTS_VIDEO : 0);
 
-    stream = nsDOMLocalMediaStream::CreateInputStream(hints);
+    stream = nsDOMMediaStream::CreateInputStream(hints);
 
     nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
       (nsGlobalWindow::GetInnerWindowWithId(mWindowID));
@@ -299,7 +299,7 @@ public:
       MutexAutoLock lock(MediaManager::Get()->GetMutex());
       if (activeWindows->Get(mWindowID)) {
         LOG(("Returning success for getUserMedia()"));
-        success->OnSuccess(static_cast<nsIDOMLocalMediaStream*>(stream));
+        success->OnSuccess(stream);
       }
     }
 
