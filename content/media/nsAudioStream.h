@@ -10,6 +10,7 @@
 #include "nsISupportsImpl.h"
 #include "nsIThread.h"
 #include "nsAutoPtr.h"
+#include "AudioSampleFormat.h"
 
 // Access to a single instance of this class must be synchronized by
 // callers, or made from a single thread.  One exception is that access to
@@ -18,15 +19,6 @@
 class nsAudioStream : public nsISupports
 {
 public:
-
-  enum SampleFormat
-  {
-    // Native-endian signed 16-bit audio samples
-    FORMAT_S16,
-    // Signed 32-bit float samples
-    FORMAT_FLOAT32
-  };
-
   nsAudioStream()
     : mRate(0),
       mChannels(0)
@@ -107,11 +99,11 @@ public:
   int GetRate() { return mRate; }
   int GetChannels() { return mChannels; }
 
-  static SampleFormat Format() {
+  static mozilla::AudioSampleFormat Format() {
 #ifdef MOZ_SAMPLE_TYPE_S16
-    return nsAudioStream::FORMAT_S16;
+    return mozilla::AUDIO_FORMAT_S16;
 #else
-    return nsAudioStream::FORMAT_FLOAT32;
+    return mozilla::AUDIO_FORMAT_FLOAT32;
 #endif
   }
 

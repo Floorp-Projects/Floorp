@@ -5,6 +5,8 @@
 
 #include "AudioSegment.h"
 
+#include "nsAudioStream.h"
+
 namespace mozilla {
 
 /*
@@ -80,14 +82,14 @@ InterleaveAndConvertBuffer(const SrcT* aSource, int32_t aSourceLength,
                            int32_t aLength,
                            float aVolume,
                            int32_t aChannels,
-                           void* aOutput, nsAudioStream::SampleFormat aOutputFormat)
+                           void* aOutput, AudioSampleFormat aOutputFormat)
 {
   switch (aOutputFormat) {
-  case nsAudioStream::FORMAT_FLOAT32:
+  case AUDIO_FORMAT_FLOAT32:
     InterleaveAndConvertBuffer(aSource, aSourceLength, aLength, aVolume,
                                aChannels, static_cast<float*>(aOutput));
     break;
-  case nsAudioStream::FORMAT_S16:
+  case AUDIO_FORMAT_S16:
     InterleaveAndConvertBuffer(aSource, aSourceLength, aLength, aVolume,
                                aChannels, static_cast<int16_t*>(aOutput));
     break;
@@ -95,22 +97,22 @@ InterleaveAndConvertBuffer(const SrcT* aSource, int32_t aSourceLength,
 }
 
 static void
-InterleaveAndConvertBuffer(const void* aSource, nsAudioStream::SampleFormat aSourceFormat,
+InterleaveAndConvertBuffer(const void* aSource, AudioSampleFormat aSourceFormat,
                            int32_t aSourceLength,
                            int32_t aOffset, int32_t aLength,
                            float aVolume,
                            int32_t aChannels,
-                           void* aOutput, nsAudioStream::SampleFormat aOutputFormat)
+                           void* aOutput, AudioSampleFormat aOutputFormat)
 {
   switch (aSourceFormat) {
-  case nsAudioStream::FORMAT_FLOAT32:
+  case AUDIO_FORMAT_FLOAT32:
     InterleaveAndConvertBuffer(static_cast<const float*>(aSource) + aOffset, aSourceLength,
                                aLength,
                                aVolume,
                                aChannels,
                                aOutput, aOutputFormat);
     break;
-  case nsAudioStream::FORMAT_S16:
+  case AUDIO_FORMAT_S16:
     InterleaveAndConvertBuffer(static_cast<const int16_t*>(aSource) + aOffset, aSourceLength,
                                aLength,
                                aVolume,
