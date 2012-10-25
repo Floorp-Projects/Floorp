@@ -509,11 +509,17 @@ let SocialShareButton = {
     this.unsharePopup.hidePopup();
   },
 
+  canSharePage: function SSB_canSharePage(aURI) {
+    // We only allow sharing of http or https
+    return aURI && (aURI.schemeIs('http') || aURI.schemeIs('https'));
+  },
+
   updateButtonHiddenState: function SSB_updateButtonHiddenState() {
     let shareButton = this.shareButton;
     if (shareButton)
       shareButton.hidden = !Social.uiVisible || this.promptImages == null ||
-                           !SocialUI.haveLoggedInUser();
+                           !SocialUI.haveLoggedInUser() ||
+                           !this.canSharePage(gBrowser.currentURI);
   },
 
   onClick: function SSB_onClick(aEvent) {
@@ -566,7 +572,12 @@ let SocialShareButton = {
   },
 
   updateShareState: function SSB_updateShareState() {
-    let currentPageShared = Social.isPageShared(gBrowser.currentURI);
+    // we might have been called due to a location change, and the new location
+    // might change the state of "can this url be shared"
+    this.updateButtonHiddenState();
+
+    let shareButton = this.shareButton;
+    let currentPageShared = shareButton && !shareButton.hidden && Social.isPageShared(gBrowser.currentURI);
 
     // Provide a11y-friendly notification of share.
     let status = document.getElementById("share-button-status");
@@ -583,7 +594,6 @@ let SocialShareButton = {
     }
 
     // Update the share button, if present
-    let shareButton = this.shareButton;
     if (!shareButton || shareButton.hidden)
       return;
 
