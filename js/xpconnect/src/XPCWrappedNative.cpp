@@ -525,8 +525,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         ac.construct(ccx, parent);
 
         if (parent != plannedParent) {
-            XPCWrappedNativeScope* betterScope =
-                XPCWrappedNativeScope::FindInJSObjectScope(ccx, parent);
+            XPCWrappedNativeScope* betterScope = ObjectScope(parent);
             if (betterScope != Scope)
                 return GetNewOrUsed(ccx, helper, betterScope, Interface, resultWrapper);
 
@@ -1788,11 +1787,7 @@ XPCWrappedNative::RescueOrphans(XPCCallContext& ccx)
     JSObject *parentGhost = js::GetObjectParent(mFlatJSObject);
     JSObject *realParent = js::UnwrapObject(parentGhost);
     nsRefPtr<XPCWrappedNative> ignored;
-    return ReparentWrapperIfFound(ccx,
-                                  XPCWrappedNativeScope::
-                                    FindInJSObjectScope(ccx, parentGhost),
-                                  XPCWrappedNativeScope::
-                                    FindInJSObjectScope(ccx, realParent),
+    return ReparentWrapperIfFound(ccx, ObjectScope(parentGhost), ObjectScope(realParent),
                                   realParent, mIdentity, getter_AddRefs(ignored));
 }
 
@@ -3816,8 +3811,7 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     JSAutoCompartment ac(ccx, parent);
 
     if (parent != plannedParent) {
-        XPCWrappedNativeScope *newXpcScope =
-            XPCWrappedNativeScope::FindInJSObjectScope(ccx, parent);
+        XPCWrappedNativeScope *newXpcScope = ObjectScope(parent);
         if (newXpcScope != xpcScope) {
             SLIM_LOG_NOT_CREATED(ccx, identityObj, "crossing origins");
 
