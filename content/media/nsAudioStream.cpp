@@ -133,7 +133,7 @@ class AudioInitEvent : public nsRunnable
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
     mOwner->mAudioChild =  static_cast<AudioChild*>(cpc->SendPAudioConstructor(mOwner->mChannels,
                                                                                mOwner->mRate,
-                                                                               MOZ_AUDIO_DATA_FORMAT));
+                                                                               Format()));
     return NS_OK;
   }
 

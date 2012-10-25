@@ -158,7 +158,7 @@ AudioSegment::WriteTo(nsAudioStream* aOutput)
 {
   NS_ASSERTION(mChannels == aOutput->GetChannels(), "Wrong number of channels");
   nsAutoTArray<uint8_t,STATIC_AUDIO_BUFFER_BYTES> buf;
-  uint32_t frameSize = GetSampleSize(aOutput->GetFormat())*mChannels;
+  uint32_t frameSize = GetSampleSize(nsAudioStream::Format())*mChannels;
   for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
     AudioChunk& c = *ci;
     if (frameSize*c.mDuration > UINT32_MAX) {
@@ -171,7 +171,7 @@ AudioSegment::WriteTo(nsAudioStream* aOutput)
                                  c.mOffset, int32_t(c.mDuration),
                                  c.mVolume,
                                  aOutput->GetChannels(),
-                                 buf.Elements(), aOutput->GetFormat());
+                                 buf.Elements(), nsAudioStream::Format());
     } else {
       // Assumes that a bit pattern of zeroes == 0.0f
       memset(buf.Elements(), 0, buf.Length());
