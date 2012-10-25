@@ -1548,6 +1548,19 @@ abstract public class GeckoApp
 
     protected void initializeChrome(String uri, Boolean isExternalURL) {
         mDoorHangerPopup = new DoorHangerPopup(this, null);
+        mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
+        mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
+
+        if (cameraView == null) {
+            cameraView = new SurfaceView(this);
+            cameraView.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        }
+
+        if (mLayerView == null) {
+            LayerView layerView = (LayerView) findViewById(R.id.layer_view);
+            layerView.initializeView(GeckoAppShell.getEventDispatcher());
+            mLayerView = layerView;
+        }
     }
 
     private void initialize() {
@@ -1656,20 +1669,6 @@ abstract public class GeckoApp
                 }
             }, 1000 * 5 /* 5 seconds */);
         }
-
-        if (cameraView == null) {
-            cameraView = new SurfaceView(this);
-            cameraView.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        }
-
-        if (mLayerView == null) {
-            LayerView layerView = (LayerView) findViewById(R.id.layer_view);
-            layerView.initializeView(GeckoAppShell.getEventDispatcher());
-            mLayerView = layerView;
-        }
-
-        mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
-        mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
 
         //register for events
         registerEventListener("DOMContentLoaded");
