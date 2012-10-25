@@ -2602,12 +2602,12 @@ nsGlobalWindow::DialogsAreBeingAbused()
   NS_ASSERTION(GetScriptableTop() &&
                GetScriptableTop()->GetCurrentInnerWindowInternal() == this,
                "DialogsAreBeingAbused called with invalid window");
-            
+
   if (mLastDialogQuitTime.IsNull() ||
-      nsContentUtils::CallerHasUniversalXPConnect()) {
+      nsContentUtils::IsCallerChrome()) {
     return false;
   }
- 
+
   TimeDuration dialogInterval(TimeStamp::Now() - mLastDialogQuitTime);
   if (dialogInterval.ToSeconds() <
       Preferences::GetInt("dom.successive_dialog_time_limit",
