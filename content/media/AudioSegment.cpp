@@ -27,7 +27,7 @@ InterleaveAndConvertBuffer(const SrcT* aSource, int32_t aSourceLength,
   }
 }
 
-static void
+static inline void
 InterleaveAndConvertBuffer(const int16_t* aSource, int32_t aSourceLength,
                            int32_t aLength,
                            float aVolume,
@@ -35,34 +35,24 @@ InterleaveAndConvertBuffer(const int16_t* aSource, int32_t aSourceLength,
                            int16_t* aOutput)
 {
   int16_t* output = aOutput;
-  float v = NS_MAX(NS_MIN(aVolume, 1.0f), -1.0f);
-  int32_t volume = int32_t((1 << 16) * v);
+  if (0.0f <= aVolume && aVolume <= 1.0f) {
+    int32_t scale = int32_t((1 << 16) * aVolume);
+    for (int32_t i = 0; i < aLength; ++i) {
+      for (int32_t channel = 0; channel < aChannels; ++channel) {
+        int16_t s = aSource[channel*aSourceLength + i];
+        *output = int16_t((int32_t(s) * scale) >> 16);
+        ++output;
+      }
+    }
+    return;
+  }
+
   for (int32_t i = 0; i < aLength; ++i) {
     for (int32_t channel = 0; channel < aChannels; ++channel) {
-      int16_t s = aSource[channel*aSourceLength + i];
-      *output = int16_t((int32_t(s) * volume) >> 16);
+      float v = AudioSampleToFloat(aSource[channel*aSourceLength + i])*aVolume;
+      *output = FloatToAudioSample<int16_t>(v);
       ++output;
     }
-  }
-}
-
-template <class SrcT>
-static void
-InterleaveAndConvertBuffer(const SrcT* aSource, int32_t aSourceLength,
-                           int32_t aLength,
-                           float aVolume,
-                           int32_t aChannels,
-                           void* aOutput, AudioSampleFormat aOutputFormat)
-{
-  switch (aOutputFormat) {
-  case AUDIO_FORMAT_FLOAT32:
-    InterleaveAndConvertBuffer(aSource, aSourceLength, aLength, aVolume,
-                               aChannels, static_cast<float*>(aOutput));
-    break;
-  case AUDIO_FORMAT_S16:
-    InterleaveAndConvertBuffer(aSource, aSourceLength, aLength, aVolume,
-                               aChannels, static_cast<int16_t*>(aOutput));
-    break;
   }
 }
 
@@ -72,22 +62,24 @@ InterleaveAndConvertBuffer(const void* aSource, AudioSampleFormat aSourceFormat,
                            int32_t aOffset, int32_t aLength,
                            float aVolume,
                            int32_t aChannels,
-                           void* aOutput, AudioSampleFormat aOutputFormat)
+                           AudioDataValue* aOutput)
 {
   switch (aSourceFormat) {
   case AUDIO_FORMAT_FLOAT32:
-    InterleaveAndConvertBuffer(static_cast<const float*>(aSource) + aOffset, aSourceLength,
+    InterleaveAndConvertBuffer(static_cast<const float*>(aSource) + aOffset,
+                               aSourceLength,
                                aLength,
                                aVolume,
                                aChannels,
-                               aOutput, aOutputFormat);
+                               aOutput);
     break;
   case AUDIO_FORMAT_S16:
-    InterleaveAndConvertBuffer(static_cast<const int16_t*>(aSource) + aOffset, aSourceLength,
+    InterleaveAndConvertBuffer(static_cast<const int16_t*>(aSource) + aOffset,
+                               aSourceLength,
                                aLength,
                                aVolume,
                                aChannels,
-                               aOutput, aOutputFormat);
+                               aOutput);
     break;
   }
 }
@@ -100,30 +92,29 @@ AudioSegment::ApplyVolume(float aVolume)
   }
 }
 
-static const int STATIC_AUDIO_BUFFER_BYTES = 50000;
+static const int STATIC_AUDIO_SAMPLES = 10000;
 
 void
 AudioSegment::WriteTo(nsAudioStream* aOutput)
 {
   NS_ASSERTION(mChannels == aOutput->GetChannels(), "Wrong number of channels");
-  nsAutoTArray<uint8_t,STATIC_AUDIO_BUFFER_BYTES> buf;
-  uint32_t frameSize = GetSampleSize(AUDIO_OUTPUT_FORMAT)*mChannels;
+  nsAutoTArray<AudioDataValue,STATIC_AUDIO_SAMPLES> buf;
   for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
     AudioChunk& c = *ci;
-    if (frameSize*c.mDuration > UINT32_MAX) {
+    if (uint64_t(mChannels)*c.mDuration > INT32_MAX) {
       NS_ERROR("Buffer overflow");
       return;
     }
-    buf.SetLength(int32_t(frameSize*c.mDuration));
+    buf.SetLength(int32_t(mChannels*c.mDuration));
     if (c.mBuffer) {
       InterleaveAndConvertBuffer(c.mBuffer->Data(), c.mBufferFormat, c.mBufferLength,
                                  c.mOffset, int32_t(c.mDuration),
                                  c.mVolume,
                                  aOutput->GetChannels(),
-                                 buf.Elements(), AUDIO_OUTPUT_FORMAT);
+                                 buf.Elements());
     } else {
       // Assumes that a bit pattern of zeroes == 0.0f
-      memset(buf.Elements(), 0, buf.Length());
+      memset(buf.Elements(), 0, buf.Length()*sizeof(AudioDataValue));
     }
     aOutput->Write(buf.Elements(), int32_t(c.mDuration));
   }

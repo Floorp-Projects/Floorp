@@ -66,16 +66,6 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
 public:
   typedef mozilla::AudioSampleFormat SampleFormat;
 
-  static int GetSampleSize(SampleFormat aFormat)
-  {
-    switch (aFormat) {
-    case AUDIO_FORMAT_S16: return 2;
-    case AUDIO_FORMAT_FLOAT32: return 4;
-    }
-    NS_ERROR("Bad format");
-    return 0;
-  }
-
   AudioSegment() : MediaSegmentBase<AudioSegment, AudioChunk>(AUDIO), mChannels(0) {}
 
   bool IsInitialized()
@@ -92,19 +82,6 @@ public:
   {
     NS_ASSERTION(IsInitialized(), "Not initialized");
     return mChannels;
-  }
-  /**
-   * Returns the format of the first audio frame that has data, or
-   * AUDIO_FORMAT_FLOAT32 if there is none.
-   */
-  SampleFormat GetFirstFrameFormat()
-  {
-    for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
-      if (ci->mBuffer) {
-        return ci->mBufferFormat;
-      }
-    }
-    return AUDIO_FORMAT_FLOAT32;
   }
   void AppendFrames(already_AddRefed<SharedBuffer> aBuffer, int32_t aBufferLength,
                     int32_t aStart, int32_t aEnd, SampleFormat aFormat)
