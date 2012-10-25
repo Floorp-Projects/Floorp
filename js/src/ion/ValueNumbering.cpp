@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Ion.h"
+#include "IonBuilder.h"
 #include "IonSpewer.h"
 #include "CompileInfo.h"
 #include "ValueNumbering.h"
@@ -13,8 +14,9 @@
 using namespace js;
 using namespace js::ion;
 
-ValueNumberer::ValueNumberer(MIRGraph &graph, bool optimistic)
-  : graph_(graph),
+ValueNumberer::ValueNumberer(MIRGenerator *mir, MIRGraph &graph, bool optimistic)
+  : mir(mir),
+    graph_(graph),
     pessimisticPass_(!optimistic),
     count_(0)
 { }
@@ -145,6 +147,8 @@ ValueNumberer::computeValueNumbers()
         return false;
     // Stick a VN object onto every mdefinition
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
+        if (mir->shouldCancel("Value Numbering (preparation loop"))
+            return false;
         for (MDefinitionIterator iter(*block); iter; iter++)
             iter->setValueNumberData(new ValueNumberData);
         MControlInstruction *jump = block->lastIns();
@@ -189,6 +193,8 @@ ValueNumberer::computeValueNumbers()
         }
 #endif
         for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
+            if (mir->shouldCancel("Value Numbering (main loop)"))
+                return false;
             for (MDefinitionIterator iter(*block); iter; ) {
 
                 if (!isMarked(*iter)) {
@@ -325,6 +331,8 @@ ValueNumberer::eliminateRedundancies()
 
     // Starting from each self-dominating block, traverse the CFG in pre-order.
     while (!worklist.empty()) {
+        if (mir->shouldCancel("Value Numbering (eliminate loop)"))
+            return false;
         MBasicBlock *block = worklist.popCopy();
 
         IonSpew(IonSpew_GVN, "Looking at block %d", block->id());
