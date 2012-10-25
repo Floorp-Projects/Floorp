@@ -55,6 +55,19 @@ public:
 
   static void     ReleaseHandle(uint32_t aHwHandle);
   static uint32_t GetHandle(GonkCamera* aTarget, uint32_t aCamera);
+
+  /**
+   * The physical orientation of the camera sensor: 0, 90, 180, or 270.
+   *
+   * For example, suppose a device has a naturally tall screen. The
+   * back-facing camera sensor is mounted in landscape. You are looking at
+   * the screen. If the top side of the camera sensor is aligned with the
+   * right edge of the screen in natural orientation, the value should be
+   * 90. If the top side of a front-facing camera sensor is aligned with the
+   * right of the screen, the value should be 270.
+   */
+  static int      GetSensorOrientation(uint32_t aHwHandle);
+
   static int      AutoFocus(uint32_t aHwHandle);
   static void     CancelAutoFocus(uint32_t aHwHandle);
   static int      TakePicture(uint32_t aHwHandle);
@@ -103,6 +116,7 @@ protected:
 #endif
   sp<GonkCameraListener>        mListener;
   bool                          mInitialized;
+  int                           mSensorOrientation;
 
   bool IsInitialized()
   {
