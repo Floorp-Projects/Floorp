@@ -3750,8 +3750,9 @@ pref("dom.mozSettings.enabled", false);
 pref("dom.mozPermissionSettings.enabled", false);
 
 // W3C touch events
+// 0 - disabled, 1 - enabled, 2 - autodetect (win)
 #ifdef XP_WIN
-pref("dom.w3c_touch_events.enabled", true);
+pref("dom.w3c_touch_events.enabled", 2);
 #endif
 
 // enable JS dump() function.
