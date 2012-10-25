@@ -320,11 +320,7 @@ XPCWrappedNative::WrapNewGlobal(XPCCallContext &ccx, xpcObjectHelper &nativeHelp
     // create ends up there.
     JSAutoCompartment ac(ccx, global);
 
-    // If requested, immediately initialize the standard classes on the global.
-    // We need to do this before creating a scope, because
-    // XPCWrappedNativeScope::SetGlobal resolves |Object| via
-    // JS_ResolveStandardClass. JS_InitStandardClasses asserts if any of the
-    // standard classes are already initialized, so this is a problem.
+    // If requested, initialize the standard classes on the global.
     if (initStandardClasses && ! JS_InitStandardClasses(ccx, global))
         return NS_ERROR_FAILURE;
 
@@ -1144,7 +1140,7 @@ XPCWrappedNative::Init(XPCCallContext& ccx, JSObject* parent,
         return false;
     }
 
-    mFlatJSObject = xpc_NewSystemInheritingJSObject(ccx, jsclazz, protoJSObject, false, parent);
+    mFlatJSObject = JS_NewObject(ccx, jsclazz, protoJSObject, parent);
     if (!mFlatJSObject)
         return false;
 
@@ -2215,11 +2211,9 @@ XPCWrappedNative::InitTearOffJSObject(XPCCallContext& ccx,
 {
     // This is only called while locked (during XPCWrappedNative::FindTearOff).
 
-    JSObject* obj =
-        xpc_NewSystemInheritingJSObject(ccx, Jsvalify(&XPC_WN_Tearoff_JSClass),
-                                        GetScope()->GetPrototypeJSObject(),
-                                        false, mFlatJSObject);
-
+    JSObject* obj = JS_NewObject(ccx, Jsvalify(&XPC_WN_Tearoff_JSClass),
+                                 JS_GetObjectPrototype(ccx, mFlatJSObject),
+                                 mFlatJSObject);
     if (!obj)
         return false;
 
@@ -3860,9 +3854,7 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     if (!jsclazz)
         return false;
 
-    wrapper = xpc_NewSystemInheritingJSObject(ccx, jsclazz,
-                                              xpcproto->GetJSProtoObject(),
-                                              false, parent);
+    wrapper = JS_NewObject(ccx, jsclazz, xpcproto->GetJSProtoObject(), parent);
     if (!wrapper)
         return false;
 
