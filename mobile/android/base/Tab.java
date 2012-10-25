@@ -158,11 +158,12 @@ public class Tab {
         if (mThumbnailBuffer != null && mThumbnailBuffer.capacity() == capacity)
             return mThumbnailBuffer;
         freeBuffer();
+        mThumbnailBitmap = null;
         mThumbnailBuffer = DirectBufferAllocator.allocate(capacity);
         return mThumbnailBuffer;
     }
 
-    public Bitmap getThumbnailBitmap() {
+    synchronized public Bitmap getThumbnailBitmap() {
         if (mThumbnailBitmap != null)
             return mThumbnailBitmap;
         return mThumbnailBitmap = Bitmap.createBitmap(Tabs.getThumbnailWidth(), Tabs.getThumbnailHeight(), Bitmap.Config.RGB_565);
@@ -236,7 +237,6 @@ public class Tab {
             mUrl = url;
             Log.d(LOGTAG, "Updated URL for tab with id: " + mId);
             updateBookmark();
-            updateHistory(mUrl, mTitle);
         }
     }
 
@@ -295,7 +295,7 @@ public class Tab {
 
         if (mState != Tab.STATE_LOADING)
             mEnteringReaderMode = false;
-        }
+    }
 
     public int getState() {
         return mState;
@@ -498,7 +498,6 @@ public class Tab {
             final String url = message.getString("url");
             mHistoryIndex++;
             mHistorySize = mHistoryIndex + 1;
-            addHistory(url);
         } else if (event.equals("Back")) {
             if (!canDoBack()) {
                 Log.e(LOGTAG, "Received unexpected back notification");

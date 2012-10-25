@@ -35,6 +35,22 @@ public:
   virtual nsISupports* GetParentObject();
 };
 
+// IID for nsRenamedInterface
+#define NS_RENAMED_INTERFACE_IID \
+{ 0xd4b19ef3, 0xe68b, 0x4e3f, \
+ { 0x94, 0xbc, 0xc9, 0xde, 0x3a, 0x69, 0xb0, 0xe8 } }
+
+class nsRenamedInterface : public nsISupports,
+                           public nsWrapperCache
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_RENAMED_INTERFACE_IID)
+  NS_DECL_ISUPPORTS
+
+  // We need a GetParentObject to make binding codegen happy
+  virtual nsISupports* GetParentObject();
+};
+
 // IID for the IndirectlyImplementedInterface
 #define NS_INDIRECTLY_IMPLEMENTED_INTERFACE_IID \
 { 0xfed55b69, 0x7012, 0x4849, \
@@ -415,6 +431,9 @@ public:
   // Miscellania
   int32_t AttrWithLenientThis();
   void SetAttrWithLenientThis(int32_t);
+  uint32_t UnforgeableAttr();
+  uint32_t UnforgeableAttr2();
+  void PassRenamedInterface(nsRenamedInterface&);
 
   // Methods and properties imported via "implements"
   bool ImplementedProperty();
