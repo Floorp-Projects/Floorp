@@ -396,9 +396,12 @@ public:
 
   nsPIDOMWindow* GetWindow() const { return mWindow; }
 
-  NS_IMETHODIMP CreateOffer(MediaConstraints& constraints);
-
-  NS_IMETHODIMP CreateAnswer(MediaConstraints& constraints);
+  // Validate constraints and construct a MediaConstraints object
+  // from a JS::Value.
+  nsresult ConvertConstraints(
+    const JS::Value& aConstraints, MediaConstraints* aObj, JSContext* aCx);
+  NS_IMETHODIMP CreateOffer(MediaConstraints& aConstraints);
+  NS_IMETHODIMP CreateAnswer(MediaConstraints& aConstraints);
 
 private:
   PeerConnectionImpl(const PeerConnectionImpl&rhs);
