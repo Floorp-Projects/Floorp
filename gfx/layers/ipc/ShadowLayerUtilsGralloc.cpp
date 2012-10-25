@@ -22,6 +22,7 @@
 using namespace android;
 using namespace base;
 using namespace mozilla::layers;
+using namespace mozilla::gl;
 
 namespace IPC {
 
