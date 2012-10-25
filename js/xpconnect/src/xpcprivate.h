@@ -1718,7 +1718,23 @@ public:
         return mExperimentalBindingsEnabled;
     }
 
+    typedef nsTHashtable<nsPtrHashKey<JSObject> > DOMExpandoMap;
+
+    bool RegisterDOMExpandoObject(JSObject *expando) {
+        if (!mDOMExpandoMap) {
+            mDOMExpandoMap = new DOMExpandoMap();
+            mDOMExpandoMap->Init(8);
+        }
+        return mDOMExpandoMap->PutEntry(expando, mozilla::fallible_t());
+    }
+    void RemoveDOMExpandoObject(JSObject *expando) {
+        if (mDOMExpandoMap)
+            mDOMExpandoMap->RemoveEntry(expando);
+    }
+
     XPCWrappedNativeScope(JSContext *cx, JSObject* aGlobal);
+
+    nsAutoPtr<JSObject2JSObjectMap> mWaiverWrapperMap;
 
 protected:
     virtual ~XPCWrappedNativeScope();
@@ -1749,6 +1765,7 @@ private:
     XPCContext*                      mContext;
 
     nsDataHashtable<nsDepCharHashKey, JSObject*> mCachedDOMPrototypes;
+    nsAutoPtr<DOMExpandoMap> mDOMExpandoMap;
 
     JSBool mExperimentalBindingsEnabled;
 };
@@ -4276,8 +4293,6 @@ namespace xpc {
 class CompartmentPrivate
 {
 public:
-    typedef nsTHashtable<nsPtrHashKey<JSObject> > DOMExpandoMap;
-
     CompartmentPrivate()
         : wantXrays(false)
         , universalXPConnectEnabled(false)
@@ -4299,20 +4314,6 @@ public:
     // Our XPCWrappedNativeScope. This is non-null if and only if this is an
     // XPConnect compartment.
     XPCWrappedNativeScope *scope;
-    nsAutoPtr<JSObject2JSObjectMap> waiverWrapperMap;
-    nsAutoPtr<DOMExpandoMap> domExpandoMap;
-
-    bool RegisterDOMExpandoObject(JSObject *expando) {
-        if (!domExpandoMap) {
-            domExpandoMap = new DOMExpandoMap();
-            domExpandoMap->Init(8);
-        }
-        return domExpandoMap->PutEntry(expando, mozilla::fallible_t());
-    }
-    void RemoveDOMExpandoObject(JSObject *expando) {
-        if (domExpandoMap)
-            domExpandoMap->RemoveEntry(expando);
-    }
 
     const nsACString& GetLocation() {
         if (locationURI) {

@@ -328,14 +328,6 @@ TraceJSHolder(void *holder, nsScriptObjectTracer *&tracer, void *arg)
     return PL_DHASH_NEXT;
 }
 
-static PLDHashOperator
-TraceDOMExpandos(nsPtrHashKey<JSObject> *expando, void *aClosure)
-{
-    JS_CALL_OBJECT_TRACER(static_cast<JSTracer *>(aClosure), expando->GetKey(),
-                          "DOM expando object");
-    return PL_DHASH_NEXT;
-}
-
 void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 {
     JSContext *iter = nullptr;
@@ -356,14 +348,6 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
         static_cast<nsXPCWrappedJS*>(e)->TraceJS(trc);
 
     mJSHolders.Enumerate(TraceJSHolder, trc);
-
-    // Trace compartments.
-    XPCCompartmentSet &set = GetCompartmentSet();
-    for (XPCCompartmentRange r = set.all(); !r.empty(); r.popFront()) {
-        CompartmentPrivate *priv = GetCompartmentPrivate(r.front());
-        if (priv->domExpandoMap)
-            priv->domExpandoMap->EnumerateEntries(TraceDOMExpandos, trc);
-    }
 }
 
 struct Closure
@@ -417,19 +401,6 @@ XPCJSRuntime::SuspectWrappedNative(XPCWrappedNative *wrapper,
     JSObject* obj = wrapper->GetFlatJSObjectPreserveColor();
     if (xpc_IsGrayGCThing(obj) || cb.WantAllTraces())
         cb.NoteJSRoot(obj);
-}
-
-static PLDHashOperator
-SuspectDOMExpandos(nsPtrHashKey<JSObject> *key, void *arg)
-{
-    Closure *closure = static_cast<Closure*>(arg);
-    JSObject* obj = key->GetKey();
-    const dom::DOMClass* clasp;
-    dom::DOMObjectSlot slot = GetDOMClass(obj, clasp);
-    MOZ_ASSERT(slot != dom::eNonDOMObject && clasp->mDOMObjectIsISupports);
-    nsISupports* native = dom::UnwrapDOMObject<nsISupports>(obj, slot);
-    closure->cb->NoteXPCOMRoot(native);
-    return PL_DHASH_NEXT;
 }
 
 bool
@@ -503,14 +474,6 @@ XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionTraversalCallback &cb)
 
     Closure closure = { true, &cb };
     mJSHolders.Enumerate(NoteJSHolder, &closure);
-
-    // Suspect objects with expando objects.
-    XPCCompartmentSet &set = GetCompartmentSet();
-    for (XPCCompartmentRange r = set.all(); !r.empty(); r.popFront()) {
-        CompartmentPrivate *priv = GetCompartmentPrivate(r.front());
-        if (priv->domExpandoMap)
-            priv->domExpandoMap->EnumerateEntries(SuspectDOMExpandos, &closure);
-    }
 }
 
 static PLDHashOperator
@@ -803,14 +766,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
 
             // Find dying scopes.
             XPCWrappedNativeScope::StartFinalizationPhaseOfGC(fop, self);
-
-            // Sweep compartments.
-            XPCCompartmentSet &set = self->GetCompartmentSet();
-            for (XPCCompartmentRange r = set.all(); !r.empty(); r.popFront()) {
-                CompartmentPrivate *priv = GetCompartmentPrivate(r.front());
-                if (priv->waiverWrapperMap)
-                    priv->waiverWrapperMap->Sweep();
-            }
 
             self->mDoingFinalization = true;
             break;
