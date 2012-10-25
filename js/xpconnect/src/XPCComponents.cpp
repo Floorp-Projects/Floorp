@@ -3309,14 +3309,8 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
 
         {
           JSAutoCompartment ac(ccx, sandbox);
-          XPCWrappedNativeScope* scope =
-              XPCWrappedNativeScope::GetNewOrUsed(ccx, sandbox);
-
-          if (!scope)
-              return NS_ERROR_XPC_UNEXPECTED;
-
           if (options.wantComponents &&
-              !nsXPCComponents::AttachComponentsObject(ccx, scope))
+              !nsXPCComponents::AttachComponentsObject(ccx, XPCWrappedNativeScope::FindInJSObjectScope(ccx, sandbox)))
               return NS_ERROR_XPC_UNEXPECTED;
 
           if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, sandbox))

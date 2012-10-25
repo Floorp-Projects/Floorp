@@ -1087,7 +1087,10 @@ CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal)
     JSObject *global = JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal));
     if (!global)
         return nullptr;
-    EnsureCompartmentPrivate(global);
+    JSAutoCompartment ac(cx, global);
+    // The constructor automatically attaches the scope to the compartment private
+    // of |global|.
+    (void) new XPCWrappedNativeScope(cx, global);
     JSCompartment *compartment = js::GetObjectCompartment(global);
 
     XPCCompartmentSet& set = nsXPConnect::GetRuntimeInstance()->GetCompartmentSet();
