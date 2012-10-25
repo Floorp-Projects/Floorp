@@ -30,7 +30,6 @@
 
 #define nsHtml5Tokenizer_cpp__
 
-#include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsString.h"
