@@ -207,11 +207,6 @@ public:
 
   static bool     IsCallerTrustedForWrite();
 
-  /**
-   * Check whether a caller has UniversalXPConnect.
-   */
-  static bool     CallerHasUniversalXPConnect();
-
   static bool     IsImageSrcSetDisabled();
 
   /**
