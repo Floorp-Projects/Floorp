@@ -1533,13 +1533,6 @@ nsContentUtils::Shutdown()
   nsTextEditorState::ShutDown();
 }
 
-// static
-bool
-nsContentUtils::CallerHasUniversalXPConnect()
-{
-  return IsCallerChrome();
-}
-
 /**
  * Checks whether two nodes come from the same origin. aTrustedNode is
  * considered 'safe' in that a user can operate on it and that it isn't
@@ -1613,8 +1606,8 @@ nsContentUtils::CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
   }
 
   // The subject doesn't subsume aPrincipal. Allow access only if the subject
-  // has UniversalXPConnect.
-  return CallerHasUniversalXPConnect();
+  // is chrome.
+  return IsCallerChrome();
 }
 
 // static
@@ -1789,13 +1782,13 @@ nsContentUtils::IsCallerChrome()
 bool
 nsContentUtils::IsCallerTrustedForRead()
 {
-  return CallerHasUniversalXPConnect();
+  return IsCallerChrome();
 }
 
 bool
 nsContentUtils::IsCallerTrustedForWrite()
 {
-  return CallerHasUniversalXPConnect();
+  return IsCallerChrome();
 }
 
 bool
