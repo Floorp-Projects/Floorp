@@ -1228,7 +1228,7 @@ ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
         static_cast<PBlobParent*>(remoteBlob->GetPBlob()));
     NS_ASSERTION(actor, "Null actor?!");
 
-    if (actor->Manager() == this) {
+    if (static_cast<ContentParent*>(actor->Manager()) == this) {
       return actor;
     }
   }
