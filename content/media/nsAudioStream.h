@@ -12,10 +12,8 @@
 #include "nsAutoPtr.h"
 
 #ifdef MOZ_SAMPLE_TYPE_S16
-#define MOZ_AUDIO_DATA_FORMAT (nsAudioStream::FORMAT_S16)
 typedef short SampleType;
 #else
-#define MOZ_AUDIO_DATA_FORMAT (nsAudioStream::FORMAT_FLOAT32)
 typedef float SampleType;
 #endif
 
@@ -113,7 +111,14 @@ public:
 
   int GetRate() { return mRate; }
   int GetChannels() { return mChannels; }
-  SampleFormat GetFormat() { return MOZ_AUDIO_DATA_FORMAT; }
+
+  static SampleFormat Format() {
+#ifdef MOZ_SAMPLE_TYPE_S16
+    return nsAudioStream::FORMAT_S16;
+#else
+    return nsAudioStream::FORMAT_FLOAT32;
+#endif
+  }
 
 protected:
   nsCOMPtr<nsIThread> mAudioPlaybackThread;
