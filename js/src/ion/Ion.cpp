@@ -122,20 +122,29 @@ ion::InitializeIon()
     return true;
 }
 
-IonCompartment::IonCompartment()
+IonRuntime::IonRuntime()
   : execAlloc_(NULL),
     enterJIT_(NULL),
     bailoutHandler_(NULL),
     argumentsRectifier_(NULL),
     invalidator_(NULL),
-    functionWrappers_(NULL),
-    flusher_(NULL)
+    functionWrappers_(NULL)
 {
 }
 
-bool
-IonCompartment::initialize(JSContext *cx)
+IonRuntime::~IonRuntime()
 {
+    js_delete(functionWrappers_);
+}
+
+bool
+IonRuntime::initialize(JSContext *cx)
+{
+    AutoEnterAtomsCompartment ac(cx);
+
+    if (!cx->compartment->ensureIonCompartmentExists(cx))
+        return false;
+
     execAlloc_ = cx->runtime->getExecAlloc(cx);
     if (!execAlloc_)
         return false;
@@ -144,7 +153,51 @@ IonCompartment::initialize(JSContext *cx)
     if (!functionWrappers_ || !functionWrappers_->init())
         return false;
 
+    if (!bailoutTables_.reserve(FrameSizeClass::ClassLimit().classId()))
+        return false;
+
+    for (uint32 id = 0;; id++) {
+        FrameSizeClass class_ = FrameSizeClass::FromClass(id);
+        if (class_ == FrameSizeClass::ClassLimit())
+            break;
+        bailoutTables_.infallibleAppend(NULL);
+        bailoutTables_[id] = generateBailoutTable(cx, id);
+        if (!bailoutTables_[id])
+            return false;
+    }
+
+    bailoutHandler_ = generateBailoutHandler(cx);
+    if (!bailoutHandler_)
+        return false;
+
+    argumentsRectifier_ = generateArgumentsRectifier(cx);
+    if (!argumentsRectifier_)
+        return false;
+
+    invalidator_ = generateInvalidator(cx);
+    if (!invalidator_)
+        return false;
+
+    enterJIT_ = generateEnterJIT(cx);
+    if (!enterJIT_)
+        return false;
+
+    preBarrier_ = generatePreBarrier(cx);
+    if (!preBarrier_)
+        return false;
+
+    for (VMFunction *fun = VMFunction::functions; fun; fun = fun->next) {
+        if (!generateVMWrapper(cx, *fun))
+            return false;
+    }
+
     return true;
+}
+
+IonCompartment::IonCompartment(IonRuntime *rt)
+  : rt(rt),
+    flusher_(NULL)
+{
 }
 
 void
@@ -191,11 +244,6 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
         mustMarkEnterJIT = true;
     }
 
-    // These must be available if we could be running JIT code; they are not
-    // traced as normal through IonCode or IonScript objects
-    if (mustMarkEnterJIT)
-        MarkIonCodeRoot(trc, enterJIT_.unsafeGet(), "enterJIT");
-
     // functionWrappers_ are not marked because this is a WeakCache of VM
     // function implementations.
 
@@ -207,55 +255,26 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 void
 IonCompartment::sweep(FreeOp *fop)
 {
-    if (enterJIT_ && !IsIonCodeMarked(enterJIT_.unsafeGet()))
-        enterJIT_ = NULL;
-    if (bailoutHandler_ && !IsIonCodeMarked(bailoutHandler_.unsafeGet()))
-        bailoutHandler_ = NULL;
-    if (argumentsRectifier_ && !IsIonCodeMarked(argumentsRectifier_.unsafeGet()))
-        argumentsRectifier_ = NULL;
-    if (invalidator_ && !IsIonCodeMarked(invalidator_.unsafeGet()))
-        invalidator_ = NULL;
-    if (preBarrier_ && !IsIonCodeMarked(preBarrier_.unsafeGet()))
-        preBarrier_ = NULL;
-
-    for (size_t i = 0; i < bailoutTables_.length(); i++) {
-        if (bailoutTables_[i] && !IsIonCodeMarked(bailoutTables_[i].unsafeGet()))
-            bailoutTables_[i] = NULL;
-    }
-
-    // Sweep cache of VM function implementations.
-    functionWrappers_->sweep(fop);
 }
 
 IonCode *
 IonCompartment::getBailoutTable(const FrameSizeClass &frameClass)
 {
     JS_ASSERT(frameClass != FrameSizeClass::None());
-    return bailoutTables_[frameClass.classId()];
+    return rt->bailoutTables_[frameClass.classId()];
 }
 
 IonCode *
-IonCompartment::getBailoutTable(JSContext *cx, const FrameSizeClass &frameClass)
+IonCompartment::getVMWrapper(const VMFunction &f)
 {
-    uint32 id = frameClass.classId();
+    typedef MoveResolver::MoveOperand MoveOperand;
 
-    if (id >= bailoutTables_.length()) {
-        size_t numToPush = id - bailoutTables_.length() + 1;
-        if (!bailoutTables_.reserve(bailoutTables_.length() + numToPush))
-            return NULL;
-        for (size_t i = 0; i < numToPush; i++)
-            bailoutTables_.infallibleAppend(NULL);
-    }
+    JS_ASSERT(rt->functionWrappers_);
+    JS_ASSERT(rt->functionWrappers_->initialized());
+    IonRuntime::VMWrapperMap::Ptr p = rt->functionWrappers_->lookup(&f);
+    JS_ASSERT(p);
 
-    if (!bailoutTables_[id])
-        bailoutTables_[id] = generateBailoutTable(cx, id);
-
-    return bailoutTables_[id];
-}
-
-IonCompartment::~IonCompartment()
-{
-    js_delete(functionWrappers_);
+    return p->value;
 }
 
 IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
@@ -327,15 +346,8 @@ IonCode::trace(JSTracer *trc)
 {
     // Note that we cannot mark invalidated scripts, since we've basically
     // corrupted the code stream by injecting bailouts.
-    if (invalidated()) {
-        // Note that since we're invalidated, we won't mark the precious
-        // invalidator thunk referenced in the epilogue. We don't move
-        // executable code so the actual reference is okay, we just need to
-        // make sure it says alive before we return.
-        IonCompartment *ion = compartment()->ionCompartment();
-        MarkIonCodeUnbarriered(trc, ion->getInvalidationThunkAddr(), "invalidator");
+    if (invalidated())
         return;
-    }
 
     if (jumpRelocTableBytes_) {
         uint8 *start = code_ + jumpRelocTableOffset();
@@ -989,6 +1001,7 @@ AttachFinishedCompilations(JSContext *cx)
 
             CodeGenerator codegen(builder, *builder->backgroundCompiledLir);
 
+            types::AutoEnterTypeInference enterTypes(cx);
             types::AutoEnterCompilation enterCompiler(cx, types::AutoEnterCompilation::Ion);
             enterCompiler.initExisting(builder->recompileInfo);
 
@@ -1281,13 +1294,6 @@ ion::CanEnterAtBranch(JSContext *cx, HandleScript script, StackFrame *fp, jsbyte
     if (script->ion->osrPc() != pc)
         return Method_Skipped;
 
-    // This can GC, so afterward, script->ion is not guaranteed to be valid.
-    if (!cx->compartment->ionCompartment()->enterJIT(cx))
-        return Method_Error;
-
-    if (!script->ion)
-        return Method_Skipped;
-
     return Method_Compiled;
 }
 
@@ -1334,13 +1340,6 @@ ion::CanEnter(JSContext *cx, HandleScript script, StackFrame *fp, bool newType)
         return status;
     }
 
-    // This can GC, so afterward, script->ion is not guaranteed to be valid.
-    if (!cx->compartment->ionCompartment()->enterJIT(cx))
-        return Method_Error;
-
-    if (!script->ion)
-        return Method_Skipped;
-
     return Method_Compiled;
 }
 
@@ -1358,7 +1357,7 @@ ion::CanEnterUsingFastInvoke(JSContext *cx, HandleScript script)
 
     // This can GC, so afterward, script->ion is not guaranteed to be valid.
     AssertCanGC();
-    if (!cx->compartment->ionCompartment()->enterJIT(cx))
+    if (!cx->compartment->ionCompartment()->enterJIT())
         return Method_Error;
 
     if (!script->ion)
@@ -1376,7 +1375,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
     JS_ASSERT(CheckFrame(fp));
     JS_ASSERT(!fp->script()->ion->bailoutExpected());
 
-    EnterIonCode enter = cx->compartment->ionCompartment()->enterJITInfallible();
+    EnterIonCode enter = cx->compartment->ionCompartment()->enterJIT();
 
     // maxArgc is the maximum of arguments between the number of actual
     // arguments and the number of formal arguments. It accounts for |this|.
@@ -1550,7 +1549,7 @@ ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
 
     activation.setPrevPc(cx->regs().pc);
 
-    EnterIonCode enter = cx->compartment->ionCompartment()->enterJITInfallible();
+    EnterIonCode enter = cx->compartment->ionCompartment()->enterJIT();
     void *calleeToken = CalleeToToken(fun);
 
     Value result = Int32Value(fun->nargs);
