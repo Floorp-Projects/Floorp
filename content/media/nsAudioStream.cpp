@@ -62,7 +62,7 @@ class nsNativeAudioStream : public nsAudioStream
 
   nsresult Init(int32_t aNumChannels, int32_t aRate);
   void Shutdown();
-  nsresult Write(const void* aBuf, uint32_t aFrames);
+  nsresult Write(const AudioDataValue* aBuf, uint32_t aFrames);
   uint32_t Available();
   void SetVolume(double aVolume);
   void Drain();
@@ -97,7 +97,7 @@ class nsRemotedAudioStream : public nsAudioStream
 
   nsresult Init(int32_t aNumChannels, int32_t aRate);
   void Shutdown();
-  nsresult Write(const void* aBuf, uint32_t aFrames);
+  nsresult Write(const AudioDataValue* aBuf, uint32_t aFrames);
   uint32_t Available();
   void SetVolume(double aVolume);
   void Drain();
@@ -143,13 +143,14 @@ class AudioWriteEvent : public nsRunnable
 {
  public:
   AudioWriteEvent(AudioChild* aChild,
-                  const void* aBuf,
+                  const AudioDataValue* aBuf,
                   uint32_t aNumberOfFrames,
                   uint32_t aBytesPerFrame)
   {
     mAudioChild = aChild;
     mBytesPerFrame = aBytesPerFrame;
-    mBuffer.Assign((const char*)aBuf, aNumberOfFrames * aBytesPerFrame);
+    mBuffer.Assign(reinterpret_cast<const char*>(aBuf),
+                   aNumberOfFrames * aBytesPerFrame);
   }
 
   NS_IMETHOD Run()
@@ -464,7 +465,7 @@ void nsNativeAudioStream::Shutdown()
   mInError = true;
 }
 
-nsresult nsNativeAudioStream::Write(const void* aBuf, uint32_t aFrames)
+nsresult nsNativeAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
 {
   NS_ASSERTION(!mPaused, "Don't write audio when paused, you'll block");
 
@@ -475,8 +476,7 @@ nsresult nsNativeAudioStream::Write(const void* aBuf, uint32_t aFrames)
   nsAutoArrayPtr<short> s_data(new short[samples]);
 
   float scaled_volume = float(GetVolumeScale() * mVolume);
-  const AudioDataValue* buf = static_cast<const AudioDataValue*>(aBuf);
-  ConvertAudioSamplesWithScale(buf, s_data.get(), samples, scaled_volume);
+  ConvertAudioSamplesWithScale(aBuf, s_data.get(), samples, scaled_volume);
 
   if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
                       s_data.get(),
@@ -630,7 +630,7 @@ nsRemotedAudioStream::Shutdown()
 }
 
 nsresult
-nsRemotedAudioStream::Write(const void* aBuf, uint32_t aFrames)
+nsRemotedAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
 {
   if (!mAudioChild)
     return NS_ERROR_FAILURE;
@@ -812,7 +812,7 @@ class nsBufferedAudioStream : public nsAudioStream
 
   nsresult Init(int32_t aNumChannels, int32_t aRate);
   void Shutdown();
-  nsresult Write(const void* aBuf, uint32_t aFrames);
+  nsresult Write(const AudioDataValue* aBuf, uint32_t aFrames);
   uint32_t Available();
   void SetVolume(double aVolume);
   void Drain();
@@ -967,7 +967,7 @@ nsBufferedAudioStream::Shutdown()
 }
 
 nsresult
-nsBufferedAudioStream::Write(const void* aBuf, uint32_t aFrames)
+nsBufferedAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
 {
   MonitorAutoLock mon(mMonitor);
   if (!mCubebStream || mState == ERRORED) {
@@ -975,7 +975,7 @@ nsBufferedAudioStream::Write(const void* aBuf, uint32_t aFrames)
   }
   NS_ASSERTION(mState == INITIALIZED || mState == STARTED, "Stream write in unexpected state.");
 
-  const uint8_t* src = static_cast<const uint8_t*>(aBuf);
+  const uint8_t* src = reinterpret_cast<const uint8_t*>(aBuf);
   uint32_t bytesToCopy = aFrames * mBytesPerFrame;
 
   while (bytesToCopy > 0) {
