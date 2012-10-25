@@ -815,7 +815,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     if (!aKeyEvent.IsMeta() && !aKeyEvent.IsControl() && IsOpenedIMEMode()) {
       UInt32 state =
         nsCocoaUtils::ConvertToCarbonModifier([aNativeKeyEvent modifierFlags]);
-      PRUint32 ch = TranslateToChar(nativeKeyCode, state, kbType);
+      uint32_t ch = TranslateToChar(nativeKeyCode, state, kbType);
       if (ch) {
         insertString = ch;
       }
