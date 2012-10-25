@@ -163,6 +163,10 @@ protected:
   {
     NS_PRECONDITION(aFrame, "Need a frame");
 
+    if (aFrame == mFrame) {
+      return;
+    }
+
     nsIFrame *prevContinuation = GetPrevContinuation(aFrame);
 
     if (!prevContinuation || mFrame != prevContinuation) {
@@ -222,6 +226,19 @@ protected:
 
   void Init(nsIFrame* aFrame)
   {
+    mBidiEnabled = aFrame->PresContext()->BidiEnabled();
+    if (mBidiEnabled) {
+      // Find the containing block frame
+      nsIFrame* frame = aFrame;
+      do {
+        frame = frame->GetParent();
+        mBlockFrame = do_QueryFrame(frame);
+      }
+      while (frame && frame->IsFrameOfType(nsIFrame::eLineParticipant));
+
+      NS_ASSERTION(mBlockFrame, "Cannot find containing block.");
+    }
+
     // Start with the previous flow frame as our continuation point
     // is the total of the widths of the previous frames.
     nsIFrame* inlineFrame = GetPrevContinuation(aFrame);
@@ -229,6 +246,9 @@ protected:
     while (inlineFrame) {
       nsRect rect = inlineFrame->GetRect();
       mContinuationPoint += rect.width;
+      if (mBidiEnabled && !AreOnSameLine(aFrame, inlineFrame)) {
+        mLineContinuationPoint += rect.width;
+      }
       mUnbrokenWidth += rect.width;
       mBoundingBox.UnionRect(mBoundingBox, rect);
       inlineFrame = GetPrevContinuation(inlineFrame);
@@ -245,21 +265,6 @@ protected:
     }
 
     mFrame = aFrame;
-
-    mBidiEnabled = aFrame->PresContext()->BidiEnabled();
-    if (mBidiEnabled) {
-      // Find the containing block frame
-      nsIFrame* frame = aFrame;
-      do {
-        frame = frame->GetParent();
-        mBlockFrame = do_QueryFrame(frame);
-      }
-      while (frame && frame->IsFrameOfType(nsIFrame::eLineParticipant));
-
-      NS_ASSERTION(mBlockFrame, "Cannot find containing block.");
-
-      mLineContinuationPoint = mContinuationPoint;
-    }
   }
 
   bool AreOnSameLine(nsIFrame* aFrame1, nsIFrame* aFrame2) {
