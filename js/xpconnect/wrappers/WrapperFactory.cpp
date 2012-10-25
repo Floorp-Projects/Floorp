@@ -59,7 +59,7 @@ WrapperFactory::GetXrayWaiver(JSObject *obj)
     // Object should come fully unwrapped but outerized.
     MOZ_ASSERT(obj == UnwrapObject(obj));
     MOZ_ASSERT(!js::GetObjectClass(obj)->ext.outerObject);
-    XPCWrappedNativeScope *scope = ObjectScope(obj);
+    XPCWrappedNativeScope *scope = GetObjectScope(obj);
     MOZ_ASSERT(scope);
 
     if (!scope->mWaiverWrapperMap)
@@ -73,7 +73,7 @@ WrapperFactory::CreateXrayWaiver(JSContext *cx, JSObject *obj)
     // The caller is required to have already done a lookup.
     // NB: This implictly performs the assertions of GetXrayWaiver.
     MOZ_ASSERT(!GetXrayWaiver(obj));
-    XPCWrappedNativeScope *scope = ObjectScope(obj);
+    XPCWrappedNativeScope *scope = GetObjectScope(obj);
 
     // Get a waiver for the proto.
     JSObject *proto;
@@ -606,7 +606,7 @@ FixWaiverAfterTransplant(JSContext *cx, JSObject *oldWaiver, JSObject *newobj)
     // There should be no same-compartment references to oldWaiver, and we
     // just remapped all cross-compartment references. It's dead, so we can
     // remove it from the map.
-    XPCWrappedNativeScope *scope = ObjectScope(oldWaiver);
+    XPCWrappedNativeScope *scope = GetObjectScope(oldWaiver);
     JSObject *key = Wrapper::wrappedObject(oldWaiver);
     MOZ_ASSERT(scope->mWaiverWrapperMap->Find(key));
     scope->mWaiverWrapperMap->Remove(key);

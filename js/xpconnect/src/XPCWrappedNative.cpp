@@ -312,7 +312,7 @@ XPCWrappedNative::WrapNewGlobal(XPCCallContext &ccx, xpcObjectHelper &nativeHelp
     MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
 
     // Create the global.
-    JSObject *global =  xpc::CreateGlobalObject(ccx, clasp, principal);
+    JSObject *global = xpc::CreateGlobalObject(ccx, clasp, principal);
     if (!global)
         return NS_ERROR_FAILURE;
     XPCWrappedNativeScope *scope = GetCompartmentPrivate(global)->scope;
@@ -525,7 +525,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         ac.construct(ccx, parent);
 
         if (parent != plannedParent) {
-            XPCWrappedNativeScope* betterScope = ObjectScope(parent);
+            XPCWrappedNativeScope* betterScope = GetObjectScope(parent);
             if (betterScope != Scope)
                 return GetNewOrUsed(ccx, helper, betterScope, Interface, resultWrapper);
 
@@ -1787,7 +1787,8 @@ XPCWrappedNative::RescueOrphans(XPCCallContext& ccx)
     JSObject *parentGhost = js::GetObjectParent(mFlatJSObject);
     JSObject *realParent = js::UnwrapObject(parentGhost);
     nsRefPtr<XPCWrappedNative> ignored;
-    return ReparentWrapperIfFound(ccx, ObjectScope(parentGhost), ObjectScope(realParent),
+    return ReparentWrapperIfFound(ccx, GetObjectScope(parentGhost),
+                                  GetObjectScope(realParent),
                                   realParent, mIdentity, getter_AddRefs(ignored));
 }
 
@@ -3811,7 +3812,7 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     JSAutoCompartment ac(ccx, parent);
 
     if (parent != plannedParent) {
-        XPCWrappedNativeScope *newXpcScope = ObjectScope(parent);
+        XPCWrappedNativeScope *newXpcScope = GetObjectScope(parent);
         if (newXpcScope != xpcScope) {
             SLIM_LOG_NOT_CREATED(ccx, identityObj, "crossing origins");
 
