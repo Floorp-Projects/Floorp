@@ -619,6 +619,7 @@ FindBody(JSContext *cx, HandleFunction fun, StableCharPtr chars, size_t length,
 JSString *
 js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lambdaParen)
 {
+    AssertCanGC();
     StringBuffer out(cx);
     RootedScript script(cx);
 
