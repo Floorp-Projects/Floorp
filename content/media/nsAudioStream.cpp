@@ -476,27 +476,27 @@ nsresult nsNativeAudioStream::Write(const void* aBuf, uint32_t aFrames)
 
   if (s_data) {
     double scaled_volume = GetVolumeScale() * mVolume;
-#ifdef MOZ_SAMPLE_TYPE_S16
-    const short* buf = static_cast<const short*>(aBuf);
-    int32_t volume = int32_t((1 << 16) * scaled_volume);
-    for (uint32_t i = 0; i < samples; ++i) {
-      s_data[i] = short((int32_t(buf[i]) * volume) >> 16);
-    }
-#else /* MOZ_SAMPLE_TYPE_FLOAT32 */
-    const float* buf = static_cast<const float*>(aBuf);
-    for (uint32_t i = 0; i <  samples; ++i) {
-      float scaled_value = floorf(0.5 + 32768 * buf[i] * scaled_volume);
-      if (buf[i] < 0.0) {
-        s_data[i] = (scaled_value < -32768.0) ?
-          -32768 :
-          short(scaled_value);
-      } else {
-        s_data[i] = (scaled_value > 32767.0) ?
-          32767 :
-          short(scaled_value);
+    if (Format() == FORMAT_S16) {
+      const short* buf = static_cast<const short*>(aBuf);
+      int32_t volume = int32_t((1 << 16) * scaled_volume);
+      for (uint32_t i = 0; i < samples; ++i) {
+        s_data[i] = short((int32_t(buf[i]) * volume) >> 16);
+      }
+    } else {
+      const float* buf = static_cast<const float*>(aBuf);
+      for (uint32_t i = 0; i <  samples; ++i) {
+        float scaled_value = floorf(0.5 + 32768 * buf[i] * scaled_volume);
+        if (buf[i] < 0.0) {
+          s_data[i] = (scaled_value < -32768.0) ?
+            -32768 :
+            short(scaled_value);
+        } else {
+          s_data[i] = (scaled_value > 32767.0) ?
+            32767 :
+            short(scaled_value);
+        }
       }
     }
-#endif
   }
 
   if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
@@ -947,13 +947,13 @@ nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate)
   cubeb_stream_params params;
   params.rate = aRate;
   params.channels = aNumChannels;
-#ifdef MOZ_SAMPLE_TYPE_S16
-  params.format =  CUBEB_SAMPLE_S16NE;
-  mBytesPerFrame = sizeof(int16_t) * aNumChannels;
-#else /* MOZ_SAMPLE_TYPE_FLOAT32 */
-  params.format = CUBEB_SAMPLE_FLOAT32NE;
-  mBytesPerFrame = sizeof(float) * aNumChannels;
-#endif
+  if (Format() == FORMAT_S16) {
+    params.format =  CUBEB_SAMPLE_S16NE;
+    mBytesPerFrame = sizeof(int16_t) * aNumChannels;
+  } else {
+    params.format = CUBEB_SAMPLE_FLOAT32NE;
+    mBytesPerFrame = sizeof(float) * aNumChannels;
+  }
 
   {
     cubeb_stream* stream;
@@ -1183,9 +1183,8 @@ nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
       if (scaled_volume == 1.0) {
         memcpy(output, input[i], input_size[i]);
         output += input_size[i];
-      } else {
+      } else if (Format() == FORMAT_S16) {
         // Adjust volume as each sample is copied out.
-#ifdef MOZ_SAMPLE_TYPE_S16
         int32_t volume = int32_t(1 << 16) * scaled_volume;
 
         const short* src = static_cast<const short*>(input[i]);
@@ -1193,13 +1192,13 @@ nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
         for (uint32_t j = 0; j < input_size[i] / (mBytesPerFrame / mChannels); ++j) {
           dst[j] = short((int32_t(src[j]) * volume) >> 16);
         }
-#else /* MOZ_SAMPLE_TYPE_FLOAT32 */
+        output += input_size[i];
+      } else {
         const float* src = static_cast<const float*>(input[i]);
         float* dst = reinterpret_cast<float*>(output);
         for (uint32_t j = 0; j < input_size[i] / (mBytesPerFrame / mChannels); ++j) {
           dst[j] = src[j] * scaled_volume;
         }
-#endif
         output += input_size[i];
       }
     }
