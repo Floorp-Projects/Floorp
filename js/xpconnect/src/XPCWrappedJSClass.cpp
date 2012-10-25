@@ -507,7 +507,7 @@ GetContextFromObject(JSObject *obj)
         return nullptr;
 
     JSAutoCompartment ac(ccx, obj);
-    XPCWrappedNativeScope* scope = ObjectScope(obj);
+    XPCWrappedNativeScope* scope = GetObjectScope(obj);
     XPCContext *xpcc = scope->GetContext();
 
     if (xpcc) {

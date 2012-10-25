@@ -2471,7 +2471,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
 
     nsXPConnect* xpc = ccx.GetXPConnect();
     XPCContext* xpcc = ccx.GetXPCContext();
-    XPCWrappedNativeScope* scope = ObjectScope(obj);
+    XPCWrappedNativeScope* scope = GetObjectScope(obj);
     nsXPCComponents* comp;
 
     if (!xpc || !xpcc || !scope || !(comp = scope->GetComponents()))
@@ -3260,7 +3260,6 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
     sandbox = xpc::CreateGlobalObject(cx, &SandboxClass, principal);
     if (!sandbox)
         return NS_ERROR_FAILURE;
-    NS_ENSURE_SUCCESS(rv, rv);
     xpc::GetCompartmentPrivate(sandbox)->wantXrays = options.wantXrays;
 
     JS::AutoObjectRooter tvr(cx, sandbox);
@@ -3309,7 +3308,7 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
         {
           JSAutoCompartment ac(ccx, sandbox);
           if (options.wantComponents &&
-              !nsXPCComponents::AttachComponentsObject(ccx, ObjectScope(sandbox)))
+              !nsXPCComponents::AttachComponentsObject(ccx, GetObjectScope(sandbox)))
               return NS_ERROR_XPC_UNEXPECTED;
 
           if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, sandbox))
@@ -4302,7 +4301,7 @@ nsXPCComponents_Utils::GetComponentsForScope(const jsval &vscope, JSContext *cx,
     if (!vscope.isObject())
         return NS_ERROR_INVALID_ARG;
     JSObject *scopeObj = js::UnwrapObject(&vscope.toObject());
-    XPCWrappedNativeScope *scope = ObjectScope(scopeObj);
+    XPCWrappedNativeScope *scope = GetObjectScope(scopeObj);
     XPCCallContext ccx(NATIVE_CALLER, cx);
     JSObject *components = scope->GetComponentsJSObject(ccx);
     if (!components)

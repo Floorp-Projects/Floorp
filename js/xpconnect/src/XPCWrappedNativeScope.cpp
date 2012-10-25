@@ -84,7 +84,7 @@ XPCWrappedNativeScope* XPCWrappedNativeScope::gDyingScopes = nullptr;
 XPCWrappedNativeScope*
 XPCWrappedNativeScope::GetNewOrUsed(JSContext *cx, JSObject* aGlobal)
 {
-    XPCWrappedNativeScope* scope = ObjectScope(aGlobal);
+    XPCWrappedNativeScope* scope = GetObjectScope(aGlobal);
     if (!scope) {
         scope = new XPCWrappedNativeScope(cx, aGlobal);
     } else {
