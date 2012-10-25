@@ -172,7 +172,7 @@ interface nsIMIMEInfo : nsIHandlerInfo {
      * Returns whether or not these two nsIMIMEInfos are logically
      * equivalent.
      *
-     * @returns PR_TRUE if the two are considered equal
+     * @returns true if the two are considered equal
      */
     boolean equals(in nsIMIMEInfo aMIMEInfo);
 

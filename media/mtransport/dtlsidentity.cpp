@@ -64,7 +64,7 @@ TemporaryRef<DtlsIdentity> DtlsIdentity::Generate() {
   private_key =
       PK11_GenerateKeyPair(slot,
                            CKM_RSA_PKCS_KEY_PAIR_GEN, &rsaparams, &pubkey,
-                           PR_FALSE, PR_TRUE, nullptr);
+                           false, true, nullptr);
   if (private_key == nullptr)
     return nullptr;
   public_key = pubkey;

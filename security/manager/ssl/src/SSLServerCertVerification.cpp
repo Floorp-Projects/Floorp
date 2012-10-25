@@ -1102,11 +1102,11 @@ AuthCertificateHook(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
          ("[%p] starting AuthCertificateHook\n", fd));
 
-  // Modern libssl always passes PR_TRUE for checkSig, and we have no means of
+  // Modern libssl always passes true for checkSig, and we have no means of
   // doing verification without checking signatures.
   NS_ASSERTION(checkSig, "AuthCertificateHook: checkSig unexpectedly false");
 
-  // PSM never causes libssl to call this function with PR_TRUE for isServer,
+  // PSM never causes libssl to call this function with true for isServer,
   // and many things in PSM assume that we are a client.
   NS_ASSERTION(!isServer, "AuthCertificateHook: isServer unexpectedly true");
 

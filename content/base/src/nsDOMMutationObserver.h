@@ -31,9 +31,9 @@ class nsDOMMutationRecord : public nsIDOMMutationRecord
 public:
   nsDOMMutationRecord(const nsAString& aType) : mType(aType)
   {
-    mAttrName.SetIsVoid(PR_TRUE);
-    mAttrNamespace.SetIsVoid(PR_TRUE);
-    mPrevValue.SetIsVoid(PR_TRUE);
+    mAttrName.SetIsVoid(true);
+    mAttrNamespace.SetIsVoid(true);
+    mPrevValue.SetIsVoid(true);
   }
   virtual ~nsDOMMutationRecord() {}
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

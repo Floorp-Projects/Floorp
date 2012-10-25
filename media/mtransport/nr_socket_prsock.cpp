@@ -324,7 +324,7 @@ int NrSocket::create(nr_transport_addr *addr) {
   // Set nonblocking
   PRSocketOptionData option;
   option.option = PR_SockOpt_Nonblocking;
-  option.value.non_blocking = PR_TRUE;
+  option.value.non_blocking = true;
   status = PR_SetSocketOption(fd_, &option);
   if (status != PR_SUCCESS) {
     r_log(LOG_GENERIC, LOG_CRIT, "Couldn't make socket nonblocking");

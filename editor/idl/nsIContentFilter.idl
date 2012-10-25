@@ -27,12 +27,12 @@ interface nsIContentFilter : nsISupports
    * The flag is true when the editor intends to delete the selection.
    *
    * Callers who want to cancel all insertion can simply set
-   * continueWithInsertion to PR_FALSE and return.
+   * continueWithInsertion to false and return.
    * Note: If cancellation occurs during the "open" event, the editor will
    * still be available but will be empty.
    *
    * Callers who want to allow insertion of the data with no changes
-   * can simply set continueWithInsertion to PR_TRUE and return.
+   * can simply set continueWithInsertion to true and return.
    *
    * Callers who want to modify the content (docFragment) being inserted are 
    * responsible for updating contentStartNode, contentStartOffset, 

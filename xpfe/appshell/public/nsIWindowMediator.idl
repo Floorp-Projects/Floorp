@@ -128,7 +128,7 @@ interface nsIWindowMediator: nsISupports
     * @param outBelow if outPosition==zLevelBelow, the window
     *                 below which inWindow should be placed. Otherwise this
     *                 this value will be null.
-    * @return PR_TRUE if the position returned is different from
+    * @return true if the position returned is different from
     *         the position given.
     */
 

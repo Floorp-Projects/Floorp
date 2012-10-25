@@ -93,8 +93,8 @@ interface nsISelection : nsISupports
 
     /**
      * Indicates whether the node is part of the selection. If partlyContained 
-     * is set to PR_TRUE, the function returns true when some part of the node 
-     * is part of the selection. If partlyContained is set to PR_FALSE, the
+     * is set to true, the function returns true when some part of the node 
+     * is part of the selection. If partlyContained is set to false, the
      * function only returns true when the entire node is part of the selection.
      */
     boolean containsNode(in nsIDOMNode node, in boolean partlyContained);
@@ -127,8 +127,8 @@ interface nsISelection : nsISupports
 
     /**
      * Modifies the cursor Bidi level after a change in keyboard direction
-     * @param langRTL is PR_TRUE if the new language is right-to-left or
-     *                PR_FALSE if the new language is left-to-right.
+     * @param langRTL is true if the new language is right-to-left or
+     *                false if the new language is left-to-right.
      */
     void selectionLanguageChange(in boolean langRTL);
 

@@ -87,7 +87,7 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  *   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(myxmlhttpreq));
  *
  *   target->AddEventListener(NS_LITERAL_STRING("load"), mylistener,
- *                            PR_FALSE)
+ *                            false)
  *
  *   where mylistener is your event listener object that implements the
  *   interface nsIDOMEventListener.

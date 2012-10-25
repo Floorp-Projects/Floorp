@@ -256,7 +256,7 @@ nsFileChannel::nsFileChannel(nsIURI *uri)
       NS_SUCCEEDED(file->IsSymlink(&symLink)) && 
       symLink &&
       NS_SUCCEEDED(file->GetNativeTarget(fileTarget)) &&
-      NS_SUCCEEDED(NS_NewNativeLocalFile(fileTarget, PR_TRUE, 
+      NS_SUCCEEDED(NS_NewNativeLocalFile(fileTarget, true, 
                                          getter_AddRefs(resolvedFile))) &&
       NS_SUCCEEDED(NS_NewFileURI(getter_AddRefs(targetURI), 
                    resolvedFile, nullptr))) {

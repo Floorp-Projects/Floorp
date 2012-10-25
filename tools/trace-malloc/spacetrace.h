@@ -508,7 +508,7 @@ typedef struct __struct_STContextCacheItem
 **                  Ignore this unless the reference count is 0,
 **                  This is used to evict the oldest unused item from
 **                      the context cache.
-**  mInUse          Mainly PR_FALSE only at the beginning of the process,
+**  mInUse          Mainly false only at the beginning of the process,
 **                      but this indicates that the item has not yet been
 **                      used at all, and thus shouldn't be evaluated for
 **                      a cache hit.
