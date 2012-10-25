@@ -5365,8 +5365,17 @@ ed.pw
 go.pw
 belau.pw
 
-// py : http://www.nic.py/faq_a.html#faq_b
-*.py
+// py : http://www.nic.py/pautas.html#seccion_9
+// Confirmed by registry 2012-10-03
+com.py
+coop.py
+edu.py
+gov.py
+mil.py
+net.py
+org.py
+!nic.py
+!una.py
 
 // qa : http://domains.qa/en/
 qa
