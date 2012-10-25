@@ -4322,8 +4322,8 @@ class CompartmentPrivate
 public:
     typedef nsTHashtable<nsPtrHashKey<JSObject> > DOMExpandoMap;
 
-    CompartmentPrivate(bool wantXrays)
-        : wantXrays(wantXrays)
+    CompartmentPrivate()
+        : wantXrays(false)
         , universalXPConnectEnabled(false)
     {
         MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
