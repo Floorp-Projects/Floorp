@@ -397,6 +397,7 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
 
   // Only draw progressively when the resolution is unchanged.
   if (gfxPlatform::UseProgressiveTilePainting() &&
+      !BasicManager()->HasShadowTarget() &&
       mTiledBuffer.GetResolution() == resolution) {
     // Calculate the transform required to convert screen space into layer space
     gfx3DMatrix transform = GetEffectiveTransform();
