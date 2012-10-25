@@ -944,6 +944,7 @@
 
     <implementation implements="nsIAutoCompletePopup">
       <field name="_currentIndex">0</field>
+      <field name="_rowHeight">0</field>
 
       <!-- =================== nsIAutoCompletePopup =================== -->
 
@@ -1062,11 +1063,13 @@
           // Default the height to 0 if we have no rows to show
           let height = 0;
           if (numRows) {
-            let firstRowRect = rows[0].getBoundingClientRect();
-            let lastRowRect = rows[numRows - 1].getBoundingClientRect();
+            if (!this._rowHeight) {
+              let firstRowRect = rows[0].getBoundingClientRect();
+              this._rowHeight = firstRowRect.height;
+            }
 
             // Calculate the height to have the first row to last row shown
-            height = lastRowRect.bottom - firstRowRect.top;
+            height = this._rowHeight * numRows;
           }
 
           // Only update the height if we have a non-zero height and if it
