@@ -33,7 +33,7 @@ enum EnterJitEbpArgumentOffset {
  * using the standard cdecl calling convention.
  */
 IonCode *
-IonCompartment::generateEnterJIT(JSContext *cx)
+IonRuntime::generateEnterJIT(JSContext *cx)
 {
     MacroAssembler masm(cx);
 
@@ -161,7 +161,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
 }
 
 IonCode *
-IonCompartment::generateInvalidator(JSContext *cx)
+IonRuntime::generateInvalidator(JSContext *cx)
 {
     AutoIonContextAlloc aica(cx);
     MacroAssembler masm(cx);
@@ -211,7 +211,7 @@ IonCompartment::generateInvalidator(JSContext *cx)
 }
 
 IonCode *
-IonCompartment::generateArgumentsRectifier(JSContext *cx)
+IonRuntime::generateArgumentsRectifier(JSContext *cx)
 {
     MacroAssembler masm(cx);
 
@@ -357,7 +357,7 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32 frameClass)
 }
 
 IonCode *
-IonCompartment::generateBailoutTable(JSContext *cx, uint32 frameClass)
+IonRuntime::generateBailoutTable(JSContext *cx, uint32 frameClass)
 {
     MacroAssembler masm;
 
@@ -373,7 +373,7 @@ IonCompartment::generateBailoutTable(JSContext *cx, uint32 frameClass)
 }
 
 IonCode *
-IonCompartment::generateBailoutHandler(JSContext *cx)
+IonRuntime::generateBailoutHandler(JSContext *cx)
 {
     MacroAssembler masm;
 
@@ -384,7 +384,7 @@ IonCompartment::generateBailoutHandler(JSContext *cx)
 }
 
 IonCode *
-IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
+IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
 {
     AssertCanGC();
     typedef MoveResolver::MoveOperand MoveOperand;
@@ -544,7 +544,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 }
 
 IonCode *
-IonCompartment::generatePreBarrier(JSContext *cx)
+IonRuntime::generatePreBarrier(JSContext *cx)
 {
     MacroAssembler masm;
 
