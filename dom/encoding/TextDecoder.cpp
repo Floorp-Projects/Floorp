@@ -240,13 +240,6 @@ TextDecoder::GetEncoding(nsAString& aEncoding)
     return;
   }
 
-  // Similarly, "x-windows-949" is used for the "euc-kr" family. Therefore, if
-  // the internal encoding name is "x-windows-949", "euc-kr" is returned.
-  if (!strcmp(mEncoding, "x-windows-949")) {
-    aEncoding.AssignLiteral("euc-kr");
-    return;
-  }
-
   aEncoding.AssignASCII(mEncoding);
 }
 
