@@ -522,6 +522,12 @@ const DownloadsIndicatorView = {
 
   onDrop: function DIV_onDrop(aEvent)
   {
+    let dt = aEvent.dataTransfer;
+    // If dragged item is from our source, do not try to
+    // redownload already downloaded file.
+    if (dt.mozGetDataAt("application/x-moz-file", 0))
+      return;
+
     let name = {};
     let url = browserDragAndDrop.drop(aEvent, name);
     if (url) {
