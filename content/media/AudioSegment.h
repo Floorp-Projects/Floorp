@@ -67,7 +67,6 @@ public:
   static int GetSampleSize(SampleFormat aFormat)
   {
     switch (aFormat) {
-    case nsAudioStream::FORMAT_U8: return 1;
     case nsAudioStream::FORMAT_S16: return 2;
     case nsAudioStream::FORMAT_FLOAT32: return 4;
     }

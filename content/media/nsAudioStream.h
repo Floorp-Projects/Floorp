@@ -21,8 +21,9 @@ public:
 
   enum SampleFormat
   {
-    FORMAT_U8,
+    // Native-endian signed 16-bit audio samples
     FORMAT_S16,
+    // Signed 32-bit float samples
     FORMAT_FLOAT32
   };
 
