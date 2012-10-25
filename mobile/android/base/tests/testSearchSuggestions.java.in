@@ -33,7 +33,7 @@ public class testSearchSuggestions extends BaseTest {
     }
 
     public void testSearchSuggestions() {
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        blockForGeckoReady();
 
         // Map of expected values. See robocop_suggestions.sjs.
         final HashMap<String, ArrayList<String>> suggestMap = new HashMap<String, ArrayList<String>>();

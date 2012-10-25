@@ -23,7 +23,7 @@ public class testCheck3 extends PixelTest {
             return;
         }
 
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        blockForGeckoReady();
         loadAndPaint(url);
         mDriver.setupScrollHandling();
 
