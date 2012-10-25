@@ -650,7 +650,7 @@ nsVariant::ConvertToInt64(const nsDiscriminatedUnion& data, int64_t *_retval)
         *_retval = tempData.u.mInt32Value;
         return rv;
     case nsIDataType::VTYPE_UINT32:
-        LL_UI2L(*_retval, tempData.u.mUint32Value);
+        *_retval = tempData.u.mUint32Value;
         return rv;
     case nsIDataType::VTYPE_DOUBLE:
         // XXX should check for data loss here!

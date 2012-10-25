@@ -174,12 +174,11 @@ int64_t nsCRT::atoll(const char *str)
     if (!str)
         return LL_Zero();
 
-    int64_t ll = LL_Zero(), digitll = LL_Zero();
+    int64_t ll = LL_Zero();
 
     while (*str && *str >= '0' && *str <= '9') {
         ll *= 10;
-        LL_UI2L(digitll, (*str - '0'));
-        ll += digitll;
+        ll += *str - '0';
         str++;
     }
 
