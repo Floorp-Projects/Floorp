@@ -1030,7 +1030,8 @@ TraceXPCGlobal(JSTracer *trc, JSObject *obj)
     if (XPCWrappedNativeScope *scope = XPCWrappedNativeScope::GetNativeScope(obj))
         scope->TraceDOMPrototypes(trc);
 
-    mozilla::dom::TraceProtoOrIfaceCache(trc, obj);
+    if (js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL)
+        mozilla::dom::TraceProtoOrIfaceCache(trc, obj);
 }
 
 #ifdef DEBUG
@@ -1101,14 +1102,13 @@ CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal)
     // Verify that the right trace hook is called. Note that this doesn't
     // work right for wrapped globals, since the tracing situation there is
     // more complicated. Manual inspection shows that they do the right thing.
-    if (clasp->flags & JSCLASS_XPCONNECT_GLOBAL &&
-        !((js::Class*)clasp)->ext.isWrappedNative)
+    if (!((js::Class*)clasp)->ext.isWrappedNative)
     {
         VerifyTraceXPCGlobalCalledTracer trc;
         JS_TracerInit(&trc.base, JS_GetRuntime(cx), VerifyTraceXPCGlobalCalled);
         trc.ok = false;
         JS_TraceChildren(&trc.base, global, JSTRACE_OBJECT);
-        NS_ABORT_IF_FALSE(trc.ok, "Trace hook needs to call TraceXPCGlobal if JSCLASS_XPCONNECT_GLOBAL is set.");
+        NS_ABORT_IF_FALSE(trc.ok, "Trace hook on global needs to call TraceXPCGlobal for XPConnect compartments.");
     }
 #endif
 
