@@ -4171,6 +4171,7 @@ name.my
 
 // mz : http://www.gobin.info/domainname/mz-template.doc
 *.mz
+!teledata.mz
 
 // na : http://www.na-nic.com.na/
 // http://www.info.na/domain/
