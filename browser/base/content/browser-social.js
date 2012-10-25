@@ -114,9 +114,9 @@ let SocialUI = {
   // This handles "ActivateSocialFeature" events fired against content documents
   // in this window.
   _activationEventHandler: function SocialUI_activationHandler(e) {
-    // Nothing to do if Social is already active, or we don't have a provider
+    // Nothing to do if Social is already enabled, or we don't have a provider
     // to enable yet.
-    if (Social.active || !Social.provider)
+    if (Social.enabled || !Social.provider)
       return;
 
     let targetDoc = e.target;
