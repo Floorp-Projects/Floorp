@@ -8,8 +8,8 @@ let prefName = "social.enabled",
 function test() {
   waitForExplicitFinish();
 
-  // Need to load a non-empty page for the social share button to appear
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:", {skipAnimation: true});
+  // Need to load a http/https/ftp/ftps page for the social share button to appear
+  let tab = gBrowser.selectedTab = gBrowser.addTab("https://example.com", {skipAnimation: true});
   tab.linkedBrowser.addEventListener("load", function tabLoad(event) {
     tab.linkedBrowser.removeEventListener("load", tabLoad, true);
     executeSoon(tabLoaded);
@@ -261,11 +261,62 @@ function testStillSharedAfterReopen() {
     tab = gBrowser.selectedTab = gBrowser.addTab(toShare, {skipAnimation: true});
     tab.linkedBrowser.addEventListener("load", function tabLoad(event) {
       tab.linkedBrowser.removeEventListener("load", tabLoad, true);
-      is(shareButton.hasAttribute("shared"), true, "New tab to previously shared URL should reflect shared");
-      SocialShareButton.unsharePage();
-      gBrowser.removeTab(tab);
-      executeSoon(testDisable);
+      executeSoon(function() {
+        is(shareButton.hasAttribute("shared"), true, "New tab to previously shared URL should reflect shared");
+        SocialShareButton.unsharePage();
+        gBrowser.removeTab(tab);
+        executeSoon(testOnlyShareCertainUrlsTabSwitch);
+      });
     }, true);
+  }, true);
+}
+
+function testOnlyShareCertainUrlsTabSwitch() {
+  let toShare = "http://example.com";
+  let notSharable = "about:blank";
+  let {shareButton} = SocialShareButton;
+  let tab = gBrowser.selectedTab = gBrowser.addTab(toShare);
+  let tabb = gBrowser.getBrowserForTab(tab);
+  tabb.addEventListener("load", function tabLoad(event) {
+    tabb.removeEventListener("load", tabLoad, true);
+    ok(!shareButton.hidden, "share button not hidden for http url");
+    let tab2 = gBrowser.selectedTab = gBrowser.addTab(notSharable);
+    let tabb2 = gBrowser.getBrowserForTab(tab2);
+    tabb2.addEventListener("load", function tabLoad(event) {
+      tabb2.removeEventListener("load", tabLoad, true);
+      ok(shareButton.hidden, "share button hidden for about:blank");
+      gBrowser.selectedTab = tab;
+      ok(!shareButton.hidden, "share button re-shown when switching back to http: url");
+      gBrowser.selectedTab = tab2;
+      ok(shareButton.hidden, "share button re-hidden when switching back to about:blank");
+      gBrowser.removeTab(tab);
+      gBrowser.removeTab(tab2);
+      executeSoon(testOnlyShareCertainUrlsSameTab);
+    }, true);
+  }, true);
+}
+
+function testOnlyShareCertainUrlsSameTab() {
+  let toShare = "http://example.com";
+  let notSharable = "about:blank";
+  let {shareButton} = SocialShareButton;
+  let tab = gBrowser.selectedTab = gBrowser.addTab(toShare);
+  let tabb = gBrowser.getBrowserForTab(tab);
+  tabb.addEventListener("load", function tabLoad(event) {
+    tabb.removeEventListener("load", tabLoad, true);
+    ok(!shareButton.hidden, "share button not hidden for http url");
+    tabb.addEventListener("load", function tabLoad(event) {
+      tabb.removeEventListener("load", tabLoad, true);
+      ok(shareButton.hidden, "share button hidden for about:blank");
+      tabb.addEventListener("load", function tabLoad(event) {
+        tabb.removeEventListener("load", tabLoad, true);
+        ok(!shareButton.hidden, "share button re-enabled http url");
+        gBrowser.removeTab(tab);
+        executeSoon(testDisable);
+      }, true);
+      tabb.loadURI(toShare);
+    }, true);
+    tabb.loadURI(notSharable);
   }, true);
 }
 
