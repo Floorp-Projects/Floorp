@@ -198,7 +198,7 @@ WebrtcVideoConduit::AttachRenderer(mozilla::RefPtr<VideoRenderer> aVideoRenderer
   if(!aVideoRenderer)
   {
     CSFLogError(logTag, "%s NULL Renderer", __FUNCTION__);
-    MOZ_ASSERT(false);
+    MOZ_ASSERT(PR_FALSE);
     return kMediaConduitInvalidRenderer;
   }
   //Assign the new renderer - overwrites if there is already one
@@ -227,7 +227,7 @@ WebrtcVideoConduit::AttachTransport(mozilla::RefPtr<TransportInterface> aTranspo
   if(!aTransport)
   {
     CSFLogError(logTag, "%s NULL Transport ", __FUNCTION__);
-    MOZ_ASSERT(false);
+    MOZ_ASSERT(PR_FALSE);
     return kMediaConduitInvalidTransport;
   }
   //Assign the transport
@@ -448,14 +448,14 @@ WebrtcVideoConduit::SendVideoFrame(unsigned char* video_frame,
                      width == 0 || height == 0)
   {
     CSFLogError(logTag,  "%s Invalid Parameters ",__FUNCTION__);
-    MOZ_ASSERT(false);
+    MOZ_ASSERT(PR_FALSE);
     return kMediaConduitMalformedArgument;
   }
 
   if(video_type != kVideoI420)
   {
     CSFLogError(logTag,  "%s VideoType Invalid. Only 1420 Supported",__FUNCTION__);
-    MOZ_ASSERT(false);
+    MOZ_ASSERT(PR_FALSE);
     return kMediaConduitMalformedArgument;
   }
   //Transmission should be enabled before we insert any frames.

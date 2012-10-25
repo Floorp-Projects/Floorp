@@ -20,7 +20,7 @@ interface nsIHttpAuthenticableChannel : nsIProxiedChannel
     
     /**
      * Returns if the proxy HTTP method used is CONNECT. If no proxy is being
-     * used it must return false.
+     * used it must return PR_FALSE.
      */
     readonly attribute boolean proxyMethodIsConnect;
 

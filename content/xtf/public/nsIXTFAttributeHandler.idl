@@ -21,7 +21,7 @@ interface nsIXTFAttributeHandler : nsISupports
 
   // If the attribute 'name' is unknown the implementation should mark
   // the returned string as being 'null' (i.e. return 'null' in JS;
-  // call SetIsVoid(true) in C++) rather than throw an exception.
+  // call SetIsVoid(PR_TRUE) in C++) rather than throw an exception.
   // A 'void' result will be translated into the attribute missing
   // by the wrapper. An empty result will be translated into
   // the attribute having no value.

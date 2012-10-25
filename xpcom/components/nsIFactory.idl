@@ -34,10 +34,10 @@ interface nsIFactory :  nsISupports {
    /**
     * LockFactory provides the client a way to keep the component
     * in memory until it is finished with it. The client can call
-    * LockFactory(true) to lock the factory and LockFactory(false)
+    * LockFactory(PR_TRUE) to lock the factory and LockFactory(PR_FALSE)
     * to release the factory.	 
     *
-    * @param lock - Must be true or false
+    * @param lock - Must be PR_TRUE or PR_FALSE
     * @return NS_OK - If the lock operation was successful.
     *         NS_ERROR* - Method failure.
     */

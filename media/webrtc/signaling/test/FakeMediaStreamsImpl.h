@@ -16,7 +16,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(Fake_nsDOMMediaStream, nsIDOMMediaStream)
 NS_IMETHODIMP
 Fake_nsDOMMediaStream::GetCurrentTime(double *aCurrentTime)
 {
-  PR_ASSERT(false);
+  PR_ASSERT(PR_FALSE);
 
   *aCurrentTime = 0;
   return NS_OK;

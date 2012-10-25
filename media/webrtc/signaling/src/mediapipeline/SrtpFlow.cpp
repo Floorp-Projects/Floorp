@@ -225,14 +225,14 @@ nsresult SrtpFlow::Init() {
     err_status_t r = srtp_init();
     if (r != err_status_ok) {
       MOZ_MTLOG(PR_LOG_ERROR, "Could not initialize SRTP");
-      MOZ_ASSERT(false);
+      MOZ_ASSERT(PR_FALSE);
       return NS_ERROR_FAILURE;
     }
 
     r = srtp_install_event_handler(&SrtpFlow::srtp_event_handler);
     if (r != err_status_ok) {
       MOZ_MTLOG(PR_LOG_ERROR, "Could not install SRTP event handler");
-      MOZ_ASSERT(false);
+      MOZ_ASSERT(PR_FALSE);
       return NS_ERROR_FAILURE;
     }
 

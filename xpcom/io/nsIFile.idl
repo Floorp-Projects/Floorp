@@ -170,7 +170,7 @@ interface nsIFile : nsISupports
 
     /**
      *  This will try to delete this file.  The 'recursive' flag
-     *  must be true to delete directories which are not empty.
+     *  must be PR_TRUE to delete directories which are not empty.
      *
      *  This will not resolve any symlinks.
      */

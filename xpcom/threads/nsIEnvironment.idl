@@ -47,8 +47,8 @@ interface nsIEnvironment : nsISupports
      *
      * @param aName   the variable name to probe.
      * @return        if the variable has been set, the value returned is
-     *                true. If the variable was not defined in the
-     *                environment false will be returned.
+     *                PR_TRUE. If the variable was not defined in the
+     *                environment PR_FALSE will be returned.
      */
     boolean exists(in AString aName);
 };

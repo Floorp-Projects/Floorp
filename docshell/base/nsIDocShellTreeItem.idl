@@ -27,8 +27,8 @@ interface nsIDocShellTreeItem : nsIDocShellTreeNode
          * Compares the provided name against the item's name and
          * returns the appropriate result.
          *
-         * @return <CODE>true</CODE> if names match;
-         *         <CODE>false</CODE> otherwise.
+         * @return <CODE>PR_TRUE</CODE> if names match;
+         *         <CODE>PR_FALSE</CODE> otherwise.
          */
         boolean nameEquals(in wstring name);
 
