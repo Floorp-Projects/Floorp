@@ -41,10 +41,9 @@ TransplantObjectWithWrapper(JSContext *cx,
                             JSObject *origobj, JSObject *origwrapper,
                             JSObject *targetobj, JSObject *targetwrapper);
 
-nsresult
+JSObject *
 CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
-                   bool wantXrays, JSObject **global,
-                   JSCompartment **compartment);
+                   bool wantXrays);
 } /* namespace xpc */
 
 #define XPCONNECT_GLOBAL_FLAGS                                                \

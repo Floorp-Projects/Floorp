@@ -752,13 +752,10 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
     JSContext *cx = ctxNew->GetNativeContext();
     JSAutoRequest ar(cx);
 
-    nsIPrincipal *principal = GetPrincipal();
-    JSObject *newGlob;
-    JSCompartment *compartment;
-
-    rv = xpc::CreateGlobalObject(cx, &gSharedGlobalClass, principal, false,
-                                 &newGlob, &compartment);
-    NS_ENSURE_SUCCESS(rv, NS_OK);
+    JSObject *newGlob = xpc::CreateGlobalObject(cx, &gSharedGlobalClass,
+                                                GetPrincipal(), false);
+    if (!newGlob)
+        return NS_OK;;
 
     ::JS_SetGlobalObject(cx, newGlob);
 
