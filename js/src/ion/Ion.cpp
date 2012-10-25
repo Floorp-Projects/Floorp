@@ -765,90 +765,60 @@ CompileBackEnd(MIRGenerator *mir)
 
     MIRGraph &graph = mir->graph();
 
-    if (mir->shouldCancel("Start"))
-        return false;
-
     if (!SplitCriticalEdges(graph))
         return NULL;
     IonSpewPass("Split Critical Edges");
     AssertGraphCoherency(graph);
-
-    if (mir->shouldCancel("Split Critical Edges"))
-        return false;
 
     if (!RenumberBlocks(graph))
         return NULL;
     IonSpewPass("Renumber Blocks");
     AssertGraphCoherency(graph);
 
-    if (mir->shouldCancel("Renumber Blocks"))
-        return false;
-
     if (!BuildDominatorTree(graph))
         return NULL;
     // No spew: graph not changed.
 
-    if (mir->shouldCancel("Dominator Tree"))
-        return false;
-
     // This must occur before any code elimination.
-    if (!EliminatePhis(mir, graph))
+    if (!EliminatePhis(graph))
         return NULL;
     IonSpewPass("Eliminate phis");
     AssertGraphCoherency(graph);
-
-    if (mir->shouldCancel("Eliminate phis"))
-        return false;
 
     if (!BuildPhiReverseMapping(graph))
         return NULL;
     // No spew: graph not changed.
 
-    if (mir->shouldCancel("Phi reverse mapping"))
-        return false;
-
     // This pass also removes copies.
-    if (!ApplyTypeInformation(mir, graph))
+    if (!ApplyTypeInformation(graph))
         return NULL;
     IonSpewPass("Apply types");
     AssertGraphCoherency(graph);
 
-    if (mir->shouldCancel("Apply types"))
-        return false;
-
     // Alias analysis is required for LICM and GVN so that we don't move
     // loads across stores.
     if (js_IonOptions.licm || js_IonOptions.gvn) {
-        AliasAnalysis analysis(mir, graph);
+        AliasAnalysis analysis(graph);
         if (!analysis.analyze())
             return NULL;
         IonSpewPass("Alias analysis");
         AssertGraphCoherency(graph);
-
-        if (mir->shouldCancel("Alias analysis"))
-            return false;
     }
 
     if (js_IonOptions.edgeCaseAnalysis) {
-        EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
+        EdgeCaseAnalysis edgeCaseAnalysis(graph);
         if (!edgeCaseAnalysis.analyzeEarly())
             return NULL;
         IonSpewPass("Edge Case Analysis (Early)");
         AssertGraphCoherency(graph);
-
-        if (mir->shouldCancel("Edge Case Analysis (Early)"))
-            return false;
     }
 
     if (js_IonOptions.gvn) {
-        ValueNumberer gvn(mir, graph, js_IonOptions.gvnIsOptimistic);
+        ValueNumberer gvn(graph, js_IonOptions.gvnIsOptimistic);
         if (!gvn.analyze())
             return NULL;
         IonSpewPass("GVN");
         AssertGraphCoherency(graph);
-
-        if (mir->shouldCancel("GVN"))
-            return false;
     }
 
     if (js_IonOptions.rangeAnalysis) {
@@ -858,54 +828,36 @@ CompileBackEnd(MIRGenerator *mir)
         IonSpewPass("Beta");
         AssertGraphCoherency(graph);
 
-        if (mir->shouldCancel("RA Beta"))
-            return false;
-
         if (!r.analyze())
             return NULL;
         IonSpewPass("Range Analysis");
         AssertGraphCoherency(graph);
 
-        if (mir->shouldCancel("Range Analysis"))
-            return false;
-
         if (!r.removeBetaNobes())
             return NULL;
         IonSpewPass("De-Beta");
         AssertGraphCoherency(graph);
-
-        if (mir->shouldCancel("RA De-Beta"))
-            return false;
     }
 
-    if (!EliminateDeadCode(mir, graph))
+    if (!EliminateDeadCode(graph))
         return NULL;
     IonSpewPass("DCE");
     AssertGraphCoherency(graph);
 
-    if (mir->shouldCancel("DCE"))
-        return false;
-
     if (js_IonOptions.licm) {
-        LICM licm(mir, graph);
+        LICM licm(graph);
         if (!licm.analyze())
             return NULL;
         IonSpewPass("LICM");
         AssertGraphCoherency(graph);
-
-        if (mir->shouldCancel("LICM"))
-            return false;
     }
 
     if (js_IonOptions.edgeCaseAnalysis) {
-        EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
+        EdgeCaseAnalysis edgeCaseAnalysis(graph);
         if (!edgeCaseAnalysis.analyzeLate())
             return NULL;
         IonSpewPass("Edge Case Analysis (Late)");
         AssertGraphCoherency(graph);
-
-        if (mir->shouldCancel("Edge Case Analysis (Late)"))
-            return false;
     }
 
     // Note: bounds check elimination has to run after all other passes that
@@ -917,9 +869,6 @@ CompileBackEnd(MIRGenerator *mir)
     IonSpewPass("Bounds Check Elimination");
     AssertGraphCoherency(graph);
 
-    if (mir->shouldCancel("Bounds Check Elimination"))
-        return false;
-
     LIRGraph *lir = mir->temp().lifoAlloc()->new_<LIRGraph>(&graph);
     if (!lir)
         return NULL;
@@ -929,17 +878,11 @@ CompileBackEnd(MIRGenerator *mir)
         return NULL;
     IonSpewPass("Generate LIR");
 
-    if (mir->shouldCancel("Generate LIR"))
-        return false;
-
     if (js_IonOptions.lsra) {
-        LinearScanAllocator regalloc(mir, &lirgen, *lir);
+        LinearScanAllocator regalloc(&lirgen, *lir);
         if (!regalloc.go())
             return NULL;
         IonSpewPass("Allocate Registers", &regalloc);
-
-        if (mir->shouldCancel("Allocate Registers"))
-            return false;
     }
 
     return lir;
