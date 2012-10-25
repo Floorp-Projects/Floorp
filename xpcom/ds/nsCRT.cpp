@@ -172,9 +172,9 @@ PRUnichar* nsCRT::strndup(const PRUnichar* str, uint32_t len)
 int64_t nsCRT::atoll(const char *str)
 {
     if (!str)
-        return LL_Zero();
+        return 0;
 
-    int64_t ll = LL_Zero();
+    int64_t ll = 0;
 
     while (*str && *str >= '0' && *str <= '9') {
         ll *= 10;
