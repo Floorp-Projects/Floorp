@@ -622,7 +622,7 @@ public:
 
         mContextRestorer->InitWithFuncCallback(RobustnessTimerCallbackStatic,
                                                static_cast<void*>(this),
-                                               PR_MillisecondsToInterval(1000),
+                                               1000,
                                                nsITimer::TYPE_ONE_SHOT);
         mContextLossTimerRunning = true;
         mDrawSinceContextLossTimerSet = false;

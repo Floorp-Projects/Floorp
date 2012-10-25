@@ -390,10 +390,42 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
           (aIsLinksOnly && !isInsideLink) ||
           (mStartLinksOnlyPref && aIsLinksOnly && !isStartingLink)) {
         // ------ Failure ------
-        // mStartPointRange got updated to the right thing already,
-        // but we stil need to collapse it to the right end.
-        mStartPointRange->Collapse(aFindPrev);
-
+        // At this point mStartPointRange got updated to the first
+        // visible range in the viewport.  We _may_ be able to just
+        // start there, if it's not taking us in the wrong direction.
+        if (aFindPrev) {
+          // We can continue at the end of mStartPointRange if its end is before
+          // the start of returnRange or coincides with it.  Otherwise, we need
+          // to continue at the start of returnRange.
+          int16_t compareResult;
+          nsresult rv =
+            mStartPointRange->CompareBoundaryPoints(nsIDOMRange::START_TO_END,
+                                                    returnRange, &compareResult);
+          if (NS_SUCCEEDED(rv) && compareResult <= 0) {
+            // OK to start at the end of mStartPointRange
+            mStartPointRange->Collapse(false);
+          } else {
+            // Start at the beginning of returnRange
+            returnRange->CloneRange(getter_AddRefs(mStartPointRange));
+            mStartPointRange->Collapse(true);
+          }
+        } else {
+          // We can continue at the start of mStartPointRange if its start is
+          // after the end of returnRange or coincides with it.  Otherwise, we
+          // need to continue at the end of returnRange.
+          int16_t compareResult;
+          nsresult rv =
+            mStartPointRange->CompareBoundaryPoints(nsIDOMRange::END_TO_START,
+                                                    returnRange, &compareResult);
+          if (NS_SUCCEEDED(rv) && compareResult >= 0) {
+            // OK to start at the start of mStartPointRange
+            mStartPointRange->Collapse(true);
+          } else {
+            // Start at the end of returnRange
+            returnRange->CloneRange(getter_AddRefs(mStartPointRange));
+            mStartPointRange->Collapse(false);
+          }
+        }
         continue;
       }
 
@@ -1146,9 +1178,9 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
     nsCOMPtr<nsIDOMNode> firstVisibleNode = do_QueryInterface(frame->GetContent());
 
     if (firstVisibleNode) {
-      (*aFirstVisibleRange)->SelectNode(firstVisibleNode);
       frame->GetOffsets(startFrameOffset, endFrameOffset);
       (*aFirstVisibleRange)->SetStart(firstVisibleNode, startFrameOffset);
+      (*aFirstVisibleRange)->SetEnd(firstVisibleNode, endFrameOffset);
     }
   }
 

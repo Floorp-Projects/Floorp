@@ -1912,6 +1912,10 @@ void Texture2D::createTexture()
 {
     GLsizei width = mImageArray[0].getWidth();
     GLsizei height = mImageArray[0].getHeight();
+
+    if (!(width > 0 && height > 0))
+        return; // do not attempt to create d3d textures for nonexistant data
+
     GLint levels = creationLevels(width, height);
     D3DFORMAT d3dfmt = mImageArray[0].getD3DFormat();
     DWORD d3dusage = GetTextureUsage(d3dfmt, mUsage, false);
@@ -2472,6 +2476,10 @@ IDirect3DBaseTexture9 *TextureCubeMap::getBaseTexture() const
 void TextureCubeMap::createTexture()
 {
     GLsizei size = mImageArray[0][0].getWidth();
+
+    if (!(size > 0))
+        return; // do not attempt to create d3d textures for nonexistant data
+
     GLint levels = creationLevels(size, 0);
     D3DFORMAT d3dfmt = mImageArray[0][0].getD3DFormat();
     DWORD d3dusage = GetTextureUsage(d3dfmt, mUsage, false);

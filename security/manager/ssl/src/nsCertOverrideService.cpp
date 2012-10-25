@@ -18,7 +18,6 @@
 #include "nsPromiseFlatString.h"
 #include "nsThreadUtils.h"
 #include "nsStringBuffer.h"
-#include "nsAutoPtr.h"
 #include "nspr.h"
 #include "pk11pub.h"
 #include "certdb.h"
@@ -510,7 +509,7 @@ nsCertOverrideService::RememberValidityOverride(const nsACString & aHostName, in
   if (NS_FAILED(rv))
     return rv;
 
-  char *dbkey = NULL;
+  char *dbkey = nullptr;
   rv = aCert->GetDbKey(&dbkey);
   if (NS_FAILED(rv) || !dbkey)
     return rv;
@@ -697,7 +696,7 @@ nsCertOverrideService::GetAllOverrideHostsWithPorts(uint32_t *aCount,
 static bool
 matchesDBKey(nsIX509Cert *cert, const char *match_dbkey)
 {
-  char *dbkey = NULL;
+  char *dbkey = nullptr;
   nsresult rv = cert->GetDbKey(&dbkey);
   if (NS_FAILED(rv) || !dbkey)
     return false;

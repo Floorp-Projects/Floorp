@@ -89,6 +89,12 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlag
   if (!(aFlags & VisitFlags::TOP_LEVEL))
     return NS_OK;
 
+  if (aFlags & VisitFlags::REDIRECT_SOURCE)
+    return NS_OK;
+
+  if (aFlags & VisitFlags::UNRECOVERABLE_ERROR)
+    return NS_OK;
+
   AndroidBridge *bridge = AndroidBridge::Bridge();
   if (bridge) {
     nsAutoCString uri;

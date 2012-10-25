@@ -11,7 +11,6 @@
 #include "nsTHashtable.h"
 #include "nsIObserver.h"
 #include "nsIX509Cert.h"
-#include "nsAutoPtr.h"
 #include "nsNSSCertificate.h"
 #include "nsString.h"
 #include "nsWeakReference.h"

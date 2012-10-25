@@ -263,34 +263,42 @@ nsPrincipal::GetOrigin(char **aOrigin)
 NS_IMETHODIMP
 nsPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
 {
+  *aResult = false;
+
   if (!aOther) {
     NS_WARNING("Need a principal to compare this to!");
-    *aResult = false;
     return NS_OK;
   }
 
-  if (this != aOther) {
-
-    // Codebases are equal if they have the same origin.
-    *aResult =
-      NS_SUCCEEDED(nsScriptSecurityManager::CheckSameOriginPrincipal(this,
-                                                                     aOther));
+  if (aOther == this) {
+    *aResult = true;
     return NS_OK;
   }
 
-  *aResult = true;
+  // Codebases are equal if they have the same origin.
+  *aResult = NS_SUCCEEDED(
+               nsScriptSecurityManager::CheckSameOriginPrincipal(this, aOther));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
 {
-  if (this == aOther) {
+  *aResult = false;
+
+  if (!aOther) {
+    NS_WARNING("Need a principal to compare this to!");
+    return NS_OK;
+  }
+
+  if (aOther == this) {
     *aResult = true;
     return NS_OK;
   }
 
-  *aResult = false;
+  if (!nsScriptSecurityManager::AppAttributesEqual(this, aOther)) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIURI> otherURI;
   nsresult rv = aOther->GetURI(getter_AddRefs(otherURI));

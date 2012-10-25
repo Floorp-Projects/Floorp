@@ -1,0 +1,31 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title>Gracefully handle setting a field on a bad |this|</title>
+
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="a">
+      <implementation>
+        <field name="f">17</field>
+      </implementation>
+    </binding>
+  </bindings>
+
+  <script type="application/javascript">
+    window.onload = function()
+    {
+      var bound = document.getElementById("bound");
+      try
+      {
+        Object.getPrototypeOf(bound).f = 42;
+      }
+      catch (e) { /* Throwing's fine, crashing isn't. */ }
+    };
+  </script>
+</head>
+
+<body>
+  <div id="bound" style="-moz-binding: url(#a)"></div>
+</body>
+
+</html>
