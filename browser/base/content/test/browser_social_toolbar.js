@@ -96,6 +96,37 @@ var tests = {
       document.getElementById("menu_ToolsPopup").openPopup();
     }, "statusIcon was never found");
   },
+  testAmbientNotificationContent: function(next) {
+    let ambience = {
+      name: "testIcon",
+      iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
+      contentPanel: "data:text/html;charset=utf-8," +
+                    encodeURI('<html><body><div id="testdiv"/></body></html>'),
+      counter: 42,
+      label: "Test Ambient 1",
+      menuURL: "https://example.com/testAmbient1"
+    };
+    Social.provider.setAmbientNotification(ambience);
+
+    let statusIcon = document.querySelector("#social-toolbar-item > box");
+    waitForCondition(function() {
+      statusIcon = document.querySelector("#social-toolbar-item > box");
+      return !!statusIcon;
+    }, function () {
+      let panel = document.getElementById("social-notification-panel");
+      let iframe = panel.firstChild;
+      iframe.contentWindow.addEventListener("load", function frame_load() {
+        iframe.contentWindow.removeEventListener("load", frame_load);
+        ok(iframe.contentDocument.getElementById("testdiv"), "could find our div in the content");
+        panel.addEventListener("popuphidden", function popuphidden() {
+          panel.removeEventListener("popuphidden", popuphidden);
+          next();
+        });
+        panel.hidePopup();
+      })
+      panel.openPopup();
+    }, "statusIcon was never found");
+  },
   testProfileUnset: function(next) {
     Social.provider.updateUserProfile({});
     // check dom values
