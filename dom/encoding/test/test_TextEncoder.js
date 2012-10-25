@@ -263,12 +263,15 @@ function testArrayOfStrings(test)
 function testEncoderGetEncoding()
 {
   var labelEncodings = [
-    {label: "utf-16", encoding: "utf-16"},
-    {label: "utf-16le", encoding: "utf-16"},
+    {encoding: "utf-8", labels: ["unicode-1-1-utf-8", "utf-8", "utf8"]},
+    {encoding: "utf-16", labels: ["utf-16", "utf-16le"]},
+    {encoding: "utf-16be", labels: ["utf-16be"]},
   ];
 
-  labelEncodings.forEach(function(le){
-    var decoder = TextEncoder(le.label);
-    assert_equals(decoder.encoding, le.encoding, le.label + " label encoding test.");
-  });
+  for (var le of labelEncodings) {
+    for (var label of le.labels) {
+      var encoder = TextEncoder(label);
+      assert_equals(encoder.encoding, le.encoding, label + " label encoding test.");
+    }
+  }
 }
