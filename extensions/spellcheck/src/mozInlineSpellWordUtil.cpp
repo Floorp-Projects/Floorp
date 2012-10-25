@@ -367,25 +367,23 @@ IsBRElement(nsINode* aNode)
 }
 
 /**
- * Check if there's a DOM word separator before aBeforeOffset in this node.
- * Always returns true if it's a BR element.
- * aSeparatorOffset is set to the index of the first character in the last
- * separator if any is found (0 for BR elements).
+ * Given a TextNode, checks to see if there's a DOM word separator before
+ * aBeforeOffset within it. This function does not modify aSeparatorOffset when
+ * it returns false.
  *
- * This function does not modify aSeparatorOffset when it returns false.
+ * @param aNode the TextNode to check.
+ * @param aBeforeOffset the offset in the TextNode before which we will search
+ *        for the DOM separator. You can pass INT32_MAX to search the entire
+ *        length of the string.
+ * @param aSeparatorOffset will be set to the offset of the first separator it
+ *        encounters. Will not be written to if no separator is found.
+ * @returns True if it found a separator.
  */
 static bool
-ContainsDOMWordSeparator(nsINode* aNode, int32_t aBeforeOffset,
-                         int32_t* aSeparatorOffset)
+TextNodeContainsDOMWordSeparator(nsINode* aNode,
+                                 int32_t aBeforeOffset,
+                                 int32_t* aSeparatorOffset)
 {
-  if (IsBRElement(aNode)) {
-    *aSeparatorOffset = 0;
-    return true;
-  }
-  
-  if (!IsTextNode(aNode))
-    return false;
-
   // aNode is actually an nsIContent, since it's eTEXT
   nsIContent* content = static_cast<nsIContent*>(aNode);
   const nsTextFragment* textFragment = content->GetText();
@@ -405,6 +403,30 @@ ContainsDOMWordSeparator(nsINode* aNode, int32_t aBeforeOffset,
     }
   }
   return false;
+}
+
+/**
+ * Check if there's a DOM word separator before aBeforeOffset in this node.
+ * Always returns true if it's a BR element.
+ * aSeparatorOffset is set to the index of the first character in the last
+ * separator if any is found (0 for BR elements).
+ *
+ * This function does not modify aSeparatorOffset when it returns false.
+ */
+static bool
+ContainsDOMWordSeparator(nsINode* aNode, int32_t aBeforeOffset,
+                         int32_t* aSeparatorOffset)
+{
+  if (IsBRElement(aNode)) {
+    *aSeparatorOffset = 0;
+    return true;
+  }
+
+  if (!IsTextNode(aNode))
+    return false;
+
+  return TextNodeContainsDOMWordSeparator(aNode, aBeforeOffset,
+                                          aSeparatorOffset);
 }
 
 static bool
@@ -469,13 +491,27 @@ mozInlineSpellWordUtil::BuildSoftText()
         // word on the text node as well.
         int32_t newOffset = 0;
         if (firstOffsetInNode > 0) {
-          // Try to find the previous word boundary.  We ignore the return value
-          // of ContainsDOMWordSeparator here because there might be no preceding
-          // word separator (such as when we're at the end of the first word in
-          // the text node), in which case we just set the found offsets to 0.
-          // Otherwise, ContainsDOMWordSeparator finds us the correct word
-          // boundary so that we can avoid looking at too many words.
-          ContainsDOMWordSeparator(node, firstOffsetInNode - 1, &newOffset);
+          // Try to find the previous word boundary in the current node. If
+          // we can't find one, start checking previous sibling nodes (if any
+          // adjacent ones exist) to see if we can find any text nodes with
+          // DOM word separators. We bail out as soon as we see a node that is
+          // not a text node, or we run out of previous sibling nodes. In the
+          // event that we simply cannot find any preceding word separator, the
+          // offset is set to 0, and the soft text beginning node is set to the
+          // "most previous" text node before the original starting node, or
+          // kept at the original starting node if no previous text nodes exist.
+          if (!ContainsDOMWordSeparator(node, firstOffsetInNode - 1,
+                                        &newOffset)) {
+            nsINode* prevNode = node->GetPreviousSibling();
+            while (prevNode && IsTextNode(prevNode)) {
+              mSoftBegin.mNode = prevNode;
+              if (TextNodeContainsDOMWordSeparator(prevNode, INT32_MAX,
+                                                   &newOffset)) {
+                break;
+              }
+              prevNode = prevNode->GetPreviousSibling();
+            }
+          }
         }
         firstOffsetInNode = newOffset;
         mSoftBegin.mOffset = newOffset;
