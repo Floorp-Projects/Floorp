@@ -171,7 +171,6 @@ private:
     PROCESSING_CONTROL_RST_STREAM
   };
 
-  void        DeterminePingThreshold();
   nsresult    ResponseHeadersComplete();
   uint32_t    GetWriteQueueSize();
   void        ChangeDownstreamState(enum stateType);
@@ -179,7 +178,6 @@ private:
   nsresult    UncompressAndDiscard(uint32_t, uint32_t);
   void        zlibInit();
   void        GeneratePing(uint32_t);
-  void        ClearPing(bool);
   void        GenerateRstStream(uint32_t, uint32_t);
   void        GenerateGoAway();
   void        CleanupStream(SpdyStream3 *, nsresult, rstReason);
@@ -339,7 +337,6 @@ private:
   PRIntervalTime       mLastDataReadEpoch; // used for IdleTime()
   PRIntervalTime       mPingSentEpoch;
   uint32_t             mNextPingID;
-  bool                 mPingThresholdExperiment;
 };
 
 }} // namespace mozilla::net
