@@ -2838,7 +2838,8 @@ public:
         JSObject* wrapper = GetWrapperPreserveColor();
         if (wrapper)
             JS_CALL_OBJECT_TRACER(trc, wrapper, "XPCWrappedNative::mWrapper");
-        if (JS_IsGlobalObject(mFlatJSObject))
+        if (mFlatJSObject && mFlatJSObject != INVALID_OBJECT &&
+            JS_IsGlobalObject(mFlatJSObject))
         {
             TraceXPCGlobal(trc, mFlatJSObject);
         }
