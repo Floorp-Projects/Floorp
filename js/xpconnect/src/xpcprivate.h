@@ -170,8 +170,9 @@
 
 #include "nsIXPCScriptNotify.h"  // used to notify: ScriptEvaluated
 
-#include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"
+#include "nsJSPrincipals.h"
+#include "nsIScriptObjectPrincipal.h"
 #include "nsISecurityCheckedComponent.h"
 #include "xpcObjectHelper.h"
 #include "nsIThreadInternal.h"
@@ -1643,9 +1644,12 @@ public:
     GetPrototypeNoHelper(XPCCallContext& ccx);
 
     nsIPrincipal*
-    GetPrincipal() const
-    {return mScriptObjectPrincipal ?
-         mScriptObjectPrincipal->GetPrincipal() : nullptr;}
+    GetPrincipal() const {
+        if (!mGlobalJSObject)
+            return nullptr;
+        JSCompartment *c = js::GetObjectCompartment(mGlobalJSObject);
+        return nsJSPrincipals::get(JS_GetCompartmentPrincipals(c));
+    }
 
     void RemoveWrappedNativeProtos();
 
@@ -1778,13 +1782,6 @@ private:
     JSObject*                        mPrototypeNoHelper;
 
     XPCContext*                      mContext;
-
-    // The script object principal instance corresponding to our current global
-    // JS object.
-    // XXXbz what happens if someone calls JS_SetPrivate on mGlobalJSObject.
-    // How do we deal?  Do we need to?  I suspect this isn't worth worrying
-    // about, since all of our scope objects are verified as not doing that.
-    nsIScriptObjectPrincipal* mScriptObjectPrincipal;
 
     nsDataHashtable<nsDepCharHashKey, JSObject*> mCachedDOMPrototypes;
 
