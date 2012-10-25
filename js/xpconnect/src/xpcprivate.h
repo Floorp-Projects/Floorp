@@ -1646,19 +1646,6 @@ public:
 
     void RemoveWrappedNativeProtos();
 
-    static XPCWrappedNativeScope*
-    FindInJSObjectScope(JSContext* cx, JSObject* obj,
-                        JSBool OKIfNotInitialized = false,
-                        XPCJSRuntime* runtime = nullptr);
-
-    static XPCWrappedNativeScope*
-    FindInJSObjectScope(XPCCallContext& ccx, JSObject* obj,
-                        JSBool OKIfNotInitialized = false)
-    {
-        return FindInJSObjectScope(ccx, obj, OKIfNotInitialized,
-                                   ccx.GetRuntime());
-    }
-
     static void
     SystemIsBeingShutDown();
 
