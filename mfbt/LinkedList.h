@@ -254,10 +254,6 @@ class LinkedList
   public:
     LinkedList() : sentinel(LinkedListElement<T>::NODE_KIND_SENTINEL) { }
 
-    ~LinkedList() {
-      MOZ_ASSERT(isEmpty());
-    }
-
     /*
      * Add elem to the front of the list.
      */
