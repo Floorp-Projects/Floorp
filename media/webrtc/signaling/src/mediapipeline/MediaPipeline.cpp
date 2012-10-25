@@ -559,17 +559,8 @@ void MediaPipelineTransmit::ProcessAudioChunk(AudioSessionConduit *conduit,
         break;
       case AUDIO_FORMAT_S16:
         {
-          // Code based on nsAudioStream
           const short* buf = static_cast<const short *>(chunk.mBuffer->Data());
-
-          int32_t volume = int32_t((1 << 16) * chunk.mVolume);
-          for (uint32_t i = 0; i < chunk.mDuration; ++i) {
-            int16_t s = buf[i];
-#if defined(IS_BIG_ENDIAN)
-            s = ((s & 0x00ff) << 8) | ((s & 0xff00) >> 8);
-#endif
-            samples[i] = short((int32_t(s) * volume) >> 16);
-          }
+          ConvertAudioSamplesWithScale(buf, samples, chunk.mDuration, chunk.mVolume);
         }
         break;
       default:

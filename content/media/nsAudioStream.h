@@ -99,14 +99,6 @@ public:
   int GetRate() { return mRate; }
   int GetChannels() { return mChannels; }
 
-  static mozilla::AudioSampleFormat Format() {
-#ifdef MOZ_SAMPLE_TYPE_S16
-    return mozilla::AUDIO_FORMAT_S16;
-#else
-    return mozilla::AUDIO_FORMAT_FLOAT32;
-#endif
-  }
-
 protected:
   nsCOMPtr<nsIThread> mAudioPlaybackThread;
   int mRate;
