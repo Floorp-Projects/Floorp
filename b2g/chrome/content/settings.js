@@ -6,6 +6,14 @@
 
 "use strict;"
 
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import('resource://gre/modules/Services.jsm');
+
 // Once Bug 731746 - Allow chrome JS object to implement nsIDOMEventTarget
 // is resolved this helper could be removed.
 var SettingsListener = {
@@ -96,8 +104,16 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
 #unfilter attemptSubstitution
   lock.set('deviceinfo.os', os_version, null, null);
 
+  let appInfo = Cc["@mozilla.org/xre/app-info;1"]
+                  .getService(Ci.nsIXULAppInfo);
+  lock.set('deviceinfo.platform_version', appInfo.platformVersion, null, null);
+  lock.set('deviceinfo.platform_build_id', appInfo.platformBuildID, null, null);
+
+  let update_channel = Services.prefs.getCharPref('app.update.channel');
+  lock.set('deviceinfo.update_channel', update_channel, null, null);
+
   //Get the hardware info from android properties
-  var hardware_version = null;
+  let hardware_version = null;
   try {
     let cutils = ctypes.open('libcutils.so');
     let cbuf = ctypes.char.array(128)();
