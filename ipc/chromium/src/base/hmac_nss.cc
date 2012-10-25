@@ -22,7 +22,7 @@ struct NSSDestroyer {
 };
 
 void DestroyContext(PK11Context* context) {
-  PK11_DestroyContext(context, true);
+  PK11_DestroyContext(context, PR_TRUE);
 }
 
 // Define some convenient scopers around NSS pointers.

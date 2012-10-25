@@ -105,11 +105,11 @@ interface nsIHTMLEditor : nsISupports
    *                    May be null.
    *                    Example: aProperty="font", aAttribute="color",
    *                             aValue="0x00FFFF"
-   * @param aFirst      [OUT] true if the first text node in the
+   * @param aFirst      [OUT] PR_TRUE if the first text node in the
    *                          selection has the property
-   * @param aAny        [OUT] true if any of the text nodes in the
+   * @param aAny        [OUT] PR_TRUE if any of the text nodes in the
    *                          selection have the property
-   * @param aAll        [OUT] true if all of the text nodes in the
+   * @param aAll        [OUT] PR_TRUE if all of the text nodes in the
    *                          selection have the property
    */
   void getInlineProperty(in nsIAtom aProperty, 
@@ -230,7 +230,7 @@ interface nsIHTMLEditor : nsISupports
     *
     * @param aElement           The element to insert
     * @param aDeleteSelection   Delete the selection before inserting
-    *     If aDeleteSelection is false, then the element is inserted 
+    *     If aDeleteSelection is PR_FALSE, then the element is inserted 
     *     after the end of the selection for all element except
     *     Named Anchors, which insert before the selection
     */  

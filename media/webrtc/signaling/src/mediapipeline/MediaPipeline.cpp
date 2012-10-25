@@ -555,7 +555,7 @@ void MediaPipelineTransmit::ProcessAudioChunk(AudioSessionConduit *conduit,
       case nsAudioStream::FORMAT_U8:
       case nsAudioStream::FORMAT_FLOAT32:
         MOZ_MTLOG(PR_LOG_ERROR, "Can't process audio except in 16-bit PCM yet");
-        MOZ_ASSERT(false);
+        MOZ_ASSERT(PR_FALSE);
         return;
         break;
       case nsAudioStream::FORMAT_S16:
@@ -574,7 +574,7 @@ void MediaPipelineTransmit::ProcessAudioChunk(AudioSessionConduit *conduit,
         }
         break;
       default:
-        MOZ_ASSERT(false);
+        MOZ_ASSERT(PR_FALSE);
         return;
         break;
     }
@@ -604,7 +604,7 @@ void MediaPipelineTransmit::ProcessVideoChunk(VideoSessionConduit *conduit,
 
   if (format != PLANAR_YCBCR) {
     MOZ_MTLOG(PR_LOG_ERROR, "Can't process non-YCBCR video");
-    MOZ_ASSERT(false);
+    MOZ_ASSERT(PR_FALSE);
     return;
   }
 

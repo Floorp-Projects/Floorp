@@ -372,8 +372,8 @@ GenerateKeyPair(PK11SlotInfo * slot,
 {
   *publicKey = NULL;
   *privateKey = PK11_GenerateKeyPair(slot, mechanism, params, publicKey,
-                                     false /*isPerm*/,
-                                     true /*isSensitive*/,
+                                     PR_FALSE /*isPerm*/,
+                                     PR_TRUE /*isSensitive*/,
                                      NULL /*&pwdata*/);
   if (!*privateKey) {
     MOZ_ASSERT(!*publicKey);

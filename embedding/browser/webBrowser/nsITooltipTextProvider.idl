@@ -35,9 +35,9 @@ interface nsITooltipTextProvider : nsISupports
      * @arg aNode The node to obtain the text from.
      * @arg aText The tooltip text.
      *
-     * @return <CODE>true</CODE> if tooltip text is associated
+     * @return <CODE>PR_TRUE</CODE> if tooltip text is associated
      *         with the node and was returned in the aText argument;
-     *         <CODE>false</CODE> otherwise.
+     *         <CODE>PR_FALSE</CODE> otherwise.
      */
     boolean getNodeText(in nsIDOMNode aNode, out wstring aText);
 };
