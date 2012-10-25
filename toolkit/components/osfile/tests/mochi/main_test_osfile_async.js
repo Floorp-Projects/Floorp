@@ -295,6 +295,9 @@ let test_read_write = maketest("read_write", function read_write(test) {
     stat = yield OS.File.stat(pathDest);
     test.is(stat.size, size, "Both files have the same size");
     yield reference_compare_files(pathSource, pathDest, test);
+
+    // Cleanup.
+    OS.File.remove(pathDest);
   });
 });
 
@@ -368,6 +371,9 @@ let test_read_write_all = maketest("read_write_all", function read_write_all(tes
     } catch (err) {
       test.ok(true, "Without a tmpPath, writeAtomic has failed as expected");
     }
+
+    // Cleanup.
+    OS.File.remove(pathDest);
   });
 });
 
@@ -428,6 +434,7 @@ let test_copy = maketest("copy", function copy(test) {
     test.info("Move complete");
     yield reference_compare_files(pathSource, pathDest2, test);
     test.info("Second compare complete");
+    OS.File.remove(pathDest2);
 
     try {
       let field = yield OS.File.open(pathDest);
