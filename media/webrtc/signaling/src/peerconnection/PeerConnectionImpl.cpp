@@ -211,7 +211,7 @@ public:
                   mObserver->OnAddStream(stream, "video");
                 } else {
                   CSFLogErrorS(logTag, __FUNCTION__ << "Audio & Video not supported");
-                  MOZ_ASSERT(false);
+                  MOZ_ASSERT(PR_FALSE);
                 }
               }
               break;

@@ -29,28 +29,28 @@
  *          query as to whether the application should continue to
  *          run.
  *
- *          If the returned boolean result is false, then the
+ *          If the returned boolean result is PR_FALSE, then the
  *          application should exit without further processing.  In
  *          such cases, the returned nsresult indicates whether the
  *          reason to exit is due to an error or not.
  *
  *          Win32 Note: In the case of starting a second instance
  *                      of this executable, this function will return
- *                      false and nsresult==NS_OK.  This means that
+ *                      PR_FALSE and nsresult==NS_OK.  This means that
  *                      the command line arguments have been
  *                      successfully passed to the instance of the
  *                      application acting as a DDE server.
  *
  *  stop - You call this to inform the native app support that the
  *         application *wishes* to terminate.  If the returned boolean
- *         value is false, then the application should continue
+ *         value is PR_FALSE, then the application should continue
  *         (as if there were still additional top-level windows open).
  *         
  *         Win32 Note: If this is the instance of the application
  *                     acting as the DDE server, and there are current
  *                     DDE conversations active with other instances
  *                     acting as DDE clients, then this function will
- *                     return false.
+ *                     return PR_FALSE.
  * 
  *  quit - Like Stop, but this method *forces* termination (or more 
  *         precisely, indicates that the application is about to be

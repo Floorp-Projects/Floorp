@@ -144,7 +144,7 @@ static int nr_crypto_nss_hmac(UCHAR *key, int keyl, UCHAR *buf, int bufl,
   err = 0;
 
  abort:
-  if(hmac_ctx) PK11_DestroyContext(hmac_ctx, true);
+  if(hmac_ctx) PK11_DestroyContext(hmac_ctx, PR_TRUE);
   if (skey) PK11_FreeSymKey(skey);
   if (slot) PK11_FreeSlot(slot);
 

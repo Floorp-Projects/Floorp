@@ -90,7 +90,7 @@ bool Time::FromString(const wchar_t* time_string, Time* parsed_time) {
   if (ascii_time_string.length() == 0)
     return false;
   PRTime result_time = 0;
-  PRStatus result = PR_ParseTimeString(ascii_time_string.c_str(), false,
+  PRStatus result = PR_ParseTimeString(ascii_time_string.c_str(), PR_FALSE,
                                        &result_time);
   if (PR_SUCCESS != result)
     return false;

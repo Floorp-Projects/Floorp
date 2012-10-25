@@ -23,7 +23,7 @@ interface nsIDOMNode;
  *   nsCOMPtr<nsIObserverService> observerService = 
  *     do_GetService("@mozilla.org/observer-service;1", &rv);
  *   if (NS_SUCCEEDED(rv)) 
- *     rv = observerService->AddObserver(this, "accessible-event", true);
+ *     rv = observerService->AddObserver(this, "accessible-event", PR_TRUE);
  */
 [scriptable, uuid(7f66a33a-9ed7-4fd4-87a8-e431b0f43368)]
 interface nsIAccessibleEvent : nsISupports

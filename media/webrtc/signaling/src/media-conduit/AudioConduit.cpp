@@ -370,7 +370,7 @@ WebrtcAudioConduit::SendAudioFrame(const int16_t audio_data[],
                     ((lengthSamples % (samplingFreqHz / 100) != 0)) )
   {
     CSFLogError(logTag, "%s Invalid Params ", __FUNCTION__);
-    MOZ_ASSERT(false);
+    MOZ_ASSERT(PR_FALSE);
     return kMediaConduitMalformedArgument;
   }
 
@@ -378,7 +378,7 @@ WebrtcAudioConduit::SendAudioFrame(const int16_t audio_data[],
   if(capture_delay < 0 )
   {
     CSFLogError(logTag,"%s Invalid Capture Delay ", __FUNCTION__);
-    MOZ_ASSERT(false);
+    MOZ_ASSERT(PR_FALSE);
     return kMediaConduitMalformedArgument;
   }
 
@@ -422,7 +422,7 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
   if(!speechData )
   {
     CSFLogError(logTag,"%s Null Audio Buffer Pointer", __FUNCTION__);
-    MOZ_ASSERT(false);
+    MOZ_ASSERT(PR_FALSE);
     return kMediaConduitMalformedArgument;
   }
 
@@ -430,7 +430,7 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
   if((numSamples = GetNum10msSamplesForFrequency(samplingFreqHz)) == 0  )
   {
     CSFLogError(logTag,"%s Invalid Sampling Frequency ", __FUNCTION__);
-    MOZ_ASSERT(false);
+    MOZ_ASSERT(PR_FALSE);
     return kMediaConduitMalformedArgument;
   }
 
@@ -438,7 +438,7 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
   if(capture_delay < 0 )
   {
     CSFLogError(logTag,"%s Invalid Capture Delay ", __FUNCTION__);
-    MOZ_ASSERT(false);
+    MOZ_ASSERT(PR_FALSE);
     return kMediaConduitMalformedArgument;
   }
 

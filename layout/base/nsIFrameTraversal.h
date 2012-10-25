@@ -61,7 +61,7 @@ public:
   NS_IMETHOD NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
                                nsPresContext* aPresContext,
                                nsIFrame *aStart,
-                               int32_t aType,
+                               PRInt32 aType,
                                bool aVisual,
                                bool aLockInScrollView,
                                bool aFollowOOFs) = 0;
