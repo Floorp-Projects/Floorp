@@ -1075,9 +1075,9 @@ CheckTypeInference(JSContext *cx, JSClass *clasp, nsIPrincipal *principal)
 
 namespace xpc {
 
-nsresult
+JSObject*
 CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
-                   bool wantXrays, JSObject **global, JSCompartment **compartment)
+                   bool wantXrays)
 {
     // Make sure that Type Inference is enabled for everything non-chrome.
     // Sandboxes and compilation scopes are exceptions. See bug 744034.
@@ -1085,15 +1085,15 @@ CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
 
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "using a principal off the main thread?");
 
-    *global = JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal));
-    if (!*global)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-    *compartment = js::GetObjectCompartment(*global);
-    JS_SetCompartmentPrivate(*compartment, new xpc::CompartmentPrivate(wantXrays));
+    JSObject *global = JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal));
+    if (!global)
+        return nullptr;
+    JSCompartment *compartment = js::GetObjectCompartment(global);
+    JS_SetCompartmentPrivate(compartment, new xpc::CompartmentPrivate(wantXrays));
 
     XPCCompartmentSet& set = nsXPConnect::GetRuntimeInstance()->GetCompartmentSet();
-    if (!set.put(*compartment))
-        return UnexpectedFailure(NS_ERROR_FAILURE);
+    if (!set.put(compartment))
+        return nullptr;
 
 #ifdef DEBUG
     // Verify that the right trace hook is called. Note that this doesn't
@@ -1105,16 +1105,16 @@ CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
         VerifyTraceXPCGlobalCalledTracer trc;
         JS_TracerInit(&trc.base, JS_GetRuntime(cx), VerifyTraceXPCGlobalCalled);
         trc.ok = false;
-        JS_TraceChildren(&trc.base, *global, JSTRACE_OBJECT);
+        JS_TraceChildren(&trc.base, global, JSTRACE_OBJECT);
         NS_ABORT_IF_FALSE(trc.ok, "Trace hook needs to call TraceXPCGlobal if JSCLASS_XPCONNECT_GLOBAL is set.");
     }
 #endif
 
     if (clasp->flags & JSCLASS_DOM_GLOBAL) {
-        AllocateProtoOrIfaceCache(*global);
+        AllocateProtoOrIfaceCache(global);
     }
 
-    return NS_OK;
+    return global;
 }
 
 } // namespace xpc

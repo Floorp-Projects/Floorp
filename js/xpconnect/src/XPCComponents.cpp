@@ -3256,11 +3256,11 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
 
     nsIPrincipal *principal = sop->GetPrincipal();
 
-    JSCompartment *compartment;
     JSObject *sandbox;
 
-    rv = xpc::CreateGlobalObject(cx, &SandboxClass, principal,
-                                 options.wantXrays, &sandbox, &compartment);
+    sandbox = xpc::CreateGlobalObject(cx, &SandboxClass, principal, options.wantXrays);
+    if (!sandbox)
+        return NS_ERROR_FAILURE;
     NS_ENSURE_SUCCESS(rv, rv);
 
     JS::AutoObjectRooter tvr(cx, sandbox);
