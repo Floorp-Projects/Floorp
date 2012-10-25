@@ -22,8 +22,7 @@ MIRGenerator::MIRGenerator(JSCompartment *compartment,
     info_(info),
     temp_(temp),
     graph_(graph),
-    error_(false),
-    cancelBuild_(0)
+    error_(false)
 { }
 
 bool

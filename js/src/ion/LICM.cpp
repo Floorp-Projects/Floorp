@@ -8,7 +8,6 @@
 #include <stdio.h>
 
 #include "Ion.h"
-#include "IonBuilder.h"
 #include "IonSpewer.h"
 #include "LICM.h"
 #include "MIR.h"
@@ -75,8 +74,8 @@ ion::ExtractLinearInequality(MTest *test, BranchDirection direction,
     return true;
 }
 
-LICM::LICM(MIRGenerator *mir, MIRGraph &graph)
-  : mir(mir), graph(graph)
+LICM::LICM(MIRGraph &graph)
+  : graph(graph)
 {
 }
 
@@ -94,7 +93,7 @@ LICM::analyze()
             continue;
 
         // Attempt to optimize loop.
-        Loop loop(mir, header->backedge(), header, graph);
+        Loop loop(header->backedge(), header, graph);
 
         Loop::LoopReturn lr = loop.init();
         if (lr == Loop::LoopReturn_Error)
@@ -109,9 +108,8 @@ LICM::analyze()
     return true;
 }
 
-Loop::Loop(MIRGenerator *mir, MBasicBlock *footer, MBasicBlock *header, MIRGraph &graph)
-  : mir(mir),
-    graph(graph),
+Loop::Loop(MBasicBlock *footer, MBasicBlock *header, MIRGraph &graph)
+  : graph(graph),
     footer_(footer),
     header_(header)
 {
@@ -183,9 +181,6 @@ Loop::optimize()
     IonSpew(IonSpew_LICM, "These instructions are in the loop: ");
 
     while (!worklist_.empty()) {
-        if (mir->shouldCancel("LICM (worklist)"))
-            return false;
-
         MInstruction *ins = popFromWorklist();
 
         IonSpewHeader(IonSpew_LICM);

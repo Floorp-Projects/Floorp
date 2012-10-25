@@ -15,11 +15,10 @@ class MIRGraph;
 
 class EdgeCaseAnalysis
 {
-    MIRGenerator *mir;
     MIRGraph &graph;
 
   public:
-    EdgeCaseAnalysis(MIRGenerator *mir, MIRGraph &graph);
+    EdgeCaseAnalysis(MIRGraph &graph);
     bool analyzeEarly();
     bool analyzeLate();
     static bool AllUsesTruncate(MInstruction *m);

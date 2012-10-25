@@ -25,11 +25,10 @@ typedef Vector<MInstruction*, 1, IonAllocPolicy> InstructionQueue;
 
 class LICM
 {
-    MIRGenerator *mir;
     MIRGraph &graph;
 
   public:
-    LICM(MIRGenerator *mir, MIRGraph &graph);
+    LICM(MIRGraph &graph);
     bool analyze();
 };
 
@@ -41,7 +40,6 @@ ExtractLinearInequality(MTest *test, BranchDirection direction,
 
 class Loop
 {
-    MIRGenerator *mir;
     MIRGraph &graph;
 
   public:
@@ -54,7 +52,7 @@ class Loop
 
   public:
     // A loop is constructed on a backedge found in the control flow graph.
-    Loop(MIRGenerator *mir, MBasicBlock *header, MBasicBlock *footer, MIRGraph &graph);
+    Loop(MBasicBlock *header, MBasicBlock *footer, MIRGraph &graph);
 
     // Initializes the loop, finds all blocks and instructions contained in the loop.
     LoopReturn init();
