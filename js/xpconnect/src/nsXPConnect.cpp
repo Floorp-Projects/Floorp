@@ -1087,8 +1087,8 @@ CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal)
     JSObject *global = JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal));
     if (!global)
         return nullptr;
+    EnsureCompartmentPrivate(global);
     JSCompartment *compartment = js::GetObjectCompartment(global);
-    JS_SetCompartmentPrivate(compartment, new xpc::CompartmentPrivate());
 
     XPCCompartmentSet& set = nsXPConnect::GetRuntimeInstance()->GetCompartmentSet();
     if (!set.put(compartment))
@@ -2403,22 +2403,14 @@ void
 SetLocationForGlobal(JSObject *global, const nsACString& location)
 {
     MOZ_ASSERT(global);
-
-    CompartmentPrivate *priv = GetCompartmentPrivate(global);
-    MOZ_ASSERT(priv, "No compartment private");
-
-    priv->SetLocation(location);
+    EnsureCompartmentPrivate(global)->SetLocation(location);
 }
 
 void
 SetLocationForGlobal(JSObject *global, nsIURI *locationURI)
 {
     MOZ_ASSERT(global);
-
-    CompartmentPrivate *priv = GetCompartmentPrivate(global);
-    MOZ_ASSERT(priv, "No compartment private");
-
-    priv->SetLocation(locationURI);
+    EnsureCompartmentPrivate(global)->SetLocation(locationURI);
 }
 
 } // namespace xpc
