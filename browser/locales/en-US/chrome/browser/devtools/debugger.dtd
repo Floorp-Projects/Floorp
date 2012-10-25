@@ -16,7 +16,7 @@
 <!ENTITY debuggerMenu.label2            "Debugger">
 
 <!-- LOCALIZATION NOTE (debuggerMenu.accesskey): This is accesskey for the
-  -  Tools meny entry of Debugger that opens the debugger UI. -->
+  -  Tools menu entry of Debugger that opens the debugger UI. -->
 <!ENTITY debuggerMenu.accesskey         "D">
 
 <!-- LOCALIZATION NOTE (remoteDebuggerMenu.label): This is the label for the
