@@ -17,6 +17,7 @@ extern "C" {
 #endif
 #include "nsTimeRanges.h"
 #include "mozilla/TimeStamp.h"
+#include "VorbisUtils.h"
 
 using namespace mozilla;
 
