@@ -249,18 +249,9 @@ nsIFrame::GetAbsoluteContainingBlock() const {
 }
 
 void
-nsIFrame::MarkAsAbsoluteContainingBlock()
-{
+nsIFrame::MarkAsAbsoluteContainingBlock() {
   AddStateBits(NS_FRAME_HAS_ABSPOS_CHILDREN);
   Properties().Set(AbsoluteContainingBlockProperty(), new nsAbsoluteContainingBlock(GetAbsoluteListID()));
-}
-
-void
-nsIFrame::MarkAsNotAbsoluteContainingBlock()
-{
-  NS_ASSERTION(!HasAbsolutelyPositionedChildren(), "Think of the children!");
-  RemoveStateBits(NS_FRAME_HAS_ABSPOS_CHILDREN);
-  Properties().Delete(AbsoluteContainingBlockProperty());
 }
 
 void
