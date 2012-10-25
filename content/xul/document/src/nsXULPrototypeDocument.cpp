@@ -11,6 +11,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIPrincipal.h"
+#include "nsJSPrincipals.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptSecurityManager.h"
@@ -94,8 +95,6 @@ nsXULPDGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
 
     // The addref was part of JSObject construction
     NS_RELEASE(nativeThis);
-
-    DestroyProtoOrIfaceCache(obj);
 }
 
 
@@ -752,10 +751,10 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
     JSContext *cx = ctxNew->GetNativeContext();
     JSAutoRequest ar(cx);
 
-    JSObject *newGlob = xpc::CreateGlobalObject(cx, &gSharedGlobalClass,
-                                                GetPrincipal());
+    JSObject *newGlob = JS_NewGlobalObject(cx, &gSharedGlobalClass,
+                                           nsJSPrincipals::get(GetPrincipal()));
     if (!newGlob)
-        return NS_OK;;
+        return NS_OK;
 
     ::JS_SetGlobalObject(cx, newGlob);
 

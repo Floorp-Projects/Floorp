@@ -19,6 +19,7 @@
 #include "nsIScriptError.h"
 #include "nsIChromeRegistry.h"
 #include "nsIPrincipal.h"
+#include "nsJSPrincipals.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
@@ -155,8 +156,6 @@ nsXBLDocGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
 
   // The addref was part of JSObject construction
   NS_RELEASE(nativeThis);
-
-  DestroyProtoOrIfaceCache(obj);
 }
 
 static JSBool
@@ -281,7 +280,8 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment()
   // why - see bug 339647)
   JS_SetErrorReporter(cx, XBL_ProtoErrorReporter);
 
-  mJSObject = xpc::CreateGlobalObject(cx, &gSharedGlobalClass, GetPrincipal());
+  mJSObject = JS_NewGlobalObject(cx, &gSharedGlobalClass,
+                                 nsJSPrincipals::get(GetPrincipal()));
   if (!mJSObject)
       return NS_OK;
 
