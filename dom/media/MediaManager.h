@@ -132,7 +132,7 @@ public:
           }
 
           MM_LOG(("started all sources"));
-          nsRefPtr<GetUserMediaNotificationEvent> event =
+          nsCOMPtr<GetUserMediaNotificationEvent> event =
             new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STARTING);
 
           NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
@@ -153,7 +153,7 @@ public:
           // Do this after stopping all tracks with EndTrack()
           mSourceStream->Finish();
 
-          nsRefPtr<GetUserMediaNotificationEvent> event =
+          nsCOMPtr<GetUserMediaNotificationEvent> event =
             new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STOPPING);
 
           NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
@@ -175,7 +175,7 @@ private:
   MediaOperation mType;
   nsRefPtr<MediaEngineSource> mAudioSource;
   nsRefPtr<MediaEngineSource> mVideoSource;
-  nsRefPtr<nsDOMMediaStream> mStream;
+  nsCOMPtr<nsDOMMediaStream> mStream;
   SourceMediaStream *mSourceStream;
 };
 
@@ -228,17 +228,11 @@ public:
     }
   }
 
-  void
-  NotifyFinished(MediaStreamGraph* aGraph)
-  {
-    Invalidate();
-  }
-
 private:
   nsCOMPtr<nsIThread> mMediaThread;
   nsRefPtr<MediaEngineSource> mAudioSource;
   nsRefPtr<MediaEngineSource> mVideoSource;
-  nsRefPtr<nsDOMMediaStream> mStream;
+  nsCOMPtr<nsDOMMediaStream> mStream;
   bool mValid;
 };
 

@@ -553,19 +553,7 @@ public:
    * when all tracks have ended and when latest time sent to
    * AdvanceKnownTracksTime() has been reached.
    */
-  void FinishWithLockHeld();
-  void Finish()
-    {
-      MutexAutoLock lock(mMutex);
-      FinishWithLockHeld();
-    }
-
-
-  /**
-   * End all tracks and Finish() this stream.  Used to voluntarily revoke access
-   * to a LocalMediaStream.
-   */
-  void EndAllTrackAndFinish();
+  void Finish();
 
   // XXX need a Reset API
 
