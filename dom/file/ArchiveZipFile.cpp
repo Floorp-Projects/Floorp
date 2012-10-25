@@ -327,7 +327,7 @@ ArchiveInputStream::Seek(int32_t aWhence, int64_t aOffset)
 NS_IMETHODIMP
 ArchiveInputStream::Tell(int64_t *aResult)
 {
-  LL_UI2L(*aResult, mData.cursor);
+  *aResult = mData.cursor;
   return NS_OK;
 }
 
