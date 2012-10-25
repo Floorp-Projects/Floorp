@@ -476,7 +476,7 @@ nsresult nsNativeAudioStream::Write(const void* aBuf, uint32_t aFrames)
 
   if (s_data) {
     double scaled_volume = GetVolumeScale() * mVolume;
-    if (Format() == FORMAT_S16) {
+    if (Format() == AUDIO_FORMAT_S16) {
       const short* buf = static_cast<const short*>(aBuf);
       int32_t volume = int32_t((1 << 16) * scaled_volume);
       for (uint32_t i = 0; i < samples; ++i) {
@@ -947,7 +947,7 @@ nsBufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate)
   cubeb_stream_params params;
   params.rate = aRate;
   params.channels = aNumChannels;
-  if (Format() == FORMAT_S16) {
+  if (Format() == AUDIO_FORMAT_S16) {
     params.format =  CUBEB_SAMPLE_S16NE;
     mBytesPerFrame = sizeof(int16_t) * aNumChannels;
   } else {
@@ -1183,7 +1183,7 @@ nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
       if (scaled_volume == 1.0) {
         memcpy(output, input[i], input_size[i]);
         output += input_size[i];
-      } else if (Format() == FORMAT_S16) {
+      } else if (Format() == AUDIO_FORMAT_S16) {
         // Adjust volume as each sample is copied out.
         int32_t volume = int32_t(1 << 16) * scaled_volume;
 
