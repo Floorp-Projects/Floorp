@@ -208,6 +208,7 @@ class B2GReftest(RefTest):
         self._automation.setRemoteProfile(self.remoteProfile)
         self.localLogName = options.localLogName
         self.remoteLogFile = options.remoteLogFile
+        self.bundlesDir = '/system/b2g/distribution/bundles'
         self.userJS = '/data/local/user.js'
         self.testDir = '/data/local/tests'
         self.remoteMozillaPath = '/data/b2g/mozilla'
@@ -226,6 +227,15 @@ class B2GReftest(RefTest):
             except:
                 print "ERROR: We were not able to retrieve the info from %s" % self.remoteLogFile
                 sys.exit(5)
+
+        # Delete any bundled extensions
+        extensionDir = os.path.join(profileDir, 'extensions', 'staged')
+        for filename in os.listdir(extensionDir):
+            try:
+                self._devicemanager._checkCmdAs(['shell', 'rm', '-rf',
+                                                 os.path.join(self.bundlesDir, filename)])
+            except devicemanager.DMError:
+                pass
 
         # Restore the original profiles.ini.
         if self.originalProfilesIni:
@@ -407,6 +417,19 @@ user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
             self._devicemanager.pushDir(profileDir, self.remoteProfile)
         except devicemanager.DMError:
             print "Automation Error: Unable to copy profile to device."
+            raise
+
+        # Copy the extensions to the B2G bundles dir.
+        extensionDir = os.path.join(profileDir, 'extensions', 'staged')
+        # need to write to read-only dir
+        self._devicemanager._checkCmdAs(['remount'])
+        for filename in os.listdir(extensionDir):
+            self._devicemanager._checkCmdAs(['shell', 'rm', '-rf',
+                                             os.path.join(self.bundlesDir, filename)])
+        try:
+            self._devicemanager.pushDir(extensionDir, self.bundlesDir)
+        except devicemanager.DMError:
+            print "Automation Error: Unable to copy extensions to device."
             raise
 
         # In B2G, user.js is always read from /data/local, not the profile
