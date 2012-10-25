@@ -4382,6 +4382,9 @@ private:
     nsCOMPtr<nsIURI> locationURI;
 };
 
+CompartmentPrivate*
+EnsureCompartmentPrivate(JSObject *obj);
+
 inline CompartmentPrivate*
 GetCompartmentPrivate(JSCompartment *compartment)
 {

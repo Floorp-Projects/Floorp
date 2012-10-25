@@ -213,9 +213,25 @@ ContextCallback(JSContext *cx, unsigned operation)
     return true;
 }
 
-xpc::CompartmentPrivate::~CompartmentPrivate()
+namespace xpc {
+
+CompartmentPrivate::~CompartmentPrivate()
 {
     MOZ_COUNT_DTOR(xpc::CompartmentPrivate);
+}
+
+CompartmentPrivate*
+EnsureCompartmentPrivate(JSObject *obj)
+{
+    JSCompartment *c = js::GetObjectCompartment(obj);
+    CompartmentPrivate *priv = GetCompartmentPrivate(c);
+    if (priv)
+        return priv;
+    priv = new CompartmentPrivate();
+    JS_SetCompartmentPrivate(c, priv);
+    return priv;
+}
+
 }
 
 static void
