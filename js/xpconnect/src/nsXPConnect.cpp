@@ -1092,11 +1092,6 @@ CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal)
     // The constructor automatically attaches the scope to the compartment private
     // of |global|.
     (void) new XPCWrappedNativeScope(cx, global);
-    JSCompartment *compartment = js::GetObjectCompartment(global);
-
-    XPCCompartmentSet& set = nsXPConnect::GetRuntimeInstance()->GetCompartmentSet();
-    if (!set.put(compartment))
-        return nullptr;
 
 #ifdef DEBUG
     // Verify that the right trace hook is called. Note that this doesn't
