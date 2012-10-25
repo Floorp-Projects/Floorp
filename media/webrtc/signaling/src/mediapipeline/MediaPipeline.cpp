@@ -552,7 +552,6 @@ void MediaPipelineTransmit::ProcessAudioChunk(AudioSessionConduit *conduit,
 
   if (chunk.mBuffer) {
     switch(chunk.mBufferFormat) {
-      case nsAudioStream::FORMAT_U8:
       case nsAudioStream::FORMAT_FLOAT32:
         MOZ_MTLOG(PR_LOG_ERROR, "Can't process audio except in 16-bit PCM yet");
         MOZ_ASSERT(PR_FALSE);

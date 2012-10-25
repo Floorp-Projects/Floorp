@@ -19,11 +19,6 @@ SampleToFloat(float aValue)
   return aValue;
 }
 static float
-SampleToFloat(uint8_t aValue)
-{
-  return (aValue - 128)/128.0f;
-}
-static float
 SampleToFloat(int16_t aValue)
 {
   return aValue/32768.0f;
@@ -33,13 +28,6 @@ static void
 FloatToSample(float aValue, float* aOut)
 {
   *aOut = aValue;
-}
-static void
-FloatToSample(float aValue, uint8_t* aOut)
-{
-  float v = aValue*128 + 128;
-  float clamped = NS_MAX(0.0f, NS_MIN(255.0f, v));
-  *aOut = uint8_t(clamped);
 }
 static void
 FloatToSample(float aValue, int16_t* aOut)
@@ -103,10 +91,6 @@ InterleaveAndConvertBuffer(const SrcT* aSource, int32_t aSourceLength,
     InterleaveAndConvertBuffer(aSource, aSourceLength, aLength, aVolume,
                                aChannels, static_cast<int16_t*>(aOutput));
     break;
-  case nsAudioStream::FORMAT_U8:
-    InterleaveAndConvertBuffer(aSource, aSourceLength, aLength, aVolume,
-                               aChannels, static_cast<uint8_t*>(aOutput));
-    break;
   }
 }
 
@@ -128,13 +112,6 @@ InterleaveAndConvertBuffer(const void* aSource, nsAudioStream::SampleFormat aSou
     break;
   case nsAudioStream::FORMAT_S16:
     InterleaveAndConvertBuffer(static_cast<const int16_t*>(aSource) + aOffset, aSourceLength,
-                               aLength,
-                               aVolume,
-                               aChannels,
-                               aOutput, aOutputFormat);
-    break;
-  case nsAudioStream::FORMAT_U8:
-    InterleaveAndConvertBuffer(static_cast<const uint8_t*>(aSource) + aOffset, aSourceLength,
                                aLength,
                                aVolume,
                                aChannels,
