@@ -132,8 +132,7 @@ class AudioInitEvent : public nsRunnable
     ContentChild * cpc = ContentChild::GetSingleton();
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
     mOwner->mAudioChild =  static_cast<AudioChild*>(cpc->SendPAudioConstructor(mOwner->mChannels,
-                                                                               mOwner->mRate,
-                                                                               Format()));
+                                                                               mOwner->mRate));
     return NS_OK;
   }
 
