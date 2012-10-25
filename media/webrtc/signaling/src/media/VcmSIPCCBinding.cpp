@@ -648,7 +648,7 @@ void vcmGetIceParams(const char *peerconnection, char **ufragp, char **pwdp)
 
   }
   if (!ufrag || !pwd) {
-    MOZ_ASSERT(PR_FALSE);
+    MOZ_ASSERT(false);
     cpr_free(ufrag);
     cpr_free(pwd);
     CSFLogDebug( logTag, "%s: no ufrag or password", __FUNCTION__);
@@ -1185,7 +1185,7 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
     pc->impl()->GetRemoteStream(pc_stream_id);
   if (!stream) {
     // This should never happen
-    PR_ASSERT(PR_FALSE);
+    PR_ASSERT(false);
     return VCM_ERROR;
   }
   // Create the transport flows
@@ -1218,7 +1218,7 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
     {
       int ret = vcmPayloadType2AudioCodec(payloads[i], &config_raw);
       if (ret) {
-       PR_ASSERT(PR_FALSE);
+       PR_ASSERT(false);
        return VCM_ERROR;
       }
       configs.push_back(config_raw);
@@ -1250,7 +1250,7 @@ int vcmRxStartICE(cc_mcapid_t mcap_id,
     {
       int ret = vcmPayloadType2VideoCodec(payloads[i], &config_raw);
       if (ret) {
-       PR_ASSERT(PR_FALSE);
+       PR_ASSERT(false);
        return VCM_ERROR;
       }
       configs.push_back(config_raw);
@@ -2364,11 +2364,11 @@ static int vcmPayloadType2AudioCodec(vcm_media_payload_type_t payload_in,
       //TODO: Check with Ekr, Derf if 64k and 56K are valid frequency rates for G722.1
       // or G722.2
       CSFLogError(logTag, "vcmPayloadType2AudioCodec Codec Not Implemented !");
-      PR_ASSERT(PR_FALSE);
+      PR_ASSERT(false);
       return VCM_ERROR;
     default:
       CSFLogError(logTag, "vcmPayloadType2AudioCodec unknown codec. Apparent internal error");
-      PR_ASSERT(PR_FALSE);
+      PR_ASSERT(false);
       return VCM_ERROR;
   }
 
@@ -2401,7 +2401,7 @@ static int vcmPayloadType2VideoCodec(vcm_media_payload_type_t payload_in,
       break;
     default:
       CSFLogError(logTag, "vcmPayloadType2VideoCodec unknown codec. Apparent internal error");
-      PR_ASSERT(PR_FALSE);
+      PR_ASSERT(false);
       return VCM_ERROR;
   }
   return 0;

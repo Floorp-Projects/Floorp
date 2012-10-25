@@ -160,9 +160,9 @@ XPT_GetAddrForOffset(XPTCursor *cursor, uint32_t offset);
                         mode == XPT_ENCODE ? size : 0u, &new_curs,            \
                         &already) ||                                          \
         !(mode == XPT_DECODE || XPT_Do32(cursor, &new_curs.offset)))          \
-        return PR_FALSE;                                                      \
+        return false;                                                      \
     if (already)                                                              \
-        return PR_TRUE;                                                       \
+        return true;                                                       \
 
 #define XPT_PREAMBLE_NO_ALLOC(cursor, addrp, pool, size, new_curs, already)   \
   {                                                                           \
@@ -173,7 +173,7 @@ XPT_GetAddrForOffset(XPTCursor *cursor, uint32_t offset);
  error:                                                                       \
     if (cursor->state->mode == XPT_DECODE)                                    \
     XPT_FREEIF(arena, free_it);                                               \
-    return PR_FALSE;
+    return false;
 
 
 #ifdef __cplusplus

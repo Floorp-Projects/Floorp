@@ -103,8 +103,8 @@ parent:
      * Notifies chrome that there is a focus change involving an editable
      * object (input, textarea, document, contentEditable. etc.)
      *
-     *  focus        PR_TRUE if editable object is receiving focus
-     *               PR_FALSE if losing focus
+     *  focus        true if editable object is receiving focus
+     *               false if losing focus
      *  preference   Native widget preference for IME updates
      *  seqno        Current seqno value on the chrome side
      */
@@ -114,7 +114,7 @@ parent:
     /**
      * Notifies chrome that there has been a change in text content
      * One call can encompass both a delete and an insert operation
-     * Only called when NotifyIMEFocus returns PR_TRUE for mWantUpdates
+     * Only called when NotifyIMEFocus returns true for mWantUpdates
      *
      *  offset       Starting offset of the change
      *  end          Ending offset of the range deleted
@@ -127,7 +127,7 @@ parent:
 
     /**
      * Notifies chrome that there has been a change in selection
-     * Only called when NotifyIMEFocus returns PR_TRUE for mWantUpdates
+     * Only called when NotifyIMEFocus returns true for mWantUpdates
      *
      *  seqno        Current seqno value on the content side
      *  anchor       Offset where the selection started
@@ -137,7 +137,7 @@ parent:
 
     /**
      * Notifies chrome to refresh its text cache 
-     * Only called when NotifyIMEFocus returns PR_TRUE for mWantHints
+     * Only called when NotifyIMEFocus returns true for mWantHints
      *
      *  text         The entire content of the text field
      */
@@ -146,12 +146,12 @@ parent:
     /**
      * Instructs chrome to end any pending composition
      *
-     *  cancel       PR_TRUE if composition should be cancelled
+     *  cancel       true if composition should be cancelled
      *  composition  Text to commit before ending the composition
      *
-     *  if cancel is PR_TRUE,
+     *  if cancel is true,
      *    widget should return empty string for composition
-     *  if cancel is PR_FALSE,
+     *  if cancel is false,
      *    widget should return the current composition text
      */
     sync EndIMEComposition(bool cancel) returns (nsString composition);

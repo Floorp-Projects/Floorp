@@ -25,15 +25,15 @@ interface nsISimpleEnumerator : nsISupports {
    * internal state of enumerator.
    *
    * @see getNext()
-   * @return PR_TRUE if there are remaining elements in the enumerator.
-   *         PR_FALSE if there are no more elements in the enumerator.
+   * @return true if there are remaining elements in the enumerator.
+   *         false if there are no more elements in the enumerator.
    */                                            
   boolean hasMoreElements();
 
   /**
    * Called to retrieve the next element in the enumerator. The "next"
    * element is the first element upon the first call. Must be
-   * pre-ceeded by a call to hasMoreElements() which returns PR_TRUE.
+   * pre-ceeded by a call to hasMoreElements() which returns true.
    * This method is generally called within a loop to iterate over
    * the elements in the enumerator.
    *

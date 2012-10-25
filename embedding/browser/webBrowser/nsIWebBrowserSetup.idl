@@ -77,8 +77,8 @@ interface nsIWebBrowserSetup : nsISupports
     const unsigned long SETUP_USE_GLOBAL_HISTORY    = 256;
 
     /**
-     * Boolean. A value of PR_TRUE makes the browser a chrome wrapper.
-     * Default is PR_FALSE.
+     * Boolean. A value of true makes the browser a chrome wrapper.
+     * Default is false.
      *
      * @since mozilla1.0
      *
@@ -99,7 +99,7 @@ interface nsIWebBrowserSetup : nsISupports
 
     /**
      * Sets an integer or boolean property on the new web browser object.
-     * Only PR_TRUE and PR_FALSE are legal boolean values.
+     * Only true and false are legal boolean values.
      *
      * @param aId The identifier of the property to be set.
      * @param aValue The value of the property.

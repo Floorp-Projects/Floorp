@@ -392,7 +392,7 @@ nsDiskCacheStreamIO::CloseInternal()
             nsresult rv = Flush();
             NS_ENSURE_SUCCESS(rv, rv);
         }
-        mOutputStreamIsOpen = PR_FALSE;
+        mOutputStreamIsOpen = false;
     }
 
     // Make sure to always close the FileDescriptor

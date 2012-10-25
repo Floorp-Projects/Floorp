@@ -206,7 +206,7 @@ interface nsIDOMEventTarget : nsISupports
    * This is used to create the event target chain and implementations
    * should set the necessary members of nsEventChainPreVisitor.
    * At least aVisitor.mCanHandle must be set,
-   * usually also aVisitor.mParentTarget if mCanHandle is PR_TRUE.
+   * usually also aVisitor.mParentTarget if mCanHandle is true.
    * First one tells that this object can handle the aVisitor.mEvent event and
    * the latter one is the possible parent object for the event target chain.
    * @see nsEventDispatcher.h for more documentation about aVisitor.
@@ -220,7 +220,7 @@ interface nsIDOMEventTarget : nsISupports
   void PreHandleEvent(in nsEventChainPreVisitorRef aVisitor);
 
   /**
-   * If nsEventChainPreVisitor.mWantsWillHandleEvent is set PR_TRUE,
+   * If nsEventChainPreVisitor.mWantsWillHandleEvent is set true,
    * called just before possible event handlers on this object will be called.
    */
   [noscript, nostdcall]
@@ -263,7 +263,7 @@ interface nsIDOMEventTarget : nsISupports
   /**
    * Get the event listener manager, the guy you talk to to register for events
    * on this node.
-   * @param aMayCreate If PR_FALSE, returns a listener manager only if
+   * @param aMayCreate If false, returns a listener manager only if
    *                   one already exists.
    */
   [notxpcom, nostdcall]

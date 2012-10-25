@@ -176,12 +176,12 @@ interface nsIEditor  : nsISupports
 
 
   /** turn the undo system on or off
-    * @param aEnable  if PR_TRUE, the undo system is turned on if available
-    *                 if PR_FALSE the undo system is turned off if it
+    * @param aEnable  if true, the undo system is turned on if available
+    *                 if false the undo system is turned off if it
     *                 was previously on
-    * @return         if aEnable is PR_TRUE, returns NS_OK if
+    * @return         if aEnable is true, returns NS_OK if
     *                 the undo system could be initialized properly
-    *                 if aEnable is PR_FALSE, returns NS_OK.
+    *                 if aEnable is false, returns NS_OK.
     */
   void enableUndo(in boolean enable);
 
@@ -208,8 +208,8 @@ interface nsIEditor  : nsISupports
   void undo(in unsigned long count);
 
   /** returns state information about the undo system.
-    * @param aIsEnabled [OUT] PR_TRUE if undo is enabled
-    * @param aCanUndo   [OUT] PR_TRUE if at least one transaction is
+    * @param aIsEnabled [OUT] true if undo is enabled
+    * @param aCanUndo   [OUT] true if at least one transaction is
     *                         currently ready to be undone.
     */
   void canUndo(out boolean isEnabled, out boolean canUndo);
@@ -227,8 +227,8 @@ interface nsIEditor  : nsISupports
   void redo(in unsigned long count);
 
   /** returns state information about the redo system.
-    * @param aIsEnabled [OUT] PR_TRUE if redo is enabled
-    * @param aCanRedo   [OUT] PR_TRUE if at least one transaction is
+    * @param aIsEnabled [OUT] true if redo is enabled
+    * @param aCanRedo   [OUT] true if at least one transaction is
                               currently ready to be redone.
     */
   void canRedo(out boolean isEnabled, out boolean canRedo);
@@ -261,8 +261,8 @@ interface nsIEditor  : nsISupports
     * @param   should  Set false to suppress changing the selection;
     *                  i.e., before using InsertElement() to insert
     *                  under <head> element
-    * WARNING: You must be very careful to reset back to PR_TRUE after
-    *          setting PR_FALSE, else selection/caret is trashed
+    * WARNING: You must be very careful to reset back to true after
+    *          setting false, else selection/caret is trashed
     *          for further editing.
     */
   void setShouldTxnSetSelection(in boolean should);
@@ -370,9 +370,9 @@ interface nsIEditor  : nsISupports
    * @param aElement      the content element to operate on
    * @param aAttribute    the string representation of the attribute to get
    * @param aResultValue  [OUT] the value of aAttribute.
-   *                      Only valid if aResultIsSet is PR_TRUE
-   * @return              PR_TRUE if aAttribute is set on the current node,
-   *                      PR_FALSE if it is not.
+   *                      Only valid if aResultIsSet is true
+   * @return              true if aAttribute is set on the current node,
+   *                      false if it is not.
    */
   boolean getAttributeValue(in nsIDOMElement aElement, 
                             in AString attributestr, 

@@ -64,7 +64,7 @@ TEST_F(PRTimeTest, ParseTimeTest1) {
   PRTime current_time64 = static_cast<PRTime>(current_time) * PR_USEC_PER_SEC;
 
   PRTime parsed_time = 0;
-  PRStatus result = PR_ParseTimeString(time_buf, PR_FALSE, &parsed_time);
+  PRStatus result = PR_ParseTimeString(time_buf, false, &parsed_time);
   EXPECT_EQ(PR_SUCCESS, result);
   EXPECT_EQ(current_time64, parsed_time);
 }
@@ -72,14 +72,14 @@ TEST_F(PRTimeTest, ParseTimeTest1) {
 TEST_F(PRTimeTest, ParseTimeTest2) {
   PRTime parsed_time = 0;
   PRStatus result = PR_ParseTimeString("Mon, 15 Oct 2007 19:45:00 GMT",
-                                       PR_FALSE, &parsed_time);
+                                       false, &parsed_time);
   EXPECT_EQ(PR_SUCCESS, result);
   EXPECT_EQ(parsed_time, comparison_time_pdt);
 }
 
 TEST_F(PRTimeTest, ParseTimeTest3) {
   PRTime parsed_time = 0;
-  PRStatus result = PR_ParseTimeString("15 Oct 07 12:45:00", PR_FALSE,
+  PRStatus result = PR_ParseTimeString("15 Oct 07 12:45:00", false,
                                        &parsed_time);
   EXPECT_EQ(PR_SUCCESS, result);
   EXPECT_EQ(parsed_time, comparison_time_local_);
@@ -87,7 +87,7 @@ TEST_F(PRTimeTest, ParseTimeTest3) {
 
 TEST_F(PRTimeTest, ParseTimeTest4) {
   PRTime parsed_time = 0;
-  PRStatus result = PR_ParseTimeString("15 Oct 07 19:45 GMT", PR_FALSE,
+  PRStatus result = PR_ParseTimeString("15 Oct 07 19:45 GMT", false,
                                        &parsed_time);
   EXPECT_EQ(PR_SUCCESS, result);
   EXPECT_EQ(parsed_time, comparison_time_pdt);
@@ -96,7 +96,7 @@ TEST_F(PRTimeTest, ParseTimeTest4) {
 TEST_F(PRTimeTest, ParseTimeTest5) {
   PRTime parsed_time = 0;
   PRStatus result = PR_ParseTimeString("Mon Oct 15 12:45 PDT 2007",
-                                       PR_FALSE, &parsed_time);
+                                       false, &parsed_time);
   EXPECT_EQ(PR_SUCCESS, result);
   EXPECT_EQ(parsed_time, comparison_time_pdt);
 }
@@ -104,14 +104,14 @@ TEST_F(PRTimeTest, ParseTimeTest5) {
 TEST_F(PRTimeTest, ParseTimeTest6) {
   PRTime parsed_time = 0;
   PRStatus result = PR_ParseTimeString("Monday, Oct 15, 2007 12:45 PM",
-                                       PR_FALSE, &parsed_time);
+                                       false, &parsed_time);
   EXPECT_EQ(PR_SUCCESS, result);
   EXPECT_EQ(parsed_time, comparison_time_local_);
 }
 
 TEST_F(PRTimeTest, ParseTimeTest7) {
   PRTime parsed_time = 0;
-  PRStatus result = PR_ParseTimeString("10/15/07 12:45:00 PM", PR_FALSE,
+  PRStatus result = PR_ParseTimeString("10/15/07 12:45:00 PM", false,
                                        &parsed_time);
   EXPECT_EQ(PR_SUCCESS, result);
   EXPECT_EQ(parsed_time, comparison_time_local_);
@@ -119,7 +119,7 @@ TEST_F(PRTimeTest, ParseTimeTest7) {
 
 TEST_F(PRTimeTest, ParseTimeTest8) {
   PRTime parsed_time = 0;
-  PRStatus result = PR_ParseTimeString("15-OCT-2007 12:45pm", PR_FALSE,
+  PRStatus result = PR_ParseTimeString("15-OCT-2007 12:45pm", false,
                                        &parsed_time);
   EXPECT_EQ(PR_SUCCESS, result);
   EXPECT_EQ(parsed_time, comparison_time_local_);
@@ -128,7 +128,7 @@ TEST_F(PRTimeTest, ParseTimeTest8) {
 TEST_F(PRTimeTest, ParseTimeTest9) {
   PRTime parsed_time = 0;
   PRStatus result = PR_ParseTimeString("16 Oct 2007 4:45-JST (Tuesday)",
-                                       PR_FALSE, &parsed_time);
+                                       false, &parsed_time);
   EXPECT_EQ(PR_SUCCESS, result);
   EXPECT_EQ(parsed_time, comparison_time_pdt);
 }
@@ -247,14 +247,14 @@ TEST_F(PRTimeTest, ParseTimeTestOutOfRange) {
   // we use January 2, 3001 to make sure it's after the magic maximum in any
   // timezone.
   PRStatus result = PR_ParseTimeString("Sun Jan  2 00:00:00 3001",
-                                       PR_FALSE, &parsed_time);
+                                       false, &parsed_time);
   EXPECT_EQ(PR_SUCCESS, result);
 }
 
 TEST_F(PRTimeTest, ParseTimeTestNotNormalized1) {
   PRTime parsed_time = 0;
   PRStatus result = PR_ParseTimeString("Mon Oct 15 12:44:60 PDT 2007",
-                                       PR_FALSE, &parsed_time);
+                                       false, &parsed_time);
   EXPECT_EQ(PR_SUCCESS, result);
   EXPECT_EQ(comparison_time_pdt, parsed_time);
 }
@@ -262,7 +262,7 @@ TEST_F(PRTimeTest, ParseTimeTestNotNormalized1) {
 TEST_F(PRTimeTest, ParseTimeTestNotNormalized2) {
   PRTime parsed_time = 0;
   PRStatus result = PR_ParseTimeString("Sun Oct 14 36:45 PDT 2007",
-                                       PR_FALSE, &parsed_time);
+                                       false, &parsed_time);
   EXPECT_EQ(PR_SUCCESS, result);
   EXPECT_EQ(comparison_time_pdt, parsed_time);
 }

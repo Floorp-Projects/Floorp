@@ -20,14 +20,14 @@ interface nsIPrintPreviewNavigation  : nsISupports
   /**
    * Preview the next Page
    *
-   * Return - PR_TRUE if success
+   * Return - true if success
    */
   boolean	nextPage();
   
   /**
    * Preview the previous Page
    *
-   * Return - PR_TRUE if success
+   * Return - true if success
    */
   boolean	previousPage();
 
@@ -35,7 +35,7 @@ interface nsIPrintPreviewNavigation  : nsISupports
    * Go to a page to preview
    *
    * aPageNumber - Page to go preview
-   * Return - PR_TRUE if success
+   * Return - true if success
    */
   boolean	goToPage(unsigned long aPageNumber);
 
