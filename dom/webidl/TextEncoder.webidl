@@ -3,18 +3,18 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://wiki.whatwg.org/wiki/StringEncoding
+ * http://encoding.spec.whatwg.org/#interface-textencoder
  *
- * Copyright © 2006 The WHATWG Contributors
- * http://wiki.whatwg.org/wiki/WHATWG_Wiki:Copyrights
+ * Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-[Constructor(optional DOMString encoding)]
+[Constructor(optional DOMString label = "utf-8")]
 interface TextEncoder {
   [SetterThrows]
   readonly attribute DOMString encoding;
   [Throws]
-  Uint8Array encode(DOMString? string, optional TextEncodeOptions options);
+  Uint8Array encode(optional DOMString? input = null, optional TextEncodeOptions options);
 };
 
 dictionary TextEncodeOptions {
