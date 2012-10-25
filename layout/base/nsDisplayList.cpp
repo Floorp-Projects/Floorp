@@ -852,7 +852,7 @@ nsDisplayList::ComputeVisibilityForRoot(nsDisplayListBuilder* aBuilder,
   SAMPLE_LABEL("nsDisplayList", "ComputeVisibilityForRoot");
   nsRegion r;
   r.And(*aVisibleRegion, GetBounds(aBuilder));
-  return ComputeVisibilityForSublist(aBuilder, nullptr, aVisibleRegion, r.GetBounds(), r.GetBounds());
+  return ComputeVisibilityForSublist(aBuilder, aVisibleRegion, r.GetBounds(), r.GetBounds());
 }
 
 static nsRegion
@@ -897,7 +897,6 @@ GetDisplayPortBounds(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem)
 
 bool
 nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
-                                           nsDisplayItem* aForItem,
                                            nsRegion* aVisibleRegion,
                                            const nsRect& aListVisibleBounds,
                                            const nsRect& aAllowVisibleRegionExpansion) {
@@ -919,13 +918,6 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
   for (int32_t i = elements.Length() - 1; i >= 0; --i) {
     nsDisplayItem* item = elements[i];
     nsDisplayItem* belowItem = i < 1 ? nullptr : elements[i - 1];
-
-    NS_ASSERTION(!aForItem ||
-                 item->GetType() != nsDisplayItem::TYPE_TRANSFORM ||
-                 item->GetUnderlyingFrame() != aForItem->GetUnderlyingFrame() ||
-                 aForItem->ReferenceFrame() != aForItem->GetUnderlyingFrame(),
-                 "If we have an nsDisplayTransform child (for the same frame),"
-                 "then we shouldn't be our own reference frame!");
 
     nsDisplayList* list = item->GetList();
     if (aBuilder->AllowMergingAndFlattening()) {
@@ -2483,30 +2475,6 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
   : nsDisplayItem(aBuilder, aFrame) {
   mList.AppendToTop(aList);
   UpdateBounds(aBuilder);
-
-  if (!aFrame || !aFrame->IsTransformed()) {
-    return;
-  }
-
-  // If we're a transformed frame, then we need to find out if we're inside
-  // the nsDisplayTransform or outside of it. Frames inside the transform
-  // need mReferenceFrame == mFrame, outside needs the next ancestor
-  // reference frame.
-  // If we're inside the transform, then the nsDisplayItem constructor
-  // will have done the right thing.
-  // If we're outside the transform, then we should have only one child
-  // (since nsDisplayTransform wraps all actual content), and that child
-  // will have the correct reference frame set (since nsDisplayTransform
-  // handles this explictly).
-  //
-  // Preserve-3d can cause us to have multiple nsDisplayTransform
-  // children.
-  nsDisplayItem *i = mList.GetBottom();
-  if (i && (!i->GetAbove() || i->GetType() == TYPE_TRANSFORM) && 
-      i->GetUnderlyingFrame() == mFrame) {
-    mReferenceFrame = i->ReferenceFrame();
-    mToReferenceFrame = i->ToReferenceFrame();
-  }
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
@@ -2514,16 +2482,6 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
   : nsDisplayItem(aBuilder, aFrame) {
   mList.AppendToTop(aItem);
   UpdateBounds(aBuilder);
-  
-  if (!aFrame || !aFrame->IsTransformed()) {
-    return;
-  }
-
-  // See the previous nsDisplayWrapList constructor
-  if (aItem->GetUnderlyingFrame() == aFrame) {
-    mReferenceFrame = aItem->ReferenceFrame();
-    mToReferenceFrame = aItem->ToReferenceFrame();
-  }
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
@@ -2555,7 +2513,7 @@ bool
 nsDisplayWrapList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                      nsRegion* aVisibleRegion,
                                      const nsRect& aAllowVisibleRegionExpansion) {
-  return mList.ComputeVisibilityForSublist(aBuilder, this, aVisibleRegion,
+  return mList.ComputeVisibilityForSublist(aBuilder, aVisibleRegion,
                                            mVisibleRect,
                                            aAllowVisibleRegionExpansion);
 }
@@ -2918,6 +2876,11 @@ nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
 
   NS_ASSERTION(mScrolledFrame && mScrolledFrame->GetContent(),
                "Need a child frame with content");
+  nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(aForFrame);
+  NS_ASSERTION(parent, "Must have a parent!");
+  mReferenceFrame = 
+    aBuilder->FindReferenceFrameFor(parent);
+  mToReferenceFrame = aForFrame->GetOffsetToCrossDoc(mReferenceFrame);
 }
 
 nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
@@ -2935,6 +2898,11 @@ nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
 
   NS_ASSERTION(mScrolledFrame && mScrolledFrame->GetContent(),
                "Need a child frame with content");
+  nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(aForFrame);
+  NS_ASSERTION(parent, "Must have a parent!");
+  mReferenceFrame = 
+    aBuilder->FindReferenceFrameFor(parent);
+  mToReferenceFrame = aForFrame->GetOffsetToCrossDoc(mReferenceFrame);
 }
 
 nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
@@ -2951,6 +2919,11 @@ nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
 
   NS_ASSERTION(mScrolledFrame && mScrolledFrame->GetContent(),
                "Need a child frame with content");
+  nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(aForFrame);
+  NS_ASSERTION(parent, "Must have a parent!");
+  mReferenceFrame = 
+    aBuilder->FindReferenceFrameFor(parent);
+  mToReferenceFrame = aForFrame->GetOffsetToCrossDoc(mReferenceFrame);
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -3006,7 +2979,7 @@ nsDisplayScrollLayer::ComputeVisibility(nsDisplayListBuilder* aBuilder,
       childVisibleRegion.GetBounds().Intersect(mList.GetBounds(aBuilder));
     nsRect allowExpansion = boundedRect.Intersect(aAllowVisibleRegionExpansion);
     bool visible = mList.ComputeVisibilityForSublist(
-      aBuilder, this, &childVisibleRegion, boundedRect, allowExpansion);
+      aBuilder, &childVisibleRegion, boundedRect, allowExpansion);
     mVisibleRect = boundedRect;
 
     return visible;
@@ -3355,7 +3328,7 @@ bool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
   nsRect allowExpansion =
     aAllowVisibleRegionExpansion.ConvertAppUnitsRoundIn(mParentAPD, mAPD);
   bool retval =
-    mList.ComputeVisibilityForSublist(aBuilder, this, &visibleRegion,
+    mList.ComputeVisibilityForSublist(aBuilder, &visibleRegion,
                                       transformedVisibleRect,
                                       allowExpansion);
 
@@ -4363,7 +4336,7 @@ bool nsDisplaySVGEffects::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   // not allow them to subtract area from aVisibleRegion.
   nsRegion childrenVisible(dirtyRect);
   nsRect r = dirtyRect.Intersect(mList.GetBounds(aBuilder));
-  mList.ComputeVisibilityForSublist(aBuilder, this, &childrenVisible, r, nsRect());
+  mList.ComputeVisibilityForSublist(aBuilder, &childrenVisible, r, nsRect());
   return true;
 }
 
