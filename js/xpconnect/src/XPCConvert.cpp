@@ -812,8 +812,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                       "bad scope for new JSObjects");
 
     JSObject *jsscope = lccx.GetScopeForNewJSObjects();
-    XPCWrappedNativeScope* xpcscope =
-        XPCWrappedNativeScope::FindInJSObjectScope(cx, jsscope);
+    XPCWrappedNativeScope* xpcscope = ObjectScope(jsscope);
     if (!xpcscope)
         return false;
 
