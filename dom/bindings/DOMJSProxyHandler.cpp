@@ -61,7 +61,7 @@ DOMProxyHandler::EnsureExpandoObject(JSContext* cx, JSObject* obj)
       return NULL;
     }
 
-    XPCWrappedNativeScope* scope = xpc::ObjectScope(obj);
+    XPCWrappedNativeScope* scope = xpc::GetObjectScope(obj);
     if (!scope->RegisterDOMExpandoObject(obj)) {
       return NULL;
     }

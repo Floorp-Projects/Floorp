@@ -4386,8 +4386,10 @@ inline bool EnableUniversalXPConnect(JSContext *cx)
                                  js::AllCompartments());
 }
 
+// This returns null if and only if it is called on an object in a non-XPConnect
+// compartment.
 inline XPCWrappedNativeScope*
-ObjectScope(JSObject *obj)
+GetObjectScope(JSObject *obj)
 {
     return EnsureCompartmentPrivate(obj)->scope;
 }

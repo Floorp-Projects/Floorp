@@ -1027,7 +1027,7 @@ TraceXPCGlobal(JSTracer *trc, JSObject *obj)
     }
 #endif
 
-    if (XPCWrappedNativeScope *scope = ObjectScope(obj))
+    if (XPCWrappedNativeScope *scope = GetObjectScope(obj))
         scope->TraceDOMPrototypes(trc);
 
     if (js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL)
@@ -1446,7 +1446,7 @@ nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
     if (!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    XPCWrappedNativeScope* scope = ObjectScope(aScope);
+    XPCWrappedNativeScope* scope = GetObjectScope(aScope);
     if (!scope)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -1477,8 +1477,8 @@ nsXPConnect::ReparentWrappedNativeIfFound(JSContext * aJSContext,
     if (!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    XPCWrappedNativeScope* scope = ObjectScope(aScope);
-    XPCWrappedNativeScope* scope2 = ObjectScope(aNewParent);
+    XPCWrappedNativeScope* scope = GetObjectScope(aScope);
+    XPCWrappedNativeScope* scope2 = GetObjectScope(aNewParent);
     if (!scope || !scope2)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -1510,7 +1510,7 @@ nsXPConnect::RescueOrphansInScope(JSContext *aJSContext, JSObject *aScope)
     if (!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    XPCWrappedNativeScope *scope = ObjectScope(aScope);
+    XPCWrappedNativeScope *scope = GetObjectScope(aScope);
     if (!scope)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -1762,7 +1762,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
 
     JSAutoCompartment ac(aJSContext, aScope);
 
-    XPCWrappedNativeScope* scope = ObjectScope(aScope);
+    XPCWrappedNativeScope* scope = GetObjectScope(aScope);
     if (!scope)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 

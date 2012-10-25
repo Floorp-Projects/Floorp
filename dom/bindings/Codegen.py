@@ -1424,7 +1424,7 @@ def CheckPref(descriptor, globalName, varName, retval, wrapperCache = None):
                    "      return %s;") % (varName, retval)
     return """
   {
-    XPCWrappedNativeScope* scope = xpc::ObjectScope(%s);
+    XPCWrappedNativeScope* scope = xpc::GetObjectScope(%s);
     if (!scope) {
 %s
     }

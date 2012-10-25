@@ -2044,9 +2044,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
         NS_ASSERTION(!JS_IsExceptionPending(cx),
                      "We might overwrite a pending exception!");
-        XPCWrappedNativeScope* scope = xpc::ObjectScope(mJSObject);
-        if (scope->mWaiverWrapperMap)
+        XPCWrappedNativeScope* scope = xpc::GetObjectScope(mJSObject);
+        if (scope->mWaiverWrapperMap) {
           scope->mWaiverWrapperMap->Reparent(cx, newInnerWindow->mJSObject);
+        }
       }
     }
 
