@@ -113,7 +113,6 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
         mGlobalJSObject(nullptr),
         mPrototypeJSObject(nullptr),
         mPrototypeNoHelper(nullptr),
-        mScriptObjectPrincipal(nullptr),
         mExperimentalBindingsEnabled(XPCJSRuntime::Get()->ExperimentalBindingsEnabled())
 {
     // add ourselves to the scopes list
@@ -218,36 +217,7 @@ XPCWrappedNativeScope::SetGlobal(JSContext *cx, JSObject* aGlobal,
 {
     // We allow for calling this more than once. This feature is used by
     // nsXPConnect::InitClassesWithNewWrappedGlobal.
-
     mGlobalJSObject = aGlobal;
-    mScriptObjectPrincipal = nullptr;
-
-    // Try to find the native global object. If we didn't receive it explicitly,
-    // we might be able to find it in the private slot.
-    nsISupports *native;
-    if (aNative) {
-        native = aNative;
-    } else {
-        const JSClass *jsClass = js::GetObjectJSClass(aGlobal);
-        if (!(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
-                                 JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
-            // Our global has an nsISupports native pointer.  Let's
-            // see whether it's what we want.
-            nsISupports *priv =
-                static_cast<nsISupports*>(xpc_GetJSPrivate(aGlobal));
-            nsCOMPtr<nsIXPConnectWrappedNative> wn = do_QueryInterface(priv);
-            if (wn)
-                native = static_cast<XPCWrappedNative*>(wn.get())->GetIdentityObject();
-            else
-                native = nullptr;
-        } else if (!mozilla::dom::UnwrapDOMObjectToISupports(aGlobal, native)) {
-            native = nullptr;
-        }
-    }
-
-    // Now init our script object principal, if the new global has one.
-    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(native);
-    mScriptObjectPrincipal = sop;
 
     // Lookup 'globalObject.Object.prototype' for our wrapper's proto
     JSObject *objectPrototype =
@@ -398,7 +368,6 @@ XPCWrappedNativeScope::StartFinalizationPhaseOfGC(JSFreeOp *fop, XPCJSRuntime* r
         if (cur->mGlobalJSObject &&
             JS_IsAboutToBeFinalized(cur->mGlobalJSObject)) {
             cur->mGlobalJSObject.finalize(fop->runtime());
-            cur->mScriptObjectPrincipal = nullptr;
             if (cur->GetCachedDOMPrototypes().IsInitialized())
                  cur->GetCachedDOMPrototypes().Clear();
             // Move this scope from the live list to the dying list.
