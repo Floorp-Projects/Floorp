@@ -13,10 +13,13 @@ const Ci = Components.interfaces;
 
 var PrivateBrowsingUtils = {
   isWindowPrivate: function pbu_isWindowPrivate(aWindow) {
+    return this.privacyContextFromWindow(aWindow).usePrivateBrowsing;
+  },
+
+  privacyContextFromWindow: function pbu_privacyContextFromWindow(aWindow) {
     return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                   .getInterface(Ci.nsIWebNavigation)
-                  .QueryInterface(Ci.nsILoadContext)
-                  .usePrivateBrowsing;
+                  .QueryInterface(Ci.nsILoadContext);
   },
 
   get permanentPrivateBrowsing() {
