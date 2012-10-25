@@ -465,11 +465,10 @@ public:
 
   NS_IMETHOD HandleResult(mozIStorageResultSet *aResult)
   {
-    nsresult rv;
     nsCOMPtr<mozIStorageRow> row;
 
     while (1) {
-      rv = aResult->GetNextRow(getter_AddRefs(row));
+      DebugOnly<nsresult> rv = aResult->GetNextRow(getter_AddRefs(row));
       NS_ASSERT_SUCCESS(rv);
 
       if (!row)
@@ -1423,7 +1422,7 @@ nsCookieService::RebuildCorruptDB(DBState* aDBState)
   }
 
   // Execute the statement. If any errors crop up, we won't try again.
-  nsresult rv = stmt->BindParameters(paramsArray);
+  DebugOnly<nsresult> rv = stmt->BindParameters(paramsArray);
   NS_ASSERT_SUCCESS(rv);
   nsCOMPtr<mozIStoragePendingStatement> handle;
   rv = stmt->ExecuteAsync(aDBState->insertListener, getter_AddRefs(handle));
@@ -1976,7 +1975,7 @@ nsCookieService::GetCookieFromRow(T &aRow)
 {
   // Skip reading 'baseDomain' -- up to the caller.
   nsCString name, value, host, path;
-  nsresult rv = aRow->GetUTF8String(0, name);
+  DebugOnly<nsresult> rv = aRow->GetUTF8String(0, name);
   NS_ASSERT_SUCCESS(rv);
   rv = aRow->GetUTF8String(1, value);
   NS_ASSERT_SUCCESS(rv);
@@ -2052,7 +2051,7 @@ nsCookieService::CancelAsyncRead(bool aPurgeReadSet)
   // Cancel the pending read, kill the read listener, and empty the array
   // of data already read in on the background thread.
   mDefaultDBState->readListener->Cancel();
-  mozilla::DebugOnly<nsresult> rv = mDefaultDBState->pendingRead->Cancel();
+  DebugOnly<nsresult> rv = mDefaultDBState->pendingRead->Cancel();
   NS_ASSERT_SUCCESS(rv);
 
   mDefaultDBState->stmtReadDomain = nullptr;
@@ -2602,7 +2601,7 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
       uint32_t length;
       paramsArray->GetLength(&length);
       if (length) {
-        nsresult rv = stmt->BindParameters(paramsArray);
+        DebugOnly<nsresult> rv = stmt->BindParameters(paramsArray);
         NS_ASSERT_SUCCESS(rv);
         nsCOMPtr<mozIStoragePendingStatement> handle;
         rv = stmt->ExecuteAsync(mDBState->updateListener,
@@ -3620,7 +3619,7 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
     uint32_t length;
     paramsArray->GetLength(&length);
     if (length) {
-      nsresult rv = stmt->BindParameters(paramsArray);
+      DebugOnly<nsresult> rv = stmt->BindParameters(paramsArray);
       NS_ASSERT_SUCCESS(rv);
       nsCOMPtr<mozIStoragePendingStatement> handle;
       rv = stmt->ExecuteAsync(mDBState->removeListener, getter_AddRefs(handle));
@@ -4058,7 +4057,7 @@ nsCookieService::AddCookieToList(const nsCookieKey             &aKey,
     // If we were supplied an array to store parameters, we shouldn't call
     // executeAsync - someone up the stack will do this for us.
     if (!aParamsArray) {
-      nsresult rv = stmt->BindParameters(paramsArray);
+      DebugOnly<nsresult> rv = stmt->BindParameters(paramsArray);
       NS_ASSERT_SUCCESS(rv);
       nsCOMPtr<mozIStoragePendingStatement> handle;
       rv = stmt->ExecuteAsync(mDBState->insertListener, getter_AddRefs(handle));
@@ -4084,8 +4083,9 @@ nsCookieService::UpdateCookieInList(nsCookie                      *aCookie,
     aParamsArray->NewBindingParams(getter_AddRefs(params));
 
     // Bind our parameters.
-    nsresult rv = params->BindInt64ByName(NS_LITERAL_CSTRING("lastAccessed"),
-                                          aLastAccessed);
+    DebugOnly<nsresult> rv =
+      params->BindInt64ByName(NS_LITERAL_CSTRING("lastAccessed"),
+                              aLastAccessed);
     NS_ASSERT_SUCCESS(rv);
 
     rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("name"),
