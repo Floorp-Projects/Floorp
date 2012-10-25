@@ -38,9 +38,21 @@ let FormAssistant = {
   },
 
   isKeyboardOpened: false,
-  focusedElement : null,
   selectionStart: 0,
   selectionEnd: 0,
+
+  _focusedElement: null,
+
+  get focusedElement() {
+    if (this._focusedElement && Cu.isDeadWrapper(this._focusedElement))
+      this._focusedElement = null;
+
+    return this._focusedElement;
+  },
+
+  set focusedElement(val) {
+    this._focusedElement = val;
+  },
 
   setFocusedElement: function fa_setFocusedElement(element) {
     if (element === this.focusedElement)
