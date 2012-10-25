@@ -121,6 +121,7 @@ struct JSCompartment
     JSPrincipals                 *principals;
 
   private:
+    friend struct JSRuntime;
     friend struct JSContext;
     js::GlobalObject             *global_;
   public:
