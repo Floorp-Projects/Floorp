@@ -11,6 +11,7 @@
 #include "AliasAnalysis.h"
 #include "MIRGraph.h"
 #include "Ion.h"
+#include "IonBuilder.h"
 #include "IonSpewer.h"
 
 using namespace js;
@@ -47,8 +48,9 @@ class AliasSetIterator
     }
 };
 
-AliasAnalysis::AliasAnalysis(MIRGraph &graph)
-  : graph_(graph),
+AliasAnalysis::AliasAnalysis(MIRGenerator *mir, MIRGraph &graph)
+  : mir(mir),
+    graph_(graph),
     loop_(NULL)
 {
 }
@@ -85,6 +87,9 @@ AliasAnalysis::analyze()
     uint32 newId = 1;
 
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
+        if (mir->shouldCancel("Alias Analysis (main loop)"))
+            return false;
+
         if (block->isLoopHeader()) {
             IonSpew(IonSpew_Alias, "Processing loop header %d", block->id());
             loop_ = new LoopAliasInfo(loop_, *block);

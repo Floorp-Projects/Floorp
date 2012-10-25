@@ -77,13 +77,14 @@ class ValueNumberer
     void breakClass(MDefinition*);
 
   protected:
+    MIRGenerator *mir;
     MIRGraph &graph_;
     ValueMap values;
     bool pessimisticPass_;
     size_t count_;
 
   public:
-    ValueNumberer(MIRGraph &graph, bool optimistic);
+    ValueNumberer(MIRGenerator *mir, MIRGraph &graph, bool optimistic);
     bool analyze();
 };
 
