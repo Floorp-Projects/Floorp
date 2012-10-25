@@ -81,19 +81,19 @@ XPCWrappedNativeScope* XPCWrappedNativeScope::gDyingScopes = nullptr;
 
 // static
 XPCWrappedNativeScope*
-XPCWrappedNativeScope::GetNewOrUsed(JSContext *cx, JSObject* aGlobal, nsISupports* aNative)
+XPCWrappedNativeScope::GetNewOrUsed(JSContext *cx, JSObject* aGlobal)
 {
 
     XPCWrappedNativeScope* scope = FindInJSObjectScope(cx, aGlobal, true);
     if (!scope)
-        scope = new XPCWrappedNativeScope(cx, aGlobal, aNative);
+        scope = new XPCWrappedNativeScope(cx, aGlobal);
     else {
         // We need to call SetGlobal in order to refresh our cached
         // mPrototypeJSObject and to clear mPrototypeNoHelper (so we get a new
         // new one if requested in the new scope) in the case where the global
         // object is being reused (JS_SetAllNonReservedSlotsToUndefined has
         // been called).  NOTE: We are only called by nsXPConnect::InitClasses.
-        scope->SetGlobal(cx, aGlobal, aNative);
+        scope->SetGlobal(cx, aGlobal);
     }
     if (js::GetObjectClass(aGlobal)->flags & JSCLASS_XPCONNECT_GLOBAL)
         JS_SetReservedSlot(aGlobal,
@@ -103,8 +103,7 @@ XPCWrappedNativeScope::GetNewOrUsed(JSContext *cx, JSObject* aGlobal, nsISupport
 }
 
 XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
-                                             JSObject* aGlobal,
-                                             nsISupports* aNative)
+                                             JSObject* aGlobal)
       : mWrappedNativeMap(Native2WrappedNativeMap::newMap(XPC_NATIVE_MAP_SIZE)),
         mWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_SIZE)),
         mMainThreadWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_SIZE)),
@@ -133,7 +132,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
     }
 
     if (aGlobal)
-        SetGlobal(cx, aGlobal, aNative);
+        SetGlobal(cx, aGlobal);
 
     DEBUG_TrackNewScope(this);
     MOZ_COUNT_CTOR(XPCWrappedNativeScope);
@@ -212,8 +211,7 @@ js::Class XPC_WN_NoHelper_Proto_JSClass = {
 
 
 void
-XPCWrappedNativeScope::SetGlobal(JSContext *cx, JSObject* aGlobal,
-                                 nsISupports* aNative)
+XPCWrappedNativeScope::SetGlobal(JSContext *cx, JSObject* aGlobal)
 {
     // We allow for calling this more than once. This feature is used by
     // nsXPConnect::InitClassesWithNewWrappedGlobal.
