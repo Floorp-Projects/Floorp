@@ -778,6 +778,13 @@ MediaManager::GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
   }
 #endif
 
+  static bool created = false;
+  if (!created) {
+    // Force MediaManager to startup before we try to access it from other threads
+    // Hack: should init singleton earlier unless it's expensive (mem or CPU)
+    (void) MediaManager::Get();
+  }
+
   // Store the WindowID in a hash table and mark as active. The entry is removed
   // when this window is closed or navigated away from.
   uint64_t windowID = aWindow->WindowID();
