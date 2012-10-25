@@ -556,7 +556,7 @@ nsHTMLTextAreaElement::SetValue(const nsAString& aValue)
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::SetUserInput(const nsAString& aValue)
 {
-  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
   SetValueInternal(aValue, true);

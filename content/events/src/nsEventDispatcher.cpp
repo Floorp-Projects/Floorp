@@ -684,7 +684,7 @@ nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
 
     if (!dontResetTrusted) {
       //Check security state to determine if dispatcher is trusted
-      aDOMEvent->SetTrusted(nsContentUtils::IsCallerTrustedForWrite());
+      aDOMEvent->SetTrusted(nsContentUtils::IsCallerChrome());
     }
 
     return nsEventDispatcher::Dispatch(aTarget, aPresContext, innerEvent,
