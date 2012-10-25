@@ -28,7 +28,7 @@ public:
   // The WebIDL constructor.
   static already_AddRefed<TextEncoder>
   Constructor(nsISupports* aGlobal,
-              const Optional<nsAString>& aEncoding,
+              const nsAString& aEncoding,
               ErrorResult& aRv)
   {
     nsRefPtr<TextEncoder> txtEncoder = new TextEncoder(aGlobal);
@@ -98,7 +98,7 @@ private:
    *                     Default value is "utf-8" if no encoding is provided.
    * @return aRv         EncodingError exception else null.
    */
-  void Init(const Optional<nsAString>& aEncoding,
+  void Init(const nsAString& aEncoding,
             ErrorResult& aRv);
 };
 
