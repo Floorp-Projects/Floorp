@@ -657,6 +657,7 @@ nsGonkCameraControl::TakePictureImpl(TakePictureTask* aTakePicture)
 
   // Convert 'rotation' to a positive value from 0..270 degrees, in steps of 90.
   uint32_t r = static_cast<uint32_t>(aTakePicture->mRotation);
+  r += GonkCameraHardware::GetSensorOrientation(mHwHandle);
   r %= 360;
   r += 45;
   r /= 90;
