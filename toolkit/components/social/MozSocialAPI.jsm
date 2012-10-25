@@ -59,7 +59,7 @@ function injectController(doc, topic, data) {
     }
 
     SocialService.getProvider(origin, function(provider) {
-      if (provider && provider.workerURL) {
+      if (provider && provider.workerURL && provider.enabled) {
         attachToWindow(provider, window);
       }
     });
@@ -70,14 +70,15 @@ function injectController(doc, topic, data) {
 
 // Loads mozSocial support functions associated with provider into targetWindow
 function attachToWindow(provider, targetWindow) {
+  // If the loaded document isn't from the provider's origin, don't attach
+  // the mozSocial API.
   let origin = provider.origin;
-  if (!provider.enabled) {
-    throw new Error("MozSocialAPI: cannot attach disabled provider " + origin);
-  }
-
   let targetDocURI = targetWindow.document.documentURIObject;
   if (provider.origin != targetDocURI.prePath) {
-    throw new Error("MozSocialAPI: cannot attach " + origin + " to " + targetDocURI.spec);
+    let msg = "MozSocialAPI: not attaching mozSocial API for " + origin +
+              " to " + targetDocURI.spec + " since origins differ."
+    Services.console.logStringMessage(msg);
+    return;
   }
 
   var port = provider.getWorkerPort(targetWindow);
@@ -179,6 +180,7 @@ function attachToWindow(provider, targetWindow) {
     // set a timer which will fire after the unload events have all fired.
     schedule(function () { port.close(); });
   });
+
   // We allow window.close() to close the panel, so add an event handler for
   // this, then cancel the event (so the window itself doesn't die) and
   // close the panel instead.
