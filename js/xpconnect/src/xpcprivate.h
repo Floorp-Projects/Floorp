@@ -1711,15 +1711,6 @@ public:
         return mCachedDOMPrototypes;
     }
 
-    static XPCWrappedNativeScope *GetNativeScope(JSObject *obj)
-    {
-        MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL);
-
-        const js::Value &v = js::GetObjectSlot(obj, JSCLASS_GLOBAL_SLOT_COUNT);
-        return v.isUndefined()
-               ? nullptr
-               : static_cast<XPCWrappedNativeScope *>(v.toPrivate());
-    }
     void TraceDOMPrototypes(JSTracer *trc);
 
     JSBool ExperimentalBindingsEnabled()
