@@ -15,6 +15,8 @@ const NOTIFICATION_EVENT_SHOWN = "shown";
 const ICON_SELECTOR = ".notification-anchor-icon";
 const ICON_ATTRIBUTE_SHOWING = "showing";
 
+const PREF_SECURITY_DELAY = "security.notification_enable_delay";
+
 let popupNotificationsMap = new WeakMap();
 let gNotificationParents = new WeakMap;
 
@@ -45,6 +47,7 @@ Notification.prototype = {
   browser: null,
   owner: null,
   options: null,
+  timeShown: null,
 
   /**
    * Removes the notification and updates the popup accordingly if needed.
@@ -104,6 +107,7 @@ this.PopupNotifications = function PopupNotifications(tabbrowser, panel, iconBox
   this.panel = panel;
   this.tabbrowser = tabbrowser;
   this.iconBox = iconBox;
+  this.buttonDelay = Services.prefs.getIntPref(PREF_SECURITY_DELAY);
 
   this.panel.addEventListener("popuphidden", this, true);
 
@@ -525,6 +529,7 @@ PopupNotifications.prototype = {
     this.panel.setAttribute("popupid", this.panel.firstChild.getAttribute("popupid"));
     this.panel.openPopup(anchorElement, "bottomcenter topleft");
     notificationsToShow.forEach(function (n) {
+      n.timeShown = Date.now();
       this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);
     }, this);
   },
@@ -698,6 +703,21 @@ PopupNotifications.prototype = {
       throw "PopupNotifications_onButtonCommand: couldn't find notification";
 
     let notification = notificationEl.notification;
+    let timeSinceShown = Date.now() - notification.timeShown;
+
+    // Only report the first time mainAction is triggered and remember that this occurred.
+    if (!notification.timeMainActionFirstTriggered) {
+      notification.timeMainActionFirstTriggered = timeSinceShown;
+      Services.telemetry.getHistogramById("POPUP_NOTIFICATION_MAINACTION_TRIGGERED_MS").
+                         add(timeSinceShown);
+    }
+
+    if (timeSinceShown < this.buttonDelay) {
+      Services.console.logStringMessage("PopupNotifications_onButtonCommand: " +
+                                        "Button click happened before the security delay: " +
+                                        timeSinceShown + "ms");
+      return;
+    }
     notification.mainAction.callback.call();
 
     this._remove(notification);

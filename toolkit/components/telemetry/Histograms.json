@@ -2657,5 +2657,12 @@
     "high": "10000",
     "n_buckets": 10,
     "description": "Time (ms) it takes to persist the last submitted Health Report payload to disk."
+  },
+  "POPUP_NOTIFICATION_MAINACTION_TRIGGERED_MS": {
+    "kind": "linear",
+    "low": 25,
+    "high": "80 * 25",
+    "n_buckets": "80 + 1",
+    "description": "The time (in milliseconds) after showing a PopupNotification that the mainAction was first triggered"
   }
 }
