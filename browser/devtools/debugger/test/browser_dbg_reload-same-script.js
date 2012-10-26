@@ -53,13 +53,13 @@ function test()
     testScriptShown();
   }
 
-  window.addEventListener("Debugger:ScriptShown", onScriptShown);
+  window.addEventListener("Debugger:SourceShown", onScriptShown);
 
   function startTest()
   {
     if (expectedScriptShown && resumed && !testStarted) {
-      window.removeEventListener("Debugger:ScriptShown", onScriptShown);
-      window.addEventListener("Debugger:ScriptShown", onUlteriorScriptShown);
+      window.removeEventListener("Debugger:SourceShown", onScriptShown);
+      window.addEventListener("Debugger:SourceShown", onUlteriorScriptShown);
       testStarted = true;
       Services.tm.currentThread.dispatch({ run: performTest }, 0);
     }
@@ -68,7 +68,7 @@ function test()
   function finishTest()
   {
     if (expectedScriptShown && resumed && testStarted) {
-      window.removeEventListener("Debugger:ScriptShown", onUlteriorScriptShown);
+      window.removeEventListener("Debugger:SourceShown", onUlteriorScriptShown);
       closeDebuggerAndFinish();
     }
   }
@@ -77,7 +77,7 @@ function test()
   {
     testCurrentScript("-01.js", step);
     expectedScript = "-01.js";
-    reloadPage();
+    performAction(reloadPage);
   }
 
   function testScriptShown()
@@ -88,64 +88,64 @@ function test()
     step++;
 
     if (step === 1) {
-      testCurrentScript("-01.js", step);
+      testCurrentScript("-01.js", step, true);
       expectedScript = "-01.js";
-      reloadPage();
+      performAction(reloadPage);
     }
     else if (step === 2) {
-      testCurrentScript("-01.js", step);
+      testCurrentScript("-01.js", step, true);
       expectedScript = "-02.js";
-      switchScript(1);
+      performAction(switchScript, 1);
     }
     else if (step === 3) {
       testCurrentScript("-02.js", step);
       expectedScript = "-02.js";
-      reloadPage();
+      performAction(reloadPage);
     }
     else if (step === 4) {
-      testCurrentScript("-02.js", step);
+      testCurrentScript("-02.js", step, true);
       expectedScript = "-01.js";
-      switchScript(0);
+      performAction(switchScript, 0);
     }
     else if (step === 5) {
       testCurrentScript("-01.js", step);
       expectedScript = "-01.js";
-      reloadPage();
+      performAction(reloadPage);
     }
     else if (step === 6) {
-      testCurrentScript("-01.js", step);
+      testCurrentScript("-01.js", step, true);
       expectedScript = "-01.js";
-      reloadPage();
+      performAction(reloadPage);
     }
     else if (step === 7) {
-      testCurrentScript("-01.js", step);
+      testCurrentScript("-01.js", step, true);
       expectedScript = "-01.js";
-      reloadPage();
+      performAction(reloadPage);
     }
     else if (step === 8) {
-      testCurrentScript("-01.js", step);
+      testCurrentScript("-01.js", step, true);
       expectedScript = "-02.js";
-      switchScript(1);
+      performAction(switchScript, 1);
     }
     else if (step === 9) {
       testCurrentScript("-02.js", step);
       expectedScript = "-02.js";
-      reloadPage();
+      performAction(reloadPage);
     }
     else if (step === 10) {
-      testCurrentScript("-02.js", step);
+      testCurrentScript("-02.js", step, true);
       expectedScript = "-02.js";
-      reloadPage();
+      performAction(reloadPage);
     }
     else if (step === 11) {
-      testCurrentScript("-02.js", step);
+      testCurrentScript("-02.js", step, true);
       expectedScript = "-02.js";
-      reloadPage();
+      performAction(reloadPage);
     }
     else if (step === 12) {
-      testCurrentScript("-02.js", step);
+      testCurrentScript("-02.js", step, true);
       expectedScript = "-01.js";
-      switchScript(0);
+      performAction(switchScript, 0);
     }
     else if (step === 13) {
       testCurrentScript("-01.js", step);
@@ -153,24 +153,28 @@ function test()
     }
   }
 
-  function testCurrentScript(part, step)
+  function testCurrentScript(part, step, isAfterReload)
   {
-    info("Currently preferred script: " + gView.Scripts.preferredScriptUrl);
-    info("Currently selected script: " + gView.Scripts.selected);
+    info("Currently preferred script: " + gView.Sources.preferredValue);
+    info("Currently selected script: " + gView.Sources.selectedValue);
 
-    isnot(gView.Scripts.preferredScriptUrl.indexOf(part), -1,
-      "The preferred script url wasn't set correctly. (" + step + ")");
-    isnot(gView.Scripts.selected.indexOf(part), -1,
+    if (step < 1) {
+      is(gView.Sources.preferredValue, null,
+        "The preferred script url should be initially null");
+    }
+    else if (isAfterReload) {
+      isnot(gView.Sources.preferredValue.indexOf(part), -1,
+        "The preferred script url wasn't set correctly. (" + step + ")");
+    }
+
+    isnot(gView.Sources.selectedValue.indexOf(part), -1,
       "The selected script isn't the correct one. (" + step + ")");
-    is(gView.Scripts.selected, scriptShownUrl,
+    is(gView.Sources.selectedValue, scriptShownUrl,
       "The shown script is not the the correct one. (" + step + ")");
   }
 
-  function switchScript(index)
+  function performAction(callback, data)
   {
-    let scriptsView = gView.Scripts;
-    let scriptLocations = scriptsView.scriptLocations;
-
     // Poll every few milliseconds until the scripts are retrieved.
     let count = 0;
     let intervalID = window.setInterval(function() {
@@ -179,15 +183,20 @@ function test()
         ok(false, "Timed out while polling for the scripts.");
         closeDebuggerAndFinish();
       }
-      if (scriptLocations.length !== 2) {
+      if (gView.Sources.values.length !== 2) {
         return;
       }
-      info("Available scripts: " + scriptLocations);
+      info("Available scripts: " + gView.Sources.values);
 
-      // We got all the scripts, it's safe to switch.
+      // We got all the scripts, it's safe to callback.
       window.clearInterval(intervalID);
-      scriptsView.selectScript(scriptLocations[index]);
+      callback(data);
     }, 100);
+  }
+
+  function switchScript(index)
+  {
+    gView.Sources.selectedValue = gView.Sources.values[index];
   }
 
   function reloadPage()

@@ -21,8 +21,8 @@ function test() {
 
     testPanesState();
 
-    gView.toggleStackframesAndBreakpointsPane({ visible: true });
-    gView.toggleVariablesPane({ visible: true });
+    gView._toggleStackframesAndBreakpointsPane({ visible: true });
+    gView._toggleVariablesPane({ visible: true });
     testPaneCollapse1();
     testPaneCollapse2();
 
@@ -64,7 +64,7 @@ function testPaneCollapse1() {
   is(gDebugger.Prefs.stackframesPaneVisible, true,
     "The stackframes and breakpoints pane should at this point be visible.");
 
-  gView.toggleStackframesAndBreakpointsPane({ visible: false, animated: true });
+  gView._toggleStackframesAndBreakpointsPane({ visible: false, animated: true });
 
   is(gDebugger.Prefs.stackframesPaneVisible, false,
     "The stackframes and breakpoints pane should be hidden after collapsing.");
@@ -82,7 +82,7 @@ function testPaneCollapse1() {
   is(gDebugger.Prefs.stackframesPaneVisible, false,
     "The stackframes and breakpoints pane should be hidden before uncollapsing.");
 
-  gView.toggleStackframesAndBreakpointsPane({ visible: true, animated: false });
+  gView._toggleStackframesAndBreakpointsPane({ visible: true, animated: false });
 
   is(gDebugger.Prefs.stackframesPaneVisible, true,
     "The stackframes and breakpoints pane should be visible after uncollapsing.");
@@ -116,7 +116,7 @@ function testPaneCollapse2() {
   is(gDebugger.Prefs.variablesPaneVisible, true,
     "The variables pane should at this point be visible.");
 
-  gView.toggleVariablesPane({ visible: false, animated: true });
+  gView._toggleVariablesPane({ visible: false, animated: true });
 
   is(gDebugger.Prefs.variablesPaneVisible, false,
     "The variables pane should be hidden after collapsing.");
@@ -134,7 +134,7 @@ function testPaneCollapse2() {
   is(gDebugger.Prefs.variablesPaneVisible, false,
     "The variables pane should be hidden before uncollapsing.");
 
-  gView.toggleVariablesPane({ visible: true, animated: false });
+  gView._toggleVariablesPane({ visible: true, animated: false });
 
   is(gDebugger.Prefs.variablesPaneVisible, true,
     "The variables pane should be visible after uncollapsing.");
