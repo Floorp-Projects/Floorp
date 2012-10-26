@@ -1613,6 +1613,13 @@ nsChildView::GetInputContext()
       mInputContext.mIMEState.mOpen = IMEState::CLOSED;
       break;
   }
+  mInputContext.mNativeIMEContext = [mView inputContext];
+  // If input context isn't available on this widget, we should set |this|
+  // instead of nullptr since nullptr means that the platform has only one
+  // context per process.
+  if (!mInputContext.mNativeIMEContext) {
+    mInputContext.mNativeIMEContext = this;
+  }
   return mInputContext;
 }
 
