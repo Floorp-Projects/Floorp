@@ -321,14 +321,16 @@ BluetoothHfpManager::NotifySettings()
   type.AssignLiteral("bluetooth-hfp-status-changed");
 
   name.AssignLiteral("connected");
-  uint32_t status = GetConnectionStatus();
-  v = status;
+  if (GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED) {
+    v = true;
+  } else {
+    v = false;
+  }
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   name.AssignLiteral("address");
-  nsString address;
-  GetSocketAddr(address);
-  v = address;
+  GetSocketAddr(mDevicePath);
+  v = mDevicePath;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   if (!BroadcastSystemMessage(type, parameters)) {
@@ -835,12 +837,14 @@ BluetoothHfpManager::CallStateChanged(int aCallIndex, int aCallState,
 void
 BluetoothHfpManager::OnConnectSuccess()
 {
+  // Cache device path for NotifySettings() since we can't get socket address
+  // when a headset disconnect with us
+  GetSocketAddr(mDevicePath);
+
   if (mCurrentCallState == nsIRadioInterfaceLayer::CALL_STATE_CONNECTED ||
       mCurrentCallState == nsIRadioInterfaceLayer::CALL_STATE_DIALING ||
       mCurrentCallState == nsIRadioInterfaceLayer::CALL_STATE_ALERTING) {
-    nsString address;
-    GetSocketAddr(address);
-    OpenScoSocket(address);
+    OpenScoSocket(mDevicePath);
   }
 
   NotifySettings();
