@@ -1284,13 +1284,6 @@ RecordNativeStackTopForGC(JSRuntime *rt)
 
 } /* namespace js */
 
-bool
-js_IsAddressableGCThing(JSRuntime *rt, uintptr_t w, gc::AllocKind *thingKind, void **thing)
-{
-    rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
-    return js::IsAddressableGCThing(rt, w, false, thingKind, NULL, thing) == CGCT_VALID;
-}
-
 void
 js_FinishGC(JSRuntime *rt)
 {
