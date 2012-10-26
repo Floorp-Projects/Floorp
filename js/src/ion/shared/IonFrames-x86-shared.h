@@ -89,6 +89,49 @@ class IonJSFrameLayout : public IonCommonFrameLayout
     }
 };
 
+class IonBaselineJSFrameLayout : public IonCommonFrameLayout
+{
+    void *calleeToken_;
+    uintptr_t numActualArgs_;
+
+  public:
+    CalleeToken calleeToken() const {
+        return calleeToken_;
+    }
+    void replaceCalleeToken(void *value) {
+        calleeToken_ = value;
+    }
+
+    static size_t offsetOfCalleeToken() {
+        return offsetof(IonBaselineJSFrameLayout, calleeToken_);
+    }
+    static size_t offsetOfNumActualArgs() {
+        return offsetof(IonBaselineJSFrameLayout, numActualArgs_);
+    }
+    static size_t offsetOfActualArgs() {
+        IonBaselineJSFrameLayout *base = NULL;
+        // +1 to skip |this|.
+        return reinterpret_cast<size_t>(&base->argv()[1]);
+    }
+
+    Value *argv() {
+        return (Value *)(this + 1);
+    }
+    uintptr_t numActualArgs() const {
+        return numActualArgs_;
+    }
+
+    // Computes a reference to a slot, where a slot is a distance from the base
+    // frame pointer (as would be used for LStackSlot).
+    uintptr_t *slotRef(uint32 slot) {
+        return (uintptr_t *)((uint8 *)this - (slot * STACK_SLOT_SIZE));
+    }
+
+    static inline size_t Size() {
+        return sizeof(IonBaselineJSFrameLayout);
+    }
+};
+
 class IonEntryFrameLayout : public IonJSFrameLayout
 {
   public:

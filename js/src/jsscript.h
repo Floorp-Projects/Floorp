@@ -23,6 +23,7 @@ namespace js {
 
 namespace ion {
     struct IonScript;
+    struct BaselineScript;
 }
 
 # define ION_DISABLED_SCRIPT ((js::ion::IonScript *)0x1)
@@ -547,13 +548,13 @@ struct JSScript : public js::gc::Cell
     }
 
     js::ion::IonScript *ion;          /* Information attached by Ion */
-
-#if defined(JS_METHODJIT) && JS_BITS_PER_WORD == 32
-    void *padding_;
-#endif
+    js::ion::BaselineScript *baseline;
 
     bool hasIonScript() const {
         return ion && ion != ION_DISABLED_SCRIPT && ion != ION_COMPILING_SCRIPT;
+    }
+    bool hasBaselineScript() const {
+        return !!baseline;
     }
     bool canIonCompile() const {
         return ion != ION_DISABLED_SCRIPT;
