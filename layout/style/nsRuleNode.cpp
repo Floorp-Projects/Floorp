@@ -257,6 +257,18 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   if (aValue.IsPixelLengthUnit()) {
     return aValue.GetPixelLength();
   }
+  if (aValue.IsCalcUnit()) {
+    // For properties for which lengths are the *only* units accepted in
+    // calc(), we can handle calc() here and just compute a final
+    // result.  We ensure that we don't get to this code for other
+    // properties by not calling CalcLength in those cases:  SetCoord
+    // only calls CalcLength for a calc when it is appropriate to do so.
+    CalcLengthCalcOps ops(aFontSize, aStyleFont,
+                          aStyleContext, aPresContext,
+                          aUseProvidedRootEmSize, aUseUserFontSet,
+                          aCanStoreInRuleTree);
+    return css::ComputeCalc(aValue, ops);
+  }
   // Common code for all units other than pixel-based units and fixed-length
   // units:
   aCanStoreInRuleTree = false;
@@ -341,23 +353,6 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
 
       return ScaleCoord(aValue, ceil(aPresContext->AppUnitsPerDevPixel() *
                                      zeroWidth));
-    }
-    // For properties for which lengths are the *only* units accepted in
-    // calc(), we can handle calc() here and just compute a final
-    // result.  We ensure that we don't get to this code for other
-    // properties by not calling CalcLength in those cases:  SetCoord
-    // only calls CalcLength for a calc when it is appropriate to do so.
-    case eCSSUnit_Calc:
-    case eCSSUnit_Calc_Plus:
-    case eCSSUnit_Calc_Minus:
-    case eCSSUnit_Calc_Times_L:
-    case eCSSUnit_Calc_Times_R:
-    case eCSSUnit_Calc_Divided: {
-      CalcLengthCalcOps ops(aFontSize, aStyleFont,
-                            aStyleContext, aPresContext,
-                            aUseProvidedRootEmSize, aUseUserFontSet,
-                            aCanStoreInRuleTree);
-      return css::ComputeCalc(aValue, ops);
     }
     default:
       NS_NOTREACHED("unexpected unit");
