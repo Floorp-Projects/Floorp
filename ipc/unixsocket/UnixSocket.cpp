@@ -778,7 +778,7 @@ UnixSocketConsumer::ListenSocket(UnixSocketConnector* aConnector)
   mImpl = new UnixSocketImpl(this, aConnector, addr);
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                    new SocketAcceptTask(mImpl));
-  mConnectionStatus = SOCKET_CONNECTING;
+  mConnectionStatus = SOCKET_LISTENING;
   return true;
 }
 
