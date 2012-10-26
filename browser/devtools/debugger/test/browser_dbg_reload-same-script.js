@@ -178,10 +178,11 @@ function test()
     // Poll every few milliseconds until the scripts are retrieved.
     let count = 0;
     let intervalID = window.setInterval(function() {
-      dump("count: " + count + " ");
+      info("count: " + count + " ");
       if (++count > 50) {
         ok(false, "Timed out while polling for the scripts.");
-        closeDebuggerAndFinish();
+        window.clearInterval(intervalID);
+        return closeDebuggerAndFinish();
       }
       if (gView.Sources.values.length !== 2) {
         return;
