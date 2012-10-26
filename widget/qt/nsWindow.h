@@ -153,8 +153,7 @@ public:
     NS_IMETHOD         EnableDragDrop(bool aEnable);
     NS_IMETHOD         CaptureMouse(bool aCapture);
     NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
-                                           bool aDoCapture,
-                                           bool aConsumeRollupEvent);
+                                           bool aDoCapture);
 
     NS_IMETHOD         SetWindowClass(const nsAString& xulWinType);
 
@@ -306,6 +305,7 @@ private:
         bool needDispatch;
     } MozCachedMoveEvent;
 
+    bool               CheckForRollup(double aMouseX, double aMouseY, bool aIsWheel);
     void*              SetupPluginPort(void);
     nsresult           SetWindowIconList(const nsTArray<nsCString> &aIconList);
     void               SetDefaultIcon(void);
