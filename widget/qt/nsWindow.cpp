@@ -3189,6 +3189,9 @@ NS_IMETHODIMP_(InputContext)
 nsWindow::GetInputContext()
 {
     mInputContext.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
+    // Our qt widget looks like using only one context per process.
+    // However, it's better to set the context's pointer.
+    mInputContext.mNativeIMEContext = qApp->inputContext();
     return mInputContext;
 }
 
