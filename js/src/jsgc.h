@@ -441,12 +441,6 @@ const size_t INITIAL_CHUNK_CAPACITY = 16 * 1024 * 1024 / ChunkSize;
 /* The number of GC cycles an empty chunk can survive before been released. */
 const size_t MAX_EMPTY_CHUNK_AGE = 4;
 
-inline Cell *
-AsCell(JSObject *obj)
-{
-    return reinterpret_cast<Cell *>(obj);
-}
-
 } /* namespace gc */
 
 struct GCPtrHasher
@@ -499,9 +493,6 @@ js_LockGCThingRT(JSRuntime *rt, void *thing);
 
 extern void
 js_UnlockGCThingRT(JSRuntime *rt, void *thing);
-
-extern bool
-js_IsAddressableGCThing(JSRuntime *rt, uintptr_t w, js::gc::AllocKind *thingKind, void **thing);
 
 namespace js {
 
