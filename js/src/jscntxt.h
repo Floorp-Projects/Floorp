@@ -92,7 +92,6 @@ class JaegerRuntime;
 class MathCache;
 
 namespace ion {
-class IonRuntime;
 class IonActivation;
 }
 
@@ -439,14 +438,12 @@ struct JSRuntime : js::RuntimeFriendFields
 #ifdef JS_METHODJIT
     js::mjit::JaegerRuntime *jaegerRuntime_;
 #endif
-    js::ion::IonRuntime *ionRuntime_;
 
     JSObject *selfHostedGlobal_;
 
     JSC::ExecutableAllocator *createExecutableAllocator(JSContext *cx);
     WTF::BumpPointerAllocator *createBumpPointerAllocator(JSContext *cx);
     js::mjit::JaegerRuntime *createJaegerRuntime(JSContext *cx);
-    js::ion::IonRuntime *createIonRuntime(JSContext *cx);
 
   public:
     JSC::ExecutableAllocator *getExecAlloc(JSContext *cx) {
@@ -471,9 +468,6 @@ struct JSRuntime : js::RuntimeFriendFields
         return *jaegerRuntime_;
     }
 #endif
-    js::ion::IonRuntime *getIonRuntime(JSContext *cx) {
-        return ionRuntime_ ? ionRuntime_ : createIonRuntime(cx);
-    }
 
     bool initSelfHosting(JSContext *cx);
     void markSelfHostedGlobal(JSTracer *trc);

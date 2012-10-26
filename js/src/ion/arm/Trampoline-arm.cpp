@@ -70,7 +70,7 @@ struct EnterJITStack
  *   ...using standard EABI calling convention
  */
 IonCode *
-IonRuntime::generateEnterJIT(JSContext *cx)
+IonCompartment::generateEnterJIT(JSContext *cx)
 {
     AutoFlushCache afc("GenerateEnterJIT", cx->compartment->ionCompartment());
 
@@ -199,9 +199,22 @@ IonRuntime::generateEnterJIT(JSContext *cx)
 }
 
 IonCode *
-IonRuntime::generateInvalidator(JSContext *cx)
+IonCompartment::generateReturnError(JSContext *cx)
 {
-    // See large comment in x86's IonRuntime::generateInvalidator.
+    MacroAssembler masm(cx);
+    // This is where the stack size is stored on x86. where is it stored here?
+    masm.ma_pop(r0);
+    masm.ma_add(r0, sp, sp);
+
+    GenerateReturn(masm, JS_FALSE);
+    Linker linker(masm);
+    return linker.newCode(cx);
+}
+
+IonCode *
+IonCompartment::generateInvalidator(JSContext *cx)
+{
+    // See large comment in x86's IonCompartment::generateInvalidator.
     AutoIonContextAlloc aica(cx);
     MacroAssembler masm(cx);
     //masm.as_bkpt();
@@ -248,7 +261,7 @@ IonRuntime::generateInvalidator(JSContext *cx)
 }
 
 IonCode *
-IonRuntime::generateArgumentsRectifier(JSContext *cx)
+IonCompartment::generateArgumentsRectifier(JSContext *cx)
 {
     MacroAssembler masm(cx);
     // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
@@ -435,7 +448,7 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
 }
 
 IonCode *
-IonRuntime::generateBailoutTable(JSContext *cx, uint32 frameClass)
+IonCompartment::generateBailoutTable(JSContext *cx, uint32 frameClass)
 {
     MacroAssembler masm;
 
@@ -451,7 +464,7 @@ IonRuntime::generateBailoutTable(JSContext *cx, uint32 frameClass)
 }
 
 IonCode *
-IonRuntime::generateBailoutHandler(JSContext *cx)
+IonCompartment::generateBailoutHandler(JSContext *cx)
 {
     MacroAssembler masm;
     GenerateBailoutThunk(masm, NO_FRAME_SIZE_CLASS_ID);
@@ -461,7 +474,7 @@ IonRuntime::generateBailoutHandler(JSContext *cx)
 }
 
 IonCode *
-IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
+IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 {
     typedef MoveResolver::MoveOperand MoveOperand;
 
@@ -611,7 +624,7 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
 }
 
 IonCode *
-IonRuntime::generatePreBarrier(JSContext *cx)
+IonCompartment::generatePreBarrier(JSContext *cx)
 {
     MacroAssembler masm;
 
