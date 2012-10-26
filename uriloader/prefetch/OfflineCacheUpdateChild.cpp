@@ -82,6 +82,8 @@ OfflineCacheUpdateChild::OfflineCacheUpdateChild(nsIDOMWindow* aWindow)
     : mState(STATE_UNINITIALIZED)
     , mIsUpgrade(false)
     , mIPCActivated(false)
+    , mInBrowser(false)
+    , mAppID(NECKO_NO_APP_ID)
     , mWindow(aWindow)
     , mByteProgress(0)
 {
@@ -183,7 +185,8 @@ OfflineCacheUpdateChild::Init(nsIURI *aManifestURI,
                               nsIURI *aDocumentURI,
                               nsIDOMDocument *aDocument,
                               nsIFile *aCustomProfileDir,
-                              nsILoadContext *aLoadContext)
+                              uint32_t aAppID,
+                              bool aInBrowser)
 {
     nsresult rv;
 
@@ -224,7 +227,8 @@ OfflineCacheUpdateChild::Init(nsIURI *aManifestURI,
     if (aDocument)
         SetDocument(aDocument);
 
-    mLoadContext = aLoadContext;
+    mAppID = aAppID;
+    mInBrowser = aInBrowser;
 
     return NS_OK;
 }
@@ -427,19 +431,11 @@ OfflineCacheUpdateChild::Schedule()
     // See also nsOfflineCacheUpdate::ScheduleImplicit.
     bool stickDocument = mDocument != nullptr; 
 
-    // Carry load context to the parent
-    bool isInBrowserElement = false;
-    uint32_t appId = NECKO_NO_APP_ID;
-    if (mLoadContext) {
-        mLoadContext->GetIsInBrowserElement(&isInBrowserElement);
-        mLoadContext->GetAppId(&appId);
-    }
-
     // Need to addref ourself here, because the IPC stack doesn't hold
     // a reference to us. Will be released in RecvFinish() that identifies 
     // the work has been done.
     child->SendPOfflineCacheUpdateConstructor(this, manifestURI, documentURI,
-                                              isInBrowserElement, appId,
+                                              mInBrowser, mAppID,
                                               stickDocument);
 
     mIPCActivated = true;
