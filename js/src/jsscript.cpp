@@ -21,7 +21,6 @@
 #include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsopcode.h"
@@ -39,11 +38,11 @@
 #include "vm/Xdr.h"
 
 #include "jsinferinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "frontend/SharedContext-inl.h"
+#include "vm/Interpreter-inl.h"
 #include "vm/RegExpObject-inl.h"
 
 using namespace js;

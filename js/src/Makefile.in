@@ -84,7 +84,6 @@ CPPSRCS		= \
 		jsgc.cpp \
 		jscrashreport.cpp \
 		jsinfer.cpp \
-		jsinterp.cpp \
 		jsiter.cpp \
 		jslog2.cpp \
 		jsmath.cpp \
@@ -123,6 +122,7 @@ CPPSRCS		= \
 		BytecodeCompiler.cpp \
 		BytecodeEmitter.cpp \
 		FoldConstants.cpp \
+		Interpreter.cpp \
 		NameFunctions.cpp \
 		ParallelArray.cpp \
 		ParseMaps.cpp \
@@ -867,7 +867,7 @@ $(CURDIR)/javascript-trace.h: $(srcdir)/devtools/javascript-trace.d
 
 # We can't automatically generate dependencies on auto-generated headers;
 # we have to list them explicitly.
-$(addsuffix .$(OBJ_SUFFIX),jsprobes jsinterp jsobj): $(CURDIR)/javascript-trace.h
+$(addsuffix .$(OBJ_SUFFIX),jsprobes jsobj): $(CURDIR)/javascript-trace.h
 endif
 
 ifdef HAVE_LINUX_PERF_EVENT_H

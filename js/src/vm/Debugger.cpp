@@ -13,7 +13,6 @@
 #include "jswrapper.h"
 #include "jsarrayinlines.h"
 #include "jsgcinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 #include "jscompartment.h"
@@ -24,6 +23,7 @@
 #include "methodjit/Retcon.h"
 #include "js/Vector.h"
 
+#include "vm/Interpreter-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

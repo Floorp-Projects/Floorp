@@ -24,10 +24,11 @@
 
 #include "builtin/RegExp.h"
 
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
+
+#include "vm/Interpreter-inl.h"
 
 #include "methodjit/StubCalls-inl.h"
 #ifdef JS_ION

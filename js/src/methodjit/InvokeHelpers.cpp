@@ -25,7 +25,6 @@
 #include "methodjit/ICRepatcher.h"
 #include "vm/Debugger.h"
 
-#include "jsinterpinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsobjinlines.h"
@@ -33,6 +32,7 @@
 #include "jsatominlines.h"
 
 #include "StubCalls-inl.h"
+#include "vm/Interpreter-inl.h"
 
 #include "jsautooplen.h"
 

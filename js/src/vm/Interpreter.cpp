@@ -27,7 +27,6 @@
 #include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsinterp.h"
 #include "jsiter.h"
 #include "jslibmath.h"
 #include "jslock.h"
@@ -51,7 +50,6 @@
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 #include "jsprobes.h"
@@ -61,6 +59,7 @@
 #include "jstypedarrayinlines.h"
 
 #include "builtin/Iterator-inl.h"
+#include "vm/Interpreter-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 

@@ -17,9 +17,9 @@
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
-#include "jsinterpinlines.h"
 #include "jsautooplen.h"
 
+#include "vm/Interpreter-inl.h"
 #include "vm/ScopeObject-inl.h"
 #include "vm/StringObject-inl.h"
 
