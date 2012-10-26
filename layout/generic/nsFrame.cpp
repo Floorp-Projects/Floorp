@@ -6881,7 +6881,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 {
   NS_ASSERTION(!((GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
                  (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)),
-               "Don't call - overflow rects not maintain on these SVG frames");
+               "Don't call - overflow rects not maintained on these SVG frames");
 
   nsRect bounds(nsPoint(0, 0), aNewSize);
   // Store the passed in overflow area if we are a preserve-3d frame,
