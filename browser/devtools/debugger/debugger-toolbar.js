@@ -135,7 +135,7 @@ ToolbarView.prototype = {
     DebuggerView.togglePanes({
       visible: DebuggerView.panesHidden,
       animated: true,
-      silent: false
+      silent: true
     });
   },
 
