@@ -1197,16 +1197,25 @@ var NativeWindow = {
   menu: {
     _callbacks: [],
     _menuId: 0,
-    add: function(aName, aIcon, aCallback) {
-      sendMessageToJava({
-        gecko: {
-          type: "Menu:Add",
-          name: aName,
-          icon: aIcon,
-          id: this._menuId
-        }
-      });
-      this._callbacks[this._menuId] = aCallback;
+    add: function() {
+      let options;
+      if (arguments.length == 1) {
+        options = arguments[0];
+      } else if (arguments.length == 3) {
+          options = {
+            name: arguments[0],
+            icon: arguments[1],
+            callback: arguments[2]
+          };
+      } else {
+         return;
+      }
+
+      options.type = "Menu:Add";
+      options.id = this._menuId;
+
+      sendMessageToJava({ gecko: options });
+      this._callbacks[this._menuId] = options.callback;
       this._menuId++;
       return this._menuId - 1;
     },
