@@ -162,7 +162,7 @@ create({ constructor: BreakpointsView, proto: MenuContainer.prototype }, {
   initialize: function DVB_initialize() {
     dumpn("Initializing the BreakpointsView");
     this._container = new StackList(document.getElementById("breakpoints"));
-    this._popupset = document.getElementById("debugger-popups");
+    this._popupset = document.getElementById("debuggerPopupset");
 
     this._container.emptyText = L10N.getStr("emptyBreakpointsText");
     this._container.itemFactory = this._createItemView;
