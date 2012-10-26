@@ -90,8 +90,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x4e05b167, 0x475b, 0x422b, \
-    { 0x88, 0xc0, 0xa5, 0xb1, 0x61, 0xcf, 0x87, 0x79 } }
+  { 0x8181a08f, 0xaa37, 0x4fd0, \
+    { 0x94, 0x32, 0x27, 0x74, 0xe2, 0xce, 0x02, 0xc8 } }
 
 /*
  * Window shadow styles
@@ -1198,14 +1198,12 @@ class nsIWidget : public nsISupports {
 
     /**
      * Enables/Disables system capture of any and all events that would cause a
-     * dropdown to be rolled up, This method ignores the aConsumeRollupEvent 
-     * parameter when aDoCapture is FALSE
+     * popup to be rolled up. aListener should be set to a non-null value for
+     * any popups that are not managed by the popup manager.
      * @param aDoCapture true enables capture, false disables capture 
-     * @param aConsumeRollupEvent true consumes the rollup event, false dispatches rollup event
      *
      */
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture,
-                                   bool aConsumeRollupEvent) = 0;
+    NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener, bool aDoCapture) = 0;
 
     /**
      * Bring this window to the user's attention.  This is intended to be a more
