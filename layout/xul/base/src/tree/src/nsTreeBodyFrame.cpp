@@ -58,6 +58,8 @@
 #include "nsRenderingContext.h"
 #include "nsIScriptableRegion.h"
 
+#include "mozilla/Likely.h"
+
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
@@ -181,7 +183,7 @@ nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
 
   nsSize min(0,0);
   int32_t desiredRows;
-  if (NS_UNLIKELY(!baseElement)) {
+  if (MOZ_UNLIKELY(!baseElement)) {
     desiredRows = 0;
   }
   else if (baseElement->Tag() == nsGkAtoms::select &&

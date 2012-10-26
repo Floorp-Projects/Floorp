@@ -36,6 +36,7 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "prnetdb.h"
+#include "mozilla/Likely.h"
 
 //-----------------------------------------------------------------------------
 
@@ -275,7 +276,7 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
 
     // allocate a buffer sizeof("Negotiate" + " " + b64output_token + "\0")
     *creds = (char *) nsMemory::Alloc(kNegotiateLen + 1 + strlen(encoded_token) + 1);
-    if (NS_UNLIKELY(!*creds))
+    if (MOZ_UNLIKELY(!*creds))
         rv = NS_ERROR_OUT_OF_MEMORY;
     else
         sprintf(*creds, "%s %s", kNegotiate, encoded_token);

@@ -7,6 +7,7 @@
 #define nsINode_h___
 
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Likely.h"
 #include "nsCOMPtr.h"               // for member, local
 #include "nsGkAtoms.h"              // for nsGkAtoms::baseURIProperty
 #include "nsIDOMEventTarget.h"      // for base class
@@ -738,7 +739,7 @@ public:
    * @return the parent, or null if no parent or the parent is not an nsIContent
    */
   nsIContent* GetParent() const {
-    return NS_LIKELY(GetBoolFlag(ParentIsContent)) ?
+    return MOZ_LIKELY(GetBoolFlag(ParentIsContent)) ?
       reinterpret_cast<nsIContent*>(mParent) : nullptr;
   }
 
