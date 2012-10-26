@@ -23,28 +23,29 @@ function testSimpleCall() {
   gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
-      testScriptLabelShortening();
+      testlabelshortening();
     }}, 0);
   });
 
   gDebuggee.simpleCall();
 }
 
-function testScriptLabelShortening() {
+function testlabelshortening() {
   gDebugger.DebuggerController.activeThread.resume(function() {
-    let vs = gDebugger.DebuggerView.Scripts;
+    let sv = gDebugger.SourceUtils;
+    let vs = gDebugger.DebuggerView.Sources;
     let ss = gDebugger.DebuggerController.SourceScripts;
     vs.empty();
-    vs._scripts.removeEventListener("select", vs._onScriptsChange, false);
+    vs._container.removeEventListener("select", vs._onScriptsChange, false);
 
-    is(ss.trimUrlQuery("a/b/c.d?test=1&random=4#reference"), "a/b/c.d",
+    is(sv.trimUrlQuery("a/b/c.d?test=1&random=4#reference"), "a/b/c.d",
       "Trimming the url query isn't done properly.");
 
     let ellipsis = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString);
     let nanana = new Array(20).join(NaN);
 
     let superLargeLabel = new Array(100).join("Beer can in Jamaican sounds like Bacon!");
-    let trimmedLargeLabel = ss.trimUrlLength(superLargeLabel, 1234);
+    let trimmedLargeLabel = sv.trimUrlLength(superLargeLabel, 1234);
     is(trimmedLargeLabel.length, 1235,
       "Trimming large labels isn't done properly.");
     ok(trimmedLargeLabel.endsWith(ellipsis),
@@ -80,23 +81,23 @@ function testScriptLabelShortening() {
     urls.forEach(function(url) {
       executeSoon(function() {
         let loc = url.href + url.leaf;
-        vs.addScript(ss.getScriptLabel(loc, url.href), { url: loc }, true);
+        vs.push(sv.getSourceLabel(loc, url.href), loc, { forced: true });
       });
     });
 
     executeSoon(function() {
       info("Script labels:");
-      info(vs.scriptLabels.toSource());
+      info(vs.labels.toSource());
 
       info("Script locations:");
-      info(vs.scriptLocations.toSource());
+      info(vs.values.toSource());
 
       urls.forEach(function(url) {
         let loc = url.href + url.leaf;
         if (url.dupe) {
-          ok(!vs.contains(loc), "Shouldn't contain script: " + loc);
+          ok(!vs.containsValue(loc), "Shouldn't contain script: " + loc);
         } else {
-          ok(vs.contains(loc), "Should contain script: " + loc);
+          ok(vs.containsValue(loc), "Should contain script: " + loc);
         }
       });
 
@@ -136,18 +137,18 @@ function testScriptLabelShortening() {
       ok(vs.containsLabel(nanana + "Batman!" + ellipsis),
         "Script (15) label is incorrect.");
 
-      is(vs._scripts.itemCount, urls.filter(function(url) !url.dupe).length,
+      is(vs._container.itemCount, urls.filter(function(url) !url.dupe).length,
         "Didn't get the correct number of scripts in the list.");
 
-      is(vs.getScriptByLocation("http://some.address.com/random/subrandom/").label, "random/subrandom/",
-        "Scripts.getScriptByLocation isn't functioning properly (0).");
-      is(vs.getScriptByLocation("http://some.address.com/random/suprandom/?a=1").label, "random/suprandom/?a=1",
-        "Scripts.getScriptByLocation isn't functioning properly (1).");
+      is(vs.getItemByValue("http://some.address.com/random/subrandom/").label, "random/subrandom/",
+        "Scripts.getItemByValue isn't functioning properly (0).");
+      is(vs.getItemByValue("http://some.address.com/random/suprandom/?a=1").label, "random/suprandom/?a=1",
+        "Scripts.getItemByValue isn't functioning properly (1).");
 
-      is(vs.getScriptByLabel("random/subrandom/").value, "http://some.address.com/random/subrandom/",
-        "Scripts.getScriptByLabel isn't functioning properly (0).");
-      is(vs.getScriptByLabel("random/suprandom/?a=1").value, "http://some.address.com/random/suprandom/?a=1",
-        "Scripts.getScriptByLabel isn't functioning properly (1).");
+      is(vs.getItemByLabel("random/subrandom/").value, "http://some.address.com/random/subrandom/",
+        "Scripts.getItemByLabel isn't functioning properly (0).");
+      is(vs.getItemByLabel("random/suprandom/?a=1").value, "http://some.address.com/random/suprandom/?a=1",
+        "Scripts.getItemByLabel isn't functioning properly (1).");
 
 
       closeDebuggerAndFinish();
