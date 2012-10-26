@@ -10,6 +10,7 @@
 #include "nscore.h"  /* needed for nsresult */
 #endif
 #include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
 
 /*
  * To add error code to your module, you need to do the following:
@@ -153,12 +154,12 @@
 inline uint32_t NS_FAILED_impl(nsresult _nsresult) {
   return static_cast<uint32_t>(_nsresult) & 0x80000000;
 }
-#define NS_FAILED(_nsresult)    ((bool)NS_UNLIKELY(NS_FAILED_impl(_nsresult)))
-#define NS_SUCCEEDED(_nsresult) ((bool)NS_LIKELY(!NS_FAILED_impl(_nsresult)))
+#define NS_FAILED(_nsresult)    ((bool)MOZ_UNLIKELY(NS_FAILED_impl(_nsresult)))
+#define NS_SUCCEEDED(_nsresult) ((bool)MOZ_LIKELY(!NS_FAILED_impl(_nsresult)))
 #else
 #define NS_FAILED_impl(_nsresult) ((_nsresult) & 0x80000000)
-#define NS_FAILED(_nsresult)    (NS_UNLIKELY(NS_FAILED_impl(_nsresult)))
-#define NS_SUCCEEDED(_nsresult) (NS_LIKELY(!NS_FAILED_impl(_nsresult)))
+#define NS_FAILED(_nsresult)    (MOZ_UNLIKELY(NS_FAILED_impl(_nsresult)))
+#define NS_SUCCEEDED(_nsresult) (MOZ_LIKELY(!NS_FAILED_impl(_nsresult)))
 #endif
 
 /**

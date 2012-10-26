@@ -20,6 +20,7 @@
 #include "mozilla/css/Declaration.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Likely.h"
 #include "prlog.h"
 #include <math.h>
 #include "gfxMatrix.h"
@@ -878,13 +879,13 @@ MOZ_ALWAYS_INLINE float
 EnsureNotNan(float aValue)
 {
   // This would benefit from a MOZ_FLOAT_IS_NaN if we had one.
-  return NS_LIKELY(!MOZ_DOUBLE_IS_NaN(aValue)) ? aValue : 0;
+  return MOZ_LIKELY(!MOZ_DOUBLE_IS_NaN(aValue)) ? aValue : 0;
 }
 template<>
 MOZ_ALWAYS_INLINE double
 EnsureNotNan(double aValue)
 {
-  return NS_LIKELY(!MOZ_DOUBLE_IS_NaN(aValue)) ? aValue : 0;
+  return MOZ_LIKELY(!MOZ_DOUBLE_IS_NaN(aValue)) ? aValue : 0;
 }
 
 template <typename T>
@@ -3379,7 +3380,7 @@ nsStyleAnimation::Value::SetUnparsedStringValue(const nsString& aString)
   FreeValue();
   mUnit = eUnit_UnparsedString;
   mValue.mString = nsCSSValue::BufferFromString(aString).get();
-  if (NS_UNLIKELY(!mValue.mString)) {
+  if (MOZ_UNLIKELY(!mValue.mString)) {
     // not much we can do here; just make sure that our promise of a
     // non-null mValue.mString holds for string units.
     mUnit = eUnit_Null;

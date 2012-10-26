@@ -59,7 +59,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::TraverseImpl
     if (!tmp->IsValid())
         return NS_OK;
 
-    if (NS_UNLIKELY(cb.WantDebugInfo())) {
+    if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
         char name[72];
         XPCNativeScriptableInfo* si = tmp->GetScriptableInfo();
         if (si)

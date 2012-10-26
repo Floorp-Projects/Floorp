@@ -7,6 +7,7 @@
 
 #include "nsITransactionManager.h"
 #include "nsComponentManagerUtils.h"
+#include "mozilla/Likely.h"
 
 static int32_t sConstructorCount     = 0;
 static int32_t sDestructorCount      = 0;
@@ -4446,7 +4447,7 @@ stress_test(TestTransactionFactory *factory, int32_t iterations)
     }
 
     // Trivial feedback not to let the user think the test is stuck.
-    if (NS_UNLIKELY(j % 100 == 0))
+    if (MOZ_UNLIKELY(j % 100 == 0))
       printf("%i ", j);
   } // for, iterations.
 
