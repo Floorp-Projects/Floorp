@@ -176,9 +176,11 @@ CodeGeneratorARM::generateOutOfLineCode()
         // Push the frame size, so the handler can recover the IonScript.
         masm.ma_mov(Imm32(frameSize()), lr);
 
-        IonCompartment *ion = GetIonContext()->compartment->ionCompartment();
-        IonCode *handler = ion->getGenericBailoutHandler();
-
+        JSContext *cx = GetIonContext()->cx;
+        IonCompartment *ion = cx->compartment->ionCompartment();
+        IonCode *handler = ion->getGenericBailoutHandler(cx);
+        if (!handler)
+            return false;
         masm.branch(handler);
     }
 
@@ -980,7 +982,11 @@ CodeGeneratorARM::visitTruncateDToInt32(LTruncateDToInt32 *ins)
     return emitTruncateDouble(ToFloatRegister(ins->input()), ToRegister(ins->output()));
 }
 
-static const uint32 FrameSizes[] = { 128, 256, 512, 1024 };
+// The first two size classes are 128 and 256 bytes respectively. After that we
+// increment by 512.
+static const uint32 LAST_FRAME_SIZE = 512;
+static const uint32 LAST_FRAME_INCREMENT = 512;
+static const uint32 FrameSizes[] = { 128, 256, LAST_FRAME_SIZE };
 
 FrameSizeClass
 FrameSizeClass::FromDepth(uint32 frameDepth)
@@ -990,22 +996,21 @@ FrameSizeClass::FromDepth(uint32 frameDepth)
             return FrameSizeClass(i);
     }
 
-    return FrameSizeClass::None();
-}
+    uint32 newFrameSize = frameDepth - LAST_FRAME_SIZE;
+    uint32 sizeClass = (newFrameSize / LAST_FRAME_INCREMENT) + 1;
 
-FrameSizeClass
-FrameSizeClass::ClassLimit()
-{
-    return FrameSizeClass(JS_ARRAY_LENGTH(FrameSizes));
+    return FrameSizeClass(JS_ARRAY_LENGTH(FrameSizes) + sizeClass);
 }
-
 uint32
 FrameSizeClass::frameSize() const
 {
     JS_ASSERT(class_ != NO_FRAME_SIZE_CLASS_ID);
-    JS_ASSERT(class_ < JS_ARRAY_LENGTH(FrameSizes));
 
-    return FrameSizes[class_];
+    if (class_ < JS_ARRAY_LENGTH(FrameSizes))
+        return FrameSizes[class_];
+
+    uint32 step = class_ - JS_ARRAY_LENGTH(FrameSizes);
+    return LAST_FRAME_SIZE + step * LAST_FRAME_INCREMENT;
 }
 
 ValueOperand
@@ -1455,13 +1460,13 @@ CodeGeneratorARM::visitRecompileCheck(LRecompileCheck *lir)
     return true;
 }
 
-typedef bool (*InterruptCheckFn)(JSContext *);
-static const VMFunction InterruptCheckInfo = FunctionInfo<InterruptCheckFn>(InterruptCheck);
-
 bool
 CodeGeneratorARM::visitInterruptCheck(LInterruptCheck *lir)
 {
-    OutOfLineCode *ool = oolCallVM(InterruptCheckInfo, lir, (ArgList()), StoreNothing());
+    typedef bool (*pf)(JSContext *);
+    static const VMFunction interruptCheckInfo = FunctionInfo<pf>(InterruptCheck);
+
+    OutOfLineCode *ool = oolCallVM(interruptCheckInfo, lir, (ArgList()), StoreNothing());
     if (!ool)
         return false;
 
@@ -1487,9 +1492,13 @@ CodeGeneratorARM::generateInvalidateEpilogue()
     // Push the return address of the point that we bailed out at onto the stack
     masm.Push(lr);
 
+    JSContext *cx = GetIonContext()->cx;
+
     // Push the Ion script onto the stack (when we determine what that pointer is).
     invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
-    IonCode *thunk = GetIonContext()->compartment->ionCompartment()->getInvalidationThunk();
+    IonCode *thunk = cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(cx);
+    if (!thunk)
+        return false;
 
     masm.branch(thunk);
 
