@@ -104,7 +104,6 @@ public class Tabs implements GeckoEventListener {
             notifyListeners(tab, TabEvents.ADDED);
         }
 
-        Log.i(LOGTAG, "Added a tab with id: " + id);
         return tab;
     }
 
@@ -114,7 +113,6 @@ public class Tabs implements GeckoEventListener {
             mOrder.remove(tab);
             mTabs.remove(id);
             tab.freeBuffer();
-            Log.i(LOGTAG, "Removed a tab with id: " + id);
         }
     }
 
@@ -243,7 +241,6 @@ public class Tabs implements GeckoEventListener {
     // GeckoEventListener implementation
 
     public void handleMessage(String event, JSONObject message) {
-        Log.i(LOGTAG, "Got message: " + event);
         try {
             if (event.startsWith("SessionHistory:")) {
                 Tab tab = getTab(message.getInt("tabID"));
@@ -252,8 +249,6 @@ public class Tabs implements GeckoEventListener {
                     tab.handleSessionHistoryMessage(event, message);
                 }
             } else if (event.equals("Tab:Added")) {
-                Log.i(LOGTAG, "Received message from Gecko: " + SystemClock.uptimeMillis() + " - Tab:Added");
-
                 int id = message.getInt("tabID");
                 Tab tab = null;
 
@@ -305,7 +300,7 @@ public class Tabs implements GeckoEventListener {
                                               Intent.ACTION_SEND, title);
             }
         } catch (Exception e) { 
-            Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
+            Log.w(LOGTAG, "handleMessage threw for " + event, e);
         }
     }
 
@@ -499,10 +494,9 @@ public class Tabs implements GeckoEventListener {
                 added = addTab(tabId, tabUrl, false, parentId, url, isPrivate);
             }
         } catch (Exception e) {
-            Log.e(LOGTAG, "error building JSON arguments");
+            Log.w(LOGTAG, "Error building JSON arguments for loadUrl.");
         }
 
-        Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Load");
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Load", args.toString()));
 
         if (tabId != -1) {
