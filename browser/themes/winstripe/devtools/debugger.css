@@ -413,7 +413,7 @@
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
-#toggle-panes:not([stackframesAndBreakpointsHidden]):not([variablesHidden]) {
+#toggle-panes:not([panesHidden]) {
   list-style-image: url("chrome://browser/skin/devtools/debugger-collapse.png");
 }
 

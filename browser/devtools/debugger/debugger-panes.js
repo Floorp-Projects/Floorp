@@ -57,7 +57,7 @@ create({ constructor: StackFramesView, proto: MenuContainer.prototype }, {
   addFrame:
   function DVSF_addFrame(aFrameName, aFrameDetails, aDepth, aOptions = {}) {
     // Stackframes are UI elements which benefit from visible panes.
-    DebuggerView.showPanesIfPreffered();
+    DebuggerView.showPanesSoon();
 
     // Append a stackframe item to this container.
     let stackframeItem = this.push(aFrameName, aFrameDetails, {

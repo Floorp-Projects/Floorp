@@ -134,8 +134,7 @@ ToolbarView.prototype = {
   _onTogglePanesPressed: function DVT__onTogglePanesPressed() {
     DebuggerView.togglePanes({
       visible: DebuggerView.panesHidden,
-      animated: true,
-      silent: true
+      animated: true
     });
   },
 
@@ -197,7 +196,8 @@ ToolbarView.prototype = {
  */
 function OptionsView() {
   dumpn("OptionsView was instantiated");
-  this._togglePOE = this._togglePOE.bind(this);
+  this._togglePauseOnExceptions = this._togglePauseOnExceptions.bind(this);
+  this._toggleShowPanesOnStartup = this._toggleShowPanesOnStartup.bind(this);
   this._toggleShowNonEnum = this._toggleShowNonEnum.bind(this);
 }
 
@@ -208,10 +208,12 @@ OptionsView.prototype = {
   initialize: function DVO_initialize() {
     dumpn("Initializing the OptionsView");
     this._button = document.getElementById("debugger-options");
-    this._poeItem = document.getElementById("pause-on-exceptions");
+    this._pauseOnExceptionsItem = document.getElementById("pause-on-exceptions");
+    this._showPanesOnStartupItem = document.getElementById("show-panes-on-startup");
     this._showNonEnumItem = document.getElementById("show-nonenum");
 
-    this._poeItem.setAttribute("checked", "false");
+    this._pauseOnExceptionsItem.setAttribute("checked", "false");
+    this._showPanesOnStartupItem.setAttribute("checked", Prefs.panesVisibleOnStartup);
     this._showNonEnumItem.setAttribute("checked", Prefs.nonEnumVisible);
   },
 
@@ -220,6 +222,7 @@ OptionsView.prototype = {
    */
   destroy: function DVO_destroy() {
     dumpn("Destroying the OptionsView");
+    // Nothing to do here yet.
   },
 
   /**
@@ -237,15 +240,23 @@ OptionsView.prototype = {
   },
 
   /**
-   * Listener handling the 'pause on exceptions' checkbox click event.
+   * Listener handling the 'pause on exceptions' menuitem command.
    */
-  _togglePOE: function DVO__togglePOE() {
+  _togglePauseOnExceptions: function DVO__togglePauseOnExceptions() {
     DebuggerController.activeThread.pauseOnExceptions(
-      this._poeItem.getAttribute("checked") == "true");
+      this._pauseOnExceptionsItem.getAttribute("checked") == "true");
   },
 
   /**
-   * Listener handling the 'show non-enumerables' checkbox click event.
+   * Listener handling the 'show panes on startup' menuitem command.
+   */
+  _toggleShowPanesOnStartup: function DVO__toggleShowPanesOnStartup() {
+    Prefs.panesVisibleOnStartup =
+      this._showPanesOnStartupItem.getAttribute("checked") == "true";
+  },
+
+  /**
+   * Listener handling the 'show non-enumerables' menuitem command.
    */
   _toggleShowNonEnum: function DVO__toggleShowNonEnum() {
     DebuggerView.Variables.nonEnumVisible = Prefs.nonEnumVisible =
@@ -253,7 +264,8 @@ OptionsView.prototype = {
   },
 
   _button: null,
-  _poeItem: null,
+  _pauseOnExceptionsItem: null,
+  _showPanesOnStartupItem: null,
   _showNonEnumItem: null
 };
 

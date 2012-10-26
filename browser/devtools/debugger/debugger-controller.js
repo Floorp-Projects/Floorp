@@ -1198,9 +1198,8 @@ XPCOMUtils.defineLazyGetter(L10N, "ellipsis", function() {
 });
 
 const STACKFRAMES_WIDTH = "devtools.debugger.ui.stackframes-width";
-const STACKFRAMES_VISIBLE = "devtools.debugger.ui.stackframes-pane-visible";
 const VARIABLES_WIDTH = "devtools.debugger.ui.variables-width";
-const VARIABLES_PANE_VISIBLE = "devtools.debugger.ui.variables-pane-visible";
+const PANES_VISIBLE_ON_STARTUP = "devtools.debugger.ui.panes-visible-on-startup";
 const NON_ENUM_VISIBLE = "devtools.debugger.ui.non-enum-visible";
 const REMOTE_AUTO_CONNECT = "devtools.debugger.remote-autoconnect";
 const REMOTE_HOST = "devtools.debugger.remote-host";
@@ -1233,26 +1232,6 @@ let Prefs = {
   },
 
   /**
-   * Gets the preferred stackframes pane visibility state.
-   * @return boolean
-   */
-  get stackframesPaneVisible() {
-    if (this._stackframesVisible === undefined) {
-      this._stackframesVisible = Services.prefs.getBoolPref(STACKFRAMES_VISIBLE);
-    }
-    return this._stackframesVisible;
-  },
-
-  /**
-   * Sets the preferred stackframes pane visibility state.
-   * @param boolean value
-   */
-  set stackframesPaneVisible(value) {
-    Services.prefs.setBoolPref(STACKFRAMES_VISIBLE, value);
-    this._stackframesVisible = value;
-  },
-
-  /**
    * Gets the preferred variables pane width.
    * @return number
    */
@@ -1270,26 +1249,6 @@ let Prefs = {
   set variablesWidth(value) {
     Services.prefs.setIntPref(VARIABLES_WIDTH, value);
     this._variablesWidth = value;
-  },
-
-  /**
-   * Gets the preferred variables pane visibility state.
-   * @return boolean
-   */
-  get variablesPaneVisible() {
-    if (this._variablesVisible === undefined) {
-      this._variablesVisible = Services.prefs.getBoolPref(VARIABLES_PANE_VISIBLE);
-    }
-    return this._variablesVisible;
-  },
-
-  /**
-   * Sets the preferred variables pane visibility state.
-   * @param boolean value
-   */
-  set variablesPaneVisible(value) {
-    Services.prefs.setBoolPref(VARIABLES_PANE_VISIBLE, value);
-    this._variablesVisible = value;
   },
 
   /**
@@ -1312,6 +1271,26 @@ let Prefs = {
   set remoteAutoConnect(value) {
     Services.prefs.setBoolPref(REMOTE_AUTO_CONNECT, value);
     this._autoConnect = value;
+  },
+
+  /**
+   * Gets the preferred panes visibility state on startup.
+   * @return boolean
+   */
+  get panesVisibleOnStartup() {
+    if (this._panesVisible === undefined) {
+      this._panesVisible = Services.prefs.getBoolPref(PANES_VISIBLE_ON_STARTUP);
+    }
+    return this._panesVisible;
+  },
+
+  /**
+   * Sets the preferred panes visibility state on startup.
+   * @param boolean value
+   */
+  set panesVisibleOnStartup(value) {
+    Services.prefs.setBoolPref(PANES_VISIBLE_ON_STARTUP, value);
+    this._panesVisible = value;
   },
 
   /**

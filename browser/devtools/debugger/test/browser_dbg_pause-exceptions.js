@@ -40,8 +40,8 @@ function testWithFrame()
       is(gDebugger.DebuggerController.activeThread.state, "paused",
         "Should be paused now.");
 
-      gDebugger.DebuggerView.Options._poeItem.setAttribute("checked", "true");
-      gDebugger.DebuggerView.Options._togglePOE();
+      gDebugger.DebuggerView.Options._pauseOnExceptionsItem.setAttribute("checked", "true");
+      gDebugger.DebuggerView.Options._togglePauseOnExceptions();
 
       gCount = 0;
       gPane.contentWindow.gClient.addOneTimeListener("resumed", function() {
