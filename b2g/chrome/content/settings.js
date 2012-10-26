@@ -6,6 +6,14 @@
 
 "use strict;"
 
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import('resource://gre/modules/Services.jsm');
+
 // Once Bug 731746 - Allow chrome JS object to implement nsIDOMEventTarget
 // is resolved this helper could be removed.
 var SettingsListener = {
@@ -59,7 +67,22 @@ SettingsListener.observe('audio.volume.master', 0.5, function(value) {
 
 // =================== Languages ====================
 SettingsListener.observe('language.current', 'en-US', function(value) {
-  Services.prefs.setCharPref('intl.accept_languages', value);
+  Services.prefs.setCharPref('general.useragent.locale', value);
+
+  let prefName = 'intl.accept_languages';
+  if (Services.prefs.prefHasUserValue(prefName)) {
+    Services.prefs.clearUserPref(prefName);
+  }
+
+  let intl = '';
+  try {
+    intl = Services.prefs.getComplexValue(prefName,
+                                          Ci.nsIPrefLocalizedString).data;
+  } catch(e) {}
+
+  if (!((new RegExp('^' + value + '[^a-z-_] *[,;]?', 'i')).test(intl))) {
+    Services.prefs.setCharPref(prefName, value + ', ' + intl);
+  }
 });
 
 
@@ -96,8 +119,16 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
 #unfilter attemptSubstitution
   lock.set('deviceinfo.os', os_version, null, null);
 
+  let appInfo = Cc["@mozilla.org/xre/app-info;1"]
+                  .getService(Ci.nsIXULAppInfo);
+  lock.set('deviceinfo.platform_version', appInfo.platformVersion, null, null);
+  lock.set('deviceinfo.platform_build_id', appInfo.platformBuildID, null, null);
+
+  let update_channel = Services.prefs.getCharPref('app.update.channel');
+  lock.set('deviceinfo.update_channel', update_channel, null, null);
+
   //Get the hardware info from android properties
-  var hardware_version = null;
+  let hardware_version = null;
   try {
     let cutils = ctypes.open('libcutils.so');
     let cbuf = ctypes.char.array(128)();

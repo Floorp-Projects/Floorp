@@ -15,7 +15,7 @@ import android.test.ActivityInstrumentationTestCase2;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
-
+import java.lang.reflect.Method;
 import java.util.HashMap;
 
 /**
@@ -39,6 +39,23 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected String mRawBaseUrl;
     private String mLogFile;
     protected String mProfile;
+
+    protected void blockForGeckoReady() {
+        try {
+            Actions.EventExpecter geckoReadyExpector = mActions.expectGeckoEvent("Gecko:Ready");
+            ClassLoader classLoader = getActivity().getClassLoader();
+            Class appsCls = classLoader.loadClass("org.mozilla.gecko.GeckoApp");
+            Class launchStateCls = classLoader.loadClass("org.mozilla.gecko.GeckoApp$LaunchState");
+            Method checkLaunchState =  appsCls.getMethod("checkLaunchState", launchStateCls);
+            Object states[] =  launchStateCls.getEnumConstants();
+            Boolean ret = (Boolean)checkLaunchState.invoke(null, states[3]);
+            if (!ret.booleanValue()) {
+	        geckoReadyExpector.blockForEvent();
+            }
+        } catch (Exception e) {
+            mAsserter.dumpLog("Exception in blockForGeckoReady", e);
+        }
+    }
 
     static {
         try {

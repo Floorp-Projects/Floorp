@@ -219,7 +219,6 @@ net.au
 org.au
 edu.au
 gov.au
-csiro.au
 asn.au
 id.au
 // Historic 2LDs (closed to new registration, but sites still exist)
@@ -4172,6 +4171,7 @@ name.my
 
 // mz : http://www.gobin.info/domainname/mz-template.doc
 *.mz
+!teledata.mz
 
 // na : http://www.na-nic.com.na/
 // http://www.info.na/domain/
@@ -5365,8 +5365,17 @@ ed.pw
 go.pw
 belau.pw
 
-// py : http://www.nic.py/faq_a.html#faq_b
-*.py
+// py : http://www.nic.py/pautas.html#seccion_9
+// Confirmed by registry 2012-10-03
+com.py
+coop.py
+edu.py
+gov.py
+mil.py
+net.py
+org.py
+!nic.py
+!una.py
 
 // qa : http://domains.qa/en/
 qa
@@ -6580,8 +6589,51 @@ za.com
 operaunite.com
 
 // Google, Inc.
-// Requested by Eduardo Vela <evn@google.com> 2010-09-06
+// Requested by Eduardo Vela <evn@google.com> 2012-10-24
 appspot.com
+blogspot.be
+blogspot.bj
+blogspot.ca
+blogspot.cf
+blogspot.ch
+blogspot.co.at
+blogspot.co.il
+blogspot.co.nz
+blogspot.co.uk
+blogspot.com
+blogspot.com.ar
+blogspot.com.au
+blogspot.com.br
+blogspot.com.es
+blogspot.cv
+blogspot.cz
+blogspot.de
+blogspot.dk
+blogspot.fi
+blogspot.fr
+blogspot.gr
+blogspot.hk
+blogspot.hu
+blogspot.ie
+blogspot.in
+blogspot.it
+blogspot.jp
+blogspot.kr
+blogspot.mr
+blogspot.mx
+blogspot.nl
+blogspot.no
+blogspot.pt
+blogspot.re
+blogspot.ro
+blogspot.se
+blogspot.sg
+blogspot.sk
+blogspot.td
+blogspot.tw
+codespot.com
+googleapis.com
+googlecode.com
 
 // DreamHost : http://www.dreamhost.com/
 // Requested by Andrew Farmer <andrew.farmer@dreamhost.com> 2012-10-02
@@ -6886,5 +6938,13 @@ webhop.net
 webhop.org
 worse-than.tv
 writesthisblog.com
+
+// BetaInABox
+// Requested by adrian@betainabox.com 2012-09-13
+betainabox.com
+
+// Red Hat, Inc. OpenShift : https://openshift.redhat.com/
+// Requested by Tim Kramer <tkramer@rhcloud.com> 2012-10-24
+rhcloud.com
 
 // ===END PRIVATE DOMAINS===

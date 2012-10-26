@@ -222,7 +222,14 @@ class TestTyping(MarionetteTestCase):
     def testShouldTypeAnInteger(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
-        
+
         element = self.marionette.find_element("id", "keyReporter")
         element.send_keys(1234)
-        self.assertEqual(element.get_attribute("value"), "1234")    
+        self.assertEqual(element.get_attribute("value"), "1234")
+
+    def testShouldSendKeysToElementsWithoutTheValueAttribute(self):
+        test_html = self.marionette.absolute_url("javascriptPage.html")
+        self.marionette.navigate(test_html)
+
+        # If we don't get an error below we are good
+        self.marionette.find_element('tag name', 'body').send_keys('foo')

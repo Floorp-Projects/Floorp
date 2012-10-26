@@ -4,13 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/ContactService.jsm');
 Cu.import('resource://gre/modules/SettingsChangeNotifier.jsm');
 #ifdef MOZ_B2G_FM
@@ -506,13 +499,10 @@ Services.obs.addObserver(function onWebappsReady(subject, topic, data) {
 }, 'webapps-registry-ready', false);
 
 Services.obs.addObserver(function onBluetoothVolumeChange(subject, topic, data) {
-  if (data == 'up') {
-    shell.sendChromeEvent({ type: 'volume-up-button-press' });
-    shell.sendChromeEvent({ type: 'volume-up-button-release' });
-  } else if (data == 'down') {
-    shell.sendChromeEvent({ type: 'volume-down-button-press' });
-    shell.sendChromeEvent({ type: 'volume-down-button-release' });
-  }
+  shell.sendChromeEvent({
+    type: "volumeset",
+    value: data
+  });
 }, 'bluetooth-volume-change', false);
 
 (function Repl() {

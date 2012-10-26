@@ -18,7 +18,7 @@ public class testLoad extends PixelTest {
     public void testLoad() {
         String url = getAbsoluteUrl("/robocop/robocop_boxes.html");
 
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        blockForGeckoReady();
 
         loadAndVerifyBoxes(url);
 
