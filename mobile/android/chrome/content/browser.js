@@ -5637,8 +5637,9 @@ var PluginHelper = {
       }
     ];
 
-    // Add a checkbox with a "Don't ask again" message
-    let options = { checkbox: Strings.browser.GetStringFromName("clickToPlayPlugins.dontAskAgain") };
+    // Add a checkbox with a "Don't ask again" message if the uri contains a
+    // host. Adding a permanent exception will fail if host is not present.
+    let options = uri.host ? { checkbox: Strings.browser.GetStringFromName("clickToPlayPlugins.dontAskAgain") } : {};
 
     NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id, options);
   },
