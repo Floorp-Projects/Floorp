@@ -30,7 +30,6 @@
 
 #define nsHtml5TreeBuilder_cpp__
 
-#include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsITimer.h"

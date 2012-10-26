@@ -54,7 +54,10 @@ ActivityProxy.prototype = {
                         ? DOMApplicationRegistry.getManifestURLByLocalId(appId)
                         : null;
     cpmm.sendAsyncMessage("Activity:Start", { id: this.id,
-                                              options: aOptions,
+                                              options: {
+                                                name: aOptions.name,
+                                                data: aOptions.data
+                                              },
                                               manifestURL: manifestURL,
                                               pageURL: aWindow.document.location.href });
 

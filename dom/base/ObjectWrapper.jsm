@@ -4,7 +4,7 @@
 
 "use strict"
 
-const Cu = Components.utils; 
+const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
@@ -13,25 +13,59 @@ const EXPORTED_SYMBOLS = ["ObjectWrapper"];
 // Makes sure that we expose correctly chrome JS objects to content.
 
 let ObjectWrapper = {
+  getObjectKind: function objWrapper_getobjectkind(aObject) {
+    if (!aObject) {
+      return "null";
+    }
+
+    if (Array.isArray(aObject)) {
+      return "array";
+    } else if (aObject.mozSlice && (typeof aObject.mozSlice == "function")) {
+      return "blob";
+    } else if (typeof aObject == "object") {
+      return "object";
+    } else {
+      return "primitive";
+    }
+  },
+
   wrap: function objWrapper_wrap(aObject, aCtxt) {
+    if (!aObject) {
+      return null;
+    }
+
+    // First check wich kind of object we have.
+    let kind = this.getObjectKind(aObject);
+    if (kind == "array") {
+      let res = Cu.createArrayIn(aCtxt);
+      aObject.forEach(function(aObj) {
+        res.push(this.wrap(aObj, aCtxt));
+      }, this);
+      return res;
+    } else if (kind == "blob") {
+      return new aCtxt.Blob([aObject]);
+    } else if (kind == "primitive") {
+      return aObject;
+    }
+
+    //  Fall-through, we now have a dictionnary object.
     let res = Cu.createObjectIn(aCtxt);
     let propList = { };
     for (let prop in aObject) {
       let value;
-      if (Array.isArray(aObject[prop])) {
+      let objProp = aObject[prop];
+      let propKind = this.getObjectKind(objProp);
+      if (propKind == "array") {
         value = Cu.createArrayIn(aCtxt);
-        aObject[prop].forEach(function(aObj) {
-          // Only wrap objects.
-          if (typeof aObj == "object") {
-            value.push(objWrapper_wrap(aObj, aCtxt));
-          } else {
-            value.push(aObj);
-          }
-        });
-      } else if (typeof(aObject[prop]) == "object") {
-        value = objWrapper_wrap(aObject[prop], aCtxt);
+        objProp.forEach(function(aObj) {
+          value.push(this.wrap(aObj, aCtxt));
+        }, this);
+      } else if (propKind == "blob") {
+        value = new aCtxt.Blob([objProp]);
+      } else if (propKind == "object") {
+        value = this.wrap(objProp, aCtxt);
       } else {
-        value = aObject[prop];
+        value = objProp;
       }
       propList[prop] = {
         enumerable: true,

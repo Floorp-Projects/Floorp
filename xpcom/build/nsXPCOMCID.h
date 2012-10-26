@@ -76,6 +76,11 @@
 #define NS_CYCLE_COLLECTOR_LOGGER_CONTRACTID "@mozilla.org/cycle-collector-logger;1"
 
 /**
+ * nsMessageLoop contract id
+ */
+#define NS_MESSAGE_LOOP_CONTRACTID "@mozilla.org/message-loop;1"
+
+/**
  * The following are the CIDs and Contract IDs of the nsISupports wrappers for 
  * primative types.  
  */

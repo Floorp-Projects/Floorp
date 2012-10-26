@@ -61,8 +61,8 @@ DOMProxyHandler::EnsureExpandoObject(JSContext* cx, JSObject* obj)
       return NULL;
     }
 
-    xpc::CompartmentPrivate* priv = xpc::GetCompartmentPrivate(obj);
-    if (!priv->RegisterDOMExpandoObject(obj)) {
+    XPCWrappedNativeScope* scope = xpc::GetObjectScope(obj);
+    if (!scope->RegisterDOMExpandoObject(obj)) {
       return NULL;
     }
 

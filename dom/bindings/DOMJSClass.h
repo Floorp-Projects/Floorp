@@ -22,10 +22,8 @@ class nsCycleCollectionParticipant;
 // bindings.
 #define DOM_XRAY_EXPANDO_SLOT 1
 
-// All DOM globals must have a slot at DOM_PROTOTYPE_SLOT. We have to
-// start at 1 past JSCLASS_GLOBAL_SLOT_COUNT because XPConnect uses
-// that one.
-#define DOM_PROTOTYPE_SLOT (JSCLASS_GLOBAL_SLOT_COUNT + 1)
+// All DOM globals must have a slot at DOM_PROTOTYPE_SLOT.
+#define DOM_PROTOTYPE_SLOT JSCLASS_GLOBAL_SLOT_COUNT
 
 // We use these flag bits for the new bindings.
 #define JSCLASS_DOM_GLOBAL JSCLASS_USERBIT1

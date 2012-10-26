@@ -19,6 +19,7 @@
 #include "nsIScriptError.h"
 #include "nsIChromeRegistry.h"
 #include "nsIPrincipal.h"
+#include "nsJSPrincipals.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
@@ -31,8 +32,6 @@
 
 using namespace mozilla::scache;
 using namespace mozilla;
-
-using mozilla::dom::DestroyProtoOrIfaceCache;
 
 static const char kXBLCachePrefix[] = "xblcache";
 
@@ -155,8 +154,6 @@ nsXBLDocGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
 
   // The addref was part of JSObject construction
   NS_RELEASE(nativeThis);
-
-  DestroyProtoOrIfaceCache(obj);
 }
 
 static JSBool
@@ -169,13 +166,14 @@ nsXBLDocGlobalObject_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id)
 
 JSClass nsXBLDocGlobalObject::gSharedGlobalClass = {
     "nsXBLPrototypeScript compilation scope",
-    XPCONNECT_GLOBAL_FLAGS,
+    JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
+    JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0),
     JS_PropertyStub,  JS_PropertyStub,
     nsXBLDocGlobalObject_getProperty, nsXBLDocGlobalObject_setProperty,
     JS_EnumerateStub, nsXBLDocGlobalObject_resolve,
     JS_ConvertStub, nsXBLDocGlobalObject_finalize,
     nsXBLDocGlobalObject_checkAccess, NULL, NULL, NULL,
-    TraceXPCGlobal
+    NULL
 };
 
 //----------------------------------------------------------------------
@@ -281,12 +279,10 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment()
   // why - see bug 339647)
   JS_SetErrorReporter(cx, XBL_ProtoErrorReporter);
 
-  nsIPrincipal *principal = GetPrincipal();
-  JSCompartment *compartment;
-
-  rv = xpc::CreateGlobalObject(cx, &gSharedGlobalClass, principal, false,
-                               &mJSObject, &compartment);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
+  mJSObject = JS_NewGlobalObject(cx, &gSharedGlobalClass,
+                                 nsJSPrincipals::get(GetPrincipal()));
+  if (!mJSObject)
+      return NS_OK;
 
   // Set the location information for the new global, so that tools like
   // about:memory may use that information

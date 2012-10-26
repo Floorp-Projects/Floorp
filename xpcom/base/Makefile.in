@@ -42,6 +42,7 @@ CPPSRCS		= \
 		nsErrorAsserts.cpp \
 		nsGZFileWriter.cpp \
 		MemoryInfoDumper.cpp \
+		nsMessageLoop.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH),Linux)
@@ -137,6 +138,7 @@ XPIDLSRCS	= \
 		nsIMutable.idl \
 		nsIMemoryReporter.idl \
 		nsIGZFileWriter.idl \
+		nsIMessageLoop.idl \
 		$(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

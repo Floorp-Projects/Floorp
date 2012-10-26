@@ -2283,6 +2283,20 @@ nsWindow::ScheduleResumeComposition(int width, int height)
     }
 }
 
+float
+nsWindow::ComputeRenderIntegrity()
+{
+    if (sCompositorParent) {
+        mozilla::layers::LayerManagerOGL* manager =
+          static_cast<mozilla::layers::LayerManagerOGL*>(sCompositorParent->GetLayerManager());
+        if (manager) {
+            return manager->ComputeRenderIntegrity();
+        }
+    }
+
+    return 1.f;
+}
+
 bool
 nsWindow::WidgetPaintsBackground()
 {
