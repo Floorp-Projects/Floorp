@@ -28,7 +28,7 @@ const installedPermsToTest = {
   "geolocation": "prompt",
   "alarms": "allow",
   "contacts": "prompt",
-  "device-storage:apps": "allow",
+  "device-storage:apps": "prompt",
 };
 
 const uninstalledPermsToTest = {

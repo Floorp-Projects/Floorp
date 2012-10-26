@@ -44,6 +44,7 @@ function mapSuffixes(aPermName, aSuffixes)
 }
 
 // Permissions Matrix: https://docs.google.com/spreadsheet/ccc?key=0Akyz_Bqjgf5pdENVekxYRjBTX0dCXzItMnRyUU1RQ0E#gid=0
+// Also, keep in sync with https://mxr.mozilla.org/mozilla-central/source/extensions/cookie/Permission.txt
 
 // Permissions that are implicit:
 // battery-status, network-information, vibration,
@@ -87,24 +88,31 @@ const PermissionsTable = { "resource-lock": {
                            },
                            "device-storage:apps": {
                              app: DENY_ACTION,
-                             privileged: ALLOW_ACTION,
-                             certified: ALLOW_ACTION
+                             privileged: PROMPT_ACTION,
+                             certified: ALLOW_ACTION,
+                             access: ["read", "write", "create"]
                            },
                            "device-storage:pictures": {
                              app: DENY_ACTION,
-                             privileged: ALLOW_ACTION,
+                             privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write", "create"]
                            },
                            "device-storage:videos": {
                              app: DENY_ACTION,
-                             privileged: ALLOW_ACTION,
+                             privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write", "create"]
                            },
                            "device-storage:music": {
                              app: DENY_ACTION,
-                             privileged: ALLOW_ACTION,
+                             privileged: PROMPT_ACTION,
+                             certified: ALLOW_ACTION,
+                             access: ["read", "write", "create"]
+                           },
+                           "device-storage:sdcard": {
+                             app: DENY_ACTION,
+                             privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write", "create"]
                            },
