@@ -2162,26 +2162,6 @@ SetMarkStackLimit(JSRuntime *rt, size_t limit)
 
 } /* namespace js */
 
-static void
-gc_root_traversal(JSTracer *trc, const RootEntry &entry)
-{
-    const char *name = entry.value.name ? entry.value.name : "root";
-    if (entry.value.type == JS_GC_ROOT_GCTHING_PTR)
-        MarkGCThingRoot(trc, reinterpret_cast<void **>(entry.key), name);
-    else
-        MarkValueRoot(trc, reinterpret_cast<Value *>(entry.key), name);
-}
-
-static void
-gc_lock_traversal(const GCLocks::Entry &entry, JSTracer *trc)
-{
-    JS_ASSERT(entry.value >= 1);
-    JS_SET_TRACING_LOCATION(trc, (void *)&entry.key);
-    void *tmp = entry.key;
-    MarkGCThingRoot(trc, &tmp, "locked object");
-    JS_ASSERT(tmp == entry.key);
-}
-
 namespace js {
 
 void
@@ -2468,11 +2448,23 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
         rt->markSelfHostedGlobal(trc);
     }
 
-    for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront())
-        gc_root_traversal(trc, r.front());
+    for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {
+        const RootEntry &entry = r.front();
+        const char *name = entry.value.name ? entry.value.name : "root";
+        if (entry.value.type == JS_GC_ROOT_GCTHING_PTR)
+            MarkGCThingRoot(trc, reinterpret_cast<void **>(entry.key), name);
+        else
+            MarkValueRoot(trc, reinterpret_cast<Value *>(entry.key), name);
+    }
 
-    for (GCLocks::Range r = rt->gcLocksHash.all(); !r.empty(); r.popFront())
-        gc_lock_traversal(r.front(), trc);
+    for (GCLocks::Range r = rt->gcLocksHash.all(); !r.empty(); r.popFront()) {
+        const GCLocks::Entry &entry = r.front();
+        JS_ASSERT(entry.value >= 1);
+        JS_SET_TRACING_LOCATION(trc, (void *)&entry.key);
+        void *tmp = entry.key;
+        MarkGCThingRoot(trc, &tmp, "locked object");
+        JS_ASSERT(tmp == entry.key);
+    }
 
     if (rt->scriptAndCountsVector) {
         ScriptAndCountsVector &vec = *rt->scriptAndCountsVector;
