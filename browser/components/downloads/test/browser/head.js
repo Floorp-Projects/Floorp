@@ -12,7 +12,8 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
-
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
+                                  "resource:///modules/DownloadsCommon.jsm");
 const nsIDM = Ci.nsIDownloadManager;
 
 let gTestTargetFile = FileUtils.getFile("TmpD", ["dm-ui-test.file"]);
@@ -150,9 +151,13 @@ function gen_resetState()
     statement.finalize();
   }
 
+  // Reset any prefs that might have been changed.
+  Services.prefs.clearUserPref("browser.download.panel.shown");
+
   // Ensure that the panel is closed and data is unloaded.
   DownloadsCommon.data.clear();
   DownloadsCommon.data._loadState = DownloadsCommon.data.kLoadNone;
+  DownloadsPanel.hidePanel();
 
   // Wait for focus on the main window.
   waitForFocus(testRunner.continueTest);
@@ -226,4 +231,42 @@ function gen_openPanel(aData)
   // Open the downloads panel, waiting until loading is completed.
   DownloadsPanel.showPanel();
   yield;
+}
+
+/**
+ * Spin the event loop for aSeconds seconds, and then signal the test to
+ * continue.
+ *
+ * @param aSeconds the number of seconds to wait.
+ * @note This helper should _only_ be used when there's no valid event to
+ *       listen to and one can't be made.
+ */
+function waitFor(aSeconds)
+{
+  setTimeout(function() {
+    testRunner.continueTest();
+  }, aSeconds * 1000);
+}
+
+/**
+ * Make it so that the next time the downloads panel opens, we signal to
+ * continue the test. This function needs to be called each time you want
+ * to wait for the panel to open.
+ *
+ * Example usage:
+ *
+ * prepareForPanelOpen();
+ * // Do something to open the panel
+ * yield;
+ * // We can assume the panel is open now.
+ */
+function prepareForPanelOpen()
+{
+  // Hook to wait until the test data has been loaded.
+  let originalOnPopupShown = DownloadsPanel.onPopupShown;
+  DownloadsPanel.onPopupShown = function (aEvent) {
+    DownloadsPanel.onPopupShown = originalOnPopupShown;
+    DownloadsPanel.onPopupShown.apply(this, [aEvent]);
+    testRunner.continueTest();
+  };
 }
