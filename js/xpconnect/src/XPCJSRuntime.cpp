@@ -312,7 +312,7 @@ static void
 TraceJSObject(void *aScriptThing, const char *name, void *aClosure)
 {
     JS_CALL_TRACER(static_cast<JSTracer*>(aClosure), aScriptThing,
-                   js_GetGCThingTraceKind(aScriptThing), name);
+                   js::GCThingTraceKind(aScriptThing), name);
 }
 
 static PLDHashOperator
@@ -359,7 +359,7 @@ CheckParticipatesInCycleCollection(void *aThing, const char *name, void *aClosur
     if (closure->cycleCollectionEnabled)
         return;
 
-    if (AddToCCKind(js_GetGCThingTraceKind(aThing)) &&
+    if (AddToCCKind(js::GCThingTraceKind(aThing)) &&
         xpc_IsGrayGCThing(aThing))
     {
         closure->cycleCollectionEnabled = true;

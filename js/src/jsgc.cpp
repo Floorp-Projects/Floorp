@@ -3133,7 +3133,7 @@ GCHelperThread::startBackgroundAllocationIfIdle()
 #endif /* JS_THREADSAFE */
 }
 
-JS_FRIEND_API(void)
+void
 GCHelperThread::replenishAndFreeLater(void *ptr)
 {
     JS_ASSERT(freeCursor == freeCursorEnd);

@@ -1026,7 +1026,6 @@ Cell::isAligned() const
 #endif
 
 } /* namespace gc */
-
 } /* namespace js */
 
 #endif /* gc_heap_h___ */
