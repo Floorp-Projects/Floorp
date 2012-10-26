@@ -142,10 +142,9 @@ namespace {
   StaticRefPtr<BluetoothHfpManager> gBluetoothHfpManager;
   StaticRefPtr<BluetoothHfpManagerObserver> sHfpObserver;
   bool gInShutdown = false;
-  static nsCOMPtr<nsIThread> sHfpCommandThread;
   static bool sStopSendingRingFlag = true;
 
-  static int kRingInterval = 3000000;  //unit: us
+  static int sRingInterval = 3000; //unit: ms
 } // anonymous namespace
 
 NS_IMPL_ISUPPORTS1(BluetoothHfpManagerObserver, nsIObserver)
@@ -167,7 +166,7 @@ BluetoothHfpManagerObserver::Observe(nsISupports* aSubject,
   return NS_ERROR_UNEXPECTED;
 }
 
-class SendRingIndicatorTask : public nsRunnable
+class SendRingIndicatorTask : public Task
 {
 public:
   SendRingIndicatorTask()
@@ -175,17 +174,27 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  NS_IMETHOD Run()
+  void Run() MOZ_OVERRIDE
   {
-    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(NS_IsMainThread());
 
-    while (!sStopSendingRingFlag) {
-      gBluetoothHfpManager->SendLine("RING");
-
-      usleep(kRingInterval);
+    if (sStopSendingRingFlag) {
+      return;
     }
 
-    return NS_OK;
+    if (!gBluetoothHfpManager) {
+      NS_WARNING("BluetoothHfpManager no longer exists, cannot send ring!");
+      return;
+    }
+
+    gBluetoothHfpManager->SendLine("RING");
+
+    MessageLoop::current()->
+      PostDelayedTask(FROM_HERE,
+                      new SendRingIndicatorTask(),
+                      sRingInterval);
+
+    return;
   }
 };
 
@@ -242,13 +251,6 @@ BluetoothHfpManager::Init()
     return false;
   }
 
-  if (!sHfpCommandThread) {
-    if (NS_FAILED(NS_NewThread(getter_AddRefs(sHfpCommandThread)))) {
-      NS_ERROR("Failed to new thread for sHfpCommandThread");
-      return false;
-    }
-  }
-
   float volume;
   nsCOMPtr<nsIAudioManager> am = do_GetService("@mozilla.org/telephony/audiomanager;1");
   if (!am) {
@@ -276,15 +278,6 @@ BluetoothHfpManager::Cleanup()
     NS_WARNING("Failed to stop listening RIL");
   }
   mListener = nullptr;
-
-  // Shut down the command thread if it still exists.
-  if (sHfpCommandThread) {
-    nsCOMPtr<nsIThread> thread;
-    sHfpCommandThread.swap(thread);
-    if (NS_FAILED(thread->Shutdown())) {
-      NS_WARNING("Failed to shut down the bluetooth hfpmanager command thread!");
-    }
-  }
 
   sHfpObserver->Shutdown();
   sHfpObserver = nullptr;
@@ -721,12 +714,8 @@ BluetoothHfpManager::SetupCIND(int aCallIndex, int aCallState, bool aInitial)
 
       // Start sending RING indicator to HF
       sStopSendingRingFlag = false;
-      sendRingTask = new SendRingIndicatorTask();
-
-      if (NS_FAILED(sHfpCommandThread->Dispatch(sendRingTask, NS_DISPATCH_NORMAL))) {
-        NS_WARNING("Cannot dispatch ring task!");
-        return;
-      };
+      MessageLoop::current()->PostTask(FROM_HERE,
+                                       new SendRingIndicatorTask());
       break;
     case nsIRadioInterfaceLayer::CALL_STATE_DIALING:
       sCINDItems[CINDType::CALLSETUP].value = CallSetupState::OUTGOING;
