@@ -5907,8 +5907,13 @@ nsWindow::GetInputContext()
   if (!mIMModule) {
       context.mIMEState.mEnabled = IMEState::DISABLED;
       context.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
+      // If IME context isn't available on this widget, we should set |this|
+      // instead of nullptr since nullptr means that the platform has only one
+      // context per process.
+      context.mNativeIMEContext = this;
   } else {
       context = mIMModule->GetInputContext();
+      context.mNativeIMEContext = mIMModule;
   }
   return context;
 }
