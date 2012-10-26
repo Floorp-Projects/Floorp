@@ -208,9 +208,8 @@ class FrameSizeClass
         return FrameSizeClass(class_);
     }
 
-    // These functions are implemented in specific CodeGenerator-* files.
+    // These two functions are implemented in specific CodeGenerator-* files.
     static FrameSizeClass FromDepth(uint32 frameDepth);
-    static FrameSizeClass ClassLimit();
     uint32 frameSize() const;
 
     uint32 classId() const {

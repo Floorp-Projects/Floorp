@@ -21,7 +21,11 @@ CodeGeneratorX86::CodeGeneratorX86(MIRGenerator *gen, LIRGraph &graph)
 {
 }
 
-static const uint32 FrameSizes[] = { 128, 256, 512, 1024 };
+// The first two size classes are 128 and 256 bytes respectively. After that we
+// increment by 512.
+static const uint32 LAST_FRAME_SIZE = 512;
+static const uint32 LAST_FRAME_INCREMENT = 512;
+static const uint32 FrameSizes[] = { 128, 256, LAST_FRAME_SIZE };
 
 FrameSizeClass
 FrameSizeClass::FromDepth(uint32 frameDepth)
@@ -31,22 +35,21 @@ FrameSizeClass::FromDepth(uint32 frameDepth)
             return FrameSizeClass(i);
     }
 
-    return FrameSizeClass::None();
-}
+    uint32 newFrameSize = frameDepth - LAST_FRAME_SIZE;
+    uint32 sizeClass = (newFrameSize / LAST_FRAME_INCREMENT) + 1;
 
-FrameSizeClass
-FrameSizeClass::ClassLimit()
-{
-    return FrameSizeClass(JS_ARRAY_LENGTH(FrameSizes));
+    return FrameSizeClass(JS_ARRAY_LENGTH(FrameSizes) + sizeClass);
 }
-
 uint32
 FrameSizeClass::frameSize() const
 {
     JS_ASSERT(class_ != NO_FRAME_SIZE_CLASS_ID);
-    JS_ASSERT(class_ < JS_ARRAY_LENGTH(FrameSizes));
 
-    return FrameSizes[class_];
+    if (class_ < JS_ARRAY_LENGTH(FrameSizes))
+        return FrameSizes[class_];
+
+    uint32 step = class_ - JS_ARRAY_LENGTH(FrameSizes);
+    return LAST_FRAME_SIZE + step * LAST_FRAME_INCREMENT;
 }
 
 ValueOperand
@@ -285,13 +288,13 @@ CodeGeneratorX86::visitRecompileCheck(LRecompileCheck *lir)
     return true;
 }
 
-typedef bool (*InterruptCheckFn)(JSContext *);
-static const VMFunction InterruptCheckInfo = FunctionInfo<InterruptCheckFn>(InterruptCheck);
-
 bool
 CodeGeneratorX86::visitInterruptCheck(LInterruptCheck *lir)
 {
-    OutOfLineCode *ool = oolCallVM(InterruptCheckInfo, lir, (ArgList()), StoreNothing());
+    typedef bool (*pf)(JSContext *);
+    static const VMFunction interruptCheckInfo = FunctionInfo<pf>(InterruptCheck);
+
+    OutOfLineCode *ool = oolCallVM(interruptCheckInfo, lir, (ArgList()), StoreNothing());
     if (!ool)
         return false;
 

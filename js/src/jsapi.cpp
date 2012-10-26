@@ -684,26 +684,20 @@ mozilla::ThreadLocal<JSRuntime *> TlsRuntime;
 JS_FRIEND_API(void)
 EnterAssertNoGCScope()
 {
-    JSRuntime *rt = TlsRuntime.get();
-    if (rt)
-        ++rt->gcAssertNoGCDepth;
+    ++TlsRuntime.get()->gcAssertNoGCDepth;
 }
 
 JS_FRIEND_API(void)
 LeaveAssertNoGCScope()
 {
-    JSRuntime *rt = TlsRuntime.get();
-    if (rt) {
-        --rt->gcAssertNoGCDepth;
-        JS_ASSERT(rt->gcAssertNoGCDepth >= 0);
-    }
+    --TlsRuntime.get()->gcAssertNoGCDepth;
+    JS_ASSERT(TlsRuntime.get()->gcAssertNoGCDepth >= 0);
 }
 
 JS_FRIEND_API(bool)
 InNoGCScope()
 {
-    JSRuntime *rt = TlsRuntime.get();
-    return !rt || rt->gcAssertNoGCDepth > 0;
+    return TlsRuntime.get()->gcAssertNoGCDepth > 0;
 }
 
 JS_FRIEND_API(bool)

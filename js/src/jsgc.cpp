@@ -3895,14 +3895,6 @@ BeginSweepPhase(JSRuntime *rt)
     }
 #ifdef JS_ION
     for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        /*
-         * Don't sweep IonCode objects from the atoms compartment. These are
-         * stubs and wrappers allocated when the IonRuntime is created and
-         * must persist until the runtime is destroyed.
-         */
-        if (c == rt->atomsCompartment)
-            continue;
-
         if (c->isGCSweeping()) {
             gcstats::AutoSCC scc(rt->gcStats, partition.getSCC(c));
             c->arenas.queueIonCodeForSweep(&fop);

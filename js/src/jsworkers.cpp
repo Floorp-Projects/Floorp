@@ -17,7 +17,8 @@ using namespace js;
 bool
 js::OffThreadCompilationAvailable(JSContext *cx)
 {
-    return cx->runtime->useHelperThreads();
+    WorkerThreadState &state = *cx->runtime->workerThreadState;
+    return state.numThreads > 0;
 }
 
 bool
@@ -73,8 +74,6 @@ CompiledScriptMatches(JSCompartment *compartment, JSScript *script, JSScript *ta
 void
 js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 {
-    AutoAssertNoGC nogc;
-
     if (!compartment->rt->workerThreadState)
         return;
 
