@@ -54,10 +54,9 @@ function testNonEnumProperties() {
       ok(nonenum.hasAttribute("open"),
         ".nonenum container should be visible.");
 
-      let option = gDebugger.document.getElementById("show-nonenum");
-
       // Uncheck 'show hidden properties'.
-      EventUtils.sendMouseEvent({ type: "click" }, option, gDebugger);
+      gDebugger.DebuggerView.Options._showNonEnumItem.setAttribute("checked", "false");
+      gDebugger.DebuggerView.Options._toggleShowNonEnum();
 
       ok(details.hasAttribute("open"),
         ".details container should stay visible.");
@@ -66,7 +65,8 @@ function testNonEnumProperties() {
         ".nonenum container should become hidden.");
 
       // Check 'show hidden properties'.
-      EventUtils.sendMouseEvent({ type: "click" }, option, gDebugger);
+      gDebugger.DebuggerView.Options._showNonEnumItem.setAttribute("checked", "true");
+      gDebugger.DebuggerView.Options._toggleShowNonEnum();
 
       ok(details.hasAttribute("open"),
         ".details container should stay visible.");
@@ -83,7 +83,8 @@ function testNonEnumProperties() {
         ".nonenum container should be hidden.");
 
       // Uncheck 'show hidden properties'.
-      EventUtils.sendMouseEvent({ type: "click" }, option, gDebugger);
+      gDebugger.DebuggerView.Options._showNonEnumItem.setAttribute("checked", "false");
+      gDebugger.DebuggerView.Options._toggleShowNonEnum();
 
       ok(!details.hasAttribute("open"),
         ".details container should stay hidden.");
@@ -92,7 +93,8 @@ function testNonEnumProperties() {
         ".nonenum container should stay hidden.");
 
       // Check 'show hidden properties'.
-      EventUtils.sendMouseEvent({ type: "click" }, option, gDebugger);
+      gDebugger.DebuggerView.Options._showNonEnumItem.setAttribute("checked", "true");
+      gDebugger.DebuggerView.Options._toggleShowNonEnum();
 
       gDebugger.DebuggerController.activeThread.resume(function() {
         closeDebuggerAndFinish();

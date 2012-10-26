@@ -363,7 +363,7 @@ LayoutHelpers = {
       elemString += PlatformKeys.GetStringFromName("VK_ALT") +
                     PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
-    if (elemMod.match("ctrl")) {
+    if (elemMod.match("ctrl") || elemMod.match("control")) {
       elemString += PlatformKeys.GetStringFromName("VK_CONTROL") +
                     PlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
     }
