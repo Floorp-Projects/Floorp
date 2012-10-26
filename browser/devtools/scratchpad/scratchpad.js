@@ -1399,6 +1399,7 @@ var Scratchpad = {
         telemetry.toolClosed("scratchpad");
         window.close();
       }
+
       if (aCallback) {
         aCallback();
       }
@@ -1467,6 +1468,9 @@ var Scratchpad = {
     }
   },
 
+  /**
+   * Opens the MDN documentation page for Scratchpad.
+   */
   openDocumentationPage: function SP_openDocumentationPage()
   {
     let url = this.strings.GetStringFromName("help.openDocumentationPage");
@@ -1475,7 +1479,6 @@ var Scratchpad = {
     this.gBrowser.selectedTab = newTab;
   },
 };
-
 
 /**
  * Encapsulates management of the sidebar containing the VariablesView for
