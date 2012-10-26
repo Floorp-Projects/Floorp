@@ -29,6 +29,7 @@ class TextCompositionArray;
 
 class nsIMEStateManager
 {
+  friend class nsTextStateManager;
 protected:
   typedef mozilla::widget::IMEState IMEState;
   typedef mozilla::widget::InputContext InputContext;
@@ -42,8 +43,8 @@ public:
                                   nsIContent* aContent);
   /**
    * OnChangeFocus() should be called when focused content is changed or
-   * IME enabled state is changed.  If focus isn't actually changed and IME
-   * enabled state isn't changed, this will do nothing.
+   * IME enabled state is changed.  If nobody has focus, set both aPresContext
+   * and aContent nullptr.  E.g., all windows are deactivated.
    */
   static nsresult OnChangeFocus(nsPresContext* aPresContext,
                                 nsIContent* aContent,
@@ -54,17 +55,6 @@ public:
   // They are separate from OnChangeFocus above because this offers finer
   // control compared to having the two methods incorporated into OnChangeFocus
 
-  // OnTextStateBlur should be called *before* NS_BLUR_CONTENT fires
-  // aPresContext is the nsPresContext receiving focus (not lost focus)
-  // aContent is the nsIContent receiving focus (not lost focus)
-  // aPresContext and/or aContent may be null
-  static nsresult OnTextStateBlur(nsPresContext* aPresContext,
-                                  nsIContent* aContent);
-  // OnTextStateFocus should be called *after* NS_FOCUS_CONTENT fires
-  // aPresContext is the nsPresContext receiving focus
-  // aContent is the nsIContent receiving focus
-  static nsresult OnTextStateFocus(nsPresContext* aPresContext,
-                                   nsIContent* aContent);
   // Get the focused editor's selection and root
   static nsresult GetFocusSelectionAndRoot(nsISelection** aSel,
                                            nsIContent** aRoot);
@@ -83,6 +73,14 @@ public:
   static void OnClickInEditor(nsPresContext* aPresContext,
                               nsIContent* aContent,
                               nsIDOMMouseEvent* aMouseEvent);
+
+  // This method is called when editor actually gets focus.
+  // aContent must be:
+  //   If the editor is for <input> or <textarea>, the element.
+  //   If the editor is for contenteditable, the active editinghost.
+  //   If the editor is for designMode, NULL.
+  static void OnFocusInEditor(nsPresContext* aPresContext,
+                              nsIContent* aContent);
 
   /**
    * All DOM composition events and DOM text events must be dispatched via
@@ -118,6 +116,12 @@ protected:
                                  nsIContent* aContent);
 
   static void EnsureTextCompositionArray();
+  static void CreateTextStateManager();
+  static void DestroyTextStateManager();
+
+  static bool IsEditable(nsINode* node);
+  static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
+                                      nsIContent* aContent);
 
   static nsIContent*    sContent;
   static nsPresContext* sPresContext;
