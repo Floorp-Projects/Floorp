@@ -1291,11 +1291,6 @@ js_IsAddressableGCThing(JSRuntime *rt, uintptr_t w, gc::AllocKind *thingKind, vo
     return js::IsAddressableGCThing(rt, w, false, thingKind, NULL, thing) == CGCT_VALID;
 }
 
-#ifdef DEBUG
-static void
-CheckLeakedRoots(JSRuntime *rt);
-#endif
-
 void
 js_FinishGC(JSRuntime *rt)
 {
@@ -1324,10 +1319,6 @@ js_FinishGC(JSRuntime *rt)
 
     rt->gcChunkPool.expireAndFree(rt, true);
 
-#ifdef DEBUG
-    if (!rt->gcRootsHash.empty())
-        CheckLeakedRoots(rt);
-#endif
     rt->gcRootsHash.clear();
     rt->gcLocksHash.clear();
 }
@@ -1392,53 +1383,6 @@ js_RemoveRoot(JSRuntime *rt, void *rp)
 typedef RootedValueMap::Range RootRange;
 typedef RootedValueMap::Entry RootEntry;
 typedef RootedValueMap::Enum RootEnum;
-
-#ifdef DEBUG
-
-static void
-CheckLeakedRoots(JSRuntime *rt)
-{
-    uint32_t leakedroots = 0;
-
-    /* Warn (but don't assert) debug builds of any remaining roots. */
-    for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {
-        RootEntry &entry = r.front();
-        leakedroots++;
-        fprintf(stderr,
-                "JS engine warning: leaking GC root \'%s\' at %p\n",
-                entry.value.name ? entry.value.name : "", entry.key);
-    }
-
-    if (leakedroots > 0) {
-        if (leakedroots == 1) {
-            fprintf(stderr,
-"JS engine warning: 1 GC root remains after destroying the JSRuntime at %p.\n"
-"                   This root may point to freed memory. Objects reachable\n"
-"                   through it have not been finalized.\n",
-                    (void *) rt);
-        } else {
-            fprintf(stderr,
-"JS engine warning: %lu GC roots remain after destroying the JSRuntime at %p.\n"
-"                   These roots may point to freed memory. Objects reachable\n"
-"                   through them have not been finalized.\n",
-                    (unsigned long) leakedroots, (void *) rt);
-        }
-    }
-}
-
-void
-js_DumpNamedRoots(JSRuntime *rt,
-                  void (*dump)(const char *name, void *rp, JSGCRootType type, void *data),
-                  void *data)
-{
-    for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {
-        RootEntry &entry = r.front();
-        if (const char *name = entry.value.name)
-            dump(name, entry.key, entry.value.type, data);
-    }
-}
-
-#endif /* DEBUG */
 
 static size_t
 ComputeTriggerBytes(JSCompartment *comp, size_t lastBytes, size_t maxBytes, JSGCInvocationKind gckind)
