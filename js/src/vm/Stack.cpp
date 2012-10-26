@@ -15,7 +15,6 @@
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
-#include "jsinterpinlines.h"
 
 #include "jsopcode.h"
 

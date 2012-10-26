@@ -7,7 +7,6 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsinterp.h"
 #include "Bailouts.h"
 #include "SnapshotReader.h"
 #include "Ion.h"

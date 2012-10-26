@@ -34,7 +34,6 @@
 #include "jsversion.h"
 #include "jsdtoa.h"
 #include "jsgc.h"
-#include "jsinterp.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"

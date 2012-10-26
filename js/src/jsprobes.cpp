@@ -21,7 +21,6 @@
 #include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "jsfun.h"
-#include "jsinterp.h"
 #include "jsobj.h"
 #include "jsprobes.h"
 #include "jsscript.h"

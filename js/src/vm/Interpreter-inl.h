@@ -12,7 +12,6 @@
 #include "jsbool.h"
 #include "jscompartment.h"
 #include "jsinfer.h"
-#include "jsinterp.h"
 #include "jslibmath.h"
 #include "jsnum.h"
 #include "jsprobes.h"
@@ -30,6 +29,7 @@
 #include "ion/IonCompartment.h"
 
 #include "vm/Stack-inl.h"
+#include "vm/Interpreter.h"
 
 namespace js {
 

@@ -35,7 +35,6 @@
 #include "jsversion.h"
 #include "jscntxt.h"
 #include "jsdate.h"
-#include "jsinterp.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsstr.h"

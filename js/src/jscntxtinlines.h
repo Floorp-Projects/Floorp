@@ -11,13 +11,13 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
-#include "jsinterp.h"
 #include "jsprobes.h"
 #include "jsxml.h"
 #include "jsgc.h"
 
 #include "frontend/ParseMaps.h"
 #include "vm/RegExpObject.h"
+#include "vm/Interpreter.h"
 
 #include "jsgcinlines.h"
 
