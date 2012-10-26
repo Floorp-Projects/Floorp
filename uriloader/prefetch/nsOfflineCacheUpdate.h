@@ -37,6 +37,7 @@ class nsOfflineCacheUpdate;
 
 class nsICacheEntryDescriptor;
 class nsIUTF8StringEnumerator;
+class nsILoadContext;
 
 class nsOfflineCacheUpdateItem : public nsIDOMLoadStatus
                                , public nsIStreamListener
@@ -264,7 +265,10 @@ private:
     nsCOMPtr<nsIURI> mManifestURI;
     nsCOMPtr<nsIURI> mDocumentURI;
     nsCOMPtr<nsIFile> mCustomProfileDir;
-    nsCOMPtr<nsILoadContext> mLoadContext;
+
+    uint32_t mAppID;
+    bool mInBrowser;
+
     nsCOMPtr<nsIObserver> mUpdateAvailableObserver;
 
     nsCOMPtr<nsIApplicationCache> mApplicationCache;
@@ -317,7 +321,8 @@ public:
 
     nsresult ScheduleUpdate(nsOfflineCacheUpdate *aUpdate);
     nsresult FindUpdate(nsIURI *aManifestURI,
-                        nsILoadContext *aLoadContext,
+                        uint32_t aAppID,
+                        bool aInBrowser,
                         nsOfflineCacheUpdate **aUpdate);
 
     nsresult Schedule(nsIURI *aManifestURI,
@@ -325,6 +330,8 @@ public:
                       nsIDOMDocument *aDocument,
                       nsIDOMWindow* aWindow,
                       nsIFile* aCustomProfileDir,
+                      uint32_t aAppID,
+                      bool aInBrowser,
                       nsIOfflineCacheUpdate **aUpdate);
 
     virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate);
