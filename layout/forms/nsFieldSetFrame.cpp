@@ -27,6 +27,7 @@
 #include "nsIServiceManager.h"
 #include "nsDisplayList.h"
 #include "nsRenderingContext.h"
+#include "mozilla/Likely.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;
@@ -613,7 +614,7 @@ nsFieldSetFrame::InsertFrames(ChildListID    aListID,
 
   // aFrameList is not allowed to contain "the legend" for this fieldset
   ReparentFrameList(aFrameList);
-  if (NS_UNLIKELY(aPrevFrame == mLegendFrame)) {
+  if (MOZ_UNLIKELY(aPrevFrame == mLegendFrame)) {
     aPrevFrame = nullptr;
   }
   return mContentFrame->InsertFrames(aListID, aPrevFrame, aFrameList);

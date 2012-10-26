@@ -11,6 +11,7 @@
 #include "nsLineBox.h"
 #include "nsStyleStruct.h"
 #include "nsTHashtable.h"
+#include "mozilla/Likely.h"
 class nsIScrollableFrame;
 
 namespace mozilla {
@@ -59,7 +60,7 @@ class TextOverflow {
   struct AlignmentEdges {
     AlignmentEdges() : mAssigned(false) {}
     void Accumulate(const nsRect& aRect) {
-      if (NS_LIKELY(mAssigned)) {
+      if (MOZ_LIKELY(mAssigned)) {
         x = NS_MIN(x, aRect.X());
         xmost = NS_MAX(xmost, aRect.XMost());
       } else {
@@ -77,7 +78,7 @@ class TextOverflow {
   struct InnerClipEdges {
     InnerClipEdges() : mAssignedLeft(false), mAssignedRight(false) {}
     void AccumulateLeft(const nsRect& aRect) {
-      if (NS_LIKELY(mAssignedLeft)) {
+      if (MOZ_LIKELY(mAssignedLeft)) {
         mLeft = NS_MAX(mLeft, aRect.X());
       } else {
         mLeft = aRect.X();
@@ -85,7 +86,7 @@ class TextOverflow {
       }
     }
     void AccumulateRight(const nsRect& aRect) {
-      if (NS_LIKELY(mAssignedRight)) {
+      if (MOZ_LIKELY(mAssignedRight)) {
         mRight = NS_MIN(mRight, aRect.XMost());
       } else {
         mRight = aRect.XMost();

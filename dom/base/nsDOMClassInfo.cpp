@@ -553,6 +553,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
+#include "mozilla/Likely.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -9177,7 +9178,7 @@ nsHTMLDocumentSH::DocumentAllTagsNewResolve(JSContext *cx, JSHandleObject obj,
     if (!::JS_GetPrototype(cx, obj, &proto)) {
       return JS_FALSE;
     }
-    if (NS_UNLIKELY(!proto)) {
+    if (MOZ_UNLIKELY(!proto)) {
       return JS_TRUE;
     }
 
@@ -9881,7 +9882,7 @@ nsHTMLPluginObjElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
   if (!::JS_GetPrototype(cx, obj, &pi_obj)) {
     return NS_ERROR_UNEXPECTED;
   }
-  if (NS_UNLIKELY(!pi_obj)) {
+  if (MOZ_UNLIKELY(!pi_obj)) {
     return NS_OK;
   }
 
@@ -9913,7 +9914,7 @@ nsHTMLPluginObjElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   if (!::JS_GetPrototype(cx, obj, &pi_obj)) {
     return NS_ERROR_UNEXPECTED;
   }
-  if (NS_UNLIKELY(!pi_obj)) {
+  if (MOZ_UNLIKELY(!pi_obj)) {
     return NS_OK;
   }
 

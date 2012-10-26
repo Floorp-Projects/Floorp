@@ -53,6 +53,7 @@
 #include "nsRenderingContext.h"
 #include "mozilla/Preferences.h"
 #include "nsContentList.h"
+#include "mozilla/Likely.h"
 
 using namespace mozilla;
 
@@ -779,7 +780,7 @@ nsComboboxControlFrame::GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
   }
 
   nscoord displayWidth = 0;
-  if (NS_LIKELY(mDisplayFrame)) {
+  if (MOZ_LIKELY(mDisplayFrame)) {
     displayWidth = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                         mDisplayFrame,
                                                         aType);
@@ -1394,19 +1395,19 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
   styleContext = styleSet->
     ResolveAnonymousBoxStyle(nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
                              mStyleContext);
-  if (NS_UNLIKELY(!styleContext)) {
+  if (MOZ_UNLIKELY(!styleContext)) {
     return nullptr;
   }
 
   nsRefPtr<nsStyleContext> textStyleContext;
   textStyleContext = styleSet->ResolveStyleForNonElement(mStyleContext);
-  if (NS_UNLIKELY(!textStyleContext)) {
+  if (MOZ_UNLIKELY(!textStyleContext)) {
     return nullptr;
   }
 
   // Start by by creating our anonymous block frame
   mDisplayFrame = new (shell) nsComboboxDisplayFrame(styleContext, this);
-  if (NS_UNLIKELY(!mDisplayFrame)) {
+  if (MOZ_UNLIKELY(!mDisplayFrame)) {
     return nullptr;
   }
 
@@ -1419,7 +1420,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
 
   // Create a text frame and put it inside the block frame
   nsIFrame* textFrame = NS_NewTextFrame(shell, textStyleContext);
-  if (NS_UNLIKELY(!textFrame)) {
+  if (MOZ_UNLIKELY(!textFrame)) {
     return nullptr;
   }
 

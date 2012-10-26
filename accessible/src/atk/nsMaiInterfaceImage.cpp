@@ -8,6 +8,7 @@
 
 #include "AccessibleWrap.h"
 #include "ImageAccessible.h"
+#include "mozilla/Likely.h"
 #include "nsMai.h"
 
 using namespace mozilla;
@@ -53,7 +54,7 @@ void
 imageInterfaceInitCB(AtkImageIface* aIface)
 {
   NS_ASSERTION(aIface, "no interface!");
-  if (NS_UNLIKELY(!aIface))
+  if (MOZ_UNLIKELY(!aIface))
     return;
 
   aIface->get_image_position = getImagePositionCB;

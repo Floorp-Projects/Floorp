@@ -7,6 +7,7 @@
 /* A namespace class for static layout utilities. */
 
 #include "mozilla/Util.h"
+#include "mozilla/Likely.h"
 
 #include "jsapi.h"
 #include "jsdbgapi.h"
@@ -5618,7 +5619,7 @@ nsContentUtils::ASCIIToLower(nsAString& aStr)
 {
   PRUnichar* iter = aStr.BeginWriting();
   PRUnichar* end = aStr.EndWriting();
-  if (NS_UNLIKELY(!iter || !end)) {
+  if (MOZ_UNLIKELY(!iter || !end)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   while (iter != end) {
@@ -5639,7 +5640,7 @@ nsContentUtils::ASCIIToLower(const nsAString& aSource, nsAString& aDest)
   aDest.SetLength(len);
   if (aDest.Length() == len) {
     PRUnichar* dest = aDest.BeginWriting();
-    if (NS_UNLIKELY(!dest)) {
+    if (MOZ_UNLIKELY(!dest)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     const PRUnichar* iter = aSource.BeginReading();
@@ -5662,7 +5663,7 @@ nsContentUtils::ASCIIToUpper(nsAString& aStr)
 {
   PRUnichar* iter = aStr.BeginWriting();
   PRUnichar* end = aStr.EndWriting();
-  if (NS_UNLIKELY(!iter || !end)) {
+  if (MOZ_UNLIKELY(!iter || !end)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   while (iter != end) {
@@ -5683,7 +5684,7 @@ nsContentUtils::ASCIIToUpper(const nsAString& aSource, nsAString& aDest)
   aDest.SetLength(len);
   if (aDest.Length() == len) {
     PRUnichar* dest = aDest.BeginWriting();
-    if (NS_UNLIKELY(!dest)) {
+    if (MOZ_UNLIKELY(!dest)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     const PRUnichar* iter = aSource.BeginReading();

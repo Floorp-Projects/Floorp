@@ -48,6 +48,7 @@
 #include "mozilla/storage.h"
 #include "mozilla/Util.h" // for DebugOnly
 #include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
 #include "nsIAppsService.h"
 #include "mozIApplication.h"
 
@@ -2072,11 +2073,11 @@ nsCookieService::EnsureReadDomain(const nsCookieKey &aKey)
     "not in default db state");
 
   // Fast path 1: nothing to read, or we've already finished reading.
-  if (NS_LIKELY(!mDBState->dbConn || !mDefaultDBState->pendingRead))
+  if (MOZ_LIKELY(!mDBState->dbConn || !mDefaultDBState->pendingRead))
     return;
 
   // Fast path 2: already read in this particular domain.
-  if (NS_LIKELY(mDefaultDBState->readSet.GetEntry(aKey)))
+  if (MOZ_LIKELY(mDefaultDBState->readSet.GetEntry(aKey)))
     return;
 
   // Read in the data synchronously.
@@ -2167,7 +2168,7 @@ nsCookieService::EnsureReadComplete()
     "not in default db state");
 
   // Fast path 1: nothing to read, or we've already finished reading.
-  if (NS_LIKELY(!mDBState->dbConn || !mDefaultDBState->pendingRead))
+  if (MOZ_LIKELY(!mDBState->dbConn || !mDefaultDBState->pendingRead))
     return;
 
   // Cancel the pending read, so we don't get any more results.

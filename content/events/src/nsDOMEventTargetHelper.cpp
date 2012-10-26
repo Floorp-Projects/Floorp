@@ -13,6 +13,7 @@
 #include "prprf.h"
 #include "nsGlobalWindow.h"
 #include "nsDOMEvent.h"
+#include "mozilla/Likely.h"
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEventTargetHelper)
 
@@ -21,7 +22,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDOMEventTargetHelper)
-  if (NS_UNLIKELY(cb.WantDebugInfo())) {
+  if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[512];
     nsAutoString uri;
     if (tmp->mOwner && tmp->mOwner->GetExtantDocument()) {
