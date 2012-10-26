@@ -55,6 +55,7 @@ private:
   int mCurrentCallState;
   bool mReceiveVgsFlag;
   nsString mDevicePath;
+  enum mozilla::ipc::SocketConnectionStatus mSocketStatus;
   nsAutoPtr<BluetoothRilListener> mListener;
 };
 

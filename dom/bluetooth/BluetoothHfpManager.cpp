@@ -240,6 +240,8 @@ BluetoothHfpManager::BluetoothHfpManager()
 bool
 BluetoothHfpManager::Init()
 {
+  mSocketStatus = GetConnectionStatus();
+
   sHfpObserver = new BluetoothHfpManagerObserver();
   if (!sHfpObserver->Init()) {
     NS_WARNING("Cannot set up Hfp Observers!");
@@ -617,6 +619,9 @@ BluetoothHfpManager::Listen()
                                            true,
                                            false,
                                            this);
+
+  mSocketStatus = GetConnectionStatus();
+
   return NS_FAILED(rv) ? false : true;
 }
 
@@ -629,7 +634,6 @@ BluetoothHfpManager::Disconnect()
   }
 
   CloseSocket();
-  Listen();
 }
 
 bool
@@ -847,6 +851,8 @@ BluetoothHfpManager::OnConnectSuccess()
     OpenScoSocket(mDevicePath);
   }
 
+  mSocketStatus = GetConnectionStatus();
+
   NotifySettings();
 }
 
@@ -854,6 +860,7 @@ void
 BluetoothHfpManager::OnConnectError()
 {
   CloseSocket();
+  mSocketStatus = GetConnectionStatus();
   // If connecting for some reason didn't work, restart listening
   Listen();
 }
@@ -861,7 +868,11 @@ BluetoothHfpManager::OnConnectError()
 void
 BluetoothHfpManager::OnDisconnect()
 {
-  NotifySettings();
+  if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
+    Listen();
+    NotifySettings();
+  }
+
   sCINDItems[CINDType::CALL].value = CallState::NO_CALL;
   sCINDItems[CINDType::CALLSETUP].value = CallSetupState::NO_CALLSETUP;
   sCINDItems[CINDType::CALLHELD].value = CallHeldState::NO_CALLHELD;
