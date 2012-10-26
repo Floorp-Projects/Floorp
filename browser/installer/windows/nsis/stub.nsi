@@ -183,6 +183,10 @@ Page custom createOptions leaveOptions ; Options page
 Page custom createInstall leaveInstall ; Download / Installation page
 
 Function .onInit
+  ; Remove the current exe directory from the search order.
+  ; This only effects LoadLibrary calls and not implicitly loaded DLLs.
+  System::Call 'kernel32::SetDllDirectoryW(w "")'
+
   StrCpy $LANGUAGE 0
   ; This macro is used to set the brand name variables but the ini file method
   ; isn't supported for the stub installer.
