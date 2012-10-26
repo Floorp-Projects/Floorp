@@ -8307,6 +8307,25 @@ nsCSSFrameConstructor::RestyleElement(Element        *aElement,
   NS_ASSERTION(!aPrimaryFrame || aPrimaryFrame->GetContent() == aElement,
                "frame/content mismatch");
 
+  // If we're restyling the root element and there are 'rem' units in
+  // use, handle dynamic changes to the definition of a 'rem' here.
+  if (GetPresContext()->UsesRootEMUnits() && aPrimaryFrame) {
+    nsStyleContext *oldContext = aPrimaryFrame->GetStyleContext();
+    if (!oldContext->GetParent()) { // check that we're the root element
+      nsRefPtr<nsStyleContext> newContext = mPresShell->StyleSet()->
+        ResolveStyleFor(aElement, nullptr /* == oldContext->GetParent() */);
+      if (oldContext->GetStyleFont()->mFont.size !=
+          newContext->GetStyleFont()->mFont.size) {
+        // The basis for 'rem' units has changed.
+        DoRebuildAllStyleData(aRestyleTracker, nsChangeHint(0));
+        if (aMinHint == 0) {
+          return;
+        }
+        aPrimaryFrame = aElement->GetPrimaryFrame();
+      }
+    }
+  }
+
   if (aMinHint & nsChangeHint_ReconstructFrame) {
     RecreateFramesForContent(aElement, false);
   } else if (aPrimaryFrame) {
