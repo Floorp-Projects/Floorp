@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const LAZY_EMPTY_DELAY = 150; // ms
+
 Components.utils.import('resource://gre/modules/Services.jsm');
 
 let EXPORTED_SYMBOLS = ["VariablesView", "create"];
@@ -46,13 +48,28 @@ VariablesView.prototype = {
 
     let scope = new Scope(this, aName);
     this._store.set(scope.id, scope);
+    this._currHierarchy.set(aName, scope);
     return scope;
   },
 
   /**
    * Removes all items from this container.
+   *
+   * @param number aTimeout [optional]
+   *        The number of milliseconds to delay the operation if
+   *        lazy emptying of this container is enabled.
    */
-  empty: function VV_empty() {
+  empty: function VV_empty(aTimeout = LAZY_EMPTY_DELAY) {
+    // If there are no items in this container, emptying is useless.
+    if (!this._store.size()) {
+      return;
+    }
+    // Check if this empty operation may be executed lazily.
+    if (this.lazyEmpty && aTimeout > 0) {
+      this._emptySoon(aTimeout);
+      return;
+    }
+
     let list = this._list;
     let firstChild;
 
@@ -62,6 +79,41 @@ VariablesView.prototype = {
 
     this._store = new Map();
     this._appendEmptyNotice();
+  },
+
+  /**
+   * Emptying this container and rebuilding it immediately afterwards would
+   * result in a brief redraw flicker, because the previously expanded nodes
+   * may get asynchronously re-expanded, after fetching the prototype and
+   * properties from a server.
+   *
+   * To avoid such behaviour, a normal container list is rebuild, but not
+   * immediately attached to the parent container. The old container list
+   * is kept around for a short period of time, hopefully accounting for the
+   * data fetching delay. In the meantime, any operations can be executed
+   * normally.
+   *
+   * @see VariablesView.empty
+   * @see VariablesView.commitHierarchy
+   */
+  _emptySoon: function VV__emptySoon(aTimeout) {
+    let window = this.window;
+    let document = this.document;
+
+    let prevList = this._list;
+    let currList = this._list = this.document.createElement("vbox");
+    this._store = new Map();
+
+    this._emptyTimeout = window.setTimeout(function() {
+      this._emptyTimeout = null;
+
+      this._parent.removeChild(prevList);
+      this._parent.appendChild(currList);
+
+      if (!this._store.size()) {
+        this._appendEmptyNotice();
+      }
+    }.bind(this), aTimeout);
   },
 
   /**
@@ -146,9 +198,11 @@ VariablesView.prototype = {
   get window() this.document.defaultView,
 
   eval: null,
+  lazyEmpty: false,
   _store: null,
   _prevHierarchy: null,
   _currHierarchy: null,
+  _emptyTimeout: null,
   _enumVisible: true,
   _nonEnumVisible: true,
   _list: null,
@@ -702,7 +756,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     if (aDescriptor.get || aDescriptor.set) {
       this.addProperty("get ", { value: aDescriptor.get });
       this.addProperty("set ", { value: aDescriptor.set });
-      this.expand();
+      this.expand(true);
       separatorLabel.hidden = true;
       valueLabel.hidden = true;
     }
@@ -949,7 +1003,7 @@ VariablesView.prototype.createHierarchy = function VV_createHierarchy() {
 
 /**
  * Briefly flash the variables that changed between the previous and current
- * scope/variable/property hierarchies.
+ * scope/variable/property hierarchies and reopen previously expanded nodes.
  */
 VariablesView.prototype.commitHierarchy = function VV_commitHierarchy() {
   let prevHierarchy = this._prevHierarchy;
@@ -972,6 +1026,11 @@ VariablesView.prototype.commitHierarchy = function VV_commitHierarchy() {
       let prevString = prevVariable._valueString;
       let currString = currVariable._valueString;
       changed = prevString != currString;
+
+      // Re-expand the variable if not previously collapsed.
+      if (prevVariable.expanded) {
+        currVariable.expand(true);
+      }
     }
 
     // Make sure this variable is not handled in ulteror commits for the
@@ -986,14 +1045,14 @@ VariablesView.prototype.commitHierarchy = function VV_commitHierarchy() {
     // Apply an attribute determining the flash type and duration.
     // Dispatch this action after all the nodes have been drawn, so that
     // the transition efects can take place.
-    Services.tm.currentThread.dispatch({ run: function(aTarget) {
+    this.window.setTimeout(function(aTarget) {
       aTarget.setAttribute("changed", "");
 
       aTarget.addEventListener("transitionend", function onEvent() {
         aTarget.removeEventListener("transitionend", onEvent, false);
         aTarget.removeAttribute("changed");
       }, false);
-    }.bind(this, currVariable.target)}, 0);
+    }.bind(this, currVariable.target), LAZY_EMPTY_DELAY + 1);
   }
 };
 
