@@ -2619,6 +2619,18 @@ bool nsWindow::OnImeRequest(MPARAM mp1, MPARAM mp2)
   return rc;
 }
 
+NS_IMETHODIMP_(InputContext) nsWindow::GetInputContext()
+{
+  HIMI himi;
+  if (sIm32Mod && spfnImGetInstance(mWnd, &himi)) {
+    mInputContext.mNativeIMEContext = static_cast<void*>(himi);
+  }
+  if (!mInputContext.mNativeIMEContext) {
+    mInputContext.mNativeIMEContext = this;
+  }
+  return mInputContext;
+}
+
 //-----------------------------------------------------------------------------
 // Key handler.  Specs for the various text messages are really confused;
 // see other platforms for best results of how things are supposed to work.
