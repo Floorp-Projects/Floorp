@@ -2091,6 +2091,8 @@ NS_IMETHODIMP_(InputContext)
 nsWindow::GetInputContext()
 {
     mInputContext.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
+    // We assume that there is only one context per process on Android
+    mInputContext.mNativeIMEContext = nullptr;
     return mInputContext;
 }
 
