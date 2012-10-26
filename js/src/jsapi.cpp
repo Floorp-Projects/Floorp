@@ -2452,18 +2452,6 @@ JS_AnchorPtr(void *p)
 {
 }
 
-#ifdef DEBUG
-
-JS_PUBLIC_API(void)
-JS_DumpNamedRoots(JSRuntime *rt,
-                  void (*dump)(const char *name, void *rp, JSGCRootType type, void *data),
-                  void *data)
-{
-    js_DumpNamedRoots(rt, dump, data);
-}
-
-#endif /* DEBUG */
-
 JS_PUBLIC_API(JSBool)
 JS_LockGCThing(JSContext *cx, void *thing)
 {
