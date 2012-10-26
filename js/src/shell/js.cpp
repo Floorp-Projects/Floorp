@@ -54,9 +54,9 @@
 #include "jsheaptools.h"
 
 #include "jsinferinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
+#include "vm/Interpreter-inl.h"
 #include "ion/Ion.h"
 
 #ifdef XP_UNIX

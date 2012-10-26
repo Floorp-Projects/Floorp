@@ -57,7 +57,6 @@
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
-#include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -85,7 +84,6 @@
 #endif
 #include "ion/IonFrameIterator.h"
 
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/ScopeObject-inl.h"

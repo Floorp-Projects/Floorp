@@ -18,6 +18,7 @@
 
 #include "gc/Barrier-inl.h"
 
+#include "Interpreter-inl.h"
 #include "ObjectImpl-inl.h"
 
 using namespace js;

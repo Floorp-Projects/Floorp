@@ -7,13 +7,11 @@
 
 #include "Ion.h"
 #include "IonCompartment.h"
-#include "jsinterp.h"
 #include "ion/IonFrames.h"
 #include "ion/IonFrames-inl.h" // for GetTopIonJSScript
 
+#include "vm/Interpreter-inl.h"
 #include "vm/StringObject-inl.h"
-
-#include "jsinterpinlines.h"
 
 using namespace js;
 using namespace js::ion;

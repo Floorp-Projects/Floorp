@@ -14,9 +14,9 @@
 #include "IonSpewer.h"
 #include "VMFunctions.h"
 
-#include "jsinterpinlines.h"
-
+#include "vm/Interpreter-inl.h"
 #include "vm/Stack.h"
+
 #include "IonFrames-inl.h"
 
 using namespace js;
