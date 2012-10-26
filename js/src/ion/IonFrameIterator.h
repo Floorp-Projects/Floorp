@@ -24,6 +24,8 @@ enum FrameType
     // functon activation.
     IonFrame_JS,
 
+    IonFrame_BaselineJS,
+
     // The entry frame is the initial prologue block transitioning from the VM
     // into the Ion world.
     IonFrame_Entry,

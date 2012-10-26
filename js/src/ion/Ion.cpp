@@ -5,6 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "BaselineJIT.h"
+#include "BaselineCompiler.h"
 #include "Ion.h"
 #include "IonAnalysis.h"
 #include "IonBuilder.h"
@@ -1239,6 +1241,8 @@ ion::CanEnter(JSContext *cx, HandleScript script, StackFrame *fp, bool newType)
 {
     JS_ASSERT(ion::IsEnabled(cx));
 
+    return ion::CanEnterBaselineJIT(cx, script, fp);
+
     // Skip if the script has been disabled.
     if (script->ion == ION_DISABLED_SCRIPT)
         return Method_Skipped;
@@ -1393,6 +1397,8 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 IonExecStatus
 ion::Cannon(JSContext *cx, StackFrame *fp)
 {
+    return ion::EnterBaselineMethod(cx, fp);
+
     AssertCanGC();
     RootedScript script(cx, fp->script());
     IonScript *ion = script->ion;
