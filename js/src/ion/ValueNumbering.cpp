@@ -72,6 +72,34 @@ ValueNumberer::simplify(MDefinition *def, bool useValueNumbers)
     return ins;
 }
 
+MControlInstruction *
+ValueNumberer::simplifyControlInstruction(MControlInstruction *def)
+{
+    if (def->isEffectful())
+        return def;
+
+    MDefinition *repl = def->foldsTo(false);
+    if (repl == def || !repl->updateForFolding(def))
+        return def;
+
+    // Ensure this instruction has a value number.
+    if (!repl->valueNumberData())
+        repl->setValueNumberData(new ValueNumberData);
+
+    MBasicBlock *block = def->block();
+
+    // MControlInstructions should not have consumers.
+    JS_ASSERT(repl->isControlInstruction());
+    JS_ASSERT(def->useCount() == 0);
+
+    if (def->isInWorklist())
+        repl->setInWorklist();
+
+    block->discardLastIns();
+    block->end((MControlInstruction *)repl);
+    return (MControlInstruction *)repl;
+}
+
 void
 ValueNumberer::markDefinition(MDefinition *def)
 {
@@ -229,6 +257,7 @@ ValueNumberer::computeValueNumbers()
             }
             // Process control flow instruction:
             MControlInstruction *jump = block->lastIns();
+            jump = simplifyControlInstruction(jump);
 
             // If we are pessimistic, then this will never get set.
             if (!jump->isInWorklist())
