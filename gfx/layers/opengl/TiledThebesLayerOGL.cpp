@@ -197,7 +197,7 @@ TiledThebesLayerOGL::ProcessUploadQueue()
 }
 
 void
-TiledThebesLayerOGL::RenderTile(TiledTexture aTile,
+TiledThebesLayerOGL::RenderTile(const TiledTexture& aTile,
                                 const gfx3DMatrix& aTransform,
                                 const nsIntPoint& aOffset,
                                 const nsIntRegion& aScreenRegion,
