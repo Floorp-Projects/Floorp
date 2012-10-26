@@ -40,6 +40,7 @@ let DebuggerView = {
     this.Variables.emptyText = L10N.getStr("emptyVariablesText");
     this.Variables.nonEnumVisible = Prefs.nonEnumVisible;
     this.Variables.eval = DebuggerController.StackFrames.evaluate;
+    this.Variables.lazyEmpty = true;
 
     this._initializePanes();
     this._initializeEditor(aCallback)

@@ -240,6 +240,17 @@
  * Property element
  */
 
+.property {
+  transition: background 1s ease-in-out;
+  background: #fff;
+  border-radius: 8px;
+}
+
+.property[changed] {
+  transition-duration: 0.4s;
+  background: rgba(255, 255, 0, 0.65);
+}
+
 .property > .title > .name {
   color: #881090;
 }

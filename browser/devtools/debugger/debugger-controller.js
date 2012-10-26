@@ -405,7 +405,6 @@ StackFrames.prototype = {
       return;
     }
     DebuggerView.StackFrames.empty();
-    DebuggerView.Variables.empty();
 
     for (let frame of this.activeThread.cachedFrames) {
       this._addFrame(frame);
@@ -440,7 +439,7 @@ StackFrames.prototype = {
       return;
     }
     DebuggerView.StackFrames.empty();
-    DebuggerView.Variables.empty();
+    DebuggerView.Variables.empty(0);
     DebuggerView.Breakpoints.unhighlightBreakpoint();
     window.dispatchEvent("Debugger:AfterFramesCleared");
   },
@@ -630,6 +629,10 @@ StackFrames.prototype = {
       }
 
       aVar.fetched = true;
+
+      // Signal that properties have been fetched.
+      window.dispatchEvent("Debugger:FetchedProperties");
+      DebuggerView.Variables.commitHierarchy();
     }.bind(this));
   },
 
