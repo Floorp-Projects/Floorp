@@ -116,11 +116,6 @@ namespace js {
 
 namespace gc {
 
-/*
- * Lower limit after which we limit the heap growth
- */
-const size_t GC_ALLOCATION_THRESHOLD = 30 * 1024 * 1024;
-
 /* Perform a Full GC every 20 seconds if MaybeGC is called */
 static const uint64_t GC_IDLE_FULL_SPAN = 20 * 1000 * 1000;
 
@@ -1380,7 +1375,7 @@ typedef RootedValueMap::Enum RootEnum;
 static size_t
 ComputeTriggerBytes(JSCompartment *comp, size_t lastBytes, size_t maxBytes, JSGCInvocationKind gckind)
 {
-    size_t base = gckind == GC_SHRINK ? lastBytes : Max(lastBytes, GC_ALLOCATION_THRESHOLD);
+    size_t base = gckind == GC_SHRINK ? lastBytes : Max(lastBytes, comp->rt->gcAllocationThreshold);
     float trigger = float(base) * comp->gcHeapGrowthFactor;
     return size_t(Min(float(maxBytes), trigger));
 }
@@ -1432,7 +1427,7 @@ JSCompartment::reduceGCTriggerBytes(size_t amount)
 {
     JS_ASSERT(amount > 0);
     JS_ASSERT(gcTriggerBytes >= amount);
-    if (gcTriggerBytes - amount < GC_ALLOCATION_THRESHOLD * gcHeapGrowthFactor)
+    if (gcTriggerBytes - amount < rt->gcAllocationThreshold * gcHeapGrowthFactor)
         return;
     gcTriggerBytes -= amount;
 }
