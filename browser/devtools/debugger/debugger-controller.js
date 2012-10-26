@@ -1201,9 +1201,9 @@ const STACKFRAMES_WIDTH = "devtools.debugger.ui.stackframes-width";
 const VARIABLES_WIDTH = "devtools.debugger.ui.variables-width";
 const PANES_VISIBLE_ON_STARTUP = "devtools.debugger.ui.panes-visible-on-startup";
 const NON_ENUM_VISIBLE = "devtools.debugger.ui.non-enum-visible";
-const REMOTE_AUTO_CONNECT = "devtools.debugger.remote-autoconnect";
 const REMOTE_HOST = "devtools.debugger.remote-host";
 const REMOTE_PORT = "devtools.debugger.remote-port";
+const REMOTE_AUTO_CONNECT = "devtools.debugger.remote-autoconnect";
 const REMOTE_CONNECTION_RETRIES = "devtools.debugger.remote-connection-retries";
 const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
 
@@ -1252,28 +1252,6 @@ let Prefs = {
   },
 
   /**
-   * Gets a flag specifying if the debugger should automatically connect to
-   * the default host and port number.
-   * @return boolean
-   */
-  get remoteAutoConnect() {
-    if (this._autoConnect === undefined) {
-      this._autoConnect = Services.prefs.getBoolPref(REMOTE_AUTO_CONNECT);
-    }
-    return this._autoConnect;
-  },
-
-  /**
-   * Sets a flag specifying if the debugger should automatically connect to
-   * the default host and port number.
-   * @param boolean value
-   */
-  set remoteAutoConnect(value) {
-    Services.prefs.setBoolPref(REMOTE_AUTO_CONNECT, value);
-    this._autoConnect = value;
-  },
-
-  /**
    * Gets the preferred panes visibility state on startup.
    * @return boolean
    */
@@ -1313,24 +1291,70 @@ let Prefs = {
   set nonEnumVisible(value) {
     Services.prefs.setBoolPref(NON_ENUM_VISIBLE, value);
     this._nonEnumVisible = value;
+  },
+
+  /**
+   * Gets the preferred default remote debugging host.
+   * @return string
+   */
+  get remoteHost() {
+    if (this._remoteHost === undefined) {
+      this._remoteHost = Services.prefs.getCharPref(REMOTE_HOST);
+    }
+    return this._remoteHost;
+  },
+
+  /**
+   * Sets the preferred default remote debugging host.
+   * @param string value
+   */
+  set remoteHost(value) {
+    Services.prefs.setCharPref(REMOTE_HOST, value);
+    this._remoteHost = value;
+  },
+
+  /**
+   * Gets the preferred default remote debugging port.
+   * @return number
+   */
+  get remotePort() {
+    if (this._remotePort === undefined) {
+      this._remotePort = Services.prefs.getIntPref(REMOTE_PORT);
+    }
+    return this._remotePort;
+  },
+
+  /**
+   * Sets the preferred default remote debugging port.
+   * @param number value
+   */
+  set remotePort(value) {
+    Services.prefs.setIntPref(REMOTE_PORT, value);
+    this._remotePort = value;
+  },
+
+  /**
+   * Gets a flag specifying if the debugger should automatically connect to
+   * the default host and port number.
+   * @return boolean
+   */
+  get remoteAutoConnect() {
+    if (this._autoConnect === undefined) {
+      this._autoConnect = Services.prefs.getBoolPref(REMOTE_AUTO_CONNECT);
+    }
+    return this._autoConnect;
+  },
+
+  /**
+   * Sets a flag specifying if the debugger should automatically connect to
+   * the default host and port number.
+   * @param boolean value
+   */
+  set remoteAutoConnect(value) {
+    Services.prefs.setBoolPref(REMOTE_AUTO_CONNECT, value);
+    this._autoConnect = value;
   }
 };
-
-/**
- * Gets the preferred default remote debugging host.
- * @return string
- */
-XPCOMUtils.defineLazyGetter(Prefs, "remoteHost", function() {
-  return Services.prefs.getCharPref(REMOTE_HOST);
-});
-
-/**
- * Gets the preferred default remote debugging port.
- * @return number
- */
-XPCOMUtils.defineLazyGetter(Prefs, "remotePort", function() {
-  return Services.prefs.getIntPref(REMOTE_PORT);
-});
 
 /**
  * Gets the max number of attempts to reconnect to a remote server.
