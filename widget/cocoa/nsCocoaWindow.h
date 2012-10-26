@@ -294,6 +294,16 @@ public:
     }
     NS_IMETHOD_(InputContext) GetInputContext()
     {
+      NSView* view = mWindow ? [mWindow contentView] : nil;
+      if (view) {
+        mInputContext.mNativeIMEContext = [view inputContext];
+      }
+      // If inputContext isn't available on this window, returns this window's
+      // pointer since nullptr means the platform has only one context per
+      // process.
+      if (!mInputContext.mNativeIMEContext) {
+        mInputContext.mNativeIMEContext = this;
+      }
       return mInputContext;
     }
     NS_IMETHOD BeginSecureKeyboardInput();
