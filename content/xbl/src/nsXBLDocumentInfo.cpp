@@ -29,6 +29,7 @@
 #include "mozilla/scache/StartupCacheUtils.h"
 #include "nsCCUncollectableMarker.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/Util.h"
 
 using namespace mozilla::scache;
 using namespace mozilla;
@@ -264,7 +265,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment()
   // NOTE: We init this context with a NULL global, so we automatically
   // hook up to the existing nsIScriptGlobalObject global setup by
   // nsGlobalWindow.
-  nsresult rv = newCtx->InitContext();
+  DebugOnly<nsresult> rv = newCtx->InitContext();
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Script Language's InitContext failed");
   newCtx->SetGCOnDestruction(false);
   newCtx->DidInitializeContext();
