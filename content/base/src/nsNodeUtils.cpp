@@ -45,8 +45,7 @@ using namespace mozilla::dom;
   nsINode* node = content_;                                       \
   NS_ASSERTION(node->OwnerDoc() == doc, "Bogus document");        \
   if (doc) {                                                      \
-    static_cast<nsIMutationObserver*>(doc->BindingManager())->    \
-      func_ params_;                                              \
+    doc->BindingManager()->func_ params_;                         \
   }                                                               \
   do {                                                            \
     nsINode::nsSlots* slots = node->GetExistingSlots();           \

@@ -380,7 +380,7 @@ void TransportLayerDtls::WasInserted() {
   if (!Setup()) {
     SetState(TS_ERROR);
   }
-};
+}
 
 
 nsresult TransportLayerDtls::SetVerificationAllowAll() {
