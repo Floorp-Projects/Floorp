@@ -492,7 +492,7 @@ DebuggerClient.prototype = {
       }
     } catch(ex) {
       dumpn("Error handling response: " + ex + " - stack:\n" + ex.stack);
-      Cu.reportError(ex);
+      Cu.reportError(ex.message + "\n" + ex.stack);
     }
 
     this._sendRequests();

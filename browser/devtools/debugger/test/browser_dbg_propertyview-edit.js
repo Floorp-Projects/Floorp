@@ -29,7 +29,7 @@ function testFrameEval() {
       is(gDebugger.DebuggerController.activeThread.state, "paused",
         "Should only be getting stack frames while paused.");
 
-      var localScope = gDebugger.DebuggerView.Properties._vars.firstChild,
+      var localScope = gDebugger.DebuggerView.Variables._list.querySelector(".scope"),
           localNodes = localScope.querySelector(".details").childNodes,
           varA = localNodes[7];
 
@@ -72,14 +72,14 @@ function testModification(aVar, aCallback, aNewValue, aNewResult) {
     gDebugger.addEventListener("Debugger:FetchedVariables", function test() {
       // We expect 2 Debugger:FetchedVariables events, one from the global
       // object scope and the regular one.
-      if (++count <2) {
+      if (++count < 2) {
         info("Number of received Debugger:FetchedVariables events: " + count);
         return;
       }
       gDebugger.removeEventListener("Debugger:FetchedVariables", test, false);
       // Get the variable reference anew, since the old ones were discarded when
       // we resumed.
-      var localScope = gDebugger.DebuggerView.Properties._vars.firstChild,
+      var localScope = gDebugger.DebuggerView.Variables._list.querySelector(".scope"),
           localNodes = localScope.querySelector(".details").childNodes,
           varA = localNodes[7];
 

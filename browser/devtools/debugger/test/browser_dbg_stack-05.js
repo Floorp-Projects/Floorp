@@ -32,7 +32,7 @@ function test() {
     gDebuggee.firstCall();
   });
 
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     let url = aEvent.detail.url;
     if (url.indexOf("-02.js") != -1) {
       scriptShown = true;
@@ -51,7 +51,7 @@ function test() {
 
 function testRecurse()
 {
-  let frames = gDebugger.DebuggerView.StackFrames._frames;
+  let frames = gDebugger.DebuggerView.StackFrames._container._list;
   let childNodes = frames.childNodes;
 
   is(frames.querySelectorAll(".dbg-stackframe").length, 4,

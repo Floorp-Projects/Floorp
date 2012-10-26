@@ -50,12 +50,12 @@ function test()
     executeSoon(startTest);
   }
 
-  window.addEventListener("Debugger:ScriptShown", onScriptShown);
+  window.addEventListener("Debugger:SourceShown", onScriptShown);
 
   function startTest()
   {
     if (scriptShown && framesAdded && resumed && !testStarted) {
-      window.removeEventListener("Debugger:ScriptShown", onScriptShown);
+      window.removeEventListener("Debugger:SourceShown", onScriptShown);
       testStarted = true;
       Services.tm.currentThread.dispatch({ run: performTest }, 0);
     }
@@ -63,18 +63,18 @@ function test()
 
   function performTest()
   {
-    gScripts = gDebugger.DebuggerView.Scripts;
+    gScripts = gDebugger.DebuggerView.Sources;
 
     is(gDebugger.DebuggerController.activeThread.state, "paused",
       "Should only be getting stack frames while paused.");
 
-    is(gScripts._scripts.itemCount, 2, "Found the expected number of scripts.");
+    is(gScripts._container.itemCount, 2, "Found the expected number of scripts.");
 
     gEditor = gDebugger.editor;
 
     isnot(gEditor.getText().indexOf("debugger"), -1,
           "The correct script was loaded initially.");
-    isnot(gScripts.selected, gScripts.scriptLocations[0],
+    isnot(gScripts.selectedValue, gScripts.values[0],
           "the correct script is selected");
 
     gBreakpoints = gPane.breakpoints;
@@ -85,7 +85,7 @@ function test()
 
     gEditor.addEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE,
                              onEditorBreakpointAddFirst);
-    let location = {url: gScripts.selected, line: 6};
+    let location = {url: gScripts.selectedValue, line: 6};
     executeSoon(function() {
       gPane.addBreakpoint(location, onBreakpointAddFirst);
     });
@@ -116,7 +116,7 @@ function test()
 
     ok(aBreakpointClient, "breakpoint1 added, client received");
     ok(!aResponseError, "breakpoint1 added without errors");
-    is(aBreakpointClient.location.url, gScripts.selected,
+    is(aBreakpointClient.location.url, gScripts.selectedValue,
        "breakpoint1 client url is correct");
     is(aBreakpointClient.location.line, 6,
        "breakpoint1 client line is correct");
@@ -126,7 +126,7 @@ function test()
          "breakpoint1 client found in the list of debugger breakpoints");
       is(Object.keys(gBreakpoints).length, 1,
          "the list of debugger breakpoints holds only one breakpoint");
-      is(gPane.getBreakpoint(gScripts.selected, 6), aBreakpointClient,
+      is(gPane.getBreakpoint(gScripts.selectedValue, 6), aBreakpointClient,
          "getBreakpoint(selectedScript, 2) returns the correct breakpoint");
 
       info("remove the first breakpoint");
@@ -141,7 +141,7 @@ function test()
     breakpointsRemoved++;
 
     ok(aLocation, "breakpoint1 removed");
-    is(aLocation.url, gScripts.selected, "breakpoint1 remove: url is correct");
+    is(aLocation.url, gScripts.selectedValue, "breakpoint1 remove: url is correct");
     is(aLocation.line, 6, "breakpoint1 remove: line is correct");
 
     executeSoon(testBreakpointAddBackground);
@@ -166,11 +166,11 @@ function test()
     info("add a breakpoint to the second script which is not selected");
 
     is(Object.keys(gBreakpoints).length, 0, "no breakpoints in the debugger");
-    ok(!gPane.getBreakpoint(gScripts.selected, 6),
+    ok(!gPane.getBreakpoint(gScripts.selectedValue, 6),
        "getBreakpoint(selectedScript, 6) returns no breakpoint");
 
-    let script0 = gScripts.scriptLocations[0];
-    isnot(script0, gScripts.selected,
+    let script0 = gScripts.values[0];
+    isnot(script0, gScripts.selectedValue,
           "first script location is not the currently selected script");
 
     let location = {url: script0, line: 5};
@@ -195,7 +195,7 @@ function test()
 
     ok(aBreakpointClient, "breakpoint2 added, client received");
     ok(!aResponseError, "breakpoint2 added without errors");
-    is(aBreakpointClient.location.url, gScripts.scriptLocations[0],
+    is(aBreakpointClient.location.url, gScripts.values[0],
        "breakpoint2 client url is correct");
     is(aBreakpointClient.location.line, 5,
        "breakpoint2 client line is correct");
@@ -204,8 +204,8 @@ function test()
       ok(aBreakpointClient.actor in gBreakpoints,
          "breakpoint2 client found in the list of debugger breakpoints");
       is(Object.keys(gBreakpoints).length, 1, "one breakpoint in the debugger");
-      is(gPane.getBreakpoint(gScripts.scriptLocations[0], 5), aBreakpointClient,
-         "getBreakpoint(scriptLocations[0], 5) returns the correct breakpoint");
+      is(gPane.getBreakpoint(gScripts.values[0], 5), aBreakpointClient,
+         "getBreakpoint(locations[0], 5) returns the correct breakpoint");
 
       // remove the trap listener
       gEditor.removeEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE,
@@ -218,8 +218,8 @@ function test()
 
       info("switch to the second script");
 
-      gScripts._scripts.selectedIndex = 0;
-      gDebugger.DebuggerController.SourceScripts.onChange({ target: gScripts._scripts });
+      gScripts._container.selectedIndex = 0;
+      gDebugger.DebuggerController.SourceScripts.onChange({ target: gScripts._container });
     });
   }
 
@@ -285,8 +285,8 @@ function test()
 
   function finalCheck() {
     is(Object.keys(gBreakpoints).length, 0, "no breakpoint in the debugger");
-    ok(!gPane.getBreakpoint(gScripts.scriptLocations[0], 5),
-       "getBreakpoint(scriptLocations[0], 5) returns no breakpoint");
+    ok(!gPane.getBreakpoint(gScripts.values[0], 5),
+       "getBreakpoint(locations[0], 5) returns no breakpoint");
   }
 
   registerCleanupFunction(function() {

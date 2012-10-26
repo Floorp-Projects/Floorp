@@ -7,8 +7,8 @@
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/debugger.css" type="text/css"?>
 <!DOCTYPE window [
-<!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/debugger.dtd" >
- %debuggerDTD;
+<!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/debugger.dtd">
+  %debuggerDTD;
 ]>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/source-editor-overlay.xul"?>
@@ -18,6 +18,8 @@
   <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="text/javascript" src="debugger-controller.js"/>
   <script type="text/javascript" src="debugger-view.js"/>
+  <script type="text/javascript" src="debugger-toolbar.js"/>
+  <script type="text/javascript" src="debugger-panes.js"/>
 
   <popupset id="debugger-popups">
     <menupopup id="sourceEditorContextMenu"
@@ -38,31 +40,31 @@
   <keyset id="sourceEditorKeys"/>
   <keyset id="scriptSearchKeys">
     <key id="fileSearchKey" key="P" modifiers="access shift"
-         oncommand="DebuggerView.Scripts._onFileSearch()"/>
+         oncommand="DebuggerView.Filtering._doFileSearch()"/>
     <key id="lineSearchKey" key="G" modifiers="access shift"
-         oncommand="DebuggerView.Scripts._onLineSearch()"/>
+         oncommand="DebuggerView.Filtering._doLineSearch()"/>
     <key id="tokenSearchKey" key="T" modifiers="access shift"
-         oncommand="DebuggerView.Scripts._onTokenSearch()"/>
+         oncommand="DebuggerView.Filtering._doTokenSearch()"/>
     <key id="globalSearchKey" key="F" modifiers="access shift"
-         oncommand="DebuggerView.Scripts._onGlobalSearch()"/>
+         oncommand="DebuggerView.Filtering._doGlobalSearch()"/>
   </keyset>
   <keyset id="threadStateKeys">
     <key id="resumeKey" keycode="VK_F6"
-         oncommand="DebuggerView.StackFrames._onResume()"/>
+         oncommand="DebuggerView.Toolbar._onResumePressed()"/>
     <key id="stepOverKey" keycode="VK_F7"
-         oncommand="DebuggerView.StackFrames._onStepOver()"/>
+         oncommand="DebuggerView.Toolbar._onStepOverPressed()"/>
     <key id="stepInKey" keycode="VK_F8"
-         oncommand="DebuggerView.StackFrames._onStepIn()"/>
+         oncommand="DebuggerView.Toolbar._onStepInPressed()"/>
     <key id="stepOutKey" keycode="VK_F8" modifiers="shift"
-         oncommand="DebuggerView.StackFrames._onStepOut()"/>
+         oncommand="DebuggerView.Toolbar._onStepOutPressed()"/>
   </keyset>
 
   <vbox id="body" flex="1">
     <toolbar id="dbg-toolbar" class="devtools-toolbar">
 #ifdef XP_MACOSX
       <toolbarbutton id="close"
-                     tooltiptext="&debuggerUI.closeButton.tooltip;"
-                     class="devtools-closebutton"/>
+                     class="devtools-closebutton"
+                     tooltiptext="&debuggerUI.closeButton.tooltip;"/>
 #endif
       <toolbarbutton id="toggle-panes"
                      class="devtools-toolbarbutton"
@@ -70,7 +72,6 @@
       <hbox id="debugger-controls">
         <toolbarbutton id="resume"
                        class="devtools-toolbarbutton"
-                       type="checkbox"
                        tabindex="0"/>
         <toolbarbutton id="step-over"
                        class="devtools-toolbarbutton"
@@ -82,26 +83,26 @@
                        class="devtools-toolbarbutton"
                        tabindex="0"/>
       </hbox>
-      <menulist id="scripts" class="devtools-menulist"
-                sizetopopup="always"/>
-      <textbox id="scripts-search" type="search"
-               class="devtools-searchinput"/>
-      <checkbox id="pause-exceptions"
-                type="checkbox"
+      <menulist id="chrome-globals"
+                class="devtools-menulist" hidden="true"/>
+      <menulist id="sources"
+                class="devtools-menulist"/>
+      <textbox id="searchbox"
+               class="devtools-searchinput" type="search"/>
+      <checkbox id="pause-on-exceptions"
                 tabindex="0"
                 label="&debuggerUI.pauseExceptions;"/>
       <checkbox id="show-nonenum"
-                type="checkbox"
                 tabindex="0"
                 label="&debuggerUI.showNonEnums;"/>
       <spacer flex="1"/>
 #ifndef XP_MACOSX
       <toolbarbutton id="close"
-                     tooltiptext="&debuggerUI.closeButton.tooltip;"
-                     class="devtools-closebutton"/>
+                     class="devtools-closebutton"
+                     tooltiptext="&debuggerUI.closeButton.tooltip;"/>
 #endif
     </toolbar>
-    <panel id="scripts-search-panel"
+    <panel id="searchbox-panel"
            type="arrow"
            noautofocus="true"
            position="before_start">
@@ -109,17 +110,17 @@
         <label class="description" value="&debuggerUI.searchPanelTitle;"/>
         <hbox align="center">
           <button id="global-operator-button" class="operator"
-                  onclick="DebuggerView.Scripts._onGlobalSearch()"/>
+                  onclick="DebuggerView.Filtering._doGlobalSearch()"/>
           <label id="global-operator-label" class="plain operator"/>
         </hbox>
         <hbox align="center">
           <button id="token-operator-button" class="operator"
-                  onclick="DebuggerView.Scripts._onTokenSearch()"/>
+                  onclick="DebuggerView.Filtering._doTokenSearch()"/>
           <label id="token-operator-label" class="plain operator"/>
         </hbox>
         <hbox align="center">
           <button id="line-operator-button" class="operator"
-                  onclick="DebuggerView.Scripts._onLineSearch()"/>
+                  onclick="DebuggerView.Filtering._doLineSearch()"/>
           <label id="line-operator-label" class="plain operator"/>
         </hbox>
       </vbox>

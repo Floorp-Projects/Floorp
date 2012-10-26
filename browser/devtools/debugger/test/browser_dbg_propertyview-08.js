@@ -35,10 +35,10 @@ function testFrameParameters()
 
       dump("After currentThread.dispatch!\n");
 
-      var frames = gDebugger.DebuggerView.StackFrames._frames,
-          localScope = gDebugger.DebuggerView.Properties._vars.firstChild,
-          localNodes = localScope.childNodes[1].childNodes,
-          localNonEnums = localScope.childNodes[2].childNodes; // .nonenums
+      var frames = gDebugger.DebuggerView.StackFrames._container._list,
+          localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".scope")[0],
+          localNodes = localScope.querySelector(".details").childNodes,
+          localNonEnums = localScope.querySelector(".nonenum").childNodes;
 
       dump("Got our variables:\n");
       dump("frames     - " + frames.constructor + "\n");
@@ -58,11 +58,28 @@ function testFrameParameters()
       is(localNodes[0].querySelector(".value").getAttribute("value"), "[object Proxy]",
         "Should have the right property value for 'this'.");
 
+      let thisNode, argumentsNode, cNode;
+      for (let [id, scope] in gDebugger.DebuggerView.Variables) {
+        if (scope.target === localScope) {
+          for (let [name, variable] in scope) {
+            if (variable.target === localNodes[0]) {
+              thisNode = variable;
+            }
+            if (variable.target === localNodes[8]) {
+              argumentsNode = variable;
+            }
+            if (variable.target === localNodes[10]) {
+              cNode = variable;
+            }
+          }
+        }
+      }
+
       // Expand the 'this', 'arguments' and 'c' tree nodes. This causes
       // their properties to be retrieved and displayed.
-      localNodes[0].expand();
-      localNodes[8].expand();
-      localNodes[10].expand();
+      thisNode.expand();
+      argumentsNode.expand();
+      cNode.expand();
 
       // Poll every few milliseconds until the properties are retrieved.
       // It's important to set the timer in the chrome window, because the
@@ -74,55 +91,55 @@ function testFrameParameters()
           ok(false, "Timed out while polling for the properties.");
           resumeAndFinish();
         }
-        if (!localNodes[0].fetched ||
-            !localNodes[8].fetched ||
-            !localNodes[10].fetched) {
+        if (!thisNode.fetched ||
+            !argumentsNode.fetched ||
+            !cNode.fetched) {
           return;
         }
         window.clearInterval(intervalID);
-        is(localNodes[0].querySelector(".property > .title > .key")
+        is(thisNode.target.querySelector(".property > .title > .name")
                         .getAttribute("value"), "InstallTrigger",
           "Should have the right property name for InstallTrigger.");
-        ok(localNodes[0].querySelector(".property > .title > .value")
-                        .getAttribute("value").search(/object/) != -1,
-          "Array should be an object.");
+        ok(thisNode.target.querySelector(".property > .title > .value")
+                        .getAttribute("value").search(/object/) == -1,
+          "InstallTrigger should not be an object.");
 
-        is(localNodes[8].querySelector(".value")
+        is(argumentsNode.target.querySelector(".value")
                         .getAttribute("value"), "[object Arguments]",
          "Should have the right property value for 'arguments'.");
-        ok(localNodes[8].querySelector(".property > .title > .value")
+        ok(argumentsNode.target.querySelector(".property > .title > .value")
                         .getAttribute("value").search(/object/) != -1,
           "Arguments should be an object.");
 
-        is(localNodes[8].querySelectorAll(".property > .title > .key")[7]
+        is(argumentsNode.target.querySelectorAll(".property > .title > .name")[7]
                         .getAttribute("value"), "__proto__",
          "Should have the right property name for '__proto__'.");
-        ok(localNodes[8].querySelectorAll(".property > .title > .value")[7]
+        ok(argumentsNode.target.querySelectorAll(".property > .title > .value")[7]
                         .getAttribute("value").search(/object/) != -1,
           "__proto__ should be an object.");
 
-        is(localNodes[10].querySelector(".value")
+        is(cNode.target.querySelector(".value")
                          .getAttribute("value"), "[object Object]",
           "Should have the right property value for 'c'.");
 
-        is(localNodes[10].querySelectorAll(".property > .title > .key")[0]
+        is(cNode.target.querySelectorAll(".property > .title > .name")[0]
                          .getAttribute("value"), "a",
           "Should have the right property name for 'c.a'.");
-        is(localNodes[10].querySelectorAll(".property > .title > .value")[0]
+        is(cNode.target.querySelectorAll(".property > .title > .value")[0]
                          .getAttribute("value"), "1",
           "Should have the right value for 'c.a'.");
 
-        is(localNodes[10].querySelectorAll(".property > .title > .key")[1]
+        is(cNode.target.querySelectorAll(".property > .title > .name")[1]
                          .getAttribute("value"), "b",
           "Should have the right property name for 'c.b'.");
-        is(localNodes[10].querySelectorAll(".property > .title > .value")[1]
+        is(cNode.target.querySelectorAll(".property > .title > .value")[1]
                          .getAttribute("value"), "\"beta\"",
           "Should have the right value for 'c.b'.");
 
-        is(localNodes[10].querySelectorAll(".property > .title > .key")[2]
+        is(cNode.target.querySelectorAll(".property > .title > .name")[2]
                          .getAttribute("value"), "c",
           "Should have the right property name for 'c.c'.");
-        is(localNodes[10].querySelectorAll(".property > .title > .value")[2]
+        is(cNode.target.querySelectorAll(".property > .title > .value")[2]
                          .getAttribute("value"), "true",
           "Should have the right value for 'c.c'.");
 
@@ -140,7 +157,7 @@ function resumeAndFinish() {
   gDebugger.addEventListener("Debugger:AfterFramesCleared", function listener() {
     gDebugger.removeEventListener("Debugger:AfterFramesCleared", listener, true);
 
-    var frames = gDebugger.DebuggerView.StackFrames._frames;
+    var frames = gDebugger.DebuggerView.StackFrames._container._list;
     is(frames.querySelectorAll(".dbg-stackframe").length, 0,
       "Should have no frames.");
 

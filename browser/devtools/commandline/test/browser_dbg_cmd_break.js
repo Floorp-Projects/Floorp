@@ -38,7 +38,7 @@ function testBreakCommands() {
   let pane = DebuggerUI.toggleDebugger();
 
   var dbgConnected = DeveloperToolbarTest.checkCalled(function() {
-    pane._frame.removeEventListener("Debugger:Connecting", dbgConnected, true);
+    pane._frame.removeEventListener("Debugger:Connected", dbgConnected, true);
 
     // Wait for the initial resume.
     let client = pane.contentWindow.gClient;
@@ -116,5 +116,5 @@ function testBreakCommands() {
     client.addOneTimeListener("resumed", resumed);
   });
 
-  pane._frame.addEventListener("Debugger:Connecting", dbgConnected, true);
+  pane._frame.addEventListener("Debugger:Connected", dbgConnected, true);
 }
