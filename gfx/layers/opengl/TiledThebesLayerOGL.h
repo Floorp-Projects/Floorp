@@ -131,7 +131,7 @@ public:
   void ProcessUploadQueue();
 
   // Renders a single given tile.
-  void RenderTile(TiledTexture aTile,
+  void RenderTile(const TiledTexture& aTile,
                   const gfx3DMatrix& aTransform,
                   const nsIntPoint& aOffset,
                   const nsIntRegion& aScreenRegion,
