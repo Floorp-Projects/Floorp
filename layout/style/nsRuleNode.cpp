@@ -269,17 +269,24 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
                           aCanStoreInRuleTree);
     return css::ComputeCalc(aValue, ops);
   }
-  // Common code for all units other than pixel-based units and fixed-length
-  // units:
-  aCanStoreInRuleTree = false;
-  const nsStyleFont *styleFont =
-    aStyleFont ? aStyleFont : aStyleContext->GetStyleFont();
-  if (aFontSize == -1) {
-    // XXX Should this be styleFont->mSize instead to avoid taking minfontsize
-    // prefs into account?
-    aFontSize = styleFont->mFont.size;
-  }
   switch (aValue.GetUnit()) {
+    // nsPresContext::SetVisibleArea and
+    // nsPresContext::MediaFeatureValuesChanged handle dynamic changes
+    // of the basis for viewport units by rebuilding the rule tree and
+    // style context tree.  Not caching them in the rule tree wouldn't
+    // be sufficient to handle these changes because we also need a way
+    // to get rid of cached values in the style context tree without any
+    // changes in specified style.  We can either do this by not caching
+    // in the rule tree and then throwing away the style context tree
+    // for dynamic viewport size changes, or by allowing caching in the
+    // rule tree and using the existing rebuild style data path that
+    // throws away the style context and the rule tree.
+    // Thus we do cache viewport units in the rule tree.  This allows us
+    // to benefit from the performance advantages of the rule tree
+    // (e.g., faster dynamic changes on other things, like transforms)
+    // and allows us not to need an additional code path, in exchange
+    // for an increased cost to dynamic changes to the viewport size
+    // when viewport units are in use.
     case eCSSUnit_ViewportWidth: {
       aPresContext->SetUsesViewportUnits(true);
       return ScaleCoord(aValue, 0.01f * aPresContext->GetVisibleArea().width);
@@ -298,6 +305,22 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       nsSize viewportSize = aPresContext->GetVisibleArea().Size();
       return ScaleCoord(aValue, 0.01f * max(viewportSize.width, viewportSize.height));
     }
+    default:
+      // Fall through to the code for units that can't be stored in the
+      // rule tree because they depend on font data.
+      break;
+  }
+  // Common code for units that depend on the element's font data and
+  // thus can't be stored in the rule tree:
+  aCanStoreInRuleTree = false;
+  const nsStyleFont *styleFont =
+    aStyleFont ? aStyleFont : aStyleContext->GetStyleFont();
+  if (aFontSize == -1) {
+    // XXX Should this be styleFont->mSize instead to avoid taking minfontsize
+    // prefs into account?
+    aFontSize = styleFont->mFont.size;
+  }
+  switch (aValue.GetUnit()) {
     case eCSSUnit_RootEM: {
       nscoord rootFontSize;
 
