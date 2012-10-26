@@ -2808,6 +2808,13 @@ html|*#gcli-output-frame {
   font-weight: bold;
 }
 
+.chatbar-button > menupopup > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
+  width: auto;
+  height: auto;
+  max-height: 16px;
+  max-width: 16px;
+}
+
 .chatbar-innerbox {
   background: transparent;
   margin: -285px -1px 0 -1px;
