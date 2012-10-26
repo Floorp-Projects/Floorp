@@ -110,7 +110,14 @@ public class GeckoMenuItem implements MenuItem, View.OnClickListener {
 
     @Override
     public Drawable getIcon() {
-        return null;
+        if (mIcon == null) {
+            if (mIconRes != 0)
+                return mContext.getResources().getDrawable(mIconRes);
+            else
+                return null;
+        } else {
+            return mIcon;
+        }
     }
 
     @Override
