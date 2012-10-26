@@ -456,9 +456,10 @@ class Marionette(object):
     def get_perf_data(self):
         return self._send_message('getPerfData', 'value')
 
-    def import_script(self, file):
-        f = open(file, "r")
-        js = f.read()
+    def import_script(self, js_file):
+        js = ''
+        with open(js_file, 'r') as f:
+            js = f.read()
         return self._send_message('importScript', 'ok', script=js)
 
     @property
