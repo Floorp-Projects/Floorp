@@ -346,7 +346,7 @@ let tests = {
         let port = e.ports[0];
 
         try {
-          var exampleSocket = new WebSocket("ws://www.example.com/socketserver");
+          var exampleSocket = new WebSocket("ws://mochi.test:8888/socketserver");
         } catch (e) {
           port.postMessage({topic: "done", result: "FAILED calling WebSocket constructor: " + e});
           return;
