@@ -1232,12 +1232,36 @@ nsXMLHttpRequest::Status()
 
   uint16_t readyState;
   GetReadyState(&readyState);
-  if (readyState == UNSENT || readyState == OPENED || mErrorLoad) {
+  if (readyState == UNSENT || readyState == OPENED) {
+    return 0;
+  }
+
+  if (mErrorLoad) {
+    // Let's simulate the http protocol for jar/app requests:
+    nsCOMPtr<nsIJARChannel> jarChannel = GetCurrentJARChannel();
+    if (jarChannel) {
+      nsresult status;
+      mChannel->GetStatus(&status);
+
+      if (status == NS_ERROR_FILE_NOT_FOUND) {
+        return 404; // Not Found
+      } else {
+        return 500; // Internal Error
+      }
+    }
+
     return 0;
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
   if (!httpChannel) {
+
+    // Let's simulate the http protocol for jar/app requests:
+    nsCOMPtr<nsIJARChannel> jarChannel = GetCurrentJARChannel();
+    if (jarChannel) {
+      return 200; // Ok
+    }
+
     return 0;
   }
 
@@ -1627,17 +1651,21 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
 already_AddRefed<nsIHttpChannel>
 nsXMLHttpRequest::GetCurrentHttpChannel()
 {
-  nsIHttpChannel *httpChannel = nullptr;
-
-  if (mReadRequest) {
-    CallQueryInterface(mReadRequest, &httpChannel);
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mReadRequest);
+  if (!httpChannel) {
+    httpChannel = do_QueryInterface(mChannel);
   }
+  return httpChannel.forget();
+}
 
-  if (!httpChannel && mChannel) {
-    CallQueryInterface(mChannel, &httpChannel);
+already_AddRefed<nsIJARChannel>
+nsXMLHttpRequest::GetCurrentJARChannel()
+{
+  nsCOMPtr<nsIJARChannel> appChannel = do_QueryInterface(mReadRequest);
+  if (!appChannel) {
+    appChannel = do_QueryInterface(mChannel);
   }
-
-  return httpChannel;
+  return appChannel.forget();
 }
 
 bool
