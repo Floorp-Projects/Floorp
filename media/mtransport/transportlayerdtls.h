@@ -113,7 +113,7 @@ class TransportLayerDtls : public TransportLayer {
       len_ = len;
     }
 
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VerificationDigest);
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VerificationDigest)
 
     std::string algorithm_;
     size_t len_;
