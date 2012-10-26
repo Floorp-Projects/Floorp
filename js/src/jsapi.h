@@ -3632,29 +3632,10 @@ js_RemoveRoot(JSRuntime *rt, void *rp);
 extern JS_NEVER_INLINE JS_PUBLIC_API(void)
 JS_AnchorPtr(void *p);
 
-/*
- * This symbol may be used by embedders to detect the change from the old
- * JS_AddRoot(JSContext *, void *) APIs to the new ones above.
- */
-#define JS_TYPED_ROOTING_API
-
-/* Obsolete rooting APIs. */
-#define JS_EnterLocalRootScope(cx) (JS_TRUE)
-#define JS_LeaveLocalRootScope(cx) ((void) 0)
-#define JS_LeaveLocalRootScopeWithResult(cx, rval) ((void) 0)
-#define JS_ForgetLocalRoot(cx, thing) ((void) 0)
-
 typedef enum JSGCRootType {
     JS_GC_ROOT_VALUE_PTR,
     JS_GC_ROOT_GCTHING_PTR
 } JSGCRootType;
-
-#ifdef DEBUG
-extern JS_PUBLIC_API(void)
-JS_DumpNamedRoots(JSRuntime *rt,
-                  void (*dump)(const char *name, void *rp, JSGCRootType type, void *data),
-                  void *data);
-#endif
 
 extern JS_PUBLIC_API(JSBool)
 JS_LockGCThing(JSContext *cx, void *thing);

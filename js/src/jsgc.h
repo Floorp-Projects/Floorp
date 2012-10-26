@@ -488,13 +488,6 @@ js_AddRoot(JSContext *cx, js::Value *vp, const char *name);
 extern JSBool
 js_AddGCThingRoot(JSContext *cx, void **rp, const char *name);
 
-#ifdef DEBUG
-extern void
-js_DumpNamedRoots(JSRuntime *rt,
-                  void (*dump)(const char *name, void *rp, JSGCRootType type, void *data),
-                  void *data);
-#endif
-
 /* Table of pointers with count valid members. */
 typedef struct JSPtrTable {
     size_t      count;
