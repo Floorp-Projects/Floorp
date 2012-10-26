@@ -1290,7 +1290,7 @@ SourceResults.prototype = {
     aElementNode.resultsHeader = resultsHeader;
     aElementNode.resultsContainer = resultsContainer;
 
-    if (aExpandFlag) {
+    if (aExpandFlag && aMatchCount < GLOBAL_SEARCH_EXPAND_MAX_RESULTS) {
       this.expand(true);
     }
 

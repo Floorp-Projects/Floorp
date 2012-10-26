@@ -96,7 +96,6 @@
   border-radius: 4px;
   cursor: pointer;
   transition: transform 0.25s ease-in-out;
-  transform: scale(1, 1);
 }
 
 .dbg-results-container .line-contents > .string[match=true][focused] {
