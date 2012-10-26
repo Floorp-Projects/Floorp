@@ -86,10 +86,11 @@ function testFrameParameters()
       // content window timers are disabled while the debuggee is paused.
       let count = 0;
       let intervalID = window.setInterval(function(){
-        dump("count: "+count+" ");
+        info("count: " + count + " ");
         if (++count > 50) {
           ok(false, "Timed out while polling for the properties.");
-          resumeAndFinish();
+          window.clearInterval(intervalID);
+          return resumeAndFinish();
         }
         if (!thisNode.fetched ||
             !argumentsNode.fetched ||
