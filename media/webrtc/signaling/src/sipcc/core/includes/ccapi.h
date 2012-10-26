@@ -24,7 +24,6 @@ typedef int cc_causes_t;
 #define  CC_CALL_NONE       CC_CALL_TYPE_NONE
 #define  CC_CALL_INCOMING   CC_CALL_TYPE_INCOMING
 #define  SDP_SIZE           4096   /* must increase this */
-#define  PC_HANDLE_SIZE     17 /* 8 random bytes in hex plus null */
 #define  CANDIDATE_SIZE     150
 #define  MID_SIZE           150
 

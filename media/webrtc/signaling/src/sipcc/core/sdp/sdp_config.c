@@ -5,7 +5,9 @@
 #include "sdp_os_defs.h"
 #include "sdp.h"
 #include "sdp_private.h"
+#include "CSFLog.h"
 
+static const char* logTag = "sdp_config";
 
 /* Function:    sdp_verify_conf_ptr
  * Description: Verify the configuration pointer is valid by checking for
@@ -21,7 +23,7 @@ tinybool sdp_verify_conf_ptr (sdp_conf_options_t *conf_p)
     if ((conf_p != NULL) && (conf_p->magic_num == SDP_MAGIC_NUM)) {
         return (TRUE);
     } else {
-        sdp_log_errmsg(SDP_ERR_INVALID_CONF_PTR, NULL);
+        CSFLogError(logTag, "SDP: Invalid Config pointer.");
         return (FALSE);
     }
 }
