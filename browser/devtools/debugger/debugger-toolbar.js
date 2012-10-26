@@ -197,8 +197,8 @@ ToolbarView.prototype = {
  */
 function OptionsView() {
   dumpn("OptionsView was instantiated");
-  this._onPoeClick = this._onPoeClick.bind(this);
-  this._onShowNonenumClick = this._onShowNonenumClick.bind(this);
+  this._togglePOE = this._togglePOE.bind(this);
+  this._toggleShowNonEnum = this._toggleShowNonEnum.bind(this);
 }
 
 OptionsView.prototype = {
@@ -207,14 +207,12 @@ OptionsView.prototype = {
    */
   initialize: function DVO_initialize() {
     dumpn("Initializing the OptionsView");
-    this._poeCheckbox = document.getElementById("pause-on-exceptions");
-    this._showNonenumCheckbox = document.getElementById("show-nonenum");
+    this._button = document.getElementById("debugger-options");
+    this._poeItem = document.getElementById("pause-on-exceptions");
+    this._showNonEnumItem = document.getElementById("show-nonenum");
 
-    this._poeCheckbox.addEventListener("click", this._onPoeClick, false);
-    this._showNonenumCheckbox.addEventListener("click", this._onShowNonenumClick, false);
-
-    this._poeCheckbox.checked = false; // Never pause on exceptions by default.
-    this._showNonenumCheckbox.checked = Prefs.nonEnumVisible;
+    this._poeItem.setAttribute("checked", "false");
+    this._showNonEnumItem.setAttribute("checked", Prefs.nonEnumVisible);
   },
 
   /**
@@ -222,27 +220,41 @@ OptionsView.prototype = {
    */
   destroy: function DVO_destroy() {
     dumpn("Destroying the OptionsView");
-    this._poeCheckbox.removeEventListener("click", this._onPoeClick, false);
-    this._showNonenumCheckbox.removeEventListener("click", this._onShowNonenumClick, false);
+  },
+
+  /**
+   * Listener handling the 'gear menu' popup showing event.
+   */
+  _onPopupShowing: function DVO__onPopupShowing() {
+    this._button.setAttribute("open", "true");
+  },
+
+  /**
+   * Listener handling the 'gear menu' popup hiding event.
+   */
+  _onPopupHiding: function DVO__onPopupHiding() {
+    this._button.removeAttribute("open");
   },
 
   /**
    * Listener handling the 'pause on exceptions' checkbox click event.
    */
-  _onPoeClick: function DVO__onPOEClick() {
-    DebuggerController.activeThread.pauseOnExceptions(this._poeCheckbox.checked);
+  _togglePOE: function DVO__togglePOE() {
+    DebuggerController.activeThread.pauseOnExceptions(
+      this._poeItem.getAttribute("checked") == "true");
   },
 
   /**
    * Listener handling the 'show non-enumerables' checkbox click event.
    */
-  _onShowNonenumClick: function DVO__onShowNonenumClick() {
-    DebuggerView.Variables.nonEnumVisible =
-      Prefs.nonEnumVisible = this._showNonenumCheckbox.checked;
+  _toggleShowNonEnum: function DVO__toggleShowNonEnum() {
+    DebuggerView.Variables.nonEnumVisible = Prefs.nonEnumVisible =
+      this._showNonEnumItem.getAttribute("checked") == "true";
   },
 
-  _poeCheckbox: null,
-  _showNonenumCheckbox: null
+  _button: null,
+  _poeItem: null,
+  _showNonEnumItem: null
 };
 
 /**
