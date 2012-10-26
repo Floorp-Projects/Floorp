@@ -545,7 +545,7 @@ public:
   uint32_t Index() { return mIndex; }
 
   PRUnichar GetCharAt(uint32_t aIndex) {
-    NS_ASSERTION(0 <= aIndex && aIndex < mLength, "Out of range!");
+    NS_ASSERTION(aIndex < mLength, "Out of range!");
     return mUniText ? mUniText[aIndex] : PRUnichar(mText[aIndex]);
   }
 

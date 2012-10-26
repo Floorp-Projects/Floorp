@@ -3360,6 +3360,9 @@ JS_GetObjectPrototype(JSContext *cx, JSRawObject forObj);
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSRawObject obj);
 
+extern JS_PUBLIC_API(JSBool)
+JS_IsGlobalObject(JSRawObject obj);
+
 /*
  * May return NULL, if |c| never had a global (e.g. the atoms compartment), or
  * if |c|'s global has been collected.
@@ -4123,11 +4126,9 @@ struct JSClass {
 #define JSCLASS_FREEZE_PROTO            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
 #define JSCLASS_FREEZE_CTOR             (1<<(JSCLASS_HIGH_FLAGS_SHIFT+5))
 
-#define JSCLASS_XPCONNECT_GLOBAL        (1<<(JSCLASS_HIGH_FLAGS_SHIFT+6))
-
 /* Reserved for embeddings. */
-#define JSCLASS_USERBIT2                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+7))
-#define JSCLASS_USERBIT3                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+8))
+#define JSCLASS_USERBIT2                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+6))
+#define JSCLASS_USERBIT3                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+7))
 
 /*
  * Bits 26 through 31 are reserved for the CACHED_PROTO_KEY mechanism, see

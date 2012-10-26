@@ -28,7 +28,6 @@
 #ifndef nsHtml5StateSnapshot_h__
 #define nsHtml5StateSnapshot_h__
 
-#include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsString.h"

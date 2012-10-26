@@ -11,6 +11,9 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "prlog.h"
+#include "mozilla/Util.h"
+
+using namespace mozilla;
 
 #if defined(PR_LOGGING)
 static PRLogModuleInfo *gRequestObserverProxyLog;
@@ -90,8 +93,6 @@ public:
 
     NS_IMETHOD Run()
     {
-        nsresult rv, status = NS_OK;
-
         LOG(("nsOnStopRequestEvent::HandleEvent [req=%x]\n", mRequest.get()));
 
         nsCOMPtr<nsIRequestObserver> observer = mProxy->mObserver;
@@ -102,7 +103,8 @@ public:
         // Do not allow any more events to be handled after OnStopRequest
         mProxy->mObserver = 0;
 
-        rv = mRequest->GetStatus(&status);
+        nsresult status = NS_OK;
+        DebugOnly<nsresult> rv = mRequest->GetStatus(&status);
         NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed for request!");
 
         LOG(("handle stopevent=%p\n", this));

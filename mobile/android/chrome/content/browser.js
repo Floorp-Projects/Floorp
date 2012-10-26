@@ -3584,6 +3584,13 @@ var BrowserEventHandler = {
     this.updateReflozPref();
   },
 
+  resetMaxLineBoxWidth: function() {
+    let webNav = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+    let docShell = webNav.QueryInterface(Ci.nsIDocShell);
+    let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+    docViewer.changeMaxLineBoxWidth(0);
+  },
+
   updateReflozPref: function() {
      this.mReflozPref = Services.prefs.getBoolPref("browser.zoom.reflowOnZoom");
   },
@@ -3747,6 +3754,7 @@ var BrowserEventHandler = {
   },
 
   _zoomOut: function() {
+    BrowserEventHandler.resetMaxLineBoxWidth();
     sendMessageToJava({ gecko: { type: "Browser:ZoomToPageWidth"} });
   },
 
@@ -3837,6 +3845,10 @@ var BrowserEventHandler = {
       if ((bRect.height > rect.h) && (cssTapY > rect.y + (rect.h * 1.2))) {
         rect.y = cssTapY - (rect.h / 2);
       }
+    }
+
+    if (rect.w > viewport.cssWidth || rect.h > viewport.cssHeight) {
+      BrowserEventHandler.resetMaxLineBoxWidth();
     }
 
     sendMessageToJava({ gecko: rect });

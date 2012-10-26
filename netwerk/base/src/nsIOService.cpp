@@ -42,11 +42,13 @@
 #include "nsIProxiedChannel.h"
 #include "nsIProtocolProxyCallback.h"
 #include "nsICancelable.h"
-
+#include "mozilla/Util.h"
 
 #if defined(XP_WIN) || defined(MOZ_PLATFORM_MAEMO)
 #include "nsNativeConnectionHelper.h"
 #endif
+
+using namespace mozilla;
 
 #define PORT_PREF_PREFIX           "network.security.ports."
 #define PORT_PREF(x)               PORT_PREF_PREFIX x
@@ -692,7 +694,6 @@ nsIOService::SetOffline(bool offline)
     }
 
     nsIIOService *subject = static_cast<nsIIOService *>(this);
-    nsresult rv;
     while (mSetOfflineValue != mOffline) {
         offline = mSetOfflineValue;
 
@@ -721,7 +722,7 @@ nsIOService::SetOffline(bool offline)
             // go online
             if (mDNSService) {
                 mDNSService->SetOffline(false);
-                rv = mDNSService->Init();
+                DebugOnly<nsresult> rv = mDNSService->Init();
                 NS_ASSERTION(NS_SUCCEEDED(rv), "DNS service init failed");
             }
             InitializeSocketTransportService();
@@ -745,11 +746,11 @@ nsIOService::SetOffline(bool offline)
         // be sure to try and shutdown both (even if the first fails)...
         // shutdown dns service first, because it has callbacks for socket transport
         if (mDNSService) {
-            rv = mDNSService->Shutdown();
+            DebugOnly<nsresult> rv = mDNSService->Shutdown();
             NS_ASSERTION(NS_SUCCEEDED(rv), "DNS service shutdown failed");
         }
         if (mSocketTransportService) {
-            rv = mSocketTransportService->Shutdown();
+            DebugOnly<nsresult> rv = mSocketTransportService->Shutdown();
             NS_ASSERTION(NS_SUCCEEDED(rv), "socket transport service shutdown failed");
         }
     }
