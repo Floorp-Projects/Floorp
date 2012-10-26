@@ -97,18 +97,34 @@ GetTopIonJSScript(JSContext *cx, const SafepointIndex **safepointIndexOut, void 
     if (returnAddrOut)
         *returnAddrOut = (void *) iter.returnAddressToFp();
 
-    JS_ASSERT(iter.type() == IonFrame_JS);
-    IonJSFrameLayout *frame = static_cast<IonJSFrameLayout*>(iter.current());
-    switch (GetCalleeTokenTag(frame->calleeToken())) {
-      case CalleeToken_Function: {
-        JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
-        return fun->script();
-      }
-      case CalleeToken_Script:
-        return CalleeTokenToScript(frame->calleeToken());
-      default:
-        JS_NOT_REACHED("unexpected callee token kind");
-        return NULL;
+    if (iter.type() == IonFrame_JS) {
+        IonJSFrameLayout *frame = static_cast<IonJSFrameLayout*>(iter.current());
+        switch (GetCalleeTokenTag(frame->calleeToken())) {
+        case CalleeToken_Function: {
+            JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
+            return fun->script();
+        }
+        case CalleeToken_Script:
+            return CalleeTokenToScript(frame->calleeToken());
+        default:
+            JS_NOT_REACHED("unexpected callee token kind");
+            return NULL;
+        }
+    } else {
+        JS_ASSERT(iter.type() == IonFrame_BaselineJS);
+        IonBaselineJSFrameLayout *frame = static_cast<IonBaselineJSFrameLayout*>(iter.current());
+
+        switch (GetCalleeTokenTag(frame->calleeToken())) {
+        case CalleeToken_Function: {
+            JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
+            return fun->script();
+        }
+        case CalleeToken_Script:
+            return CalleeTokenToScript(frame->calleeToken());
+        default:
+            JS_NOT_REACHED("unexpected callee token kind");
+            return NULL;
+        }
     }
 }
 

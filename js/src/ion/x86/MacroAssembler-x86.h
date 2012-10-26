@@ -178,6 +178,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         push(ImmTag(JSVAL_TYPE_TO_TAG(type)));
         push(reg);
     }
+    void pushValue(const Address &addr) {
+        push(tagOf(addr));
+        push(payloadOf(addr));
+    }
     void storePayload(const Value &val, Operand dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
         if (val.isMarkable())
@@ -412,6 +416,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         jump(label);
         return CodeOffsetJump(size());
     }
+    CodeOffsetCall callWithPatch(IonCode *code) {
+        call(code);
+        return CodeOffsetCall(size());
+    }
+
     template <typename S, typename T>
     CodeOffsetJump branchPtrWithPatch(Condition cond, S lhs, T ptr, RepatchLabel *label) {
         branchPtr(cond, lhs, ptr, label);
@@ -730,6 +739,15 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         makeFrameDescriptor(dynStack, IonFrame_JS);
         Push(dynStack);
         call(target);
+    }
+    void tailCallWithExitFrameFromBaseline(IonCode *target) {
+        movl(ebp, eax);
+        subl(esp, eax);
+        addl(Imm32(4), eax);
+        makeFrameDescriptor(eax, IonFrame_BaselineJS);
+        push(eax);
+        push(esi);
+        jmp(target);
     }
 
     void enterOsr(Register calleeToken, Register code) {
