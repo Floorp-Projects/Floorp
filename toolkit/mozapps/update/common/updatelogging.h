@@ -22,6 +22,7 @@ public:
   void Finish();
   void Flush();
   void Printf(const char *fmt, ... );
+  void WarnPrintf(const char *fmt, ... );
 
   ~UpdateLog()
   {
@@ -34,6 +35,7 @@ protected:
   NS_tchar* sourcePath;
 };
 
+#define LOG_WARN(args) UpdateLog::GetPrimaryLog().WarnPrintf args
 #define LOG(args) UpdateLog::GetPrimaryLog().Printf args
 #define LogInit(PATHNAME_, FILENAME_) \
   UpdateLog::GetPrimaryLog().Init(PATHNAME_, FILENAME_, 0, false)
