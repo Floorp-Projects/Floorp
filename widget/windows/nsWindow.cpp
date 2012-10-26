@@ -591,6 +591,17 @@ nsWindow::Create(nsIWidget *aParent,
 
   SubclassWindow(TRUE);
 
+  // NOTE: mNativeIMEContext may be null if IMM module isn't installed.
+  nsIMEContext IMEContext(mWnd);
+  mInputContext.mNativeIMEContext = static_cast<void*>(IMEContext.get());
+  MOZ_ASSERT(mInputContext.mNativeIMEContext ||
+             !nsIMM32Handler::IsIMEAvailable());
+  // If no IME context is available, we should set this widget's pointer since
+  // nullptr indicates there is only one context per process on the platform.
+  if (!mInputContext.mNativeIMEContext) {
+    mInputContext.mNativeIMEContext = this;
+  }
+
   // If the internal variable set by the config.trim_on_minimize pref has not
   // been initialized, and if this is the hidden window (conveniently created
   // before any visible windows, and after the profile has been initialized),
@@ -7288,11 +7299,22 @@ nsWindow::SetInputContext(const InputContext& aContext,
   if (nsIMM32Handler::IsComposing()) {
     ResetInputState();
   }
+  void* nativeIMEContext = mInputContext.mNativeIMEContext;
   mInputContext = aContext;
+  mInputContext.mNativeIMEContext = nullptr;
   bool enable = (mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
                  mInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
 
   AssociateDefaultIMC(enable);
+
+  if (enable) {
+    nsIMEContext IMEContext(mWnd);
+    mInputContext.mNativeIMEContext = static_cast<void*>(IMEContext.get());
+  }
+  // Restore the latest associated context when we cannot get actual context.
+  if (!mInputContext.mNativeIMEContext) {
+    mInputContext.mNativeIMEContext = nativeIMEContext;
+  }
 
   if (enable &&
       mInputContext.mIMEState.mOpen != IMEState::DONT_CHANGE_OPEN_STATE) {
