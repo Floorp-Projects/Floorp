@@ -495,9 +495,6 @@ js_DumpNamedRoots(JSRuntime *rt,
                   void *data);
 #endif
 
-extern uint32_t
-js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data);
-
 /* Table of pointers with count valid members. */
 typedef struct JSPtrTable {
     size_t      count;
