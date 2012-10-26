@@ -358,6 +358,7 @@ pref("toolkit.telemetry.infoURL", "http://www.mozilla.com/legal/privacy/firefox.
 pref("toolkit.telemetry.debugSlowSql", false);
 
 // Identity module
+pref("toolkit.identity.enabled", false);
 pref("toolkit.identity.debug", false);
 
 // Disable remote debugging protocol logging
@@ -3796,8 +3797,6 @@ pref("social.enabled", false);
 // Disable idle observer fuzz, because only privileged content can access idle
 // observers (bug 780507).
 pref("dom.idle-observers-api.fuzz_time.disabled", true);
-
-pref("toolkit.identity.debug", false);
 
 // Setting that to true grant elevated privileges to apps that ask
 // for them in their manifest.
