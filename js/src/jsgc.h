@@ -31,12 +31,6 @@
 
 struct JSCompartment;
 
-#if JS_STACK_GROWTH_DIRECTION > 0
-# define JS_CHECK_STACK_SIZE(limit, lval)  ((uintptr_t)(lval) < limit)
-#else
-# define JS_CHECK_STACK_SIZE(limit, lval)  ((uintptr_t)(lval) > limit)
-#endif
-
 namespace js {
 
 class GCHelperThread;
@@ -482,9 +476,6 @@ typedef js::HashMap<void *,
 
 } /* namespace js */
 
-extern JS_FRIEND_API(JSGCTraceKind)
-js_GetGCThingTraceKind(void *thing);
-
 extern JSBool
 js_InitGC(JSRuntime *rt, uint32_t maxbytes);
 
@@ -530,9 +521,6 @@ MarkCompartmentActive(js::StackFrame *fp);
 extern void
 TraceRuntime(JSTracer *trc);
 
-extern JS_FRIEND_API(void)
-MarkContext(JSTracer *trc, JSContext *acx);
-
 /* Must be called with GC lock taken. */
 extern void
 TriggerGC(JSRuntime *rt, js::gcreason::Reason reason);
@@ -549,9 +537,6 @@ ShrinkGCBuffers(JSRuntime *rt);
 
 extern void
 ReleaseAllJITCode(FreeOp *op);
-
-extern JS_FRIEND_API(void)
-PrepareForFullGC(JSRuntime *rt);
 
 /*
  * Kinds of js_GC invocation.
@@ -629,11 +614,11 @@ class GCHelperThread {
     void            **freeCursor;
     void            **freeCursorEnd;
 
-    bool    backgroundAllocation;
+    bool              backgroundAllocation;
 
     friend struct js::gc::ArenaLists;
 
-    JS_FRIEND_API(void)
+    void
     replenishAndFreeLater(void *ptr);
 
     static void freeElementsAndArray(void **array, void **end) {
@@ -1112,7 +1097,7 @@ typedef void (*IterateCellCallback)(JSRuntime *rt, void *data, void *thing,
  * |arenaCallback| on every in-use arena, and |cellCallback| on every in-use
  * cell in the GC heap.
  */
-extern JS_FRIEND_API(void)
+extern void
 IterateCompartmentsArenasCells(JSRuntime *rt, void *data,
                                JSIterateCompartmentCallback compartmentCallback,
                                IterateArenaCallback arenaCallback,
@@ -1121,22 +1106,16 @@ IterateCompartmentsArenasCells(JSRuntime *rt, void *data,
 /*
  * Invoke chunkCallback on every in-use chunk.
  */
-extern JS_FRIEND_API(void)
+extern void
 IterateChunks(JSRuntime *rt, void *data, IterateChunkCallback chunkCallback);
 
 /*
  * Invoke cellCallback on every in-use object of the specified thing kind for
  * the given compartment or for all compartments if it is null.
  */
-extern JS_FRIEND_API(void)
+extern void
 IterateCells(JSRuntime *rt, JSCompartment *compartment, gc::AllocKind thingKind,
              void *data, IterateCellCallback cellCallback);
-
-/*
- * Invoke cellCallback on every gray JS_OBJECT in the given compartment.
- */
-extern JS_FRIEND_API(void)
-IterateGrayObjects(JSCompartment *compartment, GCThingCallback *cellCallback, void *data);
 
 } /* namespace js */
 
@@ -1208,19 +1187,6 @@ MaybeVerifyBarriers(JSContext *cx, bool always = false)
 #endif
 
 } /* namespace gc */
-
-static inline JSCompartment *
-GetGCThingCompartment(void *thing)
-{
-    JS_ASSERT(thing);
-    return reinterpret_cast<gc::Cell *>(thing)->compartment();
-}
-
-static inline JSCompartment *
-GetObjectCompartment(JSObject *obj)
-{
-    return GetGCThingCompartment(obj);
-}
 
 void
 PurgeJITCaches(JSCompartment *c);

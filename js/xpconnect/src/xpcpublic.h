@@ -12,9 +12,9 @@
 #include "js/MemoryMetrics.h"
 #include "jsclass.h"
 #include "jsfriendapi.h"
-#include "jsgc.h"
 #include "jspubtd.h"
 #include "jsproxy.h"
+#include "js/HeapAPI.h"
 
 #include "nsISupports.h"
 #include "nsIPrincipal.h"
