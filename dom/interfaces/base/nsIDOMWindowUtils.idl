@@ -40,7 +40,7 @@ interface nsIDOMTouch;
 interface nsIDOMClientRect;
 interface nsIURI;
 
-[scriptable, uuid(020deb5a-cba6-41dd-8551-72a880d01970)]
+[scriptable, uuid(b3a3589d-cc9d-4123-9b21-51c66e88b436)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -173,6 +173,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * privileges.
    */
   void setResolution(in float aXResolution, in float aYResolution);
+
+  void getResolution(out float aXResolution, out float aYResolution);
 
   /**
    * Whether the next paint should be flagged as the first paint for a document.
