@@ -111,6 +111,12 @@ function testNamesForMarkup(aMarkupElm)
     child = child.nextSibling;
   }
 
+  // Wave over images to create frames.
+  var imgElms = div.getElementsByTagName("html:img");
+  for (var idx = 0; idx < imgElms.length; idx++) {
+    waveOverImageMap(imgElms[idx]);
+  }
+
   if (gDumpToConsole) {
     dump("\nProcessing markup. Wait for reorder event on " +
          prettyName(document) + "'\n");
