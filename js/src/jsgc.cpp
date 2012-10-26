@@ -1440,25 +1440,6 @@ js_DumpNamedRoots(JSRuntime *rt,
 
 #endif /* DEBUG */
 
-uint32_t
-js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
-{
-    int ct = 0;
-    for (RootEnum e(rt->gcRootsHash); !e.empty(); e.popFront()) {
-        RootEntry &entry = e.front();
-
-        ct++;
-        int mapflags = map(entry.key, entry.value.type, entry.value.name, data);
-
-        if (mapflags & JS_MAP_GCROOT_REMOVE)
-            e.removeFront();
-        if (mapflags & JS_MAP_GCROOT_STOP)
-            break;
-    }
-
-    return ct;
-}
-
 static size_t
 ComputeTriggerBytes(JSCompartment *comp, size_t lastBytes, size_t maxBytes, JSGCInvocationKind gckind)
 {

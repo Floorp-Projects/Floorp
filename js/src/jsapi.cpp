@@ -2464,12 +2464,6 @@ JS_DumpNamedRoots(JSRuntime *rt,
 
 #endif /* DEBUG */
 
-JS_PUBLIC_API(uint32_t)
-JS_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
-{
-    return js_MapGCRoots(rt, map, data);
-}
-
 JS_PUBLIC_API(JSBool)
 JS_LockGCThing(JSContext *cx, void *thing)
 {
