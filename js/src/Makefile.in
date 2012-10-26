@@ -186,7 +186,6 @@ EXPORTS_ds = \
 		$(NULL)
 
 EXPORTS_gc = \
-		Heap.h \
 		Root.h \
 		$(NULL)
 
