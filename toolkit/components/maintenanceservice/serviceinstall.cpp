@@ -68,8 +68,8 @@ GetVersionNumberFromPath(LPWSTR path, DWORD &A, DWORD &B,
   nsAutoArrayPtr<char> fileVersionInfo = new char[fileVersionInfoSize];
   if (!GetFileVersionInfoW(path, 0, fileVersionInfoSize,
                            fileVersionInfo.get())) {
-      LOG(("Could not obtain file info of old service.  (%d)\n", 
-           GetLastError()));
+      LOG_WARN(("Could not obtain file info of old service.  (%d)", 
+                GetLastError()));
       return FALSE;
   }
 
@@ -78,8 +78,8 @@ GetVersionNumberFromPath(LPWSTR path, DWORD &A, DWORD &B,
   UINT size;
   if (!VerQueryValueW(fileVersionInfo.get(), L"\\", 
     reinterpret_cast<LPVOID*>(&fixedFileInfo), &size)) {
-      LOG(("Could not query file version info of old service.  (%d)\n", 
-           GetLastError()));
+      LOG_WARN(("Could not query file version info of old service.  (%d)", 
+                GetLastError()));
       return FALSE;
   }  
 
@@ -105,34 +105,34 @@ UpdateServiceDescription(SC_HANDLE serviceHandle)
   if (!GetModuleFileNameW(NULL, updaterINIPath, 
                           sizeof(updaterINIPath) /
                           sizeof(updaterINIPath[0]))) {
-    LOG(("Could not obtain module filename when attempting to "
-         "modify service description. (%d)\n", GetLastError()));
+    LOG_WARN(("Could not obtain module filename when attempting to "
+              "modify service description.  (%d)", GetLastError()));
     return FALSE;
   }
 
   if (!PathRemoveFileSpecW(updaterINIPath)) {
-    LOG(("Could not remove file spec when attempting to "
-         "modify service description. (%d)\n", GetLastError()));
+    LOG_WARN(("Could not remove file spec when attempting to "
+              "modify service description.  (%d)", GetLastError()));
     return FALSE;
   }
 
   if (!PathAppendSafe(updaterINIPath, L"updater.ini")) {
-    LOG(("Could not append updater.ini filename when attempting to "
-         "modify service description. (%d)\n", GetLastError()));
+    LOG_WARN(("Could not append updater.ini filename when attempting to "
+              "modify service description.  (%d)", GetLastError()));
     return FALSE;
   }
 
   if (GetFileAttributesW(updaterINIPath) == INVALID_FILE_ATTRIBUTES) {
-    LOG(("updater.ini file does not exist, will not modify "
-         "service description. (%d)\n", GetLastError()));
+    LOG_WARN(("updater.ini file does not exist, will not modify "
+              "service description.  (%d)", GetLastError()));
     return FALSE;
   }
   
   MaintenanceServiceStringTable serviceStrings;
   int rv = ReadMaintenanceServiceStrings(updaterINIPath, &serviceStrings);
   if (rv != OK || !strlen(serviceStrings.serviceDescription)) {
-    LOG(("updater.ini file does not contain a maintenance "
-         "service description.\n"));
+    LOG_WARN(("updater.ini file does not contain a maintenance "
+              "service description."));
     return FALSE;
   }
 
@@ -142,8 +142,8 @@ UpdateServiceDescription(SC_HANDLE serviceHandle)
                            serviceDescription,
                            sizeof(serviceDescription) / 
                            sizeof(serviceDescription[0]))) {
-    LOG(("Could not convert description to wide string format (%d)\n", 
-         GetLastError()));
+    LOG_WARN(("Could not convert description to wide string format.  (%d)",
+              GetLastError()));
     return FALSE;
   }
 
@@ -152,11 +152,11 @@ UpdateServiceDescription(SC_HANDLE serviceHandle)
   if (!ChangeServiceConfig2W(serviceHandle, 
                              SERVICE_CONFIG_DESCRIPTION, 
                              &descriptionConfig)) {
-    LOG(("Could not change service config (%d)\n", GetLastError()));
+    LOG_WARN(("Could not change service config.  (%d)", GetLastError()));
     return FALSE;
   }
 
-  LOG(("The service description was updated successfully.\n"));
+  LOG(("The service description was updated successfully."));
   return TRUE;
 }
 
@@ -183,22 +183,23 @@ FixServicePath(SC_HANDLE service,
   bool doesServiceHaveCorrectPath =
     !wcsstr(currentServicePath, L"maintenanceservice_tmp.exe");
   if (doesServiceHaveCorrectPath) {
-    LOG(("The MozillaMaintenance service path is correct.\n"));
+    LOG(("The MozillaMaintenance service path is correct."));
     servicePathWasWrong = FALSE;
     return TRUE;
   }
-  LOG(("The MozillaMaintenance path is NOT correct.\n"));
+  // This is a recoverable situation so not logging as a warning
+  LOG(("The MozillaMaintenance path is NOT correct."));
   servicePathWasWrong = TRUE;
 
   WCHAR fixedPath[MAX_PATH + 1] = { L'\0' };
   wcsncpy(fixedPath, currentServicePath, MAX_PATH);
   PathUnquoteSpacesW(fixedPath);
   if (!PathRemoveFileSpecW(fixedPath)) {
-    LOG(("Couldn't remove file spec. (%d)\n", GetLastError()));
+    LOG_WARN(("Couldn't remove file spec.  (%d)", GetLastError()));
     return FALSE;
   }
   if (!PathAppendSafe(fixedPath, L"maintenanceservice.exe")) {
-    LOG(("Couldn't append file spec. (%d)\n", GetLastError()));
+    LOG_WARN(("Couldn't append file spec.  (%d)", GetLastError()));
     return FALSE;
   }
   PathQuoteSpacesW(fixedPath);
@@ -207,11 +208,11 @@ FixServicePath(SC_HANDLE service,
   if (!ChangeServiceConfigW(service, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE,
                             SERVICE_NO_CHANGE, fixedPath, NULL, NULL, NULL,
                             NULL, NULL, NULL)) {
-    LOG(("Could not fix service path. (%d)\n", GetLastError()));
+    LOG_WARN(("Could not fix service path.  (%d)", GetLastError()));
     return FALSE;
   }
 
-  LOG(("Fixed service path to: %ls.\n", fixedPath));
+  LOG(("Fixed service path to: %ls.", fixedPath));
   return TRUE;
 }
 
@@ -230,7 +231,7 @@ SvcInstall(SvcInstallAction action)
   nsAutoServiceHandle schSCManager(OpenSCManager(NULL, NULL, 
                                                  SC_MANAGER_ALL_ACCESS));
   if (!schSCManager) {
-    LOG(("Could not open service manager.  (%d)\n", GetLastError()));
+    LOG_WARN(("Could not open service manager.  (%d)", GetLastError()));
     return FALSE;
   }
 
@@ -238,9 +239,9 @@ SvcInstall(SvcInstallAction action)
   if (!GetModuleFileNameW(NULL, newServiceBinaryPath, 
                           sizeof(newServiceBinaryPath) / 
                           sizeof(newServiceBinaryPath[0]))) {
-    LOG(("Could not obtain module filename when attempting to "
-         "install service. (%d)\n",
-         GetLastError()));
+    LOG_WARN(("Could not obtain module filename when attempting to "
+              "install service.  (%d)",
+              GetLastError()));
     return FALSE;
   }
 
@@ -251,7 +252,7 @@ SvcInstall(SvcInstallAction action)
   DWORD lastError = GetLastError();
   if (!schService && ERROR_SERVICE_DOES_NOT_EXIST != lastError) {
     // The service exists but we couldn't open it
-    LOG(("Could not open service.  (%d)\n", GetLastError()));
+    LOG_WARN(("Could not open service.  (%d)", GetLastError()));
     return FALSE;
   }
   
@@ -261,17 +262,17 @@ SvcInstall(SvcInstallAction action)
     // or have been changed after the installation.  This will reset the 
     // permissions back to allow limited user accounts.
     if (!SetUserAccessServiceDACL(schService)) {
-      LOG(("Could not reset security ACE on service handle. It might not be "
-           "possible to start the service. This error should never "
-           "happen.  (%d)\n", GetLastError()));
+      LOG_WARN(("Could not reset security ACE on service handle. It might not be "
+                "possible to start the service. This error should never "
+                "happen.  (%d)", GetLastError()));
     }
 
     // The service exists and we opened it
     DWORD bytesNeeded;
     if (!QueryServiceConfigW(schService, NULL, 0, &bytesNeeded) && 
         GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
-      LOG(("Could not determine buffer size for query service config.  (%d)\n", 
-           GetLastError()));
+      LOG_WARN(("Could not determine buffer size for query service config.  (%d)",
+                GetLastError()));
       return FALSE;
     }
 
@@ -281,8 +282,8 @@ SvcInstall(SvcInstallAction action)
     if (!QueryServiceConfigW(schService, 
         reinterpret_cast<QUERY_SERVICE_CONFIGW*>(serviceConfigBuffer.get()), 
         bytesNeeded, &bytesNeeded)) {
-      LOG(("Could open service but could not query service config.  (%d)\n", 
-           GetLastError()));
+      LOG_WARN(("Could open service but could not query service config.  (%d)",
+                GetLastError()));
       return FALSE;
     }
     QUERY_SERVICE_CONFIGW &serviceConfig = 
@@ -294,8 +295,8 @@ SvcInstall(SvcInstallAction action)
     if (!alreadyCheckedFixServicePath) {
       if (!FixServicePath(schService, serviceConfig.lpBinaryPathName,
                           servicePathWasWrong)) {
-        LOG(("Could not fix service path. This should never happen. (%d)\n",
-              GetLastError()));
+        LOG_WARN(("Could not fix service path. This should never happen.  (%d)",
+                  GetLastError()));
         // True is returned because the service is pointing to
         // maintenanceservice_tmp.exe so it actually was upgraded to the
         // newest installed service.
@@ -307,7 +308,7 @@ SvcInstall(SvcInstallAction action)
         // The service was just fixed to point to maintenanceservice.exe.
         // Re-attempting an install from scratch will work as normal.
         alreadyCheckedFixServicePath = TRUE;
-        LOG(("Restarting install action: %d\n", action));
+        LOG(("Restarting install action: %d", action));
         return SvcInstall(action);
       }
     }
@@ -328,7 +329,7 @@ SvcInstall(SvcInstallAction action)
                                existingC, existingD);
     if (!GetVersionNumberFromPath(newServiceBinaryPath, newA, 
                                  newB, newC, newD)) {
-      LOG(("Could not obtain version number from new path\n"));
+      LOG_WARN(("Could not obtain version number from new path"));
       return FALSE;
     }
 
@@ -354,7 +355,7 @@ SvcInstall(SvcInstallAction action)
 
       if (!wcscmp(newServiceBinaryPath, serviceConfig.lpBinaryPathName)) {
         LOG(("File is already in the correct location, no action needed for "
-             "upgrade.  The path is: \"%ls\"\n", newServiceBinaryPath));
+             "upgrade.  The path is: \"%ls\"", newServiceBinaryPath));
         return TRUE;
       }
 
@@ -365,10 +366,11 @@ SvcInstall(SvcInstallAction action)
       // copy it in.  First try the safest / easiest way to overwrite the file.
       if (!CopyFileW(newServiceBinaryPath, 
                      serviceConfig.lpBinaryPathName, FALSE)) {
-        LOG(("Could not overwrite old service binary file. "
-             "This should never happen, but if it does the next upgrade will "
-             "fix it, the service is not a critical component that needs to be "
-             "installed for upgrades to work. (%d)\n", GetLastError()));
+        LOG_WARN(("Could not overwrite old service binary file. "
+                  "This should never happen, but if it does the next "
+                  "upgrade will fix it, the service is not a critical "
+                  "component that needs to be installed for upgrades "
+                  "to work.  (%d)", GetLastError()));
 
         // We rename the last 3 filename chars in an unsafe way.  Manually
         // verify there are more than 3 chars for safe failure in MoveFileExW.
@@ -390,51 +392,51 @@ SvcInstall(SvcInstallAction action)
             if (!CopyFileW(newServiceBinaryPath, 
                            serviceConfig.lpBinaryPathName, FALSE)) {
               // It is best to leave the old service binary in this condition.
-              LOG(("ERROR: The new service binary could not be copied in."
-                   " The service will not be upgraded.\n"));
+              LOG_WARN(("The new service binary could not be copied in."
+                        " The service will not be upgraded."));
               result = FALSE;
             } else {
               LOG(("The new service binary was copied in by first moving the"
-                   " old one out of the way.\n"));
+                   " old one out of the way."));
             }
 
             // Attempt to get rid of the old service temp path.
             if (DeleteFileW(oldServiceBinaryTempPath)) {
-              LOG(("The old temp service path was deleted: %ls.\n", 
+              LOG(("The old temp service path was deleted: %ls.",
                    oldServiceBinaryTempPath));
             } else {
               // The old temp path could not be removed.  It will be removed
               // the next time the user can't copy the binary in or on uninstall.
-              LOG(("WARNING: The old temp service path was not deleted.\n"));
+              LOG_WARN(("The old temp service path was not deleted."));
             }
           } else {
             // It is best to leave the old service binary in this condition.
-            LOG(("ERROR: Could not move old service file out of the way from:"
-                 " \"%ls\" to \"%ls\". Service will not be upgraded. (%d)\n", 
-                 serviceConfig.lpBinaryPathName, 
-                 oldServiceBinaryTempPath, GetLastError()));
+            LOG_WARN(("Could not move old service file out of the way from:"
+                      " \"%ls\" to \"%ls\". Service will not be upgraded.  (%d)",
+                      serviceConfig.lpBinaryPathName,
+                      oldServiceBinaryTempPath, GetLastError()));
             result = FALSE;
           }
           delete[] oldServiceBinaryTempPath;
         } else {
             // It is best to leave the old service binary in this condition.
-            LOG(("ERROR: Service binary path was less than 3, service will"
-                 " not be updated.  This should never happen.\n"));
+            LOG_WARN(("Service binary path was less than 3, service will"
+                      " not be updated.  This should never happen."));
             result = FALSE;
         }
       } else {
-        LOG(("The new service binary was copied in.\n"));
+        LOG(("The new service binary was copied in."));
       }
 
       // We made a copy of ourselves to the existing location.
       // The tmp file (the process of which we are executing right now) will be
       // left over.  Attempt to delete the file on the next reboot.
       if (MoveFileExW(newServiceBinaryPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT)) {
-        LOG(("Deleting the old file path on the next reboot: %ls.\n", 
+        LOG(("Deleting the old file path on the next reboot: %ls.",
              newServiceBinaryPath));
       } else {
-        LOG(("Call to delete the old file path failed: %ls.\n", 
-             newServiceBinaryPath));
+        LOG_WARN(("Call to delete the old file path failed: %ls.",
+                  newServiceBinaryPath));
       }
       
       return result;
@@ -464,17 +466,17 @@ SvcInstall(SvcInstallAction action)
                                 newServiceBinaryPath, NULL, NULL, NULL, 
                                 NULL, NULL));
   if (!schService) {
-    LOG(("Could not create Windows service. "
-         "This error should never happen since a service install "
-         "should only be called when elevated. (%d)\n", GetLastError()));
+    LOG_WARN(("Could not create Windows service. "
+              "This error should never happen since a service install "
+              "should only be called when elevated.  (%d)", GetLastError()));
     return FALSE;
   } 
 
   if (!SetUserAccessServiceDACL(schService)) {
-    LOG(("Could not set security ACE on service handle, the service will not "
-         "be able to be started from unelevated processes. "
-         "This error should never happen.  (%d)\n", 
-         GetLastError()));
+    LOG_WARN(("Could not set security ACE on service handle, the service will not "
+              "be able to be started from unelevated processes. "
+              "This error should never happen.  (%d)",
+              GetLastError()));
   }
 
   UpdateServiceDescription(schService);
@@ -494,7 +496,7 @@ StopService()
   nsAutoServiceHandle schSCManager(OpenSCManager(NULL, NULL, 
                                                  SC_MANAGER_ALL_ACCESS));
   if (!schSCManager) {
-    LOG(("Could not open service manager.  (%d)\n", GetLastError()));
+    LOG_WARN(("Could not open service manager.  (%d)", GetLastError()));
     return FALSE;
   }
 
@@ -502,28 +504,28 @@ StopService()
   nsAutoServiceHandle schService(OpenServiceW(schSCManager, SVC_NAME, 
                                               SERVICE_ALL_ACCESS));
   if (!schService) {
-    LOG(("Could not open service.  (%d)\n", GetLastError()));
+    LOG_WARN(("Could not open service.  (%d)", GetLastError()));
     return FALSE;
   } 
 
-  LOG(("Sending stop request...\n"));
+  LOG(("Sending stop request..."));
   SERVICE_STATUS status;
   SetLastError(ERROR_SUCCESS);
   if (!ControlService(schService, SERVICE_CONTROL_STOP, &status) &&
       GetLastError() != ERROR_SERVICE_NOT_ACTIVE) {
-    LOG(("Error sending stop request: %d\n", GetLastError()));
+    LOG_WARN(("Error sending stop request.  (%d)", GetLastError()));
   }
 
   schSCManager.reset();
   schService.reset();
 
-  LOG(("Waiting for service stop...\n"));
+  LOG(("Waiting for service stop..."));
   DWORD lastState = WaitForServiceStop(SVC_NAME, 30);
 
   // The service can be in a stopped state but the exe still in use
   // so make sure the process is really gone before proceeding
   WaitForProcessExit(L"maintenanceservice.exe", 30);
-  LOG(("Done waiting for service stop, last service state: %d\n", lastState));
+  LOG(("Done waiting for service stop, last service state: %d", lastState));
 
   return lastState == SERVICE_STOPPED;
 }
@@ -540,7 +542,7 @@ SvcUninstall()
   nsAutoServiceHandle schSCManager(OpenSCManager(NULL, NULL, 
                                                  SC_MANAGER_ALL_ACCESS));
   if (!schSCManager) {
-    LOG(("Could not open service manager.  (%d)\n", GetLastError()));
+    LOG_WARN(("Could not open service manager.  (%d)", GetLastError()));
     return FALSE;
   }
 
@@ -548,7 +550,7 @@ SvcUninstall()
   nsAutoServiceHandle schService(OpenServiceW(schSCManager, SVC_NAME, 
                                               SERVICE_ALL_ACCESS));
   if (!schService) {
-    LOG(("Could not open service.  (%d)\n", GetLastError()));
+    LOG_WARN(("Could not open service.  (%d)", GetLastError()));
     return FALSE;
   } 
 
@@ -616,24 +618,24 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
   if (!QueryServiceObjectSecurity(hService, DACL_SECURITY_INFORMATION, 
                                   &psd, 0, &needed)) {
     if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
-      LOG(("Warning: Could not query service object security size.  (%d)\n", 
-           GetLastError()));
+      LOG_WARN(("Could not query service object security size.  (%d)",
+                GetLastError()));
       return GetLastError();
     }
 
     DWORD size = needed;
     psd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, size);
     if (!psd) {
-      LOG(("Warning: Could not allocate security descriptor.  (%d)\n", 
-           GetLastError()));
+      LOG_WARN(("Could not allocate security descriptor.  (%d)",
+                GetLastError()));
       return ERROR_INSUFFICIENT_BUFFER;
     }
 
     // Get the actual security descriptor now
     if (!QueryServiceObjectSecurity(hService, DACL_SECURITY_INFORMATION, 
                                     psd, size, &needed)) {
-      LOG(("Warning: Could not allocate security descriptor.  (%d)\n", 
-           GetLastError()));
+      LOG_WARN(("Could not allocate security descriptor.  (%d)",
+                GetLastError()));
       return GetLastError();
     }
   }
@@ -644,7 +646,7 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
   BOOL bDaclDefaulted = FALSE;
   if ( !GetSecurityDescriptorDacl(psd, &bDaclPresent, &pacl, 
                                   &bDaclDefaulted)) {
-    LOG(("Warning: Could not obtain DACL.  (%d)\n", GetLastError()));
+    LOG_WARN(("Could not obtain DACL.  (%d)", GetLastError()));
     return GetLastError();
   }
 
@@ -652,13 +654,13 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
   DWORD SIDSize = SECURITY_MAX_SID_SIZE;
   sid = LocalAlloc(LMEM_FIXED, SIDSize);
   if (!sid) {
-    LOG(("Could not allocate SID memory.  (%d)\n", GetLastError()));
+    LOG_WARN(("Could not allocate SID memory.  (%d)", GetLastError()));
     return GetLastError();
   }
 
   if (!CreateWellKnownSid(WinBuiltinUsersSid, NULL, sid, &SIDSize)) {
     DWORD lastError = GetLastError();
-    LOG(("Could not create well known SID.  (%d)\n", lastError));
+    LOG_WARN(("Could not create well known SID.  (%d)", lastError));
     LocalFree(sid);
     return lastError;
   }
@@ -674,8 +676,8 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
   if (!LookupAccountSidW(NULL, sid, accountName, 
                          &accountNameSize, 
                          domainName, &domainNameSize, &accountType)) {
-    LOG(("Warning: Could not lookup account Sid, will try Users.  (%d)\n",
-         GetLastError()));
+    LOG_WARN(("Could not lookup account Sid, will try Users.  (%d)",
+              GetLastError()));
     wcscpy(accountName, L"Users");
   }
 
@@ -690,33 +692,33 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
                               SET_ACCESS, NO_INHERITANCE);
   DWORD lastError = SetEntriesInAclW(1, (PEXPLICIT_ACCESS)&ea, pacl, &pNewAcl);
   if (ERROR_SUCCESS != lastError) {
-    LOG(("Warning: Could not set entries in ACL.  (%d)\n", lastError));
+    LOG_WARN(("Could not set entries in ACL.  (%d)", lastError));
     return lastError;
   }
 
   // Initialize a new security descriptor.
   SECURITY_DESCRIPTOR sd;
   if (!InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION)) {
-    LOG(("Warning: Could not initialize security descriptor.  (%d)\n", 
-         GetLastError()));
+    LOG_WARN(("Could not initialize security descriptor.  (%d)",
+              GetLastError()));
     return GetLastError();
   }
 
   // Set the new DACL in the security descriptor.
   if (!SetSecurityDescriptorDacl(&sd, TRUE, pNewAcl, FALSE)) {
-    LOG(("Warning: Could not set security descriptor DACL.  (%d)\n", 
-         GetLastError()));
+    LOG_WARN(("Could not set security descriptor DACL.  (%d)",
+              GetLastError()));
     return GetLastError();
   }
 
   // Set the new security descriptor for the service object.
   if (!SetServiceObjectSecurity(hService, DACL_SECURITY_INFORMATION, &sd)) {
-    LOG(("Warning: Could not set object security.  (%d)\n", 
-         GetLastError()));
+    LOG_WARN(("Could not set object security.  (%d)",
+              GetLastError()));
     return GetLastError();
   }
 
   // Woohoo, raise the roof
-  LOG(("User access was set successfully on the service.\n"));
+  LOG(("User access was set successfully on the service."));
   return ERROR_SUCCESS;
 }
