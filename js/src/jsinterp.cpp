@@ -861,38 +861,6 @@ TryNoteIter::settle()
     }
 }
 
-/*
- * Increment/decrement the value 'v'. The resulting value is stored in *slot.
- * The result of the expression (taking into account prefix/postfix) is stored
- * in *expr.
- */
-static bool
-DoIncDec(JSContext *cx, HandleScript script, jsbytecode *pc, const Value &v, Value *slot, Value *expr)
-{
-    const JSCodeSpec &cs = js_CodeSpec[*pc];
-
-    if (v.isInt32()) {
-        int32_t i = v.toInt32();
-        if (i > JSVAL_INT_MIN && i < JSVAL_INT_MAX) {
-            int32_t sum = i + (cs.format & JOF_INC ? 1 : -1);
-            *slot = Int32Value(sum);
-            *expr = (cs.format & JOF_POST) ? Int32Value(i) : *slot;
-            return true;
-        }
-    }
-
-    double d;
-    if (!ToNumber(cx, v, &d))
-        return false;
-
-    double sum = d + (cs.format & JOF_INC ? 1 : -1);
-    *slot = NumberValue(sum);
-    *expr = (cs.format & JOF_POST) ? NumberValue(d) : *slot;
-
-    TypeScript::MonitorOverflow(cx, script, pc);
-    return true;
-}
-
 #define PUSH_COPY(v)             do { *regs.sp++ = v; assertSameCompartment(cx, regs.sp[-1]); } while (0)
 #define PUSH_COPY_SKIP_CHECK(v)  *regs.sp++ = v
 #define PUSH_NULL()              regs.sp++->setNull()
@@ -2201,19 +2169,7 @@ BEGIN_CASE(JSOP_ARGDEC)
 BEGIN_CASE(JSOP_INCARG)
 BEGIN_CASE(JSOP_ARGINC)
 {
-    unsigned i = GET_ARGNO(regs.pc);
-    if (script->argsObjAliasesFormals()) {
-        const Value &arg = regs.fp()->argsObj().arg(i);
-        Value v;
-        if (!DoIncDec(cx, script, regs.pc, arg, &v, &regs.sp[0]))
-            goto error;
-        regs.fp()->argsObj().setArg(i, v);
-    } else {
-        Value &arg = regs.fp()->unaliasedFormal(i);
-        if (!DoIncDec(cx, script, regs.pc, arg, &arg, &regs.sp[0]))
-            goto error;
-    }
-    regs.sp++;
+    /* No-op */
 }
 END_CASE(JSOP_ARGINC);
 
@@ -2222,11 +2178,7 @@ BEGIN_CASE(JSOP_LOCALDEC)
 BEGIN_CASE(JSOP_INCLOCAL)
 BEGIN_CASE(JSOP_LOCALINC)
 {
-    unsigned i = GET_SLOTNO(regs.pc);
-    Value &local = regs.fp()->unaliasedLocal(i);
-    if (!DoIncDec(cx, script, regs.pc, local, &local, &regs.sp[0]))
-        goto error;
-    regs.sp++;
+    /* No-op */
 }
 END_CASE(JSOP_LOCALINC)
 
