@@ -216,7 +216,7 @@
     <markup ref="html:img" ruleset="htmlimageemptyalt">
       <html:span id="l1" a11yname="test2">test2</html:span>
       <html:span id="l2" a11yname="test3">test3</html:span>
-      <html:img id="img"
+      <html:img id="imgemptyalt"
                  aria-label="Logo of Mozilla"
                  aria-labelledby="l1 l2"
                  title="This is a logo"

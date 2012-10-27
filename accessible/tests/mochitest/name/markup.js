@@ -14,6 +14,8 @@ var gDumpToConsole = false;
  */
 function testNames()
 {
+  enableLogging("tree");
+
   var request = new XMLHttpRequest();
   request.open("get", gNameRulesFileURL, false);
   request.send();
@@ -64,6 +66,7 @@ var gTestIterator =
 
       this.markupIdx++;
       if (this.markupIdx == this.markupElms.length) {
+        disableLogging("tree");
         SimpleTest.finish();
         return;
       }
@@ -109,6 +112,12 @@ function testNamesForMarkup(aMarkupElm)
     var newChild = document.importNode(child, true);
     div.appendChild(newChild);
     child = child.nextSibling;
+  }
+
+  // Wave over images to create frames.
+  var imgElms = div.getElementsByTagName("html:img");
+  for (var idx = 0; idx < imgElms.length; idx++) {
+    waveOverImageMap(imgElms[idx]);
   }
 
   if (gDumpToConsole) {

@@ -399,6 +399,7 @@ pref("javascript.options.mem.gc_high_frequency_high_limit_mb", 40);
 pref("javascript.options.mem.gc_high_frequency_low_limit_mb", 10);
 pref("javascript.options.mem.gc_low_frequency_heap_growth", 105);
 pref("javascript.options.mem.high_water_mark", 16);
+pref("javascript.options.mem.gc_allocation_threshold_mb", 3);
 #else
 pref("javascript.options.mem.high_water_mark", 32);
 #endif

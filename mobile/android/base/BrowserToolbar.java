@@ -553,6 +553,9 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
 
     public void setProgressVisibility(boolean visible) {
+        // The "Throbber start" and "Throbber stop" log messages in this method
+        // are needed by S1/S2 tests (http://mrcote.info/phonedash/#).
+        // See discussion in Bug 804457. Bug 805124 tracks paring these down.
         if (visible) {
             mFavicon.setImageDrawable(mProgressSpinner);
             mProgressSpinner.start();

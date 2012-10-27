@@ -74,7 +74,7 @@ typedef enum {
 
 /* Forward references */
 static cc_causes_t
-gsmsdp_init_local_sdp (cc_sdp_t **sdp_pp);
+gsmsdp_init_local_sdp (const char *peerconnection, cc_sdp_t **sdp_pp);
 
 static void
 gsmsdp_set_media_capability(fsmdef_media_t *media,
@@ -2242,7 +2242,7 @@ gsmsdp_update_local_sdp_media (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
 
     if (sdp_p == NULL) {
 
-        gsmsdp_init_local_sdp(&(dcb_p->sdp));
+        gsmsdp_init_local_sdp(dcb_p->peerconnection, &(dcb_p->sdp));
 
         cc_sdp_p = dcb_p->sdp;
         if ((cc_sdp_p == NULL) || (cc_sdp_p->src_sdp == NULL)) {
@@ -4393,6 +4393,7 @@ gsmsdp_get_offered_media_types (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean *has_
  *
  * Parameters:
  *
+ * peerconnection - handle to peerconnection object
  * sdp_pp     - Pointer to the local sdp
  *
  * returns    cc_causes_t
@@ -4400,7 +4401,7 @@ gsmsdp_get_offered_media_types (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean *has_
  *            CC_CAUSE_ERROR - indicates failure
  */
 static cc_causes_t
-gsmsdp_init_local_sdp (cc_sdp_t **sdp_pp)
+gsmsdp_init_local_sdp (const char *peerconnection, cc_sdp_t **sdp_pp)
 {
     char            addr_str[MAX_IPADDR_STR_LEN];
     cpr_ip_addr_t   ipaddr;
@@ -4413,7 +4414,7 @@ gsmsdp_init_local_sdp (cc_sdp_t **sdp_pp)
     cpr_ip_mode_e   ip_mode;
     char           *strtok_state;
 
-    if (!sdp_pp) {
+    if (!peerconnection || !sdp_pp) {
         return CC_CAUSE_ERROR;
     }
 
@@ -4441,13 +4442,15 @@ gsmsdp_init_local_sdp (cc_sdp_t **sdp_pp)
      * Create the local sdp struct
      */
     if (*sdp_pp == NULL) {
-        sipsdp_src_dest_create(CCSIP_SRC_SDP_BIT, sdp_pp);
+        sipsdp_src_dest_create(peerconnection,
+            CCSIP_SRC_SDP_BIT, sdp_pp);
     } else {
         sdp_p = *sdp_pp;
         if (sdp_p->src_sdp != NULL) {
             sipsdp_src_dest_free(CCSIP_SRC_SDP_BIT, sdp_pp);
         }
-        sipsdp_src_dest_create(CCSIP_SRC_SDP_BIT, sdp_pp);
+        sipsdp_src_dest_create(peerconnection,
+            CCSIP_SRC_SDP_BIT, sdp_pp);
     }
     sdp_p = *sdp_pp;
 
@@ -4707,7 +4710,8 @@ gsmsdp_create_local_sdp (fsmdef_dcb_t *dcb_p, boolean force_streams_enabled,
     int             sdpmode = 0;
     boolean         media_enabled;
 
-    if ( CC_CAUSE_OK != gsmsdp_init_local_sdp(&(dcb_p->sdp)) )
+    if ( CC_CAUSE_OK != gsmsdp_init_local_sdp(dcb_p->peerconnection,
+        &(dcb_p->sdp)) )
       return CC_CAUSE_ERROR;
 
     config_get_value(CFGID_SDPMODE, &sdpmode, sizeof(sdpmode));
@@ -4833,8 +4837,8 @@ gsmsdp_create_options_sdp (cc_sdp_t ** sdp_pp)
 {
     cc_sdp_t *sdp_p;
 
-
-    if (gsmsdp_init_local_sdp(sdp_pp) == CC_CAUSE_ERROR) {
+    /* This empty string represents to associated peerconnection object */
+    if (gsmsdp_init_local_sdp("", sdp_pp) == CC_CAUSE_ERROR) {
         return;
     }
 
@@ -5586,7 +5590,8 @@ gsmsdp_encode_sdp_and_update_version (fsmdef_dcb_t *dcb_p, cc_msgbody_info_t *ms
 
     if ( dcb_p->sdp == NULL || dcb_p->sdp->src_sdp == NULL )
     {
-    	if ( CC_CAUSE_OK != gsmsdp_init_local_sdp(&(dcb_p->sdp)) )
+    	if ( CC_CAUSE_OK != gsmsdp_init_local_sdp(dcb_p->peerconnection,
+            &(dcb_p->sdp)) )
     	{
     		return CC_CAUSE_ERROR;
     	}
@@ -5678,7 +5683,8 @@ gsmsdp_realloc_dest_sdp (fsmdef_dcb_t *dcb_p)
     /* There are SDPs to process, prepare for parsing the SDP */
     if (dcb_p->sdp == NULL) {
         /* Create internal SDP information block with dest sdp block */
-        sipsdp_src_dest_create(CCSIP_DEST_SDP_BIT, &dcb_p->sdp);
+        sipsdp_src_dest_create(dcb_p->peerconnection,
+            CCSIP_DEST_SDP_BIT, &dcb_p->sdp);
     } else {
         /*
          * SDP info. block exists, remove the previously received
@@ -5688,7 +5694,8 @@ gsmsdp_realloc_dest_sdp (fsmdef_dcb_t *dcb_p)
         if (dcb_p->sdp->dest_sdp) {
             sipsdp_src_dest_free(CCSIP_DEST_SDP_BIT, &dcb_p->sdp);
         }
-        sipsdp_src_dest_create(CCSIP_DEST_SDP_BIT, &dcb_p->sdp);
+        sipsdp_src_dest_create(dcb_p->peerconnection,
+            CCSIP_DEST_SDP_BIT, &dcb_p->sdp);
     }
 
     /* No SDP info block and parsed control block are available */
@@ -5887,7 +5894,7 @@ gsmsdp_process_offer_sdp (fsm_fcb_t *fcb_p,
     }
 
     if (init) {
-        (void)gsmsdp_init_local_sdp(&(dcb_p->sdp));
+        (void)gsmsdp_init_local_sdp(dcb_p->peerconnection, &(dcb_p->sdp));
         /* Note that there should not a previous version here as well */
     }
 

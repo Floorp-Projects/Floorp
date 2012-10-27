@@ -3034,48 +3034,6 @@ mjit::Compiler::generateMethod()
             frame.popn(2);
           END_CASE(JSOP_INITELEM)
 
-          BEGIN_CASE(JSOP_INCARG)
-          BEGIN_CASE(JSOP_DECARG)
-          BEGIN_CASE(JSOP_ARGINC)
-          BEGIN_CASE(JSOP_ARGDEC)
-            if (script_->hasScriptCounts) {
-                restoreVarType();
-                FrameEntry *fe = frame.getArg(GET_SLOTNO(PC));
-                if (fe->isTypeKnown())
-                    arithFirstUseType = fe->getKnownType();
-            }
-
-            if (!jsop_arginc(op, GET_SLOTNO(PC)))
-                return Compile_Retry;
-
-            if (script_->hasScriptCounts) {
-                FrameEntry *fe = frame.getArg(GET_SLOTNO(PC));
-                updateArithCounts(PC, fe, arithFirstUseType, JSVAL_TYPE_INT32);
-                arithUpdated = true;
-            }
-          END_CASE(JSOP_ARGDEC)
-
-          BEGIN_CASE(JSOP_INCLOCAL)
-          BEGIN_CASE(JSOP_DECLOCAL)
-          BEGIN_CASE(JSOP_LOCALINC)
-          BEGIN_CASE(JSOP_LOCALDEC)
-            if (script_->hasScriptCounts) {
-                restoreVarType();
-                FrameEntry *fe = frame.getLocal(GET_SLOTNO(PC));
-                if (fe->isTypeKnown())
-                    arithFirstUseType = fe->getKnownType();
-            }
-
-            if (!jsop_localinc(op, GET_SLOTNO(PC)))
-                return Compile_Retry;
-
-            if (script_->hasScriptCounts) {
-                FrameEntry *fe = frame.getLocal(GET_SLOTNO(PC));
-                updateArithCounts(PC, fe, arithFirstUseType, JSVAL_TYPE_INT32);
-                arithUpdated = true;
-            }
-          END_CASE(JSOP_LOCALDEC)
-
           BEGIN_CASE(JSOP_BINDNAME)
             jsop_bindname(script_->getName(GET_UINT32_INDEX(PC)));
           END_CASE(JSOP_BINDNAME)

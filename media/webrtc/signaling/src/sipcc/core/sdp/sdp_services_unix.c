@@ -15,6 +15,7 @@
 /*                                                                */
 /******************************************************************/
 
+#if 0
 void sdp_log_errmsg (sdp_errmsg_e errmsg, char *str)
 {
     switch (errmsg) {
@@ -35,6 +36,7 @@ void sdp_log_errmsg (sdp_errmsg_e errmsg, char *str)
         break;
     }
 }
+#endif
 
 /*
  * sdp_dump_buffer

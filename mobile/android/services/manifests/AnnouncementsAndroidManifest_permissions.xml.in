@@ -1,0 +1,2 @@
+    <!-- So we can start our service. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
