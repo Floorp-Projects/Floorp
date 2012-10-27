@@ -11,6 +11,7 @@
 #include <gst/video/video.h>
 #include "nsBuiltinDecoderReader.h"
 
+using namespace mozilla;
 
 class nsMediaDecoder;
 class nsTimeRanges;

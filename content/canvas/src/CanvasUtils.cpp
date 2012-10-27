@@ -23,8 +23,6 @@
 #include "CanvasUtils.h"
 #include "mozilla/gfx/Matrix.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace CanvasUtils {
 
