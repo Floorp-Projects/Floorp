@@ -43,7 +43,7 @@ public:
   }
 
 private:
-  bool ReadFromResource(mozilla::MediaResource *aResource, uint8_t *aBuf, uint32_t aLength);
+  bool ReadFromResource(MediaResource *aResource, uint8_t *aBuf, uint32_t aLength);
 
   nsRawVideoHeader mMetadata;
   uint32_t mCurrentFrame;

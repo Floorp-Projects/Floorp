@@ -275,7 +275,7 @@ protected:
       {
         // Don't let Run() (called by media stream graph thread) race with
         // Revoke() (called by decoder state machine thread)
-        mozilla::MutexAutoLock lock(mMutex);
+        MutexAutoLock lock(mMutex);
         if (!mStateMachine)
           return NS_OK;
         stateMachine = mStateMachine;
@@ -285,11 +285,11 @@ protected:
     }
     void Revoke()
     {
-      mozilla::MutexAutoLock lock(mMutex);
+      MutexAutoLock lock(mMutex);
       mStateMachine = nullptr;
     }
 
-    mozilla::Mutex mMutex;
+    Mutex mMutex;
     // Protected by mMutex.
     // We don't use an owning pointer here, because keeping mStateMachine alive
     // would mean in some cases we'd have to destroy mStateMachine from this
