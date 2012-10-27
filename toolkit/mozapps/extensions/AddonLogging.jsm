@@ -25,8 +25,12 @@ var gDebugLogEnabled = false;
 
 function formatLogMessage(aType, aName, aStr, aException) {
   let message = aType.toUpperCase() + " " + aName + ": " + aStr;
-  if (aException)
-    return message + ": " + aException;
+  if (aException) {
+    if (typeof aException == "number")
+      return message + ": " + Components.Exception("", aException).name
+    else
+      return message + ": " + aException;
+  }
   return message;
 }
 
@@ -42,10 +46,12 @@ function getStackDetails(aException) {
         };
       }
 
-      return {
-        sourceName: aException.fileName,
-        lineNumber: aException.lineNumber
-      };
+      if (typeof aException == "object") {
+        return {
+          sourceName: aException.fileName,
+          lineNumber: aException.lineNumber
+        };
+      }
     }
 
     let stackFrame = Components.stack.caller.caller.caller;

@@ -35,14 +35,25 @@
   -  the button that closes the debugger UI. -->
 <!ENTITY debuggerUI.closeButton.tooltip "Close">
 
+<!-- LOCALIZATION NOTE (debuggerUI.optsButton.tooltip): This is the tooltip for
+  -  the button that opens up an options context menu for the debugger UI. -->
+<!ENTITY debuggerUI.optsButton.tooltip  "Debugger Options">
+
 <!-- LOCALIZATION NOTE (debuggerUI.pauseExceptions): This is the label for the
   -  checkbox that toggles pausing on exceptions. -->
 <!ENTITY debuggerUI.pauseExceptions     "Pause on exceptions">
+<!ENTITY debuggerUI.pauseExceptions.key "E">
+
+<!-- LOCALIZATION NOTE (debuggerUI.showPanesOnInit): This is the label for the
+  -  checkbox that toggles visibility of panes when opening the debugger. -->
+<!ENTITY debuggerUI.showPanesOnInit     "Show panes on startup">
+<!ENTITY debuggerUI.showPanesOnInit.key "S">
 
 <!-- LOCALIZATION NOTE (debuggerUI.showNonEnums): This is the label for the
   -  checkbox that toggles visibility of hidden (non-enumerable) variables and
   -  properties in stack views. -->
 <!ENTITY debuggerUI.showNonEnums        "Show hidden properties">
+<!ENTITY debuggerUI.showNonEnums.key    "P">
 
 <!-- LOCALIZATION NOTE (debuggerUI.searchPanelTitle): This is the text that
   -  appears in the filter panel popup as a description. -->
