@@ -37,7 +37,13 @@
 
 #include "nsNSSHelper.h"
 #include "nsClientAuthRemember.h"
-#include "nsCERTValInParamWrapper.h"
+
+namespace mozilla { namespace psm {
+
+class CertVerifier;
+
+} } // namespace mozilla::psm
+
 
 #define NS_NSSCOMPONENT_CID \
 {0xa277189c, 0x1dd1, 0x11b2, {0xa8, 0xc9, 0xe4, 0xe8, 0xbf, 0xb1, 0x33, 0x8e}}
@@ -157,10 +163,8 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
   NS_IMETHOD IsNSSInitialized(bool *initialized) = 0;
 
-  NS_IMETHOD GetDefaultCERTValInParam(
-                  mozilla::RefPtr<nsCERTValInParamWrapper> &out) = 0;
-  NS_IMETHOD GetDefaultCERTValInParamLocalOnly(
-                  mozilla::RefPtr<nsCERTValInParamWrapper> &out) = 0;
+  NS_IMETHOD GetDefaultCertVerifier(
+                  mozilla::RefPtr<mozilla::psm::CertVerifier> &out) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINSSComponent, NS_INSSCOMPONENT_IID)
@@ -264,10 +268,8 @@ public:
   NS_IMETHOD EnsureIdentityInfoLoaded();
   NS_IMETHOD IsNSSInitialized(bool *initialized);
 
-  NS_IMETHOD GetDefaultCERTValInParam(
-                  mozilla::RefPtr<nsCERTValInParamWrapper> &out);
-  NS_IMETHOD GetDefaultCERTValInParamLocalOnly(
-                  mozilla::RefPtr<nsCERTValInParamWrapper> &out);
+  NS_IMETHOD GetDefaultCertVerifier(
+                  mozilla::RefPtr<mozilla::psm::CertVerifier> &out);
 private:
 
   nsresult InitializeNSS(bool showWarningBox);
@@ -327,8 +329,8 @@ private:
   nsCertVerificationThread *mCertVerificationThread;
 
   nsNSSHttpInterface mHttpForNSS;
-  mozilla::RefPtr<nsCERTValInParamWrapper> mDefaultCERTValInParam;
-  mozilla::RefPtr<nsCERTValInParamWrapper> mDefaultCERTValInParamLocalOnly;
+  mozilla::RefPtr<mozilla::psm::CertVerifier> mDefaultCertVerifier;
+
 
   static PRStatus IdentityInfoInit(void);
   PRCallOnceType mIdentityInfoCallOnce;

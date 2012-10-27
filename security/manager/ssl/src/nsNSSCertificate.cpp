@@ -7,11 +7,12 @@
 #include "prerror.h"
 #include "prprf.h"
 
+#include "nsNSSCertificate.h"
+#include "CertVerifier.h"
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsNSSCleaner.h"
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
-#include "nsNSSCertificate.h"
 #include "nsNSSCertValidity.h"
 #include "nsPKCS12Blob.h"
 #include "nsPK11TokenDB.h"
@@ -48,6 +49,7 @@
 #include "plbase64.h"
 
 using namespace mozilla;
+using namespace mozilla::psm;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -75,14 +77,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS7(nsNSSCertificate, nsIX509Cert,
 
 /* static */
 nsNSSCertificate*
-nsNSSCertificate::Create(CERTCertificate *cert)
+nsNSSCertificate::Create(CERTCertificate *cert, SECOidTag *evOidPolicy)
 {
   if (GeckoProcessType_Default != XRE_GetProcessType()) {
     NS_ERROR("Trying to initialize nsNSSCertificate in a non-chrome process!");
     return nullptr;
   }
   if (cert)
-    return new nsNSSCertificate(cert);
+    return new nsNSSCertificate(cert, evOidPolicy);
   else
     return new nsNSSCertificate();
 }
@@ -127,7 +129,8 @@ nsNSSCertificate::InitFromDER(char *certDER, int derLen)
   return true;
 }
 
-nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) : 
+nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert,
+                                   SECOidTag *evOidPolicy) :
                                            mCert(nullptr),
                                            mPermDelete(false),
                                            mCertType(CERT_TYPE_NOT_YET_INITIALIZED),
@@ -142,8 +145,18 @@ nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) :
   if (isAlreadyShutDown())
     return;
 
-  if (cert) 
+  if (cert) {
     mCert = CERT_DupCertificate(cert);
+    if (evOidPolicy) {
+      if ( *evOidPolicy == SEC_OID_UNKNOWN) {
+        mCachedEVStatus =  ev_status_invalid;
+      }
+      else {
+        mCachedEVStatus = ev_status_valid;
+      }
+      mCachedEVOidTag = *evOidPolicy;
+    }
+  }
 }
 
 nsNSSCertificate::nsNSSCertificate() : 
@@ -1201,15 +1214,9 @@ nsNSSCertificate::VerifyForUsage(uint32_t usage, uint32_t *verificationResult)
 
   NS_ENSURE_ARG(verificationResult);
 
-  nsresult nsrv;
-  nsCOMPtr<nsINSSComponent> inss = do_GetService(kNSSComponentCID, &nsrv);
-  if (!inss)
-    return nsrv;
-  RefPtr<nsCERTValInParamWrapper> survivingParams;
-  nsrv = inss->GetDefaultCERTValInParam(survivingParams);
-  if (NS_FAILED(nsrv))
-    return nsrv;
-  
+  RefPtr<CertVerifier> certVerifier(GetDefaultCertVerifier());
+  NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
+
   SECCertificateUsage nss_usage;
   
   switch (usage)
@@ -1266,19 +1273,8 @@ nsNSSCertificate::VerifyForUsage(uint32_t usage, uint32_t *verificationResult)
       return NS_ERROR_FAILURE;
   }
 
-  SECStatus verify_result;
-  if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
-    CERTCertDBHandle *defaultcertdb = CERT_GetDefaultCertDB();
-    verify_result = CERT_VerifyCertificateNow(defaultcertdb, mCert, true, 
-                                              nss_usage, nullptr, nullptr);
-  }
-  else {
-    CERTValOutParam cvout[1];
-    cvout[0].type = cert_po_end;
-    verify_result = CERT_PKIXVerifyCert(mCert, nss_usage,
-                                        survivingParams->GetRawPointerForNSS(),
-                                        cvout, nullptr);
-  }
+  SECStatus verify_result = certVerifier->VerifyCert(mCert, nss_usage, PR_Now(),
+                                                     nullptr /*XXX pinarg*/);
   
   if (verify_result == SECSuccess)
   {
