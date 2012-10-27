@@ -142,12 +142,6 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 static const int WHEEL_DELTA = 120;
 static bool gGlobalsInitialized = false;
 
-static nsIRollupListener*          gRollupListener;
-static nsWeakPtr                   gRollupWindow;
-static bool                        gConsumeRollupEvent;
-
-static bool       check_for_rollup(double aMouseX, double aMouseY,
-                                   bool aIsWheel);
 static bool
 is_mouse_in_window (MozQWidget* aWindow, double aMouseX, double aMouseY);
 
@@ -384,12 +378,10 @@ nsWindow::Destroy(void)
 #endif
     }
 
-    nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
-    if (static_cast<nsIWidget *>(this) == rollupWidget.get()) {
-        if (gRollupListener)
-            gRollupListener->Rollup(0);
-        gRollupWindow = nullptr;
-        gRollupListener = nullptr;
+    nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
+    nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
+    if (static_cast<nsIWidget *>(this) == rollupWidget)
+        rollupListener->Rollup(0, nullptr);
     }
 
     if (mLayerManager) {
@@ -545,7 +537,7 @@ nsWindow::Move(int32_t aX, int32_t aY)
     mBounds.x = pos.x();
     mBounds.y = pos.y();
 
-    NotifyRollupGeometryChange(gRollupListener);
+    NotifyRollupGeometryChange();
     return NS_OK;
 }
 
@@ -888,51 +880,41 @@ nsWindow::CaptureMouse(bool aCapture)
 
 NS_IMETHODIMP
 nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
-                              bool               aDoCapture,
-                              bool               aConsumeRollupEvent)
+                              bool               aDoCapture)
 {
     if (!mWidget)
         return NS_OK;
 
     LOG(("CaptureRollupEvents %p\n", (void *)this));
 
-    if (aDoCapture) {
-        gConsumeRollupEvent = aConsumeRollupEvent;
-        gRollupListener = aListener;
-        gRollupWindow = do_GetWeakReference(static_cast<nsIWidget*>(this));
-    }
-    else {
-        gRollupListener = nullptr;
-        gRollupWindow = nullptr;
-    }
-
+    gRollupListener = aDoCapture ? aListener : nullptr;
     return NS_OK;
 }
 
 bool
-check_for_rollup(double aMouseX, double aMouseY,
-                 bool aIsWheel)
+nsWindow::CheckForRollup(double aMouseX, double aMouseY,
+                         bool aIsWheel)
 {
     bool retVal = false;
-    nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
-
-    if (rollupWidget && gRollupListener) {
+    nsIRollupListener* rollupListener = GetActiveRollupListener();
+    nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
+    if (rollupWidget) {
         MozQWidget *currentPopup =
             (MozQWidget *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
 
         if (!is_mouse_in_window(currentPopup, aMouseX, aMouseY)) {
             bool rollup = true;
             if (aIsWheel) {
-                rollup = gRollupListener->ShouldRollupOnMouseWheelEvent();
+                rollup = rollupListener->ShouldRollupOnMouseWheelEvent();
                 retVal = true;
             }
             // if we're dealing with menus, we probably have submenus and
             // we don't want to rollup if the clickis in a parent menu of
             // the current submenu
             uint32_t popupsToRollup = UINT32_MAX;
-            if (gRollupListener) {
+            if (rollupListener) {
                 nsAutoTArray<nsIWidget*, 5> widgetChain;
-                uint32_t sameTypeCount = gRollupListener->GetSubmenuWidgetChain(&widgetChain);
+                uint32_t sameTypeCount = rollupListener->GetSubmenuWidgetChain(&widgetChain);
                 for (uint32_t i=0; i<widgetChain.Length(); ++i) {
                     nsIWidget* widget =  widgetChain[i];
                     MozQWidget* currWindow =
@@ -951,13 +933,11 @@ check_for_rollup(double aMouseX, double aMouseY,
 
             // if we've determined that we should still rollup, do it.
             if (rollup) {
-                gRollupListener->Rollup(popupsToRollup);
-                retVal = true;
+                retVal = rollupListener->Rollup(popupsToRollup, nullptr);
             }
         }
     } else {
-        gRollupWindow = nullptr;
-        gRollupListener = nullptr;
+        nsBaseWidget::gRollupListener = nullptr;
     }
 
     return retVal;
@@ -1318,8 +1298,7 @@ nsWindow::OnButtonPressEvent(QGraphicsSceneMouseEvent *aEvent)
     if (mWidget)
         pos = mWidget->mapToParent(pos);
 
-    bool rolledUp = check_for_rollup( pos.x(), pos.y(), false);
-    if (gConsumeRollupEvent && rolledUp)
+    if (CheckForRollup( pos.x(), pos.y(), false))
         return nsEventStatus_eIgnore;
 
     uint16_t      domButton;
@@ -2975,7 +2954,7 @@ nsWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
         DispatchResizeEvent(rect, status);
     }
 
-    NotifyRollupGeometryChange(gRollupListener);
+    NotifyRollupGeometryChange();
     return NS_OK;
 }
 
@@ -3039,7 +3018,7 @@ nsWindow::Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
     if (aRepaint)
         mWidget->update();
 
-    NotifyRollupGeometryChange(gRollupListener);
+    NotifyRollupGeometryChange();
     return NS_OK;
 }
 

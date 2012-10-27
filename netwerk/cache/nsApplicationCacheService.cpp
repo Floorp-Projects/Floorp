@@ -31,8 +31,34 @@ nsApplicationCacheService::BuildGroupID(nsIURI *aManifestURL,
                                         nsILoadContext *aLoadContext,
                                         nsACString &_result)
 {
+    nsresult rv;
+
+    uint32_t appId = NECKO_NO_APP_ID;
+    bool isInBrowserElement = false;
+
+    if (aLoadContext) {
+        rv = aLoadContext->GetAppId(&appId);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = aLoadContext->GetIsInBrowserElement(&isInBrowserElement);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    rv = nsOfflineCacheDevice::BuildApplicationCacheGroupID(
+        aManifestURL, appId, isInBrowserElement, _result);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsApplicationCacheService::BuildGroupIDForApp(nsIURI *aManifestURL,
+                                              uint32_t aAppId,
+                                              bool aIsInBrowser,
+                                              nsACString &_result)
+{
     nsresult rv = nsOfflineCacheDevice::BuildApplicationCacheGroupID(
-        aManifestURL, aLoadContext, _result);
+        aManifestURL, aAppId, aIsInBrowser, _result);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

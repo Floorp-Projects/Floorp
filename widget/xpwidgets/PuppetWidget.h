@@ -126,7 +126,7 @@ public:
   NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus);
 
   NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener,
-                                 bool aDoCapture, bool aConsumeRollupEvent)
+                                 bool aDoCapture)
   { return NS_ERROR_UNEXPECTED; }
 
   //

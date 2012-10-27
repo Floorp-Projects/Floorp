@@ -240,6 +240,8 @@ BluetoothHfpManager::BluetoothHfpManager()
 bool
 BluetoothHfpManager::Init()
 {
+  mSocketStatus = GetConnectionStatus();
+
   sHfpObserver = new BluetoothHfpManagerObserver();
   if (!sHfpObserver->Init()) {
     NS_WARNING("Cannot set up Hfp Observers!");
@@ -321,14 +323,16 @@ BluetoothHfpManager::NotifySettings()
   type.AssignLiteral("bluetooth-hfp-status-changed");
 
   name.AssignLiteral("connected");
-  uint32_t status = GetConnectionStatus();
-  v = status;
+  if (GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED) {
+    v = true;
+  } else {
+    v = false;
+  }
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   name.AssignLiteral("address");
-  nsString address;
-  GetSocketAddr(address);
-  v = address;
+  GetSocketAddr(mDevicePath);
+  v = mDevicePath;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   if (!BroadcastSystemMessage(type, parameters)) {
@@ -615,6 +619,9 @@ BluetoothHfpManager::Listen()
                                            true,
                                            false,
                                            this);
+
+  mSocketStatus = GetConnectionStatus();
+
   return NS_FAILED(rv) ? false : true;
 }
 
@@ -627,7 +634,6 @@ BluetoothHfpManager::Disconnect()
   }
 
   CloseSocket();
-  Listen();
 }
 
 bool
@@ -835,13 +841,17 @@ BluetoothHfpManager::CallStateChanged(int aCallIndex, int aCallState,
 void
 BluetoothHfpManager::OnConnectSuccess()
 {
+  // Cache device path for NotifySettings() since we can't get socket address
+  // when a headset disconnect with us
+  GetSocketAddr(mDevicePath);
+
   if (mCurrentCallState == nsIRadioInterfaceLayer::CALL_STATE_CONNECTED ||
       mCurrentCallState == nsIRadioInterfaceLayer::CALL_STATE_DIALING ||
       mCurrentCallState == nsIRadioInterfaceLayer::CALL_STATE_ALERTING) {
-    nsString address;
-    GetSocketAddr(address);
-    OpenScoSocket(address);
+    OpenScoSocket(mDevicePath);
   }
+
+  mSocketStatus = GetConnectionStatus();
 
   NotifySettings();
 }
@@ -850,6 +860,7 @@ void
 BluetoothHfpManager::OnConnectError()
 {
   CloseSocket();
+  mSocketStatus = GetConnectionStatus();
   // If connecting for some reason didn't work, restart listening
   Listen();
 }
@@ -857,7 +868,11 @@ BluetoothHfpManager::OnConnectError()
 void
 BluetoothHfpManager::OnDisconnect()
 {
-  NotifySettings();
+  if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
+    Listen();
+    NotifySettings();
+  }
+
   sCINDItems[CINDType::CALL].value = CallState::NO_CALL;
   sCINDItems[CINDType::CALLSETUP].value = CallSetupState::NO_CALLSETUP;
   sCINDItems[CINDType::CALLHELD].value = CallHeldState::NO_CALLHELD;

@@ -16,6 +16,7 @@
 #include "jsutil.h"
 
 #include "ds/BitArray.h"
+#include "js/HeapAPI.h"
 
 struct JSCompartment;
 
@@ -102,33 +103,6 @@ struct Cell
     inline bool isAligned() const;
 #endif
 };
-
-/*
- * Page size must be static to support our arena pointer optimizations, so we
- * are forced to support each platform with non-4096 pages as a special case.
- * Note: The freelist supports a maximum arena shift of 15.
- * Note: Do not use JS_CPU_SPARC here, this header is used outside JS.
- * Bug 692267: Move page size definition to gc/Memory.h and include it
- *             directly once jsgc.h is no longer an installed header.
- */
-#if (defined(SOLARIS) || defined(__FreeBSD__)) && \
-    (defined(__sparc) || defined(__sparcv9) || defined(__ia64))
-const size_t PageShift = 13;
-const size_t ArenaShift = PageShift;
-#elif defined(__powerpc__)
-const size_t PageShift = 16;
-const size_t ArenaShift = 12;
-#else
-const size_t PageShift = 12;
-const size_t ArenaShift = PageShift;
-#endif
-const size_t PageSize = size_t(1) << PageShift;
-const size_t ArenaSize = size_t(1) << ArenaShift;
-const size_t ArenaMask = ArenaSize - 1;
-
-const size_t ChunkShift = 20;
-const size_t ChunkSize = size_t(1) << ChunkShift;
-const size_t ChunkMask = ChunkSize - 1;
 
 /*
  * This is the maximum number of arenas we allow in the FreeCommitted state
@@ -403,11 +377,9 @@ struct FreeSpan
 };
 
 /* Every arena has a header. */
-struct ArenaHeader
+struct ArenaHeader : public JS::shadow::ArenaHeader
 {
     friend struct FreeLists;
-
-    JSCompartment   *compartment;
 
     /*
      * ArenaHeader::next has two purposes: when unallocated, it points to the
@@ -1026,7 +998,6 @@ Cell::isAligned() const
 #endif
 
 } /* namespace gc */
-
 } /* namespace js */
 
 #endif /* gc_heap_h___ */

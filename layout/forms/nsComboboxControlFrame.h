@@ -168,7 +168,7 @@ public:
    * Hide the dropdown menu and stop capturing mouse events.
    * @note This method might destroy |this|.
    */
-  virtual nsIContent* Rollup(uint32_t aCount, bool aGetLastRolledUp = false);
+  virtual bool Rollup(uint32_t aCount, nsIContent** aLastRolledUp);
   virtual void NotifyGeometryChange();
 
   /**
@@ -187,6 +187,8 @@ public:
 
   virtual uint32_t GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain)
     { return 0; }
+
+  virtual nsIWidget* GetRollupWidget();
 
   //nsIStatefulFrame
   NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState) MOZ_OVERRIDE;

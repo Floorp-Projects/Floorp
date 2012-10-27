@@ -13,11 +13,19 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "IdentityService",
+#ifdef MOZ_B2G_VERSION
+                                  "resource://gre/modules/identity/MinimalIdentity.jsm");
+#else
                                   "resource://gre/modules/identity/Identity.jsm");
+#endif
 
 XPCOMUtils.defineLazyModuleGetter(this,
                                   "Logger",
                                   "resource://gre/modules/identity/LogUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
+                                   "@mozilla.org/parentprocessmessagemanager;1",
+                                   "nsIMessageListenerManager");
 
 function log(...aMessageArgs) {
   Logger.log.apply(Logger, ["DOMIdentity"].concat(aMessageArgs));
@@ -122,9 +130,7 @@ let DOMIdentity = {
 
     // Target is the frame message manager that called us and is
     // used to send replies back to the proper window.
-    let targetMM = aMessage.target
-                           .QueryInterface(Ci.nsIFrameLoaderOwner)
-                           .frameLoader.messageManager;
+    let targetMM = aMessage.target;
 
     switch (aMessage.name) {
       // RP
@@ -165,16 +171,10 @@ let DOMIdentity = {
   // nsIObserver
   observe: function DOMIdentity_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "domwindowopened":
-      case "domwindowclosed":
-        let win = aSubject.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindow);
-        this._configureMessages(win, aTopic == "domwindowopened");
-        break;
-
       case "xpcom-shutdown":
-        Services.ww.unregisterNotification(this);
+        this._unsubscribeListeners();
         Services.obs.removeObserver(this, "xpcom-shutdown");
+        Services.ww.unregisterNotification(this);
         break;
     }
   },
@@ -190,18 +190,21 @@ let DOMIdentity = {
   _init: function DOMIdentity__init() {
     Services.ww.registerNotification(this);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
+    this._subscribeListeners();
   },
 
-  _configureMessages: function DOMIdentity__configureMessages(aWindow, aRegister) {
-    if (!aWindow.messageManager)
-      return;
-
-    let func = aWindow.messageManager[aRegister ? "addMessageListener"
-                                                : "removeMessageListener"];
-
+  _subscribeListeners: function DOMIdentity__subscribeListeners() {
+    if (!ppmm) return;
     for (let message of this.messages) {
-      func.call(aWindow.messageManager, message, this);
+      ppmm.addMessageListener(message, this);
     }
+  },
+
+  _unsubscribeListeners: function DOMIdentity__unsubscribeListeners() {
+    for (let message of this.messages) {
+      ppmm.removeMessageListener(message, this);
+    }
+    ppmm = null;
   },
 
   _resetFrameState: function(aContext) {

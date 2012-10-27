@@ -481,11 +481,19 @@ nsFrameLoader::ReallyStartLoadingInternal()
 
   loadInfo->SetReferrer(referrer);
 
+  // Default flags:
+  int32_t flags = nsIWebNavigation::LOAD_FLAGS_NONE;
+
+  // Flags for browser frame:
+  if (OwnerIsBrowserFrame()) {
+    flags = nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
+            nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+  }
+
   // Kick off the load...
   bool tmpState = mNeedsAsyncDestroy;
   mNeedsAsyncDestroy = true;
-  rv = mDocShell->LoadURI(mURIToLoad, loadInfo,
-                          nsIWebNavigation::LOAD_FLAGS_NONE, false);
+  rv = mDocShell->LoadURI(mURIToLoad, loadInfo, flags, false);
   mNeedsAsyncDestroy = tmpState;
   mURIToLoad = nullptr;
   NS_ENSURE_SUCCESS(rv, rv);

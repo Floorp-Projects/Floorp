@@ -8,12 +8,21 @@
 #define jsfriendapi_h___
 
 #include "jsclass.h"
+#include "jscpucfg.h"
 #include "jspubtd.h"
 #include "jsprvtd.h"
+
+#include "js/HeapAPI.h"
 
 #include "mozilla/GuardObjects.h"
 
 JS_BEGIN_EXTERN_C
+
+#if JS_STACK_GROWTH_DIRECTION > 0
+# define JS_CHECK_STACK_SIZE(limit, lval)  ((uintptr_t)(lval) < limit)
+#else
+# define JS_CHECK_STACK_SIZE(limit, lval)  ((uintptr_t)(lval) > limit)
+#endif
 
 extern JS_FRIEND_API(void)
 JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
@@ -259,6 +268,9 @@ TraceWeakMaps(WeakMapTracer *trc);
 extern JS_FRIEND_API(bool)
 GCThingIsMarkedGray(void *thing);
 
+JS_FRIEND_API(void)
+UnmarkGrayGCThing(void *thing);
+
 typedef void
 (GCThingCallback)(void *closure, void *gcthing);
 
@@ -267,6 +279,15 @@ VisitGrayWrapperTargets(JSCompartment *comp, GCThingCallback *callback, void *cl
 
 extern JS_FRIEND_API(JSObject *)
 GetWeakmapKeyDelegate(JSObject *key);
+
+JS_FRIEND_API(JSGCTraceKind)
+GCThingTraceKind(void *thing);
+
+/*
+ * Invoke cellCallback on every gray JS_OBJECT in the given compartment.
+ */
+extern JS_FRIEND_API(void)
+IterateGrayObjects(JSCompartment *compartment, GCThingCallback *cellCallback, void *data);
 
 /*
  * Shadow declarations of JS internal structures, for access by inline access

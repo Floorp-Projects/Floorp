@@ -31,12 +31,6 @@
 
 struct JSCompartment;
 
-#if JS_STACK_GROWTH_DIRECTION > 0
-# define JS_CHECK_STACK_SIZE(limit, lval)  ((uintptr_t)(lval) < limit)
-#else
-# define JS_CHECK_STACK_SIZE(limit, lval)  ((uintptr_t)(lval) > limit)
-#endif
-
 namespace js {
 
 class GCHelperThread;
@@ -447,12 +441,6 @@ const size_t INITIAL_CHUNK_CAPACITY = 16 * 1024 * 1024 / ChunkSize;
 /* The number of GC cycles an empty chunk can survive before been released. */
 const size_t MAX_EMPTY_CHUNK_AGE = 4;
 
-inline Cell *
-AsCell(JSObject *obj)
-{
-    return reinterpret_cast<Cell *>(obj);
-}
-
 } /* namespace gc */
 
 struct GCPtrHasher
@@ -482,9 +470,6 @@ typedef js::HashMap<void *,
 
 } /* namespace js */
 
-extern JS_FRIEND_API(JSGCTraceKind)
-js_GetGCThingTraceKind(void *thing);
-
 extern JSBool
 js_InitGC(JSRuntime *rt, uint32_t maxbytes);
 
@@ -496,16 +481,6 @@ js_AddRoot(JSContext *cx, js::Value *vp, const char *name);
 
 extern JSBool
 js_AddGCThingRoot(JSContext *cx, void **rp, const char *name);
-
-#ifdef DEBUG
-extern void
-js_DumpNamedRoots(JSRuntime *rt,
-                  void (*dump)(const char *name, void *rp, JSGCRootType type, void *data),
-                  void *data);
-#endif
-
-extern uint32_t
-js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data);
 
 /* Table of pointers with count valid members. */
 typedef struct JSPtrTable {
@@ -519,9 +494,6 @@ js_LockGCThingRT(JSRuntime *rt, void *thing);
 extern void
 js_UnlockGCThingRT(JSRuntime *rt, void *thing);
 
-extern bool
-js_IsAddressableGCThing(JSRuntime *rt, uintptr_t w, js::gc::AllocKind *thingKind, void **thing);
-
 namespace js {
 
 extern void
@@ -529,9 +501,6 @@ MarkCompartmentActive(js::StackFrame *fp);
 
 extern void
 TraceRuntime(JSTracer *trc);
-
-extern JS_FRIEND_API(void)
-MarkContext(JSTracer *trc, JSContext *acx);
 
 /* Must be called with GC lock taken. */
 extern void
@@ -549,9 +518,6 @@ ShrinkGCBuffers(JSRuntime *rt);
 
 extern void
 ReleaseAllJITCode(FreeOp *op);
-
-extern JS_FRIEND_API(void)
-PrepareForFullGC(JSRuntime *rt);
 
 /*
  * Kinds of js_GC invocation.
@@ -629,11 +595,11 @@ class GCHelperThread {
     void            **freeCursor;
     void            **freeCursorEnd;
 
-    bool    backgroundAllocation;
+    bool              backgroundAllocation;
 
     friend struct js::gc::ArenaLists;
 
-    JS_FRIEND_API(void)
+    void
     replenishAndFreeLater(void *ptr);
 
     static void freeElementsAndArray(void **array, void **end) {
@@ -1112,7 +1078,7 @@ typedef void (*IterateCellCallback)(JSRuntime *rt, void *data, void *thing,
  * |arenaCallback| on every in-use arena, and |cellCallback| on every in-use
  * cell in the GC heap.
  */
-extern JS_FRIEND_API(void)
+extern void
 IterateCompartmentsArenasCells(JSRuntime *rt, void *data,
                                JSIterateCompartmentCallback compartmentCallback,
                                IterateArenaCallback arenaCallback,
@@ -1121,22 +1087,16 @@ IterateCompartmentsArenasCells(JSRuntime *rt, void *data,
 /*
  * Invoke chunkCallback on every in-use chunk.
  */
-extern JS_FRIEND_API(void)
+extern void
 IterateChunks(JSRuntime *rt, void *data, IterateChunkCallback chunkCallback);
 
 /*
  * Invoke cellCallback on every in-use object of the specified thing kind for
  * the given compartment or for all compartments if it is null.
  */
-extern JS_FRIEND_API(void)
+extern void
 IterateCells(JSRuntime *rt, JSCompartment *compartment, gc::AllocKind thingKind,
              void *data, IterateCellCallback cellCallback);
-
-/*
- * Invoke cellCallback on every gray JS_OBJECT in the given compartment.
- */
-extern JS_FRIEND_API(void)
-IterateGrayObjects(JSCompartment *compartment, GCThingCallback *cellCallback, void *data);
 
 } /* namespace js */
 
@@ -1208,19 +1168,6 @@ MaybeVerifyBarriers(JSContext *cx, bool always = false)
 #endif
 
 } /* namespace gc */
-
-static inline JSCompartment *
-GetGCThingCompartment(void *thing)
-{
-    JS_ASSERT(thing);
-    return reinterpret_cast<gc::Cell *>(thing)->compartment();
-}
-
-static inline JSCompartment *
-GetObjectCompartment(JSObject *obj)
-{
-    return GetGCThingCompartment(obj);
-}
 
 void
 PurgeJITCaches(JSCompartment *c);

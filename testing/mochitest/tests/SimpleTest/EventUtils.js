@@ -206,11 +206,13 @@ function _parseModifiers(aEvent)
  * a mousedown followed by a mouse up is performed.
  *
  * aWindow is optional, and defaults to the current window object.
+ *
+ * Returns whether the event had preventDefault() called on it.
  */
 function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
 {
   var rect = aTarget.getBoundingClientRect();
-  synthesizeMouseAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
+  return synthesizeMouseAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
        aEvent, aWindow);
 }
 function synthesizeTouch(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
@@ -234,6 +236,7 @@ function synthesizeTouch(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
 function synthesizeMouseAtPoint(left, top, aEvent, aWindow)
 {
   var utils = _getDOMWindowUtils(aWindow);
+  var defaultPrevented = false;
 
   if (utils) {
     var button = aEvent.button || 0;
@@ -241,13 +244,15 @@ function synthesizeMouseAtPoint(left, top, aEvent, aWindow)
     var modifiers = _parseModifiers(aEvent);
 
     if (("type" in aEvent) && aEvent.type) {
-      utils.sendMouseEvent(aEvent.type, left, top, button, clickCount, modifiers);
+      defaultPrevented = utils.sendMouseEvent(aEvent.type, left, top, button, clickCount, modifiers);
     }
     else {
       utils.sendMouseEvent("mousedown", left, top, button, clickCount, modifiers);
       utils.sendMouseEvent("mouseup", left, top, button, clickCount, modifiers);
     }
   }
+
+  return defaultPrevented;
 }
 function synthesizeTouchAtPoint(left, top, aEvent, aWindow)
 {

@@ -93,9 +93,6 @@ extern "C" {
 // defined in nsMenuBarX.mm
 extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
 
-// these are defined in nsCocoaWindow.mm
-extern bool gConsumeRollupEvent;
-
 bool gChildViewMethodsSwizzled = false;
 
 extern nsISupportsArray *gDraggedTransferables;
@@ -109,9 +106,6 @@ NSPoint ChildViewMouseTracker::sLastScrollEventScreenLocation = NSZeroPoint;
 static void blinkRect(Rect* r);
 static void blinkRgn(RgnHandle rgn);
 #endif
-
-nsIRollupListener * gRollupListener = nullptr;
-nsIWidget         * gRollupWidget   = nullptr;
 
 bool gUserCancelledDrag = false;
 
@@ -816,7 +810,7 @@ NS_IMETHODIMP nsChildView::Move(int32_t aX, int32_t aY)
   if (mVisible)
     [mView setNeedsDisplay:YES];
 
-  NotifyRollupGeometryChange(gRollupListener);
+  NotifyRollupGeometryChange();
   ReportMoveEvent();
 
   return NS_OK;
@@ -839,7 +833,7 @@ NS_IMETHODIMP nsChildView::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint
   if (mVisible && aRepaint)
     [mView setNeedsDisplay:YES];
 
-  NotifyRollupGeometryChange(gRollupListener);
+  NotifyRollupGeometryChange();
   ReportSizeEvent();
 
   return NS_OK;
@@ -870,7 +864,7 @@ NS_IMETHODIMP nsChildView::Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_
   if (mVisible && aRepaint)
     [mView setNeedsDisplay:YES];
 
-  NotifyRollupGeometryChange(gRollupListener);
+  NotifyRollupGeometryChange();
   if (isMoving) {
     ReportMoveEvent();
     if (mOnDestroyCalled)
@@ -1490,9 +1484,8 @@ nsIntPoint nsChildView::WidgetToScreenOffset()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0,0));
 }
 
-NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener, 
-                                               bool aDoCapture, 
-                                               bool aConsumeRollupEvent)
+NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener,
+                                               bool aDoCapture)
 {
   // this never gets called, only top-level windows can be rollup widgets
   return NS_OK;
@@ -1912,6 +1905,20 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 }
 
++ (void)registerViewForDraggedTypes:(NSView*)aView
+{
+  [aView registerForDraggedTypes:[NSArray arrayWithObjects:NSFilenamesPboardType,
+                                                           NSStringPboardType,
+                                                           NSHTMLPboardType,
+                                                           NSURLPboardType,
+                                                           NSFilesPromisePboardType,
+                                                           kWildcardPboardType,
+                                                           kCorePboardType_url,
+                                                           kCorePboardType_urld,
+                                                           kCorePboardType_urln,
+                                                           nil]];
+}
+
 // initWithFrame:geckoChild:
 - (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild
 {
@@ -1959,17 +1966,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
   
   // register for things we'll take from other applications
-  PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView initWithFrame: registering drag types\n"));
-  [self registerForDraggedTypes:[NSArray arrayWithObjects:NSFilenamesPboardType,
-                                                          NSStringPboardType,
-                                                          NSHTMLPboardType,
-                                                          NSURLPboardType,
-                                                          NSFilesPromisePboardType,
-                                                          kWildcardPboardType,
-                                                          kCorePboardType_url,
-                                                          kCorePboardType_urld,
-                                                          kCorePboardType_urln,
-                                                          nil]];
+  [ChildView registerViewForDraggedTypes:self];
+
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(windowBecameMain:)
                                                name:NSWindowDidBecomeMainNotification
@@ -2339,7 +2337,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (BOOL)mouseDownCanMoveWindow
 {
-  return NO;
+  return [[self window] isMovableByWindowBackground];
 }
 
 - (void)lockFocus
@@ -2651,14 +2649,16 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!gRollupWidget)
-    return;
-
 #ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
   return;
 #endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
 
-  NSWindow *popupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+  nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
+  nsCOMPtr<nsIWidget> widget = rollupListener->GetRollupWidget();
+  if (!widget)
+    return;
+
+  NSWindow *popupWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
   if (!popupWindow || ![popupWindow isKindOfClass:[PopupWindow class]])
     return;
 
@@ -2678,15 +2678,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   BOOL consumeEvent = NO;
 
-  if (gRollupWidget && gRollupListener) {
-    NSWindow* currentPopup = static_cast<NSWindow*>(gRollupWidget->GetNativeData(NS_NATIVE_WINDOW));
+  nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
+  nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
+  if (rollupWidget) {
+    NSWindow* currentPopup = static_cast<NSWindow*>(rollupWidget->GetNativeData(NS_NATIVE_WINDOW));
     if (!nsCocoaUtils::IsEventOverWindow(theEvent, currentPopup)) {
       // event is not over the rollup window, default is to roll up
       bool shouldRollup = true;
 
       // check to see if scroll events should roll up the popup
       if ([theEvent type] == NSScrollWheel) {
-        shouldRollup = gRollupListener->ShouldRollupOnMouseWheelEvent();
+        shouldRollup = rollupListener->ShouldRollupOnMouseWheelEvent();
         // always consume scroll events that aren't over the popup
         consumeEvent = YES;
       }
@@ -2695,31 +2697,28 @@ NSEvent* gLastDragMouseDownEvent = nil;
       // we don't want to rollup if the click is in a parent menu of
       // the current submenu
       uint32_t popupsToRollup = UINT32_MAX;
-      if (gRollupListener) {
-        nsAutoTArray<nsIWidget*, 5> widgetChain;
-        uint32_t sameTypeCount = gRollupListener->GetSubmenuWidgetChain(&widgetChain);
-        for (uint32_t i = 0; i < widgetChain.Length(); i++) {
-          nsIWidget* widget = widgetChain[i];
-          NSWindow* currWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
-          if (nsCocoaUtils::IsEventOverWindow(theEvent, currWindow)) {
-            // don't roll up if the mouse event occurred within a menu of the
-            // same type. If the mouse event occurred in a menu higher than
-            // that, roll up, but pass the number of popups to Rollup so
-            // that only those of the same type close up.
-            if (i < sameTypeCount) {
-              shouldRollup = false;
-            }
-            else {
-              popupsToRollup = sameTypeCount;
-            }
-            break;
+      nsAutoTArray<nsIWidget*, 5> widgetChain;
+      uint32_t sameTypeCount = rollupListener->GetSubmenuWidgetChain(&widgetChain);
+      for (uint32_t i = 0; i < widgetChain.Length(); i++) {
+        nsIWidget* widget = widgetChain[i];
+        NSWindow* currWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
+        if (nsCocoaUtils::IsEventOverWindow(theEvent, currWindow)) {
+          // don't roll up if the mouse event occurred within a menu of the
+          // same type. If the mouse event occurred in a menu higher than
+          // that, roll up, but pass the number of popups to Rollup so
+          // that only those of the same type close up.
+          if (i < sameTypeCount) {
+            shouldRollup = false;
           }
+          else {
+            popupsToRollup = sameTypeCount;
+          }
+          break;
         }
       }
 
       if (shouldRollup) {
-        gRollupListener->Rollup(popupsToRollup);
-        consumeEvent = (BOOL)gConsumeRollupEvent;
+        consumeEvent = (BOOL)rollupListener->Rollup(popupsToRollup, nullptr);
       }
     }
   }
@@ -3282,6 +3281,25 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   nsEventStatus status; // ignored
   mGeckoChild->DispatchEvent(&event, status);
+}
+
+- (void)updateWindowDraggableStateOnMouseMove:(NSEvent*)theEvent
+{
+  if (!theEvent || !mGeckoChild) {
+    return;
+  }
+
+  nsCocoaWindow* windowWidget = mGeckoChild->GetXULWindowWidget();
+  if (!windowWidget) {
+    return;
+  }
+
+  // We assume later on that sending a hit test event won't cause widget destruction.
+  nsMouseEvent hitTestEvent(true, NS_MOUSE_MOZHITTEST, mGeckoChild, nsMouseEvent::eReal);
+  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&hitTestEvent];
+  bool result = mGeckoChild->DispatchWindowEvent(hitTestEvent);
+
+  [windowWidget->GetCocoaWindow() setMovableByWindowBackground:result];
 }
 
 - (void)handleMouseMoved:(NSEvent*)theEvent
@@ -4808,6 +4826,11 @@ ChildViewMouseTracker::ViewForEvent(NSEvent* aEvent)
 
   NSPoint windowEventLocation = nsCocoaUtils::EventLocationForWindow(aEvent, window);
   NSView* view = [[[window contentView] superview] hitTest:windowEventLocation];
+
+  while([view conformsToProtocol:@protocol(EventRedirection)]) {
+    view = [(id<EventRedirection>)view targetView];
+  }
+
   if (![view isKindOfClass:[ChildView class]])
     return nil;
 
@@ -4906,7 +4929,7 @@ ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent,
   NSWindow *ourWindow = [self window];
   NSView *contentView = [ourWindow contentView];
   if ([ourWindow isKindOfClass:[ToolbarWindow class]] && (self == contentView))
-    return NO;
+    return [ourWindow isMovableByWindowBackground];
   return [self nsChildView_NSView_mouseDownCanMoveWindow];
 }
 

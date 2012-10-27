@@ -116,8 +116,9 @@ public:
 
 enum SocketConnectionStatus {
   SOCKET_DISCONNECTED = 0,
-  SOCKET_CONNECTING = 1,
-  SOCKET_CONNECTED = 2
+  SOCKET_LISTENING = 1,
+  SOCKET_CONNECTING = 2,
+  SOCKET_CONNECTED = 3
 };
 
 class UnixSocketConsumer : public RefCounted<UnixSocketConsumer>
