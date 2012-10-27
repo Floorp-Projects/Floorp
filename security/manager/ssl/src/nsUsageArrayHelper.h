@@ -5,9 +5,9 @@
 #ifndef _NSUSAGEARRAYHELPER_H_
 #define _NSUSAGEARRAYHELPER_H_
 
-#include "certt.h"
-
+#include "CertVerifier.h"
 #include "nsNSSComponent.h"
+#include "certt.h"
 
 class nsUsageArrayHelper
 {
@@ -38,8 +38,10 @@ private:
 
   uint32_t check(uint32_t previousCheckResult,
                  const char *suffix,
+                 mozilla::psm::CertVerifier * certVerifier,
                  SECCertificateUsage aCertUsage,
-                 nsCERTValInParamWrapper * aValInParams,
+                 PRTime time,
+                 mozilla::psm::CertVerifier::Flags flags,
                  uint32_t &aCounter,
                  PRUnichar **outUsages);
 

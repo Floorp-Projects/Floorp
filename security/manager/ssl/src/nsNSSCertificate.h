@@ -44,12 +44,12 @@ public:
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
 
-  nsNSSCertificate(CERTCertificate *cert);
+  nsNSSCertificate(CERTCertificate *cert,SECOidTag *evOidPolicy = nullptr);
   nsNSSCertificate();
   /* from a request? */
   virtual ~nsNSSCertificate();
   nsresult FormatUIStrings(const nsAutoString &nickname, nsAutoString &nickWithSerial, nsAutoString &details);
-  static nsNSSCertificate* Create(CERTCertificate *cert = nullptr);
+  static nsNSSCertificate* Create(CERTCertificate *cert = nullptr, SECOidTag *evOidPolicy = nullptr);
   static nsNSSCertificate* ConstructFromDER(char *certDER, int derLen);
 
   // It is the responsibility of the caller of this method to free the returned
