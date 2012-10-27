@@ -24,6 +24,10 @@ public class AnnouncementsBroadcastReceiver extends BroadcastReceiver {
    */
   @Override
   public void onReceive(Context context, Intent intent) {
+    if (AnnouncementsConstants.DISABLED) {
+      return;
+    }
+
     Intent service = new Intent(context, AnnouncementsBroadcastService.class);
     service.putExtras(intent);
     service.setAction(intent.getAction());

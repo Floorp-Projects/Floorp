@@ -20,6 +20,10 @@ public class AnnouncementsStartReceiver extends BroadcastReceiver {
 
   @Override
   public void onReceive(Context context, Intent intent) {
+    if (AnnouncementsConstants.DISABLED) {
+      return;
+    }
+
     Logger.debug(LOG_TAG, "AnnouncementsStartReceiver.onReceive().");
     Intent service = new Intent(context, AnnouncementsService.class);
     context.startService(service);
