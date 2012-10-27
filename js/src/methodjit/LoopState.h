@@ -330,12 +330,9 @@ class LoopState : public MacroAssemblerTypedefs
      */
     bool constrainedLoop;
 
-    void analyzeLoopTest();
-    void analyzeLoopIncrements();
     void analyzeLoopBody(unsigned frame);
 
     bool definiteArrayAccess(const analyze::SSAValue &obj, const analyze::SSAValue &index);
-    bool getLoopTestAccess(const analyze::SSAValue &v, uint32_t *pslot, int32_t *pconstant);
 
     bool addGrowArray(types::TypeObject *object);
     bool addModifiedProperty(types::TypeObject *object, jsid id);
