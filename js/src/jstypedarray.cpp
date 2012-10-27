@@ -18,6 +18,7 @@
 #include "jscpucfg.h"
 #include "jsversion.h"
 #include "jsgc.h"
+#include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"

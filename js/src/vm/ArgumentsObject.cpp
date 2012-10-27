@@ -7,6 +7,7 @@
 
 #include "jsgc.h"
 #include "jsinfer.h"
+#include "jsinterp.h"
 
 #include "vm/GlobalObject.h"
 #include "vm/Stack.h"
@@ -17,7 +18,6 @@
 #include "gc/Barrier-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/ArgumentsObject-inl.h"
-#include "vm/Interpreter.h"
 
 using namespace js;
 using namespace js::gc;

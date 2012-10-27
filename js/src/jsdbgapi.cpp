@@ -19,6 +19,7 @@
 #include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsinterp.h"
 #include "jslock.h"
 #include "jsobj.h"
 #include "jsopcode.h"
@@ -37,10 +38,10 @@
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
+#include "jsinterpinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 
-#include "vm/Interpreter-inl.h"
 #include "vm/Stack-inl.h"
 
 #include "jsautooplen.h"

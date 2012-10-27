@@ -13,7 +13,7 @@
 #include "mozilla/HashFunctions.h"
 #include "vm/GlobalObject.h"
 
-#include "vm/Interpreter-inl.h"
+#include "jsinterpinlines.h"
 
 using namespace js;
 

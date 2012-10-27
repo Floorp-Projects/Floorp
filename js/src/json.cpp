@@ -14,6 +14,7 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsfun.h"
+#include "jsinterp.h"
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsobj.h"

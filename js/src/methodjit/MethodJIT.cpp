@@ -24,8 +24,7 @@
 #include "methodjit/Retcon.h"
 
 #include "jsgcinlines.h"
-
-#include "vm/Interpreter-inl.h"
+#include "jsinterpinlines.h"
 
 #if JS_TRACE_LOGGING
 #include "TraceLogging.h"
