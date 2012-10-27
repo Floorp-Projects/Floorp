@@ -77,8 +77,8 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
     nsRefPtr<gfxContext> ctx = new gfxContext(surf);
     ctx->SetMatrix(transform);
 
-    presContext->PresShell()->
-      RenderDocument(documentRect, renderFlags, bgColor, ctx);
+    nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
+    shell->RenderDocument(documentRect, renderFlags, bgColor, ctx);
 
     return true;
 }

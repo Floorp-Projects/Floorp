@@ -208,7 +208,7 @@
   transition-delay: 200ms;
 }
 
-.ruleview-property:not(:hover) > .ruleview-enableproperty {
+.ruleview-property:not(:hover) > .ruleview-enableproperty[checked] {
   opacity: 0;
   transition: none;
 }

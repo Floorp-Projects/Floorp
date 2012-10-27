@@ -17,7 +17,6 @@
 #include "nsOggCodecState.h"
 #include "VideoUtils.h"
 
-using namespace mozilla;
 
 class nsMediaDecoder;
 class nsTimeRanges;

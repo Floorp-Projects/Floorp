@@ -3958,8 +3958,8 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
   }
   thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
                               matrix._22, matrix._31, matrix._32));
-  unused << presContext->PresShell()->
-    RenderDocument(r, renderDocFlags, backgroundColor, thebes);
+  nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
+  unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
   mTarget->SetTransform(matrix);
 
   // note that x and y are coordinates in the document that

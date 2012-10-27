@@ -268,6 +268,10 @@ PeerConnection.prototype = {
       throw new Error("createOffer already called");
     }
 
+    if (!constraints) {
+      constraints = {};
+    }
+
     if (!this._validateConstraints(constraints)) {
       throw new Error("createOffer passed invalid constraints");
     }
@@ -293,6 +297,10 @@ PeerConnection.prototype = {
 
     if (this.remoteDescription.type != "offer") {
       throw new Error("No outstanding offer");
+    }
+
+    if (!constraints) {
+      constraints = {};
     }
 
     if (!this._validateConstraints(constraints)) {

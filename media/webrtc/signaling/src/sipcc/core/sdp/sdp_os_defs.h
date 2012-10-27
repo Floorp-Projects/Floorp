@@ -13,8 +13,6 @@
 #include "phone_debug.h"
 
 
-#define SDP_ERROR     buginf
-#define SDP_WARN      buginf
 #define SDP_PRINT     buginf
 #define SDP_MALLOC(x) cpr_calloc(1, (x))
 #define SDP_FREE      cpr_free
