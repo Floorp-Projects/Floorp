@@ -22,6 +22,7 @@
 #include "nsWeakReference.h"
 #include "nsIScriptSecurityManager.h"
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
+#include "nsIDOMEventTarget.h"
 #include "nsSmartCardMonitor.h"
 #endif
 #include "nsINSSErrorsService.h"
@@ -37,9 +38,12 @@
 #include "nsNSSHelper.h"
 #include "nsClientAuthRemember.h"
 
-#ifndef NSS_NO_LIBPKIX
-#include "nsCERTValInParamWrapper.h"
-#endif
+namespace mozilla { namespace psm {
+
+class CertVerifier;
+
+} } // namespace mozilla::psm
+
 
 #define NS_NSSCOMPONENT_CID \
 {0xa277189c, 0x1dd1, 0x11b2, {0xa8, 0xc9, 0xe4, 0xe8, 0xbf, 0xb1, 0x33, 0x8e}}
@@ -155,16 +159,14 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token) = 0;
 #endif
 
-  NS_IMETHOD IsNSSInitialized(bool *initialized) = 0;
-
-#ifndef NSS_NO_LIBPKIX
+#ifndef NSS_NO_LIBPKIX  
   NS_IMETHOD EnsureIdentityInfoLoaded() = 0;
-  NS_IMETHOD GetDefaultCERTValInParam(
-                  mozilla::RefPtr<nsCERTValInParamWrapper> &out) = 0;
-  NS_IMETHOD GetDefaultCERTValInParamLocalOnly(
-                  mozilla::RefPtr<nsCERTValInParamWrapper> &out) = 0;
 #endif
 
+  NS_IMETHOD IsNSSInitialized(bool *initialized) = 0;
+
+  NS_IMETHOD GetDefaultCertVerifier(
+                  mozilla::RefPtr<mozilla::psm::CertVerifier> &out) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINSSComponent, NS_INSSCOMPONENT_IID)
@@ -266,8 +268,13 @@ public:
   nsresult DispatchEventToWindow(nsIDOMWindow *domWin, const nsAString &eventType, const nsAString &token);
 #endif
 
+#ifndef NSS_NO_LIBPKIX
+  NS_IMETHOD EnsureIdentityInfoLoaded();
+#endif
   NS_IMETHOD IsNSSInitialized(bool *initialized);
 
+  NS_IMETHOD GetDefaultCertVerifier(
+                  mozilla::RefPtr<mozilla::psm::CertVerifier> &out);
 private:
 
   nsresult InitializeNSS(bool showWarningBox);
@@ -279,6 +286,7 @@ private:
   
   void InstallLoadableRoots();
   void UnloadLoadableRoots();
+  void CleanupIdentityInfo();
   void setValidationOptions(nsIPrefBranch * pref);
   nsresult setEnabledTLSVersions(nsIPrefBranch * pref);
   nsresult InitializePIPNSSBundle();
@@ -296,16 +304,6 @@ private:
   void DoProfileChangeTeardown(nsISupports* aSubject);
   void DoProfileBeforeChange(nsISupports* aSubject);
   void DoProfileChangeNetRestore();
-
-#ifndef NSS_NO_LIBPKIX
-  NS_IMETHOD EnsureIdentityInfoLoaded();
-  static PRStatus IdentityInfoInit(void);
-  void CleanupIdentityInfo();
-  NS_IMETHOD GetDefaultCERTValInParam(
-                  mozilla::RefPtr<nsCERTValInParamWrapper> &out);
-  NS_IMETHOD GetDefaultCERTValInParamLocalOnly(
-                  mozilla::RefPtr<nsCERTValInParamWrapper> &out);
-#endif
   
   Mutex mutex;
   
@@ -336,16 +334,14 @@ private:
   nsCertVerificationThread *mCertVerificationThread;
 
   nsNSSHttpInterface mHttpForNSS;
+  mozilla::RefPtr<mozilla::psm::CertVerifier> mDefaultCertVerifier;
 
-#ifndef NSS_NO_LIBPKIX
-private:
-  mozilla::RefPtr<nsCERTValInParamWrapper> mDefaultCERTValInParam;
-  mozilla::RefPtr<nsCERTValInParamWrapper> mDefaultCERTValInParamLocalOnly;
+
+  static PRStatus IdentityInfoInit(void);
   PRCallOnceType mIdentityInfoCallOnce;
+
 public:
   static bool globalConstFlagUsePKIXVerification;
-#endif
-
 };
 
 class PSMContentListener : public nsIURIContentListener,

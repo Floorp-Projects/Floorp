@@ -16,6 +16,7 @@
 #include "secerr.h"
 
 using namespace mozilla;
+using namespace mozilla::psm;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -29,66 +30,6 @@ nsUsageArrayHelper::nsUsageArrayHelper(CERTCertificate *aCert)
   nsNSSShutDownPreventionLock locker;
   defaultcertdb = CERT_GetDefaultCertDB();
   nssComponent = do_GetService(kNSSComponentCID, &m_rv);
-}
-
-// XXX: old, non-libpkix version of check that will be removed after the switch
-// to libpkix is final.
-void
-nsUsageArrayHelper::check(const char *suffix,
-                        SECCertificateUsage aCertUsage,
-                        uint32_t &aCounter,
-                        PRUnichar **outUsages)
-{
-  if (!aCertUsage) return;
-  nsAutoCString typestr;
-  switch (aCertUsage) {
-  case certificateUsageSSLClient:
-    typestr = "VerifySSLClient";
-    break;
-  case certificateUsageSSLServer:
-    typestr = "VerifySSLServer";
-    break;
-  case certificateUsageSSLServerWithStepUp:
-    typestr = "VerifySSLStepUp";
-    break;
-  case certificateUsageEmailSigner:
-    typestr = "VerifyEmailSigner";
-    break;
-  case certificateUsageEmailRecipient:
-    typestr = "VerifyEmailRecip";
-    break;
-  case certificateUsageObjectSigner:
-    typestr = "VerifyObjSign";
-    break;
-  case certificateUsageProtectedObjectSigner:
-    typestr = "VerifyProtectObjSign";
-    break;
-  case certificateUsageUserCertImport:
-    typestr = "VerifyUserImport";
-    break;
-  case certificateUsageSSLCA:
-    typestr = "VerifySSLCA";
-    break;
-  case certificateUsageVerifyCA:
-    typestr = "VerifyCAVerifier";
-    break;
-  case certificateUsageStatusResponder:
-    typestr = "VerifyStatusResponder";
-    break;
-  case certificateUsageAnyCA:
-    typestr = "VerifyAnyCA";
-    break;
-  default:
-    break;
-  }
-  if (!typestr.IsEmpty()) {
-    typestr.Append(suffix);
-    nsAutoString verifyDesc;
-    m_rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    if (NS_SUCCEEDED(m_rv)) {
-      outUsages[aCounter++] = ToNewUnicode(verifyDesc);
-    }
-  }
 }
 
 namespace {
@@ -110,8 +51,6 @@ isFatalError(uint32_t checkResult)
 
 } // unnamed namespace
 
-#ifndef NSS_NO_LIBPKIX
-
 // Validates the certificate for the given usage. If the certificate is valid
 // for the given usage, aCounter is incremented, a string description of the
 // usage is appended to outUsages, and nsNSSCertificate::VERIFIED_OK is
@@ -120,8 +59,10 @@ isFatalError(uint32_t checkResult)
 uint32_t
 nsUsageArrayHelper::check(uint32_t previousCheckResult,
                           const char *suffix,
+                          CertVerifier * certVerifier,
                           SECCertificateUsage aCertUsage,
-                          nsCERTValInParamWrapper * aValInParams,
+                          PRTime time,
+                          CertVerifier::Flags flags,
                           uint32_t &aCounter,
                           PRUnichar **outUsages)
 {
@@ -177,13 +118,8 @@ nsUsageArrayHelper::check(uint32_t previousCheckResult,
     return nsIX509Cert::NOT_VERIFIED_UNKNOWN;
   }
 
-  SECStatus rv;
-  CERTValOutParam cvout[1];
-  cvout[0].type = cert_po_end;
-
-  rv = CERT_PKIXVerifyCert(mCert, aCertUsage,
-                           aValInParams->GetRawPointerForNSS(),
-                           cvout, nullptr);
+  SECStatus rv = certVerifier->VerifyCert(mCert, aCertUsage,
+                         time, nullptr /*XXX:wincx*/, flags);
 
   if (rv == SECSuccess) {
     typestr.Append(suffix);
@@ -215,7 +151,6 @@ nsUsageArrayHelper::check(uint32_t previousCheckResult,
   return result;
 }
 
-#endif
 
 // Maps the error code to one of the Constants for certificate verification
 // results" in nsIX509Cert.
@@ -265,110 +200,69 @@ nsUsageArrayHelper::GetUsagesArray(const char *suffix,
   if (outArraySize < max_returned_out_array_size)
     return NS_ERROR_FAILURE;
 
+  // Bug 860076, this disabling ocsp for all NSS is incorrect.
+#ifndef NSS_NO_LIBPKIX
+  const bool localOSCPDisable = !nsNSSComponent::globalConstFlagUsePKIXVerification && localOnly;
+#else
+  const bool localOSCPDisable = localOnly;
+#endif 
+  if (localOSCPDisable) {
+    nsresult rv;
+    nssComponent = do_GetService(kNSSComponentCID, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+    
+    if (nssComponent) {
+      nssComponent->SkipOcsp();
+    }
+  }
+
   uint32_t &count = *_count;
   count = 0;
 
-// TODO: This block will be removed as soon as the switch to libpkix is
-// complete.
-#ifndef NSS_NO_LIBPKIX
-if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
-#endif
-  if (localOnly) {
-    nssComponent->SkipOcsp();
-  }
+  RefPtr<CertVerifier> certVerifier(GetDefaultCertVerifier());
+  NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
-  SECCertificateUsage usages = 0;
-  int err = 0;
-  
-  // CERT_VerifyCertificateNow returns SECFailure unless the certificate is
-  // valid for all the given usages. Hoewver, we are only looking for the list
-  // of usages for which the cert *is* valid.
-  (void)
-  CERT_VerifyCertificateNow(defaultcertdb, mCert, true,
-			    certificateUsageSSLClient |
-			    certificateUsageSSLServer |
-			    certificateUsageSSLServerWithStepUp |
-			    certificateUsageEmailSigner |
-			    certificateUsageEmailRecipient |
-			    certificateUsageObjectSigner |
-			    certificateUsageSSLCA |
-			    certificateUsageStatusResponder,
-			    nullptr, &usages);
-  err = PR_GetError();
-
-  if (localOnly) {
-     nssComponent->SkipOcspOff();
-  }
-
-  // The following list of checks must be < max_returned_out_array_size
-  
-  check(suffix, usages & certificateUsageSSLClient, count, outUsages);
-  check(suffix, usages & certificateUsageSSLServer, count, outUsages);
-  check(suffix, usages & certificateUsageSSLServerWithStepUp, count, outUsages);
-  check(suffix, usages & certificateUsageEmailSigner, count, outUsages);
-  check(suffix, usages & certificateUsageEmailRecipient, count, outUsages);
-  check(suffix, usages & certificateUsageObjectSigner, count, outUsages);
-#if 0
-  check(suffix, usages & certificateUsageProtectedObjectSigner, count, outUsages);
-  check(suffix, usages & certificateUsageUserCertImport, count, outUsages);
-#endif
-  check(suffix, usages & certificateUsageSSLCA, count, outUsages);
-#if 0
-  check(suffix, usages & certificateUsageVerifyCA, count, outUsages);
-#endif
-  check(suffix, usages & certificateUsageStatusResponder, count, outUsages);
-#if 0
-  check(suffix, usages & certificateUsageAnyCA, count, outUsages);
-#endif
-
-  if (count == 0) {
-    verifyFailed(_verified, err);
-  } else {
-    *_verified = nsNSSCertificate::VERIFIED_OK;
-  }
-  return NS_OK;
-
-#ifndef NSS_NO_LIBPKIX
-}
-
-  RefPtr<nsCERTValInParamWrapper> params;
-  nsresult rv = localOnly ? nssComponent->GetDefaultCERTValInParamLocalOnly(params)
-                          : nssComponent->GetDefaultCERTValInParam(params);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRTime now = PR_Now();
+  CertVerifier::Flags flags = localOnly ? CertVerifier::FLAG_LOCAL_ONLY : 0;
 
   // The following list of checks must be < max_returned_out_array_size
 
   uint32_t result;
-  result = check(nsIX509Cert::VERIFIED_OK, suffix, certificateUsageSSLClient,
-                 params, count, outUsages);
-  result = check(result, suffix, certificateUsageSSLServer,
-                 params, count, outUsages);
-  result = check(result, suffix, certificateUsageSSLServerWithStepUp,
-                 params, count, outUsages);
-  result = check(result, suffix, certificateUsageEmailSigner,
-                 params, count, outUsages);
-  result = check(result, suffix, certificateUsageEmailRecipient,
-                 params, count, outUsages);
-  result = check(result, suffix, certificateUsageObjectSigner,
-                 params, count, outUsages);
+  result = check(nsIX509Cert::VERIFIED_OK, suffix, certVerifier,
+                 certificateUsageSSLClient, now, flags, count, outUsages);
+  result = check(result, suffix, certVerifier,
+                 certificateUsageSSLServer, now, flags, count, outUsages);
+  result = check(result, suffix, certVerifier,
+                 certificateUsageEmailSigner, now, flags, count, outUsages);
+  result = check(result, suffix, certVerifier,
+                 certificateUsageEmailRecipient, now, flags, count, outUsages);
+  result = check(result, suffix, certVerifier,
+                 certificateUsageObjectSigner, now, flags, count, outUsages);
 #if 0
-  result = check(result, suffix, certificateUsageProtectedObjectSigner,
-                 params, count, outUsages);
-  result = check(result, suffix, certificateUsageUserCertImport,
-                 params, count, outUsages);
+  result = check(result, suffix, certVerifier,
+                 certificateUsageProtectedObjectSigner, now, flags, count,
+                 outUsages);
+  result = check(result, suffix, certVerifier,
+                 certificateUsageUserCertImport, now, flags, count, outUsages);
 #endif
-  result = check(result, suffix, certificateUsageSSLCA,
-                 params, count, outUsages);
+  result = check(result, suffix, certVerifier,
+                 certificateUsageSSLCA, now, flags, count, outUsages);
 #if 0
-  result = check(result, suffix, certificateUsageVerifyCA,
-                 params, count, outUsages);
+  result = check(result, suffix, certVerifier,
+                 certificateUsageVerifyCA, now, flags, count, outUsages);
 #endif
-  result = check(result, suffix, certificateUsageStatusResponder,
-                 params, count, outUsages);
+  result = check(result, suffix, certVerifier,
+                 certificateUsageStatusResponder, now, flags, count, outUsages);
 #if 0
-  result = checkPKIX(result, check(suffix, certificateUsageAnyCA,
-                 params, count, outUsages);
+  result = check(result, suffix, certVerifier,
+                 certificateUsageAnyCA, now, flags, count, outUsages);
 #endif
+
+  // Bug 860076, this disabling ocsp for all NSS is incorrect
+  if (localOSCPDisable) {
+     nssComponent->SkipOcspOff();
+  }
 
   if (isFatalError(result) || count == 0) {
     MOZ_ASSERT(result != nsIX509Cert::VERIFIED_OK);
@@ -385,5 +279,4 @@ if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
     *_verified = nsNSSCertificate::VERIFIED_OK;
   }
   return NS_OK;
-#endif
 }
