@@ -462,7 +462,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void showTabs(TabsPanel.Panel panel) {
-        if (!sIsGeckoReady)
+        if (!checkLaunchState(LaunchState.GeckoRunning))
             return;
 
         mTabsPanel.show(panel);
@@ -846,7 +846,7 @@ abstract public class BrowserApp extends GeckoApp
         if (aMenu == null)
             return false;
 
-        if (!sIsGeckoReady)
+        if (!checkLaunchState(LaunchState.GeckoRunning))
             aMenu.findItem(R.id.settings).setEnabled(false);
 
         Tab tab = Tabs.getInstance().getSelectedTab();
