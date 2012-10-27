@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef Interpreter_h_
-#define Interpreter_h_
+#ifndef jsinterp_h___
+#define jsinterp_h___
 /*
  * JS interpreter interface.
  */
@@ -377,4 +377,4 @@ DeleteProperty(JSContext *ctx, HandleValue val, HandlePropertyName name, JSBool 
 
 }  /* namespace js */
 
-#endif /* Interpreter_h_ */
+#endif /* jsinterp_h___ */

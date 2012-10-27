@@ -26,6 +26,7 @@
 #include "methodjit/StubCalls.h"
 #include "methodjit/Retcon.h"
 
+#include "jsinterpinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsnuminlines.h"
@@ -36,7 +37,6 @@
 #include "jsfuninlines.h"
 #include "jstypedarray.h"
 
-#include "vm/Interpreter-inl.h"
 #include "vm/RegExpObject-inl.h"
 #include "vm/String-inl.h"
 

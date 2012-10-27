@@ -17,8 +17,7 @@
 #include "assembler/assembler/RepatchBuffer.h"
 
 #include "jscntxtinlines.h"
-
-#include "vm/Interpreter-inl.h"
+#include "jsinterpinlines.h"
 
 using namespace js;
 using namespace js::mjit;
