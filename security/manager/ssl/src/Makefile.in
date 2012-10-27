@@ -70,13 +70,9 @@ CPPSRCS = 				\
   nsNSSVersion.cpp \
   nsCertificatePrincipal.cpp \
   SharedSSLState.cpp \
+  CertVerifier.cpp \
   $(NULL)
 
-ifndef NSS_NO_LIBPKIX
-CPPSRCS += \
-  nsCERTValInParamWrapper.cpp \
-  $(NULL)
-endif
 
 ifndef MOZ_DISABLE_CRYPTOLEGACY
 CPPSRCS += \
