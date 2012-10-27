@@ -1670,6 +1670,19 @@ nsHttpConnectionMgr::BuildPipeline(nsConnectionEntry *ent,
     return NS_OK;
 }
 
+void
+nsHttpConnectionMgr::ReportProxyTelemetry(nsConnectionEntry *ent)
+{
+    enum { PROXY_NONE = 1, PROXY_HTTP = 2, PROXY_SOCKS = 3 };
+
+    if (!ent->mConnInfo->UsingProxy())
+        Telemetry::Accumulate(Telemetry::HTTP_PROXY_TYPE, PROXY_NONE);
+    else if (ent->mConnInfo->UsingHttpProxy())
+        Telemetry::Accumulate(Telemetry::HTTP_PROXY_TYPE, PROXY_HTTP);
+    else
+        Telemetry::Accumulate(Telemetry::HTTP_PROXY_TYPE, PROXY_SOCKS);
+}
+
 nsresult
 nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
 {
@@ -1702,6 +1715,8 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
 
         ent = preferredEntry;
     }
+
+    ReportProxyTelemetry(ent);
 
     // If we are doing a force reload then close out any existing conns
     // to this host so that changes in DNS, LBs, etc.. are reflected
