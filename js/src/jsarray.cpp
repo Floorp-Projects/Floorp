@@ -82,6 +82,7 @@
 #include "jsversion.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -102,12 +103,12 @@
 #include "jsarrayinlines.h"
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsstrinlines.h"
 
 #include "vm/ArgumentsObject-inl.h"
-#include "vm/Interpreter-inl.h"
 #include "vm/ObjectImpl-inl.h"
 #include "vm/Stack-inl.h"
 

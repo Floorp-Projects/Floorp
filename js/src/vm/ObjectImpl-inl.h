@@ -12,11 +12,11 @@
 
 #include "jscompartment.h"
 #include "jsgc.h"
+#include "jsinterp.h"
 
 #include "gc/Heap.h"
 #include "gc/Marking.h"
 #include "js/TemplateLib.h"
-#include "vm/Interpreter.h"
 
 #include "ObjectImpl.h"
 
