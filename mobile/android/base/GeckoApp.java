@@ -163,7 +163,6 @@ abstract public class GeckoApp
     private static GeckoThread sGeckoThread;
     public Handler mMainHandler;
     private GeckoProfile mProfile;
-    public static boolean sIsGeckoReady = false;
     public static int mOrientation;
     private boolean mIsRestoringActivity;
     private String mCurrentResponse = "";
@@ -979,7 +978,6 @@ abstract public class GeckoApp
                 handlePageShow(tabId);
             } else if (event.equals("Gecko:Ready")) {
                 mGeckoReadyStartupTimer.stop();
-                sIsGeckoReady = true;
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
                 connectGeckoLayerClient();
