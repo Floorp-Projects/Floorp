@@ -14,6 +14,8 @@ var gDumpToConsole = false;
  */
 function testNames()
 {
+  enableLogging("tree");
+
   var request = new XMLHttpRequest();
   request.open("get", gNameRulesFileURL, false);
   request.send();
@@ -64,6 +66,7 @@ var gTestIterator =
 
       this.markupIdx++;
       if (this.markupIdx == this.markupElms.length) {
+        disableLogging("tree");
         SimpleTest.finish();
         return;
       }
