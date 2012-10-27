@@ -757,7 +757,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcLastGCTime(0),
     gcJitReleaseTime(0),
     gcMode(JSGC_MODE_GLOBAL),
-    gcAllocationThreshold(30),
+    gcAllocationThreshold(30 * 1024 * 1024),
     gcHighFrequencyGC(false),
     gcHighFrequencyTimeThreshold(1000),
     gcHighFrequencyLowLimitBytes(100 * 1024 * 1024),
