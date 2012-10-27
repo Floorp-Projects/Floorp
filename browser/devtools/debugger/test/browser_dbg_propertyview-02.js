@@ -23,7 +23,7 @@ function testSimpleCall() {
   gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
-      let testScope = gDebugger.DebuggerView.Properties._addScope("test");
+      let testScope = gDebugger.DebuggerView.Variables.addScope("test");
 
       ok(testScope,
         "Should have created a scope.");
@@ -31,13 +31,13 @@ function testSimpleCall() {
       is(testScope.id.substring(0, 4), "test",
         "The newly created scope should have the default id set.");
 
-      is(testScope.querySelector(".name").getAttribute("value"), "test",
+      is(testScope.target.querySelector(".name").getAttribute("value"), "test",
         "Any new scope should have the designated title.");
 
-      is(testScope.querySelector(".details").childNodes.length, 0,
+      is(testScope.target.querySelector(".details").childNodes.length, 0,
         "Any new scope should have a container with no child nodes.");
 
-      is(gDebugger.DebuggerView.Properties._vars.childNodes.length, 3,
+      is(gDebugger.DebuggerView.Variables._list.childNodes.length, 3,
         "Should have 3 scopes created.");
 
 
@@ -102,15 +102,15 @@ function testSimpleCall() {
       ok(!testScope.expanded,
         "The testScope should remember it is collapsed even if it is hidden.");
 
-      EventUtils.sendMouseEvent({ type: "click" },
-        testScope.querySelector(".title"),
+      EventUtils.sendMouseEvent({ type: "mousedown" },
+        testScope.target.querySelector(".title"),
         gDebugger);
 
       ok(testScope.expanded,
         "Clicking the testScope tilte should expand it.");
 
-      EventUtils.sendMouseEvent({ type: "click" },
-        testScope.querySelector(".title"),
+      EventUtils.sendMouseEvent({ type: "mousedown" },
+        testScope.target.querySelector(".title"),
         gDebugger);
 
       ok(!testScope.expanded,

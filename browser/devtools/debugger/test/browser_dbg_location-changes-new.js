@@ -27,7 +27,7 @@ function testSimpleCall() {
   gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({
       run: function() {
-        var frames = gDebugger.DebuggerView.StackFrames._frames,
+        var frames = gDebugger.DebuggerView.StackFrames._container._list,
             childNodes = frames.childNodes;
 
         is(gDebugger.DebuggerController.activeThread.state, "paused",
@@ -39,7 +39,7 @@ function testSimpleCall() {
         is(childNodes.length, frames.querySelectorAll(".dbg-stackframe").length,
           "All children should be frames.");
 
-        isnot(gDebugger.DebuggerView.Scripts.selected, null,
+        isnot(gDebugger.DebuggerView.Sources.selectedValue, null,
           "There should be a selected script.");
         isnot(gDebugger.editor.getText().length, 0,
           "The source editor should have some text displayed.");
@@ -59,15 +59,15 @@ function testLocationChange()
       ok(true, "tabNavigated event was fired.");
       info("Still attached to the tab.");
 
-      gDebugger.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+      gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
         gDebugger.removeEventListener(aEvent.type, _onEvent);
 
-        isnot(gDebugger.DebuggerView.Scripts.selected, null,
+        isnot(gDebugger.DebuggerView.Sources.selectedValue, null,
           "There should be a selected script.");
         isnot(gDebugger.editor.getText().length, 0,
           "The source editor should have some text displayed.");
 
-        let menulist = gDebugger.DebuggerView.Scripts._scripts;
+        let menulist = gDebugger.DebuggerView.Sources._container;
         let noScripts = gDebugger.L10N.getStr("noScriptsText");
         isnot(menulist.getAttribute("label"), noScripts,
           "The menulist should not display a notice that there are no scripts availalble.");

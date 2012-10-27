@@ -36,7 +36,7 @@ function test()
     gDebuggee.firstCall();
   });
 
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     let url = aEvent.detail.url;
     if (url.indexOf("-02.js") != -1) {
       scriptShown = true;
@@ -56,16 +56,16 @@ function test()
 function testScriptSearching() {
   gDebugger.DebuggerController.activeThread.resume(function() {
     gEditor = gDebugger.DebuggerView.editor;
-    gScripts = gDebugger.DebuggerView.Scripts;
-    gSearchBox = gScripts._searchbox;
-    gMenulist = gScripts._scripts;
+    gScripts = gDebugger.DebuggerView.Sources;
+    gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
+    gMenulist = gScripts._container;
 
     firstSearch();
   });
 }
 
 function firstSearch() {
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + aEvent.detail.url + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -78,7 +78,7 @@ function firstSearch() {
         ok(gEditor.getCaretPosition().line == 4 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line. (1)");
-        is(gScripts.visibleItemsCount, 1,
+        is(gScripts.visibleItems, 1,
           "Not all the correct scripts are shown after the search. (1)");
 
         secondSearch();
@@ -91,7 +91,7 @@ function firstSearch() {
 function secondSearch() {
   let token = "deb";
 
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + aEvent.detail.url + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -106,18 +106,18 @@ function secondSearch() {
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 8 + token.length,
           "The editor didn't jump to the correct line. (2)");
-        is(gScripts.visibleItemsCount, 1,
+        is(gScripts.visibleItems, 1,
           "Not all the correct scripts are shown after the search. (2)");
 
         waitForFirstScript();
       });
     }
   });
-  gScripts.selectIndex(1);
+  gScripts.selectedIndex = 1;
 }
 
 function waitForFirstScript() {
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + aEvent.detail.url + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -130,13 +130,13 @@ function waitForFirstScript() {
       });
     }
   });
-  gScripts.selectIndex(0);
+  gScripts.selectedIndex = 0;
 }
 
 function thirdSearch() {
   let token = "deb";
 
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     info("Current script url:\n" + aEvent.detail.url + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
@@ -149,17 +149,17 @@ function thirdSearch() {
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 8 + token.length,
           "The editor didn't jump to the correct line. (3)");
-        is(gScripts.visibleItemsCount, 1,
+        is(gScripts.visibleItems, 1,
           "Not all the correct scripts are shown after the search. (3)");
 
-        finalCheck(0, "ugger;", token);
+        fourthSearch(0, "ugger;", token);
       });
     }
   });
   write(".*-02\.js#" + token);
 }
 
-function finalCheck(i, string, token) {
+function fourthSearch(i, string, token) {
   info("Searchbox value: " + gSearchBox.value);
 
   ok(gEditor.getCaretPosition().line == 5 &&
@@ -168,7 +168,7 @@ function finalCheck(i, string, token) {
 
   if (string[i]) {
     EventUtils.sendChar(string[i]);
-    finalCheck(i + 1, string, token);
+    fourthSearch(i + 1, string, token);
     return;
   }
 
@@ -180,7 +180,7 @@ function finalCheck(i, string, token) {
   executeSoon(function() {
     let noMatchingScripts = gDebugger.L10N.getStr("noMatchingScriptsText");
 
-    is(gScripts.visibleItemsCount, 2,
+    is(gScripts.visibleItems, 2,
       "Not all the scripts are shown after the searchbox was emptied.");
     is(gMenulist.selectedIndex, 1,
       "The menulist should have retained its selected index after the searchbox was emptied.");
@@ -192,7 +192,7 @@ function finalCheck(i, string, token) {
 
     is(gMenulist.getAttribute("label"), noMatchingScripts,
       "The menulist should display a notice that no scripts match the searched token.");
-    is(gScripts.visibleItemsCount, 0,
+    is(gScripts.visibleItems, 0,
       "No scripts should be displayed in the menulist after a bogus search.");
     is(gMenulist.selectedIndex, 1,
       "The menulist should retain its selected index after a bogus search.");
@@ -204,13 +204,31 @@ function finalCheck(i, string, token) {
 
     isnot(gMenulist.getAttribute("label"), noMatchingScripts,
       "The menulist should not display a notice after the searchbox was emptied.");
-    is(gScripts.visibleItemsCount, 2,
+    is(gScripts.visibleItems, 2,
       "Not all the scripts are shown after the searchbox was emptied.");
     is(gMenulist.selectedIndex, 1,
       "The menulist should have retained its selected index after the searchbox was emptied of a bogus search.");
 
-    closeDebuggerAndFinish();
+    noMatchingScriptsSingleCharCheck(token, i);
   });
+}
+
+function noMatchingScriptsSingleCharCheck(token, i) {
+  let noMatchingScripts = gDebugger.L10N.getStr("noMatchingScriptsText");
+
+  write("x");
+  ok(gEditor.getCaretPosition().line == 5 &&
+     gEditor.getCaretPosition().col == 8 + token.length + i,
+    "The editor didn't remain at the correct token. (8)");
+
+  is(gMenulist.getAttribute("label"), noMatchingScripts,
+    "The menulist should display a notice after no matches are found.");
+  is(gScripts.visibleItems, 0,
+    "No scripts should be shown after no matches are found.");
+  is(gMenulist.selectedIndex, 1,
+    "The menulist should have retained its selected index after no matches are found.");
+
+  closeDebuggerAndFinish();
 }
 
 function clear() {
