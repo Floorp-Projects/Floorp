@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Scripts searching
+ * Sources searching
  */
 
 #globalsearch {
@@ -44,7 +44,7 @@
 }
 
 /**
- * Properties elements
+ * Variables view
  */
 
 #variables {
@@ -55,11 +55,11 @@
  * Scope, variable and property elements
  */
 
-.details {
+#variables .details {
   display: none;
 }
 
-.details[open] {
+#variables .details[open] {
   display: -moz-box;
 }
 

@@ -48,18 +48,18 @@ function test() {
     executeSoon(startTest);
   }
 
-  window.addEventListener("Debugger:ScriptShown", onScriptShown);
+  window.addEventListener("Debugger:SourceShown", onScriptShown);
 
   function startTest() {
     if (scriptShown && framesAdded && resumed && !testStarted) {
-      window.removeEventListener("Debugger:ScriptShown", onScriptShown);
+      window.removeEventListener("Debugger:SourceShown", onScriptShown);
       testStarted = true;
       Services.tm.currentThread.dispatch({ run: performTest }, 0);
     }
   }
 
   function performTest() {
-    gScripts = gDebugger.DebuggerView.Scripts;
+    gScripts = gDebugger.DebuggerView.Sources;
     gEditor = gDebugger.editor;
     gBreakpoints = gPane.breakpoints;
     is(Object.keys(gBreakpoints), 0, "There are no breakpoints");
@@ -67,16 +67,22 @@ function test() {
     gEditor.addEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE,
       onEditorBreakpointAdd);
 
-    let location = { url: gScripts.selected, line: 4 };
+    let location = { url: gScripts.selectedValue, line: 4 };
     executeSoon(function () {
       gPane.addBreakpoint(location, onBreakpointAdd);
     });
   }
 
+  let onBpDebuggerAdd = false;
+  let onBpEditorAdd = false;
+
   function onBreakpointAdd(aBpClient) {
-    is(aBpClient.location.url, gScripts.selected, "URL is the same");
+    is(aBpClient.location.url, gScripts.selectedValue, "URL is the same");
     is(aBpClient.location.line, 6, "Line number is new");
     is(aBpClient.requestedLocation.line, 4, "Requested location is correct");
+
+    onBpDebuggerAdd = true;
+    tryFinish();
   }
 
   function onEditorBreakpointAdd(aEvent) {
@@ -86,14 +92,24 @@ function test() {
     is(gEditor.getBreakpoints().length, 1,
       "There is only one breakpoint in the editor");
 
-    ok(!gPane.getBreakpoint(gScripts.selected, 4),
+    ok(!gPane.getBreakpoint(gScripts.selectedValue, 4),
       "There are no breakpoints on an invalid line");
 
-    let br = gPane.getBreakpoint(gScripts.selected, 6);
-    is(br.location.url, gScripts.selected, "URL is correct");
+    let br = gPane.getBreakpoint(gScripts.selectedValue, 6);
+    is(br.location.url, gScripts.selectedValue, "URL is correct");
     is(br.location.line, 6, "Line number is correct");
 
-    closeDebuggerAndFinish();
+    onBpEditorAdd = true;
+    tryFinish();
+  }
+
+  function tryFinish() {
+    info("onBpDebuggerAdd: " + onBpDebuggerAdd);
+    info("onBpEditorAdd: " + onBpEditorAdd);
+
+    if (onBpDebuggerAdd && onBpEditorAdd) {
+      closeDebuggerAndFinish();
+    }
   }
 
   registerCleanupFunction(function () {

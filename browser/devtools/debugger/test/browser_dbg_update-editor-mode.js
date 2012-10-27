@@ -47,12 +47,12 @@ function test()
     executeSoon(startTest);
   }
 
-  window.addEventListener("Debugger:ScriptShown", onScriptShown);
+  window.addEventListener("Debugger:SourceShown", onScriptShown);
 
   function startTest()
   {
     if (scriptShown && framesAdded && resumed && !testStarted) {
-      window.removeEventListener("Debugger:ScriptShown", onScriptShown);
+      window.removeEventListener("Debugger:SourceShown", onScriptShown);
       testStarted = true;
       Services.tm.currentThread.dispatch({ run: testScriptsDisplay }, 0);
     }
@@ -60,7 +60,7 @@ function test()
 }
 
 function testScriptsDisplay() {
-  gScripts = gDebugger.DebuggerView.Scripts._scripts;
+  gScripts = gDebugger.DebuggerView.Sources._container;
 
   is(gDebugger.DebuggerController.activeThread.state, "paused",
     "Should only be getting stack frames while paused.");
@@ -73,7 +73,7 @@ function testScriptsDisplay() {
   ok(gDebugger.editor.getText().search(/debugger/) != -1,
     "The correct script was loaded initially.");
 
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     let url = aEvent.detail.url;
     if (url.indexOf("switching-01.js") != -1) {
       window.removeEventListener(aEvent.type, _onEvent);
@@ -82,7 +82,7 @@ function testScriptsDisplay() {
   });
 
   let url = gDebuggee.document.querySelector("script").src;
-  gDebugger.DebuggerView.Scripts.selectScript(url);
+  gDebugger.DebuggerView.Sources.selectedValue = url;
 }
 
 function testSwitchPaused()
