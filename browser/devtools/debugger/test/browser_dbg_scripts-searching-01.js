@@ -34,7 +34,7 @@ function test()
     gDebuggee.simpleCall();
   });
 
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     window.removeEventListener(aEvent.type, _onEvent);
     scriptShown = true;
     runTest();
@@ -53,9 +53,9 @@ function testScriptSearching() {
 
   gDebugger.DebuggerController.activeThread.resume(function() {
     gEditor = gDebugger.DebuggerView.editor;
-    gScripts = gDebugger.DebuggerView.Scripts;
-    gSearchBox = gScripts._searchbox;
-    gMenulist = gScripts._scripts;
+    gScripts = gDebugger.DebuggerView.Sources;
+    gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
+    gMenulist = gScripts._container;
 
     write(":12");
     ok(gEditor.getCaretPosition().line == 11 &&
@@ -110,12 +110,12 @@ function testScriptSearching() {
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (8)");
 
-    write("::#" + token.length);
+    write("::#" + token);
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (9)");
 
-    write(":::#" + token.length);
+    write(":::#" + token);
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (10)");
@@ -191,7 +191,7 @@ function testScriptSearching() {
     ok(gEditor.getCaretPosition().line == 19 &&
        gEditor.getCaretPosition().col == 4 + token.length,
       "The editor didn't remain at the correct token. (19)");
-    is(gScripts.visibleItemsCount, 1,
+    is(gScripts.visibleItems, 1,
       "Not all the scripts are shown after the search. (20)");
 
     closeDebuggerAndFinish();

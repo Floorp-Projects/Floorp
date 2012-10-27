@@ -69,6 +69,18 @@
   background-color: hsla(211,68%,6%,.2);
 }
 
+.devtools-option-toolbarbutton {
+  -moz-appearance: none;
+  list-style-image: url("chrome://browser/skin/devtools/option-icon.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+  background: none;
+  border: none;
+}
+
+.devtools-option-toolbarbutton[open=true] {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
 .devtools-menulist > .menulist-label-box {
   text-align: center;
 }
