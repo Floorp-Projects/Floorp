@@ -7,6 +7,9 @@
 /* nsStrictTransportSecurityService.cpp, you shouldn't be #including it.     */
 /*****************************************************************************/
 
+#include "mozilla/StandardInteger.h"
+const PRTime gPreloadListExpirationTime = INT64_C(1362156597190000);
+
 class nsSTSPreload
 {
   public:
@@ -34,27 +37,31 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "factor.cc", false },
   { "id.mayfirst.org", false },
   { "intercom.io", false },
+  { "itriskltd.com", true },
   { "keyerror.com", true },
   { "logentries.com", false },
   { "login.sapo.pt", true },
+  { "lookout.com", false },
   { "luneta.nearbuysystems.com", false },
   { "makeyourlaws.org", false },
   { "mattmccutchen.net", true },
   { "members.mayfirst.org", false },
+  { "mylookout.com", false },
   { "neg9.org", false },
   { "passwd.io", true },
   { "piratenlogin.de", true },
   { "pixi.me", true },
   { "riseup.net", true },
   { "sandbox.mydigipass.com", false },
+  { "stocktrade.de", false },
   { "stripe.com", true },
   { "support.mayfirst.org", false },
   { "surfeasy.com", false },
+  { "twitter.com", false },
   { "ubertt.org", true },
   { "www.apollo-auto.com", true },
   { "www.braintreepayments.com", false },
   { "www.cueup.com", false },
-  { "www.elanex.biz", false },
   { "www.intercom.io", false },
   { "www.lookout.com", false },
   { "www.mydigipass.com", false },

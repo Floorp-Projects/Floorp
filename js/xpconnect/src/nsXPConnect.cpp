@@ -15,7 +15,6 @@
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
 #include "jsfriendapi.h"
-#include "jsgc.h"
 #include "dom_quickstubs.h"
 #include "nsNullPrincipal.h"
 #include "nsIURI.h"
@@ -574,7 +573,7 @@ nsXPConnect::GetParticipant()
 JSBool
 xpc_GCThingIsGrayCCThing(void *thing)
 {
-    return AddToCCKind(js_GetGCThingTraceKind(thing)) &&
+    return AddToCCKind(js::GCThingTraceKind(thing)) &&
            xpc_IsGrayGCThing(thing);
 }
 
@@ -623,7 +622,7 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     if (!xpc_IsGrayGCThing(thing))
         return;
 
-    static_cast<js::gc::Cell *>(thing)->unmark(js::gc::GRAY);
+    js::UnmarkGrayGCThing(thing);
 
     /*
      * Trace children of |thing|. If |thing| and its parent are both shapes, |thing| will
@@ -661,7 +660,7 @@ xpc_UnmarkGrayGCThingRecursive(void *thing, JSGCTraceKind kind)
     MOZ_ASSERT(kind != JSTRACE_SHAPE, "UnmarkGrayGCThingRecursive not intended for Shapes");
 
     // Unmark.
-    static_cast<js::gc::Cell *>(thing)->unmark(js::gc::GRAY);
+    js::UnmarkGrayGCThing(thing);
 
     // Trace children.
     UnmarkGrayTracer trc;
@@ -863,7 +862,7 @@ static void
 TraverseGCThing(TraverseSelect ts, void *p, JSGCTraceKind traceKind,
                 nsCycleCollectionTraversalCallback &cb)
 {
-    MOZ_ASSERT(traceKind == js_GetGCThingTraceKind(p));
+    MOZ_ASSERT(traceKind == js::GCThingTraceKind(p));
     bool isMarkedGray = xpc_IsGrayGCThing(p);
 
     if (ts == TRAVERSE_FULL)
@@ -890,7 +889,7 @@ NS_METHOD
 nsXPConnectParticipant::TraverseImpl(nsXPConnectParticipant *that, void *p,
                                      nsCycleCollectionTraversalCallback &cb)
 {
-    TraverseGCThing(TRAVERSE_FULL, p, js_GetGCThingTraceKind(p), cb);
+    TraverseGCThing(TRAVERSE_FULL, p, js::GCThingTraceKind(p), cb);
     return NS_OK;
 }
 
@@ -2409,7 +2408,7 @@ static void
 NoteJSChildGrayWrapperShim(void *data, void *thing)
 {
     TraversalTracer *trc = static_cast<TraversalTracer*>(data);
-    NoteJSChild(trc, thing, js_GetGCThingTraceKind(thing));
+    NoteJSChild(trc, thing, js::GCThingTraceKind(thing));
 }
 
 static void
@@ -2418,7 +2417,7 @@ TraverseObjectShim(void *data, void *thing)
     nsCycleCollectionTraversalCallback *cb =
         static_cast<nsCycleCollectionTraversalCallback*>(data);
 
-    MOZ_ASSERT(js_GetGCThingTraceKind(thing) == JSTRACE_OBJECT);
+    MOZ_ASSERT(js::GCThingTraceKind(thing) == JSTRACE_OBJECT);
     TraverseGCThing(TRAVERSE_CPP, thing, JSTRACE_OBJECT, *cb);
 }
 

@@ -164,17 +164,18 @@ nsXULPopupManager::Observe(nsISupports *aSubject,
 nsXULPopupManager*
 nsXULPopupManager::GetInstance()
 {
+  MOZ_ASSERT(sInstance);
   return sInstance;
 }
 
-nsIContent*
-nsXULPopupManager::Rollup(uint32_t aCount, bool aGetLastRolledUp)
+bool
+nsXULPopupManager::Rollup(uint32_t aCount, nsIContent** aLastRolledUp)
 {
-  nsIContent* lastRolledUpPopup = nullptr;
+  bool consume = false;
 
   nsMenuChainItem* item = GetTopVisibleMenu();
   if (item) {
-    if (aGetLastRolledUp) {
+    if (aLastRolledUp) {
       // we need to get the popup that will be closed last, so that
       // widget can keep track of it so it doesn't reopen if a mouse
       // down event is going to processed.
@@ -186,8 +187,10 @@ nsXULPopupManager::Rollup(uint32_t aCount, bool aGetLastRolledUp)
       nsMenuChainItem* first = item;
       while (first->GetParent())
         first = first->GetParent();
-      lastRolledUpPopup = first->Content();
+      *aLastRolledUp = first->Content();
     }
+
+    consume = item->Frame()->ConsumeOutsideClicks();
 
     // if a number of popups to close has been specified, determine the last
     // popup to close
@@ -205,7 +208,7 @@ nsXULPopupManager::Rollup(uint32_t aCount, bool aGetLastRolledUp)
     HidePopup(item->Content(), true, true, false, lastPopup);
   }
 
-  return lastRolledUpPopup;
+  return consume;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -262,6 +265,13 @@ nsXULPopupManager::GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain)
   }
 
   return sameTypeCount;
+}
+
+nsIWidget*
+nsXULPopupManager::GetRollupWidget()
+{
+  nsMenuChainItem* item = GetTopVisibleMenu();
+  return item ? item->Frame()->GetWidget() : nullptr;
 }
 
 void
@@ -1545,7 +1555,7 @@ nsXULPopupManager::SetCaptureState(nsIContent* aOldPopup)
     return;
 
   if (mWidget) {
-    mWidget->CaptureRollupEvents(this, false, false);
+    mWidget->CaptureRollupEvents(nullptr, false);
     mWidget = nullptr;
   }
 
@@ -1553,7 +1563,7 @@ nsXULPopupManager::SetCaptureState(nsIContent* aOldPopup)
     nsMenuPopupFrame* popup = item->Frame();
     mWidget = popup->GetWidget();
     if (mWidget) {
-      mWidget->CaptureRollupEvents(this, true, popup->ConsumeOutsideClicks());
+      mWidget->CaptureRollupEvents(nullptr, true);
       popup->AttachedDismissalListener();
     }
   }
@@ -2102,7 +2112,7 @@ nsXULPopupManager::KeyDown(nsIDOMKeyEvent* aKeyEvent)
         // The access key just went down and no other
         // modifiers are already down.
         if (mPopups)
-          Rollup(0);
+          Rollup(0, nullptr);
         else if (mActiveMenuBar)
           mActiveMenuBar->MenuClosed();
       }
@@ -2179,7 +2189,7 @@ nsXULPopupManager::KeyPress(nsIDOMKeyEvent* aKeyEvent)
   ) {
     // close popups or deactivate menubar when Tab or F10 are pressed
     if (item)
-      Rollup(0);
+      Rollup(0, nullptr);
     else if (mActiveMenuBar)
       mActiveMenuBar->MenuClosed();
   }

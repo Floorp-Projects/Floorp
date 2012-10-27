@@ -231,6 +231,9 @@ public:
   nsWindowType            GetWindowType() { return mWindowType; }
 
   virtual bool            UseOffMainThreadCompositing();
+
+  static nsIRollupListener* GetActiveRollupListener();
+
 protected:
 
   virtual void            ResolveIconName(const nsAString &aIconName,
@@ -287,10 +290,12 @@ protected:
 
   nsPopupType PopupType() const { return mPopupType; }
 
-  void NotifyRollupGeometryChange(nsIRollupListener* aRollupListener)
+  void NotifyRollupGeometryChange()
   {
-    if (aRollupListener) {
-      aRollupListener->NotifyGeometryChange();
+    // XULPopupManager isn't interested in this notification, so only
+    // send it if gRollupListener is set.
+    if (gRollupListener) {
+      gRollupListener->NotifyGeometryChange();
     }
   }
 
@@ -349,6 +354,8 @@ protected:
   nsPopupLevel      mPopupLevel;
   nsPopupType       mPopupType;
   SizeConstraints   mSizeConstraints;
+
+  static nsIRollupListener* gRollupListener;
 
   // the last rolled up popup. Only set this when an nsAutoRollup is in scope,
   // so it can be cleared automatically.

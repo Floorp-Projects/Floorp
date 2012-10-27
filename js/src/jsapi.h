@@ -3632,55 +3632,10 @@ js_RemoveRoot(JSRuntime *rt, void *rp);
 extern JS_NEVER_INLINE JS_PUBLIC_API(void)
 JS_AnchorPtr(void *p);
 
-/*
- * This symbol may be used by embedders to detect the change from the old
- * JS_AddRoot(JSContext *, void *) APIs to the new ones above.
- */
-#define JS_TYPED_ROOTING_API
-
-/* Obsolete rooting APIs. */
-#define JS_EnterLocalRootScope(cx) (JS_TRUE)
-#define JS_LeaveLocalRootScope(cx) ((void) 0)
-#define JS_LeaveLocalRootScopeWithResult(cx, rval) ((void) 0)
-#define JS_ForgetLocalRoot(cx, thing) ((void) 0)
-
 typedef enum JSGCRootType {
     JS_GC_ROOT_VALUE_PTR,
     JS_GC_ROOT_GCTHING_PTR
 } JSGCRootType;
-
-#ifdef DEBUG
-extern JS_PUBLIC_API(void)
-JS_DumpNamedRoots(JSRuntime *rt,
-                  void (*dump)(const char *name, void *rp, JSGCRootType type, void *data),
-                  void *data);
-#endif
-
-/*
- * Call JS_MapGCRoots to map the GC's roots table using map(rp, name, data).
- * The root is pointed at by rp; if the root is unnamed, name is null; data is
- * supplied from the third parameter to JS_MapGCRoots.
- *
- * The map function should return JS_MAP_GCROOT_REMOVE to cause the currently
- * enumerated root to be removed.  To stop enumeration, set JS_MAP_GCROOT_STOP
- * in the return value.  To keep on mapping, return JS_MAP_GCROOT_NEXT.  These
- * constants are flags; you can OR them together.
- *
- * The JSGCRootType parameter indicates whether rp is a pointer to a Value
- * (which is obtained by '(Value *)rp') or a pointer to a GC-thing pointer
- * (which is obtained by '(void **)rp').
- *
- * JS_MapGCRoots returns the count of roots that were successfully mapped.
- */
-#define JS_MAP_GCROOT_NEXT      0       /* continue mapping entries */
-#define JS_MAP_GCROOT_STOP      1       /* stop mapping entries */
-#define JS_MAP_GCROOT_REMOVE    2       /* remove and free the current entry */
-
-typedef int
-(* JSGCRootMapFun)(void *rp, JSGCRootType type, const char *name, void *data);
-
-extern JS_PUBLIC_API(uint32_t)
-JS_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data);
 
 extern JS_PUBLIC_API(JSBool)
 JS_LockGCThing(JSContext *cx, void *thing);

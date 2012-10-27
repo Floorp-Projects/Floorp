@@ -41,16 +41,16 @@ ledgerscope.net: max-age too low: 86400
 linx.net: could not connect to host
 lists.mayfirst.org: did not receive HSTS header
 login.persona.org: max-age too low: 2592000
-lookout.com: did not receive HSTS header
 mail.google.com: did not receive HSTS header
 market.android.com: did not receive HSTS header
 mydigipass.com: did not receive HSTS header
-mylookout.com: did not receive HSTS header
 neonisi.com: could not connect to host
+openshift.redhat.com: did not receive HSTS header
 ottospora.nl: could not connect to host
 packagist.org: max-age too low: 2592000
 plus.google.com: did not receive HSTS header
 profiles.google.com: did not receive HSTS header
+rhcloud.com: could not connect to host
 romab.com: max-age too low: 2628000
 script.google.com: did not receive HSTS header
 shops.neonisi.com: could not connect to host
@@ -67,6 +67,7 @@ torproject.org: did not receive HSTS header
 uprotect.it: could not connect to host
 www.developer.mydigipass.com: did not receive HSTS header
 www.dropcam.com: max-age too low: 2592000
+www.elanex.biz: did not receive HSTS header
 www.entropia.de: max-age too low: 2678402
 www.gmail.com: did not receive HSTS header
 www.googlemail.com: did not receive HSTS header
@@ -83,3 +84,4 @@ www.neonisi.com: could not connect to host
 www.paycheckrecords.com: did not receive HSTS header
 www.paypal.com: max-age too low: 14400
 www.sandbox.mydigipass.com: did not receive HSTS header
+www.twitter.com: did not receive HSTS header

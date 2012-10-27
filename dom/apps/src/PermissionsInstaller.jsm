@@ -82,7 +82,8 @@ const PermissionsTable = { "resource-lock": {
                            contacts: {
                              app: DENY_ACTION,
                              privileged: PROMPT_ACTION,
-                             certified: ALLOW_ACTION
+                             certified: ALLOW_ACTION,
+                             access: ["read", "write", "create"]
                            },
                            "device-storage:apps": {
                              app: DENY_ACTION,
@@ -92,17 +93,20 @@ const PermissionsTable = { "resource-lock": {
                            "device-storage:pictures": {
                              app: DENY_ACTION,
                              privileged: ALLOW_ACTION,
-                             certified: ALLOW_ACTION
+                             certified: ALLOW_ACTION,
+                             access: ["read", "write", "create"]
                            },
                            "device-storage:videos": {
                              app: DENY_ACTION,
                              privileged: ALLOW_ACTION,
-                             certified: ALLOW_ACTION
+                             certified: ALLOW_ACTION,
+                             access: ["read", "write", "create"]
                            },
                            "device-storage:music": {
                              app: DENY_ACTION,
                              privileged: ALLOW_ACTION,
-                             certified: ALLOW_ACTION
+                             certified: ALLOW_ACTION,
+                             access: ["read", "write", "create"]
                            },
                            sms: {
                              app: DENY_ACTION,
@@ -152,7 +156,8 @@ const PermissionsTable = { "resource-lock": {
                            settings: {
                              app: DENY_ACTION,
                              privileged: DENY_ACTION,
-                             certified: ALLOW_ACTION
+                             certified: ALLOW_ACTION,
+                             access: ["read", "write"]
                            },
                            permissions: {
                              app: DENY_ACTION,
@@ -267,13 +272,18 @@ function expandPermissions(aPermName, aAccess) {
     Cu.reportError("PermissionsTable.jsm: expandPermissions: Unknown Permission: " + aPermName);
     throw new Error("PermissionsTable.jsm: expandPermissions: Unknown Permission: " + aPermName);
   }
+
+/* 
+Temporarily disabled in order to add access fields to gaia: See Bug 805646
   if (!aAccess && PermissionsTable[aPermName].access ||
       aAccess && !PermissionsTable[aPermName].access) {
     Cu.reportError("PermissionsTable.jsm: expandPermissions: Invalid Manifest : " +
                    aPermName + " " + aAccess + "\n");
     throw new Error("PermissionsTable.jsm: expandPermissions: Invalid Manifest");
   }
-  if (!PermissionsTable[aPermName].access) {
+*/
+
+  if (!PermissionsTable[aPermName].access || !aAccess) {
     return [aPermName];
   }
 
@@ -297,7 +307,7 @@ function expandPermissions(aPermName, aAccess) {
 
   let permArr = mapSuffixes(aPermName, requestedSuffixes);
 
-  let expandedPerms = [];
+  let expandedPerms = [aPermName];
   for (let idx in permArr) {
     if (PermissionsTable[aPermName].access.indexOf(requestedSuffixes[idx]) != -1) {
       expandedPerms.push(permArr[idx]);

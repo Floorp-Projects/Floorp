@@ -161,7 +161,6 @@ INSTALLED_HEADERS = \
 		jsdbgapi.h \
 		jsdhash.h \
 		jsfriendapi.h \
-		jsgc.h \
 		jslock.h \
 		json.h \
 		jsproxy.h \
@@ -187,11 +186,7 @@ EXPORTS_ds = \
 		$(NULL)
 
 EXPORTS_gc = \
-		Barrier.h \
-		Heap.h \
 		Root.h \
-		Statistics.h \
-		StoreBuffer.h \
 		$(NULL)
 
 ######################################################
@@ -212,6 +207,7 @@ EXPORTS_NAMESPACES += js
 # LegacyIntTypes.h below is deliberately exempted from this requirement.
 EXPORTS_js = \
 		HashTable.h \
+		HeapAPI.h \
 		LegacyIntTypes.h \
 		MemoryMetrics.h \
 		TemplateLib.h \

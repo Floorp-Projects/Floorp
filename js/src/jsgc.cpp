@@ -1284,18 +1284,6 @@ RecordNativeStackTopForGC(JSRuntime *rt)
 
 } /* namespace js */
 
-bool
-js_IsAddressableGCThing(JSRuntime *rt, uintptr_t w, gc::AllocKind *thingKind, void **thing)
-{
-    rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
-    return js::IsAddressableGCThing(rt, w, false, thingKind, NULL, thing) == CGCT_VALID;
-}
-
-#ifdef DEBUG
-static void
-CheckLeakedRoots(JSRuntime *rt);
-#endif
-
 void
 js_FinishGC(JSRuntime *rt)
 {
@@ -1324,10 +1312,6 @@ js_FinishGC(JSRuntime *rt)
 
     rt->gcChunkPool.expireAndFree(rt, true);
 
-#ifdef DEBUG
-    if (!rt->gcRootsHash.empty())
-        CheckLeakedRoots(rt);
-#endif
     rt->gcRootsHash.clear();
     rt->gcLocksHash.clear();
 }
@@ -1392,72 +1376,6 @@ js_RemoveRoot(JSRuntime *rt, void *rp)
 typedef RootedValueMap::Range RootRange;
 typedef RootedValueMap::Entry RootEntry;
 typedef RootedValueMap::Enum RootEnum;
-
-#ifdef DEBUG
-
-static void
-CheckLeakedRoots(JSRuntime *rt)
-{
-    uint32_t leakedroots = 0;
-
-    /* Warn (but don't assert) debug builds of any remaining roots. */
-    for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {
-        RootEntry &entry = r.front();
-        leakedroots++;
-        fprintf(stderr,
-                "JS engine warning: leaking GC root \'%s\' at %p\n",
-                entry.value.name ? entry.value.name : "", entry.key);
-    }
-
-    if (leakedroots > 0) {
-        if (leakedroots == 1) {
-            fprintf(stderr,
-"JS engine warning: 1 GC root remains after destroying the JSRuntime at %p.\n"
-"                   This root may point to freed memory. Objects reachable\n"
-"                   through it have not been finalized.\n",
-                    (void *) rt);
-        } else {
-            fprintf(stderr,
-"JS engine warning: %lu GC roots remain after destroying the JSRuntime at %p.\n"
-"                   These roots may point to freed memory. Objects reachable\n"
-"                   through them have not been finalized.\n",
-                    (unsigned long) leakedroots, (void *) rt);
-        }
-    }
-}
-
-void
-js_DumpNamedRoots(JSRuntime *rt,
-                  void (*dump)(const char *name, void *rp, JSGCRootType type, void *data),
-                  void *data)
-{
-    for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {
-        RootEntry &entry = r.front();
-        if (const char *name = entry.value.name)
-            dump(name, entry.key, entry.value.type, data);
-    }
-}
-
-#endif /* DEBUG */
-
-uint32_t
-js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
-{
-    int ct = 0;
-    for (RootEnum e(rt->gcRootsHash); !e.empty(); e.popFront()) {
-        RootEntry &entry = e.front();
-
-        ct++;
-        int mapflags = map(entry.key, entry.value.type, entry.value.name, data);
-
-        if (mapflags & JS_MAP_GCROOT_REMOVE)
-            e.removeFront();
-        if (mapflags & JS_MAP_GCROOT_STOP)
-            break;
-    }
-
-    return ct;
-}
 
 static size_t
 ComputeTriggerBytes(JSCompartment *comp, size_t lastBytes, size_t maxBytes, JSGCInvocationKind gckind)
@@ -2244,26 +2162,6 @@ SetMarkStackLimit(JSRuntime *rt, size_t limit)
 
 } /* namespace js */
 
-static void
-gc_root_traversal(JSTracer *trc, const RootEntry &entry)
-{
-    const char *name = entry.value.name ? entry.value.name : "root";
-    if (entry.value.type == JS_GC_ROOT_GCTHING_PTR)
-        MarkGCThingRoot(trc, reinterpret_cast<void **>(entry.key), name);
-    else
-        MarkValueRoot(trc, reinterpret_cast<Value *>(entry.key), name);
-}
-
-static void
-gc_lock_traversal(const GCLocks::Entry &entry, JSTracer *trc)
-{
-    JS_ASSERT(entry.value >= 1);
-    JS_SET_TRACING_LOCATION(trc, (void *)&entry.key);
-    void *tmp = entry.key;
-    MarkGCThingRoot(trc, &tmp, "locked object");
-    JS_ASSERT(tmp == entry.key);
-}
-
 namespace js {
 
 void
@@ -2550,11 +2448,23 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
         rt->markSelfHostedGlobal(trc);
     }
 
-    for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront())
-        gc_root_traversal(trc, r.front());
+    for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {
+        const RootEntry &entry = r.front();
+        const char *name = entry.value.name ? entry.value.name : "root";
+        if (entry.value.type == JS_GC_ROOT_GCTHING_PTR)
+            MarkGCThingRoot(trc, reinterpret_cast<void **>(entry.key), name);
+        else
+            MarkValueRoot(trc, reinterpret_cast<Value *>(entry.key), name);
+    }
 
-    for (GCLocks::Range r = rt->gcLocksHash.all(); !r.empty(); r.popFront())
-        gc_lock_traversal(r.front(), trc);
+    for (GCLocks::Range r = rt->gcLocksHash.all(); !r.empty(); r.popFront()) {
+        const GCLocks::Entry &entry = r.front();
+        JS_ASSERT(entry.value >= 1);
+        JS_SET_TRACING_LOCATION(trc, (void *)&entry.key);
+        void *tmp = entry.key;
+        MarkGCThingRoot(trc, &tmp, "locked object");
+        JS_ASSERT(tmp == entry.key);
+    }
 
     if (rt->scriptAndCountsVector) {
         ScriptAndCountsVector &vec = *rt->scriptAndCountsVector;
@@ -3133,7 +3043,7 @@ GCHelperThread::startBackgroundAllocationIfIdle()
 #endif /* JS_THREADSAFE */
 }
 
-JS_FRIEND_API(void)
+void
 GCHelperThread::replenishAndFreeLater(void *ptr)
 {
     JS_ASSERT(freeCursor == freeCursorEnd);

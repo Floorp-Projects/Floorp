@@ -32,7 +32,7 @@ nsTextEquivUtils::GetNameFromSubtree(Accessible* aAccessible,
     return NS_OK;
 
   gInitiatorAcc = aAccessible;
-  if (IsNameFromSubtreeAllowed(aAccessible)) {
+  if (GetRoleRule(aAccessible->Role()) == eFromSubtree) {
     //XXX: is it necessary to care the accessible is not a document?
     if (aAccessible->IsContent()) {
       nsAutoString name;

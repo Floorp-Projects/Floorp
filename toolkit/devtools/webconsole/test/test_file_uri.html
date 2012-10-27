@@ -70,7 +70,7 @@ function onFileActivity(aType, aPacket)
   gState.dbgClient.removeListener("fileActivity", onFileActivity);
 
   info("aPacket.uri: " + aPacket.uri);
-  ok(/bug798764\.html$/.test(aPacket.uri), "file URI match");
+  ok(/\bbug798764\b.*\.html$/.test(aPacket.uri), "file URI match");
 
   testEnd();
 }

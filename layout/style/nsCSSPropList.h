@@ -3366,7 +3366,7 @@ CSS_PROP_SHORTHAND(
     MozTransform,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_IS_ALIAS,
-    "")
+    "layout.css.prefixes.transforms")
 
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 // We have a few properties that are in style structs but are not stored
