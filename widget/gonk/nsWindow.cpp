@@ -517,6 +517,8 @@ nsWindow::SetInputContext(const InputContext& aContext,
 NS_IMETHODIMP_(InputContext)
 nsWindow::GetInputContext()
 {
+    // There is only one IME context on Gonk.
+    mInputContext.mNativeIMEContext = nullptr;
     return mInputContext;
 }
 

@@ -466,6 +466,7 @@ void nsCSSRendering::Init()
   NS_ASSERTION(!gInlineBGData, "Init called twice");
   gInlineBGData = new InlineBackgroundData();
   gGradientCache = new GradientCache();
+  nsCSSBorderRenderer::Init();
 }
 
 // Clean up any global variables used by nsCSSRendering.
@@ -475,6 +476,7 @@ void nsCSSRendering::Shutdown()
   gInlineBGData = nullptr;
   delete gGradientCache;
   gGradientCache = nullptr;
+  nsCSSBorderRenderer::Shutdown();
 }
 
 /**

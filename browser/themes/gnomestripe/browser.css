@@ -1380,6 +1380,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #share-button {
   -moz-image-region: rect(0, 16px, 16px, 0);
+  -moz-margin-end: 3px;
 }
 
 #socialUserPortrait {
@@ -2805,6 +2806,13 @@ html|*#gcli-output-frame {
 
 .chatbar-button > menupopup > menuitem[activity] {
   font-weight: bold;
+}
+
+.chatbar-button > menupopup > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
+  width: auto;
+  height: auto;
+  max-height: 16px;
+  max-width: 16px;
 }
 
 .chatbar-innerbox {

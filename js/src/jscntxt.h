@@ -552,6 +552,7 @@ struct JSRuntime : js::RuntimeFriendFields
     int64_t             gcLastGCTime;
     int64_t             gcJitReleaseTime;
     JSGCMode            gcMode;
+    size_t              gcAllocationThreshold;
     bool                gcHighFrequencyGC;
     uint64_t            gcHighFrequencyTimeThreshold;
     uint64_t            gcHighFrequencyLowLimitBytes;

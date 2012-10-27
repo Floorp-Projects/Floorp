@@ -1642,6 +1642,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #share-button {
   -moz-image-region: rect(0, 16px, 16px, 0);
+  -moz-margin-end: 3px;
 }
 
 #socialUserPortrait {
@@ -3485,10 +3486,11 @@ html|*#gcli-output-frame {
   -moz-border-end: 1px solid #ccc;
 }
 
-.chatbar-button > .button-box > .box-inherit > .button-icon {
+.chatbar-button > menupopup > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
+  width: auto;
+  height: auto;
   max-height: 16px;
   max-width: 16px;
-  padding: 2px;
 }
 
 .chatbar-button > .toolbarbutton-icon {

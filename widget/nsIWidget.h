@@ -278,6 +278,8 @@ struct IMEState {
 };
 
 struct InputContext {
+  InputContext() : mNativeIMEContext(nullptr) {}
+
   IMEState mIMEState;
 
   /* The type of the input if the input is a html input field */
@@ -288,6 +290,11 @@ struct InputContext {
 
   /* A hint for the action that is performed when the input is submitted */
   nsString mActionHint;
+
+  /* Native IME context for the widget.  This doesn't come from the argument of
+     SetInputContext().  If there is only one context in the process, this may
+     be nullptr. */
+  void* mNativeIMEContext;
 };
 
 struct InputContextAction {

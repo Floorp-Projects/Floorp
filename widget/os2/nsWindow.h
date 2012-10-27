@@ -183,10 +183,7 @@ public:
   {
     mInputContext = aInputContext;
   }
-  NS_IMETHOD_(InputContext) GetInputContext()
-  {
-    return mInputContext;
-  }
+  NS_IMETHOD_(InputContext) GetInputContext();
 
   // nsWindow
   static void           ReleaseGlobals();

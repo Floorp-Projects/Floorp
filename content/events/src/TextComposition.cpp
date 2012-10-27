@@ -24,9 +24,7 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
                                  nsINode* aNode,
                                  nsGUIEvent* aEvent) :
   mPresContext(aPresContext), mNode(aNode),
-  // temporarily, we should assume that one native IME context is per native
-  // widget.
-  mNativeContext(aEvent->widget),
+  mNativeContext(aEvent->widget->GetInputContext().mNativeIMEContext),
   mIsSynthesizedForTests(
     (aEvent->flags & NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT) != 0)
 {
@@ -44,9 +42,7 @@ TextComposition::TextComposition(const TextComposition& aOther)
 bool
 TextComposition::MatchesNativeContext(nsIWidget* aWidget) const
 {
-  // temporarily, we should assume that one native IME context is per one
-  // native widget.
-  return mNativeContext == static_cast<void*>(aWidget);
+  return mNativeContext == aWidget->GetInputContext().mNativeIMEContext;
 }
 
 bool
