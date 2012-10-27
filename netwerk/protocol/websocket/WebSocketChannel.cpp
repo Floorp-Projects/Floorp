@@ -20,6 +20,8 @@
 #include "nsIStreamConverterService.h"
 #include "nsIIOService2.h"
 #include "nsIProtocolProxyService.h"
+#include "nsIProxyInfo.h"
+#include "nsIProxiedChannel.h"
 
 #include "nsAutoPtr.h"
 #include "nsStandardURL.h"
@@ -35,6 +37,7 @@
 #include "nsNetUtil.h"
 #include "mozilla/Attributes.h"
 #include "TimeStamp.h"
+#include "mozilla/Telemetry.h"
 
 #include "plbase64.h"
 #include "prmem.h"
@@ -917,7 +920,7 @@ WebSocketChannel::WebSocketChannel() :
   mPingTimeout(0),
   mPingResponseTimeout(10000),
   mMaxConcurrentConnections(200),
-  mRecvdHttpOnStartRequest(0),
+  mGotUpgradeOK(0),
   mRecvdHttpUpgradeTransport(0),
   mRequestedClose(0),
   mClientClosed(0),
@@ -2187,6 +2190,36 @@ WebSocketChannel::StartWebsocketData()
   return mSocketIn->AsyncWait(this, 0, 0, mSocketThread);
 }
 
+void
+WebSocketChannel::ReportConnectionTelemetry()
+{ 
+  // 3 bits are used. high bit is for wss, middle bit for failed,
+  // and low bit for proxy..
+  // 0 - 7 : ws-ok-plain, ws-ok-proxy, ws-failed-plain, ws-failed-proxy,
+  //         wss-ok-plain, wss-ok-proxy, wss-failed-plain, wss-failed-proxy
+
+  bool didProxy = false;
+
+  nsCOMPtr<nsIProxyInfo> pi;
+  nsCOMPtr<nsIProxiedChannel> pc = do_QueryInterface(mChannel);
+  if (pc)
+    pc->GetProxyInfo(getter_AddRefs(pi));
+  if (pi) {
+    nsAutoCString proxyType;
+    pi->GetType(proxyType);
+    if (!proxyType.IsEmpty() &&
+        !proxyType.Equals(NS_LITERAL_CSTRING("direct")))
+      didProxy = true;
+  }
+
+  uint8_t value = (mEncrypted ? (1 << 2) : 0) | 
+    (!mGotUpgradeOK ? (1 << 1) : 0) |
+    (didProxy ? (1 << 0) : 0);
+
+  LOG(("WebSocketChannel::ReportConnectionTelemetry() %p %d", this, value));
+  Telemetry::Accumulate(Telemetry::WEBSOCKETS_HANDSHAKE_TYPE, value);
+}
+
 // nsIDNSListener
 
 NS_IMETHODIMP
@@ -2380,7 +2413,7 @@ WebSocketChannel::Notify(nsITimer *timer)
     LOG(("WebSocketChannel:: Expecting Server Close - Timed Out\n"));
     AbortSession(NS_ERROR_NET_TIMEOUT);
   } else if (timer == mOpenTimer) {
-    NS_ABORT_IF_FALSE(!mRecvdHttpOnStartRequest,
+    NS_ABORT_IF_FALSE(!mGotUpgradeOK,
                       "Open Timer after open complete");
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
 
@@ -2717,7 +2750,7 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport *aTransport,
   }
 
   LOG(("WebSocketChannel::OnTransportAvailable %p [%p %p %p] rcvdonstart=%d\n",
-       this, aTransport, aSocketIn, aSocketOut, mRecvdHttpOnStartRequest));
+       this, aTransport, aSocketIn, aSocketOut, mGotUpgradeOK));
 
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
   NS_ABORT_IF_FALSE(!mRecvdHttpUpgradeTransport, "OTA duplicated");
@@ -2734,7 +2767,7 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport *aTransport,
   if (NS_FAILED(rv)) return rv;
 
   mRecvdHttpUpgradeTransport = 1;
-  if (mRecvdHttpOnStartRequest)
+  if (mGotUpgradeOK)
     return StartWebsocketData();
   return NS_OK;
 }
@@ -2748,7 +2781,7 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
   LOG(("WebSocketChannel::OnStartRequest(): %p [%p %p] recvdhttpupgrade=%d\n",
        this, aRequest, aContext, mRecvdHttpUpgradeTransport));
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
-  NS_ABORT_IF_FALSE(!mRecvdHttpOnStartRequest, "OTA duplicated");
+  NS_ABORT_IF_FALSE(!mGotUpgradeOK, "OTA duplicated");
 
   if (mOpenTimer) {
     mOpenTimer->Cancel();
@@ -2881,7 +2914,7 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
   if (NS_FAILED(rv))
     return rv;
 
-  mRecvdHttpOnStartRequest = 1;
+  mGotUpgradeOK = 1;
   if (mRecvdHttpUpgradeTransport)
     return StartWebsocketData();
 
@@ -2896,6 +2929,8 @@ WebSocketChannel::OnStopRequest(nsIRequest *aRequest,
   LOG(("WebSocketChannel::OnStopRequest() %p [%p %p %x]\n",
        this, aRequest, aContext, aStatusCode));
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
+
+  ReportConnectionTelemetry();
 
   // This is the end of the HTTP upgrade transaction, the
   // upgraded streams live on
