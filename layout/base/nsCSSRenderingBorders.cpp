@@ -1292,9 +1292,6 @@ nsCSSBorderRenderer::CreateCornerGradient(mozilla::css::Corner aCorner,
   pat2.y = cornerOrigin.y -
     mBorderWidths[cornerWidth[aCorner]]  * gradientCoeff[aCorner].b;
 
-  float gradientOffset = 0.25 / sqrt(pow(mBorderWidths[cornerHeight[aCorner]], 2) +
-                                 pow(mBorderWidths[cornerHeight[aCorner]], 2));
-
   aPoint1 = Point(pat1.x, pat1.y);
   aPoint2 = Point(pat2.x, pat2.y);
 
