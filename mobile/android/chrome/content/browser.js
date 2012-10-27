@@ -1596,7 +1596,7 @@ var SelectionHandler = {
   // Keeps track of data about the dimensions of the selection. Coordinates
   // stored here are relative to the _view window.
   cache: null,
-  _activeType: this.TYPE_NONE,
+  _activeType: 0, // TYPE_NONE
 
   // The window that holds the selection (can be a sub-frame)
   get _view() {
