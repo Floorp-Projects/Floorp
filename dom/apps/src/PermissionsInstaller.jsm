@@ -270,10 +270,10 @@ for (let permName in PermissionsTable) {
 function expandPermissions(aPermName, aAccess) {
   if (!PermissionsTable[aPermName]) {
     Cu.reportError("PermissionsTable.jsm: expandPermissions: Unknown Permission: " + aPermName);
-    throw new Error("PermissionsTable.jsm: expandPermissions: Unknown Permission: " + aPermName);
+    return [];
   }
 
-/* 
+/*
 Temporarily disabled in order to add access fields to gaia: See Bug 805646
   if (!aAccess && PermissionsTable[aPermName].access ||
       aAccess && !PermissionsTable[aPermName].access) {
@@ -387,9 +387,9 @@ let PermissionsInstaller = {
 
       for (let permName in newManifest.permissions) {
         if (!PermissionsTable[permName]) {
-          throw new Error("PermissionsInstaller.jsm: '" + permName + "'" +
-                         " is not a valid Webapps permission type. Aborting Webapp installation");
-          return;
+          Cu.reportError("PermissionsInstaller.jsm: '" + permName + "'" +
+                         " is not a valid Webapps permission type.");
+          continue;
         }
 
         let perms = expandPermissions(permName,
