@@ -24,6 +24,7 @@
 #include "nsIXULRuntime.h"
 #include "nsIXULWindow.h"
 #include "nsIBaseWindow.h"
+#include "nsXULPopupManager.h"
 #include "nsEventStateManager.h"
 #include "nsIWidgetListener.h"
 #include "nsIGfxInfo.h"
@@ -47,6 +48,8 @@ static bool debug_InSecureKeyboardInputMode = false;
 #ifdef NOISY_WIDGET_LEAKS
 static int32_t gNumWidgets;
 #endif
+
+nsIRollupListener* nsBaseWidget::gRollupListener = nullptr;
 
 using namespace mozilla::layers;
 using namespace mozilla;
@@ -1295,6 +1298,17 @@ void nsBaseWidget::SetSizeConstraints(const SizeConstraints& aConstraints)
 const widget::SizeConstraints& nsBaseWidget::GetSizeConstraints() const
 {
   return mSizeConstraints;
+}
+
+// static
+nsIRollupListener*
+nsBaseWidget::GetActiveRollupListener()
+{
+  // If set, then this is likely an <html:select> dropdown.
+  if (gRollupListener)
+    return gRollupListener;
+
+  return nsXULPopupManager::GetInstance();
 }
 
 void

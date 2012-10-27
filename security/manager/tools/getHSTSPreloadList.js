@@ -27,7 +27,7 @@ const SOURCE = "https://src.chromium.org/viewvc/chrome/trunk/src/net/base/transp
 const OUTPUT = "nsSTSPreloadList.inc";
 const ERROR_OUTPUT = "nsSTSPreloadList.errors";
 const MINIMUM_REQUIRED_MAX_AGE = 60 * 60 * 24 * 7 * 18;
-const PREFIX = "/* This Source Code Form is subject to the terms of the Mozilla Public\n" +
+const HEADER = "/* This Source Code Form is subject to the terms of the Mozilla Public\n" +
 " * License, v. 2.0. If a copy of the MPL was not distributed with this\n" +
 " * file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n" +
 "\n" +
@@ -36,6 +36,8 @@ const PREFIX = "/* This Source Code Form is subject to the terms of the Mozilla 
 "/* nsStrictTransportSecurityService.cpp, you shouldn't be #including it.     */\n" +
 "/*****************************************************************************/\n" +
 "\n" +
+"#include \"mozilla/StandardInteger.h\"\n";
+const PREFIX = "\n" +
 "class nsSTSPreload\n" +
 "{\n" +
 "  public:\n" +
@@ -171,12 +173,26 @@ function writeTo(string, fos) {
   fos.write(string, string.length);
 }
 
+// Determines and returns a string representing a declaration of when this
+// preload list should no longer be used.
+// This is the current time plus MINIMUM_REQUIRED_MAX_AGE.
+function getExpirationTimeString() {
+  var now = new Date();
+  var nowMillis = now.getTime();
+  // MINIMUM_REQUIRED_MAX_AGE is in seconds, so convert to milliseconds
+  var expirationMillis = nowMillis + (MINIMUM_REQUIRED_MAX_AGE * 1000);
+  var expirationMicros = expirationMillis * 1000;
+  return "const PRTime gPreloadListExpirationTime = INT64_C(" + expirationMicros + ");\n";
+}
+
 function output(sortedStatuses) {
   try {
     var file = FileUtils.getFile("CurWorkD", [OUTPUT]);
     var errorFile = FileUtils.getFile("CurWorkD", [ERROR_OUTPUT]);
     var fos = FileUtils.openSafeFileOutputStream(file);
     var eos = FileUtils.openSafeFileOutputStream(errorFile);
+    writeTo(HEADER, fos);
+    writeTo(getExpirationTimeString(), fos);
     writeTo(PREFIX, fos);
     for (var status of hstsStatuses) {
       if (status.maxAge >= MINIMUM_REQUIRED_MAX_AGE) {

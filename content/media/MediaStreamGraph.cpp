@@ -585,7 +585,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
   bool finished;
   {
     MutexAutoLock lock(aStream->mMutex);
-    if (aStream->mPullEnabled) {
+    if (aStream->mPullEnabled && !aStream->mFinished) {
       for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
         MediaStreamListener* l = aStream->mListeners[j];
         {

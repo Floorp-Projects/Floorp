@@ -134,8 +134,6 @@ const gint kEvents = GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
                      GDK_POINTER_MOTION_MASK;
 
 /* utility functions */
-static bool       check_for_rollup(gdouble aMouseX, gdouble aMouseY,
-                                   bool aIsWheel, bool aAlwaysRollup);
 static bool       is_mouse_in_window(GdkWindow* aWindow,
                                      gdouble aMouseX, gdouble aMouseY);
 static nsWindow  *get_window_for_gtk_widget(GtkWidget *widget);
@@ -257,10 +255,6 @@ static bool              gBlockActivateEvent   = false;
 static bool              gGlobalsInitialized   = false;
 static bool              gRaiseWindows         = true;
 static nsWindow         *gPluginFocusWindow    = NULL;
-
-static nsIRollupListener*          gRollupListener;
-static nsWeakPtr                   gRollupWindow;
-static bool                        gConsumeRollupEvent;
 
 
 #define NS_WINDOW_TITLE_MAX_LENGTH 4095
@@ -640,13 +634,10 @@ nsWindow::Destroy(void)
                                          FuncToGpointer(theme_changed_cb),
                                          this);
 
-    // ungrab if required
-    nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
-    if (static_cast<nsIWidget *>(this) == rollupWidget.get()) {
-        if (gRollupListener)
-            gRollupListener->Rollup(0);
-        gRollupWindow = nullptr;
-        gRollupListener = nullptr;
+    nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
+    nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
+    if (static_cast<nsIWidget *>(this) == rollupWidget) {
+        rollupListener->Rollup(0, nullptr);
     }
 
     // dragService will be null after shutdown of the service manager.
@@ -1082,7 +1073,7 @@ nsWindow::Resize(int32_t aWidth, int32_t aHeight, bool aRepaint)
         }
     }
 
-    NotifyRollupGeometryChange(gRollupListener);
+    NotifyRollupGeometryChange();
 
     // send a resize notification if this is a toplevel
     if (mIsTopLevel || mListenForResizes) {
@@ -1148,7 +1139,7 @@ nsWindow::Resize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
         }
     }
 
-    NotifyRollupGeometryChange(gRollupListener);
+    NotifyRollupGeometryChange();
 
     if (mIsTopLevel || mListenForResizes) {
         DispatchResized(aWidth, aHeight);
@@ -1208,7 +1199,7 @@ nsWindow::Move(int32_t aX, int32_t aY)
         gdk_window_move(mGdkWindow, aX, aY);
     }
 
-    NotifyRollupGeometryChange(gRollupListener);
+    NotifyRollupGeometryChange();
     return NS_OK;
 }
 
@@ -1840,8 +1831,7 @@ nsWindow::CaptureMouse(bool aCapture)
 
 NS_IMETHODIMP
 nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
-                              bool               aDoCapture,
-                              bool               aConsumeRollupEvent)
+                              bool               aDoCapture)
 {
     if (!mGdkWindow)
         return NS_OK;
@@ -1853,10 +1843,7 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
     LOG(("CaptureRollupEvents %p\n", (void *)this));
 
     if (aDoCapture) {
-        gConsumeRollupEvent = aConsumeRollupEvent;
         gRollupListener = aListener;
-        gRollupWindow = do_GetWeakReference(static_cast<nsIWidget*>
-                                                       (this));
         // real grab is only done when there is no dragging
         if (!nsWindow::DragInProgress()) {
             gtk_grab_add(widget);
@@ -1872,7 +1859,6 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
         // was not added to this widget.
         gtk_grab_remove(widget);
         gRollupListener = nullptr;
-        gRollupWindow = nullptr;
     }
 
     return NS_OK;
@@ -2320,7 +2306,7 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
         // Cygwin/X (bug 672103).
         if (mBounds.x != screenBounds.x ||
             mBounds.y != screenBounds.y) {
-            check_for_rollup(0, 0, false, true);
+            CheckForRollup(0, 0, false, true);
         }
     }
 
@@ -2703,9 +2689,7 @@ nsWindow::OnButtonPressEvent(GdkEventButton *aEvent)
     }
 
     // check to see if we should rollup
-    bool rolledUp =
-        check_for_rollup(aEvent->x_root, aEvent->y_root, false, false);
-    if (gConsumeRollupEvent && rolledUp)
+    if (CheckForRollup(aEvent->x_root, aEvent->y_root, false, false))
         return;
 
     gdouble pressure = 0;
@@ -2853,7 +2837,7 @@ nsWindow::OnContainerFocusOutEvent(GdkEventFocus *aEvent)
         }
 
         if (shouldRollup) {
-            check_for_rollup(0, 0, false, true);
+            CheckForRollup(0, 0, false, true);
         }
     }
 
@@ -3089,9 +3073,7 @@ void
 nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
 {
     // check to see if we should rollup
-    bool rolledUp =
-        check_for_rollup(aEvent->x_root, aEvent->y_root, true, false);
-    if (gConsumeRollupEvent && rolledUp)
+    if (CheckForRollup(aEvent->x_root, aEvent->y_root, true, false))
         return;
 
     WheelEvent wheelEvent(true, NS_WHEEL_WHEEL, this);
@@ -4475,7 +4457,7 @@ nsWindow::GrabPointer(guint32 aTime)
         // A failed grab indicates that another app has grabbed the pointer.
         // Check for rollup now, because, without the grab, we likely won't
         // get subsequent button press events.
-        check_for_rollup(0, 0, false, true);
+        CheckForRollup(0, 0, false, true);
     }
 }
 
@@ -4786,20 +4768,20 @@ nsWindow::HideWindowChrome(bool aShouldHide)
     return NS_OK;
 }
 
-static bool
-check_for_rollup(gdouble aMouseX, gdouble aMouseY,
-                 bool aIsWheel, bool aAlwaysRollup)
+bool
+nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY,
+                         bool aIsWheel, bool aAlwaysRollup)
 {
     bool retVal = false;
-    nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
-
-    if (rollupWidget && gRollupListener) {
+    nsIRollupListener* rollupListener = GetActiveRollupListener();
+    nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
+    if (rollupWidget) {
         GdkWindow *currentPopup =
             (GdkWindow *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
         if (aAlwaysRollup || !is_mouse_in_window(currentPopup, aMouseX, aMouseY)) {
             bool rollup = true;
             if (aIsWheel) {
-                rollup = gRollupListener->ShouldRollupOnMouseWheelEvent();
+                rollup = rollupListener->ShouldRollupOnMouseWheelEvent();
                 retVal = true;
             }
             // if we're dealing with menus, we probably have submenus and
@@ -4808,7 +4790,7 @@ check_for_rollup(gdouble aMouseX, gdouble aMouseY,
             uint32_t popupsToRollup = UINT32_MAX;
             if (!aAlwaysRollup) {
                 nsAutoTArray<nsIWidget*, 5> widgetChain;
-                uint32_t sameTypeCount = gRollupListener->GetSubmenuWidgetChain(&widgetChain);
+                uint32_t sameTypeCount = rollupListener->GetSubmenuWidgetChain(&widgetChain);
                 for (uint32_t i=0; i<widgetChain.Length(); ++i) {
                     nsIWidget* widget = widgetChain[i];
                     GdkWindow* currWindow =
@@ -4831,16 +4813,14 @@ check_for_rollup(gdouble aMouseX, gdouble aMouseY,
             } // if rollup listener knows about menus
 
             // if we've determined that we should still rollup, do it.
-            if (rollup) {
-                gRollupListener->Rollup(popupsToRollup);
+            if (rollup && rollupListener->Rollup(popupsToRollup, nullptr)) {
                 if (popupsToRollup == UINT32_MAX) {
                     retVal = true;
                 }
             }
         }
     } else {
-        gRollupWindow = nullptr;
-        gRollupListener = nullptr;
+        nsBaseWidget::gRollupListener = nullptr;
     }
 
     return retVal;

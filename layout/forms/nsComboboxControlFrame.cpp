@@ -425,7 +425,7 @@ nsComboboxControlFrame::ShowList(bool aShowList)
     if (view) {
       nsIWidget* widget = view->GetWidget();
       if (widget) {
-        widget->CaptureRollupEvents(this, mDroppedDown, mDroppedDown);
+        widget->CaptureRollupEvents(this, mDroppedDown);
 
         if (!aShowList) {
           nsCOMPtr<nsIRunnable> widgetDestroyer =
@@ -1456,7 +1456,7 @@ nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
       if (view) {
         nsIWidget* widget = view->GetWidget();
         if (widget)
-          widget->CaptureRollupEvents(this, false, true);
+          widget->CaptureRollupEvents(this, false);
       }
     }
   }
@@ -1509,21 +1509,34 @@ nsComboboxControlFrame::SetInitialChildList(ChildListID     aListID,
 //----------------------------------------------------------------------
   //nsIRollupListener
 //----------------------------------------------------------------------
-nsIContent*
-nsComboboxControlFrame::Rollup(uint32_t aCount, bool aGetLastRolledUp)
+bool
+nsComboboxControlFrame::Rollup(uint32_t aCount, nsIContent** aLastRolledUp)
 {
-  if (mDroppedDown) {
-    nsWeakFrame weakFrame(this);
-    mListControlFrame->AboutToRollup(); // might destroy us
-    if (!weakFrame.IsAlive())
-      return nullptr;
-    ShowDropDown(false); // might destroy us
-    if (!weakFrame.IsAlive())
-      return nullptr;
+  if (!mDroppedDown)
+    return false;
+
+  nsWeakFrame weakFrame(this);
+  mListControlFrame->AboutToRollup(); // might destroy us
+  if (!weakFrame.IsAlive())
+    return true;
+  ShowDropDown(false); // might destroy us
+  if (weakFrame.IsAlive()) {
     mListControlFrame->CaptureMouseEvents(false);
   }
 
-  return nullptr;
+  return true;
+}
+
+nsIWidget*
+nsComboboxControlFrame::GetRollupWidget()
+{
+  nsIFrame* listFrame = do_QueryFrame(mListControlFrame);
+  if (!listFrame)
+    return nullptr;
+
+  nsIView* view = listFrame->GetView();
+  MOZ_ASSERT(view);
+  return view->GetWidget();
 }
 
 void

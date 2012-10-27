@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=804970
+-->
+<head>
+  <title>Test for dynamic changes to CSS 'vh', 'vw', 'vmin', and 'vmax' units</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=804970">Mozilla Bug 804970</a>
+<iframe id="iframe" src="viewport_units_iframe.html"></iframe>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for CSS vh/vw/vmin/vmax units **/
+
+function px_to_num(str)
+{
+    return Number(String(str).match(/^([\d.]+)px$/)[1]);
+}
+
+function width(elt)
+{
+    return px_to_num(elt.ownerDocument.defaultView.getComputedStyle(elt, "").width);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+    var iframe = document.getElementById("iframe");
+    var idoc = iframe.contentDocument;
+    var vh = idoc.getElementById("vh");
+    var vw = idoc.getElementById("vw");
+    var vmin = idoc.getElementById("vmin");
+    var vmax = idoc.getElementById("vmax");
+
+    iframe.style.width = "100px";
+    iframe.style.height = "250px";
+    is(width(vh), 250, "vh should be 250px");
+    is(width(vw), 100, "vw should be 100px");
+    is(width(vmin), 100, "vmin should be 100px");
+    is(width(vmax), 250, "vmax should be 250px");
+
+    iframe.style.width = "300px";
+    is(width(vh), 250, "vh should be 250px");
+    is(width(vw), 300, "vw should be 300px");
+    is(width(vmin), 250, "vmin should be 250px");
+    is(width(vmax), 300, "vmax should be 300px");
+
+    iframe.style.height = "200px";
+    is(width(vh), 200, "vh should be 200px");
+    is(width(vw), 300, "vw should be 300px");
+    is(width(vmin), 200, "vmin should be 200px");
+    is(width(vmax), 300, "vmax should be 300px");
+
+    SimpleTest.finish();
+}
+
+window.addEventListener("load", run, false);
+
+</script>
+</pre>
+</body>
+</html>

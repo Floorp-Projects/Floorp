@@ -522,6 +522,19 @@ js::GCThingIsMarkedGray(void *thing)
     return reinterpret_cast<gc::Cell *>(thing)->isMarked(gc::GRAY);
 }
 
+JS_FRIEND_API(JSGCTraceKind)
+js::GCThingTraceKind(void *thing)
+{
+    JS_ASSERT(thing);
+    return gc::GetGCThingTraceKind(thing);
+}
+
+JS_FRIEND_API(void)
+js::UnmarkGrayGCThing(void *thing)
+{
+    static_cast<js::gc::Cell *>(thing)->unmark(js::gc::GRAY);
+}
+
 JS_FRIEND_API(void)
 js::VisitGrayWrapperTargets(JSCompartment *comp, GCThingCallback *callback, void *closure)
 {

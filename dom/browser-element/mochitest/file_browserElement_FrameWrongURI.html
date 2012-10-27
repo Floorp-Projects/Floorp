@@ -1,0 +1,5 @@
+<script>
+  function testSucceeded() { alert("success"); }
+  function callback() { return "<script>opener.testSucceeded()</" + "script>"; }
+  var w = window.open("javascript:opener.callback();");
+</script>
