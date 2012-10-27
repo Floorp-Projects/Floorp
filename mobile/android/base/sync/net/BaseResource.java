@@ -311,6 +311,16 @@ public class BaseResource implements Resource {
     this.go(new HttpGet(this.uri));
   }
 
+  /**
+   * Perform an HTTP GET as with {@link BaseResource#get()}, returning only
+   * after callbacks have been invoked.
+   */
+  public void getBlocking() {
+    // Until we use the asynchronous Apache HttpClient, we can simply call
+    // through.
+    this.get();
+  }
+
   @Override
   public void delete() {
     Logger.debug(LOG_TAG, "HTTP DELETE " + this.uri.toASCIIString());
