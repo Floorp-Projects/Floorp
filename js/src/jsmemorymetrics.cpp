@@ -54,8 +54,11 @@ CompartmentStats::gcHeapThingsSize()
 {
     // These are just the GC-thing measurements.
     size_t n = 0;
-    n += gcHeapObjectsNonFunction;
+    n += gcHeapObjectsOrdinary;
     n += gcHeapObjectsFunction;
+    n += gcHeapObjectsDenseArray;
+    n += gcHeapObjectsSlowArray;
+    n += gcHeapObjectsCrossCompartmentWrapper;
     n += gcHeapStrings;
     n += gcHeapShapesTree;
     n += gcHeapShapesDict;
@@ -141,8 +144,14 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         JSObject *obj = static_cast<JSObject *>(thing);
         if (obj->isFunction()) {
             cStats->gcHeapObjectsFunction += thingSize;
+        } else if (obj->isDenseArray()) {
+            cStats->gcHeapObjectsDenseArray += thingSize;
+        } else if (obj->isSlowArray()) {
+            cStats->gcHeapObjectsSlowArray += thingSize;
+        } else if (obj->isCrossCompartmentWrapper()) {
+            cStats->gcHeapObjectsCrossCompartmentWrapper += thingSize;
         } else {
-            cStats->gcHeapObjectsNonFunction += thingSize;
+            cStats->gcHeapObjectsOrdinary += thingSize;
         }
         size_t slotsSize, elementsSize, miscSize;
         obj->sizeOfExcludingThis(rtStats->mallocSizeOf, &slotsSize,
