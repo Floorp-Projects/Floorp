@@ -136,7 +136,8 @@ struct CompartmentStats
       , gcHeapObjectsCrossCompartmentWrapper(0)
       , gcHeapStringsNormal(0)
       , gcHeapStringsShort(0)
-      , gcHeapShapesTree(0)
+      , gcHeapShapesTreeGlobalParented(0)
+      , gcHeapShapesTreeNonGlobalParented(0)
       , gcHeapShapesDict(0)
       , gcHeapShapesBase(0)
       , gcHeapScripts(0)
@@ -175,7 +176,8 @@ struct CompartmentStats
       , gcHeapObjectsCrossCompartmentWrapper(other.gcHeapObjectsCrossCompartmentWrapper)
       , gcHeapStringsNormal(other.gcHeapStringsNormal)
       , gcHeapStringsShort(other.gcHeapStringsShort)
-      , gcHeapShapesTree(other.gcHeapShapesTree)
+      , gcHeapShapesTreeGlobalParented(other.gcHeapShapesTreeGlobalParented)
+      , gcHeapShapesTreeNonGlobalParented(other.gcHeapShapesTreeNonGlobalParented)
       , gcHeapShapesDict(other.gcHeapShapesDict)
       , gcHeapShapesBase(other.gcHeapShapesBase)
       , gcHeapScripts(other.gcHeapScripts)
@@ -221,7 +223,8 @@ struct CompartmentStats
     size_t gcHeapObjectsCrossCompartmentWrapper;
     size_t gcHeapStringsNormal;
     size_t gcHeapStringsShort;
-    size_t gcHeapShapesTree;
+    size_t gcHeapShapesTreeGlobalParented;
+    size_t gcHeapShapesTreeNonGlobalParented;
     size_t gcHeapShapesDict;
     size_t gcHeapShapesBase;
     size_t gcHeapScripts;
@@ -266,7 +269,8 @@ struct CompartmentStats
         ADD(gcHeapObjectsCrossCompartmentWrapper);
         ADD(gcHeapStringsNormal);
         ADD(gcHeapStringsShort);
-        ADD(gcHeapShapesTree);
+        ADD(gcHeapShapesTreeGlobalParented);
+        ADD(gcHeapShapesTreeNonGlobalParented);
         ADD(gcHeapShapesDict);
         ADD(gcHeapShapesBase);
         ADD(gcHeapScripts);
