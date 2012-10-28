@@ -3060,7 +3060,9 @@ struct NS_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcesso
       buffer.mGlyphs = &glyphBuf.front();
       buffer.mNumGlyphs = glyphBuf.size();
 
-      Rect bounds(mBoundingBox.x, mBoundingBox.y, mBoundingBox.width, mBoundingBox.height);
+      Rect bounds = mCtx->mTarget->GetTransform().
+        TransformBounds(Rect(mBoundingBox.x, mBoundingBox.y,
+                             mBoundingBox.width, mBoundingBox.height));
       if (mOp == CanvasRenderingContext2D::TEXT_DRAW_OPERATION_FILL) {
         AdjustedTarget(mCtx, &bounds)->
           FillGlyphs(scaledFont, buffer,

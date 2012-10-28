@@ -1,0 +1,25 @@
+<!docytpe html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<script>
+window.onload=function(){
+
+var c=document.getElementById("myCanvas").getContext("2d");
+
+c.font="35px sans-serif";
+
+c.shadowBlur=60;
+c.shadowColor="blue";
+
+c.fillText("ABCDEFG",100,100);
+
+
+
+}
+</script>
+</head>
+<body>
+<canvas id="myCanvas" height=400 width=400 style="border:1px solid black"></canvas>
+</body>
+</html>

@@ -90,3 +90,5 @@ fails-if(OSX==10.6) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gra
 
 # You get a little bit of rounding fuzz on OSX from transforming the paths between user space and device space
 fuzzy-if(azureQuartz,2,113) fuzzy-if(d2d,12,17) == 784573-1.html 784573-1-ref.html
+
+== 802658-1.html 802658-1-ref.html
