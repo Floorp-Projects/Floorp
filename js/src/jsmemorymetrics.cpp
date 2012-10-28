@@ -95,7 +95,7 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
                                      &cStats.compartmentObject,
                                      &cStats.typeInferenceSizes,
                                      &cStats.shapesCompartmentTables,
-                                     &cStats.crossCompartmentWrappers,
+                                     &cStats.crossCompartmentWrappersTable,
                                      &cStats.regexpCompartment,
                                      &cStats.debuggeesSet);
 }
