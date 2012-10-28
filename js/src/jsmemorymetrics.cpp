@@ -61,7 +61,8 @@ CompartmentStats::gcHeapThingsSize()
     n += gcHeapObjectsCrossCompartmentWrapper;
     n += gcHeapStringsNormal;
     n += gcHeapStringsShort;
-    n += gcHeapShapesTree;
+    n += gcHeapShapesTreeGlobalParented;
+    n += gcHeapShapesTreeNonGlobalParented;
     n += gcHeapShapesDict;
     n += gcHeapShapesBase;
     n += gcHeapScripts;
@@ -204,7 +205,11 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
             cStats->shapesExtraDictTables += propTableSize;
             JS_ASSERT(kidsSize == 0);
         } else {
-            cStats->gcHeapShapesTree += thingSize;
+            if (shape->base()->getObjectParent() == shape->compartment()->maybeGlobal()) {
+                cStats->gcHeapShapesTreeGlobalParented += thingSize;
+            } else {
+                cStats->gcHeapShapesTreeNonGlobalParented += thingSize;
+            }
             cStats->shapesExtraTreeTables += propTableSize;
             cStats->shapesExtraTreeShapeKids += kidsSize;
         }
