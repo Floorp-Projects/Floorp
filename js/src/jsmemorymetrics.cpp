@@ -59,7 +59,8 @@ CompartmentStats::gcHeapThingsSize()
     n += gcHeapObjectsDenseArray;
     n += gcHeapObjectsSlowArray;
     n += gcHeapObjectsCrossCompartmentWrapper;
-    n += gcHeapStrings;
+    n += gcHeapStringsNormal;
+    n += gcHeapStringsShort;
     n += gcHeapShapesTree;
     n += gcHeapShapesDict;
     n += gcHeapShapesBase;
@@ -173,19 +174,23 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
     case JSTRACE_STRING:
     {
         JSString *str = static_cast<JSString *>(thing);
-        cStats->gcHeapStrings += thingSize;
 
         size_t strSize = str->sizeOfExcludingThis(rtStats->mallocSizeOf);
 
         // If we can't grow hugeStrings, let's just call this string non-huge.
         // We're probably about to OOM anyway.
         if (strSize >= HugeStringInfo::MinSize() && cStats->hugeStrings.growBy(1)) {
+            cStats->gcHeapStringsNormal += thingSize;
             HugeStringInfo &info = cStats->hugeStrings.back();
             info.length = str->length();
-            info.size = str->sizeOfExcludingThis(rtStats->mallocSizeOf);
+            info.size = strSize;
             PutEscapedString(info.buffer, sizeof(info.buffer), &str->asLinear(), 0);
+        } else if (str->isShort()) {
+            MOZ_ASSERT(strSize == 0);
+            cStats->gcHeapStringsShort += thingSize;
         } else {
-          cStats->nonHugeStringChars += strSize;
+            cStats->gcHeapStringsNormal += thingSize;
+            cStats->stringCharsNonHuge += strSize;
         }
         break;
     }

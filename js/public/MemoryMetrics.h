@@ -134,7 +134,8 @@ struct CompartmentStats
       , gcHeapObjectsDenseArray(0)
       , gcHeapObjectsSlowArray(0)
       , gcHeapObjectsCrossCompartmentWrapper(0)
-      , gcHeapStrings(0)
+      , gcHeapStringsNormal(0)
+      , gcHeapStringsShort(0)
       , gcHeapShapesTree(0)
       , gcHeapShapesDict(0)
       , gcHeapShapesBase(0)
@@ -148,7 +149,7 @@ struct CompartmentStats
       , objectElements(0)
       , objectMisc(0)
       , objectPrivate(0)
-      , nonHugeStringChars(0)
+      , stringCharsNonHuge(0)
       , shapesExtraTreeTables(0)
       , shapesExtraDictTables(0)
       , shapesExtraTreeShapeKids(0)
@@ -172,7 +173,8 @@ struct CompartmentStats
       , gcHeapObjectsDenseArray(other.gcHeapObjectsDenseArray)
       , gcHeapObjectsSlowArray(other.gcHeapObjectsSlowArray)
       , gcHeapObjectsCrossCompartmentWrapper(other.gcHeapObjectsCrossCompartmentWrapper)
-      , gcHeapStrings(other.gcHeapStrings)
+      , gcHeapStringsNormal(other.gcHeapStringsNormal)
+      , gcHeapStringsShort(other.gcHeapStringsShort)
       , gcHeapShapesTree(other.gcHeapShapesTree)
       , gcHeapShapesDict(other.gcHeapShapesDict)
       , gcHeapShapesBase(other.gcHeapShapesBase)
@@ -186,7 +188,7 @@ struct CompartmentStats
       , objectElements(other.objectElements)
       , objectMisc(other.objectMisc)
       , objectPrivate(other.objectPrivate)
-      , nonHugeStringChars(other.nonHugeStringChars)
+      , stringCharsNonHuge(other.stringCharsNonHuge)
       , shapesExtraTreeTables(other.shapesExtraTreeTables)
       , shapesExtraDictTables(other.shapesExtraDictTables)
       , shapesExtraTreeShapeKids(other.shapesExtraTreeShapeKids)
@@ -217,7 +219,8 @@ struct CompartmentStats
     size_t gcHeapObjectsDenseArray;
     size_t gcHeapObjectsSlowArray;
     size_t gcHeapObjectsCrossCompartmentWrapper;
-    size_t gcHeapStrings;
+    size_t gcHeapStringsNormal;
+    size_t gcHeapStringsShort;
     size_t gcHeapShapesTree;
     size_t gcHeapShapesDict;
     size_t gcHeapShapesBase;
@@ -232,7 +235,7 @@ struct CompartmentStats
     size_t objectElements;
     size_t objectMisc;
     size_t objectPrivate;
-    size_t nonHugeStringChars;
+    size_t stringCharsNonHuge;
     size_t shapesExtraTreeTables;
     size_t shapesExtraDictTables;
     size_t shapesExtraTreeShapeKids;
@@ -261,7 +264,8 @@ struct CompartmentStats
         ADD(gcHeapObjectsDenseArray);
         ADD(gcHeapObjectsSlowArray);
         ADD(gcHeapObjectsCrossCompartmentWrapper);
-        ADD(gcHeapStrings);
+        ADD(gcHeapStringsNormal);
+        ADD(gcHeapStringsShort);
         ADD(gcHeapShapesTree);
         ADD(gcHeapShapesDict);
         ADD(gcHeapShapesBase);
@@ -276,7 +280,7 @@ struct CompartmentStats
         ADD(objectElements);
         ADD(objectMisc);
         ADD(objectPrivate);
-        ADD(nonHugeStringChars);
+        ADD(stringCharsNonHuge);
         ADD(shapesExtraTreeTables);
         ADD(shapesExtraDictTables);
         ADD(shapesExtraTreeShapeKids);

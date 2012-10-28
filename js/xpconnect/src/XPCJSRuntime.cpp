@@ -1497,14 +1497,20 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                      "Memory on the garbage-collected JavaScript "
                      "heap that holds cross-compartment wrapper objects.");
 
-    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/strings"),
-                     cStats.gcHeapStrings,
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/strings/normal"),
+                     cStats.gcHeapStringsNormal,
                      "Memory on the garbage-collected JavaScript "
-                     "heap that holds string headers.  String headers contain "
+                     "heap that holds normal string headers.  String headers contain "
                      "various pieces of information about a string, but do not "
                      "contain (except in the case of very short strings) the "
                      "string characters;  characters in longer strings are "
                      "counted under 'gc-heap/string-chars' instead.");
+
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/strings/short"),
+                     cStats.gcHeapStringsShort,
+                     "Memory on the garbage-collected JavaScript "
+                     "heap that holds over-sized string headers, in which "
+                     "string characters are stored inline.");
 
     CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/scripts"),
                      cStats.gcHeapScripts,
@@ -1645,7 +1651,7 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   "transient analysis information.  Cleared on GC.");
 
     CREPORT_BYTES2(cJSPathPrefix + NS_LITERAL_CSTRING("string-chars/non-huge"),
-                   cStats.nonHugeStringChars, nsPrintfCString(
+                   cStats.stringCharsNonHuge, nsPrintfCString(
                    "Memory allocated to hold characters of strings whose "
                    "characters take up less than than %d bytes of memory.\n\n"
                    "Sometimes more memory is allocated than necessary, to "
