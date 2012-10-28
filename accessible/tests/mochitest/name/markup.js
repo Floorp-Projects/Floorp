@@ -6,7 +6,7 @@ var gNameRulesFileURL = "markuprules.xml";
 var gRuleDoc = null;
 
 // Debuggin stuff.
-var gDumpToConsole = false;
+var gDumpToConsole = true;
 
 /**
  * Start name tests. Run through markup elements and test names for test
