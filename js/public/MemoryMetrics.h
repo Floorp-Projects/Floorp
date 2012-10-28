@@ -129,8 +129,11 @@ struct CompartmentStats
       , extra2(0)
       , gcHeapArenaAdmin(0)
       , gcHeapUnusedGcThings(0)
-      , gcHeapObjectsNonFunction(0)
+      , gcHeapObjectsOrdinary(0)
       , gcHeapObjectsFunction(0)
+      , gcHeapObjectsDenseArray(0)
+      , gcHeapObjectsSlowArray(0)
+      , gcHeapObjectsCrossCompartmentWrapper(0)
       , gcHeapStrings(0)
       , gcHeapShapesTree(0)
       , gcHeapShapesDict(0)
@@ -164,8 +167,11 @@ struct CompartmentStats
       , extra2(other.extra2)
       , gcHeapArenaAdmin(other.gcHeapArenaAdmin)
       , gcHeapUnusedGcThings(other.gcHeapUnusedGcThings)
-      , gcHeapObjectsNonFunction(other.gcHeapObjectsNonFunction)
+      , gcHeapObjectsOrdinary(other.gcHeapObjectsOrdinary)
       , gcHeapObjectsFunction(other.gcHeapObjectsFunction)
+      , gcHeapObjectsDenseArray(other.gcHeapObjectsDenseArray)
+      , gcHeapObjectsSlowArray(other.gcHeapObjectsSlowArray)
+      , gcHeapObjectsCrossCompartmentWrapper(other.gcHeapObjectsCrossCompartmentWrapper)
       , gcHeapStrings(other.gcHeapStrings)
       , gcHeapShapesTree(other.gcHeapShapesTree)
       , gcHeapShapesDict(other.gcHeapShapesDict)
@@ -206,8 +212,11 @@ struct CompartmentStats
     size_t gcHeapArenaAdmin;
     size_t gcHeapUnusedGcThings;
 
-    size_t gcHeapObjectsNonFunction;
+    size_t gcHeapObjectsOrdinary;
     size_t gcHeapObjectsFunction;
+    size_t gcHeapObjectsDenseArray;
+    size_t gcHeapObjectsSlowArray;
+    size_t gcHeapObjectsCrossCompartmentWrapper;
     size_t gcHeapStrings;
     size_t gcHeapShapesTree;
     size_t gcHeapShapesDict;
@@ -247,8 +256,11 @@ struct CompartmentStats
         ADD(gcHeapArenaAdmin);
         ADD(gcHeapUnusedGcThings);
 
-        ADD(gcHeapObjectsNonFunction);
+        ADD(gcHeapObjectsOrdinary);
         ADD(gcHeapObjectsFunction);
+        ADD(gcHeapObjectsDenseArray);
+        ADD(gcHeapObjectsSlowArray);
+        ADD(gcHeapObjectsCrossCompartmentWrapper);
         ADD(gcHeapStrings);
         ADD(gcHeapShapesTree);
         ADD(gcHeapShapesDict);
