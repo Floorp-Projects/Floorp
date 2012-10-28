@@ -154,7 +154,7 @@ struct CompartmentStats
       , jaegerData(0)
       , ionData(0)
       , compartmentObject(0)
-      , crossCompartmentWrappers(0)
+      , crossCompartmentWrappersTable(0)
       , regexpCompartment(0)
       , debuggeesSet(0)
     {}
@@ -189,7 +189,7 @@ struct CompartmentStats
       , jaegerData(other.jaegerData)
       , ionData(other.ionData)
       , compartmentObject(other.compartmentObject)
-      , crossCompartmentWrappers(other.crossCompartmentWrappers)
+      , crossCompartmentWrappersTable(other.crossCompartmentWrappersTable)
       , regexpCompartment(other.regexpCompartment)
       , debuggeesSet(other.debuggeesSet)
       , typeInferenceSizes(other.typeInferenceSizes)
@@ -232,7 +232,7 @@ struct CompartmentStats
     size_t jaegerData;
     size_t ionData;
     size_t compartmentObject;
-    size_t crossCompartmentWrappers;
+    size_t crossCompartmentWrappersTable;
     size_t regexpCompartment;
     size_t debuggeesSet;
 
@@ -273,7 +273,7 @@ struct CompartmentStats
         ADD(jaegerData);
         ADD(ionData);
         ADD(compartmentObject);
-        ADD(crossCompartmentWrappers);
+        ADD(crossCompartmentWrappersTable);
         ADD(regexpCompartment);
         ADD(debuggeesSet);
 

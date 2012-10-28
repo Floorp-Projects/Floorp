@@ -1596,9 +1596,9 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   cStats.compartmentObject,
                   "Memory used for the JSCompartment object itself.");
 
-    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrappers"),
-                  cStats.crossCompartmentWrappers,
-                  "Memory used by cross-compartment wrappers.");
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrapper-table"),
+                  cStats.crossCompartmentWrappersTable,
+                  "Memory used by the cross-compartment wrapper table.");
 
     CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("regexp-compartment"),
                   cStats.regexpCompartment,
