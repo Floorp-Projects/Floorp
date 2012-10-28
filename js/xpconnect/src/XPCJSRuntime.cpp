@@ -1519,10 +1519,17 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                      "created for each user-defined function in a script. One "
                      "is also created for the top-level code in a script.");
 
-    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/shapes/tree"),
-                     cStats.gcHeapShapesTree,
-                     "Memory on the garbage-collected JavaScript "
-                     "heap that holds shapes that are in a property tree.");
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/shapes/tree/global-parented"),
+                     cStats.gcHeapShapesTreeGlobalParented,
+                     "Memory on the garbage-collected JavaScript heap that "
+                     "holds shapes that (a) are in a property tree, and (b) "
+                     "represent an object whose parent is the global object.");
+
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/shapes/tree/non-global-parented"),
+                     cStats.gcHeapShapesTreeNonGlobalParented,
+                     "Memory on the garbage-collected JavaScript heap that "
+                     "holds shapes that (a) are in a property tree, and (b) "
+                     "represent an object whose parent is not the global object.");
 
     CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/shapes/dict"),
                      cStats.gcHeapShapesDict,
