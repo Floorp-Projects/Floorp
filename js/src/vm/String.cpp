@@ -17,7 +17,6 @@
 using namespace mozilla;
 using namespace js;
 
-#ifdef DEBUG
 bool
 JSString::isShort() const
 {
@@ -28,7 +27,6 @@ JSString::isShort() const
     JS_ASSERT_IF(is_short, isFlat());
     return is_short;
 }
-#endif
 
 bool
 JSString::isExternal() const
