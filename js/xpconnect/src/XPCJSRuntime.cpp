@@ -1471,15 +1471,31 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                      "heap taken by empty GC thing slots within non-empty "
                      "arenas.");
 
-    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/objects/non-function"),
-                     cStats.gcHeapObjectsNonFunction,
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/objects/ordinary"),
+                     cStats.gcHeapObjectsOrdinary,
                      "Memory on the garbage-collected JavaScript "
-                     "heap that holds non-function objects.");
+                     "heap that holds ordinary (i.e. not otherwise distinguished "
+                     "my memory reporters) objects.");
 
     CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/objects/function"),
                      cStats.gcHeapObjectsFunction,
                      "Memory on the garbage-collected JavaScript "
                      "heap that holds function objects.");
+
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/objects/dense-array"),
+                     cStats.gcHeapObjectsDenseArray,
+                     "Memory on the garbage-collected JavaScript "
+                     "heap that holds dense array objects.");
+
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/objects/slow-array"),
+                     cStats.gcHeapObjectsSlowArray,
+                     "Memory on the garbage-collected JavaScript "
+                     "heap that holds slow array objects.");
+
+    CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/objects/cross-compartment-wrapper"),
+                     cStats.gcHeapObjectsCrossCompartmentWrapper,
+                     "Memory on the garbage-collected JavaScript "
+                     "heap that holds cross-compartment wrapper objects.");
 
     CREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("gc-heap/strings"),
                      cStats.gcHeapStrings,
