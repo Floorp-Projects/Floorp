@@ -301,7 +301,7 @@ public:
     if (mSigma > SIGMA_MAX) {
       mSigma = SIGMA_MAX;
     }
-      
+
     Matrix transform = mCtx->mTarget->GetTransform();
 
     mTempRect = mgfx::Rect(0, 0, ctx->mWidth, ctx->mHeight);
@@ -329,7 +329,7 @@ public:
 
     transform._31 -= mTempRect.x;
     transform._32 -= mTempRect.y;
-      
+
     mTarget =
       mCtx->mTarget->CreateShadowDrawTarget(IntSize(int32_t(mTempRect.width), int32_t(mTempRect.height)),
                                             FORMAT_B8G8R8A8, mSigma);
@@ -351,7 +351,7 @@ public:
     }
 
     RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
-    
+
     mCtx->mTarget->DrawSurfaceWithShadow(snapshot, mTempRect.TopLeft(),
                                          Color::FromABGR(mCtx->CurrentState().shadowColor),
                                          mCtx->CurrentState().shadowOffset, mSigma,
@@ -962,7 +962,7 @@ CanvasRenderingContext2D::Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFi
   }
 
   nsRefPtr<gfxASurface> surface;
-  
+
   if (NS_FAILED(GetThebesSurface(getter_AddRefs(surface)))) {
     return NS_ERROR_FAILURE;
   }
@@ -1953,7 +1953,7 @@ CanvasRenderingContext2D::ClearRect(double x, double y, double w,
   if (!FloatValidate(x,y,w,h) || !mTarget) {
     return;
   }
- 
+
   mTarget->ClearRect(mgfx::Rect(x, y, w, h));
 
   RedrawUser(gfxRect(x, y, w, h));
@@ -2023,7 +2023,7 @@ CanvasRenderingContext2D::FillRect(double x, double y, double w,
   }
 
   mgfx::Rect bounds;
-  
+
   EnsureTarget();
   if (NeedToDrawShadow()) {
     bounds = mgfx::Rect(x, y, w, h);
@@ -2251,7 +2251,7 @@ CanvasRenderingContext2D::LineTo(float x, float y)
   LineTo((double)x, (double)y);
   return NS_OK;
 }
-  
+
 NS_IMETHODIMP
 CanvasRenderingContext2D::QuadraticCurveTo(float cpx, float cpy, float x,
                                            float y)
@@ -3206,7 +3206,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   processor.mDoMeasureBoundingBox = doDrawShadow || !mIsEntireFrameInvalid;
   processor.mState = &CurrentState();
   processor.mFontgrp = currentFontStyle;
-    
+
   nscoord totalWidthCoord;
 
   // calls bidi algo twice since it needs the full text width and the
@@ -3371,7 +3371,7 @@ gfxFontGroup *CanvasRenderingContext2D::GetCurrentFontStyle()
         rv = NS_ERROR_OUT_OF_MEMORY;
       }
     }
-            
+
     NS_ASSERTION(NS_SUCCEEDED(rv), "Default canvas font is invalid");
   }
 
@@ -3554,7 +3554,7 @@ CanvasRenderingContext2D::GetMozDash(JSContext* cx, jsval* dashArray)
   *dashArray = GetMozDash(cx, rv);
   return rv.ErrorCode();
 }
- 
+
 NS_IMETHODIMP
 CanvasRenderingContext2D::SetMozDashOffset(float offset)
 {
@@ -3567,7 +3567,7 @@ CanvasRenderingContext2D::SetMozDashOffset(float offset)
   }
   return NS_OK;
 }
- 
+
 NS_IMETHODIMP
 CanvasRenderingContext2D::GetMozDashOffset(float* offset)
 {
@@ -3619,7 +3619,7 @@ void
 CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image,
                                     double sx, double sy, double sw,
                                     double sh, double dx, double dy,
-                                    double dw, double dh, 
+                                    double dw, double dh,
                                     uint8_t optional_argc,
                                     ErrorResult& error)
 {
@@ -3746,7 +3746,7 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
     filter = mgfx::FILTER_POINT;
 
   mgfx::Rect bounds;
-  
+
   if (NeedToDrawShadow()) {
     bounds = mgfx::Rect(dx, dy, dw, dh);
     bounds = mTarget->GetTransform().TransformBounds(bounds);
@@ -4243,7 +4243,7 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
 
   uint8_t* src = data;
   uint32_t srcStride = aWidth * 4;
-  
+
   RefPtr<DataSourceSurface> readback;
   if (!srcReadRect.IsEmpty()) {
     RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
@@ -4507,7 +4507,7 @@ CanvasRenderingContext2D::GetThebesSurface(gfxASurface **surface)
   EnsureTarget();
   if (!mThebesSurface) {
     mThebesSurface =
-      gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);    
+      gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);
 
     if (!mThebesSurface) {
       return NS_ERROR_FAILURE;
