@@ -1648,6 +1648,7 @@ abstract public class GeckoApp
                             int flags = Tabs.LOADURL_NEW_TAB;
                             flags |= ((isExternalURL || !sessionTab.isSelected()) ? Tabs.LOADURL_DELAY_LOAD : 0);
                             flags |= (tabObject.optBoolean("desktopMode") ? Tabs.LOADURL_DESKTOP : 0);
+                            flags |= (tabObject.optBoolean("isPrivate") ? Tabs.LOADURL_PRIVATE : 0);
 
                             Tab tab = Tabs.getInstance().loadUrl(sessionTab.getSelectedUrl(), flags);
                             tab.updateTitle(sessionTab.getSelectedTitle());
@@ -1662,6 +1663,9 @@ abstract public class GeckoApp
                     };
 
                     parser.parse(sessionString);
+                    if (mPrivateBrowsingSession != null) {
+                        parser.parse(mPrivateBrowsingSession);
+                    }
 
                     if (tabs.length() > 0) {
                         sessionString = new JSONObject().put("windows", new JSONArray().put(new JSONObject().put("tabs", tabs))).toString();
@@ -1808,11 +1812,6 @@ abstract public class GeckoApp
             connectGeckoLayerClient();
             GeckoAppShell.setLayerClient(mLayerView.getLayerClient());
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
-        }
-
-        if (mPrivateBrowsingSession != null) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(
-                    "PrivateBrowsing:Restore", mPrivateBrowsingSession));
         }
     }
 
