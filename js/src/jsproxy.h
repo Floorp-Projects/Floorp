@@ -71,20 +71,6 @@ class JS_FRIEND_API(BaseProxyHandler) {
         return false;
     }
 
-    /*
-     * The function Wrapper::wrapperHandler takes a pointer to a
-     * BaseProxyHandler and returns a pointer to a Wrapper if and only if the
-     * BaseProxyHandler is a wrapper handler (otherwise, it returns NULL).
-     *
-     * Unfortunately, we can't inherit Wrapper from BaseProxyHandler, since that
-     * would create a dreaded diamond, and we can't use dynamic_cast to cast
-     * BaseProxyHandler to Wrapper, since that would require us to compile with
-     * run-time type information. Hence the need for this virtual function.
-     */
-    virtual Wrapper *toWrapper() {
-        return NULL;
-    }
-
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
                                        bool set, PropertyDescriptor *desc) = 0;

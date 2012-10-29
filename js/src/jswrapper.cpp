@@ -52,15 +52,15 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
         return NULL;
     }
 #endif
-    return NewProxyObject(cx, handler->toBaseProxyHandler(), ObjectValue(*obj),
-                          proto, parent, obj->isCallable() ? obj : NULL, NULL);
+    return NewProxyObject(cx, handler, ObjectValue(*obj), proto, parent,
+                          obj->isCallable() ? obj : NULL, NULL);
 }
 
 Wrapper *
 Wrapper::wrapperHandler(RawObject wrapper)
 {
     JS_ASSERT(wrapper->isWrapper());
-    return GetProxyHandler(wrapper)->toWrapper();
+    return static_cast<Wrapper*>(GetProxyHandler(wrapper));
 }
 
 JSObject *
