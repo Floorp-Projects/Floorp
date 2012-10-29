@@ -216,6 +216,16 @@ private:
   void HandleStreamChangeEvent(const struct sctp_stream_change_event *strchg);
   void HandleNotification(const union sctp_notification *notif, size_t n);
 
+#ifdef SCTP_DTLS_SUPPORTED
+  bool IsSTSThread() {
+    bool on = false;
+    if (mSTS) {
+      mSTS->IsOnCurrentThread(&on);
+    }
+    return on;
+  }
+#endif
+
   // NOTE: while these arrays will auto-expand, increases in the number of
   // channels available from the stack must be negotiated!
   nsAutoTArray<DataChannel*,16> mStreamsOut;
@@ -231,6 +241,7 @@ private:
 
 #ifdef SCTP_DTLS_SUPPORTED
   nsRefPtr<TransportFlow> mTransportFlow;
+  nsCOMPtr<nsIEventTarget> mSTS;
 #endif
   uint16_t mLocalPort;
   uint16_t mRemotePort;
