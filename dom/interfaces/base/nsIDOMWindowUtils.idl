@@ -1262,6 +1262,7 @@ interface nsIDOMWindowUtils : nsISupports {
 
   const unsigned long AGENT_SHEET = 0;
   const unsigned long USER_SHEET = 1;
+  const unsigned long AUTHOR_SHEET = 2;
   /**
    * Synchronously loads a style sheet from |sheetURI| and adds it to the list
    * of additional style sheets of the document.
