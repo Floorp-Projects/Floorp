@@ -5324,7 +5324,6 @@ Selection::ScrollIntoView(SelectionRegion aRegion,
                           nsIPresShell::ScrollAxis aHorizontal,
                           int32_t aFlags)
 {
-  nsresult result;
   if (!mFrameSelection)
     return NS_OK;//nothing to do
 
@@ -5335,59 +5334,50 @@ Selection::ScrollIntoView(SelectionRegion aRegion,
     return PostScrollSelectionIntoViewEvent(aRegion, aFlags,
       aVertical, aHorizontal);
 
-  //
-  // Shut the caret off before scrolling to avoid
-  // leaving caret turds on the screen!
-  //
   nsCOMPtr<nsIPresShell> presShell;
-  result = GetPresShell(getter_AddRefs(presShell));
+  nsresult result = GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(result) || !presShell)
     return result;
-  nsRefPtr<nsCaret> caret = presShell->GetCaret();
-  if (caret)
-  {
-    // Now that text frame character offsets are always valid (though not
-    // necessarily correct), the worst that will happen if we don't flush here
-    // is that some callers might scroll to the wrong place.  Those should
-    // either manually flush if they're in a safe position for it or use the
-    // async version of this method.
-    if (aFlags & Selection::SCROLL_DO_FLUSH) {
-      presShell->FlushPendingNotifications(Flush_Layout);
 
-      // Reget the presshell, since it might have gone away.
-      result = GetPresShell(getter_AddRefs(presShell));
-      if (NS_FAILED(result) || !presShell)
-        return result;
-    }
+  // Now that text frame character offsets are always valid (though not
+  // necessarily correct), the worst that will happen if we don't flush here
+  // is that some callers might scroll to the wrong place.  Those should
+  // either manually flush if they're in a safe position for it or use the
+  // async version of this method.
+  if (aFlags & Selection::SCROLL_DO_FLUSH) {
+    presShell->FlushPendingNotifications(Flush_Layout);
 
-    //
-    // Scroll the selection region into view.
-    //
-
-    nsRect rect;
-    nsIFrame* frame = GetSelectionAnchorGeometry(aRegion, &rect);
-    if (!frame)
-      return NS_ERROR_FAILURE;
-
-    // Scroll vertically to get the caret into view, but only if the container
-    // is perceived to be scrollable in that direction (i.e. there is a visible
-    // vertical scrollbar or the scroll range is at least one device pixel)
-    aVertical.mOnlyIfPerceivedScrollableDirection = true;
-
-
-    uint32_t flags = 0;
-    if (aFlags & Selection::SCROLL_FIRST_ANCESTOR_ONLY) {
-      flags |= nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY;
-    }
-    if (aFlags & Selection::SCROLL_OVERFLOW_HIDDEN) {
-      flags |= nsIPresShell::SCROLL_OVERFLOW_HIDDEN;
-    }
-
-    presShell->ScrollFrameRectIntoView(frame, rect, aVertical, aHorizontal,
-      flags);
-    return NS_OK;
+    // Reget the presshell, since it might have gone away.
+    result = GetPresShell(getter_AddRefs(presShell));
+    if (NS_FAILED(result) || !presShell)
+      return result;
   }
-  return result;
+
+  //
+  // Scroll the selection region into view.
+  //
+
+  nsRect rect;
+  nsIFrame* frame = GetSelectionAnchorGeometry(aRegion, &rect);
+  if (!frame)
+    return NS_ERROR_FAILURE;
+
+  // Scroll vertically to get the caret into view, but only if the container
+  // is perceived to be scrollable in that direction (i.e. there is a visible
+  // vertical scrollbar or the scroll range is at least one device pixel)
+  aVertical.mOnlyIfPerceivedScrollableDirection = true;
+
+  uint32_t flags = 0;
+  if (aFlags & Selection::SCROLL_FIRST_ANCESTOR_ONLY) {
+    flags |= nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY;
+  }
+  if (aFlags & Selection::SCROLL_OVERFLOW_HIDDEN) {
+    flags |= nsIPresShell::SCROLL_OVERFLOW_HIDDEN;
+  }
+
+  presShell->ScrollFrameRectIntoView(frame, rect, aVertical, aHorizontal,
+    flags);
+  return NS_OK;
 }
 
 
