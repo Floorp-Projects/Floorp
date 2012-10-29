@@ -18,25 +18,13 @@ namespace js {
 class DummyFrameGuard;
 
 /*
- * A wrapper is essentially a proxy that restricts access to certain traps. The
- * way in which a wrapper restricts access to its traps depends on the
- * particular policy for that wrapper. To allow a wrapper's policy to be
- * customized, the Wrapper base class contains two functions, enter/leave, which
- * are called as a policy enforcement check before/after each trap is forwarded.
- *
- * To minimize code duplication, a set of abstract wrapper classes is
- * provided, from which other wrappers may inherit. These abstract classes are
- * organized in the following hierarchy:
- *
- * BaseProxyHandler Wrapper
- * |                    | |
- * IndirectProxyHandler | |
- * |                  | | |
- * |      IndirectWrapper |
- * |                      |
- * DirectProxyHandler     |
- *                  |     |
- *            DirectWrapper
+ * A wrapper is a proxy with a target object to which it generally forwards
+ * operations, but may restrict access to certain operations or instrument
+ * the trap operations in various ways. A wrapper is distinct from a Direct Proxy
+ * Handler in the sense that it can be "unwrapped" in C++, exposing the underlying
+ * object (Direct Proxy Handlers have an underlying target object, but don't
+ * expect to expose this object via any kind of unwrapping operation). Callers
+ * should be careful to avoid unwrapping security wrappers in the wrong context.
  */
 class JS_FRIEND_API(Wrapper)
 {
@@ -115,47 +103,6 @@ class JS_FRIEND_API(Wrapper)
      */
     virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act,
                        bool *bp);
-};
-
-/*
- * IndirectWrapper forwards its traps by forwarding them to
- * IndirectProxyHandler. In effect, IndirectWrapper behaves the same as
- * IndirectProxyHandler, except that it adds policy enforcement checks to each
- * fundamental trap.
- */
-class JS_FRIEND_API(IndirectWrapper) : public Wrapper,
-                                       public IndirectProxyHandler
-{
-  public:
-    explicit IndirectWrapper(unsigned flags);
-
-    virtual BaseProxyHandler* toBaseProxyHandler() {
-        return this;
-    }
-
-    virtual Wrapper *toWrapper() {
-        return this;
-    }
-
-    /* ES5 Harmony fundamental wrapper traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
-                                       jsid id, bool set,
-                                       PropertyDescriptor *desc) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper,
-                                          jsid id, bool set,
-                                          PropertyDescriptor *desc) MOZ_OVERRIDE;
-    virtual bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
-                                PropertyDescriptor *desc) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
-                                     AutoIdVector &props) MOZ_OVERRIDE;
-    virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id,
-                         bool *bp) MOZ_OVERRIDE;
-    virtual bool enumerate(JSContext *cx, JSObject *wrapper,
-                           AutoIdVector &props) MOZ_OVERRIDE;
-
-    /* Spidermonkey extensions. */
-    virtual bool defaultValue(JSContext *cx, JSObject *wrapper_, JSType hint,
-                              Value *vp) MOZ_OVERRIDE;
 };
 
 /*
