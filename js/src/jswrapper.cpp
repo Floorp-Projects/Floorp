@@ -295,7 +295,7 @@ DirectWrapper::call(JSContext *cx, JSObject *wrapper, unsigned argc, Value *vp)
 {
     vp->setUndefined(); // default result if we refuse to perform this action
     const jsid id = JSID_VOID;
-    CHECKED(IndirectProxyHandler::call(cx, wrapper, argc, vp), CALL);
+    CHECKED(DirectProxyHandler::call(cx, wrapper, argc, vp), CALL);
 }
 
 bool
@@ -303,7 +303,7 @@ DirectWrapper::construct(JSContext *cx, JSObject *wrapper, unsigned argc, Value 
 {
     vp->setUndefined(); // default result if we refuse to perform this action
     const jsid id = JSID_VOID;
-    CHECKED(IndirectProxyHandler::construct(cx, wrapper, argc, argv, vp), CALL);
+    CHECKED(DirectProxyHandler::construct(cx, wrapper, argc, argv, vp), CALL);
 }
 
 bool
@@ -311,7 +311,7 @@ DirectWrapper::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
 {
     const jsid id = JSID_VOID;
     Rooted<JSObject*> wrapper(cx, &args.thisv().toObject());
-    CHECKED(IndirectProxyHandler::nativeCall(cx, test, impl, args), CALL);
+    CHECKED(DirectProxyHandler::nativeCall(cx, test, impl, args), CALL);
 }
 
 bool
@@ -319,7 +319,7 @@ DirectWrapper::hasInstance(JSContext *cx, HandleObject wrapper, MutableHandleVal
 {
     *bp = false; // default result if we refuse to perform this action
     const jsid id = JSID_VOID;
-    GET(IndirectProxyHandler::hasInstance(cx, wrapper, v, bp));
+    GET(DirectProxyHandler::hasInstance(cx, wrapper, v, bp));
 }
 
 JSString *
@@ -333,7 +333,7 @@ DirectWrapper::obj_toString(JSContext *cx, JSObject *wrapper)
         }
         return NULL;
     }
-    JSString *str = IndirectProxyHandler::obj_toString(cx, wrapper);
+    JSString *str = DirectProxyHandler::obj_toString(cx, wrapper);
     return str;
 }
 
@@ -351,7 +351,7 @@ DirectWrapper::fun_toString(JSContext *cx, JSObject *wrapper, unsigned indent)
         }
         return NULL;
     }
-    JSString *str = IndirectProxyHandler::fun_toString(cx, wrapper, indent);
+    JSString *str = DirectProxyHandler::fun_toString(cx, wrapper, indent);
     return str;
 }
 
@@ -744,7 +744,7 @@ CrossCompartmentWrapper::iteratorNext(JSContext *cx, JSObject *wrapper, Value *v
 {
     PIERCE(cx, wrapper, GET,
            NOTHING,
-           IndirectProxyHandler::iteratorNext(cx, wrapper, vp),
+           DirectProxyHandler::iteratorNext(cx, wrapper, vp),
            cx->compartment->wrap(cx, vp));
 }
 
