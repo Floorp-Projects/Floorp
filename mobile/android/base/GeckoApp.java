@@ -150,6 +150,10 @@ abstract public class GeckoApp
     public static final String PREFS_OOM_EXCEPTION = "OOMException";
     public static final String PREFS_WAS_STOPPED   = "wasStopped";
 
+    static public final int RESTORE_NONE = 0;
+    static public final int RESTORE_OOM = 1;
+    static public final int RESTORE_CRASH = 2;
+
     StartupMode mStartupMode = null;
     protected LinearLayout mMainLayout;
     protected RelativeLayout mGeckoLayout;
@@ -184,7 +188,7 @@ abstract public class GeckoApp
 
     private HashMap<String, PowerManager.WakeLock> mWakeLocks = new HashMap<String, PowerManager.WakeLock>();
 
-    protected int mRestoreMode = GeckoAppShell.RESTORE_NONE;
+    protected int mRestoreMode = RESTORE_NONE;
     protected boolean mInitialized = false;
     protected Telemetry.Timer mAboutHomeStartupTimer;
     private Telemetry.Timer mJavaUiStartupTimer;
@@ -1493,7 +1497,7 @@ abstract public class GeckoApp
         // we were in the background, or a more harsh kill while we were
         // active
         if (savedInstanceState != null) {
-            mRestoreMode = GeckoAppShell.RESTORE_OOM;
+            mRestoreMode = RESTORE_OOM;
 
             boolean wasInBackground =
                 savedInstanceState.getBoolean(SAVED_STATE_IN_BACKGROUND, false);
@@ -1590,8 +1594,8 @@ abstract public class GeckoApp
             passedUri = uri;
         }
 
-        if (mRestoreMode == GeckoAppShell.RESTORE_NONE && getProfile().shouldRestoreSession()) {
-            mRestoreMode = GeckoAppShell.RESTORE_CRASH;
+        if (mRestoreMode == RESTORE_NONE && getProfile().shouldRestoreSession()) {
+            mRestoreMode = RESTORE_CRASH;
         }
 
         final boolean isExternalURL = passedUri != null && !passedUri.equals("about:home");
@@ -1628,7 +1632,7 @@ abstract public class GeckoApp
         Tabs.registerOnTabsChangedListener(this);
 
         // If we are doing a restore, read the session data and send it to Gecko
-        if (mRestoreMode != GeckoAppShell.RESTORE_NONE) {
+        if (mRestoreMode != RESTORE_NONE) {
             try {
                 String sessionString = getProfile().readSessionFile(false);
                 if (sessionString == null) {
@@ -1638,7 +1642,7 @@ abstract public class GeckoApp
                 // If we are doing an OOM restore, parse the session data and
                 // stub the restored tabs immediately. This allows the UI to be
                 // updated before Gecko has restored.
-                if (mRestoreMode == GeckoAppShell.RESTORE_OOM) {
+                if (mRestoreMode == RESTORE_OOM) {
                     final JSONArray tabs = new JSONArray();
                     SessionParser parser = new SessionParser() {
                         @Override
@@ -1675,32 +1679,32 @@ abstract public class GeckoApp
                 }
 
                 JSONObject restoreData = new JSONObject();
-                restoreData.put("restoringOOM", mRestoreMode == GeckoAppShell.RESTORE_OOM);
+                restoreData.put("restoringOOM", mRestoreMode == RESTORE_OOM);
                 restoreData.put("sessionString", sessionString);
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Restore", restoreData.toString()));
             } catch (Exception e) {
                 // If restore failed, do a normal startup
                 Log.e(LOGTAG, "An error occurred during restore", e);
-                mRestoreMode = GeckoAppShell.RESTORE_NONE;
+                mRestoreMode = RESTORE_NONE;
             }
         }
 
         // Move the session file if it exists
-        if (mRestoreMode != GeckoAppShell.RESTORE_OOM) {
+        if (mRestoreMode != RESTORE_OOM) {
             getProfile().moveSessionFile();
         }
 
         initializeChrome(passedUri, isExternalURL);
 
         // Show telemetry door hanger if we aren't restoring a session
-        if (mRestoreMode == GeckoAppShell.RESTORE_NONE) {
+        if (mRestoreMode == RESTORE_NONE) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Telemetry:Prompt", null));
         }
 
         Telemetry.HistogramAdd("FENNEC_STARTUP_GECKOAPP_ACTION", startupAction.ordinal());
 
         if (!mIsRestoringActivity) {
-            sGeckoThread = new GeckoThread(intent, passedUri, mRestoreMode);
+            sGeckoThread = new GeckoThread(intent, passedUri);
         }
         if (!ACTION_DEBUG.equals(action) &&
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched)) {

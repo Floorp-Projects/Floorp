@@ -247,19 +247,16 @@ var BrowserApp = {
     Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
     let url = null;
-    let restoreMode = 0;
     let pinned = false;
     if ("arguments" in window) {
       if (window.arguments[0])
         url = window.arguments[0];
       if (window.arguments[1])
-        restoreMode = window.arguments[1];
+        gScreenWidth = window.arguments[1];
       if (window.arguments[2])
-        gScreenWidth = window.arguments[2];
+        gScreenHeight = window.arguments[2];
       if (window.arguments[3])
-        gScreenHeight = window.arguments[3];
-      if (window.arguments[4])
-        pinned = window.arguments[4];
+        pinned = window.arguments[3];
     }
 
     let updated = this.isAppUpdated();
@@ -278,10 +275,6 @@ var BrowserApp = {
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
 
-    // Restore the previous session
-    // restoreMode = 0 means no restore
-    // restoreMode = 1 means force restore (after an OOM kill)
-    // restoreMode = 2 means restore only if we haven't crashed multiple times
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
     if (ss.shouldRestore()) {
       this.restoreSession(false, null);
