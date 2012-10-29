@@ -47,6 +47,7 @@ MOCHITEST_FILES	= \
 	overlap.cacheManifest \
 	overlap.cacheManifest^headers^ \
 	test_updatingManifest.html \
+	test_updateCheck.html \
 	445544_part1.html \
 	445544_part2.html \
 	445544.cacheManifest \

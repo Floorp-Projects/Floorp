@@ -28,6 +28,29 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMMediaStream)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+// LocalMediaStream currently is the same C++ class as MediaStream;
+// they may eventually split
+DOMCI_DATA(LocalMediaStream, nsDOMLocalMediaStream)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMLocalMediaStream)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMLocalMediaStream)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMMediaStream, nsDOMMediaStream)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMLocalMediaStream)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(LocalMediaStream)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMLocalMediaStream)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMLocalMediaStream)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMLocalMediaStream)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMLocalMediaStream)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMLocalMediaStream)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+
 nsDOMMediaStream::~nsDOMMediaStream()
 {
   if (mStream) {
@@ -42,6 +65,15 @@ nsDOMMediaStream::GetCurrentTime(double *aCurrentTime)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMLocalMediaStream::Stop()
+{
+  if (mStream && mStream->AsSourceStream()) {
+    mStream->AsSourceStream()->EndAllTrackAndFinish();
+  }
+  return NS_OK;
+}
+
 already_AddRefed<nsDOMMediaStream>
 nsDOMMediaStream::CreateInputStream(uint32_t aHintContents)
 {
@@ -52,10 +84,29 @@ nsDOMMediaStream::CreateInputStream(uint32_t aHintContents)
   return stream.forget();
 }
 
+already_AddRefed<nsDOMLocalMediaStream>
+nsDOMLocalMediaStream::CreateInputStream(uint32_t aHintContents)
+{
+  nsRefPtr<nsDOMLocalMediaStream> stream = new nsDOMLocalMediaStream();
+  stream->SetHintContents(aHintContents);
+  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
+  stream->mStream = gm->CreateInputStream(stream);
+  return stream.forget();
+}
+
 already_AddRefed<nsDOMMediaStream>
 nsDOMMediaStream::CreateTrackUnionStream()
 {
   nsRefPtr<nsDOMMediaStream> stream = new nsDOMMediaStream();
+  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
+  stream->mStream = gm->CreateTrackUnionStream(stream);
+  return stream.forget();
+}
+
+already_AddRefed<nsDOMLocalMediaStream>
+nsDOMLocalMediaStream::CreateTrackUnionStream()
+{
+  nsRefPtr<nsDOMLocalMediaStream> stream = new nsDOMLocalMediaStream();
   MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
   stream->mStream = gm->CreateTrackUnionStream(stream);
   return stream.forget();

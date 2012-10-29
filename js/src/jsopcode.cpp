@@ -3599,18 +3599,32 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 
               case JSOP_INCALIASEDVAR:
               case JSOP_DECALIASEDVAR:
+                if (IsVarSlot(jp, pc, &atom, &i))
+                    goto do_incatom;
+                lval = GetLocal(ss, i);
+                goto do_inclval;
+
               case JSOP_INCLOCAL:
               case JSOP_DECLOCAL:
-                if (IsVarSlot(jp, pc, &atom, &i))
+                /* INCLOCAL/DECLOCAL are followed by GETLOCAL containing the slot. */
+                JS_ASSERT(pc[JSOP_INCLOCAL_LENGTH] == JSOP_GETLOCAL);
+                if (IsVarSlot(jp, pc + JSOP_INCLOCAL_LENGTH, &atom, &i))
                     goto do_incatom;
                 lval = GetLocal(ss, i);
                 goto do_inclval;
 
               case JSOP_ALIASEDVARINC:
               case JSOP_ALIASEDVARDEC:
+                if (IsVarSlot(jp, pc, &atom, &i))
+                    goto do_atominc;
+                lval = GetLocal(ss, i);
+                goto do_lvalinc;
+
               case JSOP_LOCALINC:
               case JSOP_LOCALDEC:
-                if (IsVarSlot(jp, pc, &atom, &i))
+                /* LOCALINC/LOCALDEC are followed by GETLOCAL containing the slot. */
+                JS_ASSERT(pc[JSOP_LOCALINC_LENGTH] == JSOP_GETLOCAL);
+                if (IsVarSlot(jp, pc + JSOP_LOCALINC_LENGTH, &atom, &i))
                     goto do_atominc;
                 lval = GetLocal(ss, i);
                 goto do_lvalinc;
@@ -4413,7 +4427,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 
               case JSOP_INCARG:
               case JSOP_DECARG:
-                atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
+                /* INCARG/DECARG are followed by GETARG containing the slot. */
+                JS_ASSERT(pc[JSOP_INCARG_LENGTH] == JSOP_GETARG);
+                atom = GetArgOrVarAtom(jp, GET_ARGNO(pc + JSOP_INCARG_LENGTH));
                 LOCAL_ASSERT(atom);
                 goto do_incatom;
 
@@ -4473,7 +4489,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 
               case JSOP_ARGINC:
               case JSOP_ARGDEC:
-                atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
+                /* ARGINC/ARGDEC are followed by GETARG containing the slot. */
+                JS_ASSERT(pc[JSOP_ARGINC_LENGTH] == JSOP_GETARG);
+                atom = GetArgOrVarAtom(jp, GET_ARGNO(pc + JSOP_ARGINC_LENGTH));
                 LOCAL_ASSERT(atom);
                 goto do_atominc;
 
@@ -5616,7 +5634,7 @@ js_DecompileFunction(JSPrinter *jp)
         jp->indent -= 4;
         js_printf(jp, "\t}");
     } else {
-        JSScript *script = fun->script();
+        RootedScript script(cx, fun->script());
 #if JS_HAS_DESTRUCTURING
         SprintStack ss(cx);
 #endif

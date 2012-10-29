@@ -136,7 +136,7 @@ DOMJSClass Class = {
     %s, /* trace */
     JSCLASS_NO_INTERNAL_MEMBERS
   },
-  %s
+%s
 };
 """ % (self.descriptor.interface.identifier.name,
        ADDPROPERTY_HOOK_NAME if self.descriptor.concrete and not self.descriptor.workers and self.descriptor.wrapperCache else 'JS_PropertyStub',
@@ -892,6 +892,7 @@ class PropertyDefiner:
         # We only need Xrays for methods, attributes and constants, but in
         # workers there are no Xrays.
         return (self.name is "Methods" or self.name is "Attributes" or
+                self.name is "UnforgeableAttributes" or
                 self.name is "Constants") and not self.descriptor.workers
 
     def __str__(self):
@@ -1084,19 +1085,30 @@ class MethodDefiner(PropertyDefiner):
             pref, specData, doIdArrays)
 
 class AttrDefiner(PropertyDefiner):
-    def __init__(self, descriptor, name):
+    def __init__(self, descriptor, name, unforgeable):
         PropertyDefiner.__init__(self, descriptor, name)
         self.name = name
-        attributes = [m for m in descriptor.interface.members if m.isAttr()]
+        attributes = [m for m in descriptor.interface.members
+                      if m.isAttr() and m.isUnforgeable() == unforgeable]
         self.chrome = [m for m in attributes if isChromeOnly(m)]
         self.regular = [m for m in attributes if not isChromeOnly(m)]
+        self.unforgeable = unforgeable
+
+        if unforgeable and len(attributes) != 0 and descriptor.proxy:
+            raise TypeError("Unforgeable properties are not supported on "
+                            "proxy bindings without [NamedPropertiesObject].  "
+                            "And not even supported on the ones with "
+                            "[NamedPropertiesObject] yet, but we should fix "
+                            "that, since they're safe there.")
 
     def generateArray(self, array, name, doIdArrays):
         if len(array) == 0:
             return ""
 
         def flags(attr):
-            return "JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_NATIVE_ACCESSORS"
+            unforgeable = " | JSPROP_PERMANENT" if self.unforgeable else ""
+            return ("JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_NATIVE_ACCESSORS" +
+                    unforgeable)
 
         def getter(attr):
             native = ("genericLenientGetter" if attr.hasLenientThis()
@@ -1155,16 +1167,19 @@ class PropertyArrays():
     def __init__(self, descriptor):
         self.staticMethods = MethodDefiner(descriptor, "StaticMethods", True)
         self.methods = MethodDefiner(descriptor, "Methods", False)
-        self.attrs = AttrDefiner(descriptor, "Attributes")
+        self.attrs = AttrDefiner(descriptor, "Attributes", unforgeable=False)
+        self.unforgeableAttrs = AttrDefiner(descriptor, "UnforgeableAttributes",
+                                            unforgeable=True)
         self.consts = ConstDefiner(descriptor, "Constants")
 
     @staticmethod
     def arrayNames():
-        return [ "staticMethods", "methods", "attrs", "consts" ]
+        return [ "staticMethods", "methods", "attrs", "unforgeableAttrs",
+                 "consts" ]
 
     @staticmethod
     def xrayRelevantArrayNames():
-        return [ "methods", "attrs", "consts" ]
+        return [ "methods", "attrs", "unforgeableAttrs", "consts" ]
 
     def hasChromeOnly(self):
         return any(getattr(self, a).hasChromeOnly() for a in self.arrayNames())
@@ -1311,10 +1326,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             properties = "nullptr"
         if self.properties.hasChromeOnly():
-            if self.descriptor.workers:
-                accessCheck = "mozilla::dom::workers::GetWorkerPrivateFromContext(aCx)->IsChromeWorker()"
-            else:
-                accessCheck = "xpc::AccessCheck::isChrome(aGlobal)"
+            accessCheck = GetAccessCheck(self.descriptor, "aGlobal")
             chromeProperties = accessCheck + " ? &sChromeOnlyNativeProperties : nullptr"
         else:
             chromeProperties = "nullptr"
@@ -1412,8 +1424,7 @@ def CheckPref(descriptor, globalName, varName, retval, wrapperCache = None):
                    "      return %s;") % (varName, retval)
     return """
   {
-    XPCWrappedNativeScope* scope =
-      XPCWrappedNativeScope::FindInJSObjectScope(aCx, %s);
+    XPCWrappedNativeScope* scope = xpc::GetObjectScope(%s);
     if (!scope) {
 %s
     }
@@ -1514,14 +1525,59 @@ def CreateBindingJSObject(descriptor, parent):
 """
     return create % parent
 
+def GetAccessCheck(descriptor, globalName):
+    """
+    globalName is the name of the global JSObject*
+
+    returns a string
+    """
+    if descriptor.workers:
+        accessCheck = "mozilla::dom::workers::GetWorkerPrivateFromContext(aCx)->IsChromeWorker()"
+    else:
+        accessCheck = "xpc::AccessCheck::isChrome(%s)" % globalName
+    return accessCheck
+
+def InitUnforgeableProperties(descriptor, properties):
+    """
+    properties is a PropertyArrays instance
+    """
+    defineUnforgeables = ("if (!DefineUnforgeableAttributes(aCx, obj, %s)) {\n"
+                          "  return nullptr;\n"
+                          "}")
+    unforgeableAttrs = properties.unforgeableAttrs
+    unforgeables = []
+    if unforgeableAttrs.hasNonChromeOnly():
+        unforgeables.append(CGGeneric(defineUnforgeables %
+                                      unforgeableAttrs.variableName(False)))
+    if unforgeableAttrs.hasChromeOnly():
+        unforgeables.append(
+            CGIfWrapper(CGGeneric(defineUnforgeables %
+                                  unforgeableAttrs.variableName(True)),
+                        GetAccessCheck(descriptor, "global")))
+
+    return CGIndenter(CGWrapper(
+            CGList(unforgeables, "\n"),
+            pre=("\n"
+            "// Important: do unforgeable property setup after we have handed\n"
+            "// over ownership of the C++ object to obj as needed, so that if\n"
+            "// we fail and it ends up GCed it won't have problems in the\n"
+            "// finalizer trying to drop its ownership of the C++ object.\n"),
+            post="\n")).define() if len(unforgeables) > 0 else ""
+
 class CGWrapWithCacheMethod(CGAbstractMethod):
-    def __init__(self, descriptor):
+    """
+    Create a wrapper JSObject for a given native that implements nsWrapperCache.
+
+    properties should be a PropertyArrays instance.
+    """
+    def __init__(self, descriptor, properties):
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aScope'),
                 Argument(descriptor.nativeType + '*', 'aObject'),
                 Argument('nsWrapperCache*', 'aCache'),
                 Argument('bool*', 'aTriedToWrap')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
+        self.properties = properties
 
     def definition_body(self):
         if self.descriptor.workers:
@@ -1544,11 +1600,12 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
   }
 
 %s
-
+%s
   aCache->SetWrapper(obj);
 
   return obj;""" % (CheckPref(self.descriptor, "global", "*aTriedToWrap", "NULL", "aCache"),
-                    CreateBindingJSObject(self.descriptor, "parent"))
+                    CreateBindingJSObject(self.descriptor, "parent"),
+                    InitUnforgeableProperties(self.descriptor, self.properties))
 
 class CGWrapMethod(CGAbstractMethod):
     def __init__(self, descriptor):
@@ -1562,12 +1619,19 @@ class CGWrapMethod(CGAbstractMethod):
         return "  return Wrap(aCx, aScope, aObject, aObject, aTriedToWrap);"
 
 class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
-    def __init__(self, descriptor):
+    """
+    Create a wrapper JSObject for a given native that does not implement
+    nsWrapperCache.
+
+    properties should be a PropertyArrays instance.
+    """
+    def __init__(self, descriptor, properties):
         # XXX can we wrap if we don't have an interface prototype object?
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aScope'),
                 Argument(descriptor.nativeType + '*', 'aObject')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
+        self.properties = properties
 
     def definition_body(self):
         return """
@@ -1578,8 +1642,9 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
   }
 
 %s
-
-  return obj;""" % CreateBindingJSObject(self.descriptor, "global")
+%s
+  return obj;""" % (CreateBindingJSObject(self.descriptor, "global"),
+                    InitUnforgeableProperties(self.descriptor, self.properties))
 
 builtinNames = {
     IDLType.Tags.bool: 'bool',
@@ -5331,10 +5396,11 @@ class CGDescriptor(CGThing):
                 cgThings.append(CGDOMJSClass(descriptor))
 
             if descriptor.wrapperCache:
-                cgThings.append(CGWrapWithCacheMethod(descriptor))
+                cgThings.append(CGWrapWithCacheMethod(descriptor, properties))
                 cgThings.append(CGWrapMethod(descriptor))
             else:
-                cgThings.append(CGWrapNonWrapperCacheMethod(descriptor))
+                cgThings.append(CGWrapNonWrapperCacheMethod(descriptor,
+                                                            properties))
 
         cgThings = CGList((CGIndenter(t, declareOnly=True) for t in cgThings), "\n")
         cgThings = CGWrapper(cgThings, pre='\n', post='\n')
@@ -6063,7 +6129,9 @@ class CGExampleMember(CGThing):
                         typeDecl = "NonNull<%s>"
                 else:
                     typeDecl = "%s&"
-            return (typeDecl % iface.identifier.name), False, False
+            return ((typeDecl %
+                     self.descriptor.getDescriptor(iface.identifier.name).nativeType),
+                    False, False)
 
         if type.isSpiderMonkeyInterface():
             assert not isMember

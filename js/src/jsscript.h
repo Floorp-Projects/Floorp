@@ -576,7 +576,7 @@ struct JSScript : public js::gc::Cell
 
     JSFlatString *sourceData(JSContext *cx);
 
-    bool loadSource(JSContext *cx, bool *worked);
+    static bool loadSource(JSContext *cx, js::HandleScript scr, bool *worked);
 
     js::ScriptSource *scriptSource() {
         return scriptSource_;
@@ -1062,7 +1062,10 @@ struct ScriptSource
 
   private:
     void destroy(JSRuntime *rt);
-    bool compressed() { return compressedLength_ != 0; }
+    bool compressed() const { return compressedLength_ != 0; }
+    size_t computedSizeOfData() const {
+        return compressed() ? compressedLength_ : sizeof(jschar) * length_;
+    }
 };
 
 class ScriptSourceHolder
@@ -1090,8 +1093,10 @@ class ScriptSourceHolder
  *
  * To use it, you have to have a SourceCompressionToken, tok, with tok.ss and
  * tok.chars set to the proper values. When the SourceCompressionToken is
- * destroyed, it makes sure the compression is complete. At this point tok.ss is
- * ready to be attached to the runtime.
+ * destroyed, it makes sure the compression is complete. If you are about to
+ * successfully exit the scope of tok, you should call and check the return
+ * value of SourceCompressionToken::complete(). It returns false if allocation
+ * errors occurred in the thread.
  */
 class SourceCompressorThread
 {
@@ -1118,6 +1123,7 @@ class SourceCompressorThread
     // Flag which can be set by the main thread to ask compression to abort.
     volatile bool stop;
 
+    bool internalCompress();
     void threadLoop();
     static void compressorThread(void *arg);
 
@@ -1145,17 +1151,16 @@ struct SourceCompressionToken
     JSContext *cx;
     ScriptSource *ss;
     const jschar *chars;
+    bool oom;
   public:
     explicit SourceCompressionToken(JSContext *cx)
-      : cx(cx), ss(NULL), chars(NULL) {}
+       : cx(cx), ss(NULL), chars(NULL), oom(false) {}
     ~SourceCompressionToken()
     {
-        JS_ASSERT_IF(!ss, !chars);
-        if (ss)
-            ensureReady();
+        complete();
     }
 
-    void ensureReady();
+    bool complete();
     void abort();
 };
 

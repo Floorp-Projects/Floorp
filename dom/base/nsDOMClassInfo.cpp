@@ -562,6 +562,12 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static const char kDOMStringBundleURL[] =
   "chrome://global/locale/dom/dom.properties";
 
+#ifdef MOZ_DISABLE_DOMCRYPTO
+  static const bool domCryptoEnabled = false;
+#else
+  static const bool domCryptoEnabled = true;
+#endif
+
 // NOTE: DEFAULT_SCRIPTABLE_FLAGS and DOM_DEFAULT_SCRIPTABLE_FLAGS
 //       are defined in nsIDOMClassInfo.h.
 
@@ -1518,6 +1524,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MediaStream, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(LocalMediaStream, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
   NS_DEFINE_CLASSINFO_DATA(XMLHttpRequestUpload, nsEventTargetSH,
@@ -2368,7 +2376,8 @@ nsDOMClassInfo::RegisterExternalClasses()
   DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMWindowPerformance,                 \
                                       nsGlobalWindow::HasPerformanceSupport()) \
   DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,                   \
-                                      nsDOMTouchEvent::PrefEnabled())
+                                      nsDOMTouchEvent::PrefEnabled())          \
+  DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIWindowCrypto, domCryptoEnabled)
 
 nsresult
 nsDOMClassInfo::Init()
@@ -4127,6 +4136,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(MediaStream, nsIDOMMediaStream)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMediaStream)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(LocalMediaStream, nsIDOMLocalMediaStream)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMLocalMediaStream)
   DOM_CLASSINFO_MAP_END
 #endif
 

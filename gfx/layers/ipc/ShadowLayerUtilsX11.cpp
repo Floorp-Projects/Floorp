@@ -14,6 +14,8 @@
 #include "mozilla/X11Util.h"
 #include "cairo-xlib.h"
 
+using namespace mozilla::gl;
+
 namespace mozilla {
 namespace layers {
 

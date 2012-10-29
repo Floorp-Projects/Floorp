@@ -105,7 +105,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   };
   friend class PipelineTransport;
 
-  virtual nsresult TransportReady(TransportFlow *flow);  // The transport is ready
+  virtual nsresult TransportReady(TransportFlow *flow); // The transport is ready
   virtual nsresult TransportFailed(TransportFlow *flow);  // The transport is down
 
   void increment_rtp_packets_sent();
@@ -148,6 +148,8 @@ class MediaPipeline : public sigslot::has_slots<> {
 
  private:
   virtual void DetachTransportInt();
+  nsresult SendPacketInt(TransportFlow *flow, const void* data, int len);
+  nsresult TransportReadyInt(TransportFlow *flow);
 
   bool IsRtp(const unsigned char *data, size_t len);
 };

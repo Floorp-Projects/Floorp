@@ -10,30 +10,15 @@
 #include "nsISupportsImpl.h"
 #include "nsIThread.h"
 #include "nsAutoPtr.h"
-
-#ifdef MOZ_SAMPLE_TYPE_S16
-#define MOZ_AUDIO_DATA_FORMAT (nsAudioStream::FORMAT_S16)
-typedef short SampleType;
-#else
-#define MOZ_AUDIO_DATA_FORMAT (nsAudioStream::FORMAT_FLOAT32)
-typedef float SampleType;
-#endif
+#include "AudioSampleFormat.h"
 
 // Access to a single instance of this class must be synchronized by
 // callers, or made from a single thread.  One exception is that access to
-// GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels,Format}
+// GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels}
 // is thread-safe without external synchronization.
 class nsAudioStream : public nsISupports
 {
 public:
-
-  enum SampleFormat
-  {
-    FORMAT_U8,
-    FORMAT_S16,
-    FORMAT_FLOAT32
-  };
-
   nsAudioStream()
     : mRate(0),
       mChannels(0)
@@ -70,11 +55,11 @@ public:
   // on the main thread, which may attempt to acquire any held monitor.
   virtual void Shutdown() = 0;
 
-  // Write audio data to the audio hardware.  aBuf is an array of frames in
-  // the format specified by mFormat of length aCount.  If aFrames is larger
+  // Write audio data to the audio hardware.  aBuf is an array of AudioDataValues
+  // AudioDataValue of length aFrames*mChannels.  If aFrames is larger
   // than the result of Available(), the write will block until sufficient
   // buffer space is available.
-  virtual nsresult Write(const void* aBuf, uint32_t aFrames) = 0;
+  virtual nsresult Write(const mozilla::AudioDataValue* aBuf, uint32_t aFrames) = 0;
 
   // Return the number of audio frames that can be written without blocking.
   virtual uint32_t Available() = 0;
@@ -113,13 +98,11 @@ public:
 
   int GetRate() { return mRate; }
   int GetChannels() { return mChannels; }
-  SampleFormat GetFormat() { return MOZ_AUDIO_DATA_FORMAT; }
 
 protected:
   nsCOMPtr<nsIThread> mAudioPlaybackThread;
   int mRate;
   int mChannels;
-  SampleFormat mFormat;
 };
 
 #endif

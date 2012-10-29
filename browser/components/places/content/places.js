@@ -81,7 +81,9 @@ var PlacesOrganizer = {
     document.getElementById("placesContext")
             .removeChild(document.getElementById("placesContext_show:info"));
 
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
     gPrivateBrowsingListener.init();
+#endif
   },
 
   QueryInterface: function PO_QueryInterface(aIID) {
@@ -113,7 +115,9 @@ var PlacesOrganizer = {
   },
 
   destroy: function PO_destroy() {
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
     gPrivateBrowsingListener.uninit();
+#endif
   },
 
   _location: null,
@@ -1354,6 +1358,7 @@ var ViewMenu = {
   }
 }
 
+#ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
 /**
  * Disables the "Import and Backup->Import From Another Browser" menu item
  * in private browsing mode.
@@ -1390,3 +1395,4 @@ let gPrivateBrowsingListener = {
       this._cmd_import.removeAttribute("disabled");
   }
 };
+#endif

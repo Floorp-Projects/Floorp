@@ -15,7 +15,7 @@ interface nsILoadContext;
  * The application cache service manages the set of application cache
  * groups.
  */
-[scriptable, uuid(1750F671-0170-4d3f-A836-455501141E32)]
+[scriptable, uuid(9b5b2cde-d5dd-48d3-87f8-8e8b776952a8)]
 interface nsIApplicationCacheService : nsISupports
 {
     /**
@@ -24,6 +24,13 @@ interface nsIApplicationCacheService : nsISupports
      */
     ACString buildGroupID(in nsIURI aManifestURL,
                           in nsILoadContext aLoadContext);
+
+    /**
+     * Same as buildGroupID method, just doesn't require load context.
+     */
+    ACString buildGroupIDForApp(in nsIURI aManifestURL,
+                                in unsigned long aAppID,
+                                in boolean aInBrowser);
 
     /**
      * Create a new, empty application cache for the given cache

@@ -45,7 +45,7 @@ public class testThumbnails extends BaseTest {
         // should be plenty of time, even on slow devices
         final int thumbnailDelay = 3000;
 
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        blockForGeckoReady();
 
         // load sites; both will return HTTP 200 with a green background
         loadUrl(site1Url);

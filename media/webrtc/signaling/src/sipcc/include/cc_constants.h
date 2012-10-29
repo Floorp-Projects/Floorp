@@ -6,6 +6,8 @@
 #define _CC_CONSTANTS_H_
 #include "cc_types.h"
 
+#define  PC_HANDLE_SIZE     17 /* 8 random bytes in hex plus null */
+
 /**
  * Max call servers
  */

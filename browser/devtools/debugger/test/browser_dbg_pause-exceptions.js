@@ -30,7 +30,7 @@ function testWithFrame()
     gDebugger.addEventListener("Debugger:FetchedVariables", function testA() {
       // We expect 2 Debugger:FetchedVariables events, one from the global object
       // scope and the regular one.
-      if (++gCount <2) {
+      if (++gCount < 2) {
         is(gCount, 1, "A. First Debugger:FetchedVariables event received.");
         return;
       }
@@ -40,19 +40,15 @@ function testWithFrame()
       is(gDebugger.DebuggerController.activeThread.state, "paused",
         "Should be paused now.");
 
-      EventUtils.sendMouseEvent({ type: "click" },
-        gDebugger.document.getElementById("pause-exceptions"),
-        gDebugger);
-
-      is(gDebugger.DebuggerController.StackFrames.pauseOnExceptions, true,
-        "The option should be enabled now.");
+      gDebugger.DebuggerView.Options._pauseOnExceptionsItem.setAttribute("checked", "true");
+      gDebugger.DebuggerView.Options._togglePauseOnExceptions();
 
       gCount = 0;
       gPane.contentWindow.gClient.addOneTimeListener("resumed", function() {
         gDebugger.addEventListener("Debugger:FetchedVariables", function testB() {
           // We expect 2 Debugger:FetchedVariables events, one from the global object
           // scope and the regular one.
-          if (++gCount <2) {
+          if (++gCount < 2) {
             is(gCount, 1, "B. First Debugger:FetchedVariables event received.");
             return;
           }
@@ -60,8 +56,8 @@ function testWithFrame()
           gDebugger.removeEventListener("Debugger:FetchedVariables", testB, false);
           Services.tm.currentThread.dispatch({ run: function() {
 
-            var frames = gDebugger.DebuggerView.StackFrames._frames,
-                scopes = gDebugger.DebuggerView.Properties._vars,
+            var frames = gDebugger.DebuggerView.StackFrames._container._list,
+                scopes = gDebugger.DebuggerView.Variables._list,
                 innerScope = scopes.firstChild,
                 innerNodes = innerScope.querySelector(".details").childNodes;
 
@@ -84,7 +80,7 @@ function testWithFrame()
         }, false);
       });
 
-      EventUtils.sendMouseEvent({ type: "click" },
+      EventUtils.sendMouseEvent({ type: "mousedown" },
         gDebugger.document.getElementById("resume"),
         gDebugger);
     }, false);

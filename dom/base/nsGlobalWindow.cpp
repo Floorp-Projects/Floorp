@@ -1245,6 +1245,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowPerformance)
   NS_INTERFACE_MAP_ENTRY(nsITouchEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIInlineEventHandlers)
+  NS_INTERFACE_MAP_ENTRY(nsIWindowCrypto)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
   OUTER_WINDOW_ONLY
     NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -2042,11 +2043,11 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         rv = SetOuterObject(cx, mJSObject);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        xpc::CompartmentPrivate *priv = xpc::GetCompartmentPrivate(mJSObject);
-        if (priv && priv->waiverWrapperMap) {
-          NS_ASSERTION(!JS_IsExceptionPending(cx),
-                       "We might overwrite a pending exception!");
-          priv->waiverWrapperMap->Reparent(cx, newInnerWindow->mJSObject);
+        NS_ASSERTION(!JS_IsExceptionPending(cx),
+                     "We might overwrite a pending exception!");
+        XPCWrappedNativeScope* scope = xpc::GetObjectScope(mJSObject);
+        if (scope->mWaiverWrapperMap) {
+          scope->mWaiverWrapperMap->Reparent(cx, newInnerWindow->mJSObject);
         }
       }
     }
@@ -2601,12 +2602,12 @@ nsGlobalWindow::DialogsAreBeingAbused()
   NS_ASSERTION(GetScriptableTop() &&
                GetScriptableTop()->GetCurrentInnerWindowInternal() == this,
                "DialogsAreBeingAbused called with invalid window");
-            
+
   if (mLastDialogQuitTime.IsNull() ||
-      nsContentUtils::CallerHasUniversalXPConnect()) {
+      nsContentUtils::IsCallerChrome()) {
     return false;
   }
- 
+
   TimeDuration dialogInterval(TimeStamp::Now() - mLastDialogQuitTime);
   if (dialogInterval.ToSeconds() <
       Preferences::GetInt("dom.successive_dialog_time_limit",
@@ -3427,7 +3428,7 @@ nsGlobalWindow::GetOpener(nsIDOMWindow** aOpener)
   }
 
   // First, check if we were called from a privileged chrome script
-  if (nsContentUtils::IsCallerTrustedForRead()) {
+  if (nsContentUtils::IsCallerChrome()) {
     NS_ADDREF(*aOpener = opener);
     return NS_OK;
   }
@@ -3471,7 +3472,7 @@ nsGlobalWindow::SetOpener(nsIDOMWindow* aOpener)
 {
   // check if we were called from a privileged chrome script.
   // If not, opener is settable only to null.
-  if (aOpener && !nsContentUtils::IsCallerTrustedForWrite()) {
+  if (aOpener && !nsContentUtils::IsCallerChrome()) {
     return NS_OK;
   }
 
@@ -4158,7 +4159,7 @@ nsresult
 nsGlobalWindow::CheckSecurityWidthAndHeight(int32_t* aWidth, int32_t* aHeight)
 {
 #ifdef MOZ_XUL
-  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     // if attempting to resize the window, hide any open popups
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
     nsContentUtils::HidePopupsInDocument(doc);
@@ -4169,7 +4170,7 @@ nsGlobalWindow::CheckSecurityWidthAndHeight(int32_t* aWidth, int32_t* aHeight)
   if ((aWidth && *aWidth < 100) || (aHeight && *aHeight < 100)) {
     // Check security state for use in determing window dimensions
 
-    if (!nsContentUtils::IsCallerTrustedForWrite()) {
+    if (!nsContentUtils::IsCallerChrome()) {
       //sec check failed
       if (aWidth && *aWidth < 100) {
         *aWidth = 100;
@@ -4224,7 +4225,7 @@ nsGlobalWindow::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop)
 
   // Check security state for use in determing window dimensions
 
-  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+  if (!nsContentUtils::IsCallerChrome()) {
 #ifdef MOZ_XUL
     // if attempting to move the window, hide any open popups
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
@@ -4530,7 +4531,7 @@ nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aRequireTrust)
   // Only chrome can change our fullScreen mode, unless we're running in
   // untrusted mode.
   if (aFullScreen == rootWinFullScreen || 
-      (aRequireTrust && !nsContentUtils::IsCallerTrustedForWrite())) {
+      (aRequireTrust && !nsContentUtils::IsCallerChrome())) {
     return NS_OK;
   }
 
@@ -4807,7 +4808,7 @@ bool
 nsGlobalWindow::CanMoveResizeWindows()
 {
   // When called from chrome, we can avoid the following checks.
-  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     // Don't allow scripts to move or resize windows that were not opened by a
     // script.
     if (!mHadOriginalOpener) {
@@ -5805,7 +5806,7 @@ bool
 nsGlobalWindow::CanSetProperty(const char *aPrefName)
 {
   // Chrome can set any property.
-  if (nsContentUtils::IsCallerTrustedForWrite()) {
+  if (nsContentUtils::IsCallerChrome()) {
     return true;
   }
 
@@ -6013,7 +6014,7 @@ NS_IMETHODIMP
 nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                            const nsAString& aOptions, nsIDOMWindow** _retval)
 {
-  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -6479,7 +6480,7 @@ nsGlobalWindow::PostMessageMoz(const jsval& aMessage,
                          origin,
                          this,
                          providedOrigin,
-                         nsContentUtils::IsCallerTrustedForWrite());
+                         nsContentUtils::IsCallerChrome());
 
   // We *must* clone the data here, or the jsval could be modified
   // by script
@@ -6584,7 +6585,7 @@ nsGlobalWindow::Close()
   // Don't allow scripts from content to close non-app windows that were not
   // opened by script.
   if (!mDocShell->GetIsApp() &&
-      !mHadOriginalOpener && !nsContentUtils::IsCallerTrustedForWrite()) {
+      !mHadOriginalOpener && !nsContentUtils::IsCallerChrome()) {
     bool allowClose = mAllowScriptsToClose ||
       Preferences::GetBool("dom.allow_scripts_to_close_windows", true);
     if (!allowClose) {

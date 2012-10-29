@@ -932,7 +932,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
            aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
   }
   AutoNoisyIndenter indent(gNoisy);
-  PRTime start = LL_ZERO; // Initialize these variablies to silence the compiler.
+  PRTime start = 0; // Initialize these variablies to silence the compiler.
   int32_t ctc = 0;        // We only use these if they are set (gLameReflowMetrics).
   if (gLameReflowMetrics) {
     start = PR_Now();
@@ -6098,7 +6098,7 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
              aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height,
              ca.x, ca.y, ca.width, ca.height);
   }
-  PRTime start = LL_ZERO; // Initialize these variables to silence the compiler.
+  PRTime start = 0; // Initialize these variables to silence the compiler.
   if (gLamePaintMetrics) {
     start = PR_Now();
     drawnLines = 0;

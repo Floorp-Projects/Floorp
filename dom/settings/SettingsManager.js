@@ -109,7 +109,7 @@ SettingsLock.prototype = {
               results[name] = value;
               results.__exposedProps__[name] = "r";
               // If the value itself is an object, expose the properties.
-              if (typeof value == "object") {
+              if (typeof value == "object" && value != null) {
                 var exposed = {};
                 Object.keys(value).forEach(function(key) { exposed[key] = 'r'; });
                 results[name].__exposedProps__ = exposed;

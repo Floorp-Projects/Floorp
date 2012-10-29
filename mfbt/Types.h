@@ -96,8 +96,11 @@
 #  define MFBT_DATA(type)       MOZ_EXPORT_DATA(type)
 #else
   /*
-   * When mozglue is linked in the program, we need the MFBT API symbols
-   * to be weak.
+   * On linux mozglue is linked in the program and we link libxul.so with
+   * -z,defs. Normally that causes the linker to reject undefined references in
+   * libxul.so, but as a loophole it allows undefined references to weak
+   * symbols. We add the weak attribute to the import version of the MFBT API
+   * macros to exploit this.
    */
 #  if defined(MOZ_GLUE_IN_PROGRAM)
 #    define MFBT_API(type)        __attribute__((weak)) MOZ_IMPORT_API(type)

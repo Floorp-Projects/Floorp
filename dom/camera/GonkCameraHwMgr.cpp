@@ -19,6 +19,7 @@
 #include "GonkCameraHwMgr.h"
 #include "GonkNativeWindow.h"
 #include "CameraCommon.h"
+#include <sys/system_properties.h>
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -187,6 +188,24 @@ GonkCameraHardware::Init()
     return;
   }
 
+  struct camera_info info;
+  int rv = mModule->get_camera_info(mCamera, &info);
+  if (rv != 0) {
+    return;
+  }
+  mSensorOrientation = info.orientation;
+
+  // Some kernels report the wrong sensor orientation through
+  // get_camera_info()...
+  char propname[PROP_NAME_MAX];
+  char prop[PROP_VALUE_MAX];
+  snprintf(propname, sizeof(propname), "ro.moz.cam.%d.sensor_offset", mCamera);
+  if (__system_property_get(propname, prop) > 0) {
+    int offset = clamped(atoi(prop), 0, 270);
+    mSensorOrientation += offset;
+    mSensorOrientation %= 360;
+  }
+
   if (sHwHandle == 0) {
     sHwHandle = 1;  // don't use 0
   }
@@ -249,6 +268,17 @@ GonkCameraHardware::GetHandle(GonkCamera* aTarget, uint32_t aCamera)
   delete sHw;
   sHw = nullptr;
   return 0;
+}
+
+int
+GonkCameraHardware::GetSensorOrientation(uint32_t aHwHandle)
+{
+  DOM_CAMERA_LOGI("%s: aHwHandle = %d\n", __func__, aHwHandle);
+  GonkCameraHardware* hw = GetHardware(aHwHandle);
+  if (!hw) {
+    return 0;
+  }
+  return hw->mSensorOrientation;
 }
 
 int

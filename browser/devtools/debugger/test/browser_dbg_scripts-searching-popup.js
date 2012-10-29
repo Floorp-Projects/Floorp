@@ -29,9 +29,9 @@ function test()
 }
 
 function runTest() {
-  gScripts = gDebugger.DebuggerView.Scripts;
-  gSearchBox = gScripts._searchbox;
-  gSearchBoxPanel = gScripts._searchboxPanel;
+  gScripts = gDebugger.DebuggerView.Sources;
+  gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
+  gSearchBoxPanel = gDebugger.DebuggerView.Filtering._searchboxPanel
 
   focusSearchbox();
 }

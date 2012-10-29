@@ -643,13 +643,17 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, int32_t defaultPort)
     return true;
 }
 
-static const char kProxyType_HTTP[]    = "http";
-static const char kProxyType_PROXY[]   = "proxy";
-static const char kProxyType_SOCKS[]   = "socks";
-static const char kProxyType_SOCKS4[]  = "socks4";
-static const char kProxyType_SOCKS5[]  = "socks5";
-static const char kProxyType_DIRECT[]  = "direct";
-static const char kProxyType_UNKNOWN[] = "unknown";
+// kProxyType\* may be referred to externally in
+// nsProxyInfo in order to compare by string pointer
+namespace mozilla {
+const char *kProxyType_HTTP    = "http";
+const char *kProxyType_PROXY   = "proxy";
+const char *kProxyType_SOCKS   = "socks";
+const char *kProxyType_SOCKS4  = "socks4";
+const char *kProxyType_SOCKS5  = "socks5";
+const char *kProxyType_DIRECT  = "direct";
+const char *kProxyType_UNKNOWN = "unknown";
+}
 
 const char *
 nsProtocolProxyService::ExtractProxyInfo(const char *start,

@@ -3894,7 +3894,7 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
   // -- rendering the user's theme and then extracting the results
   // -- rendering native anonymous content (e.g., file input paths;
   // scrollbars should be allowed)
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     // not permitted to use DrawWindow
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     error.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -3958,8 +3958,8 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
   }
   thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
                               matrix._22, matrix._31, matrix._32));
-  unused << presContext->PresShell()->
-    RenderDocument(r, renderDocFlags, backgroundColor, thebes);
+  nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
+  unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
   mTarget->SetTransform(matrix);
 
   // note that x and y are coordinates in the document that
@@ -3995,7 +3995,7 @@ CanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* elem,
   // -- rendering the user's theme and then extracting the results
   // -- rendering native anonymous content (e.g., file input paths;
   // scrollbars should be allowed)
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     // not permitted to use DrawWindow
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     error.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -4132,7 +4132,7 @@ CanvasRenderingContext2D::GetImageData(JSContext* aCx, double aSx,
   // Check only if we have a canvas element; if we were created with a docshell,
   // then it's special internal use.
   if (mCanvasElement && mCanvasElement->IsWriteOnly() &&
-      !nsContentUtils::IsCallerTrustedForRead())
+      !nsContentUtils::IsCallerChrome())
   {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     error.Throw(NS_ERROR_DOM_SECURITY_ERR);

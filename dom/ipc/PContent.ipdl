@@ -272,7 +272,7 @@ parent:
         returns (uint64_t id, bool startBackground,
                  bool isForApp, bool isForBrowser);
 
-    PAudio(int32_t aNumChannels, int32_t aRate, int32_t aFormat);
+    PAudio(int32_t aNumChannels, int32_t aRate);
 
     PDeviceStorageRequest(DeviceStorageParams params);
 

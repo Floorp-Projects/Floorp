@@ -23,7 +23,7 @@ public class testNewTab extends BaseTest {
         String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
         String url2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");
 
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        blockForGeckoReady();
 
         Activity activity = getActivity();
         tabCount = mDriver.findElement(activity, "tabs_count");

@@ -32,9 +32,9 @@ function testSimpleCall() {
 function resumeAndFinish() {
   gDebugger.DebuggerController.activeThread.resume(function() {
     checkScriptsOrder();
-    addScriptsAndCheckOrder(1, function() {
-      addScriptsAndCheckOrder(2, function() {
-        addScriptsAndCheckOrder(3, function() {
+    addScriptAndCheckOrder(1, function() {
+      addScriptAndCheckOrder(2, function() {
+        addScriptAndCheckOrder(3, function() {
           closeDebuggerAndFinish();
         });
       });
@@ -42,11 +42,11 @@ function resumeAndFinish() {
   });
 }
 
-function addScriptsAndCheckOrder(method, callback) {
-  let vs = gDebugger.DebuggerView.Scripts;
-  let ss = gDebugger.DebuggerController.SourceScripts;
+function addScriptAndCheckOrder(method, callback) {
+  let sv = gDebugger.SourceUtils;
+  let vs = gDebugger.DebuggerView.Sources;
   vs.empty();
-  vs._scripts.removeEventListener("select", vs._onScriptsChange, false);
+  vs._container.removeEventListener("select", vs._onScriptsChange, false);
 
   let urls = [
     { href: "ici://some.address.com/random/", leaf: "subrandom/" },
@@ -67,15 +67,15 @@ function addScriptsAndCheckOrder(method, callback) {
     case 1:
       urls.forEach(function(url) {
         let loc = url.href + url.leaf;
-        vs.addScript(ss.getScriptLabel(loc, url.href), { url: loc });
+        vs.push(sv.getSourceLabel(loc, url.href), { url: loc });
       });
-      vs.commitScripts();
+      vs.commit();
       break;
 
     case 2:
       urls.forEach(function(url) {
         let loc = url.href + url.leaf;
-        vs.addScript(ss.getScriptLabel(loc, url.href), { url: loc }, true);
+        vs.push(sv.getSourceLabel(loc, url.href), { url: loc }, { forced: true });
       });
       break;
 
@@ -84,14 +84,14 @@ function addScriptsAndCheckOrder(method, callback) {
       for (; i < urls.length / 2; i++) {
         let url = urls[i];
         let loc = url.href + url.leaf;
-        vs.addScript(ss.getScriptLabel(loc, url.href), { url: loc });
+        vs.push(sv.getSourceLabel(loc, url.href), { url: loc });
       }
-      vs.commitScripts();
+      vs.commit();
 
       for (; i < urls.length; i++) {
         let url = urls[i];
         let loc = url.href + url.leaf;
-        vs.addScript(ss.getScriptLabel(loc, url.href), { url: loc }, true);
+        vs.push(sv.getSourceLabel(loc, url.href), { url: loc }, { forced: true });
       }
       break;
   }
@@ -103,7 +103,7 @@ function addScriptsAndCheckOrder(method, callback) {
 }
 
 function checkScriptsOrder(method) {
-  let labels = gDebugger.DebuggerView.Scripts.scriptLabels;
+  let labels = gDebugger.DebuggerView.Sources.labels;
   let sorted = labels.reduce(function(prev, curr, index, array) {
     return array[index - 1] < array[index];
   });

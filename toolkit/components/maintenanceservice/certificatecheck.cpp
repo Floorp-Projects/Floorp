@@ -44,7 +44,7 @@ CheckCertificateForPEFile(LPCWSTR filePath,
                                   &formatType, &certStore, &cryptMsg, NULL);
   if (!result) {
     lastError = GetLastError();
-    LOG(("CryptQueryObject failed with %d\n", lastError));
+    LOG_WARN(("CryptQueryObject failed.  (%d)", lastError));
     goto cleanup;
   }
 
@@ -54,7 +54,7 @@ CheckCertificateForPEFile(LPCWSTR filePath,
                             NULL, &signerInfoSize);
   if (!result) {
     lastError = GetLastError();
-    LOG(("CryptMsgGetParam failed with %d\n", lastError));
+    LOG_WARN(("CryptMsgGetParam failed.  (%d)", lastError));
     goto cleanup;
   }
 
@@ -62,7 +62,7 @@ CheckCertificateForPEFile(LPCWSTR filePath,
   signerInfo = (PCMSG_SIGNER_INFO)LocalAlloc(LPTR, signerInfoSize);
   if (!signerInfo) {
     lastError = GetLastError();
-    LOG(("Unable to allocate memory for Signer Info.\n"));
+    LOG_WARN(("Unable to allocate memory for Signer Info.  (%d)", lastError));
     goto cleanup;
   }
 
@@ -72,7 +72,7 @@ CheckCertificateForPEFile(LPCWSTR filePath,
                             (PVOID)signerInfo, &signerInfoSize);
   if (!result) {
     lastError = GetLastError();
-    LOG(("CryptMsgGetParam failed with %d\n", lastError));
+    LOG_WARN(("CryptMsgGetParam failed.  (%d)", lastError));
     goto cleanup;
   }
 
@@ -85,13 +85,13 @@ CheckCertificateForPEFile(LPCWSTR filePath,
                                            (PVOID)&certInfo, NULL);
   if (!certContext) {
     lastError = GetLastError();
-    LOG(("CertFindCertificateInStore failed with %d\n", lastError));
+    LOG_WARN(("CertFindCertificateInStore failed.  (%d)", lastError));
     goto cleanup;
   }
 
   if (!DoCertificateAttributesMatch(certContext, infoToMatch)) {
     lastError = ERROR_NOT_FOUND;
-    LOG(("Certificate did not match issuer or name\n"));
+    LOG_WARN(("Certificate did not match issuer or name.  (%d)", lastError));
     goto cleanup;
   }
 
@@ -133,21 +133,22 @@ DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
                                NULL, 0);
 
     if (!dwData) {
-      LOG(("CertGetNameString failed.\n"));
+      LOG_WARN(("CertGetNameString failed.  (%d)", GetLastError()));
       return FALSE;
     }
 
     // Allocate memory for Issuer name buffer.
     LPTSTR szName = (LPTSTR)LocalAlloc(LPTR, dwData * sizeof(WCHAR));
     if (!szName) {
-      LOG(("Unable to allocate memory for issuer name.\n"));
+      LOG_WARN(("Unable to allocate memory for issuer name.  (%d)",
+                GetLastError()));
       return FALSE;
     }
 
     // Get Issuer name.
     if (!CertGetNameString(certContext, CERT_NAME_SIMPLE_DISPLAY_TYPE,
                            CERT_NAME_ISSUER_FLAG, NULL, szName, dwData)) {
-      LOG(("CertGetNameString failed.\n"));
+      LOG_WARN(("CertGetNameString failed.  (%d)", GetLastError()));
       LocalFree(szName);
       return FALSE;
     }
@@ -168,21 +169,22 @@ DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
     dwData = CertGetNameString(certContext, CERT_NAME_SIMPLE_DISPLAY_TYPE,
                                0, NULL, NULL, 0);
     if (!dwData) {
-      LOG(("CertGetNameString failed.\n"));
+      LOG_WARN(("CertGetNameString failed.  (%d)", GetLastError()));
       return FALSE;
     }
 
     // Allocate memory for the name buffer.
     szName = (LPTSTR)LocalAlloc(LPTR, dwData * sizeof(WCHAR));
     if (!szName) {
-      LOG(("Unable to allocate memory for subject name.\n"));
+      LOG_WARN(("Unable to allocate memory for subject name.  (%d)",
+                GetLastError()));
       return FALSE;
     }
 
     // Obtain the name.
     if (!(CertGetNameString(certContext, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0,
                             NULL, szName, dwData))) {
-      LOG(("CertGetNameString failed.\n"));
+      LOG_WARN(("CertGetNameString failed.  (%d)", GetLastError()));
       LocalFree(szName);
       return FALSE;
     }
@@ -256,13 +258,13 @@ VerifyCertificateTrustForFile(LPCWSTR filePath)
   if (ERROR_SUCCESS == ret) {
     // The hash that represents the subject is trusted and there were no
     // verification errors.  No publisher nor time stamp chain errors.
-    LOG(("The file \"%ls\" is signed and the signature was verified.\n",
-        filePath));
+    LOG(("The file \"%ls\" is signed and the signature was verified.",
+         filePath));
       return ERROR_SUCCESS;
   }
 
   DWORD lastError = GetLastError();
-  LOG(("There was an error validating trust of the certificate for file"
-       " \"%ls\". Returned: %d, Last error: %d\n", filePath, ret, lastError));
+  LOG_WARN(("There was an error validating trust of the certificate for file"
+            " \"%ls\". Returned: %d.  (%d)", filePath, ret, lastError));
   return ret;
 }

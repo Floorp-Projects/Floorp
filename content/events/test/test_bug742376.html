@@ -16,16 +16,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=402089
 
 /** Test for Bug 742376 **/
 
-function getListenerCount() {
+function hasListeners() {
 
   var Cc = SpecialPowers.Cc;
   var Ci = SpecialPowers.Ci;
   var dss = Cc["@mozilla.org/devicesensors;1"].getService(Ci.nsIDeviceSensors);
 
-  return dss.listenerCount(Ci.nsIDeviceSensorData.TYPE_ORIENTATION);
+  return dss.hasWindowListener(Ci.nsIDeviceSensorData.TYPE_ORIENTATION, window);
 }
 
-var startListenerCount = getListenerCount();
+is(hasListeners(), false, "Must not have listeners before tests start");
 
 function dumbListener(event) {}
 function dumbListener2(event) {}
@@ -33,14 +33,17 @@ function dumbListener2(event) {}
 window.addEventListener("deviceorientation", dumbListener, false);
 window.addEventListener("deviceorientation", dumbListener2, false);
 
+is(hasListeners(), true, "Listeners should have been added");
+
 window.setTimeout(function() {
 
   window.removeEventListener("deviceorientation", dumbListener, false);
+  is(hasListeners(), true, "Only some listeners should have been removed");
   window.setTimeout(function() {
 
     window.removeEventListener("deviceorientation", dumbListener2, false);
     window.setTimeout(function() {
-      is (getListenerCount(), startListenerCount, "Must have the same listeners at this point");
+      is(hasListeners(), false, "Listeners should have been removed");
       SimpleTest.finish();
     }, 0);
   }, 0);

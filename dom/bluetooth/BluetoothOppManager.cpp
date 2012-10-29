@@ -15,21 +15,82 @@
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsIInputStream.h"
 
 USING_BLUETOOTH_NAMESPACE
+using namespace mozilla;
 using namespace mozilla::ipc;
 
+class BluetoothOppManagerObserver : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  BluetoothOppManagerObserver()
+  {
+  }
+
+  bool Init()
+  {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
+      NS_WARNING("Failed to add shutdown observer!");
+      return false;
+    }
+
+    return true;
+  }
+
+  bool Shutdown()
+  {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (!obs ||
+        (NS_FAILED(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)))) {
+      NS_WARNING("Can't unregister observers, or already unregistered!");
+      return false;
+    }
+    return true;
+  }
+
+  ~BluetoothOppManagerObserver()
+  {
+    Shutdown();
+  }
+};
+
+namespace {
 // Sending system message "bluetooth-opp-update-progress" every 50kb
 static const uint32_t kUpdateProgressBase = 50 * 1024;
-
-static mozilla::RefPtr<BluetoothOppManager> sInstance;
+StaticRefPtr<BluetoothOppManager> sInstance;
+StaticRefPtr<BluetoothOppManagerObserver> sOppObserver;
 static nsCOMPtr<nsIInputStream> stream = nullptr;
 static uint32_t sSentFileLength = 0;
 static nsString sFileName;
 static uint32_t sFileLength = 0;
 static nsString sContentType;
 static int sUpdateProgressCounter = 0;
+static bool sInShutdown = false;
+}
+
+NS_IMETHODIMP
+BluetoothOppManagerObserver::Observe(nsISupports* aSubject,
+                                     const char* aTopic,
+                                     const PRUnichar* aData)
+{
+  MOZ_ASSERT(sInstance);
+
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    return sInstance->HandleShutdown();
+  }
+
+  MOZ_ASSERT(false, "BluetoothOppManager got unexpected topic!");
+  return NS_ERROR_UNEXPECTED;
+}
 
 class ReadFileTask : public nsRunnable
 {
@@ -159,6 +220,16 @@ void
 BluetoothOppManager::Disconnect()
 {
   CloseSocket();
+}
+
+nsresult
+BluetoothOppManager::HandleShutdown()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  sInShutdown = true;
+  CloseSocket();
+  sInstance = nullptr;
+  return NS_OK;
 }
 
 bool

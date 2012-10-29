@@ -40,7 +40,7 @@ public:
 
   void Start();   // called by the MediaStreamListener to start preview
   void Started(); // called by the CameraControl when preview is started
-  void Stop();    // called by the MediaStreamListener to stop preview
+  void StopPreview();    // called by the MediaStreamListener to stop preview
   void Stopped(bool aForced = false);
                   // called by the CameraControl when preview is stopped
   void Error();   // something went wrong, NS_RELEASE needed

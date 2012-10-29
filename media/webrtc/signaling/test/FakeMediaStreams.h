@@ -18,7 +18,6 @@
 #include "AudioSegment.h"
 #include "MediaSegment.h"
 #include "StreamBuffer.h"
-#include "nsAudioStream.h"
 #include "nsTArray.h"
 #include "nsIRunnable.h"
 #include "nsISupportsImpl.h"
