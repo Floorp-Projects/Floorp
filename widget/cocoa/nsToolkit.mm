@@ -32,6 +32,7 @@ extern "C" {
 #include "nsGkAtoms.h"
 #include "nsIRollupListener.h"
 #include "nsIWidget.h"
+#include "nsBaseWidget.h"
 
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
@@ -39,10 +40,6 @@ extern "C" {
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
-
-// defined in nsChildView.mm
-extern nsIRollupListener * gRollupListener;
-extern nsIWidget         * gRollupWidget;
 
 static io_connect_t gRootPort = MACH_PORT_NULL;
 
@@ -167,8 +164,14 @@ static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEv
   if ((type == kCGEventTapDisabledByUserInput) ||
       (type == kCGEventTapDisabledByTimeout))
     return event;
-  if (!gRollupWidget || !gRollupListener || [NSApp isActive])
+  if ([NSApp isActive])
     return event;
+
+  nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
+  nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
+  if (!rollupWidget)
+    return event;
+
   // Don't bother with rightMouseDown events here -- because of the delay,
   // we'll end up closing browser context menus that we just opened.  Since
   // these events usually raise a context menu, we'll handle them by hooking
@@ -176,7 +179,7 @@ static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEv
   // notification (in nsAppShell.mm's AppShellDelegate).
   if (type == kCGEventRightMouseDown)
     return event;
-  NSWindow *ctxMenuWindow = (NSWindow*) gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+  NSWindow *ctxMenuWindow = (NSWindow*) rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
   if (!ctxMenuWindow)
     return event;
   NSPoint screenLocation = ConvertCGGlobalToCocoaScreen(CGEventGetLocation(event));
@@ -184,7 +187,7 @@ static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEv
   // so would break the corresponding context menu).
   if (NSPointInRect(screenLocation, [ctxMenuWindow frame]))
     return event;
-  gRollupListener->Rollup(0);
+  rollupListener->Rollup(0, nullptr);
   return event;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NULL);

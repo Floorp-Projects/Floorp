@@ -21,7 +21,6 @@ class Matrix;
 
 namespace CanvasUtils {
 
-using namespace gfx;
 
 // Check that the rectangle [x,y,w,h] is a subrectangle of [0,0,realWidth,realHeight]
 
@@ -55,11 +54,11 @@ bool CoerceDouble(jsval v, double* d);
 bool JSValToMatrix(JSContext* cx, const jsval& val,
                    gfxMatrix* matrix, nsresult* rv);
 bool JSValToMatrix(JSContext* cx, const jsval& val,
-                   Matrix* matrix, nsresult* rv);
+                   gfx::Matrix* matrix, nsresult* rv);
 
 nsresult MatrixToJSVal(const gfxMatrix& matrix,
                        JSContext* cx, jsval* val);
-nsresult MatrixToJSVal(const Matrix& matrix,
+nsresult MatrixToJSVal(const gfx::Matrix& matrix,
                        JSContext* cx, jsval* val);
 
     /* Float validation stuff */

@@ -89,14 +89,6 @@ public:
   static nsresult AppendTextEquivFromTextContent(nsIContent *aContent,
                                                  nsAString *aString);
 
-  /**
-   * Return true if the given accessible allows name from subtree.
-   */
-  static bool IsNameFromSubtreeAllowed(Accessible* aAccessible)
-  {
-    return GetRoleRule(aAccessible->Role()) == eFromSubtree;
-  }
-
 private:
   /**
    * Iterates accessible children and calculates text equivalent from each

@@ -561,7 +561,7 @@ void nsBuiltinDecoderStateMachine::SendStreamAudio(AudioData* aAudio,
   aAudio->EnsureAudioBuffer();
   nsRefPtr<SharedBuffer> buffer = aAudio->mAudioBuffer;
   aOutput->AppendFrames(buffer.forget(), aAudio->mFrames, int32_t(offset), aAudio->mFrames,
-                        MOZ_AUDIO_DATA_FORMAT);
+                        AUDIO_OUTPUT_FORMAT);
   LOG(PR_LOG_DEBUG, ("%p Decoder writing %d frames of data to MediaStream for AudioData at %lld",
                      mDecoder.get(), aAudio->mFrames - int32_t(offset), aAudio->mTime));
   aStream->mAudioFramesWritten += aAudio->mFrames - int32_t(offset);

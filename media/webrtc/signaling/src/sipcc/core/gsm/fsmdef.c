@@ -1191,7 +1191,11 @@ fsmdef_free_cb (fim_icb_t *icb, callid_t call_id)
             fcb = dcb->fcb;
             fsmdef_init_dcb(dcb, CC_NO_CALL_ID, FSMDEF_CALL_TYPE_NONE,
                             NULL, LSM_NO_LINE, NULL);
-            fsm_init_fcb(fcb, CC_NO_CALL_ID, FSMDEF_NO_DCB, FSM_TYPE_NONE);
+            /* fsmdef_init_dcb(...,NULL) will always set the fcb ptr to NULL,
+               so if fsmdef_free_cb were called on that we'd have fcb==NULL here */
+            if (fcb != NULL) {
+              fsm_init_fcb(fcb, CC_NO_CALL_ID, FSMDEF_NO_DCB, FSM_TYPE_NONE);
+            }
         } else {
 
             fcb = fsm_get_fcb_by_call_id_and_type(call_id, FSM_TYPE_DEF);

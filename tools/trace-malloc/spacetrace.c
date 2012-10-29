@@ -111,15 +111,7 @@ showHelp(void)
 uint32_t
 ticks2xsec(tmreader * aReader, uint32_t aTicks, uint32_t aResolution)
 {
-    uint64_t bigone;
-    uint64_t tmp64;
-
-    LL_UI2L(bigone, aResolution);
-    LL_UI2L(tmp64, aTicks);
-    bigone *= tmp64;
-    LL_UI2L(tmp64, aReader->ticksPerSec);
-    bigone /= tmp64;
-    return (uint32_t)bigone;
+    return (uint32_t)((aResolution * aTicks)/aReader->ticksPerSec);
 }
 
 #define ticks2msec(reader, ticks) ticks2xsec((reader), (ticks), 1000)
@@ -663,8 +655,8 @@ recalculateAllocationCost(STOptions * inOptions, STContext * inContext,
         uint64_t timeval64 = LL_INIT(0, 0);
         uint64_t size64 = LL_INIT(0, 0);
 
-        LL_UI2L(timeval64, timeval);
-        LL_UI2L(size64, size);
+        timeval64 = timeval;
+        size64 = size;
         weight64 = timeval64 * size64;
 
         /*
@@ -957,9 +949,7 @@ harvestRun(const STRun * aInRun, STRun * aOutRun,
                 /*
                  ** Check weight restrictions.
                  */
-                LL_UI2L(bytesize64, bytesize);
-                LL_UI2L(lifetime64, lifetime);
-                weight64 = bytesize64 * lifetime64;
+                weight64 = (uint64_t)(bytesize * lifetime);
                 if (weight64 < aOptions->mWeightMin64 ||
                     weight64 > aOptions->mWeightMax64) {
                     continue;
@@ -1094,13 +1084,11 @@ compareAllocations(const void *aAlloc1, const void *aAlloc2, void *aContext)
                     uint64_t timeval164 = LL_INIT(0, 0);
                     uint64_t timeval264 = LL_INIT(0, 0);
 
-                    LL_UI2L(bytesize164, byteSize(inOptions, alloc1));
-                    LL_UI2L(timeval164,
-                            (alloc1->mMaxTimeval - alloc1->mMinTimeval));
+                    bytesize164 = byteSize(inOptions, alloc1);
+                    timeval164 = alloc1->mMaxTimeval - alloc1->mMinTimeval;
                     weight164 = bytesize164 * timeval164;
-                    LL_UI2L(bytesize264, byteSize(inOptions, alloc2));
-                    LL_UI2L(timeval264,
-                            (alloc2->mMaxTimeval - alloc2->mMinTimeval));
+                    bytesize264 = byteSize(inOptions, alloc2);
+                    timeval264 = alloc2->mMaxTimeval - alloc2->mMinTimeval;
                     weight264 = bytesize264 * timeval264;
 
                     if (weight164 < weight264) {
@@ -2716,13 +2704,9 @@ displayTopAllocations(STRequest * inRequest, STRun * aRun,
                     uint32_t size = byteSize(&inRequest->mOptions, current);
                     uint32_t heapCost = current->mHeapRuntimeCost;
                     uint64_t weight64 = LL_INIT(0, 0);
-                    uint64_t size64 = LL_INIT(0, 0);
-                    uint64_t lifespan64 = LL_INIT(0, 0);
                     char buffer[32];
 
-                    LL_UI2L(size64, size);
-                    LL_UI2L(lifespan64, lifespan);
-                    weight64 = size64 * lifespan64;
+                    weight64 =(uint64_t)(size * lifespan);
 
                     PR_fprintf(inRequest->mFD, "<tr>\n");
 
@@ -2840,13 +2824,9 @@ displayMemoryLeaks(STRequest * inRequest, STRun * aRun)
                     uint32_t size = byteSize(&inRequest->mOptions, current);
                     uint32_t heapCost = current->mHeapRuntimeCost;
                     uint64_t weight64 = LL_INIT(0, 0);
-                    uint64_t size64 = LL_INIT(0, 0);
-                    uint64_t lifespan64 = LL_INIT(0, 0);
                     char buffer[32];
 
-                    LL_UI2L(size64, size);
-                    LL_UI2L(lifespan64, lifespan);
-                    weight64 = size64 * lifespan64;
+                    weight64 =(uint64_t)(size * lifespan);
 
                     /*
                      ** One more shown.
@@ -3098,14 +3078,10 @@ displayAllocationDetails(STRequest * inRequest, STAllocation * aAllocation)
             aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
         uint32_t heapCost = aAllocation->mHeapRuntimeCost;
         uint64_t weight64 = LL_INIT(0, 0);
-        uint64_t bytesize64 = LL_INIT(0, 0);
-        uint64_t timeval64 = LL_INIT(0, 0);
         uint32_t cacheval = 0;
         int displayRes = 0;
 
-        LL_UI2L(bytesize64, bytesize);
-        LL_UI2L(timeval64, timeval);
-        weight64 = bytesize64 * timeval64;
+        weight64 = (uint64_t)(bytesize * timeval);
 
         PR_fprintf(inRequest->mFD, "<p>Allocation %u Details:</p>\n",
                    aAllocation->mRunIndex);
@@ -4420,12 +4396,10 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                         uint64_t lifespan64 = LL_INIT(0, 0);
                         uint64_t weight64 = LL_INIT(0, 0);
 
-                        LL_UI2L(size64,
-                                byteSize(&inRequest->mOptions,
-                                         aRun->mAllocations[loop]));
-                        LL_UI2L(lifespan64,
-                                (aRun->mAllocations[loop]->mMaxTimeval -
-                                 aRun->mAllocations[loop]->mMinTimeval));
+                        size64 = byteSize(&inRequest->mOptions,
+                                          aRun->mAllocations[loop]);
+                        lifespan64 = aRun->mAllocations[loop]->mMaxTimeval -
+                                     aRun->mAllocations[loop]->mMinTimeval;
                         weight64 = size64 * lifespan64;
 
                         YData64[traverse] += weight64;
@@ -4487,10 +4461,9 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                 const char *legends[1] = { "Memory Weight" };
                 uint64_t percent64 = LL_INIT(0, 0);
                 uint64_t result64 = LL_INIT(0, 0);
-                uint64_t hundred64 = LL_INIT(0, 0);
-                uint32_t cached = 0;
 
-                LL_UI2L(hundred64, 100);
+                uint32_t cached = 0;
+                uint64_t hundred64 = 100;
 
                 /*
                  ** Figure out what the labels will say.
@@ -4505,9 +4478,7 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                     PR_snprintf(timevals[traverse], 32, ST_TIMEVAL_FORMAT,
                                 ST_TIMEVAL_PRINTABLE(cached));
 
-                    LL_UI2L(percent64, percents[traverse]);
-                    result64 = maxWeight64 - minWeight64;
-                    result64 *= percent64;
+                    result64 = (maxWeight64 - minWeight64) * percents[traverse];
                     result64 /= hundred64;
                     PR_snprintf(bytes[traverse], 32, "%llu", result64);
                 }

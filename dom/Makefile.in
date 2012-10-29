@@ -99,6 +99,7 @@ TEST_DIRS += \
   tests \
   imptests \
   bindings/test \
+  media/tests/mochitest \
   $(NULL)
 
 ifneq (,$(filter gtk2 cocoa windows android qt os2,$(MOZ_WIDGET_TOOLKIT)))

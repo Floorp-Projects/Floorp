@@ -295,6 +295,8 @@ let dataProviders = {
       .parseFromString("<html/>", "text/html");
 
     let canvas = doc.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
 
     let gl;
     try {

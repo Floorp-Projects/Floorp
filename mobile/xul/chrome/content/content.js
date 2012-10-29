@@ -1366,7 +1366,7 @@ var TouchEventHandler = {
   },
 
   sendEvent: function(aName, aData, aElement) {
-    if (!Services.prefs.getBoolPref("dom.w3c_touch_events.enabled"))
+    if (!Services.prefs.getIntPref("dom.w3c_touch_events.enabled"))
       return true;
 
     let evt = content.document.createEvent("touchevent");

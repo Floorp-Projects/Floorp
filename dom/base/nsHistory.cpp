@@ -76,7 +76,7 @@ nsHistory::GetLength(int32_t* aLength)
 NS_IMETHODIMP
 nsHistory::GetCurrent(nsAString& aCurrent)
 {
-  if (!nsContentUtils::IsCallerTrustedForRead())
+  if (!nsContentUtils::IsCallerChrome())
     return NS_ERROR_DOM_SECURITY_ERR;
 
   int32_t curIndex=0;
@@ -108,7 +108,7 @@ nsHistory::GetCurrent(nsAString& aCurrent)
 NS_IMETHODIMP
 nsHistory::GetPrevious(nsAString& aPrevious)
 {
-  if (!nsContentUtils::IsCallerTrustedForRead())
+  if (!nsContentUtils::IsCallerChrome())
     return NS_ERROR_DOM_SECURITY_ERR;
 
   int32_t curIndex;
@@ -140,7 +140,7 @@ nsHistory::GetPrevious(nsAString& aPrevious)
 NS_IMETHODIMP
 nsHistory::GetNext(nsAString& aNext)
 {
-  if (!nsContentUtils::IsCallerTrustedForRead())
+  if (!nsContentUtils::IsCallerChrome())
     return NS_ERROR_DOM_SECURITY_ERR;
 
   int32_t curIndex;
@@ -335,7 +335,7 @@ NS_IMETHODIMP
 nsHistory::Item(uint32_t aIndex, nsAString& aReturn)
 {
   aReturn.Truncate();
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 

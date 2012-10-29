@@ -203,15 +203,6 @@ public:
 
   static bool     IsCallerChrome();
 
-  static bool     IsCallerTrustedForRead();
-
-  static bool     IsCallerTrustedForWrite();
-
-  /**
-   * Check whether a caller has UniversalXPConnect.
-   */
-  static bool     CallerHasUniversalXPConnect();
-
   static bool     IsImageSrcSetDisabled();
 
   /**

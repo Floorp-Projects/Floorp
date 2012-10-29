@@ -741,8 +741,7 @@ mozJSComponentLoader::GlobalForLocation(nsIFile *aComponentFile,
                 return rv;
             }
 
-            int64_t maxSize;
-            LL_UI2L(maxSize, UINT32_MAX);
+            int64_t maxSize = UINT32_MAX;
             if (fileSize > maxSize) {
                 NS_ERROR("file too large");
                 JS_SetOptions(cx, oldopts);
@@ -970,7 +969,7 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
     JS::Value targetVal = targetVal_;
     JSObject *targetObject = NULL;
 
-    MOZ_ASSERT(nsContentUtils::CallerHasUniversalXPConnect());
+    MOZ_ASSERT(nsContentUtils::IsCallerChrome());
     if (optionalArgc) {
         // The caller passed in the optional second argument. Get it.
         if (targetVal.isObject()) {

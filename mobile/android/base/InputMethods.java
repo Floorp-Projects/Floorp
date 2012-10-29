@@ -6,15 +6,20 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.os.Build;
 import android.provider.Settings.Secure;
 import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodManager;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Locale;
 
 final class InputMethods {
 
+    public static final String METHOD_ATOK = "com.justsystems.atokmobile.service/.AtokInputMethodService";
     public static final String METHOD_GOOGLE_JAPANESE_INPUT = "com.google.android.inputmethod.japanese/.MozcService";
+    public static final String METHOD_IWNN = "jp.co.omronsoft.iwnnime.ml/.standardcommon.IWnnLanguageSwitcher";
     public static final String METHOD_OPENWNN_PLUS = "com.owplus.ime.openwnnplus/.OpenWnnJAJP";
     public static final String METHOD_SIMEJI = "com.adamrocker.android.input.simeji/.OpenWnnSimeji";
     public static final String METHOD_SWYPE = "com.swype.android.inputmethod/.SwypeInputMethod";
@@ -31,6 +36,16 @@ final class InputMethods {
     public static final String METHOD_SWIFTKEY_TRIAL = "com.touchtype.swiftkey.phone.trial/com.touchtype.KeyboardService";
     public static final String METHOD_TOUCHPAL_KEYBOARD = "com.cootek.smartinputv5/.TouchPalIME";
     */
+
+    // this is white list of IME support for hardware physical keyboard
+    private static final Collection<String> sHKBWhiteList = Arrays.asList(new String[] {
+                                                            METHOD_ATOK,
+                                                            METHOD_GOOGLE_JAPANESE_INPUT,
+                                                            METHOD_IWNN,
+                                                            METHOD_OPENWNN_PLUS,
+                                                            METHOD_SIMEJI,
+                                                            });
+    private static Boolean sIsPreJellyBeanAsusTransformer;
 
     private InputMethods() {}
 
@@ -51,5 +66,21 @@ final class InputMethods {
 
     public static InputMethodManager getInputMethodManager(Context context) {
         return (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+    }
+
+    public static boolean canUseInputMethodOnHKB(String inputMethod) {
+        if (sHKBWhiteList.contains(inputMethod)) {
+            return true;
+        }
+
+        // Asus Transformers generate en-US keycodes for HKB keys, regardless of system locale or
+        // keyboard layout. This bug is reportedly fixed in JB. See bug 669361 and bug 712018.
+        if (sIsPreJellyBeanAsusTransformer == null) {
+            sIsPreJellyBeanAsusTransformer = Build.VERSION.SDK_INT < 16 &&
+                                             "asus".equals(Build.BRAND) &&
+                                             "EeePad".equals(Build.BOARD);
+        }
+        // The locale may change while Firefox is running, but the device and OS should not. :)
+        return sIsPreJellyBeanAsusTransformer && !Locale.getDefault().equals(Locale.US);
     }
 }

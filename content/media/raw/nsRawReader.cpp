@@ -9,6 +9,8 @@
 #include "nsRawDecoder.h"
 #include "VideoUtils.h"
 
+using namespace mozilla;
+
 nsRawReader::nsRawReader(nsBuiltinDecoder* aDecoder)
   : nsBuiltinDecoderReader(aDecoder),
     mCurrentFrame(0), mFrameSize(0)

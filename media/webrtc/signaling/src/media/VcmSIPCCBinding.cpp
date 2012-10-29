@@ -726,9 +726,14 @@ short vcmSetIceCandidate(const char *peerconnection, const char *icecandidate, u
     return VCM_ERROR;
 
   nsresult res;
-  pc->impl()->ice_ctx()->thread()->Dispatch(
+  nsresult rv = pc->impl()->ice_ctx()->thread()->Dispatch(
     WrapRunnableRet(stream, &NrIceMediaStream::ParseTrickleCandidate, icecandidate, &res),
     NS_DISPATCH_SYNC);
+
+  if (!NS_SUCCEEDED(rv)) {
+    CSFLogError( logTag, "%s(): Could not dispatch to ICE thread", __FUNCTION__, level);
+    return VCM_ERROR;
+  }
 
   if (!NS_SUCCEEDED(res)) {
     CSFLogError( logTag, "%s(): Could not parse trickle candidate for stream %d", __FUNCTION__, level);
@@ -755,9 +760,14 @@ short vcmStartIceChecks(const char *peerconnection)
   }
 
   nsresult res;
-  pc->impl()->ice_ctx()->thread()->Dispatch(
+  nsresult rv = pc->impl()->ice_ctx()->thread()->Dispatch(
       WrapRunnableRet(pc->impl()->ice_ctx(), &NrIceCtx::StartChecks, &res),
       NS_DISPATCH_SYNC);
+
+  if (!NS_SUCCEEDED(rv)) {
+    CSFLogError( logTag, "%s(): Could not dispatch to ICE thread", __FUNCTION__);
+    return VCM_ERROR;
+  }
 
   if (!NS_SUCCEEDED(res)) {
     CSFLogError( logTag, "%s: couldn't start ICE checks", __FUNCTION__ );
@@ -2432,10 +2442,13 @@ vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
                 pc->GetHandle().c_str(), level, rtcp ? "rtcp" : "rtp");
     flow = new TransportFlow(id);
 
-    flow->PushLayer(new TransportLayerIce("flow", pc->ice_ctx(),
-                                          pc->ice_media_stream(level-1),
-                                          rtcp ? 2 : 1));
-    TransportLayerDtls *dtls = new TransportLayerDtls();
+
+    ScopedDeletePtr<TransportLayerIce> ice(new
+        TransportLayerIce("flow", pc->ice_ctx(),
+                          pc->ice_media_stream(level-1),
+                          rtcp ? 2 : 1));
+
+    ScopedDeletePtr<TransportLayerDtls> dtls(new TransportLayerDtls());
     dtls->SetRole(pc->GetRole() == sipcc::PeerConnectionImpl::kRoleOfferer ?
                   TransportLayerDtls::CLIENT : TransportLayerDtls::SERVER);
     dtls->SetIdentity(pc->GetIdentity());
@@ -2467,7 +2480,19 @@ vcmCreateTransportFlow(sipcc::PeerConnectionImpl *pc, int level, bool rtcp,
       return NULL;
     }
 
-    flow->PushLayer(dtls);
+    std::queue<TransportLayer *> layers;
+    layers.push(ice.forget());
+    layers.push(dtls.forget());
+
+
+    // Layers are now owned by the flow.
+    nsresult rv = pc->ice_ctx()->thread()->Dispatch(
+        WrapRunnableRet(flow, &TransportFlow::PushLayers, layers, &res),
+        NS_DISPATCH_SYNC);
+
+    if (NS_FAILED(rv) || NS_FAILED(res)) {
+      return NULL;
+    }
 
     pc->AddTransportFlow(level, rtcp, flow);
   }

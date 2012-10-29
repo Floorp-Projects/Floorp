@@ -11,6 +11,7 @@
 #include "nsStyleStruct.h"
 
 #include "gfxContext.h"
+#include "mozilla/gfx/2D.h"
 
 // define this to enable a bunch of debug dump info
 #undef DEBUG_NEW_BORDERS
@@ -73,6 +74,9 @@ struct nsCSSBorderRenderer {
                       nsBorderColors* const* aCompositeColors,
                       int aSkipSides,
                       nscolor aBackgroundColor);
+
+  static void Init();
+  static void Shutdown();
 
   gfxCornerSizes mBorderCornerDimensions;
 
@@ -185,12 +189,21 @@ struct nsCSSBorderRenderer {
                                                     const gfxRGBA &aFirstColor,
                                                     const gfxRGBA &aSecondColor);
 
+  // Azure variant of CreateCornerGradient.
+  mozilla::TemporaryRef<mozilla::gfx::GradientStops>
+  CreateCornerGradient(mozilla::css::Corner aCorner, const gfxRGBA &aFirstColor,
+                       const gfxRGBA &aSecondColor, mozilla::gfx::DrawTarget *aDT,
+                       mozilla::gfx::Point &aPoint1, mozilla::gfx::Point &aPoint2);
+
   // Draw a solid color border that is uniformly the same width.
   void DrawSingleWidthSolidBorder();
 
   // Draw any border which is solid on all sides and does not use
   // CompositeColors.
   void DrawNoCompositeColorSolidBorder();
+  // Draw any border which is solid on all sides and does not use
+  // CompositeColors. Using Azure.
+  void DrawNoCompositeColorSolidBorderAzure();
 
   // Draw a solid border that has no border radius (i.e. is rectangular) and
   // uses CompositeColors.

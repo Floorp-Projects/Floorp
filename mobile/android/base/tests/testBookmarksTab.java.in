@@ -41,7 +41,7 @@ public class testBookmarksTab extends BaseTest {
     }
 
     public void testBookmarksTab() {
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        blockForGeckoReady();
         String url = "http://www.example.com";
 
         // add one page to desktop folders so that we can see them

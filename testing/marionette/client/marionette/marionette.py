@@ -118,6 +118,7 @@ class Marionette(object):
                                           bin=self.bin, profile=self.profile)
             self.instance.start()
             assert(self.instance.wait_for_port())
+
         if emulator:
             self.emulator = Emulator(homedir=homedir,
                                      noWindow=self.noWindow,
@@ -126,16 +127,14 @@ class Marionette(object):
                                      sdcard=sdcard,
                                      emulatorBinary=emulatorBinary,
                                      userdata=emulatorImg,
-                                     res=emulator_res,
-                                     gecko_path=self.gecko_path)
+                                     res=emulator_res)
             self.emulator.start()
             self.port = self.emulator.setup_port_forwarding(self.port)
             assert(self.emulator.wait_for_port())
 
         if connectToRunningEmulator:
             self.emulator = Emulator(homedir=homedir,
-                                     logcat_dir=self.logcat_dir,
-                                     gecko_path=self.gecko_path)
+                                     logcat_dir=self.logcat_dir)
             self.emulator.connect()
             self.port = self.emulator.setup_port_forwarding(self.port)
             assert(self.emulator.wait_for_port())
@@ -143,30 +142,9 @@ class Marionette(object):
         self.client = MarionetteClient(self.host, self.port)
 
         if emulator:
-            # When launching an emulator, telephony API's are not
-            # available immediately.  They start working after the
-            # system-message-listener-ready event is observed.  See
-            # bug 792647.  This code causes us to wait for this event
-            # after launching an emulator, before allowing any tests
-            # to run.
-            self.start_session()
-            self.set_context(self.CONTEXT_CHROME)
-            self.set_script_timeout(30000)
-            try:
-                self.execute_async_script("""
-    waitFor(
-        function() { marionetteScriptFinished(true); },
-        function() { return isSystemMessageListenerReady(); }
-    );
-                """)
-            except ScriptTimeoutException:
-                # We silently ignore the timeout if it occurs, since
-                # isSystemMessageListenerReady() isn't available on
-                # older emulators.  30s *should* be enough of a delay
-                # to allow telephony API's to work.
-                pass
-            self.set_context(self.CONTEXT_CONTENT)
-            self.delete_session()
+            self.emulator.wait_for_system_message(self)
+        if self.gecko_path:
+            self.emulator.install_gecko(self.gecko_path, self)
 
     def __del__(self):
         if self.emulator:
@@ -478,9 +456,10 @@ class Marionette(object):
     def get_perf_data(self):
         return self._send_message('getPerfData', 'value')
 
-    def import_script(self, file):
-        f = open(file, "r")
-        js = f.read()
+    def import_script(self, js_file):
+        js = ''
+        with open(js_file, 'r') as f:
+            js = f.read()
         return self._send_message('importScript', 'ok', script=js)
 
     @property

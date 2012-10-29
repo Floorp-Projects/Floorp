@@ -372,7 +372,7 @@ nsHTMLCanvasElement::ToDataURL(const nsAString& aType, nsIVariant* aParams,
                                uint8_t optional_argc, nsAString& aDataURL)
 {
   // do a trust check if this is a write-only canvas
-  if (mWriteOnly && !nsContentUtils::IsCallerTrustedForRead()) {
+  if (mWriteOnly && !nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -584,7 +584,7 @@ nsHTMLCanvasElement::ToBlob(nsIFileCallback* aCallback,
                             uint8_t optional_argc)
 {
   // do a trust check if this is a write-only canvas
-  if (mWriteOnly && !nsContentUtils::IsCallerTrustedForRead()) {
+  if (mWriteOnly && !nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -633,7 +633,7 @@ nsHTMLCanvasElement::MozGetAsFile(const nsAString& aName,
 {
   // do a trust check if this is a write-only canvas
   if ((mWriteOnly) &&
-      !nsContentUtils::IsCallerTrustedForRead()) {
+      !nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -807,7 +807,7 @@ NS_IMETHODIMP
 nsHTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
                                       nsISupports **aContext)
 {
-  if(!nsContentUtils::IsCallerTrustedForRead()) {
+  if(!nsContentUtils::IsCallerChrome()) {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
