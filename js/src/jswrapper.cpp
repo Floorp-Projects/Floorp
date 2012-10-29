@@ -134,11 +134,6 @@ js::IsCrossCompartmentWrapper(RawObject wrapper)
            !!(Wrapper::wrapperHandler(wrapper)->flags() & Wrapper::CROSS_COMPARTMENT);
 }
 
-IndirectWrapper::IndirectWrapper(unsigned flags) : Wrapper(flags),
-    IndirectProxyHandler(&sWrapperFamily)
-{
-}
-
 #define CHECKED(op, act)                                                     \
     JS_BEGIN_MACRO                                                           \
         bool status;                                                         \
@@ -149,93 +144,6 @@ IndirectWrapper::IndirectWrapper(unsigned flags) : Wrapper(flags),
 
 #define SET(action) CHECKED(action, SET)
 #define GET(action) CHECKED(action, GET)
-
-bool
-IndirectWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
-                                       jsid id, bool set,
-                                       PropertyDescriptor *desc)
-{
-    desc->obj = NULL; // default result if we refuse to perform this action
-    CHECKED(IndirectProxyHandler::getPropertyDescriptor(cx, wrapper, id, set, desc),
-            set ? SET : GET);
-}
-
-bool
-IndirectWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper,
-                                          jsid id, bool set,
-                                          PropertyDescriptor *desc)
-{
-    desc->obj = NULL; // default result if we refuse to perform this action
-    CHECKED(IndirectProxyHandler::getOwnPropertyDescriptor(cx, wrapper, id, set, desc), GET);
-}
-
-bool
-IndirectWrapper::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
-                                PropertyDescriptor *desc)
-{
-    SET(IndirectProxyHandler::defineProperty(cx, wrapper, id, desc));
-}
-
-bool
-IndirectWrapper::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
-                                     AutoIdVector &props)
-{
-    // if we refuse to perform this action, props remains empty
-    jsid id = JSID_VOID;
-    GET(IndirectProxyHandler::getOwnPropertyNames(cx, wrapper, props));
-}
-
-bool
-IndirectWrapper::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
-{
-    *bp = true; // default result if we refuse to perform this action
-    SET(IndirectProxyHandler::delete_(cx, wrapper, id, bp));
-}
-
-bool
-IndirectWrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
-{
-    // if we refuse to perform this action, props remains empty
-    static jsid id = JSID_VOID;
-    GET(IndirectProxyHandler::enumerate(cx, wrapper, props));
-}
-
-/*
- * Ordinarily, the convert trap would require a PUNCTURE. However, the default
- * implementation of convert, JS_ConvertStub, obtains a default value by calling
- * the toString/valueOf method on the wrapper, if any. Doing a PUNCTURE in this
- * case would be overly conservative. To make matters worse, XPConnect sometimes
- * installs a custom convert trap that obtains a default value by calling the
- * toString method on the wrapper. Doing a puncture in this case would be overly
- * conservative as well. We deal with these anomalies by clearing the pending
- * exception and falling back to the DefaultValue algorithm whenever the
- * PUNCTURE fails.
- */
-bool
-IndirectWrapper::defaultValue(JSContext *cx, JSObject *wrapper_, JSType hint, Value *vp)
-{
-    RootedObject wrapper(cx, wrapper_);
-
-    bool status;
-    if (!enter(cx, wrapper_, JSID_VOID, PUNCTURE, &status)) {
-        RootedValue v(cx);
-        JS_ClearPendingException(cx);
-        if (!DefaultValue(cx, wrapper, hint, &v))
-            return false;
-        *vp = v;
-        return true;
-    }
-    /*
-     * We enter the compartment of the wrappee here, even if we're not a cross
-     * compartment wrapper. Moreover, cross compartment wrappers do not enter
-     * the compartment of the wrappee before calling this function. This is
-     * necessary because the DefaultValue algorithm above operates on the
-     * wrapper, not the wrappee, so we want to delay the decision to switch
-     * compartments until this point.
-     */
-    AutoCompartment call(cx, wrappedObject(wrapper));
-    return IndirectProxyHandler::defaultValue(cx, wrapper_, hint, vp);
-}
 
 DirectWrapper::DirectWrapper(unsigned flags, bool hasPrototype) : Wrapper(flags),
         DirectProxyHandler(&sWrapperFamily)
