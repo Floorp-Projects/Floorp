@@ -2091,6 +2091,8 @@ NS_IMETHODIMP_(InputContext)
 nsWindow::GetInputContext()
 {
     mInputContext.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
+    // We assume that there is only one context per process on Android
+    mInputContext.mNativeIMEContext = nullptr;
     return mInputContext;
 }
 
@@ -2281,6 +2283,20 @@ nsWindow::ScheduleResumeComposition(int width, int height)
     if (sCompositorParent) {
         sCompositorParent->ScheduleResumeOnCompositorThread(width, height);
     }
+}
+
+float
+nsWindow::ComputeRenderIntegrity()
+{
+    if (sCompositorParent) {
+        mozilla::layers::LayerManagerOGL* manager =
+          static_cast<mozilla::layers::LayerManagerOGL*>(sCompositorParent->GetLayerManager());
+        if (manager) {
+            return manager->ComputeRenderIntegrity();
+        }
+    }
+
+    return 1.f;
 }
 
 bool

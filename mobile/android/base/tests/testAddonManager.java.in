@@ -27,7 +27,7 @@ public class testAddonManager extends PixelTest  {
     With the Addons Manager open the test will verify that when it is opened again from the menu no new tab will be opened*/
 
     public void testAddonManager() {
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        blockForGeckoReady();
 
         // Use the menu to open the Addon Manger
         selectMenuItem("Add-ons");

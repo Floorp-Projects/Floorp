@@ -15,7 +15,7 @@ interface nsIPrincipal;
 interface nsIPrefBranch;
 interface nsIApplicationCache;
 interface nsIFile;
-interface nsILoadContext;
+interface nsIObserver;
 
 [scriptable, uuid(47360d57-8ef4-4a5d-8865-1a27a739ad1a)]
 interface nsIOfflineCacheUpdateObserver : nsISupports {
@@ -63,7 +63,7 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
  * load its items one by one, sending itemCompleted() to any registered
  * observers.
  */
-[scriptable, uuid(D47966B2-1EBC-45c5-8639-2937ED200281)]
+[scriptable, uuid(91b94446-5d91-4089-bed7-edfab25824a7)]
 interface nsIOfflineCacheUpdate : nsISupports {
   /**
    * Fetch the status of the running update.  This will return a value
@@ -109,7 +109,8 @@ interface nsIOfflineCacheUpdate : nsISupports {
    */
   void init(in nsIURI aManifestURI, in nsIURI aDocumentURI, in nsIDOMDocument aDocument,
             [optional] in nsIFile aCustomProfileDir,
-            [optional] in nsILoadContext aLoadContext);
+            [optional] in unsigned long aAppId,
+            [optional] in boolean aInBrowser);
 
   /**
    * Initialize the update for partial processing. 
@@ -125,6 +126,29 @@ interface nsIOfflineCacheUpdate : nsISupports {
    *        when this information is unknown.
    */
   void initPartial(in nsIURI aManifestURI, in ACString aClientID, in nsIURI aDocumentURI);
+
+  /**
+   * Initialize the update to only check whether there is an update
+   * to the manifest available (if it has actually changed on the server).
+   *
+   * @param aManifestURI
+   *        The manifest URI of the related cache.
+   * @param aAppID
+   *        Local ID of an app (optional) to check the cache update for.
+   * @param aInBrowser
+   *        Whether to check for a cache populated from browser element.
+   * @param aObserver
+   *        nsIObserver implementation that receives the result.
+   *        When aTopic == "offline-cache-update-available" there is an update to
+   *        to download. Update of the app cache will lead to a new version
+   *        download.
+   *        When aTopic == "offline-cache-update-unavailable" then there is no
+   *        update available (the manifest has not changed on the server).
+   */
+  void initForUpdateCheck(in nsIURI aManifestURI,
+                          in unsigned long aAppID,
+                          in boolean aInBrowser,
+                          in nsIObserver aObserver);
 
   /**
    * Add a dynamic URI to the offline cache as part of the update.
@@ -166,7 +190,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
   readonly attribute uint64_t byteProgress;
 };
 
-[scriptable, uuid(dc5de18c-197c-41d2-9584-dd7ac7494611)]
+[scriptable, uuid(cf362a31-4166-4994-8443-b68704ecdcc0)]
 interface nsIOfflineCacheUpdateService : nsISupports {
     /**
      * Constants for the offline-app permission.
@@ -206,12 +230,39 @@ interface nsIOfflineCacheUpdateService : nsISupports {
                                                       in nsIFile aProfileDir);
 
     /**
+     * Schedule a cache update for a given offline manifest using app cache
+     * bound to the given appID+inBrowser flag.  If an existing update is
+     * scheduled or running, that update will be returned. Otherwise a new
+     * update will be scheduled.
+     */
+    nsIOfflineCacheUpdate scheduleAppUpdate(in nsIURI aManifestURI,
+                                            in nsIURI aDocumentURI,
+                                            in unsigned long aAppID,
+                                            in boolean aInBrowser);
+
+    /**
      * Schedule a cache update for a manifest when the document finishes
      * loading.
      */
     void scheduleOnDocumentStop(in nsIURI aManifestURI,
                                 in nsIURI aDocumentURI,
                                 in nsIDOMDocument aDocument);
+
+    /**
+     * Schedule a check to see if an update is available.
+     *
+     * This will not update or make any changes to the appcache.
+     * It only notifies the observer to indicate whether the manifest has
+     * changed on the server (or not): a changed manifest means that an
+     * update is available.
+     *
+     * For arguments see nsIOfflineCacheUpdate.initForUpdateCheck() method
+     * description.
+     */
+    void checkForUpdate(in nsIURI aManifestURI,
+                        in unsigned long aAppID,
+                        in boolean aInBrowser,
+                        in nsIObserver aObserver);
 
     /**
      * Checks whether a principal should have access to the offline

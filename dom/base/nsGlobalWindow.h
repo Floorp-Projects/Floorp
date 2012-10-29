@@ -829,6 +829,8 @@ protected:
 
   bool CanMoveResizeWindows();
 
+  bool     GetBlurSuppression();
+
   // If aDoFlush is true, we'll flush our own layout; otherwise we'll try to
   // just flush our parent and only flush ourselves if we think we need to.
   nsresult GetScrollXY(int32_t* aScrollX, int32_t* aScrollY,

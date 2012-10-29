@@ -7,9 +7,9 @@ from setuptools import setup, find_packages
 
 version = '0.3'
 
-deps = ['mozinfo == 0.3.3', 'mozprofile == 0.4',
-        'mozprocess == 0.4', 'mozrunner == 5.8', 'mozregression == 0.6.3',
-        'mozautolog == 0.2.4', 'mozautoeslib == 0.1.1']
+deps = ['mozinfo >= 0.3.3', 'mozprofile >= 0.4',
+        'mozprocess >= 0.4', 'mozrunner >= 5.8', 'mozinstall >= 1.4',
+        'mozautolog >= 0.2.4', 'mozautoeslib >= 0.1.1', 'httplib2 >= 0.7.3']
 
 # we only support python 2.6+ right now
 assert sys.version_info[0] == 2

@@ -9,13 +9,10 @@
 #include "nsTArray.h"
 #include "nsIStringEnumerator.h"
 #include "nsAutoPtr.h"
-#include <dlfcn.h>
 
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 
-
-typedef const char* (*get_commandline_t)(GAppInfo*);
 
 char *
 get_content_type_from_mime_type(const char *mimeType)
@@ -71,24 +68,10 @@ nsGIOMimeApp::GetName(nsACString& aName)
 NS_IMETHODIMP
 nsGIOMimeApp::GetCommand(nsACString& aCommand)
 {
-  get_commandline_t g_app_info_get_commandline_ptr;
-
-  void *libHandle = dlopen("libgio-2.0.so.0", RTLD_LAZY);
-  if (!libHandle) {
+  const char *cmd = g_app_info_get_commandline(mApp);
+  if (!cmd)
     return NS_ERROR_FAILURE;
-  }
-  dlerror(); /* clear any existing error */
-  g_app_info_get_commandline_ptr =
-    (get_commandline_t) dlsym(libHandle, "g_app_info_get_commandline");
-  if (dlerror() == NULL) {
-    const char *cmd = g_app_info_get_commandline_ptr(mApp);
-    if (!cmd) {
-      dlclose(libHandle);
-      return NS_ERROR_FAILURE;
-    }
-    aCommand.Assign(cmd);
-  }
-  dlclose(libHandle);
+  aCommand.Assign(cmd);
   return NS_OK;
 }
 

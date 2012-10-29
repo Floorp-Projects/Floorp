@@ -44,12 +44,12 @@ function test()
     executeSoon(startTest);
   }
 
-  window.addEventListener("Debugger:ScriptShown", onScriptShown);
+  window.addEventListener("Debugger:SourceShown", onScriptShown);
 
   function startTest()
   {
     if (scriptShown && framesAdded && resumed && !testStarted) {
-      window.removeEventListener("Debugger:ScriptShown", onScriptShown);
+      window.removeEventListener("Debugger:SourceShown", onScriptShown);
       testStarted = true;
       Services.tm.currentThread.dispatch({ run: testScriptsDisplay }, 0);
     }
@@ -57,7 +57,7 @@ function test()
 }
 
 function testScriptsDisplay() {
-  gScripts = gDebugger.DebuggerView.Scripts._scripts;
+  gScripts = gDebugger.DebuggerView.Sources._container;
 
   is(gDebugger.DebuggerController.activeThread.state, "paused",
     "Should only be getting stack frames while paused.");
@@ -71,14 +71,14 @@ function testScriptsDisplay() {
   let label1 = "test-script-switching-01.js";
   let label2 = "test-script-switching-02.js";
 
-  ok(gDebugger.DebuggerView.Scripts.contains(EXAMPLE_URL +
+  ok(gDebugger.DebuggerView.Sources.containsValue(EXAMPLE_URL +
     label1), "First script url is incorrect.");
-  ok(gDebugger.DebuggerView.Scripts.contains(EXAMPLE_URL +
+  ok(gDebugger.DebuggerView.Sources.containsValue(EXAMPLE_URL +
     label2), "Second script url is incorrect.");
 
-  ok(gDebugger.DebuggerView.Scripts.containsLabel(
+  ok(gDebugger.DebuggerView.Sources.containsLabel(
     label1), "First script label is incorrect.");
-  ok(gDebugger.DebuggerView.Scripts.containsLabel(
+  ok(gDebugger.DebuggerView.Sources.containsLabel(
     label2), "Second script label is incorrect.");
 
   ok(gDebugger.editor.getText().search(/debugger/) != -1,
@@ -87,7 +87,7 @@ function testScriptsDisplay() {
   is(gDebugger.editor.getDebugLocation(), 5,
      "editor debugger location is correct.");
 
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     let url = aEvent.detail.url;
     if (url.indexOf("-01.js") != -1) {
       window.removeEventListener(aEvent.type, _onEvent);
@@ -95,7 +95,7 @@ function testScriptsDisplay() {
     }
   });
 
-  gDebugger.DebuggerView.Scripts.selectScript(EXAMPLE_URL + label1);
+  gDebugger.DebuggerView.Sources.selectedValue = EXAMPLE_URL + label1;
 }
 
 function testSwitchPaused()
@@ -110,7 +110,7 @@ function testSwitchPaused()
      "editor debugger location has been cleared.");
 
   gDebugger.DebuggerController.activeThread.resume(function() {
-    window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+    window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
       let url = aEvent.detail.url;
       if (url.indexOf("-02.js") != -1) {
         window.removeEventListener(aEvent.type, _onEvent);
@@ -118,8 +118,8 @@ function testSwitchPaused()
       }
     });
 
-    gDebugger.DebuggerView.Scripts.selectScript(EXAMPLE_URL +
-                                                "test-script-switching-02.js");
+    gDebugger.DebuggerView.Sources.selectedValue = EXAMPLE_URL +
+                                                   "test-script-switching-02.js";
   });
 }
 

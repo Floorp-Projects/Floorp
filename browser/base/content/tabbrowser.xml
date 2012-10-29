@@ -2054,7 +2054,7 @@
               this.showTab(tab);
           }, this);
 
-          this.tabContainer.mTabstrip.ensureElementIsVisible(this.selectedTab, false);
+          this.tabContainer._handleTabSelect(false);
         ]]>
         </body>
       </method>
@@ -2203,7 +2203,7 @@
             this.tabs[i]._selected = false;
           }
           this.mCurrentTab._selected = true;
-          this.tabContainer.mTabstrip.ensureElementIsVisible(this.mCurrentTab, false);
+          this.tabContainer._handleTabSelect(false);
 
           if (aTab.pinned)
             this.tabContainer._positionPinnedTabs();
@@ -2808,6 +2808,7 @@
         var tabs = document.getBindingParent(this);
         tabs.setAttribute("overflow", "true");
         tabs._positionPinnedTabs();
+        tabs._handleTabSelect(false);
       ]]></handler>
     </handlers>
   </binding>
@@ -3004,8 +3005,10 @@
       </method>
 
       <method name="_handleTabSelect">
+        <parameter name="aSmoothScroll"/>
         <body><![CDATA[
-          this.mTabstrip.ensureElementIsVisible(this.selectedItem);
+          if (this.getAttribute("overflow") == "true")
+            this.mTabstrip.ensureElementIsVisible(this.selectedItem, aSmoothScroll);
         ]]></body>
       </method>
 
@@ -3123,6 +3126,7 @@
         ]]></body>
       </method>
 
+      <field name="_lastNumPinned">0</field>
       <method name="_positionPinnedTabs">
         <body><![CDATA[
           var numPinned = this.tabbrowser._numPinnedTabs;
@@ -3155,7 +3159,10 @@
             this.style.MozPaddingStart = "";
           }
 
-          this.mTabstrip.ensureElementIsVisible(this.selectedItem, false);
+          if (this._lastNumPinned != numPinned) {
+            this._lastNumPinned = numPinned;
+            this._handleTabSelect(false);
+          }
         ]]></body>
       </method>
 

@@ -29,7 +29,6 @@
 #ifndef nsHtml5HtmlAttributes_h__
 #define nsHtml5HtmlAttributes_h__
 
-#include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsString.h"

@@ -10,11 +10,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOCHITEST_FILES = \
-		head_identity.js \
-		test_authentication.html \
-		test_provisioning.html \
-		test_relying_party.html \
-		$(NULL)
+# XXX bug 805602 update and restore mochitests
 
 include $(topsrcdir)/config/rules.mk

@@ -21,13 +21,13 @@ function test() {
 }
 
 function testRecurse() {
-  gDebuggee.gRecurseLimit = (gDebugger.DebuggerController.StackFrames.pageSize * 2) + 1;
+  gDebuggee.gRecurseLimit = (gDebugger.gCallStackPageSize * 2) + 1;
 
   gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
-      let frames = gDebugger.DebuggerView.StackFrames._frames;
-      let pageSize = gDebugger.DebuggerController.StackFrames.pageSize;
+      let frames = gDebugger.DebuggerView.StackFrames._container._list;
+      let pageSize = gDebugger.gCallStackPageSize;
       let recurseLimit = gDebuggee.gRecurseLimit;
       let childNodes = frames.childNodes;
 
@@ -52,10 +52,10 @@ function testRecurse() {
           });
         });
 
-        frames.scrollTop = frames.scrollHeight;
+        frames.parentNode.scrollTop = frames.scrollHeight;
       });
 
-      frames.scrollTop = frames.scrollHeight;
+      frames.parentNode.scrollTop = frames.scrollHeight;
     }}, 0);
   });
 

@@ -183,6 +183,10 @@ typedef NSInteger NSEventGestureAxis;
 - (NSEventPhase)momentumPhase;
 @end
 
+@protocol EventRedirection
+  - (NSView*)targetView;
+@end
+
 @interface ChildView : NSView<
 #ifdef ACCESSIBILITY
                               mozAccessible,
@@ -267,6 +271,8 @@ typedef NSInteger NSEventGestureAxis;
 // class initialization
 + (void)initialize;
 
++ (void)registerViewForDraggedTypes:(NSView*)aView;
+
 // these are sent to the first responder when the window key status changes
 - (void)viewsWindowDidBecomeKey;
 - (void)viewsWindowDidResignKey;
@@ -275,6 +281,8 @@ typedef NSInteger NSEventGestureAxis;
 - (void)delayedTearDown;
 
 - (void)sendFocusEvent:(uint32_t)eventType;
+
+- (void)updateWindowDraggableStateOnMouseMove:(NSEvent*)theEvent;
 
 - (void)handleMouseMoved:(NSEvent*)aEvent;
 
@@ -419,7 +427,7 @@ public:
   NS_IMETHOD        SetCursor(nsCursor aCursor);
   NS_IMETHOD        SetCursor(imgIContainer* aCursor, uint32_t aHotspotX, uint32_t aHotspotY);
 
-  NS_IMETHOD        CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture, bool aConsumeRollupEvent);
+  NS_IMETHOD        CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture);
   NS_IMETHOD        SetTitle(const nsAString& title);
 
   NS_IMETHOD        GetAttention(int32_t aCycleCount);

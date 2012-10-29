@@ -39,7 +39,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath)
                                maintenanceServiceKey, 0, 
                                KEY_READ | KEY_WOW64_64KEY, &baseKeyRaw);
   if (retCode != ERROR_SUCCESS) {
-    LOG(("Could not open key. (%d)\n", retCode));
+    LOG_WARN(("Could not open key.  (%d)", retCode));
     // Our tests run with a different apply directory for each test.
     // We use this registry key on our test slaves to store the 
     // allowed name/issuers.
@@ -47,7 +47,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath)
                             TEST_ONLY_FALLBACK_KEY_PATH, 0,
                             KEY_READ | KEY_WOW64_64KEY, &baseKeyRaw);
     if (retCode != ERROR_SUCCESS) {
-      LOG(("Could not open fallback key. (%d)\n", retCode));
+      LOG_WARN(("Could not open fallback key.  (%d)", retCode));
       return FALSE;
     }
   }
@@ -58,7 +58,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath)
   retCode = RegQueryInfoKeyW(baseKey, NULL, NULL, NULL, &subkeyCount, NULL,
                              NULL, NULL, NULL, NULL, NULL, NULL);
   if (retCode != ERROR_SUCCESS) {
-    LOG(("Could not query info key: %d\n", retCode));
+    LOG_WARN(("Could not query info key.  (%d)", retCode));
     return FALSE;
   }
 
@@ -70,7 +70,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath)
                             &subkeyBufferCount, NULL, 
                             NULL, NULL, NULL); 
     if (retCode != ERROR_SUCCESS) {
-      LOG(("Could not enum Certs: %d\n", retCode));
+      LOG_WARN(("Could not enum certs.  (%d)", retCode));
       return FALSE;
     }
 
@@ -83,7 +83,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath)
                             &subKeyRaw);
     nsAutoRegKey subKey(subKeyRaw);
     if (retCode != ERROR_SUCCESS) {
-      LOG(("Could not open subkey: %d\n", retCode));
+      LOG_WARN(("Could not open subkey.  (%d)", retCode));
       continue; // Try the next subkey
     }
 
@@ -96,7 +96,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath)
     retCode = RegQueryValueExW(subKey, L"name", 0, NULL, 
                                (LPBYTE)name, &valueBufSize);
     if (retCode != ERROR_SUCCESS) {
-      LOG(("Could not obtain name from registry: %d\n", retCode));
+      LOG_WARN(("Could not obtain name from registry.  (%d)", retCode));
       continue; // Try the next subkey
     }
 
@@ -105,7 +105,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath)
     retCode = RegQueryValueExW(subKey, L"issuer", 0, NULL, 
                                (LPBYTE)issuer, &valueBufSize);
     if (retCode != ERROR_SUCCESS) {
-      LOG(("Could not obtain issuer from registry: %d\n", retCode));
+      LOG_WARN(("Could not obtain issuer from registry.  (%d)", retCode));
       continue; // Try the next subkey
     }
 
@@ -116,13 +116,13 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath)
 
     retCode = CheckCertificateForPEFile(filePath, allowedCertificate);
     if (retCode != ERROR_SUCCESS) {
-      LOG(("Error on certificate check: %d\n", retCode));
+      LOG_WARN(("Error on certificate check.  (%d)", retCode));
       continue; // Try the next subkey
     }
 
     retCode = VerifyCertificateTrustForFile(filePath);
     if (retCode != ERROR_SUCCESS) {
-      LOG(("Error on certificate trust check: %d\n", retCode));
+      LOG_WARN(("Error on certificate trust check.  (%d)", retCode));
       continue; // Try the next subkey
     }
 

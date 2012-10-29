@@ -382,9 +382,11 @@ PuppetWidget::GetInputContext()
   InputContext context;
   if (mTabChild) {
     int32_t enabled, open;
-    mTabChild->SendGetInputContext(&enabled, &open);
+    int64_t nativeIMEContext;
+    mTabChild->SendGetInputContext(&enabled, &open, &nativeIMEContext);
     context.mIMEState.mEnabled = static_cast<IMEState::Enabled>(enabled);
     context.mIMEState.mOpen = static_cast<IMEState::Open>(open);
+    context.mNativeIMEContext = reinterpret_cast<void*>(nativeIMEContext);
   }
   return context;
 }

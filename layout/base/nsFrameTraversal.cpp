@@ -37,8 +37,8 @@ protected:
   nsIFrame *getStart(){return mStart;}
   nsIFrame *getLast(){return mLast;}
   void      setLast(nsIFrame *aFrame){mLast = aFrame;}
-  PRInt8    getOffEdge(){return mOffEdge;}
-  void      setOffEdge(PRInt8 aOffEdge){mOffEdge = aOffEdge;}
+  int8_t    getOffEdge(){return mOffEdge;}
+  void      setOffEdge(int8_t aOffEdge){mOffEdge = aOffEdge;}
   void      SetLockInScrollView(bool aLockScroll){mLockScroll = aLockScroll;}
 
   /*
@@ -94,7 +94,7 @@ private:
   nsIFrame *mStart;
   nsIFrame *mCurrent;
   nsIFrame *mLast; //the last one that was in current;
-  PRInt8    mOffEdge; //0= no -1 to far prev, 1 to far next;
+  int8_t    mOffEdge; //0= no -1 to far prev, 1 to far next;
 };
 
 
@@ -168,7 +168,7 @@ NS_IMETHODIMP
  nsFrameTraversal::NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
                                      nsPresContext* aPresContext,
                                      nsIFrame *aStart,
-                                     PRInt32 aType,
+                                     int32_t aType,
                                      bool aVisual,
                                      bool aLockInScrollView,
                                      bool aFollowOOFs)

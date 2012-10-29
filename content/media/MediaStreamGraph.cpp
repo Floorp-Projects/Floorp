@@ -585,7 +585,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
   bool finished;
   {
     MutexAutoLock lock(aStream->mMutex);
-    if (aStream->mPullEnabled) {
+    if (aStream->mPullEnabled && !aStream->mFinished) {
       for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
         MediaStreamListener* l = aStream->mListeners[j];
         {
@@ -1786,6 +1786,9 @@ MediaStream::DestroyImpl()
 void
 MediaStream::Destroy()
 {
+  // Keep this stream alive until we leave this method
+  nsRefPtr<MediaStream> kungFuDeathGrip = this;
+
   class Message : public ControlMessage {
   public:
     Message(MediaStream* aStream) : ControlMessage(aStream) {}
@@ -1799,6 +1802,9 @@ MediaStream::Destroy()
   };
   mWrapper = nullptr;
   GraphImpl()->AppendMessage(new Message(this));
+  // Message::RunDuringShutdown may have removed this stream from the graph,
+  // but our kungFuDeathGrip above will have kept this stream alive if
+  // necessary.
   mMainThreadDestroyed = true;
 }
 

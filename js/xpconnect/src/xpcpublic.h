@@ -12,9 +12,9 @@
 #include "js/MemoryMetrics.h"
 #include "jsclass.h"
 #include "jsfriendapi.h"
-#include "jsgc.h"
 #include "jspubtd.h"
 #include "jsproxy.h"
+#include "js/HeapAPI.h"
 
 #include "nsISupports.h"
 #include "nsIPrincipal.h"
@@ -40,17 +40,12 @@ JSObject *
 TransplantObjectWithWrapper(JSContext *cx,
                             JSObject *origobj, JSObject *origwrapper,
                             JSObject *targetobj, JSObject *targetwrapper);
-
-nsresult
-CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
-                   bool wantXrays, JSObject **global,
-                   JSCompartment **compartment);
 } /* namespace xpc */
 
 #define XPCONNECT_GLOBAL_FLAGS                                                \
-    JSCLASS_DOM_GLOBAL | JSCLASS_XPCONNECT_GLOBAL | JSCLASS_HAS_PRIVATE |     \
+    JSCLASS_DOM_GLOBAL | JSCLASS_HAS_PRIVATE |                                \
     JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_IMPLEMENTS_BARRIERS |            \
-    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(3)
+    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(2)
 
 void
 TraceXPCGlobal(JSTracer *trc, JSObject *obj);

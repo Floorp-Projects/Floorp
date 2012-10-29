@@ -591,6 +591,7 @@ class LinearScanAllocator
     };
 
     // Context
+    MIRGenerator *mir;
     LIRGenerator *lir;
     LIRGraph &graph;
 
@@ -685,8 +686,9 @@ class LinearScanAllocator
 #endif
 
   public:
-    LinearScanAllocator(LIRGenerator *lir, LIRGraph &graph)
-      : lir(lir),
+    LinearScanAllocator(MIRGenerator *mir, LIRGenerator *lir, LIRGraph &graph)
+      : mir(mir),
+        lir(lir),
         graph(graph),
         allRegisters_(RegisterSet::All())
     {

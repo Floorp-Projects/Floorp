@@ -67,6 +67,28 @@ let gTests = [
     executeSoon(runNextTest);
   }
 },
+{
+  desc: "Check that search engine logo has alt text",
+  setup: function ()
+  {
+  },
+  run: function ()
+  {
+    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+
+    let searchEngineLogoElt = doc.getElementById("searchEngineLogo");
+    ok(searchEngineLogoElt, "Found search engine logo");
+
+    let altText = searchEngineLogoElt.alt;
+    ok(typeof altText == "string" && altText.length > 0,
+       "Search engine logo's alt text is a nonempty string");
+
+    isnot(altText, "undefined",
+          "Search engine logo's alt text shouldn't be the string 'undefined'");
+
+    executeSoon(runNextTest);
+  }
+},
 ];
 
 function test()
