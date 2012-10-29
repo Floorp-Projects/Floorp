@@ -1240,7 +1240,7 @@ ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
 
   BlobConstructorParams params;
 
-  if (blob->IsSizeUnknown() || /*blob->IsDateUnknown()*/ 0) {
+  if (blob->IsSizeUnknown() || blob->IsDateUnknown()) {
     // We don't want to call GetSize or GetLastModifiedDate
     // yet since that may stat a file on the main thread
     // here. Instead we'll learn the size lazily from the
