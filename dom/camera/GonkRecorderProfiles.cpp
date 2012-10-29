@@ -185,7 +185,7 @@ GonkRecorderProfileManager::GonkRecorderProfileManager(uint32_t aCameraId)
   : RecorderProfileManager(aCameraId)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
-  mMaxQualityIndex = CAMCORDER_QUALITY_LIST_END - CAMCORDER_QUALITY_LIST_START;
+  mMaxQualityIndex = sizeof(ProfileList) / sizeof(ProfileList[0]) - 1;
 }
 
 GonkRecorderProfileManager::~GonkRecorderProfileManager()

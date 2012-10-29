@@ -329,6 +329,13 @@ pref("browser.download.useToolkitUI", false);
 // This controls retention behavior in the Downloads Panel only.
 pref("browser.download.panel.removeFinishedDownloads", false);
 
+// This records whether or not the panel has been shown at least once.
+pref("browser.download.panel.shown", false);
+
+// This records whether or not at least one session with the Downloads Panel
+// enabled has been completed already.
+pref("browser.download.panel.firstSessionCompleted", false);
+
 // search engines URL
 pref("browser.search.searchEnginesURL",      "https://addons.mozilla.org/%LOCALE%/firefox/search-engines/");
 
@@ -1031,9 +1038,8 @@ pref("devtools.debugger.ui.height", 250);
 pref("devtools.debugger.ui.remote-win.width", 900);
 pref("devtools.debugger.ui.remote-win.height", 400);
 pref("devtools.debugger.ui.stackframes-width", 200);
-pref("devtools.debugger.ui.stackframes-pane-visible", true);
 pref("devtools.debugger.ui.variables-width", 300);
-pref("devtools.debugger.ui.variables-pane-visible", true);
+pref("devtools.debugger.ui.panes-visible-on-startup", false);
 pref("devtools.debugger.ui.non-enum-visible", true);
 
 // Enable the style inspector

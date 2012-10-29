@@ -750,6 +750,9 @@ const DownloadsView = {
     let dataTransfer = aEvent.dataTransfer;
     dataTransfer.mozSetDataAt("application/x-moz-file", localFile, 0);
     dataTransfer.effectAllowed = "copyMove";
+    var url = Services.io.newFileURI(localFile).spec;
+    dataTransfer.setData("text/uri-list", url);
+    dataTransfer.setData("text/plain", url);
     dataTransfer.addElement(element);
 
     aEvent.stopPropagation();

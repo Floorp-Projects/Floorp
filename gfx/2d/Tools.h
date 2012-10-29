@@ -42,7 +42,7 @@ struct ClassStorage
 static inline bool
 FuzzyEqual(Float aA, Float aB, Float aErr)
 {
-  if ((aA + aErr > aB) && (aA - aErr < aB)) {
+  if ((aA + aErr >= aB) && (aA - aErr <= aB)) {
     return true;
   }
   return false;

@@ -3,8 +3,19 @@ var Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-var gPBService = Cc["@mozilla.org/privatebrowsing;1"]
-                 .getService(Ci.nsIPrivateBrowsingService);
+var _PBSvc = null;
+function get_PBSvc() {
+  if (_PBSvc)
+    return _PBSvc;
+
+  try {
+    _PBSvc = Cc["@mozilla.org/privatebrowsing;1"]
+               .getService(Ci.nsIPrivateBrowsingService);
+    return _PBSvc;
+  } catch (e) {}
+  return null;
+}
+
 var gSTSService = Cc["@mozilla.org/stsservice;1"]
                   .getService(Ci.nsIStrictTransportSecurityService);
 
@@ -20,7 +31,7 @@ var gNextTest = null;
 
 function cleanup() {
   Services.obs.removeObserver(gObserver, "private-browsing-transition-complete");
-  gPBService.privateBrowsingEnabled = false;
+  get_PBSvc().privateBrowsingEnabled = false;
   // (we have to remove any state added to the sts service so as to not muck
   // with other tests).
   var uri = Services.io.newURI("http://localhost", null, null);
@@ -28,13 +39,16 @@ function cleanup() {
 }
 
 function run_test() {
-  do_test_pending();
-  do_register_cleanup(cleanup);
+  let pb = get_PBSvc();
+  if (pb) {
+    do_test_pending();
+    do_register_cleanup(cleanup);
 
-  gNextTest = test_part1;
-  Services.obs.addObserver(gObserver, "private-browsing-transition-complete", false);
-  Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
-  gPBService.privateBrowsingEnabled = true;
+    gNextTest = test_part1;
+    Services.obs.addObserver(gObserver, "private-browsing-transition-complete", false);
+    Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+    pb.privateBrowsingEnabled = true;
+  }
 }
 
 function test_part1() {
@@ -42,7 +56,7 @@ function test_part1() {
   gSTSService.processStsHeader(uri, "max-age=1000");
   do_check_true(gSTSService.isStsHost("localhost"));
   gNextTest = test_part2;
-  gPBService.privateBrowsingEnabled = false;
+  get_PBSvc().privateBrowsingEnabled = false;
 }
 
 function test_part2() {
@@ -50,7 +64,7 @@ function test_part2() {
   gSTSService.processStsHeader(uri, "max-age=1000");
   do_check_true(gSTSService.isStsHost("localhost"));
   gNextTest = test_part3;
-  gPBService.privateBrowsingEnabled = true;
+  get_PBSvc().privateBrowsingEnabled = true;
 }
 
 function test_part3() {

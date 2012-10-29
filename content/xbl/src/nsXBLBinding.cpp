@@ -262,9 +262,15 @@ FieldSetterImpl(JSContext *cx, JS::CallArgs args)
     return false;
   }
 
-  js::Rooted<JS::Value> v(cx,
-                          args.length() > 0 ? args[0] : JS::UndefinedValue());
-  return JS_SetPropertyById(cx, thisObj, id, v.address());
+  if (installed) {
+    js::Rooted<JS::Value> v(cx,
+                            args.length() > 0 ? args[0] : JS::UndefinedValue());
+    if (!::JS_SetPropertyById(cx, thisObj, id, v.address())) {
+      return false;
+    }
+  }
+  args.rval().setUndefined();
+  return true;
 }
 
 static JSBool

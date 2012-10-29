@@ -18,6 +18,8 @@ GRE_MODULE     = 1
 EXTRA_COMPONENTS =        \
   PermissionSettings.js       \
   PermissionSettings.manifest \
+  PermissionPromptService.js \
+  PermissionPromptService.manifest \
   $(NULL)
 
 EXTRA_JS_MODULES =   \

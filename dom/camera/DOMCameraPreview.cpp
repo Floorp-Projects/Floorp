@@ -44,7 +44,7 @@ public:
         break;
 
       case STOP:
-        mDOMPreview->Stop();
+        mDOMPreview->StopPreview();
         break;
 
       case STARTED:
@@ -238,9 +238,9 @@ DOMCameraPreview::Started()
 }
 
 void
-DOMCameraPreview::Stop()
+DOMCameraPreview::StopPreview()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Stop() not called from main thread");
+  NS_ASSERTION(NS_IsMainThread(), "StopPreview() not called from main thread");
   if (mState != STARTED) {
     return;
   }

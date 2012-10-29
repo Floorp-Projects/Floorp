@@ -538,9 +538,9 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   }
 
   // mExposeVisitedStyle is set to true only by testing APIs that
-  // require UniversalXPConnect.
+  // require chrome privilege.
   NS_ABORT_IF_FALSE(!mExposeVisitedStyle ||
-                    nsContentUtils::CallerHasUniversalXPConnect(),
+                    nsContentUtils::IsCallerChrome(),
                     "mExposeVisitedStyle set incorrectly");
   if (mExposeVisitedStyle && mStyleContextHolder->RelevantLinkVisited()) {
     nsStyleContext *styleIfVisited = mStyleContextHolder->GetStyleIfVisited();

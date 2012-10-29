@@ -739,7 +739,7 @@ nsresult FaviconHelper::ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI,
   if (exists) {
 
     // Obtain the file's last modification date in seconds
-    int64_t fileModTime = LL_ZERO;
+    int64_t fileModTime = 0;
     rv = icoFile->GetLastModifiedTime(&fileModTime);
     fileModTime /= PR_MSEC_PER_SEC;
     int32_t icoReCacheSecondsTimeout = GetICOCacheSecondsTimeout();

@@ -74,7 +74,7 @@ public class testBookmark extends PixelTest  {
     public void runAwesomeScreenTest() {
         final long PAINT_CLEAR_DELAY = 1000;  // milliseconds
 
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        blockForGeckoReady();
 
         // Open the bookmark list and check the root folder view
         ListView bookmarksList = openBookmarksList();

@@ -17,6 +17,7 @@
 
 #include "jsapi.h"
 
+using namespace xpc;
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
 // the value of this variable is never used - we use its address as a sentinel
@@ -506,8 +507,7 @@ GetContextFromObject(JSObject *obj)
         return nullptr;
 
     JSAutoCompartment ac(ccx, obj);
-    XPCWrappedNativeScope* scope =
-        XPCWrappedNativeScope::FindInJSObjectScope(ccx, obj);
+    XPCWrappedNativeScope* scope = GetObjectScope(obj);
     XPCContext *xpcc = scope->GetContext();
 
     if (xpcc) {

@@ -743,18 +743,21 @@ TabParent::RecvEndIMEComposition(const bool& aCancel,
 
 bool
 TabParent::RecvGetInputContext(int32_t* aIMEEnabled,
-                               int32_t* aIMEOpen)
+                               int32_t* aIMEOpen,
+                               int64_t* aNativeIMEContext)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
     *aIMEEnabled = IMEState::DISABLED;
     *aIMEOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
+    *aNativeIMEContext = 0;
     return true;
   }
 
   InputContext context = widget->GetInputContext();
   *aIMEEnabled = static_cast<int32_t>(context.mIMEState.mEnabled);
   *aIMEOpen = static_cast<int32_t>(context.mIMEState.mOpen);
+  *aNativeIMEContext = reinterpret_cast<int64_t>(context.mNativeIMEContext);
   return true;
 }
 

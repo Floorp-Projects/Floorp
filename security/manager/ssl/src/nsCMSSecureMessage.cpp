@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsMemory.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
@@ -147,7 +146,7 @@ SendMessage(const char *msg, const char *base64Cert, char ** _retval)
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
 
   /* Step 0. Create a CMS Message */
-  cmsMsg = NSS_CMSMessage_Create(NULL);
+  cmsMsg = NSS_CMSMessage_Create(nullptr);
   if (!cmsMsg) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't create NSSCMSMessage\n"));
     rv = NS_ERROR_FAILURE;
@@ -316,7 +315,7 @@ encode(const unsigned char *data, int32_t dataLen, char **_retval)
 {
   nsresult rv = NS_OK;
 
-  *_retval = PL_Base64Encode((const char *)data, dataLen, NULL);
+  *_retval = PL_Base64Encode((const char *)data, dataLen, nullptr);
   if (!*_retval) { rv = NS_ERROR_OUT_OF_MEMORY; goto loser; }
 
 loser:
@@ -337,7 +336,7 @@ decode(const char *data, unsigned char **result, int32_t * _retval)
     if (data[len-2] == '=') adjust++;
   }
 
-  *result = (unsigned char *)PL_Base64Decode(data, len, NULL);
+  *result = (unsigned char *)PL_Base64Decode(data, len, nullptr);
   if (!*result) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::decode - error decoding base64\n"));
     rv = NS_ERROR_ILLEGAL_VALUE;

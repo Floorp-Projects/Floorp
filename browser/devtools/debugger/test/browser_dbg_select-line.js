@@ -33,7 +33,7 @@ function test()
 function testSelectLine() {
   gDebugger.DebuggerController.activeThread.addOneTimeListener("scriptsadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
-      gScripts = gDebugger.DebuggerView.Scripts._scripts;
+      gScripts = gDebugger.DebuggerView.Sources._container;
 
       is(gDebugger.DebuggerController.activeThread.state, "paused",
         "Should only be getting stack frames while paused.");
@@ -78,7 +78,7 @@ function testSelectLine() {
         stackframes.scrollTop = stackframes.scrollHeight;
 
         // Click the oldest stack frame.
-        let frames = gDebugger.DebuggerView.Stackframes._frames;
+        let frames = gDebugger.DebuggerView.Stackframes._container._list;
         is(frames.querySelectorAll(".dbg-stackframe").length, 4,
           "Should have four frames.");
 

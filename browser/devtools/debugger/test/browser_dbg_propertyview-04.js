@@ -23,7 +23,7 @@ function testSimpleCall() {
   gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
 
-      let testScope = gDebugger.DebuggerView.Properties._addScope("test");
+      let testScope = gDebugger.DebuggerView.Variables.addScope("test");
       let testVar = testScope.addVar("something");
 
       let properties = testVar.addProperties({
@@ -37,17 +37,14 @@ function testSimpleCall() {
         }
       });
 
-      is(testVar.querySelector(".details").childNodes.length, 1,
+      is(testVar.target.querySelector(".details").childNodes.length, 1,
         "A new detail node should have been added in the variable tree.");
 
-      ok(testVar.child,
+      ok(testVar.get("child"),
         "The added detail property should be accessible from the variable.");
 
-      is(testVar.child, properties.child,
-        "Adding a detail property should return that exact property.");
 
-
-      let properties2 = testVar.child.addProperties({
+      let properties2 = testVar.get("child").addProperties({
         "grandchild": {
           "value": {
             "type": "object",
@@ -58,36 +55,12 @@ function testSimpleCall() {
         }
       });
 
-      is(testVar.child.querySelector(".details").childNodes.length, 1,
+      is(testVar.get("child").target.querySelector(".details").childNodes.length, 1,
         "A new detail node should have been added in the variable tree.");
 
-      ok(testVar.child.grandchild,
+      ok(testVar.get("child").get("grandchild"),
         "The added detail property should be accessible from the variable.");
 
-      is(testVar.child.grandchild, properties2.grandchild,
-        "Adding a detail property should return that exact property.");
-
-
-      testVar.child.empty();
-
-      is(testVar.child.querySelector(".details").childNodes.length, 0,
-        "The child should remove all it's details container tree children.");
-
-      testVar.child.remove();
-
-      is(testVar.querySelector(".details").childNodes.length, 0,
-        "The child should have been removed from the parent container tree.");
-
-
-      testVar.empty();
-
-      is(testVar.querySelector(".details").childNodes.length, 0,
-        "The var should remove all it's details container tree children.");
-
-      testVar.remove();
-
-      is(testScope.querySelector(".details").childNodes.length, 0,
-        "The var should have been removed from the parent container tree.");
 
       gDebugger.DebuggerController.activeThread.resume(function() {
         closeDebuggerAndFinish();

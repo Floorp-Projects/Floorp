@@ -76,7 +76,7 @@ private:
   bool mIsUIForbidden;
 
   // nullptr means "no restriction"
-  // if != nullptr, activity is only allowed on that thread
+  // if not null, activity is only allowed on that thread
   PRThread* mNSSRestrictedThread;
 };
 

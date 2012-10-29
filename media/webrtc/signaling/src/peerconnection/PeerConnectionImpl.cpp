@@ -15,14 +15,19 @@
 #include "cpr_string.h"
 #include "cpr_stdlib.h"
 
+#include "jsapi.h"
 #include "nspr.h"
 #include "nss.h"
 #include "pk11pub.h"
 
 #include "nsNetCID.h"
+#include "nsIProperty.h"
+#include "nsIPropertyBag2.h"
 #include "nsIServiceManager.h"
+#include "nsISimpleEnumerator.h"
 #include "nsServiceManagerUtils.h"
 #include "nsISocketTransportService.h"
+
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 
@@ -730,24 +735,91 @@ PeerConnectionImpl::NotifyDataChannel(mozilla::DataChannel *aChannel)
 #endif
 }
 
-/*
- * the Constraints UI IDL work is being done. The CreateOffer below is the one
- * currently called by the signaling unit tests.
+/**
+ * Constraints look like this:
+ *
+ * {
+ *    "mandatory": {"foo":"hello", "bar": false, "baz": 10},
+ *    "optional": [{"hello":"foo"}, {"baz": false}]
+ * }
+ *
+ * Optional constraints are ordered, and hence in an array. This function
+ * converts a jsval that looks like the above into a MediaConstraints object.
  */
-NS_IMETHODIMP
-PeerConnectionImpl::CreateOffer(const char* constraints) {
-  MOZ_ASSERT(constraints);
+nsresult
+PeerConnectionImpl::ConvertConstraints(
+  const JS::Value& aConstraints, MediaConstraints* aObj, JSContext* aCx)
+{
+  size_t i;
+  jsval mandatory, optional;
+  JSObject& constraints = aConstraints.toObject();
 
-  CheckIceState();
-  mRole = kRoleOfferer;  // TODO(ekr@rtfm.com): Interrogate SIPCC here?
-  MediaConstraints aconstraints;
-  CreateOffer(aconstraints);
+  // Mandatory constraints.
+  if (JS_GetProperty(aCx, &constraints, "mandatory", &mandatory)) {
+    if (JSVAL_IS_PRIMITIVE(mandatory) && mandatory.isObject() && !JSVAL_IS_NULL(mandatory)) {
+      JSObject* opts = JSVAL_TO_OBJECT(mandatory);
+      JS::AutoIdArray mandatoryOpts(aCx, JS_Enumerate(aCx, opts));
+
+      // Iterate over each property.
+      for (i = 0; i < mandatoryOpts.length(); i++) {
+        jsval option, optionName;
+        if (JS_GetPropertyById(aCx, opts, mandatoryOpts[i], &option)) {
+          if (JS_IdToValue(aCx, mandatoryOpts[i], &optionName)) {
+            // We only support boolean constraints for now.
+            if (JSVAL_IS_BOOLEAN(option)) {
+              JSString* optionNameString = JS_ValueToString(aCx, optionName);
+              NS_ConvertUTF16toUTF8 stringVal(JS_GetStringCharsZ(aCx, optionNameString));
+              aObj->setBooleanConstraint(stringVal.get(), JSVAL_TO_BOOLEAN(option), true);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Optional constraints.
+  if (JS_GetProperty(aCx, &constraints, "optional", &optional)) {
+    if (JSVAL_IS_PRIMITIVE(optional) && optional.isObject() && !JSVAL_IS_NULL(optional)) {
+      JSObject* opts = JSVAL_TO_OBJECT(optional);
+      if (JS_IsArrayObject(aCx, opts)) {
+        uint32_t length;
+        if (!JS_GetArrayLength(aCx, opts, &length)) {
+          return NS_ERROR_FAILURE;
+        }
+        for (i = 0; i < length; i++) {
+          jsval val;
+          JS_GetElement(aCx, opts, i, &val);
+          if (JSVAL_IS_PRIMITIVE(val)) {
+            // Extract name & value and store.
+            // FIXME: MediaConstraints does not support optional constraints?
+          }
+        }
+      }
+    }
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::CreateOffer(MediaConstraints& constraints) {
+PeerConnectionImpl::CreateOffer(const JS::Value& aConstraints, JSContext* aCx)
+{
+  CheckIceState();
+  mRole = kRoleOfferer;  // TODO(ekr@rtfm.com): Interrogate SIPCC here?
 
+  MediaConstraints* cs = new MediaConstraints();
+  nsresult rv = ConvertConstraints(aConstraints, cs, aCx);
+  if (rv != NS_OK) {
+    return rv;
+  }
+
+  return CreateOffer(*cs);
+}
+
+// Used by unit tests and the IDL CreateOffer.
+NS_IMETHODIMP
+PeerConnectionImpl::CreateOffer(MediaConstraints& constraints)
+{
   cc_media_constraints_t* cc_constraints = nullptr;
   constraints.buildArray(&cc_constraints);
 
@@ -755,27 +827,25 @@ PeerConnectionImpl::CreateOffer(MediaConstraints& constraints) {
   return NS_OK;
 }
 
-/*
- * the Constraints UI IDL work is being done. The CreateAnswer below is the one
- * currently called by the signaling unit tests.
- *
- * The aOffer parameter needs to be removed here and in the PeerConnection IDL
- */
-
 NS_IMETHODIMP
-PeerConnectionImpl::CreateAnswer(const char* constraints, const char* aOffer) {
-  MOZ_ASSERT(constraints);
-
+PeerConnectionImpl::CreateAnswer(const JS::Value& aConstraints, JSContext* aCx)
+{
   CheckIceState();
   mRole = kRoleAnswerer;  // TODO(ekr@rtfm.com): Interrogate SIPCC here?
-  MediaConstraints aconstraints;
-  CreateAnswer(aconstraints);
+
+  MediaConstraints* cs = new MediaConstraints();
+  nsresult rv = ConvertConstraints(aConstraints, cs, aCx);
+  if (rv != NS_OK) {
+    return rv;
+  }
+
+  CreateAnswer(*cs);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::CreateAnswer(MediaConstraints& constraints) {
-
+PeerConnectionImpl::CreateAnswer(MediaConstraints& constraints)
+{
   cc_media_constraints_t* cc_constraints = nullptr;
   constraints.buildArray(&cc_constraints);
 
@@ -784,7 +854,8 @@ PeerConnectionImpl::CreateAnswer(MediaConstraints& constraints) {
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
+PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP)
+{
   if (!aSDP) {
     CSFLogError(logTag, "%s - aSDP is NULL", __FUNCTION__);
     return NS_ERROR_FAILURE;
@@ -797,7 +868,8 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
+PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
+{
   if (!aSDP) {
     CSFLogError(logTag, "%s - aSDP is NULL", __FUNCTION__);
     return NS_ERROR_FAILURE;

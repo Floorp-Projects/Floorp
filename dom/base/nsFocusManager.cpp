@@ -953,10 +953,11 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
     }
   }
 
-  nsIMEStateManager::OnTextStateBlur(nullptr, nullptr);
+  nsPresContext* focusedPresContext =
+    presShell ? presShell->GetPresContext() : nullptr;
+  nsIMEStateManager::OnChangeFocus(focusedPresContext, nullptr,
+                                   GetFocusMoveActionCause(0));
   if (presShell) {
-    nsIMEStateManager::OnChangeFocus(presShell->GetPresContext(), nullptr,
-                                     GetFocusMoveActionCause(0));
     SetCaretVisible(presShell, false, nullptr);
   }
 
@@ -1149,7 +1150,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
     }
     bool subsumes = false;
     focusedPrincipal->Subsumes(newPrincipal, &subsumes);
-    if (!subsumes && !nsContentUtils::IsCallerTrustedForWrite()) {
+    if (!subsumes && !nsContentUtils::IsCallerChrome()) {
       NS_WARNING("Not allowed to focus the new window!");
       return;
     }
@@ -1535,14 +1536,10 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
     clearFirstBlurEvent = true;
   }
 
-  // if there is still an active window, adjust the IME state.
-  // This has to happen before the focus is cleared below, otherwise, the IME
-  // compositionend event won't get fired at the element being blurred.
-  nsIMEStateManager::OnTextStateBlur(nullptr, nullptr);
-  if (mActiveWindow) {
-    nsIMEStateManager::OnChangeFocus(presShell->GetPresContext(), nullptr,
-                                     GetFocusMoveActionCause(0));
-  }
+  nsPresContext* focusedPresContext =
+    mActiveWindow ? presShell->GetPresContext() : nullptr;
+  nsIMEStateManager::OnChangeFocus(focusedPresContext, nullptr,
+                                   GetFocusMoveActionCause(0));
 
   // now adjust the actual focus, by clearing the fields in the focus manager
   // and in the window.
@@ -1815,10 +1812,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
                            aContent->GetCurrentDoc(),
                            aContent, aFlags & FOCUSMETHOD_MASK,
                            aWindowRaised, isRefocus);
-
-      nsIMEStateManager::OnTextStateFocus(presContext, aContent);
     } else {
-      nsIMEStateManager::OnTextStateBlur(presContext, nullptr);
       nsIMEStateManager::OnChangeFocus(presContext, nullptr,
                                        GetFocusMoveActionCause(aFlags));
       if (!aWindowRaised) {
@@ -1843,7 +1837,6 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
     }
 
     nsPresContext* presContext = presShell->GetPresContext();
-    nsIMEStateManager::OnTextStateBlur(presContext, nullptr);
     nsIMEStateManager::OnChangeFocus(presContext, nullptr,
                                      GetFocusMoveActionCause(aFlags));
 

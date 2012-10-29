@@ -25,7 +25,7 @@ function test() {
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
       Services.tm.currentThread.dispatch({ run: function() {
 
-        let frames = gDebugger.DebuggerView.StackFrames._frames;
+        let frames = gDebugger.DebuggerView.StackFrames._container._list;
         let childNodes = frames.childNodes;
 
         is(gDebugger.DebuggerController.activeThread.paused, true,
@@ -40,7 +40,7 @@ function test() {
           }}, 0);
         });
 
-        EventUtils.sendMouseEvent({ type: "click" },
+        EventUtils.sendMouseEvent({ type: "mousedown" },
           gDebugger.document.getElementById("resume"),
           gDebugger);
       }}, 0);

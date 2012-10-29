@@ -19,7 +19,7 @@ NS_IMPL_ISUPPORTS1(nsDataSignatureVerifier, nsIDataSignatureVerifier)
 const SEC_ASN1Template CERT_SignatureDataTemplate[] =
 {
     { SEC_ASN1_SEQUENCE,
-        0, NULL, sizeof(CERTSignedData) },
+        0, nullptr, sizeof(CERTSignedData) },
     { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
         offsetof(CERTSignedData,signatureAlgorithm),
         SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate), },
@@ -94,7 +94,7 @@ nsDataSignatureVerifier::VerifyData(const nsACString & aData,
                                        aData.Length(), publicKey,
                                        &(sigData.signature),
                                        &(sigData.signatureAlgorithm),
-                                       NULL, NULL);
+                                       nullptr, nullptr);
     
     // Clean up remaining objects
     SECKEY_DestroyPublicKey(publicKey);

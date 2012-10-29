@@ -29,6 +29,7 @@ function testMixedContent(hud) {
   waitForSuccess(
     {
       name: "mixed content warning displayed successfully",
+      timeout: 20000,
       validatorFn: function() {
         return ( aOutputNode.querySelector(".webconsole-mixed-content") );
       },

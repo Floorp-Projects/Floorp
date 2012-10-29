@@ -42,13 +42,37 @@ zlib_free(void *cx, void *addr)
     js_free(addr);
 }
 
+Compressor::Compressor(const unsigned char *inp, size_t inplen)
+    : inp(inp),
+      inplen(inplen),
+      outbytes(0)
+{
+    JS_ASSERT(inplen > 0);
+    zs.opaque = NULL;
+    zs.next_in = (Bytef *)inp;
+    zs.avail_in = 0;
+    zs.next_out = NULL;
+    zs.avail_out = 0;
+    zs.zalloc = zlib_alloc;
+    zs.zfree = zlib_free;
+}
+
+
+Compressor::~Compressor()
+{
+    int ret = deflateEnd(&zs);
+    if (ret != Z_OK) {
+        // If we finished early, we can get a Z_DATA_ERROR.
+        JS_ASSERT(ret == Z_DATA_ERROR);
+        JS_ASSERT(uInt(zs.next_in - inp) < inplen || !zs.avail_out);
+    }
+}
+
 bool
 Compressor::init()
 {
     if (inplen >= UINT32_MAX)
         return false;
-    zs.zalloc = zlib_alloc;
-    zs.zfree = zlib_free;
     int ret = deflateInit(&zs, Z_DEFAULT_COMPRESSION);
     if (ret != Z_OK) {
         JS_ASSERT(ret == Z_MEM_ERROR);
@@ -57,40 +81,38 @@ Compressor::init()
     return true;
 }
 
-bool
+void
+Compressor::setOutput(unsigned char *out, size_t outlen)
+{
+    JS_ASSERT(outlen > outbytes);
+    zs.next_out = out + outbytes;
+    zs.avail_out = outlen - outbytes;
+}
+
+Compressor::Status
 Compressor::compressMore()
 {
+    JS_ASSERT(zs.next_out);
     uInt left = inplen - (zs.next_in - inp);
     bool done = left <= CHUNKSIZE;
     if (done)
         zs.avail_in = left;
     else if (zs.avail_in == 0)
         zs.avail_in = CHUNKSIZE;
+    Bytef *oldout = zs.next_out;
     int ret = deflate(&zs, done ? Z_FINISH : Z_NO_FLUSH);
+    outbytes += zs.next_out - oldout;
     if (ret == Z_MEM_ERROR) {
         zs.avail_out = 0;
-        return false;
+        return OOM;
     }
     if (ret == Z_BUF_ERROR || (done && ret == Z_OK)) {
         JS_ASSERT(zs.avail_out == 0);
-        return false;
+        return MOREOUTPUT;
     }
     JS_ASSERT_IF(!done, ret == Z_OK);
     JS_ASSERT_IF(done, ret == Z_STREAM_END);
-    return !done;
-}
-
-size_t
-Compressor::finish()
-{
-    size_t outlen = inplen - zs.avail_out;
-    int ret = deflateEnd(&zs);
-    if (ret != Z_OK) {
-        // If we finished early, we can get a Z_DATA_ERROR.
-        JS_ASSERT(ret == Z_DATA_ERROR);
-        JS_ASSERT(uInt(zs.next_in - inp) < inplen || !zs.avail_out);
-    }
-    return outlen;
+    return done ? DONE : CONTINUE;
 }
 
 bool

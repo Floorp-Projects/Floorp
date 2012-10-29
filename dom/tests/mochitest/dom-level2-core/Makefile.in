@@ -97,7 +97,6 @@ MOCHITEST_FILES_B	= \
 		test_domimplementationfeaturecore.html \
 		test_domimplementationfeaturexmlversion2.html \
 		test_domimplementationhasfeature01.html \
-		test_domimplementationhasfeature02.html \
 		$(NULL)
 
 MOCHITEST_FILES_C	= \
@@ -191,8 +190,6 @@ MOCHITEST_FILES_D	= \
 		test_importNode16.html \
 		test_importNode17.html \
 		test_internalSubset01.html \
-		test_isSupported01.html \
-		test_isSupported02.html \
 		test_isSupported04.html \
 		test_isSupported05.html \
 		test_isSupported06.html \
@@ -251,9 +248,7 @@ MOCHITEST_FILES_E	= \
 		test_nodehasattributes04.html \
 		test_nodeissupported01.html \
 		test_nodeissupported02.html \
-		test_nodeissupported03.html \
 		test_nodeissupported04.html \
-		test_nodeissupported05.html \
 		$(NULL)
 
 MOCHITEST_FILES_F	= \

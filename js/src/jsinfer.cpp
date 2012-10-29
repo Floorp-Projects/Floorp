@@ -3900,27 +3900,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
         break;
 
-      case JSOP_INCARG:
-      case JSOP_DECARG:
-      case JSOP_ARGINC:
-      case JSOP_ARGDEC:
-      case JSOP_INCLOCAL:
-      case JSOP_DECLOCAL:
-      case JSOP_LOCALINC:
-      case JSOP_LOCALDEC: {
-        uint32_t slot = GetBytecodeSlot(script_, pc);
-        if (trackSlot(slot)) {
-            poppedTypes(pc, 0)->addArith(cx, script, pc, &pushed[0]);
-        } else if (slot < TotalSlots(script_)) {
-            StackTypeSet *types = TypeScript::SlotTypes(script_, slot);
-            types->addArith(cx, script, pc, types);
-            types->addSubset(cx, &pushed[0]);
-        } else {
-            pushed[0].addType(cx, Type::UnknownType());
-        }
-        break;
-      }
-
       case JSOP_ARGUMENTS:
         /* Compute a precise type only when we know the arguments won't escape. */
         if (script_->needsArgsObj())
@@ -4504,25 +4483,6 @@ ScriptAnalysis::integerOperation(jsbytecode *pc)
     JS_ASSERT(uint32_t(pc - script_->code) < script_->length);
 
     switch (JSOp(*pc)) {
-
-      case JSOP_INCARG:
-      case JSOP_DECARG:
-      case JSOP_ARGINC:
-      case JSOP_ARGDEC:
-      case JSOP_INCLOCAL:
-      case JSOP_DECLOCAL:
-      case JSOP_LOCALINC:
-      case JSOP_LOCALDEC: {
-        if (pushedTypes(pc, 0)->getKnownTypeTag() != JSVAL_TYPE_INT32)
-            return false;
-        uint32_t slot = GetBytecodeSlot(script_, pc);
-        if (trackSlot(slot)) {
-            if (poppedTypes(pc, 0)->getKnownTypeTag() != JSVAL_TYPE_INT32)
-                return false;
-        }
-        return true;
-      }
-
       case JSOP_ADD:
       case JSOP_SUB:
       case JSOP_MUL:

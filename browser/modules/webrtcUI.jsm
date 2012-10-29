@@ -90,6 +90,8 @@ function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
   if (selectableDevices.length > 1) {
     let selectableDeviceNumber = 0;
     for (let device of selectableDevices) {
+      // See bug 449811 for why we do this
+      let actual_device = device;
       selectableDeviceNumber++;
       secondaryActions.push({
         label: stringBundle.getFormattedString(
@@ -99,7 +101,7 @@ function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
                  [ device.name ]),
         accessKey: selectableDeviceNumber,
         callback: function () {
-          Services.obs.notifyObservers(device, "getUserMedia:response:allow", aCallID);
+          Services.obs.notifyObservers(actual_device, "getUserMedia:response:allow", aCallID);
         }
       });
     }

@@ -410,12 +410,18 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         // Whether a layer was updated.
         private boolean mUpdated;
         private final Rect mPageRect;
+        private final Rect mAbsolutePageRect;
 
         public Frame(ImmutableViewportMetrics metrics) {
             mFrameMetrics = metrics;
             mPageContext = createPageContext(metrics);
             mScreenContext = createScreenContext(metrics);
-            mPageRect = getPageRect();
+
+            Point origin = PointUtils.round(mFrameMetrics.getOrigin());
+            Rect pageRect = RectUtils.round(mFrameMetrics.getPageRect());
+            mAbsolutePageRect = new Rect(pageRect);
+            pageRect.offset(-origin.x, -origin.y);
+            mPageRect = pageRect;
         }
 
         private void setScissorRect() {
@@ -435,13 +441,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
             return new Rect(left, screenSize.height - bottom, right,
                             (screenSize.height - bottom) + (bottom - top));
-        }
-
-        private Rect getPageRect() {
-            Point origin = PointUtils.round(mFrameMetrics.getOrigin());
-            Rect pageRect = RectUtils.round(mFrameMetrics.getPageRect());
-            pageRect.offset(-origin.x, -origin.y);
-            return pageRect;
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
@@ -543,9 +542,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             mBackgroundLayer.draw(mScreenContext);
 
             /* Draw the drop shadow, if we need to. */
-            RectF untransformedPageRect = new RectF(0.0f, 0.0f, mPageRect.width(),
-                                                    mPageRect.height());
-            if (!untransformedPageRect.contains(mFrameMetrics.getViewport()))
+            if (!new RectF(mAbsolutePageRect).contains(mFrameMetrics.getViewport()))
                 mShadowLayer.draw(mPageContext);
 
             /* Draw the 'checkerboard'. We use gfx.show_checkerboard_pattern to
@@ -607,7 +604,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
                 /* restrict the viewport to page bounds so we don't
                  * count overscroll as checkerboard */
-                if (!viewport.intersect(mPageRect)) {
+                if (!viewport.intersect(mAbsolutePageRect)) {
                     /* if the rectangles don't intersect
                        intersect() doesn't change viewport
                        so we set it to empty by hand */
@@ -615,10 +612,14 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
                 }
                 validRegion.op(viewport, Region.Op.INTERSECT);
 
-                float checkerboard = 0.0f;
-
+                // Check if we have total checkerboarding (there's visible
+                // page area and the valid region doesn't intersect with the
+                // viewport).
                 int screenArea = viewport.width() * viewport.height();
-                if (screenArea > 0 && !(validRegion.isRect() && validRegion.getBounds().equals(viewport))) {
+                float checkerboard = (screenArea > 0 &&
+                  validRegion.quickReject(viewport)) ? 1.0f : 0.0f;
+
+                if (screenArea > 0 && checkerboard < 1.0f) {
                     validRegion.op(viewport, Region.Op.REVERSE_DIFFERENCE);
 
                     // XXX The assumption here is that a Region never has overlapping
@@ -633,6 +634,9 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
                     }
 
                     checkerboard = checkerboardArea / (float)screenArea;
+
+                    // Add any incomplete rendering in the screen area
+                    checkerboard += (1.0 - checkerboard) * (1.0 - GeckoAppShell.computeRenderIntegrity());
                 }
 
                 PanningPerfAPI.recordCheckerboard(checkerboard);

@@ -175,7 +175,7 @@ nsHttpHandler::nsHttpHandler()
     , mUseAlternateProtocol(false)
     , mSpdySendingChunkSize(ASpdySession::kSendingChunkSize)
     , mSpdySendBufferSize(ASpdySession::kTCPSendBufferSize)
-    , mSpdyPingThreshold(PR_SecondsToInterval(44))
+    , mSpdyPingThreshold(PR_SecondsToInterval(58))
     , mSpdyPingTimeout(PR_SecondsToInterval(8))
     , mConnectTimeout(90000)
 {
@@ -299,7 +299,7 @@ nsHttpHandler::Init()
                                   static_cast<nsISupports*>(static_cast<void*>(this)),
                                   NS_HTTP_STARTUP_TOPIC);
 
-    mObserverService = mozilla::services::GetObserverService();
+    mObserverService = services::GetObserverService();
     if (mObserverService) {
         mObserverService->AddObserver(this, "profile-change-net-teardown", true);
         mObserverService->AddObserver(this, "profile-change-net-restore", true);

@@ -4,6 +4,7 @@
 
 #include "mozilla/dom/EncodingUtils.h"
 #include "nsAutoPtr.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -86,19 +87,19 @@ static const LabelEncoding labelsEncodings[] = {
   {"iso_8859-7:1987", "iso-8859-7"},
   {"sun_eu_greek", "iso-8859-7"},
   {"csiso88598e", "iso-8859-8"},
-  {"csiso88598i", "iso-8859-8"},
   {"csisolatinhebrew", "iso-8859-8"},
   {"hebrew", "iso-8859-8"},
   {"iso-8859-8", "iso-8859-8"},
   {"iso-8859-8-e", "iso-8859-8"},
-  {"iso-8859-8-i", "iso-8859-8"},
   {"iso-ir-138", "iso-8859-8"},
   {"iso8859-8", "iso-8859-8"},
   {"iso88598", "iso-8859-8"},
   {"iso_8859-8", "iso-8859-8"},
   {"iso_8859-8:1988", "iso-8859-8"},
-  {"logical", "iso-8859-8"},
   {"visual", "iso-8859-8"},
+  {"csiso88598i", "iso-8859-8-i"},
+  {"iso-8859-8-i", "iso-8859-8-i"},
+  {"logical", "iso-8859-8-i"},
   {"csisolatin6", "iso-8859-10"},
   {"iso-8859-10", "iso-8859-10"},
   {"iso-ir-157", "iso-8859-10"},
@@ -208,28 +209,29 @@ static const LabelEncoding labelsEncodings[] = {
   {"x-euc-jp", "euc-jp"},
   {"csiso2022jp", "iso-2022-jp"},
   {"iso-2022-jp", "iso-2022-jp"},
-  {"csshiftjis", "shift-jis"},
-  {"ms_kanji", "shift-jis"},
-  {"shift-jis", "shift-jis"},
-  {"shift_jis", "shift-jis"},
-  {"sjis", "shift-jis"},
-  {"windows-31j", "shift-jis"},
-  {"x-sjis", "shift-jis"},
+  {"csshiftjis", "shift_jis"},
+  {"ms_kanji", "shift_jis"},
+  {"shift-jis", "shift_jis"},
+  {"shift_jis", "shift_jis"},
+  {"sjis", "shift_jis"},
+  {"windows-31j", "shift_jis"},
+  {"x-sjis", "shift_jis"},
   {"cseuckr", "euc-kr"},
-  {"csksc56011987", "x-windows-949"},
-  {"euc-kr", "x-windows-949"},
-  {"iso-ir-149", "x-windows-949"},
-  {"korean", "x-windows-949"},
-  {"ks_c_5601-1987", "x-windows-949"},
-  {"ks_c_5601-1989", "x-windows-949"},
-  {"ksc5601", "x-windows-949"},
-  {"ksc_5601", "x-windows-949"},
-  {"windows-949", "x-windows-949"},
+  {"csksc56011987", "euc-kr"},
+  {"euc-kr", "euc-kr"},
+  {"iso-ir-149", "euc-kr"},
+  {"korean", "euc-kr"},
+  {"ks_c_5601-1987", "euc-kr"},
+  {"ks_c_5601-1989", "euc-kr"},
+  {"ksc5601", "euc-kr"},
+  {"ksc_5601", "euc-kr"},
+  {"windows-949", "euc-kr"},
   {"csiso2022kr", "iso-2022-kr"},
   {"iso-2022-kr", "iso-2022-kr"},
   {"utf-16", "utf-16le"},
   {"utf-16le", "utf-16le"},
-  {"utf-16be", "utf-16be"}
+  {"utf-16be", "utf-16be"},
+  {"x-user-defined", "x-user-defined"},
 };
 
 EncodingUtils::EncodingUtils()
@@ -322,7 +324,7 @@ EncodingUtils::FindEncodingForLabel(const nsAString& aLabel,
     return false;
   }
 
-  ToLowerCase(label);
+  nsContentUtils::ASCIIToLower(label);
   const char* encoding = self->mLabelsEncodings.Get(label);
   if (!encoding) {
     return false;
