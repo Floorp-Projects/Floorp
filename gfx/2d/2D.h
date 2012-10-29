@@ -398,6 +398,15 @@ public:
    */
   virtual bool ContainsPoint(const Point &aPoint, const Matrix &aTransform) const = 0;
 
+
+  /* This function checks if a point lies within the stroke of a path using the
+   * specified strokeoptions. It allows passing a transform that will transform
+   * the path to the coordinate space in which aPoint is given.
+   */
+  virtual bool StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
+                                   const Point &aPoint,
+                                   const Matrix &aTransform) const = 0;
+
   /* This functions gets the bounds of this path. These bounds are not
    * guaranteed to be tight. A transform may be specified that gives the bounds
    * after application of the transform.
