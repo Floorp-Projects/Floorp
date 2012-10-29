@@ -1928,27 +1928,6 @@ nsScriptSecurityManager::GetCodebasePrincipalInternal(nsIURI *aURI,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsScriptSecurityManager::GetPrincipalFromContext(JSContext *cx,
-                                                 nsIPrincipal **result)
-{
-    *result = nullptr;
-
-    nsIScriptContextPrincipal* scp =
-        GetScriptContextPrincipalFromJSContext(cx);
-
-    if (!scp)
-    {
-        return NS_ERROR_FAILURE;
-    }
-
-    nsIScriptObjectPrincipal* globalData = scp->GetObjectPrincipal();
-    if (globalData)
-        NS_IF_ADDREF(*result = globalData->GetPrincipal());
-
-    return NS_OK;
-}
-
 // static
 nsIPrincipal*
 nsScriptSecurityManager::GetScriptPrincipal(JSScript *script,
