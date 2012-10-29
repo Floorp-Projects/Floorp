@@ -142,7 +142,6 @@ abstract public class GeckoApp
     public static final String ACTION_LOAD          = "org.mozilla.gecko.LOAD";
     public static final String ACTION_INIT_PW       = "org.mozilla.gecko.INIT_PW";
     public static final String ACTION_WIDGET        = "org.mozilla.gecko.WIDGET";
-    public static final String SAVED_STATE_TITLE         = "title";
     public static final String SAVED_STATE_IN_BACKGROUND = "inBackground";
     public static final String SAVED_STATE_PRIVATE_SESSION = "privateSession";
 
@@ -701,10 +700,6 @@ abstract public class GeckoApp
         if (outState == null)
             outState = new Bundle();
 
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab != null)
-            outState.putString(SAVED_STATE_TITLE, tab.getDisplayTitle());
-
         boolean inBackground =
             ((GeckoApplication)getApplication()).isApplicationInBackground();
 
@@ -719,9 +714,11 @@ abstract public class GeckoApp
         }
 
         if (tab.getState() == Tab.STATE_DELAYED) {
-            byte[] thumbnail = BrowserDB.getThumbnailForUrl(getContentResolver(), tab.getURL());
-            if (thumbnail != null)
-                processThumbnail(tab, null, thumbnail);
+            if (tab.getURL() != null) {
+                byte[] thumbnail = BrowserDB.getThumbnailForUrl(getContentResolver(), tab.getURL());
+                if (thumbnail != null)
+                    processThumbnail(tab, null, thumbnail);
+            }
             return;
         }
 
