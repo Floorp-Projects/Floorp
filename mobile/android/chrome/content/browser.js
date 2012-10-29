@@ -1214,6 +1214,19 @@ var NativeWindow = {
 
     remove: function(aId) {
       sendMessageToJava({ gecko: {type: "Menu:Remove", id: aId }});
+    },
+
+    update: function(aId, aOptions) {
+      if (!aOptions)
+        return;
+
+      sendMessageToJava({
+        gecko: {
+          type: "Menu:Update", 
+          id: aId,
+          options: aOptions
+        }
+      });
     }
   },
 
