@@ -131,7 +131,7 @@ void nsBuiltinDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs)
   DestroyDecodedStream();
 
   mDecodedStream = new DecodedStreamData(this, aStartTimeUSecs,
-    MediaStreamGraph::GetInstance()->CreateInputStream(nullptr));
+    MediaStreamGraph::GetInstance()->CreateSourceStream(nullptr));
 
   // Note that the delay between removing ports in DestroyDecodedStream
   // and adding new ones won't cause a glitch since all graph operations
