@@ -1025,7 +1025,7 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
                                    getter_AddRefs(unicodeDecoder));
   }
 
-  if (!unicodeDecoder) {
+  if (!unicodeDecoder && !aHintCharset.IsEmpty()) {
     CopyUTF16toUTF8(aHintCharset, charset);
     charsetConv->GetUnicodeDecoder(charset.get(),
                                    getter_AddRefs(unicodeDecoder));
