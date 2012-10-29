@@ -19,8 +19,9 @@ extern "C" {
 }
 
 gfxQuartzNativeDrawing::gfxQuartzNativeDrawing(gfxContext* ctx,
-                                               const gfxRect& nativeRect)
-    : mContext(ctx), mNativeRect(nativeRect)
+                                               const gfxRect& nativeRect,
+                                               gfxFloat aBackingScale)
+    : mContext(ctx), mNativeRect(nativeRect), mBackingScale(aBackingScale)
 {
     mNativeRect.RoundOut();
 }
@@ -75,7 +76,9 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
         // bug 382049 - need to explicity set the composite operation to sourceOver
         CGContextSetCompositeOperation(mCGContext, kPrivateCGCompositeSourceOver);
     } else {
-        mQuartzSurface = new gfxQuartzSurface(mNativeRect.Size(),
+        nsIntSize backingSize(NSToIntFloor(mNativeRect.width * mBackingScale),
+                              NSToIntFloor(mNativeRect.height * mBackingScale));
+        mQuartzSurface = new gfxQuartzSurface(backingSize,
                                               gfxASurface::ImageFormatARGB32);
         if (mQuartzSurface->CairoStatus())
             return nullptr;
@@ -83,6 +86,7 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
 
         // grab the CGContextRef
         mCGContext = cairo_quartz_get_cg_context_with_clip(mSurfaceContext->GetCairo());
+        CGContextScaleCTM(mCGContext, mBackingScale, mBackingScale);
         CGContextTranslateCTM(mCGContext, -mNativeRect.X(), -mNativeRect.Y());
     }
 
@@ -101,6 +105,7 @@ gfxQuartzNativeDrawing::EndNativeDrawing()
 
         // Copy back to destination
         mContext->Translate(mNativeRect.TopLeft());
-        mContext->DrawSurface(mQuartzSurface, mNativeRect.Size());
+        mContext->Scale(1.0f / mBackingScale, 1.0f / mBackingScale);
+        mContext->DrawSurface(mQuartzSurface, mQuartzSurface->GetSize());
     }
 }
