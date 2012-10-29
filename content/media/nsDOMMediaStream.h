@@ -56,7 +56,7 @@ public:
   /**
    * Create an nsDOMMediaStream whose underlying stream is a SourceMediaStream.
    */
-  static already_AddRefed<nsDOMMediaStream> CreateInputStream(uint32_t aHintContents);
+  static already_AddRefed<nsDOMMediaStream> CreateSourceStream(uint32_t aHintContents);
 
   // Hints to tell the SDP generator about whether this
   // MediaStream probably has audio and/or video
@@ -101,7 +101,7 @@ public:
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a SourceMediaStream.
    */
-  static already_AddRefed<nsDOMLocalMediaStream> CreateInputStream(uint32_t aHintContents);
+  static already_AddRefed<nsDOMLocalMediaStream> CreateSourceStream(uint32_t aHintContents);
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a TrackUnionStream.

@@ -148,7 +148,7 @@ DOMCameraPreview::DOMCameraPreview(ICameraControl* aCameraControl, uint32_t aWid
 
   mImageContainer = LayerManager::CreateImageContainer();
   MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
-  mStream = gm->CreateInputStream(this);
+  mStream = gm->CreateSourceStream(this);
   mInput = GetStream()->AsSourceStream();
 
   mListener = new DOMCameraPreviewListener(this);
