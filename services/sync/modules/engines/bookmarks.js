@@ -499,6 +499,14 @@ BookmarksStore.prototype = {
       return;
     }
 
+    // Skip malformed records. (Bug 806460.)
+    if (record.type == "query" &&
+        (!record.bmkUri ||
+         !record.folderName)) {
+      this._log.warn("Skipping malformed query bookmark: " + record.id);
+      return;
+    }
+
     // Preprocess the record before doing the normal apply.
     this.preprocessTagQuery(record);
 

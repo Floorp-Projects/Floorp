@@ -384,6 +384,20 @@ add_test(function test_reparentOrphans() {
   }
 });
 
+// Tests Bug 806460, in which query records arrive with empty folder
+// names and missing bookmark URIs.
+add_test(function test_empty_query_doesnt_die() {
+  let record = new BookmarkQuery("bookmarks", "8xoDGqKrXf1P");
+  record.folderName    = "";
+  record.queryId       = "";
+  record.parentName    = "Toolbar";
+  record.parentid      = "toolbar";
+
+  // This should not throw.
+  store.applyIncoming(record);
+  run_next_test();
+});
+
 function run_test() {
   initTestLogging('Trace');
   run_next_test();
