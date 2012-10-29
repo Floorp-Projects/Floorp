@@ -1147,7 +1147,7 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
 #endif
 
     default:
-        PR_LOG(gPluginLog, PR_LOG_WARNING,
+        PR_LOG(GetPluginLog(), PR_LOG_WARNING,
                ("In PluginInstanceParent::NPP_GetValue: Unhandled NPPVariable %i (%s)",
                 (int) aVariable, NPPVariableToString(aVariable)));
         return NPERR_GENERIC_ERROR;
@@ -1168,7 +1168,7 @@ PluginInstanceParent::NPP_SetValue(NPNVariable variable, void* value)
 
     default:
         NS_ERROR("Unhandled NPNVariable in NPP_SetValue");
-        PR_LOG(gPluginLog, PR_LOG_WARNING,
+        PR_LOG(GetPluginLog(), PR_LOG_WARNING,
                ("In PluginInstanceParent::NPP_SetValue: Unhandled NPNVariable %i (%s)",
                 (int) variable, NPNVariableToString(variable)));
         return NPERR_GENERIC_ERROR;

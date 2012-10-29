@@ -12,9 +12,16 @@
 using namespace mozilla;
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo *sLog = PR_NewLogModule("nsEventQueue");
+static PRLogModuleInfo *
+GetLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("nsEventQueue");
+  return sLog;
+}
 #endif
-#define LOG(args) PR_LOG(sLog, PR_LOG_DEBUG, args)
+#define LOG(args) PR_LOG(GetLog(), PR_LOG_DEBUG, args)
 
 nsEventQueue::nsEventQueue()
   : mReentrantMonitor("nsEventQueue.mReentrantMonitor")

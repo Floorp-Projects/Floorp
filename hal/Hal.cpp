@@ -55,7 +55,15 @@ using namespace mozilla::services;
 namespace mozilla {
 namespace hal {
 
-PRLogModuleInfo *sHalLog = PR_NewLogModule("hal");
+PRLogModuleInfo *
+GetHalLog()
+{
+  static PRLogModuleInfo *sHalLog;
+  if (!sHalLog) {
+    sHalLog = PR_NewLogModule("hal");
+  }
+  return sHalLog;
+}
 
 namespace {
 
