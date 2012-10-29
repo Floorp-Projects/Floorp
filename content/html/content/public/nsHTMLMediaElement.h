@@ -390,6 +390,9 @@ protected:
   class MediaLoadListener;
   class StreamListener;
 
+  virtual void GetItemValueText(nsAString& text);
+  virtual void SetItemValueText(const nsAString& text);
+
   class WakeLockBoolWrapper {
   public:
     WakeLockBoolWrapper(bool val = false) : mValue(val), mOuter(NULL), mWakeLock(NULL) {}
