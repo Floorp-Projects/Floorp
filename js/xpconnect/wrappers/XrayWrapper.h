@@ -95,9 +95,9 @@ class XrayWrapper : public Base {
 
 typedef XrayWrapper<js::CrossCompartmentWrapper, DOMXrayTraits > XrayDOM;
 
-class SandboxProxyHandler : public js::DirectWrapper {
+class SandboxProxyHandler : public js::Wrapper {
 public:
-    SandboxProxyHandler() : js::DirectWrapper(0)
+    SandboxProxyHandler() : js::Wrapper(0)
     {
     }
 

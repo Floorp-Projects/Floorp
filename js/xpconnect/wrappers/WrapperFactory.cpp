@@ -29,7 +29,7 @@ namespace xpc {
 // transparent wrapper in the origin (non-chrome) compartment. When
 // an object with that special wrapper applied crosses into chrome,
 // we know to not apply an X-ray wrapper.
-DirectWrapper XrayWaiver(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
+Wrapper XrayWaiver(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
 
 // When objects for which we waived the X-ray wrapper cross into
 // chrome, we wrap them into a special cross-compartment wrapper
@@ -560,9 +560,9 @@ WrapperFactory::WrapForSameCompartmentXray(JSContext *cx, JSObject *obj)
     // Select the appropriate proxy handler.
     Wrapper *wrapper = NULL;
     if (type == XrayForWrappedNative)
-        wrapper = &XrayWrapper<DirectWrapper>::singleton;
+        wrapper = &XrayWrapper<Wrapper>::singleton;
     else if (type == XrayForDOMObject)
-        wrapper = &XrayWrapper<DirectWrapper, DOMXrayTraits>::singleton;
+        wrapper = &XrayWrapper<Wrapper, DOMXrayTraits>::singleton;
     else
         MOZ_NOT_REACHED("Bad Xray type");
 
