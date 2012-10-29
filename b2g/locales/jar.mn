@@ -14,3 +14,5 @@
 
 * locale/@AB_CD@/browser/netError.dtd             (%chrome/overrides/netError.dtd)
 % override chrome://global/locale/netError.dtd    chrome://browser/locale/netError.dtd
+* locale/@AB_CD@/browser/appstrings.properties    (%chrome/overrides/appstrings.properties)
+% override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
