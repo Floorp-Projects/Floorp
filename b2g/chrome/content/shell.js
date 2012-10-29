@@ -158,7 +158,7 @@ var shell = {
 
     let manifestURL = this.manifestURL;
     // <html:iframe id="homescreen"
-    //              mozbrowser="true" mozallowfullscreen="true"
+    //              mozbrowser="true" allowfullscreen="true"
     //              style="overflow: hidden; -moz-box-flex: 1; border: none;"
     //              src="data:text/html;charset=utf-8,%3C!DOCTYPE html>%3Cbody style='background:black;'>"/>
     let browserFrame =
@@ -166,7 +166,7 @@ var shell = {
     browserFrame.setAttribute('id', 'homescreen');
     browserFrame.setAttribute('mozbrowser', 'true');
     browserFrame.setAttribute('mozapp', manifestURL);
-    browserFrame.setAttribute('mozallowfullscreen', 'true');
+    browserFrame.setAttribute('allowfullscreen', 'true');
     browserFrame.setAttribute('style', "overflow: hidden; -moz-box-flex: 1; border: none;");
     browserFrame.setAttribute('src', "data:text/html;charset=utf-8,%3C!DOCTYPE html>%3Cbody style='background:black;");
     document.getElementById('shell').appendChild(browserFrame);

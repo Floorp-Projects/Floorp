@@ -9058,7 +9058,7 @@ nsDocument::IsFullScreenEnabled(bool aCallerIsChrome, bool aLogFailure)
     return false;
   }
 
-  // Ensure that all ancestor <iframe> elements have the mozallowfullscreen
+  // Ensure that all ancestor <iframe> elements have the allowfullscreen
   // boolean attribute set.
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
   bool allowed = false;
