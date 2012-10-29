@@ -5360,8 +5360,6 @@ Selection::ScrollIntoView(SelectionRegion aRegion,
         return result;
     }
 
-    StCaretHider  caretHider(caret);      // stack-based class hides and shows the caret
-
     //
     // Scroll the selection region into view.
     //
