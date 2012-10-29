@@ -3648,6 +3648,41 @@ CanvasRenderingContext2D::IsPointInPath(float x, float y, bool *retVal)
   return NS_OK;
 }
 
+bool
+CanvasRenderingContext2D::MozIsPointInStroke(double x, double y)
+{
+  if (!FloatValidate(x,y)) {
+    return false;
+  }
+
+  EnsureUserSpacePath(false);
+  if (!mPath) {
+    return false;
+  }
+
+  const ContextState &state = CurrentState();
+
+  StrokeOptions strokeOptions(state.lineWidth,
+                              state.lineJoin,
+                              state.lineCap,
+                              state.miterLimit,
+                              state.dash.Length(),
+                              state.dash.Elements(),
+                              state.dashOffset);
+
+  if (mPathTransformWillUpdate) {
+    return mPath->StrokeContainsPoint(strokeOptions, Point(x, y), mPathToDS);
+  }
+  return mPath->StrokeContainsPoint(strokeOptions, Point(x, y), mTarget->GetTransform());
+}
+
+NS_IMETHODIMP
+CanvasRenderingContext2D::MozIsPointInStroke(float x, float y, bool *retVal)
+{
+  *retVal = MozIsPointInStroke(x, y);
+  return NS_OK;
+}
+
 //
 // image
 //
