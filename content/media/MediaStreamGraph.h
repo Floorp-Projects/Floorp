@@ -461,12 +461,9 @@ protected:
   // Temporary data for ordering streams by dependency graph
   bool mHasBeenOrdered;
   bool mIsOnOrderingStack;
-  // Temporary data to record if the stream is being consumed
-  // (i.e. has track data being played, or is feeding into some stream
-  // that is being consumed).
+  // True if the stream is being consumed (i.e. has track data being played,
+  // or is feeding into some stream that is being consumed).
   bool mIsConsumed;
-  // True if the above value is accurate.
-  bool mKnowIsConsumed;
   // Temporary data for computing blocking status of streams
   // True if we've added this stream to the set of streams we're computing
   // blocking for.
