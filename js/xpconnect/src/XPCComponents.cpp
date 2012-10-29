@@ -3219,6 +3219,51 @@ xpc::SandboxProxyHandler::getOwnPropertyDescriptor(JSContext *cx,
     return true;
 }
 
+/*
+ * Reuse the BaseProxyHandler versions of the derived traps that are implemented
+ * in terms of the fundamental traps.
+ */
+
+bool
+xpc::SandboxProxyHandler::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
+{
+    return BaseProxyHandler::has(cx, proxy, id, bp);
+}
+bool
+xpc::SandboxProxyHandler::hasOwn(JSContext *cx, JSObject *proxy, jsid id,
+                                 bool *bp)
+{
+    return BaseProxyHandler::hasOwn(cx, proxy, id, bp);
+}
+
+bool
+xpc::SandboxProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver,
+                              jsid id, Value *vp)
+{
+    return BaseProxyHandler::get(cx, proxy, receiver, id, vp);
+}
+
+bool
+xpc::SandboxProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver,
+                              jsid id, bool strict, Value *vp)
+{
+    return BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
+}
+
+bool
+xpc::SandboxProxyHandler::keys(JSContext *cx, JSObject *proxy,
+                               AutoIdVector &props)
+{
+    return BaseProxyHandler::keys(cx, proxy, props);
+}
+
+bool
+xpc::SandboxProxyHandler::iterate(JSContext *cx, JSObject *proxy, unsigned flags,
+                                  Value *vp)
+{
+    return BaseProxyHandler::iterate(cx, proxy, flags, vp);
+}
+
 nsresult
 xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, SandboxOptions& options)
 {
