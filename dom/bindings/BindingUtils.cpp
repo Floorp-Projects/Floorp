@@ -687,7 +687,7 @@ XrayResolveProperty(JSContext* cx, JSObject* wrapper, jsid id,
 
 static bool
 ResolvePrototypeOrConstructor(JSContext* cx, JSObject* wrapper, JSObject* obj,
-                              size_t protoAndIfaceArrayIndex,
+                              size_t protoAndIfaceArrayIndex, unsigned attrs,
                               JSPropertyDescriptor* desc)
 {
   JSObject* global = js::GetGlobalForObjectCrossCompartment(obj);
@@ -700,7 +700,7 @@ ResolvePrototypeOrConstructor(JSContext* cx, JSObject* wrapper, JSObject* obj,
     }
     desc->obj = wrapper;
     desc->shortid = 0;
-    desc->attrs = JSPROP_PERMANENT | JSPROP_READONLY;
+    desc->attrs = attrs;
     desc->getter = JS_PropertyStub;
     desc->setter = JS_StrictPropertyStub;
     desc->value = JS::ObjectValue(*protoOrIface);
@@ -718,6 +718,7 @@ XrayResolveNativeProperty(JSContext* cx, JSObject* wrapper,
     return nativePropertyHooks->mPrototypeID == prototypes::id::_ID_Count ||
            ResolvePrototypeOrConstructor(cx, wrapper, obj,
                                          nativePropertyHooks->mPrototypeID,
+                                         JSPROP_PERMANENT | JSPROP_READONLY,
                                          desc);
   }
 
@@ -725,7 +726,7 @@ XrayResolveNativeProperty(JSContext* cx, JSObject* wrapper,
     return nativePropertyHooks->mConstructorID == constructors::id::_ID_Count ||
            ResolvePrototypeOrConstructor(cx, wrapper, obj,
                                          nativePropertyHooks->mConstructorID,
-                                         desc);
+                                         0, desc);
   }
 
   const NativePropertiesHolder& nativeProperties =
