@@ -181,50 +181,68 @@ public final class GeckoProfile {
         return mContext.getFilesDir();
     }
 
+    /**
+     * Determines whether the tabs from the previous session should be
+     * automatically restored.
+     *
+     * sessionstore.js is moved to sessionstore.bak on a clean quit, so if we
+     * still have sessionstore.js at startup, that means we were killed
+     * uncleanly. This is caused by either 1) a crash, or 2) being killed by
+     * android because of memory constraints. Either way, the existence of this
+     * file indicates that we'll want to restore the previous session.
+     *
+     * @return whether the previous session should be restored
+     */
     public boolean shouldRestoreSession() {
-        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start check sessionstore.js exists");
-        File dir = getDir();
-        if (dir == null)
-            return false;
-
-        File sessionFile = new File(dir, "sessionstore.js");
-        if (!sessionFile.exists())
+        File sessionFile = getFile("sessionstore.js");
+        if (sessionFile == null || !sessionFile.exists())
             return false;
 
         boolean shouldRestore = (System.currentTimeMillis() - sessionFile.lastModified() < SESSION_TIMEOUT);
-        Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - finish check sessionstore.js exists");
         return shouldRestore;
     }
 
-    public String readSessionFile(boolean geckoReady) {
-        File dir = getDir();
-        if (dir == null) {
-            return null;
+    /**
+     * Moves the session file to the backup session file.
+     *
+     * sessionstore.js should hold the current session, and sessionstore.bak
+     * should hold the previous session (where it is used to read the "tabs
+     * from last time"). Normally, sessionstore.js is moved to sessionstore.bak
+     * on a clean quit, but this doesn't happen if Fennec crashed. Thus, this
+     * method should be called after a crash so sessionstore.bak correctly
+     * holds the previous session.
+     */
+    public void moveSessionFile() {
+        File sessionFile = getFile("sessionstore.js");
+        if (sessionFile != null && sessionFile.exists()) {
+            File sessionFileBackup = getFile("sessionstore.bak");
+            sessionFile.renameTo(sessionFileBackup);
         }
+    }
 
-        File sessionFile = null;
-        if (! geckoReady) {
-            // we might have crashed, in which case sessionstore.js has tabs from last time
-            sessionFile = new File(dir, "sessionstore.js");
-            if (! sessionFile.exists()) {
-                sessionFile = null;
-            }
-        }
-        if (sessionFile == null) {
-            // either we did not crash, so previous session was moved to sessionstore.bak on quit,
-            // or sessionstore init has occurred, so previous session will always
-            // be in sessionstore.bak
-            sessionFile = new File(dir, "sessionstore.bak");
-            // no need to check if the session file exists here; readFile will throw
-            // an IOException if it does not
-        }
+    /**
+     * Get the string from a session file.
+     *
+     * The session can either be read from sessionstore.js or sessionstore.bak.
+     * In general, sessionstore.js holds the current session, and
+     * sessionstore.bak holds the previous session.
+     *
+     * @param readBackup if true, the session is read from sessionstore.bak;
+     *                   otherwise, the session is read from sessionstore.js
+     *
+     * @return the session string
+     */
+    public String readSessionFile(boolean readBackup) {
+        File sessionFile = getFile(readBackup ? "sessionstore.bak" : "sessionstore.js");
 
         try {
-            return readFile(sessionFile);
+            if (sessionFile != null && sessionFile.exists()) {
+                return readFile(sessionFile);
+            }
         } catch (IOException ioe) {
-            Log.i(LOGTAG, "Unable to read session file " + sessionFile.getAbsolutePath());
-            return null;
+            Log.e(LOGTAG, "Unable to read session file", ioe);
         }
+        return null;
     }
 
     public String readFile(String filename) throws IOException {
