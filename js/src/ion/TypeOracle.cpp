@@ -82,7 +82,7 @@ TypeInferenceOracle::binaryTypes(JSScript *script, jsbytecode *pc)
     JSOp op = (JSOp)*pc;
 
     BinaryTypes res;
-    if ((js_CodeSpec[op].format & JOF_INCDEC) || op == JSOP_NEG || op == JSOP_POS) {
+    if (op == JSOP_NEG || op == JSOP_POS) {
         res.lhsTypes = script->analysis()->poppedTypes(pc, 0);
         res.rhsTypes = NULL;
         res.outTypes = script->analysis()->pushedTypes(pc, 0);
@@ -92,30 +92,6 @@ TypeInferenceOracle::binaryTypes(JSScript *script, jsbytecode *pc)
         res.outTypes = script->analysis()->pushedTypes(pc, 0);
     }
     return res;
-}
-
-TypeOracle::BinaryTypes
-TypeInferenceOracle::incslot(JSScript *script, jsbytecode *pc)
-{
-    JSOp op = JSOp(*pc);
-    unsigned index = GET_SLOTNO(pc);
- 
-    StackTypeSet *types = NULL;
-    if (js_CodeSpec[op].type() == JOF_LOCAL) {
-        if (script->analysis()->trackSlot(LocalSlot(script, index)))
-            return binaryTypes(script, pc);
-        types = TypeScript::LocalTypes(script, index);
-    } else {
-        if (script->analysis()->trackSlot(ArgSlot(index)))
-            return binaryTypes(script, pc);
-        types = TypeScript::ArgTypes(script, index);
-    }
-
-    BinaryTypes b;
-    b.lhsTypes = types;
-    b.rhsTypes = NULL;
-    b.outTypes = script->analysis()->pushedTypes(pc, 0);
-    return b;
 }
 
 TypeOracle::Unary
@@ -137,7 +113,7 @@ TypeInferenceOracle::binaryOp(JSScript *script, jsbytecode *pc)
     JSOp op = (JSOp)*pc;
 
     Binary res;
-    if ((js_CodeSpec[op].format & JOF_INCDEC) || op == JSOP_NEG || op == JSOP_POS) {
+    if (op == JSOP_NEG || op == JSOP_POS) {
         res.lhs = getMIRType(script->analysis()->poppedTypes(pc, 0));
         res.rhs = MIRType_Int32;
         res.rval = getMIRType(script->analysis()->pushedTypes(pc, 0));
