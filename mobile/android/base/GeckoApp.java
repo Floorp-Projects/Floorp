@@ -1594,7 +1594,7 @@ abstract public class GeckoApp
             mRestoreMode = GeckoAppShell.RESTORE_CRASH;
         }
 
-        boolean isExternalURL = passedUri != null && !passedUri.equals("about:home");
+        final boolean isExternalURL = passedUri != null && !passedUri.equals("about:home");
         StartupAction startupAction;
         if (isExternalURL) {
             startupAction = StartupAction.URL;
@@ -1627,10 +1627,69 @@ abstract public class GeckoApp
 
         Tabs.registerOnTabsChangedListener(this);
 
+        // If we are doing a restore, read the session data and send it to Gecko
+        if (mRestoreMode != GeckoAppShell.RESTORE_NONE) {
+            try {
+                String sessionString = getProfile().readSessionFile(false);
+                if (sessionString == null) {
+                    throw new IOException("could not read from session file");
+                }
+
+                // If we are doing an OOM restore, parse the session data and
+                // stub the restored tabs immediately. This allows the UI to be
+                // updated before Gecko has restored.
+                if (mRestoreMode == GeckoAppShell.RESTORE_OOM) {
+                    final JSONArray tabs = new JSONArray();
+                    SessionParser parser = new SessionParser() {
+                        @Override
+                        public void onTabRead(SessionTab sessionTab) {
+                            JSONObject tabObject = sessionTab.getTabObject();
+
+                            int flags = Tabs.LOADURL_NEW_TAB;
+                            flags |= ((isExternalURL || !sessionTab.isSelected()) ? Tabs.LOADURL_DELAY_LOAD : 0);
+                            flags |= (tabObject.optBoolean("desktopMode") ? Tabs.LOADURL_DESKTOP : 0);
+
+                            Tab tab = Tabs.getInstance().loadUrl(sessionTab.getSelectedUrl(), flags);
+                            tab.updateTitle(sessionTab.getSelectedTitle());
+
+                            try {
+                                tabObject.put("tabId", tab.getId());
+                            } catch (JSONException e) {
+                                Log.e(LOGTAG, "JSON error", e);
+                            }
+                            tabs.put(tabObject);
+                        }
+                    };
+
+                    parser.parse(sessionString);
+
+                    if (tabs.length() > 0) {
+                        sessionString = new JSONObject().put("windows", new JSONArray().put(new JSONObject().put("tabs", tabs))).toString();
+                    } else {
+                        throw new Exception("No tabs could be read from session file");
+                    }
+                }
+
+                JSONObject restoreData = new JSONObject();
+                restoreData.put("restoringOOM", mRestoreMode == GeckoAppShell.RESTORE_OOM);
+                restoreData.put("sessionString", sessionString);
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Restore", restoreData.toString()));
+            } catch (Exception e) {
+                // If restore failed, do a normal startup
+                Log.e(LOGTAG, "An error occurred during restore", e);
+                mRestoreMode = GeckoAppShell.RESTORE_NONE;
+            }
+        }
+
+        // Move the session file if it exists
+        if (mRestoreMode != GeckoAppShell.RESTORE_OOM) {
+            getProfile().moveSessionFile();
+        }
+
         initializeChrome(passedUri, isExternalURL);
 
+        // Show telemetry door hanger if we aren't restoring a session
         if (mRestoreMode == GeckoAppShell.RESTORE_NONE) {
-            // show telemetry door hanger if we aren't restoring a session
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Telemetry:Prompt", null));
         }
 

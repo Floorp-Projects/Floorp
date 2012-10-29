@@ -463,7 +463,7 @@ public class AboutHomeContent extends ScrollView
     }
 
     private void readLastTabs() {
-        String jsonString = mActivity.getProfile().readSessionFile(GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning));
+        String jsonString = mActivity.getProfile().readSessionFile(true);
         if (jsonString == null) {
             // no previous session data
             return;
