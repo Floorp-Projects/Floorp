@@ -67,6 +67,9 @@ abstract public class BrowserApp extends GeckoApp
         public String label;
         public String icon;
         public boolean checkable;
+        public boolean checked;
+        public boolean enabled;
+        public boolean visible;
         public int parent;
     }
 
@@ -364,6 +367,10 @@ abstract public class BrowserApp extends GeckoApp
                 MenuItemInfo info = new MenuItemInfo();
                 info.label = message.getString("name");
                 info.id = message.getInt("id") + ADDON_MENU_OFFSET;
+                info.checkable = false;
+                info.checked = false;
+                info.enabled = true;
+                info.visible = true;
                 String iconRes = null;
                 try { // icon is optional
                     iconRes = message.getString("icon");
@@ -387,6 +394,14 @@ abstract public class BrowserApp extends GeckoApp
                 mMainHandler.post(new Runnable() {
                     public void run() {
                         removeAddonMenuItem(id);
+                    }
+                });
+            } else if (event.equals("Menu:Update")) {
+                final int id = message.getInt("id") + ADDON_MENU_OFFSET;
+                final JSONObject options = message.getJSONObject("options");
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        updateAddonMenuItem(id, options);
                     }
                 });
             } else if (event.equals("CharEncoding:Data")) {
@@ -814,6 +829,9 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         item.setCheckable(info.checkable);
+        item.setChecked(info.checked);
+        item.setEnabled(info.enabled);
+        item.setVisible(info.visible);
     }
 
     private void removeAddonMenuItem(int id) {
@@ -833,6 +851,54 @@ abstract public class BrowserApp extends GeckoApp
         MenuItem menuItem = mMenu.findItem(id);
         if (menuItem != null)
             mMenu.removeItem(id);
+    }
+
+    private void updateAddonMenuItem(int id, JSONObject options) {
+        // Set attribute for the menu item in cache, if available
+        if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
+            for (MenuItemInfo item : mAddonMenuItemsCache) {
+                 if (item.id == id) {
+                     try {
+                        item.checkable = options.getBoolean("checkable");
+                     } catch (JSONException e) {}
+
+                     try {
+                        item.checked = options.getBoolean("checked");
+                     } catch (JSONException e) {}
+
+                     try {
+                        item.enabled = options.getBoolean("enabled");
+                     } catch (JSONException e) {}
+
+                     try {
+                        item.visible = options.getBoolean("visible");
+                     } catch (JSONException e) {}
+                     break;
+                 }
+            }
+        }
+
+        if (mMenu == null)
+            return;
+
+        MenuItem menuItem = mMenu.findItem(id);
+        if (menuItem != null) {
+            try {
+               menuItem.setCheckable(options.getBoolean("checkable"));
+            } catch (JSONException e) {}
+
+            try {
+               menuItem.setChecked(options.getBoolean("checked"));
+            } catch (JSONException e) {}
+
+            try {
+               menuItem.setEnabled(options.getBoolean("enabled"));
+            } catch (JSONException e) {}
+
+            try {
+               menuItem.setVisible(options.getBoolean("visible"));
+            } catch (JSONException e) {}
+        }
     }
 
     @Override
