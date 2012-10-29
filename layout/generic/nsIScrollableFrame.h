@@ -14,7 +14,8 @@
 #include "nsCoord.h"
 #include "nsPresContext.h"
 
-#define NS_DEFAULT_VERTICAL_SCROLL_DISTANCE 3
+#define NS_DEFAULT_VERTICAL_SCROLL_DISTANCE   3
+#define NS_DEFAULT_HORIZONTAL_SCROLL_DISTANCE 5
 
 class nsBoxLayoutState;
 class nsIScrollPositionListener;
