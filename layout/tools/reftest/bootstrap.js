@@ -27,6 +27,8 @@ function setDefaultPrefs() {
     // Disable addon updates and prefetching so we don't leak them
     branch.setBoolPref("extensions.update.enabled", false);
     branch.setBoolPref("extensions.getAddons.cache.enabled", false);
+    // Disable blocklist updates so we don't have them reported as leaks
+    branch.setBoolPref("extensions.blocklist.enabled", false);
     // Make url-classifier updates so rare that they won't affect tests
     branch.setIntPref("urlclassifier.updateinterval", 172800);
     // Disable high-quality downscaling, since it makes reftests more difficult.
