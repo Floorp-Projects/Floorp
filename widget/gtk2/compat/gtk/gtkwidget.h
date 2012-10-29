@@ -66,6 +66,12 @@ gtk_widget_has_grab(GtkWidget *widget)
   return GTK_WIDGET_HAS_GRAB(widget);
 }
 
+static inline gboolean
+gtk_widget_get_has_window(GtkWidget *widget)
+{
+  return !GTK_WIDGET_NO_WINDOW(widget);
+}
+
 static inline void
 gtk_widget_get_allocation(GtkWidget *widget, GtkAllocation *allocation)
 {
@@ -85,6 +91,15 @@ gtk_widget_set_can_focus(GtkWidget *widget, gboolean can_focus)
     GTK_WIDGET_SET_FLAGS (widget, GTK_CAN_FOCUS);
   else
     GTK_WIDGET_UNSET_FLAGS (widget, GTK_CAN_FOCUS);
+}
+
+static inline void
+gtk_widget_set_has_window(GtkWidget *widget, gboolean has_window)
+{
+  if (has_window)
+    GTK_WIDGET_UNSET_FLAGS (widget, GTK_NO_WINDOW);
+  else
+    GTK_WIDGET_SET_FLAGS (widget, GTK_NO_WINDOW);
 }
 
 static inline void
