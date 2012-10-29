@@ -127,10 +127,6 @@ public class GeckoAppShell
 
     static private final boolean LOGGING = false;
 
-    static public final int RESTORE_NONE = 0;
-    static public final int RESTORE_OOM = 1;
-    static public final int RESTORE_CRASH = 2;
-
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
     static File sHomeDir = null;
@@ -501,7 +497,7 @@ public class GeckoAppShell
         }
     }
 
-    public static void runGecko(String apkPath, String args, String url, String type, int restoreMode) {
+    public static void runGecko(String apkPath, String args, String url, String type) {
         WebAppAllocator.getInstance();
 
         Looper.prepare();
@@ -521,8 +517,6 @@ public class GeckoAppShell
             combinedArgs += " -url " + url;
         if (type != null)
             combinedArgs += " " + type;
-        if (restoreMode != RESTORE_NONE)
-            combinedArgs += " -restoremode " + restoreMode;
 
         DisplayMetrics metrics = GeckoApp.mAppContext.getResources().getDisplayMetrics();
         combinedArgs += " -width " + metrics.widthPixels + " -height " + metrics.heightPixels;
