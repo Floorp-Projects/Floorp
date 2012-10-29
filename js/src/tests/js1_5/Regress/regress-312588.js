@@ -11,17 +11,14 @@ var actual = 'No Crash';
 var expect = 'No Crash';
 
 printBugNumber(BUGNUMBER);
-printStatus (summary);
-expectExitCode(3);
+printStatus(summary);
 
 var a = new Array();
 
 try
 {
-  while (1)
-  {
+  for (var i = 0; i < 1e6; i++)
     (a = new Array(a)).sort();
-  }
 }
 catch(ex)
 {
