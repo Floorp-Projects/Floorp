@@ -5,6 +5,7 @@
 
 #include "CityHash.h"
 #include "cityhash/city.h"
+#include <tchar.h>
 
 #define MAX_STRLEN 1024
 
@@ -56,11 +57,10 @@ void pushString(const TCHAR *str)
 extern "C"
 {
 
-CITYHASH_API
 void GetCityHash64(HWND hwndParent, int string_size, char *variables, stack_t **stacktop)
 {
   TCHAR hashString[MAX_STRLEN];
-  TCHAR hexResult[18];
+  TCHAR hexResult[18] = { _T('\0') };
 
   g_stacktop = stacktop;
   g_variables = variables;
@@ -73,7 +73,9 @@ void GetCityHash64(HWND hwndParent, int string_size, char *variables, stack_t **
     return;
   }
   uint64 result = CityHash64((const char*)&hashString[0], wcslen(hashString)*sizeof(TCHAR));
-  swprintf_s(hexResult, 17, L"%16I64X", result);
+  // If the hash happens to work out to less than 16 hash digits it will just
+  // use less of the buffer.
+  swprintf(hexResult, L"%I64X", result);
   pushString(hexResult);
 }
 

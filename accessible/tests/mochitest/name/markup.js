@@ -6,7 +6,7 @@ var gNameRulesFileURL = "markuprules.xml";
 var gRuleDoc = null;
 
 // Debuggin stuff.
-var gDumpToConsole = false;
+var gDumpToConsole = true;
 
 /**
  * Start name tests. Run through markup elements and test names for test
@@ -14,6 +14,8 @@ var gDumpToConsole = false;
  */
 function testNames()
 {
+  enableLogging("tree");
+
   var request = new XMLHttpRequest();
   request.open("get", gNameRulesFileURL, false);
   request.send();
@@ -58,8 +60,13 @@ var gTestIterator =
 
     this.ruleIdx++;
     if (this.ruleIdx == this.ruleElms.length) {
+      // When test is finished then name is empty and no explict-name.
+      testName(this.elm, null, "No name test. ");
+      testAbsentAttrs(this.elm, {"explicit-name" : "true"});
+
       this.markupIdx++;
       if (this.markupIdx == this.markupElms.length) {
+        disableLogging("tree");
         SimpleTest.finish();
         return;
       }
@@ -105,6 +112,12 @@ function testNamesForMarkup(aMarkupElm)
     var newChild = document.importNode(child, true);
     div.appendChild(newChild);
     child = child.nextSibling;
+  }
+
+  // Wave over images to create frames.
+  var imgElms = div.getElementsByTagName("html:img");
+  for (var idx = 0; idx < imgElms.length; idx++) {
+    waveOverImageMap(imgElms[idx]);
   }
 
   if (gDumpToConsole) {

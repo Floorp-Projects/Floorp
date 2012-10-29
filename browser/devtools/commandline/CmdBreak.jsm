@@ -80,9 +80,9 @@ gcli.addCommand({
           let dbg = win.DebuggerUI.getDebugger();
           let files = [];
           if (dbg) {
-            let scriptsView = dbg.contentWindow.DebuggerView.Scripts;
-            for each (let script in scriptsView.scriptLocations) {
-              files.push(script);
+            let sourcesView = dbg.contentWindow.DebuggerView.Sources;
+            for (let item in sourcesView) {
+              files.push(item.value);
             }
           }
           return files;

@@ -29,7 +29,7 @@ function testAddBreakpoint()
   gDebugger.addEventListener("Debugger:FetchedVariables", function test() {
     gDebugger.removeEventListener("Debugger:FetchedVariables", test, false);
     executeSoon(function() {
-      var frames = gDebugger.DebuggerView.StackFrames._frames;
+      var frames = gDebugger.DebuggerView.StackFrames._container._list;
 
       is(gDebugger.DebuggerController.activeThread.state, "paused",
          "The debugger statement was reached.");

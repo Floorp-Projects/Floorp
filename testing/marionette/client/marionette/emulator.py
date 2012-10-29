@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
+from errors import *
 from mozprocess import ProcessHandlerMixin
 import multiprocessing
 import os
@@ -39,7 +40,7 @@ class Emulator(object):
 
     def __init__(self, homedir=None, noWindow=False, logcat_dir=None,
                  arch="x86", emulatorBinary=None, res='480x800', sdcard=None,
-                 userdata=None, gecko_path=None):
+                 userdata=None):
         self.port = None
         self._emulator_launched = False
         self.proc = None
@@ -62,7 +63,6 @@ class Emulator(object):
             self.homedir = os.path.expanduser(homedir)
         self.dataImg = userdata
         self.copy_userdata = self.dataImg is None
-        self.gecko_path = gecko_path
 
     def _check_for_b2g(self):
         if self.homedir is None:
@@ -278,6 +278,34 @@ class Emulator(object):
         else:
             self._adb_started = False
 
+    def wait_for_system_message(self, marionette):
+        marionette.start_session()
+        marionette.set_context(marionette.CONTEXT_CHROME)
+        marionette.set_script_timeout(45000)
+        # Telephony API's won't be available immediately upon emulator
+        # boot; we have to wait for the syste-message-listener-ready
+        # message before we'll be able to use them successfully.  See
+        # bug 792647.
+        print 'waiting for system-message-listener-ready...'
+        try:
+            marionette.execute_async_script("""
+waitFor(
+    function() { marionetteScriptFinished(true); },
+    function() { return isSystemMessageListenerReady(); }
+);
+            """)
+        except ScriptTimeoutException:
+            print 'timed out'
+            # We silently ignore the timeout if it occurs, since
+            # isSystemMessageListenerReady() isn't available on
+            # older emulators.  45s *should* be enough of a delay
+            # to allow telephony API's to work.
+            pass
+        print 'done'
+        marionette.set_context(marionette.CONTEXT_CONTENT)
+        marionette.delete_session()
+
+
     def connect(self):
         self._check_for_adb()
         self.start_adb()
@@ -290,8 +318,6 @@ class Emulator(object):
                 raise Exception('timed out waiting for emulator to be available')
             online, offline = self._get_adb_devices()
         self.port = int(list(online)[0])
-
-        self.install_gecko()
 
     def start(self):
         self._check_for_b2g()
@@ -331,8 +357,6 @@ class Emulator(object):
         # setup DNS fix for networking
         self._run_adb(['shell', 'setprop', 'net.dns1', '10.0.2.3'])
 
-        self.install_gecko()
-
     def _save_logcat_proc(self, filename, cmd):
         self.logcat_proc = LogcatProc(filename, cmd)
         self.logcat_proc.run()
@@ -340,21 +364,21 @@ class Emulator(object):
         self.logcat_proc.waitForFinish()
         self.logcat_proc = None
 
-    def install_gecko(self):
+    def install_gecko(self, gecko_path, marionette):
         """
         Install gecko into the emulator using adb push.  Restart b2g after the
         installation.
         """
-        if not self.gecko_path:
-            return
         # need to remount so we can write to /system/b2g
         self._run_adb(['remount'])
         self._run_adb(['shell', 'stop', 'b2g'])
         self._run_adb(['shell', 'rm', '-rf', '/system/b2g/*.so'])
         print 'installing gecko binaries'
-        self._run_adb(['push', self.gecko_path, '/system/b2g'])
+        self._run_adb(['push', gecko_path, '/system/b2g'])
         print 'restarting B2G'
         self._run_adb(['shell', 'start', 'b2g'])
+        self.wait_for_port()
+        self.wait_for_system_message(marionette)
 
     def rotate_log(self, srclog, index=1):
         """ Rotate a logfile, by recursively rotating logs further in the sequence,

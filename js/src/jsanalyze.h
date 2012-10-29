@@ -377,19 +377,11 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
       case JSOP_GETARG:
       case JSOP_CALLARG:
       case JSOP_SETARG:
-      case JSOP_INCARG:
-      case JSOP_DECARG:
-      case JSOP_ARGINC:
-      case JSOP_ARGDEC:
         return ArgSlot(GET_SLOTNO(pc));
 
       case JSOP_GETLOCAL:
       case JSOP_CALLLOCAL:
       case JSOP_SETLOCAL:
-      case JSOP_INCLOCAL:
-      case JSOP_DECLOCAL:
-      case JSOP_LOCALINC:
-      case JSOP_LOCALDEC:
         return LocalSlot(script, GET_SLOTNO(pc));
 
       case JSOP_THIS:
@@ -405,21 +397,7 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
 static inline bool
 BytecodeUpdatesSlot(JSOp op)
 {
-    switch (op) {
-      case JSOP_SETARG:
-      case JSOP_SETLOCAL:
-      case JSOP_INCARG:
-      case JSOP_DECARG:
-      case JSOP_ARGINC:
-      case JSOP_ARGDEC:
-      case JSOP_INCLOCAL:
-      case JSOP_DECLOCAL:
-      case JSOP_LOCALINC:
-      case JSOP_LOCALDEC:
-        return true;
-      default:
-        return false;
-    }
+    return (op == JSOP_SETARG || op == JSOP_SETLOCAL);
 }
 
 static inline int32_t

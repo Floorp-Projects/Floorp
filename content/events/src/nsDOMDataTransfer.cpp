@@ -443,7 +443,7 @@ nsDOMDataTransfer::MozGetDataAt(const nsAString& aFormat,
   nsTArray<TransferItem>& item = mItems[aIndex];
 
   // Check if the caller is allowed to access the drag data. Callers with
-  // UniversalXPConnect privileges can always read the data. During the
+  // chrome privileges can always read the data. During the
   // drop event, allow retrieving the data except in the case where the
   // source of the drag is in a child frame of the caller. In that case,
   // we only allow access to data of the same principal. During other events,
@@ -451,7 +451,7 @@ nsDOMDataTransfer::MozGetDataAt(const nsAString& aFormat,
   nsIPrincipal* principal = nullptr;
   if (mIsCrossDomainSubFrameDrop ||
       (mEventType != NS_DRAGDROP_DROP && mEventType != NS_DRAGDROP_DRAGDROP &&
-       !nsContentUtils::CallerHasUniversalXPConnect())) {
+       !nsContentUtils::IsCallerChrome())) {
     nsresult rv = NS_OK;
     principal = GetCurrentPrincipal(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -520,7 +520,7 @@ nsDOMDataTransfer::MozSetDataAt(const nsAString& aFormat,
   // XXX perhaps this should also limit any non-string type as well
   if ((aFormat.EqualsLiteral("application/x-moz-file-promise") ||
        aFormat.EqualsLiteral("application/x-moz-file")) &&
-       !nsContentUtils::CallerHasUniversalXPConnect()) {
+       !nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 

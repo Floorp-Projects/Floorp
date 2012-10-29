@@ -22,9 +22,18 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "nsIMessageListenerManager");
 
 XPCOMUtils.defineLazyGetter(this, "mRIL", function () {
-  return Cc["@mozilla.org/telephony/system-worker-manager;1"].
-           getService(Ci.nsIInterfaceRequestor).
-           getInterface(Ci.nsIRadioInterfaceLayer);
+  let telephony = Cc["@mozilla.org/telephony/system-worker-manager;1"];
+  if (!telephony) {
+    // Return a mock RIL because B2G Desktop build does not support telephony.
+    return {
+      getICCContacts: function(aContactType, aCallback) {
+        aCallback("!telephony", null, null);
+      }
+    };
+  }
+  return telephony.
+         getService(Ci.nsIInterfaceRequestor).
+         getInterface(Ci.nsIRadioInterfaceLayer);
 });
 
 let myGlobal = this;

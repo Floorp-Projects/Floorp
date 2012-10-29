@@ -87,8 +87,8 @@ struct WorkerThread
     /* Indicate to an idle thread that it should finish executing. */
     bool terminate;
 
-    /* Any script currently being compiled for Ion on this thread. */
-    JSScript *ionScript;
+    /* Any builder currently being compiled by Ion on this thread. */
+    ion::IonBuilder *ionBuilder;
 
     void destroy();
 

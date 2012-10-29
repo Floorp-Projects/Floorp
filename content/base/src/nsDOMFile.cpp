@@ -18,6 +18,7 @@
 #include "nsIFileStreams.h"
 #include "nsIInputStream.h"
 #include "nsIIPCSerializableInputStream.h"
+#include "nsIMemoryReporter.h"
 #include "nsIMIMEService.h"
 #include "nsIPlatformCharset.h"
 #include "nsISeekableStream.h"
@@ -29,6 +30,8 @@
 #include "nsBlobProtocolHandler.h"
 #include "nsStringStream.h"
 #include "nsJSUtils.h"
+#include "nsPrintfCString.h"
+#include "mozilla/SHA1.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
@@ -139,12 +142,12 @@ nsDOMFileBase::GetMozFullPath(nsAString &aFileName)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
 
-  // It is unsafe to call CallerHasUniversalXPConnect on a non-main thread. If
+  // It is unsafe to call IsCallerChrome on a non-main thread. If
   // you hit the following assertion you need to figure out some other way to
   // determine privileges and call GetMozFullPathInternal.
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (nsContentUtils::CallerHasUniversalXPConnect()) {
+  if (nsContentUtils::IsCallerChrome()) {
     return GetMozFullPathInternal(aFileName);
   }
   aFileName.Truncate();
@@ -685,6 +688,121 @@ nsDOMMemoryFile::GetInternalStream(nsIInputStream **aStream)
     return NS_ERROR_FAILURE;
 
   return DataOwnerAdapter::Create(mDataOwner, mStart, mLength, aStream);
+}
+
+/* static */ StaticAutoPtr<LinkedList<nsDOMMemoryFile::DataOwner> >
+nsDOMMemoryFile::DataOwner::sDataOwners;
+
+/* static */ bool
+nsDOMMemoryFile::DataOwner::sMemoryReporterRegistered;
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(DOMMemoryFileDataOwnerSizeOf,
+                                     "memory-file-data");
+
+class nsDOMMemoryFileDataOwnerMemoryReporter
+  : public nsIMemoryMultiReporter
+{
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetName(nsACString& aName)
+  {
+    aName.AssignASCII("dom-memory-file-data-owner");
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetExplicitNonHeap(int64_t *aResult)
+  {
+    // All of this reporter's memory is on the heap.
+    *aResult = 0;
+    return NS_OK;
+  }
+
+  NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *aCallback,
+                            nsISupports *aClosure)
+  {
+    typedef nsDOMMemoryFile::DataOwner DataOwner;
+
+    if (!DataOwner::sDataOwners) {
+      return NS_OK;
+    }
+
+    const size_t LARGE_OBJECT_MIN_SIZE = 8 * 1024;
+    size_t smallObjectsTotal = 0;
+
+    for (DataOwner *owner = DataOwner::sDataOwners->getFirst();
+         owner; owner = owner->getNext()) {
+
+      size_t size = DOMMemoryFileDataOwnerSizeOf(owner->mData);
+
+      if (size < LARGE_OBJECT_MIN_SIZE) {
+        smallObjectsTotal += size;
+      }
+      else {
+        SHA1Sum sha1;
+        sha1.update(owner->mData, owner->mLength);
+        uint8_t digest[SHA1Sum::HashSize]; // SHA1 digests are 20 bytes long.
+        sha1.finish(digest);
+
+        nsAutoCString digestString;
+        for (uint8_t i = 0; i < sizeof(digest); i++) {
+          digestString.AppendPrintf("%02x", digest[i]);
+        }
+
+        nsresult rv = aCallback->Callback(
+          /* process */ NS_LITERAL_CSTRING(""),
+          nsPrintfCString(
+            "explicit/dom/memory-file-data/large/file(length=%d, sha1=%s)",
+            owner->mLength, digestString.get()),
+          nsIMemoryReporter::KIND_HEAP,
+          nsIMemoryReporter::UNITS_BYTES,
+          size,
+          nsPrintfCString(
+            "Memory used to back a memory file of length %d.  The file has a "
+            "sha1 of %s.\n\n"
+            "Note that the allocator may round up a memory file's length -- "
+            "that is, an N-byte memory file may take up more than N bytes of "
+            "memory.",
+            owner->mLength, digestString.get()),
+          aClosure);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+
+    if (smallObjectsTotal > 0) {
+      nsresult rv = aCallback->Callback(
+        /* process */ NS_LITERAL_CSTRING(""),
+        NS_LITERAL_CSTRING("explicit/dom/memory-file-data/small"),
+        nsIMemoryReporter::KIND_HEAP,
+        nsIMemoryReporter::UNITS_BYTES,
+        smallObjectsTotal,
+        nsPrintfCString(
+          "Memory used to back small memory files (less than %d bytes each).\n\n"
+          "Note that the allocator may round up a memory file's length -- "
+          "that is, an N-byte memory file may take up more than N bytes of "
+          "memory."),
+        aClosure);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(nsDOMMemoryFileDataOwnerMemoryReporter,
+                   nsIMemoryMultiReporter);
+
+/* static */ void
+nsDOMMemoryFile::DataOwner::EnsureMemoryReporterRegistered()
+{
+  if (sMemoryReporterRegistered) {
+    return;
+  }
+
+  nsRefPtr<nsDOMMemoryFileDataOwnerMemoryReporter> reporter = new
+    nsDOMMemoryFileDataOwnerMemoryReporter();
+  NS_RegisterMemoryMultiReporter(reporter);
+
+  sMemoryReporterRegistered = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////

@@ -12,7 +12,7 @@ public class testCheck2 extends PixelTest {
     public void testCheck2() {
         String url = getAbsoluteUrl("/startup_test/fennecmark/cnn/cnn.com/index.html");
 
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        blockForGeckoReady();
         loadAndPaint(url);
         mDriver.setupScrollHandling();
 

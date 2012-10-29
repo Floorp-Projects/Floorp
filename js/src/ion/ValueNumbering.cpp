@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Ion.h"
+#include "IonBuilder.h"
 #include "IonSpewer.h"
 #include "CompileInfo.h"
 #include "ValueNumbering.h"
@@ -13,8 +14,9 @@
 using namespace js;
 using namespace js::ion;
 
-ValueNumberer::ValueNumberer(MIRGraph &graph, bool optimistic)
-  : graph_(graph),
+ValueNumberer::ValueNumberer(MIRGenerator *mir, MIRGraph &graph, bool optimistic)
+  : mir(mir),
+    graph_(graph),
     pessimisticPass_(!optimistic),
     count_(0)
 { }
@@ -68,6 +70,34 @@ ValueNumberer::simplify(MDefinition *def, bool useValueNumbers)
 
     IonSpew(IonSpew_GVN, "Folding %d to be %d", def->id(), ins->id());
     return ins;
+}
+
+MControlInstruction *
+ValueNumberer::simplifyControlInstruction(MControlInstruction *def)
+{
+    if (def->isEffectful())
+        return def;
+
+    MDefinition *repl = def->foldsTo(false);
+    if (repl == def || !repl->updateForFolding(def))
+        return def;
+
+    // Ensure this instruction has a value number.
+    if (!repl->valueNumberData())
+        repl->setValueNumberData(new ValueNumberData);
+
+    MBasicBlock *block = def->block();
+
+    // MControlInstructions should not have consumers.
+    JS_ASSERT(repl->isControlInstruction());
+    JS_ASSERT(def->useCount() == 0);
+
+    if (def->isInWorklist())
+        repl->setInWorklist();
+
+    block->discardLastIns();
+    block->end((MControlInstruction *)repl);
+    return (MControlInstruction *)repl;
 }
 
 void
@@ -145,6 +175,8 @@ ValueNumberer::computeValueNumbers()
         return false;
     // Stick a VN object onto every mdefinition
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
+        if (mir->shouldCancel("Value Numbering (preparation loop"))
+            return false;
         for (MDefinitionIterator iter(*block); iter; iter++)
             iter->setValueNumberData(new ValueNumberData);
         MControlInstruction *jump = block->lastIns();
@@ -189,6 +221,8 @@ ValueNumberer::computeValueNumbers()
         }
 #endif
         for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
+            if (mir->shouldCancel("Value Numbering (main loop)"))
+                return false;
             for (MDefinitionIterator iter(*block); iter; ) {
 
                 if (!isMarked(*iter)) {
@@ -223,6 +257,7 @@ ValueNumberer::computeValueNumbers()
             }
             // Process control flow instruction:
             MControlInstruction *jump = block->lastIns();
+            jump = simplifyControlInstruction(jump);
 
             // If we are pessimistic, then this will never get set.
             if (!jump->isInWorklist())
@@ -325,6 +360,8 @@ ValueNumberer::eliminateRedundancies()
 
     // Starting from each self-dominating block, traverse the CFG in pre-order.
     while (!worklist.empty()) {
+        if (mir->shouldCancel("Value Numbering (eliminate loop)"))
+            return false;
         MBasicBlock *block = worklist.popCopy();
 
         IonSpew(IonSpew_GVN, "Looking at block %d", block->id());

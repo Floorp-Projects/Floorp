@@ -9,6 +9,7 @@
 #define mozilla_SHA1_h_
 
 #include "mozilla/StandardInteger.h"
+#include "mozilla/Types.h"
 
 #include <stddef.h>
 
@@ -43,16 +44,16 @@ class SHA1Sum
     bool mDone;
 
   public:
-    SHA1Sum();
+    MFBT_API() SHA1Sum();
 
     static const size_t HashSize = 20;
     typedef uint8_t Hash[HashSize];
 
     /* Add len bytes of dataIn to the data sequence being hashed. */
-    void update(const void* dataIn, uint32_t len);
+    MFBT_API(void) update(const void* dataIn, uint32_t len);
 
     /* Compute the final hash of all data into hashOut. */
-    void finish(SHA1Sum::Hash& hashOut);
+    MFBT_API(void) finish(SHA1Sum::Hash& hashOut);
 };
 
 } /* namespace mozilla */

@@ -416,15 +416,7 @@ uint32_t ticks2xsec(tmreader* aReader, uint32_t aTicks, uint32_t aResolution)
 ** Convert platform specific ticks to second units
 */
 {
-    uint64_t bigone;
-    uint64_t tmp64;
-
-    LL_UI2L(bigone, aResolution);
-    LL_UI2L(tmp64, aTicks);
-    bigone *= tmp64;
-    LL_UI2L(tmp64, aReader->ticksPerSec);
-    bigone /= tmp64;
-    return uint32(bigone);
+    return (uint32)((aResolution * aTicks) / aReader->ticksPerSec);
 }
 
 

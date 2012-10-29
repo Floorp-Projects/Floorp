@@ -225,6 +225,7 @@ CanvasLayerOGL::UpdateSurface()
       mTextureTarget = LOCAL_GL_TEXTURE_RECTANGLE_ARB;
       mLayerProgram = gl::RGBARectLayerProgramType;
     }
+    mDrawTarget->Flush();
     return;
   }
 #endif

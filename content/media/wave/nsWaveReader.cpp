@@ -146,6 +146,31 @@ nsresult nsWaveReader::ReadMetadata(nsVideoInfo* aInfo,
   return NS_OK;
 }
 
+template <typename T> T UnsignedByteToAudioSample(uint8_t aValue);
+template <typename T> T SignedShortToAudioSample(int16_t aValue);
+
+template <> inline float
+UnsignedByteToAudioSample<float>(uint8_t aValue)
+{
+  return aValue * (2.0f / UINT8_MAX) - 1.0f;
+}
+template <> inline int16_t
+UnsignedByteToAudioSample<int16_t>(uint8_t aValue)
+{
+  return int16_t(aValue * UINT16_MAX / UINT8_MAX + INT16_MIN);
+}
+
+template <> inline float
+SignedShortToAudioSample<float>(int16_t aValue)
+{
+  return AudioSampleToFloat(aValue);
+}
+template <> inline int16_t
+SignedShortToAudioSample<int16_t>(int16_t aValue)
+{
+  return aValue;
+}
+
 bool nsWaveReader::DecodeAudioData()
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
@@ -176,21 +201,12 @@ bool nsWaveReader::DecodeAudioData()
   AudioDataValue* s = sampleBuffer.get();
   for (int i = 0; i < frames; ++i) {
     for (unsigned int j = 0; j < mChannels; ++j) {
-      if (mSampleFormat == nsAudioStream::FORMAT_U8) {
+      if (mSampleFormat == FORMAT_U8) {
         uint8_t v =  ReadUint8(&d);
-#if defined(MOZ_SAMPLE_TYPE_S16)
-        *s++ = (v * (1.F/UINT8_MAX)) * UINT16_MAX + INT16_MIN;
-#elif defined(MOZ_SAMPLE_TYPE_FLOAT32)
-        *s++ = (v * (1.F/UINT8_MAX)) * 2.F - 1.F;
-#endif
-      }
-      else if (mSampleFormat == nsAudioStream::FORMAT_S16) {
+        *s++ = UnsignedByteToAudioSample<AudioDataValue>(v);
+      } else if (mSampleFormat == FORMAT_S16) {
         int16_t v =  ReadInt16LE(&d);
-#if defined(MOZ_SAMPLE_TYPE_S16)
-        *s++ = v;
-#elif defined(MOZ_SAMPLE_TYPE_FLOAT32)
-        *s++ = (int32_t(v) - INT16_MIN) / float(UINT16_MAX) * 2.F - 1.F;
-#endif
+        *s++ = SignedShortToAudioSample<AudioDataValue>(v);
       }
     }
   }
@@ -451,9 +467,9 @@ nsWaveReader::LoadFormatChunk()
   mChannels = channels;
   mFrameSize = frameSize;
   if (sampleFormat == 8) {
-    mSampleFormat = nsAudioStream::FORMAT_U8;
+    mSampleFormat = FORMAT_U8;
   } else {
-    mSampleFormat = nsAudioStream::FORMAT_S16;
+    mSampleFormat = FORMAT_S16;
   }
   return true;
 }

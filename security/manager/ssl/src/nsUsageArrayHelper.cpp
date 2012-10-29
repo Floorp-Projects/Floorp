@@ -14,9 +14,9 @@
 #include "nspr.h"
 #include "nsNSSCertHeader.h"
 
-extern "C" {
 #include "secerr.h"
-}
+
+using namespace mozilla;
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
@@ -166,7 +166,7 @@ if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
 			    certificateUsageObjectSigner |
 			    certificateUsageSSLCA |
 			    certificateUsageStatusResponder,
-			    NULL, &usages);
+			    nullptr, &usages);
   err = PR_GetError();
 }
 else {
@@ -174,7 +174,7 @@ else {
   nsCOMPtr<nsINSSComponent> inss = do_GetService(kNSSComponentCID, &nsrv);
   if (!inss)
     return nsrv;
-  nsRefPtr<nsCERTValInParamWrapper> survivingParams;
+  RefPtr<nsCERTValInParamWrapper> survivingParams;
   if (localOnly)
     nsrv = inss->GetDefaultCERTValInParamLocalOnly(survivingParams);
   else
@@ -190,7 +190,7 @@ else {
   
   CERT_PKIXVerifyCert(mCert, certificateUsageCheckAllUsages,
                       survivingParams->GetRawPointerForNSS(),
-                      cvout, NULL);
+                      cvout, nullptr);
   err = PR_GetError();
   usages = cvout[0].value.scalar.usages;
 }

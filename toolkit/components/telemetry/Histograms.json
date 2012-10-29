@@ -701,6 +701,16 @@
     "n_buckets": 50,
     "description": "HTTP subitem: Overall load time - network (ms)"
   },
+  "HTTP_PROXY_TYPE": {
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "HTTP Proxy Type (none, http, socks)"
+  },
+  "WEBSOCKETS_HANDSHAKE_TYPE": {
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "Websockets Handshake Results (ws-ok-plain, ws-ok-proxy, ws-failed-plain, ws-failed-proxy, wss-ok-plain, wss-ok-proxy, wss-failed-plain, wss-failed-proxy)"
+  },
   "SPDY_VERSION2": {
     "kind": "enumerated",
     "n_values": 48,
@@ -769,20 +779,6 @@
     "high": "3000",
     "n_buckets": 50,
     "description": "SPDY: KB read per connection"
-  },
-  "SPDY_PING_EXPERIMENT_PASS": {
-    "kind": "linear",
-    "low": 10,
-    "high": "355",
-    "n_buckets": 64,
-    "description": "SPDY: Ping Interval Passed"
-  },
-  "SPDY_PING_EXPERIMENT_FAIL": {
-    "kind": "linear",
-    "low": 10,
-    "high": "355",
-    "n_buckets": 64,
-    "description": "SPDY: Ping Interval Failed"
   },
   "SPDY_SETTINGS_UL_BW": {
     "kind": "exponential",

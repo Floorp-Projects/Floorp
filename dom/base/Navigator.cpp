@@ -354,7 +354,7 @@ Navigator::GetPlatform(nsAString& aPlatform)
 NS_IMETHODIMP
 Navigator::GetOscpu(nsAString& aOSCPU)
 {
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     const nsAdoptingString& override =
       Preferences::GetString("general.oscpu.override");
 
@@ -494,7 +494,7 @@ Navigator::GetOnLine(bool* aOnline)
 NS_IMETHODIMP
 Navigator::GetBuildID(nsAString& aBuildID)
 {
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     const nsAdoptingString& override =
       Preferences::GetString("general.buildID.override");
 
@@ -1452,7 +1452,7 @@ NS_GetNavigatorUserAgent(nsAString& aUserAgent)
 nsresult
 NS_GetNavigatorPlatform(nsAString& aPlatform)
 {
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     const nsAdoptingString& override =
       mozilla::Preferences::GetString("general.platform.override");
 
@@ -1496,7 +1496,7 @@ NS_GetNavigatorPlatform(nsAString& aPlatform)
 nsresult
 NS_GetNavigatorAppVersion(nsAString& aAppVersion)
 {
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     const nsAdoptingString& override =
       mozilla::Preferences::GetString("general.appversion.override");
 
@@ -1531,7 +1531,7 @@ NS_GetNavigatorAppVersion(nsAString& aAppVersion)
 nsresult
 NS_GetNavigatorAppName(nsAString& aAppName)
 {
-  if (!nsContentUtils::IsCallerTrustedForRead()) {
+  if (!nsContentUtils::IsCallerChrome()) {
     const nsAdoptingString& override =
       mozilla::Preferences::GetString("general.appname.override");
 

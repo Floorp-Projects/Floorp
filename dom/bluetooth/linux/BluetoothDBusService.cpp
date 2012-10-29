@@ -721,14 +721,22 @@ public:
   NS_IMETHOD
   Run()
   {
-    BluetoothHfpManager* h = BluetoothHfpManager::Get();
-    if (h) {
-      h->Listen();
+    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+    if (!hfp || !hfp->Listen()) {
+      NS_WARNING("Failed to start listening for BluetoothHfpManager!");
+      return NS_ERROR_FAILURE;
+    }
+
+    BluetoothScoManager* sco = BluetoothScoManager::Get();
+    if (!sco || !sco->Listen()) {
+      NS_WARNING("Failed to start listening for BluetoothScoManager!");
+      return NS_ERROR_FAILURE;
     }
 
     BluetoothOppManager* opp = BluetoothOppManager::Get();
-    if (opp) {
-      opp->Listen();
+    if (!opp || !opp->Listen()) {
+      NS_WARNING("Failed to start listening for BluetoothOppManager!");
+      return NS_ERROR_FAILURE;
     }
 
     return NS_OK;

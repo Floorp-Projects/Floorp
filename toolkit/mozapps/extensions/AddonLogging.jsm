@@ -25,8 +25,12 @@ var gDebugLogEnabled = false;
 
 function formatLogMessage(aType, aName, aStr, aException) {
   let message = aType.toUpperCase() + " " + aName + ": " + aStr;
-  if (aException)
-    return message + ": " + aException;
+  if (aException) {
+    if (typeof aException == "number")
+      return message + ": " + Components.Exception("", aException).name
+    else
+      return message + ": " + aException;
+  }
   return message;
 }
 
@@ -42,10 +46,12 @@ function getStackDetails(aException) {
         };
       }
 
-      return {
-        sourceName: aException.fileName,
-        lineNumber: aException.lineNumber
-      };
+      if (typeof aException == "object") {
+        return {
+          sourceName: aException.fileName,
+          lineNumber: aException.lineNumber
+        };
+      }
     }
 
     let stackFrame = Components.stack.caller.caller.caller;
@@ -69,7 +75,7 @@ function AddonLogger(aName) {
 AddonLogger.prototype = {
   name: null,
 
-  error: function(aStr, aException) {
+  error: function AddonLogger_error(aStr, aException) {
     let message = formatLogMessage("error", this.name, aStr, aException);
 
     let stack = getStackDetails(aException);
@@ -100,7 +106,7 @@ AddonLogger.prototype = {
     catch (e) { }
   },
 
-  warn: function(aStr, aException) {
+  warn: function AddonLogger_warn(aStr, aException) {
     let message = formatLogMessage("warn", this.name, aStr, aException);
 
     let stack = getStackDetails(aException);
@@ -115,7 +121,7 @@ AddonLogger.prototype = {
       dump("*** " + message + "\n");
   },
 
-  log: function(aStr, aException) {
+  log: function AddonLogger_log(aStr, aException) {
     if (gDebugLogEnabled) {
       let message = formatLogMessage("log", this.name, aStr, aException);
       dump("*** " + message + "\n");
@@ -125,14 +131,14 @@ AddonLogger.prototype = {
 };
 
 var LogManager = {
-  getLogger: function(aName, aTarget) {
+  getLogger: function LogManager_getLogger(aName, aTarget) {
     let logger = new AddonLogger(aName);
 
     if (aTarget) {
       ["error", "warn", "log"].forEach(function(name) {
         let fname = name.toUpperCase();
         delete aTarget[fname];
-        aTarget[fname] = function(aStr, aException) {
+        aTarget[fname] = function LogManager_targetName(aStr, aException) {
           logger[name](aStr, aException);
         };
       });
@@ -143,13 +149,13 @@ var LogManager = {
 };
 
 var PrefObserver = {
-  init: function() {
+  init: function PrefObserver_init() {
     Services.prefs.addObserver(PREF_LOGGING_ENABLED, this, false);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
     this.observe(null, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, PREF_LOGGING_ENABLED);
   },
 
-  observe: function(aSubject, aTopic, aData) {
+  observe: function PrefObserver_observe(aSubject, aTopic, aData) {
     if (aTopic == "xpcom-shutdown") {
       Services.prefs.removeObserver(PREF_LOGGING_ENABLED, this);
       Services.obs.removeObserver(this, "xpcom-shutdown");

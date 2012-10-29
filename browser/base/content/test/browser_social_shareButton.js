@@ -8,8 +8,8 @@ let prefName = "social.enabled",
 function test() {
   waitForExplicitFinish();
 
-  // Need to load a non-empty page for the social share button to appear
-  let tab = gBrowser.selectedTab = gBrowser.addTab("about:", {skipAnimation: true});
+  // Need to load a http/https/ftp/ftps page for the social share button to appear
+  let tab = gBrowser.selectedTab = gBrowser.addTab("https://example.com", {skipAnimation: true});
   tab.linkedBrowser.addEventListener("load", function tabLoad(event) {
     tab.linkedBrowser.removeEventListener("load", tabLoad, true);
     executeSoon(tabLoaded);
@@ -68,7 +68,7 @@ function testInitial(finishcb) {
     is(shareButton.getAttribute("tooltiptext"), "Share this page", "check tooltip text is correct");
     is(shareStatusLabel.getAttribute("value"), "", "check status label text is blank");
     // Check the relative URL was resolved correctly (note this image has offsets of zero...)
-    is(shareButton.style.backgroundImage, 'url("https://example.com/browser/browser/base/content/test/social_share_image.png")', "check image url is correct");
+    is(shareButton.src, 'https://example.com/browser/browser/base/content/test/social_share_image.png', "check image url is correct");
 
     // Test clicking the share button
     shareButton.addEventListener("click", function listener() {
@@ -77,10 +77,10 @@ function testInitial(finishcb) {
       is(shareButton.getAttribute("tooltiptext"), "Unshare this page", "check tooltip text is correct");
       is(shareStatusLabel.getAttribute("value"), "This page has been shared", "check status label text is correct");
       // Check the URL and offsets were applied correctly
-      is(shareButton.style.backgroundImage, 'url("https://example.com/browser/browser/base/content/test/social_share_image.png")', "check image url is correct");
+      is(shareButton.src, 'https://example.com/browser/browser/base/content/test/social_share_image.png', "check image url is correct");
       executeSoon(testSecondClick.bind(window, testPopupOKButton));
     });
-    EventUtils.synthesizeMouseAtCenter(shareButton, {});
+    shareButton.click();
   }, "provider didn't provide user-recommend-prompt response");
 }
 
@@ -91,7 +91,7 @@ function testSecondClick(nextTest) {
     ok(true, "popup was shown after second click");
     executeSoon(nextTest);
   });
-  EventUtils.synthesizeMouseAtCenter(shareButton, {});
+  shareButton.click();
 }
 
 function testPopupOKButton() {
@@ -102,7 +102,7 @@ function testPopupOKButton() {
     is(shareButton.hasAttribute("shared"), true, "Share button should still have 'shared' attribute after OK button is clicked");
     executeSoon(testSecondClick.bind(window, testPopupUndoButton));
   });
-  EventUtils.synthesizeMouseAtCenter(okButton, {});
+  okButton.click();
 }
 
 function testPopupUndoButton() {
@@ -113,7 +113,7 @@ function testPopupUndoButton() {
     is(shareButton.hasAttribute("shared"), false, "Share button should not have 'shared' attribute after Undo button is clicked");
     executeSoon(testShortcut);
   });
-  EventUtils.synthesizeMouseAtCenter(undoButton, {});
+  undoButton.click();
 }
 
 function testShortcut() {
@@ -225,7 +225,7 @@ function testStillSharedIn2Tabs() {
       tab2b.removeEventListener("load", tabLoad, true);
       // should start without either page being shared.
       is(shareButton.hasAttribute("shared"), false, "Share button should not have 'shared' before we've done anything");
-      EventUtils.synthesizeMouseAtCenter(shareButton, {});
+      shareButton.click();
       is(shareButton.hasAttribute("shared"), true, "Share button should reflect the share");
       // and switching to the first tab (with the same URL) should still reflect shared.
       gBrowser.selectedTab = tab1;
@@ -261,11 +261,62 @@ function testStillSharedAfterReopen() {
     tab = gBrowser.selectedTab = gBrowser.addTab(toShare, {skipAnimation: true});
     tab.linkedBrowser.addEventListener("load", function tabLoad(event) {
       tab.linkedBrowser.removeEventListener("load", tabLoad, true);
-      is(shareButton.hasAttribute("shared"), true, "New tab to previously shared URL should reflect shared");
-      SocialShareButton.unsharePage();
-      gBrowser.removeTab(tab);
-      executeSoon(testDisable);
+      executeSoon(function() {
+        is(shareButton.hasAttribute("shared"), true, "New tab to previously shared URL should reflect shared");
+        SocialShareButton.unsharePage();
+        gBrowser.removeTab(tab);
+        executeSoon(testOnlyShareCertainUrlsTabSwitch);
+      });
     }, true);
+  }, true);
+}
+
+function testOnlyShareCertainUrlsTabSwitch() {
+  let toShare = "http://example.com";
+  let notSharable = "about:blank";
+  let {shareButton} = SocialShareButton;
+  let tab = gBrowser.selectedTab = gBrowser.addTab(toShare);
+  let tabb = gBrowser.getBrowserForTab(tab);
+  tabb.addEventListener("load", function tabLoad(event) {
+    tabb.removeEventListener("load", tabLoad, true);
+    ok(!shareButton.hidden, "share button not hidden for http url");
+    let tab2 = gBrowser.selectedTab = gBrowser.addTab(notSharable);
+    let tabb2 = gBrowser.getBrowserForTab(tab2);
+    tabb2.addEventListener("load", function tabLoad(event) {
+      tabb2.removeEventListener("load", tabLoad, true);
+      ok(shareButton.hidden, "share button hidden for about:blank");
+      gBrowser.selectedTab = tab;
+      ok(!shareButton.hidden, "share button re-shown when switching back to http: url");
+      gBrowser.selectedTab = tab2;
+      ok(shareButton.hidden, "share button re-hidden when switching back to about:blank");
+      gBrowser.removeTab(tab);
+      gBrowser.removeTab(tab2);
+      executeSoon(testOnlyShareCertainUrlsSameTab);
+    }, true);
+  }, true);
+}
+
+function testOnlyShareCertainUrlsSameTab() {
+  let toShare = "http://example.com";
+  let notSharable = "about:blank";
+  let {shareButton} = SocialShareButton;
+  let tab = gBrowser.selectedTab = gBrowser.addTab(toShare);
+  let tabb = gBrowser.getBrowserForTab(tab);
+  tabb.addEventListener("load", function tabLoad(event) {
+    tabb.removeEventListener("load", tabLoad, true);
+    ok(!shareButton.hidden, "share button not hidden for http url");
+    tabb.addEventListener("load", function tabLoad(event) {
+      tabb.removeEventListener("load", tabLoad, true);
+      ok(shareButton.hidden, "share button hidden for about:blank");
+      tabb.addEventListener("load", function tabLoad(event) {
+        tabb.removeEventListener("load", tabLoad, true);
+        ok(!shareButton.hidden, "share button re-enabled http url");
+        gBrowser.removeTab(tab);
+        executeSoon(testDisable);
+      }, true);
+      tabb.loadURI(toShare);
+    }, true);
+    tabb.loadURI(notSharable);
   }, true);
 }
 

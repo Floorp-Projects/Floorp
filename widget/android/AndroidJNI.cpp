@@ -834,6 +834,12 @@ Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition(JNIEnv*, jclass, 
     nsWindow::ScheduleResumeComposition(width, height);
 }
 
+NS_EXPORT float JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_computeRenderIntegrity(JNIEnv*, jclass)
+{
+    return nsWindow::ComputeRenderIntegrity();
+}
+
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_notifyFilePickerResult(JNIEnv* jenv, jclass, jstring filePath, jlong callback)
 {

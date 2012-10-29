@@ -37,7 +37,7 @@ function test()
     gDebuggee.firstCall();
   });
 
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     let url = aEvent.detail.url;
     if (url.indexOf("-02.js") != -1) {
       scriptShown = true;
@@ -57,9 +57,9 @@ function test()
 function testScriptSearching() {
   gDebugger.DebuggerController.activeThread.resume(function() {
     gEditor = gDebugger.DebuggerView.editor;
-    gScripts = gDebugger.DebuggerView.Scripts;
+    gScripts = gDebugger.DebuggerView.Sources;
     gSearchView = gDebugger.DebuggerView.GlobalSearch;
-    gSearchBox = gScripts._searchbox;
+    gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
     doSearch();
   });
@@ -68,17 +68,17 @@ function testScriptSearching() {
 function doSearch() {
   window.addEventListener("Debugger:GlobalSearch:MatchFound", function _onEvent(aEvent) {
     window.removeEventListener(aEvent.type, _onEvent);
-    info("Current script url:\n" + gScripts.selected + "\n");
+    info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    let url = gScripts.selected;
+    let url = gScripts.selectedValue;
     if (url.indexOf("-02.js") != -1) {
       executeSoon(function() {
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 0,
           "The editor shouldn't have jumped to a matching line yet.");
-        is(gScripts.visibleItemsCount, 2,
+        is(gScripts.visibleItems, 2,
           "Not all the scripts are shown after the global search.");
 
         testSearchMatchNotFound();
@@ -95,17 +95,17 @@ function doSearch() {
 function testSearchMatchNotFound() {
   window.addEventListener("Debugger:GlobalSearch:MatchNotFound", function _onEvent(aEvent) {
     window.removeEventListener(aEvent.type, _onEvent);
-    info("Current script url:\n" + gScripts.selected + "\n");
+    info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    let url = gScripts.selected;
+    let url = gScripts.selectedValue;
     if (url.indexOf("-02.js") != -1) {
       executeSoon(function() {
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't remain at the correct line.");
-        is(gScripts.visibleItemsCount, 2,
+        is(gScripts.visibleItems, 2,
           "Not all the correct scripts are shown after the search.");
 
         closeDebuggerAndFinish();

@@ -340,8 +340,7 @@ nsStackLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
           child->Layout(aState);
 
           // Get the child's new rect.
-          nsRect childRectNoMargin;
-          childRectNoMargin = childRect = child->GetRect();
+          childRect = child->GetRect();
           childRect.Inflate(margin);
 
           if (child->GetStyleXUL()->mStretchStack) {
@@ -355,16 +354,6 @@ nsStackLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
               clientRect.height = childRect.height + offset.TopBottom();
               grow = true;
             }
-          }
-
-          if (!childRectNoMargin.IsEqualInterior(oldRect))
-          {
-            // redraw the new and old positions if the 
-            // child moved or resized.
-            // if the new and old rect intersect meaning we just moved a little
-            // then just redraw the union. If they don't intersect (meaning
-            // we moved a good distance) redraw both separately.
-            aBox->Redraw(aState);
           }
        }
 
