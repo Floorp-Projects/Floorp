@@ -42,10 +42,17 @@
 using namespace mozilla;
 
 #ifdef PR_LOGGING 
-static PRLogModuleInfo *DeviceContextSpecGTKLM = PR_NewLogModule("DeviceContextSpecGTK");
+static PRLogModuleInfo *
+GetDeviceContextSpecGTKLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("DeviceContextSpecGTK");
+  return sLog;
+}
 #endif /* PR_LOGGING */
 /* Macro to make lines shorter */
-#define DO_PR_DEBUG_LOG(x) PR_LOG(DeviceContextSpecGTKLM, PR_LOG_DEBUG, x)
+#define DO_PR_DEBUG_LOG(x) PR_LOG(GetDeviceContextSpecGTKLog(), PR_LOG_DEBUG, x)
 
 //----------------------------------------------------------------------------------
 // The printer data is shared between the PrinterEnumerator and the nsDeviceContextSpecGTK

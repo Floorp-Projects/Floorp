@@ -123,7 +123,14 @@ UnmungePluginDsoPath(const string& munged)
 }
 
 
-PRLogModuleInfo* gPluginLog = PR_NewLogModule("IPCPlugins");
+PRLogModuleInfo*
+GetPluginLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("IPCPlugins");
+  return sLog;
+}
 
 void
 DeferNPObjectLastRelease(const NPNetscapeFuncs* f, NPObject* o)
