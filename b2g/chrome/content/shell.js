@@ -79,19 +79,41 @@ var shell = {
         crashID = Cc["@mozilla.org/xre/app-info;1"]
                     .getService(Ci.nsIXULRuntime).lastRunCrashID;
     } catch(e) { }
-    if (Services.prefs.getBoolPref('app.reportCrashes') &&
-        crashID) {
 
-      Services.obs.addObserver(function observer(subject, topic, state) {
-          if (topic != "network:offline-status-changed")
-            return;
-          if (state == 'online') {
-            shell.CrashSubmit.submit(crashID);
-            Services.obs.removeObserver(observer, topic);
-          }
-        }
-        , "network:offline-status-changed", false);
+    // Bail if there isn't a valid crashID.
+    if (!crashID) {
+      return;
     }
+
+    try {
+      // Check to see if the user has set a pref to always/never send
+      // crash reports. This will throw if the pref hasn't been set.
+      if (Services.prefs.getBoolPref("app.reportCrashes")) {
+        this.submitCrash(crashID);
+      }
+      // Show a banner letting the user know there was a crash.
+      this.sendChromeEvent({ type: "crash-banner" });
+    } catch (e) {
+      // Show a dialog only the first time there's a crash to report.
+      if (Services.prefs.getBoolPref("app.showCrashDialog")) {
+        Services.prefs.setBoolPref("app.showCrashDialog", false);
+        this.sendChromeEvent({ type: "crash-dialog", crashID: crashID });
+      } else {
+        // If the user hasn't set a pref, but we've already shown
+        // a dialog, show a banner with a "Report" button.
+        this.sendChromeEvent({ type: "crash-banner", crashID: crashID });
+      }
+    }
+  },
+
+  // This function submits a crash when we're online.
+  submitCrash: function shell_submitCrash(aCrashID) {
+    Services.obs.addObserver(function observer(subject, topic, state) {
+      if (state == 'online') {
+        shell.CrashSubmit.submit(aCrashID);
+        Services.obs.removeObserver(observer, topic);
+      }
+    }, "network:offline-status-changed", false);
   },
 
   get contentBrowser() {
@@ -771,8 +793,6 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
 
 (function contentCrashTracker() {
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
-      let cs = Cc["@mozilla.org/consoleservice;1"]
-                 .getService(Ci.nsIConsoleService);
       let props = aSubject.QueryInterface(Ci.nsIPropertyBag2);
       if (props.hasKey("abnormal") && props.hasKey("dumpID")) {
         shell.reportCrash(props.getProperty("dumpID"));
@@ -780,6 +800,16 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
     },
     "ipc:content-shutdown", false);
 })();
+
+// Listen for crashes submitted through the crash reporter UI.
+window.addEventListener('ContentStart', function cr_onContentStart() {
+  let content = shell.contentBrowser.contentWindow;
+  content.addEventListener("mozContentEvent", function cr_onMozContentEvent(e) {
+    if (e.detail.type == "submit-crash") {
+      shell.submitCrash(e.detail.crashID);
+    }
+  });
+});
 
 window.addEventListener('ContentStart', function update_onContentStart() {
   let updatePrompt = Cc["@mozilla.org/updates/update-prompt;1"]
