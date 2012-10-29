@@ -23,7 +23,6 @@ namespace gl {
 class GLContext;
 class TextureImage;
 }
-using namespace gl;
 
 namespace layers {
 
@@ -416,8 +415,8 @@ public:
    * underlying surface supports direct texturing, a non-null
    * TextureImage is returned.  Otherwise null is returned.
    */
-  static already_AddRefed<TextureImage>
-  OpenDescriptorForDirectTexturing(GLContext* aContext,
+  static already_AddRefed<gl::TextureImage>
+  OpenDescriptorForDirectTexturing(gl::GLContext* aContext,
                                    const SurfaceDescriptor& aDescriptor,
                                    GLenum aWrapMode);
 

@@ -16,7 +16,7 @@ public class testWebContentContextMenu extends PixelTest {
     }
 
     public void testWebContentContextMenu() {
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        blockForGeckoReady();
 
         DisplayMetrics dm = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);

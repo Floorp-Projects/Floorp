@@ -41,7 +41,7 @@ public class testAllPagesTab extends BaseTest {
     }
 
     public void testAllPagesTab() {
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        blockForGeckoReady();
 
         // load one page so there is something in our history
         String url = getAbsoluteUrl("/robocop/robocop_big_link.html");

@@ -163,7 +163,6 @@ abstract public class GeckoApp
     private static GeckoThread sGeckoThread;
     public Handler mMainHandler;
     private GeckoProfile mProfile;
-    public static boolean sIsGeckoReady = false;
     public static int mOrientation;
     private boolean mIsRestoringActivity;
     private String mCurrentResponse = "";
@@ -806,11 +805,7 @@ abstract public class GeckoApp
             return;
 
         // When a load error occurs, the URLBar can get corrupt so we reset it
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOAD_ERROR);
-            }
-        });
+        Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOAD_ERROR);
     }
 
     void handlePageShow(final int tabId) { }
@@ -983,7 +978,6 @@ abstract public class GeckoApp
                 handlePageShow(tabId);
             } else if (event.equals("Gecko:Ready")) {
                 mGeckoReadyStartupTimer.stop();
-                sIsGeckoReady = true;
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
                 connectGeckoLayerClient();
@@ -1187,11 +1181,7 @@ abstract public class GeckoApp
         tab.setReaderEnabled(false);
         if (Tabs.getInstance().isSelectedTab(tab))
             mLayerView.getRenderer().resetCheckerboard();
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.START, showProgress);
-            }
-        });
+        Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.START, showProgress);
     }
 
     void handleDocumentStop(int tabId, boolean success) {
@@ -1201,11 +1191,7 @@ abstract public class GeckoApp
 
         tab.setState(success ? Tab.STATE_SUCCESS : Tab.STATE_ERROR);
 
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.STOP);
-            }
-        });
+        Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.STOP);
 
         final String oldURL = tab.getURL();
         GeckoAppShell.getHandler().postDelayed(new Runnable() {
@@ -1250,11 +1236,7 @@ abstract public class GeckoApp
         if (tab == null)
             return;
 
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOADED);
-            }
-        });
+        Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOADED);
     }
 
     void handleTitleChanged(int tabId, String title) {
@@ -1548,6 +1530,19 @@ abstract public class GeckoApp
 
     protected void initializeChrome(String uri, Boolean isExternalURL) {
         mDoorHangerPopup = new DoorHangerPopup(this, null);
+        mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
+        mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
+
+        if (cameraView == null) {
+            cameraView = new SurfaceView(this);
+            cameraView.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        }
+
+        if (mLayerView == null) {
+            LayerView layerView = (LayerView) findViewById(R.id.layer_view);
+            layerView.initializeView(GeckoAppShell.getEventDispatcher());
+            mLayerView = layerView;
+        }
     }
 
     private void initialize() {
@@ -1656,20 +1651,6 @@ abstract public class GeckoApp
                 }
             }, 1000 * 5 /* 5 seconds */);
         }
-
-        if (cameraView == null) {
-            cameraView = new SurfaceView(this);
-            cameraView.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        }
-
-        if (mLayerView == null) {
-            LayerView layerView = (LayerView) findViewById(R.id.layer_view);
-            layerView.initializeView(GeckoAppShell.getEventDispatcher());
-            mLayerView = layerView;
-        }
-
-        mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
-        mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
 
         //register for events
         registerEventListener("DOMContentLoaded");

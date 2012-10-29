@@ -16,7 +16,7 @@ public class testAboutPage extends PixelTest {
     }
 
     public void testAboutPage() {
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        blockForGeckoReady();
 
         // Load the about: page and verify its title
         String url = "about:";

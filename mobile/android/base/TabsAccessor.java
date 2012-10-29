@@ -212,7 +212,7 @@ public final class TabsAccessor {
                 history.put(0, tab.getURL());
                 values.put(BrowserContract.Tabs.HISTORY, history.toString());
             } catch (JSONException e) {
-                Log.e(LOGTAG, "JSONException adding URL to tab history array", e);
+                Log.w(LOGTAG, "JSONException adding URL to tab history array.", e);
             }
 
             values.put(BrowserContract.Tabs.POSITION, position++);
@@ -229,10 +229,8 @@ public final class TabsAccessor {
 
     // Deletes all local tabs and replaces them with a new list of tabs.
     public static synchronized void persistLocalTabs(final ContentResolver cr, final Iterable<Tab> tabs) {
-        Log.v(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start of persistLocalTabs");
         deleteLocalTabs(cr);
         insertLocalTabs(cr, tabs);
         updateLocalClient(cr);
-        Log.v(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - end of persistLocalTabs");
     }
 }

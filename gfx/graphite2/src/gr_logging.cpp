@@ -33,7 +33,7 @@ of the License or (at your option) any later version.
 #include "inc/Segment.h"
 
 #if defined _WIN32
-#include "Windows.h"
+#include "windows.h"
 #endif
 
 using namespace graphite2;

@@ -4750,7 +4750,6 @@ NS_IMETHODIMP
 nsDocument::GetCharacterSet(nsAString& aCharacterSet)
 {
   CopyASCIItoUTF16(GetDocumentCharacterSet(), aCharacterSet);
-  ToLowerCase(aCharacterSet);
   return NS_OK;
 }
 
@@ -6388,7 +6387,7 @@ void
 nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 {
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  PRTime modDate = LL_ZERO;
+  PRTime modDate = 0;
   nsresult rv;
 
   if (httpChannel) {
@@ -6467,7 +6466,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
   }
 
   mLastModified.Truncate();
-  if (modDate != LL_ZERO) {
+  if (modDate != 0) {
     PRExplodedTime prtime;
     PR_ExplodeTime(modDate, PR_LocalTimeParameters, &prtime);
     // "MM/DD/YYYY hh:mm:ss"

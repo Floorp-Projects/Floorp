@@ -77,3 +77,11 @@ nsHttpConnectionInfo::Clone() const
     return clone;
 }
 
+bool
+nsHttpConnectionInfo::UsingProxy()
+{
+    if (!mProxyInfo)
+        return false;
+    return !mProxyInfo->IsDirect();
+}
+

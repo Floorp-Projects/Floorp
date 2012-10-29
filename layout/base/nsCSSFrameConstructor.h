@@ -276,6 +276,11 @@ public:
   // must not contain nsChangeHint_ReconstructFrame) to the root frame.
   void RebuildAllStyleData(nsChangeHint aExtraHint);
 
+  // Helper that does part of the work of RebuildAllStyleData, shared by
+  // RestyleElement for 'rem' handling.
+  void DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
+                             nsChangeHint aExtraHint);
+
   // See PostRestyleEventCommon below.
   void PostRestyleEvent(Element* aElement,
                         nsRestyleHint aRestyleHint,

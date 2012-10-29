@@ -36,7 +36,7 @@ function runTest() {
         break;
       case "#click":
         ok(true, "Receive a click event.");
-        if (SpecialPowers.getBoolPref("dom.w3c_touch_events.enabled")) {
+        if (SpecialPowers.getIntPref("dom.w3c_touch_events.enabled") != 0) {
           iframe.sendTouchEvent("touchstart", [1], [10], [10], [2], [2],
                                 [20], [0.5], 1, 0);
         } else {

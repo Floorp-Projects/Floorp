@@ -53,9 +53,7 @@ SecondsFromPRTime(PRTime prTime)
 PRTime
 PRTimeFromSeconds(uint32_t seconds)
 {
-  int64_t intermediateResult;
-
-  LL_UI2L(intermediateResult, seconds);
+  int64_t intermediateResult = seconds;
   PRTime prTime = intermediateResult * PR_USEC_PER_SEC;
   return prTime;
 }

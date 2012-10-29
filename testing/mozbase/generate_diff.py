@@ -5,9 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
+Given a list of packages and the versions to mirror,
 generate a diff appropriate for mirroring
 https://github.com/mozilla/mozbase
 to http://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase
+
+If a package version is not given, the latest version will be used.
 
 Note that this shells out to `cp` for simplicity, so you should run this
 somewhere that has the `cp` command available.
@@ -23,6 +26,7 @@ from __future__ import with_statement
 
 import optparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -33,15 +37,7 @@ from subprocess import check_call as call
 # globals
 here = os.path.dirname(os.path.abspath(__file__))
 MOZBASE = 'git://github.com/mozilla/mozbase.git'
-
-# paths we don't want in m-c from mozbase's github repo
-git_excludes = ['.git',
-                '.gitignore',
-                'versionbump.py']
-
-# top-level paths we want to keep in m-c that aren't in the github repo
-keep = ['Makefile.in',
-        'generate_diff.py']
+version_regex = r"""PACKAGE_VERSION *= *['"]([0-9.]+)["'].*"""
 
 def error(msg):
     """err out with a message"""
@@ -55,6 +51,8 @@ def remove(path):
     else:
         os.remove(path)
 
+### git functions
+
 def latest_commit(git_dir):
     """returns last commit hash from a git repository directory"""
     command = ['git', 'log', '--pretty=format:%H',  'HEAD^..HEAD']
@@ -64,6 +62,27 @@ def latest_commit(git_dir):
                                cwd=git_dir)
     stdout, stderr = process.communicate()
     return stdout.strip()
+
+def tags(git_dir):
+    """return all tags in a git repository"""
+
+    command = ['git', 'tag']
+    process = subprocess.Popen(command,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               cwd=git_dir)
+    stdout, stderr = process.communicate()
+    return [line.strip() for line in stdout.strip().splitlines()]
+
+def checkout(git_dir, tag):
+    """checkout a tagged version of a git repository"""
+
+    command = ['git', 'checkout', tag]
+    process = subprocess.Popen(command,
+                               cwd=git_dir)
+    process.communicate()
+
+### hg functions
 
 def untracked_files(hg_dir):
     """untracked files in an hg repository"""
@@ -85,11 +104,33 @@ def revert(hg_dir, excludes=()):
         if path not in excludes:
             os.remove(path)
 
+
+### version-related functions
+
+def parse_versions(*args):
+    """return a list of 2-tuples of (directory, version)"""
+
+    retval = []
+    for arg in args:
+        if '=' in arg:
+            directory, version = arg.split('=', 1)
+        else:
+            directory = arg
+            version = None
+        retval.append((directory, version))
+    return retval
+
+def version_tag(directory, version):
+    return '%s-%s' % (directory, version)
+
+
+###
+
 def main(args=sys.argv[1:]):
     """command line entry point"""
 
     # parse command line options
-    usage = '%prog output'
+    usage = '%prog [options] package1[=version1] <package2=version2> <...>'
     class PlainDescriptionFormatter(optparse.IndentedHelpFormatter):
         """description formatter for console script entry point"""
         def format_description(self, description):
@@ -100,14 +141,15 @@ def main(args=sys.argv[1:]):
     parser = optparse.OptionParser(usage=usage,
                                    description=__doc__,
                                    formatter=PlainDescriptionFormatter())
+    parser.add_option('-o', '--output', dest='output',
+                      help="specify the output file; otherwise will be in the current directory with a name based on the hash")
     options, args = parser.parse_args(args)
-    if len(args) > 1:
+    if args:
+        versions = parse_versions(*args)
+    else:
         parser.print_help()
         parser.exit()
-    if args:
-        output = args[0]
-    else:
-        output = None
+    output = options.output
 
     # calculate hg root
     hg_root = os.path.dirname(os.path.dirname(here))  # testing/mozbase
@@ -136,23 +178,41 @@ def main(args=sys.argv[1:]):
             commit_hash = latest_commit(src)
             output = os.path.join(os.getcwd(), '%s.diff' % commit_hash)
 
-        # remove files from github clone we don't want to copy
-        for path in git_excludes:
-            path = os.path.join(src, path)
-            if not os.path.exists(path):
-                continue
-            remove(path)
+        # get the tags
+        _tags = tags(src)
 
-        # remove the files from m-c we don't want to keep
-        for path in os.listdir(here):
-            if path in keep:
-                continue
-            path = os.path.join(here, path)
-            remove(path)
+        # ensure all directories and tags are available
+        for index, (directory, version) in enumerate(versions):
+            if not version:
+                # choose maximum version from setup.py
+                setup_py = os.path.join(src, directory, 'setup.py')
+                assert os.path.exists(setup_py), "'%s' not found" % setup_py
+                with file(setup_py) as f:
+                    for line in f.readlines():
+                        line = line.strip()
+                        match = re.match(version_regex, line)
+                        if match:
+                            version = match.groups()[0]
+                            versions[index] = (directory, version)
+                            print "Using %s=%s" % (directory, version)
+                            break
+                    else:
+                        error("Cannot find PACKAGE_VERSION in %s" % setup_py)
 
-        # copy mozbase to m-c
-        for path in os.listdir(src):
-            call(['cp', '-r', path, here], cwd=src)
+            tag = version_tag(directory, version)
+            if tag not in _tags:
+                error("Tag for '%s' -- %s -- not in tags")
+
+        # copy mozbase directories to m-c
+        for directory, version in versions:
+
+            # checkout appropriate revision of mozbase
+            tag = version_tag(directory, version)
+            checkout(src, tag)
+
+            # replace the directory
+            remove(os.path.join(here, directory))
+            call(['cp', '-r', directory, here], cwd=src)
 
         # generate the diff and write to output file
         call(['hg', 'addremove'], cwd=hg_root)

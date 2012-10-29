@@ -261,7 +261,7 @@ nsHttpTransaction::Init(uint8_t caps,
             mChannel,
             NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
             NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_HEADER,
-            PR_Now(), LL_ZERO,
+            PR_Now(), 0,
             mReqHeaderBuf);
 
     // Create a string stream for the request header buf (the stream holds
@@ -430,7 +430,7 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
                 mChannel,
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_BODY_SENT,
-                PR_Now(), LL_ZERO, EmptyCString());
+                PR_Now(), 0, EmptyCString());
 
         // report the status and progress
         if (!mRestartInProgressVerifier.IsDiscardingContent())
@@ -466,7 +466,7 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
         progressMax = mRequestSize; // XXX mRequestSize is 32-bit!
     }
     else {
-        progress = LL_ZERO;
+        progress = 0;
         progressMax = 0;
     }
 
@@ -661,7 +661,7 @@ nsHttpTransaction::Close(nsresult reason)
             mChannel,
             NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
             NS_HTTP_ACTIVITY_SUBTYPE_TRANSACTION_CLOSE,
-            PR_Now(), LL_ZERO, EmptyCString());
+            PR_Now(), 0, EmptyCString());
     }
 
     // we must no longer reference the connection!  find out if the 
@@ -1065,7 +1065,7 @@ nsHttpTransaction::ParseHead(char *buf,
                 mChannel,
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_START,
-                PR_Now(), LL_ZERO, EmptyCString());
+                PR_Now(), 0, EmptyCString());
         }
     }
 
@@ -1428,7 +1428,7 @@ nsHttpTransaction::ProcessData(char *buf, uint32_t count, uint32_t *countRead)
                 mChannel,
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_HEADER,
-                PR_Now(), LL_ZERO,
+                PR_Now(), 0,
                 completeResponseHeaders);
         }
     }

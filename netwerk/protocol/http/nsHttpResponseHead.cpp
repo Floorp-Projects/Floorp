@@ -535,7 +535,7 @@ nsHttpResponseHead::GetExpiresValue(uint32_t *result) const
         return NS_OK;
     }
 
-    if (time < LL_Zero())
+    if (time < 0)
         *result = 0;
     else
         *result = PRTimeToSeconds(time); 

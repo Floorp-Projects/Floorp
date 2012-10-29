@@ -343,7 +343,7 @@ pref("gfx.displayport.strategy_vb.danger_y_incr", -1); // additional danger zone
 // prediction bias strategy options
 pref("gfx.displayport.strategy_pb.threshold", -1); // velocity threshold in inches/frame
 
-pref("gfx.java.screenshot.enabled", true);
+pref("gfx.java.screenshot.enabled", false);
 
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
@@ -399,6 +399,7 @@ pref("javascript.options.mem.gc_high_frequency_high_limit_mb", 40);
 pref("javascript.options.mem.gc_high_frequency_low_limit_mb", 10);
 pref("javascript.options.mem.gc_low_frequency_heap_growth", 105);
 pref("javascript.options.mem.high_water_mark", 16);
+pref("javascript.options.mem.gc_allocation_threshold_mb", 3);
 #else
 pref("javascript.options.mem.high_water_mark", 32);
 #endif
@@ -522,7 +523,7 @@ pref("ui.dragThresholdY", 25);
 pref("layers.acceleration.disabled", false);
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-video.enabled", true);
-pref("layers.progressive-paint", false);
+pref("layers.progressive-paint", true);
 
 pref("notification.feature.enabled", true);
 
@@ -547,7 +548,7 @@ pref("content.image.allow_locking", false);
 pref("image.mem.min_discard_timeout_ms", 10000);
 
 // enable touch events interfaces
-pref("dom.w3c_touch_events.enabled", true);
+pref("dom.w3c_touch_events.enabled", 1);
 
 #ifdef MOZ_SAFE_BROWSING
 pref("browser.safebrowsing.enabled", true);

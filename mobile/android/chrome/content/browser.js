@@ -1596,7 +1596,7 @@ var SelectionHandler = {
   // Keeps track of data about the dimensions of the selection. Coordinates
   // stored here are relative to the _view window.
   cache: null,
-  _activeType: this.TYPE_NONE,
+  _activeType: 0, // TYPE_NONE
 
   // The window that holds the selection (can be a sub-frame)
   get _view() {
@@ -3584,6 +3584,13 @@ var BrowserEventHandler = {
     this.updateReflozPref();
   },
 
+  resetMaxLineBoxWidth: function() {
+    let webNav = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+    let docShell = webNav.QueryInterface(Ci.nsIDocShell);
+    let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+    docViewer.changeMaxLineBoxWidth(0);
+  },
+
   updateReflozPref: function() {
      this.mReflozPref = Services.prefs.getBoolPref("browser.zoom.reflowOnZoom");
   },
@@ -3747,6 +3754,7 @@ var BrowserEventHandler = {
   },
 
   _zoomOut: function() {
+    BrowserEventHandler.resetMaxLineBoxWidth();
     sendMessageToJava({ gecko: { type: "Browser:ZoomToPageWidth"} });
   },
 
@@ -3837,6 +3845,10 @@ var BrowserEventHandler = {
       if ((bRect.height > rect.h) && (cssTapY > rect.y + (rect.h * 1.2))) {
         rect.y = cssTapY - (rect.h / 2);
       }
+    }
+
+    if (rect.w > viewport.cssWidth || rect.h > viewport.cssHeight) {
+      BrowserEventHandler.resetMaxLineBoxWidth();
     }
 
     sendMessageToJava({ gecko: rect });
@@ -5625,8 +5637,9 @@ var PluginHelper = {
       }
     ];
 
-    // Add a checkbox with a "Don't ask again" message
-    let options = { checkbox: Strings.browser.GetStringFromName("clickToPlayPlugins.dontAskAgain") };
+    // Add a checkbox with a "Don't ask again" message if the uri contains a
+    // host. Adding a permanent exception will fail if host is not present.
+    let options = uri.host ? { checkbox: Strings.browser.GetStringFromName("clickToPlayPlugins.dontAskAgain") } : {};
 
     NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id, options);
   },

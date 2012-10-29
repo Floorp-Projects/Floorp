@@ -80,8 +80,12 @@ private:
   // (interleaved).
   uint32_t mFrameSize;
 
-  // The sample format of the PCM data.
-  nsAudioStream::SampleFormat mSampleFormat;
+  // The sample format of the PCM data. nsAudioStream::SampleFormat doesn't
+  // support U8.
+  enum {
+    FORMAT_U8,
+    FORMAT_S16
+  } mSampleFormat;
 
   // Size of PCM data stored in the WAVE as reported by the data chunk in
   // the media.

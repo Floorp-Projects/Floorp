@@ -1,10 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
 "use strict";
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+
 let tempScope = {};
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm", tempScope);
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm", tempScope);
@@ -15,29 +16,32 @@ let DebuggerClient = tempScope.DebuggerClient;
 let Services = tempScope.Services;
 
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/debugger/test/";
-
 const TAB1_URL = EXAMPLE_URL + "browser_dbg_tab1.html";
 const TAB2_URL = EXAMPLE_URL + "browser_dbg_tab2.html";
 const STACK_URL = EXAMPLE_URL + "browser_dbg_stack.html";
-// Enable remote debugging for the relevant tests.
+
+// Enable logging and remote debugging for the relevant tests.
 let gEnableRemote = Services.prefs.getBoolPref("devtools.debugger.remote-enabled");
+let gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
+Services.prefs.setBoolPref("devtools.debugger.log", true);
+
 registerCleanupFunction(function() {
   Services.prefs.setBoolPref("devtools.debugger.remote-enabled", gEnableRemote);
+  Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
 
   // Properly shut down the server to avoid memory leaks.
   DebuggerServer.destroy();
 });
 
 if (!DebuggerServer.initialized) {
-  DebuggerServer.init(function () { return true; });
+  DebuggerServer.init(function() true);
   DebuggerServer.addBrowserActors();
 }
 
 waitForExplicitFinish();
 
-function addWindow()
-{
+function addWindow() {
   let windowReference = window.open();
   let chromeWindow = windowReference
     .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation)
@@ -47,8 +51,7 @@ function addWindow()
   return chromeWindow;
 }
 
-function addTab(aURL, aOnload, aWindow)
-{
+function addTab(aURL, aOnload, aWindow) {
   let targetWindow = aWindow || window;
   let targetBrowser = targetWindow.gBrowser;
 
@@ -56,12 +59,18 @@ function addTab(aURL, aOnload, aWindow)
   targetBrowser.selectedTab = targetBrowser.addTab(aURL);
 
   let tab = targetBrowser.selectedTab;
+  let win = tab.linkedBrowser.contentWindow;
+  let expectedReadyState = aURL == "about:blank" ? ["interactive", "complete"]
+                                                 : ["complete"];
   if (aOnload) {
     let handler = function() {
-      if (tab.linkedBrowser.currentURI.spec == aURL) {
-        tab.removeEventListener("load", handler, false);
-        aOnload();
+      if (tab.linkedBrowser.currentURI.spec != aURL ||
+          win.document == null ||
+          expectedReadyState.indexOf(win.document.readyState) == -1) {
+        return;
       }
+      tab.removeEventListener("load", handler, false);
+      executeSoon(aOnload);
     }
     tab.addEventListener("load", handler, false);
   }
@@ -138,31 +147,12 @@ function attach_thread_actor_for_url(aClient, aURL, aCallback) {
   });
 }
 
-function debug_tab_pane(aURL, aOnDebugging)
-{
-  let tab = addTab(aURL, function() {
-    gBrowser.selectedTab = gTab;
-    let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
-
-    let pane = DebuggerUI.toggleDebugger();
-    pane._frame.addEventListener("Debugger:Connecting", function dbgConnected() {
-      pane._frame.removeEventListener("Debugger:Connecting", dbgConnected, true);
-
-      // Wait for the initial resume...
-      pane.contentWindow.gClient.addOneTimeListener("resumed", function() {
-        aOnDebugging(tab, debuggee, pane);
-      });
-    }, true);
-  });
-}
-
-function wait_for_connect_and_resume(aOnDebugging, aWindow)
-{
+function wait_for_connect_and_resume(aOnDebugging, aWindow) {
   let targetWindow = aWindow || window;
   let targetDocument = targetWindow.document;
 
-  targetDocument.addEventListener("Debugger:Connecting", function dbgConnected(aEvent) {
-    targetDocument.removeEventListener("Debugger:Connecting", dbgConnected, true);
+  targetDocument.addEventListener("Debugger:Connected", function dbgConnected(aEvent) {
+    targetDocument.removeEventListener("Debugger:Connected", dbgConnected, true);
 
     // Wait for the initial resume...
     aEvent.target.ownerDocument.defaultView.gClient.addOneTimeListener("resumed", function() {
@@ -171,8 +161,25 @@ function wait_for_connect_and_resume(aOnDebugging, aWindow)
   }, true);
 }
 
-function debug_remote(aURL, aOnDebugging, aBeforeTabAdded)
-{
+function debug_tab_pane(aURL, aOnDebugging) {
+  let tab = addTab(aURL, function() {
+    gBrowser.selectedTab = gTab;
+    let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
+
+    let pane = DebuggerUI.toggleDebugger();
+    pane._frame.addEventListener("Debugger:Connected", function dbgConnected() {
+      pane._frame.removeEventListener("Debugger:Connected", dbgConnected, true);
+
+      // Wait for the initial resume...
+      pane.contentWindow.gClient.addOneTimeListener("resumed", function() {
+        pane.contentWindow.DebuggerView.Variables.lazyEmpty = false;
+        aOnDebugging(tab, debuggee, pane);
+      });
+    }, true);
+  });
+}
+
+function debug_remote(aURL, aOnDebugging, aBeforeTabAdded) {
   // Make any necessary preparations (start the debugger server etc.)
   aBeforeTabAdded();
 
@@ -181,19 +188,19 @@ function debug_remote(aURL, aOnDebugging, aBeforeTabAdded)
     let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
 
     let win = DebuggerUI.toggleRemoteDebugger();
-    win._dbgwin.addEventListener("Debugger:Connecting", function dbgConnected() {
-      win._dbgwin.removeEventListener("Debugger:Connecting", dbgConnected, true);
+    win._dbgwin.addEventListener("Debugger:Connected", function dbgConnected() {
+      win._dbgwin.removeEventListener("Debugger:Connected", dbgConnected, true);
 
       // Wait for the initial resume...
       win.contentWindow.gClient.addOneTimeListener("resumed", function() {
+        win._dbgwin.DebuggerView.Variables.lazyEmpty = false;
         aOnDebugging(tab, debuggee, win);
       });
     }, true);
   });
 }
 
-function debug_chrome(aURL, aOnClosing, aOnDebugging)
-{
+function debug_chrome(aURL, aOnClosing, aOnDebugging) {
   let tab = addTab(aURL, function() {
     gBrowser.selectedTab = gTab;
     let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;

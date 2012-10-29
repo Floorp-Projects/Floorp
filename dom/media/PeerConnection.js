@@ -230,21 +230,54 @@ PeerConnection.prototype = {
     }
   },
 
+  /**
+   * Constraints look like this:
+   *
+   * {
+   *   mandatory: {"foo": true, "bar": 10, "baz": "boo"},
+   *   optional: [{"foo": true}, {"bar": 10}]
+   * }
+   *
+   * We check for basic structure but not the validity of the constraints
+   * themselves before passing them along to C++.
+   */
+  _validateConstraints: function(constraints) {
+    function isObject(obj) {
+      return obj && (typeof obj === "object");
+    }
+    function isArray(obj) {
+      return isObject(obj) &&
+        (Object.prototype.toString.call(obj) === "[object Array]");
+    }
+
+    if (!isObject(constraints)) {
+      return false;
+    }
+    if (constraints.mandatory && !isObject(constraints.mandatory)) {
+      return false;
+    }
+    if (constraints.optional && !isArray(constraints.optional)) {
+      return false;
+    }
+
+    return true;
+  },
+
   createOffer: function(onSuccess, onError, constraints) {
     if (this._onCreateOfferSuccess) {
-      if (onError) {
-        onError.onCallback("createOffer already called");
-      }
-      return;
+      throw new Error("createOffer already called");
+    }
+
+    if (!constraints) {
+      constraints = {};
+    }
+
+    if (!this._validateConstraints(constraints)) {
+      throw new Error("createOffer passed invalid constraints");
     }
 
     this._onCreateOfferSuccess = onSuccess;
     this._onCreateOfferFailure = onError;
-
-    // TODO: Implement constraints/hints.
-    if (!constraints) {
-      constraints = "";
-    }
 
     this._queueOrRun({
       func: this._pc.createOffer,
@@ -255,56 +288,43 @@ PeerConnection.prototype = {
 
   createAnswer: function(onSuccess, onError, constraints, provisional) {
     if (this._onCreateAnswerSuccess) {
-      if (onError) {
-        try {
-          onError.onCallback("createAnswer already called");
-        } catch(e) {}
-      }
-      return;
+      throw new Error("createAnswer already called");
     }
 
     if (!this.remoteDescription) {
-      if (onError) {
-        try {
-          onError.onCallback("setRemoteDescription not called");
-        } catch(e) {}
-      }
+      throw new Error("setRemoteDescription not called");
     }
 
     if (this.remoteDescription.type != "offer") {
-      if (onError) {
-        try {
-          onError.onCallback("No outstanding offer");
-        } catch(e) {}
-      }
+      throw new Error("No outstanding offer");
+    }
+
+    if (!constraints) {
+      constraints = {};
+    }
+
+    if (!this._validateConstraints(constraints)) {
+      throw new Error("createAnswer passed invalid constraints");
     }
 
     this._onCreateAnswerSuccess = onSuccess;
     this._onCreateAnswerFailure = onError;
 
-    if (!constraints) {
-      constraints = "";
-    }
     if (!provisional) {
       provisional = false;
     }
 
-    // TODO: Implement provisional answer & constraints.
+    // TODO: Implement provisional answer.
     this._queueOrRun({
       func: this._pc.createAnswer,
-      args: ["", this.remoteDescription.sdp],
+      args: [constraints],
       wait: true
     });
   },
 
   setLocalDescription: function(desc, onSuccess, onError) {
     if (this._onSetLocalDescriptionSuccess) {
-      if (onError) {
-        try {
-          onError.onCallback("setLocalDescription already called");
-        } catch(e) {}
-      }
-      return;
+      throw new Error("setLocalDescription already called");
     }
 
     this._onSetLocalDescriptionSuccess = onSuccess;
@@ -319,14 +339,9 @@ PeerConnection.prototype = {
         type = Ci.IPeerConnection.kActionAnswer;
         break;
       default:
-        if (onError) {
-          try {
-            onError.onCallback(
-              "Invalid type " + desc.type + " provided to setLocalDescription"
-            );
-          } catch(e) {}
-          return;
-        }
+        throw new Error(
+          "Invalid type " + desc.type + " provided to setLocalDescription"
+        );
         break;
     }
 
@@ -339,12 +354,7 @@ PeerConnection.prototype = {
 
   setRemoteDescription: function(desc, onSuccess, onError) {
     if (this._onSetRemoteDescriptionSuccess) {
-      if (onError) {
-        try {
-          onError.onCallback("setRemoteDescription already called");
-        } catch(e) {}
-      }
-      return;
+      throw new Error("setRemoteDescription already called");
     }
 
     this._onSetRemoteDescriptionSuccess = onSuccess;
@@ -359,14 +369,9 @@ PeerConnection.prototype = {
         type = Ci.IPeerConnection.kActionAnswer;
         break;
       default:
-        if (onError) {
-          try {
-            onError.onCallback(
-              "Invalid type " + desc.type + " provided to setRemoteDescription"
-            );
-          } catch(e) {}
-          return;
-        }
+        throw new Error(
+          "Invalid type " + desc.type + " provided to setRemoteDescription"
+        );
         break;
     }
 

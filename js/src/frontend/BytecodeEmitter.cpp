@@ -974,6 +974,10 @@ EmitVarOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
       case JSOP_GETARG: case JSOP_GETLOCAL: op = JSOP_GETALIASEDVAR; break;
       case JSOP_SETARG: case JSOP_SETLOCAL: op = JSOP_SETALIASEDVAR; break;
       case JSOP_CALLARG: case JSOP_CALLLOCAL: op = JSOP_CALLALIASEDVAR; break;
+      case JSOP_INCARG: case JSOP_INCLOCAL: op = JSOP_INCALIASEDVAR; break;
+      case JSOP_ARGINC: case JSOP_LOCALINC: op = JSOP_ALIASEDVARINC; break;
+      case JSOP_DECARG: case JSOP_DECLOCAL: op = JSOP_DECALIASEDVAR; break;
+      case JSOP_ARGDEC: case JSOP_LOCALDEC: op = JSOP_ALIASEDVARDEC; break;
       default: JS_NOT_REACHED("unexpected var op");
     }
 
@@ -988,18 +992,7 @@ EmitVarIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
     JS_ASSERT(js_CodeSpec[op].format & (JOF_INC | JOF_DEC));
     JS_ASSERT(!pn->pn_cookie.isFree());
 
-    if (!bce->isAliasedName(pn))
-        return EmitUnaliasedVarOp(cx, op, pn->pn_cookie.slot(), bce);
-
-    switch (op) {
-      case JSOP_INCARG: case JSOP_INCLOCAL: op = JSOP_INCALIASEDVAR; break;
-      case JSOP_ARGINC: case JSOP_LOCALINC: op = JSOP_ALIASEDVARINC; break;
-      case JSOP_DECARG: case JSOP_DECLOCAL: op = JSOP_DECALIASEDVAR; break;
-      case JSOP_ARGDEC: case JSOP_LOCALDEC: op = JSOP_ALIASEDVARDEC; break;
-      default: JS_NOT_REACHED("unexpected var op");
-    }
-
-    if (!EmitAliasedVarOp(cx, op, pn, bce))
+    if (!EmitVarOp(cx, pn, op, bce))
         return false;
 
     /* Remove the result to restore the stack depth before the INCALIASEDVAR. */
@@ -1010,8 +1003,10 @@ EmitVarIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
     const JSCodeSpec &cs = js_CodeSpec[op];
     bool post = (cs.format & JOF_POST);
     JSOp binop = (cs.format & JOF_INC) ? JSOP_ADD : JSOP_SUB;
+    JSOp getOp = IsLocalOp(op) ? JSOP_GETLOCAL : JSOP_GETARG;
+    JSOp setOp = IsLocalOp(op) ? JSOP_SETLOCAL : JSOP_SETARG;
 
-    if (!EmitAliasedVarOp(cx, JSOP_GETALIASEDVAR, pn, bce))  // V
+    if (!EmitVarOp(cx, pn, getOp, bce))                      // V
         return false;
     if (Emit1(cx, bce, JSOP_POS) < 0)                        // N
         return false;
@@ -1021,7 +1016,7 @@ EmitVarIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
         return false;
     if (Emit1(cx, bce, binop) < 0)                           // N? N+1
         return false;
-    if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, pn, bce))  // N? N+1
+    if (!EmitVarOp(cx, pn, setOp, bce))                      // N? N+1
         return false;
     if (post && Emit1(cx, bce, JSOP_POP) < 0)                // RESULT
         return false;

@@ -356,6 +356,9 @@
  * supported, as with MOZ_ENUM_TYPE().  For simplicity, it is currently
  * mandatory.  As with MOZ_ENUM_TYPE(), it will do nothing on compilers that do
  * not support it.
+ *
+ * Note that the workaround implemented here is not compatible with enums
+ * nested inside a class.
  */
 #if defined(MOZ_HAVE_CXX11_STRONG_ENUMS)
   /* All compilers that support strong enums also support an explicit

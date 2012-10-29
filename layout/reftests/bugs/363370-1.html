@@ -1,4 +1,4 @@
-<html><head>
+<html class="reftest-wait"><head>
 <title>Testcase bug 363370 - [reflow branch] Crash [@ nsTArray_base::ShiftData] with testcase that appends table cells</title>
 </head>
 <body>
@@ -24,9 +24,9 @@ var t2 = document.createTextNode("td");
 
 
 document.getElementById('f').appendChild(y);
-
+document.documentElement.removeAttribute('class');
 }
-setTimeout(doe, 0);
+document.addEventListener("MozReftestInvalidate", doe, false);
 </script>
 </body>
 </html>

@@ -43,7 +43,7 @@ class AudioWriteEvent : public nsRunnable
 
   NS_IMETHOD Run()
   {
-    mOwner->Write(mData.get(), mFrames);
+    mOwner->Write(reinterpret_cast<const AudioDataValue*>(mData.get()), mFrames);
     nsCOMPtr<nsIRunnable> event = new AudioWriteDoneEvent(mParent);
     NS_DispatchToMainThread(event);
     return NS_OK;
@@ -292,7 +292,7 @@ AudioParent::SendWriteDone()
   return true;
 }
 
-AudioParent::AudioParent(int32_t aNumChannels, int32_t aRate, int32_t aFormat)
+AudioParent::AudioParent(int32_t aNumChannels, int32_t aRate)
   : mIPCOpen(true)
 {
   mStream = nsAudioStream::AllocateStream();

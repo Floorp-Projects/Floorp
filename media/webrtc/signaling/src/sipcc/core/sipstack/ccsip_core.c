@@ -964,8 +964,11 @@ sip_util_extract_sdp (ccsipCCB_t *ccb, sipMessage_t *message)
 
     /*
      * Allocate a SDP buffer to work with (only destination buffer is needed).
+     *
+     * Here we are handing in an empty string to designate that we are not
+     * in the context of a peerconnection object
      */
-    sipsdp_src_dest_create(CCSIP_DEST_SDP_BIT, &sip_msg_sdp);
+    sipsdp_src_dest_create("", CCSIP_DEST_SDP_BIT, &sip_msg_sdp);
     if ((sip_msg_sdp == NULL) || (sip_msg_sdp->dest_sdp == NULL)) {
         /* Unable to get SDP */
         CCSIP_DEBUG_ERROR(get_debug_string(DEBUG_SIP_SDP_CREATE_BUF_ERROR),

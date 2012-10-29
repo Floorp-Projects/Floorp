@@ -15,7 +15,7 @@ public class testPermissions extends PixelTest {
     }
 
     public void testPermissions() {
-        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        blockForGeckoReady();
 
         geolocationTest();
     }

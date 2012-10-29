@@ -26,6 +26,7 @@ CPPSRCS = \
 	nsStrictTransportSecurityService.cpp \
 	$(NULL)
 
+DEFINES += -D__STDC_CONSTANT_MACROS
 
 include $(topsrcdir)/config/rules.mk
 

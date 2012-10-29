@@ -703,8 +703,6 @@ private:
     bool booleanJumpScript(JSOp op, jsbytecode *target);
     bool jsop_ifneq(JSOp op, jsbytecode *target);
     bool jsop_andor(JSOp op, jsbytecode *target);
-    bool jsop_arginc(JSOp op, uint32_t slot);
-    bool jsop_localinc(JSOp op, uint32_t slot);
     bool jsop_newinit();
     bool jsop_regexp();
     void jsop_initmethod();

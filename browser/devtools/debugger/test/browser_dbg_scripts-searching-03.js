@@ -37,7 +37,7 @@ function test()
     gDebuggee.firstCall();
   });
 
-  window.addEventListener("Debugger:ScriptShown", function _onEvent(aEvent) {
+  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
     let url = aEvent.detail.url;
     if (url.indexOf("-02.js") != -1) {
       scriptShown = true;
@@ -57,44 +57,46 @@ function test()
 function testScriptSearching() {
   gDebugger.DebuggerController.activeThread.resume(function() {
     gEditor = gDebugger.DebuggerView.editor;
-    gScripts = gDebugger.DebuggerView.Scripts;
+    gScripts = gDebugger.DebuggerView.Sources;
     gSearchView = gDebugger.DebuggerView.GlobalSearch;
-    gSearchBox = gScripts._searchbox;
+    gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
     firstSearch();
   });
 }
 
 function firstSearch() {
-  is(gSearchView._pane.childNodes.length, 0,
+  is(gSearchView._container._list.childNodes.length, 0,
     "The global search pane shouldn't have any child nodes yet.");
-  is(gSearchView._pane.hidden, true,
+  is(gSearchView._container._parent.hidden, true,
     "The global search pane shouldn't be visible yet.");
   is(gSearchView._splitter.hidden, true,
     "The global search pane splitter shouldn't be visible yet.");
 
   window.addEventListener("Debugger:GlobalSearch:MatchFound", function _onEvent(aEvent) {
     window.removeEventListener(aEvent.type, _onEvent);
-    info("Current script url:\n" + gScripts.selected + "\n");
+    info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    let url = gScripts.selected;
+    let url = gScripts.selectedValue;
     if (url.indexOf("-02.js") != -1) {
       executeSoon(function() {
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 0,
           "The editor shouldn't have jumped to a matching line yet.");
-        is(gScripts.visibleItemsCount, 2,
+        is(gScripts.visibleItems, 2,
           "Not all the scripts are shown after the global search.");
 
-        let scriptResults = gDebugger.document.querySelectorAll(".dbg-script-results");
+        let scriptResults = gDebugger.document.querySelectorAll(".dbg-source-results");
         is(scriptResults.length, 2,
           "There should be matches found in two scripts.");
 
-        is(scriptResults[0].expanded, true,
+        let item0 = gDebugger.SourceResults.getItemForElement(scriptResults[0]);
+        let item1 = gDebugger.SourceResults.getItemForElement(scriptResults[1]);
+        is(item0.instance.expanded, true,
           "The first script results should automatically be expanded.")
-        is(scriptResults[1].expanded, false,
+        is(item1.instance.expanded, false,
           "The first script results should not be automatically expanded.")
 
         let searchResult0 = scriptResults[0].querySelectorAll(".dbg-search-result");
@@ -180,35 +182,37 @@ function firstSearch() {
 }
 
 function secondSearch() {
-  isnot(gSearchView._pane.childNodes.length, 0,
+  isnot(gSearchView._container._list.childNodes.length, 0,
     "The global search pane should have some child nodes from the previous search.");
-  is(gSearchView._pane.hidden, false,
+  is(gSearchView._container._parent.hidden, false,
     "The global search pane should be visible from the previous search.");
   is(gSearchView._splitter.hidden, false,
     "The global search pane splitter should be visible from the previous search.");
 
   window.addEventListener("Debugger:GlobalSearch:MatchFound", function _onEvent(aEvent) {
     window.removeEventListener(aEvent.type, _onEvent);
-    info("Current script url:\n" + gScripts.selected + "\n");
+    info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    let url = gScripts.selected;
+    let url = gScripts.selectedValue;
     if (url.indexOf("-02.js") != -1) {
       executeSoon(function() {
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 0,
           "The editor shouldn't have jumped to a matching line yet.");
-        is(gScripts.visibleItemsCount, 2,
+        is(gScripts.visibleItems, 2,
           "Not all the scripts are shown after the global search.");
 
-        let scriptResults = gDebugger.document.querySelectorAll(".dbg-script-results");
+        let scriptResults = gDebugger.document.querySelectorAll(".dbg-source-results");
         is(scriptResults.length, 2,
           "There should be matches found in two scripts.");
 
-        is(scriptResults[0].expanded, true,
+        let item0 = gDebugger.SourceResults.getItemForElement(scriptResults[0]);
+        let item1 = gDebugger.SourceResults.getItemForElement(scriptResults[1]);
+        is(item0.instance.expanded, true,
           "The first script results should automatically be expanded.")
-        is(scriptResults[1].expanded, false,
+        is(item1.instance.expanded, false,
           "The first script results should not be automatically expanded.")
 
         let searchResult0 = scriptResults[0].querySelectorAll(".dbg-search-result");
@@ -269,7 +273,7 @@ function secondSearch() {
           "The first result for the second script doesn't have the correct non-matches in a line.");
 
 
-        testHideAndEmpty();
+        testClearView();
       });
     } else {
       ok(false, "The current script shouldn't have changed after a global search.");
@@ -281,15 +285,15 @@ function secondSearch() {
   });
 }
 
-function testHideAndEmpty() {
-  gSearchView.hideAndEmpty();
+function testClearView() {
+  gSearchView.clearView();
 
-  is(gSearchView._pane.childNodes.length, 0,
-    "The global search pane shouldn't have any child nodes after hideAndEmpty().");
-  is(gSearchView._pane.hidden, true,
-    "The global search pane shouldn't be visible after hideAndEmpty().");
+  is(gSearchView._container._list.childNodes.length, 0,
+    "The global search pane shouldn't have any child nodes after clearView().");
+  is(gSearchView._container._parent.hidden, true,
+    "The global search pane shouldn't be visible after clearView().");
   is(gSearchView._splitter.hidden, true,
-    "The global search pane splitter shouldn't be visible after hideAndEmpty().");
+    "The global search pane splitter shouldn't be visible after clearView().");
 
   closeDebuggerAndFinish();
 }

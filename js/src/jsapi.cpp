@@ -757,6 +757,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcLastGCTime(0),
     gcJitReleaseTime(0),
     gcMode(JSGC_MODE_GLOBAL),
+    gcAllocationThreshold(30 * 1024 * 1024),
     gcHighFrequencyGC(false),
     gcHighFrequencyTimeThreshold(1000),
     gcHighFrequencyLowLimitBytes(100 * 1024 * 1024),
@@ -2216,6 +2217,12 @@ JS_GetGlobalForObject(JSContext *cx, JSRawObject obj)
     return &obj->global();
 }
 
+extern JS_PUBLIC_API(JSBool)
+JS_IsGlobalObject(JSRawObject obj)
+{
+    return obj->isGlobal();
+}
+
 JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForCompartmentOrNull(JSContext *cx, JSCompartment *c)
 {
@@ -2444,24 +2451,6 @@ JS_RemoveScriptRootRT(JSRuntime *rt, JSScript **rp)
 JS_NEVER_INLINE JS_PUBLIC_API(void)
 JS_AnchorPtr(void *p)
 {
-}
-
-#ifdef DEBUG
-
-JS_PUBLIC_API(void)
-JS_DumpNamedRoots(JSRuntime *rt,
-                  void (*dump)(const char *name, void *rp, JSGCRootType type, void *data),
-                  void *data)
-{
-    js_DumpNamedRoots(rt, dump, data);
-}
-
-#endif /* DEBUG */
-
-JS_PUBLIC_API(uint32_t)
-JS_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
-{
-    return js_MapGCRoots(rt, map, data);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2991,6 +2980,9 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
       case JSGC_ANALYSIS_PURGE_TRIGGER:
         rt->analysisPurgeTriggerBytes = value * 1024 * 1024;
         break;
+      case JSGC_ALLOCATION_THRESHOLD:
+        rt->gcAllocationThreshold = value * 1024 * 1024;
+        break;
       default:
         JS_ASSERT(key == JSGC_MODE);
         rt->gcMode = JSGCMode(value);
@@ -3039,6 +3031,8 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
         return rt->gcDynamicMarkSlice;
       case JSGC_ANALYSIS_PURGE_TRIGGER:
         return rt->analysisPurgeTriggerBytes / 1024 / 1024;
+      case JSGC_ALLOCATION_THRESHOLD:
+        return rt->gcAllocationThreshold / 1024 / 1024;
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return uint32_t(rt->gcNumber);

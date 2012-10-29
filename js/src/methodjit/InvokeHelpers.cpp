@@ -730,41 +730,6 @@ static const char *OpcodeNames[] = {
 };
 #endif
 
-static void
-FinishVarIncOp(VMFrame &f, RejoinState rejoin, Value ov, Value nv, Value *vp)
-{
-    /* Finish an increment operation on a LOCAL or ARG. These do not involve property accesses. */
-    JS_ASSERT(rejoin == REJOIN_POS || rejoin == REJOIN_BINARY);
-
-    JSContext *cx = f.cx;
-
-    JSOp op = JSOp(*f.pc());
-    JS_ASSERT(op == JSOP_LOCALINC || op == JSOP_INCLOCAL ||
-              op == JSOP_LOCALDEC || op == JSOP_DECLOCAL ||
-              op == JSOP_ARGINC || op == JSOP_INCARG ||
-              op == JSOP_ARGDEC || op == JSOP_DECARG);
-    const JSCodeSpec *cs = &js_CodeSpec[op];
-
-    if (rejoin == REJOIN_POS) {
-        double d = ov.toNumber();
-        double N = (cs->format & JOF_INC) ? 1 : -1;
-        if (!nv.setNumber(d + N)) {
-            RootedScript fscript(cx, f.script());
-            types::TypeScript::MonitorOverflow(cx, fscript, f.pc());
-        }
-    }
-
-    unsigned i = GET_SLOTNO(f.pc());
-    if (JOF_TYPE(cs->format) == JOF_LOCAL)
-        f.fp()->unaliasedLocal(i) = nv;
-    else if (f.fp()->script()->argsObjAliasesFormals())
-        f.fp()->argsObj().setArg(i, nv);
-    else
-        f.fp()->unaliasedFormal(i) = nv;
-
-    *vp = (cs->format & JOF_POST) ? ov : nv;
-}
-
 extern "C" void *
 js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VMFrame &f)
 {
@@ -787,7 +752,6 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
     jsbytecode *pc = f.regs.pc;
 
     JSOp op = JSOp(*pc);
-    const JSCodeSpec *cs = &js_CodeSpec[op];
 
     if (!script->ensureRanAnalysis(cx)) {
         js_ReportOutOfMemory(cx);
@@ -819,29 +783,6 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 
     uint32_t nextDepth = UINT32_MAX;
     bool skipTrap = false;
-
-    if ((cs->format & (JOF_INC | JOF_DEC)) &&
-        (rejoin == REJOIN_POS || rejoin == REJOIN_BINARY)) {
-        /*
-         * We may reenter the interpreter while finishing the INC/DEC operation
-         * on a local or arg (property INC/DEC operations will rejoin into the
-         * decomposed version of the op.
-         */
-        JS_ASSERT(cs->format & (JOF_LOCAL | JOF_QARG));
-
-        nextDepth = analysis->getCode(nextpc).stackDepth;
-        enter.leave();
-
-        if (rejoin != REJOIN_BINARY || !analysis->incrementInitialValueObserved(pc)) {
-            /* Stack layout is 'V', 'N' or 'N+1' (only if the N is not needed) */
-            FinishVarIncOp(f, rejoin, nextsp[-1], nextsp[-1], &nextsp[-1]);
-        } else {
-            /* Stack layout is 'N N+1' */
-            FinishVarIncOp(f, rejoin, nextsp[-1], nextsp[0], &nextsp[-1]);
-        }
-
-        rejoin = REJOIN_FALLTHROUGH;
-    }
 
     switch (rejoin) {
       case REJOIN_SCRIPTED: {
@@ -1082,18 +1023,6 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
             f.regs.pc = nextpc;
             break;
         }
-        break;
-
-      case REJOIN_POS:
-        /* Convert-to-number which might be part of an INC* op. */
-        JS_ASSERT(op == JSOP_POS);
-        f.regs.pc = nextpc;
-        break;
-
-      case REJOIN_BINARY:
-        /* Binary arithmetic op which might be part of an INC* op. */
-        JS_ASSERT(op == JSOP_ADD || op == JSOP_SUB || op == JSOP_MUL || op == JSOP_DIV);
-        f.regs.pc = nextpc;
         break;
 
       case REJOIN_BRANCH: {

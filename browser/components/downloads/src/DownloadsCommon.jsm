@@ -651,10 +651,20 @@ const DownloadsData = {
   //// Notifications sent to the most recent browser window only
 
   /**
-   * Set to true after the first download in the session caused the downloads
-   * panel to be displayed.
+   * Set to true after the first download causes the downloads panel to be
+   * displayed.
    */
-  firstDownloadShown: false,
+  get panelHasShownBefore() {
+    try {
+      return Services.prefs.getBoolPref("browser.download.panel.shown");
+    } catch (ex) { }
+    return false;
+  },
+
+  set panelHasShownBefore(aValue) {
+    Services.prefs.setBoolPref("browser.download.panel.shown", aValue);
+    return aValue;
+  },
 
   /**
    * Displays a new download notification in the most recent browser window, if
@@ -673,14 +683,14 @@ const DownloadsData = {
     }
 
     browserWin.focus();
-    if (this.firstDownloadShown) {
-      // For new downloads after the first one in the session, don't show the
-      // panel automatically, but provide a visible notification in the topmost
+    if (this.panelHasShownBefore) {
+      // For new downloads after the first one, don't show the panel
+      // automatically, but provide a visible notification in the topmost
       // browser window, if the status indicator is already visible.
       browserWin.DownloadsIndicatorView.showEventNotification();
       return;
     }
-    this.firstDownloadShown = true;
+    this.panelHasShownBefore = true;
     browserWin.DownloadsPanel.showPanel();
   }
 };
