@@ -27,9 +27,21 @@ public:
      *     ... call Quartz operations on CGContextRef to draw to nativeRect ...
      *
      *   nativeDraw.EndNativeDrawing();
+     *
+     * aNativeRect is the size of the surface (in Quartz/Cocoa points) that
+     * will be created _if_ the gfxQuartzNativeDrawing decides to create a new
+     * surface and CGContext for its drawing operations, which it then
+     * composites into the target gfxContext.
+     *
+     * (Note that aNativeRect will be ignored if the gfxQuartzNativeDrawing
+     * uses the target gfxContext directly.)
+     *
+     * The optional aBackingScale parameter is a scaling factor that will be
+     * applied when creating and rendering into such a temporary surface.
      */
     gfxQuartzNativeDrawing(gfxContext *ctx,
-                           const gfxRect& nativeRect);
+                           const gfxRect& aNativeRect,
+                           gfxFloat aBackingScale = 1.0f);
 
     /* Returns a CGContextRef which may be used for native drawing.  This
      * CGContextRef is valid until EndNativeDrawing is called; if it is used
@@ -50,6 +62,7 @@ private:
     // if mContext is not drawing to Quartz
     nsRefPtr<gfxContext> mSurfaceContext;
     gfxRect mNativeRect;
+    gfxFloat mBackingScale;
 
     // saved state
     nsRefPtr<gfxQuartzSurface> mQuartzSurface;
