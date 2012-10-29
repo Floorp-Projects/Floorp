@@ -71,7 +71,7 @@ function keyHandler(event) {
       // to write.
       SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
 
-      // Create an iframe without a mozallowfullscreen attribute, whose contents requests
+      // Create an iframe without a allowfullscreen attribute, whose contents requests
       // full-screen. The request should be denied, and we should not receive a fullscreenchange
       // event in this document.
       var iframe = document.createElement("iframe");
