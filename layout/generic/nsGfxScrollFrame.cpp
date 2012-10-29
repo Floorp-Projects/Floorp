@@ -3426,19 +3426,19 @@ nsGfxScrollFrameInner::ReflowFinished()
       const double kScrollMultiplier =
         Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
                             NS_DEFAULT_VERTICAL_SCROLL_DISTANCE);
-      nscoord fontHeight = lineScrollAmount.height * kScrollMultiplier;
-      // We normally use (scrollArea.height - fontHeight) for height
+      nscoord increment = lineScrollAmount.height * kScrollMultiplier;
+      // We normally use (scrollArea.height - increment) for height
       // of page scrolling.  However, it is too small when
-      // fontHeight is very large. (If fontHeight is larger than
+      // increment is very large. (If increment is larger than
       // scrollArea.height, direction of scrolling will be opposite).
       // To avoid it, we use (float(scrollArea.height) * 0.8) as
       // lower bound value of height of page scrolling. (bug 383267)
       // XXX shouldn't we use GetPageScrollAmount here?
-      nscoord pageincrement = nscoord(mScrollPort.height - fontHeight);
+      nscoord pageincrement = nscoord(mScrollPort.height - increment);
       nscoord pageincrementMin = nscoord(float(mScrollPort.height) * 0.8);
       FinishReflowForScrollbar(vScroll, minY, maxY, scrollPos.y,
                                NS_MAX(pageincrement, pageincrementMin),
-                               fontHeight);
+                               increment);
     }
     if (hScroll) {
       const double kScrollMultiplier =
