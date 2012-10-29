@@ -33,12 +33,10 @@ PaymentProductPrice.prototype = {
     flags: Ci.nsIClassInfo.DOM_OBJECT,
     interfaces: [Ci.nsIDOMPaymentProductPrice]
   }),
-  country: null,
   currency: null,
   amount: null,
 
-  init: function init(aCountry, aCurrency, aAmount) {
-    this.country = aCountry;
+  init: function init(aCurrency, aAmount) {
     this.currency = aCurrency;
     this.amount = aAmount;
   }
