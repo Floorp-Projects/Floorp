@@ -159,6 +159,8 @@ public:
    * is retained until it has been uploaded/copyed and unlocked.
    */
   virtual void PaintedTiledLayerBuffer(const BasicTiledLayerBuffer* aTiledBuffer) = 0;
+
+  virtual void MemoryPressure() = 0;
 };
 
 // Normal integer division truncates towards zero,

@@ -128,6 +128,15 @@ TiledThebesLayerOGL::~TiledThebesLayerOGL()
 }
 
 void
+TiledThebesLayerOGL::MemoryPressure()
+{
+  if (mReusableTileStore) {
+    delete mReusableTileStore;
+    mReusableTileStore = new ReusableTileStoreOGL(gl(), 1);
+  }
+}
+
+void
 TiledThebesLayerOGL::PaintedTiledLayerBuffer(const BasicTiledLayerBuffer* mTiledBuffer)
 {
   mMainMemoryTiledBuffer.ReadUnlock();
