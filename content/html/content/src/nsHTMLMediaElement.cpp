@@ -1783,6 +1783,20 @@ nsHTMLMediaElement::~nsHTMLMediaElement()
   }
 }
 
+void
+nsHTMLMediaElement::GetItemValueText(nsAString& aValue)
+{
+  // Can't call GetSrc because we don't have a JSContext
+  GetURIAttr(nsGkAtoms::src, nullptr, aValue);
+}
+
+void
+nsHTMLMediaElement::SetItemValueText(const nsAString& aValue)
+{
+  // Can't call SetSrc because we don't have a JSContext
+  SetAttr(kNameSpaceID_None, nsGkAtoms::src, aValue, true);
+}
+
 void nsHTMLMediaElement::StopSuspendingAfterFirstFrame()
 {
   mAllowSuspendAfterFirstFrame = false;
