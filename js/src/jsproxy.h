@@ -159,10 +159,6 @@ class JS_PUBLIC_API(IndirectProxyHandler) : public BaseProxyHandler {
                            AutoIdVector &props) MOZ_OVERRIDE;
 
     /* Spidermonkey extensions. */
-    virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc,
-                      Value *vp) MOZ_OVERRIDE;
-    virtual bool construct(JSContext *cx, JSObject *proxy, unsigned argc,
-                           Value *argv, Value *rval) MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v,

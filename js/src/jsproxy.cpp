@@ -262,14 +262,21 @@ bool
 BaseProxyHandler::call(JSContext *cx, JSObject *proxy, unsigned argc,
                        Value *vp)
 {
-    return ReportIsNotFunction(cx, UndefinedValue());
+    AutoValueRooter rval(cx);
+    JSBool ok = Invoke(cx, vp[1], GetCall(proxy), argc, JS_ARGV(cx, vp), rval.addr());
+    if (ok)
+        JS_SET_RVAL(cx, vp, rval.value());
+    return ok;
 }
 
 bool
 BaseProxyHandler::construct(JSContext *cx, JSObject *proxy, unsigned argc,
                             Value *argv, Value *rval)
 {
-    return ReportIsNotFunction(cx, UndefinedValue(), CONSTRUCT);
+    Value fval = GetConstruct(proxy);
+    if (fval.isUndefined())
+        fval = GetCall(proxy);
+    return InvokeConstructor(cx, fval, argc, argv, rval);
 }
 
 JSString *
@@ -446,27 +453,6 @@ IndirectProxyHandler::enumerate(JSContext *cx, JSObject *proxy,
 {
     RootedObject target(cx, GetProxyTargetObject(proxy));
     return GetPropertyNames(cx, target, 0, &props);
-}
-
-bool
-IndirectProxyHandler::call(JSContext *cx, JSObject *proxy, unsigned argc,
-                   Value *vp)
-{
-    AutoValueRooter rval(cx);
-    JSBool ok = Invoke(cx, vp[1], GetCall(proxy), argc, JS_ARGV(cx, vp), rval.addr());
-    if (ok)
-        JS_SET_RVAL(cx, vp, rval.value());
-    return ok;
-}
-
-bool
-IndirectProxyHandler::construct(JSContext *cx, JSObject *proxy, unsigned argc,
-                                Value *argv, Value *rval)
-{
-    Value fval = GetConstruct(proxy);
-    if (fval.isUndefined())
-        fval = GetCall(proxy);
-    return InvokeConstructor(cx, fval, argc, argv, rval);
 }
 
 bool
