@@ -269,7 +269,7 @@ abstract public class BrowserApp extends GeckoApp
 
         if (!isExternalURL) {
             // show about:home if we aren't restoring previous session
-            if (mRestoreMode == GeckoAppShell.RESTORE_NONE) {
+            if (mRestoreMode == RESTORE_NONE) {
                 Tab tab = Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB);
             }
         } else {
