@@ -1974,7 +1974,7 @@ typedef enum JSExnType {
 } JSExnType;
 
 typedef struct JSErrorFormatString {
-    /* The error format string (UTF-8 if js_CStringsAreUTF8). */
+    /* The error format string in ASCII. */
     const char *format;
 
     /* The number of arguments to expand in the formatted error message. */
@@ -4948,26 +4948,18 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSRawObject parent);
  * the compiler.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8,
-                          JSObject *obj, const char *bytes, size_t length);
+JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj, const char *utf8, size_t length);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileScript(JSContext *cx, JSObject *obj,
-                 const char *bytes, size_t length,
+                 const char *ascii, size_t length,
                  const char *filename, unsigned lineno);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
                               JSPrincipals *principals,
-                              const char *bytes, size_t length,
+                              const char *ascii, size_t length,
                               const char *filename, unsigned lineno);
-
-extern JS_PUBLIC_API(JSScript *)
-JS_CompileScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
-                                     JSPrincipals *principals,
-                                     const char *bytes, size_t length,
-                                     const char *filename, unsigned lineno,
-                                     JSVersion version);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileUCScript(JSContext *cx, JSObject *obj,
@@ -4981,24 +4973,6 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                 const char *filename, unsigned lineno);
 
 extern JS_PUBLIC_API(JSScript *)
-JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
-                                       JSPrincipals *principals,
-                                       const jschar *chars, size_t length,
-                                       const char *filename, unsigned lineno,
-                                       JSVersion version);
-/*
- * If originPrincipals is null, then the value of principals is used as origin
- * principals for the compiled script.
- */
-extern JS_PUBLIC_API(JSScript *)
-JS_CompileUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
-                                             JSPrincipals *principals,
-                                             JSPrincipals *originPrincipals,
-                                             const jschar *chars, size_t length,
-                                             const char *filename, unsigned lineno,
-                                             JSVersion version);
-
-extern JS_PUBLIC_API(JSScript *)
 JS_CompileUTF8File(JSContext *cx, JSObject *obj, const char *filename);
 
 extern JS_PUBLIC_API(JSScript *)
@@ -5009,12 +4983,6 @@ extern JS_PUBLIC_API(JSScript *)
 JS_CompileUTF8FileHandleForPrincipals(JSContext *cx, JSObject *obj,
                                       const char *filename, FILE *fh,
                                       JSPrincipals *principals);
-
-extern JS_PUBLIC_API(JSScript *)
-JS_CompileUTF8FileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj,
-                                             const char *filename, FILE *fh,
-                                             JSPrincipals *principals,
-                                             JSVersion version);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalFromScript(JSScript *script);
@@ -5037,21 +5005,6 @@ JS_CompileUCFunction(JSContext *cx, JSObject *obj, const char *name,
                      unsigned nargs, const char **argnames,
                      const jschar *chars, size_t length,
                      const char *filename, unsigned lineno);
-
-extern JS_PUBLIC_API(JSFunction *)
-JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
-                                  JSPrincipals *principals, const char *name,
-                                  unsigned nargs, const char **argnames,
-                                  const jschar *chars, size_t length,
-                                  const char *filename, unsigned lineno);
-
-extern JS_PUBLIC_API(JSFunction *)
-JS_CompileUCFunctionForPrincipalsVersion(JSContext *cx, JSObject *obj,
-                                         JSPrincipals *principals, const char *name,
-                                         unsigned nargs, const char **argnames,
-                                         const jschar *chars, size_t length,
-                                         const char *filename, unsigned lineno,
-                                         JSVersion version);
 
 #ifdef __cplusplus
 JS_END_EXTERN_C
@@ -5537,47 +5490,18 @@ extern JS_PUBLIC_API(const jschar *)
 JS_UndependString(JSContext *cx, JSString *str);
 
 /*
- * Return JS_TRUE if C (char []) strings passed via the API and internally
- * are UTF-8.
- */
-JS_PUBLIC_API(JSBool)
-JS_CStringsAreUTF8(void);
-
-/*
- * Update the value to be returned by JS_CStringsAreUTF8(). Once set, it
- * can never be changed. This API must be called before the first call to
- * JS_NewRuntime.
- */
-JS_PUBLIC_API(void)
-JS_SetCStringsAreUTF8(void);
-
-/*
- * Character encoding support.
- *
- * For both JS_EncodeCharacters and JS_DecodeBytes, set *dstlenp to the size
- * of the destination buffer before the call; on return, *dstlenp contains the
- * number of bytes (JS_EncodeCharacters) or jschars (JS_DecodeBytes) actually
- * stored.  To determine the necessary destination buffer size, make a sizing
- * call that passes NULL for dst.
+ * For JS_DecodeBytes, set *dstlenp to the size of the destination buffer before
+ * the call; on return, *dstlenp contains the number of jschars actually stored.
+ * To determine the necessary destination buffer size, make a sizing call that
+ * passes NULL for dst.
  *
  * On errors, the functions report the error. In that case, *dstlenp contains
  * the number of characters or bytes transferred so far.  If cx is NULL, no
  * error is reported on failure, and the functions simply return JS_FALSE.
  *
- * NB: Neither function stores an additional zero byte or jschar after the
+ * NB: This function does not store an additional zero byte or jschar after the
  * transcoded string.
- *
- * If JS_CStringsAreUTF8() is true then JS_EncodeCharacters encodes to
- * UTF-8, and JS_DecodeBytes decodes from UTF-8, which may create additional
- * errors if the character sequence is malformed.  If UTF-8 support is
- * disabled, the functions deflate and inflate, respectively.
- *
- * JS_DecodeUTF8() always behaves the same independently of JS_CStringsAreUTF8().
  */
-JS_PUBLIC_API(JSBool)
-JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst,
-                    size_t *dstlenp);
-
 JS_PUBLIC_API(JSBool)
 JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst,
                size_t *dstlenp);
@@ -5608,11 +5532,6 @@ JS_GetStringEncodingLength(JSContext *cx, JSString *str);
  * of bytes that are necessary to encode the string. If that exceeds the
  * length parameter, the string will be cut and only length bytes will be
  * written into the buffer.
- *
- * If JS_CStringsAreUTF8() is true, the string does not fit into the buffer
- * and the the first length bytes ends in the middle of utf-8 encoding for
- * some character, then such partial utf-8 encoding is replaced by zero bytes.
- * This way the result always represents the valid UTF-8 sequence.
  */
 JS_PUBLIC_API(size_t)
 JS_EncodeStringToBuffer(JSString *str, char *buffer, size_t length);
