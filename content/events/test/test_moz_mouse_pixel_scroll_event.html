@@ -98,6 +98,41 @@ function prepareScrollUnits()
 
   result = -1;
   synthesizeWheel(gScrollable128, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gScrollable128.wheelHorizontalLine = result;
+  ok(result > 50 && result < 200, "prepareScrollUnits: gScrollable128.wheelHorizontalLine may be illegal value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable96, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gScrollable96.wheelHorizontalLine = result;
+  ok(result > 30 && result < gScrollable128.wheelHorizontalLine, "prepareScrollUnits: gScrollable96.wheelHorizontalLine may be illegal value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable64, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gScrollable64.wheelHorizontalLine = result;
+  ok(result > 20 && result < gScrollable96.wheelHorizontalLine, "prepareScrollUnits: gScrollable64.wheelHorizontalLine may be illegal value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable32, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gScrollable32.wheelHorizontalLine = result;
+  ok(result > 12 && result < gScrollable64.wheelHorizontalLine, "prepareScrollUnits: gScrollable32.wheelHorizontalLine may be illegal value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gRoot, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gRoot.wheelHorizontalLine = result;
+  ok(result > 5 && result < gScrollable32.wheelHorizontalLine, "prepareScrollUnits: gRoot.wheelHorizontalLine may be illegal value, got " + result);
+
+  result = -1;
+  synthesizeWheel(gScrollable128, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                     deltaY: 1.0, lineOrPageDeltaY: 1 });
   gScrollable128.wheelPageHeight = result;
@@ -1229,7 +1264,7 @@ function doTests()
 
     var expectedDetail =
       (currentTest.event.deltaMode == WheelEvent.DOM_DELTA_LINE) ?
-        (isHorizontal ? currentTest.expected.x.wheelLineHeight :
+        (isHorizontal ? currentTest.expected.x.wheelHorizontalLine :
                         currentTest.expected.y.wheelLineHeight) :
         (isHorizontal ? currentTest.expected.x.wheelPageWidth :
                         currentTest.expected.y.wheelPageHeight);
