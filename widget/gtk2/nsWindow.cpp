@@ -4814,9 +4814,7 @@ nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY,
 
             // if we've determined that we should still rollup, do it.
             if (rollup && rollupListener->Rollup(popupsToRollup, nullptr)) {
-                if (popupsToRollup == UINT32_MAX) {
-                    retVal = true;
-                }
+                retVal = true;
             }
         }
     } else {
