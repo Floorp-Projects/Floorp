@@ -2728,7 +2728,7 @@ html|*#gcli-output-frame {
 
 .chat-title {
   font-weight: bold;
-  color: -moz-dialogtext;
+  color: black;
   text-shadow: none;
   cursor: inherit;
 }
