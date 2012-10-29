@@ -319,7 +319,7 @@ js::AtomizeString(JSContext *cx, JSString *str, InternBehavior ib)
 }
 
 JSAtom *
-js::Atomize(JSContext *cx, const char *bytes, size_t length, InternBehavior ib, FlationCoding fc)
+js::Atomize(JSContext *cx, const char *bytes, size_t length, InternBehavior ib)
 {
     CHECK_REQUEST(cx);
 
@@ -340,15 +340,12 @@ js::Atomize(JSContext *cx, const char *bytes, size_t length, InternBehavior ib, 
     const jschar *chars;
     OwnCharsBehavior ocb = CopyChars;
     if (length < ATOMIZE_BUF_MAX) {
-        if (fc == CESU8Encoding)
-            InflateUTF8StringToBuffer(cx, bytes, length, inflated, &inflatedLength, fc);
-        else
-            InflateStringToBuffer(cx, bytes, length, inflated, &inflatedLength);
+        InflateStringToBuffer(cx, bytes, length, inflated, &inflatedLength);
         inflated[inflatedLength] = 0;
         chars = inflated;
     } else {
         inflatedLength = length;
-        chars = InflateString(cx, bytes, &inflatedLength, fc);
+        chars = InflateString(cx, bytes, &inflatedLength);
         if (!chars)
             return NULL;
         ocb = TakeCharOwnership;

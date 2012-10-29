@@ -359,9 +359,6 @@ SetContextOptions(JSContext *cx)
 static void
 SkipUTF8BOM(FILE* file)
 {
-    if (!js_CStringsAreUTF8)
-        return;
-
     int ch1 = fgetc(file);
     int ch2 = fgetc(file);
     int ch3 = fgetc(file);
@@ -509,7 +506,7 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
                 hitEOF = true;
                 break;
             }
-        } while (!JS_BufferIsCompilableUnit(cx, true, obj, buffer, len));
+        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, len));
 
         if (hitEOF && !buffer)
             break;
@@ -2300,13 +2297,6 @@ ToInt32(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
-StringsAreUTF8(JSContext *cx, unsigned argc, jsval *vp)
-{
-    *vp = JS_CStringsAreUTF8() ? JSVAL_TRUE : JSVAL_FALSE;
-    return true;
-}
-
 static const char* badUTF8 = "...\xC0...";
 static const char* bigUTF8 = "...\xFB\xBF\xBF\xBF\xBF...";
 static const jschar badSurrogate[] = { 'A', 'B', 'C', 0xDEEE, 'D', 'E', 0 };
@@ -2334,7 +2324,7 @@ TestUTF8(JSContext *cx, unsigned argc, jsval *vp)
         break;
       /* mode 3: bad surrogate character. */
       case 3:
-        JS_EncodeCharacters(cx, badSurrogate, 6, bytes, &bytesLength);
+        DeflateStringToBuffer(cx, badSurrogate, 6, bytes, &bytesLength);
         break;
       /* mode 4: use a too small buffer. */
       case 4:
@@ -3540,10 +3530,6 @@ static JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("pc2line", PCToLine, 0, 0,
 "pc2line(fun[, pc])",
 "  Map PC to line number."),
-
-    JS_FN_HELP("stringsAreUTF8", StringsAreUTF8, 0, 0,
-"stringsAreUTF8()",
-"  Check if strings are UTF-8 encoded."),
 
     JS_FN_HELP("testUTF8", TestUTF8, 1, 0,
 "testUTF8(mode)",
@@ -4873,7 +4859,6 @@ main(int argc, char **argv, char **envp)
         || !op.addIntOption('A', "oom-after", "COUNT", "Trigger OOM after COUNT allocations", -1)
         || !op.addBoolOption('O', "print-alloc", "Print the number of allocations at exit")
 #endif
-        || !op.addBoolOption('U', "utf8", "C strings passed to the JSAPI are UTF-8 encoded")
         || !op.addOptionalStringArg("script", "A script to execute (after all options)")
         || !op.addOptionalMultiStringArg("scriptArgs",
                                          "String arguments to bind as |arguments| in the "
@@ -4937,10 +4922,6 @@ main(int argc, char **argv, char **envp)
     if (op.getBoolOption('O'))
         OOM_printAllocationCount = true;
 #endif
-
-    /* Must be done before we create the JSRuntime. */
-    if (op.getBoolOption('U'))
-        JS_SetCStringsAreUTF8();
 
 #ifdef XP_WIN
     // Set the timer calibration delay count to 0 so we get high
