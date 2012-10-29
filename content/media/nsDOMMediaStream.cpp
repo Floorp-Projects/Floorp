@@ -75,22 +75,22 @@ nsDOMLocalMediaStream::Stop()
 }
 
 already_AddRefed<nsDOMMediaStream>
-nsDOMMediaStream::CreateInputStream(uint32_t aHintContents)
+nsDOMMediaStream::CreateSourceStream(uint32_t aHintContents)
 {
   nsRefPtr<nsDOMMediaStream> stream = new nsDOMMediaStream();
   stream->SetHintContents(aHintContents);
   MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
-  stream->mStream = gm->CreateInputStream(stream);
+  stream->mStream = gm->CreateSourceStream(stream);
   return stream.forget();
 }
 
 already_AddRefed<nsDOMLocalMediaStream>
-nsDOMLocalMediaStream::CreateInputStream(uint32_t aHintContents)
+nsDOMLocalMediaStream::CreateSourceStream(uint32_t aHintContents)
 {
   nsRefPtr<nsDOMLocalMediaStream> stream = new nsDOMLocalMediaStream();
   stream->SetHintContents(aHintContents);
   MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
-  stream->mStream = gm->CreateInputStream(stream);
+  stream->mStream = gm->CreateSourceStream(stream);
   return stream.forget();
 }
 

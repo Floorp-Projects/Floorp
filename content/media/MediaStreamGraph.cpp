@@ -2316,7 +2316,7 @@ MediaStreamGraph::GetInstance()
 }
 
 SourceMediaStream*
-MediaStreamGraph::CreateInputStream(nsDOMMediaStream* aWrapper)
+MediaStreamGraph::CreateSourceStream(nsDOMMediaStream* aWrapper)
 {
   SourceMediaStream* stream = new SourceMediaStream(aWrapper);
   NS_ADDREF(stream);

@@ -797,7 +797,7 @@ public:
    * Create a stream that a media decoder (or some other source of
    * media data, such as a camera) can write to.
    */
-  SourceMediaStream* CreateInputStream(nsDOMMediaStream* aWrapper);
+  SourceMediaStream* CreateSourceStream(nsDOMMediaStream* aWrapper);
   /**
    * Create a stream that will form the union of the tracks of its input
    * streams.
