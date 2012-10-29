@@ -23,10 +23,14 @@ public abstract class SessionParser {
     public class SessionTab {
         String mSelectedTitle;
         String mSelectedUrl;
+        boolean mIsSelected;
+        JSONObject mTabObject;
 
-        private SessionTab(String selectedTitle, String selectedUrl) {
+        private SessionTab(String selectedTitle, String selectedUrl, boolean isSelected, JSONObject tabObject) {
             mSelectedTitle = selectedTitle;
             mSelectedUrl = selectedUrl;
+            mIsSelected = isSelected;
+            mTabObject = tabObject;
         }
 
         public String getSelectedTitle() {
@@ -36,6 +40,14 @@ public abstract class SessionParser {
         public String getSelectedUrl() {
             return mSelectedUrl;
         }
+
+        public boolean isSelected() {
+            return mIsSelected;
+        }
+
+        public JSONObject getTabObject() {
+            return mTabObject;
+        }
     };
 
     abstract public void onTabRead(SessionTab tab);
@@ -43,9 +55,11 @@ public abstract class SessionParser {
     public void parse(String sessionString) {
         final JSONArray tabs;
         final JSONObject window;
+        final int selected;
         try {
             window = new JSONObject(sessionString).getJSONArray("windows").getJSONObject(0);
             tabs = window.getJSONArray("tabs");
+            selected = window.optInt("selected", -1);
         } catch (JSONException e) {
             Log.e(LOGTAG, "JSON error", e);
             return;
@@ -63,7 +77,7 @@ public abstract class SessionParser {
                     title = url;
                 }
 
-                onTabRead(new SessionTab(title, url));
+                onTabRead(new SessionTab(title, url, (selected == i+1), tab));
             } catch (JSONException e) {
                 Log.e(LOGTAG, "error reading json file", e);
                 return;

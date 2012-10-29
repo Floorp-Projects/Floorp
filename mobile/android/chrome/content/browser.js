@@ -171,6 +171,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Reload", false);
     Services.obs.addObserver(this, "Session:Stop", false);
+    Services.obs.addObserver(this, "Session:Restore", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
     Services.obs.addObserver(this, "Browser:Quit", false);
     Services.obs.addObserver(this, "Preferences:Get", false);
@@ -282,43 +283,8 @@ var BrowserApp = {
     // restoreMode = 1 means force restore (after an OOM kill)
     // restoreMode = 2 means restore only if we haven't crashed multiple times
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    if (restoreMode || ss.shouldRestore()) {
-      // A restored tab should not be active if we are loading a URL
-      let restoreToFront = false;
-
-      sendMessageToJava({
-        gecko: {
-          type: "Session:RestoreBegin"
-        }
-      });
-
-      // Make the restored tab active if we aren't loading an external URL
-      if (url == null) {
-        restoreToFront = true;
-      }
-
-      // Be ready to handle any restore failures by making sure we have a valid tab opened
-      let restoreCleanup = {
-        observe: function(aSubject, aTopic, aData) {
-          Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
-          if (aData == "fail") {
-            BrowserApp.addTab("about:home", {
-              showProgress: false,
-              selected: restoreToFront
-            });
-          }
-
-          sendMessageToJava({
-            gecko: {
-              type: "Session:RestoreEnd"
-            }
-          });
-        }
-      };
-      Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
-
-      // Start the restore
-      ss.restoreLastSession(restoreToFront, restoreMode == 1);
+    if (ss.shouldRestore()) {
+      this.restoreSession(false, null);
     }
 
     if (updated)
@@ -343,6 +309,39 @@ var BrowserApp = {
     // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
     setTimeout(function() { SafeBrowsing.init(); }, 5000);
 #endif
+  },
+
+  restoreSession: function (restoringOOM, sessionString) {
+    sendMessageToJava({
+      gecko: {
+        type: "Session:RestoreBegin"
+      }
+    });
+
+    // Be ready to handle any restore failures by making sure we have a valid tab opened
+    let restoreCleanup = {
+      observe: function (aSubject, aTopic, aData) {
+        Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
+
+        if (this.tabs.length == 0) {
+          this.addTab("about:home", {
+            showProgress: false,
+            selected: true
+          });
+        }
+
+        sendMessageToJava({
+          gecko: {
+            type: "Session:RestoreEnd"
+          }
+        });
+      }.bind(this)
+    };
+    Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
+
+    // Start the restore
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    ss.restoreLastSession(restoringOOM, sessionString);
   },
 
   isAppUpdated: function() {
@@ -1073,13 +1072,16 @@ var BrowserApp = {
       if (data.userEntered)
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
 
+      let delayLoad = ("delayLoad" in data) ? data.delayLoad : false;
       let params = {
-        selected: true,
+        selected: !delayLoad,
         parentId: ("parentId" in data) ? data.parentId : -1,
         flags: flags,
         tabID: data.tabID,
-        isPrivate: data.isPrivate,
-        pinned: data.pinned
+        isPrivate: (data.isPrivate == true),
+        pinned: (data.pinned == true),
+        delayLoad: (delayLoad == true),
+        desktopMode: (data.desktopMode == true)
       };
 
       let url = data.url;
@@ -1146,6 +1148,9 @@ var BrowserApp = {
       } else {
         profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
       }
+    } else if (aTopic == "Session:Restore") {
+      let data = JSON.parse(aData);
+      this.restoreSession(data.restoringOOM, data.sessionString);
     }
   },
 
@@ -2341,6 +2346,7 @@ Tab.prototype = {
 
     // only set tab uri if uri is valid
     let uri = null;
+    let title = aParams.title || aURL;
     try {
       uri = Services.io.newURI(aURL, null, null).spec;
     } catch (e) {}
@@ -2366,7 +2372,7 @@ Tab.prototype = {
           parentId: ("parentId" in aParams) ? aParams.parentId : -1,
           external: ("external" in aParams) ? aParams.external : false,
           selected: ("selected" in aParams) ? aParams.selected : true,
-          title: aParams.title || aURL,
+          title: title,
           delayLoad: aParams.delayLoad || false,
           desktopMode: this.desktopMode,
           isPrivate: isPrivate
@@ -2400,7 +2406,18 @@ Tab.prototype = {
     Services.obs.addObserver(this, "before-first-paint", false);
     Services.prefs.addObserver("browser.ui.zoom.force-user-scalable", this, false);
 
-    if (!aParams.delayLoad) {
+    if (aParams.delayLoad) {
+      // If this is a zombie tab, attach restore data so the tab will be
+      // restored when selected
+      this.browser.__SS_data = {
+        entries: [{
+          url: aURL,
+          title: title
+        }],
+        index: 1
+      };
+      this.browser.__SS_restore = true;
+    } else {
       let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
       let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
       let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
