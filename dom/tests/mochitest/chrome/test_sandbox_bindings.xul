@@ -51,6 +51,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       }
       try {
         var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
+        xhr.prototype = false;
+      } catch (e) {
+        ok(true, "'XMLHttpRequest.prototype' should be readonly");
+      }
+      try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
+        delete xhr.prototype;
+      } catch (e) {
+        ok(true, "'XMLHttpRequest.prototype' should be permanent");
+      }
+      try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox);
+        xhr.constructor = "ok";
+      } catch (e) {
+        is(xhr.constructor, "ok", "'XMLHttpRequest.prototype.constructor' should be writeable");
+      }
+      try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox);
+        delete xhr.constructor;
+      } catch (e) {
+        is(xhr.constructor, undefined, "'XMLHttpRequest.prototype.constructor' should be permanent");
+      }
+      try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
         is(xhr, "[object XrayWrapper " + XMLHttpRequest + "]", "'XMLHttpRequest' in a sandbox should return the XMLHttpRequest interface object");
         ok(isXrayWrapper(xhr.prototype), "Getting the prototype property on an Xray wrapper of an interface object should return an Xray wrapper");
       } catch (e) {
