@@ -19,8 +19,8 @@ interface nsIMobileConnectionProvider : nsISupports
 {
   /**
    * Called when a content process registers receiving unsolicited messages from
-   * RadioInterfaceLayer in the chrome process. Only a content granted
-   * mobileconnection permission is allowed to register. Note that a content
+   * RadioInterfaceLayer in the chrome process. Only a content process that has
+   * the 'mobileconnection' permission is allowed to register. Note that content
    * doesn't need to unregister because the chrome process will remove it from
    * the registration list once the chrome receives a 'child-process-shutdown'
    * message.

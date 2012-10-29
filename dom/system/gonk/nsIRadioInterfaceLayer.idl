@@ -150,21 +150,23 @@ interface nsIRILContentHelper : nsIMobileConnectionProvider
 
   /**
    * Called when a content process registers receiving unsolicited messages from
-   * RadioInterfaceLayer in the chrome process. Only content granted telephony
-   * permission is allowed to register. Note that a content doesn't need to
-   * unregister because the chrome process will remove it from the registration
-   * list once the chrome receives a 'child-process-shutdown' message.
+   * RadioInterfaceLayer in the chrome process. Only a content process that has
+   * the 'telephony' permission is allowed to register. Note that content
+   * doesn't need to unregister because the chrome process will remove it from
+   * the registration list once the chrome receives a 'child-process-shutdown'
+   * message.
    */
-   void registerTelephonyMsg();
+  void registerTelephonyMsg();
 
   /**
    * Called when a content process registers receiving unsolicited messages from
-   * RadioInterfaceLayer in the chrome process. Only a content granted voice
-   * mail permission is allowed to register. Note that a content doesn't need to
-   * unregister because the chrome process will remove it from the registration
-   * list once the chrome receives a 'child-process-shutdown' message.
+   * RadioInterfaceLayer in the chrome process. Only a content process that has
+   * the 'voicemail' permission is allowed to register. Note that content
+   * doesn't need to unregister because the chrome process will remove it from
+   * the registration list once the chrome receives a 'child-process-shutdown'
+   * message.
    */
-   void registerVoicemailMsg();
+  void registerVoicemailMsg();
 
   /**
    * Will continue calling callback.enumerateCallState until the callback
