@@ -13,11 +13,18 @@
 #include "prlog.h"
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* GetUserMediaLog = PR_NewLogModule("GetUserMedia");
+static PRLogModuleInfo*
+GetUserMediaLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("GetUserMedia");
+  return sLog;
+}
 #endif
 
 #undef LOG
-#define LOG(args) PR_LOG(GetUserMediaLog, PR_LOG_DEBUG, args)
+#define LOG(args) PR_LOG(GetUserMediaLog(), PR_LOG_DEBUG, args)
 
 #include "MediaEngineWebRTC.h"
 #include "ImageContainer.h"

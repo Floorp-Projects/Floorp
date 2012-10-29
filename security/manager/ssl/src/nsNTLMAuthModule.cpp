@@ -22,10 +22,17 @@
 #include "mozilla/Likely.h"
 
 #ifdef PR_LOGGING
-PRLogModuleInfo *gNTLMLog = PR_NewLogModule("NTLM");
+static PRLogModuleInfo *
+GetNTLMLog()
+{
+  static PRLogModuleInfo *sNTLMLog;
+  if (!sNTLMLog)
+    sNTLMLog = PR_NewLogModule("NTLM");
+  return sNTLMLog;
+}
 
-#define LOG(x) PR_LOG(gNTLMLog, PR_LOG_DEBUG, x)
-#define LOG_ENABLED() PR_LOG_TEST(gNTLMLog, PR_LOG_DEBUG)
+#define LOG(x) PR_LOG(GetNTLMLog(), PR_LOG_DEBUG, x)
+#define LOG_ENABLED() PR_LOG_TEST(GetNTLMLog(), PR_LOG_DEBUG)
 #else
 #define LOG(x)
 #endif

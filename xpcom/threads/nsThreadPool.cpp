@@ -16,9 +16,16 @@
 using namespace mozilla;
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo *sLog = PR_NewLogModule("nsThreadPool");
+static PRLogModuleInfo *
+GetThreadPoolLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("nsThreadPool");
+  return sLog;
+}
 #endif
-#define LOG(args) PR_LOG(sLog, PR_LOG_DEBUG, args)
+#define LOG(args) PR_LOG(GetThreadPoolLog(), PR_LOG_DEBUG, args)
 
 // DESIGN:
 //  o  Allocate anonymous threads.

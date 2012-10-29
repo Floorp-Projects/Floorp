@@ -33,10 +33,17 @@
 #define STS_KNOCKOUT (nsIPermissionManager::DENY_ACTION)
 
 #if defined(PR_LOGGING)
-PRLogModuleInfo *gSTSLog = PR_NewLogModule("nsSTSService");
+static PRLogModuleInfo *
+GetSTSLog()
+{
+  static PRLogModuleInfo *gSTSLog;
+  if (!gSTSLog)
+    gSTSLog = PR_NewLogModule("nsSTSService");
+  return gSTSLog;
+}
 #endif
 
-#define STSLOG(args) PR_LOG(gSTSLog, 4, args)
+#define STSLOG(args) PR_LOG(GetSTSLog(), 4, args)
 
 #define STS_PARSER_FAIL_IF(test,args) \
   if (test) { \

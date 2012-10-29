@@ -44,7 +44,14 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMCameraManager)
  * Set the NSPR_LOG_MODULES environment variable to enable logging
  * in a debug build, e.g. NSPR_LOG_MODULES=Camera:5
  */
-PRLogModuleInfo* gCameraLog = PR_NewLogModule("Camera");
+PRLogModuleInfo*
+GetCameraLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("Camera");
+  return sLog;
+}
 
 /**
  * nsDOMCameraManager::GetListOfCameras

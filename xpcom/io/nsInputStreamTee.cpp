@@ -19,8 +19,15 @@
 using namespace mozilla;
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo* gInputStreamTeeLog = PR_NewLogModule("nsInputStreamTee");
-#define LOG(args) PR_LOG(gInputStreamTeeLog, PR_LOG_DEBUG, args)
+static PRLogModuleInfo*
+GetTeeLog()
+{
+    static PRLogModuleInfo *sLog;
+    if (!sLog)
+        sLog = PR_NewLogModule("nsInputStreamTee");
+    return sLog;
+}
+#define LOG(args) PR_LOG(GetTeeLog(), PR_LOG_DEBUG, args)
 #else
 #define LOG(args)
 #endif
