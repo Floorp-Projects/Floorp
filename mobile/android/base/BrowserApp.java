@@ -462,7 +462,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void showTabs(TabsPanel.Panel panel) {
-        if (!checkLaunchState(LaunchState.GeckoRunning))
+        if (Tabs.getInstance().getCount() == 0)
             return;
 
         mTabsPanel.show(panel);
