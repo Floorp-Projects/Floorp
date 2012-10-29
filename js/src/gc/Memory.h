@@ -34,7 +34,7 @@ bool MarkPagesInUse(void *p, size_t size);
 // Returns #(hard faults) + #(soft faults)
 size_t GetPageFaultCount();
 
-} /* namespace gc */
-} /* namespace js */
+} // namespace gc
+} // namespace js
 
-#endif /* jsgc_memory_h___ */
+#endif // jsgc_memory_h___
