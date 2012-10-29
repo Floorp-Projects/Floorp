@@ -26,7 +26,7 @@ class DummyFrameGuard;
  * expect to expose this object via any kind of unwrapping operation). Callers
  * should be careful to avoid unwrapping security wrappers in the wrong context.
  */
-class JS_FRIEND_API(Wrapper)
+class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 {
     unsigned mFlags;
 
@@ -56,25 +56,9 @@ class JS_FRIEND_API(Wrapper)
 
     static JSObject *wrappedObject(RawObject wrapper);
 
-    explicit Wrapper(unsigned flags);
-
     unsigned flags() const {
         return mFlags;
     }
-
-    /*
-     * The function Wrapper::New takes a pointer to a Wrapper as the handler
-     * object. It then passes it on to the function NewProxyObject, which
-     * expects a pointer to a BaseProxyHandler as the handler object. We don't
-     * want to change Wrapper::New to take a pointer to a BaseProxyHandler,
-     * because that would allow the creation of wrappers with non-wrapper
-     * handlers. Unfortunately, we can't inherit Wrapper from BaseProxyHandler,
-     * since that would create a dreaded diamond, and we can't use dynamic_cast
-     * to cast Wrapper to BaseProxyHandler, since that would require us to
-     * compile with run time type information. Hence the need for this virtual
-     * function.
-     */
-    virtual BaseProxyHandler *toBaseProxyHandler() = 0;
 
     /* Policy enforcement traps.
      *
@@ -103,19 +87,10 @@ class JS_FRIEND_API(Wrapper)
      */
     virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act,
                        bool *bp);
-};
 
-/*
- * DirectWrapper forwards its traps by forwarding them to DirectProxyHandler.
- * In effect, DirectWrapper behaves the same as DirectProxyHandler, except that
- * it adds policy enforcement checks to each trap.
- */
-class JS_FRIEND_API(DirectWrapper) : public Wrapper, public DirectProxyHandler
-{
-  public:
-    explicit DirectWrapper(unsigned flags, bool hasPrototype = false);
+    explicit Wrapper(unsigned flags, bool hasPrototype = false);
 
-    virtual ~DirectWrapper();
+    virtual ~Wrapper();
 
     virtual BaseProxyHandler* toBaseProxyHandler() {
         return this;
@@ -161,14 +136,14 @@ class JS_FRIEND_API(DirectWrapper) : public Wrapper, public DirectProxyHandler
     virtual bool defaultValue(JSContext *cx, JSObject *wrapper_, JSType hint,
                               Value *vp) MOZ_OVERRIDE;
 
-    static DirectWrapper singleton;
-    static DirectWrapper singletonWithPrototype;
+    static Wrapper singleton;
+    static Wrapper singletonWithPrototype;
 
     static void *getWrapperFamily();
 };
 
 /* Base class for all cross compartment wrapper handlers. */
-class JS_FRIEND_API(CrossCompartmentWrapper) : public DirectWrapper
+class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
 {
   public:
     CrossCompartmentWrapper(unsigned flags, bool hasPrototype = false);
@@ -233,7 +208,7 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
     virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g) MOZ_OVERRIDE;
 };
 
-typedef SecurityWrapper<DirectWrapper> SameCompartmentSecurityWrapper;
+typedef SecurityWrapper<Wrapper> SameCompartmentSecurityWrapper;
 typedef SecurityWrapper<CrossCompartmentWrapper> CrossCompartmentSecurityWrapper;
 
 class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler

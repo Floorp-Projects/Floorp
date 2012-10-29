@@ -14,9 +14,9 @@
 
 #include "jsobjinlines.h"
 
-struct OuterWrapper : js::DirectWrapper
+struct OuterWrapper : js::Wrapper
 {
-    OuterWrapper() : DirectWrapper(0) {}
+    OuterWrapper() : Wrapper(0) {}
 
     virtual bool isOuterWindow() {
         return true;

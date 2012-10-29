@@ -129,7 +129,7 @@ class ScriptFrameIter;
 
 class Proxy;
 class JS_FRIEND_API(BaseProxyHandler);
-class JS_FRIEND_API(DirectWrapper);
+class JS_FRIEND_API(Wrapper);
 class JS_FRIEND_API(CrossCompartmentWrapper);
 
 class TempAllocPolicy;

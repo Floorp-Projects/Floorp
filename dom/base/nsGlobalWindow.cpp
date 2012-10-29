@@ -588,10 +588,10 @@ nsPIDOMWindow::~nsPIDOMWindow() {}
 // nsOuterWindowProxy: Outer Window Proxy
 //*****************************************************************************
 
-class nsOuterWindowProxy : public js::DirectWrapper
+class nsOuterWindowProxy : public js::Wrapper
 {
 public:
-  nsOuterWindowProxy() : js::DirectWrapper(0) {}
+  nsOuterWindowProxy() : js::Wrapper(0) {}
 
   virtual bool isOuterWindow() {
     return true;
