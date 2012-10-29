@@ -35,8 +35,10 @@ nsresult nsHttpAuthManager::Init()
     NS_ENSURE_TRUE(gHttpHandler, NS_ERROR_UNEXPECTED);
   }
 	
-  mAuthCache = gHttpHandler->AuthCache();
+  mAuthCache = gHttpHandler->AuthCache(false);
+  mPrivateAuthCache = gHttpHandler->AuthCache(true);
   NS_ENSURE_TRUE(mAuthCache, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mPrivateAuthCache, NS_ERROR_FAILURE);
   return NS_OK;
 }
 
@@ -53,18 +55,20 @@ nsHttpAuthManager::GetAuthIdentity(const nsACString & aScheme,
                                    const nsACString & aPath,
                                    nsAString & aUserDomain,
                                    nsAString & aUserName,
-                                   nsAString & aUserPassword)
+                                   nsAString & aUserPassword,
+                                   bool aIsPrivate)
 {
+  nsHttpAuthCache* auth_cache = aIsPrivate ? mPrivateAuthCache : mAuthCache;
   nsHttpAuthEntry * entry = nullptr;
   nsresult rv;
   if (!aPath.IsEmpty())
-    rv = mAuthCache->GetAuthEntryForPath(PromiseFlatCString(aScheme).get(),
+    rv = auth_cache->GetAuthEntryForPath(PromiseFlatCString(aScheme).get(),
                                          PromiseFlatCString(aHost).get(),
                                          aPort,
                                          PromiseFlatCString(aPath).get(),
                                          &entry);
   else
-    rv = mAuthCache->GetAuthEntryForDomain(PromiseFlatCString(aScheme).get(),
+    rv = auth_cache->GetAuthEntryForDomain(PromiseFlatCString(aScheme).get(),
                                            PromiseFlatCString(aHost).get(),
                                            aPort,
                                            PromiseFlatCString(aRealm).get(),
@@ -90,13 +94,15 @@ nsHttpAuthManager::SetAuthIdentity(const nsACString & aScheme,
                                    const nsACString & aPath,
                                    const nsAString & aUserDomain,
                                    const nsAString & aUserName,
-                                   const nsAString & aUserPassword)
+                                   const nsAString & aUserPassword,
+                                   bool aIsPrivate)
 {
   nsHttpAuthIdentity ident(PromiseFlatString(aUserDomain).get(),
                            PromiseFlatString(aUserName).get(),
                            PromiseFlatString(aUserPassword).get());
 
-  return mAuthCache->SetAuthEntry(PromiseFlatCString(aScheme).get(),
+  nsHttpAuthCache* auth_cache = aIsPrivate ? mPrivateAuthCache : mAuthCache;
+  return auth_cache->SetAuthEntry(PromiseFlatCString(aScheme).get(),
                                   PromiseFlatCString(aHost).get(),
                                   aPort,
                                   PromiseFlatCString(aPath).get(),
@@ -110,5 +116,11 @@ nsHttpAuthManager::SetAuthIdentity(const nsACString & aScheme,
 NS_IMETHODIMP
 nsHttpAuthManager::ClearAll()
 {
-  return mAuthCache->ClearAll();
+  nsresult rv = mAuthCache->ClearAll();
+  nsresult rv2 = mPrivateAuthCache->ClearAll();
+  if (NS_FAILED(rv))
+    return rv;
+  if (NS_FAILED(rv2))
+    return rv2;
+  return NS_OK;
 }
