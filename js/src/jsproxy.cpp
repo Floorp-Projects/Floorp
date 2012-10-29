@@ -739,7 +739,7 @@ ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
 }
 
 /* Derived class for all scripted indirect proxy handlers. */
-class ScriptedIndirectProxyHandler : public IndirectProxyHandler {
+class ScriptedIndirectProxyHandler : public BaseProxyHandler {
   public:
     ScriptedIndirectProxyHandler();
     virtual ~ScriptedIndirectProxyHandler();
@@ -777,7 +777,7 @@ class ScriptedIndirectProxyHandler : public IndirectProxyHandler {
 static int sScriptedIndirectProxyHandlerFamily = 0;
 
 ScriptedIndirectProxyHandler::ScriptedIndirectProxyHandler()
-        : IndirectProxyHandler(&sScriptedIndirectProxyHandlerFamily)
+        : BaseProxyHandler(&sScriptedIndirectProxyHandlerFamily)
 {
 }
 
