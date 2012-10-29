@@ -2496,10 +2496,12 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // to cause period, and we hope hygienic, last-ditch GCs from within
     // the GC's allocator.
     JS_SetGCParameter(mJSRuntime, JSGC_MAX_BYTES, 0xffffffff);
-#ifdef MOZ_ASAN
-    // ASan requires more stack space due to redzones
+#if defined(MOZ_ASAN) || (defined(DEBUG) && !defined(XP_WIN))
+    // Bug 803182: account for the 4x difference in the size of js::Interpret
+    // between optimized and debug builds. Also, ASan requires more stack space
+    // due to redzones
     JS_SetNativeStackQuota(mJSRuntime, 2 * 128 * sizeof(size_t) * 1024);
-#else  
+#else
     JS_SetNativeStackQuota(mJSRuntime, 128 * sizeof(size_t) * 1024);
 #endif
     JS_SetContextCallback(mJSRuntime, ContextCallback);
