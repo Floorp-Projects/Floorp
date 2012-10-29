@@ -2820,8 +2820,7 @@ nsEventStateManager::GetScrollAmount(nsPresContext* aPresContext,
   nsLayoutUtils::GetFontMetricsForFrame(rootFrame, getter_AddRefs(fm),
     nsLayoutUtils::FontSizeInflationFor(rootFrame));
   NS_ENSURE_TRUE(fm, nsSize(0, 0));
-  int32_t fontHeight = fm->MaxHeight();
-  return nsSize(fontHeight, fontHeight);
+  return nsSize(fm->AveCharWidth(), fm->MaxHeight());
 }
 
 void
