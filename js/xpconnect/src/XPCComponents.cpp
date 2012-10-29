@@ -3057,9 +3057,9 @@ xpc::SandboxProxyHandler xpc::sandboxProxyHandler;
 // A proxy handler that lets us wrap callables and invoke them with
 // the correct this object, while forwarding all other operations down
 // to them directly.
-class SandboxCallableProxyHandler : public js::DirectWrapper {
+class SandboxCallableProxyHandler : public js::Wrapper {
 public:
-    SandboxCallableProxyHandler() : js::DirectWrapper(0)
+    SandboxCallableProxyHandler() : js::Wrapper(0)
     {
     }
 
