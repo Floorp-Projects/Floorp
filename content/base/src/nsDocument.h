@@ -601,6 +601,7 @@ public:
 
   virtual nsresult LoadAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheetURI);
   virtual void RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* sheetURI);
+  virtual nsIStyleSheet* FirstAdditionalAuthorSheet();
 
   virtual nsIChannel* GetChannel() const {
     return mChannel;
@@ -1124,7 +1125,7 @@ protected:
 
   nsCOMArray<nsIStyleSheet> mStyleSheets;
   nsCOMArray<nsIStyleSheet> mCatalogSheets;
-  nsCOMArray<nsIStyleSheet> mAdditionalSheets[2];
+  nsCOMArray<nsIStyleSheet> mAdditionalSheets[SheetTypeCount];
 
   // Array of observers
   nsTObserverArray<nsIDocumentObserver*> mObservers;
