@@ -806,14 +806,6 @@ FullTrustSecMan::CheckSameOriginURI(nsIURI *aSourceURI,
 }
 
 NS_IMETHODIMP
-FullTrustSecMan::GetPrincipalFromContext(JSContext * cx,
-                                         nsIPrincipal **_retval)
-{
-    NS_IF_ADDREF(*_retval = mSystemPrincipal);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 FullTrustSecMan::GetChannelPrincipal(nsIChannel *aChannel,
                                      nsIPrincipal **_retval)
 {
