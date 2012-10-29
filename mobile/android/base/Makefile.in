@@ -115,6 +115,7 @@ FENNEC_JAVA_FILES = \
   RemoteTabs.java \
   RobocopAPI.java \
   ScreenshotHandler.java \
+  SessionParser.java \
   SetupScreen.java \
   ShapedButton.java \
   SiteIdentityPopup.java \
