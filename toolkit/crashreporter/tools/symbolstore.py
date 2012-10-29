@@ -28,7 +28,9 @@ import shutil
 import textwrap
 import fnmatch
 import subprocess
+import urlparse
 from optparse import OptionParser
+from xml.dom.minidom import parse
 
 # Utility classes
 
@@ -170,6 +172,52 @@ class HGFileInfo(VCSFileInfo):
             return "hg:%s:%s:%s" % (self.clean_root, self.file, self.revision)
         return self.file
 
+class GitRepoInfo:
+    """
+    Info about a local git repository. Does not currently
+    support discovering info about a git clone, the info must be
+    provided out-of-band.
+    """
+    def __init__(self, path, rev, root):
+        self.path = path
+        cleanroot = None
+        if root:
+            match = rootRegex.match(root)
+            if match:
+                cleanroot = match.group(1)
+                if cleanroot.endswith('/'):
+                    cleanroot = cleanroot[:-1]
+        if cleanroot is None:
+            print >> sys.stderr, textwrap.dedent("""\
+                Could not determine repo info for %s (%s).  This is either not a clone of a web-based
+                repository, or you have not specified SRCSRV_ROOT, or the clone is corrupt.""") % (path, root)
+            sys.exit(1)
+        self.rev = rev
+        self.cleanroot = cleanroot
+
+    def GetFileInfo(self, file):
+        return GitFileInfo(file, self)
+
+class GitFileInfo(VCSFileInfo):
+    def __init__(self, file, repo):
+        VCSFileInfo.__init__(self, file)
+        self.repo = repo
+        self.file = os.path.relpath(file, repo.path)
+
+    def GetRoot(self):
+        return self.repo.path
+
+    def GetCleanRoot(self):
+        return self.repo.cleanroot
+
+    def GetRevision(self):
+        return self.repo.rev
+
+    def GetFilename(self):
+        if self.revision and self.clean_root:
+            return "git:%s:%s:%s" % (self.clean_root, self.file, self.revision)
+        return self.file
+
 # Utility functions
 
 # A cache of repo info for each srcdir.
@@ -272,11 +320,12 @@ class Dumper:
     get an instance of a subclass."""
     def __init__(self, dump_syms, symbol_path,
                  archs=None,
-                 srcdirs=None,
+                 srcdirs=[],
                  copy_debug=False,
                  vcsinfo=False,
                  srcsrv=False,
-                 exclude=[]):
+                 exclude=[],
+                 repo_manifest=None):
         # popen likes absolute paths, at least on windows
         self.dump_syms = os.path.abspath(dump_syms)
         self.symbol_path = symbol_path
@@ -285,14 +334,59 @@ class Dumper:
             self.archs = ['']
         else:
             self.archs = ['-a %s' % a for a in archs.split()]
-        if srcdirs is not None:
-            self.srcdirs = [os.path.normpath(a) for a in srcdirs]
-        else:
-            self.srcdirs = None
+        self.srcdirs = [os.path.normpath(a) for a in srcdirs]
         self.copy_debug = copy_debug
         self.vcsinfo = vcsinfo
         self.srcsrv = srcsrv
         self.exclude = exclude[:]
+        if repo_manifest:
+            self.parse_repo_manifest(repo_manifest)
+
+    def parse_repo_manifest(self, repo_manifest):
+        """
+        Parse an XML manifest of repository info as produced
+        by the `repo manifest -r` command.
+        """
+        doc = parse(repo_manifest)
+        if doc.firstChild.tagName != "manifest":
+            return
+        # First, get remotes.
+        remotes = dict([(r.getAttribute("name"), r.getAttribute("fetch")) for r in doc.getElementsByTagName("remote")])
+        # And default remote.
+        default_remote = None
+        if doc.getElementsByTagName("default"):
+            default_remote = doc.getElementsByTagName("default")[0].getAttribute("remote")
+        # Now get projects. Assume they're relative to repo_manifest.
+        base_dir = os.path.abspath(os.path.dirname(repo_manifest))
+        for proj in doc.getElementsByTagName("project"):
+            # name is the repository URL relative to the remote path.
+            name = proj.getAttribute("name")
+            # path is the path on-disk, relative to the manifest file.
+            path = proj.getAttribute("path")
+            # revision is the changeset ID.
+            rev = proj.getAttribute("revision")
+            # remote is the base URL to use.
+            remote = proj.getAttribute("remote")
+            # remote defaults to the <default remote>.
+            if not remote:
+                remote = default_remote
+            # path defaults to name.
+            if not path:
+                path = name
+            if not (name and path and rev and remote):
+                print "Skipping project %s" % proj.toxml()
+                continue
+            remote = remotes[remote]
+            # Turn git URLs into http URLs so that urljoin works.
+            if remote.startswith("git:"):
+                remote = "http" + remote[3:]
+            # Add this project to srcdirs.
+            srcdir = os.path.join(base_dir, path)
+            self.srcdirs.append(srcdir)
+            # And cache its VCS file info. Currently all repos mentioned
+            # in a repo manifest are assumed to be git.
+            root = urlparse.urljoin(remote, name)
+            srcdirRepoInfo[srcdir] = GitRepoInfo(srcdir, rev, root)
 
     # subclasses override this
     def ShouldProcess(self, file):
@@ -640,15 +734,20 @@ def main():
     parser.add_option("-x", "--exclude",
                       action="append", dest="exclude", default=[], metavar="PATTERN",
                       help="Skip processing files matching PATTERN.")
+    parser.add_option("--repo-manifest",
+                      action="store", dest="repo_manifest",
+                      help="""Get source information from this XML manifest
+produced by the `repo manifest -r` command.
+""")
     (options, args) = parser.parse_args()
-    
+
     #check to see if the pdbstr.exe exists
     if options.srcsrv:
         pdbstr = os.environ.get("PDBSTR_PATH")
         if not os.path.exists(pdbstr):
             print >> sys.stderr, "Invalid path to pdbstr.exe - please set/check PDBSTR_PATH.\n"
             sys.exit(1)
-            
+
     if len(args) < 3:
         parser.error("not enough arguments")
         exit(1)
@@ -660,7 +759,8 @@ def main():
                                        srcdirs=options.srcdir,
                                        vcsinfo=options.vcsinfo,
                                        srcsrv=options.srcsrv,
-                                       exclude=options.exclude)
+                                       exclude=options.exclude,
+                                       repo_manifest=options.repo_manifest)
     for arg in args[2:]:
         dumper.Process(arg)
 
