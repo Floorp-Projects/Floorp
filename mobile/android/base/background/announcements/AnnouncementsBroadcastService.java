@@ -62,7 +62,6 @@ public class AnnouncementsBroadcastService extends IntentService {
    */
   public static void recordLastLaunch(final Context context) {
     final long now = System.currentTimeMillis();
-    Logger.info(LOG_TAG, "Recording launch: " + now);
     final SharedPreferences preferences = context.getSharedPreferences(AnnouncementsConstants.PREFS_BRANCH, BackgroundConstants.SHARED_PREFERENCES_MODE);
     preferences.edit().putLong(AnnouncementsConstants.PREF_LAST_LAUNCH, now).commit();
   }
