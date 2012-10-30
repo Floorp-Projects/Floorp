@@ -452,20 +452,11 @@ to the style struct:<br>
   <h3><a name="DOM">DOM</a></h3>
 Users in scripts, or anywhere outside of layout/ or content/ may need to access
 the new property.  This is done using the CSS OM, specifically
-<code>nsIDOMCSSStyleDeclaration</code> and <code>nsIDOMCSS2Properties</code>.
+<code>nsIDOMCSSStyleDeclaration</code> and <code>CSS2Properties</code>.
 By the magic of C++ pre-processing, the
-CSS2Properties interfaces will be implemented automatically when you
+CSS2Properties bits will be implemented automatically when you
 <a href="#CSSPropList">add your property</a> to <a href="http://lxr.mozilla.org/seamonkey/source/content/shared/public/nsCSSPropList.h">
-nsCSSPropList.h</a>. Because of this, if you fail to add your property to the
-DOM interface, you will be rewarded with compiler errors.  All you have to do
-is modify <a href="http://lxr.mozilla.org/mozilla/source/dom/public/idl/css/nsIDOMCSS2Properties.idl">
-nsIDOMCSS2Properties.idl</a> and add the appropriate attribute to the
-<code>nsIDOMNSCSS2Properties</code> interface (lower in the file).
-For example:<br>
-  <pre>           attribute DOMString        MozForceBrokenImageIcon;
-                                        // raises(DOMException) on setting
-
-</pre>
+nsCSSPropList.h</a>.
   <h3><a name="Layout">Layout</a></h3>
 OK, finally the style system is supporting the new property. It is time to
 actually make use of it now.<br>

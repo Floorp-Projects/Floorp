@@ -142,7 +142,6 @@
 #include "nsCSSRules.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetList.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSSRule.h"
 #include "nsICSSRuleList.h"
 #include "nsIDOMRect.h"
@@ -157,7 +156,6 @@
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsStyleContext.h"
 #include "nsAutoPtr.h"
 #include "nsMemory.h"
@@ -281,7 +279,6 @@
 #include "nsIDOMMediaStream.h"
 #endif
 #include "nsIDOMProgressEvent.h"
-#include "nsIDOMCSS2Properties.h"
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
@@ -1032,8 +1029,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSStyleSheet, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CSSStyleDeclaration, nsCSSStyleDeclSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(ROCSSPrimitiveValue, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -1527,8 +1522,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CSSFontFaceStyleDecl, nsCSSStyleDeclSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
 
 #if defined(MOZ_MEDIA)
   NS_DEFINE_CLASSINFO_DATA(HTMLVideoElement, nsElementSH,
@@ -3039,11 +3032,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleSheet)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(CSSStyleDeclaration, nsIDOMCSSStyleDeclaration)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSS2Properties)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ROCSSPrimitiveValue,
                                       nsIDOMCSSPrimitiveValue)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSPrimitiveValue)
@@ -4122,11 +4110,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(CSSFontFaceRule, nsIDOMCSSFontFaceRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSFontFaceRule)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(CSSFontFaceStyleDecl,
-                                      nsIDOMCSSStyleDeclaration)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
   DOM_CLASSINFO_MAP_END
 
 #if defined (MOZ_MEDIA)
@@ -10313,54 +10296,6 @@ nsCSSValueListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
 
   return list->GetItemAt(aIndex);
 }
-
-
-// CSSStyleDeclaration helper
-
-NS_IMETHODIMP
-nsCSSStyleDeclSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
-                            JSObject *globalObj, JSObject **parentObj)
-{
-#ifdef DEBUG
-  nsWrapperCache* cache = nullptr;
-  CallQueryInterface(nativeObj, &cache);
-  MOZ_ASSERT(cache, "All CSS declarations must be wrappercached");
-#endif
-
-  nsICSSDeclaration *declaration = static_cast<nsICSSDeclaration*>(nativeObj);
-  nsINode *native_parent = declaration->GetParentObject();
-  if (!native_parent) {
-    return nsDOMClassInfo::PreCreate(nativeObj, cx, globalObj, parentObj);
-  }
-
-  nsresult rv =
-    WrapNativeParent(cx, globalObj, native_parent, parentObj);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
-}
-
-nsresult
-nsCSSStyleDeclSH::GetStringAt(nsISupports *aNative, int32_t aIndex,
-                              nsAString& aResult)
-{
-  if (aIndex < 0) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> style_decl(do_QueryInterface(aNative));
-
-  nsresult rv = style_decl->Item(uint32_t(aIndex), aResult);
-#ifdef DEBUG
-  if (DOMStringIsNull(aResult)) {
-    uint32_t length = 0;
-    style_decl->GetLength(&length);
-    NS_ASSERTION(uint32_t(aIndex) >= length, "Item should only return null for out-of-bounds access");
-  }
-#endif
-  return rv;
-}
-
 
 // CSSRuleList scriptable helper
 

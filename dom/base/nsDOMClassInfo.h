@@ -1162,34 +1162,6 @@ public:
   }
 };
 
-
-// CSSStyleDeclaration helper
-
-class nsCSSStyleDeclSH : public nsStringArraySH
-{
-protected:
-  nsCSSStyleDeclSH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
-  {
-  }
-
-  virtual ~nsCSSStyleDeclSH()
-  {
-  }
-
-  virtual nsresult GetStringAt(nsISupports *aNative, int32_t aIndex,
-                               nsAString& aResult);
-
-public:
-  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
-                       JSObject *globalObj, JSObject **parentObj);
-
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsCSSStyleDeclSH(aData);
-  }
-};
-
-
 // CSSRuleList helper
 
 class nsCSSRuleListSH : public nsArraySH
