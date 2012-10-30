@@ -1,0 +1,25 @@
+<html>
+<body>
+file_browserElement_CookiesNotThirdParty.html
+
+<script type='text/javascript;version=1.7'>
+if (location.search != '?step=2') {
+  // Step 1: Set a cookie.
+  document.cookie = 'file_browserElement_CookiesNotThirdParty';
+  alert('next');
+}
+else {
+  // Step 2: Read the cookie.
+  if (document.cookie == 'file_browserElement_CookiesNotThirdParty') {
+    alert('success: got the correct cookie');
+  }
+  else {
+    alert('failure: got unexpected cookie: "' + document.cookie + '"');
+  }
+
+  alert('finish');
+}
+</script>
+
+</body>
+</html>
