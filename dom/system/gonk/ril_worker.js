@@ -3864,21 +3864,20 @@ let RIL = {
 
     delete this._pendingSentSmsMap[message.messageRef];
 
-    if ((status >>> 5) != 0x00) {
-      if (DEBUG) debug("SMS-STATUS-REPORT: delivery failed");
-      // It seems unlikely to get a result code for a failure to deliver.
-      // Even if, we don't want to do anything with this.
+    if ((options.segmentMaxSeq > 1)
+        && (options.segmentSeq < options.segmentMaxSeq)) {
+      // Not the last segment.
       return PDU_FCS_OK;
     }
 
-    if ((options.segmentMaxSeq == 1)
-        && (options.segmentSeq == options.segmentMaxSeq)) {
-      // Last segment delivered with success. Report it.
-      this.sendDOMMessage({
-        rilMessageType: "sms-delivered",
-        envelopeId: options.envelopeId,
-      });
-    }
+    let deliveryStatus = ((status >>> 5) == 0x00)
+                       ? GECKO_SMS_DELIVERY_STATUS_SUCCESS
+                       : GECKO_SMS_DELIVERY_STATUS_ERROR;
+    this.sendDOMMessage({
+      rilMessageType: "sms-delivery",
+      envelopeId: options.envelopeId,
+      deliveryStatus: deliveryStatus
+    });
 
     return PDU_FCS_OK;
   },
