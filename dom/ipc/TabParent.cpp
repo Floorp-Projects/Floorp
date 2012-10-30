@@ -525,7 +525,7 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
   nsresult rv = widget->OnIMEFocusChange(aFocus);
 
   if (aFocus) {
-    if (NS_SUCCEEDED(rv) && rv != NS_SUCCESS_IME_NO_UPDATES) {
+    if (NS_SUCCEEDED(rv)) {
       *aPreference = widget->GetIMEUpdatePreference();
     } else {
       aPreference->mWantUpdates = false;
