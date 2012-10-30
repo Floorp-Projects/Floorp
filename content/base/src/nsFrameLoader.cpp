@@ -1620,7 +1620,7 @@ nsFrameLoader::MaybeCreateDocShell()
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
       os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
-                          "in-process-browser-frame-shown", NULL);
+                          "in-process-browser-or-app-frame-shown", NULL);
     }
 
     if (mMessageManager) {
