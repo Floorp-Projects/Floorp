@@ -192,6 +192,25 @@ let SocialUI = {
         containerParent instanceof Ci.nsIDOMXULPopupElement) {
       containerParent.hidePopup();
     }
+  },
+
+  disableWithConfirmation: function SocialUI_disableWithConfirmation() {
+    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
+    let dialogTitle = gNavigatorBundle.getFormattedString("social.remove.confirmationOK",
+                                                          [Social.provider.name]);
+    let text = gNavigatorBundle.getFormattedString("social.remove.confirmationLabel",
+                                                   [Social.provider.name, brandShortName]);
+    let okButtonText = dialogTitle;
+
+    let ps = Services.prompt;
+    let flags = ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0 +
+                ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1 +
+                ps.BUTTON_POS_0_DEFAULT;
+
+    let confirmationIndex = ps.confirmEx(null, dialogTitle, text, flags,
+                                         okButtonText, null, null, null, {});
+    if (confirmationIndex == 0)
+      Social.active = false;
   }
 }
 
@@ -650,6 +669,15 @@ var SocialToolbar = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SocialToolbar_init() {
     this.button.setAttribute("image", Social.provider.iconURL);
+
+    let removeItem = document.getElementById("social-remove-menuitem");
+    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
+    let label = gNavigatorBundle.getFormattedString("social.remove.label",
+                                                    [brandShortName]);
+    let accesskey = gNavigatorBundle.getString("social.remove.accesskey");
+    removeItem.setAttribute("label", label);
+    removeItem.setAttribute("accesskey", accesskey);
+
     this.updateButton();
     this.updateProfile();
     this._dynamicResizer = new DynamicResizeWatcher();

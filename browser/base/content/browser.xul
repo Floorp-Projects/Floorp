@@ -691,6 +691,9 @@
                       command="Social:ToggleNotifications"
                       label="&social.toggleNotifications.label;"
                       accesskey="&social.toggleNotifications.accesskey;"/>
+            <menuseparator/>
+            <menuitem id="social-remove-menuitem"
+                      oncommand="SocialUI.disableWithConfirmation();"/>
           </menupopup>
         </toolbarbutton>
       </toolbaritem>
