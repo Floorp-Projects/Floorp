@@ -5,5 +5,7 @@
     "dom/tests/mochitest/dom-level2-core": "",
     "dom/tests/mochitest/dom-level2-html": ""
   },
-"excludetests": {}
+"excludetests": {
+    "dom/tests/mochitest/dom-level0/test_innerWidthHeight_script.html": "bug 807137"
+  }
 }
