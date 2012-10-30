@@ -844,8 +844,7 @@ var SocialToolbar = {
       if (!label.hasAttribute("value") || label.getAttribute("value") != labelValue)
         label.setAttribute("value", labelValue);
 
-      if (image.getAttribute("src") != icon.iconURL)
-        image.setAttribute("src", icon.iconURL);
+      image.style.listStyleImage = "url(" + icon.iconURL + ")";
     }
     panel.appendChild(notificationFrames);
     iconBox.appendChild(iconContainers);

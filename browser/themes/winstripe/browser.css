@@ -3315,7 +3315,7 @@ html|*#gcli-output-frame {
 }
 
 @navbarLargeIcons@ > #social-toolbar-item > .toolbarbutton-1 {
-  padding: 5px 0;
+  padding: 6px 0;
 }
 
 @navbarLargeIcons@ > #social-toolbar-item > .toolbarbutton-1:first-child {
@@ -3349,8 +3349,7 @@ html|*#gcli-output-frame {
 }
 
 .social-notification-icon-image {
-  width: 16px;
-  height: 16px;
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 /* social toolbar provider menu */
