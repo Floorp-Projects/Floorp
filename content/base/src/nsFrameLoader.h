@@ -33,6 +33,7 @@ class nsITabParent;
 class nsIDocShellTreeItem;
 class nsIDocShellTreeOwner;
 class nsIDocShellTreeNode;
+class mozIApplication;
 
 namespace mozilla {
 namespace dom {
@@ -313,9 +314,9 @@ private:
   /**
    * Is this a frameloader for a bona fide <iframe mozbrowser> or
    * <iframe mozapp>?  (I.e., does the frame return true for
-   * nsIMozBrowserFrame::GetReallyIsBrowser()?)
+   * nsIMozBrowserFrame::GetReallyIsBrowserOrApp()?)
    */
-  bool OwnerIsBrowserFrame();
+  bool OwnerIsBrowserOrAppFrame();
 
   /**
    * Is this a frameloader for a bona fide <iframe mozapp>?  (I.e., does the
@@ -324,10 +325,29 @@ private:
   bool OwnerIsAppFrame();
 
   /**
+   * Is this a frame loader for a bona fide <iframe mozbrowser>?
+   */
+  bool OwnerIsBrowserFrame();
+
+  /**
    * Get our owning element's app manifest URL, or return the empty string if
    * our owning element doesn't have an app manifest URL.
    */
   void GetOwnerAppManifestURL(nsAString& aOut);
+
+  /**
+   * Get the app for our frame.  This is the app whose manifest is returned by
+   * GetOwnerAppManifestURL.
+   */
+  already_AddRefed<mozIApplication> GetOwnApp();
+
+  /**
+   * Get the closest app to our frame.  This is either the frame returned by
+   * GetOwnApp() or the app associated with our owner element's principal.
+   *
+   * That is, this method returns the app that our owner content is inside.
+   */
+  already_AddRefed<mozIApplication> GetOwnOrContainingApp();
 
   /**
    * If we are an IPC frame, set mRemoteFrame. Otherwise, create and
