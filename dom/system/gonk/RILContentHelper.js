@@ -614,10 +614,10 @@ RILContentHelper.prototype = {
     // protocol.
     let requestId = this._getRandomId();
     cpmm.sendAsyncMessage("RIL:EnumerateCalls", {requestId: requestId});
-    if (!this._enumerationTelephonyCallbacks) {
-      this._enumerationTelephonyCallbacks = [];
+    if (!this._enumerateTelephonyCallbacks) {
+      this._enumerateTelephonyCallbacks = [];
     }
-    this._enumerationTelephonyCallbacks.push(callback);
+    this._enumerateTelephonyCallbacks.push(callback);
   },
 
   startTone: function startTone(dtmfChar) {
@@ -851,7 +851,7 @@ RILContentHelper.prototype = {
 
   handleEnumerateCalls: function handleEnumerateCalls(calls) {
     debug("handleEnumerateCalls: " + JSON.stringify(calls));
-    let callback = this._enumerationTelephonyCallbacks.shift();
+    let callback = this._enumerateTelephonyCallbacks.shift();
     for (let i in calls) {
       let call = calls[i];
       let keepGoing;
