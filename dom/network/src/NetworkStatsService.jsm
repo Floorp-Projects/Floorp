@@ -9,7 +9,7 @@ function debug(s) { dump("-*- NetworkStatsService: " + s + "\n"); }
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-let EXPORTED_SYMBOLS = ["NetworkStatsService"];
+this.EXPORTED_SYMBOLS = ["NetworkStatsService"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "networkManager",
 
 let myGlobal = this;
 
-let NetworkStatsService = {
+this.NetworkStatsService = {
   init: function() {
     if (DEBUG) {
       debug("Service started");

@@ -6,21 +6,21 @@ let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
 
-let EXPORTED_SYMBOLS = ["SettingsDB", "SETTINGSDB_NAME", "SETTINGSSTORE_NAME"];
+this.EXPORTED_SYMBOLS = ["SettingsDB", "SETTINGSDB_NAME", "SETTINGSSTORE_NAME"];
 
 function debug(s) {
   //dump("-*- SettingsDB: " + s + "\n");
 }
 
-const SETTINGSDB_NAME = "settings";
-const SETTINGSDB_VERSION = 1;
-const SETTINGSSTORE_NAME = "settings";
+this.SETTINGSDB_NAME = "settings";
+this.SETTINGSDB_VERSION = 1;
+this.SETTINGSSTORE_NAME = "settings";
 
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
-function SettingsDB() {}
+this.SettingsDB = function SettingsDB() {}
 
 SettingsDB.prototype = {
 

@@ -9,7 +9,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const CC = Components.Constructor;
 
-let EXPORTED_SYMBOLS = ["OfflineCacheInstaller"];
+this.EXPORTED_SYMBOLS = ["OfflineCacheInstaller"];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
@@ -98,7 +98,7 @@ function readFile(aFile, aCallback) {
   });
 }
 
-const OfflineCacheInstaller = {
+this.OfflineCacheInstaller = {
   installCache: function installCache(app) {
     let cacheDir = makeFile(app.basePath)
     cacheDir.append(app.appId);

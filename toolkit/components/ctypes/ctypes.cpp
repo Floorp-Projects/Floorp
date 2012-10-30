@@ -90,6 +90,10 @@ InitAndSealCTypesClass(JSContext* cx, JSObject* global)
 
   JS_SetCTypesCallbacks(JSVAL_TO_OBJECT(ctypes), &sCallbacks);
 
+  // Can't freeze our global if it's shared.
+  if (Preferences::GetBool("jsloader.reuseGlobal"))
+    return true;
+
   // Seal up Object, Function, Array and Error and their prototypes.  (This
   // single object instance is shared amongst everyone who imports the ctypes
   // module.)

@@ -7,7 +7,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-var EXPORTED_SYMBOLS = [];
+this.EXPORTED_SYMBOLS = [];
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");

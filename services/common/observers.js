@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let EXPORTED_SYMBOLS = ["Observers"];
+this.EXPORTED_SYMBOLS = ["Observers"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -17,7 +17,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
  *
  * @version 0.2
  */
-let Observers = {
+this.Observers = {
   /**
    * Register the given callback as an observer of the given topic.
    *

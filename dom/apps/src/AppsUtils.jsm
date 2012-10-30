@@ -14,13 +14,13 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 // Shared code for AppsServiceChild.jsm, Webapps.jsm and Webapps.js
 
-let EXPORTED_SYMBOLS = ["AppsUtils", "ManifestHelper"];
+this.EXPORTED_SYMBOLS = ["AppsUtils", "ManifestHelper"];
 
 function debug(s) {
   //dump("-*- AppsUtils.jsm: " + s + "\n");
 }
 
-let AppsUtils = {
+this.AppsUtils = {
   // Clones a app, without the manifest.
   cloneAppObject: function cloneAppObject(aApp) {
     return {
@@ -240,7 +240,7 @@ let AppsUtils = {
 /**
  * Helper object to access manifest information with locale support
  */
-let ManifestHelper = function(aManifest, aOrigin) {
+this.ManifestHelper = function(aManifest, aOrigin) {
   this._origin = Services.io.newURI(aOrigin, null, null);
   this._manifest = aManifest;
   let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry)

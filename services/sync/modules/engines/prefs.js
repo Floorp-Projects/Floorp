@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ['PrefsEngine', 'PrefRec'];
+this.EXPORTED_SYMBOLS = ['PrefsEngine', 'PrefRec'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -20,7 +20,7 @@ Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 const PREFS_GUID = CommonUtils.encodeBase64URL(Services.appinfo.ID);
 
-function PrefRec(collection, id) {
+this.PrefRec = function PrefRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 PrefRec.prototype = {
@@ -31,7 +31,7 @@ PrefRec.prototype = {
 Utils.deferGetSet(PrefRec, "cleartext", ["value"]);
 
 
-function PrefsEngine(service) {
+this.PrefsEngine = function PrefsEngine(service) {
   SyncEngine.call(this, "Prefs", service);
 }
 PrefsEngine.prototype = {

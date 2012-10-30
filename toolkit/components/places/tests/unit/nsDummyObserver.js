@@ -52,4 +52,4 @@ DummyObserver.prototype = {
   ])
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([DummyObserver]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DummyObserver]);

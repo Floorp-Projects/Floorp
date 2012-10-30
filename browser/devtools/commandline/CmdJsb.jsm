@@ -6,7 +6,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const XMLHttpRequest =
   Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
 
-let EXPORTED_SYMBOLS = [ ];
+this.EXPORTED_SYMBOLS = [ ];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/gcli.jsm");

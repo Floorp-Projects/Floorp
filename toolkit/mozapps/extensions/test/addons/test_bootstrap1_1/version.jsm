@@ -1,3 +1,3 @@
-var EXPORTED_SYMBOLS = ["VERSION"];
+this.EXPORTED_SYMBOLS = ["VERSION"];
 
-var VERSION = 1;
+this.VERSION = 1;
