@@ -12,6 +12,7 @@ function test(obj) {
     testcase(obj, Set.prototype.has, 12);
     testcase(obj, Set.prototype.add, 12);
     testcase(obj, Set.prototype.delete, 12);
+    testcase(obj, Set.prototype.clear);
 }
 
 test(Set.prototype);
