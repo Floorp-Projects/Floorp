@@ -3008,7 +3008,7 @@ nsGlobalWindow::GetScriptableParent(nsIDOMWindow** aParent)
     return NS_OK;
   }
 
-  if (mDocShell->GetIsBrowserOrApp()) {
+  if (mDocShell->GetIsContentBoundary()) {
     nsCOMPtr<nsIDOMWindow> parent = static_cast<nsIDOMWindow*>(this);
     parent.swap(*aParent);
     return NS_OK;
@@ -3113,9 +3113,9 @@ nsGlobalWindow::GetContent(nsIDOMWindow** aContent)
   FORWARD_TO_OUTER(GetContent, (aContent), NS_ERROR_NOT_INITIALIZED);
   *aContent = nullptr;
 
-  // If we're contained in <iframe mozbrowser> or <iframe mozapp>, then
-  // GetContent is the same as window.top.
-  if (mDocShell && mDocShell->GetIsInBrowserOrApp()) {
+  // If we're contained in <iframe mozbrowser>, then GetContent is the same as
+  // window.top.
+  if (mDocShell && mDocShell->GetIsBelowContentBoundary()) {
     return GetScriptableTop(aContent);
   }
 
@@ -6561,7 +6561,7 @@ nsGlobalWindow::Close()
   FORWARD_TO_OUTER(Close, (), NS_ERROR_NOT_INITIALIZED);
 
   if (!mDocShell || IsInModalState() ||
-      (IsFrame() && !mDocShell->GetIsBrowserOrApp())) {
+      (IsFrame() && !mDocShell->GetIsContentBoundary())) {
     // window.close() is called on a frame in a frameset, on a window
     // that's already closed, or on a window for which there's
     // currently a modal dialog open. Ignore such calls.
@@ -7080,9 +7080,8 @@ nsGlobalWindow::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
  * nsIGlobalWindow::frameElement.
  *
  * In contrast to GetRealFrameElement, GetScriptableFrameElement says that the
- * window contained by an <iframe mozbrowser> or <iframe mozapp> has no frame
- * element (effectively treating a mozbrowser the same as a content/chrome
- * boundary).
+ * window contained by an <iframe mozbrowser> has no frame element
+ * (effectively treating a mozbrowser the same as a content/chrome boundary).
  */
 NS_IMETHODIMP
 nsGlobalWindow::GetScriptableFrameElement(nsIDOMElement** aFrameElement)
@@ -7090,7 +7089,7 @@ nsGlobalWindow::GetScriptableFrameElement(nsIDOMElement** aFrameElement)
   FORWARD_TO_OUTER(GetScriptableFrameElement, (aFrameElement), NS_ERROR_NOT_INITIALIZED);
   *aFrameElement = NULL;
 
-  if (!mDocShell || mDocShell->GetIsBrowserOrApp()) {
+  if (!mDocShell || mDocShell->GetIsContentBoundary()) {
     return NS_OK;
   }
 

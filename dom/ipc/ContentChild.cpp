@@ -487,8 +487,7 @@ static void FirstIdle(void)
 
 PBrowserChild*
 ContentChild::AllocPBrowser(const uint32_t& aChromeFlags,
-                            const AppToken& aOwnOrContainingAppToken,
-                            const bool& aIsBrowserElement)
+                            const bool& aIsBrowserElement, const AppId& aApp)
 {
     static bool firstIdleTaskPosted = false;
     if (!firstIdleTaskPosted) {
@@ -496,11 +495,8 @@ ContentChild::AllocPBrowser(const uint32_t& aChromeFlags,
         firstIdleTaskPosted = true;
     }
 
-    nsRefPtr<TabChild> child = TabChild::Create(
-        aChromeFlags,
-        aOwnOrContainingAppToken.get_uint32_t(),
-        aIsBrowserElement);
-
+    nsRefPtr<TabChild> child =
+        TabChild::Create(aChromeFlags, aIsBrowserElement, aApp.get_uint32_t());
     // The ref here is released below.
     return child.forget().get();
 }
