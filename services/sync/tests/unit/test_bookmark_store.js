@@ -393,8 +393,12 @@ add_test(function test_empty_query_doesnt_die() {
   record.parentName    = "Toolbar";
   record.parentid      = "toolbar";
 
-  // This should not throw.
+  // These should not throw.
   store.applyIncoming(record);
+
+  delete record.folderName;
+  store.applyIncoming(record);
+  
   run_next_test();
 });
 
