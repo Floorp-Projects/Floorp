@@ -157,7 +157,7 @@ parent:
     sync EndIMEComposition(bool cancel) returns (nsString composition);
 
     sync GetInputContext() returns (int32_t IMEEnabled, int32_t IMEOpen,
-                                    int64_t NativeIMEContext);
+                                    intptr_t NativeIMEContext);
 
     SetInputContext(int32_t IMEEnabled,
                     int32_t IMEOpen,
