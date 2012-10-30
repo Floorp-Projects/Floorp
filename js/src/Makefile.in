@@ -263,6 +263,7 @@ VPATH +=	$(srcdir)/ion/shared
 
 CPPSRCS +=	MIR.cpp \
 		BaselineCompiler.cpp \
+		BaselineIC.cpp \
 		BaselineFrameInfo.cpp \
 		BaselineJIT.cpp \
 		Bailouts.cpp \

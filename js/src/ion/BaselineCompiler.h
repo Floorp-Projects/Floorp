@@ -16,7 +16,7 @@
 
 #include "BaselineJIT.h"
 #include "BaselineFrameInfo.h"
-#include "ion/IonMacroAssembler.h"
+#include "BaselineIC.h"
 #include "FixedList.h"
 
 namespace js {

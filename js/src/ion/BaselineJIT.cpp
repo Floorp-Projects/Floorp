@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BaselineCompiler.h"
+#include "BaselineIC.h"
 #include "BaselineJIT.h"
 #include "CompileInfo.h"
 
@@ -195,6 +196,13 @@ BaselineScript::copyCacheEntries(const CacheData *caches, MacroAssembler &masm)
     // final code address now.
     for (size_t i = 0; i < numCaches(); i++)
         getCache(i).updateBaseAddress(method_, masm);
+}
+
+CacheData &
+BaselineScript::getCache(size_t index)
+{
+    JS_ASSERT(index < numCaches());
+    return cacheList()[index];
 }
 
 CacheData &
