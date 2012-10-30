@@ -92,15 +92,15 @@ public class GeckoAppShell
     public static native void notifySmsReceived(String aSender, String aBody, long aTimestamp);
     public static native int  saveMessageInSentbox(String aReceiver, String aBody, long aTimestamp);
     public static native void notifySmsSent(int aId, String aReceiver, String aBody, long aTimestamp, int aRequestId, long aProcessId);
-    public static native void notifySmsDelivered(int aId, String aReceiver, String aBody, long aTimestamp);
+    public static native void notifySmsDelivery(int aId, int aDeliveryStatus, String aReceiver, String aBody, long aTimestamp);
     public static native void notifySmsSendFailed(int aError, int aRequestId, long aProcessId);
-    public static native void notifyGetSms(int aId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
+    public static native void notifyGetSms(int aId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
     public static native void notifyGetSmsFailed(int aError, int aRequestId, long aProcessId);
     public static native void notifySmsDeleted(boolean aDeleted, int aRequestId, long aProcessId);
     public static native void notifySmsDeleteFailed(int aError, int aRequestId, long aProcessId);
     public static native void notifyNoMessageInList(int aRequestId, long aProcessId);
-    public static native void notifyListCreated(int aListId, int aMessageId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
-    public static native void notifyGotNextMessage(int aMessageId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
+    public static native void notifyListCreated(int aListId, int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
+    public static native void notifyGotNextMessage(int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
     public static native void notifyReadingMessageListFailed(int aError, int aRequestId, long aProcessId);
     public static native void onSurfaceTextureFrameAvailable(Object surfaceTexture, int id);
 
