@@ -943,15 +943,15 @@ PropertyView.prototype = {
     }
 
     if (!this.tree.viewedElement || !this.visible) {
-      this.valueNode.innerHTML = "";
+      this.valueNode.textContent = "";
       this.matchedSelectorsContainer.parentNode.hidden = true;
-      this.matchedSelectorsContainer.innerHTML = "";
+      this.matchedSelectorsContainer.textContent = "";
       this.matchedExpander.removeAttribute("open");
       return;
     }
 
     this.tree.numVisibleProperties++;
-    this.valueNode.innerHTML = this.propertyInfo.value;
+    this.valueNode.textContent = this.propertyInfo.value;
     this.refreshAllSelectors();
   },
 
