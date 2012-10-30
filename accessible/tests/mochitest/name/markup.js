@@ -14,7 +14,7 @@ var gDumpToConsole = true;
  */
 function testNames()
 {
-  enableLogging("tree,stack");
+  enableLogging("tree");
 
   var request = new XMLHttpRequest();
   request.open("get", gNameRulesFileURL, false);

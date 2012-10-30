@@ -250,7 +250,6 @@ nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
       logging::Node("content", child);
     }
     logging::MsgEnd();
-    logging::Stack();
   }
 #endif
 
@@ -270,7 +269,6 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
     logging::Node("container", aContainer);
     logging::Node("content", aChild);
     logging::MsgEnd();
-    logging::Stack();
   }
 #endif
 
