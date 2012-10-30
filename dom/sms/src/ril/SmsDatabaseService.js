@@ -25,6 +25,8 @@ const DELIVERY_STATUS_SUCCESS = "success";
 const DELIVERY_STATUS_PENDING = "pending";
 const DELIVERY_STATUS_ERROR = "error";
 
+const MESSAGE_CLASS_NORMAL = "normal";
+
 const FILTER_TIMESTAMP = "timestamp";
 const FILTER_NUMBERS = "numbers";
 const FILTER_DELIVERY = "delivery";
@@ -326,6 +328,7 @@ SmsDatabaseService.prototype = {
                                                message.sender,
                                                message.receiver,
                                                message.body,
+                                               message.messageClass,
                                                message.timestamp,
                                                message.read);
         gSmsRequestManager.notifyCreateMessageList(requestId,
@@ -354,7 +357,7 @@ SmsDatabaseService.prototype = {
    * nsISmsDatabaseService API
    */
 
-  saveReceivedMessage: function saveReceivedMessage(sender, body, date) {
+  saveReceivedMessage: function saveReceivedMessage(sender, body, messageClass, date) {
     let receiver = this.mRIL.rilContext.icc ? this.mRIL.rilContext.icc.msisdn : null;
 
     let message = {delivery:       DELIVERY_RECEIVED,
@@ -362,6 +365,7 @@ SmsDatabaseService.prototype = {
                    sender:         sender,
                    receiver:       receiver,
                    body:           body,
+                   messageClass:   messageClass,
                    timestamp:      date,
                    read:           FILTER_READ_UNREAD};
     return this.saveMessage(message);
@@ -375,6 +379,7 @@ SmsDatabaseService.prototype = {
                    sender:         sender,
                    receiver:       receiver,
                    body:           body,
+                   messageClass:   MESSAGE_CLASS_NORMAL,
                    timestamp:      date,
                    read:           FILTER_READ_READ};
     return this.saveMessage(message);
@@ -469,6 +474,7 @@ SmsDatabaseService.prototype = {
                                                    data.sender,
                                                    data.receiver,
                                                    data.body,
+                                                   data.messageClass,
                                                    data.timestamp,
                                                    data.read);
         gSmsRequestManager.notifyGotSms(requestId, message);
@@ -694,6 +700,7 @@ SmsDatabaseService.prototype = {
                                                message.sender,
                                                message.receiver,
                                                message.body,
+                                               message.messageClass,
                                                message.timestamp,
                                                message.read);
         gSmsRequestManager.notifyGotNextMessage(requestId, sms);
