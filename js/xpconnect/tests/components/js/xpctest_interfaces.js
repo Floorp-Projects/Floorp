@@ -28,4 +28,4 @@ TestInterfaceB.prototype = {
 };
 
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceA, TestInterfaceB]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceA, TestInterfaceB]);

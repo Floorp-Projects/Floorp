@@ -9,13 +9,13 @@ const Cu = Components.utils;
 
 Cu.import("resource:///modules/devtools/TiltMath.jsm");
 
-let EXPORTED_SYMBOLS = ["TiltVisualizerStyle"];
+this.EXPORTED_SYMBOLS = ["TiltVisualizerStyle"];
 let rgba = TiltMath.hex2rgba;
 
 /**
  * Various colors and style settings used throughout Tilt.
  */
-let TiltVisualizerStyle = {
+this.TiltVisualizerStyle = {
 
   canvas: {
     background: "-moz-linear-gradient(top, #454545 0%, #000 100%)",

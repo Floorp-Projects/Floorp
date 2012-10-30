@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["CommonDialog"];
+this.EXPORTED_SYMBOLS = ["CommonDialog"];
 
 const Ci = Components.interfaces;
 const Cr = Components.results;
@@ -12,7 +12,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 
 
-function CommonDialog(args, ui) {
+this.CommonDialog = function CommonDialog(args, ui) {
     this.args = args;
     this.ui   = ui;
 }

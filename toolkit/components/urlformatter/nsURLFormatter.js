@@ -139,4 +139,4 @@ nsURLFormatterService.prototype = {
   }
 };
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([nsURLFormatterService]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsURLFormatterService]);

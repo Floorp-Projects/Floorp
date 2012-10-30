@@ -6,7 +6,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-let EXPORTED_SYMBOLS = ["TelemetryStopwatch"];
+this.EXPORTED_SYMBOLS = ["TelemetryStopwatch"];
 
 let Telemetry = Cc["@mozilla.org/base/telemetry;1"]
                   .getService(Ci.nsITelemetry);
@@ -17,7 +17,7 @@ let Telemetry = Cc["@mozilla.org/base/telemetry;1"]
 let simpleTimers = {};
 let objectTimers = new WeakMap();
 
-let TelemetryStopwatch = {
+this.TelemetryStopwatch = {
   /**
    * Starts a timer associated with a telemetry histogram. The timer can be
    * directly associated with a histogram, or with a pair of a histogram and

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = [ "DeveloperToolbar" ];
+this.EXPORTED_SYMBOLS = [ "DeveloperToolbar" ];
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -46,7 +46,7 @@ XPCOMUtils.defineLazyGetter(this, "isLinux", function () {
  * @param aChromeWindow The browser window to which this toolbar is attached
  * @param aToolbarElement See browser.xul:<toolbar id="developer-toolbar">
  */
-function DeveloperToolbar(aChromeWindow, aToolbarElement)
+this.DeveloperToolbar = function DeveloperToolbar(aChromeWindow, aToolbarElement)
 {
   this._chromeWindow = aChromeWindow;
 

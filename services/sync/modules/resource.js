@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "AsyncResource",
   "Resource"
 ];
@@ -48,7 +48,7 @@ const DEFAULT_LOAD_FLAGS =
  * passed (=undefined) when an error occurs. Note that this is independent of
  * the status of the HTTP response.
  */
-function AsyncResource(uri) {
+this.AsyncResource = function AsyncResource(uri) {
   this._log = Log4Moz.repository.getLogger(this._logName);
   this._log.level =
     Log4Moz.Level[Svc.Prefs.get("log.logger.network.resources")];
@@ -350,7 +350,7 @@ AsyncResource.prototype = {
  * 'Resource' is not recommended for new code. Use the asynchronous API of
  * 'AsyncResource' instead.
  */
-function Resource(uri) {
+this.Resource = function Resource(uri) {
   AsyncResource.call(this, uri);
 }
 Resource.prototype = {
