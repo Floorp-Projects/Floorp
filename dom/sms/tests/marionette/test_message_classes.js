@@ -40,6 +40,7 @@ function checkMessage(message, id) {
     is(message.id, -1, "message.id");
   }
   is(message.delivery, "received", "message.delivery");
+  is(message.deliveryStatus, "success", "message.deliveryStatus");
   is(message.sender, "+1", "message.sender");
   is(message.body, "A", "message.body");
   ok(message.timestamp instanceof Date,

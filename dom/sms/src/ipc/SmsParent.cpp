@@ -48,7 +48,8 @@ SmsParent::SmsParent()
 
   obs->AddObserver(this, kSmsReceivedObserverTopic, false);
   obs->AddObserver(this, kSmsSentObserverTopic, false);
-  obs->AddObserver(this, kSmsDeliveredObserverTopic, false);
+  obs->AddObserver(this, kSmsDeliverySuccessObserverTopic, false);
+  obs->AddObserver(this, kSmsDeliveryErrorObserverTopic, false);
 }
 
 void
@@ -61,7 +62,8 @@ SmsParent::ActorDestroy(ActorDestroyReason why)
 
   obs->RemoveObserver(this, kSmsReceivedObserverTopic);
   obs->RemoveObserver(this, kSmsSentObserverTopic);
-  obs->RemoveObserver(this, kSmsDeliveredObserverTopic);
+  obs->RemoveObserver(this, kSmsDeliverySuccessObserverTopic);
+  obs->RemoveObserver(this, kSmsDeliveryErrorObserverTopic);
 
   NS_ASSERTION(gSmsParents, "gSmsParents can't be null at that point!");
   gSmsParents->RemoveElement(this);
@@ -97,14 +99,25 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  if (!strcmp(aTopic, kSmsDeliveredObserverTopic)) {
+  if (!strcmp(aTopic, kSmsDeliverySuccessObserverTopic)) {
     nsCOMPtr<nsIDOMMozSmsMessage> message = do_QueryInterface(aSubject);
     if (!message) {
-      NS_ERROR("Got a 'sms-delivered' topic without a valid message!");
+      NS_ERROR("Got a 'sms-delivery-success' topic without a valid message!");
       return NS_OK;
     }
 
-    unused << SendNotifyDeliveredMessage(static_cast<SmsMessage*>(message.get())->GetData());
+    unused << SendNotifyDeliverySuccessMessage(static_cast<SmsMessage*>(message.get())->GetData());
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, kSmsDeliveryErrorObserverTopic)) {
+    nsCOMPtr<nsIDOMMozSmsMessage> message = do_QueryInterface(aSubject);
+    if (!message) {
+      NS_ERROR("Got a 'sms-delivery-error' topic without a valid message!");
+      return NS_OK;
+    }
+
+    unused << SendNotifyDeliveryErrorMessage(static_cast<SmsMessage*>(message.get())->GetData());
     return NS_OK;
   }
 
@@ -173,6 +186,18 @@ SmsParent::RecvSaveSentMessage(const nsString& aRecipient,
   NS_ENSURE_TRUE(smsDBService, true);
 
   smsDBService->SaveSentMessage(aRecipient, aBody, aDate, aId);
+  return true;
+}
+
+bool
+SmsParent::RecvSetMessageDeliveryStatus(const int32_t& aMessageId,
+                                        const nsString& aDeliveryStatus)
+{
+  nsCOMPtr<nsISmsDatabaseService> smsDBService =
+    do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsDBService, true);
+
+  smsDBService->SetMessageDeliveryStatus(aMessageId, aDeliveryStatus);
   return true;
 }
 

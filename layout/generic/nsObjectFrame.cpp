@@ -154,7 +154,14 @@ using mozilla::DefaultXDisplay;
 #endif
 
 #ifdef PR_LOGGING 
-static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
+static PRLogModuleInfo *
+GetObjectFrameLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("nsObjectFrame");
+  return sLog;
+}
 #endif /* PR_LOGGING */
 
 #if defined(XP_MACOSX) && !defined(__LP64__)
@@ -249,13 +256,13 @@ nsObjectFrame::nsObjectFrame(nsStyleContext* aContext)
   : nsObjectFrameSuper(aContext)
   , mReflowCallbackPosted(false)
 {
-  PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
+  PR_LOG(GetObjectFrameLog(), PR_LOG_DEBUG,
          ("Created new nsObjectFrame %p\n", this));
 }
 
 nsObjectFrame::~nsObjectFrame()
 {
-  PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
+  PR_LOG(GetObjectFrameLog(), PR_LOG_DEBUG,
          ("nsObjectFrame %p deleted\n", this));
 }
 
@@ -285,7 +292,7 @@ nsObjectFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow)
 {
-  PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
+  PR_LOG(GetObjectFrameLog(), PR_LOG_DEBUG,
          ("Initializing nsObjectFrame %p for content %p\n", this, aContent));
 
   nsresult rv = nsObjectFrameSuper::Init(aContent, aParent, aPrevInFlow);

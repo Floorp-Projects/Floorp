@@ -17,7 +17,6 @@
 
 #include "SystemWorkerManager.h"
 
-#include "nsIObserverService.h"
 #include "nsIJSContextStack.h"
 #include "nsINetworkManager.h"
 #include "nsIWifi.h"
@@ -29,7 +28,7 @@
 #ifdef MOZ_WIDGET_GONK
 #include "mozilla/ipc/Netd.h"
 #include "AutoMounter.h"
-#include "TimeSetting.h"
+#include "TimeZoneSettingObserver.h"
 #endif
 #include "mozilla/ipc/Ril.h"
 #include "nsContentUtils.h"
@@ -37,7 +36,6 @@
 #include "nsThreadUtils.h"
 #include "nsRadioInterfaceLayer.h"
 #include "WifiWorker.h"
-#include "mozilla/StaticPtr.h"
 
 USING_WORKERS_NAMESPACE
 
@@ -349,10 +347,6 @@ SystemWorkerManager::~SystemWorkerManager()
   gInstance = nullptr;
 }
 
-#ifdef MOZ_WIDGET_GONK
-static mozilla::StaticRefPtr<TimeSetting> sTimeSetting;
-#endif
-
 nsresult
 SystemWorkerManager::Init()
 {
@@ -385,7 +379,7 @@ SystemWorkerManager::Init()
 
 #ifdef MOZ_WIDGET_GONK
   InitAutoMounter();
-  sTimeSetting = new TimeSetting();
+  InitializeTimeZoneSettingObserver();
   rv = InitNetd(cx);
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
@@ -415,7 +409,6 @@ SystemWorkerManager::Shutdown()
 
 #ifdef MOZ_WIDGET_GONK
   ShutdownAutoMounter();
-  sTimeSetting = nullptr;
 #endif
 
   StopRil();

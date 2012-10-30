@@ -32,6 +32,7 @@ function sendSms() {
     log("Sent SMS (id: " + smsId + ").");
     is(sentSms.body, msgText, "msg body");
     is(sentSms.delivery, "sent", "delivery");
+    is(sentSms.deliveryStatus, "pending", "deliveryStatus");
     is(sentSms.read, true, "read");
     is(sentSms.receiver, destNumber, "receiver");
     is(sentSms.sender, null, "sender");
