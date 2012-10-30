@@ -60,8 +60,7 @@ public:
 
   nsresult Init(nsIWidget* aWidget,
                 nsPresContext* aPresContext,
-                nsINode* aNode,
-                bool aWantUpdates);
+                nsINode* aNode);
   void     Destroy(void);
   bool     IsManaging(nsPresContext* aPresContext, nsIContent* aContent);
 
@@ -675,15 +674,10 @@ nsTextStateManager::nsTextStateManager()
 nsresult
 nsTextStateManager::Init(nsIWidget* aWidget,
                          nsPresContext* aPresContext,
-                         nsINode* aNode,
-                         bool aWantUpdates)
+                         nsINode* aNode)
 {
   mWidget = aWidget;
   MOZ_ASSERT(mWidget);
-  if (!aWantUpdates) {
-    mEditableNode = aNode;
-    return NS_OK;
-  }
 
   nsIPresShell* presShell = aPresContext->PresShell();
 
@@ -1012,8 +1006,6 @@ nsIMEStateManager::CreateTextStateManager()
     return;
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  bool wantUpdates = rv != NS_SUCCESS_IME_NO_UPDATES;
-
   // OnIMEFocusChange may cause focus and sTextStateObserver to change
   // In that case return and keep the current sTextStateObserver
   NS_ENSURE_TRUE_VOID(!sTextStateObserver);
@@ -1021,8 +1013,7 @@ nsIMEStateManager::CreateTextStateManager()
   sTextStateObserver = new nsTextStateManager();
   NS_ENSURE_TRUE_VOID(sTextStateObserver);
   NS_ADDREF(sTextStateObserver);
-  rv = sTextStateObserver->Init(widget, sPresContext,
-                                editableNode, wantUpdates);
+  rv = sTextStateObserver->Init(widget, sPresContext, editableNode);
   if (NS_SUCCEEDED(rv)) {
     return;
   }
