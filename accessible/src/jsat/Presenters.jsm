@@ -13,11 +13,11 @@ Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 Cu.import('resource://gre/modules/accessibility/UtteranceGenerator.jsm');
 Cu.import('resource://gre/modules/Geometry.jsm');
 
-var EXPORTED_SYMBOLS = ['VisualPresenter',
-                        'AndroidPresenter',
-                        'DummyAndroidPresenter',
-                        'SpeechPresenter',
-                        'PresenterContext'];
+this.EXPORTED_SYMBOLS = ['VisualPresenter',
+                         'AndroidPresenter',
+                         'DummyAndroidPresenter',
+                         'SpeechPresenter',
+                         'PresenterContext'];
 
 /**
  * The interface for all presenter classes. A presenter could be, for example,
@@ -111,7 +111,7 @@ Presenter.prototype = {
  * Visual presenter. Draws a box around the virtual cursor's position.
  */
 
-function VisualPresenter() {}
+this.VisualPresenter = function VisualPresenter() {}
 
 VisualPresenter.prototype = {
   __proto__: Presenter.prototype,
@@ -179,7 +179,7 @@ VisualPresenter.prototype = {
  * Android presenter. Fires Android a11y events.
  */
 
-function AndroidPresenter() {}
+this.AndroidPresenter = function AndroidPresenter() {}
 
 AndroidPresenter.prototype = {
   __proto__: Presenter.prototype,
@@ -332,7 +332,7 @@ AndroidPresenter.prototype = {
  * A speech presenter for direct TTS output
  */
 
-function SpeechPresenter() {}
+this.SpeechPresenter = function SpeechPresenter() {}
 
 SpeechPresenter.prototype = {
   __proto__: Presenter.prototype,
@@ -376,7 +376,7 @@ SpeechPresenter.prototype = {
  * PresenterContext: An object that generates and caches context information
  * for a given accessible and its relationship with another accessible.
  */
-function PresenterContext(aAccessible, aOldAccessible) {
+this.PresenterContext = function PresenterContext(aAccessible, aOldAccessible) {
   this._accessible = aAccessible;
   this._oldAccessible =
     this._isDefunct(aOldAccessible) ? null : aOldAccessible;

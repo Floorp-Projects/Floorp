@@ -9,7 +9,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-var EXPORTED_SYMBOLS = ['AccessFu'];
+this.EXPORTED_SYMBOLS = ['AccessFu'];
 
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/Geometry.jsm');
@@ -21,7 +21,7 @@ const ACCESSFU_DISABLE = 0;
 const ACCESSFU_ENABLE = 1;
 const ACCESSFU_AUTO = 2;
 
-var AccessFu = {
+this.AccessFu = {
   /**
    * Initialize chrome-layer accessibility functionality.
    * If accessibility is enabled on the platform, then a special accessibility

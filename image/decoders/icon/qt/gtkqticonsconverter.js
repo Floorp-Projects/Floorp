@@ -133,5 +133,5 @@ GtkQtIconsConverter.prototype = {
   },
 }
 var components = [GtkQtIconsConverter];
-const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
 

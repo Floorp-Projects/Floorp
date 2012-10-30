@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 const Cu = Components.utils;
 
-var EXPORTED_SYMBOLS=["UndoStack"];
+this.EXPORTED_SYMBOLS = ["UndoStack"];
 
 /**
  * A simple undo stack manager.
@@ -19,7 +19,7 @@ var EXPORTED_SYMBOLS=["UndoStack"];
  * @param integer aMaxUndo Maximum number of undo steps.
  *   defaults to 50.
  */
-function UndoStack(aMaxUndo)
+this.UndoStack = function UndoStack(aMaxUndo)
 {
   this.maxUndo = aMaxUndo || 50;
   this._stack = [];

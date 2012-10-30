@@ -601,5 +601,5 @@ ContactManager.prototype = {
                                      flags: nsIClassInfo.DOM_OBJECT})
 }
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory(
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
                        [Contact, ContactManager, ContactProperties, ContactAddress, ContactField, ContactTelField, ContactFindOptions])

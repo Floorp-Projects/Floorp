@@ -102,4 +102,4 @@ PermissionSettings.prototype = {
                                      flags: Ci.nsIClassInfo.DOM_OBJECT})
 }
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([PermissionSettings])
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PermissionSettings])

@@ -4,7 +4,7 @@
 
 {
   if (typeof Components != "undefined") {
-    var EXPORTED_SYMBOLS = ["OS"];
+    this.EXPORTED_SYMBOLS = ["OS"];
   }
   (function(exports) {
      "use strict";

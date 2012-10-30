@@ -165,4 +165,4 @@ SafeBrowsing.prototype = {
   }
 }
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([SafeBrowsing]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SafeBrowsing]);

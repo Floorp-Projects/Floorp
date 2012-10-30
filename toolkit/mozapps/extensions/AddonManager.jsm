@@ -51,7 +51,7 @@ XPCOMUtils.defineLazyGetter(this, "CertUtils", function certUtilsLazyGetter() {
 });
 
 
-var EXPORTED_SYMBOLS = [ "AddonManager", "AddonManagerPrivate" ];
+this.EXPORTED_SYMBOLS = [ "AddonManager", "AddonManagerPrivate" ];
 
 const CATEGORY_PROVIDER_MODULE = "addon-provider-module";
 
@@ -2027,7 +2027,7 @@ var AddonManagerInternal = {
  * AddonManagerInternal for documentation however note that these methods are
  * subject to change at any time.
  */
-var AddonManagerPrivate = {
+this.AddonManagerPrivate = {
   startup: function AMP_startup() {
     AddonManagerInternal.startup();
   },
@@ -2086,7 +2086,7 @@ var AddonManagerPrivate = {
  * This is the public API that UI and developers should be calling. All methods
  * just forward to AddonManagerInternal.
  */
-var AddonManager = {
+this.AddonManager = {
   // Constants for the AddonInstall.state property
   // The install is available for download.
   STATE_AVAILABLE: 0,

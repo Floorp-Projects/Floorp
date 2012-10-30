@@ -11,10 +11,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/PermissionSettings.jsm");
 
-var EXPORTED_SYMBOLS = ["PermissionsInstaller",
-                        "expandPermissions",
-                        "PermissionsTable",
-                       ];
+this.EXPORTED_SYMBOLS = ["PermissionsInstaller",
+                         "expandPermissions",
+                         "PermissionsTable",
+                        ];
 const UNKNOWN_ACTION = Ci.nsIPermissionManager.UNKNOWN_ACTION;
 const ALLOW_ACTION = Ci.nsIPermissionManager.ALLOW_ACTION;
 const DENY_ACTION = Ci.nsIPermissionManager.DENY_ACTION;
@@ -50,7 +50,7 @@ function mapSuffixes(aPermName, aSuffixes)
 // battery-status, network-information, vibration,
 // device-capabilities
 
-const PermissionsTable = { "resource-lock": {
+this.PermissionsTable =  { "resource-lock": {
                              app: ALLOW_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
@@ -275,7 +275,7 @@ for (let permName in PermissionsTable) {
  * @param string aAccess
  * @returns Array
  **/
-function expandPermissions(aPermName, aAccess) {
+this.expandPermissions = function expandPermissions(aPermName, aAccess) {
   if (!PermissionsTable[aPermName]) {
     Cu.reportError("PermissionsTable.jsm: expandPermissions: Unknown Permission: " + aPermName);
     return [];
@@ -322,9 +322,9 @@ Temporarily disabled in order to add access fields to gaia: See Bug 805646
     }
   }
   return expandedPerms;
-}
+};
 
-let PermissionsInstaller = {
+this.PermissionsInstaller = {
 /**
    * Install permissisions or remove deprecated permissions upon re-install
    * @param object aApp
@@ -453,4 +453,4 @@ let PermissionsInstaller = {
       }
     );
   }
-}
+};

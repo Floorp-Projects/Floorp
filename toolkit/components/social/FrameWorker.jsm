@@ -17,14 +17,15 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/MessagePortBase.jsm");
 
-const EXPORTED_SYMBOLS = ["getFrameWorkerHandle"];
+this.EXPORTED_SYMBOLS = ["getFrameWorkerHandle"];
 
 var workerCache = {}; // keyed by URL.
 var _nextPortId = 1;
 
 // Retrieves a reference to a WorkerHandle associated with a FrameWorker and a
 // new ClientPort.
-function getFrameWorkerHandle(url, clientWindow, name) {
+this.getFrameWorkerHandle =
+ function getFrameWorkerHandle(url, clientWindow, name) {
   // first create the client port we are going to use.  Later we will
   // message the worker to create the worker port.
   let portid = _nextPortId++;
