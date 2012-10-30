@@ -28,7 +28,7 @@
 #ifdef MOZ_WIDGET_GONK
 #include "mozilla/ipc/Netd.h"
 #include "AutoMounter.h"
-#include "TimeSetting.h"
+#include "TimeZoneSettingObserver.h"
 #endif
 #include "mozilla/ipc/Ril.h"
 #include "nsContentUtils.h"

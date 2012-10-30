@@ -18,7 +18,7 @@
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
-#include "TimeSetting.h"
+#include "TimeZoneSettingObserver.h"
 #include "xpcpublic.h"
 
 #undef LOG
