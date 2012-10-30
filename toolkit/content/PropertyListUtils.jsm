@@ -55,7 +55,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PropertyListUtils"];
+let EXPORTED_SYMBOLS = ["PropertyListUtils"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -70,7 +70,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-this.PropertyListUtils = Object.freeze({
+let PropertyListUtils = Object.freeze({
   /**
    * Asynchronously reads a file as a property list.
    *

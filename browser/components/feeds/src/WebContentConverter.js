@@ -899,4 +899,4 @@ WebContentConverterRegistrar.prototype = {
   }]
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WebContentConverterRegistrar]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([WebContentConverterRegistrar]);

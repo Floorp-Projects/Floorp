@@ -20,7 +20,6 @@
 "use strict";
 
 let DEBUG = 0;
-let debug;
 if (DEBUG)
   debug = function (s) { dump("-*- Permission Prompt Helper component: " + s + "\n"); }
 else
@@ -30,7 +29,7 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-this.EXPORTED_SYMBOLS = ["PermissionPromptHelper"];
+let EXPORTED_SYMBOLS = ["PermissionPromptHelper"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -48,7 +47,7 @@ var permissionManager = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsI
 var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
 var appsService = Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
 
-this.PermissionPromptHelper = {
+let PermissionPromptHelper = {
   init: function() {
     debug("Init");
     ppmm.addMessageListener("PermissionPromptHelper:AskPermission", this);

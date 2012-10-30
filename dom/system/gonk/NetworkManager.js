@@ -773,7 +773,7 @@ NetworkManager.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkManager]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkManager]);
 
 
 let debug;

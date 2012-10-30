@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ['NetworkStatsDB'];
+const EXPORTED_SYMBOLS = ['NetworkStatsDB'];
 
 const DEBUG = false;
 function debug(s) { dump("-*- NetworkStatsDB: " + s + "\n"); }
@@ -25,7 +25,7 @@ const VALUES_MAX_LENGTH = 6 * 30;
 // Constant defining the rate of the samples. Daily.
 const SAMPLE_RATE = 1000 * 60 * 60 * 24;
 
-this.NetworkStatsDB = function NetworkStatsDB(aGlobal) {
+function NetworkStatsDB(aGlobal) {
   if (DEBUG) {
     debug("Constructor");
   }

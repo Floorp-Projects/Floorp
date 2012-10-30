@@ -364,4 +364,4 @@ BookmarkObserver.prototype = {
 };
 
 const components = [AutoCompleteCache, BookmarkObserver];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

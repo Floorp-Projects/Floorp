@@ -15,7 +15,7 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cu = Components.utils;
 
-this.EXPORTED_SYMBOLS = ["DebuggerServer"];
+var EXPORTED_SYMBOLS = ["DebuggerServer"];
 
 function loadSubScript(aURL)
 {
@@ -40,4 +40,4 @@ var gGlobal = Cu.Sandbox(systemPrincipal);
 gGlobal.importFunction(loadSubScript);
 gGlobal.loadSubScript("chrome://global/content/devtools/dbg-server.js");
 
-this.DebuggerServer = gGlobal.DebuggerServer;
+var DebuggerServer = gGlobal.DebuggerServer;

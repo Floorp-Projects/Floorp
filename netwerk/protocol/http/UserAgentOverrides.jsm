@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "UserAgentOverrides" ];
+var EXPORTED_SYMBOLS = [ "UserAgentOverrides" ];
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
@@ -23,7 +23,7 @@ var gOverrideFunctions = [
   function (aHttpChannel) UserAgentOverrides.getOverrideForURI(aHttpChannel.URI)
 ];
 
-this.UserAgentOverrides = {
+var UserAgentOverrides = {
   init: function uao_init() {
     if (gInitialized)
       return;

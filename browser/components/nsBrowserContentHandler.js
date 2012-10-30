@@ -825,4 +825,4 @@ nsDefaultCommandLineHandler.prototype = {
 };
 
 var components = [nsBrowserContentHandler, nsDefaultCommandLineHandler];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

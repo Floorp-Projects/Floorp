@@ -128,4 +128,4 @@ BrowserStartup.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([BrowserStartup]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([BrowserStartup]);

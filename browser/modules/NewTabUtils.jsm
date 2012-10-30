@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["NewTabUtils"];
+let EXPORTED_SYMBOLS = ["NewTabUtils"];
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
@@ -675,7 +675,7 @@ let ExpirationFilter = {
 /**
  * Singleton that provides the public API of this JSM.
  */
-this.NewTabUtils = {
+let NewTabUtils = {
   _initialized: false,
 
   init: function NewTabUtils_init() {

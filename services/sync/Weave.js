@@ -70,4 +70,4 @@ AboutWeaveLog.prototype = {
 };
 
 const components = [WeaveService, AboutWeaveLog];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

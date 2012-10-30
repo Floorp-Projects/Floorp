@@ -18,7 +18,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AlarmDB.jsm");
 
-this.EXPORTED_SYMBOLS = ["AlarmService"];
+let EXPORTED_SYMBOLS = ["AlarmService"];
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyGetter(this, "messenger", function() {
 
 let myGlobal = this;
 
-this.AlarmService = {
+let AlarmService = {
   init: function init() {
     debug("init()");
 

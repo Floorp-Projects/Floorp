@@ -87,4 +87,4 @@ InputListAutoComplete.prototype = {
 };
 
 let component = [InputListAutoComplete];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

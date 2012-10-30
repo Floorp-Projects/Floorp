@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Logger"];
+const EXPORTED_SYMBOLS = ["Logger"];
 const PREF_DEBUG = "toolkit.identity.debug";
 
 const Cu = Components.utils;
@@ -100,4 +100,4 @@ IdentityLogger.prototype = {
 
 };
 
-this.Logger = new IdentityLogger();
+let Logger = new IdentityLogger();

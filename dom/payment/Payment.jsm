@@ -9,7 +9,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-this.EXPORTED_SYMBOLS = [];
+let EXPORTED_SYMBOLS = [];
 
 const PAYMENT_IPC_MSG_NAMES = ["Payment:Pay",
                                "Payment:Success",

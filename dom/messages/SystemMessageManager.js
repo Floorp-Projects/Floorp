@@ -217,4 +217,4 @@ SystemMessageManager.prototype = {
                                     classDescription: "System Messages"})
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SystemMessageManager]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([SystemMessageManager]);

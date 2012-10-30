@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "TokenServerClient",
   "TokenServerClientError",
   "TokenServerClientNetworkError",
@@ -28,7 +28,7 @@ const Prefs = new Preferences("services.common.tokenserverclient.");
  * @param message
  *        (string) Error message.
  */
-this.TokenServerClientError = function TokenServerClientError(message) {
+function TokenServerClientError(message) {
   this.name = "TokenServerClientError";
   this.message = message || "Client error.";
 }
@@ -41,8 +41,7 @@ TokenServerClientError.prototype.constructor = TokenServerClientError;
  * @param error
  *        The underlying error thrown by the network layer.
  */
-this.TokenServerClientNetworkError =
- function TokenServerClientNetworkError(error) {
+function TokenServerClientNetworkError(error) {
   this.name = "TokenServerClientNetworkError";
   this.error = error;
 }
@@ -80,8 +79,7 @@ TokenServerClientNetworkError.prototype.constructor =
  * @param message
  *        (string) Error message.
  */
-this.TokenServerClientServerError =
- function TokenServerClientServerError(message, cause="general") {
+function TokenServerClientServerError(message, cause="general") {
   this.name = "TokenServerClientServerError";
   this.message = message || "Server error.";
   this.cause = cause;
@@ -113,7 +111,7 @@ TokenServerClientServerError.prototype.constructor =
  *    might be helpful if callers had a richer API that communicated who was
  *    at fault (e.g. differentiating a 503 from a 401).
  */
-this.TokenServerClient = function TokenServerClient() {
+function TokenServerClient() {
   this._log = Log4Moz.repository.getLogger("Common.TokenServerClient");
   this._log.level = Log4Moz.Level[Prefs.get("logger.level")];
 }

@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ['Weave'];
+const EXPORTED_SYMBOLS = ['Weave'];
 
-this.Weave = {};
+let Weave = {};
 Components.utils.import("resource://services-sync/constants.js", Weave);
 let lazies = {
   "jpakeclient.js":       ["JPAKEClient", "SendCredentialsController"],

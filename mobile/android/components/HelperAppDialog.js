@@ -213,4 +213,4 @@ HelperAppLauncherDialog.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([HelperAppLauncherDialog]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([HelperAppLauncherDialog]);

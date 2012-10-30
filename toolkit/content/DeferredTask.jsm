@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["DeferredTask"];
+const EXPORTED_SYMBOLS = ["DeferredTask"];
 
 const Cu = Components.utils;
 const Cc = Components.classes;
@@ -23,7 +23,7 @@ const Ci = Components.interfaces;
  * @param aDelay The delay time in milliseconds.
  * @param aCallback The code to execute after the delay.
  */
-this.DeferredTask = function DeferredTask(aCallback, aDelay) {
+function DeferredTask(aCallback, aDelay) {
   this._callback = function onCallback() {
     this._timer = null;
     try {

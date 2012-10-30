@@ -565,4 +565,4 @@ SearchSuggestAutoComplete.prototype = {
 };
 
 var component = [SearchSuggestAutoComplete];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

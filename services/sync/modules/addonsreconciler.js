@@ -25,14 +25,14 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 
 const DEFAULT_STATE_FILE = "addonsreconciler";
 
-this.CHANGE_INSTALLED   = 1;
-this.CHANGE_UNINSTALLED = 2;
-this.CHANGE_ENABLED     = 3;
-this.CHANGE_DISABLED    = 4;
+const CHANGE_INSTALLED   = 1;
+const CHANGE_UNINSTALLED = 2;
+const CHANGE_ENABLED     = 3;
+const CHANGE_DISABLED    = 4;
 
-this.EXPORTED_SYMBOLS = ["AddonsReconciler", "CHANGE_INSTALLED",
-                         "CHANGE_UNINSTALLED", "CHANGE_ENABLED",
-                         "CHANGE_DISABLED"];
+const EXPORTED_SYMBOLS = ["AddonsReconciler", "CHANGE_INSTALLED",
+                          "CHANGE_UNINSTALLED", "CHANGE_ENABLED",
+                          "CHANGE_DISABLED"];
 /**
  * Maintains state of add-ons.
  *
@@ -113,7 +113,7 @@ this.EXPORTED_SYMBOLS = ["AddonsReconciler", "CHANGE_INSTALLED",
  * events will occur immediately. However, we still see disabling events and
  * heed them like they were normal. In the end, the state is proper.
  */
-this.AddonsReconciler = function AddonsReconciler() {
+function AddonsReconciler() {
   this._log = Log4Moz.repository.getLogger("Sync.AddonsReconciler");
   let level = Svc.Prefs.get("log.logger.addonsreconciler", "Debug");
   this._log.level = Log4Moz.Level[level];

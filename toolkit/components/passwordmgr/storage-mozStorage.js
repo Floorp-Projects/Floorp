@@ -1681,4 +1681,4 @@ LoginManagerStorage_mozStorage.prototype = {
 }; // end of nsLoginManagerStorage_mozStorage implementation
 
 let component = [LoginManagerStorage_mozStorage];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

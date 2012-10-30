@@ -804,5 +804,5 @@ Application.prototype = {
 // set the proto, defined in extApplication.js
 Application.prototype.__proto__ = extApplication.prototype;
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Application]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([Application]);
 

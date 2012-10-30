@@ -1036,4 +1036,4 @@ TelemetryPing.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TelemetryPing]);
+let NSGetFactory = XPCOMUtils.generateNSGetFactory([TelemetryPing]);

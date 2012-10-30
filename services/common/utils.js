@@ -4,7 +4,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-this.EXPORTED_SYMBOLS = ["CommonUtils"];
+const EXPORTED_SYMBOLS = ["CommonUtils"];
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/log4moz.js");
 
-this.CommonUtils = {
+let CommonUtils = {
   exceptionStr: function exceptionStr(e) {
     let message = e.message ? e.message : e;
     return message + " " + CommonUtils.stackTrace(e);

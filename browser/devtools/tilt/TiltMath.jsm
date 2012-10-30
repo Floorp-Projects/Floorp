@@ -9,7 +9,7 @@ const Cu = Components.utils;
 
 Cu.import("resource:///modules/devtools/TiltUtils.jsm");
 
-this.EXPORTED_SYMBOLS =
+let EXPORTED_SYMBOLS =
   ["EPSILON", "TiltMath", "vec3", "mat3", "mat4", "quat4"];
 
 /**
@@ -17,7 +17,7 @@ this.EXPORTED_SYMBOLS =
  * Inspired by glMatrix, version 0.9.6, (c) 2011 Brandon Jones.
  */
 
-this.EPSILON = 0.01;
+const EPSILON = 0.01;
 const PI_OVER_180 = Math.PI / 180;
 const INV_PI_OVER_180 = 180 / Math.PI;
 const FIFTEEN_OVER_225 = 15 / 225;
@@ -26,7 +26,7 @@ const ONE_OVER_255 = 1 / 255;
 /**
  * vec3 - 3 Dimensional Vector.
  */
-this.vec3 = {
+let vec3 = {
 
   /**
    * Creates a new instance of a vec3 using the Float32Array type.
@@ -496,7 +496,7 @@ this.vec3 = {
 /**
  * mat3 - 3x3 Matrix.
  */
-this.mat3 = {
+let mat3 = {
 
   /**
    * Creates a new instance of a mat3 using the Float32Array array type.
@@ -659,7 +659,7 @@ this.mat3 = {
 /**
  * mat4 - 4x4 Matrix.
  */
-this.mat4 = {
+let mat4 = {
 
   /**
    * Creates a new instance of a mat4 using the default Float32Array type.
@@ -1627,7 +1627,7 @@ this.mat4 = {
 /**
  * quat4 - Quaternion.
  */
-this.quat4 = {
+let quat4 = {
 
   /**
    * Creates a new instance of a quat4 using the default Float32Array type.
@@ -2116,7 +2116,7 @@ this.quat4 = {
 /**
  * Various algebraic math functions required by the engine.
  */
-this.TiltMath = {
+let TiltMath = {
 
   /**
    * Helper function, converts degrees to radians.
