@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "NetUtil",
 ];
 
@@ -25,7 +25,7 @@ const PR_UINT32_MAX = 0xffffffff;
 ////////////////////////////////////////////////////////////////////////////////
 //// NetUtil Object
 
-const NetUtil = {
+this.NetUtil = {
     /**
      * Function to perform simple async copying from aSource (an input stream)
      * to aSink (an output stream).  The copy will happen on some background

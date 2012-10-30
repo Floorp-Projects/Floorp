@@ -77,4 +77,4 @@ ActivityRequestHandler.prototype = {
   })
 }
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([ActivityRequestHandler]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ActivityRequestHandler]);

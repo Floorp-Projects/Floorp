@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["SafeBrowsing"];
+this.EXPORTED_SYMBOLS = ["SafeBrowsing"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -23,7 +23,7 @@ function log(...stuff) {
   dump(msg + "\n");
 }
 
-var SafeBrowsing = {
+this.SafeBrowsing = {
 
   init: function() {
     if (this.initialized) {

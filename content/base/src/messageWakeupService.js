@@ -92,5 +92,5 @@ MessageWakeupService.prototype =
 };
 
 var components = [MessageWakeupService];
-const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
 

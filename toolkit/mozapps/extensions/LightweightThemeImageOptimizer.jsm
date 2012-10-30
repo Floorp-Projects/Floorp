@@ -4,7 +4,7 @@
 
 "use strict";
 
-let EXPORTED_SYMBOLS = ["LightweightThemeImageOptimizer"];
+this.EXPORTED_SYMBOLS = ["LightweightThemeImageOptimizer"];
 
 const Cu = Components.utils;
 const Ci = Components.interfaces;
@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
 const ORIGIN_TOP_RIGHT = 1;
 const ORIGIN_BOTTOM_LEFT = 2;
 
-let LightweightThemeImageOptimizer = {
+this.LightweightThemeImageOptimizer = {
   optimize: function LWTIO_optimize(aThemeData, aScreen) {
     let data = Utils.createCopy(aThemeData);
     if (!data.headerURL) {

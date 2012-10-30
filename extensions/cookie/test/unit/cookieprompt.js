@@ -19,4 +19,4 @@ CookiePromptService.prototype = {
   }
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([CookiePromptService]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([CookiePromptService]);

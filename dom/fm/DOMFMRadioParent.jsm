@@ -60,9 +60,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
                                    "nsISettingsService");
 
-let EXPORTED_SYMBOLS = ["DOMFMRadioParent"];
+this.EXPORTED_SYMBOLS = ["DOMFMRadioParent"];
 
-let DOMFMRadioParent = {
+this.DOMFMRadioParent = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISettingsServiceCallback]),
 

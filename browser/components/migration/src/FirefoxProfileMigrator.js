@@ -91,4 +91,4 @@ FirefoxProfileMigrator.prototype.classDescription = "Firefox Profile Migrator";
 FirefoxProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=firefox";
 FirefoxProfileMigrator.prototype.classID = Components.ID("{91185366-ba97-4438-acba-48deaca63386}");
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([FirefoxProfileMigrator]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([FirefoxProfileMigrator]);

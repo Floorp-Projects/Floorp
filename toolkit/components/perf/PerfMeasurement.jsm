@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let EXPORTED_SYMBOLS = [ "PerfMeasurement" ];
+this.EXPORTED_SYMBOLS = [ "PerfMeasurement" ];
 
 /*
  * This is the js module for jsperf. Import it like so:

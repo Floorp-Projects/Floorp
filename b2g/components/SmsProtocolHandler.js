@@ -56,4 +56,4 @@ SmsProtocolHandler.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolHandler])
 };
 
-let NSGetFactory = XPCOMUtils.generateNSGetFactory([SmsProtocolHandler]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SmsProtocolHandler]);

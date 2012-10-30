@@ -56,5 +56,5 @@ DirectoryProvider.prototype = {
   }
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([DirectoryProvider]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DirectoryProvider]);
 

@@ -4,7 +4,7 @@
 
 "use strict";
 
-let EXPORTED_SYMBOLS = ["PageThumbs", "PageThumbsStorage"];
+this.EXPORTED_SYMBOLS = ["PageThumbs", "PageThumbsStorage"];
 
 const Cu = Components.utils;
 const Cc = Components.classes;
@@ -59,7 +59,7 @@ XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function () {
  * Singleton providing functionality for capturing web page thumbnails and for
  * accessing them if already cached.
  */
-let PageThumbs = {
+this.PageThumbs = {
   _initialized: false,
 
   /**
@@ -278,7 +278,7 @@ let PageThumbs = {
   },
 };
 
-let PageThumbsStorage = {
+this.PageThumbsStorage = {
   getDirectory: function Storage_getDirectory(aCreate = true) {
     return FileUtils.getDir("ProfLD", [THUMBNAIL_DIRECTORY], aCreate);
   },

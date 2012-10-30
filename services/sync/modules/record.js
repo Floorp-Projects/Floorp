@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "WBORecord",
   "RecordManager",
   "CryptoWrapper",
@@ -24,7 +24,7 @@ Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
-function WBORecord(collection, id) {
+this.WBORecord = function WBORecord(collection, id) {
   this.data = {};
   this.payload = {};
   this.collection = collection;      // Optional.
@@ -108,7 +108,7 @@ Utils.deferGetSet(WBORecord, "data", ["id", "modified", "sortindex", "payload"])
 /**
  * An interface and caching layer for records.
  */
-function RecordManager(service) {
+this.RecordManager = function RecordManager(service) {
   this.service = service;
 
   this._log = Log4Moz.repository.getLogger(this._logName);
@@ -167,7 +167,7 @@ RecordManager.prototype = {
   }
 };
 
-function CryptoWrapper(collection, id) {
+this.CryptoWrapper = function CryptoWrapper(collection, id) {
   this.cleartext = {};
   WBORecord.call(this, collection, id);
   this.ciphertext = null;
@@ -276,7 +276,7 @@ Utils.deferGetSet(CryptoWrapper, "cleartext", "deleted");
  * You can update this thing simply by giving it /info/collections. It'll
  * use the last modified time to bring itself up to date.
  */
-function CollectionKeyManager() {
+this.CollectionKeyManager = function CollectionKeyManager() {
   this.lastModified = 0;
   this._collections = {};
   this._default = null;
@@ -505,7 +505,7 @@ CollectionKeyManager.prototype = {
   }
 }
 
-function Collection(uri, recordObj, service) {
+this.Collection = function Collection(uri, recordObj, service) {
   if (!service) {
     throw new Error("Collection constructor requires a service.");
   }

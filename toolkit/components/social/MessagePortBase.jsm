@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Code that is shared between clients and workers.
-const EXPORTED_SYMBOLS = ["AbstractPort"];
+this.EXPORTED_SYMBOLS = ["AbstractPort"];
 
-function AbstractPort(portid) {
+this.AbstractPort = function AbstractPort(portid) {
   this._portid = portid;
   this._handler = undefined;
   // pending messages sent to this port before it has a message handler.
   this._pendingMessagesIncoming = [];
-}
+};
 
 AbstractPort.prototype = {
   _portType: null, // set by a subclass.
@@ -103,4 +103,4 @@ AbstractPort.prototype = {
     this._pendingMessagesIncoming = [];
     this._portid = null;
   }
-}
+};

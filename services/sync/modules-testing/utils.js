@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "TEST_CLUSTER_URL",
   "TEST_SERVER_URL",
   "btoa", // It comes from a module import.
@@ -21,15 +21,15 @@ Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://testing-common/services-common/logging.js");
 Cu.import("resource://testing-common/services/sync/fakeservices.js");
 
-const TEST_SERVER_URL = "http://localhost:8080/";
-const TEST_CLUSTER_URL = TEST_SERVER_URL;
+this.TEST_SERVER_URL = "http://localhost:8080/";
+this.TEST_CLUSTER_URL = TEST_SERVER_URL;
 
 /**
  * First wait >100ms (nsITimers can take up to that much time to fire, so
  * we can account for the timer in delayedAutoconnect) and then two event
  * loop ticks (to account for the Utils.nextTick() in autoConnect).
  */
-function waitForZeroTimer(callback) {
+this.waitForZeroTimer = function waitForZeroTimer(callback) {
   let ticks = 2;
   function wait() {
     if (ticks) {
@@ -42,7 +42,8 @@ function waitForZeroTimer(callback) {
   CommonUtils.namedTimer(wait, 150, {}, "timer");
 }
 
-function setBasicCredentials(username, password, syncKey) {
+this.setBasicCredentials =
+ function setBasicCredentials(username, password, syncKey) {
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
 
@@ -52,7 +53,8 @@ function setBasicCredentials(username, password, syncKey) {
   auth.syncKey = syncKey;
 }
 
-function SyncTestingInfrastructure(username, password, syncKey) {
+this.SyncTestingInfrastructure =
+ function SyncTestingInfrastructure(username, password, syncKey) {
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
 
@@ -73,7 +75,7 @@ function SyncTestingInfrastructure(username, password, syncKey) {
 /**
  * Turn WBO cleartext into fake "encrypted" payload as it goes over the wire.
  */
-function encryptPayload(cleartext) {
+this.encryptPayload = function encryptPayload(cleartext) {
   if (typeof cleartext == "object") {
     cleartext = JSON.stringify(cleartext);
   }

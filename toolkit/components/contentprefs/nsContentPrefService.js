@@ -1432,4 +1432,4 @@ AsyncStatement.prototype = {
 // XPCOM Plumbing
 
 var components = [ContentPrefService, HostnameGrouper];
-var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

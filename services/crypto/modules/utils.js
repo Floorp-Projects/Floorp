@@ -4,13 +4,13 @@
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-const EXPORTED_SYMBOLS = ["CryptoUtils"];
+this.EXPORTED_SYMBOLS = ["CryptoUtils"];
 
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let CryptoUtils = {
+this.CryptoUtils = {
   /**
    * Generate a string of random bytes.
    */
