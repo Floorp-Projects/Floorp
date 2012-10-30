@@ -284,13 +284,13 @@ let Activities = {
     if (aMessage.name == "Activity:PostResult" ||
         aMessage.name == "Activity:PostError") {
       caller = this.callers[msg.id];
-      if (caller) {
-        obsData = JSON.stringify({ manifestURL: caller.manifestURL,
-                                   pageURL: caller.pageURL,
-                                   success: aMessage.name == "Activity:PostResult" });
-      } else {
+      if (!caller) {
         debug("!! caller is null for msg.id=" + msg.id);
+        return;
       }
+      obsData = JSON.stringify({ manifestURL: caller.manifestURL,
+                                 pageURL: caller.pageURL,
+                                 success: aMessage.name == "Activity:PostResult" });
     }
 
     switch(aMessage.name) {
