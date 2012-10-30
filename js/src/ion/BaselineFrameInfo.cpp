@@ -114,6 +114,7 @@ FrameInfo::popRegsAndSync(uint32_t uses)
     spIndex -= uses;
 }
 
+#ifdef DEBUG
 void
 FrameInfo::assertValidState(jsbytecode *pc)
 {
@@ -154,3 +155,4 @@ FrameInfo::assertValidState(jsbytecode *pc)
         }
     }
 }
+#endif
