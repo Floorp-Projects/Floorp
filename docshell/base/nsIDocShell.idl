@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(318CE516-3F7A-41F6-8F3D-3661650F7A46)]
+[scriptable, builtinclass, uuid(0132C0BE-ACB5-4D61-9B19-01C005E030DA)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -579,88 +579,72 @@ interface nsIDocShell : nsISupports
   void addWeakPrivacyTransitionObserver(in nsIPrivacyTransitionObserver obs);
 
   /**
-   * Returns true if this docshell corresponds to an <iframe mozbrowser>.
-   * (<iframe mozapp mozbrowser> is not considered a browser.)
+   * Mark the docshell as a browser frame.
+   * This should be used for <iframe mozbrowser> but not for <iframe mozapp>.
+   *
+   * This method should not be called more than once.
+   */
+  void setIsBrowserElement();
+
+  /**
+   * Returns true iff the docshell is marked as a browser frame.
    */
   [infallible] readonly attribute boolean isBrowserElement;
 
   /**
-   * Returns true iff the docshell corresponds to an <iframe mozapp>.
+   * Returns true iif the docshell is marked as an app frame.
    */
   [infallible] readonly attribute boolean isApp;
 
   /**
-   * Returns isBrowserElement || isApp.
+   * Returns true iif the docshell is marked as a type that behaves like a
+   * content boundary.
    */
-  [infallible] readonly attribute boolean isBrowserOrApp;
+  [infallible] readonly attribute boolean isContentBoundary;
 
   /**
-   * Returns true if this docshell corresponds to an <iframe mozbrowser> or if
-   * the docshell is contained in an <iframe mozbrowser>.  (<iframe mozapp
-   * mozbrowser> does not count as a browser.)
-   *
-   * Our notion here of "contained in" means: Walk up the docshell hierarchy in
-   * this process until we hit an <iframe mozapp> or <iframe mozbrowser> (or
-   * until the hierarchy ends).  Return true iff the docshell we stopped on has
-   * isBrowserElement == true.
+   * Returns true iif the docshell is inside a browser element.
    */
   [infallible] readonly attribute boolean isInBrowserElement;
 
   /**
-   * Returns true if this docshell corresponds to an <iframe mozbrowser> or
-   * <iframe mozap>, or if this docshell is contained in an <iframe mozbrowser>
-   * or <iframe mozapp>.
+   * Returns true iif the docshell is inside an application.  However, it will
+   * return false if the docshell is inside a browser element that is inside
+   * an application.
    *
-   * To compute this value, we walk up the docshell hierarchy.  If we encounter
-   * a docshell with isBrowserElement or isApp before we hit the end of the
-   * hierarchy, we return true.  Otherwise, we return false.
+   * Note: Do not use this method for permissions checks!  An app may contain
+   * an <iframe> pointing at arbitrary web code.  This iframe's docshell will
+   * have isInApp() == true, but the iframe's content is not "app code", and
+   * so should not be granted more trust than vanilla web content.
+   *
+   * (For example, suppose when web content calls API method X, we show a
+   * permission prompt, but when "app code" calls method X, we don't.  In this
+   * case, it would be /incorrect/ to show the permission prompt if
+   * !isInApp().)
+   *
+   * If you're doing a security check, use the content's principal instead of
+   * this method.
    */
-  [infallible] readonly attribute boolean isInBrowserOrApp;
-
-   /**
-    * Indicate that this docshell corresponds to an app with the given app id.
-    *
-    * You may pass NO_APP_ID or UNKNOWN_APP_ID for containingAppId.  If you
-    * pass NO_APP_ID, then this docshell will return NO_APP_ID for appId.  If
-    * you pass UNKNOWN_APP_ID, then this docshell will search its hiearchy for
-    * an app frame and use that frame's appId.
-    *
-    * You can call this method more than once, but there's no guarantee that
-    * other components will update their view of the world if you change a
-    * docshell's app id, so tread lightly.
-    *
-    * If you call this method after calling setIsBrowserInsideApp, this
-    * docshell will forget the fact that it was a browser.
-    */
-   void setIsApp(in unsigned long ownAppId);
-
-   /**
-    * Indicate that this docshell corresponds to a browser inside an app with
-    * the given ID.  As with setIsApp, you may pass NO_APP_ID or
-    * UNKNOWN_APP_ID.
-    *
-    * As with setIsApp, you may call this more than once, but it's kind of a
-    * hack, so be careful.
-    */
-   void setIsBrowserInsideApp(in unsigned long containingAppId);
+  [infallible] readonly attribute boolean isInApp;
 
   /**
-   * Returns the id of the app associated with this docshell.  If this docshell
-   * is an <iframe mozbrowser> inside an <iframe mozapp>, we return the app's
-   * appId.
-   *
-   * We compute this value by walking up the docshell hierarchy until we find a
-   * docshell on which setIsApp(x) or setIsBrowserInsideApp(x) was called
-   * (ignoring those docshells where x == UNKNOWN_APP_ID).  We return the app
-   * id x.
-   *
-   * If we don't find a docshell with an associated app id in our hierarchy, we
-   * return NO_APP_ID.  We never return UNKNOWN_APP_ID.
-   *
-   * Notice that a docshell may have an associated app even if it returns true
-   * for isBrowserElement!
+   * Returns if the docshell has a docshell that behaves as a content boundary
+   * in his parent hierarchy.
    */
-  [infallible] readonly attribute unsigned long appId;
+  [infallible] readonly attribute boolean isBelowContentBoundary;
+
+  /**
+   * Set the app id this docshell is associated with. The id has to be a valid
+   * app id. If the docshell isn't associated with any app, the value should be
+   * nsIScriptSecurityManager::NO_APP_ID. However, this is the default value if
+   * nothing is et.
+   *
+   * This method is [noscript] to reduce the scope. It should be used at very
+   * specific moments.
+   *
+   * Calling setAppId() will mark the frame as an app frame.
+   */
+  [noscript] void setAppId(in unsigned long appId);
 
   /**
    * Like nsIDocShellTreeItem::GetSameTypeParent, except this ignores <iframe

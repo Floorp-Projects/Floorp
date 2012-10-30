@@ -135,9 +135,7 @@ union BlobConstructorParams
   MysteryBlobConstructorParams;
 };
 
-// This struct identifies an app, by providing either a uint32_t (an appID) or a
-// pointer to a PBrowser (whose appID we use to identify the app).
-union AppToken {
+union AppId {
   uint32_t;
   nullable PBrowser;
 };
@@ -187,13 +185,13 @@ both:
     // TabChild::BrowserFrameProvideWindow, and the parent creates the
     // PBrowser as part of ContentParent::CreateTab.
     //
-    // When the parent constructs a PBrowser, the app token handed to the child
-    // side is trusted.  In that case, |ownOrContainingApp| is a uint32_t.
-    // However, when the child side constructs a PBrowser, for window.open(),
-    // the parent must validate the app ID used on the parent side.  To do so,
-    // the child process must pass a valid PBrowser as its |ownOrContainingApp|.
-    async PBrowser(uint32_t chromeFlags, AppToken ownOrContainingApp,
-                   bool isBrowserFrame);
+    // When the parent constructs a PBrowser, the app ID handed to the
+    // child side is trusted.  In that case, |appId| is uint32_t.
+    // However, when the child side constructs a PBrowser, for
+    // window.open(), the parent must validate the app ID used on the
+    // parent side.  To do so, the child process must pass a valid
+    // PBrowser as its |AppId|.
+    async PBrowser(uint32_t chromeFlags, bool isBrowserElement, AppId appId);
 
     async PBlob(BlobConstructorParams params);
 
