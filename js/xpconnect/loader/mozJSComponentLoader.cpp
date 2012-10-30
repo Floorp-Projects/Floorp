@@ -1238,7 +1238,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
         // Set the location information for the new global, so that tools like
         // about:memory may use that information
         if (!mReuseLoaderGlobal) {
-            xpc::SetLocationForGlobal(newEntry->global, aLocation);
+            xpc::SetLocationForGlobal(newEntry->obj, aLocation);
         }
 
         mod = newEntry;
