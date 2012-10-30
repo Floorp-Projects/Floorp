@@ -162,7 +162,7 @@ bool DoubleToStringConverter::ToShortestIeeeNumber(
     double value,
     StringBuilder* result_builder,
     DoubleToStringConverter::DtoaMode mode) const {
-  assert(mode == SHORTEST || mode == SHORTEST_SINGLE);
+  ASSERT(mode == SHORTEST || mode == SHORTEST_SINGLE);
   if (Double(value).IsSpecial()) {
     return HandleSpecialValues(value, result_builder);
   }
