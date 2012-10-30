@@ -14,6 +14,7 @@ function test(obj) {
     testcase(obj, Map.prototype.has, "x");
     testcase(obj, Map.prototype.set, "x", 1);
     testcase(obj, Map.prototype.delete, "x");
+    testcase(obj, Map.prototype.clear);
 }
 
 test(Map.prototype);
