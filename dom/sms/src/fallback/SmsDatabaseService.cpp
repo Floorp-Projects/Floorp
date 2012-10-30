@@ -32,6 +32,14 @@ SmsDatabaseService::SaveSentMessage(const nsAString& aReceiver,
 }
 
 NS_IMETHODIMP
+SmsDatabaseService::SetMessageDeliveryStatus(int32_t aMessageId,
+                                             const nsAString& aDeliveryStatus)
+{
+  NS_ERROR("We should not be here!");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 SmsDatabaseService::GetMessageMoz(int32_t aMessageId, int32_t aRequestId,
                                   uint64_t aProcessId)
 {

@@ -12,6 +12,26 @@
 #include "SmsRequestManager.h"
 #include "SmsRequest.h"
 
+using namespace mozilla;
+using namespace mozilla::dom::sms;
+
+namespace {
+
+void
+NotifyObserversWithSmsMessage(const char* aEventName,
+                              const SmsMessageData& aMessageData)
+{
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (!obs) {
+    return;
+  }
+
+  nsCOMPtr<SmsMessage> message = new SmsMessage(aMessageData);
+  obs->NotifyObservers(message, aEventName, nullptr);
+}
+
+} // anonymous namespace
+
 namespace mozilla {
 namespace dom {
 namespace sms {
@@ -19,42 +39,28 @@ namespace sms {
 bool
 SmsChild::RecvNotifyReceivedMessage(const SmsMessageData& aMessageData)
 {
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (!obs) {
-    return true;
-  }
-
-  nsCOMPtr<SmsMessage> message = new SmsMessage(aMessageData);
-  obs->NotifyObservers(message, kSmsReceivedObserverTopic, nullptr);
-
+  NotifyObserversWithSmsMessage(kSmsReceivedObserverTopic, aMessageData);
   return true;
 }
 
 bool
 SmsChild::RecvNotifySentMessage(const SmsMessageData& aMessageData)
 {
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (!obs) {
-    return true;
-  }
-
-  nsCOMPtr<SmsMessage> message = new SmsMessage(aMessageData);
-  obs->NotifyObservers(message, kSmsSentObserverTopic, nullptr);
-
+  NotifyObserversWithSmsMessage(kSmsSentObserverTopic, aMessageData);
   return true;
 }
 
 bool
-SmsChild::RecvNotifyDeliveredMessage(const SmsMessageData& aMessageData)
+SmsChild::RecvNotifyDeliverySuccessMessage(const SmsMessageData& aMessageData)
 {
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (!obs) {
-    return true;
-  }
+  NotifyObserversWithSmsMessage(kSmsDeliverySuccessObserverTopic, aMessageData);
+  return true;
+}
 
-  nsCOMPtr<SmsMessage> message = new SmsMessage(aMessageData);
-  obs->NotifyObservers(message, kSmsDeliveredObserverTopic, nullptr);
-
+bool
+SmsChild::RecvNotifyDeliveryErrorMessage(const SmsMessageData& aMessageData)
+{
+  NotifyObserversWithSmsMessage(kSmsDeliveryErrorObserverTopic, aMessageData);
   return true;
 }
 
