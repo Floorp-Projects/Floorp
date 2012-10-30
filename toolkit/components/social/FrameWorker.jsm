@@ -183,8 +183,17 @@ FrameWorker.prototype = {
     // removed - at which time we've explicitly killed it anyway.
     let worker = this;
 
-    workerWindow.addEventListener("load", function loadListener() {
-      workerWindow.removeEventListener("load", loadListener);
+    workerWindow.addEventListener("DOMContentLoaded", function loadListener() {
+      workerWindow.removeEventListener("DOMContentLoaded", loadListener);
+
+      // no script, error out now rather than creating ports, etc
+      let scriptText = workerWindow.document.body.textContent.trim();
+      if (!scriptText) {
+        Cu.reportError("FrameWorker: Empty worker script received");
+        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        return;
+      }
+
       // the iframe has loaded the js file as text - first inject the magic
       // port-handling code into the sandbox.
       try {
@@ -193,6 +202,8 @@ FrameWorker.prototype = {
       }
       catch (e) {
         Cu.reportError("FrameWorker: Error injecting port code into content side of the worker: " + e + "\n" + e.stack);
+        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        return;
       }
 
       // and wire up the client message handling.
@@ -201,16 +212,18 @@ FrameWorker.prototype = {
       }
       catch (e) {
         Cu.reportError("FrameWorker: Error setting up event listener for chrome side of the worker: " + e + "\n" + e.stack);
+        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        return;
       }
 
       // Now get the worker js code and eval it into the sandbox
       try {
-        let scriptText = workerWindow.document.body.textContent;
         Cu.evalInSandbox(scriptText, sandbox, "1.8", workerWindow.location.href, 1);
       } catch (e) {
         Cu.reportError("FrameWorker: Error evaluating worker script for " + worker.name + ": " + e + "; " +
             (e.lineNumber ? ("Line #" + e.lineNumber) : "") +
             (e.stack ? ("\n" + e.stack) : ""));
+        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
         return;
       }
 
@@ -341,7 +354,11 @@ function initClientMessageHandler(worker, workerWindow) {
     }
     switch (data.portTopic) {
       // No "port-create" here - client ports are created explicitly.
-
+      case "port-connection-error":
+        // onconnect failed, we cannot connect the port, the worker has
+        // become invalid
+        Services.obs.notifyObservers(null, "social:frameworker-error", worker.url);
+        break;
       case "port-close":
         // the worker side of the port was closed, so close this side too.
         port = worker.ports[portid];
