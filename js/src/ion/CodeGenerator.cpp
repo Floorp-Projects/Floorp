@@ -392,18 +392,13 @@ CodeGenerator::visitTableSwitchV(LTableSwitchV *ins)
     Register tag = masm.extractTag(value, index);
     masm.branchTestNumber(Assembler::NotEqual, tag, defaultcase);
 
-    Label unboxInt, isInt;
-    masm.branchTestInt32(Assembler::Equal, tag, &unboxInt);
+    Label isInt;
+    masm.branchTestInt32(Assembler::Equal, tag, &isInt);
     {
         FloatRegister floatIndex = ToFloatRegister(ins->tempFloat());
         masm.unboxDouble(value, floatIndex);
         emitDoubleToInt32(floatIndex, index, defaultcase, false);
-        masm.jmp(&isInt);
     }
-
-    masm.bind(&unboxInt);
-    masm.unboxInt32(value, index);
-
     masm.bind(&isInt);
 
     return emitTableSwitchDispatch(mir, index, ToRegisterOrInvalid(ins->tempPointer()));
