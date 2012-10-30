@@ -9,6 +9,7 @@
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsNativeCharsetUtils.h"
+#include "mozilla/Preferences.h"
 
 #define JSCTYPES_CONTRACTID \
   "@mozilla.org/jsctypes;1"
