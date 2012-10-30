@@ -105,6 +105,8 @@ class MapObject : public JSObject {
     static JSBool delete_(JSContext *cx, unsigned argc, Value *vp);
     static bool iterator_impl(JSContext *cx, CallArgs args);
     static JSBool iterator(JSContext *cx, unsigned argc, Value *vp);
+    static bool clear_impl(JSContext *cx, CallArgs args);
+    static JSBool clear(JSContext *cx, unsigned argc, Value *vp);
 };
 
 class SetObject : public JSObject {
@@ -131,6 +133,8 @@ class SetObject : public JSObject {
     static JSBool delete_(JSContext *cx, unsigned argc, Value *vp);
     static bool iterator_impl(JSContext *cx, CallArgs args);
     static JSBool iterator(JSContext *cx, unsigned argc, Value *vp);
+    static bool clear_impl(JSContext *cx, CallArgs args);
+    static JSBool clear(JSContext *cx, unsigned argc, Value *vp);
 };
 
 } /* namespace js */
