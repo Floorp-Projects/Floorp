@@ -2153,24 +2153,19 @@ const char nsHTMLMediaElement::gH264Types[3][16] = {
 };
 
 bool
-nsHTMLMediaElement::IsH264Enabled()
+nsHTMLMediaElement::IsGStreamerEnabled()
 {
-  return Preferences::GetBool("media.h264.enabled");
+  return Preferences::GetBool("media.gstreamer.enabled");
 }
 
 bool
 nsHTMLMediaElement::IsH264Type(const nsACString& aType)
 {
-  if (!IsH264Enabled()) {
-    return false;
-  }
-
   for (uint32_t i = 0; i < ArrayLength(gH264Types); ++i) {
     if (aType.EqualsASCII(gH264Types[i])) {
       return true;
     }
   }
-
   return false;
 }
 #endif
@@ -2265,7 +2260,7 @@ nsHTMLMediaElement::IsDASHMPDType(const nsACString& aType)
 #endif
 
 /* static */
-nsHTMLMediaElement::CanPlayStatus 
+nsHTMLMediaElement::CanPlayStatus
 nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
                                        char const *const ** aCodecList)
 {
@@ -2429,9 +2424,43 @@ nsHTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
   return NS_OK;
 }
 
+#ifdef MOZ_GSTREAMER
+bool
+nsHTMLMediaElement::IsGStreamerSupportedType(const nsACString& aMimeType)
+{
+  if (!IsGStreamerEnabled())
+    return false;
+  if (IsH264Type(aMimeType))
+    return true;
+  if (!Preferences::GetBool("media.prefer-gstreamer", false))
+    return false;
+#ifdef MOZ_WEBM
+  if (IsWebMType(aMimeType))
+    return true;
+#endif
+#ifdef MOZ_OGG
+  if (IsOggType(aMimeType))
+    return true;
+#endif
+  return false;
+}
+#endif
+
 already_AddRefed<nsMediaDecoder>
 nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 {
+
+#ifdef MOZ_GSTREAMER
+  // When enabled, use GStreamer for H.264, but not for codecs handled by our
+  // bundled decoders, unless the "media.prefer-gstreamer" pref is set.
+  if (IsGStreamerSupportedType(aType)) {
+    nsRefPtr<nsGStreamerDecoder> decoder = new nsGStreamerDecoder();
+    if (decoder->Init(this)) {
+      return decoder.forget();
+    }
+  }
+#endif
+
 #ifdef MOZ_RAW
   if (IsRawType(aType)) {
     nsRefPtr<nsRawDecoder> decoder = new nsRawDecoder();
@@ -2442,11 +2471,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 #endif
 #ifdef MOZ_OGG
   if (IsOggType(aType)) {
-#ifdef MOZ_GSTREAMER 
-    nsRefPtr<nsGStreamerDecoder> decoder = new nsGStreamerDecoder();
-#else
     nsRefPtr<nsOggDecoder> decoder = new nsOggDecoder();
-#endif
     if (decoder->Init(this)) {
       return decoder.forget();
     }
@@ -2478,11 +2503,7 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
 #endif
 #ifdef MOZ_WEBM
   if (IsWebMType(aType)) {
-#ifdef MOZ_GSTREAMER 
-    nsRefPtr<nsGStreamerDecoder> decoder = new nsGStreamerDecoder();
-#else
     nsRefPtr<nsWebMDecoder> decoder = new nsWebMDecoder();
-#endif
     if (decoder->Init(this)) {
       return decoder.forget();
     }
@@ -2498,14 +2519,6 @@ nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
   }
 #endif
 
-#ifdef MOZ_GSTREAMER 
-  if (IsH264Type(aType)) {
-    nsRefPtr<nsGStreamerDecoder> decoder = new nsGStreamerDecoder();
-    if (decoder->Init(this)) {
-      return decoder.forget();
-    }
-  }
-#endif
   return nullptr;
 }
 

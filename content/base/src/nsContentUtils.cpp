@@ -6614,47 +6614,32 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
 
 #ifdef MOZ_MEDIA
 #ifdef MOZ_OGG
-  if (nsHTMLMediaElement::IsOggEnabled()) {
-    for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gOggTypes); ++i) {
-      const char* type = nsHTMLMediaElement::gOggTypes[i];
-      if (!strcmp(aType, type)) {
-        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
-        if (docFactory && aLoaderType) {
-          *aLoaderType = TYPE_CONTENT;
-        }
-        return docFactory.forget();
-      }
+  if (nsHTMLMediaElement::IsOggType(nsDependentCString(aType))) {
+    docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_CONTENT;
     }
+    return docFactory.forget();
   }
 #endif
 
 #ifdef MOZ_WEBM
-  if (nsHTMLMediaElement::IsWebMEnabled()) {
-    for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gWebMTypes); ++i) {
-      const char* type = nsHTMLMediaElement::gWebMTypes[i];
-      if (!strcmp(aType, type)) {
-        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
-        if (docFactory && aLoaderType) {
-          *aLoaderType = TYPE_CONTENT;
-        }
-        return docFactory.forget();
-      }
+  if (nsHTMLMediaElement::IsWebMType(nsDependentCString(aType))) {
+    docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_CONTENT;
     }
+    return docFactory.forget();
   }
 #endif
 
 #ifdef MOZ_GSTREAMER
-  if (nsHTMLMediaElement::IsH264Enabled()) {
-    for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gH264Types); ++i) {
-      const char* type = nsHTMLMediaElement::gH264Types[i];
-      if (!strcmp(aType, type)) {
-        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
-        if (docFactory && aLoaderType) {
-          *aLoaderType = TYPE_CONTENT;
-        }
-        return docFactory.forget();
-      }
+  if (nsHTMLMediaElement::IsGStreamerSupportedType(nsDependentCString(aType))) {
+    docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_CONTENT;
     }
+    return docFactory.forget();
   }
 #endif
 
@@ -6668,7 +6653,6 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
     return docFactory.forget();
   }
 #endif // MOZ_MEDIA_PLUGINS
-
 #endif // MOZ_MEDIA
 
   return NULL;
