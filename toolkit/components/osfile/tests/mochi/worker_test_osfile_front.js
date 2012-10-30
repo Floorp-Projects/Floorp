@@ -745,6 +745,15 @@ function test_mkdir()
   }
   ok(exn && exn instanceof OS.File.Error && exn.becauseExists, "test_mkdir: makeDir over an existing directory failed for all the right reasons");
 
+  ok(true, "test_mkdir: Creating directory that already exists with ignoreExisting");
+  exn = null;
+  try {
+    OS.File.makeDir(dirName, {ignoreExisting: true});
+  } catch(x) {
+    exn = x;
+  }
+  ok(!exn, "test_mkdir: makeDir over an existing directory with ignoreExisting is successful");
+
   // Cleanup - and check that we have cleaned up
   OS.File.removeEmptyDir(dirName);
 
