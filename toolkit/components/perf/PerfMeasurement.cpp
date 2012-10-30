@@ -7,6 +7,7 @@
 #include "jsperf.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsMemory.h"
+#include "mozilla/Preferences.h"
 
 #define JSPERF_CONTRACTID \
   "@mozilla.org/jsperf;1"
