@@ -434,7 +434,7 @@ BookmarksStore.prototype = {
   preprocessTagQuery: function preprocessTagQuery(record) {
     if (record.type != "query" ||
         record.bmkUri == null ||
-        record.folderName == null)
+        !record.folderName)
       return;
     
     // Yes, this works without chopping off the "place:" prefix.
@@ -501,8 +501,7 @@ BookmarksStore.prototype = {
 
     // Skip malformed records. (Bug 806460.)
     if (record.type == "query" &&
-        (!record.bmkUri ||
-         !record.folderName)) {
+        !record.bmkUri) {
       this._log.warn("Skipping malformed query bookmark: " + record.id);
       return;
     }
