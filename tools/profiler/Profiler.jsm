@@ -8,9 +8,9 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-var EXPORTED_SYMBOLS = ["Profiler"];
+this.EXPORTED_SYMBOLS = ["Profiler"];
 
-let Profiler = {
+this.Profiler = {
 
 };
 

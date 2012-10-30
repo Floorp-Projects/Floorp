@@ -883,7 +883,7 @@ RILContentHelper.prototype = {
   }
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([RILContentHelper]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RILContentHelper]);
 
 let debug;
 if (DEBUG) {

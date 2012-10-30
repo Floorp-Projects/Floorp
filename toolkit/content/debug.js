@@ -8,7 +8,7 @@
 // This file contains functions that are useful for debugging purposes from
 // within JavaScript code.
 
-var EXPORTED_SYMBOLS = ["NS_ASSERT"];
+this.EXPORTED_SYMBOLS = ["NS_ASSERT"];
 
 var gTraceOnAssert = true;
 
@@ -29,7 +29,7 @@ var gTraceOnAssert = true;
  * @param message   a string to be displayed upon failure of the assertion
  */
 
-function NS_ASSERT(condition, message) {
+this.NS_ASSERT = function NS_ASSERT(condition, message) {
   if (condition)
     return;
 

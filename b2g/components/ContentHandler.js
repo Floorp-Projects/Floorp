@@ -50,4 +50,4 @@ ContentHandler.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentHandler])
 };
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentHandler]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentHandler]);

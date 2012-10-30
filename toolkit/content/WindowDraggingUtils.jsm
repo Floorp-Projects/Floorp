@@ -8,9 +8,9 @@
 #define USE_HITTEST
 #endif
 
-let EXPORTED_SYMBOLS = [ "WindowDraggingElement" ];
+this.EXPORTED_SYMBOLS = [ "WindowDraggingElement" ];
 
-function WindowDraggingElement(elem) {
+this.WindowDraggingElement = function WindowDraggingElement(elem) {
   this._elem = elem;
   this._window = elem.ownerDocument.defaultView;
 #ifdef USE_HITTEST
@@ -19,7 +19,7 @@ function WindowDraggingElement(elem) {
   else
 #endif
   this._elem.addEventListener("mousedown", this, false);
-}
+};
 
 WindowDraggingElement.prototype = {
   mouseDownCheck: function(e) { return true; },

@@ -75,4 +75,4 @@ AppProtocolHandler.prototype = {
   }
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([AppProtocolHandler]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AppProtocolHandler]);

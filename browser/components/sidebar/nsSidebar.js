@@ -183,7 +183,7 @@ nsSidebar.prototype.classInfo = XPCOMUtils.generateCI({classID: SIDEBAR_CID,
 
 nsSidebar.prototype.QueryInterface = XPCOMUtils.generateQI([nsISidebar, nsISidebarExternal]);
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([nsSidebar]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsSidebar]);
 
 /* static functions */
 if (DEBUG)

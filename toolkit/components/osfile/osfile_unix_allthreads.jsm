@@ -19,9 +19,9 @@
 
 if (typeof Components != "undefined") {
   // Module is opened as a jsm module
-  var EXPORTED_SYMBOLS = ["OS"];
+  this.EXPORTED_SYMBOLS = ["OS"];
   Components.utils.import("resource://gre/modules/ctypes.jsm");
-  Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
+  Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", this);
 } else {
   // File is included from a chrome worker
   importScripts("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");

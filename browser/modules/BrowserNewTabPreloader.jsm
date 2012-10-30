@@ -4,7 +4,7 @@
 
 "use strict";
 
-let EXPORTED_SYMBOLS = ["BrowserNewTabPreloader"];
+this.EXPORTED_SYMBOLS = ["BrowserNewTabPreloader"];
 
 const Cu = Components.utils;
 const Cc = Components.classes;
@@ -18,7 +18,7 @@ const PREF_BRANCH = "browser.newtab.";
 const TOPIC_DELAYED_STARTUP = "browser-delayed-startup-finished";
 const PRELOADER_INIT_DELAY_MS = 5000;
 
-let BrowserNewTabPreloader = {
+this.BrowserNewTabPreloader = {
   init: function Preloader_init() {
     Initializer.start();
   },

@@ -104,4 +104,4 @@ PaymentContentHelper.prototype = {
   }
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([PaymentContentHelper]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PaymentContentHelper]);

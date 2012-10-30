@@ -340,4 +340,4 @@ ChromeProfileMigrator.prototype.classDescription = "Chrome Profile Migrator";
 ChromeProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=chrome";
 ChromeProfileMigrator.prototype.classID = Components.ID("{4cec1de4-1671-4fc3-a53e-6c539dc77a26}");
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([ChromeProfileMigrator]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ChromeProfileMigrator]);

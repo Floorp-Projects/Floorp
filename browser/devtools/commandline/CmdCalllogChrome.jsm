@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-let EXPORTED_SYMBOLS = [ ];
+this.EXPORTED_SYMBOLS = [ ];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
