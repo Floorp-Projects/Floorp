@@ -19,6 +19,7 @@
 #include "nsTextFrame.h"
 #include "nsStyleStructInlines.h"
 #include "mozilla/Util.h"
+#include "mozilla/Likely.h"
 
 namespace mozilla {
 namespace css {
@@ -624,7 +625,7 @@ TextOverflow::PruneDisplayListContents(nsDisplayList*        aList,
                     itemFrame->GetOffsetTo(mBlock);
       if (mLeft.IsNeeded() && rect.x < aInsideMarkersArea.x) {
         nscoord left = aInsideMarkersArea.x - rect.x;
-        if (NS_UNLIKELY(left < 0)) {
+        if (MOZ_UNLIKELY(left < 0)) {
           item->~nsDisplayItem();
           continue;
         }
@@ -632,7 +633,7 @@ TextOverflow::PruneDisplayListContents(nsDisplayList*        aList,
       }
       if (mRight.IsNeeded() && rect.XMost() > aInsideMarkersArea.XMost()) {
         nscoord right = rect.XMost() - aInsideMarkersArea.XMost();
-        if (NS_UNLIKELY(right < 0)) {
+        if (MOZ_UNLIKELY(right < 0)) {
           item->~nsDisplayItem();
           continue;
         }

@@ -37,6 +37,7 @@
 #include "jsfriendapi.h"
 #include "nsContentUtils.h"
 #include "nsEventStateManager.h"
+#include "mozilla/Likely.h"
 
 static nsresult
 GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
@@ -939,7 +940,7 @@ nsLocation::CallerSubsumes()
 {
   // Get the principal associated with the location object.
   nsCOMPtr<nsIDOMWindow> outer = do_QueryReferent(mOuter);
-  if (NS_UNLIKELY(!outer))
+  if (MOZ_UNLIKELY(!outer))
     return false;
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(outer);
   bool subsumes = false;

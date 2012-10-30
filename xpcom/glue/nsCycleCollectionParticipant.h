@@ -6,6 +6,7 @@
 #ifndef nsCycleCollectionParticipant_h__
 #define nsCycleCollectionParticipant_h__
 
+#include "mozilla/Likely.h"
 #include "mozilla/TypeTraits.h"
 #include "nsISupports.h"
 
@@ -517,7 +518,7 @@ public:
 
 #define NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(_cb, _name)                         \
   PR_BEGIN_MACRO                                                               \
-    if (NS_UNLIKELY((_cb).WantDebugInfo())) {                                  \
+    if (MOZ_UNLIKELY((_cb).WantDebugInfo())) {                                 \
       (_cb).NoteNextEdgeName(_name);                                           \
     }                                                                          \
   PR_END_MACRO
@@ -888,7 +889,7 @@ struct Skippable
     static NS_METHOD_(void) UnmarkIfPurpleImpl(void *p)                        \
     {                                                                          \
         _class *tmp = static_cast<_class *>(p);                                \
-        if (NS_LIKELY(tmp->mRefCnt.HasPurpleBufferEntry()))                    \
+        if (MOZ_LIKELY(tmp->mRefCnt.HasPurpleBufferEntry()))                   \
             tmp->mRefCnt.ReleasePurpleBufferEntry();                           \
     }
 

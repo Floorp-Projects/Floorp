@@ -15,7 +15,7 @@ let fxuri = Utils.makeURI("http://getfirefox.com/");
 let tburi = Utils.makeURI("http://getthunderbird.com/");
 
 
-function test_bookmark_create() {
+add_test(function test_bookmark_create() {
   try {
     _("Ensure the record isn't present yet.");
     let ids = PlacesUtils.bookmarks.getBookmarkIdsForURI(fxuri, {});
@@ -86,10 +86,11 @@ function test_bookmark_create() {
   } finally {
     _("Clean up.");
     store.wipe();
+    run_next_test();
   }
-}
+});
 
-function test_bookmark_update() {
+add_test(function test_bookmark_update() {
   try {
     _("Create a bookmark whose values we'll change.");
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
@@ -120,10 +121,11 @@ function test_bookmark_update() {
   } finally {
     _("Clean up.");
     store.wipe();
+    run_next_test();
   }
-}
+});
 
-function test_bookmark_createRecord() {
+add_test(function test_bookmark_createRecord() {
   try {
     _("Create a bookmark without a description or title.");
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
@@ -140,10 +142,11 @@ function test_bookmark_createRecord() {
   } finally {
     _("Clean up.");
     store.wipe();
+    run_next_test();
   }
-}
+});
 
-function test_folder_create() {
+add_test(function test_folder_create() {
   try {
     _("Create a folder.");
     let folder = new BookmarkFolder("bookmarks", "testfolder-1");
@@ -171,10 +174,11 @@ function test_folder_create() {
   } finally {
     _("Clean up.");
     store.wipe();
+    run_next_test();
   }
-}
+});
 
-function test_folder_createRecord() {
+add_test(function test_folder_createRecord() {
   try {
     _("Create a folder.");
     let folder1_id = PlacesUtils.bookmarks.createFolder(
@@ -204,10 +208,11 @@ function test_folder_createRecord() {
   } finally {
     _("Clean up.");
     store.wipe();
+    run_next_test();
   }
-}
+});
 
-function test_deleted() {
+add_test(function test_deleted() {
   try {
     _("Create a bookmark that will be deleted.");
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
@@ -235,10 +240,11 @@ function test_deleted() {
   } finally {
     _("Clean up.");
     store.wipe();
+    run_next_test();
   }
-}
+});
 
-function test_move_folder() {
+add_test(function test_move_folder() {
   try {
     _("Create two folders and a bookmark in one of them.");
     let folder1_id = PlacesUtils.bookmarks.createFolder(
@@ -263,10 +269,11 @@ function test_move_folder() {
   } finally {
     _("Clean up.");
     store.wipe();
+    run_next_test();
   }
-}
+});
 
-function test_move_order() {
+add_test(function test_move_order() {
   // Make sure the tracker is turned on.
   Svc.Obs.notify("weave:engine:start-tracking");
   try {
@@ -306,10 +313,11 @@ function test_move_order() {
     Svc.Obs.notify("weave:engine:stop-tracking");
     _("Clean up.");
     store.wipe();
+    run_next_test();
   }
-}
+});
 
-function test_orphan() {
+add_test(function test_orphan() {
   try {
 
     _("Add a new bookmark locally.");
@@ -341,10 +349,11 @@ function test_orphan() {
   } finally {
     _("Clean up.");
     store.wipe();
+    run_next_test();
   }
-}
+});
 
-function test_reparentOrphans() {
+add_test(function test_reparentOrphans() {
   try {
     let folder1_id = PlacesUtils.bookmarks.createFolder(
       PlacesUtils.bookmarks.toolbarFolder, "Folder1", 0);
@@ -366,22 +375,34 @@ function test_reparentOrphans() {
   } finally {
     _("Clean up.");
     store.wipe();
+
+    if (engine._tracker._lazySave) {
+      engine._tracker._lazySave.clear();
+    }
+
+    run_next_test();
   }
-}
+});
+
+// Tests Bug 806460, in which query records arrive with empty folder
+// names and missing bookmark URIs.
+add_test(function test_empty_query_doesnt_die() {
+  let record = new BookmarkQuery("bookmarks", "8xoDGqKrXf1P");
+  record.folderName    = "";
+  record.queryId       = "";
+  record.parentName    = "Toolbar";
+  record.parentid      = "toolbar";
+
+  // These should not throw.
+  store.applyIncoming(record);
+
+  delete record.folderName;
+  store.applyIncoming(record);
+  
+  run_next_test();
+});
 
 function run_test() {
   initTestLogging('Trace');
-  test_bookmark_create();
-  test_bookmark_createRecord();
-  test_bookmark_update();
-  test_folder_create();
-  test_folder_createRecord();
-  test_deleted();
-  test_move_folder();
-  test_move_order();
-  test_orphan();
-  test_reparentOrphans();
-  if (engine._tracker._lazySave) {
-    engine._tracker._lazySave.clear();
-  }
+  run_next_test();
 }

@@ -14,7 +14,7 @@ interface nsIDOMNode;
  * tabs contained in them.
  */
 
-[scriptable, uuid(766a09c1-d21b-4bf8-9fe3-8b34b716251a)]
+[scriptable, uuid(15152edf-6c99-4277-9020-076be4653c69)]
 interface nsISessionStore : nsISupports
 {
   /**
@@ -77,8 +77,9 @@ interface nsISessionStore : nsISupports
 
   /**
    * Restores the previous browser session using a fast, lightweight strategy
-   * @param aBringToFront should a restored tab be brought to the foreground?
-   * @param aForceRestore  whether we need to force a restore, regardless of the recent crash situation
+   * @param aRestoringOOM  Whether this is an OOM restore from Android
+   * @param aSessionString The session string to restore from. If null, the
+   *                       backup session file is read from.
    */
-  void restoreLastSession(in boolean aBringToFront, in boolean aForceRestore);
+  void restoreLastSession(in boolean aRestoringOOM, in AString aSessionString);
 };

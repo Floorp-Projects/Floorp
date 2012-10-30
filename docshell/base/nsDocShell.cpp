@@ -2150,8 +2150,8 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
     *aFullscreenAllowed = false;
 
     // For non-content boundaries, check that the enclosing iframe element
-    // has the mozallowfullscreen attribute set to true. If any ancestor
-    // iframe does not have mozallowfullscreen=true, then fullscreen is
+    // has the allowfullscreen attribute set to true. If any ancestor
+    // iframe does not have allowfullscreen=true, then fullscreen is
     // prohibited.
     nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(GetAsSupports(this));
     if (!win) {
@@ -2160,12 +2160,13 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
     nsCOMPtr<nsIContent> frameElement = do_QueryInterface(win->GetFrameElementInternal());
     if (frameElement &&
         frameElement->IsHTML(nsGkAtoms::iframe) &&
+        !frameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) &&
         !frameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozallowfullscreen)) {
         return NS_OK;
     }
 
     // If we have no parent then we're the root docshell; no ancestor of the
-    // original docshell doesn't have a mozallowfullscreen attribute, so
+    // original docshell doesn't have a allowfullscreen attribute, so
     // report fullscreen as allowed.
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_GetInterface(GetAsSupports(this));
     NS_ENSURE_TRUE(dsti, NS_OK);

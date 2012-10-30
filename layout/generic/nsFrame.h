@@ -9,6 +9,7 @@
 #define nsFrame_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
 #include "nsBox.h"
 #include "nsRect.h"
 #include "nsString.h"
@@ -578,7 +579,7 @@ public:
                                     const nsStyleDisplay* aDisp)
   {
     // clip overflow:-moz-hidden-unscrollable ...
-    if (NS_UNLIKELY(aDisp->mOverflowX == NS_STYLE_OVERFLOW_CLIP)) {
+    if (MOZ_UNLIKELY(aDisp->mOverflowX == NS_STYLE_OVERFLOW_CLIP)) {
       return true;
     }
 

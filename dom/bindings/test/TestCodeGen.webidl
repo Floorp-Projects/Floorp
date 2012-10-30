@@ -334,6 +334,10 @@ interface TestInterface {
   AnotherNameForTestInterface exerciseTypedefInterfaces2(NullableTestInterface arg);
   void exerciseTypedefInterfaces3(YetAnotherNameForTestInterface arg);
 
+  // Static methods and attributes
+  static attribute boolean staticAttribute;
+  static void staticMethod(boolean arg);
+
   // Miscellania
   [LenientThis] attribute long attrWithLenientThis;
   [Unforgeable] readonly attribute long unforgeableAttr;

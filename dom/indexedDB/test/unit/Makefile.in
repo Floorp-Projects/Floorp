@@ -45,6 +45,7 @@ MOCHITEST_FILES = \
   test_objectStore_remove_values.js \
   test_odd_result_order.js \
   test_open_empty_db.js \
+  test_open_for_principal.js \
   test_open_objectStore.js \
   test_optionalArguments.js \
   test_overlapping_transactions.js \

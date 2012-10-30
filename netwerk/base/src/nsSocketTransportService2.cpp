@@ -22,6 +22,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Likely.h"
 
 
 // XXX: There is no good header file to put these in. :(
@@ -794,7 +795,7 @@ nsSocketTransportService::DoPollIteration(bool wait)
                 // here -- otherwise, some compilers will treat it as signed,
                 // which makes them fire signed/unsigned-comparison build
                 // warnings for the comparison against 'pollInterval'.)
-                if (NS_UNLIKELY(pollInterval >
+                if (MOZ_UNLIKELY(pollInterval >
                                 static_cast<uint32_t>(UINT16_MAX) -
                                 s.mElapsedTime))
                     s.mElapsedTime = UINT16_MAX;

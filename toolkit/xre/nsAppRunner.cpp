@@ -25,6 +25,7 @@
 
 #include "mozilla/Util.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
 
 #include "nsAppRunner.h"
 #include "mozilla/AppData.h"
@@ -1061,9 +1062,9 @@ bool gLogConsoleErrors
 
 #define NS_ENSURE_TRUE_LOG(x, ret)               \
   PR_BEGIN_MACRO                                 \
-  if (NS_UNLIKELY(!(x))) {                       \
+  if (MOZ_UNLIKELY(!(x))) {                      \
     NS_WARNING("NS_ENSURE_TRUE(" #x ") failed"); \
-    gLogConsoleErrors = true;                 \
+    gLogConsoleErrors = true;                    \
     return ret;                                  \
   }                                              \
   PR_END_MACRO

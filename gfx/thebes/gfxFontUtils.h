@@ -22,6 +22,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsIStreamBufferAccess.h"
+#include "mozilla/Likely.h"
 
 #include "zlib.h"
 
@@ -154,7 +155,7 @@ public:
         uint32_t blockIndex = aIndex/BLOCK_SIZE_BITS;
         if (blockIndex >= mBlocks.Length()) {
             nsAutoPtr<Block> *blocks = mBlocks.AppendElements(blockIndex + 1 - mBlocks.Length());
-            if (NS_UNLIKELY(!blocks)) // OOM
+            if (MOZ_UNLIKELY(!blocks)) // OOM
                 return;
         }
         Block *block = mBlocks[blockIndex];
@@ -179,7 +180,7 @@ public:
         if (endIndex >= mBlocks.Length()) {
             uint32_t numNewBlocks = endIndex + 1 - mBlocks.Length();
             nsAutoPtr<Block> *blocks = mBlocks.AppendElements(numNewBlocks);
-            if (NS_UNLIKELY(!blocks)) // OOM
+            if (MOZ_UNLIKELY(!blocks)) // OOM
                 return;
         }
 
@@ -213,7 +214,7 @@ public:
         uint32_t blockIndex = aIndex/BLOCK_SIZE_BITS;
         if (blockIndex >= mBlocks.Length()) {
             nsAutoPtr<Block> *blocks = mBlocks.AppendElements(blockIndex + 1 - mBlocks.Length());
-            if (NS_UNLIKELY(!blocks)) // OOM
+            if (MOZ_UNLIKELY(!blocks)) // OOM
                 return;
         }
         Block *block = mBlocks[blockIndex];
@@ -230,7 +231,7 @@ public:
         if (endIndex >= mBlocks.Length()) {
             uint32_t numNewBlocks = endIndex + 1 - mBlocks.Length();
             nsAutoPtr<Block> *blocks = mBlocks.AppendElements(numNewBlocks);
-            if (NS_UNLIKELY(!blocks)) // OOM
+            if (MOZ_UNLIKELY(!blocks)) // OOM
                 return;
         }
 
@@ -281,7 +282,7 @@ public:
         if (blockCount > mBlocks.Length()) {
             uint32_t needed = blockCount - mBlocks.Length();
             nsAutoPtr<Block> *blocks = mBlocks.AppendElements(needed);
-            if (NS_UNLIKELY(!blocks)) { // OOM
+            if (MOZ_UNLIKELY(!blocks)) { // OOM
                 return;
             }
         }

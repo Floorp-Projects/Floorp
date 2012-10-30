@@ -46,6 +46,7 @@
 #include "nsIProtocolHandler.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/Likely.h"
 
 #include "DiscardTracker.h"
 #include "nsAsyncRedirectVerifyHelper.h"
@@ -91,7 +92,7 @@ imgRequest::imgRequest(imgLoader* aLoader)
  , mResniffMimeType(false)
 {
   // Register our pref observers if we haven't yet.
-  if (NS_UNLIKELY(!gInitializedPrefCaches)) {
+  if (MOZ_UNLIKELY(!gInitializedPrefCaches)) {
     InitPrefCaches();
   }
 }

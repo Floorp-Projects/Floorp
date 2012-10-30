@@ -8,6 +8,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Likely.h"
 #include "mozilla/Util.h"
 
 #include "xpcprivate.h"
@@ -136,7 +137,7 @@ nsXPConnect::GetXPConnect()
     // Do a release-mode assert that we're not doing anything significant in
     // XPConnect off the main thread. If you're an extension developer hitting
     // this, you need to change your code. See bug 716167.
-    if (!NS_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
+    if (!MOZ_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
         MOZ_CRASH();
 
     if (!gSelf) {
@@ -695,7 +696,7 @@ NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
      * parent pointers iteratively, rather than recursively, to avoid overflow.
      */
     if (AddToCCKind(kind)) {
-        if (NS_UNLIKELY(tracer->cb.WantDebugInfo())) {
+        if (MOZ_UNLIKELY(tracer->cb.WantDebugInfo())) {
             // based on DumpNotify in jsapi.c
             if (tracer->debugPrinter) {
                 char buffer[200];
@@ -1160,8 +1161,8 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     MOZ_ASSERT(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL);
 
     // Init WebIDL binding constructors wanted on all XPConnect globals.
-    if (!TextDecoderBinding::GetProtoObject(aJSContext, global, global) ||
-        !TextEncoderBinding::GetProtoObject(aJSContext, global, global)) {
+    if (!TextDecoderBinding::GetConstructorObject(aJSContext, global) ||
+        !TextEncoderBinding::GetConstructorObject(aJSContext, global)) {
         return UnexpectedFailure(NS_ERROR_FAILURE);
     }
 
@@ -1997,7 +1998,7 @@ nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
                                    uint32_t aRecursionDepth)
 {
     // Watch out for unpaired events during observer registration.
-    if (NS_UNLIKELY(mEventDepth == 0))
+    if (MOZ_UNLIKELY(mEventDepth == 0))
         return NS_OK;
     mEventDepth--;
 
