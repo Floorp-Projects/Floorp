@@ -703,6 +703,24 @@ DOMCI_DATA_NO_CLASS(DOMConstructor)
 
 namespace {
 
+class IDBFactorySH : public nsDOMGenericSH
+{
+protected:
+  IDBFactorySH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  { }
+
+  virtual ~IDBFactorySH()
+  { }
+
+public:
+  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData *aData)
+  {
+    return new IDBFactorySH(aData);
+  }
+};
+
 class IDBEventTargetSH : public nsEventTargetSH
 {
 protected:
@@ -1581,7 +1599,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(DesktopNotificationCenter, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(IDBFactory, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(IDBFactory, IDBFactorySH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(IDBFileHandle, FileHandle, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
@@ -7966,6 +7984,88 @@ nsDOMMutationObserverSH::PreserveWrapper(nsISupports* aNative)
   nsDOMMutationObserver* mutationObserver =
     nsDOMMutationObserver::FromSupports(aNative);
   nsContentUtils::PreserveWrapper(aNative, mutationObserver);
+}
+
+// IDBFactory helper
+
+/* static */
+template<nsresult (*func)(JSContext *cx, unsigned argc, jsval *vp, bool aDelete), bool aDelete>
+JSBool
+IDBFNativeShim(JSContext *cx, unsigned argc, jsval *vp)
+{
+  nsresult rv = (*func)(cx, argc, vp, aDelete);
+  if (NS_FAILED(rv)) {
+    xpc::Throw(cx, rv);
+    return false;
+  }
+
+  return true;  
+}
+
+/* static */ nsresult
+IDBFOpenForPrincipal(JSContext *cx, unsigned argc, JS::Value *vp, bool aDelete)
+{
+  // Just to be on the extra-safe side
+  if (!nsContentUtils::IsCallerChrome()) {
+    MOZ_NOT_REACHED("Shouldn't be possible to get here");
+    return NS_ERROR_FAILURE;
+  }
+
+  JSObject* principalJS;
+  JSString* nameJS;
+  uint32_t version = 0;
+  if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "oS/u",
+                           &principalJS, &nameJS, &version)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (version < 1 && argc >= 3) {
+    return NS_ERROR_TYPE_ERR;
+  }
+
+  nsDependentJSString name;
+  NS_ENSURE_TRUE(name.init(cx, nameJS), NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIPrincipal> principal = do_QueryWrapper(cx, principalJS);
+  NS_ENSURE_TRUE(principal, NS_ERROR_NO_INTERFACE);
+
+  nsCString extendedOrigin;
+  nsresult rv = principal->GetExtendedOrigin(extendedOrigin);
+  NS_ENSURE_FALSE(extendedOrigin.IsEmpty(), NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIIDBFactory> factory =
+    do_QueryWrapper(cx, JS_THIS_OBJECT(cx, vp));
+  NS_ENSURE_TRUE(factory, NS_ERROR_NO_INTERFACE);
+
+  nsRefPtr<indexedDB::IDBOpenDBRequest> request;
+  rv = static_cast<indexedDB::IDBFactory*>(factory.get())->
+    OpenCommon(name, version, extendedOrigin, aDelete, cx,
+               getter_AddRefs(request));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return WrapNative(cx, JS_GetGlobalForScopeChain(cx),
+                    static_cast<nsIIDBOpenDBRequest*>(request),
+                    &NS_GET_IID(nsIIDBOpenDBRequest), true, vp);
+}
+
+NS_IMETHODIMP
+IDBFactorySH::PostCreatePrototype(JSContext * cx, JSObject * proto)
+{
+  // set up our proto first
+  nsresult rv = nsDOMGenericSH::PostCreatePrototype(cx, proto);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (xpc::AccessCheck::isChrome(js::GetObjectCompartment(proto)) &&
+      (!JS_DefineFunction(cx, proto, "openForPrincipal",
+                          IDBFNativeShim<IDBFOpenForPrincipal, false>,
+                          3, JSPROP_ENUMERATE) ||
+       !JS_DefineFunction(cx, proto, "deleteForPrincipal",
+                          IDBFNativeShim<IDBFOpenForPrincipal, true>,
+                          3, JSPROP_ENUMERATE))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return rv;
 }
 
 // IDBEventTarget helper
