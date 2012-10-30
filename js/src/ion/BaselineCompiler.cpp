@@ -362,6 +362,8 @@ BaselineCompiler::emitBody()
         SPEW_OPCODE();
         JSOp op = JSOp(*pc);
 
+        frame.assertValidState(pc);
+
         masm.bind(labelOf(pc));
 
         switch (op) {
