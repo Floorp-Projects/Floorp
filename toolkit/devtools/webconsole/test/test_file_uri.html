@@ -79,7 +79,13 @@ function testEnd()
 {
   if (gTmpFile) {
     SimpleTest.executeSoon(function() {
-      gTmpFile.remove(false);
+      try {
+        gTmpFile.remove(false);
+      }
+      catch (ex if (ex.name == "NS_ERROR_FILE_IS_LOCKED")) {
+        // Sometimes remove() throws because the file is not unlocked soon
+        // enough.
+      }
       gTmpFile = null;
     });
   }
