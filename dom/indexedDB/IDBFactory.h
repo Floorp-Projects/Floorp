@@ -92,6 +92,7 @@ public:
   nsresult
   OpenCommon(const nsAString& aName,
              int64_t aVersion,
+             const nsACString& aASCIIOrigin,
              bool aDeleting,
              JSContext* aCallingCx,
              IDBOpenDBRequest** _retval);
