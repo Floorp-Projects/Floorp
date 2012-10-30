@@ -36,18 +36,25 @@ def parseInt(literal):
     return value * sign
 
 # Magic for creating enums
-def M_add_class_attribs(attribs):
+def M_add_class_attribs(attribs, start):
     def foo(name, bases, dict_):
         for v, k in enumerate(attribs):
-            dict_[k] = v
+            dict_[k] = start + v
         assert 'length' not in dict_
-        dict_['length'] = len(attribs)
+        dict_['length'] = start + len(attribs)
         return type(name, bases, dict_)
     return foo
 
-def enum(*names):
-    class Foo(object):
-        __metaclass__ = M_add_class_attribs(names)
+def enum(*names, **kw):
+    if len(kw) == 1:
+        base = kw['base'].__class__
+        start = base.length
+    else:
+        assert len(kw) == 0
+        base = object
+        start = 0
+    class Foo(base):
+        __metaclass__ = M_add_class_attribs(names, start)
         def __setattr__(self, name, value):  # this makes it read-only
             raise NotImplementedError
     return Foo()
@@ -1928,6 +1935,11 @@ class IDLInterfaceMember(IDLObjectWithIdentifier):
         'Method'
     )
 
+    Special = enum(
+        'Static',
+        'Stringifier'
+    )
+
     def __init__(self, location, identifier, tag):
         IDLObjectWithIdentifier.__init__(self, location, None, identifier)
         self.tag = tag
@@ -1991,8 +2003,8 @@ class IDLConst(IDLInterfaceMember):
         pass
 
 class IDLAttribute(IDLInterfaceMember):
-    def __init__(self, location, identifier, type, readonly, inherit,
-                 static=False):
+    def __init__(self, location, identifier, type, readonly, inherit=False,
+                 static=False, stringifier=False):
         IDLInterfaceMember.__init__(self, location, identifier,
                                     IDLInterfaceMember.Tags.Attr)
 
@@ -2003,6 +2015,7 @@ class IDLAttribute(IDLInterfaceMember):
         self.static = static
         self.lenientThis = False
         self._unforgeable = False
+        self.stringifier = stringifier
 
         if readonly and inherit:
             raise WebIDLError("An attribute cannot be both 'readonly' and 'inherit'",
@@ -2265,14 +2278,12 @@ class IDLMethodOverload:
 class IDLMethod(IDLInterfaceMember, IDLScope):
 
     Special = enum(
-        'None',
         'Getter',
         'Setter',
         'Creator',
         'Deleter',
         'LegacyCaller',
-        'Stringifier',
-        'Static'
+        base=IDLInterfaceMember.Special
     )
 
     TypeSuffixModifier = enum(
@@ -3096,16 +3107,32 @@ class Parser(Tokenizer):
         """
         p[0] = p[1]
 
+    def p_AttributeWithQualifier(self, p):
+        """
+            Attribute : Qualifier AttributeRest
+        """
+        static = IDLInterfaceMember.Special.Static in p[1]
+        stringifier = IDLInterfaceMember.Special.Stringifier in p[1]
+        (location, identifier, type, readonly) = p[2]
+        p[0] = IDLAttribute(location, identifier, type, readonly, static=static,
+                            stringifier=stringifier)
+
     def p_Attribute(self, p):
         """
-            Attribute : Inherit ReadOnly ATTRIBUTE Type IDENTIFIER SEMICOLON
+            Attribute : Inherit AttributeRest
         """
-        location = self.getLocation(p, 3)
-        inherit = p[1]
-        readonly = p[2]
-        t = p[4]
-        identifier = IDLUnresolvedIdentifier(self.getLocation(p, 5), p[5])
-        p[0] = IDLAttribute(location, identifier, t, readonly, inherit)
+        (location, identifier, type, readonly) = p[2]
+        p[0] = IDLAttribute(location, identifier, type, readonly, inherit=p[1])
+
+    def p_AttributeRest(self, p):
+        """
+            AttributeRest : ReadOnly ATTRIBUTE Type IDENTIFIER SEMICOLON
+        """
+        location = self.getLocation(p, 2)
+        readonly = p[1]
+        t = p[3]
+        identifier = IDLUnresolvedIdentifier(self.getLocation(p, 4), p[4])
+        p[0] = (location, identifier, t, readonly)
 
     def p_ReadOnly(self, p):
         """
@@ -3142,17 +3169,21 @@ class Parser(Tokenizer):
             raise WebIDLError("Duplicate qualifiers are not allowed",
                               [self.getLocation(p, 1)])
 
-        static = True if IDLMethod.Special.Static in p[1] else False
+        static = IDLInterfaceMember.Special.Static in p[1]
         # If static is there that's all that's allowed.  This is disallowed
         # by the parser, so we can assert here.
         assert not static or len(qualifiers) == 1
+
+        stringifier = IDLInterfaceMember.Special.Stringifier in p[1]
+        # If stringifier is there that's all that's allowed.  This is disallowed
+        # by the parser, so we can assert here.
+        assert not stringifier or len(qualifiers) == 1
 
         getter = True if IDLMethod.Special.Getter in p[1] else False
         setter = True if IDLMethod.Special.Setter in p[1] else False
         creator = True if IDLMethod.Special.Creator in p[1] else False
         deleter = True if IDLMethod.Special.Deleter in p[1] else False
         legacycaller = True if IDLMethod.Special.LegacyCaller in p[1] else False
-        stringifier = True if IDLMethod.Special.Stringifier in p[1] else False
 
         if getter or deleter:
             if setter or creator:
@@ -3260,15 +3291,22 @@ class Parser(Tokenizer):
                            legacycaller=legacycaller, stringifier=stringifier)
         p[0] = method
 
-    def p_QualifiersStatic(self, p):
+    def p_QualifierStatic(self, p):
         """
-            Qualifiers : STATIC
+            Qualifier : STATIC
         """
-        p[0] = [IDLMethod.Special.Static]
+        p[0] = [IDLInterfaceMember.Special.Static]
 
-    def p_QualifiersSpecials(self, p):
+    def p_QualifierStringifier(self, p):
         """
-            Qualifiers : Specials
+            Qualifier : STRINGIFIER
+        """
+        p[0] = [IDLInterfaceMember.Special.Stringifier]
+
+    def p_Qualifiers(self, p):
+        """
+            Qualifiers : Qualifier
+                       | Specials
         """
         p[0] = p[1]
 
@@ -3314,12 +3352,6 @@ class Parser(Tokenizer):
             Special : LEGACYCALLER
         """
         p[0] = IDLMethod.Special.LegacyCaller
-
-    def p_SpecialStringifier(self, p):
-        """
-            Special : STRINGIFIER
-        """
-        p[0] = IDLMethod.Special.Stringifier
 
     def p_OperationRest(self, p):
         """

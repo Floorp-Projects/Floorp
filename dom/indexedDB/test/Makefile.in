@@ -81,6 +81,7 @@ MOCHITEST_FILES = \
   test_object_identity.html \
   test_odd_result_order.html \
   test_open_empty_db.html \
+  test_open_for_principal.html \
   test_open_objectStore.html \
   test_optionalArguments.html \
   test_overlapping_transactions.html \

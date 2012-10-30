@@ -9,6 +9,7 @@
  */
 
 #include "mozilla/Util.h"
+#include "mozilla/Likely.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -1589,7 +1590,7 @@ static const char* kNSURIs[] = {
 };
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
-  if (NS_UNLIKELY(cb.WantDebugInfo())) {
+  if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[512];
     nsAutoCString loadedAsData;
     if (tmp->IsLoadedAsData()) {
@@ -9058,7 +9059,7 @@ nsDocument::IsFullScreenEnabled(bool aCallerIsChrome, bool aLogFailure)
     return false;
   }
 
-  // Ensure that all ancestor <iframe> elements have the mozallowfullscreen
+  // Ensure that all ancestor <iframe> elements have the allowfullscreen
   // boolean attribute set.
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
   bool allowed = false;

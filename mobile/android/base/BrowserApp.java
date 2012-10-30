@@ -217,10 +217,6 @@ abstract public class BrowserApp extends GeckoApp
 
         mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
 
-        if (savedInstanceState != null) {
-            mBrowserToolbar.setTitle(savedInstanceState.getString(SAVED_STATE_TITLE));
-        }
-
         registerEventListener("CharEncoding:Data");
         registerEventListener("CharEncoding:State");
         registerEventListener("Feedback:LastUrl");
@@ -269,11 +265,14 @@ abstract public class BrowserApp extends GeckoApp
 
         if (!isExternalURL) {
             // show about:home if we aren't restoring previous session
-            if (mRestoreMode == GeckoAppShell.RESTORE_NONE) {
+            if (mRestoreMode == RESTORE_NONE) {
                 Tab tab = Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB);
+            } else {
+                hideAboutHome();
             }
         } else {
-            Tabs.getInstance().loadUrl(uri, Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED);
+            int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED;
+            Tabs.getInstance().loadUrl(uri, flags);
         }
     }
 
@@ -462,7 +461,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void showTabs(TabsPanel.Panel panel) {
-        if (!checkLaunchState(LaunchState.GeckoRunning))
+        if (Tabs.getInstance().getCount() == 0)
             return;
 
         mTabsPanel.show(panel);
@@ -634,6 +633,7 @@ abstract public class BrowserApp extends GeckoApp
         if (mAboutHomeShowing != null && !mAboutHomeShowing)
             return;
 
+        mBrowserToolbar.setShadowVisibility(true);
         mAboutHomeShowing = false;
         Runnable r = new AboutHomeRunnable(false);
         mMainHandler.postAtFrontOfQueue(r);
@@ -646,7 +646,6 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         public void run() {
-            mFormAssistPopup.hide();
             if (mShow) {
                 if (mAboutHomeContent == null) {
                     mAboutHomeContent = (AboutHomeContent) findViewById(R.id.abouthome_content);

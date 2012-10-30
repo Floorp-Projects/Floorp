@@ -58,7 +58,8 @@ struct ReferencePtr
   uint64_t mLongPtr;
 };
 
-static std::string StringFromPtr(ReferencePtr aPtr)
+// Used by the Azure drawing debugger (player2d)
+inline std::string StringFromPtr(ReferencePtr aPtr)
 {
   std::stringstream stream;
   stream << aPtr;

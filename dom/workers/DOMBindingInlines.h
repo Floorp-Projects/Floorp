@@ -39,7 +39,7 @@ struct WrapPrototypeTraits
     GetProtoObject(JSContext* aCx, JSObject* aGlobal)                          \
     {                                                                          \
       using namespace mozilla::dom;                                            \
-      return _class##Binding_workers::GetProtoObject(aCx, aGlobal, aGlobal);   \
+      return _class##Binding_workers::GetProtoObject(aCx, aGlobal);            \
     }                                                                          \
   };
 

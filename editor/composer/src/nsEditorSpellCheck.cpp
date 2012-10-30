@@ -25,6 +25,7 @@
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIEditor.h"                  // for nsIEditor
 #include "nsIHTMLEditor.h"              // for nsIHTMLEditor
+#include "nsILoadContext.h"
 #include "nsISelection.h"               // for nsISelection
 #include "nsISpellChecker.h"            // for nsISpellChecker, etc
 #include "nsISupportsBase.h"            // for nsISupports
@@ -108,6 +109,21 @@ LastDictionary::GetDocumentURI(nsIEditor* aEditor, nsIURI * *aURI)
   return NS_OK;
 }
 
+static already_AddRefed<nsILoadContext>
+GetLoadContext(nsIEditor* aEditor)
+{
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aEditor->GetDocument(getter_AddRefs(domDoc));
+  NS_ENSURE_TRUE(domDoc, nullptr);
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  NS_ENSURE_TRUE(doc, nullptr);
+
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
+  return loadContext.forget();
+}
+
 NS_IMETHODIMP
 LastDictionary::FetchLastDictionary(nsIEditor* aEditor, nsAString& aDictionary)
 {
@@ -127,10 +143,11 @@ LastDictionary::FetchLastDictionary(nsIEditor* aEditor, nsAString& aDictionary)
   NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
   uri->SetAsISupports(docUri);
 
+  nsCOMPtr<nsILoadContext> loadContext = GetLoadContext(aEditor);
   bool hasPref;
-  if (NS_SUCCEEDED(contentPrefService->HasPref(uri, CPS_PREF_NAME, &hasPref)) && hasPref) {
+  if (NS_SUCCEEDED(contentPrefService->HasPref(uri, CPS_PREF_NAME, loadContext, &hasPref)) && hasPref) {
     nsCOMPtr<nsIVariant> pref;
-    contentPrefService->GetPref(uri, CPS_PREF_NAME, nullptr, getter_AddRefs(pref));
+    contentPrefService->GetPref(uri, CPS_PREF_NAME, loadContext, nullptr, getter_AddRefs(pref));
     pref->GetAsAString(aDictionary);
   } else {
     aDictionary.Truncate();
@@ -162,7 +179,8 @@ LastDictionary::StoreCurrentDictionary(nsIEditor* aEditor, const nsAString& aDic
     do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(contentPrefService, NS_ERROR_NOT_INITIALIZED);
 
-  return contentPrefService->SetPref(uri, CPS_PREF_NAME, prefValue);
+  nsCOMPtr<nsILoadContext> loadContext = GetLoadContext(aEditor);
+  return contentPrefService->SetPref(uri, CPS_PREF_NAME, prefValue, loadContext);
 }
 
 NS_IMETHODIMP
@@ -184,7 +202,8 @@ LastDictionary::ClearCurrentDictionary(nsIEditor* aEditor)
     do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(contentPrefService, NS_ERROR_NOT_INITIALIZED);
 
-  return contentPrefService->RemovePref(uri, CPS_PREF_NAME);
+  nsCOMPtr<nsILoadContext> loadContext = GetLoadContext(aEditor);
+  return contentPrefService->RemovePref(uri, CPS_PREF_NAME, loadContext);
 }
 
 LastDictionary* nsEditorSpellCheck::gDictionaryStore = nullptr;

@@ -273,7 +273,8 @@ protected:
   static JSPropertyOp sXrayWrapperPropertyHolderGetPropertyOp;
 };
 
-
+// THIS ONE ISN'T SAFE!! It assumes that the private of the JSObject is
+// an nsISupports.
 inline
 const nsQueryInterface
 do_QueryWrappedNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj)
@@ -281,6 +282,8 @@ do_QueryWrappedNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj)
   return nsQueryInterface(nsDOMClassInfo::GetNative(wrapper, obj));
 }
 
+// THIS ONE ISN'T SAFE!! It assumes that the private of the JSObject is
+// an nsISupports.
 inline
 const nsQueryInterfaceWithError
 do_QueryWrappedNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj,

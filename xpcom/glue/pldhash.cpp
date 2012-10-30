@@ -16,6 +16,7 @@
 #include "mozilla/HashFunctions.h"
 #include "nsDebug.h"     /* for PR_ASSERT */
 #include "nsAlgorithm.h"
+#include "mozilla/Likely.h"
 
 #ifdef PL_DHASHMETER
 # if defined MOZILLA_CLIENT && defined DEBUG_XXXbrendan
@@ -412,7 +413,7 @@ SearchTable(PLDHashTable *table, const void *key, PLDHashNumber keyHash,
     firstRemoved = NULL;
 
     for (;;) {
-        if (NS_UNLIKELY(ENTRY_IS_REMOVED(entry))) {
+        if (MOZ_UNLIKELY(ENTRY_IS_REMOVED(entry))) {
             if (!firstRemoved)
                 firstRemoved = entry;
         } else {

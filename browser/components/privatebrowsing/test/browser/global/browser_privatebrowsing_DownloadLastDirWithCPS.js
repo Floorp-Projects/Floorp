@@ -114,7 +114,7 @@ function runTest() {
     { // check clearHistory removes all data
       clearHistory();
       is(gDownloadLastDir.file, null, "clearHistory removes all data");
-      is(Services.contentPrefs.hasPref(uri1, "browser.download.lastDir"), false, "LastDir preference should be absent");
+      is(Services.contentPrefs.hasPref(uri1, "browser.download.lastDir", null), false, "LastDir preference should be absent");
       is(gDownloadLastDir.getFile(uri1), null, "uri1 should point to null");
       is(gDownloadLastDir.getFile(uri2), null, "uri2 should point to null");
       is(gDownloadLastDir.getFile(uri3), null, "uri3 should point to null");

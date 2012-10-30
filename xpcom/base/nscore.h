@@ -363,31 +363,6 @@ typedef uint32_t nsrefcnt;
 #define NS_STRINGIFY_HELPER(x_) #x_
 #define NS_STRINGIFY(x_) NS_STRINGIFY_HELPER(x_)
 
-/*
- * These macros allow you to give a hint to the compiler about branch
- * probability so that it can better optimize.  Use them like this:
- *
- *  if (NS_LIKELY(v == 1)) {
- *    ... expected code path ...
- *  }
- *
- *  if (NS_UNLIKELY(v == 0)) {
- *    ... non-expected code path ...
- *  }
- *
- * These macros are guaranteed to always return 0 or 1.
- * The NS_FAILED/NS_SUCCEEDED macros depends on this.
- * @return 0 or 1
- */
-
-#if defined(__GNUC__) && (__GNUC__ > 2)
-#define NS_LIKELY(x)    (__builtin_expect(!!(x), 1))
-#define NS_UNLIKELY(x)  (__builtin_expect(!!(x), 0))
-#else
-#define NS_LIKELY(x)    (!!(x))
-#define NS_UNLIKELY(x)  (!!(x))
-#endif
-
  /*
   * If we're being linked as standalone glue, we don't want a dynamic
   * dependency on NSPR libs, so we skip the debug thread-safety

@@ -288,7 +288,7 @@ function add_preference(aURI)
   check_preference_exists(aURI, false);
   let cp = Cc["@mozilla.org/content-pref/service;1"].
            getService(Ci.nsIContentPrefService);
-  cp.setPref(aURI, PREFERENCE_NAME, "foo");
+  cp.setPref(aURI, PREFERENCE_NAME, "foo", null);
   check_preference_exists(aURI, true);
 }
 
@@ -305,7 +305,7 @@ function check_preference_exists(aURI, aExists)
   let cp = Cc["@mozilla.org/content-pref/service;1"].
            getService(Ci.nsIContentPrefService);
   let checker = aExists ? do_check_true : do_check_false;
-  checker(cp.hasPref(aURI, PREFERENCE_NAME));
+  checker(cp.hasPref(aURI, PREFERENCE_NAME, null));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -515,7 +515,7 @@ function test_content_preferecnes_not_cleared_with_uri_contains_domain()
   // Reset state
   let cp = Cc["@mozilla.org/content-pref/service;1"].
            getService(Ci.nsIContentPrefService);
-  cp.removePref(TEST_URI, PREFERENCE_NAME);
+  cp.removePref(TEST_URI, PREFERENCE_NAME, null);
   check_preference_exists(TEST_URI, false);
 }
 

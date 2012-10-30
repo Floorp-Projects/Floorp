@@ -8045,7 +8045,7 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
               nsWindowType wintype;
               activateWindow->GetWindowType(wintype);
               if (wintype == eWindowType_popup && activateWindow->PopupType() == ePopupTypePanel) {
-                *outResult = MA_NOACTIVATE;
+                *outResult = popupsToRollup != UINT32_MAX ? MA_NOACTIVATEANDEAT : MA_NOACTIVATE;
               }
             }
           }

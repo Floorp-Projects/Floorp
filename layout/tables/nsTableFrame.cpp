@@ -38,6 +38,7 @@
 #include "nsDisplayList.h"
 #include "nsIScrollableFrame.h"
 #include "nsCSSProps.h"
+#include "mozilla/Likely.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;
@@ -1406,7 +1407,7 @@ nsTableFrame::ProcessRowInserted(nscoord aNewHeight)
 nsTableFrame::MarkIntrinsicWidthsDirty()
 {
   nsITableLayoutStrategy* tls = LayoutStrategy();
-  if (NS_UNLIKELY(!tls)) {
+  if (MOZ_UNLIKELY(!tls)) {
     // This is a FrameNeedsReflow() from nsBlockFrame::RemoveFrame()
     // walking up the ancestor chain in a table next-in-flow.  In this case
     // our original first-in-flow (which owns the TableLayoutStrategy) has
@@ -2191,7 +2192,7 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
         pseudoFrame = pseudoFrame->GetFirstPrincipalChild();
       }
       nsCOMPtr<nsIContent> container = content->GetParent();
-      if (NS_LIKELY(container)) { // XXX need this null-check, see bug 411823.
+      if (MOZ_LIKELY(container)) { // XXX need this null-check, see bug 411823.
         int32_t newIndex = container->IndexOf(content);
         nsIFrame* kidFrame;
         bool isColGroup = (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP ==

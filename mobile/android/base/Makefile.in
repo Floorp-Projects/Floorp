@@ -115,6 +115,7 @@ FENNEC_JAVA_FILES = \
   RemoteTabs.java \
   RobocopAPI.java \
   ScreenshotHandler.java \
+  SessionParser.java \
   SetupScreen.java \
   ShapedButton.java \
   SiteIdentityPopup.java \
@@ -266,8 +267,11 @@ DEFINES += \
   -DMOZ_APP_BUILDID=$(MOZ_APP_BUILDID) \
   -DMOZ_APP_ABI=$(TARGET_XPCOM_ABI) \
   -DMOZ_UPDATER=$(MOZ_UPDATER) \
-  -DMOZ_PKG_SPECIAL=$(MOZ_PKG_SPECIAL) \
   $(NULL)
+
+ifdef MOZ_PKG_SPECIAL
+DEFINES += -DMOZ_PKG_SPECIAL=$(MOZ_PKG_SPECIAL)
+endif
 
 ifdef MOZ_LINKER_EXTRACT
 DEFINES += -DMOZ_LINKER_EXTRACT=1

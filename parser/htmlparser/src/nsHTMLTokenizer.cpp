@@ -21,6 +21,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsParserConstants.h"
+#include "mozilla/Likely.h"
 
 /************************************************************************
   And now for the main class -- nsHTMLTokenizer...
@@ -631,7 +632,7 @@ nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
       static_cast<CAttributeToken*>
                  (theAllocator->CreateTokenOfType(eToken_attribute,
                                                      eHTMLTag_unknown));
-    if (NS_LIKELY(theToken != nullptr)) {
+    if (MOZ_LIKELY(theToken != nullptr)) {
       // Tell the new token to finish consuming text...
       result = theToken->Consume(aChar, aScanner, mFlags);
 
@@ -837,7 +838,7 @@ nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
             endToken = theAllocator->CreateTokenOfType(eToken_end, theTag,
                                                        endTagName);
             AddToken(endToken, result, &mTokenDeque, theAllocator);
-            if (NS_LIKELY(endToken != nullptr)) {
+            if (MOZ_LIKELY(endToken != nullptr)) {
               endToken->SetInError(true);
             }
             else {

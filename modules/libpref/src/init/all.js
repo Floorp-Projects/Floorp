@@ -169,7 +169,7 @@ pref("media.webm.enabled", true);
 pref("media.dash.enabled", true);
 #endif
 #ifdef MOZ_GSTREAMER
-pref("media.h264.enabled", true);
+pref("media.gstreamer.enabled", true);
 #endif
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", false);

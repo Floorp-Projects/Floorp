@@ -23,6 +23,7 @@
 #include "xpcpublic.h"
 #include "nsJSEnvironment.h"
 #include "nsDOMJSUtils.h"
+#include "mozilla/Likely.h"
 #ifdef DEBUG
 
 #include "nspr.h" // PR_fprintf
@@ -71,7 +72,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSEventListener)
-  if (NS_UNLIKELY(cb.WantDebugInfo()) && tmp->mEventName) {
+  if (MOZ_UNLIKELY(cb.WantDebugInfo()) && tmp->mEventName) {
     nsAutoCString name;
     name.AppendLiteral("nsJSEventListener handlerName=");
     name.Append(
