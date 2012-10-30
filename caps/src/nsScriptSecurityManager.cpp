@@ -335,19 +335,15 @@ nsScriptSecurityManager::GetChannelPrincipal(nsIChannel* aChannel,
     nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    uint32_t appId = UNKNOWN_APP_ID;
-    bool isInBrowserElement = false;
-
     nsCOMPtr<nsIDocShell> docShell;
     NS_QueryNotificationCallbacks(aChannel, docShell);
 
     if (docShell) {
-        docShell->GetAppId(&appId);
-        docShell->GetIsInBrowserElement(&isInBrowserElement);
+        return GetDocShellCodebasePrincipal(uri, docShell, aPrincipal);
     }
 
-    return GetCodebasePrincipalInternal(uri, appId, isInBrowserElement,
-                                        aPrincipal);
+    return GetCodebasePrincipalInternal(uri, UNKNOWN_APP_ID,
+        /* isInBrowserElement */ false, aPrincipal);
 }
 
 NS_IMETHODIMP
@@ -1891,14 +1887,9 @@ nsScriptSecurityManager::GetDocShellCodebasePrincipal(nsIURI* aURI,
                                                       nsIDocShell* aDocShell,
                                                       nsIPrincipal** aPrincipal)
 {
-  MOZ_ASSERT(aDocShell);
-
-  uint32_t appId;
-  bool isInBrowserElement;
-  aDocShell->GetAppId(&appId);
-  aDocShell->GetIsInBrowserElement(&isInBrowserElement);
-
-  return GetCodebasePrincipalInternal(aURI, appId, isInBrowserElement,
+  return GetCodebasePrincipalInternal(aURI,
+                                      aDocShell->GetAppId(),
+                                      aDocShell->GetIsInBrowserElement(),
                                       aPrincipal);
 }
 
