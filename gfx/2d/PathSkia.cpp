@@ -136,15 +136,8 @@ PathSkia::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
     return false;
   }
 
-  SkRegion pointRect;
-  pointRect.setRect(int32_t(SkFloatToScalar(transformed.x - 1)),
-                    int32_t(SkFloatToScalar(transformed.y - 1)),
-                    int32_t(SkFloatToScalar(transformed.x + 1)),
-                    int32_t(SkFloatToScalar(transformed.y + 1)));
-
-  SkRegion pathRegion;
-  
-  return pathRegion.setPath(mPath, pointRect);
+  return mPath.contains(SkFloatToScalar(transformed.x),
+                        SkFloatToScalar(transformed.y));
 }
 
 static Rect SkRectToRect(const SkRect& aBounds)
