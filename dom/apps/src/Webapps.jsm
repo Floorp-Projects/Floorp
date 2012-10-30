@@ -246,38 +246,8 @@ let DOMApplicationRegistry = {
     }
   },
 
-  fixIndexedDb: function fixIndexedDb() {
-    debug("Fixing indexedDb folder names");
-    let idbDir = FileUtils.getDir("indexedDBPDir", ["indexedDB"]);
-
-    if (!idbDir.isDirectory()) {
-      return;
-    }
-
-    let re = /^(\d+)\+(.*)\+(f|t)$/;
-
-    let entries = idbDir.directoryEntries;
-    while (entries.hasMoreElements()) {
-      let entry = entries.getNext().QueryInterface(Ci.nsIFile);
-      if (!entry.isDirectory()) {
-        continue;
-      }
-
-      let newName = entry.leafName.replace(re, "$1+$3+$2");
-      if (newName != entry.leafName) {
-        try {
-          entry.moveTo(idbDir, newName);
-        } catch(e) { }
-      }
-    }
-  },
-
   loadAndUpdateApps: function loadAndUpdateApps() {
     let runUpdate = AppsUtils.isFirstRun(Services.prefs);
-
-    if (runUpdate) {
-      this.fixIndexedDb();
-    }
 
     let onAppsLoaded = (function onAppsLoaded() {
       if (runUpdate) {
