@@ -33,6 +33,7 @@ function checkSentMessage(message, body, sentDate) {
 
   ok(message.id, "message.id is valid");
   is(message.delivery, "sent", "message.delivery");
+  is(message.deliveryStatus, "pending", "message.deliveryStatus");
   is(message.sender, null, "message.sender");
   is(message.receiver, receiver, "message.receiver");
   is(message.body, body, "message.body");
