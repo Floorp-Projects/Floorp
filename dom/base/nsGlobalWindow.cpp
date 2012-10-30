@@ -3032,7 +3032,7 @@ nsGlobalWindow::GetRealParent(nsIDOMWindow** aParent)
   }
 
   nsCOMPtr<nsIDocShell> parent;
-  mDocShell->GetParentIgnoreBrowserFrame(getter_AddRefs(parent));
+  mDocShell->GetSameTypeParentIgnoreBrowserAndAppBoundaries(getter_AddRefs(parent));
 
   if (parent) {
     nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(parent));
@@ -7112,7 +7112,7 @@ nsGlobalWindow::GetRealFrameElement(nsIDOMElement** aFrameElement)
   }
 
   nsCOMPtr<nsIDocShell> parent;
-  mDocShell->GetParentIgnoreBrowserFrame(getter_AddRefs(parent));
+  mDocShell->GetSameTypeParentIgnoreBrowserAndAppBoundaries(getter_AddRefs(parent));
 
   if (!parent || parent == mDocShell) {
     // We're at a chrome boundary, don't expose the chrome iframe
