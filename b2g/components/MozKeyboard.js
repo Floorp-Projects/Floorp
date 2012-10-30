@@ -36,7 +36,7 @@ MozKeyboard.prototype = {
 
   init: function mozKeyboardInit(win) {
     Services.obs.addObserver(this, "inner-window-destroyed", false);
-    Services.obs.addObserver(this, 'in-process-browser-frame-shown', false);
+    Services.obs.addObserver(this, 'in-process-browser-or-app-frame-shown', false);
     Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
 
     this._window = win;
@@ -116,7 +116,7 @@ MozKeyboard.prototype = {
       break;
     }
     case 'remote-browser-frame-shown':
-    case 'in-process-browser-frame-shown': {
+    case 'in-process-browser-or-app-frame-shown': {
       let frameLoader = subject.QueryInterface(Ci.nsIFrameLoader);
       let mm = frameLoader.messageManager;
       mm.addMessageListener("Forms:Input", (function receiveMessage(msg) {
