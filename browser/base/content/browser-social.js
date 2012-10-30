@@ -103,6 +103,9 @@ let SocialUI = {
     kbMenuitem.setAttribute("label", label);
     kbMenuitem.setAttribute("accesskey", accesskey);
 
+    // The View->Sidebar menu.
+    document.getElementById("menu_socialSidebar").setAttribute("label", Social.provider.name);
+
     SocialToolbar.init();
     SocialShareButton.init();
     SocialSidebar.init();
