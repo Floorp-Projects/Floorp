@@ -16,7 +16,7 @@
 58646</a></li>
     <li>
       6/18/2002: David Baron (dbaron@dbaron.org): corrected support
-      for 'inherit' and '-moz-initial' (didn't test with code, though),
+      for 'inherit' and 'initial' (didn't test with code, though),
       and explained what the final boolean in CheckPropertyData is for.
     </li>
     <li>
@@ -425,7 +425,7 @@ to the style struct:<br>
     ui-&gt;mResizer = parentUI-&gt;mResizer;
   }
 
-  <b>// force-broken-image-icons: integer, inherit, -moz-initial
+  <b>// force-broken-image-icons: integer, inherit, initial
   if (eCSSUnit_Integer == uiData.mForceBrokenImageIcons.GetUnit()) {
     ui-&gt;mForceBrokenImageIcons = uiData.mForceBrokenImageIcons.GetIntValue();
   } else if (eCSSUnit_Inherit == uiData.mForceBrokenImageIcons.GetUnit()) {

@@ -35,7 +35,7 @@ var body = document.body;
 var p = document.getElementById("display");
 var p2 = document.getElementById("display2");
 
-html.style.font = "-moz-initial";
+html.style.font = "initial";
 
 var defaultFontSize = fs(html);
 
@@ -48,9 +48,9 @@ var defaultFontSize = fs(html);
 html.style.fontSize = "3rem";
 is(fs(html), 3 * defaultFontSize,
    "3rem on root should triple root's font size");
-body.style.font = "-moz-initial";
+body.style.font = "initial";
 is(fs(body), defaultFontSize,
-   "-moz-initial should produce initial font size");
+   "initial should produce initial font size");
 body.style.fontSize = "1em";
 is(fs(body), 3 * defaultFontSize, "1em should inherit from parent");
 body.style.fontSize = "200%";
@@ -61,7 +61,7 @@ p.style.font = "inherit";
 is(fs(p), 6 * defaultFontSize, "inherit should inherit from parent");
 p2.style.fontSize = "2rem";
 is(fs(p2), 6 * defaultFontSize, "2rem should double root");
-body.style.font = "-moz-initial";
+body.style.font = "initial";
 is(fs(p), defaultFontSize, "inherit should inherit from parent");
 is(fs(p2), 6 * defaultFontSize, "2rem should double root");
 body.style.fontSize = "5em";
