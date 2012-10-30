@@ -4,13 +4,19 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(fc58ba6e-70de-4550-aa1e-790ecc19cf98)]
+[scriptable, builtinclass, uuid(5e3224dd-1ca3-43e6-861e-b7734656fd2f)]
 interface nsIDOMMozSmsMessage : nsISupports
 {
   // TODO: we should add SENT and RECEIVED DOMString constants, see bug 443316.
 
   readonly attribute long      id;
   readonly attribute DOMString delivery;  // Should be "sent" or "received".
+  /**
+   * For received messages, it is "success"; for sent messages, it can be
+   * "pending", "success", "error", or "not-applicable" if the message was sent
+   * without status report requisition.
+   */
+  readonly attribute DOMString deliveryStatus;
   readonly attribute DOMString sender;
   readonly attribute DOMString receiver;
   readonly attribute DOMString body;
