@@ -39,7 +39,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
  * ([length]:[packet]). The contents of the JSON packet are specified in
  * the Remote Debugging Protocol specification.
  */
-this.DebuggerTransport = function DebuggerTransport(aInput, aOutput)
+function DebuggerTransport(aInput, aOutput)
 {
   this._input = aInput;
   this._output = aOutput;

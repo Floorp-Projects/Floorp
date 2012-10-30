@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["SignInToWebsiteUX"];
+const EXPORTED_SYMBOLS = ["SignInToWebsiteUX"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -23,7 +23,7 @@ function log(...aMessageArgs) {
   Logger.log.apply(Logger, ["SignInToWebsiteUX"].concat(aMessageArgs));
 }
 
-this.SignInToWebsiteUX = {
+let SignInToWebsiteUX = {
 
   init: function SignInToWebsiteUX_init() {
 

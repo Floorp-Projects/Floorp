@@ -126,7 +126,7 @@ PaymentRequestRefundInfo.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([
   PaymentProductPrice,
   PaymentRequestInfo,
   PaymentRequestPaymentInfo,

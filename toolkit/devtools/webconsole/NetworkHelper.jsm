@@ -64,7 +64,7 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function () {
   return obj.NetUtil;
 });
 
-this.EXPORTED_SYMBOLS = ["NetworkHelper"];
+var EXPORTED_SYMBOLS = ["NetworkHelper"];
 
 /**
  * Helper object for networking stuff.
@@ -73,7 +73,7 @@ this.EXPORTED_SYMBOLS = ["NetworkHelper"];
  * have been modified to match the Firefox coding rules.
  */
 
-this.NetworkHelper =
+var NetworkHelper =
 {
   /**
    * Converts aText with a given aCharset to unicode.

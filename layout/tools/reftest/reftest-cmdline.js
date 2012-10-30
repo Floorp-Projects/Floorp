@@ -108,4 +108,4 @@ RefTestCmdLineHandler.prototype =
   helpInfo : "  -reftest <file>    Run layout acceptance tests on given manifest.\n"
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RefTestCmdLineHandler]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([RefTestCmdLineHandler]);

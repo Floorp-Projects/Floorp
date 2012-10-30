@@ -122,4 +122,4 @@ nsDefaultCLH.prototype = {
   helpInfo : "",
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsDefaultCLH]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([nsDefaultCLH]);

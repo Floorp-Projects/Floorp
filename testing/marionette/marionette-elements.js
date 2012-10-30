@@ -11,29 +11,19 @@
  * server uses maps this reference to the actual element when it executes the command.
  */
 
-this.EXPORTED_SYMBOLS = [
-  "ElementManager",
-  "CLASS_NAME",
-  "SELECTOR",
-  "ID",
-  "NAME",
-  "LINK_TEXT",
-  "PARTIAL_LINK_TEXT",
-  "TAG",
-  "XPATH"
-];
+let EXPORTED_SYMBOLS = ["ElementManager", "CLASS_NAME", "SELECTOR", "ID", "NAME", "LINK_TEXT", "PARTIAL_LINK_TEXT", "TAG", "XPATH"];
 
 let uuidGen = Components.classes["@mozilla.org/uuid-generator;1"]
              .getService(Components.interfaces.nsIUUIDGenerator);
 
-this.CLASS_NAME = "class name";
-this.SELECTOR = "css selector";
-this.ID = "id";
-this.NAME = "name";
-this.LINK_TEXT = "link text";
-this.PARTIAL_LINK_TEXT = "partial link text";
-this.TAG = "tag name";
-this.XPATH = "xpath";
+let CLASS_NAME = "class name";
+let SELECTOR = "css selector";
+let ID = "id";
+let NAME = "name";
+let LINK_TEXT = "link text";
+let PARTIAL_LINK_TEXT = "partial link text";
+let TAG = "tag name";
+let XPATH = "xpath";
 
 function ElementException(msg, num, stack) {
   this.message = msg;
@@ -42,7 +32,7 @@ function ElementException(msg, num, stack) {
 }
 
 /* NOTE: Bug 736592 has been created to replace seenItems with a weakRef map */
-this.ElementManager = function ElementManager(notSupported) {
+function ElementManager(notSupported) {
   this.searchTimeout = 0;
   this.seenItems = {};
   this.timer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);

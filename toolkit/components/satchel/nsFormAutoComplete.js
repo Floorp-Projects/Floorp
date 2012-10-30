@@ -427,4 +427,4 @@ FormAutoCompleteResult.prototype = {
 };
 
 let component = [FormAutoComplete];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

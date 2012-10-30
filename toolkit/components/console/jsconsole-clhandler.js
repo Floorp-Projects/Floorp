@@ -37,4 +37,4 @@ jsConsoleHandler.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([jsConsoleHandler]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([jsConsoleHandler]);

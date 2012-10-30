@@ -136,5 +136,5 @@ MozKeyboard.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MozKeyboard]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([MozKeyboard]);
 

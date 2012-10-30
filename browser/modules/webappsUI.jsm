@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["webappsUI"];
+let EXPORTED_SYMBOLS = ["webappsUI"];
 
 let Ci = Components.interfaces;
 let Cc = Components.classes;
@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/WebappsInstaller.jsm");
 Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 
-this.webappsUI = {
+let webappsUI = {
   init: function webappsUI_init() {
     Services.obs.addObserver(this, "webapps-ask-install", false);
     Services.obs.addObserver(this, "webapps-launch", false);

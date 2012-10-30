@@ -124,4 +124,4 @@ AboutBlocked.prototype = {
 
 const components = [AboutEmpty, AboutFennec, AboutRights,
                     AboutCertError, AboutFirefox, AboutHome, AboutBlocked];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

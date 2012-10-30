@@ -13,7 +13,7 @@
  * Lowest (+10):  Background tabs in background windows.
  */
 
-this.EXPORTED_SYMBOLS = ["trackBrowserWindow"];
+let EXPORTED_SYMBOLS = ["trackBrowserWindow"];
 
 const Ci = Components.interfaces;
 
@@ -39,7 +39,7 @@ let _windows = [];
 
 
 // Exported symbol
-this.trackBrowserWindow = function trackBrowserWindow(aWindow) {
+function trackBrowserWindow(aWindow) {
   WindowHelper.addWindow(aWindow);
 }
 

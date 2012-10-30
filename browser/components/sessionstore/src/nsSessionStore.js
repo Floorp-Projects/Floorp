@@ -34,4 +34,4 @@ SessionStoreService.prototype.classID =
 SessionStoreService.prototype.QueryInterface =
   XPCOMUtils.generateQI([Ci.nsISessionStore]);
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SessionStoreService]);
+let NSGetFactory = XPCOMUtils.generateNSGetFactory([SessionStoreService]);

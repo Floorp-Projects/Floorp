@@ -1794,4 +1794,4 @@ FeedProcessor.prototype = {
 var components = [FeedProcessor, FeedResult, Feed, Entry,
                   TextConstruct, Generator, Person];
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

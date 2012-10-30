@@ -673,6 +673,6 @@ PeerConnectionObserver.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
+let NSGetFactory = XPCOMUtils.generateNSGetFactory(
   [IceCandidate, SessionDescription, PeerConnection]
 );

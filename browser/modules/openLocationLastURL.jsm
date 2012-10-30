@@ -8,7 +8,7 @@ const Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-this.EXPORTED_SYMBOLS = [ "OpenLocationLastURL" ];
+var EXPORTED_SYMBOLS = [ "OpenLocationLastURL" ];
 
 let prefSvc = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
@@ -41,7 +41,7 @@ os.addObserver(observer, "last-pb-context-exited", true);
 os.addObserver(observer, "browser:purge-session-history", true);
 
 
-this.OpenLocationLastURL = function OpenLocationLastURL(aWindow) {
+function OpenLocationLastURL(aWindow) {
   this.window = aWindow;
 }
 

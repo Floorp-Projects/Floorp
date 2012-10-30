@@ -1751,4 +1751,4 @@ ContentPermissionPrompt.prototype = {
 };
 
 var components = [BrowserGlue, ContentPermissionPrompt];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

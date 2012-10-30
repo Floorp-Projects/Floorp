@@ -634,4 +634,4 @@ SecurityCallbacks.prototype = {
 };
 
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TCPSocket]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([TCPSocket]);

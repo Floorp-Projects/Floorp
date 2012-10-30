@@ -361,4 +361,4 @@ SystemMessageInternal.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISystemMessagesInternal, Ci.nsIObserver])
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SystemMessageInternal]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([SystemMessageInternal]);

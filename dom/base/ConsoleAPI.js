@@ -485,4 +485,4 @@ ConsoleAPI.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ConsoleAPI]);
+let NSGetFactory = XPCOMUtils.generateNSGetFactory([ConsoleAPI]);

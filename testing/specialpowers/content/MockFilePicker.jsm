@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["MockFilePicker"];
+var EXPORTED_SYMBOLS = ["MockFilePicker"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -30,7 +30,7 @@ var newFactory = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
 };
 
-this.MockFilePicker = {
+var MockFilePicker = {
   returnOK: Ci.nsIFilePicker.returnOK,
   returnCancel: Ci.nsIFilePicker.returnCancel,
   returnReplace: Ci.nsIFilePicker.returnReplace,

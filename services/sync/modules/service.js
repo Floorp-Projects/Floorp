@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["Service"];
+const EXPORTED_SYMBOLS = ["Service"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -1475,5 +1475,5 @@ Sync11Service.prototype = {
   },
 };
 
-this.Service = new Sync11Service();
+let Service = new Sync11Service();
 Service.onStartup();

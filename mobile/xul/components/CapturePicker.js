@@ -82,4 +82,4 @@ CapturePicker.prototype = {
 };
 
 var components = [ CapturePicker ];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

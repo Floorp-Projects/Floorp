@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ChromeManifestParser"];
+var EXPORTED_SYMBOLS = ["ChromeManifestParser"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -33,7 +33,7 @@ function flushJarCache(aJarFile) {
 /**
  * Parses chrome manifest files.
  */
-this.ChromeManifestParser = {
+var ChromeManifestParser = {
 
   /**
    * Reads and parses a chrome manifest file located at a specified URI, and all

@@ -233,6 +233,6 @@ NetworkStatsManager.prototype = {
                                      flags: nsIClassInfo.DOM_OBJECT})
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkStatsData,
-                                                     NetworkStats,
-                                                     NetworkStatsManager])
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkStatsData,
+                                                      NetworkStats,
+                                                      NetworkStatsManager])

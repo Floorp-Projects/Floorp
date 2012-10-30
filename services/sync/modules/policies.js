@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "ErrorHandler",
   "SyncScheduler",
 ];
@@ -15,7 +15,7 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
-this.SyncScheduler = function SyncScheduler(service) {
+function SyncScheduler(service) {
   this.service = service;
   this.init();
 }
@@ -467,7 +467,7 @@ SyncScheduler.prototype = {
 const LOG_PREFIX_SUCCESS = "success-";
 const LOG_PREFIX_ERROR   = "error-";
 
-this.ErrorHandler = function ErrorHandler(service) {
+function ErrorHandler(service) {
   this.service = service;
   this.init();
 }

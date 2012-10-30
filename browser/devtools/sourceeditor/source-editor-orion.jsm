@@ -140,7 +140,7 @@ if (Services.appinfo.OS == "WINNT" ||
   });
 }
 
-this.EXPORTED_SYMBOLS = ["SourceEditor"];
+var EXPORTED_SYMBOLS = ["SourceEditor"];
 
 /**
  * The SourceEditor object constructor. The SourceEditor component allows you to
@@ -151,7 +151,7 @@ this.EXPORTED_SYMBOLS = ["SourceEditor"];
  *
  * @constructor
  */
-this.SourceEditor = function SourceEditor() {
+function SourceEditor() {
   // Update the SourceEditor defaults from user preferences.
 
   SourceEditor.DEFAULTS.tabSize =
