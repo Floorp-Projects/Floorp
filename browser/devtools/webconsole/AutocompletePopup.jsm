@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyGetter(this, "stringBundle", function () {
 });
 
 
-this.EXPORTED_SYMBOLS = ["AutocompletePopup"];
+var EXPORTED_SYMBOLS = ["AutocompletePopup"];
 
 /**
  * Autocomplete popup UI implementation.
@@ -29,7 +29,7 @@ this.EXPORTED_SYMBOLS = ["AutocompletePopup"];
  * @param nsIDOMDocument aDocument
  *        The document you want the popup attached to.
  */
-this.AutocompletePopup = function AutocompletePopup(aDocument)
+function AutocompletePopup(aDocument)
 {
   this._document = aDocument;
 

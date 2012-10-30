@@ -11,14 +11,14 @@
  * forwards to dump();
  */
 
-this.EXPORTED_SYMBOLS = [ "Node", "HTMLElement", "setTimeout", "clearTimeout" ];
+const EXPORTED_SYMBOLS = [ "Node", "HTMLElement", "setTimeout", "clearTimeout" ];
 
 /**
  * Expose Node/HTMLElement objects. This allows us to use the Node constants
  * without resorting to hardcoded numbers
  */
-this.Node = Components.interfaces.nsIDOMNode;
-this.HTMLElement = Components.interfaces.nsIDOMHTMLElement;
+const Node = Components.interfaces.nsIDOMNode;
+const HTMLElement = Components.interfaces.nsIDOMHTMLElement;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -66,7 +66,7 @@ TimerCallback.prototype.notify = function(timer) {
  * @return the ID of the timeout, which can be used later with
  * window.clearTimeout.
  */
-this.setTimeout = function setTimeout(callback, delay) {
+const setTimeout = function setTimeout(callback, delay) {
   const timer = Components.classes["@mozilla.org/timer;1"]
                         .createInstance(Components.interfaces.nsITimer);
 
@@ -83,7 +83,7 @@ this.setTimeout = function setTimeout(callback, delay) {
  * @param timerID the ID of the timeout you wish to clear, as returned by
  * window.setTimeout().
  */
-this.clearTimeout = function clearTimeout(timerID) {
+const clearTimeout = function clearTimeout(timerID) {
   let timer = timers[timerID];
   if (timer) {
     timer.cancel();

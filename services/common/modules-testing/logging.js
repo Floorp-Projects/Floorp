@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "getTestLogger",
   "initTestLogging",
 ];
@@ -13,7 +13,7 @@ const {utils: Cu} = Components;
 
 Cu.import("resource://services-common/log4moz.js");
 
-this.initTestLogging = function initTestLogging(level) {
+function initTestLogging(level) {
   function LogStats() {
     this.errorsLogged = 0;
   }
@@ -48,7 +48,7 @@ this.initTestLogging = function initTestLogging(level) {
   return logStats;
 }
 
-this.getTestLogger = function getTestLogger(component) {
+function getTestLogger(component) {
   return Log4Moz.repository.getLogger("Testing");
 }
 

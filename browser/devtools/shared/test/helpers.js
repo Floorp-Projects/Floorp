@@ -54,7 +54,7 @@
  * of GCLI and can be run as a test case.
  */
 
-this.EXPORTED_SYMBOLS = [ 'helpers' ];
+var EXPORTED_SYMBOLS = [ 'helpers' ];
 
 var test = { };
 
@@ -496,7 +496,7 @@ DeveloperToolbarTest.closeAllTabs = function() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-this.helpers = {};
+var helpers = {};
 
 helpers._display = undefined;
 

@@ -1,1 +1,1 @@
-this.EXPORTED_SYMBOLS = "not an array";
+var EXPORTED_SYMBOLS = "not an array";

@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/identity/LogUtils.jsm");
 Cu.import("resource://gre/modules/identity/Sandbox.jsm");
 
-this.EXPORTED_SYMBOLS = ["IdentityProvider"];
+const EXPORTED_SYMBOLS = ["IdentityProvider"];
 const FALLBACK_PROVIDER = "browserid.org";
 
 XPCOMUtils.defineLazyModuleGetter(this,
@@ -491,4 +491,4 @@ IdentityProviderService.prototype = {
 
 };
 
-this.IdentityProvider = new IdentityProviderService();
+let IdentityProvider = new IdentityProviderService();

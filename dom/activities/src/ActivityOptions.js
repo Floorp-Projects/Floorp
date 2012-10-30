@@ -53,4 +53,4 @@ ActivityOptions.prototype = {
   })
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ActivityOptions]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([ActivityOptions]);

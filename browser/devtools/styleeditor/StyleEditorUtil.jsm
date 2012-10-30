@@ -5,11 +5,11 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "_",
   "assert",
-  "attr", // XXXkhuey unused?
-  "getCurrentBrowserTabContentWindow", // XXXkhuey unused?
+  "attr",
+  "getCurrentBrowserTabContentWindow",
   "log",
   "text",
   "wire"
@@ -35,7 +35,7 @@ const gStringBundle = Services.strings.createBundle(PROPERTIES_URL);
  *        Optional arguments to format in the string.
  * @return string
  */
-this._ = function _(aName)
+function _(aName)
 {
 
   if (arguments.length == 1) {
@@ -53,7 +53,7 @@ this._ = function _(aName)
  *        Optional message.
  * @return aExpression
  */
-this.assert = function assert(aExpression, aMessage)
+function assert(aExpression, aMessage)
 {
   if (!!!(aExpression)) {
     let msg = aMessage ? "ASSERTION FAILURE:" + aMessage : "ASSERTION FAILURE";
@@ -76,7 +76,7 @@ this.assert = function assert(aExpression, aMessage)
  *         Text content of matching element or null if there were no element
  *         matching aSelector.
  */
-this.text = function text(aRoot, aSelector, aText)
+function text(aRoot, aSelector, aText)
 {
   let element = aRoot.querySelector(aSelector);
   if (!element) {
@@ -113,7 +113,7 @@ function forEach(aObject, aCallback)
  *        One or multiple arguments to log.
  *        If multiple arguments are given, they will be joined by " " in the log.
  */
-this.log = function log()
+function log()
 {
   console.logStringMessage(Array.prototype.slice.call(arguments).join(" "));
 }
@@ -136,7 +136,7 @@ this.log = function log()
  *        If aDescriptor is a function, the argument is equivalent to :
  *        {events: {'click': aDescriptor}}
  */
-this.wire = function wire(aRoot, aSelectorOrElement, aDescriptor)
+function wire(aRoot, aSelectorOrElement, aDescriptor)
 {
   let matches;
   if (typeof(aSelectorOrElement) == "string") { // selector

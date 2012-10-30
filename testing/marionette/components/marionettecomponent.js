@@ -102,4 +102,4 @@ MarionetteComponent.prototype = {
 
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MarionetteComponent]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([MarionetteComponent]);

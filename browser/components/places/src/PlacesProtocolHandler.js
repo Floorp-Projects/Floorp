@@ -46,4 +46,4 @@ PlacesProtocolHandler.prototype = {
   classID: Components.ID("{6bcb9bde-9018-4443-a071-c32653469597}")
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PlacesProtocolHandler]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([PlacesProtocolHandler]);

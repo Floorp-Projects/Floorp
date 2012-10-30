@@ -57,4 +57,4 @@ ProcessGlobal.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ProcessGlobal]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([ProcessGlobal]);

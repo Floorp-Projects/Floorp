@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Social"];
+let EXPORTED_SYMBOLS = ["Social"];
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
   "resource://gre/modules/SocialService.jsm");
 
-this.Social = {
+let Social = {
   lastEventReceived: 0,
   provider: null,
   _disabledForSafeMode: false,

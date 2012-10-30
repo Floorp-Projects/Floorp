@@ -84,4 +84,4 @@ amContentHandler.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([amContentHandler]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([amContentHandler]);

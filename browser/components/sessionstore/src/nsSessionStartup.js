@@ -319,4 +319,4 @@ SessionStartup.prototype = {
   classID:          Components.ID("{ec7a6c20-e081-11da-8ad9-0800200c9a66}"),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SessionStartup]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([SessionStartup]);

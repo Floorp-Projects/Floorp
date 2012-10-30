@@ -43,4 +43,4 @@ MailtoProtocolHandler.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolHandler])
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MailtoProtocolHandler]);
+let NSGetFactory = XPCOMUtils.generateNSGetFactory([MailtoProtocolHandler]);

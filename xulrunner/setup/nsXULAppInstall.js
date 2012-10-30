@@ -315,4 +315,4 @@ AppInstall.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AppInstall]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([AppInstall]);

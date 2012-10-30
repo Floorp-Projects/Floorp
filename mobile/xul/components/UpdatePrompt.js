@@ -305,4 +305,4 @@ UpdatePrompt.prototype = {
 
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([UpdatePrompt]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([UpdatePrompt]);

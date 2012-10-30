@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "RotaryEngine",
   "RotaryRecord",
   "RotaryStore",
@@ -24,7 +24,7 @@ Cu.import("resource://services-sync/util.js");
  * Complete with record, store, and tracker implementations.
  */
 
-this.RotaryRecord = function RotaryRecord(collection, id) {
+function RotaryRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 RotaryRecord.prototype = {
@@ -32,7 +32,7 @@ RotaryRecord.prototype = {
 };
 Utils.deferGetSet(RotaryRecord, "cleartext", ["denomination"]);
 
-this.RotaryStore = function RotaryStore(engine) {
+function RotaryStore(engine) {
   Store.call(this, "Rotary", engine);
   this.items = {};
 }
@@ -88,7 +88,7 @@ RotaryStore.prototype = {
   }
 };
 
-this.RotaryTracker = function RotaryTracker(engine) {
+function RotaryTracker(engine) {
   Tracker.call(this, "Rotary", engine);
 }
 RotaryTracker.prototype = {
@@ -96,7 +96,7 @@ RotaryTracker.prototype = {
 };
 
 
-this.RotaryEngine = function RotaryEngine(service) {
+function RotaryEngine(service) {
   SyncEngine.call(this, "Rotary", service);
   // Ensure that the engine starts with a clean slate.
   this.toFetch        = [];

@@ -2,7 +2,7 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["SessionStorage"];
+let EXPORTED_SYMBOLS = ["SessionStorage"];
 
 const Cu = Components.utils;
 
@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
 
-this.SessionStorage = {
+let SessionStorage = {
   /**
    * Updates all sessionStorage "super cookies"
    * @param aDocShell

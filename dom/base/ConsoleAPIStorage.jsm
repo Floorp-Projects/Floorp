@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const STORAGE_MAX_EVENTS = 200;
 
-this.EXPORTED_SYMBOLS = ["ConsoleAPIStorage"];
+var EXPORTED_SYMBOLS = ["ConsoleAPIStorage"];
 
 var _consoleStorage = {};
 
@@ -36,7 +36,7 @@ var _consoleStorage = {};
  *    // Clear the events for the given inner window ID.
  *    ConsoleAPIStorage.clearEvents(innerWindowID);
  */
-this.ConsoleAPIStorage = {
+var ConsoleAPIStorage = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
