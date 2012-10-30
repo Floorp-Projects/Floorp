@@ -1423,7 +1423,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* Star button */
 #star-button {
-  padding: 1px;
   list-style-image: url("chrome://browser/skin/places/starPage.png");
 }
 
