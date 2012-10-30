@@ -49,6 +49,7 @@ SmsService::Send(const nsAString& aNumber, const nsAString& aMessage,
 NS_IMETHODIMP
 SmsService::CreateSmsMessage(int32_t aId,
                              const nsAString& aDelivery,
+                             const nsAString& aDeliveryStatus,
                              const nsAString& aSender,
                              const nsAString& aReceiver,
                              const nsAString& aBody,
@@ -57,8 +58,10 @@ SmsService::CreateSmsMessage(int32_t aId,
                              JSContext* aCx,
                              nsIDOMMozSmsMessage** aMessage)
 {
-  return SmsMessage::Create(aId, aDelivery, aSender, aReceiver, aBody,
-                            aTimestamp, aRead, aCx, aMessage);
+  return SmsMessage::Create(aId, aDelivery, aDeliveryStatus,
+                            aSender, aReceiver,
+                            aBody, aTimestamp, aRead,
+                            aCx, aMessage);
 }
 
 } // namespace sms

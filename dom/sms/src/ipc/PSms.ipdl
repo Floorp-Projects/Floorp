@@ -8,6 +8,7 @@ include protocol PContent;
 include "mozilla/dom/sms/Types.h";
 
 using DeliveryState;
+using DeliveryStatus;
 using ReadState;
 
 namespace mozilla {
@@ -15,13 +16,14 @@ namespace dom {
 namespace sms {
 
 struct SmsMessageData {
-  int32_t       id;
-  DeliveryState delivery;
-  nsString      sender;
-  nsString      receiver;
-  nsString      body;
-  uint64_t      timestamp; // ms since epoch.
-  bool          read;
+  int32_t        id;
+  DeliveryState  delivery;
+  DeliveryStatus deliveryStatus;
+  nsString       sender;
+  nsString       receiver;
+  nsString       body;
+  uint64_t       timestamp; // ms since epoch.
+  bool           read;
 };
 
 struct SmsFilterData {
@@ -40,7 +42,9 @@ child:
 
     NotifySentMessage(SmsMessageData aMessageData);
 
-    NotifyDeliveredMessage(SmsMessageData aMessageData);
+    NotifyDeliverySuccessMessage(SmsMessageData aMessageData);
+
+    NotifyDeliveryErrorMessage(SmsMessageData aMessageData);
 
     NotifyRequestSmsSent(SmsMessageData aMessageData, int32_t aRequestId,
                          uint64_t aProcessId);
@@ -88,6 +92,8 @@ parent:
 
     sync SaveSentMessage(nsString aReceiver, nsString aBody, uint64_t aDate)
         returns (int32_t aId);
+
+    SetMessageDeliveryStatus(int32_t aMessageId, nsString aDeliveryStatus);
 
     GetMessage(int32_t aMessageId, int32_t aRequestId, uint64_t aProcessId);
 
