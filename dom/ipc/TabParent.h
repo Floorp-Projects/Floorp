@@ -54,7 +54,7 @@ class TabParent : public PBrowserParent
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
 public:
-    TabParent(mozIApplication* aApp, bool aIsBrowserElement);
+    TabParent(mozIApplication* aOwnOrContainingApp, bool aIsBrowserElement);
     virtual ~TabParent();
     nsIDOMElement* GetOwnerElement() { return mFrameElement; }
     void SetOwnerElement(nsIDOMElement* aElement);
@@ -63,8 +63,9 @@ public:
         mBrowserDOMWindow = aBrowserDOMWindow;
     }
  
-    mozIApplication* GetApp() { return mApp; }
+    mozIApplication* GetOwnOrContainingApp() { return mOwnOrContainingApp; }
     bool IsBrowserElement() { return mIsBrowserElement; }
+    bool IsBrowserOrApp() { return GetOwnOrContainingApp() || IsBrowserElement(); }
 
     /**
      * Return the TabParent that has decided it wants to capture an
@@ -261,7 +262,9 @@ protected:
                                                   uint64_t* aLayersId) MOZ_OVERRIDE;
     virtual bool DeallocPRenderFrame(PRenderFrameParent* aFrame) MOZ_OVERRIDE;
 
-    nsCOMPtr<mozIApplication> mApp;
+    nsCOMPtr<mozIApplication> mOwnOrContainingApp;
+    bool mIsBrowserElement;
+
     // IME
     static TabParent *mIMETabParent;
     nsString mIMECacheText;
@@ -280,7 +283,6 @@ protected:
 
     nsIntSize mDimensions;
     float mDPI;
-    bool mIsBrowserElement;
     bool mShown;
 
 private:
@@ -288,9 +290,9 @@ private:
     already_AddRefed<nsIWidget> GetWidget() const;
     layout::RenderFrameParent* GetRenderFrame();
     void TryCacheDPI();
-    // Return true iff this TabParent was created for a mozbrowser
+    // Return true iff this TabParent was created for a mozbrowser or mozapp
     // frame.
-    bool IsForMozBrowser();
+    bool IsForBrowserOrApp();
     // When true, we create a pan/zoom controller for our frame and
     // notify it of input events targeting us.
     bool UseAsyncPanZoom();

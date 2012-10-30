@@ -664,13 +664,12 @@ protected:
     bool JustStartedNetworkLoad();
 
     enum FrameType {
-        eFrameTypeRegular  = 0x0, // 0000
-        eFrameTypeBrowser  = 0x1, // 0001
-        eFrameTypeApp      = 0x2  // 0010
+        eFrameTypeRegular,
+        eFrameTypeBrowser,
+        eFrameTypeApp
     };
 
     FrameType GetInheritedFrameType();
-    FrameType GetFrameType();
 
     // hash of session storages, keyed by domain
     nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorage> mStorages;
@@ -807,7 +806,6 @@ protected:
     bool                       mIsAppTab;
     bool                       mUseGlobalHistory;
     bool                       mInPrivateBrowsing;
-    bool                       mIsBrowserFrame;
 
     // This boolean is set to true right before we fire pagehide and generally
     // unset when we embed a new content viewer.  While it's true no navigation
@@ -844,7 +842,18 @@ protected:
 
     nsRefPtr<nsDOMNavigationTiming> mTiming;
 
-    uint32_t mAppId;
+    // Are we a regular frame, a browser frame, or an app frame?
+    FrameType mFrameType;
+
+    // We only expect mOwnOrContainingAppId to be something other than
+    // UNKNOWN_APP_ID if mFrameType != eFrameTypeRegular.  For vanilla iframes
+    // inside an app, we'll retrieve the containing app-id by walking up the
+    // docshell hierarchy.
+    //
+    // (This needs to be the docshell's own /or containing/ app id because the
+    // containing app frame might be in another process, in which case we won't
+    // find it by walking up the docshell hierarchy.)
+    uint32_t mOwnOrContainingAppId;
 
 private:
     nsCOMPtr<nsIAtom> mForcedCharset;
