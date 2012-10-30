@@ -97,6 +97,17 @@ public:
              JSContext* aCallingCx,
              IDBOpenDBRequest** _retval);
 
+  nsresult
+  OpenCommon(const nsAString& aName,
+             int64_t aVersion,
+             bool aDeleting,
+             JSContext* aCallingCx,
+             IDBOpenDBRequest** _retval)
+  {
+    return OpenCommon(aName, aVersion, mASCIIOrigin, aDeleting, aCallingCx,
+                      _retval);
+  }
+
   void
   SetActor(IndexedDBChild* aActorChild)
   {
