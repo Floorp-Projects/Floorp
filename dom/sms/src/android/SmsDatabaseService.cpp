@@ -16,7 +16,6 @@ NS_IMPL_ISUPPORTS1(SmsDatabaseService, nsISmsDatabaseService)
 NS_IMETHODIMP
 SmsDatabaseService::SaveReceivedMessage(const nsAString& aSender,
                                         const nsAString& aBody,
-                                        const nsAString& aMessageClass,
                                         uint64_t aDate, int32_t* aId)
 {
   // The Android stock SMS app does this already.

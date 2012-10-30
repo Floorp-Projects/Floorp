@@ -68,7 +68,6 @@ SmsService::CreateSmsMessage(int32_t aId,
                              const nsAString& aSender,
                              const nsAString& aReceiver,
                              const nsAString& aBody,
-                             const nsAString& aMessageClass,
                              const jsval& aTimestamp,
                              const bool aRead,
                              JSContext* aCx,
@@ -76,7 +75,7 @@ SmsService::CreateSmsMessage(int32_t aId,
 {
   return SmsMessage::Create(aId, aDelivery, aDeliveryStatus,
                             aSender, aReceiver,
-                            aBody, aMessageClass, aTimestamp, aRead,
+                            aBody, aTimestamp, aRead,
                             aCx, aMessage);
 }
 
