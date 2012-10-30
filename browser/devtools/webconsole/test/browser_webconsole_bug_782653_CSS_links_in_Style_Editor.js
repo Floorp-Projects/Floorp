@@ -44,9 +44,7 @@ function checkStyleEditorForSheetAndLine(aStyleSheetIndex, aLine, aCallback) {
   function doCheck(aEditor) {
     function checkLineAndCallback() {
       info("In checkLineAndCallback()");
-      ok(aEditor.sourceEditor != null, "sourceeditor not null");
-      ok(aEditor.sourceEditor.getCaretPosition() != null, "position not null");
-      ok(aEditor.sourceEditor.getCaretPosition().line != null, "line not null");
+      ok(aEditor.sourceEditor, "sourceeditor not null");
       is(aEditor.sourceEditor.getCaretPosition().line, aLine,
          "Correct line is selected");
       if (aCallback) {
@@ -55,6 +53,7 @@ function checkStyleEditorForSheetAndLine(aStyleSheetIndex, aLine, aCallback) {
     }
 
     ok(aEditor, "aEditor is defined.");
+    aEditor.focus();
 
     // Source-editor is already loaded, check the current line of caret.
     if (aEditor.sourceEditor) {
@@ -78,7 +77,7 @@ function checkStyleEditorForSheetAndLine(aStyleSheetIndex, aLine, aCallback) {
       onAttach: function onAttach() {
         info("on attach happened");
         aEditor.removeActionListener(this);
-        info("this removed");
+        info("action listener removed");
         executeSoon(function() {
           if (aEditor.styleSheetIndex != SEC.selectedStyleSheetIndex) {
             ok(false, "Correct Style Sheet was not selected.");
@@ -116,7 +115,7 @@ function checkStyleEditorForSheetAndLine(aStyleSheetIndex, aLine, aCallback) {
          "checking later if it is correct");
     for (let aEditor of SEC.editors) {
       if (aEditor.styleSheetIndex == aStyleSheetIndex) {
-        doCheck(aEditor);
+        executeSoon(doCheck.bind(null, aEditor));
         break;
       }
     }
@@ -138,18 +137,14 @@ let observer = {
                              .getEditorForWindow(content.window);
       ok(styleEditorWin, "Style Editor Window is defined");
       waitForFocus(function() {
-        //styleEditorWin.addEventListener("load", function onStyleEditorWinLoad() {
-          //styleEditorWin.removeEventListener("load", onStyleEditorWinLoad);
-
-          checkStyleEditorForSheetAndLine(0, 7, function() {
-            checkStyleEditorForSheetAndLine(1, 6, function() {
-              window.StyleEditor.toggle();
-              styleEditorWin = null;
-              finishTest();
-            });
-            EventUtils.sendMouseEvent({ type: "click" }, nodes[1]);
+        checkStyleEditorForSheetAndLine(0, 7, function() {
+          checkStyleEditorForSheetAndLine(1, 6, function() {
+            window.StyleEditor.toggle();
+            nodes = styleEditorWin = null;
+            finishTest();
           });
-        //});
+          EventUtils.sendMouseEvent({ type: "click" }, nodes[1]);
+        });
       }, styleEditorWin);
     });
   }
