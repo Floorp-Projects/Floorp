@@ -18,7 +18,34 @@
 namespace js {
 namespace ion {
 
-class StackValue {
+// FrameInfo overview.
+//
+// FrameInfo is used by the compiler to track values stored in the frame. This
+// includes locals, arguments and stack values. Locals and arguments are always
+// fully synced. Stack values can either be synced, stored as constant, stored in
+// a Value register or refer to a local slot. Syncing a StackValue ensures it's
+// stored on the stack, e.g. kind == Stack.
+//
+// To see how this works, consider the following statement:
+//
+//    var y = x + 9;
+//
+// Here two values are pushed: StackValue(LocalSlot(0)) and StackValue(Int32Value(9)).
+// Only when we reach the ADD op, code is generated to load the operands directly
+// into the right operand registers and sync all other stack values.
+//
+// For stack values, the following invariants hold (and are checked between ops):
+//
+// (1) If a value is synced (kind == Stack), all values below it must also be synced.
+//     In other words, values with kind other than Stack can only appear on top of the
+//     abstract stack.
+//
+// (2) When we call a stub or IC, all values still on the stack must be synced.
+
+// Represents a value pushed on the stack. Note that StackValue is not used for
+// locals or arguments since these are always fully synced.
+class StackValue
+{
   public:
     enum Kind {
         Constant,
@@ -26,9 +53,9 @@ class StackValue {
         Stack,
         LocalSlot
 #ifdef DEBUG
+        // In debug builds, assert Kind is initialized.
         , Uninitialized
 #endif
-
     };
 
   private:
@@ -39,9 +66,7 @@ class StackValue {
             Value v;
         } constant;
         struct {
-            //XXX: allow using ValueOperand here.
-            struct Register r1;
-            struct Register r2;
+            AlignedStorage2<ValueOperand> reg;
         } reg;
         struct {
             uint32_t local;
@@ -67,7 +92,7 @@ class StackValue {
     }
     ValueOperand reg() const {
         JS_ASSERT(kind_ == Register);
-        return ValueOperand(data.reg.r1, data.reg.r2);
+        return *data.reg.reg.addr();
     }
     uint32_t localSlot() const {
         JS_ASSERT(kind_ == LocalSlot);
@@ -80,8 +105,7 @@ class StackValue {
     }
     void setRegister(const ValueOperand &val) {
         kind_ = Register;
-        data.reg.r1 = val.typeReg();
-        data.reg.r2 = val.payloadReg();
+        *data.reg.reg.addr() = val;
     }
     void setLocalSlot(uint32_t local) {
         kind_ = LocalSlot;
@@ -131,7 +155,15 @@ class FrameInfo
 
     bool init();
 
-    size_t stackDepth() const {
+  private:
+    inline StackValue *rawPush() {
+        StackValue *val = &stack[spIndex++];
+        val->reset();
+        return val;
+    }
+
+  public:
+    inline size_t stackDepth() const {
         return spIndex;
     }
     inline StackValue *peek(int32_t index) const {
@@ -149,11 +181,6 @@ class FrameInfo
     inline void popn(uint32_t n) {
         for (uint32_t i = 0; i < n; i++)
             pop();
-    }
-    inline StackValue *rawPush() {
-        StackValue *val = &stack[spIndex++];
-        val->reset();
-        return val;
     }
     inline void push(const Value &val) {
         StackValue *sv = rawPush();
@@ -177,6 +204,13 @@ class FrameInfo
     void sync(StackValue *val);
     void syncStack(uint32_t uses);
     void popRegsAndSync(uint32_t uses);
+
+#ifdef DEBUG
+    // Assert the state is valid before excuting "pc".
+    void assertValidState(jsbytecode *pc);
+#else
+    inline void assertValidState(jsbytecode *pc) {}
+#endif
 };
 
 } // namespace ion
