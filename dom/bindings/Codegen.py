@@ -1196,12 +1196,12 @@ class AttrDefiner(PropertyDefiner):
             return "{ (JSPropertyOp)%s, %s }" % (accessor, jitinfo)
 
         def setter(attr):
+            if attr.readonly and attr.getExtendedAttribute("PutForwards") is None:
+                return "JSOP_NULLWRAPPER"
             if self.static:
                 accessor = 'set_' + attr.identifier.name
                 jitinfo = "nullptr"
             else:
-                if attr.readonly and attr.getExtendedAttribute("PutForwards") is None:
-                    return "JSOP_NULLWRAPPER"
                 accessor = ("genericLenientSetter" if attr.hasLenientThis()
                             else "genericSetter")
                 jitinfo = "&%s_setterinfo" % attr.identifier.name
@@ -6149,6 +6149,7 @@ class CGBindingRoot(CGThing):
                           'mozilla/dom/Nullable.h',
                           'PrimitiveConversions.h',
                           'XPCQuickStubs.h',
+                          'XPCWrapper.h',
                           'nsDOMQS.h',
                           'AccessCheck.h',
                           'WorkerPrivate.h',
