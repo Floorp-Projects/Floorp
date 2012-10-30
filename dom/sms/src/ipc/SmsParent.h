@@ -27,7 +27,7 @@ public:
   virtual bool RecvHasSupport(bool* aHasSupport) MOZ_OVERRIDE;
   virtual bool RecvGetNumberOfMessagesForText(const nsString& aText, uint16_t* aResult) MOZ_OVERRIDE;
   virtual bool RecvSendMessage(const nsString& aNumber, const nsString& aMessage, const int32_t& aRequestId, const uint64_t& aProcessId) MOZ_OVERRIDE;
-  virtual bool RecvSaveReceivedMessage(const nsString& aSender, const nsString& aBody, const nsString& aMessageClass, const uint64_t& aDate, int32_t* aId) MOZ_OVERRIDE;
+  virtual bool RecvSaveReceivedMessage(const nsString& aSender, const nsString& aBody, const uint64_t& aDate, int32_t* aId) MOZ_OVERRIDE;
   virtual bool RecvSaveSentMessage(const nsString& aRecipient, const nsString& aBody, const uint64_t& aDate, int32_t* aId) MOZ_OVERRIDE;
   virtual bool RecvSetMessageDeliveryStatus(const int32_t& aMessageId, const nsString& aDeliveryStatus) MOZ_OVERRIDE;
   virtual bool RecvGetMessage(const int32_t& aMessageId, const int32_t& aRequestId, const uint64_t& aProcessId) MOZ_OVERRIDE;

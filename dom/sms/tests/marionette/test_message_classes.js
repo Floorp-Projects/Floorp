@@ -31,7 +31,7 @@ function sendSmsPduToEmulator(pdu) {
 }
 
 const TIMESTAMP = Date.UTC(2000, 0, 1);
-function checkMessage(message, id, messageClass) {
+function checkMessage(message, id) {
   ok(message instanceof MozSmsMessage,
      "message is instanceof " + message.constructor);
   if (id == null) {
@@ -43,7 +43,6 @@ function checkMessage(message, id, messageClass) {
   is(message.deliveryStatus, "success", "message.deliveryStatus");
   is(message.sender, "+1", "message.sender");
   is(message.body, "A", "message.body");
-  is(message.messageClass, messageClass, "message.messageClass");
   ok(message.timestamp instanceof Date,
      "message.timestamp is instanceof " + message.timestamp.constructor);
   is(message.timestamp.getTime(), TIMESTAMP, "message.timestamp");
@@ -62,7 +61,7 @@ function test_message_class_0() {
       sms.removeEventListener("received", onReceived);
 
       let message = event.message;
-      checkMessage(message, -1, "class-0");
+      checkMessage(message, -1);
 
       // Make sure the message is not stored.
       let request = sms.getMessages(null, false);
@@ -101,13 +100,13 @@ function test_message_class_0() {
   do_test(0);
 }
 
-function doTestMessageClassGeneric(allDCSs, messageClass, next) {
+function doTestMessageClassGeneric(allDCSs, next) {
   function do_test(dcsIndex) {
     sms.addEventListener("received", function onReceived(event) {
       sms.removeEventListener("received", onReceived);
 
       // Make sure we can correctly receive the message
-      checkMessage(event.message, null, messageClass);
+      checkMessage(event.message);
 
       ++dcsIndex;
       if (dcsIndex >= allDCSs.length) {
@@ -136,7 +135,7 @@ function test_message_class_1() {
   ];
 
   log("Checking Message Class 1");
-  doTestMessageClassGeneric(allDCSs, "class-1", test_message_class_2);
+  doTestMessageClassGeneric(allDCSs, test_message_class_2);
 }
 
 function test_message_class_2() {
@@ -157,7 +156,7 @@ function test_message_class_2() {
       function onReceived(event) {
         if (pidIndex == 0) {
           // Make sure we can correctly receive the message
-          checkMessage(event.message, null, "class-2");
+          checkMessage(event.message);
 
           next();
           return;
@@ -221,7 +220,7 @@ function test_message_class_3() {
   ];
 
   log("Checking Message Class 3");
-  doTestMessageClassGeneric(allDCSs, "class-3", cleanUp);
+  doTestMessageClassGeneric(allDCSs, cleanUp);
 }
 
 function cleanUp() {

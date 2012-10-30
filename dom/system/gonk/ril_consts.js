@@ -964,11 +964,11 @@ const PDU_PID_USIM_DATA_DOWNLOAD           = 0x7F;
 const PDU_DCS_MSG_CODING_7BITS_ALPHABET  = 0x00;
 const PDU_DCS_MSG_CODING_8BITS_ALPHABET  = 0x04;
 const PDU_DCS_MSG_CODING_16BITS_ALPHABET = 0x08;
-const PDU_DCS_MSG_CLASS_NORMAL           = 0xFF;
+const PDU_DCS_MSG_CLASS_UNKNOWN          = 0xFF;
 const PDU_DCS_MSG_CLASS_0                = 0x00;
-const PDU_DCS_MSG_CLASS_1                = 0x01;
-const PDU_DCS_MSG_CLASS_2                = 0x02;
-const PDU_DCS_MSG_CLASS_3                = 0x03;
+const PDU_DCS_MSG_CLASS_ME_SPECIFIC      = 0x01;
+const PDU_DCS_MSG_CLASS_SIM_SPECIFIC     = 0x02;
+const PDU_DCS_MSG_CLASS_TE_SPECIFIC      = 0x03;
 const PDU_DCS_CODING_GROUP_BITS          = 0xF0;
 const PDU_DCS_MSG_CLASS_BITS             = 0x03;
 const PDU_DCS_MWI_ACTIVE_BITS            = 0x08;
@@ -978,13 +978,6 @@ const PDU_DCS_MWI_TYPE_VOICEMAIL         = 0x00;
 const PDU_DCS_MWI_TYPE_FAX               = 0x01;
 const PDU_DCS_MWI_TYPE_EMAIL             = 0x02;
 const PDU_DCS_MWI_TYPE_OTHER             = 0x03;
-
-const GECKO_SMS_MESSAGE_CLASSES = {};
-GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_NORMAL] = "normal";
-GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_0]      = "class-0";
-GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_1]      = "class-1";
-GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_2]      = "class-2";
-GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_3]      = "class-3";
 
 // Because service center timestamp omit the century. Yay.
 const PDU_TIMESTAMP_YEAR_OFFSET = 2000;

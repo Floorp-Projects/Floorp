@@ -162,9 +162,7 @@ SmsParent::RecvSendMessage(const nsString& aNumber, const nsString& aMessage,
 bool
 SmsParent::RecvSaveReceivedMessage(const nsString& aSender,
                                    const nsString& aBody,
-                                   const nsString& aMessageClass,
-                                   const uint64_t& aDate,
-                                   int32_t* aId)
+                                   const uint64_t& aDate, int32_t* aId)
 {
   *aId = -1;
 
@@ -172,7 +170,7 @@ SmsParent::RecvSaveReceivedMessage(const nsString& aSender,
     do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsDBService, true);
 
-  smsDBService->SaveReceivedMessage(aSender, aBody, aMessageClass, aDate, aId);
+  smsDBService->SaveReceivedMessage(aSender, aBody, aDate, aId);
   return true;
 }
 
