@@ -584,7 +584,7 @@ IDBFactory::Open(const nsAString& aName,
   }
 
   nsRefPtr<IDBOpenDBRequest> request;
-  nsresult rv = OpenCommon(aName, aVersion, mASCIIOrigin, false, aCx,
+  nsresult rv = OpenCommon(aName, aVersion, false, aCx,
                            getter_AddRefs(request));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -598,7 +598,7 @@ IDBFactory::DeleteDatabase(const nsAString& aName,
                            nsIIDBOpenDBRequest** _retval)
 {
   nsRefPtr<IDBOpenDBRequest> request;
-  nsresult rv = OpenCommon(aName, 0, mASCIIOrigin, true, aCx, getter_AddRefs(request));
+  nsresult rv = OpenCommon(aName, 0, true, aCx, getter_AddRefs(request));
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
