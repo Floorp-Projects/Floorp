@@ -73,9 +73,10 @@ TabParent *TabParent::mIMETabParent = nullptr;
 
 NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIAuthPromptProvider, nsISecureBrowserUI)
 
-TabParent::TabParent(mozIApplication* aApp, bool aIsBrowserElement)
+TabParent::TabParent(mozIApplication* aOwnOrContainingApp, bool aIsBrowserElement)
   : mFrameElement(NULL)
-  , mApp(aApp)
+  , mOwnOrContainingApp(aOwnOrContainingApp)
+  , mIsBrowserElement(aIsBrowserElement)
   , mIMESelectionAnchor(0)
   , mIMESelectionFocus(0)
   , mIMEComposing(false)
@@ -85,7 +86,6 @@ TabParent::TabParent(mozIApplication* aApp, bool aIsBrowserElement)
   , mEventCaptureDepth(0)
   , mDimensions(0, 0)
   , mDPI(0)
-  , mIsBrowserElement(aIsBrowserElement)
   , mShown(false)
 {
 }
@@ -188,7 +188,7 @@ TabParent::AnswerCreateWindow(PBrowserParent** retval)
     }
 
     // Only non-app, non-browser processes may call CreateWindow.
-    if (GetApp() || IsBrowserElement()) {
+    if (IsBrowserOrApp()) {
         return false;
     }
 
@@ -892,9 +892,9 @@ TabParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor,
   // XXXbent Need to make sure we have a whitelist for chrome databases!
 
   // Verify the appID in the origin first.
-  if (mApp && !aASCIIOrigin.EqualsLiteral("chrome")) {
+  if (mOwnOrContainingApp && !aASCIIOrigin.EqualsLiteral("chrome")) {
     uint32_t appId;
-    rv = mApp->GetLocalId(&appId);
+    rv = mOwnOrContainingApp->GetLocalId(&appId);
     NS_ENSURE_SUCCESS(rv, false);
 
     if (!IndexedDatabaseManager::OriginMatchesApp(aASCIIOrigin, appId)) {
@@ -1159,16 +1159,10 @@ TabParent::GetWidget() const
 }
 
 bool
-TabParent::IsForMozBrowser()
+TabParent::IsForBrowserOrApp()
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
-  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(content);
-  if (browserFrame) {
-    bool isBrowser = false;
-    browserFrame->GetReallyIsBrowser(&isBrowser);
-    return isBrowser;
-  }
-  return false;
+  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mFrameElement);
+  return browserFrame ? browserFrame->GetReallyIsBrowserOrApp() : false;
 }
 
 bool
@@ -1179,7 +1173,7 @@ TabParent::UseAsyncPanZoom()
     Preferences::GetBool("layers.async-pan-zoom.enabled", false);
   ContentParent* cp = static_cast<ContentParent*>(Manager());
   return (usingOffMainThreadCompositing &&
-          !cp->IsForApp() && IsForMozBrowser() &&
+          !cp->IsForApp() && IsForBrowserOrApp() &&
           asyncPanZoomEnabled);
 }
 
