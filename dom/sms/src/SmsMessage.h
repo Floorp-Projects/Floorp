@@ -29,6 +29,7 @@ public:
              const nsString& aSender,
              const nsString& aReceiver,
              const nsString& aBody,
+             MessageClass aMessageClass,
              uint64_t aTimestamp,
              bool aRead);
   SmsMessage(const SmsMessageData& aData);
@@ -39,6 +40,7 @@ public:
                          const nsAString& aSender,
                          const nsAString& aReceiver,
                          const nsAString& aBody,
+                         const nsAString& aMessageClass,
                          const JS::Value& aTimestamp,
                          const bool aRead,
                          JSContext* aCx,

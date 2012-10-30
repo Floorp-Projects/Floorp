@@ -9,6 +9,7 @@ include "mozilla/dom/sms/Types.h";
 
 using DeliveryState;
 using DeliveryStatus;
+using MessageClass;
 using ReadState;
 
 namespace mozilla {
@@ -22,6 +23,7 @@ struct SmsMessageData {
   nsString       sender;
   nsString       receiver;
   nsString       body;
+  MessageClass   messageClass;
   uint64_t       timestamp; // ms since epoch.
   bool           read;
 };
@@ -87,7 +89,7 @@ parent:
     SendMessage(nsString aNumber, nsString aMessage, int32_t aRequestId,
                 uint64_t aProcessId);
 
-    sync SaveReceivedMessage(nsString aSender, nsString aBody, uint64_t aDate)
+    sync SaveReceivedMessage(nsString aSender, nsString aBody, nsString aMessageClass, uint64_t aDate)
         returns (int32_t aId);
 
     sync SaveSentMessage(nsString aReceiver, nsString aBody, uint64_t aDate)
