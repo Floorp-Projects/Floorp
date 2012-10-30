@@ -1748,10 +1748,6 @@ this.DOMApplicationRegistry = {
     switch (message.name) {
       case "Webapps:ClearBrowserData":
         this._clearPrivateData(appId, true);
-        // XXXbent This is a hack until bug 802366 is fixed. Currently all data
-        //         loaded in mozbrowser frames within an app believe that their
-        //         appId is 0.
-        this._clearPrivateData(0, true);
         break;
     }
   },
