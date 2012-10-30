@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["SocialService"];
+this.EXPORTED_SYMBOLS = ["SocialService"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
@@ -82,7 +82,7 @@ function schedule(callback) {
 }
 
 // Public API
-const SocialService = {
+this.SocialService = {
   get enabled() {
     return SocialServiceInternal.enabled;
   },

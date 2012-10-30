@@ -10,7 +10,7 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-let EXPORTED_SYMBOLS = ["DOMRequestIpcHelper"];
+this.EXPORTED_SYMBOLS = ["DOMRequestIpcHelper"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
 
-function DOMRequestIpcHelper() {
+this.DOMRequestIpcHelper = function DOMRequestIpcHelper() {
 }
 
 DOMRequestIpcHelper.prototype = {

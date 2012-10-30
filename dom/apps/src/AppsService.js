@@ -62,4 +62,4 @@ AppsService.prototype = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIAppsService])
 }
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([AppsService])
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AppsService])

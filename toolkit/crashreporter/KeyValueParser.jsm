@@ -4,7 +4,7 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-let EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "parseKeyValuePairs",
   "parseKeyValuePairsFromFile"
 ];
@@ -12,7 +12,7 @@ let EXPORTED_SYMBOLS = [
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-function parseKeyValuePairs(text) {
+this.parseKeyValuePairs = function parseKeyValuePairs(text) {
   let lines = text.split('\n');
   let data = {};
   for (let i = 0; i < lines.length; i++) {
@@ -31,7 +31,7 @@ function parseKeyValuePairs(text) {
   return data;
 }
 
-function parseKeyValuePairsFromFile(file) {
+this.parseKeyValuePairsFromFile = function parseKeyValuePairsFromFile(file) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
                 createInstance(Ci.nsIFileInputStream);
   fstream.init(file, -1, 0, 0);

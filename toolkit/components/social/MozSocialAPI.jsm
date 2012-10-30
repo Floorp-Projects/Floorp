@@ -9,9 +9,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "SocialService", "resource://gre/modules/SocialService.jsm");
 
-const EXPORTED_SYMBOLS = ["MozSocialAPI", "openChatWindow"];
+this.EXPORTED_SYMBOLS = ["MozSocialAPI", "openChatWindow"];
 
-var MozSocialAPI = {
+this.MozSocialAPI = {
   _enabled: false,
   _everEnabled: false,
   set enabled(val) {
@@ -249,7 +249,8 @@ function ensureProviderOrigin(provider, url) {
   return fullURL;
 }
 
-function openChatWindow(chromeWindow, provider, url, callback, mode) {
+this.openChatWindow =
+ function openChatWindow(chromeWindow, provider, url, callback, mode) {
   if (!chromeWindow.SocialChatBar)
     return;
   let fullURL = ensureProviderOrigin(provider, url);

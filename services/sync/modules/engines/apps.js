@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ['AppsEngine', 'AppRec'];
+this.EXPORTED_SYMBOLS = ['AppsEngine', 'AppRec'];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -15,7 +15,7 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
 
-function AppRec(collection, id) {
+this.AppRec = function AppRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 
@@ -123,7 +123,7 @@ AppTracker.prototype = {
   }
 }
 
-function AppsEngine(service) {
+this.AppsEngine = function AppsEngine(service) {
   SyncEngine.call(this, "Apps", service);
 }
 

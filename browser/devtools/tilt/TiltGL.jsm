@@ -15,12 +15,12 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/TiltMath.jsm");
 Cu.import("resource:///modules/devtools/TiltUtils.jsm");
 
-let EXPORTED_SYMBOLS = ["TiltGL"];
+this.EXPORTED_SYMBOLS = ["TiltGL"];
 
 /**
  * Module containing thin wrappers around low-level WebGL functions.
  */
-let TiltGL = {};
+this.TiltGL = {};
 
 /**
  * Contains commonly used helper methods used in any 3D application.

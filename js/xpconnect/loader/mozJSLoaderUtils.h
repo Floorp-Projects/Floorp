@@ -23,8 +23,17 @@ ReadCachedScript(mozilla::scache::StartupCache* cache, nsACString &uri,
                  JSScript **script);
 
 nsresult
+ReadCachedFunction(mozilla::scache::StartupCache* cache, nsACString &uri,
+                   JSContext *cx, nsIPrincipal *systemPrincipal,
+                   JSFunction **function);
+
+nsresult
 WriteCachedScript(mozilla::scache::StartupCache* cache, nsACString &uri,
                   JSContext *cx, nsIPrincipal *systemPrincipal,
                   JSScript *script);
+nsresult
+WriteCachedFunction(mozilla::scache::StartupCache* cache, nsACString &uri,
+                    JSContext *cx, nsIPrincipal *systemPrincipal,
+                    JSFunction *function);
 
 #endif /* mozJSLoaderUtils_h */

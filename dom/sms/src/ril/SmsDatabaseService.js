@@ -783,7 +783,7 @@ XPCOMUtils.defineLazyGetter(SmsDatabaseService.prototype, "mRIL", function () {
               .getInterface(Ci.nsIRadioInterfaceLayer);
 });
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([SmsDatabaseService]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SmsDatabaseService]);
 
 function debug() {
   dump("SmsDatabaseService: " + Array.slice(arguments).join(" ") + "\n");

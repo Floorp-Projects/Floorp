@@ -1,1 +1,1 @@
-var EXPORTED_SYMBOLS = [{}];
+this.EXPORTED_SYMBOLS = [{}];

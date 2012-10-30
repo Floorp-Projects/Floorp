@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "UserAPI10Client",
 ];
 
@@ -23,7 +23,7 @@ Cu.import("resource://services-sync/util.js");
  *
  * Instances are constructed with the base URI of the service.
  */
-function UserAPI10Client(baseURI) {
+this.UserAPI10Client = function UserAPI10Client(baseURI) {
   this._log = Log4Moz.repository.getLogger("Sync.UserAPI");
   this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.userapi")];
 

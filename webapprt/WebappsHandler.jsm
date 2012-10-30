@@ -4,7 +4,7 @@
 
 "use strict";
 
-let EXPORTED_SYMBOLS = ["WebappsHandler"];
+this.EXPORTED_SYMBOLS = ["WebappsHandler"];
 
 let Cc = Components.classes;
 let Ci = Components.interfaces;
@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/Webapps.jsm");
 Cu.import("resource://gre/modules/WebappsInstaller.jsm");
 Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 
-let WebappsHandler = {
+this.WebappsHandler = {
   init: function() {
     Services.obs.addObserver(this, "webapps-ask-install", false);
     Services.obs.addObserver(this, "webapps-launch", false);

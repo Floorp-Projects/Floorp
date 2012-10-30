@@ -12,9 +12,9 @@ Cu.import("resource:///modules/inspector.jsm");
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource:///modules/devtools/CssLogic.jsm");
 
-var EXPORTED_SYMBOLS = ["LayoutView"];
+this.EXPORTED_SYMBOLS = ["LayoutView"];
 
-function LayoutView(aOptions)
+this.LayoutView = function LayoutView(aOptions)
 {
   this.chromeDoc = aOptions.document;
   this.inspector = aOptions.inspector;

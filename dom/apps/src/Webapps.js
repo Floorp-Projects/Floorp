@@ -758,6 +758,6 @@ WebappsApplicationMgmt.prototype = {
                                     classDescription: "Webapps Application Mgmt"})
 }
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([WebappsRegistry,
-                                                      WebappsApplication,
-                                                      DOMError]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WebappsRegistry,
+                                                     WebappsApplication,
+                                                     DOMError]);

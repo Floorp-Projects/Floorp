@@ -28,10 +28,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gActivityDistributor",
                                    "@mozilla.org/network/http-activity-distributor;1",
                                    "nsIHttpActivityDistributor");
 
-var EXPORTED_SYMBOLS = ["WebConsoleUtils", "JSPropertyProvider", "JSTermHelpers",
-                        "PageErrorListener", "ConsoleAPIListener",
-                        "NetworkResponseListener", "NetworkMonitor",
-                        "ConsoleProgressListener"];
+this.EXPORTED_SYMBOLS = ["WebConsoleUtils", "JSPropertyProvider", "JSTermHelpers",
+                         "PageErrorListener", "ConsoleAPIListener",
+                         "NetworkResponseListener", "NetworkMonitor",
+                         "ConsoleProgressListener"];
 
 // Match the function name from the result of toString() or toSource().
 //
@@ -44,7 +44,7 @@ const REGEX_MATCH_FUNCTION_NAME = /^\(?function\s+([^(\s]+)\s*\(/;
 // Match the function arguments from the result of toString() or toSource().
 const REGEX_MATCH_FUNCTION_ARGS = /^\(?function\s*[^\s(]*\s*\((.+?)\)/;
 
-var WebConsoleUtils = {
+this.WebConsoleUtils = {
   /**
    * Convenience function to unwrap a wrapped object.
    *
@@ -914,7 +914,7 @@ WebConsoleUtils.l10n.prototype = {
 // JS Completer
 //////////////////////////////////////////////////////////////////////////
 
-var JSPropertyProvider = (function _JSPP(WCU) {
+this.JSPropertyProvider = (function _JSPP(WCU) {
 const STATE_NORMAL = 0;
 const STATE_QUOTE = 2;
 const STATE_DQUOTE = 3;
@@ -1225,7 +1225,7 @@ return JSPropertyProvider;
  *        invoked with one argument, the nsIScriptError, whenever a relevant
  *        page error is received.
  */
-function PageErrorListener(aWindow, aListener)
+this.PageErrorListener = function PageErrorListener(aWindow, aListener)
 {
   this.window = aWindow;
   this.listener = aListener;
@@ -1373,7 +1373,7 @@ PageErrorListener.prototype =
  *        Console API message that comes from the observer service, whenever
  *        a relevant console API call is received.
  */
-function ConsoleAPIListener(aWindow, aOwner)
+this.ConsoleAPIListener = function ConsoleAPIListener(aWindow, aOwner)
 {
   this.window = aWindow;
   this.owner = aOwner;
@@ -1475,7 +1475,7 @@ ConsoleAPIListener.prototype =
  * @param object aOwner
  *        The owning object.
  */
-function JSTermHelpers(aOwner)
+this.JSTermHelpers = function JSTermHelpers(aOwner)
 {
   /**
    * Find a node by ID.
@@ -1679,7 +1679,7 @@ function JSTermHelpers(aOwner)
     aOwner.helperResult = { rawOutput: true };
     return String(aString);
   };
-}
+};
 
 
 (function(_global, WCU) {
@@ -2582,7 +2582,6 @@ _global.NetworkMonitor = NetworkMonitor;
 _global.NetworkResponseListener = NetworkResponseListener;
 })(this, WebConsoleUtils);
 
-
 /**
  * A WebProgressListener that listens for location changes.
  *
@@ -2597,7 +2596,8 @@ _global.NetworkResponseListener = NetworkResponseListener;
  *        - onFileActivity(aFileURI)
  *        - onLocationChange(aState, aTabURI, aPageTitle)
  */
-function ConsoleProgressListener(aWindow, aOwner)
+this.ConsoleProgressListener =
+ function ConsoleProgressListener(aWindow, aOwner)
 {
   this.window = aWindow;
   this.owner = aOwner;

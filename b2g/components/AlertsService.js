@@ -24,4 +24,4 @@ AlertsService.prototype = {
   }
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([AlertsService]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AlertsService]);

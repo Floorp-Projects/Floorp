@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let EXPORTED_SYMBOLS = [ "CmdCommands" ];
+this.EXPORTED_SYMBOLS = [ "CmdCommands" ];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
@@ -32,7 +32,7 @@ let commands = [];
 /**
  * Exported API
  */
-let CmdCommands = {
+this.CmdCommands = {
   /**
    * Called to look in a directory pointed at by the devtools.commands.dir pref
    * for *.mozcmd files which are then loaded.

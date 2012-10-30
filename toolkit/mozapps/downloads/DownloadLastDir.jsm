@@ -28,7 +28,7 @@ const LAST_DIR_PREF = "browser.download.lastDir";
 const SAVE_PER_SITE_PREF = LAST_DIR_PREF + ".savePerSite";
 const nsIFile = Components.interfaces.nsIFile;
 
-var EXPORTED_SYMBOLS = [ "DownloadLastDir" ];
+this.EXPORTED_SYMBOLS = [ "DownloadLastDir" ];
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -84,7 +84,7 @@ function isContentPrefEnabled() {
 
 let gDownloadLastDirFile = readLastDirPref();
 
-function DownloadLastDir(aWindow) {
+this.DownloadLastDir = function DownloadLastDir(aWindow) {
   this.window = aWindow;
 }
 

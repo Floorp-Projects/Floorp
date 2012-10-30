@@ -12,7 +12,7 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-let EXPORTED_SYMBOLS = ["SettingsChangeNotifier"];
+this.EXPORTED_SYMBOLS = ["SettingsChangeNotifier"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageBroadcaster");
 
-let SettingsChangeNotifier = {
+this.SettingsChangeNotifier = {
   init: function() {
     debug("init");
     this.children = [];

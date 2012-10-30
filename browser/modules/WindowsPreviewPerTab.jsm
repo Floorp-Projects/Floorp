@@ -41,7 +41,7 @@
  * buttons appear on the taskbar, so a magic pref-controlled number determines
  * when this threshold has been crossed.
  */
-var EXPORTED_SYMBOLS = ["AeroPeek"];
+this.EXPORTED_SYMBOLS = ["AeroPeek"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -558,7 +558,7 @@ TabWindow.prototype = {
  * This object acts as global storage and external interface for this feature.
  * It maintains the values of the prefs.
  */
-var AeroPeek = {
+this.AeroPeek = {
   available: false,
   // Does the pref say we're enabled?
   _prefenabled: true,

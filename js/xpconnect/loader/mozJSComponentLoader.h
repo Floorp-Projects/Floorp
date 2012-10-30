@@ -32,6 +32,8 @@
     { 0xbb, 0xef, 0xf0, 0xcc, 0xb5, 0xfa, 0x64, 0xb6 }}
 #define MOZJSCOMPONENTLOADER_CONTRACTID "@mozilla.org/moz/jsloader;1"
 
+class JSCLContextHelper;
+
 class mozJSComponentLoader : public mozilla::ModuleLoader,
                              public xpcIJSModuleLoader,
                              public nsIObserver
@@ -54,9 +56,15 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     nsresult ReallyInit();
     void UnloadModules();
 
-    nsresult GlobalForLocation(nsIFile* aComponentFile,
+    JSObject* PrepareObjectForLocation(JSCLContextHelper& aCx,
+                                       nsIFile* aComponentFile,
+                                       nsIURI *aComponent,
+                                       bool aReuseLoaderGlobal,
+                                       bool *aRealFile);
+
+    nsresult ObjectForLocation(nsIFile* aComponentFile,
                                nsIURI *aComponent,
-                               JSObject **aGlobal,
+                               JSObject **aObject,
                                char **location,
                                jsval *exception);
 
@@ -69,6 +77,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
     nsCOMPtr<nsIThreadJSContextStack> mContextStack;
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
+    nsCOMPtr<nsIXPConnectJSObjectHolder> mLoaderGlobal;
     JSRuntime *mRuntime;
     JSContext *mContext;
 
@@ -84,7 +93,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
             loadProc = NULL;
             unloadProc = NULL;
 
-            global = nullptr;
+            obj = nullptr;
             location = nullptr;
         }
 
@@ -95,19 +104,19 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
         void Clear() {
             getfactoryobj = NULL;
 
-            if (global) {
+            if (obj) {
                 JSAutoRequest ar(sSelf->mContext);
 
-                JSAutoCompartment ac(sSelf->mContext, global);
+                JSAutoCompartment ac(sSelf->mContext, obj);
 
-                JS_SetAllNonReservedSlotsToUndefined(sSelf->mContext, global);
-                JS_RemoveObjectRoot(sSelf->mContext, &global);
+                JS_SetAllNonReservedSlotsToUndefined(sSelf->mContext, obj);
+                JS_RemoveObjectRoot(sSelf->mContext, &obj);
             }
 
             if (location)
                 NS_Free(location);
 
-            global = NULL;
+            obj = NULL;
             location = NULL;
         }
 
@@ -115,7 +124,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
                                                        const mozilla::Module::CIDEntry& entry);
 
         nsCOMPtr<xpcIJSGetFactory> getfactoryobj;
-        JSObject            *global;
+        JSObject            *obj;
         char                *location;
     };
 
@@ -129,4 +138,5 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     nsDataHashtable<nsCStringHashKey, ModuleEntry*> mInProgressImports;
 
     bool mInitialized;
+    bool mReuseLoaderGlobal;
 };
