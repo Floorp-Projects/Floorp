@@ -39,7 +39,7 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 
-[scriptable, builtinclass, uuid(e93b2f6a-c543-448b-9239-55c96e31672e)]
+[scriptable, builtinclass, uuid(0132C0BE-ACB5-4D61-9B19-01C005E030DA)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -647,22 +647,16 @@ interface nsIDocShell : nsISupports
   [noscript] void setAppId(in unsigned long appId);
 
   /**
-   * Returns the app id of the app the docshell is in. Returns
-   * nsIScriptSecurityManager::NO_APP_ID if the docshell is not in an app.
+   * Like nsIDocShellTreeItem::GetSameTypeParent, except this ignores <iframe
+   * mozbrowser> and <iframe mozapp> boundaries.
    */
-  [infallible] readonly attribute unsigned long appId;
+  nsIDocShell getSameTypeParentIgnoreBrowserAndAppBoundaries();
 
   /** 
    * True iff asynchronous panning and zooming is enabled for this
    * docshell.
    */
   readonly attribute bool asyncPanZoomEnabled;
-
-  /**
-   * Like GetSameTypeParent, except this ignores <iframe mozbrowser>
-   * boundaries.
-   */
-  nsIDocShell getParentIgnoreBrowserFrame();
 
   /**
    * The sandbox flags on the docshell. These reflect the value of the sandbox
