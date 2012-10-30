@@ -638,7 +638,7 @@ function test_border_color_transition(prop) {
   is(cs.getPropertyValue(prop), "rgb(96, 48, 32)",
      "color-valued property " + prop + ": interpolation of initial value");
 
-  check_distance(prop, "rgb(128, 64, 0)", "rgb(96, 48, 32)", "-moz-initial");
+  check_distance(prop, "rgb(128, 64, 0)", "rgb(96, 48, 32)", "initial");
 
   div.style.removeProperty("color");
 }
