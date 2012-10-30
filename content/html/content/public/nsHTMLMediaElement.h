@@ -308,7 +308,8 @@ public:
 #endif
 
 #ifdef MOZ_GSTREAMER
-  static bool IsH264Enabled();
+  static bool IsGStreamerEnabled();
+  static bool IsGStreamerSupportedType(const nsACString& aType);
   static bool IsH264Type(const nsACString& aType);
   static const char gH264Types[3][16];
   static char const *const gH264Codecs[7];

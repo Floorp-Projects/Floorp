@@ -7,6 +7,7 @@
 /* A namespace class for static layout utilities. */
 
 #include "mozilla/Util.h"
+#include "mozilla/Likely.h"
 
 #include "jsapi.h"
 #include "jsdbgapi.h"
@@ -5618,7 +5619,7 @@ nsContentUtils::ASCIIToLower(nsAString& aStr)
 {
   PRUnichar* iter = aStr.BeginWriting();
   PRUnichar* end = aStr.EndWriting();
-  if (NS_UNLIKELY(!iter || !end)) {
+  if (MOZ_UNLIKELY(!iter || !end)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   while (iter != end) {
@@ -5639,7 +5640,7 @@ nsContentUtils::ASCIIToLower(const nsAString& aSource, nsAString& aDest)
   aDest.SetLength(len);
   if (aDest.Length() == len) {
     PRUnichar* dest = aDest.BeginWriting();
-    if (NS_UNLIKELY(!dest)) {
+    if (MOZ_UNLIKELY(!dest)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     const PRUnichar* iter = aSource.BeginReading();
@@ -5662,7 +5663,7 @@ nsContentUtils::ASCIIToUpper(nsAString& aStr)
 {
   PRUnichar* iter = aStr.BeginWriting();
   PRUnichar* end = aStr.EndWriting();
-  if (NS_UNLIKELY(!iter || !end)) {
+  if (MOZ_UNLIKELY(!iter || !end)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   while (iter != end) {
@@ -5683,7 +5684,7 @@ nsContentUtils::ASCIIToUpper(const nsAString& aSource, nsAString& aDest)
   aDest.SetLength(len);
   if (aDest.Length() == len) {
     PRUnichar* dest = aDest.BeginWriting();
-    if (NS_UNLIKELY(!dest)) {
+    if (MOZ_UNLIKELY(!dest)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     const PRUnichar* iter = aSource.BeginReading();
@@ -6613,47 +6614,32 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
 
 #ifdef MOZ_MEDIA
 #ifdef MOZ_OGG
-  if (nsHTMLMediaElement::IsOggEnabled()) {
-    for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gOggTypes); ++i) {
-      const char* type = nsHTMLMediaElement::gOggTypes[i];
-      if (!strcmp(aType, type)) {
-        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
-        if (docFactory && aLoaderType) {
-          *aLoaderType = TYPE_CONTENT;
-        }
-        return docFactory.forget();
-      }
+  if (nsHTMLMediaElement::IsOggType(nsDependentCString(aType))) {
+    docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_CONTENT;
     }
+    return docFactory.forget();
   }
 #endif
 
 #ifdef MOZ_WEBM
-  if (nsHTMLMediaElement::IsWebMEnabled()) {
-    for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gWebMTypes); ++i) {
-      const char* type = nsHTMLMediaElement::gWebMTypes[i];
-      if (!strcmp(aType, type)) {
-        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
-        if (docFactory && aLoaderType) {
-          *aLoaderType = TYPE_CONTENT;
-        }
-        return docFactory.forget();
-      }
+  if (nsHTMLMediaElement::IsWebMType(nsDependentCString(aType))) {
+    docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_CONTENT;
     }
+    return docFactory.forget();
   }
 #endif
 
 #ifdef MOZ_GSTREAMER
-  if (nsHTMLMediaElement::IsH264Enabled()) {
-    for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gH264Types); ++i) {
-      const char* type = nsHTMLMediaElement::gH264Types[i];
-      if (!strcmp(aType, type)) {
-        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
-        if (docFactory && aLoaderType) {
-          *aLoaderType = TYPE_CONTENT;
-        }
-        return docFactory.forget();
-      }
+  if (nsHTMLMediaElement::IsGStreamerSupportedType(nsDependentCString(aType))) {
+    docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_CONTENT;
     }
+    return docFactory.forget();
   }
 #endif
 
@@ -6667,7 +6653,6 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
     return docFactory.forget();
   }
 #endif // MOZ_MEDIA_PLUGINS
-
 #endif // MOZ_MEDIA
 
   return NULL;

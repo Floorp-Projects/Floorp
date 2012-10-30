@@ -2652,8 +2652,7 @@ html|*#gcli-output-frame {
 
 .social-notification-icon-image {
   margin: 5px 3px;
-  width: 16px;
-  height: 16px;
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 .social-notification-icon-hbox {
@@ -2727,7 +2726,7 @@ html|*#gcli-output-frame {
 
 .chat-title {
   font-weight: bold;
-  color: -moz-dialogtext;
+  color: black;
   text-shadow: none;
   cursor: inherit;
 }

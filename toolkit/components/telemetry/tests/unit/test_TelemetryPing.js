@@ -180,6 +180,7 @@ function checkPayload(request, reason, successfulPings) {
   do_check_true(payload.simpleMeasurements.uptime >= 0);
   do_check_true(payload.simpleMeasurements.startupInterrupted === 1);
   do_check_eq(payload.simpleMeasurements.shutdownDuration, SHUTDOWN_TIME);
+  do_check_eq(payload.simpleMeasurements.savedPings, 1);
 
   var isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
   if (isWindows) {

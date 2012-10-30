@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Likely.h"
+
 void
 nsHtml5Tokenizer::StartPlainText()
 {
@@ -37,12 +39,12 @@ nsHtml5Tokenizer::errWarnLtSlashInRcdata()
 {
 }
 
-// The null checks below annotated NS_LIKELY are not actually necessary.
+// The null checks below annotated MOZ_LIKELY are not actually necessary.
 
 void
 nsHtml5Tokenizer::errUnquotedAttributeValOrNull(PRUnichar c)
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     switch (c) {
       case '<':
         mViewSource->AddErrorToCurrentNode("errUnquotedAttributeLt");
@@ -64,7 +66,7 @@ nsHtml5Tokenizer::errUnquotedAttributeValOrNull(PRUnichar c)
 void
 nsHtml5Tokenizer::errLtOrEqualsOrGraveInUnquotedAttributeOrNull(PRUnichar c)
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     switch (c) {
       case '=':
         mViewSource->AddErrorToCurrentNode("errUnquotedAttributeStartEquals");
@@ -82,7 +84,7 @@ nsHtml5Tokenizer::errLtOrEqualsOrGraveInUnquotedAttributeOrNull(PRUnichar c)
 void
 nsHtml5Tokenizer::errBadCharBeforeAttributeNameOrNull(PRUnichar c)
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     if (c == '<') {
       mViewSource->AddErrorToCurrentNode("errBadCharBeforeAttributeNameLt");
     } else if (c == '=') {
@@ -96,7 +98,7 @@ nsHtml5Tokenizer::errBadCharBeforeAttributeNameOrNull(PRUnichar c)
 void
 nsHtml5Tokenizer::errBadCharAfterLt(PRUnichar c)
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errBadCharAfterLt");
   }
 }
@@ -104,7 +106,7 @@ nsHtml5Tokenizer::errBadCharAfterLt(PRUnichar c)
 void
 nsHtml5Tokenizer::errQuoteOrLtInAttributeNameOrNull(PRUnichar c)
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     if (c == '<') {
       mViewSource->AddErrorToCurrentNode("errLtInAttributeName");
     } else if (c != 0xFFFD) {
@@ -136,7 +138,7 @@ nsHtml5Tokenizer::maybeErrSlashInEndTag(bool selfClosing)
 PRUnichar
 nsHtml5Tokenizer::errNcrNonCharacter(PRUnichar ch)
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrNonCharacter");
   }
   return ch;
@@ -145,7 +147,7 @@ nsHtml5Tokenizer::errNcrNonCharacter(PRUnichar ch)
 void
 nsHtml5Tokenizer::errAstralNonCharacter(int32_t ch)
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrNonCharacter");
   }
 }
@@ -153,7 +155,7 @@ nsHtml5Tokenizer::errAstralNonCharacter(int32_t ch)
 PRUnichar
 nsHtml5Tokenizer::errNcrControlChar(PRUnichar ch)
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrControlChar");
   }
   return ch;
@@ -162,7 +164,7 @@ nsHtml5Tokenizer::errNcrControlChar(PRUnichar ch)
 void
 nsHtml5Tokenizer::errGarbageAfterLtSlash()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errGarbageAfterLtSlash");
   }
 }
@@ -170,7 +172,7 @@ nsHtml5Tokenizer::errGarbageAfterLtSlash()
 void
 nsHtml5Tokenizer::errLtSlashGt()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errLtSlashGt");
   }
 }
@@ -178,7 +180,7 @@ nsHtml5Tokenizer::errLtSlashGt()
 void
 nsHtml5Tokenizer::errCharRefLacksSemicolon()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errCharRefLacksSemicolon");
   }
 }
@@ -186,7 +188,7 @@ nsHtml5Tokenizer::errCharRefLacksSemicolon()
 void
 nsHtml5Tokenizer::errNoDigitsInNCR()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNoDigitsInNCR");
   }
 }
@@ -194,7 +196,7 @@ nsHtml5Tokenizer::errNoDigitsInNCR()
 void
 nsHtml5Tokenizer::errGtInSystemId()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errGtInSystemId");
   }
 }
@@ -202,7 +204,7 @@ nsHtml5Tokenizer::errGtInSystemId()
 void
 nsHtml5Tokenizer::errGtInPublicId()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errGtInPublicId");
   }
 }
@@ -210,7 +212,7 @@ nsHtml5Tokenizer::errGtInPublicId()
 void
 nsHtml5Tokenizer::errNamelessDoctype()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNamelessDoctype");
   }
 }
@@ -218,7 +220,7 @@ nsHtml5Tokenizer::errNamelessDoctype()
 void
 nsHtml5Tokenizer::errConsecutiveHyphens()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errConsecutiveHyphens");
   }
 }
@@ -226,7 +228,7 @@ nsHtml5Tokenizer::errConsecutiveHyphens()
 void
 nsHtml5Tokenizer::errPrematureEndOfComment()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errPrematureEndOfComment");
   }
 }
@@ -234,7 +236,7 @@ nsHtml5Tokenizer::errPrematureEndOfComment()
 void
 nsHtml5Tokenizer::errBogusComment()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errBogusComment");
   }
 }
@@ -242,7 +244,7 @@ nsHtml5Tokenizer::errBogusComment()
 void
 nsHtml5Tokenizer::errSlashNotFollowedByGt()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentSlash("errSlashNotFollowedByGt");
   }
 }
@@ -250,7 +252,7 @@ nsHtml5Tokenizer::errSlashNotFollowedByGt()
 void
 nsHtml5Tokenizer::errNoSpaceBetweenAttributes()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNoSpaceBetweenAttributes");
   }
 }
@@ -258,7 +260,7 @@ nsHtml5Tokenizer::errNoSpaceBetweenAttributes()
 void
 nsHtml5Tokenizer::errAttributeValueMissing()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errAttributeValueMissing");
   }
 }
@@ -266,7 +268,7 @@ nsHtml5Tokenizer::errAttributeValueMissing()
 void
 nsHtml5Tokenizer::errEqualsSignBeforeAttributeName()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errEqualsSignBeforeAttributeName");
   }
 }
@@ -274,7 +276,7 @@ nsHtml5Tokenizer::errEqualsSignBeforeAttributeName()
 void
 nsHtml5Tokenizer::errLtGt()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errLtGt");
   }
 }
@@ -282,7 +284,7 @@ nsHtml5Tokenizer::errLtGt()
 void
 nsHtml5Tokenizer::errProcessingInstruction()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errProcessingInstruction");
   }
 }
@@ -290,7 +292,7 @@ nsHtml5Tokenizer::errProcessingInstruction()
 void
 nsHtml5Tokenizer::errUnescapedAmpersandInterpretedAsCharacterReference()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentAmpersand("errUnescapedAmpersandInterpretedAsCharacterReference");
   }
 }
@@ -298,7 +300,7 @@ nsHtml5Tokenizer::errUnescapedAmpersandInterpretedAsCharacterReference()
 void
 nsHtml5Tokenizer::errNotSemicolonTerminated()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNotSemicolonTerminated");
   }
 }
@@ -306,7 +308,7 @@ nsHtml5Tokenizer::errNotSemicolonTerminated()
 void
 nsHtml5Tokenizer::errNoNamedCharacterMatch()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentAmpersand("errNoNamedCharacterMatch");
   }
 }
@@ -314,7 +316,7 @@ nsHtml5Tokenizer::errNoNamedCharacterMatch()
 void
 nsHtml5Tokenizer::errQuoteBeforeAttributeName(PRUnichar c)
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errQuoteBeforeAttributeName");
   }
 }
@@ -322,7 +324,7 @@ nsHtml5Tokenizer::errQuoteBeforeAttributeName(PRUnichar c)
 void
 nsHtml5Tokenizer::errExpectedPublicId()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errExpectedPublicId");
   }
 }
@@ -330,7 +332,7 @@ nsHtml5Tokenizer::errExpectedPublicId()
 void
 nsHtml5Tokenizer::errBogusDoctype()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errBogusDoctype");
   }
 }
@@ -338,7 +340,7 @@ nsHtml5Tokenizer::errBogusDoctype()
 void
 nsHtml5Tokenizer::errNcrSurrogate()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrSurrogate");
   }
 }
@@ -346,7 +348,7 @@ nsHtml5Tokenizer::errNcrSurrogate()
 void
 nsHtml5Tokenizer::errNcrCr()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrCr");
   }
 }
@@ -354,7 +356,7 @@ nsHtml5Tokenizer::errNcrCr()
 void
 nsHtml5Tokenizer::errNcrInC1Range()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrInC1Range");
   }
 }
@@ -362,7 +364,7 @@ nsHtml5Tokenizer::errNcrInC1Range()
 void
 nsHtml5Tokenizer::errEofInPublicId()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errEofInPublicId");
   }
 }
@@ -370,7 +372,7 @@ nsHtml5Tokenizer::errEofInPublicId()
 void
 nsHtml5Tokenizer::errEofInComment()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errEofInComment");
   }
 }
@@ -378,7 +380,7 @@ nsHtml5Tokenizer::errEofInComment()
 void
 nsHtml5Tokenizer::errEofInDoctype()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errEofInDoctype");
   }
 }
@@ -386,7 +388,7 @@ nsHtml5Tokenizer::errEofInDoctype()
 void
 nsHtml5Tokenizer::errEofInAttributeValue()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errEofInAttributeValue");
   }
 }
@@ -394,7 +396,7 @@ nsHtml5Tokenizer::errEofInAttributeValue()
 void
 nsHtml5Tokenizer::errEofInAttributeName()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errEofInAttributeName");
   }
 }
@@ -402,7 +404,7 @@ nsHtml5Tokenizer::errEofInAttributeName()
 void
 nsHtml5Tokenizer::errEofWithoutGt()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errEofWithoutGt");
   }
 }
@@ -410,7 +412,7 @@ nsHtml5Tokenizer::errEofWithoutGt()
 void
 nsHtml5Tokenizer::errEofInTagName()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errEofInTagName");
   }
 }
@@ -418,7 +420,7 @@ nsHtml5Tokenizer::errEofInTagName()
 void
 nsHtml5Tokenizer::errEofInEndTag()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errEofInEndTag");
   }
 }
@@ -426,7 +428,7 @@ nsHtml5Tokenizer::errEofInEndTag()
 void
 nsHtml5Tokenizer::errEofAfterLt()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errEofAfterLt");
   }
 }
@@ -434,7 +436,7 @@ nsHtml5Tokenizer::errEofAfterLt()
 void
 nsHtml5Tokenizer::errNcrOutOfRange()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrOutOfRange");
   }
 }
@@ -442,7 +444,7 @@ nsHtml5Tokenizer::errNcrOutOfRange()
 void
 nsHtml5Tokenizer::errNcrUnassigned()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrUnassigned");
   }
 }
@@ -450,7 +452,7 @@ nsHtml5Tokenizer::errNcrUnassigned()
 void
 nsHtml5Tokenizer::errDuplicateAttribute()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errDuplicateAttribute");
   }
 }
@@ -458,7 +460,7 @@ nsHtml5Tokenizer::errDuplicateAttribute()
 void
 nsHtml5Tokenizer::errEofInSystemId()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentRun("errEofInSystemId");
   }
 }
@@ -466,7 +468,7 @@ nsHtml5Tokenizer::errEofInSystemId()
 void
 nsHtml5Tokenizer::errExpectedSystemId()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errExpectedSystemId");
   }
 }
@@ -474,7 +476,7 @@ nsHtml5Tokenizer::errExpectedSystemId()
 void
 nsHtml5Tokenizer::errMissingSpaceBeforeDoctypeName()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errMissingSpaceBeforeDoctypeName");
   }
 }
@@ -482,7 +484,7 @@ nsHtml5Tokenizer::errMissingSpaceBeforeDoctypeName()
 void
 nsHtml5Tokenizer::errHyphenHyphenBang()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errHyphenHyphenBang");
   }
 }
@@ -490,7 +492,7 @@ nsHtml5Tokenizer::errHyphenHyphenBang()
 void
 nsHtml5Tokenizer::errNcrControlChar()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrControlChar");
   }
 }
@@ -498,7 +500,7 @@ nsHtml5Tokenizer::errNcrControlChar()
 void
 nsHtml5Tokenizer::errNcrZero()
 {
-  if (NS_UNLIKELY(mViewSource)) {
+  if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrZero");
   }
 }
@@ -506,7 +508,7 @@ nsHtml5Tokenizer::errNcrZero()
 void
 nsHtml5Tokenizer::errNoSpaceBetweenDoctypeSystemKeywordAndQuote()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNoSpaceBetweenDoctypeSystemKeywordAndQuote");
   }
 }
@@ -514,7 +516,7 @@ nsHtml5Tokenizer::errNoSpaceBetweenDoctypeSystemKeywordAndQuote()
 void
 nsHtml5Tokenizer::errNoSpaceBetweenPublicAndSystemIds()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNoSpaceBetweenPublicAndSystemIds");
   }
 }
@@ -522,7 +524,7 @@ nsHtml5Tokenizer::errNoSpaceBetweenPublicAndSystemIds()
 void
 nsHtml5Tokenizer::errNoSpaceBetweenDoctypePublicKeywordAndQuote()
 {
-  if (NS_LIKELY(mViewSource)) {
+  if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNoSpaceBetweenDoctypePublicKeywordAndQuote");
   }
 }

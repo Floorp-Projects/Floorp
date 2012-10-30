@@ -61,8 +61,6 @@ EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 endif
 
 ifeq (Android,$(OS_TARGET))
-# To properly wrap jemalloc's pthread_atfork call.
-EXTRA_DSO_LDOPTS += -Wl,--wrap=pthread_atfork
 CPPSRCS += BionicGlue.cpp
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,$(DEPTH)/other-licenses/android)
 endif
@@ -71,6 +69,12 @@ ifeq (android, $(MOZ_WIDGET_TOOLKIT))
 # Add Android specific code
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,../android)
+# To properly wrap jemalloc's pthread_atfork call.
+EXTRA_DSO_LDOPTS += -Wl,--wrap=pthread_atfork
+endif
+
+ifeq (gonk, $(MOZ_WIDGET_TOOLKIT))
+CSRCS += cpuacct.c
 endif
 
 ifdef MOZ_LINKER
