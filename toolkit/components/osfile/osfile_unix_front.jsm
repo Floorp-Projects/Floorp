@@ -651,14 +651,6 @@
      };
 
      /**
-      * Return directory as |File|
-      */
-     File.DirectoryIterator.prototype.unixAsFile = function unixAsFile() {
-       if (!this._dir) throw File.Error.closed();
-       return error_or_file(UnixFile.dirfd(this._dir));
-     };
-
-     /**
       * An entry in a directory.
       */
      File.DirectoryIterator.Entry = function Entry(unix_entry, parent) {

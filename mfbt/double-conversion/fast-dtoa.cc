@@ -529,7 +529,7 @@ static bool Grisu3(double v,
   if (mode == FAST_DTOA_SHORTEST) {
     Double(v).NormalizedBoundaries(&boundary_minus, &boundary_plus);
   } else {
-    ASSERT(mode == FAST_DTOA_SHORTEST_SINGLE);
+    assert(mode == FAST_DTOA_SHORTEST_SINGLE);
     float single_v = static_cast<float>(v);
     Single(single_v).NormalizedBoundaries(&boundary_minus, &boundary_plus);
   }
