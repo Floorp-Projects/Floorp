@@ -23,6 +23,16 @@ enum DeliveryState {
   eDeliveryState_EndGuard
 };
 
+// For SmsMessageData.deliveryStatus.
+enum DeliveryStatus {
+  eDeliveryStatus_NotApplicable = 0,
+  eDeliveryStatus_Success,
+  eDeliveryStatus_Pending,
+  eDeliveryStatus_Error,
+  // This state should stay at the end.
+  eDeliveryStatus_EndGuard
+};
+
 // For SmsFilterData.read
 enum ReadState {
   eReadState_Unknown = -1,
@@ -46,6 +56,16 @@ struct ParamTraits<mozilla::dom::sms::DeliveryState>
   : public EnumSerializer<mozilla::dom::sms::DeliveryState,
                           mozilla::dom::sms::eDeliveryState_Sent,
                           mozilla::dom::sms::eDeliveryState_EndGuard>
+{};
+
+/**
+ * Delivery status serializer.
+ */
+template <>
+struct ParamTraits<mozilla::dom::sms::DeliveryStatus>
+  : public EnumSerializer<mozilla::dom::sms::DeliveryStatus,
+                          mozilla::dom::sms::eDeliveryStatus_NotApplicable,
+                          mozilla::dom::sms::eDeliveryStatus_EndGuard>
 {};
 
 /**

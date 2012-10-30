@@ -20,6 +20,11 @@ const STORE_NAME = "sms";
 const DELIVERY_SENT = "sent";
 const DELIVERY_RECEIVED = "received";
 
+const DELIVERY_STATUS_NOT_APPLICABLE = "not-applicable";
+const DELIVERY_STATUS_SUCCESS = "success";
+const DELIVERY_STATUS_PENDING = "pending";
+const DELIVERY_STATUS_ERROR = "error";
+
 const FILTER_TIMESTAMP = "timestamp";
 const FILTER_NUMBERS = "numbers";
 const FILTER_DELIVERY = "delivery";
@@ -317,6 +322,7 @@ SmsDatabaseService.prototype = {
         self.messageLists[self.lastMessageListId] = messageList;
         let sms = gSmsService.createSmsMessage(message.id,
                                                message.delivery,
+                                               message.deliveryStatus,
                                                message.sender,
                                                message.receiver,
                                                message.body,
@@ -351,25 +357,75 @@ SmsDatabaseService.prototype = {
   saveReceivedMessage: function saveReceivedMessage(sender, body, date) {
     let receiver = this.mRIL.rilContext.icc ? this.mRIL.rilContext.icc.msisdn : null;
 
-    let message = {delivery:  DELIVERY_RECEIVED,
-                   sender:    sender,
-                   receiver:  receiver,
-                   body:      body,
-                   timestamp: date,
-                   read:      FILTER_READ_UNREAD};
+    let message = {delivery:       DELIVERY_RECEIVED,
+                   deliveryStatus: DELIVERY_STATUS_SUCCESS,
+                   sender:         sender,
+                   receiver:       receiver,
+                   body:           body,
+                   timestamp:      date,
+                   read:           FILTER_READ_UNREAD};
     return this.saveMessage(message);
   },
 
   saveSentMessage: function saveSentMessage(receiver, body, date) {
     let sender = this.mRIL.rilContext.icc ? this.mRIL.rilContext.icc.msisdn : null;
 
-    let message = {delivery:  DELIVERY_SENT,
-                   sender:    sender,
-                   receiver:  receiver,
-                   body:      body,
-                   timestamp: date,
-                   read:      FILTER_READ_READ};
+    let message = {delivery:       DELIVERY_SENT,
+                   deliveryStatus: DELIVERY_STATUS_PENDING,
+                   sender:         sender,
+                   receiver:       receiver,
+                   body:           body,
+                   timestamp:      date,
+                   read:           FILTER_READ_READ};
     return this.saveMessage(message);
+  },
+
+  setMessageDeliveryStatus: function setMessageDeliveryStatus(messageId, deliveryStatus) {
+    if ((deliveryStatus != DELIVERY_STATUS_SUCCESS)
+        && (deliveryStatus != DELIVERY_STATUS_ERROR)) {
+      if (DEBUG) {
+        debug("Setting message " + messageId + " deliveryStatus to values other"
+              + " than 'success' and 'error'");
+      }
+      return;
+    }
+    if (DEBUG) {
+      debug("Setting message " + messageId + " deliveryStatus to "
+            + deliveryStatus);
+    }
+    this.newTxn(READ_WRITE, function (error, txn, store) {
+      if (error) {
+        if (DEBUG) debug(error);
+        return;
+      }
+
+      let getRequest = store.get(messageId);
+      getRequest.onsuccess = function onsuccess(event) {
+        let message = event.target.result;
+        if (!message) {
+          if (DEBUG) debug("Message ID " + messageId + " not found");
+          return;
+        }
+        if (message.id != messageId) {
+          if (DEBUG) {
+            debug("Retrieve message ID (" + messageId + ") is " +
+                  "different from the one we got");
+          }
+          return;
+        }
+        // Only updates messages that are still waiting for its delivery status.
+        if (message.deliveryStatus != DELIVERY_STATUS_PENDING) {
+          if (DEBUG) {
+            debug("The value of message.deliveryStatus is not 'pending' but "
+                  + message.deliveryStatus);
+          }
+          return;
+        }
+        message.deliveryStatus = deliveryStatus;
+        if (DEBUG) debug("Message.deliveryStatus set to: " + deliveryStatus);
+        store.put(message);
+      };
+    });
   },
 
   getMessage: function getMessage(messageId, requestId) {
@@ -409,6 +465,7 @@ SmsDatabaseService.prototype = {
         }
         let message = gSmsService.createSmsMessage(data.id,
                                                    data.delivery,
+                                                   data.deliveryStatus,
                                                    data.sender,
                                                    data.receiver,
                                                    data.body,
@@ -633,6 +690,7 @@ SmsDatabaseService.prototype = {
         }
         let sms = gSmsService.createSmsMessage(message.id,
                                                message.delivery,
+                                               message.deliveryStatus,
                                                message.sender,
                                                message.receiver,
                                                message.body,

@@ -47,7 +47,14 @@
 #include "Logging.h"
 
 #ifdef PR_LOGGING
-PRLogModuleInfo *sGFX2DLog = PR_NewLogModule("gfx2d");
+PRLogModuleInfo *
+GetGFX2DLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("gfx2d");
+  return sLog;
+}
 #endif
 
 // The following code was largely taken from xpcom/glue/SSE.cpp and

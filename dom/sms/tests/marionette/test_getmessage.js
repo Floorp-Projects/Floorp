@@ -36,6 +36,7 @@ function simulateIncomingSms() {
     log("Received SMS (id: " + inSmsId + ").");
     is(incomingSms.body, inText, "msg body");
     is(incomingSms.delivery, "received", "delivery");
+    is(incomingSms.deliveryStatus, "success", "deliveryStatus");
     is(incomingSms.read, false, "read");
     is(incomingSms.receiver, null, "receiver");
     is(incomingSms.sender, remoteNumber, "sender");
@@ -61,6 +62,7 @@ function sendSms() {
     log("Sent SMS (id: " + outSmsId + ").");
     is(sentSms.body, outText, "msg body");
     is(sentSms.delivery, "sent", "delivery");
+    is(sentSms.deliveryStatus, "pending", "deliveryStatus");
     is(sentSms.read, true, "read");
     is(sentSms.receiver, remoteNumber, "receiver");
     is(sentSms.sender, null, "sender");
@@ -108,6 +110,7 @@ function getReceivedSms() {
     log("Got SMS (id: " + foundSms.id + ").");
     is(foundSms.body, inText, "SMS msg text matches");
     is(foundSms.delivery, "received", "delivery");
+    is(foundSms.deliveryStatus, "success", "deliveryStatus");
     is(foundSms.read, false, "read");
     is(foundSms.receiver, myNumber, "receiver");
     is(foundSms.sender, remoteNumber, "sender");
@@ -139,6 +142,7 @@ function getSentSms() {
     log("Got SMS (id: " + foundSms.id + ").");
     is(foundSms.body, outText, "SMS msg text matches");
     is(foundSms.delivery, "sent", "delivery");
+    is(foundSms.deliveryStatus, "pending", "deliveryStatus");
     is(foundSms.read, true, "read");
     is(foundSms.receiver, remoteNumber, "receiver");
     is(foundSms.sender, myNumber, "sender");

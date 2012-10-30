@@ -276,7 +276,7 @@ protected:
 
     uint64_t        mGeneration;
 
-    static PRLogModuleInfo *sUserFontsLog;
+    static PRLogModuleInfo* GetUserFontsLog();
 
 private:
     static void CopyWOFFMetadata(const uint8_t* aFontData,

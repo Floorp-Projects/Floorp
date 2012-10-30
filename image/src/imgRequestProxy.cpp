@@ -91,7 +91,7 @@ nsresult imgRequestProxy::Init(imgStatusTracker* aStatusTracker,
 {
   NS_PRECONDITION(!mOwner && !mListener, "imgRequestProxy is already initialized");
 
-  LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequestProxy::Init", "request", aStatusTracker->GetRequest());
+  LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgRequestProxy::Init", "request", aStatusTracker->GetRequest());
 
   NS_ABORT_IF_FALSE(mAnimationConsumers == 0, "Cannot have animation before Init");
 
@@ -230,7 +230,7 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
   if (mCanceled)
     return NS_ERROR_FAILURE;
 
-  LOG_SCOPE(gImgLog, "imgRequestProxy::Cancel");
+  LOG_SCOPE(GetImgLog(), "imgRequestProxy::Cancel");
 
   mCanceled = true;
 
@@ -260,7 +260,7 @@ NS_IMETHODIMP imgRequestProxy::CancelAndForgetObserver(nsresult aStatus)
   if (mCanceled && !mListener)
     return NS_ERROR_FAILURE;
 
-  LOG_SCOPE(gImgLog, "imgRequestProxy::CancelAndForgetObserver");
+  LOG_SCOPE(GetImgLog(), "imgRequestProxy::CancelAndForgetObserver");
 
   mCanceled = true;
 
@@ -500,7 +500,7 @@ nsresult imgRequestProxy::PerformClone(imgINotificationObserver* aObserver,
 {
   NS_PRECONDITION(aClone, "Null out param");
 
-  LOG_SCOPE(gImgLog, "imgRequestProxy::Clone");
+  LOG_SCOPE(GetImgLog(), "imgRequestProxy::Clone");
 
   *aClone = nullptr;
   nsRefPtr<imgRequestProxy> clone = aAllocFn(this);
@@ -609,7 +609,7 @@ NS_IMETHODIMP imgRequestProxy::GetHasTransferredData(bool* hasData)
 
 void imgRequestProxy::OnStartContainer()
 {
-  LOG_FUNC(gImgLog, "imgRequestProxy::OnStartContainer");
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnStartContainer");
 
   if (mListener && !mCanceled && !mSentStartContainer) {
     // Hold a ref to the listener while we call it, just in case.
@@ -621,7 +621,7 @@ void imgRequestProxy::OnStartContainer()
 
 void imgRequestProxy::OnFrameUpdate(const nsIntRect * rect)
 {
-  LOG_FUNC(gImgLog, "imgRequestProxy::OnDataAvailable");
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnDataAvailable");
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
@@ -632,7 +632,7 @@ void imgRequestProxy::OnFrameUpdate(const nsIntRect * rect)
 
 void imgRequestProxy::OnStopFrame()
 {
-  LOG_FUNC(gImgLog, "imgRequestProxy::OnStopFrame");
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnStopFrame");
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
@@ -643,7 +643,7 @@ void imgRequestProxy::OnStopFrame()
 
 void imgRequestProxy::OnStopDecode()
 {
-  LOG_FUNC(gImgLog, "imgRequestProxy::OnStopDecode");
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnStopDecode");
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
@@ -658,7 +658,7 @@ void imgRequestProxy::OnStopDecode()
 
 void imgRequestProxy::OnDiscard()
 {
-  LOG_FUNC(gImgLog, "imgRequestProxy::OnDiscard");
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnDiscard");
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
@@ -669,7 +669,7 @@ void imgRequestProxy::OnDiscard()
 
 void imgRequestProxy::OnImageIsAnimated()
 {
-  LOG_FUNC(gImgLog, "imgRequestProxy::OnImageIsAnimated");
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnImageIsAnimated");
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
     nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
@@ -682,7 +682,7 @@ void imgRequestProxy::OnStartRequest()
 #ifdef PR_LOGGING
   nsAutoCString name;
   GetName(name);
-  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStartRequest", "name", name.get());
+  LOG_FUNC_WITH_PARAM(GetImgLog(), "imgRequestProxy::OnStartRequest", "name", name.get());
 #endif
 }
 
@@ -691,7 +691,7 @@ void imgRequestProxy::OnStopRequest(bool lastPart)
 #ifdef PR_LOGGING
   nsAutoCString name;
   GetName(name);
-  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStopRequest", "name", name.get());
+  LOG_FUNC_WITH_PARAM(GetImgLog(), "imgRequestProxy::OnStopRequest", "name", name.get());
 #endif
   // There's all sorts of stuff here that could kill us (the OnStopRequest call
   // on the listener, the removal from the loadgroup, the release of the
@@ -734,7 +734,7 @@ void imgRequestProxy::BlockOnload()
 #ifdef PR_LOGGING
   nsAutoCString name;
   GetName(name);
-  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::BlockOnload", "name", name.get());
+  LOG_FUNC_WITH_PARAM(GetImgLog(), "imgRequestProxy::BlockOnload", "name", name.get());
 #endif
 
   nsCOMPtr<imgIOnloadBlocker> blocker = do_QueryInterface(mListener);
@@ -748,7 +748,7 @@ void imgRequestProxy::UnblockOnload()
 #ifdef PR_LOGGING
   nsAutoCString name;
   GetName(name);
-  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::UnblockOnload", "name", name.get());
+  LOG_FUNC_WITH_PARAM(GetImgLog(), "imgRequestProxy::UnblockOnload", "name", name.get());
 #endif
 
   nsCOMPtr<imgIOnloadBlocker> blocker = do_QueryInterface(mListener);
