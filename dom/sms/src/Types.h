@@ -42,17 +42,6 @@ enum ReadState {
   eReadState_EndGuard
 };
 
-// For SmsFilterData.messageClass
-enum MessageClass {
-  eMessageClass_Normal = 0,
-  eMessageClass_Class0,
-  eMessageClass_Class1,
-  eMessageClass_Class2,
-  eMessageClass_Class3,
-  // This state should stay at the end.
-  eMessageClass_EndGuard
-};
-
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
@@ -87,16 +76,6 @@ struct ParamTraits<mozilla::dom::sms::ReadState>
   : public EnumSerializer<mozilla::dom::sms::ReadState,
                           mozilla::dom::sms::eReadState_Unknown,
                           mozilla::dom::sms::eReadState_EndGuard>
-{};
-
-/**
- * Message class serializer.
- */
-template <>
-struct ParamTraits<mozilla::dom::sms::MessageClass>
-  : public EnumSerializer<mozilla::dom::sms::MessageClass,
-                          mozilla::dom::sms::eMessageClass_Normal,
-                          mozilla::dom::sms::eMessageClass_EndGuard>
 {};
 
 } // namespace IPC

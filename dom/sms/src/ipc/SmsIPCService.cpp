@@ -65,7 +65,6 @@ SmsIPCService::CreateSmsMessage(int32_t aId,
                                 const nsAString& aSender,
                                 const nsAString& aReceiver,
                                 const nsAString& aBody,
-                                const nsAString& aMessageClass,
                                 const jsval& aTimestamp,
                                 const bool aRead,
                                 JSContext* aCx,
@@ -73,7 +72,7 @@ SmsIPCService::CreateSmsMessage(int32_t aId,
 {
   return SmsMessage::Create(aId, aDelivery, aDeliveryStatus,
                             aSender, aReceiver,
-                            aBody, aMessageClass, aTimestamp, aRead,
+                            aBody, aTimestamp, aRead,
                             aCx, aMessage);
 }
 
@@ -83,12 +82,10 @@ SmsIPCService::CreateSmsMessage(int32_t aId,
 NS_IMETHODIMP
 SmsIPCService::SaveReceivedMessage(const nsAString& aSender,
                                    const nsAString& aBody,
-                                   const nsAString& aMessageClass,
-                                   uint64_t aDate,
-                                   int32_t* aId)
+                                   uint64_t aDate, int32_t* aId)
 {
   GetSmsChild()->SendSaveReceivedMessage(nsString(aSender), nsString(aBody),
-                                         nsString(aMessageClass), aDate, aId);
+                                         aDate, aId);
 
   return NS_OK;
 }
