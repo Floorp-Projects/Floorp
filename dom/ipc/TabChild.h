@@ -164,11 +164,15 @@ public:
 
     /** Return a TabChild with the given attributes. */
     static already_AddRefed<TabChild> 
-    Create(uint32_t aChromeFlags, bool aIsBrowserElement, uint32_t aAppId);
+    Create(uint32_t aChromeFlags, uint32_t aOwnOrContainingAppId, bool aIsBrowserElement);
 
     virtual ~TabChild();
 
-    uint32_t GetAppId() { return mAppId; }
+    uint32_t GetOwnOrContainingAppId() { return mOwnOrContainingAppId; }
+
+    // Does this TabChild correspond to a browser or app frame?
+    // Equivalent to mIsBrowserElement || GetOwnOrContainingAppId() != NO_APP_ID.
+    bool IsBrowserOrApp();
 
     bool IsRootContentDocument();
 
@@ -311,15 +315,16 @@ private:
     /**
      * Create a new TabChild object.
      *
-     * |aIsBrowserElement| indicates whether the tab is inside an <iframe mozbrowser>.
-     * |aAppId| is the app id of the app containing this tab. If the tab isn't
-     * contained in an app, aAppId will be nsIScriptSecurityManager::NO_APP_ID.
+     * |aOwnOrContainingAppId| is the app-id of our frame or of the closest app
+     * frame in the hierarchy which contains us.
+     *
+     * |aIsBrowserElement| indicates whether we're a browser (but not an app).
      */
-    TabChild(uint32_t aChromeFlags, bool aIsBrowserElement, uint32_t aAppId);
+    TabChild(uint32_t aChromeFlags, uint32_t aOwnOrContainingAppId, bool aIsBrowserElement);
 
     nsresult Init();
 
-    void SetAppBrowserConfig(bool aIsBrowserElement, uint32_t aAppId);
+    void SetAppBrowserConfig(uint32_t aOwnOrContainingAppId, bool aIsBrowserElement);
 
     bool UseDirectCompositor();
 
@@ -383,9 +388,9 @@ private:
     float mOldViewportWidth;
     nscolor mLastBackgroundColor;
     ScrollingBehavior mScrolling;
-    uint32_t mAppId;
-    bool mDidFakeShow;
+    uint32_t mOwnOrContainingAppId;
     bool mIsBrowserElement;
+    bool mDidFakeShow;
     bool mNotified;
     bool mContentDocumentIsDisplayed;
     bool mTriedBrowserInit;
