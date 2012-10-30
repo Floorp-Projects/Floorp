@@ -72,12 +72,14 @@ var shell = {
     return this.CrashSubmit;
   },
 
-  reportCrash: function shell_reportCrash(aCrashID) {
+  reportCrash: function shell_reportCrash(isChrome, aCrashID) {
     let crashID = aCrashID;
     try {
-      if (crashID == undefined || crashID == "")
+      // For chrome crashes, we want to report the lastRunCrashID.
+      if (isChrome) {
         crashID = Cc["@mozilla.org/xre/app-info;1"]
                     .getService(Ci.nsIXULRuntime).lastRunCrashID;
+      }
     } catch(e) { }
 
     // Bail if there isn't a valid crashID.
@@ -86,24 +88,18 @@ var shell = {
     }
 
     try {
-      // Check to see if the user has set a pref to always/never send
-      // crash reports. This will throw if the pref hasn't been set.
+      // Check if we should automatically submit this crash.
       if (Services.prefs.getBoolPref("app.reportCrashes")) {
         this.submitCrash(crashID);
       }
-      // Show a banner letting the user know there was a crash.
-      this.sendChromeEvent({ type: "crash-banner" });
-    } catch (e) {
-      // Show a dialog only the first time there's a crash to report.
-      if (Services.prefs.getBoolPref("app.showCrashDialog")) {
-        Services.prefs.setBoolPref("app.showCrashDialog", false);
-        this.sendChromeEvent({ type: "crash-dialog", crashID: crashID });
-      } else {
-        // If the user hasn't set a pref, but we've already shown
-        // a dialog, show a banner with a "Report" button.
-        this.sendChromeEvent({ type: "crash-banner", crashID: crashID });
-      }
-    }
+    } catch (e) { }
+
+    // Let Gaia notify the user of the crash.
+    this.sendChromeEvent({
+      type: "handle-crash",
+      crashID: crashID,
+      chrome: isChrome
+    });
   },
 
   // This function submits a crash when we're online.
@@ -358,7 +354,7 @@ var shell = {
 
         this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
 
-        this.reportCrash();
+        this.reportCrash(true);
 
         let chromeWindow = window.QueryInterface(Ci.nsIDOMChromeWindow);
         chromeWindow.browserDOMWindow = new nsBrowserAccess();
@@ -795,7 +791,7 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
       let props = aSubject.QueryInterface(Ci.nsIPropertyBag2);
       if (props.hasKey("abnormal") && props.hasKey("dumpID")) {
-        shell.reportCrash(props.getProperty("dumpID"));
+        shell.reportCrash(false, props.getProperty("dumpID"));
       }
     },
     "ipc:content-shutdown", false);
@@ -805,7 +801,7 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
 window.addEventListener('ContentStart', function cr_onContentStart() {
   let content = shell.contentBrowser.contentWindow;
   content.addEventListener("mozContentEvent", function cr_onMozContentEvent(e) {
-    if (e.detail.type == "submit-crash") {
+    if (e.detail.type == "submit-crash" && e.detail.crashID) {
       shell.submitCrash(e.detail.crashID);
     }
   });
