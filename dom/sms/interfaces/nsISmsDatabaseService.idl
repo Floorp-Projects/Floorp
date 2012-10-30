@@ -13,13 +13,14 @@
 
 interface nsIDOMMozSmsFilter;
 
-[scriptable, uuid(30e8cdfb-155d-44c7-8fb3-6bcd9c1c3f99)]
+[scriptable, uuid(d6318c22-1ebd-4262-b991-432f61a96237)]
 interface nsISmsDatabaseService : nsISupports
 {
   // Takes some information required to save the message and returns its id.
   long saveReceivedMessage(in DOMString aSender, in DOMString aBody, in unsigned long long aDate);
   // Takes some information required to save the message and returns its id.
   long saveSentMessage(in DOMString aReceiver, in DOMString aBody, in unsigned long long aDate);
+  void setMessageDeliveryStatus(in long aMessageId, in DOMString aDeliveryStatus);
 
   [binaryname(GetMessageMoz)] void getMessage(in long messageId, in long requestId, [optional] in unsigned long long processId);
   void deleteMessage(in long messageId, in long requestId, [optional] in unsigned long long processId);

@@ -8,7 +8,7 @@ interface nsIDOMEventListener;
 interface nsIDOMMozSmsRequest;
 interface nsIDOMMozSmsFilter;
 
-[scriptable, builtinclass, uuid(be78baf4-20ba-4ceb-be40-d9774a9388c4)]
+[scriptable, builtinclass, uuid(1bee1224-56a2-4935-af7b-0011746306cb)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
   unsigned short      getNumberOfMessagesForText(in DOMString text);
@@ -30,5 +30,6 @@ interface nsIDOMMozSmsManager : nsIDOMEventTarget
 
   [implicit_jscontext] attribute jsval onreceived;
   [implicit_jscontext] attribute jsval onsent;
-  [implicit_jscontext] attribute jsval ondelivered;
+  [implicit_jscontext] attribute jsval ondeliverysuccess;
+  [implicit_jscontext] attribute jsval ondeliveryerror;
 };
