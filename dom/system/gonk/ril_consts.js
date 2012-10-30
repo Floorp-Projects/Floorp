@@ -930,6 +930,11 @@ const PDU_ST_3_RESERVED_BEGIN    = 0x66;
 const PDU_ST_3_SC_SPECIFIC_BEGIN = 0x70;
 const PDU_ST_3_SC_SPECIFIC_END   = 0x7F;
 
+const GECKO_SMS_DELIVERY_STATUS_NOT_APPLICABLE = "not-applicable";
+const GECKO_SMS_DELIVERY_STATUS_SUCCESS        = "success";
+const GECKO_SMS_DELIVERY_STATUS_PENDING        = "pending";
+const GECKO_SMS_DELIVERY_STATUS_ERROR          = "error";
+
 // User Data max length in septets
 const PDU_MAX_USER_DATA_7BIT = 160;
 // User Data max length in octets
