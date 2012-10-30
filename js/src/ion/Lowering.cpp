@@ -855,6 +855,15 @@ LIRGenerator::visitMul(MMul *ins)
     }
     if (ins->specialization() == MIRType_Double) {
         JS_ASSERT(lhs->type() == MIRType_Double);
+
+        // If our LHS is a constant -1.0, we can optimize to an LNegD.
+        if (lhs->isConstant() && lhs->toConstant()->value() == DoubleValue(-1.0))
+            return defineReuseInput(new LNegD(useRegisterAtStart(rhs)), ins, 0);
+
+        // We can do the same for the RHS, if we just swap the operands.
+        if (rhs->isConstant() && rhs->toConstant()->value() == DoubleValue(-1.0))
+            return defineReuseInput(new LNegD(useRegisterAtStart(lhs)), ins, 0);
+
         return lowerForFPU(new LMathD(JSOP_MUL), ins, lhs, rhs);
     }
 
