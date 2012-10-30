@@ -2886,17 +2886,20 @@ nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
       return;
   }
 
-  // We shouldn't scroll more one page at once.
+  // We shouldn't scroll more one page at once except when over one page scroll
+  // is allowed for the event.
   nsSize pageSize = aScrollableFrame->GetPageScrollAmount();
   nsIntSize devPixelPageSize(pc->AppUnitsToDevPixels(pageSize.width),
                              pc->AppUnitsToDevPixels(pageSize.height));
-  if (NS_ABS(actualDevPixelScrollAmount.x) > devPixelPageSize.width) {
+  if (!WheelPrefs::GetInstance()->IsOverOnePageScrollAllowedX(aEvent) &&
+      NS_ABS(actualDevPixelScrollAmount.x) > devPixelPageSize.width) {
     actualDevPixelScrollAmount.x =
       (actualDevPixelScrollAmount.x >= 0) ? devPixelPageSize.width :
                                             -devPixelPageSize.width;
   }
 
-  if (NS_ABS(actualDevPixelScrollAmount.y) > devPixelPageSize.height) {
+  if (!WheelPrefs::GetInstance()->IsOverOnePageScrollAllowedY(aEvent) &&
+      NS_ABS(actualDevPixelScrollAmount.y) > devPixelPageSize.height) {
     actualDevPixelScrollAmount.y =
       (actualDevPixelScrollAmount.y >= 0) ? devPixelPageSize.height :
                                             -devPixelPageSize.height;
@@ -5542,4 +5545,24 @@ nsEventStateManager::WheelPrefs::NeedToComputeLineOrPageDelta(
 
   return (mMultiplierX[index] != 1.0 && mMultiplierX[index] != -1.0) ||
          (mMultiplierY[index] != 1.0 && mMultiplierY[index] != -1.0);
+}
+
+bool
+nsEventStateManager::WheelPrefs::IsOverOnePageScrollAllowedX(
+                                   widget::WheelEvent* aEvent)
+{
+  Index index = GetIndexFor(aEvent);
+  Init(index);
+  return NS_ABS(mMultiplierX[index]) >=
+           MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL;
+}
+
+bool
+nsEventStateManager::WheelPrefs::IsOverOnePageScrollAllowedY(
+                                   widget::WheelEvent* aEvent)
+{
+  Index index = GetIndexFor(aEvent);
+  Init(index);
+  return NS_ABS(mMultiplierY[index]) >=
+           MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL;
 }
