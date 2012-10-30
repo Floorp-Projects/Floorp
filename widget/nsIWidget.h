@@ -1494,10 +1494,7 @@ class nsIWidget : public nsISupports {
      * aFocus is false if node is giving up focus (blur)
      *
      * If this returns NS_ERROR_*, OnIMETextChange and OnIMESelectionChange
-     * and OnIMEFocusChange(false) will be never called.
-     *
-     * If this returns NS_SUCCESS_IME_NO_UPDATES, OnIMEFocusChange(false)
-     * will be called but OnIMETextChange and OnIMESelectionChange will NOT.
+     * will be never called.
      */
     NS_IMETHOD OnIMEFocusChange(bool aFocus) = 0;
 
