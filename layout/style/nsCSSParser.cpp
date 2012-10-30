@@ -4715,7 +4715,8 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
           aValue.SetInheritValue();
           return true;
         }
-        else if (eCSSKeyword__moz_initial == keyword) { // anything that can inherit can also take an initial val.
+        else if (eCSSKeyword__moz_initial == keyword ||
+                 eCSSKeyword_initial == keyword) { // anything that can inherit can also take an initial val.
           aValue.SetInitialValue();
           return true;
         }
@@ -6484,7 +6485,8 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
       nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
       int32_t dummy;
       if (keyword == eCSSKeyword_inherit ||
-          keyword == eCSSKeyword__moz_initial) {
+          keyword == eCSSKeyword__moz_initial ||
+          keyword == eCSSKeyword_initial) {
         return false;
       } else if (keyword == eCSSKeyword_none) {
         if (haveImage)
@@ -7278,7 +7280,7 @@ CSSParserImpl::ParseBorderImage()
 {
   nsAutoParseCompoundProperty compound(this);
 
-  // border-image: inherit | -moz-initial |
+  // border-image: inherit | initial |
   // <border-image-source> ||
   // <border-image-slice>
   //   [ / <border-image-width> |
@@ -7292,7 +7294,7 @@ CSSParserImpl::ParseBorderImage()
     AppendValue(eCSSProperty_border_image_width, value);
     AppendValue(eCSSProperty_border_image_outset, value);
     AppendValue(eCSSProperty_border_image_repeat, value);
-    // Keyword "inherit" (and "-moz-initial") can't be mixed, so we are done.
+    // Keyword "inherit" (and "initial") can't be mixed, so we are done.
     return true;
   }
 
@@ -7862,6 +7864,7 @@ CSSParserImpl::ParseRect(nsCSSProperty aPropID)
         }
         val.SetInheritValue();
         break;
+      case eCSSKeyword_initial:
       case eCSSKeyword__moz_initial:
         if (!ExpectEndProperty()) {
           return false;
@@ -8697,7 +8700,7 @@ CSSParserImpl::ParseFamily(nsCSSValue& aValue)
       aValue.SetInheritValue();
       return true;
     }
-    if (keyword == eCSSKeyword__moz_initial) {
+    if (keyword == eCSSKeyword__moz_initial || keyword == eCSSKeyword_initial) {
       aValue.SetInitialValue();
       return true;
     }
@@ -9516,7 +9519,7 @@ CSSParserImpl::ParseAnimationOrTransitionShorthand(
                  size_t aNumProperties)
 {
   nsCSSValue tempValue;
-  // first see if 'inherit' or '-moz-initial' is specified.  If one is,
+  // first see if 'inherit' or 'initial' is specified.  If one is,
   // it can be the only thing specified, so don't attempt to parse any
   // additional properties
   if (ParseVariant(tempValue, VARIANT_INHERIT, nullptr)) {
