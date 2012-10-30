@@ -335,7 +335,7 @@ SCInput::readPtr(void **p)
     // 32 bits, so we create a 64 temporary and discard the unused bits.
     uint64_t tmp;
     bool ret = read(&tmp);
-    *p = (void *) tmp;
+    *p = reinterpret_cast<void*>(tmp);
     return ret;
 }
 
