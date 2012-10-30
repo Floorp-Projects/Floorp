@@ -7481,8 +7481,8 @@ var MemoryObserver = {
   },
 
   dumpMemoryStats: function(aLabel) {
-    let memMgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
-    memMgr.dumpMemoryReportsToFile(aLabel, false, true);
+    let memDumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
+    memDumper.dumpMemoryReportsToFile(aLabel, false, true);
   },
 };
 
