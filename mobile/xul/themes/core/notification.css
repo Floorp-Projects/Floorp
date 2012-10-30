@@ -15,7 +15,7 @@ notification, notification[type="warning"] {
 
 notification .messageCloseButton {
   list-style-image: url("chrome://browser/skin/images/close-default-hdpi.png");
-  -moz-image-region: -moz-initial;
+  -moz-image-region: initial;
   -moz-box-align: start;
 }
 

@@ -44,7 +44,7 @@ li > ol:-moz-first-node {
  */
 
 li::-moz-list-bullet {
-  font-size: -moz-initial;
+  font-size: initial;
 }
 
 
@@ -54,10 +54,10 @@ table {
   line-height: normal;
 
   /* Quirk: cut off all font inheritance in tables except for family. */
-  font-size: -moz-initial;
-  font-weight: -moz-initial;
-  font-style: -moz-initial;
-  font-variant: -moz-initial;
+  font-size: initial;
+  font-weight: initial;
+  font-style: initial;
+  font-variant: initial;
 }
 
 /*

@@ -102,7 +102,7 @@ var tests = [
     blink: null, line: null, color: "#ff0000", style: null,
     expectedValue: "", expectedCSSValue: null },
   { decoration: "line-through",
-    blink: null, line: null, color: "-moz-initial", style: null,
+    blink: null, line: null, color: "initial", style: null,
     expectedValue: "line-through", expectedCSSValue: "line-through" },
   { decoration: "blink underline",
     blink: null, line: null, color: "currentColor", style: null,
@@ -134,7 +134,7 @@ var tests = [
     expectedValue: "underline overline line-through blink",
     expectedCSSValue: "underline overline line-through blink" },
   { decoration: "line-through overline underline",
-    blink: null, line: null, color: null, style: "-moz-initial",
+    blink: null, line: null, color: null, style: "initial",
     expectedValue: "underline overline line-through",
     expectedCSSValue: "underline overline line-through" }
 ];
