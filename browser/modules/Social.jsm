@@ -42,6 +42,9 @@ this.Social = {
   },
 
   set enabled(val) {
+    if (!val) {
+      delete this.errorState;
+    }
     SocialService.enabled = val;
   },
   get enabled() {
