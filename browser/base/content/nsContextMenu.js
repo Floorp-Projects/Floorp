@@ -424,7 +424,8 @@ nsContextMenu.prototype = {
   setTarget: function (aNode, aRangeParent, aRangeOffset) {
     const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     if (aNode.namespaceURI == xulNS ||
-        aNode.nodeType == Node.DOCUMENT_NODE) {
+        aNode.nodeType == Node.DOCUMENT_NODE ||
+        this.isTargetAFormControl(aNode)) {
       this.shouldDisplay = false;
       return;
     }
@@ -1272,7 +1273,6 @@ nsContextMenu.prototype = {
            "contextMenu.hasBGImage = " + this.hasBGImage + "\n";
   },
 
-  // This method has been deprecated. See bug 433168 for more information.
   // Returns true if aNode is a from control (except text boxes and images).
   // This is used to disable the context menu for form controls.
   isTargetAFormControl: function(aNode) {
