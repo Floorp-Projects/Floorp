@@ -1124,16 +1124,12 @@ CssRuleView.prototype = {
    */
   _onMenuUpdate: function CssRuleView_onMenuUpdate(aEvent)
   {
-    let node = this.doc.popupNode;
-
     // Copy selection.
-    let editorSelection = node.className == "styleinspector-propertyeditor" &&
-                          node.selectionEnd - node.selectionStart != 0;
-    let disable = this.doc.defaultView.getSelection().isCollapsed &&
-                  !editorSelection;
+    let disable = this.doc.defaultView.getSelection().isCollapsed;
     this._copyItem.disabled = disable;
 
     // Copy property, copy property name & copy property value.
+    let node = this.doc.popupNode;
     if (!node) {
       return;
     }
@@ -1163,26 +1159,16 @@ CssRuleView.prototype = {
    */
   _onCopy: function CssRuleView_onCopy(aEvent)
   {
-    let target = this.doc.popupNode || aEvent.target;
-    let text;
+    let win = this.doc.defaultView;
+    let text = win.getSelection().toString();
 
-    if (target.nodeName == "input") {
-      let start = Math.min(target.selectionStart, target.selectionEnd);
-      let end = Math.max(target.selectionStart, target.selectionEnd);
-      let count = end - start;
-      text = target.value.substr(start, count);
-    } else {
-      let win = this.doc.defaultView;
-      text = win.getSelection().toString();
+    // Remove any double newlines.
+    text = text.replace(/(\r?\n)\r?\n/g, "$1");
 
-      // Remove any double newlines.
-      text = text.replace(/(\r?\n)\r?\n/g, "$1");
-
-      // Remove "inline"
-      let inline = _strings.GetStringFromName("rule.sourceInline");
-      let rx = new RegExp("^" + inline + "\\r?\\n?", "g");
-      text = text.replace(rx, "");
-    }
+    // Remove "inline"
+    let inline = _strings.GetStringFromName("rule.sourceInline");
+    let rx = new RegExp("^" + inline + "\\r?\\n?", "g");
+    text = text.replace(rx, "");
 
     clipboardHelper.copyString(text, this.doc);
 
@@ -1291,13 +1277,12 @@ CssRuleView.prototype = {
   _onCopyProperty: function CssRuleView_onCopyProperty(aEvent)
   {
     let node = this.doc.popupNode;
-
     if (!node) {
       return;
     }
 
     if (!node.classList.contains("ruleview-propertyname")) {
-      node = node.parentNode.parentNode.querySelector(".ruleview-propertyname");
+      node = node.querySelector(".ruleview-propertyname");
     }
 
     if (node) {
@@ -1318,7 +1303,7 @@ CssRuleView.prototype = {
     }
 
     if (!node.classList.contains("ruleview-propertyvalue")) {
-      node = node.parentNode.parentNode.querySelector(".ruleview-propertyvalue");
+      node = node.querySelector(".ruleview-propertyvalue");
     }
 
     if (node) {
@@ -1393,19 +1378,6 @@ RuleEditor.prototype = {
       let selection = this.doc.defaultView.getSelection();
       if (selection.isCollapsed) {
         this.newProperty();
-      }
-    }.bind(this), false);
-
-    this.element.addEventListener("mousedown", function() {
-      let editorNodes =
-        this.doc.querySelectorAll(".styleinspector-propertyeditor");
-
-      if (editorNodes) {
-        for (let node of editorNodes) {
-          if (node.inplaceEditor) {
-            node.inplaceEditor._clear();
-          }
-        }
       }
     }.bind(this), false);
 
