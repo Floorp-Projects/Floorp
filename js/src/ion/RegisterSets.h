@@ -110,6 +110,9 @@ class ValueOperand
     bool operator==(const ValueOperand &o) const {
         return type_ == o.type_ && payload_ == o.payload_;
     }
+    bool operator!=(const ValueOperand &o) const {
+        return !(*this == o);
+    }
 
 #elif defined(JS_PUNBOX64)
     Register value_;
@@ -128,6 +131,9 @@ class ValueOperand
     }
     bool operator==(const ValueOperand &o) const {
         return value_ == o.value_;
+    }
+    bool operator!=(const ValueOperand &o) const {
+        return !(*this == o);
     }
 #endif
 

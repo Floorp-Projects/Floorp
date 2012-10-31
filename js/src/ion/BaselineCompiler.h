@@ -48,14 +48,14 @@ class BaselineCompiler
     JSScript *script;
     jsbytecode *pc;
     MacroAssembler masm;
-    Label *labels_;
+    FixedList<Label> labels_;
     Label return_;
 
     FrameInfo frame;
     js::Vector<CacheData, 16, SystemAllocPolicy> caches_;
 
-    Label *labelOf(jsbytecode *pc) const {
-        return labels_ + (pc - script->code);
+    Label *labelOf(jsbytecode *pc) {
+        return &labels_[pc - script->code];
     }
 
   public:
@@ -75,8 +75,8 @@ class BaselineCompiler
     bool emitPrologue();
     bool emitEpilogue();
 
-    void loadValue(const StackValue *source, const ValueOperand &dest);
-    void storeValue(const StackValue *source, const Address &dest);
+    void storeValue(const StackValue *source, const Address &dest,
+                    const ValueOperand &scratch);
 
 #define EMIT_OP(op) bool emit_##op();
     OPCODE_LIST(EMIT_OP)
