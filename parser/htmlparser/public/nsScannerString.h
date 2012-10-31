@@ -9,7 +9,7 @@
 
 #include "nsString.h"
 #include "nsUnicharUtils.h" // for nsCaseInsensitiveStringComparator
-#include "mozilla/LinkedList.h"
+#include "prclist.h"
 
 
   /**
@@ -60,7 +60,7 @@ class nsScannerBufferList
          * of the data segment is determined by increment the |this| pointer
          * by 1 unit.
          */
-      class Buffer : public mozilla::LinkedListElement<Buffer>
+      class Buffer : public PRCList
         {
           public:
 
@@ -75,11 +75,11 @@ class nsScannerBufferList
             const PRUnichar* DataEnd() const { return mDataEnd; }
                   PRUnichar* DataEnd()       { return mDataEnd; }
 
-            const Buffer* Next() const { return getNext(); }
-                  Buffer* Next()       { return getNext(); }
+            const Buffer* Next() const { return static_cast<const Buffer*>(next); }
+                  Buffer* Next()       { return static_cast<Buffer*>(next); }
 
-            const Buffer* Prev() const { return getPrevious(); }
-                  Buffer* Prev()       { return getPrevious(); }
+            const Buffer* Prev() const { return static_cast<const Buffer*>(prev); }
+                  Buffer* Prev()       { return static_cast<Buffer*>(prev); }
 
             uint32_t DataLength() const { return mDataEnd - DataStart(); }
             void SetDataLength(uint32_t len) { mDataEnd = DataStart() + len; }
@@ -126,22 +126,23 @@ class nsScannerBufferList
       nsScannerBufferList( Buffer* buf )
         : mRefCnt(0)
         {
-          mBuffers.insertBack(buf);
+          PR_INIT_CLIST(&mBuffers);
+          PR_APPEND_LINK(buf, &mBuffers);
         }
 
       void  AddRef()  { ++mRefCnt; }
       void  Release() { if (--mRefCnt == 0) delete this; }
 
-      void  Append( Buffer* buf ) { mBuffers.insertBack(buf); } 
-      void  InsertAfter( Buffer* buf, Buffer* prev ) { prev->setNext(buf); }
+      void  Append( Buffer* buf ) { PR_APPEND_LINK(buf, &mBuffers); } 
+      void  InsertAfter( Buffer* buf, Buffer* prev ) { PR_INSERT_AFTER(buf, prev); }
       void  SplitBuffer( const Position& );
       void  DiscardUnreferencedPrefix( Buffer* );
 
-            Buffer* Head()       { return mBuffers.getFirst(); }
-      const Buffer* Head() const { return mBuffers.getFirst(); }
+            Buffer* Head()       { return static_cast<Buffer*>(PR_LIST_HEAD(&mBuffers)); }
+      const Buffer* Head() const { return static_cast<const Buffer*>(PR_LIST_HEAD(&mBuffers)); }
 
-            Buffer* Tail()       { return mBuffers.getLast(); }
-      const Buffer* Tail() const { return mBuffers.getLast(); }
+            Buffer* Tail()       { return static_cast<Buffer*>(PR_LIST_TAIL(&mBuffers)); }
+      const Buffer* Tail() const { return static_cast<const Buffer*>(PR_LIST_TAIL(&mBuffers)); }
 
     private:
 
@@ -151,7 +152,7 @@ class nsScannerBufferList
       void ReleaseAll();
 
       int32_t mRefCnt;
-      mozilla::LinkedList<Buffer> mBuffers;
+      PRCList mBuffers;
   };
 
 
