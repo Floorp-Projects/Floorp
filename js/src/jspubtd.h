@@ -60,8 +60,6 @@ typedef ptrdiff_t jsid;
 # define JSID_BITS(id) (id)
 #endif
 
-JS_BEGIN_EXTERN_C
-
 #ifdef WIN32
 typedef wchar_t   jschar;
 #else
@@ -215,8 +213,6 @@ typedef struct PRCallOnceType    JSCallOnceType;
 typedef JSBool                   JSCallOnceType;
 #endif
 typedef JSBool                 (*JSInitCallback)(void);
-
-JS_END_EXTERN_C
 
 #ifdef __cplusplus
 

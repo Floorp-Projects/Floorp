@@ -320,11 +320,7 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv,
 
 } /* namespace js */
 
-JS_BEGIN_EXTERN_C
-
 extern JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, JSHandleObject obj);
-
-JS_END_EXTERN_C
 
 #endif
