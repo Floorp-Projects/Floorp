@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -14,6 +15,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.LinearLayout;
 import android.widget.TabHost;
 import android.widget.TabWidget;
 import android.widget.TextView;
@@ -220,5 +222,59 @@ public class AwesomeBarTabs extends TabHost {
 
     public boolean isInReadingList() {
         return getBookmarksTab().isInReadingList();
+    }
+
+    public static class Background extends LinearLayout
+                                   implements LightweightTheme.OnChangeListener { 
+        private GeckoActivity mActivity;
+
+        public Background(Context context, AttributeSet attrs) {
+            super(context, attrs);
+            mActivity = (GeckoActivity) context;
+        }
+
+        @Override
+        public void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            mActivity.getLightweightTheme().addListener(this);
+        }
+
+        @Override
+        public void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            mActivity.getLightweightTheme().removeListener(this);
+        }
+
+        @Override
+        public void onLightweightThemeChanged() {
+            Drawable drawable = mActivity.getLightweightTheme().getDrawableWithAlpha(this, 255, 0);
+            if (drawable == null)
+                return;
+
+            int[] padding =  new int[] { getPaddingLeft(),
+                                         getPaddingTop(),
+                                         getPaddingRight(),
+                                         getPaddingBottom()
+                                       };
+            setBackgroundDrawable(drawable);
+            setPadding(padding[0], padding[1], padding[2], padding[3]);
+        }
+
+        @Override
+        public void onLightweightThemeReset() {
+            int[] padding =  new int[] { getPaddingLeft(),
+                                         getPaddingTop(),
+                                         getPaddingRight(),
+                                         getPaddingBottom()
+                                       };
+            setBackgroundResource(R.drawable.abouthome_bg_repeat);
+            setPadding(padding[0], padding[1], padding[2], padding[3]);
+        }
+
+        @Override
+        protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+            super.onLayout(changed, left, top, right, bottom);
+            onLightweightThemeChanged();
+        }
     }
 }
