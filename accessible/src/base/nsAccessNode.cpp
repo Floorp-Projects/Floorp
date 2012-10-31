@@ -83,7 +83,7 @@ RootAccessible*
 nsAccessNode::RootAccessible() const
 {
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    nsCoreUtils::GetDocShellTreeItemFor(mContent);
+    nsCoreUtils::GetDocShellTreeItemFor(GetNode());
   NS_ASSERTION(docShellTreeItem, "No docshell tree item for mContent");
   if (!docShellTreeItem) {
     return nullptr;
@@ -121,7 +121,7 @@ nsAccessNode::Language(nsAString& aLanguage)
 
   nsCoreUtils::GetLanguageFor(mContent, nullptr, aLanguage);
   if (aLanguage.IsEmpty()) { // Nothing found, so use document's language
-    mContent->OwnerDoc()->GetHeaderData(nsGkAtoms::headerContentLanguage,
+    mDoc->DocumentNode()->GetHeaderData(nsGkAtoms::headerContentLanguage,
                                         aLanguage);
   }
 }
