@@ -95,14 +95,11 @@ PluginInstanceParent::~PluginInstanceParent()
         ::CGColorSpaceRelease(mShColorSpace);
 #endif
     if (mRemoteImageDataShmem.IsWritable()) {
-        ImageContainer *container =
-            GetImageContainer();
-
-        if (container) {
-            container->SetRemoteImageData(nullptr, nullptr);
-            container->SetCompositionNotifySink(nullptr);
-            DeallocShmem(mRemoteImageDataShmem);
+        if (mImageContainer) {
+            mImageContainer->SetRemoteImageData(nullptr, nullptr);
+            mImageContainer->SetCompositionNotifySink(nullptr);
         }
+        DeallocShmem(mRemoteImageDataShmem);
     }
 }
 
@@ -419,19 +416,15 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
                ) {
         *shmem = null_t();
 
-        ImageContainer *container = GetImageContainer();
-        if (!container) {
-            *result = NPERR_GENERIC_ERROR;
-            return true;
-        }
-
         mDrawingModel = drawingModel;
         *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
                                       (void*)(intptr_t)drawingModel);
 
         if (mRemoteImageDataShmem.IsWritable()) {
-            container->SetRemoteImageData(nullptr, nullptr);
-            container->SetCompositionNotifySink(nullptr);
+            if (mImageContainer) {
+                mImageContainer->SetRemoteImageData(nullptr, nullptr);
+                mImageContainer->SetCompositionNotifySink(nullptr);
+            }
             DeallocShmem(mRemoteImageDataShmem);
             mRemoteImageDataMutex = NULL;
         }
