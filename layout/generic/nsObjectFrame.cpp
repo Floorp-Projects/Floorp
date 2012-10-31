@@ -1546,11 +1546,6 @@ nsObjectFrame::UpdateImageLayer(const gfxRect& aRect)
 #ifdef XP_MACOSX
   if (!mInstanceOwner->UseAsyncRendering()) {
     mInstanceOwner->DoCocoaEventDrawRect(aRect, nullptr);
-    // This makes sure the image on the container is up to date.
-    // XXX - Eventually we probably just want to make sure DoCocoaEventDrawRect
-    // updates the image container, to make this truly use 'push' semantics
-    // too.
-    mInstanceOwner->GetImageContainer();
   }
 #endif
 }
