@@ -122,14 +122,13 @@ PluginInstanceParent::ActorDestroy(ActorDestroyReason why)
     }
 #endif
     // After this method, the data backing the remote surface may no
-    // longer be calid. The X surface may be destroyed, or the shared
-    // memory backing this surface may no longer be valid. The right
-    // way to inform the nsObjectFrame that the surface is no longer
-    // valid is with an invalidate call.
+    // longer be valid. The X surface may be destroyed, or the shared
+    // memory backing this surface may no longer be valid.
     if (mFrontSurface) {
         mFrontSurface = NULL;
-        const NPRect rect = {0, 0, 0, 0};
-        RecvNPN_InvalidateRect(rect);
+        if (mImageContainer) {
+            mImageContainer->SetCurrentImage(nullptr);
+        }
 #ifdef MOZ_X11
         FinishX(DefaultXDisplay());
 #endif
@@ -623,16 +622,24 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
                    updatedRect.right - updatedRect.left,
                    updatedRect.bottom - updatedRect.top);
         surface->MarkDirty(ur);
-        surface->Flush();
+
+        ImageContainer *container = GetImageContainer();
+        ImageFormat format = CAIRO_SURFACE;
+        nsRefPtr<Image> image = container->CreateImage(&format, 1);
+        NS_ASSERTION(image->GetFormat() == CAIRO_SURFACE, "Wrong format?");
+        CairoImage* cairoImage = static_cast<CairoImage*>(image.get());
+        CairoImage::Data cairoData;
+        cairoData.mSurface = surface;
+        cairoData.mSize = surface->GetSize();
+        cairoImage->SetData(cairoData);
+
+        container->SetCurrentImage(cairoImage);
+    }
+    else if (mImageContainer) {
+        mImageContainer->SetCurrentImage(nullptr);
     }
 
     mFrontSurface = surface;
-    if (!surface) {
-      ImageContainer* container = GetImageContainer();
-      if (container) {
-        container->SetCurrentImage(nullptr);
-      }
-    }
     RecvNPN_InvalidateRect(updatedRect);
 
     PLUGIN_LOG_DEBUG(("   (RecvShow invalidated for surface %p)",
@@ -708,13 +715,6 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 #endif
         return NS_ERROR_NOT_AVAILABLE;
 
-    ImageFormat format = CAIRO_SURFACE;
-#ifdef XP_MACOSX
-    if (ioSurface) {
-        format = MAC_IO_SURFACE;
-    }
-#endif
-
     ImageContainer *container = GetImageContainer();
 
     if (!container) {
@@ -727,14 +727,14 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
       return NS_OK;
     }
 
-    nsRefPtr<Image> image;
-    image = container->CreateImage(&format, 1);
-    if (!image) {
-        return NS_ERROR_FAILURE;
-    }
-
 #ifdef XP_MACOSX
     if (ioSurface) {
+        ImageFormat format = MAC_IO_SURFACE;
+        nsRefPtr<Image> image = container->CreateImage(&format, 1);
+        if (!image) {
+            return NS_ERROR_FAILURE;
+        }
+
         NS_ASSERTION(image->GetFormat() == MAC_IO_SURFACE, "Wrong format?");
         MacIOSurfaceImage* ioImage = static_cast<MacIOSurfaceImage*>(image.get());
         MacIOSurfaceImage::Data ioData;
@@ -747,15 +747,6 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
         return NS_OK;
     }
 #endif
-
-    NS_ASSERTION(image->GetFormat() == CAIRO_SURFACE, "Wrong format?");
-    CairoImage* pluginImage = static_cast<CairoImage*>(image.get());
-    CairoImage::Data cairoData;
-    cairoData.mSurface = mFrontSurface;
-    cairoData.mSize = mFrontSurface->GetSize();
-    pluginImage->SetData(cairoData);
-
-    container->SetCurrentImageInTransaction(pluginImage);
 
     NS_IF_ADDREF(container);
     *aContainer = container;
