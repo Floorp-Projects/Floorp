@@ -45,8 +45,7 @@
  * methods or data used cross-file.
  */
 #if defined(WIN32) || defined(XP_OS2)
-#  define MOZ_EXPORT_API(type)    __declspec(dllexport) type
-#  define MOZ_EXPORT_DATA(type)   __declspec(dllexport) type
+#  define MOZ_EXPORT_DIRECTIVE  __declspec(dllexport)
 #else /* Unix */
 #  ifdef HAVE_VISIBILITY_ATTRIBUTE
 #    define MOZ_EXTERNAL_VIS       __attribute__((visibility("default")))
@@ -55,9 +54,11 @@
 #  else
 #    define MOZ_EXTERNAL_VIS
 #  endif
-#  define MOZ_EXPORT_API(type)    MOZ_EXTERNAL_VIS type
-#  define MOZ_EXPORT_DATA(type)   MOZ_EXTERNAL_VIS type
+#  define MOZ_EXPORT_DIRECTIVE   MOZ_EXTERNAL_VIS
 #endif
+
+#define MOZ_EXPORT_API(type)    MOZ_EXPORT_DIRECTIVE type
+#define MOZ_EXPORT_DATA(type)   MOZ_EXPORT_DIRECTIVE type
 
 /*
  * Whereas implementers use MOZ_EXPORT_API and MOZ_EXPORT_DATA to declare and
@@ -68,23 +69,27 @@
  */
 #ifdef _WIN32
 #  if defined(__MWERKS__)
-#    define MOZ_IMPORT_API(x)    x
+#    define MOZ_IMPORT_API_DIRECTIVE /* nothing */
 #  else
-#    define MOZ_IMPORT_API(x)    __declspec(dllimport) x
+#    define MOZ_IMPORT_API_DIRECTIVE __declspec(dllimport)
 #  endif
 #elif defined(XP_OS2)
-#  define MOZ_IMPORT_API(x)     __declspec(dllimport) x
+#  define MOZ_IMPORT_API_DIRECTIVE  __declspec(dllimport)
 #else
-#  define MOZ_IMPORT_API(x)     MOZ_EXPORT_API(x)
+#  define MOZ_IMPORT_API_DIRECTIVE MOZ_EXPORT_DIRECTIVE
 #endif
 
+#define MOZ_IMPORT_API(x)    MOZ_IMPORT_API_DIRECTIVE x
+
 #if defined(_WIN32) && !defined(__MWERKS__)
-#  define MOZ_IMPORT_DATA(x)     __declspec(dllimport) x
+#  define MOZ_IMPORT_DATA_DIRECTIVE __declspec(dllimport)
 #elif defined(XP_OS2)
-#  define MOZ_IMPORT_DATA(x)     __declspec(dllimport) x
+#  define MOZ_IMPORT_DATA_DIRECTIVE __declspec(dllimport)
 #else
-#  define MOZ_IMPORT_DATA(x)     MOZ_EXPORT_DATA(x)
+#  define MOZ_IMPORT_DATA_DIRECTIVE MOZ_EXPORT_DIRECTIVE
 #endif
+
+#define MOZ_IMPORT_DATA(x)    MOZ_IMPORT_DATA_DIRECTIVE x
 
 /*
  * Consistent with the above comment, the MFBT_API and MFBT_DATA macros expose
@@ -92,8 +97,8 @@
  * declarations when using mfbt.
  */
 #if defined(IMPL_MFBT)
-#  define MFBT_API(type)        MOZ_EXPORT_API(type)
-#  define MFBT_DATA(type)       MOZ_EXPORT_DATA(type)
+#  define MFBT_API     MOZ_EXPORT_DIRECTIVE
+#  define MFBT_DATA    MOZ_EXPORT_DIRECTIVE
 #else
   /*
    * On linux mozglue is linked in the program and we link libxul.so with
@@ -103,11 +108,11 @@
    * macros to exploit this.
    */
 #  if defined(MOZ_GLUE_IN_PROGRAM)
-#    define MFBT_API(type)        __attribute__((weak)) MOZ_IMPORT_API(type)
-#    define MFBT_DATA(type)       __attribute__((weak)) MOZ_IMPORT_DATA(type)
+#    define MFBT_API   __attribute__((weak)) MOZ_IMPORT_API_DIRECTIVE
+#    define MFBT_DATA  __attribute__((weak)) MOZ_IMPORT_DATA_DIRECTIVE
 #  else
-#    define MFBT_API(type)        MOZ_IMPORT_API(type)
-#    define MFBT_DATA(type)       MOZ_IMPORT_DATA(type)
+#    define MFBT_API   MOZ_IMPORT_API_DIRECTIVE
+#    define MFBT_DATA  MOZ_IMPORT_DATA_DIRECTIVE
 #  endif
 #endif
 

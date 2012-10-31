@@ -4,7 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=375363
 -->
 <head>
-  <title>Test for parsing, storage, and serialization of CSS '-moz-initial'</title>
+  <title>Test for parsing, storage, and serialization of CSS 'initial'</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="property_database.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375363
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for parsing, storage, and serialization of CSS '-moz-initial' **/
+/** Test for parsing, storage, and serialization of CSS 'initial' **/
 
 var gDeclaration = document.getElementById("testnode").style;
 
@@ -40,13 +40,13 @@ function test_property(property)
     for (var idx in info.subproperties)
       check_initial(info.subproperties[idx]);
 
-  gDeclaration.setProperty(property, "-moz-initial", "");
+  gDeclaration.setProperty(property, "initial", "");
 
   function check_set(sproperty) {
     var sinfo = gCSSProperties[sproperty];
     val = gDeclaration.getPropertyValue(sproperty);
-    is(val, "-moz-initial",
-       "-moz-initial reported back for property '" + sproperty + "'");
+    is(val, "initial",
+       "initial reported back for property '" + sproperty + "'");
     is(val, gDeclaration[sinfo.domProp],
        "consistency between decl.getPropertyValue('" + sproperty +
        "') and decl." + sinfo.domProp);
@@ -59,11 +59,11 @@ function test_property(property)
   // We don't care particularly about the whitespace or the placement of
   // semicolons, but for simplicity we'll test the current behavior.
   if ("alias_for" in info) {
-    is(gDeclaration.cssText, info.alias_for + ": -moz-initial;",
-      "declaration should serialize to exactly what went in (for -moz-initial)");
+    is(gDeclaration.cssText, info.alias_for + ": initial;",
+      "declaration should serialize to exactly what went in (for initial)");
   } else {
-    is(gDeclaration.cssText, property + ": -moz-initial;",
-      "declaration should serialize to exactly what went in (for -moz-initial)");
+    is(gDeclaration.cssText, property + ": initial;",
+      "declaration should serialize to exactly what went in (for initial)");
   }
 
   gDeclaration.removeProperty(property);

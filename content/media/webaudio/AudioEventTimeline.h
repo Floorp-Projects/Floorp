@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#pragma once
+#ifndef AudioEventTimeline_h_
+#define AudioEventTimeline_h_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
@@ -371,4 +372,6 @@ private:
 
 }
 }
+
+#endif
 

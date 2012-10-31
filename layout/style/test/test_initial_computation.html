@@ -3,7 +3,7 @@
 <!--
 -->
 <head>
-  <title>Test for computation of CSS '-moz-initial'</title>
+  <title>Test for computation of CSS 'initial'</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="property_database.js"></script>
   <style type="text/css" id="stylesheet"></style>
@@ -36,7 +36,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for computation of CSS '-moz-initial' **/
+/** Test for computation of CSS 'initial' **/
 
 var gBrokenInitial = {
 };
@@ -105,15 +105,15 @@ function test_property(property)
   // the initial value from the luck of default-initialization.
   // This means that it's important that we set the prereqs on
   // gRule1.style rather than on gElement.style.
-  gRule2.style.setProperty(property, "-moz-initial", "");
+  gRule2.style.setProperty(property, "initial", "");
   var initial_val_computed_n = get_computed_value(getComputedStyle(gElementN, ""), property);
   var initial_val_computed_f = get_computed_value(getComputedStyle(gElementF, ""), property);
   (xfail_initial(property) ? todo_is : is)(
      initial_val_computed_n, initial_computed_n,
-     "-moz-initial should cause initial value for '" + property + "'");
+     "initial should cause initial value for '" + property + "'");
   (xfail_initial(property) ? todo_is : is)(
      initial_val_computed_f, initial_computed_f,
-     "-moz-initial should cause initial value for '" + property + "'");
+     "initial should cause initial value for '" + property + "'");
   gRule1.style.removeProperty(property);
   gRule2.style.removeProperty(property);
 

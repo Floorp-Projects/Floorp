@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
-    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                     getService(Ci.nsIPrefBranch);
-    prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
-    
     let loadContext = { get usePrivateBrowsing() { return gInPrivateBrowsing; } };
 
     ContentPrefTest.deleteDatabase();
@@ -43,6 +39,4 @@ function run_test() {
     } catch (e) {
       do_throw("Unexpected exception: " + e);
     }
-
-    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
 }

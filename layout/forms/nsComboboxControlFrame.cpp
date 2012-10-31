@@ -644,11 +644,12 @@ nsComboboxControlFrame::GetAvailableDropdownSpace(nscoord* aAbove,
   }
 
   nscoord minY;
-  if (!PresContext()->IsChrome()) {
-    nsIFrame* root = PresContext()->PresShell()->GetRootFrame();
+  nsPresContext* pc = PresContext()->GetToplevelContentDocumentPresContext();
+  nsIFrame* root = pc ? pc->PresShell()->GetRootFrame() : nullptr;
+  if (root) {
     minY = root->GetScreenRectInAppUnits().y;
-    if (mLastDropDownBelowScreenY < root->GetScreenRectInAppUnits().y) {
-      // Don't allow the drop-down to be placed above the top of the root frame.
+    if (mLastDropDownBelowScreenY < minY) {
+      // Don't allow the drop-down to be placed above the content area.
       return;
     }
   } else {
@@ -680,10 +681,12 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
   mLastDropDownBelowScreenY = nscoord_MIN;
   GetAvailableDropdownSpace(&above, &below, &translation);
   if (above <= 0 && below <= 0) {
-    // Hide the view immediately to minimize flicker.
-    nsIView* view = mDropdownFrame->GetView();
-    view->GetViewManager()->SetViewVisibility(view, nsViewVisibility_kHide);
-    NS_DispatchToCurrentThread(new nsAsyncRollup(this));
+    if (IsDroppedDown()) {
+      // Hide the view immediately to minimize flicker.
+      nsIView* view = mDropdownFrame->GetView();
+      view->GetViewManager()->SetViewVisibility(view, nsViewVisibility_kHide);
+      NS_DispatchToCurrentThread(new nsAsyncRollup(this));
+    }
     return eDropDownPositionSuppressed;
   }
 

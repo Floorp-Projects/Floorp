@@ -368,6 +368,13 @@ protected:
      */
     bool NeedToComputeLineOrPageDelta(mozilla::widget::WheelEvent* aEvent);
 
+    /**
+     * IsOverOnePageScrollAllowed*() checks whether wheel scroll amount should
+     * be rounded down to the page width/height (false) or not (true).
+     */
+    bool IsOverOnePageScrollAllowedX(mozilla::widget::WheelEvent* aEvent);
+    bool IsOverOnePageScrollAllowedY(mozilla::widget::WheelEvent* aEvent);
+
   private:
     WheelPrefs();
     ~WheelPrefs();
@@ -408,6 +415,15 @@ protected:
     void Init(Index aIndex);
 
     void Reset();
+
+    /**
+     * If the abosolute values of mMultiplierX and/or mMultiplierY are equals or
+     * larger than this value, the computed scroll amount isn't rounded down to
+     * the page width or height.
+     */
+    enum {
+      MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL = 1000
+    };
 
     bool mInit[COUNT_OF_MULTIPLIERS];
     double mMultiplierX[COUNT_OF_MULTIPLIERS];

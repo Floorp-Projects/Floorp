@@ -146,19 +146,5 @@ function test()
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);
   }
 
-  for (var i=5; i<=9; i++)
-    status = summary + ': UTF-8 test: bad UTF-8 sequence ' + i;
-    expect = 'Error';
-    actual = 'No error!';
-    try
-    {
-      testUTF8(i);
-    }
-    catch (e)
-    {
-      actual = 'Error';
-    }
-    reportCompare(expect, actual, status);
-
   exitFunc('test');
 }

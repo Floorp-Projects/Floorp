@@ -781,6 +781,7 @@ class XPCShellTests(object):
 
       completeCmd = cmdH + cmdT + args
 
+      proc = None
       try:
         self.log.info("TEST-INFO | %s | running test ..." % name)
         if verbose:
@@ -876,7 +877,7 @@ class XPCShellTests(object):
       finally:
         # We can sometimes get here before the process has terminated, which would
         # cause removeDir() to fail - so check for the process & kill it it needed.
-        if self.poll(proc) is None:
+        if proc and self.poll(proc) is None:
           message = "TEST-UNEXPECTED-FAIL | %s | Process still running after test!" % name
           self.log.error(message)
           print_stdout(stdout)

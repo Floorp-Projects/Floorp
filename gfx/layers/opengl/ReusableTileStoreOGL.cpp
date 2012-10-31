@@ -169,7 +169,7 @@ ReusableTileStoreOGL::HarvestTiles(TiledThebesLayerOGL* aLayer,
 
       nsIntRegion intersectingRegion;
       bool retainTile = false;
-      if (aNewResolution != aOldResolution) {
+      if (fabs(aNewResolution.width - aOldResolution.width) > 1e-6) {
         // Reconcile resolution changes.
         // If the resolution changes, we know the backing layer will have been
         // invalidated, so retain tiles that are partially encompassed by the

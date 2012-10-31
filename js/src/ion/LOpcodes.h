@@ -66,6 +66,7 @@
     _(IsNullOrUndefinedAndBranch)   \
     _(MinMaxI)                      \
     _(MinMaxD)                      \
+    _(NegD)                         \
     _(AbsI)                         \
     _(AbsD)                         \
     _(SqrtD)                        \
