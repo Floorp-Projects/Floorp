@@ -3214,6 +3214,33 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
                "Supply either both parameters and their number or no"
                "parameters and 0.");
 
+  nsresult rv;
+  nsXPIDLString errorText;
+  if (aParams) {
+    rv = FormatLocalizedString(aFile, aMessageName, aParams, aParamsLength,
+                               errorText);
+  }
+  else {
+    rv = GetLocalizedString(aFile, aMessageName, errorText);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return ReportToConsoleNonLocalized(errorText, aErrorFlags, aCategory,
+                                     aDocument, aURI, aSourceLine,
+                                     aLineNumber, aColumnNumber);
+}
+
+
+/* static */ nsresult
+nsContentUtils::ReportToConsoleNonLocalized(const nsAString& aErrorText,
+                                            uint32_t aErrorFlags,
+                                            const char *aCategory,
+                                            nsIDocument* aDocument,
+                                            nsIURI* aURI,
+                                            const nsAFlatString& aSourceLine,
+                                            uint32_t aLineNumber,
+                                            uint32_t aColumnNumber)
+{
   uint64_t innerWindowID = 0;
   if (aDocument) {
     if (!aURI) {
@@ -3227,16 +3254,6 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
     rv = CallGetService(NS_CONSOLESERVICE_CONTRACTID, &sConsoleService);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  nsXPIDLString errorText;
-  if (aParams) {
-    rv = FormatLocalizedString(aFile, aMessageName, aParams, aParamsLength,
-                               errorText);
-  }
-  else {
-    rv = GetLocalizedString(aFile, aMessageName, errorText);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString spec;
   if (!aLineNumber) {
@@ -3258,7 +3275,7 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
       do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = errorObject->InitWithWindowID(errorText,
+  rv = errorObject->InitWithWindowID(aErrorText,
                                      NS_ConvertUTF8toUTF16(spec), // file name
                                      aSourceLine,
                                      aLineNumber, aColumnNumber,

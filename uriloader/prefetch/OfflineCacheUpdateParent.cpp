@@ -216,6 +216,12 @@ OfflineCacheUpdateParent::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
 }
 
 NS_IMETHODIMP
+OfflineCacheUpdateParent::SetPrivateBrowsing(bool aUsePrivateBrowsing)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 OfflineCacheUpdateParent::GetIsInBrowserElement(bool *aIsInBrowserElement)
 {
     *aIsInBrowserElement = mIsInBrowserElement;
