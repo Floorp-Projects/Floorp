@@ -118,4 +118,4 @@ FileComponent.prototype =
 };
 
 var gComponentsArray = [FileComponent];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(gComponentsArray);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(gComponentsArray);

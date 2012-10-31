@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["GLib", "EBook"];
+let EXPORTED_SYMBOLS = ["GLib", "EBook"];
 
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/ctypes.jsm");
 
-this.GLib = {
+let GLib = {
   lib: null,
 
   init: function glib_init() {
@@ -31,7 +31,7 @@ this.GLib = {
   }
 };
 
-this.EBook = {
+let EBook = {
   lib: null,
   
   E_CONTACT_FULL_NAME: 4,

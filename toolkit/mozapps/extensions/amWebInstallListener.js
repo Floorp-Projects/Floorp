@@ -312,4 +312,4 @@ extWebInstallListener.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstallListener])
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([extWebInstallListener]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([extWebInstallListener]);

@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "@mozilla.org/identity/crypto-service;1",
                                    "nsIIdentityCryptoService");
 
-this.EXPORTED_SYMBOLS = ["jwcrypto"];
+const EXPORTED_SYMBOLS = ["jwcrypto"];
 
 const ALGORITHMS = { RS256: "RS256", DS160: "DS160" };
 
@@ -125,5 +125,5 @@ jwcryptoClass.prototype = {
 
 };
 
-this.jwcrypto = new jwcryptoClass();
+var jwcrypto = new jwcryptoClass();
 jwcrypto.ALGORITHMS = ALGORITHMS;

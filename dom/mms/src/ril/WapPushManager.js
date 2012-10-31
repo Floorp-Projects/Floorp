@@ -9,14 +9,14 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-Cu.import("resource://gre/modules/WspPduHelper.jsm", this);
+Cu.import("resource://gre/modules/WspPduHelper.jsm");
 
 const DEBUG = false; // set to true to see debug messages
 
 /**
  * Helpers for WAP PDU processing.
  */
-this.WapPushManager = {
+let WapPushManager = {
 
   /**
    * Parse raw PDU data and deliver to a proper target.
@@ -86,7 +86,7 @@ if (DEBUG) {
   debug = function (s) {};
 }
 
-this.EXPORTED_SYMBOLS = ALL_CONST_SYMBOLS.concat([
+const EXPORTED_SYMBOLS = ALL_CONST_SYMBOLS.concat([
   "WapPushManager",
 ]);
 

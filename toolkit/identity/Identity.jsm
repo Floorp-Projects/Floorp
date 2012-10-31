@@ -6,7 +6,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["IdentityService"];
+const EXPORTED_SYMBOLS = ["IdentityService"];
 
 const Cu = Components.utils;
 const Ci = Components.interfaces;
@@ -302,4 +302,4 @@ IDService.prototype = {
 
 };
 
-this.IdentityService = new IDService();
+let IdentityService = new IDService();

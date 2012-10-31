@@ -87,4 +87,4 @@ ColorAnalyzer.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.mozIColorAnalyzer])
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ColorAnalyzer]);
+let NSGetFactory = XPCOMUtils.generateNSGetFactory([ColorAnalyzer]);

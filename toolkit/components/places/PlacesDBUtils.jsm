@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
-this.EXPORTED_SYMBOLS = [ "PlacesDBUtils" ];
+let EXPORTED_SYMBOLS = [ "PlacesDBUtils" ];
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Constants
@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyGetter(this, "DBConn", function() {
 ////////////////////////////////////////////////////////////////////////////////
 //// PlacesDBUtils
 
-this.PlacesDBUtils = {
+let PlacesDBUtils = {
   /**
    * Executes a list of maintenance tasks.
    * Once finished it will pass a array log to the callback attached to tasks.

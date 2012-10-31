@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = [ "InlineSpellChecker" ];
+var EXPORTED_SYMBOLS = [ "InlineSpellChecker" ];
 var gLanguageBundle;
 var gRegionBundle;
 const MAX_UNDO_STACK_DEPTH = 1;
 
-this.InlineSpellChecker = function InlineSpellChecker(aEditor) {
+function InlineSpellChecker(aEditor) {
   this.init(aEditor);
   this.mAddedWordStack = []; // We init this here to preserve it between init/uninit calls
 }

@@ -34,5 +34,5 @@ ContentDispatchChooser.prototype =
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentDispatchChooser]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentDispatchChooser]);
 

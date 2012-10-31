@@ -11,7 +11,7 @@ let Cc = Components.classes;
 let Cr = Components.results;
 let Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
-this.EXPORTED_SYMBOLS = ["BrowserElementPromptService"];
+let EXPORTED_SYMBOLS = ["BrowserElementPromptService"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -541,7 +541,7 @@ BrowserElementPromptFactory.prototype = {
   }
 };
 
-this.BrowserElementPromptService = {
+let BrowserElementPromptService = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
 

@@ -13,9 +13,9 @@ Cu.import('resource://gre/modules/accessibility/TraversalRules.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
-this.EXPORTED_SYMBOLS = ['EventManager'];
+var EXPORTED_SYMBOLS = ['EventManager'];
 
-this.EventManager = {
+var EventManager = {
   editState: {},
 
   start: function start(aSendMsgFunc) {

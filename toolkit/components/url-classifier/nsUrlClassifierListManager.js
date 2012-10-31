@@ -46,4 +46,4 @@ RegistrationData.prototype = {
     },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RegistrationData]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([RegistrationData]);

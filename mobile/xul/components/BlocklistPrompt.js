@@ -57,5 +57,5 @@ BlocklistPrompt.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIBlocklistPrompt])
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([BlocklistPrompt]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([BlocklistPrompt]);
 

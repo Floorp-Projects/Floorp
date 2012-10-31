@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #endif
-this.EXPORTED_SYMBOLS = [ "BadCertHandler", "checkCert", "readCertPrefs", "validateCert" ];
+EXPORTED_SYMBOLS = [ "BadCertHandler", "checkCert", "readCertPrefs", "validateCert" ];
 
 const Ce = Components.Exception;
 const Ci = Components.interfaces;
@@ -31,8 +31,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
  * @return An array of JS objects with names / values corresponding to the
  *         expected certificate's attribute names / values.
  */
-this.readCertPrefs =
-  function readCertPrefs(aPrefBranch) {
+function readCertPrefs(aPrefBranch) {
   if (Services.prefs.getBranch(aPrefBranch).getChildList("").length == 0)
     return null;
 
@@ -71,8 +70,7 @@ this.readCertPrefs =
  *         aCertificate wasn't specified and aCerts is not null or an empty
  *         array.
  */
-this.validateCert =
-  function validateCert(aCertificate, aCerts) {
+function validateCert(aCertificate, aCerts) {
   // If there are no certificate requirements then just exit
   if (!aCerts || aCerts.length == 0)
     return;
@@ -139,8 +137,7 @@ this.validateCert =
  *         from the aCerts  param is different than the expected value.
  *         NS_ERROR_ABORT if the certificate issuer is not built-in.
  */
-this.checkCert =
-  function checkCert(aChannel, aAllowNonBuiltInCerts, aCerts) {
+function checkCert(aChannel, aAllowNonBuiltInCerts, aCerts) {
   if (!aChannel.originalURI.schemeIs("https")) {
     // Require https if there are certificate values to verify
     if (aCerts) {
@@ -187,8 +184,7 @@ function isBuiltinToken(tokenName) {
  *         When true certificates that aren't builtin are allowed. When false
  *         or not specified the certificate must be a builtin certificate.
  */
-this.BadCertHandler =
-  function BadCertHandler(aAllowNonBuiltInCerts) {
+function BadCertHandler(aAllowNonBuiltInCerts) {
   this.allowNonBuiltInCerts = aAllowNonBuiltInCerts;
 }
 BadCertHandler.prototype = {

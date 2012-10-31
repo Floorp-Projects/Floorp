@@ -1651,4 +1651,4 @@ urlInlineComplete.prototype = {
 };
 
 let components = [nsPlacesAutoComplete, urlInlineComplete];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

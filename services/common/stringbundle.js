@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["StringBundle"];
+const EXPORTED_SYMBOLS = ["StringBundle"];
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
@@ -30,7 +30,7 @@ const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
  * @param url {String}
  *        the URL of the string bundle
  */
-this.StringBundle = function StringBundle(url) {
+function StringBundle(url) {
   this.url = url;
 }
 

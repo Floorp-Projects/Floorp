@@ -100,4 +100,4 @@ ActivityProxy.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIActivityProxy])
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ActivityProxy]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([ActivityProxy]);

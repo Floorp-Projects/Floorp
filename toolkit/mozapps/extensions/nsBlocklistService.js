@@ -1177,4 +1177,4 @@ BlocklistItemData.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Blocklist]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([Blocklist]);

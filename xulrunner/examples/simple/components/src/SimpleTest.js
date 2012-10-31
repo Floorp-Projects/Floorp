@@ -24,4 +24,4 @@ SimpleTest.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SimpleTest]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([SimpleTest]);

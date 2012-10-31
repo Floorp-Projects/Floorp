@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/identity/LogUtils.jsm");
 Cu.import("resource://gre/modules/identity/IdentityStore.jsm");
 
-this.EXPORTED_SYMBOLS = ["RelyingParty"];
+const EXPORTED_SYMBOLS = ["RelyingParty"];
 
 XPCOMUtils.defineLazyModuleGetter(this,
                                   "jwcrypto",
@@ -365,4 +365,4 @@ IdentityRelyingParty.prototype = {
 
 };
 
-this.RelyingParty = new IdentityRelyingParty();
+let RelyingParty = new IdentityRelyingParty();

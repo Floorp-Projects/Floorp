@@ -68,4 +68,4 @@ CommandLineHandler.prototype = {
 };
 
 let components = [CommandLineHandler];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+let NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

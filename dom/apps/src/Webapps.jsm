@@ -9,7 +9,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-this.EXPORTED_SYMBOLS = ["DOMApplicationRegistry"];
+let EXPORTED_SYMBOLS = ["DOMApplicationRegistry"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -54,7 +54,7 @@ XPCOMUtils.defineLazyGetter(this, "msgmgr", function() {
   const DIRECTORY_NAME = WEBAPP_RUNTIME ? "WebappRegD" : "ProfD";
 #endif
 
-this.DOMApplicationRegistry = {
+let DOMApplicationRegistry = {
   appsFile: null,
   webapps: { },
   children: [ ],
