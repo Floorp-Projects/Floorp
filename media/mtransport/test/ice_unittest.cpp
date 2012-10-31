@@ -31,7 +31,7 @@
 #include "gtest_utils.h"
 
 using namespace mozilla;
-MtransportTestUtils test_utils;
+MtransportTestUtils *test_utils;
 
 bool stream_added = false;
 
@@ -74,7 +74,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   void Gather() {
     nsresult res;
 
-    test_utils.sts_target()->Dispatch(
+    test_utils->sts_target()->Dispatch(
         WrapRunnableRet(ice_ctx_, &NrIceCtx::StartGathering, &res),
         NS_DISPATCH_SYNC);
 
@@ -100,7 +100,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   void Connect(IceTestPeer *remote, TrickleMode trickle_mode) {
     nsresult res;
 
-    test_utils.sts_target()->Dispatch(
+    test_utils->sts_target()->Dispatch(
       WrapRunnableRet(ice_ctx_,
         &NrIceCtx::ParseGlobalAttributes, remote->GetGlobalAttributes(), &res),
       NS_DISPATCH_SYNC);
@@ -108,7 +108,7 @@ class IceTestPeer : public sigslot::has_slots<> {
 
     if (trickle_mode == TRICKLE_NONE) {
       for (size_t i=0; i<streams_.size(); ++i) {
-        test_utils.sts_target()->Dispatch(
+        test_utils->sts_target()->Dispatch(
             WrapRunnableRet(streams_[i], &NrIceMediaStream::ParseAttributes,
                             remote->GetCandidates(remote->streams_[i]->name()),
                             &res), NS_DISPATCH_SYNC);
@@ -119,7 +119,7 @@ class IceTestPeer : public sigslot::has_slots<> {
       // Parse empty attributes and then trickle them out later
       for (size_t i=0; i<streams_.size(); ++i) {
         std::vector<std::string> empty_attrs;
-        test_utils.sts_target()->Dispatch(
+        test_utils->sts_target()->Dispatch(
             WrapRunnableRet(streams_[i], &NrIceMediaStream::ParseAttributes,
                             empty_attrs,
                             &res), NS_DISPATCH_SYNC);
@@ -129,7 +129,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     }
 
     // Now start checks
-    test_utils.sts_target()->Dispatch(
+    test_utils->sts_target()->Dispatch(
         WrapRunnableRet(ice_ctx_, &NrIceCtx::StartChecks, &res),
         NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
@@ -142,7 +142,7 @@ class IceTestPeer : public sigslot::has_slots<> {
             remote->GetCandidates(remote->streams_[i]->name());
 
         for (size_t j=0; j<candidates.size(); j++) {
-          test_utils.sts_target()->Dispatch(
+          test_utils->sts_target()->Dispatch(
               WrapRunnableRet(streams_[i], &NrIceMediaStream::ParseTrickleCandidate,
                               candidates[j],
                               &res), NS_DISPATCH_SYNC);
@@ -304,12 +304,14 @@ TEST_F(IceTest, TestSendReceive) {
 
 int main(int argc, char **argv)
 {
-  test_utils.InitServices();
+  test_utils = new MtransportTestUtils();
   NSS_NoDB_Init(nullptr);
   NSS_SetDomesticPolicy();
 
   // Start the tests
   ::testing::InitGoogleTest(&argc, argv);
 
-  return RUN_ALL_TESTS();
+  int rv = RUN_ALL_TESTS();
+  delete test_utils;
+  return rv;
 }

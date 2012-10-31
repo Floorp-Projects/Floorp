@@ -38,8 +38,7 @@
 using namespace mozilla;
 MOZ_MTLOG_MODULE("mediapipeline");
 
-MtransportTestUtils test_utils;
-
+MtransportTestUtils *test_utils;
 
 namespace {
 class TestAgent {
@@ -65,8 +64,9 @@ class TestAgent {
     res = audio_prsock_->Init();
     ASSERT_EQ((nsresult)NS_OK, res);
 
-    test_utils.sts_target()->Dispatch(WrapRunnable(audio_prsock_, &TransportLayerPrsock::Import,
-                                   fd, &res), NS_DISPATCH_SYNC);
+    test_utils->sts_target()->Dispatch(
+        WrapRunnable(audio_prsock_, &TransportLayerPrsock::Import,
+                     fd, &res), NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
 
     ASSERT_EQ((nsresult)NS_OK, audio_flow_->PushLayer(audio_prsock_));
@@ -85,7 +85,7 @@ class TestAgent {
 
     MOZ_MTLOG(PR_LOG_DEBUG, "Starting");
 
-    test_utils.sts_target()->Dispatch(
+    test_utils->sts_target()->Dispatch(
         WrapRunnableRet(audio_->GetStream(),
                         &Fake_MediaStream::Start, &ret),
         NS_DISPATCH_SYNC);
@@ -103,7 +103,7 @@ class TestAgent {
   void Stop() {
     MOZ_MTLOG(PR_LOG_DEBUG, "Stopping");
 
-    test_utils.sts_target()->Dispatch(
+    test_utils->sts_target()->Dispatch(
         WrapRunnable(this, &TestAgent::StopInt),
         NS_DISPATCH_SYNC);
 
@@ -138,7 +138,7 @@ class TestAgentSend : public TestAgent {
     EXPECT_EQ(mozilla::kMediaConduitNoError, err);
 
     audio_pipeline_ = new mozilla::MediaPipelineTransmit(NULL,
-      test_utils.sts_target(),
+      test_utils->sts_target(),
       audio_, audio_conduit_, audio_flow_, NULL);
 
 //    video_ = new Fake_nsDOMMediaStream(new Fake_VideoStreamSource());
@@ -171,7 +171,7 @@ class TestAgentReceive : public TestAgent {
     EXPECT_EQ(mozilla::kMediaConduitNoError, err);
 
     audio_pipeline_ = new mozilla::MediaPipelineReceiveAudio(NULL,
-      test_utils.sts_target(),
+      test_utils->sts_target(),
       audio_,
       static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
       audio_flow_, NULL);
@@ -191,10 +191,10 @@ class MediaPipelineTest : public ::testing::Test {
     PRStatus status = PR_NewTCPSocketPair(fds_);
     ASSERT_EQ(status, PR_SUCCESS);
 
-    test_utils.sts_target()->Dispatch(
+    test_utils->sts_target()->Dispatch(
       WrapRunnable(&p1_, &TestAgent::ConnectSocket, fds_[0], false),
       NS_DISPATCH_SYNC);
-    test_utils.sts_target()->Dispatch(
+    test_utils->sts_target()->Dispatch(
       WrapRunnable(&p2_, &TestAgent::ConnectSocket, fds_[1], false),
       NS_DISPATCH_SYNC);
   }
@@ -217,15 +217,16 @@ TEST_F(MediaPipelineTest, AudioSend) {
 }  // end namespace
 
 
-int main(int argc, char **argv)
-{
-  test_utils.InitServices();
+int main(int argc, char **argv) {
+  test_utils = new MtransportTestUtils();
   // Start the tests
   NSS_NoDB_Init(NULL);
   NSS_SetDomesticPolicy();
   ::testing::InitGoogleTest(&argc, argv);
 
-  return RUN_ALL_TESTS();
+  int rv = RUN_ALL_TESTS();
+  delete test_utils;
+  return rv;
 }
 
 

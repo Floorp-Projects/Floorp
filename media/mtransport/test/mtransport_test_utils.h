@@ -25,26 +25,31 @@
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
 #endif
-
+#include "nsPISocketTransportService.h"
 #include "nsServiceManagerUtils.h"
-
+#include "TestHarness.h"
+#include "mozilla/mozPoisonWrite.h"
 
 class MtransportTestUtils {
  public:
-  bool InitServices() {
+  MtransportTestUtils() : xpcom_("") {
+    if (!sts_) {
+      InitServices();
+    }
+  }
+
+  ~MtransportTestUtils() {
+    sts_->Shutdown();
+  }
+
+  void InitServices() {
     nsresult rv;
 
-    NS_InitXPCOM2(getter_AddRefs(servMan_), nullptr, nullptr);
-    manager_ = do_QueryInterface(servMan_);
-    rv = manager_->CreateInstanceByContractID(NS_IOSERVICE_CONTRACTID,
-                                             nullptr, NS_GET_IID(nsIIOService),
-                                              getter_AddRefs(ioservice_));
-    if (!NS_SUCCEEDED(rv))
-      return false;
-
     sts_target_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-    if (!NS_SUCCEEDED(rv))
-      return false;
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    sts_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
 #ifdef MOZ_CRASHREPORTER
     char *crashreporter = PR_GetEnv("MOZ_CRASHREPORTER");
@@ -61,27 +66,30 @@ class MtransportTestUtils {
         rv = dirsvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
                          NS_GET_IID(nsIFile),
                          getter_AddRefs(cwd));
-        if (!NS_SUCCEEDED(rv))
-          return false;
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
         crashreporter_->SetEnabled(true);
         crashreporter_->SetMinidumpPath(cwd);
       }
     }
 #endif
-    return true;
   }
 
   nsCOMPtr<nsIEventTarget> sts_target() { return sts_target_; }
 
  private:
-  nsCOMPtr<nsIServiceManager> servMan_;
-  nsCOMPtr<nsIComponentManager> manager_;
-  nsCOMPtr<nsIIOService> ioservice_;
+  ScopedXPCOM xpcom_;
   nsCOMPtr<nsIEventTarget> sts_target_;
+  nsCOMPtr<nsPISocketTransportService> sts_;
 #ifdef MOZ_CRASHREPORTER
   nsCOMPtr<nsICrashReporter> crashreporter_;
 #endif
 };
+
+
+MtransportTestUtils *mtransport_test_utils;
+
+#define SETUP_MTRANSPORT_TEST_UTILS() \
+  MtransportTestUtils utils_; mtransport_test_utils = &utils_
 
 
 #endif
