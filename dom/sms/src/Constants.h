@@ -23,6 +23,12 @@ extern const char* kSmsDeliveryErrorObserverTopic;   // Defined in the .cpp.
 #define DELIVERY_STATUS_PENDING        NS_LITERAL_STRING("pending")
 #define DELIVERY_STATUS_ERROR          NS_LITERAL_STRING("error")
 
+#define MESSAGE_CLASS_NORMAL  NS_LITERAL_STRING("normal")
+#define MESSAGE_CLASS_CLASS_0 NS_LITERAL_STRING("class-0")
+#define MESSAGE_CLASS_CLASS_1 NS_LITERAL_STRING("class-1")
+#define MESSAGE_CLASS_CLASS_2 NS_LITERAL_STRING("class-2")
+#define MESSAGE_CLASS_CLASS_3 NS_LITERAL_STRING("class-3")
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
