@@ -42,9 +42,7 @@
 #pragma warning(disable:4355) /* Silence warning about "this" used in base member initializer list */
 #endif
 
-JS_BEGIN_EXTERN_C
 struct DtoaState;
-JS_END_EXTERN_C
 
 extern void
 js_ReportOutOfMemory(JSContext *cx);

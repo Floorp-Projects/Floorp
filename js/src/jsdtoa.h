@@ -11,8 +11,6 @@
  * and back conversion package.
  */
 
-JS_BEGIN_EXTERN_C
-
 struct DtoaState;
 
 DtoaState *
@@ -107,7 +105,5 @@ js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, 
  */
 char *
 js_dtobasestr(DtoaState *state, int base, double d);
-
-JS_END_EXTERN_C
 
 #endif /* jsdtoa_h___ */
