@@ -38,6 +38,7 @@ function simulateIncomingSms() {
     is(incomingSms.read, false, "read");
     is(incomingSms.receiver, null, "receiver");
     is(incomingSms.sender, remoteNumber, "sender");
+    is(incomingSms.messageClass, "normal", "messageClass");
     ok(incomingSms.timestamp instanceof Date, "timestamp is instanceof date");
     // The max resolution of the SCTS (SMS Centre TimeStamp) is one second
     // therefore we want to compare in seconds not milliseconds. No need to
@@ -84,6 +85,7 @@ function sendSms() {
     is(sentSms.read, true, "read");
     is(sentSms.receiver, remoteNumber, "receiver");
     is(sentSms.sender, null, "sender");
+    is(sentSms.messageClass, "normal", "messageClass");
     ok(sentSms.timestamp instanceof Date, "timestamp is instanceof date");
     // The max resolution of the SCTS (SMS Centre TimeStamp) is one second
     // therefore we want to compare in seconds not milliseconds. Round the
