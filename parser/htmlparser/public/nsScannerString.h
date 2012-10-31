@@ -75,6 +75,12 @@ class nsScannerBufferList
             const PRUnichar* DataEnd() const { return mDataEnd; }
                   PRUnichar* DataEnd()       { return mDataEnd; }
 
+            const Buffer* Next() const { return getNext(); }
+                  Buffer* Next()       { return getNext(); }
+
+            const Buffer* Prev() const { return getPrevious(); }
+                  Buffer* Prev()       { return getPrevious(); }
+
             uint32_t DataLength() const { return mDataEnd - DataStart(); }
             void SetDataLength(uint32_t len) { mDataEnd = DataStart() + len; }
 
