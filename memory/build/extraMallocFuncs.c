@@ -20,49 +20,49 @@ void wrap(free)(void *);
 
 #ifdef ANDROID
 /* operator new(unsigned int) */
-MOZ_EXPORT_API(void *)
+MOZ_EXPORT void *
 wrap(_Znwj)(unsigned int size)
 {
   return wrap(malloc)(size);
 }
 /* operator new[](unsigned int) */
-MOZ_EXPORT_API(void *)
+MOZ_EXPORT void *
 wrap(_Znaj)(unsigned int size)
 {
   return wrap(malloc)(size);
 }
 /* operator delete(void*) */
-MOZ_EXPORT_API(void)
+MOZ_EXPORT void
 wrap(_ZdlPv)(void *ptr)
 {
   wrap(free)(ptr);
 }
 /* operator delete[](void*) */
-MOZ_EXPORT_API(void)
+MOZ_EXPORT void
 wrap(_ZdaPv)(void *ptr)
 {
   wrap(free)(ptr);
 }
 /*operator new(unsigned int, std::nothrow_t const&)*/
-MOZ_EXPORT_API(void *)
+MOZ_EXPORT void *
 wrap(_ZnwjRKSt9nothrow_t)(unsigned int size)
 {
   return wrap(malloc)(size);
 }
 /*operator new[](unsigned int, std::nothrow_t const&)*/
-MOZ_EXPORT_API(void *)
+MOZ_EXPORT void *
 wrap(_ZnajRKSt9nothrow_t)(unsigned int size)
 {
   return wrap(malloc)(size);
 }
 /* operator delete(void*, std::nothrow_t const&) */
-MOZ_EXPORT_API(void)
+MOZ_EXPORT void
 wrap(_ZdlPvRKSt9nothrow_t)(void *ptr)
 {
   wrap(free)(ptr);
 }
 /* operator delete[](void*, std::nothrow_t const&) */
-MOZ_EXPORT_API(void)
+MOZ_EXPORT void
 wrap(_ZdaPvRKSt9nothrow_t)(void *ptr)
 {
   wrap(free)(ptr);
@@ -70,7 +70,7 @@ wrap(_ZdaPvRKSt9nothrow_t)(void *ptr)
 #endif
 
 #ifdef wrap
-MOZ_EXPORT_API(char *)
+MOZ_EXPORT char *
 wrap(strndup)(const char *src, size_t len)
 {
   char* dst = (char*) wrap(malloc)(len + 1);
@@ -79,7 +79,7 @@ wrap(strndup)(const char *src, size_t len)
   return dst; 
 }
 
-MOZ_EXPORT_API(char *)
+MOZ_EXPORT char *
 wrap(strdup)(const char *src)
 {
   size_t len = strlen(src);
@@ -127,7 +127,7 @@ wrap(wcsdup)(const wchar_t *src)
 #endif
 
 /* Override some jemalloc defaults */
-MOZ_EXPORT_DATA(const char *) wrap(malloc_conf) = "narenas:1,lg_chunk:20";
+MOZ_EXPORT const char * wrap(malloc_conf) = "narenas:1,lg_chunk:20";
 
 #ifdef ANDROID
 #include <android/log.h>
