@@ -42,6 +42,7 @@ CPPSRCS	= \
 	nsIdleServiceGonk.cpp \
 	OrientationObserver.cpp \
 	EventHub.cpp \
+	GonkMemoryPressureMonitoring.cpp \
 	Input.cpp \
 	InputApplication.cpp \
 	InputDispatcher.cpp \
