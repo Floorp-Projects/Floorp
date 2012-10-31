@@ -40,4 +40,8 @@ public class GeckoActivity extends Activity {
         MemoryMonitor.getInstance().onTrimMemory(level);
         super.onTrimMemory(level);
     }
+
+    public LightweightTheme getLightweightTheme() {
+        return ((GeckoApplication) getApplication()).getLightweightTheme();
+    }
 }
