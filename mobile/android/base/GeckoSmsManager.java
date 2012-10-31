@@ -25,6 +25,8 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
+import static android.telephony.SmsMessage.MessageClass;
+
 /**
  * This class is returning unique ids for PendingIntent requestCode attribute.
  * There are only |Integer.MAX_VALUE - Integer.MIN_VALUE| unique IDs available,
@@ -333,6 +335,16 @@ public class GeckoSmsManager
   private final static int kInternalDeliveryStatusPending  = 32;
   private final static int kInternalDeliveryStatusFailed   = 64;
 
+  /*
+   * Keep the following values in sync with |MessageClass| in:
+   * dom/sms/src/Types.h
+   */
+  private final static int kMessageClassNormal  = 0;
+  private final static int kMessageClassClass0  = 1;
+  private final static int kMessageClassClass1  = 2;
+  private final static int kMessageClassClass2  = 3;
+  private final static int kMessageClassClass3  = 4;
+
   private final static String[] kRequiredMessageRows = new String[] { "_id", "address", "body", "date", "type", "status" };
 
   public GeckoSmsManager() {
@@ -370,6 +382,7 @@ public class GeckoSmsManager
 
         GeckoAppShell.notifySmsReceived(msg.getDisplayOriginatingAddress(),
                                         msg.getDisplayMessageBody(),
+                                        getGeckoMessageClass(msg.getMessageClass()),
                                         System.currentTimeMillis());
       }
 
@@ -930,6 +943,21 @@ public class GeckoSmsManager
       return kDeliveryStatusPending;
     }
     return kDeliveryStatusSuccess;
+  }
+
+  private int getGeckoMessageClass(MessageClass aMessageClass) {
+    switch (aMessageClass) {
+      case UNKNOWN:
+        return kMessageClassNormal;
+      case CLASS_0:
+        return kMessageClassClass0;
+      case CLASS_1:
+        return kMessageClassClass1;
+      case CLASS_2:
+        return kMessageClassClass2;
+      case CLASS_3:
+        return kMessageClassClass3;
+    }
   }
 
   class IdTooHighException extends Exception {
