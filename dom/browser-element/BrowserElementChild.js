@@ -522,14 +522,16 @@ BrowserElementChild.prototype = {
     ctx.drawWindow(content, 0, 0, content.innerWidth, content.innerHeight,
                    "rgb(255,255,255)");
 
-    sendAsyncMsg('got-screenshot', {
-      id: domRequestID,
-      // Use JPEG to hack around the fact that we can't specify opaque PNG.
-      // This requires us to unpremultiply the alpha channel, which is
-      // expensive on ARM processors because they lack a hardware integer
-      // division instruction.
-      successRv: canvas.toDataURL("image/jpeg")
-    });
+    // Take a JPEG screenshot to hack around the fact that we can't specify
+    // opaque PNG.  This requires us to unpremultiply the alpha channel, which
+    // is expensive on ARM processors because they lack a hardware integer
+    // division instruction.
+    canvas.toBlob(function(blob) {
+      sendAsyncMsg('got-screenshot', {
+        id: domRequestID,
+        successRv: blob
+      });
+    }, 'image/jpeg');
   },
 
   _recvFireCtxCallback: function(data) {
@@ -539,7 +541,7 @@ BrowserElementChild.prototype = {
       this._ctxHandlers[data.json.menuitem].click();
       this._ctxHandlers = {};
     } else {
-      debug("Ignored invalid contextmenu invokation");
+      debug("Ignored invalid contextmenu invocation");
     }
   },
 

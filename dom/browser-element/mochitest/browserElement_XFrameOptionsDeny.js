@@ -7,7 +7,23 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var initialScreenshot;
+var initialScreenshotArrayBuffer;
+
+function arrayBuffersEqual(a, b) {
+  var x = new Int8Array(a);
+  var y = new Int8Array(b);
+  if (x.length != y.length) {
+    return false;
+  }
+
+  for (var i = 0; i < x.length; i++) {
+    if (x[i] != y[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 function runTest() {
   browserElementTestHelpers.setEnabledPref(true);
@@ -29,16 +45,25 @@ function runTest() {
       e.preventDefault();
 
       iframe.getScreenshot(1000, 1000).onsuccess = function(sshot) {
-        initialScreenshot = sshot.target.result;
-        e.detail.unblock();
+        var fr = new FileReader();
+        fr.onloadend = function() {
+          initialScreenshotArrayBuffer = fr.result;
+          e.detail.unblock();
+        }
+        fr.readAsArrayBuffer(sshot.target.result);
       };
       break;
     case 'step 2':
       // The page has now attempted to load the X-Frame-Options page; take
       // another screenshot.
       iframe.getScreenshot(1000, 1000).onsuccess = function(sshot) {
-        is(sshot.target.result, initialScreenshot, "Screenshots should be identical");
-        SimpleTest.finish();
+        var fr = new FileReader();
+        fr.onloadend = function() {
+          ok(arrayBuffersEqual(fr.result, initialScreenshotArrayBuffer),
+             "Screenshots should be identical");
+          SimpleTest.finish();
+        }
+        fr.readAsArrayBuffer(sshot.target.result);
       };
       break;
     }
