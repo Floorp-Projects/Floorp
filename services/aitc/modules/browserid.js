@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["BrowserID"];
+const EXPORTED_SYMBOLS = ["BrowserID"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["AlarmDB"];
+const EXPORTED_SYMBOLS = ["AlarmDB"];
 
 /* static functions */
 const DEBUG = false;
@@ -23,7 +23,7 @@ const ALARMDB_NAME    = "alarms";
 const ALARMDB_VERSION = 1;
 const ALARMSTORE_NAME = "alarms";
 
-this.AlarmDB = function AlarmDB(aGlobal) {
+function AlarmDB(aGlobal) {
   debug("AlarmDB()");
   this._global = aGlobal;
 }

@@ -43,4 +43,4 @@ DownloadManagerUI.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDownloadManagerUI])
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DownloadManagerUI]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([DownloadManagerUI]);

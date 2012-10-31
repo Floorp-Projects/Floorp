@@ -2598,7 +2598,7 @@ WifiWorker.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WifiWorker]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([WifiWorker]);
 
 let debug;
 if (DEBUG) {

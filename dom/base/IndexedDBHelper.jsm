@@ -5,7 +5,6 @@
 "use strict"
 
 let DEBUG = 0;
-let debug;
 if (DEBUG) {
   debug = function (s) { dump("-*- IndexedDBHelper: " + s + "\n"); }
 } else {
@@ -16,12 +15,12 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-this.EXPORTED_SYMBOLS = ["IndexedDBHelper"];
+let EXPORTED_SYMBOLS = ["IndexedDBHelper"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-this.IndexedDBHelper = function IndexedDBHelper() {}
+function IndexedDBHelper() { }
 
 IndexedDBHelper.prototype = {
   

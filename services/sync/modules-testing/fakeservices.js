@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "FakeCryptoService",
   "FakeFilesystemService",
   "FakeGUIDService",
@@ -18,7 +18,7 @@ Cu.import("resource://services-sync/util.js");
 
 let btoa = Cu.import("resource://services-common/log4moz.js").btoa;
 
-this.FakeFilesystemService = function FakeFilesystemService(contents) {
+function FakeFilesystemService(contents) {
   this.fakeContents = contents;
   let self = this;
 
@@ -38,7 +38,7 @@ this.FakeFilesystemService = function FakeFilesystemService(contents) {
   };
 };
 
-this.fakeSHA256HMAC = function fakeSHA256HMAC(message) {
+function fakeSHA256HMAC(message) {
    message = message.substr(0, 64);
    while (message.length < 64) {
      message += " ";
@@ -46,7 +46,7 @@ this.fakeSHA256HMAC = function fakeSHA256HMAC(message) {
    return message;
 }
 
-this.FakeGUIDService = function FakeGUIDService() {
+function FakeGUIDService() {
   let latestGUID = 0;
 
   Utils.makeGUID = function makeGUID() {
@@ -58,7 +58,7 @@ this.FakeGUIDService = function FakeGUIDService() {
  * Mock implementation of WeaveCrypto. It does not encrypt or
  * decrypt, merely returning the input verbatim.
  */
-this.FakeCryptoService = function FakeCryptoService() {
+function FakeCryptoService() {
   this.counter = 0;
 
   delete Svc.Crypto;  // get rid of the getter first

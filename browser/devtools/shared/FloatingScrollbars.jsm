@@ -6,7 +6,7 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-this.EXPORTED_SYMBOLS = [ "switchToFloatingScrollbars", "switchToNativeScrollbars" ];
+const EXPORTED_SYMBOLS = [ "switchToFloatingScrollbars", "switchToNativeScrollbars" ];
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -20,7 +20,7 @@ let trackedTabs = new WeakMap();
  * @param aTab the targeted tab.
  *
  */
-this.switchToFloatingScrollbars = function switchToFloatingScrollbars(aTab) {
+function switchToFloatingScrollbars(aTab) {
   let mgr = trackedTabs.get(aTab);
   if (!mgr) {
     mgr = new ScrollbarManager(aTab);
@@ -34,7 +34,7 @@ this.switchToFloatingScrollbars = function switchToFloatingScrollbars(aTab) {
  * @param aTab the targeted tab.
  *
  */
-this.switchToNativeScrollbars = function switchToNativeScrollbars(aTab) {
+function switchToNativeScrollbars(aTab) {
   let mgr = trackedTabs.get(aTab);
   if (mgr) {
     mgr.reset();

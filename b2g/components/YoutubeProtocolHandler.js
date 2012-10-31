@@ -129,4 +129,4 @@ YoutubeProtocolHandler.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([YoutubeProtocolHandler]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([YoutubeProtocolHandler]);

@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["AddonUtils"];
+const EXPORTED_SYMBOLS = ["AddonUtils"];
 
 const {interfaces: Ci, utils: Cu} = Components;
 

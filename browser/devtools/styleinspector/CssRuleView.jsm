@@ -31,11 +31,11 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/CssLogic.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-this.EXPORTED_SYMBOLS = ["CssRuleView",
-                         "_ElementStyle",
-                         "editableItem",
-                         "_editableField",
-                         "_getInplaceEditorForSpan"];
+var EXPORTED_SYMBOLS = ["CssRuleView",
+                        "_ElementStyle",
+                        "editableItem",
+                        "_editableField",
+                        "_getInplaceEditorForSpan"];
 
 /**
  * Our model looks like this:
@@ -97,7 +97,7 @@ function ElementStyle(aElement, aStore)
   this.populate();
 }
 // We're exporting _ElementStyle for unit tests.
-this._ElementStyle = ElementStyle;
+var _ElementStyle = ElementStyle;
 
 ElementStyle.prototype = {
 
@@ -874,7 +874,7 @@ TextProperty.prototype = {
  *        set of disabled properties.
  * @constructor
  */
-this.CssRuleView = function CssRuleView(aDoc, aStore)
+function CssRuleView(aDoc, aStore)
 {
   this.doc = aDoc;
   this.store = aStore;
@@ -1925,7 +1925,7 @@ function editableField(aOptions)
  * @param function aCallback
  *        Called when the editor is activated.
  */
-this.editableItem = function editableItem(aOptions, aCallback)
+function editableItem(aOptions, aCallback)
 {
   let trigger = aOptions.trigger || "click"
   let element = aOptions.element;
@@ -1967,7 +1967,7 @@ this.editableItem = function editableItem(aOptions, aCallback)
   element._editable = true;
 }
 
-this._editableField = editableField;
+var _editableField = editableField;
 
 function InplaceEditor(aOptions, aEvent)
 {
@@ -2257,7 +2257,7 @@ InplaceEditor.prototype = {
  * own compartment, those expandos live on Xray wrappers that are only visible
  * within this JSM. So we provide a little workaround here.
  */
-this._getInplaceEditorForSpan = function _getInplaceEditorForSpan(aSpan) { return aSpan.inplaceEditor; };
+function _getInplaceEditorForSpan(aSpan) { return aSpan.inplaceEditor; };
 
 /**
  * Store of CSSStyleDeclarations mapped to properties that have been changed by

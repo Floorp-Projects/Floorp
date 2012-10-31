@@ -302,4 +302,4 @@ TimerManager.prototype = {
                                          Ci.nsIObserver])
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TimerManager]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([TimerManager]);

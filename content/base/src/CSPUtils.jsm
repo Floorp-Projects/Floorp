@@ -20,8 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
 // Module stuff
-this.EXPORTED_SYMBOLS = ["CSPRep", "CSPSourceList", "CSPSource", "CSPHost",
-                         "CSPdebug", "CSPViolationReportListener", "CSPLocalizer"];
+var EXPORTED_SYMBOLS = ["CSPRep", "CSPSourceList", "CSPSource", "CSPHost",
+                        "CSPdebug", "CSPViolationReportListener", "CSPLocalizer"];
 
 var STRINGS_URI = "chrome://global/locale/security/csp.properties";
 
@@ -94,7 +94,7 @@ var gPrefObserver = {
   },
 };
 
-this.CSPdebug = function CSPdebug(aMsg) {
+function CSPdebug(aMsg) {
   if (!gPrefObserver.debugEnabled) return;
 
   aMsg = 'CSP debug: ' + aMsg + "\n";
@@ -160,7 +160,7 @@ CSPPolicyURIListener.prototype = {
 /**
  * Class that represents a parsed policy structure.
  */
-this.CSPRep = function CSPRep() {
+function CSPRep() {
   // this gets set to true when the policy is done parsing, or when a
   // URI-borne policy has finished loading.
   this._isInitialized = false;
@@ -664,7 +664,7 @@ CSPRep.prototype = {
 /**
  * Class to represent a list of sources
  */
-this.CSPSourceList = function CSPSourceList() {
+function CSPSourceList() {
   this._sources = [];
   this._permitAllSources = false;
 
@@ -900,7 +900,7 @@ CSPSourceList.prototype = {
 /**
  * Class to model a source (scheme, host, port)
  */
-this.CSPSource = function CSPSource() {
+function CSPSource() {
   this._scheme = undefined;
   this._port = undefined;
   this._host = undefined;
@@ -1387,7 +1387,7 @@ CSPSource.prototype = {
 /**
  * Class to model a host *.x.y.
  */
-this.CSPHost = function CSPHost() {
+function CSPHost() {
   this._segments = [];
 }
 
@@ -1556,7 +1556,7 @@ CSPHost.prototype = {
 /**
  * Class that listens to violation report transmission and logs errors.
  */
-this.CSPViolationReportListener = function CSPViolationReportListener(reportURI) {
+function CSPViolationReportListener(reportURI) {
   this._reportURI = reportURI;
 }
 
@@ -1636,7 +1636,7 @@ function cspWarn(aCSPRep, aMessage) {
 
 //////////////////////////////////////////////////////////////////////
 
-this.CSPLocalizer = {
+CSPLocalizer = {
   /**
    * Retrieve a localized string.
    *

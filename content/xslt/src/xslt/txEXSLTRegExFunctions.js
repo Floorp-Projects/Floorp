@@ -66,4 +66,4 @@ txEXSLTRegExFunctions.prototype = {
     }
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([txEXSLTRegExFunctions]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([txEXSLTRegExFunctions]);

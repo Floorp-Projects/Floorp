@@ -1404,4 +1404,4 @@ HandlerService.prototype = {
 //****************************************************************************//
 // More XPCOM Plumbing
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([HandlerService]);
+NSGetFactory = XPCOMUtils.generateNSGetFactory([HandlerService]);

@@ -75,4 +75,4 @@ TestParams.prototype = {
   testInterfaceIsArray: f_size_and_iid,
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestParams]);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory([TestParams]);

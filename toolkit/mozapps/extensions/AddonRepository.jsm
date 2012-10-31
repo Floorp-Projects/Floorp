@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
-this.EXPORTED_SYMBOLS = [ "AddonRepository" ];
+var EXPORTED_SYMBOLS = [ "AddonRepository" ];
 
 const PREF_GETADDONS_CACHE_ENABLED       = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_CACHE_TYPES         = "extensions.getAddons.cache.types";
@@ -418,7 +418,7 @@ AddonSearchResult.prototype = {
  * that are compatible with the current application and are not already
  * installed.
  */
-this.AddonRepository = {
+var AddonRepository = {
   /**
    * Whether caching is currently enabled
    */

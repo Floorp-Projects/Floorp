@@ -55,4 +55,4 @@ TelProtocolHandler.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolHandler])
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TelProtocolHandler]);
+let NSGetFactory = XPCOMUtils.generateNSGetFactory([TelProtocolHandler]);

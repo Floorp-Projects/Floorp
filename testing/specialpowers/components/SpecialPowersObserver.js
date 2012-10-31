@@ -148,4 +148,4 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
     }
   };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SpecialPowersObserver]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([SpecialPowersObserver]);

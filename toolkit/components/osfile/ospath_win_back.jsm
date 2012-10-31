@@ -23,8 +23,8 @@
  * components.
  */
 if (typeof Components != "undefined") {
-  this.EXPORTED_SYMBOLS = ["OS"];
-  Components.utils.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", this);
+  var EXPORTED_SYMBOLS = ["OS"];
+  Components.utils.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm");
 }
 (function(exports) {
    "use strict";
