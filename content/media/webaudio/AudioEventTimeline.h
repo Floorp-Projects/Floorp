@@ -153,7 +153,19 @@ public:
 
   void CancelScheduledValues(float aStartTime)
   {
-    // TODO: implement
+    for (unsigned i = 0; i < mEvents.Length(); ++i) {
+      if (mEvents[i].mTime >= aStartTime) {
+#ifdef DEBUG
+        // Sanity check: the array should be sorted, so all of the following
+        // events should have a time greater than aStartTime too.
+        for (unsigned j = i + 1; j < mEvents.Length(); ++j) {
+          MOZ_ASSERT(mEvents[j].mTime >= aStartTime);
+        }
+#endif
+        mEvents.TruncateLength(i);
+        break;
+      }
+    }
   }
 
   // This method computes the AudioParam value at a given time based on the event timeline
