@@ -12,6 +12,8 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 
+import java.util.List;
+
 public class BrowserDB {
     public static String ABOUT_PAGES_URL_FILTER = "about:%";
 
@@ -72,6 +74,8 @@ public class BrowserDB {
         public void removeReadingListItemWithURL(ContentResolver cr, String uri);
 
         public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri);
+
+        public Cursor getFaviconsForUrls(ContentResolver cr, List<String> urls);
 
         public void updateFaviconForUrl(ContentResolver cr, String uri, BitmapDrawable favicon);
 
@@ -184,6 +188,10 @@ public class BrowserDB {
 
     public static BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri) {
         return sDb.getFaviconForUrl(cr, uri);
+    }
+
+    public static Cursor getFaviconsForUrls(ContentResolver cr, List<String> urls) {
+        return sDb.getFaviconsForUrls(cr, urls);
     }
 
     public static void updateFaviconForUrl(ContentResolver cr, String uri, BitmapDrawable favicon) {
