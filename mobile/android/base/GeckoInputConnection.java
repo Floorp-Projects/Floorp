@@ -119,61 +119,22 @@ class GeckoInputConnection
     }
 
     @Override
-    public boolean beginBatchEdit() {
+    public synchronized boolean beginBatchEdit() {
         mBatchEditCount++;
+        mEditableClient.setUpdateGecko(false);
         return true;
     }
 
     @Override
-    public boolean endBatchEdit() {
+    public synchronized boolean endBatchEdit() {
         if (mBatchEditCount > 0) {
             mBatchEditCount--;
+            if (mBatchEditCount == 0) {
+                mEditableClient.setUpdateGecko(true);
+            }
         } else {
             Log.w(LOGTAG, "endBatchEdit() called, but mBatchEditCount == 0?!");
         }
-        return true;
-    }
-
-    @Override
-    public boolean commitCompletion(CompletionInfo text) {
-        return commitText(text.getText(), 1);
-    }
-
-    @Override
-    public boolean commitText(CharSequence text, int newCursorPosition) {
-        if (mCommittingText)
-            Log.e(LOGTAG, "Please report this bug:",
-                  new IllegalStateException("commitText, but already committing text?!"));
-
-        mCommittingText = true;
-        replaceText(text, newCursorPosition, false);
-        mCommittingText = false;
-
-        if (hasCompositionString()) {
-            if (DEBUG) Log.d(LOGTAG, ". . . commitText: endComposition");
-            endComposition();
-        }
-        return true;
-    }
-
-    @Override
-    public boolean finishComposingText() {
-        // finishComposingText() is called by the input method manager from a background
-        // thread so we have to make sure it's run in the ui thread.
-        postToUiThread(new Runnable() {
-            public void run() {
-                if (hasCompositionString()) {
-                    if (DEBUG) Log.d(LOGTAG, ". . . finishComposingText: endComposition");
-                    endComposition();
-                }
-                final Editable content = getEditable();
-                if (content != null) {
-                    beginBatchEdit();
-                    removeComposingSpans(content);
-                    endBatchEdit();
-                }
-            }
-        });
         return true;
     }
 
@@ -184,32 +145,38 @@ class GeckoInputConnection
 
     @Override
     public boolean performContextMenuAction(int id) {
-        String text = mEditable.toString();
-        Span selection = getSelection();
+        Editable editable = getEditable();
+        int selStart = Selection.getSelectionStart(editable);
+        int selEnd = Selection.getSelectionEnd(editable);
 
         switch (id) {
             case R.id.selectAll:
-                setSelection(0, text.length());
+                setSelection(0, editable.length());
                 break;
             case R.id.cut:
-                // Fill the clipboard
-                GeckoAppShell.setClipboardText(text);
                 // If selection is empty, we'll select everything
-                if (selection.length == 0)
-                    GeckoAppShell.sendEventToGecko(
-                        GeckoEvent.createIMEEvent(GeckoEvent.IME_SET_SELECTION, 0, text.length()));
-                GeckoAppShell.sendEventToGecko(
-                    GeckoEvent.createIMEEvent(GeckoEvent.IME_DELETE_TEXT, 0, 0));
+                if (selStart == selEnd) {
+                    // Fill the clipboard
+                    GeckoAppShell.setClipboardText(editable.toString());
+                    editable.clear();
+                } else {
+                    GeckoAppShell.setClipboardText(
+                            editable.toString().substring(
+                                Math.min(selStart, selEnd),
+                                Math.max(selStart, selEnd)));
+                    editable.delete(selStart, selEnd);
+                }
                 break;
             case R.id.paste:
                 commitText(GeckoAppShell.getClipboardText(), 1);
                 break;
             case R.id.copy:
                 // Copy the current selection or the empty string if nothing is selected.
-                String copiedText = selection.length > 0
-                                    ? text.substring(selection.start, selection.end)
-                                    : "";
-                GeckoAppShell.setClipboardText(text);
+                String copiedText = selStart == selEnd ? "" :
+                                    editable.toString().substring(
+                                        Math.min(selStart, selEnd),
+                                        Math.max(selStart, selEnd));
+                GeckoAppShell.setClipboardText(copiedText);
                 break;
         }
         return true;
@@ -223,28 +190,20 @@ class GeckoInputConnection
         if ((flags & GET_EXTRACTED_TEXT_MONITOR) != 0)
             mUpdateRequest = req;
 
-        Span selection = getSelection();
+        Editable editable = getEditable();
+        int selStart = Selection.getSelectionStart(editable);
+        int selEnd = Selection.getSelectionEnd(editable);
 
         ExtractedText extract = new ExtractedText();
         extract.flags = 0;
         extract.partialStartOffset = -1;
         extract.partialEndOffset = -1;
-        extract.selectionStart = selection.start;
-        extract.selectionEnd = selection.end;
+        extract.selectionStart = selStart;
+        extract.selectionEnd = selEnd;
         extract.startOffset = 0;
-        extract.text = mEditable.toString();
+        extract.text = editable;
 
         return extract;
-    }
-
-    @Override
-    public boolean setSelection(int start, int end) {
-        // Some IMEs call setSelection() with negative or stale indexes, so clamp them.
-        Span newSelection = Span.clamp(start, end, mEditable);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(GeckoEvent.IME_SET_SELECTION,
-                                                                 newSelection.start,
-                                                                 newSelection.length));
-        return super.setSelection(newSelection.start, newSelection.end);
     }
 
     private static void postToUiThread(Runnable runnable) {
@@ -253,152 +212,8 @@ class GeckoInputConnection
         GeckoApp.mAppContext.mMainHandler.post(runnable);
     }
 
-    @Override
-    public CharSequence getTextBeforeCursor(int length, int flags) {
-        // Avoid underrunning text buffer.
-        Span selection = getSelection();
-        if (length > selection.start) {
-            length = selection.start;
-        }
-
-        if (length < 1) {
-            return "";
-        }
-
-        return super.getTextBeforeCursor(length, flags);
-    }
-
-    @Override
-    public CharSequence getTextAfterCursor(int length, int flags) {
-        // Avoid overrunning text buffer.
-        Span selection = getSelection();
-        int contentLength = mEditable.length();
-        if (selection.end + length > contentLength) {
-            length = contentLength - selection.end;
-        }
-
-        if (length < 1) {
-            return "";
-        }
-
-        return super.getTextAfterCursor(length, flags);
-    }
-
-    @Override
-    public boolean setComposingText(CharSequence text, int newCursorPosition) {
-        // setComposingText() places the given text into the editable, replacing any existing
-        // composing text. This method will likely be called multiple times while we are composing
-        // text.
-        return super.setComposingText(text, newCursorPosition);
-    }
-
     private static View getView() {
         return GeckoApp.mAppContext.getLayerView();
-    }
-
-    private Span getSelection() {
-        int start = Selection.getSelectionStart(mEditable);
-        int end = Selection.getSelectionEnd(mEditable);
-        return Span.clamp(start, end, mEditable);
-    }
-
-    private void replaceText(CharSequence text, int newCursorPosition, boolean composing) {
-        if (DEBUG) {
-            Log.d(LOGTAG, String.format("IME: replaceText(\"%s\", %d, %b)",
-                                        text, newCursorPosition, composing));
-            GeckoApp.assertOnUiThread();
-        }
-
-        if (text == null)
-            text = "";
-
-        beginBatchEdit();
-
-        // delete composing text set previously.
-        int a;
-        int b;
-
-        Span composingSpan = getComposingSpan();
-        if (composingSpan != null) {
-            removeComposingSpans(mEditable);
-            a = composingSpan.start;
-            b = composingSpan.end;
-            composingSpan = null;
-        } else {
-            Span selection = getSelection();
-            a = selection.start;
-            b = selection.end;
-        }
-
-        if (composing) {
-            Spannable sp = null;
-            if (!(text instanceof Spannable)) {
-                sp = new SpannableStringBuilder(text);
-                text = sp;
-                // Underline the active composition string.
-                sp.setSpan(new UnderlineSpan(), 0, sp.length(),
-                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_COMPOSING);
-            } else {
-                sp = (Spannable) text;
-            }
-            setComposingSpans(sp);
-        }
-
-        if (DEBUG) Log.d(LOGTAG, "Replacing from " + a + " to " + b + " with \""
-                + text + "\", composing=" + composing
-                + ", type=" + text.getClass().getCanonicalName());
-
-        if (DEBUG) {
-            LogPrinter lp = new LogPrinter(Log.VERBOSE, LOGTAG);
-            lp.println("Current text:");
-            TextUtils.dumpSpans(mEditable, lp, "  ");
-            lp.println("Composing text:");
-            TextUtils.dumpSpans(text, lp, "  ");
-        }
-
-        // Position the cursor appropriately, so that after replacing the
-        // desired range of text it will be located in the correct spot.
-        // This allows us to deal with filters performing edits on the text
-        // we are providing here.
-        if (newCursorPosition > 0) {
-            newCursorPosition += b - 1;
-        } else {
-            newCursorPosition += a;
-        }
-        if (newCursorPosition < 0) newCursorPosition = 0;
-        if (newCursorPosition > mEditable.length())
-            newCursorPosition = mEditable.length();
-        Selection.setSelection(mEditable, newCursorPosition);
-
-        mEditable.replace(a, b, text);
-
-        if (DEBUG) {
-            LogPrinter lp = new LogPrinter(Log.VERBOSE, LOGTAG);
-            lp.println("Final text:");
-            TextUtils.dumpSpans(mEditable, lp, "  ");
-        }
-
-        endBatchEdit();
-    }
-
-    @Override
-    public boolean setComposingRegion(int start, int end) {
-        if (hasCompositionString()) {
-            if (DEBUG) Log.d(LOGTAG, ". . . setComposingRegion: endComposition");
-            endComposition();
-        }
-
-        Span newComposingRegion = Span.clamp(start, end, mEditable);
-        return super.setComposingRegion(newComposingRegion.start, newComposingRegion.end);
-    }
-
-    public String getComposingText() {
-        Span composingSpan = getComposingSpan();
-        if (composingSpan == null || composingSpan.length == 0) {
-            return "";
-        }
-
-        return TextUtils.substring(mEditable, composingSpan.start, composingSpan.end);
     }
 
     public boolean onKeyDel() {
@@ -481,8 +296,7 @@ class GeckoInputConnection
             mBatchEditCount = 0;
         }
 
-        removeComposingSpans(mEditable);
-        mCompositionStart = NO_COMPOSITION_STRING;
+        removeComposingSpans(getEditable());
         mUpdateRequest = null;
     }
 
@@ -550,13 +364,6 @@ class GeckoInputConnection
             // to show some reasonable amount of the page (see bug 752709)
             outAttrs.imeOptions |= EditorInfo.IME_FLAG_NO_EXTRACT_UI
                                    | EditorInfo.IME_FLAG_NO_FULLSCREEN;
-        }
-
-        // onCreateInputConnection() can be called during composition when input focus
-        // is restored from a VKB popup window (such as for entering accented characters)
-        // back to our IME. We want to commit our active composition string. Bug 756429
-        if (hasCompositionString()) {
-            endComposition();
         }
 
         String prevInputMethod = mCurrentInputMethod;
@@ -799,7 +606,7 @@ class GeckoInputConnection
         }
 
         public void run() {
-            if (DEBUG) Log.d(LOGTAG, "IME: run()");
+            if (DEBUG) Log.d(LOGTAG, "IME: IMEStateUpdater.run()");
             synchronized (IMEStateUpdater.class) {
                 instance = null;
             }
@@ -828,80 +635,6 @@ class GeckoInputConnection
                     }
                 }
             });
-        }
-    }
-
-    private void setEditable(String contents) {
-        int prevLength = mEditable.length();
-        mEditable.removeSpan(this);
-        mEditable.replace(0, prevLength, contents);
-        spanAndSelectEditable();
-    }
-
-    private void spanAndSelectEditable() {
-        int length = mEditable.length();
-        mEditable.setSpan(this, 0, length, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-        Selection.setSelection(mEditable, length);
-    }
-
-    protected final boolean hasCompositionString() {
-        return mCompositionStart != NO_COMPOSITION_STRING;
-    }
-
-    private Span getComposingSpan() {
-        int start = getComposingSpanStart(mEditable);
-        int end = getComposingSpanEnd(mEditable);
-
-        // Does the editable have a composing span?
-        if (start < 0 || end < 0) {
-            if (start != -1 || end != -1) {
-                throw new IndexOutOfBoundsException("Bad composing span [" + start + "," + end
-                                                     + "), contentLength=" + mEditable.length());
-            }
-            return null;
-        }
-
-        return new Span(start, end, mEditable);
-    }
-
-    private static String prettyPrintString(CharSequence s) {
-        // Quote string and replace newlines with CR arrows.
-        return "\"" + s.toString().replace('\n', UNICODE_CRARR) + "\"";
-    }
-
-    private static final class Span {
-        public final int start;
-        public final int end;
-        public final int length;
-
-        public static Span clamp(int start, int end, Editable content) {
-            return new Span(start, end, content);
-        }
-
-        private Span(int a, int b, Editable content) {
-            if (a > b) {
-                int tmp = a;
-                a = b;
-                b = tmp;
-            }
-
-            final int contentLength = content.length();
-
-            if (a < 0) {
-                a = 0;
-            } else if (a > contentLength) {
-                a = contentLength;
-            }
-
-            if (b < 0) {
-                b = 0;
-            } else if (b > contentLength) {
-                b = contentLength;
-            }
-
-            start = a;
-            end = b;
-            length = end - start;
         }
     }
 
