@@ -363,6 +363,9 @@ struct JSCompartment : public js::gc::GraphNodeBase
      */
     js::RawObject                gcIncomingGrayPointers;
 
+    /* Linked list of live array buffers with >1 view. */
+    JSObject                     *gcLiveArrayBuffers;
+
   private:
     /*
      * Malloc counter to measure memory pressure for GC scheduling. It runs from

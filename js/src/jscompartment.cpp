@@ -73,6 +73,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcMallocAndFreeBytes(0),
     gcTriggerMallocAndFreeBytes(0),
     gcIncomingGrayPointers(NULL),
+    gcLiveArrayBuffers(NULL),
     gcMallocBytes(0),
     debugModeBits(rt->debugMode ? DebugFromC : 0),
     watchpointMap(NULL),
