@@ -129,6 +129,7 @@ using mozilla::unused;
 #include "nsINIParser.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/StartupTimeline.h"
+#include "mozilla/mozPoisonWrite.h"
 
 #include <stdlib.h>
 
@@ -3874,6 +3875,10 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // corresponds to nsIAppStartup.quit(eRestart)
   if (rv == NS_SUCCESS_RESTART_APP) {
     appInitiatedRestart = true;
+  } else {
+    // We will have a real shutdown, let ShutdownXPCOM poison writes to
+    // find any late ones.
+    mozilla::EnableWritePoisoning();
   }
 
   if (!mShuttingDown) {

@@ -276,7 +276,14 @@ public:
     }
 };
 
-bool PoisoningDisabled = false;
+// This variable being true has two consequences
+// * It prevents PoisonWrite from patching the write functions.
+// * If the patching has already been done, it prevents AbortOnBadWrite from
+//   asserting. Note that not all writes use AbortOnBadWrite at this point
+//   (aio_write for example), so disabling writes after patching doesn't
+//   completely undo it.
+bool PoisoningDisabled = true;
+
 void AbortOnBadWrite(int fd, const void *wbuf, size_t count) {
     if (PoisoningDisabled)
         return;
@@ -375,7 +382,15 @@ extern "C" {
 
 namespace mozilla {
 void PoisonWrite() {
-    PoisoningDisabled = false;
+    // Quick sanity check that we don't poison twice.
+    static bool WritesArePoisoned = false;
+    MOZ_ASSERT(!WritesArePoisoned);
+    if (WritesArePoisoned)
+        return;
+    WritesArePoisoned = true;
+
+    if (PoisoningDisabled)
+        return;
 
     nsCOMPtr<nsIFile> mozFile;
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mozFile));
@@ -403,5 +418,8 @@ void PoisonWrite() {
 }
 void DisableWritePoisoning() {
     PoisoningDisabled = true;
+}
+void EnableWritePoisoning() {
+    PoisoningDisabled = false;
 }
 }
