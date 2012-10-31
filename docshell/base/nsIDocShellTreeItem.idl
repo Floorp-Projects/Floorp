@@ -53,11 +53,10 @@ interface nsIDocShellTreeItem : nsIDocShellTreeNode
 	readonly attribute nsIDocShellTreeItem parent;
 
 	/*
-	This getter returns the same thing parent does however if the parent
-	is of a different itemType, or if the parent is an <iframe mozbrowser>
-	or <iframe mozapp>, it will instead return nullptr.  This call is a
-	convience function for those wishing to not cross the boundaries at
-	which item types change.
+	This is call returns the same thing parent does however if the parent is
+	of a different itemType, it will instead return nullptr.  This call is a
+	convience function for those wishing to not cross the boundaries at which
+	item types change.
 	*/
 	readonly attribute nsIDocShellTreeItem sameTypeParent;
 
