@@ -1295,6 +1295,9 @@ IsPropertyAddInlineable(JSContext *cx, HandleObject obj, jsid id, uint32_t oldSl
     if (obj->getClass()->resolve != JS_ResolveStub)
         return false;
 
+    if (!obj->isExtensible())
+        return false;
+
     // walk up the object prototype chain and ensure that all prototypes
     // are native, and that all prototypes have no getter or setter
     // defined on the property
