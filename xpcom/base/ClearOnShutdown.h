@@ -8,6 +8,7 @@
 #define mozilla_ClearOnShutdown_h
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/StaticPtr.h"
 #include "nsThreadUtils.h"
 
 /*
@@ -64,7 +65,7 @@ private:
 };
 
 extern bool sHasShutDown;
-extern LinkedList<ShutdownObserver> sShutdownObservers;
+extern StaticAutoPtr<LinkedList<ShutdownObserver> > sShutdownObservers;
 
 } // namespace ClearOnShutdown_Internal
 
@@ -74,10 +75,12 @@ inline void ClearOnShutdown(SmartPtr *aPtr)
   using namespace ClearOnShutdown_Internal;
 
   MOZ_ASSERT(NS_IsMainThread());
-
   MOZ_ASSERT(!sHasShutDown);
-  ShutdownObserver *observer = new PointerClearer<SmartPtr>(aPtr);
-  sShutdownObservers.insertBack(observer);
+
+  if (!sShutdownObservers) {
+    sShutdownObservers = new LinkedList<ShutdownObserver>();
+  }
+  sShutdownObservers->insertBack(new PointerClearer<SmartPtr>(aPtr));
 }
 
 // Called when XPCOM is shutting down, after all shutdown notifications have
@@ -89,11 +92,12 @@ inline void KillClearOnShutdown()
   MOZ_ASSERT(NS_IsMainThread());
 
   ShutdownObserver *observer;
-  while ((observer = sShutdownObservers.popFirst())) {
+  while ((observer = sShutdownObservers->popFirst())) {
     observer->Shutdown();
     delete observer;
   }
 
+  sShutdownObservers = nullptr;
   sHasShutDown = true;
 }
 
