@@ -10,29 +10,16 @@ import org.mozilla.gecko.gfx.InputConnectionHandler;
 import android.R;
 import android.content.Context;
 import android.os.Build;
-import android.os.SystemClock;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.text.method.KeyListener;
 import android.text.method.TextKeyListener;
-import android.text.style.BackgroundColorSpan;
-import android.text.style.CharacterStyle;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.UnderlineSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.LogPrinter;
-import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.BaseInputConnection;
-import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
@@ -56,34 +43,13 @@ class GeckoInputConnection
     public static final int IME_STATE_PLUGIN = 3;
 
     private static final int NOTIFY_IME_RESETINPUTSTATE = 0;
-    private static final int NOTIFY_IME_SETOPENSTATE = 1;
     private static final int NOTIFY_IME_CANCELCOMPOSITION = 2;
     private static final int NOTIFY_IME_FOCUSCHANGE = 3;
 
-    private static final int NO_COMPOSITION_STRING = -1;
-
     private static final int INLINE_IME_MIN_DISPLAY_SIZE = 480;
 
-    private static final char UNICODE_BULLET                    = '\u2022';
-    private static final char UNICODE_CENT_SIGN                 = '\u00a2';
-    private static final char UNICODE_COPYRIGHT_SIGN            = '\u00a9';
-    private static final char UNICODE_CRARR                     = '\u21b2'; // &crarr;
-    private static final char UNICODE_DIVISION_SIGN             = '\u00f7';
-    private static final char UNICODE_DOUBLE_LOW_QUOTATION_MARK = '\u201e';
-    private static final char UNICODE_ELLIPSIS                  = '\u2026';
-    private static final char UNICODE_EURO_SIGN                 = '\u20ac';
-    private static final char UNICODE_INVERTED_EXCLAMATION_MARK = '\u00a1';
-    private static final char UNICODE_MULTIPLICATION_SIGN       = '\u00d7';
-    private static final char UNICODE_PI                        = '\u03a0';
-    private static final char UNICODE_PILCROW_SIGN              = '\u00b6';
-    private static final char UNICODE_POUND_SIGN                = '\u00a3';
-    private static final char UNICODE_REGISTERED_SIGN           = '\u00ae';
-    private static final char UNICODE_SQUARE_ROOT               = '\u221a';
-    private static final char UNICODE_TRADEMARK_SIGN            = '\u2122';
-    private static final char UNICODE_WHITE_BULLET              = '\u25e6';
-    private static final char UNICODE_YEN_SIGN                  = '\u00a5';
-
     private static final Timer mIMETimer = new Timer("GeckoInputConnection Timer");
+
     private static int mIMEState;
     private static String mIMETypeHint = "";
     private static String mIMEModeHint = "";
@@ -91,11 +57,6 @@ class GeckoInputConnection
 
     private String mCurrentInputMethod;
 
-    // Is a composition active?
-    private int mCompositionStart = NO_COMPOSITION_STRING;
-    private boolean mCommittingText;
-    private KeyCharacterMap mKeyCharacterMap;
-    private final Editable mEditable;
     private final GeckoEditableClient mEditableClient;
     protected int mBatchEditCount;
     private ExtractedTextRequest mUpdateRequest;
