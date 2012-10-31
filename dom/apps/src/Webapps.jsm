@@ -1070,6 +1070,12 @@ this.DOMApplicationRegistry = {
 
     let appObject = AppsUtils.cloneAppObject(app);
     appObject.appStatus = app.appStatus || Ci.nsIPrincipal.APP_STATUS_INSTALLED;
+    // For hosted apps, allow application status override in dev mode.
+    if (!aData.isPackage &&
+        Services.prefs.getBoolPref("dom.mozApps.dev_mode")) {
+      appObject.appStatus = AppsUtils.getAppManifestStatus(app.manifest);
+    }
+
     appObject.installTime = app.installTime = Date.now();
     appObject.lastUpdateCheck = app.lastUpdateCheck = Date.now();
     let appNote = JSON.stringify(appObject);
@@ -1112,7 +1118,10 @@ this.DOMApplicationRegistry = {
     // For package apps, the permissions are not in the mini-manifest, so
     // don't update the permissions yet.
     if (!aData.isPackage) {
-      PermissionsInstaller.installPermissions(aData.app, isReinstall, (function() {
+      PermissionsInstaller.installPermissions({ origin: appObject.origin,
+                                                manifestURL: appObject.manifestURL,
+                                                manifest: jsonManifest },
+                                              isReinstall, (function() {
         this.uninstall(aData, aData.mm);
       }).bind(this));
     }
