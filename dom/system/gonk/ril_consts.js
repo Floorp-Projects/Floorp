@@ -390,6 +390,9 @@ const CALL_PRESENTATION_RESTRICTED = 1;
 const CALL_PRESENTATION_UNKNOWN = 2;
 const CALL_PRESENTATION_PAYPHONE = 3;
 
+// Call forwarding actions, see TS 27.007 7.11 "mode"
+const CALL_FORWARD_ACTION_QUERY_STATUS = 2;
+
 // ICC commands, see TS 27.007 +CRSM commands
 const ICC_COMMAND_SEEK = 0xa2;
 const ICC_COMMAND_READ_BINARY = 0xb0;
