@@ -1747,7 +1747,8 @@ var SelectionHandler = {
     return !(aElement instanceof Ci.nsIDOMHTMLButtonElement ||
              aElement instanceof Ci.nsIDOMHTMLEmbedElement ||
              aElement instanceof Ci.nsIDOMHTMLImageElement ||
-             aElement instanceof Ci.nsIDOMHTMLMediaElement);
+             aElement instanceof Ci.nsIDOMHTMLMediaElement) &&
+             aElement.style.MozUserSelect != 'none';
   },
 
   // aX/aY are in top-level window browser coordinates
