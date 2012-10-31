@@ -51,6 +51,7 @@ let DebuggerController = {
     window.removeEventListener("load", this._startupDebugger, true);
 
     DebuggerView.initialize(function() {
+      DebuggerView._isInitialized = true;
       window.dispatchEvent("Debugger:Loaded");
       this._connect();
     }.bind(this));
@@ -67,6 +68,7 @@ let DebuggerController = {
     window.removeEventListener("unload", this._shutdownDebugger, true);
 
     DebuggerView.destroy(function() {
+      DebuggerView._isDestroyed = true;
       this.SourceScripts.disconnect();
       this.StackFrames.disconnect();
       this.ThreadState.disconnect();
