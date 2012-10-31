@@ -24,4 +24,4 @@ SiteSpecificUserAgent.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISiteSpecificUserAgent])
 };
 
-let NSGetFactory = XPCOMUtils.generateNSGetFactory([SiteSpecificUserAgent]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SiteSpecificUserAgent]);

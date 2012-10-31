@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "DownloadPaths",
 ];
 
@@ -26,7 +26,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-const DownloadPaths = {
+this.DownloadPaths = {
   /**
    * Creates a uniquely-named file starting from the name of the provided file.
    * If a file with the provided name already exists, the function attempts to

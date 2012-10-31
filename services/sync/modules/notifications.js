@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["Notifications", "Notification", "NotificationButton"];
+this.EXPORTED_SYMBOLS = ["Notifications", "Notification", "NotificationButton"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -13,7 +13,7 @@ Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-sync/util.js");
 
-let Notifications = {
+this.Notifications = {
   // Match the referenced values in toolkit/content/widgets/notification.xml.
   get PRIORITY_INFO()     1, // PRIORITY_INFO_LOW
   get PRIORITY_WARNING()  4, // PRIORITY_WARNING_LOW
@@ -83,7 +83,8 @@ let Notifications = {
 /**
  * A basic notification.  Subclass this to create more complex notifications.
  */
-function Notification(title, description, iconURL, priority, buttons) {
+this.Notification =
+ function Notification(title, description, iconURL, priority, buttons) {
   this.title = title;
   this.description = description;
 
@@ -108,7 +109,8 @@ Notification.prototype.buttons = [];
 /**
  * A button to display in a notification.
  */
-function NotificationButton(label, accessKey, callback) {
+this.NotificationButton =
+ function NotificationButton(label, accessKey, callback) {
   function callbackWrapper() {
     try {
       callback.apply(this, arguments);

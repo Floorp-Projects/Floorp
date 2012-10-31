@@ -206,4 +206,4 @@ amManager.prototype = {
                                          Ci.nsIObserver])
 };
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([amManager]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([amManager]);

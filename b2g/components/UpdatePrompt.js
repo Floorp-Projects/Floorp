@@ -411,4 +411,4 @@ UpdatePrompt.prototype = {
   onStatus: function UP_onStatus(aRequest, aUpdate, aStatus, aStatusArg) { }
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([UpdatePrompt]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([UpdatePrompt]);

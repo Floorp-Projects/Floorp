@@ -24,7 +24,7 @@
  * For more information, ask Joe Walker <jwalker@mozilla.com>
  */
 
-var EXPORTED_SYMBOLS = [ "gcli" ];
+this.EXPORTED_SYMBOLS = [ "gcli" ];
 
 Components.utils.import("resource://gre/modules/devtools/Require.jsm");
 Components.utils.import("resource://gre/modules/devtools/Console.jsm");
@@ -10479,4 +10479,4 @@ define("text!gcli/ui/tooltip.html", [], "\n" +
 
 
 // Satisfy EXPORTED_SYMBOLS
-const gcli = require('gcli/index');
+this.gcli = require('gcli/index');

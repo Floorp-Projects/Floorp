@@ -34,8 +34,8 @@ try {
 }
 
 // Export the SourceEditor.
-var SourceEditor = obj.SourceEditor;
-var EXPORTED_SYMBOLS = ["SourceEditor"];
+this.SourceEditor = obj.SourceEditor;
+this.EXPORTED_SYMBOLS = ["SourceEditor"];
 
 // Add the constants used by all SourceEditors.
 

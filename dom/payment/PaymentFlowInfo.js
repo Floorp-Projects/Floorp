@@ -19,4 +19,4 @@ PaymentFlowInfo.prototype = {
   requestMethod: null
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([PaymentFlowInfo]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PaymentFlowInfo]);

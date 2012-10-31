@@ -60,4 +60,4 @@ UpdateServiceStub.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
 };
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([UpdateServiceStub]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([UpdateServiceStub]);

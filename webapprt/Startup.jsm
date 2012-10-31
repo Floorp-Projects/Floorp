@@ -8,7 +8,7 @@
  * the first time this module is imported.  So only put stuff here that must
  * happen before the webapp is loaded. */
 
-const EXPORTED_SYMBOLS = [];
+this.EXPORTED_SYMBOLS = [];
 
 const Ci = Components.interfaces;
 const Cu = Components.utils;

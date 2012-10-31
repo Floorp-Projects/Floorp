@@ -9,7 +9,7 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-var EXPORTED_SYMBOLS = ["InspectorUI"];
+this.EXPORTED_SYMBOLS = ["InspectorUI"];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -411,7 +411,7 @@ Inspector.prototype = {
  * @param nsIDOMWindow aWindow
  *        The chrome window for which the Inspector instance is created.
  */
-function InspectorUI(aWindow)
+this.InspectorUI = function InspectorUI(aWindow)
 {
   // Let style inspector tools register themselves.
   let tmp = {};
