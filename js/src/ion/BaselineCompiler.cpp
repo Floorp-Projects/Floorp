@@ -21,7 +21,6 @@ BaselineCompiler::BaselineCompiler(JSContext *cx, JSScript *script)
   : cx(cx),
     script(script),
     pc(NULL),
-    labels_(NULL),
     frame(cx, script, masm)
 {
 }
@@ -29,8 +28,7 @@ BaselineCompiler::BaselineCompiler(JSContext *cx, JSScript *script)
 bool
 BaselineCompiler::init()
 {
-    labels_ = (Label *)cx->malloc_(sizeof(Label) * script->length);
-    if (!labels_)
+    if (!labels_.init(script->length))
         return false;
 
     for (size_t i = 0; i < script->length; i++)
@@ -176,7 +174,7 @@ BaselineCompiler::emit_JSOP_POP()
 bool
 BaselineCompiler::emit_JSOP_GOTO()
 {
-    JS_ASSERT(frame.stackDepth() == 0); // Nothing to sync.
+    frame.syncStack(0);
 
     jsbytecode *target = pc + GET_JUMP_OFFSET(pc);
     masm.jump(labelOf(target));
@@ -188,6 +186,9 @@ BaselineCompiler::emit_JSOP_IFNE()
 {
     frame.popRegsAndSync(1);
 
+    //XXX: this assumes the value is boolean or int32. We should emit this in
+    // the common case (for instance x < y or !x loop condition), but for other
+    // cases we need a ToBoolean IC.
     jsbytecode *target = pc + GET_JUMP_OFFSET(pc);
     masm.branchTest32(Assembler::NonZero, R0.payloadReg(), R0.payloadReg(), labelOf(target));
     return true;
@@ -248,7 +249,8 @@ BaselineCompiler::emit_JSOP_UINT24()
 }
 
 void
-BaselineCompiler::storeValue(const StackValue *source, const Address &dest)
+BaselineCompiler::storeValue(const StackValue *source, const Address &dest,
+                             const ValueOperand &scratch)
 {
     switch (source->kind()) {
       case StackValue::Constant:
@@ -258,36 +260,15 @@ BaselineCompiler::storeValue(const StackValue *source, const Address &dest)
         masm.storeValue(source->reg(), dest);
         break;
       case StackValue::LocalSlot:
-        masm.loadValue(frame.addressOfLocal(source->localSlot()), R0);
-        masm.storeValue(R0, dest);
+        masm.loadValue(frame.addressOfLocal(source->localSlot()), scratch);
+        masm.storeValue(scratch, dest);
         break;
       case StackValue::Stack:
+        masm.loadValue(frame.addressOfStackValue(source), scratch);
+        masm.storeValue(scratch, dest);
+        break;
       default:
-        JS_NOT_REACHED("Foo");
-    }
-}
-
-void
-BaselineCompiler::loadValue(const StackValue *source, const ValueOperand &dest)
-{
-    switch (source->kind()) {
-      case StackValue::Constant:
-        masm.moveValue(source->constant(), dest);
-        break;
-      case StackValue::Register: {
-        ValueOperand reg = source->reg();
-        if (reg.payloadReg() != dest.payloadReg())
-            masm.mov(reg.payloadReg(), dest.payloadReg());
-        if (reg.typeReg() != dest.typeReg())
-            masm.mov(reg.typeReg(), dest.typeReg());
-        break;
-      }
-      case StackValue::LocalSlot:
-        masm.loadValue(frame.addressOfLocal(source->localSlot()), dest);
-        break;
-      case StackValue::Stack:
-      default:
-        JS_NOT_REACHED("Foo");
+        JS_NOT_REACHED("Invalid kind");
     }
 }
 
@@ -393,7 +374,7 @@ BaselineCompiler::emit_JSOP_SETLOCAL()
     frame.syncStack(1);
 
     uint32_t local = GET_SLOTNO(pc);
-    storeValue(frame.peek(-1), frame.addressOfLocal(local));
+    storeValue(frame.peek(-1), frame.addressOfLocal(local), R0);
     return true;
 }
 
@@ -402,9 +383,7 @@ BaselineCompiler::emit_JSOP_RETURN()
 {
     JS_ASSERT(frame.stackDepth() == 1);
 
-    // Store TOS in R0.
-    loadValue(frame.peek(-1), JSReturnOperand);
-    frame.pop();
+    frame.popValue(JSReturnOperand);
     masm.jump(&return_);
     return true;
 }
