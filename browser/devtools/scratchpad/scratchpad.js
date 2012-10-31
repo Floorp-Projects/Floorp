@@ -729,16 +729,13 @@ var Scratchpad = {
    */
   getRecentFiles: function SP_getRecentFiles()
   {
-    let branch = Services.prefs.getBranch("devtools.scratchpad.");
+    let maxRecent = Services.prefs.getIntPref(PREF_RECENT_FILES_MAX);
+    let branch = Services.prefs.
+                 getBranch("devtools.scratchpad.");
+
     let filePaths = [];
-
-    // WARNING: Do not use getCharPref here, it doesn't play nicely with
-    // Unicode strings.
-
     if (branch.prefHasUserValue("recentFilePaths")) {
-      let data = branch.getComplexValue("recentFilePaths",
-        Ci.nsISupportsString).data;
-      filePaths = JSON.parse(data);
+      filePaths = JSON.parse(branch.getCharPref("recentFilePaths"));
     }
 
     return filePaths;
@@ -784,16 +781,10 @@ var Scratchpad = {
 
     filePaths.push(aFile.path);
 
-    // WARNING: Do not use setCharPref here, it doesn't play nicely with
-    // Unicode strings.
-
-    let str = Cc["@mozilla.org/supports-string;1"]
-      .createInstance(Ci.nsISupportsString);
-    str.data = JSON.stringify(filePaths);
-
-    let branch = Services.prefs.getBranch("devtools.scratchpad.");
-    branch.setComplexValue("recentFilePaths",
-      Ci.nsISupportsString, str);
+    let branch = Services.prefs.
+                 getBranch("devtools.scratchpad.");
+    branch.setCharPref("recentFilePaths", JSON.stringify(filePaths));
+    return;
   },
 
   /**
@@ -877,19 +868,11 @@ var Scratchpad = {
 
       let filePaths = this.getRecentFiles();
       if (maxRecent < filePaths.length) {
+        let branch = Services.prefs.
+                     getBranch("devtools.scratchpad.");
         let diff = filePaths.length - maxRecent;
         filePaths.splice(0, diff);
-
-        // WARNING: Do not use setCharPref here, it doesn't play nicely with
-        // Unicode strings.
-
-        let str = Cc["@mozilla.org/supports-string;1"]
-          .createInstance(Ci.nsISupportsString);
-        str.data = JSON.stringify(filePaths);
-
-        let branch = Services.prefs.getBranch("devtools.scratchpad.");
-        branch.setComplexValue("recentFilePaths",
-          Ci.nsISupportsString, str);
+        branch.setCharPref("recentFilePaths", JSON.stringify(filePaths));
       }
     }
   },
