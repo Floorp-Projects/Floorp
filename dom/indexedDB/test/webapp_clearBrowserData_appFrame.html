@@ -33,23 +33,8 @@
       const objectStoreName = "foo";
       const testKey = 1;
       const testValue = objectStoreName;
-      const dbName = location.pathname + location.search;
 
-      // Determine whether our parent iframe asked us to create a remote
-      // browser frame here.
-      let remote_browser;
-      if (location.search.indexOf("remote_browser=true") != -1) {
-        remote_browser = true;
-      }
-      else if (location.search.indexOf("remote_browser=false") != -1) {
-        remote_browser = false;
-      }
-      else {
-        ok(false, "Expected remote_browser={true,false} in query string.");
-        return;
-      }
-
-      let request = indexedDB.open(dbName, 1);
+      let request = indexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = unexpectedSuccessHandler;
@@ -78,11 +63,7 @@
 
       let iframe = document.createElement("iframe");
       iframe.setAttribute("mozbrowser", "");
-      // Send our querystring to the subframe because
-      // webapp_clearBrowserData_browserFrame uses its pathname + querystring to
-      // open a database which it assumes hasn't been touched by another test.
-      iframe.setAttribute("src", "webapp_clearBrowserData_browserFrame.html" + location.search);
-      iframe.setAttribute("remote", remote_browser);
+      iframe.setAttribute("src", "webapp_clearBrowserData_browserFrame.html");
       iframe.addEventListener("mozbrowsershowmodalprompt", function(event) {
         let message = JSON.parse(event.detail.message);
         switch (message.type) {
@@ -115,7 +96,7 @@
       document.body.appendChild(iframe);
       yield;
 
-      request = indexedDB.open(dbName, 1);
+      request = indexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;
       request.onupgradeneeded = unexpectedSuccessHandler;
       request.onsuccess = grabEventAndContinueHandler;
