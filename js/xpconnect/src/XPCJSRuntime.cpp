@@ -2362,7 +2362,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mWatchdogThread(nullptr),
    mWatchdogHibernating(false),
    mLastActiveTime(-1),
-   mReleaseRunnable(nullptr),
    mExceptionManagerNotAvailable(false)
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
