@@ -132,6 +132,9 @@
 #include <io.h>
 #include <process.h>
 #endif
+#ifdef ANDROID
+#include <sys/stat.h>
+#endif
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -1564,8 +1567,20 @@ private:
         nsresult rv = logFile->AppendNative(filename);
         NS_ENSURE_SUCCESS(rv, nullptr);
 
-        rv = logFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+        rv = logFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
         NS_ENSURE_SUCCESS(rv, nullptr);
+#ifdef ANDROID
+        {
+            // On android the default system umask is 0077 which makes these files
+            // unreadable to the shell user. In order to pull the dumps off a non-rooted
+            // device we need to chmod them to something world-readable.
+            nsAutoCString path;
+            rv = logFile->GetNativePath(path);
+            if (NS_SUCCEEDED(rv)) {
+                chmod(PromiseFlatCString(path).get(), 0644);
+            }
+        }
+#endif
 
         return logFile.forget();
     }
