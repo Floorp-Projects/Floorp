@@ -161,7 +161,9 @@ nsWindow::nsWindow() :
     mIsVisible(false),
     mParent(nullptr),
     mFocus(nullptr),
-    mIMEComposing(false)
+    mIMEComposing(false),
+    mIMEMaskSelectionUpdate(false),
+    mIMEMaskTextUpdate(false)
 {
 }
 
@@ -639,12 +641,16 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent)
 
         switch (aEvent->message) {
         case NS_COMPOSITION_START:
+            MOZ_ASSERT(!mIMEComposing);
             mIMEComposing = true;
             break;
         case NS_COMPOSITION_END:
+            MOZ_ASSERT(mIMEComposing);
             mIMEComposing = false;
+            mIMEComposingText.Truncate();
             break;
         case NS_TEXT_TEXT:
+            MOZ_ASSERT(mIMEComposing);
             mIMEComposingText = static_cast<nsTextEvent*>(aEvent)->theText;
             break;
         case NS_KEY_PRESS:
@@ -1751,6 +1757,7 @@ void
 nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
 {
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
+    RemoveIMEComposition();
     uint32_t msg;
     switch (ae->Action()) {
     case AndroidKeyEvent::ACTION_DOWN:
@@ -1816,89 +1823,210 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
 #define ALOGIME(args...)
 #endif
 
-void
-nsWindow::OnIMEAddRange(AndroidGeckoEvent *ae)
+static nscolor
+ConvertAndroidColor(uint32_t c)
 {
-    //ALOGIME("IME: IME_ADD_RANGE");
-    nsTextRange range;
-    range.mStartOffset = ae->Offset();
-    range.mEndOffset = range.mStartOffset + ae->Count();
-    range.mRangeType = ae->RangeType();
-    range.mRangeStyle.mDefinedStyles = ae->RangeStyles();
-    range.mRangeStyle.mLineStyle = nsTextRangeStyle::LINESTYLE_SOLID;
-    range.mRangeStyle.mForegroundColor = NS_RGBA(
-        ((ae->RangeForeColor() >> 16) & 0xff),
-        ((ae->RangeForeColor() >> 8) & 0xff),
-        (ae->RangeForeColor() & 0xff),
-        ((ae->RangeForeColor() >> 24) & 0xff));
-    range.mRangeStyle.mBackgroundColor = NS_RGBA(
-        ((ae->RangeBackColor() >> 16) & 0xff),
-        ((ae->RangeBackColor() >> 8) & 0xff),
-        (ae->RangeBackColor() & 0xff),
-        ((ae->RangeBackColor() >> 24) & 0xff));
-    mIMERanges.AppendElement(range);
-    return;
+    return NS_RGBA((c & 0x000000ff),
+                   (c & 0x0000ff00) >> 8,
+                   (c & 0x00ff0000) >> 16,
+                   (c & 0xff000000) >> 24);
+}
+
+/*
+    Remove the composition but leave the text content as-is
+*/
+void
+nsWindow::RemoveIMEComposition()
+{
+    // Remove composition on Gecko side
+    if (!mIMEComposing)
+        return;
+
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+    bool savedMaskSelection = mIMEMaskSelectionUpdate;
+    bool savedMaskText = mIMEMaskTextUpdate;
+    mIMEMaskSelectionUpdate = mIMEMaskTextUpdate = true;
+
+    nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
+    InitEvent(textEvent, nullptr);
+    textEvent.theText = mIMEComposingText;
+    DispatchEvent(&textEvent);
+
+    nsCompositionEvent event(true, NS_COMPOSITION_END, this);
+    InitEvent(event, nullptr);
+    DispatchEvent(&event);
+
+    mIMEMaskSelectionUpdate = savedMaskSelection;
+    mIMEMaskTextUpdate = savedMaskText;
 }
 
 void
 nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
 {
+    MOZ_ASSERT(!mIMEMaskTextUpdate);
+    MOZ_ASSERT(!mIMEMaskSelectionUpdate);
+    /*
+        Rules for managing IME between Gecko and Java:
+
+        * Gecko controls the text content, and Java shadows the Gecko text
+           through text updates
+        * Java controls the selection, and Gecko shadows the Java selection
+           through set selection events
+        * Java controls the composition, and Gecko shadows the Java
+           composition through update composition events
+    */
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     switch (ae->Action()) {
-    case AndroidGeckoEvent::IME_COMPOSITION_END:
+    case AndroidGeckoEvent::IME_SYNCHRONIZE:
         {
-            ALOGIME("IME: IME_COMPOSITION_END");
-            MOZ_ASSERT(mIMEComposing,
-                       "IME_COMPOSITION_END when we are not composing?!");
-
-            nsCompositionEvent event(true, NS_COMPOSITION_END, this);
-            InitEvent(event, nullptr);
-            event.data = mIMELastDispatchedComposingText;
-            mIMELastDispatchedComposingText.Truncate();
-            DispatchEvent(&event);
+            AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT, 0);
         }
-        return;
-    case AndroidGeckoEvent::IME_COMPOSITION_BEGIN:
+        break;
+    case AndroidGeckoEvent::IME_REPLACE_TEXT:
         {
-            ALOGIME("IME: IME_COMPOSITION_BEGIN");
-            MOZ_ASSERT(!mIMEComposing,
-                       "IME_COMPOSITION_BEGIN when we are already composing?!");
+            /*
+                Replace text in Gecko thread from ae->Start() to ae->End()
+                  with the string ae->Characters()
 
-            mIMELastDispatchedComposingText.Truncate();
-            nsCompositionEvent event(true, NS_COMPOSITION_START, this);
-            InitEvent(event, nullptr);
-            DispatchEvent(&event);
-        }
-        return;
-    case AndroidGeckoEvent::IME_ADD_RANGE:
-        {
-            NS_ASSERTION(mIMEComposing,
-                         "IME_ADD_RANGE when we are not composing?!");
-            OnIMEAddRange(ae);
-        }
-        return;
-    case AndroidGeckoEvent::IME_SET_TEXT:
-        {
-            NS_ASSERTION(mIMEComposing,
-                         "IME_SET_TEXT when we are not composing?!");
+                Selection updates are masked so the result of our temporary
+                  selection event is not passed on to Java
 
-            OnIMEAddRange(ae);
+                Text updates are passed on, so the Java text can shadow the
+                  Gecko text
+            */
+            mIMEMaskSelectionUpdate = true;
+            RemoveIMEComposition();
+            {
+                nsSelectionEvent event(true, NS_SELECTION_SET, this);
+                InitEvent(event, nullptr);
+                event.mOffset = uint32_t(ae->Start());
+                event.mLength = uint32_t(ae->End() - ae->Start());
+                event.mExpandToClusterBoundary = false;
+                DispatchEvent(&event);
+            }
+            {
+                nsCompositionEvent event(true, NS_COMPOSITION_START, this);
+                InitEvent(event, nullptr);
+                DispatchEvent(&event);
+            }
+            {
+                nsTextEvent event(true, NS_TEXT_TEXT, this);
+                InitEvent(event, nullptr);
+                event.theText = ae->Characters();
+                DispatchEvent(&event);
+            }
+            {
+                nsCompositionEvent event(true, NS_COMPOSITION_END, this);
+                InitEvent(event, nullptr);
+                event.data = ae->Characters();
+                DispatchEvent(&event);
+            }
+            AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT, 0);
+            mIMEMaskSelectionUpdate = false;
+        }
+        break;
+    case AndroidGeckoEvent::IME_SET_SELECTION:
+        {
+            /*
+                Set Gecko selection to ae->Start() to ae->End()
+
+                Selection updates are masked to prevent Java from being
+                  notified of the new selection
+            */
+            MOZ_ASSERT(!mIMEMaskTextUpdate);
+            mIMEMaskSelectionUpdate = true;
+            nsSelectionEvent selEvent(true, NS_SELECTION_SET, this);
+            InitEvent(selEvent, nullptr);
+
+            int32_t start = ae->Start(), end = ae->End();
+
+            if (start < 0 || end < 0) {
+                nsQueryContentEvent event(true, NS_QUERY_SELECTED_TEXT, this);
+                InitEvent(event, nullptr);
+                DispatchEvent(&event);
+                MOZ_ASSERT(event.mSucceeded && !event.mWasAsync);
+
+                if (start < 0)
+                    start = int32_t(event.GetSelectionStart());
+                if (end < 0)
+                    end = int32_t(event.GetSelectionEnd());
+            }
+
+            selEvent.mOffset = std::min(start, end);
+            selEvent.mLength = std::max(start, end) - selEvent.mOffset;
+            selEvent.mReversed = start > end;
+            selEvent.mExpandToClusterBoundary = false;
+
+            DispatchEvent(&selEvent);
+            mIMEMaskSelectionUpdate = false;
+        }
+        break;
+    case AndroidGeckoEvent::IME_ADD_COMPOSITION_RANGE:
+        {
+            nsTextRange range;
+            range.mStartOffset = ae->Start();
+            range.mEndOffset = ae->End();
+            range.mRangeType = ae->RangeType();
+            range.mRangeStyle.mDefinedStyles = ae->RangeStyles();
+            range.mRangeStyle.mLineStyle = nsTextRangeStyle::LINESTYLE_SOLID;
+            range.mRangeStyle.mForegroundColor =
+                    ConvertAndroidColor(uint32_t(ae->RangeForeColor()));
+            range.mRangeStyle.mBackgroundColor =
+                    ConvertAndroidColor(uint32_t(ae->RangeBackColor()));
+            mIMERanges.AppendElement(range);
+        }
+        break;
+    case AndroidGeckoEvent::IME_UPDATE_COMPOSITION:
+        {
+            /*
+                Update the composition from ae->Start() to ae->End() using
+                  information from added ranges. This is only used for
+                  visual indication and does not affect the text content.
+                  Only the offsets are specified and not the text content
+                  to eliminate the possibility of this event altering the
+                  text content unintentionally.
+
+                Selection and text updates are masked so the result of
+                  temporary events are not passed on to Java
+            */
+            mIMEMaskSelectionUpdate = mIMEMaskTextUpdate = true;
+            RemoveIMEComposition();
 
             nsTextEvent event(true, NS_TEXT_TEXT, this);
             InitEvent(event, nullptr);
 
-            event.theText.Assign(ae->Characters());
             event.rangeArray = mIMERanges.Elements();
             event.rangeCount = mIMERanges.Length();
 
+            {
+                nsSelectionEvent event(true, NS_SELECTION_SET, this);
+                InitEvent(event, nullptr);
+                event.mOffset = uint32_t(ae->Start());
+                event.mLength = uint32_t(ae->End() - ae->Start());
+                event.mExpandToClusterBoundary = false;
+                DispatchEvent(&event);
+            }
+            {
+                nsQueryContentEvent queryEvent(true,
+                        NS_QUERY_SELECTED_TEXT, this);
+                InitEvent(queryEvent, nullptr);
+                DispatchEvent(&queryEvent);
+                MOZ_ASSERT(queryEvent.mSucceeded && !queryEvent.mWasAsync);
+                event.theText = queryEvent.mReply.mString;
+            }
+            {
+                nsCompositionEvent event(true, NS_COMPOSITION_START, this);
+                InitEvent(event, nullptr);
+                DispatchEvent(&event);
+            }
+
             if (mIMEComposing &&
-                event.theText != mIMELastDispatchedComposingText) {
+                event.theText != mIMEComposingText) {
                 nsCompositionEvent compositionUpdate(true,
                                                      NS_COMPOSITION_UPDATE,
                                                      this);
                 InitEvent(compositionUpdate, nullptr);
                 compositionUpdate.data = event.theText;
-                mIMELastDispatchedComposingText = event.theText;
                 DispatchEvent(&compositionUpdate);
                 if (Destroyed())
                     return;
@@ -1913,85 +2041,18 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
 
             DispatchEvent(&event);
             mIMERanges.Clear();
+            mIMEMaskSelectionUpdate = mIMEMaskTextUpdate = false;
         }
-        return;
-    case AndroidGeckoEvent::IME_GET_TEXT:
+        break;
+    case AndroidGeckoEvent::IME_REMOVE_COMPOSITION:
         {
-            ALOGIME("IME: IME_GET_TEXT: o=%u, l=%u", ae->Offset(), ae->Count());
-
-            nsQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, this);
-            InitEvent(event, nullptr);
-
-            event.InitForQueryTextContent(ae->Offset(), ae->Count());
-            
-            DispatchEvent(&event);
-
-            if (!event.mSucceeded) {
-                ALOGIME("IME:     -> failed");
-                AndroidBridge::Bridge()->ReturnIMEQueryResult(
-                    nullptr, 0, 0, 0);
-                return;
-            } else if (!event.mWasAsync) {
-                AndroidBridge::Bridge()->ReturnIMEQueryResult(
-                    event.mReply.mString.get(), 
-                    event.mReply.mString.Length(), 0, 0);
-            }
+            RemoveIMEComposition();
+            mIMERanges.Clear();
         }
-        return;
-    case AndroidGeckoEvent::IME_DELETE_TEXT:
-        {
-            ALOGIME("IME: IME_DELETE_TEXT");
-            NS_ASSERTION(mIMEComposing,
-                         "IME_DELETE_TEXT when we are not composing?!");
-
-            nsKeyEvent event(true, NS_KEY_PRESS, this);
-            ANPEvent pluginEvent;
-            InitKeyEvent(event, *ae, &pluginEvent);
-            event.keyCode = NS_VK_BACK;
-            DispatchEvent(&event);
-        }
-        return;
-    case AndroidGeckoEvent::IME_SET_SELECTION:
-        {
-            ALOGIME("IME: IME_SET_SELECTION: o=%u, l=%d", ae->Offset(), ae->Count());
-
-            nsSelectionEvent selEvent(true, NS_SELECTION_SET, this);
-            InitEvent(selEvent, nullptr);
-
-            selEvent.mOffset = uint32_t(ae->Count() >= 0 ?
-                                        ae->Offset() :
-                                        ae->Offset() + ae->Count());
-            selEvent.mLength = uint32_t(NS_ABS(ae->Count()));
-            selEvent.mReversed = ae->Count() >= 0 ? false : true;
-            selEvent.mExpandToClusterBoundary = false;
-
-            DispatchEvent(&selEvent);
-        }
-        return;
-    case AndroidGeckoEvent::IME_GET_SELECTION:
-        {
-            ALOGIME("IME: IME_GET_SELECTION");
-
-            nsQueryContentEvent event(true, NS_QUERY_SELECTED_TEXT, this);
-            InitEvent(event, nullptr);
-            DispatchEvent(&event);
-
-            if (!event.mSucceeded) {
-                ALOGIME("IME:     -> failed");
-                AndroidBridge::Bridge()->ReturnIMEQueryResult(
-                    nullptr, 0, 0, 0);
-                return;
-            } else if (!event.mWasAsync) {
-                AndroidBridge::Bridge()->ReturnIMEQueryResult(
-                    event.mReply.mString.get(),
-                    event.mReply.mString.Length(), 
-                    event.GetSelectionStart(),
-                    event.GetSelectionEnd() - event.GetSelectionStart());
-            }
-            //ALOGIME("IME:     -> o=%u, l=%u", event.mReply.mOffset, event.mReply.mString.Length());
-        }
-        return;
+        break;
     }
+    MOZ_ASSERT(!mIMEMaskTextUpdate);
+    MOZ_ASSERT(!mIMEMaskSelectionUpdate);
 }
 
 nsWindow *
