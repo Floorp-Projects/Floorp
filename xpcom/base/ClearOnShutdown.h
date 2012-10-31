@@ -91,10 +91,12 @@ inline void KillClearOnShutdown()
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  ShutdownObserver *observer;
-  while ((observer = sShutdownObservers->popFirst())) {
-    observer->Shutdown();
-    delete observer;
+  if (sShutdownObservers) {
+    ShutdownObserver *observer;
+    while ((observer = sShutdownObservers->popFirst())) {
+      observer->Shutdown();
+      delete observer;
+    }
   }
 
   sShutdownObservers = nullptr;
