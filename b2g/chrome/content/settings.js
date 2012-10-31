@@ -153,10 +153,8 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
 })();
 
 // =================== Debugger ====================
-SettingsListener.observe('devtools.debugger.remote-enabled', false, function(value) {
+SettingsListener.observe('devtools.debugger.remote-enabled', false, function(enabled) {
   Services.prefs.setBoolPref('devtools.debugger.remote-enabled', value);
-  // This preference is consulted during startup
-  Services.prefs.savePrefFile(null);
 });
 
 SettingsListener.observe('devtools.debugger.log', false, function(value) {
