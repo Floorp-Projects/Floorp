@@ -58,7 +58,7 @@ class TestElements(MarionetteTestCase):
         self.assertEqual(HTMLElement, type(found_el));
         self.assertEqual(el, found_el)
 
-    def test_name(self):
+    def test_by_name(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
         el = self.marionette.execute_script("return window.document.getElementsByName('myInput')[0];")

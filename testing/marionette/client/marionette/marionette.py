@@ -112,6 +112,7 @@ class Marionette(object):
         self.noWindow = noWindow
         self.logcat_dir = logcat_dir
         self.gecko_path = gecko_path
+        self._test_name = None
 
         if bin:
             self.instance = GeckoInstance(host=self.host, port=self.port,
@@ -271,6 +272,15 @@ class Marionette(object):
         self.session = self._send_message('newSession', 'value')
         self.b2g = 'b2g' in self.session
         return self.session
+
+    @property
+    def test_name(self):
+        return self._test_name
+
+    @test_name.setter
+    def test_name(self, test_name):
+        if self._send_message('setTestName', 'ok', value=test_name):
+            self._test_name = test_name
 
     def delete_session(self):
         response = self._send_message('deleteSession', 'ok')
