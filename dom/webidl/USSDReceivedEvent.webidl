@@ -5,6 +5,6 @@
  */
 
 dictionary USSDReceivedEventDict {
-  DOMString message = "";
+  DOMString? message = null;
   boolean sessionEnded = false;
 };
