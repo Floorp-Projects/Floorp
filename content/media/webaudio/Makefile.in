@@ -23,6 +23,7 @@ CPPSRCS := \
   AudioParam.cpp \
   AudioSourceNode.cpp \
   EnableWebAudioCheck.cpp \
+  GainNode.cpp \
   $(NULL)
 
 EXPORTS_NAMESPACES := mozilla/dom
@@ -33,6 +34,7 @@ EXPORTS_mozilla/dom := \
   AudioNode.h \
   AudioParam.h \
   AudioSourceNode.h \
+  GainNode.h \
   $(NULL)
 
 PARALLEL_DIRS := test

@@ -26,6 +26,7 @@ namespace dom {
 class AudioDestinationNode;
 class AudioBufferSourceNode;
 class AudioBuffer;
+class GainNode;
 
 class AudioContext MOZ_FINAL : public nsWrapperCache,
                                public EnableWebAudioCheck
@@ -60,6 +61,9 @@ public:
   CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
                uint32_t aLength, float aSampleRate,
                ErrorResult& aRv);
+
+  already_AddRefed<GainNode>
+  CreateGain();
 
 private:
   nsCOMPtr<nsIDOMWindow> mWindow;
