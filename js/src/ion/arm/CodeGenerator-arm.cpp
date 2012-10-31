@@ -354,11 +354,10 @@ CodeGeneratorARM::visitAddI(LAddI *ins)
     const LAllocation *rhs = ins->getOperand(1);
     const LDefinition *dest = ins->getDef(0);
 
-    if (rhs->isConstant()) {
+    if (rhs->isConstant())
         masm.ma_add(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), SetCond);
-    } else {
+    else
         masm.ma_add(ToRegister(lhs), ToOperand(rhs), ToRegister(dest), SetCond);
-    }
 
     if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
         return false;
@@ -372,11 +371,11 @@ CodeGeneratorARM::visitSubI(LSubI *ins)
     const LAllocation *lhs = ins->getOperand(0);
     const LAllocation *rhs = ins->getOperand(1);
     const LDefinition *dest = ins->getDef(0);
-    if (rhs->isConstant()) {
+
+    if (rhs->isConstant())
         masm.ma_sub(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), SetCond);
-    } else {
+    else
         masm.ma_sub(ToRegister(lhs), ToOperand(rhs), ToRegister(dest), SetCond);
-    }
 
     if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
         return false;
@@ -400,7 +399,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
             Assembler::Condition bailoutCond = (constant == 0) ? Assembler::LessThan : Assembler::Equal;
             masm.ma_cmp(ToRegister(lhs), Imm32(0));
             if (!bailoutIf(bailoutCond, ins->snapshot()))
-                    return false;
+                return false;
         }
         // TODO: move these to ma_mul.
         switch (constant) {
@@ -461,13 +460,12 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
             }
 
             if (!handled) {
-                if (mul->canOverflow()) {
+                if (mul->canOverflow())
                     c = masm.ma_check_mul(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), c);
-                } else {
+                else
                     masm.ma_mul(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest));
-                }
             }
-        }
+          }
         }
         // Bailout on overflow
         if (mul->canOverflow() && !bailoutIf(c, ins->snapshot()))
@@ -615,9 +613,8 @@ CodeGeneratorARM::visitModPowTwoI(LModPowTwoI *ins)
     masm.ma_rsb(Imm32(0), out, NoSetCond, Assembler::Signed);
     masm.ma_and(Imm32((1<<ins->shift())-1), out);
     masm.ma_rsb(Imm32(0), out, SetCond, Assembler::Signed);
-    if (!bailoutIf(Assembler::Zero, ins->snapshot())) {
+    if (!bailoutIf(Assembler::Zero, ins->snapshot()))
         return false;
-    }
     masm.bind(&fin);
     return true;
 }
@@ -629,9 +626,8 @@ CodeGeneratorARM::visitModMaskI(LModMaskI *ins)
     Register dest = ToRegister(ins->getDef(0));
     Register tmp = ToRegister(ins->getTemp(0));
     masm.ma_mod_mask(src, dest, tmp, ins->shift());
-    if (!bailoutIf(Assembler::Zero, ins->snapshot())) {
+    if (!bailoutIf(Assembler::Zero, ins->snapshot()))
         return false;
-    }
     return true;
 }
 bool
@@ -657,25 +653,22 @@ CodeGeneratorARM::visitBitOpI(LBitOpI *ins)
     // all of these bitops should be either imm32's, or integer registers.
     switch (ins->bitop()) {
       case JSOP_BITOR:
-        if (rhs->isConstant()) {
+        if (rhs->isConstant())
             masm.ma_orr(Imm32(ToInt32(rhs)), ToRegister(lhs), ToRegister(dest));
-        } else {
+        else
             masm.ma_orr(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
-        }
         break;
       case JSOP_BITXOR:
-        if (rhs->isConstant()) {
+        if (rhs->isConstant())
             masm.ma_eor(Imm32(ToInt32(rhs)), ToRegister(lhs), ToRegister(dest));
-        } else {
+        else
             masm.ma_eor(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
-        }
         break;
       case JSOP_BITAND:
-        if (rhs->isConstant()) {
+        if (rhs->isConstant())
             masm.ma_and(Imm32(ToInt32(rhs)), ToRegister(lhs), ToRegister(dest));
-        } else {
+        else
             masm.ma_and(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
-        }
         break;
       default:
         JS_NOT_REACHED("unexpected binary opcode");
@@ -834,9 +827,8 @@ CodeGeneratorARM::visitMoveGroup(LMoveGroup *group)
                                         ? MoveResolver::Move::DOUBLE
                                         : MoveResolver::Move::GENERAL;
 
-        if (!resolver.addMove(toMoveOperand(from), toMoveOperand(to), kind)) {
+        if (!resolver.addMove(toMoveOperand(from), toMoveOperand(to), kind))
             return false;
-        }
     }
 
     if (!resolver.resolve())
@@ -893,7 +885,6 @@ CodeGeneratorARM::emitTableSwitchDispatch(MTableSwitch *mir, const Register &ind
 
     if (!masm.addDeferredData(d, 0))
         return false;
-
     return true;
 }
 
@@ -906,17 +897,17 @@ CodeGeneratorARM::visitMathD(LMathD *math)
     
     switch (math->jsop()) {
       case JSOP_ADD:
-          masm.ma_vadd(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
-          break;
+        masm.ma_vadd(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        break;
       case JSOP_SUB:
-          masm.ma_vsub(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
-          break;
+        masm.ma_vsub(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        break;
       case JSOP_MUL:
-          masm.ma_vmul(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
-          break;
+        masm.ma_vmul(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        break;
       case JSOP_DIV:
-          masm.ma_vdiv(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
-          break;
+        masm.ma_vdiv(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        break;
       default:
         JS_NOT_REACHED("unexpected opcode");
         return false;
@@ -1212,6 +1203,7 @@ CodeGeneratorARM::visitCompareB(LCompareB *lir)
         emitSet(JSOpToCondition(mir->jsop()), output);
         masm.jump(&done);
     }
+
     masm.bind(&notBoolean);
     {
         masm.move32(Imm32(mir->jsop() == JSOP_STRICTNE), output);
@@ -1349,13 +1341,15 @@ CodeGeneratorARM::visitLoadElementT(LLoadElementT *load)
     Register base = ToRegister(load->elements());
     if (load->mir()->type() == MIRType_Double) {
         if (load->index()->isConstant()) {
-            masm.loadInt32OrDouble(Address(base,ToInt32(load->index()) * sizeof(Value)), ToFloatRegister(load->output()));
+            Address source(base, ToInt32(load->index()) * sizeof(Value));
+            masm.loadInt32OrDouble(source, ToFloatRegister(load->output()));
         } else {
             masm.loadInt32OrDouble(base, ToRegister(load->index()), ToFloatRegister(load->output()));
         }
     } else {
         if (load->index()->isConstant()) {
-            masm.load32(Address(base, ToInt32(load->index()) * sizeof(Value)), ToRegister(load->output()));
+            Address source(base, ToInt32(load->index()) * sizeof(Value));
+            masm.load32(source, ToRegister(load->output()));
         } else {
             masm.ma_ldr(DTRAddr(base, DtrRegImmShift(ToRegister(load->index()), LSL, 3)),
                         ToRegister(load->output()));
