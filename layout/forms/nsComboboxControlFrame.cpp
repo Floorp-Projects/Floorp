@@ -681,10 +681,12 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
   mLastDropDownBelowScreenY = nscoord_MIN;
   GetAvailableDropdownSpace(&above, &below, &translation);
   if (above <= 0 && below <= 0) {
-    // Hide the view immediately to minimize flicker.
-    nsIView* view = mDropdownFrame->GetView();
-    view->GetViewManager()->SetViewVisibility(view, nsViewVisibility_kHide);
-    NS_DispatchToCurrentThread(new nsAsyncRollup(this));
+    if (IsDroppedDown()) {
+      // Hide the view immediately to minimize flicker.
+      nsIView* view = mDropdownFrame->GetView();
+      view->GetViewManager()->SetViewVisibility(view, nsViewVisibility_kHide);
+      NS_DispatchToCurrentThread(new nsAsyncRollup(this));
+    }
     return eDropDownPositionSuppressed;
   }
 
