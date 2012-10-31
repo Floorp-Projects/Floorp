@@ -12,10 +12,11 @@
     <RelativeLayout android:id="@+id/address_bar"
                     style="@style/AddressBar">
 
-        <ImageView android:id="@+id/address_bar_bg"
-                   android:layout_width="fill_parent"
-                   android:layout_height="fill_parent"
-                   android:background="@drawable/address_bar_bg"/>
+        <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/address_bar_bg"
+                                                    android:layout_width="fill_parent"
+                                                    android:layout_height="fill_parent"
+                                                    gecko:curveTowards="left"
+                                                    android:background="@drawable/address_bar_bg"/>
 
         <org.mozilla.gecko.TabsButton android:id="@+id/tabs"
                                       style="@style/AddressBar.ImageButton"
@@ -23,6 +24,7 @@
                                       android:layout_alignParentLeft="true"
                                       gecko:curveTowards="left"
                                       gecko:cropped="true"
+                                      gecko:sidebar="true"
                                       android:background="@drawable/tabs_button"
                                       android:gravity="center_vertical"
                                       android:src="@drawable/tabs_level"
@@ -78,16 +80,16 @@
                            android:focusable="false"
                            android:background="@drawable/address_bar_url"/>
 
-                <FrameLayout android:id="@+id/awesome_bar_right_edge"
-                             style="@style/AddressBar.ImageButton"
-                             android:layout_width="25dp"
-                             android:layout_height="fill_parent"
-                             android:paddingTop="6dp"
-                             android:paddingBottom="6dp"
-                             android:layout_centerVertical="true"
-                             android:layout_alignParentRight="true"
-                             android:duplicateParentState="true"
-                             android:background="@drawable/address_bar_bg">
+                <view class="org.mozilla.gecko.BrowserToolbar$RightEdge"
+                      android:id="@+id/awesome_bar_right_edge"
+                      style="@style/AddressBar.ImageButton"
+                      android:layout_width="25dp"
+                      android:layout_height="fill_parent"
+                      android:paddingTop="6dp"
+                      android:paddingBottom="6dp"
+                      android:layout_centerVertical="true"
+                      android:layout_alignParentRight="true"
+                      android:duplicateParentState="true">
 
                     <ImageView android:layout_width="50dp"
                                android:layout_height="fill_parent"
@@ -98,7 +100,7 @@
                                android:focusable="false"
                                android:src="@drawable/address_bar_url"/>
 
-                </FrameLayout>
+                </view>
 
             </RelativeLayout>
 

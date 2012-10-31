@@ -562,6 +562,8 @@ abstract public class BrowserApp extends GeckoApp
             mTabsPanel.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
         }
 
+        mBrowserToolbar.refreshBackground();
+
         if (hasTabsSideBar())
             mBrowserToolbar.adjustTabsAnimation(true);
     }
