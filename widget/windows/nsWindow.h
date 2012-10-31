@@ -90,7 +90,7 @@ public:
   NS_IMETHOD              SetParent(nsIWidget *aNewParent);
   virtual nsIWidget*      GetParent(void);
   virtual float           GetDPI();
-  virtual double          GetDefaultScale();
+  virtual double          GetDefaultScaleInternal();
   NS_IMETHOD              Show(bool bState);
   virtual bool            IsVisible() const;
   NS_IMETHOD              ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY);

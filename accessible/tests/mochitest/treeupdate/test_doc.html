@@ -72,11 +72,6 @@
       {
         var tree = {
           role: ROLE_DOCUMENT,
-          states: {
-            // Out of date root content involves stale state presence.
-            states: 0,
-            extraStates: EXT_STATE_STALE
-          },
           children: [ ]
         };
         testAccessibleTree(getDocNode(aID), tree);
@@ -94,12 +89,6 @@
       {
         var tree = {
           role: ROLE_DOCUMENT,
-          states: {
-            states: 0,
-            extraStates: 0,
-            absentStates: 0,
-            absentExtraStates: EXT_STATE_STALE
-          },
           children: [
             {
               role: ROLE_TEXT_LEAF,

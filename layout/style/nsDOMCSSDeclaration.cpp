@@ -18,7 +18,6 @@
 #include "nsIURL.h"
 #include "nsReadableUtils.h"
 #include "nsIPrincipal.h"
-#include "nsDOMClassInfoID.h"
 #include "mozAutoDocUpdate.h"
 
 namespace css = mozilla::css;
@@ -27,15 +26,11 @@ nsDOMCSSDeclaration::~nsDOMCSSDeclaration()
 {
 }
 
-DOMCI_DATA(CSSStyleDeclaration, nsDOMCSSDeclaration)
-
 NS_INTERFACE_TABLE_HEAD(nsDOMCSSDeclaration)
-  NS_INTERFACE_TABLE3(nsDOMCSSDeclaration,
+  NS_INTERFACE_TABLE2(nsDOMCSSDeclaration,
                       nsICSSDeclaration,
-                      nsIDOMCSSStyleDeclaration,
-                      nsIDOMCSS2Properties)
+                      nsIDOMCSSStyleDeclaration)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSStyleDeclaration)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -303,35 +298,3 @@ nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
   decl->RemoveProperty(aPropID);
   return SetCSSDeclaration(decl);
 }
-
-// nsIDOMCSS2Properties
-
-#define CSS_PROP_DOMPROP_PREFIXED(prop_) Moz ## prop_
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,          \
-                 kwtable_, stylestruct_, stylestructoffset_, animtype_)      \
-  NS_IMETHODIMP                                                              \
-  nsDOMCSSDeclaration::Get##method_(nsAString& aValue)                       \
-  {                                                                          \
-    return GetPropertyValue(eCSSProperty_##id_, aValue);                     \
-  }                                                                          \
-                                                                             \
-  NS_IMETHODIMP                                                              \
-  nsDOMCSSDeclaration::Set##method_(const nsAString& aValue)                 \
-  {                                                                          \
-    return SetPropertyValue(eCSSProperty_##id_, aValue);                     \
-  }
-
-#define CSS_PROP_LIST_EXCLUDE_INTERNAL
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_)  \
-  CSS_PROP(name_, id_, method_, flags_, pref_, X, X, X, X, X)
-#include "nsCSSPropList.h"
-
-#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)  \
-  CSS_PROP(X, propid_, aliasmethod_, X, pref_, X, X, X, X, X)
-#include "nsCSSPropAliasList.h"
-#undef CSS_PROP_ALIAS
-
-#undef CSS_PROP_SHORTHAND
-#undef CSS_PROP_LIST_EXCLUDE_INTERNAL
-#undef CSS_PROP
-#undef CSS_PROP_DOMPROP_PREFIXED

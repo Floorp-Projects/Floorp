@@ -12,7 +12,6 @@
 
 #include "nsError.h"
 #include "nsDOMString.h"
-#include "nsIDOMCSS2Properties.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsStyleContext.h"

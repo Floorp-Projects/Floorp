@@ -15,10 +15,6 @@ var prefObserver = {
 };
 
 function run_test() {
-  Cc["@mozilla.org/preferences-service;1"].
-    getService(Ci.nsIPrefBranch).
-      setBoolPref("browser.privatebrowsing.keep_current_session", true);
-  
   let loadContext = { get usePrivateBrowsing() { return gInPrivateBrowsing; } };
 
   var cps = new ContentPrefInstance(loadContext);
