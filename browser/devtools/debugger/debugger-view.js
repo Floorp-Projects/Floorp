@@ -45,7 +45,6 @@ let DebuggerView = {
 
     this._initializePanes();
     this._initializeEditor(aCallback)
-    this._isInitialized = true;
   },
 
   /**
@@ -419,6 +418,7 @@ let DebuggerView = {
   _stackframesAndBreakpoints: null,
   _variables: null,
   _isInitialized: false,
+  _isDestroyed: false
 };
 
 /**
