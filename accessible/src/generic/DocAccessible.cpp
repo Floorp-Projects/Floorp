@@ -260,13 +260,8 @@ DocAccessible::Description(nsString& aDescription)
 uint64_t
 DocAccessible::NativeState()
 {
-  // The root content of the document might be removed so that mContent is
-  // out of date.
-  uint64_t state = (mContent->GetCurrentDoc() == mDocument) ?
-    0 : states::STALE;
-
   // Document is always focusable.
-  state |= states::FOCUSABLE; // keep in sync with NativeIteractiveState() impl
+  uint64_t state = states::FOCUSABLE; // keep in sync with NativeInteractiveState() impl
   if (FocusMgr()->IsFocused(this))
     state |= states::FOCUSED;
 
@@ -309,11 +304,11 @@ DocAccessible::NativelyUnavailable() const
 void
 DocAccessible::ApplyARIAState(uint64_t* aState) const
 {
-  // Combine with states from outer doc
-  // 
-  Accessible::ApplyARIAState(aState);
+  // Grab states from content element.
+  if (mContent)
+    Accessible::ApplyARIAState(aState);
 
-  // Allow iframe/frame etc. to have final state override via ARIA
+  // Allow iframe/frame etc. to have final state override via ARIA.
   if (mParent)
     mParent->ApplyARIAState(aState);
 }
@@ -540,7 +535,7 @@ DocAccessible::GetEditor() const
   // Check if document is editable (designMode="on" case). Otherwise check if
   // the html:body (for HTML document case) or document element is editable.
   if (!mDocument->HasFlag(NODE_IS_EDITABLE) &&
-      !mContent->HasFlag(NODE_IS_EDITABLE))
+      (!mContent || !mContent->HasFlag(NODE_IS_EDITABLE)))
     return nullptr;
 
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();
@@ -1560,7 +1555,7 @@ DocAccessible::DoInitialUpdate()
   // miss the notification (since content tree change notifications are ignored
   // prior to initial update). Make sure the content element is valid.
   nsIContent* contentElm = nsCoreUtils::GetRoleContent(mDocument);
-  if (contentElm && mContent != contentElm)
+  if (mContent != contentElm)
     mContent = contentElm;
 
   // Build initial tree.
@@ -1825,7 +1820,7 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
   if (aContainer == this) {
     // If new root content has been inserted then update it.
     nsIContent* rootContent = nsCoreUtils::GetRoleContent(mDocument);
-    if (rootContent && rootContent != mContent)
+    if (rootContent != mContent)
       mContent = rootContent;
 
     // Continue to update the tree even if we don't have root content.
