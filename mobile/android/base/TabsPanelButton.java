@@ -5,9 +5,13 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.PorterDuff.Mode;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
 
 public class TabsPanelButton extends ShapedButton {
@@ -46,5 +50,27 @@ public class TabsPanelButton extends ShapedButton {
             mPath.lineTo(width, 0);
             mPath.lineTo(width, height);
         }
+    }
+
+    // The drawable is constructed as per @drawable/tab_new_button.
+    @Override
+    public void onLightweightThemeChanged() {
+        Drawable drawable = mActivity.getLightweightTheme().getDrawableWithAlpha(this, 34);
+        if (drawable == null)
+            return;
+
+        Resources resources = getContext().getResources();
+        LayerDrawable layers = new LayerDrawable(new Drawable[] { resources.getDrawable(R.drawable.tabs_tray_bg_repeat), drawable }); 
+
+        StateListDrawable stateList = new StateListDrawable();
+        stateList.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.highlight));
+        stateList.addState(new int[] {}, layers);
+
+        setBackgroundDrawable(stateList);
+    }
+
+    @Override
+    public void onLightweightThemeReset() {
+        setBackgroundResource(R.drawable.tab_new_button);
     }
 }

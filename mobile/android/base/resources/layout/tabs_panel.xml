@@ -8,7 +8,8 @@
     <view class="org.mozilla.gecko.TabsPanel$TabsPanelToolbar"
           android:id="@+id/toolbar"
           android:layout_width="fill_parent"
-          android:layout_height="@dimen/browser_toolbar_height"/>
+          android:layout_height="@dimen/browser_toolbar_height"
+          android:background="@drawable/tabs_tray_bg_repeat"/>
 
     <RelativeLayout android:layout_width="fill_parent"
                     android:layout_height="fill_parent">
