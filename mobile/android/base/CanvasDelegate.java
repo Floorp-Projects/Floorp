@@ -59,6 +59,7 @@ public class CanvasDelegate {
 
                 mPaint.setXfermode(mMode);
                 canvas.drawBitmap(bitmap, 0, 0, mPaint);
+                bitmap.recycle();
 
                 mPaint.setXfermode(null);
             }
