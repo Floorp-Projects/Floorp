@@ -218,7 +218,7 @@
       <item name="android:paddingBottom">@dimen/abouthome_icon_radius</item>
       <item name="android:paddingLeft">0dip</item>
       <item name="android:paddingRight">0dip</item>
-      <item name="android:scaleType">centerCrop</item>
+      <item name="android:scaleType">fitCenter</item>
     </style>
 
     <style name="AboutHome.Thumbnail.Label">
