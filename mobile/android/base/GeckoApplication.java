@@ -13,6 +13,8 @@ public class GeckoApplication extends Application {
     private boolean mInited;
     private boolean mInBackground;
 
+    private LightweightTheme mLightweightTheme;
+
     protected void initialize() {
         if (mInited)
             return;
@@ -21,6 +23,8 @@ public class GeckoApplication extends Application {
         try {
             Class.forName("android.os.AsyncTask");
         } catch (ClassNotFoundException e) {}
+
+        mLightweightTheme = new LightweightTheme(this);
 
         GeckoConnectivityReceiver.getInstance().init(getApplicationContext());
         GeckoBatteryManager.getInstance().init(getApplicationContext());
@@ -49,5 +53,9 @@ public class GeckoApplication extends Application {
 
     public boolean isApplicationInBackground() {
         return mInBackground;
+    }
+
+    public LightweightTheme getLightweightTheme() {
+        return mLightweightTheme;
     }
 }
