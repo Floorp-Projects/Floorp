@@ -182,7 +182,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                               new String[] { Combined._ID,
                                              Combined.URL,
                                              Combined.TITLE,
-                                             Combined.FAVICON,
                                              Combined.DISPLAY,
                                              Combined.BOOKMARK_ID,
                                              Combined.HISTORY_ID },
