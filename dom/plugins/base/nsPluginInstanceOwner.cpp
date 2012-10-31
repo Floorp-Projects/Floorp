@@ -3434,30 +3434,6 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
 
   // If we already have a frame that is changing or going away...
   if (mObjectFrame) {
-    // We have an old frame.
-    // Drop image reference because the child may destroy the surface after we return.
-    nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
-    if (container) {
-#ifdef XP_MACOSX
-      AutoLockImage autoLock(container);
-      Image *image = autoLock.GetImage();
-      if (image && (image->GetFormat() == MAC_IO_SURFACE) && mObjectFrame) {
-        // Undo what we did to the current image in SetCurrentImageInTransaction().
-        MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image);
-        oglImage->SetUpdateCallback(nullptr, nullptr);
-        oglImage->SetDestroyCallback(nullptr);
-        // If we have a current image here, its destructor hasn't yet been
-        // called, so OnDestroyImage() can't yet have been called.  So we need
-        // to do ourselves what OnDestroyImage() would have done.
-        NS_RELEASE_THIS();
-      }
-      // Important! Unlock here otherwise SetCurrentImageInTransaction will deadlock with
-      // our lock if we have a RemoteImage.
-      autoLock.Unlock();
-#endif
-      container->SetCurrentImageInTransaction(nullptr);
-    }
-
     // Make sure the old frame isn't holding a reference to us.
     mObjectFrame->SetInstanceOwner(nullptr);
   }
