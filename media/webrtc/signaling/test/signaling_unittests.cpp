@@ -28,7 +28,9 @@ using namespace std;
 #include "nsIDOMRTCPeerConnection.h"
 
 #include "mtransport_test_utils.h"
-MtransportTestUtils test_utils;
+MtransportTestUtils *test_utils;
+
+
 
 static int kDefaultTimeout = 5000;
 
@@ -255,7 +257,7 @@ TestObserver::OnAddStream(nsIDOMMediaStream *stream, const char *type)
   Fake_SourceMediaStream *fs = static_cast<Fake_SourceMediaStream *>(ms->GetStream());
 
   nsresult ret;
-  test_utils.sts_target()->Dispatch(
+  test_utils->sts_target()->Dispatch(
     WrapRunnableRet(fs, &Fake_SourceMediaStream::Start, &ret),
     NS_DISPATCH_SYNC);
 
@@ -485,7 +487,7 @@ class SignalingAgent {
       new Fake_AudioStreamSource();
 
     nsresult ret;
-    test_utils.sts_target()->Dispatch(
+    test_utils->sts_target()->Dispatch(
       WrapRunnableRet(audio_stream, &Fake_MediaStream::Start, &ret),
         NS_DISPATCH_SYNC);
 
@@ -945,9 +947,8 @@ TEST_F(SignalingTest, FullCallTrickle)
 
 } // End namespace test.
 
-int main(int argc, char **argv)
-{
-  test_utils.InitServices();
+int main(int argc, char **argv) {
+  test_utils = new MtransportTestUtils();
   NSS_NoDB_Init(NULL);
   NSS_SetDomesticPolicy();
 
@@ -957,10 +958,10 @@ int main(int argc, char **argv)
     if (!strcmp(argv[i],"-t")) {
       kDefaultTimeout = 20000;
     }
-
   }
 
   ::testing::AddGlobalTestEnvironment(new test::SignalingEnvironment);
   int result = RUN_ALL_TESTS();
+  delete test_utils;
   return result;
 }

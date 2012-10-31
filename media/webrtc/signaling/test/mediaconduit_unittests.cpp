@@ -21,7 +21,7 @@ using namespace std;
 #include "gtest_utils.h"
 
 #include "mtransport_test_utils.h"
-MtransportTestUtils test_utils;
+MtransportTestUtils *test_utils;
 
 //Video Frame Color
 const int COLOR = 0x80; //Gray
@@ -749,9 +749,11 @@ TEST_F(TransportConduitTest, TestVideoConduitCodecAPI) {
 
 int main(int argc, char **argv)
 {
-  test_utils.InitServices();
+  test_utils = new MtransportTestUtils();
   ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  int rv = RUN_ALL_TESTS();
+  delete test_utils;
+  return rv;
 }
 
 
