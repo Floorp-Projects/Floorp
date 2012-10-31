@@ -11,8 +11,9 @@ interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozIccManager;
+interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(5362762c-7091-4da9-aecd-ba878bc51b3d)]
+[scriptable, builtinclass, uuid(0540db59-8b4f-41c2-a1b8-4097780558b7)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   /**
@@ -225,6 +226,37 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    */
   nsIDOMDOMRequest cancelMMI();
 
+   /**
+   * Configures call forward options.
+   *
+   * @param CFInfo
+   *        An object containing the call forward rule to set.
+   *
+   * If successful, the request's onsuccess will be called.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'IllegalSIMorME', or 'GenericFailure'
+   */
+  nsIDOMDOMRequest setCallForwardingOption(in nsIDOMMozMobileCFInfo CFInfo);
+
+  /**
+   * Queries current call forward options.
+   *
+   * @param reason
+   *        Indicates the reason the call is being forwarded. It will be either
+   *        unconditional (0), mobile busy (1), no reply (2), not reachable (3),
+   *        all call forwarding (4), or all conditional call forwarding (5).
+   *
+   * If successful, the request's onsuccess will be called, and the request's
+   * result will be an array of nsIDOMMozMobileCFInfo.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * or 'GenericFailure'.
+   */
+  nsIDOMDOMRequest getCallForwardingOption(in unsigned short reason);
+
   /**
    * The 'cardstatechange' event is notified when the 'cardState' attribute
    * changes value.
@@ -402,4 +434,66 @@ interface nsIDOMMozMobileICCInfo : nsISupports
    * his phone number.
    */
   readonly attribute DOMString msisdn;
+};
+
+[scriptable, uuid(2e40982a-ddf6-4d92-a3e8-4d69ce5a3a2e)]
+interface nsIDOMMozMobileCFInfo : nsISupports
+{
+  /**
+   * Call forwarding rule status.
+   *
+   * It will be either not active (false), or active (true).
+   *
+   * Note: Unused for setting call forwarding options. It reports
+   *       the status of the rule when getting how the rule is
+   *       configured.
+   *
+   * @see 3GPP TS 27.007 7.11 "status".
+   */
+  readonly attribute bool active;
+
+  const long CALL_FORWARD_ACTION_DISABLE = 0;
+  const long CALL_FORWARD_ACTION_ENABLE = 1;
+  const long CALL_FORWARD_ACTION_QUERY_STATUS = 2;
+  const long CALL_FORWARD_ACTION_REGISTRATION = 3;
+  const long CALL_FORWARD_ACTION_ERASURE = 4;
+
+  /**
+   * Indicates what to do with the rule.
+   *
+   * One of the CALL_FORWARD_ACTION_* constants. It will be either disable (0),
+   * enable (1), query status (2), registration (3), or erasure (4).
+   *
+   * @see 3GPP TS 27.007 7.11 "mode".
+   */
+  readonly attribute unsigned short action;
+
+  const long CALL_FORWARD_REASON_UNCONDITIONAL = 0;
+  const long CALL_FORWARD_REASON_MOBILE_BUSY = 1;
+  const long CALL_FORWARD_REASON_NO_REPLY = 2;
+  const long CALL_FORWARD_REASON_NOT_REACHABLE = 3;
+  const long CALL_FORWARD_REASON_ALL_CALL_FORWARDING = 4;
+  const long CALL_FORWARD_REASON_ALL_CONDITIONAL_CALL_FORWARDING = 5;
+
+  /**
+   * Indicates the reason the call is being forwarded.
+   *
+   * One of the CALL_FORWARD_REASON_* constants. It will be either
+   * unconditional (0), mobile busy (1), no reply (2), not reachable (3),
+   * all call forwarding (4), or all conditional call forwarding (5).
+   *
+   * @see 3GPP TS 27.007 7.11 "reason".
+   */
+  readonly attribute unsigned short reason;
+
+  /**
+   * Phone number of forwarding address.
+   */
+  readonly attribute DOMString number;
+
+  /**
+   * When "no reply" is enabled or queried, this gives the time in
+   * seconds to wait before call is forwarded.
+   */
+  readonly attribute unsigned short timeSeconds;
 };
