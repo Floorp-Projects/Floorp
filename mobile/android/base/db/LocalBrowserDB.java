@@ -708,6 +708,27 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return b;
     }
 
+    public Cursor getThumbnailsForUrls(ContentResolver cr, List<String> urls) {
+        StringBuffer selection = new StringBuffer();
+        String[] selectionArgs = new String[urls.size()];
+
+        for (int i = 0; i < urls.size(); i++) {
+          final String url = urls.get(i);
+
+          if (i > 0)
+            selection.append(" OR ");
+
+          selection.append(Images.URL + " = ?");
+          selectionArgs[i] = url;
+        }
+
+        return cr.query(mImagesUriWithProfile,
+                        new String[] { Images.URL, Images.THUMBNAIL },
+                        selection.toString(),
+                        selectionArgs,
+                        null);
+    }
+
     public void removeThumbnails(ContentResolver cr) {
         ContentValues values = new ContentValues();
         values.putNull(Images.THUMBNAIL);

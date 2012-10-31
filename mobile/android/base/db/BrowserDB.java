@@ -83,6 +83,8 @@ public class BrowserDB {
 
         public byte[] getThumbnailForUrl(ContentResolver cr, String uri);
 
+        public Cursor getThumbnailsForUrls(ContentResolver cr, List<String> urls);
+
         public void removeThumbnails(ContentResolver cr);
 
         public void registerBookmarkObserver(ContentResolver cr, ContentObserver observer);
@@ -204,6 +206,10 @@ public class BrowserDB {
 
     public static byte[] getThumbnailForUrl(ContentResolver cr, String uri) {
         return sDb.getThumbnailForUrl(cr, uri);
+    }
+
+    public static Cursor getThumbnailsForUrls(ContentResolver cr, List<String> urls) {
+        return sDb.getThumbnailsForUrls(cr, urls);
     }
 
     public static void removeThumbnails(ContentResolver cr) {
