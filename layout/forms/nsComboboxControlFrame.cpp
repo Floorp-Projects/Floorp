@@ -644,11 +644,12 @@ nsComboboxControlFrame::GetAvailableDropdownSpace(nscoord* aAbove,
   }
 
   nscoord minY;
-  if (!PresContext()->IsChrome()) {
-    nsIFrame* root = PresContext()->PresShell()->GetRootFrame();
+  nsPresContext* pc = PresContext()->GetToplevelContentDocumentPresContext();
+  nsIFrame* root = pc ? pc->PresShell()->GetRootFrame() : nullptr;
+  if (root) {
     minY = root->GetScreenRectInAppUnits().y;
-    if (mLastDropDownBelowScreenY < root->GetScreenRectInAppUnits().y) {
-      // Don't allow the drop-down to be placed above the top of the root frame.
+    if (mLastDropDownBelowScreenY < minY) {
+      // Don't allow the drop-down to be placed above the content area.
       return;
     }
   } else {
