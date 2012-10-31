@@ -122,7 +122,6 @@ StartupCache::InitSingleton()
 
 StartupCache* StartupCache::gStartupCache;
 bool StartupCache::gShutdownInitiated;
-bool StartupCache::gIgnoreDiskCache;
 enum StartupCache::TelemetrifyAge StartupCache::gPostFlushAgeAction = StartupCache::IGNORE_AGE;
 
 StartupCache::StartupCache() 
@@ -204,12 +203,12 @@ StartupCache::Init()
   rv = mObserverService->AddObserver(mListener, "startupcache-invalidate",
                                      false);
   NS_ENSURE_SUCCESS(rv, rv);
-
+  
   rv = LoadArchive(RECORD_AGE);
   
   // Sometimes we don't have a cache yet, that's ok.
   // If it's corrupted, just remove it and start over.
-  if (gIgnoreDiskCache || (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)) {
+  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
     NS_WARNING("Failed to load startupcache file correctly, removing!");
     InvalidateCache();
   }
@@ -228,9 +227,6 @@ StartupCache::Init()
 nsresult
 StartupCache::LoadArchive(enum TelemetrifyAge flag)
 {
-  if (gIgnoreDiskCache)
-    return NS_ERROR_FAILURE;
-
   bool exists;
   mArchive = NULL;
   nsresult rv = mFile->Exists(&exists);
@@ -462,9 +458,6 @@ StartupCache::WriteToDisk()
   mArchive = NULL;
   zipW->Close();
 
-  // We succesfully wrote the archive to disk; mark the disk file as trusted
-  gIgnoreDiskCache = false;
-
   // Our reader's view of the archive is outdated now, reload it.
   LoadArchive(gPostFlushAgeAction);
   
@@ -477,23 +470,8 @@ StartupCache::InvalidateCache()
   WaitOnWriteThread();
   mTable.Clear();
   mArchive = NULL;
-  nsresult rv = mFile->Remove(false);
-  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
-      rv != NS_ERROR_FILE_NOT_FOUND) {
-    gIgnoreDiskCache = true;
-    mozilla::Telemetry::Accumulate(Telemetry::STARTUP_CACHE_INVALID, true);
-    return;
-  }
-  gIgnoreDiskCache = false;
+  mFile->Remove(false);
   LoadArchive(gPostFlushAgeAction);
-}
-
-void
-StartupCache::IgnoreDiskCache()
-{
-  gIgnoreDiskCache = true;
-  if (gStartupCache)
-    gStartupCache->InvalidateCache();
 }
 
 /*
@@ -732,13 +710,6 @@ StartupCacheWrapper::InvalidateCache()
     return NS_ERROR_NOT_INITIALIZED;
   }
   sc->InvalidateCache();
-  return NS_OK;
-}
-
-nsresult
-StartupCacheWrapper::IgnoreDiskCache()
-{
-  StartupCache::IgnoreDiskCache();
   return NS_OK;
 }
 
