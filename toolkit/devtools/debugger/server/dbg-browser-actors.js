@@ -72,17 +72,25 @@ BrowserRootActor.prototype = {
   },
 
   /**
-   * Handles the listTabs request.  Builds a list of actors
-   * for the tabs running in the process.  The actors will survive
-   * until at least the next listTabs request.
+   * Handles the listTabs request.  Builds a list of actors for the tabs running
+   * in the process.  The actors will survive until at least the next listTabs
+   * request.
    */
   onListTabs: function BRA_onListTabs() {
-    // Get actors for all the currently-running tabs (reusing
-    // existing actors where applicable), and store them in
-    // an ActorPool.
+    // Get actors for all the currently-running tabs (reusing existing actors
+    // where applicable), and store them in an ActorPool.
 
     let actorPool = new ActorPool(this.conn);
     let tabActorList = [];
+
+    // Get the chrome debugger actor.
+    let actor = this._chromeDebugger;
+    if (!actor) {
+      actor = new ChromeDebuggerActor(this);
+      actor.parentID = this.actorID;
+      this._chromeDebugger = actor;
+      actorPool.addActor(actor);
+    }
 
     // Walk over open browser windows.
     let e = windowMediator.getEnumerator("navigator:browser");
@@ -91,12 +99,12 @@ BrowserRootActor.prototype = {
     while (e.hasMoreElements()) {
       let win = e.getNext();
 
-      // Watch the window for tab closes so we can invalidate
-      // actors as needed.
+      // Watch the window for tab closes so we can invalidate actors as needed.
       this.watchWindow(win);
 
       // List the tabs in this browser.
       let selectedBrowser = win.getBrowser().selectedBrowser;
+
       let browsers = win.getBrowser().browsers;
       for each (let browser in browsers) {
         if (browser == selectedBrowser && win == top) {
@@ -115,9 +123,8 @@ BrowserRootActor.prototype = {
 
     this._createExtraActors(DebuggerServer.globalActorFactories, actorPool);
 
-    // Now drop the old actorID -> actor map.  Actors that still
-    // mattered were added to the new map, others will go
-    // away.
+    // Now drop the old actorID -> actor map.  Actors that still mattered were
+    // added to the new map, others will go away.
     if (this._tabActorPool) {
       this.conn.removeActorPool(this._tabActorPool);
     }
@@ -127,7 +134,8 @@ BrowserRootActor.prototype = {
     let response = {
       "from": "root",
       "selected": selected,
-      "tabs": [actor.grip() for (actor of tabActorList)]
+      "tabs": [actor.grip() for (actor of tabActorList)],
+      "chromeDebugger": this._chromeDebugger.actorID
     };
     this._appendExtraActors(response);
     return response;
@@ -204,7 +212,58 @@ BrowserRootActor.prototype = {
     }
   },
 
-  // nsIWindowMediatorListener
+  // ChromeDebuggerActor hooks.
+
+  /**
+   * Add the specified actor to the default actor pool connection, in order to
+   * keep it alive as long as the server is. This is used by breakpoints in the
+   * thread and chrome debugger actors.
+   *
+   * @param actor aActor
+   *        The actor object.
+   */
+  addToParentPool: function BRA_addToParentPool(aActor) {
+    this.conn.addActor(aActor);
+  },
+
+  /**
+   * Remove the specified actor from the default actor pool.
+   *
+   * @param BreakpointActor aActor
+   *        The actor object.
+   */
+  removeFromParentPool: function BRA_removeFromParentPool(aActor) {
+    this.conn.removeActor(aActor);
+  },
+
+  /**
+   * Prepare to enter a nested event loop by disabling debuggee events.
+   */
+  preNest: function BRA_preNest() {
+    let top = windowMediator.getMostRecentWindow("navigator:browser");
+    let browser = top.gBrowser.selectedBrowser;
+    let windowUtils = browser.contentWindow
+                             .QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+    windowUtils.suppressEventHandling(true);
+    windowUtils.suspendTimeouts();
+  },
+
+  /**
+   * Prepare to exit a nested event loop by enabling debuggee events.
+   */
+  postNest: function BRA_postNest(aNestData) {
+    let top = windowMediator.getMostRecentWindow("navigator:browser");
+    let browser = top.gBrowser.selectedBrowser;
+    let windowUtils = browser.contentWindow
+                             .QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+    windowUtils.resumeTimeouts();
+    windowUtils.suppressEventHandling(false);
+  },
+
+  // nsIWindowMediatorListener.
+
   onWindowTitleChange: function BRA_onWindowTitleChange(aWindow, aTitle) { },
   onOpenWindow: function BRA_onOpenWindow(aWindow) { },
   onCloseWindow: function BRA_onCloseWindow(aWindow) {
@@ -267,23 +326,24 @@ BrowserTabActor.prototype = {
   _pendingNavigation: null,
 
   /**
-   * Add the specified breakpoint to the default actor pool connection, in order
-   * to be alive as long as the server is.
+   * Add the specified actor to the default actor pool connection, in order to
+   * keep it alive as long as the server is. This is used by breakpoints in the
+   * thread actor.
    *
-   * @param BreakpointActor aActor
+   * @param actor aActor
    *        The actor object.
    */
-  addToBreakpointPool: function BTA_addToBreakpointPool(aActor) {
+  addToParentPool: function BTA_addToParentPool(aActor) {
     this.conn.addActor(aActor);
   },
 
   /**
-   * Remove the specified breakpint from the default actor pool.
+   * Remove the specified actor from the default actor pool.
    *
    * @param BreakpointActor aActor
    *        The actor object.
    */
-  removeFromBreakpointPool: function BTA_removeFromBreakpointPool(aActor) {
+  removeFromParentPool: function BTA_removeFromParentPool(aActor) {
     this.conn.removeActor(aActor);
   },
 
@@ -392,19 +452,7 @@ BrowserTabActor.prototype = {
     this.conn.addActorPool(this._contextPool);
 
     this.threadActor = new ThreadActor(this);
-    this._addDebuggees(this.browser.contentWindow.wrappedJSObject);
     this._contextPool.addActor(this.threadActor);
-  },
-
-  /**
-   * Add the provided window and all windows in its frame tree as debuggees.
-   */
-  _addDebuggees: function BTA__addDebuggees(aWindow) {
-    this.threadActor.addDebuggee(aWindow);
-    let frames = aWindow.frames;
-    for (let i = 0; i < frames.length; i++) {
-      this._addDebuggees(frames[i]);
-    }
   },
 
   /**
@@ -517,7 +565,9 @@ BrowserTabActor.prototype = {
       }
       if (this._attached) {
         this.threadActor.clearDebuggees();
-        this.threadActor.dbg.enabled = true;
+        if (this.threadActor.dbg) {
+          this.threadActor.dbg.enabled = true;
+        }
         if (this._progressListener) {
           delete this._progressListener._needsTabNavigated;
         }
@@ -527,7 +577,10 @@ BrowserTabActor.prototype = {
     }
 
     if (this._attached) {
-      this._addDebuggees(evt.target.defaultView.wrappedJSObject);
+      this.threadActor.global = evt.target.defaultView.wrappedJSObject;
+      if (this.threadActor.attached) {
+        this.threadActor.findGlobals();
+      }
     }
   }
 };
@@ -599,107 +652,10 @@ DebuggerProgressListener.prototype = {
    * Destroy the progress listener instance.
    */
   destroy: function DPL_destroy() {
-    this._tabActor._tabbrowser.removeProgressListener(this);
+    if (this._tabActor._tabbrowser.removeProgressListener) {
+      this._tabActor._tabbrowser.removeProgressListener(this);
+    }
     this._tabActor._progressListener = null;
     this._tabActor = null;
-  }
-};
-
-// DebuggerServer extension API.
-
-/**
- * Registers handlers for new tab-scoped request types defined dynamically.
- * This is used for example by add-ons to augment the functionality of the tab
- * actor.
- * TODO: remove this API in the next release after bug 753401 lands, once all
- * our experimental add-ons have been converted to the new API.
- *
- * @param aName string
- *        The name of the new request type.
- * @param aFunction function
- *        The handler for this request type.
- */
-DebuggerServer.addTabRequest = function DS_addTabRequest(aName, aFunction) {
-  BrowserTabActor.prototype.requestTypes[aName] = function(aRequest) {
-    if (!this.attached) {
-      return { error: "wrongState" };
-    }
-    return aFunction(this, aRequest);
-  }
-};
-
-/**
- * Registers handlers for new tab-scoped request types defined dynamically.
- * This is used for example by add-ons to augment the functionality of the tab
- * actor.
- *
- * @param aFunction function
- *        The constructor function for this request type.
- * @param aName string [optional]
- *        The name of the new request type. If this is not present, the
- *        actorPrefix property of the constructor prototype is used.
- */
-DebuggerServer.addTabActor = function DS_addTabActor(aFunction, aName) {
-  let name = aName ? aName : aFunction.prototype.actorPrefix;
-  if (["title", "url", "actor"].indexOf(name) != -1) {
-    throw Error(name + " is not allowed");
-  }
-  if (DebuggerServer.tabActorFactories.hasOwnProperty(name)) {
-    throw Error(name + " already exists");
-  }
-  DebuggerServer.tabActorFactories[name] = aFunction;
-};
-
-/**
- * Unregisters the handler for the specified tab-scoped request type.
- * This may be used for example by add-ons when shutting down or upgrading.
- *
- * @param aFunction function
- *        The constructor function for this request type.
- */
-DebuggerServer.removeTabActor = function DS_removeTabActor(aFunction) {
-  for (let name in DebuggerServer.tabActorFactories) {
-    let handler = DebuggerServer.tabActorFactories[name];
-    if (handler.name == aFunction.name) {
-      delete DebuggerServer.tabActorFactories[name];
-    }
-  }
-};
-
-/**
- * Registers handlers for new browser-scoped request types defined dynamically.
- * This is used for example by add-ons to augment the functionality of the root
- * actor.
- *
- * @param aFunction function
- *        The constructor function for this request type.
- * @param aName string [optional]
- *        The name of the new request type. If this is not present, the
- *        actorPrefix property of the constructor prototype is used.
- */
-DebuggerServer.addGlobalActor = function DS_addGlobalActor(aFunction, aName) {
-  let name = aName ? aName : aFunction.prototype.actorPrefix;
-  if (["from", "tabs", "selected"].indexOf(name) != -1) {
-    throw Error(name + " is not allowed");
-  }
-  if (DebuggerServer.globalActorFactories.hasOwnProperty(name)) {
-    throw Error(name + " already exists");
-  }
-  DebuggerServer.globalActorFactories[name] = aFunction;
-};
-
-/**
- * Unregisters the handler for the specified browser-scoped request type.
- * This may be used for example by add-ons when shutting down or upgrading.
- *
- * @param aFunction function
- *        The constructor function for this request type.
- */
-DebuggerServer.removeGlobalActor = function DS_removeGlobalActor(aFunction) {
-  for (let name in DebuggerServer.globalActorFactories) {
-    let handler = DebuggerServer.globalActorFactories[name];
-    if (handler.name == aFunction.name) {
-      delete DebuggerServer.globalActorFactories[name];
-    }
   }
 };
