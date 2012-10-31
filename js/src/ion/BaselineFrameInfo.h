@@ -69,7 +69,7 @@ class StackValue
             AlignedStorage2<ValueOperand> reg;
         } reg;
         struct {
-            uint32_t local;
+            uint32_t slot;
         } local;
     } data;
 
@@ -96,7 +96,7 @@ class StackValue
     }
     uint32_t localSlot() const {
         JS_ASSERT(kind_ == LocalSlot);
-        return data.local.local;
+        return data.local.slot;
     }
 
     void setConstant(const Value &v) {
@@ -107,9 +107,9 @@ class StackValue
         kind_ = Register;
         *data.reg.reg.addr() = val;
     }
-    void setLocalSlot(uint32_t local) {
+    void setLocalSlot(uint32_t slot) {
         kind_ = LocalSlot;
-        data.local.local = local;
+        data.local.slot = slot;
     }
     void setStack() {
         kind_ = Stack;
@@ -162,6 +162,10 @@ class FrameInfo
         return val;
     }
 
+    uint32_t nlocals() const {
+        return script->nfixed;
+    }
+
   public:
     inline size_t stackDepth() const {
         return spIndex;
@@ -170,13 +174,15 @@ class FrameInfo
         JS_ASSERT(index < 0);
         return const_cast<StackValue *>(&stack[spIndex + index]);
     }
-    inline void pop() {
-        --spIndex;
-        StackValue *val = &stack[spIndex];
+    inline void pop(bool adjustStack = true) {
+        spIndex--;
+        StackValue *popped = &stack[spIndex];
 
-        if (val->kind() == StackValue::Stack) {
-            JS_NOT_REACHED("NYI");
-        }
+        if (adjustStack && popped->kind() == StackValue::Stack)
+            masm.addPtr(Imm32(sizeof(Value)), spReg);
+
+        // Assert when anything uses this value.
+        popped->reset();
     }
     inline void popn(uint32_t n) {
         for (uint32_t i = 0; i < n; i++)
@@ -195,11 +201,17 @@ class FrameInfo
         sv->setLocalSlot(local);
     }
     inline Address addressOfLocal(size_t local) const {
-        JS_ASSERT(local < script->nfixed);
+        JS_ASSERT(local < nlocals());
         return Address(frameReg, -BasicFrame::offsetOfLocal(local));
     }
+    inline Address addressOfStackValue(const StackValue *value) const {
+        JS_ASSERT(value->kind() == StackValue::Stack);
+        size_t slot = value - &stack[0];
+        JS_ASSERT(slot < stackDepth());
+        return Address(frameReg, -BasicFrame::offsetOfLocal(nlocals() + slot));
+    }
 
-    void ensureInRegister(StackValue *val, ValueOperand dest, ValueOperand scratch);
+    void popValue(ValueOperand dest);
 
     void sync(StackValue *val);
     void syncStack(uint32_t uses);

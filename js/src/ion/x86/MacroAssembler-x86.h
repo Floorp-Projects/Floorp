@@ -98,6 +98,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void moveValue(const Value &val, const ValueOperand &dest) {
         moveValue(val, dest.typeReg(), dest.payloadReg());
     }
+    void moveValue(const ValueOperand &src, const ValueOperand &dest) {
+        JS_ASSERT(src.typeReg() != dest.payloadReg());
+        JS_ASSERT(src.payloadReg() != dest.typeReg());
+        if (src.typeReg() != dest.typeReg())
+            movl(src.typeReg(), dest.typeReg());
+        if (src.payloadReg() != dest.payloadReg())
+            movl(src.payloadReg(), dest.payloadReg());
+    }
 
     /////////////////////////////////////////////////////////////////
     // X86/X64-common interface.

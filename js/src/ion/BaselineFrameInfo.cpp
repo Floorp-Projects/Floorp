@@ -57,8 +57,10 @@ FrameInfo::syncStack(uint32_t uses)
 }
 
 void
-FrameInfo::ensureInRegister(StackValue *val, ValueOperand dest, ValueOperand scratch)
+FrameInfo::popValue(ValueOperand dest)
 {
+    StackValue *val = peek(-1);
+
     switch (val->kind()) {
       case StackValue::Constant:
         masm.moveValue(val->constant(), dest);
@@ -69,17 +71,15 @@ FrameInfo::ensureInRegister(StackValue *val, ValueOperand dest, ValueOperand scr
       case StackValue::Stack:
         masm.popValue(dest);
         break;
-      case StackValue::Register: {
-        ValueOperand reg = val->reg();
-        if (reg.payloadReg() != dest.payloadReg())
-            masm.mov(reg.payloadReg(), dest.payloadReg());
-        if (reg.typeReg() != dest.typeReg())
-            masm.mov(reg.typeReg(), dest.typeReg());
+      case StackValue::Register:
+        masm.moveValue(val->reg(), dest);
         break;
-      }
       default:
-        JS_NOT_REACHED("foo");
+        JS_NOT_REACHED("Invalid kind");
     }
+
+    // masm.popValue already adjusted the stack pointer, don't do it twice.
+    pop(/* adjustStack = */false);
 }
 
 void
@@ -96,22 +96,23 @@ FrameInfo::popRegsAndSync(uint32_t uses)
 
     switch (uses) {
       case 1:
-        ensureInRegister(peek(-1), R0, R2);
+        popValue(R0);
         break;
-      case 2:
-        if (peek(-1)->kind() == StackValue::Register) {
-            ensureInRegister(peek(-1), R1, R2);
-            ensureInRegister(peek(-2), R0, R2);
-        } else {
-            ensureInRegister(peek(-2), R0, R2);
-            ensureInRegister(peek(-1), R1, R2);
+      case 2: {
+        // If the second value is in R1, move it to R2 so that it's not
+        // clobbered by the first popValue.
+        StackValue *val = peek(-2);
+        if (val->kind() == StackValue::Register && val->reg() == R1) {
+            masm.moveValue(R1, R2);
+            val->setRegister(R2);
         }
+        popValue(R1);
+        popValue(R0);
         break;
+      }
       default:
-        JS_NOT_REACHED("Unexpected use count");
+        JS_NOT_REACHED("Invalid uses");
     }
-
-    spIndex -= uses;
 }
 
 #ifdef DEBUG
