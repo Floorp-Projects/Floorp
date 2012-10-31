@@ -606,7 +606,7 @@ BluetoothHfpManager::Connect(const nsAString& aDevicePath,
                                         serviceUuidStr,
                                         BluetoothSocketType::RFCOMM,
                                         true,
-                                        false,
+                                        true,
                                         this,
                                         runnable);
 
@@ -635,7 +635,7 @@ BluetoothHfpManager::Listen()
   nsresult rv = bs->ListenSocketViaService(BluetoothReservedChannels::HANDSFREE_AG,
                                            BluetoothSocketType::RFCOMM,
                                            true,
-                                           false,
+                                           true,
                                            this);
 
   mSocketStatus = GetConnectionStatus();
