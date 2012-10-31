@@ -73,15 +73,15 @@ public:
     static ContentParent* GetNewOrUsed(bool aForBrowserElement = false);
 
     /**
-     * Get or create a content process for the given (app, is-browser)
-     * descriptor.
+     * Get or create a content process for the given app descriptor,
+     * which may be null.  This function will assign processes to app
+     * or non-app browsers by internal heuristics.
      *
-     * The app here is inherited -- that is, <iframe mozbrowser> inside <iframe
-     * mozapp> must pass a non-null app.  aIsBrowserElement should be true
-     * only for <iframe mozbrowser> frames that are not app frames.
+     * Currently apps are given their own process, and browser tabs
+     * share processes.
      */
-    static TabParent* CreateBrowserOrApp(mozIApplication* aOwnOrContainingApp,
-                                         bool aIsBrowserElement);
+    static TabParent* CreateBrowser(mozIApplication* aApp,
+                                    bool aIsBrowserFrame);
 
     static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -188,8 +188,8 @@ private:
                                           bool* aIsForBrowser) MOZ_OVERRIDE;
 
     virtual PBrowserParent* AllocPBrowser(const uint32_t& aChromeFlags,
-                                          const AppToken& aOwnOrContainingAppToken,
-                                          const bool& aIsBrowserElement);
+                                          const bool& aIsBrowserElement,
+                                          const AppId& aApp);
     virtual bool DeallocPBrowser(PBrowserParent* frame);
 
     virtual PDeviceStorageRequestParent* AllocPDeviceStorageRequest(const DeviceStorageParams&);

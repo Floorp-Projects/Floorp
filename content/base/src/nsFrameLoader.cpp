@@ -944,7 +944,7 @@ nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
     EnsureMessageManager();
 
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-    if (OwnerIsBrowserOrAppFrame() && os && !mRemoteBrowserInitialized) {
+    if (OwnerIsBrowserFrame() && os && !mRemoteBrowserInitialized) {
       os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
                           "remote-browser-frame-shown", NULL);
       mRemoteBrowserInitialized = true;
@@ -1393,23 +1393,25 @@ nsFrameLoader::SetOwnerContent(Element* aContent)
 }
 
 bool
-nsFrameLoader::OwnerIsBrowserOrAppFrame()
+nsFrameLoader::OwnerIsBrowserFrame()
 {
   nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
-  return browserFrame ? browserFrame->GetReallyIsBrowserOrApp() : false;
+  bool isBrowser = false;
+  if (browserFrame) {
+    browserFrame->GetReallyIsBrowser(&isBrowser);
+  }
+  return isBrowser;
 }
 
 bool
 nsFrameLoader::OwnerIsAppFrame()
 {
   nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
-  return browserFrame ? browserFrame->GetReallyIsApp() : false;
-}
-
-bool
-nsFrameLoader::OwnerIsBrowserFrame()
-{
-  return OwnerIsBrowserOrAppFrame() && !OwnerIsAppFrame();
+  bool isApp = false;
+  if (browserFrame) {
+    browserFrame->GetReallyIsApp(&isApp);
+  }
+  return isApp;
 }
 
 void
@@ -1420,55 +1422,6 @@ nsFrameLoader::GetOwnerAppManifestURL(nsAString& aOut)
   if (browserFrame) {
     browserFrame->GetAppManifestURL(aOut);
   }
-}
-
-already_AddRefed<mozIApplication>
-nsFrameLoader::GetOwnApp()
-{
-  nsAutoString manifest;
-  GetOwnerAppManifestURL(manifest);
-  if (manifest.IsEmpty()) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(appsService, nullptr);
-
-  nsCOMPtr<mozIDOMApplication> domApp;
-  appsService->GetAppByManifestURL(manifest, getter_AddRefs(domApp));
-
-  nsCOMPtr<mozIApplication> app = do_QueryInterface(domApp);
-  MOZ_ASSERT_IF(domApp, app);
-  return app.forget();
-}
-
-already_AddRefed<mozIApplication>
-nsFrameLoader::GetOwnOrContainingApp()
-{
-  nsCOMPtr<mozIApplication> app = GetOwnApp();
-  if (app) {
-    return app.forget();
-  }
-
-  // See if our owner content's principal has an associated app.
-  uint32_t appId = mOwnerContent->NodePrincipal()->GetAppId();
-  MOZ_ASSERT(appId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
-
-  if (appId == nsIScriptSecurityManager::NO_APP_ID ||
-      appId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(appsService, nullptr);
-
-  nsCOMPtr<mozIDOMApplication> domApp;
-  appsService->GetAppByLocalId(appId, getter_AddRefs(domApp));
-  MOZ_ASSERT(domApp);
-
-  app = do_QueryInterface(domApp);
-  MOZ_ASSERT_IF(domApp, app);
-  return app.forget();
 }
 
 bool
@@ -1487,7 +1440,7 @@ nsFrameLoader::ShouldUseRemoteProcess()
 
   // If we're an <iframe mozbrowser> and we don't have a "remote" attribute,
   // fall back to the default.
-  if (OwnerIsBrowserOrAppFrame() &&
+  if (OwnerIsBrowserFrame() &&
       !mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::Remote)) {
 
     return Preferences::GetBool("dom.ipc.browser_frames.oop_by_default", false);
@@ -1495,7 +1448,7 @@ nsFrameLoader::ShouldUseRemoteProcess()
 
   // Otherwise, we're remote if we have "remote=true" and we're either a
   // browser frame or a XUL element.
-  return (OwnerIsBrowserOrAppFrame() ||
+  return (OwnerIsBrowserFrame() ||
           mOwnerContent->GetNameSpaceID() == kNameSpaceID_XUL) &&
          mOwnerContent->AttrValueIs(kNameSpaceID_None,
                                     nsGkAtoms::Remote,
@@ -1541,6 +1494,24 @@ nsFrameLoader::MaybeCreateDocShell()
   // Create the docshell...
   mDocShell = do_CreateInstance("@mozilla.org/docshell;1");
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+
+  if (OwnerIsBrowserFrame()) {
+    nsAutoString manifest;
+    GetOwnerAppManifestURL(manifest);
+    if (!manifest.IsEmpty()) {
+      nsCOMPtr<nsIAppsService> appsService =
+        do_GetService(APPS_SERVICE_CONTRACTID);
+      if (!appsService) {
+        NS_ERROR("Apps Service is not available!");
+        return NS_ERROR_FAILURE;
+      }
+
+      uint32_t appId;
+      appsService->GetAppLocalIdByManifestURL(manifest, &appId);
+
+      mDocShell->SetAppId(appId);
+    }
+  }
 
   if (!mNetworkCreated) {
     nsCOMPtr<nsIDocShellHistory> history = do_QueryInterface(mDocShell);
@@ -1643,34 +1614,9 @@ nsFrameLoader::MaybeCreateDocShell()
 
   EnsureMessageManager();
 
-  if (OwnerIsAppFrame()) {
-    // You can't be both an app and a browser frame.
-    MOZ_ASSERT(!OwnerIsBrowserFrame());
-
-    nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
-    MOZ_ASSERT(ownApp);
-    uint32_t ownAppId = nsIScriptSecurityManager::NO_APP_ID;
-    if (ownApp) {
-      NS_ENSURE_SUCCESS(ownApp->GetLocalId(&ownAppId), NS_ERROR_FAILURE);
-    }
-
-    mDocShell->SetIsApp(ownAppId);
-  }
-
   if (OwnerIsBrowserFrame()) {
-    // You can't be both a browser and an app frame.
-    MOZ_ASSERT(!OwnerIsAppFrame());
+    mDocShell->SetIsBrowserElement();
 
-    nsCOMPtr<mozIApplication> containingApp = GetOwnOrContainingApp();
-    uint32_t containingAppId = nsIScriptSecurityManager::NO_APP_ID;
-    if (containingApp) {
-      NS_ENSURE_SUCCESS(containingApp->GetLocalId(&containingAppId),
-                        NS_ERROR_FAILURE);
-    }
-    mDocShell->SetIsBrowserInsideApp(containingAppId);
-  }
-
-  if (OwnerIsBrowserOrAppFrame()) {
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
       os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
@@ -2002,7 +1948,7 @@ nsFrameLoader::TryRemoteBrowser()
   nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(parentAsWebNav));
 
   // <iframe mozbrowser> gets to skip these checks.
-  if (!OwnerIsBrowserOrAppFrame()) {
+  if (!OwnerIsBrowserFrame()) {
     int32_t parentType;
     parentAsItem->GetItemType(&parentType);
 
@@ -2038,18 +1984,35 @@ nsFrameLoader::TryRemoteBrowser()
     return false;
   }
 
-  // Get our own or containing app only if we're a browser or app frame.  We
-  // want to avoid the situation where, if we're a remote frame that's neither
-  // a browser nor an app frame, we pass our containing app to
-  // ContentParent::CreateBrowserOrApp below, because that would effectively
-  // give this non-browser-or-app frame app privileges.
+  bool isBrowserElement = false;
   nsCOMPtr<mozIApplication> app;
-  if (OwnerIsBrowserOrAppFrame()) {
-    app = GetOwnOrContainingApp();
+  if (OwnerIsBrowserFrame()) {
+    isBrowserElement = true;
+
+    nsAutoString manifest;
+    GetOwnerAppManifestURL(manifest);
+    if (!manifest.IsEmpty()) {
+      nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
+      if (!appsService) {
+        NS_ERROR("Apps Service is not available!");
+        return false;
+      }
+
+      nsCOMPtr<mozIDOMApplication> domApp;
+      appsService->GetAppByManifestURL(manifest, getter_AddRefs(domApp));
+      // If the frame is actually an app, we should not mark it as a
+      // browser.  This is to identify the data store: since <app>s
+      // and <browser>s-within-<app>s have different stores, we want
+      // to ensure the <app> uses its store, not the one for its
+      // <browser>s.
+      app = do_QueryInterface(domApp);
+      if (app) {
+        isBrowserElement = false;
+      }
+    }
   }
 
-  mRemoteBrowser = ContentParent::CreateBrowserOrApp(app, OwnerIsBrowserFrame());
-  if (mRemoteBrowser) {
+  if ((mRemoteBrowser = ContentParent::CreateBrowser(app, isBrowserElement))) {
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mOwnerContent);
     mRemoteBrowser->SetOwnerElement(element);
 
@@ -2359,7 +2322,7 @@ nsFrameLoader::EnsureMessageManager()
     return rv;
   }
 
-  if (!mIsTopLevelContent && !OwnerIsBrowserOrAppFrame() && !mRemoteFrame) {
+  if (!mIsTopLevelContent && !OwnerIsBrowserFrame() && !mRemoteFrame) {
     return NS_OK;
   }
 
