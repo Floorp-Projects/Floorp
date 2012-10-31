@@ -130,9 +130,9 @@ class ArrayBufferObject : public JSObject
     static JSBool obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
                                 MutableHandleValue statep, MutableHandleId idp);
 
-    static void sweepAll(JSRuntime *rt);
+    static void sweep(JSCompartment *rt);
 
-    static void resetArrayBufferList(JSRuntime *rt);
+    static void resetArrayBufferList(JSCompartment *rt);
 
     static bool stealContents(JSContext *cx, JSObject *obj, void **contents,
                               uint8_t **data);
