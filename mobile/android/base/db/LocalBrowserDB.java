@@ -31,6 +31,7 @@ import android.util.Log;
 import java.io.ByteArrayOutputStream;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     // Calculate these once, at initialization. isLoggable is too expensive to
@@ -617,6 +618,27 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
         Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
         return new BitmapDrawable(bitmap);
+    }
+
+    public Cursor getFaviconsForUrls(ContentResolver cr, List<String> urls) {
+        StringBuffer selection = new StringBuffer();
+        String[] selectionArgs = new String[urls.size()];
+
+        for (int i = 0; i < urls.size(); i++) {
+          final String url = urls.get(i);
+
+          if (i > 0)
+            selection.append(" OR ");
+
+          selection.append(Images.URL + " = ?");
+          selectionArgs[i] = url;
+        }
+
+        return cr.query(mImagesUriWithProfile,
+                        new String[] { Images.URL, Images.FAVICON },
+                        selection.toString(),
+                        selectionArgs,
+                        null);
     }
 
     public void updateFaviconForUrl(ContentResolver cr, String uri,
