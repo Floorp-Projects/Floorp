@@ -599,16 +599,21 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
     }
 #endif
 
-#ifdef MOZ_X11
-    if (mFrontSurface &&
-        mFrontSurface->GetType() == gfxASurface::SurfaceTypeXlib)
+    if (mFrontSurface) {
         // This is the "old front buffer" we're about to hand back to
         // the plugin.  We might still have drawing operations
-        // referencing it, so we XSync here to let them finish before
-        // the plugin starts scribbling on it again, or worse,
-        // destroys it.
-        FinishX(DefaultXDisplay());
+        // referencing it.
+        mFrontSurface->Finish();
+
+#ifdef MOZ_X11
+        if (mFrontSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
+            // XSync here to ensure the server has finished operations on the
+            // surface before the plugin starts scribbling on it again, or
+            // worse, destroys it.
+            FinishX(DefaultXDisplay());
+        }
 #endif
+    }
 
     if (mFrontSurface && gfxSharedImageSurface::IsSharedImage(mFrontSurface))
         *prevSurface = static_cast<gfxSharedImageSurface*>(mFrontSurface.get())->GetShmem();
