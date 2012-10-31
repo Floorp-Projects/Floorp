@@ -1241,11 +1241,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   #endif
     }
 
-    nsRefPtr<ImageContainer> container = GetImageContainer();
-    if (container && (container->HasCurrentImage() || !isVisible ||
-        container->GetCurrentSize() != gfxIntSize(window->width, window->height))) {
-      mInstanceOwner->NotifyPaintWaiter(aBuilder);
-    }
+    mInstanceOwner->NotifyPaintWaiter(aBuilder);
   }
 
   // determine if we are printing
@@ -1522,20 +1518,6 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   nsDidReflowStatus status = NS_FRAME_REFLOW_FINISHED; // should we use a special status?
   frame->DidReflow(presContext,
                    nullptr, status);  // DidReflow will take care of it
-}
-
-already_AddRefed<ImageContainer>
-nsObjectFrame::GetImageContainer()
-{
-  nsRefPtr<ImageContainer> container = mImageContainer;
-
-  if (container) {
-    return container.forget();
-  }
-
-  container = mImageContainer = LayerManager::CreateImageContainer();
-
-  return container.forget();
 }
 
 nsRect

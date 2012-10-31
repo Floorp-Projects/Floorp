@@ -173,7 +173,6 @@ public:
   LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                            LayerManager* aManager);
 
-  already_AddRefed<ImageContainer> GetImageContainer();
   /**
    * Get the rectangle (relative to this frame) which it will paint. Normally
    * the frame's content-box but may be smaller if the plugin is rendering
@@ -289,10 +288,6 @@ private:
   nsTArray<nsIntRect>             mNextConfigurationClipRegion;
 
   bool mReflowCallbackPosted;
-
-  // A reference to the ImageContainer which contains the current frame
-  // of plugin to display.
-  nsRefPtr<ImageContainer> mImageContainer;
 
   // We keep this reference to ensure we can always unregister the
   // plugins we register on the root PresContext.
