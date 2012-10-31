@@ -1826,6 +1826,18 @@ ConvertAndroidColor(uint32_t c)
                    (c & 0xff000000) >> 24);
 }
 
+class AutoIMEMask {
+private:
+    bool mOldMask, *mMask;
+public:
+    AutoIMEMask(bool &mask) : mOldMask(mask), mMask(&mask) {
+        mask = true;
+    }
+    ~AutoIMEMask() {
+        *mMask = mOldMask;
+    }
+};
+
 /*
     Remove the composition but leave the text content as-is
 */
@@ -1837,9 +1849,8 @@ nsWindow::RemoveIMEComposition()
         return;
 
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
-    bool savedMaskSelection = mIMEMaskSelectionUpdate;
-    bool savedMaskText = mIMEMaskTextUpdate;
-    mIMEMaskSelectionUpdate = mIMEMaskTextUpdate = true;
+    AutoIMEMask selMask(mIMEMaskSelectionUpdate);
+    AutoIMEMask textMask(mIMEMaskTextUpdate);
 
     nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
     InitEvent(textEvent, nullptr);
@@ -1849,9 +1860,6 @@ nsWindow::RemoveIMEComposition()
     nsCompositionEvent event(true, NS_COMPOSITION_END, this);
     InitEvent(event, nullptr);
     DispatchEvent(&event);
-
-    mIMEMaskSelectionUpdate = savedMaskSelection;
-    mIMEMaskTextUpdate = savedMaskText;
 }
 
 void
@@ -1888,7 +1896,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 Text updates are passed on, so the Java text can shadow the
                   Gecko text
             */
-            mIMEMaskSelectionUpdate = true;
+            AutoIMEMask selMask(mIMEMaskSelectionUpdate);
             RemoveIMEComposition();
             {
                 nsSelectionEvent event(true, NS_SELECTION_SET, this);
@@ -1916,7 +1924,6 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 DispatchEvent(&event);
             }
             AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT, 0);
-            mIMEMaskSelectionUpdate = false;
         }
         break;
     case AndroidGeckoEvent::IME_SET_SELECTION:
@@ -1927,8 +1934,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 Selection updates are masked to prevent Java from being
                   notified of the new selection
             */
-            MOZ_ASSERT(!mIMEMaskTextUpdate);
-            mIMEMaskSelectionUpdate = true;
+            AutoIMEMask selMask(mIMEMaskSelectionUpdate);
             nsSelectionEvent selEvent(true, NS_SELECTION_SET, this);
             InitEvent(selEvent, nullptr);
 
@@ -1952,7 +1958,6 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             selEvent.mExpandToClusterBoundary = false;
 
             DispatchEvent(&selEvent);
-            mIMEMaskSelectionUpdate = false;
         }
         break;
     case AndroidGeckoEvent::IME_ADD_COMPOSITION_RANGE:
@@ -1983,7 +1988,8 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 Selection and text updates are masked so the result of
                   temporary events are not passed on to Java
             */
-            mIMEMaskSelectionUpdate = mIMEMaskTextUpdate = true;
+            AutoIMEMask selMask(mIMEMaskSelectionUpdate);
+            AutoIMEMask textMask(mIMEMaskTextUpdate);
             RemoveIMEComposition();
 
             nsTextEvent event(true, NS_TEXT_TEXT, this);
@@ -2035,7 +2041,6 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
 
             DispatchEvent(&event);
             mIMERanges.Clear();
-            mIMEMaskSelectionUpdate = mIMEMaskTextUpdate = false;
         }
         break;
     case AndroidGeckoEvent::IME_REMOVE_COMPOSITION:
@@ -2045,8 +2050,6 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
         }
         break;
     }
-    MOZ_ASSERT(!mIMEMaskTextUpdate);
-    MOZ_ASSERT(!mIMEMaskSelectionUpdate);
 }
 
 nsWindow *
