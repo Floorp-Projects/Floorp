@@ -676,8 +676,9 @@ public:
     int Flags() { return mFlags; }
     int UnicodeChar() { return mUnicodeChar; }
     int RepeatCount() const { return mRepeatCount; }
-    int Offset() { return mOffset; }
     int Count() { return mCount; }
+    int Start() { return mStart; }
+    int End() { return mEnd; }
     int PointerIndex() { return mPointerIndex; }
     int RangeType() { return mRangeType; }
     int RangeStyles() { return mRangeStyles; }
@@ -703,7 +704,8 @@ protected:
     int mDomKeyLocation;
     int mKeyCode, mUnicodeChar;
     int mRepeatCount;
-    int mOffset, mCount;
+    int mCount;
+    int mStart, mEnd;
     int mRangeType, mRangeStyles;
     int mRangeForeColor, mRangeBackColor;
     double mX, mY, mZ;
@@ -753,8 +755,9 @@ protected:
     static jfieldID jMetaStateField;
     static jfieldID jDomKeyLocationField;
     static jfieldID jFlagsField;
-    static jfieldID jOffsetField;
     static jfieldID jCountField;
+    static jfieldID jStartField;
+    static jfieldID jEndField;
     static jfieldID jPointerIndexField;
     static jfieldID jUnicodeCharField;
     static jfieldID jRepeatCountField;
@@ -807,14 +810,12 @@ public:
     };
 
     enum {
-        IME_COMPOSITION_END = 0,
-        IME_COMPOSITION_BEGIN = 1,
-        IME_SET_TEXT = 2,
-        IME_GET_TEXT = 3,
-        IME_DELETE_TEXT = 4,
-        IME_SET_SELECTION = 5,
-        IME_GET_SELECTION = 6,
-        IME_ADD_RANGE = 7
+        IME_SYNCHRONIZE = 0,
+        IME_REPLACE_TEXT = 1,
+        IME_SET_SELECTION = 2,
+        IME_ADD_COMPOSITION_RANGE = 3,
+        IME_UPDATE_COMPOSITION = 4,
+        IME_REMOVE_COMPOSITION = 5
     };
 };
 
