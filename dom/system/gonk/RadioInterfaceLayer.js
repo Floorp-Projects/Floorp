@@ -2578,7 +2578,7 @@ RILNetworkInterface.prototype = {
 
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RadioInterfaceLayer]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([RadioInterfaceLayer]);
 
 let debug;
 if (DEBUG) {

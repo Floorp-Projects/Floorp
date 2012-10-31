@@ -197,5 +197,5 @@ var RecommendedSearchResults = {
   }
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AddonUpdateService]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([AddonUpdateService]);
 

@@ -534,4 +534,4 @@ nsDOMIdentityInternal.prototype = {
 
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsDOMIdentityInternal]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([nsDOMIdentityInternal]);

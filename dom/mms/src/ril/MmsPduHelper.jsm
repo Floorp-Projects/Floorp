@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/mms_consts.js");
 
 let DEBUG; // set to true to see debug messages
 
-this.translatePduErrorToStatus = function translatePduErrorToStatus(error) {
+function translatePduErrorToStatus(error) {
   if (error == MMS_PDU_ERROR_OK) {
     return MMS_PDU_STATUS_RETRIEVED;
   }
@@ -40,7 +40,7 @@ function defineLazyRegExp(obj, name, pattern) {
  * Yes = <Octet 128>
  * No = <Octet 129>
  */
-this.BooleanValue = {
+let BooleanValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -76,7 +76,7 @@ this.BooleanValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A section 8
  */
-this.Address = {
+let Address = {
   /**
    * @param data
    *        A wrapped object to store encoded raw data.
@@ -187,7 +187,7 @@ defineLazyRegExp(Address, "REGEXP_ALPHANUM",           "^\\w+$");
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.2
  */
-this.HeaderField = {
+let HeaderField = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -224,7 +224,7 @@ this.HeaderField = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.2
  */
-this.MmsHeader = {
+let MmsHeader = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -300,7 +300,7 @@ this.MmsHeader = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.9
  */
-this.ContentClassValue = {
+let ContentClassValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -345,7 +345,7 @@ this.ContentClassValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.10
  */
-this.ContentLocationValue = {
+let ContentLocationValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -384,7 +384,7 @@ this.ContentLocationValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.18
  */
-this.ElementDescriptorValue = {
+let ElementDescriptorValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -422,7 +422,7 @@ this.ElementDescriptorValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.18
  */
-this.Parameter = {
+let Parameter = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -532,7 +532,7 @@ this.Parameter = {
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.19
  * @see OMA-TS-MMS_CONF-V1_3-20110913-A clause 10.2.1
  */
-this.EncodedStringValue = {
+let EncodedStringValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -670,7 +670,7 @@ this.EncodedStringValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.20
  */
-this.ExpiryValue = {
+let ExpiryValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -743,7 +743,7 @@ this.ExpiryValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.21
  */
-this.FromValue = {
+let FromValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -806,7 +806,7 @@ this.FromValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.23
  */
-this.PreviouslySentByValue = {
+let PreviouslySentByValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -836,7 +836,7 @@ this.PreviouslySentByValue = {
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.23
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.24
  */
-this.PreviouslySentDateValue = {
+let PreviouslySentDateValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -870,7 +870,7 @@ this.PreviouslySentDateValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.27
  */
-this.MessageClassValue = {
+let MessageClassValue = {
   WELL_KNOWN_CLASSES: ["personal", "advertisement", "informational", "auto"],
 
   /**
@@ -926,7 +926,7 @@ this.MessageClassValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.30
  */
-this.MessageTypeValue = {
+let MessageTypeValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -969,7 +969,7 @@ this.MessageTypeValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.32
  */
-this.MmFlagsValue = {
+let MmFlagsValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -1032,7 +1032,7 @@ this.MmFlagsValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.33
  */
-this.MmStateValue = {
+let MmStateValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -1075,7 +1075,7 @@ this.MmStateValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.35
  */
-this.PriorityValue = {
+let PriorityValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -1114,7 +1114,7 @@ this.PriorityValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.39
  */
-this.RecommendedRetrievalModeValue = {
+let RecommendedRetrievalModeValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -1136,7 +1136,7 @@ this.RecommendedRetrievalModeValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.43
  */
-this.ReplyChargingValue = {
+let ReplyChargingValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -1180,7 +1180,7 @@ this.ReplyChargingValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.49
  */
-this.ResponseText = {
+let ResponseText = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -1232,7 +1232,7 @@ this.ResponseText = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.50
  */
-this.RetrieveStatusValue = {
+let RetrieveStatusValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -1270,7 +1270,7 @@ this.RetrieveStatusValue = {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.54
  */
-this.StatusValue = {
+let StatusValue = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -1305,7 +1305,7 @@ this.StatusValue = {
   },
 };
 
-this.PduHelper = {
+let PduHelper = {
   /**
    * @param data
    *        A wrapped object containing raw PDU data.
@@ -1695,7 +1695,7 @@ if (DEBUG) {
   debug = function (s) {};
 }
 
-this.EXPORTED_SYMBOLS = ALL_CONST_SYMBOLS.concat([
+const EXPORTED_SYMBOLS = ALL_CONST_SYMBOLS.concat([
   // Utility functions
   "translatePduErrorToStatus",
 

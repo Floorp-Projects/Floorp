@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ['HistoryEngine', 'HistoryRec'];
+const EXPORTED_SYMBOLS = ['HistoryEngine', 'HistoryRec'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -19,7 +19,7 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 
-this.HistoryRec = function HistoryRec(collection, id) {
+function HistoryRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 HistoryRec.prototype = {
@@ -31,7 +31,7 @@ HistoryRec.prototype = {
 Utils.deferGetSet(HistoryRec, "cleartext", ["histUri", "title", "visits"]);
 
 
-this.HistoryEngine = function HistoryEngine(service) {
+function HistoryEngine(service) {
   SyncEngine.call(this, "History", service);
 }
 HistoryEngine.prototype = {

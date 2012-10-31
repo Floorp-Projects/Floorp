@@ -6,7 +6,6 @@
 
 /* static functions */
 let DEBUG = 0;
-let debug;
 if (DEBUG)
   debug = function (s) { dump("-*- SettingsService: " + s + "\n"); }
 else
@@ -183,4 +182,4 @@ SettingsService.prototype = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsISettingsService]),
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SettingsService, SettingsServiceLock])
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([SettingsService, SettingsServiceLock])

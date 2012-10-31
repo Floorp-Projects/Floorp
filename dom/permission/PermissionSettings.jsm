@@ -12,7 +12,7 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-this.EXPORTED_SYMBOLS = ["PermissionSettingsModule"];
+let EXPORTED_SYMBOLS = ["PermissionSettingsModule"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "@mozilla.org/AppsService;1",
                                    "nsIAppsService");
 
-this.PermissionSettingsModule = {
+let PermissionSettingsModule = {
   init: function() {
     debug("Init");
     ppmm.addMessageListener("PermissionSettings:AddPermission", this);

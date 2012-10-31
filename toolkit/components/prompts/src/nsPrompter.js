@@ -855,4 +855,4 @@ EmbedPrompter.prototype = new Prompter();
 EmbedPrompter.prototype.classID          = Components.ID("{7ad1b327-6dfa-46ec-9234-f2a620ea7e00}");
 
 var component = [Prompter, EmbedPrompter, AuthPromptAdapterFactory];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

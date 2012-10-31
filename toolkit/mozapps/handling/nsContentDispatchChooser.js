@@ -87,4 +87,4 @@ nsContentDispatchChooser.prototype =
 
 let components = [nsContentDispatchChooser];
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

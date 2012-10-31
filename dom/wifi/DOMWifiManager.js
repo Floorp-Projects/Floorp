@@ -393,7 +393,7 @@ DOMWifiManager.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DOMWifiManager]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([DOMWifiManager]);
 
 let debug;
 if (DEBUG) {

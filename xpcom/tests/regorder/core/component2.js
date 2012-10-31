@@ -30,8 +30,7 @@ var gRegTestCoreComponent =
 
 const kClassID = Components.ID("{d04d1298-6dac-459b-a13b-bcab235730a0}");
 
-this.NSGetFactory =
-  function NSGetFactory(aClassID) {
+function NSGetFactory(aClassID) {
   if (!aClassID.equals(kClassID))
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 

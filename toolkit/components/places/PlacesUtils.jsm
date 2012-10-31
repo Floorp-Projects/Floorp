@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "PlacesUtils"
 , "PlacesAggregatedTransaction"
 , "PlacesCreateFolderTransaction"
@@ -77,7 +77,7 @@ function asFullVisit(aNode) QI_node(aNode, Ci.nsINavHistoryFullVisitResultNode);
 function asContainer(aNode) QI_node(aNode, Ci.nsINavHistoryContainerResultNode);
 function asQuery(aNode) QI_node(aNode, Ci.nsINavHistoryQueryResultNode);
 
-this.PlacesUtils = {
+var PlacesUtils = {
   // Place entries that are containers, e.g. bookmark folders or queries.
   TYPE_X_MOZ_PLACE_CONTAINER: "text/x-moz-place-container",
   // Place entries that are bookmark separators.
@@ -2349,8 +2349,7 @@ BaseTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesAggregatedTransaction =
- function PlacesAggregatedTransaction(aName, aTransactions)
+function PlacesAggregatedTransaction(aName, aTransactions)
 {
   // Copy the transactions array to decouple it from its prototype, which
   // otherwise keeps alive its associated global object.
@@ -2433,9 +2432,8 @@ PlacesAggregatedTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesCreateFolderTransaction =
- function PlacesCreateFolderTransaction(aTitle, aParentId, aIndex, aAnnotations,
-                                        aChildTransactions)
+function PlacesCreateFolderTransaction(aTitle, aParentId, aIndex, aAnnotations,
+                                       aChildTransactions)
 {
   this.item = new TransactionItemCache();
   this.item.title = aTitle;
@@ -2507,10 +2505,9 @@ PlacesCreateFolderTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesCreateBookmarkTransaction =
- function PlacesCreateBookmarkTransaction(aURI, aParentId, aIndex, aTitle,
-                                          aKeyword, aAnnotations,
-                                          aChildTransactions)
+function PlacesCreateBookmarkTransaction(aURI, aParentId, aIndex, aTitle,
+                                         aKeyword, aAnnotations,
+                                         aChildTransactions)
 {
   this.item = new TransactionItemCache();
   this.item.uri = aURI;
@@ -2574,8 +2571,7 @@ PlacesCreateBookmarkTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesCreateSeparatorTransaction =
- function PlacesCreateSeparatorTransaction(aParentId, aIndex)
+function PlacesCreateSeparatorTransaction(aParentId, aIndex)
 {
   this.item = new TransactionItemCache();
   this.item.parentId = aParentId;
@@ -2618,9 +2614,8 @@ PlacesCreateSeparatorTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesCreateLivemarkTransaction =
- function PlacesCreateLivemarkTransaction(aFeedURI, aSiteURI, aTitle, aParentId,
-                                          aIndex, aAnnotations)
+function PlacesCreateLivemarkTransaction(aFeedURI, aSiteURI, aTitle, aParentId,
+                                         aIndex, aAnnotations)
 {
   this.item = new TransactionItemCache();
   this.item.feedURI = aFeedURI;
@@ -2757,8 +2752,7 @@ PlacesRemoveLivemarkTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesMoveItemTransaction =
- function PlacesMoveItemTransaction(aItemId, aNewParentId, aNewIndex)
+function PlacesMoveItemTransaction(aItemId, aNewParentId, aNewIndex)
 {
   this.item = new TransactionItemCache();
   this.item.id = aItemId;
@@ -2804,8 +2798,7 @@ PlacesMoveItemTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesRemoveItemTransaction =
- function PlacesRemoveItemTransaction(aItemId)
+function PlacesRemoveItemTransaction(aItemId)
 {
   if (PlacesUtils.isRootItem(aItemId))
     throw Cr.NS_ERROR_INVALID_ARG;
@@ -2938,8 +2931,7 @@ PlacesRemoveItemTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesEditItemTitleTransaction =
- function PlacesEditItemTitleTransaction(aItemId, aNewTitle)
+function PlacesEditItemTitleTransaction(aItemId, aNewTitle)
 {
   this.item = new TransactionItemCache();
   this.item.id = aItemId;
@@ -2973,8 +2965,7 @@ PlacesEditItemTitleTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesEditBookmarkURITransaction =
- function PlacesEditBookmarkURITransaction(aItemId, aNewURI) {
+function PlacesEditBookmarkURITransaction(aItemId, aNewURI) {
   this.item = new TransactionItemCache();
   this.item.id = aItemId;
   this.new = new TransactionItemCache();
@@ -3025,8 +3016,7 @@ PlacesEditBookmarkURITransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesSetItemAnnotationTransaction =
- function PlacesSetItemAnnotationTransaction(aItemId, aAnnotationObject)
+function PlacesSetItemAnnotationTransaction(aItemId, aAnnotationObject)
 {
   this.item = new TransactionItemCache();
   this.item.id = aItemId;
@@ -3085,8 +3075,7 @@ PlacesSetItemAnnotationTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesSetPageAnnotationTransaction =
- function PlacesSetPageAnnotationTransaction(aURI, aAnnotationObject)
+function PlacesSetPageAnnotationTransaction(aURI, aAnnotationObject)
 {
   this.item = new TransactionItemCache();
   this.item.uri = aURI;
@@ -3142,8 +3131,7 @@ PlacesSetPageAnnotationTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesEditBookmarkKeywordTransaction =
- function PlacesEditBookmarkKeywordTransaction(aItemId, aNewKeyword)
+function PlacesEditBookmarkKeywordTransaction(aItemId, aNewKeyword)
 {
   this.item = new TransactionItemCache();
   this.item.id = aItemId;
@@ -3177,8 +3165,7 @@ PlacesEditBookmarkKeywordTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesEditBookmarkPostDataTransaction =
- function PlacesEditBookmarkPostDataTransaction(aItemId, aPostData)
+function PlacesEditBookmarkPostDataTransaction(aItemId, aPostData)
 {
   this.item = new TransactionItemCache();
   this.item.id = aItemId;
@@ -3212,8 +3199,7 @@ PlacesEditBookmarkPostDataTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesEditItemDateAddedTransaction =
- function PlacesEditItemDateAddedTransaction(aItemId, aNewDateAdded)
+function PlacesEditItemDateAddedTransaction(aItemId, aNewDateAdded)
 {
   this.item = new TransactionItemCache();
   this.item.id = aItemId;
@@ -3251,8 +3237,7 @@ PlacesEditItemDateAddedTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesEditItemLastModifiedTransaction =
- function PlacesEditItemLastModifiedTransaction(aItemId, aNewLastModified)
+function PlacesEditItemLastModifiedTransaction(aItemId, aNewLastModified)
 {
   this.item = new TransactionItemCache();
   this.item.id = aItemId;
@@ -3292,8 +3277,7 @@ PlacesEditItemLastModifiedTransaction.prototype = {
  *
  * @return nsITransaction object
  */
-this.PlacesSortFolderByNameTransaction =
- function PlacesSortFolderByNameTransaction(aFolderId)
+function PlacesSortFolderByNameTransaction(aFolderId)
 {
   this.item = new TransactionItemCache();  
   this.item.id = aFolderId;
@@ -3379,8 +3363,7 @@ PlacesSortFolderByNameTransaction.prototype = {
  * @param aTags
  *        Array of tags to set for the given URL.
  */
-this.PlacesTagURITransaction =
- function PlacesTagURITransaction(aURI, aTags)
+function PlacesTagURITransaction(aURI, aTags)
 {
   this.item = new TransactionItemCache();
   this.item.uri = aURI;
@@ -3427,8 +3410,7 @@ PlacesTagURITransaction.prototype = {
  *        Array of tags to unset. pass null to remove all tags from the given
  *        url.
  */
-this.PlacesUntagURITransaction =
- function PlacesUntagURITransaction(aURI, aTags)
+function PlacesUntagURITransaction(aURI, aTags)
 {
   this.item = new TransactionItemCache();
   this.item.uri = aURI;

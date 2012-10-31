@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+let EXPORTED_SYMBOLS;
 if (!this.ctypes) {
   // We're likely being loaded as a JSM.
-  this.EXPORTED_SYMBOLS = [ "libcutils", "libnetutils", "netHelpers" ];
+  EXPORTED_SYMBOLS = [ "libcutils", "libnetutils", "netHelpers" ];
   Components.utils.import("resource://gre/modules/ctypes.jsm");
 }
 
@@ -30,7 +31,7 @@ let DEBUG;
 /**
  * Expose some system-level functions.
  */
-this.libcutils = (function() {
+let libcutils = (function() {
   let lib;
   try {
     lib = ctypes.open("libcutils.so");
@@ -105,7 +106,7 @@ this.libcutils = (function() {
 /**
  * Network-related functions from libnetutils.
  */
-this.libnetutils = (function () {
+let libnetutils = (function () {
   let library;
   try {
     library = ctypes.open("libnetutils.so");
@@ -328,7 +329,7 @@ this.libnetutils = (function () {
 /**
  * Helpers for conversions.
  */
-this.netHelpers = {
+let netHelpers = {
 
   /**
    * Swap byte orders for 32-bit value

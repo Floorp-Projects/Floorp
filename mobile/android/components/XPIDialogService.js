@@ -36,4 +36,4 @@ WebInstallPrompt.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WebInstallPrompt]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([WebInstallPrompt]);

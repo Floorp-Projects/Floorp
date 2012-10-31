@@ -37,4 +37,4 @@ ContentPolicy.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentPolicy]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentPolicy]);

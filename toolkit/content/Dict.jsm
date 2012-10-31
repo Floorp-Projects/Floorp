@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Dict"];
+var EXPORTED_SYMBOLS = ["Dict"];
 
 /**
  * Transforms a given key into a property name guaranteed not to collide with
@@ -31,7 +31,7 @@ function unconvert(aProp) {
  *                 object are considered.
  *                 If |aInitial| is a string, it is assumed to be JSON and parsed into an object.
  */
-this.Dict = function Dict(aInitial) {
+function Dict(aInitial) {
   if (aInitial === undefined)
     aInitial = {};
   if (typeof aInitial == "string")

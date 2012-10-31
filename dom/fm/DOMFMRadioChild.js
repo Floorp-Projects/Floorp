@@ -383,5 +383,5 @@ DOMFMRadioChild.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DOMFMRadioChild]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([DOMFMRadioChild]);
 

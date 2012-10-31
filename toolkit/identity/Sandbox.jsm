@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Sandbox"];
+const EXPORTED_SYMBOLS = ["Sandbox"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyModuleGetter(this,
  * @param aCallback
  *        (function) Callback to be invoked with a Sandbox, when ready.
  */
-this.Sandbox = function Sandbox(aURL, aCallback) {
+function Sandbox(aURL, aCallback) {
   // Normalize the URL so the comparison in _makeSandboxContentLoaded works
   this._url = Services.io.newURI(aURL, null, null).spec;
   this._log("Creating sandbox for:", this._url);

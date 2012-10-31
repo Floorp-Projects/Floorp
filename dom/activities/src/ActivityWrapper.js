@@ -42,5 +42,5 @@ ActivityWrapper.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISystemMessagesWrapper])
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ActivityWrapper]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([ActivityWrapper]);
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ['PasswordEngine', 'LoginRec'];
+const EXPORTED_SYMBOLS = ['PasswordEngine', 'LoginRec'];
 
 const Cu = Components.utils;
 const Cc = Components.classes;
@@ -14,7 +14,7 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
 
-this.LoginRec = function LoginRec(collection, id) {
+function LoginRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 LoginRec.prototype = {
@@ -26,7 +26,7 @@ Utils.deferGetSet(LoginRec, "cleartext", ["hostname", "formSubmitURL",
   "httpRealm", "username", "password", "usernameField", "passwordField"]);
 
 
-this.PasswordEngine = function PasswordEngine(service) {
+function PasswordEngine(service) {
   SyncEngine.call(this, "Passwords", service);
 }
 PasswordEngine.prototype = {
