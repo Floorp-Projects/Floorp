@@ -975,7 +975,7 @@ float nsWindow::GetDPI()
   return float(heightPx/heightInches);
 }
 
-double nsWindow::GetDefaultScale()
+double nsWindow::GetDefaultScaleInternal()
 {
   HDC dc = ::GetDC(mWnd);
   if (!dc)
