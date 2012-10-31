@@ -462,3 +462,10 @@ interface TestIndexedAndNamedGetterAndSetterInterface : TestIndexedSetterInterfa
   [Infallible]
   readonly attribute unsigned long length;
 };
+
+interface TestCppKeywordNamedMethodsInterface {
+  boolean continue();
+  boolean delete();
+  long volatile();
+};
+
