@@ -33,4 +33,8 @@ MOCHITEST_FILES	= \
 		devicestorage_common.js \
 		$(NULL)
 
+MOCHITEST_CHROME_FILES =\
+		test_app_permissions.html \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
