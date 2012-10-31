@@ -283,6 +283,48 @@ var WifiManager = (function() {
     doBooleanCommand("SCAN", "OK", callback);
   }
 
+  var debugEnabled = false;
+  function setLogLevel(level, callback) {
+    doBooleanCommand("LOG_LEVEL " + level, "OK", callback);
+  }
+
+  function syncDebug() {
+    if (debugEnabled !== DEBUG) {
+      let wanted = DEBUG;
+      setLogLevel(wanted ? "DEBUG" : "INFO", function(ok) {
+        if (ok)
+          debugEnabled = wanted;
+      });
+    }
+  }
+
+  function getLogLevel(callback) {
+    doStringCommand("LOG_LEVEL", callback);
+  }
+
+  function getDebugEnabled(callback) {
+    getLogLevel(function(level) {
+      if (level === null) {
+        debug("Unable to get wpa_supplicant's log level");
+        callback(false);
+        return;
+      }
+
+      var lines = level.split("\n");
+      for (let i = 0; i < lines.length; ++i) {
+        let match = /Current level: (.*)/.exec(lines[i]);
+        if (match) {
+          debugEnabled = match[1].toLowerCase() === "debug";
+          callback(true);
+          return;
+        }
+      }
+
+      // If we're here, we didn't get the current level.
+      callback(false);
+    });
+  }
+
   function setScanModeCommand(setActive, callback) {
     scanModeActive = setActive;
     doSetScanModeCommand(setActive, callback);
@@ -919,6 +961,9 @@ var WifiManager = (function() {
     waitForEvent();
 
     // Load up the supplicant state.
+    getDebugEnabled(function(ok) {
+      syncDebug();
+    });
     statusCommand(function(status) {
       parseStatus(status);
       notify("supplicantconnection");
@@ -1247,6 +1292,7 @@ var WifiManager = (function() {
         return false;
     }
   }
+  manager.syncDebug = syncDebug;
   manager.stateOrdinal = function(state) {
     return supplicantStatesMap.indexOf(state);
   }
@@ -2628,5 +2674,6 @@ function updateDebug() {
   } else {
     debug = function (s) {};
   }
+  WifiManager.syncDebug();
 }
 updateDebug();
