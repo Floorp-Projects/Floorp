@@ -29,6 +29,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class TabsTray extends LinearLayout 
                       implements TabsPanel.PanelView {
@@ -39,7 +40,9 @@ public class TabsTray extends LinearLayout
 
     private static ListView mList;
     private TabsAdapter mTabsAdapter;
-    private boolean mWaitingForClose;
+
+    private List<View> mPendingClosedTabs;
+    private int mCloseAnimationCount;
 
     private TabSwipeGestureListener mSwipeListener;
 
@@ -53,6 +56,9 @@ public class TabsTray extends LinearLayout
         mContext = context;
 
         LayoutInflater.from(context).inflate(R.layout.tabs_tray, this);
+
+        mCloseAnimationCount = 0;
+        mPendingClosedTabs = new ArrayList<View>();
 
         mList = (ListView) findViewById(R.id.list);
         mList.setItemsCanFocus(true);
@@ -85,7 +91,6 @@ public class TabsTray extends LinearLayout
 
     @Override
     public void show() {
-        mWaitingForClose = false;
         Tabs.getInstance().refreshThumbnails();
         Tabs.registerOnTabsChangedListener(mTabsAdapter);
         mTabsAdapter.refreshTabsData();
@@ -145,7 +150,6 @@ public class TabsTray extends LinearLayout
                     break;
 
                 case CLOSED:
-                    mWaitingForClose = false;
                     removeTab(tab);
                     break;
 
@@ -269,20 +273,25 @@ public class TabsTray extends LinearLayout
     }
 
     private void animateClose(final View view, int x) {
-        // Just bail out, if we're already closing
-        if (mWaitingForClose)
-            return;
-
         PropertyAnimator animator = new PropertyAnimator(ANIMATION_DURATION);
         animator.attach(view, Property.ALPHA, 0);
         animator.attach(view, Property.TRANSLATION_X, x);
 
-        mWaitingForClose = true;
+        mCloseAnimationCount++;
+        mPendingClosedTabs.add(view);
 
         animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             public void onPropertyAnimationStart() { }
             public void onPropertyAnimationEnd() {
-                animateFinishClose(view);
+                mCloseAnimationCount--;
+                if (mCloseAnimationCount > 0)
+                    return;
+
+                for (View pendingView : mPendingClosedTabs) {
+                    animateFinishClose(pendingView);
+                }
+
+                mPendingClosedTabs.clear();
             }
         });
 
