@@ -30,10 +30,11 @@ SmsMessage::SmsMessage(int32_t aId,
                        const nsString& aSender,
                        const nsString& aReceiver,
                        const nsString& aBody,
+                       MessageClass aMessageClass,
                        uint64_t aTimestamp,
                        bool aRead)
   : mData(aId, aDelivery, aDeliveryStatus, aSender, aReceiver, aBody,
-          aTimestamp, aRead)
+          aMessageClass, aTimestamp, aRead)
 {
 }
 
@@ -49,6 +50,7 @@ SmsMessage::Create(int32_t aId,
                    const nsAString& aSender,
                    const nsAString& aReceiver,
                    const nsAString& aBody,
+                   const nsAString& aMessageClass,
                    const jsval& aTimestamp,
                    const bool aRead,
                    JSContext* aCx,
@@ -81,6 +83,20 @@ SmsMessage::Create(int32_t aId,
     data.deliveryStatus() = eDeliveryStatus_Pending;
   } else if (aDeliveryStatus.Equals(DELIVERY_STATUS_ERROR)) {
     data.deliveryStatus() = eDeliveryStatus_Error;
+  } else {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (aMessageClass.Equals(MESSAGE_CLASS_NORMAL)) {
+    data.messageClass() = eMessageClass_Normal;
+  } else if (aMessageClass.Equals(MESSAGE_CLASS_CLASS_0)) {
+    data.messageClass() = eMessageClass_Class0;
+  } else if (aMessageClass.Equals(MESSAGE_CLASS_CLASS_1)) {
+    data.messageClass() = eMessageClass_Class1;
+  } else if (aMessageClass.Equals(MESSAGE_CLASS_CLASS_2)) {
+    data.messageClass() = eMessageClass_Class2;
+  } else if (aMessageClass.Equals(MESSAGE_CLASS_CLASS_3)) {
+    data.messageClass() = eMessageClass_Class3;
   } else {
     return NS_ERROR_INVALID_ARG;
   }
@@ -184,6 +200,33 @@ NS_IMETHODIMP
 SmsMessage::GetBody(nsAString& aBody)
 {
   aBody = mData.body();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsMessage::GetMessageClass(nsAString& aMessageClass)
+{
+  switch (mData.messageClass()) {
+    case eMessageClass_Normal:
+      aMessageClass = MESSAGE_CLASS_NORMAL;
+      break;
+    case eMessageClass_Class0:
+      aMessageClass = MESSAGE_CLASS_CLASS_0;
+      break;
+    case eMessageClass_Class1:
+      aMessageClass = MESSAGE_CLASS_CLASS_1;
+      break;
+    case eMessageClass_Class2:
+      aMessageClass = MESSAGE_CLASS_CLASS_2;
+      break;
+    case eMessageClass_Class3:
+      aMessageClass = MESSAGE_CLASS_CLASS_3;
+      break;
+    default:
+      MOZ_NOT_REACHED("We shouldn't get any other message class!");
+      return NS_ERROR_UNEXPECTED;
+  }
+
   return NS_OK;
 }
 

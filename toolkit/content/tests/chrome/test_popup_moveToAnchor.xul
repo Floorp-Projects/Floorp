@@ -23,7 +23,7 @@ SimpleTest.waitForExplicitFinish();
 
 function runTest(id)
 {
-  $("popup").openPopup($("button1"), "after_start", 0, 0);
+  $("popup").openPopup($("button1"), "after_start");
 }
 
 function popupshown()
@@ -35,28 +35,28 @@ function popupshown()
 
   checkCoords(popup, button1rect.left, button1rect.bottom, "initial");
 
-  popup.moveToAnchor($("button1"), "after_start", 0, 8, false);
+  popup.moveToAnchor($("button1"), "after_start", 0, 8);
   checkCoords(popup, button1rect.left, button1rect.bottom + 8, "move anchor top + 8");
 
-  popup.moveToAnchor($("button1"), "after_start", 6, -10, false);
+  popup.moveToAnchor($("button1"), "after_start", 6, -10);
   checkCoords(popup, button1rect.left + 6, button1rect.bottom - 10, "move anchor left + 6, top - 10");
 
-  popup.moveToAnchor($("button1"), "before_start", -2, 0, false);
+  popup.moveToAnchor($("button1"), "before_start", -2, 0);
   checkCoords(popup, button1rect.left - 2, button1rect.top - popupheight, "move anchor before_start");
 
-  popup.moveToAnchor($("button2"), "before_start", 0, 0, false);
+  popup.moveToAnchor($("button2"), "before_start");
   checkCoords(popup, button2rect.left, button2rect.top - popupheight, "move button2");
 
-  popup.moveToAnchor($("button1"), "end_before", 0, 0, false);
+  popup.moveToAnchor($("button1"), "end_before");
   checkCoords(popup, button1rect.right, button1rect.top, "move anchor end_before");
 
-  popup.moveToAnchor($("button2"), "after_start", 5, 4, false);
+  popup.moveToAnchor($("button2"), "after_start", 5, 4);
   checkCoords(popup, button2rect.left + 5, button2rect.bottom + 4, "move button2 left + 5, top + 4");
 
   popup.moveTo($("button1").boxObject.screenX + 10, $("button1").boxObject.screenY + 12);
   checkCoords(popup, button1rect.left + 10, button1rect.top + 12, "move to button1 screen with offset");
 
-  popup.moveToAnchor($("button1"), "after_start", 1, 2, false);
+  popup.moveToAnchor($("button1"), "after_start", 1, 2);
   checkCoords(popup, button1rect.left + 1, button1rect.bottom + 2, "move button2 after screen");
 
   popup.hidePopup();

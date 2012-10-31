@@ -1613,6 +1613,9 @@ nsXULPopupManager::UpdateMenuItems(nsIContent* aPopup)
   // command attribute. If so, then several attributes must potentially be updated.
  
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aPopup->GetDocument()));
+  if (!domDoc)
+    return;
+
   for (nsCOMPtr<nsIContent> grandChild = aPopup->GetFirstChild();
        grandChild;
        grandChild = grandChild->GetNextSibling()) {

@@ -154,7 +154,8 @@ WebRtc_Word32 VideoCaptureMacQTKit::Init(
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                      "Failed to set capture device %s (unique ID %s) even "
                      "though it was a valid return from "
-                     "VideoCaptureMacQTKitInfo");
+                     "VideoCaptureMacQTKitInfo",
+	             deviceNameUTF8, iDeviceUniqueIdUTF8);
         return -1;
     }
 

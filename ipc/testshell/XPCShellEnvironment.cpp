@@ -597,7 +597,7 @@ ProcessFile(JSContext *cx,
             }
             bufp += strlen(bufp);
             lineno++;
-        } while (!JS_BufferIsCompilableUnit(cx, JS_FALSE, obj, buffer, strlen(buffer)));
+        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, strlen(buffer)));
 
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
@@ -753,6 +753,12 @@ FullTrustSecMan::GetSimpleCodebasePrincipal(nsIURI *aURI,
 NS_IMETHODIMP
 FullTrustSecMan::GetNoAppCodebasePrincipal(nsIURI *aURI,
                                            nsIPrincipal **_retval)
+{
+    return GetSimpleCodebasePrincipal(aURI, _retval);
+}
+
+NS_IMETHODIMP
+FullTrustSecMan::GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval)
 {
     return GetSimpleCodebasePrincipal(aURI, _retval);
 }

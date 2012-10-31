@@ -1839,7 +1839,7 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
     if (!mShell)
         return NS_ERROR_FAILURE;
 
-    LOG(("CaptureRollupEvents %p\n", (void *)this));
+    LOG(("CaptureRollupEvents %p %i\n", this, int(aDoCapture)));
 
     if (aDoCapture) {
         gRollupListener = aListener;

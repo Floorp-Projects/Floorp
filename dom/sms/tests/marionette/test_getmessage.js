@@ -40,6 +40,7 @@ function simulateIncomingSms() {
     is(incomingSms.read, false, "read");
     is(incomingSms.receiver, null, "receiver");
     is(incomingSms.sender, remoteNumber, "sender");
+    is(incomingSms.messageClass, "normal", "messageClass");
     ok(incomingSms.timestamp instanceof Date, "timestamp is instanceof date");
     inSmsTimeStamp = incomingSms.timestamp;
     sendSms();
@@ -66,6 +67,7 @@ function sendSms() {
     is(sentSms.read, true, "read");
     is(sentSms.receiver, remoteNumber, "receiver");
     is(sentSms.sender, null, "sender");
+    is(sentSms.messageClass, "normal", "messageClass");
     ok(sentSms.timestamp instanceof Date, "timestamp is instanceof date");  
     outSmsTimeStamp = sentSms.timestamp;
 
@@ -114,6 +116,7 @@ function getReceivedSms() {
     is(foundSms.read, false, "read");
     is(foundSms.receiver, myNumber, "receiver");
     is(foundSms.sender, remoteNumber, "sender");
+    is(foundSms.messageClass, "normal", "messageClass");
     ok(foundSms.timestamp instanceof Date, "timestamp is instanceof date");
     is(foundSms.timestamp.getTime(), inSmsTimeStamp.getTime(), "timestamp matches");
     getSentSms();
@@ -146,6 +149,7 @@ function getSentSms() {
     is(foundSms.read, true, "read");
     is(foundSms.receiver, remoteNumber, "receiver");
     is(foundSms.sender, myNumber, "sender");
+    is(foundSms.messageClass, "normal", "messageClass");
     ok(foundSms.timestamp instanceof Date, "timestamp is instanceof date");
     is(foundSms.timestamp.getTime(), outSmsTimeStamp.getTime(), "timestamp matches");
     deleteMsgs();

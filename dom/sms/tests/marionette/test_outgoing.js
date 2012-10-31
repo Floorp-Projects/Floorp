@@ -37,6 +37,7 @@ function checkSentMessage(message, body, sentDate) {
   is(message.sender, null, "message.sender");
   is(message.receiver, receiver, "message.receiver");
   is(message.body, body, "message.body");
+  is(message.messageClass, "normal", "messageClass");
   ok(message.timestamp instanceof Date,
      "message.timestamp is instanceof " + message.timestamp.constructor);
   // SMSC timestamp is in seconds.

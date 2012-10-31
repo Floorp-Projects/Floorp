@@ -11,9 +11,9 @@
 
 #include "nsEffectiveTLDService.h"
 #include "nsIIDNService.h"
+#include "nsIMemoryReporter.h"
 #include "nsNetUtil.h"
 #include "prnetdb.h"
-
 
 using namespace mozilla;
 
@@ -57,6 +57,25 @@ nsDomainEntry::FuncForStaticAsserts(void)
 
 // ----------------------------------------------------------------------
 
+static nsEffectiveTLDService *gService = nullptr;
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(EffectiveTLDServiceMallocSizeOf,
+                                     "effective-tld-service")
+
+static int64_t
+GetEffectiveTLDSize()
+{
+  return gService->SizeOfIncludingThis(EffectiveTLDServiceMallocSizeOf);
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(
+  EffectiveTLDService,
+  "explicit/xpcom/effective-TLD-service",
+  KIND_HEAP,
+  nsIMemoryReporter::UNITS_BYTES,
+  GetEffectiveTLDSize,
+  "Memory used by the effective TLD service.")
+
 nsresult
 nsEffectiveTLDService::Init()
 {
@@ -86,7 +105,34 @@ nsEffectiveTLDService::Init()
     NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
     entry->SetData(&entries[i]);
   }
+
+  MOZ_ASSERT(!gService);
+  gService = this;
+  mReporter = new NS_MEMORY_REPORTER_NAME(EffectiveTLDService);
+  (void)::NS_RegisterMemoryReporter(mReporter);
+
   return NS_OK;
+}
+
+nsEffectiveTLDService::~nsEffectiveTLDService()
+{
+  (void)::NS_UnregisterMemoryReporter(mReporter);
+  mReporter = nullptr;
+  gService = nullptr;
+}
+
+size_t
+nsEffectiveTLDService::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+{
+  size_t n = aMallocSizeOf(this);
+  n += mHash.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+
+  // Measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - mReporter
+  // - mIDNService
+
+  return n;
 }
 
 // External function for dealing with URI's correctly.

@@ -1039,7 +1039,7 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
             }
             bufp += strlen(bufp);
             lineno++;
-        } while (!JS_BufferIsCompilableUnit(cx, false, obj, buffer, strlen(buffer)));
+        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, strlen(buffer)));
 
         DoBeginRequest(cx);
         /* Clear any pending exception from previous failed compiles.  */
@@ -1391,6 +1391,13 @@ FullTrustSecMan::GetSimpleCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval
 /* [noscript] nsIPrincipal getNoAppCodebasePrincipal (in nsIURI aURI); */
 NS_IMETHODIMP
 FullTrustSecMan::GetNoAppCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval)
+{
+    return GetSimpleCodebasePrincipal(aURI, _retval);
+}
+
+/* [noscript] nsIPrincipal getCodebasePrincipal (in nsIURI aURI); */
+NS_IMETHODIMP
+FullTrustSecMan::GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval)
 {
     return GetSimpleCodebasePrincipal(aURI, _retval);
 }

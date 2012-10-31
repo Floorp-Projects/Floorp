@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.background.announcements.AnnouncementsBroadcastService;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.gfx.Layer;
@@ -1785,10 +1786,15 @@ abstract public class GeckoApp
                 // no hurry in starting this.
                 checkMigrateSync();
 
+                // Record our launch time for the announcements service
+                // to use in assessing inactivity.
+                final Context context = GeckoApp.mAppContext;
+                AnnouncementsBroadcastService.recordLastLaunch(context);
+
                 // Kick off our background service to fetch product announcements.
                 // We do this by invoking the broadcast receiver, which uses the
                 // system alarm infrastructure to perform tasks at intervals.
-                GeckoPreferences.broadcastAnnouncementsPref(GeckoApp.mAppContext);
+                GeckoPreferences.broadcastAnnouncementsPref(context);
 
                 /*
                   XXXX see bug 635342

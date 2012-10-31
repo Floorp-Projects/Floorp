@@ -742,7 +742,7 @@ NS_IMETHODIMP nsChildView::GetBounds(nsIntRect &aRect)
 }
 
 double
-nsChildView::GetDefaultScale()
+nsChildView::GetDefaultScaleInternal()
 {
   return BackingScaleFactor();
 }
