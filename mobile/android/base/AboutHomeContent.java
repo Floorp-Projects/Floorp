@@ -7,8 +7,10 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
+import org.mozilla.gecko.util.GeckoAsyncTask;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,8 +61,10 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -263,15 +267,17 @@ public class AboutHomeContent extends ScrollView
                     mTopSitesAdapter = new TopSitesCursorAdapter(mActivity,
                                                                  R.layout.abouthome_topsite_item,
                                                                  mCursor,
-                                                                 new String[] { URLColumns.TITLE,
-                                                                                URLColumns.THUMBNAIL },
-                                                                 new int[] { R.id.title, R.id.thumbnail });
+                                                                 new String[] { URLColumns.TITLE },
+                                                                 new int[] { R.id.title });
 
                     mTopSitesAdapter.setViewBinder(new TopSitesViewBinder());
                     mTopSitesGrid.setAdapter(mTopSitesAdapter);
                 } else {
                     mTopSitesAdapter.changeCursor(mCursor);
                 }
+
+                if (mTopSitesAdapter.getCount() > 0)
+                    loadTopSitesThumbnails(resolver);
 
                 updateLayout(syncIsSetup);
 
@@ -286,6 +292,97 @@ public class AboutHomeContent extends ScrollView
                     mLoadCompleteCallback.callback();
             }
         });
+    }
+
+    private List<String> getTopSitesUrls() {
+        List<String> urls = new ArrayList<String>();
+
+        Cursor c = mTopSitesAdapter.getCursor();
+        if (c == null || !c.moveToFirst())
+            return urls;
+
+        do {
+            final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
+            urls.add(url);
+        } while (c.moveToNext());
+
+        return urls;
+    }
+
+    private void displayThumbnail(View view, Bitmap thumbnail) {
+        ImageView thumbnailView = (ImageView) view.findViewById(R.id.thumbnail);
+
+        if (thumbnail == null) {
+            thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_bg);
+            thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        } else {
+            try {
+                thumbnailView.setImageBitmap(thumbnail);
+                thumbnailView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            } catch (OutOfMemoryError oom) {
+                Log.e(LOGTAG, "Unable to load thumbnail bitmap", oom);
+                thumbnailView.setImageResource(R.drawable.abouthome_thumbnail_bg);
+                thumbnailView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            }
+        }
+    }
+
+    private void updateTopSitesThumbnails(Map<String, Bitmap> thumbnails) {
+        for (int i = 0; i < mTopSitesGrid.getChildCount(); i++) {
+            final View view = mTopSitesGrid.getChildAt(i);
+
+            Cursor c = (Cursor) mTopSitesGrid.getItemAtPosition(i);
+            final String url = c.getString(c.getColumnIndex(URLColumns.URL));
+
+            displayThumbnail(view, thumbnails.get(url));
+        }
+
+        mTopSitesGrid.invalidate();
+    }
+
+    public Map<String, Bitmap> getTopSitesThumbnails(Cursor c) {
+        Map<String, Bitmap> thumbnails = new HashMap<String, Bitmap>();
+
+        try {
+            if (c == null || !c.moveToFirst())
+                return thumbnails;
+
+            do {
+                final String url = c.getString(c.getColumnIndexOrThrow(Images.URL));
+                final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Images.THUMBNAIL));
+                if (b == null)
+                    continue;
+
+                Bitmap thumbnail = BitmapFactory.decodeByteArray(b, 0, b.length);
+                if (thumbnail == null)
+                    continue;
+
+                thumbnails.put(url, thumbnail);
+            } while (c.moveToNext());
+        } finally {
+            if (c != null)
+                c.close();
+        }
+
+        return thumbnails;
+    }
+
+    private void loadTopSitesThumbnails(final ContentResolver cr) {
+        final List<String> urls = getTopSitesUrls();
+        if (urls.size() == 0)
+            return;
+
+        (new GeckoAsyncTask<Void, Void, Cursor>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
+            @Override
+            public Cursor doInBackground(Void... params) {
+                return BrowserDB.getThumbnailsForUrls(cr, urls);
+            }
+
+            @Override
+            public void onPostExecute(Cursor c) {
+                updateTopSitesThumbnails(getTopSitesThumbnails(c));
+            }
+        }).execute();
     }
 
     void update(final EnumSet<UpdateFlags> flags) {
@@ -675,28 +772,6 @@ public class AboutHomeContent extends ScrollView
     }
 
     class TopSitesViewBinder implements SimpleCursorAdapter.ViewBinder {
-        private boolean updateThumbnail(View view, Cursor cursor, int thumbIndex) {
-            byte[] b = cursor.getBlob(thumbIndex);
-            ImageView thumbnail = (ImageView) view;
-
-            if (b == null) {
-                thumbnail.setImageResource(R.drawable.abouthome_thumbnail_bg);
-                thumbnail.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            } else {
-                try {
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
-                    thumbnail.setImageBitmap(bitmap);
-                    thumbnail.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                } catch (OutOfMemoryError oom) {
-                    Log.e(LOGTAG, "Unable to load thumbnail bitmap", oom);
-                    thumbnail.setImageResource(R.drawable.abouthome_thumbnail_bg);
-                    thumbnail.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                }
-            }
-
-            return true;
-        }
-
         private boolean updateTitle(View view, Cursor cursor, int titleIndex) {
             String title = cursor.getString(titleIndex);
             TextView titleView = (TextView) view;
@@ -717,11 +792,6 @@ public class AboutHomeContent extends ScrollView
             int titleIndex = cursor.getColumnIndexOrThrow(URLColumns.TITLE);
             if (columnIndex == titleIndex) {
                 return updateTitle(view, cursor, titleIndex);
-            }
-
-            int thumbIndex = cursor.getColumnIndexOrThrow(URLColumns.THUMBNAIL);
-            if (columnIndex == thumbIndex) {
-                return updateThumbnail(view, cursor, thumbIndex);
             }
 
             // Other columns are handled automatically
