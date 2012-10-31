@@ -436,7 +436,7 @@ Section "Uninstall"
   ; Refresh desktop icons otherwise the start menu internet item won't be
   ; removed and other ugly things will happen like recreation of the app's
   ; clients registry key by the OS under some conditions.
-  System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
+  System::Call "shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i 0, i 0, i 0)"
 
 !ifdef MOZ_MAINTENANCE_SERVICE
   ; Get the path the allowed cert is at and remove it
