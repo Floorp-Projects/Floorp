@@ -37,7 +37,7 @@
  * realloc() has failed.
  */
 
-[scriptable, uuid(59e7e77a-38e4-11d4-8cf5-0060b0fc14a3)]
+[scriptable, uuid(6aef11c4-8615-44a6-9711-98f43805693d)]
 interface nsIMemory : nsISupports
 {
     /**
@@ -93,5 +93,13 @@ interface nsIMemory : nsISupports
      * DEPRECATED - Always returns false.  See bug 592308.
      */
     boolean isLowMemory();
+
+    /**
+     * This predicate can be used to determine if the platform is a "low-memory"
+     * platform. Callers may use this to dynamically tune their behaviour
+     * to favour reduced memory usage at the expense of performance. The value
+     * returned by this function will not change over the lifetime of the process.
+     */
+    boolean isLowMemoryPlatform();
 };
 
