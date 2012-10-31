@@ -13,9 +13,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "getFrameWorkerHandle", "resource://gre/modules/FrameWorker.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "openChatWindow", "resource://gre/modules/MozSocialAPI.jsm");
 
-const EXPORTED_SYMBOLS = ["WorkerAPI"];
+this.EXPORTED_SYMBOLS = ["WorkerAPI"];
 
-function WorkerAPI(provider, port) {
+this.WorkerAPI = function WorkerAPI(provider, port) {
   if (!port)
     throw new Error("Can't initialize WorkerAPI with a null port");
 

@@ -10,9 +10,9 @@ const Ci = Components.interfaces;
 
 Cu.import('resource://gre/modules/Services.jsm');
 
-var EXPORTED_SYMBOLS = ['Utils', 'Logger'];
+this.EXPORTED_SYMBOLS = ['Utils', 'Logger'];
 
-var Utils = {
+this.Utils = {
   _buildAppMap: {
     '{3c2e2abc-06d4-11e1-ac3b-374f68613e61}': 'b2g',
     '{ec8030f7-c20a-464f-9b0e-13a3a9e97384}': 'browser',
@@ -156,7 +156,7 @@ var Utils = {
   }
 };
 
-var Logger = {
+this.Logger = {
   DEBUG: 0,
   INFO: 1,
   WARNING: 2,

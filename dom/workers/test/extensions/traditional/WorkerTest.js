@@ -129,4 +129,4 @@ WorkerTest.prototype = {
   classID: Components.ID("{3b52b935-551f-4606-ba4c-decc18b67bfd}")
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([WorkerTest]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WorkerTest]);

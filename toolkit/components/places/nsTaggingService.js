@@ -678,4 +678,4 @@ TagAutoCompleteSearch.prototype = {
 };
 
 let component = [TaggingService, TagAutoCompleteSearch];
-var NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);

@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/FloatingScrollbars.jsm");
 Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 
-var EXPORTED_SYMBOLS = ["ResponsiveUIManager"];
+this.EXPORTED_SYMBOLS = ["ResponsiveUIManager"];
 
 const MIN_WIDTH = 50;
 const MIN_HEIGHT = 50;
@@ -20,7 +20,7 @@ const MIN_HEIGHT = 50;
 const MAX_WIDTH = 10000;
 const MAX_HEIGHT = 10000;
 
-let ResponsiveUIManager = {
+this.ResponsiveUIManager = {
   /**
    * Check if the a tab is in a responsive mode.
    * Leave the responsive mode if active,

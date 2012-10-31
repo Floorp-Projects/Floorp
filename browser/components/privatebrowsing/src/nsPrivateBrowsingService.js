@@ -591,4 +591,4 @@ PrivateBrowsingService.prototype = {
   }
 };
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([PrivateBrowsingService]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PrivateBrowsingService]);

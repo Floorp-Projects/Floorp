@@ -579,4 +579,4 @@ var components = [FeedConverter,
                   PodCastProtocolHandler];
 
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

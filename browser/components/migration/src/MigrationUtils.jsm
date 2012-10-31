@@ -4,7 +4,7 @@
 
 "use strict";
 
-let EXPORTED_SYMBOLS = ["MigrationUtils", "MigratorPrototype"];
+this.EXPORTED_SYMBOLS = ["MigrationUtils", "MigratorPrototype"];
 
 const Cu = Components.utils;
 const Ci = Components.interfaces;
@@ -86,7 +86,7 @@ function getMigratorKeyForDefaultBrowser() {
  *    override |sourceHomePageURL| getter.
  * 7. For startup-only migrators, override |startupOnlyMigrator|.
  */
-let MigratorPrototype = {
+this.MigratorPrototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserProfileMigrator]),
 
   /**
@@ -323,7 +323,7 @@ let MigratorPrototype = {
   }
 };
 
-let MigrationUtils = Object.freeze({
+this.MigrationUtils = Object.freeze({
   resourceTypes: {
     SETTINGS:   Ci.nsIBrowserProfileMigrator.SETTINGS,
     COOKIES:    Ci.nsIBrowserProfileMigrator.COOKIES,

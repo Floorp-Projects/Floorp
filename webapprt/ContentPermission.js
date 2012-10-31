@@ -86,4 +86,4 @@ ContentPermission.prototype = {
   }
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentPermission]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentPermission]);

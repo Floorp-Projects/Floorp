@@ -13,7 +13,7 @@ const PAGE_SIZE = 10;
 
 const PREVIEW_AREA = 700;
 
-var EXPORTED_SYMBOLS = ["MarkupView"];
+this.EXPORTED_SYMBOLS = ["MarkupView"];
 
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource:///modules/devtools/CssRuleView.jsm");
@@ -39,7 +39,7 @@ Cu.import("resource://gre/modules/Services.jsm");
  * @param iframe aFrame
  *        An iframe in which the caller has kindly loaded markup-view.xhtml.
  */
-function MarkupView(aInspector, aFrame)
+this.MarkupView = function MarkupView(aInspector, aFrame)
 {
   this._inspector = aInspector;
   this._frame = aFrame;

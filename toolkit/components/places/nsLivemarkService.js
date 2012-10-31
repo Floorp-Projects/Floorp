@@ -1244,4 +1244,4 @@ LivemarkLoadListener.prototype = {
   ])
 }
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([LivemarkService]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([LivemarkService]);

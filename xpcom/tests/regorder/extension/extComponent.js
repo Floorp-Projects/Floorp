@@ -29,7 +29,7 @@ var gRegTestExtComponent =
 };
 
 const kClassID = Components.ID("{fe64efb7-c5ab-41a6-b639-e6c0f483181e}");
-function NSGetFactory(cid)
+this.NSGetFactory = function NSGetFactory(cid)
 {
   if (!cid.equals(kClassID))
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;

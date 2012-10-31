@@ -574,4 +574,4 @@ function errorWithStack() {
   return err;
 }
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([HashCompleter]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([HashCompleter]);

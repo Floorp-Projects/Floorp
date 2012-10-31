@@ -45,4 +45,4 @@ TestObjectReadOnly.prototype = {
 };
 
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([TestObjectReadWrite, TestObjectReadOnly]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestObjectReadWrite, TestObjectReadOnly]);

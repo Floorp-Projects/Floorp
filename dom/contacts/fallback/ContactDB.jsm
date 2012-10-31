@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ['ContactDB'];
+this.EXPORTED_SYMBOLS = ['ContactDB'];
 
 const DEBUG = false;
 function debug(s) { dump("-*- ContactDB component: " + s + "\n"); }
@@ -20,7 +20,7 @@ const DB_NAME = "contacts";
 const DB_VERSION = 4;
 const STORE_NAME = "contacts";
 
-function ContactDB(aGlobal) {
+this.ContactDB = function ContactDB(aGlobal) {
   if (DEBUG) debug("Constructor");
   this._global = aGlobal;
 }
