@@ -194,8 +194,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return filterAllSites(cr,
                               new String[] { Combined._ID,
                                              Combined.URL,
-                                             Combined.TITLE,
-                                             Combined.THUMBNAIL },
+                                             Combined.TITLE },
                               "",
                               limit,
                               BrowserDB.ABOUT_PAGES_URL_FILTER);
