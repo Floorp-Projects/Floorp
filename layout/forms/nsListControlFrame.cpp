@@ -403,7 +403,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
     (NS_SUBTREE_DIRTY(this) || aReflowState.ShouldReflowAllKids());
   
   nsHTMLReflowState state(aReflowState);
-  int32_t length = GetNumberOfOptions();  
+  int32_t length = GetNumberOfRows();
 
   nscoord oldHeightOfARow = HeightOfARow();
 
@@ -565,7 +565,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
     if (above <= 0 && below <= 0) {
       state.SetComputedHeight(heightOfARow);
       mNumDisplayRows = 1;
-      mDropdownCanGrow = GetNumberOfOptions() > 1;
+      mDropdownCanGrow = GetNumberOfRows() > 1;
     } else {
       nscoord bp = aReflowState.mComputedBorderPadding.TopBottom();
       nscoord availableHeight = NS_MAX(above, below) - bp;
@@ -573,7 +573,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
       uint32_t rows;
       if (visibleHeight <= availableHeight) {
         // The dropdown fits in the available height.
-        rows = GetNumberOfOptions();
+        rows = GetNumberOfRows();
         mNumDisplayRows = clamped<uint32_t>(rows, 1, kMaxDropDownRows);
         if (mNumDisplayRows == rows) {
           newHeight = visibleHeight;  // use the exact height
@@ -747,6 +747,39 @@ nsListControlFrame::InitSelectionRange(int32_t aClickedIndex)
       mEndSelectionIndex = i-1;
     }
   }
+}
+
+static uint32_t
+CountOptionsAndOptgroups(nsIFrame* aFrame)
+{
+  uint32_t count = 0;
+  nsFrameList::Enumerator e(aFrame->PrincipalChildList());
+  for (; !e.AtEnd(); e.Next()) {
+    nsIFrame* child = e.get();
+    nsIContent* content = child->GetContent();
+    if (content) {
+      if (content->IsHTML(nsGkAtoms::option)) {
+        ++count;
+      } else {
+        nsCOMPtr<nsIDOMHTMLOptGroupElement> optgroup = do_QueryInterface(content);
+        if (optgroup) {
+          nsAutoString label;
+          optgroup->GetLabel(label);
+          if (label.Length() > 0) {
+            ++count;
+          }
+          count += CountOptionsAndOptgroups(child);
+        }
+      }
+    }
+  }
+  return count;
+}
+
+uint32_t
+nsListControlFrame::GetNumberOfRows()
+{
+  return ::CountOptionsAndOptgroups(GetContentInsertionFrame());
 }
 
 //---------------------------------------------------------
