@@ -397,6 +397,32 @@ MobileConnection::CancelMMI(nsIDOMDOMRequest** request)
   return mProvider->CancelMMI(GetOwner(), request);
 }
 
+NS_IMETHODIMP
+MobileConnection::GetCallForwardingOption(PRUint16 aReason,
+                                          nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->GetCallForwardingOption(GetOwner(), aReason, aRequest);
+}
+
+NS_IMETHODIMP
+MobileConnection::SetCallForwardingOption(nsIDOMMozMobileCFInfo* aCFInfo,
+                                          nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SetCallForwardingOption(GetOwner(), aCFInfo, aRequest);
+}
+
 } // namespace network
 } // namespace dom
 } // namespace mozilla
