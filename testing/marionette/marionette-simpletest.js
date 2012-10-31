@@ -5,7 +5,7 @@
  * The Marionette object, passed to the script context.
  */
 
-function Marionette(scope, window, context, logObj, perfData, timeout) {
+function Marionette(scope, window, context, logObj, perfData, timeout, testName) {
   this.scope = scope;
   this.window = window;
   this.tests = [];
@@ -13,6 +13,7 @@ function Marionette(scope, window, context, logObj, perfData, timeout) {
   this.perfData = perfData;
   this.context = context;
   this.timeout = timeout;
+  this.testName = testName;
   this.TEST_UNEXPECTED_FAIL = "TEST-UNEXPECTED-FAIL";
   this.TEST_PASS = "TEST-PASS";
   this.TEST_KNOWN_FAIL = "TEST-KNOWN-FAIL";
@@ -96,7 +97,7 @@ Marionette.prototype = {
     //TODO: dump to file
     let resultString = test.result ? passString : failString;
     let diagnostic = test.name + (test.diag ? " - " + test.diag : "");
-    let msg = [resultString, diagnostic].join(" | ");
+    let msg = resultString + " | " + this.testName + " | " + diagnostic;
     dump("MARIONETTE TEST RESULT:" + msg + "\n");
   },
 

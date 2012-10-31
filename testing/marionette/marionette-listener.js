@@ -34,6 +34,7 @@ let marionettePerf = new MarionettePerfData();
 let isB2G = false;
 
 let marionetteTimeout = null;
+let marionetteTestName;
 let winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDOMWindowUtils);
 let listenerId = null; //unique ID of this listener
@@ -117,6 +118,7 @@ function startListeners() {
   addMessageListenerId("Marionette:emulatorCmdResult", emulatorCmdResult);
   addMessageListenerId("Marionette:importScript", importScript);
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
+  addMessageListenerId("Marionette:setTestName", setTestName);
 }
 
 /**
@@ -181,6 +183,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:emulatorCmdResult", emulatorCmdResult);
   removeMessageListenerId("Marionette:importScript", importScript);
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
+  removeMessageListenerId("Marionette:setTestName", setTestName);
   this.elementManager.reset();
   try {
     importedScripts.remove(false);
@@ -266,7 +269,7 @@ function createExecuteContentSandbox(aWindow) {
 
   let marionette = new Marionette(this, aWindow, "content",
                                   marionetteLogObj, marionettePerf,
-                                  marionetteTimeout);
+                                  marionetteTimeout, marionetteTestName);
   sandbox.marionette = marionette;
   marionette.exports.forEach(function(fn) {
     try {
@@ -389,6 +392,14 @@ function executeScript(msg, directInject) {
     // 17 = JavascriptException
     sendError(e.name + ': ' + e.message, 17, e.stack);
   }
+}
+
+/**
+ * Sets the test name, used in logging messages.
+ */
+function setTestName(msg) {
+  marionetteTestName = msg.json.value;
+  sendOk();
 }
 
 /**
