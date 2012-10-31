@@ -1230,9 +1230,10 @@ RadioInterfaceLayer.prototype = {
     }
 
     let id = -1;
-    if (message.messageClass != RIL.PDU_DCS_MSG_CLASS_0) {
+    if (message.messageClass != RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_0]) {
       id = gSmsDatabaseService.saveReceivedMessage(message.sender || null,
                                                    message.fullBody || null,
+                                                   message.messageClass,
                                                    message.timestamp);
     }
     let sms = gSmsService.createSmsMessage(id,
@@ -1241,6 +1242,7 @@ RadioInterfaceLayer.prototype = {
                                            message.sender || null,
                                            message.receiver || null,
                                            message.fullBody || null,
+                                           message.messageClass,
                                            message.timestamp,
                                            false);
 
@@ -1251,6 +1253,7 @@ RadioInterfaceLayer.prototype = {
                                        sender: message.sender || null,
                                        receiver: message.receiver || null,
                                        body: message.fullBody || null,
+                                       messageClass: message.messageClass,
                                        timestamp: message.timestamp,
                                        read: false});
     Services.obs.notifyObservers(sms, kSmsReceivedObserverTopic, null);
@@ -1280,6 +1283,7 @@ RadioInterfaceLayer.prototype = {
     }
 
     let timestamp = Date.now();
+    let messageClass = RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_NORMAL];
     let id = gSmsDatabaseService.saveSentMessage(options.number,
                                                  options.fullBody,
                                                  timestamp);
@@ -1289,6 +1293,7 @@ RadioInterfaceLayer.prototype = {
                                            null,
                                            options.number,
                                            options.fullBody,
+                                           messageClass,
                                            timestamp,
                                            true);
 
@@ -1314,6 +1319,7 @@ RadioInterfaceLayer.prototype = {
     }
     delete this._sentSmsEnvelopes[message.envelopeId];
 
+    let messageClass = RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_NORMAL];
     gSmsDatabaseService.setMessageDeliveryStatus(options.id,
                                                  message.deliveryStatus);
     let sms = gSmsService.createSmsMessage(options.id,
@@ -1322,6 +1328,7 @@ RadioInterfaceLayer.prototype = {
                                            null,
                                            options.number,
                                            options.fullBody,
+                                           messageClass,
                                            options.timestamp,
                                            true);
 
