@@ -202,7 +202,7 @@ BluetoothOppManager::Connect(const nsAString& aDeviceObjectPath,
                                         serviceUuidStr,
                                         BluetoothSocketType::RFCOMM,
                                         true,
-                                        false,
+                                        true,
                                         this,
                                         runnable);
 
@@ -242,7 +242,7 @@ BluetoothOppManager::Listen()
   nsresult rv = bs->ListenSocketViaService(BluetoothReservedChannels::OPUSH,
                                            BluetoothSocketType::RFCOMM,
                                            true,
-                                           false,
+                                           true,
                                            this);
   return NS_FAILED(rv) ? false : true;
 }
