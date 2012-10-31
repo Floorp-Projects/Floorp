@@ -4,14 +4,14 @@
 
 "use strict";
 
-let EXPORTED_SYMBOLS = ["webrtcUI"];
+this.EXPORTED_SYMBOLS = ["webrtcUI"];
 
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-let webrtcUI = {
+this.webrtcUI = {
   init: function () {
     Services.obs.addObserver(handleRequest, "getUserMedia:request", false);
   },

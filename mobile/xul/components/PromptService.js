@@ -912,4 +912,4 @@ XPCOMUtils.defineLazyGetter(PromptUtils, "bundle", function () {
   return Services.strings.createBundle("chrome://global/locale/commonDialogs.properties");
 });
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([PromptService]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PromptService]);

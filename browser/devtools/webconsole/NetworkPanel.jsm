@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
-var EXPORTED_SYMBOLS = ["NetworkPanel"];
+this.EXPORTED_SYMBOLS = ["NetworkPanel"];
 
 /**
  * Creates a new NetworkPanel.
@@ -37,7 +37,7 @@ var EXPORTED_SYMBOLS = ["NetworkPanel"];
  * @param object aHttpActivity
  *        HttpActivity to display in the panel.
  */
-function NetworkPanel(aParent, aHttpActivity)
+this.NetworkPanel = function NetworkPanel(aParent, aHttpActivity)
 {
   let doc = aParent.ownerDocument;
   this.httpActivity = aHttpActivity;

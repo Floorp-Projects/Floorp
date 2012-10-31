@@ -1042,4 +1042,4 @@ SessionStore.prototype = {
   }
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([SessionStore]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SessionStore]);

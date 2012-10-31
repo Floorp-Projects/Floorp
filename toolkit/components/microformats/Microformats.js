@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["Microformats", "adr", "tag", "hCard", "hCalendar", "geo"];
+this.EXPORTED_SYMBOLS = ["Microformats", "adr", "tag", "hCard", "hCalendar", "geo"];
 
-var Microformats = {
+this.Microformats = {
   /* When a microformat is added, the name is placed in this list */
   list: [],
   /* Custom iterator so that microformats can be enumerated as */
@@ -1163,7 +1163,7 @@ var Microformats = {
 
 /* MICROFORMAT DEFINITIONS BEGIN HERE */
 
-function adr(node, validate) {
+this.adr = function adr(node, validate) {
   if (node) {
     Microformats.parser.newMicroformat(this, node, "adr", validate);
   }
@@ -1255,7 +1255,7 @@ var adr_definition = {
 
 Microformats.add("adr", adr_definition);
 
-function hCard(node, validate) {
+this.hCard = function hCard(node, validate) {
   if (node) {
     Microformats.parser.newMicroformat(this, node, "hCard", validate);
   }
@@ -1464,7 +1464,7 @@ var hCard_definition = {
 
 Microformats.add("hCard", hCard_definition);
 
-function hCalendar(node, validate) {
+this.hCalendar = function hCalendar(node, validate) {
   if (node) {
     Microformats.parser.newMicroformat(this, node, "hCalendar", validate);
   }
@@ -1644,7 +1644,7 @@ var hCalendar_definition = {
 
 Microformats.add("hCalendar", hCalendar_definition);
 
-function geo(node, validate) {
+this.geo = function geo(node, validate) {
   if (node) {
     Microformats.parser.newMicroformat(this, node, "geo", validate);
   }
@@ -1760,7 +1760,7 @@ var geo_definition = {
 
 Microformats.add("geo", geo_definition);
 
-function tag(node, validate) {
+this.tag = function tag(node, validate) {
   if (node) {
     Microformats.parser.newMicroformat(this, node, "tag", validate);
   }

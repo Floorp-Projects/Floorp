@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-EXPORTED_SYMBOLS = [ "DistributionCustomizer" ];
+this.EXPORTED_SYMBOLS = [ "DistributionCustomizer" ];
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
-function DistributionCustomizer() {
+this.DistributionCustomizer = function DistributionCustomizer() {
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
   let iniFile = dirSvc.get("XCurProcD", Ci.nsIFile);

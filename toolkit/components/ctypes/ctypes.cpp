@@ -9,6 +9,7 @@
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsNativeCharsetUtils.h"
+#include "mozilla/Preferences.h"
 
 #define JSCTYPES_CONTRACTID \
   "@mozilla.org/jsctypes;1"
@@ -89,6 +90,10 @@ InitAndSealCTypesClass(JSContext* cx, JSObject* global)
     return false;
 
   JS_SetCTypesCallbacks(JSVAL_TO_OBJECT(ctypes), &sCallbacks);
+
+  // Can't freeze our global if it's shared.
+  if (Preferences::GetBool("jsloader.reuseGlobal"))
+    return true;
 
   // Seal up Object, Function, Array and Error and their prototypes.  (This
   // single object instance is shared amongst everyone who imports the ctypes

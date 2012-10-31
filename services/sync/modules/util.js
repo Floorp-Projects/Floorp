@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["XPCOMUtils", "Services", "NetUtil", "PlacesUtils",
-                          "FileUtils", "Utils", "Async", "Svc", "Str"];
+this.EXPORTED_SYMBOLS = ["XPCOMUtils", "Services", "NetUtil", "PlacesUtils",
+                         "FileUtils", "Utils", "Async", "Svc", "Str"];
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
@@ -12,20 +12,20 @@ Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://services-common/stringbundle.js");
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/async.js", this);
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/PlacesUtils.jsm", this);
+Cu.import("resource://gre/modules/NetUtil.jsm", this);
+Cu.import("resource://gre/modules/FileUtils.jsm", this);
 
 /*
  * Utility functions
  */
 
-let Utils = {
+this.Utils = {
   // Alias in functions from CommonUtils. These previously were defined here.
   // In the ideal world, references to these would be removed.
   nextTick: CommonUtils.nextTick,
@@ -535,7 +535,7 @@ XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function() {
 /*
  * Commonly-used services
  */
-let Svc = {};
+this.Svc = {};
 Svc.Prefs = new Preferences(PREFS_BRANCH);
 Svc.DefaultPrefs = new Preferences({branch: PREFS_BRANCH, defaultBranch: true});
 Svc.Obs = Observers;
@@ -570,7 +570,7 @@ Svc.__defineGetter__("Crypto", function() {
   return Svc.Crypto = cryptoSvc;
 });
 
-let Str = {};
+this.Str = {};
 ["errors", "sync"].forEach(function(lazy) {
   XPCOMUtils.defineLazyGetter(Str, lazy, Utils.lazyStrings(lazy));
 });

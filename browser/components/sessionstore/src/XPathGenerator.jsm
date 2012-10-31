@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let EXPORTED_SYMBOLS = ["XPathGenerator"];
+this.EXPORTED_SYMBOLS = ["XPathGenerator"];
 
-let XPathGenerator = {
+this.XPathGenerator = {
   // these two hashes should be kept in sync
   namespaceURIs:     { "xhtml": "http://www.w3.org/1999/xhtml" },
   namespacePrefixes: { "http://www.w3.org/1999/xhtml": "xhtml" },

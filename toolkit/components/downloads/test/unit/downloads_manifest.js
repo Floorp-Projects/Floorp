@@ -21,4 +21,4 @@ HelperAppDlg.prototype = {
 }
 
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([HelperAppDlg]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([HelperAppDlg]);

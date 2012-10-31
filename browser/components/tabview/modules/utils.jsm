@@ -7,7 +7,7 @@
 // **********
 // Title: utils.js
 
-let EXPORTED_SYMBOLS = ["Point", "Rect", "Range", "Subscribable", "Utils", "MRUList"];
+this.EXPORTED_SYMBOLS = ["Point", "Rect", "Range", "Subscribable", "Utils", "MRUList"];
 
 // #########
 const Ci = Components.interfaces;
@@ -23,7 +23,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 // If a is a Point, creates a copy of it. Otherwise, expects a to be x,
 // and creates a Point with it along with y. If either a or y are omitted,
 // 0 is used in their place.
-function Point(a, y) {
+this.Point = function Point(a, y) {
   if (Utils.isPoint(a)) {
     this.x = a.x;
     this.y = a.y;
@@ -60,7 +60,7 @@ Point.prototype = {
 // Constructor: Rect
 // If a is a Rect, creates a copy of it. Otherwise, expects a to be left,
 // and creates a Rect with it along with top, width, and height.
-function Rect(a, top, width, height) {
+this.Rect = function Rect(a, top, width, height) {
   // Note: perhaps 'a' should really be called 'rectOrLeft'
   if (Utils.isRect(a)) {
     this.left = a.left;
@@ -251,7 +251,7 @@ Rect.prototype = {
 //
 // Constructor: Range
 // Creates a Range with the given min and max
-function Range(min, max) {
+this.Range = function Range(min, max) {
   if (Utils.isRange(min) && !max) { // if the one variable given is a range, copy it.
     this.min = min.min;
     this.max = min.max;
@@ -357,7 +357,7 @@ Range.prototype = {
 // ##########
 // Class: Subscribable
 // A mix-in for allowing objects to collect subscribers for custom events.
-function Subscribable() {
+this.Subscribable = function Subscribable() {
   this.subscribers = null;
 };
 
@@ -438,7 +438,7 @@ Subscribable.prototype = {
 // ##########
 // Class: Utils
 // Singelton with common utility functions.
-let Utils = {
+this.Utils = {
   // ----------
   // Function: toString
   // Prints [Utils] for debug use
@@ -768,7 +768,7 @@ let Utils = {
 //
 // Constructor: MRUList
 // If a is an array of entries, creates a copy of it.
-function MRUList(a) {
+this.MRUList = function MRUList(a) {
   if (Array.isArray(a))
     this._list = a.concat();
   else

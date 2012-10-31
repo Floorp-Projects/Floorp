@@ -19,9 +19,9 @@
  * @rejects {B} reason
  */
 
-let EXPORTED_SYMBOLS = ["OS"];
+this.EXPORTED_SYMBOLS = ["OS"];
 
-Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
+Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", this);
 
 let LOG = OS.Shared.LOG.bind(OS.Shared, "Controller");
 let isTypedArray = OS.Shared.isTypedArray;

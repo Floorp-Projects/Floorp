@@ -67,5 +67,5 @@ ActivitiesDialog.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIActivityUIGlue, Ci.nsIRunnable])
 }
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([ActivitiesDialog]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ActivitiesDialog]);
 

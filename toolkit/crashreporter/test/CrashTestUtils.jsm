@@ -1,6 +1,8 @@
-var EXPORTED_SYMBOLS = ["CrashTestUtils"];
+// XXXkhuey this needs a license header.
 
-let CrashTestUtils = {
+this.EXPORTED_SYMBOLS = ["CrashTestUtils"];
+
+this.CrashTestUtils = {
   // These will be defined using ctypes APIs below.
   crash: null,
   lockDir: null,

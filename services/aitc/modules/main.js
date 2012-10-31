@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["Aitc"];
+this.EXPORTED_SYMBOLS = ["Aitc"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -17,7 +17,7 @@ Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/preferences.js");
 
-function Aitc() {
+this.Aitc = function Aitc() {
   this._log = Log4Moz.repository.getLogger("Service.AITC");
   this._log.level = Log4Moz.Level[Preferences.get(
     "services.aitc.service.log.level"

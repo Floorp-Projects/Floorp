@@ -104,4 +104,4 @@ DownloadsUI.prototype = {
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([DownloadsUI]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DownloadsUI]);

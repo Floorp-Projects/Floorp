@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let EXPORTED_SYMBOLS = [ "addDebuggerToGlobal" ];
+this.EXPORTED_SYMBOLS = [ "addDebuggerToGlobal" ];
 
 /*
  * This is the js module for Debugger. Import it like so:
@@ -19,6 +19,6 @@ let EXPORTED_SYMBOLS = [ "addDebuggerToGlobal" ];
  */
 
 const init = Components.classes["@mozilla.org/jsdebugger;1"].createInstance(Components.interfaces.IJSDebugger);
-function addDebuggerToGlobal(global) {
+this.addDebuggerToGlobal = function addDebuggerToGlobal(global) {
   init.addClass(global);
 };

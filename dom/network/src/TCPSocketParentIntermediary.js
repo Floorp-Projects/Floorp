@@ -52,4 +52,4 @@ TCPSocketParentIntermediary.prototype = {
   ])
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([TCPSocketParentIntermediary]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TCPSocketParentIntermediary]);

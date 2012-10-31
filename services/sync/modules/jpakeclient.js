@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["JPAKEClient", "SendCredentialsController"];
+this.EXPORTED_SYMBOLS = ["JPAKEClient", "SendCredentialsController"];
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
@@ -111,7 +111,7 @@ const JPAKE_VERIFY_VALUE      = "0123456789ABCDEF";
  * Note that after completion or abort, the 'client' instance may not be reused.
  * You will have to create a new one in case you'd like to restart the process.
  */
-function JPAKEClient(controller) {
+this.JPAKEClient = function JPAKEClient(controller) {
   this.controller = controller;
 
   this._log = Log4Moz.repository.getLogger("Sync.JPAKEClient");
@@ -698,7 +698,8 @@ JPAKEClient.prototype = {
  *                                                          service);
  *
  */
-function SendCredentialsController(jpakeclient, service) {
+this.SendCredentialsController =
+ function SendCredentialsController(jpakeclient, service) {
   this._log = Log4Moz.repository.getLogger("Sync.SendCredentialsController");
   this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
 

@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageBroadcaster");
 
-const EXPORTED_SYMBOLS = [];
+this.EXPORTED_SYMBOLS = [];
 
 let idbGlobal = this;
 

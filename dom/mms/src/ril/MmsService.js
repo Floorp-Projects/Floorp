@@ -591,7 +591,7 @@ MmsService.prototype = {
   },
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([MmsService]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MmsService]);
 
 let debug;
 if (DEBUG) {

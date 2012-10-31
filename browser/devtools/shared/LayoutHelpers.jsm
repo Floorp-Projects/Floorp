@@ -18,9 +18,9 @@ XPCOMUtils.defineLazyGetter(this, "PlatformKeys", function() {
     "chrome://global-platform/locale/platformKeys.properties");
 });
 
-var EXPORTED_SYMBOLS = ["LayoutHelpers"];
+this.EXPORTED_SYMBOLS = ["LayoutHelpers"];
 
-LayoutHelpers = {
+this.LayoutHelpers = LayoutHelpers = {
 
   /**
    * Compute the position and the dimensions for the visible portion

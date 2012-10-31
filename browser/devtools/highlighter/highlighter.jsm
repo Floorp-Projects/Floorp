@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var EXPORTED_SYMBOLS = ["Highlighter"];
+this.EXPORTED_SYMBOLS = ["Highlighter"];
 
 const INSPECTOR_INVISIBLE_ELEMENTS = {
   "head": true,
@@ -113,7 +113,7 @@ const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
  *
  * @param object aWindow
  */
-function Highlighter(aWindow)
+this.Highlighter = function Highlighter(aWindow)
 {
   this.chromeWin = aWindow;
   this.tabbrowser = aWindow.gBrowser;

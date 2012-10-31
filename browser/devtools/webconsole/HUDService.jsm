@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
-var EXPORTED_SYMBOLS = ["HUDService"];
+this.EXPORTED_SYMBOLS = ["HUDService"];
 
 function LogFactory(aMessagePrefix)
 {

@@ -149,5 +149,5 @@ nsWebHandlerApp.prototype = {
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
 
-NSGetFactory = XPCOMUtils.generateNSGetFactory([nsWebHandlerApp]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsWebHandlerApp]);
 
