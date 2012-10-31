@@ -70,11 +70,14 @@ EXTRA_JS_MODULES = \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \
-  LightweightThemeConsumer.jsm \
   PrivateBrowsingUtils.jsm \
   Services.jsm \
   WindowDraggingUtils.jsm \
   Troubleshoot.jsm \
   $(NULL)
+
+ifneq (Android,$(OS_TARGET))
+EXTRA_PP_JS_MODULES += LightweightThemeConsumer.jsm
+endif
 
 include $(topsrcdir)/config/rules.mk
