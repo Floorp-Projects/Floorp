@@ -1981,8 +1981,8 @@ var SelectionHandler = {
   updateCacheForSelection: function sh_updateCacheForSelection(aIsStartHandle) {
     let selection = this.getSelection();
     let rects = selection.getRangeAt(0).getClientRects();
-    let start = { x: rects[0].left, y: rects[0].bottom };
-    let end = { x: rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
+    let start = { x: this._isRTL ? rects[0].right : rects[0].left, y: rects[0].bottom };
+    let end = { x: this._isRTL ? rects[rects.length - 1].left : rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
 
     let selectionReversed = false;
     if (this.cache.start) {
