@@ -91,18 +91,6 @@
 <!ENTITY search.label                              "Search:">
 <!ENTITY search.accesskey                          "S">
 
-<!ENTITY search.in.label                           "Search in:">
-<!ENTITY search.scopeFolder.label                  "Selected Folder">
-<!ENTITY search.scopeFolder.accesskey              "r">
-<!ENTITY search.scopeBookmarks.label               "Bookmarks">
-<!ENTITY search.scopeBookmarks.accesskey           "k">
-<!ENTITY search.scopeDownloads.label               "Downloads">
-<!ENTITY search.scopeDownloads.accesskey           "D">
-<!ENTITY search.scopeHistory.label                 "History">
-<!ENTITY search.scopeHistory.accesskey             "H">
-<!ENTITY saveSearch.label                          "Save">
-<!ENTITY saveSearch.accesskey                      "S">
-
 <!ENTITY cmd.find.key  "f">
 
 <!ENTITY maintenance.label      "Import and Backup">

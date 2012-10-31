@@ -31,8 +31,8 @@
 ]>
 
 <window id="places"
-        title="&places.library.title;" 
-        windowtype="Places:Organizer" 
+        title="&places.library.title;"
+        windowtype="Places:Organizer"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         onload="PlacesOrganizer.init();"
@@ -87,12 +87,12 @@
 
   <keyset id="placesOrganizerKeyset">
     <!-- Instantiation Keys -->
-    <key id="placesKey_close" key="&cmd.close.key;" modifiers="accel" 
+    <key id="placesKey_close" key="&cmd.close.key;" modifiers="accel"
          oncommand="close();"/>
          
     <!-- Command Keys -->
     <key id="placesKey_find:all"
-         command="OrganizerCommand_find:all" 
+         command="OrganizerCommand_find:all"
          key="&cmd.find.key;"
          modifiers="accel"/>
 
@@ -241,9 +241,9 @@
             <menuseparator id="orgCloseSeparator"/>
 
             <menuitem id="orgClose"
-                      key="placesKey_close" 
+                      key="placesKey_close"
                       label="&file.close.label;"
-                      accesskey="&file.close.accesskey;" 
+                      accesskey="&file.close.accesskey;"
                       oncommand="close();"/>
 #endif
           </menupopup>
@@ -258,7 +258,7 @@
               tooltiptext="&views.tooltip;">
           <menupopup id="viewMenuPopup">
 
-            <menu id="viewColumns" 
+            <menu id="viewColumns"
                   label="&view.columns.label;" accesskey="&view.columns.accesskey;">
               <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
                          oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
@@ -268,14 +268,14 @@
                   accesskey="&view.sort.accesskey;">
               <menupopup onpopupshowing="ViewMenu.populateSortMenu(event);"
                          oncommand="ViewMenu.setSortColumn(event.target.column, null);">
-                <menuitem id="viewUnsorted" type="radio" name="columns" 
+                <menuitem id="viewUnsorted" type="radio" name="columns"
                           label="&view.unsorted.label;" accesskey="&view.unsorted.accesskey;"
                           oncommand="ViewMenu.setSortColumn(null, null);"/>
                 <menuseparator id="directionSeparator"/>
-                <menuitem id="viewSortAscending" type="radio" name="direction" 
+                <menuitem id="viewSortAscending" type="radio" name="direction"
                           label="&view.sortAscending.label;" accesskey="&view.sortAscending.accesskey;"
                           oncommand="ViewMenu.setSortColumn(null, 'ascending'); event.stopPropagation();"/>
-                <menuitem id="viewSortDescending" type="radio" name="direction" 
+                <menuitem id="viewSortDescending" type="radio" name="direction"
                           label="&view.sortDescending.label;" accesskey="&view.sortDescending.accesskey;"
                           oncommand="ViewMenu.setSortColumn(null, 'descending'); event.stopPropagation();"/>
               </menupopup>
@@ -358,38 +358,6 @@
     </tree>
     <splitter collapse="none" persist="state"></splitter>
     <vbox id="contentView" flex="4">
-      <toolbox id="searchModifiers" hidden="true">
-        <toolbar id="organizerScopeBar" class="chromeclass-toolbar" align="center">
-          <label id="scopeBarTitle" value="&search.in.label;"/>
-          <toolbarbutton id="scopeBarAll" class="small-margin"
-                         type="radio" group="scopeBar"
-                         oncommand="PlacesQueryBuilder.onScopeSelected(this);"
-                         label="&search.scopeBookmarks.label;"
-                         accesskey="&search.scopeBookmarks.accesskey;"/>
-          <toolbarbutton id="scopeBarHistory" class="small-margin"
-                         type="radio" group="scopeBar"
-                         oncommand="PlacesQueryBuilder.onScopeSelected(this);"
-                         label="&search.scopeHistory.label;"
-                         accesskey="&search.scopeHistory.accesskey;"/>
-          <toolbarbutton id="scopeBarDownloads" class="small-margin"
-                         type="radio" group="scopeBar"
-                         oncommand="PlacesQueryBuilder.onScopeSelected(this);"
-                         label="&search.scopeDownloads.label;"
-                         accesskey="&search.scopeDownloads.accesskey;"/>
-          <toolbarbutton id="scopeBarFolder" class="small-margin"
-                         type="radio" group="scopeBar"
-                         oncommand="PlacesQueryBuilder.onScopeSelected(this);"
-                         accesskey="&search.scopeFolder.accesskey;"
-                         emptytitle="&search.scopeFolder.label;" flex="1"/>
-          <!-- The folder scope button should flex but not take up more room
-                than its label needs.  The only simple way to do that is to
-                set a really big flex on the spacer, e.g., 2^31 - 1. -->
-          <spacer flex="2147483647"/>
-          <button id="saveSearch" class="small-margin"
-                  label="&saveSearch.label;" accesskey="&saveSearch.accesskey;"
-                  command="OrganizerCommand_search:save"/>
-        </toolbar>
-      </toolbox>
       <tree id="placeContent"
             class="plain placesTree"
             context="placesContext"
