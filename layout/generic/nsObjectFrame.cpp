@@ -1595,14 +1595,6 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (window->width <= 0 || window->height <= 0)
     return nullptr;
 
-  // Create image
-  nsRefPtr<ImageContainer> container = mInstanceOwner->GetImageContainer();
-
-  if (!container) {
-    // This can occur if our instance is gone.
-    return nullptr;
-  }
-
   // window is in "display pixels", but size needs to be in device pixels
   double scaleFactor = 1.0;
   if (NS_FAILED(mInstanceOwner->GetContentsScaleFactor(&scaleFactor))) {
@@ -1627,8 +1619,14 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
         return nullptr;
     }
 
-    NS_ASSERTION(layer->GetType() == Layer::TYPE_IMAGE, "Bad layer type");
+    // Create image
+    nsRefPtr<ImageContainer> container = mInstanceOwner->GetImageContainer();
+    if (!container) {
+      // This can occur if our instance is gone.
+      return nullptr;
+    }
 
+    NS_ASSERTION(layer->GetType() == Layer::TYPE_IMAGE, "Bad layer type");
     ImageLayer* imglayer = static_cast<ImageLayer*>(layer.get());
     UpdateImageLayer(r);
 
