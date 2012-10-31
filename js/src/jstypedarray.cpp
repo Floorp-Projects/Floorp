@@ -3880,6 +3880,16 @@ JS_GetArrayBufferViewData(JSObject *obj, JSContext *maybecx)
     return obj->isDataView() ? obj->asDataView().dataPointer() : TypedArray::viewData(obj);
 }
 
+JS_FRIEND_API(JSObject *)
+JS_GetArrayBufferViewBuffer(JSObject *obj, JSContext *maybecx)
+{
+    obj = CheckedUnwrap(maybecx, obj);
+    if (!obj)
+        return NULL;
+    JS_ASSERT(obj->isTypedArray() || obj->isDataView());
+    return &obj->getFixedSlot(BufferView::BUFFER_SLOT).toObject();
+}
+
 JS_FRIEND_API(uint32_t)
 JS_GetArrayBufferViewByteLength(JSObject *obj, JSContext *maybecx)
 {
