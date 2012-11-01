@@ -289,6 +289,7 @@ SocialProvider.prototype = {
       this.workerAPI.terminate();
     }
     this.workerAPI = null;
+    this.profile = undefined;
   },
 
   /**
