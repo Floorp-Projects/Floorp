@@ -6870,7 +6870,7 @@ IsInlineFrame(nsIFrame *aFrame)
 
 bool
 nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
-                                 nsSize aNewSize)
+                                 nsSize aNewSize, nsSize* aOldSize)
 {
   NS_ASSERTION(!((GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
                  (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)),
@@ -6965,6 +6965,8 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 
   /* If we're transformed, transform the overflow rect by the current transformation. */
   bool hasTransform = IsTransformed();
+  nsSize oldSize = aOldSize ? *aOldSize : mRect.Size();
+  bool sizeChanged = (oldSize != aNewSize);
   if (hasTransform) {
     Properties().Set(nsIFrame::PreTransformOverflowAreasProperty(),
                      new nsOverflowAreas(aOverflowAreas));
@@ -6978,14 +6980,16 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       nsRect& o = aOverflowAreas.Overflow(otype);
       o = nsDisplayTransform::TransformRect(o, this, nsPoint(0, 0), &newBounds);
     }
-    if (Preserves3DChildren()) {
-      ComputePreserve3DChildrenOverflow(aOverflowAreas, newBounds);
-    } else if (ChildrenHavePerspective()) {
-      RecomputePerspectiveChildrenOverflow(this->GetStyleContext(), &newBounds);
+    if (sizeChanged) {
+      if (Preserves3DChildren()) {
+        ComputePreserve3DChildrenOverflow(aOverflowAreas, newBounds);
+      } else if (ChildrenHavePerspective()) {
+        RecomputePerspectiveChildrenOverflow(this->GetStyleContext(), &newBounds);
+      }
     }
   } else {
     Properties().Delete(nsIFrame::PreTransformOverflowAreasProperty());
-    if (ChildrenHavePerspective()) {
+    if (ChildrenHavePerspective() && sizeChanged) {
       nsRect newBounds(nsPoint(0, 0), aNewSize);
       RecomputePerspectiveChildrenOverflow(this->GetStyleContext(), &newBounds);
     }
@@ -7799,7 +7803,8 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
                          reflowState, reflowStatus);
   }
 
-  FinishAndStoreOverflow(desiredSize.mOverflowAreas, size);
+  nsSize oldSize(ourRect.Size());
+  FinishAndStoreOverflow(desiredSize.mOverflowAreas, size, &oldSize);
 
   SyncLayout(aState);
 
