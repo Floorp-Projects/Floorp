@@ -9,7 +9,6 @@ import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.GfxInfoThread;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
-import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.TouchEventHandler;
 import org.mozilla.gecko.util.EventDispatcher;
@@ -110,7 +109,7 @@ public class GeckoAppShell
 
     static private boolean gRestartScheduled = false;
 
-    static private GeckoEditableListener mEditableListener = null;
+    static private GeckoInputConnection mInputConnection = null;
 
     static private final HashMap<Integer, AlertNotification>
         mAlertNotifications = new HashMap<Integer, AlertNotification>();
@@ -535,11 +534,8 @@ public class GeckoAppShell
     // Called on the UI thread after Gecko loads.
     private static void geckoLoaded() {
         LayerView v = GeckoApp.mAppContext.getLayerView();
-        GeckoEditable editable = new GeckoEditable();
-        InputConnectionHandler ich = GeckoInputConnection.create(v, editable);
-        v.setInputConnectionHandler(ich);
-        // install the gecko => editable listener
-        mEditableListener = editable;
+        mInputConnection = GeckoInputConnection.create(v);
+        v.setInputConnectionHandler(mInputConnection);
     }
 
     static void sendPendingEventsToGecko() {
@@ -572,30 +568,21 @@ public class GeckoAppShell
      *  The Gecko-side API: API methods that Gecko calls
      */
     public static void notifyIME(int type, int state) {
-        if (mEditableListener != null) {
-            mEditableListener.notifyIME(type, state);
-        }
+        if (mInputConnection != null)
+            mInputConnection.notifyIME(type, state);
     }
 
-    public static void notifyIMEEnabled(int state, String typeHint,
-                                        String modeHint, String actionHint,
-                                        boolean landscapeFS) {
-        // notifyIMEEnabled() still needs the landscapeFS parameter
-        // because it is called from JNI code that assumes it has the
-        // same signature as XUL Fennec's (which does use landscapeFS).
-        // Bug 807124 will eliminate the need for landscapeFS
-        if (mEditableListener != null) {
-            mEditableListener.notifyIMEEnabled(state, typeHint,
-                                               modeHint, actionHint);
-        }
+    public static void notifyIMEEnabled(int state, String typeHint, String modeHint,
+                                        String actionHint, boolean landscapeFS) {
+        // notifyIMEEnabled() still needs the landscapeFS parameter because it is called from JNI
+        // code that assumes it has the same signature as XUL Fennec's (which does use landscapeFS).
+        if (mInputConnection != null)
+            mInputConnection.notifyIMEEnabled(state, typeHint, modeHint, actionHint);
     }
 
     public static void notifyIMEChange(String text, int start, int end, int newEnd) {
-        if (newEnd < 0) { // Selection change
-            mEditableListener.onSelectionChange(start, end);
-        } else { // Text change
-            mEditableListener.onTextChange(text, start, end, newEnd);
-        }
+        if (mInputConnection != null)
+            mInputConnection.notifyIMEChange(text, start, end, newEnd);
     }
 
     private static CountDownLatch sGeckoPendingAcks = null;
@@ -2010,10 +1997,8 @@ public class GeckoAppShell
     }
 
     public static void viewSizeChanged() {
-        LayerView v = GeckoApp.mAppContext.getLayerView();
-        if (v != null && v.isIMEEnabled()) {
-            sendEventToGecko(GeckoEvent.createBroadcastEvent(
-                    "ScrollTo:FocusedInput", ""));
+        if (mInputConnection != null && mInputConnection.isIMEEnabled()) {
+            sendEventToGecko(GeckoEvent.createBroadcastEvent("ScrollTo:FocusedInput", ""));
         }
     }
 

@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.util.GeckoJarReader;
-import org.mozilla.gecko.util.LruCache;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
@@ -20,7 +19,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
-import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.http.AndroidHttpClient;
@@ -48,7 +46,6 @@ public class Favicons {
 
     private Map<Long,LoadFaviconTask> mLoadTasks;
     private long mNextFaviconLoadId;
-    private LruCache<String, Drawable> mFaviconsCache;
     private static final String USER_AGENT = GeckoApp.mAppContext.getDefaultUAString();
     private AndroidHttpClient mHttpClient;
 
@@ -142,15 +139,6 @@ public class Favicons {
 
         mLoadTasks = Collections.synchronizedMap(new HashMap<Long,LoadFaviconTask>());
         mNextFaviconLoadId = 0;
-
-        // Create a favicon memory cache that have up to 1mb of size
-        mFaviconsCache = new LruCache<String, Drawable>(1024 * 1024) {
-            @Override
-            protected int sizeOf(String url, Drawable image) {
-                Bitmap bitmap = ((BitmapDrawable) image).getBitmap();
-                return bitmap.getRowBytes() * bitmap.getHeight();
-            }
-        };
     }
 
     private synchronized AndroidHttpClient getHttpClient() {
@@ -159,20 +147,6 @@ public class Favicons {
 
         mHttpClient = AndroidHttpClient.newInstance(USER_AGENT);
         return mHttpClient;
-    }
-
-    private void dispatchResult(final String pageUrl, final Drawable image,
-            final OnFaviconLoadedListener listener) {
-        if (pageUrl != null && image != null)
-            putFaviconInMemCache(pageUrl, image);
-
-        // We want to always run the listener on UI thread
-        GeckoAppShell.getMainHandler().post(new Runnable() {
-            public void run() {
-                if (listener != null)
-                    listener.onFaviconLoaded(pageUrl, image);
-            }
-        });
     }
 
     public String getFaviconUrlForPageUrl(String pageUrl) {
@@ -184,15 +158,8 @@ public class Favicons {
 
         // Handle the case where page url is empty
         if (pageUrl == null || pageUrl.length() == 0) {
-            dispatchResult(null, null, listener);
-            return -1;
-        }
-
-        // Check if favicon is mem cached
-        Drawable image = getFaviconFromMemCache(pageUrl);
-        if (image != null) {
-            dispatchResult(pageUrl, image, listener);
-            return -1;
+            if (listener != null)
+                listener.onFaviconLoaded(null, null);
         }
 
         LoadFaviconTask task = new LoadFaviconTask(pageUrl, faviconUrl, persist, listener);
@@ -203,18 +170,6 @@ public class Favicons {
         task.execute();
 
         return taskId;
-    }
-
-    public Drawable getFaviconFromMemCache(String pageUrl) {
-        return mFaviconsCache.get(pageUrl);
-    }
-
-    public void putFaviconInMemCache(String pageUrl, Drawable image) {
-        mFaviconsCache.put(pageUrl, image);
-    }
-
-    public void clearMemCache() {
-        mFaviconsCache.evictAll();
     }
 
     public boolean cancelFaviconLoad(long taskId) {
@@ -300,7 +255,7 @@ public class Favicons {
         // Runs in background thread
         private BitmapDrawable downloadFavicon(URL faviconUrl) {
             if (mFaviconUrl.startsWith("jar:jar:")) {
-                return GeckoJarReader.getBitmapDrawable(mContext.getResources(), mFaviconUrl);
+                return GeckoJarReader.getBitmapDrawable(GeckoApp.mAppContext.getResources(), mFaviconUrl);
             }
 
             URI uri;
@@ -384,7 +339,15 @@ public class Favicons {
         @Override
         protected void onPostExecute(final BitmapDrawable image) {
             mLoadTasks.remove(mId);
-            dispatchResult(mPageUrl, image, mListener);
+
+            if (mListener != null) {
+                // We want to always run the listener on UI thread
+                GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+                    public void run() {
+                        mListener.onFaviconLoaded(mPageUrl, image);
+                    }
+                });
+            }
         }
 
         @Override

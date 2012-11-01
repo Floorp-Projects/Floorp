@@ -100,7 +100,7 @@ class AndroidBridge
 public:
     enum {
         NOTIFY_IME_RESETINPUTSTATE = 0,
-        NOTIFY_IME_REPLY_EVENT = 1,
+        NOTIFY_IME_SETOPENSTATE = 1,
         NOTIFY_IME_CANCELCOMPOSITION = 2,
         NOTIFY_IME_FOCUSCHANGE = 3
     };
@@ -170,6 +170,8 @@ public:
     void EnableSensor(int aSensorType);
 
     void DisableSensor(int aSensorType);
+
+    void ReturnIMEQueryResult(const PRUnichar *aResult, uint32_t aLen, int aSelStart, int aSelLen);
 
     void NotifyXreExit();
 
@@ -406,6 +408,7 @@ protected:
     jmethodID jEnableLocationHighAccuracy;
     jmethodID jEnableSensor;
     jmethodID jDisableSensor;
+    jmethodID jReturnIMEQueryResult;
     jmethodID jNotifyAppShellReady;
     jmethodID jNotifyXreExit;
     jmethodID jScheduleRestart;
