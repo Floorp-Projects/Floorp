@@ -9,7 +9,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-let EXPORTED_SYMBOLS = ["DOMApplicationRegistry"];
+this.EXPORTED_SYMBOLS = ["DOMApplicationRegistry"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -54,7 +54,7 @@ XPCOMUtils.defineLazyGetter(this, "msgmgr", function() {
   const DIRECTORY_NAME = WEBAPP_RUNTIME ? "WebappRegD" : "ProfD";
 #endif
 
-let DOMApplicationRegistry = {
+this.DOMApplicationRegistry = {
   appsFile: null,
   webapps: { },
   children: [ ],
@@ -1070,6 +1070,12 @@ let DOMApplicationRegistry = {
 
     let appObject = AppsUtils.cloneAppObject(app);
     appObject.appStatus = app.appStatus || Ci.nsIPrincipal.APP_STATUS_INSTALLED;
+    // For hosted apps, allow application status override in dev mode.
+    if (!aData.isPackage &&
+        Services.prefs.getBoolPref("dom.mozApps.dev_mode")) {
+      appObject.appStatus = AppsUtils.getAppManifestStatus(app.manifest);
+    }
+
     appObject.installTime = app.installTime = Date.now();
     appObject.lastUpdateCheck = app.lastUpdateCheck = Date.now();
     let appNote = JSON.stringify(appObject);
@@ -1112,7 +1118,10 @@ let DOMApplicationRegistry = {
     // For package apps, the permissions are not in the mini-manifest, so
     // don't update the permissions yet.
     if (!aData.isPackage) {
-      PermissionsInstaller.installPermissions(aData.app, isReinstall, (function() {
+      PermissionsInstaller.installPermissions({ origin: appObject.origin,
+                                                manifestURL: appObject.manifestURL,
+                                                manifest: jsonManifest },
+                                              isReinstall, (function() {
         this.uninstall(aData, aData.mm);
       }).bind(this));
     }

@@ -5,7 +5,7 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/KeyValueParser.jsm");
 
-let EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "CrashSubmit"
 ];
 
@@ -301,7 +301,7 @@ Submitter.prototype = {
 
 //===================================
 // External API goes here
-let CrashSubmit = {
+this.CrashSubmit = {
   /**
    * Submit the crash report named id.dmp from the "pending" directory.
    *

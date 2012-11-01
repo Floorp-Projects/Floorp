@@ -18,7 +18,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/CssLogic.jsm");
 Cu.import("resource:///modules/devtools/Templater.jsm");
 
-var EXPORTED_SYMBOLS = ["CssHtmlTree", "PropertyView"];
+this.EXPORTED_SYMBOLS = ["CssHtmlTree", "PropertyView"];
 
 /**
  * Helper for long-running processes that should yield occasionally to
@@ -116,7 +116,7 @@ UpdateProcess.prototype = {
  * @params {StyleInspector} aStyleInspector The owner of this CssHtmlTree
  * @constructor
  */
-function CssHtmlTree(aStyleInspector)
+this.CssHtmlTree = function CssHtmlTree(aStyleInspector)
 {
   this.styleWin = aStyleInspector.iframe;
   this.styleInspector = aStyleInspector;
@@ -719,7 +719,7 @@ CssHtmlTree.prototype = {
  * @param {string} aName the CSS property name for which this PropertyView
  * instance will render the rules.
  */
-function PropertyView(aTree, aName)
+this.PropertyView = function PropertyView(aTree, aName)
 {
   this.tree = aTree;
   this.name = aName;

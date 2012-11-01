@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["AitcStorage", "AitcQueue"];
+this.EXPORTED_SYMBOLS = ["AitcStorage", "AitcQueue"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -32,7 +32,7 @@ Cu.import("resource://services-common/utils.js");
  *                    will be persisted on disk.
  *
  */
-function AitcQueue(filename, cb) {
+this.AitcQueue = function AitcQueue(filename, cb) {
   if (!cb) {
     throw new Error("AitcQueue constructor called without callback");
   }

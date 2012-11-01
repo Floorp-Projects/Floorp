@@ -45,6 +45,7 @@ GlobalPCList.prototype = {
       this._list[winID].forEach(function(pc) {
         pc._pc.close();
         delete pc._observer;
+        pc._pc = null;
       });
       delete this._list[winID];
     }
@@ -673,6 +674,6 @@ PeerConnectionObserver.prototype = {
   }
 };
 
-let NSGetFactory = XPCOMUtils.generateNSGetFactory(
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
   [IceCandidate, SessionDescription, PeerConnection]
 );

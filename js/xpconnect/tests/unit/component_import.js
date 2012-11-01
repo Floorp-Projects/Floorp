@@ -85,4 +85,4 @@ function do_check_true(cond, text) {
 }
 
 var gComponentsArray = [FooComponent, BarComponent];
-var NSGetFactory = XPCOMUtils.generateNSGetFactory(gComponentsArray);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory(gComponentsArray);

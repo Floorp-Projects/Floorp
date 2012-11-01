@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let EXPORTED_SYMBOLS = ["Services"];
+this.EXPORTED_SYMBOLS = ["Services"];
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let Services = {};
+this.Services = {};
 
 XPCOMUtils.defineLazyGetter(Services, "prefs", function () {
   return Cc["@mozilla.org/preferences-service;1"]

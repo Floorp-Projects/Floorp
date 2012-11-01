@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "ClientEngine",
   "ClientsRec"
 ];
@@ -18,7 +18,7 @@ Cu.import("resource://services-sync/util.js");
 const CLIENTS_TTL = 1814400; // 21 days
 const CLIENTS_TTL_REFRESH = 604800; // 7 days
 
-function ClientsRec(collection, id) {
+this.ClientsRec = function ClientsRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 ClientsRec.prototype = {
@@ -30,7 +30,7 @@ ClientsRec.prototype = {
 Utils.deferGetSet(ClientsRec, "cleartext", ["name", "type", "commands"]);
 
 
-function ClientEngine(service) {
+this.ClientEngine = function ClientEngine(service) {
   SyncEngine.call(this, "Clients", service);
 
   // Reset the client on every startup so that we fetch recent clients

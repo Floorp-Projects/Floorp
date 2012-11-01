@@ -1378,4 +1378,4 @@ FeedWriter.prototype = {
                                          Ci.nsINavHistoryObserver])
 };
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([FeedWriter]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([FeedWriter]);

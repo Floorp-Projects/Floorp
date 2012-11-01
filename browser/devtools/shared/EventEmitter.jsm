@@ -1,6 +1,8 @@
-var EXPORTED_SYMBOLS = ["EventEmitter"];
+// XXXkhuey this should have a license header.
 
-function EventEmitter() {
+this.EXPORTED_SYMBOLS = ["EventEmitter"];
+
+this.EventEmitter = function EventEmitter() {
 }
 
 EventEmitter.prototype = {
