@@ -171,6 +171,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Reload", false);
     Services.obs.addObserver(this, "Session:Stop", false);
+    Services.obs.addObserver(this, "Session:Restore", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
     Services.obs.addObserver(this, "Browser:Quit", false);
     Services.obs.addObserver(this, "Preferences:Get", false);
@@ -246,19 +247,16 @@ var BrowserApp = {
     Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
     let url = null;
-    let restoreMode = 0;
     let pinned = false;
     if ("arguments" in window) {
       if (window.arguments[0])
         url = window.arguments[0];
       if (window.arguments[1])
-        restoreMode = window.arguments[1];
+        gScreenWidth = window.arguments[1];
       if (window.arguments[2])
-        gScreenWidth = window.arguments[2];
+        gScreenHeight = window.arguments[2];
       if (window.arguments[3])
-        gScreenHeight = window.arguments[3];
-      if (window.arguments[4])
-        pinned = window.arguments[4];
+        pinned = window.arguments[3];
     }
 
     let updated = this.isAppUpdated();
@@ -277,48 +275,9 @@ var BrowserApp = {
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
 
-    // Restore the previous session
-    // restoreMode = 0 means no restore
-    // restoreMode = 1 means force restore (after an OOM kill)
-    // restoreMode = 2 means restore only if we haven't crashed multiple times
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    if (restoreMode || ss.shouldRestore()) {
-      // A restored tab should not be active if we are loading a URL
-      let restoreToFront = false;
-
-      sendMessageToJava({
-        gecko: {
-          type: "Session:RestoreBegin"
-        }
-      });
-
-      // Make the restored tab active if we aren't loading an external URL
-      if (url == null) {
-        restoreToFront = true;
-      }
-
-      // Be ready to handle any restore failures by making sure we have a valid tab opened
-      let restoreCleanup = {
-        observe: function(aSubject, aTopic, aData) {
-          Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
-          if (aData == "fail") {
-            BrowserApp.addTab("about:home", {
-              showProgress: false,
-              selected: restoreToFront
-            });
-          }
-
-          sendMessageToJava({
-            gecko: {
-              type: "Session:RestoreEnd"
-            }
-          });
-        }
-      };
-      Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
-
-      // Start the restore
-      ss.restoreLastSession(restoreToFront, restoreMode == 1);
+    if (ss.shouldRestore()) {
+      this.restoreSession(false, null);
     }
 
     if (updated)
@@ -343,6 +302,39 @@ var BrowserApp = {
     // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
     setTimeout(function() { SafeBrowsing.init(); }, 5000);
 #endif
+  },
+
+  restoreSession: function (restoringOOM, sessionString) {
+    sendMessageToJava({
+      gecko: {
+        type: "Session:RestoreBegin"
+      }
+    });
+
+    // Be ready to handle any restore failures by making sure we have a valid tab opened
+    let restoreCleanup = {
+      observe: function (aSubject, aTopic, aData) {
+        Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
+
+        if (this.tabs.length == 0) {
+          this.addTab("about:home", {
+            showProgress: false,
+            selected: true
+          });
+        }
+
+        sendMessageToJava({
+          gecko: {
+            type: "Session:RestoreEnd"
+          }
+        });
+      }.bind(this)
+    };
+    Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
+
+    // Start the restore
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    ss.restoreLastSession(restoringOOM, sessionString);
   },
 
   isAppUpdated: function() {
@@ -1073,13 +1065,16 @@ var BrowserApp = {
       if (data.userEntered)
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
 
+      let delayLoad = ("delayLoad" in data) ? data.delayLoad : false;
       let params = {
-        selected: true,
+        selected: !delayLoad,
         parentId: ("parentId" in data) ? data.parentId : -1,
         flags: flags,
         tabID: data.tabID,
-        isPrivate: data.isPrivate,
-        pinned: data.pinned
+        isPrivate: (data.isPrivate == true),
+        pinned: (data.pinned == true),
+        delayLoad: (delayLoad == true),
+        desktopMode: (data.desktopMode == true)
       };
 
       let url = data.url;
@@ -1146,6 +1141,9 @@ var BrowserApp = {
       } else {
         profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
       }
+    } else if (aTopic == "Session:Restore") {
+      let data = JSON.parse(aData);
+      this.restoreSession(data.restoringOOM, data.sessionString);
     }
   },
 
@@ -2341,6 +2339,7 @@ Tab.prototype = {
 
     // only set tab uri if uri is valid
     let uri = null;
+    let title = aParams.title || aURL;
     try {
       uri = Services.io.newURI(aURL, null, null).spec;
     } catch (e) {}
@@ -2366,7 +2365,7 @@ Tab.prototype = {
           parentId: ("parentId" in aParams) ? aParams.parentId : -1,
           external: ("external" in aParams) ? aParams.external : false,
           selected: ("selected" in aParams) ? aParams.selected : true,
-          title: aParams.title || aURL,
+          title: title,
           delayLoad: aParams.delayLoad || false,
           desktopMode: this.desktopMode,
           isPrivate: isPrivate
@@ -2400,7 +2399,18 @@ Tab.prototype = {
     Services.obs.addObserver(this, "before-first-paint", false);
     Services.prefs.addObserver("browser.ui.zoom.force-user-scalable", this, false);
 
-    if (!aParams.delayLoad) {
+    if (aParams.delayLoad) {
+      // If this is a zombie tab, attach restore data so the tab will be
+      // restored when selected
+      this.browser.__SS_data = {
+        entries: [{
+          url: aURL,
+          title: title
+        }],
+        index: 1
+      };
+      this.browser.__SS_restore = true;
+    } else {
       let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
       let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
       let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
@@ -5834,11 +5844,13 @@ var PermissionsHelper = {
       case "Permissions:Clear":
         // An array of the indices of the permissions we want to clear
         let permissionsToClear = JSON.parse(aData);
+        let privacyContext = BrowserApp.selectedBrowser.docShell
+                               .QueryInterface(Ci.nsILoadContext);
 
         for (let i = 0; i < permissionsToClear.length; i++) {
           let indexToClear = permissionsToClear[i];
           let permissionType = this._currentPermissions[indexToClear]["type"];
-          this.clearPermission(uri, permissionType);
+          this.clearPermission(uri, permissionType, privacyContext);
         }
         break;
     }
@@ -5883,7 +5895,7 @@ var PermissionsHelper = {
    *        The permission type string stored in permission manager.
    *        e.g. "geolocation", "indexedDB", "popup"
    */
-  clearPermission: function clearPermission(aURI, aType) {
+  clearPermission: function clearPermission(aURI, aType, aContext) {
     // Password saving isn't a nsIPermissionManager permission type, so handle
     // it seperately.
     if (aType == "password") {
@@ -5897,7 +5909,7 @@ var PermissionsHelper = {
     } else {
       Services.perms.remove(aURI.host, aType);
       // Clear content prefs set in ContentPermissionPrompt.js
-      Services.contentPrefs.removePref(aURI, aType + ".request.remember");
+      Services.contentPrefs.removePref(aURI, aType + ".request.remember", aContext);
     }
   }
 };
@@ -6933,10 +6945,7 @@ var Telemetry = {
       link: {
         label: learnMoreLabel,
         url: learnMoreUrl
-      },
-      // We're adding this doorhanger during startup, before the initial onLocationChange
-      // event fires, so we need to set persistence to make sure it doesn't disappear.
-      persistence: 1
+      }
     };
     NativeWindow.doorhanger.show(message, "telemetry-optin", buttons, BrowserApp.selectedTab.id, options);
   },
@@ -7469,8 +7478,8 @@ var MemoryObserver = {
   },
 
   dumpMemoryStats: function(aLabel) {
-    let memMgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
-    memMgr.dumpMemoryReportsToFile(aLabel, false, true);
+    let memDumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
+    memDumper.dumpMemoryReportsToFile(aLabel, false, true);
   },
 };
 

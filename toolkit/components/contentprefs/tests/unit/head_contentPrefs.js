@@ -9,6 +9,9 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://gre/modules/ContentPrefInstance.jsm');
+
 const CONTENT_PREFS_DB_FILENAME = "content-prefs.sqlite";
 const CONTENT_PREFS_BACKUP_DB_FILENAME = "content-prefs.sqlite.corrupt";
 
@@ -132,6 +135,15 @@ var ContentPrefTest = {
   }
 
 };
+
+let gInPrivateBrowsing = false;
+function enterPBMode() {
+  gInPrivateBrowsing = true;
+}
+function exitPBMode() {
+  gInPrivateBrowsing = false;
+  Services.obs.notifyObservers(null, "last-pb-context-exited", null);
+}
 
 ContentPrefTest.deleteDatabase();
 

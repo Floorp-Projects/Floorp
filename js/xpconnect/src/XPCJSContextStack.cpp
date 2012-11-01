@@ -16,7 +16,7 @@
 #include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
-using mozilla::dom::DestroyProtoOrIfaceCache;
+using mozilla::dom::DestroyProtoAndIfaceCache;
 
 /***************************************************************************/
 
@@ -127,7 +127,7 @@ SafeFinalize(JSFreeOp *fop, JSObject* obj)
     nsIScriptObjectPrincipal* sop =
         static_cast<nsIScriptObjectPrincipal*>(xpc_GetJSPrivate(obj));
     NS_IF_RELEASE(sop);
-    DestroyProtoOrIfaceCache(obj);
+    DestroyProtoAndIfaceCache(obj);
 }
 
 static JSClass global_class = {

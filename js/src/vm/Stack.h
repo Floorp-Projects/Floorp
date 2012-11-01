@@ -173,6 +173,8 @@ class CallArgsList : public JS::CallArgs
     friend class StackSegment;
     CallArgsList *prev_;
     bool active_;
+  protected:
+    CallArgsList() : prev_(NULL), active_(false) {}
   public:
     friend CallArgsList CallArgsListFromVp(unsigned, Value *, CallArgsList *);
     friend CallArgsList CallArgsListFromArgv(unsigned, Value *, CallArgsList *);

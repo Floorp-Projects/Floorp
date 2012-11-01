@@ -428,12 +428,20 @@ public:
   already_AddRefed<TestInterface> ExerciseTypedefInterfaces2(TestInterface*);
   void ExerciseTypedefInterfaces3(TestInterface&);
 
+  // Static methods and attributes
+  static void StaticMethod(nsISupports*, bool);
+  static bool StaticAttribute(nsISupports*);
+  static void SetStaticAttribute(nsISupports*, bool);
+
   // Miscellania
   int32_t AttrWithLenientThis();
   void SetAttrWithLenientThis(int32_t);
   uint32_t UnforgeableAttr();
   uint32_t UnforgeableAttr2();
   void PassRenamedInterface(nsRenamedInterface&);
+  TestInterface* PutForwardsAttr();
+  TestInterface* PutForwardsAttr2();
+  TestInterface* PutForwardsAttr3();
 
   // Methods and properties imported via "implements"
   bool ImplementedProperty();

@@ -5,35 +5,50 @@
 #include "base/message_loop.h"
 #include "jsapi.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Hal.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsIJSContextStack.h"
+#include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsISettingsService.h"
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
-#include "TimeSetting.h"
+#include "TimeZoneSettingObserver.h"
 #include "xpcpublic.h"
 
 #undef LOG
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Time Setting" , ## args)
-#define ERR(args...)  __android_log_print(ANDROID_LOG_ERROR, "Time Setting" , ## args)
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Time Zone Setting" , ## args)
+#define ERR(args...)  __android_log_print(ANDROID_LOG_ERROR, "Time Zone Setting" , ## args)
 
 #define TIME_TIMEZONE       "time.timezone"
 #define MOZSETTINGS_CHANGED "mozsettings-changed"
 
-namespace mozilla {
-namespace system {
+using namespace mozilla;
 
-class InitTimezoneCb MOZ_FINAL : public nsISettingsServiceCallback
+namespace {
+
+class TimeZoneSettingObserver : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  TimeZoneSettingObserver();
+  virtual ~TimeZoneSettingObserver();
+  static nsresult SetTimeZone(const JS::Value &aValue, JSContext *aContext);
+};
+
+class TimeZoneSettingCb MOZ_FINAL : public nsISettingsServiceCallback
 {
 public:
   NS_DECL_ISUPPORTS
 
-  InitTimezoneCb() {}
+  TimeZoneSettingCb() {}
 
   NS_IMETHOD Handle(const nsAString &aName, const JS::Value &aResult, JSContext *aContext) {
     // If we don't have time.timezone value in the settings, we need
@@ -61,21 +76,21 @@ public:
 
     // Set the system timezone based on the current settings.
     if (aResult.isString()) {
-      return TimeSetting::SetTimezone(aResult, aContext);
+      return TimeZoneSettingObserver::SetTimeZone(aResult, aContext);
     }
 
     return NS_OK;
   }
 
   NS_IMETHOD HandleError(const nsAString &aName, JSContext *aContext) {
-    ERR("InitTimezoneCb::HandleError: %s\n", NS_LossyConvertUTF16toASCII(aName).get());
+    ERR("TimeZoneSettingCb::HandleError: %s\n", NS_LossyConvertUTF16toASCII(aName).get());
     return NS_OK;
   }
 };
 
-NS_IMPL_ISUPPORTS1(InitTimezoneCb, nsISettingsServiceCallback)
+NS_IMPL_ISUPPORTS1(TimeZoneSettingCb, nsISettingsServiceCallback)
 
-TimeSetting::TimeSetting()
+TimeZoneSettingObserver::TimeZoneSettingObserver()
 {
   // Setup an observer to watch changes to the setting.
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
@@ -100,11 +115,11 @@ TimeSetting::TimeSetting()
     return;
   }
   settingsService->CreateLock(getter_AddRefs(lock));
-  nsCOMPtr<nsISettingsServiceCallback> callback = new InitTimezoneCb();
+  nsCOMPtr<nsISettingsServiceCallback> callback = new TimeZoneSettingCb();
   lock->Get(TIME_TIMEZONE, callback);
 }
 
-nsresult TimeSetting::SetTimezone(const JS::Value &aValue, JSContext *aContext)
+nsresult TimeZoneSettingObserver::SetTimeZone(const JS::Value &aValue, JSContext *aContext)
 {
   // Convert the JS value to a nsCString type.
   nsDependentJSString valueStr;
@@ -123,7 +138,7 @@ nsresult TimeSetting::SetTimezone(const JS::Value &aValue, JSContext *aContext)
   return NS_OK;
 }
 
-TimeSetting::~TimeSetting()
+TimeZoneSettingObserver::~TimeZoneSettingObserver()
 {
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
@@ -131,10 +146,10 @@ TimeSetting::~TimeSetting()
   }
 }
 
-NS_IMPL_ISUPPORTS1(TimeSetting, nsIObserver)
+NS_IMPL_ISUPPORTS1(TimeZoneSettingObserver, nsIObserver)
 
 NS_IMETHODIMP
-TimeSetting::Observe(nsISupports *aSubject,
+TimeZoneSettingObserver::Observe(nsISupports *aSubject,
                      const char *aTopic,
                      const PRUnichar *aData)
 {
@@ -190,7 +205,19 @@ TimeSetting::Observe(nsISupports *aSubject,
   }
 
   // Set the system timezone.
-  return SetTimezone(value, cx);
+  return SetTimeZone(value, cx);
+}
+
+} // anonymous namespace
+
+static mozilla::StaticRefPtr<TimeZoneSettingObserver> sTimeZoneSettingObserver;
+namespace mozilla {
+namespace system {
+void
+InitializeTimeZoneSettingObserver()
+{
+  sTimeZoneSettingObserver = new TimeZoneSettingObserver();
+  ClearOnShutdown(&sTimeZoneSettingObserver);
 }
 
 } // namespace system

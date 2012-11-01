@@ -4,13 +4,9 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(393f54dc-13c1-44e5-ad36-ab410dc3334b)]
+[scriptable, uuid(2a9bc152-ce8d-4ac5-a2b0-7fb52501178e)]
 interface nsIDOMPaymentProductPrice : nsISupports
 {
-  // A product might have a different price depending on the country. Even if
-  // the currency is the same.
-  readonly attribute DOMString country;
-
   // Each price has a currency associated.
   readonly attribute DOMString currency;
 

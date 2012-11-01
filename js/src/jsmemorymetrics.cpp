@@ -54,10 +54,15 @@ CompartmentStats::gcHeapThingsSize()
 {
     // These are just the GC-thing measurements.
     size_t n = 0;
-    n += gcHeapObjectsNonFunction;
+    n += gcHeapObjectsOrdinary;
     n += gcHeapObjectsFunction;
-    n += gcHeapStrings;
-    n += gcHeapShapesTree;
+    n += gcHeapObjectsDenseArray;
+    n += gcHeapObjectsSlowArray;
+    n += gcHeapObjectsCrossCompartmentWrapper;
+    n += gcHeapStringsNormal;
+    n += gcHeapStringsShort;
+    n += gcHeapShapesTreeGlobalParented;
+    n += gcHeapShapesTreeNonGlobalParented;
     n += gcHeapShapesDict;
     n += gcHeapShapesBase;
     n += gcHeapScripts;
@@ -95,7 +100,7 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
                                      &cStats.compartmentObject,
                                      &cStats.typeInferenceSizes,
                                      &cStats.shapesCompartmentTables,
-                                     &cStats.crossCompartmentWrappers,
+                                     &cStats.crossCompartmentWrappersTable,
                                      &cStats.regexpCompartment,
                                      &cStats.debuggeesSet);
 }
@@ -141,8 +146,14 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         JSObject *obj = static_cast<JSObject *>(thing);
         if (obj->isFunction()) {
             cStats->gcHeapObjectsFunction += thingSize;
+        } else if (obj->isDenseArray()) {
+            cStats->gcHeapObjectsDenseArray += thingSize;
+        } else if (obj->isSlowArray()) {
+            cStats->gcHeapObjectsSlowArray += thingSize;
+        } else if (obj->isCrossCompartmentWrapper()) {
+            cStats->gcHeapObjectsCrossCompartmentWrapper += thingSize;
         } else {
-            cStats->gcHeapObjectsNonFunction += thingSize;
+            cStats->gcHeapObjectsOrdinary += thingSize;
         }
         size_t slotsSize, elementsSize, miscSize;
         obj->sizeOfExcludingThis(rtStats->mallocSizeOf, &slotsSize,
@@ -164,19 +175,23 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
     case JSTRACE_STRING:
     {
         JSString *str = static_cast<JSString *>(thing);
-        cStats->gcHeapStrings += thingSize;
 
         size_t strSize = str->sizeOfExcludingThis(rtStats->mallocSizeOf);
 
         // If we can't grow hugeStrings, let's just call this string non-huge.
         // We're probably about to OOM anyway.
         if (strSize >= HugeStringInfo::MinSize() && cStats->hugeStrings.growBy(1)) {
+            cStats->gcHeapStringsNormal += thingSize;
             HugeStringInfo &info = cStats->hugeStrings.back();
             info.length = str->length();
-            info.size = str->sizeOfExcludingThis(rtStats->mallocSizeOf);
+            info.size = strSize;
             PutEscapedString(info.buffer, sizeof(info.buffer), &str->asLinear(), 0);
+        } else if (str->isShort()) {
+            MOZ_ASSERT(strSize == 0);
+            cStats->gcHeapStringsShort += thingSize;
         } else {
-          cStats->nonHugeStringChars += strSize;
+            cStats->gcHeapStringsNormal += thingSize;
+            cStats->stringCharsNonHuge += strSize;
         }
         break;
     }
@@ -190,7 +205,11 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
             cStats->shapesExtraDictTables += propTableSize;
             JS_ASSERT(kidsSize == 0);
         } else {
-            cStats->gcHeapShapesTree += thingSize;
+            if (shape->base()->getObjectParent() == shape->compartment()->maybeGlobal()) {
+                cStats->gcHeapShapesTreeGlobalParented += thingSize;
+            } else {
+                cStats->gcHeapShapesTreeNonGlobalParented += thingSize;
+            }
             cStats->shapesExtraTreeTables += propTableSize;
             cStats->shapesExtraTreeShapeKids += kidsSize;
         }

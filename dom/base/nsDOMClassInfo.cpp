@@ -142,7 +142,6 @@
 #include "nsCSSRules.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetList.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSSRule.h"
 #include "nsICSSRuleList.h"
 #include "nsIDOMRect.h"
@@ -157,7 +156,6 @@
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsStyleContext.h"
 #include "nsAutoPtr.h"
 #include "nsMemory.h"
@@ -281,7 +279,6 @@
 #include "nsIDOMMediaStream.h"
 #endif
 #include "nsIDOMProgressEvent.h"
-#include "nsIDOMCSS2Properties.h"
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
@@ -553,6 +550,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
+#include "mozilla/Likely.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -701,6 +699,24 @@ DOMCI_DATA_NO_CLASS(DOMConstructor)
                                                  _flags)
 
 namespace {
+
+class IDBFactorySH : public nsDOMGenericSH
+{
+protected:
+  IDBFactorySH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  { }
+
+  virtual ~IDBFactorySH()
+  { }
+
+public:
+  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData *aData)
+  {
+    return new IDBFactorySH(aData);
+  }
+};
 
 class IDBEventTargetSH : public nsEventTargetSH
 {
@@ -1013,8 +1029,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSStyleSheet, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CSSStyleDeclaration, nsCSSStyleDeclSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(ROCSSPrimitiveValue, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -1508,8 +1522,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CSSFontFaceStyleDecl, nsCSSStyleDeclSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
 
 #if defined(MOZ_MEDIA)
   NS_DEFINE_CLASSINFO_DATA(HTMLVideoElement, nsElementSH,
@@ -1580,7 +1592,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(DesktopNotificationCenter, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(IDBFactory, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(IDBFactory, IDBFactorySH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(IDBFileHandle, FileHandle, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
@@ -3020,11 +3032,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleSheet)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(CSSStyleDeclaration, nsIDOMCSSStyleDeclaration)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSS2Properties)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ROCSSPrimitiveValue,
                                       nsIDOMCSSPrimitiveValue)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSPrimitiveValue)
@@ -4103,11 +4110,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(CSSFontFaceRule, nsIDOMCSSFontFaceRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSFontFaceRule)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(CSSFontFaceStyleDecl,
-                                      nsIDOMCSSStyleDeclaration)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
   DOM_CLASSINFO_MAP_END
 
 #if defined (MOZ_MEDIA)
@@ -6683,12 +6685,40 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
         return NS_OK;
       }
 
+      Maybe<JSAutoCompartment> ac;
+      JSObject* global;
+      bool defineOnXray = ObjectIsNativeWrapper(cx, obj);
+      if (defineOnXray) {
+        global = xpc::Unwrap(cx, obj, false);
+        if (!global) {
+          return NS_ERROR_DOM_SECURITY_ERR;
+        }
+        ac.construct(cx, global);
+      } else {
+        global = obj;
+      }
+
       bool enabled;
-      bool defined = define(cx, obj, &enabled);
-      MOZ_ASSERT_IF(defined, enabled);
+      JSObject* interfaceObject = define(cx, global, &enabled);
       if (enabled) {
-        *did_resolve = defined;
-        return defined ? NS_OK : NS_ERROR_FAILURE;
+        if (!interfaceObject) {
+          return NS_ERROR_FAILURE;
+        }
+
+        if (defineOnXray) {
+          // This really should be handled by the Xray for the window.
+          ac.destroy();
+          if (!JS_WrapObject(cx, &interfaceObject) ||
+              !JS_DefinePropertyById(cx, obj, id,
+                                     JS::ObjectValue(*interfaceObject), nullptr,
+                                     nullptr, 0)) {
+            return NS_ERROR_FAILURE;
+          }
+        }
+
+        *did_resolve = true;
+
+        return NS_OK;
       }
     }
   }
@@ -7939,6 +7969,92 @@ nsDOMMutationObserverSH::PreserveWrapper(nsISupports* aNative)
   nsContentUtils::PreserveWrapper(aNative, mutationObserver);
 }
 
+// IDBFactory helper
+
+/* static */
+template<nsresult (*func)(JSContext *, unsigned, jsval *, bool), bool aDelete>
+JSBool
+IDBFNativeShim(JSContext *cx, unsigned argc, jsval *vp)
+{
+  nsresult rv = (*func)(cx, argc, vp, aDelete);
+  if (NS_FAILED(rv)) {
+    xpc::Throw(cx, rv);
+    return false;
+  }
+
+  return true;
+}
+
+/* static */ nsresult
+IDBFOpenForPrincipal(JSContext *cx, unsigned argc, JS::Value *vp, bool aDelete)
+{
+  // Just to be on the extra-safe side
+  if (!nsContentUtils::IsCallerChrome()) {
+    MOZ_NOT_REACHED("Shouldn't be possible to get here");
+    return NS_ERROR_FAILURE;
+  }
+
+  JSObject* principalJS;
+  JSString* nameJS;
+  uint32_t version = 0;
+  if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "oS/u",
+                           &principalJS, &nameJS, &version)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (version < 1 && argc >= 3) {
+    return NS_ERROR_TYPE_ERR;
+  }
+
+  if (aDelete) {
+    version = 0;
+  }
+
+  nsDependentJSString name;
+  NS_ENSURE_TRUE(name.init(cx, nameJS), NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIPrincipal> principal = do_QueryWrapper(cx, principalJS);
+  NS_ENSURE_TRUE(principal, NS_ERROR_NO_INTERFACE);
+
+  nsCString extendedOrigin;
+  nsresult rv = principal->GetExtendedOrigin(extendedOrigin);
+  NS_ENSURE_FALSE(extendedOrigin.IsEmpty(), NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIIDBFactory> factory =
+    do_QueryWrapper(cx, JS_THIS_OBJECT(cx, vp));
+  NS_ENSURE_TRUE(factory, NS_ERROR_NO_INTERFACE);
+
+  nsRefPtr<indexedDB::IDBOpenDBRequest> request;
+  rv = static_cast<indexedDB::IDBFactory*>(factory.get())->
+    OpenCommon(name, version, extendedOrigin, aDelete, cx,
+               getter_AddRefs(request));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return WrapNative(cx, JS_GetGlobalForScopeChain(cx),
+                    static_cast<nsIIDBOpenDBRequest*>(request),
+                    &NS_GET_IID(nsIIDBOpenDBRequest), true, vp);
+}
+
+NS_IMETHODIMP
+IDBFactorySH::PostCreatePrototype(JSContext * cx, JSObject * proto)
+{
+  // set up our proto first
+  nsresult rv = nsDOMGenericSH::PostCreatePrototype(cx, proto);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (xpc::AccessCheck::isChrome(js::GetObjectCompartment(proto)) &&
+      (!JS_DefineFunction(cx, proto, "openForPrincipal",
+                          IDBFNativeShim<IDBFOpenForPrincipal, false>,
+                          3, JSPROP_ENUMERATE) ||
+       !JS_DefineFunction(cx, proto, "deleteForPrincipal",
+                          IDBFNativeShim<IDBFOpenForPrincipal, true>,
+                          2, JSPROP_ENUMERATE))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return rv;
+}
+
 // IDBEventTarget helper
 
 NS_IMETHODIMP
@@ -9149,7 +9265,7 @@ nsHTMLDocumentSH::DocumentAllTagsNewResolve(JSContext *cx, JSHandleObject obj,
     if (!::JS_GetPrototype(cx, obj, &proto)) {
       return JS_FALSE;
     }
-    if (NS_UNLIKELY(!proto)) {
+    if (MOZ_UNLIKELY(!proto)) {
       return JS_TRUE;
     }
 
@@ -9853,7 +9969,7 @@ nsHTMLPluginObjElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
   if (!::JS_GetPrototype(cx, obj, &pi_obj)) {
     return NS_ERROR_UNEXPECTED;
   }
-  if (NS_UNLIKELY(!pi_obj)) {
+  if (MOZ_UNLIKELY(!pi_obj)) {
     return NS_OK;
   }
 
@@ -9885,7 +10001,7 @@ nsHTMLPluginObjElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   if (!::JS_GetPrototype(cx, obj, &pi_obj)) {
     return NS_ERROR_UNEXPECTED;
   }
-  if (NS_UNLIKELY(!pi_obj)) {
+  if (MOZ_UNLIKELY(!pi_obj)) {
     return NS_OK;
   }
 
@@ -10180,54 +10296,6 @@ nsCSSValueListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
 
   return list->GetItemAt(aIndex);
 }
-
-
-// CSSStyleDeclaration helper
-
-NS_IMETHODIMP
-nsCSSStyleDeclSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
-                            JSObject *globalObj, JSObject **parentObj)
-{
-#ifdef DEBUG
-  nsWrapperCache* cache = nullptr;
-  CallQueryInterface(nativeObj, &cache);
-  MOZ_ASSERT(cache, "All CSS declarations must be wrappercached");
-#endif
-
-  nsICSSDeclaration *declaration = static_cast<nsICSSDeclaration*>(nativeObj);
-  nsINode *native_parent = declaration->GetParentObject();
-  if (!native_parent) {
-    return nsDOMClassInfo::PreCreate(nativeObj, cx, globalObj, parentObj);
-  }
-
-  nsresult rv =
-    WrapNativeParent(cx, globalObj, native_parent, parentObj);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
-}
-
-nsresult
-nsCSSStyleDeclSH::GetStringAt(nsISupports *aNative, int32_t aIndex,
-                              nsAString& aResult)
-{
-  if (aIndex < 0) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> style_decl(do_QueryInterface(aNative));
-
-  nsresult rv = style_decl->Item(uint32_t(aIndex), aResult);
-#ifdef DEBUG
-  if (DOMStringIsNull(aResult)) {
-    uint32_t length = 0;
-    style_decl->GetLength(&length);
-    NS_ASSERTION(uint32_t(aIndex) >= length, "Item should only return null for out-of-bounds access");
-  }
-#endif
-  return rv;
-}
-
 
 // CSSRuleList scriptable helper
 

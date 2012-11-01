@@ -6,6 +6,7 @@
 #include "gfxFT2FontBase.h"
 #include "gfxFT2Utils.h"
 #include "harfbuzz/hb.h"
+#include "mozilla/Likely.h"
 
 using namespace mozilla::gfx;
 
@@ -110,7 +111,7 @@ gfxFT2FontBase::GetMetrics()
     if (mHasMetrics)
         return mMetrics;
 
-    if (NS_UNLIKELY(GetStyle()->size <= 0.0)) {
+    if (MOZ_UNLIKELY(GetStyle()->size <= 0.0)) {
         new(&mMetrics) gfxFont::Metrics(); // zero initialize
         mSpaceGlyph = 0;
     } else {

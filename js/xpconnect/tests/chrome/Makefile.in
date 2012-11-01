@@ -58,6 +58,7 @@ MOCHITEST_CHROME_FILES = \
 		test_exnstack.xul \
 		test_expandosharing.xul \
 		file_expandosharing.jsm \
+		test_exposeInDerived.xul \
 		test_getweakmapkeys.xul \
 		test_mozMatchesSelector.xul \
 		test_nodelists.xul \

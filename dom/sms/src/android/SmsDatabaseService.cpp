@@ -16,6 +16,7 @@ NS_IMPL_ISUPPORTS1(SmsDatabaseService, nsISmsDatabaseService)
 NS_IMETHODIMP
 SmsDatabaseService::SaveReceivedMessage(const nsAString& aSender,
                                         const nsAString& aBody,
+                                        const nsAString& aMessageClass,
                                         uint64_t aDate, int32_t* aId)
 {
   // The Android stock SMS app does this already.
@@ -35,6 +36,14 @@ SmsDatabaseService::SaveSentMessage(const nsAString& aReceiver,
   }
 
   *aId = AndroidBridge::Bridge()->SaveSentMessage(aReceiver, aBody, aDate);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsDatabaseService::SetMessageDeliveryStatus(int32_t aMessageId,
+                                             const nsAString& aDeliveryStatus)
+{
+  // TODO: Bug 803828: update delivery status for sent messages in Android.
   return NS_OK;
 }
 

@@ -14,6 +14,8 @@
 #include "GrallocImages.h"
 #include "mozilla/layers/ShmemYCbCrImage.h"
 
+using namespace mozilla::ipc;
+
 namespace mozilla {
 namespace layers {
 
@@ -122,44 +124,52 @@ void ImageContainerChild::DestroySharedImage(const SharedImage& aImage)
   DeallocSharedImageData(this, aImage);
 }
 
+SharedImage* ImageContainerChild::AsSharedImage(Image* aImage)
+{
+#ifdef MOZ_WIDGET_GONK
+  if (aImage->GetFormat() == GONK_IO_SURFACE) {
+    GonkIOSurfaceImage* gonkImage = static_cast<GonkIOSurfaceImage*>(aImage);
+    SharedImage* result = new SharedImage(gonkImage->GetSurfaceDescriptor());
+    return result;
+  } else if (aImage->GetFormat() == GRALLOC_PLANAR_YCBCR) {
+    GrallocPlanarYCbCrImage* GrallocImage = static_cast<GrallocPlanarYCbCrImage*>(aImage);
+    SharedImage* result = new SharedImage(GrallocImage->GetSurfaceDescriptor());
+    return result;
+  }
+#endif
+  return nullptr; // XXX: bug 773440
+}
+
 bool ImageContainerChild::CopyDataIntoSharedImage(Image* src, SharedImage* dest)
 {
   if ((src->GetFormat() == PLANAR_YCBCR) && 
       (dest->type() == SharedImage::TYCbCrImage)) {
     PlanarYCbCrImage *planarYCbCrImage = static_cast<PlanarYCbCrImage*>(src);
-    const PlanarYCbCrImage::Data *data =planarYCbCrImage->GetData();
+    const PlanarYCbCrImage::Data *data = planarYCbCrImage->GetData();
     NS_ASSERTION(data, "Must be able to retrieve yuv data from image!");
     YCbCrImage& yuv = dest->get_YCbCrImage();
 
     ShmemYCbCrImage shmemImage(yuv.data(), yuv.offset());
 
-    for (int i = 0; i < data->mYSize.height; i++) {
-      memcpy(shmemImage.GetYData() + i * shmemImage.GetYStride(),
-             data->mYChannel + i * data->mYStride,
-             data->mYSize.width);
+    if (!shmemImage.CopyData(data->mYChannel, data->mCbChannel, data->mCrChannel,
+                             data->mYSize, data->mYStride,
+                             data->mCbCrSize, data->mCbCrStride)) {
+      NS_WARNING("Failed to copy image data!");
+      return false;
     }
-    for (int i = 0; i < data->mCbCrSize.height; i++) {
-      memcpy(shmemImage.GetCbData() + i * shmemImage.GetCbCrStride(),
-             data->mCbChannel + i * data->mCbCrStride,
-             data->mCbCrSize.width);
-      memcpy(shmemImage.GetCrData() + i * shmemImage.GetCbCrStride(),
-             data->mCrChannel + i * data->mCbCrStride,
-             data->mCbCrSize.width);
-    }
-
     return true;
   }
   return false; // TODO: support more image formats
 }
 
-SharedImage* ImageContainerChild::CreateSharedImageFromData(Image* image)
+SharedImage* ImageContainerChild::AllocateSharedImageFor(Image* image)
 {
   NS_ABORT_IF_FALSE(InImageBridgeChildThread(),
                   "Should be in ImageBridgeChild thread.");
-
   if (!image) {
     return nullptr;
   }
+
   if (image->GetFormat() == PLANAR_YCBCR ) {
     PlanarYCbCrImage *planarYCbCrImage = static_cast<PlanarYCbCrImage*>(image);
     const PlanarYCbCrImage::Data *data = planarYCbCrImage->GetData();
@@ -181,38 +191,14 @@ SharedImage* ImageContainerChild::CreateSharedImageFromData(Image* image)
                                           data->mCbCrSize);
     ShmemYCbCrImage shmemImage(shmem);
 
-    if (!shmemImage.IsValid() || shmem.Size<uint8_t>() < size) {
+    if (!shmemImage.IsValid()) {
+      NS_WARNING("Failed to properly allocate image data!");
       DeallocShmem(shmem);
       return nullptr;
     }
 
-    for (int i = 0; i < data->mYSize.height; i++) {
-      memcpy(shmemImage.GetYData() + i * shmemImage.GetYStride(),
-             data->mYChannel + i * data->mYStride,
-             data->mYSize.width);
-    }
-    for (int i = 0; i < data->mCbCrSize.height; i++) {
-      memcpy(shmemImage.GetCbData() + i * shmemImage.GetCbCrStride(),
-             data->mCbChannel + i * data->mCbCrStride,
-             data->mCbCrSize.width);
-      memcpy(shmemImage.GetCrData() + i * shmemImage.GetCbCrStride(),
-             data->mCrChannel + i * data->mCbCrStride,
-             data->mCbCrSize.width);
-    }
-
     ++mActiveImageCount;
-    SharedImage* result = new SharedImage(YCbCrImage(shmem, 0, data->GetPictureRect()));
-    return result;
-#ifdef MOZ_WIDGET_GONK
-  } else if (image->GetFormat() == GONK_IO_SURFACE) {
-    GonkIOSurfaceImage* gonkImage = static_cast<GonkIOSurfaceImage*>(image);
-    SharedImage* result = new SharedImage(gonkImage->GetSurfaceDescriptor());
-    return result;
-  } else if (image->GetFormat() == GRALLOC_PLANAR_YCBCR) {
-    GrallocPlanarYCbCrImage* GrallocImage = static_cast<GrallocPlanarYCbCrImage*>(image);
-    SharedImage* result = new SharedImage(GrallocImage->GetSurfaceDescriptor());
-    return result;
-#endif
+    return new SharedImage(YCbCrImage(shmem, 0, data->GetPictureRect()));
   } else {
     NS_RUNTIMEABORT("TODO: Only YCbCrImage is supported here right now.");
   }
@@ -294,6 +280,40 @@ void ImageContainerChild::ClearSharedImagePool()
   mSharedImagePool.Clear();
 }
 
+void ImageContainerChild::SendImageNow(Image* aImage)
+{
+  NS_ABORT_IF_FALSE(InImageBridgeChildThread(),
+                    "Should be in ImageBridgeChild thread.");
+
+  if (mStop) {
+    return;
+  }
+
+  bool needsCopy = false;
+  // If the image can be converted to a shared image, no need to do a copy.
+  SharedImage* img = AsSharedImage(aImage);
+  if (!img) {
+    needsCopy = true;
+    // Try to get a compatible shared image from the pool
+    img = GetSharedImageFor(aImage);
+    if (!img && mActiveImageCount < (int)MAX_ACTIVE_SHARED_IMAGES) {
+      // If no shared image available, allocate a new one
+      img = AllocateSharedImageFor(aImage);
+    }
+  }
+
+  if (img && (!needsCopy || CopyDataIntoSharedImage(aImage, img))) {
+    // Keep a reference to the image we sent to compositor to maintain a
+    // correct reference count.
+    mImageQueue.AppendElement(aImage);
+    SendPublishImage(*img);
+  } else {
+    NS_WARNING("Failed to send an image to the compositor");
+  }
+  delete img;
+  return;
+}
+
 class ImageBridgeCopyAndSendTask : public Task
 {
 public:
@@ -304,41 +324,13 @@ public:
 
   void Run()
   { 
-    SharedImage* img = mChild->ImageToSharedImage(mImage.get());
-    if (img) {
-      mChild->SendPublishImage(*img);
-    }
+    mChild->SendImageNow(mImage);
   }
 
-  ImageContainerChild *mChild;
+  ImageContainerChild* mChild;
   nsRefPtr<ImageContainer> mImageContainer;
   nsRefPtr<Image> mImage;
 };
-
-SharedImage* ImageContainerChild::ImageToSharedImage(Image* aImage)
-{
-  if (mStop) {
-    return nullptr;
-  }
-  if (mActiveImageCount > (int)MAX_ACTIVE_SHARED_IMAGES) {
-    // Too many active shared images, perhaps the compositor is hanging.
-    // Skipping current image
-    return nullptr;
-  }
-
-  NS_ABORT_IF_FALSE(InImageBridgeChildThread(),
-                    "Should be in ImageBridgeChild thread.");
-  SharedImage *img = GetSharedImageFor(aImage);
-  if (img) {
-    CopyDataIntoSharedImage(aImage, img);  
-  } else {
-    img = CreateSharedImageFromData(aImage);
-  }
-  // Keep a reference to the image we sent to compositor to maintain a
-  // correct reference count.
-  mImageQueue.AppendElement(aImage);
-  return img;
-}
 
 void ImageContainerChild::SendImageAsync(ImageContainer* aContainer,
                                          Image* aImage)
@@ -352,14 +344,7 @@ void ImageContainerChild::SendImageAsync(ImageContainer* aContainer,
   }
 
   if (InImageBridgeChildThread()) {
-    SharedImage *img = ImageToSharedImage(aImage);
-    if (img) {
-      SendPublishImage(*img);
-    } else {
-      NS_WARNING("Failed to create a shared image!");
-    }
-    delete img;
-    return;
+    SendImageNow(aImage);
   }
 
   // Sending images and (potentially) allocating shmems must be done 

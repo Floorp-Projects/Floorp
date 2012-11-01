@@ -17,6 +17,7 @@
 #include "nsGtkIMModule.h"
 #include "nsWindow.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Likely.h"
 
 #ifdef MOZ_PLATFORM_MAEMO
 #include "nsServiceManagerUtils.h"
@@ -307,7 +308,7 @@ nsGtkIMModule::PrepareToDestroyContext(GtkIMContext *aContext)
 void
 nsGtkIMModule::OnFocusWindow(nsWindow* aWindow)
 {
-    if (NS_UNLIKELY(IsDestroyed())) {
+    if (MOZ_UNLIKELY(IsDestroyed())) {
         return;
     }
 
@@ -321,7 +322,7 @@ nsGtkIMModule::OnFocusWindow(nsWindow* aWindow)
 void
 nsGtkIMModule::OnBlurWindow(nsWindow* aWindow)
 {
-    if (NS_UNLIKELY(IsDestroyed())) {
+    if (MOZ_UNLIKELY(IsDestroyed())) {
         return;
     }
 
@@ -342,7 +343,7 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
 {
     NS_PRECONDITION(aEvent, "aEvent must be non-null");
 
-    if (!IsEditable() || NS_UNLIKELY(IsDestroyed())) {
+    if (!IsEditable() || MOZ_UNLIKELY(IsDestroyed())) {
         return false;
     }
 
@@ -364,7 +365,7 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
     }
 
     GtkIMContext* im = GetContext();
-    if (NS_UNLIKELY(!im)) {
+    if (MOZ_UNLIKELY(!im)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, there are no context"));
         return false;
@@ -444,7 +445,7 @@ nsGtkIMModule::ResetIME()
          this, GetCompositionStateName(), mIsIMFocused ? "YES" : "NO"));
 
     GtkIMContext *im = GetContext();
-    if (NS_UNLIKELY(!im)) {
+    if (MOZ_UNLIKELY(!im)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, there are no context"));
         return;
@@ -457,7 +458,7 @@ nsGtkIMModule::ResetIME()
 nsresult
 nsGtkIMModule::ResetInputState(nsWindow* aCaller)
 {
-    if (NS_UNLIKELY(IsDestroyed())) {
+    if (MOZ_UNLIKELY(IsDestroyed())) {
         return NS_OK;
     }
 
@@ -486,7 +487,7 @@ nsGtkIMModule::ResetInputState(nsWindow* aCaller)
 nsresult
 nsGtkIMModule::CancelIMEComposition(nsWindow* aCaller)
 {
-    if (NS_UNLIKELY(IsDestroyed())) {
+    if (MOZ_UNLIKELY(IsDestroyed())) {
         return NS_OK;
     }
 
@@ -506,7 +507,7 @@ nsGtkIMModule::CancelIMEComposition(nsWindow* aCaller)
     }
 
     GtkIMContext *im = GetContext();
-    if (NS_UNLIKELY(!im)) {
+    if (MOZ_UNLIKELY(!im)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, there are no context"));
         return NS_OK;
@@ -523,7 +524,7 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
                                const InputContext* aContext,
                                const InputContextAction* aAction)
 {
-    if (NS_UNLIKELY(IsDestroyed())) {
+    if (MOZ_UNLIKELY(IsDestroyed())) {
         return;
     }
 

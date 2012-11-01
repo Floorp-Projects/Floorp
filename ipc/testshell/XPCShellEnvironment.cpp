@@ -597,7 +597,7 @@ ProcessFile(JSContext *cx,
             }
             bufp += strlen(bufp);
             lineno++;
-        } while (!JS_BufferIsCompilableUnit(cx, JS_FALSE, obj, buffer, strlen(buffer)));
+        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, strlen(buffer)));
 
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
@@ -758,6 +758,12 @@ FullTrustSecMan::GetNoAppCodebasePrincipal(nsIURI *aURI,
 }
 
 NS_IMETHODIMP
+FullTrustSecMan::GetCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval)
+{
+    return GetSimpleCodebasePrincipal(aURI, _retval);
+}
+
+NS_IMETHODIMP
 FullTrustSecMan::GetAppCodebasePrincipal(nsIURI *aURI,
                                          uint32_t aAppId,
                                          bool aInMozBrowser,
@@ -803,14 +809,6 @@ FullTrustSecMan::CheckSameOriginURI(nsIURI *aSourceURI,
                                     bool reportError)
 {
     return NS_OK;
-}
-
-NS_IMETHODIMP
-FullTrustSecMan::GetPrincipalFromContext(JSContext * cx,
-                                         nsIPrincipal **_retval)
-{
-    NS_IF_ADDREF(*_retval = mSystemPrincipal);
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

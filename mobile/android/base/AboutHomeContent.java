@@ -463,89 +463,67 @@ public class AboutHomeContent extends ScrollView
     }
 
     private void readLastTabs() {
-        String jsonString = mActivity.getProfile().readSessionFile(GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning));
+        String jsonString = mActivity.getProfile().readSessionFile(true);
         if (jsonString == null) {
             // no previous session data
             return;
         }
 
-        final JSONArray tabs;
-        try {
-            tabs = new JSONObject(jsonString).getJSONArray("windows")
-                                             .getJSONObject(0)
-                                             .getJSONArray("tabs");
-        } catch (JSONException e) {
-            Log.i(LOGTAG, "error reading json file", e);
-            return;
-        }
-
         final ArrayList<String> lastTabUrlsList = new ArrayList<String>();
+        new SessionParser() {
+            @Override
+            public void onTabRead(final SessionTab tab) {
+                final String url = tab.getSelectedUrl();
+                // don't show last tabs for about:home
+                if (url.equals("about:home")) {
+                    return;
+                }
 
-        for (int i = 0; i < tabs.length(); i++) {
-            final String title;
-            final String url;
-            try {
-                JSONObject tab = tabs.getJSONObject(i);
-                int index = tab.getInt("index");
-                JSONArray entries = tab.getJSONArray("entries");
-                JSONObject entry = entries.getJSONObject(index - 1);
-                url = entry.getString("url");
+                ContentResolver resolver = mActivity.getContentResolver();
+                final BitmapDrawable favicon = BrowserDB.getFaviconForUrl(resolver, url);
+                lastTabUrlsList.add(url);
 
-                String optTitle = entry.optString("title");
-                if (optTitle.length() == 0)
-                    title = url;
-                else
-                    title = optTitle;
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "error reading json file", e);
-                continue;
+                AboutHomeContent.this.post(new Runnable() {
+                    public void run() {
+                        View container = mInflater.inflate(R.layout.abouthome_last_tabs_row, mLastTabs.getItemsContainer(), false);
+                        ((TextView) container.findViewById(R.id.last_tab_title)).setText(tab.getSelectedTitle());
+                        ((TextView) container.findViewById(R.id.last_tab_url)).setText(tab.getSelectedUrl());
+                        if (favicon != null) {
+                            ((ImageView) container.findViewById(R.id.last_tab_favicon)).setImageDrawable(favicon);
+                        }
+
+                        container.setOnClickListener(new View.OnClickListener() {
+                            public void onClick(View v) {
+                                Tabs.getInstance().loadUrlInTab(url);
+                            }
+                        });
+
+                        mLastTabs.addItem(container);
+                    }
+                });
             }
+        }.parse(jsonString);
 
-            // don't show last tabs for about pages
-            if (url.startsWith("about:"))
-                continue;
-
-            ContentResolver resolver = mActivity.getContentResolver();
-            final BitmapDrawable favicon = BrowserDB.getFaviconForUrl(resolver, url);
-            lastTabUrlsList.add(url);
-
+        final int numLastTabs = lastTabUrlsList.size();
+        if (numLastTabs >= 1) {
             post(new Runnable() {
                 public void run() {
-                    View container = mInflater.inflate(R.layout.abouthome_last_tabs_row, mLastTabs.getItemsContainer(), false);
-                    ((TextView) container.findViewById(R.id.last_tab_title)).setText(title);
-                    ((TextView) container.findViewById(R.id.last_tab_url)).setText(url);
-                    if (favicon != null)
-                        ((ImageView) container.findViewById(R.id.last_tab_favicon)).setImageDrawable(favicon);
-
-                    container.setOnClickListener(new View.OnClickListener() {
-                        public void onClick(View v) {
-                            Tabs.getInstance().loadUrlInTab(url);
-                        }
-                    });
-
-                    mLastTabs.addItem(container);
+                    if (numLastTabs > 1) {
+                        mLastTabs.showMoreText();
+                        mLastTabs.setOnMoreTextClickListener(new View.OnClickListener() {
+                            public void onClick(View v) {
+                                for (String url : lastTabUrlsList) {
+                                    Tabs.getInstance().loadUrlInTab(url);
+                                }
+                            }
+                        });
+                    } else if (numLastTabs == 1) {
+                        mLastTabs.hideMoreText();
+                    }
+                    mLastTabs.show();
                 }
             });
         }
-
-        final int numLastTabs = lastTabUrlsList.size();
-        post(new Runnable() {
-            public void run() {
-                if (numLastTabs > 1) {
-                    mLastTabs.showMoreText();
-                    mLastTabs.setOnMoreTextClickListener(new View.OnClickListener() {
-                        public void onClick(View v) {
-                            for (String url : lastTabUrlsList)
-                                Tabs.getInstance().loadUrlInTab(url);
-                        }
-                    });
-                    mLastTabs.show();
-                } else if (numLastTabs == 1) {
-                    mLastTabs.hideMoreText();
-                    mLastTabs.show();
-                }
-            }
-        });
     }
 
     private void loadRemoteTabs() {

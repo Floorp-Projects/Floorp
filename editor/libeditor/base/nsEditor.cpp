@@ -31,7 +31,7 @@
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAString.h"                  // for nsAString_internal::Length, etc
 #include "nsCCUncollectableMarker.h"    // for nsCCUncollectableMarker
-#include "nsCaret.h"                    // for nsCaret, StCaretHider
+#include "nsCaret.h"                    // for nsCaret
 #include "nsCaseTreatment.h"
 #include "nsCharTraits.h"               // for NS_IS_HIGH_SURROGATE, etc
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
@@ -938,8 +938,6 @@ nsEditor::EndPlaceHolderTransaction()
 
       if (presShell)
         caret = presShell->GetCaret();
-
-      StCaretHider caretHider(caret);
 
       // time to turn off the batch
       EndUpdateViewBatch();
@@ -4182,19 +4180,6 @@ nsresult nsEditor::EndUpdateViewBatch()
 
   if (0 == mUpdateCount)
   {
-    // Hide the caret with an StCaretHider. By the time it goes out
-    // of scope and tries to show the caret, reflow and selection changed
-    // notifications should've happened so the caret should have enough info
-    // to draw at the correct position.
-
-    nsRefPtr<nsCaret> caret;
-    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-
-    if (presShell)
-      caret = presShell->GetCaret();
-
-    StCaretHider caretHider(caret);
-
     // Turn selection updating and notifications back on.
 
     nsCOMPtr<nsISelection>selection;

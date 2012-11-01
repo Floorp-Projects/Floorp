@@ -478,6 +478,14 @@ let test_mkdir = maketest("mkdir", function mkdir(test) {
     let stat = yield OS.File.stat(DIRNAME);
     test.ok(stat.isDir, "I have effectively created a directory");
 
+    // Creating a directory with ignoreExisting (should succeed)
+    try {
+      yield OS.File.makeDir(DIRNAME, {ignoreExisting: true});
+      test.ok(true, "Creating a directory with ignoreExisting succeeds");
+    } catch(err) {
+      test.ok(false, "Creating a directory with ignoreExisting fails");
+    }
+
     // Creating a directory (should fail)
     try {
       yield OS.File.makeDir(DIRNAME);

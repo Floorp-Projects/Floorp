@@ -30,7 +30,7 @@ NS_IMPL_ISUPPORTS3(imgStatusTrackerObserver,
 /* [noscript] void frameChanged (in nsIntRect dirtyRect); */
 NS_IMETHODIMP imgStatusTrackerObserver::FrameChanged(const nsIntRect *dirtyRect)
 {
-  LOG_SCOPE(gImgLog, "imgStatusTrackerObserver::FrameChanged");
+  LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::FrameChanged");
   NS_ABORT_IF_FALSE(mTracker->GetImage(),
                     "FrameChanged callback before we've created our image");
 
@@ -48,7 +48,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::FrameChanged(const nsIntRect *dirtyRect)
 
 NS_IMETHODIMP imgStatusTrackerObserver::OnStartDecode()
 {
-  LOG_SCOPE(gImgLog, "imgStatusTrackerObserver::OnStartDecode");
+  LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStartDecode");
   NS_ABORT_IF_FALSE(mTracker->GetImage(),
                     "OnStartDecode callback before we've created our image");
 
@@ -85,7 +85,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStartRequest()
 /* void onStartContainer (); */
 NS_IMETHODIMP imgStatusTrackerObserver::OnStartContainer()
 {
-  LOG_SCOPE(gImgLog, "imgStatusTrackerObserver::OnStartContainer");
+  LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStartContainer");
 
   NS_ABORT_IF_FALSE(mTracker->GetImage(),
                     "OnStartContainer callback before we've created our image");
@@ -102,7 +102,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnStartContainer()
 /* [noscript] void onDataAvailable ([const] in nsIntRect rect); */
 NS_IMETHODIMP imgStatusTrackerObserver::OnDataAvailable(const nsIntRect * rect)
 {
-  LOG_SCOPE(gImgLog, "imgStatusTrackerObserver::OnDataAvailable");
+  LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnDataAvailable");
   NS_ABORT_IF_FALSE(mTracker->GetImage(),
                     "OnDataAvailable callback before we've created our image");
 
@@ -119,7 +119,7 @@ NS_IMETHODIMP imgStatusTrackerObserver::OnDataAvailable(const nsIntRect * rect)
 /* void onStopFrame (); */
 NS_IMETHODIMP imgStatusTrackerObserver::OnStopFrame()
 {
-  LOG_SCOPE(gImgLog, "imgStatusTrackerObserver::OnStopFrame");
+  LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStopFrame");
   NS_ABORT_IF_FALSE(mTracker->GetImage(),
                     "OnStopFrame callback before we've created our image");
 
@@ -152,7 +152,7 @@ FireFailureNotification(imgRequest* aRequest)
 /* void onStopDecode (in nsresult status); */
 NS_IMETHODIMP imgStatusTrackerObserver::OnStopDecode(nsresult aStatus)
 {
-  LOG_SCOPE(gImgLog, "imgStatusTrackerObserver::OnStopDecode");
+  LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStopDecode");
   NS_ABORT_IF_FALSE(mTracker->GetImage(),
                     "OnStopDecode callback before we've created our image");
 
@@ -313,7 +313,7 @@ imgStatusTracker::Notify(imgRequest* request, imgRequestProxy* proxy)
   request->GetURI(getter_AddRefs(uri));
   nsAutoCString spec;
   uri->GetSpec(spec);
-  LOG_FUNC_WITH_PARAM(gImgLog, "imgStatusTracker::Notify async", "uri", spec.get());
+  LOG_FUNC_WITH_PARAM(GetImgLog(), "imgStatusTracker::Notify async", "uri", spec.get());
 #endif
 
   proxy->SetNotificationsDeferred(true);
@@ -367,7 +367,7 @@ imgStatusTracker::NotifyCurrentState(imgRequestProxy* proxy)
   proxy->GetURI(getter_AddRefs(uri));
   nsAutoCString spec;
   uri->GetSpec(spec);
-  LOG_FUNC_WITH_PARAM(gImgLog, "imgStatusTracker::NotifyCurrentState", "uri", spec.get());
+  LOG_FUNC_WITH_PARAM(GetImgLog(), "imgStatusTracker::NotifyCurrentState", "uri", spec.get());
 #endif
 
   proxy->SetNotificationsDeferred(true);
@@ -385,7 +385,7 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
   proxy->GetURI(getter_AddRefs(uri));
   nsAutoCString spec;
   uri->GetSpec(spec);
-  LOG_SCOPE_WITH_PARAM(gImgLog, "imgStatusTracker::SyncNotify", "uri", spec.get());
+  LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgStatusTracker::SyncNotify", "uri", spec.get());
 #endif
 
   nsCOMPtr<imgIRequest> kungFuDeathGrip(proxy);

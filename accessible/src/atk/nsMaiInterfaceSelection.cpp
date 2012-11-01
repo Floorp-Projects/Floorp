@@ -8,6 +8,7 @@
 
 #include "AccessibleWrap.h"
 #include "nsMai.h"
+#include "mozilla/Likely.h"
 
 #include <atk/atk.h>
 
@@ -96,7 +97,7 @@ void
 selectionInterfaceInitCB(AtkSelectionIface* aIface)
 {
   NS_ASSERTION(aIface, "Invalid aIface");
-  if (NS_UNLIKELY(!aIface))
+  if (MOZ_UNLIKELY(!aIface))
     return;
 
   aIface->add_selection = addSelectionCB;

@@ -1327,6 +1327,16 @@ class LMinMaxD : public LInstructionHelper<1, 2, 0>
     }
 };
 
+// Negative of a double.
+class LNegD : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(NegD);
+    LNegD(const LAllocation &num) {
+        setOperand(0, num);
+    }
+};
+
 // Absolute value of an integer.
 class LAbsI : public LInstructionHelper<1, 1, 0>
 {

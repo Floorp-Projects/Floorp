@@ -44,10 +44,10 @@ textbox {
 textbox:not([type="number"]) {
   min-height: @textbox_height@;
   border: @border_width_small@ solid @color_button_border@;
-  -moz-border-top-colors: -moz-initial;
-  -moz-border-right-colors: -moz-initial;
-  -moz-border-bottom-colors: -moz-initial;
-  -moz-border-left-colors: -moz-initial;
+  -moz-border-top-colors: initial;
+  -moz-border-right-colors: initial;
+  -moz-border-bottom-colors: initial;
+  -moz-border-left-colors: initial;
 }
 
 textbox[isempty="true"] {
@@ -137,7 +137,7 @@ button:not([disabled])[checked="true"] {
 
 /* Override GTK2 system setting */
 .button-icon {
-  display: -moz-initial !important;
+  display: initial !important;
 }
 
 /* spinbuttons ------------------------------------------------------------- */
@@ -148,9 +148,9 @@ spinbuttons {
 .numberbox-input-box {
   border: @border_width_small@ solid @color_button_border@;
   border-right: 0 solid transparent;
-  -moz-border-top-colors: -moz-initial;
-  -moz-border-bottom-colors: -moz-initial;
-  -moz-border-left-colors: -moz-initial;
+  -moz-border-top-colors: initial;
+  -moz-border-bottom-colors: initial;
+  -moz-border-left-colors: initial;
 }
 
 .numberbox-input-box:-moz-locale-dir(rtl) {
@@ -334,10 +334,10 @@ checkbox:focus > .checkbox-label-center-box > .checkbox-label-box {
 
 .checkbox-check {
   border: 2px transparent;
-  -moz-border-top-colors: -moz-initial;
-  -moz-border-right-colors: -moz-initial;
-  -moz-border-bottom-colors: -moz-initial;
-  -moz-border-left-colors: -moz-initial;
+  -moz-border-top-colors: initial;
+  -moz-border-right-colors: initial;
+  -moz-border-bottom-colors: initial;
+  -moz-border-left-colors: initial;
   width: 46px;
   height: 46px;
   background: url("chrome://browser/skin/images/check-unselected-hdpi.png") no-repeat 50% 50%;
@@ -536,10 +536,10 @@ progressmeter {
   padding: @padding_small@;
   height: @textbox_height@;
   border: @border_width_large@ solid #aaa;
-  -moz-border-top-colors: -moz-initial;
-  -moz-border-right-colors: -moz-initial;
-  -moz-border-bottom-colors: -moz-initial;
-  -moz-border-left-colors: -moz-initial;
+  -moz-border-top-colors: initial;
+  -moz-border-right-colors: initial;
+  -moz-border-bottom-colors: initial;
+  -moz-border-left-colors: initial;
 }
 
 .progress-bar {

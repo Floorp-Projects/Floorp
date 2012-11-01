@@ -247,7 +247,7 @@ public:
 
     CGFloat                 BackingScaleFactor();
     void                    BackingScaleFactorChanged();
-    virtual double          GetDefaultScale();
+    virtual double          GetDefaultScaleInternal();
 
     NS_IMETHOD              SetTitle(const nsAString& aTitle);
 

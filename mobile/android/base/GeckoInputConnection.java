@@ -826,14 +826,16 @@ class GeckoInputConnection
                                  InputType.TYPE_NUMBER_FLAG_DECIMAL;
         else if (mIMEModeHint.equalsIgnoreCase("digit"))
             outAttrs.inputType = InputType.TYPE_CLASS_NUMBER;
-        else if (mIMEModeHint.equalsIgnoreCase("uppercase"))
-            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS;
-        else if (mIMEModeHint.equalsIgnoreCase("lowercase"))
-            outAttrs.inputType = InputType.TYPE_CLASS_TEXT; 
-        else if (mIMEModeHint.equalsIgnoreCase("titlecase"))
-            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_WORDS;
-        else if (mIMEModeHint.equalsIgnoreCase("autocapitalized"))
-            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
+        else {
+            outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_AUTO_CORRECT;
+            if (mIMEModeHint.equalsIgnoreCase("uppercase"))
+                outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS;
+            else if (mIMEModeHint.equalsIgnoreCase("titlecase"))
+                outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_WORDS;
+            else if (mIMEModeHint.equalsIgnoreCase("autocapitalized"))
+                outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
+            // lowercase mode is the default
+        }
 
         if (mIMEActionHint.equalsIgnoreCase("go"))
             outAttrs.imeOptions = EditorInfo.IME_ACTION_GO;

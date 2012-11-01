@@ -132,7 +132,7 @@ documenttab[selected="true"] > vbox > stack > hbox > .documenttab-close[tablet] 
 #newtab-button[tablet] > .toolbarbutton-text {
   -moz-padding-start: 0.5em;
   color: white;
-  display: -moz-initial;
+  display: initial;
   text-align: start;
 }
 

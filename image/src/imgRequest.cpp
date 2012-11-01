@@ -46,6 +46,7 @@
 #include "nsIProtocolHandler.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/Likely.h"
 
 #include "DiscardTracker.h"
 #include "nsAsyncRedirectVerifyHelper.h"
@@ -68,7 +69,14 @@ InitPrefCaches()
 }
 
 #if defined(PR_LOGGING)
-PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
+PRLogModuleInfo *
+GetImgLog()
+{
+  static PRLogModuleInfo *sImgLog;
+  if (!sImgLog)
+    sImgLog = PR_NewLogModule("imgRequest");
+  return sImgLog;
+}
 #endif
 
 NS_IMPL_ISUPPORTS5(imgRequest,
@@ -91,7 +99,7 @@ imgRequest::imgRequest(imgLoader* aLoader)
  , mResniffMimeType(false)
 {
   // Register our pref observers if we haven't yet.
-  if (NS_UNLIKELY(!gInitializedPrefCaches)) {
+  if (MOZ_UNLIKELY(!gInitializedPrefCaches)) {
     InitPrefCaches();
   }
 }
@@ -101,9 +109,9 @@ imgRequest::~imgRequest()
   if (mURI) {
     nsAutoCString spec;
     mURI->GetSpec(spec);
-    LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::~imgRequest()", "keyuri", spec.get());
+    LOG_FUNC_WITH_PARAM(GetImgLog(), "imgRequest::~imgRequest()", "keyuri", spec.get());
   } else
-    LOG_FUNC(gImgLog, "imgRequest::~imgRequest()");
+    LOG_FUNC(GetImgLog(), "imgRequest::~imgRequest()");
 }
 
 nsresult imgRequest::Init(nsIURI *aURI,
@@ -115,7 +123,7 @@ nsresult imgRequest::Init(nsIURI *aURI,
                           nsIPrincipal* aLoadingPrincipal,
                           int32_t aCORSMode)
 {
-  LOG_FUNC(gImgLog, "imgRequest::Init");
+  LOG_FUNC(GetImgLog(), "imgRequest::Init");
 
   NS_ABORT_IF_FALSE(!mImage, "Multiple calls to init");
   NS_ABORT_IF_FALSE(aURI, "No uri");
@@ -182,7 +190,7 @@ void imgRequest::ResetCacheEntry()
 void imgRequest::AddProxy(imgRequestProxy *proxy)
 {
   NS_PRECONDITION(proxy, "null imgRequestProxy passed in");
-  LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::AddProxy", "proxy", proxy);
+  LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgRequest::AddProxy", "proxy", proxy);
 
   // If we're empty before adding, we have to tell the loader we now have
   // proxies.
@@ -196,7 +204,7 @@ void imgRequest::AddProxy(imgRequestProxy *proxy)
 
 nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
 {
-  LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy", "proxy", proxy);
+  LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgRequest::RemoveProxy", "proxy", proxy);
 
   // This will remove our animation consumers, so after removing
   // this proxy, we don't end up without proxies with observers, but still
@@ -224,7 +232,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
     else {
       nsAutoCString spec;
       mURI->GetSpec(spec);
-      LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy no cache entry", "uri", spec.get());
+      LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::RemoveProxy no cache entry", "uri", spec.get());
     }
 #endif
 
@@ -234,7 +242,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
        and won't leave a bad pointer in the observer list.
      */
     if (statusTracker.IsLoading() && NS_FAILED(aStatus)) {
-      LOG_MSG(gImgLog, "imgRequest::RemoveProxy", "load in progress.  canceling");
+      LOG_MSG(GetImgLog(), "imgRequest::RemoveProxy", "load in progress.  canceling");
 
       this->Cancel(NS_BINDING_ABORTED);
     }
@@ -253,7 +261,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
 
 void imgRequest::CancelAndAbort(nsresult aStatus)
 {
-  LOG_SCOPE(gImgLog, "imgRequest::CancelAndAbort");
+  LOG_SCOPE(GetImgLog(), "imgRequest::CancelAndAbort");
 
   Cancel(aStatus);
 
@@ -270,7 +278,7 @@ void imgRequest::Cancel(nsresult aStatus)
 {
   /* The Cancel() method here should only be called by this class. */
 
-  LOG_SCOPE(gImgLog, "imgRequest::Cancel");
+  LOG_SCOPE(GetImgLog(), "imgRequest::Cancel");
 
   imgStatusTracker& statusTracker = GetStatusTracker();
 
@@ -286,7 +294,7 @@ void imgRequest::Cancel(nsresult aStatus)
 
 nsresult imgRequest::GetURI(nsIURI **aURI)
 {
-  LOG_FUNC(gImgLog, "imgRequest::GetURI");
+  LOG_FUNC(GetImgLog(), "imgRequest::GetURI");
 
   if (mURI) {
     *aURI = mURI;
@@ -299,7 +307,7 @@ nsresult imgRequest::GetURI(nsIURI **aURI)
 
 nsresult imgRequest::GetSecurityInfo(nsISupports **aSecurityInfo)
 {
-  LOG_FUNC(gImgLog, "imgRequest::GetSecurityInfo");
+  LOG_FUNC(GetImgLog(), "imgRequest::GetSecurityInfo");
 
   // Missing security info means this is not a security load
   // i.e. it is not an error when security info is missing
@@ -309,7 +317,7 @@ nsresult imgRequest::GetSecurityInfo(nsISupports **aSecurityInfo)
 
 void imgRequest::RemoveFromCache()
 {
-  LOG_SCOPE(gImgLog, "imgRequest::RemoveFromCache");
+  LOG_SCOPE(GetImgLog(), "imgRequest::RemoveFromCache");
 
   if (mIsInCache) {
     // mCacheEntry is nulled out when we have no more observers.
@@ -350,7 +358,7 @@ void imgRequest::AdjustPriority(imgRequestProxy *proxy, int32_t delta)
 
 void imgRequest::SetIsInCache(bool incache)
 {
-  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequest::SetIsCacheable", "incache", incache);
+  LOG_FUNC_WITH_PARAM(GetImgLog(), "imgRequest::SetIsCacheable", "incache", incache);
   mIsInCache = incache;
 }
 
@@ -477,7 +485,7 @@ imgRequest::StartDecoding()
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
 NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt)
 {
-  LOG_SCOPE(gImgLog, "imgRequest::OnStartRequest");
+  LOG_SCOPE(GetImgLog(), "imgRequest::OnStartRequest");
 
   // Figure out if we're multipart
   nsCOMPtr<nsIMultiPartChannel> mpchan(do_QueryInterface(aRequest));
@@ -550,7 +558,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 /* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult status); */
 NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt, nsresult status)
 {
-  LOG_FUNC(gImgLog, "imgRequest::OnStopRequest");
+  LOG_FUNC(GetImgLog(), "imgRequest::OnStopRequest");
 
   bool lastPart = true;
   nsCOMPtr<nsIMultiPartChannel> mpchan(do_QueryInterface(aRequest));
@@ -634,14 +642,14 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
                             nsIInputStream *inStr, uint64_t sourceOffset,
                             uint32_t count)
 {
-  LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "count", count);
+  LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgRequest::OnDataAvailable", "count", count);
 
   NS_ASSERTION(aRequest, "imgRequest::OnDataAvailable -- no request!");
 
   nsresult rv;
 
   if (!mGotData || mResniffMimeType) {
-    LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable |First time through... finding mimetype|");
+    LOG_SCOPE(GetImgLog(), "imgRequest::OnDataAvailable |First time through... finding mimetype|");
 
     mGotData = true;
 
@@ -662,7 +670,7 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
 
     nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
     if (newType.IsEmpty()) {
-      LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable |sniffing of mimetype failed|");
+      LOG_SCOPE(GetImgLog(), "imgRequest::OnDataAvailable |sniffing of mimetype failed|");
 
       rv = NS_ERROR_FAILURE;
       if (chan) {
@@ -670,7 +678,7 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
       }
 
       if (NS_FAILED(rv)) {
-        PR_LOG(gImgLog, PR_LOG_ERROR,
+        PR_LOG(GetImgLog(), PR_LOG_ERROR,
                ("[this=%p] imgRequest::OnDataAvailable -- Content type unavailable from the channel\n",
                 this));
 
@@ -679,7 +687,7 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
         return NS_BINDING_ABORTED;
       }
 
-      LOG_MSG(gImgLog, "imgRequest::OnDataAvailable", "Got content type from the channel");
+      LOG_MSG(GetImgLog(), "imgRequest::OnDataAvailable", "Got content type from the channel");
     }
 
     // If we're a regular image and this is the first call to OnDataAvailable,
@@ -733,7 +741,7 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
         }
       }
 
-      LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "content type", mContentType.get());
+      LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::OnDataAvailable", "content type", mContentType.get());
 
       //
       // Figure out our Image initialization flags
@@ -851,7 +859,7 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
                                         sourceOffset, count);
   }
   if (NS_FAILED(rv)) {
-    PR_LOG(gImgLog, PR_LOG_WARNING,
+    PR_LOG(GetImgLog(), PR_LOG_WARNING,
            ("[this=%p] imgRequest::OnDataAvailable -- "
             "copy to RasterImage failed\n", this));
     this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
@@ -969,7 +977,7 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
   nsAutoCString oldspec;
   if (mCurrentURI)
     mCurrentURI->GetSpec(oldspec);
-  LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnChannelRedirect", "old", oldspec.get());
+  LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::OnChannelRedirect", "old", oldspec.get());
 #endif
 
   // make sure we have a protocol that returns data rather than opens

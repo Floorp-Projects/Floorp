@@ -60,6 +60,7 @@
 #include "nsNthIndexCache.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/Likely.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2843,7 +2844,7 @@ AddRule(RuleSelectorPair* aRuleInfo, RuleCascadeData* aCascade)
 
   // Build the rule hash.
   nsCSSPseudoElements::Type pseudoType = aRuleInfo->mSelector->PseudoType();
-  if (NS_LIKELY(pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement)) {
+  if (MOZ_LIKELY(pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement)) {
     cascade->mRuleHash.AppendRule(*aRuleInfo);
   } else if (pseudoType < nsCSSPseudoElements::ePseudo_PseudoElementCount) {
     RuleHash*& ruleHash = cascade->mPseudoElementRuleHashes[pseudoType];
@@ -3246,7 +3247,7 @@ AncestorFilter::Init(Element *aElement)
 
   mFilter = new Filter();
 
-  if (NS_LIKELY(aElement)) {
+  if (MOZ_LIKELY(aElement)) {
     MOZ_ASSERT(aElement->IsInDoc(),
                "aElement must be in the document for the assumption that "
                "GetParentNode() is non-null on all element ancestors of "

@@ -26,7 +26,6 @@ SDK_XPIDLSRCS = 				\
 	$(NULL)
 
 XPIDLSRCS =					\
-	nsIDOMCSS2Properties.idl		\
 	nsIDOMCSSCharsetRule.idl		\
 	nsIDOMCSSFontFaceRule.idl		\
 	nsIDOMCSSImportRule.idl			\
