@@ -94,8 +94,9 @@ function graphExpr(idx, body) Pattern({ type: "GraphExpression", index: idx, exp
 function letExpr(head, body) Pattern({ type: "LetExpression", head: head, body: body })
 function idxExpr(idx) Pattern({ type: "GraphIndexExpression", index: idx })
 
-function compBlock(left, right) Pattern({ type: "ComprehensionBlock", left: left, right: right, each: false })
-function compEachBlock(left, right) Pattern({ type: "ComprehensionBlock", left: left, right: right, each: true })
+function compBlock(left, right) Pattern({ type: "ComprehensionBlock", left: left, right: right, each: false, of: false })
+function compEachBlock(left, right) Pattern({ type: "ComprehensionBlock", left: left, right: right, each: true, of: false })
+function compOfBlock(left, right) Pattern({ type: "ComprehensionBlock", left: left, right: right, each: false, of: true })
 
 function arrPatt(elts) Pattern({ type: "ArrayPattern", elements: elts })
 function objPatt(elts) Pattern({ type: "ObjectPattern", properties: elts })
@@ -764,6 +765,24 @@ assertExpr("[ [x,y,z] for each (x in foo) for each (y in bar) for each (z in baz
                     [compEachBlock(ident("x"), ident("foo")), compEachBlock(ident("y"), ident("bar")), compEachBlock(ident("z"), ident("baz"))],
                     ident("p")));
 
+assertExpr("[ x         for (x of foo)]",
+           compExpr(ident("x"), [compOfBlock(ident("x"), ident("foo"))], null));
+assertExpr("[ [x,y]     for (x of foo) for (y of bar)]",
+           compExpr(arrExpr([ident("x"), ident("y")]), [compOfBlock(ident("x"), ident("foo")), compOfBlock(ident("y"), ident("bar"))], null));
+assertExpr("[ [x,y,z] for (x of foo) for (y of bar) for (z of baz)]",
+           compExpr(arrExpr([ident("x"), ident("y"), ident("z")]),
+                    [compOfBlock(ident("x"), ident("foo")), compOfBlock(ident("y"), ident("bar")), compOfBlock(ident("z"), ident("baz"))],
+                    null));
+
+assertExpr("[ x         for (x of foo) if (p)]",
+           compExpr(ident("x"), [compOfBlock(ident("x"), ident("foo"))], ident("p")));
+assertExpr("[ [x,y]     for (x of foo) for (y of bar) if (p)]",
+           compExpr(arrExpr([ident("x"), ident("y")]), [compOfBlock(ident("x"), ident("foo")), compOfBlock(ident("y"), ident("bar"))], ident("p")));
+assertExpr("[ [x,y,z] for (x of foo) for (y of bar) for (z of baz) if (p) ]",
+           compExpr(arrExpr([ident("x"), ident("y"), ident("z")]),
+                    [compOfBlock(ident("x"), ident("foo")), compOfBlock(ident("y"), ident("bar")), compOfBlock(ident("z"), ident("baz"))],
+                    ident("p")));
+
 // generator expressions
 
 assertExpr("( x         for (x in foo))",
@@ -800,6 +819,24 @@ assertExpr("( [x,y]     for each (x in foo) for each (y in bar) if (p))",
 assertExpr("( [x,y,z] for each (x in foo) for each (y in bar) for each (z in baz) if (p) )",
            genExpr(arrExpr([ident("x"), ident("y"), ident("z")]),
                    [compEachBlock(ident("x"), ident("foo")), compEachBlock(ident("y"), ident("bar")), compEachBlock(ident("z"), ident("baz"))],
+                   ident("p")));
+
+assertExpr("( x         for (x of foo))",
+           genExpr(ident("x"), [compOfBlock(ident("x"), ident("foo"))], null));
+assertExpr("( [x,y]     for (x of foo) for (y of bar))",
+           genExpr(arrExpr([ident("x"), ident("y")]), [compOfBlock(ident("x"), ident("foo")), compOfBlock(ident("y"), ident("bar"))], null));
+assertExpr("( [x,y,z] for (x of foo) for (y of bar) for (z of baz))",
+           genExpr(arrExpr([ident("x"), ident("y"), ident("z")]),
+                   [compOfBlock(ident("x"), ident("foo")), compOfBlock(ident("y"), ident("bar")), compOfBlock(ident("z"), ident("baz"))],
+                   null));
+
+assertExpr("( x         for (x of foo) if (p))",
+           genExpr(ident("x"), [compOfBlock(ident("x"), ident("foo"))], ident("p")));
+assertExpr("( [x,y]     for (x of foo) for (y of bar) if (p))",
+           genExpr(arrExpr([ident("x"), ident("y")]), [compOfBlock(ident("x"), ident("foo")), compOfBlock(ident("y"), ident("bar"))], ident("p")));
+assertExpr("( [x,y,z] for (x of foo) for (y of bar) for (z of baz) if (p) )",
+           genExpr(arrExpr([ident("x"), ident("y"), ident("z")]),
+                   [compOfBlock(ident("x"), ident("foo")), compOfBlock(ident("y"), ident("bar")), compOfBlock(ident("z"), ident("baz"))],
                    ident("p")));
 
 // NOTE: it would be good to test generator expressions both with and without upvars, just like functions above.
