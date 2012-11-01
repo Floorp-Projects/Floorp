@@ -15,6 +15,7 @@
 
 !define URLStubDownload "http://download.mozilla.org/?product=firefox-nightly-latest&os=win&lang=${AB_CD}"
 !define URLManualDownload "https://www.mozilla.org/firefox/installer-help/?channel=nightly"
+!define Channel "nightly"
 
 # The installer's certificate name and issuer expected by the stub installer
 !define CertNameDownload   "Mozilla Corporation"
