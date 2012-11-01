@@ -679,10 +679,9 @@ nsImageFrame::NotifyNewCurrentRequest(imgIRequest *aRequest,
         presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
                                     NS_FRAME_IS_DIRTY);
       }
-    } else {
-      // Update border+content to account for image change
-      InvalidateFrame();
     }
+    // Update border+content to account for image change
+    InvalidateFrame();
   }
 }
 
