@@ -261,13 +261,6 @@ public class LayerView extends FrameLayout {
         return false;
     }
 
-    public boolean isIMEEnabled() {
-        if (mInputConnectionHandler != null) {
-            return mInputConnectionHandler.isIMEEnabled();
-        }
-        return false;
-    }
-
     public void requestRender() {
         if (mListener != null) {
             mListener.renderRequested();

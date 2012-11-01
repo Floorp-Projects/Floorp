@@ -80,12 +80,14 @@ public class GeckoEvent {
     private static final int DOM_KEY_LOCATION_MOBILE = 4;
     private static final int DOM_KEY_LOCATION_JOYSTICK = 5;
 
-    public static final int IME_SYNCHRONIZE = 0;
-    public static final int IME_REPLACE_TEXT = 1;
-    public static final int IME_SET_SELECTION = 2;
-    public static final int IME_ADD_COMPOSITION_RANGE = 3;
-    public static final int IME_UPDATE_COMPOSITION = 4;
-    public static final int IME_REMOVE_COMPOSITION = 5;
+    public static final int IME_COMPOSITION_END = 0;
+    public static final int IME_COMPOSITION_BEGIN = 1;
+    public static final int IME_SET_TEXT = 2;
+    public static final int IME_GET_TEXT = 3;
+    public static final int IME_DELETE_TEXT = 4;
+    public static final int IME_SET_SELECTION = 5;
+    public static final int IME_GET_SELECTION = 6;
+    public static final int IME_ADD_RANGE = 7;
 
     public static final int IME_RANGE_CARETPOSITION = 1;
     public static final int IME_RANGE_RAWINPUT = 2;
@@ -116,8 +118,7 @@ public class GeckoEvent {
     public int mMetaState, mFlags;
     public int mKeyCode, mUnicodeChar;
     public int mRepeatCount;
-    public int mCount;
-    public int mStart, mEnd;
+    public int mOffset, mCount;
     public String mCharacters, mCharactersExtra;
     public int mRangeType, mRangeStyles;
     public int mRangeForeColor, mRangeBackColor;
@@ -458,51 +459,44 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createIMEEvent(int action) {
+    public static GeckoEvent createIMEEvent(int imeAction, int offset, int count) {
         GeckoEvent event = new GeckoEvent(IME_EVENT);
-        event.mAction = action;
+        event.mAction = imeAction;
+        event.mOffset = offset;
+        event.mCount = count;
         return event;
     }
 
-    public static GeckoEvent createIMEReplaceEvent(int start, int end,
-                                                   String text) {
+    private void InitIMERange(int action, int offset, int count,
+                              int rangeType, int rangeStyles,
+                              int rangeForeColor, int rangeBackColor) {
+        mAction = action;
+        mOffset = offset;
+        mCount = count;
+        mRangeType = rangeType;
+        mRangeStyles = rangeStyles;
+        mRangeForeColor = rangeForeColor;
+        mRangeBackColor = rangeBackColor;
+        return;
+    }
+    
+    public static GeckoEvent createIMERangeEvent(int offset, int count,
+                                                 int rangeType, int rangeStyles,
+                                                 int rangeForeColor, int rangeBackColor,
+                                                 String text) {
         GeckoEvent event = new GeckoEvent(IME_EVENT);
-        event.mAction = IME_REPLACE_TEXT;
-        event.mStart = start;
-        event.mEnd = end;
+        event.InitIMERange(IME_SET_TEXT, offset, count, rangeType, rangeStyles,
+                           rangeForeColor, rangeBackColor);
         event.mCharacters = text;
         return event;
     }
 
-    public static GeckoEvent createIMESelectEvent(int start, int end) {
+    public static GeckoEvent createIMERangeEvent(int offset, int count,
+                                                 int rangeType, int rangeStyles,
+                                                 int rangeForeColor, int rangeBackColor) {
         GeckoEvent event = new GeckoEvent(IME_EVENT);
-        event.mAction = IME_SET_SELECTION;
-        event.mStart = start;
-        event.mEnd = end;
-        return event;
-    }
-
-    public static GeckoEvent createIMECompositionEvent(int start, int end) {
-        GeckoEvent event = new GeckoEvent(IME_EVENT);
-        event.mAction = IME_UPDATE_COMPOSITION;
-        event.mStart = start;
-        event.mEnd = end;
-        return event;
-    }
-
-    public static GeckoEvent createIMERangeEvent(int start,
-                                                 int end, int rangeType,
-                                                 int rangeStyles,
-                                                 int rangeForeColor,
-                                                 int rangeBackColor) {
-        GeckoEvent event = new GeckoEvent(IME_EVENT);
-        event.mAction = IME_ADD_COMPOSITION_RANGE;
-        event.mStart = start;
-        event.mEnd = end;
-        event.mRangeType = rangeType;
-        event.mRangeStyles = rangeStyles;
-        event.mRangeForeColor = rangeForeColor;
-        event.mRangeBackColor = rangeBackColor;
+        event.InitIMERange(IME_ADD_RANGE, offset, count, rangeType, rangeStyles,
+                           rangeForeColor, rangeBackColor);
         return event;
     }
 
