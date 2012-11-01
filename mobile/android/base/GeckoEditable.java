@@ -63,9 +63,9 @@ final class GeckoEditable
     private final ActionQueue mActionQueue;
 
     private int mSavedSelectionStart;
-    private int mSelectionSeqno;
-    private int mCompositionSeqno;
-    private int mLastUpdatedCompositionSeqno;
+    private volatile int mGeckoUpdateSeqno;
+    private int mUIUpdateSeqno;
+    private int mLastUIUpdateSeqno;
     private boolean mUpdateGecko;
 
     /* An action that alters the Editable
@@ -95,6 +95,7 @@ final class GeckoEditable
         CharSequence mSequence;
         Object mSpanObject;
         int mSpanFlags;
+        boolean mShouldUpdate;
 
         Action(int type) {
             mType = type;
@@ -149,6 +150,11 @@ final class GeckoEditable
             if (DEBUG) {
                 GeckoApp.assertOnUiThread();
             }
+            /* Events don't need update because they generate text/selection
+               notifications which will do the updating for us */
+            if (action.mType != Action.TYPE_EVENT) {
+                action.mShouldUpdate = mUpdateGecko;
+            }
             if (mActions.isEmpty()) {
                 mActionsActive.acquireUninterruptibly();
                 mActions.offer(action);
@@ -170,7 +176,7 @@ final class GeckoEditable
                         action.mStart, action.mEnd, action.mSequence.toString()));
                 break;
             }
-            ++mCompositionSeqno;
+            ++mUIUpdateSeqno;
         }
 
         void poll() {
@@ -234,24 +240,30 @@ final class GeckoEditable
     }
 
     private void geckoUpdateGecko(final boolean force) {
-        if (mUpdateGecko) {
-            geckoPostToUI(new Runnable() {
-                public void run() {
+        /* We do not increment the seqno here, but only check it, because geckoUpdateGecko is a
+           request for update. If we incremented the seqno here, geckoUpdateGecko would have
+           prevented other updates from occurring */
+        final int seqnoWhenPosted = mGeckoUpdateSeqno;
+
+        geckoPostToUI(new Runnable() {
+            public void run() {
+                mActionQueue.syncWithGecko();
+                if (seqnoWhenPosted == mGeckoUpdateSeqno) {
                     uiUpdateGecko(force);
                 }
-            });
-        }
+            }
+        });
     }
 
     private void uiUpdateGecko(boolean force) {
 
-        if (!force && mCompositionSeqno == mLastUpdatedCompositionSeqno) {
+        if (!force && mUIUpdateSeqno == mLastUIUpdateSeqno) {
             if (DEBUG) {
                 Log.d(LOGTAG, "uiUpdateGecko() skipped");
             }
             return;
         }
-        mLastUpdatedCompositionSeqno = mCompositionSeqno;
+        mLastUIUpdateSeqno = mUIUpdateSeqno;
         mActionQueue.syncWithGecko();
 
         if (DEBUG) {
@@ -432,7 +444,9 @@ final class GeckoEditable
             mText.setSpan(action.mSpanObject, action.mStart, action.mEnd, action.mSpanFlags);
             break;
         }
-        geckoUpdateGecko(false);
+        if (action.mShouldUpdate) {
+            geckoUpdateGecko(false);
+        }
         mActionQueue.poll();
     }
 
@@ -485,11 +499,7 @@ final class GeckoEditable
         if (start < 0 || start > end || end > mText.length()) {
             throw new IllegalArgumentException("invalid selection notification range");
         }
-        if (!mUpdateGecko) {
-            // Selection will be updated at the end of the batch operation
-            return;
-        }
-        final int seqnoWhenPosted = ++mSelectionSeqno;
+        final int seqnoWhenPosted = ++mGeckoUpdateSeqno;
 
         geckoPostToUI(new Runnable() {
             public void run() {
@@ -497,8 +507,15 @@ final class GeckoEditable
                 /* check to see there has not been another action that potentially changed the
                    selection. If so, we can skip this update because we know there is another
                    update right after this one that will replace the effect of this update */
-                if (mSelectionSeqno == seqnoWhenPosted) {
+                if (mGeckoUpdateSeqno == seqnoWhenPosted) {
+                    /* In this case, Gecko's selection has changed and it's notifying us to change
+                       Java's selection. In the normal case, whenever Java's selection changes,
+                       we go back and set Gecko's selection as well. However, in this case,
+                       since Gecko's selection is already up-to-date, we skip this step. */
+                    boolean oldUpdateGecko = mUpdateGecko;
+                    mUpdateGecko = false;
                     Selection.setSelection(mProxy, start, end);
+                    mUpdateGecko = oldUpdateGecko;
                 }
             }
         });
@@ -536,7 +553,6 @@ final class GeckoEditable
             }
         } else {
             mText.replace(start, oldEnd, text, 0, text.length());
-            geckoUpdateGecko(true);
             geckoPostToUI(new Runnable() {
                 public void run() {
                     if (mListener != null) {
