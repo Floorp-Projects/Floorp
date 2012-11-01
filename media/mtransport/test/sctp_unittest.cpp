@@ -35,7 +35,7 @@
 using namespace mozilla;
 MOZ_MTLOG_MODULE("mtransport");
 
-MtransportTestUtils test_utils;
+MtransportTestUtils *test_utils;
 static bool sctp_logging = false;
 static int port_number = 5000;
 
@@ -117,7 +117,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
         static_cast<void *>(flow_.get()) << std::endl;
     usrsctp_close(sctp_);
 
-    test_utils.sts_target()->Dispatch(WrapRunnable(this,
+    test_utils->sts_target()->Dispatch(WrapRunnable(this,
                                                    &TransportTestPeer::DisconnectInt),
                                       NS_DISPATCH_SYNC);
 
@@ -157,7 +157,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
   void StartTransfer(size_t to_send) {
     periodic_ = new SendPeriodic(this, to_send);
-    timer_->SetTarget(test_utils.sts_target());
+    timer_->SetTarget(test_utils->sts_target());
     timer_->InitWithCallback(periodic_, 10, nsITimer::TYPE_REPEATING_SLACK);
   }
 
@@ -348,7 +348,7 @@ TEST_F(TransportTest, TestTransfer) {
 
 int main(int argc, char **argv)
 {
-  test_utils.InitServices();
+  test_utils = new MtransportTestUtils();
   // Start the tests
   ::testing::InitGoogleTest(&argc, argv);
 
@@ -358,5 +358,7 @@ int main(int argc, char **argv)
     }
   }
 
-  return RUN_ALL_TESTS();
+  int rv = RUN_ALL_TESTS();
+  delete test_utils;
+  return rv;
 }

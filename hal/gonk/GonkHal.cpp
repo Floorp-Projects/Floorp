@@ -23,6 +23,7 @@
 #include <sys/syscall.h>
 #include <sys/resource.h>
 #include <time.h>
+#include <asm/page.h>
 
 #include "android/log.h"
 #include "cutils/properties.h"
@@ -926,10 +927,10 @@ SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
 }
 
 static int
-oomAdjOfOomScoreAdj(int aOomScoreAdj)
+OomAdjOfOomScoreAdj(int aOomScoreAdj)
 {
   // Convert OOM adjustment from the domain of /proc/<pid>/oom_score_adj
-  // to thew domain of /proc/<pid>/oom_adj.
+  // to the domain of /proc/<pid>/oom_adj.
 
   int adj;
 
@@ -942,10 +943,92 @@ oomAdjOfOomScoreAdj(int aOomScoreAdj)
   return adj;
 }
 
+static void
+EnsureKernelLowMemKillerParamsSet()
+{
+  static bool kernelLowMemKillerParamsSet;
+  if (kernelLowMemKillerParamsSet) {
+    return;
+  }
+  kernelLowMemKillerParamsSet = true;
+
+  HAL_LOG(("Setting kernel's low-mem killer parameters."));
+
+  // Set /sys/module/lowmemorykiller/parameters/{adj,minfree,notify_trigger}
+  // according to our prefs.  These files let us tune when the kernel kills
+  // processes when we're low on memory, and when it notifies us that we're
+  // running low on available memory.
+  //
+  // adj and minfree are both comma-separated lists of integers.  If adj="A,B"
+  // and minfree="X,Y", then the kernel will kill processes with oom_adj
+  // A or higher once we have fewer than X pages of memory free, and will kill
+  // processes with oom_adj B or higher once we have fewer than Y pages of
+  // memory free.
+  //
+  // notify_trigger is a single integer.   If we set notify_trigger=Z, then
+  // we'll get notified when there are fewer than Z pages of memory free.  (See
+  // GonkMemoryPressureMonitoring.cpp.)
+
+  // Build the adj and minfree strings.
+  nsAutoCString adjParams;
+  nsAutoCString minfreeParams;
+
+  const char* priorityClasses[] = {"master", "foreground", "background"};
+  for (size_t i = 0; i < NS_ARRAY_LENGTH(priorityClasses); i++) {
+    int32_t oomScoreAdj;
+    if (!NS_SUCCEEDED(Preferences::GetInt(nsPrintfCString(
+          "hal.processPriorityManager.gonk.%sOomScoreAdjust",
+          priorityClasses[i]).get(), &oomScoreAdj))) {
+      continue;
+    }
+
+    int32_t killUnderMB;
+    if (!NS_SUCCEEDED(Preferences::GetInt(nsPrintfCString(
+          "hal.processPriorityManager.gonk.%sKillUnderMB",
+          priorityClasses[i]).get(), &killUnderMB))) {
+      continue;
+    }
+
+    // adj is in oom_adj units.
+    adjParams.AppendPrintf("%d,", OomAdjOfOomScoreAdj(oomScoreAdj));
+
+    // minfree is in pages.
+    minfreeParams.AppendPrintf("%d,", killUnderMB * 1024 * 1024 / PAGE_SIZE);
+  }
+
+  // Strip off trailing commas.
+  adjParams.Cut(adjParams.Length() - 1, 1);
+  minfreeParams.Cut(minfreeParams.Length() - 1, 1);
+  if (!adjParams.IsEmpty() && !minfreeParams.IsEmpty()) {
+    WriteToFile("/sys/module/lowmemorykiller/parameters/adj", adjParams.get());
+    WriteToFile("/sys/module/lowmemorykiller/parameters/minfree", minfreeParams.get());
+  }
+
+  // Set the low-memory-notification threshold.
+  int32_t lowMemNotifyThresholdMB;
+  if (NS_SUCCEEDED(Preferences::GetInt(
+        "hal.processPriorityManager.gonk.notifyLowMemUnderMB",
+        &lowMemNotifyThresholdMB))) {
+
+    // notify_trigger is in pages.
+    WriteToFile("/sys/module/lowmemorykiller/parameters/notify_trigger",
+      nsPrintfCString("%d", lowMemNotifyThresholdMB * 1024 * 1024 / PAGE_SIZE).get());
+  }
+}
+
 void
 SetProcessPriority(int aPid, ProcessPriority aPriority)
 {
   HAL_LOG(("SetProcessPriority(pid=%d, priority=%d)", aPid, aPriority));
+
+  // If this is the first time SetProcessPriority was called, set the kernel's
+  // OOM parameters according to our prefs.
+  //
+  // We could/should do this on startup instead of waiting for the first
+  // SetProcessPriorityCall.  But in practice, the master process needs to set
+  // its priority early in the game, so we can reasonably rely on
+  // SetProcessPriority being called early in startup.
+  EnsureKernelLowMemKillerParamsSet();
 
   const char* priorityStr = NULL;
   switch (aPriority) {
@@ -988,7 +1071,7 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
     if (!WriteToFile(nsPrintfCString("/proc/%d/oom_score_adj", aPid).get(),
                      nsPrintfCString("%d", clampedOomScoreAdj).get()))
     {
-      int oomAdj = oomAdjOfOomScoreAdj(clampedOomScoreAdj);
+      int oomAdj = OomAdjOfOomScoreAdj(clampedOomScoreAdj);
 
       WriteToFile(nsPrintfCString("/proc/%d/oom_adj", aPid).get(),
                   nsPrintfCString("%d", oomAdj).get());

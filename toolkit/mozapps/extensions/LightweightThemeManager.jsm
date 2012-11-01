@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["LightweightThemeManager"];
+this.EXPORTED_SYMBOLS = ["LightweightThemeManager"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -69,7 +69,7 @@ __defineSetter__("_maxUsedThemes", function maxUsedThemesSetter(aVal) {
 var _themeIDBeingEnabled = null;
 var _themeIDBeingDisbled = null;
 
-var LightweightThemeManager = {
+this.LightweightThemeManager = {
   get usedThemes () {
     try {
       return JSON.parse(_prefs.getComplexValue("usedThemes",

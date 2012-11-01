@@ -11,6 +11,7 @@
 #include "nsISupportsImpl.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGPaintServerFrame.h"
+#include "nsSVGPathGeometryElement.h"
 #include "nsSVGFilterFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGTextPathFrame.h"
@@ -386,7 +387,8 @@ nsSVGMarkerProperty *
 nsSVGEffects::GetMarkerProperty(nsIURI *aURI, nsIFrame *aFrame,
                                 const FramePropertyDescriptor *aProp)
 {
-  NS_ABORT_IF_FALSE(aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame,
+  NS_ABORT_IF_FALSE(aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame &&
+                      static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable(),
                     "Bad frame");
   return static_cast<nsSVGMarkerProperty*>(
           GetEffectProperty(aURI, aFrame, aProp, CreateMarkerProperty));
@@ -529,7 +531,8 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
   GetEffectProperty(aFrame->GetStyleSVGReset()->mFilter,
                     aFrame, FilterProperty(), CreateFilterProperty);
 
-  if (aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame) {
+  if (aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame &&
+      static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
     // Set marker properties here to avoid reference loops
     const nsStyleSVG *style = aFrame->GetStyleSVG();
     GetEffectProperty(style->mMarkerStart, aFrame, MarkerBeginProperty(),

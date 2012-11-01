@@ -893,7 +893,7 @@ static bool CreateDecoder(PluginHost *aPluginHost, Decoder *aDecoder, const char
 } // namespace OmxPlugin
 
 // Export the manifest so MPAPI can find our entry points.
-Manifest MOZ_EXPORT_DATA(MPAPI_MANIFEST) {
+Manifest MOZ_EXPORT MPAPI_MANIFEST {
   OmxPlugin::CanDecode,
   OmxPlugin::CreateDecoder
 };

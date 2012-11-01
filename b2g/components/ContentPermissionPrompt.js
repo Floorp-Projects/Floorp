@@ -145,4 +145,4 @@ ContentPermissionPrompt.prototype = {
 
 
 //module initialization
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentPermissionPrompt]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentPermissionPrompt]);

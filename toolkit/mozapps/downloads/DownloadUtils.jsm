@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = [ "DownloadUtils" ];
+this.EXPORTED_SYMBOLS = [ "DownloadUtils" ];
 
 /**
  * This module provides the DownloadUtils object which contains useful methods
@@ -85,7 +85,7 @@ __defineGetter__("gBundle", function() {
 const kCachedLastMaxSize = 10;
 let gCachedLast = [];
 
-let DownloadUtils = {
+this.DownloadUtils = {
   /**
    * Generate a full status string for a download given its current progress,
    * total size, speed, last time remaining

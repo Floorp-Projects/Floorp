@@ -1196,12 +1196,12 @@ class AttrDefiner(PropertyDefiner):
             return "{ (JSPropertyOp)%s, %s }" % (accessor, jitinfo)
 
         def setter(attr):
+            if attr.readonly and attr.getExtendedAttribute("PutForwards") is None:
+                return "JSOP_NULLWRAPPER"
             if self.static:
                 accessor = 'set_' + attr.identifier.name
                 jitinfo = "nullptr"
             else:
-                if attr.readonly and attr.getExtendedAttribute("PutForwards") is None:
-                    return "JSOP_NULLWRAPPER"
                 accessor = ("genericLenientSetter" if attr.hasLenientThis()
                             else "genericSetter")
                 jitinfo = "&%s_setterinfo" % attr.identifier.name
@@ -3865,7 +3865,7 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     """
     def __init__(self, descriptor, method):
         self.method = method
-        name = method.identifier.name
+        name = CppKeywords.checkMethodName(method.identifier.name)
         args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
                 Argument('unsigned', 'argc'), Argument('JS::Value*', 'vp')]
@@ -3881,6 +3881,27 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     def makeNativeName(descriptor, method):
         name = method.identifier.name
         return MakeNativeName(descriptor.binaryNames.get(name, name))
+
+class CppKeywords():
+    """
+    A class for checking if method names declared in webidl
+    are not in conflict with C++ keywords.
+    """
+    keywords = frozenset(['alignas', 'alignof', 'and', 'and_eq', 'asm', 'auto', 'bitand', 'bitor', 'bool',
+    'break', 'case', 'catch', 'char', 'char16_t', 'char32_t', 'class', 'compl', 'const', 'constexpr',
+    'const_cast', 'continue', 'decltype', 'default', 'delete', 'do', 'double', 'dynamic_cast', 'else', 'enum',
+    'explicit', 'export', 'extern', 'false', 'final', 'float', 'for', 'friend', 'goto', 'if', 'inline',
+    'int', 'long', 'mutable', 'namespace', 'new', 'noexcept', 'not', 'not_eq', 'nullptr', 'operator',
+    'or', 'or_eq', 'override', 'private', 'protected', 'public', 'register', 'reinterpret_cast', 'return',
+    'short', 'signed', 'sizeof', 'static', 'static_assert', 'static_cast', 'struct', 'switch', 'template',
+    'this', 'thread_local', 'throw', 'true', 'try', 'typedef', 'typeid', 'typename', 'union', 'unsigned',
+    'using', 'virtual', 'void', 'volatile', 'wchar_t', 'while', 'xor', 'xor_eq'])
+
+    @staticmethod
+    def checkMethodName(name):
+        if name in CppKeywords.keywords:
+          name = '_' + name
+        return name
 
 class CGStaticMethod(CGAbstractStaticBindingMethod):
     """
@@ -4123,8 +4144,9 @@ class CGMemberJITInfo(CGThing):
             return result
         if self.member.isMethod():
             methodinfo = ("%s_methodinfo" % self.member.identifier.name)
+            name = CppKeywords.checkMethodName(self.member.identifier.name)
             # Actually a JSJitMethodOp, but JSJitPropertyOp by struct definition.
-            method = ("(JSJitPropertyOp)%s" % self.member.identifier.name)
+            method = ("(JSJitPropertyOp)%s" % name)
 
             # Methods are infallible if they are infallible, have no arguments
             # to unwrap, and have a return type that's infallible to wrap up for
@@ -6127,6 +6149,7 @@ class CGBindingRoot(CGThing):
                           'mozilla/dom/Nullable.h',
                           'PrimitiveConversions.h',
                           'XPCQuickStubs.h',
+                          'XPCWrapper.h',
                           'nsDOMQS.h',
                           'AccessCheck.h',
                           'WorkerPrivate.h',

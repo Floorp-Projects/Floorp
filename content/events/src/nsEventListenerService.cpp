@@ -279,6 +279,35 @@ nsEventListenerService::RemoveSystemEventListener(nsIDOMEventTarget *aTarget,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEventListenerService::AddListenerForAllEvents(nsIDOMEventTarget* aTarget,
+                                                nsIDOMEventListener* aListener,
+                                                bool aUseCapture,
+                                                bool aWantsUntrusted,
+                                                bool aSystemEventGroup)
+{
+  NS_ENSURE_STATE(aTarget && aListener);
+  nsEventListenerManager* manager = aTarget->GetListenerManager(true);
+  NS_ENSURE_STATE(manager);
+  manager->AddListenerForAllEvents(aListener, aUseCapture, aWantsUntrusted,
+                               aSystemEventGroup);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventListenerService::RemoveListenerForAllEvents(nsIDOMEventTarget* aTarget,
+                                                   nsIDOMEventListener* aListener,
+                                                   bool aUseCapture,
+                                                   bool aSystemEventGroup)
+{
+  NS_ENSURE_STATE(aTarget && aListener);
+  nsEventListenerManager* manager = aTarget->GetListenerManager(false);
+  if (manager) {
+    manager->RemoveListenerForAllEvents(aListener, aUseCapture, aSystemEventGroup);
+  }
+  return NS_OK;
+}
+
 nsresult
 NS_NewEventListenerService(nsIEventListenerService** aResult)
 {

@@ -31,14 +31,14 @@
 	wrap(mallctlbymib)(mib, miblen, &v, &sz, NULL, 0);		\
 } while (0)
 
-MOZ_IMPORT_API(int)
+MOZ_IMPORT_API int
 wrap(mallctl)(const char*, void*, size_t*, void*, size_t);
-MOZ_IMPORT_API(int)
+MOZ_IMPORT_API int
 wrap(mallctlnametomib)(const char *name, size_t *mibp, size_t *miblenp);
-MOZ_IMPORT_API(int)
+MOZ_IMPORT_API int
 wrap(mallctlbymib)(const size_t *mib, size_t miblen, void *oldp, size_t *oldlenp, void *newp, size_t newlen);
 
-MOZ_EXPORT_API(void)
+MOZ_EXPORT void
 jemalloc_stats(jemalloc_stats_t *stats)
 {
   unsigned narenas;
