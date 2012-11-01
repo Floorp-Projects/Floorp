@@ -947,6 +947,8 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml          \
   mobile/android/base/resources/drawable/desktop_notification.png               \
   mobile/android/base/resources/drawable/highlight.xml                          \
+  mobile/android/base/resources/drawable/handle_end_level.xml                   \
+  mobile/android/base/resources/drawable/handle_start_level.xml                 \
   mobile/android/base/resources/drawable/menu_button.xml                        \
   mobile/android/base/resources/drawable/menu_item_checkmark.xml                \
   mobile/android/base/resources/drawable/menu_level.xml                         \

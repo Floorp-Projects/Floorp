@@ -2080,7 +2080,8 @@ var SelectionHandler = {
     sendMessageToJava({
       gecko: {
         type: "TextSelection:PositionHandles",
-        positions: positions
+        positions: positions,
+        rtl: this._isRTL
       }
     });
   },
