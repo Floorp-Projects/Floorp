@@ -18,10 +18,7 @@ using namespace js;
 using namespace js::ion;
 
 BaselineCompiler::BaselineCompiler(JSContext *cx, JSScript *script)
-  : cx(cx),
-    script(script),
-    pc(NULL),
-    frame(cx, script, masm)
+  : BaselineCompilerSpecific(cx, script)
 {
 }
 

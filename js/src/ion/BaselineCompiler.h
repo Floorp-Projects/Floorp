@@ -15,9 +15,16 @@
 #include "jsinterp.h"
 
 #include "BaselineJIT.h"
-#include "BaselineFrameInfo.h"
 #include "BaselineIC.h"
 #include "FixedList.h"
+
+#if defined(JS_CPU_X86)
+# include "x86/BaselineCompiler-x86.h"
+#elif defined(JS_CPU_X64)
+# include "x64/BaselineCompiler-x64.h"
+#else
+#error "CPU Not Supported"
+#endif
 
 namespace js {
 namespace ion {
@@ -42,17 +49,10 @@ namespace ion {
     _(JSOP_RETURN)             \
     _(JSOP_STOP)
 
-class BaselineCompiler
+class BaselineCompiler : public BaselineCompilerSpecific
 {
-    JSContext *cx;
-    JSScript *script;
-    jsbytecode *pc;
-    MacroAssembler masm;
     FixedList<Label> labels_;
     Label return_;
-
-    FrameInfo frame;
-    js::Vector<CacheData, 16, SystemAllocPolicy> caches_;
 
     Label *labelOf(jsbytecode *pc) {
         return &labels_[pc - script->code];
@@ -65,11 +65,6 @@ class BaselineCompiler
     MethodStatus compile();
 
   private:
-    bool allocateCache(const BaseCache &cache) {
-        JS_ASSERT(cache.data.pc == pc);
-        return caches_.append(cache.data);
-    }
-
     MethodStatus emitBody();
 
     bool emitPrologue();
