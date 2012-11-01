@@ -4253,7 +4253,7 @@ js_NativeGet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> pobj, Shape
 
 JSBool
 js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
-             Shape *shape, bool added, bool strict, Value *vp)
+             HandleShape shape, bool added, bool strict, Value *vp)
 {
     JS_ASSERT(obj->isNative());
 
@@ -4277,22 +4277,21 @@ js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
             return js_ReportGetterOnlyAssignment(cx);
     }
 
-    Rooted<Shape *> shapeRoot(cx, shape);
     RootedValue nvp(cx, *vp);
 
     int32_t sample = cx->runtime->propertyRemovals;
-    if (!shapeRoot->set(cx, obj, receiver, strict, &nvp))
+    if (!shape->set(cx, obj, receiver, strict, &nvp))
         return false;
 
     /*
      * Update any slot for the shape with the value produced by the setter,
      * unless the setter deleted the shape.
      */
-    if (shapeRoot->hasSlot() &&
+    if (shape->hasSlot() &&
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
-         obj->nativeContains(cx, shapeRoot))) {
+         obj->nativeContains(cx, shape))) {
         AddTypePropertyId(cx, obj, shape->propid(), *vp);
-        obj->setSlot(shapeRoot->slot(), nvp);
+        obj->setSlot(shape->slot(), nvp);
     }
 
     *vp = nvp;
