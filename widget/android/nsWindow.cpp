@@ -2194,6 +2194,8 @@ nsWindow::OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd)
                                    event.mReply.mString.Length(),
                                    aStart, aOldEnd, aNewEnd);
 
+    /* Make sure Java's selection is up-to-date */
+    OnIMESelectionChange();
     return NS_OK;
 }
 
