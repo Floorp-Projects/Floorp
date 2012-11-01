@@ -2015,6 +2015,19 @@ AddPendingRecompile(JSContext *cx, HandleScript script, jsbytecode *pc,
         cx->compartment->types.addPendingRecompile(cx, script, pc);
 
     /*
+     * Remind Ion not to save the compile code if generating type
+     * inference information mid-compilation causes an invalidation of the
+     * script being compiled.
+     */
+    RecompileInfo& info = cx->compartment->types.compiledInfo;
+    if (info.outputIndex != RecompileInfo::NoCompilerRunning) {
+        CompilerOutput *co = info.compilerOutput(cx);
+        if (co->isIon() && co->script == script) {
+            co->invalidate();
+        }
+    }
+
+    /*
      * When one script is inlined into another the caller listens to state
      * changes on the callee's script, so trigger these to force recompilation
      * of any such callers.
