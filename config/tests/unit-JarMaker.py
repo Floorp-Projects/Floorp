@@ -275,6 +275,29 @@ class Test_relativesrcdir(unittest.TestCase):
                            os.path.join(os.path.abspath('/TOPSOURCEDIR'),
                                         'browser/locales', 'en-US')
                            ])
+    def test_override(self):
+        jm = self.jm
+        jm.outputFormat = 'flat'  # doesn't touch chrome dir without files
+        jarcontents = StringIO('''en-US.jar:
+relativesrcdir dom/locales:
+''')
+        jarcontents.name = 'override.mn'
+        jm.makeJar(jarcontents, '/NO_OUTPUT_REQUIRED')
+        self.assertEquals(jm.localedirs,
+                          [
+                            os.path.join(os.path.abspath('/TOPSOURCEDIR'),
+                                         'dom/locales', 'en-US')
+                            ])
+    def test_override_l10n(self):
+        jm = self.jm
+        jm.l10nbase = '/L10N_BASE'
+        jm.outputFormat = 'flat'  # doesn't touch chrome dir without files
+        jarcontents = StringIO('''en-US.jar:
+relativesrcdir dom/locales:
+''')
+        jarcontents.name = 'override.mn'
+        jm.makeJar(jarcontents, '/NO_OUTPUT_REQUIRED')
+        self.assertEquals(jm.localedirs, [os.path.join('/L10N_BASE', 'dom')])
 
 
 if __name__ == '__main__':

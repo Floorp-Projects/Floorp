@@ -64,6 +64,7 @@ class JarMaker(object):
 
   ignore = re.compile('\s*(\#.*)?$')
   jarline = re.compile('(?:(?P<jarfile>[\w\d.\-\_\\\/]+).jar\:)|(?:\s*(\#.*)?)\s*$')
+  relsrcline = re.compile('relativesrcdir\s+(?P<relativesrcdir>.+?):')
   regline = re.compile('\%\s+(.*)$')
   entryre = '(?P<optPreprocess>\*)?(?P<optOverwrite>\+?)\s+'
   entryline = re.compile(entryre + '(?P<output>[\w\d.\-\_\\\/\+\@]+)\s*(\((?P<locale>\%?)(?P<source>[\w\d.\-\_\\\/\@]+)\))?\s*$')
@@ -281,6 +282,11 @@ class JarMaker(object):
           # reraise the StopIteration for makeJar
           raise
         if self.ignore.match(l):
+          continue
+        m = self.relsrcline.match(l)
+        if m:
+          relativesrcdir = m.group('relativesrcdir')
+          self.localedirs = self.generateLocaleDirs(relativesrcdir)
           continue
         m = self.regline.match(l)
         if  m:
