@@ -63,9 +63,13 @@ NewDenseAllocatedArray(JSContext *cx, uint32_t length, RawObject proto = NULL);
 extern JSObject * JS_FASTCALL
 NewDenseUnallocatedArray(JSContext *cx, uint32_t length, RawObject proto = NULL);
 
-/* Create a dense array with a copy of vp. */
+/* Create a dense array with a copy of the dense array elements in src. */
 extern JSObject *
-NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *vp, RawObject proto = NULL);
+NewDenseCopiedArray(JSContext *cx, uint32_t length, HandleObject src, uint32_t elementOffset, RawObject proto = NULL);
+
+/* Create a dense array from the given array values, which must be rooted */
+extern JSObject *
+NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values, RawObject proto = NULL);
 
 /* Create a sparse array. */
 extern JSObject *

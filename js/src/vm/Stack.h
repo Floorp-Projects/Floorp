@@ -497,8 +497,7 @@ class StackFrame
     inline Value &unaliasedActual(unsigned i, MaybeCheckAliasing = CHECK_ALIASING);
     template <class Op> inline void forEachUnaliasedActual(Op op);
 
-    typedef Vector<Value, 16, SystemAllocPolicy> CopyVector;
-    bool copyRawFrameSlots(CopyVector *v);
+    bool copyRawFrameSlots(AutoValueVector *v);
 
     inline unsigned numFormalArgs() const;
     inline unsigned numActualArgs() const;
