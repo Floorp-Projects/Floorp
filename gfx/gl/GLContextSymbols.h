@@ -39,6 +39,8 @@ struct GLContextSymbols
     PFNGLACTIVETEXTUREPROC fActiveTexture;
     typedef void (GLAPIENTRY * PFNGLATTACHSHADERPROC) (GLuint program, GLuint shader);
     PFNGLATTACHSHADERPROC fAttachShader;
+    typedef void (GLAPIENTRY * PFNGLBEGINQUERYPROC) (GLenum target, GLuint id);
+    PFNGLBEGINQUERYPROC fBeginQuery;
     typedef void (GLAPIENTRY * PFNGLBINDATTRIBLOCATIONPROC) (GLuint program, GLuint index, const GLchar* name);
     PFNGLBINDATTRIBLOCATIONPROC fBindAttribLocation;
     typedef void (GLAPIENTRY * PFNGLBINDBUFFERPROC) (GLenum target, GLuint buffer);
@@ -85,6 +87,10 @@ struct GLContextSymbols
     PFNGLDISABLEVERTEXATTRIBARRAYPROC fDisableVertexAttribArray;
     typedef void (GLAPIENTRY * PFNGLDRAWARRAYSPROC) (GLenum mode, GLint first, GLsizei count);
     PFNGLDRAWARRAYSPROC fDrawArrays;
+    typedef void (GLAPIENTRY * PFNGLDRAWBUFFERPROC) (GLenum mode);
+    PFNGLDRAWBUFFERPROC fDrawBuffer;
+    typedef void (GLAPIENTRY * PFNGLDRAWBUFFERSPROC) (GLsizei n, const GLenum* bufs);
+    PFNGLDRAWBUFFERSPROC fDrawBuffers;
     typedef void (GLAPIENTRY * PFNGLDRAWELEMENTSPROC) (GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
     PFNGLDRAWELEMENTSPROC fDrawElements;
     typedef void (GLAPIENTRY * PFNGLENABLEPROC) (GLenum);
@@ -93,6 +99,8 @@ struct GLContextSymbols
     PFNGLENABLEVERTEXATTRIBARRAYPROC fEnableVertexAttribArray;
     typedef void (GLAPIENTRY * PFNGLFINISHPROC) (void);
     PFNGLFINISHPROC fFinish;
+    typedef void (GLAPIENTRY * PFNGLENDQUERYPROC) (GLenum target);
+    PFNGLENDQUERYPROC fEndQuery;
     typedef void (GLAPIENTRY * PFNGLFLUSHPROC) (void);
     PFNGLFLUSHPROC fFlush;
     typedef void (GLAPIENTRY * PFNGLFRONTFACEPROC) (GLenum);
@@ -121,8 +129,16 @@ struct GLContextSymbols
     PFNGLGETPROGRAMIVPROC fGetProgramiv;
     typedef void (GLAPIENTRY * PFNGLGETPROGRAMINFOLOGPROC) (GLuint program, GLsizei bufSize, GLsizei* length, GLchar* infoLog);
     PFNGLGETPROGRAMINFOLOGPROC fGetProgramInfoLog;
+    typedef void (GLAPIENTRY * PFNGLGETQUERYIVPROC) (GLenum target, GLenum pname, GLint* params);
+    PFNGLGETQUERYIVPROC fGetQueryiv;
+    typedef void (GLAPIENTRY * PFNGLGETQUERYOBJECTIVPROC) (GLuint id, GLenum pname, GLint* params);
+    PFNGLGETQUERYOBJECTIVPROC fGetQueryObjectiv;
+    typedef void (GLAPIENTRY * PFNGLGETQUERYOBJECTUIVPROC) (GLuint id, GLenum pname, GLuint* params);
+    PFNGLGETQUERYOBJECTUIVPROC fGetQueryObjectuiv;
     typedef void (GLAPIENTRY * PFNGLTEXPARAMETERIPROC) (GLenum target, GLenum pname, GLint param);
     PFNGLTEXPARAMETERIPROC fTexParameteri;
+    typedef void (GLAPIENTRY * PFNGLTEXPARAMETERIVPROC) (GLenum target, GLenum pname, GLint* param);
+    PFNGLTEXPARAMETERIVPROC fTexParameteriv;
     typedef void (GLAPIENTRY * PFNGLTEXPARAMETERFPROC) (GLenum target, GLenum pname, GLfloat param);
     PFNGLTEXPARAMETERFPROC fTexParameterf;
     typedef GLubyte* (GLAPIENTRY * PFNGLGETSTRINGPROC) (GLenum);
@@ -330,6 +346,8 @@ struct GLContextSymbols
     PFNGLCREATESHADERPROC fCreateShader;
     typedef void (GLAPIENTRY * PFNGLGENBUFFERSPROC) (GLsizei n, GLuint* buffers);
     PFNGLGENBUFFERSPROC fGenBuffers;
+    typedef void (GLAPIENTRY * PFNGLGENQUERIESPROC) (GLsizei n, GLuint* queries);
+    PFNGLGENQUERIESPROC fGenQueries;
     typedef void (GLAPIENTRY * PFNGLGENTEXTURESPROC) (GLsizei n, GLuint *textures);
     PFNGLGENTEXTURESPROC fGenTextures;
     typedef void (GLAPIENTRY * PFNGLGENFRAMEBUFFERS) (GLsizei n, GLuint* ids);
@@ -343,6 +361,8 @@ struct GLContextSymbols
     PFNGLDELETESHADERPROC fDeleteShader;
     typedef void (GLAPIENTRY * PFNGLDELETEBUFFERSPROC) (GLsizei n, const GLuint* buffers);
     PFNGLDELETEBUFFERSPROC fDeleteBuffers;
+    typedef void (GLAPIENTRY * PFNGLDELETEQUERIESPROC) (GLsizei n, const GLuint* queries);
+    PFNGLDELETEQUERIESPROC fDeleteQueries;
     typedef void (GLAPIENTRY * PFNGLDELETETEXTURESPROC) (GLsizei n, const GLuint* textures);
     PFNGLDELETETEXTURESPROC fDeleteTextures;
     typedef void (GLAPIENTRY * PFNGLDELETEFRAMEBUFFERS) (GLsizei n, const GLuint* ids);
