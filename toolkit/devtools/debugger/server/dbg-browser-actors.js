@@ -296,9 +296,17 @@ BrowserTabActor.prototype = {
     dbg_assert(this.actorID,
                "tab should have an actorID.");
 
+    let title = this.browser.contentTitle;
+    // If contentTitle is empty (e.g. on a not-yet-restored tab), but there is a
+    // tabbrowser (i.e. desktop Firefox, but not Fennec), we can use the label
+    // as the title.
+    if (!title && this._tabbrowser) {
+      title = this._tabbrowser
+                  ._getTabForContentWindow(this.browser.contentWindow).label;
+    }
     let response = {
       actor: this.actorID,
-      title: this.browser.contentTitle,
+      title: title,
       url: this.browser.currentURI.spec
     };
 
