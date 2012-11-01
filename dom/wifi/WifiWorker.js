@@ -1008,15 +1008,11 @@ var WifiManager = (function() {
               });
             }
 
-            // Driver startup on the otoro takes longer than it takes for us
+            // Driver startup on certain platforms takes longer than it takes for us
             // to return from loadDriver, so wait 2 seconds before starting
             // the supplicant to give it a chance to start.
-            if (device === "otoro") {
-              timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-              timer.init(doStartSupplicant, 2000, Ci.nsITimer.TYPE_ONE_SHOT);
-            } else {
-              doStartSupplicant();
-            }
+            timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+            timer.init(doStartSupplicant, 2000, Ci.nsITimer.TYPE_ONE_SHOT);
           });
         });
       });
