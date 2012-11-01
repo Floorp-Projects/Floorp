@@ -169,4 +169,4 @@ PaymentUI.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIGlue])
 }
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([PaymentUI]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PaymentUI]);

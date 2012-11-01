@@ -766,7 +766,7 @@ DescribeGCThing(bool isMarked, void *p, JSGCTraceKind traceKind,
                             clasp->name, si->GetJSClass()->name);
             } else if (clasp == &js::FunctionClass) {
                 JSFunction *fun = JS_GetObjectFunction(obj);
-                JSString *str = JS_GetFunctionId(fun);
+                JSString *str = JS_GetFunctionDisplayId(fun);
                 if (str) {
                     NS_ConvertUTF16toUTF8 fname(JS_GetInternedStringChars(str));
                     JS_snprintf(name, sizeof(name),

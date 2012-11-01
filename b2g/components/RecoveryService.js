@@ -90,4 +90,4 @@ RecoveryService.prototype = {
   }
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([RecoveryService]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RecoveryService]);

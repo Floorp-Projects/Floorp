@@ -12,7 +12,8 @@
     <RelativeLayout android:id="@+id/address_bar"
                     style="@style/AddressBar">
 
-        <org.mozilla.gecko.BrowserToolbarBackground android:layout_width="fill_parent"
+        <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/address_bar_bg"
+                                                    android:layout_width="fill_parent"
                                                     android:layout_height="fill_parent"
                                                     android:layout_marginRight="75dip"
                                                     android:layout_alignParentTop="true"

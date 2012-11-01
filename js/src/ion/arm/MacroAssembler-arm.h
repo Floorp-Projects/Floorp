@@ -20,12 +20,14 @@ namespace ion {
 static Register CallReg = ip;
 static const int defaultShift = 3;
 JS_STATIC_ASSERT(1 << defaultShift == sizeof(jsval));
+
 // MacroAssemblerARM is inheriting form Assembler defined in Assembler-arm.{h,cpp}
 class MacroAssemblerARM : public Assembler
 {
   public:
-    MacroAssemblerARM() {
-    }
+    MacroAssemblerARM()
+    { }
+
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest);
@@ -48,7 +50,8 @@ class MacroAssemblerARM : public Assembler
     void ma_alu(Register src1, Operand op2, Register dest, ALUOp op,
                 SetCond_ sc = NoSetCond, Condition c = Always);
     void ma_nop();
-    void ma_movPatchable(Imm32 imm, Register dest, Assembler::Condition c, RelocStyle rs, Instruction *i = NULL);
+    void ma_movPatchable(Imm32 imm, Register dest, Assembler::Condition c,
+                         RelocStyle rs, Instruction *i = NULL);
     // These should likely be wrapped up as a set of macros
     // or something like that.  I cannot think of a good reason
     // to explicitly have all of this code.

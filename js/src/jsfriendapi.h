@@ -16,8 +16,6 @@
 
 #include "mozilla/GuardObjects.h"
 
-JS_BEGIN_EXTERN_C
-
 #if JS_STACK_GROWTH_DIRECTION > 0
 # define JS_CHECK_STACK_SIZE(limit, lval)  ((uintptr_t)(lval) < limit)
 #else
@@ -148,8 +146,6 @@ extern JS_FRIEND_API(void)
 js_DumpChars(const jschar *s, size_t n);
 #endif
 
-#ifdef __cplusplus
-
 extern JS_FRIEND_API(bool)
 JS_CopyPropertiesFrom(JSContext *cx, JSObject *target, JSObject *obj);
 
@@ -179,12 +175,6 @@ struct JSFunctionSpecWithHelp {
 
 extern JS_FRIEND_API(bool)
 JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWithHelp *fs);
-
-#endif
-
-JS_END_EXTERN_C
-
-#ifdef __cplusplus
 
 typedef bool (* JS_SourceHook)(JSContext *cx, JSScript *script, jschar **src, uint32_t *length);
 
@@ -988,8 +978,6 @@ uint32_t GetListBaseExpandoSlot();
 
 } /* namespace js */
 
-#endif
-
 /* Implemented in jsdate.cpp. */
 
 /*
@@ -1026,8 +1014,6 @@ js_GetSCOffset(JSStructuredCloneWriter* writer);
 
 /* Typed Array functions, implemented in jstypedarray.cpp */
 
-#ifdef __cplusplus
-
 namespace js {
 namespace ArrayBufferView {
 
@@ -1054,9 +1040,6 @@ enum ViewType {
 } /* namespace js */
 
 typedef js::ArrayBufferView::ViewType JSArrayBufferViewType;
-#else
-typedef uint32_t JSArrayBufferViewType;
-#endif /* __cplusplus */
 
 /*
  * Create a new typed array with nelements elements.
@@ -1394,7 +1377,6 @@ JS_GetDataViewByteLength(JSObject *obj, JSContext *maybecx);
 JS_FRIEND_API(void *)
 JS_GetDataViewData(JSObject *obj, JSContext *maybecx);
 
-#ifdef __cplusplus
 /*
  * This struct contains metadata passed from the DOM to the JS Engine for JIT
  * optimizations on DOM property accessors. Eventually, this should be made
@@ -1430,7 +1412,6 @@ SET_JITINFO(JSFunction * func, const JSJitInfo *info)
     JS_ASSERT(!(fun->flags & 0x4000));
     fun->jitinfo = info;
 }
-#endif /* __cplusplus */
 
 /*
  * Engine-internal extensions of jsid.  This code is here only until we
@@ -1496,8 +1477,6 @@ JSID_TO_ATOM(jsid id)
 
 JS_STATIC_ASSERT(sizeof(jsid) == JS_BYTES_PER_WORD);
 
-#ifdef __cplusplus
-
 namespace js {
 
 static JS_ALWAYS_INLINE Value
@@ -1520,7 +1499,5 @@ IdToJsval(jsid id)
 }
 
 } /* namespace js */
-
-#endif /* __cplusplus */
 
 #endif /* jsfriendapi_h___ */

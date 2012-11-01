@@ -179,21 +179,20 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
     // triggers a read barrier on both these pointers, so they will still be
     // marked in that case.
 
-    bool mustMarkEnterJIT = false;
+    bool runningIonCode = false;
     for (IonActivationIterator iter(trc->runtime); iter.more(); ++iter) {
         IonActivation *activation = iter.activation();
 
         if (activation->compartment() != compartment)
             continue;
 
-        // Both OSR and normal function calls depend on the EnterJIT code
-        // existing for entrance and exit.
-        mustMarkEnterJIT = true;
+        runningIonCode = true;
+        break;
     }
 
-    // These must be available if we could be running JIT code; they are not
-    // traced as normal through IonCode or IonScript objects
-    if (mustMarkEnterJIT)
+    // Don't destroy enterJIT if we are running Ion code. Note that enterJIT is
+    // not used for JM -> Ion calls, so it may be NULL in that case.
+    if (runningIonCode && enterJIT_)
         MarkIonCodeRoot(trc, enterJIT_.unsafeGet(), "enterJIT");
 
     // functionWrappers_ are not marked because this is a WeakCache of VM

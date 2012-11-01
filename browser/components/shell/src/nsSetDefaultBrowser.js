@@ -28,4 +28,4 @@ nsSetDefaultBrowser.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
 };
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([nsSetDefaultBrowser]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsSetDefaultBrowser]);

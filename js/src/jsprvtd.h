@@ -29,8 +29,6 @@
 #include "js/Vector.h"
 #endif
 
-JS_BEGIN_EXTERN_C
-
 /*
  * Convenience constants.
  */
@@ -379,6 +377,5 @@ typedef JSObject *
 typedef JSObject *
 (* JSIteratorOp)(JSContext *cx, JSHandleObject obj, JSBool keysonly);
 
-JS_END_EXTERN_C
 
 #endif /* jsprvtd_h___ */

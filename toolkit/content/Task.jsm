@@ -6,7 +6,7 @@
 
 "use strict";
 
-let EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "Task"
 ];
 
@@ -103,7 +103,7 @@ Cu.import("resource://gre/modules/commonjs/promise/core.js");
 /**
  * This object provides the public module functions.
  */
-const Task = {
+this.Task = {
   /**
    * Creates and starts a new task.
    *

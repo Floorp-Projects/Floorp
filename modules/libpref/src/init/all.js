@@ -3818,6 +3818,12 @@ pref("dom.mozApps.maxLocalId", 1000);
 // a restart is required to enable a new value.
 pref("network.activity.blipIntervalMilliseconds", 0);
 
+// If true, reuse the same global for everything loaded by the component loader
+// (JS components, JSMs, etc).  This saves memory, but makes it possible for
+// the scripts to interfere with each other.  A restart is required for this
+// to take effect.
+pref("jsloader.reuseGlobal", false);
+
 // When we're asked to take a screenshot, don't wait more than 2000ms for the
 // event loop to become idle before actually taking the screenshot.
 pref("dom.browserElement.maxScreenshotDelayMS", 2000);
