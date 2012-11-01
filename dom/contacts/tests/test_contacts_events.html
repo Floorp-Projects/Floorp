@@ -19,6 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=764667
 
 /** Test for Bug 764667 **/
 
+SpecialPowers.addPermission("contacts-read", true, document);
+
 var e = new MozContactChangeEvent("contactchanged", {contactID: "123", reason: "create"});
 ok(e, "Should have contactsChange event!");
 is(e.contactID, "123", "ID should be 123.");

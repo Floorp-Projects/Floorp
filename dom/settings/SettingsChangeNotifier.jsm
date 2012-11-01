@@ -80,6 +80,11 @@ this.SettingsChangeNotifier = {
     let mm = aMessage.target;
     switch (aMessage.name) {
       case "Settings:Changed":
+        if (!aMessage.target.assertPermission("settings-write")) {
+          Cu.reportError("Settings message " + msg.name +
+                         " from a content process with no 'settings-write' privileges.");
+          return null;
+        }
         this.broadcastMessage("Settings:Change:Return:OK",
           { key: msg.key, value: msg.value });
         Services.obs.notifyObservers(this, kMozSettingsChangedObserverTopic,

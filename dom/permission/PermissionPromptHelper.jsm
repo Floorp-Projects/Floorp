@@ -71,8 +71,9 @@ this.PermissionPromptHelper = {
       let uri = Services.io.newURI(msg.origin, null, null);
       principal =
         secMan.getAppCodebasePrincipal(uri, msg.appID, msg.browserFlag);
+      let access = msg.access ? msg.type + "-" + msg.access : msg.type;
       let perm =
-        permissionManager.testExactPermissionFromPrincipal(principal, msg.type);
+        permissionManager.testExactPermissionFromPrincipal(principal, access);
       installedPerms.push(perm);
     }
 
