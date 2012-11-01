@@ -802,6 +802,29 @@ nsScriptNameSpaceManager::RegisterDefineDOMInterface(const nsAFlatString& aName,
   }
 }
 
+struct GlobalNameClosure
+{
+  nsScriptNameSpaceManager::GlobalNameEnumerator enumerator;
+  void* closure;
+};
+
+static PLDHashOperator
+EnumerateGlobalName(PLDHashTable*, PLDHashEntryHdr *hdr, uint32_t,
+                    void* aClosure)
+{
+  GlobalNameMapEntry *entry = static_cast<GlobalNameMapEntry *>(hdr);
+  GlobalNameClosure* closure = static_cast<GlobalNameClosure*>(aClosure);
+  return closure->enumerator(entry->mKey, closure->closure);
+}
+
+void
+nsScriptNameSpaceManager::EnumerateGlobalNames(GlobalNameEnumerator aEnumerator,
+                                               void* aClosure)
+{
+  GlobalNameClosure closure = { aEnumerator, aClosure };
+  PL_DHashTableEnumerate(&mGlobalNames, EnumerateGlobalName, &closure);
+}
+
 static size_t
 SizeOfEntryExcludingThis(PLDHashEntryHdr *aHdr, nsMallocSizeOfFun aMallocSizeOf,
                          void *aArg)
