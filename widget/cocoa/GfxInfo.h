@@ -53,6 +53,8 @@ public:
   NS_DECL_NSIGFXINFODEBUG
 #endif
 
+  virtual uint32_t OperatingSystemVersion() const { return mOSXVersion; }
+
 protected:
 
   virtual nsresult GetFeatureStatusImpl(int32_t aFeature, 
