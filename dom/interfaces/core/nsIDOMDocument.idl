@@ -27,7 +27,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(31ce7ae7-15d5-4fc8-912b-ae0e23e93146)]
+[scriptable, uuid(6f3aac2e-ae11-487a-9eb0-0e12c66b3b21)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -46,6 +46,11 @@ interface nsIDOMDocument : nsIDOMNode
   nsIDOMAttr                    createAttribute(in DOMString name)
                                   raises(DOMException);
   nsIDOMNodeList                getElementsByTagName(in DOMString tagname);
+
+  [optional_argc,
+   implicit_jscontext] jsval    register(in DOMString name,
+                                         [optional] in jsval options)
+                                  raises(DOMException);
 
   // Introduced in DOM Level 2:
   [optional_argc] nsIDOMNode    importNode(in nsIDOMNode importedNode,
@@ -396,3 +401,24 @@ interface nsIDOMDocument : nsIDOMNode
    */
   readonly attribute DOMString compatMode;
 };
+
+/**
+ * Interface for lifecycle callbacks in document.register.
+ */
+
+[scriptable, function, uuid(bfcd6299-081e-45d8-99f6-cb06fe2e70de)]
+interface nsILifecycleCallback : nsISupports
+{
+  void created(in nsIDOMElement dummy);
+};
+
+dictionary LifecycleCallbacks {
+  nsILifecycleCallback created;
+};
+
+dictionary DocumentRegisterOptions {
+  nsIVariant prototype;
+  nsIDOMDocumentFragment customTemplate;
+  nsIVariant lifecycle;
+};
+
