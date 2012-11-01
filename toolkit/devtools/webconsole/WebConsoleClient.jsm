@@ -10,7 +10,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-var EXPORTED_SYMBOLS = ["WebConsoleClient"];
+this.EXPORTED_SYMBOLS = ["WebConsoleClient"];
 
 /**
  * A WebConsoleClient is used as a front end for the WebConsoleActor that is
@@ -21,7 +21,7 @@ var EXPORTED_SYMBOLS = ["WebConsoleClient"];
  * @param string aActor
  *        The WebConsoleActor ID.
  */
-function WebConsoleClient(aDebuggerClient, aActor)
+this.WebConsoleClient = function WebConsoleClient(aDebuggerClient, aActor)
 {
   this._actor = aActor;
   this._client = aDebuggerClient;

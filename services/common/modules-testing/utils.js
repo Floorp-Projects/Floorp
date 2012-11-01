@@ -4,11 +4,11 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "TestingUtils",
 ];
 
-let TestingUtils = {
+this.TestingUtils = {
   /**
    * Perform a deep copy of an Array or Object.
    */

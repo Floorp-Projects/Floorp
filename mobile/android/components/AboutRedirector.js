@@ -112,4 +112,4 @@ AboutRedirector.prototype = {
 };
 
 const components = [AboutRedirector];
-const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

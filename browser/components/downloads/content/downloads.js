@@ -1114,7 +1114,8 @@ DownloadsViewItemController.prototype = {
         return this.dataItem.openable && this.dataItem.localFile.exists();
       }
       case "downloadsCmd_show": {
-        return this.dataItem.localFile.exists();
+        return this.dataItem.localFile.exists() ||
+               this.dataItem.partFile.exists();
       }
       case "downloadsCmd_pauseResume":
         return this.dataItem.inProgress && this.dataItem.resumable;

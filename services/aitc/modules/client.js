@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["AitcClient"];
+this.EXPORTED_SYMBOLS = ["AitcClient"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -32,7 +32,7 @@ const DEFAULT_REQUEST_FAILURE_THRESHOLD = 3;
  * The values should be stored persistently. The Preferences object from
  * services-common/preferences.js is an example of such an object.
  */
-function AitcClient(token, state) {
+this.AitcClient = function AitcClient(token, state) {
   this.updateToken(token);
 
   this._log = Log4Moz.repository.getLogger("Service.AITC.Client");

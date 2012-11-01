@@ -11,7 +11,6 @@
         sizemode="fullscreen"
 #endif
         style="background: black; overflow: hidden; width:320px; height:480px"
-        onload="shell.start();"
         onunload="shell.stop();">
 
   <script type="application/javascript" src="chrome://browser/content/settings.js"/>

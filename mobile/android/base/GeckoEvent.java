@@ -273,6 +273,12 @@ public class GeckoEvent {
 
         PointF geckoPoint = new PointF(pt.x, pt.y);
         geckoPoint = GeckoApp.mAppContext.getLayerView().convertViewPointToLayerPoint(geckoPoint);
+
+        if (geckoPoint == null) {
+            // This could happen if Gecko isn't ready yet.
+            return null;
+        }
+
         event.mPoints[0] = new Point(Math.round(geckoPoint.x), Math.round(geckoPoint.y));
 
         event.mX = size;

@@ -731,6 +731,9 @@ class LBlock : public TempObject
     LInstructionIterator begin() {
         return instructions_.begin();
     }
+    LInstructionIterator begin(LInstruction *at) {
+        return instructions_.begin(at);
+    }
     LInstructionIterator end() {
         return instructions_.end();
     }

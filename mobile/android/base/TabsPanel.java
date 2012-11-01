@@ -8,8 +8,13 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,7 +25,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-public class TabsPanel extends LinearLayout {
+public class TabsPanel extends LinearLayout
+                       implements LightweightTheme.OnChangeListener {
     private static final String LOGTAG = "GeckoTabsPanel";
 
     public static enum Panel {
@@ -115,6 +121,41 @@ public class TabsPanel extends LinearLayout {
                               Math.min(windowHeight - 2.5f * actionBarHeight, windowHeight * 0.8f) - actionBarHeight);
     }
 
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        mActivity.getLightweightTheme().addListener(this);
+    }
+
+    @Override
+    public void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mActivity.getLightweightTheme().removeListener(this);
+    }
+    
+    @Override
+    public void onLightweightThemeChanged() {
+        Drawable drawable = mActivity.getLightweightTheme().getDrawableWithAlpha(this, 255, 0);
+        if (drawable == null)
+            return;
+
+        drawable.setAlpha(30);
+
+        LayerDrawable layers = new LayerDrawable(new Drawable[] { mContext.getResources().getDrawable(R.drawable.tabs_tray_bg_repeat), drawable });
+        setBackgroundDrawable(layers);
+    }
+
+    @Override
+    public void onLightweightThemeReset() {
+        setBackgroundResource(R.drawable.tabs_tray_bg_repeat);
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        onLightweightThemeChanged();
+    }
+
     // Tabs List Container holds the ListView
     public static class TabsListContainer extends LinearLayout {
         private Context mContext;
@@ -136,7 +177,10 @@ public class TabsPanel extends LinearLayout {
     }
 
     // Tabs Panel Toolbar contains the Buttons
-    public static class TabsPanelToolbar extends RelativeLayout {
+    public static class TabsPanelToolbar extends RelativeLayout 
+                                         implements LightweightTheme.OnChangeListener {
+        private BrowserApp mActivity;
+
         public TabsPanelToolbar(Context context, AttributeSet attrs) {
             super(context, attrs);
 
@@ -151,6 +195,42 @@ public class TabsPanel extends LinearLayout {
                 panelToolbarRes = R.layout.tabs_panel_toolbar;
 
             LayoutInflater.from(context).inflate(panelToolbarRes, this);
+
+            mActivity = (BrowserApp) context;
+        }
+
+        @Override
+        public void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            mActivity.getLightweightTheme().addListener(this);
+        }
+
+        @Override
+        public void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            mActivity.getLightweightTheme().removeListener(this);
+        }
+    
+        @Override
+        public void onLightweightThemeChanged() {
+            Drawable drawable = mActivity.getLightweightTheme().getDrawableWithAlpha(this, 34);
+            if (drawable == null)
+                return;
+
+            Resources resources = this.getContext().getResources();
+            LayerDrawable layers = new LayerDrawable(new Drawable[] { resources.getDrawable(R.drawable.tabs_tray_bg_repeat), drawable }); 
+            setBackgroundDrawable(layers);
+        }
+
+        @Override
+        public void onLightweightThemeReset() {
+            setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        @Override
+        protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+            super.onLayout(changed, left, top, right, bottom);
+            onLightweightThemeChanged();
         }
     }
 

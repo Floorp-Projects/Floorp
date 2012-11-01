@@ -8,10 +8,11 @@
                                   android:layout_width="fill_parent"
                                   android:layout_height="fill_parent">
 
-    <LinearLayout android:orientation="vertical"
-                  android:layout_width="fill_parent"
-                  android:layout_height="fill_parent"
-                  android:background="@drawable/abouthome_bg_repeat">
+    <view class="org.mozilla.gecko.AwesomeBarTabs.Background"
+          android:orientation="vertical"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent"
+          android:background="@drawable/abouthome_bg_repeat">
 
         <LinearLayout android:id="@+id/tab_widget_container"
                       android:layout_width="fill_parent"
@@ -32,6 +33,6 @@
                      android:layout_width="fill_parent"
                      android:layout_height="fill_parent"/>
 
-    </LinearLayout>
+    </view>
 
 </org.mozilla.gecko.AwesomeBarTabs>

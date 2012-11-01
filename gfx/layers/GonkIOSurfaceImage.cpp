@@ -21,6 +21,7 @@ uint32_t GonkIOSurfaceImage::sColorIdMap[] = {
     HAL_PIXEL_FORMAT_YCbCr_422_P, OMX_COLOR_FormatYUV422Planar,
     HAL_PIXEL_FORMAT_YCbCr_420_SP, OMX_COLOR_FormatYUV420SemiPlanar,
     HAL_PIXEL_FORMAT_YCrCb_420_SP_ADRENO, OMX_QCOM_COLOR_FormatYVU420SemiPlanar,
+    HAL_PIXEL_FORMAT_YV12, OMX_COLOR_FormatYUV420Planar,
     0, 0
 };
 
