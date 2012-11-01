@@ -5593,12 +5593,48 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   return NS_OK;
 }
 
+struct ResolveGlobalNameClosure
+{
+  JSContext* cx;
+  JSObject* obj;
+  bool* retval;
+};
+
+static PLDHashOperator
+ResolveGlobalName(const nsAString& aName, void* aClosure)
+{
+  ResolveGlobalNameClosure* closure =
+    static_cast<ResolveGlobalNameClosure*>(aClosure);
+  JS::Value dummy;
+  bool ok = JS_LookupUCProperty(closure->cx, closure->obj,
+                                aName.BeginReading(), aName.Length(),
+                                &dummy);
+  if (!ok) {
+    *closure->retval = false;
+    return PL_DHASH_STOP;
+  }
+  return PL_DHASH_NEXT;
+}
+
 NS_IMETHODIMP
 nsWindowSH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       JSObject *obj, bool *_retval)
 {
   if (!ObjectIsNativeWrapper(cx, obj)) {
     *_retval = JS_EnumerateStandardClasses(cx, obj);
+    if (!*_retval) {
+      return NS_OK;
+    }
+
+    // Now resolve everything from the namespace manager
+    nsScriptNameSpaceManager *nameSpaceManager =
+      nsJSRuntime::GetNameSpaceManager();
+    if (!nameSpaceManager) {
+      NS_ERROR("Can't get namespace manager.");
+      return NS_ERROR_UNEXPECTED;
+    }
+    ResolveGlobalNameClosure closure = { cx, obj, _retval };
+    nameSpaceManager->EnumerateGlobalNames(ResolveGlobalName, &closure);
   }
 
   return NS_OK;
