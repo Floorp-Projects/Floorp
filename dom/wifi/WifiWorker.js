@@ -852,7 +852,9 @@ var WifiManager = (function() {
       if (fields.BSSID !== "00:00:00:00:00:00")
         manager.connectionInfo.bssid = fields.BSSID;
 
-      notifyStateChange(fields);
+      if (notifyStateChange(fields) && fields.state === "COMPLETED") {
+        onconnected();
+      }
       return true;
     }
     if (eventData.indexOf("CTRL-EVENT-DRIVER-STATE") === 0) {
@@ -902,14 +904,6 @@ var WifiManager = (function() {
       return true;
     }
     if (eventData.indexOf("CTRL-EVENT-CONNECTED") === 0) {
-      // Format: CTRL-EVENT-CONNECTED - Connection to 00:1e:58:ec:d5:6d completed (reauth) [id=1 id_str=]
-      var bssid = eventData.split(" ")[4];
-      var id = eventData.substr(eventData.indexOf("id=")).split(" ")[0];
-
-      // Don't call onconnected if we ignored this state change (since we were
-      // already connected).
-      if (notifyStateChange({ state: "CONNECTED", BSSID: bssid, id: id }))
-        onconnected();
       return true;
     }
     if (eventData.indexOf("CTRL-EVENT-SCAN-RESULTS") === 0) {
