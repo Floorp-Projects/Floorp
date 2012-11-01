@@ -5053,19 +5053,17 @@ nsIFrame::EndDeferringInvalidatesForDisplayRoot()
  * the whole overflow area if the frame's size changes.
  */
 static nsRect
-ComputeOutlineAndEffectsRect(nsIFrame* aFrame, bool* aAnyOutlineOrEffects,
+ComputeOutlineAndEffectsRect(nsIFrame* aFrame,
                              const nsRect& aOverflowRect,
                              const nsSize& aNewSize,
                              bool aStoreRectProperties) {
   nsRect r = aOverflowRect;
-  *aAnyOutlineOrEffects = false;
 
   if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
     // For SVG frames, we only need to account for filters.
     // TODO: We could also take account of clipPath and mask to reduce the
     // visual overflow, but that's not essential.
     if (aFrame->GetStyleSVGReset()->mFilter) {
-      *aAnyOutlineOrEffects = true;
       if (aStoreRectProperties) {
         aFrame->Properties().
           Set(nsIFrame::PreEffectsBBoxProperty(), new nsRect(r));
@@ -5096,7 +5094,6 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, bool* aAnyOutlineOrEffects,
       shadows.UnionRect(shadows, tmpRect);
     }
     r.UnionRect(r, shadows);
-    *aAnyOutlineOrEffects = true;
   }
 
   const nsStyleOutline* outline = aFrame->GetStyleOutline();
@@ -5122,7 +5119,6 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, bool* aAnyOutlineOrEffects,
       // need to keep this code (and the storing of properties just
       // above) in sync with GetOutlineInnerRect in nsCSSRendering.cpp.
       r.Inflate(inflateBy, inflateBy);
-      *aAnyOutlineOrEffects = true;
     }
   }
 
@@ -5145,8 +5141,6 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, bool* aAnyOutlineOrEffects,
     nsRect outsetRect(nsPoint(0, 0), aNewSize);
     outsetRect.Inflate(outsetMargin);
     r.UnionRect(r, outsetRect);
-
-    *aAnyOutlineOrEffects = true;
   }
 
   // Note that we don't remove the outlineInnerRect if a frame loses outline
@@ -5157,7 +5151,6 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, bool* aAnyOutlineOrEffects,
   // the frame dies.
 
   if (nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame)) {
-    *aAnyOutlineOrEffects = true;
     if (aStoreRectProperties) {
       aFrame->Properties().
         Set(nsIFrame::PreEffectsBBoxProperty(), new nsRect(r));
@@ -6956,14 +6949,11 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   }
 
   // Nothing in here should affect scrollable overflow.
-  bool hasOutlineOrEffects;
   aOverflowAreas.VisualOverflow() =
-    ComputeOutlineAndEffectsRect(this, &hasOutlineOrEffects,
-                                 aOverflowAreas.VisualOverflow(), aNewSize,
-                                 true);
+    ComputeOutlineAndEffectsRect(this, aOverflowAreas.VisualOverflow(), 
+                                 aNewSize, true);
 
   // Absolute position clipping
-  bool didHaveClipPropClip = (GetStateBits() & NS_FRAME_HAS_CLIP) != 0;
   nsRect clipPropClipRect;
   bool hasClipPropClip = GetClipPropClipRect(disp, &clipPropClipRect, aNewSize);
   if (hasClipPropClip) {
@@ -6971,13 +6961,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       nsRect& o = aOverflowAreas.Overflow(otype);
       o.IntersectRect(o, clipPropClipRect);
     }
-    AddStateBits(NS_FRAME_HAS_CLIP);
-  } else {
-    RemoveStateBits(NS_FRAME_HAS_CLIP);
   }
-
-  bool preTransformVisualOverflowChanged =
-    !GetVisualOverflowRectRelativeToSelf().IsEqualInterior(aOverflowAreas.VisualOverflow());
 
   /* If we're transformed, transform the overflow rect by the current transformation. */
   bool hasTransform = IsTransformed();
@@ -7013,31 +6997,6 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     anyOverflowChanged = SetOverflowAreas(aOverflowAreas);
   } else {
     anyOverflowChanged = ClearOverflowRects();
-  }
-
-  if (preTransformVisualOverflowChanged) {
-    if (hasOutlineOrEffects) {
-      // When there's an outline or box-shadow or SVG effects,
-      // changes to those styles might require repainting of the old and new
-      // overflow areas. Repainting of the old overflow area is handled in
-      // nsCSSFrameConstructor::DoApplyRenderingChangeToTree in response
-      // to nsChangeHint_RepaintFrame. Since the new overflow area is not
-      // known at that time, we have to handle it here.
-      // If the overflow area hasn't changed, then we don't have to do
-      // anything here since repainting the old overflow area was enough.
-      // If there is no outline or other effects now, then we don't have
-      // to do anything here since removing those styles can't require
-      // repainting of areas that weren't in the old overflow area.
-      InvalidateFrame();
-    } else if (hasClipPropClip || didHaveClipPropClip) {
-      // If we are (or were) clipped by the 'clip' property, and our
-      // overflow area changes, it might be because the clipping changed.
-      // The nsChangeHint_RepaintFrame for the style change will only
-      // repaint the old overflow area, so if the overflow area has
-      // changed (in particular, if it grows), we have to repaint the
-      // new area here.
-      InvalidateFrame();
-    }
   }
 
   if (anyOverflowChanged) {
