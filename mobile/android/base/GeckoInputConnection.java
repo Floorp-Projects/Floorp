@@ -216,26 +216,6 @@ class GeckoInputConnection
         return GeckoApp.mAppContext.getLayerView();
     }
 
-    public boolean onKeyDel() {
-        // Some IMEs don't update us on deletions
-        // In that case we are not updated when a composition
-        // is destroyed, and Bad Things happen
-
-        if (!hasCompositionString())
-            return false;
-
-        String text = getComposingText();
-
-        if (text != null && text.length() > 1) {
-            text = text.substring(0, text.length() - 1);
-            replaceText(text, 1, false);
-            return false;
-        }
-
-        commitText(null, 1);
-        return true;
-    }
-
     private static InputMethodManager getInputMethodManager() {
         View view = getView();
         if (view == null) {
@@ -385,17 +365,6 @@ class GeckoInputConnection
     }
 
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
-        if (InputMethods.canUseInputMethodOnHKB(mCurrentInputMethod))
-            return false;
-
-        switch (event.getAction()) {
-            case KeyEvent.ACTION_DOWN:
-                return processKeyDown(keyCode, event);
-            case KeyEvent.ACTION_UP:
-                return processKeyUp(keyCode, event);
-            case KeyEvent.ACTION_MULTIPLE:
-                return onKeyMultiple(keyCode, event.getRepeatCount(), event);
-        }
         return false;
     }
 
@@ -404,10 +373,6 @@ class GeckoInputConnection
     }
 
     private boolean processKeyDown(int keyCode, KeyEvent event) {
-        if (DEBUG) {
-            Log.d(LOGTAG, "IME: processKeyDown(keyCode=" + keyCode + ", event=" + event + ")");
-        }
-
         if (keyCode > KeyEvent.getMaxKeyCode())
             return false;
 
@@ -418,12 +383,6 @@ class GeckoInputConnection
             case KeyEvent.KEYCODE_VOLUME_DOWN:
             case KeyEvent.KEYCODE_SEARCH:
                 return false;
-            case KeyEvent.KEYCODE_DEL:
-                // See comments in GeckoInputConnection.onKeyDel
-                if (onKeyDel()) {
-                    return true;
-                }
-                break;
             case KeyEvent.KEYCODE_ENTER:
                 if ((event.getFlags() & KeyEvent.FLAG_EDITOR_ACTION) != 0 &&
                     mIMEActionHint.equalsIgnoreCase("next"))
@@ -442,13 +401,8 @@ class GeckoInputConnection
                 keyCode == KeyEvent.KEYCODE_DEL ||
                 keyCode == KeyEvent.KEYCODE_TAB ||
                 (event.getFlags() & KeyEvent.FLAG_SOFT_KEYBOARD) != 0 ||
-                !keyListener.onKeyDown(view, mEditable, keyCode, event)) {
-            // Make sure selection in Gecko is up-to-date
-            Span selection = getSelection();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(GeckoEvent.IME_SET_SELECTION,
-                                                                     selection.start,
-                                                                     selection.length));
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createKeyEvent(event));
+                !keyListener.onKeyDown(view, getEditable(), keyCode, event)) {
+            mEditableClient.sendEvent(GeckoEvent.createKeyEvent(event));
         }
         return true;
     }
@@ -458,10 +412,6 @@ class GeckoInputConnection
     }
 
     private boolean processKeyUp(int keyCode, KeyEvent event) {
-        if (DEBUG) {
-            Log.d(LOGTAG, "IME: processKeyUp(keyCode=" + keyCode + ", event=" + event + ")");
-        }
-
         if (keyCode > KeyEvent.getMaxKeyCode())
             return false;
 
@@ -481,15 +431,20 @@ class GeckoInputConnection
             keyCode == KeyEvent.KEYCODE_ENTER ||
             keyCode == KeyEvent.KEYCODE_DEL ||
             (event.getFlags() & KeyEvent.FLAG_SOFT_KEYBOARD) != 0 ||
-            !keyListener.onKeyUp(view, mEditable, keyCode, event)) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createKeyEvent(event));
+            !keyListener.onKeyUp(view, getEditable(), keyCode, event)) {
+            mEditableClient.sendEvent(GeckoEvent.createKeyEvent(event));
         }
 
         return true;
     }
 
     public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createKeyEvent(event));
+        while ((repeatCount--) != 0) {
+            if (!processKeyDown(keyCode, event) ||
+                !processKeyUp(keyCode, event)) {
+                return false;
+            }
+        }
         return true;
     }
 
