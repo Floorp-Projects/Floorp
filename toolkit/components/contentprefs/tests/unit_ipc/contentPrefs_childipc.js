@@ -20,18 +20,18 @@ function run_test() {
   catch(e) { }
 
   // Can set&get whitelisted values
-  cps.setPref("group", "browser.upload.lastDir", "childValue");
-  do_check_eq(cps.getPref("group", "browser.upload.lastDir"), "childValue");
+  cps.setPref("group", "browser.upload.lastDir", "childValue", null);
+  do_check_eq(cps.getPref("group", "browser.upload.lastDir", null), "childValue");
 
   // Test sending URI
   var ioSvc = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService);
   var uri = ioSvc.newURI("http://mozilla.org", null, null);
-  cps.setPref(uri, "browser.upload.lastDir", "childValue2");
-  do_check_eq(cps.getPref(uri, "browser.upload.lastDir"), "childValue2");
+  cps.setPref(uri, "browser.upload.lastDir", "childValue2", null);
+  do_check_eq(cps.getPref(uri, "browser.upload.lastDir", null), "childValue2");
 
   // Previous value
-  do_check_eq(cps.getPref("group", "browser.upload.lastDir"), "childValue");
+  do_check_eq(cps.getPref("group", "browser.upload.lastDir", null), "childValue");
 
   // Tell parent to finish and clean up
   cps.wrappedJSObject.messageManager.sendSyncMessage('ContentPref:QUIT');

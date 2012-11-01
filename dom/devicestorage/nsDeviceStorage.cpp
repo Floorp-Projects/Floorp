@@ -2258,7 +2258,7 @@ nsDOMDeviceStorage::RemoveEventListener(const nsAString & aType,
 {
   nsDOMEventTargetHelper::RemoveEventListener(aType, aListener, false);
 
-  if (mIsWatchingFile && !HasListenersFor(NS_LITERAL_STRING("change"))) {
+  if (mIsWatchingFile && !HasListenersFor(nsGkAtoms::onchange)) {
     mIsWatchingFile = false;
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     obs->RemoveObserver(this, "file-watcher-update");

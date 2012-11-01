@@ -1437,8 +1437,6 @@ nsCSSFontFaceStyleDecl::Fields[] = {
 #undef CSS_FONT_DESC
 };
 
-DOMCI_DATA(CSSFontFaceStyleDecl, nsCSSFontFaceStyleDecl)
-
 // QueryInterface implementation for nsCSSFontFaceStyleDecl
 NS_INTERFACE_MAP_BEGIN(nsCSSFontFaceStyleDecl)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -1452,7 +1450,6 @@ NS_INTERFACE_MAP_BEGIN(nsCSSFontFaceStyleDecl)
     return ContainingRule()->QueryInterface(aIID, aInstancePtr);
   }
   else
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSFontFaceStyleDecl)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF_USING_AGGREGATOR(nsCSSFontFaceStyleDecl, ContainingRule())

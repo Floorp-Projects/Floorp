@@ -19,9 +19,6 @@
  *   2. performs a search and ensures that the content tree is correct for the
  *      folder and search and that the search UI is visible and appropriate to
  *      folder,
- *   3. ensures that the folder scope button is disabled appropriate to the
- *      folder,
- *   4. if the folder scope button is enabled clicks it,
  *   5. resets the search and ensures that the content tree is correct and that
  *      the search UI is hidden, and
  *   6. if folder scope was clicked, searches again and ensures folder scope
@@ -37,61 +34,16 @@ let testCases = [
   function allBookmarksScope() {
     let defScope = getDefaultScope(PlacesUIUtils.allBookmarksFolderId);
     search(PlacesUIUtils.allBookmarksFolderId, "dummy", defScope);
-    ok(!selectScope("scopeBarFolder"),
-       "Folder scope should be disabled for All Bookmarks");
-    ok(selectScope("scopeBarAll"),
-       "Bookmarks scope should be enabled for All Bookmarks");
-    resetSearch("scopeBarAll");
   },
 
   function historyScope() {
     let defScope = getDefaultScope(PlacesUIUtils.leftPaneQueries["History"]);
     search(PlacesUIUtils.leftPaneQueries["History"], "dummy", defScope);
-    ok(!selectScope("scopeBarFolder"),
-       "Folder scope should be disabled for History");
-    ok(selectScope("scopeBarAll"),
-       "Bookmarks scope should be enabled for History");
-    resetSearch("scopeBarAll");
   },
 
   function downloadsScope() {
     let defScope = getDefaultScope(PlacesUIUtils.leftPaneQueries["Downloads"]);
     search(PlacesUIUtils.leftPaneQueries["Downloads"], "dummy", defScope);
-    ok(!selectScope("scopeBarFolder"),
-       "Folder scope should be disabled for Downloads");
-    ok(!selectScope("scopeBarAll"),
-       "Bookmarks scope should be disabled for Downloads");
-    resetSearch(defScope);
-  },
-
-  function toolbarFolderScope() {
-    let defScope = getDefaultScope(PlacesUtils.toolbarFolderId);
-    search(PlacesUtils.toolbarFolderId, "dummy", defScope);
-    ok(selectScope("scopeBarAll"),
-       "Bookmarks scope should be enabled for toolbar folder");
-    ok(selectScope("scopeBarFolder"),
-       "Folder scope should be enabled for toolbar folder");
-    // Ensure that folder scope is still selected after resetting and searching
-    // again.
-    resetSearch("scopeBarFolder");
-    search(PlacesUtils.toolbarFolderId, "dummy", "scopeBarFolder");
-  },
-
-  function subFolderScope() {
-    let folderId = PlacesUtils.bookmarks.createFolder(PlacesUtils.toolbarFolderId,
-                                                      "dummy folder",
-                                                      PlacesUtils.bookmarks.DEFAULT_INDEX);
-    let defScope = getDefaultScope(folderId);
-    search(folderId, "dummy", defScope);
-    ok(selectScope("scopeBarAll"),
-       "Bookmarks scope should be enabled for regularfolder");
-    ok(selectScope("scopeBarFolder"),
-       "Folder scope should be enabled for regular subfolder");
-    // Ensure that folder scope is still selected after resetting and searching
-    // again.
-    resetSearch("scopeBarFolder");
-    search(folderId, "dummy", "scopeBarFolder");
-    PlacesUtils.bookmarks.removeItem(folderId);
   },
 ];
 
@@ -113,21 +65,6 @@ function getDefaultScope(aFolderId) {
     default:
       return "scopeBarAll";
   }
-}
-
-/**
- * Returns the ID of the search scope button that is currently checked.
- *
- * @return the ID of the selected scope folder button
- */
-function getSelectedScopeButtonId() {
-  let doc = gLibrary.document;
-  let scopeButtons = doc.getElementById("organizerScopeBar").childNodes;
-  for (let i = 0; i < scopeButtons.length; i++) {
-    if (scopeButtons[i].checked)
-      return scopeButtons[i].id;
-  }
-  return null;
 }
 
 /**
@@ -200,63 +137,11 @@ function search(aFolderId, aSearchStr, aExpectedScopeButtonId) {
   if (aSearchStr) {
     is(query.searchTerms, aSearchStr,
        "Content tree's searchTerms should be text in search box");
-    is(doc.getElementById("searchModifiers").hidden, false,
-       "Scope bar should not be hidden after searching");
-
-    let scopeButtonId = getSelectedScopeButtonId();
-    if (scopeButtonId == "scopeBarDownloads" ||
-        scopeButtonId == "scopeBarHistory" ||
-        scopeButtonId == "scopeBarAll" ||
-        aFolderId == PlacesUtils.unfiledBookmarksFolderId) {
-      // Check that the target node exists in the tree's search results.
-      let url, count;
-      if (scopeButtonId == "scopeBarDownloads") {
-        url = TEST_DOWNLOAD_URL;
-        count = 1;
-      }
-      else {
-        url = TEST_URL;
-        count = scopeButtonId == "scopeBarHistory" ? 2 : 1;
-      }
-      is(contentTree.view.rowCount, count, "Found correct number of results");
-
-      let node = null;
-      for (let i = 0; i < contentTree.view.rowCount; i++) {
-        node = contentTree.view.nodeForTreeIndex(i);
-        if (node.uri === url)
-          break;
-      }
-      isnot(node, null, "At least the target node should be in the tree");
-      is(node.uri, url, "URI of node should match target URL");
-    }
   }
   else {
     is(query.hasSearchTerms, false,
        "Content tree's searchTerms should not exist after search reset");
-    ok(doc.getElementById("searchModifiers").hidden,
-       "Scope bar should be hidden after search reset");
   }
-  is(getSelectedScopeButtonId(), aExpectedScopeButtonId,
-     "Proper scope button should be selected after searching or resetting");
-}
-
-/**
- * Clicks the given search scope button if it is enabled.
- *
- * @param  aScopeButtonId
- *         the button with this ID will be clicked
- * @return true if the button is enabled, false otherwise
- */
-function selectScope(aScopeButtonId) {
-  let doc = gLibrary.document;
-  let button = doc.getElementById(aScopeButtonId);
-  isnot(button, null,
-     "Sanity check: scope button with ID " + aScopeButtonId + " should exist");
-  // Bug 469436 may hide an inappropriate scope button instead of disabling it.
-  if (button.disabled || button.hidden)
-    return false;
-  button.click();
-  return true;
 }
 
 /**

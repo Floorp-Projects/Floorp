@@ -35,6 +35,7 @@
 #  include "nsIPlatformCharset.h"
 #include "nsISaveAsCharset.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Likely.h"
 
 
 //
@@ -67,7 +68,7 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
     if (primitive ) {
       if (aDataLen % 2) { 
         nsAutoArrayPtr<char> buffer(new char[aDataLen + 1]);
-        if (!NS_LIKELY(buffer))
+        if (!MOZ_LIKELY(buffer))
           return;
       
         memcpy(buffer, aDataBuff, aDataLen);

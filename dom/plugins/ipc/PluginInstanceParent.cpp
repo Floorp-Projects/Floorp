@@ -95,14 +95,11 @@ PluginInstanceParent::~PluginInstanceParent()
         ::CGColorSpaceRelease(mShColorSpace);
 #endif
     if (mRemoteImageDataShmem.IsWritable()) {
-        ImageContainer *container =
-            GetImageContainer();
-
-        if (container) {
-            container->SetRemoteImageData(nullptr, nullptr);
-            container->SetCompositionNotifySink(nullptr);
-            DeallocShmem(mRemoteImageDataShmem);
+        if (mImageContainer) {
+            mImageContainer->SetRemoteImageData(nullptr, nullptr);
+            mImageContainer->SetCompositionNotifySink(nullptr);
         }
+        DeallocShmem(mRemoteImageDataShmem);
     }
 }
 
@@ -125,14 +122,13 @@ PluginInstanceParent::ActorDestroy(ActorDestroyReason why)
     }
 #endif
     // After this method, the data backing the remote surface may no
-    // longer be calid. The X surface may be destroyed, or the shared
-    // memory backing this surface may no longer be valid. The right
-    // way to inform the nsObjectFrame that the surface is no longer
-    // valid is with an invalidate call.
+    // longer be valid. The X surface may be destroyed, or the shared
+    // memory backing this surface may no longer be valid.
     if (mFrontSurface) {
         mFrontSurface = NULL;
-        const NPRect rect = {0, 0, 0, 0};
-        RecvNPN_InvalidateRect(rect);
+        if (mImageContainer) {
+            mImageContainer->SetCurrentImage(nullptr);
+        }
 #ifdef MOZ_X11
         FinishX(DefaultXDisplay());
 #endif
@@ -419,19 +415,15 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
                ) {
         *shmem = null_t();
 
-        ImageContainer *container = GetImageContainer();
-        if (!container) {
-            *result = NPERR_GENERIC_ERROR;
-            return true;
-        }
-
         mDrawingModel = drawingModel;
         *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
                                       (void*)(intptr_t)drawingModel);
 
         if (mRemoteImageDataShmem.IsWritable()) {
-            container->SetRemoteImageData(nullptr, nullptr);
-            container->SetCompositionNotifySink(nullptr);
+            if (mImageContainer) {
+                mImageContainer->SetRemoteImageData(nullptr, nullptr);
+                mImageContainer->SetCompositionNotifySink(nullptr);
+            }
             DeallocShmem(mRemoteImageDataShmem);
             mRemoteImageDataMutex = NULL;
         }
@@ -607,16 +599,21 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
     }
 #endif
 
-#ifdef MOZ_X11
-    if (mFrontSurface &&
-        mFrontSurface->GetType() == gfxASurface::SurfaceTypeXlib)
+    if (mFrontSurface) {
         // This is the "old front buffer" we're about to hand back to
         // the plugin.  We might still have drawing operations
-        // referencing it, so we XSync here to let them finish before
-        // the plugin starts scribbling on it again, or worse,
-        // destroys it.
-        FinishX(DefaultXDisplay());
+        // referencing it.
+        mFrontSurface->Finish();
+
+#ifdef MOZ_X11
+        if (mFrontSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
+            // XSync here to ensure the server has finished operations on the
+            // surface before the plugin starts scribbling on it again, or
+            // worse, destroys it.
+            FinishX(DefaultXDisplay());
+        }
 #endif
+    }
 
     if (mFrontSurface && gfxSharedImageSurface::IsSharedImage(mFrontSurface))
         *prevSurface = static_cast<gfxSharedImageSurface*>(mFrontSurface.get())->GetShmem();
@@ -630,16 +627,24 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
                    updatedRect.right - updatedRect.left,
                    updatedRect.bottom - updatedRect.top);
         surface->MarkDirty(ur);
-        surface->Flush();
+
+        ImageContainer *container = GetImageContainer();
+        ImageFormat format = CAIRO_SURFACE;
+        nsRefPtr<Image> image = container->CreateImage(&format, 1);
+        NS_ASSERTION(image->GetFormat() == CAIRO_SURFACE, "Wrong format?");
+        CairoImage* cairoImage = static_cast<CairoImage*>(image.get());
+        CairoImage::Data cairoData;
+        cairoData.mSurface = surface;
+        cairoData.mSize = surface->GetSize();
+        cairoImage->SetData(cairoData);
+
+        container->SetCurrentImage(cairoImage);
+    }
+    else if (mImageContainer) {
+        mImageContainer->SetCurrentImage(nullptr);
     }
 
     mFrontSurface = surface;
-    if (!surface) {
-      ImageContainer* container = GetImageContainer();
-      if (container) {
-        container->SetCurrentImage(nullptr);
-      }
-    }
     RecvNPN_InvalidateRect(updatedRect);
 
     PLUGIN_LOG_DEBUG(("   (RecvShow invalidated for surface %p)",
@@ -715,13 +720,6 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 #endif
         return NS_ERROR_NOT_AVAILABLE;
 
-    ImageFormat format = CAIRO_SURFACE;
-#ifdef XP_MACOSX
-    if (ioSurface) {
-        format = MAC_IO_SURFACE;
-    }
-#endif
-
     ImageContainer *container = GetImageContainer();
 
     if (!container) {
@@ -734,14 +732,14 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
       return NS_OK;
     }
 
-    nsRefPtr<Image> image;
-    image = container->CreateImage(&format, 1);
-    if (!image) {
-        return NS_ERROR_FAILURE;
-    }
-
 #ifdef XP_MACOSX
     if (ioSurface) {
+        ImageFormat format = MAC_IO_SURFACE;
+        nsRefPtr<Image> image = container->CreateImage(&format, 1);
+        if (!image) {
+            return NS_ERROR_FAILURE;
+        }
+
         NS_ASSERTION(image->GetFormat() == MAC_IO_SURFACE, "Wrong format?");
         MacIOSurfaceImage* ioImage = static_cast<MacIOSurfaceImage*>(image.get());
         MacIOSurfaceImage::Data ioData;
@@ -754,15 +752,6 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
         return NS_OK;
     }
 #endif
-
-    NS_ASSERTION(image->GetFormat() == CAIRO_SURFACE, "Wrong format?");
-    CairoImage* pluginImage = static_cast<CairoImage*>(image.get());
-    CairoImage::Data cairoData;
-    cairoData.mSurface = mFrontSurface;
-    cairoData.mSize = mFrontSurface->GetSize();
-    pluginImage->SetData(cairoData);
-
-    container->SetCurrentImageInTransaction(pluginImage);
 
     NS_IF_ADDREF(container);
     *aContainer = container;
@@ -1147,7 +1136,7 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
 #endif
 
     default:
-        PR_LOG(gPluginLog, PR_LOG_WARNING,
+        PR_LOG(GetPluginLog(), PR_LOG_WARNING,
                ("In PluginInstanceParent::NPP_GetValue: Unhandled NPPVariable %i (%s)",
                 (int) aVariable, NPPVariableToString(aVariable)));
         return NPERR_GENERIC_ERROR;
@@ -1168,7 +1157,7 @@ PluginInstanceParent::NPP_SetValue(NPNVariable variable, void* value)
 
     default:
         NS_ERROR("Unhandled NPNVariable in NPP_SetValue");
-        PR_LOG(gPluginLog, PR_LOG_WARNING,
+        PR_LOG(GetPluginLog(), PR_LOG_WARNING,
                ("In PluginInstanceParent::NPP_SetValue: Unhandled NPNVariable %i (%s)",
                 (int) variable, NPNVariableToString(variable)));
         return NPERR_GENERIC_ERROR;

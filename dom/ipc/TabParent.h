@@ -124,7 +124,7 @@ public:
                                        nsString* aComposition);
     virtual bool RecvGetInputContext(int32_t* aIMEEnabled,
                                      int32_t* aIMEOpen,
-                                     int64_t* aNativeIMEContext);
+                                     intptr_t* aNativeIMEContext);
     virtual bool RecvSetInputContext(const int32_t& aIMEEnabled,
                                      const int32_t& aIMEOpen,
                                      const nsString& aType,

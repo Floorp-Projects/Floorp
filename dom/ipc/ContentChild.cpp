@@ -20,7 +20,6 @@
 #endif
 
 #include "mozilla/Attributes.h"
-#include "mozilla/MemoryInfoDumper.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/StorageChild.h"
@@ -39,6 +38,7 @@
 #include "nsAudioStream.h"
 #endif
 #include "nsIMemoryReporter.h"
+#include "nsIMemoryInfoDumper.h"
 #include "nsIObserverService.h"
 #include "nsTObserverArray.h"
 #include "nsIObserver.h"
@@ -448,7 +448,9 @@ ContentChild::RecvDumpMemoryReportsToFile(const nsString& aIdentifier,
                                           const bool& aMinimizeMemoryUsage,
                                           const bool& aDumpChildProcesses)
 {
-    MemoryInfoDumper::DumpMemoryReportsToFile(
+    nsCOMPtr<nsIMemoryInfoDumper> dumper = do_GetService("@mozilla.org/memory-info-dumper;1");
+
+    dumper->DumpMemoryReportsToFile(
         aIdentifier, aMinimizeMemoryUsage, aDumpChildProcesses);
     return true;
 }
@@ -457,7 +459,9 @@ bool
 ContentChild::RecvDumpGCAndCCLogsToFile(const nsString& aIdentifier,
                                         const bool& aDumpChildProcesses)
 {
-    MemoryInfoDumper::DumpGCAndCCLogsToFile(
+    nsCOMPtr<nsIMemoryInfoDumper> dumper = do_GetService("@mozilla.org/memory-info-dumper;1");
+
+    dumper->DumpGCAndCCLogsToFile(
         aIdentifier, aDumpChildProcesses);
     return true;
 }

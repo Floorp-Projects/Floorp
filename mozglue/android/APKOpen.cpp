@@ -288,6 +288,24 @@ Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one
   return f_ ## name(jenv, jc, one, two, three, four, five, six, seven, eight); \
 }
 
+#define SHELL_WRAPPER9_WITH_RETURN(name, return_type, type1, type2, type3, type4, type5, type6, type7, type8, type9) \
+typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven, type8 eight, type9 nine); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT return_type JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven, type8 eight, type9 nine) \
+{ \
+  return f_ ## name(jenv, jc, one, two, three, four, five, six, seven, eight, nine); \
+}
+
+#define SHELL_WRAPPER9(name,type1,type2,type3,type4,type5,type6,type7,type8, type9) \
+typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven, type8 eight, type9 nine); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT void JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven, type8 eight, type9 nine) \
+{ \
+  f_ ## name(jenv, jc, one, two, three, four, five, six, seven, eight, nine); \
+}
+
 SHELL_WRAPPER0(nativeInit)
 SHELL_WRAPPER1(notifyGeckoOfEvent, jobject)
 SHELL_WRAPPER0(processNextNativeEvent)
@@ -309,15 +327,15 @@ SHELL_WRAPPER2(scheduleResumeComposition, jint, jint)
 SHELL_WRAPPER0_WITH_RETURN(computeRenderIntegrity, jfloat)
 SHELL_WRAPPER3_WITH_RETURN(saveMessageInSentbox, jint, jstring, jstring, jlong)
 SHELL_WRAPPER6(notifySmsSent, jint, jstring, jstring, jlong, jint, jlong)
-SHELL_WRAPPER4(notifySmsDelivered, jint, jstring, jstring, jlong)
+SHELL_WRAPPER5(notifySmsDelivery, jint, jint, jstring, jstring, jlong)
 SHELL_WRAPPER3(notifySmsSendFailed, jint, jint, jlong)
-SHELL_WRAPPER7(notifyGetSms, jint, jstring, jstring, jstring, jlong, jint, jlong)
+SHELL_WRAPPER8(notifyGetSms, jint, jint, jstring, jstring, jstring, jlong, jint, jlong)
 SHELL_WRAPPER3(notifyGetSmsFailed, jint, jint, jlong)
 SHELL_WRAPPER3(notifySmsDeleted, jboolean, jint, jlong)
 SHELL_WRAPPER3(notifySmsDeleteFailed, jint, jint, jlong)
 SHELL_WRAPPER2(notifyNoMessageInList, jint, jlong)
-SHELL_WRAPPER8(notifyListCreated, jint, jint, jstring, jstring, jstring, jlong, jint, jlong)
-SHELL_WRAPPER7(notifyGotNextMessage, jint, jstring, jstring, jstring, jlong, jint, jlong)
+SHELL_WRAPPER9(notifyListCreated, jint, jint, jint, jstring, jstring, jstring, jlong, jint, jlong)
+SHELL_WRAPPER8(notifyGotNextMessage, jint, jint, jstring, jstring, jstring, jlong, jint, jlong)
 SHELL_WRAPPER3(notifyReadingMessageListFailed, jint, jint, jlong)
 SHELL_WRAPPER2(notifyFilePickerResult, jstring, jlong)
 SHELL_WRAPPER1_WITH_RETURN(getSurfaceBits, jobject, jobject)
@@ -733,7 +751,7 @@ loadGeckoLibs(const char *apkName)
   GETFUNC(computeRenderIntegrity);
   GETFUNC(saveMessageInSentbox);
   GETFUNC(notifySmsSent);
-  GETFUNC(notifySmsDelivered);
+  GETFUNC(notifySmsDelivery);
   GETFUNC(notifySmsSendFailed);
   GETFUNC(notifyGetSms);
   GETFUNC(notifyGetSmsFailed);

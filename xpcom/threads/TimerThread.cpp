@@ -75,7 +75,7 @@ TimerObserverRunnable::Run()
 
 nsresult TimerThread::Init()
 {
-  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("TimerThread::Init [%d]\n", mInitialized));
+  PR_LOG(GetTimerLog(), PR_LOG_DEBUG, ("TimerThread::Init [%d]\n", mInitialized));
 
   if (mInitialized) {
     if (!mThread)
@@ -121,7 +121,7 @@ nsresult TimerThread::Init()
 
 nsresult TimerThread::Shutdown()
 {
-  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("TimerThread::Shutdown begin\n"));
+  PR_LOG(GetTimerLog(), PR_LOG_DEBUG, ("TimerThread::Shutdown begin\n"));
 
   if (!mThread)
     return NS_ERROR_NOT_INITIALIZED;
@@ -155,7 +155,7 @@ nsresult TimerThread::Shutdown()
 
   mThread->Shutdown();    // wait for the thread to die
 
-  PR_LOG(gTimerLog, PR_LOG_DEBUG, ("TimerThread::Shutdown end\n"));
+  PR_LOG(GetTimerLog(), PR_LOG_DEBUG, ("TimerThread::Shutdown end\n"));
   return NS_OK;
 }
 
@@ -207,7 +207,7 @@ void TimerThread::UpdateFilter(uint32_t aDelay, TimeStamp aTimeout,
   }
 
 #ifdef DEBUG_TIMERS
-  PR_LOG(gTimerLog, PR_LOG_DEBUG,
+  PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
          ("UpdateFilter: smoothSlack = %g, filterLength = %u\n",
           smoothSlack, filterLength));
 #endif
@@ -273,8 +273,8 @@ NS_IMETHODIMP TimerThread::Run()
             MonitorAutoUnlock unlock(mMonitor);
 
 #ifdef DEBUG_TIMERS
-            if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-              PR_LOG(gTimerLog, PR_LOG_DEBUG,
+            if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
+              PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
                      ("Timer thread woke up %fms from when it was supposed to\n",
                       fabs((now - timer->mTimeout).ToMilliseconds())));
             }
@@ -333,12 +333,12 @@ NS_IMETHODIMP TimerThread::Run()
       }
 
 #ifdef DEBUG_TIMERS
-      if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+      if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
         if (waitFor == PR_INTERVAL_NO_TIMEOUT)
-          PR_LOG(gTimerLog, PR_LOG_DEBUG,
+          PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
                  ("waiting for PR_INTERVAL_NO_TIMEOUT\n"));
         else
-          PR_LOG(gTimerLog, PR_LOG_DEBUG,
+          PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
                  ("waiting for %u\n", PR_IntervalToMilliseconds(waitFor)));
       }
 #endif

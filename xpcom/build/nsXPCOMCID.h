@@ -71,6 +71,11 @@
 #define NS_MEMORY_REPORTER_MANAGER_CONTRACTID "@mozilla.org/memory-reporter-manager;1"
 
 /**
+ * Memory info dumper service CID
+ */
+#define NS_MEMORY_INFO_DUMPER_CONTRACTID "@mozilla.org/memory-info-dumper;1"
+
+/**
  * Cycle collector logger contract id
  */
 #define NS_CYCLE_COLLECTOR_LOGGER_CONTRACTID "@mozilla.org/cycle-collector-logger;1"

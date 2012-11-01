@@ -9,6 +9,7 @@
 
 #include "InterfaceInitFuncs.h"
 #include "nsMai.h"
+#include "mozilla/Likely.h"
 
 AtkSocketEmbedType AtkSocketAccessible::g_atk_socket_embed = NULL;
 GType AtkSocketAccessible::g_atk_socket_type = G_TYPE_INVALID;
@@ -105,7 +106,7 @@ void
 mai_atk_component_iface_init(AtkComponentIface* aIface)
 {
   NS_ASSERTION(aIface, "Invalid Interface");
-  if (NS_UNLIKELY(!aIface))
+  if (MOZ_UNLIKELY(!aIface))
     return;
 
   aIface->ref_accessible_at_point = RefAccessibleAtPoint;

@@ -5026,6 +5026,13 @@
       IfFileExists "$INSTDIR\${FileMainEXE}" +2 +1
       Quit ; Nothing initialized so no need to call OnEndCommon
 
+!ifmacrodef InitHashAppModelId
+      ; setup the application model id registration value
+      !ifdef AppName
+      ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
+      !endif
+!endif
+
       ; Prevents breaking apps that don't use SetBrandNameVars
       !ifdef SetBrandNameVars
         ${SetBrandNameVars} "$INSTDIR\distribution\setup.ini"

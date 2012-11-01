@@ -265,6 +265,7 @@ REMOTE_XPCSHELL = \
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
 	  -I$(topsrcdir)/build \
 	  -I$(topsrcdir)/build/mobile \
+	  -I$(topsrcdir)/testing/mozbase/mozdevice/mozdevice \
 	  $(topsrcdir)/testing/xpcshell/remotexpcshelltests.py \
 	  --manifest=$(DEPTH)/_tests/xpcshell/xpcshell.ini \
 	  --build-info-json=$(DEPTH)/mozinfo.json \

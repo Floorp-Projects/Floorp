@@ -10,6 +10,7 @@
 #define nsLineBox_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
 
 #include "nsILineIterator.h"
 #include "nsIFrame.h"
@@ -361,14 +362,14 @@ private:
 
 public:
   int32_t GetChildCount() const {
-    return NS_UNLIKELY(mFlags.mHasHashedFrames) ? mFrames->Count() : mChildCount;
+    return MOZ_UNLIKELY(mFlags.mHasHashedFrames) ? mFrames->Count() : mChildCount;
   }
 
   /**
    * Register that aFrame is now on this line.
    */
   void NoteFrameAdded(nsIFrame* aFrame) {
-    if (NS_UNLIKELY(mFlags.mHasHashedFrames)) {
+    if (MOZ_UNLIKELY(mFlags.mHasHashedFrames)) {
       mFrames->PutEntry(aFrame);
     } else {
       if (++mChildCount >= kMinChildCountForHashtable) {
@@ -382,7 +383,7 @@ public:
    */
   void NoteFrameRemoved(nsIFrame* aFrame) {
     MOZ_ASSERT(GetChildCount() > 0);
-    if (NS_UNLIKELY(mFlags.mHasHashedFrames)) {
+    if (MOZ_UNLIKELY(mFlags.mHasHashedFrames)) {
       mFrames->RemoveEntry(aFrame);
       if (mFrames->Count() < kMinChildCountForHashtable) {
         SwitchToCounter();
@@ -510,7 +511,7 @@ private:
 public:
 
   bool Contains(nsIFrame* aFrame) const {
-    return NS_UNLIKELY(mFlags.mHasHashedFrames) ? mFrames->Contains(aFrame)
+    return MOZ_UNLIKELY(mFlags.mHasHashedFrames) ? mFrames->Contains(aFrame)
                                                 : IndexOf(aFrame) >= 0;
   }
 

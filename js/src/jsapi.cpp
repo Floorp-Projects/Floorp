@@ -668,9 +668,8 @@ JS_IsBuiltinFunctionConstructor(JSFunction *fun)
 /************************************************************************/
 
 /*
- * Has a new runtime ever been created?  This flag is used to detect unsafe
- * changes to js_CStringsAreUTF8 after a runtime has been created, and to
- * control things that should happen only once across all runtimes.
+ * Has a new runtime ever been created?  This flag is used to control things
+ * that should happen only once across all runtimes.
  */
 static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 
@@ -5211,7 +5210,7 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options,
 {
     jschar *chars;
     if (options.utf8)
-        chars = InflateString(cx, bytes, &length, CESU8Encoding);
+        chars = InflateUTF8String(cx, bytes, &length);
     else
         chars = InflateString(cx, bytes, &length);
     if (!chars)
@@ -5244,40 +5243,6 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options, const char 
     return script;
 }
 
-extern JS_PUBLIC_API(JSScript *)
-JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *objArg,
-                                       JSPrincipals *principals,
-                                       const jschar *chars, size_t length,
-                                       const char *filename, unsigned lineno,
-                                       JSVersion version)
-{
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setFileAndLine(filename, lineno)
-           .setVersion(version);
-
-    return Compile(cx, obj, options, chars, length);
-}
-
-extern JS_PUBLIC_API(JSScript *)
-JS_CompileUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *objArg,
-                                             JSPrincipals *principals,
-                                             JSPrincipals *originPrincipals,
-                                             const jschar *chars, size_t length,
-                                             const char *filename, unsigned lineno,
-                                             JSVersion version)
-{
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setOriginPrincipals(originPrincipals)
-           .setFileAndLine(filename, lineno)
-           .setVersion(version);
-
-    return Compile(cx, obj, options, chars, length);
-}
-
 JS_PUBLIC_API(JSScript *)
 JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *objArg, JSPrincipals *principals,
                                 const jschar *chars, size_t length,
@@ -5303,25 +5268,9 @@ JS_CompileUCScript(JSContext *cx, JSObject *objArg, const jschar *chars, size_t 
 }
 
 JS_PUBLIC_API(JSScript *)
-JS_CompileScriptForPrincipalsVersion(JSContext *cx, JSObject *objArg,
-                                     JSPrincipals *principals,
-                                     const char *bytes, size_t length,
-                                     const char *filename, unsigned lineno,
-                                     JSVersion version)
-{
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setFileAndLine(filename, lineno)
-           .setVersion(version);
-
-    return Compile(cx, obj, options, bytes, length);
-}
-
-JS_PUBLIC_API(JSScript *)
 JS_CompileScriptForPrincipals(JSContext *cx, JSObject *objArg,
                               JSPrincipals *principals,
-                              const char *bytes, size_t length,
+                              const char *ascii, size_t length,
                               const char *filename, unsigned lineno)
 {
     RootedObject obj(cx, objArg);
@@ -5329,25 +5278,24 @@ JS_CompileScriptForPrincipals(JSContext *cx, JSObject *objArg,
     options.setPrincipals(principals)
            .setFileAndLine(filename, lineno);
 
-    return Compile(cx, obj, options, bytes, length);
+    return Compile(cx, obj, options, ascii, length);
 }
 
 JS_PUBLIC_API(JSScript *)
-JS_CompileScript(JSContext *cx, JSObject *objArg, const char *bytes, size_t length,
+JS_CompileScript(JSContext *cx, JSObject *objArg, const char *ascii, size_t length,
                  const char *filename, unsigned lineno)
 {
     RootedObject obj(cx, objArg);
     CompileOptions options(cx);
     options.setFileAndLine(filename, lineno);
 
-    return Compile(cx, obj, options, bytes, length);
+    return Compile(cx, obj, options, ascii, length);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8, JSObject *objArg, const char *bytes, size_t length)
+JS_BufferIsCompilableUnit(JSContext *cx, JSObject *objArg, const char *utf8, size_t length)
 {
     RootedObject obj(cx, objArg);
-    jschar *chars;
     JSBool result;
     JSExceptionState *exnState;
     JSErrorReporter older;
@@ -5355,10 +5303,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8, JSObject *objArg
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    if (bytes_are_utf8)
-        chars = InflateString(cx, bytes, &length, CESU8Encoding);
-    else
-        chars = InflateString(cx, bytes, &length);
+    jschar *chars = InflateUTF8String(cx, utf8, &length);
     if (!chars)
         return JS_TRUE;
 
@@ -5411,20 +5356,6 @@ JS_CompileUTF8FileHandleForPrincipals(JSContext *cx, JSObject *objArg, const cha
     options.setUTF8(true)
            .setFileAndLine(filename, 1)
            .setPrincipals(principals);
-
-    return Compile(cx, obj, options, file);
-}
-
-JS_PUBLIC_API(JSScript *)
-JS_CompileUTF8FileHandleForPrincipalsVersion(JSContext *cx, JSObject *objArg, const char *filename,
-                                             FILE *file, JSPrincipals *principals, JSVersion version)
-{
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setUTF8(true)
-           .setFileAndLine(filename, 1)
-           .setPrincipals(principals)
-           .setVersion(version);
 
     return Compile(cx, obj, options, file);
 }
@@ -5504,7 +5435,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
 {
     jschar *chars;
     if (options.utf8)
-        chars = InflateString(cx, bytes, &length, CESU8Encoding);
+        chars = InflateUTF8String(cx, bytes, &length);
     else
         chars = InflateString(cx, bytes, &length);
     if (!chars)
@@ -5513,39 +5444,6 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
     JSFunction *fun = CompileFunction(cx, obj, options, name, nargs, argnames, chars, length);
     js_free(chars);
     return fun;
-}
-
-JS_PUBLIC_API(JSFunction *)
-JS_CompileUCFunctionForPrincipalsVersion(JSContext *cx, JSObject *obj_,
-                                         JSPrincipals *principals, const char *name,
-                                         unsigned nargs, const char **argnames,
-                                         const jschar *chars, size_t length,
-                                         const char *filename, unsigned lineno,
-                                         JSVersion version)
-{
-    RootedObject obj(cx, obj_);
-
-    CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setFileAndLine(filename, lineno)
-           .setVersion(version);
-
-    return CompileFunction(cx, obj, options, name, nargs, argnames, chars, length);
-}
-
-JS_PUBLIC_API(JSFunction *)
-JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *objArg,
-                                  JSPrincipals *principals, const char *name,
-                                  unsigned nargs, const char **argnames,
-                                  const jschar *chars, size_t length,
-                                  const char *filename, unsigned lineno)
-{
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setFileAndLine(filename, lineno);
-
-    return CompileFunction(cx, obj, options, name, nargs, argnames, chars, length);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -5565,7 +5463,7 @@ JS_PUBLIC_API(JSFunction *)
 JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *objArg,
                                 JSPrincipals *principals, const char *name,
                                 unsigned nargs, const char **argnames,
-                                const char *bytes, size_t length,
+                                const char *ascii, size_t length,
                                 const char *filename, unsigned lineno)
 {
     RootedObject obj(cx, objArg);
@@ -5573,20 +5471,20 @@ JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *objArg,
     options.setPrincipals(principals)
            .setFileAndLine(filename, lineno);
 
-    return CompileFunction(cx, obj, options, name, nargs, argnames, bytes, length);
+    return CompileFunction(cx, obj, options, name, nargs, argnames, ascii, length);
 }
 
 JS_PUBLIC_API(JSFunction *)
 JS_CompileFunction(JSContext *cx, JSObject *objArg, const char *name,
                    unsigned nargs, const char **argnames,
-                   const char *bytes, size_t length,
+                   const char *ascii, size_t length,
                    const char *filename, unsigned lineno)
 {
     RootedObject obj(cx, objArg);
     CompileOptions options(cx);
     options.setFileAndLine(filename, lineno);
 
-    return CompileFunction(cx, obj, options, name, nargs, argnames, bytes, length);
+    return CompileFunction(cx, obj, options, name, nargs, argnames, ascii, length);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -5703,7 +5601,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, CompileOptions options,
 {
     jschar *chars;
     if (options.utf8)
-        chars = InflateString(cx, bytes, &length, CESU8Encoding);
+        chars = InflateUTF8String(cx, bytes, &length);
     else
         chars = InflateString(cx, bytes, &length);
     if (!chars)
@@ -6283,26 +6181,6 @@ JS_UndependString(JSContext *cx, JSString *str)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst, size_t *dstlenp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-
-    size_t n;
-    if (!dst) {
-        n = GetDeflatedStringLength(cx, src, srclen);
-        if (n == (size_t)-1) {
-            *dstlenp = 0;
-            return JS_FALSE;
-        }
-        *dstlenp = n;
-        return JS_TRUE;
-    }
-
-    return DeflateStringToBuffer(cx, src, srclen, dst, dstlenp);
-}
-
-JS_PUBLIC_API(JSBool)
 JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst, size_t *dstlenp)
 {
     AssertHeapIsIdle(cx);
@@ -6368,11 +6246,7 @@ JS_EncodeStringToBuffer(JSString *str, char *buffer, size_t length)
     size_t necessaryLength = GetDeflatedStringLength(NULL, chars, str->length());
     if (necessaryLength == size_t(-1))
         return size_t(-1);
-    if (writtenLength != length) {
-        /* Make sure that the buffer contains only valid UTF-8 sequences. */
-        JS_ASSERT(js_CStringsAreUTF8);
-        PodZero(buffer + writtenLength, length - writtenLength);
-    }
+    JS_ASSERT(writtenLength == length); // C strings are NOT encoded.
     return necessaryLength;
 }
 
@@ -6637,31 +6511,6 @@ JS_PUBLIC_API(JSBool)
 JS_WriteBytes(JSStructuredCloneWriter *w, const void *p, size_t len)
 {
     return w->output().writeBytes(p, len);
-}
-
-/*
- * The following determines whether C Strings are to be treated as UTF-8
- * or ISO-8859-1.  For correct operation, it must be set prior to the
- * first call to JS_NewRuntime.
- */
-#ifndef JS_C_STRINGS_ARE_UTF8
-JSBool js_CStringsAreUTF8 = JS_FALSE;
-#endif
-
-JS_PUBLIC_API(JSBool)
-JS_CStringsAreUTF8()
-{
-    return js_CStringsAreUTF8;
-}
-
-JS_PUBLIC_API(void)
-JS_SetCStringsAreUTF8()
-{
-    JS_ASSERT(!js_NewRuntimeWasCalled);
-
-#ifndef JS_C_STRINGS_ARE_UTF8
-    js_CStringsAreUTF8 = JS_TRUE;
-#endif
 }
 
 /************************************************************************/

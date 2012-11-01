@@ -150,5 +150,29 @@ bool ShmemYCbCrImage::IsValid()
   return true;
 }
 
+bool ShmemYCbCrImage::CopyData(uint8_t* aYData, uint8_t* aCbData, uint8_t* aCrData,
+                               gfxIntSize aYSize, uint32_t aYStride,
+                               gfxIntSize aCbCrSize, uint32_t aCbCrStride)
+{
+  if (!IsValid() || GetYSize() != aYSize || GetCbCrSize() != aCbCrSize) {
+    return false;
+  }
+  for (int i = 0; i < aYSize.height; i++) {
+    memcpy(GetYData() + i * GetYStride(),
+           aYData + i * aYStride,
+           aYSize.width);
+  }
+  for (int i = 0; i < aCbCrSize.height; i++) {
+    memcpy(GetCbData() + i * GetCbCrStride(),
+           aCbData + i * aCbCrStride,
+           aCbCrSize.width);
+    memcpy(GetCrData() + i * GetCbCrStride(),
+           aCrData + i * aCbCrStride,
+           aCbCrSize.width);
+  }
+  return true;
+}
+
+
 } // namespace
 } // namespace

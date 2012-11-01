@@ -37,7 +37,6 @@
 
 @media (-moz-windows-default-theme) {
   #placesView,
-  #searchModifiers,
   #infoPane,
   #placesList,
   #placeContent {
@@ -57,15 +56,6 @@
     background-color: transparent;
     -moz-margin-start: -3px;
     position: relative;
-  }
-
-  #searchModifiers {
-    border-bottom: 1px solid #A9B7C9;
-  }
-
-  #organizerScopeBar {
-    -moz-appearance: none;
-    border: none;
   }
 
   #detailsDeck {

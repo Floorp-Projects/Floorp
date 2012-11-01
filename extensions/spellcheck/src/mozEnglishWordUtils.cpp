@@ -10,6 +10,7 @@
 #include "nsUnicharUtilCIID.h"
 #include "nsUnicodeProperties.h"
 #include "nsCRT.h"
+#include "mozilla/Likely.h"
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozEnglishWordUtils)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(mozEnglishWordUtils)
@@ -247,7 +248,7 @@ NS_IMETHODIMP mozEnglishWordUtils::FromRootForm(const PRUnichar *aWord, const PR
   for(uint32_t i = 0; i < icount; ++i) {
     length = NS_strlen(iwords[i]);
     tmpPtr[i] = (PRUnichar *) nsMemory::Alloc(sizeof(PRUnichar) * (length + 1));
-    if (NS_UNLIKELY(!tmpPtr[i])) {
+    if (MOZ_UNLIKELY(!tmpPtr[i])) {
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, tmpPtr);
       return NS_ERROR_OUT_OF_MEMORY;
     }

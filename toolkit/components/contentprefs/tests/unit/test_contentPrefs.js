@@ -103,8 +103,7 @@ function run_test() {
 
 
   // Now get the content pref service for real for use by the rest of the tests.
-  var cps = Cc["@mozilla.org/content-pref/service;1"].
-            getService(Ci.nsIContentPrefService);
+  let cps = new ContentPrefInstance(null);
 
   var uri = ContentPrefTest.getURI("http://www.example.com/");
 

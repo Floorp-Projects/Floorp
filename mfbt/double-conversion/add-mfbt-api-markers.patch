@@ -1,5 +1,5 @@
 diff --git a/mfbt/double-conversion/double-conversion.h b/mfbt/double-conversion/double-conversion.h
-index f98edae..e536a01 100644
+index f98edae..c62b16b 100644
 --- a/mfbt/double-conversion/double-conversion.h
 +++ b/mfbt/double-conversion/double-conversion.h
 @@ -28,6 +28,7 @@
@@ -15,7 +15,7 @@ index f98edae..e536a01 100644
  
    // Returns a converter following the EcmaScript specification.
 -  static const DoubleToStringConverter& EcmaScriptConverter();
-+  static MFBT_API(const DoubleToStringConverter&) EcmaScriptConverter();
++  static MFBT_API const DoubleToStringConverter& EcmaScriptConverter();
  
    // Computes the shortest string of digits that correctly represent the input
    // number. Depending on decimal_in_shortest_low and decimal_in_shortest_high
@@ -24,7 +24,7 @@ index f98edae..e536a01 100644
    // 1 + kMaxFixedDigitsBeforePoint + 1 + kMaxFixedDigitsAfterPoint characters
    // (one additional character for the sign, and one for the decimal point).
 -  bool ToFixed(double value,
-+  MFBT_API(bool) ToFixed(double value,
++  MFBT_API bool ToFixed(double value,
                 int requested_digits,
                 StringBuilder* result_builder) const;
  
@@ -33,7 +33,7 @@ index f98edae..e536a01 100644
    // decimal point, the decimal point, the exponent character, the
    // exponent's sign, and at most 3 exponent digits).
 -  bool ToExponential(double value,
-+  MFBT_API(bool) ToExponential(double value,
++  MFBT_API bool ToExponential(double value,
                       int requested_digits,
                       StringBuilder* result_builder) const;
  
@@ -42,7 +42,7 @@ index f98edae..e536a01 100644
    // kMaxPrecisionDigits + 7 characters (the sign, the decimal point, the
    // exponent character, the exponent's sign, and at most 3 exponent digits).
 -  bool ToPrecision(double value,
-+  MFBT_API(bool) ToPrecision(double value,
++  MFBT_API bool ToPrecision(double value,
                     int precision,
                     StringBuilder* result_builder) const;
  
@@ -51,7 +51,7 @@ index f98edae..e536a01 100644
    // Note that DoubleToAscii null-terminates its input. So the given buffer
    // should be at least kBase10MaximalLength + 1 characters long.
 -  static const int kBase10MaximalLength = 17;
-+  static const MFBT_DATA(int) kBase10MaximalLength = 17;
++  static const MFBT_DATA int kBase10MaximalLength = 17;
  
    // Converts the given double 'v' to ascii. 'v' must not be NaN, +Infinity, or
    // -Infinity. In SHORTEST_SINGLE-mode this restriction also applies to 'v'
@@ -60,7 +60,7 @@ index f98edae..e536a01 100644
    // The given length is only used in debug mode to ensure the buffer is big
    // enough.
 -  static void DoubleToAscii(double v,
-+  static MFBT_API(void) DoubleToAscii(double v,
++  static MFBT_API void DoubleToAscii(double v,
                              DtoaMode mode,
                              int requested_digits,
                              char* buffer,
@@ -69,7 +69,7 @@ index f98edae..e536a01 100644
   private:
    // Implementation for ToShortest and ToShortestSingle.
 -  bool ToShortestIeeeNumber(double value,
-+  MFBT_API(bool) ToShortestIeeeNumber(double value,
++  MFBT_API bool ToShortestIeeeNumber(double value,
                              StringBuilder* result_builder,
                              DtoaMode mode) const;
  
@@ -78,17 +78,17 @@ index f98edae..e536a01 100644
    // If either of them is NULL or the value is not special then the
    // function returns false.
 -  bool HandleSpecialValues(double value, StringBuilder* result_builder) const;
-+  MFBT_API(bool) HandleSpecialValues(double value, StringBuilder* result_builder) const;
++  MFBT_API bool HandleSpecialValues(double value, StringBuilder* result_builder) const;
    // Constructs an exponential representation (i.e. 1.234e56).
    // The given exponent assumes a decimal point after the first decimal digit.
 -  void CreateExponentialRepresentation(const char* decimal_digits,
-+  MFBT_API(void) CreateExponentialRepresentation(const char* decimal_digits,
++  MFBT_API void CreateExponentialRepresentation(const char* decimal_digits,
                                         int length,
                                         int exponent,
                                         StringBuilder* result_builder) const;
    // Creates a decimal representation (i.e 1234.5678).
 -  void CreateDecimalRepresentation(const char* decimal_digits,
-+  MFBT_API(void) CreateDecimalRepresentation(const char* decimal_digits,
++  MFBT_API void CreateDecimalRepresentation(const char* decimal_digits,
                                     int length,
                                     int decimal_point,
                                     int digits_after_point,

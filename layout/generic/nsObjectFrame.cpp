@@ -154,7 +154,14 @@ using mozilla::DefaultXDisplay;
 #endif
 
 #ifdef PR_LOGGING 
-static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
+static PRLogModuleInfo *
+GetObjectFrameLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("nsObjectFrame");
+  return sLog;
+}
 #endif /* PR_LOGGING */
 
 #if defined(XP_MACOSX) && !defined(__LP64__)
@@ -249,13 +256,13 @@ nsObjectFrame::nsObjectFrame(nsStyleContext* aContext)
   : nsObjectFrameSuper(aContext)
   , mReflowCallbackPosted(false)
 {
-  PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
+  PR_LOG(GetObjectFrameLog(), PR_LOG_DEBUG,
          ("Created new nsObjectFrame %p\n", this));
 }
 
 nsObjectFrame::~nsObjectFrame()
 {
-  PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
+  PR_LOG(GetObjectFrameLog(), PR_LOG_DEBUG,
          ("nsObjectFrame %p deleted\n", this));
 }
 
@@ -285,7 +292,7 @@ nsObjectFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow)
 {
-  PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
+  PR_LOG(GetObjectFrameLog(), PR_LOG_DEBUG,
          ("Initializing nsObjectFrame %p for content %p\n", this, aContent));
 
   nsresult rv = nsObjectFrameSuper::Init(aContent, aParent, aPrevInFlow);
@@ -1234,11 +1241,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   #endif
     }
 
-    nsRefPtr<ImageContainer> container = GetImageContainer();
-    if (container && (container->HasCurrentImage() || !isVisible ||
-        container->GetCurrentSize() != gfxIntSize(window->width, window->height))) {
-      mInstanceOwner->NotifyPaintWaiter(aBuilder);
-    }
+    mInstanceOwner->NotifyPaintWaiter(aBuilder);
   }
 
   // determine if we are printing
@@ -1517,20 +1520,6 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
                    nullptr, status);  // DidReflow will take care of it
 }
 
-already_AddRefed<ImageContainer>
-nsObjectFrame::GetImageContainer()
-{
-  nsRefPtr<ImageContainer> container = mImageContainer;
-
-  if (container) {
-    return container.forget();
-  }
-
-  container = mImageContainer = LayerManager::CreateImageContainer();
-
-  return container.forget();
-}
-
 nsRect
 nsObjectFrame::GetPaintedRect(nsDisplayPlugin* aItem)
 {
@@ -1557,11 +1546,6 @@ nsObjectFrame::UpdateImageLayer(const gfxRect& aRect)
 #ifdef XP_MACOSX
   if (!mInstanceOwner->UseAsyncRendering()) {
     mInstanceOwner->DoCocoaEventDrawRect(aRect, nullptr);
-    // This makes sure the image on the container is up to date.
-    // XXX - Eventually we probably just want to make sure DoCocoaEventDrawRect
-    // updates the image container, to make this truly use 'push' semantics
-    // too.
-    mInstanceOwner->GetImageContainer();
   }
 #endif
 }
@@ -1611,14 +1595,6 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (window->width <= 0 || window->height <= 0)
     return nullptr;
 
-  // Create image
-  nsRefPtr<ImageContainer> container = mInstanceOwner->GetImageContainer();
-
-  if (!container) {
-    // This can occur if our instance is gone.
-    return nullptr;
-  }
-
   // window is in "display pixels", but size needs to be in device pixels
   double scaleFactor = 1.0;
   if (NS_FAILED(mInstanceOwner->GetContentsScaleFactor(&scaleFactor))) {
@@ -1643,8 +1619,14 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
         return nullptr;
     }
 
-    NS_ASSERTION(layer->GetType() == Layer::TYPE_IMAGE, "Bad layer type");
+    // Create image
+    nsRefPtr<ImageContainer> container = mInstanceOwner->GetImageContainer();
+    if (!container) {
+      // This can occur if our instance is gone.
+      return nullptr;
+    }
 
+    NS_ASSERTION(layer->GetType() == Layer::TYPE_IMAGE, "Bad layer type");
     ImageLayer* imglayer = static_cast<ImageLayer*>(layer.get());
     UpdateImageLayer(r);
 

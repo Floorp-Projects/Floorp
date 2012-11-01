@@ -17,10 +17,10 @@
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "nsThread.h"
+#include "nsMemoryInfoDumper.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Services.h"
-#include "mozilla/MemoryInfoDumper.h"
 
 #ifndef XP_WIN
 #include <unistd.h>
@@ -605,7 +605,7 @@ nsMemoryReporterManager::Init()
     REGISTER(AtomTable);
 
 #if defined(XP_LINUX)
-    MemoryInfoDumper::Initialize();
+    nsMemoryInfoDumper::Initialize();
 #endif
 
     return NS_OK;

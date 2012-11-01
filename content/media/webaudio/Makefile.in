@@ -20,6 +20,7 @@ CPPSRCS := \
   AudioContext.cpp \
   AudioDestinationNode.cpp \
   AudioNode.cpp \
+  AudioParam.cpp \
   AudioSourceNode.cpp \
   EnableWebAudioCheck.cpp \
   $(NULL)
@@ -30,10 +31,15 @@ EXPORTS_mozilla/dom := \
   AudioBufferSourceNode.h \
   AudioDestinationNode.h \
   AudioNode.h \
+  AudioParam.h \
   AudioSourceNode.h \
   $(NULL)
 
 PARALLEL_DIRS := test
+
+ifdef ENABLE_TESTS
+TOOL_DIRS += compiledtest
+endif
 
 FORCE_STATIC_LIB := 1
 

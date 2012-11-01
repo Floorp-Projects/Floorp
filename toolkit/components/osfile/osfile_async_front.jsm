@@ -597,6 +597,8 @@ File.remove = function remove(path) {
  * as per winapi function |CreateDirectory|. If unspecified,
  * use the default security descriptor, inherited from the
  * parent directory.
+ * - {bool} ignoreExisting If |true|, do not fail if the
+ * directory already exists.
  */
 File.makeDir = function makeDir(path, options) {
   return Scheduler.post("makeDir",
