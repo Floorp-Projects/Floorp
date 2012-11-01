@@ -653,12 +653,6 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent)
             MOZ_ASSERT(mIMEComposing);
             mIMEComposingText = static_cast<nsTextEvent*>(aEvent)->theText;
             break;
-        case NS_KEY_PRESS:
-            // Sometimes the text changes after a key press do not generate notifications (see Bug 723810)
-            // Call the corresponding methods explicitly to send those changes back to Java
-            OnIMETextChange(0, 0, 0);
-            OnIMESelectionChange();
-            break;
         }
         return status;
     }
@@ -2088,28 +2082,8 @@ NS_IMETHODIMP
 nsWindow::ResetInputState()
 {
     //ALOGIME("IME: ResetInputState: s=%d", aState);
-
-    // Cancel composition on Gecko side
-    if (mIMEComposing) {
-        nsRefPtr<nsWindow> kungFuDeathGrip(this);
-
-        nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
-        InitEvent(textEvent, nullptr);
-        textEvent.theText = mIMEComposingText;
-        DispatchEvent(&textEvent);
-        mIMEComposingText.Truncate(0);
-
-        nsCompositionEvent event(true, NS_COMPOSITION_END, this);
-        InitEvent(event, nullptr);
-        DispatchEvent(&event);
-    }
-
+    RemoveIMEComposition();
     AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_RESETINPUTSTATE, 0);
-
-    // Send IME text/selection change notifications
-    OnIMETextChange(0, 0, 0);
-    OnIMESelectionChange();
-
     return NS_OK;
 }
 
@@ -2169,7 +2143,6 @@ nsWindow::CancelIMEComposition()
         nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
         InitEvent(textEvent, nullptr);
         DispatchEvent(&textEvent);
-        mIMEComposingText.Truncate(0);
 
         nsCompositionEvent compEvent(true, NS_COMPOSITION_END, this);
         InitEvent(compEvent, nullptr);
@@ -2189,7 +2162,7 @@ nsWindow::OnIMEFocusChange(bool aFocus)
                              int(aFocus));
 
     if (aFocus) {
-        OnIMETextChange(0, 0, 0);
+        OnIMETextChange(0, INT32_MAX, INT32_MAX);
         OnIMESelectionChange();
     }
 
@@ -2199,22 +2172,16 @@ nsWindow::OnIMEFocusChange(bool aFocus)
 NS_IMETHODIMP
 nsWindow::OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd)
 {
+    if (mIMEMaskTextUpdate)
+        return NS_OK;
+
     ALOGIME("IME: OnIMETextChange: s=%d, oe=%d, ne=%d",
             aStart, aOldEnd, aNewEnd);
-
-    if (!mInputContext.mIMEState.mEnabled) {
-        AndroidBridge::NotifyIMEChange(nullptr, 0, 0, 0, 0);
-        return NS_OK;
-    }
-
-    // A quirk in Android makes it necessary to pass the whole text.
-    // The more efficient way would have been passing the substring from index
-    // aStart to index aNewEnd
 
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     nsQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, this);
     InitEvent(event, nullptr);
-    event.InitForQueryTextContent(0, UINT32_MAX);
+    event.InitForQueryTextContent(aStart, aNewEnd - aStart);
 
     DispatchEvent(&event);
     if (!event.mSucceeded)
@@ -2230,12 +2197,10 @@ nsWindow::OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd)
 NS_IMETHODIMP
 nsWindow::OnIMESelectionChange(void)
 {
-    ALOGIME("IME: OnIMESelectionChange");
-
-    if (!mInputContext.mIMEState.mEnabled) {
-        AndroidBridge::NotifyIMEChange(nullptr, 0, 0, 0, -1);
+    if (mIMEMaskSelectionUpdate)
         return NS_OK;
-    }
+
+    ALOGIME("IME: OnIMESelectionChange");
 
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     nsQueryContentEvent event(true, NS_QUERY_SELECTED_TEXT, this);
@@ -2245,9 +2210,8 @@ nsWindow::OnIMESelectionChange(void)
     if (!event.mSucceeded)
         return NS_OK;
 
-    AndroidBridge::NotifyIMEChange(nullptr, 0, int(event.mReply.mOffset),
-                                   int(event.mReply.mOffset + 
-                                       event.mReply.mString.Length()), -1);
+    AndroidBridge::NotifyIMEChange(nullptr, 0, int(event.GetSelectionStart()),
+                                   int(event.GetSelectionEnd()), -1);
     return NS_OK;
 }
 
