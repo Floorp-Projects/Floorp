@@ -45,6 +45,7 @@ GlobalPCList.prototype = {
       this._list[winID].forEach(function(pc) {
         pc._pc.close();
         delete pc._observer;
+        pc._pc = null;
       });
       delete this._list[winID];
     }
