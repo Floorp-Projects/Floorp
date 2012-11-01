@@ -21,6 +21,7 @@
 #include "nsDOMOfflineResourceList.h"
 #include "nsError.h"
 #include "nsIIdleService.h"
+#include "nsIPowerManagerService.h"
 
 #ifdef XP_WIN
 #ifdef GetClassName
@@ -4586,6 +4587,17 @@ nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aRequireTrust)
     // the browser full-screen mode toggle keyboard-shortcut, we'll detect
     // that and leave DOM API full-screen mode too.
     nsIDocument::ExitFullScreen(false);
+  }
+
+  if (!mWakeLock && mFullScreen) {
+    nsCOMPtr<nsIPowerManagerService> pmService =
+      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(pmService, NS_OK);
+
+    pmService->NewWakeLock(NS_LITERAL_STRING("DOM_Fullscreen"), this, getter_AddRefs(mWakeLock));
+  } else if (mWakeLock && !mFullScreen) {
+    mWakeLock->Unlock();
+    mWakeLock = NULL;
   }
 
   return NS_OK;
