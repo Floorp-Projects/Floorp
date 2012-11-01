@@ -6,6 +6,6 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:state_pressed="true" android:drawable="@drawable/highlight"/>
-    <item android:drawable="@drawable/tabs_tray_bg_repeat"/>
+    <item android:drawable="@android:color/transparent"/>
 
 </selector>

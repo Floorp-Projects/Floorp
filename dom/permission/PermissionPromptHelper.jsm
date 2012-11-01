@@ -20,6 +20,7 @@
 "use strict";
 
 let DEBUG = 0;
+let debug;
 if (DEBUG)
   debug = function (s) { dump("-*- Permission Prompt Helper component: " + s + "\n"); }
 else
@@ -29,7 +30,7 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-let EXPORTED_SYMBOLS = ["PermissionPromptHelper"];
+this.EXPORTED_SYMBOLS = ["PermissionPromptHelper"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -47,7 +48,7 @@ var permissionManager = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsI
 var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
 var appsService = Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
 
-let PermissionPromptHelper = {
+this.PermissionPromptHelper = {
   init: function() {
     debug("Init");
     ppmm.addMessageListener("PermissionPromptHelper:AskPermission", this);
@@ -70,8 +71,9 @@ let PermissionPromptHelper = {
       let uri = Services.io.newURI(msg.origin, null, null);
       principal =
         secMan.getAppCodebasePrincipal(uri, msg.appID, msg.browserFlag);
+      let access = msg.access ? msg.type + "-" + msg.access : msg.type;
       let perm =
-        permissionManager.testExactPermissionFromPrincipal(principal, msg.type);
+        permissionManager.testExactPermissionFromPrincipal(principal, access);
       installedPerms.push(perm);
     }
 

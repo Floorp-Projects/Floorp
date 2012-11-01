@@ -9,12 +9,12 @@
  *   // close the jni library when you are done
  *   jni.close();
  */
-let EXPORTED_SYMBOLS = ["JNI"];
+this.EXPORTED_SYMBOLS = ["JNI"];
 
 Components.utils.import("resource://gre/modules/ctypes.jsm")
 Components.utils.import("resource://gre/modules/Services.jsm")
 
-function JNI() { }
+this.JNI = function JNI() { }
 
 JNI.prototype = {
   get lib() {

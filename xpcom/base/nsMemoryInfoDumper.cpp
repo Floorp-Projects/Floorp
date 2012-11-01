@@ -31,7 +31,6 @@
 #endif
 
 #ifdef ANDROID
-#include <sys/types.h>
 #include <sys/stat.h>
 #endif
 
@@ -505,18 +504,20 @@ nsMemoryInfoDumper::DumpMemoryReportsToFileImpl(
   rv = tmpFile->AppendNative(NS_LITERAL_CSTRING("incomplete-") + filename);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX This ifdef does not belong here; it should be pushed down into the
-  // CreateUnique implementation.  Please don't copy/paste this elsewhere.
-#ifdef ANDROID
-    // Set umask to 0 while we create the file because on Android the default
-    // umask is 0077.
-    mode_t mask = umask(0);
-#endif
-    rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
-#ifdef ANDROID
-    umask(mask);
-#endif
+  rv = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
   NS_ENSURE_SUCCESS(rv, rv);
+#ifdef ANDROID
+  {
+    // On android the default system umask is 0077 which makes these files
+    // unreadable to the shell user. In order to pull the dumps off a non-rooted
+    // device we need to chmod them to something world-readable.
+    nsAutoCString path;
+    rv = tmpFile->GetNativePath(path);
+    if (NS_SUCCEEDED(rv)) {
+      chmod(PromiseFlatCString(path).get(), 0644);
+    }
+  }
+#endif
 
   nsRefPtr<nsGZFileWriter> writer = new nsGZFileWriter();
   rv = writer->Init(tmpFile);

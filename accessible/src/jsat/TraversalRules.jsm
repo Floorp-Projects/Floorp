@@ -9,7 +9,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-var EXPORTED_SYMBOLS = ['TraversalRules'];
+this.EXPORTED_SYMBOLS = ['TraversalRules'];
 
 Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
@@ -70,7 +70,7 @@ var gSimpleTraversalRoles =
    // Used for traversing in to child OOP frames.
    Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME];
 
-var TraversalRules = {
+this.TraversalRules = {
   Simple: new BaseTraversalRule(
     gSimpleTraversalRoles,
     function Simple_match(aAccessible) {

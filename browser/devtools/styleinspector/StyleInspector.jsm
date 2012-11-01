@@ -15,7 +15,7 @@ Cu.import("resource:///modules/inspector.jsm");
 
 // This module doesn't currently export any symbols directly, it only
 // registers inspector tools.
-var EXPORTED_SYMBOLS = [];
+this.EXPORTED_SYMBOLS = [];
 
 /**
  * Lookup l10n string from a string bundle.

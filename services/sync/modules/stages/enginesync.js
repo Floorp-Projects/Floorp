@@ -6,7 +6,7 @@
  * This file contains code for synchronizing engines.
  */
 
-const EXPORTED_SYMBOLS = ["EngineSynchronizer"];
+this.EXPORTED_SYMBOLS = ["EngineSynchronizer"];
 
 const {utils: Cu} = Components;
 
@@ -21,7 +21,7 @@ Cu.import("resource://services-sync/util.js");
  *
  * This was originally split out of service.js. The API needs lots of love.
  */
-function EngineSynchronizer(service) {
+this.EngineSynchronizer = function EngineSynchronizer(service) {
   this._log = Log4Moz.repository.getLogger("Sync.Synchronizer");
   this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.synchronizer")];
 

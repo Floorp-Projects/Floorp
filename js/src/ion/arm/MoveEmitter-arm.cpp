@@ -70,6 +70,7 @@ MoveEmitterARM::toOperand(const MoveOperand &operand, bool isFloat) const
         // Otherwise, the stack offset may need to be adjusted.
         return Operand(StackPointer, operand.disp() + (masm.framePushed() - pushedAtStart_));
     }
+
     if (operand.isGeneralReg())
         return Operand(operand.reg());
 
@@ -212,11 +213,10 @@ void
 MoveEmitterARM::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
 {
     if (from.isFloatReg()) {
-        if (to.isFloatReg()) {
+        if (to.isFloatReg())
             masm.ma_vmov(from.floatReg(), to.floatReg());
-        } else {
+        else
             masm.ma_vstr(from.floatReg(), toOperand(to, true));
-        }
     } else if (to.isFloatReg()) {
         masm.ma_vldr(toOperand(from, true), to.floatReg());
     } else {
@@ -262,8 +262,7 @@ MoveEmitterARM::finish()
 {
     assertDone();
 
-    if (pushedAtSpill_ != -1 && spilledReg_ != InvalidReg) {
+    if (pushedAtSpill_ != -1 && spilledReg_ != InvalidReg)
         masm.ma_ldr(spillSlot(), spilledReg_);
-    }
     masm.freeStack(masm.framePushed() - pushedAtStart_);
 }

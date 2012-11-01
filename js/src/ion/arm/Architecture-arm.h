@@ -71,12 +71,9 @@ class Registers
     } RegisterID;
     typedef RegisterID Code;
 
-
     static const char *GetName(Code code) {
-        static const char *Names[] = { "r0", "r1", "r2", "r3",
-                                       "r4", "r5", "r6", "r7",
-                                       "r8", "r9", "r10", "r11",
-                                       "r12", "sp", "r14", "pc"};
+        static const char *Names[] = { "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
+                                       "r8", "r9", "r10", "r11", "r12", "sp", "r14", "pc"};
         return Names[code];
     }
 
@@ -114,8 +111,7 @@ class Registers
 
     static const uint32 SingleByteRegs =
         VolatileMask | NonVolatileMask;
-    // we should also account for any scratch registers that we care about.x
-    // possibly the stack as well.
+
     static const uint32 NonAllocatableMask =
         (1 << Registers::sp) |
         (1 << Registers::r12) | // r12 = ip = scratch
@@ -182,10 +178,8 @@ class FloatRegisters
     typedef FPRegisterID Code;
 
     static const char *GetName(Code code) {
-        static const char *Names[] = { "d0", "d1", "d2", "d3",
-                                       "d4", "d5", "d6", "d7",
-                                       "d8", "d9", "d10", "d11",
-                                       "d12", "d13", "d14", "d15"};
+        static const char *Names[] = { "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7",
+                                       "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15"};
         return Names[code];
     }
 
@@ -201,9 +195,8 @@ class FloatRegisters
 
     static const uint32 WrapperMask = VolatileMask;
 
-    static const uint32 NonAllocatableMask =
-        // the scratch float register for ARM.
-                                        (1 << d0) | (1 << invalid_freg);
+    // d0 is the ARM scratch float register.
+    static const uint32 NonAllocatableMask = (1 << d0) | (1 << invalid_freg);
 
     // Registers that can be allocated without being saved, generally.
     static const uint32 TempMask = VolatileMask & ~NonAllocatableMask;
@@ -217,6 +210,5 @@ bool has16DP();
 
 } // namespace ion
 } // namespace js
-// we don't want the macro assembler's goods to start leaking out.
 
 #endif // jsion_architecture_arm_h__

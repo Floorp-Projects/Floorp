@@ -171,4 +171,4 @@ AlarmsManager.prototype = {
   },
 }
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([AlarmsManager])
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AlarmsManager])

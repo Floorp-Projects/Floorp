@@ -7,7 +7,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 // This is the parent process corresponding to nsDOMIdentity.
-let EXPORTED_SYMBOLS = ["DOMIdentity"];
+this.EXPORTED_SYMBOLS = ["DOMIdentity"];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -123,7 +123,7 @@ RPWatchContext.prototype = {
   }
 };
 
-let DOMIdentity = {
+this.DOMIdentity = {
   // nsIMessageListener
   receiveMessage: function DOMIdentity_receiveMessage(aMessage) {
     let msg = aMessage.json;

@@ -543,24 +543,29 @@ abstract public class BrowserApp extends GeckoApp
         else
             mTabsPanel.setDrawingCacheEnabled(false);
 
-        if (hasTabsSideBar() && mTabsPanel.isShown()) {
-            boolean usingTextureView = mLayerView.shouldUseTextureView();
+        if (mTabsPanel.isShown()) {
+            if (hasTabsSideBar()) {
+                boolean usingTextureView = mLayerView.shouldUseTextureView();
 
-            int leftMargin = (usingTextureView ? 0 : mTabsPanel.getWidth());
-            int rightMargin = (usingTextureView ? mTabsPanel.getWidth() : 0);
-            ((LinearLayout.LayoutParams) mGeckoLayout.getLayoutParams()).setMargins(leftMargin, 0, rightMargin, 0);
+                int leftMargin = (usingTextureView ? 0 : mTabsPanel.getWidth());
+                int rightMargin = (usingTextureView ? mTabsPanel.getWidth() : 0);
+                ((LinearLayout.LayoutParams) mGeckoLayout.getLayoutParams()).setMargins(leftMargin, 0, rightMargin, 0);
 
-            if (!usingTextureView)
-                mGeckoLayout.scrollTo(0, 0);
+                if (!usingTextureView)
+                    mGeckoLayout.scrollTo(0, 0);
+            }
 
             mGeckoLayout.requestLayout();
-        }
-
-        if (!mTabsPanel.isShown()) {
+        } else {
             mBrowserToolbar.updateTabs(false);
             mBrowserToolbar.finishTabsAnimation();
             mTabsPanel.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
         }
+
+        mBrowserToolbar.refreshBackground();
+
+        if (hasTabsSideBar())
+            mBrowserToolbar.adjustTabsAnimation(true);
     }
 
     /* Favicon methods */

@@ -33,4 +33,4 @@ function UrlClassifierLib() {
 UrlClassifierLib.prototype.classID = Components.ID("{26a4a019-2827-4a89-a85c-5931a678823a}");
 UrlClassifierLib.prototype.QueryInterface = XPCOMUtils.generateQI([]);
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([UrlClassifierLib]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([UrlClassifierLib]);

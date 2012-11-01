@@ -66,7 +66,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class AboutHomeContent extends ScrollView
-       implements TabsAccessor.OnQueryTabsCompleteListener {
+                              implements TabsAccessor.OnQueryTabsCompleteListener,
+                                         LightweightTheme.OnChangeListener {
     private static final String LOGTAG = "GeckoAboutHome";
 
     private static final int NUMBER_OF_REMOTE_TABS = 5;
@@ -182,6 +183,18 @@ public class AboutHomeContent extends ScrollView
         });
 
         setTopSitesConstants();
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        mActivity.getLightweightTheme().addListener(this);
+    }
+
+    @Override
+    public void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mActivity.getLightweightTheme().removeListener(this);
     }
 
     public void onDestroy() {
@@ -566,6 +579,26 @@ public class AboutHomeContent extends ScrollView
         
         mRemoteTabs.setSubtitle(client);
         mRemoteTabs.show();
+    }
+
+    @Override
+    public void onLightweightThemeChanged() {
+        final Drawable drawable = mActivity.getLightweightTheme().getDrawableWithAlpha(this, 255, 0);
+        if (drawable == null)
+            return;
+
+         setBackgroundDrawable(drawable);
+    }
+
+    @Override
+    public void onLightweightThemeReset() {
+        setBackgroundResource(R.drawable.abouthome_bg_repeat);
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        onLightweightThemeChanged();
     }
 
     public static class TopSitesGridView extends GridView {
