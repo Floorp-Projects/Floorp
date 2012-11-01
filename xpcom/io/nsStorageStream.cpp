@@ -22,6 +22,7 @@
 #include "nsISeekableStream.h"
 #include "prlog.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
 
 #if defined(PR_LOGGING)
 //
@@ -35,9 +36,16 @@
 // this enables PR_LOG_DEBUG level information and places all output in
 // the file nspr.log
 //
-static PRLogModuleInfo* sLog = PR_NewLogModule("nsStorageStream");
+static PRLogModuleInfo*
+GetStorageStreamLog()
+{
+    static PRLogModuleInfo *sLog;
+    if (!sLog)
+        sLog = PR_NewLogModule("nsStorageStream");
+    return sLog;
+}
 #endif
-#define LOG(args) PR_LOG(sLog, PR_LOG_DEBUG, args)
+#define LOG(args) PR_LOG(GetStorageStreamLog(), PR_LOG_DEBUG, args)
 
 nsStorageStream::nsStorageStream()
     : mSegmentedBuffer(0), mSegmentSize(0), mWriteInProgress(false),
@@ -155,7 +163,7 @@ nsStorageStream::Write(const char *aBuffer, uint32_t aCount, uint32_t *aNumWritt
     // even for N=0 (with the caveat that we require .write("", 0) be called to
     // initialize internal buffers).
     bool firstTime = mSegmentedBuffer->GetSegmentCount() == 0;
-    while (remaining || NS_UNLIKELY(firstTime)) {
+    while (remaining || MOZ_UNLIKELY(firstTime)) {
         firstTime = false;
         availableInSegment = mSegmentEnd - mWriteCursor;
         if (!availableInSegment) {

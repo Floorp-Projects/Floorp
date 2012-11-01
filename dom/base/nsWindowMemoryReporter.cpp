@@ -305,10 +305,6 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
   ghostWindows.Init();
   CheckForGhostWindows(&ghostWindows);
 
-  nsCOMPtr<nsIEffectiveTLDService> tldService = do_GetService(
-    NS_EFFECTIVETLDSERVICE_CONTRACTID);
-  NS_ENSURE_STATE(tldService);
-
   WindowPaths windowPaths;
   windowPaths.Init();
 

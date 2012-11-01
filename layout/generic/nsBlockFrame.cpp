@@ -54,6 +54,7 @@
 #include "TextOverflow.h"
 #include "nsStyleStructInlines.h"
 #include "mozilla/Util.h" // for DebugOnly
+#include "mozilla/Likely.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -2543,7 +2544,7 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState&  aState,
       "mPrevChild should be the LastChild of the line we are adding to");
     // The frame is being pulled from a next-in-flow; therefore we
     // need to add it to our sibling list.
-    if (NS_LIKELY(!aFromOverflowLine)) {
+    if (MOZ_LIKELY(!aFromOverflowLine)) {
       NS_ASSERTION(&aFromFrameList == &aFromContainer->mFrames,
                    "must be normal flow if not overflow line");
       NS_ASSERTION(aFromLine == aFromContainer->mLines.begin(),

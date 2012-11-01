@@ -12,6 +12,7 @@ let SocialUI = {
     Services.obs.addObserver(this, "social:pref-changed", false);
     Services.obs.addObserver(this, "social:ambient-notification-changed", false);
     Services.obs.addObserver(this, "social:profile-changed", false);
+    Services.obs.addObserver(this, "social:frameworker-error", false);
 
     Services.prefs.addObserver("social.sidebar.open", this, false);
     Services.prefs.addObserver("social.toast-notifications.enabled", this, false);
@@ -29,6 +30,7 @@ let SocialUI = {
     Services.obs.removeObserver(this, "social:pref-changed");
     Services.obs.removeObserver(this, "social:ambient-notification-changed");
     Services.obs.removeObserver(this, "social:profile-changed");
+    Services.obs.removeObserver(this, "social:frameworker-error");
 
     Services.prefs.removeObserver("social.sidebar.open", this);
     Services.prefs.removeObserver("social.toast-notifications.enabled", this);
@@ -69,6 +71,12 @@ let SocialUI = {
         SocialShareButton.updateProfileInfo();
         SocialChatBar.update();
         break;
+      case "social:frameworker-error":
+        if (Social.provider) {
+          Social.errorState = "frameworker-error";
+          SocialSidebar.setSidebarErrorMessage("frameworker-error");
+        }
+        break;
       case "nsPref:changed":
         SocialSidebar.updateSidebar();
         SocialToolbar.updateButton();
@@ -102,6 +110,9 @@ let SocialUI = {
     kbMenuitem.hidden = !Social.enabled;
     kbMenuitem.setAttribute("label", label);
     kbMenuitem.setAttribute("accesskey", accesskey);
+
+    // The View->Sidebar menu.
+    document.getElementById("menu_socialSidebar").setAttribute("label", Social.provider.name);
 
     SocialToolbar.init();
     SocialShareButton.init();
@@ -192,6 +203,25 @@ let SocialUI = {
         containerParent instanceof Ci.nsIDOMXULPopupElement) {
       containerParent.hidePopup();
     }
+  },
+
+  disableWithConfirmation: function SocialUI_disableWithConfirmation() {
+    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
+    let dialogTitle = gNavigatorBundle.getFormattedString("social.remove.confirmationOK",
+                                                          [Social.provider.name]);
+    let text = gNavigatorBundle.getFormattedString("social.remove.confirmationLabel",
+                                                   [Social.provider.name, brandShortName]);
+    let okButtonText = dialogTitle;
+
+    let ps = Services.prompt;
+    let flags = ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0 +
+                ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1 +
+                ps.BUTTON_POS_0_DEFAULT;
+
+    let confirmationIndex = ps.confirmEx(null, dialogTitle, text, flags,
+                                         okButtonText, null, null, null, {});
+    if (confirmationIndex == 0)
+      Social.active = false;
   }
 }
 
@@ -650,6 +680,15 @@ var SocialToolbar = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SocialToolbar_init() {
     this.button.setAttribute("image", Social.provider.iconURL);
+
+    let removeItem = document.getElementById("social-remove-menuitem");
+    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
+    let label = gNavigatorBundle.getFormattedString("social.remove.label",
+                                                    [brandShortName]);
+    let accesskey = gNavigatorBundle.getString("social.remove.accesskey");
+    removeItem.setAttribute("label", label);
+    removeItem.setAttribute("accesskey", accesskey);
+
     this.updateButton();
     this.updateProfile();
     this._dynamicResizer = new DynamicResizeWatcher();
@@ -813,8 +852,7 @@ var SocialToolbar = {
       if (!label.hasAttribute("value") || label.getAttribute("value") != labelValue)
         label.setAttribute("value", labelValue);
 
-      if (image.getAttribute("src") != icon.iconURL)
-        image.setAttribute("src", icon.iconURL);
+      image.style.listStyleImage = "url(" + icon.iconURL + ")";
     }
     panel.appendChild(notificationFrames);
     iconBox.appendChild(iconContainers);
@@ -902,7 +940,19 @@ var SocialToolbar = {
 var SocialSidebar = {
   // Called once, after window load, when the Social.provider object is initialized
   init: function SocialSidebar_init() {
+    let sbrowser = document.getElementById("social-sidebar-browser");
+    this.errorListener = new SocialErrorListener("sidebar");
+    this.configureSidebarDocShell(sbrowser.docShell);
     this.updateSidebar();
+  },
+
+  configureSidebarDocShell: function SocialSidebar_configureDocShell(aDocShell) {
+    // setting isAppTab causes clicks on untargeted links to open new tabs
+    aDocShell.isAppTab = true;
+    aDocShell.QueryInterface(Ci.nsIWebProgress)
+             .addProgressListener(SocialSidebar.errorListener,
+                                  Ci.nsIWebProgress.NOTIFY_STATE_REQUEST |
+                                  Ci.nsIWebProgress.NOTIFY_LOCATION);
   },
 
   // Whether the sidebar can be shown for this window.
@@ -923,10 +973,11 @@ var SocialSidebar = {
     return Services.prefs.getBoolPref("social.sidebar.open") && !document.mozFullScreen;
   },
 
-  dispatchEvent: function(aType, aDetail) {
+  setSidebarVisibilityState: function(aEnabled) {
     let sbrowser = document.getElementById("social-sidebar-browser");
+    sbrowser.docShell.isActive = aEnabled;
     let evt = sbrowser.contentDocument.createEvent("CustomEvent");
-    evt.initCustomEvent(aType, true, true, aDetail ? aDetail : {});
+    evt.initCustomEvent(aEnabled ? "socialFrameShow" : "socialFrameHide", true, true, {});
     sbrowser.contentDocument.documentElement.dispatchEvent(evt);
   },
 
@@ -944,9 +995,8 @@ var SocialSidebar = {
     command.setAttribute("checked", !hideSidebar);
 
     let sbrowser = document.getElementById("social-sidebar-browser");
-    sbrowser.docShell.isActive = !hideSidebar;
     if (hideSidebar) {
-      this.dispatchEvent("socialFrameHide");
+      this.setSidebarVisibilityState(false);
       // If we've been disabled, unload the sidebar content immediately;
       // if the sidebar was just toggled to invisible, wait a timeout
       // before unloading.
@@ -959,24 +1009,24 @@ var SocialSidebar = {
         );
       }
     } else {
+      if (Social.errorState == "frameworker-error") {
+        SocialSidebar.setSidebarErrorMessage("frameworker-error");
+        return;
+      }
+
       // Make sure the right sidebar URL is loaded
       if (sbrowser.getAttribute("origin") != Social.provider.origin) {
         sbrowser.setAttribute("origin", Social.provider.origin);
-        // setting isAppTab causes clicks on untargeted links to open new tabs
-        sbrowser.docShell.isAppTab = true;
-        sbrowser.webProgress.addProgressListener(new SocialErrorListener("sidebar"),
-                                                 Ci.nsIWebProgress.NOTIFY_STATE_REQUEST |
-                                                 Ci.nsIWebProgress.NOTIFY_LOCATION);
         sbrowser.setAttribute("src", Social.provider.sidebarURL);
         sbrowser.addEventListener("load", function sidebarOnShow() {
-          sbrowser.removeEventListener("load", sidebarOnShow);
+          sbrowser.removeEventListener("load", sidebarOnShow, true);
           // let load finish, then fire our event
           setTimeout(function () {
-            SocialSidebar.dispatchEvent("socialFrameShow");
+            SocialSidebar.setSidebarVisibilityState(true);
           }, 0);
-        });
+        }, true);
       } else {
-        this.dispatchEvent("socialFrameShow");
+        this.setSidebarVisibilityState(true);
       }
     }
   },
@@ -993,6 +1043,18 @@ var SocialSidebar = {
     container.removeChild(sbrowser);
     sbrowser.removeAttribute("origin");
     sbrowser.removeAttribute("src");
+
+    function resetDocShell(docshellSupports) {
+      let docshell = docshellSupports.QueryInterface(Ci.nsIDocShell);
+      if (docshell.chromeEventHandler != sbrowser)
+        return;
+
+      SocialSidebar.configureSidebarDocShell(docshell);
+
+      Services.obs.removeObserver(resetDocShell, "webnavigation-create");
+    }
+    Services.obs.addObserver(resetDocShell, "webnavigation-create", false);
+
     container.appendChild(sbrowser);
 
     SocialFlyout.unload();
@@ -1000,10 +1062,18 @@ var SocialSidebar = {
 
   _unloadTimeoutId: 0,
 
-  setSidebarErrorMessage: function() {
+  setSidebarErrorMessage: function(aType) {
     let sbrowser = document.getElementById("social-sidebar-browser");
-    let url = encodeURIComponent(Social.provider.sidebarURL);
-    sbrowser.loadURI("about:socialerror?mode=tryAgain&url=" + url, null, null);
+    switch (aType) {
+      case "sidebar-error":
+        let url = encodeURIComponent(Social.provider.sidebarURL);
+        sbrowser.loadURI("about:socialerror?mode=tryAgain&url=" + url, null, null);
+        break;
+
+      case "frameworker-error":
+        sbrowser.setAttribute("src", "about:socialerror?mode=workerFailure");
+        break;
+    }
   }
 }
 
@@ -1041,7 +1111,7 @@ SocialErrorListener.prototype = {
 
   onLocationChange: function SPL_onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
     let failure = aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE;
-    if (failure) {
+    if (failure && Social.errorState != "frameworker-error") {
       aRequest.cancel(Components.results.NS_BINDING_ABORTED);
       window.setTimeout(function(self) {
         self.setErrorMessage(aWebProgress);
@@ -1060,7 +1130,7 @@ SocialErrorListener.prototype = {
         break;
 
       case "sidebar":
-        SocialSidebar.setSidebarErrorMessage();
+        SocialSidebar.setSidebarErrorMessage("sidebar-error");
         break;
 
       case "notification-panel":

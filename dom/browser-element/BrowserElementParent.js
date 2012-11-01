@@ -371,9 +371,10 @@ BrowserElementParent.prototype = {
   _recvGetName: function(data) {
     return this._frameElement.getAttribute('name');
   },
-  
+
   _recvGetFullscreenAllowed: function(data) {
-    return this._frameElement.hasAttribute('mozallowfullscreen');
+    return this._frameElement.hasAttribute('allowfullscreen') ||
+           this._frameElement.hasAttribute('mozallowfullscreen');
   },
 
   _fireCtxMenuEvent: function(data) {

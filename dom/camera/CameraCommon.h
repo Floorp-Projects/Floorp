@@ -24,8 +24,8 @@
 #include "prlog.h"
 
 #ifdef PR_LOGGING
-extern PRLogModuleInfo* gCameraLog;
-#define DOM_CAMERA_LOG( type, ... ) PR_LOG(gCameraLog, (PRLogModuleLevel)type, ( __VA_ARGS__ ))
+extern PRLogModuleInfo* GetCameraLog();
+#define DOM_CAMERA_LOG( type, ... ) PR_LOG(GetCameraLog(), (PRLogModuleLevel)type, ( __VA_ARGS__ ))
 #else
 #define DOM_CAMERA_LOG( type, ... )
 #endif
@@ -51,7 +51,7 @@ enum {
 #ifdef PR_LOGGING
 #define DOM_CAMERA_LOGR( ... )                                  \
   do {                                                          \
-    if (gCameraLog) {                                           \
+    if (GetCameraLog()) {                                       \
       DOM_CAMERA_LOG( DOM_CAMERA_LOG_REFERENCES, __VA_ARGS__ ); \
     }                                                           \
   } while (0)

@@ -19,6 +19,16 @@ static int32_t          gGenerator = 0;
 static TimerThread*     gThread = nullptr;
 
 #ifdef DEBUG_TIMERS
+
+PRLogModuleInfo*
+GetTimerLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("nsTimerImpl");
+  return sLog;
+}
+
 #include <math.h>
 
 double nsTimerImpl::sDeltaSumSquared = 0;
@@ -222,12 +232,12 @@ nsTimerImpl::Startup()
 void nsTimerImpl::Shutdown()
 {
 #ifdef DEBUG_TIMERS
-  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+  if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
     double mean = 0, stddev = 0;
     myNS_MeanAndStdDev(sDeltaNum, sDeltaSum, sDeltaSumSquared, &mean, &stddev);
 
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("sDeltaNum = %f, sDeltaSum = %f, sDeltaSumSquared = %f\n", sDeltaNum, sDeltaSum, sDeltaSumSquared));
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("mean: %fms, stddev: %fms\n", mean, stddev));
+    PR_LOG(GetTimerLog(), PR_LOG_DEBUG, ("sDeltaNum = %f, sDeltaSum = %f, sDeltaSumSquared = %f\n", sDeltaNum, sDeltaSum, sDeltaSumSquared));
+    PR_LOG(GetTimerLog(), PR_LOG_DEBUG, ("mean: %fms, stddev: %fms\n", mean, stddev));
   }
 #endif
 
@@ -425,7 +435,7 @@ void nsTimerImpl::Fire()
 
   TimeStamp now = TimeStamp::Now();
 #ifdef DEBUG_TIMERS
-  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+  if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
     TimeDuration   a = now - mStart; // actual delay in intervals
     TimeDuration   b = TimeDuration::FromMilliseconds(mDelay); // expected delay in intervals
     TimeDuration   delta = (a > b) ? a - b : b - a;
@@ -434,10 +444,10 @@ void nsTimerImpl::Fire()
     sDeltaSumSquared += double(d) * double(d);
     sDeltaNum++;
 
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] expected delay time %4ums\n", this, mDelay));
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] actual delay time   %fms\n", this, a.ToMilliseconds()));
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] (mType is %d)       -------\n", this, mType));
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p]     delta           %4dms\n", this, (a > b) ? (int32_t)d : -(int32_t)d));
+    PR_LOG(GetTimerLog(), PR_LOG_DEBUG, ("[this=%p] expected delay time %4ums\n", this, mDelay));
+    PR_LOG(GetTimerLog(), PR_LOG_DEBUG, ("[this=%p] actual delay time   %fms\n", this, a.ToMilliseconds()));
+    PR_LOG(GetTimerLog(), PR_LOG_DEBUG, ("[this=%p] (mType is %d)       -------\n", this, mType));
+    PR_LOG(GetTimerLog(), PR_LOG_DEBUG, ("[this=%p]     delta           %4dms\n", this, (a > b) ? (int32_t)d : -(int32_t)d));
 
     mStart = mStart2;
     mStart2 = TimeStamp();
@@ -500,8 +510,8 @@ void nsTimerImpl::Fire()
   mTimerCallbackWhileFiring = nullptr;
 
 #ifdef DEBUG_TIMERS
-  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-    PR_LOG(gTimerLog, PR_LOG_DEBUG,
+  if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
+    PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
            ("[this=%p] Took %fms to fire timer callback\n",
             this, (TimeStamp::Now() - now).ToMilliseconds()));
   }
@@ -544,9 +554,9 @@ NS_IMETHODIMP nsTimerEvent::Run()
     return NS_OK;
 
 #ifdef DEBUG_TIMERS
-  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+  if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
     TimeStamp now = TimeStamp::Now();
-    PR_LOG(gTimerLog, PR_LOG_DEBUG,
+    PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
            ("[this=%p] time between PostTimerEvent() and Fire(): %fms\n",
             this, (now - mInitTime).ToMilliseconds()));
   }
@@ -571,7 +581,7 @@ nsresult nsTimerImpl::PostTimerEvent()
     return NS_ERROR_OUT_OF_MEMORY;
 
 #ifdef DEBUG_TIMERS
-  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+  if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
     event->mInitTime = TimeStamp::Now();
   }
 #endif
@@ -608,7 +618,7 @@ void nsTimerImpl::SetDelayInternal(uint32_t aDelay)
   mTimeout += delayInterval;
 
 #ifdef DEBUG_TIMERS
-  if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+  if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
     if (mStart.IsNull())
       mStart = now;
     else

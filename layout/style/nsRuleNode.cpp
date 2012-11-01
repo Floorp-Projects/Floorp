@@ -42,6 +42,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/Likely.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Util.h"
 
@@ -2027,7 +2028,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
 #undef STYLE_STRUCT_TEST
 
   // If we have a post-resolve callback, handle that now.
-  if (ruleData.mPostResolveCallback && (NS_LIKELY(res != nullptr)))
+  if (ruleData.mPostResolveCallback && (MOZ_LIKELY(res != nullptr)))
     (*ruleData.mPostResolveCallback)(const_cast<void*>(res), &ruleData);
 
   // Now return the result.
@@ -2041,7 +2042,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Font:
     {
       nsStyleFont* fontData = new (mPresContext) nsStyleFont(mPresContext);
-      if (NS_LIKELY(fontData != nullptr)) {
+      if (MOZ_LIKELY(fontData != nullptr)) {
         nscoord minimumFontSize = mPresContext->MinFontSize(fontData->mLanguage);
 
         if (minimumFontSize > 0 && !mPresContext->IsChrome()) {
@@ -2057,7 +2058,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Display:
     {
       nsStyleDisplay* disp = new (mPresContext) nsStyleDisplay();
-      if (NS_LIKELY(disp != nullptr)) {
+      if (MOZ_LIKELY(disp != nullptr)) {
         aContext->SetStyle(eStyleStruct_Display, disp);
       }
       return disp;
@@ -2065,7 +2066,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Visibility:
     {
       nsStyleVisibility* vis = new (mPresContext) nsStyleVisibility(mPresContext);
-      if (NS_LIKELY(vis != nullptr)) {
+      if (MOZ_LIKELY(vis != nullptr)) {
         aContext->SetStyle(eStyleStruct_Visibility, vis);
       }
       return vis;
@@ -2073,7 +2074,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Text:
     {
       nsStyleText* text = new (mPresContext) nsStyleText();
-      if (NS_LIKELY(text != nullptr)) {
+      if (MOZ_LIKELY(text != nullptr)) {
         aContext->SetStyle(eStyleStruct_Text, text);
       }
       return text;
@@ -2081,7 +2082,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_TextReset:
     {
       nsStyleTextReset* text = new (mPresContext) nsStyleTextReset();
-      if (NS_LIKELY(text != nullptr)) {
+      if (MOZ_LIKELY(text != nullptr)) {
         aContext->SetStyle(eStyleStruct_TextReset, text);
       }
       return text;
@@ -2089,7 +2090,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Color:
     {
       nsStyleColor* color = new (mPresContext) nsStyleColor(mPresContext);
-      if (NS_LIKELY(color != nullptr)) {
+      if (MOZ_LIKELY(color != nullptr)) {
         aContext->SetStyle(eStyleStruct_Color, color);
       }
       return color;
@@ -2097,7 +2098,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Background:
     {
       nsStyleBackground* bg = new (mPresContext) nsStyleBackground();
-      if (NS_LIKELY(bg != nullptr)) {
+      if (MOZ_LIKELY(bg != nullptr)) {
         aContext->SetStyle(eStyleStruct_Background, bg);
       }
       return bg;
@@ -2105,7 +2106,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Margin:
     {
       nsStyleMargin* margin = new (mPresContext) nsStyleMargin();
-      if (NS_LIKELY(margin != nullptr)) {
+      if (MOZ_LIKELY(margin != nullptr)) {
         aContext->SetStyle(eStyleStruct_Margin, margin);
       }
       return margin;
@@ -2113,7 +2114,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Border:
     {
       nsStyleBorder* border = new (mPresContext) nsStyleBorder(mPresContext);
-      if (NS_LIKELY(border != nullptr)) {
+      if (MOZ_LIKELY(border != nullptr)) {
         aContext->SetStyle(eStyleStruct_Border, border);
       }
       return border;
@@ -2121,7 +2122,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Padding:
     {
       nsStylePadding* padding = new (mPresContext) nsStylePadding();
-      if (NS_LIKELY(padding != nullptr)) {
+      if (MOZ_LIKELY(padding != nullptr)) {
         aContext->SetStyle(eStyleStruct_Padding, padding);
       }
       return padding;
@@ -2129,7 +2130,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Outline:
     {
       nsStyleOutline* outline = new (mPresContext) nsStyleOutline(mPresContext);
-      if (NS_LIKELY(outline != nullptr)) {
+      if (MOZ_LIKELY(outline != nullptr)) {
         aContext->SetStyle(eStyleStruct_Outline, outline);
       }
       return outline;
@@ -2137,7 +2138,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_List:
     {
       nsStyleList* list = new (mPresContext) nsStyleList();
-      if (NS_LIKELY(list != nullptr)) {
+      if (MOZ_LIKELY(list != nullptr)) {
         aContext->SetStyle(eStyleStruct_List, list);
       }
       return list;
@@ -2145,7 +2146,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Position:
     {
       nsStylePosition* pos = new (mPresContext) nsStylePosition();
-      if (NS_LIKELY(pos != nullptr)) {
+      if (MOZ_LIKELY(pos != nullptr)) {
         aContext->SetStyle(eStyleStruct_Position, pos);
       }
       return pos;
@@ -2153,7 +2154,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Table:
     {
       nsStyleTable* table = new (mPresContext) nsStyleTable();
-      if (NS_LIKELY(table != nullptr)) {
+      if (MOZ_LIKELY(table != nullptr)) {
         aContext->SetStyle(eStyleStruct_Table, table);
       }
       return table;
@@ -2161,7 +2162,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_TableBorder:
     {
       nsStyleTableBorder* table = new (mPresContext) nsStyleTableBorder(mPresContext);
-      if (NS_LIKELY(table != nullptr)) {
+      if (MOZ_LIKELY(table != nullptr)) {
         aContext->SetStyle(eStyleStruct_TableBorder, table);
       }
       return table;
@@ -2169,7 +2170,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Content:
     {
       nsStyleContent* content = new (mPresContext) nsStyleContent();
-      if (NS_LIKELY(content != nullptr)) {
+      if (MOZ_LIKELY(content != nullptr)) {
         aContext->SetStyle(eStyleStruct_Content, content);
       }
       return content;
@@ -2177,7 +2178,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Quotes:
     {
       nsStyleQuotes* quotes = new (mPresContext) nsStyleQuotes();
-      if (NS_LIKELY(quotes != nullptr)) {
+      if (MOZ_LIKELY(quotes != nullptr)) {
         aContext->SetStyle(eStyleStruct_Quotes, quotes);
       }
       return quotes;
@@ -2185,7 +2186,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_UserInterface:
     {
       nsStyleUserInterface* ui = new (mPresContext) nsStyleUserInterface();
-      if (NS_LIKELY(ui != nullptr)) {
+      if (MOZ_LIKELY(ui != nullptr)) {
         aContext->SetStyle(eStyleStruct_UserInterface, ui);
       }
       return ui;
@@ -2193,7 +2194,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_UIReset:
     {
       nsStyleUIReset* ui = new (mPresContext) nsStyleUIReset();
-      if (NS_LIKELY(ui != nullptr)) {
+      if (MOZ_LIKELY(ui != nullptr)) {
         aContext->SetStyle(eStyleStruct_UIReset, ui);
       }
       return ui;
@@ -2202,7 +2203,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_XUL:
     {
       nsStyleXUL* xul = new (mPresContext) nsStyleXUL();
-      if (NS_LIKELY(xul != nullptr)) {
+      if (MOZ_LIKELY(xul != nullptr)) {
         aContext->SetStyle(eStyleStruct_XUL, xul);
       }
       return xul;
@@ -2211,7 +2212,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_Column:
     {
       nsStyleColumn* column = new (mPresContext) nsStyleColumn(mPresContext);
-      if (NS_LIKELY(column != nullptr)) {
+      if (MOZ_LIKELY(column != nullptr)) {
         aContext->SetStyle(eStyleStruct_Column, column);
       }
       return column;
@@ -2220,7 +2221,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_SVG:
     {
       nsStyleSVG* svg = new (mPresContext) nsStyleSVG();
-      if (NS_LIKELY(svg != nullptr)) {
+      if (MOZ_LIKELY(svg != nullptr)) {
         aContext->SetStyle(eStyleStruct_SVG, svg);
       }
       return svg;
@@ -2229,7 +2230,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     case eStyleStruct_SVGReset:
     {
       nsStyleSVGReset* svgReset = new (mPresContext) nsStyleSVGReset();
-      if (NS_LIKELY(svgReset != nullptr)) {
+      if (MOZ_LIKELY(svgReset != nullptr)) {
         aContext->SetStyle(eStyleStruct_SVGReset, svgReset);
       }
       return svgReset;
@@ -2349,8 +2350,8 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
       data_ = new (mPresContext) nsStyle##type_ ctorargs_;                    \
   }                                                                           \
                                                                               \
-  if (NS_UNLIKELY(!data_))                                                    \
-    return nullptr;  /* Out Of Memory */                                       \
+  if (MOZ_UNLIKELY(!data_))                                                   \
+    return nullptr;  /* Out Of Memory */                                      \
   if (!parentdata_)                                                           \
     parentdata_ = data_;
 
@@ -2385,8 +2386,8 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   else                                                                        \
     data_ = new (mPresContext) nsStyle##type_ ctorargs_;                      \
                                                                               \
-  if (NS_UNLIKELY(!data_))                                                    \
-    return nullptr;  /* Out Of Memory */                                       \
+  if (MOZ_UNLIKELY(!data_))                                                   \
+    return nullptr;  /* Out Of Memory */                                      \
                                                                               \
   /* If |canStoreInRuleTree| might be true by the time we're done, we */      \
   /* can't call parentContext->GetStyle##type_() since it could recur into */ \
@@ -2417,9 +2418,9 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     if (!aHighestNode->mStyleData.mInheritedData) {                           \
       aHighestNode->mStyleData.mInheritedData =                               \
         new (mPresContext) nsInheritedStyleData;                              \
-      if (NS_UNLIKELY(!aHighestNode->mStyleData.mInheritedData)) {            \
+      if (MOZ_UNLIKELY(!aHighestNode->mStyleData.mInheritedData)) {           \
         data_->Destroy(mPresContext);                                         \
-        return nullptr;                                                        \
+        return nullptr;                                                       \
       }                                                                       \
     }                                                                         \
     NS_ASSERTION(!aHighestNode->mStyleData.mInheritedData->                   \
@@ -2461,9 +2462,9 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     if (!aHighestNode->mStyleData.mResetData) {                               \
       aHighestNode->mStyleData.mResetData =                                   \
         new (mPresContext) nsResetStyleData;                                  \
-      if (NS_UNLIKELY(!aHighestNode->mStyleData.mResetData)) {                \
+      if (MOZ_UNLIKELY(!aHighestNode->mStyleData.mResetData)) {               \
         data_->Destroy(mPresContext);                                         \
-        return nullptr;                                                        \
+        return nullptr;                                                       \
       }                                                                       \
     }                                                                         \
     NS_ASSERTION(!aHighestNode->mStyleData.mResetData->                       \
@@ -4715,7 +4716,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     mozilla::css::URLValue* url = bindingValue->GetURLStructValue();
     NS_ASSERTION(url, "What's going on here?");
 
-    if (NS_LIKELY(url->GetURI())) {
+    if (MOZ_LIKELY(url->GetURI())) {
       display->mBinding = url;
     } else {
       display->mBinding = nullptr;
@@ -7680,16 +7681,16 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
   }
 
   data = mStyleData.GetStyleData(aSID);
-  if (NS_LIKELY(data != nullptr))
+  if (MOZ_LIKELY(data != nullptr))
     return data; // We have a fully specified struct. Just return it.
 
-  if (NS_UNLIKELY(!aComputeData))
+  if (MOZ_UNLIKELY(!aComputeData))
     return nullptr;
 
   // Nothing is cached.  We'll have to delve further and examine our rules.
   data = WalkRuleTree(aSID, aContext);
 
-  if (NS_LIKELY(data != nullptr))
+  if (MOZ_LIKELY(data != nullptr))
     return data;
 
   NS_NOTREACHED("could not create style struct");
@@ -7718,16 +7719,16 @@ nsRuleNode::GetStyle##name_(nsStyleContext* aContext, bool aComputeData)    \
   }                                                                           \
                                                                               \
   data = mStyleData.GetStyle##name_();                                        \
-  if (NS_LIKELY(data != nullptr))                                              \
+  if (MOZ_LIKELY(data != nullptr))                                            \
     return data;                                                              \
                                                                               \
-  if (NS_UNLIKELY(!aComputeData))                                             \
-    return nullptr;                                                            \
+  if (MOZ_UNLIKELY(!aComputeData))                                            \
+    return nullptr;                                                           \
                                                                               \
   data = static_cast<const nsStyle##name_ *>                                  \
            (WalkRuleTree(eStyleStruct_##name_, aContext));                    \
                                                                               \
-  if (NS_LIKELY(data != nullptr))                                              \
+  if (MOZ_LIKELY(data != nullptr))                                            \
     return data;                                                              \
                                                                               \
   NS_NOTREACHED("could not create style struct");                             \

@@ -17,7 +17,8 @@ class SmsChild : public PSmsChild
 public:
   virtual bool RecvNotifyReceivedMessage(const SmsMessageData& aMessage) MOZ_OVERRIDE;
   virtual bool RecvNotifySentMessage(const SmsMessageData& aMessage) MOZ_OVERRIDE;
-  virtual bool RecvNotifyDeliveredMessage(const SmsMessageData& aMessage) MOZ_OVERRIDE;
+  virtual bool RecvNotifyDeliverySuccessMessage(const SmsMessageData& aMessage) MOZ_OVERRIDE;
+  virtual bool RecvNotifyDeliveryErrorMessage(const SmsMessageData& aMessage) MOZ_OVERRIDE;
   virtual bool RecvNotifyRequestSmsSent(const SmsMessageData& aMessage, const int32_t& aRequestId, const uint64_t& aProcessId) MOZ_OVERRIDE;
   virtual bool RecvNotifyRequestSmsSendFailed(const int32_t& aError, const int32_t& aRequestId, const uint64_t& aProcessId) MOZ_OVERRIDE;
   virtual bool RecvNotifyRequestGotSms(const SmsMessageData& aMessage, const int32_t& aRequestId, const uint64_t& aProcessId) MOZ_OVERRIDE;

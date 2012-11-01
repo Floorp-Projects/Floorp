@@ -22,6 +22,7 @@
 #include "nsIGeolocationProvider.h"
 #include "nsIRadioInterfaceLayer.h"
 #include "nsString.h"
+#include "nsISettingsService.h"
 
 class nsIThread;
 
@@ -33,11 +34,13 @@ class nsIThread;
 
 class GonkGPSGeolocationProvider : public nsIGeolocationProvider
                                  , public nsIRILDataCallback
+                                 , public nsISettingsServiceCallback
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGEOLOCATIONPROVIDER
   NS_DECL_NSIRILDATACALLBACK
+  NS_DECL_NSISETTINGSSERVICECALLBACK
 
   static already_AddRefed<GonkGPSGeolocationProvider> GetSingleton();
 
@@ -66,6 +69,9 @@ private:
   static AGpsCallbacks mAGPSCallbacks;
   static AGpsRilCallbacks mAGPSRILCallbacks;
 
+  int32_t GetDataConnectionState();
+  void SetAGpsDataConn(nsAString& aApn);
+  void RequestSettingValue(char* aKey);
   void Init();
   void SetupAGPS();
   void StartGPS();

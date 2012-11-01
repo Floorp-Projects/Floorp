@@ -547,13 +547,13 @@ WebappsApplication.prototype = {
         case "Webapps:CheckForUpdate:Return:OK":
           for (let prop in msg.app) {
             this[prop] = msg.app[prop];
-            if (msg.event == "downloadapplied") {
-              Services.DOMRequest.fireSuccess(req, this.manifestURL);
-              this._fireEvent("downloadapplied", this._ondownloadapplied);
-            } else if (msg.event == "downloadavailable") {
-              Services.DOMRequest.fireSuccess(req, this.manifestURL);
-              this._fireEvent("downloadavailable", this._ondownloadavailable);
-            }
+          }
+          if (msg.event == "downloadapplied") {
+            Services.DOMRequest.fireSuccess(req, this.manifestURL);
+            this._fireEvent("downloadapplied", this._ondownloadapplied);
+          } else if (msg.event == "downloadavailable") {
+            Services.DOMRequest.fireSuccess(req, this.manifestURL);
+            this._fireEvent("downloadavailable", this._ondownloadavailable);
           }
           break;
         case "Webapps:CheckForUpdate:Return:KO":
@@ -580,7 +580,7 @@ WebappsApplication.prototype = {
               this.downloadSize = app.downloadSize || 0;
               this.installState = app.installState;
               this.manifest = app.manifest;
-              this._fireEvent("downloaded", this._ondownloaded);
+              this._fireEvent("downloadsuccess", this._ondownloadsuccess);
               this._fireEvent("downloadapplied", this._ondownloadapplied);
               break;
             case "canceled":
@@ -597,9 +597,9 @@ WebappsApplication.prototype = {
             case "downloaded":
               app = msg.app;
               this.downloading = app.downloading;
-              this.downloadavailable = app.downloadavailable;
+              this.downloadAvailable = app.downloadAvailable;
               this.readyToApplyDownload = app.readyToApplyDownload;
-              this._fireEvent("downloaded", this._ondownloaded);
+              this._fireEvent("downloadsuccess", this._ondownloadsuccess);
               break;
             case "applied":
               app = msg.app;
@@ -669,7 +669,7 @@ WebappsApplicationMgmt.prototype = {
       return;
     }
 
-    cpmm.sendAsyncMessage("Webapps::ApplyDownload",
+    cpmm.sendAsyncMessage("Webapps:ApplyDownload",
                           { manifestURL: aApp.manifestURL });
   },
 

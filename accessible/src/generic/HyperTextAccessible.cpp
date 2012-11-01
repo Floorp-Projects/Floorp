@@ -1159,6 +1159,9 @@ HyperTextAccessible::NativeAttributes()
     }
   }
 
+  if (!HasOwnContent())
+    return attributes.forget();
+
   // For the html landmark elements we expose them like we do aria landmarks to
   // make AT navigation schemes "just work". Note html:header is redundant as
   // a landmark since it usually contains headings. We're not yet sure how the

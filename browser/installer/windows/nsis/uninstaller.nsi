@@ -671,9 +671,6 @@ Function .onInit
   System::Call 'kernel32::SetDllDirectoryW(w "")'
 
   ; We need this set up for most of the helper.exe operations.
-  !ifdef AppName
-  ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
-  !endif
   ${UninstallOnInitCommon}
 FunctionEnd
 

@@ -259,7 +259,9 @@ public class Tab {
 
         mTitle = (title == null ? "" : title);
 
-        updateHistory(mUrl, mTitle);
+        if (mUrl != null)
+            updateHistory(mUrl, mTitle);
+
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.TITLE);
     }
 

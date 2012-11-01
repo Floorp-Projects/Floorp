@@ -208,13 +208,20 @@ js_strdup(JSContext *cx, const jschar *s);
 namespace js {
 
 /*
- * Inflate bytes to jschars. Return null on error, otherwise return the jschar
- * or byte vector that was malloc'ed. length is updated to the length of the
+ * Inflate bytes in ASCII encoding to jschars. Return null on error, otherwise
+ * return the jschar that was malloc'ed. length is updated to the length of the
  * new string (in jschars).
  */
 extern jschar *
-InflateString(JSContext *cx, const char *bytes, size_t *length,
-              FlationCoding fc = NormalEncoding);
+InflateString(JSContext *cx, const char *bytes, size_t *length);
+
+/*
+ * Inflate bytes in UTF-8 encoding to jschars. Return null on error, otherwise
+ * return the jschar vector that was malloc'ed. length is updated to the length
+ * of the new string (in jschars).
+ */
+extern jschar *
+InflateUTF8String(JSContext *cx, const char *bytes, size_t *length);
 
 extern char *
 DeflateString(JSContext *cx, const jschar *chars, size_t length);
@@ -232,36 +239,21 @@ InflateStringToBuffer(JSContext *cx, const char *bytes, size_t length,
 
 extern bool
 InflateUTF8StringToBuffer(JSContext *cx, const char *bytes, size_t length,
-                          jschar *chars, size_t *charsLength,
-                          FlationCoding fc = NormalEncoding);
+                          jschar *chars, size_t *charsLength);
 
 /* Get number of bytes in the deflated sequence of characters. */
 extern size_t
 GetDeflatedStringLength(JSContext *cx, const jschar *chars, size_t charsLength);
 
-/* This function will never fail (return -1) in CESU-8 mode. */
-extern size_t
-GetDeflatedUTF8StringLength(JSContext *cx, const jschar *chars,
-                            size_t charsLength,
-                            FlationCoding fc = NormalEncoding);
-
 /*
  * Deflate JS chars to bytes into a buffer. 'bytes' must be large enough for
  * 'length chars. The buffer is NOT null-terminated. The destination length
  * must to be initialized with the buffer size and will contain on return the
- * number of copied bytes. Conversion behavior depends on js_CStringsAreUTF8.
+ * number of copied bytes.
  */
 extern bool
 DeflateStringToBuffer(JSContext *cx, const jschar *chars,
                       size_t charsLength, char *bytes, size_t *length);
-
-/*
- * Same as DeflateStringToBuffer, but treats 'bytes' as UTF-8 or CESU-8.
- */
-extern bool
-DeflateStringToUTF8Buffer(JSContext *cx, const jschar *chars,
-                          size_t charsLength, char *bytes, size_t *length,
-                          FlationCoding fc = NormalEncoding);
 
 /*
  * The String.prototype.replace fast-native entry point is exported for joined

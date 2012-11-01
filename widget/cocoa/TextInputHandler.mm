@@ -2971,8 +2971,6 @@ IMEInputHandler::OnFocusChangeInGecko(bool aFocus)
 
   // This is called when the native focus is changed and when the native focus
   // isn't changed but the focus is changed in Gecko.
-  // XXX currently, we're not called this method with false, we need to
-  // improve the nsIMEStateManager implementation.
   if (!aFocus) {
     if (sFocusedIMEHandler == this)
       sFocusedIMEHandler = nullptr;

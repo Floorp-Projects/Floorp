@@ -60,6 +60,7 @@
 #include <startup-notification-1.0/libsn/sn.h>
 #endif
 
+#include "mozilla/Likely.h"
 #include "mozilla/Preferences.h"
 #include "nsIPrefService.h"
 #include "nsIGConfService.h"
@@ -1813,17 +1814,16 @@ nsWindow::CaptureMouse(bool aCapture)
     if (!mGdkWindow)
         return NS_OK;
 
-    GtkWidget *widget = GetMozContainerWidget();
-    if (!widget)
+    if (!mShell)
         return NS_ERROR_FAILURE;
 
     if (aCapture) {
-        gtk_grab_add(widget);
+        gtk_grab_add(mShell);
         GrabPointer(GetLastUserInputTime());
     }
     else {
         ReleaseGrabs();
-        gtk_grab_remove(widget);
+        gtk_grab_remove(mShell);
     }
 
     return NS_OK;
@@ -1836,17 +1836,21 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
     if (!mGdkWindow)
         return NS_OK;
 
-    GtkWidget *widget = GetMozContainerWidget();
-    if (!widget)
+    if (!mShell)
         return NS_ERROR_FAILURE;
 
-    LOG(("CaptureRollupEvents %p\n", (void *)this));
+    LOG(("CaptureRollupEvents %p %i\n", this, int(aDoCapture)));
 
     if (aDoCapture) {
         gRollupListener = aListener;
         // real grab is only done when there is no dragging
         if (!nsWindow::DragInProgress()) {
-            gtk_grab_add(widget);
+            // This widget grab ensures that a Gecko GtkWidget receives mouse
+            // events even when embedded in non-Gecko-owned GtkWidgets.
+            // The grab is placed on the toplevel GtkWindow instead of the
+            // MozContainer to avoid double dispatch of keyboard events
+            // (bug 707623).
+            gtk_grab_add(mShell);
             GrabPointer(GetLastUserInputTime());
         }
     }
@@ -1857,7 +1861,7 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
         // There may not have been a drag in process when aDoCapture was set,
         // so make sure to remove any added grab.  This is a no-op if the grab
         // was not added to this widget.
-        gtk_grab_remove(widget);
+        gtk_grab_remove(mShell);
         gRollupListener = nullptr;
     }
 
@@ -2027,7 +2031,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     GdkRectangle *rects;
     gint nrects;
     gdk_region_get_rectangles(aEvent->region, &rects, &nrects);
-    if (NS_UNLIKELY(!rects)) // OOM
+    if (MOZ_UNLIKELY(!rects)) // OOM
         return FALSE;
 #else
 #ifdef cairo_copy_clip_rectangle_list
@@ -2035,7 +2039,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 #else
     cairo_rectangle_list_t *rects;
     rects = cairo_copy_clip_rectangle_list(cr);  
-    if (NS_UNLIKELY(rects->status != CAIRO_STATUS_SUCCESS)) {
+    if (MOZ_UNLIKELY(rects->status != CAIRO_STATUS_SUCCESS)) {
        NS_WARNING("Failed to obtain cairo rectangle list.");
        return FALSE;
     }
@@ -2207,7 +2211,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     // PaintWindow can Destroy us (bug 378273), avoid doing any paint
     // operations below if that happened - it will lead to XError and exit().
     if (shaped) {
-        if (NS_LIKELY(!mIsDestroyed)) {
+        if (MOZ_LIKELY(!mIsDestroyed)) {
             if (painted) {
                 nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
 
@@ -2236,7 +2240,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         }
     }
 #  ifdef MOZ_HAVE_SHMIMAGE
-    if (nsShmImage::UseShm() && NS_LIKELY(!mIsDestroyed)) {
+    if (nsShmImage::UseShm() && MOZ_LIKELY(!mIsDestroyed)) {
 #if defined(MOZ_WIDGET_GTK2)
         mShmImage->Put(mGdkWindow, rects, r_end);
 #else
@@ -2734,7 +2738,7 @@ nsWindow::OnButtonPressEvent(GdkEventButton *aEvent)
 
     // right menu click on linux should also pop up a context menu
     if (domButton == nsMouseEvent::eRightButton &&
-        NS_LIKELY(!mIsDestroyed)) {
+        MOZ_LIKELY(!mIsDestroyed)) {
         nsMouseEvent contextMenuEvent(true, NS_CONTEXTMENU, this,
                                       nsMouseEvent::eReal);
         InitButtonEvent(contextMenuEvent, aEvent);
@@ -2940,7 +2944,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
 
     bool isKeyDownCancelled = false;
     if (DispatchKeyDownEvent(aEvent, &isKeyDownCancelled) &&
-        NS_UNLIKELY(mIsDestroyed)) {
+        MOZ_UNLIKELY(mIsDestroyed)) {
         return TRUE;
     }
 
@@ -3224,7 +3228,7 @@ nsWindow::ThemeChanged()
 {
     NotifyThemeChanged();
 
-    if (!mGdkWindow || NS_UNLIKELY(mIsDestroyed))
+    if (!mGdkWindow || MOZ_UNLIKELY(mIsDestroyed))
         return;
 
     // Dispatch theme change notification to all child windows
@@ -4814,9 +4818,7 @@ nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY,
 
             // if we've determined that we should still rollup, do it.
             if (rollup && rollupListener->Rollup(popupsToRollup, nullptr)) {
-                if (popupsToRollup == UINT32_MAX) {
-                    retVal = true;
-                }
+                retVal = true;
             }
         }
     } else {

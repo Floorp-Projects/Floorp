@@ -31,7 +31,14 @@
 #include "DataChannelProtocol.h"
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* dataChannelLog = PR_NewLogModule("DataChannel");
+PRLogModuleInfo*
+GetDataChannelLog()
+{
+  static PRLogModuleInfo* sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("DataChannel");
+  return sLog;
+}
 #endif
 
 static bool sctp_initialized;

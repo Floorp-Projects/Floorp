@@ -2937,6 +2937,23 @@ nsDOMWindowUtils::SelectAtPoint(float aX, float aY, uint32_t aSelectBehavior,
   return NS_OK;
 }
 
+static nsIDocument::additionalSheetType
+convertSheetType(uint32_t aSheetType)
+{
+  switch(aSheetType) {
+    case nsDOMWindowUtils::AGENT_SHEET:
+      return nsIDocument::eAgentSheet;
+    case nsDOMWindowUtils::USER_SHEET:
+      return nsIDocument::eUserSheet;
+    case nsDOMWindowUtils::AUTHOR_SHEET:
+      return nsIDocument::eAuthorSheet;
+    default:
+      NS_ASSERTION(false, "wrong type");
+      // we must return something although this should never happen
+      return nsIDocument::SheetTypeCount;
+  }
+}
+
 NS_IMETHODIMP
 nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 {
@@ -2945,7 +2962,9 @@ nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   }
 
   NS_ENSURE_ARG_POINTER(aSheetURI);
-  NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
+                aSheetType == USER_SHEET ||
+                aSheetType == AUTHOR_SHEET);
 
   nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_INVALID_ARG);
@@ -2958,9 +2977,7 @@ nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(ddoc);
   NS_ENSURE_TRUE(doc, NS_ERROR_INVALID_ARG);
 
-  nsIDocument::additionalSheetType type = 
-    aSheetType == AGENT_SHEET ? nsIDocument::eAgentSheet :
-                                nsIDocument::eUserSheet;
+  nsIDocument::additionalSheetType type = convertSheetType(aSheetType);
 
   rv = doc->LoadAdditionalStyleSheet(type, aSheetURI);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2976,7 +2993,9 @@ nsDOMWindowUtils::RemoveSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   }
 
   NS_ENSURE_ARG_POINTER(aSheetURI);
-  NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
+                aSheetType == USER_SHEET ||
+                aSheetType == AUTHOR_SHEET);
 
   nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_INVALID_ARG);
@@ -2989,9 +3008,7 @@ nsDOMWindowUtils::RemoveSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(ddoc);
   NS_ENSURE_TRUE(doc, NS_ERROR_INVALID_ARG);
 
-  nsIDocument::additionalSheetType type = 
-    aSheetType == AGENT_SHEET ? nsIDocument::eAgentSheet :
-                                nsIDocument::eUserSheet;
+  nsIDocument::additionalSheetType type = convertSheetType(aSheetType);
 
   doc->RemoveAdditionalStyleSheet(type, aSheetURI);
   return NS_OK;

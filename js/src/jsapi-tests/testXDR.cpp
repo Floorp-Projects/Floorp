@@ -25,10 +25,12 @@ CompileScriptForPrincipalsVersionOrigin(JSContext *cx, JS::HandleObject obj,
     if (!chars)
         return NULL;
     JS_ALWAYS_TRUE(JS_DecodeBytes(cx, bytes, nbytes, chars, &nchars));
-    JSScript *script = JS_CompileUCScriptForPrincipalsVersionOrigin(cx, obj,
-                                                                    principals, originPrincipals,
-                                                                    chars, nchars,
-                                                                    filename, lineno, version);
+    JS::CompileOptions options(cx);
+    options.setPrincipals(principals)
+           .setOriginPrincipals(originPrincipals)
+           .setFileAndLine(filename, lineno)
+           .setVersion(version);
+    JSScript *script = JS::Compile(cx, obj, options, chars, nchars);
     free(chars);
     return script;
 }

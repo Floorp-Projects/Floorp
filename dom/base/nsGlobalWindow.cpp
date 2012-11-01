@@ -42,6 +42,7 @@
 #include "nsCharSeparatedTokenizer.h" // for Accept-Language parsing
 #include "nsUnicharUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Likely.h"
 
 // Other Classes
 #include "nsEventListenerManager.h"
@@ -588,10 +589,10 @@ nsPIDOMWindow::~nsPIDOMWindow() {}
 // nsOuterWindowProxy: Outer Window Proxy
 //*****************************************************************************
 
-class nsOuterWindowProxy : public js::DirectWrapper
+class nsOuterWindowProxy : public js::Wrapper
 {
 public:
-  nsOuterWindowProxy() : js::DirectWrapper(0) {}
+  nsOuterWindowProxy() : js::Wrapper(0) {}
 
   virtual bool isOuterWindow() {
     return true;
@@ -1286,7 +1287,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsGlobalWindow)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
-  if (NS_UNLIKELY(cb.WantDebugInfo())) {
+  if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[512];
     PR_snprintf(name, sizeof(name), "nsGlobalWindow #%ld", tmp->mWindowID);
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);

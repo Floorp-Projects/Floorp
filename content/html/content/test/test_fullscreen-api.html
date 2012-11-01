@@ -31,7 +31,7 @@ SpecialPowers.setBoolPref("full-screen-api.enabled", true);
 SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
 
 // Run the tests which go full-screen in new windows, as mochitests normally
-// run in an iframe, which by default will not have the mozallowfullscreen
+// run in an iframe, which by default will not have the allowfullscreen
 // attribute set, so full-screen won't work.
 var gTestWindows = [
   "file_fullscreen-rollback.html",

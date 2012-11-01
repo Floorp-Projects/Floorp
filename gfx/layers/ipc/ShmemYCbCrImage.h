@@ -93,6 +93,13 @@ public:
    */
   gfxIntSize GetCbCrSize();
 
+  /**
+   * Copies the data passed in parameter into the shmem.
+   */
+  bool CopyData(uint8_t* aYData, uint8_t* aCbData, uint8_t* aCrData,
+                gfxIntSize aYSize, uint32_t aYStride,
+                gfxIntSize aCbCrSize, uint32_t aCbCrStride);
+
 private:
   bool Open(Shmem& aShmem, size_t aOffset = 0);
 

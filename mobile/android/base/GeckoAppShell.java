@@ -127,10 +127,6 @@ public class GeckoAppShell
 
     static private final boolean LOGGING = false;
 
-    static public final int RESTORE_NONE = 0;
-    static public final int RESTORE_OOM = 1;
-    static public final int RESTORE_CRASH = 2;
-
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
     static File sHomeDir = null;
@@ -235,18 +231,18 @@ public class GeckoAppShell
 
     public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
 
-    public static native void notifySmsReceived(String aSender, String aBody, long aTimestamp);
+    public static native void notifySmsReceived(String aSender, String aBody, int aMessageClass, long aTimestamp);
     public static native int  saveMessageInSentbox(String aReceiver, String aBody, long aTimestamp);
     public static native void notifySmsSent(int aId, String aReceiver, String aBody, long aTimestamp, int aRequestId, long aProcessId);
-    public static native void notifySmsDelivered(int aId, String aReceiver, String aBody, long aTimestamp);
+    public static native void notifySmsDelivery(int aId, int aDeliveryStatus, String aReceiver, String aBody, long aTimestamp);
     public static native void notifySmsSendFailed(int aError, int aRequestId, long aProcessId);
-    public static native void notifyGetSms(int aId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
+    public static native void notifyGetSms(int aId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
     public static native void notifyGetSmsFailed(int aError, int aRequestId, long aProcessId);
     public static native void notifySmsDeleted(boolean aDeleted, int aRequestId, long aProcessId);
     public static native void notifySmsDeleteFailed(int aError, int aRequestId, long aProcessId);
     public static native void notifyNoMessageInList(int aRequestId, long aProcessId);
-    public static native void notifyListCreated(int aListId, int aMessageId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
-    public static native void notifyGotNextMessage(int aMessageId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
+    public static native void notifyListCreated(int aListId, int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
+    public static native void notifyGotNextMessage(int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
     public static native void notifyReadingMessageListFailed(int aError, int aRequestId, long aProcessId);
 
     public static native void scheduleComposite();
@@ -501,7 +497,7 @@ public class GeckoAppShell
         }
     }
 
-    public static void runGecko(String apkPath, String args, String url, String type, int restoreMode) {
+    public static void runGecko(String apkPath, String args, String url, String type) {
         WebAppAllocator.getInstance();
 
         Looper.prepare();
@@ -521,8 +517,6 @@ public class GeckoAppShell
             combinedArgs += " -url " + url;
         if (type != null)
             combinedArgs += " " + type;
-        if (restoreMode != RESTORE_NONE)
-            combinedArgs += " -restoremode " + restoreMode;
 
         DisplayMetrics metrics = GeckoApp.mAppContext.getResources().getDisplayMetrics();
         combinedArgs += " -width " + metrics.widthPixels + " -height " + metrics.heightPixels;

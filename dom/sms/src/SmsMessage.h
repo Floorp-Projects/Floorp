@@ -23,16 +23,24 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMMOZSMSMESSAGE
 
-  SmsMessage(int32_t aId, DeliveryState aDelivery, const nsString& aSender,
-             const nsString& aReceiver, const nsString& aBody,
-             uint64_t aTimestamp, bool aRead);
+  SmsMessage(int32_t aId,
+             DeliveryState aDelivery,
+             DeliveryStatus aDeliveryStatus,
+             const nsString& aSender,
+             const nsString& aReceiver,
+             const nsString& aBody,
+             MessageClass aMessageClass,
+             uint64_t aTimestamp,
+             bool aRead);
   SmsMessage(const SmsMessageData& aData);
 
   static nsresult Create(int32_t aId,
                          const nsAString& aDelivery,
+                         const nsAString& aDeliveryStatus,
                          const nsAString& aSender,
                          const nsAString& aReceiver,
                          const nsAString& aBody,
+                         const nsAString& aMessageClass,
                          const JS::Value& aTimestamp,
                          const bool aRead,
                          JSContext* aCx,

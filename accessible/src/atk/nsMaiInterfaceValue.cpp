@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "InterfaceInitFuncs.h"
+#include "mozilla/Likely.h"
 
 #include "AccessibleWrap.h"
 #include "nsMai.h"
@@ -116,7 +117,7 @@ void
 valueInterfaceInitCB(AtkValueIface* aIface)
 {
   NS_ASSERTION(aIface, "Invalid aIface");
-  if (NS_UNLIKELY(!aIface))
+  if (MOZ_UNLIKELY(!aIface))
     return;
 
   aIface->get_current_value = getCurrentValueCB;

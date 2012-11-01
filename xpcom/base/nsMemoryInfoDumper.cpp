@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/MemoryInfoDumper.h"
+#include "mozilla/nsMemoryInfoDumper.h"
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/FileUtils.h"
@@ -55,7 +55,8 @@ public:
 
   NS_IMETHOD Run()
   {
-    MemoryInfoDumper::DumpMemoryReportsToFile(
+    nsCOMPtr<nsIMemoryInfoDumper> dumper = do_GetService("@mozilla.org/memory-info-dumper;1");
+    dumper->DumpMemoryReportsToFile(
       mIdentifier, mMinimizeMemoryUsage, mDumpChildProcesses);
     return NS_OK;
   }
@@ -77,7 +78,8 @@ public:
 
   NS_IMETHOD Run()
   {
-    MemoryInfoDumper::DumpGCAndCCLogsToFile(
+    nsCOMPtr<nsIMemoryInfoDumper> dumper = do_GetService("@mozilla.org/memory-info-dumper;1");
+    dumper->DumpGCAndCCLogsToFile(
       mIdentifier, mDumpChildProcesses);
     return NS_OK;
   }
@@ -270,8 +272,20 @@ InitializeSignalWatcher()
 } // anonymous namespace
 #endif // } XP_LINUX
 
+} // namespace mozilla
+
+NS_IMPL_ISUPPORTS1(nsMemoryInfoDumper, nsIMemoryInfoDumper)
+
+nsMemoryInfoDumper::nsMemoryInfoDumper()
+{
+}
+
+nsMemoryInfoDumper::~nsMemoryInfoDumper()
+{
+}
+
 /* static */ void
-MemoryInfoDumper::Initialize()
+nsMemoryInfoDumper::Initialize()
 {
 #ifdef XP_LINUX
   InitializeSignalWatcher();
@@ -292,8 +306,8 @@ EnsureNonEmptyIdentifier(nsAString& aIdentifier)
   aIdentifier.AppendInt(static_cast<int64_t>(PR_Now()) / 1000000);
 }
 
-/* static */ void
-MemoryInfoDumper::DumpMemoryReportsToFile(
+NS_IMETHODIMP
+nsMemoryInfoDumper::DumpMemoryReportsToFile(
     const nsAString& aIdentifier,
     bool aMinimizeMemoryUsage,
     bool aDumpChildProcesses)
@@ -322,15 +336,16 @@ MemoryInfoDumper::DumpMemoryReportsToFile(
           /* dumpChildProcesses = */ false);
     nsCOMPtr<nsIMemoryReporterManager> mgr =
       do_GetService("@mozilla.org/memory-reporter-manager;1");
-    NS_ENSURE_TRUE(mgr,);
+    NS_ENSURE_TRUE(mgr, NS_ERROR_FAILURE);
     mgr->MinimizeMemoryUsage(callback);
+    return NS_OK;
   }
 
-  DumpMemoryReportsToFileImpl(identifier);
+  return DumpMemoryReportsToFileImpl(identifier);
 }
 
-/* static */ void
-MemoryInfoDumper::DumpGCAndCCLogsToFile(
+NS_IMETHODIMP
+nsMemoryInfoDumper::DumpGCAndCCLogsToFile(
   const nsAString& aIdentifier,
   bool aDumpChildProcesses)
 {
@@ -351,7 +366,10 @@ MemoryInfoDumper::DumpGCAndCCLogsToFile(
   logger->SetFilenameIdentifier(identifier);
 
   nsJSContext::CycleCollectNow(logger);
+  return NS_OK;
 }
+
+namespace mozilla {
 
 #define DUMP(o, s) \
   do { \
@@ -450,8 +468,10 @@ NS_IMPL_ISUPPORTS1(
     , nsIMemoryMultiReporterCallback
     )
 
+} // namespace mozilla
+
 /* static */ nsresult
-MemoryInfoDumper::DumpMemoryReportsToFileImpl(
+nsMemoryInfoDumper::DumpMemoryReportsToFileImpl(
   const nsAString& aIdentifier)
 {
   // Open a new file named something like
@@ -601,10 +621,9 @@ MemoryInfoDumper::DumpMemoryReportsToFileImpl(
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsString msg = NS_LITERAL_STRING(
-    "nsIMemoryReporterManager::dumpReports() dumped reports to ");
+    "nsIMemoryInfoDumper dumped reports to ");
   msg.Append(path);
   return cs->LogStringMessage(msg.get());
 }
 
 #undef DUMP
-} // namespace mozilla

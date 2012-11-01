@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=804630
+-->
+<window title="Mozilla Bug 804630"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=804630"
+     target="_blank">Mozilla Bug 804630</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test to make sure that COWed objects can expose properties from their prototypes. **/
+  const Cu = Components.utils;
+
+  // Set up the sandbox.
+  var sb = new Cu.Sandbox('http://www.example.com');
+  sb.ok = ok;
+  sb.is = is;
+
+  // Make a chrome object that exposes objects off its prototype.
+  sb.proto = { read: 42, readWrite: 32, __exposedProps__: {} };
+  sb.proto.__defineSetter__('setterProp', function(val) { this._setterProp = val; });
+  sb.obj = { __exposedProps__: { read: 'r', readWrite: 'rw', setterProp: 'w' } };
+  sb.obj.__proto__ = sb.proto;
+
+  // Make sure we can't access any of the properties on the prototype directly.
+  Cu.evalInSandbox('is(proto.read, undefined, "proto.read inaccessible");', sb);
+  Cu.evalInSandbox('var wrote = false; ' +
+                   'try { proto.readWrite = 12; wrote = true; } catch(e) {} ' +
+                   ' ok(!wrote, "Should not write proto property");', sb);
+  Cu.evalInSandbox('var wrote = false; ' +
+                   'try { proto.setterProp = 12; wrote = true; } catch(e) {} ' +
+                   ' ok(!wrote, "Should not write proto setter");', sb);
+
+  // Make sure we can access the exposed properties via the derived object.
+  Cu.evalInSandbox('is(obj.read, 42, "obj.read accessible");', sb);
+  Cu.evalInSandbox('is(obj.readWrite, 32, "obj.readWrite is readable");', sb);
+  Cu.evalInSandbox('obj.readWrite = 8; is(obj.readWrite, 8, "obj.readWrite is writable");', sb);
+  Cu.evalInSandbox('obj.setterProp = 3;', sb);
+  is(sb.obj._setterProp, 3, "obj.setterProp works");
+
+  ]]>
+  </script>
+</window>
