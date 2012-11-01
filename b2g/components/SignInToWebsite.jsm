@@ -143,7 +143,7 @@ let Pipe = {
    * provide a callback for handling messages.
    *
    * @param aRpOptions        options describing the Relying Party's
-   *        (dicitonary)      call, such as origin and loggedInEmail.
+   *        (dictionary)      call, such as origin and loggedInUser.
    *
    * @param aGaiaOptions      showUI:   boolean
    *        (dictionary)      message:  name of the message to emit
