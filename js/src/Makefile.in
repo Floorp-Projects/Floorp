@@ -296,6 +296,7 @@ CPPSRCS +=	MIR.cpp \
 		RangeAnalysis.cpp \
 		VMFunctions.cpp \
 		AliasAnalysis.cpp \
+		BaselineCompiler-shared.cpp \
 		$(NULL)
 endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
@@ -305,6 +306,7 @@ CPPSRCS +=	IonFrames-x86-shared.cpp
 CPPSRCS +=	MoveEmitter-x86-shared.cpp
 CPPSRCS +=	Assembler-x86-shared.cpp
 CPPSRCS +=	Lowering-x86-shared.cpp
+CPPSRCS +=	BaselineCompiler-x86-shared.cpp
 CPPSRCS +=	BaselineIC-x86-shared.cpp
 endif #ENABLE_ION
 ifeq (x86_64, $(TARGET_CPU))
@@ -327,6 +329,7 @@ CPPSRCS += 	Lowering-x64.cpp \
 		Assembler-x64.cpp \
 		Bailouts-x64.cpp \
 		MacroAssembler-x64.cpp \
+		BaselineCompiler-x64.cpp \
 		BaselineIC-x64.cpp \
 		$(NULL)
 endif #ENABLE_ION
@@ -339,6 +342,7 @@ CPPSRCS +=	Lowering-x86.cpp \
 		Assembler-x86.cpp \
 		Bailouts-x86.cpp \
 		MacroAssembler-x86.cpp \
+		BaselineCompiler-x86.cpp \
 		BaselineIC-x86.cpp \
 		$(NULL)
 endif #ENABLE_ION
