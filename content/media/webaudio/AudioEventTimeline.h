@@ -127,28 +127,28 @@ public:
 
   void SetValueAtTime(float aValue, float aStartTime, ErrorResult& aRv)
   {
-    InsertEvent(Event(Event::Type::SetValue, aStartTime, aValue), aRv);
+    InsertEvent(Event(Event::SetValue, aStartTime, aValue), aRv);
   }
 
   void LinearRampToValueAtTime(float aValue, float aEndTime, ErrorResult& aRv)
   {
-    InsertEvent(Event(Event::Type::LinearRamp, aEndTime, aValue), aRv);
+    InsertEvent(Event(Event::LinearRamp, aEndTime, aValue), aRv);
   }
 
   void ExponentialRampToValueAtTime(float aValue, float aEndTime, ErrorResult& aRv)
   {
-    InsertEvent(Event(Event::Type::ExponentialRamp, aEndTime, aValue), aRv);
+    InsertEvent(Event(Event::ExponentialRamp, aEndTime, aValue), aRv);
   }
 
   void SetTargetAtTime(float aTarget, float aStartTime, float aTimeConstant, ErrorResult& aRv)
   {
-    InsertEvent(Event(Event::Type::SetTarget, aStartTime, aTarget, aTimeConstant), aRv);
+    InsertEvent(Event(Event::SetTarget, aStartTime, aTarget, aTimeConstant), aRv);
   }
 
   void SetValueCurveAtTime(const FloatArrayWrapper& aValues, float aStartTime, float aDuration, ErrorResult& aRv)
   {
     // TODO: implement
-    // InsertEvent(Event(Event::Type::SetValueCurve, aStartTime, 0.0f, 0.0f, aDuration, aValues), aRv);
+    // InsertEvent(Event(Event::SetValueCurve, aStartTime, 0.0f, 0.0f, aDuration, aValues), aRv);
   }
 
   void CancelScheduledValues(float aStartTime)
@@ -165,10 +165,10 @@ public:
     bool bailOut = false;
     for (unsigned i = 0; !bailOut && i < mEvents.Length(); ++i) {
       switch (mEvents[i].mType) {
-      case Event::Type::SetValue:
-      case Event::Type::SetTarget:
-      case Event::Type::LinearRamp:
-      case Event::Type::ExponentialRamp:
+      case Event::SetValue:
+      case Event::SetTarget:
+      case Event::LinearRamp:
+      case Event::ExponentialRamp:
         if (aTime == mEvents[i].mTime) {
           // Find the last event with the same time
           do {
@@ -183,7 +183,7 @@ public:
           bailOut = true;
         }
         break;
-      case Event::Type::SetValueCurve:
+      case Event::SetValueCurve:
         // TODO: implement
         break;
       default:
@@ -204,17 +204,17 @@ public:
     // If the requested time is before all of the existing events
     if (!previous) {
       switch (next->mType) {
-      case Event::Type::SetValue:
-      case Event::Type::SetTarget:
+      case Event::SetValue:
+      case Event::SetTarget:
         // The requested time is before the first event
         return mValue;
-      case Event::Type::LinearRamp:
+      case Event::LinearRamp:
         // Use t=0 as T0 and v=defaultValue as V0
         return LinearInterpolate(0.0f, mValue, next->mTime, next->mValue, aTime);
-      case Event::Type::ExponentialRamp:
+      case Event::ExponentialRamp:
         // Use t=0 as T0 and v=defaultValue as V0
         return ExponentialInterpolate(0.0f, mValue, next->mTime, next->mValue, aTime);
-      case Event::Type::SetValueCurve:
+      case Event::SetValueCurve:
         // TODO: implement
         return 0.0f;
       }
@@ -222,7 +222,7 @@ public:
     }
 
     // SetTarget nodes can be handled no matter what their next node is (if they have one)
-    if (previous->mType == Event::Type::SetTarget) {
+    if (previous->mType == Event::SetTarget) {
       // Follow the curve, without regard to the next node
       return ExponentialApproach(previous->mTime, mValue, previous->mValue,
                                  previous->mTimeConstant, aTime);
@@ -231,15 +231,15 @@ public:
     // If the requested time is after all of the existing events
     if (!next) {
       switch (previous->mType) {
-      case Event::Type::SetValue:
-      case Event::Type::LinearRamp:
-      case Event::Type::ExponentialRamp:
+      case Event::SetValue:
+      case Event::LinearRamp:
+      case Event::ExponentialRamp:
         // The value will be constant after the last event
         return previous->mValue;
-      case Event::Type::SetValueCurve:
+      case Event::SetValueCurve:
         // TODO: implement
         return 0.0f;
-      case Event::Type::SetTarget:
+      case Event::SetTarget:
         MOZ_ASSERT(false, "unreached");
       }
       MOZ_ASSERT(false, "unreached");
@@ -249,28 +249,28 @@ public:
 
     // First, handle the case where our range ends up in a ramp event
     switch (next->mType) {
-    case Event::Type::LinearRamp:
+    case Event::LinearRamp:
       return LinearInterpolate(previous->mTime, previous->mValue, next->mTime, next->mValue, aTime);
-    case Event::Type::ExponentialRamp:
+    case Event::ExponentialRamp:
       return ExponentialInterpolate(previous->mTime, previous->mValue, next->mTime, next->mValue, aTime);
-    case Event::Type::SetValue:
-    case Event::Type::SetTarget:
-    case Event::Type::SetValueCurve:
+    case Event::SetValue:
+    case Event::SetTarget:
+    case Event::SetValueCurve:
       break;
     }
 
     // Now handle all other cases
     switch (previous->mType) {
-    case Event::Type::SetValue:
-    case Event::Type::LinearRamp:
-    case Event::Type::ExponentialRamp:
+    case Event::SetValue:
+    case Event::LinearRamp:
+    case Event::ExponentialRamp:
       // If the next event type is neither linear or exponential ramp, the
       // value is constant.
       return previous->mValue;
-    case Event::Type::SetValueCurve:
+    case Event::SetValueCurve:
       // TODO: implement
       return 0.0f;
-    case Event::Type::SetTarget:
+    case Event::SetTarget:
       MOZ_ASSERT(false, "unreached");
     }
 
@@ -310,7 +310,7 @@ private:
     // Make sure that non-curve events don't fall within the duration of a
     // curve event.
     for (unsigned i = 0; i < mEvents.Length(); ++i) {
-      if (mEvents[i].mType == Event::Type::SetValueCurve &&
+      if (mEvents[i].mType == Event::SetValueCurve &&
           mEvents[i].mTime <= aEvent.mTime &&
           (mEvents[i].mTime + mEvents[i].mDuration) >= aEvent.mTime) {
         aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
@@ -320,7 +320,7 @@ private:
 
     // Make sure that curve events don't fall in a range which includes other
     // events.
-    if (aEvent.mType == Event::Type::SetValueCurve) {
+    if (aEvent.mType == Event::SetValueCurve) {
       for (unsigned i = 0; i < mEvents.Length(); ++i) {
         if (mEvents[i].mTime >= aEvent.mTime &&
             mEvents[i].mTime <= (aEvent.mTime + aEvent.mDuration)) {

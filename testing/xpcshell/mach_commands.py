@@ -21,15 +21,19 @@ from mach.base import (
 
 class XPCShellRunner(MozbuildObject):
     """Run xpcshell tests."""
-    def run_suite(self):
-        # TODO hook up to harness runner and support things like shuffle,
-        # proper progress updates, etc.
-        self._run_make(directory='.', target='xpcshell-tests')
+    def run_suite(self, **kwargs):
+        manifest = os.path.join(self.topobjdir, '_tests', 'xpcshell',
+            'xpcshell.ini')
 
-    def run_test(self, test_file, debug=False):
+        self._run_xpcshell_harness(manifest=manifest, **kwargs)
+
+    def run_test(self, test_file, debug=False, interactive=False,
+        keep_going=False, shuffle=False):
         """Runs an individual xpcshell test."""
+
         if test_file == 'all':
-            self.run_suite()
+            self.run_suite(debug=debug, interactive=interactive,
+                keep_going=keep_going, shuffle=shuffle)
             return
 
         # dirname() gets confused if there isn't a trailing slash.
@@ -46,6 +50,9 @@ class XPCShellRunner(MozbuildObject):
 
         args = {
             'debug': debug,
+            'interactive': interactive,
+            'keep_going': keep_going,
+            'shuffle': shuffle,
             'test_dirs': [test_dir],
         }
 
@@ -55,7 +62,8 @@ class XPCShellRunner(MozbuildObject):
         self._run_xpcshell_harness(**args)
 
     def _run_xpcshell_harness(self, test_dirs=None, manifest=None,
-        test_path=None, debug=False):
+        test_path=None, debug=False, shuffle=False, interactive=False,
+        keep_going=False):
 
         # Obtain a reference to the xpcshell test runner.
         import runxpcshelltests
@@ -71,11 +79,16 @@ class XPCShellRunner(MozbuildObject):
             'xpcshell': os.path.join(self.bindir, 'xpcshell'),
             'mozInfo': os.path.join(self.topobjdir, 'mozinfo.json'),
             'symbolsPath': os.path.join(self.distdir, 'crashreporter-symbols'),
+            'interactive': interactive,
+            'keepGoing': keep_going,
             'logfiles': False,
+            'shuffle': shuffle,
             'testsRootDir': tests_dir,
             'testingModulesDir': modules_dir,
             'profileName': 'firefox',
             'verbose': test_path is not None,
+            'xunitFilename': os.path.join(self.statedir, 'xpchsell.xunit.xml'),
+            'xunitName': 'xpcshell',
         }
 
         if manifest is not None:
@@ -105,6 +118,12 @@ class MachCommands(MozbuildObject):
              'or omitted. If omitted, the entire test suite is executed.')
     @CommandArgument('--debug', '-d', action='store_true',
         help='Run test in a debugger.')
+    @CommandArgument('--interactive', '-i', action='store_true',
+        help='Open an xpcshell prompt before running tests.')
+    @CommandArgument('--keep-going', '-k', action='store_true',
+        help='Continue running tests after a SIGINT is received.')
+    @CommandArgument('--shuffle', '-s', action='store_true',
+        help='Randomize the execution order of tests.')
     def run_xpcshell_test(self, **params):
         xpcshell = self._spawn(XPCShellRunner)
         xpcshell.run_test(**params)
