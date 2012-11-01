@@ -20,6 +20,7 @@ if sys.version_info[0] == 2 and sys.version_info[1] < 7:
 # TODO Bug 794506 Integrate with the in-tree virtualenv configuration.
 SEARCH_PATHS = [
     'python/mach',
+    'python/mozboot',
     'python/mozbuild',
     'build',
     'build/pymake',
@@ -37,6 +38,7 @@ SEARCH_PATHS = [
 # Individual files providing mach commands.
 MACH_MODULES = [
     'layout/tools/reftest/mach_commands.py',
+    'python/mozboot/mozboot/mach_commands.py',
     'testing/mochitest/mach_commands.py',
     'testing/xpcshell/mach_commands.py',
 ]
