@@ -2,8 +2,6 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /*
 ** Copyright 2006, The Android Open Source Project
-** Not a Contribution, Apache license notifications and license are
-** retained for attribution purposes only.
 **
 ** Licensed under the Apache License, Version 2.0 (the "License");
 ** you may not use this file except in compliance with the License.
@@ -45,9 +43,6 @@
 #include "mozilla/ipc/RawDBusConnection.h"
 #include "mozilla/Util.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
-#if defined(MOZ_WIDGET_GONK)
-#include "cutils/properties.h"
-#endif
 
 /**
  * Some rules for dealing with memory in DBus:
@@ -81,8 +76,6 @@ USING_BLUETOOTH_NAMESPACE
 #define BLUEZ_DBUS_BASE_IFC       "org.bluez"
 #define BLUEZ_ERROR_IFC           "org.bluez.Error"
 
-#define PROP_DEVICE_CONNECTED_TYPE "org.bluez.device.conn.type"
-
 typedef struct {
   const char* name;
   int type;
@@ -95,7 +88,7 @@ static Properties sDeviceProperties[] = {
   {"Class", DBUS_TYPE_UINT32},
   {"UUIDs", DBUS_TYPE_ARRAY},
   {"Paired", DBUS_TYPE_BOOLEAN},
-  {"Connected", DBUS_TYPE_ARRAY},
+  {"Connected", DBUS_TYPE_BOOLEAN},
   {"Trusted", DBUS_TYPE_BOOLEAN},
   {"Blocked", DBUS_TYPE_BOOLEAN},
   {"Alias", DBUS_TYPE_STRING},
@@ -878,48 +871,6 @@ GetIntCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
 }
 
 bool
-IsDeviceConnectedTypeBoolean()
-{
-#if defined(MOZ_WIDGET_GONK)
-
-  char connProp[PROPERTY_VALUE_MAX];
-
-  property_get(PROP_DEVICE_CONNECTED_TYPE, connProp, "array");
-  if (strcmp(connProp, "boolean") == 0) {
-    return true;
-  }
-  return false;
-#else
-  // Assume it's always a boolean on desktop. Fixing someday in Bug 806457.
-  return true;
-#endif
-}
-
-void
-CopyProperties(Properties* inProp, Properties* outProp, int aPropertyTypeLen)
-{
-  int i;
-
-  for (i = 0; i < aPropertyTypeLen; i++ ) {
-    outProp[i].name = inProp[i].name;
-    outProp[i].type = inProp[i].type;
-  }
-}
-
-int
-GetPropertyIndex(Properties* prop, char* propertyName, int aPropertyTypeLen)
-{
-  int i;
-
-  for (i = 0; i < aPropertyTypeLen; i++) {
-    if (!strncmp(propertyName, prop[i].name, strlen(propertyName))) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-bool
 GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
             int aPropertyTypeLen, int* aPropIndex,
             InfallibleTArray<BluetoothNamedValue>& aProperties)
@@ -1086,44 +1037,14 @@ UnpackAdapterPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                           ArrayLength(sAdapterProperties));
 }
 
-bool
-ReplaceConnectedType(Properties* sourceProperties, Properties** destProperties, int aPropertyTypeLen)
-{
-  if (!IsDeviceConnectedTypeBoolean()) {
-    return false;
-  }
-  *destProperties = (Properties *) malloc(sizeof(Properties) * aPropertyTypeLen);
-  if (*destProperties) {
-    CopyProperties(sourceProperties, *destProperties, aPropertyTypeLen);
-    int index = GetPropertyIndex(*destProperties, "Connected", aPropertyTypeLen);
-    if (index >= 0) {
-      (*destProperties)[index].type = DBUS_TYPE_BOOLEAN;
-      return true;
-    } else {
-      free(*destProperties);
-    }
-  }
-  return false;
-}
-
 void
 UnpackDevicePropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                               BluetoothValue& aValue,
                               nsAString& aErrorStr)
 {
-  Properties* props = sDeviceProperties;
-  Properties* newProps;
-  bool replaced = ReplaceConnectedType(sDeviceProperties, &newProps, ArrayLength(sDeviceProperties));
-  if (replaced) {
-     GetPropertyIndex(newProps, "Connected", ArrayLength(sDeviceProperties));
-     props = newProps;
-  }
   UnpackPropertiesMessage(aMsg, aErr, aValue, aErrorStr,
-                          props,
+                          sDeviceProperties,
                           ArrayLength(sDeviceProperties));
-  if (replaced) {
-     free(newProps);
-  }
 }
 
 void
@@ -1271,20 +1192,11 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
     dbus_message_iter_get_basic(&iter, &addr);
 
     if (dbus_message_iter_next(&iter)) {
-      Properties* props = sDeviceProperties;
-      Properties* newProps;
-      bool replaced = ReplaceConnectedType(sDeviceProperties, &newProps, ArrayLength(sDeviceProperties));
-      if (replaced) {
-        props = newProps;
-      }
       ParseProperties(&iter,
                       v,
                       errorStr,
-                      props,
+                      sDeviceProperties,
                       ArrayLength(sDeviceProperties));
-      if (replaced) {
-        free(newProps);
-      }
       if (v.type() == BluetoothValue::TArrayOfBluetoothNamedValue)
       {
         // The DBus DeviceFound message actually passes back a key value object
@@ -1357,21 +1269,11 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
                         sAdapterProperties,
                         ArrayLength(sAdapterProperties));
   } else if (dbus_message_is_signal(aMsg, DBUS_DEVICE_IFACE, "PropertyChanged")) {
-    Properties* props = sDeviceProperties;
-    Properties* newProps;
-    bool replaced = ReplaceConnectedType(sDeviceProperties, &newProps, ArrayLength(sDeviceProperties));
-    if (replaced) {
-      GetPropertyIndex(newProps, "Connected", ArrayLength(sDeviceProperties));
-      props = newProps;
-    }
     ParsePropertyChange(aMsg,
                         v,
                         errorStr,
-                        props,
+                        sDeviceProperties,
                         ArrayLength(sDeviceProperties));
-    if (replaced) {
-      free(newProps);
-    }
     if (v.get_ArrayOfBluetoothNamedValue()[0].name().EqualsLiteral("Paired")) {
       // transfer signal to BluetoothService and
       // broadcast system message of bluetooth-pairingstatuschanged
