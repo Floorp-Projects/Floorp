@@ -81,14 +81,15 @@ nsAppShell::Init()
         g_main_context_set_poll_func(NULL, &PollWrapper);
     }
 
-    GIOChannel *ioc;
-
     if (PR_GetEnv("MOZ_DEBUG_PAINTS"))
         gdk_window_set_debug_updates(TRUE);
 
     int err = pipe(mPipeFDs);
     if (err)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    GIOChannel *ioc;
+    GSource *source;
 
     // make the pipe nonblocking
 
@@ -106,9 +107,12 @@ nsAppShell::Init()
         goto failed;
 
     ioc = g_io_channel_unix_new(mPipeFDs[0]);
-    mTag = g_io_add_watch_full(ioc, G_PRIORITY_DEFAULT, G_IO_IN,
-                               EventProcessorCallback, this, nullptr);
+    source = g_io_create_watch(ioc, G_IO_IN);
     g_io_channel_unref(ioc);
+    g_source_set_callback(source, (GSourceFunc)EventProcessorCallback, this, nullptr);
+    g_source_set_can_recurse(source, TRUE);
+    mTag = g_source_attach(source, nullptr);
+    g_source_unref(source);
 
     return nsBaseAppShell::Init();
 failed:
