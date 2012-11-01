@@ -313,8 +313,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
         return BAILOUT_RETURN_RECOMPILE_CHECK;
       case Bailout_BoundsCheck:
         return BAILOUT_RETURN_BOUNDS_CHECK;
-      case Bailout_Invalidate:
-        return BAILOUT_RETURN_INVALIDATE;
+      case Bailout_ShapeGuard:
+        return BAILOUT_RETURN_SHAPE_GUARD;
       case Bailout_CachedShapeGuard:
         return BAILOUT_RETURN_CACHED_SHAPE_GUARD;
 
@@ -552,7 +552,7 @@ ion::BoundsCheckFailure()
 }
 
 uint32
-ion::ForceInvalidation()
+ion::ShapeGuardFailure()
 {
     JSContext *cx = GetIonContext()->cx;
     JSScript *script = GetBailedJSScript(cx);
@@ -560,7 +560,9 @@ ion::ForceInvalidation()
     JS_ASSERT(script->hasIonScript());
     JS_ASSERT(!script->ion->invalidated());
 
-    IonSpew(IonSpew_Invalidate, "Forced invalidation bailout");
+    script->failedShapeGuard = true;
+
+    IonSpew(IonSpew_Invalidate, "Invalidating due to shape guard failure");
 
     return Invalidate(cx, script);
 }
@@ -573,6 +575,8 @@ ion::CachedShapeGuardFailure()
 
     JS_ASSERT(script->hasIonScript());
     JS_ASSERT(!script->ion->invalidated());
+
+    script->failedShapeGuard = true;
 
     // Purge JM caches in the script and all inlined script, to avoid baking in
     // the same shape guard next time.
