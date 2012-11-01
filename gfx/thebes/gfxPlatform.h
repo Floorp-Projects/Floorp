@@ -310,6 +310,13 @@ public:
      */
     virtual bool FontHintingEnabled() { return true; }
 
+    bool UsesSubpixelAATextRendering() {
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+	return false;
+#endif
+	return true;
+    }
+
     /**
      * Whether to check all font cmaps during system font fallback
      */
