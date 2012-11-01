@@ -7027,7 +7027,8 @@ nsIFrame::RecomputePerspectiveChildrenOverflow(const nsStyleContext* aStartStyle
           static_cast<nsOverflowAreas*>(child->Properties().Get(nsIFrame::InitialOverflowProperty()));
         nsRect bounds(nsPoint(0, 0), child->GetSize());
         if (overflow) {
-          child->FinishAndStoreOverflow(*overflow, bounds.Size());
+          nsOverflowAreas overflowCopy = *overflow;
+          child->FinishAndStoreOverflow(overflowCopy, bounds.Size());
         } else {
           nsOverflowAreas boundsOverflow;
           boundsOverflow.SetAllTo(bounds);
@@ -7078,7 +7079,8 @@ RecomputePreserve3DChildrenOverflow(nsIFrame* aFrame, const nsRect* aBounds)
           static_cast<nsOverflowAreas*>(child->Properties().Get(nsIFrame::InitialOverflowProperty()));
         nsRect bounds(nsPoint(0, 0), child->GetSize());
         if (overflow) {
-          child->FinishAndStoreOverflow(*overflow, bounds.Size());
+          nsOverflowAreas overflowCopy = *overflow;
+          child->FinishAndStoreOverflow(overflowCopy, bounds.Size());
         } else {
           nsOverflowAreas boundsOverflow;
           boundsOverflow.SetAllTo(bounds);
@@ -7097,8 +7099,9 @@ RecomputePreserve3DChildrenOverflow(nsIFrame* aFrame, const nsRect* aBounds)
       static_cast<nsOverflowAreas*>(aFrame->Properties().Get(nsIFrame::InitialOverflowProperty()));
     nsRect bounds(nsPoint(0, 0), aFrame->GetSize());
     if (overflow) {
-      overflow->UnionAllWith(bounds); 
-      aFrame->FinishAndStoreOverflow(*overflow, bounds.Size());
+      nsOverflowAreas overflowCopy = *overflow;
+      overflowCopy.UnionAllWith(bounds); 
+      aFrame->FinishAndStoreOverflow(overflowCopy, bounds.Size());
     } else {
       nsOverflowAreas boundsOverflow;
       boundsOverflow.SetAllTo(bounds);
