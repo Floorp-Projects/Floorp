@@ -1317,9 +1317,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mListenerManager,
                                                   nsEventListenerManager)
 
-  for (nsTimeout* timeout = tmp->FirstTimeout();
+  for (nsTimeout* timeout = tmp->mTimeouts.getFirst();
        timeout;
-       timeout = timeout->Next()) {
+       timeout = timeout->getNext()) {
     cb.NoteNativeChild(timeout, NS_CYCLE_COLLECTION_PARTICIPANT(nsTimeout));
   }
 
@@ -1424,7 +1424,9 @@ nsGlobalWindow::IsBlackForCC()
 void
 nsGlobalWindow::UnmarkGrayTimers()
 {
-  for (nsTimeout* timeout = FirstTimeout(); timeout; timeout = timeout->Next()) {
+  for (nsTimeout* timeout = mTimeouts.getFirst();
+       timeout;
+       timeout = timeout->getNext()) {
     if (timeout->mScriptHandler) {
       JSObject* o = timeout->mScriptHandler->GetScriptObject();
       xpc_UnmarkGrayObject(o);
@@ -9899,7 +9901,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   // timeout events fire "early", so we need to test the timer as well
   // as the deadline.
   last_expired_timeout = nullptr;
-  for (timeout = FirstTimeout(); timeout; timeout = timeout->Next()) {
+  for (timeout = mTimeouts.getFirst(); timeout; timeout = timeout->getNext()) {
     if (((timeout == aTimeout) || (timeout->mWhen <= deadline)) &&
         (timeout->mFiringDepth == 0)) {
       // Mark any timeouts that are on the list to be fired with the
@@ -9947,10 +9949,10 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
   Telemetry::AutoCounter<Telemetry::DOM_TIMERS_FIRED_PER_NATIVE_TIMEOUT> timeoutsRan;
 
-  for (timeout = FirstTimeout();
+  for (timeout = mTimeouts.getFirst();
        timeout != &dummy_timeout && !IsFrozen();
        timeout = nextTimeout) {
-    nextTimeout = timeout->Next();
+    nextTimeout = timeout->getNext();
 
     if (timeout->mFiringDepth != firingDepth) {
       // We skip the timeout since it's on the list to run at another
@@ -10014,7 +10016,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
     // Running a timeout can cause another timeout to be deleted, so
     // we need to reset the pointer to the following timeout.
-    nextTimeout = timeout->Next();
+    nextTimeout = timeout->getNext();
 
     timeout->remove();
 
@@ -10067,7 +10069,7 @@ nsGlobalWindow::ClearTimeoutOrInterval(int32_t aTimerID)
   uint32_t public_id = (uint32_t)aTimerID;
   nsTimeout *timeout;
 
-  for (timeout = FirstTimeout(); timeout; timeout = timeout->Next()) {
+  for (timeout = mTimeouts.getFirst(); timeout; timeout = timeout->getNext()) {
     if (timeout->mPublicId == public_id) {
       if (timeout->mRunning) {
         /* We're running from inside the timeout. Mark this
@@ -10112,13 +10114,13 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
   // start at the timer after mTimeoutInsertionPoint, if there is one.
   // Otherwise, start at the beginning of the list.
   for (nsTimeout *timeout = mTimeoutInsertionPoint ?
-         mTimeoutInsertionPoint->Next() : FirstTimeout();
+         mTimeoutInsertionPoint->getNext() : mTimeouts.getFirst();
        timeout; ) {
     // It's important that this check be <= so that we guarantee that
     // taking NS_MAX with |now| won't make a quantity equal to
     // timeout->mWhen below.
     if (timeout->mWhen <= now) {
-      timeout = timeout->Next();
+      timeout = timeout->getNext();
       continue;
     }
 
@@ -10155,7 +10157,7 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
       
       // Get the pointer to the next timeout now, before we move the
       // current timeout in the list.
-      nsTimeout* nextTimeout = timeout->Next();
+      nsTimeout* nextTimeout = timeout->getNext();
 
       // It is safe to remove and re-insert because mWhen is now
       // strictly smaller than it used to be, so we know we'll insert
@@ -10179,7 +10181,7 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
 
       timeout = nextTimeout;
     } else {
-      timeout = timeout->Next();
+      timeout = timeout->getNext();
     }
   }
 
@@ -10191,7 +10193,7 @@ nsGlobalWindow::ClearAllTimeouts()
 {
   nsTimeout *timeout, *nextTimeout;
 
-  for (timeout = FirstTimeout(); timeout; timeout = nextTimeout) {
+  for (timeout = mTimeouts.getFirst(); timeout; timeout = nextTimeout) {
     /* If RunTimeout() is higher up on the stack for this
        window, e.g. as a result of document.write from a timeout,
        then we need to reset the list insertion point for
@@ -10200,7 +10202,7 @@ nsGlobalWindow::ClearAllTimeouts()
     if (mRunningTimeout == timeout)
       mTimeoutInsertionPoint = nullptr;
 
-    nextTimeout = timeout->Next();
+    nextTimeout = timeout->getNext();
 
     if (timeout->mTimer) {
       timeout->mTimer->Cancel();
@@ -10233,14 +10235,14 @@ nsGlobalWindow::InsertTimeoutIntoList(nsTimeout *aTimeout)
   // mTimeoutInsertionPoint, though.  This optimizes for the common case of
   // insertion at the end.
   nsTimeout* prevSibling;
-  for (prevSibling = LastTimeout();
+  for (prevSibling = mTimeouts.getLast();
        prevSibling && prevSibling != mTimeoutInsertionPoint &&
          // This condition needs to match the one in SetTimeoutOrInterval that
          // determines whether to set mWhen or mTimeRemaining.
          ((IsFrozen() || mTimeoutsSuspendDepth) ?
           prevSibling->mTimeRemaining > aTimeout->mTimeRemaining :
           prevSibling->mWhen > aTimeout->mWhen);
-       prevSibling = prevSibling->Prev()) {
+       prevSibling = prevSibling->getPrevious()) {
     /* Do nothing; just searching */
   }
 
@@ -10541,7 +10543,7 @@ nsGlobalWindow::SuspendTimeouts(uint32_t aIncrease,
     mozilla::dom::workers::SuspendWorkersForWindow(cx, this);
 
     TimeStamp now = TimeStamp::Now();
-    for (nsTimeout *t = FirstTimeout(); t; t = t->Next()) {
+    for (nsTimeout *t = mTimeouts.getFirst(); t; t = t->getNext()) {
       // Set mTimeRemaining to be the time remaining for this timer.
       if (t->mWhen > now)
         t->mTimeRemaining = t->mWhen - now;
@@ -10629,7 +10631,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
     bool _seenDummyTimeout = false;
 #endif
 
-    for (nsTimeout *t = FirstTimeout(); t; t = t->Next()) {
+    for (nsTimeout *t = mTimeouts.getFirst(); t; t = t->getNext()) {
       // There's a chance we're being called with RunTimeout on the stack in which
       // case we have a dummy timeout in the list that *must not* be resumed. It
       // can be identified by a null mWindow.
