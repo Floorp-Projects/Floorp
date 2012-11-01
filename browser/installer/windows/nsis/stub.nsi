@@ -33,6 +33,7 @@ Var CheckboxSetAsDefault
 Var CheckboxShortcutOnBar ; Used for Quicklaunch or Taskbar as appropriate
 Var CheckboxShortcutInStartMenu
 Var CheckboxShortcutOnDesktop
+Var CheckboxSendPing
 Var CheckboxInstallMaintSvc
 Var DirRequest
 Var ButtonBrowse
@@ -356,6 +357,7 @@ Function .onGUIEnd
 
   ; Try to send a ping if a download was attempted
   ${If} $IsDownloadFinished != ""
+  ${AndIf} $CheckboxSendPing == 1
     System::Int64Op $DownloadedAmount / 1024
     Pop $DownloadedAmount
     InetBgDL::Get "${BaseURLStubPing}${Channel}/${AB_CD}/$ExitCode/" \
@@ -388,6 +390,7 @@ Function createIntro
   StrCpy $CheckboxShortcutOnBar 1
   StrCpy $CheckboxShortcutInStartMenu 1
   StrCpy $CheckboxShortcutOnDesktop 1
+  StrCpy $CheckboxSendPing 1
 !ifdef MOZ_MAINTENANCE_SERVICE
   StrCpy $CheckboxInstallMaintSvc 1
 !else
@@ -628,6 +631,16 @@ Function createOptions
 
   Call UpdateFreeSpaceLabel
 
+  ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} 168u ${OPTIONS_SUBITEM_WIDTH_DU} \
+                        12u "$(SEND_PING)"
+  Pop $CheckboxSendPing
+  ; The uxtheme must be disabled on checkboxes in order to override the system
+  ; font color.
+  System::Call 'uxtheme::SetWindowTheme(i $CheckboxSendPing, w " ", w " ")'
+  SetCtlColors $CheckboxSendPing ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
+  SendMessage $CheckboxSendPing ${WM_SETFONT} $FontNormal 0
+  ${NSD_Check} $CheckboxSendPing
+
 !ifdef MOZ_MAINTENANCE_SERVICE
   ; Only show the maintenance service checkbox if we have write access to HKLM
   Call IsUserAdmin
@@ -645,7 +658,7 @@ Function createOptions
     ClearErrors
     ReadRegStr $0 HKLM "SYSTEM\CurrentControlSet\services\MozillaMaintenance" "ImagePath"
     ${If} ${Errors}
-      ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} 175u ${OPTIONS_ITEM_WIDTH_DU} \
+      ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} 184u ${OPTIONS_ITEM_WIDTH_DU} \
                             12u "$(INSTALL_MAINT_SERVICE)"
       Pop $CheckboxInstallMaintSvc
       System::Call 'uxtheme::SetWindowTheme(i $CheckboxInstallMaintSvc, w " ", w " ")'
@@ -706,6 +719,7 @@ Function leaveOptions
   ${NSD_GetState} $CheckboxShortcutOnBar $CheckboxShortcutOnBar
   ${NSD_GetState} $CheckboxShortcutInStartMenu $CheckboxShortcutInStartMenu
   ${NSD_GetState} $CheckboxShortcutOnDesktop $CheckboxShortcutOnDesktop
+  ${NSD_GetState} $CheckboxSendPing $CheckboxSendPing
 !ifdef MOZ_MAINTENANCE_SERVICE
   ${NSD_GetState} $CheckboxInstallMaintSvc $CheckboxInstallMaintSvc
 !endif
