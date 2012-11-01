@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.text.TextUtils;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -341,8 +342,11 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         return mLayout;
     }
 
-    public void requestLayout() {
-        mLayout.invalidate();
+    public void refreshBackground() {
+        mAddressBarBg.requestLayout();
+
+        if (mAwesomeBarRightEdge != null)
+            mAwesomeBarRightEdge.requestLayout();
     }
 
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
@@ -795,6 +799,60 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             mMenuPopup.dismiss();
 
         return true;
+    }
+
+    public static class RightEdge extends FrameLayout
+                                  implements LightweightTheme.OnChangeListener { 
+        private BrowserApp mActivity;
+
+        public RightEdge(Context context, AttributeSet attrs) {
+            super(context, attrs);
+            mActivity = (BrowserApp) context;
+        }
+
+        @Override
+        public void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            mActivity.getLightweightTheme().addListener(this);
+        }
+
+        @Override
+        public void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            mActivity.getLightweightTheme().removeListener(this);
+        }
+
+        @Override
+        public void onLightweightThemeChanged() {
+            Drawable drawable = mActivity.getLightweightTheme().getDrawable(this);
+            if (drawable == null)
+                return;
+
+            int[] padding =  new int[] { getPaddingLeft(),
+                                         getPaddingTop(),
+                                         getPaddingRight(),
+                                         getPaddingBottom()
+                                       };
+            setBackgroundDrawable(drawable);
+            setPadding(padding[0], padding[1], padding[2], padding[3]);
+        }
+
+        @Override
+        public void onLightweightThemeReset() {
+            int[] padding =  new int[] { getPaddingLeft(),
+                                         getPaddingTop(),
+                                         getPaddingRight(),
+                                         getPaddingBottom()
+                                       };
+            setBackgroundResource(R.drawable.address_bar_bg);
+            setPadding(padding[0], padding[1], padding[2], padding[3]);
+        }
+
+        @Override
+        protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+            super.onLayout(changed, left, top, right, bottom);
+            onLightweightThemeChanged();
+        }
     }
 
     // MenuPopup holds the MenuPanel in Honeycomb/ICS devices with no hardware key
