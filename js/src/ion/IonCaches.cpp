@@ -114,7 +114,8 @@ GeneratePrototypeGuards(JSContext *cx, MacroAssembler &masm, JSObject *obj, JSOb
     JSObject *pobj = IsCacheableListBase(obj)
                      ? obj->getTaggedProto().toObjectOrNull()
                      : obj->getProto();
-    JS_ASSERT(pobj);
+    if (!pobj)
+        return;
     while (pobj != holder) {
         if (pobj->hasUncacheableProto()) {
             JS_ASSERT(!pobj->hasSingletonType());
