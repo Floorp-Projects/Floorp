@@ -4700,6 +4700,8 @@ JS_SetReservedSlot(RawObject obj, uint32_t index, RawValue value)
 JS_PUBLIC_API(JSObject *)
 JS_NewArrayObject(JSContext *cx, int length, jsval *vector)
 {
+    AutoArrayRooter tvr(cx, length, vector);
+
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
