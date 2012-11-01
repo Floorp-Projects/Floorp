@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["AitcManager"];
+this.EXPORTED_SYMBOLS = ["AitcManager"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -33,7 +33,7 @@ const MARKETPLACE_URL = PREFS.get("marketplace.url");
  * to bypass BrowserID for xpcshell tests, since the window object in not
  * available.
  */
-function AitcManager(cb, premadeClient, premadeToken) {
+this.AitcManager = function AitcManager(cb, premadeClient, premadeToken) {
   this._client = null;
   this._getTimer = null;
   this._putTimer = null;

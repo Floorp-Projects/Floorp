@@ -11,7 +11,7 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-let EXPORTED_SYMBOLS = ["DOMContactManager"];
+this.EXPORTED_SYMBOLS = ["DOMContactManager"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyGetter(this, "mRIL", function () {
 
 let myGlobal = this;
 
-let DOMContactManager = {
+this.DOMContactManager = {
   init: function() {
     if (DEBUG) debug("Init");
     this._messages = ["Contacts:Find", "Contacts:Clear", "Contact:Save", "Contact:Remove", "Contacts:GetSimContacts"];
@@ -65,6 +65,15 @@ let DOMContactManager = {
     if (this._db)
       this._db.close();
     this._db = null;
+  },
+
+  assertPermission: function(aMessage, aPerm) {
+    if (!aMessage.target.assertPermission(aPerm)) {
+      Cu.reportError("Contacts message " + msg.name +
+                     " from a content process with no" + aPerm + " privileges.");
+      return false;
+    }
+    return true;
   },
 
   receiveMessage: function(aMessage) {
@@ -112,6 +121,9 @@ let DOMContactManager = {
 
     switch (aMessage.name) {
       case "Contacts:Find":
+        if (!this.assertPermission(aMessage, "contacts-read")) {
+          return null;
+        }
         let result = new Array();
         this._db.find(
           function(contacts) {
@@ -134,6 +146,15 @@ let DOMContactManager = {
           msg.options.findOptions);
         break;
       case "Contact:Save":
+        if (msg.options.reason === "create") {
+          if (!this.assertPermission(aMessage, "contacts-create")) {
+            return null;
+          }
+        } else {
+          if (!this.assertPermission(aMessage, "contacts-write")) {
+            return null;
+          }
+        }
         this._db.saveContact(
           msg.options.contact,
           function() { mm.sendAsyncMessage("Contact:Save:Return:OK", { requestID: msg.requestID, contactID: msg.options.contact.id }); }.bind(this),
@@ -141,6 +162,9 @@ let DOMContactManager = {
         );
         break;
       case "Contact:Remove":
+        if (!this.assertPermission(aMessage, "contacts-write")) {
+          return null;
+        }
         this._db.removeContact(
           msg.options.id,
           function() { mm.sendAsyncMessage("Contact:Remove:Return:OK", { requestID: msg.requestID, contactID: msg.options.id }); }.bind(this),
@@ -148,12 +172,18 @@ let DOMContactManager = {
         );
         break;
       case "Contacts:Clear":
+        if (!this.assertPermission(aMessage, "contacts-write")) {
+          return null;
+        }
         this._db.clear(
           function() { mm.sendAsyncMessage("Contacts:Clear:Return:OK", { requestID: msg.requestID }); }.bind(this),
           function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Clear:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
         );
         break;
       case "Contacts:GetSimContacts":
+        if (!this.assertPermission(aMessage, "contacts-read")) {
+          return null;
+        }
         mRIL.getICCContacts(
           msg.options.contactType,
           function (aErrorMsg, aType, aContacts) {

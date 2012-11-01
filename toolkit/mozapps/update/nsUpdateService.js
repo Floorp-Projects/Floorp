@@ -759,7 +759,34 @@ function cleanUpMozUpdaterDirs() {
     var tmpDir = Components.classes["@mozilla.org/file/directory_service;1"].
                             getService(Components.interfaces.nsIProperties).
                             get("TmpD", Components.interfaces.nsIFile);
-    // All temp unique subfolders are inside MozUpdater, delete it recursively.
+
+    // We used to store MozUpdater-i folders directly inside the temp directory.
+    // We need to cleanup these directories if we detect that they still exist.
+    // To check if they still exist, we simply check for MozUpdater-1.
+    var mozUpdaterDir1 = tmpDir.clone();
+    mozUpdaterDir1.append("MozUpdater-1");
+    // Only try to delete the left over folders in "$Temp/MozUpdater-i/*" if
+    // MozUpdater-1 exists.
+    if (mozUpdaterDir1.exists()) {
+      LOG("cleanUpMozUpdaterDirs - Cleaning top level MozUpdater-i folders");
+      let i = 0;
+      let dirEntries = tmpDir.directoryEntries;
+      while (dirEntries.hasMoreElements() && i < 10) {
+        let file = dirEntries.getNext().QueryInterface(Components.interfaces.nsILocalFile);
+        if (file.leafName.startsWith("MozUpdater-") && file.leafName != "MozUpdater-1") {
+          file.remove(true);
+          i++;
+        }
+      }
+      // If you enumerate the whole temp directory and the count of deleted
+      // items is less than 10, then delete MozUpdate-1.
+      if (i < 10) {
+        mozUpdaterDir1.remove(true);
+      }
+    }
+
+    // If we reach here, we simply need to clean the MozUpdater folder.  In our
+    // new way of storing these files, the unique subfolders are inside MozUpdater
     var mozUpdaterDir = tmpDir.clone();
     mozUpdaterDir.append("MozUpdater");
     if (mozUpdaterDir.exists()) {
@@ -3862,7 +3889,7 @@ UpdatePrompt.prototype = {
 };
 
 var components = [UpdateService, Checker, UpdatePrompt, UpdateManager];
-var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
 
 #if 0
 /**

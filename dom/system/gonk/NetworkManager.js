@@ -333,6 +333,7 @@ NetworkManager.prototype = {
   setAndConfigureActive: function setAndConfigureActive() {
     debug("Evaluating whether active network needs to be changed.");
     let oldActive = this.active;
+    let defaultDataNetwork;
 
     if (this._overriddenActive) {
       debug("We have an override for the active network: " +
@@ -340,12 +341,6 @@ NetworkManager.prototype = {
       // The override was just set, so reconfigure the network.
       if (this.active != this._overriddenActive) {
         this.active = this._overriddenActive;
-        // Don't set default route and DNS on secondary APN
-        if (oldActive &&
-            (oldActive.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
-            oldActive.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL)) {
-          return;
-        }
         this.setDefaultRouteAndDNS(oldActive);
       }
       return;
@@ -365,6 +360,9 @@ NetworkManager.prototype = {
       if (network.state != Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED) {
         continue;
       }
+      if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
+        defaultDataNetwork = network;
+      }
       this.active = network;
       if (network.type == this.preferredNetworkType) {
         debug("Found our preferred type of network: " + network.name);
@@ -372,11 +370,14 @@ NetworkManager.prototype = {
       }
     }
     if (this.active) {
-      // Don't set default route and DNS on secondary APN
-      if (oldActive &&
-          (oldActive.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
-          oldActive.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL)) {
-        return;
+      // Give higher priority to default data APN than seconary APN.
+      // If default data APN is not connected, we still set default route
+      // and DNS on seconary APN.
+      if (defaultDataNetwork &&
+          (this.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
+           this.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) &&
+          this.active.type != this.preferredNetworkType) {
+        this.active = defaultDataNetwork;
       }
       this.setDefaultRouteAndDNS(oldActive);
     }
@@ -773,7 +774,7 @@ NetworkManager.prototype = {
   }
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkManager]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkManager]);
 
 
 let debug;

@@ -134,6 +134,7 @@ class nsHashKey;
 #define NS_EVENT_BUBBLE_MASK              (~(NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
 
 #define NS_EVENT_TYPE_NULL                   0
+#define NS_EVENT_TYPE_ALL                  1 // Not a real event type
 
 /**
  * GUI MESSAGES

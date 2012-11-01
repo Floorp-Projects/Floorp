@@ -43,6 +43,7 @@
 #include "nsScreenManagerGonk.h"
 #include "nsWindow.h"
 #include "OrientationObserver.h"
+#include "GonkMemoryPressureMonitoring.h"
 
 #include "android/log.h"
 #include "libui/EventHub.h"
@@ -616,6 +617,8 @@ nsAppShell::Init()
 
     rv = AddFdHandler(signalfds[0], pipeHandler, "");
     NS_ENSURE_SUCCESS(rv, rv);
+
+    InitGonkMemoryPressureMonitoring();
 
     // Delay initializing input devices until the screen has been
     // initialized (and we know the resolution).

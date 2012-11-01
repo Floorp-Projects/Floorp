@@ -922,6 +922,11 @@ public class PanZoomController
 
         PointF point = new PointF(detector.getFocusX(), detector.getFocusY());
         GeckoEvent event = GeckoEvent.createNativeGestureEvent(GeckoEvent.ACTION_MAGNIFY_END, point, getMetrics().zoomFactor);
+
+        if (event == null) {
+            return;
+        }
+
         GeckoAppShell.sendEventToGecko(event);
     }
 

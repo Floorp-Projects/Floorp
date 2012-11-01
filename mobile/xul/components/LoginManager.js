@@ -683,4 +683,4 @@ UserAutoCompleteResult.prototype = {
     }
 };
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([LoginManager]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([LoginManager]);

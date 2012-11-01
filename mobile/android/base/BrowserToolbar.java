@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.text.TextUtils;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -341,8 +342,11 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         return mLayout;
     }
 
-    public void requestLayout() {
-        mLayout.invalidate();
+    public void refreshBackground() {
+        mAddressBarBg.requestLayout();
+
+        if (mAwesomeBarRightEdge != null)
+            mAwesomeBarRightEdge.requestLayout();
     }
 
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
@@ -515,6 +519,9 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                         PropertyAnimator.Property.TRANSLATION_X,
                         width);
 
+        // Uses the old mTabsPaneWidth.
+        adjustTabsAnimation(false);
+
         mTabsPaneWidth = width;
 
         // Only update title padding immediatelly when shrinking the browser
@@ -522,6 +529,22 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         // expanding (see finishTabsAnimation()).
         if (mTabsPaneWidth > 0)
             setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
+    }
+
+    public void adjustTabsAnimation(boolean reset) {
+        int width = reset ? 0 : mTabsPaneWidth;
+        mAwesomeBarRightEdge.setTranslationX(-width);
+        mAwesomeBar.setTranslationX(width);
+        mAddressBarBg.setTranslationX(width);
+        mTabs.setTranslationX(width);
+        mTabsCount.setTranslationX(width);
+        mBack.setTranslationX(width);
+        mForward.setTranslationX(width);
+        mTitle.setTranslationX(width);
+        mFavicon.setTranslationX(width);
+        mSiteSecurity.setTranslationX(width);
+
+        ((ViewGroup.MarginLayoutParams) mLayout.getLayoutParams()).leftMargin = reset ? mTabsPaneWidth : 0;
     }
 
     public void finishTabsAnimation() {
@@ -550,6 +573,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 mMenu.getBackground().setLevel(TABS_CONTRACTED);
             }
         }
+
+        // A level change will not trigger onMeasure() for the tabs, where the path is created.
+        // Manually requesting a layout to re-calculate the path.
+        mTabs.requestLayout();
     }
 
     public void setProgressVisibility(boolean visible) {
@@ -582,7 +609,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         // We want title to fill the whole space available for it when there are icons
         // being shown on the right side of the toolbar as the icons already have some
         // padding in them. This is just to avoid wasting space when icons are shown.
-        mTitle.setPadding(0, 0, (!mShowReader && !isLoading ? mTitlePadding : 0) + mTabsPaneWidth, 0);
+        mTitle.setPadding(0, 0, (!mShowReader && !isLoading ? mTitlePadding : 0), 0);
 
         updateFocusOrder();
     }
@@ -772,6 +799,60 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             mMenuPopup.dismiss();
 
         return true;
+    }
+
+    public static class RightEdge extends FrameLayout
+                                  implements LightweightTheme.OnChangeListener { 
+        private BrowserApp mActivity;
+
+        public RightEdge(Context context, AttributeSet attrs) {
+            super(context, attrs);
+            mActivity = (BrowserApp) context;
+        }
+
+        @Override
+        public void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            mActivity.getLightweightTheme().addListener(this);
+        }
+
+        @Override
+        public void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+            mActivity.getLightweightTheme().removeListener(this);
+        }
+
+        @Override
+        public void onLightweightThemeChanged() {
+            Drawable drawable = mActivity.getLightweightTheme().getDrawable(this);
+            if (drawable == null)
+                return;
+
+            int[] padding =  new int[] { getPaddingLeft(),
+                                         getPaddingTop(),
+                                         getPaddingRight(),
+                                         getPaddingBottom()
+                                       };
+            setBackgroundDrawable(drawable);
+            setPadding(padding[0], padding[1], padding[2], padding[3]);
+        }
+
+        @Override
+        public void onLightweightThemeReset() {
+            int[] padding =  new int[] { getPaddingLeft(),
+                                         getPaddingTop(),
+                                         getPaddingRight(),
+                                         getPaddingBottom()
+                                       };
+            setBackgroundResource(R.drawable.address_bar_bg);
+            setPadding(padding[0], padding[1], padding[2], padding[3]);
+        }
+
+        @Override
+        protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+            super.onLayout(changed, left, top, right, bottom);
+            onLightweightThemeChanged();
+        }
     }
 
     // MenuPopup holds the MenuPanel in Honeycomb/ICS devices with no hardware key

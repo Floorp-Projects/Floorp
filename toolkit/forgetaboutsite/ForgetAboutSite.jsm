@@ -4,7 +4,7 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["ForgetAboutSite"];
+this.EXPORTED_SYMBOLS = ["ForgetAboutSite"];
 
 /**
  * Returns true if the string passed in is part of the root domain of the
@@ -35,7 +35,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-var ForgetAboutSite = {
+this.ForgetAboutSite = {
   removeDataFromDomain: function CRH_removeDataFromDomain(aDomain)
   {
     // clear any and all network geolocation provider sessions

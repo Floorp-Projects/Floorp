@@ -456,6 +456,20 @@ IsTraceable(VirtualRegister *reg)
     return false;
 }
 
+#ifdef DEBUG
+static inline bool
+NextInstructionHasFixedUses(LBlock *block, LInstruction *ins)
+{
+    LInstructionIterator iter(block->begin(ins));
+    iter++;
+    for (LInstruction::InputIterator alloc(**iter); alloc.more(); alloc.next()) {
+        if (alloc->isUse() && alloc->toUse()->isFixedRegister())
+            return true;
+    }
+    return false;
+}
+#endif
+
 /*
  * This function builds up liveness intervals for all virtual registers
  * defined in the function. Additionally, it populates the liveIn array with
@@ -542,9 +556,14 @@ LinearScanAllocator::buildLivenessInfo()
 
                     CodePosition from;
                     if (def->policy() == LDefinition::PRESET && def->output()->isRegister()) {
-                        // The fixed range covers the current instruction so the interval
-                        // for the virtual register starts at the next instruction. The
-                        // next instruction is an LNop so this is fine.
+                        // The fixed range covers the current instruction so the
+                        // interval for the virtual register starts at the next
+                        // instruction. If the next instruction has a fixed use,
+                        // this can lead to unnecessary register moves. To avoid
+                        // special handling for this, assert the next instruction
+                        // has no fixed uses. defineFixed guarantees this by inserting
+                        // an LNop.
+                        JS_ASSERT(!NextInstructionHasFixedUses(block, *ins));
                         AnyRegister reg = def->output()->toRegister();
                         if (!addFixedRangeAtHead(reg, inputOf(*ins), outputOf(*ins).next()))
                             return false;

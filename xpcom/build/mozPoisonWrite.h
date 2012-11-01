@@ -17,5 +17,6 @@ MOZ_END_EXTERN_C
 namespace mozilla {
 void PoisonWrite();
 void DisableWritePoisoning();
+void EnableWritePoisoning();
 }
 #endif

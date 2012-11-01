@@ -91,6 +91,8 @@ FENNEC_JAVA_FILES = \
   GeckoViewsFactory.java \
   HeightChangeAnimation.java \
   InputMethods.java \
+  LightweightTheme.java \
+  LightweightThemeDrawable.java \
   LinkPreference.java \
   LinkTextView.java \
   MemoryMonitor.java \
@@ -208,11 +210,13 @@ FENNEC_PP_JAVA_FILES = \
 
 FENNEC_PP_XML_FILES = \
   res/layout/abouthome_content.xml \
+  res/layout/awesomebar_search.xml \
   res/layout/awesomebar_suggestion_row.xml \
   res/layout/browser_toolbar.xml \
   res/layout/browser_toolbar_menu.xml \
   res/layout-land-v14/browser_toolbar.xml \
   res/layout-land-v14/browser_toolbar_menu.xml \
+  res/layout-large-v11/awesomebar_search.xml \
   res/layout-large-v11/browser_toolbar_menu.xml \
   res/layout-xlarge-v11/browser_toolbar_menu.xml \
   res/layout/gecko_app.xml \
@@ -342,7 +346,6 @@ RES_LAYOUT = \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_suggestion_item.xml \
   res/layout/awesomebar_suggestion_prompt.xml \
-  res/layout/awesomebar_search.xml \
   res/layout/awesomebar_tab_indicator.xml \
   res/layout/awesomebar_tabs.xml \
   res/layout/bookmark_edit.xml \
@@ -392,7 +395,6 @@ RES_LAYOUT_LAND_V14 = \
   $(NULL)
 
 RES_LAYOUT_LARGE_V11 = \
-  res/layout-large-v11/awesomebar_search.xml \
   res/layout-large-v11/doorhangerpopup.xml \
   res/layout-large-v11/site_identity_popup.xml \
   res/layout-large-v11/tabs_panel_toolbar_menu.xml \
@@ -947,6 +949,8 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml          \
   mobile/android/base/resources/drawable/desktop_notification.png               \
   mobile/android/base/resources/drawable/highlight.xml                          \
+  mobile/android/base/resources/drawable/handle_end_level.xml                   \
+  mobile/android/base/resources/drawable/handle_start_level.xml                 \
   mobile/android/base/resources/drawable/menu_button.xml                        \
   mobile/android/base/resources/drawable/menu_item_checkmark.xml                \
   mobile/android/base/resources/drawable/menu_level.xml                         \

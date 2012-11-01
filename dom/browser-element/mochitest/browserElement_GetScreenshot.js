@@ -17,20 +17,34 @@ function runTest() {
   iframe1.src = 'data:text/html,<html>' +
     '<body style="background:green">hello</body></html>';
 
-  var screenshots = [];
+  var screenshotArrayBuffers = [];
   var numLoaded = 0;
 
-  function screenshotTaken(screenshot) {
-    screenshots.push(screenshot);
-    if (screenshots.length === 1) {
+  function screenshotTaken(screenshotArrayBuffer) {
+    screenshotArrayBuffers.push(screenshotArrayBuffer);
+    if (screenshotArrayBuffers.length === 1) {
       ok(true, 'Got initial non blank screenshot');
       iframe1.src = 'data:text/html,<html>' +
         '<body style="background:blue">hello</body></html>';
-      waitForScreenshot(function(screenshot) {
-        return screenshot !== screenshots[0];
+
+      // Wait until screenshotArrayBuffer !== screenshotArrayBuffers[0].
+      waitForScreenshot(function(screenshotArrayBuffer) {
+        var view1 = new Int8Array(screenshotArrayBuffer);
+        var view2 = new Int8Array(screenshotArrayBuffers[0]);
+        if (view1.length != view2.length) {
+          return true;
+        }
+
+        for (var i = 0; i < view1.length; i++) {
+          if (view1[i] != view2[i]) {
+            return true;
+          }
+        }
+
+        return false;
       });
     }
-    else if (screenshots.length === 2) {
+    else if (screenshotArrayBuffers.length === 2) {
       ok(true, 'Got updated screenshot after source page changed');
       SimpleTest.finish();
     }
@@ -39,31 +53,39 @@ function runTest() {
   // We continually take screenshots until we get one that we are
   // happy with.
   function waitForScreenshot(filter) {
+    function gotScreenshotArrayBuffer() {
+      // |this| is the FileReader whose result contains the screenshot as an
+      // ArrayBuffer.
 
-    function screenshotLoaded(e) {
-      if (filter(e.target.result)) {
-        screenshotTaken(e.target.result);
+      if (filter(this.result)) {
+        screenshotTaken(this.result);
         return;
       }
       if (--attempts === 0) {
         ok(false, 'Timed out waiting for correct screenshot');
         SimpleTest.finish();
       } else {
-        content.document.defaultView.setTimeout(function() {
-          iframe1.getScreenshot(1000, 1000).onsuccess = screenshotLoaded;
+        setTimeout(function() {
+          iframe1.getScreenshot(1000, 1000).onsuccess = getScreenshotArrayBuffer;
         }, 200);
       }
     }
 
+    function getScreenshotArrayBuffer(e) {
+      var fr = new FileReader();
+      fr.onloadend = gotScreenshotArrayBuffer;
+      fr.readAsArrayBuffer(e.target.result);
+    }
+
     var attempts = 10;
-    iframe1.getScreenshot(1000, 1000).onsuccess = screenshotLoaded;
+    iframe1.getScreenshot(1000, 1000).onsuccess = getScreenshotArrayBuffer;
   }
 
   function iframeLoadedHandler() {
     numLoaded++;
     if (numLoaded === 2) {
-      waitForScreenshot(function(screenshot) {
-        return screenshot !== 'data:,';
+      waitForScreenshot(function(screenshotArrayBuffer) {
+        return screenshotArrayBuffer.byteLength != 0;
       });
     }
   }

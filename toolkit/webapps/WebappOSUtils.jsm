@@ -9,9 +9,9 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-let EXPORTED_SYMBOLS = ["WebappOSUtils"];
+this.EXPORTED_SYMBOLS = ["WebappOSUtils"];
 
-let WebappOSUtils = {
+this.WebappOSUtils = {
   launch: function(aData) {
 #ifdef XP_WIN
     let appRegKey;

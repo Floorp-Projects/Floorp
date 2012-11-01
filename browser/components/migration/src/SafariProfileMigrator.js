@@ -677,4 +677,4 @@ SafariProfileMigrator.prototype.classDescription = "Safari Profile Migrator";
 SafariProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=safari";
 SafariProfileMigrator.prototype.classID = Components.ID("{4b609ecf-60b2-4655-9df4-dc149e474da1}");
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([SafariProfileMigrator]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SafariProfileMigrator]);

@@ -7,6 +7,7 @@
 interface nsIDOMMozMobileICCInfo;
 interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
+interface nsIDOMMozMobileCFInfo;
 interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
 
@@ -14,7 +15,7 @@ interface nsIDOMWindow;
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(3db24bfe-abc4-43a3-9183-07e516a33af9)]
+[scriptable, uuid(0fb90831-801d-4a84-a56f-7cbc77ba9d61)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   /**
@@ -52,4 +53,9 @@ interface nsIMobileConnectionProvider : nsISupports
                             in boolean        helpRequested);
   void sendStkEventDownload(in nsIDOMWindow window,
                             in jsval        event);
+
+  nsIDOMDOMRequest getCallForwardingOption(in nsIDOMWindow   window,
+                                           in unsigned short reason);
+  nsIDOMDOMRequest setCallForwardingOption(in nsIDOMWindow          window,
+                                           in nsIDOMMozMobileCFInfo CFInfo);
 };

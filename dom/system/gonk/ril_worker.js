@@ -2511,6 +2511,52 @@ let RIL = {
    },
 
   /**
+   * Queries current call forward rules.
+   *
+   * @param reason
+   *        One of nsIDOMMozMobileCFInfo.CALL_FORWARD_REASON_* constants.
+   * @param serviceClass
+   *        One of ICC_SERVICE_CLASS_* constants.
+   * @param number
+   *        Phone number of forwarding address.
+   */
+  queryCallForwardStatus: function queryCallForwardStatus(options) {
+    Buf.newParcel(REQUEST_QUERY_CALL_FORWARD_STATUS, options);
+    Buf.writeUint32(CALL_FORWARD_ACTION_QUERY_STATUS);
+    Buf.writeUint32(options.reason);
+    Buf.writeUint32(options.serviceClass);
+    Buf.writeUint32(this._toaFromString(options.number));
+    Buf.writeString(options.number);
+    Buf.writeUint32(0);
+    Buf.sendParcel();
+  },
+
+  /**
+   * Configures call forward rule.
+   *
+   * @param action
+   *        One of nsIDOMMozMobileCFInfo.CALL_FORWARD_ACTION_* constants.
+   * @param reason
+   *        One of nsIDOMMozMobileCFInfo.CALL_FORWARD_REASON_* constants.
+   * @param serviceClass
+   *        One of ICC_SERVICE_CLASS_* constants.
+   * @param number
+   *        Phone number of forwarding address.
+   * @param timeSeconds
+   *        Time in seconds to wait beforec all is forwarded.
+   */
+  setCallForward: function setCallForward(options) {
+    Buf.newParcel(REQUEST_SET_CALL_FORWARD, options);
+    Buf.writeUint32(options.action);
+    Buf.writeUint32(options.reason);
+    Buf.writeUint32(options.serviceClass);
+    Buf.writeUint32(this._toaFromString(options.number));
+    Buf.writeString(options.number);
+    Buf.writeUint32(options.timeSeconds);
+    Buf.sendParcel();
+  },
+
+  /**
    * Handle STK CALL_SET_UP request.
    *
    * @param hasConfirmed
@@ -3546,6 +3592,17 @@ let RIL = {
   },
 
   /**
+   * Helper for returning the TOA for the given dial string.
+   */
+  _toaFromString: function _toaFromString(number) {
+    let toa = TOA_UNKNOWN;
+    if (number && number.length > 0 && number[0] == '+') {
+      toa = TOA_INTERNATIONAL;
+    }
+    return toa;
+  },
+
+  /**
    * @param message A decoded SMS-DELIVER message.
    *
    * @see 3GPP TS 31.111 section 7.1.1
@@ -4495,8 +4552,48 @@ RIL[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, options) {
 };
 RIL[REQUEST_GET_CLIR] = null;
 RIL[REQUEST_SET_CLIR] = null;
-RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] = null;
-RIL[REQUEST_SET_CALL_FORWARD] = null;
+RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] =
+  function REQUEST_QUERY_CALL_FORWARD_STATUS(length, options) {
+    options.success = options.rilRequestError == 0;
+    if (!options.success) {
+      options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+      this.sendDOMMessage(options);
+      return;
+    }
+
+    let rulesLength = 0;
+    if (length) {
+      rulesLength = Buf.readUint32();
+    }
+    if (!rulesLength) {
+      options.success = false;
+      options.errorMsg =
+        "Invalid rule length while querying call forwarding status.";
+      this.sendDOMMessage(options);
+      return;
+    }
+    let rules = new Array(rulesLength);
+    for (let i = 0; i < rulesLength; i++) {
+      let rule = {};
+      rule.active       = Buf.readUint32() == 1; // CALL_FORWARD_STATUS_*
+      rule.reason       = Buf.readUint32(); // CALL_FORWARD_REASON_*
+      rule.serviceClass = Buf.readUint32();
+      rule.toa          = Buf.readUint32();
+      rule.number       = Buf.readString();
+      rule.timeSeconds  = Buf.readUint32();
+      rules[i] = rule;
+    }
+    options.rules = rules;
+    this.sendDOMMessage(options);
+};
+RIL[REQUEST_SET_CALL_FORWARD] =
+  function REQUEST_SET_CALL_FORWARD(length, options) {
+    options.success = options.rilRequestError == 0;
+    if (!options.success) {
+      options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    }
+    this.sendDOMMessage(options);
+};
 RIL[REQUEST_QUERY_CALL_WAITING] = null;
 RIL[REQUEST_SET_CALL_WAITING] = function REQUEST_SET_CALL_WAITING(length, options) {
   options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
@@ -4736,12 +4833,7 @@ RIL[REQUEST_STK_GET_PROFILE] = null;
 RIL[REQUEST_STK_SET_PROFILE] = null;
 RIL[REQUEST_STK_SEND_ENVELOPE_COMMAND] = null;
 RIL[REQUEST_STK_SEND_TERMINAL_RESPONSE] = null;
-RIL[REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM] = function REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM(length, options) {
-  if (!options.rilRequestError && options.hasConfirmed) {
-    options.rilMessageType = "stkcallsetup";
-    this.sendDOMMessage(options);
-  }
-};
+RIL[REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM] = null;
 RIL[REQUEST_EXPLICIT_CALL_TRANSFER] = null;
 RIL[REQUEST_SET_PREFERRED_NETWORK_TYPE] = function REQUEST_SET_PREFERRED_NETWORK_TYPE(length, options) {
   if (options.networkType == null) {

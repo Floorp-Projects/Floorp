@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = [ "AboutHomeUtils" ];
+this.EXPORTED_SYMBOLS = [ "AboutHomeUtils" ];
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -15,7 +15,7 @@ const SNIPPETS_URL_PREF = "browser.aboutHomeSnippets.updateUrl";
 // Should be bumped up if the snippets content format changes.
 const STARTPAGE_VERSION = 3;
 
-let AboutHomeUtils = new Object();
+this.AboutHomeUtils = new Object();
 
 /**
  * Returns an object containing the name and searchURL of the original default

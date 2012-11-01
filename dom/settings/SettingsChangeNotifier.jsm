@@ -12,7 +12,7 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-let EXPORTED_SYMBOLS = ["SettingsChangeNotifier"];
+this.EXPORTED_SYMBOLS = ["SettingsChangeNotifier"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageBroadcaster");
 
-let SettingsChangeNotifier = {
+this.SettingsChangeNotifier = {
   init: function() {
     debug("init");
     this.children = [];
@@ -80,6 +80,11 @@ let SettingsChangeNotifier = {
     let mm = aMessage.target;
     switch (aMessage.name) {
       case "Settings:Changed":
+        if (!aMessage.target.assertPermission("settings-write")) {
+          Cu.reportError("Settings message " + msg.name +
+                         " from a content process with no 'settings-write' privileges.");
+          return null;
+        }
         this.broadcastMessage("Settings:Change:Return:OK",
           { key: msg.key, value: msg.value });
         Services.obs.notifyObservers(this, kMozSettingsChangedObserverTopic,

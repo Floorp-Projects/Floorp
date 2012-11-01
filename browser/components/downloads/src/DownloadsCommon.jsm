@@ -6,7 +6,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "DownloadsCommon",
 ];
 
@@ -80,6 +80,8 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsLocalFileCtor", function () {
                                 "nsILocalFile", "initWithPath");
 });
 
+const kPartialDownloadSuffix = ".part";
+
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadsCommon
 
@@ -87,7 +89,7 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsLocalFileCtor", function () {
  * This object is exposed directly to the consumers of this JavaScript module,
  * and provides shared methods for all the instances of the user interface.
  */
-const DownloadsCommon = {
+this.DownloadsCommon = {
   /**
    * Returns an object whose keys are the string names from the downloads string
    * bundle, and whose values are either the translated strings or functions
@@ -871,18 +873,47 @@ DownloadsDataItem.prototype = {
    */
   get localFile()
   {
+    return this._getFile(this.file);
+  },
+
+  /**
+   * Returns the nsILocalFile for the partially downloaded target.
+   *
+   * @throws if the native path is not valid.  This can happen if the same
+   *         profile is used on different platforms, for example if a native
+   *         Windows path is stored and then the item is accessed on a Mac.
+   */
+  get partFile()
+  {
+    return this._getFile(this.file + kPartialDownloadSuffix);
+  },
+
+  /**
+   * Returns an nsILocalFile for aFilename. aFilename might be a file URL or
+   * a native path.
+   *
+   * @param aFilename the filename of the file to retrieve.
+   * @return an nsILocalFile for the file.
+   * @throws if the native path is not valid.  This can happen if the same
+   *         profile is used on different platforms, for example if a native
+   *         Windows path is stored and then the item is accessed on a Mac.
+   * @note This function makes no guarantees about the file's existence -
+   *       callers should check that the returned file exists.
+   */
+  _getFile: function DDI__getFile(aFilename)
+  {
     // The download database may contain targets stored as file URLs or native
     // paths.  This can still be true for previously stored items, even if new
     // items are stored using their file URL.  See also bug 239948 comment 12.
-    if (this.file.startsWith("file:")) {
+    if (aFilename.startsWith("file:")) {
       // Assume the file URL we obtained from the downloads database or from the
       // "spec" property of the target has the UTF-8 charset.
-      let fileUrl = NetUtil.newURI(this.file).QueryInterface(Ci.nsIFileURL);
+      let fileUrl = NetUtil.newURI(aFilename).QueryInterface(Ci.nsIFileURL);
       return fileUrl.file.clone().QueryInterface(Ci.nsILocalFile);
     } else {
       // The downloads database contains a native path.  Try to create a local
       // file, though this may throw an exception if the path is invalid.
-      return new DownloadsLocalFileCtor(this.file);
+      return new DownloadsLocalFileCtor(aFilename);
     }
   }
 };

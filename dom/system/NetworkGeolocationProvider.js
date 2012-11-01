@@ -288,4 +288,4 @@ WifiGeoPositionProvider.prototype = {
   },
 };
 
-let NSGetFactory = XPCOMUtils.generateNSGetFactory([WifiGeoPositionProvider]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WifiGeoPositionProvider]);
