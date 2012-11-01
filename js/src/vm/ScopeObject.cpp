@@ -1423,24 +1423,24 @@ class DebugScopeProxy : public BaseProxyHandler
 
     bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE
     {
-        ScopeObject &scope = proxy->asDebugScope().scope();
+        ScopeObject &scopeObj = proxy->asDebugScope().scope();
 
-        if (isArguments(cx, id) && isFunctionScope(scope)) {
+        if (isArguments(cx, id) && isFunctionScope(scopeObj)) {
             *bp = true;
             return true;
         }
 
         JSBool found;
-        RootedObject rootedScope(cx, &scope);
-        if (!JS_HasPropertyById(cx, rootedScope, id, &found))
+        RootedObject scope(cx, &scopeObj);
+        if (!JS_HasPropertyById(cx, scope, id, &found))
             return false;
 
         /*
          * Function scopes are optimized to not contain unaliased variables so
          * a manual search is necessary.
          */
-        if (!found && scope.isCall() && !scope.asCall().isForEval()) {
-            RootedScript script(cx, scope.asCall().callee().script());
+        if (!found && scope->isCall() && !scope->asCall().isForEval()) {
+            RootedScript script(cx, scope->asCall().callee().script());
             for (BindingIter bi(script); bi; bi++) {
                 if (!bi->aliased() && NameToId(bi->name()) == id) {
                     found = true;
