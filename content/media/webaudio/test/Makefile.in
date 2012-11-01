@@ -14,6 +14,7 @@ MOCHITEST_FILES := \
   test_AudioBuffer.html \
   test_AudioContext.html \
   test_badConnect.html \
+  test_delayNode.html \
   test_gainNode.html \
   test_singleSourceDest.html \
   $(NULL)
