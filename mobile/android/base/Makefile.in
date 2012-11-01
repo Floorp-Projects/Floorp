@@ -77,6 +77,7 @@ FENNEC_JAVA_FILES = \
   GeckoAppShell.java \
   GeckoBatteryManager.java \
   GeckoConnectivityReceiver.java \
+  GeckoEditable.java \
   GeckoEvent.java \
   GeckoHalDefines.java \
   GeckoInputConnection.java \
