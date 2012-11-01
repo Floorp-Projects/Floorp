@@ -10,6 +10,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.PorterDuff.Mode;
+import android.graphics.Shader;
 import android.os.Build;
 
 public class CanvasDelegate { 
@@ -67,5 +68,9 @@ public class CanvasDelegate {
 
         // Restore the canvas.
         canvas.restoreToCount(count);
+    }
+
+    public void setShader(Shader shader) {
+        mPaint.setShader(shader);
     }
 }
