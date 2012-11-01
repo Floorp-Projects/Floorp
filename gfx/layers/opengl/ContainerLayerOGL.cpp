@@ -5,6 +5,7 @@
 
 #include "ContainerLayerOGL.h"
 #include "gfxUtils.h"
+#include "gfxPlatform.h"
 
 namespace mozilla {
 namespace layers {
@@ -209,10 +210,12 @@ ContainerRender(Container* aContainer,
       // not safe.
       if (HasOpaqueAncestorLayer(aContainer) &&
           transform3D.Is2D(&transform) && !transform.HasNonIntegerTranslation()) {
-        mode = LayerManagerOGL::InitModeCopy;
+        mode = gfxPlatform::GetPlatform()->UsesSubpixelAATextRendering() ?
+		LayerManagerOGL::InitModeCopy :
+		LayerManagerOGL::InitModeClear;
         framebufferRect.x += transform.x0;
         framebufferRect.y += transform.y0;
-        aContainer->mSupportsComponentAlphaChildren = true;
+        aContainer->mSupportsComponentAlphaChildren = gfxPlatform::GetPlatform()->UsesSubpixelAATextRendering();
       }
     }
 
