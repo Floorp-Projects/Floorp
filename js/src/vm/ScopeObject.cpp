@@ -1710,7 +1710,7 @@ DebugScopes::onPopCall(StackFrame *fp, JSContext *cx)
          * aliasing. This unnecessarily includes aliased variables
          * but it simplifies later indexing logic.
          */
-        StackFrame::CopyVector vec;
+        AutoValueVector vec(cx);
         if (!fp->copyRawFrameSlots(&vec) || vec.length() == 0)
             return;
 
