@@ -2998,6 +2998,11 @@ CodeGenerator::generate()
                            ? frameDepth_
                            : FrameSizeClass::FromDepth(frameDepth_).frameSize();
 
+    // Check to make sure we didn't have a mid-build invalidation. If so, we
+    // will trickle to ion::Compile() and return Method_Skipped.
+    if (cx->compartment->types.compiledInfo.compilerOutput(cx)->isInvalidated())
+        return true;
+
     script->ion = IonScript::New(cx, slots, scriptFrameSize, snapshots_.size(),
                                  bailouts_.length(), graph.numConstants(),
                                  safepointIndices_.length(), osiIndices_.length(),
