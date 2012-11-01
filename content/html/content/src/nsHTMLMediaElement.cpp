@@ -70,6 +70,7 @@
 #include "nsIMediaList.h"
 
 #include "ImageContainer.h"
+#include "nsIPowerManagerService.h"
 
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
@@ -1747,6 +1748,8 @@ nsHTMLMediaElement::nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   }
 #endif
 
+  mPaused.SetOuter(this);
+
   RegisterFreezableElement();
   NotifyOwnerDocumentActivityChanged();
 }
@@ -1867,6 +1870,23 @@ NS_IMETHODIMP nsHTMLMediaElement::Play()
   UpdatePreloadAction();
 
   return NS_OK;
+}
+
+nsHTMLMediaElement::WakeLockBoolWrapper& nsHTMLMediaElement::WakeLockBoolWrapper::operator=(bool val) {
+  if (mValue == val)
+    return *this;
+  if (!mWakeLock && !val && mOuter) {
+    nsCOMPtr<nsIPowerManagerService> pmService =
+      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(pmService, *this);
+
+    pmService->NewWakeLock(NS_LITERAL_STRING("Playing_media"), mOuter->OwnerDoc()->GetWindow(), getter_AddRefs(mWakeLock));
+  } else if (mWakeLock && val) {
+    mWakeLock->Unlock();
+    mWakeLock = NULL;
+  }
+  mValue = val;
+  return *this;
 }
 
 bool nsHTMLMediaElement::ParseAttribute(int32_t aNamespaceID,
