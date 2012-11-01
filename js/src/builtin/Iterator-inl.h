@@ -22,6 +22,13 @@ JSObject::asPropertyIterator()
     return *static_cast<js::PropertyIteratorObject *>(this);
 }
 
+inline const js::PropertyIteratorObject &
+JSObject::asPropertyIterator() const
+{
+    JS_ASSERT(isPropertyIterator());
+    return *static_cast<const js::PropertyIteratorObject *>(this);
+}
+
 js::NativeIterator *
 js::PropertyIteratorObject::getNativeIterator() const
 {

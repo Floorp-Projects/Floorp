@@ -1559,30 +1559,38 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                      "heap that holds E4X XML objects.");
 #endif
 
-    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/slots"),
-                  cStats.objectSlots,
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects-extra/slots"),
+                  cStats.objectsExtraSlots,
                   "Memory allocated for the non-fixed object "
                   "slot arrays, which are used to represent object properties. "
                   "Some objects also contain a fixed number of slots which are "
                   "stored on the JavaScript heap; those slots "
                   "are not counted here, but in 'gc-heap/objects' instead.");
 
-    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/elements"),
-                  cStats.objectElements,
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects-extra/elements"),
+                  cStats.objectsExtraElements,
                   "Memory allocated for object element "
                   "arrays, which are used to represent indexed object "
                   "properties.");
 
-    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/misc"),
-                  cStats.objectMisc,
-                  "Memory allocated for various small, miscellaneous "
-                  "structures that hang off certain kinds of objects.");
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects-extra/arguments-data"),
+                  cStats.objectsExtraArgumentsData,
+                  "Memory allocated for data belonging to arguments objects.");
+
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects-extra/regexp-statics"),
+                  cStats.objectsExtraRegExpStatics,
+                  "Memory allocated for data belonging to the RegExpStatics object.");
+
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects-extra/property-iterator-data"),
+                  cStats.objectsExtraPropertyIteratorData,
+                  "Memory allocated for data belonging to property iterator "
+                  "objects.");
 
     // Note that we use cDOMPathPrefix here.  This is because we measure orphan
     // DOM nodes in the JS multi-reporter, but we want to report them in a
     // "dom" sub-tree rather than a "js" sub-tree.
     CREPORT_BYTES(cDOMPathPrefix + NS_LITERAL_CSTRING("orphan-nodes"),
-                  cStats.objectPrivate,
+                  cStats.objectsExtraPrivate,
                   "Memory used by orphan DOM nodes that are only reachable "
                   "from JavaScript objects.");
 
