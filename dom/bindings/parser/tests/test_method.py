@@ -123,6 +123,19 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse("""
           interface A {
+            void foo(optional float bar = 1);
+          };
+        """)
+        results = parser.finish()
+    except Exception, x:
+        threw = True
+    harness.ok(not threw, "Should allow integer to float type corecion")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+          interface A {
             [GetterInfallible] void foo();
           };
         """)
