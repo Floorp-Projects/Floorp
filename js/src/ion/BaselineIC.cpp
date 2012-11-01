@@ -106,28 +106,6 @@ BinaryOpCache::generateUpdate(JSContext *cx, MacroAssembler &masm)
 }
 
 bool
-BinaryOpCache::generateInt32(JSContext *cx, MacroAssembler &masm)
-{
-    Label notInt32, overflow;
-    masm.branchTestInt32(Assembler::NotEqual, R0, &notInt32);
-    masm.branchTestInt32(Assembler::NotEqual, R1, &notInt32);
-
-    masm.addl(R1.payloadReg(), R0.payloadReg());
-    masm.j(Assembler::Overflow, &overflow);
-
-    masm.ret();
-
-    // Overflow.
-    masm.bind(&overflow);
-    //XXX: restore R0.
-
-    // Update cache state.
-    masm.bind(&notInt32);
-    generateUpdate(cx, masm);
-    return true;
-}
-
-bool
 UpdateCompareCache(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
     uint8_t *returnAddr;
@@ -215,35 +193,5 @@ CompareCache::generateUpdate(JSContext *cx, MacroAssembler &masm)
 
     masm.tailCallWithExitFrameFromBaseline(wrapper);
     masm.breakpoint();
-    return true;
-}
-
-bool
-CompareCache::generateInt32(JSContext *cx, MacroAssembler &masm)
-{
-    Label notInt32;
-    masm.branchTestInt32(Assembler::NotEqual, R0, &notInt32);
-    masm.branchTestInt32(Assembler::NotEqual, R1, &notInt32);
-
-    masm.cmpl(R0.payloadReg(), R1.payloadReg());
-
-    switch (JSOp(*data.pc)) {
-      case JSOP_LT:
-        masm.setCC(Assembler::LessThan, R0.payloadReg());
-        break;
-
-      default:
-        JS_NOT_REACHED("Unexpected compare op");
-        break;
-    }
-
-    masm.movzxbl(R0.payloadReg(), R0.payloadReg());
-    masm.movl(ImmType(JSVAL_TYPE_BOOLEAN), R0.typeReg());
-
-    masm.ret();
-
-    // Update cache state.
-    masm.bind(&notInt32);
-    generateUpdate(cx, masm);
     return true;
 }
