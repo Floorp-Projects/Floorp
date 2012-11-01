@@ -73,6 +73,28 @@ function test() {
       }
     },
 
+    // Try change an attribute to a badly formed string
+    {
+      before: function() {
+        assertAttributes(doc.querySelector("#node22"), {
+          id: "node22",
+          class: "unchanged"
+        });
+      },
+      execute: function() {
+        let editor = markup.getContainer(doc.querySelector("#node22")).editor;
+        let attr = editor.attrs["class"].querySelector(".editable");
+        editField(attr, 'class="""');
+      },
+      after: function() {
+        assertAttributes(doc.querySelector("#node22"), {
+          id: "node22",
+          class: "unchanged"
+        });
+      }
+    },
+
+
     // Remove an attribute
     {
       before: function() {
@@ -114,6 +136,25 @@ function test() {
       }
     },
 
+    // Try add a badly formed attribute by clicking the empty space after a node
+    {
+      before: function() {
+        assertAttributes(doc.querySelector("#node23"), {
+          id: "node23",
+        });
+      },
+      execute: function() {
+        let editor = markup.getContainer(doc.querySelector("#node23")).editor;
+        let attr = editor.newAttr;
+        editField(attr, 'class="newclass" style="""');
+      },
+      after: function() {
+        assertAttributes(doc.querySelector("#node23"), {
+          id: "node23",
+        });
+      }
+    },
+
     // Add attributes by adding to an existing attribute's entry
     {
       setup: function() {
@@ -137,6 +178,25 @@ function test() {
           style: "color:green"
         });
         is(InspectorUI.highlighter.nodeInfo.classesBox.textContent, ".newclass", "Correct classes in the infobar after edit.");
+      }
+    },
+
+    // Try add attributes by adding to an existing attribute's entry
+    {
+      before: function() {
+        assertAttributes(doc.querySelector("#node24"), {
+          id: "node24",
+        });
+      },
+      execute: function() {
+        let editor = markup.getContainer(doc.querySelector("#node24")).editor;
+        let attr = editor.attrs["id"].querySelector(".editable");
+        editField(attr, attr.textContent + ' class="""');
+      },
+      after: function() {
+        assertAttributes(doc.querySelector("#node24"), {
+          id: "node24",
+        });
       }
     },
 
