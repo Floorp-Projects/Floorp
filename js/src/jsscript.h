@@ -473,6 +473,9 @@ struct JSScript : public js::gc::Cell
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
 #endif
+#ifdef JS_ION
+    bool            failedShapeGuard:1; /* script has had hoisted shape guard fail */
+#endif
     bool            invalidatedIdempotentCache:1; /* idempotent cache has triggered invalidation */
     bool            isGenerator:1;    /* is a generator */
     bool            isGeneratorExp:1; /* is a generator expression */
