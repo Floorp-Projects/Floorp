@@ -14,7 +14,7 @@ const RIL_SMSDATABASESERVICE_CID = Components.ID("{a1fa610c-eb6c-4ac2-878f-b005d
 
 const DEBUG = false;
 const DB_NAME = "sms";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_NAME = "sms";
 
 const DELIVERY_SENT = "sent";
@@ -171,8 +171,14 @@ SmsDatabaseService.prototype = {
 
         case 1:
           if (DEBUG) debug("Upgrade to version 2. Including `read` index");
-          let objectStore = event.target.transaction.objectStore(STORE_NAME); 
+          let objectStore = event.target.transaction.objectStore(STORE_NAME);
           self.upgradeSchema(objectStore);
+          break;
+
+        case 2:
+          if (DEBUG) debug("Upgrade to version 3. Fix existing entries.")
+          objectStore = event.target.transaction.objectStore(STORE_NAME);
+          self.upgradeSchema2(objectStore);
           break;
 
         default:
@@ -247,6 +253,30 @@ SmsDatabaseService.prototype = {
   upgradeSchema: function upgradeSchema(objectStore) {
     // For now, the only possible upgrade is to version 2.
     objectStore.createIndex("read", "read", { unique: false });  
+  },
+
+  upgradeSchema2: function upgradeSchema2(objectStore) {
+    if (!objectStore) {
+      objectStore = aTransaction.objectStore(STORE_NAME);
+    }
+    objectStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        return;
+      }
+
+      let message = cursor.value;
+      if (DEBUG) debug("upgrade before: " + JSON.stringify(message));
+      if (!message.messageClass) {
+        message.messageClass = MESSAGE_CLASS_NORMAL;
+      }
+      if (!message.deliveryStatus) {
+        message.deliveryStatus = DELIVERY_STATUS_NOT_APPLICABLE;
+      }
+      cursor.update(message);
+      if (DEBUG) debug("upgrade after:  " + JSON.stringify(message));
+      cursor.continue();
+    }
   },
 
   /**
