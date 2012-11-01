@@ -29,7 +29,9 @@ if (!SpecialPowers.getBoolPref("dom.mozContacts.enabled")) {
   SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
 }
     
-SpecialPowers.addPermission("contacts", true, document);
+SpecialPowers.addPermission("contacts-write", true, document);
+SpecialPowers.addPermission("contacts-read", true, document);
+SpecialPowers.addPermission("contacts-create", true, document);
 
 // For Sorting
 var c1 = {

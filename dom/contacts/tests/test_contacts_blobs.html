@@ -29,7 +29,9 @@ if (!SpecialPowers.getBoolPref("dom.mozContacts.enabled")) {
   SpecialPowers.setBoolPref("dom.mozContacts.enabled", true);
 }
 
-SpecialPowers.addPermission("contacts", true, document);
+SpecialPowers.addPermission("contacts-write", true, document);
+SpecialPowers.addPermission("contacts-read", true, document);
+SpecialPowers.addPermission("contacts-create", true, document);
 
 var utils = SpecialPowers.getDOMWindowUtils(window);
 
@@ -109,7 +111,6 @@ function onFailure() {
 
 function verifyBlob(blob1, blob2, isLast)
 {
-  dump("islast? " + isLast + "\n");
   is(blob1 instanceof SpecialPowers.Ci.nsIDOMBlob, true,
      "Instance of nsIDOMBlob");
   is(blob1 instanceof SpecialPowers.Ci.nsIDOMFile,
@@ -174,7 +175,6 @@ var steps = [
     ok(true, "Adding contact with photo");
     createResult1 = new mozContact();
     createResult1.init(properties1);
-    dump("CreateResult1: " + JSON.stringify(createResult1));
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -201,7 +201,6 @@ var steps = [
     ok(true, "Adding contact with 2 photos");
     createResult1 = new mozContact();
     createResult1.init(properties2);
-    dump("CreateResult1: " + JSON.stringify(createResult1));
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -228,7 +227,6 @@ var steps = [
     ok(true, "Adding photo as String");
     createResult1 = new mozContact();
     createResult1.init({name: "asdf", photo: ["xyz"]});
-    dump("CreateResult1: " + JSON.stringify(createResult1));
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -242,7 +240,6 @@ var steps = [
     ok(true, "Adding photo as String");
     createResult1 = new mozContact();
     createResult1.init({name: "jkl", photo: "xyz"});
-    dump("CreateResult1: " + JSON.stringify(createResult1));
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -270,7 +267,6 @@ var steps = [
     ok(true, "Adding photo as Object");
     createResult1 = new mozContact();
     createResult1.init({photo: [{}]});
-    dump("CreateResult1: " + JSON.stringify(createResult1));
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
