@@ -149,14 +149,6 @@ struct nsTimeout : mozilla::LinkedListElement<nsTimeout>
   nsrefcnt Release();
   nsrefcnt AddRef();
 
-  nsTimeout* Next() {
-    return getNext();
-  }
-
-  nsTimeout* Prev() {
-    return getPrevious();
-  }
-
   nsresult InitTimer(nsTimerCallbackFunc aFunc, uint64_t delay) {
     return mTimer->InitWithFuncCallback(aFunc, this, delay,
                                         nsITimer::TYPE_ONE_SHOT);
@@ -882,14 +874,6 @@ protected:
   }
 
   bool IsInModalState();
-
-  nsTimeout* FirstTimeout() {
-    return mTimeouts.getFirst();
-  }
-
-  nsTimeout* LastTimeout() {
-    return mTimeouts.getLast();
-  }
 
   // Convenience functions for the many methods that need to scale
   // from device to CSS pixels or vice versa.  Note: if a presentation
