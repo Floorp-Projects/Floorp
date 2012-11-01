@@ -216,6 +216,7 @@ var BrowserApp = {
 
     NativeWindow.init();
     SelectionHandler.init();
+    LightWeightThemeWebInstaller.init();
     Downloads.init();
     FindHelper.init();
     FormAssistant.init();
@@ -493,6 +494,7 @@ var BrowserApp = {
   shutdown: function shutdown() {
     NativeWindow.uninit();
     SelectionHandler.uninit();
+    LightWeightThemeWebInstaller.uninit();
     FormAssistant.uninit();
     FindHelper.uninit();
     OfflineApps.uninit();
@@ -2107,6 +2109,153 @@ var SelectionHandler = {
       }
       view = view.parent;
     }
+  }
+};
+
+var LightWeightThemeWebInstaller = {
+  init: function sh_init() {
+    let temp = {};
+    Cu.import("resource://gre/modules/LightweightThemeConsumer.jsm", temp);
+    let theme = new temp.LightweightThemeConsumer(document);
+    BrowserApp.deck.addEventListener("InstallBrowserTheme", this, false, true);
+    BrowserApp.deck.addEventListener("PreviewBrowserTheme", this, false, true);
+    BrowserApp.deck.addEventListener("ResetBrowserThemePreview", this, false, true);
+  },
+
+  uninit: function() {
+    BrowserApp.deck.addEventListener("InstallBrowserTheme", this, false, true);
+    BrowserApp.deck.addEventListener("PreviewBrowserTheme", this, false, true);
+    BrowserApp.deck.addEventListener("ResetBrowserThemePreview", this, false, true);
+  },
+
+  handleEvent: function (event) {
+    switch (event.type) {
+      case "InstallBrowserTheme":
+      case "PreviewBrowserTheme":
+      case "ResetBrowserThemePreview":
+        // ignore requests from background tabs
+        if (event.target.ownerDocument.defaultView.top != content)
+          return;
+    }
+
+    switch (event.type) {
+      case "InstallBrowserTheme":
+        this._installRequest(event);
+        break;
+      case "PreviewBrowserTheme":
+        this._preview(event);
+        break;
+      case "ResetBrowserThemePreview":
+        this._resetPreview(event);
+        break;
+      case "pagehide":
+      case "TabSelect":
+        this._resetPreview();
+        break;
+    }
+  },
+
+  get _manager () {
+    let temp = {};
+    Cu.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
+    delete this._manager;
+    return this._manager = temp.LightweightThemeManager;
+  },
+
+  _installRequest: function (event) {
+    let node = event.target;
+    let data = this._getThemeFromNode(node);
+    if (!data)
+      return;
+
+    if (this._isAllowed(node)) {
+      this._install(data);
+      return;
+    }
+
+    let allowButtonText = Strings.browser.GetStringFromName("lwthemeInstallRequest.allowButton");
+    let message = Strings.browser.formatStringFromName("lwthemeInstallRequest.message", [node.ownerDocument.location.hostname], 1);
+    let buttons = [{
+      label: allowButtonText,
+      callback: function () {
+        LightWeightThemeWebInstaller._install(data);
+      }
+    }];
+
+    NativeWindow.doorhanger.show(message, "Personas", buttons, BrowserApp.selectedTab.id);
+  },
+
+  _install: function (newLWTheme) {
+    let previousLWTheme = this._manager.currentTheme;
+
+    let listener = {
+      onEnabled: function(aAddon) {
+        LightWeightThemeWebInstaller._postInstallNotification(newLWTheme, previousLWTheme);
+      }
+    };
+
+    AddonManager.addAddonListener(listener);
+    this._manager.currentTheme = newLWTheme;
+    AddonManager.removeAddonListener(listener);
+  },
+
+  _postInstallNotification: function (newTheme, previousTheme) {
+    let buttons = [{
+      label: Strings.browser.GetStringFromName("lwthemePostInstallNotification.undoButton"),
+      callback: function () {
+        LightWeightThemeWebInstaller._manager.forgetUsedTheme(newTheme.id);
+        LightWeightThemeWebInstaller._manager.currentTheme = previousTheme;
+      }
+    }, {
+      label: Strings.browser.GetStringFromName("lwthemePostInstallNotification.manageButton"),
+      callback: function () {
+        BrowserApp.addTab("about:addons", {
+          showProgress: false,
+          selected: true
+        });
+      }
+    }];
+
+    let message = Strings.browser.GetStringFromName("lwthemePostInstallNotification.message"); 
+    NativeWindow.doorhanger.show(message, "Personas", buttons, BrowserApp.selectedTab.id);
+  },
+
+  _previewWindow: null,
+  _preview: function (event) {
+    if (!this._isAllowed(event.target))
+      return;
+    let data = this._getThemeFromNode(event.target);
+    if (!data)
+      return;
+    this._resetPreview();
+
+    this._previewWindow = event.target.ownerDocument.defaultView;
+    this._previewWindow.addEventListener("pagehide", this, true);
+    BrowserApp.deck.addEventListener("TabSelect", this, false);
+    this._manager.previewTheme(data);
+  },
+
+  _resetPreview: function (event) {
+    if (!this._previewWindow ||
+        event && !this._isAllowed(event.target))
+      return;
+
+    this._previewWindow.removeEventListener("pagehide", this, true);
+    this._previewWindow = null;
+    BrowserApp.deck.removeEventListener("TabSelect", this, false);
+
+    this._manager.resetPreview();
+  },
+
+  _isAllowed: function (node) {
+    let pm = Services.perms;
+
+    let uri = node.ownerDocument.documentURIObject;
+    return pm.testPermission(uri, "install") == pm.ALLOW_ACTION;
+  },
+
+  _getThemeFromNode: function (node) {
+    return this._manager.parseTheme(node.getAttribute("data-browsertheme"), node.baseURI);
   }
 };
 
