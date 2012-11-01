@@ -92,6 +92,7 @@ class DocumentFragment;
 class DocumentType;
 class DOMImplementation;
 class Element;
+struct ElementRegistrationOptions;
 class GlobalObject;
 class HTMLBodyElement;
 class Link;
@@ -1910,6 +1911,10 @@ public:
   {
     return GetRootElement();
   }
+  virtual JSObject*
+  Register(JSContext* aCx, const nsAString& aName,
+           const mozilla::dom::ElementRegistrationOptions& aOptions,
+           mozilla::ErrorResult& rv) = 0;
   already_AddRefed<nsContentList>
   GetElementsByTagName(const nsAString& aTagName)
   {

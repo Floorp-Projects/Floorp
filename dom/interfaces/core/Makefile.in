@@ -29,6 +29,7 @@ SDK_XPIDLSRCS =                                 \
 	nsIDOMNodeList.idl			\
 	nsIDOMProcessingInstruction.idl		\
 	nsIDOMText.idl				\
+	nsIDocumentRegister.idl		\
 	$(NULL)
 XPIDLSRCS =                                     \
 	nsIDOMDOMStringList.idl			\
