@@ -35,7 +35,7 @@ interface nsIEventListenerInfo : nsISupports
   nsISupports getDebugObject();
 };
 
-[scriptable, uuid(0cf94aa6-ea9a-44cb-a063-be834afa679d)]
+[scriptable, uuid(f6964bfb-dabe-4cab-9733-be0ee2bf8171)]
 interface nsIEventListenerService : nsISupports
 {
   /**
@@ -81,5 +81,16 @@ interface nsIEventListenerService : nsISupports
                                  in DOMString type,
                                  in nsIDOMEventListener listener,
                                  in boolean useCapture);
+
+  void addListenerForAllEvents(in nsIDOMEventTarget target,
+                               in nsIDOMEventListener listener,
+                               [optional] in boolean aUseCapture,
+                               [optional] in boolean aWantsUntrusted,
+                               [optional] in boolean aSystemEventGroup);
+
+  void removeListenerForAllEvents(in nsIDOMEventTarget target,
+                                  in nsIDOMEventListener listener,
+                                  [optional] in boolean aUseCapture,
+                                  [optional] in boolean aSystemEventGroup);
 };
 
