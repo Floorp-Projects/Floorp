@@ -163,28 +163,29 @@ SmsDatabaseService.prototype = {
 
       let db = event.target.result;
 
-      switch (event.oldVersion) {
-        case 0:
-          if (DEBUG) debug("New database");
-          self.createSchema(db);
-          break;
-
-        case 1:
-          if (DEBUG) debug("Upgrade to version 2. Including `read` index");
-          let objectStore = event.target.transaction.objectStore(STORE_NAME);
-          self.upgradeSchema(objectStore);
-          break;
-
-        case 2:
-          if (DEBUG) debug("Upgrade to version 3. Fix existing entries.")
-          objectStore = event.target.transaction.objectStore(STORE_NAME);
-          self.upgradeSchema2(objectStore);
-          break;
-
-        default:
-          event.target.transaction.abort();
-          callback("Old database version: " + event.oldVersion, null);
-          break;
+      let currentVersion = event.oldVersion;
+      while (currentVersion != event.newVersion) {
+        switch (currentVersion) {
+          case 0:
+            if (DEBUG) debug("New database");
+            self.createSchema(db);
+            break;
+          case 1:
+            if (DEBUG) debug("Upgrade to version 2. Including `read` index");
+            let objectStore = event.target.transaction.objectStore(STORE_NAME);
+            self.upgradeSchema(objectStore);
+            break;
+          case 2:
+            if (DEBUG) debug("Upgrade to version 3. Fix existing entries.")
+            objectStore = event.target.transaction.objectStore(STORE_NAME);
+            self.upgradeSchema2(objectStore);
+            break;
+          default:
+            event.target.transaction.abort();
+            callback("Old database version: " + event.oldVersion, null);
+            break;
+        }
+        currentVersion++;
       }
     };
     request.onerror = function (event) {
@@ -243,7 +244,6 @@ SmsDatabaseService.prototype = {
     objectStore.createIndex("sender", "sender", { unique: false });
     objectStore.createIndex("receiver", "receiver", { unique: false });
     objectStore.createIndex("timestamp", "timestamp", { unique: false });
-    objectStore.createIndex("read", "read", { unique: false });
     if (DEBUG) debug("Created object stores and indexes");
   },
 
@@ -256,9 +256,6 @@ SmsDatabaseService.prototype = {
   },
 
   upgradeSchema2: function upgradeSchema2(objectStore) {
-    if (!objectStore) {
-      objectStore = aTransaction.objectStore(STORE_NAME);
-    }
     objectStore.openCursor().onsuccess = function(event) {
       let cursor = event.target.result;
       if (!cursor) {
@@ -266,15 +263,9 @@ SmsDatabaseService.prototype = {
       }
 
       let message = cursor.value;
-      if (DEBUG) debug("upgrade before: " + JSON.stringify(message));
-      if (!message.messageClass) {
-        message.messageClass = MESSAGE_CLASS_NORMAL;
-      }
-      if (!message.deliveryStatus) {
-        message.deliveryStatus = DELIVERY_STATUS_NOT_APPLICABLE;
-      }
+      message.messageClass = MESSAGE_CLASS_NORMAL;
+      message.deliveryStatus = DELIVERY_STATUS_NOT_APPLICABLE;
       cursor.update(message);
-      if (DEBUG) debug("upgrade after:  " + JSON.stringify(message));
       cursor.continue();
     }
   },
