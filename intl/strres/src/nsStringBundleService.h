@@ -6,7 +6,6 @@
 #ifndef nsStringBundleService_h__
 #define nsStringBundleService_h__
 
-#include "prclist.h"
 #include "plarena.h"
 
 #include "nsCOMPtr.h"
@@ -17,6 +16,8 @@
 #include "nsWeakReference.h"
 #include "nsIErrorService.h"
 #include "nsIStringBundleOverride.h"
+
+#include "mozilla/LinkedList.h"
 
 struct bundleCacheEntry_t;
 
@@ -48,7 +49,7 @@ private:
   static void recycleEntry(bundleCacheEntry_t*);
   
   nsHashtable mBundleMap;
-  PRCList mBundleCache;
+  mozilla::LinkedList<bundleCacheEntry_t> mBundleCache;
   PLArenaPool mCacheEntryPool;
 
   nsCOMPtr<nsIErrorService>     mErrorService;
