@@ -821,6 +821,12 @@ iterator_iteratorObject(JSContext *cx, HandleObject obj, JSBool keysonly)
     return obj;
 }
 
+size_t
+PropertyIteratorObject::sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const
+{
+    return mallocSizeOf(getPrivate());
+}
+
 void
 PropertyIteratorObject::trace(JSTracer *trc, RawObject obj)
 {

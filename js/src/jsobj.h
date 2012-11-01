@@ -368,9 +368,10 @@ struct JSObject : public js::ObjectImpl
 
     inline size_t computedSizeOfThisSlotsElements() const;
 
-    inline void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
-                                    size_t *slotsSize, size_t *elementsSize,
-                                    size_t *miscSize) const;
+    inline void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *slotsSize,
+                                    size_t *elementsSize, size_t *argumentsDataSize,
+                                    size_t *regExpStaticsSize,
+                                    size_t *propertyIteratorDataSize) const;
 
     bool hasIdempotentProtoChain() const;
 
@@ -1020,6 +1021,7 @@ struct JSObject : public js::ObjectImpl
     inline js::NormalArgumentsObject &asNormalArguments();
     inline js::NumberObject &asNumber();
     inline js::PropertyIteratorObject &asPropertyIterator();
+    inline const js::PropertyIteratorObject &asPropertyIterator() const;
     inline js::RegExpObject &asRegExp();
     inline js::ScopeObject &asScope();
     inline js::SetObject &asSet();
