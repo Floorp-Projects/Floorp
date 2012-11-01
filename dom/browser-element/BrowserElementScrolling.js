@@ -125,8 +125,18 @@ const ContentPanning = {
   },
 
   getPannable: function cp_getPannable(node) {
-    if (!(node instanceof Ci.nsIDOMHTMLElement) || node.tagName == 'HTML')
-      return [null, null];
+    let pannableNode = this._findPannable(node);
+    if (pannableNode) {
+      return [pannableNode, this._generateCallback(pannableNode)];
+    }
+
+    return [null, null];
+  },
+
+  _findPannable: function cp_findPannable(node) {
+    if (!(node instanceof Ci.nsIDOMHTMLElement) || node.tagName == 'HTML') {
+      return null;
+    }
 
     let nodeContent = node.ownerDocument.defaultView;
     while (!(node instanceof Ci.nsIDOMHTMLBodyElement)) {
@@ -148,39 +158,63 @@ const ContentPanning = {
            node.scrollWidth > node.clientWidth ||
            ('scrollLeftMax' in node && node.scrollLeftMax > 0) ||
            ('scrollTopMax' in node && node.scrollTopMax > 0)));
-      if (isScroll || isAuto || isScrollableTextarea)
-        return [node, this._generateCallback(node)];
+      if (isScroll || isAuto || isScrollableTextarea) {
+        return node;
+      }
 
       node = node.parentNode;
     }
 
     if (ContentPanning._asyncPanZoomForViewportFrame &&
-        nodeContent === content)
-      // The parent context is asynchronously panning and zooming our
-      // root scrollable frame, so don't use our synchronous fallback.
-      return [null, null];
-
-    if (nodeContent.scrollMaxX || nodeContent.scrollMaxY) {
-      return [nodeContent, this._generateCallback(nodeContent)];
+        nodeContent === content) {
+        // The parent context is asynchronously panning and zooming our
+        // root scrollable frame, so don't use our synchronous fallback.
+        return null;
     }
 
-    return [null, null];
+    if (nodeContent.scrollMaxX || nodeContent.scrollMaxY) {
+      return nodeContent;
+    }
+
+    return null;
   },
 
   _generateCallback: function cp_generateCallback(content) {
-    function scroll(delta) {
-      if (content instanceof Ci.nsIDOMHTMLElement) {
-        let oldX = content.scrollLeft, oldY = content.scrollTop;
-        content.scrollLeft += delta.x;
-        content.scrollTop += delta.y;
-        let newX = content.scrollLeft, newY = content.scrollTop;
-        return (newX != oldX) || (newY != oldY);
+    let firstScroll = true;
+    let target;
+    let isScrolling = false;
+    let oldX, oldY, newX, newY;
+
+    function doScroll(node, delta) {
+      if (node instanceof Ci.nsIDOMHTMLElement) {
+        oldX = node.scrollLeft, oldY = node.scrollTop;
+        node.scrollLeft += delta.x;
+        node.scrollTop += delta.y;
+        newX = node.scrollLeft, newY = node.scrollTop;
+        return (newX != oldX || newY != oldY);
       } else {
-        let oldX = content.scrollX, oldY = content.scrollY;
-        content.scrollBy(delta.x, delta.y);
-        let newX = content.scrollX, newY = content.scrollY;
-        return (newX != oldX) || (newY != oldY);
+        oldX = node.scrollX, oldY = node.scrollY;
+        node.scrollBy(delta.x, delta.y);
+        newX = node.scrollX, newY = node.scrollY;
+        return (newX != oldX || newY != oldY);
       }
+    };
+
+    function scroll(delta) {
+      for (target = content; target;
+          target = ContentPanning._findPannable(target.parentNode)) {
+        isScrolling = doScroll(target, delta);
+        if (isScrolling || !firstScroll) {
+          break;
+        }
+      }
+      if (isScrolling) {
+        if (firstScroll) {
+          content = target; // set scrolling target to the first scrolling region
+        }
+        firstScroll = false; // lockdown the scrolling target after a success scrolling
+      }
+      return isScrolling;
     }
     return scroll;
   },
