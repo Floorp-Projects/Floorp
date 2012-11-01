@@ -453,6 +453,14 @@ private:
 NS_IMPL_ISUPPORTS2(nsGlobalWindowObserver, nsIObserver, nsIInterfaceRequestor)
 
 nsTimeout::nsTimeout()
+  : mCleared(false),
+    mRunning(false),
+    mIsInterval(false),
+    mPublicId(0),
+    mInterval(0),
+    mFiringDepth(0),
+    mNestingLevel(0),
+    mPopupState(openAllowed)
 {
 #ifdef DEBUG_jst
   {
@@ -461,8 +469,6 @@ nsTimeout::nsTimeout()
     ++gTimeoutCnt;
   }
 #endif
-
-  memset(this, 0, sizeof(*this));
 
   MOZ_COUNT_CTOR(nsTimeout);
 }
