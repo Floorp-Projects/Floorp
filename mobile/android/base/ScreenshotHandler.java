@@ -35,7 +35,7 @@ public final class ScreenshotHandler implements Runnable {
     private static final int BYTES_FOR_16BPP = 2;
     private static final int MAX_PIXELS_PER_SLICE = 100000;
 
-    private static boolean sDisableScreenshot;
+    private static boolean sDisableScreenshot = true;
     private static boolean sForceDisabled;
     private static ScreenshotHandler sInstance;
 

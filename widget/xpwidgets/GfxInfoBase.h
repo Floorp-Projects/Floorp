@@ -68,6 +68,12 @@ public:
   static nsTArray<GfxDriverInfo>* mDriverInfo;
   static bool mDriverInfoObserverInitialized;
 
+  virtual const nsAString& Model() const { return nsString(); }
+  virtual const nsAString& Hardware() const { return nsString(); }
+  virtual const nsAString& Product() const { return nsString(); }
+  virtual const nsAString& Manufacturer() const { return nsString(); }
+  virtual uint32_t OperatingSystemVersion() const { return 0; }
+
 protected:
 
   virtual nsresult GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,

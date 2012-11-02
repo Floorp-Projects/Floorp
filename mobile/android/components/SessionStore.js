@@ -52,19 +52,10 @@ SessionStore.prototype = {
     // Get file references
     this._sessionFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
     this._sessionFileBackup = this._sessionFile.clone();
-    this._sessionCache = this._sessionFile.clone();
     this._sessionFile.append("sessionstore.js");
     this._sessionFileBackup.append("sessionstore.bak");
-    this._sessionCache.append("sessionstoreCache");
 
     this._loadState = STATE_STOPPED;
-
-    try {
-      if (!this._sessionCache.exists() || !this._sessionCache.isDirectory())
-        this._sessionCache.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
-    } catch (ex) {
-      Cu.reportError(ex); // file was write-locked?
-    }
 
     this._interval = Services.prefs.getIntPref("browser.sessionstore.interval");
     this._maxTabsUndo = Services.prefs.getIntPref("browser.sessionstore.max_tabs_undo");
@@ -88,36 +79,6 @@ SessionStore.prototype = {
       } catch (ex) { dump(ex + '\n'); } // couldn't remove the file - what now?
     }
 
-    this._clearCache();
-  },
-
-  _clearCache: function ss_clearCache() {
-    // First, let's get a list of files we think should be active
-    let activeFiles = [];
-    this._forEachBrowserWindow(function(aWindow) {
-      let tabs = aWindow.BrowserApp.tabs;
-      for (let i = 0; i < tabs.length; i++) {
-        let browser = tabs[i].browser;
-        if (browser.__SS_extdata && "thumbnail" in browser.__SS_extdata)
-          activeFiles.push(browser.__SS_extdata.thumbnail);
-      }
-    });
-
-    // Now, let's find the stale files in the cache folder
-    let staleFiles = [];
-    let cacheFiles = this._sessionCache.directoryEntries;
-    while (cacheFiles.hasMoreElements()) {
-      let file = cacheFiles.getNext().QueryInterface(Ci.nsILocalFile);
-      let fileURI = Services.io.newFileURI(file);
-      if (activeFiles.indexOf(fileURI) == -1)
-        staleFiles.push(file);
-    }
-
-    // Remove the stale files in a separate step to keep the enumerator from
-    // messing up if we remove the files as we collect them.
-    staleFiles.forEach(function(aFile) {
-      aFile.remove(false);
-    })
   },
 
   _sendMessageToJava: function (aMsg) {
@@ -928,26 +889,6 @@ SessionStore.prototype = {
   setTabValue: function ss_setTabValue(aTab, aKey, aStringValue) {
     let browser = aTab.browser;
 
-    // Thumbnails are actually stored in the cache, so do the save and update the URI
-    if (aKey == "thumbnail") {
-      let file = this._sessionCache.clone();
-      file.append("thumbnail-" + browser.contentWindowId);
-      file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
-
-      let source = Services.io.newURI(aStringValue, "UTF8", null);
-      let target = Services.io.newFileURI(file)
-
-      let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
-      persist.persistFlags = Ci.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES | Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-      let privacyContext = browser.contentWindow
-                                  .QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIWebNavigation)
-                                  .QueryInterface(Ci.nsILoadContext);
-      persist.saveURI(source, null, null, null, null, file, privacyContext);
-
-      aStringValue = target.spec;
-    }
-
     if (!browser.__SS_extdata)
       browser.__SS_extdata = {};
     browser.__SS_extdata[aKey] = aStringValue;
@@ -978,7 +919,6 @@ SessionStore.prototype = {
     }
 
     function notifyObservers(aMessage) {
-      self._clearCache();
       Services.obs.notifyObservers(null, "sessionstore-windows-restored", aMessage || "");
     }
 

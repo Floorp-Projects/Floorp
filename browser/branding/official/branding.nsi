@@ -18,6 +18,7 @@
 !define Official
 !define URLStubDownload "http://download.mozilla.org/?product=firefox-latest&os=win&lang=${AB_CD}"
 !define URLManualDownload "https://www.mozilla.org/firefox/installer-help/?channel=release"
+!define Channel "release"
 
 # The installer's certificate name and issuer expected by the stub installer
 !define CertNameDownload   "Mozilla Corporation"

@@ -12,6 +12,7 @@
 #include "AudioDestinationNode.h"
 #include "AudioBufferSourceNode.h"
 #include "AudioBuffer.h"
+#include "GainNode.h"
 
 namespace mozilla {
 namespace dom {
@@ -84,6 +85,13 @@ AudioContext::CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
     return nullptr;
   }
   return buffer.forget();
+}
+
+already_AddRefed<GainNode>
+AudioContext::CreateGain()
+{
+  nsRefPtr<GainNode> gainNode = new GainNode(this);
+  return gainNode.forget();
 }
 
 }
