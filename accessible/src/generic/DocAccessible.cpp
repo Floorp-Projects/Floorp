@@ -592,8 +592,6 @@ DocAccessible::Shutdown()
     logging::DocDestroy("document shutdown", mDocumentNode, this);
 #endif
 
-  mPresShell->SetDocAccessible(nullptr);
-
   if (mNotificationController) {
     mNotificationController->Shutdown();
     mNotificationController = nullptr;
@@ -629,6 +627,7 @@ DocAccessible::Shutdown()
     mVirtualCursor = nullptr;
   }
 
+  mPresShell->SetDocAccessible(nullptr);
   mPresShell = nullptr;  // Avoid reentrancy
 
   mDependentIDsHash.Clear();
