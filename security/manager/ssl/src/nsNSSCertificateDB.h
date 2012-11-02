@@ -7,8 +7,9 @@
 
 #include "nsIX509CertDB.h"
 #include "nsIX509CertDB2.h"
-#include "nsNSSCertHeader.h"
+#include "certt.h"
 
+class nsCString;
 class nsIArray;
 
 class nsNSSCertificateDB : public nsIX509CertDB, public nsIX509CertDB2
