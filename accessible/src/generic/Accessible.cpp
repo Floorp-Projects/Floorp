@@ -2105,9 +2105,35 @@ NS_IMETHODIMP Accessible::GetNativeInterface(void **aOutAccessible)
 void
 Accessible::DoCommand(nsIContent *aContent, uint32_t aActionIndex)
 {
+  class Runnable MOZ_FINAL : public nsRunnable
+  {
+  public:
+    Runnable(Accessible* aAcc, nsIContent* aContent, uint32_t aIdx) :
+      mAcc(aAcc), mContent(aContent), mIdx(aIdx) { }
+
+    NS_IMETHOD Run()
+    {
+      if (mAcc)
+        mAcc->DispatchClickEvent(mContent, mIdx);
+
+      return NS_OK;
+    }
+
+    void Revoke()
+    {
+      mAcc = nullptr;
+      mContent = nullptr;
+    }
+
+  private:
+    nsRefPtr<Accessible> mAcc;
+    nsCOMPtr<nsIContent> mContent;
+    uint32_t mIdx;
+  };
+
   nsIContent* content = aContent ? aContent : mContent.get();
-  NS_DISPATCH_RUNNABLEMETHOD_ARG2(DispatchClickEvent, this, content,
-                                  aActionIndex);
+  nsCOMPtr<nsIRunnable> runnable = new Runnable(this, content, aActionIndex);
+  NS_DispatchToMainThread(runnable);
 }
 
 void
