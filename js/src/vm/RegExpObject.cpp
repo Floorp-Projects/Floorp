@@ -195,7 +195,10 @@ RegExpCode::compile(JSContext *cx, JSLinearString &pattern, unsigned *parenCount
             return false;
 
         JSGlobalData globalData(execAlloc);
-        jitCompile(yarrPattern, &globalData, codeBlock);
+        jitCompile(yarrPattern,
+                   JSC::Yarr::Char16,
+                   &globalData,
+                   codeBlock);
         if (!codeBlock.isFallBack())
             return true;
     }
@@ -218,21 +221,23 @@ RegExpRunStatus
 RegExpCode::execute(JSContext *cx, StableCharPtr chars, size_t length, size_t start,
                     int *output, size_t outputCount)
 {
-    int result;
+    unsigned result;
 #if ENABLE_YARR_JIT
     (void) cx; /* Unused. */
-    if (codeBlock.isFallBack())
-        result = JSC::Yarr::interpret(byteCode, chars.get(), start, length, output);
-    else
-        result = JSC::Yarr::execute(codeBlock, chars.get(), start, length, output);
+    if (codeBlock.isFallBack()) {
+        result = JSC::Yarr::interpret(byteCode, chars.get(), length, start,
+                                      reinterpret_cast<unsigned *>(output));
+    } else {
+        result = codeBlock.execute(chars.get(), start, length, output).start;
+    }
 #else
-    result = JSC::Yarr::interpret(byteCode, chars.get(), start, length, output);
+    result = JSC::Yarr::interpret(byteCode, chars.get(), length, start,
+                                  reinterpret_cast<unsigned *>(output));
 #endif
 
-    if (result == -1)
+    if (result == JSC::Yarr::offsetNoMatch)
         return RegExpRunStatus_Success_NotFound;
 
-    JS_ASSERT(result >= 0);
     return RegExpRunStatus_Success;
 }
 

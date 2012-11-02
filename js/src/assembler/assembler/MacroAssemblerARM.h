@@ -250,6 +250,11 @@ public:
         m_assembler.eors_r(dest, dest, ARMRegisters::S1);
     }
 
+    void load8(BaseIndex address, RegisterID dest)
+    {
+        load8ZeroExtend(address, dest);
+    }
+
     void load8SignExtend(ImplicitAddress address, RegisterID dest)
     {
         m_assembler.dataTransferN(true, true, 8, dest, address.base, address.offset);
@@ -276,6 +281,11 @@ public:
     void load8(ImplicitAddress address, RegisterID dest)
     {
         load8ZeroExtend(address, dest);
+    }
+
+    void load16Unaligned(BaseIndex address, RegisterID dest)
+    {
+        load16(address, dest);
     }
    
     void load16SignExtend(ImplicitAddress address, RegisterID dest)

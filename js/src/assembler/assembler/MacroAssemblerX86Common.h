@@ -414,6 +414,11 @@ public:
         m_assembler.movw_rm(src, address.offset, address.base, address.index, address.scale);
     }
 
+    void load8(BaseIndex address, RegisterID dest)
+    {
+        load8ZeroExtend(address, dest);
+    }
+
     void load8ZeroExtend(BaseIndex address, RegisterID dest)
     {
         m_assembler.movzbl_mr(address.offset, address.base, address.index, address.scale, dest);
@@ -452,6 +457,11 @@ public:
     void load16(Address address, RegisterID dest)
     {
         m_assembler.movzwl_mr(address.offset, address.base, dest);
+    }
+
+    void load16Unaligned(BaseIndex address, RegisterID dest)
+    {
+        load16(address, dest);
     }
 
     DataLabel32 store32WithAddressOffsetPatch(RegisterID src, Address address)
