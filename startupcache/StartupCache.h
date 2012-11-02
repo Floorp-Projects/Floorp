@@ -44,6 +44,12 @@
  *
  * InvalidateCache() may be called if a client suspects data corruption 
  * or wishes to invalidate for any other reason. This will remove all existing cache data.
+ * Additionally, the static method IgnoreDiskCache() can be called if it is
+ * believed that the on-disk cache file is itself corrupt. This call implicitly
+ * calls InvalidateCache (if the singleton has been initialized) to ensure any
+ * data already read from disk is discarded. The cache will not load data from
+ * the disk file until a successful write occurs.
+ *
  * Finally, getDebugObjectOutputStream() allows debug code to wrap an objectstream
  * with a debug objectstream, to check for multiply-referenced objects. These will
  * generally fail to deserialize correctly, unless they are stateless singletons or the 
@@ -114,6 +120,9 @@ public:
   // Removes the cache file.
   void InvalidateCache();
 
+  // Signal that data should not be loaded from the cache file
+  static void IgnoreDiskCache();
+
   // In DEBUG builds, returns a stream that will attempt to check for
   // and disallow multiple writes of the same object.
   nsresult GetDebugObjectOutputStream(nsIObjectOutputStream* aStream,
@@ -167,6 +176,7 @@ private:
 
   static StartupCache *gStartupCache;
   static bool gShutdownInitiated;
+  static bool gIgnoreDiskCache;
   PRThread *mWriteThread;
 #ifdef DEBUG
   nsTHashtable<nsISupportsHashKey> mWriteObjectMap;

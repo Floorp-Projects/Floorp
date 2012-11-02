@@ -143,7 +143,7 @@ let Pipe = {
    * provide a callback for handling messages.
    *
    * @param aRpOptions        options describing the Relying Party's
-   *        (dicitonary)      call, such as origin and loggedInEmail.
+   *        (dictionary)      call, such as origin and loggedInUser.
    *
    * @param aGaiaOptions      showUI:   boolean
    *        (dictionary)      message:  name of the message to emit
@@ -289,11 +289,11 @@ let SignInToWebsiteController = {
    */
   _makeDoMethodCallback: function SignInToWebsiteController__makeDoMethodCallback(aRpId) {
     return function SignInToWebsiteController_methodCallback(aOptions) {
-      log("doMethod:", aOptions);
       let message = aOptions.json;
       if (typeof message === 'string') {
         message = JSON.parse(message);
       }
+      log("doMethod:", message.method);
       switch(message.method) {
         case "ready":
           IdentityService.doReady(aRpId);

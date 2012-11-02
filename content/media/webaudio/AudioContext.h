@@ -27,6 +27,7 @@ class AudioDestinationNode;
 class AudioBufferSourceNode;
 class AudioBuffer;
 class GainNode;
+class DelayNode;
 
 class AudioContext MOZ_FINAL : public nsWrapperCache,
                                public EnableWebAudioCheck
@@ -64,6 +65,9 @@ public:
 
   already_AddRefed<GainNode>
   CreateGain();
+
+  already_AddRefed<DelayNode>
+  CreateDelay(float aMaxDelayTime);
 
 private:
   nsCOMPtr<nsIDOMWindow> mWindow;

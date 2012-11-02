@@ -125,6 +125,11 @@ class MachCommands(MozbuildObject):
     @CommandArgument('--shuffle', '-s', action='store_true',
         help='Randomize the execution order of tests.')
     def run_xpcshell_test(self, **params):
+        # We should probably have a utility function to ensure the tree is
+        # ready to run tests. Until then, we just create the state dir (in
+        # case the tree wasn't built with mach).
+        self._ensure_state_subdir_exists('.')
+
         xpcshell = self._spawn(XPCShellRunner)
         xpcshell.run_test(**params)
 

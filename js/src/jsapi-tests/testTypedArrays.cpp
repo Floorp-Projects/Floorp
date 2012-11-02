@@ -99,6 +99,7 @@ TestArrayFromBuffer(JSContext *cx)
     CHECK_EQUAL(JS_GetTypedArrayLength(array, cx), elts);
     CHECK_EQUAL(JS_GetTypedArrayByteOffset(array, cx), 0);
     CHECK_EQUAL(JS_GetTypedArrayByteLength(array, cx), nbytes);
+    CHECK_EQUAL(JS_GetArrayBufferViewBuffer(array, cx), (JSObject*) buffer);
 
     Element *data;
     CHECK(data = GetData(array, cx));

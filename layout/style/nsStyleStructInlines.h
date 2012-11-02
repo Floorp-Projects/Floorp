@@ -142,4 +142,20 @@ nsStyleDisplay::IsAbsolutelyPositioned(const nsIFrame* aFrame) const
   return IsAbsolutelyPositionedStyle() && !aFrame->IsSVGText();
 }
 
+uint8_t
+nsStyleVisibility::GetEffectivePointerEvents(nsIFrame* aFrame) const
+{
+  if (aFrame->GetContent() && !aFrame->GetContent()->GetParent()) {
+    // The root element has a cluster of frames associated with it
+    // (root scroll frame, canvas frame, the actual primary frame). Make
+    // those take their pointer-events value from the root element's primary
+    // frame.
+    nsIFrame* f = aFrame->GetContent()->GetPrimaryFrame();
+    if (f) {
+      return f->GetStyleVisibility()->mPointerEvents;
+    }
+  }
+  return mPointerEvents;
+}
+
 #endif /* !defined(nsStyleStructInlines_h_) */

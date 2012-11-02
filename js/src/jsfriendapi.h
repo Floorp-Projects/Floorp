@@ -1336,6 +1336,14 @@ extern JS_FRIEND_API(void *)
 JS_GetArrayBufferViewData(JSObject *obj, JSContext *maybecx);
 
 /*
+ * Return the ArrayBuffer underlying an ArrayBufferView. If the buffer has been
+ * neutered, this will still return the neutered buffer. |obj| must be an
+ * object that would return true for JS_IsArrayBufferViewObject().
+ */
+extern JS_FRIEND_API(JSObject *)
+JS_GetArrayBufferViewBuffer(JSObject *obj, JSContext *maybecx);
+
+/*
  * Check whether obj supports JS_GetDataView* APIs. Note that this may fail and
  * throw an exception if a security wrapper is encountered that denies the
  * operation.

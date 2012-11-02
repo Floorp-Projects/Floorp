@@ -54,11 +54,12 @@ public:
   nsresult GetVideoSizes(nsTArray<CameraSize>& aVideoSizes);
   nsresult PushParameters();
 
-  nsresult SetupRecording(int aFd, int aMaxFileSizeBytes = -1, int aMaxVideoLengthMs = -1);
+  nsresult SetupRecording(int aFd, int64_t aMaxFileSizeBytes = -1, int64_t aMaxVideoLengthMs = -1);
   nsresult SetupVideoMode(const nsAString& aProfile);
 
   void AutoFocusComplete(bool aSuccess);
   void TakePictureComplete(uint8_t* aData, uint32_t aLength);
+  void HandleRecorderEvent(int msg, int ext1, int ext2);
 
 protected:
   ~nsGonkCameraControl();

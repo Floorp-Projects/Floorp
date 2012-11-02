@@ -104,6 +104,3 @@ protected:
 
   bool IsMenuActive(nsIFrame* aFrame, uint8_t aWidgetType);
 };
-
-// Creator function
-extern NS_METHOD NS_NewNativeThemeWin(nsISupports *aOuter, REFNSIID aIID, void **aResult);
