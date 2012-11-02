@@ -164,8 +164,10 @@ typedef uint64_t nsFrameState;
 // e.g., it is absolutely positioned or floated
 #define NS_FRAME_OUT_OF_FLOW                        NS_FRAME_STATE_BIT(8)
 
-// This bit is available for re-use.
-//#define NS_FRAME_SELECTED_CONTENT                   NS_FRAME_STATE_BIT(9)
+// Frame can be an abs/fixed pos. container, if its style says so.
+// MarkAs[Not]AbsoluteContainingBlock will assert that this bit is set.
+// NS_FRAME_HAS_ABSPOS_CHILDREN must not be set when this bit is unset.
+#define NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN           NS_FRAME_STATE_BIT(9)
 
 // If this bit is set, then the frame and _all_ of its descendant frames need
 // to be reflowed.

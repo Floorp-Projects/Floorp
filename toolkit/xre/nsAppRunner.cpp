@@ -91,11 +91,13 @@
 #include "nsIWidget.h"
 #include "nsIDocShell.h"
 #include "nsAppShellCID.h"
+#include "mozilla/scache/StartupCache.h"
 
 #include "mozilla/unused.h"
 
 using namespace mozilla;
 using mozilla::unused;
+using mozilla::scache::StartupCache;
 
 #ifdef XP_WIN
 #include "nsIWinAppHelper.h"
@@ -2406,7 +2408,7 @@ static void BuildVersion(nsCString &aBuf)
 static void
 WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
              const nsCString& aOSABI, nsIFile* aXULRunnerDir,
-             nsIFile* aAppDir)
+             nsIFile* aAppDir, bool invalidateCache)
 {
   nsCOMPtr<nsIFile> file;
   aProfileDir->Clone(getter_AddRefs(file));
@@ -2449,19 +2451,30 @@ WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
     PR_Write(fd, appDir.get(), appDir.Length());
   }
 
+  static const char kInvalidationHeader[] = "InvalidateCaches=1" NS_LINEBREAK;
+  if (invalidateCache)
+    PR_Write(fd, kInvalidationHeader, sizeof(kInvalidationHeader) - 1);
+
   static const char kNL[] = NS_LINEBREAK;
   PR_Write(fd, kNL, sizeof(kNL) - 1);
 
   PR_Close(fd);
 }
 
-static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfileDir,
+/**
+ * Returns true if the startup cache file was successfully removed.
+ * Returns false if file->Clone fails at any point (OOM) or if unable
+ * to remove the startup cache file. Note in particular the return value
+ * is unaffected by a failure to remove extensions.ini
+ */
+static bool
+RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfileDir,
                                       bool aRemoveEMFiles)
 {
   nsCOMPtr<nsIFile> file;
   aProfileDir->Clone(getter_AddRefs(file));
   if (!file)
-    return;
+    return false;
 
   if (aRemoveEMFiles) {
     file->SetNativeLeafName(NS_LITERAL_CSTRING("extensions.ini"));
@@ -2470,7 +2483,7 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
 
   aLocalProfileDir->Clone(getter_AddRefs(file));
   if (!file)
-    return;
+    return false;
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #define PLATFORM_FASL_SUFFIX ".mfasl"
@@ -2485,7 +2498,8 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
   file->Remove(false);
 
   file->SetNativeLeafName(NS_LITERAL_CSTRING("startupCache"));
-  file->Remove(true);
+  nsresult rv = file->Remove(true);
+  return NS_SUCCEEDED(rv) || rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
 }
 
 // To support application initiated restart via nsIAppStartup.quit, we
@@ -3533,21 +3547,22 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   // profile in different builds the component registry must be
   // re-generated to prevent mysterious component loading failures.
   //
+  bool startupCacheValid = true;
   if (gSafeMode) {
-    RemoveComponentRegistries(mProfD, mProfLD, false);
+    startupCacheValid = RemoveComponentRegistries(mProfD, mProfLD, false);
     WriteVersion(mProfD, NS_LITERAL_CSTRING("Safe Mode"), osABI,
-                 mDirProvider.GetGREDir(), mAppData->directory);
+                 mDirProvider.GetGREDir(), mAppData->directory, !startupCacheValid);
   }
   else if (versionOK) {
     if (!cachesOK) {
       // Remove caches, forcing component re-registration.
       // The new list of additional components directories is derived from
       // information in "extensions.ini".
-      RemoveComponentRegistries(mProfD, mProfLD, false);
+      startupCacheValid = RemoveComponentRegistries(mProfD, mProfLD, false);
         
       // Rewrite compatibility.ini to remove the flag
       WriteVersion(mProfD, version, osABI,
-                   mDirProvider.GetGREDir(), mAppData->directory);
+                   mDirProvider.GetGREDir(), mAppData->directory, !startupCacheValid);
     }
     // Nothing need be done for the normal startup case.
   }
@@ -3555,12 +3570,15 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
     // Remove caches, forcing component re-registration
     // with the default set of components (this disables any potentially
     // troublesome incompatible XPCOM components). 
-    RemoveComponentRegistries(mProfD, mProfLD, true);
+    startupCacheValid = RemoveComponentRegistries(mProfD, mProfLD, true);
 
     // Write out version
     WriteVersion(mProfD, version, osABI,
-                 mDirProvider.GetGREDir(), mAppData->directory);
+                 mDirProvider.GetGREDir(), mAppData->directory, !startupCacheValid);
   }
+
+  if (!startupCacheValid)
+    StartupCache::IgnoreDiskCache();
 
   if (flagFile) {
     flagFile->Remove(true);

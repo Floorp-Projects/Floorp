@@ -901,13 +901,6 @@ nsInlineFrame::GetBaseline() const
   return mBaseline;
 }
 
-void
-nsInlineFrame::DestroyFrom(nsIFrame* aDestructRoot)
-{
-  DestroyAbsoluteFrames(aDestructRoot);
-  nsContainerFrame::DestroyFrom(aDestructRoot);
-}
-
 #ifdef ACCESSIBILITY
 a11y::AccType
 nsInlineFrame::AccessibleType()

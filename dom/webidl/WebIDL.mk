@@ -20,6 +20,7 @@ webidl_files = \
   CanvasRenderingContext2D.webidl \
   ClientRectList.webidl \
   CSSStyleDeclaration.webidl \
+  DelayNode.webidl \
   DOMImplementation.webidl \
   DOMTokenList.webidl \
   DOMSettableTokenList.webidl \

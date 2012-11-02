@@ -53,7 +53,6 @@ public:
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              uint32_t aFlags) MOZ_OVERRIDE;
   virtual nscoord GetBaseline() const;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -114,13 +113,6 @@ nsFieldSetFrame::nsFieldSetFrame(nsStyleContext* aContext)
   mContentFrame = nullptr;
   mLegendFrame  = nullptr;
   mLegendSpace  = 0;
-}
-
-void
-nsFieldSetFrame::DestroyFrom(nsIFrame* aDestructRoot)
-{
-  DestroyAbsoluteFrames(aDestructRoot);
-  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 nsIAtom*

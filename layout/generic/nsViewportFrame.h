@@ -33,8 +33,6 @@ public:
   {}
   virtual ~ViewportFrame() { } // useful for debugging
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
-
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
