@@ -787,7 +787,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcDynamicMarkSlice(false),
     gcShouldCleanUpEverything(false),
     gcIsNeeded(0),
-    gcWeakMapList(NULL),
     gcStats(thisFromCtor()),
     gcNumber(0),
     gcStartNumber(0),

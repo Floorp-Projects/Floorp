@@ -1530,6 +1530,7 @@ DebugScopes::DebugScopes(JSContext *cx)
 DebugScopes::~DebugScopes()
 {
     JS_ASSERT(missingScopes.empty());
+    WeakMapBase::removeWeakMapFromList(&proxiedScopes);
 }
 
 bool
@@ -1542,12 +1543,6 @@ DebugScopes::init()
         return false;
     }
     return true;
-}
-
-void
-DebugScopes::finalize(JSRuntime *rt)
-{
-    WeakMapBase::removeWeakMapFromList(rt, &proxiedScopes);
 }
 
 void
