@@ -1172,6 +1172,8 @@ Argument.prototype.merge = function(following) {
  * - prefixPostSpace: Should the prefix be altered to end with a space?
  * - suffixSpace: Should the suffix be altered to end with a space?
  * - type: Constructor to use in creating new instances. Default: Argument
+ * - dontQuote: Should we avoid adding prefix/suffix quotes when the text value
+ *   has a space? Needed when we're completing a sub-command.
  */
 Argument.prototype.beget = function(options) {
   var text = this.text;
@@ -1182,10 +1184,13 @@ Argument.prototype.beget = function(options) {
     text = options.text;
 
     // We need to add quotes when the replacement string has spaces or is empty
-    var needsQuote = text.indexOf(' ') >= 0 || text.length == 0;
-    if (needsQuote && /['"]/.test(prefix)) {
-      prefix = prefix + '\'';
-      suffix = '\'' + suffix;
+    if (!options.dontQuote) {
+      var needsQuote = text.indexOf(' ') >= 0 || text.length == 0;
+      var hasQuote = /['"]$/.test(prefix);
+      if (needsQuote && !hasQuote) {
+        prefix = prefix + '\'';
+        suffix = '\'' + suffix;
+      }
     }
   }
 
@@ -1590,9 +1595,9 @@ NamedArgument.prototype.beget = function(options) {
   options.type = NamedArgument;
   var begotten = Argument.prototype.beget.call(this, options);
 
-  // Cut the prefix into |whitespace|non-whitespace|whitespace| so we can
+  // Cut the prefix into |whitespace|non-whitespace|whitespace+quote so we can
   // rebuild nameArg and valueArg from the parts
-  var matches = /^([\s]*)([^\s]*)([\s]*)$/.exec(begotten.prefix);
+  var matches = /^([\s]*)([^\s]*)([\s]*['"]?)$/.exec(begotten.prefix);
 
   if (this.valueArg == null && begotten.text === '') {
     begotten.nameArg = new Argument(matches[2], matches[1], matches[3]);
@@ -3038,12 +3043,22 @@ function hash(str) {
     return hash;
   }
   for (var i = 0; i < str.length; i++) {
-    var char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    var character = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + character;
     hash = hash & hash; // Convert to 32bit integer
   }
   return hash;
 }
+
+/**
+ * Shortcut for clearElement/createTextNode/appendChild to make up for the lack
+ * of standards around textContent/innerText
+ */
+exports.setTextContent = function(elem, text) {
+  exports.clearElement(elem);
+  var child = elem.ownerDocument.createTextNode(text);
+  elem.appendChild(child);
+};
 
 /**
  * There are problems with innerHTML on XML documents, so we need to do a dance
@@ -5411,7 +5426,7 @@ function UnassignedAssignment(requisition, arg) {
       name: 'param',
       requisition: requisition,
       isIncompleteName: (arg.text.charAt(0) === '-')
-    },
+    }
   });
   this.paramIndex = -1;
   this.onAssignmentChange = util.createEvent('UnassignedAssignment.onAssignmentChange');
@@ -5812,7 +5827,10 @@ Requisition.prototype.complete = function(cursor, predictionChoice) {
   }
   else {
     // Mutate this argument to hold the completion
-    var arg = assignment.arg.beget({ text: prediction.name });
+    var arg = assignment.arg.beget({
+      text: prediction.name,
+      dontQuote: (assignment === this.commandAssignment)
+    });
     this.setAssignment(assignment, arg, { argUpdate: true });
 
     if (!prediction.incomplete) {
@@ -5905,7 +5923,7 @@ Requisition.prototype.toCanonicalString = function() {
  * to display this typed input. It's a bit like toString on steroids.
  * <p>
  * The returned object has the following members:<ul>
- * <li>char: The character to which this arg trace refers.
+ * <li>character: The character to which this arg trace refers.
  * <li>arg: The Argument to which this character is assigned.
  * <li>part: One of ['prefix'|'text'|suffix'] - how was this char understood
  * </ul>
@@ -5930,13 +5948,13 @@ Requisition.prototype.createInputArgTrace = function() {
   var i;
   this._args.forEach(function(arg) {
     for (i = 0; i < arg.prefix.length; i++) {
-      args.push({ arg: arg, char: arg.prefix[i], part: 'prefix' });
+      args.push({ arg: arg, character: arg.prefix[i], part: 'prefix' });
     }
     for (i = 0; i < arg.text.length; i++) {
-      args.push({ arg: arg, char: arg.text[i], part: 'text' });
+      args.push({ arg: arg, character: arg.text[i], part: 'text' });
     }
     for (i = 0; i < arg.suffix.length; i++) {
-      args.push({ arg: arg, char: arg.suffix[i], part: 'suffix' });
+      args.push({ arg: arg, character: arg.suffix[i], part: 'suffix' });
     }
   });
 
@@ -6024,7 +6042,7 @@ Requisition.prototype.getInputStatusMarkup = function(cursor) {
       }
     }
 
-    markup.push({ status: status, string: argTrace.char });
+    markup.push({ status: status, string: argTrace.character });
   }
 
   // De-dupe: merge entries where 2 adjacent have same status
@@ -6796,7 +6814,12 @@ Output.prototype.toDom = function(element) {
       node = util.createElement(document, 'p');
     }
 
-    util.setContents(node, output.toString());
+    if (this.command.returnType === 'string') {
+      node.textContent = output;
+    }
+    else {
+      util.setContents(node, output.toString());
+    }
   }
 
   // Make sure that links open in a new window.
@@ -6937,7 +6960,7 @@ var eagerHelperSettingSpec = {
     lookup: [
       { name: 'never', value: Eagerness.NEVER },
       { name: 'sometimes', value: Eagerness.SOMETIMES },
-      { name: 'always', value: Eagerness.ALWAYS },
+      { name: 'always', value: Eagerness.ALWAYS }
     ]
   },
   defaultValue: Eagerness.SOMETIMES,
@@ -7345,7 +7368,6 @@ var TrueNamedArgument = require('gcli/argument').TrueNamedArgument;
 var FalseNamedArgument = require('gcli/argument').FalseNamedArgument;
 var ArrayArgument = require('gcli/argument').ArrayArgument;
 
-var Conversion = require('gcli/types').Conversion;
 var ArrayConversion = require('gcli/types').ArrayConversion;
 
 var StringType = require('gcli/types/basic').StringType;
@@ -7608,7 +7630,7 @@ function ArrayField(type, options) {
   this.addButton = util.createElement(this.document, 'button');
   this.addButton.classList.add('gcli-array-member-add');
   this.addButton.addEventListener('click', this._onAdd, false);
-  this.addButton.innerHTML = l10n.lookup('fieldArrayAdd');
+  this.addButton.textContent = l10n.lookup('fieldArrayAdd');
   this.element.appendChild(this.addButton);
 
   // <div class=gcliArrayMbrs save="${mbrElement}">
@@ -7676,7 +7698,7 @@ ArrayField.prototype._onAdd = function(ev, subConversion) {
   var delButton = util.createElement(this.document, 'button');
   delButton.classList.add('gcli-array-member-del');
   delButton.addEventListener('click', this._onDel, false);
-  delButton.innerHTML = l10n.lookup('fieldArrayDel');
+  delButton.textContent = l10n.lookup('fieldArrayDel');
   element.appendChild(delButton);
 
   var member = {
@@ -7790,10 +7812,7 @@ Field.prototype.setMessageElement = function(element) {
  */
 Field.prototype.setMessage = function(message) {
   if (this.messageElement) {
-    if (message == null) {
-      message = '';
-    }
-    util.setContents(this.messageElement, message);
+    util.setTextContent(this.messageElement, message || '');
   }
 };
 
@@ -8453,7 +8472,7 @@ SelectionField.prototype._addOption = function(item) {
   this.items.push(item);
 
   var option = util.createElement(this.document, 'option');
-  option.innerHTML = item.name;
+  option.textContent = item.name;
   option.value = item.index;
   this.element.appendChild(option);
 };
@@ -8594,7 +8613,7 @@ var helpCommandSpec = {
       name: 'search',
       type: 'string',
       description: l10n.lookup('helpSearchDesc'),
-      manual: l10n.lookup('helpSearchManual2'),
+      manual: l10n.lookup('helpSearchManual3'),
       defaultValue: null
     }
   ],
@@ -8679,7 +8698,7 @@ function getListTemplateData(args, context) {
 
     ondblclick: function(ev) {
       util.executeCommand(ev.currentTarget, context);
-    },
+    }
   };
 }
 
@@ -8699,11 +8718,8 @@ function getManTemplateData(command, context) {
       util.executeCommand(ev.currentTarget, context);
     },
 
-    describe: function(item, element) {
-      var text = item.manual || item.description;
-      var parent = element.ownerDocument.createElement('div');
-      util.setContents(parent, text);
-      return parent.childNodes;
+    describe: function(item) {
+      return item.manual || item.description;
     },
 
     getTypeDescription: function(param) {
@@ -8755,7 +8771,7 @@ define("text!gcli/commands/help_man.html", [], "\n" +
   "\n" +
   "  <h4 class=\"gcli-help-header\">${l10n.helpManDescription}:</h4>\n" +
   "\n" +
-  "  <p class=\"gcli-help-description\">${describe(command, __element)}</p>\n" +
+  "  <p class=\"gcli-help-description\">${describe(command)}</p>\n" +
   "\n" +
   "  <div if=\"${command.exec}\">\n" +
   "    <h4 class=\"gcli-help-header\">${l10n.helpManParameters}:</h4>\n" +
@@ -8765,7 +8781,7 @@ define("text!gcli/commands/help_man.html", [], "\n" +
   "      <li foreach=\"param in ${command.params}\">\n" +
   "        ${param.name} <em>${getTypeDescription(param)}</em>\n" +
   "        <br/>\n" +
-  "        ${describe(param, __element)}\n" +
+  "        ${describe(param)}\n" +
   "      </li>\n" +
   "    </ul>\n" +
   "  </div>\n" +
@@ -8904,7 +8920,7 @@ var prefSetCmdSpec = {
           activate: function() {
             context.exec('pref set ' + exports.allowSet.name + ' true');
           }
-        },
+        }
       });
     }
     args.setting.value = args.value;
@@ -9975,9 +9991,7 @@ Completer.prototype.resized = function(ev) {
  * Bring the completion element up to date with what the requisition says
  */
 Completer.prototype.update = function(ev) {
-  if (ev && ev.choice != null) {
-    this.choice = ev.choice;
-  }
+  this.choice = (ev && ev.choice != null) ? ev.choice : 0;
 
   var data = this._getCompleterTemplateData();
   var template = this.template.cloneNode(true);
@@ -10140,14 +10154,15 @@ exports.Completer = Completer;
 
 });
 define("text!gcli/ui/completer.html", [], "\n" +
-  "<description>\n" +
+  "<description\n" +
+  "    xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\">\n" +
   "  <loop foreach=\"member in ${statusMarkup}\">\n" +
-  "    <label class=\"${member.className}\">${member.string}</label>\n" +
+  "    <label class=\"${member.className}\" value=\"${member.string}\"></label>\n" +
   "  </loop>\n" +
-  "  <label class=\"gcli-in-ontab\">${directTabText}</label>\n" +
-  "  <label class=\"gcli-in-todo\" foreach=\"param in ${emptyParameters}\">${param}</label>\n" +
-  "  <label class=\"gcli-in-ontab\">${arrowTabText}</label>\n" +
-  "  <label class=\"gcli-in-closebrace\" if=\"${unclosedJs}\">}</label>\n" +
+  "  <label class=\"gcli-in-ontab\" value=\"${directTabText}\"/>\n" +
+  "  <label class=\"gcli-in-todo\" foreach=\"param in ${emptyParameters}\" value=\"${param}\"/>\n" +
+  "  <label class=\"gcli-in-ontab\" value=\"${arrowTabText}\"/>\n" +
+  "  <label class=\"gcli-in-closebrace\" if=\"${unclosedJs}\" value=\"}\"/>\n" +
   "</description>\n" +
   "");
 
@@ -10375,7 +10390,7 @@ Tooltip.prototype.assignmentContentsChanged = function(ev) {
   }
 
   this.field.setConversion(ev.conversion);
-  util.setContents(this.descriptionEle, this.description);
+  util.setTextContent(this.descriptionEle, this.description);
 
   this._updatePosition();
 };
@@ -10429,19 +10444,7 @@ Object.defineProperty(Tooltip.prototype, 'description', {
       return '';
     }
 
-    var output = this.assignment.param.manual;
-    if (output) {
-      var wrapper = this.document.createElement('span');
-      util.setContents(wrapper, output);
-      if (!this.assignment.param.isDataRequired) {
-        var optional = this.document.createElement('span');
-        optional.appendChild(this.document.createTextNode(' (Optional)'));
-        wrapper.appendChild(optional);
-      }
-      return wrapper;
-    }
-
-    return this.assignment.param.description;
+    return this.assignment.param.manual || this.assignment.param.description;
   },
   enumerable: true
 });
