@@ -7,4 +7,5 @@ var obj = {};
 s.add(obj);
 assertEq(referencesVia(s, "key", obj), true);
 s.clear();
-assertEq(referencesVia(s, "key", obj), false);
+if (typeof findReferences == 'function')
+    assertEq(referencesVia(s, "key", obj), false);
