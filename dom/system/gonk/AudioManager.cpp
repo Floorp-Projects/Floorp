@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include <android/log.h> 
+#include <android/log.h>
 
 #include "mozilla/Hal.h"
 #include "AudioManager.h"
@@ -26,13 +26,28 @@ using namespace android;
 using namespace mozilla::hal;
 using namespace mozilla;
 
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "AudioManager" , ## args) 
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "AudioManager" , ## args)
 
 #define HEADPHONES_STATUS_CHANGED "headphones-status-changed"
 #define HEADPHONES_STATUS_ON      NS_LITERAL_STRING("on").get()
 #define HEADPHONES_STATUS_OFF     NS_LITERAL_STRING("off").get()
 #define HEADPHONES_STATUS_UNKNOWN NS_LITERAL_STRING("unknown").get()
 #define BLUETOOTH_SCO_STATUS_CHANGED "bluetooth-sco-status-changed"
+
+// Refer AudioService.java from Android
+static int sMaxStreamVolumeTbl[AUDIO_STREAM_CNT] = {
+  10,  // voice call
+  10,  // system
+  7,   // ring
+  15,  // music
+  7,   // alarm
+  7,   // notification
+  15,  // BT SCO
+  7,   // enforced audible
+  15,  // DTMF
+  15,  // TTS
+  10,  // FM
+};
 
 // A bitwise variable for recording what kind of headset is attached.
 static int sHeadsetState;
@@ -44,7 +59,7 @@ IsFmRadioAudioOn()
   if (static_cast<
       audio_policy_dev_state_t (*) (audio_devices_t, const char *)
       >(AudioSystem::getDeviceConnectionState)) {
-    return AudioSystem::getDeviceConnectionState(AUDIO_DEVICE_OUT_FM, "") == 
+    return AudioSystem::getDeviceConnectionState(AUDIO_DEVICE_OUT_FM, "") ==
            AUDIO_POLICY_DEVICE_STATE_AVAILABLE ? true : false;
   } else {
     return false;
@@ -186,6 +201,11 @@ AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (NS_FAILED(obs->AddObserver(this, BLUETOOTH_SCO_STATUS_CHANGED, false))) {
     NS_WARNING("Failed to add bluetooth-sco-status-changed oberver!");
+  }
+
+  for (int loop = 0; loop < AUDIO_STREAM_CNT; loop++) {
+    AudioSystem::initStreamVolume(static_cast<audio_stream_type_t>(loop), 0,
+                                  sMaxStreamVolumeTbl[loop]);
   }
 }
 
@@ -338,7 +358,7 @@ AudioManager::SetFmRadioAudioEnabled(bool aFmRadioAudioEnabled)
       status_t (*) (AudioSystem::audio_devices, AudioSystem::device_connection_state, const char *)
       >(AudioSystem::setDeviceConnectionState)) {
     AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_FM,
-      aFmRadioAudioEnabled ? AUDIO_POLICY_DEVICE_STATE_AVAILABLE : 
+      aFmRadioAudioEnabled ? AUDIO_POLICY_DEVICE_STATE_AVAILABLE :
       AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
     InternalSetAudioRoutes(GetCurrentSwitchState(SWITCH_HEADPHONES));
     return NS_OK;
@@ -346,3 +366,24 @@ AudioManager::SetFmRadioAudioEnabled(bool aFmRadioAudioEnabled)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 }
+
+NS_IMETHODIMP
+AudioManager::SetStreamVolumeIndex(int32_t aStream, int32_t aIndex) {
+  status_t status =
+    AudioSystem::setStreamVolumeIndex(static_cast<audio_stream_type_t>(aStream), aIndex);
+  return status ? NS_ERROR_FAILURE : NS_OK;
+}
+
+NS_IMETHODIMP
+AudioManager::GetStreamVolumeIndex(int32_t aStream, int32_t* aIndex) {
+  status_t status =
+    AudioSystem::getStreamVolumeIndex(static_cast<audio_stream_type_t>(aStream), aIndex);
+  return status ? NS_ERROR_FAILURE : NS_OK;
+}
+
+NS_IMETHODIMP
+AudioManager::GetMaxStreamVolumeIndex(int32_t aStream, int32_t* aMaxIndex) {
+  *aMaxIndex = sMaxStreamVolumeTbl[aStream];
+  return NS_OK;
+}
+
