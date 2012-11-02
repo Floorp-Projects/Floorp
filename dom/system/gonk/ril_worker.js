@@ -704,6 +704,11 @@ let RIL = {
     this.SMSC = null;
 
     /**
+     * ICC information that is not exposed to Gaia.
+     */
+    this.iccInfoPrivate = {};
+
+    /**
      * ICC information, such as MSISDN, IMSI, ...etc.
      */
     this.iccInfo = {};
@@ -1171,7 +1176,6 @@ let RIL = {
     this.getIMSI();
     this.getMSISDN();
     this.getAD();
-    this.getSPN();
     this.getSST();
     this.getMBDN();
   },
@@ -1182,6 +1186,86 @@ let RIL = {
   _handleICCInfoChange: function _handleICCInfoChange() {
     this.iccInfo.rilMessageType = "iccinfochange";
     this.sendDOMMessage(this.iccInfo);
+  },
+
+  /**
+   * This will compute the spnDisplay field of the network.
+   * See TS 22.101 Annex A and TS 51.011 10.3.11 for details.
+   *
+   * @return True if some of iccInfo is changed in by this function.
+   */
+  updateDisplayCondition: function updateDisplayCondition() {
+    // If EFspn isn't existed in SIM or it haven't been read yet, we should
+    // just set isDisplayNetworkNameRequired = true and
+    // isDisplaySpnRequired = false
+    let iccInfo = this.iccInfo;
+    let iccInfoPriv = this.iccInfoPrivate;
+    let iccSpn = iccInfoPriv.SPN;
+    let origIsDisplayNetworkNameRequired = iccInfo.isDisplayNetworkNameRequired;
+    let origIsDisplaySPNRequired = iccInfo.isDisplaySpnRequired;
+
+    if (!iccSpn) {
+      iccInfo.isDisplayNetworkNameRequired = true;
+      iccInfo.isDisplaySpnRequired = false;
+    } else {
+      let operatorMnc = this.operator.mnc;
+      let operatorMcc = this.operator.mcc;
+
+      // First detect if we are on HPLMN or one of the PLMN
+      // specified by the SIM card.
+      let isOnMatchingPlmn = false;
+
+      // If the current network is the one defined as mcc/mnc
+      // in SIM card, it's okay.
+      if (iccInfo.mcc == operatorMcc && iccInfo.mnc == operatorMnc) {
+        isOnMatchingPlmn = true;
+      }
+
+      // Test to see if operator's mcc/mnc match mcc/mnc of PLMN.
+      if (!isOnMatchingPlmn && iccInfoPriv.PLMN) {
+        let iccPlmn = iccInfoPriv.PLMN; // PLMN list
+        for (let plmn in iccPlmn) {
+          let plmnMcc = iccPlmn[plmn].mcc;
+          let plmnMnc = iccPlmn[plmn].mnc;
+          isOnMatchingPlmn = (plmnMcc == operatorMcc) && (plmnMnc == operatorMnc);
+          if (isOnMatchingPlmn) {
+            break;
+          }
+        }
+      }
+
+      if (isOnMatchingPlmn) {
+        // The first bit of display condition tells us if we should display
+        // registered PLMN.
+        if (DEBUG) debug("updateDisplayCondition: PLMN is HPLMN or PLMN is in PLMN list");
+        if (iccSpn.spnDisplayCondition & 0x01) {
+          iccInfo.isDisplayNetworkNameRequired = true;
+          iccInfo.isDisplaySpnRequired = false;
+        } else {
+          iccInfo.isDisplayNetworkNameRequired = false;
+          iccInfo.isDisplaySpnRequired = false;
+        }
+      } else {
+        // The second bit of display condition tells us if we should display
+        // registered PLMN.
+        if (DEBUG) debug("updateICCDisplayName: PLMN isn't HPLMN and PLMN isn't in PLMN list");
+        if (iccSpn.spnDisplayCondition & 0x02) {
+          iccInfo.isDisplayNetworkNameRequired = false;
+          iccInfo.isDisplaySpnRequired = false;
+        } else {
+          iccInfo.isDisplayNetworkNameRequired = false;
+          iccInfo.isDisplaySpnRequired = true;
+        }
+      }
+    }
+
+    if (DEBUG) {
+      debug("updateDisplayCondition: isDisplayNetworkNameRequired = " + iccInfo.isDisplayNetworkNameRequired);
+      debug("updateDisplayCondition: isDisplaySpnRequired = " + iccInfo.isDisplaySpnRequired);
+    }
+
+    return ((origIsDisplayNetworkNameRequired !== iccInfo.isDisplayNetworkNameRequired) ||
+            (origIsDisplaySPNRequired !== iccInfo.isDisplaySpnRequired));
   },
 
   /**
@@ -1345,12 +1429,20 @@ let RIL = {
       // Minus 1 because first is used to store display condition
       let len = (length / 2) - 1;
       let spnDisplayCondition = GsmPDUHelper.readHexOctet();
-      this.iccInfo.spn = GsmPDUHelper.readAlphaIdentifier(len);
+      let spn = GsmPDUHelper.readAlphaIdentifier(len);
       Buf.readStringDelimiter(length);
 
       if (DEBUG) {
-        debug("SPN: spn=" + this.iccInfo.spn + ", spnDisplayCondition=" + spnDisplayCondition);
+        debug("SPN: spn = " + spn +
+              ", spnDisplayCondition = " + spnDisplayCondition);
       }
+
+      this.iccInfoPrivate.SPN = {
+        spn : spn,
+        spnDisplayCondition : spnDisplayCondition,
+      };
+      this.iccInfo.spn = spn;
+      this.updateDisplayCondition();
       this._handleICCInfoChange();
     }
 
@@ -1358,6 +1450,104 @@ let RIL = {
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_SPN,
       pathId:    this._getPathIdForICCRecord(ICC_EF_SPN),
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_TRANSPARENT,
+      callback:  callback,
+    });
+  },
+
+  /**
+   * Read the PLMNsel (Public Land Mobile Network) from the ICC.
+   *
+   * See ETSI TS 100.977 section 10.3.4 EF_PLMNsel
+   */
+  getPLMNSelector: function getPLMNSelector() {
+    function callback() {
+      if (DEBUG) debug("PLMN: [PLMN Selector] Process PLMN Selector");
+
+      let length = Buf.readUint32();
+      this.iccInfoPrivate.PLMN = this.readPLMNEntries(length/6);
+      Buf.readStringDelimiter(length);
+
+      if (DEBUG) debug("PLMN: [PLMN Selector] " + JSON.stringify(this.iccInfoPrivate.PLMN));
+
+      if (this.updateDisplayCondition()) {
+        this._handleICCInfoChange();
+      }
+    }
+
+    // PLMN List is Service 7 in SIM, EF_PLMNsel
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_PLMNsel,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_PLMNsel),
+      p1:        0, // For GET_RESPONSE, p1 = 0
+      p2:        0, // For GET_RESPONSE, p2 = 0
+      p3:        GET_RESPONSE_EF_SIZE_BYTES,
+      data:      null,
+      pin2:      null,
+      type:      EF_TYPE_TRANSPARENT,
+      callback:  callback,
+    });
+  },
+
+  /**
+   * Read the SPDI (Service Provider Display Information) from the ICC.
+   *
+   * See TS 131.102 section 4.2.66
+   */
+  getSPDI: function getSPDI() {
+    function callback() {
+      if (DEBUG) debug("PLMN: [SPDI] Process SPDI callback");
+      let length = Buf.readUint32();
+      let tlvTag;
+      let tlvLen;
+      let readLen = 0;
+      let endLoop = false;
+      this.iccInfoPrivate.PLMN = null;
+      while ((readLen < length) && !endLoop) {
+        tlvTag = GsmPDUHelper.readHexOctet();
+        tlvLen = GsmPDUHelper.readHexOctet();
+        readLen += 2; // For tag and length.
+        switch (tlvTag) {
+        case SPDI_TAG_SPDI:
+          // The value part itself is a TLV.
+          continue;
+        case SPDI_TAG_PLMN_LIST:
+          // This PLMN list is what we want.
+          this.iccInfoPrivate.PLMN = readPLMNEntries(tlvLen/6);
+          readLen += tlvLen;
+          endLoop = true;
+          break;
+        default:
+          // We don't care about its content if its tag is not SPDI nor
+          // PLMN_LIST.
+          GsmPDUHelper.readHexOctetArray(tlvLen);
+          readLen += tlvLen;
+        }
+      }
+
+      // Consume unread octets.
+      if (length - readLen > 0) {
+        GsmPDUHelper.readHexOctetArray(length - readLen);
+      }
+      Buf.readStringDelimiter(length);
+
+      if (DEBUG) debug("PLMN: [SPDI] " + JSON.stringify(this.iccInfoPrivate.PLMN));
+      if (this.updateDisplayCondition()) {
+        this._handleICCInfoChange();
+      }
+    }
+
+    // PLMN List is Servive 51 in USIM, EF_SPDI
+    this.iccIO({
+      command:   ICC_COMMAND_GET_RESPONSE,
+      fileId:    ICC_EF_SPDI,
+      pathId:    this._getPathIdForICCRecord(ICC_EF_SPDI),
       p1:        0, // For GET_RESPONSE, p1 = 0
       p2:        0, // For GET_RESPONSE, p2 = 0
       p3:        GET_RESPONSE_EF_SIZE_BYTES,
@@ -1447,6 +1637,24 @@ let RIL = {
           str += this.iccInfo.sst[i] + ", ";
         }
         debug("SST: " + str);
+      }
+
+      // Fetch SPN and PLMN list, if some of them are available.
+      if (this.isICCServiceAvailable("SPN")) {
+        if (DEBUG) debug("SPN: SPN is available");
+        this.getSPN();
+      } else {
+        if (DEBUG) debug("SPN: SPN service is not available");
+      }
+
+      if (this.isICCServiceAvailable("PLMNSEL")) {
+        if (DEBUG) debug("PLMN: PLMNSEL available.");
+        this.getPLMNSelector();
+      } else if (this.isICCServiceAvailable("SPDI")) {
+        if (DEBUG) debug("PLMN: SPDI available.");
+        this.getSPDI();
+      } else {
+        if (DEBUG) debug("PLMN: Both PLMNSEL/SPDI not available");
       }
     }
 
@@ -1683,6 +1891,73 @@ let RIL = {
       }
     }
     return null;
+  },
+
+  /**
+   *  Read the list of PLMN (Public Land Mobile Network) entries
+   *  We cannot directly rely on readSwappedNibbleBcdToString(),
+   *  since it will no correctly handle some corner-cases that are
+   *  not a problem in our case (0xFF 0xFF 0xFF).
+   *
+   *  @param length The number of PLMN records.
+   *  @return An array of string corresponding to the PLMNs.
+   */
+  readPLMNEntries: function readPLMNEntries(length) {
+    let plmnList = [];
+    // each PLMN entry has 3 byte
+    debug("readPLMNEntries: PLMN entries length = " + length);
+    let index = 0;
+    while (index < length) {
+      // Unused entries will be 0xFFFFFF, according to EF_SPDI
+      // specs (TS 131 102, section 4.2.66)
+      try {
+        let plmn = [GsmPDUHelper.readHexOctet(),
+                    GsmPDUHelper.readHexOctet(),
+                    GsmPDUHelper.readHexOctet()];
+        if (DEBUG) debug("readPLMNEntries: Reading PLMN entry: [" + index +
+                         "]: '" + plmn + "'");
+        if (plmn[0] != 0xFF &&
+            plmn[1] != 0xFF &&
+            plmn[2] != 0xFF) {
+          let semiOctets = [];
+          for (let i = 0; i < plmn.length; i++) {
+            semiOctets.push((plmn[idx] & 0xF0) >> 4);
+            semiOctets.push(plmn[idx] & 0x0F);
+          }
+
+          // According to TS 24.301, 9.9.3.12, the semi octets is arranged
+          // in format:
+          // Byte 1: MCC[2] | MCC[1]
+          // Byte 2: MNC[3] | MCC[3]
+          // Byte 3: MNC[2] | MNC[1]
+          // Therefore, we need to rearrage them.
+          let reformat = [semiOctets[1], semiOctets[0], semiOctets[3],
+                          semiOctets[5], semiOctets[4], semiOctets[2]];
+          let buf = "";
+          let plmnEntry = {};
+          for (let i = 0; i < reformat.length; i++) {
+            if (reformat[i] != 0xF) {
+              buf += GsmPDUHelper.semiOctetToBcdChar(reformat[i]);
+            }
+            if (i === 2) {
+              // 0-2: MCC
+              plmnEntry.mcc = parseInt(buf);
+              buf = "";
+            } else if (i === 5) {
+              // 3-5: MNC
+              plmnEntry.mnc = parseInt(buf);
+            }
+          }
+          if (DEBUG) debug("readPLMNEntries: PLMN = " + plmnEntry.mcc + ", " + plmnEntry.mnc);
+          plmnList.push(plmnEntry);
+        }
+      } catch (e) {
+        if (DEBUG) debug("readPLMNEntries: PLMN entry " + index + " is invalid.");
+        break;
+      }
+      index ++;
+    }
+    return plmnList;
   },
 
   /**
@@ -3082,6 +3357,7 @@ let RIL = {
 
           case ICC_EF_AD:
           case ICC_EF_MBDN:
+          case ICC_EF_PLMNsel:
           case ICC_EF_SPN:
           case ICC_EF_SST:
             return EF_PATH_MF_SIM + EF_PATH_DF_GSM;
@@ -3094,6 +3370,7 @@ let RIL = {
           case ICC_EF_UST:
           case ICC_EF_MSISDN:
           case ICC_EF_SPN:
+          case ICC_EF_SPDI:
             return EF_PATH_MF_SIM + EF_PATH_ADF_USIM;
 
           default:
@@ -3438,7 +3715,9 @@ let RIL = {
           debug("Error processing operator tuple: " + e);
         }
       }
-
+      if (this.updateDisplayCondition()) {
+        this._handleICCInfoChange();
+      }
       this._sendNetworkInfoMessage(NETWORK_INFO_OPERATOR, this.operator);
     }
   },
