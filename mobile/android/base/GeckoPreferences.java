@@ -16,6 +16,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -61,6 +62,9 @@ public class GeckoPreferences
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
         registerEventListener("Sanitize:Finished");
+
+        if (Build.VERSION.SDK_INT >= 14)
+            getActionBar().setHomeButtonEnabled(true);
     }
 
     @Override
