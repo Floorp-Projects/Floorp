@@ -91,8 +91,8 @@ nsHTMLScrollFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
 void
 nsHTMLScrollFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  mInner.Destroy();
   DestroyAbsoluteFrames(aDestructRoot);
+  mInner.Destroy();
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 

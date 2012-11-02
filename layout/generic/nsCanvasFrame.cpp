@@ -47,7 +47,6 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 void
 nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  DestroyAbsoluteFrames(aDestructRoot);
   nsIScrollableFrame* sf =
     PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
   if (sf) {
