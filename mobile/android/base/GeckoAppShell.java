@@ -1290,7 +1290,7 @@ public class GeckoAppShell
             "- cookie = '" + aAlertCookie +"'\n" +
             "- name = '" + aAlertName + "'");
 
-        int icon = R.drawable.icon; // Just use the app icon by default
+        int icon = R.drawable.ic_status_logo;
 
         Uri imageUri = Uri.parse(aImageUrl);
         String scheme = imageUri.getScheme();
