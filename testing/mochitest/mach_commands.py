@@ -109,5 +109,7 @@ class MachCommands(MozbuildObject):
         self.run_mochitest(test_file, 'a11y')
 
     def run_mochitest(self, test_file, flavor):
+        self._ensure_state_subdir_exists('.')
+
         mochitest = self._spawn(MochitestRunner)
         mochitest.run_mochitest_test(test_file, flavor)
