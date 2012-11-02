@@ -10148,14 +10148,15 @@ exports.Completer = Completer;
 
 });
 define("text!gcli/ui/completer.html", [], "\n" +
-  "<description>\n" +
+  "<description\n" +
+  "    xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\">\n" +
   "  <loop foreach=\"member in ${statusMarkup}\">\n" +
-  "    <label class=\"${member.className}\">${member.string}</label>\n" +
+  "    <label class=\"${member.className}\" value=\"${member.string}\"></label>\n" +
   "  </loop>\n" +
-  "  <label class=\"gcli-in-ontab\">${directTabText}</label>\n" +
-  "  <label class=\"gcli-in-todo\" foreach=\"param in ${emptyParameters}\">${param}</label>\n" +
-  "  <label class=\"gcli-in-ontab\">${arrowTabText}</label>\n" +
-  "  <label class=\"gcli-in-closebrace\" if=\"${unclosedJs}\">}</label>\n" +
+  "  <label class=\"gcli-in-ontab\" value=\"${directTabText}\"/>\n" +
+  "  <label class=\"gcli-in-todo\" foreach=\"param in ${emptyParameters}\" value=\"${param}\"/>\n" +
+  "  <label class=\"gcli-in-ontab\" value=\"${arrowTabText}\"/>\n" +
+  "  <label class=\"gcli-in-closebrace\" if=\"${unclosedJs}\" value=\"}\"/>\n" +
   "</description>\n" +
   "");
 
