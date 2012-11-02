@@ -46,6 +46,8 @@ namespace ion {
     _(JSOP_LT)                 \
     _(JSOP_GETLOCAL)           \
     _(JSOP_SETLOCAL)           \
+    _(JSOP_GETARG)             \
+    _(JSOP_SETARG)             \
     _(JSOP_RETURN)             \
     _(JSOP_STOP)
 

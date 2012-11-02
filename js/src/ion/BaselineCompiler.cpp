@@ -43,6 +43,11 @@ BaselineCompiler::compile()
     IonSpew(IonSpew_Scripts, "Baseline compiling script %s:%d (%p)",
             script->filename, script->lineno, script);
 
+    if (script->needsArgsObj()) {
+        IonSpew(IonSpew_Abort, "Script needs arguments object");
+        return Method_CantCompile;
+    }
+
     if (!emitPrologue())
         return Method_Error;
 
@@ -101,7 +106,7 @@ BaselineCompiler::emitPrologue()
     masm.push(frameReg);
     masm.mov(spReg, frameReg);
 
-    masm.subPtr(Imm32(script->nfixed * sizeof(Value)), spReg);
+    masm.subPtr(Imm32(BaselineFrame::frameSize(frame.nlocals())), spReg);
     return true;
 }
 
@@ -260,6 +265,10 @@ BaselineCompiler::storeValue(const StackValue *source, const Address &dest,
         masm.loadValue(frame.addressOfLocal(source->localSlot()), scratch);
         masm.storeValue(scratch, dest);
         break;
+      case StackValue::ArgSlot:
+        masm.loadValue(frame.addressOfArg(source->argSlot()), scratch);
+        masm.storeValue(scratch, dest);
+        break;
       case StackValue::Stack:
         masm.loadValue(frame.addressOfStackValue(source), scratch);
         masm.storeValue(scratch, dest);
@@ -368,10 +377,37 @@ BaselineCompiler::emit_JSOP_GETLOCAL()
 bool
 BaselineCompiler::emit_JSOP_SETLOCAL()
 {
+    // Ensure no other StackValue refers to the old value, for instance i + (i = 3).
+    // This also allows us to use R0 as scratch below.
     frame.syncStack(1);
 
     uint32_t local = GET_SLOTNO(pc);
     storeValue(frame.peek(-1), frame.addressOfLocal(local), R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_GETARG()
+{
+    // Arguments object is not yet supported.
+    JS_ASSERT(!script->argsObjAliasesFormals());
+
+    uint32_t arg = GET_SLOTNO(pc);
+    frame.pushArg(arg);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_SETARG()
+{
+    // Arguments object is not yet supported.
+    JS_ASSERT(!script->argsObjAliasesFormals());
+
+    // See the comment in JSOP_SETLOCAL.
+    frame.syncStack(1);
+
+    uint32_t arg = GET_SLOTNO(pc);
+    storeValue(frame.peek(-1), frame.addressOfArg(arg), R0);
     return true;
 }
 
