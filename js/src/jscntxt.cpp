@@ -321,7 +321,7 @@ intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(args[0].isObject());
     RootedObject obj(cx, &args[0].toObject());
     JS_ASSERT(obj->isFunction());
-    obj->toFunction()->flags |= JSFUN_SELF_HOSTED_CTOR;
+    obj->toFunction()->setIsSelfHostedConstructor();
     return true;
 }
 

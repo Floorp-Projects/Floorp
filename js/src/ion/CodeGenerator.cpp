@@ -306,7 +306,7 @@ CodeGenerator::visitLambda(LLambda *lir)
         uint32_t word;
     } u;
     u.s.nargs = fun->nargs;
-    u.s.flags = fun->flags & ~JSFUN_EXTENDED;
+    u.s.flags = fun->flags & ~JSFunction::EXTENDED;
 
     JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
     masm.store32(Imm32(u.word), Address(output, offsetof(JSFunction, nargs)));
@@ -827,11 +827,11 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         return false;
 
     // Guard that calleereg is a non-native function:
-    // Non-native iff (callee->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
-    // This is equivalent to testing if any of the bits in JSFUN_KINDMASK are set.
+    // We do this by testing whether JSFunction::INTERPRETED is set
+    // TODO: this could be optimized
     Address flags(calleereg, offsetof(JSFunction, flags));
-    masm.load16ZeroExtend_mask(flags, Imm32(JSFUN_INTERPRETED), nargsreg);
-    masm.branch32(Assembler::NotEqual, nargsreg, Imm32(JSFUN_INTERPRETED), &invoke);
+    masm.load16ZeroExtend_mask(flags, Imm32(JSFunction::INTERPRETED), nargsreg);
+    masm.branch32(Assembler::NotEqual, nargsreg, Imm32(JSFunction::INTERPRETED), &invoke);
 
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.movePtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
@@ -1129,13 +1129,13 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     Label end, invoke;
 
     // Guard that calleereg is a non-native function:
-    // Non-native iff (callee->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
-    // This is equivalent to testing if any of the bits in JSFUN_KINDMASK are set.
+    // We do this by testing whether JSFunction::INTERPRETED is set
+    // TODO: this could be optimized
     if (!apply->hasSingleTarget()) {
         Register kind = objreg;
         Address flags(calleereg, offsetof(JSFunction, flags));
-        masm.load16ZeroExtend_mask(flags, Imm32(JSFUN_INTERPRETED), kind);
-        masm.branch32(Assembler::NotEqual, kind, Imm32(JSFUN_INTERPRETED), &invoke);
+        masm.load16ZeroExtend_mask(flags, Imm32(JSFunction::INTERPRETED), kind);
+        masm.branch32(Assembler::NotEqual, kind, Imm32(JSFunction::INTERPRETED), &invoke);
     } else {
         // Native single targets are handled by LCallNative.
         JS_ASSERT(!apply->getSingleTarget()->isNative());

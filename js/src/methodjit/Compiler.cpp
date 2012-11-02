@@ -4431,7 +4431,7 @@ mjit::Compiler::inlineCallHelper(uint32_t argc, bool callingNew, FrameSize &call
         /* Test if the function is scripted. */
         stubcc.masm.load16(Address(icCalleeData, offsetof(JSFunction, flags)), tmp);
         Jump isNative = stubcc.masm.branchTest32(Assembler::Zero, tmp,
-                                                 Imm32(JSFUN_INTERPRETED));
+                                                 Imm32(JSFunction::INTERPRETED));
         tempRegs.putReg(tmp);
 
         /*
