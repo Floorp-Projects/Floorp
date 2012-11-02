@@ -87,6 +87,18 @@ WeakMapBase::restoreWeakMapList(JSRuntime *rt, WeakMapVector &vector)
     }
 }
 
+void
+WeakMapBase::removeWeakMapFromList(JSRuntime *rt, WeakMapBase *weakmap)
+{
+    for (WeakMapBase **p = &rt->gcWeakMapList; *p; p = &(*p)->next) {
+        if (*p == weakmap) {
+            *p = (*p)->next;
+            weakmap->next = WeakMapNotInList;
+            break;
+        }
+    }
+}
+
 typedef WeakMap<EncapsulatedPtrObject, RelocatableValue> ObjectValueMap;
 
 static ObjectValueMap *

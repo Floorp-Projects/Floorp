@@ -93,6 +93,9 @@ class WeakMapBase {
     static bool saveWeakMapList(JSRuntime *rt, WeakMapVector &vector);
     static void restoreWeakMapList(JSRuntime *rt, WeakMapVector &vector);
 
+    // Remove a weakmap from the live weakmap list
+    static void removeWeakMapFromList(JSRuntime *rt, WeakMapBase *weakmap);
+
   protected:
     // Instance member functions called by the above. Instantiations of WeakMap override
     // these with definitions appropriate for their Key and Value types.
