@@ -59,20 +59,13 @@ function identityCall(message) {
   sendAsyncMessage(kIdentityControllerDoMethod, message);
 }
 
-function identityFinished() {
-  log("identity finished.  closing dialog");
-  closeIdentityDialog(function notifySuccess() {
-    // get ready for next call with a reinit
-    func = null; options = null;
-
-    sendAsyncMessage(kIdentityDelegateFinished);
-  });
-}
-
 /*
- * Notify the UI to close the dialog and return to the caller application
+ * To close the dialog, we first tell the gecko SignInToWebsite manager that it
+ * can clean up.  Then we tell the gaia component that we are finished.  It is
+ * necessary to notify gecko first, so that the message can be sent before gaia
+ * destroys our context.
  */
-function closeIdentityDialog(aCallback) {
+function closeIdentityDialog() {
   let randomId = uuidgen.generateUUID().toString();
   let id = kReceivedIdentityAssertion + "-" + randomId;
   let browser = Services.wm.getMostRecentWindow("navigator:browser");
@@ -94,6 +87,11 @@ function closeIdentityDialog(aCallback) {
     }
   });
 
+  // tell gecko we're done.  fire and forget.
+  func = null; options = null;
+  sendAsyncMessage(kIdentityDelegateFinished);
+
+  // tell gaia to shut us down
   browser.shell.sendChromeEvent(detail);
 }
 
@@ -111,7 +109,7 @@ function doInternalWatch() {
         identityCall(aParams);
         if (aParams.method === "ready") {
           log("watch finished.");
-          identityFinished();
+          closeIdentityDialog();
         }
       },
       JSON.stringify({loggedInUser: options.loggedInUser, origin: options.origin}),
@@ -132,7 +130,7 @@ function doInternalRequest() {
           log("request -> assertion, so do login");
           identityCall({method:'login',assertion:assertion});
         }
-        identityFinished();
+        closeIdentityDialog();
       },
       options);
   }
@@ -145,7 +143,7 @@ function doInternalLogout(aOptions) {
     log("logging you out of ", options.origin);
     BrowserID.internal.logout(options.origin, function() {
       identityCall({method:'logout'});
-      identityFinished();
+      closeIdentityDialog();
     });
   }
 }
