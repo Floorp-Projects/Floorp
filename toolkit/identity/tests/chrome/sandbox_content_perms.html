@@ -18,15 +18,6 @@
         return false;
       }
 
-      function CcDenied() {
-        try {
-          Components.classes;
-          return false;
-        } catch (e) {
-          return !!/denied/.exec(e);
-        }
-      }
-
       // Build an object with test results (true = pass)
       let results = {
         windowTop: window.top == window,
@@ -37,7 +28,7 @@
                                .docCharsetIsForced;
         }),
 
-        ccAccess: !!CcDenied(),
+        ccAccess: SpecialPowers.Components.classes == null,
       };
 
       let resultsJSON = JSON.stringify(results);
