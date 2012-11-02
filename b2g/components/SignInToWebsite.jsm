@@ -289,11 +289,11 @@ let SignInToWebsiteController = {
    */
   _makeDoMethodCallback: function SignInToWebsiteController__makeDoMethodCallback(aRpId) {
     return function SignInToWebsiteController_methodCallback(aOptions) {
-      log("doMethod:", aOptions);
       let message = aOptions.json;
       if (typeof message === 'string') {
         message = JSON.parse(message);
       }
+      log("doMethod:", message.method);
       switch(message.method) {
         case "ready":
           IdentityService.doReady(aRpId);
