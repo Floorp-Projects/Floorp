@@ -3038,12 +3038,22 @@ function hash(str) {
     return hash;
   }
   for (var i = 0; i < str.length; i++) {
-    var char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    var character = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + character;
     hash = hash & hash; // Convert to 32bit integer
   }
   return hash;
 }
+
+/**
+ * Shortcut for clearElement/createTextNode/appendChild to make up for the lack
+ * of standards around textContent/innerText
+ */
+exports.setTextContent = function(elem, text) {
+  exports.clearElement(elem);
+  var child = elem.ownerDocument.createTextNode(text);
+  elem.appendChild(child);
+};
 
 /**
  * There are problems with innerHTML on XML documents, so we need to do a dance
@@ -5411,7 +5421,7 @@ function UnassignedAssignment(requisition, arg) {
       name: 'param',
       requisition: requisition,
       isIncompleteName: (arg.text.charAt(0) === '-')
-    },
+    }
   });
   this.paramIndex = -1;
   this.onAssignmentChange = util.createEvent('UnassignedAssignment.onAssignmentChange');
@@ -5905,7 +5915,7 @@ Requisition.prototype.toCanonicalString = function() {
  * to display this typed input. It's a bit like toString on steroids.
  * <p>
  * The returned object has the following members:<ul>
- * <li>char: The character to which this arg trace refers.
+ * <li>character: The character to which this arg trace refers.
  * <li>arg: The Argument to which this character is assigned.
  * <li>part: One of ['prefix'|'text'|suffix'] - how was this char understood
  * </ul>
@@ -5930,13 +5940,13 @@ Requisition.prototype.createInputArgTrace = function() {
   var i;
   this._args.forEach(function(arg) {
     for (i = 0; i < arg.prefix.length; i++) {
-      args.push({ arg: arg, char: arg.prefix[i], part: 'prefix' });
+      args.push({ arg: arg, character: arg.prefix[i], part: 'prefix' });
     }
     for (i = 0; i < arg.text.length; i++) {
-      args.push({ arg: arg, char: arg.text[i], part: 'text' });
+      args.push({ arg: arg, character: arg.text[i], part: 'text' });
     }
     for (i = 0; i < arg.suffix.length; i++) {
-      args.push({ arg: arg, char: arg.suffix[i], part: 'suffix' });
+      args.push({ arg: arg, character: arg.suffix[i], part: 'suffix' });
     }
   });
 
@@ -6024,7 +6034,7 @@ Requisition.prototype.getInputStatusMarkup = function(cursor) {
       }
     }
 
-    markup.push({ status: status, string: argTrace.char });
+    markup.push({ status: status, string: argTrace.character });
   }
 
   // De-dupe: merge entries where 2 adjacent have same status
@@ -6942,7 +6952,7 @@ var eagerHelperSettingSpec = {
     lookup: [
       { name: 'never', value: Eagerness.NEVER },
       { name: 'sometimes', value: Eagerness.SOMETIMES },
-      { name: 'always', value: Eagerness.ALWAYS },
+      { name: 'always', value: Eagerness.ALWAYS }
     ]
   },
   defaultValue: Eagerness.SOMETIMES,
@@ -7350,7 +7360,6 @@ var TrueNamedArgument = require('gcli/argument').TrueNamedArgument;
 var FalseNamedArgument = require('gcli/argument').FalseNamedArgument;
 var ArrayArgument = require('gcli/argument').ArrayArgument;
 
-var Conversion = require('gcli/types').Conversion;
 var ArrayConversion = require('gcli/types').ArrayConversion;
 
 var StringType = require('gcli/types/basic').StringType;
@@ -7613,7 +7622,7 @@ function ArrayField(type, options) {
   this.addButton = util.createElement(this.document, 'button');
   this.addButton.classList.add('gcli-array-member-add');
   this.addButton.addEventListener('click', this._onAdd, false);
-  this.addButton.innerHTML = l10n.lookup('fieldArrayAdd');
+  this.addButton.textContent = l10n.lookup('fieldArrayAdd');
   this.element.appendChild(this.addButton);
 
   // <div class=gcliArrayMbrs save="${mbrElement}">
@@ -7681,7 +7690,7 @@ ArrayField.prototype._onAdd = function(ev, subConversion) {
   var delButton = util.createElement(this.document, 'button');
   delButton.classList.add('gcli-array-member-del');
   delButton.addEventListener('click', this._onDel, false);
-  delButton.innerHTML = l10n.lookup('fieldArrayDel');
+  delButton.textContent = l10n.lookup('fieldArrayDel');
   element.appendChild(delButton);
 
   var member = {
@@ -7795,10 +7804,7 @@ Field.prototype.setMessageElement = function(element) {
  */
 Field.prototype.setMessage = function(message) {
   if (this.messageElement) {
-    if (message == null) {
-      message = '';
-    }
-    util.setContents(this.messageElement, message);
+    util.setTextContent(this.messageElement, message || '');
   }
 };
 
@@ -8458,7 +8464,7 @@ SelectionField.prototype._addOption = function(item) {
   this.items.push(item);
 
   var option = util.createElement(this.document, 'option');
-  option.innerHTML = item.name;
+  option.textContent = item.name;
   option.value = item.index;
   this.element.appendChild(option);
 };
@@ -8599,7 +8605,7 @@ var helpCommandSpec = {
       name: 'search',
       type: 'string',
       description: l10n.lookup('helpSearchDesc'),
-      manual: l10n.lookup('helpSearchManual2'),
+      manual: l10n.lookup('helpSearchManual3'),
       defaultValue: null
     }
   ],
@@ -8684,7 +8690,7 @@ function getListTemplateData(args, context) {
 
     ondblclick: function(ev) {
       util.executeCommand(ev.currentTarget, context);
-    },
+    }
   };
 }
 
@@ -8704,11 +8710,8 @@ function getManTemplateData(command, context) {
       util.executeCommand(ev.currentTarget, context);
     },
 
-    describe: function(item, element) {
-      var text = item.manual || item.description;
-      var parent = element.ownerDocument.createElement('div');
-      util.setContents(parent, text);
-      return parent.childNodes;
+    describe: function(item) {
+      return item.manual || item.description;
     },
 
     getTypeDescription: function(param) {
@@ -8760,7 +8763,7 @@ define("text!gcli/commands/help_man.html", [], "\n" +
   "\n" +
   "  <h4 class=\"gcli-help-header\">${l10n.helpManDescription}:</h4>\n" +
   "\n" +
-  "  <p class=\"gcli-help-description\">${describe(command, __element)}</p>\n" +
+  "  <p class=\"gcli-help-description\">${describe(command)}</p>\n" +
   "\n" +
   "  <div if=\"${command.exec}\">\n" +
   "    <h4 class=\"gcli-help-header\">${l10n.helpManParameters}:</h4>\n" +
@@ -8770,7 +8773,7 @@ define("text!gcli/commands/help_man.html", [], "\n" +
   "      <li foreach=\"param in ${command.params}\">\n" +
   "        ${param.name} <em>${getTypeDescription(param)}</em>\n" +
   "        <br/>\n" +
-  "        ${describe(param, __element)}\n" +
+  "        ${describe(param)}\n" +
   "      </li>\n" +
   "    </ul>\n" +
   "  </div>\n" +
@@ -8909,7 +8912,7 @@ var prefSetCmdSpec = {
           activate: function() {
             context.exec('pref set ' + exports.allowSet.name + ' true');
           }
-        },
+        }
       });
     }
     args.setting.value = args.value;
@@ -10380,7 +10383,7 @@ Tooltip.prototype.assignmentContentsChanged = function(ev) {
   }
 
   this.field.setConversion(ev.conversion);
-  util.setContents(this.descriptionEle, this.description);
+  util.setTextContent(this.descriptionEle, this.description);
 
   this._updatePosition();
 };
@@ -10434,19 +10437,7 @@ Object.defineProperty(Tooltip.prototype, 'description', {
       return '';
     }
 
-    var output = this.assignment.param.manual;
-    if (output) {
-      var wrapper = this.document.createElement('span');
-      util.setContents(wrapper, output);
-      if (!this.assignment.param.isDataRequired) {
-        var optional = this.document.createElement('span');
-        optional.appendChild(this.document.createTextNode(' (Optional)'));
-        wrapper.appendChild(optional);
-      }
-      return wrapper;
-    }
-
-    return this.assignment.param.description;
+    return this.assignment.param.manual || this.assignment.param.description;
   },
   enumerable: true
 });
