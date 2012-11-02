@@ -192,9 +192,7 @@ let ConsoleView = {
   },
 
   appendInitialItems: function cv_appendInitialItems() {
-    let out = {}; // Throwaway references to support 'out' parameters.
-    Services.console.getMessageArray(out, {});
-    let messages = out.value;
+    let messages = Services.console.getMessageArray();
 
     // In case getMessageArray returns 0-length array as null
     if (!messages)

@@ -7,7 +7,7 @@
 #include "nsIConsoleListener.idl"
 #include "nsIConsoleMessage.idl"
 
-[scriptable, uuid(883472a0-ea9b-11da-8ad9-0800200c9a66)]
+[scriptable, uuid(0eb81d20-c37e-42d4-82a8-ca9ae96bdf52)]
 interface nsIConsoleService : nsISupports
 {
     void logMessage(in nsIConsoleMessage message);
@@ -23,8 +23,8 @@ interface nsIConsoleService : nsISupports
      * will allocate one word for messages, so as to show up as a
      * 0-length array when called from script.
      */
-    void getMessageArray([array, size_is(count)] out nsIConsoleMessage messages,
-                         out uint32_t count);
+    void getMessageArray([optional] out uint32_t count,
+                         [retval, array, size_is(count)] out nsIConsoleMessage messages);
 
     /**
      * To guard against stack overflows from listeners that could log

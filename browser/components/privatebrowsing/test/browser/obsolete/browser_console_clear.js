@@ -35,9 +35,7 @@ function test() {
   consoleService.registerListener(consoleObserver);
 
   function messageExists() {
-    let out = {};
-    consoleService.getMessageArray(out, {});
-    let messages = out.value || [];
+    let messages = consoleService.getMessageArray() || [];
     for (let i = 0; i < messages.length; ++i) {
       if (messages[i].message == TEST_MESSAGE)
         return true;
