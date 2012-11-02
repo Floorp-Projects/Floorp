@@ -6796,7 +6796,12 @@ Output.prototype.toDom = function(element) {
       node = util.createElement(document, 'p');
     }
 
-    util.setContents(node, output.toString());
+    if (this.command.returnType === 'string') {
+      node.textContent = output;
+    }
+    else {
+      util.setContents(node, output.toString());
+    }
   }
 
   // Make sure that links open in a new window.
