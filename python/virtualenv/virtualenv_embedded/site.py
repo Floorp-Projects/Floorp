@@ -238,7 +238,10 @@ def addsitepackages(known_paths, sys_prefix=sys.prefix, exec_prefix=sys.exec_pre
                 lib64_dir = os.path.join(prefix, "lib64", "python" + sys.version[:3], "site-packages")
                 if (os.path.exists(lib64_dir) and 
                     os.path.realpath(lib64_dir) not in [os.path.realpath(p) for p in sitedirs]):
-                    sitedirs.append(lib64_dir)
+                    if sys.maxsize > 2**32:
+                        sitedirs.insert(0, lib64_dir)
+                    else:
+                        sitedirs.append(lib64_dir)
                 try:
                     # sys.getobjects only available in --with-pydebug build
                     sys.getobjects
@@ -577,7 +580,10 @@ def virtual_install_main_packages():
         hardcoded_relative_dirs = paths[:] # for the special 'darwin' case below
         lib64_path = os.path.join(sys.real_prefix, 'lib64', 'python'+sys.version[:3])
         if os.path.exists(lib64_path):
-            paths.append(lib64_path)
+            if sys.maxsize > 2**32:
+                paths.insert(0, lib64_path)
+            else:
+                paths.append(lib64_path)
         # This is hardcoded in the Python executable, but relative to sys.prefix:
         plat_path = os.path.join(sys.real_prefix, 'lib', 'python'+sys.version[:3],
                                  'plat-%s' % sys.platform)
