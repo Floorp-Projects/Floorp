@@ -33,6 +33,7 @@ Var CheckboxSetAsDefault
 Var CheckboxShortcutOnBar ; Used for Quicklaunch or Taskbar as appropriate
 Var CheckboxShortcutInStartMenu
 Var CheckboxShortcutOnDesktop
+Var CheckboxSendPing
 Var CheckboxInstallMaintSvc
 Var DirRequest
 Var ButtonBrowse
@@ -66,8 +67,24 @@ Var CanSetAsDefault
 Var TmpVal
 Var InstallCounterStep
 
+Var ExitCode
+Var SecondsToDownload
+Var ExistingProfile
+Var ExistingInstall
+Var DownloadedAmount
+Var FirefoxLaunch
+
 Var HEIGHT_PX
 Var CTL_RIGHT_PX
+
+!define ERR_SUCCESS 0
+!define ERR_CANCEL_DOWNLOAD 10
+!define ERR_INVALID_HANDLE 11
+!define ERR_CERT_UNTRUSTED 12
+!define ERR_CERT_ATTRIBUTES 13
+!define ERR_CERT_UNTRUSTED_AND_ATTRIBUTES 14
+!define ERR_CHECK_INSTALL_TIMEOUT 15
+!define ERR_UNKNOWN 99
 
 !define DownloadIntervalMS 200 ; Interval for the download timer
 !define InstallIntervalMS 100 ; Interval for the install timer
@@ -122,6 +139,8 @@ Var CTL_RIGHT_PX
 !define URLStubDownload "http://download.mozilla.org/?product=firefox-beta-latest&os=win&lang=${AB_CD}"
 !undef URLManualDownload
 !define URLManualDownload "https://www.mozilla.org/firefox/installer-help/?channel=beta"
+!undef Channel
+!define Channel "beta"
 !endif
 !endif
 
@@ -296,6 +315,10 @@ Function .onInit
     StrCpy $CanSetAsDefault "true"
   ${EndIf}
 
+  StrCpy $IsDownloadFinished ""
+  StrCpy $FirefoxLaunch 0
+  StrCpy $ExitCode ${ERR_UNKNOWN}
+
   CreateFont $FontBlurb "$(^Font)" "12" "500"
   CreateFont $FontNormal "$(^Font)" "11" "500"
   CreateFont $FontItalic "$(^Font)" "11" "500" /ITALIC
@@ -326,6 +349,22 @@ FunctionEnd
 !endif
 
 Function .onGUIEnd
+  ; The value of $IsDownloadFinished will be false if the download was attempted
+  ; and wasn't completed. Get the seconds elapsed trying to download.
+  ${If} $IsDownloadFinished == "false"
+    Call GetSecondsToDownload
+  ${EndIf}
+
+  ; Try to send a ping if a download was attempted
+  ${If} $IsDownloadFinished != ""
+  ${AndIf} $CheckboxSendPing == 1
+    System::Int64Op $DownloadedAmount / 1024
+    Pop $DownloadedAmount
+    InetBgDL::Get "${BaseURLStubPing}${Channel}/${AB_CD}/$ExitCode/" \
+                  "$FirefoxLaunch/$SecondsToDownload/$DownloadedAmount/" \
+                  "$ExistingProfile/$ExistingInstall/" "$PLUGINSDIR\_temp" /END
+  ${EndIf}
+
   ${UnloadUAC}
 FunctionEnd
 
@@ -337,6 +376,7 @@ Function .onUserAbort
   ${NSD_KillTimer} FinishInstall
   ${NSD_KillTimer} DisplayDownloadError
 
+  Delete "$PLUGINSDIR\_temp"
   Delete "$PLUGINSDIR\download.exe"
   Delete "$PLUGINSDIR\${CONFIG_INI}"
 FunctionEnd
@@ -350,6 +390,7 @@ Function createIntro
   StrCpy $CheckboxShortcutOnBar 1
   StrCpy $CheckboxShortcutInStartMenu 1
   StrCpy $CheckboxShortcutOnDesktop 1
+  StrCpy $CheckboxSendPing 1
 !ifdef MOZ_MAINTENANCE_SERVICE
   StrCpy $CheckboxInstallMaintSvc 1
 !else
@@ -590,6 +631,16 @@ Function createOptions
 
   Call UpdateFreeSpaceLabel
 
+  ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} 168u ${OPTIONS_SUBITEM_WIDTH_DU} \
+                        12u "$(SEND_PING)"
+  Pop $CheckboxSendPing
+  ; The uxtheme must be disabled on checkboxes in order to override the system
+  ; font color.
+  System::Call 'uxtheme::SetWindowTheme(i $CheckboxSendPing, w " ", w " ")'
+  SetCtlColors $CheckboxSendPing ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
+  SendMessage $CheckboxSendPing ${WM_SETFONT} $FontNormal 0
+  ${NSD_Check} $CheckboxSendPing
+
 !ifdef MOZ_MAINTENANCE_SERVICE
   ; Only show the maintenance service checkbox if we have write access to HKLM
   Call IsUserAdmin
@@ -607,7 +658,7 @@ Function createOptions
     ClearErrors
     ReadRegStr $0 HKLM "SYSTEM\CurrentControlSet\services\MozillaMaintenance" "ImagePath"
     ${If} ${Errors}
-      ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} 175u ${OPTIONS_ITEM_WIDTH_DU} \
+      ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} 184u ${OPTIONS_ITEM_WIDTH_DU} \
                             12u "$(INSTALL_MAINT_SERVICE)"
       Pop $CheckboxInstallMaintSvc
       System::Call 'uxtheme::SetWindowTheme(i $CheckboxInstallMaintSvc, w " ", w " ")'
@@ -668,6 +719,7 @@ Function leaveOptions
   ${NSD_GetState} $CheckboxShortcutOnBar $CheckboxShortcutOnBar
   ${NSD_GetState} $CheckboxShortcutInStartMenu $CheckboxShortcutInStartMenu
   ${NSD_GetState} $CheckboxShortcutOnDesktop $CheckboxShortcutOnDesktop
+  ${NSD_GetState} $CheckboxSendPing $CheckboxSendPing
 !ifdef MOZ_MAINTENANCE_SERVICE
   ${NSD_GetState} $CheckboxInstallMaintSvc $CheckboxInstallMaintSvc
 !endif
@@ -816,7 +868,29 @@ Function createInstall
   SetCtlColors $0 ${FOOTER_CONTROL_TEXT_COLOR_FADED} ${FOOTER_BKGRD_COLOR}
   ShowWindow $0 ${SW_SHOW}
 
+  StrCpy $IsDownloadFinished "false"
   StrCpy $DownloadReset "false"
+  StrCpy $ExitCode ${ERR_CANCEL_DOWNLOAD}
+  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+    StrCpy $ExistingInstall 1
+  ${Else}
+    StrCpy $ExistingInstall 0
+  ${EndIf}
+
+  ${If} ${FileExists} "$LOCALAPPDATA\Mozilla\Firefox"
+    StrCpy $ExistingProfile 1
+  ${Else}
+    StrCpy $ExistingProfile 0
+  ${EndIf}
+
+  GetTempFileName $2
+  GetFileTime $2 $1 $0
+  Delete $2
+  System::Int64Op $1 * 0x100000000
+  Pop $1
+  System::Int64Op $1 + $0
+  Pop $SecondsToDownload
+
   ${NSD_CreateTimer} StartDownload ${DownloadIntervalMS}
 
   LockWindow off
@@ -831,6 +905,24 @@ FunctionEnd
 
 Function leaveInstall
 # Need a ping?
+FunctionEnd
+
+; This function is not idempotent. It calculates the amount of time between now
+; and $SecondsToDownload and stores the results back into $SecondsToDownload.
+; For that reason it should only be called once for the purpose of determining
+; the number of elapsed seconds to download.
+Function GetSecondsToDownload
+  GetTempFileName $2
+  GetFileTime $2 $1 $0
+  Delete $2
+  System::Int64Op $1 * 0x100000000
+  Pop $1
+  System::Int64Op $1 + $0
+  Pop $0
+  System::Int64Op $0 - $SecondsToDownload
+  Pop $SecondsToDownload
+  System::Int64Op $SecondsToDownload / 10000000
+  Pop $SecondsToDownload
 FunctionEnd
 
 Function StartDownload
@@ -855,6 +947,7 @@ Function OnDownload
   ${If} $0 > 299
     ${NSD_KillTimer} OnDownload
     ${If} "$DownloadReset" != "true"
+      StrCpy $DownloadedAmount 0
       ${NSD_AddStyle} $ProgressbarDownload ${PBS_MARQUEE}
       SendMessage $ProgressbarDownload ${PBM_SETMARQUEE} 1 10 ; start=1|stop=0 interval(ms)=+N
     ${EndIf}
@@ -893,6 +986,8 @@ Function OnDownload
       ; InstallProgressFirstStep define and provides the user with immediate
       ; feedback.
       StrCpy $InstallCounterStep ${InstallProgressFirstStep}
+      Call GetSecondsToDownload
+      StrCpy $DownloadedAmount $DownloadSize
       LockWindow on
       ; Update the progress bars first in the UI change so they take affect
       ; before other UI changes.
@@ -920,6 +1015,7 @@ Function OnDownload
       StrCpy $HandleDownload "$R9"
 
       ${If} $HandleDownload == ${INVALID_HANDLE_VALUE}
+        StrCpy $ExitCode ${ERR_INVALID_HANDLE}
         StrCpy $0 "0"
         StrCpy $1 "0"
       ${Else}
@@ -928,6 +1024,14 @@ Function OnDownload
         CertCheck::VerifyCertNameIssuer "$PLUGINSDIR\download.exe" \
                                         "${CertNameDownload}" "${CertIssuerDownload}"
         Pop $1
+        ${If} $0 == 0
+        ${AndIf} $1 == 0
+          StrCpy $ExitCode ${ERR_CERT_UNTRUSTED_AND_ATTRIBUTES}
+        ${ElseIf} $0 == 0
+          StrCpy $ExitCode ${ERR_CERT_UNTRUSTED}
+        ${ElseIf}  $1 == 0
+          StrCpy $ExitCode ${ERR_CERT_ATTRIBUTES}
+        ${EndIf}
       ${EndIf}
 
       ${If} $0 == 0
@@ -998,6 +1102,7 @@ Function OnDownload
         ShowWindow $BitmapBlurb2 ${SW_SHOW}
         LockWindow off
       ${EndIf}
+      StrCpy $DownloadedAmount $3
       SendMessage $ProgressbarDownload ${PBM_SETPOS} $3 0
     ${EndIf}
   ${EndIf}
@@ -1021,6 +1126,7 @@ Function CheckInstall
     ${NSD_KillTimer} CheckInstall
     ; Close the handle that prevents modification of the full installer
     System::Call 'kernel32::CloseHandle(i $HandleDownload)'
+    StrCpy $ExitCode ${ERR_CHECK_INSTALL_TIMEOUT}
     ; Use a timer so the UI has a chance to update
     ${NSD_CreateTimer} DisplayDownloadError ${InstallIntervalMS}
     Return
@@ -1094,6 +1200,8 @@ Function FinishInstall
     Delete "$INSTDIR\${FileMainEXE}"
     Rename "$INSTDIR\${FileMainEXE}.moz-upgrade" "$INSTDIR\${FileMainEXE}"
   ${EndIf}
+
+  StrCpy $ExitCode ${ERR_SUCCESS}
 
   Call LaunchApp
 
@@ -1309,9 +1417,12 @@ FunctionEnd
 Function LaunchApp
   FindWindow $0 "${WindowClass}"
   ${If} $0 <> 0 ; integer comparison
+    StrCpy $FirefoxLaunch 1
     MessageBox MB_OK|MB_ICONQUESTION "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
     Return
   ${EndIf}
+
+  StrCpy $FirefoxLaunch 2
 
   ClearErrors
   ${GetParameters} $0

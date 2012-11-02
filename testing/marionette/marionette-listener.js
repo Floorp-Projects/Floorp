@@ -264,7 +264,9 @@ function createExecuteContentSandbox(aWindow) {
   sandbox.__proto__ = sandbox.window;
   sandbox.testUtils = utils;
 
-  let marionette = new Marionette(this, aWindow, "content", marionetteLogObj, marionettePerf);
+  let marionette = new Marionette(this, aWindow, "content",
+                                  marionetteLogObj, marionettePerf,
+                                  marionetteTimeout);
   sandbox.marionette = marionette;
   marionette.exports.forEach(function(fn) {
     try {
@@ -445,7 +447,6 @@ function executeWithCallback(msg, timeout) {
   asyncTestTimeoutId = curWindow.setTimeout(function() {
     sandbox.asyncComplete('timed out', 28);
   }, marionetteTimeout);
-  sandbox.marionette.timeout = marionetteTimeout;
 
   curWindow.addEventListener('error', function win__onerror(evt) {
     curWindow.removeEventListener('error', win__onerror, true);

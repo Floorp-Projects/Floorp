@@ -1545,6 +1545,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
                            nsScriptObjectHolder<JSScript>& aScriptObject,
                            bool aSaveSource /* = false */)
 {
+  SAMPLE_LABEL_PRINTF("JS", "Compile Script", "%s", aURL ? aURL : "");
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
   NS_ENSURE_ARG_POINTER(aPrincipal);

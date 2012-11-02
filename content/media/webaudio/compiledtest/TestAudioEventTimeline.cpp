@@ -208,6 +208,25 @@ void TestEventReplacement()
   is(timeline.GetValueAtTime(0.1f), 30.0f, "The first event should be overwritten");
 }
 
+void TestEventRemoval()
+{
+  Timeline timeline(10.0f, .1f, 20.0f);
+
+  ErrorResultMock rv;
+
+  timeline.SetValueAtTime(10.0f, 0.1f, rv);
+  timeline.SetValueAtTime(15.0f, 0.15f, rv);
+  timeline.SetValueAtTime(20.0f, 0.2f, rv);
+  timeline.LinearRampToValueAtTime(30.0f, 0.3f, rv);
+  is(timeline.GetEventCount(), 4, "Should have three events initially");
+  timeline.CancelScheduledValues(0.4f);
+  is(timeline.GetEventCount(), 4, "Trying to delete past the end of the array should have no effect");
+  timeline.CancelScheduledValues(0.3f);
+  is(timeline.GetEventCount(), 3, "Should successfully delete one event");
+  timeline.CancelScheduledValues(0.12f);
+  is(timeline.GetEventCount(), 1, "Should successfully delete two events");
+}
+
 void TestBeforeFirstEvent()
 {
   Timeline timeline(10.0f, .1f, 20.0f);
@@ -327,6 +346,7 @@ int main()
   TestSpecExample();
   TestInvalidEvents();
   TestEventReplacement();
+  TestEventRemoval();
   TestBeforeFirstEvent();
   TestAfterLastValueEvent();
   TestAfterLastTargetValueEvent();

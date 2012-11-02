@@ -7,8 +7,10 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 import org.mozilla.gecko.db.BrowserContract.Combined;
+import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.util.GeckoAsyncTask;
 import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.json.JSONArray;
@@ -18,8 +20,13 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
@@ -49,6 +56,7 @@ import android.widget.TextView;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     public static final String LOGTAG = "ALL_PAGES";
@@ -68,6 +76,11 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     private LinearLayout mAllPagesView;
     private boolean mAnimateSuggestions;
     private View mSuggestionsOptInPrompt;
+    private Handler mHandler;
+
+    private static final int MESSAGE_LOAD_FAVICONS = 1;
+    private static final int MESSAGE_UPDATE_FAVICONS = 2;
+    private static final int DELAY_SHOW_THUMBNAILS = 550;
 
     private class SearchEntryViewHolder {
         public FlowLayout suggestionView;
@@ -122,9 +135,14 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             ((Activity)mContext).registerForContextMenu(mView);
             mView.setTag(TAG);
             AwesomeBarCursorAdapter adapter = getCursorAdapter();
-            ((ListView)mView).setAdapter(adapter);
-            mView.setOnTouchListener(mListListener);
+
+            ListView listView = (ListView) mView;
+            listView.setAdapter(adapter);
+            listView.setOnTouchListener(mListListener);
+
+            mHandler = new AllPagesHandler();
         }
+
         return (ListView)mView;
     }
 
@@ -138,6 +156,10 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         Cursor cursor = adapter.getCursor();
         if (cursor != null)
             cursor.close();
+
+        mHandler.removeMessages(MESSAGE_UPDATE_FAVICONS);
+        mHandler.removeMessages(MESSAGE_LOAD_FAVICONS);
+        mHandler = null;
     }
 
     public void filter(String searchTerm) {
@@ -195,6 +217,8 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
                     Cursor c = BrowserDB.filter(getContentResolver(), constraint, MAX_RESULTS);
                     c.getCount();
+
+                    postLoadFavicons();
 
                     long end = SystemClock.uptimeMillis();
                     int time = (int)(end - start);
@@ -398,8 +422,8 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
                 updateTitle(viewHolder.titleView, cursor);
                 updateUrl(viewHolder.urlView, cursor);
-                updateFavicon(viewHolder.faviconView, cursor);
                 updateBookmarkIcon(viewHolder.bookmarkIconView, cursor);
+                displayFavicon(viewHolder);
             }
 
             return convertView;
@@ -705,5 +729,130 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
     private void unregisterEventListener(String event) {
         GeckoAppShell.getEventDispatcher().unregisterEventListener(event, this);
+    }
+
+    private List<String> getUrlsWithoutFavicon() {
+        List<String> urls = new ArrayList<String>();
+
+        Cursor c = mCursorAdapter.getCursor();
+        if (c == null || !c.moveToFirst())
+            return urls;
+
+        do {
+            final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
+
+            // We only want to load favicons from DB if they are not in the
+            // memory cache yet.
+            Favicons favicons = GeckoApp.mAppContext.getFavicons();
+            if (favicons.getFaviconFromMemCache(url) != null)
+                continue;
+
+            urls.add(url);
+        } while (c.moveToNext());
+
+        return urls;
+    }
+
+    public void storeFaviconsInMemCache(Cursor c) {
+        try {
+            if (c == null || !c.moveToFirst())
+                return;
+
+            Favicons favicons = GeckoApp.mAppContext.getFavicons();
+
+            do {
+                final String url = c.getString(c.getColumnIndexOrThrow(Images.URL));
+                final byte[] b = c.getBlob(c.getColumnIndexOrThrow(Images.FAVICON));
+                if (b == null)
+                    continue;
+
+                Bitmap favicon = BitmapFactory.decodeByteArray(b, 0, b.length);
+                if (favicon == null)
+                    continue;
+
+                Drawable faviconDrawable = new BitmapDrawable(getResources(), favicon);
+                favicons.putFaviconInMemCache(url, faviconDrawable);
+            } while (c.moveToNext());
+        } finally {
+            if (c != null)
+                c.close();
+        }
+    }
+
+    private void loadFaviconsForCurrentResults() {
+        final List<String> urls = getUrlsWithoutFavicon();
+        if (urls.size() == 0)
+            return;
+
+        (new GeckoAsyncTask<Void, Void, Cursor>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
+            @Override
+            public Cursor doInBackground(Void... params) {
+                return BrowserDB.getFaviconsForUrls(getContentResolver(), urls);
+            }
+
+            @Override
+            public void onPostExecute(Cursor c) {
+                storeFaviconsInMemCache(c);
+                postUpdateFavicons();
+            }
+        }).execute();
+    }
+
+    private void displayFavicon(AwesomeEntryViewHolder viewHolder) {
+        final String url = viewHolder.urlView.getText().toString();
+        Favicons favicons = GeckoApp.mAppContext.getFavicons();
+        viewHolder.faviconView.setImageDrawable(favicons.getFaviconFromMemCache(url));
+    }
+
+    private void updateFavicons() {
+        ListView listView = (ListView) mView;
+        for (int i = 0; i < listView.getChildCount(); i++) {
+            final View view = listView.getChildAt(i);
+            final Object tag = view.getTag();
+
+            if (tag == null || !(tag instanceof AwesomeEntryViewHolder))
+                continue;
+
+            final AwesomeEntryViewHolder viewHolder = (AwesomeEntryViewHolder) tag;
+            displayFavicon(viewHolder);
+        }
+
+        mView.invalidate();
+    }
+
+    private void postUpdateFavicons() {
+        if (mHandler == null)
+            return;
+
+        Message msg = mHandler.obtainMessage(MESSAGE_UPDATE_FAVICONS,
+                                             AllPagesTab.this);
+
+        mHandler.removeMessages(MESSAGE_UPDATE_FAVICONS);
+        mHandler.sendMessage(msg);
+    }
+
+    private void postLoadFavicons() {
+        if (mHandler == null)
+            return;
+
+        Message msg = mHandler.obtainMessage(MESSAGE_LOAD_FAVICONS,
+                                             AllPagesTab.this);
+
+        mHandler.removeMessages(MESSAGE_LOAD_FAVICONS);
+        mHandler.sendMessageDelayed(msg, 200);
+    }
+
+    private class AllPagesHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MESSAGE_LOAD_FAVICONS:
+                    loadFaviconsForCurrentResults();
+                    break;
+                case MESSAGE_UPDATE_FAVICONS:
+                    updateFavicons();
+                    break;
+            }
+        }
     }
 }
