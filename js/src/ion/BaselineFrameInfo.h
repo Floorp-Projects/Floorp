@@ -207,7 +207,7 @@ class FrameInfo
         StackValue *popped = &stack[spIndex];
 
         if (adjustStack && popped->kind() == StackValue::Stack)
-            masm.addPtr(Imm32(sizeof(Value)), spReg);
+            masm.addPtr(Imm32(sizeof(Value)), BaselineStackReg);
 
         // Assert when anything uses this value.
         popped->reset();
@@ -234,17 +234,17 @@ class FrameInfo
     }
     inline Address addressOfLocal(size_t local) const {
         JS_ASSERT(local < nlocals());
-        return Address(frameReg, BaselineFrame::offsetOfLocal(local));
+        return Address(BaselineFrameReg, BaselineFrame::offsetOfLocal(local));
     }
     inline Address addressOfArg(size_t arg) const {
         JS_ASSERT(arg < nargs());
-        return Address(frameReg, BaselineFrame::offsetOfArg(arg));
+        return Address(BaselineFrameReg, BaselineFrame::offsetOfArg(arg));
     }
     inline Address addressOfStackValue(const StackValue *value) const {
         JS_ASSERT(value->kind() == StackValue::Stack);
         size_t slot = value - &stack[0];
         JS_ASSERT(slot < stackDepth());
-        return Address(frameReg, BaselineFrame::offsetOfLocal(nlocals() + slot));
+        return Address(BaselineFrameReg, BaselineFrame::offsetOfLocal(nlocals() + slot));
     }
 
     void popValue(ValueOperand dest);
