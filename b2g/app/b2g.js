@@ -237,6 +237,7 @@ pref("ui.dragThresholdY", 25);
 // Layers Acceleration
 pref("layers.acceleration.disabled", false);
 #ifndef XP_WIN
+//TODO: turn this on for Windows in bug 808016
 pref("layers.offmainthreadcomposition.enabled", true);
 #endif
 pref("layers.offmainthreadcomposition.animate-opacity", true);
