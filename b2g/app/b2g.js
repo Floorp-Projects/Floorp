@@ -236,7 +236,9 @@ pref("ui.dragThresholdY", 25);
 
 // Layers Acceleration
 pref("layers.acceleration.disabled", false);
+#ifndef XP_WIN
 pref("layers.offmainthreadcomposition.enabled", true);
+#endif
 pref("layers.offmainthreadcomposition.animate-opacity", true);
 pref("layers.offmainthreadcomposition.animate-transform", true);
 pref("layers.async-video.enabled", true);
