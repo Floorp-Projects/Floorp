@@ -186,6 +186,7 @@ Accessible*
 nsAccessibilityService::GetRootDocumentAccessible(nsIPresShell* aPresShell,
                                                   bool aCanCreate)
 {
+  nsIPresShell* ps = aPresShell;
   nsIDocument* documentNode = aPresShell->GetDocument();
   if (documentNode) {
     nsCOMPtr<nsISupports> container = documentNode->GetContainer();
@@ -197,11 +198,10 @@ nsAccessibilityService::GetRootDocumentAccessible(nsIPresShell* aPresShell,
         nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(rootTreeItem));
         nsCOMPtr<nsIPresShell> presShell;
         docShell->GetPresShell(getter_AddRefs(presShell));
-        documentNode = presShell->GetDocument();
+        ps = presShell;
       }
 
-      return aCanCreate ?
-        GetDocAccessible(documentNode) : GetDocAccessibleFromCache(documentNode);
+      return aCanCreate ? GetDocAccessible(ps) : ps->GetDocAccessible();
     }
   }
   return nullptr;
@@ -406,15 +406,12 @@ nsAccessibilityService::UpdateImageMap(nsImageFrame* aImageFrame)
 void
 nsAccessibilityService::PresShellActivated(nsIPresShell* aPresShell)
 {
-  nsIDocument* DOMDoc = aPresShell->GetDocument();
-  if (DOMDoc) {
-    DocAccessible* document = GetDocAccessibleFromCache(DOMDoc);
-    if (document) {
-      RootAccessible* rootDocument = document->RootAccessible();
-      NS_ASSERTION(rootDocument, "Entirely broken tree: no root document!");
-      if (rootDocument)
-        rootDocument->DocumentActivated(document);
-    }
+  DocAccessible* document = aPresShell->GetDocAccessible();
+  if (document) {
+    RootAccessible* rootDocument = document->RootAccessible();
+    NS_ASSERTION(rootDocument, "Entirely broken tree: no root document!");
+    if (rootDocument)
+      rootDocument->DocumentActivated(document);
   }
 }
 
@@ -650,7 +647,7 @@ nsAccessibilityService::GetAccessibleFromCache(nsIDOMNode* aNode,
   if (!accessible) {
     nsCOMPtr<nsIDocument> document(do_QueryInterface(node));
     if (document)
-      accessible = GetDocAccessibleFromCache(document);
+      accessible = GetExistingDocAccessible(document);
   }
 
   NS_IF_ADDREF(*aAccessible = accessible);
