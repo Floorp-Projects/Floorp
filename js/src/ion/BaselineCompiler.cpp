@@ -103,10 +103,10 @@ BaselineCompiler::compile()
 bool
 BaselineCompiler::emitPrologue()
 {
-    masm.push(frameReg);
-    masm.mov(spReg, frameReg);
+    masm.push(BaselineFrameReg);
+    masm.mov(BaselineStackReg, BaselineFrameReg);
 
-    masm.subPtr(Imm32(BaselineFrame::frameSize(frame.nlocals())), spReg);
+    masm.subPtr(Imm32(BaselineFrame::frameSize(frame.nlocals())), BaselineStackReg);
     return true;
 }
 
@@ -115,8 +115,8 @@ BaselineCompiler::emitEpilogue()
 {
     masm.bind(&return_);
 
-    masm.mov(frameReg, spReg);
-    masm.pop(frameReg);
+    masm.mov(BaselineFrameReg, BaselineStackReg);
+    masm.pop(BaselineFrameReg);
 
     masm.ret();
     return true;
