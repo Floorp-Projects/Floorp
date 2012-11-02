@@ -66,9 +66,7 @@ ThreadActor.prototype = {
 
   clearDebuggees: function TA_clearDebuggees() {
     if (this.dbg) {
-      for (let d of this.dbg.getDebuggees()) {
-        this.dbg.removeDebuggee(d);
-      }
+      this.dbg.removeAllDebuggees();
     }
     this.conn.removeActorPool(this._threadLifetimePool || undefined);
     this._threadLifetimePool = null;
