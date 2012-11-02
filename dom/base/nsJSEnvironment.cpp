@@ -3666,7 +3666,7 @@ MaxScriptRunTimePrefChangedCallback(const char *aPrefName, void *aClosure)
   PRTime t;
   if (time <= 0) {
     // Let scripts run for a really, really long time.
-    t = LL_INIT(0x40000000, 0);
+    t = 0x40000000LL << 32;
   } else {
     t = time * PR_USEC_PER_SEC;
   }

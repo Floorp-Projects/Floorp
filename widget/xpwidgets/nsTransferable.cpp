@@ -176,7 +176,7 @@ DataStruct::ReadCache(nsISupports** aData, uint32_t* aDataLen)
   if ( cacheFile && NS_SUCCEEDED(cacheFile->Exists(&exists)) && exists ) {
     // get the size of the file
     int64_t fileSize;
-    int64_t max32(LL_INIT(0, 0xFFFFFFFF));
+    int64_t max32 = 0xFFFFFFFF;
     cacheFile->GetFileSize(&fileSize);
     if (fileSize > max32)
       return NS_ERROR_OUT_OF_MEMORY;
