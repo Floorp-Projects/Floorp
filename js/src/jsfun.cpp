@@ -404,7 +404,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
         script = fun->script();
     } else {
         RootedObject parent(cx, NULL);
-        fun = js_NewFunction(cx, NullPtr(), NULL, 0, JSFUN_INTERPRETED, parent, NullPtr());
+        fun = js_NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED, parent, NullPtr());
         if (!fun)
             return false;
         if (!JSObject::clearParent(cx, fun))
@@ -457,7 +457,7 @@ js::CloneInterpretedFunction(JSContext *cx, HandleObject enclosingScope, HandleF
 
     RootedObject parent(cx, NULL);
     RootedFunction
-        clone(cx, js_NewFunction(cx, NullPtr(), NULL, 0, JSFUN_INTERPRETED, parent, NullPtr()));
+        clone(cx, js_NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED, parent, NullPtr()));
     if (!clone)
         return NULL;
     if (!JSObject::clearParent(cx, clone))
@@ -600,7 +600,7 @@ FindBody(JSContext *cx, HandleFunction fun, StableCharPtr chars, size_t length,
     if (tt == TOK_ERROR)
         return false;
     bool braced = tt == TOK_LC;
-    JS_ASSERT(!!(fun->flags & JSFUN_EXPR_CLOSURE) ^ braced);
+    JS_ASSERT(fun->isExprClosure() == !braced);
     *bodyStart = ts.offsetOfToken(ts.currentToken());
     if (braced)
         *bodyStart += 1;
@@ -637,7 +637,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
     }
     if (!bodyOnly) {
         // If we're not in pretty mode, put parentheses around lambda functions.
-        if (fun->isInterpreted() && !lambdaParen && (fun->flags & JSFUN_LAMBDA)) {
+        if (fun->isInterpreted() && !lambdaParen && fun->isLambda()) {
             if (!out.append("("))
                 return NULL;
         }
@@ -663,7 +663,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
             return NULL;
 
         StableCharPtr chars = src->chars();
-        bool exprBody = fun->flags & JSFUN_EXPR_CLOSURE;
+        bool exprBody = fun->isExprClosure();
         // The source data for functions created by calling the Function
         // constructor is only the function's body.
         bool funCon = script->sourceStart == 0 && script->scriptSource()->argumentsNotIncluded();
@@ -751,7 +751,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
             // Slap a semicolon on the end of functions with an expression body.
             if (exprBody && !out.append(";"))
                 return NULL;
-        } else if (!lambdaParen && (fun->flags & JSFUN_LAMBDA)) {
+        } else if (!lambdaParen && fun->isLambda()) {
             if (!out.append(")"))
                 return NULL;
         }
@@ -760,10 +760,10 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
             !out.append("[sourceless code]") ||
             (!bodyOnly && !out.append("\n}")))
             return NULL;
-        if (!lambdaParen && (fun->flags & JSFUN_LAMBDA) && (!out.append(")")))
+        if (!lambdaParen && fun->isLambda() && !out.append(")"))
             return NULL;
     } else {
-        JS_ASSERT(!(fun->flags & JSFUN_EXPR_CLOSURE));
+        JS_ASSERT(!fun->isExprClosure());
         if ((!bodyOnly && !out.append("() {\n    ")) ||
             !out.append("[native code]") ||
             (!bodyOnly && !out.append("\n}")))
@@ -1186,7 +1186,7 @@ js_fun_bind(JSContext *cx, HandleObject target, HandleValue thisArg,
     RootedAtom name(cx, target->isFunction() ? target->toFunction()->atom() : NULL);
 
     RootedObject funobj(cx, js_NewFunction(cx, NullPtr(), CallOrConstructBoundFunction, length,
-                                           JSFUN_CONSTRUCTOR, target, name));
+                                           JSFunction::NATIVE_CTOR, target, name));
     if (!funobj)
         return NULL;
 
@@ -1414,7 +1414,7 @@ Function(JSContext *cx, unsigned argc, Value *vp)
      * and so would a call to f from another top-level's script or function.
      */
     RootedAtom anonymousAtom(cx, cx->names().anonymous);
-    RootedFunction fun(cx, js_NewFunction(cx, NullPtr(), NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
+    RootedFunction fun(cx, js_NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED_LAMBDA,
                                           global, anonymousAtom));
     if (!fun)
         return false;
@@ -1437,7 +1437,7 @@ IsBuiltinFunctionConstructor(JSFunction *fun)
 
 JSFunction *
 js_NewFunction(JSContext *cx, HandleObject funobjArg, Native native, unsigned nargs,
-               unsigned flags, HandleObject parent, HandleAtom atom, js::gc::AllocKind kind)
+               JSFunction::Flags flags, HandleObject parent, HandleAtom atom, js::gc::AllocKind kind)
 {
     JS_ASSERT(kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
     JS_ASSERT(sizeof(JSFunction) <= gc::Arena::thingSize(JSFunction::FinalizeKind));
@@ -1456,17 +1456,18 @@ js_NewFunction(JSContext *cx, HandleObject funobjArg, Native native, unsigned na
 
     /* Initialize all function members. */
     fun->nargs = uint16_t(nargs);
-    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_INTERPRETED);
-    if (flags & JSFUN_INTERPRETED) {
+    fun->flags = flags;
+    if (fun->isInterpreted()) {
         JS_ASSERT(!native);
         fun->mutableScript().init(NULL);
         fun->initEnvironment(parent);
     } else {
+        JS_ASSERT(fun->isNative());
         JS_ASSERT(native);
         fun->initNative(native, NULL);
     }
     if (kind == JSFunction::ExtendedFinalizeKind) {
-        fun->flags |= JSFUN_EXTENDED;
+        fun->flags |= JSFunction::EXTENDED;
         fun->initializeExtended();
     }
     fun->initAtom(atom);
@@ -1493,7 +1494,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
     RootedFunction clone(cx, cloneobj->toFunction());
 
     clone->nargs = fun->nargs;
-    clone->flags = fun->flags & ~JSFUN_EXTENDED;
+    clone->flags = fun->flags & ~JSFunction::EXTENDED;
     if (fun->isInterpreted()) {
         clone->initScript(fun->script().unsafeGet());
         clone->initEnvironment(parent);
@@ -1503,7 +1504,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
     clone->initAtom(fun->displayAtom());
 
     if (kind == JSFunction::ExtendedFinalizeKind) {
-        clone->flags |= JSFUN_EXTENDED;
+        clone->flags |= JSFunction::EXTENDED;
         clone->initializeExtended();
     }
 
@@ -1557,21 +1558,21 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
 
 JSFunction *
 js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
-                  unsigned nargs, unsigned attrs, Handle<PropertyName*> selfHostedName, AllocKind kind)
+                  unsigned nargs, unsigned flags, Handle<PropertyName*> selfHostedName, AllocKind kind)
 {
     PropertyOp gop;
     StrictPropertyOp sop;
 
     RootedFunction fun(cx);
 
-    if (attrs & JSFUN_STUB_GSOPS) {
+    if (flags & JSFUN_STUB_GSOPS) {
         /*
          * JSFUN_STUB_GSOPS is a request flag only, not stored in fun->flags or
          * the defined property's attributes. This allows us to encode another,
          * internal flag using the same bit, JSFUN_EXPR_CLOSURE -- see jsfun.h
          * for more on this.
          */
-        attrs &= ~JSFUN_STUB_GSOPS;
+        flags &= ~JSFUN_STUB_GSOPS;
         gop = JS_PropertyStub;
         sop = JS_StrictPropertyStub;
     } else {
@@ -1588,11 +1589,10 @@ js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
     if (native) {
         JS_ASSERT(!selfHostedName);
         RootedAtom atom(cx, JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL);
+        JSFunction::Flags funFlags = JSAPIToJSFunctionFlags(flags);
         fun = js_NewFunction(cx, NullPtr(), native, nargs,
-                             attrs & (JSFUN_FLAGS_MASK),
-                             obj, atom, kind);
+                             funFlags, obj, atom, kind);
     } else {
-        JS_ASSERT(attrs & JSFUN_INTERPRETED);
         JS_ASSERT(!cx->runtime->isSelfHostedGlobal(cx->global()));
         fun = cx->runtime->getSelfHostedFunction(cx, selfHostedName);
         fun->initAtom(JSID_TO_ATOM(id));
@@ -1601,7 +1601,7 @@ js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
         return NULL;
 
     RootedValue funVal(cx, ObjectValue(*fun));
-    if (!JSObject::defineGeneric(cx, obj, id, funVal, gop, sop, attrs & ~JSFUN_FLAGS_MASK))
+    if (!JSObject::defineGeneric(cx, obj, id, funVal, gop, sop, flags & ~JSFUN_FLAGS_MASK))
         return NULL;
 
     return fun;

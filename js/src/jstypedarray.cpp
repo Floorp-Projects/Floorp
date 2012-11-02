@@ -1657,8 +1657,8 @@ class TypedArrayTemplate
         unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
 
         Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
-        RawObject getter =
-            js_NewFunction(cx, NullPtr(), Getter<ValueGetter>, 0, 0, global, NullPtr());
+        RawObject getter = js_NewFunction(cx, NullPtr(), Getter<ValueGetter>, 0,
+                                          JSFunction::NATIVE_FUN, global, NullPtr());
         if (!getter)
             return false;
 
@@ -3318,7 +3318,7 @@ InitTypedArrayClass(JSContext *cx)
     fun =
         js_NewFunction(cx, NullPtr(),
                        ArrayBufferObject::createTypedArrayFromBuffer<typename ArrayType::ThisType>,
-                       0, 0, global, NullPtr());
+                       0, JSFunction::NATIVE_FUN, global, NullPtr());
     if (!fun)
         return NULL;
 
@@ -3382,8 +3382,8 @@ InitArrayBufferClass(JSContext *cx)
 
     RootedId byteLengthId(cx, NameToId(cx->names().byteLength));
     unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
-    RawObject getter = js_NewFunction(cx, NullPtr(), ArrayBufferObject::byteLengthGetter, 0, 0,
-                                      global, NullPtr());
+    RawObject getter = js_NewFunction(cx, NullPtr(), ArrayBufferObject::byteLengthGetter, 0,
+                                      JSFunction::NATIVE_FUN, global, NullPtr());
     if (!getter)
         return NULL;
 
@@ -3484,8 +3484,8 @@ DataViewObject::defineGetter(JSContext *cx, PropertyName *name, HandleObject pro
     unsigned flags = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
 
     Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
-    JSObject *getter = js_NewFunction(cx, NullPtr(), DataViewObject::getter<ValueGetter>, 0, 0,
-                                      global, NullPtr());
+    JSObject *getter = js_NewFunction(cx, NullPtr(), DataViewObject::getter<ValueGetter>, 0,
+                                      JSFunction::NATIVE_FUN, global, NullPtr());
     if (!getter)
         return false;
 
@@ -3529,7 +3529,7 @@ DataViewObject::initClass(JSContext *cx)
      * global for use by the DataView constructor.
      */
     RootedFunction fun(cx, js_NewFunction(cx, NullPtr(), ArrayBufferObject::createDataViewForThis,
-                                          0, 0, global, NullPtr()));
+                                          0, JSFunction::NATIVE_FUN, global, NullPtr()));
     if (!fun)
         return NULL;
 

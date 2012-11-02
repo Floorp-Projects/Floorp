@@ -4820,7 +4820,8 @@ JS_NewFunction(JSContext *cx, JSNative native, unsigned nargs, unsigned flags,
             return NULL;
     }
 
-    return js_NewFunction(cx, NullPtr(), native, nargs, flags, parent, atom);
+    JSFunction::Flags funFlags = JSAPIToJSFunctionFlags(flags);
+    return js_NewFunction(cx, NullPtr(), native, nargs, funFlags, parent, atom);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4835,7 +4836,8 @@ JS_NewFunctionById(JSContext *cx, JSNative native, unsigned nargs, unsigned flag
     assertSameCompartment(cx, parent);
 
     RootedAtom atom(cx, JSID_TO_ATOM(id));
-    return js_NewFunction(cx, NullPtr(), native, nargs, flags, parent, atom);
+    JSFunction::Flags funFlags = JSAPIToJSFunctionFlags(flags);
+    return js_NewFunction(cx, NullPtr(), native, nargs, funFlags, parent, atom);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4893,12 +4895,6 @@ JS_GetFunctionDisplayId(JSFunction *fun)
     return fun->displayAtom();
 }
 
-JS_PUBLIC_API(unsigned)
-JS_GetFunctionFlags(JSFunction *fun)
-{
-    return fun->flags;
-}
-
 JS_PUBLIC_API(uint16_t)
 JS_GetFunctionArity(JSFunction *fun)
 {
@@ -4924,6 +4920,12 @@ JS_IsNativeFunction(JSRawObject funobj, JSNative call)
         return false;
     JSFunction *fun = funobj->toFunction();
     return fun->isNative() && fun->native() == call;
+}
+
+extern JS_PUBLIC_API(JSBool)
+JS_IsConstructor(JSFunction *fun)
+{
+    return fun->isNativeConstructor() || fun->isInterpretedConstructor();
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -4965,18 +4967,15 @@ js_generic_native_method_dispatcher(JSContext *cx, unsigned argc, Value *vp)
 JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
 {
-    RootedObject obj(cx, objArg);
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
-    unsigned flags;
-    RootedObject ctor(cx);
-    JSFunction *fun;
-
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-    for (; fs->name; fs++) {
-        flags = fs->flags;
+    assertSameCompartment(cx, objArg);
 
+    RootedObject obj(cx, objArg);
+    RootedObject ctor(cx);
+
+    for (; fs->name; fs++) {
         RootedAtom atom(cx, Atomize(cx, fs->name, strlen(fs->name)));
         if (!atom)
             return JS_FALSE;
@@ -4987,6 +4986,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
          * Define a generic arity N+1 static method for the arity N prototype
          * method if flags contains JSFUN_GENERIC_NATIVE.
          */
+        unsigned flags = fs->flags;
         if (flags & JSFUN_GENERIC_NATIVE) {
             if (!ctor) {
                 ctor = JS_GetConstructor(cx, obj);
@@ -4995,8 +4995,9 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
             }
 
             flags &= ~JSFUN_GENERIC_NATIVE;
-            fun = js_DefineFunction(cx, ctor, id, js_generic_native_method_dispatcher,
-                                    fs->nargs + 1, flags, NullPtr(), JSFunction::ExtendedFinalizeKind);
+            JSFunction *fun = js_DefineFunction(cx, ctor, id, js_generic_native_method_dispatcher,
+                                    fs->nargs + 1, flags, NullPtr(),
+                                    JSFunction::ExtendedFinalizeKind);
             if (!fun)
                 return JS_FALSE;
 
@@ -5024,7 +5025,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
                 return JS_FALSE;
             selfHostedPropertyName = selfHostedAtom->asPropertyName();
         }
-        fun = js_DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags, selfHostedPropertyName);
+        JSFunction *fun = js_DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags,
+                                            selfHostedPropertyName);
         if (!fun)
             return JS_FALSE;
         if (fs->call.info)
@@ -5423,7 +5425,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
             return NULL;
     }
 
-    RootedFunction fun(cx, js_NewFunction(cx, NullPtr(), NULL, 0, JSFUN_INTERPRETED, obj, funAtom));
+    RootedFunction fun(cx, js_NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED, obj, funAtom));
     if (!fun)
         return NULL;
 

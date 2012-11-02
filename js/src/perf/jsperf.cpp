@@ -90,7 +90,7 @@ pm_canMeasureSomething(JSContext* cx, unsigned /*unused*/, jsval* vp)
     return JS_TRUE;
 }
 
-const uint8_t PM_FATTRS = JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED;
+const uint8_t PM_FATTRS = JSPROP_READONLY | JSPROP_PERMANENT;
 static JSFunctionSpec pm_fns[] = {
     JS_FN("start",               pm_start,               0, PM_FATTRS),
     JS_FN("stop",                pm_stop,                0, PM_FATTRS),

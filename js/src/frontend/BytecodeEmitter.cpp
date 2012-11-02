@@ -1376,7 +1376,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return true;
 
         RootedFunction fun(cx, bce->sc->asFunbox()->function());
-        JS_ASSERT(fun->flags & JSFUN_LAMBDA);
+        JS_ASSERT(fun->isLambda());
         JS_ASSERT(pn->pn_atom == fun->atom());
 
         /*

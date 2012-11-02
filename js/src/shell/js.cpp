@@ -1753,18 +1753,20 @@ DisassembleScript(JSContext *cx, JSScript *script_, JSFunction *fun, bool lines,
 {
     Rooted<JSScript*> script(cx, script_);
 
-    if (fun && (fun->flags & ~7U)) {
-        uint16_t flags = fun->flags;
+    if (fun) {
         Sprint(sp, "flags:");
-
-#define SHOW_FLAG(flag) if (flags & JSFUN_##flag) Sprint(sp, " " #flag);
-
-        SHOW_FLAG(LAMBDA);
-        SHOW_FLAG(HEAVYWEIGHT);
-        SHOW_FLAG(EXPR_CLOSURE);
-
-#undef SHOW_FLAG
-
+        if (fun->isLambda())
+            Sprint(sp, " LAMBDA");
+        if (fun->isHeavyweight())
+            Sprint(sp, " HEAVYWEIGHT");
+        if (fun->isExprClosure())
+            Sprint(sp, " EXPRESSION CLOSURE");
+        if (fun->isFunctionPrototype())
+            Sprint(sp, " Function.prototype");
+        if (fun->isSelfHostedBuiltin())
+            Sprint(sp, " SELF_HOSTED");
+        if (fun->isSelfHostedConstructor())
+            Sprint(sp, " SELF_HOSTED_CTOR");
         Sprint(sp, "\n");
     }
 
