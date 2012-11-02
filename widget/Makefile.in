@@ -141,6 +141,10 @@ XPIDLSRCS	+= nsIPrintSettingsWin.idl \
 		$(NULL)
 endif
 
+ifdef MOZ_METRO
+XPIDLSRCS += nsIWinMetroUtils.idl
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 XPIDLSRCS +=	nsIMacDockSupport.idl \
 		nsIStandaloneNativeMenu.idl \
