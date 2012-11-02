@@ -137,7 +137,8 @@ SettingsLock.prototype = {
       var lock;
       while (lock = this._settingsManager._locks.dequeue()) {
         if (!lock._transaction) {
-          lock._transaction = lock._settingsManager._settingsDB._db.transaction(SETTINGSSTORE_NAME, "readwrite");
+          let transactionType = this._settingsManager.hasWritePrivileges ? "readwrite" : "readonly";
+          lock._transaction = lock._settingsManager._settingsDB._db.transaction(SETTINGSSTORE_NAME, transactionType);
         }
         lock.process();
       }

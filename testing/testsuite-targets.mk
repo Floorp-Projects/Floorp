@@ -264,7 +264,6 @@ REMOTE_XPCSHELL = \
 	rm -f ./$@.log && \
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
 	  -I$(topsrcdir)/build \
-	  -I$(topsrcdir)/build/mobile \
 	  -I$(topsrcdir)/testing/mozbase/mozdevice/mozdevice \
 	  $(topsrcdir)/testing/xpcshell/remotexpcshelltests.py \
 	  --manifest=$(DEPTH)/_tests/xpcshell/xpcshell.ini \
@@ -275,6 +274,37 @@ REMOTE_XPCSHELL = \
 	  --objdir=$(DEPTH) \
 	  $(SYMBOLS_PATH) \
 	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+
+B2G_XPCSHELL = \
+	rm -f ./@.log && \
+	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/build \
+	  $(topsrcdir)/testing/xpcshell/runtestsb2g.py \
+	  --manifest=$(DEPTH)/_tests/xpcshell/xpcshell.ini \
+	  --build-info-json=$(DEPTH)/mozinfo.json \
+	  --no-logfiles \
+	  --use-device-libs \
+	  --no-clean \
+	  --objdir=$(DEPTH) \
+	  $$EXTRA_XPCSHELL_ARGS \
+	  --b2gpath=${B2G_HOME} \
+	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+
+xpcshell-tests-b2g: ADB_PATH?=$(shell which adb)
+xpcshell-tests-b2g:
+	@if [ "${B2G_HOME}" = "" ]; then \
+		echo "Please set the B2G_HOME variable"; exit 1; \
+	elif [ ! -f "${ADB_PATH}" ]; then \
+		echo "Please set the ADB_PATH variable"; exit 1; \
+	elif [ "${EMULATOR}" != "" ]; then \
+		EXTRA_XPCSHELL_ARGS=--emulator=${EMULATOR}; \
+		$(call B2G_XPCSHELL); \
+		exit 0; \
+	else \
+		EXTRA_XPCSHELL_ARGS=--address=localhost:2828; \
+		$(call B2G_XPCSHELL); \
+		exit 0; \
+	fi
 
 xpcshell-tests-remote: DM_TRANS?=adb
 xpcshell-tests-remote:

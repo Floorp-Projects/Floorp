@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test GainNode</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
+  var context = new mozAudioContext();
+  var buffer = context.createBuffer(1, 2048, 44100);
+  for (var i = 0; i < 2048; ++i) {
+    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / 44100);
+  }
+
+  var destination = context.destination;
+
+  var source = context.createBufferSource();
+
+  var gain = context.createGain();
+
+  source.buffer = buffer;
+
+  source.connect(gain);
+  gain.connect(destination);
+
+  ok(gain.gain, "The audioparam member must exist");
+  is(gain.gain.value, 1.0, "Correct initial value");
+  is(gain.gain.defaultValue, 1.0, "Correct default value");
+  is(gain.gain.minValue, 0, "Correct min value");
+  is(gain.gain.maxValue, 1.0, "Correct max value");
+  gain.gain.value = 0.5;
+  is(gain.gain.value, 0.5, "Correct initial value");
+  is(gain.gain.defaultValue, 1.0, "Correct default value");
+  is(gain.gain.minValue, 0, "Correct min value");
+  is(gain.gain.maxValue, 1.0, "Correct max value");
+
+  source.start(0);
+  SimpleTest.executeSoon(function() {
+    source.stop(0);
+    source.disconnect();
+    gain.disconnect();
+
+    SpecialPowers.clearUserPref("media.webaudio.enabled");
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

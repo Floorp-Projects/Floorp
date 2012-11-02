@@ -13,6 +13,7 @@
 #include "nsISeekableStream.h"
 #include "pratom.h"
 #include "nsMediaPluginReader.h"
+#include "nsIGfxInfo.h"
 
 #include "MPAPI.h"
 
@@ -87,6 +88,29 @@ static PluginHost sPluginHost = {
 
 void nsMediaPluginHost::TryLoad(const char *name)
 {
+  bool forceEnabled =
+      Preferences::GetBool("stagefright.force-enabled", false);
+  bool disabled =
+      Preferences::GetBool("stagefright.disabled", false);
+
+  if (disabled) {
+    NS_WARNING("XXX stagefright disabled\n");
+    return;
+  }
+
+  if (!forceEnabled) {
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    if (gfxInfo) {
+      int32_t status;
+      if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_STAGEFRIGHT, &status))) {
+        if (status != nsIGfxInfo::FEATURE_NO_INFO) {
+          NS_WARNING("XXX stagefright blacklisted\n");
+          return;
+        }
+      }
+    }
+  }
+
   PRLibrary *lib = PR_LoadLibrary(name);
   if (lib) {
     Manifest *manifest = static_cast<Manifest *>(PR_FindSymbol(lib, "MPAPI_MANIFEST"));
