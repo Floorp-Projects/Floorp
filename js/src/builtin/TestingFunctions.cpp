@@ -687,6 +687,40 @@ FinalizeCount(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static JSBool
+DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
+{
+    const char *fileName = NULL;
+    JSAutoByteString fileNameBytes;
+    if (argc > 0) {
+        Value v = JS_ARGV(cx, vp)[0];
+        if (v.isString()) {
+            JSString *str = v.toString();
+            if (!fileNameBytes.encode(cx, str))
+                return false;
+            fileName = fileNameBytes.ptr();
+        }
+    }
+
+    FILE *dumpFile;
+    if (!fileName) {
+        dumpFile = stdout;
+    } else {
+        dumpFile = fopen(fileName, "w");
+        if (!dumpFile) {
+            JS_ReportError(cx, "can't open %s", fileName);
+            return false;
+        }
+    }
+
+    js::DumpHeapComplete(JS_GetRuntime(cx), dumpFile);
+
+    fclose(dumpFile);
+
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
+}
+
 JSBool
 MJitChunkLimit(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -859,6 +893,10 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("isProxy", IsProxy, 1, 0,
 "isProxy(obj)",
 "  If true, obj is a proxy of some sort"),
+
+    JS_FN_HELP("dumpHeapComplete", DumpHeapComplete, 1, 0,
+"dumpHeapComplete([filename])",
+"  Dump reachable and unreachable objects to a file."),
 
     JS_FN_HELP("mjitChunkLimit", MJitChunkLimit, 1, 0,
 "mjitChunkLimit(N)",
