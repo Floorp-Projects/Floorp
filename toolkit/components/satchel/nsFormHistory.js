@@ -923,9 +923,7 @@ FormHistory.prototype = {
             stmt.finalize();
         }
         this.dbStmts = {};
-
-        // Return if the database hasn't been opened.
-        if (Object.getOwnPropertyDescriptor(FormHistory.prototype, "dbConnection").value === undefined)
+        if (this.dbConnection === undefined)
             return;
 
         let completed = false;
