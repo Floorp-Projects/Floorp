@@ -5,6 +5,6 @@ for (var [k, v] of m)
     if (k !== "c")
         m.delete(k);
 m.clear();
-assertEq(m.size(), 0);
+assertEq(m.size, 0);
 assertEq(m.has("c"), false);
 assertEq(m.has("d"), false);

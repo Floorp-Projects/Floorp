@@ -8,4 +8,4 @@ for (let x of set) {
         set.add(x - 1);
 }
 assertEq(log, '5;4;3;2;1;0;');
-assertEq(set.size(), 6);
+assertEq(set.size, 6);
