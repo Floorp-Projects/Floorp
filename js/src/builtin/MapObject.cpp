@@ -947,8 +947,12 @@ Class MapObject::class_ = {
     mark
 };
 
+JSPropertySpec MapObject::properties[] = {
+    JS_PSG("size", size, 0),
+    JS_PS_END
+};
+
 JSFunctionSpec MapObject::methods[] = {
-    JS_FN("size", size, 0, 0),
     JS_FN("get", get, 1, 0),
     JS_FN("has", has, 1, 0),
     JS_FN("set", set, 2, 0),
@@ -960,7 +964,7 @@ JSFunctionSpec MapObject::methods[] = {
 
 static JSObject *
 InitClass(JSContext *cx, Handle<GlobalObject*> global, Class *clasp, JSProtoKey key, Native construct,
-          JSFunctionSpec *methods)
+          JSPropertySpec *properties, JSFunctionSpec *methods)
 {
     Rooted<JSObject*> proto(cx, global->createBlankPrototype(cx, clasp));
     if (!proto)
@@ -970,7 +974,7 @@ InitClass(JSContext *cx, Handle<GlobalObject*> global, Class *clasp, JSProtoKey 
     Rooted<JSFunction*> ctor(cx, global->createConstructor(cx, construct, ClassName(key, cx), 1));
     if (!ctor ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
-        !DefinePropertiesAndBrand(cx, proto, NULL, methods) ||
+        !DefinePropertiesAndBrand(cx, proto, properties, methods) ||
         !DefineConstructorAndPrototype(cx, global, key, ctor, proto))
     {
         return NULL;
@@ -982,7 +986,7 @@ JSObject *
 MapObject::initClass(JSContext *cx, JSObject *obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->asGlobal());
-    return InitClass(cx, global, &class_, JSProto_Map, construct, methods);
+    return InitClass(cx, global, &class_, JSProto_Map, construct, properties, methods);
 }
 
 template <class Range>
@@ -1410,8 +1414,12 @@ Class SetObject::class_ = {
     mark
 };
 
+JSPropertySpec SetObject::properties[] = {
+    JS_PSG("size", size, 0),
+    JS_PS_END
+};
+
 JSFunctionSpec SetObject::methods[] = {
-    JS_FN("size", size, 0, 0),
     JS_FN("has", has, 1, 0),
     JS_FN("add", add, 1, 0),
     JS_FN("delete", delete_, 1, 0),
@@ -1424,7 +1432,7 @@ JSObject *
 SetObject::initClass(JSContext *cx, JSObject *obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->asGlobal());
-    return InitClass(cx, global, &class_, JSProto_Set, construct, methods);
+    return InitClass(cx, global, &class_, JSProto_Set, construct, properties, methods);
 }
 
 void
