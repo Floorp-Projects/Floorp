@@ -1080,7 +1080,7 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         RegisterID t0 = tempRegs.takeAnyReg().reg();
-        masm.bumpStubCount(f.script().get(nogc), f.pc(), t0);
+        masm.bumpStubCount(f.script(), f.pc(), t0);
 
         /*
          * Use three values above sp on the stack for use by the call to store
@@ -1194,7 +1194,7 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         RegisterID t0 = tempRegs.takeAnyReg().reg();
-        masm.bumpStubCount(f.script().get(nogc), f.pc(), t0);
+        masm.bumpStubCount(f.script(), f.pc(), t0);
 
         /*
          * A JSNative has the following signature:

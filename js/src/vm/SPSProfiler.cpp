@@ -359,13 +359,12 @@ void
 SPSProfiler::discardMJITCode(mjit::JITScript *jscr,
                              mjit::JITChunk *chunk, void* address)
 {
-    AutoAssertNoGC nogc;
     if (!jminfo.initialized())
         return;
 
     unregisterScript(jscr->script, chunk);
     for (unsigned i = 0; i < chunk->nInlineFrames; i++)
-        unregisterScript(chunk->inlineFrames()[i].fun->script().get(nogc), chunk);
+        unregisterScript(chunk->inlineFrames()[i].fun->script(), chunk);
 }
 
 void

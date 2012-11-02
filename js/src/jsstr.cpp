@@ -2369,7 +2369,7 @@ LambdaIsGetElem(JSObject &lambda)
     if (!fun->isInterpreted())
         return NULL;
 
-    RawScript script = fun->script().get(nogc);
+    RawScript script = fun->script();
     jsbytecode *pc = script->code;
 
     /*
