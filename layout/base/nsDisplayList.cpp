@@ -861,12 +861,18 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
   bool snap;
   nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, &snap);
   if (aBuilder->IsForPluginGeometry()) {
-    // Treat all chrome items as opaque, unless their frames are opacity:0.
+    // Treat all leaf chrome items as opaque, unless their frames are opacity:0.
     // Since opacity:0 frames generate an nsDisplayOpacity, that item will
     // not be treated as opaque here, so opacity:0 chrome content will be
     // effectively ignored, as it should be.
+    // We treat leaf chrome items as opaque to ensure that they cover
+    // content plugins, for security reasons.
+    // Non-leaf chrome items don't render contents of their own so shouldn't
+    // be treated as opaque (and their bounds is just the union of their
+    // children, which might be a large area their contents don't really cover).
     nsIFrame* f = aItem->GetUnderlyingFrame();
-    if (f && f->PresContext()->IsChrome() && f->GetStyleDisplay()->mOpacity != 0.0) {
+    if (f && f->PresContext()->IsChrome() && !aItem->GetChildren() &&
+        f->GetStyleDisplay()->mOpacity != 0.0) {
       opaque = aItem->GetBounds(aBuilder, &snap);
     }
   }
