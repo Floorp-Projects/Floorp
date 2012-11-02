@@ -727,6 +727,9 @@ public:
 
   void SetPostScale(float aXScale, float aYScale)
   {
+    if (mPostXScale == aXScale && mPostYScale == aYScale) {
+      return;
+    }
     mPostXScale = aXScale;
     mPostYScale = aYScale;
     Mutated();
@@ -1232,6 +1235,9 @@ public:
 
   void SetPreScale(float aXScale, float aYScale)
   {
+    if (mPreXScale == aXScale && mPreYScale == aYScale) {
+      return;
+    }
     mPreXScale = aXScale;
     mPreYScale = aYScale;
     Mutated();
