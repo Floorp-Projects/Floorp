@@ -1,5 +1,6 @@
+const Cu = Components.utils;
+
 function run_test() {
-  var Cu = Components.utils;
   var sb1 = Cu.Sandbox("http://www.blah.com");
   var sb2 = Cu.Sandbox("http://www.blah.com");
   var sb3 = Cu.Sandbox(this);
@@ -13,25 +14,19 @@ function run_test() {
 
   // non-chrome accessing chrome Components
   sb1.C = Components;
-  rv = Cu.evalInSandbox("C.utils", sb1);
-  do_check_eq(rv, undefined);  
-  rv = Cu.evalInSandbox("C.interfaces", sb1);
-  do_check_neq(rv, undefined);
+  checkThrows("C.utils", sb1);
+  checkThrows("C.classes", sb1);
 
   // non-chrome accessing own Components
-  rv = Cu.evalInSandbox("Components.utils", sb1);
-  do_check_eq(rv, undefined);
-  rv = Cu.evalInSandbox("Components.interfaces", sb1);
-  do_check_neq(rv, undefined); 
+  checkThrows("Components.utils", sb1);
+  checkThrows("Components.classes", sb1);
 
   // non-chrome same origin
   var C2 = Cu.evalInSandbox("Components", sb2);
-  do_check_neq(rv, C2.utils); 
+  do_check_neq(rv, C2.utils);
   sb1.C2 = C2;
-  rv = Cu.evalInSandbox("C2.utils", sb1);
-  do_check_eq(rv, undefined);
-  rv = Cu.evalInSandbox("C2.interfaces", sb1);
-  do_check_neq(rv, undefined);
+  checkThrows("C2.utils", sb1);
+  checkThrows("C2.classes", sb1);
 
   // chrome accessing chrome
   sb3.C = Components;
@@ -40,9 +35,11 @@ function run_test() {
 
   // non-chrome cross origin
   sb4.C2 = C2;
-  rv = Cu.evalInSandbox("C2.interfaces", sb1);
-  do_check_neq(rv, undefined);
-  rv = Cu.evalInSandbox("C2.utils", sb1);
-  do_check_eq(rv, undefined);
+  checkThrows("C2.utils", sb1);
+  checkThrows("C2.classes", sb1);
+}
 
+function checkThrows(expression, sb) {
+  var result = Cu.evalInSandbox('(function() { try { ' + expression + '; return "allowed"; } catch (e) { return e.toString(); }})();', sb);
+  do_check_true(!!/denied/.exec(result));
 }
