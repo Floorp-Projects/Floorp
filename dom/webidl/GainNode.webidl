@@ -10,25 +10,10 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor, PrefControlled]
-interface mozAudioContext {
+[PrefControlled]
+interface GainNode : AudioNode {
 
-    readonly attribute AudioDestinationNode destination;
-
-    [Creator, Throws]
-    AudioBuffer createBuffer(unsigned long numberOfChannels, unsigned long length, float sampleRate);
-
-    // [Creator, Throws]
-    // AudioBuffer createBuffer(ArrayBuffer buffer, boolean mixToMono);
-
-    // AudioNode creation 
-    [Creator]
-    AudioBufferSourceNode createBufferSource();
-
-    [Creator]
-    GainNode createGain();
+    readonly attribute AudioParam gain;
 
 };
-
-typedef mozAudioContext AudioContext;
 

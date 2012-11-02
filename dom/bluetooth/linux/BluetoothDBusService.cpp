@@ -2387,45 +2387,6 @@ BluetoothDBusService::Disconnect(const uint16_t aProfileId,
   DispatchBluetoothReply(aRunnable, v, replyError);
 }
 
-class CreateBluetoothScoSocket : public nsRunnable
-{
-public:
-  CreateBluetoothScoSocket(UnixSocketConsumer* aConsumer,
-                           const nsAString& aAddress,
-                           bool aAuth,
-                           bool aEncrypt)
-    : mConsumer(aConsumer),
-      mAddress(aAddress),
-      mAuth(aAuth),
-      mEncrypt(aEncrypt)
-  {
-  }
-
-  nsresult
-  Run()
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    nsString replyError;
-    BluetoothUnixSocketConnector* c =
-      new BluetoothUnixSocketConnector(BluetoothSocketType::SCO, -1,
-                                       mAuth, mEncrypt);
-
-    if (!mConsumer->ConnectSocket(c, NS_ConvertUTF16toUTF8(mAddress).get())) {
-      replyError.AssignLiteral("SocketConnectionError");
-      return NS_ERROR_FAILURE;
-    }
-
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<UnixSocketConsumer> mConsumer;
-  nsString mAddress;
-  bool mAuth;
-  bool mEncrypt;
-};
-
 class ConnectBluetoothSocketRunnable : public nsRunnable
 {
 public:
@@ -2583,12 +2544,13 @@ BluetoothDBusService::GetScoSocket(const nsAString& aAddress,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<nsRunnable> func(new CreateBluetoothScoSocket(aConsumer,
-                                                         aAddress,
-                                                         aAuth,
-                                                         aEncrypt));
-  if (NS_FAILED(mBluetoothCommandThread->Dispatch(func, NS_DISPATCH_NORMAL))) {
-    NS_WARNING("Cannot dispatch firmware loading task!");
+  nsString replyError;
+  BluetoothUnixSocketConnector* c =
+    new BluetoothUnixSocketConnector(BluetoothSocketType::SCO, -1,
+                                     aAuth, aEncrypt);
+
+  if (!aConsumer->ConnectSocket(c, NS_ConvertUTF16toUTF8(aAddress).get())) {
+    replyError.AssignLiteral("SocketConnectionError");
     return NS_ERROR_FAILURE;
   }
 

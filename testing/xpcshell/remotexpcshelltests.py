@@ -8,7 +8,7 @@ import re, sys, os
 import subprocess
 import runxpcshelltests as xpcshell
 from automationutils import *
-import devicemanager, devicemanagerADB, devicemanagerSUT
+from mozdevice import devicemanager, devicemanagerADB, devicemanagerSUT
 
 # A specialization of XPCShellTests that runs tests on an Android device
 # via devicemanager.
