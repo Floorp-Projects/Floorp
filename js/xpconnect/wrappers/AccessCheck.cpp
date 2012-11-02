@@ -330,6 +330,17 @@ AccessCheck::deny(JSContext *cx, jsid id)
 enum Access { READ = (1<<0), WRITE = (1<<1), NO_ACCESS = 0 };
 
 static bool
+Deny(JSContext *cx, jsid id, Wrapper::Action act)
+{
+    // Refuse to perform the action and just return the default value.
+    if (act == Wrapper::GET)
+        return true;
+    // If its a set, deny it and throw an exception.
+    AccessCheck::deny(cx, id);
+    return false;
+}
+
+static bool
 IsInSandbox(JSContext *cx, JSObject *obj)
 {
     JSAutoCompartment ac(cx, obj);
@@ -338,15 +349,19 @@ IsInSandbox(JSContext *cx, JSObject *obj)
 }
 
 bool
-ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper::Action act)
+ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper::Action act,
+                             Permission &perm)
 {
     JSObject *wrappedObject = Wrapper::wrappedObject(wrapper);
 
-    if (act == Wrapper::CALL)
+    if (act == Wrapper::CALL) {
+        perm = PermitObjectAccess;
         return true;
+    }
 
+    perm = DenyAccess;
     if (act == Wrapper::PUNCTURE)
-        return false;
+        return Deny(cx, id, act);
 
     jsid exposedPropsId = GetRTIdByIndex(cx, XPCJSRuntime::IDX_EXPOSEDPROPS);
 
@@ -365,6 +380,7 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
          JS_IsTypedArrayObject(wrappedObject, cx)) &&
         ((JSID_IS_INT(id) && JSID_TO_INT(id) >= 0) ||
          (JSID_IS_STRING(id) && JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "length")))) {
+        perm = PermitPropertyAccess;
         return true; // Allow
     }
 
@@ -389,20 +405,26 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
                 }
             }
 
+            perm = PermitPropertyAccess;
             return true;
         }
-        return false;
+        return Deny(cx, id, act);
     }
 
-    if (id == JSID_VOID)
+    if (id == JSID_VOID) {
+        // This will force the caller to call us back for individual property accesses.
+        perm = PermitPropertyAccess;
         return true;
+    }
 
     JS::Value exposedProps;
     if (!JS_LookupPropertyById(cx, wrappedObject, exposedPropsId, &exposedProps))
         return false;
 
-    if (exposedProps.isNullOrUndefined())
-        return false;
+    if (exposedProps.isNullOrUndefined()) {
+        JSAutoCompartment wrapperAC(cx, wrapper);
+        return Deny(cx, id, act);
+    }
 
     if (!exposedProps.isObject()) {
         JS_ReportError(cx, "__exposedProps__ must be undefined, null, or an Object");
@@ -418,8 +440,10 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
     if (!JS_GetPropertyDescriptorById(cx, hallpass, id, JSRESOLVE_QUALIFIED, &desc)) {
         return false; // Error
     }
-    if (!desc.obj || !(desc.attrs & JSPROP_ENUMERATE))
-        return false;
+    if (desc.obj == NULL || !(desc.attrs & JSPROP_ENUMERATE)) {
+        JSAutoCompartment wrapperAC(cx, wrapper);
+        return Deny(cx, id, act);
+    }
 
     if (!JSVAL_IS_STRING(desc.value)) {
         JS_ReportError(cx, "property must be a string");
@@ -463,15 +487,19 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
 
     if ((act == Wrapper::SET && !(access & WRITE)) ||
         (act != Wrapper::SET && !(access & READ))) {
-        return false;
+        JSAutoCompartment wrapperAC(cx, wrapper);
+        return Deny(cx, id, act);
     }
 
-    return true;
+    perm = PermitPropertyAccess;
+    return true; // Allow
 }
 
 bool
-ComponentsObjectPolicy::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper::Action act)
+ComponentsObjectPolicy::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper::Action act,
+                              Permission &perm) 
 {
+    perm = DenyAccess;
     JSAutoCompartment ac(cx, wrapper);
 
     if (JSID_IS_STRING(id) && act == Wrapper::GET) {
@@ -482,6 +510,7 @@ ComponentsObjectPolicy::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper
             JS_FlatStringEqualsAscii(flatId, "interfacesByID") ||
             JS_FlatStringEqualsAscii(flatId, "results"))
         {
+            perm = PermitPropertyAccess;
             return true;
         }
     }
@@ -490,10 +519,11 @@ ComponentsObjectPolicy::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper
     // so we need this dynamic check. This can go away when we expose Components
     // as SpecialPowers.wrap(Components) during automation.
     if (xpc::IsUniversalXPConnectEnabled(cx)) {
+        perm = PermitPropertyAccess;
         return true;
     }
 
-    return false;
+    return Deny(cx, id, act);
 }
 
 }
