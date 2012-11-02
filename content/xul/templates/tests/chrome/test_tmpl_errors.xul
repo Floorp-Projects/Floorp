@@ -23,9 +23,8 @@ var consoleService = Components.classes["@mozilla.org/consoleservice;1"].
 
 function checkConsole(expectedError)
 {
-  var out = {};
-  consoleService.getMessageArray(out, {});
-  is(out.value[0].message, expectedError, "logged message " + expectedError);
+  var message = consoleService.getMessageArray()[0].message;
+  is(message, expectedError, "logged message " + expectedError);
 }
 
 // each test consists of a pre function executed before the template build, an
