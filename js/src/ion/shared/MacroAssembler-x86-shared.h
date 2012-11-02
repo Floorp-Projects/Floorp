@@ -219,10 +219,6 @@ class MacroAssemblerX86Shared : public Assembler
     void store16(const S &src, const T &dest) {
         movw(src, Operand(dest));
     }
-    void load16ZeroExtend_mask(const Address &src, Imm32 mask, const Register &dest) {
-        load32(src, dest);
-        and32(mask, dest);
-    }
     void load16SignExtend(const Address &src, const Register &dest) {
         movxwl(Operand(src), dest);
     }

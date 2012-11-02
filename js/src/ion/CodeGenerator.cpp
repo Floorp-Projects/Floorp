@@ -827,11 +827,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         return false;
 
     // Guard that calleereg is a non-native function:
-    // We do this by testing whether JSFunction::INTERPRETED is set
-    // TODO: this could be optimized
-    Address flags(calleereg, offsetof(JSFunction, flags));
-    masm.load16ZeroExtend_mask(flags, Imm32(JSFunction::INTERPRETED), nargsreg);
-    masm.branch32(Assembler::NotEqual, nargsreg, Imm32(JSFunction::INTERPRETED), &invoke);
+    masm.branchIfFunctionIsNative(calleereg, &invoke);
 
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.movePtr(Address(calleereg, offsetof(JSFunction, u.i.script_)), objreg);
@@ -1129,13 +1125,8 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     Label end, invoke;
 
     // Guard that calleereg is a non-native function:
-    // We do this by testing whether JSFunction::INTERPRETED is set
-    // TODO: this could be optimized
     if (!apply->hasSingleTarget()) {
-        Register kind = objreg;
-        Address flags(calleereg, offsetof(JSFunction, flags));
-        masm.load16ZeroExtend_mask(flags, Imm32(JSFunction::INTERPRETED), kind);
-        masm.branch32(Assembler::NotEqual, kind, Imm32(JSFunction::INTERPRETED), &invoke);
+        masm.branchIfFunctionIsNative(calleereg, &invoke);
     } else {
         // Native single targets are handled by LCallNative.
         JS_ASSERT(!apply->getSingleTarget()->isNative());
