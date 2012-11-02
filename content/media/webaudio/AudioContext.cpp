@@ -13,6 +13,7 @@
 #include "AudioBufferSourceNode.h"
 #include "AudioBuffer.h"
 #include "GainNode.h"
+#include "DelayNode.h"
 
 namespace mozilla {
 namespace dom {
@@ -92,6 +93,13 @@ AudioContext::CreateGain()
 {
   nsRefPtr<GainNode> gainNode = new GainNode(this);
   return gainNode.forget();
+}
+
+already_AddRefed<DelayNode>
+AudioContext::CreateDelay(float aMaxDelayTime)
+{
+  nsRefPtr<DelayNode> delayNode = new DelayNode(this, aMaxDelayTime);
+  return delayNode.forget();
 }
 
 }

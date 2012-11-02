@@ -190,9 +190,6 @@ pref("app.privacyURL", "http://www.mozilla.com/%LOCALE%/m/privacy.html");
 pref("app.creditsURL", "http://www.mozilla.org/credits/");
 pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/b2g/features/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/b2g/faq/");
-// Whether we want to report crashes (headless)
-//XXX Remove this pref when bug 801932 is fixed
-pref("app.reportCrashes", true);
 
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
@@ -239,7 +236,10 @@ pref("ui.dragThresholdY", 25);
 
 // Layers Acceleration
 pref("layers.acceleration.disabled", false);
+#ifndef XP_WIN
+//TODO: turn this on for Windows in bug 808016
 pref("layers.offmainthreadcomposition.enabled", true);
+#endif
 pref("layers.offmainthreadcomposition.animate-opacity", true);
 pref("layers.offmainthreadcomposition.animate-transform", true);
 pref("layers.async-video.enabled", true);

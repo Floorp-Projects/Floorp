@@ -255,7 +255,11 @@ class Vector : private AllocPolicy
     /* private accessors */
 
     bool usingInlineStorage() const {
-        return mBegin == (T *)storage.addr();
+        return mBegin == inlineStorage();
+    }
+
+    T *inlineStorage() const {
+        return (T *)storage.addr();
     }
 
     T *beginNoCheck() const {
@@ -479,6 +483,8 @@ class Vector : private AllocPolicy
      * object (which must be heap-allocated) itself.
      */
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const;
+
+    void swap(Vector &other);
 };
 
 /* This does the re-entrancy check plus several other sanity checks. */
@@ -993,6 +999,33 @@ inline size_t
 Vector<T,N,AP>::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const
 {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+}
+
+template <class T, size_t N, class AP>
+inline void
+Vector<T,N,AP>::swap(Vector &other)
+{
+    // TODO Implement N != 0
+    JS_STATIC_ASSERT(N == 0);
+
+    // This only works when inline storage is always empty.
+    if (!usingInlineStorage() && other.usingInlineStorage()) {
+        other.mBegin = mBegin;
+        mBegin = inlineStorage();
+    } else if (usingInlineStorage() && !other.usingInlineStorage()) {
+        mBegin = other.mBegin;
+        other.mBegin = other.inlineStorage();
+    } else if (!usingInlineStorage() && !other.usingInlineStorage()) {
+        Swap(mBegin, other.mBegin);
+    } else {
+        // This case is a no-op, since we'd set both to use their inline storage.
+    }
+
+    Swap(mLength, other.mLength);
+    Swap(mCapacity, other.mCapacity);
+#ifdef DEBUG
+    Swap(mReserved, other.mReserved);
+#endif
 }
 
 }  /* namespace js */

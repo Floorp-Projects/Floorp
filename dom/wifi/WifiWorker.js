@@ -40,14 +40,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
 // command always succeeds and we do a string/boolean check for the
 // expected results).
 var WifiManager = (function() {
-  function getSdkVersionAndDevice() {
+  function getSdkVersion() {
     Cu.import("resource://gre/modules/systemlibs.js");
     let sdkVersion = libcutils.property_get("ro.build.version.sdk");
-    return { sdkVersion: parseInt(sdkVersion, 10),
-               device: libcutils.property_get("ro.product.device") };
+    return parseInt(sdkVersion, 10);
   }
 
-  let { sdkVersion, device } = getSdkVersionAndDevice();
+  let sdkVersion = getSdkVersion();
 
   var controlWorker = new ChromeWorker(WIFIWORKER_WORKER);
   var eventWorker = new ChromeWorker(WIFIWORKER_WORKER);
@@ -720,7 +719,7 @@ var WifiManager = (function() {
   }
 
   manager.start = function() {
-    debug("detected SDK version " + sdkVersion + " and device " + device);
+    debug("detected SDK version " + sdkVersion);
     connectToSupplicant(connectCallback);
   }
 
@@ -1008,15 +1007,11 @@ var WifiManager = (function() {
               });
             }
 
-            // Driver startup on the otoro takes longer than it takes for us
+            // Driver startup on certain platforms takes longer than it takes for us
             // to return from loadDriver, so wait 2 seconds before starting
             // the supplicant to give it a chance to start.
-            if (device === "otoro") {
-              timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-              timer.init(doStartSupplicant, 2000, Ci.nsITimer.TYPE_ONE_SHOT);
-            } else {
-              doStartSupplicant();
-            }
+            timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+            timer.init(doStartSupplicant, 2000, Ci.nsITimer.TYPE_ONE_SHOT);
           });
         });
       });

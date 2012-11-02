@@ -661,9 +661,16 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     static_cast<RefLayer*>(layer.get())->SetReferentId(id);
     layer->SetVisibleRegion(aVisibleRect);
     nsIntPoint rootFrameOffset = GetRootFrameOffset(aFrame, aBuilder);
-    layer->SetBaseTransform(
-      gfx3DMatrix::Translation(rootFrameOffset.x + aContainerParameters.mOffset.x, 
-                               rootFrameOffset.y + aContainerParameters.mOffset.y, 0.0));
+    // We can only have an offset if we're a child of an inactive
+    // container, but our display item is LAYER_ACTIVE_FORCE which
+    // forces all layers above to be active.
+    MOZ_ASSERT(aContainerParameters.mOffset == nsIntPoint());
+    gfx3DMatrix m =
+      gfx3DMatrix::Translation(rootFrameOffset.x, rootFrameOffset.y, 0.0);
+    // Remote content can't be repainted by us, so we multiply down
+    // the resolution that our container expects onto our container.
+    m.Scale(aContainerParameters.mXScale, aContainerParameters.mYScale, 1.0);
+    layer->SetBaseTransform(m);
 
     return layer.forget();
   }

@@ -91,8 +91,8 @@ nsHTMLScrollFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
 void
 nsHTMLScrollFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  mInner.Destroy();
   DestroyAbsoluteFrames(aDestructRoot);
+  mInner.Destroy();
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
@@ -1676,7 +1676,7 @@ InvalidateFixedBackgroundFramesFromList(nsDisplayListBuilder* aBuilder,
                                         const nsDisplayList& aList)
 {
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
-    nsDisplayList* sublist = item->GetList();
+    nsDisplayList* sublist = item->GetSameCoordinateSystemChildren();
     if (sublist) {
       InvalidateFixedBackgroundFramesFromList(aBuilder, aMovingFrame, *sublist);
       continue;

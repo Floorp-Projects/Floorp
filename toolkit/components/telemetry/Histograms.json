@@ -429,6 +429,10 @@
     "n_buckets": 20,
     "description": "Startup cache age (hours)"
   },
+  "STARTUP_CACHE_INVALID": {
+    "kind": "flag",
+    "description": "Was the disk startup cache file detected as invalid"
+  },
   "WORD_CACHE_HITS": {
     "kind": "exponential",
     "high": "256",

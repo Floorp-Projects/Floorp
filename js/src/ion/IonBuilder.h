@@ -280,6 +280,7 @@ class IonBuilder : public MIRGenerator
     MDefinition *walkScopeChain(unsigned hops);
 
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
+    MInstruction *addShapeGuard(MDefinition *obj, const Shape *shape, BailoutKind bailoutKind);
 
     JSObject *getNewArrayTemplateObject(uint32 count);
 
@@ -472,6 +473,10 @@ class IonBuilder : public MIRGenerator
     // True if script->failedBoundsCheck is set for the current script or
     // an outer script.
     bool failedBoundsCheck_;
+
+    // True if script->failedShapeGuard is set for the current script or
+    // an outer script.
+    bool failedShapeGuard_;
 
     // If this script can use a lazy arguments object, it wil be pre-created
     // here.

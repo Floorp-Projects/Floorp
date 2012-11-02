@@ -1897,6 +1897,14 @@ class IDLValue(IDLObject):
             else:
                 raise WebIDLError("Value %s is out of range for type %s." %
                                   (self.value, type), [location])
+        elif self.type.isInteger() and type.isFloat():
+            # Convert an integer literal into float
+            if -2**24 <= self.value <= 2**24:
+                floatType = BuiltinTypes[IDLBuiltinType.Types.float]
+                return IDLValue(self.location, floatType, float(self.value))
+            else:
+                raise WebIDLError("Converting value %s to %s will lose precision." %
+                                  (self.value, type), [location])
         elif self.type.isString() and type.isEnum():
             # Just keep our string, but make sure it's a valid value for this enum
             if self.value not in type.inner.values():

@@ -593,8 +593,7 @@ final class DebugGeckoInputConnection
         } else if (obj instanceof CharSequence) {
             sb.append("\"").append(obj.toString().replace('\n', '\u21b2')).append("\"");
         } else if (obj.getClass().isArray()) {
-            Class cls = obj.getClass();
-            sb.append(cls.getComponentType().getSimpleName()).append("[")
+            sb.append(obj.getClass().getComponentType().getSimpleName()).append("[")
               .append(java.lang.reflect.Array.getLength(obj)).append("]");
         } else {
             sb.append(obj.toString());
