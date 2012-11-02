@@ -51,7 +51,8 @@ class StackValue
         Constant,
         Register,
         Stack,
-        LocalSlot
+        LocalSlot,
+        ArgSlot
 #ifdef DEBUG
         // In debug builds, assert Kind is initialized.
         , Uninitialized
@@ -71,6 +72,9 @@ class StackValue
         struct {
             uint32_t slot;
         } local;
+        struct {
+            uint32_t slot;
+        } arg;
     } data;
 
   public:
@@ -98,6 +102,10 @@ class StackValue
         JS_ASSERT(kind_ == LocalSlot);
         return data.local.slot;
     }
+    uint32_t argSlot() const {
+        JS_ASSERT(kind_ == ArgSlot);
+        return data.arg.slot;
+    }
 
     void setConstant(const Value &v) {
         kind_ = Constant;
@@ -111,6 +119,10 @@ class StackValue
         kind_ = LocalSlot;
         data.local.slot = slot;
     }
+    void setArgSlot(uint32_t slot) {
+        kind_ = ArgSlot;
+        data.arg.slot = slot;
+    }
     void setStack() {
         kind_ = Stack;
     }
@@ -123,14 +135,33 @@ static const ValueOperand R0(ecx, edx);
 static const ValueOperand R1(eax, ebx);
 static const ValueOperand R2(esi, edi);
 
-class BasicFrame
+// The stack looks like this, fp is the frame pointer:
+//
+// fp+y   arguments
+// fp+x   IonBaselineJSFrameLayout (frame header)
+// fp  => saved frame pointer
+// fp-x   BaselineFrame
+//        locals
+//        stack values
+class BaselineFrame
 {
+    // TODO: use these to store the scope chain or scratch values.
     uint32_t dummy1;
     uint32_t dummy2;
 
+    // Distance between the frame pointer and the frame header (return address).
+    // This is the old frame pointer saved in the prologue.
+    static const uint32_t FramePointerOffset = sizeof(void *);
+
   public:
-    static inline size_t offsetOfLocal(unsigned index) {
-        return sizeof(BasicFrame) + index * sizeof(Value);
+    static inline size_t offsetOfLocal(size_t index) {
+        return -(sizeof(BaselineFrame) + index * sizeof(Value)) - sizeof(Value);
+    }
+    static inline size_t offsetOfArg(size_t index) {
+        return FramePointerOffset + IonBaselineJSFrameLayout::offsetOfActualArg(index);
+    }
+    static size_t frameSize(size_t nlocals) {
+        return sizeof(BaselineFrame) + nlocals * sizeof(Value);
     }
 };
 
@@ -155,15 +186,18 @@ class FrameInfo
 
     bool init();
 
+    uint32_t nlocals() const {
+        return script->nfixed;
+    }
+    uint32_t nargs() const {
+        return script->function()->nargs;
+    }
+
   private:
     inline StackValue *rawPush() {
         StackValue *val = &stack[spIndex++];
         val->reset();
         return val;
-    }
-
-    uint32_t nlocals() const {
-        return script->nfixed;
     }
 
   public:
@@ -200,15 +234,23 @@ class FrameInfo
         StackValue *sv = rawPush();
         sv->setLocalSlot(local);
     }
+    inline void pushArg(uint32_t arg) {
+        StackValue *sv = rawPush();
+        sv->setArgSlot(arg);
+    }
     inline Address addressOfLocal(size_t local) const {
         JS_ASSERT(local < nlocals());
-        return Address(frameReg, -BasicFrame::offsetOfLocal(local));
+        return Address(frameReg, BaselineFrame::offsetOfLocal(local));
+    }
+    inline Address addressOfArg(size_t arg) const {
+        JS_ASSERT(arg < nargs());
+        return Address(frameReg, BaselineFrame::offsetOfArg(arg));
     }
     inline Address addressOfStackValue(const StackValue *value) const {
         JS_ASSERT(value->kind() == StackValue::Stack);
         size_t slot = value - &stack[0];
         JS_ASSERT(slot < stackDepth());
-        return Address(frameReg, -BasicFrame::offsetOfLocal(nlocals() + slot));
+        return Address(frameReg, BaselineFrame::offsetOfLocal(nlocals() + slot));
     }
 
     void popValue(ValueOperand dest);
