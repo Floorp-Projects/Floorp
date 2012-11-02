@@ -3399,7 +3399,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     if (!src)
         return JS_FALSE;
 
-    js::ScopedFreePtr<char> filename;
+    ScopedJSFreePtr<char> filename;
     uint32_t lineno = 1;
     bool loc = true;
 

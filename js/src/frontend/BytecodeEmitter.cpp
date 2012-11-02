@@ -2263,7 +2263,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     uint32_t caseCount = pn2->pn_count;
     uint32_t tableLength = 0;
-    js::ScopedFreePtr<ParseNode*> table(NULL);
+    ScopedJSFreePtr<ParseNode*> table(NULL);
 
     if (caseCount == 0 ||
         (caseCount == 1 &&
@@ -2455,7 +2455,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
         /*
          * Use malloc to avoid arena bloat for programs with many switches.
-         * ScopedFreePtr takes care of freeing it on exit.
+         * ScopedJSFreePtr takes care of freeing it on exit.
          */
         if (tableLength != 0) {
             table = cx->pod_calloc<ParseNode*>(tableLength);
