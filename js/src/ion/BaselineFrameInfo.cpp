@@ -29,6 +29,9 @@ FrameInfo::sync(StackValue *val)
       case StackValue::LocalSlot:
         masm.pushValue(addressOfLocal(val->localSlot()));
         break;
+      case StackValue::ArgSlot:
+        masm.pushValue(addressOfArg(val->argSlot()));
+        break;
       case StackValue::Register:
         masm.pushValue(val->reg());
         break;
@@ -67,6 +70,9 @@ FrameInfo::popValue(ValueOperand dest)
         break;
       case StackValue::LocalSlot:
         masm.loadValue(addressOfLocal(val->localSlot()), dest);
+        break;
+      case StackValue::ArgSlot:
+        masm.loadValue(addressOfArg(val->argSlot()), dest);
         break;
       case StackValue::Stack:
         masm.popValue(dest);

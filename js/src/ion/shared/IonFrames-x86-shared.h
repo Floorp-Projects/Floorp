@@ -113,18 +113,15 @@ class IonBaselineJSFrameLayout : public IonCommonFrameLayout
         // +1 to skip |this|.
         return reinterpret_cast<size_t>(&base->argv()[1]);
     }
+    static size_t offsetOfActualArg(size_t arg) {
+        return offsetOfActualArgs() + arg * sizeof(Value);
+    }
 
     Value *argv() {
         return (Value *)(this + 1);
     }
     uintptr_t numActualArgs() const {
         return numActualArgs_;
-    }
-
-    // Computes a reference to a slot, where a slot is a distance from the base
-    // frame pointer (as would be used for LStackSlot).
-    uintptr_t *slotRef(uint32 slot) {
-        return (uintptr_t *)((uint8 *)this - (slot * STACK_SLOT_SIZE));
     }
 
     static inline size_t Size() {
