@@ -197,12 +197,10 @@ static inline void
 PatchCall(CodeLocationCall call, CodeLocationLabel label)
 {
 #ifdef DEBUG
-    // Assert that we're overwriting a jump instruction, either:
-    //   0F 80+cc <imm32>, or
-    //   E9 <imm32>
-    //XXX unsigned char *x = (unsigned char *)jump.raw() - 5;
-    //JS_ASSERT(((*x >= 0x80 && *x <= 0x8F) && *(x - 1) == 0x0F) ||
-    //          (*x == 0xE9));
+    // Assert that we're overwriting a call instruction:
+    //   E8 <imm32>
+    unsigned char *x = (unsigned char *)call.raw() - 5;
+    JS_ASSERT(*x == 0xE8);
 #endif
     JSC::X86Assembler::setRel32(call.raw(), label.raw());
 }
