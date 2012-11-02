@@ -461,13 +461,15 @@ ArrayBufferObject::createDataViewForThis(JSContext *cx, unsigned argc, Value *vp
 }
 
 bool
-ArrayBufferObject::stealContents(JSContext *cx, JSObject *obj, void **contents)
+ArrayBufferObject::stealContents(JSContext *cx, JSObject *obj, void **contents,
+                                 uint8_t **data)
 {
     ArrayBufferObject &buffer = obj->asArrayBuffer();
     JSObject *views = *GetViewList(&buffer);
     js::ObjectElements *header = js::ObjectElements::fromElements((js::HeapSlot*)buffer.dataPointer());
     if (buffer.hasDynamicElements()) {
         *contents = header;
+        *data = buffer.dataPointer();
 
         buffer.setFixedElements();
         header = js::ObjectElements::fromElements((js::HeapSlot*)buffer.dataPointer());
@@ -482,6 +484,7 @@ ArrayBufferObject::stealContents(JSContext *cx, JSObject *obj, void **contents)
 
         ArrayBufferObject::setElementsHeader(newheader, length);
         *contents = newheader;
+        *data = reinterpret_cast<uint8_t *>(newheader + 1);
     }
 
     // Neuter the donor ArrayBuffer and all views of it
@@ -3675,7 +3678,8 @@ JS_AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, 
 }
 
 JS_PUBLIC_API(JSBool)
-JS_StealArrayBufferContents(JSContext *cx, JSObject *obj, void **contents)
+JS_StealArrayBufferContents(JSContext *cx, JSObject *obj, void **contents,
+                            uint8_t **data)
 {
     if (!(obj = UnwrapObjectChecked(cx, obj)))
         return false;
@@ -3685,7 +3689,7 @@ JS_StealArrayBufferContents(JSContext *cx, JSObject *obj, void **contents)
         return false;
     }
 
-    if (!ArrayBufferObject::stealContents(cx, obj, contents))
+    if (!ArrayBufferObject::stealContents(cx, obj, contents, data))
         return false;
 
     return true;
