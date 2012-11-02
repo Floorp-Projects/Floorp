@@ -8,7 +8,6 @@
 
 #include "nsIAccessibilityService.h"
 
-#include "a11yGeneric.h"
 #include "nsAccDocManager.h"
 
 #include "mozilla/a11y/FocusManager.h"
