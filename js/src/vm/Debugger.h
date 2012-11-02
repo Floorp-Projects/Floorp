@@ -176,6 +176,7 @@ class Debugger {
     static JSBool setUncaughtExceptionHook(JSContext *cx, unsigned argc, Value *vp);
     static JSBool addDebuggee(JSContext *cx, unsigned argc, Value *vp);
     static JSBool removeDebuggee(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool removeAllDebuggees(JSContext *cx, unsigned argc, Value *vp);
     static JSBool hasDebuggee(JSContext *cx, unsigned argc, Value *vp);
     static JSBool getDebuggees(JSContext *cx, unsigned argc, Value *vp);
     static JSBool getNewestFrame(JSContext *cx, unsigned argc, Value *vp);
