@@ -644,7 +644,7 @@ PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
   MOZ_ASSERT(aRetval);
 
 #ifdef MOZILLA_INTERNAL_API
-  mozilla::DataChannel* dataChannel;
+  nsRefPtr<mozilla::DataChannel> dataChannel;
   mozilla::DataChannelConnection::Type theType =
     static_cast<mozilla::DataChannelConnection::Type>(aType);
 
@@ -661,7 +661,7 @@ PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
 
   CSFLogDebugS(logTag, __FUNCTION__ << ": making DOMDataChannel");
 
-  return NS_NewDOMDataChannel(dataChannel, mWindow, aRetval);
+  return NS_NewDOMDataChannel(dataChannel.forget(), mWindow, aRetval);
 #else
   return NS_OK;
 #endif
