@@ -12,6 +12,7 @@
 #include "jscompartment.h"
 
 #include "BaselineJIT.h"
+#include "BaselineRegisters.h"
 #include "ion/IonMacroAssembler.h"
 #include "FixedList.h"
 
@@ -127,13 +128,6 @@ class StackValue
         kind_ = Stack;
     }
 };
-
-static const Register frameReg = ebp;
-static const Register spReg = StackPointer;
-
-static const ValueOperand R0(ecx, edx);
-static const ValueOperand R1(eax, ebx);
-static const ValueOperand R2(esi, edi);
 
 // The stack looks like this, fp is the frame pointer:
 //
