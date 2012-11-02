@@ -169,8 +169,8 @@ protected:
 private:
 #ifdef SCTP_DTLS_SUPPORTED
   static void DTLSConnectThread(void *data);
-  int SendPacket(const unsigned char* data, size_t len);
-  void PacketReceived(TransportFlow *flow, const unsigned char *data, size_t len);
+  int SendPacket(const unsigned char* data, size_t len, bool release);
+  void SctpDtlsInput(TransportFlow *flow, const unsigned char *data, size_t len);
   static int SctpDtlsOutput(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df);
 #endif
   DataChannel* FindChannelByStreamIn(uint16_t streamIn);

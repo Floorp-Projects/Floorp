@@ -351,7 +351,7 @@ DataChannelConnection::ConnectDTLS(TransportFlow *aFlow, uint16_t localport, uin
   NS_ENSURE_TRUE(aFlow, false);
 
   mTransportFlow = aFlow;
-  mTransportFlow->SignalPacketReceived.connect(this, &DataChannelConnection::PacketReceived);
+  mTransportFlow->SignalPacketReceived.connect(this, &DataChannelConnection::SctpDtlsInput);
   mLocalPort = localport;
   mRemotePort = remoteport;
 
@@ -409,8 +409,8 @@ DataChannelConnection::DTLSConnectThread(void *data)
 }
 
 void
-DataChannelConnection::PacketReceived(TransportFlow *flow,
-                                      const unsigned char *data, size_t len)
+DataChannelConnection::SctpDtlsInput(TransportFlow *flow,
+                                     const unsigned char *data, size_t len)
 {
   //LOG(("%p: SCTP/DTLS received %ld bytes", this, len));
 
@@ -419,10 +419,13 @@ DataChannelConnection::PacketReceived(TransportFlow *flow,
 }
 
 int
-DataChannelConnection::SendPacket(const unsigned char *data, size_t len)
+DataChannelConnection::SendPacket(const unsigned char *data, size_t len, bool release)
 {
   //LOG(("%p: SCTP/DTLS sent %ld bytes", this, len));
-  return mTransportFlow->SendPacket(data, len) < 0 ? 1 : 0;
+  int res = mTransportFlow->SendPacket(data, len) < 0 ? 1 : 0;
+  if (release)
+    delete data;
+  return res;
 }
 
 /* static */
@@ -433,17 +436,25 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
   DataChannelConnection *peer = static_cast<DataChannelConnection *>(addr);
   int res;
 
-  if (peer->IsSTSThread()) {
-    res = peer->SendPacket(static_cast<unsigned char *>(buffer), length);
+  // We're async proxying even if on the STSThread because this is called
+  // with internal SCTP locks held in some cases (such as in usrsctp_connect()).
+  // SCTP has an option for Apple, on IP connections only, to release at least
+  // one of the locks before calling a packet output routine; with changes to
+  // the underlying SCTP stack this might remove the need to use an async proxy.
+  if (0 /*peer->IsSTSThread()*/) {
+    res = peer->SendPacket(static_cast<unsigned char *>(buffer), length, false);
   } else {
+    unsigned char *data = new unsigned char[length];
+    memcpy(data, buffer, length);
     res = -1;
     // XXX It might be worthwhile to add an assertion against the thread
     // somehow getting into the DataChannel/SCTP code again, as
     // DISPATCH_SYNC is not fully blocking.  This may be tricky, as it
     // needs to be a per-thread check, not a global.
-    peer->mSTS->Dispatch(WrapRunnableRet(
-      peer, &DataChannelConnection::SendPacket, static_cast<unsigned char *>(buffer), length, &res
-    ), NS_DISPATCH_SYNC);
+    peer->mSTS->Dispatch(WrapRunnable(
+      peer, &DataChannelConnection::SendPacket, data, length, true
+    ), NS_DISPATCH_NORMAL);
+    res = 0; // cheat!  Packets can always be dropped later anyways
   }
   return res;
 }
