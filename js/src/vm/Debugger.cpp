@@ -1195,7 +1195,7 @@ Debugger::onSingleStep(JSContext *cx, Value *vp)
     {
         AutoAssertNoGC nogc;
         uint32_t stepperCount = 0;
-        JSScript *trappingScript = fp->script().get(nogc);
+        JSScript *trappingScript = fp->script();
         GlobalObject *global = &fp->global();
         if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
             for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
@@ -3462,7 +3462,7 @@ DebuggerFrame_getOffset(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_FRAME(cx, argc, vp, "get offset", args, thisobj, fp);
     AutoAssertNoGC nogc;
-    RawScript script = fp->script().get(nogc);
+    RawScript script = fp->script();
     jsbytecode *pc = fp->pcQuadratic(cx);
     JS_ASSERT(script->code <= pc);
     JS_ASSERT(pc < script->code + script->length);

@@ -452,7 +452,7 @@ JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
 {
     AutoAssertNoGC nogc;
-    return fun->maybeScript().get(nogc);
+    return fun->maybeScript();
 }
 
 JS_PUBLIC_API(JSNative)
@@ -501,7 +501,7 @@ JS_PUBLIC_API(JSScript *)
 JS_GetFrameScript(JSContext *cx, JSStackFrame *fpArg)
 {
     AutoAssertNoGC nogc;
-    return Valueify(fpArg)->script().get(nogc);
+    return Valueify(fpArg)->script();
 }
 
 JS_PUBLIC_API(jsbytecode *)
@@ -546,7 +546,7 @@ JS_SetTopFrameAnnotation(JSContext *cx, void *annotation)
     // because we will never EnterIon on a frame with an annotation.
     fp->setAnnotation(annotation);
 
-    RawScript script = fp->script().get(nogc);
+    RawScript script = fp->script();
 
     ReleaseAllJITCode(cx->runtime->defaultFreeOp());
 
@@ -1015,7 +1015,7 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
     size_t nbytes = sizeof *fun;
     nbytes += JS_GetObjectTotalSize(cx, fun);
     if (fun->isInterpreted())
-        nbytes += JS_GetScriptTotalSize(cx, fun->script().get(nogc));
+        nbytes += JS_GetScriptTotalSize(cx, fun->script());
     if (fun->displayAtom())
         nbytes += GetAtomTotalSize(cx, fun->displayAtom());
     return nbytes;
@@ -1207,8 +1207,8 @@ JS::DescribeStack(JSContext *cx, unsigned maxFrames)
 
     for (ScriptFrameIter i(cx); !i.done(); ++i) {
         FrameDescription desc;
-        desc.script = i.script().get(nogc);
-        desc.lineno = PCToLineNumber(i.script().get(nogc), i.pc());
+        desc.script = i.script();
+        desc.lineno = PCToLineNumber(i.script(), i.pc());
         desc.fun = i.maybeCallee();
         if (!frames.append(desc))
             return NULL;

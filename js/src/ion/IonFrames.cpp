@@ -34,7 +34,7 @@ ion::MaybeScriptFromCalleeToken(CalleeToken token)
       case CalleeToken_Script:
         return CalleeTokenToScript(token);
       case CalleeToken_Function:
-        return CalleeTokenToFunction(token)->script().get(nogc);
+        return CalleeTokenToFunction(token)->script();
     }
     JS_NOT_REACHED("invalid callee token tag");
     return NULL;
@@ -943,7 +943,7 @@ InlineFrameIterator::findNextFrame()
         si_.nextFrame();
 
         callee_ = funval.toObject().toFunction();
-        script_ = callee_->script().get(nogc);
+        script_ = callee_->script();
         pc_ = script_->code + si_.pcOffset();
     }
 

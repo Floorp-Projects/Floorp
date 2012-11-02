@@ -1198,7 +1198,7 @@ class FrameRegs
 
     void setToEndOfScript() {
         AutoAssertNoGC nogc;
-        RawScript script = fp()->script().get(nogc);
+        RawScript script = fp()->script();
         sp = fp()->base();
         pc = script->code + script->length - JSOP_STOP_LENGTH;
         JS_ASSERT(*pc == JSOP_STOP);

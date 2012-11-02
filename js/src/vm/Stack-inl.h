@@ -138,7 +138,7 @@ StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
                             LOWERED_CALL_APPLY |
                             OVERFLOW_ARGS |
                             UNDERFLOW_ARGS)) == 0);
-    JS_ASSERT(callee.script() == script);
+    JS_ASSERT(script == callee.script());
 
     /* Initialize stack frame members. */
     flags_ = FUNCTION | HAS_PREVPC | HAS_SCOPECHAIN | HAS_BLOCKCHAIN | flagsArg;
@@ -563,7 +563,7 @@ ContextStack::currentScript(jsbytecode **ppc,
         mjit::JITChunk *chunk = fp->jit()->chunk(regs.pc);
         JS_ASSERT(inlined->inlineIndex < chunk->nInlineFrames);
         mjit::InlineFrame *frame = &chunk->inlineFrames()[inlined->inlineIndex];
-        RawScript script = frame->fun->script().get(nogc);
+        RawScript script = frame->fun->script();
         if (!allowCrossCompartment && script->compartment() != cx_->compartment)
             return NULL;
         if (ppc)
@@ -572,7 +572,7 @@ ContextStack::currentScript(jsbytecode **ppc,
     }
 #endif
 
-    RawScript script = fp->script().get(nogc);
+    RawScript script = fp->script();
     if (!allowCrossCompartment && script->compartment() != cx_->compartment)
         return NULL;
 
