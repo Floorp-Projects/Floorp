@@ -691,7 +691,7 @@ bool test_appendint64()
     int64_t min = INT64_MIN;
     static const char min_expected[] = "-9223372036854775808";
     static const char min_expected_oct[] = "1000000000000000000000";
-    int64_t maxint_plus1 = LL_INIT(1, 0);
+    int64_t maxint_plus1 = 1LL << 32;
     static const char maxint_plus1_expected[] = "4294967296";
     static const char maxint_plus1_expected_x[] = "100000000";
 
