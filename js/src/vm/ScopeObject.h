@@ -568,8 +568,6 @@ class DebugScopes
     DebugScopes(JSContext *c);
     ~DebugScopes();
 
-    void finalize(JSRuntime *rt);
-
   private:
     bool init();
 

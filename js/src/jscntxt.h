@@ -656,7 +656,6 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     volatile uintptr_t  gcIsNeeded;
 
-    js::WeakMapBase     *gcWeakMapList;
     js::gcstats::Statistics gcStats;
 
     /* Incremented on every GC slice. */

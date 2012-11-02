@@ -367,6 +367,9 @@ struct JSCompartment : public js::gc::GraphNodeBase
     /* Linked list of live array buffers with >1 view. */
     JSObject                     *gcLiveArrayBuffers;
 
+    /* Linked list of live weakmaps in this compartment. */
+    js::WeakMapBase              *gcWeakMapList;
+
   private:
     /*
      * Malloc counter to measure memory pressure for GC scheduling. It runs from
