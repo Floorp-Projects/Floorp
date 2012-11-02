@@ -534,11 +534,9 @@ class DebugScopeObject : public JSObject
     bool isForDeclarative() const;
 };
 
-/* Maintains runtime-wide debug scope bookkeeping information. */
+/* Maintains per-compartment debug scope bookkeeping information. */
 class DebugScopes
 {
-    JSRuntime *rt;
-
     /* The map from (non-debug) scopes to debug scopes. */
     typedef WeakMap<EncapsulatedPtrObject, RelocatablePtrObject> ObjectWeakMap;
     ObjectWeakMap proxiedScopes;
@@ -567,32 +565,39 @@ class DebugScopes
     LiveScopeMap liveScopes;
 
   public:
-    DebugScopes(JSRuntime *rt);
+    DebugScopes(JSContext *c);
     ~DebugScopes();
+
+    void finalize(JSRuntime *rt);
+
+  private:
     bool init();
 
+    static DebugScopes *ensureCompartmentData(JSContext *cx);
+
+  public:
     void mark(JSTracer *trc);
-    void sweep();
+    void sweep(JSRuntime *rt);
 
-    DebugScopeObject *hasDebugScope(JSContext *cx, ScopeObject &scope) const;
-    bool addDebugScope(JSContext *cx, ScopeObject &scope, DebugScopeObject &debugScope);
+    static DebugScopeObject *hasDebugScope(JSContext *cx, ScopeObject &scope);
+    static bool addDebugScope(JSContext *cx, ScopeObject &scope, DebugScopeObject &debugScope);
 
-    DebugScopeObject *hasDebugScope(JSContext *cx, const ScopeIter &si) const;
-    bool addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject &debugScope);
+    static DebugScopeObject *hasDebugScope(JSContext *cx, const ScopeIter &si);
+    static bool addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject &debugScope);
 
-    bool updateLiveScopes(JSContext *cx);
-    StackFrame *hasLiveFrame(ScopeObject &scope);
+    static bool updateLiveScopes(JSContext *cx);
+    static StackFrame *hasLiveFrame(ScopeObject &scope);
 
     /*
      * In debug-mode, these must be called whenever exiting a call/block or
      * when activating/yielding a generator.
      */
-    void onPopCall(StackFrame *fp, JSContext *cx);
-    void onPopBlock(JSContext *cx, StackFrame *fp);
-    void onPopWith(StackFrame *fp);
-    void onPopStrictEvalScope(StackFrame *fp);
-    void onGeneratorFrameChange(StackFrame *from, StackFrame *to, JSContext *cx);
-    void onCompartmentLeaveDebugMode(JSCompartment *c);
+    static void onPopCall(StackFrame *fp, JSContext *cx);
+    static void onPopBlock(JSContext *cx, StackFrame *fp);
+    static void onPopWith(StackFrame *fp);
+    static void onPopStrictEvalScope(StackFrame *fp);
+    static void onGeneratorFrameChange(StackFrame *from, StackFrame *to, JSContext *cx);
+    static void onCompartmentLeaveDebugMode(JSCompartment *c);
 };
 
 }  /* namespace js */

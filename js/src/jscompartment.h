@@ -115,6 +115,7 @@ struct TypeInferenceSizes;
 
 namespace js {
 class AutoDebugModeGC;
+struct DebugScopes;
 }
 
 struct JSCompartment : public js::gc::GraphNodeBase
@@ -483,6 +484,9 @@ struct JSCompartment : public js::gc::GraphNodeBase
     js::ScriptCountsMap *scriptCountsMap;
 
     js::DebugScriptMap *debugScriptMap;
+
+    /* Bookkeeping information for debug scope objects. */
+    js::DebugScopes *debugScopes;
 
 #ifdef JS_ION
   private:
