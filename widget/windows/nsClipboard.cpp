@@ -308,7 +308,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(nsIWidget * aWidget, UINT /*aInd
   HGLOBAL   hglb; 
   nsresult  result = NS_ERROR_FAILURE;
 
-  HWND nativeWin = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
+  HWND nativeWin = nullptr;
   if (::OpenClipboard(nativeWin)) { 
     hglb = ::GetClipboardData(aFormat); 
     result = GetGlobalData(hglb, aData, aLen);
