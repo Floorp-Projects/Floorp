@@ -136,6 +136,12 @@ protected:
    */
   nsIFrame* ObtainIntrinsicSizeFrame();
 
+  /**
+   * Return true if pointer event hit-testing should be allowed to target
+   * content in the subdocument.
+   */
+  bool PassPointerEventsToChildren();
+
   nsRefPtr<nsFrameLoader> mFrameLoader;
   nsIView* mInnerView;
   bool mIsInline;

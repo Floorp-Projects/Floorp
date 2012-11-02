@@ -1375,7 +1375,7 @@ struct nsStyleVisibility {
   }
 
   uint8_t mDirection;                  // [inherited] see nsStyleConsts.h NS_STYLE_DIRECTION_*
-  uint8_t   mVisible;                  // [inherited]
+  uint8_t mVisible;                    // [inherited]
   uint8_t mPointerEvents;              // [inherited] see nsStyleConsts.h
 
   bool IsVisible() const {
@@ -1386,6 +1386,8 @@ struct nsStyleVisibility {
     return ((mVisible == NS_STYLE_VISIBILITY_VISIBLE) ||
             (mVisible == NS_STYLE_VISIBILITY_COLLAPSE));
   }
+
+  inline uint8_t GetEffectivePointerEvents(nsIFrame* aFrame) const;
 };
 
 struct nsTimingFunction {
