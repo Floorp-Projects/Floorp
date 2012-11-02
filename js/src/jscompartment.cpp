@@ -74,6 +74,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcTriggerMallocAndFreeBytes(0),
     gcIncomingGrayPointers(NULL),
     gcLiveArrayBuffers(NULL),
+    gcWeakMapList(NULL),
     gcMallocBytes(0),
     debugModeBits(rt->debugMode ? DebugFromC : 0),
     watchpointMap(NULL),
@@ -96,10 +97,7 @@ JSCompartment::~JSCompartment()
     js_delete(watchpointMap);
     js_delete(scriptCountsMap);
     js_delete(debugScriptMap);
-    if (debugScopes) {
-        debugScopes->finalize(rt);
-        js_delete(debugScopes);
-    }
+    js_delete(debugScopes);
 }
 
 bool
@@ -623,6 +621,9 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 
         if (debugScopes)
             debugScopes->sweep(rt);
+
+        /* Finalize unreachable (key,value) pairs in all weak maps. */
+        WeakMapBase::sweepCompartment(this);
     }
 
     if (!activeAnalysis && !gcPreserveCode) {

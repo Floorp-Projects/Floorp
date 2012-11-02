@@ -55,8 +55,6 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
 
   public:
     typedef WeakMap<Key, Value, DefaultHasher<Key> > Base;
-    explicit DebuggerWeakMap(JSRuntime *rt)
-        : Base(rt), valueCompartment(NULL), compartmentCounts(rt) { }
     explicit DebuggerWeakMap(JSContext *cx)
         : Base(cx), valueCompartment(NULL), compartmentCounts(cx) { }
 
@@ -128,7 +126,7 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
 
   private:
     /* Override sweep method to also update our edge cache. */
-    void sweep(JSTracer *trc) {
+    void sweep() {
         for (Enum e(*static_cast<Base *>(this)); !e.empty(); e.popFront()) {
             Key k(e.front().key);
             Value v(e.front().value);
