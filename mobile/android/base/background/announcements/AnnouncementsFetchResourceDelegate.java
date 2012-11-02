@@ -52,6 +52,9 @@ public class AnnouncementsFetchResourceDelegate extends SyncResourceDelegate {
     request.addHeader("Accept-Language", delegate.getLocale().toString());
     request.addHeader("Accept",          ACCEPT_HEADER);
 
+    // We never want to keep connections alive.
+    request.addHeader("Connection", "close");
+
     // Set If-Modified-Since to avoid re-fetching content.
     final long ifModifiedSince = delegate.getLastFetch();
     if (ifModifiedSince > 0) {

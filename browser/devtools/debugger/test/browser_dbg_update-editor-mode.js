@@ -30,6 +30,7 @@ function test()
     gDebuggee = aDebuggee;
     gPane = aPane;
     gDebugger = gPane.contentWindow;
+    gScripts = gDebugger.DebuggerView.Sources._container;
     resumed = true;
 
     gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
@@ -60,14 +61,13 @@ function test()
 }
 
 function testScriptsDisplay() {
-  gScripts = gDebugger.DebuggerView.Sources._container;
-
   is(gDebugger.DebuggerController.activeThread.state, "paused",
     "Should only be getting stack frames while paused.");
 
-  is(gScripts.itemCount, 2, "Found the expected number of scripts.");
+  is(gScripts.itemCount, 3,
+    "Found the expected number of scripts.");
 
-  is(gDebugger.editor.getMode(), SourceEditor.MODES.HTML,
+  is(gDebugger.editor.getMode(), SourceEditor.MODES.TEXT,
      "Found the expected editor mode.");
 
   ok(gDebugger.editor.getText().search(/debugger/) != -1,
@@ -77,7 +77,7 @@ function testScriptsDisplay() {
     let url = aEvent.detail.url;
     if (url.indexOf("switching-01.js") != -1) {
       window.removeEventListener(aEvent.type, _onEvent);
-      testSwitchPaused();
+      testSwitchPaused1();
     }
   });
 
@@ -85,8 +85,14 @@ function testScriptsDisplay() {
   gDebugger.DebuggerView.Sources.selectedValue = url;
 }
 
-function testSwitchPaused()
+function testSwitchPaused1()
 {
+  is(gDebugger.DebuggerController.activeThread.state, "paused",
+    "Should only be getting stack frames while paused.");
+
+  is(gScripts.itemCount, 3,
+    "Found the expected number of scripts.");
+
   ok(gDebugger.editor.getText().search(/debugger/) == -1,
     "The second script is no longer displayed.");
 
@@ -94,6 +100,38 @@ function testSwitchPaused()
     "The first script is displayed.");
 
   is(gDebugger.editor.getMode(), SourceEditor.MODES.JAVASCRIPT,
+     "Found the expected editor mode.");
+
+  window.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
+    let url = aEvent.detail.url;
+    if (url.indexOf("update-editor-mode") != -1) {
+      window.removeEventListener(aEvent.type, _onEvent);
+      testSwitchPaused2();
+    }
+  });
+
+  let label = "browser_dbg_update-editor-mode.html";
+  gDebugger.DebuggerView.Sources.selectedLabel = label;
+}
+
+function testSwitchPaused2()
+{
+  is(gDebugger.DebuggerController.activeThread.state, "paused",
+    "Should only be getting stack frames while paused.");
+
+  is(gScripts.itemCount, 3,
+    "Found the expected number of scripts.");
+
+  ok(gDebugger.editor.getText().search(/firstCall/) == -1,
+    "The first script is no longer displayed.");
+
+  ok(gDebugger.editor.getText().search(/debugger/) == -1,
+    "The second script is no longer displayed.");
+
+  ok(gDebugger.editor.getText().search(/banana/) != -1,
+    "The third script is displayed.");
+
+  is(gDebugger.editor.getMode(), SourceEditor.MODES.HTML,
      "Found the expected editor mode.");
 
   gDebugger.DebuggerController.activeThread.resume(function() {
