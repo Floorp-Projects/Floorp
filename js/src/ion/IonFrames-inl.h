@@ -102,7 +102,7 @@ GetTopIonJSScript(JSContext *cx, const SafepointIndex **safepointIndexOut, void 
     switch (GetCalleeTokenTag(frame->calleeToken())) {
       case CalleeToken_Function: {
         JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
-        return fun->script();
+        return fun->script().get(nogc);
       }
       case CalleeToken_Script:
         return CalleeTokenToScript(frame->calleeToken());
