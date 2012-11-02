@@ -13,8 +13,8 @@
 namespace js {
 namespace ion {
 
-static const Register frameReg = ebp;
-static const Register spReg = esp;
+static const Register BaselineFrameReg    = ebp;
+static const Register BaselineStackReg    = esp;
 
 static const ValueOperand R0(ecx, edx);
 static const ValueOperand R1(eax, ebx);
