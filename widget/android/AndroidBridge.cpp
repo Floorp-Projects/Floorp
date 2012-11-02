@@ -107,7 +107,6 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jEnableLocationHighAccuracy = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableLocationHighAccuracy", "(Z)V");
     jEnableSensor = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableSensor", "(I)V");
     jDisableSensor = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableSensor", "(I)V");
-    jReturnIMEQueryResult = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "returnIMEQueryResult", "(Ljava/lang/String;II)V");
     jScheduleRestart = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scheduleRestart", "()V");
     jNotifyXreExit = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "onXreExit", "()V");
     jGetHandlersForMimeType = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getHandlersForMimeType", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
@@ -398,25 +397,6 @@ AndroidBridge::DisableSensor(int aSensorType)
         return;
     AutoLocalJNIFrame jniFrame(env, 0);
     env->CallStaticVoidMethod(mGeckoAppShellClass, jDisableSensor, aSensorType);
-}
-
-void
-AndroidBridge::ReturnIMEQueryResult(const PRUnichar *aResult, uint32_t aLen,
-                                    int aSelStart, int aSelLen)
-{
-    ALOG_BRIDGE("AndroidBridge::ReturnIMEQueryResult");
-
-    JNIEnv *env = GetJNIEnv();
-    if (!env)
-        return;
-
-    AutoLocalJNIFrame jniFrame(env);
-    jvalue args[3];
-    args[0].l = NewJavaString(&jniFrame, aResult, aLen);
-    args[1].i = aSelStart;
-    args[2].i = aSelLen;
-    env->CallStaticVoidMethodA(mGeckoAppShellClass,
-                               jReturnIMEQueryResult, args);
 }
 
 void

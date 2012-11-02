@@ -31,6 +31,7 @@ import android.util.Log;
 import java.io.ByteArrayOutputStream;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     // Calculate these once, at initialization. isLoggable is too expensive to
@@ -181,7 +182,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                               new String[] { Combined._ID,
                                              Combined.URL,
                                              Combined.TITLE,
-                                             Combined.FAVICON,
                                              Combined.DISPLAY,
                                              Combined.BOOKMARK_ID,
                                              Combined.HISTORY_ID },
@@ -194,8 +194,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return filterAllSites(cr,
                               new String[] { Combined._ID,
                                              Combined.URL,
-                                             Combined.TITLE,
-                                             Combined.THUMBNAIL },
+                                             Combined.TITLE },
                               "",
                               limit,
                               BrowserDB.ABOUT_PAGES_URL_FILTER);
@@ -619,6 +618,27 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return new BitmapDrawable(bitmap);
     }
 
+    public Cursor getFaviconsForUrls(ContentResolver cr, List<String> urls) {
+        StringBuffer selection = new StringBuffer();
+        String[] selectionArgs = new String[urls.size()];
+
+        for (int i = 0; i < urls.size(); i++) {
+          final String url = urls.get(i);
+
+          if (i > 0)
+            selection.append(" OR ");
+
+          selection.append(Images.URL + " = ?");
+          selectionArgs[i] = url;
+        }
+
+        return cr.query(mImagesUriWithProfile,
+                        new String[] { Images.URL, Images.FAVICON },
+                        selection.toString(),
+                        selectionArgs,
+                        null);
+    }
+
     public void updateFaviconForUrl(ContentResolver cr, String uri,
             BitmapDrawable favicon) {
         Bitmap bitmap = favicon.getBitmap();
@@ -685,6 +705,27 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         c.close();
 
         return b;
+    }
+
+    public Cursor getThumbnailsForUrls(ContentResolver cr, List<String> urls) {
+        StringBuffer selection = new StringBuffer();
+        String[] selectionArgs = new String[urls.size()];
+
+        for (int i = 0; i < urls.size(); i++) {
+          final String url = urls.get(i);
+
+          if (i > 0)
+            selection.append(" OR ");
+
+          selection.append(Images.URL + " = ?");
+          selectionArgs[i] = url;
+        }
+
+        return cr.query(mImagesUriWithProfile,
+                        new String[] { Images.URL, Images.THUMBNAIL },
+                        selection.toString(),
+                        selectionArgs,
+                        null);
     }
 
     public void removeThumbnails(ContentResolver cr) {

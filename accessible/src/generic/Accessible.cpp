@@ -3084,7 +3084,7 @@ Accessible::GetAttrValue(nsIAtom *aProperty, double *aValue)
 uint32_t
 Accessible::GetActionRule()
 {
-  if (InteractiveState() & states::UNAVAILABLE)
+  if (!HasOwnContent() || (InteractiveState() & states::UNAVAILABLE))
     return eNoAction;
 
   // Check if it's simple xlink.

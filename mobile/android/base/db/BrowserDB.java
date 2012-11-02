@@ -12,6 +12,8 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 
+import java.util.List;
+
 public class BrowserDB {
     public static String ABOUT_PAGES_URL_FILTER = "about:%";
 
@@ -73,11 +75,15 @@ public class BrowserDB {
 
         public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri);
 
+        public Cursor getFaviconsForUrls(ContentResolver cr, List<String> urls);
+
         public void updateFaviconForUrl(ContentResolver cr, String uri, BitmapDrawable favicon);
 
         public void updateThumbnailForUrl(ContentResolver cr, String uri, BitmapDrawable thumbnail);
 
         public byte[] getThumbnailForUrl(ContentResolver cr, String uri);
+
+        public Cursor getThumbnailsForUrls(ContentResolver cr, List<String> urls);
 
         public void removeThumbnails(ContentResolver cr);
 
@@ -186,6 +192,10 @@ public class BrowserDB {
         return sDb.getFaviconForUrl(cr, uri);
     }
 
+    public static Cursor getFaviconsForUrls(ContentResolver cr, List<String> urls) {
+        return sDb.getFaviconsForUrls(cr, urls);
+    }
+
     public static void updateFaviconForUrl(ContentResolver cr, String uri, BitmapDrawable favicon) {
         sDb.updateFaviconForUrl(cr, uri, favicon);
     }
@@ -196,6 +206,10 @@ public class BrowserDB {
 
     public static byte[] getThumbnailForUrl(ContentResolver cr, String uri) {
         return sDb.getThumbnailForUrl(cr, uri);
+    }
+
+    public static Cursor getThumbnailsForUrls(ContentResolver cr, List<String> urls) {
+        return sDb.getThumbnailsForUrls(cr, urls);
     }
 
     public static void removeThumbnails(ContentResolver cr) {
