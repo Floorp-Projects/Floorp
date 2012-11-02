@@ -235,6 +235,23 @@ nsSubDocumentFrame::GetSubdocumentRootFrame()
   return subdocView ? subdocView->GetFrame() : nullptr;
 }
 
+bool
+nsSubDocumentFrame::PassPointerEventsToChildren()
+{
+  if (GetStyleVisibility()->mPointerEvents != NS_STYLE_POINTER_EVENTS_NONE) {
+    return true;
+  }
+  // Limit use of mozpasspointerevents to chrome documents, because
+  // this could be used by the parent document to discover which parts of the
+  // subdocument are transparent to events (if subdocument uses
+  // pointer-events:none on its root element, which is admittedly unlikely)
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::mozpasspointerevents) &&
+      PresContext()->IsChrome()) {
+    return true;
+  }
+  return false;
+}
+
 NS_IMETHODIMP
 nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
@@ -243,8 +260,9 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
 
-  if (aBuilder->IsForEventDelivery() &&
-      GetStyleVisibility()->mPointerEvents == NS_STYLE_POINTER_EVENTS_NONE)
+  // If mozpasspointerevents is set, then we should allow subdocument content
+  // to handle events even if we're pointer-events:none.
+  if (aBuilder->IsForEventDelivery() && !PassPointerEventsToChildren())
     return NS_OK;
 
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);

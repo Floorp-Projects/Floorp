@@ -49,6 +49,8 @@ MOCHITEST_CHROME_FILES = \
 	test_dialog_with_positioning.html \
 	     dialog_with_positioning_window.xul \
 	blue-32x32.png \
+    test_passpointerevents.html \
+         passpointerevents_window.html \
 	$(NULL)
 
 ifdef MOZ_DEBUG
