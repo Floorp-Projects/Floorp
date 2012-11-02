@@ -2552,7 +2552,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
 
   if (drawBackgroundImage) {
     bool clipSet = false;
-    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT_WITH_RANGE(i, bg, startLayer, nLayers) {
+    NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT_WITH_RANGE(i, bg, bg->mImageCount - 1,
+                                                              nLayers + (bg->mImageCount -
+                                                                         startLayer - 1)) {
       const nsStyleBackground::Layer &layer = bg->mLayers[i];
       if (!aBGClipRect) {
         uint8_t newBackgroundClip = layer.mClip;
@@ -2575,7 +2577,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
           clipSet = true;
         }
       }
-      if (!clipState.mDirtyRectGfx.IsEmpty()) {
+      if ((aLayer < 0 || i == (uint32_t)startLayer) &&
+          !clipState.mDirtyRectGfx.IsEmpty()) {
         nsBackgroundLayerState state = PrepareBackgroundLayer(aPresContext, aForFrame,
             aFlags, aBorderArea, clipState.mBGClipArea, *bg, layer);
         if (!state.mFillArea.IsEmpty()) {
