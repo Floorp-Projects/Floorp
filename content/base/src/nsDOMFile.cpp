@@ -744,21 +744,21 @@ class nsDOMMemoryFileDataOwnerMemoryReporter
         sha1.finish(digest);
 
         nsAutoCString digestString;
-        for (uint8_t i = 0; i < sizeof(digest); i++) {
+        for (size_t i = 0; i < sizeof(digest); i++) {
           digestString.AppendPrintf("%02x", digest[i]);
         }
 
         nsresult rv = aCallback->Callback(
           /* process */ NS_LITERAL_CSTRING(""),
           nsPrintfCString(
-            "explicit/dom/memory-file-data/large/file(length=%d, sha1=%s)",
+            "explicit/dom/memory-file-data/large/file(length=%llu, sha1=%s)",
             owner->mLength, digestString.get()),
           nsIMemoryReporter::KIND_HEAP,
           nsIMemoryReporter::UNITS_BYTES,
           size,
           nsPrintfCString(
-            "Memory used to back a memory file of length %d.  The file has a "
-            "sha1 of %s.\n\n"
+            "Memory used to back a memory file of length %llu bytes.  The file "
+            "has a sha1 of %s.\n\n"
             "Note that the allocator may round up a memory file's length -- "
             "that is, an N-byte memory file may take up more than N bytes of "
             "memory.",
