@@ -31,11 +31,11 @@ JSFunction::initAtom(JSAtom *atom)
 inline void
 JSFunction::setGuessedAtom(JSAtom *atom)
 {
-    JS_ASSERT(this->atom_ == NULL);
+    JS_ASSERT(atom_ == NULL);
     JS_ASSERT(atom != NULL);
     JS_ASSERT(!hasGuessedAtom());
-    this->atom_ = atom;
-    this->flags |= JSFUN_HAS_GUESSED_ATOM;
+    atom_ = atom;
+    flags |= HAS_GUESSED_ATOM;
 }
 
 inline JSObject *
@@ -183,7 +183,7 @@ IsConstructing(const Value *vp)
     JSObject *callee = &JS_CALLEE(cx, vp).toObject();
     if (callee->isFunction()) {
         JSFunction *fun = callee->toFunction();
-        JS_ASSERT((fun->flags & JSFUN_CONSTRUCTOR) != 0);
+        JS_ASSERT(fun->isNativeConstructor());
     } else {
         JS_ASSERT(callee->getClass()->construct != NULL);
     }

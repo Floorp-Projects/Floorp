@@ -166,9 +166,11 @@ js_InitBooleanClass(JSContext *cx, HandleObject obj)
 
     Handle<PropertyName*> valueOfName = cx->names().valueOf;
     RootedFunction
-        valueOf(cx, js_NewFunction(cx, NullPtr(), bool_valueOf, 0, 0, global, valueOfName));
+        valueOf(cx, js_NewFunction(cx, NullPtr(), bool_valueOf, 0, JSFunction::NATIVE_FUN,
+                                   global, valueOfName));
     if (!valueOf)
         return NULL;
+
     RootedValue value(cx, ObjectValue(*valueOf));
     if (!JSObject::defineProperty(cx, booleanProto, valueOfName, value,
                                   JS_PropertyStub, JS_StrictPropertyStub, 0))
