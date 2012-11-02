@@ -1172,6 +1172,8 @@ Argument.prototype.merge = function(following) {
  * - prefixPostSpace: Should the prefix be altered to end with a space?
  * - suffixSpace: Should the suffix be altered to end with a space?
  * - type: Constructor to use in creating new instances. Default: Argument
+ * - dontQuote: Should we avoid adding prefix/suffix quotes when the text value
+ *   has a space? Needed when we're completing a sub-command.
  */
 Argument.prototype.beget = function(options) {
   var text = this.text;
@@ -1182,10 +1184,13 @@ Argument.prototype.beget = function(options) {
     text = options.text;
 
     // We need to add quotes when the replacement string has spaces or is empty
-    var needsQuote = text.indexOf(' ') >= 0 || text.length == 0;
-    if (needsQuote && /['"]/.test(prefix)) {
-      prefix = prefix + '\'';
-      suffix = '\'' + suffix;
+    if (!options.dontQuote) {
+      var needsQuote = text.indexOf(' ') >= 0 || text.length == 0;
+      var hasQuote = /['"]$/.test(prefix);
+      if (needsQuote && !hasQuote) {
+        prefix = prefix + '\'';
+        suffix = '\'' + suffix;
+      }
     }
   }
 
@@ -1590,9 +1595,9 @@ NamedArgument.prototype.beget = function(options) {
   options.type = NamedArgument;
   var begotten = Argument.prototype.beget.call(this, options);
 
-  // Cut the prefix into |whitespace|non-whitespace|whitespace| so we can
+  // Cut the prefix into |whitespace|non-whitespace|whitespace+quote so we can
   // rebuild nameArg and valueArg from the parts
-  var matches = /^([\s]*)([^\s]*)([\s]*)$/.exec(begotten.prefix);
+  var matches = /^([\s]*)([^\s]*)([\s]*['"]?)$/.exec(begotten.prefix);
 
   if (this.valueArg == null && begotten.text === '') {
     begotten.nameArg = new Argument(matches[2], matches[1], matches[3]);
@@ -5822,7 +5827,10 @@ Requisition.prototype.complete = function(cursor, predictionChoice) {
   }
   else {
     // Mutate this argument to hold the completion
-    var arg = assignment.arg.beget({ text: prediction.name });
+    var arg = assignment.arg.beget({
+      text: prediction.name,
+      dontQuote: (assignment === this.commandAssignment)
+    });
     this.setAssignment(assignment, arg, { argUpdate: true });
 
     if (!prediction.incomplete) {
@@ -9983,9 +9991,7 @@ Completer.prototype.resized = function(ev) {
  * Bring the completion element up to date with what the requisition says
  */
 Completer.prototype.update = function(ev) {
-  if (ev && ev.choice != null) {
-    this.choice = ev.choice;
-  }
+  this.choice = (ev && ev.choice != null) ? ev.choice : 0;
 
   var data = this._getCompleterTemplateData();
   var template = this.template.cloneNode(true);
