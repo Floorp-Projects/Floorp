@@ -67,6 +67,8 @@ public:
   nsresult Get(nsICameraShutterCallback** aOnShutter);
   nsresult Set(nsICameraClosedCallback* aOnClosed);
   nsresult Get(nsICameraClosedCallback** aOnClosed);
+  nsresult Set(nsICameraRecorderStateChange* aOnRecorderStateChange);
+  nsresult Get(nsICameraRecorderStateChange** aOnRecorderStateChange);
 
   nsresult SetFocusAreas(JSContext* aCx, const JS::Value& aValue)
   {
@@ -96,6 +98,7 @@ public:
   bool ReceiveFrame(void* aBuffer, ImageFormat aFormat, FrameBuilder aBuilder);
   void OnShutter();
   void OnClosed();
+  void OnRecorderStateChange(const nsString& aStateMsg, int32_t aStatus, int32_t aTrackNumber);
 
   uint64_t GetWindowId()
   {
@@ -145,6 +148,7 @@ protected:
   nsCOMPtr<nsICameraErrorCallback>          mStartRecordingOnErrorCb;
   nsCOMPtr<nsICameraShutterCallback>        mOnShutterCb;
   nsCOMPtr<nsICameraClosedCallback>         mOnClosedCb;
+  nsCOMPtr<nsICameraRecorderStateChange>    mOnRecorderStateChangeCb;
 
 private:
   CameraControlImpl(const CameraControlImpl&) MOZ_DELETE;
@@ -605,6 +609,37 @@ public:
   CameraRecorderOptions mOptions;
   nsCOMPtr<nsICameraPreviewStreamCallback> mOnSuccessCb;
   nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
+};
+
+// Error result runnable
+class CameraRecorderStateChange : public nsRunnable
+{
+public:
+  CameraRecorderStateChange(nsICameraRecorderStateChange* onStateChange, const nsString& aStateMsg, int32_t aStatus, int32_t aTrackNumber, uint64_t aWindowId)
+    : mOnStateChangeCb(onStateChange)
+    , mStateMsg(aStateMsg)
+    , mStatus(aStatus)
+    , mTrackNumber(aTrackNumber)
+    , mWindowId(aWindowId)
+  { }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (mOnStateChangeCb && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
+      // For now, just pass the state message and swallow mStatus and mTrackNumber
+      mOnStateChangeCb->HandleStateChange(mStateMsg);
+    }
+    return NS_OK;
+  }
+
+protected:
+  nsCOMPtr<nsICameraRecorderStateChange> mOnStateChangeCb;
+  const nsString mStateMsg;
+  int32_t mStatus;
+  int32_t mTrackNumber;
+  uint64_t mWindowId;
 };
 
 } // namespace mozilla
