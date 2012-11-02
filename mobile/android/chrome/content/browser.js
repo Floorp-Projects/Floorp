@@ -6586,6 +6586,10 @@ var ActivityObserver = {
     let isForeground = false
     switch (aTopic) {
       case "application-background" :
+        let doc = BrowserApp.selectedTab.browser.contentDocument;
+        if (doc.mozFullScreen) {
+          doc.mozCancelFullScreen();
+        }
         isForeground = false;
         break;
       case "application-foreground" :

@@ -64,6 +64,7 @@ class JarMaker(object):
 
   ignore = re.compile('\s*(\#.*)?$')
   jarline = re.compile('(?:(?P<jarfile>[\w\d.\-\_\\\/]+).jar\:)|(?:\s*(\#.*)?)\s*$')
+  relsrcline = re.compile('relativesrcdir\s+(?P<relativesrcdir>.+?):')
   regline = re.compile('\%\s+(.*)$')
   entryre = '(?P<optPreprocess>\*)?(?P<optOverwrite>\+?)\s+'
   entryline = re.compile(entryre + '(?P<output>[\w\d.\-\_\\\/\+\@]+)\s*(\((?P<locale>\%?)(?P<source>[\w\d.\-\_\\\/\@]+)\))?\s*$')
@@ -77,6 +78,9 @@ class JarMaker(object):
     self.topsourcedir = None
     self.sourcedirs = []
     self.localedirs = None
+    self.l10nbase = None
+    self.l10nmerge = None
+    self.relativesrcdir = None
 
   def getCommandLineParser(self):
     '''Get a optparse.OptionParser for jarmaker.
@@ -105,6 +109,12 @@ class JarMaker(object):
                  help="top source directory")
     p.add_option('-c', '--l10n-src', type="string", action="append",
                  help="localization directory")
+    p.add_option('--l10n-base', type="string", action="store",
+                 help="base directory to be used for localization (requires relativesrcdir)")
+    p.add_option('--locale-mergedir', type="string", action="store",
+                 help="base directory to be used for l10n-merge (requires l10n-base and relativesrcdir)")
+    p.add_option('--relativesrcdir', type="string",
+                 help="relativesrcdir to be used for localization")
     p.add_option('-j', type="string",
                  help="jarfile directory")
     return p
@@ -170,7 +180,7 @@ class JarMaker(object):
       mf.close()
     finally:
       lock = None
-  
+
   def makeJar(self, infile, jardir):
     '''makeJar is the main entry point to JarMaker.
 
@@ -183,6 +193,8 @@ class JarMaker(object):
     self.sourcedirs = [_normpath(p) for p in self.sourcedirs]
     if self.localedirs:
       self.localedirs = [_normpath(p) for p in self.localedirs]
+    elif self.relativesrcdir:
+      self.localedirs = self.generateLocaleDirs(self.relativesrcdir)
     if isinstance(infile, basestring):
       logging.info("processing " + infile)
       self.sourcedirs.append(_normpath(os.path.dirname(infile)))
@@ -204,6 +216,23 @@ class JarMaker(object):
       # we read the file
       pass
     return
+
+  def generateLocaleDirs(self, relativesrcdir):
+    if os.path.basename(relativesrcdir) == 'locales':
+      # strip locales
+      l10nrelsrcdir = os.path.dirname(relativesrcdir)
+    else:
+      l10nrelsrcdir = relativesrcdir
+    locdirs = []
+    # generate locales dirs, merge, l10nbase, en-US
+    if self.l10nmerge:
+      locdirs.append(os.path.join(self.l10nmerge, l10nrelsrcdir))
+    if self.l10nbase:
+      locdirs.append(os.path.join(self.l10nbase, l10nrelsrcdir))
+    if self.l10nmerge or not self.l10nbase:
+      # add en-US if we merge, or if it's not l10n
+      locdirs.append(os.path.join(self.topsourcedir, relativesrcdir, 'en-US'))
+    return locdirs
 
   def processJarSection(self, jarfile, lines, jardir):
     '''Internal method called by makeJar to actually process a section
@@ -253,6 +282,11 @@ class JarMaker(object):
           # reraise the StopIteration for makeJar
           raise
         if self.ignore.match(l):
+          continue
+        m = self.relsrcline.match(l)
+        if m:
+          relativesrcdir = m.group('relativesrcdir')
+          self.localedirs = self.generateLocaleDirs(relativesrcdir)
           continue
         m = self.regline.match(l)
         if  m:
@@ -323,7 +357,7 @@ class JarMaker(object):
         outf.write(inf.read())
         outf.close()
         inf.close()
-    
+
 
   class OutputHelper_jar(object):
     '''Provide getDestModTime and getOutput for a given jarfile.
@@ -402,6 +436,16 @@ def main():
   if options.bothManifests:
     jm.useChromeManifest = True
     jm.useJarfileManifest = True
+  if options.l10n_base:
+    if not options.relativesrcdir:
+      p.error('relativesrcdir required when using l10n-base')
+    if options.l10n_src:
+      p.error('both l10n-src and l10n-base are not supported')
+    jm.l10nbase = options.l10n_base
+    jm.relativesrcdir = options.relativesrcdir
+    jm.l10nmerge = options.locale_mergedir
+  elif options.locale_mergedir:
+    p.error('l10n-base required when using locale-mergedir')
   jm.localedirs = options.l10n_src
   noise = logging.INFO
   if options.verbose is not None:

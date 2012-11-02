@@ -33,8 +33,9 @@ jfieldID AndroidGeckoEvent::jDomKeyLocationField = 0;
 jfieldID AndroidGeckoEvent::jFlagsField = 0;
 jfieldID AndroidGeckoEvent::jUnicodeCharField = 0;
 jfieldID AndroidGeckoEvent::jRepeatCountField = 0;
-jfieldID AndroidGeckoEvent::jOffsetField = 0;
 jfieldID AndroidGeckoEvent::jCountField = 0;
+jfieldID AndroidGeckoEvent::jStartField = 0;
+jfieldID AndroidGeckoEvent::jEndField = 0;
 jfieldID AndroidGeckoEvent::jPointerIndexField = 0;
 jfieldID AndroidGeckoEvent::jRangeTypeField = 0;
 jfieldID AndroidGeckoEvent::jRangeStylesField = 0;
@@ -227,8 +228,9 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jFlagsField = getField("mFlags", "I");
     jUnicodeCharField = getField("mUnicodeChar", "I");
     jRepeatCountField = getField("mRepeatCount", "I");
-    jOffsetField = getField("mOffset", "I");
     jCountField = getField("mCount", "I");
+    jStartField = getField("mStart", "I");
+    jEndField = getField("mEnd", "I");
     jPointerIndexField = getField("mPointerIndex", "I");
     jRangeTypeField = getField("mRangeType", "I");
     jRangeStylesField = getField("mRangeStyles", "I");
@@ -564,14 +566,13 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
 
         case IME_EVENT:
-            if (mAction == IME_GET_TEXT || mAction == IME_SET_SELECTION) {
-                mOffset = jenv->GetIntField(jobj, jOffsetField);
-                mCount = jenv->GetIntField(jobj, jCountField);
-            } else if (mAction == IME_SET_TEXT || mAction == IME_ADD_RANGE) {
-                if (mAction == IME_SET_TEXT)
-                    ReadCharactersField(jenv);
-                mOffset = jenv->GetIntField(jobj, jOffsetField);
-                mCount = jenv->GetIntField(jobj, jCountField);
+            mStart = jenv->GetIntField(jobj, jStartField);
+            mEnd = jenv->GetIntField(jobj, jEndField);
+
+            if (mAction == IME_REPLACE_TEXT) {
+                ReadCharactersField(jenv);
+            } else if (mAction == IME_UPDATE_COMPOSITION ||
+                    mAction == IME_ADD_COMPOSITION_RANGE) {
                 mRangeType = jenv->GetIntField(jobj, jRangeTypeField);
                 mRangeStyles = jenv->GetIntField(jobj, jRangeStylesField);
                 mRangeForeColor =

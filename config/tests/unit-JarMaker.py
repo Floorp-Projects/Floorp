@@ -4,6 +4,7 @@ import os, sys, os.path, time, inspect
 from filecmp import dircmp
 from tempfile import mkdtemp
 from shutil import rmtree, copy2
+from StringIO import StringIO
 from zipfile import ZipFile
 import mozunit
 from JarMaker import JarMaker
@@ -238,6 +239,65 @@ class TestJarMaker(unittest.TestCase):
         destfoo = os.path.join(self.builddir, 'chrome', 'test', 'dir', 'foo')
         self.assertTrue(is_symlink_to(destfoo, srcbar),
                         "%s is not a symlink to %s" % (destfoo, srcbar))
+
+
+class Test_relativesrcdir(unittest.TestCase):
+    def setUp(self):
+        self.jm = JarMaker()
+        self.jm.topsourcedir = '/TOPSOURCEDIR'
+        self.jm.relativesrcdir = 'browser/locales'
+        self.fake_empty_file = StringIO()
+        self.fake_empty_file.name = 'fake_empty_file'
+    def tearDown(self):
+        del self.jm
+        del self.fake_empty_file
+    def test_en_US(self):
+        jm = self.jm
+        jm.makeJar(self.fake_empty_file, '/NO_OUTPUT_REQUIRED')
+        self.assertEquals(jm.localedirs,
+                          [
+                            os.path.join(os.path.abspath('/TOPSOURCEDIR'),
+                                         'browser/locales', 'en-US')
+                            ])
+    def test_l10n_no_merge(self):
+        jm = self.jm
+        jm.l10nbase = '/L10N_BASE'
+        jm.makeJar(self.fake_empty_file, '/NO_OUTPUT_REQUIRED')
+        self.assertEquals(jm.localedirs, [os.path.join('/L10N_BASE', 'browser')])
+    def test_l10n_merge(self):
+        jm = self.jm
+        jm.l10nbase = '/L10N_BASE'
+        jm.l10nmerge = '/L10N_MERGE'
+        jm.makeJar(self.fake_empty_file, '/NO_OUTPUT_REQUIRED')
+        self.assertEquals(jm.localedirs,
+                          [os.path.join('/L10N_MERGE', 'browser'),
+                           os.path.join('/L10N_BASE', 'browser'),
+                           os.path.join(os.path.abspath('/TOPSOURCEDIR'),
+                                        'browser/locales', 'en-US')
+                           ])
+    def test_override(self):
+        jm = self.jm
+        jm.outputFormat = 'flat'  # doesn't touch chrome dir without files
+        jarcontents = StringIO('''en-US.jar:
+relativesrcdir dom/locales:
+''')
+        jarcontents.name = 'override.mn'
+        jm.makeJar(jarcontents, '/NO_OUTPUT_REQUIRED')
+        self.assertEquals(jm.localedirs,
+                          [
+                            os.path.join(os.path.abspath('/TOPSOURCEDIR'),
+                                         'dom/locales', 'en-US')
+                            ])
+    def test_override_l10n(self):
+        jm = self.jm
+        jm.l10nbase = '/L10N_BASE'
+        jm.outputFormat = 'flat'  # doesn't touch chrome dir without files
+        jarcontents = StringIO('''en-US.jar:
+relativesrcdir dom/locales:
+''')
+        jarcontents.name = 'override.mn'
+        jm.makeJar(jarcontents, '/NO_OUTPUT_REQUIRED')
+        self.assertEquals(jm.localedirs, [os.path.join('/L10N_BASE', 'dom')])
 
 
 if __name__ == '__main__':
