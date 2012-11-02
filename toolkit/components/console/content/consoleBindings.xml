@@ -130,9 +130,7 @@
 
       <method name="appendInitialItems">
         <body><![CDATA[
-          var out = {}; // Throwaway references to support 'out' parameters.
-          Services.console.getMessageArray(out, {});
-          var messages = out.value;
+          var messages = Services.console.getMessageArray();
       
           // In case getMessageArray returns 0-length array as null
           if (!messages)
