@@ -561,7 +561,11 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
             ionCompartment_->sweep(fop);
 #endif
 
-        /* JIT code can hold references on RegExpShared, so sweep regexps after clearing code. */
+        /*
+         * JIT code increments activeUseCount for any RegExpShared used by jit
+         * code for the lifetime of the JIT script. Thus, we must perform
+         * sweeping after clearing jit code.
+         */
         regExps.sweep(rt);
     }
 
