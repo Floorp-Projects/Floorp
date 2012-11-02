@@ -126,7 +126,7 @@ StackFrame::copyFrameAndValues(JSContext *cx, Value *vp, StackFrame *otherfp,
     }
 
     if (cx->compartment->debugMode())
-        cx->runtime->debugScopes->onGeneratorFrameChange(otherfp, this, cx);
+        DebugScopes::onGeneratorFrameChange(otherfp, this, cx);
 }
 
 /* Note: explicit instantiation for js_NewGenerator located in jsiter.cpp. */
@@ -333,7 +333,7 @@ StackFrame::epilogue(JSContext *cx)
         if (isStrictEvalFrame()) {
             JS_ASSERT_IF(hasCallObj(), scopeChain()->asCall().isForEval());
             if (cx->compartment->debugMode())
-                cx->runtime->debugScopes->onPopStrictEvalScope(this);
+                DebugScopes::onPopStrictEvalScope(this);
         } else if (isDirectEvalFrame()) {
             if (isDebuggerFrame())
                 JS_ASSERT(!scopeChain()->isScope());
@@ -368,7 +368,7 @@ StackFrame::epilogue(JSContext *cx)
         AssertDynamicScopeMatchesStaticScope(script, scopeChain());
 
     if (cx->compartment->debugMode())
-        cx->runtime->debugScopes->onPopCall(this, cx);
+        DebugScopes::onPopCall(this, cx);
 
 
     if (isConstructing() && returnValue().isPrimitive())
@@ -416,7 +416,7 @@ StackFrame::popBlock(JSContext *cx)
     JS_ASSERT(hasBlockChain());
 
     if (cx->compartment->debugMode())
-        cx->runtime->debugScopes->onPopBlock(cx, this);
+        DebugScopes::onPopBlock(cx, this);
 
     if (blockChain_->needsClone()) {
         JS_ASSERT(scopeChain_->asClonedBlock().staticBlock() == *blockChain_);
@@ -430,7 +430,7 @@ void
 StackFrame::popWith(JSContext *cx)
 {
     if (cx->compartment->debugMode())
-        cx->runtime->debugScopes->onPopWith(this);
+        DebugScopes::onPopWith(this);
 
     JS_ASSERT(scopeChain()->isWith());
     popOffScopeChain();

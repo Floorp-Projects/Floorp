@@ -98,7 +98,6 @@ class IonActivation;
 
 class WeakMapBase;
 class InterpreterFrames;
-class DebugScopes;
 class WorkerThreadState;
 
 /*
@@ -911,9 +910,6 @@ struct JSRuntime : js::RuntimeFriendFields
      * onNewGlobalObject handler methods established.
      */
     JSCList             onNewGlobalObjectWatchers;
-
-    /* Bookkeeping information for debug scope objects. */
-    js::DebugScopes     *debugScopes;
 
     /* Client opaque pointers */
     void                *data;

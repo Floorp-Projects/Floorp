@@ -78,7 +78,8 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     debugModeBits(rt->debugMode ? DebugFromC : 0),
     watchpointMap(NULL),
     scriptCountsMap(NULL),
-    debugScriptMap(NULL)
+    debugScriptMap(NULL),
+    debugScopes(NULL)
 #ifdef JS_ION
     , ionCompartment_(NULL)
 #endif
@@ -95,6 +96,10 @@ JSCompartment::~JSCompartment()
     js_delete(watchpointMap);
     js_delete(scriptCountsMap);
     js_delete(debugScriptMap);
+    if (debugScopes) {
+        debugScopes->finalize(rt);
+        js_delete(debugScopes);
+    }
 }
 
 bool
@@ -615,6 +620,9 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
          * sweeping after clearing jit code.
          */
         regExps.sweep(rt);
+
+        if (debugScopes)
+            debugScopes->sweep(rt);
     }
 
     if (!activeAnalysis && !gcPreserveCode) {
@@ -787,7 +795,7 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b, AutoDebugModeGC &dmgc)
     if (enabledBefore != enabledAfter) {
         updateForDebugMode(cx->runtime->defaultFreeOp(), dmgc);
         if (!enabledAfter)
-            cx->runtime->debugScopes->onCompartmentLeaveDebugMode(this);
+            DebugScopes::onCompartmentLeaveDebugMode(this);
     }
     return true;
 }
@@ -861,7 +869,7 @@ JSCompartment::removeDebuggee(FreeOp *fop,
         debugModeBits &= ~DebugFromJS;
         if (wasEnabled && !debugMode()) {
             AutoDebugModeGC dmgc(rt);
-            fop->runtime()->debugScopes->onCompartmentLeaveDebugMode(this);
+            DebugScopes::onCompartmentLeaveDebugMode(this);
             updateForDebugMode(fop, dmgc);
         }
     }
