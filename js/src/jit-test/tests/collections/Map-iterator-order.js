@@ -5,7 +5,7 @@ load(libdir + "eqArrayHelper.js");
 var map = Map();
 for (var i = 7; i !== 1; i = i * 7 % 1117)
     map.set("" + i, i);
-assertEq(map.size(), 557);
+assertEq(map.size, 557);
 
 i = 7;
 for (var pair of map) {

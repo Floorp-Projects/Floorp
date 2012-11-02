@@ -131,7 +131,7 @@ var inMemoryPrefsProto = {
 
     if (this._prefCache[aGroup].has(aName)) {
       this._prefCache[aGroup].delete(aName);
-      if (this._prefCache[aGroup].size() == 0) {
+      if (this._prefCache[aGroup].size == 0) {
         // remove empty group
         delete this._prefCache[aGroup];
       }
