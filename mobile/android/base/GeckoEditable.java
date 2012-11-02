@@ -229,7 +229,7 @@ final class GeckoEditable
 
         mText = new SpannableStringBuilder();
 
-        final Class[] PROXY_INTERFACES = { Editable.class };
+        final Class<?>[] PROXY_INTERFACES = { Editable.class };
         mProxy = (Editable)Proxy.newProxyInstance(
                 Editable.class.getClassLoader(),
                 PROXY_INTERFACES, this);
@@ -575,8 +575,7 @@ final class GeckoEditable
         } else if (obj instanceof CharSequence) {
             sb.append("\"").append(obj.toString().replace('\n', '\u21b2')).append("\"");
         } else if (obj.getClass().isArray()) {
-            Class cls = obj.getClass();
-            sb.append(cls.getComponentType().getSimpleName()).append("[")
+            sb.append(obj.getClass().getComponentType().getSimpleName()).append("[")
               .append(java.lang.reflect.Array.getLength(obj)).append("]");
         } else {
             sb.append(obj.toString());
@@ -588,7 +587,7 @@ final class GeckoEditable
     public Object invoke(Object proxy, Method method, Object[] args)
                          throws Throwable {
         Object target;
-        final Class methodInterface = method.getDeclaringClass();
+        final Class<?> methodInterface = method.getDeclaringClass();
         if (DEBUG) {
             // Editable methods should all be called from the UI thread
             GeckoApp.assertOnUiThread();
@@ -786,6 +785,7 @@ final class GeckoEditable
     }
 
     @Override
+    @SuppressWarnings("rawtypes") // nextSpanTransition uses raw Class in its Android declaration
     public int nextSpanTransition(int start, int limit, Class type) {
         throw new UnsupportedOperationException();
     }
