@@ -58,7 +58,7 @@ WriteConsoleLog()
   nsIConsoleMessage** messages;
   uint32_t mcount;
 
-  rv = csrv->GetMessageArray(&mcount, &messages);
+  rv = csrv->GetMessageArray(&messages, &mcount);
   if (NS_FAILED(rv)) {
     PR_Close(file);
     return;
