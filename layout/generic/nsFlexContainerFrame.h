@@ -65,9 +65,6 @@ protected:
   {}
   virtual ~nsFlexContainerFrame();
 
-  // Protected nsIFrame overrides:
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
-
   // Protected flex-container-specific methods / member-vars
 #ifdef DEBUG
   void SanityCheckAnonymousFlexItems() const;

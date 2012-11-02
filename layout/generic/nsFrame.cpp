@@ -605,6 +605,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
   NS_ASSERTION(!GetNextSibling() && !GetPrevSibling(),
                "Frames should be removed before destruction.");
   NS_ASSERTION(aDestructRoot, "Must specify destruct root");
+  MOZ_ASSERT(!HasAbsolutelyPositionedChildren());
 
   nsSVGEffects::InvalidateDirectRenderingObservers(this);
 
@@ -4222,14 +4223,6 @@ nsFrame::FinishReflowWithAbsoluteFrames(nsPresContext*           aPresContext,
   ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   FinishAndStoreOverflow(&aDesiredSize);
-}
-
-void
-nsFrame::DestroyAbsoluteFrames(nsIFrame* aDestructRoot)
-{
-  if (IsAbsoluteContainer()) {
-    GetAbsoluteContainingBlock()->DestroyFrames(this, aDestructRoot);
-  }
 }
 
 void
