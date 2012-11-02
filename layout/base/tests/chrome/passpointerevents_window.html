@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that mozpasspointerevents works</title>
+</head>
+<body onload="startTest()">
+<iframe id="f" style="border:none; width:200px; height:200px; pointer-events:none" mozpasspointerevents
+        src="data:text/html,<html style='pointer-events:none'><div style='margin:100px; width:100px; height:100px; background:yellow; pointer-events:auto'>">
+</iframe>
+
+<script type="application/javascript">
+var SimpleTest = window.opener.SimpleTest;
+var is = window.opener.is;
+
+function startTest() {
+  var f = document.getElementById("f");
+  var fRect = f.getBoundingClientRect();
+  var e1 = document.elementFromPoint(fRect.left + 10, fRect.top + 10);
+  is(e1, document.body, "check point in transparent region of the iframe");
+  var e2 = document.elementFromPoint(fRect.left + 110, fRect.top + 110);
+  is(e2, f, "check point in opaque region of the iframe");
+  window.close();
+  SimpleTest.finish();
+}
+</script>
+</body>
+</html>
