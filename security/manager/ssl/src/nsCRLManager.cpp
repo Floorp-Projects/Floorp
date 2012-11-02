@@ -17,8 +17,6 @@
 #include "nsNSSShutDown.h"
 #include "nsThreadUtils.h"
 
-#include "nsNSSCertHeader.h"
-
 #include "nspr.h"
 #include "pk11func.h"
 #include "certdb.h"
