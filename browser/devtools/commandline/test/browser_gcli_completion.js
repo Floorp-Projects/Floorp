@@ -407,5 +407,53 @@ exports.testCompleteIntoOptional = function(options) {
   });
 };
 
+exports.testSpaceComplete = function(options) {
+  helpers.setInput('tslong --sel2 wit');
+  helpers.check({
+    input:  'tslong --sel2 wit',
+    hints:                   'h space <msg> [options]',
+    markup: 'VVVVVVVIIIIIIVIII',
+    cursor: 17,
+    current: 'sel2',
+    status: 'ERROR',
+    tooltipState: 'true:importantFieldFlag',
+    args: {
+      command: { name: 'tslong' },
+      msg: { status: 'INCOMPLETE', message: '' },
+      num: { status: 'VALID' },
+      sel: { status: 'VALID' },
+      bool: { value: false, status: 'VALID' },
+      num2: { status: 'VALID' },
+      bool2: { value: false, status: 'VALID' },
+      sel2: { arg: ' --sel2 wit', status: 'INCOMPLETE' }
+    }
+  });
+
+  helpers.pressTab();
+  helpers.check({
+    input:  'tslong --sel2 \'with space\' ',
+    hints:                             '<msg> [options]',
+    markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVV',
+    cursor: 27,
+    current: 'sel2',
+    status: 'ERROR',
+    tooltipState: 'true:importantFieldFlag',
+    args: {
+      command: { name: 'tslong' },
+      msg: { status: 'INCOMPLETE', message: '' },
+      num: { status: 'VALID' },
+      sel: { status: 'VALID' },
+      bool: { value: false,status: 'VALID' },
+      num2: { status: 'VALID' },
+      bool2: { value: false,status: 'VALID' },
+      sel2: {
+        value: 'with space',
+        arg: ' --sel2 \'with space\' ',
+        status: 'VALID'
+      }
+    }
+  });
+};
+
 
 // });

@@ -17,16 +17,27 @@
  *
  * @param aHooks object
  *        An object with preNest and postNest methods for calling when entering
- *        and exiting a nested event loop, as well as addToBreakpointPool and
- *        removeFromBreakpointPool methods for handling breakpoint lifetime.
+ *        and exiting a nested event loop, addToParentPool and
+ *        removeFromParentPool methods for handling the lifetime of actors that
+ *        will outlive the thread, like breakpoints, and also an optional (for
+ *        content debugging) browser property for getting a reference to the
+ *        content window.
  */
 function ThreadActor(aHooks)
 {
   this._state = "detached";
   this._frameActors = [];
   this._environmentActors = [];
-  this._hooks = aHooks ? aHooks : {};
+  this._hooks = {};
+  if (aHooks) {
+    this._hooks = aHooks;
+    if (aHooks.browser) {
+      this.global = aHooks.browser.contentWindow.wrappedJSObject;
+    }
+  }
   this._scripts = {};
+  this.findGlobals = this.globalManager.findGlobals.bind(this);
+  this.onNewGlobal = this.globalManager.onNewGlobal.bind(this);
 }
 
 /**
@@ -39,6 +50,9 @@ ThreadActor.prototype = {
   actorPrefix: "context",
 
   get state() { return this._state; },
+  get attached() this.state == "attached" ||
+                 this.state == "running" ||
+                 this.state == "paused",
 
   get _breakpointStore() { return ThreadActor._breakpointStore; },
 
@@ -52,19 +66,10 @@ ThreadActor.prototype = {
 
   clearDebuggees: function TA_clearDebuggees() {
     if (this.dbg) {
-      let debuggees = this.dbg.getDebuggees();
-      for (let debuggee of debuggees) {
-        this.dbg.removeDebuggee(debuggee);
-      }
+      this.dbg.removeAllDebuggees();
     }
     this.conn.removeActorPool(this._threadLifetimePool || undefined);
     this._threadLifetimePool = null;
-    // Unless we carefully take apart the scripts table this way, we end up
-    // leaking documents. It would be nice to track this down carefully, once
-    // we have the appropriate tools.
-    for (let url in this._scripts) {
-      delete this._scripts[url];
-    }
     this._scripts = {};
   },
 
@@ -72,24 +77,25 @@ ThreadActor.prototype = {
    * Add a debuggee global to the Debugger object.
    */
   addDebuggee: function TA_addDebuggee(aGlobal) {
-    // Use the inspector xpcom component to turn on debugging
-    // for aGlobal's compartment.  Ideally this won't be necessary
-    // medium- to long-term, and will be managed by the engine
-    // instead.
-
-    if (!this.dbg) {
-      this.dbg = new Debugger();
-      this.dbg.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
-      this.dbg.onDebuggerStatement = this.onDebuggerStatement.bind(this);
-      this.dbg.onNewScript = this.onNewScript.bind(this);
-      // Keep the debugger disabled until a client attaches.
-      this.dbg.enabled = this._state != "detached";
+    try {
+      this.dbg.addDebuggee(aGlobal);
+    } catch (e) {
+      // Ignore attempts to add the debugger's compartment as a debuggee.
+      dumpn("Ignoring request to add the debugger's compartment as a debuggee");
     }
+  },
 
-    this.dbg.addDebuggee(aGlobal);
-    for (let s of this.dbg.findScripts()) {
-      this._addScript(s);
-    }
+  /**
+   * Initialize the Debugger.
+   */
+  _initDebugger: function TA__initDebugger() {
+    this.dbg = new Debugger();
+    this.dbg.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
+    this.dbg.onDebuggerStatement = this.onDebuggerStatement.bind(this);
+    this.dbg.onNewScript = this.onNewScript.bind(this);
+    this.dbg.onNewGlobalObject = this.globalManager.onNewGlobal.bind(this);
+    // Keep the debugger disabled until a client attaches.
+    this.dbg.enabled = this._state != "detached";
   },
 
   /**
@@ -101,6 +107,53 @@ ThreadActor.prototype = {
     } catch(ex) {
       // XXX: This debuggee has code currently executing on the stack,
       // we need to save this for later.
+    }
+  },
+
+  /**
+   * Add the provided window and all windows in its frame tree as debuggees.
+   */
+  _addDebuggees: function TA__addDebuggees(aWindow) {
+    this.addDebuggee(aWindow);
+    let frames = aWindow.frames;
+    if (frames) {
+      for (let i = 0; i < frames.length; i++) {
+        this._addDebuggees(frames[i]);
+      }
+    }
+  },
+
+  /**
+   * An object that will be used by ThreadActors to tailor their behavior
+   * depending on the debugging context being required (chrome or content).
+   */
+  globalManager: {
+    findGlobals: function TA_findGlobals() {
+      this._addDebuggees(this.global);
+    },
+
+    /**
+     * A function that the engine calls when a new global object has been
+     * created.
+     *
+     * @param aGlobal Debugger.Object
+     *        The new global object that was created.
+     */
+    onNewGlobal: function TA_onNewGlobal(aGlobal) {
+      // Content debugging only cares about new globals in the contant window,
+      // like iframe children.
+      if (aGlobal.hostAnnotations &&
+          aGlobal.hostAnnotations.type == "document" &&
+          aGlobal.hostAnnotations.element === this.global) {
+        this.addDebuggee(aGlobal);
+      }
+      // Notify the client.
+      this.conn.send({
+        from: this.actorID,
+        type: "newGlobal",
+        // TODO: after bug 801084 lands see if we need to JSONify this.
+        hostAnnotations: aGlobal.hostAnnotations
+      });
     }
   },
 
@@ -139,10 +192,13 @@ ThreadActor.prototype = {
 
     this._state = "attached";
 
+    if (!this.dbg) {
+      this._initDebugger();
+    }
+    this.findGlobals();
     this.dbg.enabled = true;
     try {
       // Put ourselves in the paused state.
-      // XXX: We need to put the debuggee in a paused state too.
       let packet = this._paused();
       if (!packet) {
         return { error: "notAttached" };
@@ -461,7 +517,7 @@ ThreadActor.prototype = {
     }
     if (!bpActor) {
       bpActor = new BreakpointActor(this, location);
-      this._hooks.addToBreakpointPool(bpActor);
+      this._hooks.addToParentPool(bpActor);
       if (scriptBreakpoints[location.line]) {
         scriptBreakpoints[location.line].actor = bpActor;
       }
@@ -1045,13 +1101,13 @@ ThreadActor.prototype = {
   },
 
   /**
-   * Add the provided script to the server cache.
+   * Check if the provided script is allowed to be stored in the cache.
    *
    * @param aScript Debugger.Script
    *        The source script that will be stored.
-   * @returns true, if the script was added, false otherwise.
+   * @returns true, if the script can be added, false otherwise.
    */
-  _addScript: function TA__addScript(aScript) {
+  _allowScript: function TA__allowScript(aScript) {
     // Ignore anything we don't have a URL for (eval scripts, for example).
     if (!aScript.url)
       return false;
@@ -1061,6 +1117,20 @@ ThreadActor.prototype = {
     }
     // Ignore about:* pages for content debugging.
     if (aScript.url.indexOf("about:") == 0) {
+      return false;
+    }
+    return true;
+  },
+
+  /**
+   * Add the provided script to the server cache.
+   *
+   * @param aScript Debugger.Script
+   *        The source script that will be stored.
+   * @returns true, if the script was added, false otherwise.
+   */
+  _addScript: function TA__addScript(aScript) {
+    if (!this._allowScript(aScript)) {
       return false;
     }
     // Use a sparse array for storing the scripts for each URL in order to
@@ -1172,26 +1242,6 @@ PauseScopedActor.prototype = {
     }
   }
 };
-
-
-/**
- * Utility function for updating an object with the properties of another
- * object.
- *
- * @param aTarget Object
- *        The object being updated.
- * @param aNewAttrs Object
- *        The new attributes being set on the target.
- */
-function update(aTarget, aNewAttrs) {
-  for (let key in aNewAttrs) {
-    let desc = Object.getOwnPropertyDescriptor(aNewAttrs, key);
-
-    if (desc) {
-      Object.defineProperty(aTarget, key, desc);
-    }
-  }
-}
 
 
 /**
@@ -1815,7 +1865,7 @@ BreakpointActor.prototype = {
     let scriptBreakpoints = this.threadActor._breakpointStore[this.location.url];
     delete scriptBreakpoints[this.location.line];
     // Remove the actual breakpoint.
-    this.threadActor._hooks.removeFromBreakpointPool(this);
+    this.threadActor._hooks.removeFromParentPool(this);
     for (let script of this.scripts) {
       script.clearBreakpoint(this);
     }
@@ -2066,4 +2116,90 @@ function getFunctionName(aFunction) {
     }
   }
   return name;
+}
+
+
+/**
+ * Creates an actor for handling chrome debugging. ChromeDebuggerActor is a
+ * thin wrapper over ThreadActor, slightly changing some of its behavior.
+ *
+ * @param aHooks object
+ *        An object with preNest and postNest methods for calling when entering
+ *        and exiting a nested event loop and also addToParentPool and
+ *        removeFromParentPool methods for handling the lifetime of actors that
+ *        will outlive the thread, like breakpoints.
+ */
+function ChromeDebuggerActor(aHooks)
+{
+  ThreadActor.call(this, aHooks);
+}
+
+ChromeDebuggerActor.prototype = Object.create(ThreadActor.prototype);
+
+update(ChromeDebuggerActor.prototype, {
+  constructor: ChromeDebuggerActor,
+
+  // A constant prefix that will be used to form the actor ID by the server.
+  actorPrefix: "chromeDebugger",
+
+  /**
+   * Override the eligibility check for scripts to make sure every script with a
+   * URL is stored when debugging chrome.
+   */
+  _allowScript: function(aScript) !!aScript.url,
+
+   /**
+   * An object that will be used by ThreadActors to tailor their behavior
+   * depending on the debugging context being required (chrome or content).
+   * The methods that this object provides must be bound to the ThreadActor
+   * before use.
+   */
+  globalManager: {
+    findGlobals: function CDA_findGlobals() {
+      // Fetch the list of globals from the debugger.
+      for (let g of this.dbg.findAllGlobals()) {
+        this.addDebuggee(g);
+      }
+    },
+
+    /**
+     * A function that the engine calls when a new global object has been
+     * created.
+     *
+     * @param aGlobal Debugger.Object
+     *        The new global object that was created.
+     */
+    onNewGlobal: function CDA_onNewGlobal(aGlobal) {
+      this.addDebuggee(aGlobal);
+      // Notify the client.
+      this.conn.send({
+        from: this.actorID,
+        type: "newGlobal",
+        // TODO: after bug 801084 lands see if we need to JSONify this.
+        hostAnnotations: aGlobal.hostAnnotations
+      });
+    }
+  }
+});
+
+
+// Utility functions.
+
+/**
+ * Utility function for updating an object with the properties of another
+ * object.
+ *
+ * @param aTarget Object
+ *        The object being updated.
+ * @param aNewAttrs Object
+ *        The new attributes being set on the target.
+ */
+function update(aTarget, aNewAttrs) {
+  for (let key in aNewAttrs) {
+    let desc = Object.getOwnPropertyDescriptor(aNewAttrs, key);
+
+    if (desc) {
+      Object.defineProperty(aTarget, key, desc);
+    }
+  }
 }

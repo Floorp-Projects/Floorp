@@ -360,9 +360,8 @@ Function .onGUIEnd
   ${AndIf} $CheckboxSendPing == 1
     System::Int64Op $DownloadedAmount / 1024
     Pop $DownloadedAmount
-    InetBgDL::Get "${BaseURLStubPing}${Channel}/${AB_CD}/$ExitCode/" \
-                  "$FirefoxLaunch/$SecondsToDownload/$DownloadedAmount/" \
-                  "$ExistingProfile/$ExistingInstall/" "$PLUGINSDIR\_temp" /END
+    InetBgDL::Get "${BaseURLStubPing}${Channel}/${AB_CD}/$ExitCode/$FirefoxLaunch/$SecondsToDownload/$DownloadedAmount/$ExistingProfile/$ExistingInstall/" \
+      "$PLUGINSDIR\_temp" /END
   ${EndIf}
 
   ${UnloadUAC}
