@@ -40,14 +40,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
 // command always succeeds and we do a string/boolean check for the
 // expected results).
 var WifiManager = (function() {
-  function getSdkVersionAndDevice() {
+  function getSdkVersion() {
     Cu.import("resource://gre/modules/systemlibs.js");
     let sdkVersion = libcutils.property_get("ro.build.version.sdk");
-    return { sdkVersion: parseInt(sdkVersion, 10),
-               device: libcutils.property_get("ro.product.device") };
+    return parseInt(sdkVersion, 10);
   }
 
-  let { sdkVersion, device } = getSdkVersionAndDevice();
+  let sdkVersion = getSdkVersion();
 
   var controlWorker = new ChromeWorker(WIFIWORKER_WORKER);
   var eventWorker = new ChromeWorker(WIFIWORKER_WORKER);
@@ -720,7 +719,7 @@ var WifiManager = (function() {
   }
 
   manager.start = function() {
-    debug("detected SDK version " + sdkVersion + " and device " + device);
+    debug("detected SDK version " + sdkVersion);
     connectToSupplicant(connectCallback);
   }
 
