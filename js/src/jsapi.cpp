@@ -7081,9 +7081,9 @@ JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno)
         return JS_FALSE;
 
     if (script)
-        *script = i.script().get(nogc);
+        *script = i.script();
     if (lineno)
-        *lineno = js::PCToLineNumber(i.script().get(nogc), i.pc());
+        *lineno = js::PCToLineNumber(i.script(), i.pc());
     return JS_TRUE;
 }
 
