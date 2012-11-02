@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2012 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,36 +23,51 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "YarrSyntaxChecker.h"
+#ifndef MatchResult_h
+#define MatchResult_h
 
-#include "YarrParser.h"
+#include "wtfbridge.h"
 
-namespace JSC { namespace Yarr {
+typedef uint64_t EncodedMatchResult;
 
-class SyntaxChecker {
-public:
-    void assertionBOL() {}
-    void assertionEOL() {}
-    void assertionWordBoundary(bool) {}
-    void atomPatternCharacter(UChar) {}
-    void atomBuiltInCharacterClass(BuiltInCharacterClassID, bool) {}
-    void atomCharacterClassBegin(bool = false) {}
-    void atomCharacterClassAtom(UChar) {}
-    void atomCharacterClassRange(UChar, UChar) {}
-    void atomCharacterClassBuiltIn(BuiltInCharacterClassID, bool) {}
-    void atomCharacterClassEnd() {}
-    void atomParenthesesSubpatternBegin(bool = true) {}
-    void atomParentheticalAssertionBegin(bool = false) {}
-    void atomParenthesesEnd() {}
-    void atomBackReference(unsigned) {}
-    void quantifyAtom(unsigned, unsigned, bool) {}
-    void disjunction() {}
+struct MatchResult {
+    MatchResult(size_t start, size_t end)
+        : start(start)
+        , end(end)
+    {
+    }
+
+    explicit MatchResult(EncodedMatchResult encoded)
+    {
+        union u {
+            uint64_t encoded;
+            struct s {
+                size_t start;
+                size_t end;
+            } split;
+        } value;
+        value.encoded = encoded;
+        start = value.split.start;
+        end = value.split.end;
+    }
+
+    static MatchResult failed()
+    {
+        return MatchResult(WTF::notFound, 0);
+    }
+
+    operator bool()
+    {
+        return start != WTF::notFound;
+    }
+
+    bool empty()
+    {
+        return start == end;
+    }
+
+    size_t start;
+    size_t end;
 };
 
-ErrorCode checkSyntax(const String& pattern)
-{
-    SyntaxChecker syntaxChecker;
-    return parse(syntaxChecker, pattern);
-}
-
-}} // JSC::YARR
+#endif

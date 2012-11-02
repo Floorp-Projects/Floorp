@@ -384,6 +384,7 @@ CPPSRCS += 	ExecutableAllocator.cpp \
 		YarrInterpreter.cpp \
 		YarrPattern.cpp \
 		YarrSyntaxChecker.cpp \
+		YarrCanonicalizeUCS2.cpp \
 		$(NONE)
 
 ifdef ENABLE_METHODJIT_SPEW

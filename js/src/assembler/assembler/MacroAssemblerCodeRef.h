@@ -206,6 +206,13 @@ public:
         m_executablePool = NULL;
     }
 
+    MacroAssemblerCodePtr code() {
+        return m_code;
+    }
+    size_t size() {
+        return m_size;
+    }
+
     MacroAssemblerCodePtr m_code;
     ExecutablePool* m_executablePool;
     size_t m_size;
