@@ -519,18 +519,19 @@ RegExpShared::execute(JSContext *cx, StableCharPtr chars, size_t length, size_t 
 /* RegExpCompartment */
 
 RegExpCompartment::RegExpCompartment(JSRuntime *rt)
-  : map_(rt)
+  : map_(rt), inUse_(rt)
 {}
 
 RegExpCompartment::~RegExpCompartment()
 {
-    map_.empty();
+    JS_ASSERT(map_.empty());
+    JS_ASSERT(inUse_.empty());
 }
 
 bool
 RegExpCompartment::init(JSContext *cx)
 {
-    if (!map_.init()) {
+    if (!map_.init() || !inUse_.init()) {
         js_ReportOutOfMemory(cx);
         return false;
     }
@@ -538,12 +539,19 @@ RegExpCompartment::init(JSContext *cx)
     return true;
 }
 
+/* See the comment on RegExpShared lifetime in RegExpObject.h. */
 void
 RegExpCompartment::sweep(JSRuntime *rt)
 {
-    for (Map::Enum e(map_); !e.empty(); e.popFront()) {
-        /* See the comment on RegExpShared lifetime in RegExpObject.h. */
-        RegExpShared *shared = e.front().value;
+#ifdef DEBUG
+    for (Map::Range r = map_.all(); !r.empty(); r.popFront())
+        JS_ASSERT(inUse_.has(r.front().value));
+#endif
+
+    map_.clear();
+
+    for (PendingSet::Enum e(inUse_); !e.empty(); e.popFront()) {
+        RegExpShared *shared = e.front();
         if (shared->activeUseCount == 0 && shared->gcNumberWhenUsed < rt->gcStartNumber) {
             js_delete(shared);
             e.removeFront();
@@ -571,6 +579,12 @@ RegExpCompartment::get(JSContext *cx, JSAtom *keyAtom, JSAtom *source, RegExpFla
 
     /* Re-lookup in case there was a GC. */
     if (!map_.relookupOrAdd(p, key, shared)) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    if (!inUse_.put(shared)) {
+        map_.remove(key);
         js_ReportOutOfMemory(cx);
         return false;
     }
