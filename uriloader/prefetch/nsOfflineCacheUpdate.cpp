@@ -38,6 +38,7 @@
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
+#include "nsIConsoleService.h"
 #include "prlog.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Preferences.h"
@@ -81,13 +82,36 @@ private:
     char **mValues;
 };
 
-static nsresult
+namespace { // anon
+
+nsresult
 DropReferenceFromURL(nsIURI * aURI)
 {
     // XXXdholbert If this SetRef fails, callers of this method probably
     // want to call aURI->CloneIgnoringRef() and use the result of that.
     return aURI->SetRef(EmptyCString());
 }
+
+void
+LogToConsole(const char * message, nsOfflineCacheUpdateItem * item = nullptr)
+{
+    nsCOMPtr<nsIConsoleService> consoleService =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    if (consoleService)
+    {
+        nsAutoString messageUTF16 = NS_ConvertUTF8toUTF16(message);
+        if (item && item->mURI) {
+            nsAutoCString uriSpec;
+            item->mURI->GetSpec(uriSpec);
+
+            messageUTF16.Append(NS_LITERAL_STRING(", URL="));
+            messageUTF16.Append(NS_ConvertUTF8toUTF16(uriSpec));
+        }
+        consoleService->LogStringMessage(messageUTF16.get());
+    }
+}
+
+} // anon namespace
 
 //-----------------------------------------------------------------------------
 // nsManifestCheck
@@ -270,6 +294,9 @@ nsManifestCheck::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
         callback->OnRedirectVerifyCallback(NS_OK);
         return NS_OK;
     }
+
+    LogToConsole("Manifest check failed because its response is a redirect");
+
     aOldChannel->Cancel(NS_ERROR_ABORT);
     return NS_ERROR_ABORT;
 }
@@ -432,7 +459,14 @@ nsOfflineCacheUpdateItem::OnStopRequest(nsIRequest *aRequest,
                                         nsISupports *aContext,
                                         nsresult aStatus)
 {
-    LOG(("done fetching offline item [status=%x]\n", aStatus));
+#if defined(PR_LOGGING)
+    if (LOG_ENABLED()) {
+        nsAutoCString spec;
+        mURI->GetSpec(spec);
+        LOG(("%p: Done fetching offline item %s [status=%x]\n",
+            this, spec.get(), aStatus));
+    }
+#endif
 
     if (mBytesRead == 0 && aStatus == NS_OK) {
         // we didn't need to read (because LOAD_ONLY_IF_MODIFIED was
@@ -500,6 +534,8 @@ nsOfflineCacheUpdateItem::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
     if (!(aFlags & nsIChannelEventSink::REDIRECT_INTERNAL)) {
         // Don't allow redirect in case of non-internal redirect and cancel
         // the channel to clean the cache entry.
+        LogToConsole("Offline cache manifest failed because an item redirects", this);
+
         aOldChannel->Cancel(NS_ERROR_ABORT);
         return NS_ERROR_ABORT;
     }
@@ -815,6 +851,7 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
             if (++begin == end || static_cast<unsigned char>(*begin) != 0xbb ||
                 ++begin == end || static_cast<unsigned char>(*begin) != 0xbf) {
                 mParserState = PARSE_ERROR;
+                LogToConsole("Offline cache manifest BOM error", this);
                 return NS_OK;
             }
             ++begin;
@@ -824,6 +861,7 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
 
         if (!magic.EqualsLiteral("CACHE MANIFEST")) {
             mParserState = PARSE_ERROR;
+            LogToConsole("Offline cache manifest magic incorect", this);
             return NS_OK;
         }
 
@@ -1080,6 +1118,7 @@ nsOfflineManifestItem::OnStartRequest(nsIRequest *aRequest,
 
     if (!succeeded) {
         LOG(("HTTP request failed"));
+        LogToConsole("Offline cache manifest HTTP request failed", this);
         mParserState = PARSE_ERROR;
         return NS_ERROR_ABORT;
     }
@@ -1091,6 +1130,7 @@ nsOfflineManifestItem::OnStartRequest(nsIRequest *aRequest,
     if (!contentType.EqualsLiteral("text/cache-manifest")) {
         LOG(("Rejected cache manifest with Content-Type %s (expecting text/cache-manifest)",
              contentType.get()));
+        LogToConsole("Offline cache manifest not served with text/cache-manifest", this);
         mParserState = PARSE_ERROR;
         return NS_ERROR_ABORT;
     }
@@ -1534,6 +1574,7 @@ nsOfflineCacheUpdate::LoadCompleted(nsOfflineCacheUpdateItem *aItem)
         uint16_t status;
         rv = mManifestItem->GetStatus(&status);
         if (status == 404 || status == 410) {
+            LogToConsole("Offline cache manifest removed, cache cleared", mManifestItem);
             mSucceeded = false;
             if (mPreviousApplicationCache) {
                 if (mPinned) {
@@ -1560,6 +1601,8 @@ nsOfflineCacheUpdate::LoadCompleted(nsOfflineCacheUpdateItem *aItem)
         }
 
         if (!doUpdate) {
+            LogToConsole("Offline cache doesn't need to update", mManifestItem);
+
             mSucceeded = false;
 
             AssociateDocuments(mPreviousApplicationCache);
@@ -1629,6 +1672,8 @@ nsOfflineCacheUpdate::LoadCompleted(nsOfflineCacheUpdateItem *aItem)
 
             mPinnedEntryRetriesCount++;
 
+            LogToConsole("An unpinned offline cache deleted");
+
             // Retry this item.
             ProcessNextURI();
             return;
@@ -1647,6 +1692,7 @@ nsOfflineCacheUpdate::LoadCompleted(nsOfflineCacheUpdateItem *aItem)
         if (aItem->mItemType &
             (nsIApplicationCache::ITEM_EXPLICIT |
              nsIApplicationCache::ITEM_FALLBACK)) {
+            LogToConsole("Offline cache manifest item failed to load", aItem);
             mSucceeded = false;
         }
     } else {
@@ -1679,6 +1725,7 @@ nsOfflineCacheUpdate::ManifestCheckCompleted(nsresult aStatus,
         mManifestItem->GetManifestHash(firstManifestHash);
         if (aManifestHash != firstManifestHash) {
             LOG(("Manifest has changed during cache items download [%p]", this));
+            LogToConsole("Offline cache manifest changed during update", mManifestItem);
             aStatus = NS_ERROR_FAILURE;
         }
     }
@@ -1715,6 +1762,7 @@ nsOfflineCacheUpdate::ManifestCheckCompleted(nsresult aStatus,
         newUpdate->Schedule();
     }
     else {
+        LogToConsole("Offline cache update done", mManifestItem);
         Finish();
     }
 }
@@ -1934,6 +1982,10 @@ void
 nsOfflineCacheUpdate::NotifyState(uint32_t state)
 {
     LOG(("nsOfflineCacheUpdate::NotifyState [%p, %d]", this, state));
+
+    if (state == STATE_ERROR) {
+        LogToConsole("Offline cache update error", mManifestItem);
+    }
 
     nsCOMArray<nsIOfflineCacheUpdateObserver> observers;
     GatherObservers(observers);
