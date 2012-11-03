@@ -523,7 +523,8 @@ ComponentsObjectPolicy::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper
         return true;
     }
 
-    return Deny(cx, id, act);
+    AccessCheck::deny(cx, id);
+    return false;
 }
 
 }
