@@ -199,14 +199,6 @@ LookupCache::Has(const Completion& aCompletion,
 {
   *aHas = *aComplete = false;
 
-  // check completion store first
-  if (mCompletions.BinaryIndexOf(aCompletion) != nsTArray<Completion>::NoIndex) {
-    LOG(("Complete in %s", mTableName.get()));
-    *aComplete = true;
-    *aHas = true;
-    return NS_OK;
-  }
-
   uint32_t prefix = aCompletion.ToUint32();
   uint32_t hostkey = aHostkey.ToUint32();
   uint32_t codedkey;
@@ -224,6 +216,12 @@ LookupCache::Has(const Completion& aCompletion,
   LOG(("Probe in %s: %X, found %d", mTableName.get(), prefix, found));
 
   if (found) {
+    *aHas = true;
+  }
+
+  if (mCompletions.BinaryIndexOf(aCompletion) != nsTArray<Completion>::NoIndex) {
+    LOG(("Complete in %s", mTableName.get()));
+    *aComplete = true;
     *aHas = true;
   }
 
