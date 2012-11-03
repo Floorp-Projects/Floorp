@@ -78,9 +78,9 @@ nsPluginInstallerWizard.prototype.pluginInfoReceived = function (aPluginRequestI
     progressMeter.setAttribute("mode", "determined");
 
   progressMeter.setAttribute("value",
-      ((this.WSPluginCounter / this.mPluginRequests.size()) * 100) + "%");
+      ((this.WSPluginCounter / this.mPluginRequests.size) * 100) + "%");
 
-  if (this.WSPluginCounter == this.mPluginRequests.size()) {
+  if (this.WSPluginCounter == this.mPluginRequests.size) {
     // check if no plugins were found
     if (this.mPluginInfoArrayLength == 0) {
       this.advancePage("lastpage");

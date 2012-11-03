@@ -9,63 +9,63 @@
 BEGIN_BLUETOOTH_NAMESPACE
 
 int
-AppendHeaderName(uint8_t* retBuf, const char* name, int length)
+AppendHeaderName(uint8_t* aRetBuf, const char* aName, int aLength)
 {
-  int headerLength = length + 3;
+  int headerLength = aLength + 3;
 
-  retBuf[0] = ObexHeaderId::Name;
-  retBuf[1] = (headerLength & 0xFF00) >> 8;
-  retBuf[2] = headerLength & 0x00FF;
+  aRetBuf[0] = ObexHeaderId::Name;
+  aRetBuf[1] = (headerLength & 0xFF00) >> 8;
+  aRetBuf[2] = headerLength & 0x00FF;
 
-  memcpy(&retBuf[3], name, length);
+  memcpy(&aRetBuf[3], aName, aLength);
 
   return headerLength;
 }
 
 int
-AppendHeaderBody(uint8_t* retBuf, uint8_t* data, int length)
+AppendHeaderBody(uint8_t* aRetBuf, uint8_t* aData, int aLength)
 {
-  int headerLength = length + 3;
+  int headerLength = aLength + 3;
 
-  retBuf[0] = ObexHeaderId::Body;
-  retBuf[1] = (headerLength & 0xFF00) >> 8;
-  retBuf[2] = headerLength & 0x00FF;
+  aRetBuf[0] = ObexHeaderId::Body;
+  aRetBuf[1] = (headerLength & 0xFF00) >> 8;
+  aRetBuf[2] = headerLength & 0x00FF;
 
-  memcpy(&retBuf[3], data, length);
+  memcpy(&aRetBuf[3], aData, aLength);
 
   return headerLength;
 }
 
 int
-AppendHeaderLength(uint8_t* retBuf, int objectLength)
+AppendHeaderLength(uint8_t* aRetBuf, int aObjectLength)
 {
-  retBuf[0] = ObexHeaderId::Length;
-  retBuf[1] = (objectLength & 0xFF000000) >> 24;
-  retBuf[2] = (objectLength & 0x00FF0000) >> 16;
-  retBuf[3] = (objectLength & 0x0000FF00) >> 8;
-  retBuf[4] = objectLength & 0x000000FF;
+  aRetBuf[0] = ObexHeaderId::Length;
+  aRetBuf[1] = (aObjectLength & 0xFF000000) >> 24;
+  aRetBuf[2] = (aObjectLength & 0x00FF0000) >> 16;
+  aRetBuf[3] = (aObjectLength & 0x0000FF00) >> 8;
+  aRetBuf[4] = aObjectLength & 0x000000FF;
 
   return 5;
 }
 
 int
-AppendHeaderConnectionId(uint8_t* retBuf, int connectionId)
+AppendHeaderConnectionId(uint8_t* aRetBuf, int aConnectionId)
 {
-  retBuf[0] = ObexHeaderId::ConnectionId;
-  retBuf[1] = (connectionId & 0xFF000000) >> 24;
-  retBuf[2] = (connectionId & 0x00FF0000) >> 16;
-  retBuf[3] = (connectionId & 0x0000FF00) >> 8;
-  retBuf[4] = connectionId & 0x000000FF;
+  aRetBuf[0] = ObexHeaderId::ConnectionId;
+  aRetBuf[1] = (aConnectionId & 0xFF000000) >> 24;
+  aRetBuf[2] = (aConnectionId & 0x00FF0000) >> 16;
+  aRetBuf[3] = (aConnectionId & 0x0000FF00) >> 8;
+  aRetBuf[4] = aConnectionId & 0x000000FF;
 
   return 5;
 }
 
 void
-SetObexPacketInfo(uint8_t* retBuf, uint8_t opcode, int packetLength)
+SetObexPacketInfo(uint8_t* aRetBuf, uint8_t aOpcode, int aPacketLength)
 {
-  retBuf[0] = opcode;
-  retBuf[1] = (packetLength & 0xFF00) >> 8;
-  retBuf[2] = packetLength & 0x00FF;
+  aRetBuf[0] = aOpcode;
+  aRetBuf[1] = (aPacketLength & 0xFF00) >> 8;
+  aRetBuf[2] = aPacketLength & 0x00FF;
 }
 
 int

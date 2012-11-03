@@ -30,3 +30,11 @@ function checkMethod(name, arity) {
 checkMethod("has", 1);
 checkMethod("add", 1);
 checkMethod("delete", 1);
+
+var desc = Object.getOwnPropertyDescriptor(Set.prototype, "size");
+assertEq(desc.enumerable, false);
+assertEq(desc.configurable, true);
+assertEq(typeof desc.get, 'function');
+assertEq(desc.get.length, 0);
+assertEq(desc.set, undefined);
+checkMethod("clear", 0);

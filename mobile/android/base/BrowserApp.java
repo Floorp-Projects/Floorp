@@ -223,6 +223,7 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Feedback:OpenPlayStore");
         registerEventListener("Feedback:MaybeLater");
         registerEventListener("Dex:Load");
+        registerEventListener("Telemetry:Gather");
     }
 
     @Override
@@ -237,6 +238,7 @@ abstract public class BrowserApp extends GeckoApp
         unregisterEventListener("Feedback:OpenPlayStore");
         unregisterEventListener("Feedback:MaybeLater");
         unregisterEventListener("Dex:Load");
+        unregisterEventListener("Telemetry:Gather");
     }
 
     @Override
@@ -428,6 +430,11 @@ abstract public class BrowserApp extends GeckoApp
                             menu.findItem(R.id.settings).setEnabled(true);
                     }
                 });
+            } else if (event.equals("Telemetry:Gather")) {
+                Telemetry.HistogramAdd("PLACES_PAGES_COUNT", BrowserDB.getCount(getContentResolver(), "history"));
+                Telemetry.HistogramAdd("PLACES_BOOKMARKS_COUNT", BrowserDB.getCount(getContentResolver(), "bookmarks"));
+                Telemetry.HistogramAdd("FENNEC_FAVICONS_COUNT", BrowserDB.getCount(getContentResolver(), "favicons"));
+                Telemetry.HistogramAdd("FENNEC_THUMBNAILS_COUNT", BrowserDB.getCount(getContentResolver(), "thumbnails"));
             } else if (event.equals("Dex:Load")) {
                 String zipFile = message.getString("zipfile");
                 String implClass = message.getString("impl");

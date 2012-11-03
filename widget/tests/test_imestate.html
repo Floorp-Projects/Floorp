@@ -134,7 +134,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
 {
   function test(aTest)
   {
-    function moveFocus(aTest)
+    function moveFocus(aTest, aFocusEventHandler)
     {
       if (aInDesignMode) {
         if (document.activeElement) {
@@ -149,10 +149,14 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
       }
       var previousFocusedElement = gFM.focusedElement;
       var element = document.getElementById(aTest.id);
+      var focusEventTarget = element;
       if (element.contentDocument) {
+        focusEventTarget = element.contentDocument;
         element = element.contentDocument.documentElement;
       }
+      focusEventTarget.addEventListener("focus", aFocusEventHandler, true);
       element.focus();
+      focusEventTarget.removeEventListener("focus", aFocusEventHandler, true);
       var focusedElement = gFM.focusedElement;
       if (focusedElement) {
         var bindingParent = document.getBindingParent(focusedElement);
@@ -186,9 +190,28 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
     // IME Enabled state testing
     var enabled = gUtils.IME_STATUS_ENABLED;
     if (kIMEEnabledSupported) {
-      if (!moveFocus(aTest)) {
+      var focusEventCount = 0;
+      function onFocus(aEvent)
+      {
+        focusEventCount++;
+        is(gUtils.IMEStatus, aTest.expectedEnabled,
+           aDescription + ": " + aTest.description + ", wrong enabled state at focus event");
+      }
+
+      if (!moveFocus(aTest, onFocus)) {
         return;
       }
+
+      if (aTest.focusable) {
+        if (aTest.focusEventNotFired) {
+          todo(focusEventCount > 0,
+               aDescription + ": " + aTest.description + ", focus event is never fired");
+        } else {
+          ok(focusEventCount > 0,
+             aDescription + ": " + aTest.description + ", focus event is never fired");
+        }
+      }
+
       enabled = gUtils.IMEStatus;
       inputtype = gUtils.focusedInputType;
       is(enabled, aTest.expectedEnabled,
@@ -254,10 +277,12 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
     { id: "checkbox",
       description: "input[type=checkbox]",
       focusable: !aInDesignMode,
+      focusEventNotFired: aIsEditable && !aInDesignMode,
       expectedEnabled: kEnabledStateOnNonEditableElement },
     { id: "radio",
       description: "input[type=radio]",
       focusable: !aInDesignMode,
+      focusEventNotFired: aIsEditable && !aInDesignMode,
       expectedEnabled: kEnabledStateOnNonEditableElement },
     { id: "submit",
       description: "input[type=submit]",
@@ -270,6 +295,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
     { id: "file",
       description: "input[type=file]",
       focusable: !aInDesignMode,
+      focusEventNotFired: aIsEditable && !aInDesignMode,
       expectedEnabled: kEnabledStateOnNonEditableElement },
     { id: "button",
       description: "input[type=button]",
@@ -321,10 +347,12 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
     { id: "select",
       description: "select (dropdown list)",
       focusable: !aInDesignMode,
+      focusEventNotFired: aIsEditable && !aInDesignMode,
       expectedEnabled: kEnabledStateOnNonEditableElement },
     { id: "select_multiple",
       description: "select (list box)",
       focusable: !aInDesignMode,
+      focusEventNotFired: aIsEditable && !aInDesignMode,
       expectedEnabled: kEnabledStateOnNonEditableElement },
 
     // a element

@@ -12,4 +12,4 @@ for (let [k, v] of map) {
     force(v);
 }
 assertEq(log, '5;4;3;2;1;0;');
-assertEq(map.size(), 6);
+assertEq(map.size, 6);

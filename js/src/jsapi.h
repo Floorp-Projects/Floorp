@@ -1197,6 +1197,10 @@ class AutoStringRooter : private AutoGCRooter {
         return &str;
     }
 
+    JSString * const * addr() const {
+        return &str;
+    }
+
     friend void AutoGCRooter::trace(JSTracer *trc);
 
   private:
