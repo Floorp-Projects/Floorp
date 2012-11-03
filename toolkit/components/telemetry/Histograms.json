@@ -1759,14 +1759,14 @@
     "high": "2000",
     "n_buckets": 10,
     "cpp_guard": "ANDROID",
-    "description": "PLACES: Number of favicons stored"
+    "description": "FENNEC: (Places) Number of favicons stored"
   },
   "FENNEC_THUMBNAILS_COUNT": {
     "kind": "exponential",
     "high": "2000",
     "n_buckets": 10,
     "cpp_guard": "ANDROID",
-    "description": "Fennec: Number of thumbnails stored"
+    "description": "FENNEC: (Places) Number of thumbnails stored"
   },
   "PLACES_SORTED_BOOKMARKS_PERC": {
     "kind": "linear",
