@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait">
+  <path id="path"/>
+  <text>
+    <textPath xlink:href="#path">f</textPath>
+    <textPath xlink:href="#path">f</textPath>
+  </text>
+
+  <script>
+  function boom()
+  {
+    var path = document.getElementById("path");
+    path.parentNode.removeChild(path);
+    document.documentElement.removeAttribute("class");
+  }
+  window.addEventListener("load", boom, false);
+  </script>
+</svg>

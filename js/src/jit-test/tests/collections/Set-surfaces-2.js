@@ -8,10 +8,14 @@ function testcase(obj, fn) {
     assertThrowsInstanceOf(function () { fn.apply(obj, args); }, TypeError);
 }
 
+var Set_size_getter = Object.getOwnPropertyDescriptor(Set.prototype, "size").get;
+
 function test(obj) {
     testcase(obj, Set.prototype.has, 12);
     testcase(obj, Set.prototype.add, 12);
     testcase(obj, Set.prototype.delete, 12);
+    testcase(obj, Set.prototype.clear);
+    testcase(obj, Set_size_getter);
 }
 
 test(Set.prototype);
