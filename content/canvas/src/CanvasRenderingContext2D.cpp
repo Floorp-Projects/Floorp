@@ -2355,7 +2355,16 @@ struct NS_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcesso
           mTextRun->GetDetailedGlyphs(i);
 
         if (glyphs[i].IsMissing()) {
+          newGlyph.mIndex = 0;
+          if (mTextRun->IsRightToLeft()) {
+            newGlyph.mPosition.x = baselineOrigin.x - advanceSum -
+              detailedGlyphs[0].mAdvance * devUnitsPerAppUnit;
+          } else {
+            newGlyph.mPosition.x = baselineOrigin.x + advanceSum;
+          }
+          newGlyph.mPosition.y = baselineOrigin.y;
           advanceSum += detailedGlyphs[0].mAdvance * devUnitsPerAppUnit;
+          glyphBuf.push_back(newGlyph);
           continue;
         }
 
