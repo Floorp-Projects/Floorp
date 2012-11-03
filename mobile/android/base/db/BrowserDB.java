@@ -90,6 +90,8 @@ public class BrowserDB {
         public void registerBookmarkObserver(ContentResolver cr, ContentObserver observer);
 
         public void registerHistoryObserver(ContentResolver cr, ContentObserver observer);
+
+        public int getCount(ContentResolver cr, String database);
     }
 
     static {
@@ -226,5 +228,9 @@ public class BrowserDB {
 
     public static void unregisterContentObserver(ContentResolver cr, ContentObserver observer) {
         cr.unregisterContentObserver(observer);
+    }
+
+    public static int getCount(ContentResolver cr, String database) {
+        return sDb.getCount(cr, database);
     }
 }
