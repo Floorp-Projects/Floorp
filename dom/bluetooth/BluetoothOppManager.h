@@ -10,7 +10,6 @@
 #include "BluetoothCommon.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/ipc/UnixSocket.h"
-#include "nsIDOMFile.h"
 
 class nsIOutputStream;
 class nsIInputStream;
