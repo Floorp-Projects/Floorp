@@ -29,6 +29,9 @@ function VariablesView(aParentNode) {
   this._parent = aParentNode;
   this._appendEmptyNotice();
 
+  this._onSearchboxInput = this._onSearchboxInput.bind(this);
+  this._onSearchboxKeyPress = this._onSearchboxKeyPress.bind(this);
+
   // Create an internal list container.
   this._list = this.document.createElement("vbox");
   this._parent.appendChild(this._list);
@@ -141,6 +144,97 @@ VariablesView.prototype = {
   },
 
   /**
+   * Enables variable and property searching in this view.
+   */
+  enableSearch: function VV_enableSearch() {
+    // If searching was already enabled, no need to re-enable it again.
+    if (this._searchboxContainer) {
+      return;
+    }
+    let document = this.document;
+    let parent = this._parent;
+
+    let container = this._searchboxContainer = document.createElement("hbox");
+    container.className = "devtools-toolbar";
+
+    let searchbox = this._searchboxNode = document.createElement("textbox");
+    searchbox.className = "devtools-searchinput";
+    searchbox.setAttribute("placeholder", this._searchboxPlaceholder);
+    searchbox.setAttribute("type", "search");
+    searchbox.setAttribute("flex", "1");
+    searchbox.addEventListener("input", this._onSearchboxInput, false);
+    searchbox.addEventListener("keypress", this._onSearchboxKeyPress, false);
+
+    container.appendChild(searchbox);
+    parent.insertBefore(container, parent.firstChild);
+  },
+
+  /**
+   * Disables variable and property searching in this view.
+   */
+  disableSearch: function VV_disableSearch() {
+    // If searching was already disabled, no need to re-disable it again.
+    if (!this._searchboxContainer) {
+      return;
+    }
+    this._parent.removeChild(this._searchboxContainer);
+    this._searchboxNode.addEventListener("input", this._onSearchboxInput, false);
+    this._searchboxNode.addEventListener("keypress", this._onSearchboxKeyPress, false);
+
+    this._searchboxContainer = null;
+    this._searchboxNode = null;
+  },
+
+  /**
+   * Performs a case insensitive search for variables or properties matching
+   * the query, and hides non-matched items.
+   *
+   * @param string aQuery
+   *        The variable or property to search for.
+   */
+  performSearch: function VV_performSerch(aQuery) {
+    let lowerCaseQuery = aQuery.toLowerCase();
+
+    for (let [_, scope] in this) {
+      scope._performSearch(lowerCaseQuery);
+    }
+  },
+
+  /**
+   * Sets the text displayed for the searchbox in this container.
+   * @param string aValue
+   */
+  set searchPlaceholder(aValue) {
+    if (this._searchboxNode) {
+      this._searchboxNode.setAttribute("placeholder", aValue);
+    }
+    this._searchboxPlaceholder = aValue;
+  },
+
+  /**
+   * Listener handling the searchbox input event.
+   */
+  _onSearchboxInput: function VV__onSearchboxInput() {
+    this.performSearch(this._searchboxNode.value);
+  },
+
+  /**
+   * Listener handling the searchbox key press event.
+   */
+  _onSearchboxKeyPress: function VV__onSearchboxKeyPress(e) {
+    switch(e.keyCode) {
+      case e.DOM_VK_RETURN:
+      case e.DOM_VK_ENTER:
+        this._onSearchboxInput();
+        return;
+      case e.DOM_VK_ESCAPE:
+        this._searchboxNode.value = "";
+        this._onSearchboxInput();
+        return;
+    }
+  },
+
+  /**
    * Sets the text displayed in this container when there are no available items.
    * @param string aValue
    */
@@ -205,8 +299,11 @@ VariablesView.prototype = {
   _emptyTimeout: null,
   _enumVisible: true,
   _nonEnumVisible: true,
-  _list: null,
   _parent: null,
+  _list: null,
+  _searchboxNode: null,
+  _searchboxContainer: null,
+  _searchboxPlaceholder: "",
   _emptyTextNode: null,
   _emptyTextValue: ""
 };
@@ -353,6 +450,7 @@ Scope.prototype = {
    * Toggles between the scope's collapsed and expanded state.
    */
   toggle: function S_toggle() {
+    this._wasToggled = true;
     this.expanded ^= 1;
 
     if (this.ontoggle) {
@@ -387,6 +485,12 @@ Scope.prototype = {
    * @return boolean
    */
   get expanded() this._isExpanded,
+
+  /**
+   * Returns if this element was ever toggled.
+   * @return boolean
+   */
+  get toggled() this._wasToggled,
 
   /**
    * Gets the twisty visibility state.
@@ -532,6 +636,56 @@ Scope.prototype = {
   },
 
   /**
+   * Performs a case insensitive search for variables or properties matching
+   * the query, and hides non-matched items.
+   *
+   * @param string aLowerCaseQuery
+   *        The lowercased name of the variable or property to search for.
+   */
+  _performSearch: function S__performSearch(aLowerCaseQuery) {
+    for (let [_, variable] in this) {
+      let currentObject = variable;
+      let lowerCaseName = variable._nameString.toLowerCase();
+      let lowerCaseValue = variable._valueString.toLowerCase();
+
+      // Non-matched variables or properties require a corresponding attribute.
+      if (!lowerCaseName.contains(aLowerCaseQuery) &&
+          !lowerCaseValue.contains(aLowerCaseQuery)) {
+        variable.target.setAttribute("non-match", "");
+      }
+      // Variable or property is matched.
+      else {
+        variable.target.removeAttribute("non-match");
+
+        // If the variable was ever expanded, there's a possibility it may
+        // contain some matched properties, so make sure they're visible
+        // ("expand downwards").
+
+        if (variable.toggled) {
+          variable.expand(true);
+        }
+
+        // If the variable is contained in another scope (variable or property),
+        // the parent may not be a match, thus hidden. It should be visible
+        // ("expand upwards").
+
+        while ((variable = variable.ownerView) &&  /* Parent object exists. */
+               (variable instanceof Scope ||
+                variable instanceof Variable ||
+                variable instanceof Property)) {
+
+          // Show and expand the parent, as it is certainly accessible.
+          variable.target.removeAttribute("non-match");
+          variable.expand(true);
+        }
+      }
+
+      // Proceed with the search recursively inside this variable or property.
+      currentObject._performSearch(aLowerCaseQuery);
+    }
+  },
+
+  /**
    * Gets top level variables view instance.
    * @return VariablesView
    */
@@ -569,10 +723,11 @@ Scope.prototype = {
   _locked: false,
   _isShown: true,
   _isExpanded: false,
+  _wasToggled: false,
   _isArrowVisible: true,
   _store: null,
-  _idString: null,
-  _nameString: null,
+  _idString: "",
+  _nameString: "",
   _target: null,
   _arrow: null,
   _name: null,
