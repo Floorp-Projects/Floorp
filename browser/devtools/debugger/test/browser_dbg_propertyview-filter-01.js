@@ -31,8 +31,14 @@ function test()
 
 function testSearchbox()
 {
+  ok(!gDebugger.DebuggerView.Variables._searchboxNode,
+    "There should not initially be a searchbox available in the variables view.");
+  ok(!gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
+    "There searchbox element should not be found.");
+
+  gDebugger.DebuggerView.Variables.enableSearch();
   ok(gDebugger.DebuggerView.Variables._searchboxNode,
-    "There should initially be a searchbox available in the variables view.");
+    "There should be a searchbox available after enabling.");
   ok(gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
     "There searchbox element should be found.");
 
@@ -63,6 +69,22 @@ function testSearchbox()
     "There searchbox element should not be found.");
 
   gDebugger.DebuggerView.Variables.enableSearch();
+  ok(gDebugger.DebuggerView.Variables._searchboxNode,
+    "There should be a searchbox available after enabling again.");
+  ok(gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
+    "There searchbox element should be found.");
+
+  ok(gDebugger.DebuggerView.Variables._searchboxNode.getAttribute("placeholder"),
+    placeholder, "There correct placeholder should be applied to the searchbox again.");
+
+
+  gDebugger.DebuggerView.Variables.searchEnabled = false;
+  ok(!gDebugger.DebuggerView.Variables._searchboxNode,
+    "There shouldn't be a searchbox available after disabling again.");
+  ok(!gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
+    "There searchbox element should not be found.");
+
+  gDebugger.DebuggerView.Variables.searchEnabled = true;
   ok(gDebugger.DebuggerView.Variables._searchboxNode,
     "There should be a searchbox available after enabling again.");
   ok(gDebugger.DebuggerView.Variables._parent.querySelector(".devtools-searchinput"),
@@ -111,8 +133,8 @@ function testVariablesFiltering()
     is(globalScope.querySelectorAll(".variable:not([non-match])").length, 1,
       "There should be 1 variable displayed in the global scope");
 
-    is(innerScope.querySelectorAll(".property:not([non-match])").length, 5,
-      "There should be 5 properties displayed in the inner scope");
+    is(innerScope.querySelectorAll(".property:not([non-match])").length, 6,
+      "There should be 6 properties displayed in the inner scope");
     is(mathScope.querySelectorAll(".property:not([non-match])").length, 0,
       "There should be 0 properties displayed in the math scope");
     is(testScope.querySelectorAll(".property:not([non-match])").length, 0,
@@ -131,9 +153,11 @@ function testVariablesFiltering()
     is(innerScope.querySelectorAll(".property:not([non-match]) > .title > .name")[2].getAttribute("value"),
       "location", "The third inner property displayed should be 'location'");
     is(innerScope.querySelectorAll(".property:not([non-match]) > .title > .name")[3].getAttribute("value"),
-      "Location", "The fourth inner property displayed should be 'Location'");
+      "__proto__", "The fourth inner property displayed should be '__proto__'");
     is(innerScope.querySelectorAll(".property:not([non-match]) > .title > .name")[4].getAttribute("value"),
       "Location", "The fifth inner property displayed should be 'Location'");
+    is(innerScope.querySelectorAll(".property:not([non-match]) > .title > .name")[5].getAttribute("value"),
+      "Location", "The sixth inner property displayed should be 'Location'");
 
     is(globalScope.querySelectorAll(".variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
       "Location", "The only global variable displayed should be 'Location'");
@@ -195,8 +219,8 @@ function testVariablesFiltering()
     is(globalScope.querySelectorAll(".variable:not([non-match])").length, 1,
       "There should be 1 variable displayed in the global scope");
 
-    is(innerScope.querySelectorAll(".property:not([non-match])").length, 5,
-      "There should be 5 properties displayed in the inner scope");
+    is(innerScope.querySelectorAll(".property:not([non-match])").length, 6,
+      "There should be 6 properties displayed in the inner scope");
     is(mathScope.querySelectorAll(".property:not([non-match])").length, 0,
       "There should be 0 properties displayed in the math scope");
     is(testScope.querySelectorAll(".property:not([non-match])").length, 0,
@@ -215,9 +239,11 @@ function testVariablesFiltering()
     is(innerScope.querySelectorAll(".property:not([non-match]) > .title > .name")[2].getAttribute("value"),
       "location", "The third inner property displayed should be 'location'");
     is(innerScope.querySelectorAll(".property:not([non-match]) > .title > .name")[3].getAttribute("value"),
-      "Location", "The fourth inner property displayed should be 'Location'");
+      "__proto__", "The fourth inner property displayed should be '__proto__'");
     is(innerScope.querySelectorAll(".property:not([non-match]) > .title > .name")[4].getAttribute("value"),
       "Location", "The fifth inner property displayed should be 'Location'");
+    is(innerScope.querySelectorAll(".property:not([non-match]) > .title > .name")[5].getAttribute("value"),
+      "Location", "The sixth inner property displayed should be 'Location'");
 
     is(globalScope.querySelectorAll(".variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
       "Location", "The only global variable displayed should be 'Location'");
@@ -419,9 +445,11 @@ function ignoreExtraMatchedProperties()
 {
   for (let [_, item] of gDebugger.DebuggerView.Variables._currHierarchy) {
     let name = item.name.toLowerCase();
-    if (name.contains("tracemallocdumpallocations") ||
-        name.contains("geolocation") ||
-        name.contains("webgl")) {
+    let value = item._valueString || "";
+
+    if ((name.contains("tracemallocdumpallocations")) ||
+        (name.contains("geolocation")) ||
+        (name.contains("webgl"))) {
       item.target.setAttribute("non-match", "");
     }
   }

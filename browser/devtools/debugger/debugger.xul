@@ -41,12 +41,16 @@
              oncommand="DebuggerView.Filtering._doTokenSearch()"/>
     <command id="globalSearchCommand"
              oncommand="DebuggerView.Filtering._doGlobalSearch()"/>
+    <command id="variableSearchCommand"
+             oncommand="DebuggerView.Filtering._doVariableSearch()"/>
     <command id="togglePauseOnExceptions"
              oncommand="DebuggerView.Options._togglePauseOnExceptions()"/>
     <command id="toggleShowPanesOnStartup"
              oncommand="DebuggerView.Options._toggleShowPanesOnStartup()"/>
     <command id="toggleShowNonEnum"
-             oncommand="DebuggerView.Options._toggleShowNonEnum()"/>
+             oncommand="DebuggerView.Options._toggleShowVariablesNonEnum()"/>
+    <command id="toggleShowVariablesSearchbox"
+             oncommand="DebuggerView.Options._toggleShowVariablesSearchbox()"/>
   </commandset>
 
   <popupset id="debuggerPopupset">
@@ -75,11 +79,16 @@
                 label="&debuggerUI.showPanesOnInit;"
                 accesskey="&debuggerUI.showPanesOnInit.key;"
                 command="toggleShowPanesOnStartup"/>
-      <menuitem id="show-nonenum"
+      <menuitem id="show-vars-nonenum"
                 type="checkbox"
                 label="&debuggerUI.showNonEnums;"
                 accesskey="&debuggerUI.showNonEnums.key;"
                 command="toggleShowNonEnum"/>
+      <menuitem id="show-vars-searchbox"
+                type="checkbox"
+                label="&debuggerUI.showVarsSearch;"
+                accesskey="&debuggerUI.showVarsSearch.key;"
+                command="toggleShowVariablesSearchbox"/>
     </menupopup>
   </popupset>
 
@@ -115,6 +124,10 @@
          key="F"
          modifiers="control shift"
          command="globalSearchCommand"/>
+    <key id="variableSearchKey"
+         key="V"
+         modifiers="control shift"
+         command="variableSearchCommand"/>
   </keyset>
 
   <vbox id="body" flex="1">
@@ -158,6 +171,7 @@
                      tooltiptext="&debuggerUI.closeButton.tooltip;"/>
 #endif
     </toolbar>
+
     <panel id="searchbox-panel"
            type="arrow"
            noautofocus="true"
@@ -179,8 +193,14 @@
                   command="lineSearchCommand"/>
           <label id="line-operator-label" class="plain operator"/>
         </hbox>
+        <hbox align="center">
+          <button id="variable-operator-button" class="operator"
+                  command="variableSearchCommand"/>
+          <label id="variable-operator-label" class="plain operator"/>
+        </hbox>
       </vbox>
     </panel>
+
     <vbox id="dbg-content" flex="1">
       <vbox id="globalsearch" hidden="true"/>
       <splitter id="globalsearch-splitter"
@@ -197,5 +217,6 @@
         <vbox id="variables"/>
       </hbox>
     </vbox>
+
   </vbox>
 </window>
