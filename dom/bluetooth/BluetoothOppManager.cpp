@@ -253,8 +253,7 @@ BluetoothOppManager::Listen()
 }
 
 bool
-BluetoothOppManager::SendFile(BlobParent* aActor,
-                              BluetoothReplyRunnable* aRunnable)
+BluetoothOppManager::SendFile(BlobParent* aActor)
 {
   if (mBlob) {
     // Means there's a sending process. Reply error.
@@ -275,20 +274,19 @@ BluetoothOppManager::SendFile(BlobParent* aActor,
 }
 
 bool
-BluetoothOppManager::StopSendingFile(BluetoothReplyRunnable* aRunnable)
+BluetoothOppManager::StopSendingFile()
 {
   mAbortFlag = true;
 
   return true;
 }
 
-void
-BluetoothOppManager::ConfirmReceivingFile(bool aConfirm,
-                                          BluetoothReplyRunnable* aRunnable)
+bool
+BluetoothOppManager::ConfirmReceivingFile(bool aConfirm)
 {
   if (!mWaitingForConfirmationFlag) {
     NS_WARNING("We are not waiting for a confirmation now.");
-    return;
+    return false;
   }
 
   NS_ASSERTION(mPacketLeftLength == 0,
@@ -307,6 +305,8 @@ BluetoothOppManager::ConfirmReceivingFile(bool aConfirm,
     FileTransferComplete(mConnectedDeviceAddress, aConfirm, true, sFileName,
                          sSentFileLength, sContentType);
   }
+
+  return true;
 }
 
 void
