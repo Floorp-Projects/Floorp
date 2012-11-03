@@ -48,6 +48,7 @@ class B2GRemoteAutomation(Automation):
 
         # Default our product to b2g
         self._product = "b2g"
+        self.lastTestSeen = "b2gautomation.py"
         # Default log finish to mochitest standard
         self.logFinish = 'INFO SimpleTest FINISHED' 
         Automation.__init__(self)
@@ -137,6 +138,12 @@ class B2GRemoteAutomation(Automation):
             if currentlog:
                 responseDueBy = time.time() + timeout
                 print currentlog
+                # Match the test filepath from the last TEST-START line found in the new
+                # log content. These lines are in the form:
+                # ... INFO TEST-START | /filepath/we/wish/to/capture.html\n
+                testStartFilenames = re.findall(r"TEST-START \| ([^\s]*)", currentlog)
+                if testStartFilenames:
+                    self.lastTestSeen = testStartFilenames[-1]
                 if hasattr(self, 'logFinish') and self.logFinish in currentlog:
                     return 0
             else:
