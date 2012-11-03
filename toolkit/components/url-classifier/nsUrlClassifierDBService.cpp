@@ -986,7 +986,7 @@ nsUrlClassifierLookupCallback::HandleResults()
   if (cacheMisses) {
     for (uint32_t i = 0; i < mResults->Length(); i++) {
       LookupResult &result = mResults->ElementAt(i);
-      if (!result.Confirmed()) {
+      if (!result.Confirmed() && !result.mNoise) {
         cacheMisses->AppendElement(result.PrefixHash());
       }
     }
