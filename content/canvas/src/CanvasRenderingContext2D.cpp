@@ -3038,6 +3038,11 @@ struct NS_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcesso
         gfxTextRun::DetailedGlyph *detailedGlyphs =
           mTextRun->GetDetailedGlyphs(i);
 
+        if (glyphs[i].IsMissing()) {
+          advanceSum += detailedGlyphs[0].mAdvance * devUnitsPerAppUnit;
+          continue;
+        }
+
         for (uint32_t c = 0; c < glyphs[i].GetGlyphCount(); c++) {
           newGlyph.mIndex = detailedGlyphs[c].mGlyphID;
           if (mTextRun->IsRightToLeft()) {
