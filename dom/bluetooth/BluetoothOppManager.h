@@ -107,6 +107,7 @@ private:
   bool mPutFinal;
   bool mWaitingForConfirmationFlag;
   int mUpdateProgressCounter;
+  enum mozilla::ipc::SocketConnectionStatus mSocketStatus;
 
   nsCOMPtr<nsIDOMBlob> mBlob;
   nsCOMPtr<nsIThread> mReadFileThread;
