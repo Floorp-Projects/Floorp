@@ -660,9 +660,9 @@ StackFrames.prototype = {
 
       // Add the variable's __proto__.
       if (prototype.type != "null") {
-        aVar.addProperties({ "__proto__ ": { value: prototype } });
+        aVar.addProperty("__proto__", { value: prototype });
         // Expansion handlers must be set after the properties are added.
-        this._addExpander(aVar.get("__proto__ "), prototype);
+        this._addExpander(aVar.get("__proto__"), prototype);
       }
 
       aVar.fetched = true;
@@ -734,6 +734,7 @@ SourceScripts.prototype = {
    * Connect to the current thread client.
    */
   connect: function SS_connect() {
+    dumpn("SourceScripts is connecting...");
     this.debuggerClient.addListener("newScript", this._onNewScript);
     this.debuggerClient.addListener("newGlobal", this._onNewGlobal);
     this._handleTabNavigation();
@@ -746,6 +747,7 @@ SourceScripts.prototype = {
     if (!this.activeThread) {
       return;
     }
+    dumpn("SourceScripts is disconnecting...");
     this.debuggerClient.removeListener("newScript", this._onNewScript);
     this.debuggerClient.removeListener("newGlobal", this._onNewGlobal);
   },
