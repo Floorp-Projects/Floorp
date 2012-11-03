@@ -117,6 +117,16 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
       return mArray.SafeElementAt(i, def);
     }
 
+    // Shorthand for ElementAt(i)
+    elem_type& operator[](index_type i) {
+      return ElementAt(i);
+    }
+
+    // Shorthand for ElementAt(i)
+    const elem_type& operator[](index_type i) const {
+      return ElementAt(i);
+    }
+
     //
     // Search methods
     //
