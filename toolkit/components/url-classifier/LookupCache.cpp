@@ -46,7 +46,7 @@ namespace mozilla {
 namespace safebrowsing {
 
 const uint32_t LOOKUPCACHE_MAGIC = 0x1231af3e;
-const uint32_t CURRENT_VERSION = 1;
+const uint32_t CURRENT_VERSION = 2;
 
 LookupCache::LookupCache(const nsACString& aTableName, nsIFile* aStoreDir,
                          bool aPerClientRandomize)
