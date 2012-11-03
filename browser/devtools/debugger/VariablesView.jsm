@@ -186,6 +186,16 @@ VariablesView.prototype = {
   },
 
   /**
+   * Sets if the variable and property searching is enabled.
+   */
+  set searchEnabled(aFlag) aFlag ? this.enableSearch() : this.disableSearch(),
+
+  /**
+   * Gets if the variable and property searching is enabled.
+   */
+  get searchEnabled() !!this._searchboxContainer,
+
+  /**
    * Performs a case insensitive search for variables or properties matching
    * the query, and hides non-matched items.
    *
@@ -193,10 +203,28 @@ VariablesView.prototype = {
    *        The variable or property to search for.
    */
   performSearch: function VV_performSerch(aQuery) {
-    let lowerCaseQuery = aQuery.toLowerCase();
+    if (!aQuery) {
+      for (let [_, item] of this._currHierarchy) {
+        item._match = true;
+      }
+    } else {
+      for (let [_, scope] in this) {
+        scope._performSearch(aQuery.toLowerCase());
+      }
+    }
+  },
 
+  /**
+   * Expands the first search results in this container.
+   */
+  expandFirstSearchResults: function VV_expandFirstSearchResults() {
     for (let [_, scope] in this) {
-      scope._performSearch(lowerCaseQuery);
+      for (let [_, variable] in scope) {
+        if (variable._isMatch) {
+          variable.expand();
+          break;
+        }
+      }
     }
   },
 
@@ -406,7 +434,7 @@ Scope.prototype = {
    *        Pass true to not show an opening animation.
    */
   expand: function S_expand(aSkipAnimationFlag) {
-    if (this._locked) {
+    if (this._isExpanded || this._locked) {
       return;
     }
     if (this._variablesView._enumVisible) {
@@ -431,7 +459,7 @@ Scope.prototype = {
    * Collapses the scope, hiding all the added details.
    */
   collapse: function S_collapse() {
-    if (this._locked) {
+    if (!this._isExpanded || this._locked) {
       return;
     }
     this._arrow.removeAttribute("open");
@@ -485,12 +513,6 @@ Scope.prototype = {
    * @return boolean
    */
   get expanded() this._isExpanded,
-
-  /**
-   * Returns if this element was ever toggled.
-   * @return boolean
-   */
-  get toggled() this._wasToggled,
 
   /**
    * Gets the twisty visibility state.
@@ -651,17 +673,17 @@ Scope.prototype = {
       // Non-matched variables or properties require a corresponding attribute.
       if (!lowerCaseName.contains(aLowerCaseQuery) &&
           !lowerCaseValue.contains(aLowerCaseQuery)) {
-        variable.target.setAttribute("non-match", "");
+        variable._match = false;
       }
       // Variable or property is matched.
       else {
-        variable.target.removeAttribute("non-match");
+        variable._match = true;
 
         // If the variable was ever expanded, there's a possibility it may
         // contain some matched properties, so make sure they're visible
         // ("expand downwards").
 
-        if (variable.toggled) {
+        if (variable._wasToggled) {
           variable.expand(true);
         }
 
@@ -675,13 +697,32 @@ Scope.prototype = {
                 variable instanceof Property)) {
 
           // Show and expand the parent, as it is certainly accessible.
-          variable.target.removeAttribute("non-match");
+          variable._match = true;
           variable.expand(true);
         }
       }
 
       // Proceed with the search recursively inside this variable or property.
-      currentObject._performSearch(aLowerCaseQuery);
+      if (variable._wasToggled || variable.expanded || variable.getter || variable.setter) {
+        currentObject._performSearch(aLowerCaseQuery);
+      }
+    }
+  },
+
+  /**
+   * Sets if this object instance is a match or non-match.
+   * @param boolean aStatus
+   */
+  set _match(aStatus) {
+    if (this._isMatch == aStatus) {
+      return;
+    }
+    if (aStatus) {
+      this._isMatch = true;
+      this.target.removeAttribute("non-match");
+    } else {
+      this._isMatch = false;
+      this.target.setAttribute("non-match", "");
     }
   },
 
@@ -725,6 +766,7 @@ Scope.prototype = {
   _isExpanded: false,
   _wasToggled: false,
   _isArrowVisible: true,
+  _isMatch: true,
   _store: null,
   _idString: "",
   _nameString: "",
@@ -817,6 +859,16 @@ create({ constructor: Variable, proto: Scope.prototype }, {
       this.addProperty(name, aProperties[name]);
     }
   },
+
+  /**
+   * Returns this variable's getter from the descriptor if available,
+   */
+  get getter() this._initialDescriptor.get,
+
+  /**
+   * Returns this variable's getter from the descriptor if available,
+   */
+  get setter() this._initialDescriptor.set,
 
   /**
    * Sets the specific grip for this variable.
