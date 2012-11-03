@@ -1248,7 +1248,8 @@ XPCOMUtils.defineLazyGetter(L10N, "ellipsis", function() {
 const STACKFRAMES_WIDTH = "devtools.debugger.ui.stackframes-width";
 const VARIABLES_WIDTH = "devtools.debugger.ui.variables-width";
 const PANES_VISIBLE_ON_STARTUP = "devtools.debugger.ui.panes-visible-on-startup";
-const NON_ENUM_VISIBLE = "devtools.debugger.ui.non-enum-visible";
+const VARIABLES_NON_ENUM_VISIBLE = "devtools.debugger.ui.variables-non-enum-visible";
+const VARIABLES_SEARCHBOX_VISIBLE = "devtools.debugger.ui.variables-searchbox-visible";
 const REMOTE_HOST = "devtools.debugger.remote-host";
 const REMOTE_PORT = "devtools.debugger.remote-port";
 const REMOTE_AUTO_CONNECT = "devtools.debugger.remote-autoconnect";
@@ -1324,11 +1325,11 @@ let Prefs = {
    * properties and variables in the scope view.
    * @return boolean
    */
-  get nonEnumVisible() {
-    if (this._nonEnumVisible === undefined) {
-      this._nonEnumVisible = Services.prefs.getBoolPref(NON_ENUM_VISIBLE);
+  get variablesNonEnumVisible() {
+    if (this._varNonEnum === undefined) {
+      this._varNonEnum = Services.prefs.getBoolPref(VARIABLES_NON_ENUM_VISIBLE);
     }
-    return this._nonEnumVisible;
+    return this._varNonEnum;
   },
 
   /**
@@ -1336,9 +1337,29 @@ let Prefs = {
    * properties and variables in the scope view.
    * @param boolean value
    */
-  set nonEnumVisible(value) {
-    Services.prefs.setBoolPref(NON_ENUM_VISIBLE, value);
-    this._nonEnumVisible = value;
+  set variablesNonEnumVisible(value) {
+    Services.prefs.setBoolPref(VARIABLES_NON_ENUM_VISIBLE, value);
+    this._varNonEnum = value;
+  },
+
+  /**
+   * Gets a flag specifying if the a variables searchbox should be shown.
+   * @return boolean
+   */
+  get variablesSearchboxVisible() {
+    if (this._varSearchbox === undefined) {
+      this._varSearchbox = Services.prefs.getBoolPref(VARIABLES_SEARCHBOX_VISIBLE);
+    }
+    return this._varSearchbox;
+  },
+
+  /**
+   * Sets a flag specifying if the a variables searchbox should be shown.
+   * @param boolean value
+   */
+  set variablesSearchboxVisible(value) {
+    Services.prefs.setBoolPref(VARIABLES_SEARCHBOX_VISIBLE, value);
+    this._varSearchbox = value;
   },
 
   /**
