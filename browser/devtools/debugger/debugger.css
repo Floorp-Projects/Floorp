@@ -64,6 +64,15 @@
 }
 
 /**
+ * Variables and properties searching
+ */
+
+.variable[non-match] > .title,
+.property[non-match] > .title {
+  display: none;
+}
+
+/**
  * Toolbar
  */
 
