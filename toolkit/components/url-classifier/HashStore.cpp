@@ -118,7 +118,7 @@ namespace mozilla {
 namespace safebrowsing {
 
 const uint32_t STORE_MAGIC = 0x1231af3b;
-const uint32_t CURRENT_VERSION = 2;
+const uint32_t CURRENT_VERSION = 3;
 
 void
 TableUpdate::NewAddPrefix(uint32_t aAddChunk, const Prefix& aHash)
