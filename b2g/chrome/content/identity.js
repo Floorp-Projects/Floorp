@@ -33,7 +33,6 @@ log("\n\n======================= identity.js =======================\n\n");
 // This script may be injected more than once into an iframe.
 // Ensure we don't redefine contstants
 if (typeof kIdentityJSLoaded === 'undefined') {
-  const kReceivedIdentityAssertion = "received-id-assertion";
   const kIdentityDelegateWatch = "identity-delegate-watch";
   const kIdentityDelegateRequest = "identity-delegate-request";
   const kIdentityDelegateLogout = "identity-delegate-logout";
@@ -66,33 +65,10 @@ function identityCall(message) {
  * destroys our context.
  */
 function closeIdentityDialog() {
-  let randomId = uuidgen.generateUUID().toString();
-  let id = kReceivedIdentityAssertion + "-" + randomId;
-  let browser = Services.wm.getMostRecentWindow("navigator:browser");
-
-  let detail = {
-    type: kReceivedIdentityAssertion,
-    id: id,
-    showUI: showUI
-  };
-
-  // In order to avoid race conditions, we wait for the UI to notify that
-  // it has successfully closed the identity flow and has recovered the
-  // caller app, before notifying the parent process.
-  content.addEventListener("mozContentEvent", function closeIdentityDialogFinished(evt) {
-    content.removeEventListener("mozContentEvent", closeIdentityDialogFinished);
-
-    if (evt.detail.id == id && aCallback) {
-      aCallback();
-    }
-  });
-
-  // tell gecko we're done.  fire and forget.
+  log('ready to close');
+  // tell gecko we're done.
   func = null; options = null;
   sendAsyncMessage(kIdentityDelegateFinished);
-
-  // tell gaia to shut us down
-  browser.shell.sendChromeEvent(detail);
 }
 
 /*
