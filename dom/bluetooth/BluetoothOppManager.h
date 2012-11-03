@@ -83,6 +83,7 @@ private:
                                  const nsString& aFileName,
                                  uint32_t aFileLength,
                                  const nsString& aContentType);
+  void DeleteReceivedFile();
   void ReplyToConnect();
   void ReplyToDisconnect();
   void ReplyToPut(bool aFinal, bool aContinue);
