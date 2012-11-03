@@ -631,6 +631,12 @@ class Rooted : public RootedBase<T>
     Rooted(const Rooted &) MOZ_DELETE;
 };
 
+#if !(defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING))
+// Defined in vm/String.h.
+template <>
+class Rooted<JSStableString *>;
+#endif
+
 template <typename T>
 bool
 Return<T>::operator==(const Rooted<T> &other)

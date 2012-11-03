@@ -195,11 +195,11 @@ public:
   }
 };
 
-int AppendHeaderName(uint8_t* retBuf, const char* name, int length);
-int AppendHeaderBody(uint8_t* retBuf, uint8_t* data, int length);
-int AppendHeaderLength(uint8_t* retBuf, int objectLength);
-int AppendHeaderConnectionId(uint8_t* retBuf, int connectionId);
-void SetObexPacketInfo(uint8_t* retBuf, uint8_t opcode, int packetLength);
+int AppendHeaderName(uint8_t* aRetBuf, const char* aName, int aLength);
+int AppendHeaderBody(uint8_t* aRetBuf, uint8_t* aData, int aLength);
+int AppendHeaderLength(uint8_t* aRetBuf, int aObjectLength);
+int AppendHeaderConnectionId(uint8_t* aRetBuf, int aConnectionId);
+void SetObexPacketInfo(uint8_t* aRetBuf, uint8_t aOpcode, int aPacketLength);
 int ParseHeadersAndFindBody(uint8_t* aHeaderStart,
                             int aTotalLength,
                             ObexHeaderSet* aRetHanderSet);

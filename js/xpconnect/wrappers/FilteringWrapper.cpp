@@ -29,12 +29,6 @@ FilteringWrapper<Base, Policy>::~FilteringWrapper()
 {
 }
 
-typedef Wrapper::Permission Permission;
-
-static const Permission PermitObjectAccess = Wrapper::PermitObjectAccess;
-static const Permission PermitPropertyAccess = Wrapper::PermitPropertyAccess;
-static const Permission DenyAccess = Wrapper::DenyAccess;
-
 template <typename Policy>
 static bool
 Filter(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
@@ -42,11 +36,10 @@ Filter(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
     size_t w = 0;
     for (size_t n = 0; n < props.length(); ++n) {
         jsid id = props[n];
-        Permission perm;
-        if (!Policy::check(cx, wrapper, id, Wrapper::GET, perm))
-            return false; // Error
-        if (perm != DenyAccess)
+        if (Policy::check(cx, wrapper, id, Wrapper::GET))
             props[w++] = id;
+        else if (JS_IsExceptionPending(cx))
+            return false;
     }
     props.resize(w);
     return true;
@@ -92,14 +85,16 @@ bool
 FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
                                       Wrapper::Action act, bool *bp)
 {
-    Permission perm;
-    if (!Policy::check(cx, wrapper, id, act, perm)) {
-        *bp = false;
+    if (!Policy::check(cx, wrapper, id, act)) {
+        if (JS_IsExceptionPending(cx)) {
+            *bp = false;
+            return false;
+        }
+        JSAutoCompartment ac(cx, wrapper);
+        *bp = Policy::deny(cx, id, act);
         return false;
     }
     *bp = true;
-    if (perm == DenyAccess)
-        return false;
     return Base::enter(cx, wrapper, id, act, bp);
 }
 

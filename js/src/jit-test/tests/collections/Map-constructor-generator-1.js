@@ -12,7 +12,7 @@ function data(n) {
 
 var m = Map(data(50));
 assertEq(done, true);  // the constructor consumes the argument
-assertEq(m.size(), 50);
+assertEq(m.size, 50);
 assertEq(m.get(""), 0);
 assertEq(m.get("....."), 5);
 assertEq(m.get(Array(49+1).join(".")), 49);

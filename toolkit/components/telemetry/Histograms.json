@@ -1754,6 +1754,20 @@
     "n_buckets": 10,
     "description": "PLACES: Number of keywords"
   },
+  "FENNEC_FAVICONS_COUNT": {
+    "kind": "exponential",
+    "high": "2000",
+    "n_buckets": 10,
+    "cpp_guard": "ANDROID",
+    "description": "FENNEC: (Places) Number of favicons stored"
+  },
+  "FENNEC_THUMBNAILS_COUNT": {
+    "kind": "exponential",
+    "high": "2000",
+    "n_buckets": 10,
+    "cpp_guard": "ANDROID",
+    "description": "FENNEC: (Places) Number of thumbnails stored"
+  },
   "PLACES_SORTED_BOOKMARKS_PERC": {
     "kind": "linear",
     "high": "100",
