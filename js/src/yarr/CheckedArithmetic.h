@@ -31,7 +31,7 @@
 #include "TypeTraits.h"
 
 #include <limits>
-#include <stdint.h>
+#include "mozilla/StandardInteger.h"
 
 #ifdef _MSC_VER
 # undef min

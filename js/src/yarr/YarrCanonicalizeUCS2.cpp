@@ -30,7 +30,7 @@
 namespace JSC { namespace Yarr {
 
 #include <stddef.h>
-#include <stdint.h>
+#include "mozilla/StandardInteger.h"
 
 uint16_t ucs2CharacterSet0[] = { 0x01c4u, 0x01c5u, 0x01c6u, 0 };
 uint16_t ucs2CharacterSet1[] = { 0x01c7u, 0x01c8u, 0x01c9u, 0 };
