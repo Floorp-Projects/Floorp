@@ -298,6 +298,8 @@ BluetoothOppManager::ConfirmReceivingFile(bool aConfirm)
   if (aConfirm) {
     StartFileTransfer(mConnectedDeviceAddress, true,
                       sFileName, sFileLength, sContentType);
+  } else {
+    DeleteReceivedFile();
   }
 
   if (mPutFinal || !aConfirm) {
@@ -346,6 +348,28 @@ BluetoothOppManager::AfterOppDisconnected()
   }
 
   mConnectedDeviceAddress.AssignLiteral("00:00:00:00:00:00");
+}
+
+void
+BluetoothOppManager::DeleteReceivedFile()
+{
+  nsString path;
+  path.AssignLiteral(TARGET_FOLDER);
+  path += sFileName;
+
+  nsCOMPtr<nsIFile> f;
+  nsresult rv = NS_NewLocalFile(path + sFileName, false, getter_AddRefs(f));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Couldn't find received file, nothing to delete.");
+    return;
+  }
+
+  if (mOutputStream) {
+    mOutputStream->Close();
+    mOutputStream = nullptr;
+  }
+
+  f->Remove(false);
 }
 
 // Virtual function of class SocketConsumer
@@ -521,10 +545,9 @@ BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
         pktHeaders.GetContentType(sContentType);
         pktHeaders.GetLength(&sFileLength);
 
-        path += sFileName;
-
         nsCOMPtr<nsIFile> f;
-        nsresult rv = NS_NewLocalFile(path, false, getter_AddRefs(f));
+        nsresult rv;
+        rv = NS_NewLocalFile(path + sFileName, false, getter_AddRefs(f));
         if (NS_FAILED(rv)) {
           NS_WARNING("Couldn't new a local file");
         }
@@ -533,6 +556,13 @@ BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
         if (NS_FAILED(rv)) {
           NS_WARNING("Couldn't create the file");
         }
+
+        /*
+         * The function CreateUnique() may create a file with a different file
+         * name from the original sFileName. Therefore we have to retrieve
+         * the file name again.
+         */
+        f->GetLeafName(sFileName);
 
         NS_NewLocalFileOutputStream(getter_AddRefs(mOutputStream), f);
         if (!mOutputStream) {
@@ -607,6 +637,7 @@ BluetoothOppManager::ReceiveSocketData(UnixSocketRawData* aMessage)
             mReceiving = false;
             FileTransferComplete(mConnectedDeviceAddress, false, true,
                                  sFileName, sSentFileLength, sContentType);
+            DeleteReceivedFile();
           } else if (mPutFinal) {
             mReceiving = false;
             FileTransferComplete(mConnectedDeviceAddress, true, true,
