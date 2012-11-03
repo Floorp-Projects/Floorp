@@ -38,6 +38,8 @@ let DebuggerView = {
     this.GlobalSearch.initialize();
 
     this.Variables = new VariablesView(document.getElementById("variables"));
+    this.Variables.enableSearch();
+    this.Variables.searchPlaceholder = L10N.getStr("emptyVariablesFilterText");
     this.Variables.emptyText = L10N.getStr("emptyVariablesText");
     this.Variables.nonEnumVisible = Prefs.nonEnumVisible;
     this.Variables.eval = DebuggerController.StackFrames.evaluate;
