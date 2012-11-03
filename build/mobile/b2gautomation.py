@@ -131,19 +131,16 @@ class B2GRemoteAutomation(Automation):
             output.
         """
         timeout = timeout or 120
-
-        didTimeout = False
-
-        done = time.time() + timeout
+        responseDueBy = time.time() + timeout
         while True:
             currentlog = proc.stdout
             if currentlog:
-                done = time.time() + timeout
+                responseDueBy = time.time() + timeout
                 print currentlog
                 if hasattr(self, 'logFinish') and self.logFinish in currentlog:
                     return 0
             else:
-                if time.time() > done:
+                if time.time() > responseDueBy:
                     self.log.info("TEST-UNEXPECTED-FAIL | %s | application timed "
                                   "out after %d seconds with no output",
                                   self.lastTestSeen, int(timeout))
@@ -341,4 +338,3 @@ class B2GRemoteAutomation(Automation):
         def kill(self):
             # this should never happen
             raise Exception("'kill' called on B2GInstance")
-
