@@ -184,6 +184,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "ToggleProfiling", false);
+    Services.obs.addObserver(this, "gather-telemetry", false);
 
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
@@ -1145,6 +1146,8 @@ var BrowserApp = {
       } else {
         profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
       }
+    } else if (aTopic == "gather-telemetry") {
+      sendMessageToJava({ gecko: { type: "Telemetry:Gather" }});
     } else if (aTopic == "Session:Restore") {
       let data = JSON.parse(aData);
       this.restoreSession(data.restoringOOM, data.sessionString);
