@@ -237,7 +237,7 @@
   -moz-padding-start: 6px;
 }
 
-.variable > .details {
+.variable:not([non-header]) > .details {
   -moz-margin-start: 10px;
 }
 
@@ -264,7 +264,7 @@
   -moz-padding-start: 6px;
 }
 
-.property > .details {
+.property:not([non-header]) > .details {
   -moz-margin-start: 10px;
 }
 

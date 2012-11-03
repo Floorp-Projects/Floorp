@@ -39,6 +39,18 @@ function VariablesView(aParentNode) {
 
 VariablesView.prototype = {
   /**
+   * Helper setter for populating this container with a raw object.
+   *
+   * @param object aData
+   *        The raw object to display. You can only provide this object
+   *        if you want the variables view to work in sync mode.
+   */
+  set rawObject(aObject) {
+    this.empty();
+    this.addScope().addVar().populate(aObject);
+  },
+
+  /**
    * Adds a scope to contain any inspected variables.
    *
    * @param string aName
@@ -46,12 +58,13 @@ VariablesView.prototype = {
    * @return Scope
    *         The newly created Scope instance.
    */
-  addScope: function VV_addScope(aName) {
+  addScope: function VV_addScope(aName = "") {
     this._removeEmptyNotice();
 
     let scope = new Scope(this, aName);
     this._store.set(scope.id, scope);
     this._currHierarchy.set(aName, scope);
+    scope.header = !!aName;
     return scope;
   },
 
@@ -382,7 +395,7 @@ Scope.prototype = {
    * @return Variable
    *         The newly created Variable instance, null if it already exists.
    */
-  addVar: function S_addVar(aName, aDescriptor = {}) {
+  addVar: function S_addVar(aName = "", aDescriptor = {}) {
     if (this._store.has(aName)) {
       return null;
     }
@@ -390,6 +403,7 @@ Scope.prototype = {
     let variable = new Variable(this, aName, aDescriptor);
     this._store.set(aName, variable);
     this._variablesView._currHierarchy.set(variable._absoluteName, variable);
+    variable.header = !!aName;
     return variable;
   },
 
@@ -487,6 +501,24 @@ Scope.prototype = {
   },
 
   /**
+   * Shows the scope's title header.
+   */
+  showHeader: function S_showHeader() {
+    this._target.removeAttribute("non-header");
+    this._isHeaderVisible = true;
+  },
+
+  /**
+   * Hides the scope's title header.
+   * This action will automatically expand the scope.
+   */
+  hideHeader: function S_hideHeader() {
+    this.expand();
+    this._target.setAttribute("non-header", "");
+    this._isHeaderVisible = false;
+  },
+
+  /**
    * Shows the scope's expand/collapse arrow.
    */
   showArrow: function S_showArrow() {
@@ -515,6 +547,12 @@ Scope.prototype = {
   get expanded() this._isExpanded,
 
   /**
+   * Gets the header visibility state.
+   * @return boolean
+   */
+  get header() this._isHeaderVisible,
+
+  /**
    * Gets the twisty visibility state.
    * @return boolean
    */
@@ -531,6 +569,12 @@ Scope.prototype = {
    * @param boolean aFlag
    */
   set expanded(aFlag) aFlag ? this.expand() : this.collapse(),
+
+  /**
+   * Sets the header visibility state.
+   * @param boolean aFlag
+   */
+  set header(aFlag) aFlag ? this.showHeader() : this.hideHeader(),
 
   /**
    * Sets the twisty visibility state.
@@ -760,11 +804,13 @@ Scope.prototype = {
 
   ownerView: null,
   eval: null,
+  fetched: false,
   _committed: false,
   _locked: false,
   _isShown: true,
   _isExpanded: false,
   _wasToggled: false,
+  _isHeaderVisible: true,
   _isArrowVisible: true,
   _isMatch: true,
   _store: null,
@@ -823,7 +869,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
    * @return Property
    *         The newly created Property instance, null if it already exists.
    */
-  addProperty: function V_addProperty(aName, aDescriptor = {}) {
+  addProperty: function V_addProperty(aName = "", aDescriptor = {}) {
     if (this._store.has(aName)) {
       return null;
     }
@@ -831,6 +877,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     let property = new Property(this, aName, aDescriptor);
     this._store.set(aName, property);
     this._variablesView._currHierarchy.set(property._absoluteName, property);
+    property.header = !!aName;
     return property;
   },
 
@@ -859,6 +906,88 @@ create({ constructor: Variable, proto: Scope.prototype }, {
       this.addProperty(name, aProperties[name]);
     }
   },
+
+  /**
+   * Populates this variable to contain all the properties of an object.
+   *
+   * @param object aObject
+   *        The raw object you want to display.
+   */
+  populate: function V_populate(aObject) {
+    // Retrieve the properties only once.
+    if (this.fetched) {
+      return;
+    }
+
+    // Sort all of the properties before adding them.
+    let sortedPropertyNames = Object.getOwnPropertyNames(aObject).sort();
+    let prototype = Object.getPrototypeOf(aObject);
+
+    // Add all the variable properties.
+    for (let name of sortedPropertyNames) {
+      let descriptor = Object.getOwnPropertyDescriptor(aObject, name);
+      if (descriptor.get || descriptor.set) {
+        this._addRawNonValueProperty(name, descriptor);
+      } else {
+        this._addRawValueProperty(name, descriptor, aObject[name]);
+      }
+    }
+    // Add the variable's __proto__.
+    if (prototype) {
+      this._addRawValueProperty("__proto__", {}, prototype);
+    }
+
+    this.fetched = true;
+  },
+
+  /**
+   * Adds a property for this variable based on a raw value descriptor.
+   *
+   * @param string aName
+   *        The property's name.
+   * @param object aDescriptor
+   *        Specifies the exact property descriptor as returned by a call to
+   *        Object.getOwnPropertyDescriptor.
+   * @param object aValue
+   *        The raw property value you want to display.
+   */
+  _addRawValueProperty: function V__addRawValueProperty(aName, aDescriptor, aValue) {
+    let descriptor = Object.create(aDescriptor);
+    descriptor.value = VariablesView.getGrip(aValue);
+
+    let propertyItem = this.addProperty(aName, descriptor);
+
+    // Add an 'onexpand' callback for the property, lazily handling
+    // the addition of new child properties.
+    if (!VariablesView.isPrimitive(descriptor)) {
+      propertyItem.onexpand = this.populate.bind(propertyItem, aValue);
+    }
+
+    return propertyItem;
+  },
+
+  /**
+   * Adds a property for this variable based on a getter/setter descriptor.
+   *
+   * @param string aName
+   *        The property's name.
+   * @param object aDescriptor
+   *        Specifies the exact property descriptor as returned by a call to
+   *        Object.getOwnPropertyDescriptor.
+   */
+  _addRawNonValueProperty: function V__addRawNonValueProperty(aName, aDescriptor) {
+    let descriptor = Object.create(aDescriptor);
+    descriptor.get = VariablesView.getGrip(aDescriptor.get);
+    descriptor.set = VariablesView.getGrip(aDescriptor.set);
+
+    let propertyItem = this.addProperty(aName, descriptor);
+    return propertyItem;
+  },
+
+  /**
+   * Returns this variable's value from the descriptor if available,
+   */
+  get value() this._initialDescriptor.value,
 
   /**
    * Returns this variable's getter from the descriptor if available,
@@ -961,8 +1090,8 @@ create({ constructor: Variable, proto: Scope.prototype }, {
       this.hideArrow();
     }
     if (aDescriptor.get || aDescriptor.set) {
-      this.addProperty("get ", { value: aDescriptor.get });
-      this.addProperty("set ", { value: aDescriptor.set });
+      this.addProperty("get", { value: aDescriptor.get });
+      this.addProperty("set", { value: aDescriptor.set });
       this.expand(true);
       separatorLabel.hidden = true;
       valueLabel.hidden = true;
@@ -1297,6 +1426,31 @@ VariablesView.isPrimitive = function VV_isPrimitive(aDescriptor) {
   }
 
   return false;
+};
+
+/**
+ * Returns a standard grip for a value.
+ *
+ * @param any aValue
+ *        The raw value to get a grip for.
+ * @return any
+ *         The value's grip.
+ */
+VariablesView.getGrip = function VV_getGrip(aValue) {
+  if (aValue === undefined) {
+    return { type: "undefined" };
+  }
+  if (aValue === null) {
+    return { type: "null" };
+  }
+  if (typeof aValue == "object" || typeof aValue == "function") {
+    if (aValue.constructor) {
+      return { type: "object", class: aValue.constructor.name };
+    } else {
+      return { type: "object", class: "Object" };
+    }
+  }
+  return aValue;
 };
 
 /**
