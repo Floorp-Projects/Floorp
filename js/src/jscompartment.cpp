@@ -77,7 +77,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     , ionCompartment_(NULL)
 #endif
 {
-    setGCMaxMallocBytes(rt->gcMaxMallocBytes / 2);
+    setGCMaxMallocBytes(rt->gcMaxMallocBytes * 0.9);
 }
 
 JSCompartment::~JSCompartment()
