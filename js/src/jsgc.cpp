@@ -3274,17 +3274,12 @@ BeginMarkPhase(JSRuntime *rt)
             any = true;
             if (c != rt->atomsCompartment)
                 c->setGCState(JSCompartment::Mark);
-
-            c->resetGCMallocBytes();
         } else {
             rt->gcIsFull = false;
         }
 
         c->setPreservingCode(ShouldPreserveJITCode(c, currentTime));
     }
-
-    if (rt->gcIsFull)
-        rt->resetGCMallocBytes();
 
     /* Check that at least one compartment is scheduled for collection. */
     JS_ASSERT(any);
@@ -4041,8 +4036,13 @@ AutoGCSession::~AutoGCSession()
     runtime->gcSelectedForMarking.clearAndFree();
 #endif
 
-    for (CompartmentsIter c(runtime); !c.done(); c.next())
+    /* Clear gcMallocBytes for all compartments */
+    for (CompartmentsIter c(runtime); !c.done(); c.next()) {
+        c->resetGCMallocBytes();
         c->unscheduleGC();
+    }
+
+    runtime->resetGCMallocBytes();
 }
 
 class AutoCopyFreeListToArenas {
