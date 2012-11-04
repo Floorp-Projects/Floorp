@@ -3741,13 +3741,13 @@ ctx.fillStyle = '#0f0';
 ctx.fillRect(0, 0, 100, 50);
 var _thrown = undefined; try {
   ctx.drawImage(document.getElementById('red_14.png'), 10, 10, 0, 1, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
 var _thrown = undefined; try {
   ctx.drawImage(document.getElementById('red_14.png'), 10, 10, 1, 0, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
 var _thrown = undefined; try {
   ctx.drawImage(document.getElementById('red_14.png'), 10, 10, 0, 0, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.name == "IndexSizeError" && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw IndexSizeError");
 isPixel(ctx, 50,25, 0,255,0,255, 2);
 
 
@@ -19591,8 +19591,8 @@ ok(ctx.clip() === undefined, "ctx.clip() === undefined");
 if (ctx.putImageData) {
     ok(ctx.putImageData(ctx.getImageData(0, 0, 1, 1), 0, 0) === undefined, "ctx.putImageData(ctx.getImageData(0, 0, 1, 1), 0, 0) === undefined");
 }
-ok(ctx.drawImage(document.getElementById('yellow_11.png'), 0, 0, 0, 0, 0, 0, 0, 0) === undefined, "ctx.drawImage(document.getElementById('yellow_11.png'), 0, 0, 0, 0, 0, 0, 0, 0) === undefined");
-ok(ctx.drawImage(canvas, 0, 0, 0, 0, 0, 0, 0, 0) === undefined, "ctx.drawImage(canvas, 0, 0, 0, 0, 0, 0, 0, 0) === undefined");
+ok(ctx.drawImage(document.getElementById('yellow_11.png'), 0, 0, 1, 1, 0, 0, 0, 0) === undefined, "ctx.drawImage(document.getElementById('yellow_11.png'), 0, 0, 1, 1, 0, 0, 0, 0) === undefined");
+ok(ctx.drawImage(canvas, 0, 0, 1, 1, 0, 0, 0, 0) === undefined, "ctx.drawImage(canvas, 0, 0, 1, 1, 0, 0, 0, 0) === undefined");
 ok(ctx.createLinearGradient(0, 0, 0, 0).addColorStop(0, 'white') === undefined, "ctx.createLinearGradient(0, 0, 0, 0).addColorStop(0, 'white') === undefined");
 
 
