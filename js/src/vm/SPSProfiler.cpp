@@ -46,7 +46,7 @@ SPSProfiler::setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max
 {
     JS_ASSERT_IF(size_ && *size_ != 0, !enabled());
     if (!strings.initialized())
-        strings.init(max);
+        strings.init();
     stack_ = stack;
     size_  = size;
     max_   = max;
