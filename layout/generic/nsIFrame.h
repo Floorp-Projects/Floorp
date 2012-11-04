@@ -252,6 +252,10 @@ typedef uint64_t nsFrameState;
 // This bit acts as a loop flag for recursive paint server drawing.
 #define NS_FRAME_DRAWING_AS_PAINTSERVER             NS_FRAME_STATE_BIT(33)
 
+// Marks the frame as having a changed transform between processing
+// nsChangeHint_UpdateTransformLayer and calling FinishAndStoreOverflow.
+#define NS_FRAME_TRANSFORM_CHANGED                  NS_FRAME_STATE_BIT(34)
+
 // Frame is a display root and the retained layer tree needs to be updated
 // at the next paint via display list construction.
 // Only meaningful for display roots, so we don't really need a global state
