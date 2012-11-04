@@ -2760,7 +2760,6 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                               aLoadingDocument,     /* uniquification key */
                               aLoadFlags,           /* load flags */
                               nullptr,               /* cache key */
-                              nullptr,               /* existing request*/
                               channelPolicy,        /* CSP info */
                               aRequest);
 }

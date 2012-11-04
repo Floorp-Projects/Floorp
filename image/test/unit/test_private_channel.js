@@ -73,7 +73,7 @@ function loadImage(isPrivate, callback) {
   var loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
   loadGroup.notificationCallbacks = new NotificationCallbacks(isPrivate);
   var loader = isPrivate ? gPrivateLoader : gPublicLoader;
-  requests.push(loader.loadImage(uri, null, null, null, loadGroup, outer, null, 0, null, null, null));
+  requests.push(loader.loadImage(uri, null, null, null, loadGroup, outer, null, 0, null, null));
   listener.synchronous = false;  
 }
 
