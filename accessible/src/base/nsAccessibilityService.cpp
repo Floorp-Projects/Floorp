@@ -250,6 +250,7 @@ nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
       logging::Node("content", child);
     }
     logging::MsgEnd();
+    logging::Stack();
   }
 #endif
 
@@ -269,6 +270,7 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
     logging::Node("container", aContainer);
     logging::Node("content", aChild);
     logging::MsgEnd();
+    logging::Stack();
   }
 #endif
 
@@ -617,6 +619,19 @@ nsAccessibilityService::SetLogging(const nsACString& aModules)
 #ifdef A11Y_LOG
   logging::Enable(PromiseFlatCString(aModules));
 #endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessibilityService::IsLogged(const nsAString& aModule, bool* aIsLogged)
+{
+  NS_ENSURE_ARG_POINTER(aIsLogged);
+  *aIsLogged = false;
+
+#ifdef A11Y_LOG
+  *aIsLogged = logging::IsEnabled(aModule);
+#endif
+
   return NS_OK;
 }
 
