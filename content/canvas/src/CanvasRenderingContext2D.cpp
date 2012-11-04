@@ -3725,6 +3725,11 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
     sh = (double) imgSize.height;
   }
 
+  if (sw == 0.0 || sh == 0.0) {
+    error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
   if (dw == 0.0 || dh == 0.0) {
     // not really failure, but nothing to do --
     // and noone likes a divide-by-zero
