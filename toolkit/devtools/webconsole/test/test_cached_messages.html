@@ -44,16 +44,17 @@ function doPageErrors()
     },
   ];
 
-  let body = top.document.documentElement;
-  let container = top.document.createElementNS(XHTML_NS, "script");
-  body.appendChild(container);
-  container.textContent = "document.documentElement.style.color = 'fooColor';";
-  body.removeChild(container);
+  let container = document.createElement("script");
+  document.body.appendChild(container);
+  container.textContent = "document.body.style.color = 'fooColor';";
+  document.body.removeChild(container);
 
-  container = top.document.createElementNS(XHTML_NS, "script");
-  body.appendChild(container);
+  SimpleTest.expectUncaughtException();
+
+  container = document.createElement("script");
+  document.body.appendChild(container);
   container.textContent = "document.doTheImpossible();";
-  body.removeChild(container);
+  document.body.removeChild(container);
 }
 
 function doConsoleCalls()
