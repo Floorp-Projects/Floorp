@@ -258,7 +258,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment()
   NS_GetJSRuntime(getter_AddRefs(scriptRuntime));
   NS_ENSURE_TRUE(scriptRuntime, NS_OK);
 
-  nsCOMPtr<nsIScriptContext> newCtx = scriptRuntime->CreateContext();
+  nsCOMPtr<nsIScriptContext> newCtx = scriptRuntime->CreateContext(nullptr);
   MOZ_ASSERT(newCtx);
 
   newCtx->WillInitializeContext();

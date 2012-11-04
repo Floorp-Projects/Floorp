@@ -45,8 +45,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x8bdcea47, 0x6704, 0x4dd9, \
-  { 0xa1, 0x48, 0x05, 0x34, 0xcf, 0xe2, 0xdd, 0x57 } }
+{ 0x9ab23956, 0x39be, 0x430c, \
+  { 0x8e, 0xe5, 0x44, 0xa3, 0xbf, 0x39, 0xe9, 0x96 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -60,8 +60,6 @@ class nsIScriptContext : public nsIScriptContextPrincipal
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTCONTEXT_IID)
-
-  virtual void SetGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;
 
   /**
    * Compile and execute a script.
