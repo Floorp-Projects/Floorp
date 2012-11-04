@@ -113,7 +113,7 @@ let gTests = [
     clean: function() {},
     event: {},
     targets: [ "panellink" ],
-    expectedInvokedMethods: [ "urlSecurityCheck", "getShortcutOrURI", "loadURI" ],
+    expectedInvokedMethods: [ "urlSecurityCheck", "loadURI" ],
     preventDefault: true,
   },
 
