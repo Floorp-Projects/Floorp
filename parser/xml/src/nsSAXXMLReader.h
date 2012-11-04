@@ -94,6 +94,9 @@ private:
                           nsString &aQName);
   nsString mPublicId;
   nsString mSystemId;
+
+  // Feature flags
+  bool mEnableNamespacePrefixes;
 };
 
 #endif // nsSAXXMLReader_h__
