@@ -51,6 +51,11 @@ enum EModules {
 bool IsEnabled(uint32_t aModules);
 
 /**
+ * Return true if the given module is logged.
+ */
+bool IsEnabled(const nsAString& aModules);
+
+/**
  * Log the document loading progress.
  */
 void DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
