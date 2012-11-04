@@ -4415,8 +4415,13 @@ nsHttpChannel::BeginConnect()
         mCaps |= NS_HTTP_REFRESH_DNS;
 
     // Force-Reload should reset the persistent connection pool for this host
-    if (mLoadFlags & LOAD_FRESH_CONNECTION)
-        mCaps |= NS_HTTP_CLEAR_KEEPALIVES;
+    if (mLoadFlags & LOAD_FRESH_CONNECTION) {
+        // just the initial document resets the whole pool
+        if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI)
+            gHttpHandler->ConnMgr()->ClosePersistentConnections();
+        // each sub resource gets a fresh connection
+        mCaps &= ~(NS_HTTP_ALLOW_KEEPALIVE | NS_HTTP_ALLOW_PIPELINING);
+    }
 
     // We may have been cancelled already, either by on-modify-request
     // listeners or by load group observers; in that case, we should
