@@ -792,10 +792,7 @@ CanvasRenderingContext2D::Redraw(const mgfx::Rect &r)
 
   nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
 
-  gfxRect tmpR = ThebesRect(r);
-  mCanvasElement->InvalidateCanvasContent(&tmpR);
-
-  return;
+  mCanvasElement->InvalidateCanvasContent(&r);
 }
 
 void
