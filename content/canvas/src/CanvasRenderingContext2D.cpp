@@ -793,10 +793,7 @@ CanvasRenderingContext2D::Redraw(const mgfx::Rect &r)
 
   nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
 
-  gfxRect tmpR = ThebesRect(r);
-  mCanvasElement->InvalidateCanvasContent(&tmpR);
-
-  return;
+  mCanvasElement->InvalidateCanvasContent(&r);
 }
 
 void
@@ -3773,6 +3770,11 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
     sx = sy = 0.0;
     sw = (double) imgSize.width;
     sh = (double) imgSize.height;
+  }
+
+  if (sw == 0.0 || sh == 0.0) {
+    error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
   }
 
   if (dw == 0.0 || dh == 0.0) {

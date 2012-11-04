@@ -8,8 +8,8 @@
 #include "nsIScriptContext.h"
 
 #define NS_ISCRIPTRUNTIME_IID \
-{ 0xfa30d7a8, 0x7f0a, 0x437a, \
-  { 0xa1, 0x0c, 0xc2, 0xbe, 0xa3, 0xdb, 0x4f, 0x4b } }
+{ 0x41ded433, 0x83a5, 0x43fb, \
+  { 0x85, 0xf4, 0x33, 0xba, 0x8f, 0xd1, 0x3f, 0xdc } }
 
 /**
  * A singleton language environment for an application.  Responsible for
@@ -22,7 +22,9 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTRUNTIME_IID)
 
   /* Factory for a new context for this language */
-  virtual already_AddRefed<nsIScriptContext> CreateContext() = 0;
+  virtual already_AddRefed<nsIScriptContext>
+  CreateContext(bool aGCOnDestruction,
+                nsIScriptGlobalObject* aGlobalObject) = 0;
   
   /* Memory managment for script objects returned from various
    * nsIScriptContext methods.  These are identical to those in
