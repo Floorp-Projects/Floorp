@@ -1681,19 +1681,15 @@ nsFtpState::Init(nsFtpChannel *channel)
         mAction = PUT;
 
     nsresult rv;
+    nsAutoCString path;
     nsCOMPtr<nsIURL> url = do_QueryInterface(mChannel->URI());
-
-    nsAutoCString host;
-    if (url) {
-        rv = url->GetAsciiHost(host);
-    } else {
-        rv = mChannel->URI()->GetAsciiHost(host);
-    }
-    if (NS_FAILED(rv) || host.IsEmpty()) {
+	
+    nsCString host;
+    url->GetAsciiHost(host);
+    if (host.IsEmpty()) {
         return NS_ERROR_MALFORMED_URI;
     }
-
-    nsAutoCString path;
+  
     if (url) {
         rv = url->GetFilePath(path);
     } else {
