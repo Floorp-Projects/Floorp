@@ -1071,10 +1071,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   return 0;
 }
 
-nsJSContext::nsJSContext(JSRuntime *aRuntime)
-  : mActive(false),
-    mGCOnDestruction(true),
-    mExecuteDepth(0)
+nsJSContext::nsJSContext(JSRuntime *aRuntime, nsIScriptGlobalObject* aGlobalObject)
+  : mActive(false)
+  , mGCOnDestruction(true)
+  , mExecuteDepth(0)
+  , mGlobalObjectRef(aGlobalObject)
 {
   mNext = sContextList;
   mPrev = &sContextList;
@@ -3624,9 +3625,10 @@ NS_IMPL_ADDREF(nsJSRuntime)
 NS_IMPL_RELEASE(nsJSRuntime)
 
 already_AddRefed<nsIScriptContext>
-nsJSRuntime::CreateContext()
+nsJSRuntime::CreateContext(nsIScriptGlobalObject* aGlobalObject)
 {
-  nsCOMPtr<nsIScriptContext> scriptContext = new nsJSContext(sRuntime);
+  nsCOMPtr<nsIScriptContext> scriptContext =
+    new nsJSContext(sRuntime, aGlobalObject);
   return scriptContext.forget();
 }
 
