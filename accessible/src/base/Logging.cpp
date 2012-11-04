@@ -35,6 +35,24 @@ struct ModuleRep {
   logging::EModules mModule;
 };
 
+static ModuleRep sModuleMap[] = {
+  { "docload", logging::eDocLoad },
+  { "doccreate", logging::eDocCreate },
+  { "docdestroy", logging::eDocDestroy },
+  { "doclifecycle", logging::eDocLifeCycle },
+
+  { "events", logging::eEvents },
+  { "platforms", logging::ePlatforms },
+  { "stack", logging::eStack },
+  { "text", logging::eText },
+  { "tree", logging::eTree },
+
+  { "DOMEvents", logging::eDOMEvents },
+  { "focus", logging::eFocus },
+  { "selection", logging::eSelection },
+  { "notifications", logging::eNotifications }
+};
+
 static void
 EnableLogging(const char* aModulesStr)
 {
@@ -42,31 +60,18 @@ EnableLogging(const char* aModulesStr)
   if (!aModulesStr)
     return;
 
-  static ModuleRep modules[] = {
-    { "docload", logging::eDocLoad },
-    { "doccreate", logging::eDocCreate },
-    { "docdestroy", logging::eDocDestroy },
-    { "doclifecycle", logging::eDocLifeCycle },
-
-    { "events", logging::eEvents },
-    { "platforms", logging::ePlatforms },
-    { "stack", logging::eStack },
-    { "text", logging::eText },
-    { "tree", logging::eTree },
-
-    { "DOMEvents", logging::eDOMEvents },
-    { "focus", logging::eFocus },
-    { "selection", logging::eSelection },
-    { "notifications", logging::eNotifications }
-  };
-
   const char* token = aModulesStr;
   while (*token != '\0') {
     size_t tokenLen = strcspn(token, ",");
-    for (unsigned int idx = 0; idx < ArrayLength(modules); idx++) {
-      if (strncmp(token, modules[idx].mStr, tokenLen) == 0) {
-        sModules |= modules[idx].mModule;
-        printf("\n\nmodule enabled: %s\n", modules[idx].mStr);
+    for (unsigned int idx = 0; idx < ArrayLength(sModuleMap); idx++) {
+      if (strncmp(token, sModuleMap[idx].mStr, tokenLen) == 0) {
+#if !defined(MOZ_PROFILING) && (!defined(MOZ_DEBUG) || defined(MOZ_OPTIMIZE))
+        // Stack tracing on profiling enabled or debug not optimized builds.
+        if (strncmp(token, "stack", tokenLen) == 0)
+          break;
+#endif
+        sModules |= sModuleMap[idx].mModule;
+        printf("\n\nmodule enabled: %s\n", sModuleMap[idx].mStr);
         break;
       }
     }
@@ -801,6 +806,17 @@ bool
 logging::IsEnabled(uint32_t aModules)
 {
   return sModules & aModules;
+}
+
+bool
+logging::IsEnabled(const nsAString& aModuleStr)
+{
+  for (unsigned int idx = 0; idx < ArrayLength(sModuleMap); idx++) {
+    if (aModuleStr.EqualsASCII(sModuleMap[idx].mStr))
+      return sModules & sModuleMap[idx].mModule;
+  }
+
+  return false;
 }
 
 void
