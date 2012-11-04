@@ -742,7 +742,7 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
   nsresult rv = NS_GetJSRuntime(getter_AddRefs(languageRuntime));
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
-  nsCOMPtr<nsIScriptContext> ctxNew = languageRuntime->CreateContext();
+  nsCOMPtr<nsIScriptContext> ctxNew = languageRuntime->CreateContext(false, nullptr);
   MOZ_ASSERT(ctxNew);
 
   // We have to setup a special global object.  We do this then
@@ -770,7 +770,6 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
   rv = ctxNew->InitContext();
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
-  ctxNew->SetGCOnDestruction(false);
   ctxNew->DidInitializeContext();
 
   JSObject* global = ctxNew->GetNativeGlobal();

@@ -1071,10 +1071,12 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   return 0;
 }
 
-nsJSContext::nsJSContext(JSRuntime *aRuntime)
-  : mActive(false),
-    mGCOnDestruction(true),
-    mExecuteDepth(0)
+nsJSContext::nsJSContext(JSRuntime *aRuntime, bool aGCOnDestruction,
+                         nsIScriptGlobalObject* aGlobalObject)
+  : mActive(false)
+  , mGCOnDestruction(aGCOnDestruction)
+  , mExecuteDepth(0)
+  , mGlobalObjectRef(aGlobalObject)
 {
   mNext = sContextList;
   mPrev = &sContextList;
@@ -2841,12 +2843,6 @@ nsJSContext::GetExecutingScript()
   return JS_IsRunning(mContext) || mExecuteDepth > 0;
 }
 
-void
-nsJSContext::SetGCOnDestruction(bool aGCOnDestruction)
-{
-  mGCOnDestruction = aGCOnDestruction;
-}
-
 NS_IMETHODIMP
 nsJSContext::ScriptExecuted()
 {
@@ -3624,9 +3620,11 @@ NS_IMPL_ADDREF(nsJSRuntime)
 NS_IMPL_RELEASE(nsJSRuntime)
 
 already_AddRefed<nsIScriptContext>
-nsJSRuntime::CreateContext()
+nsJSRuntime::CreateContext(bool aGCOnDestruction,
+                           nsIScriptGlobalObject* aGlobalObject)
 {
-  nsCOMPtr<nsIScriptContext> scriptContext = new nsJSContext(sRuntime);
+  nsCOMPtr<nsIScriptContext> scriptContext =
+    new nsJSContext(sRuntime, aGCOnDestruction, aGlobalObject);
   return scriptContext.forget();
 }
 
