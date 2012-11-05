@@ -239,6 +239,20 @@ class Descriptor(DescriptorProvider):
                 iface = iface.parent
 
             if self.proxy:
+                if (not operations['IndexedGetter'] and
+                    (operations['IndexedSetter'] or
+                     operations['IndexedDeleter'] or
+                     operations['IndexedCreator'])):
+                    raise SyntaxError("%s supports indexed properties but does "
+                                      "not have an indexed getter.\n%s" %
+                                      (self.interface, self.interface.location))
+                if (not operations['NamedGetter'] and
+                    (operations['NamedSetter'] or
+                     operations['NamedDeleter'] or
+                     operations['NamedCreator'])):
+                    raise SyntaxError("%s supports named properties but does "
+                                      "not have a named getter.\n%s" %
+                                      (self.interface, self.interface.location))
                 iface = self.interface
                 while iface:
                     iface.setUserData('hasProxyDescendant', True)
@@ -358,3 +372,9 @@ class Descriptor(DescriptorProvider):
             throws = member.getExtendedAttribute(throwsAttr)
         maybeAppendInfallibleToAttrs(attrs, throws)
         return attrs
+
+    def supportsIndexedProperties(self):
+        return self.operations['IndexedGetter'] is not None
+
+    def supportsNamedProperties(self):
+        return self.operations['NamedGetter'] is not None

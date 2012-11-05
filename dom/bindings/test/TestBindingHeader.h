@@ -641,6 +641,8 @@ public:
   virtual nsISupports* GetParentObject();
 
   void IndexedSetter(uint32_t, const nsAString&);
+  void IndexedGetter(uint32_t, bool&, nsString&);
+  uint32_t Length();
   void SetItem(uint32_t, const nsAString&);
 };
 
@@ -654,6 +656,7 @@ public:
   virtual nsISupports* GetParentObject();
 
   void NamedSetter(const nsAString&, TestIndexedSetterInterface&);
+  TestIndexedSetterInterface* NamedGetter(const nsAString&, bool&);
   void GetSupportedNames(nsTArray<nsString>&);
 };
 
@@ -667,7 +670,10 @@ public:
   virtual nsISupports* GetParentObject();
 
   void IndexedSetter(uint32_t, TestIndexedSetterInterface&);
+  TestIndexedSetterInterface* IndexedGetter(uint32_t, bool&);
+  uint32_t Length();
   void NamedSetter(const nsAString&, TestIndexedSetterInterface&);
+  TestIndexedSetterInterface* NamedGetter(const nsAString&, bool&);
   void SetNamedItem(const nsAString&, TestIndexedSetterInterface&);
   void GetSupportedNames(nsTArray<nsString>&);
 };
@@ -712,6 +718,8 @@ public:
 
   void IndexedDeleter(uint32_t, bool&);
   void IndexedDeleter(uint32_t) MOZ_DELETE;
+  long IndexedGetter(uint32_t, bool&);
+  uint32_t Length();
   void DelItem(uint32_t);
   void DelItem(uint32_t, bool&) MOZ_DELETE;
 };
@@ -727,6 +735,8 @@ public:
 
   bool IndexedDeleter(uint32_t, bool&);
   bool IndexedDeleter(uint32_t) MOZ_DELETE;
+  long IndexedGetter(uint32_t, bool&);
+  uint32_t Length();
   bool DelItem(uint32_t);
   bool DelItem(uint32_t, bool&) MOZ_DELETE;
 };
@@ -741,6 +751,7 @@ public:
   virtual nsISupports* GetParentObject();
 
   void NamedDeleter(const nsAString&, bool&);
+  long NamedGetter(const nsAString&, bool&);
   void GetSupportedNames(nsTArray<nsString>&);
 };
 
@@ -755,6 +766,7 @@ public:
 
   bool NamedDeleter(const nsAString&, bool&);
   bool NamedDeleter(const nsAString&) MOZ_DELETE;
+  long NamedGetter(const nsAString&, bool&);
   bool DelNamedItem(const nsAString&);
   bool DelNamedItem(const nsAString&, bool&) MOZ_DELETE;
   void GetSupportedNames(nsTArray<nsString>&);
@@ -770,9 +782,12 @@ public:
   virtual nsISupports* GetParentObject();
 
   void IndexedDeleter(uint32_t, bool&);
+  long IndexedGetter(uint32_t, bool&);
+  uint32_t Length();
 
   void NamedDeleter(const nsAString&, bool&);
   void NamedDeleter(const nsAString&) MOZ_DELETE;
+  long NamedGetter(const nsAString&, bool&);
   void DelNamedItem(const nsAString&);
   void DelNamedItem(const nsAString&, bool&) MOZ_DELETE;
   void GetSupportedNames(nsTArray<nsString>&);
