@@ -3021,7 +3021,7 @@ if (!returnArray) {
         if descriptor.interface.isCallback():
             wrap = "WrapCallbackInterface(cx, obj, %s, ${jsvalPtr})" % result
             failed = None
-        elif not descriptor.interface.isExternal():
+        elif not descriptor.interface.isExternal() and not descriptor.skipGen:
             if descriptor.wrapperCache:
                 wrapMethod = "WrapNewBindingObject"
             else:
@@ -6190,7 +6190,8 @@ class CGBindingRoot(CGThing):
     """
     def __init__(self, config, prefix, webIDLFile):
         descriptors = config.getDescriptors(webIDLFile=webIDLFile,
-                                            hasInterfaceOrInterfacePrototypeObject=True)
+                                            hasInterfaceOrInterfacePrototypeObject=True,
+                                            skipGen=False)
         dictionaries = config.getDictionaries(webIDLFile)
 
         forwardDeclares = [CGClassForwardDeclare('XPCWrappedNativeScope')]
