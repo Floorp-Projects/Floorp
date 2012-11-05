@@ -438,6 +438,7 @@ public:
   void SetAttrWithLenientThis(int32_t);
   uint32_t UnforgeableAttr();
   uint32_t UnforgeableAttr2();
+  void Stringify(nsString&);
   void PassRenamedInterface(nsRenamedInterface&);
   TestInterface* PutForwardsAttr();
   TestInterface* PutForwardsAttr2();
