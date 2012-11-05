@@ -41,7 +41,7 @@ public class Tab {
     private long mLastUsed;
     private String mUrl;
     private String mTitle;
-    private Drawable mFavicon;
+    private Bitmap mFavicon;
     private String mFaviconUrl;
     private int mFaviconSize;
     private JSONObject mIdentityData;
@@ -147,7 +147,7 @@ public class Tab {
         return mUrl;
     }
 
-    public Drawable getFavicon() {
+    public Bitmap getFavicon() {
         return mFavicon;
     }
 
@@ -325,7 +325,7 @@ public class Tab {
         return mFaviconLoadId;
     }
 
-    public void updateFavicon(Drawable favicon) {
+    public void updateFavicon(Bitmap favicon) {
         mFavicon = favicon;
     }
 

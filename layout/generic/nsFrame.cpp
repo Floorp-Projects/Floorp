@@ -6984,12 +6984,10 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       nsRect& o = aOverflowAreas.Overflow(otype);
       o = nsDisplayTransform::TransformRect(o, this, nsPoint(0, 0), &newBounds);
     }
-    if (sizeChanged) {
-      if (Preserves3DChildren()) {
-        ComputePreserve3DChildrenOverflow(aOverflowAreas, newBounds);
-      } else if (ChildrenHavePerspective()) {
-        RecomputePerspectiveChildrenOverflow(this->GetStyleContext(), &newBounds);
-      }
+    if ((sizeChanged || HasAnyStateBits(NS_FRAME_TRANSFORM_CHANGED)) && Preserves3DChildren()) {
+      ComputePreserve3DChildrenOverflow(aOverflowAreas, newBounds);
+    } else if (sizeChanged && ChildrenHavePerspective()) {
+      RecomputePerspectiveChildrenOverflow(this->GetStyleContext(), &newBounds);
     }
   } else {
     Properties().Delete(nsIFrame::PreTransformOverflowAreasProperty());
@@ -6998,6 +6996,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       RecomputePerspectiveChildrenOverflow(this->GetStyleContext(), &newBounds);
     }
   }
+  RemoveStateBits(NS_FRAME_TRANSFORM_CHANGED);
     
 
   bool anyOverflowChanged;
