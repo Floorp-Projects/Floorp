@@ -5271,6 +5271,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     "\n" +
                     "  %s* self = UnwrapProxy(proxy);\n" +
                     CGIndenter(CGProxyNamedSetter(self.descriptor)).define() + "\n" +
+                    "  return true;\n" +
                     "}\n") % (self.descriptor.nativeType)
         elif self.descriptor.operations['NamedGetter']:
             set += ("if (JSID_IS_STRING(id)) {\n" +
