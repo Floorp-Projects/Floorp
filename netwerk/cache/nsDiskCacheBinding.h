@@ -104,7 +104,9 @@ public:
     nsDiskCacheBinding *    FindActiveBinding(uint32_t  hashNumber);
     void                    RemoveBinding(nsDiskCacheBinding * binding);
     bool                    ActiveBindings();
-    
+
+    size_t                 SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf);
+
 private:
     nsresult                AddBinding(nsDiskCacheBinding * binding);
 

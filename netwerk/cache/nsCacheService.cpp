@@ -1060,11 +1060,22 @@ nsCacheService *   nsCacheService::gService = nullptr;
 static nsCOMPtr<nsIMemoryReporter> MemoryCacheReporter = nullptr;
 
 NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(NetworkMemoryCache,
-    "explicit/network-memory-cache",
+    "explicit/network/memory-cache",
     KIND_HEAP,
     UNITS_BYTES,
     nsCacheService::MemoryDeviceSize,
     "Memory used by the network memory cache.")
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(NetworkDiskCacheSizeOfFun, "network-disk-cache")
+
+static nsCOMPtr<nsIMemoryReporter> DiskCacheReporter = nullptr;
+
+NS_THREADSAFE_MEMORY_REPORTER_IMPLEMENT(NetworkDiskCache,
+    "explicit/network/disk-cache",
+    KIND_HEAP,
+    UNITS_BYTES,
+    nsCacheService::DiskDeviceHeapSize,
+    "Memory used by the network disk cache.")
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheService, nsICacheService)
 
@@ -1206,10 +1217,13 @@ nsCacheService::Shutdown()
         mObserver->Remove();
         NS_RELEASE(mObserver);
         
-        // unregister memory reporter, before deleting the memory device, just
+        // unregister memory reporters, before deleting the devices, just
         // to be safe
         NS_UnregisterMemoryReporter(MemoryCacheReporter);
         MemoryCacheReporter = nullptr;
+
+        NS_UnregisterMemoryReporter(DiskCacheReporter);
+        DiskCacheReporter = nullptr;
 
         // deallocate memory and disk caches
         delete mMemoryDevice;
@@ -1563,6 +1577,9 @@ nsCacheService::CreateDiskDevice()
     }
     // Ignore state of the timer and return success since the purpose of the
     // method (create the disk-device) has been fulfilled
+
+    DiskCacheReporter = new NS_MEMORY_REPORTER_NAME(NetworkDiskCache);
+    NS_RegisterMemoryReporter(DiskCacheReporter);
 
     return NS_OK;
 }
@@ -2234,6 +2251,14 @@ nsCacheService::MemoryDeviceSize()
 {
     nsMemoryCacheDevice *memoryDevice = GlobalInstance()->mMemoryDevice;
     return memoryDevice ? memoryDevice->TotalSize() : 0;
+}
+
+int64_t
+nsCacheService::DiskDeviceHeapSize()
+{
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_DISKDEVICEHEAPSIZE));
+    nsDiskCacheDevice *diskDevice = GlobalInstance()->mDiskDevice;
+    return (int64_t)(diskDevice ? diskDevice->SizeOfIncludingThis(NetworkDiskCacheSizeOfFun) : 0);
 }
 
 nsresult
