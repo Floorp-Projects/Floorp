@@ -24,6 +24,7 @@ webidl_files = \
   DOMImplementation.webidl \
   DOMTokenList.webidl \
   DOMSettableTokenList.webidl \
+  DOMStringMap.webidl \
   Function.webidl \
   EventHandler.webidl \
   EventListener.webidl \

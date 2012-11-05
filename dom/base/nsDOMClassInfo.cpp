@@ -111,8 +111,6 @@
 #include "nsIDOMDOMTokenList.h"
 #include "nsIDOMDOMSettableTokenList.h"
 
-#include "nsDOMStringMap.h"
-
 // HTMLFormElement helper includes
 #include "nsIForm.h"
 #include "nsIFormControl.h"
@@ -438,8 +436,6 @@
 #include "ArchiveReader.h"
 #include "ArchiveRequest.h"
 
-#include "nsIDOMDOMStringMap.h"
-
 #include "nsIDOMDesktopNotification.h"
 #include "nsIDOMNavigatorDesktopNotification.h"
 #include "nsIDOMNavigatorDeviceStorage.h"
@@ -615,14 +611,6 @@ static const char kDOMStringBundleURL[] =
   (DOM_DEFAULT_SCRIPTABLE_FLAGS       |                                       \
    nsIXPCScriptable::WANT_GETPROPERTY |                                       \
    nsIXPCScriptable::WANT_ENUMERATE)
-
-#define DOMSTRINGMAP_SCRIPTABLE_FLAGS                                         \
-  (DOM_DEFAULT_SCRIPTABLE_FLAGS       |                                       \
-   nsIXPCScriptable::WANT_ENUMERATE   |                                       \
-   nsIXPCScriptable::WANT_PRECREATE   |                                       \
-   nsIXPCScriptable::WANT_DELPROPERTY |                                       \
-   nsIXPCScriptable::WANT_SETPROPERTY |                                       \
-   nsIXPCScriptable::WANT_GETPROPERTY)
 
 #define EVENTTARGET_SCRIPTABLE_FLAGS                                          \
   (DOM_DEFAULT_SCRIPTABLE_FLAGS       |                                       \
@@ -1448,9 +1436,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozURLProperty, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(DOMStringMap, nsDOMStringMapSH,
-                           DOMSTRINGMAP_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(ModalContentWindow, nsWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
@@ -4009,10 +3994,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(MozURLProperty, nsIDOMMozURLProperty)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozURLProperty)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(DOMStringMap, nsIDOMDOMStringMap)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMStringMap)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ModalContentWindow, nsIDOMWindow)
@@ -8514,142 +8495,6 @@ nsNamedNodeMapSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
   nsINode *attr;
   *aCache = attr = map->GetNamedItem(aName, aResult);
   return attr;
-}
-
-
-NS_IMETHODIMP
-nsDOMStringMapSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                             JSObject *obj, jsid id, uint32_t flags,
-                             JSObject **objp, bool *_retval)
-{
-  nsCOMPtr<nsIDOMDOMStringMap> dataset(do_QueryWrappedNative(wrapper, obj));
-  NS_ENSURE_TRUE(dataset, NS_ERROR_UNEXPECTED);
-
-  nsAutoString prop;
-  NS_ENSURE_TRUE(JSIDToProp(id, prop), NS_ERROR_UNEXPECTED);
-
-  if (dataset->HasDataAttr(prop)) {
-    *_retval = JS_DefinePropertyById(cx, obj, id, JSVAL_VOID,
-                                     nullptr, nullptr,
-                                     JSPROP_ENUMERATE | JSPROP_SHARED); 
-    *objp = obj;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMStringMapSH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *obj, bool *_retval)
-{
-  nsCOMPtr<nsIDOMDOMStringMap> dataset(do_QueryWrappedNative(wrapper, obj));
-  NS_ENSURE_TRUE(dataset, NS_ERROR_UNEXPECTED);
-
-  nsDOMStringMap* stringMap = static_cast<nsDOMStringMap*>(dataset.get());
-  nsTArray<nsString> properties;
-  nsresult rv = stringMap->GetDataPropList(properties);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  for (uint32_t i = 0; i < properties.Length(); ++i) {
-    nsString& prop(properties[i]);
-    *_retval = JS_DefineUCProperty(cx, obj, prop.get(), prop.Length(),
-                                   JSVAL_VOID, nullptr, nullptr,
-                                   JSPROP_ENUMERATE | JSPROP_SHARED);
-    NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMStringMapSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
-                            JSObject *globalObj, JSObject **parentObj)
-{
-  nsDOMStringMap* map = nsDOMStringMap::FromSupports(nativeObj);
-  nsINode* native_parent = map->GetParentObject();
-  if (!native_parent) {
-    return nsDOMClassInfo::PreCreate(nativeObj, cx, globalObj, parentObj);
-  }
-
-  return WrapNativeParent(cx, globalObj, native_parent, parentObj);
-}
-
-NS_IMETHODIMP
-nsDOMStringMapSH::DelProperty(nsIXPConnectWrappedNative *wrapper,
-                              JSContext *cx, JSObject *obj, jsid id,
-                              jsval *vp, bool *_retval)
-{
-  nsCOMPtr<nsIDOMDOMStringMap> dataset(do_QueryWrappedNative(wrapper, obj));
-  NS_ENSURE_TRUE(dataset, NS_ERROR_UNEXPECTED);
-
-  nsAutoString prop;
-  NS_ENSURE_TRUE(JSIDToProp(id, prop), NS_ERROR_UNEXPECTED);
-
-  dataset->RemoveDataAttr(prop);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMStringMapSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                              JSObject *obj, jsid id, jsval *vp,
-                              bool *_retval)
-{
-  nsCOMPtr<nsIDOMDOMStringMap> dataset(do_QueryWrappedNative(wrapper, obj));
-  NS_ENSURE_TRUE(dataset, NS_ERROR_UNEXPECTED);
-
-  nsAutoString propName;
-  NS_ENSURE_TRUE(JSIDToProp(id, propName), NS_ERROR_UNEXPECTED);
-
-  nsAutoString propVal;
-  nsresult rv = dataset->GetDataAttr(propName, propVal);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (propVal.IsVoid()) {
-    *vp = JSVAL_VOID;
-    return NS_SUCCESS_I_DID_SOMETHING;
-  }
-
-  NS_ENSURE_TRUE(xpc::NonVoidStringToJsval(cx, propVal, vp),
-                 NS_ERROR_OUT_OF_MEMORY);
-  return NS_SUCCESS_I_DID_SOMETHING;
-}
-
-NS_IMETHODIMP
-nsDOMStringMapSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                              JSObject *obj, jsid id, jsval *vp,
-                              bool *_retval)
-{
-  nsCOMPtr<nsIDOMDOMStringMap> dataset(do_QueryWrappedNative(wrapper, obj));
-  NS_ENSURE_TRUE(dataset, NS_ERROR_UNEXPECTED);
-
-  nsAutoString propName;
-  NS_ENSURE_TRUE(JSIDToProp(id, propName), NS_ERROR_UNEXPECTED);
-
-  JSString *val = JS_ValueToString(cx, *vp);
-  NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
-
-  nsDependentJSString propVal;
-  NS_ENSURE_TRUE(propVal.init(cx, val), NS_ERROR_UNEXPECTED);
-
-  nsresult rv = dataset->SetDataAttr(propName, propVal);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_SUCCESS_I_DID_SOMETHING;
-}
-
-bool
-nsDOMStringMapSH::JSIDToProp(const jsid& aId, nsAString& aResult)
-{
-  if (JSID_IS_INT(aId)) {
-    aResult.AppendInt(JSID_TO_INT(aId));
-  } else if (JSID_IS_STRING(aId)) {
-    aResult = nsDependentJSString(aId);
-  } else {
-    return false;
-  }
-
-  return true;
 }
 
 // Can't be static so GetterShim will compile
