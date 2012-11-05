@@ -22,7 +22,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -269,11 +268,10 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             final String url = mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.URL));
 
             Favicons favicons = GeckoApp.mAppContext.getFavicons();
-            Drawable faviconDrawable = favicons.getFaviconFromMemCache(url);
+            Bitmap bitmap = favicons.getFaviconFromMemCache(url);
             byte[] favicon = null;
 
-            if (faviconDrawable != null) {
-                Bitmap bitmap = ((BitmapDrawable) faviconDrawable).getBitmap();
+            if (bitmap != null) {
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
                 favicon = stream.toByteArray();
@@ -782,8 +780,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                 if (favicon == null)
                     continue;
 
-                Drawable faviconDrawable = new BitmapDrawable(getResources(), favicon);
-                favicons.putFaviconInMemCache(url, faviconDrawable);
+                favicons.putFaviconInMemCache(url, favicon);
             } while (c.moveToNext());
         } finally {
             if (c != null)
@@ -813,7 +810,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     private void displayFavicon(AwesomeEntryViewHolder viewHolder) {
         final String url = viewHolder.urlView.getText().toString();
         Favicons favicons = GeckoApp.mAppContext.getFavicons();
-        viewHolder.faviconView.setImageDrawable(favicons.getFaviconFromMemCache(url));
+        viewHolder.faviconView.setImageBitmap(favicons.getFaviconFromMemCache(url));
     }
 
     private void updateFavicons() {
