@@ -259,7 +259,7 @@ if (DEBUG)
 else
   debug = function (s) {};
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([nsFilePicker]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsFilePicker]);
 
 /* crap from strres.js that I want to use for string bundles since I can't include another .js file.... */
 

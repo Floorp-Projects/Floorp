@@ -244,7 +244,7 @@ BluetoothScoManager::Listen()
   nsresult rv = bs->ListenSocketViaService(-1,
                                            BluetoothSocketType::SCO,
                                            true,
-                                           false,
+                                           true,
                                            this);
 
   mSocketStatus = GetConnectionStatus();

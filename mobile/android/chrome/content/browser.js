@@ -171,6 +171,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Reload", false);
     Services.obs.addObserver(this, "Session:Stop", false);
+    Services.obs.addObserver(this, "Session:Restore", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
     Services.obs.addObserver(this, "Browser:Quit", false);
     Services.obs.addObserver(this, "Preferences:Get", false);
@@ -183,6 +184,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "ToggleProfiling", false);
+    Services.obs.addObserver(this, "gather-telemetry", false);
 
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
@@ -215,6 +217,7 @@ var BrowserApp = {
 
     NativeWindow.init();
     SelectionHandler.init();
+    LightWeightThemeWebInstaller.init();
     Downloads.init();
     FindHelper.init();
     FormAssistant.init();
@@ -233,6 +236,7 @@ var BrowserApp = {
     ExternalApps.init();
     MemoryObserver.init();
     Distribution.init();
+    Tabs.init();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.init();
 #endif
@@ -246,19 +250,16 @@ var BrowserApp = {
     Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
     let url = null;
-    let restoreMode = 0;
     let pinned = false;
     if ("arguments" in window) {
       if (window.arguments[0])
         url = window.arguments[0];
       if (window.arguments[1])
-        restoreMode = window.arguments[1];
+        gScreenWidth = window.arguments[1];
       if (window.arguments[2])
-        gScreenWidth = window.arguments[2];
+        gScreenHeight = window.arguments[2];
       if (window.arguments[3])
-        gScreenHeight = window.arguments[3];
-      if (window.arguments[4])
-        pinned = window.arguments[4];
+        pinned = window.arguments[3];
     }
 
     let updated = this.isAppUpdated();
@@ -277,48 +278,9 @@ var BrowserApp = {
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
 
-    // Restore the previous session
-    // restoreMode = 0 means no restore
-    // restoreMode = 1 means force restore (after an OOM kill)
-    // restoreMode = 2 means restore only if we haven't crashed multiple times
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    if (restoreMode || ss.shouldRestore()) {
-      // A restored tab should not be active if we are loading a URL
-      let restoreToFront = false;
-
-      sendMessageToJava({
-        gecko: {
-          type: "Session:RestoreBegin"
-        }
-      });
-
-      // Make the restored tab active if we aren't loading an external URL
-      if (url == null) {
-        restoreToFront = true;
-      }
-
-      // Be ready to handle any restore failures by making sure we have a valid tab opened
-      let restoreCleanup = {
-        observe: function(aSubject, aTopic, aData) {
-          Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
-          if (aData == "fail") {
-            BrowserApp.addTab("about:home", {
-              showProgress: false,
-              selected: restoreToFront
-            });
-          }
-
-          sendMessageToJava({
-            gecko: {
-              type: "Session:RestoreEnd"
-            }
-          });
-        }
-      };
-      Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
-
-      // Start the restore
-      ss.restoreLastSession(restoreToFront, restoreMode == 1);
+    if (ss.shouldRestore()) {
+      this.restoreSession(false, null);
     }
 
     if (updated)
@@ -343,6 +305,39 @@ var BrowserApp = {
     // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
     setTimeout(function() { SafeBrowsing.init(); }, 5000);
 #endif
+  },
+
+  restoreSession: function (restoringOOM, sessionString) {
+    sendMessageToJava({
+      gecko: {
+        type: "Session:RestoreBegin"
+      }
+    });
+
+    // Be ready to handle any restore failures by making sure we have a valid tab opened
+    let restoreCleanup = {
+      observe: function (aSubject, aTopic, aData) {
+        Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
+
+        if (this.tabs.length == 0) {
+          this.addTab("about:home", {
+            showProgress: false,
+            selected: true
+          });
+        }
+
+        sendMessageToJava({
+          gecko: {
+            type: "Session:RestoreEnd"
+          }
+        });
+      }.bind(this)
+    };
+    Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
+
+    // Start the restore
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    ss.restoreLastSession(restoringOOM, sessionString);
   },
 
   isAppUpdated: function() {
@@ -501,6 +496,7 @@ var BrowserApp = {
   shutdown: function shutdown() {
     NativeWindow.uninit();
     SelectionHandler.uninit();
+    LightWeightThemeWebInstaller.uninit();
     FormAssistant.uninit();
     FindHelper.uninit();
     OfflineApps.uninit();
@@ -517,6 +513,7 @@ var BrowserApp = {
     ExternalApps.uninit();
     MemoryObserver.uninit();
     Distribution.uninit();
+    Tabs.uninit();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.uninit();
 #endif
@@ -676,7 +673,7 @@ var BrowserApp = {
     evt.initUIEvent("TabOpen", true, false, window, null);
     newTab.browser.dispatchEvent(evt);
 
-    Tabs.zombifyLru();
+    Tabs.expireLruTab();
 
     return newTab;
   },
@@ -1073,13 +1070,16 @@ var BrowserApp = {
       if (data.userEntered)
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
 
+      let delayLoad = ("delayLoad" in data) ? data.delayLoad : false;
       let params = {
-        selected: true,
+        selected: !delayLoad,
         parentId: ("parentId" in data) ? data.parentId : -1,
         flags: flags,
         tabID: data.tabID,
-        isPrivate: data.isPrivate,
-        pinned: data.pinned
+        isPrivate: (data.isPrivate == true),
+        pinned: (data.pinned == true),
+        delayLoad: (delayLoad == true),
+        desktopMode: (data.desktopMode == true)
       };
 
       let url = data.url;
@@ -1146,6 +1146,11 @@ var BrowserApp = {
       } else {
         profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
       }
+    } else if (aTopic == "gather-telemetry") {
+      sendMessageToJava({ gecko: { type: "Telemetry:Gather" }});
+    } else if (aTopic == "Session:Restore") {
+      let data = JSON.parse(aData);
+      this.restoreSession(data.restoringOOM, data.sessionString);
     }
   },
 
@@ -1749,7 +1754,8 @@ var SelectionHandler = {
     return !(aElement instanceof Ci.nsIDOMHTMLButtonElement ||
              aElement instanceof Ci.nsIDOMHTMLEmbedElement ||
              aElement instanceof Ci.nsIDOMHTMLImageElement ||
-             aElement instanceof Ci.nsIDOMHTMLMediaElement);
+             aElement instanceof Ci.nsIDOMHTMLMediaElement) &&
+             aElement.style.MozUserSelect != 'none';
   },
 
   // aX/aY are in top-level window browser coordinates
@@ -1982,8 +1988,8 @@ var SelectionHandler = {
   updateCacheForSelection: function sh_updateCacheForSelection(aIsStartHandle) {
     let selection = this.getSelection();
     let rects = selection.getRangeAt(0).getClientRects();
-    let start = { x: rects[0].left, y: rects[0].bottom };
-    let end = { x: rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
+    let start = { x: this._isRTL ? rects[0].right : rects[0].left, y: rects[0].bottom };
+    let end = { x: this._isRTL ? rects[rects.length - 1].left : rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
 
     let selectionReversed = false;
     if (this.cache.start) {
@@ -2081,7 +2087,8 @@ var SelectionHandler = {
     sendMessageToJava({
       gecko: {
         type: "TextSelection:PositionHandles",
-        positions: positions
+        positions: positions,
+        rtl: this._isRTL
       }
     });
   },
@@ -2107,6 +2114,153 @@ var SelectionHandler = {
       }
       view = view.parent;
     }
+  }
+};
+
+var LightWeightThemeWebInstaller = {
+  init: function sh_init() {
+    let temp = {};
+    Cu.import("resource://gre/modules/LightweightThemeConsumer.jsm", temp);
+    let theme = new temp.LightweightThemeConsumer(document);
+    BrowserApp.deck.addEventListener("InstallBrowserTheme", this, false, true);
+    BrowserApp.deck.addEventListener("PreviewBrowserTheme", this, false, true);
+    BrowserApp.deck.addEventListener("ResetBrowserThemePreview", this, false, true);
+  },
+
+  uninit: function() {
+    BrowserApp.deck.addEventListener("InstallBrowserTheme", this, false, true);
+    BrowserApp.deck.addEventListener("PreviewBrowserTheme", this, false, true);
+    BrowserApp.deck.addEventListener("ResetBrowserThemePreview", this, false, true);
+  },
+
+  handleEvent: function (event) {
+    switch (event.type) {
+      case "InstallBrowserTheme":
+      case "PreviewBrowserTheme":
+      case "ResetBrowserThemePreview":
+        // ignore requests from background tabs
+        if (event.target.ownerDocument.defaultView.top != content)
+          return;
+    }
+
+    switch (event.type) {
+      case "InstallBrowserTheme":
+        this._installRequest(event);
+        break;
+      case "PreviewBrowserTheme":
+        this._preview(event);
+        break;
+      case "ResetBrowserThemePreview":
+        this._resetPreview(event);
+        break;
+      case "pagehide":
+      case "TabSelect":
+        this._resetPreview();
+        break;
+    }
+  },
+
+  get _manager () {
+    let temp = {};
+    Cu.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
+    delete this._manager;
+    return this._manager = temp.LightweightThemeManager;
+  },
+
+  _installRequest: function (event) {
+    let node = event.target;
+    let data = this._getThemeFromNode(node);
+    if (!data)
+      return;
+
+    if (this._isAllowed(node)) {
+      this._install(data);
+      return;
+    }
+
+    let allowButtonText = Strings.browser.GetStringFromName("lwthemeInstallRequest.allowButton");
+    let message = Strings.browser.formatStringFromName("lwthemeInstallRequest.message", [node.ownerDocument.location.hostname], 1);
+    let buttons = [{
+      label: allowButtonText,
+      callback: function () {
+        LightWeightThemeWebInstaller._install(data);
+      }
+    }];
+
+    NativeWindow.doorhanger.show(message, "Personas", buttons, BrowserApp.selectedTab.id);
+  },
+
+  _install: function (newLWTheme) {
+    let previousLWTheme = this._manager.currentTheme;
+
+    let listener = {
+      onEnabled: function(aAddon) {
+        LightWeightThemeWebInstaller._postInstallNotification(newLWTheme, previousLWTheme);
+      }
+    };
+
+    AddonManager.addAddonListener(listener);
+    this._manager.currentTheme = newLWTheme;
+    AddonManager.removeAddonListener(listener);
+  },
+
+  _postInstallNotification: function (newTheme, previousTheme) {
+    let buttons = [{
+      label: Strings.browser.GetStringFromName("lwthemePostInstallNotification.undoButton"),
+      callback: function () {
+        LightWeightThemeWebInstaller._manager.forgetUsedTheme(newTheme.id);
+        LightWeightThemeWebInstaller._manager.currentTheme = previousTheme;
+      }
+    }, {
+      label: Strings.browser.GetStringFromName("lwthemePostInstallNotification.manageButton"),
+      callback: function () {
+        BrowserApp.addTab("about:addons", {
+          showProgress: false,
+          selected: true
+        });
+      }
+    }];
+
+    let message = Strings.browser.GetStringFromName("lwthemePostInstallNotification.message"); 
+    NativeWindow.doorhanger.show(message, "Personas", buttons, BrowserApp.selectedTab.id);
+  },
+
+  _previewWindow: null,
+  _preview: function (event) {
+    if (!this._isAllowed(event.target))
+      return;
+    let data = this._getThemeFromNode(event.target);
+    if (!data)
+      return;
+    this._resetPreview();
+
+    this._previewWindow = event.target.ownerDocument.defaultView;
+    this._previewWindow.addEventListener("pagehide", this, true);
+    BrowserApp.deck.addEventListener("TabSelect", this, false);
+    this._manager.previewTheme(data);
+  },
+
+  _resetPreview: function (event) {
+    if (!this._previewWindow ||
+        event && !this._isAllowed(event.target))
+      return;
+
+    this._previewWindow.removeEventListener("pagehide", this, true);
+    this._previewWindow = null;
+    BrowserApp.deck.removeEventListener("TabSelect", this, false);
+
+    this._manager.resetPreview();
+  },
+
+  _isAllowed: function (node) {
+    let pm = Services.perms;
+
+    let uri = node.ownerDocument.documentURIObject;
+    return pm.testPermission(uri, "install") == pm.ALLOW_ACTION;
+  },
+
+  _getThemeFromNode: function (node) {
+    return this._manager.parseTheme(node.getAttribute("data-browsertheme"), node.baseURI);
   }
 };
 
@@ -2341,6 +2495,7 @@ Tab.prototype = {
 
     // only set tab uri if uri is valid
     let uri = null;
+    let title = aParams.title || aURL;
     try {
       uri = Services.io.newURI(aURL, null, null).spec;
     } catch (e) {}
@@ -2366,7 +2521,7 @@ Tab.prototype = {
           parentId: ("parentId" in aParams) ? aParams.parentId : -1,
           external: ("external" in aParams) ? aParams.external : false,
           selected: ("selected" in aParams) ? aParams.selected : true,
-          title: aParams.title || aURL,
+          title: title,
           delayLoad: aParams.delayLoad || false,
           desktopMode: this.desktopMode,
           isPrivate: isPrivate
@@ -2400,7 +2555,18 @@ Tab.prototype = {
     Services.obs.addObserver(this, "before-first-paint", false);
     Services.prefs.addObserver("browser.ui.zoom.force-user-scalable", this, false);
 
-    if (!aParams.delayLoad) {
+    if (aParams.delayLoad) {
+      // If this is a zombie tab, attach restore data so the tab will be
+      // restored when selected
+      this.browser.__SS_data = {
+        entries: [{
+          url: aURL,
+          title: title
+        }],
+        index: 1
+      };
+      this.browser.__SS_restore = true;
+    } else {
       let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
       let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
       let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
@@ -5834,11 +6000,13 @@ var PermissionsHelper = {
       case "Permissions:Clear":
         // An array of the indices of the permissions we want to clear
         let permissionsToClear = JSON.parse(aData);
+        let privacyContext = BrowserApp.selectedBrowser.docShell
+                               .QueryInterface(Ci.nsILoadContext);
 
         for (let i = 0; i < permissionsToClear.length; i++) {
           let indexToClear = permissionsToClear[i];
           let permissionType = this._currentPermissions[indexToClear]["type"];
-          this.clearPermission(uri, permissionType);
+          this.clearPermission(uri, permissionType, privacyContext);
         }
         break;
     }
@@ -5883,7 +6051,7 @@ var PermissionsHelper = {
    *        The permission type string stored in permission manager.
    *        e.g. "geolocation", "indexedDB", "popup"
    */
-  clearPermission: function clearPermission(aURI, aType) {
+  clearPermission: function clearPermission(aURI, aType, aContext) {
     // Password saving isn't a nsIPermissionManager permission type, so handle
     // it seperately.
     if (aType == "password") {
@@ -5897,7 +6065,7 @@ var PermissionsHelper = {
     } else {
       Services.perms.remove(aURI.host, aType);
       // Clear content prefs set in ContentPermissionPrompt.js
-      Services.contentPrefs.removePref(aURI, aType + ".request.remember");
+      Services.contentPrefs.removePref(aURI, aType + ".request.remember", aContext);
     }
   }
 };
@@ -6423,6 +6591,10 @@ var ActivityObserver = {
     let isForeground = false
     switch (aTopic) {
       case "application-background" :
+        let doc = BrowserApp.selectedTab.browser.contentDocument;
+        if (doc.mozFullScreen) {
+          doc.mozCancelFullScreen();
+        }
         isForeground = false;
         break;
       case "application-foreground" :
@@ -6933,10 +7105,7 @@ var Telemetry = {
       link: {
         label: learnMoreLabel,
         url: learnMoreUrl
-      },
-      // We're adding this doorhanger during startup, before the initial onLocationChange
-      // event fires, so we need to set persistence to make sure it doesn't disappear.
-      persistence: 1
+      }
     };
     NativeWindow.doorhanger.show(message, "telemetry-optin", buttons, BrowserApp.selectedTab.id, options);
   },
@@ -7469,8 +7638,8 @@ var MemoryObserver = {
   },
 
   dumpMemoryStats: function(aLabel) {
-    let memMgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
-    memMgr.dumpMemoryReportsToFile(aLabel, false, true);
+    let memDumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
+    memDumper.dumpMemoryReportsToFile(aLabel, false, true);
   },
 };
 
@@ -7545,13 +7714,43 @@ var Tabs = {
   // of tabs. Each tab has a timestamp associated with it that indicates when
   // it was last touched.
 
+  _enableTabExpiration: false,
+
+  init: function() {
+    // on low-memory platforms, always allow tab expiration. on high-mem
+    // platforms, allow it to be turned on once we hit a low-mem situation
+    if (Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory).isLowMemoryPlatform()) {
+      this._enableTabExpiration = true;
+    } else {
+      Services.obs.addObserver(this, "memory-pressure", false);
+    }
+  },
+
+  uninit: function() {
+    if (!this._enableTabExpiration) {
+      // if _enableTabExpiration is true then we won't have this
+      // observer registered any more.
+      Services.obs.removeObserver(this, "memory-pressure");
+    }
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "memory-pressure" && aData != "heap-minimize") {
+      this._enableTabExpiration = true;
+      Services.obs.removeObserver(this, "memory-pressure");
+    }
+  },
+
   touch: function(aTab) {
     aTab.lastTouchedAt = Date.now();
   },
 
-  zombifyLru: function() {
-    let zombieTimeMs = Services.prefs.getIntPref("browser.tabs.zombieTime") * 1000;
-    if (zombieTimeMs < 0) {
+  expireLruTab: function() {
+    if (!this._enableTabExpiration) {
+      return false;
+    }
+    let expireTimeMs = Services.prefs.getIntPref("browser.tabs.expireTime") * 1000;
+    if (expireTimeMs < 0) {
       // this behaviour is disabled
       return false;
     }
@@ -7568,9 +7767,9 @@ var Tabs = {
         lruTab = tabs[i];
       }
     }
-    // if the tab was last touched more than browser.tabs.zombieTime seconds ago,
+    // if the tab was last touched more than browser.tabs.expireTime seconds ago,
     // zombify it
-    if (lruTab && (Date.now() - lruTab.lastTouchedAt) > zombieTimeMs) {
+    if (lruTab && (Date.now() - lruTab.lastTouchedAt) > expireTimeMs) {
       MemoryObserver.zombify(lruTab);
       return true;
     }

@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 
 #include "mock_Link.h"
+using namespace mozilla;
 using namespace mozilla::dom;
 
 /**

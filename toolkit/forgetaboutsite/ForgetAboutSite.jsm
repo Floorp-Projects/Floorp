@@ -4,7 +4,7 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["ForgetAboutSite"];
+this.EXPORTED_SYMBOLS = ["ForgetAboutSite"];
 
 /**
  * Returns true if the string passed in is part of the root domain of the
@@ -35,7 +35,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-var ForgetAboutSite = {
+this.ForgetAboutSite = {
   removeDataFromDomain: function CRH_removeDataFromDomain(aDomain)
   {
     // clear any and all network geolocation provider sessions
@@ -197,10 +197,10 @@ var ForgetAboutSite = {
       // Now, for each name we got back, remove all of its prefs.
       for (let i = 0; i < names.length; i++) {
         let uri = names[i];
-        let enumerator = cp.getPrefs(uri).enumerator;
+        let enumerator = cp.getPrefs(uri, null).enumerator;
         while (enumerator.hasMoreElements()) {
           let pref = enumerator.getNext().QueryInterface(Ci.nsIProperty);
-          cp.removePref(uri, pref.name);
+          cp.removePref(uri, pref.name, null);
         }
       }
     }

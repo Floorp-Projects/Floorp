@@ -376,12 +376,19 @@
       * as per winapi function |CreateDirectory|. If unspecified,
       * use the default security descriptor, inherited from the
       * parent directory.
+      * - {bool} ignoreExisting If |true|, do not fail if the
+      * directory already exists.
       */
      File.makeDir = function makeDir(path, options) {
        options = options || noOptions;
        let security = options.winSecurity || null;
-       throw_on_zero("makeDir",
-         WinFile.CreateDirectory(path, security));
+       let result = WinFile.CreateDirectory(path, security);
+       if (result ||
+           options.ignoreExisting &&
+           ctypes.winLastError == OS.Constants.Win.ERROR_ALREADY_EXISTS) {
+        return;
+       }
+       throw new File.Error("makeDir");
      };
 
      /**

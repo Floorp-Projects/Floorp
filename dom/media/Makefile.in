@@ -47,5 +47,9 @@ LOCAL_INCLUDES += \
 DIRS += bridge
 endif
 
+TEST_DIRS += \
+  tests/mochitest \
+  $(NULL)
+
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk

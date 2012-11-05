@@ -102,6 +102,10 @@ function disableLogging()
 {
   gAccRetrieval.setLogging("");
 }
+function isLogged(aModule)
+{
+  return gAccRetrieval.isLogged(aModule);
+}
 
 /**
  * Invokes the given function when document is loaded and focused. Preferable

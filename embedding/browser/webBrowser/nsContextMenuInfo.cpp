@@ -305,7 +305,7 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgIR
           NS_ENSURE_TRUE(il, NS_ERROR_FAILURE);
 
           return il->LoadImage(bgUri, nullptr, nullptr, principal, nullptr,
-                               nullptr, nullptr, nsIRequest::LOAD_NORMAL, nullptr,
+                               nullptr, nullptr, nsIRequest::LOAD_NORMAL,
                                nullptr, channelPolicy, aRequest);
         }
       }

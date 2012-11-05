@@ -25,8 +25,8 @@
 
 #include "prlog.h"
 #ifdef PR_LOGGING 
-extern PRLogModuleInfo * kLayoutPrintingLogMod;
-#define PR_PL(_p1)  PR_LOG(kLayoutPrintingLogMod, PR_LOG_DEBUG, _p1)
+extern PRLogModuleInfo *GetLayoutPrintingLog();
+#define PR_PL(_p1)  PR_LOG(GetLayoutPrintingLog(), PR_LOG_DEBUG, _p1)
 #else
 #define PR_PL(_p1)
 #endif
@@ -381,7 +381,7 @@ PruneDisplayListForExtraPage(nsDisplayListBuilder* aBuilder,
     nsDisplayItem* i = aList->RemoveBottom();
     if (!i)
       break;
-    nsDisplayList* subList = i->GetList();
+    nsDisplayList* subList = i->GetSameCoordinateSystemChildren();
     if (subList) {
       PruneDisplayListForExtraPage(aBuilder, aPage, aExtraPage, aY, subList);
       nsDisplayItem::Type type = i->GetType();

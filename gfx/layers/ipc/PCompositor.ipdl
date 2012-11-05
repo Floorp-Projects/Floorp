@@ -30,6 +30,9 @@ rpc protocol PCompositor
 
 parent:  
 
+  // Release disposable memory. This will clear the tile store (stale tiles).
+  async MemoryPressure();
+
   // The child is about to be destroyed, so perform any necessary cleanup.
   sync WillStop();
 

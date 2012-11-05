@@ -50,7 +50,8 @@ fails-if(Android) != text-font-lang.html text-font-lang-notref.html
 == strokeText-path.html strokeText-path-ref.html
 
 # check that emoji character renders as something non-blank (for Apple Color Emoji font, bug 715798)
-random-if(!cocoaWidget) fails-if(OSX==10.6) random-if(OSX==10.7) != text-emoji.html text-emoji-notref.html
+# apparently fails on some 10.7 systems for unknown reasons, bug 804522.
+random-if(OSX==10.7) != text-emoji.html text-emoji-notref.html
 
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
 # so we have less control over degenerate behaviour as tested by this
@@ -90,3 +91,5 @@ fails-if(OSX==10.6) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gra
 
 # You get a little bit of rounding fuzz on OSX from transforming the paths between user space and device space
 fuzzy-if(azureQuartz,2,113) fuzzy-if(d2d,12,17) == 784573-1.html 784573-1-ref.html
+
+== 802658-1.html 802658-1-ref.html

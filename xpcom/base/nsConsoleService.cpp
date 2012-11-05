@@ -208,7 +208,7 @@ nsConsoleService::LogStringMessage(const PRUnichar *message)
 }
 
 NS_IMETHODIMP
-nsConsoleService::GetMessageArray(nsIConsoleMessage ***messages, uint32_t *count)
+nsConsoleService::GetMessageArray(uint32_t *count, nsIConsoleMessage ***messages)
 {
     nsIConsoleMessage **messageArray;
 

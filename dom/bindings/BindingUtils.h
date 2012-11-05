@@ -68,6 +68,7 @@ ThrowMethodFailedWithDetails(JSContext* cx, const ErrorResult& rv,
   return Throw<mainThread>(cx, rv.ErrorCode());
 }
 
+// Returns true if the JSClass is used for DOM objects.
 inline bool
 IsDOMClass(const JSClass* clasp)
 {
@@ -78,6 +79,20 @@ inline bool
 IsDOMClass(const js::Class* clasp)
 {
   return IsDOMClass(Jsvalify(clasp));
+}
+
+// Returns true if the JSClass is used for DOM interface and interface 
+// prototype objects.
+inline bool
+IsDOMIfaceAndProtoClass(const JSClass* clasp)
+{
+  return clasp->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS;
+}
+
+inline bool
+IsDOMIfaceAndProtoClass(const js::Class* clasp)
+{
+  return IsDOMIfaceAndProtoClass(Jsvalify(clasp));
 }
 
 // It's ok for eRegularDOMObject and eProxyDOMObject to be the same, but
@@ -168,9 +183,7 @@ inline bool
 IsDOMObject(JSObject* obj)
 {
   js::Class* clasp = js::GetObjectClass(obj);
-  return IsDOMClass(clasp) ||
-         ((js::IsObjectProxyClass(clasp) || js::IsFunctionProxyClass(clasp)) &&
-          js::GetProxyHandler(obj)->family() == ProxyFamily());
+  return IsDOMClass(clasp) || IsDOMProxy(obj, clasp);
 }
 
 // Some callers don't want to set an exception when unwrapping fails
@@ -275,53 +288,52 @@ UnwrapObject(JSContext* cx, JSObject* obj, U& value)
            PrototypeIDMap<T>::PrototypeID), T>(cx, obj, value);
 }
 
-const size_t kProtoOrIfaceCacheCount =
-  prototypes::id::_ID_Count + constructors::id::_ID_Count;
+// The items in the protoAndIfaceArray are indexed by the prototypes::id::ID and
+// constructors::id::ID enums, in that order. The end of the prototype objects
+// should be the start of the interface objects.
+MOZ_STATIC_ASSERT((size_t)constructors::id::_ID_Start ==
+                  (size_t)prototypes::id::_ID_Count,
+                  "Overlapping or discontiguous indexes.");
+const size_t kProtoAndIfaceCacheCount = constructors::id::_ID_Count;
 
 inline void
-AllocateProtoOrIfaceCache(JSObject* obj)
+AllocateProtoAndIfaceCache(JSObject* obj)
 {
   MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
   MOZ_ASSERT(js::GetReservedSlot(obj, DOM_PROTOTYPE_SLOT).isUndefined());
 
   // Important: The () at the end ensure zero-initialization
-  JSObject** protoOrIfaceArray = new JSObject*[kProtoOrIfaceCacheCount]();
+  JSObject** protoAndIfaceArray = new JSObject*[kProtoAndIfaceCacheCount]();
 
   js::SetReservedSlot(obj, DOM_PROTOTYPE_SLOT,
-                      JS::PrivateValue(protoOrIfaceArray));
+                      JS::PrivateValue(protoAndIfaceArray));
 }
 
 inline void
-TraceProtoOrIfaceCache(JSTracer* trc, JSObject* obj)
+TraceProtoAndIfaceCache(JSTracer* trc, JSObject* obj)
 {
   MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
 
-  if (!HasProtoOrIfaceArray(obj))
+  if (!HasProtoAndIfaceArray(obj))
     return;
-  JSObject** protoOrIfaceArray = GetProtoOrIfaceArray(obj);
-  for (size_t i = 0; i < kProtoOrIfaceCacheCount; ++i) {
-    JSObject* proto = protoOrIfaceArray[i];
+  JSObject** protoAndIfaceArray = GetProtoAndIfaceArray(obj);
+  for (size_t i = 0; i < kProtoAndIfaceCacheCount; ++i) {
+    JSObject* proto = protoAndIfaceArray[i];
     if (proto) {
-      JS_CALL_OBJECT_TRACER(trc, proto, "protoOrIfaceArray[i]");
+      JS_CALL_OBJECT_TRACER(trc, proto, "protoAndIfaceArray[i]");
     }
   }
 }
 
 inline void
-DestroyProtoOrIfaceCache(JSObject* obj)
+DestroyProtoAndIfaceCache(JSObject* obj)
 {
   MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
 
-  JSObject** protoOrIfaceArray = GetProtoOrIfaceArray(obj);
+  JSObject** protoAndIfaceArray = GetProtoAndIfaceArray(obj);
 
-  delete [] protoOrIfaceArray;
+  delete [] protoAndIfaceArray;
 }
-
-struct ConstantSpec
-{
-  const char* name;
-  JS::Value value;
-};
 
 /**
  * Add constants to an object.
@@ -329,33 +341,10 @@ struct ConstantSpec
 bool
 DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs);
 
-template<typename T>
-struct Prefable {
-  // A boolean indicating whether this set of specs is enabled
-  bool enabled;
-  // Array of specs, terminated in whatever way is customary for T.
-  // Null to indicate a end-of-array for Prefable, when such an
-  // indicator is needed.
-  T* specs;
-};
-
-struct NativeProperties
+struct JSNativeHolder
 {
-  Prefable<JSFunctionSpec>* staticMethods;
-  jsid* staticMethodIds;
-  JSFunctionSpec* staticMethodsSpecs;
-  Prefable<JSFunctionSpec>* methods;
-  jsid* methodIds;
-  JSFunctionSpec* methodsSpecs;
-  Prefable<JSPropertySpec>* attributes;
-  jsid* attributeIds;
-  JSPropertySpec* attributeSpecs;
-  Prefable<JSPropertySpec>* unforgeableAttributes;
-  jsid* unforgeableAttributeIds;
-  JSPropertySpec* unforgeableAttributeSpecs;
-  Prefable<ConstantSpec>* constants;
-  jsid* constantIds;
-  ConstantSpec* constantSpecs;
+  JSNative mNative;
+  const NativePropertyHooks* mPropertyHooks;
 };
 
 /*
@@ -364,21 +353,24 @@ struct NativeProperties
  *
  * global is used as the parent of the interface object and the interface
  *        prototype object
- * receiver is the object on which we need to define the interface object as a
- *          property
  * protoProto is the prototype to use for the interface prototype object.
  * protoClass is the JSClass to use for the interface prototype object.
  *            This is null if we should not create an interface prototype
  *            object.
+ * protoCache a pointer to a JSObject pointer where we should cache the
+ *            interface prototype object. This must be null if protoClass is and
+ *            vice versa.
  * constructorClass is the JSClass to use for the interface object.
  *                  This is null if we should not create an interface object or
  *                  if it should be a function object.
- * constructor is the JSNative to use as a constructor.  If this is non-null, it
- *             should be used as a JSNative to back the interface object, which
- *             should be a Function.  If this is null, then we should create an
- *             object of constructorClass, unless that's also null, in which
- *             case we should not create an interface object at all.
+ * constructor holds the JSNative to back the interface object which should be a
+ *             Function, unless constructorClass is non-null in which case it is
+ *             ignored. If this is null and constructorClass is also null then
+ *             we should not create an interface object at all.
  * ctorNargs is the length of the constructor function; 0 if no constructor
+ * constructorCache a pointer to a JSObject pointer where we should cache the
+ *                  interface object. This must be null if both constructorClass
+ *                  and constructor are null, and non-null otherwise.
  * domClass is the DOMClass of instance objects for this class.  This can be
  *          null if this is not a concrete proto.
  * properties contains the methods, attributes and constants to be defined on
@@ -388,21 +380,19 @@ struct NativeProperties
  *                  interface doesn't have any ChromeOnly properties or if the
  *                  object is being created in non-chrome compartment.
  *
- * At least one of protoClass and constructorClass should be non-null.
- * If constructorClass is non-null, the resulting interface object will be
- * defined on the given global with property name |name|, which must also be
- * non-null.
- *
- * returns the interface prototype object if protoClass is non-null, else it
- * returns the interface object.
+ * At least one of protoClass, constructorClass or constructor should be
+ * non-null. If constructorClass or constructor are non-null, the resulting
+ * interface object will be defined on the given global with property name
+ * |name|, which must also be non-null.
  */
-JSObject*
-CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* receiver,
-                       JSObject* protoProto, JSClass* protoClass,
-                       JSClass* constructorClass, JSNative constructor,
-                       unsigned ctorNargs, const DOMClass* domClass,
-                       const NativeProperties* properties,
-                       const NativeProperties* chromeProperties,
+void
+CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* protoProto,
+                       JSClass* protoClass, JSObject** protoCache,
+                       JSClass* constructorClass, JSNativeHolder* constructor,
+                       unsigned ctorNargs, JSObject** constructorCache,
+                       const DOMClass* domClass,
+                       const NativeProperties* regularProperties,
+                       const NativeProperties* chromeOnlyProperties,
                        const char* name);
 
 /*
@@ -1279,19 +1269,95 @@ public:
     }
 };
 
+inline bool
+IdEquals(jsid id, const char* string)
+{
+  return JSID_IS_STRING(id) &&
+         JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), string);
+}
+
+inline bool
+AddStringToIDVector(JSContext* cx, JS::AutoIdVector& vector, const char* name)
+{
+  return vector.growBy(1) &&
+         InternJSString(cx, vector[vector.length() - 1], name);
+}
+
 // Implementation of the bits that XrayWrapper needs
-bool
-XrayResolveProperty(JSContext* cx, JSObject* wrapper, jsid id,
-                    JSPropertyDescriptor* desc,
-                    const NativeProperties* nativeProperties,
-                    const NativeProperties* chromeOnlyNativeProperties);
 
+/**
+ * This resolves indexed or named properties of obj.
+ *
+ * wrapper is the Xray JS object.
+ * obj is the target object of the Xray, a binding's instance object or a
+ *     interface or interface prototype object.
+ */
 bool
-XrayEnumerateProperties(JSObject* wrapper,
-                        JS::AutoIdVector& props,
-                        const NativeProperties* nativeProperties,
-                        const NativeProperties* chromeOnlyNativeProperties);
+XrayResolveOwnProperty(JSContext* cx, JSObject* wrapper, JSObject* obj,
+                       jsid id, bool set, JSPropertyDescriptor* desc);
 
+/**
+ * This resolves operations, attributes and constants of the interfaces for obj.
+ *
+ * wrapper is the Xray JS object.
+ * obj is the target object of the Xray, a binding's instance object or a
+ *     interface or interface prototype object.
+ */
+bool
+XrayResolveNativeProperty(JSContext* cx, JSObject* wrapper, JSObject* obj,
+                          jsid id, JSPropertyDescriptor* desc);
+
+/**
+ * This enumerates indexed or named properties of obj and operations, attributes
+ * and constants of the interfaces for obj.
+ *
+ * wrapper is the Xray JS object.
+ * obj is the target object of the Xray, a binding's instance object or a
+ *     interface or interface prototype object.
+ */
+bool
+XrayEnumerateProperties(JSContext* cx, JSObject* wrapper, JSObject* obj,
+                        bool ownOnly, JS::AutoIdVector& props);
+
+extern NativePropertyHooks sWorkerNativePropertyHooks;
+
+// We use one constructor JSNative to represent all DOM interface objects (so
+// we can easily detect when we need to wrap them in an Xray wrapper). We store
+// the real JSNative in the mNative member of a JSNativeHolder in the
+// CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT slot of the JSFunction object for a
+// specific interface object. We also store the NativeProperties in the
+// JSNativeHolder. The CONSTRUCTOR_XRAY_EXPANDO_SLOT is used to store the
+// expando chain of the Xray for the interface object.
+// Note that some interface objects are not yet a JSFunction but a normal
+// JSObject with a DOMJSClass, those do not use these slots.
+
+enum {
+  CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT = 0,
+  CONSTRUCTOR_XRAY_EXPANDO_SLOT
+};
+
+JSBool
+Constructor(JSContext* cx, unsigned argc, JS::Value* vp);
+
+inline bool
+UseDOMXray(JSObject* obj)
+{
+  const js::Class* clasp = js::GetObjectClass(obj);
+  return IsDOMClass(clasp) ||
+         IsDOMProxy(obj, clasp) ||
+         JS_IsNativeFunction(obj, Constructor) ||
+         IsDOMIfaceAndProtoClass(clasp);
+}
+
+#ifdef DEBUG
+inline bool
+HasConstructor(JSObject* obj)
+{
+  return JS_IsNativeFunction(obj, Constructor) ||
+         js::GetObjectClass(obj)->construct;
+}
+ #endif
+ 
 // Transfer reference in ptr to smartPtr.
 template<class T>
 inline void
@@ -1326,6 +1392,24 @@ protected:
                        mozilla::Maybe<JSAutoCompartment>& aAc,
                        JS::Value& aVal);
 };
+
+/**
+ * This creates a JSString containing the value that the toString function for
+ * obj should create according to the WebIDL specification, ignoring any
+ * modifications by script. The value is prefixed with pre and postfixed with
+ * post, unless this is called for an object that has a stringifier. It is
+ * specifically for use by Xray code.
+ *
+ * wrapper is the Xray JS object.
+ * obj is the target object of the Xray, a binding's instance object or a
+ *     interface or interface prototype object.
+ * pre is a string that should be prefixed to the value.
+ * post is a string that should be prefixed to the value.
+ * v contains the JSString for the value if the function returns true.
+ */
+bool
+NativeToString(JSContext* cx, JSObject* wrapper, JSObject* obj, const char* pre,
+               const char* post, JS::Value* v);
 
 } // namespace dom
 } // namespace mozilla

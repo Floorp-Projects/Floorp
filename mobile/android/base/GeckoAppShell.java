@@ -9,6 +9,7 @@ import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.GfxInfoThread;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
+import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.TouchEventHandler;
 import org.mozilla.gecko.util.EventDispatcher;
@@ -109,7 +110,7 @@ public class GeckoAppShell
 
     static private boolean gRestartScheduled = false;
 
-    static private GeckoInputConnection mInputConnection = null;
+    static private GeckoEditableListener mEditableListener = null;
 
     static private final HashMap<Integer, AlertNotification>
         mAlertNotifications = new HashMap<Integer, AlertNotification>();
@@ -126,10 +127,6 @@ public class GeckoAppShell
     public static final String SHORTCUT_TYPE_BOOKMARK = "bookmark";
 
     static private final boolean LOGGING = false;
-
-    static public final int RESTORE_NONE = 0;
-    static public final int RESTORE_OOM = 1;
-    static public final int RESTORE_CRASH = 2;
 
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
@@ -235,18 +232,18 @@ public class GeckoAppShell
 
     public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
 
-    public static native void notifySmsReceived(String aSender, String aBody, long aTimestamp);
+    public static native void notifySmsReceived(String aSender, String aBody, int aMessageClass, long aTimestamp);
     public static native int  saveMessageInSentbox(String aReceiver, String aBody, long aTimestamp);
     public static native void notifySmsSent(int aId, String aReceiver, String aBody, long aTimestamp, int aRequestId, long aProcessId);
-    public static native void notifySmsDelivered(int aId, String aReceiver, String aBody, long aTimestamp);
+    public static native void notifySmsDelivery(int aId, int aDeliveryStatus, String aReceiver, String aBody, long aTimestamp);
     public static native void notifySmsSendFailed(int aError, int aRequestId, long aProcessId);
-    public static native void notifyGetSms(int aId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
+    public static native void notifyGetSms(int aId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
     public static native void notifyGetSmsFailed(int aError, int aRequestId, long aProcessId);
     public static native void notifySmsDeleted(boolean aDeleted, int aRequestId, long aProcessId);
     public static native void notifySmsDeleteFailed(int aError, int aRequestId, long aProcessId);
     public static native void notifyNoMessageInList(int aRequestId, long aProcessId);
-    public static native void notifyListCreated(int aListId, int aMessageId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
-    public static native void notifyGotNextMessage(int aMessageId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
+    public static native void notifyListCreated(int aListId, int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
+    public static native void notifyGotNextMessage(int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
     public static native void notifyReadingMessageListFailed(int aError, int aRequestId, long aProcessId);
 
     public static native void scheduleComposite();
@@ -501,7 +498,7 @@ public class GeckoAppShell
         }
     }
 
-    public static void runGecko(String apkPath, String args, String url, String type, int restoreMode) {
+    public static void runGecko(String apkPath, String args, String url, String type) {
         WebAppAllocator.getInstance();
 
         Looper.prepare();
@@ -521,8 +518,6 @@ public class GeckoAppShell
             combinedArgs += " -url " + url;
         if (type != null)
             combinedArgs += " " + type;
-        if (restoreMode != RESTORE_NONE)
-            combinedArgs += " -restoremode " + restoreMode;
 
         DisplayMetrics metrics = GeckoApp.mAppContext.getResources().getDisplayMetrics();
         combinedArgs += " -width " + metrics.widthPixels + " -height " + metrics.heightPixels;
@@ -540,8 +535,11 @@ public class GeckoAppShell
     // Called on the UI thread after Gecko loads.
     private static void geckoLoaded() {
         LayerView v = GeckoApp.mAppContext.getLayerView();
-        mInputConnection = GeckoInputConnection.create(v);
-        v.setInputConnectionHandler(mInputConnection);
+        GeckoEditable editable = new GeckoEditable();
+        InputConnectionHandler ich = GeckoInputConnection.create(v, editable);
+        v.setInputConnectionHandler(ich);
+        // install the gecko => editable listener
+        mEditableListener = editable;
     }
 
     static void sendPendingEventsToGecko() {
@@ -574,21 +572,30 @@ public class GeckoAppShell
      *  The Gecko-side API: API methods that Gecko calls
      */
     public static void notifyIME(int type, int state) {
-        if (mInputConnection != null)
-            mInputConnection.notifyIME(type, state);
+        if (mEditableListener != null) {
+            mEditableListener.notifyIME(type, state);
+        }
     }
 
-    public static void notifyIMEEnabled(int state, String typeHint, String modeHint,
-                                        String actionHint, boolean landscapeFS) {
-        // notifyIMEEnabled() still needs the landscapeFS parameter because it is called from JNI
-        // code that assumes it has the same signature as XUL Fennec's (which does use landscapeFS).
-        if (mInputConnection != null)
-            mInputConnection.notifyIMEEnabled(state, typeHint, modeHint, actionHint);
+    public static void notifyIMEEnabled(int state, String typeHint,
+                                        String modeHint, String actionHint,
+                                        boolean landscapeFS) {
+        // notifyIMEEnabled() still needs the landscapeFS parameter
+        // because it is called from JNI code that assumes it has the
+        // same signature as XUL Fennec's (which does use landscapeFS).
+        // Bug 807124 will eliminate the need for landscapeFS
+        if (mEditableListener != null) {
+            mEditableListener.notifyIMEEnabled(state, typeHint,
+                                               modeHint, actionHint);
+        }
     }
 
     public static void notifyIMEChange(String text, int start, int end, int newEnd) {
-        if (mInputConnection != null)
-            mInputConnection.notifyIMEChange(text, start, end, newEnd);
+        if (newEnd < 0) { // Selection change
+            mEditableListener.onSelectionChange(start, end);
+        } else { // Text change
+            mEditableListener.onTextChange(text, start, end, newEnd);
+        }
     }
 
     private static CountDownLatch sGeckoPendingAcks = null;
@@ -1283,7 +1290,7 @@ public class GeckoAppShell
             "- cookie = '" + aAlertCookie +"'\n" +
             "- name = '" + aAlertName + "'");
 
-        int icon = R.drawable.icon; // Just use the app icon by default
+        int icon = R.drawable.ic_status_logo;
 
         Uri imageUri = Uri.parse(aImageUrl);
         String scheme = imageUri.getScheme();
@@ -2003,8 +2010,10 @@ public class GeckoAppShell
     }
 
     public static void viewSizeChanged() {
-        if (mInputConnection != null && mInputConnection.isIMEEnabled()) {
-            sendEventToGecko(GeckoEvent.createBroadcastEvent("ScrollTo:FocusedInput", ""));
+        LayerView v = GeckoApp.mAppContext.getLayerView();
+        if (v != null && v.isIMEEnabled()) {
+            sendEventToGecko(GeckoEvent.createBroadcastEvent(
+                    "ScrollTo:FocusedInput", ""));
         }
     }
 

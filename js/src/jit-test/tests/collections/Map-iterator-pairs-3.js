@@ -9,4 +9,4 @@ assertEq(pair[0], 'b');
 assertEq(pair[1], 2);
 assertEq(map.get('a'), 1);
 assertEq(map.has('b'), false);
-assertEq(map.size(), 1);
+assertEq(map.size, 1);

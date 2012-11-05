@@ -202,7 +202,8 @@
       </html:select>
     </markup>
 
-    <markup ref="html:img" ruleset="htmlimage">
+    <markup ref="html:img" ruleset="htmlimage"
+            id="markupHTMLImageTest">
       <html:span id="l1" a11yname="test2">test2</html:span>
       <html:span id="l2" a11yname="test3">test3</html:span>
       <html:img id="img"
@@ -214,6 +215,7 @@
     </markup>
 
     <markup ref="html:img" ruleset="htmlimageemptyalt">
+            id="markupHTMLImageEmptyAltTest"
       <html:span id="l1" a11yname="test2">test2</html:span>
       <html:span id="l2" a11yname="test3">test3</html:span>
       <html:img id="imgemptyalt"

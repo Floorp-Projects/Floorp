@@ -122,27 +122,26 @@ GfxInfo::EnsureInitializedFromGfxInfoData()
   // as it's useful information that isn't given anywhere else in about:support of in crash reports.
   // But we should really move this out of GfxInfo.
   if (mozilla::AndroidBridge::Bridge()) {
-    nsAutoString str;
-    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MODEL", str)) {
-      mAdapterDescription.AppendPrintf(" -- Model: %s",  NS_LossyConvertUTF16toASCII(str).get());
+    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MODEL", mModel)) {
+      mAdapterDescription.AppendPrintf(" -- Model: %s",  NS_LossyConvertUTF16toASCII(mModel).get());
     }
 
-    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "PRODUCT", str)) {
-      mAdapterDescription.AppendPrintf(", Product: %s", NS_LossyConvertUTF16toASCII(str).get());
+    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "PRODUCT", mProduct)) {
+      mAdapterDescription.AppendPrintf(", Product: %s", NS_LossyConvertUTF16toASCII(mProduct).get());
     }
 
-    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MANUFACTURER", str)) {
-      mAdapterDescription.AppendPrintf(", Manufacturer: %s", NS_LossyConvertUTF16toASCII(str).get());
+    if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MANUFACTURER", mManufacturer)) {
+      mAdapterDescription.AppendPrintf(", Manufacturer: %s", NS_LossyConvertUTF16toASCII(mManufacturer).get());
     }
 
-    int32_t version; // the HARDWARE field isn't available on Android SDK < 8
-    if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &version))
-      version = 0;
+    int32_t signedVersion;
+    if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &signedVersion))
+      signedVersion = 0;
+    mOSVersion = signedVersion;
 
-    if (version >= 8 && mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str)) {
-      if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str)) {
-        mAdapterDescription.AppendPrintf(", Hardware: %s", NS_LossyConvertUTF16toASCII(str).get());
-      }
+    // the HARDWARE field isn't available on Android SDK < 8
+    if (mOSVersion >= 8 && mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", mHardware)) {
+      mAdapterDescription.AppendPrintf(", Hardware: %s", NS_LossyConvertUTF16toASCII(mHardware).get());
     }
   }
 
@@ -309,7 +308,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
   NS_ENSURE_ARG_POINTER(aStatus);
   aSuggestedDriverVersion.SetIsVoid(true);
   *aStatus = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
-  OperatingSystem os = DRIVER_OS_ANDROID;
+  OperatingSystem os = mOS;
   if (aOS)
     *aOS = os;
 
@@ -328,6 +327,27 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
       {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         return NS_OK;
+      }
+    }
+
+    if (aFeature == FEATURE_STAGEFRIGHT) {
+      NS_LossyConvertUTF16toASCII cManufacturer(mManufacturer);
+      NS_LossyConvertUTF16toASCII cModel(mModel);
+      if (mOSVersion < 14 /* Before version 4.0 */ )
+      {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
+        return NS_OK;
+      }
+      else if (mOSVersion < 16 /* Before version 4.1 */ )
+      {
+        bool isWhitelisted =
+          cManufacturer.Equals("samsung", nsCaseInsensitiveCStringComparator()) ||
+          cModel.Equals("galaxy nexus", nsCaseInsensitiveCStringComparator()); // some Galaxy Nexus have manufacturer=amazon
+
+        if (!isWhitelisted) {
+          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+          return NS_OK;
+        }
       }
     }
   }
@@ -366,7 +386,29 @@ NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString & aDriverVersion)
 /* void spoofOSVersion (in unsigned long aVersion); */
 NS_IMETHODIMP GfxInfo::SpoofOSVersion(uint32_t aVersion)
 {
+  EnsureInitializedFromGfxInfoData(); // initialization from GfxInfo data overwrites mOSVersion
+  mOSVersion = aVersion;
   return NS_OK;
 }
 
 #endif
+
+const nsAString& GfxInfo::Model() const
+{
+  return mModel;
+}
+
+const nsAString& GfxInfo::Hardware() const
+{
+  return mHardware;
+}
+
+const nsAString& GfxInfo::Product() const
+{
+  return mProduct;
+}
+
+const nsAString& GfxInfo::Manufacturer() const
+{
+  return mManufacturer;
+}

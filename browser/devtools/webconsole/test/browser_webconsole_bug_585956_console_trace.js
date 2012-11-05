@@ -31,7 +31,7 @@ function tabLoaded() {
 function performChecks() {
   // The expected stack trace object.
   let stacktrace = [
-    { filename: TEST_URI, lineNumber: 9, functionName: null, language: 2 },
+    { filename: TEST_URI, lineNumber: 9, functionName: "window.foobar585956c", language: 2 },
     { filename: TEST_URI, lineNumber: 14, functionName: "foobar585956b", language: 2 },
     { filename: TEST_URI, lineNumber: 18, functionName: "foobar585956a", language: 2 },
     { filename: TEST_URI, lineNumber: 21, functionName: null, language: 2 }

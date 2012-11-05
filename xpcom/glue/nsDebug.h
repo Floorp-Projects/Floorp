@@ -16,6 +16,7 @@
 
 #include "nsXPCOM.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Likely.h"
 
 #ifdef DEBUG
 #include "prprf.h"
@@ -248,7 +249,7 @@
 
 #define NS_ENSURE_TRUE(x, ret)                                \
   do {                                                        \
-    if (NS_UNLIKELY(!(x))) {                                  \
+    if (MOZ_UNLIKELY(!(x))) {                                 \
        NS_WARNING("NS_ENSURE_TRUE(" #x ") failed");           \
        return ret;                                            \
     }                                                         \
@@ -259,7 +260,7 @@
 
 #define NS_ENSURE_TRUE_VOID(x)                                \
   do {                                                        \
-    if (NS_UNLIKELY(!(x))) {                                  \
+    if (MOZ_UNLIKELY(!(x))) {                                 \
        NS_WARNING("NS_ENSURE_TRUE(" #x ") failed");           \
        return;                                                \
     }                                                         \

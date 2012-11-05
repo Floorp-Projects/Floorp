@@ -48,6 +48,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     gcStoreBuffer(&gcNursery),
 #endif
     needsBarrier_(false),
+    ionUsingBarriers_(false),
     gcScheduled(false),
     gcState(NoGC),
     gcPreserveCode(false),
@@ -76,7 +77,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     , ionCompartment_(NULL)
 #endif
 {
-    setGCMaxMallocBytes(rt->gcMaxMallocBytes);
+    setGCMaxMallocBytes(rt->gcMaxMallocBytes * 0.9);
 }
 
 JSCompartment::~JSCompartment()
@@ -131,7 +132,7 @@ JSCompartment::init(JSContext *cx)
 }
 
 void
-JSCompartment::setNeedsBarrier(bool needs)
+JSCompartment::setNeedsBarrier(bool needs, ShouldUpdateIon updateIon)
 {
 #ifdef JS_METHODJIT
     /* ClearAllFrames calls compileBarriers() and needs the old value. */
@@ -141,8 +142,10 @@ JSCompartment::setNeedsBarrier(bool needs)
 #endif
 
 #ifdef JS_ION
-    if (needsBarrier_ != needs)
+    if (updateIon == UpdateIon && needs != ionUsingBarriers_) {
         ion::ToggleBarriers(this, needs);
+        ionUsingBarriers_ = needs;
+    }
 #endif
 
     needsBarrier_ = needs;
@@ -558,7 +561,11 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
             ionCompartment_->sweep(fop);
 #endif
 
-        /* JIT code can hold references on RegExpShared, so sweep regexps after clearing code. */
+        /*
+         * JIT code increments activeUseCount for any RegExpShared used by jit
+         * code for the lifetime of the JIT script. Thus, we must perform
+         * sweeping after clearing jit code.
+         */
         regExps.sweep(rt);
     }
 

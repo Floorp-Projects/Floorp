@@ -15,6 +15,7 @@
 #include "gfxCore.h"
 #include "nsTraceRefcnt.h"
 #include "mozilla/gfx/BaseRect.h"
+#include "mozilla/Likely.h"
 
 struct nsIntRect;
 
@@ -59,7 +60,7 @@ struct NS_GFX nsRect :
 #else
     int64_t nx = int64_t(x) - aMargin.left;
     int64_t w = int64_t(width) + int64_t(aMargin.left) + aMargin.right;
-    if (NS_UNLIKELY(w > nscoord_MAX)) {
+    if (MOZ_UNLIKELY(w > nscoord_MAX)) {
       NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord width");
       int64_t xdiff = nx - nscoord_MIN / 2;
       if (xdiff < 0) {
@@ -67,12 +68,12 @@ struct NS_GFX nsRect :
         nx = nscoord_MIN / 2;
         w += xdiff;
       }
-      if (NS_UNLIKELY(w > nscoord_MAX)) {
+      if (MOZ_UNLIKELY(w > nscoord_MAX)) {
         w = nscoord_MAX;
       }
     }
     width = nscoord(w);
-    if (NS_UNLIKELY(nx < nscoord_MIN)) {
+    if (MOZ_UNLIKELY(nx < nscoord_MIN)) {
       NS_WARNING("Underflowed nscoord_MIN in conversion to nscoord x");
       nx = nscoord_MIN;
     }
@@ -80,7 +81,7 @@ struct NS_GFX nsRect :
 
     int64_t ny = int64_t(y) - aMargin.top;
     int64_t h = int64_t(height) + int64_t(aMargin.top) + aMargin.bottom;
-    if (NS_UNLIKELY(h > nscoord_MAX)) {
+    if (MOZ_UNLIKELY(h > nscoord_MAX)) {
       NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord height");
       int64_t ydiff = ny - nscoord_MIN / 2;
       if (ydiff < 0) {
@@ -88,12 +89,12 @@ struct NS_GFX nsRect :
         ny = nscoord_MIN / 2;
         h += ydiff;
       }
-      if (NS_UNLIKELY(h > nscoord_MAX)) {
+      if (MOZ_UNLIKELY(h > nscoord_MAX)) {
         h = nscoord_MAX;
       }
     }
     height = nscoord(h);
-    if (NS_UNLIKELY(ny < nscoord_MIN)) {
+    if (MOZ_UNLIKELY(ny < nscoord_MIN)) {
       NS_WARNING("Underflowed nscoord_MIN in conversion to nscoord y");
       ny = nscoord_MIN;
     }
@@ -124,12 +125,12 @@ struct NS_GFX nsRect :
     nsRect result;
     result.x = NS_MIN(aRect.x, x);
     int64_t w = NS_MAX(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
-    if (NS_UNLIKELY(w > nscoord_MAX)) {
+    if (MOZ_UNLIKELY(w > nscoord_MAX)) {
       NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord width");
       // Clamp huge negative x to nscoord_MIN / 2 and try again.
       result.x = NS_MAX(result.x, nscoord_MIN / 2);
       w = NS_MAX(int64_t(aRect.x) + aRect.width, int64_t(x) + width) - result.x;
-      if (NS_UNLIKELY(w > nscoord_MAX)) {
+      if (MOZ_UNLIKELY(w > nscoord_MAX)) {
         w = nscoord_MAX;
       }
     }
@@ -137,12 +138,12 @@ struct NS_GFX nsRect :
 
     result.y = NS_MIN(aRect.y, y);
     int64_t h = NS_MAX(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;
-    if (NS_UNLIKELY(h > nscoord_MAX)) {
+    if (MOZ_UNLIKELY(h > nscoord_MAX)) {
       NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord height");
       // Clamp huge negative y to nscoord_MIN / 2 and try again.
       result.y = NS_MAX(result.y, nscoord_MIN / 2);
       h = NS_MAX(int64_t(aRect.y) + aRect.height, int64_t(y) + height) - result.y;
-      if (NS_UNLIKELY(h > nscoord_MAX)) {
+      if (MOZ_UNLIKELY(h > nscoord_MAX)) {
         h = nscoord_MAX;
       }
     }

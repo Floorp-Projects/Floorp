@@ -121,8 +121,7 @@ nsPopupBoxObject::MoveToAnchor(nsIDOMElement* aAnchorElement,
                                int32_t aXPos, int32_t aYPos,
                                bool aAttributesOverride)
 {
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm && mContent) {
+  if (mContent) {
     nsCOMPtr<nsIContent> anchorContent(do_QueryInterface(aAnchorElement));
 
     nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(mContent->GetPrimaryFrame());

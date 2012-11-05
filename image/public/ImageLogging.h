@@ -23,7 +23,7 @@
 
 #if defined(PR_LOGGING)
 // Declared in imgRequest.cpp.
-extern PRLogModuleInfo *gImgLog;
+extern PRLogModuleInfo *GetImgLog();
 
 #define GIVE_ME_MS_NOW() PR_IntervalToMilliseconds(PR_IntervalNow())
 

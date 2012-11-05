@@ -7,6 +7,7 @@
 #include "jsperf.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsMemory.h"
+#include "mozilla/Preferences.h"
 
 #define JSPERF_CONTRACTID \
   "@mozilla.org/jsperf;1"
@@ -57,6 +58,10 @@ InitAndSealPerfMeasurementClass(JSContext* cx, JSObject* global)
   // Init the PerfMeasurement class
   if (!JS::RegisterPerfMeasurement(cx, global))
     return false;
+
+  // Can't freeze our global if it's shared.
+  if (Preferences::GetBool("jsloader.reuseGlobal"))
+    return true;
 
   // Seal up Object, Function, and Array and their prototypes.  (This single
   // object instance is shared amongst everyone who imports the jsperf module.)

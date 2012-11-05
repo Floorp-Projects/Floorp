@@ -146,4 +146,4 @@ Sidebar.prototype = {
   classID: SIDEBAR_CID,
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([Sidebar]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Sidebar]);

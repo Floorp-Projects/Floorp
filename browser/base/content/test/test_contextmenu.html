@@ -20,7 +20,6 @@ Browser context menu tests.
 
 SpecialPowers.Cu.import("resource://gre/modules/InlineSpellChecker.jsm", window);
 
-const Cc = SpecialPowers.Components.classes;
 const Ci = SpecialPowers.Ci;
 
 function openContextMenuFor(element, shiftkey, shouldWaitForFocus) {
@@ -880,7 +879,7 @@ function startTest() {
       return;
     }
 
-    subwindow.mozAllowFullScreen = true;
+    subwindow.allowfullscreen = true;
     lastElement = null;
 
     text   = subwindow.document.getElementById("test-text");

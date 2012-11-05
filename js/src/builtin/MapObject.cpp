@@ -111,6 +111,8 @@ class OrderedHashTable
             return false;
         }
 
+        // clear() requires that members are assigned only after all allocation
+        // has succeeded, and that this->ranges is left untouched.
         hashTable = tableAlloc;
         data = dataAlloc;
         dataLength = 0;
@@ -215,6 +217,42 @@ class OrderedHashTable
             if (!rehash(hashShift + 1))
                 return false;
         }
+        return true;
+    }
+
+    /*
+     * Remove all entries.
+     *
+     * Returns false on OOM, leaving the OrderedHashTable and any live Ranges
+     * in the old state.
+     *
+     * The effect on live Ranges is the same as removing all entries; in
+     * particular, those Ranges are still live and will see any entries added
+     * after a successful clear().
+     */
+    bool clear() {
+        if (dataLength != 0) {
+            Data **oldHashTable = hashTable;
+            Data *oldData = data;
+            uint32_t oldDataLength = dataLength;
+
+            hashTable = NULL;
+            if (!init()) {
+                // init() only mutates members on success; see comment above.
+                hashTable = oldHashTable;
+                return false;
+            }
+
+            alloc.free_(oldHashTable);
+            freeData(oldData, oldDataLength);
+            for (Range *r = ranges; r; r = r->next)
+                r->onClear();
+        }
+
+        MOZ_ASSERT(hashTable);
+        MOZ_ASSERT(data);
+        MOZ_ASSERT(dataLength == 0);
+        MOZ_ASSERT(liveCount == 0);
         return true;
     }
 
@@ -335,6 +373,12 @@ class OrderedHashTable
         void onCompact() {
             MOZ_ASSERT(valid());
             i = count;
+        }
+
+        /* The hash table calls this when cleared. */
+        void onClear() {
+            MOZ_ASSERT(valid());
+            i = count = 0;
         }
 
         bool valid() const {
@@ -476,9 +520,13 @@ class OrderedHashTable
         return 1 << (HashNumberSizeBits - hashShift);
     }
 
-    void freeData(Data *data, uint32_t length) {
+    static void destroyData(Data *data, uint32_t length) {
         for (Data *p = data + length; p != data; )
             (--p)->~Data();
+    }
+
+    void freeData(Data *data, uint32_t length) {
+        destroyData(data, length);
         alloc.free_(data);
     }
 
@@ -642,6 +690,7 @@ class OrderedHashMap
     Entry *get(const Key &key)                      { return impl.get(key); }
     bool put(const Key &key, const Value &value)    { return impl.put(Entry(key, value)); }
     bool remove(const Key &key, bool *foundp)       { return impl.remove(key, foundp); }
+    bool clear()                                    { return impl.clear(); }
 };
 
 template <class T, class OrderedHashPolicy, class AllocPolicy>
@@ -668,6 +717,7 @@ class OrderedHashSet
     Range all()                                     { return impl.all(); }
     bool put(const T &value)                        { return impl.put(value); }
     bool remove(const T &value, bool *foundp)       { return impl.remove(value, foundp); }
+    bool clear()                                    { return impl.clear(); }
 };
 
 }  // namespace js
@@ -897,19 +947,24 @@ Class MapObject::class_ = {
     mark
 };
 
+JSPropertySpec MapObject::properties[] = {
+    JS_PSG("size", size, 0),
+    JS_PS_END
+};
+
 JSFunctionSpec MapObject::methods[] = {
-    JS_FN("size", size, 0, 0),
     JS_FN("get", get, 1, 0),
     JS_FN("has", has, 1, 0),
     JS_FN("set", set, 2, 0),
     JS_FN("delete", delete_, 1, 0),
     JS_FN("iterator", iterator, 0, 0),
+    JS_FN("clear", clear, 0, 0),
     JS_FS_END
 };
 
 static JSObject *
 InitClass(JSContext *cx, Handle<GlobalObject*> global, Class *clasp, JSProtoKey key, Native construct,
-          JSFunctionSpec *methods)
+          JSPropertySpec *properties, JSFunctionSpec *methods)
 {
     Rooted<JSObject*> proto(cx, global->createBlankPrototype(cx, clasp));
     if (!proto)
@@ -919,7 +974,7 @@ InitClass(JSContext *cx, Handle<GlobalObject*> global, Class *clasp, JSProtoKey 
     Rooted<JSFunction*> ctor(cx, global->createConstructor(cx, construct, ClassName(key, cx), 1));
     if (!ctor ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
-        !DefinePropertiesAndBrand(cx, proto, NULL, methods) ||
+        !DefinePropertiesAndBrand(cx, proto, properties, methods) ||
         !DefineConstructorAndPrototype(cx, global, key, ctor, proto))
     {
         return NULL;
@@ -931,7 +986,7 @@ JSObject *
 MapObject::initClass(JSContext *cx, JSObject *obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->asGlobal());
-    return InitClass(cx, global, &class_, JSProto_Map, construct, methods);
+    return InitClass(cx, global, &class_, JSProto_Map, construct, properties, methods);
 }
 
 template <class Range>
@@ -1147,8 +1202,10 @@ MapObject::delete_impl(JSContext *cx, CallArgs args)
     ValueMap &map = extract(args);
     ARG0_KEY(cx, args, key);
     bool found;
-    if (!map.remove(key, &found))
+    if (!map.remove(key, &found)) {
+        js_ReportOutOfMemory(cx);
         return false;
+    }
     args.rval().setBoolean(found);
     return true;
 }
@@ -1177,6 +1234,25 @@ MapObject::iterator(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod(cx, is, iterator_impl, args);
+}
+
+bool
+MapObject::clear_impl(JSContext *cx, CallArgs args)
+{
+    Rooted<MapObject*> mapobj(cx, &args.thisv().toObject().asMap());
+    if (!mapobj->getData()->clear()) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
+    args.rval().setUndefined();
+    return true;
+}
+
+JSBool
+MapObject::clear(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, is, clear_impl, args);
 }
 
 JSObject *
@@ -1338,12 +1414,17 @@ Class SetObject::class_ = {
     mark
 };
 
+JSPropertySpec SetObject::properties[] = {
+    JS_PSG("size", size, 0),
+    JS_PS_END
+};
+
 JSFunctionSpec SetObject::methods[] = {
-    JS_FN("size", size, 0, 0),
     JS_FN("has", has, 1, 0),
     JS_FN("add", add, 1, 0),
     JS_FN("delete", delete_, 1, 0),
     JS_FN("iterator", iterator, 0, 0),
+    JS_FN("clear", clear, 0, 0),
     JS_FS_END
 };
 
@@ -1351,7 +1432,7 @@ JSObject *
 SetObject::initClass(JSContext *cx, JSObject *obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->asGlobal());
-    return InitClass(cx, global, &class_, JSProto_Set, construct, methods);
+    return InitClass(cx, global, &class_, JSProto_Set, construct, properties, methods);
 }
 
 void
@@ -1488,8 +1569,10 @@ SetObject::delete_impl(JSContext *cx, CallArgs args)
     ValueSet &set = extract(args);
     ARG0_KEY(cx, args, key);
     bool found;
-    if (!set.remove(key, &found))
+    if (!set.remove(key, &found)) {
+        js_ReportOutOfMemory(cx);
         return false;
+    }
     args.rval().setBoolean(found);
     return true;
 }
@@ -1518,6 +1601,25 @@ SetObject::iterator(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod(cx, is, iterator_impl, args);
+}
+
+bool
+SetObject::clear_impl(JSContext *cx, CallArgs args)
+{
+    Rooted<SetObject*> setobj(cx, &args.thisv().toObject().asSet());
+    if (!setobj->getData()->clear()) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
+    args.rval().setUndefined();
+    return true;
+}
+
+JSBool
+SetObject::clear(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, is, clear_impl, args);
 }
 
 JSObject *

@@ -120,6 +120,7 @@ BrowserElementChild.prototype = {
       addMessageListener('browser-element-api:' + msg, handler.bind(self));
     }
 
+    addMsgListener("purge-history", this._recvPurgeHistory);
     addMsgListener("get-screenshot", this._recvGetScreenshot);
     addMsgListener("set-visible", this._recvSetVisible);
     addMsgListener("send-mouse-event", this._recvSendMouseEvent);
@@ -214,7 +215,8 @@ BrowserElementChild.prototype = {
     let returnValue = this._waitForResult(win);
 
     if (args.promptType == 'prompt' ||
-        args.promptType == 'confirm') {
+        args.promptType == 'confirm' ||
+        args.promptType == 'custom-prompt') {
       return returnValue;
     }
   },
@@ -450,6 +452,20 @@ BrowserElementChild.prototype = {
     sendAsyncMsg("scroll", { top: win.scrollY, left: win.scrollX });
   },
 
+  _recvPurgeHistory: function(data) {
+    debug("Received purgeHistory message: (" + data.json.id + ")");
+
+    let history = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
+
+    try {
+      if (history && history.count) {
+        history.PurgeHistory(history.count);
+      }
+    } catch(e) {}
+
+    sendAsyncMsg('got-purge-history', { id: data.json.id, successRv: true });
+  },
+
   _recvGetScreenshot: function(data) {
     debug("Received getScreenshot message: (" + data.json.id + ")");
 
@@ -521,14 +537,16 @@ BrowserElementChild.prototype = {
     ctx.drawWindow(content, 0, 0, content.innerWidth, content.innerHeight,
                    "rgb(255,255,255)");
 
-    sendAsyncMsg('got-screenshot', {
-      id: domRequestID,
-      // Use JPEG to hack around the fact that we can't specify opaque PNG.
-      // This requires us to unpremultiply the alpha channel, which is
-      // expensive on ARM processors because they lack a hardware integer
-      // division instruction.
-      successRv: canvas.toDataURL("image/jpeg")
-    });
+    // Take a JPEG screenshot to hack around the fact that we can't specify
+    // opaque PNG.  This requires us to unpremultiply the alpha channel, which
+    // is expensive on ARM processors because they lack a hardware integer
+    // division instruction.
+    canvas.toBlob(function(blob) {
+      sendAsyncMsg('got-screenshot', {
+        id: domRequestID,
+        successRv: blob
+      });
+    }, 'image/jpeg');
   },
 
   _recvFireCtxCallback: function(data) {
@@ -538,7 +556,7 @@ BrowserElementChild.prototype = {
       this._ctxHandlers[data.json.menuitem].click();
       this._ctxHandlers = {};
     } else {
-      debug("Ignored invalid contextmenu invokation");
+      debug("Ignored invalid contextmenu invocation");
     }
   },
 

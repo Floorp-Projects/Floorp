@@ -210,6 +210,10 @@
                               observes="viewHistorySidebar"
                               label="&historyButton.label;"
                               accesskey="&historySidebarCmd.accesskey;"/>
+                    <menuitem id="menu_socialSidebar"
+                              type="checkbox"
+                              autocheck="false"
+                              command="Social:ToggleSidebar"/>
                   </menupopup>
                 </menu>
                 <menuseparator/>

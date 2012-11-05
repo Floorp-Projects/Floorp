@@ -6,7 +6,7 @@ var gNameRulesFileURL = "markuprules.xml";
 var gRuleDoc = null;
 
 // Debuggin stuff.
-var gDumpToConsole = true;
+var gDumpToConsole = false;
 
 /**
  * Start name tests. Run through markup elements and test names for test
@@ -14,7 +14,7 @@ var gDumpToConsole = true;
  */
 function testNames()
 {
-  enableLogging("tree");
+  enableLogging("tree,stack"); // debugging
 
   var request = new XMLHttpRequest();
   request.open("get", gNameRulesFileURL, false);
@@ -66,7 +66,7 @@ var gTestIterator =
 
       this.markupIdx++;
       if (this.markupIdx == this.markupElms.length) {
-        disableLogging("tree");
+        //disableLogging("tree"); // debugging
         SimpleTest.finish();
         return;
       }
@@ -114,12 +114,6 @@ function testNamesForMarkup(aMarkupElm)
     child = child.nextSibling;
   }
 
-  // Wave over images to create frames.
-  var imgElms = div.getElementsByTagName("html:img");
-  for (var idx = 0; idx < imgElms.length; idx++) {
-    waveOverImageMap(imgElms[idx]);
-  }
-
   if (gDumpToConsole) {
     dump("\nProcessing markup. Wait for reorder event on " +
          prettyName(document) + "'\n");
@@ -138,12 +132,21 @@ function testNamesForMarkupRules(aMarkupElm, aContainer)
   var serializer = new XMLSerializer();
 
   var expr = "//html/body/div[@id='test']/" + aMarkupElm.getAttribute("ref");
-  var elms = evaluateXPath(document, expr, htmlDocResolver);
+  var elm = evaluateXPath(document, expr, htmlDocResolver)[0];
 
   var ruleId = aMarkupElm.getAttribute("ruleset");
   var ruleElms = getRuleElmsByRulesetId(ruleId);
 
-  gTestIterator.iterateRules(elms[0], aContainer, ruleElms);
+  var processMarkupRules =
+    gTestIterator.iterateRules.bind(gTestIterator, elm, aContainer, ruleElms);
+
+  // Images may be recreated after we append them into subtree. We need to wait
+  // in this case. If we are on profiling enabled build then stack tracing
+  // works and thus let's log instead.
+  if (isAccessible(elm) || isLogged("stack"))
+    processMarkupRules();
+  else
+    waitForEvent(EVENT_SHOW, elm, processMarkupRules);
 }
 
 /**

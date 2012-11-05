@@ -525,7 +525,7 @@ js_InitRandom(JSContext *cx)
      * the context and its successor. We don't just use the context because it might be
      * possible to reverse engineer the context pointer if one guesses the time right.
      */
-    random_setSeed(&cx->rngSeed, (PRMJ_Now() / 1000) ^ int64_t(cx) ^ int64_t(cx->link.next));
+    random_setSeed(&cx->rngSeed, (PRMJ_Now() / 1000) ^ int64_t(cx) ^ int64_t(cx->getNext()));
 }
 
 extern uint64_t

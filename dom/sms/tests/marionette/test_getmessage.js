@@ -36,9 +36,11 @@ function simulateIncomingSms() {
     log("Received SMS (id: " + inSmsId + ").");
     is(incomingSms.body, inText, "msg body");
     is(incomingSms.delivery, "received", "delivery");
+    is(incomingSms.deliveryStatus, "success", "deliveryStatus");
     is(incomingSms.read, false, "read");
     is(incomingSms.receiver, null, "receiver");
     is(incomingSms.sender, remoteNumber, "sender");
+    is(incomingSms.messageClass, "normal", "messageClass");
     ok(incomingSms.timestamp instanceof Date, "timestamp is instanceof date");
     inSmsTimeStamp = incomingSms.timestamp;
     sendSms();
@@ -61,9 +63,11 @@ function sendSms() {
     log("Sent SMS (id: " + outSmsId + ").");
     is(sentSms.body, outText, "msg body");
     is(sentSms.delivery, "sent", "delivery");
+    is(sentSms.deliveryStatus, "pending", "deliveryStatus");
     is(sentSms.read, true, "read");
     is(sentSms.receiver, remoteNumber, "receiver");
     is(sentSms.sender, null, "sender");
+    is(sentSms.messageClass, "normal", "messageClass");
     ok(sentSms.timestamp instanceof Date, "timestamp is instanceof date");  
     outSmsTimeStamp = sentSms.timestamp;
 
@@ -108,9 +112,11 @@ function getReceivedSms() {
     log("Got SMS (id: " + foundSms.id + ").");
     is(foundSms.body, inText, "SMS msg text matches");
     is(foundSms.delivery, "received", "delivery");
+    is(foundSms.deliveryStatus, "success", "deliveryStatus");
     is(foundSms.read, false, "read");
     is(foundSms.receiver, myNumber, "receiver");
     is(foundSms.sender, remoteNumber, "sender");
+    is(foundSms.messageClass, "normal", "messageClass");
     ok(foundSms.timestamp instanceof Date, "timestamp is instanceof date");
     is(foundSms.timestamp.getTime(), inSmsTimeStamp.getTime(), "timestamp matches");
     getSentSms();
@@ -139,9 +145,11 @@ function getSentSms() {
     log("Got SMS (id: " + foundSms.id + ").");
     is(foundSms.body, outText, "SMS msg text matches");
     is(foundSms.delivery, "sent", "delivery");
+    is(foundSms.deliveryStatus, "pending", "deliveryStatus");
     is(foundSms.read, true, "read");
     is(foundSms.receiver, remoteNumber, "receiver");
     is(foundSms.sender, myNumber, "sender");
+    is(foundSms.messageClass, "normal", "messageClass");
     ok(foundSms.timestamp instanceof Date, "timestamp is instanceof date");
     is(foundSms.timestamp.getTime(), outSmsTimeStamp.getTime(), "timestamp matches");
     deleteMsgs();

@@ -102,6 +102,10 @@ DiscardTracker::Shutdown()
     sTimer->Cancel();
     sTimer = NULL;
   }
+
+  // Clear the sDiscardableImages linked list so that its destructor
+  // (LinkedList.h) finds an empty array, which is required after bug 803688.
+  DiscardAll();
 }
 
 /*

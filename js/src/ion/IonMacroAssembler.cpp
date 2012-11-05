@@ -524,7 +524,7 @@ MacroAssembler::generateBailoutTail(Register scratch)
 
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_BOUNDS_CHECK), &boundscheck);
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_OVERRECURSED), &overrecursed);
-    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_INVALIDATE), &invalidate);
+    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_SHAPE_GUARD), &invalidate);
 
     // Fall-through: cached shape guard failure.
     {
@@ -539,7 +539,7 @@ MacroAssembler::generateBailoutTail(Register scratch)
     bind(&invalidate);
     {
         setupUnalignedABICall(0, scratch);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void *, ForceInvalidation));
+        callWithABI(JS_FUNC_TO_DATA_PTR(void *, ShapeGuardFailure));
 
         branchTest32(Zero, ReturnReg, ReturnReg, &exception);
         jump(&interpret);

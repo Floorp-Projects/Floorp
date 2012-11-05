@@ -9,6 +9,7 @@
 
 #include "prmem.h"
 #include "nsIInputStream.h"
+#include "mozilla/Likely.h"
 
 /**
  * @file
@@ -114,7 +115,7 @@ NS_ReadLine (StreamType* aStream, nsLineBuffer<CharT> * aBuffer,
     if (aBuffer->start == aBuffer->end) { // buffer is empty.  Read into it.
       uint32_t bytesRead;
       nsresult rv = aStream->Read(aBuffer->buf, kLineBufferSize, &bytesRead);
-      if (NS_FAILED(rv) || NS_UNLIKELY(bytesRead == 0)) {
+      if (NS_FAILED(rv) || MOZ_UNLIKELY(bytesRead == 0)) {
         *more = false;
         return rv;
       }
@@ -134,7 +135,7 @@ NS_ReadLine (StreamType* aStream, nsLineBuffer<CharT> * aBuffer,
      * more char after the end-of-line to set |more| correctly.
      */
     CharT* current = aBuffer->start;
-    if (NS_LIKELY(eolchar == 0)) {
+    if (MOZ_LIKELY(eolchar == 0)) {
       for ( ; current < aBuffer->end; ++current) {
         if (*current == '\n' || *current == '\r') {
           eolchar = *current;
@@ -144,7 +145,7 @@ NS_ReadLine (StreamType* aStream, nsLineBuffer<CharT> * aBuffer,
         }
       }
     }
-    if (NS_LIKELY(eolchar != 0)) {
+    if (MOZ_LIKELY(eolchar != 0)) {
       for ( ; current < aBuffer->end; ++current) {
         if ((eolchar == '\r' && *current == '\n') ||
             (eolchar == '\n' && *current == '\r')) {

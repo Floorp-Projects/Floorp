@@ -46,6 +46,9 @@ $(CONFIG_DIR)/setup.exe::
 	cd $(CONFIG_DIR) && $(MAKENSISU) installer.nsi
 ifdef MOZ_STUB_INSTALLER
 	cd $(CONFIG_DIR) && $(MAKENSISU) stub.nsi
+ifdef MOZ_EXTERNAL_SIGNING_FORMAT
+	$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT),-f $(f)) $(CONFIG_DIR)/stub.exe
+endif
 endif
 # Support for building the uninstaller when repackaging locales
 ifeq ($(CONFIG_DIR),l10ngen)
@@ -71,9 +74,6 @@ ifdef MOZ_STUB_INSTALLER
 endif
 ifdef MOZ_EXTERNAL_SIGNING_FORMAT
 	$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT),-f $(f)) "$(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
-ifdef MOZ_STUB_INSTALLER
-	$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT),-f $(f)) "$(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME)-stub.exe"
-endif
 endif
 
 # For building the uninstaller during the application build so it can be

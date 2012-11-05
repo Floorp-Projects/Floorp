@@ -2015,6 +2015,19 @@ AddPendingRecompile(JSContext *cx, HandleScript script, jsbytecode *pc,
         cx->compartment->types.addPendingRecompile(cx, script, pc);
 
     /*
+     * Remind Ion not to save the compile code if generating type
+     * inference information mid-compilation causes an invalidation of the
+     * script being compiled.
+     */
+    RecompileInfo& info = cx->compartment->types.compiledInfo;
+    if (info.outputIndex != RecompileInfo::NoCompilerRunning) {
+        CompilerOutput *co = info.compilerOutput(cx);
+        if (co->isIon() && co->script == script) {
+            co->invalidate();
+        }
+    }
+
+    /*
      * When one script is inlined into another the caller listens to state
      * changes on the callee's script, so trigger these to force recompilation
      * of any such callers.
@@ -5217,42 +5230,6 @@ TypeDynamicResult(JSContext *cx, HandleScript script, jsbytecode *pc, Type type)
             types->addType(cx, type);
         }
         return;
-    }
-
-    /*
-     * For inc/dec ops, we need to go back and reanalyze the affected opcode
-     * taking the overflow into account. We won't see an explicit adjustment
-     * of the type of the thing being inc/dec'ed, nor will adding TYPE_DOUBLE to
-     * the pushed value affect that type.
-     */
-    JSOp op = JSOp(*pc);
-    const JSCodeSpec *cs = &js_CodeSpec[op];
-    if (cs->format & (JOF_INC | JOF_DEC)) {
-        switch (op) {
-          case JSOP_INCLOCAL:
-          case JSOP_DECLOCAL:
-          case JSOP_LOCALINC:
-          case JSOP_LOCALDEC:
-          case JSOP_INCARG:
-          case JSOP_DECARG:
-          case JSOP_ARGINC:
-          case JSOP_ARGDEC: {
-            /*
-             * Just mark the slot's type as holding the new type. This captures
-             * the effect if the slot is not being tracked, and if the slot
-             * doesn't escape we will update the pushed types below to capture
-             * the slot's value after this write.
-             */
-            uint32_t slot = GetBytecodeSlot(script, pc);
-            if (slot < TotalSlots(script)) {
-                TypeSet *types = TypeScript::SlotTypes(script, slot);
-                types->addType(cx, type);
-            }
-            break;
-          }
-
-          default:;
-        }
     }
 
     if (script->hasAnalysis() && script->analysis()->ranInference()) {

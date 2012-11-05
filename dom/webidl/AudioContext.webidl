@@ -25,6 +25,11 @@ interface mozAudioContext {
     [Creator]
     AudioBufferSourceNode createBufferSource();
 
+    [Creator]
+    GainNode createGain();
+    [Creator]
+    DelayNode createDelay(optional float maxDelayTime = 1);
+
 };
 
 typedef mozAudioContext AudioContext;

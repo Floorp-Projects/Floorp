@@ -24,8 +24,8 @@
 #include "prlog.h"
 
 #ifdef PR_LOGGING
-extern PRLogModuleInfo* gCameraLog;
-#define DOM_CAMERA_LOG( type, ... ) PR_LOG(gCameraLog, (PRLogModuleLevel)type, ( __VA_ARGS__ ))
+extern PRLogModuleInfo* GetCameraLog();
+#define DOM_CAMERA_LOG( type, ... ) PR_LOG(GetCameraLog(), (PRLogModuleLevel)type, ( __VA_ARGS__ ))
 #else
 #define DOM_CAMERA_LOG( type, ... )
 #endif
@@ -51,7 +51,7 @@ enum {
 #ifdef PR_LOGGING
 #define DOM_CAMERA_LOGR( ... )                                  \
   do {                                                          \
-    if (gCameraLog) {                                           \
+    if (GetCameraLog()) {                                       \
       DOM_CAMERA_LOG( DOM_CAMERA_LOG_REFERENCES, __VA_ARGS__ ); \
     }                                                           \
   } while (0)
@@ -77,6 +77,9 @@ enum {
   CAMERA_PARAM_FOCUSDISTANCEOPTIMUM,
   CAMERA_PARAM_FOCUSDISTANCEFAR,
   CAMERA_PARAM_EXPOSURECOMPENSATION,
+  CAMERA_PARAM_THUMBNAILWIDTH,
+  CAMERA_PARAM_THUMBNAILHEIGHT,
+  CAMERA_PARAM_THUMBNAILQUALITY,
 
   CAMERA_PARAM_SUPPORTED_PREVIEWSIZES,
   CAMERA_PARAM_SUPPORTED_VIDEOSIZES,
@@ -93,7 +96,8 @@ enum {
   CAMERA_PARAM_SUPPORTED_MAXEXPOSURECOMPENSATION,
   CAMERA_PARAM_SUPPORTED_EXPOSURECOMPENSATIONSTEP,
   CAMERA_PARAM_SUPPORTED_ZOOM,
-  CAMERA_PARAM_SUPPORTED_ZOOMRATIOS
+  CAMERA_PARAM_SUPPORTED_ZOOMRATIOS,
+  CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES
 };
 
 #ifdef PR_LOGGING

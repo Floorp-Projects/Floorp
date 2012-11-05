@@ -34,7 +34,8 @@ class nsJSContext : public nsIScriptContext,
                     public nsIXPCScriptNotify
 {
 public:
-  nsJSContext(JSRuntime *aRuntime);
+  nsJSContext(JSRuntime* aRuntime, bool aGCOnDestruction,
+              nsIScriptGlobalObject* aGlobalObject);
   virtual ~nsJSContext();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -42,11 +43,6 @@ public:
                                                          nsIScriptContext)
 
   virtual nsIScriptObjectPrincipal* GetObjectPrincipal();
-
-  virtual void SetGlobalObject(nsIScriptGlobalObject* aGlobalObject)
-  {
-    mGlobalObjectRef = aGlobalObject;
-  }
 
   virtual nsresult EvaluateString(const nsAString& aScript,
                                   JSObject* aScopeObject,
@@ -123,8 +119,6 @@ public:
   virtual nsresult SetProperty(JSObject* aTarget, const char* aPropName, nsISupports* aVal);
 
   virtual bool GetExecutingScript();
-
-  virtual void SetGCOnDestruction(bool aGCOnDestruction);
 
   virtual nsresult InitClasses(JSObject* aGlobalObj);
 
@@ -314,7 +308,9 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  virtual already_AddRefed<nsIScriptContext> CreateContext();
+  virtual already_AddRefed<nsIScriptContext>
+  CreateContext(bool aGCOnDestruction,
+                nsIScriptGlobalObject* aGlobalObject);
 
   virtual nsresult DropScriptObject(void *object);
   virtual nsresult HoldScriptObject(void *object);

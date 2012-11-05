@@ -46,7 +46,6 @@ class TempFile(object):
 
   __del__ = cleanup
 
-
 class TPSTestRunner(object):
 
   default_env = { 'MOZ_CRASHREPORTER_DISABLE': '1',
@@ -86,14 +85,15 @@ class TPSTestRunner(object):
   ffDateRe = re.compile(
       r"Firefox builddate: (?P<ffdate>.*)\n")
 
-  def __init__(self, extensionDir, emailresults=False, testfile="sync.test",
+  def __init__(self, extensionDir,
+               testfile="sync.test",
                binary=None, config=None, rlock=None, mobile=False,
-               autolog=False, logfile="tps.log",
+               logfile="tps.log", resultfile="tps_result.json",
                ignore_unused_engines=False):
     self.extensions = []
-    self.emailresults = emailresults
     self.testfile = testfile
     self.logfile = os.path.abspath(logfile)
+    self.resultfile = resultfile
     self.binary = binary
     self.ignore_unused_engines = ignore_unused_engines
     self.config = config if config else {}
@@ -105,7 +105,6 @@ class TPSTestRunner(object):
     self.nightly = False
     self.rlock = rlock
     self.mobile = mobile
-    self.autolog = autolog
     self.tpsxpi = None
     self.firefoxRunner = None
     self.extensionDir = extensionDir
@@ -131,6 +130,25 @@ class TPSTestRunner(object):
     f.close()
     if printToConsole:
       print msg
+
+  def writeToResultFile(self, postdata, body=None,
+                        sendTo='crossweave@mozilla.com'):
+    """Writes results to test file"""
+    f = open(self.resultfile, 'a')
+    if body is not None:
+      postdata['body'] = body
+    if self.numpassed is not None:
+      postdata['numpassed'] = self.numpassed
+    if self.numfailed is not None:
+      postdata['numfailed'] = self.numfailed
+    if self.firefoxRunner and self.firefoxRunner.url:
+      postdata['firefoxrunnerurl'] = self.firefoxRunner.url
+
+    postdata['sendTo'] = sendTo
+    results = {}
+    results['results'] = postdata
+    f.write(json.dumps(results, indent=2))
+    f.close()
 
   def _zip_add_file(self, zip, file, rootDir):
     zip.write(os.path.join(rootDir, file), file)
@@ -314,26 +332,19 @@ class TPSTestRunner(object):
       traceback.print_exc()
       self.numpassed = 0
       self.numfailed = 1
-      if self.emailresults:
-        try:
-          self.sendEmail('<pre>%s</pre>' % traceback.format_exc(),
-                         sendTo='crossweave@mozilla.com')
-        except:
-          traceback.print_exc()
-      else:
-        raise
-
+      try:
+        self.writeToResultFile(self.postdata,
+                               '<pre>%s</pre>' % traceback.format_exc())
+      except:
+        traceback.print_exc()
     else:
       try:
-        if self.autolog:
-          self.postToAutolog()
-        if self.emailresults:
-          self.sendEmail()
+        self.writeToResultFile(self.postdata)
       except:
         traceback.print_exc()
         try:
-          self.sendEmail('<pre>%s</pre>' % traceback.format_exc(),
-                         sendTo='crossweave@mozilla.com')
+          self.writeToResultFile(self.postdata,
+                                 '<pre>%s</pre>' % traceback.format_exc())
         except:
           traceback.print_exc()
 
@@ -409,100 +420,3 @@ class TPSTestRunner(object):
                       'addonversion': self.addonversion,
                       'synctype': self.synctype,
                     }
-
-  def sendEmail(self, body=None, sendTo=None):
-    # send the result e-mail
-    if self.config.get('email') and self.config['email'].get('username') \
-       and self.config['email'].get('password'):
-
-      from tps.sendemail import SendEmail
-      from tps.emailtemplate import GenerateEmailBody
-
-      if body is None:
-        buildUrl = None
-        if self.firefoxRunner and self.firefoxRunner.url:
-          buildUrl = self.firefoxRunner.url
-        body = GenerateEmailBody(self.postdata,
-                                 self.numpassed,
-                                 self.numfailed,
-                                 self.config['account']['serverURL'],
-                                 buildUrl)
-
-      subj = "TPS Report: "
-      if self.numfailed == 0 and self.numpassed > 0:
-        subj += "YEEEAAAHHH"
-      else:
-        subj += "PC LOAD LETTER"
-
-      changeset = self.postdata['productversion']['changeset'] if \
-          self.postdata and self.postdata.get('productversion') and \
-          self.postdata['productversion'].get('changeset') \
-          else 'unknown'
-      subj +=", changeset " + changeset + "; " + str(self.numfailed) + \
-             " failed, " + str(self.numpassed) + " passed"
-
-      To = [sendTo] if sendTo else None
-      if not To:
-        if self.numfailed > 0 or self.numpassed == 0:
-          To = self.config['email'].get('notificationlist')
-        else:
-          To = self.config['email'].get('passednotificationlist')
-
-      if To:
-        SendEmail(From=self.config['email']['username'],
-                  To=To,
-                  Subject=subj,
-                  HtmlData=body,
-                  Username=self.config['email']['username'],
-                  Password=self.config['email']['password'])
-
-  def postToAutolog(self):
-    from mozautolog import RESTfulAutologTestGroup as AutologTestGroup
-
-    group = AutologTestGroup(
-              harness='crossweave',
-              testgroup='crossweave-%s' % self.synctype,
-              server=self.config.get('es'),
-              restserver=self.config.get('restserver'),
-              machine=socket.gethostname(),
-              platform=self.config.get('platform', None),
-              os=self.config.get('os', None),
-            )
-    tree = self.postdata['productversion']['repository']
-    group.set_primary_product(
-              tree=tree[tree.rfind("/")+1:],
-              version=self.postdata['productversion']['version'],
-              buildid=self.postdata['productversion']['buildid'],
-              buildtype='opt',
-              revision=self.postdata['productversion']['changeset'],
-            )
-    group.add_test_suite(
-              passed=self.numpassed,
-              failed=self.numfailed,
-              todo=0,
-            )
-    for test in self.results:
-      if test['state'] != "TEST-PASS":
-        errorlog = self.errorlogs.get(test['name'])
-        errorlog_filename = errorlog.filename if errorlog else None
-        group.add_test_failure(
-              test = test['name'],
-              status = test['state'],
-              text = test['message'],
-              logfile = errorlog_filename
-            )
-    try:
-        group.submit()
-    except:
-        self.sendEmail('<pre>%s</pre>' % traceback.format_exc(),
-                       sendTo='crossweave@mozilla.com')
-        return
-
-    # Iterate through all testfailure objects, and update the postdata
-    # dict with the testfailure logurl's, if any.
-    for tf in group.testsuites[-1].testfailures:
-      result = [x for x in self.results if x.get('name') == tf.test]
-      if not result:
-        continue
-      result[0]['logurl'] = tf.logurl
-

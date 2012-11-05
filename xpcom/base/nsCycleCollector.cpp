@@ -132,13 +132,17 @@
 #include <io.h>
 #include <process.h>
 #endif
+#ifdef ANDROID
+#include <sys/stat.h>
+#endif
 
 #ifdef XP_WIN
 #include <windows.h>
 #endif
 
-#include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
+#include "mozilla/Likely.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/StandardInteger.h"
 #include "mozilla/Telemetry.h"
 
@@ -1563,8 +1567,20 @@ private:
         nsresult rv = logFile->AppendNative(filename);
         NS_ENSURE_SUCCESS(rv, nullptr);
 
-        rv = logFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+        rv = logFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
         NS_ENSURE_SUCCESS(rv, nullptr);
+#ifdef ANDROID
+        {
+            // On android the default system umask is 0077 which makes these files
+            // unreadable to the shell user. In order to pull the dumps off a non-rooted
+            // device we need to chmod them to something world-readable.
+            nsAutoCString path;
+            rv = logFile->GetNativePath(path);
+            if (NS_SUCCEEDED(rv)) {
+                chmod(PromiseFlatCString(path).get(), 0644);
+            }
+        }
+#endif
 
         return logFile.forget();
     }
@@ -1688,7 +1704,7 @@ private:
         MOZ_ASSERT(root);
         MOZ_ASSERT(participant);
 
-        if (!participant->CanSkipInCC(root) || NS_UNLIKELY(WantAllTraces())) {
+        if (!participant->CanSkipInCC(root) || MOZ_UNLIKELY(WantAllTraces())) {
             AddNode(root, participant);
         }
     }
@@ -1754,7 +1770,7 @@ GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
 
     mFlags |= flags;
 
-    mMergeCompartments = mMergeCompartments && NS_LIKELY(!WantAllTraces());
+    mMergeCompartments = mMergeCompartments && MOZ_LIKELY(!WantAllTraces());
 }
 
 GCGraphBuilder::~GCGraphBuilder()
@@ -1931,12 +1947,12 @@ GCGraphBuilder::NoteJSChild(void *child)
     }
 
     nsCString edgeName;
-    if (NS_UNLIKELY(WantDebugInfo())) {
+    if (MOZ_UNLIKELY(WantDebugInfo())) {
         edgeName.Assign(mNextEdgeName);
         mNextEdgeName.Truncate();
     }
 
-    if (xpc_GCThingIsGrayCCThing(child) || NS_UNLIKELY(WantAllTraces())) {
+    if (xpc_GCThingIsGrayCCThing(child) || MOZ_UNLIKELY(WantAllTraces())) {
         if (JSCompartment *comp = MergeCompartment(child)) {
             NoteChild(comp, mJSCompParticipant, edgeName);
         } else {

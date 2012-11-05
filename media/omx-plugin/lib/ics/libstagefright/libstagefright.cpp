@@ -19,111 +19,111 @@
 #include "stagefright/OMXClient.h"
 
 namespace android {
-MOZ_EXPORT_API(void)
+MOZ_EXPORT void
 MediaBuffer::release()
 {
 }
 
-MOZ_EXPORT_API(size_t)
+MOZ_EXPORT size_t
 MediaBuffer::range_offset() const
 {
   return 0;
 }
 
-MOZ_EXPORT_API(size_t)
+MOZ_EXPORT size_t
 MediaBuffer::range_length() const
 {
   return 0;
 }
 
-MOZ_EXPORT_API(sp<MetaData>)
+MOZ_EXPORT sp<MetaData>
 MediaBuffer::meta_data()
 {
   return 0;
 }
 
-MOZ_EXPORT_API(void*)
+MOZ_EXPORT void*
 MediaBuffer::data() const
 {
   return 0;
 }
 
-MOZ_EXPORT_API(size_t)
+MOZ_EXPORT size_t
 MediaBuffer::size() const
 {
   return 0;
 }
 
-MOZ_EXPORT_API(bool)
+MOZ_EXPORT bool
 MetaData::findInt32(uint32_t key, int32_t *value)
 {
   return false;
 }
 
-MOZ_EXPORT_API(bool)
+MOZ_EXPORT bool
 MetaData::findInt64(uint32_t key, int64_t *value)
 {
   return false;
 }
 
-MOZ_EXPORT_API(bool)
+MOZ_EXPORT bool
 MetaData::findPointer(uint32_t key, void **value)
 {
   return false;
 }
 
-MOZ_EXPORT_API(bool)
+MOZ_EXPORT bool
 MetaData::findCString(uint32_t key, const char **value)
 {
   return false;
 }
 
-MOZ_EXPORT_API(bool)
+MOZ_EXPORT bool
 MetaData::findRect(unsigned int key, int *cropLeft, int *cropTop,
                    int *cropRight, int *cropBottom)
 {
   abort();
 }
 
-MOZ_EXPORT_API(MediaSource::ReadOptions)::ReadOptions()
+MOZ_EXPORT MediaSource::ReadOptions::ReadOptions()
 {
 }
 
-MOZ_EXPORT_API(void)
+MOZ_EXPORT void
 MediaSource::ReadOptions::setSeekTo(int64_t time_us, SeekMode mode)
 {
 }
 
-MOZ_EXPORT_API(bool)
+MOZ_EXPORT bool
 DataSource::getUInt16(off64_t offset, uint16_t *x)
 {
   return false;
 }
 
-MOZ_EXPORT_API(status_t)
+MOZ_EXPORT status_t
 DataSource::getSize(off64_t *size)
 {
   return 0;
 }
 
-MOZ_EXPORT_API(String8)
+MOZ_EXPORT String8
 DataSource::getMIMEType() const
 {
   return String8();
 }
 
-MOZ_EXPORT_API(void)
+MOZ_EXPORT void
 DataSource::RegisterDefaultSniffers()
 {
 }
 
-MOZ_EXPORT_API(sp<MediaExtractor>)
+MOZ_EXPORT sp<MediaExtractor>
 MediaExtractor::Create(const sp<DataSource> &source, const char *mime)
 {
   return 0;
 }
 
-MOZ_EXPORT_API(sp<MediaSource>)
+MOZ_EXPORT sp<MediaSource>
 OMXCodec::Create(
             const sp<IOMX> &omx,
             const sp<MetaData> &meta, bool createEncoder,
@@ -135,16 +135,16 @@ OMXCodec::Create(
   return 0;
 }
 
-MOZ_EXPORT_API(OMXClient)::OMXClient()
+MOZ_EXPORT OMXClient::OMXClient()
 {
 }
 
-MOZ_EXPORT_API(status_t) OMXClient::connect()
+MOZ_EXPORT status_t OMXClient::connect()
 {
   return OK;
 }
 
-MOZ_EXPORT_API(void) OMXClient::disconnect()
+MOZ_EXPORT void OMXClient::disconnect()
 {
 }
 
@@ -161,5 +161,5 @@ virtual ~UnknownDataSource() { }
 
 UnknownDataSource foo;
 
-MOZ_EXPORT_API(UnknownDataSource)::UnknownDataSource() { }
+MOZ_EXPORT UnknownDataSource::UnknownDataSource() { }
 }

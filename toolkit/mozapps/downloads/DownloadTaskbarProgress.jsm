@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "DownloadTaskbarProgress",
 ];
 
@@ -19,7 +19,7 @@ const kTaskbarID = "@mozilla.org/windows-taskbar;1";
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadTaskbarProgress Object
 
-const DownloadTaskbarProgress =
+this.DownloadTaskbarProgress =
 {
   /**
    * Called when a browser window appears. This has an effect only when we

@@ -27,7 +27,7 @@ interface nsIChannelPolicy;
  * @version 0.3
  * @see imagelib2
  */
-[scriptable, uuid(f5a7c016-8caf-460a-b1a1-3fe5534d5c9e)]
+[scriptable, uuid(278c4c8e-934f-4364-b49b-081cd8b1d595)]
 interface imgILoader : nsISupports
 {
   // Extra flags to pass to loadImage if you want a load to use CORS
@@ -47,8 +47,6 @@ interface imgILoader : nsISupports
    * @param aLoadFlags Load flags for the request
    * @param aCacheKey cache key to use for a load if the original
    *                  image came from a request that had post data
-   * @param aRequest A newly created, unused imgIRequest object or NULL for one to
-                     be created for you.
 
 
    * libpr0n does NOT keep a strong ref to the observer; this prevents
@@ -65,7 +63,6 @@ interface imgILoader : nsISupports
                         in nsISupports aCX,
                         in nsLoadFlags aLoadFlags,
                         in nsISupports cacheKey,
-                        in imgIRequest aRequest,
                         in nsIChannelPolicy channelPolicy);
 
   /**

@@ -1,7 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99 ft=cpp:
- *
- * ***** BEGIN LICENSE BLOCK *****
+/*
  * Copyright (C) 2009, 2010 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,8 +21,7 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- *
- * ***** END LICENSE BLOCK ***** */
+ */
 
 #ifndef YarrInterpreter_h
 #define YarrInterpreter_h
@@ -72,7 +68,8 @@ struct ByteTerm {
         TypeParentheticalAssertionBegin,
         TypeParentheticalAssertionEnd,
         TypeCheckInput,
-        TypeUncheckInput
+        TypeUncheckInput,
+        TypeDotStarEnclosure
     } type;
     union {
         struct {
@@ -97,19 +94,18 @@ struct ByteTerm {
             int end;
             bool onceThrough;
         } alternative;
+        struct {
+            bool m_bol : 1;
+            bool m_eol : 1;
+        } anchors;
         unsigned checkInputCount;
     };
     unsigned frameLocation;
     bool m_capture : 1;
     bool m_invert : 1;
-    int inputPosition;
+    unsigned inputPosition;
 
-    // For js::Vector. Does not create a valid object.
-    ByteTerm()
-    {
-    }
-
-    ByteTerm(UChar ch, int inputPos, unsigned frameLocation, unsigned quantityCount, QuantifierType quantityType)
+    ByteTerm(UChar ch, int inputPos, unsigned frameLocation, Checked<unsigned> quantityCount, QuantifierType quantityType)
         : frameLocation(frameLocation)
         , m_capture(false)
         , m_invert(false)
@@ -128,11 +124,11 @@ struct ByteTerm {
 
         atom.patternCharacter = ch;
         atom.quantityType = quantityType;
-        atom.quantityCount = quantityCount;
+        atom.quantityCount = quantityCount.unsafeGet();
         inputPosition = inputPos;
     }
 
-    ByteTerm(UChar lo, UChar hi, int inputPos, unsigned frameLocation, unsigned quantityCount, QuantifierType quantityType)
+    ByteTerm(UChar lo, UChar hi, int inputPos, unsigned frameLocation, Checked<unsigned> quantityCount, QuantifierType quantityType)
         : frameLocation(frameLocation)
         , m_capture(false)
         , m_invert(false)
@@ -152,7 +148,7 @@ struct ByteTerm {
         atom.casedCharacter.lo = lo;
         atom.casedCharacter.hi = hi;
         atom.quantityType = quantityType;
-        atom.quantityCount = quantityCount;
+        atom.quantityCount = quantityCount.unsafeGet();
         inputPosition = inputPos;
     }
 
@@ -199,6 +195,11 @@ struct ByteTerm {
         inputPosition = inputPos;
     }
 
+    // For js::Vector. Does not create a valid object.
+    ByteTerm()
+    {
+    }
+
     static ByteTerm BOL(int inputPos)
     {
         ByteTerm term(TypeAssertionBOL);
@@ -206,17 +207,17 @@ struct ByteTerm {
         return term;
     }
 
-    static ByteTerm CheckInput(unsigned count)
+    static ByteTerm CheckInput(Checked<unsigned> count)
     {
         ByteTerm term(TypeCheckInput);
-        term.checkInputCount = count;
+        term.checkInputCount = count.unsafeGet();
         return term;
     }
 
-    static ByteTerm UncheckInput(unsigned count)
+    static ByteTerm UncheckInput(Checked<unsigned> count)
     {
         ByteTerm term(TypeUncheckInput);
-        term.checkInputCount = count;
+        term.checkInputCount = count.unsafeGet();
         return term;
     }
     
@@ -302,6 +303,14 @@ struct ByteTerm {
     {
         return ByteTerm(TypeSubpatternEnd);
     }
+    
+    static ByteTerm DotStarEnclosure(bool bolAnchor, bool eolAnchor)
+    {
+        ByteTerm term(TypeDotStarEnclosure);
+        term.anchors.m_bol = bolAnchor;
+        term.anchors.m_eol = eolAnchor;
+        return term;
+    }
 
     bool invert()
     {
@@ -315,7 +324,7 @@ struct ByteTerm {
 };
 
 class ByteDisjunction {
-    WTF_MAKE_FAST_ALLOCATED
+    WTF_MAKE_FAST_ALLOCATED;
 public:
     ByteDisjunction(unsigned numSubpatterns, unsigned frameSize)
         : m_numSubpatterns(numSubpatterns)
@@ -329,7 +338,7 @@ public:
 };
 
 struct BytecodePattern {
-    WTF_MAKE_FAST_ALLOCATED
+    WTF_MAKE_FAST_ALLOCATED;
 public:
     BytecodePattern(PassOwnPtr<ByteDisjunction> body, const Vector<ByteDisjunction*> &allParenthesesInfo, YarrPattern& pattern, BumpPointerAllocator* allocator)
         : m_body(body)
@@ -368,6 +377,11 @@ private:
     Vector<ByteDisjunction*> m_allParenthesesInfo;
     Vector<CharacterClass*> m_userCharacterClasses;
 };
+
+JS_EXPORT_PRIVATE PassOwnPtr<BytecodePattern> byteCompile(YarrPattern&, BumpPointerAllocator*);
+JS_EXPORT_PRIVATE unsigned interpret(BytecodePattern*, const String& input, unsigned start, unsigned* output);
+unsigned interpret(BytecodePattern*, const LChar* input, unsigned length, unsigned start, unsigned* output);
+unsigned interpret(BytecodePattern*, const UChar* input, unsigned length, unsigned start, unsigned* output);
 
 } } // namespace JSC::Yarr
 

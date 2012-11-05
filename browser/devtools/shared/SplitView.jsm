@@ -5,7 +5,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["SplitView"];
+this.EXPORTED_SYMBOLS = ["SplitView"];
 
 /* this must be kept in sync with CSS (ie. splitview.css) */
 const LANDSCAPE_MEDIA_QUERY = "(min-width: 551px)";
@@ -26,7 +26,7 @@ const BINDING_USERDATA = "splitview-binding";
  * @param DOMElement aRoot
  * @see appendItem
  */
-function SplitView(aRoot)
+this.SplitView = function SplitView(aRoot)
 {
   this._root = aRoot;
   this._controller = aRoot.querySelector(".splitview-controller");

@@ -146,7 +146,6 @@
 
 // For reporting errors with the console service.
 // These can go away if error reporting is propagated up past nsDocShell.
-#include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 
 // used to dispatch urls to default protocol handlers
@@ -825,10 +824,6 @@ nsDocShell::~nsDocShell()
                gNumberOfDocShells, mHistoryID);
     }
 #endif
-
-    if (mInPrivateBrowsing) {
-        DecreasePrivateDocShellCount();
-    }
 }
 
 nsresult
@@ -2019,6 +2014,20 @@ nsDocShell::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing)
 NS_IMETHODIMP
 nsDocShell::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
 {
+#ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+    nsContentUtils::ReportToConsoleNonLocalized(
+        NS_LITERAL_STRING("Only internal code is allowed to set the usePrivateBrowsing attribute"),
+        nsIScriptError::warningFlag,
+        "Internal API Used",
+        mContentViewer ? mContentViewer->GetDocument() : nullptr);
+#endif
+
+    return SetPrivateBrowsing(aUsePrivateBrowsing);
+}
+
+NS_IMETHODIMP
+nsDocShell::SetPrivateBrowsing(bool aUsePrivateBrowsing)
+{
     bool changed = aUsePrivateBrowsing != mInPrivateBrowsing;
     if (changed) {
         mInPrivateBrowsing = aUsePrivateBrowsing;
@@ -2028,12 +2037,12 @@ nsDocShell::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
             DecreasePrivateDocShellCount();
         }
     }
-    
+
     int32_t count = mChildList.Count();
     for (int32_t i = 0; i < count; ++i) {
         nsCOMPtr<nsILoadContext> shell = do_QueryInterface(ChildAt(i));
         if (shell) {
-            shell->SetUsePrivateBrowsing(aUsePrivateBrowsing);
+            shell->SetPrivateBrowsing(aUsePrivateBrowsing);
         }
     }
 
@@ -2150,8 +2159,8 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
     *aFullscreenAllowed = false;
 
     // For non-content boundaries, check that the enclosing iframe element
-    // has the mozallowfullscreen attribute set to true. If any ancestor
-    // iframe does not have mozallowfullscreen=true, then fullscreen is
+    // has the allowfullscreen attribute set to true. If any ancestor
+    // iframe does not have allowfullscreen=true, then fullscreen is
     // prohibited.
     nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(GetAsSupports(this));
     if (!win) {
@@ -2160,12 +2169,13 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
     nsCOMPtr<nsIContent> frameElement = do_QueryInterface(win->GetFrameElementInternal());
     if (frameElement &&
         frameElement->IsHTML(nsGkAtoms::iframe) &&
+        !frameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) &&
         !frameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozallowfullscreen)) {
         return NS_OK;
     }
 
     // If we have no parent then we're the root docshell; no ancestor of the
-    // original docshell doesn't have a mozallowfullscreen attribute, so
+    // original docshell doesn't have a allowfullscreen attribute, so
     // report fullscreen as allowed.
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_GetInterface(GetAsSupports(this));
     NS_ENSURE_TRUE(dsti, NS_OK);
@@ -2772,7 +2782,7 @@ nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
     if (parentAsLoadContext &&
         NS_SUCCEEDED(parentAsLoadContext->GetUsePrivateBrowsing(&value)))
     {
-        SetUsePrivateBrowsing(value);
+        SetPrivateBrowsing(value);
 #ifndef MOZ_PER_WINDOW_PRIVATE_BROWSING
         // Belt and suspenders - we want to catch any instances where the flag
         // we're propagating doesn't match the global state.
@@ -4914,6 +4924,12 @@ nsDocShell::Destroy()
     // Cancel any timers that were set for this docshell; this is needed
     // to break the cycle between us and the timers.
     CancelRefreshURITimers();
+
+    if (mInPrivateBrowsing) {
+        mInPrivateBrowsing = false;
+        DecreasePrivateDocShellCount();
+    }
+
     return NS_OK;
 }
 

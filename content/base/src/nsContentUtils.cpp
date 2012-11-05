@@ -7,6 +7,7 @@
 /* A namespace class for static layout utilities. */
 
 #include "mozilla/Util.h"
+#include "mozilla/Likely.h"
 
 #include "jsapi.h"
 #include "jsdbgapi.h"
@@ -2759,7 +2760,6 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                               aLoadingDocument,     /* uniquification key */
                               aLoadFlags,           /* load flags */
                               nullptr,               /* cache key */
-                              nullptr,               /* existing request*/
                               channelPolicy,        /* CSP info */
                               aRequest);
 }
@@ -3214,6 +3214,33 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
                "Supply either both parameters and their number or no"
                "parameters and 0.");
 
+  nsresult rv;
+  nsXPIDLString errorText;
+  if (aParams) {
+    rv = FormatLocalizedString(aFile, aMessageName, aParams, aParamsLength,
+                               errorText);
+  }
+  else {
+    rv = GetLocalizedString(aFile, aMessageName, errorText);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return ReportToConsoleNonLocalized(errorText, aErrorFlags, aCategory,
+                                     aDocument, aURI, aSourceLine,
+                                     aLineNumber, aColumnNumber);
+}
+
+
+/* static */ nsresult
+nsContentUtils::ReportToConsoleNonLocalized(const nsAString& aErrorText,
+                                            uint32_t aErrorFlags,
+                                            const char *aCategory,
+                                            nsIDocument* aDocument,
+                                            nsIURI* aURI,
+                                            const nsAFlatString& aSourceLine,
+                                            uint32_t aLineNumber,
+                                            uint32_t aColumnNumber)
+{
   uint64_t innerWindowID = 0;
   if (aDocument) {
     if (!aURI) {
@@ -3227,16 +3254,6 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
     rv = CallGetService(NS_CONSOLESERVICE_CONTRACTID, &sConsoleService);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  nsXPIDLString errorText;
-  if (aParams) {
-    rv = FormatLocalizedString(aFile, aMessageName, aParams, aParamsLength,
-                               errorText);
-  }
-  else {
-    rv = GetLocalizedString(aFile, aMessageName, errorText);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString spec;
   if (!aLineNumber) {
@@ -3258,7 +3275,7 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
       do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = errorObject->InitWithWindowID(errorText,
+  rv = errorObject->InitWithWindowID(aErrorText,
                                      NS_ConvertUTF8toUTF16(spec), // file name
                                      aSourceLine,
                                      aLineNumber, aColumnNumber,
@@ -5618,7 +5635,7 @@ nsContentUtils::ASCIIToLower(nsAString& aStr)
 {
   PRUnichar* iter = aStr.BeginWriting();
   PRUnichar* end = aStr.EndWriting();
-  if (NS_UNLIKELY(!iter || !end)) {
+  if (MOZ_UNLIKELY(!iter || !end)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   while (iter != end) {
@@ -5639,7 +5656,7 @@ nsContentUtils::ASCIIToLower(const nsAString& aSource, nsAString& aDest)
   aDest.SetLength(len);
   if (aDest.Length() == len) {
     PRUnichar* dest = aDest.BeginWriting();
-    if (NS_UNLIKELY(!dest)) {
+    if (MOZ_UNLIKELY(!dest)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     const PRUnichar* iter = aSource.BeginReading();
@@ -5662,7 +5679,7 @@ nsContentUtils::ASCIIToUpper(nsAString& aStr)
 {
   PRUnichar* iter = aStr.BeginWriting();
   PRUnichar* end = aStr.EndWriting();
-  if (NS_UNLIKELY(!iter || !end)) {
+  if (MOZ_UNLIKELY(!iter || !end)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   while (iter != end) {
@@ -5683,7 +5700,7 @@ nsContentUtils::ASCIIToUpper(const nsAString& aSource, nsAString& aDest)
   aDest.SetLength(len);
   if (aDest.Length() == len) {
     PRUnichar* dest = aDest.BeginWriting();
-    if (NS_UNLIKELY(!dest)) {
+    if (MOZ_UNLIKELY(!dest)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     const PRUnichar* iter = aSource.BeginReading();
@@ -6613,47 +6630,32 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
 
 #ifdef MOZ_MEDIA
 #ifdef MOZ_OGG
-  if (nsHTMLMediaElement::IsOggEnabled()) {
-    for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gOggTypes); ++i) {
-      const char* type = nsHTMLMediaElement::gOggTypes[i];
-      if (!strcmp(aType, type)) {
-        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
-        if (docFactory && aLoaderType) {
-          *aLoaderType = TYPE_CONTENT;
-        }
-        return docFactory.forget();
-      }
+  if (nsHTMLMediaElement::IsOggType(nsDependentCString(aType))) {
+    docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_CONTENT;
     }
+    return docFactory.forget();
   }
 #endif
 
 #ifdef MOZ_WEBM
-  if (nsHTMLMediaElement::IsWebMEnabled()) {
-    for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gWebMTypes); ++i) {
-      const char* type = nsHTMLMediaElement::gWebMTypes[i];
-      if (!strcmp(aType, type)) {
-        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
-        if (docFactory && aLoaderType) {
-          *aLoaderType = TYPE_CONTENT;
-        }
-        return docFactory.forget();
-      }
+  if (nsHTMLMediaElement::IsWebMType(nsDependentCString(aType))) {
+    docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_CONTENT;
     }
+    return docFactory.forget();
   }
 #endif
 
 #ifdef MOZ_GSTREAMER
-  if (nsHTMLMediaElement::IsH264Enabled()) {
-    for (unsigned int i = 0; i < ArrayLength(nsHTMLMediaElement::gH264Types); ++i) {
-      const char* type = nsHTMLMediaElement::gH264Types[i];
-      if (!strcmp(aType, type)) {
-        docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
-        if (docFactory && aLoaderType) {
-          *aLoaderType = TYPE_CONTENT;
-        }
-        return docFactory.forget();
-      }
+  if (nsHTMLMediaElement::IsGStreamerSupportedType(nsDependentCString(aType))) {
+    docFactory = do_GetService("@mozilla.org/content/document-loader-factory;1");
+    if (docFactory && aLoaderType) {
+      *aLoaderType = TYPE_CONTENT;
     }
+    return docFactory.forget();
   }
 #endif
 
@@ -6667,7 +6669,6 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
     return docFactory.forget();
   }
 #endif // MOZ_MEDIA_PLUGINS
-
 #endif // MOZ_MEDIA
 
   return NULL;
@@ -6681,30 +6682,34 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
   NS_ENSURE_TRUE(aDocument->GetScriptGlobalObject(), true);
 
-  JSContext* ctx = (JSContext*) aDocument->GetScriptGlobalObject()->
+  JSContext* cx = aDocument->GetScriptGlobalObject()->
                                   GetContext()->GetNativeContext();
-  NS_ENSURE_TRUE(ctx, true);
+  NS_ENSURE_TRUE(cx, true);
 
-  JSAutoRequest ar(ctx);
+  JSAutoRequest ar(cx);
 
   // The pattern has to match the entire value.
   aPattern.Insert(NS_LITERAL_STRING("^(?:"), 0);
   aPattern.Append(NS_LITERAL_STRING(")$"));
 
-  JSObject* re = JS_NewUCRegExpObjectNoStatics(ctx, reinterpret_cast<jschar*>
+  JSObject* re = JS_NewUCRegExpObjectNoStatics(cx, static_cast<jschar*>
                                                  (aPattern.BeginWriting()),
-                                                aPattern.Length(), 0);
-  NS_ENSURE_TRUE(re, true);
+                                               aPattern.Length(), 0);
+  if (!re) {
+    JS_ClearPendingException(cx);
+    return true;
+  }
 
-  jsval rval = JSVAL_NULL;
+  JS::Value rval = JS::NullValue();
   size_t idx = 0;
-  JSBool res;
+  if (!JS_ExecuteRegExpNoStatics(cx, re,
+                                 static_cast<jschar*>(aValue.BeginWriting()),
+                                 aValue.Length(), &idx, true, &rval)) {
+    JS_ClearPendingException(cx);
+    return true;
+  }
 
-  res = JS_ExecuteRegExpNoStatics(ctx, re, reinterpret_cast<jschar*>
-                                    (aValue.BeginWriting()),
-                                  aValue.Length(), &idx, JS_TRUE, &rval);
-
-  return res == JS_FALSE || rval != JSVAL_NULL;
+  return !rval.isNull();
 }
 
 // static

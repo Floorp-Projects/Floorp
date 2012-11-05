@@ -305,7 +305,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
   // Passing in null for channelPolicy here since nsMenuItemIconX::LoadIcon is
   // not exposed to web content
   nsresult rv = loader->LoadImage(aIconURI, nullptr, nullptr, nullptr, loadGroup, this,
-                                   nullptr, nsIRequest::LOAD_NORMAL, nullptr, nullptr,
+                                   nullptr, nsIRequest::LOAD_NORMAL, nullptr,
                                    nullptr, getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv)) return rv;
 

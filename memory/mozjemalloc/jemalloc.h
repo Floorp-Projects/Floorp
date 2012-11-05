@@ -59,7 +59,7 @@ void	jemalloc_stats(jemalloc_stats_t *stats);
 __attribute__((weak))
 #endif
 #if defined(MOZ_JEMALLOC)
-MOZ_IMPORT_API(int) wrap(nallocm)(size_t *rsize, size_t size, int flags);
+MOZ_IMPORT_API int wrap(nallocm)(size_t *rsize, size_t size, int flags);
 #else
 size_t je_malloc_good_size(size_t size);
 #endif

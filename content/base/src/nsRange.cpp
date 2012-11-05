@@ -30,6 +30,7 @@
 #include "nsTextFrame.h"
 #include "nsFontFaceList.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Likely.h"
 
 using namespace mozilla;
 
@@ -395,7 +396,7 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
                    "mStartOffset is beyond the end of this node");
       newStartOffset = static_cast<uint32_t>(mStartOffset) - aInfo->mChangeStart;
       newStartNode = aInfo->mDetails->mNextSibling;
-      if (NS_UNLIKELY(aContent == mRoot)) {
+      if (MOZ_UNLIKELY(aContent == mRoot)) {
         newRoot = IsValidBoundary(newStartNode);
       }
 
@@ -457,14 +458,14 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
     if (removed == mStartParent) {
       newStartOffset = static_cast<uint32_t>(mStartOffset) + aInfo->mChangeStart;
       newStartNode = aContent;
-      if (NS_UNLIKELY(removed == mRoot)) {
+      if (MOZ_UNLIKELY(removed == mRoot)) {
         newRoot = IsValidBoundary(newStartNode);
       }
     }
     if (removed == mEndParent) {
       newEndOffset = static_cast<uint32_t>(mEndOffset) + aInfo->mChangeStart;
       newEndNode = aContent;
-      if (NS_UNLIKELY(removed == mRoot)) {
+      if (MOZ_UNLIKELY(removed == mRoot)) {
         newRoot = IsValidBoundary(newEndNode);
       }
     }

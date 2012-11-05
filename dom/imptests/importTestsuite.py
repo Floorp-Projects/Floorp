@@ -10,6 +10,8 @@ Note: removes both source and destination directory before starting. Do not
       use with outstanding changes in either directory.
 """
 
+from __future__ import print_function, unicode_literals
+
 import os
 import shutil
 import subprocess
@@ -32,7 +34,7 @@ def getData(confFile):
   dest = ""
   directories = []
   try:
-    fp = open(confFile, "rb")
+    fp = open(confFile, "r")
     first = True
     for line in fp:
       if first:
@@ -56,7 +58,7 @@ def copy(thissrcdir, dest, directories):
   """Copy mochitests and support files from the external HG directory to their
   place in mozilla-central.
   """
-  print "Copying %s..." % (directories, )
+  print("Copying %s..." % directories)
   for d in directories:
     subdirs, mochitests, supportfiles = parseManifestFile(dest, d)
     sourcedir = makePath("hg-%s" % dest, d)
@@ -79,9 +81,9 @@ def printMakefile(dest, directories):
   """Create a .mk file to be included into the main Makefile.in, which lists the
   directories with tests.
   """
-  print "Creating .mk..."
+  print("Creating .mk...")
   path = dest + ".mk"
-  fp = open(path, "wb")
+  fp = open(path, "w")
   fp.write("DIRS += \\\n")
   fp.write(writeMakefile.makefileString([makePath(dest, d) for d in directories]))
   fp.write("\n")
@@ -91,14 +93,10 @@ def printMakefile(dest, directories):
 def printMakefiles(thissrcdir, dest, directories):
   """Create Makefile.in files for each directory that contains tests we import.
   """
-  print "Creating Makefile.ins..."
+  print("Creating Makefile.ins...")
   for d in directories:
-    if d:
-      path = "%s/%s" % (dest, d)
-    else:
-      # Empty directory, i.e., the repository root
-      path = dest
-    print "Creating Makefile.in in %s..." % (path, )
+    path = makePath(dest, d)
+    print("Creating Makefile.in in %s..." % path)
 
     subdirs, mochitests, supportfiles = parseManifestFile(dest, d)
 
@@ -107,13 +105,13 @@ def printMakefiles(thissrcdir, dest, directories):
 
     result = writeMakefile.substMakefile("importTestsuite.py", subdirs, files)
 
-    fp = open(path + "/Makefile.in", "wb")
+    fp = open(path + "/Makefile.in", "w")
     fp.write(result)
     fp.close()
 
 def hgadd(dest, directories):
   """Inform hg of the files in |directories|."""
-  print "hg addremoving..."
+  print("hg addremoving...")
   for d in directories:
     subprocess.check_call(["hg", "addremove", "%s/%s" % (dest, d)])
 
@@ -125,26 +123,26 @@ def importRepo(confFile, thissrcdir):
   try:
     repo, dest, directories = getData(confFile)
     hgdest = "hg-%s" % (dest, )
-    print "Going to clone %s to %s..." % (repo, hgdest)
-    print "Removing %s..." % dest
+    print("Going to clone %s to %s..." % (repo, hgdest))
+    print("Removing %s..." % dest)
     subprocess.check_call(["rm", "--recursive", "--force", dest])
-    print "Removing %s..." % hgdest
+    print("Removing %s..." % hgdest)
     subprocess.check_call(["rm", "--recursive", "--force", hgdest])
-    print "Cloning %s to %s..." % (repo, hgdest)
+    print("Cloning %s to %s..." % (repo, hgdest))
     subprocess.check_call(["hg", "clone", repo, hgdest])
-    print "Going to import %s..." % (directories, )
+    print("Going to import %s..." % directories)
     importDirs(thissrcdir, dest, directories)
     printMakefile(dest, directories)
     hgadd(dest, directories)
-    print "Removing %s again..." % hgdest
+    print("Removing %s again..." % hgdest)
     subprocess.check_call(["rm", "--recursive", "--force", hgdest])
-  except subprocess.CalledProcessError, e:
-    print e.returncode
+  except subprocess.CalledProcessError as e:
+    print(e.returncode)
   finally:
-    print "Done"
+    print("Done")
 
 if __name__ == "__main__":
   if len(sys.argv) != 2:
-    print "Need one argument."
+    print("Need one argument.")
   else:
     importRepo(sys.argv[1], "dom/imptests")

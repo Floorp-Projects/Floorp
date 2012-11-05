@@ -23,8 +23,15 @@ using namespace mozilla;
 //
 // set NSPR_LOG_MODULES=nsPipe:5
 //
-static PRLogModuleInfo *gPipeLog = PR_NewLogModule("nsPipe");
-#define LOG(args) PR_LOG(gPipeLog, PR_LOG_DEBUG, args)
+static PRLogModuleInfo *
+GetPipeLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("nsPipe");
+  return sLog;
+}
+#define LOG(args) PR_LOG(GetPipeLog(), PR_LOG_DEBUG, args)
 #else
 #define LOG(args)
 #endif
