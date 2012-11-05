@@ -12,7 +12,6 @@ const Cr = Components.results;
 this.EXPORTED_SYMBOLS = ['AccessFu'];
 
 Cu.import('resource://gre/modules/Services.jsm');
-Cu.import('resource://gre/modules/Geometry.jsm');
 
 Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 Cu.import('resource://gre/modules/accessibility/TouchAdapter.jsm');
@@ -32,33 +31,25 @@ this.AccessFu = {
       // XXX: only supports attaching to one window now.
       throw new Error('Only one window could be attached to AccessFu');
 
-    Logger.info('attach');
     this.chromeWin = aWindow;
 
     this.prefsBranch = Cc['@mozilla.org/preferences-service;1']
       .getService(Ci.nsIPrefService).getBranch('accessibility.accessfu.');
     this.prefsBranch.addObserver('activate', this, false);
 
-    this.touchAdapter = TouchAdapter;
-
-    switch (Utils.MozBuildApp) {
-      case 'mobile/android':
-        Services.obs.addObserver(this, 'Accessibility:Settings', false);
-        Cc['@mozilla.org/android/bridge;1'].
-          getService(Ci.nsIAndroidBridge).handleGeckoMessage(
-            JSON.stringify({ gecko: { type: 'Accessibility:Ready' } }));
-        this.touchAdapter = AndroidTouchAdapter;
-        break;
-      case 'b2g':
-        aWindow.addEventListener(
-          'ContentStart',
-          (function(event) {
-             let content = aWindow.shell.contentBrowser.contentWindow;
-             content.addEventListener('mozContentEvent', this, false, true);
-           }).bind(this), false);
-        break;
-      default:
-        break;
+    try {
+      Cc['@mozilla.org/android/bridge;1'].
+        getService(Ci.nsIAndroidBridge).handleGeckoMessage(
+          JSON.stringify({ gecko: { type: 'Accessibility:Ready' } }));
+      Services.obs.addObserver(this, 'Accessibility:Settings', false);
+    } catch (x) {
+      // Not on Android
+      aWindow.addEventListener(
+        'ContentStart',
+        (function(event) {
+           let content = aWindow.shell.contentBrowser.contentWindow;
+           content.addEventListener('mozContentEvent', this, false, true);
+         }).bind(this), false);
     }
 
     try {
@@ -79,7 +70,13 @@ this.AccessFu = {
       return;
     this._enabled = true;
 
+    Cu.import('resource://gre/modules/accessibility/Utils.jsm');
+    Cu.import('resource://gre/modules/accessibility/TouchAdapter.jsm');
+
     Logger.info('enable');
+
+    this.touchAdapter = (Utils.MozBuildApp == 'mobile/android') ?
+      AndroidTouchAdapter : TouchAdapter;
 
     for each (let mm in Utils.getAllMessageManagers(this.chromeWin))
       this._loadFrameScript(mm);
@@ -137,7 +134,7 @@ this.AccessFu = {
       else
         this._disable();
     } catch (x) {
-      Logger.logException(x);
+      dump('Error ' + x.message + ' ' + x.fileName + ':' + x.lineNumber);
     }
   },
 
@@ -176,7 +173,6 @@ this.AccessFu = {
   },
 
   observe: function observe(aSubject, aTopic, aData) {
-    Logger.debug('observe', aTopic);
     switch (aTopic) {
       case 'Accessibility:Settings':
         this._systemPref = JSON.parse(aData).enabled;
@@ -253,6 +249,7 @@ this.AccessFu = {
 var Output = {
   attach: function attach(aWindow) {
     this.chromeWin = aWindow;
+    Cu.import('resource://gre/modules/Geometry.jsm');
   },
 
   Speech: function Speech(aDetails, aBrowser) {
@@ -482,36 +479,39 @@ var Input = {
     mm.sendAsyncMessage('AccessFu:Scroll', {page: aPage, horizontal: aHorizontal, origin: 'top'});
   },
 
-  keyMap: {
-    a: ['moveNext', 'Anchor'],
-    A: ['movePrevious', 'Anchor'],
-    b: ['moveNext', 'Button'],
-    B: ['movePrevious', 'Button'],
-    c: ['moveNext', 'Combobox'],
-    C: ['movePrevious', 'Combobox'],
-    e: ['moveNext', 'Entry'],
-    E: ['movePrevious', 'Entry'],
-    f: ['moveNext', 'FormElement'],
-    F: ['movePrevious', 'FormElement'],
-    g: ['moveNext', 'Graphic'],
-    G: ['movePrevious', 'Graphic'],
-    h: ['moveNext', 'Heading'],
-    H: ['movePrevious', 'Heading'],
-    i: ['moveNext', 'ListItem'],
-    I: ['movePrevious', 'ListItem'],
-    k: ['moveNext', 'Link'],
-    K: ['movePrevious', 'Link'],
-    l: ['moveNext', 'List'],
-    L: ['movePrevious', 'List'],
-    p: ['moveNext', 'PageTab'],
-    P: ['movePrevious', 'PageTab'],
-    r: ['moveNext', 'RadioButton'],
-    R: ['movePrevious', 'RadioButton'],
-    s: ['moveNext', 'Separator'],
-    S: ['movePrevious', 'Separator'],
-    t: ['moveNext', 'Table'],
-    T: ['movePrevious', 'Table'],
-    x: ['moveNext', 'Checkbox'],
-    X: ['movePrevious', 'Checkbox']
+  get keyMap() {
+    delete this.keyMap;
+    this.keyMap = {
+      a: ['moveNext', 'Anchor'],
+      A: ['movePrevious', 'Anchor'],
+      b: ['moveNext', 'Button'],
+      B: ['movePrevious', 'Button'],
+      c: ['moveNext', 'Combobox'],
+      C: ['movePrevious', 'Combobox'],
+      e: ['moveNext', 'Entry'],
+      E: ['movePrevious', 'Entry'],
+      f: ['moveNext', 'FormElement'],
+      F: ['movePrevious', 'FormElement'],
+      g: ['moveNext', 'Graphic'],
+      G: ['movePrevious', 'Graphic'],
+      h: ['moveNext', 'Heading'],
+      H: ['movePrevious', 'Heading'],
+      i: ['moveNext', 'ListItem'],
+      I: ['movePrevious', 'ListItem'],
+      k: ['moveNext', 'Link'],
+      K: ['movePrevious', 'Link'],
+      l: ['moveNext', 'List'],
+      L: ['movePrevious', 'List'],
+      p: ['moveNext', 'PageTab'],
+      P: ['movePrevious', 'PageTab'],
+      r: ['moveNext', 'RadioButton'],
+      R: ['movePrevious', 'RadioButton'],
+      s: ['moveNext', 'Separator'],
+      S: ['movePrevious', 'Separator'],
+      t: ['moveNext', 'Table'],
+      T: ['movePrevious', 'Table'],
+      x: ['moveNext', 'Checkbox'],
+      X: ['movePrevious', 'Checkbox']
+    };
   }
 };
