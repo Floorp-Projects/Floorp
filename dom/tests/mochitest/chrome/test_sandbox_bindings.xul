@@ -92,6 +92,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       } catch (e) {
         ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox");
       }
+
+      try {
+        // have to run this test before document.defaultView.XMLHttpRequest
+        // gets munged in the sandbox.
+        var proto = Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox);
+        props = [];
+        for (var i in proto) {
+          props.push(i);
+        }
+        isnot(props.indexOf("dispatchEvent"), -1,
+           "'dispatchEvent' property should be enumerable on XMLHttpRequest.prototype");
+        props = Object.getOwnPropertyNames(proto);
+        is(props.indexOf("dispatchEvent"), -1,
+           "'dispatchEvent' is not an own property on XMLHttpRequest.prototype; it's on EventTarget.prototype")
+      } catch (e) {
+        ok(false, "XMLHttpRequest.prototype manipulation via an Xray shouldn't throw" + e);
+      }
+
       try {
         Components.utils.evalInSandbox("document.defaultView.XMLHttpRequest = function() {};", sandbox);
         var win = Components.utils.evalInSandbox("document.defaultView", sandbox);
@@ -132,6 +150,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       } catch (e) {
         ok(false, "Imagedata manipulation via an Xray shouldn't throw " + e);
       }
+
+      try {
+        var list = Components.utils.evalInSandbox("document.getElementsByTagName('*')", sandbox);
+        props = [];
+        for (var i in list) {
+          props.push(i);
+        }
+        is(props.indexOf("constructor"), -1,
+           "'constructor' property should not be enumerable on list object");
+        props = Object.getOwnPropertyNames(list);
+        is(props.indexOf("constructor"), -1,
+           "'constructor' property should not be an own property name on list object");
+      } catch (e) {
+        ok(false, "NodeList.prototype manipulation via an Xray shouldn't throw" + e);
+      }
+
+      try {
+        var proto = Components.utils.evalInSandbox("NodeList.prototype", sandbox);
+        props = [];
+        for (var i in proto) {
+          props.push(i);
+        }
+        is(props.indexOf("constructor"), -1,
+           "'constructor' property should not be enumerable on proto directly");
+        props = Object.getOwnPropertyNames(proto);
+        isnot(props.indexOf("constructor"), -1,
+              "'constructor' property should be an own property name on proto");
+      } catch (e) {
+        ok(false, "NodeList.prototype manipulation via an Xray shouldn't throw" + e);
+      }
+
       SimpleTest.finish();
     }
 
