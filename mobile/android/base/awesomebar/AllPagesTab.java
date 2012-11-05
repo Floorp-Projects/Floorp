@@ -54,6 +54,7 @@ import android.widget.TabHost.TabContentFactory;
 import android.widget.TextView;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -265,9 +266,20 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             if (keywordCol != -1)
                 keyword = mCursor.getString(keywordCol);
 
-            return new ContextMenuSubject(id,
-                                          mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.URL)),
-                                          mCursor.getBlob(mCursor.getColumnIndexOrThrow(URLColumns.FAVICON)),
+            final String url = mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.URL));
+
+            Favicons favicons = GeckoApp.mAppContext.getFavicons();
+            Drawable faviconDrawable = favicons.getFaviconFromMemCache(url);
+            byte[] favicon = null;
+
+            if (faviconDrawable != null) {
+                Bitmap bitmap = ((BitmapDrawable) faviconDrawable).getBitmap();
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                favicon = stream.toByteArray();
+            }
+
+            return new ContextMenuSubject(id, url, favicon,
                                           mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.TITLE)),
                                           keyword,
                                           mCursor.getInt(mCursor.getColumnIndexOrThrow(Combined.DISPLAY)));
