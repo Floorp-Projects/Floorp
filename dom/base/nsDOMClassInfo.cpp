@@ -523,7 +523,9 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 
 #include "nsIDOMNavigatorSystemMessages.h"
 
+#ifdef MOZ_SYS_MSG
 #include "mozilla/dom/Activity.h"
+#endif
 #include "TimeManager.h"
 
 #include "DOMCameraManager.h"
@@ -1691,8 +1693,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(LockedFile, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
+#ifdef MOZ_SYS_MSG
   NS_DEFINE_CLASSINFO_DATA(MozActivity, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
+#endif
 
   NS_DEFINE_CLASSINFO_DATA(MozTimeManager, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1730,7 +1734,9 @@ NS_DEFINE_CONTRACT_CTOR(XSLTProcessor,
                         "@mozilla.org/document-transformer;1?type=xslt")
 NS_DEFINE_CONTRACT_CTOR(EventSource, NS_EVENTSOURCE_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(MutationObserver, NS_DOMMUTATIONOBSERVER_CONTRACTID)
+#ifdef MOZ_SYS_MSG
 NS_DEFINE_CONTRACT_CTOR(MozActivity, NS_DOMACTIVITY_CONTRACTID)
+#endif
 
 #undef NS_DEFINE_CONTRACT_CTOR
 
@@ -1801,7 +1807,9 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XSLTProcessor, XSLTProcessorCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(EventSource, EventSourceCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MutationObserver, MutationObserverCtor)
+#ifdef MOZ_SYS_MSG
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozActivity, MozActivityCtor)
+#endif
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nullptr;
@@ -4445,11 +4453,13 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLockedFile)
   DOM_CLASSINFO_MAP_END
 
+#ifdef MOZ_SYS_MSG
   DOM_CLASSINFO_MAP_BEGIN(MozActivity, nsIDOMMozActivity)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozActivity)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
+#endif
 
   DOM_CLASSINFO_MAP_BEGIN(MozTimeManager, nsIDOMMozTimeManager)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozTimeManager)
