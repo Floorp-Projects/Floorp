@@ -57,10 +57,6 @@ public:
 
   void Clear();
 
-  // FIXME: remove these once chrome hang has switched to using offsets.
-  bool HasModule(const Module &aModule) const;
-  void RemoveModule(unsigned aIndex);
-
 private:
   std::vector<Module> mModules;
   std::vector<Frame> mStack;
