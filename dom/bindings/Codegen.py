@@ -2025,8 +2025,11 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
     if type.isSequence():
         assert not isEnforceRange and not isClamp
 
-        if failureCode is not None:
-            raise TypeError("Can't handle sequences when failureCode is not None")
+        if failureCode is None:
+            notSequence = "return ThrowErrorMessage(cx, MSG_NOT_SEQUENCE);"
+        else:
+            notSequence = failureCode
+
         nullable = type.nullable();
         # Be very careful not to change "type": we need it later
         if nullable:
@@ -2071,7 +2074,7 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
 
         templateBody = ("""JSObject* seq = &${val}.toObject();\n
 if (!IsArrayLike(cx, seq)) {
-  return ThrowErrorMessage(cx, MSG_NOT_SEQUENCE);
+%s
 }
 uint32_t length;
 // JS_GetArrayLength actually works on all objects
@@ -2088,7 +2091,8 @@ for (uint32_t i = 0; i < length; ++i) {
   if (!JS_GetElement(cx, seq, i, &temp)) {
     return false;
   }
-""" % (elementDeclType.define(),
+""" % (CGIndenter(CGGeneric(notSequence)).define(),
+       elementDeclType.define(),
        elementDeclType.define(),
        arrayRef))
 
