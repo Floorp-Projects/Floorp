@@ -419,5 +419,36 @@ this.NetworkHelper =
     "application/x-json": "json",
     "application/json-rpc": "json",
     "application/x-web-app-manifest+json": "json",
-  }
+  },
+
+  /**
+   * Check if the given MIME type is a text-only MIME type.
+   *
+   * @param string aMimeType
+   * @return boolean
+   */
+  isTextMimeType: function NH_isTextMimeType(aMimeType)
+  {
+    if (aMimeType.indexOf("text/") == 0) {
+      return true;
+    }
+
+    if (/^application\/[a-z-]+\+xml$/.test(aMimeType)) {
+      return true;
+    }
+
+    switch (NetworkHelper.mimeCategoryMap[aMimeType]) {
+      case "txt":
+      case "js":
+      case "json":
+      case "css":
+      case "html":
+      case "svg":
+      case "xml":
+        return true;
+
+      default:
+        return false;
+    }
+  },
 }

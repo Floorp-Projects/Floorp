@@ -98,7 +98,7 @@ function onNetworkEventUpdate(aState, aType, aPacket)
       break;
     case "responseContent":
       expectedPacket = {
-        mimeType: /^application\/(json|octet-stream)$/,
+        mimeType: "application/json",
         contentSize: 0,
         discardResponseBody: true,
       };
