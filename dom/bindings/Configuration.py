@@ -172,10 +172,14 @@ class Descriptor(DescriptorProvider):
                 headerDefault = headerDefault.replace("::", "/") + ".h"
         self.headerFile = desc.get('headerFile', headerDefault)
 
-        if self.interface.isCallback() or self.interface.isExternal():
+        self.skipGen = desc.get('skipGen', False)
+
+        if (self.interface.isCallback() or self.interface.isExternal() or
+            self.skipGen):
             if 'castable' in desc:
-                raise TypeError("%s is external or callback but has a castable "
-                                "setting" % self.interface.identifier.name)
+                raise TypeError("%s is external or callback or skipGen but has "
+                                "a castable setting" %
+                                self.interface.identifier.name)
             self.castable = False
         else:
             self.castable = desc.get('castable', True)
