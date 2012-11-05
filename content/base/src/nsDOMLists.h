@@ -33,6 +33,11 @@ public:
     mNames.Clear();
   }
 
+  void CopyList(nsTArray<nsString>& aNames)
+  {
+    aNames = mNames;
+  }
+
 private:
   nsTArray<nsString> mNames;
 };

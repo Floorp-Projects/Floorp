@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=772869
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 772869</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=772869">Mozilla Bug 772869</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <a class="foo" name="x"></a>
+  <span class="foo" id="y"></span>
+  <span class="foo" name="x"></span>
+  <form class="foo" name="z" id="w"></form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 772869 **/
+var x = document.getElementsByClassName("foo");
+x.something = "another";
+names = [];
+for (var name in x) {
+  names.push(name);
+}
+is(names.length, 13, "Should have 13 items");
+is(names[0], "0", "Entry 1")
+is(names[1], "1", "Entry 2")
+is(names[2], "2", "Entry 3")
+is(names[3], "3", "Entry 4")
+is(names[4], "x", "Entry 5")
+is(names[5], "y", "Entry 6")
+is(names[6], "z", "Entry 7")
+is(names[7], "w", "Entry 8")
+is(names[8], "something", "Entry 9")
+is(names[9], "item", "Entry 10")
+is(names[10], "namedItem", "Entry 11")
+is(names[11], "iterator", "Entry 12")
+is(names[12], "length", "Entry 13")
+</script>
+</pre>
+</body>
+</html>

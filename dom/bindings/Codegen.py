@@ -5372,6 +5372,7 @@ class CGDOMJSProxyHandler_getOwnPropertyNames(ClassMethod):
         ClassMethod.__init__(self, "getOwnPropertyNames", "bool", args)
         self.descriptor = descriptor
     def getBody(self):
+        # Per spec, we do indices, then named props, then everything else
         indexedGetter = self.descriptor.operations['IndexedGetter']
         if indexedGetter:
             addIndices = """uint32_t length = UnwrapProxy(proxy)->Length();
@@ -5386,13 +5387,27 @@ for (int32_t i = 0; i < int32_t(length); ++i) {
         else:
             addIndices = ""
 
-        return addIndices + """JSObject* expando;
+        supportsNames = (self.descriptor.operations['NamedGetter'] or
+                         self.descriptor.operations['NamedSetter'] or
+                         self.descriptor.operations['NamedCreator'] or
+                         self.descriptor.operations['NamedDeleter'])
+        if supportsNames:
+            addNames = """nsTArray<nsString> names;
+UnwrapProxy(proxy)->GetSupportedNames(names);
+if (!AppendNamedPropertyIds(cx, proxy, names, props)) {
+  return false;
+}
+
+"""
+        else:
+            addNames = ""
+
+        return addIndices + addNames + """JSObject* expando;
 if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = DOMProxyHandler::GetExpandoObject(proxy)) &&
     !js::GetPropertyNames(cx, expando, JSITER_OWNONLY | JSITER_HIDDEN, &props)) {
   return false;
 }
 
-// FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=772869 Add named items
 return true;"""
 
 class CGDOMJSProxyHandler_hasOwn(ClassMethod):

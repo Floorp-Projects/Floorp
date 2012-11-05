@@ -100,6 +100,7 @@ public:
 
   virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
                               mozilla::ErrorResult& error);
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames);
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
                              const nsAString& aName);
@@ -2539,4 +2540,23 @@ nsFormControlList::NamedItem(JSContext* cx, const nsAString& name,
     return nullptr;
   }
   return &v.toObject();
+}
+
+static PLDHashOperator
+CollectNames(const nsAString& aName,
+             nsISupports* /* unused */,
+             void* aClosure)
+{
+  static_cast<nsTArray<nsString>*>(aClosure)->AppendElement(aName);
+  return PL_DHASH_NEXT;
+}
+
+void
+nsFormControlList::GetSupportedNames(nsTArray<nsString>& aNames)
+{
+  FlushPendingNotifications();
+  // Just enumerate mNameLookupTable.  This won't guarantee order, but
+  // that's OK, because the HTML5 spec doesn't define an order for
+  // this enumeration.
+  mNameLookupTable.EnumerateRead(CollectNames, &aNames);
 }
