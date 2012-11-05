@@ -867,7 +867,7 @@ struct JSRuntime : js::RuntimeFriendFields
      * and for each JSObject::remove method call that frees a slot in the given
      * object. See js_NativeGet and js_NativeSet in jsobj.cpp.
      */
-    int32_t             propertyRemovals;
+    uint32_t            propertyRemovals;
 
     /* Number localization, used by jsnum.c */
     const char          *thousandsSeparator;
