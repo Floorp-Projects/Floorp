@@ -1882,7 +1882,8 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
                                     treatNullAs="Default",
                                     treatUndefinedAs="Default",
                                     isEnforceRange=False,
-                                    isClamp=False):
+                                    isClamp=False,
+                                    isNullOrUndefined=False):
     """
     Get a template for converting a JS value to a native object based on the
     given type and descriptor.  If failureCode is given, then we're actually
@@ -3582,6 +3583,37 @@ class CGMethodCall(CGThing):
             def distinguishingType(signature):
                 return signature[1][distinguishingIndex].type
 
+            def tryCall(signature, indent, isDefinitelyObject=False,
+                        isNullOrUndefined=False):
+                assert not isDefinitelyObject or not isNullOrUndefined
+                assert isDefinitelyObject or isNullOrUndefined
+                if isDefinitelyObject:
+                    failureCode = "break;"
+                else:
+                    failureCode = None
+                type = distinguishingType(signature)
+                # The argument at index distinguishingIndex can't possibly
+                # be unset here, because we've already checked that argc is
+                # large enough that we can examine this argument.
+                testCode = instantiateJSToNativeConversionTemplate(
+                    getJSToNativeConversionTemplate(type, descriptor,
+                                                    failureCode=failureCode,
+                                                    isDefinitelyObject=isDefinitelyObject,
+                                                    isNullOrUndefined=isNullOrUndefined),
+                    {
+                        "declName" : "arg%d" % distinguishingIndex,
+                        "holderName" : ("arg%d" % distinguishingIndex) + "_holder",
+                        "val" : distinguishingArg
+                        })
+                caseBody.append(CGIndenter(testCode, indent));
+                # If we got this far, we know we unwrapped to the right
+                # C++ type, so just do the call.  Start conversion with
+                # distinguishingIndex + 1, since we already converted
+                # distinguishingIndex.
+                caseBody.append(CGIndenter(
+                        getPerSignatureCall(signature, distinguishingIndex + 1),
+                        indent))
+
             # First check for null or undefined.  That means looking for
             # nullable arguments at the distinguishing index and outputting a
             # separate branch for them.  But if the nullable argument is a
@@ -3594,13 +3626,19 @@ class CGMethodCall(CGThing):
             # extra branch: we'll fall through to conversion for those types,
             # which correctly handles null as needed, because isObject() will be
             # false for null and undefined.
-            pickFirstSignature(
-                "%s.isNullOrUndefined()" % distinguishingArg,
-                lambda s: ((distinguishingType(s).nullable() and not
-                            distinguishingType(s).isString() and not
-                            distinguishingType(s).isEnum() and not
-                            distinguishingType(s).isPrimitive()) or
-                           distinguishingType(s).isDictionary()))
+            nullOrUndefSigs = [s for s in possibleSignatures
+                               if ((distinguishingType(s).nullable() and not
+                                    distinguishingType(s).isString() and not
+                                    distinguishingType(s).isEnum() and not
+                                   distinguishingType(s).isPrimitive()) or
+                                   distinguishingType(s).isDictionary())]
+            # Can't have multiple nullable types here
+            assert len(nullOrUndefSigs) < 2
+            if len(nullOrUndefSigs) > 0:
+                caseBody.append(CGGeneric("if (%s.isNullOrUndefined()) {" %
+                                          distinguishingArg))
+                tryCall(nullOrUndefSigs[0], 2, isNullOrUndefined=True)
+                caseBody.append(CGGeneric("}"))
 
             # Now check for distinguishingArg being various kinds of objects.
             # The spec says to check for the following things in order:
@@ -3653,32 +3691,12 @@ class CGMethodCall(CGThing):
                 # unwrapping test to skip having to do codegen for the
                 # null-or-undefined case, which we already handled above.
                 caseBody.append(CGGeneric("if (%s.isObject()) {" %
-                                          (distinguishingArg)))
+                                          distinguishingArg))
                 for sig in objectSigs:
                     caseBody.append(CGIndenter(CGGeneric("do {")));
-                    type = distinguishingType(sig)
-
-                    # The argument at index distinguishingIndex can't possibly
-                    # be unset here, because we've already checked that argc is
-                    # large enough that we can examine this argument.
-                    testCode = instantiateJSToNativeConversionTemplate(
-                        getJSToNativeConversionTemplate(type, descriptor,
-                                                        failureCode="break;",
-                                                        isDefinitelyObject=True),
-                        {
-                            "declName" : "arg%d" % distinguishingIndex,
-                            "holderName" : ("arg%d" % distinguishingIndex) + "_holder",
-                            "val" : distinguishingArg
-                            })
-
-                    # Indent by 4, since we need to indent further than our "do" statement
-                    caseBody.append(CGIndenter(testCode, 4));
-                    # If we got this far, we know we unwrapped to the right
-                    # C++ type, so just do the call.  Start conversion with
-                    # distinguishingIndex + 1, since we already converted
-                    # distinguishingIndex.
-                    caseBody.append(CGIndenter(
-                            getPerSignatureCall(sig, distinguishingIndex + 1), 4))
+                    # Indent by 4, since we need to indent further
+                    # than our "do" statement
+                    tryCall(sig, 4, isDefinitelyObject=True)
                     caseBody.append(CGIndenter(CGGeneric("} while (0);")))
 
                 caseBody.append(CGGeneric("}"))
