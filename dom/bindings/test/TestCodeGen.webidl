@@ -441,15 +441,19 @@ interface TestIndexedAndNamedGetterInterface {
 
 interface TestIndexedSetterInterface {
   setter creator void setItem(unsigned long index, DOMString item);
+  getter DOMString (unsigned long index);
 };
 
 interface TestNamedSetterInterface {
   setter creator void (DOMString name, TestIndexedSetterInterface item);
+  getter TestIndexedSetterInterface (DOMString name);
 };
 
 interface TestIndexedAndNamedSetterInterface {
   setter creator void (unsigned long index, TestIndexedSetterInterface item);
+  getter TestIndexedSetterInterface (unsigned long index);
   setter creator void setNamedItem(DOMString name, TestIndexedSetterInterface item);
+  getter TestIndexedSetterInterface (DOMString name);
 };
 
 interface TestIndexedAndNamedGetterAndSetterInterface : TestIndexedSetterInterface {
@@ -465,23 +469,29 @@ interface TestIndexedAndNamedGetterAndSetterInterface : TestIndexedSetterInterfa
 
 interface TestIndexedDeleterInterface {
   deleter void delItem(unsigned long index);
+  getter long (unsigned long index);
 };
 
 interface TestIndexedDeleterWithRetvalInterface {
   deleter boolean delItem(unsigned long index);
+  getter long (unsigned long index);
 };
 
 interface TestNamedDeleterInterface {
   deleter void (DOMString name);
+  getter long (DOMString name);
 };
 
 interface TestNamedDeleterWithRetvalInterface {
   deleter boolean delNamedItem(DOMString name);
+  getter long (DOMString name);
 };
 
 interface TestIndexedAndNamedDeleterInterface {
   deleter void (unsigned long index);
+  getter long (unsigned long index);
   deleter void delNamedItem(DOMString name);
+  getter long (DOMString name);
 };
 
 interface TestCppKeywordNamedMethodsInterface {
