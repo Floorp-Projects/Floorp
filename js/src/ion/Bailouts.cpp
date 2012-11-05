@@ -61,7 +61,7 @@ InlineFrameIterator::InlineFrameIterator(const IonBailoutIterator *iter)
 void
 IonBailoutIterator::dump() const
 {
-    if (type_ == IonFrame_JS) {
+    if (type_ == IonFrame_OptimizedJS) {
         InlineFrameIterator frames(this);
         for (;;) {
             frames.dump();
@@ -350,7 +350,7 @@ EnsureExitFrame(IonCommonFrameLayout *frame)
         return;
     }
 
-    JS_ASSERT(frame->prevType() == IonFrame_JS);
+    JS_ASSERT(frame->prevType() == IonFrame_OptimizedJS);
     frame->changePrevType(IonFrame_Bailed_JS);
 }
 
