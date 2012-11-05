@@ -1955,6 +1955,9 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
     # Also, we should not have a defaultValue if we know we're an object
     assert(not isDefinitelyObject or defaultValue is None)
 
+    # And we can't both be an object and be null or undefined
+    assert not isDefinitelyObject or not isNullOrUndefined
+
     # Helper functions for dealing with failures due to the JS value being the
     # wrong type of value
     def onFailureNotAnObject(failureCode):
@@ -1995,8 +1998,14 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
 
     # A helper function for wrapping up the template body for
     # possibly-nullable objecty stuff
-    def wrapObjectTemplate(templateBody, isDefinitelyObject, type,
-                           codeToSetNull, failureCode=None):
+    def wrapObjectTemplate(templateBody, type, codeToSetNull, failureCode=None):
+        if isNullOrUndefined:
+            assert type.nullable()
+            # Just ignore templateBody and set ourselves to null.
+            # Note that wedon't have to worry about default values
+            # here either, since we already examined this value.
+            return "%s;" % codeToSetNull
+
         if not isDefinitelyObject:
             # Handle the non-object cases by wrapping up the whole
             # thing in an if cascade.
@@ -2107,8 +2116,7 @@ for (uint32_t i = 0; i < length; ++i) {
                     ))).define()
 
         templateBody += "\n}"
-        templateBody = wrapObjectTemplate(templateBody, isDefinitelyObject,
-                                          type,
+        templateBody = wrapObjectTemplate(templateBody, type,
                                           "const_cast< %s & >(${declName}).SetNull()" % mutableTypeName.define())
         return (templateBody, typeName, None, isOptional)
 
@@ -2427,8 +2435,8 @@ for (uint32_t i = 0; i < length; ++i) {
             # And store our tmp, before it goes out of scope.
             templateBody += "${declName} = tmp;"
 
-        templateBody = wrapObjectTemplate(templateBody, isDefinitelyObject,
-                                          type, "${declName} = NULL",
+        templateBody = wrapObjectTemplate(templateBody, type,
+                                          "${declName} = NULL",
                                           failureCode)
 
         declType = CGGeneric(declType)
@@ -2483,7 +2491,7 @@ for (uint32_t i = 0; i < length; ++i) {
             template += "%s = ${holderName}.addr();" % nullableTarget
         elif not isOptional:
             template += "${declName} = ${holderName}.addr();"
-        template = wrapObjectTemplate(template, isDefinitelyObject, type,
+        template = wrapObjectTemplate(template, type,
                                       "%s = NULL" % nullableTarget,
                                       failureCode)
 
@@ -2626,7 +2634,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 "} else {\n"
                 "%s"
                 "}" % CGIndenter(onFailureNotCallable(failureCode)).define(),
-                isDefinitelyObject, type,
+                type,
                 "${declName} = nullptr",
                 failureCode)
         return (template, declType, None, isOptional)
@@ -2649,7 +2657,7 @@ for (uint32_t i = 0; i < length; ++i) {
             raise TypeError("Can't handle member 'object'; need to sort out "
                             "rooting issues")
         template = wrapObjectTemplate("${declName} = &${val}.toObject();",
-                                      isDefinitelyObject, type,
+                                      type,
                                       "${declName} = NULL",
                                       failureCode)
         if type.nullable():
