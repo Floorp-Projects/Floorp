@@ -26,20 +26,6 @@
 using namespace js;
 using namespace js::ion;
 
-JSScript *
-ion::MaybeScriptFromCalleeToken(CalleeToken token)
-{
-    AutoAssertNoGC nogc;
-    switch (GetCalleeTokenTag(token)) {
-      case CalleeToken_Script:
-        return CalleeTokenToScript(token);
-      case CalleeToken_Function:
-        return CalleeTokenToFunction(token)->script();
-    }
-    JS_NOT_REACHED("invalid callee token tag");
-    return NULL;
-}
-
 IonFrameIterator::IonFrameIterator(const IonActivationIterator &activations)
     : current_(activations.top()),
       type_(IonFrame_Exit),
@@ -174,7 +160,7 @@ IonFrameIterator::script() const
 {
     AutoAssertNoGC nogc;
     JS_ASSERT(isScripted());
-    RawScript script = MaybeScriptFromCalleeToken(calleeToken());
+    RawScript script = ScriptFromCalleeToken(calleeToken());
     JS_ASSERT(script);
     return script;
 }
