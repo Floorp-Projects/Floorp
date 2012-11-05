@@ -16,7 +16,6 @@ MOCHITEST_FILES := \
   test_DOMImplementation-createDocument.html.json \
   test_Document-createElementNS.html.json \
   test_Document-getElementsByTagName.html.json \
-  test_Element-children.html.json \
   test_Event-constructors.html.json \
   test_Event-defaultPrevented.html.json \
   test_EventTarget-dispatchEvent.html.json \

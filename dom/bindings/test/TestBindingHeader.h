@@ -612,6 +612,7 @@ public:
   virtual nsISupports* GetParentObject();
 
   void NamedGetter(const nsAString&, bool&, nsAString&);
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestIndexedAndNamedGetterInterface : public nsISupports,
@@ -627,6 +628,7 @@ public:
   void NamedGetter(const nsAString&, bool&, nsAString&);
   void NamedItem(const nsAString&, nsAString&);
   uint32_t Length();
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestIndexedSetterInterface : public nsISupports,
@@ -652,6 +654,7 @@ public:
   virtual nsISupports* GetParentObject();
 
   void NamedSetter(const nsAString&, TestIndexedSetterInterface&);
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestIndexedAndNamedSetterInterface : public nsISupports,
@@ -666,6 +669,7 @@ public:
   void IndexedSetter(uint32_t, TestIndexedSetterInterface&);
   void NamedSetter(const nsAString&, TestIndexedSetterInterface&);
   void SetNamedItem(const nsAString&, TestIndexedSetterInterface&);
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestIndexedAndNamedGetterAndSetterInterface : public TestIndexedSetterInterface
@@ -680,6 +684,7 @@ public:
   void NamedSetter(const nsAString&, const nsAString&);
   void Stringify(nsAString&);
   uint32_t Length();
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestCppKeywordNamedMethodsInterface : public nsISupports,
@@ -736,6 +741,7 @@ public:
   virtual nsISupports* GetParentObject();
 
   void NamedDeleter(const nsAString&, bool&);
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestNamedDeleterWithRetvalInterface : public nsISupports,
@@ -751,6 +757,7 @@ public:
   bool NamedDeleter(const nsAString&) MOZ_DELETE;
   bool DelNamedItem(const nsAString&);
   bool DelNamedItem(const nsAString&, bool&) MOZ_DELETE;
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestIndexedAndNamedDeleterInterface : public nsISupports,
@@ -768,6 +775,7 @@ public:
   void NamedDeleter(const nsAString&) MOZ_DELETE;
   void DelNamedItem(const nsAString&);
   void DelNamedItem(const nsAString&, bool&) MOZ_DELETE;
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 } // namespace dom

@@ -52,6 +52,7 @@ public:
 
   virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
                               ErrorResult& error);
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames);
 
   NS_IMETHOD    ParentDestroyed();
 
@@ -272,6 +273,24 @@ TableRowsCollection::NamedItem(JSContext* cx, const nsAString& name,
   );
   return nullptr;
 }
+
+void
+TableRowsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
+{
+  DO_FOR_EACH_ROWGROUP(
+    nsTArray<nsString> names;
+    nsCOMPtr<nsIHTMLCollection> coll = do_QueryInterface(rows);
+    if (coll) {
+      coll->GetSupportedNames(names);
+      for (uint32_t i = 0; i < names.Length(); ++i) {
+        if (!aNames.Contains(names[i])) {
+          aNames.AppendElement(names[i]);
+        }
+      }
+    }
+  );
+}
+
 
 NS_IMETHODIMP 
 TableRowsCollection::NamedItem(const nsAString& aName,
