@@ -46,6 +46,8 @@ public:
                     NS_ASSERTION(mInStreamCount >= 0, "mInStreamCount has gone negative");
                 }
 
+    size_t     SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+
     // GCC 2.95.2 requires this to be defined, although we never call it.
     // and OS/2 requires that it not be private
     nsDiskCacheStreamIO() { NS_NOTREACHED("oops"); }
