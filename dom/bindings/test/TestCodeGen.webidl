@@ -425,7 +425,6 @@ dictionary DictContainingSequence {
 
 interface TestIndexedGetterInterface {
   getter long item(unsigned long index);
-  [Infallible]
   readonly attribute unsigned long length;
 };
 
@@ -436,7 +435,6 @@ interface TestNamedGetterInterface {
 interface TestIndexedAndNamedGetterInterface {
   getter long (unsigned long index);
   getter DOMString namedItem(DOMString name);
-  [Infallible]
   readonly attribute unsigned long length;
 };
 
@@ -462,9 +460,7 @@ interface TestIndexedAndNamedGetterAndSetterInterface : TestIndexedSetterInterfa
   getter DOMString namedItem(DOMString name);
   setter creator void (unsigned long index, long item);
   setter creator void (DOMString name, DOMString item);
-  [Infallible]
   stringifier DOMString ();
-  [Infallible]
   readonly attribute unsigned long length;
 };
 
