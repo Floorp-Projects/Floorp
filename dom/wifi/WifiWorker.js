@@ -51,6 +51,8 @@ var WifiManager = (function() {
   var controlWorker = new ChromeWorker(WIFIWORKER_WORKER);
   var eventWorker = new ChromeWorker(WIFIWORKER_WORKER);
 
+  var manager = {};
+
   // Callbacks to invoke when a reply arrives from the controlWorker.
   var controlCallbacks = Object.create(null);
   var idgen = 0;
@@ -242,16 +244,19 @@ var WifiManager = (function() {
   // that when we're not connected to any network. This ensures that we'll
   // automatically reconnect to networks if one falls out of range.
   var reEnableBackgroundScan = false;
-  var backgroundScanEnabled = false;
+
+  // NB: This is part of the internal API.
+  manager.backgroundScanEnabled = false;
   function setBackgroundScan(enable, callback) {
     var doEnable = (enable === "ON");
-    if (doEnable === backgroundScanEnabled) {
+    if (doEnable === manager.backgroundScanEnabled) {
       callback(false, true);
       return;
     }
 
-    backgroundScanEnabled = doEnable;
-    doBooleanCommand("SET pno " + (backgroundScanEnabled ? "1" : "0"), "OK",
+    manager.backgroundScanEnabled = doEnable;
+    doBooleanCommand("SET pno " + (manager.backgroundScanEnabled ? "1" : "0"),
+                     "OK",
                      function(ok) {
                        callback(true, ok);
                      });
@@ -616,8 +621,6 @@ var WifiManager = (function() {
     });
   }
 
-  var manager = {};
-
   var suppressEvents = false;
   function notify(eventName, eventObject) {
     if (suppressEvents)
@@ -644,7 +647,7 @@ var WifiManager = (function() {
     }
 
     // Stop background scanning if we're trying to connect to a network.
-    if (backgroundScanEnabled &&
+    if (manager.backgroundScanEnabled &&
         (fields.state === "ASSOCIATING" ||
          fields.state === "ASSOCIATED" ||
          fields.state === "FOUR_WAY_HANDSHAKE" ||
@@ -707,22 +710,9 @@ var WifiManager = (function() {
     notifyStateChange({ state: state, fromStatus: true });
 
     // If we parse the status and the supplicant has already entered the
-    // COMPLETED state, then we need to set up DHCP right away. Otherwise, if
-    // we're not actively connecting to a network, we need to turn on
-    // background scanning.
-    switch (state) {
-      case "COMPLETED":
-        onconnected();
-        break;
-
-      case "DISCONNECTED":
-      case "INACTIVE":
-      case "SCANNING":
-        setBackgroundScan("ON", function(){});
-
-      default:
-        break;
-    }
+    // COMPLETED state, then we need to set up DHCP right away.
+    if (state === "COMPLETED")
+      onconnected();
   }
 
   // try to connect to the supplicant
@@ -1535,6 +1525,36 @@ function WifiWorker() {
   this._connectionInfoTimer = null;
   this._reconnectOnDisconnect = false;
 
+  // XXX On some phones (Otoro and Unagi) the wifi driver doesn't play nicely
+  // with the automatic scans that wpa_supplicant does (it appears that the
+  // driver forgets that it's returned scan results and then refuses to try to
+  // rescan. In order to detect this case we start a timer when we enter the
+  // SCANNING state and reset it whenever we either get scan results or leave
+  // the SCANNING state. If the timer fires, we assume that we are stuck and
+  // forceably try to unstick the supplican, also turning on background
+  // scanning to avoid having to constantly poke the supplicant.
+
+  // How long we wait is controlled by the SCAN_STUCK_WAIT constant.
+  const SCAN_STUCK_WAIT = 12000;
+  this._scanStuckTimer = null;
+  this._turnOnBackgroundScan = false;
+
+  function startScanStuckTimer() {
+    self._scanStuckTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    self._scanStuckTimer.initWithCallback(scanIsStuck, SCAN_STUCK_WAIT,
+                                          Ci.nsITimer.TYPE_ONE_SHOT);
+  }
+
+  function scanIsStuck() {
+    // Uh-oh, we've waited too long for scan results. Disconnect (which
+    // guarantees that we leave the SCANNING state and tells wpa_supplicant to
+    // wait for our next command) ensure that background scanning is on and
+    // then try again.
+    debug("Determined that scanning is stuck, turning on background scanning!");
+    WifiManager.disconnect(function(ok) {});
+    self._turnOnBackgroundScan = true;
+  }
+
   // A list of requests to turn wifi on or off.
   this._stateRequests = [];
 
@@ -1646,6 +1666,8 @@ function WifiWorker() {
 
     // Notify everybody, even if they didn't ask us to come up.
     self._fireEvent("wifiUp", {});
+    if (WifiManager.state === "SCANNING")
+      startScanStuckTimer();
   };
 
   WifiManager.onsupplicantlost = function() {
@@ -1690,6 +1712,12 @@ function WifiWorker() {
         this.state !== "CONNECTED" &&
         this.state !== "COMPLETED") {
       self._stopConnectionInfoTimer();
+    }
+
+    if (this.state !== "SCANNING" &&
+        self._scanStuckTimer) {
+      self._scanStuckTimer.cancel();
+      self._scanStuckTimer = null;
     }
 
     switch (this.state) {
@@ -1754,6 +1782,13 @@ function WifiWorker() {
         self.currentNetwork = null;
         self.ipAddress = "";
 
+        if (self._turnOnBackgroundScan) {
+          self._turnOnBackgroundScan = false;
+          WifiManager.setBackgroundScan("ON", function(did_something, ok) {
+            WifiManager.reassociate(function() {});
+          });
+        }
+
         WifiManager.connectionDropped(function() {
           // We've disconnected from a network because of a call to forgetNetwork.
           // Reconnect to the next available network (if any).
@@ -1762,8 +1797,6 @@ function WifiWorker() {
             WifiManager.reconnect(function(){});
           }
         });
-
-        WifiManager.setBackgroundScan("ON", function(){});
 
         WifiNetworkInterface.state =
           Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
@@ -1786,6 +1819,12 @@ function WifiWorker() {
         break;
       case "WPS_OVERLAP_DETECTED":
         self._fireEvent("onwpsoverlap", {});
+        break;
+      case "SCANNING":
+        // If we're already scanning in the background, we don't need to worry
+        // about getting stuck while scanning.
+        if (!WifiManager.backgroundScanEnabled && WifiManager.enabled)
+          startScanStuckTimer();
         break;
     }
   };
@@ -1818,6 +1857,13 @@ function WifiWorker() {
   };
 
   WifiManager.onscanresultsavailable = function() {
+    if (self._scanStuckTimer) {
+      // We got scan results! We must not be stuck for now, try again.
+      self._scanStuckTimer.cancel();
+      self._scanStuckTimer.initWithCallback(scanIsStuck, SCAN_STUCK_WAIT,
+                                            Ci.nsITimer.TYPE_ONE_SHOT);
+    }
+
     if (self.wantScanResults.length === 0) {
       debug("Scan results available, but we don't need them");
       return;
