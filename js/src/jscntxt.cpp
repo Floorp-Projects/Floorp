@@ -380,13 +380,10 @@ JSRuntime::markSelfHostedGlobal(JSTracer *trc)
 }
 
 JSFunction *
-JSRuntime::getSelfHostedFunction(JSContext *cx, const char *name)
+JSRuntime::getSelfHostedFunction(JSContext *cx, Handle<PropertyName*> name)
 {
     RootedObject holder(cx, cx->global()->getIntrinsicsHolder());
-    JSAtom *atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return NULL;
-    RootedId id(cx, AtomToId(atom));
+    RootedId id(cx, NameToId(name));
     RootedValue funVal(cx, NullValue());
     if (!cloneSelfHostedValueById(cx, id, holder, &funVal))
         return NULL;

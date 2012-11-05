@@ -250,7 +250,7 @@ js_CloneFunctionObject(JSContext *cx, js::HandleFunction fun,
 
 extern JSFunction *
 js_DefineFunction(JSContext *cx, js::HandleObject obj, js::HandleId id, JSNative native,
-                  unsigned nargs, unsigned flags, const char *selfHostedName = NULL,
+                  unsigned nargs, unsigned flags, js::Handle<js::PropertyName*> selfHostedName = JS::NullPtr(),
                   js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
 namespace js {
