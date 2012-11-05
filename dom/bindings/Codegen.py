@@ -3540,8 +3540,12 @@ class CGMethodCall(CGThing):
 
             distinguishingIndex = method.distinguishingIndexForArgCount(argCount)
 
-            # We can't handle unions at the distinguishing index.
-            for (returnType, args) in possibleSignatures:
+            for (_, args) in possibleSignatures:
+                # We should not have "any" args at distinguishingIndex,
+                # since we have multiple possible signatures remaining,
+                # but "any" is never distinguishable from anything else.
+                assert not args[distinguishingIndex].type.isAny()
+                # We can't handle unions at the distinguishing index.
                 if args[distinguishingIndex].type.isUnion():
                     raise TypeError("No support for unions as distinguishing "
                                     "arguments yet: %s",
@@ -3575,38 +3579,84 @@ class CGMethodCall(CGThing):
                     return True
                 return False
 
-            # First check for null or undefined
-            pickFirstSignature("%s.isNullOrUndefined()" % distinguishingArg,
-                               lambda s: (s[1][distinguishingIndex].type.nullable() or
-                                          s[1][distinguishingIndex].type.isDictionary()))
+            def distinguishingType(signature):
+                return signature[1][distinguishingIndex].type
 
-            # Now check for distinguishingArg being an object that implements a
-            # non-callback interface.  That includes typed arrays and
-            # arraybuffers.
-            interfacesSigs = [
+            # First check for null or undefined.  That means looking for
+            # nullable arguments at the distinguishing index and outputting a
+            # separate branch for them.  But if the nullable argument is a
+            # primitive, string, or enum, we don't need to do that.  The reason
+            # for that is that at most one argument at the distinguishing index
+            # is nullable (since two nullable arguments are not
+            # distinguishable), and all the argument types other than
+            # primitive/string/enum end up inside isObject() checks.  So if our
+            # nullable is a primitive/string/enum it's safe to not output the
+            # extra branch: we'll fall through to conversion for those types,
+            # which correctly handles null as needed, because isObject() will be
+            # false for null and undefined.
+            pickFirstSignature(
+                "%s.isNullOrUndefined()" % distinguishingArg,
+                lambda s: ((distinguishingType(s).nullable() and not
+                            distinguishingType(s).isString() and not
+                            distinguishingType(s).isEnum() and not
+                            distinguishingType(s).isPrimitive()) or
+                           distinguishingType(s).isDictionary()))
+
+            # Now check for distinguishingArg being various kinds of objects.
+            # The spec says to check for the following things in order:
+            # 1)  A platform object that's not a platform array object, being
+            #     passed to an interface or "object" arg.
+            # 2)  A platform array object or Array or platform object with
+            #     indexed properties being passed to an array or sequence or
+            #     "object" arg.
+            # 3)  A Date object being passed to a Date or "object" arg
+            # 4)  Some other kind of object being passed to a callback
+            #     interface, callback function, dictionary, or "object" arg.
+            #
+            # Unfortunately, we cannot push the "some other kind of object"
+            # check down into case 4, because dictionaries _can_ normally be
+            # initialized from platform objects. But we can coalesce the other
+            # three cases together, as long as we make sure to check whether our
+            # object works as an interface argument before checking whether it
+            # works as an arraylike.
+
+            # First grab all the overloads that have a non-callback interface
+            # (which includes typed arrays and arraybuffers) at the
+            # distinguishing index.  We can also include the ones that have an
+            # "object" here, since if those are present no other object-typed
+            # argument will be.
+            objectSigs = [
                 s for s in possibleSignatures
-                if (s[1][distinguishingIndex].type.isObject() or
-                    s[1][distinguishingIndex].type.isNonCallbackInterface()) ]
-            # There might be more than one of these; we need to check
+                if (distinguishingType(s).isObject() or
+                    distinguishingType(s).isNonCallbackInterface()) ]
+
+            # Now append all the overloads that take an array or sequence:
+            objectSigs.extend(s for s in possibleSignatures
+                              if (distinguishingType(s).isArray() or
+                                  distinguishingType(s).isSequence()))
+
+            # And all the overloads that take Date
+            objectSigs.extend(s for s in possibleSignatures
+                              if distinguishingType(s).isDate())
+
+            # There might be more than one thing in objectSigs; we need to check
             # which ones we unwrap to.
-            
-            if len(interfacesSigs) > 0:
-                # The spec says that we should check for "platform objects
-                # implementing an interface", but it's enough to guard on these
-                # being an object.  The code for unwrapping non-callback
-                # interfaces and typed arrays will just bail out and move on to
-                # the next overload if the object fails to unwrap correctly.  We
-                # could even not do the isObject() check up front here, but in
-                # cases where we have multiple object overloads it makes sense
-                # to do it only once instead of for each overload.  That will
-                # also allow the unwrapping test to skip having to do codegen
-                # for the null-or-undefined case, which we already handled
-                # above.
+            if len(objectSigs) > 0:
+                # Here it's enough to guard on our argument being an object. The
+                # code for unwrapping non-callback interfaces, typed arrays,
+                # sequences, arrays, and Dates will just bail out and move on to
+                # the next overload if the object fails to unwrap correctly,
+                # while "object" accepts any object anyway.  We could even not
+                # do the isObject() check up front here, but in cases where we
+                # have multiple object overloads it makes sense to do it only
+                # once instead of for each overload.  That will also allow the
+                # unwrapping test to skip having to do codegen for the
+                # null-or-undefined case, which we already handled above.
                 caseBody.append(CGGeneric("if (%s.isObject()) {" %
                                           (distinguishingArg)))
-                for sig in interfacesSigs:
+                for sig in objectSigs:
                     caseBody.append(CGIndenter(CGGeneric("do {")));
-                    type = sig[1][distinguishingIndex].type
+                    type = distinguishingType(sig)
 
                     # The argument at index distinguishingIndex can't possibly
                     # be unset here, because we've already checked that argc is
@@ -3624,7 +3674,7 @@ class CGMethodCall(CGThing):
                     # Indent by 4, since we need to indent further than our "do" statement
                     caseBody.append(CGIndenter(testCode, 4));
                     # If we got this far, we know we unwrapped to the right
-                    # interface, so just do the call.  Start conversion with
+                    # C++ type, so just do the call.  Start conversion with
                     # distinguishingIndex + 1, since we already converted
                     # distinguishingIndex.
                     caseBody.append(CGIndenter(
@@ -3633,46 +3683,24 @@ class CGMethodCall(CGThing):
 
                 caseBody.append(CGGeneric("}"))
 
-            # XXXbz Now we're supposed to check for distinguishingArg being
-            # an array or a platform object that supports indexed
-            # properties... skip that last for now.  It's a bit of a pain.
-            pickFirstSignature("%s.isObject() && IsArrayLike(cx, &%s.toObject())" %
-                               (distinguishingArg, distinguishingArg),
-                               lambda s:
-                                   (s[1][distinguishingIndex].type.isArray() or
-                                    s[1][distinguishingIndex].type.isSequence() or
-                                    s[1][distinguishingIndex].type.isObject()))
-
-            # Check for Date objects
-            # XXXbz Do we need to worry about security wrappers around the Date?
-            pickFirstSignature("%s.isObject() && JS_ObjectIsDate(cx, &%s.toObject())" %
-                               (distinguishingArg, distinguishingArg),
-                               lambda s: (s[1][distinguishingIndex].type.isDate() or
-                                          s[1][distinguishingIndex].type.isObject()))
-
             # Check for vanilla JS objects
             # XXXbz Do we need to worry about security wrappers?
             pickFirstSignature("%s.isObject() && !IsPlatformObject(cx, &%s.toObject())" %
                                (distinguishingArg, distinguishingArg),
-                               lambda s: (s[1][distinguishingIndex].type.isCallback() or
-                                          s[1][distinguishingIndex].type.isCallbackInterface() or
-                                          s[1][distinguishingIndex].type.isDictionary() or
-                                          s[1][distinguishingIndex].type.isObject()))
+                               lambda s: (distinguishingType(s).isCallback() or
+                                          distinguishingType(s).isCallbackInterface() or
+                                          distinguishingType(s).isDictionary()))
 
             # The remaining cases are mutually exclusive.  The
             # pickFirstSignature calls are what change caseBody
             # Check for strings or enums
             if pickFirstSignature(None,
-                                  lambda s: (s[1][distinguishingIndex].type.isString() or
-                                             s[1][distinguishingIndex].type.isEnum())):
+                                  lambda s: (distinguishingType(s).isString() or
+                                             distinguishingType(s).isEnum())):
                 pass
             # Check for primitives
             elif pickFirstSignature(None,
-                                    lambda s: s[1][distinguishingIndex].type.isPrimitive()):
-                pass
-            # Check for "any"
-            elif pickFirstSignature(None,
-                                    lambda s: s[1][distinguishingIndex].type.isAny()):
+                                    lambda s: distinguishingType(s).isPrimitive()):
                 pass
             else:
                 # Just throw; we have no idea what we're supposed to
