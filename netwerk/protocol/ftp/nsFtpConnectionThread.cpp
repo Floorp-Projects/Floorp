@@ -841,7 +841,7 @@ nsFtpState::R_pwd() {
             respStr.Truncate(pos);
             if (mServerType == FTP_VMS_TYPE)
                 ConvertDirspecFromVMS(respStr);
-            if (respStr.Last() != '/')
+            if (respStr.IsEmpty() || respStr.Last() != '/')
                 respStr.Append('/');
             mPwd = respStr;
         }
