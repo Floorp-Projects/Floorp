@@ -32,11 +32,11 @@ add_test(function test_constructor() {
 
 add_test(function test_expected_measurements() {
   let result = new MetricsCollectionResult("foo");
-  do_check_eq(result.missingMeasurements.size(), 0);
+  do_check_eq(result.missingMeasurements.size0);
 
   result.expectMeasurement("foo");
   result.expectMeasurement("bar");
-  do_check_eq(result.missingMeasurements.size(), 2);
+  do_check_eq(result.missingMeasurements.size, 2);
   do_check_true(result.missingMeasurements.has("foo"));
   do_check_true(result.missingMeasurements.has("bar"));
 
@@ -47,19 +47,19 @@ add_test(function test_missing_measurements() {
   let result = new MetricsCollectionResult("foo");
 
   let missing = result.missingMeasurements;
-  do_check_eq(missing.size(), 0);
+  do_check_eq(missing.size, 0);
 
   result.expectMeasurement("DummyMeasurement");
   result.expectMeasurement("b");
 
   missing = result.missingMeasurements;
-  do_check_eq(missing.size(), 2);
+  do_check_eq(missing.size, 2);
   do_check_true(missing.has("DummyMeasurement"));
   do_check_true(missing.has("b"));
 
   result.addMeasurement(new DummyMeasurement());
   missing = result.missingMeasurements;
-  do_check_eq(missing.size(), 1);
+  do_check_eq(missing.size, 1);
   do_check_true(missing.has("b"));
 
   run_next_test();
@@ -82,7 +82,7 @@ add_test(function test_add_measurement() {
   result.expectMeasurement("foo");
   result.addMeasurement(new DummyMeasurement("foo"));
 
-  do_check_eq(result.measurements.size(), 1);
+  do_check_eq(result.measurements.size, 1);
   do_check_true(result.measurements.has("foo"));
 
   run_next_test();
@@ -168,14 +168,14 @@ add_test(function test_aggregate_side_effects() {
 
   result1.aggregate(result2);
 
-  do_check_eq(result1.expectedMeasurements.size(), 4);
+  do_check_eq(result1.expectedMeasurements.size, 4);
   do_check_true(result1.expectedMeasurements.has("bar"));
 
-  do_check_eq(result1.measurements.size(), 2);
+  do_check_eq(result1.measurements.size, 2);
   do_check_true(result1.measurements.has("dummy1"));
   do_check_true(result1.measurements.has("dummy2"));
 
-  do_check_eq(result1.missingMeasurements.size(), 2);
+  do_check_eq(result1.missingMeasurements.size, 2);
   do_check_true(result1.missingMeasurements.has("bar"));
 
   do_check_eq(result1.errors.length, 2);

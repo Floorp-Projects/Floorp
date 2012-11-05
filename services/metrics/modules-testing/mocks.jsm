@@ -36,11 +36,14 @@ this.DummyProvider = function DummyProvider(name="DummyProvider") {
   MetricsProvider.call(this, name);
 
   this.constantMeasurementName = "DummyMeasurement";
+  this.collectConstantCount = 0;
 }
 DummyProvider.prototype = {
   __proto__: MetricsProvider.prototype,
 
   collectConstantMeasurements: function collectConstantMeasurements() {
+    this.collectConstantCount++;
+
     let result = this.createResult();
     result.expectMeasurement(this.constantMeasurementName);
     result.addMeasurement(new DummyMeasurement(this.constantMeasurementName));
