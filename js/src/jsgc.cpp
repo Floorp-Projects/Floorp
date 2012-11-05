@@ -4079,7 +4079,7 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
         AutoCopyFreeListToArenas copy(rt);
         for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
             if (c->isGCMarking()) {
-                c->setNeedsBarrier(false, JSCompartment::UpdateIon);
+                c->setNeedsBarrier(false, JSCompartment::DontUpdateIon);
                 c->setGCState(JSCompartment::NoGC);
                 wasMarking = true;
             }
@@ -4154,12 +4154,12 @@ AutoGCSlice::AutoGCSlice(JSRuntime *rt)
 
 AutoGCSlice::~AutoGCSlice()
 {
-    /* We can't use GCCompartmentsIter if this is the end of the last slice. */
-    for (CompartmentsIter c(runtime); !c.done(); c.next()) {
+    for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
         if (c->isGCMarking()) {
             c->setNeedsBarrier(true, JSCompartment::UpdateIon);
             c->arenas.prepareForIncrementalGC(runtime);
         } else {
+            JS_ASSERT(c->isGCSweeping());
             c->setNeedsBarrier(false, JSCompartment::UpdateIon);
         }
     }
