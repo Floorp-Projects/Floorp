@@ -12,10 +12,10 @@
 #include "prlog.h"
 
 #ifdef PR_LOGGING
-extern PRLogModuleInfo* dataChannelLog;
+extern PRLogModuleInfo* GetDataChannelLog();
 #endif
 #undef LOG
-#define LOG(args) PR_LOG(dataChannelLog, PR_LOG_DEBUG, args)
+#define LOG(args) PR_LOG(GetDataChannelLog(), PR_LOG_DEBUG, args)
 
 
 #include "nsDOMDataChannel.h"
@@ -49,7 +49,7 @@ class nsDOMDataChannel : public nsDOMEventTargetHelper,
                          public mozilla::DataChannelListener
 {
 public:
-  nsDOMDataChannel(mozilla::DataChannel* aDataChannel)
+  nsDOMDataChannel(already_AddRefed<mozilla::DataChannel> aDataChannel)
     : mDataChannel(aDataChannel)
     , mBinaryType(DC_BINARY_TYPE_BLOB)
   {}
@@ -92,7 +92,7 @@ private:
                          JSContext *aCx);
 
   // Owning reference
-  nsAutoPtr<mozilla::DataChannel> mDataChannel;
+  nsRefPtr<mozilla::DataChannel> mDataChannel;
   nsString  mOrigin;
   enum
   {
@@ -492,7 +492,7 @@ nsDOMDataChannel::AppReady()
 
 /* static */
 nsresult
-NS_NewDOMDataChannel(mozilla::DataChannel* aDataChannel,
+NS_NewDOMDataChannel(already_AddRefed<mozilla::DataChannel> aDataChannel,
                      nsPIDOMWindow* aWindow,
                      nsIDOMDataChannel** aDomDataChannel)
 {

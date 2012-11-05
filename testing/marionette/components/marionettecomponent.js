@@ -23,6 +23,7 @@ function MarionetteComponent() {
   
   let formatter = new Log4Moz.BasicFormatter();
   this.logger.addAppender(new Log4Moz.FileAppender(logf, formatter));
+  this.logger.addAppender(new Log4Moz.DumpAppender(formatter));
   this.logger.info("MarionetteComponent loaded");
 }
 
@@ -102,4 +103,4 @@ MarionetteComponent.prototype = {
 
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([MarionetteComponent]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MarionetteComponent]);

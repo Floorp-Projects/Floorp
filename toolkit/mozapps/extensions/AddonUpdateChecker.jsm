@@ -13,7 +13,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-var EXPORTED_SYMBOLS = [ "AddonUpdateChecker" ];
+this.EXPORTED_SYMBOLS = [ "AddonUpdateChecker" ];
 
 const TIMEOUT               = 2 * 60 * 1000;
 const PREFIX_NS_RDF         = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
@@ -592,7 +592,7 @@ function matchesVersions(aUpdate, aAppVersion, aPlatformVersion,
   return result;
 }
 
-var AddonUpdateChecker = {
+this.AddonUpdateChecker = {
   // These must be kept in sync with AddonManager
   // The update check timed out
   ERROR_TIMEOUT: -1,

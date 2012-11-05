@@ -18,7 +18,7 @@ var gStringBundle = Cc['@mozilla.org/intl/stringbundle;1'].
   createBundle('chrome://global/locale/AccessFu.properties');
 
 
-var EXPORTED_SYMBOLS = ['UtteranceGenerator'];
+this.EXPORTED_SYMBOLS = ['UtteranceGenerator'];
 
 Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 
@@ -38,7 +38,7 @@ Cu.import('resource://gre/modules/accessibility/Utils.jsm');
  * clicked event. Speaking only 'clicked' makes sense. Speaking 'button' does
  * not.
  */
-var UtteranceGenerator = {
+this.UtteranceGenerator = {
   gActionMap: {
     jump: 'jumpAction',
     press: 'pressAction',

@@ -158,7 +158,7 @@ add_test(function test_invalid_request_method() {
       allowed.add(method);
     }
 
-    do_check_eq(allowed.size(), 3);
+    do_check_eq(allowed.size, 3);
     for (let method of ["GET", "PUT", "DELETE"]) {
       do_check_true(allowed.has(method));
     }

@@ -9,7 +9,7 @@ import os
 import traceback
 from remotexpcshelltests import XPCShellRemote, RemoteXPCShellOptions
 from automationutils import *
-import devicemanagerADB
+from mozdevice import devicemanagerADB
 
 DEVICE_TEST_ROOT = '/data/local/tests'
 
@@ -154,7 +154,7 @@ def main():
     try:
         success = xpcsh.runTests(xpcshell='xpcshell', testdirs=args[0:], **options.__dict__)
     except:
-        print "TEST-UNEXPECTED-FAIL | %s | Exception caught while running tests." % sys.exc_info()[1]
+        print "Automation Error: Exception caught while running tests"
         traceback.print_exc()
         sys.exit(1)
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let EXPORTED_SYMBOLS = ["Preferences"];
+this.EXPORTED_SYMBOLS = ["Preferences"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -18,7 +18,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const MAX_INT = Math.pow(2, 31) - 1;
 const MIN_INT = -MAX_INT;
 
-function Preferences(args) {
+this.Preferences =
+  function Preferences(args) {
     if (isObject(args)) {
       if (args.branch)
         this._prefBranch = args.branch;
@@ -26,6 +27,8 @@ function Preferences(args) {
         this._defaultBranch = args.defaultBranch;
       if (args.site)
         this._site = args.site;
+      if (args.privacyContext)
+        this._privacyContext = args.privacyContext;
     }
     else if (args)
       this._prefBranch = args;
@@ -76,7 +79,7 @@ Preferences.prototype = {
   },
 
   _siteGet: function(prefName, defaultValue) {
-    let value = this._contentPrefSvc.getPref(this._site, this._prefBranch + prefName);
+    let value = this._contentPrefSvc.getPref(this._site, this._prefBranch + prefName, this._privacyContext);
     return typeof value != "undefined" ? value : defaultValue;
   },
 
@@ -160,7 +163,7 @@ Preferences.prototype = {
   },
 
   _siteSet: function(prefName, prefValue) {
-    this._contentPrefSvc.setPref(this._site, this._prefBranch + prefName, prefValue);
+    this._contentPrefSvc.setPref(this._site, this._prefBranch + prefName, prefValue, this._privacyContext);
   },
 
   /**
@@ -192,7 +195,7 @@ Preferences.prototype = {
   },
 
   _siteHas: function(prefName) {
-    return this._contentPrefSvc.hasPref(this._site, this._prefBranch + prefName);
+    return this._contentPrefSvc.hasPref(this._site, this._prefBranch + prefName, this._privacyContext);
   },
 
   /**
@@ -253,7 +256,7 @@ Preferences.prototype = {
   },
 
   _siteReset: function(prefName) {
-    return this._contentPrefSvc.removePref(this._site, this._prefBranch + prefName);
+    return this._contentPrefSvc.removePref(this._site, this._prefBranch + prefName, this._privacyContext);
   },
 
   /**
@@ -387,10 +390,10 @@ Preferences.prototype = {
    */
   _prefBranch: "",
 
-  site: function(site) {
+  site: function(site, privacyContext) {
     if (!(site instanceof Ci.nsIURI))
       site = this._ioSvc.newURI("http://" + site, null, null);
-    return new Preferences({ branch: this._prefBranch, site: site });
+    return new Preferences({ branch: this._prefBranch, site: site, privacyContext: privacyContext });
   },
 
   /**

@@ -32,6 +32,8 @@
 #include "imgIContainer.h"
 #include "prlog.h"
 
+#include "mozilla/Likely.h"
+
 MOZ_STATIC_ASSERT((((1 << nsStyleStructID_Length) - 1) &
                    ~(NS_STYLE_INHERIT_MASK)) == 0,
                   "Not enough bits in NS_STYLE_INHERIT_MASK");
@@ -384,7 +386,7 @@ nsBorderColors*
 nsBorderColors::Clone(bool aDeep) const
 {
   nsBorderColors* result = new nsBorderColors(mColor);
-  if (NS_UNLIKELY(!result))
+  if (MOZ_UNLIKELY(!result))
     return result;
   if (aDeep)
     NS_CSS_CLONE_LIST_MEMBER(nsBorderColors, this, mNext, result, (false));

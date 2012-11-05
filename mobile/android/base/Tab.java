@@ -20,6 +20,7 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -40,7 +41,7 @@ public class Tab {
     private long mLastUsed;
     private String mUrl;
     private String mTitle;
-    private Drawable mFavicon;
+    private Bitmap mFavicon;
     private String mFaviconUrl;
     private int mFaviconSize;
     private JSONObject mIdentityData;
@@ -146,7 +147,7 @@ public class Tab {
         return mUrl;
     }
 
-    public Drawable getFavicon() {
+    public Bitmap getFavicon() {
         return mFavicon;
     }
 
@@ -165,8 +166,16 @@ public class Tab {
     }
 
     synchronized public Bitmap getThumbnailBitmap() {
-        if (mThumbnailBitmap != null)
-            return mThumbnailBitmap;
+        // Bug 787318 - Honeycomb has a bug with bitmap caching, we can't
+        // reuse the bitmap there.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB
+            || Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB_MR2) {
+            if (mThumbnailBitmap != null)
+                return mThumbnailBitmap;
+        } else {
+            if (mThumbnailBitmap != null)
+                mThumbnailBitmap.recycle();
+        }
         return mThumbnailBitmap = Bitmap.createBitmap(Tabs.getThumbnailWidth(), Tabs.getThumbnailHeight(), Bitmap.Config.RGB_565);
     }
 
@@ -259,7 +268,9 @@ public class Tab {
 
         mTitle = (title == null ? "" : title);
 
-        updateHistory(mUrl, mTitle);
+        if (mUrl != null)
+            updateHistory(mUrl, mTitle);
+
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.TITLE);
     }
 
@@ -314,7 +325,7 @@ public class Tab {
         return mFaviconLoadId;
     }
 
-    public void updateFavicon(Drawable favicon) {
+    public void updateFavicon(Bitmap favicon) {
         mFavicon = favicon;
     }
 

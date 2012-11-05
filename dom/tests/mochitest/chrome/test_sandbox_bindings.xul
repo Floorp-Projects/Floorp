@@ -21,30 +21,94 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
   <![CDATA[
 
   /** Test for Bug 741267 **/
+    function isXrayWrapper(x) {
+      return XPCNativeWrapper.unwrap(x) != x;
+    }
+
     function doTest() {
       var win = $("t").contentWindow;
       var sandbox = Components.utils.Sandbox(win, { sandboxPrototype: win });
       try {
-        var nl = Components.utils.evalInSandbox("NodeList", sandbox);
-        is(nl, String(NodeList), "'NodeList' in a sandbox should return the NodeList interface prototype object");
+        var css = Components.utils.evalInSandbox("CSSStyleDeclaration", sandbox);
+        is(css.prototype, "[object CSSStyleDeclarationPrototype]", "'CSSStyleDeclaration.prototype' in a sandbox should return the CSSStyleDeclaration interface prototype object");
       } catch (e) {
-        ok(false, "'NodeList' shouldn't throw in a sandbox");
+        ok(false, "'CSSStyleDeclaration' shouldn't throw in a sandbox");
       }
       try {
         var et = Components.utils.evalInSandbox("EventTarget", sandbox);
-        ok(et, "'EventTarget' in a sandbox should return the EventTarget interface prototype object");
+        ok(et, "'EventTarget' in a sandbox should return the EventTarget interface object");
+        ok(isXrayWrapper(et), "Getting an interface object on an Xray wrapper should return an Xray wrapper");
       } catch (e) {
         ok(false, "'EventTarget' shouldn't throw in a sandbox");
       }
       try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox);
+        ok(xhr, "'XMLHttpRequest.prototype' in a sandbox should return the XMLHttpRequest interface prototype object");
+        ok(isXrayWrapper(xhr), "Getting an interface prototype object on an Xray wrapper should return an Xray wrapper");
+        ok(isXrayWrapper(xhr.constructor), "Getting the constructor property on an Xray wrapper of an interface prototype object should return an Xray wrapper");
+      } catch (e) {
+        ok(false, "'XMLHttpRequest.prototype' shouldn't throw in a sandbox");
+      }
+      try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
+        xhr.prototype = false;
+      } catch (e) {
+        ok(true, "'XMLHttpRequest.prototype' should be readonly");
+      }
+      try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
+        delete xhr.prototype;
+      } catch (e) {
+        ok(true, "'XMLHttpRequest.prototype' should be permanent");
+      }
+      try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox);
+        xhr.constructor = "ok";
+      } catch (e) {
+        is(xhr.constructor, "ok", "'XMLHttpRequest.prototype.constructor' should be writeable");
+      }
+      try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox);
+        delete xhr.constructor;
+      } catch (e) {
+        is(xhr.constructor, undefined, "'XMLHttpRequest.prototype.constructor' should be permanent");
+      }
+      try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
+        is(xhr, "[object XrayWrapper " + XMLHttpRequest + "]", "'XMLHttpRequest' in a sandbox should return the XMLHttpRequest interface object");
+        ok(isXrayWrapper(xhr.prototype), "Getting the prototype property on an Xray wrapper of an interface object should return an Xray wrapper");
+      } catch (e) {
+        ok(false, "'XMLHttpRequest' shouldn't throw in a sandbox");
+      }
+      try {
         var xhr = Components.utils.evalInSandbox("XMLHttpRequest()", sandbox);
-        is(xhr, "[object XMLHttpRequest]", "'XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
+        is("" + xhr, "" + XMLHttpRequest(), "'XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
+      } catch (e) {
+        ok(false, "'XMLHttpRequest()' shouldn't throw in a sandbox");
+      }
+      try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype.toString = function () { return 'Failed'; }; XMLHttpRequest();", sandbox);
+        is(xhr.toString(), "[object XrayWrapper " + XMLHttpRequest() + "]", "XMLHttpRequest.prototype.toString in the sandbox should not override the native toString behaviour");
+      } catch (e) {
+        ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox");
+      }
+      try {
+        Components.utils.evalInSandbox("document.defaultView.XMLHttpRequest = function() {};", sandbox);
+        var win = Components.utils.evalInSandbox("document.defaultView", sandbox);
+        var xhr = win.XMLHttpRequest();
+        is("" + xhr, "" + XMLHttpRequest(), "'XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
       } catch (e) {
         ok(false, "'XMLHttpRequest()' shouldn't throw in a sandbox");
       }
       try {
         var canvas = Components.utils.evalInSandbox("document.createElement('canvas').getContext('2d')", sandbox);
         is(canvas.DRAWWINDOW_DRAW_CARET, CanvasRenderingContext2D.DRAWWINDOW_DRAW_CARET, "Constants should be defined on DOM objects in a sandbox");
+      } catch (e) {
+        ok(false, "'document.createElement('canvas').getContext('2D')' shouldn't throw in a sandbox");
+      }
+      try {
+        var classList = Components.utils.evalInSandbox("document.body.className = 'a b'; document.body.classList", sandbox);
+        is(classList.toString(), "a b", "Stringifier should be called");
       } catch (e) {
         ok(false, "'document.createElement('canvas').getContext('2D')' shouldn't throw in a sandbox");
       }

@@ -4,7 +4,7 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-let EXPORTED_SYMBOLS = [ "Flags" ];
+this.EXPORTED_SYMBOLS = [ "Flags" ];
 
 Cu.import("resource:///modules/devtools/gcli.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
 
 // We need to use an object in which to store any flags because a primitive
 // would remain undefined.
-let Flags = {
+this.Flags = {
   addonsLoaded: false
 };
 

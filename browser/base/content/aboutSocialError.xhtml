@@ -64,6 +64,9 @@
           config.tryAgainCallback = loadQueryURL;
           config.queryURL = url;
           break;
+        case "workerFailure":
+          config.tryAgainCallback = reloadProvider;
+          break;
         default:
           break;
       }
@@ -103,7 +106,10 @@
     }
 
     function reloadProvider() {
-      Social.provider.reload();
+      Social.enabled = false;
+      Services.tm.mainThread.dispatch(function() {
+        Social.enabled = true;
+      }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
     }
 
     parseQueryString();

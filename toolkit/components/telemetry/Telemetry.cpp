@@ -29,6 +29,7 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Likely.h"
 
 namespace {
 
@@ -667,7 +668,7 @@ TelemetryImpl::GetHistogramEnumId(const char *name, Telemetry::ID *id)
   if (!map->Count()) {
     for (uint32_t i = 0; i < Telemetry::HistogramCount; i++) {
       CharPtrEntryType *entry = map->PutEntry(gHistograms[i].id());
-      if (NS_UNLIKELY(!entry)) {
+      if (MOZ_UNLIKELY(!entry)) {
         map->Clear();
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -812,7 +813,7 @@ TelemetryImpl::RegisterAddonHistogram(const nsACString &id,
   AddonEntryType *addonEntry = mAddonMap.GetEntry(id);
   if (!addonEntry) {
     addonEntry = mAddonMap.PutEntry(id);
-    if (NS_UNLIKELY(!addonEntry)) {
+    if (MOZ_UNLIKELY(!addonEntry)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     addonEntry->mData = new AddonHistogramMapType();
@@ -826,7 +827,7 @@ TelemetryImpl::RegisterAddonHistogram(const nsACString &id,
   }
 
   histogramEntry = histogramMap->PutEntry(name);
-  if (NS_UNLIKELY(!histogramEntry)) {
+  if (MOZ_UNLIKELY(!histogramEntry)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1319,7 +1320,7 @@ TelemetryImpl::StoreSlowSQL(const nsACString &sql, uint32_t delay,
   SlowSQLEntryType *entry = slowSQLMap->GetEntry(sql);
   if (!entry) {
     entry = slowSQLMap->PutEntry(sql);
-    if (NS_UNLIKELY(!entry))
+    if (MOZ_UNLIKELY(!entry))
       return;
     entry->mData.mainThread.hitCount = 0;
     entry->mData.mainThread.totalTime = 0;

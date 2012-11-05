@@ -8,7 +8,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-var EXPORTED_SYMBOLS = [];
+this.EXPORTED_SYMBOLS = [];
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");

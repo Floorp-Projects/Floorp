@@ -22,6 +22,7 @@
 #include "nsIPrefService.h"
 #include "nsITelemetry.h"
 #include "jsapi.h"
+#include "prio.h"
 
 namespace mozilla {
 namespace scache {
@@ -56,7 +57,7 @@ PR_END_MACRO
 nsresult
 WaitForStartupTimer() {
   nsresult rv;
-  nsCOMPtr<nsIStartupCache> sc 
+  nsCOMPtr<nsIStartupCache> sc
     = do_GetService("@mozilla.org/startupcache/cache;1");
   PR_Sleep(10 * PR_TicksPerSecond());
   
@@ -75,7 +76,7 @@ WaitForStartupTimer() {
 nsresult
 TestStartupWriteRead() {
   nsresult rv;
-  nsCOMPtr<nsIStartupCache> sc 
+  nsCOMPtr<nsIStartupCache> sc
     = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
   if (!sc) {
     fail("didn't get a pointer...");
@@ -118,7 +119,7 @@ TestWriteInvalidateRead() {
   const char* id = "id";
   char* outbuf = NULL;
   uint32_t len;
-  nsCOMPtr<nsIStartupCache> sc 
+  nsCOMPtr<nsIStartupCache> sc
     = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
   sc->InvalidateCache();
 
@@ -248,9 +249,109 @@ TestWriteObject() {
 }
 
 nsresult
+LockCacheFile(bool protect, nsIFile* profileDir) {
+  NS_ENSURE_ARG(profileDir);
+
+  nsCOMPtr<nsIFile> startupCache;
+  profileDir->Clone(getter_AddRefs(startupCache));
+  NS_ENSURE_STATE(startupCache);
+  startupCache->AppendNative(NS_LITERAL_CSTRING("startupCache"));
+
+  nsresult rv;
+#ifndef XP_WIN
+  static uint32_t oldPermissions;
+#else
+  static PRFileDesc* fd = nullptr;
+#endif
+
+  // To prevent deletion of the startupcache file, we change the containing
+  // directory's permissions on Linux/Mac, and hold the file open on Windows
+  if (protect) {
+#ifndef XP_WIN
+    rv = startupCache->GetPermissions(&oldPermissions);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = startupCache->SetPermissions(0555);
+    NS_ENSURE_SUCCESS(rv, rv);
+#else
+    // Filename logic from StartupCache.cpp
+    #ifdef IS_BIG_ENDIAN
+    #define SC_ENDIAN "big"
+    #else
+    #define SC_ENDIAN "little"
+    #endif
+
+    #if PR_BYTES_PER_WORD == 4
+    #define SC_WORDSIZE "4"
+    #else
+    #define SC_WORDSIZE "8"
+    #endif
+    char sStartupCacheName[] = "startupCache." SC_WORDSIZE "." SC_ENDIAN;
+    startupCache->AppendNative(NS_LITERAL_CSTRING(sStartupCacheName));
+
+    rv = startupCache->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
+    NS_ENSURE_SUCCESS(rv, rv);
+#endif
+  } else {
+#ifndef XP_WIN
+    rv = startupCache->SetPermissions(oldPermissions);
+    NS_ENSURE_SUCCESS(rv, rv);
+#else
+   PR_Close(fd);
+#endif
+  }
+
+  return NS_OK;
+}
+
+nsresult
+TestIgnoreDiskCache(nsIFile* profileDir) {
+  nsresult rv;
+  nsCOMPtr<nsIStartupCache> sc
+    = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
+  sc->InvalidateCache();
+  
+  const char* buf = "Get a Beardbook app for your smartphone";
+  const char* id = "id";
+  char* outbuf = NULL;
+  PRUint32 len;
+  
+  rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = sc->ResetStartupWriteTimer();
+  rv = WaitForStartupTimer();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Prevent StartupCache::InvalidateCache from deleting the disk file
+  rv = LockCacheFile(true, profileDir);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  sc->IgnoreDiskCache();
+
+  rv = sc->GetBuffer(id, &outbuf, &len);
+
+  nsresult r = LockCacheFile(false, profileDir);
+  NS_ENSURE_SUCCESS(r, r);
+
+  delete[] outbuf;
+
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    passed("buffer not available after ignoring disk cache");
+  } else if (NS_SUCCEEDED(rv)) {
+    fail("GetBuffer succeeded unexpectedly after ignoring disk cache");
+    return NS_ERROR_UNEXPECTED;
+  } else {
+    fail("GetBuffer gave an unexpected failure, expected NOT_AVAILABLE");
+    return rv;
+  }
+
+  sc->InvalidateCache();
+  return NS_OK;
+}
+
+nsresult
 TestEarlyShutdown() {
   nsresult rv;
-  nsCOMPtr<nsIStartupCache> sc 
+  nsCOMPtr<nsIStartupCache> sc
     = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
   sc->InvalidateCache();
 
@@ -299,14 +400,14 @@ SetupJS(JSContext **cxp)
 }
 
 bool
-GetHistogramCounts(const char *testmsg, JSContext *cx, jsval *counts)
+GetHistogramCounts(const char *testmsg, const nsACString &histogram_id,
+                   JSContext *cx, jsval *counts)
 {
   nsCOMPtr<nsITelemetry> telemetry = do_GetService("@mozilla.org/base/telemetry;1");
-  NS_NAMED_LITERAL_CSTRING(histogram_id, "STARTUP_CACHE_AGE_HOURS");
   JS::AutoValueRooter h(cx);
   nsresult trv = telemetry->GetHistogramById(histogram_id, cx, h.addr());
   if (NS_FAILED(trv)) {
-    fail("%s: couldn't get histogram", testmsg);
+    fail("%s: couldn't get histogram %s", testmsg, ToNewCString(histogram_id));
     return false;
   }
   passed(testmsg);
@@ -358,9 +459,30 @@ CompareCountArrays(JSContext *cx, JSObject *before, JSObject *after)
     }
   }
 
-  // All of the elements of the histograms's count arrays differed.
+  // None of the elements of the histograms's count arrays differed.
   // Not good, we should have recorded something.
   return NS_ERROR_FAILURE;
+}
+
+nsresult
+TestHistogramValues(const char* type, bool use_js, JSContext *cx,
+                    JSObject *before, JSObject *after)
+{
+  if (!use_js) {
+    fail("couldn't check histogram recording");
+    return NS_ERROR_FAILURE;
+  }
+  nsresult compare = CompareCountArrays(cx, before, after);
+  if (compare == NS_ERROR_UNEXPECTED) {
+    fail("count comparison error");
+    return compare;
+  }
+  if (compare == NS_ERROR_FAILURE) {
+    fail("histogram didn't record %s", type);
+    return compare;
+  }
+  passed("histogram records %s", type);
+  return NS_OK;
 }
 
 int main(int argc, char** argv)
@@ -398,9 +520,17 @@ int main(int argc, char** argv)
   if (use_js && !JS_InitStandardClasses(cx, glob))
     use_js = false;
 
-  JS::AutoValueRooter before_counts(cx);
+  NS_NAMED_LITERAL_CSTRING(age_histogram_id, "STARTUP_CACHE_AGE_HOURS");
+  NS_NAMED_LITERAL_CSTRING(invalid_histogram_id, "STARTUP_CACHE_INVALID");
+
+  JS::AutoValueRooter age_before_counts(cx);
   if (use_js && !GetHistogramCounts("STARTUP_CACHE_AGE_HOURS histogram before test",
-                                 cx, before_counts.addr()))
+                                    age_histogram_id, cx, age_before_counts.addr()))
+    use_js = false;
+  
+  JS::AutoValueRooter invalid_before_counts(cx);
+  if (use_js && !GetHistogramCounts("STARTUP_CACHE_INVALID histogram before test",
+                                    invalid_histogram_id, cx, invalid_before_counts.addr()))
     use_js = false;
   
   nsresult scrv;
@@ -416,31 +546,32 @@ int main(int argc, char** argv)
     rv = 1;
   if (NS_FAILED(TestWriteObject()))
     rv = 1;
+  nsCOMPtr<nsIFile> profileDir = xpcom.GetProfileDirectory();
+  if (NS_FAILED(TestIgnoreDiskCache(profileDir)))
+    rv = 1;
   if (NS_FAILED(TestEarlyShutdown()))
     rv = 1;
 
-  JS::AutoValueRooter after_counts(cx);
+  JS::AutoValueRooter age_after_counts(cx);
   if (use_js && !GetHistogramCounts("STARTUP_CACHE_AGE_HOURS histogram after test",
-                                    cx, after_counts.addr()))
+                                    age_histogram_id, cx, age_after_counts.addr()))
     use_js = false;
 
-  if (!use_js) {
-    fail("couldn't check histogram recording");
+  if (NS_FAILED(TestHistogramValues("age samples", use_js, cx,
+                                    JSVAL_TO_OBJECT(age_before_counts.value()),
+                                    JSVAL_TO_OBJECT(age_after_counts.value()))))
     rv = 1;
-  } else {
-    nsresult compare = CompareCountArrays(cx,
-                                          JSVAL_TO_OBJECT(before_counts.value()),
-                                          JSVAL_TO_OBJECT(after_counts.value()));
-    if (compare == NS_ERROR_UNEXPECTED) {
-      fail("count comparison error");
-      rv = 1;
-    } else if (compare == NS_ERROR_FAILURE) {
-      fail("histogram didn't record samples");
-      rv = 1;
-    } else {
-      passed("histogram records samples");
-    }
-  }
+                                                    
+  JS::AutoValueRooter invalid_after_counts(cx);
+  if (use_js && !GetHistogramCounts("STARTUP_CACHE_INVALID histogram after test",
+                                    invalid_histogram_id, cx, invalid_after_counts.addr()))
+    use_js = false;
+
+  // STARTUP_CACHE_INVALID should have been triggered by TestIgnoreDiskCache()
+  if (NS_FAILED(TestHistogramValues("invalid disk cache", use_js, cx,
+                                    JSVAL_TO_OBJECT(invalid_before_counts.value()),
+                                    JSVAL_TO_OBJECT(invalid_after_counts.value()))))
+    rv = 1;
 
   return rv;
 }

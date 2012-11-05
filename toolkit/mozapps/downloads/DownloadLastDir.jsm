@@ -28,7 +28,7 @@ const LAST_DIR_PREF = "browser.download.lastDir";
 const SAVE_PER_SITE_PREF = LAST_DIR_PREF + ".savePerSite";
 const nsIFile = Components.interfaces.nsIFile;
 
-var EXPORTED_SYMBOLS = [ "DownloadLastDir" ];
+this.EXPORTED_SYMBOLS = [ "DownloadLastDir" ];
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -50,7 +50,10 @@ let observer = {
         gDownloadLastDirFile = null;
         if (Services.prefs.prefHasUserValue(LAST_DIR_PREF))
           Services.prefs.clearUserPref(LAST_DIR_PREF);
-        Services.contentPrefs.removePrefsByName(LAST_DIR_PREF);
+        // Ensure that purging session history causes both the session-only PB cache
+        // and persistent prefs to be cleared.
+        Services.contentPrefs.removePrefsByName(LAST_DIR_PREF, {usePrivateBrowsing: false});
+        Services.contentPrefs.removePrefsByName(LAST_DIR_PREF, {usePrivateBrowsing: true});
         break;
     }
   }
@@ -81,7 +84,7 @@ function isContentPrefEnabled() {
 
 let gDownloadLastDirFile = readLastDirPref();
 
-function DownloadLastDir(aWindow) {
+this.DownloadLastDir = function DownloadLastDir(aWindow) {
   this.window = aWindow;
 }
 
@@ -97,7 +100,11 @@ DownloadLastDir.prototype = {
   },
   getFile: function (aURI) {
     if (aURI && isContentPrefEnabled()) {
-      let lastDir = Services.contentPrefs.getPref(aURI, LAST_DIR_PREF);
+      let loadContext = this.window
+                            .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                            .getInterface(Components.interfaces.nsIWebNavigation)
+                            .QueryInterface(Components.interfaces.nsILoadContext);
+      let lastDir = Services.contentPrefs.getPref(aURI, LAST_DIR_PREF, loadContext);
       if (lastDir) {
         var lastDirFile = Components.classes["@mozilla.org/file/local;1"]
                                     .createInstance(Components.interfaces.nsIFile);
@@ -118,10 +125,14 @@ DownloadLastDir.prototype = {
   },
   setFile: function (aURI, aFile) {
     if (aURI && isContentPrefEnabled()) {
+      let loadContext = this.window
+                            .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                            .getInterface(Components.interfaces.nsIWebNavigation)
+                            .QueryInterface(Components.interfaces.nsILoadContext);
       if (aFile instanceof Components.interfaces.nsIFile)
-        Services.contentPrefs.setPref(aURI, LAST_DIR_PREF, aFile.path);
+        Services.contentPrefs.setPref(aURI, LAST_DIR_PREF, aFile.path, loadContext);
       else
-        Services.contentPrefs.removePref(aURI, LAST_DIR_PREF);
+        Services.contentPrefs.removePref(aURI, LAST_DIR_PREF, loadContext);
     }
     if (this.isPrivate()) {
       if (aFile instanceof Components.interfaces.nsIFile)

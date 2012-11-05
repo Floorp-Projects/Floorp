@@ -251,19 +251,26 @@ private:
 #include "prlog.h"
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo *gLoaderLog = PR_NewLogModule("nsCSSLoader");
+static PRLogModuleInfo *
+GetLoaderLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("nsCSSLoader");
+  return sLog;
+}
 #endif /* PR_LOGGING */
 
-#define LOG_FORCE(args) PR_LOG(gLoaderLog, PR_LOG_ALWAYS, args)
-#define LOG_ERROR(args) PR_LOG(gLoaderLog, PR_LOG_ERROR, args)
-#define LOG_WARN(args) PR_LOG(gLoaderLog, PR_LOG_WARNING, args)
-#define LOG_DEBUG(args) PR_LOG(gLoaderLog, PR_LOG_DEBUG, args)
+#define LOG_FORCE(args) PR_LOG(GetLoaderLog(), PR_LOG_ALWAYS, args)
+#define LOG_ERROR(args) PR_LOG(GetLoaderLog(), PR_LOG_ERROR, args)
+#define LOG_WARN(args) PR_LOG(GetLoaderLog(), PR_LOG_WARNING, args)
+#define LOG_DEBUG(args) PR_LOG(GetLoaderLog(), PR_LOG_DEBUG, args)
 #define LOG(args) LOG_DEBUG(args)
 
-#define LOG_FORCE_ENABLED() PR_LOG_TEST(gLoaderLog, PR_LOG_ALWAYS)
-#define LOG_ERROR_ENABLED() PR_LOG_TEST(gLoaderLog, PR_LOG_ERROR)
-#define LOG_WARN_ENABLED() PR_LOG_TEST(gLoaderLog, PR_LOG_WARNING)
-#define LOG_DEBUG_ENABLED() PR_LOG_TEST(gLoaderLog, PR_LOG_DEBUG)
+#define LOG_FORCE_ENABLED() PR_LOG_TEST(GetLoaderLog(), PR_LOG_ALWAYS)
+#define LOG_ERROR_ENABLED() PR_LOG_TEST(GetLoaderLog(), PR_LOG_ERROR)
+#define LOG_WARN_ENABLED() PR_LOG_TEST(GetLoaderLog(), PR_LOG_WARNING)
+#define LOG_DEBUG_ENABLED() PR_LOG_TEST(GetLoaderLog(), PR_LOG_DEBUG)
 #define LOG_ENABLED() LOG_DEBUG_ENABLED()
 
 #ifdef PR_LOGGING

@@ -149,7 +149,7 @@
 }
 
 #form-helper-suggestions .form-helper-suggestions-label:first-child {
-  -moz-padding-start: -moz-initial; /* the arrowscrollbox creates enough left padding */
+  -moz-padding-start: initial; /* the arrowscrollbox creates enough left padding */
   -moz-border-start: none;
 }
 

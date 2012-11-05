@@ -806,7 +806,10 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
     if (((spaceLoc < dotLoc || quoteLoc < dotLoc) &&
          (spaceLoc < colonLoc || quoteLoc < colonLoc) &&
          (spaceLoc < qMarkLoc || quoteLoc < qMarkLoc)) ||
-        qMarkLoc == 0)
+        qMarkLoc == 0 ||
+        (dotLoc == uint32_t(kNotFound) &&
+                colonLoc == uint32_t(kNotFound) &&
+                qMarkLoc == uint32_t(kNotFound) ) )
     {
         KeywordToURI(aURIString, aURI);
     }

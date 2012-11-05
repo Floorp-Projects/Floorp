@@ -27,9 +27,11 @@ function simulateIncomingSms() {
     log("Received SMS (id: " + incomingSms.id + ").");
     is(incomingSms.body, msgText, "msg body");
     is(incomingSms.delivery, "received", "delivery");
+    is(incomingSms.deliveryStatus, "success", "deliveryStatus");
     is(incomingSms.read, false, "read");
     is(incomingSms.receiver, null, "receiver");
     is(incomingSms.sender, fromNumber, "sender");
+    is(incomingSms.messageClass, "normal", "messageClass");
     ok(incomingSms.timestamp instanceof Date, "timestamp is istanceof date");
 
     verifySmsExists(incomingSms);

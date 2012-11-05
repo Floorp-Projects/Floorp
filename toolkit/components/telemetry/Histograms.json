@@ -429,6 +429,10 @@
     "n_buckets": 20,
     "description": "Startup cache age (hours)"
   },
+  "STARTUP_CACHE_INVALID": {
+    "kind": "flag",
+    "description": "Was the disk startup cache file detected as invalid"
+  },
   "WORD_CACHE_HITS": {
     "kind": "exponential",
     "high": "256",
@@ -1749,6 +1753,20 @@
     "high": "200",
     "n_buckets": 10,
     "description": "PLACES: Number of keywords"
+  },
+  "FENNEC_FAVICONS_COUNT": {
+    "kind": "exponential",
+    "high": "2000",
+    "n_buckets": 10,
+    "cpp_guard": "ANDROID",
+    "description": "FENNEC: (Places) Number of favicons stored"
+  },
+  "FENNEC_THUMBNAILS_COUNT": {
+    "kind": "exponential",
+    "high": "2000",
+    "n_buckets": 10,
+    "cpp_guard": "ANDROID",
+    "description": "FENNEC: (Places) Number of thumbnails stored"
   },
   "PLACES_SORTED_BOOKMARKS_PERC": {
     "kind": "linear",

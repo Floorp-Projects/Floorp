@@ -20,7 +20,7 @@
  *   implementation isn't always required (or even well defined)
  */
 
-const EXPORTED_SYMBOLS = [ "console" ];
+this.EXPORTED_SYMBOLS = [ "console" ];
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -345,7 +345,7 @@ function createMultiLineDumper(aLevel) {
  * object. It currently writes to dump(), but should write to the web
  * console's chrome error section (when it has one)
  */
-const console = {
+this.console = {
   debug: createMultiLineDumper("debug"),
   log: createDumper("log"),
   info: createDumper("info"),

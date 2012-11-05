@@ -155,6 +155,15 @@ PrependString(Vector<jschar, N, AP> &v, JSString* str)
   memcpy(v.begin(), chars, alen * sizeof(jschar));
 }
 
+extern size_t
+GetDeflatedUTF8StringLength(JSContext *maybecx, const jschar *chars,
+                            size_t charsLength);
+
+bool
+DeflateStringToUTF8Buffer(JSContext *maybecx, const jschar *src, size_t srclen,
+                          char *dst, size_t *dstlenp);
+
+
 /*******************************************************************************
 ** Function and struct API definitions
 *******************************************************************************/

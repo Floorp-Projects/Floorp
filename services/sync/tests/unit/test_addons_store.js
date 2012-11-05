@@ -13,7 +13,6 @@ const HTTP_PORT = 8888;
 
 let prefs = new Preferences();
 
-Svc.Prefs.set("addons.ignoreRepositoryChecking", true);
 prefs.set("extensions.getAddons.get.url", "http://localhost:8888/search/guid:%IDS%");
 loadAddonTestFunctions();
 startupManager();
@@ -76,110 +75,6 @@ function run_test() {
 
   run_next_test();
 }
-
-add_test(function test_get_all_ids() {
-  _("Ensures that getAllIDs() returns an appropriate set.");
-
-  engine._refreshReconcilerState();
-
-  let addon1 = installAddon("test_install1");
-  let addon2 = installAddon("test_bootstrap1_1");
-
-  let ids = store.getAllIDs();
-  do_check_eq("object", typeof(ids));
-  do_check_eq(2, Object.keys(ids).length);
-  do_check_true(addon1.syncGUID in ids);
-  do_check_true(addon2.syncGUID in ids);
-
-  addon1.install.cancel();
-  uninstallAddon(addon2);
-
-  run_next_test();
-});
-
-add_test(function test_change_item_id() {
-  _("Ensures that changeItemID() works properly.");
-
-  let addon = installAddon("test_bootstrap1_1");
-
-  let oldID = addon.syncGUID;
-  let newID = Utils.makeGUID();
-
-  store.changeItemID(oldID, newID);
-
-  let newAddon = getAddonFromAddonManagerByID(addon.id);
-  do_check_neq(null, newAddon);
-  do_check_eq(newID, newAddon.syncGUID);
-
-  uninstallAddon(newAddon);
-
-  run_next_test();
-});
-
-add_test(function test_create() {
-  _("Ensure creating/installing an add-on from a record works.");
-
-  let server = createAndStartHTTPServer(HTTP_PORT);
-
-  let addon = installAddon("test_bootstrap1_1");
-  let id = addon.id;
-  uninstallAddon(addon);
-
-  let guid = Utils.makeGUID();
-  let record = createRecordForThisApp(guid, id, true, false);
-
-  let failed = store.applyIncomingBatch([record]);
-  do_check_eq(0, failed.length);
-
-  let newAddon = getAddonFromAddonManagerByID(id);
-  do_check_neq(null, newAddon);
-  do_check_eq(guid, newAddon.syncGUID);
-  do_check_false(newAddon.userDisabled);
-
-  uninstallAddon(newAddon);
-
-  server.stop(run_next_test);
-});
-
-add_test(function test_create_missing_search() {
-  _("Ensures that failed add-on searches are handled gracefully.");
-
-  let server = createAndStartHTTPServer(HTTP_PORT);
-
-  // The handler for this ID is not installed, so a search should 404.
-  const id = "missing@tests.mozilla.org";
-  let guid = Utils.makeGUID();
-  let record = createRecordForThisApp(guid, id, true, false);
-
-  let failed = store.applyIncomingBatch([record]);
-  do_check_eq(1, failed.length);
-  do_check_eq(guid, failed[0]);
-
-  let addon = getAddonFromAddonManagerByID(id);
-  do_check_eq(null, addon);
-
-  server.stop(run_next_test);
-});
-
-add_test(function test_create_bad_install() {
-  _("Ensures that add-ons without a valid install are handled gracefully.");
-
-  let server = createAndStartHTTPServer(HTTP_PORT);
-
-  // The handler returns a search result but the XPI will 404.
-  const id = "missing-xpi@tests.mozilla.org";
-  let guid = Utils.makeGUID();
-  let record = createRecordForThisApp(guid, id, true, false);
-
-  let failed = store.applyIncomingBatch([record]);
-  do_check_eq(1, failed.length);
-  do_check_eq(guid, failed[0]);
-
-  let addon = getAddonFromAddonManagerByID(id);
-  do_check_eq(null, addon);
-
-  server.stop(run_next_test);
-});
 
 add_test(function test_remove() {
   _("Ensure removing add-ons from deleted records works.");
@@ -404,6 +299,122 @@ add_test(function test_ignore_hotfixes() {
   prefs.reset("hotfix.id");
 
   run_next_test();
+});
+
+
+add_test(function test_get_all_ids() {
+  _("Ensures that getAllIDs() returns an appropriate set.");
+
+  Svc.Prefs.set("addons.ignoreRepositoryChecking", true);
+
+  _("Installing two addons.");
+  let addon1 = installAddon("test_install1");
+  let addon2 = installAddon("test_bootstrap1_1");
+
+  _("Ensure they're syncable.");
+  do_check_true(store.isAddonSyncable(addon1));
+  do_check_true(store.isAddonSyncable(addon2));
+
+  let ids = store.getAllIDs();
+
+  do_check_eq("object", typeof(ids));
+  do_check_eq(2, Object.keys(ids).length);
+  do_check_true(addon1.syncGUID in ids);
+  do_check_true(addon2.syncGUID in ids);
+
+  addon1.install.cancel();
+  uninstallAddon(addon2);
+
+  Svc.Prefs.reset("addons.ignoreRepositoryChecking");
+  run_next_test();
+});
+
+add_test(function test_change_item_id() {
+  _("Ensures that changeItemID() works properly.");
+
+  let addon = installAddon("test_bootstrap1_1");
+
+  let oldID = addon.syncGUID;
+  let newID = Utils.makeGUID();
+
+  store.changeItemID(oldID, newID);
+
+  let newAddon = getAddonFromAddonManagerByID(addon.id);
+  do_check_neq(null, newAddon);
+  do_check_eq(newID, newAddon.syncGUID);
+
+  uninstallAddon(newAddon);
+
+  run_next_test();
+});
+
+add_test(function test_create() {
+  _("Ensure creating/installing an add-on from a record works.");
+
+  // Set this so that getInstallFromSearchResult doesn't end up
+  // failing the install due to an insecure source URI scheme.
+  Svc.Prefs.set("addons.ignoreRepositoryChecking", true);
+  let server = createAndStartHTTPServer(HTTP_PORT);
+
+  let addon = installAddon("test_bootstrap1_1");
+  let id = addon.id;
+  uninstallAddon(addon);
+
+  let guid = Utils.makeGUID();
+  let record = createRecordForThisApp(guid, id, true, false);
+
+  let failed = store.applyIncomingBatch([record]);
+  do_check_eq(0, failed.length);
+
+  let newAddon = getAddonFromAddonManagerByID(id);
+  do_check_neq(null, newAddon);
+  do_check_eq(guid, newAddon.syncGUID);
+  do_check_false(newAddon.userDisabled);
+
+  uninstallAddon(newAddon);
+
+  Svc.Prefs.reset("addons.ignoreRepositoryChecking");
+  server.stop(run_next_test);
+});
+
+add_test(function test_create_missing_search() {
+  _("Ensures that failed add-on searches are handled gracefully.");
+
+  let server = createAndStartHTTPServer(HTTP_PORT);
+
+  // The handler for this ID is not installed, so a search should 404.
+  const id = "missing@tests.mozilla.org";
+  let guid = Utils.makeGUID();
+  let record = createRecordForThisApp(guid, id, true, false);
+
+  let failed = store.applyIncomingBatch([record]);
+  do_check_eq(1, failed.length);
+  do_check_eq(guid, failed[0]);
+
+  let addon = getAddonFromAddonManagerByID(id);
+  do_check_eq(null, addon);
+
+  server.stop(run_next_test);
+});
+
+add_test(function test_create_bad_install() {
+  _("Ensures that add-ons without a valid install are handled gracefully.");
+
+  let server = createAndStartHTTPServer(HTTP_PORT);
+
+  // The handler returns a search result but the XPI will 404.
+  const id = "missing-xpi@tests.mozilla.org";
+  let guid = Utils.makeGUID();
+  let record = createRecordForThisApp(guid, id, true, false);
+
+  let failed = store.applyIncomingBatch([record]);
+  do_check_eq(1, failed.length);
+  do_check_eq(guid, failed[0]);
+
+  let addon = getAddonFromAddonManagerByID(id);
+  do_check_eq(null, addon);
+
+  server.stop(run_next_test);
 });
 
 add_test(function test_wipe() {

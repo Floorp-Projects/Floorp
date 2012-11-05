@@ -6,7 +6,7 @@ function hexData(n) {
 }
 
 var s = Set(hexData(256));
-assertEq(s.size(), 256);
+assertEq(s.size, 256);
 assertEq(s.has("0"), true);
 assertEq(s.has(0), false);
 assertEq(s.has("ff"), true);

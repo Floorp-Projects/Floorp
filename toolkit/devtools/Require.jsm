@@ -15,7 +15,7 @@
  * serves the projects it loads.
  */
 
-const EXPORTED_SYMBOLS = [ "define", "require" ];
+this.EXPORTED_SYMBOLS = [ "define", "require" ];
 
 const console = (function() {
   const tempScope = {};
@@ -29,7 +29,7 @@ const console = (function() {
  * @param deps Ignored. For compatibility with CommonJS AMD Spec
  * @param payload Function with (require, exports, module) params
  */
-function define(moduleName, deps, payload) {
+this.define = function define(moduleName, deps, payload) {
   if (typeof moduleName != "string") {
     throw new Error("Error: Module name is not a string");
   }
@@ -192,4 +192,4 @@ define.globalDomain = new Domain();
  * Expose a default require function which is the require of the global
  * sandbox to make it easy to use.
  */
-const require = define.globalDomain.require.bind(define.globalDomain);
+this.require = define.globalDomain.require.bind(define.globalDomain);

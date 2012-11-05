@@ -499,6 +499,7 @@ DOMCI_DATA(IDBFactory, IDBFactory)
 nsresult
 IDBFactory::OpenCommon(const nsAString& aName,
                        int64_t aVersion,
+                       const nsACString& aASCIIOrigin,
                        bool aDeleting,
                        JSContext* aCallingCx,
                        IDBOpenDBRequest** _retval)
@@ -529,7 +530,7 @@ IDBFactory::OpenCommon(const nsAString& aName,
 
   if (IndexedDatabaseManager::IsMainProcess()) {
     nsRefPtr<OpenDatabaseHelper> openHelper =
-      new OpenDatabaseHelper(request, aName, mASCIIOrigin, aVersion, aDeleting,
+      new OpenDatabaseHelper(request, aName, aASCIIOrigin, aVersion, aDeleting,
                              mContentParent, privilege);
 
     rv = openHelper->Init();
@@ -542,13 +543,13 @@ IDBFactory::OpenCommon(const nsAString& aName,
     NS_ASSERTION(mgr, "This should never be null!");
 
     rv =
-      mgr->WaitForOpenAllowed(OriginOrPatternString::FromOrigin(mASCIIOrigin),
+      mgr->WaitForOpenAllowed(OriginOrPatternString::FromOrigin(aASCIIOrigin),
                               openHelper->Id(), permissionHelper);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
   else if (aDeleting) {
     nsCOMPtr<nsIAtom> databaseId =
-      IndexedDatabaseManager::GetDatabaseId(mASCIIOrigin, aName);
+      IndexedDatabaseManager::GetDatabaseId(aASCIIOrigin, aName);
     NS_ENSURE_TRUE(databaseId, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     IndexedDBDeleteDatabaseRequestChild* actor =

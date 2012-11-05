@@ -79,7 +79,7 @@ interface nsISAXXMLReader : nsIStreamListener {
   attribute nsISAXLexicalHandler lexicalHandler;
 
   /**
-   * Set the value of a feature flag. NOT CURRENTLY IMPLEMENTED.
+   * Set the value of a feature flag.
    *
    * The feature name is any fully-qualified URI.  It is possible
    * for an XMLReader to expose a feature value but to be unable to
@@ -93,11 +93,15 @@ interface nsISAXXMLReader : nsIStreamListener {
    *
    * @param name String flag for a parser feature.
    * @param value Turn the feature on/off.
+   *
+   * @note This is currently supported only for
+   * http://xml.org/sax/features/namespace-prefixes .  All other
+   * features will result in a NOT_IMPLEMENTED exception.
    */
   void setFeature(in AString name, in boolean value);
 
   /**
-   * Look up the value of a feature flag. NOT CURRENTLY IMPLEMENTED.
+   * Look up the value of a feature flag.
    *
    * The feature name is any fully-qualified URI.  It is
    * possible for an XMLReader to recognize a feature name but
@@ -110,6 +114,10 @@ interface nsISAXXMLReader : nsIStreamListener {
    * http://xml.org/sax/features/namespace-prefixes feature names.
    *
    * @param name String flag for a parser feature.
+   *
+   * @note This is currently supported only for
+   * http://xml.org/sax/features/namespace-prefixes .  All other
+   * features will result in a NOT_IMPLEMENTED exception.
    */
   boolean getFeature(in AString name);
 

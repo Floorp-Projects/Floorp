@@ -1159,6 +1159,9 @@ HyperTextAccessible::NativeAttributes()
     }
   }
 
+  if (!HasOwnContent())
+    return attributes.forget();
+
   // For the html landmark elements we expose them like we do aria landmarks to
   // make AT navigation schemes "just work". Note html:header is redundant as
   // a landmark since it usually contains headings. We're not yet sure how the
@@ -1494,6 +1497,14 @@ HyperTextAccessible::GetEditor() const
 nsresult
 HyperTextAccessible::SetSelectionRange(int32_t aStartPos, int32_t aEndPos)
 {
+  // Before setting the selection range, we need to ensure that the editor
+  // is initialized. (See bug 804927.)
+  // Otherwise, it's possible that lazy editor initialization will override
+  // the selection we set here and leave the caret at the end of the text.
+  // By calling GetEditor here, we ensure that editor initialization is
+  // completed before we set the selection.
+  nsCOMPtr<nsIEditor> editor = GetEditor();
+
   bool isFocusable = InteractiveState() & states::FOCUSABLE;
 
   // If accessible is focusable then focus it before setting the selection to

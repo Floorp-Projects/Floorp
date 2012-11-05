@@ -37,11 +37,13 @@ const nsIRadioInterfaceLayer = Ci.nsIRadioInterfaceLayer;
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kSmsReceivedObserverTopic          = "sms-received";
 const kSmsSentObserverTopic              = "sms-sent";
-const kSmsDeliveredObserverTopic         = "sms-delivered";
+const kSmsDeliverySuccessObserverTopic   = "sms-delivery-success";
+const kSmsDeliveryErrorObserverTopic     = "sms-delivery-error";
 const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
 const kSysMsgListenerReadyObserverTopic  = "system-message-listener-ready";
 const kSysClockChangeObserverTopic       = "system-clock-change";
 const kTimeNitzAutomaticUpdateEnabled    = "time.nitz.automatic-update.enabled";
+
 const DOM_SMS_DELIVERY_RECEIVED          = "received";
 const DOM_SMS_DELIVERY_SENT              = "sent";
 
@@ -76,7 +78,9 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:SendStkResponse",
   "RIL:SendStkMenuSelection",
   "RIL:SendStkEventDownload",
-  "RIL:RegisterMobileConnectionMsg"
+  "RIL:RegisterMobileConnectionMsg",
+  "RIL:SetCallForwardingOption",
+  "RIL:GetCallForwardingOption"
 ];
 
 const RIL_IPC_VOICEMAIL_MSG_NAMES = [
@@ -302,11 +306,9 @@ RadioInterfaceLayer.prototype = {
     debug("Received '" + msg.name + "' message from content process");
     if (msg.name == "child-process-shutdown") {
       // By the time we receive child-process-shutdown, the child process has
-      // already forgotten its permissions so we need to unregister for both
-      // telephony and mobile connection messages.
-      this.unregisterTelephonyTarget(msg.target);
-      this.unregisterMobileConnectionTarget(msg.target);
-      this.unregisterVoicemailTarget(msg.target);
+      // already forgotten its permissions so we need to unregister the target
+      // for every permission.
+      this.unregisterMessageTarget(null, msg.target);
       return;
     }
 
@@ -381,7 +383,7 @@ RadioInterfaceLayer.prototype = {
         this.resumeCall(msg.json);
         break;
       case "RIL:RegisterTelephonyMsg":
-        this.registerTelephonyTarget(msg.target);
+        this.registerMessageTarget("telephony", msg.target);
         break;
       case "RIL:GetAvailableNetworks":
         this.saveRequestTarget(msg);
@@ -425,10 +427,18 @@ RadioInterfaceLayer.prototype = {
         this.sendStkEventDownload(msg.json);
         break;
       case "RIL:RegisterMobileConnectionMsg":
-        this.registerMobileConnectionTarget(msg.target);
+        this.registerMessageTarget("mobileconnection", msg.target);
         break;
       case "RIL:RegisterVoicemailMsg":
-        this.registerVoicemailTarget(msg.target);
+        this.registerMessageTarget("voicemail", msg.target);
+        break;
+      case "RIL:SetCallForwardingOption":
+        this.saveRequestTarget(msg);
+        this.setCallForwardingOption(msg.json);
+        break;
+      case "RIL:GetCallForwardingOption":
+        this.saveRequestTarget(msg);
+        this.getCallForwardingOption(msg.json);
         break;
     }
   },
@@ -500,7 +510,7 @@ RadioInterfaceLayer.prototype = {
         break;
       case "cardstatechange":
         this.rilContext.cardState = message.cardState;
-        this._sendMobileConnectionMessage("RIL:CardStateChanged", message);
+        this._sendTargetMessage("mobileconnection", "RIL:CardStateChanged", message);
         break;
       case "setCallWaiting":
         this.handleCallWaitingStatusChange(message);
@@ -511,8 +521,8 @@ RadioInterfaceLayer.prototype = {
       case "sms-sent":
         this.handleSmsSent(message);
         return;
-      case "sms-delivered":
-        this.handleSmsDelivered(message);
+      case "sms-delivery":
+        this.handleSmsDelivery(message);
         return;
       case "sms-send-failed":
         this.handleSmsSendFailed(message);
@@ -547,7 +557,7 @@ RadioInterfaceLayer.prototype = {
         }
         break;
       case "iccmbdn":
-        this._sendVoicemailMessage("RIL:VoicemailNumberChanged", message);
+        this._sendTargetMessage("voicemail", "RIL:VoicemailNumberChanged", message);
         break;
       case "USSDReceived":
         debug("USSDReceived " + JSON.stringify(message));
@@ -565,18 +575,16 @@ RadioInterfaceLayer.prototype = {
         this.handleStkProactiveCommand(message);
         break;
       case "stksessionend":
-        this._sendMobileConnectionMessage("RIL:StkSessionEnd", null);
+        this._sendTargetMessage("mobileconnection", "RIL:StkSessionEnd", null);
         break;
       case "setPreferredNetworkType":
         this.handleSetPreferredNetworkType(message);
         break;
-      case "stkcallsetup":
-        // A call has been placed by the STK app. We shall launch the dialer
-        // app by sending a system message, in order to further control the
-        // call, e.g. hang it up.
-        debug("STK app has placed a call no. " + message.command.options.address);
-        gSystemMessenger.broadcastMessage("icc-dialing", {state: "dialing",
-          number: message.command.options.address});
+      case "queryCallForwardStatus":
+        this.handleQueryCallForwardStatus(message);
+        break;
+      case "setCallForward":
+        this.handleSetCallForward(message);
         break;
       default:
         throw new Error("Don't know about this message type: " +
@@ -607,10 +615,18 @@ RadioInterfaceLayer.prototype = {
   },
 
   _messageManagerByPermission: null,
+  _permissionList: null,
   registerMessageTarget: function registerMessageTarget(permission, target) {
     let targets = this._messageManagerByPermission[permission];
+    if (!this._permissionList) {
+      this._permissionList = [];
+    }
     if (!targets) {
       targets = this._messageManagerByPermission[permission] = [];
+      let list = this._permissionList;
+      if (list.indexOf(permission) == -1) {
+        list.push(permission);
+      }
     }
 
     if (targets.indexOf(target) != -1) {
@@ -623,6 +639,15 @@ RadioInterfaceLayer.prototype = {
   },
 
   unregisterMessageTarget: function unregisterMessageTarget(permission, target) {
+    if (permission == null) {
+      // Unregister the target for every permission when no permission is specified.
+      for (let type of this._permissionList) {
+        this.unregisterMessageTarget(type, target);
+      }
+      return;
+    }
+
+    // Unregister the target for a specified permission.
     let targets = this._messageManagerByPermission[permission];
     if (!targets) {
       return;
@@ -635,41 +660,13 @@ RadioInterfaceLayer.prototype = {
     }
   },
 
-  registerTelephonyTarget: function registerTelephonyTarget(target) {
-    this.registerMessageTarget("telephony", target);
-  },
-
-  registerMobileConnectionTarget: function registerMobileConnectionTarget(target) {
-    this.registerMessageTarget("mobileconnection", target);
-  },
-
-  registerVoicemailTarget: function registerVoicemailTarget(target) {
-    this.registerMessageTarget("voicemail", target);
-  },
-
-  unregisterTelephonyTarget: function unregisterTelephonyTarget(target) {
-    this.unregisterMessageTarget("telephony", target);
-  },
-
-  unregisterMobileConnectionTarget: function unregisterMobileConnectionTarget(target) {
-    this.unregisterMessageTarget("mobileconnection", target);
-  },
-
-  unregisterVoicemailTarget: function unregisterVoicemailTarget(target) {
-    this.unregisterMessageTarget("voicemail", target);
-  },
-
   _sendTargetMessage: function _sendTargetMessage(permission, message, options) {
-    let thisTargets = this._messageManagerByPermission[permission];
-    if (!thisTargets) {
+    let targets = this._messageManagerByPermission[permission];
+    if (!targets) {
       return;
     }
 
-    let targets = thisTargets.slice();
     for each (let target in targets) {
-      if (thisTargets.indexOf(target) == -1) {
-        continue;
-      }
       target.sendAsyncMessage(message, options);
     }
   },
@@ -719,10 +716,10 @@ RadioInterfaceLayer.prototype = {
     this.checkRoamingBetweenOperators(data);
 
     if (voiceMessage || operatorMessage) {
-      this._sendMobileConnectionMessage("RIL:VoiceInfoChanged", voice);
+      this._sendTargetMessage("mobileconnection", "RIL:VoiceInfoChanged", voice);
     }
     if (dataMessage || operatorMessage) {
-      this._sendMobileConnectionMessage("RIL:DataInfoChanged", data);
+      this._sendTargetMessage("mobileconnection", "RIL:DataInfoChanged", data);
     }
 
     if (selectionMessage) {
@@ -796,7 +793,7 @@ RadioInterfaceLayer.prototype = {
     }
 
     if (!newInfo.batch) {
-      this._sendMobileConnectionMessage("RIL:VoiceInfoChanged", voiceInfo);
+      this._sendTargetMessage("mobileconnection", "RIL:VoiceInfoChanged", voiceInfo);
     }
   },
 
@@ -826,7 +823,7 @@ RadioInterfaceLayer.prototype = {
     }
 
     if (!newInfo.batch) {
-      this._sendMobileConnectionMessage("RIL:DataInfoChanged", dataInfo);
+      this._sendTargetMessage("mobileconnection", "RIL:DataInfoChanged", dataInfo);
     }
     this.updateRILNetworkInterface();
   },
@@ -837,7 +834,7 @@ RadioInterfaceLayer.prototype = {
   handleDataCallError: function handleDataCallError(message) {
     // Notify data call error only for data APN
     if (message.apn == this.dataCallSettings["apn"]) {
-      this._sendMobileConnectionMessage("RIL:DataError", message);
+      this._sendTargetMessage("mobileconnection", "RIL:DataError", message);
     }
 
     this._deliverDataCallCallback("dataCallError", [message]);
@@ -883,7 +880,7 @@ RadioInterfaceLayer.prototype = {
         voiceInfo.relSignalStrength != message.gsmRelative) {
       voiceInfo.signalStrength = message.gsmDBM;
       voiceInfo.relSignalStrength = message.gsmRelative;
-      this._sendMobileConnectionMessage("RIL:VoiceInfoChanged", voiceInfo);
+      this._sendTargetMessage("mobileconnection", "RIL:VoiceInfoChanged", voiceInfo);
     }
 
     let dataInfo = this.rilContext.data;
@@ -891,7 +888,7 @@ RadioInterfaceLayer.prototype = {
         dataInfo.relSignalStrength != message.gsmRelative) {
       dataInfo.signalStrength = message.gsmDBM;
       dataInfo.relSignalStrength = message.gsmRelative;
-      this._sendMobileConnectionMessage("RIL:DataInfoChanged", dataInfo);
+      this._sendTargetMessage("mobileconnection", "RIL:DataInfoChanged", dataInfo);
     }
   },
 
@@ -909,12 +906,12 @@ RadioInterfaceLayer.prototype = {
 
     if (this.networkChanged(message, voice.network)) {
       voice.network = message;
-      this._sendMobileConnectionMessage("RIL:VoiceInfoChanged", voice);
+      this._sendTargetMessage("mobileconnection", "RIL:VoiceInfoChanged", voice);
     }
 
     if (this.networkChanged(message, data.network)) {
       data.network = message;
-      this._sendMobileConnectionMessage("RIL:DataInfoChanged", data);
+      this._sendTargetMessage("mobileconnection", "RIL:DataInfoChanged", data);
     }
   },
 
@@ -1099,8 +1096,10 @@ RadioInterfaceLayer.prototype = {
     debug("handleCallStateChange: " + JSON.stringify(call));
     call.state = convertRILCallState(call.state);
 
-    if (call.state == nsIRadioInterfaceLayer.CALL_STATE_INCOMING) {
-      gSystemMessenger.broadcastMessage("telephony-incoming", {number: call.number});
+    if (call.state == nsIRadioInterfaceLayer.CALL_STATE_INCOMING ||
+        call.state == nsIRadioInterfaceLayer.CALL_STATE_DIALING) {
+      gSystemMessenger.broadcastMessage("telephony-new-call", {number: call.number,
+                                                               state: call.state});
     }
 
     if (call.isActive) {
@@ -1111,7 +1110,7 @@ RadioInterfaceLayer.prototype = {
       this._activeCall = null;
     }
     this.updateCallAudioState();
-    this._sendTelephonyMessage("RIL:CallStateChanged", call);
+    this._sendTargetMessage("telephony", "RIL:CallStateChanged", call);
   },
 
   /**
@@ -1124,7 +1123,7 @@ RadioInterfaceLayer.prototype = {
     }
     this.updateCallAudioState();
     call.state = nsIRadioInterfaceLayer.CALL_STATE_DISCONNECTED;
-    this._sendTelephonyMessage("RIL:CallStateChanged", call);
+    this._sendTargetMessage("telephony", "RIL:CallStateChanged", call);
   },
 
   /**
@@ -1152,7 +1151,7 @@ RadioInterfaceLayer.prototype = {
    */
   updateNetworkSelectionMode: function updateNetworkSelectionMode(message) {
     debug("updateNetworkSelectionMode: " + JSON.stringify(message));
-    this._sendMobileConnectionMessage("RIL:NetworkSelectionModeChanged", message);
+    this._sendTargetMessage("mobileconnection", "RIL:NetworkSelectionModeChanged", message);
   },
 
   /**
@@ -1175,7 +1174,7 @@ RadioInterfaceLayer.prototype = {
    * Handle call error.
    */
   handleCallError: function handleCallError(message) {
-    this._sendTelephonyMessage("RIL:CallError", message);
+    this._sendTargetMessage("telephony", "RIL:CallError", message);
   },
 
   /**
@@ -1236,30 +1235,35 @@ RadioInterfaceLayer.prototype = {
     if (mwi) {
       mwi.returnNumber = message.sender || null;
       mwi.returnMessage = message.fullBody || null;
-      this._sendVoicemailMessage("RIL:VoicemailNotification", mwi);
+      this._sendTargetMessage("voicemail", "RIL:VoicemailNotification", mwi);
       return;
     }
 
     let id = -1;
-    if (message.messageClass != RIL.PDU_DCS_MSG_CLASS_0) {
+    if (message.messageClass != RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_0]) {
       id = gSmsDatabaseService.saveReceivedMessage(message.sender || null,
                                                    message.fullBody || null,
+                                                   message.messageClass,
                                                    message.timestamp);
     }
     let sms = gSmsService.createSmsMessage(id,
                                            DOM_SMS_DELIVERY_RECEIVED,
+                                           RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS,
                                            message.sender || null,
                                            message.receiver || null,
                                            message.fullBody || null,
+                                           message.messageClass,
                                            message.timestamp,
                                            false);
 
     gSystemMessenger.broadcastMessage("sms-received",
                                       {id: id,
                                        delivery: DOM_SMS_DELIVERY_RECEIVED,
+                                       deliveryStatus: RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS,
                                        sender: message.sender || null,
                                        receiver: message.receiver || null,
                                        body: message.fullBody || null,
+                                       messageClass: message.messageClass,
                                        timestamp: message.timestamp,
                                        read: false});
     Services.obs.notifyObservers(sms, kSmsReceivedObserverTopic, null);
@@ -1289,14 +1293,17 @@ RadioInterfaceLayer.prototype = {
     }
 
     let timestamp = Date.now();
+    let messageClass = RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_NORMAL];
     let id = gSmsDatabaseService.saveSentMessage(options.number,
                                                  options.fullBody,
                                                  timestamp);
     let sms = gSmsService.createSmsMessage(id,
                                            DOM_SMS_DELIVERY_SENT,
+                                           RIL.GECKO_SMS_DELIVERY_STATUS_PENDING,
                                            null,
                                            options.number,
                                            options.fullBody,
+                                           messageClass,
                                            timestamp,
                                            true);
 
@@ -1304,16 +1311,17 @@ RadioInterfaceLayer.prototype = {
       // No more used if STATUS-REPORT not requested.
       delete this._sentSmsEnvelopes[message.envelopeId];
     } else {
-      options.sms = sms;
+      options.id = id;
+      options.timestamp = timestamp;
     }
 
     gSmsRequestManager.notifySmsSent(options.requestId, sms);
 
-    Services.obs.notifyObservers(options.sms, kSmsSentObserverTopic, null);
+    Services.obs.notifyObservers(sms, kSmsSentObserverTopic, null);
   },
 
-  handleSmsDelivered: function handleSmsDelivered(message) {
-    debug("handleSmsDelivered: " + JSON.stringify(message));
+  handleSmsDelivery: function handleSmsDelivery(message) {
+    debug("handleSmsDelivery: " + JSON.stringify(message));
 
     let options = this._sentSmsEnvelopes[message.envelopeId];
     if (!options) {
@@ -1321,7 +1329,23 @@ RadioInterfaceLayer.prototype = {
     }
     delete this._sentSmsEnvelopes[message.envelopeId];
 
-    Services.obs.notifyObservers(options.sms, kSmsDeliveredObserverTopic, null);
+    let messageClass = RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_NORMAL];
+    gSmsDatabaseService.setMessageDeliveryStatus(options.id,
+                                                 message.deliveryStatus);
+    let sms = gSmsService.createSmsMessage(options.id,
+                                           DOM_SMS_DELIVERY_SENT,
+                                           message.deliveryStatus,
+                                           null,
+                                           options.number,
+                                           options.fullBody,
+                                           messageClass,
+                                           options.timestamp,
+                                           true);
+
+    let topic = (message.deliveryStatus == RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS)
+                ? kSmsDeliverySuccessObserverTopic
+                : kSmsDeliveryErrorObserverTopic;
+    Services.obs.notifyObservers(sms, topic, null);
   },
 
   handleSmsSendFailed: function handleSmsSendFailed(message) {
@@ -1352,7 +1376,7 @@ RadioInterfaceLayer.prototype = {
     if (datacall.ifname &&
         datacall.apn == this.dataCallSettings["apn"]) {
       data.connected = (datacall.state == RIL.GECKO_NETWORK_STATE_CONNECTED);
-      this._sendMobileConnectionMessage("RIL:DataInfoChanged", data);
+      this._sendTargetMessage("mobileconnection", "RIL:DataInfoChanged", data);
     }
 
     this._deliverDataCallCallback("dataCallStateChanged",
@@ -1421,7 +1445,7 @@ RadioInterfaceLayer.prototype = {
     }
     // RIL:IccInfoChanged corresponds to a DOM event that gets fired only
     // when the MCC or MNC codes have changed.
-    this._sendMobileConnectionMessage("RIL:IccInfoChanged", message);
+    this._sendTargetMessage("mobileconnection", "RIL:IccInfoChanged", message);
   },
 
   handleICCCardLockResult: function handleICCCardLockResult(message) {
@@ -1430,7 +1454,7 @@ RadioInterfaceLayer.prototype = {
 
   handleUSSDReceived: function handleUSSDReceived(ussd) {
     debug("handleUSSDReceived " + JSON.stringify(ussd));
-    this._sendMobileConnectionMessage("RIL:USSDReceived", ussd);
+    this._sendTargetMessage("mobileconnection", "RIL:USSDReceived", ussd);
   },
 
   handleSendMMI: function handleSendMMI(message) {
@@ -1450,7 +1474,17 @@ RadioInterfaceLayer.prototype = {
   handleStkProactiveCommand: function handleStkProactiveCommand(message) {
     debug("handleStkProactiveCommand " + JSON.stringify(message));
     gSystemMessenger.broadcastMessage("icc-stkcommand", message);
-    this._sendMobileConnectionMessage("RIL:StkCommand", message);
+    this._sendTargetMessage("mobileconnection", "RIL:StkCommand", message);
+  },
+
+  handleQueryCallForwardStatus: function handleQueryCallForwardStatus(message) {
+    debug("handleQueryCallForwardStatus: " + JSON.stringify(message));
+    this._sendRequestResults("RIL:GetCallForwardingOption", message);
+  },
+
+  handleSetCallForward: function handleSetCallForward(message) {
+    debug("handleSetCallForward: " + JSON.stringify(message));
+    this._sendRequestResults("RIL:SetCallForwardingOption", message);
   },
 
   // nsIObserver
@@ -1718,6 +1752,21 @@ RadioInterfaceLayer.prototype = {
 
   sendStkEventDownload: function sendStkEventDownload(message) {
     message.rilMessageType = "sendStkEventDownload";
+    this.worker.postMessage(message);
+  },
+
+  setCallForwardingOption: function setCallForwardingOption(message) {
+    debug("setCallForwardingOption: " + JSON.stringify(message));
+    message.rilMessageType = "setCallForward";
+    message.serviceClass = RIL.ICC_SERVICE_CLASS_VOICE;
+    this.worker.postMessage(message);
+  },
+
+  getCallForwardingOption: function getCallForwardingOption(message) {
+    debug("getCallForwardingOption: " + JSON.stringify(message));
+    message.rilMessageType = "queryCallForwardStatus";
+    message.serviceClass = RIL.ICC_SERVICE_CLASS_NONE;
+    message.number = null;
     this.worker.postMessage(message);
   },
 
@@ -2571,7 +2620,7 @@ RILNetworkInterface.prototype = {
 
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([RadioInterfaceLayer]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RadioInterfaceLayer]);
 
 let debug;
 if (DEBUG) {

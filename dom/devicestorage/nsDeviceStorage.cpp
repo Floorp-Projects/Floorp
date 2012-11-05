@@ -1462,7 +1462,7 @@ public:
       return NS_OK;
     }
 
-    nsCOMPtr<nsIContentPermissionPrompt> prompt = do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
+    nsCOMPtr<nsIContentPermissionPrompt> prompt = do_CreateInstance(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
     if (prompt) {
       prompt->Prompt(this);
     }
@@ -2049,7 +2049,7 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContentPermissionPrompt> prompt = do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
+  nsCOMPtr<nsIContentPermissionPrompt> prompt = do_CreateInstance(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
   if (prompt) {
     prompt->Prompt(r);
   }
@@ -2258,7 +2258,7 @@ nsDOMDeviceStorage::RemoveEventListener(const nsAString & aType,
 {
   nsDOMEventTargetHelper::RemoveEventListener(aType, aListener, false);
 
-  if (mIsWatchingFile && !HasListenersFor(NS_LITERAL_STRING("change"))) {
+  if (mIsWatchingFile && !HasListenersFor(nsGkAtoms::onchange)) {
     mIsWatchingFile = false;
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     obs->RemoveObserver(this, "file-watcher-update");

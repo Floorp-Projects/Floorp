@@ -58,9 +58,10 @@
 using namespace mozilla::dom;
 using namespace mozilla::hal;
 
-#define EVENT_TYPE_EQUALS( ls, type, userType ) \
-  (ls->mEventType == type && \
-  (ls->mEventType != NS_USER_DEFINED_EVENT || ls->mTypeAtom == userType))
+#define EVENT_TYPE_EQUALS(ls, type, userType, allEvents) \
+  ((ls->mEventType == type && \
+   (ls->mEventType != NS_USER_DEFINED_EVENT || ls->mTypeAtom == userType)) || \
+   (allEvents && ls->mAllEvents))
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -193,9 +194,10 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
                                          uint32_t aType,
                                          nsIAtom* aTypeAtom,
                                          int32_t aFlags,
-                                         bool aHandler)
+                                         bool aHandler,
+                                         bool aAllEvents)
 {
-  NS_ABORT_IF_FALSE(aType && aTypeAtom, "Missing type");
+  NS_ABORT_IF_FALSE((aType && aTypeAtom) || aAllEvents, "Missing type");
 
   if (!aListener) {
     return;
@@ -210,7 +212,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     if (ls->mListener == aListener &&
         ls->mListenerIsHandler == aHandler &&
         ls->mFlags == aFlags &&
-        EVENT_TYPE_EQUALS(ls, aType, aTypeAtom)) {
+        EVENT_TYPE_EQUALS(ls, aType, aTypeAtom, aAllEvents)) {
       return;
     }
   }
@@ -218,13 +220,14 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   mNoListenerForEvent = NS_EVENT_TYPE_NULL;
   mNoListenerForEventAtom = nullptr;
 
-  ls = mListeners.AppendElement();
+  ls = aAllEvents ? mListeners.InsertElementAt(0) : mListeners.AppendElement();
   ls->mListener = aListener;
   ls->mEventType = aType;
   ls->mTypeAtom = aTypeAtom;
   ls->mFlags = aFlags;
   ls->mListenerIsHandler = aHandler;
   ls->mHandlerIsString = false;
+  ls->mAllEvents = aAllEvents;
 
   // Detect the type of event listener.
   nsCOMPtr<nsIXPConnectWrappedJS> wjs;
@@ -406,7 +409,8 @@ void
 nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener, 
                                             uint32_t aType,
                                             nsIAtom* aUserType,
-                                            int32_t aFlags)
+                                            int32_t aFlags,
+                                            bool aAllEvents)
 {
   if (!aListener || !aType) {
     return;
@@ -424,7 +428,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
 
   for (uint32_t i = 0; i < count; ++i) {
     ls = &mListeners.ElementAt(i);
-    if (EVENT_TYPE_EQUALS(ls, aType, aUserType)) {
+    if (EVENT_TYPE_EQUALS(ls, aType, aUserType, aAllEvents)) {
       ++typeCount;
       if (ls->mListener == aListener &&
           (ls->mFlags & ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED) == aFlags) {
@@ -442,14 +446,14 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
     }
   }
 
-  if (deviceType && typeCount == 0) {
+  if (!aAllEvents && deviceType && typeCount == 0) {
     DisableDevice(aType);
   } else if (timeChangeEvent && typeCount == 0) {
     nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
     if (window) {
       window->DisableTimeChangeNotifications();
     }
-  } else if (networkEvent && typeCount == 0) {
+  } else if (!aAllEvents && networkEvent && typeCount == 0) {
     nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
     if (window) {
       window->DisableNetworkEvent(aType);
@@ -463,9 +467,9 @@ ListenerCanHandle(nsListenerStruct* aLs, nsEvent* aEvent)
   // This is slightly different from EVENT_TYPE_EQUALS in that it returns
   // true even when aEvent->message == NS_USER_DEFINED_EVENT and
   // aLs=>mEventType != NS_USER_DEFINED_EVENT as long as the atoms are the same
-  return aEvent->message == NS_USER_DEFINED_EVENT ?
+  return (aEvent->message == NS_USER_DEFINED_EVENT ?
     (aLs->mTypeAtom == aEvent->userType) :
-    (aLs->mEventType == aEvent->message);
+    (aLs->mEventType == aEvent->message)) || aLs->mAllEvents;
 }
 
 void
@@ -498,8 +502,8 @@ nsEventListenerManager::FindEventHandler(uint32_t aEventType,
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
     ls = &mListeners.ElementAt(i);
-    if (ls->mListenerIsHandler && EVENT_TYPE_EQUALS(ls, aEventType, aTypeAtom))
-    {
+    if (ls->mListenerIsHandler &&
+        EVENT_TYPE_EQUALS(ls, aEventType, aTypeAtom, false)) {
       return ls;
     }
   }
@@ -990,6 +994,34 @@ nsEventListenerManager::RemoveEventListener(const nsAString& aType,
   int32_t flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
   
   RemoveEventListenerByType(aListener, aType, flags);
+}
+
+void
+nsEventListenerManager::AddListenerForAllEvents(nsIDOMEventListener* aListener,
+                                                bool aUseCapture,
+                                                bool aWantsUntrusted,
+                                                bool aSystemEventGroup)
+{
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  if (aWantsUntrusted) {
+    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+  }
+  if (aSystemEventGroup) {
+    flags |= NS_EVENT_FLAG_SYSTEM_EVENT;
+  }
+  AddEventListener(aListener, NS_EVENT_TYPE_ALL, nullptr, flags, false, true);
+}
+
+void
+nsEventListenerManager::RemoveListenerForAllEvents(nsIDOMEventListener* aListener, 
+                                                   bool aUseCapture,
+                                                   bool aSystemEventGroup)
+{
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  if (aSystemEventGroup) {
+    flags |= NS_EVENT_FLAG_SYSTEM_EVENT;
+  }
+  RemoveEventListener(aListener, NS_EVENT_TYPE_ALL, nullptr, flags, true);
 }
 
 bool

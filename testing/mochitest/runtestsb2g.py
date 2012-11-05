@@ -488,7 +488,7 @@ def main():
         mochitest.cleanup(None, options)
         retVal = mochitest.runTests(options)
     except:
-        print "TEST-UNEXPECTED-FAIL | %s | Exception caught while running tests." % sys.exc_info()[1]
+        print "Automation Error: Exception caught while running tests"
         traceback.print_exc()
         mochitest.stopWebServer(options)
         mochitest.stopWebSocketServer(options)

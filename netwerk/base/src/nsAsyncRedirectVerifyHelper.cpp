@@ -18,8 +18,15 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo *gLog = PR_NewLogModule("nsRedirect");
-#define LOG(args) PR_LOG(gLog, PR_LOG_DEBUG, args)
+static PRLogModuleInfo *
+GetRedirectLog()
+{
+    static PRLogModuleInfo *sLog;
+    if (!sLog)
+        sLog = PR_NewLogModule("nsRedirect");
+    return sLog;
+}
+#define LOG(args) PR_LOG(GetRedirectLog(), PR_LOG_DEBUG, args)
 #else
 #define LOG(args)
 #endif

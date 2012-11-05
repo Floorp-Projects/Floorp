@@ -4,12 +4,12 @@
 
 "use strict";
 
-let EXPORTED_SYMBOLS = ["TelURIParser"];
+this.EXPORTED_SYMBOLS = ["TelURIParser"];
 
 /**
  * Singleton providing functionality for parsing tel: and sms: URIs
  */
-let TelURIParser = {
+this.TelURIParser = {
   parseURI: function(scheme, uri) {
     // Ignore MWI and USSD codes. See 794034.
     if (uri.indexOf('*') != -1 || uri.indexOf('#') != -1) {

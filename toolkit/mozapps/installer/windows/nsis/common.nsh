@@ -83,6 +83,12 @@
 !define SHORTCUTS_LOG "shortcuts_log.ini"
 !define TO_BE_DELETED "to_be_deleted"
 
+; !define SHCNF_DWORD     0x0003
+; !define SHCNF_FLUSH     0x1000
+!define SHCNF_DWORDFLUSH  0x1003
+!ifndef SHCNE_ASSOCCHANGED
+  !define SHCNE_ASSOCCHANGED 0x08000000
+!endif
 
 ################################################################################
 # Macros for debugging
@@ -5026,6 +5032,13 @@
       IfFileExists "$INSTDIR\${FileMainEXE}" +2 +1
       Quit ; Nothing initialized so no need to call OnEndCommon
 
+!ifmacrodef InitHashAppModelId
+      ; setup the application model id registration value
+      !ifdef AppName
+      ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
+      !endif
+!endif
+
       ; Prevents breaking apps that don't use SetBrandNameVars
       !ifdef SetBrandNameVars
         ${SetBrandNameVars} "$INSTDIR\distribution\setup.ini"
@@ -5139,7 +5152,7 @@
 
       finish:
       ${UnloadUAC}
-      System::Call "shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)"
+      System::Call "shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i 0, i 0, i 0)"
       Quit ; Nothing initialized so no need to call OnEndCommon
 
       continue:

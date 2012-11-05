@@ -5,7 +5,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["StyleEditorChrome"];
+this.EXPORTED_SYMBOLS = ["StyleEditorChrome"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -32,7 +32,7 @@ const STYLE_EDITOR_TEMPLATE = "stylesheet";
  * @param DOMWindow aContentWindow
  *        Content DOMWindow to attach to this chrome.
  */
-function StyleEditorChrome(aRoot, aContentWindow)
+this.StyleEditorChrome = function StyleEditorChrome(aRoot, aContentWindow)
 {
   assert(aRoot, "Argument 'aRoot' is required to initialize StyleEditorChrome.");
 

@@ -233,6 +233,8 @@ class nsStyleSet
   nsresult RemoveStyleSheet(sheetType aType, nsIStyleSheet *aSheet);
   nsresult ReplaceSheets(sheetType aType,
                          const nsCOMArray<nsIStyleSheet> &aNewSheets);
+  nsresult InsertStyleSheetBefore(sheetType aType, nsIStyleSheet *aNewSheet,
+                                  nsIStyleSheet *aReferenceSheet);
 
   // Enable/Disable entire author style level (Doc & PresHint levels)
   bool GetAuthorStyleDisabled();

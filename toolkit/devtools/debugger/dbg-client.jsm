@@ -10,9 +10,9 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-var EXPORTED_SYMBOLS = ["DebuggerTransport",
-                        "DebuggerClient",
-                        "debuggerSocketConnect"];
+this.EXPORTED_SYMBOLS = ["DebuggerTransport",
+                         "DebuggerClient",
+                         "debuggerSocketConnect"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -36,7 +36,7 @@ function dumpn(str)
 
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader);
-loader.loadSubScript("chrome://global/content/devtools/dbg-transport.js");
+loader.loadSubScript("chrome://global/content/devtools/dbg-transport.js", this);
 
 /**
  * Add simple event notification to a prototype object. Any object that has
@@ -173,6 +173,7 @@ const UnsolicitedNotifications = {
   "locationChange": "locationChange",
   "networkEvent": "networkEvent",
   "networkEventUpdate": "networkEventUpdate",
+  "newGlobal": "newGlobal",
   "newScript": "newScript",
   "tabDetached": "tabDetached",
   "tabNavigated": "tabNavigated",
@@ -197,7 +198,7 @@ const ROOT_ACTOR_NAME = "root";
  * provides the means to communicate with the server and exchange the messages
  * required by the protocol in a traditional JavaScript API.
  */
-function DebuggerClient(aTransport)
+this.DebuggerClient = function DebuggerClient(aTransport)
 {
   this._transport = aTransport;
   this._transport.hooks = this;
@@ -1284,7 +1285,7 @@ eventSource(BreakpointClient.prototype);
  * @param aPort number
  *        The port number of the debugger server.
  */
-function debuggerSocketConnect(aHost, aPort)
+this.debuggerSocketConnect = function debuggerSocketConnect(aHost, aPort)
 {
   let s = socketTransportService.createTransport(null, 0, aHost, aPort, null);
   let transport = new DebuggerTransport(s.openInputStream(0, 0, 0),

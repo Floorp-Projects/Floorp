@@ -40,14 +40,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
 // command always succeeds and we do a string/boolean check for the
 // expected results).
 var WifiManager = (function() {
-  function getSdkVersionAndDevice() {
+  function getSdkVersion() {
     Cu.import("resource://gre/modules/systemlibs.js");
     let sdkVersion = libcutils.property_get("ro.build.version.sdk");
-    return { sdkVersion: parseInt(sdkVersion, 10),
-               device: libcutils.property_get("ro.product.device") };
+    return parseInt(sdkVersion, 10);
   }
 
-  let { sdkVersion, device } = getSdkVersionAndDevice();
+  let sdkVersion = getSdkVersion();
 
   var controlWorker = new ChromeWorker(WIFIWORKER_WORKER);
   var eventWorker = new ChromeWorker(WIFIWORKER_WORKER);
@@ -235,6 +234,29 @@ var WifiManager = (function() {
     doBooleanCommand("REASSOCIATE", "OK", callback);
   }
 
+  // A note about background scanning:
+  // Normally, background scanning shouldn't be necessary as wpa_supplicant
+  // has the capability to automatically schedule its own scans at appropriate
+  // intervals. However, with some drivers, this appears to get stuck after
+  // three scans, so we enable the driver's background scanning to work around
+  // that when we're not connected to any network. This ensures that we'll
+  // automatically reconnect to networks if one falls out of range.
+  var reEnableBackgroundScan = false;
+  var backgroundScanEnabled = false;
+  function setBackgroundScan(enable, callback) {
+    var doEnable = (enable === "ON");
+    if (doEnable === backgroundScanEnabled) {
+      callback(false, true);
+      return;
+    }
+
+    backgroundScanEnabled = doEnable;
+    doBooleanCommand("SET pno " + (backgroundScanEnabled ? "1" : "0"), "OK",
+                     function(ok) {
+                       callback(true, ok);
+                     });
+  }
+
   var scanModeActive = false;
 
   function doSetScanModeCommand(setActive, callback) {
@@ -245,11 +267,14 @@ var WifiManager = (function() {
     if (forceActive && !scanModeActive) {
       // Note: we ignore errors from doSetScanMode.
       doSetScanModeCommand(true, function(ignore) {
-        doBooleanCommand("SCAN", "OK", function(ok) {
-          doSetScanModeCommand(false, function(ignore) {
-            // The result of scanCommand is the result of the actual SCAN
-            // request.
-            callback(ok);
+        setBackgroundScan("OFF", function(turned, ignore) {
+          reEnableBackgroundScan = turned;
+          doBooleanCommand("SCAN", "OK", function(ok) {
+            doSetScanModeCommand(false, function(ignore) {
+              // The result of scanCommand is the result of the actual SCAN
+              // request.
+              callback(ok);
+            });
           });
         });
       });
@@ -575,6 +600,16 @@ var WifiManager = (function() {
         fields.state !== "SCANNING") {
       return false;
     }
+
+    // Stop background scanning if we're trying to connect to a network.
+    if (backgroundScanEnabled &&
+        (fields.state === "ASSOCIATING" ||
+         fields.state === "ASSOCIATED" ||
+         fields.state === "FOUR_WAY_HANDSHAKE" ||
+         fields.state === "GROUP_HANDSHAKE" ||
+         fields.state === "COMPLETED")) {
+      setBackgroundScan("OFF", function() {});
+    }
     fields.prevState = manager.state;
     manager.state = fields.state;
 
@@ -628,8 +663,24 @@ var WifiManager = (function() {
       dhcpInfo = { ip_address: ip_address };
 
     notifyStateChange({ state: state, fromStatus: true });
-    if (state === "COMPLETED")
-      onconnected();
+
+    // If we parse the status and the supplicant has already entered the
+    // COMPLETED state, then we need to set up DHCP right away. Otherwise, if
+    // we're not actively connecting to a network, we need to turn on
+    // background scanning.
+    switch (state) {
+      case "COMPLETED":
+        onconnected();
+        break;
+
+      case "DISCONNECTED":
+      case "INACTIVE":
+      case "SCANNING":
+        setBackgroundScan("ON", function(){});
+
+      default:
+        break;
+    }
   }
 
   // try to connect to the supplicant
@@ -668,7 +719,7 @@ var WifiManager = (function() {
   }
 
   manager.start = function() {
-    debug("detected SDK version " + sdkVersion + " and device " + device);
+    debug("detected SDK version " + sdkVersion);
     connectToSupplicant(connectCallback);
   }
 
@@ -811,6 +862,10 @@ var WifiManager = (function() {
     }
     if (eventData.indexOf("CTRL-EVENT-SCAN-RESULTS") === 0) {
       debug("Notifying of scan results available");
+      if (reEnableBackgroundScan) {
+        reEnableBackgroundScan = false;
+        setBackgroundScan("ON", function() {});
+      }
       notify("scanresultsavailable");
       return true;
     }
@@ -952,15 +1007,11 @@ var WifiManager = (function() {
               });
             }
 
-            // Driver startup on the otoro takes longer than it takes for us
+            // Driver startup on certain platforms takes longer than it takes for us
             // to return from loadDriver, so wait 2 seconds before starting
             // the supplicant to give it a chance to start.
-            if (device === "otoro") {
-              timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-              timer.init(doStartSupplicant, 2000, Ci.nsITimer.TYPE_ONE_SHOT);
-            } else {
-              doStartSupplicant();
-            }
+            timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+            timer.init(doStartSupplicant, 2000, Ci.nsITimer.TYPE_ONE_SHOT);
           });
         });
       });
@@ -1161,6 +1212,7 @@ var WifiManager = (function() {
   manager.setScanMode = function(mode, callback) {
     setScanModeCommand(mode === "active", callback);
   }
+  manager.setBackgroundScan = setBackgroundScan;
   manager.scan = scanCommand;
   manager.wpsPbc = wpsPbcCommand;
   manager.wpsPin = wpsPinCommand;
@@ -1644,6 +1696,8 @@ function WifiWorker() {
             WifiManager.reconnect(function(){});
           }
         });
+
+        WifiManager.setBackgroundScan("ON", function(){});
 
         WifiNetworkInterface.state =
           Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
@@ -2539,7 +2593,7 @@ WifiWorker.prototype = {
   }
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([WifiWorker]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WifiWorker]);
 
 let debug;
 if (DEBUG) {

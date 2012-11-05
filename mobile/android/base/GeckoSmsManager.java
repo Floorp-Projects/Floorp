@@ -25,6 +25,8 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
+import static android.telephony.SmsMessage.MessageClass;
+
 /**
  * This class is returning unique ids for PendingIntent requestCode attribute.
  * There are only |Integer.MAX_VALUE - Integer.MIN_VALUE| unique IDs available,
@@ -307,7 +309,7 @@ public class GeckoSmsManager
   private final static int kSmsTypeSentbox    = 2;
 
   /*
-   * Keep the following error codes in syng with |DeliveryState| in:
+   * Keep the following state codes in syng with |DeliveryState| in:
    * dom/sms/src/Types.h
    */
   private final static int kDeliveryStateSent     = 0;
@@ -315,7 +317,35 @@ public class GeckoSmsManager
   private final static int kDeliveryStateUnknown  = 2;
   private final static int kDeliveryStateEndGuard = 3;
 
-  private final static String[] kRequiredMessageRows = new String[] { "_id", "address", "body", "date", "type" };
+  /*
+   * Keep the following status codes in sync with |DeliveryStatus| in:
+   * dom/sms/src/Types.h
+   */
+  private final static int kDeliveryStatusNotApplicable = 0;
+  private final static int kDeliveryStatusSuccess       = 1;
+  private final static int kDeliveryStatusPending       = 2;
+  private final static int kDeliveryStatusError         = 3;
+
+  /*
+   * android.provider.Telephony.Sms.STATUS_*. Duplicated because they're not
+   * part of Android public API.
+   */
+  private final static int kInternalDeliveryStatusNone     = -1;
+  private final static int kInternalDeliveryStatusComplete = 0;
+  private final static int kInternalDeliveryStatusPending  = 32;
+  private final static int kInternalDeliveryStatusFailed   = 64;
+
+  /*
+   * Keep the following values in sync with |MessageClass| in:
+   * dom/sms/src/Types.h
+   */
+  private final static int kMessageClassNormal  = 0;
+  private final static int kMessageClassClass0  = 1;
+  private final static int kMessageClassClass1  = 2;
+  private final static int kMessageClassClass2  = 3;
+  private final static int kMessageClassClass3  = 4;
+
+  private final static String[] kRequiredMessageRows = new String[] { "_id", "address", "body", "date", "type", "status" };
 
   public GeckoSmsManager() {
     SmsIOThread.getInstance().start();
@@ -352,6 +382,7 @@ public class GeckoSmsManager
 
         GeckoAppShell.notifySmsReceived(msg.getDisplayOriginatingAddress(),
                                         msg.getDisplayMessageBody(),
+                                        getGeckoMessageClass(msg.getMessageClass()),
                                         System.currentTimeMillis());
       }
 
@@ -413,9 +444,12 @@ public class GeckoSmsManager
                                             bundle.getLong("processId"));
           Log.i("GeckoSmsManager", "SMS sending failed!");
         } else {
-          // It seems unlikely to get a result code for a failure to deliver.
-          // Even if, we don't want to do anything with this.
-          Log.e("GeckoSmsManager", "SMS failed to be delivered... is that even possible?");
+          GeckoAppShell.notifySmsDelivery(envelope.getMessageId(),
+                                          kDeliveryStatusError,
+                                          bundle.getString("number"),
+                                          bundle.getString("message"),
+                                          envelope.getMessageTimestamp());
+          Log.i("GeckoSmsManager", "SMS delivery failed!");
         }
       } else {
         if (part == Envelope.SubParts.SENT_PART) {
@@ -434,10 +468,11 @@ public class GeckoSmsManager
 
           Log.i("GeckoSmsManager", "SMS sending was successfull!");
         } else {
-          GeckoAppShell.notifySmsDelivered(envelope.getMessageId(),
-                                           bundle.getString("number"),
-                                           bundle.getString("message"),
-                                           envelope.getMessageTimestamp());
+          GeckoAppShell.notifySmsDelivery(envelope.getMessageId(),
+                                          kDeliveryStatusSuccess,
+                                          bundle.getString("number"),
+                                          bundle.getString("message"),
+                                          envelope.getMessageTimestamp());
           Log.i("GeckoSmsManager", "SMS successfully delivered!");
         }
       }
@@ -548,6 +583,8 @@ public class GeckoSmsManager
       values.put("address", aRecipient);
       values.put("body", aBody);
       values.put("date", aDate);
+      // Always 'PENDING' because we always request status report.
+      values.put("status", kInternalDeliveryStatusPending);
 
       ContentResolver cr = GeckoApp.mAppContext.getContentResolver();
       Uri uri = cr.insert(kSmsSentContentUri, values);
@@ -606,18 +643,22 @@ public class GeckoSmsManager
           }
 
           int type = cursor.getInt(cursor.getColumnIndex("type"));
+          int deliveryStatus;
           String sender = "";
           String receiver = "";
 
           if (type == kSmsTypeInbox) {
+            deliveryStatus = kDeliveryStatusSuccess;
             sender = cursor.getString(cursor.getColumnIndex("address"));
           } else if (type == kSmsTypeSentbox) {
+            deliveryStatus = getGeckoDeliveryStatus(cursor.getInt(cursor.getColumnIndex("status")));
             receiver = cursor.getString(cursor.getColumnIndex("address"));
           } else {
             throw new InvalidTypeException();
           }
 
           GeckoAppShell.notifyGetSms(cursor.getInt(cursor.getColumnIndex("_id")),
+                                     deliveryStatus,
                                      receiver, sender,
                                      cursor.getString(cursor.getColumnIndex("body")),
                                      cursor.getLong(cursor.getColumnIndex("date")),
@@ -771,12 +812,15 @@ public class GeckoSmsManager
           cursor.moveToFirst();
 
           int type = cursor.getInt(cursor.getColumnIndex("type"));
+          int deliveryStatus;
           String sender = "";
           String receiver = "";
 
           if (type == kSmsTypeInbox) {
+            deliveryStatus = kDeliveryStatusSuccess;
             sender = cursor.getString(cursor.getColumnIndex("address"));
           } else if (type == kSmsTypeSentbox) {
+            deliveryStatus = getGeckoDeliveryStatus(cursor.getInt(cursor.getColumnIndex("status")));
             receiver = cursor.getString(cursor.getColumnIndex("address"));
           } else {
             throw new UnexpectedDeliveryStateException();
@@ -786,6 +830,7 @@ public class GeckoSmsManager
           closeCursor = false;
           GeckoAppShell.notifyListCreated(listId,
                                           cursor.getInt(cursor.getColumnIndex("_id")),
+                                          deliveryStatus,
                                           receiver, sender,
                                           cursor.getString(cursor.getColumnIndex("body")),
                                           cursor.getLong(cursor.getColumnIndex("date")),
@@ -837,12 +882,15 @@ public class GeckoSmsManager
           }
 
           int type = cursor.getInt(cursor.getColumnIndex("type"));
+          int deliveryStatus;
           String sender = "";
           String receiver = "";
 
           if (type == kSmsTypeInbox) {
+            deliveryStatus = kDeliveryStatusSuccess;
             sender = cursor.getString(cursor.getColumnIndex("address"));
           } else if (type == kSmsTypeSentbox) {
+            deliveryStatus = getGeckoDeliveryStatus(cursor.getInt(cursor.getColumnIndex("status")));
             receiver = cursor.getString(cursor.getColumnIndex("address"));
           } else {
             throw new UnexpectedDeliveryStateException();
@@ -850,6 +898,7 @@ public class GeckoSmsManager
 
           int listId = MessagesListManager.getInstance().add(cursor);
           GeckoAppShell.notifyGotNextMessage(cursor.getInt(cursor.getColumnIndex("_id")),
+                                             deliveryStatus,
                                              receiver, sender,
                                              cursor.getString(cursor.getColumnIndex("body")),
                                              cursor.getLong(cursor.getColumnIndex("date")),
@@ -881,6 +930,34 @@ public class GeckoSmsManager
   public void shutdown() {
     SmsIOThread.getInstance().interrupt();
     MessagesListManager.getInstance().clear();
+  }
+
+  private int getGeckoDeliveryStatus(int aDeliveryStatus) {
+    if (aDeliveryStatus == kInternalDeliveryStatusNone) {
+      return kDeliveryStatusNotApplicable;
+    }
+    if (aDeliveryStatus >= kInternalDeliveryStatusFailed) {
+      return kDeliveryStatusError;
+    }
+    if (aDeliveryStatus >= kInternalDeliveryStatusPending) {
+      return kDeliveryStatusPending;
+    }
+    return kDeliveryStatusSuccess;
+  }
+
+  private int getGeckoMessageClass(MessageClass aMessageClass) {
+    switch (aMessageClass) {
+      case UNKNOWN:
+        return kMessageClassNormal;
+      case CLASS_0:
+        return kMessageClassClass0;
+      case CLASS_1:
+        return kMessageClassClass1;
+      case CLASS_2:
+        return kMessageClassClass2;
+      case CLASS_3:
+        return kMessageClassClass3;
+    }
   }
 
   class IdTooHighException extends Exception {

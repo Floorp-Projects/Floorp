@@ -363,14 +363,10 @@ void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion,
 #ifdef DEBUG_INVALIDATIONS
       printf("--COMPOSITE-- %p\n", mPresShell);
 #endif
-      if (IsRefreshDriverPaintingEnabled()) {
-        mPresShell->Paint(aView, damageRegion, nsIPresShell::PAINT_COMPOSITE);
-      } else {
-        mPresShell->Paint(aView, damageRegion,
-                          nsIPresShell::PAINT_LAYERS |
-                          nsIPresShell::PAINT_COMPOSITE |
-                          (aWillSendDidPaint ? nsIPresShell::PAINT_WILL_SEND_DID_PAINT : 0));
-      }
+      mPresShell->Paint(aView, damageRegion,
+                        (IsRefreshDriverPaintingEnabled() ? 0 : nsIPresShell::PAINT_LAYERS) |
+                        nsIPresShell::PAINT_COMPOSITE |
+                        (aWillSendDidPaint ? nsIPresShell::PAINT_WILL_SEND_DID_PAINT : 0));
 #ifdef DEBUG_INVALIDATIONS
       printf("--ENDCOMPOSITE--\n");
 #endif

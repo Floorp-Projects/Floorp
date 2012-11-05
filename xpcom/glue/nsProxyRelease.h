@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Likely.h"
 
 #ifdef XPCOM_GLUE_AVOID_NSPR
 #error NS_ProxyRelease implementation depends on NSPR.
@@ -101,7 +102,7 @@ NS_ProxyRelease
  * an nsMainThreadPtrHandle<T> rather than an nsCOMPtr<T>.
  */
 template<class T>
-class nsMainThreadPtrHolder
+class nsMainThreadPtrHolder MOZ_FINAL
 {
 public:
   // We can only acquire a pointer on the main thread.
@@ -128,7 +129,7 @@ public:
 
   T* get() {
     // Nobody should be touching the raw pointer off-main-thread.
-    if (NS_UNLIKELY(!NS_IsMainThread()))
+    if (MOZ_UNLIKELY(!NS_IsMainThread()))
       MOZ_CRASH();
     return mRawPtr;
   }

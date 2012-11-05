@@ -88,12 +88,10 @@ BluetoothUnixSocketConnector::SetUp(int aFd)
   case BluetoothSocketType::RFCOMM:
     lm |= mAuth ? RFCOMM_LM_AUTH : 0;
     lm |= mEncrypt ? RFCOMM_LM_ENCRYPT : 0;
-    lm |= (mAuth && mEncrypt) ? RFCOMM_LM_SECURE : 0;
     break;
   case BluetoothSocketType::L2CAP:
     lm |= mAuth ? L2CAP_LM_AUTH : 0;
     lm |= mEncrypt ? L2CAP_LM_ENCRYPT : 0;
-    lm |= (mAuth && mEncrypt) ? L2CAP_LM_SECURE : 0;
     break;
   }
 

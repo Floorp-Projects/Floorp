@@ -11,7 +11,7 @@ var iter = map.iterator();
 assertEq(iter.next()[0], 0);
 for (var i = 0; i < 30; i++)
     map.delete(i);
-assertEq(map.size(), 2);
+assertEq(map.size, 2);
 for (var i = 32; i < 100; i++)
     map.set(i, i);  // eventually triggers compaction
 

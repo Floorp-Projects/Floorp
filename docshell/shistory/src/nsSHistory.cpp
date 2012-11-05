@@ -60,8 +60,15 @@ int32_t nsSHistory::sHistoryMaxTotalViewers = -1;
 // entries were touched, so that we can evict older entries first.
 static uint32_t gTouchCounter = 0;
 
-static PRLogModuleInfo* gLogModule = PR_NewLogModule("nsSHistory");
-#define LOG(format) PR_LOG(gLogModule, PR_LOG_DEBUG, format)
+static PRLogModuleInfo*
+GetSHistoryLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("nsSHistory");
+  return sLog;
+}
+#define LOG(format) PR_LOG(GetSHistoryLog(), PR_LOG_DEBUG, format)
 
 // This macro makes it easier to print a log message which includes a URI's
 // spec.  Example use:
@@ -71,7 +78,7 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("nsSHistory");
 //
 #define LOG_SPEC(format, uri)                              \
   PR_BEGIN_MACRO                                           \
-    if (PR_LOG_TEST(gLogModule, PR_LOG_DEBUG)) {           \
+    if (PR_LOG_TEST(GetSHistoryLog(), PR_LOG_DEBUG)) {     \
       nsAutoCString _specStr(NS_LITERAL_CSTRING("(null)"));\
       if (uri) {                                           \
         uri->GetSpec(_specStr);                            \
@@ -89,7 +96,7 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("nsSHistory");
 //
 #define LOG_SHENTRY_SPEC(format, shentry)                  \
   PR_BEGIN_MACRO                                           \
-    if (PR_LOG_TEST(gLogModule, PR_LOG_DEBUG)) {           \
+    if (PR_LOG_TEST(GetSHistoryLog(), PR_LOG_DEBUG)) {     \
       nsCOMPtr<nsIURI> uri;                                \
       shentry->GetURI(getter_AddRefs(uri));                \
       LOG_SPEC(format, uri);                               \

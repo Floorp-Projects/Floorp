@@ -29,8 +29,15 @@
 namespace mozilla {
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* gMediaManagerLog = PR_NewLogModule("MediaManager");
-#define LOG(msg) PR_LOG(gMediaManagerLog, PR_LOG_DEBUG, msg)
+PRLogModuleInfo*
+GetMediaManagerLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("MediaManager");
+  return sLog;
+}
+#define LOG(msg) PR_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
 #else
 #define LOG(msg)
 #endif
@@ -245,7 +252,7 @@ public:
     uint32_t hints = (mAudioSource ? nsDOMMediaStream::HINT_CONTENTS_AUDIO : 0);
     hints |= (mVideoSource ? nsDOMMediaStream::HINT_CONTENTS_VIDEO : 0);
 
-    stream = nsDOMLocalMediaStream::CreateInputStream(hints);
+    stream = nsDOMLocalMediaStream::CreateSourceStream(hints);
 
     nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
       (nsGlobalWindow::GetInnerWindowWithId(mWindowID));

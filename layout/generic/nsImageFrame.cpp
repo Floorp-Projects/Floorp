@@ -679,10 +679,9 @@ nsImageFrame::NotifyNewCurrentRequest(imgIRequest *aRequest,
         presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
                                     NS_FRAME_IS_DIRTY);
       }
-    } else {
-      // Update border+content to account for image change
-      InvalidateFrame();
     }
+    // Update border+content to account for image change
+    InvalidateFrame();
   }
 }
 
@@ -1837,7 +1836,6 @@ nsImageFrame::LoadIcon(const nsAString& aSpec,
                        gIconLoad,
                        nullptr,      /* Not associated with any particular document */
                        loadFlags,
-                       nullptr,
                        nullptr,
                        nullptr,      /* channel policy not needed */
                        aRequest);

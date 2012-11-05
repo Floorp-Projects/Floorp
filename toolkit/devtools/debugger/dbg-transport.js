@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-Cu.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 /**
  * An adapter that handles data transfers between the debugger client and
@@ -39,7 +39,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
  * ([length]:[packet]). The contents of the JSON packet are specified in
  * the Remote Debugging Protocol specification.
  */
-function DebuggerTransport(aInput, aOutput)
+this.DebuggerTransport = function DebuggerTransport(aInput, aOutput)
 {
   this._input = aInput;
   this._output = aOutput;

@@ -129,10 +129,15 @@ struct CompartmentStats
       , extra2(0)
       , gcHeapArenaAdmin(0)
       , gcHeapUnusedGcThings(0)
-      , gcHeapObjectsNonFunction(0)
+      , gcHeapObjectsOrdinary(0)
       , gcHeapObjectsFunction(0)
-      , gcHeapStrings(0)
-      , gcHeapShapesTree(0)
+      , gcHeapObjectsDenseArray(0)
+      , gcHeapObjectsSlowArray(0)
+      , gcHeapObjectsCrossCompartmentWrapper(0)
+      , gcHeapStringsNormal(0)
+      , gcHeapStringsShort(0)
+      , gcHeapShapesTreeGlobalParented(0)
+      , gcHeapShapesTreeNonGlobalParented(0)
       , gcHeapShapesDict(0)
       , gcHeapShapesBase(0)
       , gcHeapScripts(0)
@@ -141,11 +146,13 @@ struct CompartmentStats
 #if JS_HAS_XML_SUPPORT
       , gcHeapXML(0)
 #endif
-      , objectSlots(0)
-      , objectElements(0)
-      , objectMisc(0)
-      , objectPrivate(0)
-      , nonHugeStringChars(0)
+      , objectsExtraSlots(0)
+      , objectsExtraElements(0)
+      , objectsExtraArgumentsData(0)
+      , objectsExtraRegExpStatics(0)
+      , objectsExtraPropertyIteratorData(0)
+      , objectsExtraPrivate(0)
+      , stringCharsNonHuge(0)
       , shapesExtraTreeTables(0)
       , shapesExtraDictTables(0)
       , shapesExtraTreeShapeKids(0)
@@ -154,7 +161,7 @@ struct CompartmentStats
       , jaegerData(0)
       , ionData(0)
       , compartmentObject(0)
-      , crossCompartmentWrappers(0)
+      , crossCompartmentWrappersTable(0)
       , regexpCompartment(0)
       , debuggeesSet(0)
     {}
@@ -164,10 +171,15 @@ struct CompartmentStats
       , extra2(other.extra2)
       , gcHeapArenaAdmin(other.gcHeapArenaAdmin)
       , gcHeapUnusedGcThings(other.gcHeapUnusedGcThings)
-      , gcHeapObjectsNonFunction(other.gcHeapObjectsNonFunction)
+      , gcHeapObjectsOrdinary(other.gcHeapObjectsOrdinary)
       , gcHeapObjectsFunction(other.gcHeapObjectsFunction)
-      , gcHeapStrings(other.gcHeapStrings)
-      , gcHeapShapesTree(other.gcHeapShapesTree)
+      , gcHeapObjectsDenseArray(other.gcHeapObjectsDenseArray)
+      , gcHeapObjectsSlowArray(other.gcHeapObjectsSlowArray)
+      , gcHeapObjectsCrossCompartmentWrapper(other.gcHeapObjectsCrossCompartmentWrapper)
+      , gcHeapStringsNormal(other.gcHeapStringsNormal)
+      , gcHeapStringsShort(other.gcHeapStringsShort)
+      , gcHeapShapesTreeGlobalParented(other.gcHeapShapesTreeGlobalParented)
+      , gcHeapShapesTreeNonGlobalParented(other.gcHeapShapesTreeNonGlobalParented)
       , gcHeapShapesDict(other.gcHeapShapesDict)
       , gcHeapShapesBase(other.gcHeapShapesBase)
       , gcHeapScripts(other.gcHeapScripts)
@@ -176,11 +188,13 @@ struct CompartmentStats
 #if JS_HAS_XML_SUPPORT
       , gcHeapXML(other.gcHeapXML)
 #endif
-      , objectSlots(other.objectSlots)
-      , objectElements(other.objectElements)
-      , objectMisc(other.objectMisc)
-      , objectPrivate(other.objectPrivate)
-      , nonHugeStringChars(other.nonHugeStringChars)
+      , objectsExtraSlots(other.objectsExtraSlots)
+      , objectsExtraElements(other.objectsExtraElements)
+      , objectsExtraArgumentsData(other.objectsExtraArgumentsData)
+      , objectsExtraRegExpStatics(other.objectsExtraRegExpStatics)
+      , objectsExtraPropertyIteratorData(other.objectsExtraPropertyIteratorData)
+      , objectsExtraPrivate(other.objectsExtraPrivate)
+      , stringCharsNonHuge(other.stringCharsNonHuge)
       , shapesExtraTreeTables(other.shapesExtraTreeTables)
       , shapesExtraDictTables(other.shapesExtraDictTables)
       , shapesExtraTreeShapeKids(other.shapesExtraTreeShapeKids)
@@ -189,7 +203,7 @@ struct CompartmentStats
       , jaegerData(other.jaegerData)
       , ionData(other.ionData)
       , compartmentObject(other.compartmentObject)
-      , crossCompartmentWrappers(other.crossCompartmentWrappers)
+      , crossCompartmentWrappersTable(other.crossCompartmentWrappersTable)
       , regexpCompartment(other.regexpCompartment)
       , debuggeesSet(other.debuggeesSet)
       , typeInferenceSizes(other.typeInferenceSizes)
@@ -206,10 +220,15 @@ struct CompartmentStats
     size_t gcHeapArenaAdmin;
     size_t gcHeapUnusedGcThings;
 
-    size_t gcHeapObjectsNonFunction;
+    size_t gcHeapObjectsOrdinary;
     size_t gcHeapObjectsFunction;
-    size_t gcHeapStrings;
-    size_t gcHeapShapesTree;
+    size_t gcHeapObjectsDenseArray;
+    size_t gcHeapObjectsSlowArray;
+    size_t gcHeapObjectsCrossCompartmentWrapper;
+    size_t gcHeapStringsNormal;
+    size_t gcHeapStringsShort;
+    size_t gcHeapShapesTreeGlobalParented;
+    size_t gcHeapShapesTreeNonGlobalParented;
     size_t gcHeapShapesDict;
     size_t gcHeapShapesBase;
     size_t gcHeapScripts;
@@ -219,11 +238,13 @@ struct CompartmentStats
     size_t gcHeapXML;
 #endif
 
-    size_t objectSlots;
-    size_t objectElements;
-    size_t objectMisc;
-    size_t objectPrivate;
-    size_t nonHugeStringChars;
+    size_t objectsExtraSlots;
+    size_t objectsExtraElements;
+    size_t objectsExtraArgumentsData;
+    size_t objectsExtraRegExpStatics;
+    size_t objectsExtraPropertyIteratorData;
+    size_t objectsExtraPrivate;
+    size_t stringCharsNonHuge;
     size_t shapesExtraTreeTables;
     size_t shapesExtraDictTables;
     size_t shapesExtraTreeShapeKids;
@@ -232,7 +253,7 @@ struct CompartmentStats
     size_t jaegerData;
     size_t ionData;
     size_t compartmentObject;
-    size_t crossCompartmentWrappers;
+    size_t crossCompartmentWrappersTable;
     size_t regexpCompartment;
     size_t debuggeesSet;
 
@@ -247,10 +268,15 @@ struct CompartmentStats
         ADD(gcHeapArenaAdmin);
         ADD(gcHeapUnusedGcThings);
 
-        ADD(gcHeapObjectsNonFunction);
+        ADD(gcHeapObjectsOrdinary);
         ADD(gcHeapObjectsFunction);
-        ADD(gcHeapStrings);
-        ADD(gcHeapShapesTree);
+        ADD(gcHeapObjectsDenseArray);
+        ADD(gcHeapObjectsSlowArray);
+        ADD(gcHeapObjectsCrossCompartmentWrapper);
+        ADD(gcHeapStringsNormal);
+        ADD(gcHeapStringsShort);
+        ADD(gcHeapShapesTreeGlobalParented);
+        ADD(gcHeapShapesTreeNonGlobalParented);
         ADD(gcHeapShapesDict);
         ADD(gcHeapShapesBase);
         ADD(gcHeapScripts);
@@ -260,11 +286,13 @@ struct CompartmentStats
         ADD(gcHeapXML);
     #endif
 
-        ADD(objectSlots);
-        ADD(objectElements);
-        ADD(objectMisc);
-        ADD(objectPrivate);
-        ADD(nonHugeStringChars);
+        ADD(objectsExtraSlots);
+        ADD(objectsExtraElements);
+        ADD(objectsExtraArgumentsData);
+        ADD(objectsExtraRegExpStatics);
+        ADD(objectsExtraPropertyIteratorData);
+        ADD(objectsExtraPrivate);
+        ADD(stringCharsNonHuge);
         ADD(shapesExtraTreeTables);
         ADD(shapesExtraDictTables);
         ADD(shapesExtraTreeShapeKids);
@@ -273,7 +301,7 @@ struct CompartmentStats
         ADD(jaegerData);
         ADD(ionData);
         ADD(compartmentObject);
-        ADD(crossCompartmentWrappers);
+        ADD(crossCompartmentWrappersTable);
         ADD(regexpCompartment);
         ADD(debuggeesSet);
 

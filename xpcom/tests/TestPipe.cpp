@@ -148,6 +148,11 @@ NS_IMETHODIMP BackwardsAllocator::IsLowMemory(bool* retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP BackwardsAllocator::IsLowMemoryPlatform(bool* retval)
+{
+  *retval = false;
+  return NS_OK;
+}
 
 nsresult TestBackwardsAllocator()
 {
