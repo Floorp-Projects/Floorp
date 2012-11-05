@@ -5260,6 +5260,7 @@ js_GetterOnlyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBo
 void
 dumpValue(const Value &v)
 {
+    AutoAssertNoGC nogc;
     if (v.isNull())
         fprintf(stderr, "null");
     else if (v.isUndefined())
@@ -5279,7 +5280,7 @@ dumpValue(const Value &v)
             fputs("<unnamed function", stderr);
         }
         if (fun->isInterpreted()) {
-            JSScript *script = fun->script();
+            JSScript *script = fun->script().get(nogc);
             fprintf(stderr, " (%s:%u)",
                     script->filename ? script->filename : "", script->lineno);
         }
@@ -5545,9 +5546,9 @@ js_DumpBacktrace(JSContext *cx)
     size_t depth = 0;
     for (StackIter i(cx); !i.done(); ++i, ++depth) {
         if (i.isScript()) {
-            const char *filename = JS_GetScriptFilename(cx, i.script());
-            unsigned line = JS_PCToLineNumber(cx, i.script(), i.pc());
-            RawScript script = i.script();
+            const char *filename = JS_GetScriptFilename(cx, i.script().get(nogc));
+            unsigned line = JS_PCToLineNumber(cx, i.script().get(nogc), i.pc());
+            RawScript script = i.script().get(nogc);
             sprinter.printf("#%d %14p   %s:%d (%p @ %d)\n",
                             depth, (i.isIon() ? 0 : i.interpFrame()), filename, line,
                             script, i.pc() - script->code);
