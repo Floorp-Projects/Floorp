@@ -1556,7 +1556,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
 
 JSFunction *
 js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
-                  unsigned nargs, unsigned attrs, const char *selfHostedName, AllocKind kind)
+                  unsigned nargs, unsigned attrs, Handle<PropertyName*> selfHostedName, AllocKind kind)
 {
     PropertyOp gop;
     StrictPropertyOp sop;
