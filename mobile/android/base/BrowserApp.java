@@ -582,7 +582,7 @@ abstract public class BrowserApp extends GeckoApp
         long id = getFavicons().loadFavicon(tab.getURL(), tab.getFaviconURL(), !tab.isPrivate(),
                         new Favicons.OnFaviconLoadedListener() {
 
-            public void onFaviconLoaded(String pageUrl, Drawable favicon) {
+            public void onFaviconLoaded(String pageUrl, Bitmap favicon) {
                 // Leave favicon UI untouched if we failed to load the image
                 // for some reason.
                 if (favicon == null)
