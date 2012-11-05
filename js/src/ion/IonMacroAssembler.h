@@ -258,10 +258,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     void PushRegsInMask(GeneralRegisterSet set) {
         PushRegsInMask(RegisterSet(set, FloatRegisterSet()));
     }
-    void PopRegsInMask(RegisterSet set);
+    void PopRegsInMask(RegisterSet set) {
+        PopRegsInMaskIgnore(set, RegisterSet());
+    }
     void PopRegsInMask(GeneralRegisterSet set) {
         PopRegsInMask(RegisterSet(set, FloatRegisterSet()));
     }
+    void PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore);
 
     void branchTestValueTruthy(const ValueOperand &value, Label *ifTrue, FloatRegister fr);
 

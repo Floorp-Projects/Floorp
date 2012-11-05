@@ -246,6 +246,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     // frame produced by callVM.
     inline void saveLive(LInstruction *ins);
     inline void restoreLive(LInstruction *ins);
+    inline void restoreLiveIgnore(LInstruction *ins, RegisterSet reg);
 
     template <typename T>
     void pushArg(const T &t) {
@@ -428,6 +429,9 @@ struct StoreNothing
 {
     inline void generate(CodeGeneratorShared *codegen) const {
     }
+    inline RegisterSet clobbered() const {
+        return RegisterSet(); // No register gets clobbered
+    }
 };
 
 class StoreRegisterTo
@@ -442,6 +446,11 @@ class StoreRegisterTo
 
     inline void generate(CodeGeneratorShared *codegen) const {
         codegen->storeResultTo(out_);
+    }
+    inline RegisterSet clobbered() const {
+        RegisterSet set = RegisterSet();
+        set.add(out_);
+        return set;
     }
 };
 
@@ -458,6 +467,11 @@ class StoreValueTo_
 
     inline void generate(CodeGeneratorShared *codegen) const {
         codegen->storeResultValueTo(out_);
+    }
+    inline RegisterSet clobbered() const {
+        RegisterSet set = RegisterSet();
+        set.add(out_);
+        return set;
     }
 };
 
@@ -518,7 +532,7 @@ CodeGeneratorShared::visitOutOfLineCallVM(OutOfLineCallVM<ArgSeq, StoreOutputTo>
     if (!callVM(ool->function(), lir))
         return false;
     ool->out().generate(this);
-    restoreLive(lir);
+    restoreLiveIgnore(lir, ool->out().clobbered());
     masm.jump(ool->rejoin());
     return true;
 }
