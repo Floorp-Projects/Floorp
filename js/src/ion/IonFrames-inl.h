@@ -97,19 +97,9 @@ GetTopIonJSScript(JSContext *cx, const SafepointIndex **safepointIndexOut, void 
     if (returnAddrOut)
         *returnAddrOut = (void *) iter.returnAddressToFp();
 
-    JS_ASSERT(iter.type() == IonFrame_OptimizedJS);
+    JS_ASSERT(iter.isScripted());
     IonJSFrameLayout *frame = static_cast<IonJSFrameLayout*>(iter.current());
-    switch (GetCalleeTokenTag(frame->calleeToken())) {
-      case CalleeToken_Function: {
-        JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
-        return fun->script();
-      }
-      case CalleeToken_Script:
-        return CalleeTokenToScript(frame->calleeToken());
-      default:
-        JS_NOT_REACHED("unexpected callee token kind");
-        return NULL;
-    }
+    return ScriptFromCalleeToken(frame->calleeToken());
 }
 
 } // namespace ion
