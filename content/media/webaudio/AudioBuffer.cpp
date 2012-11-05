@@ -20,7 +20,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioBuffer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mChannels)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  NS_DROP_JS_OBJECTS(tmp, AudioBuffer);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AudioBuffer)
@@ -49,21 +48,18 @@ AudioBuffer::AudioBuffer(AudioContext* aContext, uint32_t aLength,
     mSampleRate(aSampleRate)
 {
   SetIsDOMBinding();
+
+  NS_HOLD_JS_OBJECTS(this, AudioBuffer);
 }
 
 AudioBuffer::~AudioBuffer()
 {
-  // Drop the JS object reference if we're still holding to the channels
-  if (mChannels.Length()) {
-    NS_DROP_JS_OBJECTS(this, AudioBuffer);
-  }
+  NS_DROP_JS_OBJECTS(this, AudioBuffer);
 }
 
 bool
 AudioBuffer::InitializeBuffers(uint32_t aNumberOfChannels, JSContext* aJSContext)
 {
-  NS_HOLD_JS_OBJECTS(this, AudioBuffer);
-
   if (!mChannels.SetCapacity(aNumberOfChannels)) {
     return false;
   }
