@@ -996,6 +996,7 @@ var SocialSidebar = {
 
     let sbrowser = document.getElementById("social-sidebar-browser");
     if (hideSidebar) {
+      sbrowser.removeEventListener("load", SocialSidebar._loadListener, true);
       this.setSidebarVisibilityState(false);
       // If we've been disabled, unload the sidebar content immediately;
       // if the sidebar was just toggled to invisible, wait a timeout
@@ -1018,17 +1019,17 @@ var SocialSidebar = {
       if (sbrowser.getAttribute("origin") != Social.provider.origin) {
         sbrowser.setAttribute("origin", Social.provider.origin);
         sbrowser.setAttribute("src", Social.provider.sidebarURL);
-        sbrowser.addEventListener("load", function sidebarOnShow() {
-          sbrowser.removeEventListener("load", sidebarOnShow, true);
-          // let load finish, then fire our event
-          setTimeout(function () {
-            SocialSidebar.setSidebarVisibilityState(true);
-          }, 0);
-        }, true);
+        sbrowser.addEventListener("load", SocialSidebar._loadListener, true);
       } else {
         this.setSidebarVisibilityState(true);
       }
     }
+  },
+
+  _loadListener: function SocialSidebar_loadListener() {
+    let sbrowser = document.getElementById("social-sidebar-browser");
+    sbrowser.removeEventListener("load", SocialSidebar._loadListener, true);
+    SocialSidebar.setSidebarVisibilityState(true);
   },
 
   unloadSidebar: function SocialSidebar_unloadSidebar() {
