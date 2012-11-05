@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=772869
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 772869</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=772869">Mozilla Bug 772869</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <select id="s">
+    <option name="x"></option>
+    <option name="y" id="z"></option>
+    <option name="z" id="x"></option>
+    <option id="w"></option>
+  </select>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 772869 **/
+var opt = $("s").options;
+opt.loopy = "something"
+var names = Object.getOwnPropertyNames(opt);
+is(names.length, 9, "Should have eight entries");
+is(names[0], "0", "Entry 1")
+is(names[1], "1", "Entry 2")
+is(names[2], "2", "Entry 3")
+is(names[3], "3", "Entry 4")
+is(names[4], "x", "Entry 5")
+is(names[5], "y", "Entry 6")
+is(names[6], "z", "Entry 7")
+is(names[7], "w", "Entry 8")
+is(names[8], "loopy", "Entry 9")
+
+var names2 = [];
+for (var name in opt) {
+  names2.push(name);
+}
+for (var i = 0; i < names.length; ++i) {
+  is(names2[i], names[i], "Correct entry at " + i);
+}
+
+</script>
+</pre>
+</body>
+</html>

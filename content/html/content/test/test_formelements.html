@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=772869
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 772869</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=772869">Mozilla Bug 772869</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <form id="f">
+    <input name="x">
+    <input type="image" name="a">
+    <input type="file" name="y">
+    <input type="submit" name="z">
+    <input id="w">
+    <input name="w">
+  </form>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 772869 **/
+var x = $("f").elements;
+x.something = "another";
+names = [];
+for (var name in x) {
+  names.push(name);
+}
+is(names.length, 14, "Should have 14 items");
+// Now sort entries 5 through 8, for comparison purposes.  We don't sort the
+// whole array, because we want to make sure the ordering between the parts
+// is correct
+temp = names.slice(5, 9);
+temp.sort();
+names.splice.bind(names, 5, 4).apply(null, temp);
+is(names.length, 14, "Should have still have 14 items");
+is(names[0], "0", "Entry 1")
+is(names[1], "1", "Entry 2")
+is(names[2], "2", "Entry 3")
+is(names[3], "3", "Entry 4")
+is(names[4], "4", "Entry 5")
+is(names[5], "w", "Entry 6")
+is(names[6], "x", "Entry 7")
+is(names[7], "y", "Entry 8")
+is(names[8], "z", "Entry 9")
+is(names[9], "something", "Entry 10")
+is(names[10], "item", "Entry 11")
+is(names[11], "namedItem", "Entry 12")
+is(names[12], "iterator", "Entry 13")
+is(names[13], "length", "Entry 14")
+</script>
+</pre>
+</body>
+</html>
