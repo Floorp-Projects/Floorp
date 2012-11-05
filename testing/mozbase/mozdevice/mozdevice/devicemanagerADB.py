@@ -23,10 +23,12 @@ class DeviceManagerADB(DeviceManager):
         self.useRunAs = False
         self.useDDCopy = False
         self.useZip = False
+        self.logcatNeedsRoot = False
         self.packageName = None
         self.tempDir = None
         self.deviceRoot = deviceRoot
         self.default_timeout = 300
+        self.pollingInterval = 0.01
 
         # the path to adb, or 'adb' to assume that it's on the PATH
         self.adbPath = adbPath
@@ -131,7 +133,7 @@ class DeviceManagerADB(DeviceManager):
         start_time = time.time()
         ret_code = proc.poll()
         while ((time.time() - start_time) <= timeout) and ret_code == None:
-            time.sleep(1)
+            time.sleep(self.pollingInterval)
             ret_code = proc.poll()
         if ret_code == None:
             proc.kill()
@@ -271,14 +273,7 @@ class DeviceManagerADB(DeviceManager):
         Does a recursive delete of directory on the device: rm -Rf remoteDir
         """
         if (self.dirExists(remoteDir)):
-            files = self.listFiles(remoteDir.strip())
-            for f in files:
-                path = remoteDir.strip() + "/" + f.strip()
-                if self.dirExists(path):
-                    self.removeDir(path)
-                else:
-                    self.removeFile(path)
-            self._removeSingleDir(remoteDir.strip())
+            self._runCmd(["shell", "rm", "-r", remoteDir])
         else:
             self.removeFile(remoteDir.strip())
 
@@ -396,7 +391,7 @@ class DeviceManagerADB(DeviceManager):
                 args = ["shell", "kill"]
                 if forceKill:
                     args.append("-9")
-                args.append(pid)
+                args.append(str(pid))
                 p = self._runCmdAs(args)
                 p.communicate()
                 if p.returncode != 0:
@@ -450,15 +445,11 @@ class DeviceManagerADB(DeviceManager):
         os.remove(localFile)
         return ret
 
-    def getFile(self, remoteFile, localFile = 'temp.txt'):
+    def getFile(self, remoteFile, localFile):
         """
         Copy file from device (remoteFile) to host (localFile).
         """
-        contents = self.pullFile(remoteFile)
-
-        fhandle = open(localFile, 'wb')
-        fhandle.write(contents)
-        fhandle.close()
+        self._runPull(remoteFile, localFile)
 
     def getDirectory(self, remoteDir, localDir, checkDir=True):
         """
@@ -612,35 +603,6 @@ class DeviceManagerADB(DeviceManager):
             raise DMError("Unable to get current time using date (got: '%s')" % timestr)
         return str(int(timestr)*1000)
 
-    def recordLogcat(self):
-        """
-        Clears the logcat file making it easier to view specific events
-        """
-        # this does not require root privileges with ADB
-        try:
-            self.shellCheckOutput(['/system/bin/logcat', '-c'])
-        except DMError, e:
-            print "DeviceManager: Error recording logcat '%s'" % e.msg
-            # to preserve compat with parent method, just ignore exceptions
-            pass
-
-    def getLogcat(self):
-        """
-        Returns the contents of the logcat file as a string
-
-        returns:
-          success: contents of logcat, string
-          failure: None
-        """
-        # this does not require root privileges with ADB
-        try:
-            output = self.shellCheckOutput(["/system/bin/logcat", "-d", "dalvikvm:S", "ConnectivityService:S", "WifiMonitor:S", "WifiStateTracker:S", "wpa_supplicant:S", "NetworkStateTracker:S"])
-            return output.split('\r')
-        except DMError, e:
-            # to preserve compat with parent method, just ignore exceptions
-            print "DeviceManager: Error recording logcat '%s'" % e.msg
-            pass
-
     def getInfo(self, directive=None):
         """
         Returns information about the device
@@ -762,7 +724,7 @@ class DeviceManagerADB(DeviceManager):
         start_time = time.time()
         ret_code = proc.poll()
         while ((time.time() - start_time) <= timeout) and ret_code == None:
-            time.sleep(1)
+            time.sleep(self.pollingInterval)
             ret_code = proc.poll()
         if ret_code == None:
             proc.kill()
