@@ -18,5 +18,5 @@ for (var [k, v] of map) {
     }
 }
 assertEq(log, 'ABCDEFGHIJKLMNOPQRST');
-assertEq(map.size(), 1);  // Only the last entry remains.
+assertEq(map.size, 1);  // Only the last entry remains.
 assertEq(map.get('T'), 19);

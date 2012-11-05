@@ -77,14 +77,6 @@
   -moz-padding-start: 2px;
 }
 
-#searchModifiers {
-  padding-right: 3px;
-}
-
-#saveSearch {
-  list-style-image: url("moz-icon://stock/gtk-save?size=menu");
-}
-
 /**** menuitem stock icons ****/
 #orgClose {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");

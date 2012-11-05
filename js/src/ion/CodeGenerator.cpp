@@ -392,13 +392,18 @@ CodeGenerator::visitTableSwitchV(LTableSwitchV *ins)
     Register tag = masm.extractTag(value, index);
     masm.branchTestNumber(Assembler::NotEqual, tag, defaultcase);
 
-    Label isInt;
-    masm.branchTestInt32(Assembler::Equal, tag, &isInt);
+    Label unboxInt, isInt;
+    masm.branchTestInt32(Assembler::Equal, tag, &unboxInt);
     {
         FloatRegister floatIndex = ToFloatRegister(ins->tempFloat());
         masm.unboxDouble(value, floatIndex);
         emitDoubleToInt32(floatIndex, index, defaultcase, false);
+        masm.jump(&isInt);
     }
+
+    masm.bind(&unboxInt);
+    masm.unboxInt32(value, index);
+
     masm.bind(&isInt);
 
     return emitTableSwitchDispatch(mir, index, ToRegisterOrInvalid(ins->tempPointer()));
@@ -2992,6 +2997,11 @@ CodeGenerator::generate()
     uint32 scriptFrameSize = frameClass_ == FrameSizeClass::None()
                            ? frameDepth_
                            : FrameSizeClass::FromDepth(frameDepth_).frameSize();
+
+    // Check to make sure we didn't have a mid-build invalidation. If so, we
+    // will trickle to ion::Compile() and return Method_Skipped.
+    if (cx->compartment->types.compiledInfo.compilerOutput(cx)->isInvalidated())
+        return true;
 
     script->ion = IonScript::New(cx, slots, scriptFrameSize, snapshots_.size(),
                                  bailouts_.length(), graph.numConstants(),

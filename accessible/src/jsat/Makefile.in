@@ -9,7 +9,23 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+INSTALL_TARGETS += ACCESSFU
+
+ACCESSFU_FILES := \
+  AccessFu.css \
+  AccessFu.jsm \
+  content-script.js \
+  EventManager.jsm \
+  jar.mn \
+  Makefile.in \
+  Presenters.jsm \
+  TouchAdapter.jsm \
+  TraversalRules.jsm \
+  Utils.jsm \
+  UtteranceGenerator.jsm \
+  $(NULL)
+
+ACCESSFU_DEST = $(FINAL_TARGET)/modules/accessibility
+
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	$(NSINSTALL) $(srcdir)/*.jsm $(FINAL_TARGET)/modules/accessibility

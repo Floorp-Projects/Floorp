@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=731471
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 731471</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="setTimeout(boom, 0);">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=731471">Mozilla Bug 731471</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 731471. This is effectively a crashtest, but it uses window.open, which
+    doesn't work in the crashtest harness. **/
+SimpleTest.waitForExplicitFinish();
+function boom()
+{
+    w = window.open("data:text/html,1");
+    setTimeout(function() {
+        w.document.write("2");
+        w.document.close();
+        w.document.write("3 - Done");
+        w.document.close();
+        w.close();
+        ok(true, "Didn't assert! Or maybe we did. We'll never know until bug 404077 is fixed");
+        SimpleTest.finish();
+    }, 400);
+}
+
+</script>
+</pre>
+</body>
+</html>

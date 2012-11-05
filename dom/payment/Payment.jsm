@@ -9,7 +9,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-let EXPORTED_SYMBOLS = [];
+this.EXPORTED_SYMBOLS = [];
 
 const PAYMENT_IPC_MSG_NAMES = ["Payment:Pay",
                                "Payment:Success",
@@ -304,23 +304,21 @@ let PaymentManager =  {
       }
 
       // The payment request 'price' parameter is a collection of objects with
-      // 'country', 'currency' and 'amount' members.
+      // 'currency' and 'amount' members.
       let productPrices = [];
       if (!Array.isArray(pldRequest.price)) {
         pldRequest.price = [pldRequest.price];
       }
 
       for (let i in pldRequest.price) {
-        if (!pldRequest.price[i].country || !pldRequest.price[i].currency ||
-            !pldRequest.price[i].amount) {
+        if (!pldRequest.price[i].currency || !pldRequest.price[i].amount) {
           debug("Not valid payment request. " +
                 "Price parameter is not well formed");
           return null;
         }
         let price = Cc["@mozilla.org/payment/product-price;1"]
                     .createInstance(Ci.nsIDOMPaymentProductPrice);
-        price.wrappedJSObject.init(pldRequest.price[i].country,
-                                   pldRequest.price[i].currency,
+        price.wrappedJSObject.init(pldRequest.price[i].currency,
                                    pldRequest.price[i].amount);
         productPrices.push(price);
       }

@@ -27,6 +27,7 @@
 #include "nsIServiceManager.h"
 #include "nsDisplayList.h"
 #include "nsRenderingContext.h"
+#include "mozilla/Likely.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;
@@ -52,7 +53,6 @@ public:
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              uint32_t aFlags) MOZ_OVERRIDE;
   virtual nscoord GetBaseline() const;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -113,13 +113,6 @@ nsFieldSetFrame::nsFieldSetFrame(nsStyleContext* aContext)
   mContentFrame = nullptr;
   mLegendFrame  = nullptr;
   mLegendSpace  = 0;
-}
-
-void
-nsFieldSetFrame::DestroyFrom(nsIFrame* aDestructRoot)
-{
-  DestroyAbsoluteFrames(aDestructRoot);
-  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 nsIAtom*
@@ -613,7 +606,7 @@ nsFieldSetFrame::InsertFrames(ChildListID    aListID,
 
   // aFrameList is not allowed to contain "the legend" for this fieldset
   ReparentFrameList(aFrameList);
-  if (NS_UNLIKELY(aPrevFrame == mLegendFrame)) {
+  if (MOZ_UNLIKELY(aPrevFrame == mLegendFrame)) {
     aPrevFrame = nullptr;
   }
   return mContentFrame->InsertFrames(aListID, aPrevFrame, aFrameList);

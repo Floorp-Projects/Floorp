@@ -8,7 +8,7 @@
 </head>
 <body>
 <p id="display"></p>
-<div id="scrollable" style="font-size: 16px; line-height: 1; overflow: auto; width: 200px; height: 200px;">
+<div id="scrollable" style="font-family: monospace; font-size: 16px; line-height: 1; overflow: auto; width: 200px; height: 200px;">
   <div id="scrolled" style="font-size: 64px; width: 5000px; height: 5000px;">
     Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
     Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
@@ -51,6 +51,7 @@ var gScrollableElement = document.getElementById("scrollable");
 var gScrolledElement = document.getElementById("scrolled");
 
 var gLineHeight = 0;
+var gHorizontalLine = 0;
 var gPageHeight = 0;
 var gPageWidth  = 0;
 
@@ -69,6 +70,13 @@ function prepareScrollUnits()
                     deltaY: 1.0, lineOrPageDeltaY: 1 });
   gLineHeight = result;
   ok(gLineHeight > 10 && gLineHeight < 25, "prepareScrollUnits: gLineHeight may be illegal value, got " + gLineHeight);
+
+  result = -1;
+  synthesizeWheel(gScrollableElement, 10, 10,
+                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                    deltaX: 1.0, lineOrPageDeltaX: 1 });
+  gHorizontalLine = result;
+  ok(gHorizontalLine > 5 && gHorizontalLine < 16, "prepareScrollUnits: gHorizontalLine may be illegal value, got " + gHorizontalLine);
 
   result = -1;
   synthesizeWheel(gScrollableElement, 10, 10,
@@ -160,13 +168,13 @@ function testDeltaMultiplierPrefs()
   // use test_continuous_dom_wheel_event.html.
   const kEvents = [
     { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-      deltaX: gLineHeight, deltaY: gLineHeight, deltaZ: gLineHeight, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
+      deltaX: gHorizontalLine, deltaY: gLineHeight, deltaZ: gLineHeight, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
     { deltaMode: WheelEvent.DOM_DELTA_LINE,
       deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
     { deltaMode: WheelEvent.DOM_DELTA_PAGE,
       deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 },
     { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-      deltaX: -gLineHeight, deltaY: -gLineHeight, deltaZ: -gLineHeight, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
+      deltaX: -gHorizontalLine, deltaY: -gLineHeight, deltaZ: -gLineHeight, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
     { deltaMode: WheelEvent.DOM_DELTA_LINE,
       deltaX: -1.0, deltaY: -1.0, deltaZ: -1.0, lineOrPageDeltaX: -1, lineOrPageDeltaY: -1 },
     { deltaMode: WheelEvent.DOM_DELTA_PAGE,
@@ -239,7 +247,7 @@ function testDeltaMultiplierPrefs()
       expectedDetail = isHorizontal ? currentEvent.deltaX : currentEvent.deltaY;
       if (expectedDetail) {
         if (currentEvent.deltaMode == WheelEvent.DOM_DELTA_LINE) {
-          expectedDetail *= gLineHeight;
+          expectedDetail *= (isHorizontal ? gHorizontalLine : gLineHeight);
         } else if (currentEvent.deltaMode == WheelEvent.DOM_DELTA_PAGE) {
           if (expectedDetail > 0) {
             expectedDetail = (isHorizontal ? gPageWidth : gPageHeight);

@@ -155,6 +155,7 @@ struct JSCompartment
 
   private:
     bool                         needsBarrier_;
+    bool                         ionUsingBarriers_;
   public:
 
     bool needsBarrier() const {
@@ -169,7 +170,12 @@ struct JSCompartment
         return compileBarriers(needsBarrier());
     }
 
-    void setNeedsBarrier(bool needs);
+    enum ShouldUpdateIon {
+        DontUpdateIon,
+        UpdateIon
+    };
+
+    void setNeedsBarrier(bool needs, ShouldUpdateIon updateIon);
 
     static size_t OffsetOfNeedsBarrier() {
         return offsetof(JSCompartment, needsBarrier_);

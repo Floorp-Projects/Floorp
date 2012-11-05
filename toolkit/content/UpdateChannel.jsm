@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["UpdateChannel"];
+this.EXPORTED_SYMBOLS = ["UpdateChannel"];
 
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-let UpdateChannel = {
+this.UpdateChannel = {
   /**
    * Read the update channel from defaults only.  We do this to ensure that
    * the channel is tightly coupled with the application and does not apply

@@ -21,13 +21,13 @@ function run_test() {
   // Cannot set general values
   messageHandler.receiveMessage({ name: "ContentPref:setPref",
     json: { group: 'group2', name: 'name', value: 'someValue' } });
-  do_check_eq(cps.getPref('group', 'name'), undefined);
+  do_check_eq(cps.getPref('group', 'name', null), undefined);
 
   // Can set whitelisted values
   do_check_true(messageHandler.receiveMessage({ name: "ContentPref:setPref",
     json: { group: 'group2', name: 'browser.upload.lastDir',
             value: 'someValue' } }).succeeded);
-  do_check_eq(cps.getPref('group2', 'browser.upload.lastDir'), 'someValue');
+  do_check_eq(cps.getPref('group2', 'browser.upload.lastDir', null), 'someValue');
 
   // Prepare for child tests
 

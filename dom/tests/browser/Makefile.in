@@ -20,6 +20,7 @@ MOCHITEST_BROWSER_FILES := \
   browser_ConsoleStoragePBTest.js \
   browser_autofocus_preference.js \
   browser_bug396843.js \
+  browser_xhr_sandbox.js \
   $(NULL)
 
 ifeq (Linux,$(OS_ARCH))

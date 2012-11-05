@@ -101,4 +101,4 @@ AboutApps.prototype = {
 };
 
 const components = [AitcService, AboutApps];
-const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

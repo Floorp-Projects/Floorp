@@ -130,7 +130,9 @@ function openBrowserWindowIntl()
                       "_blank", params,
                       gBrowserContext.startURL);
 
-  addA11yLoadEvent(startBrowserTests, browserWindow());
+  whenDelayedStartupFinished(browserWindow(), function () {
+    addA11yLoadEvent(startBrowserTests, browserWindow());
+  });
 }
 
 function startBrowserTests()
@@ -139,4 +141,13 @@ function startBrowserTests()
     addA11yLoadEvent(gBrowserContext.testFunc, currentBrowser().contentWindow);
   else
     gBrowserContext.testFunc();
+}
+
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      setTimeout(aCallback, 0);
+    }
+  }, "browser-delayed-startup-finished", false);
 }

@@ -28,7 +28,7 @@ protected:
   // NOTE: If the channel has a type hint set, contentType will be left
   // untouched. The caller should not use it in that case.
   nsresult MakeFileInputStream(nsIFile *file, nsCOMPtr<nsIInputStream> &stream,
-                               nsCString &contentType);
+                               nsCString &contentType, bool async);
 
   virtual nsresult OpenContentStream(bool async, nsIInputStream **result,
                                      nsIChannel** channel);

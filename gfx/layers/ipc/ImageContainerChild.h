@@ -42,7 +42,7 @@ public:
   /**
    * Sends an image to the compositor without using the main thread.
    *
-   * This method should be called by ImageContainer only, and can be called 
+   * This method should be called by ImageContainer only, and can be called
    * from any thread.
    */
   void SendImageAsync(ImageContainer* aContainer, Image* aImage);
@@ -158,36 +158,51 @@ protected:
   bool AddSharedImageToPool(SharedImage* img);
 
   /**
-   * Removes a shared image from the pool and returns it.
-   * Returns nullptr if the pool is empty.
-   */
-  SharedImage* GetSharedImageFor(Image* aImage);
-  /**
-   * Seallocates all the shared images from the pool and clears the pool.
-   */
-
-  void ClearSharedImagePool();
-  /**
-   * Returns a shared image containing the same data as the image passed in 
-   * parameter.
+   * Must be called on the ImageBridgeChild's thread.
+   *
+   * creates and sends a shared image containing the same data as the image passed
+   * in parameter.
    * - If the image's data is already in shared memory, this should just acquire
-   * the data rather tahn copying it (TODO)
+   * the data rather tahn copying it
    * - If There is an available shared image of the same size in the pool, reuse
    * it rather than allocating shared memory.
    * - worst case, allocate shared memory and copy the image's data into it. 
    */
-  SharedImage* ImageToSharedImage(Image* toCopy);
+  void SendImageNow(Image* aImage);
+
+
+  /**
+   * Returns a SharedImage if the image passed in parameter can be shared
+   * directly without a copy, returns nullptr otherwise.
+   */
+  SharedImage* AsSharedImage(Image* aImage);
+
+  /**
+   * Removes a shared image from the pool and returns it.
+   * Returns nullptr if the pool is empty.
+   * The returned image does not contain the image data, a copy still needs to
+   * be done afterward (see CopyDataIntoSharedImage).
+   */
+  SharedImage* GetSharedImageFor(Image* aImage);
+
+  /**
+   * Allocates a SharedImage.
+   * Returns nullptr in case of failure.
+   * The returned image does not contain the image data, a copy still needs to
+   * be done afterward (see CopyDataIntoSharedImage).
+   */
+  SharedImage* AllocateSharedImageFor(Image* aImage);
 
   /**
    * Called by ImageToSharedImage.
    */
   bool CopyDataIntoSharedImage(Image* src, SharedImage* dest);
 
+
   /**
-   * Allocates a SharedImage and copy aImage's data into it.
-   * Called by ImageToSharedImage.
+   * Deallocates all the shared images from the pool and clears the pool.
    */
-  SharedImage * CreateSharedImageFromData(Image* aImage);
+  void ClearSharedImagePool();
 
 private:
   uint64_t mImageContainerID;

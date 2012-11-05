@@ -610,7 +610,7 @@ WrappedNativeFinalize(js::FreeOp *fop, JSObject *obj, WNHelperType helperType)
 {
     js::Class* clazz = js::GetObjectClass(obj);
     if (clazz->flags & JSCLASS_DOM_GLOBAL) {
-        mozilla::dom::DestroyProtoOrIfaceCache(obj);
+        mozilla::dom::DestroyProtoAndIfaceCache(obj);
     }
     nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
     if (!p)
@@ -661,7 +661,7 @@ MarkWrappedNative(JSTracer *trc, JSObject *obj)
 {
     js::Class* clazz = js::GetObjectClass(obj);
     if (clazz->flags & JSCLASS_DOM_GLOBAL) {
-        mozilla::dom::TraceProtoOrIfaceCache(trc, obj);
+        mozilla::dom::TraceProtoAndIfaceCache(trc, obj);
     }
 
     JSObject *obj2;
@@ -1466,7 +1466,7 @@ XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp)
 #ifdef DEBUG_slimwrappers
     {
         JSFunction* fun = funobj->getFunctionPrivate();
-        JSString *funid = JS_GetFunctionId(fun);
+        JSString *funid = JS_GetFunctionDisplayId(fun);
         JSAutoByteString bytes;
         const char *funname = !funid ? "" : bytes.encode(cx, funid) ? bytes.ptr() : "<error>";
         SLIM_LOG_WILL_MORPH_FOR_PROP(cx, obj, funname);
@@ -1503,7 +1503,7 @@ XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
         const char* funname = nullptr;
         JSAutoByteString bytes;
         if (JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION) {
-            JSString *funid = JS_GetFunctionId(funobj->getFunctionPrivate());
+            JSString *funid = JS_GetFunctionDisplayId(funobj->getFunctionPrivate());
             funname = !funid ? "" : bytes.encode(cx, funid) ? bytes.ptr() : "<error>";
         }
         SLIM_LOG_WILL_MORPH_FOR_PROP(cx, obj, funname);

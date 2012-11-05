@@ -18,5 +18,5 @@ for (var x of set) {
     }
 }
 assertEq(log, str);
-assertEq(set.size(), 1);  // Elements 0 to 24 are removed, leaving only 25 (Z).
+assertEq(set.size, 1);  // Elements 0 to 24 are removed, leaving only 25 (Z).
 assertEq(set.has('Z'), true);

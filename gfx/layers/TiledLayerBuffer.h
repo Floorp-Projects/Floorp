@@ -159,6 +159,8 @@ public:
    * is retained until it has been uploaded/copyed and unlocked.
    */
   virtual void PaintedTiledLayerBuffer(const BasicTiledLayerBuffer* aTiledBuffer) = 0;
+
+  virtual void MemoryPressure() = 0;
 };
 
 // Normal integer division truncates towards zero,
@@ -244,7 +246,7 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
   // which we will allocate in pass 2.
   // TODO: Add a tile pool to reduce new allocation
   int tileX = 0;
-  int tileY;
+  int tileY = 0;
   // Iterate over the new drawing bounds in steps of tiles.
   for (int32_t x = newBound.x; x < newBound.XMost(); tileX++) {
     // Compute tileRect(x,y,width,height) in layer space coordinate

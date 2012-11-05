@@ -69,6 +69,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
   public:
     // Instruction visitors.
     virtual bool visitMinMaxD(LMinMaxD *ins);
+    virtual bool visitNegD(LNegD *ins);
     virtual bool visitAbsD(LAbsD *ins);
     virtual bool visitSqrtD(LSqrtD *ins);
     virtual bool visitAddI(LAddI *ins);
@@ -167,8 +168,8 @@ class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorARM>
     }
 };
 
-} // ion
-} // js
+} // namespace ion
+} // namespace js
 
 #endif // jsion_codegen_arm_h__
 

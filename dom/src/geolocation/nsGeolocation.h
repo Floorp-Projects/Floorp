@@ -53,7 +53,8 @@ class nsGeolocationRequest
   nsGeolocationRequest(nsGeolocation* locator,
                        nsIDOMGeoPositionCallback* callback,
                        nsIDOMGeoPositionErrorCallback* errorCallback,
-                       bool watchPositionRequest = false);
+                       bool watchPositionRequest = false,
+                       int32_t watchId = 0);
   nsresult Init(JSContext* aCx, const jsval& aOptions);
   void Shutdown();
 
@@ -71,6 +72,8 @@ class nsGeolocationRequest
   bool Recv__delete__(const bool& allow);
   void IPDLRelease() { Release(); }
 
+  int32_t WatchId() { return mWatchId; }
+
  private:
 
   void NotifyError(int16_t errorCode);
@@ -84,6 +87,8 @@ class nsGeolocationRequest
   nsAutoPtr<mozilla::dom::GeoPositionOptions> mOptions;
 
   nsRefPtr<nsGeolocation> mLocator;
+
+  int32_t mWatchId;
 };
 
 /**
@@ -108,6 +113,7 @@ public:
   nsresult Init();
 
   void HandleMozsettingChanged(const PRUnichar* aData);
+  void HandleMozsettingValue(const bool aValue);
 
   // Management of the nsGeolocation objects
   void AddLocator(nsGeolocation* locator);
@@ -121,7 +127,7 @@ public:
 
   // Stop the started geolocation device (gps, nmea, etc.)
   void     StopDevice();
-  
+
   // create, or reinitalize the callback timer
   void     SetDisconnectTimer();
 
@@ -155,7 +161,7 @@ private:
 
 /**
  * Can return a geolocation info
- */ 
+ */
 class nsGeolocation MOZ_FINAL : public nsIDOMGeoGeolocation
 {
 public:
@@ -190,11 +196,18 @@ public:
   // Check to see if the widnow still exists
   bool WindowOwnerStillExists();
 
+  // Notification from the service:
+  void ServiceReady();
+
 private:
 
   ~nsGeolocation();
 
   bool RegisterRequestWithPrompt(nsGeolocationRequest* request);
+
+  // Methods for the service when it's ready to process requests:
+  nsresult GetCurrentPositionReady(nsGeolocationRequest* aRequest);
+  nsresult WatchPositionReady(nsGeolocationRequest* aRequest);
 
   // Two callback arrays.  The first |mPendingCallbacks| holds objects for only
   // one callback and then they are released/removed from the array.  The second
@@ -212,6 +225,22 @@ private:
 
   // owning back pointer.
   nsRefPtr<nsGeolocationService> mService;
+
+  // Watch ID
+  uint32_t mLastWatchId;
+
+  // Pending requests are used when the service is not ready:
+  class PendingRequest
+  {
+  public:
+    nsRefPtr<nsGeolocationRequest> request;
+    enum {
+      GetCurrentPosition,
+      WatchPosition
+    } type;
+  };
+
+  nsTArray<PendingRequest> mPendingRequests;
 };
 
 #endif /* nsGeoLocation_h */

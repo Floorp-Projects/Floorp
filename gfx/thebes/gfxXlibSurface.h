@@ -47,6 +47,7 @@ public:
 
     virtual already_AddRefed<gfxASurface>
     CreateSimilarSurface(gfxContentType aType, const gfxIntSize& aSize);
+    virtual void Finish() MOZ_OVERRIDE;
 
     virtual const gfxIntSize GetSize() const { return mSize; }
 

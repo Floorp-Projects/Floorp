@@ -1135,7 +1135,7 @@ function doTestZoom(aSettings, aCallback)
   doNextTest();
 }
 
-function doTestZoomedScroll()
+function doTestZoomedScroll(aCallback)
 {
   function testZoomedPixelScroll()
   {
@@ -1262,6 +1262,8 @@ function doTestZoomedScroll()
             window.removeEventListener("MozMousePixelScroll", handler, true);
 
             synthesizeKey("0", { accelKey: true });
+
+            SimpleTest.executeSoon(aCallback);
           }, 20);
         }, 20);
       }, 20);
@@ -1272,6 +1274,261 @@ function doTestZoomedScroll()
   //     is computed by complex logic.
 
   testZoomedPixelScroll();
+}
+
+function doTestWholeScroll(aCallback)
+{
+  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 99999999);
+  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 99999999);
+
+  const kTests = [
+    { description: "try whole-scroll to top (line)",
+      prepare: function () {
+        gScrollableElement.scrollTop = 1000;
+        gScrollableElement.scrollLeft = 1000;
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -1.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      expectedScrollTop: 0,
+      expectedScrollLeft: 1000
+    },
+    { description: "try whole-scroll to top when scrollTop is already top-most (line)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -1.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      expectedScrollTop: 0,
+      expectedScrollLeft: 1000
+    },
+    { description: "try whole-scroll to bottom (line)",
+      prepare: function () {
+        gScrollableElement.scrollTop = 1000;
+        gScrollableElement.scrollLeft = 1000;
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: 1.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      expectedScrollTop: gScrollableElement.scrollTopMax,
+      expectedScrollLeft: 1000
+    },
+    { description: "try whole-scroll to bottom when scrollTop is already bottom-most (line)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0, deltaY: 1.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      expectedScrollTop: gScrollableElement.scrollTopMax,
+      expectedScrollLeft: 1000
+    },
+    { description: "try whole-scroll to left (line)",
+      prepare: function () {
+        gScrollableElement.scrollTop = 1000;
+        gScrollableElement.scrollLeft = 1000;
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -1.0, deltaY: 0.0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 1000,
+      expectedScrollLeft: 0
+    },
+    { description: "try whole-scroll to left when scrollLeft is already left-most (line)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -1.0, deltaY: 0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 1000,
+      expectedScrollLeft: 0
+    },
+    { description: "try whole-scroll to right (line)",
+      prepare: function () {
+        gScrollableElement.scrollTop = 1000;
+        gScrollableElement.scrollLeft = 1000;
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 1000,
+      expectedScrollLeft: gScrollableElement.scrollLeftMax
+    },
+    { description: "try whole-scroll to right when scrollLeft is already right-most (line)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 1.0, deltaY: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 1000,
+      expectedScrollLeft: gScrollableElement.scrollLeftMax
+    },
+
+
+    { description: "try whole-scroll to top (pixel)",
+      prepare: function () {
+        gScrollableElement.scrollTop = 1000;
+        gScrollableElement.scrollLeft = 1000;
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -1.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 0,
+      expectedScrollLeft: 1000
+    },
+    { description: "try whole-scroll to top when scrollTop is already top-most (pixel)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -1.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 0,
+      expectedScrollLeft: 1000
+    },
+    { description: "try whole-scroll to bottom (pixel)",
+      prepare: function () {
+        gScrollableElement.scrollTop = 1000;
+        gScrollableElement.scrollLeft = 1000;
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 1.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 },
+      expectedScrollTop: gScrollableElement.scrollTopMax,
+      expectedScrollLeft: 1000
+    },
+    { description: "try whole-scroll to bottom when scrollTop is already bottom-most (pixel)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0, deltaY: 1.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 },
+      expectedScrollTop: gScrollableElement.scrollTopMax,
+      expectedScrollLeft: 1000
+    },
+    { description: "try whole-scroll to left (pixel)",
+      prepare: function () {
+        gScrollableElement.scrollTop = 1000;
+        gScrollableElement.scrollLeft = 1000;
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -1.0, deltaY: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 1000,
+      expectedScrollLeft: 0
+    },
+    { description: "try whole-scroll to left when scrollLeft is already left-most (pixel)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -1.0, deltaY: 0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 1000,
+      expectedScrollLeft: 0
+    },
+    { description: "try whole-scroll to right (pixel)",
+      prepare: function () {
+        gScrollableElement.scrollTop = 1000;
+        gScrollableElement.scrollLeft = 1000;
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 1.0, deltaY: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 1000,
+      expectedScrollLeft: gScrollableElement.scrollLeftMax
+    },
+    { description: "try whole-scroll to right when scrollLeft is already right-most (pixel)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 1.0, deltaY: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 1000,
+      expectedScrollLeft: gScrollableElement.scrollLeftMax
+    },
+
+
+    { description: "try whole-scroll to top (page)",
+      prepare: function () {
+        gScrollableElement.scrollTop = 1000;
+        gScrollableElement.scrollLeft = 1000;
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: -1.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      expectedScrollTop: 0,
+      expectedScrollLeft: 1000
+    },
+    { description: "try whole-scroll to top when scrollTop is already top-most (page)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: -1.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1 },
+      expectedScrollTop: 0,
+      expectedScrollLeft: 1000
+    },
+    { description: "try whole-scroll to bottom (page)",
+      prepare: function () {
+        gScrollableElement.scrollTop = 1000;
+        gScrollableElement.scrollLeft = 1000;
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: 1.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      expectedScrollTop: gScrollableElement.scrollTopMax,
+      expectedScrollLeft: 1000
+    },
+    { description: "try whole-scroll to bottom when scrollTop is already bottom-most (page)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0, deltaY: 1.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1 },
+      expectedScrollTop: gScrollableElement.scrollTopMax,
+      expectedScrollLeft: 1000
+    },
+    { description: "try whole-scroll to left (page)",
+      prepare: function () {
+        gScrollableElement.scrollTop = 1000;
+        gScrollableElement.scrollLeft = 1000;
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -1.0, deltaY: 0.0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 1000,
+      expectedScrollLeft: 0
+    },
+    { description: "try whole-scroll to left when scrollLeft is already left-most (page)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -1.0, deltaY: 0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 1000,
+      expectedScrollLeft: 0
+    },
+    { description: "try whole-scroll to right (page)",
+      prepare: function () {
+        gScrollableElement.scrollTop = 1000;
+        gScrollableElement.scrollLeft = 1000;
+      },
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0, deltaY: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 1000,
+      expectedScrollLeft: gScrollableElement.scrollLeftMax
+    },
+    { description: "try whole-scroll to right when scrollLeft is already right-most (page)",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 1.0, deltaY: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0 },
+      expectedScrollTop: 1000,
+      expectedScrollLeft: gScrollableElement.scrollLeftMax
+    },
+  ];
+
+  var index = 0;
+
+  function doIt()
+  {
+    const kTest = kTests[index];
+    if (kTest.prepare) {
+      kTest.prepare();
+    }
+    synthesizeWheel(gScrollableElement, 10, 10, kTest.event);
+    hitEventLoop(function () {
+      is(gScrollableElement.scrollTop, kTest.expectedScrollTop,
+         "doTestWholeScroll, " + kTest.description + ": unexpected scrollTop");
+      is(gScrollableElement.scrollLeft, kTest.expectedScrollLeft,
+         "doTestWholeScroll, " + kTest.description + ": unexpected scrollLeft");
+      if (++index == kTests.length) {
+        SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
+        SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");
+        SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_z");
+        SimpleTest.executeSoon(aCallback);
+      } else {
+        doIt();
+      }
+    }, 20);
+  }
+  doIt();
 }
 
 function runTests()
@@ -1313,8 +1570,11 @@ function runTests()
         doTestZoom(kSettings[index], function() {
           if (++index == kSettings.length) {
             setDeltaMultiplierSettings(kSettings[0]);
-            doTestZoomedScroll();
-            finishTests();
+            doTestZoomedScroll(function() {
+              doTestWholeScroll(function() {
+                finishTests();
+              });
+            });
           } else {
             doTest();
           }

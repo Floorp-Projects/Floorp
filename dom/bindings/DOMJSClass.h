@@ -8,6 +8,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "mozilla/Assertions.h"
 
 #include "mozilla/dom/PrototypeList.h" // auto-generated
 
@@ -27,30 +28,105 @@ class nsCycleCollectionParticipant;
 
 // We use these flag bits for the new bindings.
 #define JSCLASS_DOM_GLOBAL JSCLASS_USERBIT1
+#define JSCLASS_IS_DOMIFACEANDPROTOJSCLASS JSCLASS_USERBIT2
 
 // NOTE: This is baked into the Ion JIT as 0 in codegen for LGetDOMProperty and
 // LSetDOMProperty. Those constants need to be changed accordingly if this value
 // changes.
 #define DOM_PROTO_INSTANCE_CLASS_SLOT 0
 
+MOZ_STATIC_ASSERT(DOM_PROTO_INSTANCE_CLASS_SLOT != DOM_XRAY_EXPANDO_SLOT,
+                  "Interface prototype object use both of these, so they must "
+                  "not be the same slot.");
+
 namespace mozilla {
 namespace dom {
 
 typedef bool
-(* ResolveProperty)(JSContext* cx, JSObject* wrapper, jsid id, bool set,
-                    JSPropertyDescriptor* desc);
-typedef bool
-(* EnumerateProperties)(JSContext* cx, JSObject* wrapper,
-                        JS::AutoIdVector& props);
+(* ResolveOwnProperty)(JSContext* cx, JSObject* wrapper, JSObject* obj, jsid id,
+                       bool set, JSPropertyDescriptor* desc);
 
+typedef bool
+(* EnumerateOwnProperties)(JSContext* cx, JSObject* wrapper, JSObject* obj,
+                           JS::AutoIdVector& props);
+
+struct ConstantSpec
+{
+  const char* name;
+  JS::Value value;
+};
+
+template<typename T>
+struct Prefable {
+  // A boolean indicating whether this set of specs is enabled
+  bool enabled;
+  // Array of specs, terminated in whatever way is customary for T.
+  // Null to indicate a end-of-array for Prefable, when such an
+  // indicator is needed.
+  T* specs;
+};
+
+struct NativeProperties
+{
+  Prefable<JSFunctionSpec>* staticMethods;
+  jsid* staticMethodIds;
+  JSFunctionSpec* staticMethodsSpecs;
+  Prefable<JSPropertySpec>* staticAttributes;
+  jsid* staticAttributeIds;
+  JSPropertySpec* staticAttributeSpecs;
+  Prefable<JSFunctionSpec>* methods;
+  jsid* methodIds;
+  JSFunctionSpec* methodsSpecs;
+  Prefable<JSPropertySpec>* attributes;
+  jsid* attributeIds;
+  JSPropertySpec* attributeSpecs;
+  Prefable<JSPropertySpec>* unforgeableAttributes;
+  jsid* unforgeableAttributeIds;
+  JSPropertySpec* unforgeableAttributeSpecs;
+  Prefable<ConstantSpec>* constants;
+  jsid* constantIds;
+  ConstantSpec* constantSpecs;
+};
+
+struct NativePropertiesHolder
+{
+  const NativeProperties* regular;
+  const NativeProperties* chromeOnly;
+};
+
+// Helper structure for Xrays for DOM binding objects. The same instance is used
+// for instances, interface objects and interface prototype objects of a
+// specific interface.
 struct NativePropertyHooks
 {
-  ResolveProperty mResolveOwnProperty;
-  ResolveProperty mResolveProperty;
-  EnumerateProperties mEnumerateOwnProperties;
-  EnumerateProperties mEnumerateProperties;
+  // The hook to call for resolving indexed or named properties. May be null if
+  // there can't be any.
+  ResolveOwnProperty mResolveOwnProperty;
+  // The hook to call for enumerating indexed or named properties. May be null
+  // if there can't be any.
+  EnumerateOwnProperties mEnumerateOwnProperties;
 
-  const NativePropertyHooks *mProtoHooks;
+  // The property arrays for this interface.
+  NativePropertiesHolder mNativeProperties;
+
+  // This will be set to the ID of the interface prototype object for the
+  // interface, if it has one. If it doesn't have one it will be set to
+  // prototypes::id::_ID_Count.
+  prototypes::ID mPrototypeID;
+
+  // This will be set to the ID of the interface object for the interface, if it
+  // has one. If it doesn't have one it will be set to
+  // constructors::id::_ID_Count.
+  constructors::ID mConstructorID;
+
+  // The NativePropertyHooks instance for the parent interface.
+  const NativePropertyHooks* mProtoHooks;
+};
+
+enum DOMObjectType {
+  eInstance,
+  eInterface,
+  eInterfacePrototype
 };
 
 struct DOMClass
@@ -102,8 +178,33 @@ struct DOMJSClass
   JSClass* ToJSClass() { return &mBase; }
 };
 
+// Special JSClass for DOM interface and interface prototype objects.
+struct DOMIfaceAndProtoJSClass
+{
+  // It would be nice to just inherit from JSClass, but that precludes pure
+  // compile-time initialization of the form
+  // |DOMJSInterfaceAndPrototypeClass = {...};|, since C++ only allows brace
+  // initialization for aggregate/POD types.
+  JSClass mBase;
+
+  // Either eInterface or eInterfacePrototype
+  DOMObjectType mType;
+
+  const NativePropertyHooks* mNativeHooks;
+
+  static const DOMIfaceAndProtoJSClass* FromJSClass(const JSClass* base) {
+    MOZ_ASSERT(base->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS);
+    return reinterpret_cast<const DOMIfaceAndProtoJSClass*>(base);
+  }
+  static const DOMIfaceAndProtoJSClass* FromJSClass(const js::Class* base) {
+    return FromJSClass(Jsvalify(base));
+  }
+
+  JSClass* ToJSClass() { return &mBase; }
+};
+
 inline bool
-HasProtoOrIfaceArray(JSObject* global)
+HasProtoAndIfaceArray(JSObject* global)
 {
   MOZ_ASSERT(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL);
   // This can be undefined if we GC while creating the global
@@ -111,7 +212,7 @@ HasProtoOrIfaceArray(JSObject* global)
 }
 
 inline JSObject**
-GetProtoOrIfaceArray(JSObject* global)
+GetProtoAndIfaceArray(JSObject* global)
 {
   MOZ_ASSERT(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL);
   return static_cast<JSObject**>(

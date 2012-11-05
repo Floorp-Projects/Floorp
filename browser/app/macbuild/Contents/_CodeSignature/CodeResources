@@ -18,6 +18,12 @@
                 <key>weight</key>
                 <real>10</real>
             </dict>
+            <key>^MacOS/override.ini</key><dict>
+                <key>omit</key>
+                <true/>
+                <key>weight</key>
+                <real>10</real>
+            </dict>
             <key>^MacOS/updates/.*</key><dict>
                 <key>omit</key>
                 <true/>

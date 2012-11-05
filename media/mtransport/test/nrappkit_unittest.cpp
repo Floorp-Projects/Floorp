@@ -26,7 +26,7 @@ extern "C" {
 
 using namespace mozilla;
 
-MtransportTestUtils test_utils;
+MtransportTestUtils *test_utils;
 
 namespace {
 
@@ -37,7 +37,7 @@ class TimerTest : public ::testing::Test {
   int ArmTimer(int timeout) {
     int ret;
 
-    test_utils.sts_target()->Dispatch(
+    test_utils->sts_target()->Dispatch(
         WrapRunnableRet(this, &TimerTest::ArmTimer_w, timeout, &ret),
         NS_DISPATCH_SYNC);
 
@@ -51,7 +51,7 @@ class TimerTest : public ::testing::Test {
   int CancelTimer() {
     int ret;
 
-    test_utils.sts_target()->Dispatch(
+    test_utils->sts_target()->Dispatch(
         WrapRunnableRet(this, &TimerTest::CancelTimer_w, &ret),
         NS_DISPATCH_SYNC);
 
@@ -88,12 +88,13 @@ TEST_F(TimerTest, CancelTimer) {
   ASSERT_FALSE(fired_);
 }
 
-int main(int argc, char **argv)
-{
-  test_utils.InitServices();
+int main(int argc, char **argv) {
+  test_utils = new MtransportTestUtils();
 
   // Start the tests
   ::testing::InitGoogleTest(&argc, argv);
 
-  return RUN_ALL_TESTS();
+  int rv = RUN_ALL_TESTS();
+  delete test_utils;
+  return rv;
 }

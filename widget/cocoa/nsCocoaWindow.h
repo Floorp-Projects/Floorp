@@ -18,7 +18,6 @@
 class nsCocoaWindow;
 class nsChildView;
 class nsMenuBarX;
-@class ChildView;
 
 // Value copied from BITMAP_MAX_AREA, used in nsNativeThemeCocoa.mm
 #define CUIDRAW_MAX_AREA 500000
@@ -177,7 +176,6 @@ typedef struct _nsCocoaWindowList {
   TitlebarAndBackgroundColor *mColor;
   float mUnifiedToolbarHeight;
   NSColor *mBackgroundColor;
-  NSView *mTitlebarView; // strong
 }
 // Pass nil here to get the default appearance.
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
@@ -188,7 +186,6 @@ typedef struct _nsCocoaWindowList {
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect sync:(BOOL)aSync;
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect;
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState;
-- (ChildView*)mainChildView;
 @end
 
 class nsCocoaWindow : public nsBaseWidget, public nsPIWidgetCocoa
@@ -247,7 +244,7 @@ public:
 
     CGFloat                 BackingScaleFactor();
     void                    BackingScaleFactorChanged();
-    virtual double          GetDefaultScale();
+    virtual double          GetDefaultScaleInternal();
 
     NS_IMETHOD              SetTitle(const nsAString& aTitle);
 

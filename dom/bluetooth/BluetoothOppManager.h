@@ -10,7 +10,9 @@
 #include "BluetoothCommon.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/ipc/UnixSocket.h"
-#include "nsIDOMFile.h"
+
+class nsIOutputStream;
+class nsIInputStream;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -48,10 +50,9 @@ public:
   void Disconnect();
   bool Listen();
 
-  bool SendFile(BlobParent* aBlob,
-                BluetoothReplyRunnable* aRunnable);
-  bool StopSendingFile(BluetoothReplyRunnable* aRunnable);
-  void ConfirmReceivingFile(bool aConfirm, BluetoothReplyRunnable* aRunnable);
+  bool SendFile(BlobParent* aBlob);
+  bool StopSendingFile();
+  bool ConfirmReceivingFile(bool aConfirm);
 
   void SendConnectRequest();
   void SendPutHeaderRequest(const nsAString& aFileName, int aFileSize);
@@ -82,9 +83,12 @@ private:
                                  const nsString& aFileName,
                                  uint32_t aFileLength,
                                  const nsString& aContentType);
+  void DeleteReceivedFile();
   void ReplyToConnect();
   void ReplyToDisconnect();
   void ReplyToPut(bool aFinal, bool aContinue);
+  void AfterOppConnected();
+  void AfterOppDisconnected();
   virtual void OnConnectSuccess() MOZ_OVERRIDE;
   virtual void OnConnectError() MOZ_OVERRIDE;
   virtual void OnDisconnect() MOZ_OVERRIDE;
@@ -101,9 +105,13 @@ private:
   bool mReceiving;
   bool mPutFinal;
   bool mWaitingForConfirmationFlag;
+  int mUpdateProgressCounter;
+  enum mozilla::ipc::SocketConnectionStatus mSocketStatus;
 
   nsCOMPtr<nsIDOMBlob> mBlob;
   nsCOMPtr<nsIThread> mReadFileThread;
+  nsCOMPtr<nsIOutputStream> mOutputStream;
+  nsCOMPtr<nsIInputStream> mInputStream;
 };
 
 END_BLUETOOTH_NAMESPACE

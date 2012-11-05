@@ -30,7 +30,7 @@
 #include "gtest/gtest.h"
 #include "gtest_utils.h"
 
-MtransportTestUtils test_utils;
+MtransportTestUtils *test_utils;
 
 namespace {
 class SocketTransportServiceTest : public ::testing::Test {
@@ -202,10 +202,12 @@ TEST_F(SocketTransportServiceTest, SendPacket) {
 
 
 int main(int argc, char **argv) {
-    test_utils.InitServices();
+  test_utils = new MtransportTestUtils();
 
   // Start the tests
   ::testing::InitGoogleTest(&argc, argv);
 
-  return RUN_ALL_TESTS();
+  int rv = RUN_ALL_TESTS();
+  delete test_utils;
+  return rv;
 }

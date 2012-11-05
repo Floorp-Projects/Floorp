@@ -32,13 +32,16 @@ function run_test() {
  * Ensure an SmsMessage object created has sensible initial values.
  */
 add_test(function test_interface() {
-  let sms = newMessage(null, "sent", null, null, null, new Date(), true);
+  let sms = newMessage(null, "sent", "pending", null, null, null, "normal",
+                       new Date(), true);
   do_check_true(sms instanceof Ci.nsIDOMMozSmsMessage);
   do_check_eq(sms.id, 0);
   do_check_eq(sms.delivery, "sent");
+  do_check_eq(sms.deliveryStatus, "pending");
   do_check_eq(sms.receiver, null);
   do_check_eq(sms.sender, null);
   do_check_eq(sms.body, null);
+  do_check_eq(sms.messageClass, "normal");
   do_check_true(sms.timestamp instanceof Date);
   do_check_true(sms.read);
   run_next_test();
@@ -48,13 +51,17 @@ add_test(function test_interface() {
  * Verify that attributes are read-only.
  */
 add_test(function test_readonly_attributes() {
-  let sms = newMessage(null, "received", null, null, null, new Date(), true);
+  let sms = newMessage(null, "received", "success", null, null, null,
+                       "normal", new Date(), true);
 
   sms.id = 1;
   do_check_eq(sms.id, 0);
 
   sms.delivery = "sent";
   do_check_eq(sms.delivery, "received");
+
+  sms.deliveryStatus = "pending";
+  do_check_eq(sms.deliveryStatus, "success");
 
   sms.receiver = "a receiver";
   do_check_eq(sms.receiver, null);
@@ -64,6 +71,9 @@ add_test(function test_readonly_attributes() {
 
   sms.body = "a body";
   do_check_eq(sms.body, null);
+
+  sms.messageClass = "class-0";
+  do_check_eq(sms.messageClass, "normal");
 
   let oldTimestamp = sms.timestamp.getTime();
   sms.timestamp = new Date();
@@ -80,13 +90,15 @@ add_test(function test_readonly_attributes() {
  */
 add_test(function test_timestamp_number() {
   let ts = Date.now();
-  let sms = newMessage(42, "sent", "the sender", "the receiver", "the body", ts,
-                       true);
+  let sms = newMessage(42, "sent", "pending", "the sender", "the receiver",
+                       "the body", "normal", ts, true);
   do_check_eq(sms.id, 42);
   do_check_eq(sms.delivery, "sent");
+  do_check_eq(sms.deliveryStatus, "pending");
   do_check_eq(sms.sender, "the sender");
   do_check_eq(sms.receiver, "the receiver");
   do_check_eq(sms.body, "the body");
+  do_check_eq(sms.messageClass, "normal");
   do_check_true(sms.timestamp instanceof Date);
   do_check_eq(sms.timestamp.getTime(), ts);
   do_check_true(sms.read);
@@ -98,13 +110,15 @@ add_test(function test_timestamp_number() {
  */
 add_test(function test_timestamp_date() {
   let date = new Date();
-  let sms = newMessage(42, "sent", "the sender", "the receiver", "the body",
-                       date, true);
+  let sms = newMessage(42, "sent", "pending", "the sender", "the receiver",
+                       "the body", "normal", date, true);
   do_check_eq(sms.id, 42);
   do_check_eq(sms.delivery, "sent");
+  do_check_eq(sms.deliveryStatus, "pending");
   do_check_eq(sms.sender, "the sender");
   do_check_eq(sms.receiver, "the receiver");
   do_check_eq(sms.body, "the body");
+  do_check_eq(sms.messageClass, "normal");
   do_check_true(sms.timestamp instanceof Date);
   do_check_eq(sms.timestamp.getTime(), date.getTime());
   do_check_true(sms.read);
@@ -116,8 +130,8 @@ add_test(function test_timestamp_date() {
  */
 add_test(function test_invalid_timestamp_float() {
   do_check_throws(function() {
-    newMessage(42, "sent", "the sender", "the receiver", "the body", 3.1415,
-               true);
+    newMessage(42, "sent", "pending", "the sender", "the receiver", "the body",
+               "normal", 3.1415, true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -127,8 +141,8 @@ add_test(function test_invalid_timestamp_float() {
  */
 add_test(function test_invalid_timestamp_null() {
   do_check_throws(function() {
-    newMessage(42, "sent", "the sender", "the receiver", "the body", null,
-               true);
+    newMessage(42, "sent", "pending", "the sender", "the receiver", "the body",
+               "normal", null, true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -138,8 +152,8 @@ add_test(function test_invalid_timestamp_null() {
  */
 add_test(function test_invalid_timestamp_undefined() {
   do_check_throws(function() {
-    newMessage(42, "sent", "the sender", "the receiver", "the body", undefined,
-               true);
+    newMessage(42, "sent", "pending", "the sender", "the receiver", "the body",
+               "normal", undefined, true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -149,7 +163,8 @@ add_test(function test_invalid_timestamp_undefined() {
  */
 add_test(function test_invalid_timestamp_object() {
   do_check_throws(function() {
-    newMessage(42, "sent", "the sender", "the receiver", "the body", {}, true);
+    newMessage(42, "sent", "pending", "the sender", "the receiver", "the body",
+               "normal", {}, true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -159,8 +174,8 @@ add_test(function test_invalid_timestamp_object() {
  */
 add_test(function test_invalid_delivery_string() {
   do_check_throws(function() {
-    newMessage(42, "this is invalid", "the sender", "the receiver", "the body",
-               new Date(), true);
+    newMessage(42, "this is invalid", "pending", "the sender", "the receiver",
+               "the body", "normal", new Date(), true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -170,7 +185,52 @@ add_test(function test_invalid_delivery_string() {
  */
 add_test(function test_invalid_delivery_string() {
   do_check_throws(function() {
-    newMessage(42, 1, "the sender", "the receiver", "the body", new Date(), true);
+    newMessage(42, 1, "pending", "the sender", "the receiver", "the body",
+               "normal", new Date(), true);
+  }, Cr.NS_ERROR_INVALID_ARG);
+  run_next_test();
+});
+
+/**
+ * Test that an invalid delivery status string is not accepted.
+ */
+add_test(function test_invalid_delivery_status_string() {
+  do_check_throws(function() {
+    newMessage(42, "sent", "this is invalid", "the sender", "the receiver",
+               "the body", "normal", new Date(), true);
+  }, Cr.NS_ERROR_INVALID_ARG);
+  run_next_test();
+});
+
+/**
+ * Test that a number is not accepted for the 'deliveryStatus' argument.
+ */
+add_test(function test_invalid_delivery_status_string() {
+  do_check_throws(function() {
+    newMessage(42, "sent", 1, "the sender", "the receiver", "the body",
+               "normal", new Date(), true);
+  }, Cr.NS_ERROR_INVALID_ARG);
+  run_next_test();
+});
+
+/**
+ * Test that an invalid message class string is not accepted.
+ */
+add_test(function test_invalid_message_class_string() {
+  do_check_throws(function() {
+    newMessage(42, "sent", "pending", "the sender", "the receiver",
+               "the body", "this is invalid", new Date(), true);
+  }, Cr.NS_ERROR_INVALID_ARG);
+  run_next_test();
+});
+
+/**
+ * Test that a number is not accepted for the 'messageClass' argument.
+ */
+add_test(function test_invalid_message_class_string() {
+  do_check_throws(function() {
+    newMessage(42, "sent", "pending", "the sender", "the receiver", "the body",
+               1, new Date(), true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });

@@ -83,6 +83,8 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
   if (!((new RegExp('^' + value + '[^a-z-_] *[,;]?', 'i')).test(intl))) {
     Services.prefs.setCharPref(prefName, value + ', ' + intl);
   }
+
+  shell.start();
 });
 
 
@@ -153,8 +155,10 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
 })();
 
 // =================== Debugger ====================
-SettingsListener.observe('devtools.debugger.remote-enabled', false, function(enabled) {
+SettingsListener.observe('devtools.debugger.remote-enabled', false, function(value) {
   Services.prefs.setBoolPref('devtools.debugger.remote-enabled', value);
+  // This preference is consulted during startup
+  Services.prefs.savePrefFile(null);
 });
 
 SettingsListener.observe('devtools.debugger.log', false, function(value) {
@@ -181,3 +185,15 @@ SettingsListener.observe('debug.dev-mode', false, function(value) {
 SettingsListener.observe('privacy.donottrackheader.enabled', false, function(value) {
   Services.prefs.setBoolPref('privacy.donottrackheader.enabled', value);
 });
+
+// =================== Crash Reporting ====================
+SettingsListener.observe('app.reportCrashes', 'ask', function(value) {
+  if (value == 'always') {
+    Services.prefs.setBoolPref('app.reportCrashes', true);
+  } else if (value == 'never') {
+    Services.prefs.setBoolPref('app.reportCrashes', false);
+  } else {
+    Services.prefs.clearUserPref('app.reportCrashes');
+  }
+});
+

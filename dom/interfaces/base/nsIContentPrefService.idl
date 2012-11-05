@@ -7,6 +7,7 @@
 interface nsIVariant;
 interface nsIPropertyBag2;
 interface nsIContentURIGrouper;
+interface nsILoadContext;
 interface mozIStorageConnection;
 
 [scriptable, uuid(746c7a02-f6c1-4869-b434-7c8b86e60e61)]
@@ -38,7 +39,7 @@ interface nsIContentPrefCallback : nsISupports
   void onResult(in nsIVariant aResult);
 };
 
-[scriptable, uuid(0014e2b4-1bab-4946-9211-7d28fc8df4d7)]
+[scriptable, uuid(e3f772f3-023f-4b32-b074-36cf0fd5d414)]
 interface nsIContentPrefService : nsISupports
 {
   /**
@@ -57,6 +58,11 @@ interface nsIContentPrefService : nsISupports
    *                       (typically in the format of a hostname), or null 
    *                       to get the global pref (applies to all sites)
    * @param    aName       the name of the pref to get
+   * @param    aPrivacyContext
+   *                       a context from which to determine the privacy status
+   *                       of the pref (ie. whether to search in memory or in
+   *                       permanent storage for it), obtained from a relevant
+   *                       window or channel.
    * @param    aCallback   an optional nsIContentPrefCallback to receive the
    *                       result. If desired, JavaScript callers can instead
    *                       provide a function to call upon completion
@@ -66,6 +72,7 @@ interface nsIContentPrefService : nsISupports
    * @throws   NS_ERROR_ILLEGAL_VALUE if aName is null or an empty string
    */
   nsIVariant getPref(in nsIVariant aGroup, in AString aName,
+                     in nsILoadContext aPrivacyContext,
                      [optional] in nsIContentPrefCallback aCallback);
 
   /**
@@ -80,10 +87,15 @@ interface nsIContentPrefService : nsISupports
    *                       to set the global pref (applies to all sites)
    * @param    aName       the name of the pref to set
    * @param    aValue      the new value of the pref
+   * @param    aPrivacyContext
+   *                       a context from which to determine the privacy status
+   *                       of the pref (ie. whether to store it in memory or in
+   *                       permanent storage), obtained from a relevant
+   *                       window or channel.
    * @throws   NS_ERROR_ILLEGAL_VALUE if aGroup is not a string, nsIURI, or null
    * @throws   NS_ERROR_ILLEGAL_VALUE if aName is null or an empty string
    */
-  void setPref(in nsIVariant aGroup, in AString aName, in nsIVariant aValue);
+  void setPref(in nsIVariant aGroup, in AString aName, in nsIVariant aValue, in nsILoadContext aPrivacyContext);
   
   /**
    * Check whether or not a pref exists.
@@ -93,10 +105,15 @@ interface nsIContentPrefService : nsISupports
    *                       (typically in the format of a hostname), or null
    *                       to check for the global pref (applies to all sites)
    * @param    aName       the name of the pref to check for
+   * @param    aPrivacyContext
+   *                       a context from which to determine the privacy status
+   *                       of the pref (ie. whether to search in memory or in
+   *                       permanent storage for it), obtained from a relevant
+   *                       window or channel.
    * @throws   NS_ERROR_ILLEGAL_VALUE if aGroup is not a string, nsIURI, or null
    * @throws   NS_ERROR_ILLEGAL_VALUE if aName is null or an empty string
    */
-  boolean hasPref(in nsIVariant aGroup, in AString aName);
+  boolean hasPref(in nsIVariant aGroup, in AString aName, in nsILoadContext aContext);
 
   /**
    * Check whether or not the value of a pref (or its non-existance) is cached.
@@ -106,10 +123,15 @@ interface nsIContentPrefService : nsISupports
    *                       (typically in the format of a hostname), or null
    *                       to check for the global pref (applies to all sites)
    * @param    aName       the name of the pref to check for
+   * @param    aPrivacyContext
+   *                       a context from which to determine the privacy status
+   *                       of the pref (ie. whether to search in memory or in
+   *                       permanent storage for it), obtained from a relevant
+   *                       window or channel.
    * @throws   NS_ERROR_ILLEGAL_VALUE if aGroup is not a string, nsIURI, or null
    * @throws   NS_ERROR_ILLEGAL_VALUE if aName is null or an empty string
    */
-  boolean hasCachedPref(in nsIVariant aGroup, in AString aName);
+  boolean hasCachedPref(in nsIVariant aGroup, in AString aName, in nsILoadContext aContext);
 
   /**
    * Remove a pref.
@@ -119,24 +141,40 @@ interface nsIContentPrefService : nsISupports
    *                       (typically in the format of a hostname), or null
    *                       to remove the global pref (applies to all sites) 
    * @param    aName       the name of the pref to remove
+   * @param    aPrivacyContext
+   *                       a context from which to determine the privacy status
+   *                       of the pref (ie. whether to search in memory or in
+   *                       permanent storage for it), obtained from a relevant
+   *                       window or channel.
    * @throws   NS_ERROR_ILLEGAL_VALUE if aGroup is not a string, nsIURI, or null
    * @throws   NS_ERROR_ILLEGAL_VALUE if aName is null or an empty string
    */
-  void removePref(in nsIVariant aGroup, in AString aName);
+  void removePref(in nsIVariant aGroup, in AString aName, in nsILoadContext aContext);
 
   /**
    * Remove all grouped prefs.  Useful for removing references to the sites
    * the user has visited when the user clears their private data.
+   *
+   * @param    aPrivacyContext
+   *                       a context from which to determine the privacy status
+   *                       of the pref (ie. whether to remove prefs in memory or
+   *                       in permanent storage), obtained from a relevant
+   *                       window or channel.
    */
-  void removeGroupedPrefs();
+  void removeGroupedPrefs(in nsILoadContext aContext);
 
   /**
    * Remove all prefs with the given name.
    *
    * @param    aName        the setting name for which to remove prefs
+   * @param    aPrivacyContext
+   *                        a context from which to determine the privacy status
+   *                        of the prefs (ie. whether to remove prefs in memory or
+   *                        in permanent storage), obtained from a relevant
+   *                        window or channel.
    * @throws   NS_ERROR_ILLEGAL_VALUE if aName is null or an empty string
    */
-  void removePrefsByName(in AString aName);
+  void removePrefsByName(in AString aName, in nsILoadContext aContext);
 
   /**
    * Get the prefs that apply to the given site.
@@ -145,21 +183,31 @@ interface nsIContentPrefService : nsISupports
    *                       from which the hostname will be used, a string
    *                       (typically in the format of a hostname), or null
    *                       to get the global prefs (apply to all sites) 
+   * @param    aPrivacyContext
+   *                       a context from which to determine the privacy status
+   *                       of the pref (ie. whether to search for prefs in memory
+   *                       or in permanent storage), obtained from a relevant
+   *                       window or channel.
    * 
    * @returns  a property bag of prefs
    * @throws   NS_ERROR_ILLEGAL_VALUE if aGroup is not a string, nsIURI, or null
    */
-  nsIPropertyBag2 getPrefs(in nsIVariant aGroup);
+  nsIPropertyBag2 getPrefs(in nsIVariant aGroup, in nsILoadContext aContext);
 
   /**
    * Get the prefs with the given name.
    *
    * @param    aName        the setting name for which to retrieve prefs
+   * @param    aPrivacyContext
+   *                        a context from which to determine the privacy status
+   *                        of the pref (ie. whether to search for prefs in memory
+   *                        or in permanent storage), obtained from a relevant
+   *                        window or channel.
    * 
    * @returns  a property bag of prefs
    * @throws   NS_ERROR_ILLEGAL_VALUE if aName is null or an empty string
    */
-  nsIPropertyBag2 getPrefsByName(in AString aName);
+  nsIPropertyBag2 getPrefsByName(in AString aName, in nsILoadContext aContext);
   
   /**
    * Add an observer.

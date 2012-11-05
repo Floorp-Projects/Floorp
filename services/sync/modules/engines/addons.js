@@ -50,7 +50,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
                                   "resource://gre/modules/AddonRepository.jsm");
 
-const EXPORTED_SYMBOLS = ["AddonsEngine"];
+this.EXPORTED_SYMBOLS = ["AddonsEngine"];
 
 // 7 days in milliseconds.
 const PRUNE_ADDON_CHANGES_THRESHOLD = 60 * 60 * 24 * 7 * 1000;
@@ -107,7 +107,7 @@ Utils.deferGetSet(AddonRecord, "cleartext", ["addonID",
  * The engine instance overrides a handful of functions on the base class. The
  * rationale for each is documented by that function.
  */
-function AddonsEngine(service) {
+this.AddonsEngine = function AddonsEngine(service) {
   SyncEngine.call(this, "Addons", service);
 
   this._reconciler = new AddonsReconciler();

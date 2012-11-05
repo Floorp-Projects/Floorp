@@ -138,7 +138,8 @@ GeneratePrototypeGuards(JSContext *cx, MacroAssembler &masm, JSObject *obj, JSOb
     JSObject *pobj = IsCacheableListBase(obj)
                      ? obj->getTaggedProto().toObjectOrNull()
                      : obj->getProto();
-    JS_ASSERT(pobj);
+    if (!pobj)
+        return;
     while (pobj != holder) {
         if (pobj->hasUncacheableProto()) {
             JS_ASSERT(!pobj->hasSingletonType());
@@ -176,6 +177,52 @@ IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, const Shape *shape)
         return false;
 
     if (!shape->hasSlot() || !shape->hasDefaultGetter())
+        return false;
+
+    return true;
+}
+
+static bool
+IsCacheableNoProperty(JSObject *obj, JSObject *holder, const Shape *shape, jsbytecode *pc,
+                      const TypedOrValueRegister &output)
+{
+    if (shape)
+        return false;
+
+    JS_ASSERT(!holder);
+
+    // Just because we didn't find the property on the object doesn't mean it
+    // won't magically appear through various engine hacks:
+    if (obj->getClass()->getProperty && obj->getClass()->getProperty != JS_PropertyStub)
+        return false;
+
+    // Don't generate missing property ICs if we skipped a non-native object, as
+    // lookups may extend beyond the prototype chain (e.g.  for ListBase
+    // proxies).
+    JSObject *obj2 = obj;
+    while (obj2) {
+        if (!obj2->isNative())
+            return false;
+        obj2 = obj2->getProto();
+    }
+
+#if JS_HAS_NO_SUCH_METHOD
+    // This case cannot appear with an idempotent cache.
+    if (pc) {
+        // The __noSuchMethod__ hook may substitute in a valid method.  Since,
+        // if o.m is missing, o.m() will probably be an error, just mark all
+        // missing callprops as uncacheable.
+        if (JSOp(*pc) == JSOP_CALLPROP ||
+            JSOp(*pc) == JSOP_CALLELEM)
+        {
+            return false;
+        }
+    }
+#endif
+
+    // TI has not yet monitored an Undefined value. The fallback path will
+    // monitor and invalidate the script.
+    if (!output.hasValue())
         return false;
 
     return true;
@@ -250,26 +297,55 @@ struct GetNativePropertyStub
             // Note: this may clobber the object register if it's used as scratch.
             GeneratePrototypeGuards(cx, masm, obj, holder, object, scratchReg, &prototypeFailures);
 
-            // Guard on the holder's shape.
-            holderReg = scratchReg;
-            masm.movePtr(ImmGCPtr(holder), holderReg);
-            masm.branchPtr(Assembler::NotEqual,
-                           Address(holderReg, JSObject::offsetOfShape()),
-                           ImmGCPtr(holder->lastProperty()),
-                           &prototypeFailures);
+            if (holder) {
+                // Guard on the holder's shape.
+                holderReg = scratchReg;
+                masm.movePtr(ImmGCPtr(holder), holderReg);
+                masm.branchPtr(Assembler::NotEqual,
+                               Address(holderReg, JSObject::offsetOfShape()),
+                               ImmGCPtr(holder->lastProperty()),
+                               &prototypeFailures);
+            } else {
+                // The property does not exist. Guard on everything in the
+                // prototype chain.
+                JSObject *proto = obj->getTaggedProto().toObjectOrNull();
+                Register lastReg = object;
+                JS_ASSERT(scratchReg != object);
+                while (proto) {
+                    Address addrType(lastReg, JSObject::offsetOfType());
+                    masm.loadPtr(addrType, scratchReg);
+                    Address addrProto(scratchReg, offsetof(types::TypeObject, proto));
+                    masm.loadPtr(addrProto, scratchReg);
+                    Address addrShape(scratchReg, JSObject::offsetOfShape());
+
+                    // Guard the shape of the current prototype.
+                    masm.branchPtr(Assembler::NotEqual,
+                                   Address(scratchReg, JSObject::offsetOfShape()),
+                                   ImmGCPtr(proto->lastProperty()),
+                                   &prototypeFailures);
+
+                    proto = proto->getProto();
+                    lastReg = scratchReg;
+                }
+
+                holderReg = InvalidReg;
+            }
         } else {
             holderReg = object;
         }
 
         // Slot access.
-        if (holder->isFixedSlot(shape->slot())) {
+        if (holder && holder->isFixedSlot(shape->slot())) {
             Address addr(holderReg, JSObject::getFixedSlotOffset(shape->slot()));
             masm.loadTypedOrValue(addr, output);
-        } else {
+        } else if (holder) {
             masm.loadPtr(Address(holderReg, JSObject::offsetOfSlots()), scratchReg);
 
             Address addr(scratchReg, holder->dynamicSlotIndex(shape->slot()) * sizeof(Value));
             masm.loadTypedOrValue(addr, output);
+        } else {
+            JS_ASSERT(!holder);
+            masm.moveValue(UndefinedValue(), output.valueReg());
         }
 
         if (restoreScratch)
@@ -678,7 +754,13 @@ TryAttachNativeGetPropStub(JSContext *cx, IonScript *ion,
     bool readSlot = false;
     bool callGetter = false;
 
-    if (IsCacheableGetPropReadSlot(checkObj, holder, shape)) {
+    RootedScript script(cx);
+    jsbytecode *pc;
+    cache.getScriptedLocation(&script, &pc);
+
+    if (IsCacheableGetPropReadSlot(checkObj, holder, shape) ||
+        IsCacheableNoProperty(checkObj, holder, shape, pc, cache.output()))
+    {
         readSlot = true;
     } else if (IsCacheableGetPropCallNative(checkObj, holder, shape) ||
                IsCacheableGetPropCallPropertyOp(checkObj, holder, shape))
@@ -699,6 +781,7 @@ TryAttachNativeGetPropStub(JSContext *cx, IonScript *ion,
     // monitor the return type inside an idempotent cache though, so we don't
     // handle this case.
     if (cache.idempotent() &&
+        holder &&
         holder->hasSingletonType() &&
         holder->getSlot(shape->slot()).isUndefined())
     {
@@ -1237,6 +1320,9 @@ IsPropertyAddInlineable(JSContext *cx, HandleObject obj, jsid id, uint32_t oldSl
     if (obj->getClass()->resolve != JS_ResolveStub)
         return false;
 
+    if (!obj->isExtensible())
+        return false;
+
     // walk up the object prototype chain and ensure that all prototypes
     // are native, and that all prototypes have no getter or setter
     // defined on the property
@@ -1330,7 +1416,12 @@ IonCacheGetElement::attachGetProp(JSContext *cx, IonScript *ion, HandleObject ob
     if (!JSObject::lookupProperty(cx, obj, name, &holder, &shape))
         return false;
 
-    if (!IsCacheableGetPropReadSlot(obj, holder, shape)) {
+    RootedScript script(cx);
+    jsbytecode *pc;
+    getScriptedLocation(&script, &pc);
+
+    if (!IsCacheableGetPropReadSlot(obj, holder, shape) &&
+        !IsCacheableNoProperty(obj, holder, shape, pc, output())) {
         IonSpew(IonSpew_InlineCaches, "GETELEM uncacheable property");
         return true;
     }
@@ -1785,7 +1876,7 @@ IonCacheName::attach(JSContext *cx, IonScript *ion, HandleObject scopeChain, Han
 
 static bool
 IsCacheableName(JSContext *cx, HandleObject scopeChain, HandleObject obj, HandleObject holder,
-                HandleShape shape)
+                HandleShape shape, const TypedOrValueRegister &output)
 {
     if (!shape)
         return false;
@@ -1796,7 +1887,8 @@ IsCacheableName(JSContext *cx, HandleObject scopeChain, HandleObject obj, Handle
 
     if (obj->isGlobal()) {
         // Support only simple property lookups.
-        if (!IsCacheableGetPropReadSlot(obj, holder, shape))
+        if (!IsCacheableGetPropReadSlot(obj, holder, shape) &&
+            !IsCacheableNoProperty(obj, holder, shape, NULL, output))
             return false;
     } else if (obj->isCall()) {
         if (!shape->hasDefaultGetter())
@@ -1842,7 +1934,7 @@ js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
         return false;
 
     if (cache.stubCount() < MAX_STUBS &&
-        IsCacheableName(cx, scopeChain, obj, holder, shape))
+        IsCacheableName(cx, scopeChain, obj, holder, shape, cache.outputReg()))
     {
         if (!cache.attach(cx, ion, scopeChain, obj, shape))
             return false;

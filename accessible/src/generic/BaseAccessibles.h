@@ -122,6 +122,7 @@ public:
   virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE MOZ_FINAL;
   virtual uint64_t NativeLinkState() const MOZ_OVERRIDE MOZ_FINAL;
   virtual bool NativelyUnavailable() const MOZ_OVERRIDE MOZ_FINAL;
+  virtual void ApplyARIAState(uint64_t* aState) const MOZ_OVERRIDE MOZ_FINAL;
 };
 
 } // namespace a11y

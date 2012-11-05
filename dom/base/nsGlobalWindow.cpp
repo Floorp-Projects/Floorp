@@ -21,6 +21,7 @@
 #include "nsDOMOfflineResourceList.h"
 #include "nsError.h"
 #include "nsIIdleService.h"
+#include "nsIPowerManagerService.h"
 
 #ifdef XP_WIN
 #ifdef GetClassName
@@ -42,6 +43,7 @@
 #include "nsCharSeparatedTokenizer.h" // for Accept-Language parsing
 #include "nsUnicharUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Likely.h"
 
 // Other Classes
 #include "nsEventListenerManager.h"
@@ -588,10 +590,10 @@ nsPIDOMWindow::~nsPIDOMWindow() {}
 // nsOuterWindowProxy: Outer Window Proxy
 //*****************************************************************************
 
-class nsOuterWindowProxy : public js::DirectWrapper
+class nsOuterWindowProxy : public js::Wrapper
 {
 public:
-  nsOuterWindowProxy() : js::DirectWrapper(0) {}
+  nsOuterWindowProxy() : js::Wrapper(0) {}
 
   virtual bool isOuterWindow() {
     return true;
@@ -1286,7 +1288,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsGlobalWindow)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
-  if (NS_UNLIKELY(cb.WantDebugInfo())) {
+  if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[512];
     PR_snprintf(name, sizeof(name), "nsGlobalWindow #%ld", tmp->mWindowID);
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
@@ -1449,27 +1451,19 @@ nsGlobalWindow::EnsureScriptEnvironment()
   nsresult rv = NS_GetJSRuntime(getter_AddRefs(scriptRuntime));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIScriptContext> context = scriptRuntime->CreateContext();
+  // If this window is a [i]frame, don't bother GC'ing when the frame's context
+  // is destroyed since a GC will happen when the frameset or host document is
+  // destroyed anyway.
+  nsCOMPtr<nsIScriptContext> context =
+    scriptRuntime->CreateContext(!IsFrame(), this);
 
   NS_ASSERTION(!mContext, "Will overwrite mContext!");
 
   // should probably assert the context is clean???
   context->WillInitializeContext();
 
-  // We need point the context to the global window before initializing it
-  // so that it can make various decisions properly.
-  context->SetGlobalObject(this);
-
   rv = context->InitContext();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (IsFrame()) {
-    // This window is a [i]frame, don't bother GC'ing when the
-    // frame's context is destroyed since a GC will happen when the
-    // frameset or host document is destroyed anyway.
-
-    context->SetGCOnDestruction(false);
-  }
 
   mContext = context;
   return NS_OK;
@@ -4593,6 +4587,17 @@ nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aRequireTrust)
     // the browser full-screen mode toggle keyboard-shortcut, we'll detect
     // that and leave DOM API full-screen mode too.
     nsIDocument::ExitFullScreen(false);
+  }
+
+  if (!mWakeLock && mFullScreen) {
+    nsCOMPtr<nsIPowerManagerService> pmService =
+      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(pmService, NS_OK);
+
+    pmService->NewWakeLock(NS_LITERAL_STRING("DOM_Fullscreen"), this, getter_AddRefs(mWakeLock));
+  } else if (mWakeLock && !mFullScreen) {
+    mWakeLock->Unlock();
+    mWakeLock = NULL;
   }
 
   return NS_OK;
@@ -8538,25 +8543,15 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
   if (aIID.Equals(NS_GET_IID(nsIDocCharset))) {
     FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
 
-    if (mDocShell) {
-      nsCOMPtr<nsIDocCharset> docCharset(do_QueryInterface(mDocShell));
-      if (docCharset) {
-        NS_WARNING("Using deprecated nsIDocCharset: use nsIDocShell.GetCharset() instead ");
-        *aSink = docCharset;
-        NS_ADDREF(((nsISupports *) *aSink));
-      }
-    }
+    NS_WARNING("Using deprecated nsIDocCharset: use nsIDocShell.GetCharset() instead ");
+    nsCOMPtr<nsIDocCharset> docCharset(do_QueryInterface(mDocShell));
+    docCharset.forget(aSink);
   }
   else if (aIID.Equals(NS_GET_IID(nsIWebNavigation))) {
     FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
 
-    if (mDocShell) {
-      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-      if (webNav) {
-        *aSink = webNav;
-        NS_ADDREF(((nsISupports *) *aSink));
-      }
-    }
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+    webNav.forget(aSink);
   }
   else if (aIID.Equals(NS_GET_IID(nsIDocShell))) {
     FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
@@ -8573,10 +8568,7 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
       mDocShell->GetContentViewer(getter_AddRefs(viewer));
       if (viewer) {
         nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint(do_QueryInterface(viewer));
-        if (webBrowserPrint) {
-          *aSink = webBrowserPrint;
-          NS_ADDREF(((nsISupports *) *aSink));
-        }
+        webBrowserPrint.forget(aSink);
       }
     }
   }
@@ -8590,6 +8582,12 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
 
     *aSink = mWindowUtils;
     NS_ADDREF(((nsISupports *) *aSink));
+  }
+  else if (aIID.Equals(NS_GET_IID(nsILoadContext))) {
+    FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
+
+    nsCOMPtr<nsILoadContext> loadContext(do_QueryInterface(mDocShell));
+    loadContext.forget(aSink);
   }
   else {
     return QueryInterface(aIID, aSink);

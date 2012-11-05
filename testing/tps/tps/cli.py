@@ -8,7 +8,6 @@ import optparse
 import os
 import sys
 import time
-import traceback
 
 from threading import RLock
 
@@ -16,19 +15,10 @@ from tps import TPSFirefoxRunner, TPSTestRunner
 
 def main():
   parser = optparse.OptionParser()
-  parser.add_option("--email-results",
-                    action = "store_true", dest = "emailresults",
-                    default = False,
-                    help = "email the test results to the recipients defined "
-                           "in the config file")
   parser.add_option("--mobile",
                     action = "store_true", dest = "mobile",
                     default = False,
                     help = "run with mobile settings")
-  parser.add_option("--autolog",
-                    action = "store_true", dest = "autolog",
-                    default = False,
-                    help = "post results to Autolog")
   parser.add_option("--testfile",
                     action = "store", type = "string", dest = "testfile",
                     default = '../../services/sync/tests/tps/test_sync.js',
@@ -38,6 +28,10 @@ def main():
                     action = "store", type = "string", dest = "logfile",
                     default = 'tps.log',
                     help = "path to the log file [default: %default]")
+  parser.add_option("--resultfile",
+                    action = "store", type = "string", dest = "resultfile",
+                    default = 'tps_result.json',
+                    help = "path to the result file [default: %default]")
   parser.add_option("--binary",
                     action = "store", type = "string", dest = "binary",
                     default = None,
@@ -90,43 +84,13 @@ def main():
         extensionDir = "%s:/%s" % (m.group(0)[1:2], extensionDir[3:])
         extensionDir = extensionDir.replace("/", "\\")
 
-  if options.binary is None:
-    while True:
-      try:
-        # If no binary is specified, start the pulse build monitor, and wait
-        # until we receive build notifications before running tests.
-        monitor = TPSPulseMonitor(extensionDir,
-                                  config=config,
-                                  autolog=options.autolog,
-                                  emailresults=options.emailresults,
-                                  testfile=options.testfile,
-                                  logfile=options.logfile,
-                                  rlock=rlock)
-        print "waiting for pulse build notifications"
-
-        if options.pulsefile:
-          # For testing purposes, inject a pulse message directly into
-          # the monitor.
-          builddata = json.loads(open(options.pulsefile, 'r').read())
-          monitor.onBuildComplete(builddata)
-
-        monitor.listen()
-      except KeyboardInterrupt:
-        sys.exit()
-      except:
-        traceback.print_exc()
-        print 'sleeping 5 minutes'
-        time.sleep(300)
-
   TPS = TPSTestRunner(extensionDir,
-                      emailresults=options.emailresults,
                       testfile=options.testfile,
                       logfile=options.logfile,
                       binary=options.binary,
                       config=config,
                       rlock=rlock,
                       mobile=options.mobile,
-                      autolog=options.autolog,
                       ignore_unused_engines=options.ignore_unused_engines)
   TPS.run_tests()
 

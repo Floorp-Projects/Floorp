@@ -511,12 +511,11 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
                                  int32_t aModifiers,
                                  bool aIgnoreRootScrollFrame,
                                  float aPressure,
-                                 unsigned short aInputSourceArg,
-                                 bool *aPreventDefault)
+                                 unsigned short aInputSourceArg)
 {
   return SendMouseEventCommon(aType, aX, aY, aButton, aClickCount, aModifiers,
                               aIgnoreRootScrollFrame, aPressure,
-                              aInputSourceArg, false, aPreventDefault);
+                              aInputSourceArg, false);
 }
 
 NS_IMETHODIMP
@@ -533,7 +532,7 @@ nsDOMWindowUtils::SendMouseEventToWindow(const nsAString& aType,
   SAMPLE_LABEL("nsDOMWindowUtils", "SendMouseEventToWindow");
   return SendMouseEventCommon(aType, aX, aY, aButton, aClickCount, aModifiers,
                               aIgnoreRootScrollFrame, aPressure,
-                              aInputSourceArg, true, nullptr);
+                              aInputSourceArg, true);
 }
 
 static nsIntPoint
@@ -556,8 +555,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
                                        bool aIgnoreRootScrollFrame,
                                        float aPressure,
                                        unsigned short aInputSourceArg,
-                                       bool aToWindow,
-                                       bool *aPreventDefault)
+                                       bool aToWindow)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -584,9 +582,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
   else if (aType.EqualsLiteral("contextmenu")) {
     msg = NS_CONTEXTMENU;
     contextMenuKey = (aButton == 0);
-  } else if (aType.EqualsLiteral("MozMouseHittest"))
-    msg = NS_MOUSE_MOZHITTEST;
-  else
+  } else
     return NS_ERROR_FAILURE;
 
   if (aInputSourceArg == nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN) {
@@ -627,10 +623,7 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
     status = nsEventStatus_eIgnore;
     return presShell->HandleEvent(view->GetFrame(), &event, false, &status);
   }
-  nsresult rv = widget->DispatchEvent(&event, status);
-  *aPreventDefault = (status == nsEventStatus_eConsumeNoDefault);
-
-  return rv;
+  return widget->DispatchEvent(&event, status);
 }
 
 NS_IMETHODIMP
@@ -2937,6 +2930,23 @@ nsDOMWindowUtils::SelectAtPoint(float aX, float aY, uint32_t aSelectBehavior,
   return NS_OK;
 }
 
+static nsIDocument::additionalSheetType
+convertSheetType(uint32_t aSheetType)
+{
+  switch(aSheetType) {
+    case nsDOMWindowUtils::AGENT_SHEET:
+      return nsIDocument::eAgentSheet;
+    case nsDOMWindowUtils::USER_SHEET:
+      return nsIDocument::eUserSheet;
+    case nsDOMWindowUtils::AUTHOR_SHEET:
+      return nsIDocument::eAuthorSheet;
+    default:
+      NS_ASSERTION(false, "wrong type");
+      // we must return something although this should never happen
+      return nsIDocument::SheetTypeCount;
+  }
+}
+
 NS_IMETHODIMP
 nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 {
@@ -2945,7 +2955,9 @@ nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   }
 
   NS_ENSURE_ARG_POINTER(aSheetURI);
-  NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
+                aSheetType == USER_SHEET ||
+                aSheetType == AUTHOR_SHEET);
 
   nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_INVALID_ARG);
@@ -2958,9 +2970,7 @@ nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(ddoc);
   NS_ENSURE_TRUE(doc, NS_ERROR_INVALID_ARG);
 
-  nsIDocument::additionalSheetType type = 
-    aSheetType == AGENT_SHEET ? nsIDocument::eAgentSheet :
-                                nsIDocument::eUserSheet;
+  nsIDocument::additionalSheetType type = convertSheetType(aSheetType);
 
   rv = doc->LoadAdditionalStyleSheet(type, aSheetURI);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2976,7 +2986,9 @@ nsDOMWindowUtils::RemoveSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   }
 
   NS_ENSURE_ARG_POINTER(aSheetURI);
-  NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
+  NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
+                aSheetType == USER_SHEET ||
+                aSheetType == AUTHOR_SHEET);
 
   nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_INVALID_ARG);
@@ -2989,9 +3001,7 @@ nsDOMWindowUtils::RemoveSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(ddoc);
   NS_ENSURE_TRUE(doc, NS_ERROR_INVALID_ARG);
 
-  nsIDocument::additionalSheetType type = 
-    aSheetType == AGENT_SHEET ? nsIDocument::eAgentSheet :
-                                nsIDocument::eUserSheet;
+  nsIDocument::additionalSheetType type = convertSheetType(aSheetType);
 
   doc->RemoveAdditionalStyleSheet(type, aSheetURI);
   return NS_OK;

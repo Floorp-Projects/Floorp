@@ -570,4 +570,4 @@ CSPReportRedirectSink.prototype = {
   }
 };
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentSecurityPolicy]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentSecurityPolicy]);

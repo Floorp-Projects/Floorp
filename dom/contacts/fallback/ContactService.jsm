@@ -11,7 +11,7 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-let EXPORTED_SYMBOLS = ["DOMContactManager"];
+this.EXPORTED_SYMBOLS = ["DOMContactManager"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyGetter(this, "mRIL", function () {
 
 let myGlobal = this;
 
-let DOMContactManager = {
+this.DOMContactManager = {
   init: function() {
     if (DEBUG) debug("Init");
     this._messages = ["Contacts:Find", "Contacts:Clear", "Contact:Save", "Contact:Remove", "Contacts:GetSimContacts"];
@@ -67,6 +67,15 @@ let DOMContactManager = {
     this._db = null;
   },
 
+  assertPermission: function(aMessage, aPerm) {
+    if (!aMessage.target.assertPermission(aPerm)) {
+      Cu.reportError("Contacts message " + msg.name +
+                     " from a content process with no" + aPerm + " privileges.");
+      return false;
+    }
+    return true;
+  },
+
   receiveMessage: function(aMessage) {
     if (DEBUG) debug("Fallback DOMContactManager::receiveMessage " + aMessage.name);
     let mm = aMessage.target;
@@ -79,43 +88,42 @@ let DOMContactManager = {
      */
     function sortfunction(a, b){
       let x, y;
-      let sortByNameSet = true;
       let result = 0;
       let findOptions = msg.options.findOptions;
-      let sortBy = findOptions.sortBy;
       let sortOrder = findOptions.sortOrder;
-      
-      if (!a.properties[sortBy] || !(x = a.properties[sortBy][0].toLowerCase())) {
-        sortByNameSet = false;
-      }
+      let sortBy = findOptions.sortBy === "familyName" ? [ "familyName", "givenName" ] : [ "givenName" , "familyName" ];
+      let xIndex = 0;
+      let yIndex = 0;
 
-      if (!b.properties[sortBy] || !(y = b.properties[sortBy][0].toLowerCase())) {
-        if (sortByNameSet) {
+      do {
+        while (xIndex < sortBy.length && !x) {
+          x = a.properties[sortBy[xIndex]] ? a.properties[sortBy[xIndex]][0].toLowerCase() : null;
+          xIndex++;
+        }
+        if (!x) {
           return sortOrder == 'ascending' ? 1 : -1;
         }
-      }
+        while (yIndex < sortBy.length && !y) {
+          y = b.properties[sortBy[yIndex]] ? b.properties[sortBy[yIndex]][0].toLowerCase() : null;
+          yIndex++;
+        }
+        if (!y) {
+          return sortOrder == 'ascending' ? 1 : -1;
+        }
 
-      if (sortByNameSet) {
         result = x.localeCompare(y);
-      }
+        x = null;
+        y = null;
+      } while (result === 0);
 
-      if (result == 0) {
-        // If 2 entries have the same sortBy (familyName or givenName) field,
-        // we have to continue sorting.
-        let otherSortBy = sortBy == "familyName" ? "givenName" : "familyName";
-        if (!a.properties[otherSortBy] || !(x = a.properties[otherSortBy][0].toLowerCase())) {
-          return sortOrder == 'ascending' ? 1 : -1;
-        }
-        if (!b.properties[otherSortBy] || !(y = b.properties[otherSortBy][0].toLowerCase())) {
-          return sortOrder == 'ascending' ? 1 : -1;
-        }
-        result = x.localeCompare(y);
-      }
       return sortOrder == 'ascending' ? result : -result;
     }
 
     switch (aMessage.name) {
       case "Contacts:Find":
+        if (!this.assertPermission(aMessage, "contacts-read")) {
+          return null;
+        }
         let result = new Array();
         this._db.find(
           function(contacts) {
@@ -138,6 +146,15 @@ let DOMContactManager = {
           msg.options.findOptions);
         break;
       case "Contact:Save":
+        if (msg.options.reason === "create") {
+          if (!this.assertPermission(aMessage, "contacts-create")) {
+            return null;
+          }
+        } else {
+          if (!this.assertPermission(aMessage, "contacts-write")) {
+            return null;
+          }
+        }
         this._db.saveContact(
           msg.options.contact,
           function() { mm.sendAsyncMessage("Contact:Save:Return:OK", { requestID: msg.requestID, contactID: msg.options.contact.id }); }.bind(this),
@@ -145,6 +162,9 @@ let DOMContactManager = {
         );
         break;
       case "Contact:Remove":
+        if (!this.assertPermission(aMessage, "contacts-write")) {
+          return null;
+        }
         this._db.removeContact(
           msg.options.id,
           function() { mm.sendAsyncMessage("Contact:Remove:Return:OK", { requestID: msg.requestID, contactID: msg.options.id }); }.bind(this),
@@ -152,12 +172,18 @@ let DOMContactManager = {
         );
         break;
       case "Contacts:Clear":
+        if (!this.assertPermission(aMessage, "contacts-write")) {
+          return null;
+        }
         this._db.clear(
           function() { mm.sendAsyncMessage("Contacts:Clear:Return:OK", { requestID: msg.requestID }); }.bind(this),
           function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Clear:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
         );
         break;
       case "Contacts:GetSimContacts":
+        if (!this.assertPermission(aMessage, "contacts-read")) {
+          return null;
+        }
         mRIL.getICCContacts(
           msg.options.contactType,
           function (aErrorMsg, aType, aContacts) {

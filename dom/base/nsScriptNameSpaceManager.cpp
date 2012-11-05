@@ -8,6 +8,7 @@
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsICategoryManager.h"
+#include "nsIMemoryReporter.h"
 #include "nsIServiceManager.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -37,6 +38,13 @@ public:
   // Our hash table ops don't care about the order of these members
   nsString mKey;
   nsGlobalNameStruct mGlobalName;
+
+  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) {
+    // Measurement of the following members may be added later if DMD finds it
+    // is worthwhile:
+    // - mGlobalName
+    return mKey.SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
+  }
 };
 
 
@@ -792,4 +800,23 @@ nsScriptNameSpaceManager::RegisterDefineDOMInterface(const nsAFlatString& aName,
     s->mDefineDOMInterface = aDefineDOMInterface;
     s->mPrefEnabled = aPrefEnabled;
   }
+}
+
+static size_t
+SizeOfEntryExcludingThis(PLDHashEntryHdr *aHdr, nsMallocSizeOfFun aMallocSizeOf,
+                         void *aArg)
+{
+    GlobalNameMapEntry* entry = static_cast<GlobalNameMapEntry*>(aHdr);
+    return entry->SizeOfExcludingThis(aMallocSizeOf);
+}
+
+size_t
+nsScriptNameSpaceManager::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+{
+  size_t n = 0;
+  n += PL_DHashTableSizeOfExcludingThis(&mGlobalNames,
+         SizeOfEntryExcludingThis, aMallocSizeOf);
+  n += PL_DHashTableSizeOfExcludingThis(&mNavigatorNames,
+         SizeOfEntryExcludingThis, aMallocSizeOf);
+  return n;
 }

@@ -20,12 +20,12 @@ XPCOMUtils.defineLazyModuleGetter(this,
   "DebuggerServer", "resource://gre/modules/devtools/dbg-server.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this,
-  "Services", "resource:///modules/Services.jsm");
+  "Services", "resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this,
-  "FileUtils", "resource:///modules/FileUtils.jsm");
+  "FileUtils", "resource://gre/modules/FileUtils.jsm");
 
-let EXPORTED_SYMBOLS = ["DebuggerUI"];
+this.EXPORTED_SYMBOLS = ["DebuggerUI"];
 
 /**
  * Provides a simple mechanism of managing debugger instances.
@@ -33,10 +33,10 @@ let EXPORTED_SYMBOLS = ["DebuggerUI"];
  * @param nsIDOMWindow aWindow
  *        The chrome window for which the DebuggerUI instance is created.
  */
-function DebuggerUI(aWindow) {
+this.DebuggerUI = function DebuggerUI(aWindow) {
   this.chromeWindow = aWindow;
   this.listenToTabs();
-}
+};
 
 DebuggerUI.prototype = {
   /**
@@ -261,8 +261,7 @@ DebuggerPane.prototype = {
    */
   _initServer: function DP__initServer() {
     if (!DebuggerServer.initialized) {
-      // Always allow connections from nsIPipe transports.
-      DebuggerServer.init(function() true);
+      DebuggerServer.init();
       DebuggerServer.addBrowserActors();
     }
   },

@@ -10,7 +10,7 @@ interface nsIURI;
 interface nsIChannel;
 interface nsIDocShell;
 
-[scriptable, uuid(c7180b79-2a8e-42b1-a91f-beade3a3e992)]
+[scriptable, uuid(ae486501-ec57-4ec8-a565-6880ca4ae6c4)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -167,6 +167,13 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      */
     nsIPrincipal getNoAppCodebasePrincipal(in nsIURI uri);
 
+    /**
+     * Legacy name for getNoAppCodebasePrincipal.
+     *
+     * @deprecated use getNoAppCodebasePrincipal instead.
+     */
+    [deprecated] nsIPrincipal getCodebasePrincipal(in nsIURI uri);
+
     ///////////////////////
     /**
      * Return the principal of the specified object in the specified context.
@@ -196,13 +203,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     void checkSameOriginURI(in nsIURI aSourceURI,
                             in nsIURI aTargetURI,
                             in boolean reportError);
-
-    /**
-     * Returns the principal of the global object of the given context, or null
-     * if no global or no principal.
-     */
-    [noscript] nsIPrincipal getPrincipalFromContext(in JSContextPtr cx);
-
     /**
      * Get the principal for the given channel.  This will typically be the
      * channel owner if there is one, and the codebase principal for the

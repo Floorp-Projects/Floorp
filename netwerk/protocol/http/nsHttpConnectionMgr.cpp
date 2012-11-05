@@ -1718,11 +1718,6 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
 
     ReportProxyTelemetry(ent);
 
-    // If we are doing a force reload then close out any existing conns
-    // to this host so that changes in DNS, LBs, etc.. are reflected
-    if (trans->Caps() & NS_HTTP_CLEAR_KEEPALIVES)
-        ClosePersistentConnections(ent);
-
     // Check if the transaction already has a sticky reference to a connection.
     // If so, then we can just use it directly by transferring its reference
     // to the new connection variable instead of searching for a new one

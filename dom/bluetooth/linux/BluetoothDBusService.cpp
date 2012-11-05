@@ -43,6 +43,9 @@
 #include "mozilla/ipc/RawDBusConnection.h"
 #include "mozilla/Util.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
+#if defined(MOZ_WIDGET_GONK)
+#include "cutils/properties.h"
+#endif
 
 /**
  * Some rules for dealing with memory in DBus:
@@ -76,6 +79,8 @@ USING_BLUETOOTH_NAMESPACE
 #define BLUEZ_DBUS_BASE_IFC       "org.bluez"
 #define BLUEZ_ERROR_IFC           "org.bluez.Error"
 
+#define PROP_DEVICE_CONNECTED_TYPE "org.bluez.device.conn.type"
+
 typedef struct {
   const char* name;
   int type;
@@ -88,7 +93,7 @@ static Properties sDeviceProperties[] = {
   {"Class", DBUS_TYPE_UINT32},
   {"UUIDs", DBUS_TYPE_ARRAY},
   {"Paired", DBUS_TYPE_BOOLEAN},
-  {"Connected", DBUS_TYPE_BOOLEAN},
+  {"Connected", DBUS_TYPE_ARRAY},
   {"Trusted", DBUS_TYPE_BOOLEAN},
   {"Blocked", DBUS_TYPE_BOOLEAN},
   {"Alias", DBUS_TYPE_STRING},
@@ -871,6 +876,49 @@ GetIntCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
 }
 
 bool
+IsDeviceConnectedTypeBoolean()
+{
+#if defined(MOZ_WIDGET_GONK)
+
+  char connProp[PROPERTY_VALUE_MAX];
+
+  property_get(PROP_DEVICE_CONNECTED_TYPE, connProp, "array");
+  if (strcmp(connProp, "boolean") == 0) {
+    return true;
+  }
+  return false;
+#else
+  // Assume it's always a boolean on desktop. Fixing someday in Bug 806457.
+  return true;
+#endif
+}
+
+void
+CopyProperties(Properties* inProp, Properties* outProp, int aPropertyTypeLen)
+{
+  int i;
+
+  for (i = 0; i < aPropertyTypeLen; i++) {
+    outProp[i].name = inProp[i].name;
+    outProp[i].type = inProp[i].type;
+  }
+}
+
+int
+GetPropertyIndex(Properties* prop, const char* propertyName,
+                 int aPropertyTypeLen)
+{
+  int i;
+
+  for (i = 0; i < aPropertyTypeLen; i++) {
+    if (!strncmp(propertyName, prop[i].name, strlen(propertyName))) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+bool
 GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
             int aPropertyTypeLen, int* aPropIndex,
             InfallibleTArray<BluetoothNamedValue>& aProperties)
@@ -1037,14 +1085,43 @@ UnpackAdapterPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                           ArrayLength(sAdapterProperties));
 }
 
+bool
+ReplaceConnectedType(Properties* sourceProperties, Properties** destProperties, int aPropertyTypeLen)
+{
+  if (!IsDeviceConnectedTypeBoolean()) {
+    return false;
+  }
+  *destProperties = (Properties *) malloc(sizeof(Properties) * aPropertyTypeLen);
+  if (*destProperties) {
+    CopyProperties(sourceProperties, *destProperties, aPropertyTypeLen);
+    int index = GetPropertyIndex(*destProperties, "Connected", aPropertyTypeLen);
+    if (index >= 0) {
+      (*destProperties)[index].type = DBUS_TYPE_BOOLEAN;
+      return true;
+    } else {
+      free(*destProperties);
+    }
+  }
+  return false;
+}
+
 void
 UnpackDevicePropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                               BluetoothValue& aValue,
                               nsAString& aErrorStr)
 {
+  Properties* props = sDeviceProperties;
+  Properties* newProps;
+  bool replaced = ReplaceConnectedType(sDeviceProperties, &newProps, ArrayLength(sDeviceProperties));
+  if (replaced) {
+     props = newProps;
+  }
   UnpackPropertiesMessage(aMsg, aErr, aValue, aErrorStr,
-                          sDeviceProperties,
+                          props,
                           ArrayLength(sDeviceProperties));
+  if (replaced) {
+     free(newProps);
+  }
 }
 
 void
@@ -1192,11 +1269,20 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
     dbus_message_iter_get_basic(&iter, &addr);
 
     if (dbus_message_iter_next(&iter)) {
+      Properties* props = sDeviceProperties;
+      Properties* newProps;
+      bool replaced = ReplaceConnectedType(sDeviceProperties, &newProps, ArrayLength(sDeviceProperties));
+      if (replaced) {
+        props = newProps;
+      }
       ParseProperties(&iter,
                       v,
                       errorStr,
-                      sDeviceProperties,
+                      props,
                       ArrayLength(sDeviceProperties));
+      if (replaced) {
+        free(newProps);
+      }
       if (v.type() == BluetoothValue::TArrayOfBluetoothNamedValue)
       {
         // The DBus DeviceFound message actually passes back a key value object
@@ -1269,11 +1355,20 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
                         sAdapterProperties,
                         ArrayLength(sAdapterProperties));
   } else if (dbus_message_is_signal(aMsg, DBUS_DEVICE_IFACE, "PropertyChanged")) {
+    Properties* props = sDeviceProperties;
+    Properties* newProps;
+    bool replaced = ReplaceConnectedType(sDeviceProperties, &newProps, ArrayLength(sDeviceProperties));
+    if (replaced) {
+      props = newProps;
+    }
     ParsePropertyChange(aMsg,
                         v,
                         errorStr,
-                        sDeviceProperties,
+                        props,
                         ArrayLength(sDeviceProperties));
+    if (replaced) {
+      free(newProps);
+    }
     if (v.get_ArrayOfBluetoothNamedValue()[0].name().EqualsLiteral("Paired")) {
       // transfer signal to BluetoothService and
       // broadcast system message of bluetooth-pairingstatuschanged
@@ -2273,7 +2368,8 @@ void
 BluetoothDBusService::Disconnect(const uint16_t aProfileId,
                                  BluetoothReplyRunnable* aRunnable)
 {
-  if (aProfileId == (uint16_t)(BluetoothServiceUuid::Handsfree >> 32)) {
+  if (aProfileId == (uint16_t)(BluetoothServiceUuid::Handsfree >> 32) ||
+      aProfileId == (uint16_t)(BluetoothServiceUuid::Headset >> 32)) {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
     hfp->Disconnect();
   } else if (aProfileId == (uint16_t)(BluetoothServiceUuid::ObjectPush >> 32)) {
@@ -2291,45 +2387,6 @@ BluetoothDBusService::Disconnect(const uint16_t aProfileId,
   BluetoothValue v = true;
   DispatchBluetoothReply(aRunnable, v, replyError);
 }
-
-class CreateBluetoothScoSocket : public nsRunnable
-{
-public:
-  CreateBluetoothScoSocket(UnixSocketConsumer* aConsumer,
-                           const nsAString& aAddress,
-                           bool aAuth,
-                           bool aEncrypt)
-    : mConsumer(aConsumer),
-      mAddress(aAddress),
-      mAuth(aAuth),
-      mEncrypt(aEncrypt)
-  {
-  }
-
-  nsresult
-  Run()
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    nsString replyError;
-    BluetoothUnixSocketConnector* c =
-      new BluetoothUnixSocketConnector(BluetoothSocketType::SCO, -1,
-                                       mAuth, mEncrypt);
-
-    if (!mConsumer->ConnectSocket(c, NS_ConvertUTF16toUTF8(mAddress).get())) {
-      replyError.AssignLiteral("SocketConnectionError");
-      return NS_ERROR_FAILURE;
-    }
-
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<UnixSocketConsumer> mConsumer;
-  nsString mAddress;
-  bool mAuth;
-  bool mEncrypt;
-};
 
 class ConnectBluetoothSocketRunnable : public nsRunnable
 {
@@ -2488,19 +2545,20 @@ BluetoothDBusService::GetScoSocket(const nsAString& aAddress,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<nsRunnable> func(new CreateBluetoothScoSocket(aConsumer,
-                                                         aAddress,
-                                                         aAuth,
-                                                         aEncrypt));
-  if (NS_FAILED(mBluetoothCommandThread->Dispatch(func, NS_DISPATCH_NORMAL))) {
-    NS_WARNING("Cannot dispatch firmware loading task!");
+  nsString replyError;
+  BluetoothUnixSocketConnector* c =
+    new BluetoothUnixSocketConnector(BluetoothSocketType::SCO, -1,
+                                     aAuth, aEncrypt);
+
+  if (!aConsumer->ConnectSocket(c, NS_ConvertUTF16toUTF8(aAddress).get())) {
+    replyError.AssignLiteral("SocketConnectionError");
     return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
 }
 
-bool
+void
 BluetoothDBusService::SendFile(const nsAString& aDeviceAddress,
                                BlobParent* aBlobParent,
                                BlobChild* aBlobChild,
@@ -2513,12 +2571,17 @@ BluetoothDBusService::SendFile(const nsAString& aDeviceAddress,
   // has been determined when calling 'Connect()'. Nevertheless, keep
   // it for future use.
   BluetoothOppManager* opp = BluetoothOppManager::Get();
-  opp->SendFile(aBlobParent, aRunnable);
+  BluetoothValue v = true;
+  nsString errorStr;
 
-  return true;
+  if (!opp->SendFile(aBlobParent)) {
+    errorStr.AssignLiteral("Calling SendFile() failed");
+  }
+
+  DispatchBluetoothReply(aRunnable, v, errorStr);
 }
 
-bool
+void
 BluetoothDBusService::StopSendingFile(const nsAString& aDeviceAddress,
                                       BluetoothReplyRunnable* aRunnable)
 {
@@ -2529,9 +2592,14 @@ BluetoothDBusService::StopSendingFile(const nsAString& aDeviceAddress,
   // has been determined when calling 'Connect()'. Nevertheless, keep
   // it for future use.
   BluetoothOppManager* opp = BluetoothOppManager::Get();
-  opp->StopSendingFile(aRunnable);
+  BluetoothValue v = true;
+  nsString errorStr;
 
-  return true;
+  if (!opp->StopSendingFile()) {
+    errorStr.AssignLiteral("Calling StopSendingFile() failed");
+  }
+
+  DispatchBluetoothReply(aRunnable, v, errorStr);
 }
 
 void
@@ -2546,7 +2614,14 @@ BluetoothDBusService::ConfirmReceivingFile(const nsAString& aDeviceAddress,
   // has been determined when calling 'Connect()'. Nevertheless, keep
   // it for future use.
   BluetoothOppManager* opp = BluetoothOppManager::Get();
-  opp->ConfirmReceivingFile(aConfirm, aRunnable);
+  BluetoothValue v = true;
+  nsString errorStr;
+
+  if (!opp->ConfirmReceivingFile(aConfirm)) {
+    errorStr.AssignLiteral("Calling ConfirmReceivingFile() failed");
+  }
+
+  DispatchBluetoothReply(aRunnable, v, errorStr);
 }
 
 nsresult

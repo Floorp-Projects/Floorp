@@ -5,14 +5,14 @@
  * The Marionette object, passed to the script context.
  */
 
-function Marionette(scope, window, context, logObj, perfData) {
+function Marionette(scope, window, context, logObj, perfData, timeout) {
   this.scope = scope;
   this.window = window;
   this.tests = [];
   this.logObj = logObj;
   this.perfData = perfData;
   this.context = context;
-  this.timeout = 0;
+  this.timeout = timeout;
   this.TEST_UNEXPECTED_FAIL = "TEST-UNEXPECTED-FAIL";
   this.TEST_PASS = "TEST-PASS";
   this.TEST_KNOWN_FAIL = "TEST-KNOWN-FAIL";
@@ -144,14 +144,15 @@ Marionette.prototype = {
           callback();
           return;
       }
-      timeout = timeout || Date.now();
-      if (Date.now() - timeout > this.timeout) {
+      var now = Date.now();
+      var deadline = now + (typeof(timeout) == "undefined" ? this.timeout : timeout);
+      if (deadline <= now) {
         dump("waitFor timeout: " + test.toString() + "\n");
         // the script will timeout here, so no need to raise a separate
         // timeout exception
         return;
       }
-      this.window.setTimeout(this.waitFor.bind(this), 100, callback, test, timeout);
+      this.window.setTimeout(this.waitFor.bind(this), 100, callback, test, deadline - now);
   },
 
   runEmulatorCmd: function runEmulatorCmd(cmd, callback) {

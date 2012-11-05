@@ -215,6 +215,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   addMessageListener("firstpaint", this._fireEventFromMsg);
   addMessageListener("keyevent", this._fireKeyEvent);
   addMessageListener("showmodalprompt", this._handleShowModalPrompt);
+  addMessageListener('got-purge-history', this._gotDOMRequestResult);
   addMessageListener('got-screenshot', this._gotDOMRequestResult);
   addMessageListener('got-can-go-back', this._gotDOMRequestResult);
   addMessageListener('got-can-go-forward', this._gotDOMRequestResult);
@@ -254,6 +255,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   defineMethod('goForward', this._goForward);
   defineMethod('reload', this._reload);
   defineMethod('stop', this._stop);
+  defineMethod('purgeHistory', this._purgeHistory);
   defineMethod('getScreenshot', this._getScreenshot);
   defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
   defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
@@ -371,9 +373,10 @@ BrowserElementParent.prototype = {
   _recvGetName: function(data) {
     return this._frameElement.getAttribute('name');
   },
-  
+
   _recvGetFullscreenAllowed: function(data) {
-    return this._frameElement.hasAttribute('mozallowfullscreen');
+    return this._frameElement.hasAttribute('allowfullscreen') ||
+           this._frameElement.hasAttribute('mozallowfullscreen');
   },
 
   _fireCtxMenuEvent: function(data) {
@@ -575,6 +578,10 @@ BrowserElementParent.prototype = {
     this._sendAsyncMsg('stop');
   },
 
+  _purgeHistory: function() {
+    return this._sendDOMRequest('purge-history');
+  },
+
   _getScreenshot: function(_width, _height) {
     let width = parseInt(_width);
     let height = parseInt(_height);
@@ -645,4 +652,4 @@ BrowserElementParent.prototype = {
   },
 };
 
-var NSGetFactory = XPCOMUtils.generateNSGetFactory([BrowserElementParentFactory]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([BrowserElementParentFactory]);

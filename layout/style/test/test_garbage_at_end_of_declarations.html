@@ -40,7 +40,7 @@ var gDeclaration = gElement.style;
 /*
  * This lists properties where garbage identifiers are allowed at the
  * end, with values in property_database.js that are exceptions that
- * should be tested anyway.  "inherit" and "-moz-initial" are always
+ * should be tested anyway.  "inherit" and "initial" are always
  * tested
  */
 var gAllowsExtra = {
@@ -82,7 +82,7 @@ function test_property(property)
 
   function test_value(value) {
     if (property in gAllowsExtra &&
-        value != "inherit" && value != "-moz-initial" &&
+        value != "inherit" && value != "initial" &&
         !(value in gAllowsExtra[property])) {
       return;
     }
@@ -108,7 +108,7 @@ function test_property(property)
 
   var idx;
   test_value("inherit");
-  test_value("-moz-initial");
+  test_value("initial");
   for (idx in info.initial_values)
     test_value(info.initial_values[idx]);
   for (idx in info.other_values)

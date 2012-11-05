@@ -547,31 +547,29 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     size_t argDisp = 0;
 
-    // Copy arguments.
-    if (f.explicitArgs) {
-        for (uint32 explicitArg = 0; explicitArg < f.explicitArgs; explicitArg++) {
-            MoveOperand from;
-            switch (f.argProperties(explicitArg)) {
-              case VMFunction::WordByValue:
-                masm.passABIArg(MoveOperand(argsBase, argDisp));
-                argDisp += sizeof(void *);
-                break;
-              case VMFunction::DoubleByValue:
-                JS_NOT_REACHED("VMCalls with double-size value arguments is not supported.");
-                masm.passABIArg(MoveOperand(argsBase, argDisp));
-                argDisp += sizeof(void *);
-                masm.passABIArg(MoveOperand(argsBase, argDisp));
-                argDisp += sizeof(void *);
-                break;
-              case VMFunction::WordByRef:
-                masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
-                argDisp += sizeof(void *);
-                break;
-              case VMFunction::DoubleByRef:
-                masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
-                argDisp += 2 * sizeof(void *);
-                break;
-            }
+    // Copy any arguments.
+    for (uint32 explicitArg = 0; explicitArg < f.explicitArgs; explicitArg++) {
+        MoveOperand from;
+        switch (f.argProperties(explicitArg)) {
+          case VMFunction::WordByValue:
+            masm.passABIArg(MoveOperand(argsBase, argDisp));
+            argDisp += sizeof(void *);
+            break;
+          case VMFunction::DoubleByValue:
+            JS_NOT_REACHED("VMCalls with double-size value arguments is not supported.");
+            masm.passABIArg(MoveOperand(argsBase, argDisp));
+            argDisp += sizeof(void *);
+            masm.passABIArg(MoveOperand(argsBase, argDisp));
+            argDisp += sizeof(void *);
+            break;
+          case VMFunction::WordByRef:
+            masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
+            argDisp += sizeof(void *);
+            break;
+          case VMFunction::DoubleByRef:
+            masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
+            argDisp += 2 * sizeof(void *);
+            break;
         }
     }
 

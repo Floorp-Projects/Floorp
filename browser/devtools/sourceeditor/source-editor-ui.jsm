@@ -9,12 +9,12 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["SourceEditorUI"];
+this.EXPORTED_SYMBOLS = ["SourceEditorUI"];
 
 /**
  * The Source Editor component user interface.
  */
-function SourceEditorUI(aEditor)
+this.SourceEditorUI = function SourceEditorUI(aEditor)
 {
   this.editor = aEditor;
   this._onDirtyChanged = this._onDirtyChanged.bind(this);

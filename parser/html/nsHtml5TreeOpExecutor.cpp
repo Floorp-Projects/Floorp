@@ -31,6 +31,7 @@
 #include "nsIScriptContext.h"
 #include "mozilla/Preferences.h"
 #include "nsIHTMLDocument.h"
+#include "mozilla/Likely.h"
 
 using namespace mozilla;
 
@@ -354,7 +355,7 @@ nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
   // waiting to call UpdateStyleSheet without the right observer
   EndDocUpdate();
 
-  if (NS_UNLIKELY(!mParser)) {
+  if (MOZ_UNLIKELY(!mParser)) {
     // EndDocUpdate ran stuff that called nsIParser::Terminate()
     return;
   }
@@ -412,7 +413,7 @@ nsHtml5TreeOpExecutor::FlushSpeculativeLoads()
   for (nsHtml5SpeculativeLoad* iter = const_cast<nsHtml5SpeculativeLoad*>(start);
        iter < end;
        ++iter) {
-    if (NS_UNLIKELY(!mParser)) {
+    if (MOZ_UNLIKELY(!mParser)) {
       // An extension terminated the parser from a HTTP observer.
       return;
     }
@@ -512,7 +513,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
            iter < end;
            ++iter) {
         iter->Perform(this);
-        if (NS_UNLIKELY(!mParser)) {
+        if (MOZ_UNLIKELY(!mParser)) {
           // An extension terminated the parser from a HTTP observer.
           mOpQueue.Clear(); // clear in order to be able to assert in destructor
           return;
@@ -522,7 +523,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
       FlushSpeculativeLoads(); // Make sure speculative loads never start after
                                // the corresponding normal loads for the same
                                // URLs.
-      if (NS_UNLIKELY(!mParser)) {
+      if (MOZ_UNLIKELY(!mParser)) {
         // An extension terminated the parser from a HTTP observer.
         mOpQueue.Clear(); // clear in order to be able to assert in destructor
         return;
@@ -555,7 +556,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
     const nsHtml5TreeOperation* first = mOpQueue.Elements();
     const nsHtml5TreeOperation* last = first + numberOfOpsToFlush - 1;
     for (nsHtml5TreeOperation* iter = const_cast<nsHtml5TreeOperation*>(first);;) {
-      if (NS_UNLIKELY(!mParser)) {
+      if (MOZ_UNLIKELY(!mParser)) {
         // The previous tree op caused a call to nsIParser::Terminate().
         break;
       }
@@ -564,10 +565,10 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
       iter->Perform(this, &scriptElement);
 
       // Be sure not to check the deadline if the last op was just performed.
-      if (NS_UNLIKELY(iter == last)) {
+      if (MOZ_UNLIKELY(iter == last)) {
         break;
-      } else if (NS_UNLIKELY(nsContentSink::DidProcessATokenImpl() == 
-                             NS_ERROR_HTMLPARSER_INTERRUPTED)) {
+      } else if (MOZ_UNLIKELY(nsContentSink::DidProcessATokenImpl() == 
+                 NS_ERROR_HTMLPARSER_INTERRUPTED)) {
         mOpQueue.RemoveElementsAt(0, (iter - first) + 1);
         
         EndDocUpdate();
@@ -590,7 +591,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
 
     mFlushState = eNotFlushing;
 
-    if (NS_UNLIKELY(!mParser)) {
+    if (MOZ_UNLIKELY(!mParser)) {
       // The parse ended already.
       return;
     }
@@ -620,7 +621,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
   FlushSpeculativeLoads(); // Make sure speculative loads never start after the
                 // corresponding normal loads for the same URLs.
 
-  if (NS_UNLIKELY(!mParser)) {
+  if (MOZ_UNLIKELY(!mParser)) {
     // The parse has ended.
     mOpQueue.Clear(); // clear in order to be able to assert in destructor
     return;
@@ -657,7 +658,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
   for (nsHtml5TreeOperation* iter = const_cast<nsHtml5TreeOperation*>(start);
        iter < end;
        ++iter) {
-    if (NS_UNLIKELY(!mParser)) {
+    if (MOZ_UNLIKELY(!mParser)) {
       // The previous tree op caused a call to nsIParser::Terminate().
       break;
     }
@@ -672,7 +673,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
 
   mFlushState = eNotFlushing;
 
-  if (NS_UNLIKELY(!mParser)) {
+  if (MOZ_UNLIKELY(!mParser)) {
     // Ending the doc update caused a call to nsIParser::Terminate().
     return;
   }
@@ -736,7 +737,7 @@ nsHtml5TreeOpExecutor::StartLayout() {
 
   EndDocUpdate();
 
-  if (NS_UNLIKELY(!mParser)) {
+  if (MOZ_UNLIKELY(!mParser)) {
     // got terminate
     return;
   }
@@ -833,7 +834,7 @@ nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding,
 {
   EndDocUpdate();
 
-  if (NS_UNLIKELY(!mParser)) {
+  if (MOZ_UNLIKELY(!mParser)) {
     // got terminate
     return;
   }
