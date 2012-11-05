@@ -15,6 +15,13 @@ let pos = -1;
 
 let dateNow = Date.now();
 
+let tempScope = {};
+Cu.import("resource://gre/modules/devtools/dbg-server.jsm", tempScope);
+
+let longString = (new Array(tempScope.DebuggerServer.LONG_STRING_LENGTH + 4)).join("a");
+let initialString = longString.substring(0,
+  tempScope.DebuggerServer.LONG_STRING_INITIAL_LENGTH);
+
 let inputValues = [
   // [showsPropertyPanel?, input value, expected output format,
   //    print() output, console output, optional console API test]
@@ -87,7 +94,15 @@ let inputValues = [
   [true, "({a:'b', c:'d', e:1, f:'2'})", '({a:"b", c:"d", e:1, f:"2"})',
     "[object Object",
     '({a:"b", c:"d", e:1, f:"2"})'],
+
+  // 18
+  [false, "'" + longString + "'",
+    '"' + initialString + "\"[\u2026]", initialString],
 ];
+
+longString = null;
+initialString = null;
+tempScope = null;
 
 let eventHandlers = [];
 let popupShown = [];
