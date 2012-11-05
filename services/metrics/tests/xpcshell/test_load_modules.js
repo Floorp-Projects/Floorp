@@ -4,9 +4,11 @@
 "use strict";
 
 const modules = [
+  "dataprovider.jsm",
 ];
 
 const test_modules = [
+  "mocks.jsm",
 ];
 
 function run_test() {
