@@ -86,7 +86,7 @@ StaticScopeIter::funScript() const
 {
     AutoAssertNoGC nogc;
     JS_ASSERT(type() == FUNCTION);
-    return obj->toFunction()->script();
+    return obj->toFunction()->script().get(nogc);
 }
 
 /*****************************************************************************/
@@ -1208,7 +1208,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 return false;
 
             if (maybefp) {
-                RawScript script = maybefp->script();
+                RawScript script = maybefp->script().get(nogc);
                 unsigned local = block.slotToLocalIndex(script->bindings, shape->slot());
                 if (action == GET)
                     *vp = maybefp->unaliasedLocal(local);

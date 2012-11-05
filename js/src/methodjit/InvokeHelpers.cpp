@@ -685,14 +685,14 @@ void JS_FASTCALL
 stubs::ScriptProbeOnlyPrologue(VMFrame &f)
 {
     AutoAssertNoGC nogc;
-    Probes::enterScript(f.cx, f.script(), f.script()->function(), f.fp());
+    Probes::enterScript(f.cx, f.script().get(nogc), f.script()->function(), f.fp());
 }
 
 void JS_FASTCALL
 stubs::ScriptProbeOnlyEpilogue(VMFrame &f)
 {
     AutoAssertNoGC nogc;
-    Probes::exitScript(f.cx, f.script(), f.script()->function(), f.fp());
+    Probes::exitScript(f.cx, f.script().get(nogc), f.script()->function(), f.fp());
 }
 
 void JS_FASTCALL

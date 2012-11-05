@@ -929,7 +929,7 @@ InlineFrameIterator::findNextFrame()
         si_.nextFrame();
 
         callee_ = funval.toObject().toFunction();
-        script_ = callee_->script();
+        script_ = callee_->script().get(nogc);
         pc_ = script_->code + si_.pcOffset();
     }
 
