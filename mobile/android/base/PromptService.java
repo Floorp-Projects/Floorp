@@ -22,6 +22,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.InputType;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
 import android.view.LayoutInflater;
@@ -158,6 +159,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 view = (View)input;
             } else if (type.equals("time")) {
                 TimePicker input = new TimePicker(GeckoApp.mAppContext);
+                input.setIs24HourView(DateFormat.is24HourFormat(GeckoApp.mAppContext));
                 if (!value.equals("")) {
                     try {
                         GregorianCalendar calendar = new GregorianCalendar();
