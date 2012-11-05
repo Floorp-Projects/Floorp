@@ -201,8 +201,8 @@ class LinkedListElement
     };
 
     LinkedListElement(NodeKind nodeKind)
-      : next(this),
-        prev(this),
+      : next(thisDuringConstruction()),
+        prev(thisDuringConstruction()),
         isSentinel(nodeKind == NODE_KIND_SENTINEL)
     { }
 
