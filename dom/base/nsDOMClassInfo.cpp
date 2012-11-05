@@ -526,7 +526,9 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #ifdef MOZ_SYS_MSG
 #include "mozilla/dom/Activity.h"
 #endif
+#ifdef MOZ_TIME_MANAGER
 #include "TimeManager.h"
+#endif
 
 #include "DOMCameraManager.h"
 #include "DOMCameraControl.h"
@@ -1698,8 +1700,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            EVENTTARGET_SCRIPTABLE_FLAGS)
 #endif
 
+#ifdef MOZ_TIME_MANAGER
   NS_DEFINE_CLASSINFO_DATA(MozTimeManager, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+#endif
 
 #ifdef MOZ_WEBRTC
   NS_DEFINE_CLASSINFO_DATA(DataChannel, nsEventTargetSH,
@@ -2478,7 +2482,9 @@ nsDOMClassInfo::Init()
 #ifdef MOZ_SYS_MSG
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorSystemMessages)
 #endif
+#ifdef MOZ_TIME_MANAGER
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozNavigatorTime)
+#endif
 
   DOM_CLASSINFO_MAP_END
 
@@ -4461,9 +4467,11 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 #endif
 
+#ifdef MOZ_TIME_MANAGER
   DOM_CLASSINFO_MAP_BEGIN(MozTimeManager, nsIDOMMozTimeManager)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozTimeManager)
   DOM_CLASSINFO_MAP_END
+#endif
 
 #ifdef MOZ_WEBRTC
   DOM_CLASSINFO_MAP_BEGIN(DataChannel, nsIDOMDataChannel)
