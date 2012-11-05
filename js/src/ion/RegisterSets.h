@@ -123,6 +123,7 @@ class ValueOperand
     Register scratchReg() const {
         return valueReg();
     }
+
 #endif
 
     ValueOperand() {}
@@ -427,6 +428,22 @@ class RegisterSet {
             add(any.fpu());
         else
             add(any.gpr());
+    }
+    void add(ValueOperand value) {
+#if defined(JS_NUNBOX32)
+        add(value.payloadReg());
+        add(value.typeReg());
+#elif defined(JS_PUNBOX64)
+        add(value.valueReg());
+#else
+#error "Bad architecture"
+#endif
+    }
+    void add(TypedOrValueRegister reg) {
+        if (reg.hasValue())
+            add(reg.valueReg());
+        else if (reg.hasTyped())
+            add(reg.typedReg());
     }
     void addUnchecked(Register reg) {
         gpr_.addUnchecked(reg);
