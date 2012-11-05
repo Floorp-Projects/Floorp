@@ -547,7 +547,7 @@ def main(args=sys.argv[1:]):
 
         retVal = reftest.runTests(manifest, options, cmdlineArgs)
     except:
-        print "TEST-UNEXPECTED-FAIL | %s | Exception caught while running tests." % sys.exc_info()[1]
+        print "Automation Error: Exception caught while running tests"
         traceback.print_exc()
         reftest.stopWebServer(options)
         try:

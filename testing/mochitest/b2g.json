@@ -1,5 +1,6 @@
 {
 "runtests": {
+    "dom/base": "",
     "dom/tests/mochitest/dom-level0": "",
     "dom/tests/mochitest/dom-level1-core": "",
     "dom/tests/mochitest/dom-level2-core": "",
