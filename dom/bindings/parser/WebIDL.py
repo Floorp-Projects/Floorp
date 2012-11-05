@@ -2734,7 +2734,9 @@ class Tokenizer(object):
         "null": "NULL",
         "true": "TRUE",
         "false": "FALSE",
+        "serializer": "SERIALIZER",
         "stringifier": "STRINGIFIER",
+        "unrestricted": "UNRESTRICTED",
         "attribute": "ATTRIBUTE",
         "readonly": "READONLY",
         "inherit": "INHERIT",
@@ -3425,7 +3427,7 @@ class Parser(Tokenizer):
 
     def p_Argument(self, p):
         """
-            Argument : ExtendedAttributeList Optional Type Ellipsis IDENTIFIER DefaultValue
+            Argument : ExtendedAttributeList Optional Type Ellipsis ArgumentName DefaultValue
         """
         t = p[3]
         assert isinstance(t, IDLType)
@@ -3447,6 +3449,32 @@ class Parser(Tokenizer):
 
         p[0] = IDLArgument(self.getLocation(p, 5), identifier, t, optional, defaultValue, variadic)
         p[0].addExtendedAttributes(p[1])
+
+    def p_ArgumentName(self, p):
+        """
+            ArgumentName : IDENTIFIER
+                         | ATTRIBUTE
+                         | CALLBACK
+                         | CONST
+                         | CREATOR
+                         | DELETER
+                         | DICTIONARY
+                         | ENUM
+                         | EXCEPTION
+                         | GETTER
+                         | IMPLEMENTS
+                         | INHERIT
+                         | INTERFACE
+                         | LEGACYCALLER
+                         | PARTIAL
+                         | SERIALIZER
+                         | SETTER
+                         | STATIC
+                         | STRINGIFIER
+                         | TYPEDEF
+                         | UNRESTRICTED
+        """
+        p[0] = p[1]
 
     def p_Optional(self, p):
         """
