@@ -41,10 +41,10 @@
 #define YARR_CALL __attribute__ ((regparm (3)))
 #else
 #define YARR_CALL
+#endif
 
-# if JS_TRACE_LOGGING
-#  include "TraceLogging.h"
-# endif
+#if JS_TRACE_LOGGING
+#include "TraceLogging.h"
 #endif
 
 namespace JSC {
