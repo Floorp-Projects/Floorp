@@ -467,6 +467,22 @@ this.CommonUtils = {
 
     return new BinaryInputStream(stream).readBytes(count);
   },
+
+  /**
+   * Generate a new UUID using nsIUUIDGenerator.
+   *
+   * Example value: "1e00a2e2-1570-443e-bf5e-000354124234"
+   *
+   * @return string A hex-formatted UUID string.
+   */
+  generateUUID: function generateUUID() {
+    let uuid = Cc["@mozilla.org/uuid-generator;1"]
+                 .getService(Ci.nsIUUIDGenerator)
+                 .generateUUID()
+                 .toString();
+
+    return uuid.substring(1, uuid.length - 1);
+  },
 };
 
 XPCOMUtils.defineLazyGetter(CommonUtils, "_utf8Converter", function() {
