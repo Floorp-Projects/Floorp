@@ -2080,9 +2080,9 @@ class IDLAttribute(IDLInterfaceMember):
         if identifier == "TreatNonCallableAsNull":
             raise WebIDLError("TreatNonCallableAsNull cannot be specified on attributes",
                               [attr.location, self.location])
-        elif identifier == "SetterInfallible" and self.readonly:
+        elif identifier == "SetterThrows" and self.readonly:
             raise WebIDLError("Readonly attributes must not be flagged as "
-                              "[SetterInfallible]",
+                              "[SetterThrows]",
                               [self.location])
         elif identifier == "LenientThis":
             if not attr.noArguments():
@@ -2575,13 +2575,13 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
 
     def handleExtendedAttribute(self, attr):
         identifier = attr.identifier()
-        if identifier == "GetterInfallible":
+        if identifier == "GetterThrows":
             raise WebIDLError("Methods must not be flagged as "
-                              "[GetterInfallible]",
+                              "[GetterThrows]",
                               [attr.location, self.location])
-        elif identifier == "SetterInfallible":
+        elif identifier == "SetterThrows":
             raise WebIDLError("Methods must not be flagged as "
-                              "[SetterInfallible]",
+                              "[SetterThrows]",
                               [attr.location, self.location])
         elif identifier == "Unforgeable":
             raise WebIDLError("Methods must not be flagged as "

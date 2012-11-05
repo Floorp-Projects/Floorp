@@ -136,23 +136,23 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse("""
           interface A {
-            [GetterInfallible] void foo();
+            [GetterThrows] void foo();
           };
         """)
         results = parser.finish()
     except Exception, x:
         threw = True
-    harness.ok(threw, "Should not allow [GetterInfallible] on methods")
+    harness.ok(threw, "Should not allow [GetterThrows] on methods")
 
     parser = parser.reset()
     threw = False
     try:
         parser.parse("""
           interface A {
-            [SetterInfallible] void foo();
+            [SetterThrows] void foo();
           };
         """)
         results = parser.finish()
     except Exception, x:
         threw = True
-    harness.ok(threw, "Should not allow [SetterInfallible] on methods")
+    harness.ok(threw, "Should not allow [SetterThrows] on methods")
