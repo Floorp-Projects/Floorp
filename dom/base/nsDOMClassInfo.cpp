@@ -6768,6 +6768,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     // ... and define the constants from the DOM interface on that
     // constructor object.
 
+    JSAutoCompartment ac(cx, class_obj);
     rv = DefineInterfaceConstants(cx, class_obj, &name_struct->mIID);
     NS_ENSURE_SUCCESS(rv, rv);
 
