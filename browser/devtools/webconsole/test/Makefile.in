@@ -118,6 +118,8 @@ MOCHITEST_BROWSER_FILES = \
 	browser_output_breaks_after_console_dir_uninspectable.js \
 	browser_console_log_inspectable_object.js \
 	browser_bug_638949_copy_link_location.js \
+	browser_output_longstring_expand.js \
+	browser_netpanel_longstring_expand.js \
 	head.js \
 	$(NULL)
 
@@ -136,6 +138,7 @@ MOCHITEST_BROWSER_FILES += \
 	test-filter.html \
 	test-observe-http-ajax.html \
 	test-data.json \
+	test-data.json^headers^ \
 	test-property-provider.html \
 	test-error.html \
 	test-duplicate-error.html \

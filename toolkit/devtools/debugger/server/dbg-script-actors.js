@@ -1718,12 +1718,26 @@ LongStringActor.prototype = {
       "from": this.actorID,
       "substring": this.string.substring(aRequest.start, aRequest.end)
     };
-  }
+  },
 
+  /**
+   * Handle a request to release this LongStringActor instance.
+   */
+  onRelease: function LSA_onRelease() {
+    // TODO: also check if registeredPool === threadActor.threadLifetimePool
+    // when the web console moves aray from manually releasing pause-scoped
+    // actors.
+    if (this.registeredPool.longStringActors) {
+      delete this.registeredPool.longStringActors[this.actorID];
+    }
+    this.registeredPool.removeActor(this);
+    return {};
+  },
 };
 
 LongStringActor.prototype.requestTypes = {
-  "substring": LongStringActor.prototype.onSubstring
+  "substring": LongStringActor.prototype.onSubstring,
+  "release": LongStringActor.prototype.onRelease
 };
 
 

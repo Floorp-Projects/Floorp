@@ -589,9 +589,10 @@ this.WebConsoleUtils = {
     let type = typeof(aValue);
     switch (type) {
       case "boolean":
-      case "string":
       case "number":
         return aValue;
+      case "string":
+          return aObjectWrapper(aValue);
       case "object":
       case "function":
         if (aValue) {
@@ -686,13 +687,28 @@ this.WebConsoleUtils = {
   {
     // Primitives like strings and numbers are not sent as objects.
     // But null and undefined are sent as objects with the type property
-    // telling which type of value we have.
+    // telling which type of value we have. We also have long strings which are
+    // sent using the LongStringActor.
+
     let type = typeof(aGrip);
+    if (type == "string" ||
+        (aGrip && type == "object" && aGrip.type == "longString")) {
+      let str = type == "string" ? aGrip : aGrip.initial;
+      if (aFormatString) {
+        return this.formatResultString(str);
+      }
+      return str;
+    }
+
     if (aGrip && type == "object") {
+      if (aGrip.displayString && typeof aGrip.displayString == "object" &&
+          aGrip.displayString.type == "longString") {
+        return aGrip.displayString.initial;
+      }
       return aGrip.displayString || aGrip.className || aGrip.type || type;
     }
-    return type == "string" && aFormatString ?
-           this.formatResultString(aGrip) : aGrip + "";
+
+    return aGrip + "";
   },
 
   /**
@@ -813,12 +829,21 @@ this.WebConsoleUtils = {
       return val;
     }
 
+    if (val.type == "longString") {
+      return this.formatResultString(val.initial) + "\u2026";
+    }
+
     if (val.type == "function" && val.functionName) {
       return "function " + val.functionName + "(" +
              val.functionArguments.join(", ") + ")";
     }
     if (val.type == "object" && val.className) {
       return val.className;
+    }
+
+    if (val.displayString && typeof val.displayString == "object" &&
+        val.displayString.type == "longString") {
+      return val.displayString.initial;
     }
 
     return val.displayString || val.type;
@@ -1915,12 +1940,17 @@ NetworkResponseListener.prototype = {
       text: aData || "",
     };
 
-    // TODO: Bug 787981 - use LongStringActor for strings that are too long.
+    response.size = response.text.length;
 
     try {
       response.mimeType = this.request.contentType;
     }
     catch (ex) { }
+
+    if (!response.mimeType || !NetworkHelper.isTextMimeType(response.mimeType)) {
+      response.encoding = "base64";
+      response.text = btoa(response.text);
+    }
 
     if (response.mimeType && this.request.contentCharset) {
       response.mimeType += "; charset=" + this.request.contentCharset;

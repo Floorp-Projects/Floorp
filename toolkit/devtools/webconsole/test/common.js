@@ -100,40 +100,73 @@ function checkObject(aObject, aExpected)
   {
     let expected = aExpected[name];
     let value = aObject[name];
-    if (value === undefined) {
-      ok(false, "'" + name + "' is undefined");
-    }
-    else if (typeof expected == "string" ||
-        typeof expected == "number" ||
-        typeof expected == "boolean") {
-      is(value, expected, "property '" + name + "'");
-    }
-    else if (expected instanceof RegExp) {
-      ok(expected.test(value), name + ": " + expected);
-    }
-    else if (Array.isArray(expected)) {
-      info("checking array for property '" + name + "'");
-      checkObject(value, expected);
-    }
-    else if (typeof expected == "object") {
-      info("checking object for property '" + name + "'");
-      checkObject(value, expected);
-    }
+    checkValue(name, value, expected);
+  }
+}
+
+function checkValue(aName, aValue, aExpected)
+{
+  if (aValue === undefined) {
+    ok(false, "'" + aName + "' is undefined");
+  }
+  else if (typeof aExpected == "string" || typeof aExpected == "number" ||
+           typeof aExpected == "boolean") {
+    is(aValue, aExpected, "property '" + aName + "'");
+  }
+  else if (aExpected instanceof RegExp) {
+    ok(aExpected.test(aValue), aName + ": " + aExpected + " matched " + aValue);
+  }
+  else if (Array.isArray(aExpected)) {
+    info("checking array for property '" + aName + "'");
+    checkObject(aValue, aExpected);
+  }
+  else if (typeof aExpected == "object") {
+    info("checking object for property '" + aName + "'");
+    checkObject(aValue, aExpected);
   }
 }
 
 function checkHeadersOrCookies(aArray, aExpected)
 {
+  let foundHeaders = {};
+
   for (let elem of aArray) {
     if (!(elem.name in aExpected)) {
       continue;
     }
-    let expected = aExpected[elem.name];
-    if (expected instanceof RegExp) {
-      ok(expected.test(elem.value), elem.name + ": " + expected);
-    }
-    else {
-      is(elem.value, expected, elem.name);
+    foundHeaders[elem.name] = true;
+    info("checking value of header " + elem.name);
+    checkValue(elem.name, elem.value, aExpected[elem.name]);
+  }
+
+  for (let header in aExpected) {
+    if (!(header in foundHeaders)) {
+      ok(false, header + " was not found");
     }
   }
+}
+
+var gTestState = {};
+
+function runTests(aTests, aEndCallback)
+{
+  function driver()
+  {
+    let lastResult, sendToNext;
+    for (let i = 0; i < aTests.length; i++) {
+      gTestState.index = i;
+      let fn = aTests[i];
+      info("will run test #" + i + ": " + fn.name);
+      lastResult = fn(sendToNext, lastResult);
+      sendToNext = yield lastResult;
+    }
+    yield aEndCallback(sendToNext, lastResult);
+  }
+  gTestState.driver = driver();
+  return gTestState.driver.next();
+}
+
+function nextTest(aMessage)
+{
+  return gTestState.driver.send(aMessage);
 }

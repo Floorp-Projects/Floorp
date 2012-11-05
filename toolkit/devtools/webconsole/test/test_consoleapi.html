@@ -18,12 +18,15 @@ let expectedConsoleCalls = [];
 
 function doConsoleCalls(aState)
 {
+  let longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 2)).join("a");
+
   console.log("foobarBaz-log", undefined);
   console.info("foobarBaz-info", null);
   console.warn("foobarBaz-warn", document.body);
   console.debug(null);
   console.trace();
   console.dir(document, window);
+  console.log("foo", longString);
 
   expectedConsoleCalls = [
     {
@@ -96,6 +99,22 @@ function doConsoleCalls(aState)
           name: "CDATA_SECTION_NODE",
           value: 4,
         }, // ...
+      ],
+    },
+    {
+      level: "log",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: [
+        "foo",
+        {
+          type: "longString",
+          initial: longString.substring(0,
+            DebuggerServer.LONG_STRING_INITIAL_LENGTH),
+          length: longString.length,
+          actor: /[a-z]/,
+        },
       ],
     },
   ];

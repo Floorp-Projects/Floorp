@@ -24,7 +24,8 @@
       }
 
       function testXhrPost(aCallback) {
-        makeXhr('post', 'data.json', "Hello world!", aCallback);
+        var body = "Hello world! " + (new Array(50)).join("foobaz barr");
+        makeXhr('post', 'data.json', body, aCallback);
       }
 
       document.cookie = "foobar=fooval";

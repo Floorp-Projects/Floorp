@@ -10,6 +10,11 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "LongStringClient",
+                                  "resource://gre/modules/devtools/dbg-client.jsm");
+
 this.EXPORTED_SYMBOLS = ["WebConsoleClient"];
 
 /**
@@ -25,9 +30,12 @@ this.WebConsoleClient = function WebConsoleClient(aDebuggerClient, aActor)
 {
   this._actor = aActor;
   this._client = aDebuggerClient;
+  this._longStrings = {};
 }
 
 WebConsoleClient.prototype = {
+  _longStrings: null,
+
   /**
    * Retrieve the cached messages from the server.
    *
@@ -295,6 +303,25 @@ WebConsoleClient.prototype = {
   },
 
   /**
+   * Return an instance of LongStringClient for the given long string grip.
+   *
+   * @param object aGrip
+   *        The long string grip returned by the protocol.
+   * @return object
+   *         The LongStringClient for the given long string grip.
+   */
+  longString: function WCC_longString(aGrip)
+  {
+    if (aGrip.actor in this._longStrings) {
+      return this._longStrings[aGrip.actor];
+    }
+
+    let client = new LongStringClient(this._client, aGrip);
+    this._longStrings[aGrip.actor] = client;
+    return client;
+  },
+
+  /**
    * Close the WebConsoleClient. This stops all the listeners on the server and
    * detaches from the console actor.
    *
@@ -304,6 +331,7 @@ WebConsoleClient.prototype = {
   close: function WCC_close(aOnResponse)
   {
     this.stopListeners(null, aOnResponse);
+    this._longStrings = null;
     this._client = null;
   },
 };

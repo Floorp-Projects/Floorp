@@ -85,3 +85,16 @@ img#responseImageNode {
 #responseImageNodeDiv {
   padding: 5px;
 }
+
+#responseBodyFetchLink, #requestBodyFetchLink {
+  padding: 5px;
+  margin: 0;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.1em;
+  text-decoration: underline;
+}
+
+.longStringEllipsis {
+  margin-left: 0.6em;
+}
