@@ -5033,12 +5033,12 @@ class CGProxySpecialOperation(CGPerSignatureCall):
                 "valPtr": "&desc->value"
             }
             self.cgRoot.prepend(instantiateJSToNativeConversionTemplate(template, templateValues))
-        elif operation.isGetter():
+        elif operation.isGetter() or operation.isDeleter():
             self.cgRoot.prepend(CGGeneric("bool found;"))
 
     def getArguments(self):
         args = [(a, a.identifier.name) for a in self.arguments]
-        if self.idlNode.isGetter():
+        if self.idlNode.isGetter() or self.idlNode.isDeleter():
             args.append((FakeArgument(BuiltinTypes[IDLBuiltinType.Types.boolean],
                                       self.idlNode),
                          "found"))
@@ -5083,6 +5083,20 @@ class CGProxyNamedSetter(CGProxySpecialOperation):
     """
     def __init__(self, descriptor):
         CGProxySpecialOperation.__init__(self, descriptor, 'NamedSetter')
+
+class CGProxyIndexedDeleter(CGProxySpecialOperation):
+    """
+    Class to generate a call to an indexed deleter.
+    """
+    def __init__(self, descriptor):
+        CGProxySpecialOperation.__init__(self, descriptor, 'IndexedDeleter')
+
+class CGProxyNamedDeleter(CGProxySpecialOperation):
+    """
+    Class to generate a call to a named deleter.
+    """
+    def __init__(self, descriptor):
+        CGProxySpecialOperation.__init__(self, descriptor, 'NamedDeleter')
 
 class CGProxyIsProxy(CGAbstractMethod):
     def __init__(self, descriptor):
@@ -5273,6 +5287,82 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     "  }\n" +
                     "}\n") % (self.descriptor.nativeType, self.descriptor.name)
         return set + """return mozilla::dom::DOMProxyHandler::defineProperty(%s);""" % ", ".join(a.name for a in self.args)
+
+class CGDOMJSProxyHandler_delete(ClassMethod):
+    def __init__(self, descriptor):
+        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'proxy'),
+                Argument('jsid', 'id'),
+                Argument('bool*', 'bp')]
+        ClassMethod.__init__(self, "delete_", "bool", args)
+        self.descriptor = descriptor
+
+    def getBody(self):
+        def getDeleterBody(type):
+            """
+            type should be "Named" or "Indexed"
+            """
+            assert type is "Named" or type is "Indexed"
+            deleter = self.descriptor.operations[type + 'Deleter']
+            if deleter:
+                if (not deleter.signatures()[0][0].isPrimitive() or
+                    deleter.signatures()[0][0].nullable() or
+                    deleter.signatures()[0][0].tag() != IDLType.Tags.bool):
+                    setBp = "*bp = true;"
+                else:
+                    setBp = ("if (found) {\n"
+                             "  // XXXbz we should throw as needed if Throw is true\n"
+                             "  *bp = result;\n"
+                             "} else {\n"
+                             "  *bp = true;\n"
+                             "}")
+                body = (eval("CGProxy%sDeleter" % type)(self.descriptor).define() +
+                        setBp)
+            elif self.descriptor.operations[type + 'Getter']:
+                # XXXbz: We should be doing this for cases when we have a
+                # creator or setter too, but we have no way to find out
+                # whether the property name is supported in those cases!
+                body = (eval("CGProxy%sGetter" % type)(self.descriptor).define() +
+                        "if (found) {\n"
+                        "  // XXXbz we should throw if Throw is true!\n"
+                        "  *bp = false;\n"
+                        "} else {\n"
+                        "  *bp = true;\n"
+                        "}")
+            else:
+                body = None
+            return body
+
+        delete = ""
+
+        indexedBody = getDeleterBody("Indexed")
+        if indexedBody is not None:
+            delete += ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
+                       "if (index >= 0) {\n" +
+                       "  %s* self = UnwrapProxy(proxy);\n" +
+                       CGIndenter(CGGeneric(indexedBody)).define() + "\n"
+                       "  // We always return here, even if the property was not found\n"
+                       "  return true;\n" +
+                       "}\n") % self.descriptor.nativeType
+
+        namedBody = getDeleterBody("Named")
+        if namedBody is not None:
+            delete += ("if (JSID_IS_STRING(id) && !HasPropertyOnPrototype(cx, proxy, this, id)) {\n"
+                       "  jsval nameVal = STRING_TO_JSVAL(JSID_TO_STRING(id));\n" +
+                       "  FakeDependentString name;\n"
+                       "  if (!ConvertJSValueToString(cx, nameVal, &nameVal,\n" +
+                       "                              eStringify, eStringify, name)) {\n" +
+                       "    return false;\n" +
+                       "  }\n" +
+                       "  %s* self = UnwrapProxy(proxy);\n" +
+                       CGIndenter(CGGeneric(namedBody)).define() + "\n"
+                       "  if (found) {\n"
+                       "    return true;\n"
+                       "  }\n"
+                       "}\n") % self.descriptor.nativeType
+
+        delete += "return dom::DOMProxyHandler::delete_(cx, proxy, id, bp);";
+
+        return delete
 
 class CGDOMJSProxyHandler_getOwnPropertyNames(ClassMethod):
     def __init__(self, descriptor):
@@ -5519,7 +5609,8 @@ class CGDOMJSProxyHandler(CGClass):
                         CGDOMJSProxyHandler_obj_toString(descriptor),
                         CGDOMJSProxyHandler_finalize(descriptor),
                         CGDOMJSProxyHandler_getElementIfPresent(descriptor),
-                        CGDOMJSProxyHandler_getInstance()])
+                        CGDOMJSProxyHandler_getInstance(),
+                        CGDOMJSProxyHandler_delete(descriptor)])
         CGClass.__init__(self, 'DOMProxyHandler',
                          bases=[ClassBase('mozilla::dom::DOMProxyHandler')],
                          constructors=constructors,

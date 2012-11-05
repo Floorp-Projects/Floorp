@@ -696,6 +696,80 @@ public:
   int32_t Volatile();
 };
 
+class TestIndexedDeleterInterface : public nsISupports,
+                                    public nsWrapperCache
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  // We need a GetParentObject to make binding codegen happy
+  virtual nsISupports* GetParentObject();
+
+  void IndexedDeleter(uint32_t, bool&);
+  void IndexedDeleter(uint32_t) MOZ_DELETE;
+  void DelItem(uint32_t);
+  void DelItem(uint32_t, bool&) MOZ_DELETE;
+};
+
+class TestIndexedDeleterWithRetvalInterface : public nsISupports,
+                                              public nsWrapperCache
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  // We need a GetParentObject to make binding codegen happy
+  virtual nsISupports* GetParentObject();
+
+  bool IndexedDeleter(uint32_t, bool&);
+  bool IndexedDeleter(uint32_t) MOZ_DELETE;
+  bool DelItem(uint32_t);
+  bool DelItem(uint32_t, bool&) MOZ_DELETE;
+};
+
+class TestNamedDeleterInterface : public nsISupports,
+                                  public nsWrapperCache
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  // We need a GetParentObject to make binding codegen happy
+  virtual nsISupports* GetParentObject();
+
+  void NamedDeleter(const nsAString&, bool&);
+};
+
+class TestNamedDeleterWithRetvalInterface : public nsISupports,
+                                            public nsWrapperCache
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  // We need a GetParentObject to make binding codegen happy
+  virtual nsISupports* GetParentObject();
+
+  bool NamedDeleter(const nsAString&, bool&);
+  bool NamedDeleter(const nsAString&) MOZ_DELETE;
+  bool DelNamedItem(const nsAString&);
+  bool DelNamedItem(const nsAString&, bool&) MOZ_DELETE;
+};
+
+class TestIndexedAndNamedDeleterInterface : public nsISupports,
+                                            public nsWrapperCache
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  // We need a GetParentObject to make binding codegen happy
+  virtual nsISupports* GetParentObject();
+
+  void IndexedDeleter(uint32_t, bool&);
+
+  void NamedDeleter(const nsAString&, bool&);
+  void NamedDeleter(const nsAString&) MOZ_DELETE;
+  void DelNamedItem(const nsAString&);
+  void DelNamedItem(const nsAString&, bool&) MOZ_DELETE;
+};
+
 } // namespace dom
 } // namespace mozilla
 
