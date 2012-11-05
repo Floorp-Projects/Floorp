@@ -575,7 +575,7 @@ bool GrGLProgram::genProgram(const GrCustomStage** customStages) {
                                      POS_ATTR_NAME);
 
     builder.fVSCode.appendf("void main() {\n"
-                              "\tvec3 pos3 = %s * vec3("POS_ATTR_NAME", 1);\n"
+                              "\tvec3 pos3 = %s * vec3(" POS_ATTR_NAME ", 1);\n"
                               "\tgl_Position = vec4(pos3.xy, 0, pos3.z);\n",
                             viewMName);
 
