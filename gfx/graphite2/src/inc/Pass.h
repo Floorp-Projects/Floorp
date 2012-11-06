@@ -56,7 +56,6 @@ private:
     int   	doAction(const vm::Machine::Code* codeptr, Slot * & slot_out, vm::Machine &) const;
     bool   	testPassConstraint(vm::Machine & m) const;
     bool   	testConstraint(const Rule & r, vm::Machine &) const;
-    bool   	readFSM(const byte* p, const byte*const pass_start, const size_t max_offset);
     bool   	readRules(const byte * rule_map, const size_t num_entries,
                      const byte *precontext, const uint16 * sort_key,
                      const uint16 * o_constraint, const byte *constraint_data, 
