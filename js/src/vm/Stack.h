@@ -9,7 +9,9 @@
 #define Stack_h__
 
 #include "jsfun.h"
+#ifdef JS_ION
 #include "ion/IonFrameIterator.h"
+#endif
 #include "jsautooplen.h"
 
 struct JSContext;

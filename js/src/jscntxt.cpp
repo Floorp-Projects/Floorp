@@ -42,8 +42,10 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsworkers.h"
+#ifdef JS_ION
 #include "ion/Ion.h"
 #include "ion/IonFrames.h"
+#endif
 
 #ifdef JS_METHODJIT
 # include "assembler/assembler/MacroAssembler.h"
