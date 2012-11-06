@@ -44,7 +44,7 @@ ArchiveRequestEvent::Run()
   return NS_OK;
 }
 
-/* ArchiveRequest */
+// ArchiveRequest
 
 ArchiveRequest::ArchiveRequest(nsIDOMWindow* aWindow,
                                ArchiveReader* aReader)
@@ -90,8 +90,9 @@ ArchiveRequest::Run()
   // Register this request to the reader.
   // When the reader is ready to return data, a 'Ready()' will be called
   nsresult rv = mArchiveReader->RegisterRequest(this);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     FireError(rv);
+  }
 }
 
 void
@@ -187,7 +188,7 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
   if (!JS_FreezeObject(aCx, array)) {
     return NS_ERROR_FAILURE;
   }
-  
+
   *aValue = OBJECT_TO_JSVAL(array);
   return NS_OK;
 }
@@ -205,8 +206,9 @@ ArchiveRequest::GetFileResult(JSContext* aCx,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (filename == mFilename) {
-      JSObject* scope = JS_GetGlobalForScopeChain(aCx);
-      nsresult rv = nsContentUtils::WrapNative(aCx, scope, file, aValue, nullptr, true);
+      nsresult rv = nsContentUtils::WrapNative(
+                      aCx, JS_GetGlobalForScopeChain(aCx),
+                      file, &NS_GET_IID(nsIDOMFile), aValue);
       return rv;
     }
   }

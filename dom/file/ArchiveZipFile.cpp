@@ -15,8 +15,9 @@ USING_FILE_NAMESPACE
 
 #define ZIP_CHUNK 16384
 
-// a internat input stream object
-
+/**
+ * Input stream object for zip files
+ */
 class ArchiveInputStream MOZ_FINAL : public nsIInputStream,
                                      public nsISeekableStream
 {
@@ -92,22 +93,25 @@ ArchiveInputStream::Init()
 
   memset(&mZs, 0, sizeof(z_stream));
   int zerr = inflateInit2(&mZs, -MAX_WBITS);
-  if (zerr != Z_OK)
+  if (zerr != Z_OK) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   mData.sizeToBeRead = ArchiveZipItem::StrToInt32(mCentral.size);
 
   uint32_t offset = ArchiveZipItem::StrToInt32(mCentral.localhdr_offset);
 
   // The file is corrupt
-  if (offset + ZIPLOCAL_SIZE > mData.parentSize)
+  if (offset + ZIPLOCAL_SIZE > mData.parentSize) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   // From the input stream to a seekable stream
   nsCOMPtr<nsISeekableStream> seekableStream;
   seekableStream = do_QueryInterface(mData.inputStream);
-  if (!seekableStream)
+  if (!seekableStream) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   // Seek + read the ZipLocal struct
   seekableStream->Seek(nsISeekableStream::NS_SEEK_SET, offset);
@@ -115,12 +119,14 @@ ArchiveInputStream::Init()
   uint32_t ret;
 
   rv = mData.inputStream->Read((char*)buffer, ZIPLOCAL_SIZE, &ret);
-  if (NS_FAILED(rv) || ret != ZIPLOCAL_SIZE)
+  if (NS_FAILED(rv) || ret != ZIPLOCAL_SIZE) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   // Signature check:
-  if (ArchiveZipItem::StrToInt32(buffer) != LOCALSIG)
+  if (ArchiveZipItem::StrToInt32(buffer) != LOCALSIG) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   ZipLocal local;
   memcpy(&local, buffer, ZIPLOCAL_SIZE);
@@ -131,8 +137,9 @@ ArchiveInputStream::Init()
             ArchiveZipItem::StrToInt16(local.extrafield_len);
 
   // The file is corrupt if there is not enough data
-  if (offset + mData.sizeToBeRead > mData.parentSize)
+  if (offset + mData.sizeToBeRead > mData.parentSize) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   // Data starts here:
   seekableStream->Seek(nsISeekableStream::NS_SEEK_SET, offset);
@@ -182,8 +189,9 @@ ArchiveInputStream::Read(char* aBuffer,
     mStatus = Started;
 
     rv = Init();
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
       return rv;
+    }
 
     // Let's set avail_out to -1 so we read something from the stream.
     mZs.avail_out = (uInt)-1;
@@ -196,8 +204,7 @@ ArchiveInputStream::Read(char* aBuffer,
   }
 
   // Stored file:
-  if (!mData.compressed)
-  {
+  if (!mData.compressed) {
     rv = mData.inputStream->Read(aBuffer,
                                  (mData.sizeToBeRead > aCount ?
                                     aCount : mData.sizeToBeRead),
@@ -206,23 +213,24 @@ ArchiveInputStream::Read(char* aBuffer,
       mData.sizeToBeRead -= *_retval;
       mData.cursor += *_retval;
 
-      if (mData.sizeToBeRead == 0)
+      if (mData.sizeToBeRead == 0) {
         mStatus = Done;
+      }
     }
 
     return rv;
   }
 
   // We have nothing ready to be processed:
-  if (mZs.avail_out != 0 && mData.sizeToBeRead != 0)
-  {
+  if (mZs.avail_out != 0 && mData.sizeToBeRead != 0) {
     uint32_t ret;
     rv = mData.inputStream->Read((char*)mData.input,
                                  (mData.sizeToBeRead > sizeof(mData.input) ?
                                       sizeof(mData.input) : mData.sizeToBeRead),
                                  &ret);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
       return rv;
+    }
 
     // Terminator:
     if (ret == 0) {
@@ -239,11 +247,13 @@ ArchiveInputStream::Read(char* aBuffer,
   mZs.next_out = (unsigned char*)aBuffer;
 
   int ret = inflate(&mZs, mData.sizeToBeRead ? Z_NO_FLUSH : Z_FINISH);
-  if (ret != Z_BUF_ERROR && ret != Z_OK && ret != Z_STREAM_END)
+  if (ret != Z_BUF_ERROR && ret != Z_OK && ret != Z_STREAM_END) {
     return NS_ERROR_UNEXPECTED;
+  }
 
-  if (ret == Z_STREAM_END)
+  if (ret == Z_STREAM_END) {
     mStatus = Done;
+  }
 
   *_retval = aCount - mZs.avail_out;
   mData.cursor += *_retval;
@@ -291,11 +301,13 @@ ArchiveInputStream::Seek(int32_t aWhence, int64_t aOffset)
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (pos == int64_t(mData.cursor))
+  if (pos == int64_t(mData.cursor)) {
     return NS_OK;
+  }
 
-  if (pos < 0 || pos >= mLength)
+  if (pos < 0 || pos >= mLength) {
     return NS_ERROR_FAILURE;
+  }
 
   // We have to terminate the previous operation:
   nsresult rv;
@@ -312,11 +324,13 @@ ArchiveInputStream::Seek(int32_t aWhence, int64_t aOffset)
   char buffer[1024];
   while (pos > 0) {
     rv = Read(buffer, pos > int64_t(sizeof(buffer)) ? sizeof(buffer) : pos, &ret);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
       return rv;
+    }
 
-    if (ret == 0)
+    if (ret == 0) {
       return NS_ERROR_UNEXPECTED;
+    }
 
     pos -= ret;
   }
@@ -342,8 +356,9 @@ ArchiveInputStream::SetEOF()
 NS_IMETHODIMP
 ArchiveZipFile::GetInternalStream(nsIInputStream** aStream)
 {
-  if (mLength > INT32_MAX)
+  if (mLength > INT32_MAX) {
     return NS_ERROR_FAILURE;
+  }
 
   uint64_t size;
   nsresult rv = mArchiveReader->GetSize(&size);
@@ -351,8 +366,9 @@ ArchiveZipFile::GetInternalStream(nsIInputStream** aStream)
 
   nsCOMPtr<nsIInputStream> inputStream;
   rv = mArchiveReader->GetInputStream(getter_AddRefs(inputStream));
-  if (NS_FAILED(rv) || !inputStream)
+  if (NS_FAILED(rv) || !inputStream) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   nsRefPtr<ArchiveInputStream> stream = new ArchiveInputStream(size,
                                                                inputStream,

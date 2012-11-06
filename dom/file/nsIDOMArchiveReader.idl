@@ -14,6 +14,14 @@ interface nsIDOMArchiveReader : nsISupports
   nsIDOMArchiveRequest getFile(in DOMString filename);
 };
 
+/* This dictionary is the optional argument for the
+ * ArchiveReader constructor:
+ * var a = new ArchiveReader(blob, { encoding: "iso-8859-1" }); */
+dictionary ArchiveReaderOptions
+{
+  DOMString encoding = "windows-1252"; // Default fallback encoding
+};
+
 %{ C++
 #define NS_ARCHIVEREADER_CID                         \
 {0xb6b8c817, 0x4e9a, 0x46f8,                         \
