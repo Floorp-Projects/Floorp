@@ -1610,7 +1610,7 @@ MarionetteDriverActor.prototype = {
                                  .getInterface(Ci.nsIDOMWindowUtils)
                                  .getOuterWindowWithId(message.json.win);
         let thisFrame = frameWindow.document.getElementsByTagName("iframe")[message.json.frame];
-        let mm = thisFrame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager
+        let mm = thisFrame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
 
         // See if this frame already has our frame script loaded in it; if so,
         // just wake it up.
