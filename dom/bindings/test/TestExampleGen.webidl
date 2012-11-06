@@ -309,6 +309,7 @@ interface TestExampleInterface {
   [LenientThis] attribute long attrWithLenientThis;
   [Unforgeable] readonly attribute long unforgeableAttr;
   [Unforgeable, ChromeOnly] readonly attribute long unforgeableAttr2;
+  stringifier;
   void passRenamedInterface(TestRenamedInterface arg);
   [PutForwards=writableByte] readonly attribute TestExampleInterface putForwardsAttr;
   [PutForwards=writableByte, LenientThis] readonly attribute TestExampleInterface putForwardsAttr2;

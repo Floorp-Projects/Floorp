@@ -215,6 +215,32 @@ DOMProxyHandler::obj_toString(JSContext* cx, const char* className)
   return str;
 }
 
+bool
+DOMProxyHandler::AppendNamedPropertyIds(JSContext* cx, JSObject* proxy,
+                                        nsTArray<nsString>& names,
+                                        JS::AutoIdVector& props)
+{
+  for (uint32_t i = 0; i < names.Length(); ++i) {
+    JS::Value v;
+    if (!xpc::NonVoidStringToJsval(cx, names[i], &v)) {
+      return false;
+    }
+
+    jsid id;
+    if (!JS_ValueToId(cx, v, &id)) {
+      return false;
+    }
+
+    if (!HasPropertyOnPrototype(cx, proxy, this, id)) {
+      if (!props.append(id)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 int32_t
 IdToInt32(JSContext* cx, jsid id)
 {

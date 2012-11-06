@@ -76,8 +76,8 @@ float lut_interp_linear_float(float value, float *table, int length)
 {
         int upper, lower;
         value = value * (length - 1);
-        upper = ceil(value);
-        lower = floor(value);
+        upper = ceilf(value);
+        lower = floorf(value);
         //XXX: can we be more performant here?
         value = table[upper]*(1. - (upper - value)) + table[lower]*(upper - value);
         /* scale the value */
@@ -187,46 +187,6 @@ void compute_curve_gamma_table_type0(float gamma_table[256])
 	for (i = 0; i < 256; i++) {
 		gamma_table[i] = i/255.;
 	}
-}
-
-float clamp_float(float a)
-{
-	/* One would naturally write this function as the following:
-	if (a > 1.)
-		return 1.;
-	else if (a < 0)
-		return 0;
-	else
-		return a;
-
-	However, that version will let NaNs pass through which is undesirable
-	for most consumers.
-	*/
-
-	if (a > 1.)
-		return 1.;
-	else if (a >= 0)
-		return a;
-	else // a < 0 or a is NaN
-		return 0;
-}
-
-unsigned char clamp_u8(float v)
-{
-	if (v > 255.)
-		return 255;
-	else if (v < 0)
-		return 0;
-	else
-		return floor(v+.5);
-}
-
-float u8Fixed8Number_to_float(uint16_t x)
-{
-	// 0x0000 = 0.
-	// 0x0100 = 1.
-	// 0xffff = 255  + 255/256
-	return x/256.;
 }
 
 float *build_input_gamma_table(struct curveType *TRC)

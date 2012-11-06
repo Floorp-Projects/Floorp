@@ -149,7 +149,7 @@ IonBuilder::getSingleCallTarget(uint32 argc, jsbytecode *pc)
 {
     AutoAssertNoGC nogc;
 
-    types::StackTypeSet *calleeTypes = oracle->getCallTarget(script(), argc, pc);
+    types::StackTypeSet *calleeTypes = oracle->getCallTarget(script().get(nogc), argc, pc);
     if (!calleeTypes)
         return NULL;
 

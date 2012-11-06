@@ -23,11 +23,12 @@ class ErrorResult;
 
 namespace dom {
 
-class AudioDestinationNode;
-class AudioBufferSourceNode;
 class AudioBuffer;
-class GainNode;
+class AudioBufferSourceNode;
+class AudioDestinationNode;
+class AudioListener;
 class DelayNode;
+class GainNode;
 
 class AudioContext MOZ_FINAL : public nsWrapperCache,
                                public EnableWebAudioCheck
@@ -56,6 +57,8 @@ public:
     return mDestination;
   }
 
+  AudioListener* Listener();
+
   already_AddRefed<AudioBufferSourceNode> CreateBufferSource();
 
   already_AddRefed<AudioBuffer>
@@ -72,6 +75,7 @@ public:
 private:
   nsCOMPtr<nsIDOMWindow> mWindow;
   nsRefPtr<AudioDestinationNode> mDestination;
+  nsRefPtr<AudioListener> mListener;
 };
 
 }

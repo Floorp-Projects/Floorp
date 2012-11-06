@@ -15,6 +15,7 @@
 #include "nsImageLoadingContent.h"
 #include "imgIRequest.h"
 #include "nsEventStates.h"
+#include "nsEventDispatcher.h"
 
 class nsGenConImageContent : public nsXMLElement,
                              public nsImageLoadingContent
@@ -40,6 +41,17 @@ public:
                               bool aCompileEventHandlers);
   virtual void UnbindFromTree(bool aDeep, bool aNullParent);
   virtual nsEventStates IntrinsicState() const;
+
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+  {
+    MOZ_ASSERT(IsInNativeAnonymousSubtree());
+    if (aVisitor.mEvent->message == NS_LOAD ||
+        aVisitor.mEvent->message == NS_LOAD_ERROR) {
+      // Don't propagate the events to the parent.
+      return NS_OK;
+    }
+    return nsXMLElement::PreHandleEvent(aVisitor);
+  }
   
 private:
   virtual ~nsGenConImageContent();
