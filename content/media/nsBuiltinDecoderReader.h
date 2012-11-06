@@ -486,8 +486,7 @@ public:
     while (!eof && aQueue.GetSize() == 0) {
       {
         ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-        if (mDecoder->GetDecodeState()
-            == nsDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
+        if (mDecoder->GetStateMachine()->IsShutdown()) {
           return nullptr;
         }
       }
