@@ -43,7 +43,7 @@ public:
                         JSContext* aCx,
                         JSObject* aObj,
                         uint32_t aArgc,
-                        jsval* aArgv);
+                        JS::Value* aArgv);
 
   nsresult GetInputStream(nsIInputStream** aInputStream);
   nsresult GetSize(uint64_t* aSize);
