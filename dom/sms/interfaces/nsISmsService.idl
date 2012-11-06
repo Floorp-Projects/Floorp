@@ -5,19 +5,21 @@
 #include "nsISupports.idl"
 
 interface nsIDOMMozSmsMessage;
+interface nsISmsRequest;
 
 %{C++
 #define SMS_SERVICE_CID { 0xbada3cb8, 0xa568, 0x4dff, { 0xb5, 0x43, 0x52, 0xbb, 0xb3, 0x14, 0x31, 0x21 } }
 #define SMS_SERVICE_CONTRACTID "@mozilla.org/sms/smsservice;1"
 %}
 
-[scriptable, builtinclass, uuid(9808dc00-33c6-45cc-a761-d1151cb192d6)]
+[scriptable, builtinclass, uuid(d4772337-3754-49ba-81cc-e141fff30377)]
 interface nsISmsService : nsISupports
 {
-  boolean        hasSupport();
+  boolean hasSupport();
   unsigned short getNumberOfMessagesForText(in DOMString text);
-            void send(in DOMString number, in DOMString message,
-                      in long requestId, [optional] in unsigned long long processId);
+  void send(in DOMString number,
+            in DOMString message,
+            in nsISmsRequest request);
 
   [implicit_jscontext]
   nsIDOMMozSmsMessage createSmsMessage(in long      id,
