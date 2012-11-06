@@ -31,7 +31,6 @@ class nsIEditor;
 struct nsRect;
 struct nsSize;
 class nsHTMLFormElement;
-class nsIDOMDOMStringMap;
 class nsIDOMHTMLMenuElement;
 class nsIDOMHTMLCollection;
 class nsDOMSettableTokenList;
@@ -218,7 +217,7 @@ public:
   nsresult GetContentEditable(nsAString& aContentEditable);
   nsresult GetIsContentEditable(bool* aContentEditable);
   nsresult SetContentEditable(const nsAString &aContentEditable);
-  nsresult GetDataset(nsIDOMDOMStringMap** aDataset);
+  nsresult GetDataset(nsISupports** aDataset);
   already_AddRefed<nsDOMStringMap> Dataset();
   // Callback for destructor of of dataset to ensure to null out weak pointer.
   nsresult ClearDataset();

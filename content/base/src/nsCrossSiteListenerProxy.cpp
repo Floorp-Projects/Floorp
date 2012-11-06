@@ -189,7 +189,7 @@ nsPreflightCache::GetEntry(nsIURI* aURI,
     // Entry already existed so just return it. Also update the LRU list.
 
     // Move to the head of the list.
-    entry->remove();
+    entry->removeFrom(mList);
     mList.insertFront(entry);
 
     return entry;
@@ -243,13 +243,13 @@ nsPreflightCache::RemoveEntries(nsIURI* aURI, nsIPrincipal* aPrincipal)
   nsCString key;
   if (GetCacheKey(aURI, aPrincipal, true, key) &&
       mTable.Get(key, &entry)) {
-    entry->remove();
+    entry->removeFrom(mList);
     mTable.Remove(key);
   }
 
   if (GetCacheKey(aURI, aPrincipal, false, key) &&
       mTable.Get(key, &entry)) {
-    entry->remove();
+    entry->removeFrom(mList);
     mTable.Remove(key);
   }
 }
@@ -273,7 +273,7 @@ nsPreflightCache::RemoveExpiredEntries(const nsACString& aKey,
   if (aValue->mHeaders.IsEmpty() &&
       aValue->mMethods.IsEmpty()) {
     // Expired, remove from the list as well as the hash table.
-    aValue->remove();
+    aValue->removeFrom(sPreflightCache->mList);
     return PL_DHASH_REMOVE;
   }
   

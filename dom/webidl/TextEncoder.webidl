@@ -11,7 +11,6 @@
 
 [Constructor(optional DOMString label = "utf-8")]
 interface TextEncoder {
-  [SetterThrows]
   readonly attribute DOMString encoding;
   [Throws]
   Uint8Array encode(optional DOMString? input = null, optional TextEncodeOptions options);

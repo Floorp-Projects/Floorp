@@ -884,7 +884,7 @@ class CallCompiler : public BaseCompiler
         masm.storePtr(ImmPtr((void *) ic.frameSize.rejoinState(f.pc(), false)),
                       FrameAddress(offsetof(VMFrame, stubRejoin)));
 
-        masm.bumpStubCount(f.script(), f.pc(), Registers::tempCallReg());
+        masm.bumpStubCount(f.script().get(nogc), f.pc(), Registers::tempCallReg());
 
         /* Try and compile. On success we get back the nmap pointer. */
         void *compilePtr = JS_FUNC_TO_DATA_PTR(void *, stubs::CompileFunction);
@@ -1001,7 +1001,7 @@ class CallCompiler : public BaseCompiler
         /* Guard that it's the same script. */
         Address scriptAddr(ic.funObjReg, JSFunction::offsetOfNativeOrScript());
         Jump funGuard = masm.branchPtr(Assembler::NotEqual, scriptAddr,
-                                       ImmPtr(obj->toFunction()->script()));
+                                       ImmPtr(obj->toFunction()->script().get(nogc)));
         Jump done = masm.jump();
 
         LinkerHelper linker(masm, JSC::JAEGER_CODE);
@@ -1261,7 +1261,7 @@ class CallCompiler : public BaseCompiler
 
         AutoAssertNoGC nogc;
         JS_ASSERT(fun);
-        JSScript *script = fun->script();
+        JSScript *script = fun->script().get(nogc);
         JS_ASSERT(script);
 
         uint32_t flags = callingNew ? StackFrame::CONSTRUCTING : 0;
@@ -1432,7 +1432,7 @@ ic::GenerateArgumentCheckStub(VMFrame &f)
     JITScript *jit = f.jit();
     StackFrame *fp = f.fp();
     JSFunction *fun = fp->fun();
-    JSScript *script = fun->script();
+    JSScript *script = fun->script().get(nogc);
 
     if (jit->argsCheckPool)
         jit->resetArgsCheck();

@@ -185,6 +185,14 @@ CodeGeneratorShared::restoreLive(LInstruction *ins)
     masm.PopRegsInMask(safepoint->liveRegs());
 }
 
+void
+CodeGeneratorShared::restoreLiveIgnore(LInstruction *ins, RegisterSet ignore)
+{
+    JS_ASSERT(!ins->isCall());
+    LSafepoint *safepoint = ins->safepoint();
+    masm.PopRegsInMaskIgnore(safepoint->liveRegs(), ignore);
+}
+
 } // ion
 } // js
 

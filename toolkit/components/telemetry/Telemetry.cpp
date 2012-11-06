@@ -90,6 +90,145 @@ AutoHashtable<EntryType>::ReflectIntoJS(ReflectEntryFunc entryFunc,
   return num == this->Count();
 }
 
+// This class is conceptually a list of ProcessedStack objects, but it represents them
+// more efficiently by keeping a single global list of modules.
+class CombinedStacks {
+public:
+  typedef std::vector<Telemetry::ProcessedStack::Frame> Stack;
+  const Telemetry::ProcessedStack::Module& GetModule(unsigned aIndex) const;
+  size_t GetModuleCount() const;
+  const Stack& GetStack(unsigned aIndex) const;
+  void AddStack(const Telemetry::ProcessedStack& aStack);
+  size_t GetStackCount() const;
+  size_t SizeOfExcludingThis() const;
+private:
+  std::vector<Telemetry::ProcessedStack::Module> mModules;
+  std::vector<Stack> mStacks;
+};
+
+size_t
+CombinedStacks::GetModuleCount() const {
+  return mModules.size();
+}
+
+const Telemetry::ProcessedStack::Module&
+CombinedStacks::GetModule(unsigned aIndex) const {
+  return mModules[aIndex];
+}
+
+void
+CombinedStacks::AddStack(const Telemetry::ProcessedStack& aStack) {
+  mStacks.resize(mStacks.size() + 1);
+  CombinedStacks::Stack& adjustedStack = mStacks.back();
+
+  size_t stackSize = aStack.GetStackSize();
+  for (int i = 0; i < stackSize; ++i) {
+    const Telemetry::ProcessedStack::Frame& frame = aStack.GetFrame(i);
+    uint16_t modIndex;
+    if (frame.mModIndex == std::numeric_limits<uint16_t>::max()) {
+      modIndex = frame.mModIndex;
+    } else {
+      const Telemetry::ProcessedStack::Module& module =
+        aStack.GetModule(frame.mModIndex);
+      std::vector<Telemetry::ProcessedStack::Module>::iterator modIterator =
+        std::find(mModules.begin(), mModules.end(), module);
+      if (modIterator == mModules.end()) {
+        mModules.push_back(module);
+        modIndex = mModules.size() - 1;
+      } else {
+        modIndex = modIterator - mModules.begin();
+      }
+    }
+    Telemetry::ProcessedStack::Frame adjustedFrame = { frame.mOffset, modIndex };
+    adjustedStack.push_back(adjustedFrame);
+  }
+}
+
+const CombinedStacks::Stack&
+CombinedStacks::GetStack(unsigned aIndex) const {
+  return mStacks[aIndex];
+}
+
+size_t
+CombinedStacks::GetStackCount() const {
+  return mStacks.size();
+}
+
+size_t
+CombinedStacks::SizeOfExcludingThis() const {
+  // This is a crude approximation. We would like to do something like
+  // aMallocSizeOf(&mModules[0]), but on linux aMallocSizeOf will call
+  // malloc_usable_size which is only safe on the pointers returned by malloc.
+  // While it works on current libstdc++, it is better to be safe and not assume
+  // that &vec[0] points to one. We could use a custom allocator, but
+  // it doesn't seem worth it.
+  size_t n = 0;
+  n += mModules.capacity() * sizeof(Telemetry::ProcessedStack::Module);
+  n += mStacks.capacity() * sizeof(Stack);
+  for (std::vector<Stack>::const_iterator i = mStacks.begin(),
+         e = mStacks.end(); i != e; ++i) {
+    const Stack& s = *i;
+    n += s.capacity() * sizeof(Telemetry::ProcessedStack::Frame);
+  }
+  return n;
+}
+
+class HangReports {
+public:
+  size_t SizeOfExcludingThis() const;
+  void AddHang(const Telemetry::ProcessedStack& aStack, uint32_t aDuration);
+  size_t GetStackCount() const;
+  const CombinedStacks::Stack& GetStack(unsigned aIndex) const;
+  uint32_t GetDuration(unsigned aIndex) const;
+  size_t GetModuleCount() const;
+  const Telemetry::ProcessedStack::Module& GetModule(unsigned aIndex) const;
+private:
+  CombinedStacks mStacks;
+  std::vector<uint32_t> mDurations;
+};
+
+void
+HangReports::AddHang(const Telemetry::ProcessedStack& aStack, uint32_t aDuration) {
+  mStacks.AddStack(aStack);
+  mDurations.push_back(aDuration);
+}
+
+size_t
+HangReports::SizeOfExcludingThis() const {
+  size_t n = 0;
+  n += mStacks.SizeOfExcludingThis();
+  // This is a crude approximation. See comment on
+  // CombinedStacks::SizeOfExcludingThis.
+  n += mDurations.capacity() * sizeof(uint32_t);
+  return n;
+}
+
+size_t
+HangReports::GetModuleCount() const {
+  return mStacks.GetModuleCount();
+}
+
+const Telemetry::ProcessedStack::Module&
+HangReports::GetModule(unsigned aIndex) const {
+  return mStacks.GetModule(aIndex);
+}
+
+uint32_t
+HangReports::GetDuration(unsigned aIndex) const {
+  return mDurations[aIndex];
+}
+
+const CombinedStacks::Stack&
+HangReports::GetStack(unsigned aIndex) const {
+  return mStacks.GetStack(aIndex);
+}
+
+size_t
+HangReports::GetStackCount() const {
+  MOZ_ASSERT(mDurations.size() == mStacks.GetStackCount());
+  return mStacks.GetStackCount();
+}
+
 class TelemetryImpl MOZ_FINAL : public nsITelemetry
 {
   NS_DECL_ISUPPORTS
@@ -120,10 +259,6 @@ public:
     struct Stat otherThreads;
   };
   typedef nsBaseHashtableET<nsCStringHashKey, StmtStats> SlowSQLEntryType;
-  struct HangReport {
-    uint32_t duration;
-    Telemetry::ProcessedStack mStack;
-  };
 
 private:
   // We don't need to poke inside any of our hashtables for more
@@ -191,7 +326,7 @@ private:
   // AutoHashtable here.
   nsTHashtable<nsCStringHashKey> mTrackedDBs;
   Mutex mHashMutex;
-  nsTArray<HangReport> mHangReports;
+  HangReports mHangReports;
   Mutex mHangReportsMutex;
   nsIMemoryReporter *mMemoryReporter;
 };
@@ -216,7 +351,7 @@ TelemetryImpl::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
                                          aMallocSizeOf);
   n += mTrackedDBs.SizeOfExcludingThis(impl<nsCStringHashKey>::SizeOfEntryExcludingThis,
                                        aMallocSizeOf);
-  n += mHangReports.SizeOfExcludingThis(aMallocSizeOf);
+  n += mHangReports.SizeOfExcludingThis();
   return n;
 }
 
@@ -1093,8 +1228,8 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
   *ret = OBJECT_TO_JSVAL(reportArray);
 
   // Each hang report is an object in the 'chromeHangs' array
-  for (size_t i = 0; i < mHangReports.Length(); ++i) {
-    Telemetry::ProcessedStack &stack = mHangReports[i].mStack;
+  for (size_t i = 0; i < mHangReports.GetStackCount(); ++i) {
+    const CombinedStacks::Stack &stack = mHangReports.GetStack(i);
     JSObject *reportObj = JS_NewObject(cx, NULL, NULL, NULL);
     if (!reportObj) {
       return NS_ERROR_FAILURE;
@@ -1106,7 +1241,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
 
     // Record the hang duration (expressed in seconds)
     JSBool ok = JS_DefineProperty(cx, reportObj, "duration",
-                                  INT_TO_JSVAL(mHangReports[i].duration),
+                                  INT_TO_JSVAL(mHangReports.GetDuration(i)),
                                   NULL, NULL, JSPROP_ENUMERATE);
     if (!ok) {
       return NS_ERROR_FAILURE;
@@ -1124,10 +1259,10 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
       return NS_ERROR_FAILURE;
     }
 
-    const uint32_t pcCount = stack.GetStackSize();
+    const uint32_t pcCount = stack.size();
     for (size_t pcIndex = 0; pcIndex < pcCount; ++pcIndex) {
       nsAutoCString pcString;
-      const Telemetry::ProcessedStack::Frame &Frame = stack.GetFrame(pcIndex);
+      const Telemetry::ProcessedStack::Frame &Frame = stack[pcIndex];
       pcString.AppendPrintf("0x%p", Frame.mOffset);
       JSString *str = JS_NewStringCopyZ(cx, pcString.get());
       if (!str) {
@@ -1151,11 +1286,11 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
       return NS_ERROR_FAILURE;
     }
 
-    const uint32_t moduleCount = stack.GetNumModules();
+    const uint32_t moduleCount = (i == 0) ? mHangReports.GetModuleCount() : 0;
     for (size_t moduleIndex = 0; moduleIndex < moduleCount; ++moduleIndex) {
       // Current module
       const Telemetry::ProcessedStack::Module &module =
-        stack.GetModule(moduleIndex);
+        mHangReports.GetModule(moduleIndex);
 
       JSObject *moduleInfoArray = JS_NewArrayObject(cx, 0, nullptr);
       if (!moduleInfoArray) {
@@ -1492,21 +1627,7 @@ TelemetryImpl::RecordChromeHang(uint32_t duration,
 
   MutexAutoLock hangReportMutex(sTelemetry->mHangReportsMutex);
 
-  // Only report the modules which changed since the first hang report
-  if (sTelemetry->mHangReports.Length()) {
-    Telemetry::ProcessedStack &firstStack =
-      sTelemetry->mHangReports[0].mStack;
-    for (size_t i = 0; i < aStack.GetNumModules(); ++i) {
-      const Telemetry::ProcessedStack::Module &module = aStack.GetModule(i);
-      if (firstStack.HasModule(module)) {
-        aStack.RemoveModule(i);
-        --i;
-      }
-    }
-  }
-
-  HangReport newReport = { duration, aStack };
-  sTelemetry->mHangReports.AppendElement(newReport);
+  sTelemetry->mHangReports.AddHang(aStack, duration);
 }
 #endif
 
@@ -1628,15 +1749,6 @@ const ProcessedStack::Module &ProcessedStack::GetModule(unsigned aIndex) const
 {
   MOZ_ASSERT(aIndex < mModules.size());
   return mModules[aIndex];
-}
-
-bool ProcessedStack::HasModule(const Module &aModule) const {
-  return mModules.end() !=
-    std::find(mModules.begin(), mModules.end(), aModule);
-}
-
-void ProcessedStack::RemoveModule(unsigned aIndex) {
-  mModules.erase(mModules.begin() + aIndex);
 }
 
 void ProcessedStack::AddModule(const Module &aModule)

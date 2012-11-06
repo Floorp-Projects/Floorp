@@ -13,6 +13,8 @@ let gDebuggee = null;
 let gDebugger = null;
 let gView = null;
 
+requestLongerTimeout(2);
+
 function test()
 {
   let step = 0;
