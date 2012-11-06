@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=809003
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 809003</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+     #testdiv:before {
+       content: url('data:image/gif,GIF89a%01%00%01%00%80%01%00%FF%00%00%FF%FF%FF!%F9%04%01%00%00%01%00%2C%00%00%00%00%01%00%01%00%00%02%02D%01%00%3B');
+     }
+     #testdiv:after {
+       content: url('non_existing_image.gif');
+     }
+    </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=809003">Mozilla Bug 809003</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 809003 **/
+
+window.didGetLoad = false;
+window.didGetError = false;
+
+SimpleTest.waitForExplicitFinish();
+
+setTimeout(function() {
+  is(window.didGetLoad, false, "Shouldn't have got load event!");
+  is(window.didGetError, false, "Shouldn't have got error event!");
+  SimpleTest.finish();
+}, 1000);
+
+</script>
+</pre>
+<div id="testdiv" onload="window.didGetLoad = true;" onerror="window.didGetError = true;"></div>
+</body>
+</html>
