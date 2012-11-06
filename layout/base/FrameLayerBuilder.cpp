@@ -48,6 +48,7 @@ FrameLayerBuilder::DisplayItemData::DisplayItemData(LayerManagerData* aParent, u
   , mContainerLayerGeneration(aGeneration)
   , mLayerState(aLayerState)
   , mUsed(true)
+  , mIsInvalid(false)
 {
 }
 
@@ -1020,6 +1021,7 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(nsRefPtrHashKey<DisplayItemData
   }
 
   data->mUsed = false;
+  data->mIsInvalid = false;
   return PL_DHASH_NEXT;
 }
   
@@ -1112,6 +1114,20 @@ FrameLayerBuilder::HasRetainedDataFor(nsIFrame* aFrame, uint32_t aDisplayItemKey
   return false;
 }
 
+void
+FrameLayerBuilder::IterateRetainedDataFor(nsIFrame* aFrame, DisplayItemDataCallback aCallback)
+{
+  nsTArray<DisplayItemData*> *array = 
+    reinterpret_cast<nsTArray<DisplayItemData*>*>(aFrame->Properties().Get(LayerManagerDataProperty()));
+  if (!array) {
+    return;
+  }
+  
+  for (uint32_t i = 0; i < array->Length(); i++) {
+    aCallback(aFrame, array->ElementAt(i));
+  }
+}
+
 FrameLayerBuilder::DisplayItemData*
 FrameLayerBuilder::GetOldLayerForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey)
 {
@@ -1132,7 +1148,8 @@ Layer*
 FrameLayerBuilder::GetOldLayerFor(nsDisplayItem* aItem, 
                                   nsDisplayItemGeometry** aOldGeometry, 
                                   Clip** aOldClip,
-                                  nsTArray<nsIFrame*>* aChangedFrames)
+                                  nsTArray<nsIFrame*>* aChangedFrames,
+                                  bool *aIsInvalid)
 {
   uint32_t key = aItem->GetPerFrameKey();
   nsIFrame* frame = aItem->GetUnderlyingFrame();
@@ -1148,6 +1165,9 @@ FrameLayerBuilder::GetOldLayerFor(nsDisplayItem* aItem,
       }
       if (aChangedFrames) {
         oldData->GetFrameListChanges(aItem, *aChangedFrames); 
+      }
+      if (aIsInvalid) {
+        *aIsInvalid = oldData->mIsInvalid;
       }
       return oldData->mLayer;
     }
@@ -2196,7 +2216,8 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
   nsDisplayItemGeometry *oldGeometry = NULL;
   FrameLayerBuilder::Clip* oldClip = NULL;
   nsAutoTArray<nsIFrame*,4> changedFrames;
-  Layer* oldLayer = mLayerBuilder->GetOldLayerFor(aItem, &oldGeometry, &oldClip, &changedFrames);
+  bool isInvalid = false;
+  Layer* oldLayer = mLayerBuilder->GetOldLayerFor(aItem, &oldGeometry, &oldClip, &changedFrames, &isInvalid);
   if (aNewLayer != oldLayer && oldLayer) {
     // The item has changed layers.
     // Invalidate the old bounds in the old layer and new bounds in the new layer.
@@ -2248,7 +2269,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
 #ifdef DEBUG_INVALIDATIONS
     printf("Display item type %s(%p) added to layer %p!\n", aItem->Name(), aItem->GetUnderlyingFrame(), aNewLayer);
 #endif
-  } else if (aItem->IsInvalid(invalid) && invalid.IsEmpty()) {
+  } else if (isInvalid || (aItem->IsInvalid(invalid) && invalid.IsEmpty())) {
     // Either layout marked item as needing repainting, invalidate the entire old and new areas.
     combined = oldClip->ApplyNonRoundedIntersection(oldGeometry->ComputeInvalidationRegion());
     combined.MoveBy(shift);
