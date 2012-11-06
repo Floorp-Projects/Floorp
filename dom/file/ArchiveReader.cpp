@@ -192,6 +192,17 @@ ArchiveReader::GetFile(const nsAString& filename,
   return NS_OK;
 }
 
+/* nsIDOMArchiveRequest getFiles (); */
+NS_IMETHODIMP
+ArchiveReader::GetFiles(nsIDOMArchiveRequest** _retval)
+{
+  nsRefPtr<ArchiveRequest> request = GenerateArchiveRequest();
+  request->OpGetFiles();
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
 already_AddRefed<ArchiveRequest>
 ArchiveReader::GenerateArchiveRequest()
 {
