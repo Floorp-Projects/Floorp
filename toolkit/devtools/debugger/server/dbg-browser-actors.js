@@ -451,7 +451,7 @@ BrowserTabActor.prototype = {
     this._contextPool = new ActorPool(this.conn);
     this.conn.addActorPool(this._contextPool);
 
-    this.threadActor = new ThreadActor(this);
+    this.threadActor = new ThreadActor(this, this.browser.contentWindow.wrappedJSObject);
     this._contextPool.addActor(this.threadActor);
   },
 
