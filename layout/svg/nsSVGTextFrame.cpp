@@ -246,23 +246,10 @@ nsSVGTextFrame::ReflowSVG()
 
   UpdateGlyphPositioning(false);
 
-  // We only invalidate if we are dirty, if our outer-<svg> has already had its
-  // initial reflow (since if it hasn't, its entire area will be invalidated
-  // when it gets that initial reflow), and if our parent is not dirty (since
-  // if it is, then it will invalidate its entire new area, which will include
-  // our new area).
-  bool invalidate = (mState & NS_FRAME_IS_DIRTY) &&
-    !(GetParent()->GetStateBits() &
-       (NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY));
-
+  // We leave it up to nsSVGTextFrameBase::ReflowSVG to invalidate. XXXSDL
   // With glyph positions updated, our descendants can invalidate their new
   // areas correctly:
   nsSVGTextFrameBase::ReflowSVG();
-
-  if (invalidate) {
-    // XXXSDL Let FinishAndStoreOverflow do this.
-    nsSVGUtils::InvalidateBounds(this, true);
-  }
 }
 
 SVGBBox
