@@ -12,12 +12,23 @@
      -->
 <!ENTITY downloads.title                  "Downloads">
 
-<!-- LOCALIZATION NOTE (downloads.width):
-     Width of the Downloads Panel list items, expressed using a CSS unit.  The
-     longest labels that should fit in the item width are usually those of
-     in-progress downloads and those of blocked downloads.
+<!-- LOCALIZATION NOTE (downloadDetails.width):
+     Width of details for a Downloads Panel item (which directly influences the
+     width of the Downloads Panel) expressed using a CSS unit. The longest
+     labels that should fit in the item width are usually those of in-progress
+     downloads and those of blocked downloads.
+
+     A good rule of thumb is to try to determine the longest string possible
+     that an in-progress download could display, and use that value in ch
+     units.
+
+     For example, in English, a long string would be:
+
+     59 minutes, 59 seconds remaining - 1022 of 1023 KB
+
+     That's 50 characters, so we set the width at 50ch.
      -->
-<!ENTITY downloads.width                  "65ch">
+<!ENTITY downloadDetails.width            "50ch">
 
 <!ENTITY cmd.pause.label                  "Pause">
 <!ENTITY cmd.pause.accesskey              "P">
