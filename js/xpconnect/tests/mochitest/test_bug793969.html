@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=793969
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 793969</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=793969">Mozilla Bug 793969</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 793969 **/
+function checkThrows(f, desc, skipMessageCheck) {
+  try {
+    f();
+    ok(false, "Should have thrown for " + desc);
+  } catch (e) {
+    ok(true, "threw correctly");
+    if (!skipMessageCheck)
+      ok(/denied/.exec(e), "Correctly threw a security exception: " + e);
+  }
+}
+
+checkThrows(function() { location.valueOf = 'hah'; }, 'Shadow with string');
+checkThrows(function() { location.valueOf = function() { return {a: 'hah'};} }, 'Shadow with function');
+checkThrows(function() { Object.defineProperty(location, 'valueOf', { value: function() { return 'hah'; } }); }, 'defineProperty with value');
+checkThrows(function() { delete location.valueOf; Object.defineProperty(location, 'valueOf', { value: function() { return 'hah'; } }); }, 'delete + defineProperty with value');
+checkThrows(function() { Object.defineProperty(location, 'valueOf', { getter: function() { return 'hah'; } }); }, 'defineProperty with getter');
+checkThrows(function() { delete location.valueOf; Object.defineProperty(location, 'valueOf', { getter: function() { return 'hah'; } }); }, 'delete + defineProperty with getter');
+
+Object.prototype.valueOf = function() { return 'hah'; };
+is(({}).valueOf(), 'hah', "Shadowing on Object.prototype works for vanilla objects");
+is(location.valueOf(), location, "Shadowing on Object.prototype and Location.prototype doesn't for location objects");
+
+// Make sure that Location.prototype can't be mucked with.
+function checkProto() {
+  "use strict"
+  checkThrows(function() { Location.prototype.foo = 'hah'; }, 'adding new property to Location.prototype', /* skipMessageCheck = */ true);
+  checkThrows(function() { Location.prototype.valueOf = 'hah'; }, 'defining valueOf on Location.prototype', /* skipMessageCheck = */ true);
+  checkThrows(function() { delete Location.prototype.toString; }, 'deleting property on Location.prototype', /* skipMessageCheck = */ true);
+  checkThrows(function() { Location.prototype.toString = 'hah'; }, 'setting property on Location.prototype', /* skipMessageCheck = */ true);
+  checkThrows(function() { Object.defineProperty(Location.prototype, 'toString', {value: 'hah'}); }, 'defining property on Location.prototype', /* skipMessageCheck = */ true);
+};
+checkProto();
+
+</script>
+</pre>
+</body>
+</html>
