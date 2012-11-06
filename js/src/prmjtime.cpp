@@ -326,11 +326,6 @@ def PRMJ_Now():
 
 */
 
-// We parameterize the delay count just so that shell builds can
-// set it to 0 in order to get high-resolution benchmarking.
-// 10 seems to be the number of calls to load with a blank homepage.
-int CALIBRATION_DELAY_COUNT = 10;
-
 int64_t
 PRMJ_Now(void)
 {
@@ -342,16 +337,6 @@ PRMJ_Now(void)
     bool needsCalibration = false;
     int64_t returnedTime;
     long double cachedOffset = 0.0;
-
-    /* To avoid regressing startup time (where high resolution is likely
-       not needed), give the old behavior for the first few calls.
-       This does not appear to be needed on Vista as the timeBegin/timeEndPeriod
-       calls seem to immediately take effect. */
-    int thiscall = JS_ATOMIC_INCREMENT(&nCalls);
-    if (thiscall <= CALIBRATION_DELAY_COUNT) {
-        GetSystemTimeAsFileTime(&ft);
-        return (FILETIME2INT64(ft)-win2un)/10L;
-    }
 
     /* For non threadsafe platforms, NowInit is not necessary */
 #ifdef JS_THREADSAFE

@@ -64,6 +64,8 @@ public:
     found = !!namedItem;
     return namedItem;
   }
+
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLCollection, NS_IHTMLCOLLECTION_IID)

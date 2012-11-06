@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Crashtest for bug 808374</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+mozAudioContext().createBuffer(0, 0, 0);
+ok(true, "The test should not crash during CC");
+SpecialPowers.clearUserPref("media.webaudio.enabled");
+
+</script>
+</pre>
+</body>
+</html>

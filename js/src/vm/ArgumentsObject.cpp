@@ -49,7 +49,7 @@ CopyStackFrameArguments(const StackFrame *fp, HeapValue *dst)
 ArgumentsObject::MaybeForwardToCallObject(StackFrame *fp, JSObject *obj, ArgumentsData *data)
 {
     AutoAssertNoGC nogc;
-    RawScript script = fp->script();
+    RawScript script = fp->script().get(nogc);
     if (fp->fun()->isHeavyweight() && script->argsObjAliasesFormals()) {
         obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(fp->callObj()));
         for (AliasedFormalIter fi(script); fi; fi++)

@@ -329,6 +329,10 @@ MOCHITEST_FILES = \
 		test_iframe_sandbox_workers.html \
 		file_iframe_sandbox_g_if1.html \
 		file_iframe_sandbox_worker.js \
+		test_named_options.html \
+		test_htmlcollection.html \
+		test_formelements.html \
+		test_rowscollection.html \
 		$(NULL)
 
 MOCHITEST_BROWSER_FILES = \
