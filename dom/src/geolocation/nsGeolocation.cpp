@@ -574,6 +574,11 @@ nsresult nsGeolocationService::Init()
     return NS_ERROR_FAILURE;
   }
 
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    sGeoInitPending = false;
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIGeolocationProvider> provider = do_GetService(NS_GEOLOCATION_PROVIDER_CONTRACTID);
   if (provider) {
     mProviders.AppendObject(provider);
