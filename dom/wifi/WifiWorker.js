@@ -814,6 +814,17 @@ var WifiManager = (function() {
   function handleEvent(event) {
     debug("Event coming in: " + event);
     if (event.indexOf("CTRL-EVENT-") !== 0 && event.indexOf("WPS") !== 0) {
+      // Handle connection fail exception on WEP-128, while password length
+      // is not 5 nor 13 bytes.
+      if (event.indexOf("Association request to the driver failed") !== -1) {
+        notify("passwordmaybeincorrect");
+        if (manager.authenticationFailuresCount > MAX_RETRIES_ON_AUTHENTICATION_FAILURE) {
+          notify("disconnected");
+          manager.authenticationFailuresCount = 0;
+        }
+        return true;
+      }
+
       if (event.indexOf("WPA:") == 0 &&
           event.indexOf("pre-shared key may be incorrect") != -1) {
         notify("passwordmaybeincorrect");
@@ -887,6 +898,15 @@ var WifiManager = (function() {
       manager.connectionInfo.id = -1;
       if (manager.authenticationFailuresCount > MAX_RETRIES_ON_AUTHENTICATION_FAILURE) {
         notify("disconnected", {BSSID: bssid});
+        manager.authenticationFailuresCount = 0;
+      }
+      return true;
+    }
+    // Association reject is triggered mostly on incorrect WEP key.
+    if (eventData.indexOf("CTRL-EVENT-ASSOC-REJECT") === 0) {
+      notify("passwordmaybeincorrect");
+      if (manager.authenticationFailuresCount > MAX_RETRIES_ON_AUTHENTICATION_FAILURE) {
+        notify("disconnected");
         manager.authenticationFailuresCount = 0;
       }
       return true;
