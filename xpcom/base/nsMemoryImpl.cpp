@@ -22,7 +22,7 @@
 
 #ifdef ANDROID
 #include <stdio.h>
-#define LOW_MEMORY_THRESHOLD_KB (256 * 1024)
+#define LOW_MEMORY_THRESHOLD_KB (512 * 1024)
 #endif
 
 static nsMemoryImpl sGlobalMemory;
@@ -70,7 +70,7 @@ nsMemoryImpl::IsLowMemoryPlatform(bool *result)
         sLowMemory = 0; // assume "not low memory" in case file operations fail
         *result = false;
 
-        // check if MemTotal from /proc/meminfo is greater than LOW_MEMORY_THRESHOLD_KB
+        // check if MemTotal from /proc/meminfo is less than LOW_MEMORY_THRESHOLD_KB
         FILE* fd = fopen("/proc/meminfo", "r");
         if (!fd) {
             return NS_OK;
@@ -83,7 +83,7 @@ nsMemoryImpl::IsLowMemoryPlatform(bool *result)
         if (rv != 1) {
             return NS_OK;
         }
-        sLowMemory = (mem > LOW_MEMORY_THRESHOLD_KB) ? 0 : 1;
+        sLowMemory = (mem < LOW_MEMORY_THRESHOLD_KB) ? 1 : 0;
     }
     *result = (sLowMemory == 1);
 #else
