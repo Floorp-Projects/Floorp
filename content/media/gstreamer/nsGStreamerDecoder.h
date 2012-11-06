@@ -13,7 +13,7 @@ class nsGStreamerDecoder : public nsBuiltinDecoder
 {
 public:
   virtual nsMediaDecoder* Clone() { return new nsGStreamerDecoder(); }
-  virtual nsDecoderStateMachine* CreateStateMachine();
+  virtual nsBuiltinDecoderStateMachine* CreateStateMachine();
 };
 
 #endif
