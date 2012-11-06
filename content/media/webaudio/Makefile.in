@@ -26,6 +26,7 @@ CPPSRCS := \
   DelayNode.cpp \
   EnableWebAudioCheck.cpp \
   GainNode.cpp \
+  PannerNode.cpp \
   $(NULL)
 
 EXPORTS_NAMESPACES := mozilla/dom
@@ -39,6 +40,7 @@ EXPORTS_mozilla/dom := \
   AudioSourceNode.h \
   DelayNode.h \
   GainNode.h \
+  PannerNode.h \
   $(NULL)
 
 PARALLEL_DIRS := test
