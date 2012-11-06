@@ -16,11 +16,15 @@
 
 BEGIN_FILE_NAMESPACE
 
+/**
+ * This is the ArchiveRequest that handles any operation
+ * related to ArchiveReader
+ */
 class ArchiveRequest : public mozilla::dom::DOMRequest,
                        public nsIDOMArchiveRequest
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMARCHIVEREQUEST
 
   NS_FORWARD_NSIDOMDOMREQUEST(DOMRequest::)
