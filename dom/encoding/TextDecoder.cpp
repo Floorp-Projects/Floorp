@@ -31,11 +31,10 @@ TextDecoder::Init(const nsAString& aEncoding,
     return;
   }
 
-  // Run the steps to get an encoding from Encoding.
+  // Let encoding be the result of getting an encoding from label.
+  // If encoding is failure, throw a TypeError.
   if (!EncodingUtils::FindEncodingForLabel(label, mEncoding)) {
-    // If the steps result in failure,
-    // throw a "EncodingError" exception and terminate these steps.
-    aRv.Throw(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+    aRv.ThrowTypeError(MSG_ENCODING_NOT_SUPPORTED, &label);
     return;
   }
 
