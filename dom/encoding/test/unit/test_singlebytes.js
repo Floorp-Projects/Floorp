@@ -273,7 +273,6 @@ test(
     equal(TextDecoder('utf-16le').decode(new Uint8Array(utf16le)), string);
     equal(TextDecoder('utf-16be').decode(new Uint8Array(utf16be)), string);
     equal(TextDecoder('utf-16').decode(new Uint8Array(utf16le)), string);
-    equal(TextDecoder('utf-16').decode(new Uint8Array(utf16be)), string);
 
     /*
     // TODO: New API?
