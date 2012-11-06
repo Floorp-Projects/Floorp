@@ -158,7 +158,7 @@ nsDASHDecoder::~nsDASHDecoder()
   MOZ_COUNT_DTOR(nsDASHDecoder);
 }
 
-nsDecoderStateMachine*
+nsBuiltinDecoderStateMachine*
 nsDASHDecoder::CreateStateMachine()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");

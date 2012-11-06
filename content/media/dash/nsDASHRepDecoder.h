@@ -53,12 +53,12 @@ public:
 
   // Called by the main decoder at creation time; points to the main state
   // machine managed by the main decoder. Called on the main thread only.
-  nsresult SetStateMachine(nsDecoderStateMachine* aSM);
+  nsresult SetStateMachine(nsBuiltinDecoderStateMachine* aSM);
 
 private:
   // Overridden to return the ptr set by SetStateMachine. Called on the main
   // thread only.
-  nsDecoderStateMachine* CreateStateMachine();
+  nsBuiltinDecoderStateMachine* CreateStateMachine();
 
 public:
   // Called by nsDASHDecoder at creation time; points to the media resource

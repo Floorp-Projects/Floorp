@@ -17,7 +17,7 @@ public:
     }
     return new nsOggDecoder();
   }
-  virtual nsDecoderStateMachine* CreateStateMachine();
+  virtual nsBuiltinDecoderStateMachine* CreateStateMachine();
 };
 
 #endif

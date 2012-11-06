@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsBuiltinDecoder.h"
 #include <limits>
 #include "nsNetUtil.h"
 #include "nsAudioStream.h"
@@ -12,7 +13,6 @@
 #include "nsIObserverService.h"
 #include "nsTArray.h"
 #include "VideoUtils.h"
-#include "nsBuiltinDecoder.h"
 #include "nsBuiltinDecoderStateMachine.h"
 #include "nsTimeRanges.h"
 #include "nsContentUtils.h"
@@ -29,7 +29,7 @@ PRLogModuleInfo* gBuiltinDecoderLog;
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsBuiltinDecoder, nsIObserver)
 
-void nsBuiltinDecoder::Pause() 
+void nsBuiltinDecoder::Pause()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
@@ -253,7 +253,7 @@ bool nsBuiltinDecoder::Init(nsHTMLMediaElement* aElement)
 void nsBuiltinDecoder::Shutdown()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  
+
   if (mShuttingDown)
     return;
 
@@ -350,7 +350,7 @@ nsresult nsBuiltinDecoder::InitializeStateMachine(nsMediaDecoder* aCloneDonor)
     mDecoderStateMachine->SetDuration(mDuration);
     mDecoderStateMachine->SetVolume(mInitialVolume);
     mDecoderStateMachine->SetAudioCaptured(mInitialAudioCaptured);
-    
+
     if (mFrameBufferLength > 0) {
       // The valid mFrameBufferLength value was specified earlier
       mDecoderStateMachine->SetFrameBufferLength(mFrameBufferLength);
@@ -744,7 +744,7 @@ nsBuiltinDecoder::GetStatistics()
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   if (mResource) {
-    result.mDownloadRate = 
+    result.mDownloadRate =
       mResource->GetDownloadRate(&result.mDownloadRateReliable);
     result.mDownloadPosition =
       mResource->GetCachedDataEnd(mDecoderPosition);
@@ -809,7 +809,7 @@ void nsBuiltinDecoder::NotifySuspendedStatusChanged()
     return;
   MediaResource* activeStream;
   bool suspended = mResource->IsSuspendedByCache(&activeStream);
-  
+
   if (mElement) {
     if (suspended) {
       // If this is an autoplay element, we need to kick off its autoplaying
@@ -818,7 +818,7 @@ void nsBuiltinDecoder::NotifySuspendedStatusChanged()
     }
     mElement->NotifySuspendedByCache(suspended);
     UpdateReadyStateForData();
-  } 
+  }
 }
 
 void nsBuiltinDecoder::NotifyBytesDownloaded()
@@ -989,7 +989,7 @@ void nsBuiltinDecoder::SeekingStarted()
 
 void nsBuiltinDecoder::ChangeState(PlayState aState)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");   
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
 
   if (mNextState == aState) {
@@ -1211,3 +1211,56 @@ void nsBuiltinDecoder::NotifyAudioAvailableListener()
     mDecoderStateMachine->NotifyAudioAvailableListener();
   }
 }
+
+bool nsBuiltinDecoder::OnDecodeThread() const {
+  return mDecoderStateMachine->OnDecodeThread();
+}
+
+ReentrantMonitor& nsBuiltinDecoder::GetReentrantMonitor() {
+  return mReentrantMonitor.GetReentrantMonitor();
+}
+
+// Constructs the time ranges representing what segments of the media
+// are buffered and playable.
+nsresult nsBuiltinDecoder::GetBuffered(nsTimeRanges* aBuffered) {
+  if (mDecoderStateMachine) {
+    return mDecoderStateMachine->GetBuffered(aBuffered);
+  }
+  return NS_ERROR_FAILURE;
+}
+
+int64_t nsBuiltinDecoder::VideoQueueMemoryInUse() {
+  if (mDecoderStateMachine) {
+    return mDecoderStateMachine->VideoQueueMemoryInUse();
+  }
+  return 0;
+}
+
+int64_t nsBuiltinDecoder::AudioQueueMemoryInUse() {
+  if (mDecoderStateMachine) {
+    return mDecoderStateMachine->AudioQueueMemoryInUse();
+  }
+  return 0;
+}
+
+void nsBuiltinDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) {
+  if (mDecoderStateMachine) {
+    mDecoderStateMachine->NotifyDataArrived(aBuffer, aLength, aOffset);
+  }
+}
+
+void nsBuiltinDecoder::UpdatePlaybackPosition(int64_t aTime)
+{
+  mDecoderStateMachine->UpdatePlaybackPosition(aTime);
+}
+
+// Provide access to the state machine object
+nsBuiltinDecoderStateMachine* nsBuiltinDecoder::GetStateMachine() {
+  return mDecoderStateMachine;
+}
+
+// Drop reference to state machine.  Only called during shutdown dance.
+void nsBuiltinDecoder::ReleaseStateMachine() {
+  mDecoderStateMachine = nullptr;
+}
+

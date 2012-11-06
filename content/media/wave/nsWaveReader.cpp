@@ -8,6 +8,7 @@
 #include "MediaResource.h"
 #include "nsWaveReader.h"
 #include "nsTimeRanges.h"
+#include "nsBuiltinDecoderStateMachine.h"
 #include "VideoUtils.h"
 
 #include "mozilla/StandardInteger.h"

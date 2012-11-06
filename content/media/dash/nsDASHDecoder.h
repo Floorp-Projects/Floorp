@@ -50,7 +50,7 @@ public:
 
   // Creates a single state machine for all stream decoders.
   // Called from Load on the main thread only.
-  nsDecoderStateMachine* CreateStateMachine();
+  nsBuiltinDecoderStateMachine* CreateStateMachine();
 
   // Loads the MPD from the network and subsequently loads the media streams.
   // Called from the main thread only.
