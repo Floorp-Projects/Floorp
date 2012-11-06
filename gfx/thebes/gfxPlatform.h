@@ -19,6 +19,7 @@
 
 #include "gfx2DGlue.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/EnumSet.h"
 #include "GfxInfoCollector.h"
 
 #ifdef XP_OS2
@@ -480,34 +481,38 @@ protected:
                                  mozilla::gfx::SurfaceFormat aFormat);
 
     /**
-     * Initialise the preferred and fallback canvas backends
-     * aBackendBitmask specifies the backends which are acceptable to the caller.
-     * The backend used is determined by aBackendBitmask and the order specified
-     * by the gfx.canvas.azure.backends pref.
+     * Initialise the preferred and fallback canvas backends as well as the
+     * content backend. The caller specifies which backends are supported in
+     * aCanvasSupportedBackends and aContentSupportedBackends.
      */
-    void InitBackendPrefs(uint32_t aCanvasBitmask, uint32_t aContentBitmask);
+    void InitBackendPrefs(
+        mozilla::EnumSet<mozilla::gfx::BackendType> aCanvasSupportedBackends,
+        mozilla::EnumSet<mozilla::gfx::BackendType> aContentSupportedBackends);
 
     /**
      * returns the first backend named in the pref gfx.canvas.azure.backends
-     * which is a component of aBackendBitmask, a bitmask of backend types
+     * which is a contained in the set of supported backends.
      */
-    static mozilla::gfx::BackendType GetCanvasBackendPref(uint32_t aBackendBitmask);
+    static mozilla::gfx::BackendType GetCanvasBackendPref(
+        mozilla::EnumSet<mozilla::gfx::BackendType> aSupportedBackends);
 
     /**
      * returns the first backend named in the pref gfx.content.azure.backend
-     * which is a component of aBackendBitmask, a bitmask of backend types
+     * which is a contained in the set of supported backends.
      */
-    static mozilla::gfx::BackendType GetContentBackendPref(uint32_t aBackendBitmask);
+    static mozilla::gfx::BackendType GetContentBackendPref(
+        mozilla::EnumSet<mozilla::gfx::BackendType> aSupportedBackends);
 
     /**
      * If aEnabledPrefName is non-null, checks the aEnabledPrefName pref and
      * returns BACKEND_NONE if the pref is not enabled.
      * Otherwise it will return the first backend named in aBackendPrefName
-     * allowed by aBackendBitmask, a bitmask of backend types.
+     * aBackendPrefName allowed by aSupportedBackends.
      */
-    static mozilla::gfx::BackendType GetBackendPref(const char* aEnabledPrefName,
-                                                    const char* aBackendPrefName,
-                                                    uint32_t aBackendBitmask);
+    static mozilla::gfx::BackendType GetBackendPref(
+        const char* aEnabledPrefName, const char* aBackendPrefName,
+        mozilla::EnumSet<mozilla::gfx::BackendType> aSupportedBackends);
+
     /**
      * Decode the backend enumberation from a string.
      */
