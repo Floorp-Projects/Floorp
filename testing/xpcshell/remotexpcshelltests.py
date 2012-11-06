@@ -163,6 +163,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         if self.options.localAPK:
           self.xpcsCmd.extend(['--greomni', self.remoteAPK])
         self.xpcsCmd.extend([
+           '-m',
+           '-n',
            '-s',
            '-e', 'const _HTTPD_JS_PATH = "%s";' % self.remoteJoin(self.remoteComponentsDir, 'httpd.js'),
            '-e', 'const _HEAD_JS_PATH = "%s";' % self.remoteJoin(self.remoteScriptsDir, 'head.js'),
