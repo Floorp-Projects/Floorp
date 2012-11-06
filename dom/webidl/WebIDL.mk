@@ -39,7 +39,6 @@ webidl_files = \
   ImageData.webidl \
   NodeList.webidl \
   PaintRequestList.webidl \
-  PannerNode.webidl \
   Performance.webidl \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
