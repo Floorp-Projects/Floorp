@@ -78,14 +78,7 @@ MOCHITEST_BROWSER_TESTS = \
 	head.js \
 	$(NULL)
 
-# Disabled on Windows for frequent intermittent failures
-ifneq ($(OS_ARCH), WINNT)
-MOCHITEST_BROWSER_TESTS += \
-	browser_dbg_createRemote.js \
-	$(NULL)
-else
-$(warning browser_dbg_createRemote.js is disabled on Windows for intermittent failures. Bug 753225)
-endif
+$(warning browser_dbg_createRemote.js is disabled for intermittent failures. Bug 753225)
 
 MOCHITEST_BROWSER_PAGES = \
 	browser_dbg_tab1.html \
