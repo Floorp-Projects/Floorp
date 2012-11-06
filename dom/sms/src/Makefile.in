@@ -36,7 +36,6 @@ EXPORTS_mozilla/dom/sms = \
   Constants.h \
   Types.h \
   SmsMessage.h \
-  SmsRequestManager.h \
   SmsRequest.h \
   $(NULL)
 
@@ -51,7 +50,6 @@ CPPSRCS = \
   Constants.cpp \
   SmsChild.cpp \
   SmsRequest.cpp \
-  SmsRequestManager.cpp \
   SmsFilter.cpp \
   SmsCursor.cpp \
   $(NULL)
