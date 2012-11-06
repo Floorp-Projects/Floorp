@@ -6,6 +6,7 @@
 
 #include "nsMediaOmxReader.h"
 
+#include "nsBuiltinDecoderStateMachine.h"
 #include "mozilla/TimeStamp.h"
 #include "nsTimeRanges.h"
 #include "MediaResource.h"

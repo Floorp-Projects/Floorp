@@ -1215,7 +1215,7 @@ uint32_t nsBuiltinDecoderStateMachine::PlayFromAudioQueue(uint64_t aFrameOffset,
   return frames;
 }
 
-nsresult nsBuiltinDecoderStateMachine::Init(nsDecoderStateMachine* aCloneDonor)
+nsresult nsBuiltinDecoderStateMachine::Init(nsBuiltinDecoderStateMachine* aCloneDonor)
 {
   nsBuiltinDecoderReader* cloneReader = nullptr;
   if (aCloneDonor) {

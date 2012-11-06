@@ -17,7 +17,7 @@ public:
     }
     return new nsWebMDecoder();
   }
-  virtual nsDecoderStateMachine* CreateStateMachine();
+  virtual nsBuiltinDecoderStateMachine* CreateStateMachine();
 };
 
 #endif
