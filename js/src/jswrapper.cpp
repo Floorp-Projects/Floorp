@@ -1091,7 +1091,7 @@ js::RemapWrapper(JSContext *cx, JSObject *wobj, JSObject *newTarget)
     JSObject *tobj = newTarget;
     AutoCompartment ac(cx, wobj);
     if (!wcompartment->wrap(cx, &tobj, wobj))
-        return false;
+        MOZ_CRASH();
 
     // If wrap() reused |wobj|, it will have overwritten it and returned with
     // |tobj == wobj|. Otherwise, |tobj| will point to a new wrapper and |wobj|
@@ -1102,7 +1102,7 @@ js::RemapWrapper(JSContext *cx, JSObject *wobj, JSObject *newTarget)
         // transplant on the old object so that it contains the contents of the
         // new one.
         if (!wobj->swap(cx, tobj))
-            return false;
+            MOZ_CRASH();
     }
 
     // Before swapping, this wrapper came out of wrap(), which enforces the
@@ -1139,7 +1139,7 @@ js::RemapAllWrappersForObject(JSContext *cx, JSObject *oldTarget,
          begin != end; ++begin)
     {
         if (!RemapWrapper(cx, &begin->toObject(), newTarget))
-            return false;
+            MOZ_CRASH();
     }
 
     return true;
@@ -1180,7 +1180,7 @@ js::RecomputeWrappers(JSContext *cx, const CompartmentFilter &sourceFilter,
         JSObject *wrapper = &begin->toObject();
         JSObject *wrapped = Wrapper::wrappedObject(wrapper);
         if (!RemapWrapper(cx, wrapper, wrapped))
-            return false;
+            MOZ_CRASH();
     }
 
     return true;

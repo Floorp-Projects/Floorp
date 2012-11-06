@@ -202,7 +202,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existing)
 
     unsigned flags = 0;
 
-    JS_CHECK_RECURSION(cx, return false);
+    JS_CHECK_CHROME_RECURSION(cx, return false);
 
 #ifdef DEBUG
     struct AutoDisableProxyCheck {
