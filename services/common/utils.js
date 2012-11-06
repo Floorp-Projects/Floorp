@@ -596,6 +596,55 @@ this.CommonUtils = {
 
     branch.set(pref, "" + date.getTime());
   },
+
+  /**
+   * Convert a string between two encodings.
+   *
+   * Output is only guaranteed if the input stream is composed of octets. If
+   * the input string has characters with values larger than 255, data loss
+   * will occur.
+   *
+   * The returned string is guaranteed to consist of character codes no greater
+   * than 255.
+   *
+   * @param s
+   *        (string) The source string to convert.
+   * @param source
+   *        (string) The current encoding of the string.
+   * @param dest
+   *        (string) The target encoding of the string.
+   *
+   * @return string
+   */
+  convertString: function convertString(s, source, dest) {
+    if (!s) {
+      throw new Error("Input string must be defined.");
+    }
+
+    let is = Cc["@mozilla.org/io/string-input-stream;1"]
+               .createInstance(Ci.nsIStringInputStream);
+    is.setData(s, s.length);
+
+    let listener = Cc["@mozilla.org/network/stream-loader;1"]
+                     .createInstance(Ci.nsIStreamLoader);
+
+    let result;
+
+    listener.init({
+      onStreamComplete: function onStreamComplete(loader, context, status,
+                                                  length, data) {
+        result = String.fromCharCode.apply(this, data);
+      },
+    });
+
+    let converter = this._converterService.asyncConvertData(source, dest,
+                                                            listener, null);
+    converter.onStartRequest(null, null);
+    converter.onDataAvailable(null, null, is, 0, s.length);
+    converter.onStopRequest(null, null, null);
+
+    return result;
+  },
 };
 
 XPCOMUtils.defineLazyGetter(CommonUtils, "_utf8Converter", function() {
@@ -603,4 +652,9 @@ XPCOMUtils.defineLazyGetter(CommonUtils, "_utf8Converter", function() {
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
   return converter;
+});
+
+XPCOMUtils.defineLazyGetter(CommonUtils, "_converterService", function() {
+  return Cc["@mozilla.org/streamConverters;1"]
+           .getService(Ci.nsIStreamConverterService);
 });
