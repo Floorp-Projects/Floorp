@@ -12,6 +12,7 @@ interface nsIDOMArchiveReader : nsISupports
 {
   nsIDOMArchiveRequest getFilenames();
   nsIDOMArchiveRequest getFile(in DOMString filename);
+  nsIDOMArchiveRequest getFiles();
 };
 
 /* This dictionary is the optional argument for the
