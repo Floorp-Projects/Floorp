@@ -233,6 +233,12 @@ protected:
   class nsAutoParseCompoundProperty;
   friend class nsAutoParseCompoundProperty;
 
+  class nsAutoParseCompoundProperty;
+  friend class nsAutoParseCompoundProperty;
+
+  class nsAutoSuppressErrors;
+  friend class nsAutoSuppressErrors;
+
   void AppendRule(css::Rule* aRule);
   friend void AppendRuleToSheet(css::Rule*, void*); // calls AppendRule
 
@@ -256,6 +262,58 @@ protected:
       }
     private:
       CSSParserImpl* mParser;
+  };
+
+  /**
+   * This helper class conditionally sets mInFailingSupportsRule to
+   * true if aCondition = false, and resets it to its original value in its
+   * destructor.  If we are already somewhere within a failing @supports
+   * rule, passing in aCondition = true does not change mInFailingSupportsRule.
+   */
+  class nsAutoFailingSupportsRule {
+    public:
+      nsAutoFailingSupportsRule(CSSParserImpl* aParser,
+                                bool aCondition)
+        : mParser(aParser),
+          mOriginalValue(aParser->mInFailingSupportsRule)
+      {
+        if (!aCondition) {
+          mParser->mInFailingSupportsRule = true;
+        }
+      }
+
+      ~nsAutoFailingSupportsRule()
+      {
+        mParser->mInFailingSupportsRule = mOriginalValue;
+      }
+
+    private:
+      CSSParserImpl* mParser;
+      bool mOriginalValue;
+  };
+
+  /**
+   * Auto class to set aParser->mSuppressErrors to the specified value
+   * and restore it to its original value later.
+   */
+  class nsAutoSuppressErrors {
+    public:
+      nsAutoSuppressErrors(CSSParserImpl* aParser,
+                           bool aSuppressErrors)
+        : mParser(aParser),
+          mOriginalValue(aParser->mSuppressErrors)
+      {
+        mParser->mSuppressErrors = aSuppressErrors;
+      }
+
+      ~nsAutoSuppressErrors()
+      {
+        mParser->mSuppressErrors = mOriginalValue;
+      }
+
+    private:
+      CSSParserImpl* mParser;
+      bool mOriginalValue;
   };
 
   // the caller must hold on to aString until parsing is done
@@ -689,6 +747,15 @@ protected:
   // some quirks during shorthand parsing
   bool          mParsingCompoundProperty : 1;
 
+  // True if we are somewhere within a @supports rule whose condition is
+  // false.
+  bool mInFailingSupportsRule : 1;
+
+  // True if we will suppress all parse errors (except unexpected EOFs).
+  // This is used to prevent errors for declarations inside a failing
+  // @supports rule.
+  bool mSuppressErrors : 1;
+
   // Stack of rule groups; used for @media and such.
   InfallibleTArray<nsRefPtr<css::GroupRule> > mGroupStack;
 
@@ -719,16 +786,16 @@ static void AppendRuleToSheet(css::Rule* aRule, void* aParser)
 }
 
 #define REPORT_UNEXPECTED(msg_) \
-  mReporter->ReportUnexpected(#msg_)
+  { if (!mSuppressErrors) mReporter->ReportUnexpected(#msg_); }
 
 #define REPORT_UNEXPECTED_P(msg_, param_) \
-  mReporter->ReportUnexpected(#msg_, param_)
+  { if (!mSuppressErrors) mReporter->ReportUnexpected(#msg_, param_); }
 
 #define REPORT_UNEXPECTED_TOKEN(msg_) \
-  mReporter->ReportUnexpected(#msg_, mToken)
+  { if (!mSuppressErrors) mReporter->ReportUnexpected(#msg_, mToken); }
 
 #define REPORT_UNEXPECTED_TOKEN_CHAR(msg_, ch_) \
-  mReporter->ReportUnexpected(#msg_, mToken, ch_)
+  { if (!mSuppressErrors) mReporter->ReportUnexpected(#msg_, mToken, ch_); }
 
 #define REPORT_UNEXPECTED_EOF(lf_) \
   mReporter->ReportUnexpectedEOF(#lf_)
@@ -756,6 +823,8 @@ CSSParserImpl::CSSParserImpl()
     mUnsafeRulesEnabled(false),
     mHTMLMediaMode(false),
     mParsingCompoundProperty(false),
+    mInFailingSupportsRule(false),
+    mSuppressErrors(false),
     mNextFree(nullptr)
 {
 }
@@ -2374,6 +2443,10 @@ CSSParserImpl::ParseSupportsRule(RuleAppendFunc aAppendFunc, void* aProcessData)
 
   // Remove spaces from the start and end of the recorded supports condition.
   condition.Trim(" ", true, true, false);
+
+  // Record whether we are in a failing @supports, so that property parse
+  // errors don't get reported.
+  nsAutoFailingSupportsRule failing(this, conditionMet);
 
   nsRefPtr<css::GroupRule> rule = new CSSSupportsRule(conditionMet, condition);
   return ParseGroupRule(rule, aAppendFunc, aProcessData);
@@ -4308,6 +4381,10 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
     UngetToken();
     return false;
   }
+
+  // Don't report property parse errors if we're inside a failing @supports
+  // rule.
+  nsAutoSuppressErrors suppressErrors(this, mInFailingSupportsRule);
 
   // Map property name to its ID and then parse the property
   nsCSSProperty propID = nsCSSProps::LookupProperty(propertyName,
