@@ -116,9 +116,9 @@ public:
   // nsDecoderStateMachine interface
   virtual nsresult Init(nsDecoderStateMachine* aCloneDonor);
   State GetState()
-  { 
+  {
     mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-    return mState; 
+    return mState;
   }
   virtual void SetVolume(double aVolume);
   virtual void SetAudioCaptured(bool aCapture);
@@ -263,6 +263,10 @@ public:
   void FinishStreamData();
   bool HaveEnoughDecodedAudio(int64_t aAmpleAudioUSecs);
   bool HaveEnoughDecodedVideo();
+
+  // Returns true if the state machine has shutdown or is in the process of
+  // shutting down. The decoder monitor must be held while calling this.
+  bool IsShutdown() MOZ_OVERRIDE;
 
 protected:
   class WakeDecoderRunnable : public nsRunnable {

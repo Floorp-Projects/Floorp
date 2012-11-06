@@ -135,10 +135,6 @@ public:
   // Returns main decoder's monitor for synchronised access.
   ReentrantMonitor& GetReentrantMonitor();
 
-  // Return the current decode state, according to the main decoder. The
-  // decoder monitor must be obtained before calling this.
-  nsDecoderStateMachine::State GetDecodeState();
-
   // Called on the decode thread from nsWebMReader.
   ImageContainer* GetImageContainer();
 

@@ -2613,3 +2613,10 @@ void nsBuiltinDecoderStateMachine::NotifyAudioAvailableListener()
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
   mEventManager.NotifyAudioAvailableListener();
 }
+
+bool nsBuiltinDecoderStateMachine::IsShutdown()
+{
+  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+  return GetState() == DECODER_STATE_SHUTDOWN;
+}
+

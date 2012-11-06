@@ -389,7 +389,7 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(int64_t aTarget)
         eof = !DecodeVideoFrame(skip, 0);
         {
           ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-          if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
+          if (mDecoder->GetStateMachine()->IsShutdown()) {
             return NS_ERROR_FAILURE;
           }
         }
@@ -416,7 +416,7 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(int64_t aTarget)
     }
     {
       ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-      if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
+      if (mDecoder->GetStateMachine()->IsShutdown()) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -431,7 +431,7 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(int64_t aTarget)
         eof = !DecodeAudioData();
         {
           ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-          if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
+          if (mDecoder->GetStateMachine()->IsShutdown()) {
             return NS_ERROR_FAILURE;
           }
         }
