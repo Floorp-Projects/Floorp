@@ -1874,6 +1874,11 @@ js_ReportErrorNumberVA(JSContext *cx, unsigned flags, JSErrorCallback callback,
                        void *userRef, const unsigned errorNumber,
                        JSBool charArgs, va_list ap);
 
+extern bool
+js_ReportErrorNumberUCArray(JSContext *cx, unsigned flags, JSErrorCallback callback,
+                            void *userRef, const unsigned errorNumber,
+                            const jschar **args);
+
 extern JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         void *userRef, const unsigned errorNumber,
