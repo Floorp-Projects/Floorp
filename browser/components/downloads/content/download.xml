@@ -33,6 +33,7 @@
                            max="100"
                            xbl:inherits="mode=progressmode,value=progress"/>
         <xul:description class="downloadDetails"
+                         style="width: &downloadDetails.width;"
                          crop="end"
                          xbl:inherits="value=status,tooltiptext=statusTip"/>
       </xul:vbox>

@@ -921,8 +921,18 @@ DownloadsViewItem.prototype = {
                                             DownloadsCommon.strings.statePaused,
                                             transfer);
     } else if (this.dataItem.state == nsIDM.DOWNLOAD_DOWNLOADING) {
+      // We don't show the rate for each download in order to reduce clutter.
+      // The remaining time per download is likely enough information for the
+      // panel.
+      [status] =
+        DownloadUtils.getDownloadStatusNoRate(this.dataItem.currBytes,
+                                              this.dataItem.maxBytes,
+                                              this.dataItem.speed,
+                                              this.lastEstimatedSecondsLeft);
+
+      // We are, however, OK with displaying the rate in the tooltip.
       let newEstimatedSecondsLeft;
-      [status, newEstimatedSecondsLeft] =
+      [statusTip, newEstimatedSecondsLeft] =
         DownloadUtils.getDownloadStatus(this.dataItem.currBytes,
                                         this.dataItem.maxBytes,
                                         this.dataItem.speed,
