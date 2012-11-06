@@ -33,7 +33,6 @@
 #include "nsIDOMClientRect.h"
 #include "StrongPointer.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/StaticPtr.h"
 
 #ifdef DEBUG
 #define ALOG_BRIDGE(args...) ALOG(args)
@@ -61,7 +60,7 @@ class AndroidRefable {
 // This isn't in AndroidBridge.h because including StrongPointer.h there is gross
 static android::sp<AndroidRefable> (*android_SurfaceTexture_getNativeWindow)(JNIEnv* env, jobject surfaceTexture) = nullptr;
 
-static StaticAutoPtr<nsTArray<nsCOMPtr<nsISmsRequest> > > sSmsRequest;
+/* static */ StaticAutoPtr<nsTArray<nsCOMPtr<nsISmsRequest> > > AndroidBridge::sSmsRequests;
 
 void
 AndroidBridge::ConstructBridge(JNIEnv *jEnv,
@@ -83,8 +82,8 @@ AndroidBridge::ConstructBridge(JNIEnv *jEnv,
     }
     sBridge = bridge;
 
-    sSmsRequest = new nsTArray<nsCOMPtr<nsISmsRequest> >();
-    ClearOnShutdown(&sSmsRequest);
+    sSmsRequests = new nsTArray<nsCOMPtr<nsISmsRequest> >();
+    ClearOnShutdown(&sSmsRequests);
 }
 
 bool
@@ -1836,20 +1835,20 @@ AndroidBridge::QueueSmsRequest(nsISmsRequest* aRequest)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-    if (!sSmsRequest) {
+    if (!sSmsRequests) {
         // Probably shutting down.
         return -1;
     }
 
-    uint32_t length = sSmsRequest->Length();
+    uint32_t length = sSmsRequests->Length();
     for (int32_t i = 0; i < length; i++) {
-        if (!(*sSmsRequest)[i]) {
-            (*sSmsRequest)[i] = aRequest;
+        if (!(*sSmsRequests)[i]) {
+            (*sSmsRequests)[i] = aRequest;
             return i;
         }
     }
 
-    sSmsRequest->AppendElement(aRequest);
+    sSmsRequests->AppendElement(aRequest);
 
     return length;
 }
@@ -1859,11 +1858,11 @@ AndroidBridge::DequeueSmsRequest(int32_t aRequestId)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-    if (!sSmsRequest || (aRequestId >= sSmsRequest->Length())) {
+    if (!sSmsRequests || (aRequestId >= sSmsRequests->Length())) {
         return nullptr;
     }
 
-    return (*sSmsRequest)[aRequestId].forget();
+    return (*sSmsRequests)[aRequestId].forget();
 }
 
 void
