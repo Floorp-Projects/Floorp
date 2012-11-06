@@ -1106,7 +1106,7 @@ nsOggReader::IndexedSeekResult nsOggReader::SeekToKeyframeUsingIndex(int64_t aTa
     // Couldn't insert page into the ogg resource, or somehow the resource
     // is no longer active.
     return RollbackIndexedSeek(tell);
-  }      
+  }
   mPageOffset = keyframe.mKeyPoint.mOffset + page.header_len + page.body_len;
   return SEEK_OK;
 }
@@ -1136,7 +1136,7 @@ nsresult nsOggReader::SeekInBufferedRange(int64_t aTarget,
       eof = !DecodeVideoFrame(skip, 0);
       {
         ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-        if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
+        if (mDecoder->GetStateMachine()->IsShutdown()) {
           return NS_ERROR_FAILURE;
         }
       }
