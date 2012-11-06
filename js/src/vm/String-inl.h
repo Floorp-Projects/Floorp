@@ -191,7 +191,7 @@ JSDependentString::new_(JSContext *cx, JSLinearString *baseArg, const jschar *ch
      * both to avoid the awkward moving-GC hazard this introduces and because it
      * is more efficient to immediately undepend here.
      */
-    if (JSShortString::lengthFits(base->length()))
+    if (JSShortString::lengthFits(length))
         return js::NewShortString(cx, chars, length);
 
     JSDependentString *str = (JSDependentString *)js_NewGCString(cx);
