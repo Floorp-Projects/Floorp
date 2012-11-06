@@ -43,31 +43,6 @@ FuncToGpointer(T aFunction)
          (reinterpret_cast<void (*)()>(aFunction)));
 }
 
-// XXXdholbert -- this function is duplicated in nsPrintDialogGTK.cpp
-// and needs to be unified in some generic utility class.
-static GtkWindow *
-get_gtk_window_for_nsiwidget(nsIWidget *widget)
-{
-  // Get native GdkWindow
-  GdkWindow *gdk_win = GDK_WINDOW(widget->GetNativeData(NS_NATIVE_WIDGET));
-  if (!gdk_win)
-    return NULL;
-
-  // Get the container
-  gpointer user_data = NULL;
-  gdk_window_get_user_data(gdk_win, &user_data);
-  if (!user_data)
-    return NULL;
-
-  // Make sure its really a container
-  MozContainer *parent_container = MOZ_CONTAINER(user_data);
-  if (!parent_container)
-    return NULL;
-
-  // Get its toplevel
-  return GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(parent_container)));
-}
-
 void
 nsFilePicker::Shutdown()
 {
@@ -393,7 +368,8 @@ nsFilePicker::Open(nsIFilePickerShownCallback *aCallback)
   nsXPIDLCString title;
   title.Adopt(ToNewUTF8String(mTitle));
 
-  GtkWindow *parent_widget = get_gtk_window_for_nsiwidget(mParentWidget);
+  GtkWindow *parent_widget =
+    GTK_WINDOW(mParentWidget->GetNativeData(NS_NATIVE_SHELLWIDGET));
 
   GtkFileChooserAction action = GetGtkFileChooserAction(mMode);
   const gchar *accept_button = (action == GTK_FILE_CHOOSER_ACTION_SAVE)

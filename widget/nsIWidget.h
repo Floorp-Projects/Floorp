@@ -74,7 +74,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_OFFSETY     7
 #define NS_NATIVE_PLUGIN_PORT 8
 #define NS_NATIVE_SCREEN      9
-#define NS_NATIVE_SHELLWIDGET 10      // Get the shell GtkWidget
+// The toplevel GtkWidget containing this nsIWidget:
+#define NS_NATIVE_SHELLWIDGET 10
 // Has to match to NPNVnetscapeWindow, and shareable across processes
 // HWND on Windows and XID on X11
 #define NS_NATIVE_SHAREABLE_WINDOW 11
