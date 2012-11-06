@@ -509,9 +509,10 @@ const DownloadsIndicatorView = {
     if (DownloadsCommon.useToolkitUI) {
       // The panel won't suppress attention for us, we need to clear now.
       DownloadsCommon.indicatorData.attention = false;
+      BrowserDownloadsUI();
+    } else {
+      DownloadsPanel.showPanel();
     }
-
-    DownloadsPanel.showPanel();
 
     aEvent.stopPropagation();
   },
