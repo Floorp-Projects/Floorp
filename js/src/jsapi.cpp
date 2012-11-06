@@ -1786,10 +1786,11 @@ static JSStdName standard_class_atoms[] = {
 #endif
     {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
     {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBufferObject::protoClass},
-    {js_InitWeakMapClass,               EAGER_CLASS_ATOM(WeakMap), &js::WeakMapClass},
+    {js_InitWeakMapClass,               EAGER_ATOM_AND_CLASP(WeakMap)},
     {js_InitMapClass,                   EAGER_CLASS_ATOM(Map), &js::MapObject::class_},
     {js_InitSetClass,                   EAGER_CLASS_ATOM(Set), &js::SetObject::class_},
     {js_InitParallelArrayClass,         EAGER_CLASS_ATOM(ParallelArray), &js::ParallelArrayObject::class_},
+    {js_InitProxyClass,                 EAGER_ATOM_AND_CLASP(Proxy)},
     {NULL,                              0, NULL}
 };
 
@@ -1850,9 +1851,6 @@ static JSStdName standard_class_names[] = {
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray),
                                 TYPED_ARRAY_CLASP(TYPE_UINT8_CLAMPED)},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(DataView),     &DataViewClass},
-
-    {js_InitWeakMapClass,       EAGER_ATOM_AND_CLASP(WeakMap)},
-    {js_InitProxyClass,         EAGER_ATOM_AND_CLASP(Proxy)},
 
     {NULL,                      0, NULL}
 };
@@ -4702,6 +4700,8 @@ JS_SetReservedSlot(RawObject obj, uint32_t index, RawValue value)
 JS_PUBLIC_API(JSObject *)
 JS_NewArrayObject(JSContext *cx, int length, jsval *vector)
 {
+    AutoArrayRooter tvr(cx, length, vector);
+
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -7079,9 +7079,9 @@ JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno)
         return JS_FALSE;
 
     if (script)
-        *script = i.script();
+        *script = i.script().get(nogc);
     if (lineno)
-        *lineno = js::PCToLineNumber(i.script(), i.pc());
+        *lineno = js::PCToLineNumber(i.script().get(nogc), i.pc());
     return JS_TRUE;
 }
 

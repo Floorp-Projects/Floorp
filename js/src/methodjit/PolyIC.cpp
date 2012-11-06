@@ -1080,7 +1080,7 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         RegisterID t0 = tempRegs.takeAnyReg().reg();
-        masm.bumpStubCount(f.script(), f.pc(), t0);
+        masm.bumpStubCount(f.script().get(nogc), f.pc(), t0);
 
         /*
          * Use three values above sp on the stack for use by the call to store
@@ -1194,7 +1194,7 @@ class GetPropCompiler : public PICStubCompiler
         }
 
         RegisterID t0 = tempRegs.takeAnyReg().reg();
-        masm.bumpStubCount(f.script(), f.pc(), t0);
+        masm.bumpStubCount(f.script().get(nogc), f.pc(), t0);
 
         /*
          * A JSNative has the following signature:
@@ -1508,6 +1508,13 @@ class GetPropCompiler : public PICStubCompiler
         // Mark as not idempotent to avoid recompilation in Ion Monkey
         // GetPropertyCache.
         if (!obj->hasIdempotentProtoChain()) {
+            RawScript script = f.script().unsafeGet();
+            MarkNotIdempotent(script, f.pc());
+        }
+
+        // The property is missing, Mark as not idempotent to avoid
+        // recompilation in Ion Monkey GetPropertyCache.
+        if (!getprop.holder) {
             RawScript script = f.script().unsafeGet();
             MarkNotIdempotent(script, f.pc());
         }

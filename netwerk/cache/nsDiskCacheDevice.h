@@ -54,6 +54,8 @@ public:
 
     bool                    EntryIsTooBig(int64_t entrySize);
 
+    size_t                 SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+
     /**
      * Preference accessors
      */

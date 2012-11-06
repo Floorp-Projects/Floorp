@@ -364,7 +364,7 @@ class MacroAssemblerX86Shared : public Assembler
             return false;
         mov(cl->dest(), scratch);
 
-        uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
+        uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
         Push(Imm32(descriptor));
         Push(scratch);
 
@@ -376,14 +376,14 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     bool buildOOLFakeExitFrame(void *fakeReturnAddr) {
-        uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
+        uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
         Push(Imm32(descriptor));
         Push(ImmWord(fakeReturnAddr));
         return true;
     }
 
     void callWithExitFrame(IonCode *target) {
-        uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
+        uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
         Push(Imm32(descriptor));
         call(target);
     }

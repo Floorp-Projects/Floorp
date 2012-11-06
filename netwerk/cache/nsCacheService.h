@@ -129,6 +129,8 @@ public:
     nsCacheService * GlobalInstance()   { return gService; }
 
     static int64_t   MemoryDeviceSize();
+
+    static int64_t   DiskDeviceHeapSize();
     
     static nsresult  DoomEntry(nsCacheEntry * entry);
 

@@ -63,8 +63,20 @@ CalleeTokenToScript(CalleeToken token)
     JS_ASSERT(GetCalleeTokenTag(token) == CalleeToken_Script);
     return (JSScript *)(uintptr_t(token) & ~uintptr_t(0x3));
 }
-JSScript *
-MaybeScriptFromCalleeToken(CalleeToken token);
+
+static inline JSScript *
+ScriptFromCalleeToken(CalleeToken token)
+{
+    AutoAssertNoGC nogc;
+    switch (GetCalleeTokenTag(token)) {
+      case CalleeToken_Script:
+        return CalleeTokenToScript(token);
+      case CalleeToken_Function:
+        return CalleeTokenToFunction(token)->script().get(nogc);
+    }
+    JS_NOT_REACHED("invalid callee token tag");
+    return NULL;
+}
 
 // In between every two frames lies a small header describing both frames. This
 // header, minimally, contains a returnAddress word and a descriptor word. The
