@@ -240,6 +240,10 @@ public:
 
   virtual void Shutdown() = 0;
 
+  // True if the state machine has shutdown, or is in the process of
+  // shutting down. The decoder monitor must be obtained before calling this.
+  virtual bool IsShutdown() = 0;
+
   // Called from the main thread to get the duration. The decoder monitor
   // must be obtained before calling this. It is in units of microseconds.
   virtual int64_t GetDuration() = 0;
@@ -698,10 +702,6 @@ public:
 
   // Provide access to the state machine object
   nsDecoderStateMachine* GetStateMachine() { return mDecoderStateMachine; }
-
-  // Return the current decode state. The decoder monitor must be
-  // obtained before calling this.
-  nsDecoderStateMachine::State GetDecodeState() { return mDecoderStateMachine->GetState(); }
 
   // Drop reference to state machine.  Only called during shutdown dance.
   virtual void ReleaseStateMachine() { mDecoderStateMachine = nullptr; }
