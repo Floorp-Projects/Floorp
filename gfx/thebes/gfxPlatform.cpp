@@ -340,6 +340,8 @@ gfxPlatform::Init()
 
     gPlatform->mWorkAroundDriverBugs = Preferences::GetBool("gfx.work-around-driver-bugs", true);
 
+    mozilla::gl::GLContext::PlatformStartup();
+
 #ifdef MOZ_WIDGET_ANDROID
     // Texture pool init
     mozilla::gl::TexturePoolOGL::Init();

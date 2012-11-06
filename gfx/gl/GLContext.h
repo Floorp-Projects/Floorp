@@ -744,7 +744,17 @@ public:
     }
 
     bool CanUploadSubTextures();
+
+    static void PlatformStartup();
+
+protected:
+    static bool sPowerOfTwoForced;
+    static bool sPowerOfTwoPrefCached;
+    static void CacheCanUploadNPOT();
+
+public:
     bool CanUploadNonPowerOfTwo();
+
     bool WantsSmallTiles();
     virtual bool HasLockSurface() { return false; }
 
