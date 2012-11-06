@@ -482,7 +482,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
 #ifdef MOZ_DASH
   { APPLICATION_DASH, "mpd", "DASH Media Presentation Description" },
 #endif
-#ifdef MOZ_MEDIA_PLUGINS
+#if defined(MOZ_MEDIA_PLUGINS) || defined(MOZ_WIDGET_GONK)
   { AUDIO_MP3, "mp3", "MPEG Audio" },
 #endif
   { VIDEO_MP4, "mp4", "MPEG-4 Video" },
