@@ -21,7 +21,7 @@ namespace gc {
     (defined(__sparc) || defined(__sparcv9) || defined(__ia64))
 const size_t PageShift = 13;
 const size_t ArenaShift = PageShift;
-#elif defined(__powerpc__)
+#elif defined(__powerpc64__)
 const size_t PageShift = 16;
 const size_t ArenaShift = 12;
 #else

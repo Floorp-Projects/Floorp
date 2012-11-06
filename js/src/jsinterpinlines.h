@@ -26,8 +26,10 @@
 #include "jspropertycacheinlines.h"
 #include "jstypedarrayinlines.h"
 
+#ifdef JS_ION
 #include "ion/Ion.h"
 #include "ion/IonCompartment.h"
+#endif
 
 #include "vm/Stack-inl.h"
 
