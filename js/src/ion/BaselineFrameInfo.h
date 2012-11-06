@@ -132,7 +132,7 @@ class StackValue
 // The stack looks like this, fp is the frame pointer:
 //
 // fp+y   arguments
-// fp+x   IonBaselineJSFrameLayout (frame header)
+// fp+x   IonJSFrameLayout (frame header)
 // fp  => saved frame pointer
 // fp-x   BaselineFrame
 //        locals
@@ -152,7 +152,7 @@ class BaselineFrame
         return -(sizeof(BaselineFrame) + index * sizeof(Value)) - sizeof(Value);
     }
     static inline size_t offsetOfArg(size_t index) {
-        return FramePointerOffset + IonBaselineJSFrameLayout::offsetOfActualArg(index);
+        return FramePointerOffset + IonJSFrameLayout::offsetOfActualArg(index);
     }
     static size_t frameSize(size_t nlocals) {
         return sizeof(BaselineFrame) + nlocals * sizeof(Value);
