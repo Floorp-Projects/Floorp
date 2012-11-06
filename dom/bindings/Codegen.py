@@ -5052,7 +5052,25 @@ class CGProxySpecialOperation(CGPerSignatureCall):
         wrap = CGIfWrapper(wrap, "found")
         return "\n" + wrap.define()
 
-class CGProxyIndexedGetter(CGProxySpecialOperation):
+class CGProxyIndexedOperation(CGProxySpecialOperation):
+    """
+    Class to generate a call to an indexed operation.
+    """
+    def __init__(self, descriptor, name):
+        CGProxySpecialOperation.__init__(self, descriptor, name)
+    def define(self):
+        # Our first argument is the id we're getting.
+        argName = self.arguments[0].identifier.name
+        if argName == "index":
+            # We already have our index in a variable with that name
+            setIndex = ""
+        else:
+            setIndex = "uint32_t %s = index;\n" % argName
+        return (setIndex +
+                "%s* self = UnwrapProxy(proxy);\n" +
+                CGProxySpecialOperation.define(self))
+
+class CGProxyIndexedGetter(CGProxyIndexedOperation):
     """
     Class to generate a call to an indexed getter. If templateValues is not None
     the returned value will be wrapped with wrapForType using templateValues.
@@ -5070,7 +5088,7 @@ class CGProxyIndexedPresenceChecker(CGProxyIndexedGetter):
     def __init__(self, descriptor):
         CGProxyIndexedGetter.__init__(self, descriptor)
 
-class CGProxyIndexedSetter(CGProxySpecialOperation):
+class CGProxyIndexedSetter(CGProxyIndexedOperation):
     """
     Class to generate a call to an indexed setter.
     """
@@ -5122,7 +5140,7 @@ class CGProxyNamedSetter(CGProxyNamedOperation):
     def __init__(self, descriptor):
         CGProxySpecialOperation.__init__(self, descriptor, 'NamedSetter')
 
-class CGProxyIndexedDeleter(CGProxySpecialOperation):
+class CGProxyIndexedDeleter(CGProxyIndexedOperation):
     """
     Class to generate a call to an indexed deleter.
     """
@@ -5195,7 +5213,6 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             templateValues = {'jsvalRef': 'desc->value', 'jsvalPtr': '&desc->value',
                               'obj': 'proxy', 'successCode': fillDescriptor}
             get = ("if (index >= 0) {\n" +
-                   "  %s* self = UnwrapProxy(proxy);\n" +
                    CGIndenter(CGProxyIndexedGetter(self.descriptor, templateValues)).define() + "\n" +
                    "}\n") % (self.descriptor.nativeType)
 
@@ -5275,7 +5292,6 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 raise TypeError("Can't handle creator that's different from the setter")
             set += ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
                     "if (index >= 0) {\n" +
-                    "  %s* self = UnwrapProxy(proxy);\n" +
                     CGIndenter(CGProxyIndexedSetter(self.descriptor)).define() +
                     "  return true;\n" +
                     "}\n") % (self.descriptor.nativeType)
@@ -5348,7 +5364,6 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
         if indexedBody is not None:
             delete += ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
                        "if (index >= 0) {\n" +
-                       "  %s* self = UnwrapProxy(proxy);\n" +
                        CGIndenter(CGGeneric(indexedBody)).define() + "\n"
                        "  // We always return here, even if the property was not found\n"
                        "  return true;\n" +
@@ -5417,7 +5432,6 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
         if self.descriptor.supportsIndexedProperties():
             indexed = ("int32_t index = GetArrayIndexFromId(cx, id);\n" + 
                        "if (index >= 0) {\n" +
-                       "  %s* self = UnwrapProxy(proxy);\n" +
                        CGIndenter(CGProxyIndexedPresenceChecker(self.descriptor)).define() + "\n" +
                        "  *bp = found;\n" +
                        "  return true;\n" +
@@ -5473,7 +5487,6 @@ if (expando) {
         if self.descriptor.supportsIndexedProperties():
             getIndexedOrExpando = ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
                                    "if (index >= 0) {\n" +
-                                   "  %s* self = UnwrapProxy(proxy);\n" +
                                    CGIndenter(CGProxyIndexedGetter(self.descriptor, templateValues)).define()) % (self.descriptor.nativeType)
             getIndexedOrExpando += """
   // Even if we don't have this index, we don't forward the
@@ -5539,8 +5552,7 @@ class CGDOMJSProxyHandler_getElementIfPresent(ClassMethod):
 return true;"""
             templateValues = {'jsvalRef': '*vp', 'jsvalPtr': 'vp',
                               'obj': 'proxy', 'successCode': successCode}
-            get = ("%s* self = UnwrapProxy(proxy);\n" +
-                   CGProxyIndexedGetter(self.descriptor, templateValues).define() + "\n"
+            get = (CGProxyIndexedGetter(self.descriptor, templateValues).define() + "\n"
                    "// We skip the expando object if there is an indexed getter.\n" +
                    "\n") % (self.descriptor.nativeType)
         else:
