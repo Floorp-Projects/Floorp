@@ -1568,9 +1568,14 @@ Debugger::findCompartmentEdges(JSCompartment *comp, js::gc::ComponentFinder &fin
     JSRuntime *rt = comp->rt;
     for (JSCList *p = &rt->debuggerList; (p = JS_NEXT_LINK(p)) != &rt->debuggerList;) {
         Debugger *dbg = Debugger::fromLinks(p);
-        dbg->scripts.findCompartmentEdges(comp, finder);
-        dbg->objects.findCompartmentEdges(comp, finder);
-        dbg->environments.findCompartmentEdges(comp, finder);
+        JSCompartment *w = dbg->object->compartment();
+        if (w == comp || !w->isGCMarking())
+            continue;
+        if (dbg->scripts.hasKeyInCompartment(comp) ||
+            dbg->objects.hasKeyInCompartment(comp) ||
+            dbg->environments.hasKeyInCompartment(comp)) {
+            finder.addEdgeTo(w);
+        }
     }
 }
 
