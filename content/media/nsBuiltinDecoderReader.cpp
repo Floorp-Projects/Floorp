@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GonkIOSurfaceImage.h"
-#include "nsBuiltinDecoder.h"
 #include "nsBuiltinDecoderReader.h"
+#include "nsBuiltinDecoder.h"
 #include "nsBuiltinDecoderStateMachine.h"
 #include "VideoUtils.h"
 #include "ImageContainer.h"
@@ -342,6 +342,39 @@ nsresult nsBuiltinDecoderReader::ResetDecode()
   return res;
 }
 
+VideoData* nsBuiltinDecoderReader::DecodeToFirstVideoData()
+{
+  bool eof = false;
+  while (!eof && mVideoQueue.GetSize() == 0) {
+    {
+      ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
+      if (mDecoder->GetStateMachine()->IsShutdown()) {
+        return nullptr;
+      }
+    }
+    bool unused;
+    eof = !DecodeVideoFrame(unused, 0);
+  }
+  VideoData* d = nullptr;
+  return (d = mVideoQueue.PeekFront()) ? d : nullptr;
+}
+
+AudioData* nsBuiltinDecoderReader::DecodeToFirstAudioData()
+{
+  bool eof = false;
+  while (!eof && mAudioQueue.GetSize() == 0) {
+    {
+      ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
+      if (mDecoder->GetStateMachine()->IsShutdown()) {
+        return nullptr;
+      }
+    }
+    eof = !DecodeAudioData();
+  }
+  AudioData* d = nullptr;
+  return (d = mAudioQueue.PeekFront()) ? d : nullptr;
+}
+
 VideoData* nsBuiltinDecoderReader::FindStartTime(int64_t& aOutStartTime)
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
@@ -354,15 +387,13 @@ VideoData* nsBuiltinDecoderReader::FindStartTime(int64_t& aOutStartTime)
   VideoData* videoData = nullptr;
 
   if (HasVideo()) {
-    videoData = DecodeToFirstData(&nsBuiltinDecoderReader::DecodeVideoFrame,
-                                  mVideoQueue);
+    videoData = DecodeToFirstVideoData();
     if (videoData) {
       videoStartTime = videoData->mTime;
     }
   }
   if (HasAudio()) {
-    AudioData* audioData = DecodeToFirstData(&nsBuiltinDecoderReader::DecodeAudioData,
-                                             mAudioQueue);
+    AudioData* audioData = DecodeToFirstAudioData();
     if (audioData) {
       audioStartTime = audioData->mTime;
     }
