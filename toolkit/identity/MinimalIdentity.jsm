@@ -85,7 +85,7 @@ IDService.prototype = {
    *        (Object)  an object that represents the caller document, and
    *                  is expected to have properties:
    *                  - id (unique, e.g. uuid)
-   *                  - loggedInEmail (string or null)
+   *                  - loggedInUser (string or null)
    *                  - origin (string)
    *
    *                  and a bunch of callbacks
@@ -101,12 +101,11 @@ IDService.prototype = {
     log("watch: rpcaller:", aRpCaller);
     // store the caller structure and notify the UI observers
 
-    // note that, unfortunately, what here is loggedInEmail is called
-    // loggedInUser in the native API.
     this._rpFlows[aRpCaller.id] = aRpCaller;
+
     let options = {rpId: aRpCaller.id,
                    origin: aRpCaller.origin,
-                   loggedInUser: aRpCaller.loggedInEmail || null};
+                   loggedInUser: aRpCaller.loggedInUser};
     log("sending identity-controller-watch:", options);
     Services.obs.notifyObservers({wrappedJSObject: options},"identity-controller-watch", null);
   },

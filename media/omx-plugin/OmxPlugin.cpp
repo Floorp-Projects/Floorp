@@ -601,24 +601,26 @@ void OmxDecoder::ToVideoFrame_CbYCrY(VideoFrame *aFrame, int64_t aTimeUs, void *
 }
 
 void OmxDecoder::ToVideoFrame_YUV420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {
-  // There is a bug in the OMX.SEC.avcdec where it returns an implausibly high
-  // value for mVideoSliceHeight. To work around this issue we calculate the
-  // maximum slice height for the data buffer size and limit to that.
-  //
-  // For example if we've got 396 lines of data then we must have at most 264
-  // lines of Y data and 132 lines of U data. There isn't enough data for a
-  // slice height of 272 so we limit the slice height to 264.
+  int32_t videoStride = mVideoStride;
+  int32_t videoSliceHeight = mVideoSliceHeight;
 
-  int32_t maxVideoSliceHeight = (aSize / mVideoStride) * 2 / 3;
-  int32_t videoSliceHeight = std::min(mVideoSliceHeight, maxVideoSliceHeight);
+  // OMX.SEC.avcdec rounds mVideoStride and mVideoSliceHeight up to the nearest
+  // multiple of 16 but the data itself is too small to fit. What we do is check
+  // to see if the video size patches the raw width and height. If so we can
+  // use those figures instead.
+
+  if (aSize == mVideoWidth * mVideoHeight * 3 / 2) {
+    videoStride = mVideoWidth;
+    videoSliceHeight = mVideoHeight;
+  }
 
   void *y = aData;
-  void *uv = static_cast<uint8_t *>(y) + (mVideoStride * videoSliceHeight);
+  void *uv = static_cast<uint8_t *>(y) + (videoStride * videoSliceHeight);
   aFrame->Set(aTimeUs, aKeyFrame,
-              aData, aSize, mVideoStride, videoSliceHeight, mVideoRotation,
-              y, mVideoStride, mVideoWidth, mVideoHeight, 0, 0,
-              uv, mVideoStride, mVideoWidth/2, mVideoHeight/2, 0, 1,
-              uv, mVideoStride, mVideoWidth/2, mVideoHeight/2, 1, 1);
+              aData, aSize, videoStride, videoSliceHeight, mVideoRotation,
+              y, videoStride, mVideoWidth, mVideoHeight, 0, 0,
+              uv, videoStride, mVideoWidth/2, mVideoHeight/2, 0, 1,
+              uv, videoStride, mVideoWidth/2, mVideoHeight/2, 1, 1);
 }
 
 void OmxDecoder::ToVideoFrame_YVU420SemiPlanar(VideoFrame *aFrame, int64_t aTimeUs, void *aData, size_t aSize, bool aKeyFrame) {

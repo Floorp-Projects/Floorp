@@ -752,6 +752,31 @@ public:
   }
 
   /**
+   * Report a non-localized error message to the error console.
+   *   @param aErrorText the error message
+   *   @param aErrorFlags See nsIScriptError.
+   *   @param aCategory Name of module reporting error.
+   *   @param aDocument Reference to the document which triggered the message.
+   *   @param [aURI=nullptr] (Optional) URI of resource containing error.
+   *   @param [aSourceLine=EmptyString()] (Optional) The text of the line that
+              contains the error (may be empty).
+   *   @param [aLineNumber=0] (Optional) Line number within resource
+              containing error.
+   *   @param [aColumnNumber=0] (Optional) Column number within resource
+              containing error.
+              If aURI is null, then aDocument->GetDocumentURI() is used.
+   */
+  static nsresult ReportToConsoleNonLocalized(const nsAString& aErrorText,
+                                              uint32_t aErrorFlags,
+                                              const char *aCategory,
+                                              nsIDocument* aDocument,
+                                              nsIURI* aURI = nullptr,
+                                              const nsAFlatString& aSourceLine
+                                                = EmptyString(),
+                                              uint32_t aLineNumber = 0,
+                                              uint32_t aColumnNumber = 0);
+
+  /**
    * Report a localized error message to the error console.
    *   @param aErrorFlags See nsIScriptError.
    *   @param aCategory Name of module reporting error.

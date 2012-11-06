@@ -11,6 +11,7 @@
 #define jscntxt_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/LinkedList.h"
 
 #include <string.h>
 
@@ -781,10 +782,10 @@ struct JSRuntime : js::RuntimeFriendFields
     js::PropertyName    *emptyString;
 
     /* List of active contexts sharing this runtime. */
-    JSCList             contextList;
+    mozilla::LinkedList<JSContext> contextList;
 
     bool hasContexts() const {
-        return !JS_CLIST_IS_EMPTY(&contextList);
+        return !contextList.isEmpty();
     }
 
     JS_SourceHook       sourceHook;
@@ -866,7 +867,7 @@ struct JSRuntime : js::RuntimeFriendFields
      * and for each JSObject::remove method call that frees a slot in the given
      * object. See js_NativeGet and js_NativeSet in jsobj.cpp.
      */
-    int32_t             propertyRemovals;
+    uint32_t            propertyRemovals;
 
     /* Number localization, used by jsnum.c */
     const char          *thousandsSeparator;
@@ -1233,14 +1234,12 @@ FreeOp::free_(void* p) {
 
 } /* namespace js */
 
-struct JSContext : js::ContextFriendFields
+struct JSContext : js::ContextFriendFields,
+                   public mozilla::LinkedListElement<JSContext>
 {
     explicit JSContext(JSRuntime *rt);
     JSContext *thisDuringConstruction() { return this; }
     ~JSContext();
-
-    /* JSRuntime contextList linkage. */
-    JSCList             link;
 
   private:
     /* See JSContext::findVersion. */
@@ -1601,11 +1600,6 @@ struct JSContext : js::ContextFriendFields
 
     JS_FRIEND_API(size_t) sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const;
 
-    static inline JSContext *fromLinkField(JSCList *link) {
-        JS_ASSERT(link);
-        return reinterpret_cast<JSContext *>(uintptr_t(link) - offsetof(JSContext, link));
-    }
-
     void mark(JSTracer *trc);
 
   private:
@@ -1823,27 +1817,25 @@ namespace js {
  * Enumerate all contexts in a runtime.
  */
 class ContextIter {
-    JSCList *begin;
-    JSCList *end;
+    JSContext *iter;
 
 public:
     explicit ContextIter(JSRuntime *rt) {
-        end = &rt->contextList;
-        begin = end->next;
+        iter = rt->contextList.getFirst();
     }
 
     bool done() const {
-        return begin == end;
+        return !iter;
     }
 
     void next() {
         JS_ASSERT(!done());
-        begin = begin->next;
+        iter = iter->getNext();
     }
 
     JSContext *get() const {
         JS_ASSERT(!done());
-        return JSContext::fromLinkField(begin);
+        return iter;
     }
 
     operator JSContext *() const {

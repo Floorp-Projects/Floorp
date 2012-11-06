@@ -4,11 +4,8 @@
 
 import ConfigParser
 import os
-import re
 import sys
 import tempfile
-import time
-import urllib
 import traceback
 
 sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0]))))
@@ -21,7 +18,6 @@ from runtests import MochitestServer
 
 import devicemanager
 import devicemanagerADB
-import manifestparser
 
 from marionette import Marionette
 
@@ -385,16 +381,47 @@ class B2GMochitest(Mochitest):
             testURL += "?" + "&".join(self.urlOpts)
         self._automation.testURL = testURL
 
+        # execute this script on start up.
+        # loads special powers and sets the test-container
+        # apps's iframe to the mochitest URL.
+        self._automation.test_script = """
+const CHILD_SCRIPT = "chrome://specialpowers/content/specialpowers.js";
+const CHILD_SCRIPT_API = "chrome://specialpowers/content/specialpowersAPI.js";
+const CHILD_LOGGER_SCRIPT = "chrome://specialpowers/content/MozillaLogger.js";
+
+let homescreen = document.getElementById('homescreen');
+let container = homescreen.contentWindow.document.getElementById('test-container');
+
+let specialpowers = {};
+let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
+loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js", specialpowers);
+let specialPowersObserver = new specialpowers.SpecialPowersObserver();
+specialPowersObserver.init();
+
+let mm = container.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+mm.addMessageListener("SPProcessCrashService", specialPowersObserver);
+mm.addMessageListener("SPPingService", specialPowersObserver);
+mm.addMessageListener("SpecialPowers.Quit", specialPowersObserver);
+mm.addMessageListener("SPPermissionManager", specialPowersObserver);
+
+mm.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
+mm.loadFrameScript(CHILD_SCRIPT_API, true);
+mm.loadFrameScript(CHILD_SCRIPT, true);
+specialPowersObserver._isFrameScriptLoaded = true;
+
+container.src = '%s';
+""" % testURL
+
         # Set extra prefs for B2G.
         f = open(os.path.join(options.profilePath, "user.js"), "a")
         f.write("""
-user_pref("browser.homescreenURL","app://system.gaiamobile.org");\n
-user_pref("dom.mozBrowserFramesEnabled", true);\n
-user_pref("dom.ipc.tabs.disabled", false);\n
-user_pref("dom.ipc.browser_frames.oop_by_default", true);\n
-user_pref("browser.manifestURL","app://system.gaiamobile.org/manifest.webapp");\n
-user_pref("dom.mozBrowserFramesWhitelist","app://system.gaiamobile.org,http://mochi.test:8888");\n
-user_pref("network.dns.localDomains","app://system.gaiamobile.org");\n
+user_pref("browser.homescreenURL","app://test-container.gaiamobile.org/index.html");
+user_pref("browser.manifestURL","app://test-container.gaiamobile.org/manifest.webapp");
+user_pref("dom.mozBrowserFramesEnabled", true);
+user_pref("dom.ipc.tabs.disabled", false);
+user_pref("dom.ipc.browser_frames.oop_by_default", false);
+user_pref("dom.mozBrowserFramesWhitelist","app://test-container.gaiamobile.org,http://mochi.test:8888");
+user_pref("network.dns.localDomains","app://test-container.gaiamobile.org");
 """)
         f.close()
 
@@ -488,7 +515,7 @@ def main():
         mochitest.cleanup(None, options)
         retVal = mochitest.runTests(options)
     except:
-        print "TEST-UNEXPECTED-FAIL | %s | Exception caught while running tests." % sys.exc_info()[1]
+        print "Automation Error: Exception caught while running tests"
         traceback.print_exc()
         mochitest.stopWebServer(options)
         mochitest.stopWebSocketServer(options)

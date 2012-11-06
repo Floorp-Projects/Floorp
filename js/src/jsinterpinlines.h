@@ -322,7 +322,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, HandleValue lval, HandleValu
          * The entry predicts a set either an existing "own" property, or
          * on a prototype property that has a setter.
          */
-        Shape *shape = entry->prop;
+        RootedShape shape(cx, entry->prop);
         JS_ASSERT_IF(shape->isDataDescriptor(), shape->writable());
         JS_ASSERT_IF(shape->hasSlot(), entry->isOwnPropertyHit());
 

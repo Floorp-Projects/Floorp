@@ -3473,9 +3473,13 @@ let RIL = {
       }
 
       if (!updatedDataCall) {
-        currentDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
-        currentDataCall.rilMessageType = "datacallstatechange";
-        this.sendDOMMessage(currentDataCall);
+        // If datacalls list is coming from REQUEST_SETUP_DATA_CALL response,
+        // we do not change state for any currentDataCalls not in datacalls list.
+        if (!newDataCallOptions) {
+          currentDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
+          currentDataCall.rilMessageType = "datacallstatechange";
+          this.sendDOMMessage(currentDataCall);
+        }
         continue;
       }
 
@@ -3866,7 +3870,7 @@ let RIL = {
       this.sendDOMMessage(message);
     }
 
-    if (message.messageClass == GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_2]) {
+    if (message && message.messageClass == GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_2]) {
       // `MS shall ensure that the message has been to the SMS data field in
       // the (U)SIM before sending an ACK to the SC.`  ~ 3GPP 23.038 clause 4
       return PDU_FCS_RESERVED;

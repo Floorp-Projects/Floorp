@@ -33,7 +33,6 @@ log("\n\n======================= identity.js =======================\n\n");
 // This script may be injected more than once into an iframe.
 // Ensure we don't redefine contstants
 if (typeof kIdentityJSLoaded === 'undefined') {
-  const kReceivedIdentityAssertion = "received-id-assertion";
   const kIdentityDelegateWatch = "identity-delegate-watch";
   const kIdentityDelegateRequest = "identity-delegate-request";
   const kIdentityDelegateLogout = "identity-delegate-logout";
@@ -59,42 +58,17 @@ function identityCall(message) {
   sendAsyncMessage(kIdentityControllerDoMethod, message);
 }
 
-function identityFinished() {
-  log("identity finished.  closing dialog");
-  closeIdentityDialog(function notifySuccess() {
-    // get ready for next call with a reinit
-    func = null; options = null;
-
-    sendAsyncMessage(kIdentityDelegateFinished);
-  });
-}
-
 /*
- * Notify the UI to close the dialog and return to the caller application
+ * To close the dialog, we first tell the gecko SignInToWebsite manager that it
+ * can clean up.  Then we tell the gaia component that we are finished.  It is
+ * necessary to notify gecko first, so that the message can be sent before gaia
+ * destroys our context.
  */
-function closeIdentityDialog(aCallback) {
-  let randomId = uuidgen.generateUUID().toString();
-  let id = kReceivedIdentityAssertion + "-" + randomId;
-  let browser = Services.wm.getMostRecentWindow("navigator:browser");
-
-  let detail = {
-    type: kReceivedIdentityAssertion,
-    id: id,
-    showUI: showUI
-  };
-
-  // In order to avoid race conditions, we wait for the UI to notify that
-  // it has successfully closed the identity flow and has recovered the
-  // caller app, before notifying the parent process.
-  content.addEventListener("mozContentEvent", function closeIdentityDialogFinished(evt) {
-    content.removeEventListener("mozContentEvent", closeIdentityDialogFinished);
-
-    if (evt.detail.id == id && aCallback) {
-      aCallback();
-    }
-  });
-
-  browser.shell.sendChromeEvent(detail);
+function closeIdentityDialog() {
+  log('ready to close');
+  // tell gecko we're done.
+  func = null; options = null;
+  sendAsyncMessage(kIdentityDelegateFinished);
 }
 
 /*
@@ -111,7 +85,7 @@ function doInternalWatch() {
         identityCall(aParams);
         if (aParams.method === "ready") {
           log("watch finished.");
-          identityFinished();
+          closeIdentityDialog();
         }
       },
       JSON.stringify({loggedInUser: options.loggedInUser, origin: options.origin}),
@@ -132,7 +106,7 @@ function doInternalRequest() {
           log("request -> assertion, so do login");
           identityCall({method:'login',assertion:assertion});
         }
-        identityFinished();
+        closeIdentityDialog();
       },
       options);
   }
@@ -145,7 +119,7 @@ function doInternalLogout(aOptions) {
     log("logging you out of ", options.origin);
     BrowserID.internal.logout(options.origin, function() {
       identityCall({method:'logout'});
-      identityFinished();
+      closeIdentityDialog();
     });
   }
 }

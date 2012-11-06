@@ -351,7 +351,7 @@ DataChannelConnection::ConnectDTLS(TransportFlow *aFlow, uint16_t localport, uin
   NS_ENSURE_TRUE(aFlow, false);
 
   mTransportFlow = aFlow;
-  mTransportFlow->SignalPacketReceived.connect(this, &DataChannelConnection::PacketReceived);
+  mTransportFlow->SignalPacketReceived.connect(this, &DataChannelConnection::SctpDtlsInput);
   mLocalPort = localport;
   mRemotePort = remoteport;
 
@@ -409,8 +409,8 @@ DataChannelConnection::DTLSConnectThread(void *data)
 }
 
 void
-DataChannelConnection::PacketReceived(TransportFlow *flow,
-                                      const unsigned char *data, size_t len)
+DataChannelConnection::SctpDtlsInput(TransportFlow *flow,
+                                     const unsigned char *data, size_t len)
 {
   //LOG(("%p: SCTP/DTLS received %ld bytes", this, len));
 
@@ -419,10 +419,13 @@ DataChannelConnection::PacketReceived(TransportFlow *flow,
 }
 
 int
-DataChannelConnection::SendPacket(const unsigned char *data, size_t len)
+DataChannelConnection::SendPacket(const unsigned char *data, size_t len, bool release)
 {
   //LOG(("%p: SCTP/DTLS sent %ld bytes", this, len));
-  return mTransportFlow->SendPacket(data, len) < 0 ? 1 : 0;
+  int res = mTransportFlow->SendPacket(data, len) < 0 ? 1 : 0;
+  if (release)
+    delete data;
+  return res;
 }
 
 /* static */
@@ -433,17 +436,25 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
   DataChannelConnection *peer = static_cast<DataChannelConnection *>(addr);
   int res;
 
-  if (peer->IsSTSThread()) {
-    res = peer->SendPacket(static_cast<unsigned char *>(buffer), length);
+  // We're async proxying even if on the STSThread because this is called
+  // with internal SCTP locks held in some cases (such as in usrsctp_connect()).
+  // SCTP has an option for Apple, on IP connections only, to release at least
+  // one of the locks before calling a packet output routine; with changes to
+  // the underlying SCTP stack this might remove the need to use an async proxy.
+  if (0 /*peer->IsSTSThread()*/) {
+    res = peer->SendPacket(static_cast<unsigned char *>(buffer), length, false);
   } else {
+    unsigned char *data = new unsigned char[length];
+    memcpy(data, buffer, length);
     res = -1;
     // XXX It might be worthwhile to add an assertion against the thread
     // somehow getting into the DataChannel/SCTP code again, as
     // DISPATCH_SYNC is not fully blocking.  This may be tricky, as it
     // needs to be a per-thread check, not a global.
-    peer->mSTS->Dispatch(WrapRunnableRet(
-      peer, &DataChannelConnection::SendPacket, static_cast<unsigned char *>(buffer), length, &res
-    ), NS_DISPATCH_SYNC);
+    peer->mSTS->Dispatch(WrapRunnable(
+      peer, &DataChannelConnection::SendPacket, data, length, true
+    ), NS_DISPATCH_NORMAL);
+    res = 0; // cheat!  Packets can always be dropped later anyways
   }
   return res;
 }
@@ -610,6 +621,12 @@ DataChannelConnection::FindFreeStreamOut()
     limit = MAX_NUM_STREAMS;
   for (i = 0; i < limit; ++i) {
     if (!mStreamsOut[i]) {
+      // Verify it's not still in the process of closing
+      for (uint32_t j = 0; j < mStreamsResetting.Length(); ++j) {
+        if (mStreamsResetting[j] == i) {
+          continue;
+        }
+      }
       break;
     }
   }
@@ -749,7 +766,7 @@ bool
 DataChannelConnection::SendDeferredMessages()
 {
   uint32_t i;
-  DataChannel *channel;
+  nsRefPtr<DataChannel> channel; // we may null out the refs to this
   bool still_blocked = false;
   bool sent = false;
 
@@ -803,7 +820,6 @@ DataChannelConnection::SendDeferredMessages()
           // delete the channel.
           mStreamsIn[channel->mStreamIn]   = nullptr;
           mStreamsOut[channel->mStreamOut] = nullptr;
-          delete channel;
         }
       }
     }
@@ -888,7 +904,7 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
                                                 size_t length,
                                                 uint16_t streamIn)
 {
-  DataChannel *channel;
+  nsRefPtr<DataChannel> channel;
   uint32_t prValue;
   uint16_t prPolicy;
   uint32_t flags;
@@ -918,7 +934,8 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
   }
   prValue = ntohs(req->reliability_params);
   flags = ntohs(req->flags) & DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED;
-  channel = new DataChannel(this, INVALID_STREAM, streamIn,
+  channel = new DataChannel(this,
+                            INVALID_STREAM, streamIn,
                             DataChannel::CONNECTING,
                             label,
                             prPolicy, prValue,
@@ -926,17 +943,18 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
                             nullptr, nullptr);
   mStreamsIn[streamIn] = channel;
 
-  OpenResponseFinish(channel);
+  OpenResponseFinish(channel.forget());
 }
 
 void
-DataChannelConnection::OpenResponseFinish(DataChannel *channel)
+DataChannelConnection::OpenResponseFinish(already_AddRefed<DataChannel> aChannel)
 {
+  nsRefPtr<DataChannel> channel(aChannel);
   uint16_t streamOut = FindFreeStreamOut(); // may be INVALID_STREAM!
 
   mLock.AssertCurrentThreadOwns();
 
-  LOG(("Finished response: channel %p, streamOut = %u", channel, streamOut));
+  LOG(("Finished response: channel %p, streamOut = %u", channel.get(), streamOut));
 
   if (streamOut == INVALID_STREAM) {
     if (!RequestMoreStreamsOut()) {
@@ -944,23 +962,22 @@ DataChannelConnection::OpenResponseFinish(DataChannel *channel)
       mStreamsIn[channel->mStreamIn] = nullptr;
       // we can do this with the lock held because mStreamOut is INVALID_STREAM,
       // so there's no outbound channel to reset
-      delete channel;
       return;
     }
-    LOG(("Queuing channel %p to finish response", channel));
+    LOG(("Queuing channel %d to finish response", channel->mStreamIn));
     channel->mFlags |= DATA_CHANNEL_FLAGS_FINISH_RSP;
-    mPending.Push(channel);
+    DataChannel *temp = channel.get(); // Can't cast away already_AddRefed<> from channel.forget()
+    channel.forget();
+    mPending.Push(temp);
     // can't notify the user until we can send an OpenResponse
   } else {
     channel->mStreamOut = streamOut;
     mStreamsOut[streamOut] = channel;
     if (SendOpenResponseMessage(streamOut, channel->mStreamIn)) {
-      LOG(("successful incoming open of '%s' in: %u, out: %u\n",
-           channel->mLabel.get(), channel->mStreamIn, streamOut));
-
       /* Notify ondatachannel */
       // XXX We need to make sure connection sticks around until the message is delivered
-      LOG(("%s: sending ON_CHANNEL_CREATED for %p", __FUNCTION__, channel));
+      LOG(("%s: sending ON_CHANNEL_CREATED for %s: %d/%d", __FUNCTION__, 
+           channel->mLabel.get(), streamOut, channel->mStreamIn));
       NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
                                 DataChannelOnMessageAvailable::ON_CHANNEL_CREATED,
                                 this, channel));
@@ -975,7 +992,6 @@ DataChannelConnection::OpenResponseFinish(DataChannel *channel)
         channel->mStreamOut = INVALID_STREAM;
         // we can do this with the lock held because mStreamOut is INVALID_STREAM,
         // so there's no outbound channel to reset (we failed to send on it)
-        delete channel;
         return; // paranoia against future changes since we unlocked
       }
     }
@@ -995,7 +1011,7 @@ DataChannelConnection::HandleOpenResponseMessage(const struct rtcweb_datachannel
   streamOut = ntohs(rsp->reverse_stream);
   channel = FindChannelByStreamOut(streamOut);
 
-  NS_ENSURE_TRUE(channel != nullptr, /* */);
+  NS_ENSURE_TRUE(channel, /* */);
   NS_ENSURE_TRUE(channel->mState == CONNECTING, /* */);
 
   if (rsp->error) {
@@ -1033,7 +1049,7 @@ DataChannelConnection::HandleOpenAckMessage(const struct rtcweb_datachannel_ack 
 
   channel = FindChannelByStreamIn(streamIn);
 
-  NS_ENSURE_TRUE(channel != nullptr, /* */);
+  NS_ENSURE_TRUE(channel, /* */);
   NS_ENSURE_TRUE(channel->mState == CONNECTING, /* */);
 
   channel->mState = channel->mReady ? DataChannel::OPEN : DataChannel::WAITING_TO_OPEN;
@@ -1068,7 +1084,7 @@ DataChannelConnection::HandleDataMessage(uint32_t ppid,
   channel = FindChannelByStreamIn(streamIn);
 
   // XXX A closed channel may trip this... check
-  NS_ENSURE_TRUE(channel != nullptr, /* */);
+  NS_ENSURE_TRUE(channel, /* */);
   NS_ENSURE_TRUE(channel->mState != CONNECTING, /* */);
 
   // XXX should this be a simple if, no warnings/debugbreaks?
@@ -1102,11 +1118,10 @@ DataChannelConnection::HandleDataMessage(uint32_t ppid,
         if (!channel->mBinaryBuffer.IsEmpty()) {
           channel->mBinaryBuffer += recvData;
           LOG(("%s: sending ON_DATA (binary fragmented) for %p", __FUNCTION__, channel));
-          SendOrQueue(channel,
-                      new DataChannelOnMessageAvailable(
-                        DataChannelOnMessageAvailable::ON_DATA, this,
-                        channel, channel->mBinaryBuffer,
-                        channel->mBinaryBuffer.Length()));
+          channel->SendOrQueue(new DataChannelOnMessageAvailable(
+                                 DataChannelOnMessageAvailable::ON_DATA, this,
+                                 channel, channel->mBinaryBuffer,
+                                 channel->mBinaryBuffer.Length()));
           channel->mBinaryBuffer.Truncate(0);
           return;
         }
@@ -1119,24 +1134,19 @@ DataChannelConnection::HandleDataMessage(uint32_t ppid,
     }
     /* Notify onmessage */
     LOG(("%s: sending ON_DATA for %p", __FUNCTION__, channel));
-    SendOrQueue(channel,
-                new DataChannelOnMessageAvailable(
-                  DataChannelOnMessageAvailable::ON_DATA, this,
-                  channel, recvData, length));
+    channel->SendOrQueue(new DataChannelOnMessageAvailable(
+                           DataChannelOnMessageAvailable::ON_DATA, this,
+                           channel, recvData, length));
   }
 }
 
 // Called with mLock locked!
 void
-DataChannelConnection::SendOrQueue(DataChannel *aChannel, 
-                                   DataChannelOnMessageAvailable *aMessage)
+DataChannel::SendOrQueue(DataChannelOnMessageAvailable *aMessage)
 {
-  mLock.AssertCurrentThreadOwns();
-
-  if (!aChannel->mReady &&
-      (aChannel->mState == DataChannel::CONNECTING || 
-       aChannel->mState == DataChannel::WAITING_TO_OPEN)) {
-    aChannel->mQueuedMessages.AppendElement(aMessage);
+  if (!mReady &&
+      (mState == CONNECTING || mState == WAITING_TO_OPEN)) {
+    mQueuedMessages.AppendElement(aMessage);
   } else {
     NS_DispatchToMainThread(aMessage);
   }
@@ -1383,6 +1393,7 @@ DataChannelConnection::ResetOutgoingStream(uint16_t streamOut)
   uint32_t i;
 
   mLock.AssertCurrentThreadOwns();
+  LOG(("Resetting outgoing stream %d",streamOut));
   // Rarely has more than a couple items and only for a short time
   for (i = 0; i < mStreamsResetting.Length(); ++i) {
     if (mStreamsResetting[i] == streamOut) {
@@ -1423,7 +1434,7 @@ void
 DataChannelConnection::HandleStreamResetEvent(const struct sctp_stream_reset_event *strrst)
 {
   uint32_t n, i;
-  DataChannel *channel;
+  nsRefPtr<DataChannel> channel; // since we may null out the ref to the channel
 
   if (!(strrst->strreset_flags & SCTP_STREAM_RESET_DENIED) &&
       !(strrst->strreset_flags & SCTP_STREAM_RESET_FAILED)) {
@@ -1431,7 +1442,9 @@ DataChannelConnection::HandleStreamResetEvent(const struct sctp_stream_reset_eve
     for (i = 0; i < n; ++i) {
       if (strrst->strreset_flags & SCTP_STREAM_RESET_INCOMING_SSN) {
         channel = FindChannelByStreamIn(strrst->strreset_stream_list[i]);
-        if (channel != nullptr) {
+        if (channel) {
+          LOG(("Channel %d outgoing/%d incoming closed",
+               channel->mStreamOut,channel->mStreamIn));
           mStreamsIn[channel->mStreamIn] = nullptr;
           channel->mStreamIn = INVALID_STREAM;
           if (channel->mStreamOut == INVALID_STREAM) {
@@ -1451,6 +1464,8 @@ DataChannelConnection::HandleStreamResetEvent(const struct sctp_stream_reset_eve
       if (strrst->strreset_flags & SCTP_STREAM_RESET_OUTGOING_SSN) {
         channel = FindChannelByStreamOut(strrst->strreset_stream_list[i]);
         if (channel != nullptr && channel->mStreamOut != INVALID_STREAM) {
+          LOG(("Channel %d outgoing/%d incoming closed",
+               channel->mStreamOut,channel->mStreamIn));
           mStreamsOut[channel->mStreamOut] = nullptr;
           channel->mStreamOut = INVALID_STREAM;
           if (channel->mStreamIn == INVALID_STREAM) {
@@ -1473,7 +1488,7 @@ DataChannelConnection::HandleStreamChangeEvent(const struct sctp_stream_change_e
 {
   uint16_t streamOut;
   uint32_t i;
-  DataChannel *channel;
+  nsRefPtr<DataChannel> channel;
 
   if (strchg->strchange_flags == SCTP_STREAM_CHANGE_DENIED) {
     LOG(("*** Failed increasing number of streams from %u (%u/%u)",
@@ -1520,18 +1535,19 @@ DataChannelConnection::HandleStreamChangeEvent(const struct sctp_stream_change_e
       // Can't copy nsDeque's.  Move into temp array since any that fail will
       // go back to mPending
       nsDeque temp;
-      while (nullptr != (channel = static_cast<DataChannel *>(mPending.PopFront()))) {
-        temp.Push(channel);
+      DataChannel *temp_channel; // really already_AddRefed<>
+      while (nullptr != (temp_channel = static_cast<DataChannel *>(mPending.PopFront()))) {
+        temp.Push(static_cast<void *>(temp_channel));
       }
 
       // Now assign our new streams
-      while (nullptr != (channel = static_cast<DataChannel *>(temp.PopFront()))) {
+      while (nullptr != (channel = dont_AddRef(static_cast<DataChannel *>(temp.PopFront())))) {
         if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_RSP) {
           channel->mFlags &= ~DATA_CHANNEL_FLAGS_FINISH_RSP;
-          OpenResponseFinish(channel); // may reset the flag and re-push
+          OpenResponseFinish(channel.forget()); // may reset the flag and re-push
         } else if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
           channel->mFlags &= ~DATA_CHANNEL_FLAGS_FINISH_OPEN;
-          OpenFinish(channel); // may reset the flag and re-push
+          OpenFinish(channel.forget()); // may reset the flag and re-push
         }
       }
     }
@@ -1649,12 +1665,11 @@ DataChannelConnection::ReceiveCallback(struct socket* sock, void *data, size_t d
   return 1;
 }
 
-DataChannel *
+already_AddRefed<DataChannel>
 DataChannelConnection::Open(const nsACString& label, Type type, bool inOrder,
                             uint32_t prValue, DataChannelListener *aListener,
                             nsISupports *aContext)
 {
-  DataChannel *channel;
   uint16_t prPolicy = SCTP_PR_SCTP_NONE;
   uint32_t flags;
 
@@ -1676,25 +1691,27 @@ DataChannelConnection::Open(const nsACString& label, Type type, bool inOrder,
   }
 
   flags = !inOrder ? DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED : 0;
-  channel = new DataChannel(this, INVALID_STREAM, INVALID_STREAM,
-                            DataChannel::CONNECTING,
-                            label, type, prValue,
-                            flags,
-                            aListener, aContext); // infallible malloc
+  nsRefPtr<DataChannel> channel(new DataChannel(this, 
+                                                INVALID_STREAM, INVALID_STREAM,
+                                                DataChannel::CONNECTING,
+                                                label, type, prValue,
+                                                flags,
+                                                aListener, aContext));
 
   MutexAutoLock lock(mLock); // OpenFinish assumes this
-  return OpenFinish(channel);
+  return OpenFinish(channel.forget());
 }
 
 // Separate routine so we can also call it to finish up from pending opens
-DataChannel *
-DataChannelConnection::OpenFinish(DataChannel *channel)
+already_AddRefed<DataChannel>
+DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
 {
   uint16_t streamOut = FindFreeStreamOut(); // may be INVALID_STREAM!
+  nsRefPtr<DataChannel> channel(aChannel);
 
   mLock.AssertCurrentThreadOwns();
 
-  LOG(("Finishing open: channel %p, streamOut = %u", channel, streamOut));
+  LOG(("Finishing open: channel %p, streamOut = %u", channel.get(), streamOut));
 
   if (streamOut == INVALID_STREAM) {
     if (!RequestMoreStreamsOut()) {
@@ -1702,18 +1719,18 @@ DataChannelConnection::OpenFinish(DataChannel *channel)
         // We already returned the channel to the app.  Mark it closed
         channel->mState = CLOSED;
         NS_ERROR("Failed to request more streams");
-        return channel;
+        return channel.forget();
       }
       // we can do this with the lock held because mStreamOut is INVALID_STREAM,
       // so there's no outbound channel to reset
-      delete channel;
       return nullptr;
     }
-    LOG(("Queuing channel %p to finish open", channel));
+    LOG(("Queuing channel %p to finish open", channel.get()));
     // Also serves to mark we told the app
     channel->mFlags |= DATA_CHANNEL_FLAGS_FINISH_OPEN;
+    channel->AddRef(); // we need a ref for the nsDeQue and one to return
     mPending.Push(channel);
-    return channel;
+    return channel.forget();
   }
   mStreamsOut[streamOut] = channel;
   channel->mStreamOut = streamOut;
@@ -1732,11 +1749,10 @@ DataChannelConnection::OpenFinish(DataChannel *channel)
       channel->mStreamOut = INVALID_STREAM;
       // we can do this with the lock held because mStreamOut is INVALID_STREAM,
       // so there's no outbound channel to reset (we didn't sent anything)
-      delete channel;
       return nullptr;
     }
   }
-  return channel;
+  return channel.forget();
 }
 
 int32_t
@@ -1919,14 +1935,15 @@ DataChannelConnection::SendMsgCommon(uint16_t stream, const nsACString &aMsg,
 void
 DataChannelConnection::Close(uint16_t streamOut)
 {
-  DataChannel *channel;
+  nsRefPtr<DataChannel> channel; // make sure it doesn't go away on us
 
   MutexAutoLock lock(mLock);
   LOG(("Closing stream %d",streamOut));
   channel = FindChannelByStreamOut(streamOut);
   if (channel) {
     channel->mBufferedData.Clear();
-    ResetOutgoingStream(channel->mStreamOut);
+    if (channel->mStreamOut != INVALID_STREAM)
+      ResetOutgoingStream(channel->mStreamOut);
     SendOutgoingStreamReset();
     channel->mState = CLOSING;
   }
@@ -1950,9 +1967,15 @@ void DataChannelConnection::CloseAll()
   }
 
   // Clean up any pending opens for channels
-  DataChannel *channel;
-  while (nullptr != (channel = static_cast<DataChannel *>(mPending.PopFront())))
-    channel->Close();
+  nsRefPtr<DataChannel> channel;
+  while (nullptr != (channel = dont_AddRef(static_cast<DataChannel *>(mPending.PopFront()))))
+    channel->Close(); // also releases the ref on each iteration
+}
+
+DataChannel::~DataChannel()
+{
+  LOG(("Destroying Data channel %d/%d", mStreamOut, mStreamIn));
+  Close();
 }
 
 void

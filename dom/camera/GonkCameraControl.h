@@ -47,18 +47,21 @@ public:
   const char* GetParameterConstChar(uint32_t aKey);
   double GetParameterDouble(uint32_t aKey);
   void GetParameter(uint32_t aKey, nsTArray<dom::CameraRegion>& aRegions);
+  void GetParameter(uint32_t aKey, nsTArray<CameraSize>& aSizes);
   void SetParameter(const char* aKey, const char* aValue);
   void SetParameter(uint32_t aKey, const char* aValue);
   void SetParameter(uint32_t aKey, double aValue);
   void SetParameter(uint32_t aKey, const nsTArray<dom::CameraRegion>& aRegions);
+  void SetParameter(uint32_t aKey, int aValue);
   nsresult GetVideoSizes(nsTArray<CameraSize>& aVideoSizes);
   nsresult PushParameters();
 
-  nsresult SetupRecording(int aFd, int aMaxFileSizeBytes = -1, int aMaxVideoLengthMs = -1);
+  nsresult SetupRecording(int aFd, int64_t aMaxFileSizeBytes = -1, int64_t aMaxVideoLengthMs = -1);
   nsresult SetupVideoMode(const nsAString& aProfile);
 
   void AutoFocusComplete(bool aSuccess);
   void TakePictureComplete(uint8_t* aData, uint32_t aLength);
+  void HandleRecorderEvent(int msg, int ext1, int ext2);
 
 protected:
   ~nsGonkCameraControl();
@@ -78,6 +81,7 @@ protected:
   already_AddRefed<GonkRecorderProfileManager> GetGonkRecorderProfileManager();
 
   void SetPreviewSize(uint32_t aWidth, uint32_t aHeight);
+  void SetupThumbnail(uint32_t aPictureWidth, uint32_t aPictureHeight, uint32_t aPercentQuality);
 
   uint32_t                  mHwHandle;
   double                    mExposureCompensationMin;
@@ -87,6 +91,8 @@ protected:
   android::CameraParameters mParams;
   uint32_t                  mWidth;
   uint32_t                  mHeight;
+  uint32_t                  mLastPictureWidth;
+  uint32_t                  mLastPictureHeight;
 
   enum {
     PREVIEW_FORMAT_UNKNOWN,

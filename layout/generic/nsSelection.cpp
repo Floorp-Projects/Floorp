@@ -5327,17 +5327,16 @@ Selection::ScrollIntoView(SelectionRegion aRegion,
   if (!mFrameSelection)
     return NS_OK;//nothing to do
 
+  nsCOMPtr<nsIPresShell> presShell = mFrameSelection->GetShell();
+  if (!presShell)
+    return NS_OK;
+
   if (mFrameSelection->GetBatching())
     return NS_OK;
 
   if (!(aFlags & Selection::SCROLL_SYNCHRONOUS))
     return PostScrollSelectionIntoViewEvent(aRegion, aFlags,
       aVertical, aHorizontal);
-
-  nsCOMPtr<nsIPresShell> presShell;
-  nsresult result = GetPresShell(getter_AddRefs(presShell));
-  if (NS_FAILED(result) || !presShell)
-    return result;
 
   // Now that text frame character offsets are always valid (though not
   // necessarily correct), the worst that will happen if we don't flush here
@@ -5347,10 +5346,10 @@ Selection::ScrollIntoView(SelectionRegion aRegion,
   if (aFlags & Selection::SCROLL_DO_FLUSH) {
     presShell->FlushPendingNotifications(Flush_Layout);
 
-    // Reget the presshell, since it might have gone away.
-    result = GetPresShell(getter_AddRefs(presShell));
-    if (NS_FAILED(result) || !presShell)
-      return result;
+    // Reget the presshell, since it might have been Destroy'ed.
+    presShell = mFrameSelection ? mFrameSelection->GetShell() : nullptr;
+    if (!presShell)
+      return NS_OK;
   }
 
   //

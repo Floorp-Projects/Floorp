@@ -337,6 +337,24 @@ try {
 ok(ex, "First parameter is required!");
 ex = false;
 
+try {
+  e = new UIEvent("foo", { view: {} });
+  e.view.onunload;
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "{} isn't a valid value.");
+ex = false;
+
+try {
+  e = new UIEvent("foo", { view: null });
+} catch(exp) {
+  ex = true;
+}
+ok(!ex, "null is a valid value.");
+is(e.view, null);
+ex = false;
+
 e = new UIEvent("hello");
 ok(e.type, "hello", "Wrong event type!");
 ok(!e.isTrusted, "Event shouldn't be trusted!");

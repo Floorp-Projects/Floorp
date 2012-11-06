@@ -1326,22 +1326,14 @@ PageErrorListener.prototype =
   {
     let innerWindowId = this.window ?
                         WebConsoleUtils.getInnerWindowId(this.window) : null;
-    let result = [];
-    let errors = {};
-    Services.console.getMessageArray(errors, {});
+    let errors = Services.console.getMessageArray() || [];
 
-    (errors.value || []).forEach(function(aError) {
-      if (!(aError instanceof Ci.nsIScriptError) ||
-          (innerWindowId &&
-           (aError.innerWindowID != innerWindowId ||
-            !this.isCategoryAllowed(aError.category)))) {
-        return;
-      }
-
-      result.push(aError);
+    return errors.filter(function(aError) {
+      return aError instanceof Ci.nsIScriptError &&
+             (!innerWindowId ||
+              (aError.innerWindowID == innerWindowId &&
+               this.isCategoryAllowed(aError.category)));
     }, this);
-
-    return result;
   },
 
   /**

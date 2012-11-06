@@ -184,6 +184,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "ToggleProfiling", false);
+    Services.obs.addObserver(this, "gather-telemetry", false);
 
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
@@ -235,6 +236,7 @@ var BrowserApp = {
     ExternalApps.init();
     MemoryObserver.init();
     Distribution.init();
+    Tabs.init();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.init();
 #endif
@@ -511,6 +513,7 @@ var BrowserApp = {
     ExternalApps.uninit();
     MemoryObserver.uninit();
     Distribution.uninit();
+    Tabs.uninit();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.uninit();
 #endif
@@ -670,7 +673,7 @@ var BrowserApp = {
     evt.initUIEvent("TabOpen", true, false, window, null);
     newTab.browser.dispatchEvent(evt);
 
-    Tabs.zombifyLru();
+    Tabs.expireLruTab();
 
     return newTab;
   },
@@ -1143,6 +1146,8 @@ var BrowserApp = {
       } else {
         profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
       }
+    } else if (aTopic == "gather-telemetry") {
+      sendMessageToJava({ gecko: { type: "Telemetry:Gather" }});
     } else if (aTopic == "Session:Restore") {
       let data = JSON.parse(aData);
       this.restoreSession(data.restoringOOM, data.sessionString);
@@ -7709,13 +7714,43 @@ var Tabs = {
   // of tabs. Each tab has a timestamp associated with it that indicates when
   // it was last touched.
 
+  _enableTabExpiration: false,
+
+  init: function() {
+    // on low-memory platforms, always allow tab expiration. on high-mem
+    // platforms, allow it to be turned on once we hit a low-mem situation
+    if (Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory).isLowMemoryPlatform()) {
+      this._enableTabExpiration = true;
+    } else {
+      Services.obs.addObserver(this, "memory-pressure", false);
+    }
+  },
+
+  uninit: function() {
+    if (!this._enableTabExpiration) {
+      // if _enableTabExpiration is true then we won't have this
+      // observer registered any more.
+      Services.obs.removeObserver(this, "memory-pressure");
+    }
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "memory-pressure" && aData != "heap-minimize") {
+      this._enableTabExpiration = true;
+      Services.obs.removeObserver(this, "memory-pressure");
+    }
+  },
+
   touch: function(aTab) {
     aTab.lastTouchedAt = Date.now();
   },
 
-  zombifyLru: function() {
-    let zombieTimeMs = Services.prefs.getIntPref("browser.tabs.zombieTime") * 1000;
-    if (zombieTimeMs < 0) {
+  expireLruTab: function() {
+    if (!this._enableTabExpiration) {
+      return false;
+    }
+    let expireTimeMs = Services.prefs.getIntPref("browser.tabs.expireTime") * 1000;
+    if (expireTimeMs < 0) {
       // this behaviour is disabled
       return false;
     }
@@ -7732,9 +7767,9 @@ var Tabs = {
         lruTab = tabs[i];
       }
     }
-    // if the tab was last touched more than browser.tabs.zombieTime seconds ago,
+    // if the tab was last touched more than browser.tabs.expireTime seconds ago,
     // zombify it
-    if (lruTab && (Date.now() - lruTab.lastTouchedAt) > zombieTimeMs) {
+    if (lruTab && (Date.now() - lruTab.lastTouchedAt) > expireTimeMs) {
       MemoryObserver.zombify(lruTab);
       return true;
     }

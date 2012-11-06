@@ -6,7 +6,6 @@
 #include "nsIDOMElement.idl"
 #include "nsIVariant.idl"
 
-interface nsIDOMDOMStringMap;
 interface nsIDOMHTMLMenuElement;
 interface nsIDOMHTMLPropertiesCollection;
 
@@ -30,7 +29,7 @@ interface nsIDOMHTMLElement : nsIDOMElement
            attribute DOMString        lang;
            attribute DOMString        dir;
            attribute DOMString        className;
-  readonly attribute nsIDOMDOMStringMap dataset;
+  readonly attribute nsISupports      dataset;
 
            attribute boolean                        itemScope;
            attribute nsIVariant                     itemType;

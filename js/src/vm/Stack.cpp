@@ -217,7 +217,7 @@ StackFrame::pcQuadratic(const ContextStack &stack, size_t maxDepth)
 }
 
 bool
-StackFrame::copyRawFrameSlots(CopyVector *vec)
+StackFrame::copyRawFrameSlots(AutoValueVector *vec)
 {
     if (!vec->resize(numFormalArgs() + script()->nfixed))
         return false;

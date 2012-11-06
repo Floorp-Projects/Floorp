@@ -150,6 +150,8 @@ MOCHITEST_FILES = \
 		file_post_request.html \
 		test_browserElement_inproc_ReloadPostRequest.html \
 		browserElement_ReloadPostRequest.js \
+		browserElement_PurgeHistory.js \
+		test_browserElement_inproc_PurgeHistory.html \
 		$(NULL)
 
 # Disabled due to https://bugzilla.mozilla.org/show_bug.cgi?id=774100
@@ -216,6 +218,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_ExposableURI.html \
 		test_browserElement_oop_FrameWrongURI.html \
 		test_browserElement_oop_ReloadPostRequest.html \
+		test_browserElement_oop_PurgeHistory.html \
 	$(NULL)
 endif #}
 endif #}

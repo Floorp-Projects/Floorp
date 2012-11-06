@@ -514,16 +514,6 @@ nsIDOMStorage_Clear_customMethodCallCode = """
         JS_ClearNonGlobalObject(cx, obj);
 """
 
-CUSTOM_QS = {
-    'skipgen': True,
-    'traceable': False
-}
-
-CUSTOM_QS_TN = {
-    'skipgen': True,
-    'traceable': True
-}
-
 customMethodCalls = {
     'nsIDOMNode_GetNextSibling': {
         'thisType': 'nsINode',
