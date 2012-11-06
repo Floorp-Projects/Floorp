@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=716579
+-->
+<head>
+  <meta charset="windows-1251">
+  <title>Test for Bug 716579</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=716579">Mozilla Bug 716579</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 716579 **/
+
+var html8 = "FAIL";
+var html16 = "FAIL";
+var xml8 = "FAIL";
+var xml16 = "FAIL"; 
+
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function() {
+  is(html8, "\u20AC", "HTML UTF-8 failed.");
+  is(html16, "\u20AC", "HTML UTF-16 failed.");
+  is(xml8, "\u20AC", "XML UTF-8 failed.");
+  is(xml16, "\u20AC", "XML UTF-16 failed.");
+  SimpleTest.finish();
+};
+
+</script>
+</pre>
+<div id="content" style="display: none">
+<iframe src="file_bug716579-8.html"></iframe>  
+<iframe src="file_bug716579-16.html"></iframe>  
+<iframe src="file_bug716579-8.xhtml"></iframe>  
+<iframe src="file_bug716579-16.xhtml"></iframe>  
+</div>
+</body>
+</html>
