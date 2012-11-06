@@ -13,6 +13,7 @@ webidl_files = \
   AudioBufferSourceNode.webidl \
   AudioContext.webidl \
   AudioDestinationNode.webidl \
+  AudioListener.webidl \
   AudioNode.webidl \
   AudioParam.webidl \
   AudioSourceNode.webidl \
