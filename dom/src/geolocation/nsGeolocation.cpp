@@ -789,12 +789,109 @@ nsGeolocationService::Observe(nsISupports* aSubject,
 NS_IMETHODIMP
 nsGeolocationService::Update(nsIDOMGeoPosition *aSomewhere)
 {
+  // here we have to determine this aSomewhere is a "better"
+  // position than any previously recv'ed.
+
+  if (!IsBetterPosition(aSomewhere))
+    return NS_OK;
+
   SetCachedPosition(aSomewhere);
 
   for (uint32_t i = 0; i< mGeolocators.Length(); i++) {
     mGeolocators[i]->Update(aSomewhere);
   }
   return NS_OK;
+}
+
+PRBool
+nsGeolocationService::IsBetterPosition(nsIDOMGeoPosition *aSomewhere)
+{
+  if (!aSomewhere) {
+    return false;
+  }
+  
+  if (mProviders.Count() == 1 || mLastPosition == nullptr) {
+    return true;
+  }
+
+  nsresult rv;
+  DOMTimeStamp oldTime;
+  rv = mLastPosition->GetTimestamp(&oldTime);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  nsCOMPtr<nsIDOMGeoPositionCoords> coords;
+  mLastPosition->GetCoords(getter_AddRefs(coords));
+  if (!coords) {
+    return PR_FALSE;
+  }
+
+  double oldAccuracy;
+  rv = coords->GetAccuracy(&oldAccuracy);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  double oldLat, oldLon;
+  rv = coords->GetLongitude(&oldLon);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  rv = coords->GetLatitude(&oldLat);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  aSomewhere->GetCoords(getter_AddRefs(coords));
+  if (!coords) {
+    return PR_FALSE;
+  }
+
+  double newAccuracy;
+  rv = coords->GetAccuracy(&newAccuracy);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  double newLat, newLon;
+  rv = coords->GetLongitude(&newLon);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  rv = coords->GetLatitude(&newLat);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  // Latitude and longitude is reported in degrees.
+  // However, it is easier to work in radian:
+  // see: http://en.wikipedia.org/wiki/Radian
+  double radsInDeg = M_PI / 180.0;
+
+  newLat *= radsInDeg;
+  newLon *= radsInDeg;
+  oldLat *= radsInDeg;
+  oldLon *= radsInDeg;
+
+  // WGS84 equatorial radius of earth = 6378137m
+  // http://en.wikipedia.org/wiki/WGS84
+  double radius = 6378137;
+
+  // We want to calculate the "Great Circle distance"
+  // between the point (lat1, lon1) and (lat2, lon2).  We
+  // will use the spherical law of cosines to the triangle
+  // formed by our two points and the north pole.
+  //
+  // a = sin ( lat1 ) * sin ( lat2 )  + cos ( lat1 ) * cos (lat2) * cos (lon1 - lon2)
+  // R = radius of circle
+  // distance = arccos ( a ) * R 
+  //
+  // http://en.wikipedia.org/wiki/Great-circle_distance
+
+  double delta = acos( (sin(newLat) * sin(oldLat)) +
+                       (cos(newLat) * cos(oldLat) * cos(oldLon - newLon)) ) * radius; 
+
+  // The threshold is when the distance between the two
+  // positions exceeds the worse (larger value) of the two
+  // accuracies.
+  double max_accuracy = PR_MAX(oldAccuracy, newAccuracy);
+  if (delta > max_accuracy)
+    return PR_TRUE;
+
+  // check to see if the aSomewhere position is more accurate
+  if (oldAccuracy >= newAccuracy)
+    return PR_TRUE;
+
+  return PR_FALSE;
 }
 
 void
