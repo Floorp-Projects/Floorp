@@ -326,7 +326,7 @@ protected:
 
 private:
     void               DestroyChildWindows();
-    void               GetToplevelWidget(GtkWidget **aWidget);
+    GtkWidget         *GetToplevelWidget();
     nsWindow          *GetContainerWindow();
     void               SetUrgencyHint(GtkWidget *top_window, bool state);
     void              *SetupPluginPort(void);
