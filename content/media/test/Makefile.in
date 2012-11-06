@@ -111,7 +111,6 @@ MOCHITEST_FILES = \
 		test_source_write.html \
 	        test_source_null.html \
 		test_standalone.html \
-		test_timeupdate_small_files.html \
 		test_too_many_elements.html \
 		test_volume.html \
 		test_video_to_canvas.html \
@@ -139,9 +138,11 @@ ifneq ($(OS_ARCH), WINNT)
 MOCHITEST_FILES += \
 		test_streams_element_capture.html \
 		test_streams_element_capture_reset.html \
+		test_timeupdate_small_files.html \
 		$(NULL)
 else
 $(warning test_streams_element_capture{,_reset}.html is disabled on Windows for timeouts. Bug 752796)
+$(warning test_timeupdate_small_files.html is disabled on Windows for timeouts. Bug 786539)
 endif
 
 # Don't run in suite
