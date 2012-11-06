@@ -6,8 +6,9 @@
 #include "nsReadableUtils.h"
 #include "nsComboboxControlFrame.h"
 #include "nsIDOMEventTarget.h"
-#include "nsFrameManager.h"
+#include "nsFocusManager.h"
 #include "nsFormControlFrame.h"
+#include "nsFrameManager.h"
 #include "nsGfxButtonControlFrame.h"
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
@@ -974,7 +975,8 @@ nsComboboxControlFrame::ShowDropDown(bool aDoDropDown)
   }
 
   if (!mDroppedDown && aDoDropDown) {
-    if (sFocused == this) {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (!fm || fm->GetFocusedContent() == GetContent()) {
       DropDownPositionState state = AbsolutelyPositionDropDown();
       if (state == eDropDownPositionFinal) {
         ShowList(aDoDropDown); // might destroy us

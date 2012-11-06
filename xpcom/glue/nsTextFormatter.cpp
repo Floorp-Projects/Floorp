@@ -291,12 +291,9 @@ static int cvt_ll(SprintfState *ss, int64_t num, int width, int prec,
     cvt = &cvtbuf[0] + ELEMENTS_OF(cvtbuf);
     digits = 0;
     while (num != 0) {
-	int64_t quot, rem;
-	LL_UDIVMOD(&quot, &rem, num, rad);
-	int32_t digit = int32_t(rem);
-	*--cvt = hexp[digit & 0xf];
+	*--cvt = hexp[int32_t(num % rad) & 0xf];
 	digits++;
-	num = quot;
+	num /= rad;
     }
     if (digits == 0) {
 	*--cvt = '0';

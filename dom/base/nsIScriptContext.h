@@ -45,8 +45,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x8bdcea47, 0x6704, 0x4dd9, \
-  { 0xa1, 0x48, 0x05, 0x34, 0xcf, 0xe2, 0xdd, 0x57 } }
+{ 0x95870c91, 0xe21d, 0x4499, \
+  { 0x9b, 0x61, 0x45, 0x79, 0x5f, 0x12, 0x0c, 0x98 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -60,8 +60,6 @@ class nsIScriptContext : public nsIScriptContextPrincipal
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTCONTEXT_IID)
-
-  virtual void SetGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;
 
   /**
    * Compile and execute a script.
@@ -334,12 +332,6 @@ public:
    * Called to find out if this script context might be executing script.
    */
   virtual bool GetExecutingScript() = 0;
-
-  /**
-   * Tell the context whether or not to GC when destroyed.  An optimization
-   * used when the window is a [i]frame, so GC will happen anyway.
-   */
-  virtual void SetGCOnDestruction(bool aGCOnDestruction) = 0;
 
   /**
    * Initialize DOM classes on aGlobalObj, always call

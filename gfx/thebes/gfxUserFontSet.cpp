@@ -37,7 +37,7 @@ gfxUserFontSet::GetUserFontsLog()
 #define LOG(args) PR_LOG(GetUserFontsLog(), PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(GetUserFontsLog(), PR_LOG_DEBUG)
 
-static uint64_t sFontSetGeneration = LL_INIT(0, 0);
+static uint64_t sFontSetGeneration = 0;
 
 // TODO: support for unicode ranges not yet implemented
 

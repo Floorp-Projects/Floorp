@@ -9,12 +9,16 @@
 
 using namespace mozilla::dom;
 
+#ifdef MOZ_SYS_MSG
 DOMCI_DATA(MozActivity, Activity)
+#endif
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Activity)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozActivity)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+#ifdef MOZ_SYS_MSG
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozActivity)
+#endif
 NS_INTERFACE_MAP_END_INHERITING(DOMRequest)
 
 NS_IMPL_ADDREF_INHERITED(Activity, DOMRequest)

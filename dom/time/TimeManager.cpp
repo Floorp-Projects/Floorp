@@ -7,7 +7,9 @@
 #include "nsITimeService.h"
 #include "TimeManager.h"
 
+#ifdef MOZ_TIME_MANAGER
 DOMCI_DATA(MozTimeManager, mozilla::dom::time::TimeManager)
+#endif
 
 namespace mozilla {
 namespace dom {
@@ -16,7 +18,9 @@ namespace time {
 NS_INTERFACE_MAP_BEGIN(TimeManager)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozTimeManager)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
+#ifdef MOZ_TIME_MANAGER
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozTimeManager)
+#endif
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(TimeManager)

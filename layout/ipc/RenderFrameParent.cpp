@@ -119,15 +119,22 @@ GetFrameMetrics(Layer* aLayer)
   return container ? &container->GetFrameMetrics() : NULL;
 }
 
+/**
+ * Gets the layer-pixel offset of aContainerFrame's content rect top-left
+ * from the nearest display item reference frame (which we assume will be inducing
+ * a ContainerLayer).
+ */
 static nsIntPoint
-GetRootFrameOffset(nsIFrame* aContainerFrame, nsDisplayListBuilder* aBuilder)
+GetContentRectLayerOffset(nsIFrame* aContainerFrame, nsDisplayListBuilder* aBuilder)
 {
   nscoord auPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
 
   // Offset to the content rect in case we have borders or padding
-  nsPoint frameOffset =
-    (aBuilder->ToReferenceFrame(aContainerFrame->GetParent()) +
-     aContainerFrame->GetContentRect().TopLeft());
+  // Note that aContainerFrame could be a reference frame itself, so
+  // we need to be careful here to ensure that we call ToReferenceFrame
+  // on aContainerFrame and not its parent.
+  nsPoint frameOffset = aBuilder->ToReferenceFrame(aContainerFrame) +
+    (aContainerFrame->GetContentRect().TopLeft() - aContainerFrame->GetPosition());
 
   return frameOffset.ToNearestPixels(auPerDevPixel);
 }
@@ -278,10 +285,10 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
 
     layerTransform = viewTransform;
     if (metrics->IsRootScrollable()) {
-      // Apply the root frame translation *before* we do the rest of the transforms.
-      nsIntPoint rootFrameOffset = GetRootFrameOffset(aFrame, aBuilder);
+      // Apply the translation *before* we do the rest of the transforms.
+      nsIntPoint offset = GetContentRectLayerOffset(aFrame, aBuilder);
       shadowTransform = shadowTransform *
-          gfx3DMatrix::Translation(float(rootFrameOffset.x), float(rootFrameOffset.y), 0.0);
+          gfx3DMatrix::Translation(float(offset.x), float(offset.y), 0.0);
     }
   }
 
@@ -660,10 +667,17 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     }
     static_cast<RefLayer*>(layer.get())->SetReferentId(id);
     layer->SetVisibleRegion(aVisibleRect);
-    nsIntPoint rootFrameOffset = GetRootFrameOffset(aFrame, aBuilder);
-    layer->SetBaseTransform(
-      gfx3DMatrix::Translation(rootFrameOffset.x + aContainerParameters.mOffset.x, 
-                               rootFrameOffset.y + aContainerParameters.mOffset.y, 0.0));
+    nsIntPoint offset = GetContentRectLayerOffset(aFrame, aBuilder);
+    // We can only have an offset if we're a child of an inactive
+    // container, but our display item is LAYER_ACTIVE_FORCE which
+    // forces all layers above to be active.
+    MOZ_ASSERT(aContainerParameters.mOffset == nsIntPoint());
+    gfx3DMatrix m =
+      gfx3DMatrix::Translation(offset.x, offset.y, 0.0);
+    // Remote content can't be repainted by us, so we multiply down
+    // the resolution that our container expects onto our container.
+    m.Scale(aContainerParameters.mXScale, aContainerParameters.mYScale, 1.0);
+    layer->SetBaseTransform(m);
 
     return layer.forget();
   }
@@ -880,7 +894,7 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   ContainerLayer* container = GetRootLayer();
   if (aBuilder->IsForEventDelivery() && container) {
     ViewTransform offset =
-      ViewTransform(GetRootFrameOffset(aFrame, aBuilder), 1, 1);
+      ViewTransform(GetContentRectLayerOffset(aFrame, aBuilder), 1, 1);
     BuildListForLayer(container, mFrameLoader, offset,
                       aBuilder, shadowTree, aFrame);
   } else {

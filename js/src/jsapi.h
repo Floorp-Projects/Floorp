@@ -1197,6 +1197,10 @@ class AutoStringRooter : private AutoGCRooter {
         return &str;
     }
 
+    JSString * const * addr() const {
+        return &str;
+    }
+
     friend void AutoGCRooter::trace(JSTracer *trc);
 
   private:
@@ -3409,6 +3413,7 @@ JS_realloc(JSContext *cx, void *p, size_t nbytes);
 /*
  * A wrapper for js_free(p) that may delay js_free(p) invocation as a
  * performance optimization.
+ * cx may be NULL.
  */
 extern JS_PUBLIC_API(void)
 JS_free(JSContext *cx, void *p);
@@ -4408,6 +4413,10 @@ struct JSPropertyDescriptor {
     JSPropertyOp       getter;
     JSStrictPropertyOp setter;
     jsval              value;
+
+    JSPropertyDescriptor() : obj(NULL), attrs(0), shortid(0), getter(NULL),
+                             setter(NULL), value(JSVAL_VOID)
+    {}
 };
 
 /*
@@ -4617,11 +4626,15 @@ JS_NewArrayBufferWithContents(JSContext *cx, void *contents);
 /*
  * Steal the contents of the given array buffer. The array buffer has its
  * length set to 0 and its contents array cleared. The caller takes ownership
- * of |contents| and must free it or transfer ownership via
+ * of |*contents| and must free it or transfer ownership via
  * JS_NewArrayBufferWithContents when done using it.
+ * To free |*contents|, call free().
+ * A pointer to the buffer's data is returned in |*data|. This pointer can
+ * be used until |*contents| is freed or has its ownership transferred.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_StealArrayBufferContents(JSContext *cx, JSObject *obj, void **contents);
+JS_StealArrayBufferContents(JSContext *cx, JSObject *obj, void **contents,
+                            uint8_t **data);
 
 /*
  * Allocate memory that may be eventually passed to

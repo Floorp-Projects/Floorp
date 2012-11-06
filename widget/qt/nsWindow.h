@@ -316,6 +316,7 @@ private:
                                      nsNativeWidget nativeParent,
                                      nsWidgetInitData* aInitData);
     void               SetSoftwareKeyboardState(bool aOpen, const InputContextAction& aAction);
+    void               ClearCachedResources();
 
     MozQWidget*        mWidget;
 

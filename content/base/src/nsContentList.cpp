@@ -22,6 +22,7 @@
 #include "mozilla/dom/HTMLCollectionBinding.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/Likely.h"
+#include "nsGenericHTMLElement.h"
 
 // Form related includes
 #include "nsIDOMHTMLFormElement.h"
@@ -598,6 +599,42 @@ nsContentList::NamedItem(const nsAString& aName, bool aDoFlush)
   }
 
   return nullptr;
+}
+
+void
+nsContentList::GetSupportedNames(nsTArray<nsString>& aNames)
+{
+  BringSelfUpToDate(true);
+
+  nsAutoTArray<nsIAtom*, 8> atoms;
+  for (uint32_t i = 0; i < mElements.Length(); ++i) {
+    nsIContent *content = mElements.ElementAt(i);
+    nsGenericHTMLElement* el = nsGenericHTMLElement::FromContent(content);
+    if (el) {
+      // XXXbz should we be checking for particular tags here?  How
+      // stable is this part of the spec?
+      // Note: nsINode::HasName means the name is exposed on the document,
+      // which is false for options, so we don't check it here.
+      const nsAttrValue* val = el->GetParsedAttr(nsGkAtoms::name);
+      if (val && val->Type() == nsAttrValue::eAtom) {
+        nsIAtom* name = val->GetAtomValue();
+        if (!atoms.Contains(name)) {
+          atoms.AppendElement(name);
+        }
+      }
+    }
+    if (content->HasID()) {
+      nsIAtom* id = content->GetID();
+      if (!atoms.Contains(id)) {
+        atoms.AppendElement(id);
+      }
+    }
+  }
+
+  aNames.SetCapacity(atoms.Length());
+  for (uint32_t i = 0; i < atoms.Length(); ++i) {
+    aNames.AppendElement(nsDependentAtomString(atoms[i]));
+  }
 }
 
 int32_t

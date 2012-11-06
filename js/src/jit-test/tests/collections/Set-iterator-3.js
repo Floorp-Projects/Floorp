@@ -2,7 +2,7 @@
 
 var arr = [{}, {}, {}, [], /xyz/, new Date];
 var set = Set(arr);
-assertEq(set.size(), arr.length);
+assertEq(set.size, arr.length);
 
 var i = 0;
 for (var x of set)

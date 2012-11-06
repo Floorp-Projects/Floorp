@@ -10,6 +10,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 
 namespace mozilla {
+class ReentrantMonitor;
 namespace layers {
 
 class ImageBridgeCopyAndSendTask;
@@ -115,8 +116,40 @@ public:
    * Must be called on the ImageBridgeChild's thread.
    */
   void SetIdleNow();
-  
+
+  /**
+   * Can be called from any thread.
+   * deallocates or places aImage in a pool.
+   * If this method is not called on the ImageBridgeChild thread, a task is
+   * is dispatched and the recycling/deallocation happens asynchronously on
+   * the ImageBridgeChild thread.
+   */
+  void RecycleSharedImage(SharedImage* aImage);
+
+  /**
+   * Creates a YCbCrImage using shared memory to store its data.
+   */
+  already_AddRefed<Image> CreateImage();
+
+  /**
+   * Allocates an unsafe shmem.
+   * Unlike AllocUnsafeShmem, this method can be called from any thread.
+   * If the calling thread is not the ImageBridgeChild thread, this method will
+   * dispatch a synchronous call to AllocUnsafeShmem on the ImageBridgeChild
+   * thread meaning that the calling thread will be blocked until
+   * AllocUnsafeShmem returns on the ImageBridgeChild thread.
+   */
+  bool AllocUnsafeShmemSync(size_t aBufSize,
+                            SharedMemory::SharedMemoryType aType,
+                            ipc::Shmem* aShmem);
+
+  /**
+   * Dispatches a task on the ImageBridgeChild thread to deallocate a shmem.
+   */
+  void DeallocShmemAsync(ipc::Shmem& aShmem);
+
 protected:
+
   virtual PGrallocBufferChild*
   AllocPGrallocBuffer(const gfxIntSize&, const gfxContentType&,
                       MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE
@@ -141,6 +174,11 @@ protected:
   {
     mImageContainerID = id;
   }
+
+  /**
+   * Must be called on the ImageBirdgeChild thread. (See RecycleSharedImage)
+   */
+  void RecycleSharedImageNow(SharedImage* aImage);
 
   /**
    * Deallocates a shared image's shared memory.
@@ -190,6 +228,7 @@ protected:
    * Returns nullptr in case of failure.
    * The returned image does not contain the image data, a copy still needs to
    * be done afterward (see CopyDataIntoSharedImage).
+   * Must be called on the ImageBridgeChild thread.
    */
   SharedImage* AllocateSharedImageFor(Image* aImage);
 

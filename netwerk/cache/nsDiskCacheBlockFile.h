@@ -44,7 +44,9 @@ public:
                            int32_t * startBlock);
     nsresult  ReadBlocks( void * buffer, int32_t  startBlock, int32_t  numBlocks, 
                           int32_t * bytesRead);
-    
+
+    size_t   SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf);
+
 private:
     nsresult  FlushBitMap();
     int32_t   AllocateBlocks( int32_t  numBlocks);

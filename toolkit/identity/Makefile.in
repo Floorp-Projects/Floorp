@@ -30,6 +30,7 @@ CPPSRCS = \
   $(NULL)
 
 EXTRA_JS_MODULES = \
+	IdentityUtils.jsm \
 	Identity.jsm \
 	IdentityProvider.jsm \
 	IdentityStore.jsm \

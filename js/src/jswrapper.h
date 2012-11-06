@@ -43,12 +43,6 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
         LAST_USED_FLAG = CROSS_COMPARTMENT
     };
 
-    typedef enum {
-        PermitObjectAccess,
-        PermitPropertyAccess,
-        DenyAccess
-    } Permission;
-
     static JSObject *New(JSContext *cx, JSObject *obj, JSObject *proto,
                          JSObject *parent, Wrapper *handler);
 

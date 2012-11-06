@@ -4,7 +4,7 @@ var set = Set();
 var i;
 for (i = 7; i !== 1; i = i * 7 % 1117)
     set.add(i);
-assertEq(set.size(), 557);
+assertEq(set.size, 557);
 
 i = 7;
 for (var v of set) {

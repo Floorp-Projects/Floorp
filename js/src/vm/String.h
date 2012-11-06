@@ -557,6 +557,64 @@ class JSStableString : public JSFlatString
 
 JS_STATIC_ASSERT(sizeof(JSStableString) == sizeof(JSString));
 
+#if !(defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING))
+namespace js {
+/*
+ * Specialization of Rooted<T> to explicitly root the string rather than
+ * relying on conservative stack scanning.
+ *
+ * In exact-gc builds, Rooted<T> already keeps the T reachable, so this hack is
+ * ifdef'd out. In non-exact-gc builds, conservative scanning would ordinarily
+ * pick up the slack. However in the case where the Rooted pointer is no longer
+ * used, but some subobject or malloc'd memory with the same lifetime may be
+ * used, conservative scanning can fail. JSStableString's chars() method makes
+ * it particularly attractive to use that way, so we explicitly keep the
+ * JSString gc-reachable for the full lifetime of the Rooted<JSStableString *>.
+ *
+ * It would suffice simply to force the pointer to remain on the stack, a la
+ * JS::Anchor<T>, but for some reason using that voodoo here seems to cause
+ * some compilers (clang, VC++ with PGO) to generate incorrect code.
+ */
+template <>
+class Rooted<JSStableString *>
+{
+  public:
+    Rooted(JSContext *cx, JSStableString *initial = NULL
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : rooter(cx, initial)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    operator JSStableString *() const { return get(); }
+    JSStableString * operator ->() const { return get(); }
+    JSStableString ** address() { return reinterpret_cast<JSStableString **>(rooter.addr()); }
+    JSStableString * const * address() const {
+        return reinterpret_cast<JSStableString * const *>(rooter.addr());
+    }
+    JSStableString * get() const { return static_cast<JSStableString *>(rooter.string()); }
+
+    Rooted & operator =(JSStableString *value)
+    {
+        JS_ASSERT(!RootMethods<JSStableString *>::poisoned(value));
+        rooter.setString(value);
+        return *this;
+    }
+
+    Rooted & operator =(const Rooted &value)
+    {
+        rooter.setString(value.get());
+        return *this;
+    }
+
+  private:
+    JS::AutoStringRooter rooter;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+    Rooted(const Rooted &) MOZ_DELETE;
+};
+}
+#endif
+
 class JSExtensibleString : public JSFlatString
 {
     /* Vacuous and therefore unimplemented. */

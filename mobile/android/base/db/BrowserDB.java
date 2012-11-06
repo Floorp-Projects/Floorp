@@ -10,6 +10,7 @@ import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 import android.content.ContentResolver;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 
 import java.util.List;
@@ -73,11 +74,11 @@ public class BrowserDB {
 
         public void removeReadingListItemWithURL(ContentResolver cr, String uri);
 
-        public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri);
+        public Bitmap getFaviconForUrl(ContentResolver cr, String uri);
 
         public Cursor getFaviconsForUrls(ContentResolver cr, List<String> urls);
 
-        public void updateFaviconForUrl(ContentResolver cr, String uri, BitmapDrawable favicon);
+        public void updateFaviconForUrl(ContentResolver cr, String uri, Bitmap favicon);
 
         public void updateThumbnailForUrl(ContentResolver cr, String uri, BitmapDrawable thumbnail);
 
@@ -90,6 +91,8 @@ public class BrowserDB {
         public void registerBookmarkObserver(ContentResolver cr, ContentObserver observer);
 
         public void registerHistoryObserver(ContentResolver cr, ContentObserver observer);
+
+        public int getCount(ContentResolver cr, String database);
     }
 
     static {
@@ -188,7 +191,7 @@ public class BrowserDB {
         sDb.removeReadingListItemWithURL(cr, uri);
     }
 
-    public static BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri) {
+    public static Bitmap getFaviconForUrl(ContentResolver cr, String uri) {
         return sDb.getFaviconForUrl(cr, uri);
     }
 
@@ -196,7 +199,7 @@ public class BrowserDB {
         return sDb.getFaviconsForUrls(cr, urls);
     }
 
-    public static void updateFaviconForUrl(ContentResolver cr, String uri, BitmapDrawable favicon) {
+    public static void updateFaviconForUrl(ContentResolver cr, String uri, Bitmap favicon) {
         sDb.updateFaviconForUrl(cr, uri, favicon);
     }
 
@@ -226,5 +229,9 @@ public class BrowserDB {
 
     public static void unregisterContentObserver(ContentResolver cr, ContentObserver observer) {
         cr.unregisterContentObserver(observer);
+    }
+
+    public static int getCount(ContentResolver cr, String database) {
+        return sDb.getCount(cr, database);
     }
 }

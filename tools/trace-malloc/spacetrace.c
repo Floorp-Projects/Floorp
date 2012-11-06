@@ -650,14 +650,10 @@ recalculateAllocationCost(STOptions * inOptions, STContext * inContext,
         uint32_t timeval =
             aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
         uint32_t size = byteSize(inOptions, aAllocation);
-        uint64_t weight64 = LL_INIT(0, 0);
         uint32_t heapCost = aAllocation->mHeapRuntimeCost;
-        uint64_t timeval64 = LL_INIT(0, 0);
-        uint64_t size64 = LL_INIT(0, 0);
-
-        timeval64 = timeval;
-        size64 = size;
-        weight64 = timeval64 * size64;
+        uint64_t timeval64 = timeval;
+        uint64_t size64 = size;
+        uint64_t weight64 = timeval64 * size64;
 
         /*
          ** First, update this run.
@@ -888,9 +884,9 @@ harvestRun(const STRun * aInRun, STRun * aOutRun,
             if (NULL != current) {
                 uint32_t lifetime = 0;
                 uint32_t bytesize = 0;
-                uint64_t weight64 = LL_INIT(0, 0);
-                uint64_t bytesize64 = LL_INIT(0, 0);
-                uint64_t lifetime64 = LL_INIT(0, 0);
+                uint64_t weight64 = 0;
+                uint64_t bytesize64 = 0;
+                uint64_t lifetime64 = 0;
                 int appendRes = 0;
                 int looper = 0;
                 PRBool matched = PR_FALSE;
@@ -1077,12 +1073,12 @@ compareAllocations(const void *aAlloc1, const void *aAlloc2, void *aContext)
                  */
             case ST_WEIGHT:
                 {
-                    uint64_t weight164 = LL_INIT(0, 0);
-                    uint64_t weight264 = LL_INIT(0, 0);
-                    uint64_t bytesize164 = LL_INIT(0, 0);
-                    uint64_t bytesize264 = LL_INIT(0, 0);
-                    uint64_t timeval164 = LL_INIT(0, 0);
-                    uint64_t timeval264 = LL_INIT(0, 0);
+                    uint64_t weight164 = 0;
+                    uint64_t weight264 = 0;
+                    uint64_t bytesize164 = 0;
+                    uint64_t bytesize264 = 0;
+                    uint64_t timeval164 = 0;
+                    uint64_t timeval264 = 0;
 
                     bytesize164 = byteSize(inOptions, alloc1);
                     timeval164 = alloc1->mMaxTimeval - alloc1->mMinTimeval;
@@ -2601,7 +2597,7 @@ getDataPRUint64(const FormData * aGetData, const char *aCheckFor, int inIndex,
                 uint64_t * aStoreResult64, uint64_t aConversion64)
 {
     int retval = 0;
-    uint64_t value64 = LL_INIT(0, 0);
+    uint64_t value64 = 0;
 
     retval = getDataPRUint32Base(aGetData, aCheckFor, inIndex, &value64, 64);
     *aStoreResult64 = value64 * aConversion64;
@@ -2703,7 +2699,7 @@ displayTopAllocations(STRequest * inRequest, STRun * aRun,
                         current->mMaxTimeval - current->mMinTimeval;
                     uint32_t size = byteSize(&inRequest->mOptions, current);
                     uint32_t heapCost = current->mHeapRuntimeCost;
-                    uint64_t weight64 = LL_INIT(0, 0);
+                    uint64_t weight64 = 0;
                     char buffer[32];
 
                     weight64 =(uint64_t)(size * lifespan);
@@ -2823,7 +2819,7 @@ displayMemoryLeaks(STRequest * inRequest, STRun * aRun)
                         current->mMaxTimeval - current->mMinTimeval;
                     uint32_t size = byteSize(&inRequest->mOptions, current);
                     uint32_t heapCost = current->mHeapRuntimeCost;
-                    uint64_t weight64 = LL_INIT(0, 0);
+                    uint64_t weight64 = 0;
                     char buffer[32];
 
                     weight64 =(uint64_t)(size * lifespan);
@@ -3077,7 +3073,7 @@ displayAllocationDetails(STRequest * inRequest, STAllocation * aAllocation)
         uint32_t timeval =
             aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
         uint32_t heapCost = aAllocation->mHeapRuntimeCost;
-        uint64_t weight64 = LL_INIT(0, 0);
+        uint64_t weight64 = 0;
         uint32_t cacheval = 0;
         int displayRes = 0;
 
@@ -3829,10 +3825,10 @@ graphFootprint(STRequest * inRequest, STRun * aRun)
                           legends);
 
                 if (maxMemory != minMemory) {
-                    int64_t in64 = LL_INIT(0, 0);
-                    int64_t ydata64 = LL_INIT(0, 0);
-                    int64_t spacey64 = LL_INIT(0, 0);
-                    int64_t mem64 = LL_INIT(0, 0);
+                    int64_t in64 = 0;
+                    int64_t ydata64 = 0;
+                    int64_t spacey64 = 0;
+                    int64_t mem64 = 0;
                     int32_t in32 = 0;
 
                     /*
@@ -4045,10 +4041,10 @@ graphTimeval(STRequest * inRequest, STRun * aRun)
                           legends);
 
                 if (maxMemory != minMemory) {
-                    int64_t in64 = LL_INIT(0, 0);
-                    int64_t ydata64 = LL_INIT(0, 0);
-                    int64_t spacey64 = LL_INIT(0, 0);
-                    int64_t mem64 = LL_INIT(0, 0);
+                    int64_t in64 = 0;
+                    int64_t ydata64 = 0;
+                    int64_t spacey64 = 0;
+                    int64_t mem64 = 0;
                     int32_t in32 = 0;
 
                     /*
@@ -4263,10 +4259,10 @@ graphLifespan(STRequest * inRequest, STRun * aRun)
                           legends);
 
                 if (maxMemory != minMemory) {
-                    int64_t in64 = LL_INIT(0, 0);
-                    int64_t ydata64 = LL_INIT(0, 0);
-                    int64_t spacey64 = LL_INIT(0, 0);
-                    int64_t mem64 = LL_INIT(0, 0);
+                    int64_t in64 = 0;
+                    int64_t ydata64 = 0;
+                    int64_t spacey64 = 0;
+                    int64_t mem64 = 0;
                     int32_t in32 = 0;
 
                     /*
@@ -4392,9 +4388,9 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                 for (loop = 0; loop < aRun->mAllocationCount; loop++) {
                     if (prevTimeval < aRun->mAllocations[loop]->mMinTimeval
                         && timeval >= aRun->mAllocations[loop]->mMinTimeval) {
-                        uint64_t size64 = LL_INIT(0, 0);
-                        uint64_t lifespan64 = LL_INIT(0, 0);
-                        uint64_t weight64 = LL_INIT(0, 0);
+                        uint64_t size64 = 0;
+                        uint64_t lifespan64 = 0;
+                        uint64_t weight64 = 0;
 
                         size64 = byteSize(&inRequest->mOptions,
                                           aRun->mAllocations[loop]);
@@ -4423,8 +4419,8 @@ graphWeight(STRequest * inRequest, STRun * aRun)
         }
 
         if (0 == retval) {
-            uint64_t minWeight64 = LL_INIT(0xFFFFFFFF, 0xFFFFFFFF);
-            uint64_t maxWeight64 = LL_INIT(0, 0);
+            uint64_t minWeight64 = (0xFFFFFFFFLL << 32) + 0xFFFFFFFFLL;
+            uint64_t maxWeight64 = 0;
             int transparent = 0;
             gdImagePtr graph = NULL;
 
@@ -4459,8 +4455,8 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                 char byteSpace[11][32];
                 int legendColors[1];
                 const char *legends[1] = { "Memory Weight" };
-                uint64_t percent64 = LL_INIT(0, 0);
-                uint64_t result64 = LL_INIT(0, 0);
+                uint64_t percent64 = 0;
+                uint64_t result64 = 0;
 
                 uint32_t cached = 0;
                 uint64_t hundred64 = 100;
@@ -4492,9 +4488,9 @@ graphWeight(STRequest * inRequest, STRun * aRun)
                           legendColors, legends);
 
                 if (maxWeight64 != minWeight64) {
-                    int64_t in64 = LL_INIT(0, 0);
-                    int64_t spacey64 = LL_INIT(0, 0);
-                    int64_t weight64 = LL_INIT(0, 0);
+                    int64_t in64 = 0;
+                    int64_t spacey64 = 0;
+                    int64_t weight64 = 0;
                     int32_t in32 = 0;
 
                     /*

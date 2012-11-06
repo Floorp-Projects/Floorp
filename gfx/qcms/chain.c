@@ -138,12 +138,12 @@ static void qcms_transform_module_clut_only(struct qcms_modular_transform *trans
 		float linear_g = *src++;
 		float linear_b = *src++;
 
-		int x = floor(linear_r * (transform->grid_size-1));
-		int y = floor(linear_g * (transform->grid_size-1));
-		int z = floor(linear_b * (transform->grid_size-1));
-		int x_n = ceil(linear_r * (transform->grid_size-1));
-		int y_n = ceil(linear_g * (transform->grid_size-1));
-		int z_n = ceil(linear_b * (transform->grid_size-1));
+		int x = floorf(linear_r * (transform->grid_size-1));
+		int y = floorf(linear_g * (transform->grid_size-1));
+		int z = floorf(linear_b * (transform->grid_size-1));
+		int x_n = ceilf(linear_r * (transform->grid_size-1));
+		int y_n = ceilf(linear_g * (transform->grid_size-1));
+		int z_n = ceilf(linear_b * (transform->grid_size-1));
 		float x_d = linear_r * (transform->grid_size-1) - x;
 		float y_d = linear_g * (transform->grid_size-1) - y;
 		float z_d = linear_b * (transform->grid_size-1) - z;
@@ -198,12 +198,12 @@ static void qcms_transform_module_clut(struct qcms_modular_transform *transform,
 		float linear_b = lut_interp_linear_float(device_b,
 				transform->input_clut_table_b, transform->input_clut_table_length);
 
-		int x = floor(linear_r * (transform->grid_size-1));
-		int y = floor(linear_g * (transform->grid_size-1));
-		int z = floor(linear_b * (transform->grid_size-1));
-		int x_n = ceil(linear_r * (transform->grid_size-1));
-		int y_n = ceil(linear_g * (transform->grid_size-1));
-		int z_n = ceil(linear_b * (transform->grid_size-1));
+		int x = floorf(linear_r * (transform->grid_size-1));
+		int y = floorf(linear_g * (transform->grid_size-1));
+		int z = floorf(linear_b * (transform->grid_size-1));
+		int x_n = ceilf(linear_r * (transform->grid_size-1));
+		int y_n = ceilf(linear_g * (transform->grid_size-1));
+		int z_n = ceilf(linear_b * (transform->grid_size-1));
 		float x_d = linear_r * (transform->grid_size-1) - x;
 		float y_d = linear_g * (transform->grid_size-1) - y;
 		float z_d = linear_b * (transform->grid_size-1) - z;
@@ -271,12 +271,12 @@ static void qcms_transform_module_tetra_clut(struct qcms_modular_transform *tran
 		float linear_b = lut_interp_linear_float(device_b,
 				transform->input_clut_table_b, transform->input_clut_table_length);
 
-		int x = floor(linear_r * (transform->grid_size-1));
-		int y = floor(linear_g * (transform->grid_size-1));
-		int z = floor(linear_b * (transform->grid_size-1));
-		int x_n = ceil(linear_r * (transform->grid_size-1));
-		int y_n = ceil(linear_g * (transform->grid_size-1));
-		int z_n = ceil(linear_b * (transform->grid_size-1));
+		int x = floorf(linear_r * (transform->grid_size-1));
+		int y = floorf(linear_g * (transform->grid_size-1));
+		int z = floorf(linear_b * (transform->grid_size-1));
+		int x_n = ceilf(linear_r * (transform->grid_size-1));
+		int y_n = ceilf(linear_g * (transform->grid_size-1));
+		int z_n = ceilf(linear_b * (transform->grid_size-1));
 		float rx = linear_r * (transform->grid_size-1) - x;
 		float ry = linear_g * (transform->grid_size-1) - y;
 		float rz = linear_b * (transform->grid_size-1) - z;

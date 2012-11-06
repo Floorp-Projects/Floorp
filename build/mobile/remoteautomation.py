@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import time
+import re
 import os
 import automationutils
 import tempfile
@@ -23,6 +24,7 @@ class RemoteAutomation(Automation):
 
         # Default our product to fennec
         self._product = "fennec"
+        self.lastTestSeen = "remoteautomation.py"
         Automation.__init__(self)
 
     def setDeviceManager(self, deviceManager):
@@ -61,14 +63,18 @@ class RemoteAutomation(Automation):
 
         return env
 
-    def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsDir):
+    def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath):
+        """ Wait for tests to finish (as evidenced by the process exiting),
+            or for maxTime elapse, in which case kill the process regardless.
+        """
         # maxTime is used to override the default timeout, we should honor that
         status = proc.wait(timeout = maxTime)
-
-        print proc.stdout
+        self.lastTestSeen = proc.getLastTestSeen
 
         if (status == 1 and self._devicemanager.processExist(proc.procName)):
             # Then we timed out, make sure Fennec is dead
+            print "TEST-UNEXPECTED-FAIL | %s | application ran for longer than " \
+                  "allowed maximum time of %d seconds" % (self.lastTestSeen, int(maxTime))
             proc.kill()
 
         return status
@@ -128,6 +134,7 @@ class RemoteAutomation(Automation):
         def __init__(self, dm, cmd, stdout = None, stderr = None, env = None, cwd = None):
             self.dm = dm
             self.stdoutlen = 0
+            self.lastTestSeen = "remoteautomation.py"
             self.proc = dm.launchProcess(cmd, stdout, cwd, env, True)
             if (self.proc is None):
               if cmd[0] == 'am':
@@ -177,6 +184,9 @@ class RemoteAutomation(Automation):
 
         @property
         def stdout(self):
+            """ Fetch the full remote log file using devicemanager and return just
+                the new log entries since the last call (as a multi-line string).
+            """
             if self.dm.fileExists(self.proc):
                 try:
                     t = self.dm.pullFile(self.proc)
@@ -185,12 +195,21 @@ class RemoteAutomation(Automation):
                     # function in dmSUT, so an error here is not necessarily
                     # the end of the world
                     return ''
-                tlen = len(t)
-                retVal = t[self.stdoutlen:]
-                self.stdoutlen = tlen
-                return retVal.strip('\n').strip()
+                newLogContent = t[self.stdoutlen:]
+                self.stdoutlen = len(t)
+                # Match the test filepath from the last TEST-START line found in the new
+                # log content. These lines are in the form:
+                # 1234 INFO TEST-START | /filepath/we/wish/to/capture.html\n
+                testStartFilenames = re.findall(r"TEST-START \| ([^\s]*)", newLogContent)
+                if testStartFilenames:
+                    self.lastTestSeen = testStartFilenames[-1]
+                return newLogContent.strip('\n').strip()
             else:
                 return ''
+
+        @property
+        def getLastTestSeen(self):
+            return self.lastTestSeen
 
         def wait(self, timeout = None):
             timer = 0
@@ -206,6 +225,9 @@ class RemoteAutomation(Automation):
                 timer += interval
                 if (timer > timeout):
                     break
+
+            # Flush anything added to stdout during the sleep
+            print self.stdout
 
             if (timer >= timeout):
                 return 1

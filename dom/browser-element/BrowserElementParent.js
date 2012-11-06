@@ -215,6 +215,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   addMessageListener("firstpaint", this._fireEventFromMsg);
   addMessageListener("keyevent", this._fireKeyEvent);
   addMessageListener("showmodalprompt", this._handleShowModalPrompt);
+  addMessageListener('got-purge-history', this._gotDOMRequestResult);
   addMessageListener('got-screenshot', this._gotDOMRequestResult);
   addMessageListener('got-can-go-back', this._gotDOMRequestResult);
   addMessageListener('got-can-go-forward', this._gotDOMRequestResult);
@@ -254,6 +255,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
   defineMethod('goForward', this._goForward);
   defineMethod('reload', this._reload);
   defineMethod('stop', this._stop);
+  defineMethod('purgeHistory', this._purgeHistory);
   defineMethod('getScreenshot', this._getScreenshot);
   defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
   defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
@@ -574,6 +576,10 @@ BrowserElementParent.prototype = {
 
   _stop: function() {
     this._sendAsyncMsg('stop');
+  },
+
+  _purgeHistory: function() {
+    return this._sendDOMRequest('purge-history');
   },
 
   _getScreenshot: function(_width, _height) {

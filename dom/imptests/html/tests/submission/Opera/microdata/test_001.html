@@ -1530,6 +1530,12 @@ test(function () {
 }, 'properties.item must give each property in tree order');
 test(function () {
 	var testEl = makeEl('div',{itemscope:'itemscope'},'<div itemprop="foo"></div><div itemprop="bar"><div itemprop="foo"></div></div><div itemprop="baz qux"></div>');
+	testEl.properties.something = "another";
+	var names = Object.getOwnPropertyNames(testEl.properties);
+	assert_array_equals( names, ["0", "1", "2", "3", "foo", "bar", "baz", "qux", "something"] );
+}, 'properties.item must have the right property names on it when enumerated');
+test(function () {
+	var testEl = makeEl('div',{itemscope:'itemscope'},'<div itemprop="foo"></div><div itemprop="bar"><div itemprop="foo"></div></div><div itemprop="baz qux"></div>');
 	assert_equals( testEl.properties.item(4), null, 'positive index' );
 	assert_equals( testEl.properties.item(-1), null, 'negative index' );
 }, 'properties.item must give null for out of range index');
