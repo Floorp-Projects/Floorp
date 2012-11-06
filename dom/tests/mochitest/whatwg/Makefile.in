@@ -43,14 +43,16 @@ MOCHITEST_FILES	= \
 		postMessage.jar \
 		postMessage.jar^headers^ \
 		test_bug477323.html \
-		test_bug500328.html \
-		file_bug500328_1.html \
-		file_bug500328_2.html \
 		test_document_scripts.html \
 		test_postMessage_structured_clone.html \
 		postMessage_structured_clone_helper.js \
 		postMessage_structured_clone_helper.html \
 		$(NULL)
+
+$(warning test_bug500328.html is disabled for intermittent failures. Bug 696306)
+#		test_bug500328.html \
+#		file_bug500328_1.html \
+#		file_bug500328_2.html \
 
 MOCHITEST_CHROME_FILES	= \
 		test_postMessage_chrome.html \
