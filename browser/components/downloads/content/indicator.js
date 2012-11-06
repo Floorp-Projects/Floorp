@@ -156,6 +156,9 @@ const DownloadsButton = {
     if (!placeholder) {
       // The placeholder has been removed from the browser window.
       indicator.collapsed = true;
+      // Move the indicator to a safe position on the toolbar, since otherwise
+      // it may break the merge of adjacent items, like back/forward + urlbar.
+      indicator.parentNode.appendChild(indicator);
       return null;
     }
 
