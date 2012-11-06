@@ -31,7 +31,7 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define LOG1(msg)
 #endif
 
-nsDecoderStateMachine*
+nsBuiltinDecoderStateMachine*
 nsDASHRepDecoder::CreateStateMachine()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -40,7 +40,7 @@ nsDASHRepDecoder::CreateStateMachine()
 }
 
 nsresult
-nsDASHRepDecoder::SetStateMachine(nsDecoderStateMachine* aSM)
+nsDASHRepDecoder::SetStateMachine(nsBuiltinDecoderStateMachine* aSM)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   mDecoderStateMachine = aSM;
