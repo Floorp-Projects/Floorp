@@ -272,6 +272,7 @@ nsGeolocationRequest::nsGeolocationRequest(nsGeolocation* aLocator,
                                            int32_t aWatchId)
   : mAllowed(false),
     mCleared(false),
+    mIsFirstUpdate(true),
     mIsWatchPositionRequest(aWatchPositionRequest),
     mCallback(aCallback),
     mErrorCallback(aErrorCallback),
@@ -505,16 +506,25 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
 }
 
 bool
-nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition)
+nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition, bool aIsBetter)
 {
   if (!mAllowed) {
     return false;
   }
-
-  nsCOMPtr<nsIRunnable> ev  = new RequestSendLocationEvent(aPosition,
-							   this,
-							   mIsWatchPositionRequest ? nullptr : mLocator);
-  NS_DispatchToMainThread(ev);
+  // Only dispatch callbacks if this is the first position for this request, or
+  // if the accuracy is as good or improving.
+  //
+  // This ensures that all listeners get at least one position callback, particularly
+  // in the case when newly detected positions are all less accurate than the cached one.
+  //
+  // Fixes bug 596481
+  if (mIsFirstUpdate || aIsBetter) {
+    mIsFirstUpdate = false;
+    nsCOMPtr<nsIRunnable> ev  = new RequestSendLocationEvent(aPosition,
+                                                             this,
+                                                             mIsWatchPositionRequest ? nullptr : mLocator);
+    NS_DispatchToMainThread(ev);
+  }
   return true;
 }
 
@@ -789,12 +799,105 @@ nsGeolocationService::Observe(nsISupports* aSubject,
 NS_IMETHODIMP
 nsGeolocationService::Update(nsIDOMGeoPosition *aSomewhere)
 {
-  SetCachedPosition(aSomewhere);
+  // here we have to determine this aSomewhere is a "better"
+  // position than any previously recv'ed.
+
+  bool isBetter = IsBetterPosition(aSomewhere);
+
+  if (isBetter) {
+    SetCachedPosition(aSomewhere);
+  }
 
   for (uint32_t i = 0; i< mGeolocators.Length(); i++) {
-    mGeolocators[i]->Update(aSomewhere);
+    mGeolocators[i]->Update(aSomewhere, isBetter);
   }
   return NS_OK;
+}
+
+PRBool
+nsGeolocationService::IsBetterPosition(nsIDOMGeoPosition *aSomewhere)
+{
+  if (!aSomewhere) {
+    return false;
+  }
+  
+  if (mProviders.Count() == 1 || !mLastPosition) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDOMGeoPositionCoords> coords;
+  mLastPosition->GetCoords(getter_AddRefs(coords));
+  if (!coords) {
+    return false;
+  }
+
+  double oldAccuracy;
+  nsresult rv = coords->GetAccuracy(&oldAccuracy);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  double oldLat, oldLon;
+  rv = coords->GetLongitude(&oldLon);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  rv = coords->GetLatitude(&oldLat);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  aSomewhere->GetCoords(getter_AddRefs(coords));
+  if (!coords) {
+    return false;
+  }
+
+  double newAccuracy;
+  rv = coords->GetAccuracy(&newAccuracy);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  double newLat, newLon;
+  rv = coords->GetLongitude(&newLon);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  rv = coords->GetLatitude(&newLat);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // Latitude and longitude is reported in degrees.
+  // However, it is easier to work in radian:
+  // see: http://en.wikipedia.org/wiki/Radian
+  double radsInDeg = M_PI / 180.0;
+
+  newLat *= radsInDeg;
+  newLon *= radsInDeg;
+  oldLat *= radsInDeg;
+  oldLon *= radsInDeg;
+
+  // WGS84 equatorial radius of earth = 6378137m
+  // http://en.wikipedia.org/wiki/WGS84
+  double radius = 6378137;
+
+  // We want to calculate the "Great Circle distance"
+  // between the point (lat1, lon1) and (lat2, lon2).  We
+  // will use the spherical law of cosines to the triangle
+  // formed by our two points and the north pole.
+  //
+  // a = sin ( lat1 ) * sin ( lat2 )  + cos ( lat1 ) * cos (lat2) * cos (lon1 - lon2)
+  // R = radius of circle
+  // distance = arccos ( a ) * R 
+  //
+  // http://en.wikipedia.org/wiki/Great-circle_distance
+
+  double delta = acos( (sin(newLat) * sin(oldLat)) +
+                       (cos(newLat) * cos(oldLat) * cos(oldLon - newLon)) ) * radius; 
+
+  // The threshold is when the distance between the two
+  // positions exceeds the worse (larger value) of the two
+  // accuracies.
+  double max_accuracy = NS_MAX(oldAccuracy, newAccuracy);
+  if (delta > max_accuracy)
+    return true;
+
+  // check to see if the aSomewhere position is more accurate
+  if (oldAccuracy >= newAccuracy)
+    return true;
+
+  return false;
 }
 
 void
@@ -1071,21 +1174,21 @@ nsGeolocation::RemoveRequest(nsGeolocationRequest* aRequest)
 }
 
 void
-nsGeolocation::Update(nsIDOMGeoPosition *aSomewhere)
+nsGeolocation::Update(nsIDOMGeoPosition *aSomewhere, bool aIsBetter)
 {
   if (!WindowOwnerStillExists()) {
     return Shutdown();
   }
 
   for (uint32_t i = mPendingCallbacks.Length(); i> 0; i--) {
-    if (mPendingCallbacks[i-1]->Update(aSomewhere)) {
+    if (mPendingCallbacks[i-1]->Update(aSomewhere, aIsBetter)) {
       mPendingCallbacks.RemoveElementAt(i-1);
     }
   }
 
   // notify everyone that is watching
   for (uint32_t i = 0; i< mWatchingCallbacks.Length(); i++) {
-    mWatchingCallbacks[i]->Update(aSomewhere);
+    mWatchingCallbacks[i]->Update(aSomewhere, aIsBetter);
   }
 }
 
