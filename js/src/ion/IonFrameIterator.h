@@ -112,7 +112,7 @@ class IonFrameIterator
     bool checkInvalidation() const;
 
     bool isScripted() const {
-        return type_ == IonFrame_OptimizedJS;
+        return type_ == IonFrame_BaselineJS || type_ == IonFrame_OptimizedJS;
     }
     bool isNative() const;
     bool isOOLNativeGetter() const;

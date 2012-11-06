@@ -70,6 +70,9 @@ class IonJSFrameLayout : public IonCommonFrameLayout
         // +1 to skip |this|.
         return reinterpret_cast<size_t>(&base->argv()[1]);
     }
+    static size_t offsetOfActualArg(size_t arg) {
+        return offsetOfActualArgs() + arg * sizeof(Value);
+    }
 
     Value *argv() {
         return (Value *)(this + 1);
@@ -86,46 +89,6 @@ class IonJSFrameLayout : public IonCommonFrameLayout
 
     static inline size_t Size() {
         return sizeof(IonJSFrameLayout);
-    }
-};
-
-class IonBaselineJSFrameLayout : public IonCommonFrameLayout
-{
-    void *calleeToken_;
-    uintptr_t numActualArgs_;
-
-  public:
-    CalleeToken calleeToken() const {
-        return calleeToken_;
-    }
-    void replaceCalleeToken(void *value) {
-        calleeToken_ = value;
-    }
-
-    static size_t offsetOfCalleeToken() {
-        return offsetof(IonBaselineJSFrameLayout, calleeToken_);
-    }
-    static size_t offsetOfNumActualArgs() {
-        return offsetof(IonBaselineJSFrameLayout, numActualArgs_);
-    }
-    static size_t offsetOfActualArgs() {
-        IonBaselineJSFrameLayout *base = NULL;
-        // +1 to skip |this|.
-        return reinterpret_cast<size_t>(&base->argv()[1]);
-    }
-    static size_t offsetOfActualArg(size_t arg) {
-        return offsetOfActualArgs() + arg * sizeof(Value);
-    }
-
-    Value *argv() {
-        return (Value *)(this + 1);
-    }
-    uintptr_t numActualArgs() const {
-        return numActualArgs_;
-    }
-
-    static inline size_t Size() {
-        return sizeof(IonBaselineJSFrameLayout);
     }
 };
 
