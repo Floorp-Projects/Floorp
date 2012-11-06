@@ -1230,6 +1230,13 @@ DownloadsViewItemController.prototype = {
         // URL handler.
         this._openExternal(localFile);
       }
+
+      // We explicitly close the panel here to give the user the feedback that
+      // their click has been received, and we're handling the action.
+      // Otherwise, we'd have to wait for the file-type handler to execute
+      // before the panel would close. This also helps to prevent the user from
+      // accidentally opening a file several times.
+      DownloadsPanel.hidePanel();
     },
 
     downloadsCmd_show: function DVIC_downloadsCmd_show()
@@ -1254,6 +1261,13 @@ DownloadsViewItemController.prototype = {
           }
         }
       }
+
+      // We explicitly close the panel here to give the user the feedback that
+      // their click has been received, and we're handling the action.
+      // Otherwise, we'd have to wait for the operating system file manager
+      // window to open before the panel closed. This also helps to prevent the
+      // user from opening the containing folder several times.
+      DownloadsPanel.hidePanel();
     },
 
     downloadsCmd_pauseResume: function DVIC_downloadsCmd_pauseResume()
