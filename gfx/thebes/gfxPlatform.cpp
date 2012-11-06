@@ -226,9 +226,9 @@ gfxPlatform::gfxPlatform()
 #endif
     mBidiNumeralOption = UNINITIALIZED_VALUE;
 
-    uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
-    uint32_t contentMask = 0;
-    InitBackendPrefs(canvasMask, contentMask);
+    EnumSet<BackendType> canvasBackends(BACKEND_CAIRO, BACKEND_SKIA);
+    EnumSet<BackendType> contentBackends;
+    InitBackendPrefs(canvasBackends, contentBackends);
 }
 
 gfxPlatform*
@@ -1185,30 +1185,38 @@ gfxPlatform::AppendPrefLang(eFontPrefLang aPrefLangs[], uint32_t& aLen, eFontPre
 }
 
 void
-gfxPlatform::InitBackendPrefs(uint32_t aCanvasBitmask, uint32_t aContentBitmask)
+gfxPlatform::InitBackendPrefs(EnumSet<BackendType> aCanvasSupportedBackends,
+                              EnumSet<BackendType> aContentSupportedBackends)
 {
-    mPreferredCanvasBackend = GetCanvasBackendPref(aCanvasBitmask);
+    mPreferredCanvasBackend = GetCanvasBackendPref(aCanvasSupportedBackends);
     if (!mPreferredCanvasBackend) {
       mPreferredCanvasBackend = BACKEND_CAIRO;
     }
-    mFallbackCanvasBackend = GetCanvasBackendPref(aCanvasBitmask & ~(1 << mPreferredCanvasBackend));
-    mContentBackend = GetContentBackendPref(aContentBitmask);
+    mFallbackCanvasBackend = GetCanvasBackendPref(aCanvasSupportedBackends -
+                                                  mPreferredCanvasBackend);
+    mContentBackend = GetContentBackendPref(aContentSupportedBackends);
 }
 
 /* static */ BackendType
-gfxPlatform::GetCanvasBackendPref(uint32_t aBackendBitmask)
+gfxPlatform::GetCanvasBackendPref(EnumSet<BackendType> aSupportedBackends)
 {
-    return GetBackendPref(nullptr, "gfx.canvas.azure.backends", aBackendBitmask);
+    return GetBackendPref(nullptr,
+                          "gfx.canvas.azure.backends",
+                          aSupportedBackends);
 }
 
 /* static */ BackendType
-gfxPlatform::GetContentBackendPref(uint32_t aBackendBitmask)
+gfxPlatform::GetContentBackendPref(EnumSet<BackendType> aSupportedBackends)
 {
-    return GetBackendPref("gfx.content.azure.enabled", "gfx.content.azure.backends", aBackendBitmask);
+    return GetBackendPref("gfx.content.azure.enabled",
+                          "gfx.content.azure.backends",
+                          aSupportedBackends);
 }
 
 /* static */ BackendType
-gfxPlatform::GetBackendPref(const char* aEnabledPrefName, const char* aBackendPrefName, uint32_t aBackendBitmask)
+gfxPlatform::GetBackendPref(const char* aEnabledPrefName,
+                            const char* aBackendPrefName,
+                            EnumSet<BackendType> aSupportedBackends)
 {
     if (aEnabledPrefName &&
         !Preferences::GetBool(aEnabledPrefName, false)) {
@@ -1222,9 +1230,9 @@ gfxPlatform::GetBackendPref(const char* aEnabledPrefName, const char* aBackendPr
     }
 
     for (uint32_t i = 0; i < backendList.Length(); ++i) {
-        BackendType result = BackendTypeForName(backendList[i]);
-        if ((1 << result) & aBackendBitmask) {
-            return result;
+        BackendType requestedBackend = BackendTypeForName(backendList[i]);
+        if (aSupportedBackends.contains(requestedBackend)) {
+            return requestedBackend;
         }
     }
     return BACKEND_NONE;
