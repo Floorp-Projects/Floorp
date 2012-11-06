@@ -346,14 +346,6 @@ nsDASHRepDecoder::GetReentrantMonitor()
   return mMainDecoder->GetReentrantMonitor();
 }
 
-nsDecoderStateMachine::State
-nsDASHRepDecoder::GetDecodeState()
-{
-  // XXX SHUTDOWN might not be an appropriate error.
-  return (mMainDecoder ? mMainDecoder->GetDecodeState()
-                       : nsDecoderStateMachine::DECODER_STATE_SHUTDOWN);
-}
-
 mozilla::layers::ImageContainer*
 nsDASHRepDecoder::GetImageContainer()
 {
