@@ -28,6 +28,11 @@ this.Social = {
       return;
     }
 
+    if (!this._addedPrivateBrowsingObserver) {
+      Services.obs.addObserver(this, "private-browsing", false);
+      this._addedPrivateBrowsingObserver = true;
+    }
+
     // Eventually this might want to retrieve a specific provider, but for now
     // just use the first available.
     SocialService.getProviderList(function (providers) {
@@ -35,6 +40,17 @@ this.Social = {
         this.provider = providers[0];
       callback();
     }.bind(this));
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "private-browsing") {
+      if (aData == "enter") {
+        this._enabledBeforePrivateBrowsing = this.enabled;
+        this.enabled = false;
+      } else if (aData == "exit") {
+        this.enabled = this._enabledBeforePrivateBrowsing;
+      }
+    }
   },
 
   get uiVisible() {
