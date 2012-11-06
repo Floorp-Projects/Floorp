@@ -512,6 +512,17 @@ HashStore::Rebuild()
   return NS_OK;
 }
 
+void
+HashStore::ClearCompletes()
+{
+  NS_ASSERTION(mInUpdate, "Must be in update to clear completes.");
+
+  mAddCompletes.Clear();
+  mSubCompletes.Clear();
+
+  UpdateHeader();
+}
+
 template<class T>
 static void
 ExpireEntries(nsTArray<T>* aEntries, ChunkSet& aExpirations)
