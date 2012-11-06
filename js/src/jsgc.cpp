@@ -3467,16 +3467,6 @@ BeginMarkPhase(JSRuntime *rt)
     rt->gcFoundBlackGrayEdges = false;
 }
 
-bool
-MarkWeakMapsIteratively(JSRuntime *rt)
-{
-    bool markedAny = false;
-    GCMarker *gcmarker = &rt->gcMarker;
-    for (GCCompartmentGroupIter c(rt); !c.done(); c.next())
-        markedAny |= WeakMapBase::markCompartmentIteratively(c, gcmarker);
-    return markedAny;
-}
-
 void
 MarkWeakReferences(JSRuntime *rt, gcstats::Phase phase)
 {
@@ -3485,10 +3475,17 @@ MarkWeakReferences(JSRuntime *rt, gcstats::Phase phase)
 
     gcstats::AutoPhase ap(rt->gcStats, phase);
 
-    while (WatchpointMap::markAllIteratively(gcmarker) ||
-           MarkWeakMapsIteratively(rt) ||
-           Debugger::markAllIteratively(gcmarker))
-    {
+    for (;;) {
+        bool markedAny = false;
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+            markedAny |= WatchpointMap::markCompartmentIteratively(c, gcmarker);
+            markedAny |= WeakMapBase::markCompartmentIteratively(c, gcmarker);
+        }
+        markedAny |= Debugger::markAllIteratively(gcmarker);
+
+        if (!markedAny)
+            break;
+
         SliceBudget budget;
         gcmarker->drainMarkStack(budget);
     }
