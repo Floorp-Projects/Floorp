@@ -7,7 +7,7 @@
 #include "nsWaveReader.h"
 #include "nsWaveDecoder.h"
 
-nsDecoderStateMachine* nsWaveDecoder::CreateStateMachine()
+nsBuiltinDecoderStateMachine* nsWaveDecoder::CreateStateMachine()
 {
   return new nsBuiltinDecoderStateMachine(this, new nsWaveReader(this));
 }
