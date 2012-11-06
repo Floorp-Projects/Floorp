@@ -712,7 +712,7 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         errno = 0;
         CompileOptions opts(cx);
-        opts.setCompileAndGo(true).setNoScriptRval(true);
+        opts.setUTF8(true).setCompileAndGo(true).setNoScriptRval(true);
         if ((compileOnly && !Compile(cx, thisobj, opts, filename.ptr())) ||
             !Evaluate(cx, thisobj, opts, filename.ptr(), NULL))
         {
