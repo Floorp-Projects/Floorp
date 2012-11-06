@@ -46,7 +46,7 @@ function testBOMEncodingUTF8() {
 
   // test empty encoding provided with invalid byte OM also provided.
   data = [0xFF, 0xFE, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27];
-  testBOMCharset({encoding: "", data: data, error: "EncodingError",
+  testBOMCharset({encoding: "", data: data, error: "TypeError",
                   msg: "empty encoding provided with invalid utf-8 BOM test."});
 }
 
