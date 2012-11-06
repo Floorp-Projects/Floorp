@@ -395,7 +395,7 @@ class MarionetteTestRunner(object):
         suite = unittest.TestSuite()
 
         if file_ext == '.ini':
-            testargs = { 'skip': 'false' }
+            testargs = {}
             if testtype is not None:
                 testtypes = testtype.replace('+', ' +').replace('-', ' -').split()
                 for atype in testtypes:
@@ -433,9 +433,9 @@ class MarionetteTestRunner(object):
                              id=os.getenv('BUILD_ID'),
                              test_date=int(time.time()))
 
-            manifest_tests = manifest.get(**testargs)
+            manifest_tests = manifest.active_tests(disabled=False)
 
-            for i in manifest_tests:
+            for i in manifest.get(tests=manifest_tests, **testargs):
                 self.run_test(i["path"], testtype)
                 if self.marionette.check_for_crash():
                     return
