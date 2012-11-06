@@ -50,13 +50,12 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
                     DefaultHasher<JSCompartment *>,
                     RuntimeAllocPolicy> CountMap;
 
-    JSCompartment *valueCompartment;
     CountMap compartmentCounts;
 
   public:
     typedef WeakMap<Key, Value, DefaultHasher<Key> > Base;
     explicit DebuggerWeakMap(JSContext *cx)
-        : Base(cx), valueCompartment(NULL), compartmentCounts(cx) { }
+        : Base(cx), compartmentCounts(cx) { }
 
   public:
     /* Expose those parts of HashMap public interface that are used by Debugger methods. */
@@ -77,9 +76,7 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
 
     template<typename KeyInput, typename ValueInput>
     bool relookupOrAdd(AddPtr &p, const KeyInput &k, const ValueInput &v) {
-        if (!valueCompartment)
-            valueCompartment = v->compartment();
-        JS_ASSERT(v->compartment() == valueCompartment);
+        JS_ASSERT(v->compartment() == Base::compartment);
         if (!incCompartmentCount(k->compartment()))
             return false;
         bool ok = Base::relookupOrAdd(p, k, v);
@@ -95,8 +92,6 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     void remove(const Lookup &l) {
         Base::remove(l);
         decCompartmentCount(l->compartment());
-        if (Base::count() == 0)
-            valueCompartment = NULL;
     }
 
   public:
@@ -114,14 +109,10 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
         }
     }
 
-    void findCompartmentEdges(JSCompartment *v, js::gc::ComponentFinder &finder) {
-        if (!valueCompartment || valueCompartment == v || !valueCompartment->isGCMarking())
-            return;
-        CountMap::Ptr p = compartmentCounts.lookup(v);
-        if (!p)
-            return;
-        JS_ASSERT(p->value > 0);
-        finder.addEdgeTo(valueCompartment);
+    bool hasKeyInCompartment(JSCompartment *c) {
+        CountMap::Ptr p = compartmentCounts.lookup(c);
+        JS_ASSERT_IF(p, p->value > 0);
+        return p;
     }
 
   private:
