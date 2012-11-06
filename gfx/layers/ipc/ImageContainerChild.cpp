@@ -13,6 +13,7 @@
 #include "GonkIOSurfaceImage.h"
 #include "GrallocImages.h"
 #include "mozilla/layers/ShmemYCbCrImage.h"
+#include "mozilla/ReentrantMonitor.h"
 
 using namespace mozilla::ipc;
 
@@ -34,7 +35,6 @@ namespace layers {
  * throttle that. So when the child side wants to allocate a new shared image 
  * but is already at its maximum of active shared images, it just discards the
  * image (which is therefore not allocated and not sent to the compositor).
- * (see ImageToSharedImage)
  *
  * The values for the two constants are arbitrary and should be tweaked if it 
  * happens that we run into shared memory problems.
@@ -124,22 +124,6 @@ void ImageContainerChild::DestroySharedImage(const SharedImage& aImage)
   DeallocSharedImageData(this, aImage);
 }
 
-SharedImage* ImageContainerChild::AsSharedImage(Image* aImage)
-{
-#ifdef MOZ_WIDGET_GONK
-  if (aImage->GetFormat() == GONK_IO_SURFACE) {
-    GonkIOSurfaceImage* gonkImage = static_cast<GonkIOSurfaceImage*>(aImage);
-    SharedImage* result = new SharedImage(gonkImage->GetSurfaceDescriptor());
-    return result;
-  } else if (aImage->GetFormat() == GRALLOC_PLANAR_YCBCR) {
-    GrallocPlanarYCbCrImage* GrallocImage = static_cast<GrallocPlanarYCbCrImage*>(aImage);
-    SharedImage* result = new SharedImage(GrallocImage->GetSurfaceDescriptor());
-    return result;
-  }
-#endif
-  return nullptr; // XXX: bug 773440
-}
-
 bool ImageContainerChild::CopyDataIntoSharedImage(Image* src, SharedImage* dest)
 {
   if ((src->GetFormat() == PLANAR_YCBCR) && 
@@ -203,6 +187,31 @@ SharedImage* ImageContainerChild::AllocateSharedImageFor(Image* image)
     NS_RUNTIMEABORT("TODO: Only YCbCrImage is supported here right now.");
   }
   return nullptr;
+}
+
+void ImageContainerChild::RecycleSharedImageNow(SharedImage* aImage)
+{
+  NS_ABORT_IF_FALSE(InImageBridgeChildThread(),"Must be in the ImageBridgeChild Thread.");
+
+  if (mStop || !AddSharedImageToPool(aImage)) {
+    DestroySharedImage(*aImage);
+    delete aImage;
+  }
+}
+
+void ImageContainerChild::RecycleSharedImage(SharedImage* aImage)
+{
+  if (!aImage) {
+    return;
+  }
+  if (InImageBridgeChildThread()) {
+    RecycleSharedImageNow(aImage);
+    return;
+  }
+  GetMessageLoop()->PostTask(FROM_HERE,
+                             NewRunnableMethod(this,
+                                               &ImageContainerChild::RecycleSharedImageNow,
+                                               aImage));
 }
 
 bool ImageContainerChild::AddSharedImageToPool(SharedImage* img)
@@ -289,6 +298,10 @@ void ImageContainerChild::SendImageNow(Image* aImage)
     return;
   }
 
+  if (aImage->IsSentToCompositor()) {
+    return;
+  }
+
   bool needsCopy = false;
   // If the image can be converted to a shared image, no need to do a copy.
   SharedImage* img = AsSharedImage(aImage);
@@ -305,6 +318,7 @@ void ImageContainerChild::SendImageNow(Image* aImage)
   if (img && (!needsCopy || CopyDataIntoSharedImage(aImage, img))) {
     // Keep a reference to the image we sent to compositor to maintain a
     // correct reference count.
+    aImage->MarkSent();
     mImageQueue.AppendElement(aImage);
     SendPublishImage(*img);
   } else {
@@ -379,6 +393,229 @@ void ImageContainerChild::DispatchDestroy()
   AddRef(); // corresponds to the Release in DestroyNow
   GetMessageLoop()->PostTask(FROM_HERE, 
                     NewRunnableMethod(this, &ImageContainerChild::DestroyNow));
+}
+
+// We can't pass more than 6 parameters to a 'NewRunableFunction' so some
+// parameters are stored in a struct passed by pointer
+struct CreateShmemParams
+{
+  ImageContainerChild* mProtocol;
+  size_t mBufSize;
+  SharedMemory::SharedMemoryType mType;
+  ipc::Shmem* mShmem;
+  bool mResult;
+};
+
+static void AllocUnsafeShmemNow(CreateShmemParams* aParams,
+                                ReentrantMonitor* aBarrier,
+                                bool* aDone)
+{
+  ReentrantMonitorAutoEnter autoBarrier(*aBarrier);
+  aParams->mResult = aParams->mProtocol->AllocUnsafeShmem(aParams->mBufSize,
+                                                          aParams->mType,
+                                                          aParams->mShmem);
+*aDone = true;
+  aBarrier->NotifyAll();
+}
+
+
+bool ImageContainerChild::AllocUnsafeShmemSync(size_t aBufSize,
+                                               SharedMemory::SharedMemoryType aType,
+                                               ipc::Shmem* aShmem)
+{
+  if (mStop) {
+    return false;
+  }
+  if (InImageBridgeChildThread()) {
+    AllocUnsafeShmem(aBufSize, aType, aShmem);
+  }
+  ReentrantMonitor barrier("ImageContainerChild::AllocUnsafeShmemSync");
+  ReentrantMonitorAutoEnter autoBarrier(barrier);
+
+  CreateShmemParams p = {
+    this,
+    aBufSize,
+    aType,
+    aShmem,
+    false,
+  };
+
+  bool done = false;
+  GetMessageLoop()->PostTask(FROM_HERE,
+                 NewRunnableFunction(&AllocUnsafeShmemNow,
+                                     &p,
+                                     &barrier, &done));
+  while (!done) {
+    barrier.Wait();
+  }
+
+  return p.mResult;
+}
+
+static void DeallocShmemNow(ImageContainerChild* aProtocol, ipc::Shmem aShmem)
+{
+  aProtocol->DeallocShmem(aShmem);
+}
+
+void ImageContainerChild::DeallocShmemAsync(ipc::Shmem& aShmem)
+{
+  if (mStop) {
+    return;
+  }
+  GetMessageLoop()->PostTask(FROM_HERE,
+                             NewRunnableFunction(&DeallocShmemNow,
+                                                 this,
+                                                 aShmem));
+}
+
+class SharedPlanarYCbCrImage : public PlanarYCbCrImage
+{
+public:
+  SharedPlanarYCbCrImage(ImageContainerChild* aProtocol)
+  : PlanarYCbCrImage(nullptr),
+    mImageContainerChild(aProtocol), mAllocated(false) {}
+
+  ~SharedPlanarYCbCrImage() {
+    if (mAllocated) {
+      mImageContainerChild->RecycleSharedImage(ToSharedImage());
+    }
+  }
+
+  virtual SharedPlanarYCbCrImage* AsSharedPlanarYCbCrImage() MOZ_OVERRIDE
+  {
+    return this;
+  }
+
+  virtual already_AddRefed<gfxASurface> GetAsSurface() MOZ_OVERRIDE
+  {
+    if (!mAllocated) {
+      NS_WARNING("Can't get as surface");
+      return nullptr;
+    }
+    return PlanarYCbCrImage::GetAsSurface();
+  }
+
+  virtual void SetData(const PlanarYCbCrImage::Data& aData) MOZ_OVERRIDE
+  {
+    // If mShmem has not been allocated (through Allocate(aData)), allocate it.
+    // This code path is slower than the one used when Allocate has been called
+    // since it will trigger a full copy.
+    if (!mAllocated) {
+      Data data = aData;
+      if (!Allocate(data)) {
+        return;
+      }
+    }
+
+    // do not set mBuffer like in PlanarYCbCrImage because the later
+    // will try to manage this memory without knowing it belongs to a
+    // shmem.
+    mBufferSize = ShmemYCbCrImage::ComputeMinBufferSize(mData.mYSize,
+                                                        mData.mCbCrSize);
+    mSize = mData.mPicSize;
+
+    ShmemYCbCrImage shmImg(mShmem);
+
+    if (!shmImg.CopyData(aData.mYChannel, aData.mCbChannel, aData.mCrChannel,
+                         aData.mYSize, aData.mYStride,
+                         aData.mCbCrSize, aData.mCbCrStride)) {
+      NS_WARNING("Failed to copy image data!");
+    }
+    mData.mYChannel = shmImg.GetYData();
+    mData.mCbChannel = shmImg.GetCbData();
+    mData.mCrChannel = shmImg.GetCrData();
+  }
+
+  virtual bool Allocate(PlanarYCbCrImage::Data& aData)
+  {
+    NS_ABORT_IF_FALSE(!mAllocated, "This image already has allocated data");
+
+    SharedMemory::SharedMemoryType shmType = OptimalShmemType();
+    size_t size = ShmemYCbCrImage::ComputeMinBufferSize(aData.mYSize,
+                                                        aData.mCbCrSize);
+
+    if (!mImageContainerChild->AllocUnsafeShmemSync(size, shmType, &mShmem)) {
+      return false;
+    }
+    ShmemYCbCrImage::InitializeBufferInfo(mShmem.get<uint8_t>(),
+                                          aData.mYSize,
+                                          aData.mCbCrSize);
+    ShmemYCbCrImage shmImg(mShmem);
+    if (!shmImg.IsValid() || mShmem.Size<uint8_t>() < size) {
+      mImageContainerChild->DeallocShmemAsync(mShmem);
+      return false;
+    }
+
+    aData.mYChannel = shmImg.GetYData();
+    aData.mCbChannel = shmImg.GetCbData();
+    aData.mCrChannel = shmImg.GetCrData();
+
+    // copy some of aData's values in mData (most of them)
+    mData.mYChannel = aData.mYChannel;
+    mData.mCbChannel = aData.mCbChannel;
+    mData.mCrChannel = aData.mCrChannel;
+    mData.mYSize = aData.mYSize;
+    mData.mCbCrSize = aData.mCbCrSize;
+    mData.mPicX = aData.mPicX;
+    mData.mPicY = aData.mPicY;
+    mData.mPicSize = aData.mPicSize;
+    mData.mStereoMode = aData.mStereoMode;
+    // those members are not always equal to aData's, due to potentially different
+    // packing.
+    mData.mYSkip = 0;
+    mData.mCbSkip = 0;
+    mData.mCrSkip = 0;
+    mData.mYStride = mData.mYSize.width;
+    mData.mCbCrStride = mData.mCbCrSize.width;
+
+    mAllocated = true;
+    return true;
+  }
+
+  virtual bool IsValid() MOZ_OVERRIDE {
+    return mAllocated;
+  }
+
+  SharedImage* ToSharedImage() {
+    if (mAllocated) {
+      return new SharedImage(YCbCrImage(mShmem, 0, mData.GetPictureRect()));
+    }
+    return nullptr;
+  }
+
+private:
+  Shmem mShmem;
+  nsRefPtr<ImageContainerChild> mImageContainerChild;
+  bool mAllocated;
+};
+
+already_AddRefed<Image> ImageContainerChild::CreateImage()
+{
+  nsRefPtr<Image> img = new SharedPlanarYCbCrImage(this);
+  return img.forget();
+}
+
+SharedImage* ImageContainerChild::AsSharedImage(Image* aImage)
+{
+#ifdef MOZ_WIDGET_GONK
+  if (aImage->GetFormat() == GONK_IO_SURFACE) {
+    GonkIOSurfaceImage* gonkImage = static_cast<GonkIOSurfaceImage*>(aImage);
+    SharedImage* result = new SharedImage(gonkImage->GetSurfaceDescriptor());
+    return result;
+  } else if (aImage->GetFormat() == GRALLOC_PLANAR_YCBCR) {
+    GrallocPlanarYCbCrImage* GrallocImage = static_cast<GrallocPlanarYCbCrImage*>(aImage);
+    SharedImage* result = new SharedImage(GrallocImage->GetSurfaceDescriptor());
+    return result;
+  }
+#endif
+  if (aImage->GetFormat() == PLANAR_YCBCR) {
+    SharedPlanarYCbCrImage* sharedYCbCr
+      = static_cast<PlanarYCbCrImage*>(aImage)->AsSharedPlanarYCbCrImage();
+    if (sharedYCbCr) {
+      return sharedYCbCr->ToSharedImage();
+    }
+  }
+  return nullptr;
 }
 
 } // namespace

@@ -19,6 +19,7 @@ CPPSRCS := \
   AudioBufferSourceNode.cpp \
   AudioContext.cpp \
   AudioDestinationNode.cpp \
+  AudioListener.cpp \
   AudioNode.cpp \
   AudioParam.cpp \
   AudioSourceNode.cpp \
@@ -32,6 +33,7 @@ EXPORTS_mozilla/dom := \
   AudioBuffer.h \
   AudioBufferSourceNode.h \
   AudioDestinationNode.h \
+  AudioListener.h \
   AudioNode.h \
   AudioParam.h \
   AudioSourceNode.h \

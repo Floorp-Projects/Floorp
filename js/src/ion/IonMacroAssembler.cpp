@@ -88,7 +88,7 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
 }
 
 void
-MacroAssembler::PopRegsInMask(RegisterSet set)
+MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
 {
     size_t diff = set.gprs().size() * STACK_SLOT_SIZE +
                   set.fpus().size() * sizeof(double);
@@ -96,11 +96,13 @@ MacroAssembler::PopRegsInMask(RegisterSet set)
 
     for (GeneralRegisterIterator iter(set.gprs()); iter.more(); iter++) {
         diff -= STACK_SLOT_SIZE;
-        loadPtr(Address(StackPointer, diff), *iter);
+        if (!ignore.has(*iter))
+            loadPtr(Address(StackPointer, diff), *iter);
     }
     for (FloatRegisterIterator iter(set.fpus()); iter.more(); iter++) {
         diff -= sizeof(double);
-        loadDouble(Address(StackPointer, diff), *iter);
+        if (!ignore.has(*iter))
+            loadDouble(Address(StackPointer, diff), *iter);
     }
 
     freeStack(reserved);

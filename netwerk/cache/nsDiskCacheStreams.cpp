@@ -734,3 +734,15 @@ nsDiskCacheStreamIO::DeleteBuffer()
         mBufSize = 0;
     }
 }
+
+size_t
+nsDiskCacheStreamIO::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+{
+    size_t usage = aMallocSizeOf(this);
+
+    usage += aMallocSizeOf(mLocalFile);
+    usage += aMallocSizeOf(mFD);
+    usage += aMallocSizeOf(mBuffer);
+
+    return usage;
+}

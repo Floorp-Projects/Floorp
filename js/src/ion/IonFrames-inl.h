@@ -29,7 +29,7 @@ SizeOfFramePrefix(FrameType type)
     switch (type) {
       case IonFrame_Entry:
         return IonEntryFrameLayout::Size();
-      case IonFrame_JS:
+      case IonFrame_OptimizedJS:
       case IonFrame_Bailed_JS:
         return IonJSFrameLayout::Size();
       case IonFrame_Rectifier:
@@ -97,35 +97,9 @@ GetTopIonJSScript(JSContext *cx, const SafepointIndex **safepointIndexOut, void 
     if (returnAddrOut)
         *returnAddrOut = (void *) iter.returnAddressToFp();
 
-    if (iter.type() == IonFrame_JS) {
-        IonJSFrameLayout *frame = static_cast<IonJSFrameLayout*>(iter.current());
-        switch (GetCalleeTokenTag(frame->calleeToken())) {
-        case CalleeToken_Function: {
-            JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
-            return fun->script();
-        }
-        case CalleeToken_Script:
-            return CalleeTokenToScript(frame->calleeToken());
-        default:
-            JS_NOT_REACHED("unexpected callee token kind");
-            return NULL;
-        }
-    } else {
-        JS_ASSERT(iter.type() == IonFrame_BaselineJS);
-        IonBaselineJSFrameLayout *frame = static_cast<IonBaselineJSFrameLayout*>(iter.current());
-
-        switch (GetCalleeTokenTag(frame->calleeToken())) {
-        case CalleeToken_Function: {
-            JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
-            return fun->script();
-        }
-        case CalleeToken_Script:
-            return CalleeTokenToScript(frame->calleeToken());
-        default:
-            JS_NOT_REACHED("unexpected callee token kind");
-            return NULL;
-        }
-    }
+    JS_ASSERT(iter.isScripted());
+    IonJSFrameLayout *frame = static_cast<IonJSFrameLayout*>(iter.current());
+    return ScriptFromCalleeToken(frame->calleeToken());
 }
 
 } // namespace ion

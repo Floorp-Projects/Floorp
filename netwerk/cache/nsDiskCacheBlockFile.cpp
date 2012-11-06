@@ -393,3 +393,9 @@ nsDiskCacheBlockFile::Write(int32_t offset, const void *buf, int32_t amount)
         return false;
     return PR_Write(mFD, buf, amount) == amount;
 }
+
+size_t
+nsDiskCacheBlockFile::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf)
+{
+    return aMallocSizeOf(mBitMap) + aMallocSizeOf(mFD);
+}

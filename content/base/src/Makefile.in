@@ -46,11 +46,13 @@ EXPORTS		= \
 EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
+  Comment.h \
   DOMImplementation.h \
   Link.h \
   $(NULL)
 
 CPPSRCS		= \
+		Comment.cpp \
 		DirectionalityUtils.cpp \
 		DOMImplementation.cpp \
 		nsAtomListUtils.cpp \
@@ -59,7 +61,6 @@ CPPSRCS		= \
 		nsAttrValueOrString.cpp \
 		nsCCUncollectableMarker.cpp \
 		nsChannelPolicy.cpp \
-		nsCommentNode.cpp \
 		nsContentAreaDragDrop.cpp \
 		nsContentIterator.cpp \
 		nsContentList.cpp \

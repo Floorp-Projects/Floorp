@@ -13,6 +13,8 @@ var gTab = null;
 var gDebugger = null;
 var gDebuggee = null;
 
+requestLongerTimeout(2);
+
 function test()
 {
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
@@ -33,6 +35,7 @@ function addBreakpoint()
   }, function() {
     // Wait for the resume...
     gDebugger.gClient.addOneTimeListener("resumed", function() {
+      gDebugger.DebuggerView.Variables.nonEnumVisible = false;
       testVariablesExpand();
     });
   });
@@ -194,15 +197,6 @@ function testVariablesExpand()
                       is(locationItem.target.querySelector(".details").hasAttribute("open"), true,
                         "The locationItem enumerables should still be expanded (1)");
 
-                      is(thisItem.target.querySelector(".details.nonenum").hasAttribute("open"), true,
-                        "The thisItem non-enumerables should still be expanded (1)");
-                      is(windowItem.target.querySelector(".details.nonenum").hasAttribute("open"), true,
-                        "The windowItem non-enumerables should still be expanded (1)");
-                      is(documentItem.target.querySelector(".details.nonenum").hasAttribute("open"), true,
-                        "The documentItem non-enumerables should still be expanded (1)");
-                      is(locationItem.target.querySelector(".details.nonenum").hasAttribute("open"), true,
-                        "The locationItem non-enumerables should still be expanded (1)");
-
                       is(thisItem.expanded, true,
                         "The local scope 'this' should still be expanded (1)");
                       is(windowItem.expanded, true,
@@ -274,15 +268,6 @@ function testVariablesExpand()
                             "The documentItem enumerables should still be expanded (2)");
                           is(locationItem.target.querySelector(".details").hasAttribute("open"), true,
                             "The locationItem enumerables should still be expanded (2)");
-
-                          is(thisItem.target.querySelector(".details.nonenum").hasAttribute("open"), true,
-                            "The thisItem non-enumerables should still be expanded (2)");
-                          is(windowItem.target.querySelector(".details.nonenum").hasAttribute("open"), true,
-                            "The windowItem non-enumerables should still be expanded (2)");
-                          is(documentItem.target.querySelector(".details.nonenum").hasAttribute("open"), true,
-                            "The documentItem non-enumerables should still be expanded (2)");
-                          is(locationItem.target.querySelector(".details.nonenum").hasAttribute("open"), true,
-                            "The locationItem non-enumerables should still be expanded (2)");
 
                           is(thisItem.expanded, true,
                             "The local scope 'this' should still be expanded (2)");
