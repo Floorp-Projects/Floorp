@@ -12,5 +12,5 @@ interface nsIDOMMozSmsCursor : nsISupports
 {
   // Can be null if there is no more results.
   readonly attribute nsIDOMMozSmsMessage message;
-                                    void continue();
+  void continue();
 };

@@ -46,10 +46,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
                                    "@mozilla.org/sms/smsservice;1",
                                    "nsISmsService");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gSmsRequestManager",
-                                   "@mozilla.org/sms/smsrequestmanager;1",
-                                   "nsISmsRequestManager");
-
 XPCOMUtils.defineLazyServiceGetter(this, "gIDBManager",
                                    "@mozilla.org/dom/indexeddb/manager;1",
                                    "nsIIndexedDatabaseManager");
@@ -309,20 +305,19 @@ SmsDatabaseService.prototype = {
    * containing the list of primary keys of records that matches the provided
    * search criteria. This function retrieves from the store the message with
    * the primary key matching the first one in the message list array and keeps
-   * the rest of this array in memory. It also notifies via gSmsRequestManager.
+   * the rest of this array in memory. It also notifies via nsISmsRequest.
    *
    * @param messageList
    *        Array of primary keys retrieved within createMessageList.
-   * @param requestId
-   *        Id used by the SmsRequestManager
+   * @param request
+   *        A nsISmsRequest object.
    */
-  onMessageListCreated: function onMessageListCreated(messageList, requestId) {
+  onMessageListCreated: function onMessageListCreated(messageList, aRequest) {
     if (DEBUG) debug("Message list created: " + messageList);
     let self = this;
     self.newTxn(READ_ONLY, function (error, txn, store) {
       if (error) {
-        gSmsRequestManager.notifyReadMessageListFailed(
-          requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
+        aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
         return;
       }
 
@@ -337,8 +332,7 @@ SmsDatabaseService.prototype = {
       txn.oncomplete = function oncomplete(event) {
         if (DEBUG) debug("Transaction " + txn + " completed.");
         if (!message) {
-          gSmsRequestManager.notifyReadMessageListFailed(
-            requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
+          aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
           return;
         }
         self.lastMessageListId += 1;
@@ -352,9 +346,7 @@ SmsDatabaseService.prototype = {
                                                message.messageClass,
                                                message.timestamp,
                                                message.read);
-        gSmsRequestManager.notifyCreateMessageList(requestId,
-                                                   self.lastMessageListId,
-                                                   sms);
+        aRequest.notifyMessageListCreated(self.lastMessageListId, sms);
       };
     });
   },
@@ -454,13 +446,12 @@ SmsDatabaseService.prototype = {
     });
   },
 
-  getMessage: function getMessage(messageId, requestId) {
+  getMessage: function getMessage(messageId, aRequest) {
     if (DEBUG) debug("Retrieving message with ID " + messageId);
     this.newTxn(READ_ONLY, function (error, txn, store) {
       if (error) {
         if (DEBUG) debug(error);
-        gSmsRequestManager.notifyGetSmsFailed(
-          requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
+        aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
         return;
       }
       let request = store.mozGetAll(messageId);
@@ -469,15 +460,13 @@ SmsDatabaseService.prototype = {
         if (DEBUG) debug("Transaction " + txn + " completed.");
         if (request.result.length > 1) {
           if (DEBUG) debug("Got too many results for id " + messageId);
-          gSmsRequestManager.notifyGetSmsFailed(
-            requestId, Ci.nsISmsRequestManager.UNKNOWN_ERROR);
+          aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.UNKNOWN_ERROR);
           return;
         }
         let data = request.result[0];
         if (!data) {
           if (DEBUG) debug("Message ID " + messageId + " not found");
-          gSmsRequestManager.notifyGetSmsFailed(
-            requestId, Ci.nsISmsRequestManager.NOT_FOUND_ERROR);
+          aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
           return;
         }
         if (data.id != messageId) {
@@ -485,8 +474,7 @@ SmsDatabaseService.prototype = {
             debug("Requested message ID (" + messageId + ") is " +
                   "different from the one we got");
           }
-          gSmsRequestManager.notifyGetSmsFailed(
-            requestId, Ci.nsISmsRequestManager.UNKNOWN_ERROR);
+          aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.UNKNOWN_ERROR);
           return;
         }
         let message = gSmsService.createSmsMessage(data.id,
@@ -498,25 +486,23 @@ SmsDatabaseService.prototype = {
                                                    data.messageClass,
                                                    data.timestamp,
                                                    data.read);
-        gSmsRequestManager.notifyGotSms(requestId, message);
+        aRequest.notifyMessageGot(message);
       };
 
       txn.onerror = function onerror(event) {
         if (DEBUG) debug("Caught error on transaction", event.target.errorCode);
         //TODO look at event.target.errorCode, pick appropriate error constant
-        gSmsRequestManager.notifyGetSmsFailed(
-          requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
+        aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
       };
     });
   },
 
-  deleteMessage: function deleteMessage(messageId, requestId) {
+  deleteMessage: function deleteMessage(messageId, aRequest) {
     let deleted = false;
     let self = this;
     this.newTxn(READ_WRITE, function (error, txn, store) {
       if (error) {
-        gSmsRequestManager.notifySmsDeleteFailed(
-          requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
+        aRequest.notifyDeleteMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
         return;
       }
       let request = store.count(messageId);
@@ -532,19 +518,18 @@ SmsDatabaseService.prototype = {
 
       txn.oncomplete = function oncomplete(event) {
         if (DEBUG) debug("Transaction " + txn + " completed.");
-        gSmsRequestManager.notifySmsDeleted(requestId, deleted);
+        aRequest.notifyMessageDeleted(deleted);
       };
 
       txn.onerror = function onerror(event) {
         if (DEBUG) debug("Caught error on transaction", event.target.errorCode);
         //TODO look at event.target.errorCode, pick appropriate error constant
-        gSmsRequestManager.notifySmsDeleteFailed(
-          requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
+        aRequest.notifyDeleteMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
       };
     });
   },
 
-  createMessageList: function createMessageList(filter, reverse, requestId) {
+  createMessageList: function createMessageList(filter, reverse, aRequest) {
     if (DEBUG) {
       debug("Creating a message list. Filters:" +
             " startDate: " + filter.startDate +
@@ -585,8 +570,7 @@ SmsDatabaseService.prototype = {
     let errorCb = function onerror(event) {
       //TODO look at event.target.errorCode, pick appropriate error constant.
       if (DEBUG) debug("IDBRequest error " + event.target.errorCode);
-      gSmsRequestManager.notifyReadMessageListFailed(
-        requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
+      aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
       return;
     };
 
@@ -667,7 +651,7 @@ SmsDatabaseService.prototype = {
         let result =  self.keyIntersection(filteredKeys, filter);
         if (!result.length) {
           if (DEBUG) debug("No messages matching the filter criteria");
-          gSmsRequestManager.notifyNoMessageInList(requestId);
+          aRequest.notifyNoMessageInList();
           return;
         }
 
@@ -675,7 +659,7 @@ SmsDatabaseService.prototype = {
         // all the search filters. So we take the first key and retrieve the
         // corresponding message. The rest of the keys are added to the
         // messageLists object as a new list.
-        self.onMessageListCreated(result, requestId);
+        self.onMessageListCreated(result, aRequest);
       };
 
       txn.onerror = function onerror(event) {
@@ -684,20 +668,19 @@ SmsDatabaseService.prototype = {
     });
   },
 
-  getNextMessageInList: function getNextMessageInList(listId, requestId) {
+  getNextMessageInList: function getNextMessageInList(listId, aRequest) {
     if (DEBUG) debug("Getting next message in list " + listId);
     let messageId;
     let list = this.messageLists[listId];
     if (!list) {
       if (DEBUG) debug("Wrong list id");
-      gSmsRequestManager.notifyReadMessageListFailed(
-        requestId, Ci.nsISmsRequestManager.NOT_FOUND_ERROR);
+      aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
       return;
     }
     messageId = list.shift();
     if (messageId == null) {
       if (DEBUG) debug("Reached the end of the list!");
-      gSmsRequestManager.notifyNoMessageInList(requestId);
+      aRequest.notifyNoMessageInList();
       return;
     }
     this.newTxn(READ_ONLY, function (error, txn, store) {
@@ -712,8 +695,7 @@ SmsDatabaseService.prototype = {
         if (DEBUG) debug("Transaction " + txn + " completed.");
         if (!message) {
           if (DEBUG) debug("Could not get message id " + messageId);
-          gSmsRequestManager.notifyReadMessageListFailed(
-            requestId, Ci.nsISmsRequestManager.NOT_FOUND_ERROR);
+          aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
         }
         let sms = gSmsService.createSmsMessage(message.id,
                                                message.delivery,
@@ -724,7 +706,7 @@ SmsDatabaseService.prototype = {
                                                message.messageClass,
                                                message.timestamp,
                                                message.read);
-        gSmsRequestManager.notifyGotNextMessage(requestId, sms);
+        aRequest.notifyNextMessageInListGot(sms);
       };
 
       txn.onerror = function onerror(event) {
@@ -733,8 +715,7 @@ SmsDatabaseService.prototype = {
           debug("Error retrieving message id: " + messageId +
                 ". Error code: " + event.target.errorCode);
         }
-        gSmsRequestManager.notifyReadMessageListFailed(
-          requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
+        aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
       };
     });
   },
@@ -744,13 +725,12 @@ SmsDatabaseService.prototype = {
     delete this.messageLists[listId];
   },
 
-  markMessageRead: function markMessageRead(messageId, value, requestId) {
+  markMessageRead: function markMessageRead(messageId, value, aRequest) {
     if (DEBUG) debug("Setting message " + messageId + " read to " + value);
     this.newTxn(READ_WRITE, function (error, txn, store) {
       if (error) {
         if (DEBUG) debug(error);
-        gSmsRequestManager.notifyMarkMessageReadFailed(
-          requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
+        aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
         return;
       }
       let getRequest = store.get(messageId);
@@ -759,8 +739,7 @@ SmsDatabaseService.prototype = {
         let message = event.target.result;
         if (DEBUG) debug("Message ID " + messageId + " not found");
         if (!message) {
-          gSmsRequestManager.notifyMarkMessageReadFailed(
-            requestId, Ci.nsISmsRequestManager.NOT_FOUND_ERROR);
+          aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
           return;
         }
         if (message.id != messageId) {
@@ -768,15 +747,14 @@ SmsDatabaseService.prototype = {
             debug("Retrieve message ID (" + messageId + ") is " +
                   "different from the one we got");
           }
-          gSmsRequestManager.notifyMarkMessageReadFailed(
-            requestId, Ci.nsISmsRequestManager.UNKNOWN_ERROR);
+          aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.UNKNOWN_ERROR);
           return;
         }
         // If the value to be set is the same as the current message `read`
         // value, we just notify successfully.
         if (message.read == value) {
           if (DEBUG) debug("The value of message.read is already " + value);
-          gSmsRequestManager.notifyMarkedMessageRead(requestId, message.read);
+          aRequest.notifyMessageMarkedRead(message.read);
           return;
         }
         message.read = value ? FILTER_READ_READ : FILTER_READ_UNREAD;
@@ -789,16 +767,14 @@ SmsDatabaseService.prototype = {
           }
           let checkRequest = store.get(message.id);
           checkRequest.onsuccess = function onsuccess(event) {
-            gSmsRequestManager.notifyMarkedMessageRead(
-              requestId, event.target.result.read);
+            aRequest.notifyMessageMarkedRead(event.target.result.read);
           };
         }
       };
 
       txn.onerror = function onerror(event) {
         if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
-        gSmsRequestManager.notifyMarkMessageReadFailed(
-          requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
+        aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
       };
     });
   }

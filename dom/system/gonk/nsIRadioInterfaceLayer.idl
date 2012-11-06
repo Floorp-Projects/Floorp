@@ -9,8 +9,9 @@ interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
 interface nsIDOMMozVoicemailStatus;
+interface nsISmsRequest;
 
-[scriptable, uuid(c14c71b8-afba-403b-8320-94593de9380f)]
+[scriptable, uuid(0faabc35-644d-4ed5-b109-425280ff1cdf)]
 interface nsIRILTelephonyCallback : nsISupports
 {
   /**
@@ -298,8 +299,7 @@ interface nsIRadioInterfaceLayer : nsISupports
   unsigned short getNumberOfMessagesForText(in DOMString text);
   void sendSMS(in DOMString number,
                in DOMString message,
-               in long requestId,
-               in unsigned long long processId);
+               in nsISmsRequest request);
 
   /**
    * ICC-related functionality.

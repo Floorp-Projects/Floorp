@@ -11,7 +11,7 @@ interface nsIDOMMozSmsFilter;
 [scriptable, builtinclass, uuid(1bee1224-56a2-4935-af7b-0011746306cb)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
-  unsigned short      getNumberOfMessagesForText(in DOMString text);
+  unsigned short getNumberOfMessagesForText(in DOMString text);
 
   // The first parameter can be either a DOMString (only one number) or an array
   // of DOMStrings.
@@ -19,7 +19,8 @@ interface nsIDOMMozSmsManager : nsIDOMEventTarget
   // An array of SmsRequest objects otherwise.
   jsval send(in jsval number, in DOMString message);
 
-  [binaryname(GetMessageMoz)] nsIDOMMozSmsRequest getMessage(in long id);
+  [binaryname(GetMessageMoz)]
+  nsIDOMMozSmsRequest getMessage(in long id);
 
   // The parameter can be either a message id or a SmsMessage.
   nsIDOMMozSmsRequest delete(in jsval param);
