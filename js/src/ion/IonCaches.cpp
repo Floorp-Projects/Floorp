@@ -206,17 +206,22 @@ IsCacheableNoProperty(JSObject *obj, JSObject *holder, const Shape *shape, jsbyt
         obj2 = obj2->getProto();
     }
 
+    // The pc is NULL if the cache is idempotent. We cannot share missing
+    // properties between caches because TI can only try to prove that a type is
+    // contained, but does not attempts to check if something does not exists.
+    // So the infered type of getprop would be missing and would not contain
+    // undefined, as expected for missing properties.
+    if (!pc)
+        return false;
+
 #if JS_HAS_NO_SUCH_METHOD
-    // This case cannot appear with an idempotent cache.
-    if (pc) {
-        // The __noSuchMethod__ hook may substitute in a valid method.  Since,
-        // if o.m is missing, o.m() will probably be an error, just mark all
-        // missing callprops as uncacheable.
-        if (JSOp(*pc) == JSOP_CALLPROP ||
-            JSOp(*pc) == JSOP_CALLELEM)
-        {
-            return false;
-        }
+    // The __noSuchMethod__ hook may substitute in a valid method.  Since,
+    // if o.m is missing, o.m() will probably be an error, just mark all
+    // missing callprops as uncacheable.
+    if (JSOp(*pc) == JSOP_CALLPROP ||
+        JSOp(*pc) == JSOP_CALLELEM)
+    {
+        return false;
     }
 #endif
 
@@ -1653,7 +1658,7 @@ GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
         CallObject *callObj = &scopeObj->asCall();
         if (!callObj->isForEval()) {
             RawFunction fun = &callObj->callee();
-            RawScript script = fun->script();
+            RawScript script = fun->script().get(nogc);
             if (!script->funHasExtensibleScope)
                 return;
         }
@@ -1876,7 +1881,7 @@ IonCacheName::attach(JSContext *cx, IonScript *ion, HandleObject scopeChain, Han
 
 static bool
 IsCacheableName(JSContext *cx, HandleObject scopeChain, HandleObject obj, HandleObject holder,
-                HandleShape shape, const TypedOrValueRegister &output)
+                HandleShape shape, jsbytecode *pc, const TypedOrValueRegister &output)
 {
     if (!shape)
         return false;
@@ -1888,7 +1893,7 @@ IsCacheableName(JSContext *cx, HandleObject scopeChain, HandleObject obj, Handle
     if (obj->isGlobal()) {
         // Support only simple property lookups.
         if (!IsCacheableGetPropReadSlot(obj, holder, shape) &&
-            !IsCacheableNoProperty(obj, holder, shape, NULL, output))
+            !IsCacheableNoProperty(obj, holder, shape, pc, output))
             return false;
     } else if (obj->isCall()) {
         if (!shape->hasDefaultGetter())
@@ -1934,7 +1939,7 @@ js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
         return false;
 
     if (cache.stubCount() < MAX_STUBS &&
-        IsCacheableName(cx, scopeChain, obj, holder, shape, cache.outputReg()))
+        IsCacheableName(cx, scopeChain, obj, holder, shape, pc, cache.outputReg()))
     {
         if (!cache.attach(cx, ion, scopeChain, obj, shape))
             return false;

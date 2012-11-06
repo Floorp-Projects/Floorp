@@ -39,6 +39,7 @@
 #include "nsINameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsIServiceManager.h"
 #include "nsFrame.h"
+#include "FrameLayerBuilder.h"
 #include "nsViewManager.h"
 #include "nsView.h"
 #include "nsCRTGlue.h"
@@ -2025,6 +2026,13 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
     }
   
     mFramesToDirty.RemoveEntry(aFrame);
+  } else {
+    // We must delete this property in situ so that its destructor removes the
+    // frame from FrameLayerBuilder::DisplayItemData::mFrameList -- otherwise
+    // the DisplayItemData destructor will use the destroyed frame when it
+    // tries to remove it from the (array) value of this property.
+    mPresContext->PropertyTable()->
+      Delete(aFrame, FrameLayerBuilder::LayerManagerDataProperty());
   }
 }
 

@@ -570,9 +570,6 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
     /* Find the scripted caller. */
     NonBuiltinScriptFrameIter iter(cx);
 
-    /* XXX StackIter should not point directly to scripts. */
-    SkipRoot skip(cx, &iter);
-
     /* Set the 'fileName' property. */
     RootedScript script(cx, iter.script());
     RootedString filename(cx);

@@ -80,7 +80,7 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
         }
         calleeToken = CalleeToToken(&fp->callee());
     } else {
-        calleeToken = CalleeToToken(fp->script());
+        calleeToken = CalleeToToken(fp->script().unsafeGet());
     }
 
     // Caller must construct |this| before invoking the Ion function.

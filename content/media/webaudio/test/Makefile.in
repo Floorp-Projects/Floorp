@@ -11,8 +11,10 @@ relativesrcdir := @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
+  test_bug808374.html \
   test_AudioBuffer.html \
   test_AudioContext.html \
+  test_AudioListener.html \
   test_badConnect.html \
   test_delayNode.html \
   test_gainNode.html \

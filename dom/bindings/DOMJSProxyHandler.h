@@ -56,6 +56,12 @@ public:
 
 protected:
   static JSString* obj_toString(JSContext* cx, const char* className);
+
+  // Append the property names in "names" that don't live on our proto
+  // chain to "props"
+  bool AppendNamedPropertyIds(JSContext* cx, JSObject* proxy,
+                              nsTArray<nsString>& names,
+                              JS::AutoIdVector& props);
 };
 
 extern jsid s_length_id;

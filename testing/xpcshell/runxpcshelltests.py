@@ -895,7 +895,7 @@ class XPCShellTests(object):
           try:
             self.removeDir(self.profileDir)
           except Exception:
-            message = "TEST-UNEXPECTED-FAIL | %s | Failed to clean up the test profile directory: %s" % (name, sys.exc_info()[0])
+            message = "TEST-UNEXPECTED-FAIL | %s | Failed to clean up the test profile directory: %s" % (name, sys.exc_info()[1])
             self.log.error(message)
             print_stdout(stdout)
             print_stdout(traceback.format_exc())

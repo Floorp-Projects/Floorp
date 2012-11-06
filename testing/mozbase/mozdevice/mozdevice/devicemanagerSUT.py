@@ -18,7 +18,6 @@ from distutils.version import StrictVersion
 
 class DeviceManagerSUT(DeviceManager):
     debug = 2
-    tempRoot = os.getcwd()
     base_prompt = '$>'
     base_prompt_re = '\$\>'
     prompt_sep = '\x00'
@@ -641,13 +640,10 @@ class DeviceManagerSUT(DeviceManager):
             return buf
         return buf[:-len(prompt)]
 
-    def getFile(self, remoteFile, localFile = ''):
+    def getFile(self, remoteFile, localFile):
         """
         Copy file from device (remoteFile) to host (localFile)
         """
-        if localFile == '':
-            localFile = os.path.join(self.tempRoot, "temp.txt")
-
         data = self.pullFile(remoteFile)
 
         fhandle = open(localFile, 'wb')

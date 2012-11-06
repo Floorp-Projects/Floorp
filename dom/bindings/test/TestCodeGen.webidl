@@ -342,6 +342,7 @@ interface TestInterface {
   [LenientThis] attribute long attrWithLenientThis;
   [Unforgeable] readonly attribute long unforgeableAttr;
   [Unforgeable, ChromeOnly] readonly attribute long unforgeableAttr2;
+  stringifier;
   void passRenamedInterface(TestRenamedInterface arg);
   [PutForwards=writableByte] readonly attribute TestInterface putForwardsAttr;
   [PutForwards=writableByte, LenientThis] readonly attribute TestInterface putForwardsAttr2;
@@ -424,7 +425,6 @@ dictionary DictContainingSequence {
 
 interface TestIndexedGetterInterface {
   getter long item(unsigned long index);
-  [Infallible]
   readonly attribute unsigned long length;
 };
 
@@ -435,21 +435,24 @@ interface TestNamedGetterInterface {
 interface TestIndexedAndNamedGetterInterface {
   getter long (unsigned long index);
   getter DOMString namedItem(DOMString name);
-  [Infallible]
   readonly attribute unsigned long length;
 };
 
 interface TestIndexedSetterInterface {
   setter creator void setItem(unsigned long index, DOMString item);
+  getter DOMString (unsigned long index);
 };
 
 interface TestNamedSetterInterface {
   setter creator void (DOMString name, TestIndexedSetterInterface item);
+  getter TestIndexedSetterInterface (DOMString name);
 };
 
 interface TestIndexedAndNamedSetterInterface {
   setter creator void (unsigned long index, TestIndexedSetterInterface item);
+  getter TestIndexedSetterInterface (unsigned long index);
   setter creator void setNamedItem(DOMString name, TestIndexedSetterInterface item);
+  getter TestIndexedSetterInterface (DOMString name);
 };
 
 interface TestIndexedAndNamedGetterAndSetterInterface : TestIndexedSetterInterface {
@@ -457,10 +460,35 @@ interface TestIndexedAndNamedGetterAndSetterInterface : TestIndexedSetterInterfa
   getter DOMString namedItem(DOMString name);
   setter creator void (unsigned long index, long item);
   setter creator void (DOMString name, DOMString item);
-  [Infallible]
   stringifier DOMString ();
-  [Infallible]
   readonly attribute unsigned long length;
+};
+
+interface TestIndexedDeleterInterface {
+  deleter void delItem(unsigned long index);
+  getter long (unsigned long index);
+};
+
+interface TestIndexedDeleterWithRetvalInterface {
+  deleter boolean delItem(unsigned long index);
+  getter long (unsigned long index);
+};
+
+interface TestNamedDeleterInterface {
+  deleter void (DOMString name);
+  getter long (DOMString name);
+};
+
+interface TestNamedDeleterWithRetvalInterface {
+  deleter boolean delNamedItem(DOMString name);
+  getter long (DOMString name);
+};
+
+interface TestIndexedAndNamedDeleterInterface {
+  deleter void (unsigned long index);
+  getter long (unsigned long index);
+  deleter void delNamedItem(DOMString name);
+  getter long (DOMString name);
 };
 
 interface TestCppKeywordNamedMethodsInterface {

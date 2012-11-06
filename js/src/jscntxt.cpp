@@ -618,7 +618,7 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
         return;
 
     report->filename = iter.script()->filename;
-    report->lineno = PCToLineNumber(iter.script(), iter.pc(), &report->column);
+    report->lineno = PCToLineNumber(iter.script().get(nogc), iter.pc(), &report->column);
     report->originPrincipals = iter.script()->originPrincipals;
 }
 
@@ -656,8 +656,9 @@ js_ReportOutOfMemory(JSContext *cx)
      */
     cx->clearPendingException();
     if (onError) {
-        AutoAtomicIncrement incr(&cx->runtime->inOOMReport);
+        ++cx->runtime->inOOMReport;
         onError(cx, msg, &report);
+        --cx->runtime->inOOMReport;
     }
 }
 

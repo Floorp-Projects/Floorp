@@ -879,10 +879,9 @@ bool
 IsDeviceConnectedTypeBoolean()
 {
 #if defined(MOZ_WIDGET_GONK)
-
   char connProp[PROPERTY_VALUE_MAX];
 
-  property_get(PROP_DEVICE_CONNECTED_TYPE, connProp, "array");
+  property_get(PROP_DEVICE_CONNECTED_TYPE, connProp, "boolean");
   if (strcmp(connProp, "boolean") == 0) {
     return true;
   }

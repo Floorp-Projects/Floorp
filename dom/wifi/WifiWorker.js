@@ -11,7 +11,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-const DEBUG = false; // set to true to show debug messages
+var DEBUG = false; // set to true to show debug messages
 
 const WIFIWORKER_CONTRACTID = "@mozilla.org/wifi/worker;1";
 const WIFIWORKER_CID        = Components.ID("{a14e8977-d259-433a-a88d-58dd44657e5b}");
@@ -281,6 +281,48 @@ var WifiManager = (function() {
       return;
     }
     doBooleanCommand("SCAN", "OK", callback);
+  }
+
+  var debugEnabled = false;
+  function setLogLevel(level, callback) {
+    doBooleanCommand("LOG_LEVEL " + level, "OK", callback);
+  }
+
+  function syncDebug() {
+    if (debugEnabled !== DEBUG) {
+      let wanted = DEBUG;
+      setLogLevel(wanted ? "DEBUG" : "INFO", function(ok) {
+        if (ok)
+          debugEnabled = wanted;
+      });
+    }
+  }
+
+  function getLogLevel(callback) {
+    doStringCommand("LOG_LEVEL", callback);
+  }
+
+  function getDebugEnabled(callback) {
+    getLogLevel(function(level) {
+      if (level === null) {
+        debug("Unable to get wpa_supplicant's log level");
+        callback(false);
+        return;
+      }
+
+      var lines = level.split("\n");
+      for (let i = 0; i < lines.length; ++i) {
+        let match = /Current level: (.*)/.exec(lines[i]);
+        if (match) {
+          debugEnabled = match[1].toLowerCase() === "debug";
+          callback(true);
+          return;
+        }
+      }
+
+      // If we're here, we didn't get the current level.
+      callback(false);
+    });
   }
 
   function setScanModeCommand(setActive, callback) {
@@ -919,6 +961,9 @@ var WifiManager = (function() {
     waitForEvent();
 
     // Load up the supplicant state.
+    getDebugEnabled(function(ok) {
+      syncDebug();
+    });
     statusCommand(function(status) {
       parseStatus(status);
       notify("supplicantconnection");
@@ -1247,6 +1292,7 @@ var WifiManager = (function() {
         return false;
     }
   }
+  manager.syncDebug = syncDebug;
   manager.stateOrdinal = function(state) {
     return supplicantStatesMap.indexOf(state);
   }
@@ -1835,9 +1881,28 @@ function WifiWorker() {
     handleError: function handleError(aErrorMessage) {
       debug("Error reading the 'wifi.enabled' setting. Default to wifi on.");
       self.setWifiEnabled({enabled: true});
-    },
+    }
   };
-  gSettingsService.createLock().get("wifi.enabled", initWifiEnabledCb);
+
+  var initWifiDebuggingEnabledCb = {
+    handle: function handle(aName, aResult) {
+      if (aName !== "wifi.debugging.enabled")
+        return;
+      if (aResult === null)
+        aResult = false;
+      DEBUG = aResult;
+      updateDebug();
+    },
+    handleError: function handleError(aErrorMessage) {
+      debug("Error reading the 'wifi.debugging.enabled' setting. Default to debugging off.");
+      DEBUG = false;
+      updateDebug();
+    }
+  };
+
+  let lock = gSettingsService.createLock();
+  lock.get("wifi.enabled", initWifiEnabledCb);
+  lock.get("wifi.debugging.enabled", initWifiDebuggingEnabledCb);
 }
 
 function translateState(state) {
@@ -2572,6 +2637,11 @@ WifiWorker.prototype = {
     }
 
     let setting = JSON.parse(data);
+    if (setting.key === "wifi.debugging.enabled") {
+      DEBUG = setting.value;
+      updateDebug();
+      return;
+    }
     if (setting.key !== "wifi.enabled" &&
         setting.key !== "tethering.wifi.enabled") {
       return;
@@ -2596,10 +2666,14 @@ WifiWorker.prototype = {
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WifiWorker]);
 
 let debug;
-if (DEBUG) {
-  debug = function (s) {
-    dump("-*- WifiWorker component: " + s + "\n");
-  };
-} else {
-  debug = function (s) {};
+function updateDebug() {
+  if (DEBUG) {
+    debug = function (s) {
+      dump("-*- WifiWorker component: " + s + "\n");
+    };
+  } else {
+    debug = function (s) {};
+  }
+  WifiManager.syncDebug();
 }
+updateDebug();
