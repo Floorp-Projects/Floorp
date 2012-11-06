@@ -74,17 +74,17 @@ function testVariablesView()
 }
 
 function testHierarchy() {
-  is(gVariablesView._currHierarchy.size(), 13,
+  is(gVariablesView._currHierarchy.size, 13,
     "There should be 1 scope, 1 var, 1 proto, 8 props, 1 getter and 1 setter.");
 
   gScope = gVariablesView._currHierarchy.get("");
   gVariable = gVariablesView._currHierarchy.get(".");
 
-  is(gVariablesView._store.size(), 1,
+  is(gVariablesView._store.size, 1,
     "There should be only one scope in the view");
-  is(gScope._store.size(), 1,
+  is(gScope._store.size, 1,
     "There should be only one variable in the scope");
-  is(gVariable._store.size(), 9,
+  is(gVariable._store.size, 9,
     "There should be 1 __proto__ and 8 properties in the variable");
 }
 
@@ -210,9 +210,9 @@ function testFirstLevelContents() {
 function testSecondLevelContents() {
   let someProp5 = gVariable.get("someProp5");
 
-  is(someProp5._store.size(), 0, "No properties should be in someProp5 before expanding");
+  is(someProp5._store.size, 0, "No properties should be in someProp5 before expanding");
   someProp5.expand();
-  is(someProp5._store.size(), 9, "Some properties should be in someProp5 before expanding");
+  is(someProp5._store.size, 9, "Some properties should be in someProp5 before expanding");
 
   let arrayItem0 = someProp5.get("0");
   let arrayItem1 = someProp5.get("1");
@@ -283,9 +283,9 @@ function testSecondLevelContents() {
 
   let someProp6 = gVariable.get("someProp6");
 
-  is(someProp6._store.size(), 0, "No properties should be in someProp6 before expanding");
+  is(someProp6._store.size, 0, "No properties should be in someProp6 before expanding");
   someProp6.expand();
-  is(someProp6._store.size(), 10, "Some properties should be in someProp6 before expanding");
+  is(someProp6._store.size, 10, "Some properties should be in someProp6 before expanding");
 
   let objectItem0 = someProp6.get("p0");
   let objectItem1 = someProp6.get("p1");
@@ -384,13 +384,13 @@ function testThirdLevelContents() {
     let arrayItem5 = someProp5.get("5");
     let arrayItem6 = someProp5.get("6");
 
-    is(arrayItem5._store.size(), 0, "No properties should be in arrayItem5 before expanding");
+    is(arrayItem5._store.size, 0, "No properties should be in arrayItem5 before expanding");
     arrayItem5.expand();
-    is(arrayItem5._store.size(), 5, "Some properties should be in arrayItem5 before expanding");
+    is(arrayItem5._store.size, 5, "Some properties should be in arrayItem5 before expanding");
 
-    is(arrayItem6._store.size(), 0, "No properties should be in arrayItem6 before expanding");
+    is(arrayItem6._store.size, 0, "No properties should be in arrayItem6 before expanding");
     arrayItem6.expand();
-    is(arrayItem6._store.size(), 3, "Some properties should be in arrayItem6 before expanding");
+    is(arrayItem6._store.size, 3, "Some properties should be in arrayItem6 before expanding");
 
     let arraySubItem0 = arrayItem5.get("0");
     let arraySubItem1 = arrayItem5.get("1");
@@ -417,13 +417,13 @@ function testThirdLevelContents() {
     let objectItem5 = someProp6.get("p5");
     let objectItem6 = someProp6.get("p6");
 
-    is(objectItem5._store.size(), 0, "No properties should be in objectItem5 before expanding");
+    is(objectItem5._store.size, 0, "No properties should be in objectItem5 before expanding");
     objectItem5.expand();
-    is(objectItem5._store.size(), 5, "Some properties should be in objectItem5 before expanding");
+    is(objectItem5._store.size, 5, "Some properties should be in objectItem5 before expanding");
 
-    is(objectItem6._store.size(), 0, "No properties should be in objectItem6 before expanding");
+    is(objectItem6._store.size, 0, "No properties should be in objectItem6 before expanding");
     objectItem6.expand();
-    is(objectItem6._store.size(), 3, "Some properties should be in objectItem6 before expanding");
+    is(objectItem6._store.size, 3, "Some properties should be in objectItem6 before expanding");
 
     let arraySubItem0 = objectItem5.get("0");
     let arraySubItem1 = objectItem5.get("1");
