@@ -11,7 +11,6 @@ relativesrcdir	= @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES	= \
-		test_pointerlock-api.html \
 		pointerlock_utils.js \
 		file_approval.html \
 		file_pointerlock-api.html \
@@ -33,5 +32,13 @@ MOCHITEST_FILES	= \
 		file_allowPointerLockSandboxFlag.html \
 		iframe_differentDOM.html \
 		$(NULL)
+
+ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))
+MOCHITEST_FILES += \
+		test_pointerlock-api.html \
+		$(NULL)
+else
+$(warning test_pointerlock-api.html is disabled on Linux for intermittent failures. Bug 788164)
+endif
 
 include $(topsrcdir)/config/rules.mk
