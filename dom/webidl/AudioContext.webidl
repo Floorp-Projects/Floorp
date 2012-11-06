@@ -14,6 +14,7 @@
 interface mozAudioContext {
 
     readonly attribute AudioDestinationNode destination;
+    readonly attribute AudioListener listener;
 
     [Creator, Throws]
     AudioBuffer createBuffer(unsigned long numberOfChannels, unsigned long length, float sampleRate);
