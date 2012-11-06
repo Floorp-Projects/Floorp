@@ -107,6 +107,7 @@ check-one-remote:
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
 	  -I$(topsrcdir)/build \
 	  -I$(topsrcdir)/build/mobile \
+	  -I$(topsrcdir)/testing/mozbase/mozdevice/mozdevice \
 	  $(testxpcsrcdir)/remotexpcshelltests.py \
 	  --symbols-path=$(DIST)/crashreporter-symbols \
 	  --build-info-json=$(DEPTH)/mozinfo.json \

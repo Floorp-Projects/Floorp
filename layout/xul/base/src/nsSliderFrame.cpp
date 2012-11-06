@@ -530,7 +530,6 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
               static_cast<nsMouseEvent*>(aEvent)->button ==
                 nsMouseEvent::eMiddleButton) ||
              (aEvent->message == NS_TOUCH_START && GetScrollToClick())) {
-
     nsPoint eventPoint;
     if (!GetEventPoint(aEvent, eventPoint)) {
       return NS_OK;
@@ -850,7 +849,6 @@ nsSliderFrame::StartDrag(nsIDOMEvent* aEvent)
 #ifdef DEBUG_SLIDER
   printf("Begin dragging\n");
 #endif
-
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
                             nsGkAtoms::_true, eCaseMatters))
     return NS_OK;
@@ -988,7 +986,6 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
                            nsEventStatus*  aEventStatus)
 {
   if (aEvent->message == NS_TOUCH_START && GetScrollToClick()) {
-    printf("Bailing for touch\n");
     return NS_OK;
   }
 

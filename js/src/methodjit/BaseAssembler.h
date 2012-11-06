@@ -146,7 +146,7 @@ class Assembler : public ValueAssembler
         AutoAssertNoGC nogc;
         startLabel = label();
         if (vmframe)
-            sps->setPushed(vmframe->script());
+            sps->setPushed(vmframe->script().get(nogc));
     }
 
     Assembler(MJITInstrumentation *sps, jsbytecode **pc)

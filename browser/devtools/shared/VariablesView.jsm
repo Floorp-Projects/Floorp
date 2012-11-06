@@ -77,7 +77,7 @@ VariablesView.prototype = {
    */
   empty: function VV_empty(aTimeout = LAZY_EMPTY_DELAY) {
     // If there are no items in this container, emptying is useless.
-    if (!this._store.size()) {
+    if (!this._store.size) {
       return;
     }
     // Check if this empty operation may be executed lazily.
@@ -126,7 +126,7 @@ VariablesView.prototype = {
       this._parent.removeChild(prevList);
       this._parent.appendChild(currList);
 
-      if (!this._store.size()) {
+      if (!this._store.size) {
         this._appendEmptyNotice();
       }
     }.bind(this), aTimeout);

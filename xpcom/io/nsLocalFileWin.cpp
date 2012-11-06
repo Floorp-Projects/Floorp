@@ -590,43 +590,51 @@ static nsresult
 OpenFile(const nsAFlatString &name, int osflags, int mode,
          PRFileDesc **fd)
 {
-    // XXX : 'mode' is not translated !!!
     int32_t access = 0;
-    int32_t flags = 0;
-    int32_t flag6 = 0;
 
-    if (osflags & PR_SYNC) flag6 = FILE_FLAG_WRITE_THROUGH;
- 
+    PRInt32 disposition = 0;
+    PRInt32 attributes = 0;
+
+    if (osflags & PR_SYNC) 
+        attributes = FILE_FLAG_WRITE_THROUGH;
     if (osflags & PR_RDONLY || osflags & PR_RDWR)
         access |= GENERIC_READ;
     if (osflags & PR_WRONLY || osflags & PR_RDWR)
         access |= GENERIC_WRITE;
 
     if ( osflags & PR_CREATE_FILE && osflags & PR_EXCL )
-        flags = CREATE_NEW;
+        disposition = CREATE_NEW;
     else if (osflags & PR_CREATE_FILE) {
         if (osflags & PR_TRUNCATE)
-            flags = CREATE_ALWAYS;
+            disposition = CREATE_ALWAYS;
         else
-            flags = OPEN_ALWAYS;
+            disposition = OPEN_ALWAYS;
     } else {
         if (osflags & PR_TRUNCATE)
-            flags = TRUNCATE_EXISTING;
+            disposition = TRUNCATE_EXISTING;
         else
-            flags = OPEN_EXISTING;
+            disposition = OPEN_EXISTING;
     }
 
     if (osflags & nsIFile::DELETE_ON_CLOSE) {
-      flag6 |= FILE_FLAG_DELETE_ON_CLOSE;
+        attributes |= FILE_FLAG_DELETE_ON_CLOSE;
     }
 
     if (osflags & nsIFile::OS_READAHEAD) {
-      flag6 |= FILE_FLAG_SEQUENTIAL_SCAN;
+        attributes |= FILE_FLAG_SEQUENTIAL_SCAN;
+    }
+
+    // If no write permissions are requested, and if we are possibly creating
+    // the file, then set the new file as read only.
+    // The flag has no effect if we happen to open the file.
+    if (!(mode & (PR_IWUSR | PR_IWGRP | PR_IWOTH)) &&
+        disposition != OPEN_EXISTING) {
+        attributes |= FILE_ATTRIBUTE_READONLY;
     }
 
     HANDLE file = ::CreateFileW(name.get(), access,
                                 FILE_SHARE_READ|FILE_SHARE_WRITE,
-                                NULL, flags, flag6, NULL);
+                                NULL, disposition, attributes, NULL);
 
     if (file == INVALID_HANDLE_VALUE) { 
         *fd = nullptr;

@@ -19,9 +19,11 @@ CPPSRCS := \
   AudioBufferSourceNode.cpp \
   AudioContext.cpp \
   AudioDestinationNode.cpp \
+  AudioListener.cpp \
   AudioNode.cpp \
   AudioParam.cpp \
   AudioSourceNode.cpp \
+  DelayNode.cpp \
   EnableWebAudioCheck.cpp \
   GainNode.cpp \
   $(NULL)
@@ -31,9 +33,11 @@ EXPORTS_mozilla/dom := \
   AudioBuffer.h \
   AudioBufferSourceNode.h \
   AudioDestinationNode.h \
+  AudioListener.h \
   AudioNode.h \
   AudioParam.h \
   AudioSourceNode.h \
+  DelayNode.h \
   GainNode.h \
   $(NULL)
 

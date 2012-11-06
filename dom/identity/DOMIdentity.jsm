@@ -87,17 +87,17 @@ IDPAuthenticationContext.prototype = {
   },
 };
 
-function RPWatchContext(aID, aOrigin, aLoggedInEmail, aTargetMM) {
+function RPWatchContext(aID, aOrigin, aLoggedInUser, aTargetMM) {
   this._id = aID;
   this._origin = aOrigin;
-  this._loggedInEmail = aLoggedInEmail;
+  this._loggedInUser = aLoggedInUser;
   this._mm = aTargetMM;
 }
 
 RPWatchContext.prototype = {
   get id() this._id,
   get origin() this._origin,
-  get loggedInEmail() this._loggedInEmail,
+  get loggedInUser() this._loggedInUser,
 
   doLogin: function RPWatchContext_onlogin(aAssertion) {
     log("doLogin: " + this.id);
@@ -221,7 +221,7 @@ this.DOMIdentity = {
     // Pass an object with the watch members to Identity.jsm so it can call the
     // callbacks.
     let context = new RPWatchContext(message.id, message.origin,
-                                     message.loggedInEmail, targetMM);
+                                     message.loggedInUser, targetMM);
     IdentityService.RP.watch(context);
   },
 

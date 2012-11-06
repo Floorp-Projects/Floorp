@@ -429,6 +429,10 @@
     "n_buckets": 20,
     "description": "Startup cache age (hours)"
   },
+  "STARTUP_CACHE_INVALID": {
+    "kind": "flag",
+    "description": "Was the disk startup cache file detected as invalid"
+  },
   "WORD_CACHE_HITS": {
     "kind": "exponential",
     "high": "256",
@@ -1093,6 +1097,12 @@
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_EVICTENTRIESFORCLIENT"
   },
+  "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHESERVICE_DISKDEVICEHEAPSIZE": {
+    "kind": "exponential",
+    "high": "10 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSCACHESERVICE_DISKDEVICEHEAPSIZE"
+  },
   "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSCACHEENTRYDESCRIPTOR_DOOM": {
     "kind": "exponential",
     "high": "10 * 1000",
@@ -1750,6 +1760,20 @@
     "n_buckets": 10,
     "description": "PLACES: Number of keywords"
   },
+  "FENNEC_FAVICONS_COUNT": {
+    "kind": "exponential",
+    "high": "2000",
+    "n_buckets": 10,
+    "cpp_guard": "ANDROID",
+    "description": "FENNEC: (Places) Number of favicons stored"
+  },
+  "FENNEC_THUMBNAILS_COUNT": {
+    "kind": "exponential",
+    "high": "2000",
+    "n_buckets": 10,
+    "cpp_guard": "ANDROID",
+    "description": "FENNEC: (Places) Number of thumbnails stored"
+  },
   "PLACES_SORTED_BOOKMARKS_PERC": {
     "kind": "linear",
     "high": "100",
@@ -2144,6 +2168,12 @@
     "high": "3000",
     "n_buckets": 10,
     "description": "Time to flush dirty entries from the cache (ms)"
+  },
+  "LOCALDOMSTORAGE_PERCENT_FLUSHED": {
+    "kind": "linear",
+    "high": "100",
+    "n_buckets": 12,
+    "description": "Percentage of dirty entries during a flush"
   },
   "LOCALDOMSTORAGE_KEY_SIZE_BYTES": {
     "kind": "exponential",

@@ -86,7 +86,7 @@ StaticScopeIter::funScript() const
 {
     AutoAssertNoGC nogc;
     JS_ASSERT(type() == FUNCTION);
-    return obj->toFunction()->script();
+    return obj->toFunction()->script().get(nogc);
 }
 
 /*****************************************************************************/
@@ -1208,7 +1208,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 return false;
 
             if (maybefp) {
-                RawScript script = maybefp->script();
+                RawScript script = maybefp->script().get(nogc);
                 unsigned local = block.slotToLocalIndex(script->bindings, shape->slot());
                 if (action == GET)
                     *vp = maybefp->unaliasedLocal(local);
@@ -1423,24 +1423,24 @@ class DebugScopeProxy : public BaseProxyHandler
 
     bool has(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE
     {
-        ScopeObject &scope = proxy->asDebugScope().scope();
+        ScopeObject &scopeObj = proxy->asDebugScope().scope();
 
-        if (isArguments(cx, id) && isFunctionScope(scope)) {
+        if (isArguments(cx, id) && isFunctionScope(scopeObj)) {
             *bp = true;
             return true;
         }
 
         JSBool found;
-        RootedObject rootedScope(cx, &scope);
-        if (!JS_HasPropertyById(cx, rootedScope, id, &found))
+        RootedObject scope(cx, &scopeObj);
+        if (!JS_HasPropertyById(cx, scope, id, &found))
             return false;
 
         /*
          * Function scopes are optimized to not contain unaliased variables so
          * a manual search is necessary.
          */
-        if (!found && scope.isCall() && !scope.asCall().isForEval()) {
-            RootedScript script(cx, scope.asCall().callee().script());
+        if (!found && scope->isCall() && !scope->asCall().isForEval()) {
+            RootedScript script(cx, scope->asCall().callee().script());
             for (BindingIter bi(script); bi; bi++) {
                 if (!bi->aliased() && NameToId(bi->name()) == id) {
                     found = true;
@@ -1710,7 +1710,7 @@ DebugScopes::onPopCall(StackFrame *fp, JSContext *cx)
          * aliasing. This unnecessarily includes aliased variables
          * but it simplifies later indexing logic.
          */
-        StackFrame::CopyVector vec;
+        AutoValueVector vec(cx);
         if (!fp->copyRawFrameSlots(&vec) || vec.length() == 0)
             return;
 

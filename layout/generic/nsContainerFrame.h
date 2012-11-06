@@ -372,6 +372,14 @@ protected:
   ~nsContainerFrame();
 
   /**
+   * Helper for DestroyFrom. DestroyAbsoluteFrames is called before
+   * destroying frames on lists that can contain placeholders.
+   * Derived classes must do that too, if they destroy such frame lists.
+   * See nsBlockFrame::DestroyFrom for an example.
+   */
+  void DestroyAbsoluteFrames(nsIFrame* aDestructRoot);
+
+  /**
    * Builds a display list for non-block children that behave like
    * inlines. This puts the background of each child into the
    * Content() list (suitable for inline children but not for

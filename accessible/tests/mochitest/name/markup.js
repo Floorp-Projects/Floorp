@@ -14,7 +14,7 @@ var gDumpToConsole = false;
  */
 function testNames()
 {
-  //enableLogging("tree"); // debugging
+  //enableLogging("tree,stack"); // debugging
 
   var request = new XMLHttpRequest();
   request.open("get", gNameRulesFileURL, false);
@@ -141,8 +141,9 @@ function testNamesForMarkupRules(aMarkupElm, aContainer)
     gTestIterator.iterateRules.bind(gTestIterator, elm, aContainer, ruleElms);
 
   // Images may be recreated after we append them into subtree. We need to wait
-  // in this case.
-  if (isAccessible(elm))
+  // in this case. If we are on profiling enabled build then stack tracing
+  // works and thus let's log instead.
+  if (isAccessible(elm) || isLogged("stack"))
     processMarkupRules();
   else
     waitForEvent(EVENT_SHOW, elm, processMarkupRules);

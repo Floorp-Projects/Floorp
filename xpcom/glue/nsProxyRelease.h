@@ -102,7 +102,7 @@ NS_ProxyRelease
  * an nsMainThreadPtrHandle<T> rather than an nsCOMPtr<T>.
  */
 template<class T>
-class nsMainThreadPtrHolder
+class nsMainThreadPtrHolder MOZ_FINAL
 {
 public:
   // We can only acquire a pointer on the main thread.

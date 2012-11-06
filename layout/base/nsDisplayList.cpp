@@ -828,7 +828,7 @@ nsDisplayList::FlattenTo(nsTArray<nsDisplayItem*>* aElements) {
   nsDisplayItem* item;
   while ((item = RemoveBottom()) != nullptr) {
     if (item->GetType() == nsDisplayItem::TYPE_WRAP_LIST) {
-      item->GetList()->FlattenTo(aElements);
+      item->GetSameCoordinateSystemChildren()->FlattenTo(aElements);
       item->~nsDisplayItem();
     } else {
       aElements->AppendElement(item);
@@ -861,12 +861,18 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
   bool snap;
   nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, &snap);
   if (aBuilder->IsForPluginGeometry()) {
-    // Treat all chrome items as opaque, unless their frames are opacity:0.
+    // Treat all leaf chrome items as opaque, unless their frames are opacity:0.
     // Since opacity:0 frames generate an nsDisplayOpacity, that item will
     // not be treated as opaque here, so opacity:0 chrome content will be
     // effectively ignored, as it should be.
+    // We treat leaf chrome items as opaque to ensure that they cover
+    // content plugins, for security reasons.
+    // Non-leaf chrome items don't render contents of their own so shouldn't
+    // be treated as opaque (and their bounds is just the union of their
+    // children, which might be a large area their contents don't really cover).
     nsIFrame* f = aItem->GetUnderlyingFrame();
-    if (f && f->PresContext()->IsChrome() && f->GetStyleDisplay()->mOpacity != 0.0) {
+    if (f && f->PresContext()->IsChrome() && !aItem->GetChildren() &&
+        f->GetStyleDisplay()->mOpacity != 0.0) {
       opaque = aItem->GetBounds(aBuilder, &snap);
     }
   }
@@ -927,7 +933,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
                  "If we have an nsDisplayTransform child (for the same frame),"
                  "then we shouldn't be our own reference frame!");
 
-    nsDisplayList* list = item->GetList();
+    nsDisplayList* list = item->GetSameCoordinateSystemChildren();
     if (aBuilder->AllowMergingAndFlattening()) {
       if (belowItem && item->TryMerge(aBuilder, belowItem)) {
         belowItem->~nsDisplayItem();
@@ -1277,7 +1283,7 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
         nsIFrame *f = outFrames.ElementAt(j);
         // Handle the XUL 'mousethrough' feature and 'pointer-events'.
         if (!GetMouseThrough(f) &&
-            f->GetStyleVisibility()->mPointerEvents != NS_STYLE_POINTER_EVENTS_NONE) {
+            f->GetStyleVisibility()->GetEffectivePointerEvents(f) != NS_STYLE_POINTER_EVENTS_NONE) {
           writeFrames->AppendElement(f);
         }
       }
@@ -1366,7 +1372,7 @@ void nsDisplayList::ExplodeAnonymousChildLists(nsDisplayListBuilder* aBuilder) {
     if (i->GetUnderlyingFrame()) {
       tmp.AppendToTop(i);
     } else {
-      nsDisplayList* list = i->GetList();
+      nsDisplayList* list = i->GetSameCoordinateSystemChildren();
       NS_ASSERTION(list, "leaf items can't be anonymous");
       list->ExplodeAnonymousChildLists(aBuilder);
       nsDisplayItem* j;
@@ -2538,7 +2544,7 @@ bool nsDisplayWrapList::ChildrenCanBeInactive(nsDisplayListBuilder* aBuilder,
     if (state == LAYER_ACTIVE || state == LAYER_ACTIVE_FORCE)
       return false;
     if (state == LAYER_NONE) {
-      nsDisplayList* list = i->GetList();
+      nsDisplayList* list = i->GetSameCoordinateSystemChildren();
       if (list && !ChildrenCanBeInactive(aBuilder, aManager, aParameters, *list, aActiveScrolledRoot))
         return false;
     }
@@ -3816,7 +3822,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
   }
 
   nsRefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
-    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetList(),
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetChildren(),
                            aContainerParameters, &newTransformMatrix);
 
   // Add the preserve-3d flag for this layer, BuildContainerLayerFor clears all flags,
@@ -3858,7 +3864,7 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
   return !mStoredList.ChildrenCanBeInactive(aBuilder,
                                             aManager,
                                             aParameters,
-                                            *mStoredList.GetList(),
+                                            *mStoredList.GetChildren(),
                                             activeScrolledRoot)
       ? LAYER_ACTIVE : LAYER_INACTIVE;
 }

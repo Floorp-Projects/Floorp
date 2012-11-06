@@ -131,7 +131,7 @@ IDService.prototype = {
     let provId = rp.provId;
 
     let rpLoginOptions = {
-      loggedInEmail: aIdentity,
+      loggedInUser: aIdentity,
       origin: rp.origin
     };
     log("selectIdentity: provId:", provId, "origin:", rp.origin);

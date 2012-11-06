@@ -11,7 +11,7 @@ interface nsIChannel;
 /**
  * nsIProtocolHandler
  */
-[scriptable, uuid(15fd6940-8ea7-11d3-93ad-00104ba0fd40)]
+[scriptable, uuid(f5753fec-a051-4ddc-8891-11f1f1575072)]
 interface nsIProtocolHandler : nsISupports
 {
     /**
@@ -101,6 +101,27 @@ interface nsIProtocolHandler : nsISupports
     const unsigned long URI_NOAUTH = (1<<1);
 
     /**
+     * This protocol handler can be proxied via a proxy (socks or http)
+     * (e.g., irc, smtp, http, etc.).  If the protocol supports transparent
+     * proxying, the handler should implement nsIProxiedProtocolHandler.
+     *
+     * If it supports only HTTP proxying, then it need not support
+     * nsIProxiedProtocolHandler, but should instead set the ALLOWS_PROXY_HTTP
+     * flag (see below).
+     *
+     * @see nsIProxiedProtocolHandler
+     */
+    const unsigned long ALLOWS_PROXY = (1<<2);
+
+    /**
+     * This protocol handler can be proxied using a http proxy (e.g., http,
+     * ftp, etc.).  nsIIOService::newChannelFromURI will feed URIs from this
+     * protocol handler to the HTTP protocol handler instead.  This flag is
+     * ignored if ALLOWS_PROXY is not set.
+     */
+    const unsigned long ALLOWS_PROXY_HTTP = (1<<3);
+
+    /**
      * The URIs for this protocol have no inherent security context, so
      * documents loaded via this protocol should inherit the security context
      * from the document that loads them.
@@ -180,13 +201,7 @@ interface nsIProtocolHandler : nsISupports
      * principal that subsumes this uri. For example, privileged code and
      * websites that are same origin as this uri.
      */
-    const unsigned long URI_LOADABLE_BY_SUBSUMERS = (1<<14);
-
-    /**
-     * Loading channels from this protocol has side-effects that make
-     * it unsuitable for saving to a local file.
-     */
-    const unsigned long URI_NON_PERSISTABLE = (1<<10);
+    const unsigned long URI_LOADABLE_BY_SUBSUMERS = (1<<10);
 
     /**
      * Channels using this protocol never call OnDataAvailable
@@ -207,34 +222,11 @@ interface nsIProtocolHandler : nsISupports
      */
     const unsigned long URI_OPENING_EXECUTES_SCRIPT = (1<<13);
 
-    // Note that 1 << 14 is used above
-
     /**
-     * Channels for this protocol don't need to spin the event loop to handle
-     * Open() and reads on the resulting stream.
+     * Loading channels from this protocol has side-effects that make
+     * it unsuitable for saving to a local file.
      */
-    const unsigned long URI_SYNC_LOAD_IS_OK = (1<<15);
-
-    /**
-     * This protocol handler can be proxied via a proxy (socks or http)
-     * (e.g., irc, smtp, http, etc.).  If the protocol supports transparent
-     * proxying, the handler should implement nsIProxiedProtocolHandler.
-     *
-     * If it supports only HTTP proxying, then it need not support
-     * nsIProxiedProtocolHandler, but should instead set the ALLOWS_PROXY_HTTP
-     * flag (see below).
-     *
-     * @see nsIProxiedProtocolHandler
-     */
-    const unsigned long ALLOWS_PROXY = (1<<2);
-
-    /**
-     * This protocol handler can be proxied using a http proxy (e.g., http,
-     * ftp, etc.).  nsIIOService::newChannelFromURI will feed URIs from this
-     * protocol handler to the HTTP protocol handler instead.  This flag is
-     * ignored if ALLOWS_PROXY is not set.
-     */
-    const unsigned long ALLOWS_PROXY_HTTP = (1<<3);
+    const unsigned long URI_NON_PERSISTABLE = (1<<14);
 
     /**
      * This protocol handler forbids accessing cookies e.g. for mail related
@@ -247,6 +239,12 @@ interface nsIProtocolHandler : nsISupports
      * when opening URIs for a different domain. See bug#773886
      */
     const unsigned long URI_CROSS_ORIGIN_NEEDS_WEBAPPS_PERM = (1<<16);
+
+    /**
+     * Channels for this protocol don't need to spin the event loop to handle
+     * Open() and reads on the resulting stream.
+     */
+    const unsigned long URI_SYNC_LOAD_IS_OK = (1<<17);
 
 };
 

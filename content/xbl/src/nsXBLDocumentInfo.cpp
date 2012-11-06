@@ -258,7 +258,7 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment()
   NS_GetJSRuntime(getter_AddRefs(scriptRuntime));
   NS_ENSURE_TRUE(scriptRuntime, NS_OK);
 
-  nsCOMPtr<nsIScriptContext> newCtx = scriptRuntime->CreateContext();
+  nsCOMPtr<nsIScriptContext> newCtx = scriptRuntime->CreateContext(false, nullptr);
   MOZ_ASSERT(newCtx);
 
   newCtx->WillInitializeContext();
@@ -267,7 +267,6 @@ nsXBLDocGlobalObject::EnsureScriptEnvironment()
   // nsGlobalWindow.
   DebugOnly<nsresult> rv = newCtx->InitContext();
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Script Language's InitContext failed");
-  newCtx->SetGCOnDestruction(false);
   newCtx->DidInitializeContext();
 
   mScriptContext = newCtx;

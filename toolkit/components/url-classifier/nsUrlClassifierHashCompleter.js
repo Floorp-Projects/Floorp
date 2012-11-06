@@ -312,6 +312,16 @@ HashCompleterRequest.prototype = {
       }
     }
 
+    // Randomize the order to obscure the original request from noise
+    // unbiased Fisher-Yates shuffle
+    let i = prefixes.length;
+    while (i--) {
+      let j = Math.floor(Math.random() * (i + 1));
+      let temp = prefixes[i];
+      prefixes[i] = prefixes[j];
+      prefixes[j] = temp;
+    }
+
     let body;
     body = PARTIAL_LENGTH + ":" + (PARTIAL_LENGTH * prefixes.length) +
            "\n" + prefixes.join("");

@@ -141,6 +141,7 @@ public:
   {
     aError = SetOption(aIndex, aOption);
   }
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames);
 
 private:
   /** The list of options (holds strong references).  This is infallible, so

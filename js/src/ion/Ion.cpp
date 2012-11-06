@@ -1270,7 +1270,7 @@ ion::CanEnterAtBranch(JSContext *cx, HandleScript script, StackFrame *fp, jsbyte
 
     // Attempt compilation. Returns Method_Compiled if already compiled.
     JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
-    MethodStatus status = Compile(cx, script, fun, pc, false);
+    MethodStatus status = Compile(cx, script, fun, pc, fp->isConstructing());
     if (status != Method_Compiled) {
         if (status == Method_CantCompile)
             ForbidCompilation(cx, script);
@@ -1587,7 +1587,7 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
           case IonFrame_Exit:
             IonSpew(IonSpew_Invalidate, "#%d exit frame @ %p", frameno, it.fp());
             break;
-          case IonFrame_JS:
+          case IonFrame_OptimizedJS:
           {
             JS_ASSERT(it.isScripted());
             IonSpew(IonSpew_Invalidate, "#%d JS frame @ %p, %s:%d (fun: %p, script: %p, pc %p)",

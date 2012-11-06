@@ -222,14 +222,14 @@ ST_ALL_OPTION_UINT32(ListItemMax,
 
 ST_ALL_OPTION_UINT64(WeightMin,
                      DataSetGenre,
-                     LL_INIT(0, 0),
-                     LL_INIT(0, 1),
+                     0,
+                     1,
                      "Exclude allocations that are below this weight (lifespan * size).\n")
 
 ST_ALL_OPTION_UINT64(WeightMax,
                      DataSetGenre,
-                     LL_INIT(0xFFFFFFFF, 0xFFFFFFFF),
-                     LL_INIT(0, 1),
+                     (0xFFFFFFFFLL << 32) + 0xFFFFFFFFLL,
+                     1,
                      "Exclude allocations that are above this weight (lifespan * size).\n")
 
 ST_CMD_OPTION_STRING(FileName,

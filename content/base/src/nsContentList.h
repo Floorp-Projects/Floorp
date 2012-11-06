@@ -278,6 +278,7 @@ public:
   virtual nsGenericElement* GetElementAt(uint32_t index);
   virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
                               mozilla::ErrorResult& error);
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames);
 
   // nsContentList public methods
   NS_HIDDEN_(uint32_t) Length(bool aDoFlush);

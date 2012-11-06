@@ -440,8 +440,8 @@ js::NewContext(JSRuntime *rt, size_t stackChunkSize)
      * Here the GC lock is still held after js_InitContextThreadAndLockGC took it and
      * the GC is not running on another thread.
      */
-    bool first = JS_CLIST_IS_EMPTY(&rt->contextList);
-    JS_APPEND_LINK(&cx->link, &rt->contextList);
+    bool first = rt->contextList.isEmpty();
+    rt->contextList.insertBack(cx);
 
     js_InitRandom(cx);
 
@@ -503,7 +503,7 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
         }
     }
 
-    JS_REMOVE_LINK(&cx->link);
+    cx->remove();
     bool last = !rt->hasContexts();
     if (last) {
         JS_ASSERT(!rt->isHeapBusy());
@@ -618,7 +618,7 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
         return;
 
     report->filename = iter.script()->filename;
-    report->lineno = PCToLineNumber(iter.script(), iter.pc(), &report->column);
+    report->lineno = PCToLineNumber(iter.script().get(nogc), iter.pc(), &report->column);
     report->originPrincipals = iter.script()->originPrincipals;
 }
 
@@ -656,8 +656,9 @@ js_ReportOutOfMemory(JSContext *cx)
      */
     cx->clearPendingException();
     if (onError) {
-        AutoAtomicIncrement incr(&cx->runtime->inOOMReport);
+        ++cx->runtime->inOOMReport;
         onError(cx, msg, &report);
+        --cx->runtime->inOOMReport;
     }
 }
 
@@ -1304,7 +1305,6 @@ JSContext::JSContext(JSRuntime *rt)
 #endif
     activeCompilations(0)
 {
-    PodZero(&link);
 #ifdef JSGC_ROOT_ANALYSIS
     PodArrayZero(thingGCRooters);
 #if defined(JS_GC_ZEAL) && defined(DEBUG) && !defined(JS_THREADSAFE)

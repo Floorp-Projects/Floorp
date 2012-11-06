@@ -143,6 +143,14 @@ public:
     mozilla::dom::DefineInterface aDefineDOMInterface,
     mozilla::dom::PrefEnabled aPrefEnabled);
 
+  typedef PLDHashOperator
+  (* GlobalNameEnumerator)(const nsAString& aGlobalName, void* aClosure);
+
+  void EnumerateGlobalNames(GlobalNameEnumerator aEnumerator,
+                            void* aClosure);
+
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+
 private:
   // Adds a new entry to the hash and returns the nsGlobalNameStruct
   // that aKey will be mapped to. If mType in the returned

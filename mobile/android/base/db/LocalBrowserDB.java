@@ -177,6 +177,38 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return new LocalDBCursor(c);
     }
 
+    public int getCount(ContentResolver cr, String database) {
+        Cursor cursor = null;
+        int count = 0;
+        String constraint = null;
+        try {
+            Uri uri = null;
+            if ("history".equals(database)) {
+                uri = mHistoryUriWithProfile;
+                constraint = Combined.VISITS + " > 0";
+            } else if ("bookmarks".equals(database)) {
+                uri = mBookmarksUriWithProfile;
+                // ignore folders, tags, keywords, separators, etc.
+                constraint = Bookmarks.TYPE + " = " + Bookmarks.TYPE_BOOKMARK;
+            } else if ("thumbnails".equals(database)) {
+                uri = mImagesUriWithProfile;
+                constraint = Combined.THUMBNAIL + " IS NOT NULL";
+            } else if ("favicons".equals(database)) {
+                uri = mImagesUriWithProfile;
+                constraint = Combined.FAVICON + " IS NOT NULL";
+            }
+            if (uri != null) {
+                cursor = cr.query(uri, null, constraint, null, null);
+                count = cursor.getCount();
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+        debug("Got count " + count + " for " + database);
+        return count;
+    }
+
     public Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
         return filterAllSites(cr,
                               new String[] { Combined._ID,
@@ -594,7 +626,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                   new String[] { String.valueOf(id) });
     }
 
-    public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri) {
+    public Bitmap getFaviconForUrl(ContentResolver cr, String uri) {
         Cursor c = cr.query(mImagesUriWithProfile,
                             new String[] { Images.FAVICON },
                             Images.URL + " = ?",
@@ -614,8 +646,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         if (b == null)
             return null;
 
-        Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
-        return new BitmapDrawable(bitmap);
+        return BitmapFactory.decodeByteArray(b, 0, b.length);
     }
 
     public Cursor getFaviconsForUrls(ContentResolver cr, List<String> urls) {
@@ -640,13 +671,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     }
 
     public void updateFaviconForUrl(ContentResolver cr, String uri,
-            BitmapDrawable favicon) {
-        Bitmap bitmap = favicon.getBitmap();
-        if (bitmap == null)
-            return;
-
+            Bitmap favicon) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        favicon.compress(Bitmap.CompressFormat.PNG, 100, stream);
 
         ContentValues values = new ContentValues();
         values.put(Images.FAVICON, stream.toByteArray());

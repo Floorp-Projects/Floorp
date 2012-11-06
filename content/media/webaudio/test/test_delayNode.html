@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test DelayNode</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
+  var context = new mozAudioContext();
+  var buffer = context.createBuffer(1, 2048, 44100);
+  for (var i = 0; i < 2048; ++i) {
+    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / 44100);
+  }
+
+  var destination = context.destination;
+
+  var source = context.createBufferSource();
+
+  var delay = context.createDelay();
+
+  source.buffer = buffer;
+
+  source.connect(delay);
+  delay.connect(destination);
+
+  ok(delay.delayTime, "The audioparam member must exist");
+  is(delay.delayTime.value, 0, "Correct initial value");
+  is(delay.delayTime.defaultValue, 0, "Correct default value");
+  is(delay.delayTime.minValue, 0, "Correct min value");
+  is(delay.delayTime.maxValue, 1.0, "Correct max value");
+  delay.delayTime.value = 0.5;
+  is(delay.delayTime.value, 0.5, "Correct initial value");
+  is(delay.delayTime.defaultValue, 0, "Correct default value");
+  is(delay.delayTime.minValue, 0, "Correct min value");
+  is(delay.delayTime.maxValue, 1.0, "Correct max value");
+
+  var delay2 = context.createDelay(2);
+  is(delay2.delayTime.value, 0, "Correct initial value");
+  is(delay2.delayTime.defaultValue, 0, "Correct default value");
+  is(delay2.delayTime.minValue, 0, "Correct min value");
+  is(delay2.delayTime.maxValue, 2.0, "Correct max value");
+  delay2.delayTime.value = 0.5;
+  is(delay2.delayTime.value, 0.5, "Correct initial value");
+  is(delay2.delayTime.defaultValue, 0, "Correct default value");
+  is(delay2.delayTime.minValue, 0, "Correct min value");
+  is(delay2.delayTime.maxValue, 2.0, "Correct max value");
+
+  source.start(0);
+  SimpleTest.executeSoon(function() {
+    source.stop(0);
+    source.disconnect();
+    delay.disconnect();
+
+    SpecialPowers.clearUserPref("media.webaudio.enabled");
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

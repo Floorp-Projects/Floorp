@@ -7,14 +7,12 @@ import threading
 import os
 import Queue
 import re
-import socket
 import shutil
-import sys
 import tempfile
 import time
 
 from automation import Automation
-from devicemanager import DeviceManager, NetworkTools
+from devicemanager import NetworkTools
 from mozprocess import ProcessHandlerMixin
 
 
@@ -48,6 +46,7 @@ class B2GRemoteAutomation(Automation):
 
         # Default our product to b2g
         self._product = "b2g"
+        self.lastTestSeen = "b2gautomation.py"
         # Default log finish to mochitest standard
         self.logFinish = 'INFO SimpleTest FINISHED' 
         Automation.__init__(self)
@@ -131,19 +130,22 @@ class B2GRemoteAutomation(Automation):
             output.
         """
         timeout = timeout or 120
-
-        didTimeout = False
-
-        done = time.time() + timeout
+        responseDueBy = time.time() + timeout
         while True:
             currentlog = proc.stdout
             if currentlog:
-                done = time.time() + timeout
+                responseDueBy = time.time() + timeout
                 print currentlog
+                # Match the test filepath from the last TEST-START line found in the new
+                # log content. These lines are in the form:
+                # ... INFO TEST-START | /filepath/we/wish/to/capture.html\n
+                testStartFilenames = re.findall(r"TEST-START \| ([^\s]*)", currentlog)
+                if testStartFilenames:
+                    self.lastTestSeen = testStartFilenames[-1]
                 if hasattr(self, 'logFinish') and self.logFinish in currentlog:
                     return 0
             else:
-                if time.time() > done:
+                if time.time() > responseDueBy:
                     self.log.info("TEST-UNEXPECTED-FAIL | %s | application timed "
                                   "out after %d seconds with no output",
                                   self.lastTestSeen, int(timeout))
@@ -257,26 +259,18 @@ class B2GRemoteAutomation(Automation):
                 Services.io.offline = false;
                 """)
 
-            if not self.context_chrome:
-                self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
-
-        elif self.context_chrome:
+        if self.context_chrome:
             self.marionette.set_context(self.marionette.CONTEXT_CHROME)
+        else:
+            self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
 
-        # start the tests
-        if hasattr(self, 'testURL'):
-            # Start the tests by navigating to the mochitest url, by setting it
-            # as the 'src' attribute to the homescreen mozbrowser element
-            # provided by B2G's shell.js.
-            self.marionette.execute_script("document.getElementById('homescreen').src='%s';" % self.testURL)
         # run the script that starts the tests
-        elif self.test_script:
+        if self.test_script:
             if os.path.isfile(self.test_script):
                 script = open(self.test_script, 'r')
                 self.marionette.execute_script(script.read(), script_args=self.test_script_args)
                 script.close()
-            else:
-                # assume test_script is a string
+            elif isinstance(self.test_script, basestring):
                 self.marionette.execute_script(self.test_script, script_args=self.test_script_args)
         else:
             # assumes the tests are started on startup automatically
@@ -341,4 +335,3 @@ class B2GRemoteAutomation(Automation):
         def kill(self):
             # this should never happen
             raise Exception("'kill' called on B2GInstance")
-
