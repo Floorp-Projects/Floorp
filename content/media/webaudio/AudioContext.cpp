@@ -14,6 +14,7 @@
 #include "AudioBuffer.h"
 #include "GainNode.h"
 #include "DelayNode.h"
+#include "PannerNode.h"
 #include "AudioListener.h"
 
 namespace mozilla {
@@ -105,6 +106,13 @@ AudioContext::CreateDelay(float aMaxDelayTime)
 {
   nsRefPtr<DelayNode> delayNode = new DelayNode(this, aMaxDelayTime);
   return delayNode.forget();
+}
+
+already_AddRefed<PannerNode>
+AudioContext::CreatePanner()
+{
+  nsRefPtr<PannerNode> pannerNode = new PannerNode(this);
+  return pannerNode.forget();
 }
 
 AudioListener*

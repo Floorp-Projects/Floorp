@@ -30,6 +30,8 @@ interface mozAudioContext {
     GainNode createGain();
     [Creator]
     DelayNode createDelay(optional float maxDelayTime = 1);
+    [Creator]
+    PannerNode createPanner();
 
 };
 
