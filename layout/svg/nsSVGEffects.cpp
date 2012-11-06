@@ -251,7 +251,7 @@ nsSVGFilterProperty::DoUpdate()
   if (!mFrame)
     return;
 
-  // Repaint asynchronously in case the marker frame is being torn down
+  // Repaint asynchronously in case the filter frame is being torn down
   nsChangeHint changeHint =
     nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects);
 
@@ -272,7 +272,7 @@ nsSVGMarkerProperty::DoUpdate()
 
   NS_ASSERTION(mFrame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
 
-  // Repaint asynchronously in case the filter frame is being torn down
+  // Repaint asynchronously in case the marker frame is being torn down
   nsChangeHint changeHint =
     nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects);
   
