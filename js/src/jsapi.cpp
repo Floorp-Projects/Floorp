@@ -6553,7 +6553,7 @@ JS_ReportErrorNumberVA(JSContext *cx, JSErrorCallback errorCallback,
 
 JS_PUBLIC_API(void)
 JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
-                     void *userRef, const unsigned errorNumber, ...)
+                       void *userRef, const unsigned errorNumber, ...)
 {
     va_list ap;
 
@@ -6562,6 +6562,16 @@ JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
     js_ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef,
                            errorNumber, JS_FALSE, ap);
     va_end(ap);
+}
+
+JS_PUBLIC_API(void)
+JS_ReportErrorNumberUCArray(JSContext *cx, JSErrorCallback errorCallback,
+                            void *userRef, const unsigned errorNumber,
+                            const jschar **args)
+{
+    AssertHeapIsIdle(cx);
+    js_ReportErrorNumberUCArray(cx, JSREPORT_ERROR, errorCallback, userRef,
+                                errorNumber, args);
 }
 
 JS_PUBLIC_API(JSBool)

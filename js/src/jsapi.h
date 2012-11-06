@@ -5693,6 +5693,11 @@ extern JS_PUBLIC_API(void)
 JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
                      void *userRef, const unsigned errorNumber, ...);
 
+extern JS_PUBLIC_API(void)
+JS_ReportErrorNumberUCArray(JSContext *cx, JSErrorCallback errorCallback,
+                            void *userRef, const unsigned errorNumber,
+                            const jschar **args);
+
 /*
  * As above, but report a warning instead (JSREPORT_IS_WARNING(report.flags)).
  * Return true if there was no error trying to issue the warning, and if the
