@@ -9,8 +9,13 @@ Cu.import("resource://services-sync/util.js");
 const logsdir            = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 const LOG_PREFIX_SUCCESS = "success-";
 const LOG_PREFIX_ERROR   = "error-";
-const CLEANUP_DELAY      = 1000; // delay to age files for cleanup (ms)
-const DELAY_BUFFER       = 500;  // buffer for timers on different OS platforms
+
+// Delay to wait before cleanup, to allow files to age.
+// This is so large because the file timestamp granularity is per-second, and
+// so otherwise we can end up with all of our files -- the ones we want to
+// keep, and the ones we want to clean up -- having the same modified time.
+const CLEANUP_DELAY      = 2000;
+const DELAY_BUFFER       = 500;  // Buffer for timers on different OS platforms.
 
 const PROLONGED_ERROR_DURATION =
   (Svc.Prefs.get('errorhandler.networkFailureReportTimeout') * 2) * 1000;
