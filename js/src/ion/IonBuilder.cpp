@@ -963,6 +963,13 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_getname(name);
       }
 
+      case JSOP_INTRINSICNAME:
+      case JSOP_CALLINTRINSIC:
+      {
+        RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        return jsop_intrinsicname(name);
+      }
+
       case JSOP_BINDNAME:
         return jsop_bindname(info().getName(pc));
 
@@ -4742,6 +4749,42 @@ IonBuilder::jsop_getname(HandlePropertyName name)
 
     monitorResult(ins, barrier, types);
     return pushTypeBarrier(ins, types, barrier);
+}
+
+bool
+IonBuilder::jsop_intrinsicname(HandlePropertyName name)
+{
+    types::StackTypeSet *types = oracle->propertyRead(script_, pc);
+    JSValueType type = types->getKnownTypeTag();
+
+    // If we haven't executed this opcode yet, we need to get the intrinsic
+    // value and monitor the result.
+    if (type == JSVAL_TYPE_UNKNOWN) {
+        MCallGetIntrinsicValue *ins = MCallGetIntrinsicValue::New(name);
+
+        current->add(ins);
+        current->push(ins);
+
+        if (!resumeAfter(ins))
+            return false;
+
+        types::StackTypeSet *barrier = oracle->propertyReadBarrier(script_, pc);
+        monitorResult(ins, barrier, types);
+        return pushTypeBarrier(ins, types, barrier);
+    }
+
+    // Bake in the intrinsic. Make sure that TI agrees with us on the type.
+    RootedValue vp(cx, UndefinedValue());
+    if (!cx->global()->getIntrinsicValue(cx, name, &vp))
+        return false;
+
+    JS_ASSERT(types->hasType(types::GetValueType(cx, vp)));
+
+    MConstant *ins = MConstant::New(vp);
+    current->add(ins);
+    current->push(ins);
+
+    return true;
 }
 
 bool

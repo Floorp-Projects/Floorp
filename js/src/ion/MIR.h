@@ -4755,6 +4755,27 @@ class MGetNameCache
     }
 };
 
+class MCallGetIntrinsicValue : public MNullaryInstruction
+{
+    CompilerRootPropertyName name_;
+
+    MCallGetIntrinsicValue(HandlePropertyName name)
+      : name_(name)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(CallGetIntrinsicValue);
+
+    static MCallGetIntrinsicValue *New(HandlePropertyName name) {
+        return new MCallGetIntrinsicValue(name);
+    }
+    PropertyName *name() const {
+        return name_;
+    }
+};
+
 class MSetPropertyInstruction : public MBinaryInstruction
 {
     CompilerRootPropertyName name_;

@@ -1669,6 +1669,15 @@ LIRGenerator::visitGetNameCache(MGetNameCache *ins)
 }
 
 bool
+LIRGenerator::visitCallGetIntrinsicValue(MCallGetIntrinsicValue *ins)
+{
+    LCallGetIntrinsicValue *lir = new LCallGetIntrinsicValue();
+    if (!defineVMReturn(lir, ins))
+        return false;
+    return assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
 {
     JS_ASSERT(ins->object()->type() == MIRType_Object);
