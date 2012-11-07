@@ -143,14 +143,61 @@ public class ImmutableViewportMetrics {
             FloatUtils.interpolate(zoomFactor, to.zoomFactor, t));
     }
 
-    public ImmutableViewportMetrics offsetViewportBy(PointF delta) {
+    public ImmutableViewportMetrics setViewportOrigin(float newOriginX, float newOriginY) {
         return new ImmutableViewportMetrics(
             pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
             cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
-            viewportRectLeft + delta.x,
-            viewportRectTop + delta.y,
-            viewportRectRight + delta.x,
-            viewportRectBottom + delta.y,
+            newOriginX, newOriginY, newOriginX + getWidth(), newOriginY + getHeight(),
+            zoomFactor);
+    }
+
+    public ImmutableViewportMetrics offsetViewportBy(PointF delta) {
+        return setViewportOrigin(viewportRectLeft + delta.x, viewportRectTop + delta.y);
+    }
+
+    /* This will set the zoom factor and re-scale page-size and viewport offset
+     * accordingly. The given focus will remain at the same point on the screen
+     * after scaling.
+     */
+    public ImmutableViewportMetrics scaleTo(float newZoomFactor, PointF focus) {
+        // cssPageRect* is invariant, since we're setting the scale factor
+        // here. The page rect is based on the CSS page rect.
+        float newPageRectLeft = cssPageRectLeft * newZoomFactor;
+        float newPageRectTop = cssPageRectTop * newZoomFactor;
+        float newPageRectRight = cssPageRectLeft + ((cssPageRectRight - cssPageRectLeft) * newZoomFactor);
+        float newPageRectBottom = cssPageRectTop + ((cssPageRectBottom - cssPageRectTop) * newZoomFactor);
+
+        PointF origin = getOrigin();
+        origin.offset(focus.x, focus.y);
+        origin = PointUtils.scale(origin, newZoomFactor / zoomFactor);
+        origin.offset(-focus.x, -focus.y);
+
+        return new ImmutableViewportMetrics(
+            newPageRectLeft, newPageRectTop, newPageRectRight, newPageRectBottom,
+            cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
+            origin.x, origin.y, origin.x + getWidth(), origin.y + getHeight(),
+            newZoomFactor);
+    }
+
+    /** Clamps the viewport to remain within the page rect. */
+    public ImmutableViewportMetrics clamp() {
+        RectF newViewport = getViewport();
+
+        // The viewport bounds ought to never exceed the page bounds.
+        if (newViewport.right > pageRectRight)
+            newViewport.offset(pageRectRight - newViewport.right, 0);
+        if (newViewport.left < pageRectLeft)
+            newViewport.offset(pageRectLeft - newViewport.left, 0);
+
+        if (newViewport.bottom > pageRectBottom)
+            newViewport.offset(0, pageRectBottom - newViewport.bottom);
+        if (newViewport.top < pageRectTop)
+            newViewport.offset(0, pageRectTop - newViewport.top);
+
+        return new ImmutableViewportMetrics(
+            pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
+            cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
+            newViewport.left, newViewport.top, newViewport.right, newViewport.bottom,
             zoomFactor);
     }
 
