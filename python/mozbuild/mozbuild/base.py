@@ -168,7 +168,7 @@ class MozbuildObject(ProcessExecutionMixin):
     def _run_make(self, directory=None, filename=None, target=None, log=True,
             srcdir=False, allow_parallel=True, line_handler=None,
             append_env=None, explicit_env=None, ignore_errors=False,
-            silent=True, print_directory=True):
+            ensure_exit_code=0, silent=True, print_directory=True):
         """Invoke make.
 
         directory -- Relative directory to look for Makefile in.
@@ -224,7 +224,7 @@ class MozbuildObject(ProcessExecutionMixin):
             'explicit_env': explicit_env,
             'log_level': logging.INFO,
             'require_unix_environment': True,
-            'ignore_errors': ignore_errors,
+            'ensure_exit_code': ensure_exit_code,
 
             # Make manages its children, so mozprocess doesn't need to bother.
             # Having mozprocess manage children can also have side-effects when
@@ -235,7 +235,7 @@ class MozbuildObject(ProcessExecutionMixin):
         if log:
             params['log_name'] = 'make'
 
-        fn(**params)
+        return fn(**params)
 
     @property
     def _make_path(self):
@@ -258,10 +258,10 @@ class MozbuildObject(ProcessExecutionMixin):
         return self._make
 
     def _run_command_in_srcdir(self, **args):
-        self.run_process(cwd=self.topsrcdir, **args)
+        return self.run_process(cwd=self.topsrcdir, **args)
 
     def _run_command_in_objdir(self, **args):
-        self.run_process(cwd=self.topobjdir, **args)
+        return self.run_process(cwd=self.topobjdir, **args)
 
     def _is_windows(self):
         return os.name in ('nt', 'ce')
