@@ -29,7 +29,7 @@ public:
     }
     return new nsWaveDecoder();
   }
-  virtual nsBuiltinDecoderStateMachine* CreateStateMachine();
+  virtual nsDecoderStateMachine* CreateStateMachine();
 };
 
 #endif

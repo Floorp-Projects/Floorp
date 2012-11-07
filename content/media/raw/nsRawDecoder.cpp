@@ -6,7 +6,7 @@
 #include "nsRawReader.h"
 #include "nsRawDecoder.h"
 
-nsBuiltinDecoderStateMachine* nsRawDecoder::CreateStateMachine()
+nsDecoderStateMachine* nsRawDecoder::CreateStateMachine()
 {
   return new nsBuiltinDecoderStateMachine(this, new nsRawReader(this), true);
 }

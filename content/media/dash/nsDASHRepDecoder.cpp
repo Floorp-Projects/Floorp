@@ -31,7 +31,7 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define LOG1(msg)
 #endif
 
-nsBuiltinDecoderStateMachine*
+nsDecoderStateMachine*
 nsDASHRepDecoder::CreateStateMachine()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -40,7 +40,7 @@ nsDASHRepDecoder::CreateStateMachine()
 }
 
 nsresult
-nsDASHRepDecoder::SetStateMachine(nsBuiltinDecoderStateMachine* aSM)
+nsDASHRepDecoder::SetStateMachine(nsDecoderStateMachine* aSM)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   mDecoderStateMachine = aSM;
@@ -344,6 +344,14 @@ ReentrantMonitor&
 nsDASHRepDecoder::GetReentrantMonitor()
 {
   return mMainDecoder->GetReentrantMonitor();
+}
+
+nsDecoderStateMachine::State
+nsDASHRepDecoder::GetDecodeState()
+{
+  // XXX SHUTDOWN might not be an appropriate error.
+  return (mMainDecoder ? mMainDecoder->GetDecodeState()
+                       : nsDecoderStateMachine::DECODER_STATE_SHUTDOWN);
 }
 
 mozilla::layers::ImageContainer*
