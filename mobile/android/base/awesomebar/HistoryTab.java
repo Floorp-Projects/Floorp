@@ -173,7 +173,7 @@ public class HistoryTab extends AwesomeBarTab {
                 viewHolder.faviconView.setImageDrawable(null);
             } else {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
-                viewHolder.faviconView.setImageBitmap(bitmap);
+                updateFavicon(viewHolder.faviconView, bitmap);
             }
 
             Integer bookmarkId = (Integer) historyItem.get(Combined.BOOKMARK_ID);

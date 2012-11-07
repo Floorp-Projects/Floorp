@@ -41,9 +41,13 @@ abstract public class AwesomeBarTab {
     // FIXME: This value should probably come from a prefs key
     public static final int MAX_RESULTS = 100;
     protected Context mContext = null;
+    private static int sFaviconSize = -1;
 
     public AwesomeBarTab(Context context) {
         mContext = context;
+        if (sFaviconSize < 0) {
+            sFaviconSize = Math.round(mContext.getResources().getDimension(R.dimen.awesomebar_row_favicon_size));
+        }
     }
 
     public void setListTouchListener(View.OnTouchListener listener) {
@@ -94,6 +98,15 @@ abstract public class AwesomeBarTab {
             faviconView.setImageDrawable(null);
         } else {
             Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
+            updateFavicon(faviconView, bitmap);
+        }
+    }
+
+    protected void updateFavicon(ImageView faviconView, Bitmap bitmap) {
+        if (bitmap == null) {
+            faviconView.setImageDrawable(null);
+        } else {
+            bitmap = Bitmap.createScaledBitmap(bitmap, sFaviconSize, sFaviconSize, false);
             faviconView.setImageBitmap(bitmap);
         }
     }
