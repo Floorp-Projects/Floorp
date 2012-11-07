@@ -1,0 +1,50 @@
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript">
+    function boom() {
+        function err(e) { if (console) { console.log(err); } }
+        var v0 = mozRTCPeerConnection();
+        var v1 = mozRTCPeerConnection();
+        var v2 = mozRTCPeerConnection();
+        navigator.mozGetUserMedia({audio:true},function(v7) {
+            v2.addStream(v7);
+            navigator.mozGetUserMedia({audio:true, video:true},function(v8) {
+                v1.addStream(v7);
+                v1.createOffer(function(offer) {
+                    v1.setLocalDescription(offer,function() {
+                        v0.setRemoteDescription(offer,function() {
+                            v0.createAnswer(function(answer) {
+                                v0.setLocalDescription(answer,function() {
+                                    v1.setRemoteDescription(answer,function() {
+                                    },function() {})
+                                },err)
+                            },function() { v0.close();v1.close();v2.close();})
+                        },err)
+                    },function() {})
+                },function() {})},function() { v0.close();v1.close();v2.close();});
+        },function() {});
+
+        var v0 = mozRTCPeerConnection();
+        var v1 = mozRTCPeerConnection();
+        var v2 = mozRTCPeerConnection();
+        var v3 = mozRTCPeerConnection();
+        navigator.mozGetUserMedia({audio:true},function(v8) {
+            v3.addStream(v8);
+            v3.createOffer(function(offer) {
+                v2.setLocalDescription(offer,function() {
+                    v3.setRemoteDescription(offer,function() {
+                        v2.createAnswer(function(answer) {
+                            v2.setLocalDescription(answer,function() {
+                                v1.setRemoteDescription(answer,function() {
+                                },function() { v0.close();v1.close();v2.close();v3.close();})
+                            },function() {})
+                        },function() { v0.close();v1.close();v2.close();v3.close();})
+                    },function() {})
+                },err)
+            },err)},err);
+    }
+    </script>
+<body onload="setTimeout(boom, 100)">
+</body>
+</html>
