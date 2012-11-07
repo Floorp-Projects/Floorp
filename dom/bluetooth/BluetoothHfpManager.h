@@ -57,6 +57,7 @@ private:
   enum mozilla::ipc::SocketConnectionStatus mSocketStatus;
   nsTArray<int> mCurrentCallStateArray;
   nsAutoPtr<BluetoothRilListener> mListener;
+  nsRefPtr<BluetoothReplyRunnable> mRunnable;
 };
 
 END_BLUETOOTH_NAMESPACE

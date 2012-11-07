@@ -2441,10 +2441,6 @@ public:
       DispatchBluetoothReply(mRunnable, v, replyError);
       return NS_ERROR_FAILURE;
     }
-    // Bluetooth value needs to be set to something to succeed.
-    v = true;
-    DispatchBluetoothReply(mRunnable, v, replyError);
-
     return NS_OK;
   }
 
