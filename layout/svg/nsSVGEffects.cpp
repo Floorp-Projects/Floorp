@@ -286,32 +286,6 @@ nsSVGMarkerProperty::DoUpdate()
     mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
-class nsAsyncNotifyGlyphMetricsChange MOZ_FINAL : public nsIReflowCallback
-{
-public:
-    nsAsyncNotifyGlyphMetricsChange(nsIFrame* aFrame) : mWeakFrame(aFrame)
-    {
-    }
-
-    virtual bool ReflowFinished()
-    {
-        nsSVGTextPathFrame* frame =
-            static_cast<nsSVGTextPathFrame*>(mWeakFrame.GetFrame());
-        if (frame) {
-            frame->NotifyGlyphMetricsChange();
-        }
-        delete this;
-        return true;
-    }
-
-    virtual void ReflowCallbackCanceled()
-    {
-        delete this;
-    }
-
-    nsWeakFrame mWeakFrame;
-};
-
 void
 nsSVGTextPathProperty::DoUpdate()
 {
@@ -322,13 +296,11 @@ nsSVGTextPathProperty::DoUpdate()
   NS_ASSERTION(mFrame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
 
   if (mFrame->GetType() == nsGkAtoms::svgTextPathFrame) {
-    if (mFrame->PresContext()->PresShell()->IsReflowLocked()) {
-      nsIReflowCallback* cb = new nsAsyncNotifyGlyphMetricsChange(mFrame);
-      mFrame->PresContext()->PresShell()->PostReflowCallback(cb);
-    } else {
-      nsSVGTextPathFrame* textPathFrame = static_cast<nsSVGTextPathFrame*>(mFrame);
-      textPathFrame->NotifyGlyphMetricsChange();
-    }
+    // Repaint asynchronously in case the path frame is being torn down
+    nsChangeHint changeHint =
+      nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateTextPath);
+    mFramePresShell->FrameConstructor()->PostRestyleEvent(
+      mFrame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
   }
 }
 
