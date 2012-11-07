@@ -77,9 +77,11 @@
 #include "TraceLogging.h"
 #endif
 
-using namespace mozilla;
 using namespace js;
 using namespace js::cli;
+
+using mozilla::ArrayLength;
+using mozilla::Maybe;
 
 typedef enum JSShellExitCode {
     EXITCODE_RUNTIME_ERROR      = 3,
@@ -2800,7 +2802,7 @@ WatchdogMain(void *arg)
             int64_t sleepDuration = gWatchdogHasTimeout
                                     ? gWatchdogTimeout - now
                                     : PR_INTERVAL_NO_TIMEOUT;
-            DebugOnly<PRStatus> status =
+            mozilla::DebugOnly<PRStatus> status =
                 PR_WaitCondVar(gWatchdogWakeup, sleepDuration);
             JS_ASSERT(status == PR_SUCCESS);
         }

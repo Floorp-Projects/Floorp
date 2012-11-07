@@ -22,6 +22,8 @@
 using namespace js;
 using namespace js::ion;
 
+using mozilla::DebugOnly;
+
 void
 CodeLocationJump::repoint(IonCode *code, MacroAssembler *masm)
 {

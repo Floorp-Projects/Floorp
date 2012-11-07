@@ -261,7 +261,7 @@ class SPSProfiler
 class SPSEntryMarker
 {
     SPSProfiler *profiler;
-    DebugOnly<uint32_t> size_before;
+    mozilla::DebugOnly<uint32_t> size_before;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
   public:
     SPSEntryMarker(JSRuntime *rt JS_GUARD_OBJECT_NOTIFIER_PARAM);

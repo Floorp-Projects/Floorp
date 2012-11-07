@@ -35,7 +35,6 @@ namespace js {
 
 /* The private namespace is a superset of the public/shared namespaces. */
 using namespace JS;
-using namespace mozilla;
 
 }  /* namespace js */
 

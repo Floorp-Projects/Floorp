@@ -58,6 +58,8 @@
 using namespace js;
 using namespace js::types;
 
+using mozilla::RangedPtr;
+
 /*
  * If we're accumulating a decimal number and the number is >= 2^53, then the
  * fast result from the loop in GetPrefixInteger may be inaccurate. Call

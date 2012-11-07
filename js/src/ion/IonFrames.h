@@ -107,7 +107,7 @@ class SafepointIndex
         uint32 safepointOffset_;
     };
 
-    DebugOnly<bool> resolved;
+    mozilla::DebugOnly<bool> resolved;
 
   public:
     SafepointIndex(uint32 displacement, LSafepoint *safepoint)

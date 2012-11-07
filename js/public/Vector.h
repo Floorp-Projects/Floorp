@@ -242,7 +242,7 @@ class Vector : private AllocPolicy
     size_t mReserved;   /* Max elements of reserved or used space in this vector. */
 #endif
 
-    AlignedStorage<sInlineBytes> storage;
+    mozilla::AlignedStorage<sInlineBytes> storage;
 
 #ifdef DEBUG
     friend class ReentrancyGuard;
@@ -431,7 +431,7 @@ class Vector : private AllocPolicy
         internalAppendN(t, n);
     }
     template <class U> void infallibleAppend(const U *begin, const U *end) {
-        internalAppend(begin, PointerRangeSize(begin, end));
+        internalAppend(begin, mozilla::PointerRangeSize(begin, end));
     }
     template <class U> void infallibleAppend(const U *begin, size_t length) {
         internalAppend(begin, length);
@@ -862,7 +862,7 @@ JS_ALWAYS_INLINE bool
 Vector<T,N,AP>::append(const U *insBegin, const U *insEnd)
 {
     REENTRANCY_GUARD_ET_AL;
-    size_t needed = PointerRangeSize(insBegin, insEnd);
+    size_t needed = mozilla::PointerRangeSize(insBegin, insEnd);
     if (mLength + needed > mCapacity && !growStorageBy(needed))
         return false;
 

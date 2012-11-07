@@ -40,6 +40,8 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
+using mozilla::Maybe;
+
 Class js::JSONClass = {
     js_JSON_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_JSON),

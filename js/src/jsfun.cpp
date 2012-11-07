@@ -65,11 +65,12 @@
 #include "ion/IonFrameIterator-inl.h"
 #endif
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
 using namespace js::frontend;
+
+using mozilla::ArrayLength;
 
 static JSBool
 fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValue vp)

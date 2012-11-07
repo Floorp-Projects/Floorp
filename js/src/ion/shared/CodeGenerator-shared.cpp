@@ -12,8 +12,11 @@
 #include "CodeGenerator-shared-inl.h"
 #include "ion/IonSpewer.h"
 #include "ion/IonMacroAssembler.h"
+
 using namespace js;
 using namespace js::ion;
+
+using mozilla::DebugOnly;
 
 namespace js {
 namespace ion {

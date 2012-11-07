@@ -14,8 +14,9 @@
 
 #include "jsobjinlines.h"
 
-using namespace mozilla;
 using namespace js;
+
+using mozilla::RangedPtr;
 
 bool
 JSString::isShort() const

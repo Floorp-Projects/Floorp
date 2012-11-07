@@ -57,6 +57,8 @@ using namespace js;
 using namespace js::gc;
 using namespace js::frontend;
 
+using mozilla::DebugOnly;
+
 static bool
 SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which, ptrdiff_t offset);
 
