@@ -116,7 +116,6 @@
 #include "nsIDOMSVGFilters.h"
 #include "DOMSVGTests.h"
 #include "nsSVGEffects.h"
-#include "nsSVGTextPathFrame.h"
 #include "nsSVGUtils.h"
 
 #include "nsRefreshDriver.h"
@@ -7788,12 +7787,6 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
           needInvalidatingPaint = true;
           // Invalidate and update our area:
           nsSVGUtils::InvalidateAndScheduleReflowSVG(aFrame);
-        } else if (aChange & nsChangeHint_UpdateTextPath) {
-          NS_ABORT_IF_FALSE(aFrame->GetType() == nsGkAtoms::svgTextPathFrame,
-                            "textPath frame expected");
-          needInvalidatingPaint = true;
-          // Invalidate and update our area:
-          static_cast<nsSVGTextPathFrame*>(aFrame)->NotifyGlyphMetricsChange();
         } else {
           needInvalidatingPaint = true;
           // Just invalidate our area:
