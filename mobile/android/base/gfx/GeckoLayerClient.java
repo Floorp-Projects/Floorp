@@ -268,14 +268,14 @@ public class GeckoLayerClient
 
     private void adjustViewport(DisplayPortMetrics displayPort) {
         ImmutableViewportMetrics metrics = getViewportMetrics();
-        ViewportMetrics clampedMetrics = new ViewportMetrics(metrics.clamp());
+        ImmutableViewportMetrics clampedMetrics = metrics.clamp();
 
         if (displayPort == null) {
             displayPort = DisplayPortCalculator.calculate(metrics, mPanZoomController.getVelocityVector());
         }
 
         mDisplayPort = displayPort;
-        mGeckoViewport = clampedMetrics;
+        mGeckoViewport = new ViewportMetrics(clampedMetrics);
 
         if (mRecordDrawTimes) {
             mDrawTimingQueue.add(displayPort);
