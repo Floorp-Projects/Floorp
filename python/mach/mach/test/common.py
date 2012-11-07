@@ -6,17 +6,17 @@ from __future__ import unicode_literals
 
 import time
 
-from mozbuild.base import MozbuildObject
-
-from mach.base import CommandArgument
-from mach.base import CommandProvider
-from mach.base import Command
+from mach.base import (
+    CommandArgument,
+    CommandProvider,
+    Command,
+)
 
 import mach.test.common2 as common2
 
 
 @CommandProvider
-class TestCommandProvider(MozbuildObject):
+class TestCommandProvider(object):
     @Command('throw')
     @CommandArgument('--message', '-m', default='General Error')
     def throw(self, message):
