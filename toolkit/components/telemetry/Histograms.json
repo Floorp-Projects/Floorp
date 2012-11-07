@@ -2362,7 +2362,7 @@
   "FENNEC_TAB_ZOMBIFIED": {
     "kind": "exponential",
     "low": 10,
-    "high": 1000000,
+    "high": 604800,
     "n_buckets": 20,
     "description": "How long (in seconds) a tab was inactive when it was OOM-zombified",
     "cpp_guard": "ANDROID"
