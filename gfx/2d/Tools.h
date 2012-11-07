@@ -81,6 +81,64 @@ BytesPerPixel(SurfaceFormat aFormat)
   }
 }
 
+template<typename T, int alignment = 16>
+struct AlignedArray
+{
+  AlignedArray()
+    : mStorage(nullptr)
+    , mPtr(nullptr)
+  {
+  }
+
+  MOZ_ALWAYS_INLINE AlignedArray(size_t aSize)
+    : mStorage(nullptr)
+  {
+    Realloc(aSize);
+  }
+
+  MOZ_ALWAYS_INLINE ~AlignedArray()
+  {
+    delete [] mStorage;
+  }
+
+  void Dealloc()
+  {
+    delete [] mStorage;
+    mStorage = mPtr = nullptr;
+  }
+
+  MOZ_ALWAYS_INLINE void Realloc(size_t aSize)
+  {
+    delete [] mStorage;
+    mStorage = new T[aSize + (alignment - 1)];
+    if (uintptr_t(mStorage) % alignment) {
+      // Our storage does not start at a <alignment>-byte boundary. Make sure mData does!
+      mPtr = (uint32_t*)(uintptr_t(mStorage) +
+        (alignment - (uintptr_t(mStorage) % alignment)));
+    } else {
+      mPtr = mStorage;
+    }
+  }
+
+  MOZ_ALWAYS_INLINE operator T*()
+  {
+    return mPtr;
+  }
+
+  T *mStorage;
+  T *mPtr;
+};
+
+template<int alignment>
+int32_t GetAlignedStride(int32_t aStride)
+{
+  if (aStride % alignment) {
+    return aStride + (alignment - (aStride % alignment));
+  }
+
+  return aStride;
+}
+
 }
 }
 

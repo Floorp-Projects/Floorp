@@ -6,8 +6,7 @@
 #include "ImageScaling.h"
 #include "mozilla/Attributes.h"
 
-#include <xmmintrin.h>
-#include <emmintrin.h>
+#include "SSEHelpers.h"
 
 /* The functions below use the following system for averaging 4 pixels:
  *
@@ -106,17 +105,6 @@ MOZ_ALWAYS_INLINE __m128i avg_sse2_8x1_4x1(__m128i a, __m128i b)
   a = t;
 
   return _mm_not_si128(_mm_avg_epu8(_mm_not_si128(a), _mm_not_si128(b)));
-}
-
-/* Before Nehalem _mm_loadu_si128 could be very slow, this trick is a little
- * faster. Once enough people are on architectures where _mm_loadu_si128 is
- * fast we can migrate to it.
- */
-MOZ_ALWAYS_INLINE __m128i loadUnaligned128(const __m128i *aSource)
-{
-  // Yes! We use uninitialized memory here, we'll overwrite it though!
-  __m128 res = _mm_loadl_pi(_mm_set1_ps(0), (const __m64*)aSource);
-  return _mm_castps_si128(_mm_loadh_pi(res, ((const __m64*)(aSource)) + 1));
 }
 
 MOZ_ALWAYS_INLINE uint32_t Avg2x2(uint32_t a, uint32_t b, uint32_t c, uint32_t d)
