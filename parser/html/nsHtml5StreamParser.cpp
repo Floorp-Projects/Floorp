@@ -24,6 +24,7 @@
 #include "expat.h"
 #include "nsINestedURI.h"
 #include "nsCharsetSource.h"
+#include "nsIWyciwygChannel.h"
 
 using namespace mozilla;
 
@@ -495,8 +496,8 @@ nsHtml5StreamParser::FinalizeSniffing(const uint8_t* aFromSegment, // can be nul
                                       uint32_t aCountToSniffingLimit)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
-  NS_ASSERTION(mCharsetSource < kCharsetFromMetaTag,
-      "Should not finalize sniffing when already confident.");
+  NS_ASSERTION(mCharsetSource < kCharsetFromParentForced,
+      "Should not finalize sniffing when using forced charset.");
   if (mMode == VIEW_SOURCE_XML) {
     static const XML_Memory_Handling_Suite memsuite =
       {
@@ -634,6 +635,11 @@ nsHtml5StreamParser::SniffStreamBytes(const uint8_t* aFromSegment,
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   nsresult rv = NS_OK;
   uint32_t writeCount;
+
+  // mCharset and mCharsetSource potentially have come from channel or higher
+  // by now. If we find a BOM, SetupDecodingFromBom() will overwrite them.
+  // If we don't find a BOM, the previously set values of mCharset and
+  // mCharsetSource are not modified by the BOM sniffing here.
   for (uint32_t i = 0; i < aCount && mBomState != BOM_SNIFFING_OVER; i++) {
     switch (mBomState) {
       case BOM_SNIFFING_NOT_STARTED:
@@ -701,8 +707,36 @@ nsHtml5StreamParser::SniffStreamBytes(const uint8_t* aFromSegment,
         break;
     }
   }
-  // if we get here, there either was no BOM or the BOM sniffing isn't complete yet
+  // if we get here, there either was no BOM or the BOM sniffing isn't complete
+  // yet
   
+  if (mBomState == BOM_SNIFFING_OVER &&
+    mCharsetSource >= kCharsetFromChannel) {
+    // There was no BOM and the charset came from channel or higher. mCharset
+    // still contains the charset from the channel or higher as set by an
+    // earlier call to SetDocumentCharset(), since we didn't find a BOM and
+    // overwrite mCharset.
+    nsCOMPtr<nsICharsetConverterManager> convManager =
+      do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
+    convManager->GetUnicodeDecoder(mCharset.get(),
+                                   getter_AddRefs(mUnicodeDecoder));
+    if (mUnicodeDecoder) {
+      mUnicodeDecoder->SetInputErrorBehavior(
+          nsIUnicodeDecoder::kOnError_Recover);
+      mFeedChardet = false;
+      mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
+      mMetaScanner = nullptr;
+      return WriteSniffingBufferAndCurrentSegment(aFromSegment,
+                                                  aCount,
+                                                  aWriteCount);
+    } else {
+      // nsHTMLDocument is supposed to make sure this does not happen. Let's
+      // deal with this anyway, since who knows how kCharsetFromOtherComponent
+      // is used.
+      mCharsetSource = kCharsetFromWeakDocTypeDefault;
+    }
+  }
+
   if (!mMetaScanner && (mMode == NORMAL ||
                         mMode == VIEW_SOURCE_HTML ||
                         mMode == LOAD_AS_DATA)) {
@@ -963,7 +997,13 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     mFeedChardet = false;
   }
   
-  if (mCharsetSource <= kCharsetFromMetaPrescan) {
+  nsCOMPtr<nsIWyciwygChannel> wyciwygChannel(do_QueryInterface(mRequest));
+  if (wyciwygChannel) {
+    mReparseForbidden = true;
+    mFeedChardet = false;
+    // If we are reloading a document.open()ed doc, fall through to converter
+    // instantiation here and avoid BOM sniffing.
+  } else if (mCharsetSource < kCharsetFromParentForced) {
     // we aren't ready to commit to an encoding yet
     // leave converter uninstantiated for now
     return NS_OK;

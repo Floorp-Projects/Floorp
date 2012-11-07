@@ -588,6 +588,15 @@ class XPCShellTests(object):
     out = AutologOutput()
     out.post(out.make_testgroups(collection))
 
+  def logCommand(self, name, completeCmd, testdir):
+    self.log.info("TEST-INFO | %s | full command: %r" % (name, completeCmd))
+    self.log.info("TEST-INFO | %s | current directory: %r" % (name, testdir))
+    # Show only those environment variables that are changed from
+    # the ambient environment.
+    changedEnv = (set("%s=%s" % i for i in self.env.iteritems())
+                  - set("%s=%s" % i for i in os.environ.iteritems()))
+    self.log.info("TEST-INFO | %s | environment: %s" % (name, list(changedEnv)))
+
   def runTests(self, xpcshell, xrePath=None, appPath=None, symbolsPath=None,
                manifest=None, testdirs=None, testPath=None,
                interactive=False, verbose=False, keepGoing=False, logfiles=True,
@@ -785,13 +794,7 @@ class XPCShellTests(object):
       try:
         self.log.info("TEST-INFO | %s | running test ..." % name)
         if verbose:
-            self.log.info("TEST-INFO | %s | full command: %r" % (name, completeCmd))
-            self.log.info("TEST-INFO | %s | current directory: %r" % (name, testdir))
-            # Show only those environment variables that are changed from
-            # the ambient environment.
-            changedEnv = (set("%s=%s" % i for i in self.env.iteritems())
-                          - set("%s=%s" % i for i in os.environ.iteritems()))
-            self.log.info("TEST-INFO | %s | environment: %s" % (name, list(changedEnv)))
+            self.logCommand(name, completeCmd, testdir)
         startTime = time.time()
 
         proc = self.launchProcess(completeCmd,

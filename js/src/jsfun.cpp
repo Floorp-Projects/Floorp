@@ -619,6 +619,7 @@ FindBody(JSContext *cx, HandleFunction fun, StableCharPtr chars, size_t length,
 JSString *
 js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lambdaParen)
 {
+    AssertCanGC();
     StringBuffer out(cx);
     RootedScript script(cx);
 
@@ -1555,7 +1556,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
 
 JSFunction *
 js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
-                  unsigned nargs, unsigned attrs, const char *selfHostedName, AllocKind kind)
+                  unsigned nargs, unsigned attrs, Handle<PropertyName*> selfHostedName, AllocKind kind)
 {
     PropertyOp gop;
     StrictPropertyOp sop;

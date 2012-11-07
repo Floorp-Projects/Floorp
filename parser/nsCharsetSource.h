@@ -17,9 +17,9 @@
 #define kCharsetFromMetaPrescan         8 // this one and smaller: HTML5 Tentative
 #define kCharsetFromMetaTag             9 // this one and greater: HTML5 Confident
 #define kCharsetFromIrreversibleAutoDetection 10
-#define kCharsetFromByteOrderMark      11
-#define kCharsetFromChannel            12
-#define kCharsetFromOtherComponent     13
+#define kCharsetFromChannel            11
+#define kCharsetFromOtherComponent     12
+#define kCharsetFromByteOrderMark      13
 // Levels below here will be forced onto childframes too
 #define kCharsetFromParentForced       14
 #define kCharsetFromUserForced         15

@@ -38,6 +38,7 @@
 #include "nsContentUtils.h"
 #include "nsEventStateManager.h"
 #include "mozilla/Likely.h"
+#include "nsCycleCollectionParticipant.h"
 
 static nsresult
 GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
@@ -83,15 +84,16 @@ nsLocation::~nsLocation()
 DOMCI_DATA(Location, nsLocation)
 
 // QueryInterface implementation for nsLocation
-NS_INTERFACE_MAP_BEGIN(nsLocation)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsLocation)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMLocation)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMLocation)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Location)
 NS_INTERFACE_MAP_END
 
-
-NS_IMPL_ADDREF(nsLocation)
-NS_IMPL_RELEASE(nsLocation)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsLocation)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsLocation)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsLocation)
 
 void
 nsLocation::SetDocShell(nsIDocShell *aDocShell)

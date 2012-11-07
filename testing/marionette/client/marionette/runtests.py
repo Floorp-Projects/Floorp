@@ -47,12 +47,7 @@ class MarionetteTestResult(unittest._TextTestResult):
         self.tests_passed.append(test)
 
     def getInfo(self, test):
-        if hasattr(test, 'jsFile'):
-            return os.path.basename(test.jsFile)
-        else:
-            return '%s.py:%s.%s' % (test.__class__.__module__,
-                                    test.__class__.__name__,
-                                    test._testMethodName)
+        return test.test_name
 
     def getDescription(self, test):
         doc_first_line = test.shortDescription()
@@ -83,12 +78,16 @@ class MarionetteTestResult(unittest._TextTestResult):
     def printErrorList(self, flavour, errors):
         for test, err in errors:
             self.stream.writeln(self.separator1)
-            self.stream.writeln("%s: %s" % (flavour,self.getDescription(test)))
+            self.stream.writeln("%s: %s" % (flavour, self.getDescription(test)))
             self.stream.writeln(self.separator2)
             errlines = err.strip().split('\n')
             for line in errlines[0:-1]:
                 self.stream.writeln("%s" % line)
-            self.stream.writeln("TEST-UNEXPECTED-FAIL : %s" % errlines[-1])
+            if "TEST-UNEXPECTED-FAIL" in errlines[-1]:
+                self.stream.writeln(errlines[-1])
+            else:
+                self.stream.writeln("TEST-UNEXPECTED-FAIL | %s | %s" %
+                                    (self.getInfo(test), errlines[-1]))
 
     def stopTest(self, *args, **kwargs):
         unittest._TextTestResult.stopTest(self, *args, **kwargs)
@@ -395,7 +394,7 @@ class MarionetteTestRunner(object):
         suite = unittest.TestSuite()
 
         if file_ext == '.ini':
-            testargs = { 'skip': 'false' }
+            testargs = {}
             if testtype is not None:
                 testtypes = testtype.replace('+', ' +').replace('-', ' -').split()
                 for atype in testtypes:
@@ -433,9 +432,9 @@ class MarionetteTestRunner(object):
                              id=os.getenv('BUILD_ID'),
                              test_date=int(time.time()))
 
-            manifest_tests = manifest.get(**testargs)
+            manifest_tests = manifest.active_tests(disabled=False)
 
-            for i in manifest_tests:
+            for i in manifest.get(tests=manifest_tests, **testargs):
                 self.run_test(i["path"], testtype)
                 if self.marionette.check_for_crash():
                     return

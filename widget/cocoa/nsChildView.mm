@@ -2479,20 +2479,24 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   // Create Cairo objects.
-  NSSize bufferSize = [self bounds].size;
-  nsRefPtr<gfxQuartzSurface> targetSurface =
-    new gfxQuartzSurface(aContext, gfxSize(bufferSize.width, bufferSize.height));
-  targetSurface->SetAllowUseAsSource(false);
-
-  nsRefPtr<gfxContext> targetContext = new gfxContext(targetSurface);
 
   // The CGContext that drawRect supplies us with comes with a transform that
   // scales one user space unit to one Cocoa point, which can consist of
   // multiple dev pixels. But Gecko expects its supplied context to be scaled
   // to device pixels, so we need to reverse the scaling.
+  double scale = mGeckoChild->BackingScaleFactor();
+  CGContextScaleCTM(aContext, 1.0 / scale, 1.0 / scale);
+
+  NSSize viewSize = [self bounds].size;
+  nsIntSize backingSize(viewSize.width * scale, viewSize.height * scale);
+
+  nsRefPtr<gfxQuartzSurface> targetSurface =
+    new gfxQuartzSurface(aContext, backingSize);
+  targetSurface->SetAllowUseAsSource(false);
+
+  nsRefPtr<gfxContext> targetContext = new gfxContext(targetSurface);
+
   gfxContextMatrixAutoSaveRestore save(targetContext);
-  double scale = 1.0 / mGeckoChild->GetDefaultScale();
-  targetContext->Scale(scale, scale);
 
   // Set up the clip region.
   nsIntRegionRectIterator iter(region);

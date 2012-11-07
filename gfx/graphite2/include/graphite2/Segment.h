@@ -155,12 +155,21 @@ GR2_API unsigned int gr_cinfo_unicode_char(const gr_char_info* p/*not NULL*/);
 /** Returns breakweight for a charinfo.
   * 
   * @return Breakweight is a number between -50 and 50 indicating the cost of a
-  * break before or after this character.
+  * break before or after this character. If the value < 0, the absolute value
+  * is this character's contribution to the overall breakweight before it. If the value
+  * > 0, then the value is this character's contribution to the overall breakweight after it.
+  * The overall breakweight between two characters is the maximum of the breakweight
+  * contributions from the characters either side of it. If a character makes no
+  * contribution to the breakweight on one side of it, the contribution is considered
+  * to be 0.
   * @param p Pointer to charinfo to return information on.
   */
 GR2_API int gr_cinfo_break_weight(const gr_char_info* p/*not NULL*/);
 
 /** Returns the slot index that after this character is after in the slot stream
+  *
+  * In effect each character is associated with a set of slots and this returns
+  * the index of the last slot in the segment this character is associated with.
   *
   * @return after slot index between 0 and gr_seg_n_slots()
   * @param p Pointer to charinfo to return information on.
@@ -168,6 +177,9 @@ GR2_API int gr_cinfo_break_weight(const gr_char_info* p/*not NULL*/);
 GR2_API int gr_cinfo_after(const gr_char_info* p/*not NULL*/);
 
 /** Returns the slot index that before this character is before in the slot stream
+  *
+  * In effect each character is associated with a set of slots and this returns
+  * the index of the first slot in the segment this character is associated with.
   *
   * @return before slot index between 0 and gr_seg_n_slots()
   * @param p Pointer to charinfo to return information on.
@@ -340,34 +352,42 @@ GR2_API float gr_slot_origin_Y(const gr_slot* p);
   *
   * @param p    Slot to give results for
   * @param face gr_face of the glyphs. May be NULL if unhinted advances used
-  * @param font gr_font to scale for pixel results. If NULL returns design units advance. If not NULL then returns pixel advance based on hinted or scaled glyph advances in the font. face must be passed for hinted advances to be used.
+  * @param font gr_font to scale for pixel results. If NULL returns design
+  *             units advance. If not NULL then returns pixel advance based
+  *             on hinted or scaled glyph advances in the font. face must be
+  *             passed for hinted advances to be used.
   */
 GR2_API float gr_slot_advance_X(const gr_slot* p, const gr_face* face, const gr_font *font);
 
 /** Returns the vertical advance for the glyph in the slot adjusted for kerning
   *
-  * Returns design units unless font is not NULL in which case the pixel value is returned scaled for the given font
+  * Returns design units unless font is not NULL in which case the pixel value
+  * is returned scaled for the given font
   */
 GR2_API float gr_slot_advance_Y(const gr_slot* p, const gr_face* face, const gr_font *font);
 
 /** Returns the gr_char_info index before us
   *
   * Returns the index of the gr_char_info that a cursor before this slot, would put
-  * an underlying cursor before.
+  * an underlying cursor before. This may also be interpretted as each slot holding
+  * a set of char_infos that it is associated with and this function returning the
+  * index of the char_info with lowest index, from this set.
   */
 GR2_API int gr_slot_before(const gr_slot* p/*not NULL*/);
 
 /** Returns the gr_char_info index after us
   *
   * Returns the index of the gr_char_info that a cursor after this slot would put an
-  * underlying cursor after.
+  * underlying cursor after. This may also be interpretted as each slot holding a set
+  * of char_infos that it is associated with and this function returning the index of
+  * the char_info with the highest index, from this set.
   */
 GR2_API int gr_slot_after(const gr_slot* p/*not NULL*/);
 
 /** Returns the index of this slot in the segment
   *
-  * Returns the index given to this slot during final positioning. This corresponds to the value returned br gr_cinfo_before()
-  * and gr_cinfo_after()
+  * Returns the index given to this slot during final positioning. This corresponds
+  * to the value returned br gr_cinfo_before() and gr_cinfo_after()
   */
 GR2_API unsigned int gr_slot_index(const gr_slot* p/*not NULL*/);
 
@@ -383,8 +403,8 @@ GR2_API int gr_slot_can_insert_before(const gr_slot* p);
 
 /** Returns the original gr_char_info index this slot refers to.
   *
-  * Each Slot has a gr_char_info that it originates from. This is that gr_char_info. The index is passed to gr_seg_cinfo(). This
-  * information is useful for testing.
+  * Each Slot has a gr_char_info that it originates from. This is that gr_char_info.
+  * The index is passed to gr_seg_cinfo(). This information is useful for testing.
   */
 GR2_API int gr_slot_original(const gr_slot* p/*not NULL*/);
 
