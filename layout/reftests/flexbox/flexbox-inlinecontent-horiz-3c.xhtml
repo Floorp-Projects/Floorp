@@ -14,8 +14,7 @@
     <link rel="stylesheet" type="text/css" href="ahem.css" />
     <script>
       function tweak() {
-        var newInlineContent = document.createElement("i");
-        newInlineContent.innerHTML = "mno pqr stu";
+        var newInlineContent = document.createTextNode("mno pqr stu");
 
         var flexbox = document.getElementById("flexbox");
         flexbox.insertBefore(newInlineContent, null);
@@ -34,6 +33,6 @@
     </style>
   </head>
   <body>
-    <div id="flexbox"><u>abc def ghi</u> jkl </div>
+    <div id="flexbox">abc def ghi jkl </div>
   </body>
 </html>
