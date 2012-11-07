@@ -85,6 +85,7 @@ MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		file_bug795275.xml \
 		file_bug799348.html \
 		test_bug800864.html \
+		test_bug803730.html \
 		$(NULL)
 
 ifneq ($(OS_TARGET),Android)
