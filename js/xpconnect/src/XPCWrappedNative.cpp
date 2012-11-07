@@ -1469,7 +1469,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
 
     nsRefPtr<XPCWrappedNative> wrapper;
     AutoWrapperChanger wrapperChanger;
-    JSObject *flat;
+    JSObject *flat = nullptr;
     nsWrapperCache* cache = nullptr;
     CallQueryInterface(aCOMObj, &cache);
     if (cache) {
@@ -1490,7 +1490,8 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
         if (NS_FAILED(rv))
             return rv;
 
-        flat = wrapper->GetFlatJSObject();
+        if (wrapper)
+            flat = wrapper->GetFlatJSObject();
     }
 
     if (!flat) {
