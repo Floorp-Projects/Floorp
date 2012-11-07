@@ -324,9 +324,10 @@ js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
  * If counts != NULL, include a counter of the number of times each op was executed.
  */
 JS_FRIEND_API(JSBool)
-js_DisassembleAtPC(JSContext *cx, JSScript *script_, JSBool lines, jsbytecode *pc, Sprinter *sp)
+js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines, jsbytecode *pc, Sprinter *sp)
 {
-    Rooted<JSScript*> script(cx, script_);
+    AssertCanGC();
+    RootedScript script(cx, scriptArg);
 
     jsbytecode *next, *end;
     unsigned len;
@@ -368,10 +369,12 @@ js_Disassemble(JSContext *cx, HandleScript script, JSBool lines, Sprinter *sp)
 JS_FRIEND_API(JSBool)
 js_DumpPC(JSContext *cx)
 {
+    AssertCanGC();
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return JS_FALSE;
-    JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script().unsafeGet(), true, cx->regs().pc, &sprinter);
+    RootedScript script(cx, cx->fp()->script());
+    JSBool ok = js_DisassembleAtPC(cx, script, true, cx->regs().pc, &sprinter);
     fprintf(stdout, "%s", sprinter.string());
     return ok;
 }
@@ -394,6 +397,7 @@ QuoteString(Sprinter *sp, JSString *str, uint32_t quote);
 static bool
 ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
 {
+    AssertCanGC();
     if (JSVAL_IS_STRING(v)) {
         Sprinter sprinter(cx);
         if (!sprinter.init())
@@ -474,6 +478,7 @@ unsigned
 js_Disassemble1(JSContext *cx, HandleScript script, jsbytecode *pc,
                 unsigned loc, JSBool lines, Sprinter *sp)
 {
+    AssertCanGC();
     JSOp op = (JSOp)*pc;
     if (op >= JSOP_LIMIT) {
         char numBuf1[12], numBuf2[12];

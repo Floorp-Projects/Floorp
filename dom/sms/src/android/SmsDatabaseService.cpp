@@ -48,53 +48,48 @@ SmsDatabaseService::SetMessageDeliveryStatus(int32_t aMessageId,
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::GetMessageMoz(int32_t aMessageId, int32_t aRequestId,
-                                  uint64_t aProcessId)
+SmsDatabaseService::GetMessageMoz(int32_t aMessageId, nsISmsRequest* aRequest)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
   }
 
-  AndroidBridge::Bridge()->GetMessage(aMessageId, aRequestId, aProcessId);
+  AndroidBridge::Bridge()->GetMessage(aMessageId, aRequest);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::DeleteMessage(int32_t aMessageId, int32_t aRequestId,
-                                  uint64_t aProcessId)
+SmsDatabaseService::DeleteMessage(int32_t aMessageId, nsISmsRequest* aRequest)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
   }
 
-  AndroidBridge::Bridge()->DeleteMessage(aMessageId, aRequestId, aProcessId);
+  AndroidBridge::Bridge()->DeleteMessage(aMessageId, aRequest);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 SmsDatabaseService::CreateMessageList(nsIDOMMozSmsFilter* aFilter,
-                                      bool aReverse, int32_t aRequestId,
-                                      uint64_t aProcessId)
+                                      bool aReverse, nsISmsRequest* aRequest)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
   }
 
   AndroidBridge::Bridge()->CreateMessageList(
-    static_cast<SmsFilter*>(aFilter)->GetData(), aReverse, aRequestId, aProcessId
-  );
+    static_cast<SmsFilter*>(aFilter)->GetData(), aReverse, aRequest);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsDatabaseService::GetNextMessageInList(int32_t aListId, int32_t aRequestId,
-                                         uint64_t aProcessId)
+SmsDatabaseService::GetNextMessageInList(int32_t aListId, nsISmsRequest* aRequest)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_OK;
   }
 
-  AndroidBridge::Bridge()->GetNextMessageInList(aListId, aRequestId, aProcessId);
+  AndroidBridge::Bridge()->GetNextMessageInList(aListId, aRequest);
   return NS_OK;
 }
 
@@ -111,7 +106,7 @@ SmsDatabaseService::ClearMessageList(int32_t aListId)
 
 NS_IMETHODIMP
 SmsDatabaseService::MarkMessageRead(int32_t aMessageId, bool aValue,
-                                    int32_t aRequestId, uint64_t aProcessId)
+                                    nsISmsRequest* aRequest)
 {
   // TODO: This would need to be implemented as part of Bug 748391
   return NS_OK;

@@ -156,6 +156,9 @@ const DownloadsButton = {
     if (!placeholder) {
       // The placeholder has been removed from the browser window.
       indicator.collapsed = true;
+      // Move the indicator to a safe position on the toolbar, since otherwise
+      // it may break the merge of adjacent items, like back/forward + urlbar.
+      indicator.parentNode.appendChild(indicator);
       return null;
     }
 
@@ -506,9 +509,10 @@ const DownloadsIndicatorView = {
     if (DownloadsCommon.useToolkitUI) {
       // The panel won't suppress attention for us, we need to clear now.
       DownloadsCommon.indicatorData.attention = false;
+      BrowserDownloadsUI();
+    } else {
+      DownloadsPanel.showPanel();
     }
-
-    DownloadsPanel.showPanel();
 
     aEvent.stopPropagation();
   },

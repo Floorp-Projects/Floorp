@@ -244,7 +244,6 @@ public class TabsTray extends LinearLayout
             row.title.setText(tab.getDisplayTitle());
 
             row.close.setTag(row);
-            row.close.setVisibility(mTabs.size() > 1 ? View.VISIBLE : View.INVISIBLE);
         }
 
         public View getView(int position, View convertView, ViewGroup parent) {
@@ -266,10 +265,6 @@ public class TabsTray extends LinearLayout
 
             return convertView;
         }
-    }
-
-    private boolean hasOnlyOneTab() {
-        return (mTabsAdapter != null && mTabsAdapter.getCount() == 1);
     }
 
     private void animateClose(final View view, int x) {
@@ -329,17 +324,6 @@ public class TabsTray extends LinearLayout
         PropertyAnimator animator = new PropertyAnimator(ANIMATION_DURATION);
         animator.attach(view, Property.ALPHA, 1);
         animator.attach(view, Property.TRANSLATION_X, 0);
-
-        animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
-            public void onPropertyAnimationStart() { }
-            public void onPropertyAnimationEnd() {
-                if (!hasOnlyOneTab()) {
-                    TabRow tab = (TabRow) view.getTag();
-                    tab.close.setVisibility(View.VISIBLE);
-                }
-            }
-        });
-
         animator.start();
     }
 
@@ -452,7 +436,7 @@ public class TabsTray extends LinearLayout
                         dismissRight = (deltaX > 0);
                     } else if (mMinFlingVelocity <= velocityX && velocityX <= mMaxFlingVelocity
                             && velocityY < velocityX) {
-                        dismiss = mSwiping && !hasOnlyOneTab() && (deltaX * mVelocityTracker.getXVelocity() > 0);
+                        dismiss = mSwiping && (deltaX * mVelocityTracker.getXVelocity() > 0);
                         dismissRight = (mVelocityTracker.getXVelocity() > 0);
                     }
 
@@ -488,7 +472,6 @@ public class TabsTray extends LinearLayout
                         mListView.requestDisallowInterceptTouchEvent(true);
 
                         TabRow tab = (TabRow) mSwipeView.getTag();
-                        tab.close.setVisibility(View.INVISIBLE);
 
                         // Stops listview from highlighting the touched item
                         // in the list when swiping.
@@ -501,13 +484,9 @@ public class TabsTray extends LinearLayout
                     }
 
                     if (mSwiping) {
-                        if (hasOnlyOneTab()) {
-                            mSwipeProxy.setTranslationX(deltaX / 4);
-                        } else {
-                            mSwipeProxy.setTranslationX(deltaX);
-                            mSwipeProxy.setAlpha(Math.max(0.1f, Math.min(1f,
-                                    1f - 2f * Math.abs(deltaX) / mListWidth)));
-                        }
+                        mSwipeProxy.setTranslationX(deltaX);
+                        mSwipeProxy.setAlpha(Math.max(0.1f, Math.min(1f,
+                                1f - 2f * Math.abs(deltaX) / mListWidth)));
 
                         return true;
                     }

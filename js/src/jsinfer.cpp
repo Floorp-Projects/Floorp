@@ -22,8 +22,10 @@
 #include "jsiter.h"
 #include "jsworkers.h"
 
+#ifdef JS_ION
 #include "ion/Ion.h"
 #include "ion/IonCompartment.h"
+#endif
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #include "js/MemoryMetrics.h"

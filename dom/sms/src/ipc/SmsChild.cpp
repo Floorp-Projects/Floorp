@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,7 +8,6 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/ContentChild.h"
-#include "SmsRequestManager.h"
 #include "SmsRequest.h"
 
 using namespace mozilla;
@@ -35,6 +33,21 @@ NotifyObserversWithSmsMessage(const char* aEventName,
 namespace mozilla {
 namespace dom {
 namespace sms {
+
+SmsChild::SmsChild()
+{
+  MOZ_COUNT_CTOR(SmsChild);
+}
+
+SmsChild::~SmsChild()
+{
+  MOZ_COUNT_DTOR(SmsChild);
+}
+
+void
+SmsChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+}
 
 bool
 SmsChild::RecvNotifyReceivedMessage(const SmsMessageData& aMessageData)
@@ -64,183 +77,94 @@ SmsChild::RecvNotifyDeliveryErrorMessage(const SmsMessageData& aMessageData)
   return true;
 }
 
-bool
-SmsChild::RecvNotifyRequestSmsSent(const SmsMessageData& aMessage,
-                                   const int32_t& aRequestId,
-                                   const uint64_t& aProcessId)
+PSmsRequestChild*
+SmsChild::AllocPSmsRequest(const IPCSmsRequest& aRequest)
 {
-  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
-    return true;
-  }
-
-  nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(aMessage);
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifySmsSent(aRequestId, message);
-
-  return true;
+  MOZ_NOT_REACHED("Caller is supposed to manually construct a request!");
+  return nullptr;
 }
 
 bool
-SmsChild::RecvNotifyRequestSmsSendFailed(const int32_t& aError,
-                                         const int32_t& aRequestId,
-                                         const uint64_t& aProcessId)
+SmsChild::DeallocPSmsRequest(PSmsRequestChild* aActor)
 {
-  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
-    return true;
-  }
-
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifySmsSendFailed(aRequestId, aError);
-
+  delete aActor;
   return true;
 }
 
-bool
-SmsChild::RecvNotifyRequestGotSms(const SmsMessageData& aMessage,
-                                  const int32_t& aRequestId,
-                                  const uint64_t& aProcessId)
+/*******************************************************************************
+ * SmsRequestChild
+ ******************************************************************************/
+
+SmsRequestChild::SmsRequestChild(nsISmsRequest* aReplyRequest)
+: mReplyRequest(aReplyRequest)
 {
-  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
-    return true;
-  }
+  MOZ_COUNT_CTOR(SmsRequestChild);
+  MOZ_ASSERT(aReplyRequest);
+}
 
-  nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(aMessage);
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyGotSms(aRequestId, message);
+SmsRequestChild::~SmsRequestChild()
+{
+  MOZ_COUNT_DTOR(SmsRequestChild);
+}
 
-  return true;
+void
+SmsRequestChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  // Nothing needed here.
 }
 
 bool
-SmsChild::RecvNotifyRequestGetSmsFailed(const int32_t& aError,
-                                        const int32_t& aRequestId,
-                                        const uint64_t& aProcessId)
+SmsRequestChild::Recv__delete__(const MessageReply& aReply)
 {
-  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
-    return true;
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mReplyRequest);
+  nsCOMPtr<SmsMessage> message;
+  switch(aReply.type()) {
+    case MessageReply::TReplyMessageSend:
+      message = new SmsMessage(aReply.get_ReplyMessageSend().messageData());
+      mReplyRequest->NotifyMessageSent(message);
+      break;
+    case MessageReply::TReplyMessageSendFail:
+      mReplyRequest->NotifySendMessageFailed(aReply.get_ReplyMessageSendFail().error());
+      break;
+    case MessageReply::TReplyGetMessage:
+      message = new SmsMessage(aReply.get_ReplyGetMessage().messageData());
+      mReplyRequest->NotifyMessageGot(message);
+      break;
+    case MessageReply::TReplyGetMessageFail:
+      mReplyRequest->NotifyGetMessageFailed(aReply.get_ReplyGetMessageFail().error());
+      break;
+    case MessageReply::TReplyMessageDelete:
+      mReplyRequest->NotifyMessageDeleted(aReply.get_ReplyMessageDelete().deleted());
+      break;
+    case MessageReply::TReplyMessageDeleteFail:
+      mReplyRequest->NotifyMessageDeleted(aReply.get_ReplyMessageDeleteFail().error());
+      break;
+    case MessageReply::TReplyNoMessageInList:
+      mReplyRequest->NotifyNoMessageInList();
+      break;
+    case MessageReply::TReplyCreateMessageList:
+      message = new SmsMessage(aReply.get_ReplyCreateMessageList().messageData());
+      mReplyRequest->NotifyMessageListCreated(aReply.get_ReplyCreateMessageList().listId(), 
+                                              message);
+      break;
+    case MessageReply::TReplyCreateMessageListFail:
+      mReplyRequest->NotifyReadMessageListFailed(aReply.get_ReplyCreateMessageListFail().error());
+      break;
+    case MessageReply::TReplyGetNextMessage:
+      message = new SmsMessage(aReply.get_ReplyGetNextMessage().messageData());
+      mReplyRequest->NotifyNextMessageInListGot(message);
+      break;
+    case MessageReply::TReplyMarkeMessageRead:
+      mReplyRequest->NotifyMessageMarkedRead(aReply.get_ReplyMarkeMessageRead().read());
+      break;
+    case MessageReply::TReplyMarkeMessageReadFail:
+      mReplyRequest->NotifyMarkMessageReadFailed(aReply.get_ReplyMarkeMessageReadFail().error());
+      break;
+    default:
+      MOZ_NOT_REACHED("Received invalid response parameters!");
+      return false;
   }
-
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyGetSmsFailed(aRequestId, aError);
-
-  return true;
-}
-
-bool
-SmsChild::RecvNotifyRequestSmsDeleted(const bool& aDeleted,
-                                      const int32_t& aRequestId,
-                                      const uint64_t& aProcessId)
-{
-  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
-    return true;
-  }
-
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifySmsDeleted(aRequestId, aDeleted);
-
-  return true;
-}
-
-bool
-SmsChild::RecvNotifyRequestSmsDeleteFailed(const int32_t& aError,
-                                           const int32_t& aRequestId,
-                                           const uint64_t& aProcessId)
-{
-  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
-    return true;
-  }
-
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifySmsDeleteFailed(aRequestId, aError);
-
-  return true;
-}
-
-bool
-SmsChild::RecvNotifyRequestNoMessageInList(const int32_t& aRequestId,
-                                           const uint64_t& aProcessId)
-{
-  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
-    return true;
-  }
-
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyNoMessageInList(aRequestId);
-  return true;
-}
-
-bool
-SmsChild::RecvNotifyRequestCreateMessageList(const int32_t& aListId,
-                                             const SmsMessageData& aMessageData,
-                                             const int32_t& aRequestId,
-                                             const uint64_t& aProcessId)
-{
-  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
-    return true;
-  }
-
-  nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(aMessageData);
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyCreateMessageList(aRequestId, aListId, message);
-  return true;
-}
-
-bool
-SmsChild::RecvNotifyRequestGotNextMessage(const SmsMessageData& aMessageData,
-                                          const int32_t& aRequestId,
-                                          const uint64_t& aProcessId)
-{
-  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
-    return true;
-  }
-
-  nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(aMessageData);
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyGotNextMessage(aRequestId, message);
-  return true;
-}
-
-bool
-SmsChild::RecvNotifyRequestReadListFailed(const int32_t& aError,
-                                          const int32_t& aRequestId,
-                                          const uint64_t& aProcessId)
-{
-  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
-    return true;
-  }
-
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyReadMessageListFailed(aRequestId, aError);
-  return true;
-}
-
-bool
-SmsChild::RecvNotifyRequestMarkedMessageRead(const bool& aRead,
-                                             const int32_t& aRequestId,
-                                             const uint64_t& aProcessId)
-{
-  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
-    return true;
-  }
-
-  nsCOMPtr<nsISmsRequestManager> requestManager =
-    do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyMarkedMessageRead(aRequestId, aRead);
-  return true;
-}
-
-bool
-SmsChild::RecvNotifyRequestMarkMessageReadFailed(const int32_t& aError,
-                                                 const int32_t& aRequestId,
-                                                 const uint64_t& aProcessId)
-{
-  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
-    return true;
-  }
-
-  nsCOMPtr<nsISmsRequestManager> requestManager =
-    do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyMarkMessageReadFailed(aRequestId, aError);
 
   return true;
 }

@@ -235,7 +235,6 @@ static void Shutdown();
 #include "nsCSPService.h"
 #include "nsISmsService.h"
 #include "nsISmsDatabaseService.h"
-#include "mozilla/dom/sms/SmsRequestManager.h"
 #include "mozilla/dom/sms/SmsServicesFactory.h"
 #include "nsIPowerManagerService.h"
 #include "nsIAlarmHalService.h"
@@ -319,7 +318,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISmsService, SmsServicesFactory::Crea
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISmsDatabaseService, SmsServicesFactory::CreateSmsDatabaseService)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIPowerManagerService,
                                          PowerManagerService::GetInstance)
-NS_GENERIC_FACTORY_CONSTRUCTOR(SmsRequestManager)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIAlarmHalService,
                                          AlarmHalService::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITimeService,
@@ -838,7 +836,6 @@ NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
 #endif
 NS_DEFINE_NAMED_CID(SMS_SERVICE_CID);
 NS_DEFINE_NAMED_CID(SMS_DATABASE_SERVICE_CID);
-NS_DEFINE_NAMED_CID(SMS_REQUEST_MANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_POWERMANAGERSERVICE_CID);
 NS_DEFINE_NAMED_CID(OSFILECONSTANTSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_ALARMHALSERVICE_CID);
@@ -1121,7 +1118,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_DOMMUTATIONOBSERVER_CID, false, NULL, nsDOMMutationObserverConstructor },
   { &kSMS_SERVICE_CID, false, NULL, nsISmsServiceConstructor },
   { &kSMS_DATABASE_SERVICE_CID, false, NULL, nsISmsDatabaseServiceConstructor },
-  { &kSMS_REQUEST_MANAGER_CID, false, NULL, SmsRequestManagerConstructor },
   { &kNS_POWERMANAGERSERVICE_CID, false, NULL, nsIPowerManagerServiceConstructor },
   { &kOSFILECONSTANTSSERVICE_CID, true, NULL, OSFileConstantsServiceConstructor },
   { &kNS_ALARMHALSERVICE_CID, false, NULL, nsIAlarmHalServiceConstructor },
@@ -1268,7 +1264,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_DOMMUTATIONOBSERVER_CONTRACTID, &kNS_DOMMUTATIONOBSERVER_CID },
   { SMS_SERVICE_CONTRACTID, &kSMS_SERVICE_CID },
   { SMS_DATABASE_SERVICE_CONTRACTID, &kSMS_DATABASE_SERVICE_CID },
-  { SMS_REQUEST_MANAGER_CONTRACTID, &kSMS_REQUEST_MANAGER_CID },
   { POWERMANAGERSERVICE_CONTRACTID, &kNS_POWERMANAGERSERVICE_CID },
   { OSFILECONSTANTSSERVICE_CONTRACTID, &kOSFILECONSTANTSSERVICE_CID },
   { ALARMHALSERVICE_CONTRACTID, &kNS_ALARMHALSERVICE_CID },

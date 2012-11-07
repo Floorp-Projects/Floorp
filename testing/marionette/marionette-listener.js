@@ -34,6 +34,7 @@ let marionettePerf = new MarionettePerfData();
 let isB2G = false;
 
 let marionetteTimeout = null;
+let marionetteTestName;
 let winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDOMWindowUtils);
 let listenerId = null; //unique ID of this listener
@@ -117,6 +118,7 @@ function startListeners() {
   addMessageListenerId("Marionette:emulatorCmdResult", emulatorCmdResult);
   addMessageListenerId("Marionette:importScript", importScript);
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
+  addMessageListenerId("Marionette:setTestName", setTestName);
 }
 
 /**
@@ -181,6 +183,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:emulatorCmdResult", emulatorCmdResult);
   removeMessageListenerId("Marionette:importScript", importScript);
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
+  removeMessageListenerId("Marionette:setTestName", setTestName);
   this.elementManager.reset();
   try {
     importedScripts.remove(false);
@@ -266,7 +269,7 @@ function createExecuteContentSandbox(aWindow) {
 
   let marionette = new Marionette(this, aWindow, "content",
                                   marionetteLogObj, marionettePerf,
-                                  marionetteTimeout);
+                                  marionetteTimeout, marionetteTestName);
   sandbox.marionette = marionette;
   marionette.exports.forEach(function(fn) {
     try {
@@ -389,6 +392,14 @@ function executeScript(msg, directInject) {
     // 17 = JavascriptException
     sendError(e.name + ': ' + e.message, 17, e.stack);
   }
+}
+
+/**
+ * Sets the test name, used in logging messages.
+ */
+function setTestName(msg) {
+  marionetteTestName = msg.json.value;
+  sendOk();
 }
 
 /**
@@ -787,6 +798,11 @@ function clearElement(msg) {
  */
 function switchToFrame(msg) {
   let foundFrame = null;
+  let frames = curWindow.document.getElementsByTagName("iframe");
+  //Until Bug 761935 lands, we won't have multiple nested OOP iframes. We will only have one.
+  //parWindow will refer to the iframe above the nested OOP frame.
+  let parWindow = curWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
   if ((msg.json.value == null) && (msg.json.element == null)) {
     curWindow = content;
     curWindow.focus();
@@ -796,44 +812,42 @@ function switchToFrame(msg) {
   if (msg.json.element != undefined) {
     if (elementManager.seenItems[msg.json.element] != undefined) {
       let wantedFrame = elementManager.getKnownElement(msg.json.element, curWindow); //HTMLIFrameElement
-      let frames = curWindow.document.getElementsByTagName("iframe");
       for (let i = 0; i < frames.length; i++) {
         if (frames[i] == wantedFrame) {
           curWindow = frames[i]; 
-          curWindow.focus();
-          sendOk();
-          return;
+          foundFrame = i;
         }
       }
     }
   }
-  let frames = curWindow.document.getElementsByTagName("iframe");
-  switch(typeof(msg.json.value)) {
-    case "string" :
-      let foundById = null;
-      for (let i = 0; i < frames.length; i++) {
-        //give precedence to name
-        let frame = frames[i];
-        let name = utils.getElementAttribute(frame, 'name');
-        let id = utils.getElementAttribute(frame, 'id');
-        if (name == msg.json.value) {
-          foundFrame = i;
-          break;
-        } else if ((foundById == null) && (id == msg.json.value)) {
-          foundById = i;
+  if (foundFrame == null) {
+    switch(typeof(msg.json.value)) {
+      case "string" :
+        let foundById = null;
+        for (let i = 0; i < frames.length; i++) {
+          //give precedence to name
+          let frame = frames[i];
+          let name = utils.getElementAttribute(frame, 'name');
+          let id = utils.getElementAttribute(frame, 'id');
+          if (name == msg.json.value) {
+            foundFrame = i;
+            break;
+          } else if ((foundById == null) && (id == msg.json.value)) {
+            foundById = i;
+          }
         }
-      }
-      if ((foundFrame == null) && (foundById != null)) {
-        foundFrame = foundById;
-        curWindow = frames[foundFrame];
-      }
-      break;
-    case "number":
-      if (frames[msg.json.value] != undefined) {
-        foundFrame = msg.json.value;
-        curWindow = frames[foundFrame];
-      }
-      break;
+        if ((foundFrame == null) && (foundById != null)) {
+          foundFrame = foundById;
+          curWindow = frames[foundFrame];
+        }
+        break;
+      case "number":
+        if (frames[msg.json.value] != undefined) {
+          foundFrame = msg.json.value;
+          curWindow = frames[foundFrame];
+        }
+        break;
+    }
   }
   if (foundFrame == null) {
     sendError("Unable to locate frame: " + msg.json.value, 8, null);
@@ -846,7 +860,7 @@ function switchToFrame(msg) {
     // The frame we want to switch to is a remote frame; notify our parent to handle
     // the switch.
     curWindow = content;
-    sendToServer('Marionette:switchToFrame', {win: winUtil.outerWindowID, frame: foundFrame});
+    sendToServer('Marionette:switchToFrame', {frame: foundFrame, win: parWindow});
   }
   else {
     curWindow = curWindow.contentWindow;

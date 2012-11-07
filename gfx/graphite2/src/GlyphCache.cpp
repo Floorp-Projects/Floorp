@@ -182,13 +182,6 @@ const GlyphFace *GlyphCache::glyph(unsigned short glyphid) const      //result m
     return p;
 }
 
-uint16 GlyphCache::glyphAttr(uint16 gid, uint16 gattr) const
-{
-	const GlyphFace * p = glyphSafe(gid);
-
-	return p && gattr < p->attrs().size() ? p->attrs()[gattr] : 0;
-}
-
 
 
 GlyphCache::Loader::Loader(const Face & face, const bool dumb_font)
@@ -311,7 +304,7 @@ const GlyphFace * GlyphCache::Loader::read_glyph(unsigned short glyphid, GlyphFa
             gloce = be::peek<uint16>(gloc);
         }
 
-        if (glocs >= m_pGlat.size() && gloce > m_pGlat.size())
+        if (glocs >= m_pGlat.size() || gloce > m_pGlat.size())
             return 0;
 
         const uint32 glat_version = be::peek<uint32>(m_pGlat);

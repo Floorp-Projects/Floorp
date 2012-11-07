@@ -12,8 +12,9 @@
 %}
 
 interface nsIDOMMozSmsFilter;
+interface nsISmsRequest;
 
-[scriptable, uuid(6fdb6007-51d0-456c-8b2e-dc0aea456298)]
+[scriptable, uuid(6ad55465-6937-4491-93ca-29dad9775d46)]
 interface nsISmsDatabaseService : nsISupports
 {
   // Takes some information required to save the message and returns its id.
@@ -22,11 +23,11 @@ interface nsISmsDatabaseService : nsISupports
   long saveSentMessage(in DOMString aReceiver, in DOMString aBody, in unsigned long long aDate);
   void setMessageDeliveryStatus(in long aMessageId, in DOMString aDeliveryStatus);
 
-  [binaryname(GetMessageMoz)] void getMessage(in long messageId, in long requestId, [optional] in unsigned long long processId);
-  void deleteMessage(in long messageId, in long requestId, [optional] in unsigned long long processId);
-
-  void createMessageList(in nsIDOMMozSmsFilter filter, in boolean reverse, in long requestId, [optional] in unsigned long long processId);
-  void getNextMessageInList(in long listId, in long requestId, [optional] in unsigned long long processId);
+  [binaryname(GetMessageMoz)]
+  void getMessage(in long messageId, in nsISmsRequest request);
+  void deleteMessage(in long messageId, in nsISmsRequest request);
+  void createMessageList(in nsIDOMMozSmsFilter filter, in boolean reverse, in nsISmsRequest request);
+  void getNextMessageInList(in long listId, in nsISmsRequest request);
   void clearMessageList(in long listId);
-  void markMessageRead(in long messageId, in boolean value, in long requestId, [optional] in unsigned long long processId);
+  void markMessageRead(in long messageId, in boolean value, in nsISmsRequest request);
 };

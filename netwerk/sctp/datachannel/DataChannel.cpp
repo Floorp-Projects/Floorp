@@ -788,7 +788,7 @@ DataChannelConnection::SendDeferredMessages()
         channel->mFlags &= ~DATA_CHANNEL_FLAGS_SEND_REQ;
         sent = true;
       } else {
-        if (errno == EAGAIN) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
           still_blocked = true;
         } else {
           // Close the channel, inform the user
@@ -809,7 +809,7 @@ DataChannelConnection::SendDeferredMessages()
         channel->mFlags &= ~DATA_CHANNEL_FLAGS_SEND_RSP;
         sent = true;
       } else {
-        if (errno == EAGAIN) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
           still_blocked = true;
         } else {
           // Close the channel
@@ -831,7 +831,7 @@ DataChannelConnection::SendDeferredMessages()
         channel->mFlags &= ~DATA_CHANNEL_FLAGS_SEND_ACK;
         sent = true;
       } else {
-        if (errno == EAGAIN) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
           still_blocked = true;
         } else {
           // Close the channel, inform the user
@@ -862,7 +862,7 @@ DataChannelConnection::SendDeferredMessages()
                                     (void *)spa, (socklen_t)sizeof(struct sctp_sendv_spa),
                                     SCTP_SENDV_SPA,
                                     spa->sendv_sndinfo.snd_flags) < 0)) {
-          if (errno == EAGAIN) {
+          if (errno == EAGAIN || errno == EWOULDBLOCK) {
             // leave queued for resend
             failed_send = true;
             LOG(("queue full again when resending %d bytes (%d)", len, result));
@@ -982,7 +982,7 @@ DataChannelConnection::OpenResponseFinish(already_AddRefed<DataChannel> aChannel
                                 DataChannelOnMessageAvailable::ON_CHANNEL_CREATED,
                                 this, channel));
     } else {
-      if (errno == EAGAIN) {
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
         channel->mFlags |= DATA_CHANNEL_FLAGS_SEND_RSP;
         StartDefer();
       } else {
@@ -1739,7 +1739,7 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
                               !!(channel->mFlags & DATA_CHANNEL_FLAG_OUT_OF_ORDER_ALLOWED),
                               channel->mPrPolicy, channel->mPrValue)) {
     LOG(("SendOpenRequest failed, errno = %d", errno));
-    if (errno == EAGAIN) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
       channel->mFlags |= DATA_CHANNEL_FLAGS_SEND_REQ;
       StartDefer();
     } else {
@@ -1804,7 +1804,7 @@ DataChannelConnection::SendMsgInternal(DataChannel *channel, const char *data,
     errno = EAGAIN;
   }
   if (result < 0) {
-    if (errno == EAGAIN) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
       // queue data for resend!  And queue any further data for the stream until it is...
       BufferedMsg *buffered = new BufferedMsg(spa, data, length); // infallible malloc
       channel->mBufferedData.AppendElement(buffered); // owned by mBufferedData array

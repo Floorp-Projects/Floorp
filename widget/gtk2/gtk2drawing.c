@@ -1606,8 +1606,13 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
     if (theme_honors_transparency) {
         g_object_set_data(G_OBJECT(widget), "transparent-bg-hint", GINT_TO_POINTER(TRUE));
     } else {
-        gdk_draw_rectangle(drawable, style->base_gc[bg_state], TRUE,
-                           cliprect->x, cliprect->y, cliprect->width, cliprect->height);
+        GdkRectangle clipped_rect;
+        gdk_rectangle_intersect(rect, cliprect, &clipped_rect);
+        if (clipped_rect.width != 0) {
+            gdk_draw_rectangle(drawable, style->base_gc[bg_state], TRUE,
+                               clipped_rect.x, clipped_rect.y,
+                               clipped_rect.width, clipped_rect.height);
+        }
         g_object_set_data(G_OBJECT(widget), "transparent-bg-hint", GINT_TO_POINTER(FALSE));
     }
 
