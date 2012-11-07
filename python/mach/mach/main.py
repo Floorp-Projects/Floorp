@@ -17,8 +17,6 @@ import traceback
 import uuid
 import sys
 
-from mozbuild.base import BuildConfig
-
 from .base import CommandContext
 
 from .decorators import (
@@ -32,12 +30,6 @@ from .logging import LoggingManager
 
 from .registrar import Registrar
 
-
-# Classes inheriting from ConfigProvider that provide settings.
-# TODO this should come from auto-discovery somehow.
-SETTINGS_PROVIDERS = [
-    BuildConfig,
-]
 
 # Settings for argument parser that don't get proxied to sub-module. i.e. these
 # are things consumed by the driver itself.
@@ -412,7 +404,7 @@ To see more help for a specific command, run:
         self.settings = None
         return False
 
-        for provider in SETTINGS_PROVIDERS:
+        for provider in Registrar.settings_providers:
             provider.register_settings()
             self.settings.register_provider(provider)
 

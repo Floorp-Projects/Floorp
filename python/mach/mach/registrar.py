@@ -12,11 +12,15 @@ class MachRegistrar(object):
 
     def __init__(self):
         self.command_handlers = {}
+        self.settings_providers = set()
 
     def register_command_handler(self, handler):
         name = handler.parser_args[0][0]
 
         self.command_handlers[name] = handler
+
+    def register_settings_provider(self, cls):
+        self.settings_providers.add(cls)
 
     def populate_argument_parser(self, parser):
         for command in sorted(self.command_handlers.keys()):
