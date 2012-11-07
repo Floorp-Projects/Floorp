@@ -68,6 +68,14 @@ CodeGeneratorX86::ToOutValue(LInstruction *ins)
     return ValueOperand(typeReg, payloadReg);
 }
 
+ValueOperand
+CodeGeneratorX86::ToTempValue(LInstruction *ins, size_t pos)
+{
+    Register typeReg = ToRegister(ins->getTemp(pos + TYPE_INDEX));
+    Register payloadReg = ToRegister(ins->getTemp(pos + PAYLOAD_INDEX));
+    return ValueOperand(typeReg, payloadReg);
+}
+
 bool
 CodeGeneratorX86::visitValue(LValue *value)
 {

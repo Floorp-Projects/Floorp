@@ -33,6 +33,12 @@ CodeGeneratorX64::ToOutValue(LInstruction *ins)
     return ValueOperand(ToRegister(ins->getDef(0)));
 }
 
+ValueOperand
+CodeGeneratorX64::ToTempValue(LInstruction *ins, size_t pos)
+{
+    return ValueOperand(ToRegister(ins->getTemp(pos)));
+}
+
 bool
 CodeGeneratorX64::visitDouble(LDouble *ins)
 {
