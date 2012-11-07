@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test accessible tree when ARIA role menuitem is used</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+  function doTest()
+  {
+    // Menuitem with no popup.
+    tree =
+      { SECTION: [ // container
+        { MENUPOPUP: [ // menu
+          { MENUITEM: [
+            { STATICTEXT: [] }, // bullet
+            { TEXT_LEAF: [] }
+          ] }
+        ] }
+      ] }
+    testAccessibleTree("menu", tree);
+
+    // Menuitem with explicit no popup.
+    tree =
+      { SECTION: [ // container
+        { MENUPOPUP: [ // menu
+          { MENUITEM: [
+            { STATICTEXT: [] }, // bullet
+            { TEXT_LEAF: [] }
+          ] }
+        ] }
+      ] }
+    testAccessibleTree("menu_nopopup", tree);
+
+    // Menuitem with popup.
+    tree =
+      { SECTION: [ // container
+        { MENUPOPUP: [ // menu
+          { PARENT_MENUITEM: [ // menuitem with aria-haspopup="true"
+            { STATICTEXT: [] }, // bullet
+            { TEXT_LEAF: [] }
+          ] }
+        ] }
+      ] }
+    testAccessibleTree("menu_popup", tree);
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=786566"
+     title="ARIA menuitem acting as submenu should have PARENT_MENUITEM role">
+    Mozilla Bug 786566
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="menu">
+    <ul role="menu">
+      <li role="menuitem">Normal Menu</li>
+    </ul>
+  </div>
+
+  <div id="menu_nopopup">
+    <ul role="menu">
+      <li role="menuitem" aria-haspopup="false">Menu with explicit no popup</li>
+    </ul>
+  </div>
+
+  <div id="menu_popup">
+    <ul role="menu">
+      <li role="menuitem" aria-haspopup="true">Menu with popup</li>
+    </ul>
+  </div>
+
+</body>
+</html>
