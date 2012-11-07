@@ -296,3 +296,15 @@ class BuildConfig(ConfigProvider):
 
         register('build', 'threads', PositiveIntegerType,
             default=multiprocessing.cpu_count())
+
+
+class MachCommandBase(MozbuildObject):
+    """Base class for mach command providers that wish to be MozbuildObjects.
+
+    This provides a level of indirection so MozbuildObject can be refactored
+    without having to change everything that inherits from it.
+    """
+
+    def __init__(self, context):
+        MozbuildObject.__init__(self, context.topdir, context.settings,
+            context.log_manager)
