@@ -5339,41 +5339,6 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *objArg, const char *utf8, siz
     return result;
 }
 
-JS_PUBLIC_API(JSScript *)
-JS_CompileUTF8File(JSContext *cx, JSObject *objArg, const char *filename)
-{
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setUTF8(true)
-           .setFileAndLine(filename, 1);
-
-    return Compile(cx, obj, options, filename);
-}
-
-JS_PUBLIC_API(JSScript *)
-JS_CompileUTF8FileHandleForPrincipals(JSContext *cx, JSObject *objArg, const char *filename,
-                                      FILE *file, JSPrincipals *principals)
-{
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setUTF8(true)
-           .setFileAndLine(filename, 1)
-           .setPrincipals(principals);
-
-    return Compile(cx, obj, options, file);
-}
-
-JS_PUBLIC_API(JSScript *)
-JS_CompileUTF8FileHandle(JSContext *cx, JSObject *objArg, const char *filename, FILE *file)
-{
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setUTF8(true)
-           .setFileAndLine(filename, 1);
-
-    return Compile(cx, obj, options, file);
-}
-
 JS_PUBLIC_API(JSObject *)
 JS_GetGlobalFromScript(JSScript *script)
 {
@@ -6189,15 +6154,6 @@ JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst, size_
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     return InflateStringToBuffer(cx, src, srclen, dst, dstlenp);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_DecodeUTF8(JSContext *cx, const char *src, size_t srclen, jschar *dst,
-              size_t *dstlenp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    return InflateUTF8StringToBuffer(cx, src, srclen, dst, dstlenp);
 }
 
 JS_PUBLIC_API(char *)
