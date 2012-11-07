@@ -155,8 +155,8 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     void handleClearHistory() {
-        updateAboutHomeTopSites();
         super.handleClearHistory();
+        updateAboutHomeTopSites();
     }
 
     @Override
