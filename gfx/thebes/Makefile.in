@@ -51,6 +51,7 @@ EXPORTS	= \
 	nsSurfaceTexture.h \
 	gfxBaseSharedMemorySurface.h \
 	gfxSharedImageSurface.h \
+	gfxSharedQuartzSurface.h \
 	gfxReusableSurfaceWrapper.h \
 	gfxSVGGlyphs.h \
 	$(NULL)
