@@ -29,12 +29,27 @@ function VariablesView(aParentNode) {
   this._parent = aParentNode;
   this._appendEmptyNotice();
 
+  this._onSearchboxInput = this._onSearchboxInput.bind(this);
+  this._onSearchboxKeyPress = this._onSearchboxKeyPress.bind(this);
+
   // Create an internal list container.
   this._list = this.document.createElement("vbox");
   this._parent.appendChild(this._list);
 }
 
 VariablesView.prototype = {
+  /**
+   * Helper setter for populating this container with a raw object.
+   *
+   * @param object aData
+   *        The raw object to display. You can only provide this object
+   *        if you want the variables view to work in sync mode.
+   */
+  set rawObject(aObject) {
+    this.empty();
+    this.addScope().addVar().populate(aObject);
+  },
+
   /**
    * Adds a scope to contain any inspected variables.
    *
@@ -43,12 +58,13 @@ VariablesView.prototype = {
    * @return Scope
    *         The newly created Scope instance.
    */
-  addScope: function VV_addScope(aName) {
+  addScope: function VV_addScope(aName = "") {
     this._removeEmptyNotice();
 
     let scope = new Scope(this, aName);
     this._store.set(scope.id, scope);
     this._currHierarchy.set(aName, scope);
+    scope.header = !!aName;
     return scope;
   },
 
@@ -141,6 +157,125 @@ VariablesView.prototype = {
   },
 
   /**
+   * Enables variable and property searching in this view.
+   */
+  enableSearch: function VV_enableSearch() {
+    // If searching was already enabled, no need to re-enable it again.
+    if (this._searchboxContainer) {
+      return;
+    }
+    let document = this.document;
+    let parent = this._parent;
+
+    let container = this._searchboxContainer = document.createElement("hbox");
+    container.className = "devtools-toolbar";
+
+    let searchbox = this._searchboxNode = document.createElement("textbox");
+    searchbox.className = "devtools-searchinput";
+    searchbox.setAttribute("placeholder", this._searchboxPlaceholder);
+    searchbox.setAttribute("type", "search");
+    searchbox.setAttribute("flex", "1");
+    searchbox.addEventListener("input", this._onSearchboxInput, false);
+    searchbox.addEventListener("keypress", this._onSearchboxKeyPress, false);
+
+    container.appendChild(searchbox);
+    parent.insertBefore(container, parent.firstChild);
+  },
+
+  /**
+   * Disables variable and property searching in this view.
+   */
+  disableSearch: function VV_disableSearch() {
+    // If searching was already disabled, no need to re-disable it again.
+    if (!this._searchboxContainer) {
+      return;
+    }
+    this._parent.removeChild(this._searchboxContainer);
+    this._searchboxNode.addEventListener("input", this._onSearchboxInput, false);
+    this._searchboxNode.addEventListener("keypress", this._onSearchboxKeyPress, false);
+
+    this._searchboxContainer = null;
+    this._searchboxNode = null;
+  },
+
+  /**
+   * Sets if the variable and property searching is enabled.
+   */
+  set searchEnabled(aFlag) aFlag ? this.enableSearch() : this.disableSearch(),
+
+  /**
+   * Gets if the variable and property searching is enabled.
+   */
+  get searchEnabled() !!this._searchboxContainer,
+
+  /**
+   * Performs a case insensitive search for variables or properties matching
+   * the query, and hides non-matched items.
+   *
+   * @param string aQuery
+   *        The variable or property to search for.
+   */
+  performSearch: function VV_performSerch(aQuery) {
+    if (!aQuery) {
+      for (let [_, item] of this._currHierarchy) {
+        item._match = true;
+      }
+    } else {
+      for (let [_, scope] in this) {
+        scope._performSearch(aQuery.toLowerCase());
+      }
+    }
+  },
+
+  /**
+   * Expands the first search results in this container.
+   */
+  expandFirstSearchResults: function VV_expandFirstSearchResults() {
+    for (let [_, scope] in this) {
+      for (let [_, variable] in scope) {
+        if (variable._isMatch) {
+          variable.expand();
+          break;
+        }
+      }
+    }
+  },
+
+  /**
+   * Sets the text displayed for the searchbox in this container.
+   * @param string aValue
+   */
+  set searchPlaceholder(aValue) {
+    if (this._searchboxNode) {
+      this._searchboxNode.setAttribute("placeholder", aValue);
+    }
+    this._searchboxPlaceholder = aValue;
+  },
+
+  /**
+   * Listener handling the searchbox input event.
+   */
+  _onSearchboxInput: function VV__onSearchboxInput() {
+    this.performSearch(this._searchboxNode.value);
+  },
+
+  /**
+   * Listener handling the searchbox key press event.
+   */
+  _onSearchboxKeyPress: function VV__onSearchboxKeyPress(e) {
+    switch(e.keyCode) {
+      case e.DOM_VK_RETURN:
+      case e.DOM_VK_ENTER:
+        this._onSearchboxInput();
+        return;
+      case e.DOM_VK_ESCAPE:
+        this._searchboxNode.value = "";
+        this._onSearchboxInput();
+        return;
+    }
+  },
+
+  /**
    * Sets the text displayed in this container when there are no available items.
    * @param string aValue
    */
@@ -205,8 +340,11 @@ VariablesView.prototype = {
   _emptyTimeout: null,
   _enumVisible: true,
   _nonEnumVisible: true,
-  _list: null,
   _parent: null,
+  _list: null,
+  _searchboxNode: null,
+  _searchboxContainer: null,
+  _searchboxPlaceholder: "",
   _emptyTextNode: null,
   _emptyTextValue: ""
 };
@@ -257,7 +395,7 @@ Scope.prototype = {
    * @return Variable
    *         The newly created Variable instance, null if it already exists.
    */
-  addVar: function S_addVar(aName, aDescriptor = {}) {
+  addVar: function S_addVar(aName = "", aDescriptor = {}) {
     if (this._store.has(aName)) {
       return null;
     }
@@ -265,6 +403,7 @@ Scope.prototype = {
     let variable = new Variable(this, aName, aDescriptor);
     this._store.set(aName, variable);
     this._variablesView._currHierarchy.set(variable._absoluteName, variable);
+    variable.header = !!aName;
     return variable;
   },
 
@@ -309,7 +448,7 @@ Scope.prototype = {
    *        Pass true to not show an opening animation.
    */
   expand: function S_expand(aSkipAnimationFlag) {
-    if (this._locked) {
+    if (this._isExpanded || this._locked) {
       return;
     }
     if (this._variablesView._enumVisible) {
@@ -334,7 +473,7 @@ Scope.prototype = {
    * Collapses the scope, hiding all the added details.
    */
   collapse: function S_collapse() {
-    if (this._locked) {
+    if (!this._isExpanded || this._locked) {
       return;
     }
     this._arrow.removeAttribute("open");
@@ -353,11 +492,30 @@ Scope.prototype = {
    * Toggles between the scope's collapsed and expanded state.
    */
   toggle: function S_toggle() {
+    this._wasToggled = true;
     this.expanded ^= 1;
 
     if (this.ontoggle) {
       this.ontoggle(this);
     }
+  },
+
+  /**
+   * Shows the scope's title header.
+   */
+  showHeader: function S_showHeader() {
+    this._target.removeAttribute("non-header");
+    this._isHeaderVisible = true;
+  },
+
+  /**
+   * Hides the scope's title header.
+   * This action will automatically expand the scope.
+   */
+  hideHeader: function S_hideHeader() {
+    this.expand();
+    this._target.setAttribute("non-header", "");
+    this._isHeaderVisible = false;
   },
 
   /**
@@ -389,6 +547,12 @@ Scope.prototype = {
   get expanded() this._isExpanded,
 
   /**
+   * Gets the header visibility state.
+   * @return boolean
+   */
+  get header() this._isHeaderVisible,
+
+  /**
    * Gets the twisty visibility state.
    * @return boolean
    */
@@ -405,6 +569,12 @@ Scope.prototype = {
    * @param boolean aFlag
    */
   set expanded(aFlag) aFlag ? this.expand() : this.collapse(),
+
+  /**
+   * Sets the header visibility state.
+   * @param boolean aFlag
+   */
+  set header(aFlag) aFlag ? this.showHeader() : this.hideHeader(),
 
   /**
    * Sets the twisty visibility state.
@@ -532,6 +702,75 @@ Scope.prototype = {
   },
 
   /**
+   * Performs a case insensitive search for variables or properties matching
+   * the query, and hides non-matched items.
+   *
+   * @param string aLowerCaseQuery
+   *        The lowercased name of the variable or property to search for.
+   */
+  _performSearch: function S__performSearch(aLowerCaseQuery) {
+    for (let [_, variable] in this) {
+      let currentObject = variable;
+      let lowerCaseName = variable._nameString.toLowerCase();
+      let lowerCaseValue = variable._valueString.toLowerCase();
+
+      // Non-matched variables or properties require a corresponding attribute.
+      if (!lowerCaseName.contains(aLowerCaseQuery) &&
+          !lowerCaseValue.contains(aLowerCaseQuery)) {
+        variable._match = false;
+      }
+      // Variable or property is matched.
+      else {
+        variable._match = true;
+
+        // If the variable was ever expanded, there's a possibility it may
+        // contain some matched properties, so make sure they're visible
+        // ("expand downwards").
+
+        if (variable._wasToggled) {
+          variable.expand(true);
+        }
+
+        // If the variable is contained in another scope (variable or property),
+        // the parent may not be a match, thus hidden. It should be visible
+        // ("expand upwards").
+
+        while ((variable = variable.ownerView) &&  /* Parent object exists. */
+               (variable instanceof Scope ||
+                variable instanceof Variable ||
+                variable instanceof Property)) {
+
+          // Show and expand the parent, as it is certainly accessible.
+          variable._match = true;
+          variable.expand(true);
+        }
+      }
+
+      // Proceed with the search recursively inside this variable or property.
+      if (variable._wasToggled || variable.expanded || variable.getter || variable.setter) {
+        currentObject._performSearch(aLowerCaseQuery);
+      }
+    }
+  },
+
+  /**
+   * Sets if this object instance is a match or non-match.
+   * @param boolean aStatus
+   */
+  set _match(aStatus) {
+    if (this._isMatch == aStatus) {
+      return;
+    }
+    if (aStatus) {
+      this._isMatch = true;
+      this.target.removeAttribute("non-match");
+    } else {
+      this._isMatch = false;
+      this.target.setAttribute("non-match", "");
+    }
+  },
+
+  /**
    * Gets top level variables view instance.
    * @return VariablesView
    */
@@ -565,14 +804,18 @@ Scope.prototype = {
 
   ownerView: null,
   eval: null,
+  fetched: false,
   _committed: false,
   _locked: false,
   _isShown: true,
   _isExpanded: false,
+  _wasToggled: false,
+  _isHeaderVisible: true,
   _isArrowVisible: true,
+  _isMatch: true,
   _store: null,
-  _idString: null,
-  _nameString: null,
+  _idString: "",
+  _nameString: "",
   _target: null,
   _arrow: null,
   _name: null,
@@ -626,7 +869,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
    * @return Property
    *         The newly created Property instance, null if it already exists.
    */
-  addProperty: function V_addProperty(aName, aDescriptor = {}) {
+  addProperty: function V_addProperty(aName = "", aDescriptor = {}) {
     if (this._store.has(aName)) {
       return null;
     }
@@ -634,6 +877,7 @@ create({ constructor: Variable, proto: Scope.prototype }, {
     let property = new Property(this, aName, aDescriptor);
     this._store.set(aName, property);
     this._variablesView._currHierarchy.set(property._absoluteName, property);
+    property.header = !!aName;
     return property;
   },
 
@@ -662,6 +906,98 @@ create({ constructor: Variable, proto: Scope.prototype }, {
       this.addProperty(name, aProperties[name]);
     }
   },
+
+  /**
+   * Populates this variable to contain all the properties of an object.
+   *
+   * @param object aObject
+   *        The raw object you want to display.
+   */
+  populate: function V_populate(aObject) {
+    // Retrieve the properties only once.
+    if (this.fetched) {
+      return;
+    }
+
+    // Sort all of the properties before adding them.
+    let sortedPropertyNames = Object.getOwnPropertyNames(aObject).sort();
+    let prototype = Object.getPrototypeOf(aObject);
+
+    // Add all the variable properties.
+    for (let name of sortedPropertyNames) {
+      let descriptor = Object.getOwnPropertyDescriptor(aObject, name);
+      if (descriptor.get || descriptor.set) {
+        this._addRawNonValueProperty(name, descriptor);
+      } else {
+        this._addRawValueProperty(name, descriptor, aObject[name]);
+      }
+    }
+    // Add the variable's __proto__.
+    if (prototype) {
+      this._addRawValueProperty("__proto__", {}, prototype);
+    }
+
+    this.fetched = true;
+  },
+
+  /**
+   * Adds a property for this variable based on a raw value descriptor.
+   *
+   * @param string aName
+   *        The property's name.
+   * @param object aDescriptor
+   *        Specifies the exact property descriptor as returned by a call to
+   *        Object.getOwnPropertyDescriptor.
+   * @param object aValue
+   *        The raw property value you want to display.
+   */
+  _addRawValueProperty: function V__addRawValueProperty(aName, aDescriptor, aValue) {
+    let descriptor = Object.create(aDescriptor);
+    descriptor.value = VariablesView.getGrip(aValue);
+
+    let propertyItem = this.addProperty(aName, descriptor);
+
+    // Add an 'onexpand' callback for the property, lazily handling
+    // the addition of new child properties.
+    if (!VariablesView.isPrimitive(descriptor)) {
+      propertyItem.onexpand = this.populate.bind(propertyItem, aValue);
+    }
+
+    return propertyItem;
+  },
+
+  /**
+   * Adds a property for this variable based on a getter/setter descriptor.
+   *
+   * @param string aName
+   *        The property's name.
+   * @param object aDescriptor
+   *        Specifies the exact property descriptor as returned by a call to
+   *        Object.getOwnPropertyDescriptor.
+   */
+  _addRawNonValueProperty: function V__addRawNonValueProperty(aName, aDescriptor) {
+    let descriptor = Object.create(aDescriptor);
+    descriptor.get = VariablesView.getGrip(aDescriptor.get);
+    descriptor.set = VariablesView.getGrip(aDescriptor.set);
+
+    let propertyItem = this.addProperty(aName, descriptor);
+    return propertyItem;
+  },
+
+  /**
+   * Returns this variable's value from the descriptor if available,
+   */
+  get value() this._initialDescriptor.value,
+
+  /**
+   * Returns this variable's getter from the descriptor if available,
+   */
+  get getter() this._initialDescriptor.get,
+
+  /**
+   * Returns this variable's getter from the descriptor if available,
+   */
+  get setter() this._initialDescriptor.set,
 
   /**
    * Sets the specific grip for this variable.
@@ -754,8 +1090,8 @@ create({ constructor: Variable, proto: Scope.prototype }, {
       this.hideArrow();
     }
     if (aDescriptor.get || aDescriptor.set) {
-      this.addProperty("get ", { value: aDescriptor.get });
-      this.addProperty("set ", { value: aDescriptor.set });
+      this.addProperty("get", { value: aDescriptor.get });
+      this.addProperty("set", { value: aDescriptor.set });
       this.expand(true);
       separatorLabel.hidden = true;
       valueLabel.hidden = true;
@@ -1090,6 +1426,31 @@ VariablesView.isPrimitive = function VV_isPrimitive(aDescriptor) {
   }
 
   return false;
+};
+
+/**
+ * Returns a standard grip for a value.
+ *
+ * @param any aValue
+ *        The raw value to get a grip for.
+ * @return any
+ *         The value's grip.
+ */
+VariablesView.getGrip = function VV_getGrip(aValue) {
+  if (aValue === undefined) {
+    return { type: "undefined" };
+  }
+  if (aValue === null) {
+    return { type: "null" };
+  }
+  if (typeof aValue == "object" || typeof aValue == "function") {
+    if (aValue.constructor) {
+      return { type: "object", class: aValue.constructor.name };
+    } else {
+      return { type: "object", class: "Object" };
+    }
+  }
+  return aValue;
 };
 
 /**
