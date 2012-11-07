@@ -17,6 +17,7 @@ Cu.import('resource://gre/modules/accessibility/AccessFu.jsm');
 Cu.import('resource://gre/modules/Payment.jsm');
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import('resource://gre/modules/UserAgentOverrides.jsm');
+Cu.import('resource://gre/modules/Keyboard.jsm');
 #ifdef MOZ_B2G_RIL
 Cu.import('resource://gre/modules/NetworkStatsService.jsm');
 #endif
