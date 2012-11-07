@@ -72,6 +72,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=583533
 
     is(label, document.getElementById("e").accessKeyLabel, "JS and C++ agree on accessKeyLabel");
 
+    /** Test for Bug 808964 **/
+
+    var div = document.createElement("div");
+    document.body.appendChild(div);
+
+    is(div.accessKeyLabel, "", "accessKeyLabel should be empty string");
+
 </script>
 </pre>
 </body>

@@ -19,6 +19,14 @@ import sys
 import time
 
 
+def format_seconds(total):
+    """Format number of seconds to MM:SS.DD form."""
+
+    minutes, seconds = divmod(total, 60)
+
+    return '%2d:%05.2f' % (minutes, seconds)
+
+
 class ConvertToStructuredFilter(logging.Filter):
     """Filter that converts unstructured records into structured ones."""
     def filter(self, record):
@@ -61,7 +69,8 @@ class StructuredHumanFormatter(logging.Formatter):
     def format(self, record):
         elapsed = self._time(record)
 
-        return '%4.2f %s' % (elapsed, record.msg.format(**record.params))
+        return '%s %s' % (format_seconds(elapsed),
+            record.msg.format(**record.params))
 
     def _time(self, record):
         t = record.created - self.start_time
@@ -81,7 +90,7 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
         self.terminal = terminal
 
     def format(self, record):
-        t = self.terminal.blue('%4.2f' % self._time(record))
+        t = self.terminal.blue(format_seconds(self._time(record)))
         f = record.msg.format(**record.params)
 
         return '%s %s' % (t, self._colorize(f))

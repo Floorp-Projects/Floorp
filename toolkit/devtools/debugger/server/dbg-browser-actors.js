@@ -240,26 +240,14 @@ BrowserRootActor.prototype = {
    * Prepare to enter a nested event loop by disabling debuggee events.
    */
   preNest: function BRA_preNest() {
-    let top = windowMediator.getMostRecentWindow("navigator:browser");
-    let browser = top.gBrowser.selectedBrowser;
-    let windowUtils = browser.contentWindow
-                             .QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
-    windowUtils.suppressEventHandling(true);
-    windowUtils.suspendTimeouts();
+    // Nothing to be done here for chrome windows.
   },
 
   /**
    * Prepare to exit a nested event loop by enabling debuggee events.
    */
   postNest: function BRA_postNest(aNestData) {
-    let top = windowMediator.getMostRecentWindow("navigator:browser");
-    let browser = top.gBrowser.selectedBrowser;
-    let windowUtils = browser.contentWindow
-                             .QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDOMWindowUtils);
-    windowUtils.resumeTimeouts();
-    windowUtils.suppressEventHandling(false);
+    // Nothing to be done here for chrome windows.
   },
 
   // nsIWindowMediatorListener.
@@ -451,7 +439,7 @@ BrowserTabActor.prototype = {
     this._contextPool = new ActorPool(this.conn);
     this.conn.addActorPool(this._contextPool);
 
-    this.threadActor = new ThreadActor(this);
+    this.threadActor = new ThreadActor(this, this.browser.contentWindow.wrappedJSObject);
     this._contextPool.addActor(this.threadActor);
   },
 
