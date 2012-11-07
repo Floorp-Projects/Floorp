@@ -421,7 +421,9 @@ RasterImage::~RasterImage()
   num_containers--;
   total_source_bytes -= mSourceData.Length();
 
-  DiscardTracker::Remove(&mDiscardTrackerNode);
+  if (NS_IsMainThread()) {
+    DiscardTracker::Remove(&mDiscardTrackerNode);
+  }
 }
 
 void
