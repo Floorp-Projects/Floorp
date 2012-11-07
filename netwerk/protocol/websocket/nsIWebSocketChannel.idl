@@ -12,10 +12,14 @@ interface nsIInputStream;
 
 #include "nsISupports.idl"
 
-/** 
- *  You probably want nsI{Moz}WebSocket.idl
+/**
+ * Low-level websocket API: handles network protocol.  
+ *
+ * This is primarly intended for use by the higher-level nsIWebSocket.idl.
+ * We are also making it scriptable for now, but this may change once we have
+ * WebSockets for Workers.
  */
-[uuid(0683E9A4-994D-11E1-9478-1E356188709B)]
+[scriptable, uuid(0683E9A4-994D-11E1-9478-1E356188709B)]
 interface nsIWebSocketChannel : nsISupports
 {
     /**
