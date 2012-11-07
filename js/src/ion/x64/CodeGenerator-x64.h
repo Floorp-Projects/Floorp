@@ -23,7 +23,6 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
   protected:
     ValueOperand ToValue(LInstruction *ins, size_t pos);
     ValueOperand ToOutValue(LInstruction *ins);
-    ValueOperand ToTempValue(LInstruction *ins, size_t pos);
 
 
     void loadUnboxedValue(Operand source, MIRType type, const LDefinition *dest);
