@@ -7,14 +7,17 @@ from __future__ import print_function, unicode_literals
 import operator
 import os
 
-from mach.base import CommandArgument
-from mach.base import CommandProvider
-from mach.base import Command
-from mozbuild.base import MozbuildObject
+from mach.decorators import (
+    CommandArgument,
+    CommandProvider,
+    Command,
+)
+
+from mozbuild.base import MachCommandBase
 
 
 @CommandProvider
-class Warnings(MozbuildObject):
+class Warnings(MachCommandBase):
     """Provide commands for inspecting warnings."""
 
     @property

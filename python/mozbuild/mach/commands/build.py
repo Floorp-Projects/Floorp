@@ -7,13 +7,16 @@ from __future__ import unicode_literals
 import logging
 import os
 
-from mach.base import CommandProvider
-from mach.base import Command
-from mozbuild.base import MozbuildObject
+from mach.decorators import (
+    CommandProvider,
+    Command,
+)
+
+from mozbuild.base import MachCommandBase
 
 
 @CommandProvider
-class Build(MozbuildObject):
+class Build(MachCommandBase):
     """Interface to build the tree."""
 
     @Command('build', help='Build the tree.')

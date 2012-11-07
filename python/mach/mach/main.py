@@ -19,7 +19,9 @@ import sys
 
 from mozbuild.base import BuildConfig
 
-from .base import (
+from .base import CommandContext
+
+from .decorators import (
     CommandArgument,
     CommandProvider,
     Command,
@@ -28,7 +30,7 @@ from .base import (
 from .config import ConfigSettings
 from .logging import LoggingManager
 
-from .registrar import populate_argument_parser
+from .registrar import Registrar
 
 
 # Classes inheriting from ConfigProvider that provide settings.
@@ -45,9 +47,9 @@ CONSUMED_ARGUMENTS = [
     'logfile',
     'log_interval',
     'command',
-    'cls',
-    'method',
-    'func',
+    'mach_class',
+    'mach_method',
+    'mach_pass_context',
 ]
 
 MACH_ERROR = r'''
@@ -304,18 +306,21 @@ To see more help for a specific command, run:
         stripped = {k: getattr(args, k) for k in vars(args) if k not in
             CONSUMED_ARGUMENTS}
 
-        # If the command is associated with a class, instantiate and run it.
-        # All classes must be Base-derived and take the expected argument list.
-        if hasattr(args, 'cls'):
-            cls = getattr(args, 'cls')
-            instance = cls(self.cwd, self.settings, self.log_manager)
-            fn = getattr(instance, getattr(args, 'method'))
+        context = CommandContext(topdir=self.cwd, cwd=self.cwd,
+            settings=self.settings, log_manager=self.log_manager,
+            commands=Registrar)
 
-        # If the command is associated with a function, call it.
-        elif hasattr(args, 'func'):
-            fn = getattr(args, 'func')
+        if not hasattr(args, 'mach_class'):
+            raise Exception('ArgumentParser result missing mach_class.')
+
+        cls = getattr(args, 'mach_class')
+
+        if getattr(args, 'mach_pass_context'):
+            instance = cls(context)
         else:
-            raise Exception('Dispatch configuration error in module.')
+            instance = cls()
+
+        fn = getattr(instance, getattr(args, 'mach_method'))
 
         try:
             result = fn(**stripped)
@@ -453,7 +458,7 @@ To see more help for a specific command, run:
                 'than relative time. Note that this is NOT execution time '
                 'if there are parallel operations.')
 
-        populate_argument_parser(subparser)
+        Registrar.populate_argument_parser(subparser)
 
         return parser
 
