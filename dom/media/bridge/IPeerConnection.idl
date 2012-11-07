@@ -69,6 +69,11 @@ interface IPeerConnection : nsISupports
   const long kIceConnected = 3;
   const long kIceFailed = 4;
 
+  /* for 'type' in DataChannelInit dictionary */
+  const unsigned short kDataChannelReliable = 0;
+  const unsigned short kDataChannelPartialReliableRexmit = 1;
+  const unsigned short kDataChannelPartialReliableTimed = 2;
+
   /* Must be called first. Observer events will be dispatched on the thread provided */
   void initialize(in IPeerConnectionObserver observer, in nsIDOMWindow window,
                   [optional] in nsIThread thread);
