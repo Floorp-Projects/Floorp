@@ -17,6 +17,7 @@ MOCHITEST_FILES := \
   test_AudioListener.html \
   test_badConnect.html \
   test_delayNode.html \
+  test_dynamicsCompressorNode.html \
   test_gainNode.html \
   test_pannerNode.html \
   test_singleSourceDest.html \
