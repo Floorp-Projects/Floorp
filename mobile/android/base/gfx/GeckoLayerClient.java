@@ -117,7 +117,7 @@ public class GeckoLayerClient
 
         mForceRedraw = true;
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-        mViewportMetrics = new ImmutableViewportMetrics(new ViewportMetrics(displayMetrics));
+        mViewportMetrics = new ImmutableViewportMetrics(displayMetrics);
         mZoomConstraints = new ZoomConstraints(false);
 
         mPanZoomController = new PanZoomController(this, mEventDispatcher);
@@ -192,9 +192,7 @@ public class GeckoLayerClient
      * result in an infinite loop.
      */
     void setViewportSize(FloatSize size) {
-        ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
-        viewportMetrics.setSize(size);
-        mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
+        mViewportMetrics = mViewportMetrics.setViewportSize(size);
 
         if (mGeckoIsReady) {
             // here we send gecko a resize message. The code in browser.js is responsible for
@@ -251,9 +249,7 @@ public class GeckoLayerClient
         if (mViewportMetrics.getCssPageRect().equals(cssRect))
             return;
 
-        ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
-        viewportMetrics.setPageRect(rect, cssRect);
-        mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
+        mViewportMetrics = mViewportMetrics.setPageRect(rect, cssRect);
 
         // Page size is owned by the layer client, so no need to notify it of
         // this change.
@@ -308,15 +304,14 @@ public class GeckoLayerClient
     /** Viewport message handler. */
     private DisplayPortMetrics handleViewportMessage(ImmutableViewportMetrics messageMetrics, ViewportMessageType type) {
         synchronized (this) {
-            ViewportMetrics metrics;
+            ImmutableViewportMetrics metrics;
             ImmutableViewportMetrics oldMetrics = getViewportMetrics();
 
             switch (type) {
             default:
             case UPDATE:
-                metrics = new ViewportMetrics(messageMetrics);
                 // Keep the old viewport size
-                metrics.setSize(oldMetrics.getSize());
+                metrics = messageMetrics.setViewportSize(oldMetrics.getSize());
                 abortPanZoomAnimation();
                 break;
             case PAGE_SIZE:
@@ -324,12 +319,11 @@ public class GeckoLayerClient
                 // between the rendered content (which is what Gecko tells us)
                 // and our zoom level (which may have diverged).
                 float scaleFactor = oldMetrics.zoomFactor / messageMetrics.zoomFactor;
-                metrics = new ViewportMetrics(oldMetrics);
-                metrics.setPageRect(RectUtils.scale(messageMetrics.getPageRect(), scaleFactor), messageMetrics.getCssPageRect());
+                metrics = oldMetrics.setPageRect(RectUtils.scale(messageMetrics.getPageRect(), scaleFactor), messageMetrics.getCssPageRect());
                 break;
             }
 
-            final ImmutableViewportMetrics newMetrics = new ImmutableViewportMetrics(metrics);
+            final ImmutableViewportMetrics newMetrics = metrics;
             post(new Runnable() {
                 public void run() {
                     mGeckoViewport = newMetrics;
@@ -467,12 +461,11 @@ public class GeckoLayerClient
             float pageLeft, float pageTop, float pageRight, float pageBottom,
             float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom) {
         synchronized (this) {
-            ViewportMetrics currentMetrics = new ViewportMetrics(getViewportMetrics());
-            currentMetrics.setOrigin(new PointF(offsetX, offsetY));
-            currentMetrics.setZoomFactor(zoom);
-            currentMetrics.setPageRect(new RectF(pageLeft, pageTop, pageRight, pageBottom),
-                                       new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom));
-            final ImmutableViewportMetrics newMetrics = new ImmutableViewportMetrics(currentMetrics);
+            final ImmutableViewportMetrics newMetrics = getViewportMetrics()
+                .setViewportOrigin(offsetX, offsetY)
+                .setZoomFactor(zoom)
+                .setPageRect(new RectF(pageLeft, pageTop, pageRight, pageBottom),
+                             new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom));
             // Since we have switched to displaying a different document, we need to update any
             // viewport-related state we have lying around. This includes mGeckoViewport and
             // mViewportMetrics. Usually this information is updated via handleViewportMessage
