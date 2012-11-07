@@ -90,7 +90,7 @@ let FormAssistant = {
 
     switch (evt.type) {
       case "focus":
-        if (this.isIMEDisabled())
+        if (this.isTextInputElement(target) && this.isIMEDisabled())
           return;
 
         if (target && this.isFocusableElement(target)) {
@@ -195,7 +195,7 @@ let FormAssistant = {
       case "ime-enabled-state-changed":
         let shouldOpen = parseInt(data);
         let target = Services.fm.focusedElement;
-        if (!target)
+        if (!target || !this.isTextInputElement(target))
           return;
 
         if (shouldOpen) {
@@ -232,8 +232,7 @@ let FormAssistant = {
       target = target.parentNode;
 
     let kbOpened = this.tryShowIme(target);
-    if (target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement)
+    if (this.isTextInputElement(target))
       this.isKeyboardOpened = kbOpened;
 
     this.setFocusedElement(target);
@@ -256,6 +255,11 @@ let FormAssistant = {
 
     return (element instanceof HTMLInputElement &&
             !this.ignoredInputTypes.has(element.type));
+  },
+
+  isTextInputElement: function fa_isTextInputElement(element) {
+    return element instanceof HTMLInputElement ||
+           element instanceof HTMLTextAreaElement;
   },
 
   tryShowIme: function(element) {
