@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>Test for bug 807728</title>
+  <script>
+function do_test()
+{
+    var plugin = document.getElementById("plugin");
+    var color = "FF000000";
+    var color1 = "FF000001";
+    var color2 = "FF000002";
+    var last_paint_count = 0;
+    // Enough paints to test reusing a surface after it has been
+    // moved from front to back buffer.
+    var paints_required = 10;
+    var final_color = "FFFF0000";
+
+    function wait_for_paints() {
+        var paint_count = plugin.getPaintCount();
+        if (paint_count >= paints_required && color == final_color) {
+            document.documentElement.removeAttribute("class");
+            return;
+        }
+        if (paint_count != last_paint_count) {
+            last_paint_count = paint_count;
+            if (paint_count + 1 >= paints_required) {
+                color = final_color;
+            } else if (color != color1) {
+                color = color1;
+            } else {
+                color = color2;
+            }
+            plugin.setColor(color);
+        }       
+        setTimeout(wait_for_paints, 0);
+    }
+
+    wait_for_paints();
+}
+  </script>
+</head>
+<body onload="do_test()">
+  <embed id="plugin" type="application/x-test"
+         drawmode="solid" color="FF000000" width="30" height="50">
+  </embed>
+</body>
+</html>
