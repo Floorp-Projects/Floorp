@@ -178,13 +178,6 @@ public class ViewportMetrics {
         mZoomFactor = newZoomFactor;
     }
 
-    public boolean fuzzyEquals(ViewportMetrics other) {
-        return RectUtils.fuzzyEquals(mPageRect, other.mPageRect)
-            && RectUtils.fuzzyEquals(mCssPageRect, other.mCssPageRect)
-            && RectUtils.fuzzyEquals(mViewportRect, other.mViewportRect)
-            && FloatUtils.fuzzyEquals(mZoomFactor, other.mZoomFactor);
-    }
-
     public String toJSON() {
         // Round off height and width. Since the height and width are the size of the screen, it
         // makes no sense to send non-integer coordinates to Gecko.
