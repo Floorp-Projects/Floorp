@@ -53,11 +53,7 @@ to the decorators are being used as arguments to
 *mach.base* module for more.
 
 The Python modules defining mach commands do not need to live inside the
-main mach source tree. If a path on *sys.path* contains a *mach/commands*
-directory, modules will be loaded automatically by mach and any classes
-containing the decorators described above will be detected and loaded
-automatically by mach. So, to add a new subcommand to mach, you just need
-to ensure your Python module is present on *sys.path*.
+main mach source tree.
 
 Minimizing Code in Mach
 -----------------------

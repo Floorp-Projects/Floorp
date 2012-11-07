@@ -145,28 +145,6 @@ To see more help for a specific command, run:
 
         self.log_manager.register_structured_logger(self.logger)
 
-    def load_commands_from_sys_path(self):
-        """Discover and load mach command modules from sys.path.
-
-        This iterates over all paths on sys.path. If the path contains a
-        "mach/commands" subdirectory, all .py files in that directory will be
-        loaded and examined for mach commands.
-        """
-        # Create parent module otherwise Python complains when the parent is
-        # missing.
-        if b'mach.commands' not in sys.modules:
-            mod = imp.new_module(b'mach.commands')
-            sys.modules[b'mach.commands'] = mod
-
-        for path in sys.path:
-            # We only support importing .py files from directories.
-            commands_path = os.path.join(path, 'mach', 'commands')
-
-            if not os.path.isdir(commands_path):
-                continue
-
-            self.load_commands_from_directory(commands_path)
-
     def load_commands_from_directory(self, path):
         """Scan for mach commands from modules in a directory.
 
@@ -190,6 +168,12 @@ To see more help for a specific command, run:
         chosen.
         """
         if module_name is None:
+            # Ensure parent module is present otherwise we'll (likely) get
+            # an error due to unknown parent.
+            if b'mach.commands' not in sys.modules:
+                mod = imp.new_module(b'mach.commands')
+                sys.modules[b'mach.commands'] = mod
+
             module_name = 'mach.commands.%s' % uuid.uuid1().get_hex()
 
         imp.load_source(module_name, path)
