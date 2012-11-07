@@ -49,6 +49,7 @@ EXPORTS	= \
 	gfxUtils.h \
 	gfxUserFontSet.h \
 	nsSurfaceTexture.h \
+	gfxBaseSharedMemorySurface.h \
 	gfxSharedImageSurface.h \
 	gfxReusableSurfaceWrapper.h \
 	gfxSVGGlyphs.h \
@@ -179,7 +180,7 @@ CPPSRCS	= \
 	gfxUtils.cpp \
 	gfxScriptItemizer.cpp \
 	gfxHarfBuzzShaper.cpp \
-	gfxSharedImageSurface.cpp \
+	gfxBaseSharedMemorySurface.cpp \
 	gfxReusableSurfaceWrapper.cpp \
 	nsSurfaceTexture.cpp \
 	gfxSVGGlyphs.cpp \
