@@ -143,6 +143,17 @@ public class ImmutableViewportMetrics {
             FloatUtils.interpolate(zoomFactor, to.zoomFactor, t));
     }
 
+    public ImmutableViewportMetrics offsetViewportBy(PointF delta) {
+        return new ImmutableViewportMetrics(
+            pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
+            cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
+            viewportRectLeft + delta.x,
+            viewportRectTop + delta.y,
+            viewportRectRight + delta.x,
+            viewportRectBottom + delta.y,
+            zoomFactor);
+    }
+
     public boolean fuzzyEquals(ImmutableViewportMetrics other) {
         return FloatUtils.fuzzyEquals(pageRectLeft, other.pageRectLeft)
             && FloatUtils.fuzzyEquals(pageRectTop, other.pageRectTop)
