@@ -459,8 +459,12 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
                            filename.ptr());
             return false;
         }
-        JSScript *script = JS_CompileUTF8FileHandleForPrincipals(cx, obj, filename.ptr(),
-                                                                 file, gJSPrincipals);
+        JS::CompileOptions options(cx);
+        options.setUTF8(true)
+               .setFileAndLine(filename.ptr(), 1)
+               .setPrincipals(gJSPrincipals);
+        js::RootedObject rootedObj(cx, obj);
+        JSScript *script = JS::Compile(cx, rootedObj, options, file);
         fclose(file);
         if (!script)
             return false;
@@ -1028,9 +1032,12 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
         ungetc(ch, file);
         DoBeginRequest(cx);
 
-        script = JS_CompileUTF8FileHandleForPrincipals(cx, obj, filename, file,
-                                                       gJSPrincipals);
-
+        JS::CompileOptions options(cx);
+        options.setUTF8(true)
+               .setFileAndLine(filename, 1)
+               .setPrincipals(gJSPrincipals);
+        js::RootedObject rootedObj(cx, obj);
+        script = JS::Compile(cx, rootedObj, options, file);
         if (script && !compileOnly)
             (void)JS_ExecuteScript(cx, obj, script, &result);
         DoEndRequest(cx);
