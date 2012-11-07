@@ -2386,7 +2386,7 @@ let RIL = {
         options.number = mmi.sia;
         options.serviceClass = mmi.sib;
         if (options.action == CALL_FORWARD_ACTION_QUERY_STATUS) {
-          _sendMMIError("CF_QUERY_STATUS_NOT_SUPPORTED");
+          this.queryCallForwardStatus(options);
           return;
         }
 
