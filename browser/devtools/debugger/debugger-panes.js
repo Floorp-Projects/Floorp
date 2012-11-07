@@ -1212,7 +1212,7 @@ SourceResults.prototype = {
    */
   toggle: function SR_toggle(e) {
     if (e instanceof Event) {
-      this._toggled = true;
+      this._userToggled = true;
     }
     this.expanded ^= 1;
   },
@@ -1230,9 +1230,10 @@ SourceResults.prototype = {
   set expanded(aFlag) this[aFlag ? "expand" : "collapse"](),
 
   /**
-   * Returns true if this element was toggled via user interaction.
+   * Returns if this element was ever toggled via user interaction.
+   * @return boolean
    */
-  get toggled() this._toggled,
+  get toggled() this._userToggled,
 
   /**
    * Gets the element associated with this item.
@@ -1313,7 +1314,7 @@ SourceResults.prototype = {
 
   _store: null,
   _target: null,
-  _toggled: false
+  _userToggled: false
 };
 
 /**

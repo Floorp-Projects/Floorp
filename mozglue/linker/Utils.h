@@ -90,6 +90,16 @@ struct AutoCloseFDTraits
 };
 typedef mozilla::Scoped<AutoCloseFDTraits> AutoCloseFD;
 
+/**
+ * AutoCloseFILE is a RAII wrapper for POSIX streams
+ */
+struct AutoCloseFILETraits
+{
+  typedef FILE *type;
+  static FILE *empty() { return NULL; }
+  static void release(FILE *f) { fclose(f); }
+};
+typedef mozilla::Scoped<AutoCloseFILETraits> AutoCloseFILE;
 
 /**
  * MappedPtr is a RAII wrapper for mmap()ed memory. It can be used as

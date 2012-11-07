@@ -229,7 +229,7 @@
   -moz-padding-start: 6px;
 }
 
-.variable > .details {
+.variable:not([non-header]) > .details {
   -moz-margin-start: 10px;
 }
 
@@ -256,7 +256,7 @@
   -moz-padding-start: 6px;
 }
 
-.property > .details {
+.property:not([non-header]) > .details {
   -moz-margin-start: 10px;
 }
 
@@ -317,6 +317,20 @@
 .variable[non-writable] > tooltip > label[value="writable"],
 .property[non-writable] > tooltip > label[value="writable"] {
   text-decoration: line-through;
+}
+
+/**
+ * Variables and properties searching
+ */
+
+#variables .devtools-searchinput {
+  min-height: 24px;
+}
+
+.variable[non-match],
+.property[non-match] {
+  border: none;
+  margin: 0;
 }
 
 /**
