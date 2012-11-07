@@ -29,9 +29,9 @@ while (decoderList.hasMore()) {
     var decoder =  decoderList.getNext();
 
     // encode the content for non-ASCII compatible encodings
-    if (decoder == "UTF-16" || decoder == "UTF-16BE")
+    if (decoder == "UTF-16BE")
         data = encodeUTF16BE(testContent);
-    else if (decoder == "UTF-16LE")
+    else if (decoder == "UTF-16" || decoder == "UTF-16LE")
         data = encodeUTF16LE(testContent);
     else
         data = encodeURI(testContent);
