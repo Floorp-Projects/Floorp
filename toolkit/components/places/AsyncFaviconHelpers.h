@@ -57,7 +57,7 @@ struct IconData
   , fetchMode(FETCH_NEVER)
   , status(ICON_STATUS_UNKNOWN)
   {
-    guid.SetIsVoid(PR_TRUE);
+    guid.SetIsVoid(true);
   }
 
   int64_t id;
