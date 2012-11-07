@@ -408,6 +408,9 @@ TaskbarPreview::MainWindowHook(void *aContext,
   NS_ASSERTION(nMsg == nsAppShell::GetTaskbarButtonCreatedMessage() ||
                nMsg == WM_DESTROY,
                "Window hook proc called with wrong message");
+  NS_ASSERTION(aContext, "Null context in MainWindowHook");
+  if (!aContext)
+    return false;
   TaskbarPreview *preview = reinterpret_cast<TaskbarPreview*>(aContext);
   if (nMsg == WM_DESTROY) {
     // nsWindow is being destroyed
