@@ -423,8 +423,6 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
     // XXX the blank frame is using the content of its parent - at some point it 
     // should just have null content, if we support that                                                            
     nsHTMLFramesetBlankFrame* blankFrame = new (shell) nsHTMLFramesetBlankFrame(pseudoStyleContext);
-    if (!blankFrame)
-      return NS_ERROR_OUT_OF_MEMORY;
 
     result = blankFrame->Init(mContent, this, nullptr);
     if (NS_FAILED(result)) {
