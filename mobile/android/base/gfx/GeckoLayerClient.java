@@ -268,9 +268,7 @@ public class GeckoLayerClient
 
     private void adjustViewport(DisplayPortMetrics displayPort) {
         ImmutableViewportMetrics metrics = getViewportMetrics();
-
-        ViewportMetrics clampedMetrics = new ViewportMetrics(metrics);
-        clampedMetrics.setViewport(clampedMetrics.getClampedViewport());
+        ViewportMetrics clampedMetrics = new ViewportMetrics(metrics.clamp());
 
         if (displayPort == null) {
             displayPort = DisplayPortCalculator.calculate(metrics, mPanZoomController.getVelocityVector());

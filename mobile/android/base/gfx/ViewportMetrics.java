@@ -103,24 +103,6 @@ public class ViewportMetrics {
         return RectUtils.scale(mViewportRect, 1/mZoomFactor);
     }
 
-    /** Returns the viewport rectangle, clamped within the page-size. */
-    public RectF getClampedViewport() {
-        RectF clampedViewport = new RectF(mViewportRect);
-
-        // The viewport bounds ought to never exceed the page bounds.
-        if (clampedViewport.right > mPageRect.right)
-            clampedViewport.offset(mPageRect.right - clampedViewport.right, 0);
-        if (clampedViewport.left < mPageRect.left)
-            clampedViewport.offset(mPageRect.left - clampedViewport.left, 0);
-
-        if (clampedViewport.bottom > mPageRect.bottom)
-            clampedViewport.offset(0, mPageRect.bottom - clampedViewport.bottom);
-        if (clampedViewport.top < mPageRect.top)
-            clampedViewport.offset(0, mPageRect.top - clampedViewport.top);
-
-        return clampedViewport;
-    }
-
     public RectF getPageRect() {
         return mPageRect;
     }
@@ -155,27 +137,6 @@ public class ViewportMetrics {
 
     public void setZoomFactor(float zoomFactor) {
         mZoomFactor = zoomFactor;
-    }
-
-    /* This will set the zoom factor and re-scale page-size and viewport offset
-     * accordingly. The given focus will remain at the same point on the screen
-     * after scaling.
-     */
-    public void scaleTo(float newZoomFactor, PointF focus) {
-        // mCssPageRect is invariant, since we're setting the scale factor
-        // here. The page rect is based on the CSS page rect.
-        mPageRect = RectUtils.scale(mCssPageRect, newZoomFactor);
-
-        float scaleFactor = newZoomFactor / mZoomFactor;
-        PointF origin = getOrigin();
-
-        origin.offset(focus.x, focus.y);
-        origin = PointUtils.scale(origin, scaleFactor);
-        origin.offset(-focus.x, -focus.y);
-
-        setOrigin(origin);
-
-        mZoomFactor = newZoomFactor;
     }
 
     public String toJSON() {
