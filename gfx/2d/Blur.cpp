@@ -12,6 +12,9 @@
 #include "mozilla/Constants.h"
 #include "mozilla/Util.h"
 
+#include "2D.h"
+#include "Tools.h"
+
 using namespace std;
 
 namespace mozilla {
@@ -311,8 +314,8 @@ SpreadVertical(unsigned char* aInput,
     }
 }
 
-static CheckedInt<int32_t>
-RoundUpToMultipleOf4(int32_t aVal)
+CheckedInt<int32_t>
+AlphaBoxBlur::RoundUpToMultipleOf4(int32_t aVal)
 {
   CheckedInt<int32_t> val(aVal);
 
@@ -378,10 +381,11 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
   if (stride.isValid()) {
     mStride = stride.value();
 
-    CheckedInt<int32_t> size = CheckedInt<int32_t>(mStride) * mRect.height *
-                               sizeof(unsigned char);
+    // We need to leave room for an additional 3 bytes for a potential overrun
+    // in our blurring code.
+    CheckedInt<int32_t> size = CheckedInt<int32_t>(mStride) * mRect.height + 3;
     if (size.isValid()) {
-      mData = static_cast<unsigned char*>(malloc(size.value()));
+      mData = new uint8_t[size.value()];
       memset(mData, 0, size.value());
     }
   }
@@ -405,7 +409,7 @@ AlphaBoxBlur::AlphaBoxBlur(uint8_t* aData,
 AlphaBoxBlur::~AlphaBoxBlur()
 {
   if (mFreeData) {
-    free(mData);
+    delete [] mData;
   }
 }
 
@@ -455,42 +459,238 @@ AlphaBoxBlur::Blur()
   if (mBlurRadius != IntSize(0,0) || mSpreadRadius != IntSize(0,0)) {
     int32_t stride = GetStride();
 
-    // No need to use CheckedInt here - we have validated it in the constructor.
-    size_t szB = stride * GetSize().height * sizeof(unsigned char);
-    unsigned char* tmpData = static_cast<unsigned char*>(malloc(szB));
-    if (!tmpData)
-      return; // OOM
-
-    memset(tmpData, 0, szB);
+    IntSize size = GetSize();
 
     if (mSpreadRadius.width > 0 || mSpreadRadius.height > 0) {
+      // No need to use CheckedInt here - we have validated it in the constructor.
+      size_t szB = stride * size.height;
+      unsigned char* tmpData = new uint8_t[szB];
+
+      memset(tmpData, 0, szB);
+
       SpreadHorizontal(mData, tmpData, mSpreadRadius.width, GetSize().width, GetSize().height, stride, mSkipRect);
       SpreadVertical(tmpData, mData, mSpreadRadius.height, GetSize().width, GetSize().height, stride, mSkipRect);
+
+      delete [] tmpData;
     }
 
-    if (mBlurRadius.width > 0) {
-      int32_t lobes[3][2];
-      ComputeLobes(mBlurRadius.width, lobes);
-      BoxBlurHorizontal(mData, tmpData, lobes[0][0], lobes[0][1], stride, GetSize().height, mSkipRect);
-      BoxBlurHorizontal(tmpData, mData, lobes[1][0], lobes[1][1], stride, GetSize().height, mSkipRect);
-      BoxBlurHorizontal(mData, tmpData, lobes[2][0], lobes[2][1], stride, GetSize().height, mSkipRect);
+    int32_t horizontalLobes[3][2];
+    ComputeLobes(mBlurRadius.width, horizontalLobes);
+    int32_t verticalLobes[3][2];
+    ComputeLobes(mBlurRadius.height, verticalLobes);
+
+    // We want to allow for some extra space on the left for alignment reasons.
+    int32_t maxLeftLobe = RoundUpToMultipleOf4(horizontalLobes[0][0] + 1).value();
+
+    IntSize integralImageSize(size.width + maxLeftLobe + horizontalLobes[1][1],
+                              size.height + verticalLobes[0][0] + verticalLobes[1][1] + 1);
+
+#ifdef IS_BIG_ENDIAN
+    const bool cIsBigEndian = true;
+#else
+    const bool cIsBigEndian = false;
+#endif
+
+    if (cIsBigEndian || (integralImageSize.width * integralImageSize.height) > (1 << 24)) {
+      // Fallback to old blurring code when the surface is so large it may
+      // overflow our integral image!
+
+      // No need to use CheckedInt here - we have validated it in the constructor.
+      size_t szB = stride * size.height;
+      unsigned char* tmpData = new uint8_t[szB];
+
+      memset(tmpData, 0, szB);
+
+      if (mBlurRadius.width > 0) {
+        BoxBlurHorizontal(mData, tmpData, horizontalLobes[0][0], horizontalLobes[0][1], stride, GetSize().height, mSkipRect);
+        BoxBlurHorizontal(tmpData, mData, horizontalLobes[1][0], horizontalLobes[1][1], stride, GetSize().height, mSkipRect);
+        BoxBlurHorizontal(mData, tmpData, horizontalLobes[2][0], horizontalLobes[2][1], stride, GetSize().height, mSkipRect);
+      } else {
+        uint8_t *tmp = mData;
+        mData = tmpData;
+        tmpData = tmp;
+      }
+      if (mBlurRadius.height > 0) {
+        BoxBlurVertical(tmpData, mData, verticalLobes[0][0], verticalLobes[0][1], stride, GetSize().height, mSkipRect);
+        BoxBlurVertical(mData, tmpData, verticalLobes[1][0], verticalLobes[1][1], stride, GetSize().height, mSkipRect);
+        BoxBlurVertical(tmpData, mData, verticalLobes[2][0], verticalLobes[2][1], stride, GetSize().height, mSkipRect);
+      } else {
+        uint8_t *tmp = mData;
+        mData = tmpData;
+        tmpData = tmp;
+      }
+
+      delete [] tmpData;
     } else {
-      memcpy(tmpData, mData, stride * GetSize().height);
-    }
+      size_t integralImageStride = GetAlignedStride<16>(integralImageSize.width * 4);
 
-    if (mBlurRadius.height > 0) {
-      int32_t lobes[3][2];
-      ComputeLobes(mBlurRadius.height, lobes);
-      BoxBlurVertical(tmpData, mData, lobes[0][0], lobes[0][1], stride, GetSize().height, mSkipRect);
-      BoxBlurVertical(mData, tmpData, lobes[1][0], lobes[1][1], stride, GetSize().height, mSkipRect);
-      BoxBlurVertical(tmpData, mData, lobes[2][0], lobes[2][1], stride, GetSize().height, mSkipRect);
-    } else {
-      memcpy(mData, tmpData, stride * GetSize().height);
-    }
+      // We need to leave room for an additional 12 bytes for a maximum overrun
+      // of 3 pixels in the blurring code.
+      AlignedArray<uint32_t> integralImage((integralImageStride / 4) * integralImageSize.height + 12);
 
-    free(tmpData);
+#ifdef USE_SSE2
+      if (Factory::HasSSE2()) {
+        BoxBlur_SSE2(horizontalLobes[0][0], horizontalLobes[0][1], verticalLobes[0][0],
+                     verticalLobes[0][1], integralImage, integralImageStride);
+        BoxBlur_SSE2(horizontalLobes[1][0], horizontalLobes[1][1], verticalLobes[1][0],
+                     verticalLobes[1][1], integralImage, integralImageStride);
+        BoxBlur_SSE2(horizontalLobes[2][0], horizontalLobes[2][1], verticalLobes[2][0],
+                     verticalLobes[2][1], integralImage, integralImageStride);
+      } else
+#endif
+      {
+        BoxBlur_C(horizontalLobes[0][0], horizontalLobes[0][1], verticalLobes[0][0],
+                  verticalLobes[0][1], integralImage, integralImageStride);
+        BoxBlur_C(horizontalLobes[1][0], horizontalLobes[1][1], verticalLobes[1][0],
+                  verticalLobes[1][1], integralImage, integralImageStride);
+        BoxBlur_C(horizontalLobes[2][0], horizontalLobes[2][1], verticalLobes[2][0],
+                  verticalLobes[2][1], integralImage, integralImageStride);
+      }
+    }
+  }
+}
+
+MOZ_ALWAYS_INLINE void
+GenerateIntegralRow(uint32_t  *aDest, const uint8_t *aSource, uint32_t *aPreviousRow,
+                    const uint32_t &aSourceWidth, const uint32_t &aLeftInflation, const uint32_t &aRightInflation)
+{
+  uint32_t currentRowSum = 0;
+  uint32_t pixel = aSource[0];
+  for (uint32_t x = 0; x < aLeftInflation; x++) {
+    currentRowSum += pixel;
+    *aDest++ = currentRowSum + *aPreviousRow++;
+  }
+  for (uint32_t x = aLeftInflation; x < (aSourceWidth + aLeftInflation); x += 4) {
+      uint32_t alphaValues = *(uint32_t*)(aSource + (x - aLeftInflation));
+      currentRowSum += alphaValues & 0xff;
+      *aDest++ = *aPreviousRow++ + currentRowSum;
+      alphaValues >>= 8;
+      currentRowSum += alphaValues & 0xff;
+      *aDest++ = *aPreviousRow++ + currentRowSum;
+      alphaValues >>= 8;
+      currentRowSum += alphaValues & 0xff;
+      *aDest++ = *aPreviousRow++ + currentRowSum;
+      alphaValues >>= 8;
+      currentRowSum += alphaValues & 0xff;
+      *aDest++ = *aPreviousRow++ + currentRowSum;
+  }
+  pixel = aSource[aSourceWidth - 1];
+  for (uint32_t x = (aSourceWidth + aLeftInflation); x < (aSourceWidth + aLeftInflation + aRightInflation); x++) {
+    currentRowSum += pixel;
+    *aDest++ = currentRowSum + *aPreviousRow++;
+  }
+}
+
+MOZ_ALWAYS_INLINE void
+GenerateIntegralImage_C(int32_t aLeftInflation, int32_t aRightInflation,
+                        int32_t aTopInflation, int32_t aBottomInflation,
+                        uint32_t *aIntegralImage, size_t aIntegralImageStride,
+                        uint8_t *aSource, int32_t aSourceStride, const IntSize &aSize)
+{
+  uint32_t stride32bit = aIntegralImageStride / 4;
+
+  IntSize integralImageSize(aSize.width + aLeftInflation + aRightInflation,
+                            aSize.height + aTopInflation + aBottomInflation);
+
+  memset(aIntegralImage, 0, aIntegralImageStride);
+
+  GenerateIntegralRow(aIntegralImage, aSource, aIntegralImage,
+                      aSize.width, aLeftInflation, aRightInflation);
+  for (int y = 1; y < aTopInflation + 1; y++) {
+    uint32_t *intRow = aIntegralImage + (y * stride32bit);
+    uint32_t *intPrevRow = aIntegralImage + (y - 1) * stride32bit;
+    uint32_t *intFirstRow = aIntegralImage;
+
+    GenerateIntegralRow(aIntegralImage + (y * stride32bit), aSource, aIntegralImage + (y - 1) * stride32bit,
+                        aSize.width, aLeftInflation, aRightInflation);
   }
 
+  for (int y = aTopInflation + 1; y < (aSize.height + aTopInflation); y++) {
+    GenerateIntegralRow(aIntegralImage + (y * stride32bit), aSource + aSourceStride * (y - aTopInflation),
+                        aIntegralImage + (y - 1) * stride32bit, aSize.width, aLeftInflation, aRightInflation);
+  }
+
+  if (aBottomInflation) {
+    for (int y = (aSize.height + aTopInflation); y < integralImageSize.height; y++) {
+      GenerateIntegralRow(aIntegralImage + (y * stride32bit), aSource + ((aSize.height - 1) * aSourceStride),
+                          aIntegralImage + (y - 1) * stride32bit,
+                          aSize.width, aLeftInflation, aRightInflation);
+    }
+  }
+}
+
+/**
+ * Attempt to do an in-place box blur using an integral image.
+ */
+void
+AlphaBoxBlur::BoxBlur_C(int32_t aLeftLobe,
+                        int32_t aRightLobe,
+                        int32_t aTopLobe,
+                        int32_t aBottomLobe,
+                        uint32_t *aIntegralImage,
+                        size_t aIntegralImageStride)
+{
+  IntSize size = GetSize();
+
+  MOZ_ASSERT(size.width > 0);
+
+  // Our 'left' or 'top' lobe will include the current pixel. i.e. when
+  // looking at an integral image the value of a pixel at 'x,y' is calculated
+  // using the value of the integral image values above/below that.
+  aLeftLobe++;
+  aTopLobe++;
+  int32_t boxSize = (aLeftLobe + aRightLobe) * (aTopLobe + aBottomLobe);
+
+  MOZ_ASSERT(boxSize > 0);
+
+  if (boxSize == 1) {
+      return;
+  }
+
+  uint32_t stride32bit = aIntegralImageStride / 4;
+
+  int32_t leftInflation = RoundUpToMultipleOf4(aLeftLobe).value();
+
+  GenerateIntegralImage_C(leftInflation, aRightLobe, aTopLobe, aBottomLobe,
+                          aIntegralImage, aIntegralImageStride, mData,
+                          mStride, size);
+
+  uint32_t reciprocal = uint32_t((uint64_t(1) << 32) / boxSize);
+
+  uint32_t *innerIntegral = aIntegralImage + (aTopLobe * stride32bit) + leftInflation;
+
+  // Storing these locally makes this about 30% faster! Presumably the compiler
+  // can't be sure we're not altering the member variables in this loop.
+  IntRect skipRect = mSkipRect;
+  uint8_t *data = mData;
+  int32_t stride = mStride;
+  for (int32_t y = 0; y < size.height; y++) {
+    bool inSkipRectY = y > skipRect.y && y < skipRect.YMost();
+
+    uint32_t *topLeftBase = innerIntegral + ((y - aTopLobe) * stride32bit - aLeftLobe);
+    uint32_t *topRightBase = innerIntegral + ((y - aTopLobe) * stride32bit + aRightLobe);
+    uint32_t *bottomRightBase = innerIntegral + ((y + aBottomLobe) * stride32bit + aRightLobe);
+    uint32_t *bottomLeftBase = innerIntegral + ((y + aBottomLobe) * stride32bit - aLeftLobe);
+
+    for (int32_t x = 0; x < size.width; x++) {
+      if (inSkipRectY && x > skipRect.x && x < skipRect.XMost()) {
+        x = skipRect.XMost() - 1;
+        // Trigger early jump on coming loop iterations, this will be reset
+        // next line anyway.
+        inSkipRectY = false;
+        continue;
+      }
+      int32_t topLeft = topLeftBase[x];
+      int32_t topRight = topRightBase[x];
+      int32_t bottomRight = bottomRightBase[x];
+      int32_t bottomLeft = bottomLeftBase[x];
+
+      uint32_t value = bottomRight - topRight - bottomLeft;
+      value += topLeft;
+
+      data[stride * y + x] = (uint64_t(reciprocal) * value) >> 32;
+    }
+  }
 }
 
 /**
