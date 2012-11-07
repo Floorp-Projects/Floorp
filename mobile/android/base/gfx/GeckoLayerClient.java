@@ -376,16 +376,17 @@ public class GeckoLayerClient
         // XXX All sorts of rounding happens inside Gecko that becomes hard to
         //     account exactly for. Given we align the display-port to tile
         //     boundaries (and so they rarely vary by sub-pixel amounts), just
-        //     check that values are within a pixel of the display-port bounds.
+        //     check that values are within a couple of pixels of the
+        //     display-port bounds.
 
         // Never abort drawing if we can't be sure we've sent a more recent
         // display-port. If we abort updating when we shouldn't, we can end up
         // with blank regions on the screen and we open up the risk of entering
         // an endless updating cycle.
-        if (Math.abs(displayPort.getLeft() - x) <= 1 &&
-            Math.abs(displayPort.getTop() - y) <= 1 &&
-            Math.abs(displayPort.getBottom() - (y + height)) <= 1 &&
-            Math.abs(displayPort.getRight() - (x + width)) <= 1) {
+        if (Math.abs(displayPort.getLeft() - x) <= 2 &&
+            Math.abs(displayPort.getTop() - y) <= 2 &&
+            Math.abs(displayPort.getBottom() - (y + height)) <= 2 &&
+            Math.abs(displayPort.getRight() - (x + width)) <= 2) {
             return mProgressiveUpdateData;
         }
 
