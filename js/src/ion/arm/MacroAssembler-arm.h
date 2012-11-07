@@ -549,7 +549,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     // boxing code
     void boxDouble(const FloatRegister &src, const ValueOperand &dest);
-    void boxNonDouble(JSValueType type, const Register &src, const ValueOperand &dest);
 
     // Extended unboxing API. If the payload is already in a register, returns
     // that register. Otherwise, provides a move to the given scratch register,
