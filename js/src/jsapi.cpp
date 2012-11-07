@@ -676,33 +676,36 @@ static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 /*
  * Thread Local Storage slot for storing the runtime for a thread.
  */
+namespace js {
+mozilla::ThreadLocal<PerThreadData *> TlsPerThreadData;
+}
+
 namespace JS {
-mozilla::ThreadLocal<JSRuntime *> TlsRuntime;
 
 #ifdef DEBUG
 JS_FRIEND_API(void)
 EnterAssertNoGCScope()
 {
-    ++TlsRuntime.get()->gcAssertNoGCDepth;
+    ++TlsPerThreadData.get()->gcAssertNoGCDepth;
 }
 
 JS_FRIEND_API(void)
 LeaveAssertNoGCScope()
 {
-    --TlsRuntime.get()->gcAssertNoGCDepth;
-    JS_ASSERT(TlsRuntime.get()->gcAssertNoGCDepth >= 0);
+    --TlsPerThreadData.get()->gcAssertNoGCDepth;
+    JS_ASSERT(TlsPerThreadData.get()->gcAssertNoGCDepth >= 0);
 }
 
 JS_FRIEND_API(bool)
 InNoGCScope()
 {
-    return TlsRuntime.get()->gcAssertNoGCDepth > 0;
+    return TlsPerThreadData.get()->gcAssertNoGCDepth > 0;
 }
 
 JS_FRIEND_API(bool)
 NeedRelaxedRootChecks()
 {
-    return TlsRuntime.get()->gcRelaxRootChecks;
+    return TlsPerThreadData.get()->gcRelaxRootChecks;
 }
 #else
 JS_FRIEND_API(void) EnterAssertNoGCScope() {}
@@ -715,8 +718,17 @@ JS_FRIEND_API(bool) NeedRelaxedRootChecks() { return false; }
 
 static const JSSecurityCallbacks NullSecurityCallbacks = { };
 
+js::PerThreadData::PerThreadData(JSRuntime *runtime)
+  : runtime_(runtime)
+#ifdef DEBUG
+  , gcRelaxRootChecks(false)
+  , gcAssertNoGCDepth(0)
+#endif
+{}
+
 JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
-  : atomsCompartment(NULL),
+  : mainThread(this),
+    atomsCompartment(NULL),
 #ifdef JS_THREADSAFE
     ownerThread_(NULL),
 #endif
@@ -788,10 +800,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcSliceBudget(SliceBudget::Unlimited),
     gcIncrementalEnabled(true),
     gcExactScanningEnabled(true),
-#ifdef DEBUG
-    gcRelaxRootChecks(false),
-    gcAssertNoGCDepth(0),
-#endif
     gcPoke(false),
     heapState(Idle),
 #ifdef JS_GC_ZEAL
@@ -885,14 +893,10 @@ JSRuntime::init(uint32_t maxbytes)
     ownerThread_ = PR_GetCurrentThread();
 #endif
 
-    JS::TlsRuntime.set(this);
+    js::TlsPerThreadData.set(&mainThread);
 
 #ifdef JS_METHODJIT_SPEW
     JMCheckLogging();
-#endif
-
-#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
-    PodArrayZero(thingGCRooters);
 #endif
 
     if (!js_InitGC(this, maxbytes))
@@ -1018,9 +1022,9 @@ JSRuntime::setOwnerThread()
     JS_ASSERT(ownerThread_ == (void *)0xc1ea12);  /* "clear" */
     JS_ASSERT(requestDepth == 0);
     JS_ASSERT(js_NewRuntimeWasCalled);
-    JS_ASSERT(JS::TlsRuntime.get() == NULL);
+    JS_ASSERT(js::TlsPerThreadData.get() == NULL);
     ownerThread_ = PR_GetCurrentThread();
-    JS::TlsRuntime.set(this);
+    js::TlsPerThreadData.set(&mainThread);
     nativeStackBase = GetNativeStackBase();
     if (nativeStackQuota)
         JS_SetNativeStackQuota(this, nativeStackQuota);
@@ -1033,7 +1037,7 @@ JSRuntime::clearOwnerThread()
     JS_ASSERT(requestDepth == 0);
     JS_ASSERT(js_NewRuntimeWasCalled);
     ownerThread_ = (void *)0xc1ea12;  /* "clear" */
-    JS::TlsRuntime.set(NULL);
+    js::TlsPerThreadData.set(NULL);
     nativeStackBase = 0;
 #if JS_STACK_GROWTH_DIRECTION > 0
     nativeStackLimit = UINTPTR_MAX;
@@ -1047,7 +1051,7 @@ JSRuntime::abortIfWrongThread() const
 {
     if (ownerThread_ != PR_GetCurrentThread())
         MOZ_CRASH();
-    if (this != JS::TlsRuntime.get())
+    if (!js::TlsPerThreadData.get()->associatedWith(this))
         MOZ_CRASH();
 }
 
@@ -1055,7 +1059,7 @@ JS_FRIEND_API(void)
 JSRuntime::assertValidThread() const
 {
     JS_ASSERT(ownerThread_ == PR_GetCurrentThread());
-    JS_ASSERT(this == JS::TlsRuntime.get());
+    JS_ASSERT(js::TlsPerThreadData.get()->associatedWith(this));
 }
 #endif  /* JS_THREADSAFE */
 
@@ -1092,7 +1096,7 @@ JS_NewRuntime(uint32_t maxbytes, JSUseHelperThreads useHelperThreads)
 
         InitMemorySubsystem();
 
-        if (!JS::TlsRuntime.init())
+        if (!js::TlsPerThreadData.init())
             return NULL;
 
         js_NewRuntimeWasCalled = JS_TRUE;
@@ -6553,7 +6557,7 @@ JS_ReportErrorNumberVA(JSContext *cx, JSErrorCallback errorCallback,
 
 JS_PUBLIC_API(void)
 JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
-                     void *userRef, const unsigned errorNumber, ...)
+                       void *userRef, const unsigned errorNumber, ...)
 {
     va_list ap;
 
@@ -6562,6 +6566,16 @@ JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
     js_ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef,
                            errorNumber, JS_FALSE, ap);
     va_end(ap);
+}
+
+JS_PUBLIC_API(void)
+JS_ReportErrorNumberUCArray(JSContext *cx, JSErrorCallback errorCallback,
+                            void *userRef, const unsigned errorNumber,
+                            const jschar **args)
+{
+    AssertHeapIsIdle(cx);
+    js_ReportErrorNumberUCArray(cx, JSREPORT_ERROR, errorCallback, userRef,
+                                errorNumber, args);
 }
 
 JS_PUBLIC_API(JSBool)

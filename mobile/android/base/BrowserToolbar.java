@@ -97,6 +97,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private TranslateAnimation mTitleSlideRight;
 
     private int mCount;
+    private int mFaviconSize;
 
     private static final int TABS_CONTRACTED = 1;
     private static final int TABS_EXPANDED = 2;
@@ -226,6 +227,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mFavicon.setOnClickListener(faviconListener);
         if (Build.VERSION.SDK_INT >= 16)
             mFavicon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        mFaviconSize = Math.round(mActivity.getResources().getDimension(R.dimen.browser_toolbar_favicon_size));
 
         mSiteSecurity = (ImageButton) mLayout.findViewById(R.id.site_security);
         mSiteSecurity.setOnClickListener(faviconListener);
@@ -683,10 +685,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         if (Tabs.getInstance().getSelectedTab().getState() == Tab.STATE_LOADING)
             return;
 
-        if (image != null)
+        if (image != null) {
+            image = Bitmap.createScaledBitmap(image, mFaviconSize, mFaviconSize, false);
             mFavicon.setImageBitmap(image);
-        else
+        } else {
             mFavicon.setImageResource(R.drawable.favicon);
+        }
     }
     
     public void setSecurityMode(String mode) {

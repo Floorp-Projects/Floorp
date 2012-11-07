@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <stdarg.h>
 
 #include "BindingUtils.h"
@@ -43,6 +44,58 @@ ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...)
   va_end(ap);
   return false;
 }
+
+} // namespace dom
+
+struct ErrorResult::Message {
+  nsTArray<nsString> mArgs;
+  dom::ErrNum mErrorNumber;
+};
+
+void
+ErrorResult::ThrowTypeError(const dom::ErrNum errorNumber, ...)
+{
+  va_list ap;
+  va_start(ap, errorNumber);
+  if (IsTypeError()) {
+    delete mMessage;
+  }
+  mResult = NS_ERROR_TYPE_ERR;
+  Message* message = new Message();
+  message->mErrorNumber = errorNumber;
+  uint16_t argCount =
+    dom::GetErrorMessage(nullptr, nullptr, errorNumber)->argCount;
+  MOZ_ASSERT(argCount <= 10);
+  argCount = std::min<uint16_t>(argCount, 10);
+  while (argCount--) {
+    message->mArgs.AppendElement(*va_arg(ap, nsString*));
+  }
+  mMessage = message;
+  va_end(ap);
+}
+
+void
+ErrorResult::ReportTypeError(JSContext* aCx)
+{
+  MOZ_ASSERT(mMessage, "ReportTypeError() can be called only once");
+
+  Message* message = mMessage;
+  const uint32_t argCount = message->mArgs.Length();
+  const jschar* args[11];
+  for (uint32_t i = 0; i < argCount; ++i) {
+    args[i] = message->mArgs.ElementAt(i).get();
+  }
+  args[argCount] = nullptr;
+
+  JS_ReportErrorNumberUCArray(aCx, dom::GetErrorMessage, nullptr,
+                              static_cast<const unsigned>(message->mErrorNumber),
+                              argCount > 0 ? args : nullptr);
+
+  delete message;
+  mMessage = nullptr;
+}
+
+namespace dom {
 
 bool
 DefineConstants(JSContext* cx, JSObject* obj, ConstantSpec* cs)

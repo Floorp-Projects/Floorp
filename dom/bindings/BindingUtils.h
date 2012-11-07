@@ -31,14 +31,6 @@ class nsGlobalWindow;
 namespace mozilla {
 namespace dom {
 
-enum ErrNum {
-#define MSG_DEF(_name, _argc, _str) \
-  _name,
-#include "mozilla/dom/Errors.msg"
-#undef MSG_DEF
-  Err_Limit
-};
-
 bool
 ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...);
 
@@ -61,10 +53,14 @@ Throw(JSContext* cx, nsresult rv)
 
 template<bool mainThread>
 inline bool
-ThrowMethodFailedWithDetails(JSContext* cx, const ErrorResult& rv,
+ThrowMethodFailedWithDetails(JSContext* cx, ErrorResult& rv,
                              const char* /* ifaceName */,
                              const char* /* memberName */)
 {
+  if (rv.IsTypeError()) {
+    rv.ReportTypeError(cx);
+    return false;
+  }
   return Throw<mainThread>(cx, rv.ErrorCode());
 }
 
