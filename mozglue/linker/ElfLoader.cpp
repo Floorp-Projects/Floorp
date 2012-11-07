@@ -96,7 +96,7 @@ __wrap_dladdr(void *addr, Dl_info *info)
 int
 __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
 {
-  if (ElfLoader::Singleton.dbg)
+  if (!ElfLoader::Singleton.dbg)
     return -1;
 
   for (ElfLoader::DebuggerHelper::iterator it = ElfLoader::Singleton.dbg.begin();
