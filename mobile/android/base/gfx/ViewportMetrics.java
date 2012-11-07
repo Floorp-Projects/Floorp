@@ -178,20 +178,6 @@ public class ViewportMetrics {
         mZoomFactor = newZoomFactor;
     }
 
-    /*
-     * Returns the viewport metrics that represent a linear transition between `from` and `to` at
-     * time `t`, which is on the scale [0, 1). This function interpolates the viewport rect, the
-     * page size, the offset, and the zoom factor.
-     */
-    public ViewportMetrics interpolate(ViewportMetrics to, float t) {
-        ViewportMetrics result = new ViewportMetrics(this);
-        result.mPageRect = RectUtils.interpolate(mPageRect, to.mPageRect, t);
-        result.mCssPageRect = RectUtils.interpolate(mCssPageRect, to.mCssPageRect, t);
-        result.mZoomFactor = FloatUtils.interpolate(mZoomFactor, to.mZoomFactor, t);
-        result.mViewportRect = RectUtils.interpolate(mViewportRect, to.mViewportRect, t);
-        return result;
-    }
-
     public boolean fuzzyEquals(ViewportMetrics other) {
         return RectUtils.fuzzyEquals(mPageRect, other.mPageRect)
             && RectUtils.fuzzyEquals(mCssPageRect, other.mCssPageRect)

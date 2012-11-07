@@ -622,12 +622,12 @@ public class PanZoomController
          * The viewport metrics that represent the start and end of the bounce-back animation,
          * respectively.
          */
-        private ViewportMetrics mBounceStartMetrics;
-        private ViewportMetrics mBounceEndMetrics;
+        private ImmutableViewportMetrics mBounceStartMetrics;
+        private ImmutableViewportMetrics mBounceEndMetrics;
 
         BounceRunnable(ViewportMetrics startMetrics, ViewportMetrics endMetrics) {
-            mBounceStartMetrics = startMetrics;
-            mBounceEndMetrics = endMetrics;
+            mBounceStartMetrics = new ImmutableViewportMetrics(startMetrics);
+            mBounceEndMetrics = new ImmutableViewportMetrics(endMetrics);
         }
 
         protected void animateFrame() {
@@ -657,8 +657,8 @@ public class PanZoomController
         private void advanceBounce() {
             synchronized (mTarget.getLock()) {
                 float t = easeOut(mBounceFrame * Axis.MS_PER_FRAME / 256f);
-                ViewportMetrics newMetrics = mBounceStartMetrics.interpolate(mBounceEndMetrics, t);
-                mTarget.setViewportMetrics(newMetrics);
+                ImmutableViewportMetrics newMetrics = mBounceStartMetrics.interpolate(mBounceEndMetrics, t);
+                mTarget.setViewportMetrics(new ViewportMetrics(newMetrics));
                 mBounceFrame++;
             }
         }
@@ -666,7 +666,7 @@ public class PanZoomController
         /* Concludes a bounce animation and snaps the viewport into place. */
         private void finishBounce() {
             synchronized (mTarget.getLock()) {
-                mTarget.setViewportMetrics(mBounceEndMetrics);
+                mTarget.setViewportMetrics(new ViewportMetrics(mBounceEndMetrics));
                 mBounceFrame = -1;
             }
         }

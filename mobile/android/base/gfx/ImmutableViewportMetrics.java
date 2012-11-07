@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.util.FloatUtils;
+
 import android.graphics.PointF;
 import android.graphics.RectF;
 
@@ -53,6 +55,27 @@ public class ImmutableViewportMetrics {
         zoomFactor = m.getZoomFactor();
     }
 
+    private ImmutableViewportMetrics(float aPageRectLeft, float aPageRectTop,
+        float aPageRectRight, float aPageRectBottom, float aCssPageRectLeft,
+        float aCssPageRectTop, float aCssPageRectRight, float aCssPageRectBottom,
+        float aViewportRectLeft, float aViewportRectTop, float aViewportRectRight,
+        float aViewportRectBottom, float aZoomFactor)
+    {
+        pageRectLeft = aPageRectLeft;
+        pageRectTop = aPageRectTop;
+        pageRectRight = aPageRectRight;
+        pageRectBottom = aPageRectBottom;
+        cssPageRectLeft = aCssPageRectLeft;
+        cssPageRectTop = aCssPageRectTop;
+        cssPageRectRight = aCssPageRectRight;
+        cssPageRectBottom = aCssPageRectBottom;
+        viewportRectLeft = aViewportRectLeft;
+        viewportRectTop = aViewportRectTop;
+        viewportRectRight = aViewportRectRight;
+        viewportRectBottom = aViewportRectBottom;
+        zoomFactor = aZoomFactor;
+    }
+
     public float getWidth() {
         return viewportRectRight - viewportRectLeft;
     }
@@ -96,6 +119,28 @@ public class ImmutableViewportMetrics {
 
     public RectF getCssPageRect() {
         return new RectF(cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom);
+    }
+
+    /*
+     * Returns the viewport metrics that represent a linear transition between "this" and "to" at
+     * time "t", which is on the scale [0, 1). This function interpolates all values stored in
+     * the viewport metrics.
+     */
+    public ImmutableViewportMetrics interpolate(ImmutableViewportMetrics to, float t) {
+        return new ImmutableViewportMetrics(
+            FloatUtils.interpolate(pageRectLeft, to.pageRectLeft, t),
+            FloatUtils.interpolate(pageRectTop, to.pageRectTop, t),
+            FloatUtils.interpolate(pageRectRight, to.pageRectRight, t),
+            FloatUtils.interpolate(pageRectBottom, to.pageRectBottom, t),
+            FloatUtils.interpolate(cssPageRectLeft, to.cssPageRectLeft, t),
+            FloatUtils.interpolate(cssPageRectTop, to.cssPageRectTop, t),
+            FloatUtils.interpolate(cssPageRectRight, to.cssPageRectRight, t),
+            FloatUtils.interpolate(cssPageRectBottom, to.cssPageRectBottom, t),
+            FloatUtils.interpolate(viewportRectLeft, to.viewportRectLeft, t),
+            FloatUtils.interpolate(viewportRectTop, to.viewportRectTop, t),
+            FloatUtils.interpolate(viewportRectRight, to.viewportRectRight, t),
+            FloatUtils.interpolate(viewportRectBottom, to.viewportRectBottom, t),
+            FloatUtils.interpolate(zoomFactor, to.zoomFactor, t));
     }
 
     @Override
