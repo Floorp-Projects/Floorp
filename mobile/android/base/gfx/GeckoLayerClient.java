@@ -306,7 +306,7 @@ public class GeckoLayerClient
     }
 
     /** Viewport message handler. */
-    private DisplayPortMetrics handleViewportMessage(ViewportMetrics messageMetrics, ViewportMessageType type) {
+    private DisplayPortMetrics handleViewportMessage(ImmutableViewportMetrics messageMetrics, ViewportMessageType type) {
         synchronized (this) {
             ViewportMetrics metrics;
             ImmutableViewportMetrics oldMetrics = getViewportMetrics();
@@ -314,7 +314,7 @@ public class GeckoLayerClient
             switch (type) {
             default:
             case UPDATE:
-                metrics = messageMetrics;
+                metrics = new ViewportMetrics(messageMetrics);
                 // Keep the old viewport size
                 metrics.setSize(oldMetrics.getSize());
                 abortPanZoomAnimation();
@@ -323,7 +323,7 @@ public class GeckoLayerClient
                 // adjust the page dimensions to account for differences in zoom
                 // between the rendered content (which is what Gecko tells us)
                 // and our zoom level (which may have diverged).
-                float scaleFactor = oldMetrics.zoomFactor / messageMetrics.getZoomFactor();
+                float scaleFactor = oldMetrics.zoomFactor / messageMetrics.zoomFactor;
                 metrics = new ViewportMetrics(oldMetrics);
                 metrics.setPageRect(RectUtils.scale(messageMetrics.getPageRect(), scaleFactor), messageMetrics.getCssPageRect());
                 break;
@@ -341,7 +341,7 @@ public class GeckoLayerClient
         return mDisplayPort;
     }
 
-    public DisplayPortMetrics getDisplayPort(boolean pageSizeUpdate, boolean isBrowserContentDisplayed, int tabId, ViewportMetrics metrics) {
+    public DisplayPortMetrics getDisplayPort(boolean pageSizeUpdate, boolean isBrowserContentDisplayed, int tabId, ImmutableViewportMetrics metrics) {
         Tabs tabs = Tabs.getInstance();
         if (tabs.isSelectedTab(tabs.getTab(tabId)) && isBrowserContentDisplayed) {
             // for foreground tabs, send the viewport update unless the document
@@ -353,8 +353,7 @@ public class GeckoLayerClient
             // when we do switch to that tab, we have the correct display port and
             // don't need to draw twice (once to allow the first-paint viewport to
             // get to java, and again once java figures out the display port).
-            ImmutableViewportMetrics newMetrics = new ImmutableViewportMetrics(metrics);
-            return DisplayPortCalculator.calculate(newMetrics, null);
+            return DisplayPortCalculator.calculate(metrics, null);
         }
     }
 
