@@ -77,6 +77,9 @@ public:
                                                              FillRule aFillRule = FILL_WINDING) const;
 
   virtual bool ContainsPoint(const Point &aPoint, const Matrix &aTransform) const;
+  virtual bool StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
+                                   const Point &aPoint,
+                                   const Matrix &aTransform) const;
   virtual Rect GetBounds(const Matrix &aTransform = Matrix()) const;
   virtual Rect GetStrokedBounds(const StrokeOptions &aStrokeOptions,
                                 const Matrix &aTransform = Matrix()) const;

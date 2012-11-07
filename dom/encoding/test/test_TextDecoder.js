@@ -72,19 +72,19 @@ function testConstructorEncodingOption(aData, aExpectedString)
     msg: "decoder testing constructor valid encoding."});
 
   // invalid encoding passed
-  testCharset({encoding: "asdfasdf", input: aData, error: "EncodingError",
+  testCharset({encoding: "asdfasdf", input: aData, error: "TypeError",
     msg: "constructor encoding, invalid encoding test."});
 
   // passing spaces for encoding
-  testCharset({encoding: "   ", input: aData, error: "EncodingError",
+  testCharset({encoding: "   ", input: aData, error: "TypeError",
     msg: "constructor encoding, spaces encoding test."});
 
   // passing null for encoding
-  testCharset({encoding: null, input: aData, error: "EncodingError",
+  testCharset({encoding: null, input: aData, error: "TypeError",
     msg: "constructor encoding, \"null\" encoding test."});
 
   // empty encoding passed
-  testCharset({encoding: "", input: aData, error: "EncodingError",
+  testCharset({encoding: "", input: aData, error: "TypeError",
     msg: "constuctor encoding, empty encoding test."});
 
   // replacement character test
@@ -184,10 +184,10 @@ function testDecodeStreamCompositions() {
     {encoding: "utf-16", input: [0xFF,0xFE,0x01,0x00], expected: ["","","","\x01"]},
     {encoding: "utf-16", input: [0xFF,0xFE,0xFF,0xFE], expected: ["","","","\uFEFF"]},
     {encoding: "utf-16", input: [0xFF,0xFE,0xFE,0xFF], expected: ["","","","\uFFFE"]},
-    {encoding: "utf-16", input: [0xFE,0xFF], expected: ["",""]},
-    {encoding: "utf-16", input: [0xFE,0xFF,0x01,0x00], expected: ["","","","\u0100"]},
-    {encoding: "utf-16", input: [0xFE,0xFF,0xFF,0xFE], expected: ["","","","\uFFFE"]},
-    {encoding: "utf-16", input: [0xFE,0xFF,0xFE,0xFF], expected: ["","","","\uFEFF"]},
+    {encoding: "utf-16", input: [0xFE,0xFF], expected: ["","\uFFFE"]},
+    {encoding: "utf-16", input: [0xFE,0xFF,0x01,0x00], expected: ["","\uFFFE","","\x01"]},
+    {encoding: "utf-16", input: [0xFE,0xFF,0xFF,0xFE], expected: ["","\uFFFE","","\uFEFF"]},
+    {encoding: "utf-16", input: [0xFE,0xFF,0xFE,0xFF], expected: ["","\uFFFE","","\uFFFE"]},
     {encoding: "utf-16le", input: [0x01,0x00], expected: ["","\x01"]},
     {encoding: "utf-16le", input: [0x01,0x00,0x03,0x02], expected: ["","\x01","","\u0203"]},
     {encoding: "utf-16le", input: [0xFF,0xFE,0x01,0x00], expected: ["","","","\x01"]},
@@ -337,7 +337,7 @@ function testDecoderGetEncoding()
     {encoding: "utf-16", labels: ["utf-16", "utf-16le"]},
     {encoding: "utf-16be", labels: ["utf-16be"]},
     {encoding: "x-user-defined", labels: ["x-user-defined"]},
-    {error: "EncodingError", labels: ["x-windows-949", "\u0130SO-8859-1"]},
+    {error: "TypeError", labels: ["x-windows-949", "\u0130SO-8859-1"]},
   ];
 
   for (var le of labelEncodings) {

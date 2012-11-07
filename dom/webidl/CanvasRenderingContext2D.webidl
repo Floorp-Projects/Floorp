@@ -144,6 +144,8 @@ interface CanvasRenderingContext2D {
   // if scaled.
   attribute boolean mozImageSmoothingEnabled;
 
+  boolean mozIsPointInStroke(double x, double y);
+
   // Show the caret if appropriate when drawing
   [ChromeOnly]
   const unsigned long DRAWWINDOW_DRAW_CARET   = 0x01;

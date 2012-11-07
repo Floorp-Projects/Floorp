@@ -389,8 +389,70 @@ struct JSAtomState
 #define NAME_OFFSET(name)       offsetof(JSAtomState, name)
 #define OFFSET_TO_NAME(rt,off)  (*(js::FixedHeapPtr<js::PropertyName>*)((char*)&(rt)->atomState + (off)))
 
+namespace js {
+
+/*
+ * Encapsulates portions of the runtime/context that are tied to a
+ * single active thread.  Normally, as most JS is single-threaded,
+ * there is only one instance of this struct, embedded in the
+ * JSRuntime as the field |mainThread|.  During Parallel JS sections,
+ * however, there will be one instance per worker thread.
+ *
+ * The eventual plan is to designate thread-safe portions of the
+ * interpreter and runtime by having them take |PerThreadData*|
+ * arguments instead of |JSContext*| or |JSRuntime*|.
+ */
+class PerThreadData : public js::PerThreadDataFriendFields
+{
+    /*
+     * Backpointer to the full shared JSRuntime* with which this
+     * thread is associaed.  This is private because accessing the
+     * fields of this runtime can provoke race conditions, so the
+     * intention is that access will be mediated through safe
+     * functions like |associatedWith()| below.
+     */
+    JSRuntime *runtime_;
+
+  public:
+    /*
+     * We save all conservative scanned roots in this vector so that
+     * conservative scanning can be "replayed" deterministically. In DEBUG mode,
+     * this allows us to run a non-incremental GC after every incremental GC to
+     * ensure that no objects were missed.
+     */
+#ifdef DEBUG
+    struct SavedGCRoot {
+        void *thing;
+        JSGCTraceKind kind;
+
+        SavedGCRoot(void *thing, JSGCTraceKind kind) : thing(thing), kind(kind) {}
+    };
+    js::Vector<SavedGCRoot, 0, js::SystemAllocPolicy> gcSavedRoots;
+
+    bool                gcRelaxRootChecks;
+    int                 gcAssertNoGCDepth;
+#endif
+
+    PerThreadData(JSRuntime *runtime);
+
+    bool associatedWith(const JSRuntime *rt) { return runtime_ == rt; }
+};
+
+} // namespace js
+
 struct JSRuntime : js::RuntimeFriendFields
 {
+    /* Per-thread data for the main thread that is associated with
+     * this JSRuntime, as opposed to any worker threads used in
+     * parallel sections.  See definition of |PerThreadData| struct
+     * above for more details.
+     *
+     * NB: This field is statically asserted to be at offset
+     * sizeof(RuntimeFriendFields). See
+     * PerThreadDataFriendFields::getMainThread.
+     */
+    js::PerThreadData mainThread;
+
     /* Default compartment. */
     JSCompartment       *atomsCompartment;
 
@@ -653,25 +715,6 @@ struct JSRuntime : js::RuntimeFriendFields
      * enabled, and is disabled if e4x has been used.
      */
     bool                gcExactScanningEnabled;
-
-    /*
-     * We save all conservative scanned roots in this vector so that
-     * conservative scanning can be "replayed" deterministically. In DEBUG mode,
-     * this allows us to run a non-incremental GC after every incremental GC to
-     * ensure that no objects were missed.
-     */
-#ifdef DEBUG
-    struct SavedGCRoot {
-        void *thing;
-        JSGCTraceKind kind;
-
-        SavedGCRoot(void *thing, JSGCTraceKind kind) : thing(thing), kind(kind) {}
-    };
-    js::Vector<SavedGCRoot, 0, js::SystemAllocPolicy> gcSavedRoots;
-
-    bool                gcRelaxRootChecks;
-    int                 gcAssertNoGCDepth;
-#endif
 
     bool                gcPoke;
 
@@ -1873,6 +1916,11 @@ extern JSBool
 js_ReportErrorNumberVA(JSContext *cx, unsigned flags, JSErrorCallback callback,
                        void *userRef, const unsigned errorNumber,
                        JSBool charArgs, va_list ap);
+
+extern bool
+js_ReportErrorNumberUCArray(JSContext *cx, unsigned flags, JSErrorCallback callback,
+                            void *userRef, const unsigned errorNumber,
+                            const jschar **args);
 
 extern JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,

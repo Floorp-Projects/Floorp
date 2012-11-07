@@ -30,7 +30,7 @@ interface nsIDOMTextMetrics : nsISupports
   readonly attribute float width;
 };
 
-[scriptable, uuid(c835c768-2dcc-461c-82f5-3653710d2942)]
+[scriptable, uuid(438fe14d-6501-40ab-b6c2-130fa38bd2c9)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // back-reference to the canvas element for which
@@ -166,6 +166,7 @@ enum CanvasMultiGetterType {
 
   // point-membership test
   boolean isPointInPath(in float x, in float y);
+  boolean mozIsPointInStroke(in float x, in float y);
 
   // pixel manipulation
   // ImageData getImageData (in float x, in float y, in float width, in float height);

@@ -271,6 +271,7 @@ _BROWSER_FILES = \
                  browser_tabDrop.js \
                  browser_lastAccessedTab.js \
                  browser_bug734076.js \
+                 browser_social.js \
                  browser_social_toolbar.js \
                  browser_social_shareButton.js \
                  browser_social_sidebar.js \

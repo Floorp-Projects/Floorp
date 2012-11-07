@@ -180,7 +180,7 @@ print('#include "assembler/wtf/Assertions.h"');
 print();
 print("namespace JSC { namespace Yarr {");
 print();
-print("#include <stdint.h>");
+print('#include "mozilla/StandardInteger.h"');
 print();
 
 for (i in characterSetInfo) {

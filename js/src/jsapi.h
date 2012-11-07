@@ -2889,8 +2889,6 @@ JS_IsInRequest(JSRuntime *rt);
 
 namespace JS {
 
-extern mozilla::ThreadLocal<JSRuntime *> TlsRuntime;
-
 inline bool
 IsPoisonedId(jsid iden)
 {
@@ -5692,6 +5690,11 @@ JS_ReportErrorNumberVA(JSContext *cx, JSErrorCallback errorCallback,
 extern JS_PUBLIC_API(void)
 JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
                      void *userRef, const unsigned errorNumber, ...);
+
+extern JS_PUBLIC_API(void)
+JS_ReportErrorNumberUCArray(JSContext *cx, JSErrorCallback errorCallback,
+                            void *userRef, const unsigned errorNumber,
+                            const jschar **args);
 
 /*
  * As above, but report a warning instead (JSREPORT_IS_WARNING(report.flags)).

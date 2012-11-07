@@ -9,13 +9,13 @@
                 android:padding="6dip">
 
     <ImageView android:id="@+id/favicon"
-               android:layout_width="32dip"
-               android:layout_height="32dip"
+               android:layout_width="@dimen/awesomebar_row_favicon_size"
+               android:layout_height="@dimen/awesomebar_row_favicon_size"
                android:layout_marginLeft="6dip"
                android:layout_marginRight="6dip"
                android:layout_centerVertical="true"
-               android:minWidth="32dip"
-               android:minHeight="32dip"
+               android:minWidth="@dimen/awesomebar_row_favicon_size"
+               android:minHeight="@dimen/awesomebar_row_favicon_size"
                android:scaleType="fitCenter"/>
 
     <ImageView android:id="@+id/bookmark_icon"
