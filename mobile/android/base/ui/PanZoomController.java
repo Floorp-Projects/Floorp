@@ -486,12 +486,8 @@ public class PanZoomController
     }
 
     private void scrollBy(PointF point) {
-        ViewportMetrics viewportMetrics = getMutableMetrics();
-        PointF origin = viewportMetrics.getOrigin();
-        origin.offset(point.x, point.y);
-        viewportMetrics.setOrigin(origin);
-
-        mTarget.setViewportMetrics(new ImmutableViewportMetrics(viewportMetrics));
+        ImmutableViewportMetrics scrolled = getMetrics().offsetViewportBy(point);
+        mTarget.setViewportMetrics(scrolled);
     }
 
     private void fling() {
