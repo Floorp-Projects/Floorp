@@ -9,6 +9,7 @@ import org.mozilla.gecko.util.FloatUtils;
 
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.util.DisplayMetrics;
 
 /**
  * ImmutableViewportMetrics are used to store the viewport metrics
@@ -33,26 +34,12 @@ public class ImmutableViewportMetrics {
     public final float viewportRectBottom;
     public final float zoomFactor;
 
-    public ImmutableViewportMetrics(ViewportMetrics m) {
-        RectF viewportRect = m.getViewport();
-        viewportRectLeft = viewportRect.left;
-        viewportRectTop = viewportRect.top;
-        viewportRectRight = viewportRect.right;
-        viewportRectBottom = viewportRect.bottom;
-
-        RectF pageRect = m.getPageRect();
-        pageRectLeft = pageRect.left;
-        pageRectTop = pageRect.top;
-        pageRectRight = pageRect.right;
-        pageRectBottom = pageRect.bottom;
-
-        RectF cssPageRect = m.getCssPageRect();
-        cssPageRectLeft = cssPageRect.left;
-        cssPageRectTop = cssPageRect.top;
-        cssPageRectRight = cssPageRect.right;
-        cssPageRectBottom = cssPageRect.bottom;
-
-        zoomFactor = m.getZoomFactor();
+    public ImmutableViewportMetrics(DisplayMetrics metrics) {
+        viewportRectLeft   = pageRectLeft   = cssPageRectLeft   = 0;
+        viewportRectTop    = pageRectTop    = cssPageRectTop    = 0;
+        viewportRectRight  = pageRectRight  = cssPageRectRight  = metrics.widthPixels;
+        viewportRectBottom = pageRectBottom = cssPageRectBottom = metrics.heightPixels;
+        zoomFactor = 1.0f;
     }
 
     private ImmutableViewportMetrics(float aPageRectLeft, float aPageRectTop,
@@ -83,8 +70,6 @@ public class ImmutableViewportMetrics {
     public float getHeight() {
         return viewportRectBottom - viewportRectTop;
     }
-
-    // some helpers to make ImmutableViewportMetrics act more like ViewportMetrics
 
     public PointF getOrigin() {
         return new PointF(viewportRectLeft, viewportRectTop);
@@ -143,6 +128,14 @@ public class ImmutableViewportMetrics {
             FloatUtils.interpolate(zoomFactor, to.zoomFactor, t));
     }
 
+    public ImmutableViewportMetrics setViewportSize(FloatSize size) {
+        return new ImmutableViewportMetrics(
+            pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
+            cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
+            viewportRectLeft, viewportRectTop, viewportRectLeft + size.width, viewportRectTop + size.height,
+            zoomFactor);
+    }
+
     public ImmutableViewportMetrics setViewportOrigin(float newOriginX, float newOriginY) {
         return new ImmutableViewportMetrics(
             pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
@@ -151,8 +144,24 @@ public class ImmutableViewportMetrics {
             zoomFactor);
     }
 
+    public ImmutableViewportMetrics setZoomFactor(float newZoomFactor) {
+        return new ImmutableViewportMetrics(
+            pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
+            cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
+            viewportRectLeft, viewportRectTop, viewportRectRight, viewportRectBottom,
+            newZoomFactor);
+    }
+
     public ImmutableViewportMetrics offsetViewportBy(PointF delta) {
         return setViewportOrigin(viewportRectLeft + delta.x, viewportRectTop + delta.y);
+    }
+
+    public ImmutableViewportMetrics setPageRect(RectF pageRect, RectF cssPageRect) {
+        return new ImmutableViewportMetrics(
+            pageRect.left, pageRect.top, pageRect.right, pageRect.bottom,
+            cssPageRect.left, cssPageRect.top, cssPageRect.right, cssPageRect.bottom,
+            viewportRectLeft, viewportRectTop, viewportRectRight, viewportRectBottom,
+            zoomFactor);
     }
 
     /* This will set the zoom factor and re-scale page-size and viewport offset
