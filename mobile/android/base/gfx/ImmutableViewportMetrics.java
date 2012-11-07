@@ -128,11 +128,11 @@ public class ImmutableViewportMetrics {
             FloatUtils.interpolate(zoomFactor, to.zoomFactor, t));
     }
 
-    public ImmutableViewportMetrics setViewportSize(FloatSize size) {
+    public ImmutableViewportMetrics setViewportSize(float width, float height) {
         return new ImmutableViewportMetrics(
             pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
             cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
-            viewportRectLeft, viewportRectTop, viewportRectLeft + size.width, viewportRectTop + size.height,
+            viewportRectLeft, viewportRectTop, viewportRectLeft + width, viewportRectTop + height,
             zoomFactor);
     }
 
