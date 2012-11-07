@@ -1467,6 +1467,8 @@ ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
     ArenaList *al = &arenaLists[thingKind];
     AutoLockGC maybeLock;
 
+    JS_ASSERT(!comp->scheduledForDestruction);
+
 #ifdef JS_THREADSAFE
     volatile uintptr_t *bfs = &backgroundFinalizeState[thingKind];
     if (*bfs != BFS_DONE) {
@@ -2115,6 +2117,15 @@ GCMarker::markBufferedGrayRoots()
     }
 
     grayRoots.clearAndFree();
+}
+
+void
+GCMarker::markBufferedGrayRootCompartmentsAlive()
+{
+    for (GrayRoot *elem = grayRoots.begin(); elem != grayRoots.end(); elem++) {
+        Cell *thing = static_cast<Cell *>(elem->thing);
+        thing->compartment()->maybeAlive = true;
+    }
 }
 
 void
@@ -3315,6 +3326,9 @@ BeginMarkPhase(JSRuntime *rt)
         }
 
         c->setPreservingCode(ShouldPreserveJITCode(c, currentTime));
+
+        c->scheduledForDestruction = false;
+        c->maybeAlive = false;
     }
 
     /* Check that at least one compartment is scheduled for collection. */
@@ -3385,6 +3399,58 @@ BeginMarkPhase(JSRuntime *rt)
         c->arenas.unmarkAll();
 
     MarkRuntime(gcmarker);
+
+    /*
+     * This code ensures that if a compartment is "dead", then it will be
+     * collected in this GC. A compartment is considered dead if its maybeAlive
+     * flag is false. The maybeAlive flag is set if:
+     *   (1) the compartment has incoming cross-compartment edges, or
+     *   (2) an object in the compartment was marked during root marking, either
+     *       as a black root or a gray root.
+     * If the maybeAlive is false, then we set the scheduledForDestruction flag.
+     * At any time later in the GC, if we try to mark an object whose
+     * compartment is scheduled for destruction, we will assert.
+     *
+     * The purpose of this check is to ensure that a compartment that we would
+     * normally destroy is not resurrected by a read barrier or an
+     * allocation. This might happen during a function like JS_TransplantObject,
+     * which iterates over all compartments, live or dead, and operates on their
+     * objects. See bug 803376 for details on this problem. To avoid the
+     * problem, we are very careful to avoid allocation and read barriers during
+     * JS_TransplantObject and the like. The code here ensures that we don't
+     * regress.
+     *
+     * Note that there are certain cases where allocations or read barriers in
+     * dead compartments are difficult to avoid. We detect such cases (via the
+     * gcObjectsMarkedInDeadCompartment counter) and redo any ongoing GCs after
+     * the JS_TransplantObject function has finished. This ensures that the dead
+     * compartments will be cleaned up. See AutoMarkInDeadCompartment and
+     * AutoTransplantGC for details.
+     */
+
+    /* Set the maybeAlive flag based on cross-compartment edges. */
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        for (WrapperMap::Enum e(c->crossCompartmentWrappers); !e.empty(); e.popFront()) {
+            Cell *dst = e.front().key.wrapped;
+            dst->compartment()->maybeAlive = true;
+        }
+
+        if (c->hold)
+            c->maybeAlive = true;
+    }
+
+    /* Set the maybeAlive flag based on gray roots. */
+    rt->gcMarker.markBufferedGrayRootCompartmentsAlive();
+
+    /*
+     * For black roots, code in gc/Marking.cpp will already have set maybeAlive
+     * during MarkRuntime.
+     */
+
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        if (!c->maybeAlive)
+            c->scheduledForDestruction = true;
+    }
 }
 
 void
@@ -5815,6 +5881,25 @@ PurgeJITCaches(JSCompartment *c)
 #endif
     }
 #endif
+}
+
+AutoTransplantGC::AutoTransplantGC(JSContext *cx)
+  : runtime(cx->runtime),
+    markCount(runtime->gcObjectsMarkedInDeadCompartments),
+    inIncremental(IsIncrementalGCInProgress(runtime)),
+    inTransplant(runtime->gcInTransplant)
+{
+    runtime->gcInTransplant = true;
+}
+
+AutoTransplantGC::~AutoTransplantGC()
+{
+    if (inIncremental && runtime->gcObjectsMarkedInDeadCompartments != markCount) {
+        PrepareForFullGC(runtime);
+        js::GC(runtime, GC_NORMAL, gcreason::TRANSPLANT);
+    }
+
+    runtime->gcInTransplant = inTransplant;
 }
 
 } /* namespace js */

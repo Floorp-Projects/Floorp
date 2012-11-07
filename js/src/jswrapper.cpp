@@ -45,6 +45,8 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
 {
     JS_ASSERT(parent);
 
+    AutoMarkInDeadCompartment amd(cx->compartment);
+
 #if JS_HAS_XML_SUPPORT
     if (obj->isXML()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -994,6 +996,8 @@ js::NukeCrossCompartmentWrapper(JSContext *cx, JSObject *wrapper)
 {
     JS_ASSERT(IsCrossCompartmentWrapper(wrapper));
 
+    AutoMarkInDeadCompartment amd(GetProxyTargetObject(wrapper)->compartment());
+
     SetProxyPrivate(wrapper, NullValue());
     SetProxyHandler(wrapper, &DeadObjectProxy::singleton);
 
@@ -1149,6 +1153,8 @@ JS_FRIEND_API(bool)
 js::RecomputeWrappers(JSContext *cx, const CompartmentFilter &sourceFilter,
                       const CompartmentFilter &targetFilter)
 {
+    AutoTransplantGC agc(cx);
+
     AutoWrapperVector toRecompute(cx);
 
     for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
