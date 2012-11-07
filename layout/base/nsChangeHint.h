@@ -110,7 +110,13 @@ enum nsChangeHint {
    * changes, and it's inherited by a child, that might require a reflow
    * due to the border-width change on the child.
    */
-  nsChangeHint_BorderStyleNoneChange = 0x8000
+  nsChangeHint_BorderStyleNoneChange = 0x8000,
+
+  /**
+   * SVG textPath needs to be recomputed because the path has changed.
+   * This means that the glyph positions of the text need to be recomputed.
+   */
+  nsChangeHint_UpdateTextPath = 0x10000
 
   // IMPORTANT NOTE: When adding new hints, consider whether you need to
   // add them to NS_HintsNotHandledForDescendantsIn() below.
