@@ -43,7 +43,7 @@ class ProcessExecutionMixin(LoggingMixin):
     def run_process(self, args=None, cwd=None, append_env=None,
         explicit_env=None, log_name=None, log_level=logging.INFO,
         line_handler=None, require_unix_environment=False,
-        ignore_errors=False, ignore_children=False):
+        ensure_exit_code=0, ignore_children=False):
         """Runs a single process to completion.
 
         Takes a list of arguments to run where the first item is the
@@ -60,6 +60,11 @@ class ProcessExecutionMixin(LoggingMixin):
         execute the command via an appropriate UNIX-like shell.
 
         ignore_children is proxied to mozprocess's ignore_children.
+
+        ensure_exit_code is used to ensure the exit code of a process matches
+        what is expected. If it is an integer, we raise an Exception is the
+        exit code does not match this value. If it is True, we ensure the exit
+        code is 0. If it is False, we don't perform any exit code validation.
         """
         args = self._normalize_command(args, require_unix_environment)
 
@@ -96,8 +101,16 @@ class ProcessExecutionMixin(LoggingMixin):
         p.processOutput()
         status = p.wait()
 
-        if status != 0 and not ignore_errors:
+        if ensure_exit_code is False:
+            return status
+
+        if ensure_exit_code is True:
+            ensure_exit_code = 0
+
+        if status != ensure_exit_code:
             raise Exception('Process executed with non-0 exit code: %s' % args)
+
+        return status
 
     def _normalize_command(self, args, require_unix_environment):
         """Adjust command arguments to run in the necessary environment.
