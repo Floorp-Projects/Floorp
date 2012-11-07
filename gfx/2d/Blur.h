@@ -7,7 +7,6 @@
 
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Point.h"
-#include "mozilla/CheckedInt.h"
 
 namespace mozilla {
 namespace gfx {
@@ -114,13 +113,6 @@ public:
   static IntSize CalculateBlurRadius(const Point& aStandardDeviation);
 
 private:
-
-  void BoxBlur_C(int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
-                 int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride);
-  void BoxBlur_SSE2(int32_t aLeftLobe, int32_t aRightLobe, int32_t aTopLobe,
-                    int32_t aBottomLobe, uint32_t *aIntegralImage, size_t aIntegralImageStride);
-
-  static CheckedInt<int32_t> RoundUpToMultipleOf4(int32_t aVal);
 
   /**
    * A rect indicating the area where blurring is unnecessary, and the blur
