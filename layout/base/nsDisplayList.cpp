@@ -3752,8 +3752,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const nsIFrame* aFrame,
   if (nsLayoutUtils::Are3DTransformsEnabled() && perspectiveCoord > 0.0) {
     gfx3DMatrix perspective;
     perspective._34 =
-      -1.0 / NSAppUnitsToFloatPixels(parentDisp->mChildPerspective.GetCoordValue(),
-                                     aAppUnitsPerPixel);
+      -1.0 / NSAppUnitsToFloatPixels(perspectiveCoord, aAppUnitsPerPixel);
     /* At the point when perspective is applied, we have been translated to the transform origin.
      * The translation to the perspective origin is the difference between these values.
      */
