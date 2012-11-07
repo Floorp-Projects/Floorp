@@ -143,6 +143,22 @@ public class ImmutableViewportMetrics {
             FloatUtils.interpolate(zoomFactor, to.zoomFactor, t));
     }
 
+    public boolean fuzzyEquals(ImmutableViewportMetrics other) {
+        return FloatUtils.fuzzyEquals(pageRectLeft, other.pageRectLeft)
+            && FloatUtils.fuzzyEquals(pageRectTop, other.pageRectTop)
+            && FloatUtils.fuzzyEquals(pageRectRight, other.pageRectRight)
+            && FloatUtils.fuzzyEquals(pageRectBottom, other.pageRectBottom)
+            && FloatUtils.fuzzyEquals(cssPageRectLeft, other.cssPageRectLeft)
+            && FloatUtils.fuzzyEquals(cssPageRectTop, other.cssPageRectTop)
+            && FloatUtils.fuzzyEquals(cssPageRectRight, other.cssPageRectRight)
+            && FloatUtils.fuzzyEquals(cssPageRectBottom, other.cssPageRectBottom)
+            && FloatUtils.fuzzyEquals(viewportRectLeft, other.viewportRectLeft)
+            && FloatUtils.fuzzyEquals(viewportRectTop, other.viewportRectTop)
+            && FloatUtils.fuzzyEquals(viewportRectRight, other.viewportRectRight)
+            && FloatUtils.fuzzyEquals(viewportRectBottom, other.viewportRectBottom)
+            && FloatUtils.fuzzyEquals(zoomFactor, other.zoomFactor);
+    }
+
     @Override
     public String toString() {
         return "ImmutableViewportMetrics v=(" + viewportRectLeft + "," + viewportRectTop + ","
