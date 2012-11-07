@@ -5807,9 +5807,10 @@ class CGNamespacedEnum(CGThing):
 
 class CGDictionary(CGThing):
     def __init__(self, dictionary, descriptorProvider):
-        self.dictionary = dictionary;
+        self.dictionary = dictionary
         self.descriptorProvider = descriptorProvider
         self.workers = descriptorProvider.workers
+        self.needToInitIds = not self.workers and len(dictionary.members) > 0
         if all(CGDictionary(d, descriptorProvider).generatable for
                d in CGDictionary.getDictionaryDependencies(dictionary)):
             self.generatable = True
@@ -5871,7 +5872,7 @@ class CGDictionary(CGThing):
                 "  ${selfName}(const ${selfName}&) MOZ_DELETE;\n" +
                 # NOTE: jsids are per-runtime, so don't use them in workers
                 ("  static bool InitIds(JSContext* cx);\n"
-                 "  static bool initedIds;\n" if not self.workers else "") +
+                 "  static bool initedIds;\n" if self.needToInitIds else "") +
                 "\n".join("  static jsid " +
                           self.makeIdName(m.identifier.name) + ";" for
                           m in d.members) + "\n"
@@ -5936,7 +5937,7 @@ class CGDictionary(CGThing):
              "  initedIds = true;\n"
              "  return true;\n"
              "}\n"
-             "\n" if not self.workers else "") +
+             "\n" if self.needToInitIds else "") +
             "bool\n"
             "${selfName}::Init(JSContext* cx, const JS::Value& val)\n"
             "{\n"
@@ -5946,10 +5947,10 @@ class CGDictionary(CGThing):
             # NOTE: jsids are per-runtime, so don't use them in workers
             ("  if (cx && !initedIds && !InitIds(cx)) {\n"
              "    return false;\n"
-             "  }\n" if not self.workers else "") +
-            "${initParent}"
-            "  JSBool found;\n"
-            "  JS::Value temp;\n"
+             "  }\n" if self.needToInitIds else "") +
+            "${initParent}" +
+            ("  JSBool found;\n"
+             "  JS::Value temp;\n" if len(memberInits) > 0 else "") +
             "  bool isNull = val.isNullOrUndefined();\n"
             "  if (!isNull && !val.isObject()) {\n"
             "    return ThrowErrorMessage(cx, MSG_NOT_OBJECT);\n"
@@ -5965,7 +5966,7 @@ class CGDictionary(CGThing):
             # NOTE: jsids are per-runtime, so don't use them in workers
             ("  if (!initedIds && !InitIds(cx)) {\n"
              "    return false;\n"
-             "  }\n" if not self.workers else "") +
+             "  }\n" if self.needToInitIds else "") +
             "${toObjectParent}"
             "${ensureObject}"
             "\n"
