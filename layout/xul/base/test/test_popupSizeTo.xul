@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+XUL Panel sizeTo tests
+-->
+<window title="XUL Panel sizeTo tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    function openPopup()
+    {
+      document.getElementById("panel").
+        openPopupAtScreen(Math.round(window.mozInnerScreenX) + window.innerWidth - 130,
+                          Math.round(window.mozInnerScreenY) + window.innerHeight - 130);
+    }
+
+    function sizeAndCheck(width, height) {
+      var panel = document.getElementById("panel");
+      panel.sizeTo(width, height);
+      is(panel.getBoundingClientRect().width, width, "width is correct");
+      is(panel.getBoundingClientRect().height, height, "height is correct");
+
+    }
+    function popupShown(event)
+    {
+      var panel = document.getElementById("panel");
+      var bcr = panel.getBoundingClientRect();
+      // resize to 10px bigger in both dimensions.
+      sizeAndCheck(bcr.width+10, bcr.height+10);
+      // Same width, different height (based on *new* size from last sizeAndCheck)
+      sizeAndCheck(bcr.width+10, bcr.height);
+      // Same height, different width (also based on *new* size from last sizeAndCheck)
+      sizeAndCheck(bcr.width, bcr.height);
+      event.target.hidePopup();
+    }
+
+    SimpleTest.waitForFocus(openPopup);
+   ]]></script>
+
+<panel id="panel" onpopupshown="popupShown(event)" onpopuphidden="SimpleTest.finish()">
+  <resizer id="resizer" dir="bottomend" width="16" height="16"/>
+  <hbox width="50" height="50" flex="1"/>
+</panel>
+
+</window>
