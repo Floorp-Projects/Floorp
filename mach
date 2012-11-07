@@ -39,6 +39,7 @@ SEARCH_PATHS = [
 MACH_MODULES = [
     'layout/tools/reftest/mach_commands.py',
     'python/mozboot/mozboot/mach_commands.py',
+    'python/mozbuild/mozbuild/config.py',
     'testing/mochitest/mach_commands.py',
     'testing/xpcshell/mach_commands.py',
 ]

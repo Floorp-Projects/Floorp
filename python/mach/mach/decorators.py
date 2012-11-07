@@ -8,6 +8,7 @@ import inspect
 import types
 
 from .base import MethodHandler
+from .config import ConfigProvider
 from .registrar import Registrar
 
 
@@ -111,3 +112,21 @@ class CommandArgument(object):
         func._mach_command_args = command_args
 
         return func
+
+def SettingsProvider(cls):
+    """Class decorator to denote that this class provides Mach settings.
+
+    When this decorator is encountered, the underlying class will automatically
+    be registered with the Mach registrar and will (likely) be hooked up to the
+    mach driver.
+
+    This decorator is only allowed on mach.config.ConfigProvider classes.
+    """
+    if not issubclass(cls, ConfigProvider):
+        raise Exception('@SettingsProvider encountered on class that does ' +
+                        'not derived from mach.config.ConfigProvider.')
+
+    Registrar.register_settings_provider(cls)
+
+    return cls
+
