@@ -12,7 +12,6 @@ import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.PointUtils;
-import org.mozilla.gecko.gfx.ViewportMetrics;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -143,10 +142,6 @@ public class PanZoomController
 
     private ImmutableViewportMetrics getMetrics() {
         return mTarget.getViewportMetrics();
-    }
-
-    private ViewportMetrics getMutableMetrics() {
-        return new ViewportMetrics(getMetrics());
     }
 
     // for debugging bug 713011; it can be taken out once that is resolved.
@@ -728,12 +723,12 @@ public class PanZoomController
 
     /* Returns the nearest viewport metrics with no overscroll visible. */
     private ImmutableViewportMetrics getValidViewportMetrics() {
-        return getValidViewportMetrics(getMutableMetrics());
+        return getValidViewportMetrics(getMetrics());
     }
 
-    private ImmutableViewportMetrics getValidViewportMetrics(ViewportMetrics viewportMetrics) {
+    private ImmutableViewportMetrics getValidViewportMetrics(ImmutableViewportMetrics viewportMetrics) {
         /* First, we adjust the zoom factor so that we can make no overscrolled area visible. */
-        float zoomFactor = viewportMetrics.getZoomFactor();
+        float zoomFactor = viewportMetrics.zoomFactor;
         RectF pageRect = viewportMetrics.getPageRect();
         RectF viewport = viewportMetrics.getViewport();
 
@@ -778,16 +773,16 @@ public class PanZoomController
             // by different scale factors, we end up scrolled to the end on one axis
             // after applying the scale
             PointF center = new PointF(focusX, focusY);
-            viewportMetrics.scaleTo(minZoomFactor, center);
+            viewportMetrics = viewportMetrics.scaleTo(minZoomFactor, center);
         } else if (zoomFactor > maxZoomFactor) {
             PointF center = new PointF(viewport.width() / 2.0f, viewport.height() / 2.0f);
-            viewportMetrics.scaleTo(maxZoomFactor, center);
+            viewportMetrics = viewportMetrics.scaleTo(maxZoomFactor, center);
         }
 
         /* Now we pan to the right origin. */
-        viewportMetrics.setViewport(viewportMetrics.getClampedViewport());
+        viewportMetrics = viewportMetrics.clamp();
 
-        return new ImmutableViewportMetrics(viewportMetrics);
+        return viewportMetrics;
     }
 
     private class AxisX extends Axis {
@@ -931,9 +926,9 @@ public class PanZoomController
      * scale operation. You must hold the monitor while calling this.
      */
     private void scaleWithFocus(float zoomFactor, PointF focus) {
-        ViewportMetrics viewportMetrics = getMutableMetrics();
-        viewportMetrics.scaleTo(zoomFactor, focus);
-        mTarget.setViewportMetrics(new ImmutableViewportMetrics(viewportMetrics));
+        ImmutableViewportMetrics viewportMetrics = getMetrics();
+        viewportMetrics = viewportMetrics.scaleTo(zoomFactor, focus);
+        mTarget.setViewportMetrics(viewportMetrics);
     }
 
     public boolean getRedrawHint() {
@@ -1038,16 +1033,17 @@ public class PanZoomController
 
         float finalZoom = viewport.width() / zoomToRect.width();
 
-        ViewportMetrics finalMetrics = getMutableMetrics();
-        finalMetrics.setOrigin(new PointF(zoomToRect.left * finalMetrics.getZoomFactor(),
-                                          zoomToRect.top * finalMetrics.getZoomFactor()));
-        finalMetrics.scaleTo(finalZoom, new PointF(0.0f, 0.0f));
+        ImmutableViewportMetrics finalMetrics = getMetrics();
+        finalMetrics = finalMetrics.setViewportOrigin(
+            zoomToRect.left * finalMetrics.zoomFactor,
+            zoomToRect.top * finalMetrics.zoomFactor);
+        finalMetrics = finalMetrics.scaleTo(finalZoom, new PointF(0.0f, 0.0f));
 
         // 2. now run getValidViewportMetrics on it, so that the target viewport is
         // clamped down to prevent overscroll, over-zoom, and other bad conditions.
-        ImmutableViewportMetrics finalValidMetrics = getValidViewportMetrics(finalMetrics);
+        finalMetrics = getValidViewportMetrics(finalMetrics);
 
-        bounce(finalValidMetrics);
+        bounce(finalMetrics);
         return true;
     }
 
