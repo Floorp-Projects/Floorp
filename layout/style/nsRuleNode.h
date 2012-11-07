@@ -646,6 +646,18 @@ public:
     return (mDependentBits & NS_RULE_NODE_IS_IMPORTANT) != 0;
   }
 
+  /**
+   * Has this rule node at some time in its lifetime been the mRuleNode
+   * of some style context (as opposed to only being the ancestor of
+   * some style context's mRuleNode)?
+   */
+  void SetUsedDirectly() {
+    mDependentBits |= NS_RULE_NODE_USED_DIRECTLY;
+  }
+  bool IsUsedDirectly() const {
+    return (mDependentBits & NS_RULE_NODE_USED_DIRECTLY) != 0;
+  }
+
   // NOTE:  Does not |AddRef|.
   nsIStyleRule* GetRule() const { return mRule; }
   // NOTE: Does not |AddRef|.

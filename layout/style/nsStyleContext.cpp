@@ -65,14 +65,15 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
 #endif
   }
 
+  mRuleNode->AddRef();
+  mRuleNode->SetUsedDirectly(); // before ApplyStyleFixups()!
+
   ApplyStyleFixups();
 
   #define eStyleStruct_LastItem (nsStyleStructID_Length - 1)
   NS_ASSERTION(NS_STYLE_INHERIT_MASK & NS_STYLE_INHERIT_BIT(LastItem),
                "NS_STYLE_INHERIT_MASK must be bigger, and other bits shifted");
   #undef eStyleStruct_LastItem
-
-  mRuleNode->AddRef();
 }
 
 nsStyleContext::~nsStyleContext()
