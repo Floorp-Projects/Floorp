@@ -191,8 +191,8 @@ public class GeckoLayerClient
      * to the layer client. That way, the layer client won't be tempted to call this, which might
      * result in an infinite loop.
      */
-    void setViewportSize(FloatSize size) {
-        mViewportMetrics = mViewportMetrics.setViewportSize(size);
+    void setViewportSize(int width, int height) {
+        mViewportMetrics = mViewportMetrics.setViewportSize(width, height);
 
         if (mGeckoIsReady) {
             // here we send gecko a resize message. The code in browser.js is responsible for
@@ -311,7 +311,7 @@ public class GeckoLayerClient
             default:
             case UPDATE:
                 // Keep the old viewport size
-                metrics = messageMetrics.setViewportSize(oldMetrics.getSize());
+                metrics = messageMetrics.setViewportSize(oldMetrics.getWidth(), oldMetrics.getHeight());
                 abortPanZoomAnimation();
                 break;
             case PAGE_SIZE:
@@ -629,7 +629,7 @@ public class GeckoLayerClient
 
     /** Implementation of LayerView.Listener */
     public void surfaceChanged(int width, int height) {
-        setViewportSize(new FloatSize(width, height));
+        setViewportSize(width, height);
 
         // We need to make this call even when the compositor isn't currently
         // paused (e.g. during an orientation change), to make the compositor
