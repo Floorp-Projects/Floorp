@@ -457,5 +457,10 @@ bool OperatorIn(JSContext *cx, HandleValue key, HandleObject obj, JSBool *out)
     return true;
 }
 
+bool GetIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue rval)
+{
+    return cx->global()->getIntrinsicValue(cx, name, rval);
+}
+
 } // namespace ion
 } // namespace js
