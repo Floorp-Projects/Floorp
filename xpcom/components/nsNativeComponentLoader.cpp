@@ -52,14 +52,20 @@
 
 using namespace mozilla;
 
-static PRLogModuleInfo *nsNativeModuleLoaderLog =
-    PR_NewLogModule("nsNativeModuleLoader");
+static PRLogModuleInfo *
+GetNativeModuleLoaderLog()
+{
+    static PRLogModuleInfo *sLog;
+    if (!sLog)
+        sLog = PR_NewLogModule("nsNativeModuleLoader");
+    return sLog;
+}
 
 bool gInXPCOMLoadOnMainThread = false;
 
-#define LOG(level, args) PR_LOG(nsNativeModuleLoaderLog, level, args)
+#define LOG(level, args) PR_LOG(GetNativeModuleLoaderLog(), level, args)
 
-NS_IMPL_QUERY_INTERFACE1(nsNativeModuleLoader, 
+NS_IMPL_QUERY_INTERFACE1(nsNativeModuleLoader,
                          mozilla::ModuleLoader)
 
 NS_IMPL_ADDREF_USING_AGGREGATOR(nsNativeModuleLoader,
@@ -204,7 +210,7 @@ PLDHashOperator
 nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
                                    NativeLoadData& aLoadData, void*)
 {
-    if (PR_LOG_TEST(nsNativeModuleLoaderLog, PR_LOG_DEBUG)) {
+    if (PR_LOG_TEST(GetNativeModuleLoaderLog(), PR_LOG_DEBUG)) {
         nsCOMPtr<nsIFile> file(do_QueryInterface(aHashedFile));
 
         nsAutoCString filePath;
