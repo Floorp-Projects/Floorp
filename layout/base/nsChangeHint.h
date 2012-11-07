@@ -43,13 +43,12 @@ enum nsChangeHint {
   nsChangeHint_UpdateCursor = 0x40,
 
   /**
-   * SVG filter/mask/clip effects need to be recomputed because the URI
-   * in the filter/mask/clip-path property has changed. This wipes
-   * out cached nsSVGPropertyBase and subclasses which hold a reference to
-   * the element referenced by the URI, and a mutation observer for
-   * the DOM subtree rooted at that element. Also, for filters they store a
-   * bounding-box for the filter result so that if the filter changes we can
-   * invalidate the old covered area.
+   * Used when the computed value (a URI) of one or more of an element's
+   * filter/mask/clip/etc CSS properties changes, causing the element's frame
+   * to start/stop referencing (or reference different) SVG resource elements.
+   * (_Not_ used to handle changes to referenced resource elements.) Using this
+   * hint results in nsSVGEffects::UpdateEffects being called on the element's
+   * frame.
    */
   nsChangeHint_UpdateEffects = 0x80,
 
