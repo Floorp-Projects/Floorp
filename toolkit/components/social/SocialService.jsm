@@ -30,9 +30,7 @@ let SocialServiceInternal = {
 function initService() {
   // Add a pref observer for the enabled state
   function prefObserver(subject, topic, data) {
-    let prefVal = Services.prefs.getBoolPref("social.enabled");
-    if (prefVal != SocialServiceInternal.enabled)
-      SocialService._setEnabled(prefVal);
+    SocialService._setEnabled(Services.prefs.getBoolPref("social.enabled"));
   }
   Services.prefs.addObserver("social.enabled", prefObserver, false);
   Services.obs.addObserver(function xpcomShutdown() {
@@ -97,10 +95,13 @@ this.SocialService = {
         !Services.appinfo.inSafeMode)
       return;
 
-    this._setEnabled(enable);
     Services.prefs.setBoolPref("social.enabled", enable);
+    this._setEnabled(enable);
   },
   _setEnabled: function _setEnabled(enable) {
+    if (enable == SocialServiceInternal.enabled)
+      return;
+
     SocialServiceInternal.providerArray.forEach(function (p) p.enabled = enable);
     SocialServiceInternal.enabled = enable;
     MozSocialAPI.enabled = enable;
