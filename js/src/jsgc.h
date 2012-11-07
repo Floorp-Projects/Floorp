@@ -985,6 +985,7 @@ struct GCMarker : public JSTracer {
     void startBufferingGrayRoots();
     void endBufferingGrayRoots();
     void markBufferedGrayRoots();
+    void markBufferedGrayRootCompartmentsAlive();
 
     static void GrayCallback(JSTracer *trc, void **thing, JSGCTraceKind kind);
 
@@ -1171,6 +1172,30 @@ MaybeVerifyBarriers(JSContext *cx, bool always = false)
 
 void
 PurgeJITCaches(JSCompartment *c);
+
+/*
+ * This auto class should be used around any code that does brain
+ * transplants. Brain transplants can cause problems because they operate on all
+ * compartments, whether live or dead. A brain transplant can cause a formerly
+ * dead object to be "reanimated" by causing a read or write barrier to be
+ * invoked on it during the transplant.
+ *
+ * To work around this issue, we observe when mark bits are set on objects in
+ * dead compartments. If this happens during a brain transplant, we do a full,
+ * non-incremental GC at the end of the brain transplant. This will clean up any
+ * objects that were improperly marked.
+ */
+struct AutoTransplantGC
+{
+    AutoTransplantGC(JSContext *cx);
+    ~AutoTransplantGC();
+
+  private:
+    JSRuntime *runtime;
+    unsigned markCount;
+    bool inIncremental;
+    bool inTransplant;
+};
 
 } /* namespace js */
 
