@@ -4989,7 +4989,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
 
             flags &= ~JSFUN_GENERIC_NATIVE;
             fun = js_DefineFunction(cx, ctor, id, js_generic_native_method_dispatcher,
-                                    fs->nargs + 1, flags, NULL, JSFunction::ExtendedFinalizeKind);
+                                    fs->nargs + 1, flags, NullPtr(), JSFunction::ExtendedFinalizeKind);
             if (!fun)
                 return JS_FALSE;
 
@@ -5010,7 +5010,14 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, JSFunctionSpec *fs)
         if (fs->selfHostedName && cx->runtime->isSelfHostedGlobal(cx->global()))
             return JS_TRUE;
 
-        fun = js_DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags, fs->selfHostedName);
+        Rooted<PropertyName*> selfHostedPropertyName(cx);
+        if (fs->selfHostedName) {
+            JSAtom *selfHostedAtom = Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName));
+            if (!selfHostedAtom)
+                return JS_FALSE;
+            selfHostedPropertyName = selfHostedAtom->asPropertyName();
+        }
+        fun = js_DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags, selfHostedPropertyName);
         if (!fun)
             return JS_FALSE;
         if (fs->call.info)

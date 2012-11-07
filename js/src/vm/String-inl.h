@@ -162,24 +162,36 @@ JSDependentString::init(JSLinearString *base, const jschar *chars, size_t length
 }
 
 JS_ALWAYS_INLINE JSLinearString *
-JSDependentString::new_(JSContext *cx, JSLinearString *base_, const jschar *chars, size_t length)
+JSDependentString::new_(JSContext *cx, JSLinearString *baseArg, const jschar *chars, size_t length)
 {
-    js::Rooted<JSLinearString*> base(cx, base_);
+    js::Rooted<JSLinearString*> base(cx, baseArg);
 
     /* Try to avoid long chains of dependent strings. */
     while (base->isDependent())
         base = base->asDependent().base();
 
     JS_ASSERT(base->isFlat());
-    JS_ASSERT(chars >= base->chars() && chars < base->chars() + base->length());
-    JS_ASSERT(length <= base->length() - (chars - base->chars()));
+
+    /*
+     * The chars we are pointing into must be owned by something in the chain
+     * of dependent or undepended strings kept alive by our base pointer.
+     */
+#ifdef DEBUG
+    for (JSLinearString *b = base; ; b = b->base()) {
+        if (chars >= b->chars() && chars < b->chars() + b->length() &&
+            length <= b->length() - (chars - b->chars()))
+        {
+            break;
+        }
+    }
+#endif
 
     /*
      * Do not create a string dependent on inline chars from another string,
      * both to avoid the awkward moving-GC hazard this introduces and because it
      * is more efficient to immediately undepend here.
      */
-    if (JSShortString::lengthFits(base->length()))
+    if (JSShortString::lengthFits(length))
         return js::NewShortString(cx, chars, length);
 
     JSDependentString *str = (JSDependentString *)js_NewGCString(cx);

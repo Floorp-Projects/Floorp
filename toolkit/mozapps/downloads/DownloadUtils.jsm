@@ -55,6 +55,7 @@ const kDownloadProperties =
 
 let gStr = {
   statusFormat: "statusFormat3",
+  statusFormatNoRate: "statusFormatNoRate",
   transferSameUnits: "transferSameUnits2",
   transferDiffUnits: "transferDiffUnits2",
   transferNoTotal: "transferNoTotal2",
@@ -103,6 +104,63 @@ this.DownloadUtils = {
   getDownloadStatus: function DU_getDownloadStatus(aCurrBytes, aMaxBytes,
                                                    aSpeed, aLastSec)
   {
+    let [transfer, timeLeft, newLast, normalizedSpeed]
+      = this._deriveTransferRate(aCurrBytes, aMaxBytes, aSpeed, aLastSec);
+
+    let [rate, unit] = DownloadUtils.convertByteUnits(normalizedSpeed);
+    let params = [transfer, rate, unit, timeLeft];
+    let status = gBundle.formatStringFromName(gStr.statusFormat, params,
+                                              params.length);
+    return [status, newLast];
+  },
+
+  /**
+   * Generate a status string for a download given its current progress,
+   * total size, speed, last time remaining. The status string contains the
+   * time remaining, as well as the total bytes downloaded. Unlike
+   * getDownloadStatus, it does not include the rate of download.
+   *
+   * @param aCurrBytes
+   *        Number of bytes transferred so far
+   * @param [optional] aMaxBytes
+   *        Total number of bytes or -1 for unknown
+   * @param [optional] aSpeed
+   *        Current transfer rate in bytes/sec or -1 for unknown
+   * @param [optional] aLastSec
+   *        Last time remaining in seconds or Infinity for unknown
+   * @return A pair: [download status text, new value of "last seconds"]
+   */
+  getDownloadStatusNoRate:
+  function DU_getDownloadStatusNoRate(aCurrBytes, aMaxBytes, aSpeed,
+                                      aLastSec)
+  {
+    let [transfer, timeLeft, newLast]
+      = this._deriveTransferRate(aCurrBytes, aMaxBytes, aSpeed, aLastSec);
+
+    let params = [transfer, timeLeft];
+    let status = gBundle.formatStringFromName(gStr.statusFormatNoRate, params,
+                                              params.length);
+    return [status, newLast];
+  },
+
+  /**
+   * Helper function that returns a transfer string, a time remaining string,
+   * and a new value of "last seconds".
+   * @param aCurrBytes
+   *        Number of bytes transferred so far
+   * @param [optional] aMaxBytes
+   *        Total number of bytes or -1 for unknown
+   * @param [optional] aSpeed
+   *        Current transfer rate in bytes/sec or -1 for unknown
+   * @param [optional] aLastSec
+   *        Last time remaining in seconds or Infinity for unknown
+   * @return A triple: [amount transferred string, time remaining string,
+   *                    new value of "last seconds"]
+   */
+  _deriveTransferRate: function DU__deriveTransferRate(aCurrBytes,
+                                                       aMaxBytes, aSpeed,
+                                                       aLastSec)
+  {
     if (aMaxBytes == null)
       aMaxBytes = -1;
     if (aSpeed == null)
@@ -115,13 +173,8 @@ this.DownloadUtils = {
       (aMaxBytes - aCurrBytes) / aSpeed : -1;
 
     let transfer = DownloadUtils.getTransferTotal(aCurrBytes, aMaxBytes);
-    let [rate, unit] = DownloadUtils.convertByteUnits(aSpeed);
     let [timeLeft, newLast] = DownloadUtils.getTimeLeft(seconds, aLastSec);
-
-    let params = [transfer, rate, unit, timeLeft];
-    let status = gBundle.formatStringFromName(gStr.statusFormat, params,
-                                              params.length);
-    return [status, newLast];
+    return [transfer, timeLeft, newLast, aSpeed];
   },
 
   /**

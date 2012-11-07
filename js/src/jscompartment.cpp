@@ -29,8 +29,10 @@
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
+#ifdef JS_ION
 #include "ion/IonCompartment.h"
 #include "ion/Ion.h"
+#endif
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"

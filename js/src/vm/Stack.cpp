@@ -8,9 +8,11 @@
 #include "jscntxt.h"
 #include "gc/Marking.h"
 #include "methodjit/MethodJIT.h"
+#ifdef JS_ION
 #include "ion/IonFrames.h"
 #include "ion/IonCompartment.h"
 #include "ion/Bailouts.h"
+#endif
 #include "Stack.h"
 
 #include "jsgcinlines.h"

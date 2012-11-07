@@ -424,12 +424,18 @@ dictionary DictContainingSequence {
 };
 
 interface TestIndexedGetterInterface {
-  getter long item(unsigned long index);
+  getter long item(unsigned long idx);
   readonly attribute unsigned long length;
 };
 
 interface TestNamedGetterInterface {
   getter DOMString (DOMString name);
+};
+
+interface TestIndexedGetterAndSetterAndNamedGetterInterface {
+  getter DOMString (DOMString myName);
+  getter long (unsigned long index);
+  setter creator void (unsigned long index, long arg);
 };
 
 interface TestIndexedAndNamedGetterInterface {
@@ -439,12 +445,12 @@ interface TestIndexedAndNamedGetterInterface {
 };
 
 interface TestIndexedSetterInterface {
-  setter creator void setItem(unsigned long index, DOMString item);
-  getter DOMString (unsigned long index);
+  setter creator void setItem(unsigned long idx, DOMString item);
+  getter DOMString (unsigned long idx);
 };
 
 interface TestNamedSetterInterface {
-  setter creator void (DOMString name, TestIndexedSetterInterface item);
+  setter creator void (DOMString myName, TestIndexedSetterInterface item);
   getter TestIndexedSetterInterface (DOMString name);
 };
 
@@ -465,7 +471,7 @@ interface TestIndexedAndNamedGetterAndSetterInterface : TestIndexedSetterInterfa
 };
 
 interface TestIndexedDeleterInterface {
-  deleter void delItem(unsigned long index);
+  deleter void delItem(unsigned long idx);
   getter long (unsigned long index);
 };
 

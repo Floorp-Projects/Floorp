@@ -32,7 +32,7 @@ of the License or (at your option) any later version.
 
 #ifndef GRAPHITE2_NFILEFACE
 
-#include <cstdio>
+#include <stdio.h>
 #include <cassert>
 
 #include "graphite2/Font.h"

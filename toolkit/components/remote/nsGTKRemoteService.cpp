@@ -84,17 +84,6 @@ nsGTKRemoteService::RegisterWindow(nsIDOMWindow* aWindow)
   nsIWidget* mainWidget = GetMainWidget(aWindow);
   NS_ENSURE_TRUE(mainWidget, NS_ERROR_FAILURE);
 
-  // walk up the widget tree and find the toplevel window in the
-  // hierarchy
-
-  nsIWidget* tempWidget = mainWidget->GetParent();
-
-  while (tempWidget) {
-    tempWidget = tempWidget->GetParent();
-    if (tempWidget)
-      mainWidget = tempWidget;
-  }
-
   GtkWidget* widget =
     (GtkWidget*) mainWidget->GetNativeData(NS_NATIVE_SHELLWIDGET);
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);

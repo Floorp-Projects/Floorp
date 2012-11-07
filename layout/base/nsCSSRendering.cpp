@@ -163,6 +163,10 @@ protected:
   {
     NS_PRECONDITION(aFrame, "Need a frame");
 
+    if (aFrame == mFrame) {
+      return;
+    }
+
     nsIFrame *prevContinuation = GetPrevContinuation(aFrame);
 
     if (!prevContinuation || mFrame != prevContinuation) {
@@ -222,6 +226,19 @@ protected:
 
   void Init(nsIFrame* aFrame)
   {
+    mBidiEnabled = aFrame->PresContext()->BidiEnabled();
+    if (mBidiEnabled) {
+      // Find the containing block frame
+      nsIFrame* frame = aFrame;
+      do {
+        frame = frame->GetParent();
+        mBlockFrame = do_QueryFrame(frame);
+      }
+      while (frame && frame->IsFrameOfType(nsIFrame::eLineParticipant));
+
+      NS_ASSERTION(mBlockFrame, "Cannot find containing block.");
+    }
+
     // Start with the previous flow frame as our continuation point
     // is the total of the widths of the previous frames.
     nsIFrame* inlineFrame = GetPrevContinuation(aFrame);
@@ -229,6 +246,9 @@ protected:
     while (inlineFrame) {
       nsRect rect = inlineFrame->GetRect();
       mContinuationPoint += rect.width;
+      if (mBidiEnabled && !AreOnSameLine(aFrame, inlineFrame)) {
+        mLineContinuationPoint += rect.width;
+      }
       mUnbrokenWidth += rect.width;
       mBoundingBox.UnionRect(mBoundingBox, rect);
       inlineFrame = GetPrevContinuation(inlineFrame);
@@ -245,21 +265,6 @@ protected:
     }
 
     mFrame = aFrame;
-
-    mBidiEnabled = aFrame->PresContext()->BidiEnabled();
-    if (mBidiEnabled) {
-      // Find the containing block frame
-      nsIFrame* frame = aFrame;
-      do {
-        frame = frame->GetParent();
-        mBlockFrame = do_QueryFrame(frame);
-      }
-      while (frame && frame->IsFrameOfType(nsIFrame::eLineParticipant));
-
-      NS_ASSERTION(mBlockFrame, "Cannot find containing block.");
-
-      mLineContinuationPoint = mContinuationPoint;
-    }
   }
 
   bool AreOnSameLine(nsIFrame* aFrame1, nsIFrame* aFrame2) {
@@ -1515,7 +1520,7 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
   if (!FindBackground(aPresContext, aForFrame, &sc)) {
     // We don't want to bail out if moz-appearance is set on a root
     // node. If it has a parent content node, bail because it's not
-    // a root, other wise keep going in order to let the theme stuff
+    // a root, otherwise keep going in order to let the theme stuff
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
     if (!aForFrame->GetStyleDisplay()->mAppearance) {
@@ -1534,6 +1539,42 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
                         aDirtyRect, aBorderArea, sc,
                         *aForFrame->GetStyleBorder(), aFlags,
                         aBGClipRect, aLayer);
+}
+
+void
+nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
+                                     nsRenderingContext& aRenderingContext,
+                                     nsIFrame* aForFrame,
+                                     const nsRect& aDirtyRect,
+                                     const nsRect& aBorderArea,
+                                     uint32_t aFlags)
+{
+  SAMPLE_LABEL("nsCSSRendering", "PaintBackgroundColor");
+  NS_PRECONDITION(aForFrame,
+                  "Frame is expected to be provided to PaintBackground");
+
+  nsStyleContext *sc;
+  if (!FindBackground(aPresContext, aForFrame, &sc)) {
+    // We don't want to bail out if moz-appearance is set on a root
+    // node. If it has a parent content node, bail because it's not
+    // a root, other wise keep going in order to let the theme stuff
+    // draw the background. The canvas really should be drawing the
+    // bg, but there's no way to hook that up via css.
+    if (!aForFrame->GetStyleDisplay()->mAppearance) {
+      return;
+    }
+
+    nsIContent* content = aForFrame->GetContent();
+    if (!content || content->GetParent()) {
+      return;
+    }
+
+    sc = aForFrame->GetStyleContext();
+  }
+
+  PaintBackgroundColorWithSC(aPresContext, aRenderingContext, aForFrame,
+                             aDirtyRect, aBorderArea, sc,
+                             *aForFrame->GetStyleBorder(), aFlags);
 }
 
 static bool
@@ -2424,11 +2465,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                              drawBackgroundImage,
                                              drawBackgroundColor);
 
-  // If we're not drawing the back-most layer, we don't want to draw the
+  // If we're drawing a specific layer, we don't want to draw the
   // background color.
   const nsStyleBackground *bg = aBackgroundSC->GetStyleBackground();
-  if (drawBackgroundColor && aLayer >= 0 &&
-      static_cast<uint32_t>(aLayer) != bg->mImageCount - 1) {
+  if (drawBackgroundColor && aLayer >= 0) {
     drawBackgroundColor = false;
   }
 
@@ -2590,6 +2630,99 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       }
     }
   }
+}
+
+void
+nsCSSRendering::PaintBackgroundColorWithSC(nsPresContext* aPresContext,
+                                           nsRenderingContext& aRenderingContext,
+                                           nsIFrame* aForFrame,
+                                           const nsRect& aDirtyRect,
+                                           const nsRect& aBorderArea,
+                                           nsStyleContext* aBackgroundSC,
+                                           const nsStyleBorder& aBorder,
+                                           uint32_t aFlags)
+{
+  NS_PRECONDITION(aForFrame,
+                  "Frame is expected to be provided to PaintBackground");
+
+  // Check to see if we have an appearance defined.  If so, we let the theme
+  // renderer draw the background and bail out.
+  const nsStyleDisplay* displayData = aForFrame->GetStyleDisplay();
+  if (displayData->mAppearance) {
+    nsITheme *theme = aPresContext->GetTheme();
+    if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
+                                            displayData->mAppearance)) {
+      NS_ERROR("Shouldn't be trying to paint a background color if we are themed!");
+      return;
+    }
+  }
+
+  NS_ASSERTION(!IsCanvasFrame(aForFrame), "Should not be trying to paint a background color for canvas frames!");
+
+  // Determine whether we are drawing background images and/or
+  // background colors.
+  bool drawBackgroundImage;
+  bool drawBackgroundColor;
+
+  nscolor bgColor = DetermineBackgroundColor(aPresContext,
+                                             aBackgroundSC,
+                                             aForFrame,
+                                             drawBackgroundImage,
+                                             drawBackgroundColor);
+
+  NS_ASSERTION(drawBackgroundColor, "Should not be trying to paint a background color if we don't have one");
+
+  // Compute the outermost boundary of the area that might be painted.
+  gfxContext *ctx = aRenderingContext.ThebesContext();
+  nscoord appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
+
+  // Same coordinate space as aBorderArea
+  gfxCornerSizes bgRadii;
+  bool haveRoundedCorners;
+  {
+    nscoord radii[8];
+    nsSize frameSize = aForFrame->GetSize();
+    if (&aBorder == aForFrame->GetStyleBorder() &&
+        frameSize == aBorderArea.Size()) {
+      haveRoundedCorners = aForFrame->GetBorderRadii(radii);
+    } else {
+      haveRoundedCorners = nsIFrame::ComputeBorderRadii(aBorder.mBorderRadius,
+                                   frameSize, aBorderArea.Size(),
+                                   aForFrame->GetSkipSides(), radii);
+    }
+    if (haveRoundedCorners)
+      ComputePixelRadii(radii, appUnitsPerPixel, &bgRadii);
+  }
+
+  // The background is rendered over the 'background-clip' area,
+  // which is normally equal to the border area but may be reduced
+  // to the padding area by CSS.  Also, if the border is solid, we
+  // don't need to draw outside the padding area.  In either case,
+  // if the borders are rounded, make sure we use the same inner
+  // radii as the border code will.
+  // The background-color is drawn based on the bottom
+  // background-clip.
+  const nsStyleBackground *bg = aBackgroundSC->GetStyleBackground();
+  uint8_t currentBackgroundClip = bg->BottomLayer().mClip;
+  bool isSolidBorder =
+    (aFlags & PAINTBG_WILL_PAINT_BORDER) && IsOpaqueBorder(aBorder);
+  if (isSolidBorder && currentBackgroundClip == NS_STYLE_BG_CLIP_BORDER) {
+    // If we have rounded corners, we need to inflate the background
+    // drawing area a bit to avoid seams between the border and
+    // background.
+    currentBackgroundClip = haveRoundedCorners ?
+      NS_STYLE_BG_CLIP_MOZ_ALMOST_PADDING : NS_STYLE_BG_CLIP_PADDING;
+  }
+
+  BackgroundClipState clipState;
+  GetBackgroundClip(ctx, currentBackgroundClip, aForFrame, aBorderArea,
+                    aDirtyRect, haveRoundedCorners, bgRadii, appUnitsPerPixel,
+                    &clipState);
+
+  ctx->SetColor(gfxRGBA(bgColor));
+
+  gfxContextAutoSaveRestore autoSR;
+  DrawBackgroundColor(clipState, ctx, haveRoundedCorners, appUnitsPerPixel);
 }
 
 static inline bool

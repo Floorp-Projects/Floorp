@@ -473,7 +473,7 @@ struct JSRuntime : js::RuntimeFriendFields
     bool isSelfHostedGlobal(js::HandleObject global) {
         return global == selfHostedGlobal_;
     }
-    JSFunction *getSelfHostedFunction(JSContext *cx, const char *name);
+    JSFunction *getSelfHostedFunction(JSContext *cx, js::Handle<js::PropertyName*> name);
     bool cloneSelfHostedValueById(JSContext *cx, js::HandleId id, js::HandleObject holder,
                                   js::MutableHandleValue vp);
 

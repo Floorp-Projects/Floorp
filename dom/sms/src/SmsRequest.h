@@ -7,6 +7,7 @@
 #define mozilla_dom_sms_SmsRequest_h
 
 #include "nsIDOMSmsRequest.h"
+#include "nsISmsRequest.h"
 #include "nsDOMEventTargetHelper.h"
 
 class nsIDOMMozSmsMessage;
@@ -15,16 +16,40 @@ class nsIDOMMozSmsCursor;
 namespace mozilla {
 namespace dom {
 namespace sms {
+
+class SmsRequestParent;
+class MessageReply;
+
+// We need this forwarder to avoid a QI to nsIClassInfo.
+// See: https://bugzilla.mozilla.org/show_bug.cgi?id=775997#c51 
+class SmsRequestForwarder : public nsISmsRequest
+{
+  NS_FORWARD_NSISMSREQUEST(mRealRequest->)
+
+  NS_DECL_ISUPPORTS
+
+  SmsRequestForwarder(nsISmsRequest* aRealRequest) {
+    mRealRequest = aRealRequest;
+  }
+  virtual
+  ~SmsRequestForwarder() {}
+
+private:
+  nsCOMPtr<nsISmsRequest> mRealRequest;
+};
+
 class SmsManager;
 
 class SmsRequest : public nsDOMEventTargetHelper
                  , public nsIDOMMozSmsRequest
+                 , public nsISmsRequest
 {
 public:
-  friend class SmsRequestManager;
+  friend class SmsCursor;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMDOMREQUEST
+  NS_DECL_NSISMSREQUEST
   NS_DECL_NSIDOMMOZSMSREQUEST
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
@@ -32,13 +57,23 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(SmsRequest,
                                                          nsDOMEventTargetHelper)
 
+  static already_AddRefed<nsIDOMMozSmsRequest> Create(SmsManager* aManager);
+
+  static already_AddRefed<SmsRequest> Create(SmsRequestParent* requestParent);
   void Reset();
+
+  void SetActorDied() {
+    mParentAlive = false;
+  }
 
 private:
   SmsRequest() MOZ_DELETE;
 
   SmsRequest(SmsManager* aManager);
+  SmsRequest(SmsRequestParent* aParent);
   ~SmsRequest();
+
+  nsresult SendMessageReply(const MessageReply& aReply);
 
   /**
    * Root mResult (jsval) to prevent garbage collection.
@@ -77,25 +112,20 @@ private:
    */
   bool SetSuccessInternal(nsISupports* aObject);
 
-  /**
-   * Return the internal cursor that is saved when
-   * SetSuccess(nsIDOMMozSmsCursor*) is used.
-   * Returns null if this request isn't associated to an cursor.
-   */
-  nsIDOMMozSmsCursor* GetCursor();
+  nsresult DispatchTrustedEvent(const nsAString& aEventName);
+
+  template <class T>
+  nsresult NotifySuccess(T aParam);
+  nsresult NotifyError(int32_t aError);
 
   jsval     mResult;
   bool      mResultRooted;
   bool      mDone;
+  bool      mParentAlive;
+  SmsRequestParent* mParent;
   nsCOMPtr<nsIDOMDOMError> mError;
   nsCOMPtr<nsIDOMMozSmsCursor> mCursor;
 };
-
-inline nsIDOMMozSmsCursor*
-SmsRequest::GetCursor()
-{
-  return mCursor;
-}
 
 } // namespace sms
 } // namespace dom

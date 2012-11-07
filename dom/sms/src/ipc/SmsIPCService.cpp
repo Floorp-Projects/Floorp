@@ -10,23 +10,39 @@
 #include "mozilla/dom/sms/SmsChild.h"
 #include "mozilla/dom/sms/SmsMessage.h"
 #include "SmsFilter.h"
+#include "SmsRequest.h"
 
 namespace mozilla {
 namespace dom {
 namespace sms {
 
-PSmsChild* SmsIPCService::sSmsChild = nullptr;
+PSmsChild* gSmsChild;
 
 NS_IMPL_ISUPPORTS2(SmsIPCService, nsISmsService, nsISmsDatabaseService)
 
-/* static */ PSmsChild*
+void
+SendRequest(const IPCSmsRequest& aRequest, nsISmsRequest* aRequestReply)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  NS_WARN_IF_FALSE(gSmsChild,
+                   "Calling methods on SmsIPCService during "
+                   "shutdown!");
+
+  if (gSmsChild) {
+    SmsRequestChild* actor = new SmsRequestChild(aRequestReply);
+    gSmsChild->SendPSmsRequestConstructor(actor, aRequest);
+  }
+}
+
+PSmsChild*
 SmsIPCService::GetSmsChild()
 {
-  if (!sSmsChild) {
-    sSmsChild = ContentChild::GetSingleton()->SendPSmsConstructor();
+  if (!gSmsChild) {
+    gSmsChild = ContentChild::GetSingleton()->SendPSmsConstructor();
   }
 
-  return sSmsChild;
+  return gSmsChild;
 }
 
 /*
@@ -49,12 +65,11 @@ SmsIPCService::GetNumberOfMessagesForText(const nsAString& aText, uint16_t* aRes
 }
 
 NS_IMETHODIMP
-SmsIPCService::Send(const nsAString& aNumber, const nsAString& aMessage,
-                    int32_t aRequestId, uint64_t aProcessId)
+SmsIPCService::Send(const nsAString& aNumber,
+                    const nsAString& aMessage,
+                    nsISmsRequest* aRequest)
 {
-  GetSmsChild()->SendSendMessage(nsString(aNumber), nsString(aMessage),
-                                 aRequestId, ContentChild::GetSingleton()->GetID());
-
+  SendRequest(SendMessageRequest(nsString(aNumber), nsString(aMessage)), aRequest);
   return NS_OK;
 }
 
@@ -115,40 +130,36 @@ SmsIPCService::SetMessageDeliveryStatus(int32_t aMessageId,
 }
 
 NS_IMETHODIMP
-SmsIPCService::GetMessageMoz(int32_t aMessageId, int32_t aRequestId,
-                             uint64_t aProcessId)
+SmsIPCService::GetMessageMoz(int32_t aMessageId,
+                             nsISmsRequest* aRequest)
 {
-  GetSmsChild()->SendGetMessage(aMessageId, aRequestId,
-                                ContentChild::GetSingleton()->GetID());
+  SendRequest(GetMessageRequest(aMessageId), aRequest);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsIPCService::DeleteMessage(int32_t aMessageId, int32_t aRequestId,
-                             uint64_t aProcessId)
+SmsIPCService::DeleteMessage(int32_t aMessageId,
+                             nsISmsRequest* aRequest)
 {
-  GetSmsChild()->SendDeleteMessage(aMessageId, aRequestId,
-                                   ContentChild::GetSingleton()->GetID());
+  SendRequest(DeleteMessageRequest(aMessageId), aRequest);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsIPCService::CreateMessageList(nsIDOMMozSmsFilter* aFilter, bool aReverse,
-                                 int32_t aRequestId, uint64_t aProcessId)
+SmsIPCService::CreateMessageList(nsIDOMMozSmsFilter* aFilter,
+                                 bool aReverse,
+                                 nsISmsRequest* aRequest)
 {
-  SmsFilter* filter = static_cast<SmsFilter*>(aFilter);
-  GetSmsChild()->SendCreateMessageList(filter->GetData(), aReverse, aRequestId,
-                                       ContentChild::GetSingleton()->GetID());
-
+  SmsFilterData data = SmsFilterData(static_cast<SmsFilter*>(aFilter)->GetData());
+  SendRequest(CreateMessageListRequest(data, aReverse), aRequest);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsIPCService::GetNextMessageInList(int32_t aListId, int32_t aRequestId,
-                                    uint64_t aProcessId)
+SmsIPCService::GetNextMessageInList(int32_t aListId,
+                                    nsISmsRequest* aRequest)
 {
-  GetSmsChild()->SendGetNextMessageInList(aListId, aRequestId,
-                                          ContentChild::GetSingleton()->GetID());
+  SendRequest(GetNextMessageInListRequest(aListId), aRequest);
   return NS_OK;
 }
 
@@ -160,11 +171,11 @@ SmsIPCService::ClearMessageList(int32_t aListId)
 }
 
 NS_IMETHODIMP
-SmsIPCService::MarkMessageRead(int32_t aMessageId, bool aValue,
-                               int32_t aRequestId, uint64_t aProcessId)
+SmsIPCService::MarkMessageRead(int32_t aMessageId,
+                               bool aValue,
+                               nsISmsRequest* aRequest)
 {
-  GetSmsChild()->SendMarkMessageRead(aMessageId, aValue, aRequestId,
-                                     ContentChild::GetSingleton()->GetID());
+  SendRequest(MarkMessageReadRequest(aMessageId, aValue), aRequest);
   return NS_OK;
 }
 
