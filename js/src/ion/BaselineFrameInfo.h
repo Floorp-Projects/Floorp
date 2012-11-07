@@ -154,8 +154,8 @@ class BaselineFrame
     static inline size_t offsetOfArg(size_t index) {
         return FramePointerOffset + IonJSFrameLayout::offsetOfActualArg(index);
     }
-    static size_t frameSize(size_t nlocals) {
-        return sizeof(BaselineFrame) + nlocals * sizeof(Value);
+    static size_t Size() {
+        return sizeof(BaselineFrame);
     }
 };
 
