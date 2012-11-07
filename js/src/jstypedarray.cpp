@@ -40,10 +40,11 @@
 
 #define ENABLE_TYPEDARRAY_MOVE
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
+
+using mozilla::DebugOnly;
 
 /*
  * Allocate array buffers with the maximum number of fixed slots marked as

@@ -68,11 +68,12 @@
 
 #include "jsautooplen.h"
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
+
 using js::frontend::IsIdentifier;
+using mozilla::ArrayLength;
 
 JS_STATIC_ASSERT(int32_t((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)) == int64_t((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)));
 

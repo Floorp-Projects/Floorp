@@ -17,6 +17,8 @@
 using namespace js;
 using namespace js::types;
 
+using mozilla::ArrayLength;
+
 class RegExpMatchBuilder
 {
     JSContext   * const cx;

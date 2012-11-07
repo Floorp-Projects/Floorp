@@ -67,6 +67,8 @@
 using namespace js;
 using namespace js::gc;
 
+using mozilla::DebugOnly;
+
 bool
 js::AutoCycleDetector::init()
 {

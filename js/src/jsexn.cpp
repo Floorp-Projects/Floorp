@@ -40,10 +40,11 @@
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
+
+using mozilla::ArrayLength;
 
 /* Forward declarations for ErrorClass's initializer. */
 static JSBool

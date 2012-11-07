@@ -45,6 +45,8 @@ using namespace js::mjit::ic;
 #endif
 using namespace js::analyze;
 
+using mozilla::DebugOnly;
+
 #define RETURN_IF_OOM(retval)                                   \
     JS_BEGIN_MACRO                                              \
         if (oomInVector || masm.oom() || stubcc.masm.oom())     \

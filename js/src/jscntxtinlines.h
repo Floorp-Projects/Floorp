@@ -34,7 +34,7 @@ inline bool
 NewObjectCache::lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry)
 {
     uintptr_t hash = (uintptr_t(clasp) ^ uintptr_t(key)) + kind;
-    *pentry = hash % js::ArrayLength(entries);
+    *pentry = hash % mozilla::ArrayLength(entries);
 
     Entry *entry = &entries[*pentry];
 
@@ -64,7 +64,7 @@ NewObjectCache::lookupType(Class *clasp, js::types::TypeObject *type, gc::AllocK
 inline void
 NewObjectCache::fill(EntryIndex entry_, Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj)
 {
-    JS_ASSERT(unsigned(entry_) < ArrayLength(entries));
+    JS_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
     Entry *entry = &entries[entry_];
 
     JS_ASSERT(!obj->hasDynamicSlots() && !obj->hasDynamicElements());
@@ -102,7 +102,7 @@ NewObjectCache::fillType(EntryIndex entry, Class *clasp, js::types::TypeObject *
 inline JSObject *
 NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
 {
-    JS_ASSERT(unsigned(entry_) < ArrayLength(entries));
+    JS_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
     Entry *entry = &entries[entry_];
 
     JSObject *obj = js_TryNewGCObject(cx, entry->kind);

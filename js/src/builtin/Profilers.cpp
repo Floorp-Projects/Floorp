@@ -25,6 +25,8 @@
 
 using namespace js;
 
+using mozilla::ArrayLength;
+
 /* Thread-unsafe error management */
 
 static char gLastError[2000];

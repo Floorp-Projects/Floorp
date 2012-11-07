@@ -52,12 +52,13 @@
 
 #include "vm/RegExpObject-inl.h"
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
+
 using js::frontend::IsIdentifier;
 using js::frontend::LetDataToGroupAssign;
 using js::frontend::LetDataToOffset;
+using mozilla::ArrayLength;
 
 /*
  * Index limit must stay within 32 bits.
