@@ -1402,7 +1402,8 @@ StackIter::settleOnNewState()
 }
 
 StackIter::StackIter(JSContext *cx, SavedOption savedOption)
-  : maybecx_(cx),
+  : perThread_(&cx->runtime->mainThread),
+    maybecx_(cx),
     savedOption_(savedOption),
     script_(cx, NULL)
 #ifdef JS_ION
@@ -1426,7 +1427,9 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
 }
 
 StackIter::StackIter(JSRuntime *rt, StackSegment &seg)
-  : maybecx_(NULL), savedOption_(STOP_AT_SAVED),
+  : perThread_(&rt->mainThread),
+    maybecx_(NULL),
+    savedOption_(STOP_AT_SAVED),
     script_(rt, NULL)
 #ifdef JS_ION
     , ionActivations_(rt),
@@ -1444,14 +1447,15 @@ StackIter::StackIter(JSRuntime *rt, StackSegment &seg)
 }
 
 StackIter::StackIter(const StackIter &other)
-  : maybecx_(other.maybecx_),
+  : perThread_(other.perThread_),
+    maybecx_(other.maybecx_),
     savedOption_(other.savedOption_),
     state_(other.state_),
     fp_(other.fp_),
     calls_(other.calls_),
     seg_(other.seg_),
     pc_(other.pc_),
-    script_(other.maybecx_ ? other.maybecx_->runtime : TlsRuntime.get(), other.script_),
+    script_(perThread_, other.script_),
     args_(other.args_)
 #ifdef JS_ION
     , ionActivations_(other.ionActivations_),
