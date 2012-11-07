@@ -3417,7 +3417,7 @@ RelaxRootChecks(JSContext *cx, unsigned argc, jsval *vp)
     }
 
 #ifdef DEBUG
-    cx->runtime->gcRelaxRootChecks = true;
+    cx->runtime->mainThread.gcRelaxRootChecks = true;
 #endif
 
     return true;

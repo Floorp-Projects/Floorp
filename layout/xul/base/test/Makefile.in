@@ -19,6 +19,7 @@ MOCHITEST_FILES = 	test_bug511075.html \
 MOCHITEST_CHROME_FILES =	test_bug381167.xhtml \
 		test_bug393970.xul \
 		test_bug477754.xul \
+		test_popupSizeTo.xul \
 		test_stack.xul \
 		test_resizer.xul \
 		window_resizer.xul \

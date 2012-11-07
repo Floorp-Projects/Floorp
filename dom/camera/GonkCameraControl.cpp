@@ -191,7 +191,6 @@ nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId, nsIThread* aCameraT
   , mDiscardedFrameCount(0)
   , mMediaProfiles(nullptr)
   , mRecorder(nullptr)
-  , mVideoRotation(0)
   , mVideoFile()
   , mProfileManager(nullptr)
   , mRecorderProfile(nullptr)
@@ -1172,7 +1171,7 @@ nsGonkCameraControl::HandleRecorderEvent(int msg, int ext1, int ext2)
 }
 
 nsresult
-nsGonkCameraControl::SetupRecording(int aFd, int64_t aMaxFileSizeBytes, int64_t aMaxVideoLengthMs)
+nsGonkCameraControl::SetupRecording(int aFd, int aRotation, int64_t aMaxFileSizeBytes, int64_t aMaxVideoLengthMs)
 {
   // choosing a size big enough to hold the params
   const size_t SIZE = 256;
@@ -1200,7 +1199,15 @@ nsGonkCameraControl::SetupRecording(int aFd, int64_t aMaxFileSizeBytes, int64_t 
   snprintf(buffer, SIZE, "max-filesize=%lld", aMaxFileSizeBytes);
   CHECK_SETARG(mRecorder->setParameters(String8(buffer)));
 
-  snprintf(buffer, SIZE, "video-param-rotation-angle-degrees=%d", mVideoRotation);
+  // adjust rotation by camera sensor offset
+  int r = aRotation;
+  r += GonkCameraHardware::GetSensorOrientation(mHwHandle, GonkCameraHardware::RAW_SENSOR_ORIENTATION);
+  r %= 360;
+  r += 45;
+  r /= 90;
+  r *= 90;
+  DOM_CAMERA_LOGI("setting video rotation to %d degrees (mapped from %d)\n", r, aRotation);
+  snprintf(buffer, SIZE, "video-param-rotation-angle-degrees=%d", r);
   CHECK_SETARG(mRecorder->setParameters(String8(buffer)));
 
   CHECK_SETARG(mRecorder->setListener(new GonkRecorderListener(this)));
@@ -1218,7 +1225,6 @@ nsGonkCameraControl::GetPreviewStreamVideoModeImpl(GetPreviewStreamVideoModeTask
   StopPreviewInternal(true /* forced */);
 
   // setup the video mode
-  mVideoRotation = aGetPreviewStreamVideoMode->mOptions.rotation;
   nsresult rv = SetupVideoMode(aGetPreviewStreamVideoMode->mOptions.profile);
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -1226,7 +1232,7 @@ nsGonkCameraControl::GetPreviewStreamVideoModeImpl(GetPreviewStreamVideoModeTask
   int width = video->GetWidth();
   int height = video->GetHeight();
   int fps = video->GetFramerate();
-  DOM_CAMERA_LOGI("recording preview format: %d x %d (rotated %d degrees)\n", width, height, fps);
+  DOM_CAMERA_LOGI("recording preview format: %d x %d (%d fps)\n", width, height, fps);
 
   // create and return new preview stream object
   nsCOMPtr<GetPreviewStreamResult> getPreviewStreamResult = new GetPreviewStreamResult(this, width, height, fps, aGetPreviewStreamVideoMode->mOnSuccessCb, mWindowId);

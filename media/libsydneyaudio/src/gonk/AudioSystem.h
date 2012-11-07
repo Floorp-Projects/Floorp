@@ -75,6 +75,7 @@ typedef enum {
     AUDIO_STREAM_ENFORCED_AUDIBLE = 7, /* Sounds that cannot be muted by user and must be routed to speaker */
     AUDIO_STREAM_DTMF             = 8,
     AUDIO_STREAM_TTS              = 9,
+    AUDIO_STREAM_FM               = 10,
 
     AUDIO_STREAM_CNT,
     AUDIO_STREAM_MAX              = AUDIO_STREAM_CNT - 1,
@@ -335,6 +336,7 @@ public:
         ENFORCED_AUDIBLE = 7, // Sounds that cannot be muted by user and must be routed to speaker
         DTMF             = 8,
         TTS              = 9,
+        FM               = 10,
         NUM_STREAM_TYPES
     };
 
@@ -699,8 +701,13 @@ public:
     static status_t initStreamVolume(stream_type stream,
                                       int indexMin,
                                       int indexMax);
+    static status_t initStreamVolume(audio_stream_type_t stream,
+                                      int indexMin,
+                                      int indexMax);
     static status_t setStreamVolumeIndex(stream_type stream, int index);
+    static status_t setStreamVolumeIndex(audio_stream_type_t stream, int index);
     static status_t getStreamVolumeIndex(stream_type stream, int *index);
+    static status_t getStreamVolumeIndex(audio_stream_type_t stream, int *index);
 
     static uint32_t getStrategyForStream(stream_type stream);
 

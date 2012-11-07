@@ -16,11 +16,15 @@
 #include "nsIChannel.h"
 #include "nsIDOMFile.h"
 #include "mozilla/Attributes.h"
+#include "DictionaryHelpers.h"
 
 BEGIN_FILE_NAMESPACE
 
 class ArchiveRequest;
 
+/**
+ * This is the ArchiveReader object
+ */
 class ArchiveReader MOZ_FINAL : public nsIDOMArchiveReader,
                                 public nsIJSNativeInitializer
 {
@@ -39,7 +43,7 @@ public:
                         JSContext* aCx,
                         JSObject* aObj,
                         uint32_t aArgc,
-                        jsval* aArgv);
+                        JS::Value* aArgv);
 
   nsresult GetInputStream(nsIInputStream** aInputStream);
   nsresult GetSize(uint64_t* aSize);
@@ -90,6 +94,8 @@ protected:
     nsTArray<nsCOMPtr<nsIDOMFile> > fileList;
     nsresult status;
   } mData;
+
+  ArchiveReaderOptions mOptions;
 };
 
 END_FILE_NAMESPACE
