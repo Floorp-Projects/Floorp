@@ -253,7 +253,7 @@ nsSVGFilterProperty::DoUpdate()
 
   // Repaint asynchronously in case the filter frame is being torn down
   nsChangeHint changeHint =
-    nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects);
+    nsChangeHint(nsChangeHint_RepaintFrame);
 
   // Don't need to request UpdateOverflow if we're being reflowed.
   if (!(mFrame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
@@ -274,7 +274,7 @@ nsSVGMarkerProperty::DoUpdate()
 
   // Repaint asynchronously in case the marker frame is being torn down
   nsChangeHint changeHint =
-    nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects);
+    nsChangeHint(nsChangeHint_RepaintFrame);
   
   // Don't need to request ReflowFrame if we're being reflowed.
   if (!(mFrame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
