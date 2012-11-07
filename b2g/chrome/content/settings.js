@@ -92,6 +92,12 @@ for each (let [setting, defaultValue, streamType] in audioSettings) {
   })(setting, defaultValue, streamType);
 }
 
+// =================== Console ======================
+
+SettingsListener.observe('debug.console.enabled', true, function(value) {
+  Services.prefs.setBoolPref('consoleservice.enabled', value);
+});
+
 // =================== Languages ====================
 SettingsListener.observe('language.current', 'en-US', function(value) {
   Services.prefs.setCharPref('general.useragent.locale', value);
@@ -113,7 +119,6 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
 
   shell.start();
 });
-
 
 // =================== RIL ====================
 (function RILSettingsToPrefs() {
