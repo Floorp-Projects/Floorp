@@ -4408,6 +4408,9 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable) },
     { NS_STYLE_DISPLAY_INLINE_TABLE,
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable) },
+    // NOTE: In the unlikely event that we add another table-part here that has
+    // a desired-parent-type (& hence triggers table fixup), we'll need to also
+    // update the flexbox chunk in nsStyleContext::ApplyStyleFixups().
     { NS_STYLE_DISPLAY_TABLE_CAPTION,
       FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_ALLOW_BLOCK_STYLES |
                   FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_SKIP_ABSPOS_PUSH |

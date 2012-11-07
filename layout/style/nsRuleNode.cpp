@@ -127,7 +127,9 @@ nsRuleNode::ChildrenHashOps = {
 //  - if the display value (argument) is not a block-type
 //    then we set it to a valid block display value
 //  - For enforcing the floated/positioned element CSS2 rules
-static void EnsureBlockDisplay(uint8_t& display)
+/* static */
+void
+nsRuleNode::EnsureBlockDisplay(uint8_t& display)
 {
   // see if the display value is already a block
   switch (display) {
