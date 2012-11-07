@@ -30,7 +30,9 @@ let SocialServiceInternal = {
 function initService() {
   // Add a pref observer for the enabled state
   function prefObserver(subject, topic, data) {
-    SocialService._setEnabled(Services.prefs.getBoolPref("social.enabled"));
+    let prefVal = Services.prefs.getBoolPref("social.enabled");
+    if (prefVal != SocialServiceInternal.enabled)
+      SocialService._setEnabled(prefVal);
   }
   Services.prefs.addObserver("social.enabled", prefObserver, false);
   Services.obs.addObserver(function xpcomShutdown() {
@@ -95,8 +97,8 @@ this.SocialService = {
         !Services.appinfo.inSafeMode)
       return;
 
-    Services.prefs.setBoolPref("social.enabled", enable);
     this._setEnabled(enable);
+    Services.prefs.setBoolPref("social.enabled", enable);
   },
   _setEnabled: function _setEnabled(enable) {
     SocialServiceInternal.providerArray.forEach(function (p) p.enabled = enable);
