@@ -25,7 +25,7 @@
 #include <unistd.h> /* usleep() */
 
 #define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
-#define AUDIO_VOLUME_MASTER "audio.volume.master"
+#define AUDIO_VOLUME_MASTER "audio.volume.bt_sco"
 #define HANDSFREE_UUID mozilla::dom::bluetooth::BluetoothServiceUuidStr::Handsfree
 #define HEADSET_UUID mozilla::dom::bluetooth::BluetoothServiceUuidStr::Headset
 

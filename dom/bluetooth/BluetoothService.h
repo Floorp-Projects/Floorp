@@ -273,6 +273,9 @@ public:
   virtual void
   Disconnect(uint16_t aProfileId, BluetoothReplyRunnable* aRunnable) = 0;
 
+  virtual bool
+  IsConnected(uint16_t aProfileId) = 0;
+
   virtual void
   SendFile(const nsAString& aDeviceAddress,
            BlobParent* aBlobParent,
