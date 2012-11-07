@@ -13,27 +13,30 @@ The *mach* driver follows the convention of popular tools like Git,
 Subversion, and Mercurial and provides a common driver for multiple
 subcommands.
 
-Subcommands are implemented by decorating a class inheritting from
-mozbuild.base.MozbuildObject and by decorating methods that act as
-subcommand handlers.
+Subcommands are implemented by decorating a class and by decorating
+methods that act as subcommand handlers.
 
-Relevant decorators are defined in the *mach.base* module. There are
+Relevant decorators are defined in the *mach.decorators* module. There are
 the *Command* and *CommandArgument* decorators, which should be used
 on methods to denote that a specific method represents a handler for
 a mach subcommand. There is also the *CommandProvider* decorator,
 which is applied to a class to denote that it contains mach subcommands.
 
+Classes with the *@CommandProvider* decorator *must* have an *__init__*
+method that accepts 1 or 2 arguments. If it accepts 2 arguments, the
+2nd argument will be a *MachCommandContext* instance. This is just a named
+tuple containing references to objects provided by the mach driver.
+
 Here is a complete example:
 
-    from mozbuild.base import MozbuildObject
-
-    from mach.base import CommandArgument
-    from mach.base import CommandProvider
-    from mach.base import Command
+    from mach.decorators import (
+        CommandArgument,
+        CommandProvider,
+        Command,
+    )
 
     @CommandProvider
-    class MyClass(MozbuildObject):
-
+    class MyClass(object):
         @Command('doit', help='Do ALL OF THE THINGS.')
         @CommandArgument('--force', '-f', action='store_true',
             help='Force doing it.')

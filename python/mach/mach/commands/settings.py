@@ -6,18 +6,23 @@ from __future__ import print_function, unicode_literals
 
 from textwrap import TextWrapper
 
-from mozbuild.base import MozbuildObject
-from mach.base import CommandProvider
-from mach.base import Command
+from mach.decorators import (
+    CommandProvider,
+    Command,
+)
+
 
 #@CommandProvider
-class Settings(MozbuildObject):
+class Settings(object):
     """Interact with settings for mach.
 
     Currently, we only provide functionality to view what settings are
     available. In the future, this module will be used to modify settings, help
     people create configs via a wizard, etc.
     """
+    def __init__(self, context):
+        self.settings = context.settings
+
     @Command('settings-list', help='Show available config settings.')
     def list_settings(self):
         """List available settings in a concise list."""

@@ -6,11 +6,14 @@ from __future__ import unicode_literals
 
 import os
 
-from mozbuild.base import MozbuildObject
+from mozbuild.base import (
+    MachCommandBase,
+    MozbuildObject,
+)
 
 from moztesting.util import parse_test_path
 
-from mach.base import (
+from mach.decorators import (
     CommandArgument,
     CommandProvider,
     Command,
@@ -75,7 +78,7 @@ class ReftestRunner(MozbuildObject):
 
 
 @CommandProvider
-class MachCommands(MozbuildObject):
+class MachCommands(MachCommandBase):
     @Command('reftest', help='Run a reftest.')
     @CommandArgument('test_file', default=None, nargs='?', metavar='TEST',
         help=generic_help)
