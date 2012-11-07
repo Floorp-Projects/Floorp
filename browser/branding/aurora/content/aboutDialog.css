@@ -13,6 +13,10 @@
   color: #fff !important;
 }
 
+.text-link:-moz-focusring {
+  border-color: #fff;
+}
+
 #rightBox {
   /* this margin prevents text from overlapping the planet image */
   margin-left: 280px;
