@@ -18,6 +18,9 @@
 #include "nsConsoleService.h"
 #include "nsConsoleMessage.h"
 #include "nsIClassInfoImpl.h"
+#include "nsThreadUtils.h"
+
+#include "mozilla/Preferences.h"
 
 #if defined(ANDROID)
 #include <android/log.h>
@@ -33,6 +36,8 @@ NS_IMPL_THREADSAFE_RELEASE(nsConsoleService)
 NS_IMPL_CLASSINFO(nsConsoleService, NULL, nsIClassInfo::THREADSAFE | nsIClassInfo::SINGLETON, NS_CONSOLESERVICE_CID)
 NS_IMPL_QUERY_INTERFACE1_CI(nsConsoleService, nsIConsoleService)
 NS_IMPL_CI_INTERFACE_GETTER1(nsConsoleService, nsIConsoleService)
+
+static bool sLoggingEnabled = true;
 
 nsConsoleService::nsConsoleService()
     : mMessages(nullptr)
@@ -59,6 +64,16 @@ nsConsoleService::~nsConsoleService()
         nsMemory::Free(mMessages);
 }
 
+class AddConsoleEnabledPrefWatcher : public nsRunnable
+{
+public:
+    NS_IMETHOD Run()
+    {
+        Preferences::AddBoolVarCache(&sLoggingEnabled, "consoleservice.enabled", true);
+        return NS_OK;
+    }
+};
+
 nsresult
 nsConsoleService::Init()
 {
@@ -71,6 +86,7 @@ nsConsoleService::Init()
     memset(mMessages, 0, mBufferSize * sizeof(nsIConsoleMessage *));
 
     mListeners.Init();
+    NS_DispatchToMainThread(new AddConsoleEnabledPrefWatcher);
 
     return NS_OK;
 }
@@ -129,6 +145,10 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
 {
     if (message == nullptr)
         return NS_ERROR_INVALID_ARG;
+
+    if (!sLoggingEnabled) {
+        return NS_OK;
+    }
 
     if (NS_IsMainThread() && mDeliveringMessage) {
         NS_WARNING("Some console listener threw an error while inside itself. Discarding this message");
@@ -203,7 +223,11 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
 NS_IMETHODIMP
 nsConsoleService::LogStringMessage(const PRUnichar *message)
 {
-    nsConsoleMessage *msg = new nsConsoleMessage(message);
+    if (!sLoggingEnabled) {
+        return NS_OK;
+    }
+
+    nsRefPtr<nsConsoleMessage> msg(new nsConsoleMessage(message));
     return this->LogMessage(msg);
 }
 
