@@ -1874,7 +1874,7 @@ nsWindow::GetAttention(int32_t aCycleCount)
 
     GtkWidget* top_window = GetToplevelWidget();
     GtkWidget* top_focused_window =
-        gFocusWindow->GetToplevelWidget();
+        gFocusWindow ? gFocusWindow->GetToplevelWidget() : nullptr;
 
     // Don't get attention if the window is focused anyway.
     if (top_window && (gtk_widget_get_visible(top_window)) &&
