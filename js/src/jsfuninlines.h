@@ -86,7 +86,7 @@ JSFunction::initializeExtended()
 {
     JS_ASSERT(isExtended());
 
-    JS_ASSERT(js::ArrayLength(toExtended()->extendedSlots) == 2);
+    JS_ASSERT(mozilla::ArrayLength(toExtended()->extendedSlots) == 2);
     toExtended()->extendedSlots[0].init(js::UndefinedValue());
     toExtended()->extendedSlots[1].init(js::UndefinedValue());
 }
@@ -94,14 +94,14 @@ JSFunction::initializeExtended()
 inline void
 JSFunction::setExtendedSlot(size_t which, const js::Value &val)
 {
-    JS_ASSERT(which < js::ArrayLength(toExtended()->extendedSlots));
+    JS_ASSERT(which < mozilla::ArrayLength(toExtended()->extendedSlots));
     toExtended()->extendedSlots[which] = val;
 }
 
 inline const js::Value &
 JSFunction::getExtendedSlot(size_t which) const
 {
-    JS_ASSERT(which < js::ArrayLength(toExtended()->extendedSlots));
+    JS_ASSERT(which < mozilla::ArrayLength(toExtended()->extendedSlots));
     return toExtended()->extendedSlots[which];
 }
 

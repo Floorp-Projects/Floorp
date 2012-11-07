@@ -54,6 +54,8 @@ using namespace js;
 using namespace js::types;
 using namespace js::analyze;
 
+using mozilla::DebugOnly;
+
 static inline jsid
 id_prototype(JSContext *cx) {
     return NameToId(cx->names().classPrototype);

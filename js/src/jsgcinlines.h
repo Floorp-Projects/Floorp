@@ -14,9 +14,11 @@
 #include "jsscope.h"
 #include "jsxml.h"
 
+#include "gc/Root.h"
+
 #include "js/TemplateLib.h"
 
-using namespace JS;
+using JS::AssertCanGC;
 
 namespace js {
 

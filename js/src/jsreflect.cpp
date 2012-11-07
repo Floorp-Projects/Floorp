@@ -31,9 +31,11 @@
 
 #include "jsscriptinlines.h"
 
-using namespace mozilla;
 using namespace js;
 using namespace js::frontend;
+
+using mozilla::DebugOnly;
+using mozilla::ArrayLength;
 
 namespace js {
 

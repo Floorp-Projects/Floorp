@@ -14,6 +14,8 @@
 #include "ion/MoveResolver.h"
 #include "jsopcode.h"
 
+using mozilla::DebugOnly;
+
 namespace js {
 namespace ion {
 

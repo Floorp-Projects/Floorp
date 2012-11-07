@@ -38,9 +38,10 @@
 #include "assembler/jit/ExecutableAllocator.h"
 #endif
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
+
+using mozilla::DebugOnly;
 
 JSCompartment::JSCompartment(JSRuntime *rt)
   : rt(rt),

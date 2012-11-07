@@ -357,7 +357,7 @@ class MacroAssemblerX86Shared : public Assembler
     // Builds an exit frame on the stack, with a return address to an internal
     // non-function. Returns offset to be passed to markSafepointAt().
     bool buildFakeExitFrame(const Register &scratch, uint32 *offset) {
-        DebugOnly<uint32> initialDepth = framePushed();
+        mozilla::DebugOnly<uint32> initialDepth = framePushed();
 
         CodeLabel *cl = new CodeLabel();
         if (!addCodeLabel(cl))

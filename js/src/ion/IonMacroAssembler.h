@@ -25,7 +25,7 @@
 
 namespace js {
 namespace ion {
- 
+
 // The public entrypoint for emitting assembly. Note that a MacroAssembler can
 // use cx->lifoAlloc, so take care not to interleave masm use with other
 // lifoAlloc use if one will be destroyed before the other.
@@ -52,8 +52,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     };
 
     AutoRooter autoRooter_;
-    Maybe<IonContext> ionContext_;
-    Maybe<AutoIonContextAlloc> alloc_;
+    mozilla::Maybe<IonContext> ionContext_;
+    mozilla::Maybe<AutoIonContextAlloc> alloc_;
     bool enoughMemory_;
 
   private:
