@@ -8,7 +8,7 @@
 #include "nsWebMReader.h"
 #include "nsWebMDecoder.h"
 
-nsBuiltinDecoderStateMachine* nsWebMDecoder::CreateStateMachine()
+nsDecoderStateMachine* nsWebMDecoder::CreateStateMachine()
 {
   return new nsBuiltinDecoderStateMachine(this, new nsWebMReader(this));
 }

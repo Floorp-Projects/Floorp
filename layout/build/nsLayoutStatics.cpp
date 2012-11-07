@@ -73,6 +73,11 @@
 #include "nsHTMLEditor.h"
 #include "nsTextServicesDocument.h"
 
+#ifdef MOZ_MEDIA
+#include "nsMediaDecoder.h"
+#include "nsHTMLMediaElement.h"
+#endif
+
 #ifdef MOZ_MEDIA_PLUGINS
 #include "nsMediaPluginHost.h"
 #endif
