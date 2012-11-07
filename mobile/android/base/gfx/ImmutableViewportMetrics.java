@@ -152,8 +152,8 @@ public class ImmutableViewportMetrics {
             newZoomFactor);
     }
 
-    public ImmutableViewportMetrics offsetViewportBy(PointF delta) {
-        return setViewportOrigin(viewportRectLeft + delta.x, viewportRectTop + delta.y);
+    public ImmutableViewportMetrics offsetViewportBy(float dx, float dy) {
+        return setViewportOrigin(viewportRectLeft + dx, viewportRectTop + dy);
     }
 
     public ImmutableViewportMetrics setPageRect(RectF pageRect, RectF cssPageRect) {

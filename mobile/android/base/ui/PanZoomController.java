@@ -480,8 +480,8 @@ public class PanZoomController
         updatePosition();
     }
 
-    private void scrollBy(PointF point) {
-        ImmutableViewportMetrics scrolled = getMetrics().offsetViewportBy(point);
+    private void scrollBy(float dx, float dy) {
+        ImmutableViewportMetrics scrolled = getMetrics().offsetViewportBy(dx, dy);
         mTarget.setViewportMetrics(scrolled);
     }
 
@@ -575,7 +575,7 @@ public class PanZoomController
         }
         if (! mSubscroller.scrollBy(displacement)) {
             synchronized (mTarget.getLock()) {
-                scrollBy(displacement);
+                scrollBy(displacement.x, displacement.y);
             }
         }
     }
@@ -886,8 +886,8 @@ public class PanZoomController
                 newZoomFactor = maxZoomFactor + excessZoom;
             }
 
-            scrollBy(new PointF(mLastZoomFocus.x - detector.getFocusX(),
-                    mLastZoomFocus.y - detector.getFocusY()));
+            scrollBy(mLastZoomFocus.x - detector.getFocusX(),
+                     mLastZoomFocus.y - detector.getFocusY());
             PointF focus = new PointF(detector.getFocusX(), detector.getFocusY());
             scaleWithFocus(newZoomFactor, focus);
         }
