@@ -4,14 +4,15 @@
 
 from __future__ import unicode_literals
 
-from mozbuild.base import MozbuildObject
+from mach.decorators import (
+    CommandArgument,
+    CommandProvider,
+    Command,
+)
 
-from mach.base import CommandArgument
-from mach.base import CommandProvider
-from mach.base import Command
 
 @CommandProvider
-class Bootstrap(MozbuildObject):
+class Bootstrap(object):
     """Bootstrap system and mach for optimal development experience."""
 
     @Command('bootstrap',

@@ -17,9 +17,9 @@ import traceback
 import uuid
 import sys
 
-from mozbuild.base import BuildConfig
+from .base import CommandContext
 
-from .base import (
+from .decorators import (
     CommandArgument,
     CommandProvider,
     Command,
@@ -28,14 +28,8 @@ from .base import (
 from .config import ConfigSettings
 from .logging import LoggingManager
 
-from .registrar import populate_argument_parser
+from .registrar import Registrar
 
-
-# Classes inheriting from ConfigProvider that provide settings.
-# TODO this should come from auto-discovery somehow.
-SETTINGS_PROVIDERS = [
-    BuildConfig,
-]
 
 # Settings for argument parser that don't get proxied to sub-module. i.e. these
 # are things consumed by the driver itself.
@@ -45,9 +39,9 @@ CONSUMED_ARGUMENTS = [
     'logfile',
     'log_interval',
     'command',
-    'cls',
-    'method',
-    'func',
+    'mach_class',
+    'mach_method',
+    'mach_pass_context',
 ]
 
 MACH_ERROR = r'''
@@ -151,28 +145,6 @@ To see more help for a specific command, run:
 
         self.log_manager.register_structured_logger(self.logger)
 
-    def load_commands_from_sys_path(self):
-        """Discover and load mach command modules from sys.path.
-
-        This iterates over all paths on sys.path. If the path contains a
-        "mach/commands" subdirectory, all .py files in that directory will be
-        loaded and examined for mach commands.
-        """
-        # Create parent module otherwise Python complains when the parent is
-        # missing.
-        if b'mach.commands' not in sys.modules:
-            mod = imp.new_module(b'mach.commands')
-            sys.modules[b'mach.commands'] = mod
-
-        for path in sys.path:
-            # We only support importing .py files from directories.
-            commands_path = os.path.join(path, 'mach', 'commands')
-
-            if not os.path.isdir(commands_path):
-                continue
-
-            self.load_commands_from_directory(commands_path)
-
     def load_commands_from_directory(self, path):
         """Scan for mach commands from modules in a directory.
 
@@ -196,6 +168,12 @@ To see more help for a specific command, run:
         chosen.
         """
         if module_name is None:
+            # Ensure parent module is present otherwise we'll (likely) get
+            # an error due to unknown parent.
+            if b'mach.commands' not in sys.modules:
+                mod = imp.new_module(b'mach.commands')
+                sys.modules[b'mach.commands'] = mod
+
             module_name = 'mach.commands.%s' % uuid.uuid1().get_hex()
 
         imp.load_source(module_name, path)
@@ -304,18 +282,21 @@ To see more help for a specific command, run:
         stripped = {k: getattr(args, k) for k in vars(args) if k not in
             CONSUMED_ARGUMENTS}
 
-        # If the command is associated with a class, instantiate and run it.
-        # All classes must be Base-derived and take the expected argument list.
-        if hasattr(args, 'cls'):
-            cls = getattr(args, 'cls')
-            instance = cls(self.cwd, self.settings, self.log_manager)
-            fn = getattr(instance, getattr(args, 'method'))
+        context = CommandContext(topdir=self.cwd, cwd=self.cwd,
+            settings=self.settings, log_manager=self.log_manager,
+            commands=Registrar)
 
-        # If the command is associated with a function, call it.
-        elif hasattr(args, 'func'):
-            fn = getattr(args, 'func')
+        if not hasattr(args, 'mach_class'):
+            raise Exception('ArgumentParser result missing mach_class.')
+
+        cls = getattr(args, 'mach_class')
+
+        if getattr(args, 'mach_pass_context'):
+            instance = cls(context)
         else:
-            raise Exception('Dispatch configuration error in module.')
+            instance = cls()
+
+        fn = getattr(instance, getattr(args, 'mach_method'))
 
         try:
             result = fn(**stripped)
@@ -407,7 +388,7 @@ To see more help for a specific command, run:
         self.settings = None
         return False
 
-        for provider in SETTINGS_PROVIDERS:
+        for provider in Registrar.settings_providers:
             provider.register_settings()
             self.settings.register_provider(provider)
 
@@ -453,7 +434,7 @@ To see more help for a specific command, run:
                 'than relative time. Note that this is NOT execution time '
                 'if there are parallel operations.')
 
-        populate_argument_parser(subparser)
+        Registrar.populate_argument_parser(subparser)
 
         return parser
 
