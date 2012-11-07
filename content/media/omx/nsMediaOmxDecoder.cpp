@@ -18,7 +18,7 @@ nsMediaDecoder* nsMediaOmxDecoder::Clone()
   return new nsMediaOmxDecoder();
 }
 
-nsBuiltinDecoderStateMachine* nsMediaOmxDecoder::CreateStateMachine()
+nsDecoderStateMachine* nsMediaOmxDecoder::CreateStateMachine()
 {
   return new nsBuiltinDecoderStateMachine(this, new nsMediaOmxReader(this));
 }

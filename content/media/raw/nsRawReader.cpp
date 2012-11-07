@@ -258,7 +258,8 @@ nsresult nsRawReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, 
 
     {
       mozilla::ReentrantMonitorAutoEnter autoMonitor(mDecoder->GetReentrantMonitor());
-      if (mDecoder->GetStateMachine()->IsShutdown()) {
+      if (mDecoder->GetDecodeState() ==
+          nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
         mCurrentFrame = frame;
         return NS_ERROR_FAILURE;
       }

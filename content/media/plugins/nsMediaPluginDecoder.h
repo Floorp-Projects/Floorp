@@ -21,7 +21,7 @@ public:
   }
 
   virtual nsMediaDecoder* Clone() { return new nsMediaPluginDecoder(mType); }
-  virtual nsBuiltinDecoderStateMachine* CreateStateMachine();
+  virtual nsDecoderStateMachine* CreateStateMachine();
 };
 
 #endif
