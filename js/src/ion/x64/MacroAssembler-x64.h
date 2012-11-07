@@ -647,6 +647,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void boxDouble(const FloatRegister &src, const ValueOperand &dest) {
         movqsd(src, dest.valueReg());
     }
+    void boxNonDouble(JSValueType type, const Register &src, const ValueOperand &dest) {
+        JS_ASSERT(src != dest.valueReg());
+        boxValue(type, src, dest.valueReg());
+    }
 
     // Note that the |dest| register here may be ScratchReg, so we shouldn't
     // use it.
