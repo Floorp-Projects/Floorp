@@ -49,14 +49,17 @@ class Build(MachCommandBase):
 
             self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
 
-        self._run_make(srcdir=True, filename='client.mk', line_handler=on_line,
-            log=False, print_directory=False)
+        status = self._run_make(srcdir=True, filename='client.mk',
+            line_handler=on_line, log=False, print_directory=False,
+            ensure_exit_code=False)
 
         self.log(logging.WARNING, 'warning_summary',
             {'count': len(warnings_collector.database)},
             '{count} compiler warnings present.')
 
         warnings_database.save_to_file(warnings_path)
+
+        return status
 
 
 @CommandProvider
