@@ -1322,7 +1322,7 @@ nsRuleNode::~nsRuleNode()
 {
   MOZ_COUNT_DTOR(nsRuleNode);
   if (mStyleData.mResetData || mStyleData.mInheritedData)
-    mStyleData.Destroy(0, mPresContext);
+    mStyleData.Destroy(mDependentBits, mPresContext);
   NS_IF_RELEASE(mRule);
 }
 
