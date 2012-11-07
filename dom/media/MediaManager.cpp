@@ -504,6 +504,8 @@ public:
       }
       LOG(("Selected video device"));
     }
+
+    found = false;
     if (mAudio) {
       nsTArray<nsRefPtr<MediaEngineAudioSource> > audioSources;
       mBackend->EnumerateAudioDevices(&audioSources);
