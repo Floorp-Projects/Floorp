@@ -146,6 +146,7 @@
 
 #include "mozAutoDocUpdate.h"
 #include "nsGlobalWindow.h"
+#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsEventStateManager.h"
@@ -3044,8 +3045,7 @@ nsDocument::TryChannelCharset(nsIChannel *aChannel,
     nsresult rv = aChannel->GetContentCharset(charsetVal);
     if (NS_SUCCEEDED(rv)) {
       nsAutoCString preferred;
-      rv = nsCharsetAlias::GetPreferred(charsetVal, preferred);
-      if(NS_SUCCEEDED(rv)) {
+      if(EncodingUtils::FindEncodingForLabel(charsetVal, preferred)) {
         aCharset = preferred;
         aCharsetSource = kCharsetFromChannel;
         return true;
