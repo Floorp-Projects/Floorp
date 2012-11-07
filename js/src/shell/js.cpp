@@ -431,7 +431,10 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
         oldopts = JS_GetOptions(cx);
         gGotError = false;
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-        script = JS_CompileUTF8FileHandle(cx, obj, filename, file);
+        CompileOptions options(cx);
+        options.setUTF8(true)
+               .setFileAndLine(filename, 1);
+        script = JS::Compile(cx, obj, options, file);
         JS_SetOptions(cx, oldopts);
         JS_ASSERT_IF(!script, gGotError);
         if (script && !compileOnly) {
@@ -513,14 +516,14 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
         if (hitEOF && !buffer)
             break;
 
-        if (!JS_DecodeUTF8(cx, buffer, len, NULL, &uc_len)) {
+        if (!InflateUTF8StringToBuffer(cx, buffer, len, NULL, &uc_len)) {
             JS_ReportError(cx, "Invalid UTF-8 in input");
             gExitCode = EXITCODE_RUNTIME_ERROR;
             return;
         }
 
         uc_buffer = (jschar*)malloc(uc_len * sizeof(jschar));
-        JS_DecodeUTF8(cx, buffer, len, uc_buffer, &uc_len);
+        InflateUTF8StringToBuffer(cx, buffer, len, uc_buffer, &uc_len);
 
         /* Clear any pending exception from previous failed compiles. */
         JS_ClearPendingException(cx);
@@ -966,14 +969,14 @@ FileAsString(JSContext *cx, const char *pathname)
 
                     len = (size_t)cc;
 
-                    if (!JS_DecodeUTF8(cx, buf, len, NULL, &uclen)) {
+                    if (!InflateUTF8StringToBuffer(cx, buf, len, NULL, &uclen)) {
                         JS_ReportError(cx, "Invalid UTF-8 in file '%s'", pathname);
                         gExitCode = EXITCODE_RUNTIME_ERROR;
                         return NULL;
                     }
 
                     ucbuf = (jschar*)malloc(uclen * sizeof(jschar));
-                    JS_DecodeUTF8(cx, buf, len, ucbuf, &uclen);
+                    InflateUTF8StringToBuffer(cx, buf, len, ucbuf, &uclen);
                     str = JS_NewUCStringCopyN(cx, ucbuf, uclen);
                     free(ucbuf);
                 }
@@ -1908,7 +1911,10 @@ DisassFile(JSContext *cx, unsigned argc, jsval *vp)
 
     uint32_t oldopts = JS_GetOptions(cx);
     JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-    JSScript *script = JS_CompileUTF8File(cx, thisobj, filename.ptr());
+    CompileOptions options(cx);
+    options.setUTF8(true)
+           .setFileAndLine(filename.ptr(), 1);
+    JSScript *script = JS::Compile(cx, thisobj, options, filename.ptr());
     JS_SetOptions(cx, oldopts);
     if (!script)
         return false;
