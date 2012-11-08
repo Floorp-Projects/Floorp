@@ -317,7 +317,7 @@ public:
 #ifdef MOZ_WIDGET_GONK
   static bool IsOmxEnabled();
   static bool IsOmxSupportedType(const nsACString& aType);
-  static const char gOmxTypes[5][16];
+  static const char gOmxTypes[6][16];
 #endif
 
 #if defined(MOZ_GSTREAMER) || defined(MOZ_WIDGET_GONK)

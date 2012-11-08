@@ -2190,9 +2190,10 @@ nsHTMLMediaElement::IsH264Type(const nsACString& aType)
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-const char nsHTMLMediaElement::gOmxTypes[5][16] = {
+const char nsHTMLMediaElement::gOmxTypes[6][16] = {
   "audio/mpeg",
   "audio/mp4",
+  "audio/aac-adts",
   "video/mp4",
   "video/3gpp",
   "video/quicktime",
