@@ -62,6 +62,16 @@ class MarionetteTestResult(unittest._TextTestResult):
     def printLogs(self, test):
         for testcase in test._tests:
             if hasattr(testcase, 'loglines') and testcase.loglines:
+                # Don't dump loglines to the console if they only contain
+                # TEST-START and TEST-END.
+                skip_log = True
+                for line in testcase.loglines:
+                    str_line = ' '.join(line)
+                    if not 'TEST-END' in str_line and not 'TEST-START' in str_line:
+                        skip_log = False
+                        break
+                if skip_log:
+                    return
                 self.stream.writeln('START LOG:')
                 for line in testcase.loglines:
                     self.stream.writeln(' '.join(line))
