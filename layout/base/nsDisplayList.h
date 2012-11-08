@@ -1826,6 +1826,9 @@ public:
                                                 nsIFrame* aFrame) MOZ_OVERRIDE;
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) MOZ_OVERRIDE;
   virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
+  /**
+   * GetBounds() returns the background painting area.
+   */
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE;
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) MOZ_OVERRIDE;
   virtual uint32_t GetPerFrameKey() MOZ_OVERRIDE;
@@ -1834,12 +1837,21 @@ public:
   bool IsThemed() { return mIsThemed; }
 
   /**
-   * Returns true if existing rendered pixels of this display item may need
-   * to be redrawn if the frame size changes.
-   * If false, only the changed area needs to be redrawn.
+   * Return the background positioning area.
+   * (GetBounds() returns the background painting area.)
+   * Can be called only when mBackgroundStyle is non-null.
    */
-  bool RenderingMightDependOnFrameSize();
-  
+  nsRect GetPositioningArea();
+
+  /**
+   * Returns true if existing rendered pixels of this display item may need
+   * to be redrawn if the positioning area size changes but its position does
+   * not.
+   * If false, only the changed painting area needs to be redrawn when the
+   * positioning area size changes but its position does not.
+   */
+  bool RenderingMightDependOnPositioningAreaSizeChange();
+
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder)
   {
     return new nsDisplayBackgroundGeometry(this, aBuilder);
