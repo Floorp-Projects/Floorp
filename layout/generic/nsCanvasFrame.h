@@ -146,8 +146,11 @@ public:
  */
 class nsDisplayCanvasBackground : public nsDisplayBackground {
 public:
-  nsDisplayCanvasBackground(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame, uint32_t aLayer)
-    : nsDisplayBackground(aBuilder, aFrame, aLayer, true)
+  nsDisplayCanvasBackground(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
+                            uint32_t aLayer, bool aIsThemed,
+                            const nsStyleBackground* aBackgroundStyle)
+    : nsDisplayBackground(aBuilder, aFrame, aLayer,
+                          aIsThemed, aBackgroundStyle, true)
   {
     mExtraBackgroundColor = NS_RGBA(0,0,0,0);
   }
