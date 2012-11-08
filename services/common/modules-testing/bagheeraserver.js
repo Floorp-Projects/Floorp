@@ -273,6 +273,7 @@ BagheeraServer.prototype = {
 
     if (request.hasHeader("X-Obsolete-Document")) {
       let obsolete = request.getHeader("X-Obsolete-Document");
+      this._log.info("Deleting from X-Obsolete-Document header: " + obsolete);
       delete this.namespaces[namespace][obsolete];
     }
 
