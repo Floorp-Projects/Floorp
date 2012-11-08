@@ -28,7 +28,6 @@
 #include "nsNetUtil.h"
 #include "nsLinebreakConverter.h"
 #include "nsICharsetConverterManager.h"
-#include "nsCharsetAlias.h"
 #include "nsEscape.h"
 #include "nsUnicharUtils.h"
 #include "nsIMultiplexInputStream.h"
@@ -41,7 +40,10 @@
 #include "nsIFileStreams.h"
 #include "nsContentUtils.h"
 
+#include "mozilla/dom/EncodingUtils.h"
+
 using namespace mozilla;
+using mozilla::dom::EncodingUtils;
 
 static void
 SendJSWarning(nsIDocument* aDocument,
@@ -774,8 +776,7 @@ GetSubmitCharset(nsGenericHTMLElement* aForm,
         nsAutoString uCharset;
         acceptCharsetValue.Mid(uCharset, offset, cnt);
 
-        if (NS_SUCCEEDED(nsCharsetAlias::GetPreferred(NS_LossyConvertUTF16toASCII(uCharset),
-                                                      oCharset)))
+        if (EncodingUtils::FindEncodingForLabel(uCharset, oCharset))
           return;
       }
       offset = spPos + 1;

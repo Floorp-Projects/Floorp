@@ -112,10 +112,13 @@
 #include "vm/ObjectImpl-inl.h"
 #include "vm/Stack-inl.h"
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
+
+using mozilla::ArrayLength;
+using mozilla::DebugOnly;
+using mozilla::PointerRangeSize;
 
 namespace js {
 

@@ -24,19 +24,19 @@
     <!-- These cases have a floated span as a grandchild of the flex container.
          The span should float within its flex item. -->
     <div class="flexbox">
-      aaa<span><span style="float: left">lll</span></span>bbb
+      <span>aaa<span style="float: left">lll</span>bbb</span>
     </div>
     <div class="flexbox">
-      aaa<span><span style="float: right">rrr</span></span>bbb
+      <span>aaa<span style="float: right">rrr</span>bbb</span>
     </div>
 
     <!-- These cases have a floated div as a grandchild of the flex container.
          The div should float within its flex item. -->
     <div class="flexbox">
-      aaa<span><div style="float: left">lll</div></span>bbb
+      <span>aaa<div style="float: left">lll</div>bbb</span>
     </div>
     <div class="flexbox">
-      aaa<span><div style="float: right">rrr</div></span>bbb
+      <span>aaa<div style="float: right">rrr</div>bbb</span>
     </div>
   </body>
 </html>

@@ -145,6 +145,8 @@ public:
   virtual already_AddRefed<gfxASurface>
     CreateOptimalMaskSurface(const gfxIntSize &aSize);
 
+  virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;
+
   /**
    * Helper methods.
    */
@@ -464,6 +466,13 @@ private:
   void *mThebesLayerCallbackData;
   gfxMatrix mWorldMatrix;
   nsAutoPtr<FPSState> mFPS;
+#ifdef DEBUG
+  // NB: only interesting when this is a purely compositing layer
+  // manager.  True after possibly onscreen layers have had their
+  // cached resources cleared outside of a transaction, and before the
+  // next forwarded transaction that re-validates their buffers.
+  bool mMaybeInvalidTree;
+#endif
 
   static bool sDrawFPS;
   static bool sFrameCounter;

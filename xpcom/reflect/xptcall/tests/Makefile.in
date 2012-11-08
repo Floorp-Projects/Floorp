@@ -21,10 +21,3 @@ LIBS		= \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-# For _write().
-ifeq ($(OS_ARCH),BSD_OS)
-OS_LIBS		+= -lgcc
-endif
-
-

@@ -1,0 +1,14 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(96bde2ae-9b74-4f4d-b674-664a67a35b7e)]
+interface nsIDOMWindowB2G : nsISupports
+{
+  [implicit_jscontext] attribute jsval onmoztimechange;
+  [implicit_jscontext] attribute jsval onmoznetworkupload;
+  [implicit_jscontext] attribute jsval onmoznetworkdownload;
+};

@@ -162,8 +162,17 @@ PuppetWidget::Show(bool aState)
   bool wasVisible = mVisible;
   mVisible = aState;
 
+  if (mChild) {
+    mChild->mVisible = aState;
+  }
+
+  if (!mVisible && mLayerManager) {
+    mLayerManager->ClearCachedResources();
+  }
+
   if (!wasVisible && mVisible) {
     Resize(mBounds.width, mBounds.height, false);
+    Invalidate(mBounds);
   }
 
   return NS_OK;
@@ -546,6 +555,12 @@ PuppetWidget::PaintTask::Run()
     mWidget->Paint();
   }
   return NS_OK;
+}
+
+bool
+PuppetWidget::NeedsPaint()
+{
+  return mVisible;
 }
 
 float

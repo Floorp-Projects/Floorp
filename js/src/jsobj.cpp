@@ -68,11 +68,12 @@
 
 #include "jsautooplen.h"
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
+
 using js::frontend::IsIdentifier;
+using mozilla::ArrayLength;
 
 JS_STATIC_ASSERT(int32_t((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)) == int64_t((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)));
 
@@ -3085,8 +3086,8 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
          * (FIXME: remove this dependency on the exact identity of the parent,
          * perhaps as part of bug 638316.)
          */
-        RootedFunction fun(cx, js_NewFunction(cx, NullPtr(), constructor, nargs, JSFUN_CONSTRUCTOR,
-                                              obj, atom, ctorKind));
+        RootedFunction fun(cx, js_NewFunction(cx, NullPtr(), constructor, nargs,
+                                              JSFunction::NATIVE_CTOR, obj, atom, ctorKind));
         if (!fun)
             goto bad;
 

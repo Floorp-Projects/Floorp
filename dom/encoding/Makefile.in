@@ -33,6 +33,20 @@ CPPSRCS = \
 	TextEncoder.cpp \
 	$(NULL)
 
+LOCAL_INCLUDES = \
+	-I$(topsrcdir)/intl/locale/src \
+	$(NULL)
+
 include $(topsrcdir)/dom/dom-config.mk
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
+
+EncodingUtils.$(OBJ_SUFFIX): labelsencodings.properties.h
+
+PROPS2ARRAYS = $(topsrcdir)/intl/locale/src/props2arrays.py
+labelsencodings.properties.h: $(PROPS2ARRAYS) labelsencodings.properties
+	$(PYTHON) $^ $@
+
+GARBAGE += \
+	charsetalias.properties.h \
+	$(NULL)

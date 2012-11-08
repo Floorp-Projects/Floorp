@@ -64,7 +64,7 @@ class BumpChunk
     void setBump(void *ptr) {
         JS_ASSERT(bumpBase() <= ptr);
         JS_ASSERT(ptr <= limit);
-        DebugOnly<char *> prevBump = bump;
+        mozilla::DebugOnly<char *> prevBump = bump;
         bump = static_cast<char *>(ptr);
 #ifdef DEBUG
         JS_ASSERT(contains(prevBump));
@@ -225,7 +225,7 @@ class LifoAlloc
         if (latest && (result = latest->tryAlloc(n)))
             return result;
 
-        DebugOnly<BumpChunk *> chunk = getOrCreateChunk(n);
+        mozilla::DebugOnly<BumpChunk *> chunk = getOrCreateChunk(n);
         JS_ASSERT(chunk);
 
         return latest->allocInfallible(n);

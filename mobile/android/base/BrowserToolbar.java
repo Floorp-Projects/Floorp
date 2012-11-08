@@ -378,9 +378,9 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 }
                 break;
             case RESTORED:
+                updateTabCount(Tabs.getInstance().getCount());
+                break;
             case SELECTED:
-                // We should not animate the lock icon when switching or
-                // restoring tabs.
                 mAnimateSiteSecurity = false;
                 // fall through
             case LOCATION_CHANGE:

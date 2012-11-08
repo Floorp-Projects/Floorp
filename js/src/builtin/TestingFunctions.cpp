@@ -21,6 +21,8 @@
 using namespace js;
 using namespace JS;
 
+using mozilla::ArrayLength;
+
 static JSBool
 GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 {

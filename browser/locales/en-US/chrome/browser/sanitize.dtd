@@ -5,7 +5,6 @@
 <!ENTITY sanitizePrefs2.title          "Settings for Clearing History">
 <!ENTITY sanitizeDialog2.title         "Clear Recent History">
 
-<!ENTITY sanitizeItems.label          "Clear the following items now:">
 <!ENTITY clearDataSettings2.label     "When I quit &brandShortName;, it should automatically clear all:">
 
 <!-- XXX rearrange entities to match physical layout when l10n isn't an issue -->
