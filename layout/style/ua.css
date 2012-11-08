@@ -39,6 +39,7 @@
   z-index: inherit;
   page-break-before: inherit;
   page-break-after: inherit;
+  page-break-inside: inherit;
   vertical-align: inherit; /* needed for inline-table */
   line-height: inherit; /* needed for vertical-align on inline-table */
   align-self: inherit; /* needed for "align-self" to work on table flex items */
