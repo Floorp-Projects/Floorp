@@ -981,6 +981,8 @@ plstr.h
 plarenas.h
 plarena.h
 plhash.h
+speex/speex_resampler.h
+soundtouch/SoundTouch.h
 #if MOZ_NATIVE_PNG==1
 png.h
 #endif
@@ -1053,7 +1055,6 @@ vpx/vpx_encoder.h
 vpx/vp8cx.h
 vpx/vp8dx.h
 sydneyaudio/sydney_audio.h
-speex/speex_resampler.h
 vorbis/codec.h
 theora/theoradec.h
 tremor/ivorbiscodec.h

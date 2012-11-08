@@ -913,6 +913,14 @@ nsLocation::ToString(nsAString& aReturn)
   return GetHref(aReturn);
 }
 
+NS_IMETHODIMP
+nsLocation::ValueOf(nsIDOMLocation** aReturn)
+{
+  nsCOMPtr<nsIDOMLocation> loc(this);
+  loc.forget(aReturn);
+  return NS_OK;
+}
+
 nsresult
 nsLocation::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
 {

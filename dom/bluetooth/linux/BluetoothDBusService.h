@@ -139,6 +139,9 @@ public:
           const uint16_t aProfileId,
           BluetoothReplyRunnable* aRunnable);
 
+  virtual bool
+  IsConnected(uint16_t aProfileId);
+
   virtual void
   Disconnect(const uint16_t aProfileId, BluetoothReplyRunnable* aRunnable);
 

@@ -1,0 +1,509 @@
+unchanged:
+--- /src/STTypes.h	2012-08-02 10:04:06.301691592 -0700
++++ /src/STTypes.h
+@@ -42,21 +42,13 @@
+ typedef unsigned int    uint;
+ typedef unsigned long   ulong;
+ 
+-#ifdef __GNUC__
+-    // In GCC, include soundtouch_config.h made by config scritps
+-    #include "soundtouch_config.h"
+-#endif
+-
+-#ifndef _WINDEF_
+-    // if these aren't defined already by Windows headers, define now
+-
+-    typedef int BOOL;
+-
+-    #define FALSE   0
+-    #define TRUE    1
+-
+-#endif  // _WINDEF_
++#include "soundtouch_config.h"
+ 
++#ifdef WIN32
++#define EXPORT __declspec(dllexport)
++#else
++#define EXPORT
++#endif
+ 
+ namespace soundtouch
+ {
+@@ -82,7 +74,7 @@
+         ///   also in GNU environment, then please #undef the INTEGER_SAMPLE
+         ///   and FLOAT_SAMPLE defines first as in comments above.
+         //#define SOUNDTOUCH_INTEGER_SAMPLES     1    //< 16bit integer samples
+-        #define SOUNDTOUCH_FLOAT_SAMPLES       1    //< 32bit float samples
++        #define SOUNDTOUCH_FLOAT_SAMPLES       1    //< 32bit float samples 
+      
+     #endif
+ 
+@@ -144,10 +136,10 @@
+ 
+     #endif  // SOUNDTOUCH_INTEGER_SAMPLES
+ 
+-};
++}
+ 
+ // define ST_NO_EXCEPTION_HANDLING switch to disable throwing std exceptions:
+-// #define ST_NO_EXCEPTION_HANDLING    1
++#define ST_NO_EXCEPTION_HANDLING    1
+ #ifdef ST_NO_EXCEPTION_HANDLING
+     // Exceptions disabled. Throw asserts instead if enabled.
+     #include <assert.h>
+--- /src/SoundTouch.h	2012-08-02 10:04:06.301691592 -0700
++++ /src/SoundTouch.h
+@@ -141,7 +141,7 @@
+ ///   tempo/pitch/rate/samplerate settings.
+ #define SETTING_NOMINAL_OUTPUT_SEQUENCE		7
+ 
+-class SoundTouch : public FIFOProcessor
++class EXPORT SoundTouch : public FIFOProcessor
+ {
+ private:
+     /// Rate transposer class instance
+@@ -160,7 +160,7 @@
+     float virtualPitch;
+ 
+     /// Flag: Has sample rate been set?
+-    BOOL  bSrateSet;
++    bool  bSrateSet;
+ 
+     /// Calculates effective rate & tempo valuescfrom 'virtualRate', 'virtualTempo' and 
+     /// 'virtualPitch' parameters.
+@@ -247,8 +247,8 @@
+     /// Changes a setting controlling the processing system behaviour. See the
+     /// 'SETTING_...' defines for available setting ID's.
+     /// 
+-    /// \return 'TRUE' if the setting was succesfully changed
+-    BOOL setSetting(int settingId,   ///< Setting ID number. see SETTING_... defines.
++    /// \return 'true' if the setting was succesfully changed
++    bool setSetting(int settingId,   ///< Setting ID number. see SETTING_... defines.
+                     int value        ///< New setting value.
+                     );
+ 
+--- /src/RateTransposer.cpp
++++ /src/RateTransposer.cpp
+@@ -120,17 +120,17 @@ RateTransposer *RateTransposer::newInsta
+ #endif
+ }
+ 
+ 
+ // Constructor
+ RateTransposer::RateTransposer() : FIFOProcessor(&outputBuffer)
+ {
+     numChannels = 2;
+-    bUseAAFilter = TRUE;
++    bUseAAFilter = true;
+     fRate = 0;
+ 
+     // Instantiates the anti-alias filter with default tap length
+     // of 32
+     pAAFilter = new AAFilter(32);
+ }
+ 
+ 
+@@ -138,24 +138,24 @@ RateTransposer::RateTransposer() : FIFOP
+ RateTransposer::~RateTransposer()
+ {
+     delete pAAFilter;
+ }
+ 
+ 
+ 
+ /// Enables/disables the anti-alias filter. Zero to disable, nonzero to enable
+-void RateTransposer::enableAAFilter(BOOL newMode)
++void RateTransposer::enableAAFilter(bool newMode)
+ {
+     bUseAAFilter = newMode;
+ }
+ 
+ 
+ /// Returns nonzero if anti-alias filter is enabled.
+-BOOL RateTransposer::isAAFilterEnabled() const
++bool RateTransposer::isAAFilterEnabled() const
+ {
+     return bUseAAFilter;
+ }
+ 
+ 
+ AAFilter *RateTransposer::getAAFilter()
+ {
+     return pAAFilter;
+@@ -281,17 +281,17 @@ void RateTransposer::processSamples(cons
+     uint count;
+     uint sizeReq;
+ 
+     if (nSamples == 0) return;
+     assert(pAAFilter);
+ 
+     // If anti-alias filter is turned off, simply transpose without applying
+     // the filter
+-    if (bUseAAFilter == FALSE) 
++    if (bUseAAFilter == false) 
+     {
+         sizeReq = (uint)((float)nSamples / fRate + 1.0f);
+         count = transpose(outputBuffer.ptrEnd(sizeReq), src, nSamples);
+         outputBuffer.putSamples(count);
+         return;
+     }
+ 
+     // Transpose with anti-alias filter
+--- /src/RateTransposer.h
++++ /src/RateTransposer.h
+@@ -76,17 +76,17 @@ protected:
+     FIFOSampleBuffer storeBuffer;
+ 
+     /// Buffer for keeping samples between transposing & anti-alias filter
+     FIFOSampleBuffer tempBuffer;
+ 
+     /// Output sample buffer
+     FIFOSampleBuffer outputBuffer;
+ 
+-    BOOL bUseAAFilter;
++    bool bUseAAFilter;
+ 
+     virtual void resetRegisters() = 0;
+ 
+     virtual uint transposeStereo(SAMPLETYPE *dest, 
+                          const SAMPLETYPE *src, 
+                          uint numSamples) = 0;
+     virtual uint transposeMono(SAMPLETYPE *dest, 
+                        const SAMPLETYPE *src, 
+@@ -126,20 +126,20 @@ public:
+ 
+     /// Returns the store buffer object
+     FIFOSamplePipe *getStore() { return &storeBuffer; };
+ 
+     /// Return anti-alias filter object
+     AAFilter *getAAFilter();
+ 
+     /// Enables/disables the anti-alias filter. Zero to disable, nonzero to enable
+-    void enableAAFilter(BOOL newMode);
++    void enableAAFilter(bool newMode);
+ 
+     /// Returns nonzero if anti-alias filter is enabled.
+-    BOOL isAAFilterEnabled() const;
++    bool isAAFilterEnabled() const;
+ 
+     /// Sets new target rate. Normal rate = 1.0, smaller values represent slower 
+     /// rate, larger faster rates.
+     virtual void setRate(float newRate);
+ 
+     /// Sets the number of channels, 1 = mono, 2 = stereo
+     void setChannels(int channels);
+ 
+--- /src/SoundTouch.cpp
++++ /src/SoundTouch.cpp
+@@ -106,17 +106,17 @@ SoundTouch::SoundTouch()
+ 
+     virtualPitch = 
+     virtualRate = 
+     virtualTempo = 1.0;
+ 
+     calcEffectiveRateAndTempo();
+ 
+     channels = 0;
+-    bSrateSet = FALSE;
++    bSrateSet = false;
+ }
+ 
+ 
+ 
+ SoundTouch::~SoundTouch()
+ {
+     delete pRateTransposer;
+     delete pTDStretch;
+@@ -277,27 +277,27 @@ void SoundTouch::calcEffectiveRateAndTem
+         }
+     } 
+ }
+ 
+ 
+ // Sets sample rate.
+ void SoundTouch::setSampleRate(uint srate)
+ {
+-    bSrateSet = TRUE;
++    bSrateSet = true;
+     // set sample rate, leave other tempo changer parameters as they are.
+     pTDStretch->setParameters((int)srate);
+ }
+ 
+ 
+ // Adds 'numSamples' pcs of samples from the 'samples' memory position into
+ // the input of the object.
+ void SoundTouch::putSamples(const SAMPLETYPE *samples, uint nSamples)
+ {
+-    if (bSrateSet == FALSE) 
++    if (bSrateSet == false) 
+     {
+         ST_THROW_RT_ERROR("SoundTouch : Sample rate not defined");
+     } 
+     else if (channels == 0) 
+     {
+         ST_THROW_RT_ERROR("SoundTouch : Number of channels not defined");
+     }
+ 
+@@ -382,57 +382,57 @@ void SoundTouch::flush()
+     pTDStretch->clearInput();
+     // yet leave the 'tempoChanger' output intouched as that's where the
+     // flushed samples are!
+ }
+ 
+ 
+ // Changes a setting controlling the processing system behaviour. See the
+ // 'SETTING_...' defines for available setting ID's.
+-BOOL SoundTouch::setSetting(int settingId, int value)
++bool SoundTouch::setSetting(int settingId, int value)
+ {
+     int sampleRate, sequenceMs, seekWindowMs, overlapMs;
+ 
+     // read current tdstretch routine parameters
+     pTDStretch->getParameters(&sampleRate, &sequenceMs, &seekWindowMs, &overlapMs);
+ 
+     switch (settingId) 
+     {
+         case SETTING_USE_AA_FILTER :
+             // enables / disabless anti-alias filter
+-            pRateTransposer->enableAAFilter((value != 0) ? TRUE : FALSE);
+-            return TRUE;
++            pRateTransposer->enableAAFilter((value != 0) ? true : false);
++            return true;
+ 
+         case SETTING_AA_FILTER_LENGTH :
+             // sets anti-alias filter length
+             pRateTransposer->getAAFilter()->setLength(value);
+-            return TRUE;
++            return true;
+ 
+         case SETTING_USE_QUICKSEEK :
+             // enables / disables tempo routine quick seeking algorithm
+-            pTDStretch->enableQuickSeek((value != 0) ? TRUE : FALSE);
+-            return TRUE;
++            pTDStretch->enableQuickSeek((value != 0) ? true : false);
++            return true;
+ 
+         case SETTING_SEQUENCE_MS:
+             // change time-stretch sequence duration parameter
+             pTDStretch->setParameters(sampleRate, value, seekWindowMs, overlapMs);
+-            return TRUE;
++            return true;
+ 
+         case SETTING_SEEKWINDOW_MS:
+             // change time-stretch seek window length parameter
+             pTDStretch->setParameters(sampleRate, sequenceMs, value, overlapMs);
+-            return TRUE;
++            return true;
+ 
+         case SETTING_OVERLAP_MS:
+             // change time-stretch overlap length parameter
+             pTDStretch->setParameters(sampleRate, sequenceMs, seekWindowMs, value);
+-            return TRUE;
++            return true;
+ 
+         default :
+-            return FALSE;
++            return false;
+     }
+ }
+ 
+ 
+ // Reads a setting controlling the processing system behaviour. See the
+ // 'SETTING_...' defines for available setting ID's.
+ //
+ // Returns the setting value.
+--- /src/TDStretch.cpp
++++ /src/TDStretch.cpp
+@@ -81,25 +81,25 @@ static const short _scanOffsets[5][24]={
+  *
+  * Implementation of the class 'TDStretch'
+  *
+  *****************************************************************************/
+ 
+ 
+ TDStretch::TDStretch() : FIFOProcessor(&outputBuffer)
+ {
+-    bQuickSeek = FALSE;
++    bQuickSeek = false;
+     channels = 2;
+ 
+     pMidBuffer = NULL;
+     pMidBufferUnaligned = NULL;
+     overlapLength = 0;
+ 
+-    bAutoSeqSetting = TRUE;
+-    bAutoSeekSetting = TRUE;
++    bAutoSeqSetting = true;
++    bAutoSeekSetting = true;
+ 
+ //    outDebt = 0;
+     skipFract = 0;
+ 
+     tempo = 1.0f;
+     setParameters(44100, DEFAULT_SEQUENCE_MS, DEFAULT_SEEKWINDOW_MS, DEFAULT_OVERLAP_MS);
+     setTempo(1.0f);
+ 
+@@ -129,33 +129,33 @@ void TDStretch::setParameters(int aSampl
+ {
+     // accept only positive parameter values - if zero or negative, use old values instead
+     if (aSampleRate > 0)   this->sampleRate = aSampleRate;
+     if (aOverlapMS > 0)    this->overlapMs = aOverlapMS;
+ 
+     if (aSequenceMS > 0)
+     {
+         this->sequenceMs = aSequenceMS;
+-        bAutoSeqSetting = FALSE;
++        bAutoSeqSetting = false;
+     } 
+     else if (aSequenceMS == 0)
+     {
+         // if zero, use automatic setting
+-        bAutoSeqSetting = TRUE;
++        bAutoSeqSetting = true;
+     }
+ 
+     if (aSeekWindowMS > 0) 
+     {
+         this->seekWindowMs = aSeekWindowMS;
+-        bAutoSeekSetting = FALSE;
++        bAutoSeekSetting = false;
+     } 
+     else if (aSeekWindowMS == 0) 
+     {
+         // if zero, use automatic setting
+-        bAutoSeekSetting = TRUE;
++        bAutoSeekSetting = true;
+     }
+ 
+     calcSeqParameters();
+ 
+     calculateOverlapLength(overlapMs);
+ 
+     // set tempo to recalculate 'sampleReq'
+     setTempo(tempo);
+@@ -229,24 +229,24 @@ void TDStretch::clear()
+     outputBuffer.clear();
+     clearInput();
+ }
+ 
+ 
+ 
+ // Enables/disables the quick position seeking algorithm. Zero to disable, nonzero
+ // to enable
+-void TDStretch::enableQuickSeek(BOOL enable)
++void TDStretch::enableQuickSeek(bool enable)
+ {
+     bQuickSeek = enable;
+ }
+ 
+ 
+ // Returns nonzero if the quick seeking algorithm is enabled.
+-BOOL TDStretch::isQuickSeekEnabled() const
++bool TDStretch::isQuickSeekEnabled() const
+ {
+     return bQuickSeek;
+ }
+ 
+ 
+ // Seeks for the optimal overlap-mixing position.
+ int TDStretch::seekBestOverlapPosition(const SAMPLETYPE *refPos)
+ {
+--- /src/TDStretch.h
++++ /src/TDStretch.h
+@@ -120,24 +120,24 @@ protected:
+     int seekLength;
+     int seekWindowLength;
+     int overlapDividerBits;
+     int slopingDivider;
+     float nominalSkip;
+     float skipFract;
+     FIFOSampleBuffer outputBuffer;
+     FIFOSampleBuffer inputBuffer;
+-    BOOL bQuickSeek;
++    bool bQuickSeek;
+ 
+     int sampleRate;
+     int sequenceMs;
+     int seekWindowMs;
+     int overlapMs;
+-    BOOL bAutoSeqSetting;
+-    BOOL bAutoSeekSetting;
++    bool bAutoSeqSetting;
++    bool bAutoSeekSetting;
+ 
+     void acceptNewOverlapLength(int newOverlapLength);
+ 
+     virtual void clearCrossCorrState();
+     void calculateOverlapLength(int overlapMs);
+ 
+     virtual double calcCrossCorr(const SAMPLETYPE *mixingPos, const SAMPLETYPE *compare) const;
+ 
+@@ -188,20 +188,20 @@ public:
+     /// Clears the input buffer
+     void clearInput();
+ 
+     /// Sets the number of channels, 1 = mono, 2 = stereo
+     void setChannels(int numChannels);
+ 
+     /// Enables/disables the quick position seeking algorithm. Zero to disable, 
+     /// nonzero to enable
+-    void enableQuickSeek(BOOL enable);
++    void enableQuickSeek(bool enable);
+ 
+     /// Returns nonzero if the quick seeking algorithm is enabled.
+-    BOOL isQuickSeekEnabled() const;
++    bool isQuickSeekEnabled() const;
+ 
+     /// Sets routine control parameters. These control are certain time constants
+     /// defining how the sound is stretched to the desired duration.
+     //
+     /// 'sampleRate' = sample rate of the sound
+     /// 'sequenceMS' = one processing sequence length in milliseconds
+     /// 'seekwindowMS' = seeking window length for scanning the best overlapping 
+     ///      position
+only in patch2:
+--- /src/cpu_detect_x86.cpp	2012-04-12 19:52:12.743376976 -0700
++++ /src/cpu_detect_x86.cpp	2012-08-02 09:54:24.561712171 -0700
+@@ -38,30 +38,35 @@
+ //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ //
+ ////////////////////////////////////////////////////////////////////////////////
+ 
+ #include "cpu_detect.h"
+ #include "STTypes.h"
+ 
+ #if defined(SOUNDTOUCH_ALLOW_X86_OPTIMIZATIONS)
+-
+-    #if defined(__GNUC__) && defined(__i386__)
+-        // gcc
++    #if defined(__GNUC__)
++        // gcc and clang
+         #include "cpuid.h"
+     #endif
+ 
+     #if defined(_M_IX86)
+         // windows
+         #include <intrin.h>
+-        #define bit_MMX		(1 << 23)
+-        #define bit_SSE		(1 << 25)
+-        #define bit_SSE2	(1 << 26)
+     #endif
+-
++    // If we still don't have the macros, define them (Windows, MacOS)
++    #ifndef bit_MMX
++        #define bit_MMX (1 << 23)
++    #endif
++    #ifndef bit_SSE
++       #define bit_SSE (1 << 25)
++    #endif
++    #ifndef bit_SSE2
++        #define bit_SSE2 (1 << 26)
++    #endif
+ #endif
+ 
+ 
+ //////////////////////////////////////////////////////////////////////////////
+ //
+ // processor instructions extension detection routines
+ //
+ //////////////////////////////////////////////////////////////////////////////

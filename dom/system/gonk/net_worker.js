@@ -123,11 +123,9 @@ function networkInterfaceStatsSuccess(params) {
  *        Name of the network interface.
  */
 function getIFProperties(ifname) {
-  let gateway_str = libcutils.property_get("net." + ifname + ".gw");
   return {
     ifname:      ifname,
-    gateway:     netHelpers.stringToIP(gateway_str),
-    gateway_str: gateway_str,
+    gateway_str: libcutils.property_get("net." + ifname + ".gw"),
     dns1_str:    libcutils.property_get("net." + ifname + ".dns1"),
     dns2_str:    libcutils.property_get("net." + ifname + ".dns2"),
   };
@@ -159,13 +157,15 @@ function setDefaultRouteAndDNS(options) {
     libnetutils.ifc_remove_default_route(options.oldIfname);
   }
 
-  if (!options.gateway || !options.dns1_str) {
-    options = getIFProperties(options.ifname);
-  }
+  let ifprops = getIFProperties(options.ifname);
+  let gateway_str = options.gateway_str || ifprops.gateway_str;
+  let dns1_str = options.dns1_str || ifprops.dns1_str;
+  let dns2_str = options.dns2_str || ifprops.dns2_str;
+  let gateway = netHelpers.stringToIP(gateway_str);
 
-  libnetutils.ifc_set_default_route(options.ifname, options.gateway);
-  libcutils.property_set("net.dns1", options.dns1_str);
-  libcutils.property_set("net.dns2", options.dns2_str);
+  libnetutils.ifc_set_default_route(options.ifname, gateway);
+  libcutils.property_set("net.dns1", dns1_str);
+  libcutils.property_set("net.dns2", dns2_str);
 
   // Bump the DNS change property.
   let dnschange = libcutils.property_get("net.dnschange", "0");

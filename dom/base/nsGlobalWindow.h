@@ -59,6 +59,7 @@
 #include "nsIContent.h"
 #include "nsIIDBFactory.h"
 #include "nsFrameMessageManager.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
 #include "nsIDOMTouchEvent.h"
 #include "nsIInlineEventHandlers.h"
@@ -69,6 +70,10 @@
 
 // JS includes
 #include "jsapi.h"
+
+#ifdef MOZ_B2G
+#include "nsIDOMWindowB2G.h"
+#endif // MOZ_B2G
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -134,7 +139,7 @@ NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
  * timeout.  Holds a strong reference to an nsIScriptTimeoutHandler, which
  * abstracts the language specific cruft.
  */
-struct nsTimeout : PRCList
+struct nsTimeout : mozilla::LinkedListElement<nsTimeout>
 {
   nsTimeout();
   ~nsTimeout();
@@ -143,16 +148,6 @@ struct nsTimeout : PRCList
 
   nsrefcnt Release();
   nsrefcnt AddRef();
-
-  nsTimeout* Next() {
-    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return static_cast<nsTimeout*>(PR_NEXT_LINK(this));
-  }
-
-  nsTimeout* Prev() {
-    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return static_cast<nsTimeout*>(PR_PREV_LINK(this));
-  }
 
   nsresult InitTimer(nsTimerCallbackFunc aFunc, uint64_t delay) {
     return mTimer->InitWithFuncCallback(aFunc, this, delay,
@@ -273,6 +268,9 @@ class nsGlobalWindow : public nsPIDOMWindow,
                        public nsITouchEventReceiver,
                        public nsIInlineEventHandlers,
                        public nsIWindowCrypto
+#ifdef MOZ_B2G
+                     , public nsIDOMWindowB2G
+#endif // MOZ_B2G
 {
 public:
   friend class nsDOMMozURLProperty;
@@ -321,6 +319,11 @@ public:
 
   // nsIDOMWindow
   NS_DECL_NSIDOMWINDOW
+
+#ifdef MOZ_B2G
+  // nsIDOMWindowB2G
+  NS_DECL_NSIDOMWINDOWB2G
+#endif // MOZ_B2G
 
   // nsIDOMWindowPerformance
   NS_DECL_NSIDOMWINDOWPERFORMANCE
@@ -546,8 +549,10 @@ public:
   virtual void EnableTimeChangeNotifications();
   virtual void DisableTimeChangeNotifications();
 
+#ifdef MOZ_B2G
   virtual void EnableNetworkEvent(uint32_t aType);
   virtual void DisableNetworkEvent(uint32_t aType);
+#endif // MOZ_B2G
 
   virtual nsresult SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin);
 
@@ -872,20 +877,6 @@ protected:
 
   bool IsInModalState();
 
-  nsTimeout* FirstTimeout() {
-    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return static_cast<nsTimeout*>(PR_LIST_HEAD(&mTimeouts));
-  }
-
-  nsTimeout* LastTimeout() {
-    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return static_cast<nsTimeout*>(PR_LIST_TAIL(&mTimeouts));
-  }
-
-  bool IsTimeout(PRCList* aList) {
-    return aList != &mTimeouts;
-  }
-
   // Convenience functions for the many methods that need to scale
   // from device to CSS pixels or vice versa.  Note: if a presentation
   // context is not available, they will assume a 1:1 ratio.
@@ -1053,7 +1044,7 @@ protected:
   // non-null.  In that case, the dummy timeout pointed to by
   // mTimeoutInsertionPoint may have a later mWhen than some of the timeouts
   // that come after it.
-  PRCList                       mTimeouts;
+  mozilla::LinkedList<nsTimeout> mTimeouts;
   // If mTimeoutInsertionPoint is non-null, insertions should happen after it.
   // This is a dummy timeout at the moment; if that ever changes, the logic in
   // ResetTimersForNonBackgroundWindow needs to change.

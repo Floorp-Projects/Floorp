@@ -402,7 +402,6 @@ dnl ========================================================
 dnl Special win32 checks
 dnl ========================================================
 
-# With win8, sdk target=602, WINVER=602
 MOZ_ARG_ENABLE_BOOL(metro,
 [  --enable-metro           Enable Windows Metro build targets],
     MOZ_METRO=1,
@@ -3832,12 +3831,6 @@ dnl are defined in build/autoconf/altoptions.m4.
 
 dnl If the compiler supports these attributes, define them as
 dnl convenience macros.
-if test "$ac_cv_attribute_always_inline" = yes ; then
-  AC_DEFINE(NS_ALWAYS_INLINE, [__attribute__((always_inline))])
-else
-  AC_DEFINE(NS_ALWAYS_INLINE,)
-fi
-
 if test "$ac_cv_attribute_malloc" = yes ; then
   AC_DEFINE(NS_ATTR_MALLOC, [__attribute__((malloc))])
 else
@@ -4225,6 +4218,7 @@ MOZ_OGG=1
 MOZ_RAW=
 MOZ_SYDNEYAUDIO=
 MOZ_SPEEX_RESAMPLER=1
+MOZ_SOUNDTOUCH=1
 MOZ_CUBEB=
 MOZ_VORBIS=
 MOZ_TREMOR=
@@ -4414,11 +4408,15 @@ browser)
 xulrunner)
   AC_DEFINE(MOZ_XULRUNNER)
   ;;
+b2g)
+  AC_DEFINE(MOZ_B2G)
+  ;;
 esac
 
 AC_SUBST(MOZ_BUILD_APP)
 AC_SUBST(MOZ_PHOENIX)
 AC_SUBST(MOZ_XULRUNNER)
+AC_SUBST(MOZ_B2G)
 
 AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
 
@@ -5579,6 +5577,19 @@ fi
 if test -n "$MOZ_SPEEX_RESAMPLER"; then
     AC_DEFINE(MOZ_SPEEX_RESAMPLER)
 fi
+
+if test -n "$MOZ_SOUNDTOUCH"; then
+    AC_DEFINE(MOZ_SOUNDTOUCH)
+fi
+
+if test -z "$GNU_CC" -a "$OS_ARCH" = "WINNT"; then
+   SOUNDTOUCH_LIBS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)soundtouch.$(LIB_SUFFIX)'
+else
+    SOUNDTOUCH_LIBS='-lsoundtouch'
+fi
+AC_SUBST(SOUNDTOUCH_CFLAGS)
+AC_SUBST(SOUNDTOUCH_LIBS)
+AC_SUBST(SOUNDTOUCH_CONFIG)
 
 if test -n "$MOZ_CUBEB"; then
     case "$target" in
@@ -8653,6 +8664,7 @@ AC_SUBST(MOZ_APP_EXTRA_LIBS)
 AC_SUBST(MOZ_MEDIA)
 AC_SUBST(MOZ_SYDNEYAUDIO)
 AC_SUBST(MOZ_SPEEX_RESAMPLER)
+AC_SUBST(MOZ_SOUNDTOUCH)
 AC_SUBST(MOZ_CUBEB)
 AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
