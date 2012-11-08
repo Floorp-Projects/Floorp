@@ -308,12 +308,6 @@ var BrowserApp = {
   },
 
   restoreSession: function (restoringOOM, sessionString) {
-    sendMessageToJava({
-      gecko: {
-        type: "Session:RestoreBegin"
-      }
-    });
-
     // Be ready to handle any restore failures by making sure we have a valid tab opened
     let restoreCleanup = {
       observe: function (aSubject, aTopic, aData) {
@@ -326,6 +320,7 @@ var BrowserApp = {
           });
         }
 
+        // Let Java know we're done restoring tabs so tabs added after this can be animated
         sendMessageToJava({
           gecko: {
             type: "Session:RestoreEnd"
