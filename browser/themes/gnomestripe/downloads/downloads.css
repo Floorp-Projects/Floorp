@@ -160,24 +160,33 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
 
 /*** Status and progress indicator ***/
 
-#downloads-indicator {
-  width: 35px;
-}
-
 #downloads-indicator-anchor {
-  min-width: 18px;
-  min-height: 18px;
   /* Makes the outermost stack element positioned, so that its contents are
      rendered over the main browser window in the Z order.  This is required by
      the animated event notification. */
   position: relative;
 }
 
+toolbar[iconsize="small"] #downloads-indicator-anchor {
+  min-width: 16px;
+  min-height: 16px;
+}
+
+toolbar[iconsize="large"] #downloads-indicator-anchor {
+  min-width: 24px;
+  min-height: 24px;
+}
+
 /*** Main indicator icon ***/
 
-#downloads-indicator-icon {
+toolbar[iconsize="small"] #downloads-indicator-icon {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar-small.png"),
                               0, 16, 16, 0) center no-repeat;
+}
+
+toolbar[iconsize="large"] #downloads-indicator-icon {
+  background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
+                              0, 24, 24, 0) center no-repeat;
 }
 
 #downloads-indicator[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
@@ -185,11 +194,18 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
                               16, 32, 32, 16) center no-repeat;
 }
 
-#downloads-indicator:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
+toolbar[iconsize="small"] #downloads-indicator:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar-small.png"),
                               0, 16, 16, 0) center no-repeat;
   background-size: 12px;
 }
+
+toolbar[iconsize="large"] #downloads-indicator:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
+  background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
+                              0, 24, 24, 0) center no-repeat;
+  background-size: 24px;
+}
+
 
 #downloads-indicator:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
   background-image: -moz-image-rect(url("chrome://browser/skin/downloads/download-glow.png"),
