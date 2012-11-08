@@ -21,21 +21,10 @@ object:-moz-type-unsupported {
 }
 </style>
 <script type="text/javascript">
-function unknown_plugin_detected(event) {
-  window.parent.unknown_plugin_detected(event);
+function plugin_binding_attached(event) {
+  window.parent.plugin_binding_attached(event);
 }
-
-function blocked_plugin_detected(event) {
-  window.parent.blocked_plugin_detected(event);
-}
-
-function disabled_plugin_detected(event) {
-  window.parent.disabled_plugin_detected(event);
-}
-
-document.addEventListener("PluginNotFound", unknown_plugin_detected, true);
-document.addEventListener("PluginDisabled", disabled_plugin_detected, true);
-document.addEventListener("PluginBlocklisted", blocked_plugin_detected, true);
+document.addEventListener("PluginBindingAttached", plugin_binding_attached, true, true);
 </script>
 </head>
 <body>
