@@ -484,6 +484,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
 #endif
 #if defined(MOZ_MEDIA_PLUGINS) || defined(MOZ_WIDGET_GONK)
   { AUDIO_MP3, "mp3", "MPEG Audio" },
+  { "audio/aac-adts", "aac", "AAC-ADTS Audio"},
 #endif
   { VIDEO_MP4, "mp4", "MPEG-4 Video" },
   { VIDEO_RAW, "yuv", "Raw YUV Video" },
