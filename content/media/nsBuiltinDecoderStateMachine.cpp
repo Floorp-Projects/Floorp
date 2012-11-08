@@ -1308,15 +1308,15 @@ void nsBuiltinDecoderStateMachine::ClearPositionChangeFlag()
   mPositionChangeQueued = false;
 }
 
-nsHTMLMediaElement::NextFrameStatus nsBuiltinDecoderStateMachine::GetNextFrameStatus()
+nsMediaDecoder::NextFrameStatus nsBuiltinDecoderStateMachine::GetNextFrameStatus()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   if (IsBuffering() || IsSeeking()) {
-    return nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING;
+    return nsMediaDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING;
   } else if (HaveNextFrameData()) {
-    return nsHTMLMediaElement::NEXT_FRAME_AVAILABLE;
+    return nsMediaDecoder::NEXT_FRAME_AVAILABLE;
   }
-  return nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE;
+  return nsMediaDecoder::NEXT_FRAME_UNAVAILABLE;
 }
 
 void nsBuiltinDecoderStateMachine::SetVolume(double volume)
@@ -2389,13 +2389,13 @@ void nsBuiltinDecoderStateMachine::UpdateReadyState() {
 
   nsCOMPtr<nsIRunnable> event;
   switch (GetNextFrameStatus()) {
-    case nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING:
+    case nsMediaDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING:
       event = NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::NextFrameUnavailableBuffering);
       break;
-    case nsHTMLMediaElement::NEXT_FRAME_AVAILABLE:
+    case nsMediaDecoder::NEXT_FRAME_AVAILABLE:
       event = NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::NextFrameAvailable);
       break;
-    case nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE:
+    case nsMediaDecoder::NEXT_FRAME_UNAVAILABLE:
       event = NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::NextFrameUnavailable);
       break;
     default:

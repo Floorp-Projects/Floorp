@@ -216,16 +216,7 @@ public:
   // the data for the next frame is available. This method will
   // decide whether to set the ready state to HAVE_CURRENT_DATA,
   // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
-  enum NextFrameStatus {
-    // The next frame of audio/video is available
-    NEXT_FRAME_AVAILABLE,
-    // The next frame of audio/video is unavailable because the decoder
-    // is paused while it buffers up data
-    NEXT_FRAME_UNAVAILABLE_BUFFERING,
-    // The next frame of audio/video is unavailable for some other reasons
-    NEXT_FRAME_UNAVAILABLE
-  };
-  void UpdateReadyStateForData(NextFrameStatus aNextFrame);
+  void UpdateReadyStateForData(nsMediaDecoder::NextFrameStatus aNextFrame);
 
   // Use this method to change the mReadyState member, so required
   // events can be fired.
