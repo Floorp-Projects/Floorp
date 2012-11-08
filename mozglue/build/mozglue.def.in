@@ -24,6 +24,7 @@ EXPORTS
   je_malloc_good_size
 #endif
   jemalloc_stats
+  jemalloc_free_dirty_pages
   ; A hack to work around the CRT (see giant comment in Makefile.in)
   frex=je_dumb_free_thunk
 #endif
