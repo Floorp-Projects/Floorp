@@ -16,8 +16,6 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
-#include "mozilla/Preferences.h"
-
 USING_FILE_NAMESPACE
 
 ArchiveReader::ArchiveReader()
@@ -35,12 +33,6 @@ ArchiveReader::~ArchiveReader()
   nsLayoutStatics::Release();
 }
 
-bool
-ArchiveReader::PrefEnabled()
-{
-  return Preferences::GetBool("dom.archivereader.enabled", true);
-}
-
 NS_IMETHODIMP
 ArchiveReader::Initialize(nsISupports* aOwner,
                           JSContext* aCx,
@@ -49,10 +41,6 @@ ArchiveReader::Initialize(nsISupports* aOwner,
                           JS::Value* aArgv)
 {
   NS_ENSURE_TRUE(aArgc == 1 || aArgc == 2, NS_ERROR_INVALID_ARG);
-
-  if (!PrefEnabled()) {
-    return NS_ERROR_UNEXPECTED;
-  }
 
   // We expect to get a Blob object
   if (!aArgv[0].isObject()) {
