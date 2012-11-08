@@ -56,6 +56,7 @@ var SettingsListener = {
 SettingsListener.init();
 
 // =================== Audio ====================
+#ifdef MOZ_WIDGET_GONK
 SettingsListener.observe('audio.volume.master', 0.5, function(value) {
   let audioManager = Services.audioManager;
   if (!audioManager)
@@ -91,6 +92,7 @@ for each (let [setting, defaultValue, streamType] in audioSettings) {
     });
   })(setting, defaultValue, streamType);
 }
+#endif
 
 // =================== Console ======================
 
