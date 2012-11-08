@@ -2422,14 +2422,16 @@ CSS_PROP_DISPLAY(
     kPageBreakKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None) // temp fix for bug 24000
-CSS_PROP_BACKENDONLY(
+CSS_PROP_DISPLAY(
     page-break-inside,
     page_break_inside,
     PageBreakInside,
     CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HK,
-    kPageBreakInsideKTable)
+    kPageBreakInsideKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_VISIBILITY(
     pointer-events,
     pointer_events,
