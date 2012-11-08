@@ -1,3 +1,5 @@
+# For more pagination tests, see layout/reftests/w3c-css/submitted/css21/pagination/
+#   and layout/reftests/w3c-css/submitted/multicol3/
 # Pagination tests
 == abspos-breaking-000.xhtml abspos-breaking-000.ref.xhtml
 == abspos-breaking-001.xhtml abspos-breaking-000.ref.xhtml
@@ -57,3 +59,4 @@ fails == float-continuations-000.html float-continuations-000.ref.html
 # == table-caption-splitaftercaption-9.html blank.html # bug 672654
 # == table-caption-splitaftercaption-10.html blank.html # bug 672654
 # == table-caption-splitaftercaption-11.html blank.html # bug 672654
+== column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2-ref.html

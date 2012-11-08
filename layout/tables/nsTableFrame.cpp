@@ -2797,10 +2797,9 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
 
       // If this isn't the first row group, and the previous row group has a
       // nonzero YMost, then we can't be at the top of the page.
-      // We ignore the head row group in this check, because a head row group
-      // may be automatically added at the top of *every* page.  This prevents
+      // We ignore a repeated head row group in this check to avoid causing
       // infinite loops in some circumstances - see bug 344883.
-      if (childX > (thead ? 1 : 0) &&
+      if (childX > ((thead && IsRepeatedFrame(thead)) ? 1 : 0) &&
           (rowGroups[childX - 1]->GetRect().YMost() > 0)) {
         kidReflowState.mFlags.mIsTopOfPage = false;
       }
@@ -2827,11 +2826,22 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
           childX = rowGroups.Length();
         }
       }
+      if (isPaginated && !NS_FRAME_IS_FULLY_COMPLETE(aStatus) &&
+          ShouldAvoidBreakInside(aReflowState.reflowState)) {
+        aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+        break;
+      }
       // see if the rowgroup did not fit on this page might be pushed on
       // the next page
-      if (NS_FRAME_IS_COMPLETE(aStatus) && isPaginated &&
-          (NS_UNCONSTRAINEDSIZE != kidReflowState.availableHeight) &&
-          kidReflowState.availableHeight < desiredSize.height) {
+      if (isPaginated &&
+          (NS_INLINE_IS_BREAK_BEFORE(aStatus) ||
+           (NS_FRAME_IS_COMPLETE(aStatus) &&
+            (NS_UNCONSTRAINEDSIZE != kidReflowState.availableHeight) &&
+            kidReflowState.availableHeight < desiredSize.height))) {
+        if (ShouldAvoidBreakInside(aReflowState.reflowState)) {
+          aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+          break;
+        }
         // if we are on top of the page place with dataloss
         if (kidReflowState.mFlags.mIsTopOfPage) {
           if (childX+1 < rowGroups.Length()) {
