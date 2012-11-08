@@ -3006,6 +3006,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   __block BOOL animationCancelled = NO;
+  __block BOOL geckoSwipeEventSent = NO;
   // At this point, anEvent is the first scroll wheel event in a two-finger
   // horizontal gesture that we've decided to treat as a swipe.  When we call
   // [NSEvent trackSwipeEventWithOptions:...], the OS interprets all
@@ -3041,7 +3042,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       // Not waiting until isComplete is TRUE substantially reduces the
       // time it takes to change pages after a swipe, and helps resolve
       // bug 678891.
-      if (phase == NSEventPhaseEnded) {
+      if (phase == NSEventPhaseEnded && !geckoSwipeEventSent) {
         if (gestureAmount) {
           nsSimpleGestureEvent geckoEvent(true, NS_SIMPLE_GESTURE_SWIPE, mGeckoChild, 0, 0.0);
           [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
@@ -3050,6 +3051,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
           } else {
             geckoEvent.direction |= nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
           }
+          // If DispatchWindowEvent() does something to trigger a modal dialog
+          // (which spins the event loop), the OS gets confused and makes
+          // several re-entrant calls to this handler, all of which have
+          // 'phase' set to NSEventPhaseEnded.  Unless we do something about
+          // it, this results in an equal number of re-entrant calls to
+          // DispatchWindowEvent(), and to our modal-event handling code.
+          // Probably because of bug 478703, this really messes things up,
+          // and requires a force quit to get out of.  We avoid this by
+          // avoiding re-entrant calls to DispatchWindowEvent().  See bug
+          // 770626.
+          geckoSwipeEventSent = YES;
           mGeckoChild->DispatchWindowEvent(geckoEvent);
         }
         mSwipeAnimationCancelled = nil;

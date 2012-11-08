@@ -12,12 +12,12 @@
 #include "nsIDocumentTransformer.h"
 #include "nsNetUtil.h"
 #include "nsCharsetSource.h"
-#include "nsCharsetAlias.h"
 #include "nsIPrincipal.h"
 #include "txURIUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
+#include "mozilla/dom/EncodingUtils.h"
 
 using namespace mozilla::dom;
 
@@ -149,11 +149,10 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument)
 
     // Set the charset
     if (!mOutputFormat.mEncoding.IsEmpty()) {
-        NS_LossyConvertUTF16toASCII charset(mOutputFormat.mEncoding);
         nsAutoCString canonicalCharset;
 
-        if (NS_SUCCEEDED(nsCharsetAlias::GetPreferred(charset,
-                                                      canonicalCharset))) {
+        if (EncodingUtils::FindEncodingForLabel(mOutputFormat.mEncoding,
+                                                canonicalCharset)) {
             mDocument->SetDocumentCharacterSetSource(kCharsetFromOtherComponent);
             mDocument->SetDocumentCharacterSet(canonicalCharset);
         }

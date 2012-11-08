@@ -445,6 +445,7 @@ int GonkNativeWindow::cancelBuffer(ANativeWindowBuffer* buffer)
 int GonkNativeWindow::perform(int operation, va_list args)
 {
     switch (operation) {
+        case NATIVE_WINDOW_SET_BUFFERS_TRANSFORM:
         case NATIVE_WINDOW_SET_BUFFERS_SIZE:
         case NATIVE_WINDOW_SET_SCALING_MODE:
         case NATIVE_WINDOW_SET_CROP:
@@ -464,12 +465,12 @@ int GonkNativeWindow::perform(int operation, va_list args)
             return dispatchSetBuffersDimensions(args);
         case NATIVE_WINDOW_SET_BUFFERS_FORMAT:
             return dispatchSetBuffersFormat(args);
-        case NATIVE_WINDOW_SET_BUFFERS_TRANSFORM:
         case NATIVE_WINDOW_LOCK:
         case NATIVE_WINDOW_UNLOCK_AND_POST:
         case NATIVE_WINDOW_API_CONNECT:
         case NATIVE_WINDOW_API_DISCONNECT:
         default:
+            NS_WARNING("Unsupported operation");
             return INVALID_OPERATION;
     }
 }

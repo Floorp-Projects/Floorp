@@ -71,9 +71,7 @@ NS_NewLineBox(nsIPresShell* aPresShell, nsLineBox* aFromLine,
               nsIFrame* aFrame, int32_t aCount)
 {
   nsLineBox* newLine = new (aPresShell) nsLineBox(aFrame, aCount, false);
-  if (newLine) {
-    newLine->NoteFramesMovedFrom(aFromLine);
-  }
+  newLine->NoteFramesMovedFrom(aFromLine);
   return newLine;
 }
 

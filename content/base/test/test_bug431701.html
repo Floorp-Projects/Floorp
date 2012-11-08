@@ -64,15 +64,15 @@ function xhrDoc(idx) {
 var tests = [
  [ frameDoc("one"), "ISO-8859-1", "ISO-8859-1" ],
  [ frameDoc("two"), "UTF-8", "UTF-8" ],
- [ frameDoc("three"), "ISO-8859-1", "ISO-8859-1" ],
+ [ frameDoc("three"), "windows-1252", "windows-1252" ],
  [ frameDoc("four"), "UTF-8", "UTF-8" ],
  [ frameDoc("five"), "UTF-8", "UTF-8" ],
  [ frameDoc("six"), "UTF-8", "UTF-8" ],
- [ frameDoc("seven"), "ISO-8859-1", "ISO-8859-1" ],
+ [ frameDoc("seven"), "windows-1252", "windows-1252" ],
  [ createDoc, "UTF-8", null ],
  [ xhrDoc(4), "UTF-8", "UTF-8" ],
  [ xhrDoc(5), "UTF-8", "UTF-8" ],
- [ xhrDoc(6), "ISO-8859-1", "ISO-8859-1" ],
+ [ xhrDoc(6), "windows-1252", "windows-1252" ],
 ];
 
 function doTest(idx) {

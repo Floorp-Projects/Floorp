@@ -266,6 +266,19 @@ BluetoothManager::Notify(const BluetoothSignal& aData)
   }
 }
 
+NS_IMETHODIMP
+BluetoothManager::IsConnected(uint16_t aProfileId, bool* aConnected)
+{
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    NS_WARNING("BluetoothService not available!");
+    return NS_ERROR_FAILURE;
+  }
+
+  *aConnected = bs->IsConnected(aProfileId);
+  return NS_OK;
+}
 NS_IMPL_EVENT_HANDLER(BluetoothManager, enabled)
 NS_IMPL_EVENT_HANDLER(BluetoothManager, disabled)
 NS_IMPL_EVENT_HANDLER(BluetoothManager, adapteradded)
+

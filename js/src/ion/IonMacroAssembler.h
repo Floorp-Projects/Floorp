@@ -25,7 +25,7 @@
 
 namespace js {
 namespace ion {
- 
+
 // The public entrypoint for emitting assembly. Note that a MacroAssembler can
 // use cx->lifoAlloc, so take care not to interleave masm use with other
 // lifoAlloc use if one will be destroyed before the other.
@@ -52,8 +52,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     };
 
     AutoRooter autoRooter_;
-    Maybe<IonContext> ionContext_;
-    Maybe<AutoIonContextAlloc> alloc_;
+    mozilla::Maybe<IonContext> ionContext_;
+    mozilla::Maybe<AutoIonContextAlloc> alloc_;
     bool enoughMemory_;
 
   private:
@@ -267,6 +267,17 @@ class MacroAssembler : public MacroAssemblerSpecific
     void PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore);
 
     void branchTestValueTruthy(const ValueOperand &value, Label *ifTrue, FloatRegister fr);
+
+    void branchIfFunctionIsNative(Register fun, Label *label) {
+        // 16-bit loads are slow and unaligned 32-bit loads may be too so
+        // perform an aligned 32-bit load and adjust the bitmask accordingly.
+        JS_STATIC_ASSERT(offsetof(JSFunction, nargs) % sizeof(uint32_t) == 0);
+        JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
+        JS_STATIC_ASSERT(IS_LITTLE_ENDIAN);
+        Address address(fun, offsetof(JSFunction, nargs));
+        uint32_t bit = JSFunction::INTERPRETED << 16;
+        branchTest32(Assembler::Zero, address, Imm32(bit), label);
+    }
 
     using MacroAssemblerSpecific::Push;
 

@@ -6,7 +6,6 @@
 
 #include "nsHtml5StreamParser.h"
 #include "nsICharsetConverterManager.h"
-#include "nsCharsetAlias.h"
 #include "nsServiceManagerUtils.h"
 #include "nsEncoderDecoderUtils.h"
 #include "nsContentUtils.h"
@@ -26,8 +25,10 @@
 #include "nsCharsetSource.h"
 #include "nsIWyciwygChannel.h"
 
-using namespace mozilla;
+#include "mozilla/dom/EncodingUtils.h"
 
+using namespace mozilla;
+using mozilla::dom::EncodingUtils;
 
 int32_t nsHtml5StreamParser::sTimerInitialDelay = 120;
 int32_t nsHtml5StreamParser::sTimerSubsequentDelay = 120;
@@ -1193,28 +1194,25 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
 bool
 nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
 {
-  nsAutoCString newEncoding(aEncoding);
-  newEncoding.Trim(" \t\r\n\f");
-  if (newEncoding.LowerCaseEqualsLiteral("utf-16") ||
-      newEncoding.LowerCaseEqualsLiteral("utf-16be") ||
-      newEncoding.LowerCaseEqualsLiteral("utf-16le")) {
-    mTreeBuilder->MaybeComplainAboutCharset("EncMetaUtf16",
-                                            true,
-                                            mTokenizer->getLineNumber());
-    newEncoding.Assign("UTF-8");
-  }
-
-  nsresult rv = NS_OK;
-  bool eq;
-  rv = nsCharsetAlias::Equals(newEncoding, mCharset, &eq);
-  if (NS_FAILED(rv)) {
+  nsAutoCString newEncoding;
+  if (!EncodingUtils::FindEncodingForLabel(aEncoding, newEncoding)) {
     // the encoding name is bogus
     mTreeBuilder->MaybeComplainAboutCharset("EncMetaUnsupported",
                                             true,
                                             mTokenizer->getLineNumber());
     return false;
   }
-  if (eq) {
+
+  if (newEncoding.EqualsLiteral("UTF-16") ||
+      newEncoding.EqualsLiteral("UTF-16BE") ||
+      newEncoding.EqualsLiteral("UTF-16LE")) {
+    mTreeBuilder->MaybeComplainAboutCharset("EncMetaUtf16",
+                                            true,
+                                            mTokenizer->getLineNumber());
+    newEncoding.Assign("UTF-8");
+  }
+
+  if (newEncoding.Equals(mCharset)) {
     if (mCharsetSource < kCharsetFromMetaPrescan) {
       if (mInitialEncodingWasFromParentFrame) {
         mTreeBuilder->MaybeComplainAboutCharset("EncLateMetaFrame",
@@ -1231,36 +1229,7 @@ nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
     return false;
   }
 
-  // XXX check HTML5 non-IANA aliases here
-
-  nsAutoCString preferred;
-  rv = nsCharsetAlias::GetPreferred(newEncoding, preferred);
-  if (NS_FAILED(rv)) {
-    // This charset has been blacklisted for permitting XSS smuggling.
-    // EncMetaNonRoughSuperset is a reasonable approximation to the
-    // right error message.
-    mTreeBuilder->MaybeComplainAboutCharset("EncMetaNonRoughSuperset",
-                                            true,
-                                            mTokenizer->getLineNumber());
-    return false;
-  }
-
-  // ??? Explicit further blacklist of character sets that are not
-  // "rough supersets" of ASCII.  Some of these are handled above (utf-16),
-  // some by the XSS smuggling blacklist in charsetData.properties,
-  // maybe all of the remainder should also be blacklisted there.
-  if (preferred.LowerCaseEqualsLiteral("utf-16") ||
-      preferred.LowerCaseEqualsLiteral("utf-16be") ||
-      preferred.LowerCaseEqualsLiteral("utf-16le") ||
-      preferred.LowerCaseEqualsLiteral("utf-7") ||
-      preferred.LowerCaseEqualsLiteral("x-imap4-modified-utf7")) {
-    // Not a rough ASCII superset
-    mTreeBuilder->MaybeComplainAboutCharset("EncMetaNonRoughSuperset",
-                                            true,
-                                            mTokenizer->getLineNumber());
-    return false;
-  }
-  aEncoding.Assign(preferred);
+  aEncoding.Assign(newEncoding);
   return true;
 }
 

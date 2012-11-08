@@ -29,7 +29,6 @@
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsWeakPtr.h"
-#include "nsCharsetAlias.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIDOMElement.h"
@@ -72,6 +71,7 @@
 #include "mozilla/Telemetry.h"
 #include "jsfriendapi.h"
 #include "sampler.h"
+#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "nsIDOMFormData.h"
 #include "DictionaryHelpers.h"
@@ -746,13 +746,10 @@ nsXMLHttpRequest::DetectCharset()
   }
 
   nsAutoCString charsetVal;
-  nsresult rv = channel ? channel->GetContentCharset(charsetVal) :
-                NS_ERROR_FAILURE;
-  if (NS_SUCCEEDED(rv)) {
-    rv = nsCharsetAlias::GetPreferred(charsetVal, mResponseCharset);
-  }
-
-  if (NS_FAILED(rv) || mResponseCharset.IsEmpty()) {
+  bool ok = channel &&
+            NS_SUCCEEDED(channel->GetContentCharset(charsetVal)) &&
+            EncodingUtils::FindEncodingForLabel(charsetVal, mResponseCharset);
+  if (!ok || mResponseCharset.IsEmpty()) {
     // MS documentation states UTF-8 is default for responseText
     mResponseCharset.AssignLiteral("UTF-8");
   }
@@ -764,6 +761,7 @@ nsXMLHttpRequest::DetectCharset()
     mResponseCharset.AssignLiteral("UTF-8");
   }
 
+  nsresult rv;
   nsCOMPtr<nsICharsetConverterManager> ccm =
     do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);

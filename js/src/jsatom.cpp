@@ -36,9 +36,12 @@
 
 #include "vm/String-inl.h"
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
+
+using mozilla::ArrayEnd;
+using mozilla::ArrayLength;
+using mozilla::RangedPtr;
 
 const char *
 js_AtomToPrintableString(JSContext *cx, JSAtom *atom, JSAutoByteString *bytes)

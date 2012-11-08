@@ -316,6 +316,11 @@ public:
   virtual void Initialize(const Data& aData);
   virtual void Paint(gfxContext* aContext, Layer* aMaskLayer);
 
+  virtual void ClearCachedResources() MOZ_OVERRIDE
+  {
+    DestroyBackBuffer();
+  }
+
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   {
     aAttrs = CanvasLayerAttributes(mFilter);

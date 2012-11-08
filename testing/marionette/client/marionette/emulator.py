@@ -402,8 +402,17 @@ waitFor(
 
         print 'restarting B2G'
         self.dm.shellCheckOutput(['stop', 'b2g'])
+        # ensure the b2g process has fully stopped (bug 809437)
+        for i in range(0, 10):
+            time.sleep(1)
+            if self.dm.processExist('b2g') is None:
+                break
+        else:
+            raise TimeoutException("Timeout waiting for the b2g process to terminate")
         self.dm.shellCheckOutput(['start', 'b2g'])
-        self.wait_for_port()
+
+        if not self.wait_for_port():
+            raise TimeoutException("Timeout waiting for marionette on port '%s'" % self.marionette_port)
         self.wait_for_system_message(marionette)
 
     def rotate_log(self, srclog, index=1):
