@@ -2,11 +2,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 
-<!-- LOCALIZATION NOTE (indicator.tooltiptext):
-     Tooltip for the indicator that displays the progress of ongoing downloads.
-     -->
-<!ENTITY indicator.tooltiptext            "Downloads">
-
 <!-- LOCALIZATION NOTE (downloads.title):
      Used by screen readers to describe the Downloads Panel.
      -->

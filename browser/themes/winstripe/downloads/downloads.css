@@ -159,13 +159,7 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
 
 /*** Status and progress indicator ***/
 
-#downloads-indicator {
-  width: 35px;
-}
-
 #downloads-indicator-anchor {
-  min-width: 18px;
-  min-height: 18px;
   /* Makes the outermost stack element positioned, so that its contents are
      rendered over the main browser window in the Z order.  This is required by
      the animated event notification. */
@@ -177,6 +171,8 @@ richlistitem[type="download"][state="1"]:hover > .downloadButton.downloadShow:ac
 #downloads-indicator-icon {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
                               0, 108, 18, 90) center no-repeat;
+  min-width: 18px;
+  min-height: 18px;
 }
 
 #downloads-indicator-icon:-moz-lwtheme-brighttext {
