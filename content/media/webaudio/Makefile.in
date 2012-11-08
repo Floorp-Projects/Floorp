@@ -23,6 +23,7 @@ CPPSRCS := \
   AudioNode.cpp \
   AudioParam.cpp \
   AudioSourceNode.cpp \
+  BiquadFilterNode.cpp \
   DelayNode.cpp \
   DynamicsCompressorNode.cpp \
   EnableWebAudioCheck.cpp \
@@ -39,6 +40,7 @@ EXPORTS_mozilla/dom := \
   AudioNode.h \
   AudioParam.h \
   AudioSourceNode.h \
+  BiquadFilterNode.h \
   DelayNode.h \
   DynamicsCompressorNode.h \
   GainNode.h \
