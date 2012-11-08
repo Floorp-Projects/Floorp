@@ -11,6 +11,7 @@ include $(DEPTH)/config/autoconf.mk
 
 modules := \
   async.js \
+  bagheeraclient.js \
   log4moz.js \
   observers.js \
   preferences.js \
@@ -23,6 +24,7 @@ modules := \
 
 testing_modules := \
   aitcserver.js \
+  bagheeraserver.js \
   logging.js \
   storageserver.js \
   utils.js \
@@ -46,20 +48,16 @@ include $(topsrcdir)/config/rules.mk
 # ever consolidate our Python code, and/or have a supplemental driver for the
 # build system, this can go away.
 
-storage_server_hostname := localhost
-storage_server_port := 8080
-
-head_path = $(srcdir)/tests/unit
+server_port := 8080
 
 storage-server:
 	$(PYTHON) $(srcdir)/tests/run_server.py $(topsrcdir) \
-	  $(MOZ_BUILD_ROOT) run_storage_server.js --port $(storage_server_port)
-
-# And the same thing for an AITC server.
-aitc_server_hostname := localhost
-aitc_server_port := 8080
+	  $(MOZ_BUILD_ROOT) run_storage_server.js --port $(server_port)
 
 aitc-server:
 	$(PYTHON) $(srcdir)/tests/run_server.py $(topsrcdir) \
-		$(MOZ_BUILD_ROOT) run_aitc_server.js --port $(aitc_server_port)
+		$(MOZ_BUILD_ROOT) run_aitc_server.js --port $(server_port)
 
+bagheera-server:
+	$(PYTHON) $(srcdir)/tests/run_server.py $(topsrcdir) \
+		$(MOZ_BUILD_ROOT) run_bagheera_server.js --port $(server_port)
