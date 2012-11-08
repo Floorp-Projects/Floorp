@@ -7,191 +7,262 @@
 
 #include "BaselineJIT.h"
 #include "BaselineCompiler.h"
+#include "BaselineHelpers.h"
 #include "BaselineIC.h"
 #include "IonLinker.h"
 #include "IonSpewer.h"
 #include "VMFunctions.h"
 #include "IonFrames-inl.h"
 
-using namespace js;
-using namespace js::ion;
+namespace js {
+namespace ion {
 
-bool
-UpdateBinaryOpCache(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
+
+//
+// Compare_Fallback
+//
+
+static bool
+DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, HandleValue rhs,
+                  MutableHandleValue ret)
 {
     uint8_t *returnAddr;
     RootedScript script(cx, GetTopIonJSScript(cx, NULL, (void **)&returnAddr));
 
-    BinaryOpCache cache(script->baseline->cacheDataFromReturnAddr(returnAddr));
-
-    JS_ASSERT(JSOp(*cache.data.pc) == JSOP_ADD);
-
-    if (!AddValues(cx, script, cache.data.pc, lhs, rhs, res.address()))
+    // Perform the compare operation.
+    JSOp op = JSOp(*stub->icEntry()->pc(script));
+    switch(op) {
+      case JSOP_LT: {
+        // Do the less than.
+        JSBool out;
+        if (!LessThan(cx, lhs, rhs, &out))
+            return false;
+        ret.setBoolean(out);
+        break;
+      }
+      case JSOP_GT: {
+        // Do the less than.
+        JSBool out;
+        if (!GreaterThan(cx, lhs, rhs, &out))
+            return false;
+        ret.setBoolean(out);
+        break;
+      }
+      default:
+        JS_ASSERT(!"Unhandled baseline compare op");
         return false;
-
-    return cache.update(cx, lhs, rhs, res);
-}
-
-BinaryOpCache::State
-BinaryOpCache::getTargetState(HandleValue lhs, HandleValue rhs, HandleValue res)
-{
-    DebugOnly<State> state = getState();
-    if (lhs.isInt32() && rhs.isInt32() && res.isInt32()) {
-        JS_ASSERT(state != Int32);
-        return Int32;
     }
 
-    JS_NOT_REACHED("Unexpected target state");
-    return Uninitialized;
-}
 
-bool
-BinaryOpCache::update(JSContext *cx, HandleValue lhs, HandleValue rhs, HandleValue res)
-{
-    JS_ASSERT(getState() == Uninitialized); //XXX
+    // Check to see if a new stub should be generated.
+    if (stub->numOptimizedStubs() >= ICCompare_Fallback::MAX_OPTIMIZED_STUBS) {
+        // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
+        // But for now we just bail.
+        return true;
+    }
 
-    State target = getTargetState(lhs, rhs, res);
-    JS_ASSERT(getState() != target);
+    // Try to generate new stubs.
+    if (lhs.isInt32()) {
+        if (rhs.isInt32()) {
+            ICCompare_Int32::Compiler compilerInt32(cx, op);
+            ICStub *int32Stub = compilerInt32.getStub();
+            if (!int32Stub)
+                return false;
 
-    setState(target);
-    IonCode *stub = generate(cx);
-    if (!stub)
-        return false;
+            stub->addNewStub(int32Stub);
+        }
+    }
 
-    PatchCall(data.call, CodeLocationLabel(stub));
     return true;
 }
 
 IonCode *
-BinaryOpCache::generate(JSContext *cx)
+ICCompare_Fallback::Compiler::generateStubCode()
 {
     MacroAssembler masm;
+    JS_ASSERT(R0 == JSReturnOperand);
 
-    switch (getState()) {
-      case Uninitialized:
-        if (!generateUpdate(cx, masm))
-            return NULL;
-        break;
-      case Int32:
-        if (!generateInt32(cx, masm))
-            return NULL;
-        break;
-      default:
-        JS_NOT_REACHED("foo");
-    }
+    // Pop return address.
+    masm.pop(BaselineTailCallReg);
+
+    // Get VMFunction to call
+    typedef bool (*pf)(JSContext *, ICCompare_Fallback *, HandleValue, HandleValue,
+                       MutableHandleValue);
+    static const VMFunction fun = FunctionInfo<pf>(DoCompareFallback);
+
+    IonCode *wrapper = generateVMWrapper(fun);
+    if (!wrapper)
+        return false;
+
+    // Push arguments.
+    masm.pushValue(R1);
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    // Call.
+    EmitTailCall(wrapper, masm);
 
     Linker linker(masm);
     return linker.newCode(cx);
 }
 
-bool
-BinaryOpCache::generateUpdate(JSContext *cx, MacroAssembler &masm)
+//
+// ToBool_Fallback
+//
+
+static bool
+DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, MutableHandleValue ret)
 {
-    // Pop return address.
-    masm.pop(esi);
-    masm.pushValue(R1);
-    masm.pushValue(R0);
+    bool cond = ToBoolean(arg);
+    ret.setBoolean(cond);
 
-    typedef bool (*pf)(JSContext *, HandleValue, HandleValue, MutableHandleValue);
-    static const VMFunction fun = FunctionInfo<pf>(UpdateBinaryOpCache);
-
-    IonCompartment *ion = cx->compartment->ionCompartment();
-    IonCode *wrapper = ion->generateVMWrapper(cx, fun);
-    if (!wrapper)
-        return false;
-
-    masm.tailCallWithExitFrameFromBaseline(wrapper);
-    masm.breakpoint();
-    return true;
-}
-
-bool
-UpdateCompareCache(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
-{
-    uint8_t *returnAddr;
-    RootedScript script(cx, GetTopIonJSScript(cx, NULL, (void **)&returnAddr));
-
-    CompareCache cache(script->baseline->cacheDataFromReturnAddr(returnAddr));
-
-    JS_ASSERT(JSOp(*cache.data.pc) == JSOP_LT);
-
-    JSBool b;
-    if (!LessThan(cx, lhs, rhs, &b))
-        return false;
-
-    res.setBoolean(b);
-    return cache.update(cx, lhs, rhs);
-}
-
-CompareCache::State
-CompareCache::getTargetState(HandleValue lhs, HandleValue rhs)
-{
-    DebugOnly<State> state = getState();
-    if (lhs.isInt32() && rhs.isInt32()) {
-        JS_ASSERT(state != Int32);
-        return Int32;
+    // Check to see if a new stub should be generated.
+    if (stub->numOptimizedStubs() >= ICToBool_Fallback::MAX_OPTIMIZED_STUBS) {
+        // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
+        // But for now we just bail.
+        return true;
     }
 
-    JS_NOT_REACHED("Unexpected target state");
-    return Uninitialized;
-}
+    // Try to generate new stubs.
+    if (arg.isBoolean()) {
+        // Attach the new bool-specialized stub.
+        ICToBool_Bool::Compiler compilerBool(cx);
+        ICStub *boolStub = compilerBool.getStub();
+        if (!boolStub)
+            return false;
 
-bool
-CompareCache::update(JSContext *cx, HandleValue lhs, HandleValue rhs)
-{
-    JS_ASSERT(getState() == Uninitialized); //XXX
+        stub->addNewStub(boolStub);
+    }
 
-    State target = getTargetState(lhs, rhs);
-    JS_ASSERT(getState() != target);
-
-    setState(target);
-    IonCode *stub = generate(cx);
-    if (!stub)
-        return false;
-
-    PatchCall(data.call, CodeLocationLabel(stub));
     return true;
 }
 
 IonCode *
-CompareCache::generate(JSContext *cx)
+ICToBool_Fallback::Compiler::generateStubCode()
 {
     MacroAssembler masm;
+    JS_ASSERT(R0 == JSReturnOperand);
 
-    switch (getState()) {
-      case Uninitialized:
-        if (!generateUpdate(cx, masm))
-            return NULL;
-        break;
-      case Int32:
-        if (!generateInt32(cx, masm))
-            return NULL;
-        break;
-      default:
-        JS_NOT_REACHED("foo");
-    }
+    // Pop return address.
+    masm.pop(BaselineTailCallReg);
+
+    // Get VMFunction to call
+    typedef bool (*pf)(JSContext *, ICToBool_Fallback *, HandleValue, MutableHandleValue);
+    static const VMFunction fun = FunctionInfo<pf>(DoToBoolFallback);
+
+    IonCode *wrapper = generateVMWrapper(fun);
+    if (!wrapper)
+        return false;
+
+    // Push arguments.
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    // Call.
+    EmitTailCall(wrapper, masm);
 
     Linker linker(masm);
     return linker.newCode(cx);
 }
 
-bool
-CompareCache::generateUpdate(JSContext *cx, MacroAssembler &masm)
+//
+// ToBool_Bool
+//
+
+IonCode *
+ICToBool_Bool::Compiler::generateStubCode()
 {
+    MacroAssembler masm;
+
+    // Just guard that R0 is a boolean and leave it be if so.
+    Label failure;
+    masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
+    masm.ret();
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+
+    Linker linker(masm);
+    return linker.newCode(cx);
+}
+
+//
+// BinaryArith_Fallback
+//
+
+static bool
+DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue lhs,
+                      HandleValue rhs, MutableHandleValue ret)
+{
+    uint8_t *returnAddr;
+    RootedScript script(cx, GetTopIonJSScript(cx, NULL, (void **)&returnAddr));
+
+    // Perform the compare operation.
+    JSOp op = JSOp(*stub->icEntry()->pc(script));
+    switch(op) {
+      case JSOP_ADD: {
+        // Do an add.
+        if (!AddValues(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
+            return false;
+        break;
+      }
+      default:
+        JS_ASSERT(!"Unhandled baseline compare op");
+        return false;
+    }
+
+    // Check to see if a new stub should be generated.
+    if (stub->numOptimizedStubs() >= ICBinaryArith_Fallback::MAX_OPTIMIZED_STUBS) {
+        // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
+        // But for now we just bail.
+        return true;
+    }
+
+    // Try to generate new stubs.
+    if (lhs.isInt32()) {
+        if (rhs.isInt32()) {
+            ICBinaryArith_Int32::Compiler compilerInt32(cx, op);
+            ICStub *int32Stub = compilerInt32.getStub();
+            if (!int32Stub)
+                return false;
+
+            stub->addNewStub(int32Stub);
+        }
+    }
+
+    return true;
+}
+
+IonCode *
+ICBinaryArith_Fallback::Compiler::generateStubCode()
+{
+    MacroAssembler masm;
+    JS_ASSERT(R0 == JSReturnOperand);
+
     // Pop return address.
-    masm.pop(esi);
-    masm.pushValue(R1);
-    masm.pushValue(R0);
+    masm.pop(BaselineTailCallReg);
 
-    typedef bool (*pf)(JSContext *, HandleValue, HandleValue, MutableHandleValue);
-    static const VMFunction fun = FunctionInfo<pf>(UpdateCompareCache);
+    // Get VMFunction to call
+    typedef bool (*pf)(JSContext *, ICBinaryArith_Fallback *, HandleValue, HandleValue,
+                       MutableHandleValue);
+    static const VMFunction fun = FunctionInfo<pf>(DoBinaryArithFallback);
 
-    IonCompartment *ion = cx->compartment->ionCompartment();
-    IonCode *wrapper = ion->generateVMWrapper(cx, fun);
+    IonCode *wrapper = generateVMWrapper(fun);
     if (!wrapper)
         return false;
 
-    masm.tailCallWithExitFrameFromBaseline(wrapper);
-    masm.breakpoint();
-    return true;
+    // Push arguments.
+    masm.pushValue(R1);
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+
+    // Call.
+    EmitTailCall(wrapper, masm);
+
+    Linker linker(masm);
+    return linker.newCode(cx);
 }
+
+} // namespace ion
+} // namespace js

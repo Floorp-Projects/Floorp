@@ -161,59 +161,70 @@ ion::CanEnterBaselineJIT(JSContext *cx, HandleScript script, StackFrame *fp)
     return Method_Compiled;
 }
 
-static const int DataAlignment = 4; //XXX copied from Ion.cpp
+// Be safe, align IC entry list to 8 in all cases.
+static const unsigned DataAlignment = sizeof(uintptr_t);
 
 BaselineScript *
-BaselineScript::New(JSContext *cx, size_t cacheEntries)
+BaselineScript::New(JSContext *cx, size_t icEntries)
 {
-    size_t paddedCacheEntriesSize = AlignBytes(cacheEntries * sizeof(CacheData), DataAlignment);
-    size_t bytes = paddedCacheEntriesSize;
+    size_t icEntriesSize = icEntries * sizeof(ICEntry);
+    size_t paddedICEntriesSize = AlignBytes(icEntriesSize, DataAlignment);
 
-    uint8 *buffer = (uint8 *)cx->malloc_(sizeof(BaselineScript) + bytes);
+    size_t allocBytes = sizeof(BaselineScript) + paddedICEntriesSize;
+
+    uint8_t *buffer = (uint8_t *)cx->malloc_(allocBytes);
     if (!buffer)
         return NULL;
 
     BaselineScript *script = reinterpret_cast<BaselineScript *>(buffer);
     new (script) BaselineScript();
 
-    uint32 offsetCursor = sizeof(BaselineScript);
+    uint8_t *scriptEnd = buffer + sizeof(BaselineScript);
+    uint8_t *icEntryStart = (uint8_t *) AlignBytes((uintptr_t) scriptEnd, DataAlignment);
 
-    script->cacheList_ = offsetCursor;
-    script->cacheEntries_ = cacheEntries;
-    offsetCursor += paddedCacheEntriesSize;
+    script->icEntriesOffset_ = (uint32_t) (icEntryStart - buffer);
+    script->icEntries_ = icEntries;
 
-    //uint32 offsetCursor = sizeof(BaselineScript);
     return script;
 }
 
-void
-BaselineScript::copyCacheEntries(const CacheData *caches, MacroAssembler &masm)
+ICEntry &
+BaselineScript::icEntry(size_t index)
 {
-    memcpy(cacheList(), caches, numCaches() * sizeof(CacheData));
-
-    // Jumps in the caches reflect the offset of those jumps in the compiled
-    // code, not the absolute positions of the jumps. Update according to the
-    // final code address now.
-    for (size_t i = 0; i < numCaches(); i++)
-        getCache(i).updateBaseAddress(method_, masm);
+    JS_ASSERT(index < numICEntries());
+    return icEntryList()[index];
 }
 
-CacheData &
-BaselineScript::getCache(size_t index)
+ICEntry &
+BaselineScript::icEntryFromReturnOffset(CodeOffsetLabel returnOffset)
 {
-    JS_ASSERT(index < numCaches());
-    return cacheList()[index];
-}
-
-CacheData &
-BaselineScript::cacheDataFromReturnAddr(uint8_t *addr)
-{
-    for (size_t i = 0; i < numCaches(); i++) {
-        CacheData &cache = getCache(i);
-        if (cache.call.raw() == addr)
-            return cache;
+    // FIXME: Change this to something better than linear search (binary probe)?
+    for (size_t i = 0; i < numICEntries(); i++) {
+        ICEntry &entry = icEntry(i);
+        if (entry.returnOffset().offset() == returnOffset.offset())
+            return entry;
     }
 
     JS_NOT_REACHED("No cache");
-    return getCache(0);
+    return icEntry(0);
+}
+
+void
+BaselineScript::copyICEntries(const ICEntry *entries, MacroAssembler &masm)
+{
+    // Fix up the return offset in the IC entries and copy them in.
+    // Also write out the IC entry ptrs in any fallback stubs that were added.
+    for (uint32_t i = 0; i < numICEntries(); i++) {
+        ICEntry &realEntry = icEntry(i);
+        realEntry = entries[i];
+        realEntry.fixupReturnOffset(masm);
+
+        // If the attached stub is a fallback stub, then fix it up with
+        // a pointer to the (now available) realEntry.
+        // We use a slightly hackish measure here: since we don't have a
+        // static KIND to use as the template argument for BaselineICFallbackStub,
+        // we just use a bogus one (0).
+        if (realEntry.firstStub()->isFallback())
+            realEntry.firstStub()->toFallbackStub()->fixupICEntry(&realEntry);
+    }
 }
