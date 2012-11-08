@@ -93,7 +93,7 @@ classes.dex: $(_JAVA_HARNESS)
 classes.dex: $(_JAVA_TESTS)
 	$(NSINSTALL) -D classes
 	$(JAVAC) $(JAVAC_FLAGS) -d classes $(JAVAFILES) $(_JAVA_HARNESS) $(addprefix $(DEPTH)/mobile/android/base/tests/,$(_JAVA_TESTS))
-	$(DX) --dex --output=$@ classes $(ROBOTIUM_PATH)
+	$(DX) --dex --output=$@ classes $(ROBOTIUM_PATH) $(ANDROID_COMPT_LIB)
 
 robocop.ap_: AndroidManifest.xml $(TESTPATH)/assets/*
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -I . -S res -A $(TESTPATH)/assets -F $@ -J ./
