@@ -100,9 +100,8 @@ class nsGeolocationService MOZ_FINAL : public nsIGeolocationUpdate, public nsIOb
 {
 public:
 
-  static nsGeolocationService* GetGeolocationService();
-  static nsGeolocationService* GetInstance();  // Non-Addref'ing
-  static nsGeolocationService* gService;
+  static already_AddRefed<nsGeolocationService> GetGeolocationService();
+  static nsRefPtr<nsGeolocationService> sService;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGEOLOCATIONUPDATE
