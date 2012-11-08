@@ -481,6 +481,18 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   return true;
 }
 
+bool
+ShadowLayersParent::RecvClearCachedResources()
+{
+  if (mRoot) {
+    // NB: |mRoot| here is the *child* context's root.  In this parent
+    // context, it's just a subtree root.  We need to scope the clear
+    // of resources to exactly that subtree, so we specify it here.
+    mLayerManager->ClearCachedResources(mRoot);
+  }
+  return true;
+}
+
 PGrallocBufferParent*
 ShadowLayersParent::AllocPGrallocBuffer(const gfxIntSize& aSize,
                                         const gfxContentType& aContent,

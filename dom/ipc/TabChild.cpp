@@ -1792,6 +1792,22 @@ TabChild::IsAsyncPanZoomEnabled()
     return mScrolling == ASYNC_PAN_ZOOM;
 }
 
+void
+TabChild::MakeVisible()
+{
+    if (mWidget) {
+        mWidget->Show(true);
+    }
+}
+
+void
+TabChild::MakeHidden()
+{
+    if (mWidget) {
+        mWidget->Show(false);
+    }
+}
+
 NS_IMETHODIMP
 TabChild::GetMessageManager(nsIContentFrameMessageManager** aResult)
 {

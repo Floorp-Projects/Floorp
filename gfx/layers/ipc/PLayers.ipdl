@@ -328,6 +328,10 @@ parent:
   // no transaction operate require a swap.
   async UpdateNoSwap(Edit[] cset, TargetConfig targetConfig, bool isFirstPaint);
 
+  // Drop any front buffers that might be retained on the compositor
+  // side.
+  async ClearCachedResources();
+
   async __delete__();
 };
 
