@@ -16,10 +16,6 @@
     throw new Error("osfile_win_front.jsm cannot be used from the main thread yet");
   }
 
-  importScripts("resource://gre/modules/osfile/osfile_win_back.jsm");
-  importScripts("resource://gre/modules/osfile/ospath_win_back.jsm");
-  importScripts("resource://gre/modules/osfile/osfile_shared_front.jsm");
-
   (function(exports) {
      "use strict";
 
