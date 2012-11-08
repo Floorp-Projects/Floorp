@@ -1790,8 +1790,13 @@ public:
   // a background layer will only be marked as fixed if it covers the scroll-
   // port of the root scroll-frame. This check can be skipped using
   // aSkipFixedItemBoundsCheck.
+  // aIsThemed should be the value of aFrame->IsThemed.
+  // aBackgroundStyle should be the result of
+  // nsCSSRendering::FindBackground, or null if FindBackground returned false.
   nsDisplayBackground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      uint32_t aLayer, bool aSkipFixedItemBoundsCheck = false);
+                      uint32_t aLayer, bool aIsThemed,
+                      const nsStyleBackground* aBackgroundStyle,
+                      bool aSkipFixedItemBoundsCheck = false);
   virtual ~nsDisplayBackground();
 
   // This will create and append new items for all the layers of the
@@ -1855,6 +1860,15 @@ protected:
   bool IsSingleFixedPositionImage(nsDisplayListBuilder* aBuilder, const nsRect& aClipRect);
   void ConfigureLayer(ImageLayer* aLayer);
 
+  // Cache the result of nsCSSRendering::FindBackground. Always null if
+  // mIsThemed is true or if FindBackground returned false.
+  const nsStyleBackground* mBackgroundStyle;
+  /* If this background can be a simple image layer, we store the format here. */
+  nsRefPtr<ImageContainer> mImageContainer;
+  gfxRect mDestRect;
+  uint32_t mLayer;
+
+  nsITheme::Transparency mThemeTransparency;
   /* Used to cache mFrame->IsThemed() since it isn't a cheap call */
   bool mIsThemed;
   /* true if this item represents a background-attachment:fixed layer and
@@ -1862,19 +1876,16 @@ protected:
   bool mIsFixed;
   /* true if this item represents the bottom-most background layer */
   bool mIsBottommostLayer;
-  nsITheme::Transparency mThemeTransparency;
-
-  /* If this background can be a simple image layer, we store the format here. */
-  nsRefPtr<ImageContainer> mImageContainer;
-  gfxRect mDestRect;
-  uint32_t mLayer;
 };
 
 class nsDisplayBackgroundColor : public nsDisplayItem
 {
 public:
-  nsDisplayBackgroundColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nscolor aColor)
+  nsDisplayBackgroundColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                           const nsStyleBackground* aBackgroundStyle,
+                           nscolor aColor)
     : nsDisplayItem(aBuilder, aFrame)
+    , mBackgroundStyle(aBackgroundStyle)
     , mColor(aColor)
   { }
 
@@ -1894,6 +1905,8 @@ public:
 
   NS_DISPLAY_DECL_NAME("BackgroundColor", TYPE_BACKGROUND_COLOR)
 
+protected:
+  const nsStyleBackground* mBackgroundStyle;
   nscolor mColor;
 };
 
