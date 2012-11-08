@@ -286,6 +286,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     EnableDevice(NS_DEVICE_LIGHT);
   } else if (aTypeAtom == nsGkAtoms::ondevicemotion) {
     EnableDevice(NS_DEVICE_MOTION);
+#ifdef MOZ_B2G
   } else if (aTypeAtom == nsGkAtoms::onmoztimechange) {
     nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
     if (window) {
@@ -301,6 +302,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     if (window) {
       window->EnableNetworkEvent(NS_NETWORK_DOWNLOAD_EVENT);
     }
+#endif // MOZ_B2G
   } else if (aTypeAtom == nsGkAtoms::ontouchstart ||
              aTypeAtom == nsGkAtoms::ontouchend ||
              aTypeAtom == nsGkAtoms::ontouchmove ||
@@ -422,9 +424,11 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
   uint32_t count = mListeners.Length();
   uint32_t typeCount = 0;
   bool deviceType = IsDeviceType(aType);
+#ifdef MOZ_B2G
   bool timeChangeEvent = (aType == NS_MOZ_TIME_CHANGE_EVENT);
   bool networkEvent = (aType == NS_NETWORK_UPLOAD_EVENT ||
                        aType == NS_NETWORK_DOWNLOAD_EVENT);
+#endif // MOZ_B2G
 
   for (uint32_t i = 0; i < count; ++i) {
     ls = &mListeners.ElementAt(i);
@@ -438,7 +442,11 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
         mNoListenerForEvent = NS_EVENT_TYPE_NULL;
         mNoListenerForEventAtom = nullptr;
 
-        if (!deviceType && !timeChangeEvent && !networkEvent) {
+        if (!deviceType
+#ifdef MOZ_B2G
+            && !timeChangeEvent && !networkEvent
+#endif // MOZ_B2G
+            ) {
           return;
         }
         --typeCount;
@@ -448,6 +456,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
 
   if (!aAllEvents && deviceType && typeCount == 0) {
     DisableDevice(aType);
+#ifdef MOZ_B2G
   } else if (timeChangeEvent && typeCount == 0) {
     nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
     if (window) {
@@ -458,6 +467,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
     if (window) {
       window->DisableNetworkEvent(aType);
     }
+#endif // MOZ_B2G
   }
 }
 

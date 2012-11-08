@@ -89,6 +89,8 @@ public class BrowserProvider extends ContentProvider {
 
     // Minimum duration to keep when expiring.
     static final long DEFAULT_EXPIRY_PRESERVE_WINDOW = 1000L * 60L * 60L * 24L * 28L;     // Four weeks.
+    // Minimum number of thumbnails to keep around.
+    static final int DEFAULT_EXPIRY_THUMBNAIL_COUNT = 15;
 
     static final String TABLE_BOOKMARKS = "bookmarks";
     static final String TABLE_HISTORY = "history";
@@ -1427,22 +1429,21 @@ public class BrowserProvider extends ContentProvider {
      */
     public void expireHistory(final SQLiteDatabase db, final int retain, final long keepAfter) {
         final long rows = DatabaseUtils.queryNumEntries(db, TABLE_HISTORY);
+
         if (retain >= rows) {
             debug("Not expiring history: only have " + rows + " rows.");
             return;
         }
 
+        final String sortOrder = BrowserContract.getFrecencySortOrder(false, true);
         final long toRemove = rows - retain;
         debug("Expiring at most " + toRemove + " rows earlier than " + keepAfter + ".");
 
-        final String sortOrder = BrowserContract.getFrecencySortOrder(false, true);
-
         final String sql;
         if (keepAfter > 0) {
-            // If we don't bind these paramaters dynamically, the WHERE clause here can return null
-            sql = "DELETE FROM " + TABLE_HISTORY + " " + 
+            sql = "DELETE FROM " + TABLE_HISTORY + " " +
                   "WHERE MAX(" + History.DATE_LAST_VISITED + ", " + History.DATE_MODIFIED +") < " + keepAfter + " " +
-                  " AND " + History._ID + " " + "IN ( SELECT " +
+                  " AND " + History._ID + " IN ( SELECT " +
                     History._ID + " FROM " + TABLE_HISTORY + " " +
                     "ORDER BY " + sortOrder + " LIMIT " + toRemove +
                   ")";
@@ -1451,8 +1452,27 @@ public class BrowserProvider extends ContentProvider {
                   "IN ( SELECT " + History._ID + " FROM " + TABLE_HISTORY + " " +
                   "ORDER BY " + sortOrder + " LIMIT " + toRemove + ")";
         }
-
         trace("Deleting using query: " + sql);
+        db.execSQL(sql);
+    }
+
+    /**
+     * Remove any thumbnails that for sites that aren't likely to be ever shown.
+     * Items will be removed according to a frecency calculation.
+     *
+     * Call this method within a transaction.
+     */
+    public void expireThumbnails(final SQLiteDatabase db) {
+        final String sortOrder = BrowserContract.getFrecencySortOrder(true, false);
+        final String sql = "UPDATE " + TABLE_IMAGES +
+                           " SET " + Images.THUMBNAIL + " = NULL " +
+                           " WHERE " + Images.URL + " NOT IN ( " +
+                             " SELECT " + Combined.URL +
+                             " FROM " + VIEW_COMBINED_WITH_IMAGES +
+                             " ORDER BY " + sortOrder +
+                             " LIMIT " + DEFAULT_EXPIRY_THUMBNAIL_COUNT +
+                           ")";
+        trace("Clear thumbs using query: " + sql);
         db.execSQL(sql);
     }
 
@@ -1606,6 +1626,8 @@ public class BrowserProvider extends ContentProvider {
                     retainCount = AGGRESSIVE_EXPIRY_RETAIN_COUNT;
                 }
                 expireHistory(db, retainCount, keepAfter);
+                expireThumbnails(db);
+                deleteUnusedImages(uri);
                 break;
             }
 

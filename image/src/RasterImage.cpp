@@ -403,7 +403,6 @@ RasterImage::~RasterImage()
              num_discardable_containers,
              total_source_bytes,
              discardable_source_bytes));
-    DiscardTracker::Remove(&mDiscardTrackerNode);
   }
 
   if (mDecoder) {
@@ -421,6 +420,8 @@ RasterImage::~RasterImage()
   // Total statistics
   num_containers--;
   total_source_bytes -= mSourceData.Length();
+
+  DiscardTracker::Remove(&mDiscardTrackerNode);
 }
 
 void

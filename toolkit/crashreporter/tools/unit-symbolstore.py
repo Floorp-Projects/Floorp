@@ -4,6 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os, tempfile, unittest, shutil, struct, platform, subprocess
+import mock
+from mock import patch
 import symbolstore
 
 # Some simple functions to mock out files that the platform-specific dumpers will accept.
@@ -42,9 +44,13 @@ class HelperMixin(object):
         self.test_dir = tempfile.mkdtemp()
         if not self.test_dir.endswith("/"):
             self.test_dir += "/"
-        
+        symbolstore.srcdirRepoInfo = {}
+        symbolstore.vcsFileInfoCache = {}
+
     def tearDown(self):
         shutil.rmtree(self.test_dir)
+        symbolstore.srcdirRepoInfo = {}
+        symbolstore.vcsFileInfoCache = {}
 
     def add_test_files(self, files):
         for f in files:
@@ -123,7 +129,7 @@ class TestCopyDebugUniversal(HelperMixin, unittest.TestCase):
         self._subprocess_popen = subprocess.Popen
         subprocess.Popen = popen_factory(self.next_mock_stdout())
         self.stdouts = []
-        
+
     def tearDown(self):
         HelperMixin.tearDown(self)
         shutil.rmtree(self.symbol_dir)
@@ -141,7 +147,7 @@ class TestCopyDebugUniversal(HelperMixin, unittest.TestCase):
             yield iter([])
         for s in self.stdouts:
             yield iter(s)
-    
+
     def test_copy_debug_universal(self):
         """
         Test that dumping symbols for multiple architectures only copies debug symbols once
@@ -160,6 +166,69 @@ class TestCopyDebugUniversal(HelperMixin, unittest.TestCase):
         d.CopyDebug = mock_copy_debug
         self.assertTrue(d.Process(self.test_dir))
         self.assertEqual(1, len(copied))
+
+class TestGetVCSFilename(HelperMixin, unittest.TestCase):
+    def setUp(self):
+        HelperMixin.setUp(self)
+
+    def tearDown(self):
+        HelperMixin.tearDown(self)
+
+    @patch("subprocess.Popen")
+    def testVCSFilenameHg(self, mock_Popen):
+        # mock calls to `hg parent` and `hg showconfig paths.default`
+        mock_communicate = mock_Popen.return_value.communicate
+        mock_communicate.side_effect = [("abcd1234", ""),
+                                        ("http://example.com/repo", "")]
+        os.mkdir(os.path.join(self.test_dir, ".hg"))
+        filename = os.path.join(self.test_dir, "foo.c")
+        self.assertEqual("hg:example.com/repo:foo.c:abcd1234",
+                         symbolstore.GetVCSFilename(filename, [self.test_dir])[0])
+
+    @patch("subprocess.Popen")
+    def testVCSFilenameHgMultiple(self, mock_Popen):
+        # mock calls to `hg parent` and `hg showconfig paths.default`
+        mock_communicate = mock_Popen.return_value.communicate
+        mock_communicate.side_effect = [("abcd1234", ""),
+                                        ("http://example.com/repo", ""),
+                                        ("0987ffff", ""),
+                                        ("http://example.com/other", "")]
+        srcdir1 = os.path.join(self.test_dir, "one")
+        srcdir2 = os.path.join(self.test_dir, "two")
+        os.makedirs(os.path.join(srcdir1, ".hg"))
+        os.makedirs(os.path.join(srcdir2, ".hg"))
+        filename1 = os.path.join(srcdir1, "foo.c")
+        filename2 = os.path.join(srcdir2, "bar.c")
+        self.assertEqual("hg:example.com/repo:foo.c:abcd1234",
+                         symbolstore.GetVCSFilename(filename1, [srcdir1, srcdir2])[0])
+        self.assertEqual("hg:example.com/other:bar.c:0987ffff",
+                         symbolstore.GetVCSFilename(filename2, [srcdir1, srcdir2])[0])
+
+class TestRepoManifest(HelperMixin, unittest.TestCase):
+    def testRepoManifest(self):
+        manifest = os.path.join(self.test_dir, "sources.xml")
+        open(manifest, "w").write("""<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+<remote fetch="http://example.com/foo/" name="foo"/>
+<remote fetch="git://example.com/bar/" name="bar"/>
+<default remote="bar"/>
+<project name="projects/one" revision="abcd1234"/>
+<project name="projects/two" path="projects/another" revision="ffffffff" remote="foo"/>
+<project name="something_else" revision="00000000" remote="bar"/>
+</manifest>
+""")
+        # Use a source file from each of the three projects
+        file1 = os.path.join(self.test_dir, "projects", "one", "src1.c")
+        file2 = os.path.join(self.test_dir, "projects", "another", "src2.c")
+        file3 = os.path.join(self.test_dir, "something_else", "src3.c")
+        d = symbolstore.Dumper("dump_syms", "symbol_path",
+                               repo_manifest=manifest)
+        self.assertEqual("git:example.com/bar/projects/one:src1.c:abcd1234",
+                         symbolstore.GetVCSFilename(file1, d.srcdirs)[0])
+        self.assertEqual("git:example.com/foo/projects/two:src2.c:ffffffff",
+                         symbolstore.GetVCSFilename(file2, d.srcdirs)[0])
+        self.assertEqual("git:example.com/bar/something_else:src3.c:00000000",
+                         symbolstore.GetVCSFilename(file3, d.srcdirs)[0])
 
 if __name__ == '__main__':
   unittest.main()

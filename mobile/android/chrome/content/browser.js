@@ -4490,8 +4490,6 @@ var ErrorPageEventHandler = {
             errorDoc.location = "about:home";
           }
         } else if (/^about:blocked/.test(errorDoc.documentURI)) {
-          let secHistogram = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry).getHistogramById("SECURITY_UI");
-
           // The event came from a button on a malware/phishing block page
           // First check whether it's malware or phishing, so that we can
           // use the right strings/links
@@ -4502,12 +4500,12 @@ var ErrorPageEventHandler = {
           let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
 
           if (target == errorDoc.getElementById("getMeOutButton")) {
-            secHistogram.add(nsISecTel[bucketName + "GET_ME_OUT_OF_HERE"]);
+            Telemetry.addData("SECURITY_UI", nsISecTel[bucketName + "GET_ME_OUT_OF_HERE"]);
             errorDoc.location = "about:home";
           } else if (target == errorDoc.getElementById("reportButton")) {
             // We log even if malware/phishing info URL couldn't be found:
             // the measurement is for how many users clicked the WHY BLOCKED button
-            secHistogram.add(nsISecTel[bucketName + "WHY_BLOCKED"]);
+            Telemetry.addData("SECURITY_UI", nsISecTel[bucketName + "WHY_BLOCKED"]);
 
             // This is the "Why is this site blocked" button.  For malware,
             // we can fetch a site-specific report, for phishing, we redirect
@@ -4531,7 +4529,7 @@ var ErrorPageEventHandler = {
               }
             }
           } else if (target == errorDoc.getElementById("ignoreWarningButton")) {
-            secHistogram.add(nsISecTel[bucketName + "IGNORE_WARNING"]);
+            Telemetry.addData("SECURITY_UI", nsISecTel[bucketName + "IGNORE_WARNING"]);
 
             // Allow users to override and continue through to the site,
             let webNav = BrowserApp.selectedBrowser.docShell.QueryInterface(Ci.nsIWebNavigation);
@@ -7045,6 +7043,12 @@ var Telemetry = {
     Services.obs.removeObserver(this, "Telemetry:Prompt");
   },
 
+  addData: function addData(aHistogramId, aValue) {
+    let telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+    let histogram = telemetry.getHistogramById(aHistogramId);
+    histogram.add(aValue);
+  },
+
   observe: function observe(aSubject, aTopic, aData) {
     if (aTopic == "Preferences:Set") {
       // if user changes telemetry pref, treat it like they have been prompted
@@ -7053,9 +7057,7 @@ var Telemetry = {
         Services.prefs.setIntPref(this._PREF_TELEMETRY_PROMPTED, this._TELEMETRY_PROMPT_REV);
     } else if (aTopic == "Telemetry:Add") {
       let json = JSON.parse(aData);
-      var telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
-      let histogram = telemetry.getHistogramById(json.name);
-      histogram.add(json.value);
+      this.addData(json.name, json.value);
     } else if (aTopic == "Telemetry:Prompt") {
 #ifdef MOZ_TELEMETRY_REPORTING
       this.prompt();
@@ -7607,12 +7609,13 @@ var MemoryObserver = {
     for (let i = 0; i < tabs.length; i++) {
       if (tabs[i] != selected) {
         this.zombify(tabs[i]);
+        Telemetry.addData("FENNEC_TAB_ZOMBIFIED", (Date.now() - tabs[i].lastTouchedAt) / 1000);
       }
     }
+    Telemetry.addData("FENNEC_LOWMEM_TAB_COUNT", tabs.length);
   },
 
   zombify: function(tab) {
-    dump("Zombifying tab at index [" + tab.id + "]");
     let browser = tab.browser;
     let data = browser.__SS_data;
     let extra = browser.__SS_extdata;
@@ -7769,8 +7772,10 @@ var Tabs = {
     }
     // if the tab was last touched more than browser.tabs.expireTime seconds ago,
     // zombify it
-    if (lruTab && (Date.now() - lruTab.lastTouchedAt) > expireTimeMs) {
+    let tabAgeMs = Date.now() - lruTab.lastTouchedAt;
+    if (lruTab && tabAgeMs > expireTimeMs) {
       MemoryObserver.zombify(lruTab);
+      Telemetry.addData("FENNEC_TAB_EXPIRED", tabAgeMs / 1000);
       return true;
     }
     return false;

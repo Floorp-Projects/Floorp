@@ -6,7 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.DisplayPortMetrics;
-import org.mozilla.gecko.gfx.ViewportMetrics;
+import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 
 import android.content.res.Resources;
 import android.graphics.Point;
@@ -527,14 +527,13 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createViewportEvent(ViewportMetrics viewport, DisplayPortMetrics displayPort) {
+    public static GeckoEvent createViewportEvent(ImmutableViewportMetrics metrics, DisplayPortMetrics displayPort) {
         GeckoEvent event = new GeckoEvent(VIEWPORT);
         event.mCharacters = "Viewport:Change";
-        PointF origin = viewport.getOrigin();
         StringBuffer sb = new StringBuffer(256);
-        sb.append("{ \"x\" : ").append(origin.x)
-          .append(", \"y\" : ").append(origin.y)
-          .append(", \"zoom\" : ").append(viewport.getZoomFactor())
+        sb.append("{ \"x\" : ").append(metrics.viewportRectLeft)
+          .append(", \"y\" : ").append(metrics.viewportRectTop)
+          .append(", \"zoom\" : ").append(metrics.zoomFactor)
           .append(", \"displayPort\" :").append(displayPort.toJSON())
           .append('}');
         event.mCharactersExtra = sb.toString();
