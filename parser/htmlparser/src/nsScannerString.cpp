@@ -19,13 +19,25 @@ nsScannerBufferList::Buffer*
 nsScannerBufferList::AllocBufferFromString( const nsAString& aString )
   {
     uint32_t len = aString.Length();
-    Buffer* buf = AllocBuffer(len);
 
+    if (len > MAX_CAPACITY)
+      return nullptr;
+
+    Buffer* buf = (Buffer*) malloc(sizeof(Buffer) + (len + 1) * sizeof(PRUnichar));
     if (buf)
       {
+        // leave PRCList members of Buffer uninitialized
+
+        buf->mUsageCount = 0;
+        buf->mDataEnd = buf->DataStart() + len;
+
         nsAString::const_iterator source;
         aString.BeginReading(source);
         nsCharTraits<PRUnichar>::copy(buf->DataStart(), source.get(), len);
+
+        // XXX null terminate.  this shouldn't be required, but we do it because
+        // nsScanner erroneously thinks it can dereference DataEnd :-(
+        *buf->mDataEnd = PRUnichar(0);
       }
     return buf;
   }
@@ -36,29 +48,30 @@ nsScannerBufferList::AllocBuffer( uint32_t capacity )
     if (capacity > MAX_CAPACITY)
       return nullptr;
 
-    void* ptr = malloc(sizeof(Buffer) + (capacity + 1) * sizeof(PRUnichar));
-    if (!ptr)
-      return nullptr;
+    Buffer* buf = (Buffer*) malloc(sizeof(Buffer) + (capacity + 1) * sizeof(PRUnichar));
+    if (buf)
+      {
+        // leave PRCList members of Buffer uninitialized
 
-    Buffer* buf = new (ptr) Buffer();
+        buf->mUsageCount = 0;
+        buf->mDataEnd = buf->DataStart() + capacity;
 
-    buf->mUsageCount = 0;
-    buf->mDataEnd = buf->DataStart() + capacity;
-
-    // XXX null terminate.  this shouldn't be required, but we do it because
-    // nsScanner erroneously thinks it can dereference DataEnd :-(
-    *buf->mDataEnd = PRUnichar(0);
+        // XXX null terminate.  this shouldn't be required, but we do it because
+        // nsScanner erroneously thinks it can dereference DataEnd :-(
+        *buf->mDataEnd = PRUnichar(0);
+      }
     return buf;
   }
 
 void
 nsScannerBufferList::ReleaseAll()
   {
-    while (!mBuffers.isEmpty())
+    while (!PR_CLIST_IS_EMPTY(&mBuffers))
       {
-        Buffer* node = mBuffers.popFirst();
+        PRCList* node = PR_LIST_HEAD(&mBuffers);
+        PR_REMOVE_LINK(node);
         //printf(">>> freeing buffer @%p\n", node);
-        free(node);
+        free(static_cast<Buffer*>(node));
       }
   }
 
@@ -93,10 +106,10 @@ nsScannerBufferList::DiscardUnreferencedPrefix( Buffer* aBuf )
   {
     if (aBuf == Head())
       {
-        while (!mBuffers.isEmpty() && !Head()->IsInUse())
+        while (!PR_CLIST_IS_EMPTY(&mBuffers) && !Head()->IsInUse())
           {
             Buffer* buffer = Head();
-            buffer->remove();
+            PR_REMOVE_LINK(buffer);
             free(buffer);
           }
       }
@@ -263,7 +276,7 @@ nsScannerSubstring::GetNextFragment( nsScannerFragment& frag ) const
     if (frag.mBuffer == mEnd.mBuffer)
       return false;
 
-    frag.mBuffer = frag.mBuffer->getNext();
+    frag.mBuffer = static_cast<const Buffer*>(PR_NEXT_LINK(frag.mBuffer));
 
     if (frag.mBuffer == mStart.mBuffer)
       frag.mFragmentStart = mStart.mPosition;
@@ -285,7 +298,7 @@ nsScannerSubstring::GetPrevFragment( nsScannerFragment& frag ) const
     if (frag.mBuffer == mStart.mBuffer)
       return false;
 
-    frag.mBuffer = frag.mBuffer->getPrevious();
+    frag.mBuffer = static_cast<const Buffer*>(PR_PREV_LINK(frag.mBuffer));
 
     if (frag.mBuffer == mStart.mBuffer)
       frag.mFragmentStart = mStart.mPosition;
