@@ -189,9 +189,51 @@ public:
                       ((uint32_t)ptr[1] << 16) |
                       ((uint32_t)ptr[2] << 8) |
                       ((uint32_t)ptr[3]);
-        break;
+        return;
       }
     }
+  }
+
+  void GetBodyLength(int* aRetBodyLength)
+  {
+    int length = mHeaders.Length();
+    *aRetBodyLength = 0;
+
+    for (int i = 0; i < length; ++i) {
+      if (mHeaders[i]->mId == ObexHeaderId::Body ||
+          mHeaders[i]->mId == ObexHeaderId::EndOfBody) {
+        *aRetBodyLength = mHeaders[i]->mDataLength;
+        return;
+      }
+    }
+  }
+
+  void GetBody(uint8_t** aRetBody)
+  {
+    int length = mHeaders.Length();
+    *aRetBody = nullptr;
+
+    for (int i = 0; i < length; ++i) {
+      if (mHeaders[i]->mId == ObexHeaderId::Body ||
+          mHeaders[i]->mId == ObexHeaderId::EndOfBody) {
+        uint8_t* ptr = mHeaders[i]->mData.get();
+        *aRetBody = new uint8_t[mHeaders[i]->mDataLength];
+        memcpy(*aRetBody, ptr, mHeaders[i]->mDataLength);
+        return;
+      }
+    }
+  }
+
+  bool Has(ObexHeaderId aId)
+  {
+    int length = mHeaders.Length();
+    for (int i = 0; i < length; ++i) {
+      if (mHeaders[i]->mId == aId) {
+        return true;
+      }
+    }
+
+    return false;
   }
 };
 
@@ -200,9 +242,9 @@ int AppendHeaderBody(uint8_t* aRetBuf, uint8_t* aData, int aLength);
 int AppendHeaderLength(uint8_t* aRetBuf, int aObjectLength);
 int AppendHeaderConnectionId(uint8_t* aRetBuf, int aConnectionId);
 void SetObexPacketInfo(uint8_t* aRetBuf, uint8_t aOpcode, int aPacketLength);
-int ParseHeadersAndFindBody(uint8_t* aHeaderStart,
-                            int aTotalLength,
-                            ObexHeaderSet* aRetHanderSet);
+void ParseHeaders(const uint8_t* aHeaderStart,
+                  int aTotalLength,
+                  ObexHeaderSet* aRetHanderSet);
 
 END_BLUETOOTH_NAMESPACE
 
