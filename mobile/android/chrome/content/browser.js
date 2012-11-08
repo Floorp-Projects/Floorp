@@ -14,7 +14,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/JNI.jsm");
-Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 #ifdef ACCESSIBILITY
 Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
@@ -42,6 +41,11 @@ XPCOMUtils.defineLazyGetter(this, "SafeBrowsing", function() {
   return tmp.SafeBrowsing;
 });
 #endif
+
+XPCOMUtils.defineLazyGetter(this, "PrivateBrowsingUtils", function() {
+  Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+  return PrivateBrowsingUtils;
+});
 
 // Lazily-loaded browser scripts:
 [
