@@ -335,6 +335,10 @@ ContentChild::InitXPCOM()
     mConsoleListener = new ConsoleListener(this);
     if (NS_FAILED(svc->RegisterListener(mConsoleListener)))
         NS_WARNING("Couldn't register console listener for child process");
+
+    bool isOffline;
+    SendGetXPCOMProcessAttributes(&isOffline);
+    RecvSetOffline(isOffline);
 }
 
 PMemoryReportRequestChild*
