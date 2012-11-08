@@ -431,6 +431,24 @@ public:
   }
 
   /**
+   * Must be called outside of a layers transaction.
+   *
+   * For the subtree rooted at |aSubtree|, this attempts to free up
+   * any free-able resources like retained buffers, but may do nothing
+   * at all.  After this call, the layer tree is left in an undefined
+   * state; the layers in |aSubtree|'s subtree may no longer have
+   * buffers with valid content and may no longer be able to draw
+   * their visible and valid regions.
+   *
+   * In general, a painting or forwarding transaction on |this| must
+   * complete on the tree before it returns to a valid state.
+   *
+   * Resource freeing begins from |aSubtree| or |mRoot| if |aSubtree|
+   * is null.  |aSubtree|'s manager must be this.
+   */
+  virtual void ClearCachedResources(Layer* aSubtree = nullptr) {}
+
+  /**
    * Flag the next paint as the first for a document.
    */
   virtual void SetIsFirstPaint() {}
