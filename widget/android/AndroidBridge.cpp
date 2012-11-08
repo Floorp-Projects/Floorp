@@ -81,9 +81,6 @@ AndroidBridge::ConstructBridge(JNIEnv *jEnv,
         delete bridge;
     }
     sBridge = bridge;
-
-    sSmsRequests = new nsTArray<nsCOMPtr<nsISmsRequest> >();
-    ClearOnShutdown(&sSmsRequests);
 }
 
 bool
@@ -1834,6 +1831,9 @@ int32_t
 AndroidBridge::QueueSmsRequest(nsISmsRequest* aRequest)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+    // XXX: This method will always fail on Android because we do not
+    // init sSmsRequests. See bug 775997 and Bug 809459.
 
     if (!sSmsRequests) {
         // Probably shutting down.
