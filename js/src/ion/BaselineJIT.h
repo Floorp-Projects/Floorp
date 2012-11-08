@@ -16,7 +16,7 @@
 namespace js {
 namespace ion {
 
-struct CacheData;
+struct ICEntry;
 
 struct BaselineScript
 {
@@ -27,14 +27,14 @@ struct BaselineScript
   private:
     void trace(JSTracer *trc);
 
-    uint32 cacheList_;
-    uint32 cacheEntries_;
+    uint32_t icEntriesOffset_;
+    uint32_t icEntries_;
 
   public:
     // Do not call directly, use BaselineScript::New. This is public for cx->new_.
     BaselineScript();
 
-    static BaselineScript *New(JSContext *cx, size_t cacheEntries);
+    static BaselineScript *New(JSContext *cx, size_t icEntries);
     static void Trace(JSTracer *trc, BaselineScript *script);
     static void Destroy(FreeOp *fop, BaselineScript *script);
 
@@ -42,8 +42,8 @@ struct BaselineScript
         return offsetof(BaselineScript, method_);
     }
 
-    CacheData *cacheList() {
-        return (CacheData *)(reinterpret_cast<uint8 *>(this) + cacheList_);
+    ICEntry *icEntryList() {
+        return (ICEntry *)(reinterpret_cast<uint8_t *>(this) + icEntriesOffset_);
     }
 
     IonCode *method() const {
@@ -54,14 +54,14 @@ struct BaselineScript
         method_ = code;
     }
 
-    CacheData &getCache(size_t index);
-    CacheData &cacheDataFromReturnAddr(uint8_t *addr);
+    ICEntry &icEntry(size_t index);
+    ICEntry &icEntryFromReturnOffset(CodeOffsetLabel returnOffset);
 
-    size_t numCaches() const {
-        return cacheEntries_;
+    size_t numICEntries() const {
+        return icEntries_;
     }
 
-    void copyCacheEntries(const CacheData *caches, MacroAssembler &masm);
+    void copyICEntries(const ICEntry *entries, MacroAssembler &masm);
 };
 
 MethodStatus
