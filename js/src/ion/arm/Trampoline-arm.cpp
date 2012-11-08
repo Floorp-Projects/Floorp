@@ -72,7 +72,6 @@ struct EnterJITStack
 IonCode *
 IonCompartment::generateEnterJIT(JSContext *cx)
 {
-    AutoFlushCache afc("GenerateEnterJIT", cx->compartment->ionCompartment());
 
     const Register reg_code  = r0;
     const Register reg_argc  = r1;
@@ -85,6 +84,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     JS_ASSERT(OsrFrameReg == reg_frame);
 
     MacroAssembler masm(cx);
+    AutoFlushCache afc("GenerateEnterJIT", cx->compartment->ionCompartment());
     Assembler *aasm = &masm;
 
     // Save non-volatile registers. These must be saved by the trampoline,
