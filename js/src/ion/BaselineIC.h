@@ -15,6 +15,68 @@
 namespace js {
 namespace ion {
 
+//
+// Baseline Inline Caches are polymorphic caches that aggressively
+// share their stub code.
+//
+// Every polymorphic site contains a linked list of stubs which are
+// specific to that site.  These stubs are composed of a |StubData|
+// structure that stores parametrization information (e.g.
+// the shape pointer for a shape-check-and-property-get stub), any
+// dynamic information (e.g. use counts), a pointer to the stub code,
+// and a pointer to the next stub state in the linked list.
+//
+// Every BaselineScript keeps an table of |CacheDescriptor| data
+// structures, which store the following:
+//      A pointer to the first StubData in the cache.
+//      The bytecode PC of the relevant IC.
+//      The machine-code PC where the call to the stubcode returns.
+//
+// A diagram:
+//
+//        Control flow                  Pointers
+//      =======#                     ----.     .---->
+//             #                         |     |
+//             #======>                  \-----/
+//
+//
+//                                   .---------------------------------------.
+//                                   |         .-------------------------.   |
+//                                   |         |         .----.          |   |
+//         Baseline                  |         |         |    |          |   |
+//         JIT Code              0   ^     1   ^     2   ^    |          |   |
+//     +--------------+    .-->+-----+   +-----+   +-----+    |          |   |
+//     |              |  #=|==>|     |==>|     |==>| FB  |    |          |   |
+//     |              |  # |   +-----+   +-----+   +-----+    |          |   |
+//     |              |  # |      #         #         #       |          |   |
+//     |==============|==# |      #         #         #       |          |   |
+//     |=== IC =======|    |      #         #         #       |          |   |
+//  .->|==============|<===|======#=========#=========#       |          |   |
+//  |  |              |    |                                  |          |   |
+//  |  |              |    |                                  |          |   |
+//  |  |              |    |                                  |          |   |
+//  |  |              |    |                                  v          |   |
+//  |  |              |    |                              +---------+    |   |
+//  |  |              |    |                              | Fallback|    |   |
+//  |  |              |    |                              | Stub    |    |   |
+//  |  |              |    |                              | Code    |    |   |
+//  |  |              |    |                              +---------+    |   |
+//  |  +--------------+    |                                             |   |
+//  |         |_______     |                              +---------+    |   |
+//  |                |     |                              | Stub    |<---/   |
+//  |        IC      |     \--.                           | Code    |        |
+//  |    Descriptor  |        |                           +---------+        |
+//  |      Table     v        |                                              |
+//  |  +-----------------+    |                           +---------+        |
+//  \--| Ins | PC | Stub |----/                           | Stub    |<-------/
+//     +-----------------+                                | Code    |
+//     |       ...       |                                +---------+
+//     +-----------------+
+//                                                          Shared
+//                                                          Stub Code
+//
+//
+
 // Since BaseCache has virtual methods, it can't be stored in a Vector.
 // As a workaround, use a POD base class to hold all the data.
 struct CacheData
