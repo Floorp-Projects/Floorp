@@ -8,9 +8,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Date;
@@ -47,6 +49,8 @@ import android.os.Environment;
 
 public class WatcherService extends Service
 {
+    private final String prgVersion = "Watcher Version 1.15";
+
     String sErrorPrefix = "##Installer Error## ";
     String currentDir = "/";
     String sPingTarget = "";
@@ -236,15 +240,33 @@ public class WatcherService extends Service
             doToast("WatcherService created");
         }
 
+    public void writeVersion() {
+        PrintWriter pw = null;
+        String appPath = getApplicationContext().getFilesDir().getAbsolutePath();
+        String versionPath = appPath + "/version.txt";
+        Log.i("Watcher", "writing version string to: " + versionPath);
+        try {
+            pw = new PrintWriter(new FileWriter(versionPath, true));
+            pw.println(this.prgVersion);
+        } catch (IOException ioe) {
+            Log.e("Watcher", "Exception writing version: " + this.prgVersion + " to file: " + versionPath);
+        } finally {
+            if (pw != null) {
+                pw.close();
+            }
+        }
+    }
 
     @Override
     public void onStart(Intent intent, int startId) {
+        writeVersion();
         handleCommand(intent);
         return;
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        writeVersion();
         handleCommand(intent);
         return START_STICKY;
         }
