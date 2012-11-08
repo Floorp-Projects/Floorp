@@ -32,9 +32,9 @@ VolumeManager::StateObserverList VolumeManager::mStateObserverList;
 /***************************************************************************/
 
 VolumeManager::VolumeManager()
-  : mSocket(-1),
-    mCommandPending(false),
-    mRcvIdx(0)
+  : LineWatcher('\0', kRcvBufSize),
+    mSocket(-1),
+    mCommandPending(false)
 {
   DBG("VolumeManager constructor called");
 }
@@ -272,75 +272,37 @@ VolumeManager::WriteCommandData()
 }
 
 void
-VolumeManager::OnFileCanReadWithoutBlocking(int aFd)
+VolumeManager::OnLineRead(int aFd, nsDependentCSubstring& aMessage)
 {
   MOZ_ASSERT(aFd == mSocket.get());
-  while (true) {
-    ssize_t bytesRemaining = read(aFd, &mRcvBuf[mRcvIdx], sizeof(mRcvBuf) - mRcvIdx);
-    if (bytesRemaining < 0) {
-      if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-        return;
-      }
-      if (errno == EINTR) {
-        continue;
-      }
-      ERR("Unknown read error: %d (%s) - restarting", errno, strerror(errno));
-      Restart();
-      return;
-    }
-    if (bytesRemaining == 0) {
-      // This means that vold probably crashed
-      ERR("Vold appears to have crashed - restarting");
-      Restart();
-      return;
-    }
-    // We got some data. Each line is terminated by a null character
-    DBG("Read %ld bytes", bytesRemaining);
-    while (bytesRemaining > 0) {
-      bytesRemaining--;
-      if (mRcvBuf[mRcvIdx] == '\0') {
-        // We found a line terminator. Each line is formatted as an
-        // integer response code followed by the rest of the line.
-        // Fish out the response code.
-        char *endPtr;
-        int responseCode = strtol(mRcvBuf, &endPtr, 10);
-        if (*endPtr == ' ') {
-          endPtr++;
-        }
+  char *endPtr;
+  int responseCode = strtol(aMessage.Data(), &endPtr, 10);
+  if (*endPtr == ' ') {
+    endPtr++;
+  }
 
-        // Now fish out the rest of the line after the response code
-        nsDependentCString  responseLine(endPtr, &mRcvBuf[mRcvIdx] - endPtr);
-        DBG("Rcvd: %d '%s'", responseCode, responseLine.Data());
+  // Now fish out the rest of the line after the response code
+  nsDependentCString  responseLine(endPtr, aMessage.Length() - (endPtr - aMessage.Data()));
+  DBG("Rcvd: %d '%s'", responseCode, responseLine.Data());
 
-        if (responseCode >= ResponseCode::UnsolicitedInformational) {
-          // These are unsolicited broadcasts. We intercept these and process
-          // them ourselves
-          HandleBroadcast(responseCode, responseLine);
-        } else {
-          // Everything else is considered to be part of the command response.
-          if (mCommands.size() > 0) {
-            VolumeCommand *cmd = mCommands.front();
-            cmd->HandleResponse(responseCode, responseLine);
-            if (responseCode >= ResponseCode::CommandOkay) {
-              // That's a terminating response. We can remove the command.
-              mCommands.pop();
-              mCommandPending = false;
-              // Start the next command, if there is one.
-              WriteCommandData();
-            }
-          } else {
-            ERR("Response with no command");
-          }
-        }
-        if (bytesRemaining > 0) {
-          // There is data in the receive buffer beyond the current line.
-          // Shift it down to the beginning.
-          memmove(&mRcvBuf[0], &mRcvBuf[mRcvIdx + 1], bytesRemaining);
-        }
-        mRcvIdx = 0;
-      } else {
-        mRcvIdx++;
+  if (responseCode >= ResponseCode::UnsolicitedInformational) {
+    // These are unsolicited broadcasts. We intercept these and process
+    // them ourselves
+    HandleBroadcast(responseCode, responseLine);
+  } else {
+    // Everything else is considered to be part of the command response.
+    if (mCommands.size() > 0) {
+      VolumeCommand *cmd = mCommands.front();
+      cmd->HandleResponse(responseCode, responseLine);
+      if (responseCode >= ResponseCode::CommandOkay) {
+        // That's a terminating response. We can remove the command.
+        mCommands.pop();
+        mCommandPending = false;
+        // Start the next command, if there is one.
+        WriteCommandData();
       }
+    } else {
+      ERR("Response with no command");
     }
   }
 }
@@ -382,7 +344,6 @@ VolumeManager::Restart()
   }
   mCommandPending = false;
   mSocket.dispose();
-  mRcvIdx = 0;
   Start();
 }
 
@@ -403,6 +364,12 @@ VolumeManager::Start()
                       NewRunnableFunction(VolumeManager::Start),
                       1000);
   }
+}
+
+void
+VolumeManager::OnError()
+{
+  Restart();
 }
 
 /***************************************************************************/
