@@ -1,0 +1,53 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    const name = window.location.pathname;
+
+    let request = indexedDB.open(name, 1);
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    let event = yield;
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    if (SpecialPowers.isMainProcess()) {
+      request = db.mozCreateFileHandle("random.bin", "binary/random");
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let fileHandle = event.target.result;
+      ok(fileHandle, "Got filehandle");
+    }
+    else {
+      try {
+        db.mozCreateFileHandle("random.bin", "binary/random");
+        ok(false, "Should have thrown!");
+      }
+      catch (ex) {
+        ok(true, "MozCreateFileHandle threw");
+      }
+    }
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>
