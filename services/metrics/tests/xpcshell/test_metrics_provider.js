@@ -45,11 +45,12 @@ add_test(function test_default_collectors() {
   run_next_test();
 });
 
-add_test(function test_collect_synchronous() {
+add_test(function test_collect_constant_synchronous() {
   let provider = new DummyProvider();
 
   let result = provider.collectConstantMeasurements();
   do_check_true(result instanceof MetricsCollectionResult);
+  result.populate(result);
 
   result.onFinished(function onResult(res2) {
     do_check_eq(result, res2);

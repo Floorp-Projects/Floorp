@@ -28,6 +28,7 @@ add_test(function test_register_provider() {
   do_check_eq(collector._providers.length, 1);
   collector.registerProvider(dummy);
   do_check_eq(collector._providers.length, 1);
+  do_check_eq(collector.providerErrors.size, 1);
 
   let failed = false;
   try {
@@ -59,6 +60,43 @@ add_test(function test_collect_constant_measurements() {
     do_check_true(result instanceof MetricsCollectionResult);
 
     do_check_true(collector._providers[0].constantsCollected);
+    do_check_eq(collector.providerErrors.get("DummyProvider").length, 0);
+
+    run_next_test();
+  });
+});
+
+add_test(function test_collect_constant_throws() {
+  let collector = new MetricsCollector();
+  let provider = new DummyProvider();
+  provider.throwDuringCollectConstantMeasurements = "Fake error during collect";
+  collector.registerProvider(provider);
+
+  collector.collectConstantMeasurements().then(function onResult() {
+    do_check_eq(collector.providerErrors.get("DummyProvider").length, 1);
+    do_check_eq(collector.providerErrors.get("DummyProvider")[0].message,
+                provider.throwDuringCollectConstantMeasurements);
+
+    run_next_test();
+  });
+});
+
+add_test(function test_collect_constant_populate_throws() {
+  let collector = new MetricsCollector();
+  let provider = new DummyProvider();
+  provider.throwDuringConstantPopulate = "Fake error during constant populate";
+  collector.registerProvider(provider);
+
+  collector.collectConstantMeasurements().then(function onResult() {
+    do_check_eq(collector.collectionResults.size, 1);
+    do_check_true(collector.collectionResults.has("DummyProvider"));
+
+    let result = collector.collectionResults.get("DummyProvider");
+    do_check_eq(result.errors.length, 1);
+    do_check_eq(result.errors[0].message, provider.throwDuringConstantPopulate);
+
+    do_check_false(collector._providers[0].constantsCollected);
+    do_check_eq(collector.providerErrors.get("DummyProvider").length, 0);
 
     run_next_test();
   });

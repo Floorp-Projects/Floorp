@@ -10,6 +10,7 @@ const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/commonjs/promise/core.js");
 Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/services/metrics/dataprovider.jsm");
 
 
@@ -24,6 +25,7 @@ this.MetricsCollector = function MetricsCollector() {
 
   this._providers = [];
   this.collectionResults = new Map();
+  this.providerErrors = new Map();
 }
 
 MetricsCollector.prototype = {
@@ -51,6 +53,8 @@ MetricsCollector.prototype = {
       provider: provider,
       constantsCollected: false,
     });
+
+    this.providerErrors.set(provider.name, []);
   },
 
   /**
@@ -65,16 +69,38 @@ MetricsCollector.prototype = {
     let promises = [];
 
     for (let provider of this._providers) {
+      let name = provider.provider.name;
+
       if (provider.constantsCollected) {
         this._log.trace("Provider has already provided constant data: " +
-                        provider.name);
+                        name);
         continue;
       }
 
-      let result = provider.provider.collectConstantMeasurements();
+      let result;
+      try {
+        result = provider.provider.collectConstantMeasurements();
+      } catch (ex) {
+        this._log.warn("Exception when calling " + name +
+                       ".collectConstantMeasurements: " +
+                       CommonUtils.exceptionStr(ex));
+        this.providerErrors.get(name).push(ex);
+        continue;
+      }
+
       if (!result) {
-        this._log.trace("Provider does not provide constant data: " +
-                        provider.name);
+        this._log.trace("Provider does not provide constant data: " + name);
+        continue;
+      }
+
+      try {
+        this._log.debug("Populating constant measurements: " + name);
+        result.populate(result);
+      } catch (ex) {
+        this._log.warn("Exception when calling " + name + ".populate(): " +
+                       CommonUtils.exceptionStr(ex));
+        result.addError(ex);
+        promises.push(Promise.resolve(result));
         continue;
       }
 
