@@ -28,8 +28,6 @@
 
     throw new Error("osfile_win.jsm cannot be used from the main thread yet");
   }
-  importScripts("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
-  importScripts("resource://gre/modules/osfile/osfile_win_allthreads.jsm");
 
   (function(exports) {
      "use strict";
