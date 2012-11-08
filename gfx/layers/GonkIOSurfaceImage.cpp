@@ -69,11 +69,10 @@ GonkIOSurfaceImage::GetAsSurface()
   nsRefPtr<gfxImageSurface> imageSurface =
     new gfxImageSurface(GetSize(), gfxASurface::ImageFormatRGB16_565);
 
-  android::ColorConverter *colorConverter =
-    new android::ColorConverter((OMX_COLOR_FORMATTYPE)omxFormat,
-                                OMX_COLOR_Format16bitRGB565);
+  android::ColorConverter colorConverter((OMX_COLOR_FORMATTYPE)omxFormat,
+                                         OMX_COLOR_Format16bitRGB565);
 
-  if (!colorConverter->isValid()) {
+  if (!colorConverter.isValid()) {
     NS_WARNING("Invalid color conversion");
     return nullptr;
   }
@@ -88,10 +87,10 @@ GonkIOSurfaceImage::GetAsSurface()
     height = ALIGN(height, 32);
   }
 
-  rv = colorConverter->convert(buffer, width, height,
-                               0, 0, width - 1, height - 1 /* source crop */,
-                               imageSurface->Data(), width, height,
-                               0, 0, width - 1, height - 1 /* dest crop */);
+  rv = colorConverter.convert(buffer, width, height,
+                              0, 0, width - 1, height - 1 /* source crop */,
+                              imageSurface->Data(), width, height,
+                              0, 0, width - 1, height - 1 /* dest crop */);
 
   if (rv) {
     NS_WARNING("OMX color conversion failed");
