@@ -992,6 +992,10 @@ LayerManagerOGL::Render()
   // Allow widget to render a custom background.
   mWidget->DrawWindowUnderlay(this, rect);
 
+  // Reset some state that might of been clobbered by the underlay.
+  mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
+                                 LOCAL_GL_ONE, LOCAL_GL_ONE);
+
   // Render our layers.
   RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
                            nsIntPoint(0, 0));
