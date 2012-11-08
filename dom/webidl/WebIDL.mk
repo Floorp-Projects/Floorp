@@ -17,6 +17,7 @@ webidl_files = \
   AudioNode.webidl \
   AudioParam.webidl \
   AudioSourceNode.webidl \
+  BiquadFilterNode.webidl \
   Blob.webidl \
   CanvasRenderingContext2D.webidl \
   ClientRectList.webidl \

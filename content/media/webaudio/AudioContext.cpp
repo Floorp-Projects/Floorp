@@ -17,6 +17,7 @@
 #include "PannerNode.h"
 #include "AudioListener.h"
 #include "DynamicsCompressorNode.h"
+#include "BiquadFilterNode.h"
 
 namespace mozilla {
 namespace dom {
@@ -122,6 +123,14 @@ AudioContext::CreateDynamicsCompressor()
   nsRefPtr<DynamicsCompressorNode> compressorNode =
     new DynamicsCompressorNode(this);
   return compressorNode.forget();
+}
+
+already_AddRefed<BiquadFilterNode>
+AudioContext::CreateBiquadFilter()
+{
+  nsRefPtr<BiquadFilterNode> filterNode =
+    new BiquadFilterNode(this);
+  return filterNode.forget();
 }
 
 AudioListener*
