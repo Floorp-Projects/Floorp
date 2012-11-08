@@ -72,6 +72,22 @@ add_test(function test_post_json_bad_data() {
   });
 });
 
+add_test(function test_post_json_delete_obsolete() {
+  let [client, server] = getClientAndServer();
+  server.createNamespace("foo");
+  server.setDocument("foo", "obsolete", "Old payload");
+
+  let promise = client.uploadJSON("foo", "new", {foo: "bar"}, "obsolete");
+  promise.then(function onSuccess(result) {
+    do_check_true(result.transportSuccess);
+    do_check_true(result.serverSuccess);
+    do_check_true(server.hasDocument("foo", "new"));
+    do_check_false(server.hasDocument("foo", "obsolete"));
+
+    server.stop(run_next_test);
+  });
+});
+
 add_test(function test_delete_document() {
   let [client, server] = getClientAndServer();
 
