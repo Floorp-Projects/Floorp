@@ -2989,12 +2989,11 @@ var gCSSProperties = {
 	},
 	"page-break-inside": {
 		domProp: "pageBreakInside",
-		inherited: true,
-		backend_only: true,
+		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "avoid" ],
-		invalid_values: []
+		invalid_values: [ "left", "right" ]
 	},
 	"pointer-events": {
 		domProp: "pointerEvents",
