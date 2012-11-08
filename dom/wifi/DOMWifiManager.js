@@ -26,6 +26,7 @@ function exposeCurrentNetwork(currentNetwork) {
 
 exposeCurrentNetwork.currentNetworkApi = {
   ssid: "r",
+  capabilities: "r",
   known: "r"
 };
 
