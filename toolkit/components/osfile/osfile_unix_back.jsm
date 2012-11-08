@@ -11,8 +11,6 @@
 
     throw new Error("osfile_unix_back.jsm cannot be used from the main thread yet");
   }
-  importScripts("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
-  importScripts("resource://gre/modules/osfile/osfile_unix_allthreads.jsm");
   (function(exports) {
      "use strict";
      if (!exports.OS) {
