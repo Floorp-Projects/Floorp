@@ -123,7 +123,6 @@ MOCHITEST_BROWSER_FILES = \
   browser_permissionsPrompt.html \
   browser_permissionsPromptAllow.js \
   browser_permissionsPromptDeny.js \
-  browser_privateBrowsing.js \
   browser_quotaPrompt.html \
   browser_quotaPromptAllow.js \
   browser_quotaPromptDeny.js \
@@ -133,6 +132,17 @@ MOCHITEST_BROWSER_FILES = \
   browser_quotaPromptDelete.js \
   head.js \
   $(NULL)
+
+ifdef MOZ_PER_WINDOW_PRIVATE_BROWSING
+MOCHITEST_BROWSER_FILES += \
+  browser_perwindow_privateBrowsing.js \
+  $(NULL)
+else
+MOCHITEST_BROWSER_FILES += \
+  browser_privateBrowsing.js \
+  $(NULL)
+endif
+
 endif
 
 include $(topsrcdir)/config/rules.mk
