@@ -1810,26 +1810,26 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
     aDrawBackgroundColor = aPresContext->GetBackgroundColorDraw();
   }
 
+  const nsStyleBackground *bg = aStyleContext->GetStyleBackground();
   nscolor bgColor;
   if (aDrawBackgroundColor) {
     bgColor =
       aStyleContext->GetVisitedDependentColor(eCSSProperty_background_color);
-    if (NS_GET_A(bgColor) == 0)
+    if (NS_GET_A(bgColor) == 0) {
       aDrawBackgroundColor = false;
+    }
   } else {
     // If GetBackgroundColorDraw() is false, we are still expected to
     // draw color in the background of any frame that's not completely
     // transparent, but we are expected to use white instead of whatever
     // color was specified.
     bgColor = NS_RGB(255, 255, 255);
-    if (aDrawBackgroundImage ||
-        !aStyleContext->GetStyleBackground()->IsTransparent())
+    if (aDrawBackgroundImage || !bg->IsTransparent()) {
       aDrawBackgroundColor = true;
-    else
+    } else {
       bgColor = NS_RGBA(0,0,0,0);
+    }
   }
-
-  const nsStyleBackground *bg = aStyleContext->GetStyleBackground();
 
   // We can skip painting the background color if a background image is opaque.
   if (aDrawBackgroundColor &&

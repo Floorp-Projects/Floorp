@@ -291,14 +291,16 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (IsVisibleForPainting(aBuilder)) {
     nsStyleContext* bgSC;
     const nsStyleBackground* bg = nullptr;
-    if (!IsThemed() &&
+    bool isThemed = IsThemed();
+    if (!isThemed &&
         nsCSSRendering::FindBackground(PresContext(), this, &bgSC)) {
       bg = bgSC->GetStyleBackground();
     }
     // Create separate items for each background layer.
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
       rv = aLists.BorderBackground()->AppendNewToTop(
-          new (aBuilder) nsDisplayCanvasBackground(aBuilder, this, i));
+          new (aBuilder) nsDisplayCanvasBackground(aBuilder, this, i,
+                                                   isThemed, bg));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
