@@ -1146,6 +1146,18 @@ ContentParent::RecvGetProcessAttributes(uint64_t* aId, bool* aStartBackground,
         (mAppManifestURL == MAGIC_PREALLOCATED_APP_MANIFEST_URL);
     *aIsForApp = IsForApp();
     *aIsForBrowser = mIsForBrowser;
+
+    return true;
+}
+
+bool
+ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline)
+{
+    nsCOMPtr<nsIIOService> io(do_GetIOService());
+    NS_ASSERTION(io, "No IO service?");
+    DebugOnly<nsresult> rv = io->GetOffline(aIsOffline);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed getting offline?");
+
     return true;
 }
 

@@ -186,6 +186,7 @@ private:
                                           bool* aStartBackground,
                                           bool* aIsForApp,
                                           bool* aIsForBrowser) MOZ_OVERRIDE;
+    virtual bool RecvGetXPCOMProcessAttributes(bool* aIsOffline) MOZ_OVERRIDE;
 
     virtual PBrowserParent* AllocPBrowser(const uint32_t& aChromeFlags,
                                           const bool& aIsBrowserElement,
