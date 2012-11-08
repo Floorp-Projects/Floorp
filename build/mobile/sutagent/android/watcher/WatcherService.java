@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -53,6 +54,7 @@ public class WatcherService extends Service
     long lPeriod = 300000;
     int nMaxStrikes = 0; // maximum number of tries before we consider network unreachable (0 means don't check)
     boolean bStartSUTAgent = true;
+    boolean bStartedTimer = false;
 
     Process    pProc;
     Context myContext = null;
@@ -217,9 +219,13 @@ public class WatcherService extends Service
                 }
             else if (sCmd.equalsIgnoreCase("start"))
                 {
-                doToast("WatcherService started");
-                myTimer = new Timer();
-                myTimer.scheduleAtFixedRate(new MyTime(), lDelay, lPeriod);
+                if (!this.bStartedTimer) {
+                    doToast("WatcherService started");
+                    myTimer = new Timer();
+                    Date startSchedule = new Date(System.currentTimeMillis() + lDelay);
+                    myTimer.schedule(new MyTime(), startSchedule, lPeriod);
+                    this.bStartedTimer = true;
+                }
                 }
             else
                 {
