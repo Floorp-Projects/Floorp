@@ -28,7 +28,9 @@ import shutil
 import textwrap
 import fnmatch
 import subprocess
+import urlparse
 from optparse import OptionParser
+from xml.dom.minidom import parse
 
 # Utility classes
 
@@ -102,65 +104,6 @@ class VCSFileInfo:
             file or 'None' on failure. """
         raise NotImplementedError
 
-class CVSFileInfo(VCSFileInfo):
-    """ A class to maintiain version information for files in a CVS repository.
-        Derived from VCSFileInfo. """
-
-    def __init__(self, file, srcdir):
-        VCSFileInfo.__init__(self, file)
-        self.srcdir = srcdir
-
-    def GetRoot(self):
-        (path, filename) = os.path.split(self.file)
-        root = os.path.join(path, "CVS", "Root")
-        if not os.path.isfile(root):
-            return None
-        f = open(root, "r")
-        root_name = f.readline().strip()
-        f.close()
-        if root_name:
-            return root_name
-        print >> sys.stderr, "Failed to get CVS Root for %s" % filename
-        return None
-
-    def GetCleanRoot(self):
-        parts = self.root.split('@')
-        if len(parts) > 1:
-            # we don't want the extra colon
-            return parts[1].replace(":","")
-        return self.root.replace(":","")
-
-    def GetRevision(self):
-        (path, filename) = os.path.split(self.file)
-        entries = os.path.join(path, "CVS", "Entries")
-        if not os.path.isfile(entries):
-            return None
-        f = open(entries, "r")
-        for line in f:
-            parts = line.split("/")
-            if len(parts) > 1 and parts[1] == filename:
-                return parts[2]
-        print >> sys.stderr, "Failed to get CVS Revision for %s" % filename
-        return None
-
-    def GetFilename(self):
-        file = self.file
-        if self.revision and self.clean_root:
-            if self.srcdir:
-                # strip the base path off
-                # but we actually want the last dir in srcdir
-                file = os.path.normpath(file)
-                # the lower() is to handle win32+vc8, where
-                # the source filenames come out all lowercase,
-                # but the srcdir can be mixed case
-                if file.lower().startswith(self.srcdir.lower()):
-                    file = file[len(self.srcdir):]
-                (head, tail) = os.path.split(self.srcdir)
-                if tail == "":
-                    tail = os.path.basename(head)
-                file = tail + file
-            return "cvs:%s:%s:%s" % (self.clean_root, file, self.revision)
-        return file
 
 # This regex separates protocol and optional username/password from a url.
 # For instance, all the following urls will be transformed into
@@ -170,110 +113,50 @@ class CVSFileInfo(VCSFileInfo):
 #   svn+ssh://user@foo.com/bar
 #   svn+ssh://user:pass@foo.com/bar
 #
-# This is used by both SVN and HG
 rootRegex = re.compile(r'^\S+?:/+(?:[^\s/]*@)?(\S+)$')
-
-class SVNFileInfo(VCSFileInfo):
-    url = None
-    repo = None
-    svndata = {}
-
-    def __init__(self, file):
-        """ We only want to run subversion's info tool once so pull all the data
-            here. """
-
-        VCSFileInfo.__init__(self, file)
-
-        if os.path.isfile(file):
-            command = os.popen("svn info %s" % file, "r")
-            for line in command:
-                # The last line of the output is usually '\n'
-                if line.strip() == '':
-                    continue
-                # Split into a key/value pair on the first colon
-                key, value = line.split(':', 1)
-                if key in ["Repository Root", "Revision", "URL"]:
-                    self.svndata[key] = value.strip()
-
-            exitStatus = command.close()
-            if exitStatus:
-              print >> sys.stderr, "Failed to get SVN info for %s" % file
-
-    def GetRoot(self):
-        key = "Repository Root"
-        if key in self.svndata:
-            match = rootRegex.match(self.svndata[key])
-            if match:
-                return match.group(1)
-        print >> sys.stderr, "Failed to get SVN Root for %s" % self.file
-        return None
-
-    # File bug to get this teased out from the current GetRoot, this is temporary
-    def GetCleanRoot(self):
-        return self.root
-
-    def GetRevision(self):
-        key = "Revision"
-        if key in self.svndata:
-            return self.svndata[key]
-        print >> sys.stderr, "Failed to get SVN Revision for %s" % self.file
-        return None
-
-    def GetFilename(self):
-        if self.root and self.revision:
-            if "URL" in self.svndata and "Repository Root" in self.svndata:
-                url, repo = self.svndata["URL"], self.svndata["Repository Root"]
-                file = url[len(repo) + 1:]
-            return "svn:%s:%s:%s" % (self.root, file, self.revision)
-        print >> sys.stderr, "Failed to get SVN Filename for %s" % self.file
-        return self.file
 
 def read_output(*args):
     (stdout, _) = subprocess.Popen(args=args, stdout=subprocess.PIPE).communicate()
     return stdout.rstrip()
 
 class HGRepoInfo:
-    # HG info is per-repo, so cache it in a static
-    # member var
-    repos = {}
-    def __init__(self, path, rev, cleanroot):
+    def __init__(self, path):
         self.path = path
+        rev = read_output('hg', '-R', path,
+                          'parent', '--template={node|short}')
+        # Look for the default hg path.  If SRVSRV_ROOT is set, we
+        # don't bother asking hg.
+        hg_root = os.environ.get("SRCSRV_ROOT")
+        if hg_root:
+            root = hg_root
+        else:
+            root = read_output('hg', '-R', path,
+                               'showconfig', 'paths.default')
+            if not root:
+                print >> sys.stderr, "Failed to get HG Repo for %s" % path
+        cleanroot = None
+        if root:
+            match = rootRegex.match(root)
+            if match:
+                cleanroot = match.group(1)
+                if cleanroot.endswith('/'):
+                    cleanroot = cleanroot[:-1]
+        if cleanroot is None:
+            print >> sys.stderr, textwrap.dedent("""\
+                Could not determine repo info for %s.  This is either not a clone of the web-based
+                repository, or you have not specified SRCSRV_ROOT, or the clone is corrupt.""") % path
+            sys.exit(1)
         self.rev = rev
         self.cleanroot = cleanroot
 
+    def GetFileInfo(self, file):
+        return HGFileInfo(file, self)
+
 class HGFileInfo(VCSFileInfo):
-    def __init__(self, file, srcdir):
+    def __init__(self, file, repo):
         VCSFileInfo.__init__(self, file)
-        # we should only have to collect this info once per-repo
-        if not srcdir in HGRepoInfo.repos:
-            rev = read_output('hg', '-R', srcdir,
-                              'parent', '--template={node|short}')
-            # Look for the default hg path.  If SRVSRV_ROOT is set, we
-            # don't bother asking hg.
-            hg_root = os.environ.get("SRCSRV_ROOT")
-            if hg_root:
-                path = hg_root
-            else:
-                path = read_output('hg', '-R', srcdir,
-                                   'showconfig', 'paths.default')
-                if not path:
-                    print >> sys.stderr, "Failed to get HG Repo for %s" % srcdir
-            cleanroot = None
-            if path != '': # not there?
-                match = rootRegex.match(path)
-                if match:
-                    cleanroot = match.group(1)
-                    if cleanroot.endswith('/'):
-                        cleanroot = cleanroot[:-1]
-            if cleanroot is None:
-                print >> sys.stderr, textwrap.dedent("""\
-                    Could not determine repo info for %s.  This is either not a clone of the web-based
-                    repository, or you have not specified SRCSRV_ROOT, or the clone is corrupt.""") % srcdir
-                sys.exit(1)
-            HGRepoInfo.repos[srcdir] = HGRepoInfo(path, rev, cleanroot)
-        self.repo = HGRepoInfo.repos[srcdir]
-        self.file = file
-        self.srcdir = srcdir
+        self.repo = repo
+        self.file = os.path.relpath(file, repo.path)
 
     def GetRoot(self):
         return self.repo.path
@@ -285,19 +168,60 @@ class HGFileInfo(VCSFileInfo):
         return self.repo.rev
 
     def GetFilename(self):
-        file = self.file
         if self.revision and self.clean_root:
-            if self.srcdir:
-                # strip the base path off
-                file = os.path.normpath(file)
-                if IsInDir(file, self.srcdir):
-                    file = file[len(self.srcdir):]
-                if file.startswith('/') or file.startswith('\\'):
-                    file = file[1:]
-            return "hg:%s:%s:%s" % (self.clean_root, file, self.revision)
-        return file
+            return "hg:%s:%s:%s" % (self.clean_root, self.file, self.revision)
+        return self.file
+
+class GitRepoInfo:
+    """
+    Info about a local git repository. Does not currently
+    support discovering info about a git clone, the info must be
+    provided out-of-band.
+    """
+    def __init__(self, path, rev, root):
+        self.path = path
+        cleanroot = None
+        if root:
+            match = rootRegex.match(root)
+            if match:
+                cleanroot = match.group(1)
+                if cleanroot.endswith('/'):
+                    cleanroot = cleanroot[:-1]
+        if cleanroot is None:
+            print >> sys.stderr, textwrap.dedent("""\
+                Could not determine repo info for %s (%s).  This is either not a clone of a web-based
+                repository, or you have not specified SRCSRV_ROOT, or the clone is corrupt.""") % (path, root)
+            sys.exit(1)
+        self.rev = rev
+        self.cleanroot = cleanroot
+
+    def GetFileInfo(self, file):
+        return GitFileInfo(file, self)
+
+class GitFileInfo(VCSFileInfo):
+    def __init__(self, file, repo):
+        VCSFileInfo.__init__(self, file)
+        self.repo = repo
+        self.file = os.path.relpath(file, repo.path)
+
+    def GetRoot(self):
+        return self.repo.path
+
+    def GetCleanRoot(self):
+        return self.repo.cleanroot
+
+    def GetRevision(self):
+        return self.repo.rev
+
+    def GetFilename(self):
+        if self.revision and self.clean_root:
+            return "git:%s:%s:%s" % (self.clean_root, self.file, self.revision)
+        return self.file
 
 # Utility functions
+
+# A cache of repo info for each srcdir.
+srcdirRepoInfo = {}
 
 # A cache of files for which VCS info has already been determined. Used to
 # prevent extra filesystem activity or process launching.
@@ -308,6 +232,16 @@ def IsInDir(file, dir):
     # the source filenames come out all lowercase,
     # but the srcdir can be mixed case
     return os.path.abspath(file).lower().startswith(os.path.abspath(dir).lower())
+
+def GetVCSFilenameFromSrcdir(file, srcdir):
+    if srcdir not in srcdirRepoInfo:
+        # Not in cache, so find it adnd cache it
+        if os.path.isdir(os.path.join(srcdir, '.hg')):
+            srcdirRepoInfo[srcdir] = HGRepoInfo(srcdir)
+        else:
+            # Unknown VCS or file is not in a repo.
+            return None
+    return srcdirRepoInfo[srcdir].GetFileInfo(file)
 
 def GetVCSFilename(file, srcdirs):
     """Given a full path to a file, and the top source directory,
@@ -330,18 +264,10 @@ def GetVCSFilename(file, srcdirs):
         fileInfo = vcsFileInfoCache[file]
     else:
         for srcdir in srcdirs:
-            if os.path.isdir(os.path.join(path, "CVS")):
-                fileInfo = CVSFileInfo(file, srcdir)
-                if fileInfo:
-                    root = fileInfo.root
-            elif os.path.isdir(os.path.join(path, ".svn")) or \
-                 os.path.isdir(os.path.join(path, "_svn")):
-                 fileInfo = SVNFileInfo(file);
-            elif os.path.isdir(os.path.join(srcdir, '.hg')) and \
-                 IsInDir(file, srcdir):
-                 fileInfo = HGFileInfo(file, srcdir)
-
-            if fileInfo: 
+            if not IsInDir(file, srcdir):
+                continue
+            fileInfo = GetVCSFilenameFromSrcdir(file, srcdir)
+            if fileInfo:
                 vcsFileInfoCache[file] = fileInfo
                 break
 
@@ -394,11 +320,12 @@ class Dumper:
     get an instance of a subclass."""
     def __init__(self, dump_syms, symbol_path,
                  archs=None,
-                 srcdirs=None,
+                 srcdirs=[],
                  copy_debug=False,
                  vcsinfo=False,
                  srcsrv=False,
-                 exclude=[]):
+                 exclude=[],
+                 repo_manifest=None):
         # popen likes absolute paths, at least on windows
         self.dump_syms = os.path.abspath(dump_syms)
         self.symbol_path = symbol_path
@@ -407,14 +334,59 @@ class Dumper:
             self.archs = ['']
         else:
             self.archs = ['-a %s' % a for a in archs.split()]
-        if srcdirs is not None:
-            self.srcdirs = [os.path.normpath(a) for a in srcdirs]
-        else:
-            self.srcdirs = None
+        self.srcdirs = [os.path.normpath(a) for a in srcdirs]
         self.copy_debug = copy_debug
         self.vcsinfo = vcsinfo
         self.srcsrv = srcsrv
         self.exclude = exclude[:]
+        if repo_manifest:
+            self.parse_repo_manifest(repo_manifest)
+
+    def parse_repo_manifest(self, repo_manifest):
+        """
+        Parse an XML manifest of repository info as produced
+        by the `repo manifest -r` command.
+        """
+        doc = parse(repo_manifest)
+        if doc.firstChild.tagName != "manifest":
+            return
+        # First, get remotes.
+        remotes = dict([(r.getAttribute("name"), r.getAttribute("fetch")) for r in doc.getElementsByTagName("remote")])
+        # And default remote.
+        default_remote = None
+        if doc.getElementsByTagName("default"):
+            default_remote = doc.getElementsByTagName("default")[0].getAttribute("remote")
+        # Now get projects. Assume they're relative to repo_manifest.
+        base_dir = os.path.abspath(os.path.dirname(repo_manifest))
+        for proj in doc.getElementsByTagName("project"):
+            # name is the repository URL relative to the remote path.
+            name = proj.getAttribute("name")
+            # path is the path on-disk, relative to the manifest file.
+            path = proj.getAttribute("path")
+            # revision is the changeset ID.
+            rev = proj.getAttribute("revision")
+            # remote is the base URL to use.
+            remote = proj.getAttribute("remote")
+            # remote defaults to the <default remote>.
+            if not remote:
+                remote = default_remote
+            # path defaults to name.
+            if not path:
+                path = name
+            if not (name and path and rev and remote):
+                print "Skipping project %s" % proj.toxml()
+                continue
+            remote = remotes[remote]
+            # Turn git URLs into http URLs so that urljoin works.
+            if remote.startswith("git:"):
+                remote = "http" + remote[3:]
+            # Add this project to srcdirs.
+            srcdir = os.path.join(base_dir, path)
+            self.srcdirs.append(srcdir)
+            # And cache its VCS file info. Currently all repos mentioned
+            # in a repo manifest are assumed to be git.
+            root = urlparse.urljoin(remote, name)
+            srcdirRepoInfo[srcdir] = GitRepoInfo(srcdir, rev, root)
 
     # subclasses override this
     def ShouldProcess(self, file):
@@ -762,15 +734,20 @@ def main():
     parser.add_option("-x", "--exclude",
                       action="append", dest="exclude", default=[], metavar="PATTERN",
                       help="Skip processing files matching PATTERN.")
+    parser.add_option("--repo-manifest",
+                      action="store", dest="repo_manifest",
+                      help="""Get source information from this XML manifest
+produced by the `repo manifest -r` command.
+""")
     (options, args) = parser.parse_args()
-    
+
     #check to see if the pdbstr.exe exists
     if options.srcsrv:
         pdbstr = os.environ.get("PDBSTR_PATH")
         if not os.path.exists(pdbstr):
             print >> sys.stderr, "Invalid path to pdbstr.exe - please set/check PDBSTR_PATH.\n"
             sys.exit(1)
-            
+
     if len(args) < 3:
         parser.error("not enough arguments")
         exit(1)
@@ -782,7 +759,8 @@ def main():
                                        srcdirs=options.srcdir,
                                        vcsinfo=options.vcsinfo,
                                        srcsrv=options.srcsrv,
-                                       exclude=options.exclude)
+                                       exclude=options.exclude,
+                                       repo_manifest=options.repo_manifest)
     for arg in args[2:]:
         dumper.Process(arg)
 

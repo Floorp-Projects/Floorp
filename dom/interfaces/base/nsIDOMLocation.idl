@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(a6cf906d-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(9472bf0f-2d1c-415c-90fd-f4260678b73b)]
 interface nsIDOMLocation : nsISupports
 {
            /**
@@ -27,4 +27,5 @@ interface nsIDOMLocation : nsISupports
   void                      assign(in DOMString url);
 
   DOMString                 toString();
+  nsIDOMLocation            valueOf();
 };

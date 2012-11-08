@@ -1593,7 +1593,7 @@ public class testBrowserProvider extends ContentProviderTest {
     class TestExpireHistory extends Test {
         private void createFakeHistory(long timeShift, int count) {
             // Insert a bunch of very new entries
-            ContentValues allVals[] = new ContentValues[count];
+            ContentValues[] allVals = new ContentValues[count];
             long time = System.currentTimeMillis() - timeShift;
             for (int i = 0; i < count; i++) {
                 allVals[i] = new ContentValues();
@@ -1604,7 +1604,7 @@ public class testBrowserProvider extends ContentProviderTest {
             }
 
             int inserts = mProvider.bulkInsert(mHistoryUri, allVals);
-            mAsserter.is(inserts, count, "Excepted number of inserts matches");
+            mAsserter.is(inserts, count, "Expected number of inserts matches");
 
             // inserting a new entry sets the date created and modified automatically
             // reset all of them
@@ -1618,10 +1618,26 @@ public class testBrowserProvider extends ContentProviderTest {
 
             Cursor c = mProvider.query(mHistoryUri, null, "", null, null);
             mAsserter.is(c.getCount(), count, count + " history entries found");
+
+            // add thumbnails for each entry
+            allVals = new ContentValues[count];
+            for (int i = 0; i < count; i++) {
+                allVals[i] = new ContentValues();
+                allVals[i].put(mImagesThumbnailCol, i);
+                allVals[i].put(mImagesUrlCol, "http://www.test.org/" + i);
+                allVals[i].put(mImagesFaviconCol, i);
+            }
+
+            inserts = mProvider.bulkInsert(mImagesUri, allVals);
+            mAsserter.is(inserts, count, "Expected number of inserts matches");
+
+            c = mProvider.query(mImagesUri, null, mImagesThumbnailCol + " IS NOT NULL", null, null);
+            mAsserter.is(c.getCount(), count, count + " thumbnails entries found");
         }
 
         public void test() throws Exception {
             final int count = 3000;
+            final int thumbCount = 15;
 
             // insert a bunch of new entries
             createFakeHistory(0, count);
@@ -1632,14 +1648,25 @@ public class testBrowserProvider extends ContentProviderTest {
             Cursor c = mProvider.query(mHistoryUri, null, "", null, null);
             mAsserter.is(c.getCount(), count, count + " history entries found");
 
+            // expiring with a normal priority should delete all but 10 thumbnails
+            c = mProvider.query(mImagesUri, null, mImagesThumbnailCol + " IS NOT NULL", null, null);
+            mAsserter.is(c.getCount(), thumbCount, thumbCount + " thumbnails found");
+
+            ensureEmptyDatabase();
+            // insert a bunch of new entries
+            createFakeHistory(0, count);
+
             // expiring with a aggressive priority should leave 500 entries
             url = appendUriParam(mHistoryOldUri, "PARAM_EXPIRE_PRIORITY", "AGGRESSIVE");
             mProvider.delete(url, null, null);
             c = mProvider.query(mHistoryUri, null, "", null, null);
             mAsserter.is(c.getCount(), 500, "500 history entries found");
 
-            ensureEmptyDatabase();
+            // expiring with a aggressive priority should delete all but 10 thumbnails
+            c = mProvider.query(mImagesUri, null, mImagesThumbnailCol + " IS NOT NULL", null, null);
+            mAsserter.is(c.getCount(), thumbCount, thumbCount + " thumbnails found");
 
+            ensureEmptyDatabase();
             // insert a bunch of entries with an old time created/modified
             long time = 1000L * 60L * 60L * 24L * 30L * 3L;
             createFakeHistory(time, count);
@@ -1651,12 +1678,25 @@ public class testBrowserProvider extends ContentProviderTest {
             c = mProvider.query(mHistoryUri, null, "", null, null);
             mAsserter.is(c.getCount(), 2000, "2000 history entries found");
 
+            // expiring with a normal priority should delete all but 10 thumbnails
+            c = mProvider.query(mImagesUri, null, mImagesThumbnailCol + " IS NOT NULL", null, null);
+            mAsserter.is(c.getCount(), thumbCount, thumbCount + " thumbnails found");
+
+            ensureEmptyDatabase();
+            // insert a bunch of entries with an old time created/modified
+            time = 1000L * 60L * 60L * 24L * 30L * 3L;
+            createFakeHistory(time, count);
+
             // expiring with an agressive priority should remove old
             // entries leaving at least 500
             url = appendUriParam(mHistoryOldUri, "PARAM_EXPIRE_PRIORITY", "AGGRESSIVE");
             mProvider.delete(url, null, null);
             c = mProvider.query(mHistoryUri, null, "", null, null);
             mAsserter.is(c.getCount(), 500, "500 history entries found");
+
+            // expiring with a aggressive priority should delete all but 10 thumbnails
+            c = mProvider.query(mImagesUri, null, mImagesThumbnailCol + " IS NOT NULL", null, null);
+            mAsserter.is(c.getCount(), thumbCount, thumbCount + " thumbnails found");
         }
     }
 }

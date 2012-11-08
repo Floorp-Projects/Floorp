@@ -391,3 +391,10 @@ BluetoothServiceChildProcess::StopInternal()
   MOZ_NOT_REACHED("This should never be called!");
   return NS_ERROR_FAILURE;
 }
+
+bool
+BluetoothServiceChildProcess::IsConnected(uint16_t aProfileId)
+{
+  MOZ_NOT_REACHED("This should never be called!");
+  return false;
+}

@@ -7,104 +7,18 @@
 #ifndef GFX_SHARED_IMAGESURFACE_H
 #define GFX_SHARED_IMAGESURFACE_H
 
-#include "mozilla/ipc/Shmem.h"
-#include "mozilla/ipc/SharedMemory.h"
+#include "gfxBaseSharedMemorySurface.h"
 
-#include "gfxASurface.h"
-#include "gfxImageSurface.h"
-
-class THEBES_API gfxSharedImageSurface : public gfxImageSurface {
-    typedef mozilla::ipc::SharedMemory SharedMemory;
-    typedef mozilla::ipc::Shmem Shmem;
-
-public:
-    virtual ~gfxSharedImageSurface();
-
-    /**
-     * Return a new gfxSharedImageSurface around a shmem segment newly
-     * allocated by this function.  |aAllocator| is the object used to
-     * allocate the new shmem segment.  Null is returned if creating
-     * the surface failed.
-     *
-     * NB: the *caller* is responsible for freeing the Shmem allocated
-     * by this function.
-     */
-    template<class ShmemAllocator>
-    static already_AddRefed<gfxSharedImageSurface>
-    Create(ShmemAllocator* aAllocator,
-           const gfxIntSize& aSize,
-           gfxImageFormat aFormat,
-           SharedMemory::SharedMemoryType aShmType = SharedMemory::TYPE_BASIC)
-    {
-        return Create<ShmemAllocator, false>(aAllocator, aSize, aFormat, aShmType);
-    }
-
-    /**
-     * Return a new gfxSharedImageSurface that wraps a shmem segment
-     * already created by the Create() above.  Bad things will happen
-     * if an attempt is made to wrap any other shmem segment.  Null is
-     * returned if creating the surface failed.
-     */
-    static already_AddRefed<gfxSharedImageSurface>
-    Open(const Shmem& aShmem);
-
-    template<class ShmemAllocator>
-    static already_AddRefed<gfxSharedImageSurface>
-    CreateUnsafe(ShmemAllocator* aAllocator,
-                 const gfxIntSize& aSize,
-                 gfxImageFormat aFormat,
-                 SharedMemory::SharedMemoryType aShmType = SharedMemory::TYPE_BASIC)
-    {
-        return Create<ShmemAllocator, true>(aAllocator, aSize, aFormat, aShmType);
-    }
-
-    Shmem& GetShmem() { return mShmem; }
-
-    static bool IsSharedImage(gfxASurface *aSurface);
-
+class gfxSharedImageSurface : public gfxBaseSharedMemorySurface<gfxImageSurface, gfxSharedImageSurface>
+{
+  typedef gfxBaseSharedMemorySurface<gfxImageSurface, gfxSharedImageSurface> Super;
+  friend class gfxBaseSharedMemorySurface<gfxImageSurface, gfxSharedImageSurface>;
 private:
-    gfxSharedImageSurface(const gfxIntSize&, gfxImageFormat, const Shmem&);
-
-    void WriteShmemInfo();
-
-    static size_t GetAlignedSize(const gfxIntSize&, long aStride);
-
-    template<class ShmemAllocator, bool Unsafe>
-    static already_AddRefed<gfxSharedImageSurface>
-    Create(ShmemAllocator* aAllocator,
-           const gfxIntSize& aSize,
-           gfxImageFormat aFormat,
-           SharedMemory::SharedMemoryType aShmType)
-    {
-        if (!CheckSurfaceSize(aSize))
-            return nullptr;
-
-        Shmem shmem;
-        long stride = ComputeStride(aSize, aFormat);
-        size_t size = GetAlignedSize(aSize, stride);
-        if (!Unsafe) {
-            if (!aAllocator->AllocShmem(size, aShmType, &shmem))
-                return nullptr;
-        } else {
-            if (!aAllocator->AllocUnsafeShmem(size, aShmType, &shmem))
-                return nullptr;
-        }
-
-        nsRefPtr<gfxSharedImageSurface> s =
-            new gfxSharedImageSurface(aSize, aFormat, shmem);
-        if (s->CairoStatus() != 0) {
-            aAllocator->DeallocShmem(shmem);
-            return nullptr;
-        }
-        s->WriteShmemInfo();
-        return s.forget();
-    }
-
-    Shmem mShmem;
-
-    // Calling these is very bad, disallow it
-    gfxSharedImageSurface(const gfxSharedImageSurface&);
-    gfxSharedImageSurface& operator=(const gfxSharedImageSurface&);
+    gfxSharedImageSurface(const gfxIntSize& aSize, long aStride, 
+                          gfxASurface::gfxImageFormat aFormat, 
+                          const mozilla::ipc::Shmem& aShmem)
+      : Super(aSize, aStride, aFormat, aShmem)
+    {}
 };
 
 #endif /* GFX_SHARED_IMAGESURFACE_H */

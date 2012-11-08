@@ -3659,9 +3659,6 @@ nsresult
 PresShell::PostReflowCallback(nsIReflowCallback* aCallback)
 {
   void* result = AllocateMisc(sizeof(nsCallbackEventRequest));
-  if (MOZ_UNLIKELY(!result)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   nsCallbackEventRequest* request = (nsCallbackEventRequest*)result;
 
   request->callback = aCallback;

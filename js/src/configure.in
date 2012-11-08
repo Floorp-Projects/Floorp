@@ -346,7 +346,6 @@ MOZ_TOOL_VARIABLES
 dnl Special win32 checks
 dnl ========================================================
 
-# With win8, sdk target=602, WINVER=602
 MOZ_ARG_ENABLE_BOOL(metro,
 [  --enable-metro           Enable Windows Metro build targets],
     MOZ_METRO=1,
@@ -355,8 +354,7 @@ if test -n "$MOZ_METRO"; then
     AC_DEFINE(MOZ_METRO)
     # Target the Windows 8 Kit
     WINSDK_TARGETVER=602
-    # Allow a higher api set
-    WINVER=602
+    WINVER=502
 else
     # Target the Windows 7 SDK by default
     WINSDK_TARGETVER=601
@@ -3136,12 +3134,6 @@ dnl are defined in build/autoconf/altoptions.m4.
 
 dnl If the compiler supports these attributes, define them as
 dnl convenience macros.
-if test "$ac_cv_attribute_always_inline" = yes ; then
-  AC_DEFINE(NS_ALWAYS_INLINE, [__attribute__((always_inline))])
-else
-  AC_DEFINE(NS_ALWAYS_INLINE,)
-fi
-
 if test "$ac_cv_attribute_malloc" = yes ; then
   AC_DEFINE(NS_ATTR_MALLOC, [__attribute__((malloc))])
 else
