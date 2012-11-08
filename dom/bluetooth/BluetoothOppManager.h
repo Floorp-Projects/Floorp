@@ -83,6 +83,8 @@ private:
                                  const nsString& aFileName,
                                  uint32_t aFileLength,
                                  const nsString& aContentType);
+  bool CreateFile();
+  bool WriteToFile(const uint8_t* aData, int aDataLength);
   void DeleteReceivedFile();
   void ReplyToConnect();
   void ReplyToDisconnect();
@@ -101,12 +103,16 @@ private:
   int mRemoteMaxPacketLength;
   bool mAbortFlag;
   int mPacketLeftLength;
+  int mBodySegmentLength;
+  int mReceivedDataBufferOffset;
   nsString mConnectedDeviceAddress;
-  bool mReceiving;
   bool mPutFinal;
   bool mWaitingForConfirmationFlag;
   int mUpdateProgressCounter;
   enum mozilla::ipc::SocketConnectionStatus mSocketStatus;
+
+  nsAutoPtr<uint8_t> mBodySegment;
+  nsAutoPtr<uint8_t> mReceivedDataBuffer;
 
   nsCOMPtr<nsIDOMBlob> mBlob;
   nsCOMPtr<nsIThread> mReadFileThread;

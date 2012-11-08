@@ -116,7 +116,10 @@ endif
 ifneq (,$(INTEL_ARCHITECTURE))
 # VC2005 doesn't support _mm_castsi128_ps, so SSE2 is turned off
 ifneq (1400,$(_MSC_VER))
-CPPSRCS += ImageScalingSSE2.cpp
+CPPSRCS += \
+        ImageScalingSSE2.cpp \
+        BlurSSE2.cpp \
+        $(NULL)
 DEFINES += -DUSE_SSE2
 endif
 endif
@@ -161,10 +164,12 @@ DEFINES := $(filter-out -DUNICODE -D_UNICODE,$(DEFINES))
 ifneq (,$(INTEL_ARCHITECTURE))
 ifdef GNU_CC
 ImageScalingSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+BlurSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
 endif
 
 ifdef SOLARIS_SUNPRO_CXX
 ImageScalingSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
+BlurSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
 endif
 endif
 

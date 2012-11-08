@@ -57,7 +57,7 @@ class IonCacheName;
 
 struct TypedOrValueRegisterSpace
 {
-    AlignedStorage2<TypedOrValueRegister> data_;
+    mozilla::AlignedStorage2<TypedOrValueRegister> data_;
     TypedOrValueRegister &data() {
         return *data_.addr();
     }
@@ -68,7 +68,7 @@ struct TypedOrValueRegisterSpace
 
 struct ConstantOrRegisterSpace
 {
-    AlignedStorage2<ConstantOrRegister> data_;
+    mozilla::AlignedStorage2<ConstantOrRegister> data_;
     ConstantOrRegister &data() {
         return *data_.addr();
     }

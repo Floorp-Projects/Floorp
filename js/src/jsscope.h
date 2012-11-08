@@ -894,7 +894,7 @@ class AutoRooterGetterSetter
     friend void AutoGCRooter::trace(JSTracer *trc);
 
   private:
-    Maybe<Inner> inner;
+    mozilla::Maybe<Inner> inner;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+  <script>
+
+function handleLoad() {
+  setTimeout(f1, 0);
+}
+
+function f1() {
+  document.getElementById("inner").style.top = "100px";
+  setTimeout(f2, 0);
+}
+
+function f2() {
+  document.getElementById("top").style.display = "block";
+  document.documentElement.removeAttribute("class");
+}
+
+  </script>
+</head>
+<body onload="handleLoad()">
+  <div id="top" style="display: none;"></div>
+  <div>
+    <div style="float: left; position: relative;">
+      <div id="inner" style="display: block; top: 110px; width: 100px; height: 100px; background: pink; position:absolute;"></div>
+    </div>
+  </div>
+</body>
+</html>

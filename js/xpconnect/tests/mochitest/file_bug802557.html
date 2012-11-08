@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+var gTS = window.location.toString;
+var gGHR = Object.__lookupGetter__.call(window.location, 'href');
+var gTests = {
+  getLocationImplicit: function () {
+    return window.location + "";
+  },
+  getLocationExplicit: function() {
+    return window.location.toString();
+  },
+  getLocationApply1: function() {
+    return gTS.call(window.location);
+  },
+  getLocationApply2: function() {
+    return gTS.apply(window.location, []);
+  },
+  getLocationApply3: function() {
+    return Function.call.apply(gTS, [window.location]);
+  },
+  getLocationViaPrototype: function() {
+    return Location.prototype.toString.call(window.location);
+  },
+  getHref: function() {
+    return window.location.href;
+  },
+  getHrefViaApply: function() {
+    return Function.call.apply(gGHR, [window.location]);
+  },
+  getHrefViaPrototype: function() {
+    return Object.getOwnPropertyDescriptor(Location.prototype, 'href').get.call(window.location);
+  }
+};
+
+gTests.getLocationViaPrototype.skipMessageCheck = true;
+gTests.getHrefViaPrototype.skipMessageCheck = true;
+
+</script>
+</head>
+<body>
+</body>
+</html>

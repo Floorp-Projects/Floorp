@@ -4,10 +4,12 @@
  
 #include "nsICharsetConverterManager.h"
 #include "nsServiceManagerUtils.h"
-#include "nsCharsetAlias.h"
 #include "nsEncoderDecoderUtils.h"
 #include "nsTraceRefcnt.h"
 
+#include "mozilla/dom/EncodingUtils.h"
+
+using mozilla::dom::EncodingUtils;
 
 void
 nsHtml5MetaScanner::sniff(nsHtml5ByteReadable* bytes, nsIUnicodeDecoder** decoder, nsACString& charset)
@@ -48,8 +50,7 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
     return true;
   }
   nsAutoCString preferred;
-  res = nsCharsetAlias::GetPreferred(encoding, preferred);
-  if (NS_FAILED(res)) {
+  if (!EncodingUtils::FindEncodingForLabel(encoding, preferred)) {
     return false;
   }
   if (preferred.LowerCaseEqualsLiteral("utf-16") ||

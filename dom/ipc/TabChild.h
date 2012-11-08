@@ -292,6 +292,14 @@ public:
 
     bool IsAsyncPanZoomEnabled();
 
+    /**
+     * Signal to this TabChild that it should be made visible:
+     * activated widget, retained layer tree, etc.  (Respectively,
+     * made not visible.)
+     */
+    void MakeVisible();
+    void MakeHidden();
+
 protected:
     virtual PRenderFrameChild* AllocPRenderFrame(ScrollingBehavior* aScrolling,
                                                  LayersBackend* aBackend,

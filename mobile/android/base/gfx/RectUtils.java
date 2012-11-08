@@ -103,17 +103,6 @@ public final class RectUtils {
         return new PointF(rect.left, rect.top);
     }
 
-    /*
-     * Returns the rect that represents a linear transition between `from` and `to` at time `t`,
-     * which is on the scale [0, 1).
-     */
-    public static RectF interpolate(RectF from, RectF to, float t) {
-        return new RectF(FloatUtils.interpolate(from.left, to.left, t),
-                         FloatUtils.interpolate(from.top, to.top, t),
-                         FloatUtils.interpolate(from.right, to.right, t),
-                         FloatUtils.interpolate(from.bottom, to.bottom, t));
-    }
-
     public static boolean fuzzyEquals(RectF a, RectF b) {
         if (a == null && b == null)
             return true;

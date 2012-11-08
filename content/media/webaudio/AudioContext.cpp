@@ -16,6 +16,7 @@
 #include "DelayNode.h"
 #include "PannerNode.h"
 #include "AudioListener.h"
+#include "DynamicsCompressorNode.h"
 
 namespace mozilla {
 namespace dom {
@@ -113,6 +114,14 @@ AudioContext::CreatePanner()
 {
   nsRefPtr<PannerNode> pannerNode = new PannerNode(this);
   return pannerNode.forget();
+}
+
+already_AddRefed<DynamicsCompressorNode>
+AudioContext::CreateDynamicsCompressor()
+{
+  nsRefPtr<DynamicsCompressorNode> compressorNode =
+    new DynamicsCompressorNode(this);
+  return compressorNode.forget();
 }
 
 AudioListener*

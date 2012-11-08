@@ -219,10 +219,6 @@ class MacroAssemblerX86Shared : public Assembler
     void store16(const S &src, const T &dest) {
         movw(src, Operand(dest));
     }
-    void load16ZeroExtend_mask(const Address &src, Imm32 mask, const Register &dest) {
-        load32(src, dest);
-        and32(mask, dest);
-    }
     void load16SignExtend(const Address &src, const Register &dest) {
         movxwl(Operand(src), dest);
     }
@@ -357,7 +353,7 @@ class MacroAssemblerX86Shared : public Assembler
     // Builds an exit frame on the stack, with a return address to an internal
     // non-function. Returns offset to be passed to markSafepointAt().
     bool buildFakeExitFrame(const Register &scratch, uint32 *offset) {
-        DebugOnly<uint32> initialDepth = framePushed();
+        mozilla::DebugOnly<uint32> initialDepth = framePushed();
 
         CodeLabel *cl = new CodeLabel();
         if (!addCodeLabel(cl))

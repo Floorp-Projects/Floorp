@@ -28,6 +28,7 @@ class AudioBufferSourceNode;
 class AudioDestinationNode;
 class AudioListener;
 class DelayNode;
+class DynamicsCompressorNode;
 class GainNode;
 class PannerNode;
 
@@ -75,6 +76,9 @@ public:
 
   already_AddRefed<PannerNode>
   CreatePanner();
+
+  already_AddRefed<DynamicsCompressorNode>
+  CreateDynamicsCompressor();
 
 private:
   nsCOMPtr<nsIDOMWindow> mWindow;
