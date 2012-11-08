@@ -4,12 +4,13 @@
 
 package com.mozilla.SUTAgentAndroid.service;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.Timer;
-import java.io.IOException;
-import java.net.InetAddress;
 
 import com.mozilla.SUTAgentAndroid.SUTAgentAndroid;
 import com.mozilla.SUTAgentAndroid.R;
@@ -39,6 +40,7 @@ public class ASMozStub extends android.app.Service {
     RunDataThread runDataThrd = null;
     Thread monitor = null;
     Timer timer = null;
+    boolean doZeroConfig = false;
 
     @SuppressWarnings("unchecked")
     private static final Class<?>[] mSetForegroundSignature = new Class[] {
@@ -178,14 +180,24 @@ public class ASMozStub extends android.app.Service {
             runDataThrd.start();
             doToast(String.format("Data channel port %d ...", DATA_PORT));
 
-            startZeroConf();
+            DoCommand tmpdc = new DoCommand(getApplication());
+            File dir = getFilesDir();
+            File iniFile = new File(dir, "SUTAgent.ini");
+            String sIniFile = iniFile.getAbsolutePath();
+            String zeroconf = tmpdc.GetIniData("General", "ZeroConfig", sIniFile);
+            if (zeroconf != "" && Integer.parseInt(zeroconf) == 1) {
+                this.doZeroConfig = true;
+            }
+
+            if (this.doZeroConfig) {
+                startZeroConf();
+            }
 
             Notification notification = new Notification();
             startForegroundCompat(R.string.foreground_service_started, notification);
             }
         catch (Exception e) {
             doToast(e.toString());
-//            Toast.makeText(getApplication().getApplicationContext(), e.toString(), Toast.LENGTH_LONG).show();
             }
 
         return;
@@ -195,7 +207,9 @@ public class ASMozStub extends android.app.Service {
         {
         super.onDestroy();
 
-        stopZeroConf();
+        if (this.doZeroConfig) {
+            stopZeroConf();
+        }
 
         if (runCmdThrd.isAlive())
             {
