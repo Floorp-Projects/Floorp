@@ -953,9 +953,6 @@ solaris*)
     AC_SUBST(SOLARIS_SUNPRO_CC)
     AC_SUBST(SOLARIS_SUNPRO_CXX)
     ;;
-BSD_386)
-    HOST_OS_ARCH=BSD
-    ;;
 OS_2)
     HOST_OS_ARCH=OS2
     ;;
@@ -1001,9 +998,6 @@ AIX)
             AIX_IBM_XLC=1
         fi
     fi
-    ;;
-BSD_386)
-    OS_ARCH=BSD
     ;;
 OS_2)
     OS_ARCH=OS2
@@ -1547,25 +1541,6 @@ case "$target" in
     fi
     AC_DEFINE(JS_SYS_TYPES_H_DEFINES_EXACT_SIZE_TYPES)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    ;;
-
-*-bsdi*)
-    dnl -pedantic doesn't play well with BSDI's _very_ modified gcc (shlicc2)
-    _PEDANTIC=
-    case $OS_RELEASE in
-	4.*|5.*)
-            STRIP="$STRIP -d"
-            ;;
-	*)
-	    DSO_CFLAGS=''
-	    DSO_LDOPTS='-r'
-	    _WARNINGS_CFLAGS="-Wall"
-	    _WARNINGS_CXXFLAGS="-Wall"
-	    # The test above doesn't work properly, at least on 3.1.
-	    MKSHLIB_FORCE_ALL=''
-	    MKSHLIB_UNFORCE_ALL=''
-	;;
-    esac
     ;;
 
 *-darwin*)
