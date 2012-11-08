@@ -2236,7 +2236,6 @@ public:
   /**
    * Called when a frame is about to be removed and needs to be invalidated.
    * Normally does nothing since DLBI handles removed frames.
-   * 
    */
   virtual void InvalidateFrameForRemoval() {}
 
