@@ -387,6 +387,17 @@ public:
     return mVideoFrameContainer ? mVideoFrameContainer->GetImageContainer() : nullptr;
   }
 
+  // The status of the next frame which might be available from the decoder
+  enum NextFrameStatus {
+    // The next frame of audio/video is available
+    NEXT_FRAME_AVAILABLE,
+    // The next frame of audio/video is unavailable because the decoder
+    // is paused while it buffers up data
+    NEXT_FRAME_UNAVAILABLE_BUFFERING,
+    // The next frame of audio/video is unavailable for some other reasons
+    NEXT_FRAME_UNAVAILABLE
+  };
+
 protected:
 
   // Start timer to update download progress information.

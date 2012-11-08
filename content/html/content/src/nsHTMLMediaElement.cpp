@@ -2692,7 +2692,8 @@ public:
   {
     if (mElement && mHaveCurrentData) {
       mElement->UpdateReadyStateForData(
-        mBlocked ? NEXT_FRAME_UNAVAILABLE_BUFFERING : NEXT_FRAME_AVAILABLE);
+        mBlocked ? nsMediaDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING :
+                   nsMediaDecoder::NEXT_FRAME_AVAILABLE);
     }
   }
   void DoNotifyBlocked()
@@ -3095,7 +3096,7 @@ bool nsHTMLMediaElement::ShouldCheckAllowOrigin()
   return mCORSMode != CORS_NONE;
 }
 
-void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
+void nsHTMLMediaElement::UpdateReadyStateForData(nsMediaDecoder::NextFrameStatus aNextFrame)
 {
   if (mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
     // aNextFrame might have a next frame because the decoder can advance
@@ -3120,9 +3121,9 @@ void nsHTMLMediaElement::UpdateReadyStateForData(NextFrameStatus aNextFrame)
     return;
   }
 
-  if (aNextFrame != NEXT_FRAME_AVAILABLE) {
+  if (aNextFrame != nsMediaDecoder::NEXT_FRAME_AVAILABLE) {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
-    if (!mWaitingFired && aNextFrame == NEXT_FRAME_UNAVAILABLE_BUFFERING) {
+    if (!mWaitingFired && aNextFrame == nsMediaDecoder::NEXT_FRAME_UNAVAILABLE_BUFFERING) {
       FireTimeUpdate(false);
       DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
       mWaitingFired = true;
