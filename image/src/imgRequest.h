@@ -16,6 +16,7 @@
 #include "nsIURI.h"
 #include "nsIPrincipal.h"
 #include "nsITimedChannel.h"
+#include "nsIApplicationCache.h"
 
 #include "nsCategoryCache.h"
 #include "nsCOMPtr.h"
@@ -90,6 +91,12 @@ public:
   // If this function is called multiple times, the information set earliest
   // wins.
   static void SetCacheValidation(imgCacheEntry* aEntry, nsIRequest* aRequest);
+
+  // Check if application cache of the original load is different from
+  // application cache of the new load.  Also lack of application cache
+  // on one of the loads is considered a change of a loading cache since
+  // HTTP cache may contain a different data then app cache.
+  bool CacheChanged(nsIRequest* aNewRequest);
 
   bool GetMultipart() const { return mIsMultiPartChannel; }
 
@@ -200,6 +207,7 @@ private:
   nsCOMPtr<nsISupports> mSecurityInfo;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIInterfaceRequestor> mPrevChannelSink;
+  nsCOMPtr<nsIApplicationCache> mApplicationCache;
 
   nsCOMPtr<nsITimedChannel> mTimedChannel;
 

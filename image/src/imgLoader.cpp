@@ -2112,7 +2112,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   // we have to do is tell them to notify their listeners.
   nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(aRequest));
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
-  if (cacheChan && channel) {
+  if (cacheChan && channel && !mRequest->CacheChanged(aRequest)) {
     bool isFromCache = false;
     cacheChan->IsFromCache(&isFromCache);
 
