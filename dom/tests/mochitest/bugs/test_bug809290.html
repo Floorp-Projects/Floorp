@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=809290
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 809290</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=809290">Mozilla Bug 809290</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 809290 **/
+SimpleTest.waitForExplicitFinish();
+
+var gNotifyCount = 0;
+function notifyReferrer(referrer) {
+  ++gNotifyCount;
+  if (gNotifyCount == 1) {
+    is(referrer, window.location.href, "Referrer should be the script entry point (this script)");
+    document.getElementById('ifr').setAttribute('src', 'file_bug809290_b2.html');
+  } else {
+    is(gNotifyCount, 2);
+    is(referrer, window.location.href.replace(/test_bug.*/, 'file_bug809290_b2.html'),
+       "Referrer should be the script entry point (iframe)");
+    SimpleTest.finish();
+  }
+}
+
+function go() {
+  var ifr = document.getElementById('ifr');
+  ifr.onload = null;
+  ifr.contentWindow.innerLoad();
+}
+
+</script>
+</pre>
+<iframe id="ifr" src="file_bug809290_b1.html" onload="go();"></iframe>
+</body>
+</html>
