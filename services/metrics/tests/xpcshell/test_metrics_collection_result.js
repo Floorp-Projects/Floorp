@@ -20,11 +20,22 @@ add_test(function test_constructor() {
   let failed = false;
   try {
     new MetricsCollectionResult();
-  } catch(ex) {
+  } catch (ex) {
     do_check_true(ex.message.startsWith("Must provide name argument to Metrics"));
     failed = true;
   } finally {
     do_check_true(failed);
+    failed = false;
+  }
+
+  try {
+    result.populate();
+  } catch (ex) {
+    do_check_true(ex.message.startsWith("populate() must be defined"));
+    failed = true;
+  } finally {
+    do_check_true(failed);
+    failed = false;
   }
 
   run_next_test();
@@ -229,3 +240,4 @@ add_test(function test_finish() {
 
   result.finish();
 });
+

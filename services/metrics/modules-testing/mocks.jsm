@@ -37,6 +37,8 @@ this.DummyProvider = function DummyProvider(name="DummyProvider") {
 
   this.constantMeasurementName = "DummyMeasurement";
   this.collectConstantCount = 0;
+  this.throwDuringCollectConstantMeasurements = null;
+  this.throwDuringConstantPopulate = null;
 }
 DummyProvider.prototype = {
   __proto__: MetricsProvider.prototype,
@@ -46,13 +48,27 @@ DummyProvider.prototype = {
 
     let result = this.createResult();
     result.expectMeasurement(this.constantMeasurementName);
+
+    result.populate = this._populateConstantResult.bind(this);
+
+    if (this.throwDuringCollectConstantMeasurements) {
+      throw new Error(this.throwDuringCollectConstantMeasurements);
+    }
+
+    return result;
+  },
+
+  _populateConstantResult: function _populateConstantResult(result) {
+    if (this.throwDuringConstantPopulate) {
+      throw new Error(this.throwDuringConstantPopulate);
+    }
+
+    this._log.debug("Populating constant measurement in DummyProvider.");
     result.addMeasurement(new DummyMeasurement(this.constantMeasurementName));
 
     result.setValue(this.constantMeasurementName, "string", "foo");
     result.setValue(this.constantMeasurementName, "uint32", 24);
 
     result.finish();
-
-    return result;
   },
 };

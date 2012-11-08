@@ -195,9 +195,18 @@ Object.freeze(MetricsMeasurement.prototype);
  * deferred events until after the result is populated.
  *
  * Implementations of collect* functions should call `createResult()` to create
- * a new `MetricsCollectionResult` instance. When called, they should
- * initiate population of this instance. Once population has finished (perhaps
- * asynchronously), they should call `finish()` on the instance.
+ * a new `MetricsCollectionResult` instance. They should then register
+ * expected measurements with this instance, define a `populate` function on
+ * it, then return the instance.
+ *
+ * It is important for the collect* functions to just create the empty
+ * `MetricsCollectionResult` and nothing more. This is to enable the callee
+ * to handle errors gracefully. If the collect* function were to raise, the
+ * callee may not receive a `MetricsCollectionResult` instance and it would not
+ * know what data is missing.
+ *
+ * See the documentation for `MetricsCollectionResult` for details on how
+ * to perform population.
  *
  * Receivers of created `MetricsCollectionResult` instances should wait
  * until population has finished. They can do this by chaining on to the
@@ -264,9 +273,12 @@ Object.freeze(MetricsProvider.prototype);
  * population of this instance is aborted or times out, downstream consumers
  * will know there is missing data.
  *
- * Next, they should add empty `MetricsMeasurement` instances to it via
- * `addMeasurement`. Finally, they should populate these measurements with
- * `setValue`.
+ * Next, they should define the `populate` property to a function that
+ * populates the instance.
+ *
+ * The `populate` function implementation should add empty `MetricsMeasurement`
+ * instances to the result via `addMeasurement`. Then, it should populate these
+ * measurements via `setValue`.
  *
  * It is preferred to populate via this type instead of directly on
  * `MetricsMeasurement` instances so errors with data population can be
@@ -289,6 +301,11 @@ this.MetricsCollectionResult = function MetricsCollectionResult(name) {
   this.measurements = new Map();
   this.expectedMeasurements = new Set();
   this.errors = [];
+
+  this.populate = function populate() {
+    throw new Error("populate() must be defined on MetricsCollectionResult " +
+                    "instance.");
+  };
 
   this._deferred = Promise.defer();
 }
