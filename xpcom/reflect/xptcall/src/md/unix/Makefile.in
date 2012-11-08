@@ -50,7 +50,7 @@ endif
 endif
 endif
 
-ifneq (,$(filter NetBSD OpenBSD BSD_OS GNU,$(OS_ARCH)))
+ifneq (,$(filter NetBSD OpenBSD GNU,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_gcc_x86_unix.cpp xptcstubs_gcc_x86_unix.cpp
 endif
@@ -315,15 +315,6 @@ endif
 ######################################################################
 # SPARC
 ######################################################################
-#
-# BSD_OS/SPARC
-#
-ifeq ($(OS_ARCH),BSD_OS)
-ifneq (,$(findstring sparc,$(OS_TEST)))
-CPPSRCS		:= xptcinvoke_sparc_solaris.cpp xptcstubs_sparc_solaris.cpp
-ASFILES		:= xptcinvoke_asm_sparc_bsdos.s xptcstubs_asm_sparc_solaris.s
-endif
-endif
 #
 # Linux/SPARC
 #
