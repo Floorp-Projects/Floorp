@@ -330,7 +330,7 @@ struct nsStyleBackground {
 
     // True if the effective background image position described by this depends
     // on the size of the corresponding frame.
-    bool DependsOnFrameSize() const {
+    bool DependsOnPositioningAreaSize() const {
       return mXPosition.mPercent != 0.0f || mYPosition.mPercent != 0.0f;
     }
 
@@ -371,7 +371,7 @@ struct nsStyleBackground {
     // Except for eLengthPercentage, Dimension types which might change
     // how a layer is painted when the corresponding frame's dimensions
     // change *must* precede all dimension types which are agnostic to
-    // frame size; see DependsOnFrameSize.
+    // frame size; see DependsOnDependsOnPositioningAreaSizeSize.
     enum DimensionType {
       // If one of mWidth and mHeight is eContain or eCover, then both are.
       // Also, these two values must equal the corresponding values in
@@ -387,7 +387,7 @@ struct nsStyleBackground {
     // True if the effective image size described by this depends on the size of
     // the corresponding frame, when aImage (which must not have null type) is
     // the background image.
-    bool DependsOnFrameSize(const nsStyleImage& aImage) const;
+    bool DependsOnPositioningAreaSize(const nsStyleImage& aImage) const;
 
     // Initialize nothing
     Size() {}
@@ -450,11 +450,11 @@ struct nsStyleBackground {
     void SetInitialValues();
 
     // True if the rendering of this layer might change when the size
-    // of the corresponding frame changes.  This is true for any
+    // of the background positioning area changes.  This is true for any
     // non-solid-color background whose position or size depends on
-    // the frame size.  It's also true for SVG images whose root <svg>
-    // node has a viewBox.
-    bool RenderingMightDependOnFrameSize() const;
+    // the size of the positioning area.  It's also true for SVG images
+    // whose root <svg> node has a viewBox.
+    bool RenderingMightDependOnPositioningAreaSizeChange() const;
 
     // An equality operator that compares the images using URL-equality
     // rather than pointer-equality.
