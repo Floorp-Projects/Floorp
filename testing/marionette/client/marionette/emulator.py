@@ -387,15 +387,6 @@ waitFor(
         print 'installing gecko binaries...'
         # need to remount so we can write to /system/b2g
         self._run_adb(['remount'])
-        self.dm.shellCheckOutput(['stop', 'b2g'])
-        # ensure the b2g process has fully stopped (bug 809437)
-        for i in range(0, 10):
-            time.sleep(1)
-            if self.dm.processExist('b2g') is None:
-                break
-        else:
-            raise TimeoutException("Timeout waiting for the b2g process to terminate")
-
         for root, dirs, files in os.walk(gecko_path):
             for filename in files:
                 rel_path = os.path.relpath(os.path.join(root, filename), gecko_path)
@@ -410,6 +401,14 @@ waitFor(
                             raise
 
         print 'restarting B2G'
+        self.dm.shellCheckOutput(['stop', 'b2g'])
+        # ensure the b2g process has fully stopped (bug 809437)
+        for i in range(0, 10):
+            time.sleep(1)
+            if self.dm.processExist('b2g') is None:
+                break
+        else:
+            raise TimeoutException("Timeout waiting for the b2g process to terminate")
         self.dm.shellCheckOutput(['start', 'b2g'])
 
         if not self.wait_for_port():
