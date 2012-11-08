@@ -268,8 +268,11 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
   // replace our request headers with what actually got sent in the parent
   mRequestHead.Headers() = requestHeaders;
 
-  // notify "http-on-examine-response" observers
-  gHttpHandler->OnExamineResponse(this);
+  // Note: this is where we would notify "http-on-examine-response" observers.
+  // We have deliberately disabled this for child processes (see bug 806753)
+  //
+  // gHttpHandler->OnExamineResponse(this);
+
   mTracingEnabled = false;
 
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);
@@ -874,10 +877,13 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
     newHttpChannelChild->GetClientSetRequestHeaders(&headerTuples);
   }
 
+  // Note: this is where we would notify "http-on-modify-response" observers.
+  // We have deliberately disabled this for child processes (see bug 806753)
+  // 
   // After we verify redirect, nsHttpChannel may hit the network: must give
   // "http-on-modify-request" observers the chance to cancel before that.
-  if (NS_SUCCEEDED(result))
-    gHttpHandler->OnModifyRequest(newHttpChannel);
+  //if (NS_SUCCEEDED(result))
+  //  gHttpHandler->OnModifyRequest(newHttpChannel);
 
   if (mIPCOpen)
     SendRedirect2Verify(result, *headerTuples);
@@ -986,8 +992,11 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   // OnStart/OnStopRequest
   //
 
+  // Note: this is where we would notify "http-on-modify-response" observers.
+  // We have deliberately disabled this for child processes (see bug 806753)
+  //
   // notify "http-on-modify-request" observers
-  gHttpHandler->OnModifyRequest(this);
+  //gHttpHandler->OnModifyRequest(this);
 
   mIsPending = true;
   mWasOpened = true;
