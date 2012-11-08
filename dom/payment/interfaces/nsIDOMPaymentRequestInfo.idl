@@ -4,17 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(2a9bc152-ce8d-4ac5-a2b0-7fb52501178e)]
-interface nsIDOMPaymentProductPrice : nsISupports
-{
-  // Each price has a currency associated.
-  readonly attribute DOMString currency;
-
-  // Total amount of the product being sold.
-  readonly attribute double amount;
-};
-
-[scriptable, uuid(95b89ed3-074d-4c31-a26d-5f0abed420a2)]
+[scriptable, uuid(93462984-0e9a-4016-bdb4-a24a88c08a29)]
 interface nsIDOMPaymentRequestInfo : nsISupports
 {
   // Base64 encoded and digitally signed payment request.
@@ -27,24 +17,3 @@ interface nsIDOMPaymentRequestInfo : nsISupports
   // Payment provider name.
   readonly attribute DOMString providerName;
 };
-
-[scriptable, uuid(7a9f78a6-84c6-4f8a-bb3e-3d9ae34727db)]
-interface nsIDOMPaymentRequestPaymentInfo : nsIDOMPaymentRequestInfo
-{
-  // Name of the product being sold.
-  readonly attribute DOMString productName;
-
-  // Human readable description about the product being sold.
-  readonly attribute DOMString productDescription;
-
-  // Could be a single nsIDOMPaymentProductPrice or an array of them.
-  readonly attribute jsval productPrice;
-};
-
-[scriptable, uuid(9759800a-7766-48c3-a6a6-efbe6ab54054)]
-interface nsIDOMPaymentRequestRefundInfo : nsIDOMPaymentRequestInfo
-{
-  // If the requests is a refund request, it must contain a refund reason.
-  readonly attribute DOMString reason;
-};
-
