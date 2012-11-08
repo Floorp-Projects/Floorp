@@ -229,3 +229,7 @@ SettingsListener.observe('app.reportCrashes', 'ask', function(value) {
   }
 });
 
+// ================ Updates ================
+SettingsListener.observe('app.update.interval', 86400, function(value) {
+  Services.prefs.setIntPref('app.update.interval', value);
+});
