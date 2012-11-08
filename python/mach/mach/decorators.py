@@ -107,7 +107,7 @@ class CommandArgument(object):
     def __call__(self, func):
         command_args = getattr(func, '_mach_command_args', [])
 
-        command_args.append(self._command_args)
+        command_args.insert(0, self._command_args)
 
         func._mach_command_args = command_args
 
