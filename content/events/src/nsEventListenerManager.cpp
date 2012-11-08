@@ -1012,7 +1012,7 @@ nsEventListenerManager::AddListenerForAllEvents(nsIDOMEventListener* aListener,
                                                 bool aWantsUntrusted,
                                                 bool aSystemEventGroup)
 {
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  int32_t flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
   if (aWantsUntrusted) {
     flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
   }
@@ -1027,7 +1027,7 @@ nsEventListenerManager::RemoveListenerForAllEvents(nsIDOMEventListener* aListene
                                                    bool aUseCapture,
                                                    bool aSystemEventGroup)
 {
-  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  int32_t flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
   if (aSystemEventGroup) {
     flags |= NS_EVENT_FLAG_SYSTEM_EVENT;
   }
