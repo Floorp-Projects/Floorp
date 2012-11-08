@@ -116,6 +116,20 @@ static inline void jemalloc_purge_freed_pages() { }
 void    jemalloc_purge_freed_pages();
 #endif
 
+/*
+ * Free all unused dirty pages in all arenas. Calling this function will slow
+ * down subsequent allocations so it is recommended to use it only when
+ * memory needs to be reclaimed at all costs (see bug 805855). This function
+ * provides functionality similar to mallctl("arenas.purge") in jemalloc 3.
+ */
+
+#if !defined(MOZ_NATIVE_JEMALLOC)
+#if defined(MOZ_MEMORY_LINUX) || defined(MOZ_MEMORY_BSD)
+__attribute__((weak))
+#endif /* defined(MOZ_MEMORY_LINUX) || defined(MOZ_MEMORY_BSD) */
+void    jemalloc_free_dirty_pages();
+#endif /* !defined(MOZ_NATIVE_JEMALLOC) */
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
