@@ -232,6 +232,9 @@ class PropertyTree;
 
 class UnownedBaseShape;
 
+class BaseShape;
+typedef BaseShape * RawBaseShape;
+
 class BaseShape : public js::gc::Cell
 {
   public:
@@ -350,9 +353,9 @@ class BaseShape : public js::gc::Cell
     static inline size_t offsetOfParent() { return offsetof(BaseShape, parent); }
     static inline size_t offsetOfFlags() { return offsetof(BaseShape, flags); }
 
-    static inline void writeBarrierPre(BaseShape *shape);
-    static inline void writeBarrierPost(BaseShape *shape, void *addr);
-    static inline void readBarrier(BaseShape *shape);
+    static inline void writeBarrierPre(RawBaseShape shape);
+    static inline void writeBarrierPost(RawBaseShape shape, void *addr);
+    static inline void readBarrier(RawBaseShape shape);
 
     static inline ThingRootKind rootKind() { return THING_ROOT_BASE_SHAPE; }
 
@@ -395,7 +398,7 @@ struct StackBaseShape
     PropertyOp rawGetter;
     StrictPropertyOp rawSetter;
 
-    StackBaseShape(BaseShape *base)
+    StackBaseShape(Return<BaseShape*> base)
       : flags(base->flags & BaseShape::OBJECT_FLAG_MASK),
         clasp(base->clasp),
         parent(base->parent),
@@ -517,7 +520,7 @@ struct Shape : public js::gc::Cell
     static Shape *replaceLastProperty(JSContext *cx, const StackBaseShape &base,
                                       TaggedProto proto, Shape *shape);
 
-    bool hashify(JSContext *cx);
+    static bool hashify(JSContext *cx, HandleShape shape);
     void handoffTableTo(Shape *newShape);
 
     inline void setParent(js::Shape *p);
@@ -525,10 +528,11 @@ struct Shape : public js::gc::Cell
     bool ensureOwnBaseShape(JSContext *cx) {
         if (base()->isOwned())
             return true;
-        return makeOwnBaseShape(cx);
+        RootedShape self(cx, this);
+        return makeOwnBaseShape(cx, self);
     }
 
-    bool makeOwnBaseShape(JSContext *cx);
+    static bool makeOwnBaseShape(JSContext *cx, HandleShape shape);
 
   public:
     bool hasTable() const { return base()->hasTable(); }
@@ -691,14 +695,14 @@ struct Shape : public js::gc::Cell
 
     inline bool matches(const Shape *other) const;
     inline bool matches(const StackShape &other) const;
-    inline bool matchesParamsAfterId(BaseShape *base,
+    inline bool matchesParamsAfterId(RawBaseShape base,
                                      uint32_t aslot, unsigned aattrs, unsigned aflags,
                                      int ashortid) const;
 
     bool get(JSContext* cx, HandleObject receiver, JSObject *obj, JSObject *pobj, MutableHandleValue vp);
     bool set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict, MutableHandleValue vp);
 
-    BaseShape *base() const { return base_; }
+    Return<BaseShape*> base() const { return base_; }
 
     bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
     uint32_t slot() const { JS_ASSERT(hasSlot() && !hasMissingSlot()); return maybeSlot(); }
@@ -1081,7 +1085,7 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
         if (start->isBigEnoughForAShapeTable()) {
             RootedShape startRoot(cx, start);
             RootedId idRoot(cx, id);
-            if (startRoot->hashify(cx)) {
+            if (Shape::hashify(cx, startRoot)) {
                 Shape **spp = startRoot->table().search(idRoot, adding);
                 return SHAPE_FETCH(spp);
             }

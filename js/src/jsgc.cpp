@@ -967,7 +967,7 @@ MarkExactStackRooter(JSTracer *trc, Rooted<void*> rooter, ThingRootKind kind)
       case THING_ROOT_STRING:      MarkStringRoot(trc, (JSSTring **)addr, "exact-string"); break;
       case THING_ROOT_SCRIPT:      MarkScriptRoot(trc, (JSScript **)addr, "exact-script"); break;
       case THING_ROOT_SHAPE:       MarkShapeRoot(trc, (Shape **)addr, "exact-shape"); break;
-      case THING_ROOT_BASE_SHAPE:  MarkBaseShapeRoot(trc, (BaseShape **)addr, "exact-baseshape"); break;
+      case THING_ROOT_BASE_SHAPE:  MarkBaseShapeRoot(trc, (RawBaseShape *)addr, "exact-baseshape"); break;
       case THING_ROOT_TYPE:        MarkTypeRoot(trc, (types::Type *)addr, "exact-type"); break;
       case THING_ROOT_TYPE_OBJECT: MarkTypeObjectRoot(trc, (types::TypeObject **)addr, "exact-typeobject"); break;
       case THING_ROOT_VALUE:       MarkValueRoot(trc, (Value *)addr, "exact-value"); break;
@@ -2335,7 +2335,7 @@ AutoGCRooter::trace(JSTracer *trc)
       case STACKSHAPE: {
         StackShape::AutoRooter *rooter = static_cast<StackShape::AutoRooter *>(this);
         if (rooter->shape->base)
-            MarkBaseShapeRoot(trc, (BaseShape**) &rooter->shape->base, "StackShape::AutoRooter base");
+            MarkBaseShapeRoot(trc, (RawBaseShape*) &rooter->shape->base, "StackShape::AutoRooter base");
         MarkIdRoot(trc, (jsid*) &rooter->shape->propid, "StackShape::AutoRooter id");
         return;
       }
