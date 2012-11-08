@@ -2876,11 +2876,10 @@ nsFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,
   if (!offsets.content)
     return NS_ERROR_FAILURE;
 
-  nsIFrame* theFrame;
   int32_t offset;
   const nsFrameSelection* frameSelection =
     PresContext()->GetPresShell()->ConstFrameSelection();
-  theFrame = frameSelection->
+  nsIFrame* theFrame = frameSelection->
     GetFrameForNodeOffset(offsets.content, offsets.offset,
                           nsFrameSelection::HINT(offsets.associateWithNext),
                           &offset);
@@ -2888,8 +2887,8 @@ nsFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,
     return NS_ERROR_FAILURE;
 
   nsFrame* frame = static_cast<nsFrame*>(theFrame);
-  return frame->PeekBackwardAndForward(aBeginAmountType, aEndAmountType,
-                                       offsets.offset, aPresContext,
+  return frame->PeekBackwardAndForward(aBeginAmountType, aEndAmountType, 
+                                       offset, aPresContext,
                                        aBeginAmountType != eSelectWord,
                                        aSelectFlags);
 }
