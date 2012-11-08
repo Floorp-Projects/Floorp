@@ -240,8 +240,9 @@ StackShape::hash() const
 inline bool
 Shape::matches(const js::Shape *other) const
 {
+    AutoAssertNoGC nogc;
     return propid_.get() == other->propid_.get() &&
-           matchesParamsAfterId(other->base(), other->maybeSlot(), other->attrs,
+           matchesParamsAfterId(other->base().get(nogc), other->maybeSlot(), other->attrs,
                                 other->flags, other->shortid_);
 }
 
@@ -253,7 +254,7 @@ Shape::matches(const StackShape &other) const
 }
 
 inline bool
-Shape::matchesParamsAfterId(BaseShape *base, uint32_t aslot,
+Shape::matchesParamsAfterId(RawBaseShape base, uint32_t aslot,
                             unsigned aattrs, unsigned aflags, int ashortid) const
 {
     return base->unowned() == this->base()->unowned() &&
@@ -443,7 +444,7 @@ Shape::markChildren(JSTracer *trc)
 }
 
 inline void
-BaseShape::writeBarrierPre(BaseShape *base)
+BaseShape::writeBarrierPre(RawBaseShape base)
 {
 #ifdef JSGC_INCREMENTAL
     if (!base)
@@ -451,7 +452,7 @@ BaseShape::writeBarrierPre(BaseShape *base)
 
     JSCompartment *comp = base->compartment();
     if (comp->needsBarrier()) {
-        BaseShape *tmp = base;
+        RawBaseShape tmp = base;
         MarkBaseShapeUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == base);
     }
@@ -459,17 +460,17 @@ BaseShape::writeBarrierPre(BaseShape *base)
 }
 
 inline void
-BaseShape::writeBarrierPost(BaseShape *shape, void *addr)
+BaseShape::writeBarrierPost(RawBaseShape shape, void *addr)
 {
 }
 
 inline void
-BaseShape::readBarrier(BaseShape *base)
+BaseShape::readBarrier(RawBaseShape base)
 {
 #ifdef JSGC_INCREMENTAL
     JSCompartment *comp = base->compartment();
     if (comp->needsBarrier()) {
-        BaseShape *tmp = base;
+        RawBaseShape tmp = base;
         MarkBaseShapeUnbarriered(comp->barrierTracer(), &tmp, "read barrier");
         JS_ASSERT(tmp == base);
     }
