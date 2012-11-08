@@ -6,14 +6,16 @@
 // Android runs a fairly new Linux kernel, so signal info is there,
 // but the C library doesn't have the structs defined.
 
-struct sigcontext {
-  uint32_t trap_no;
-  uint32_t error_code;
-  uint32_t oldmask;
-  uint32_t gregs[16];
-  uint32_t arm_cpsr;
-  uint32_t fault_address;
-};
+// All NDK platform versions have asm/sigcontext.h for ARM
+// Only NDK >= 6, platform >= 9 have asm/sigcontext.h for x86
+// Only NDK >= 8, platform >= 9 have asm/sigcontext.h for MIPS
+#if defined(__arm__) || defined(__thumb__) || ANDROID_VERSION >= 9
+#include <asm/sigcontext.h>
+#else
+#error use newer NDK or newer platform version (e.g. --with-android-version=9)
+#endif
+
+#ifndef __BIONIC_HAVE_UCONTEXT_T
 typedef uint32_t __sigset_t;
 typedef struct sigcontext mcontext_t;
 typedef struct ucontext {
@@ -23,7 +25,5 @@ typedef struct ucontext {
   mcontext_t uc_mcontext;
   __sigset_t uc_sigmask;
 } ucontext_t;
-enum ArmRegisters {R0 = 0, R1 = 1, R2 = 2, R3 = 3, R4 = 4, R5 = 5,
-                   R6 = 6, R7 = 7, R8 = 8, R9 = 9, R10 = 10,
-                   R11 = 11, R12 = 12, R13 = 13, R14 = 14, R15 = 15};
+#endif
 
