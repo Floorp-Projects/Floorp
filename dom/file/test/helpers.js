@@ -13,11 +13,14 @@ var fileStorages = [
 
 var utils = SpecialPowers.getDOMWindowUtils(window);
 
+var archiveReaderEnabled = false;
+
 var testGenerator = testSteps();
 
 function runTest()
 {
   allowUnlimitedQuota();
+  enableArchiveReader();
 
   SimpleTest.waitForExplicitFinish();
   testGenerator.next();
@@ -26,6 +29,7 @@ function runTest()
 function finishTest()
 {
   resetUnlimitedQuota();
+  resetArchiveReader();
 
   SimpleTest.executeSoon(function() {
     testGenerator.close();
@@ -96,6 +100,17 @@ function allowUnlimitedQuota(url)
 function resetUnlimitedQuota(url)
 {
   removePermission("indexedDB-unlimited", url);
+}
+
+function enableArchiveReader()
+{
+  archiveReaderEnabled = SpecialPowers.getBoolPref("dom.archivereader.enabled");
+  SpecialPowers.setBoolPref("dom.archivereader.enabled", true);
+}
+
+function resetArchiveReader()
+{
+  SpecialPowers.setBoolPref("dom.archivereader.enabled", archiveReaderEnabled);
 }
 
 function getFileHandle(fileStorageKey, name)
