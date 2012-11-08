@@ -44,6 +44,7 @@ namespace ion {
     _(JSOP_UINT24)             \
     _(JSOP_ADD)                \
     _(JSOP_LT)                 \
+    _(JSOP_GT)                 \
     _(JSOP_GETLOCAL)           \
     _(JSOP_SETLOCAL)           \
     _(JSOP_GETARG)             \
@@ -78,6 +79,9 @@ class BaselineCompiler : public BaselineCompilerSpecific
 #define EMIT_OP(op) bool emit_##op();
     OPCODE_LIST(EMIT_OP)
 #undef EMIT_OP
+
+    // Handles JSOP_LT, JSOP_GT, and friends
+    bool emitCompare();
 };
 
 } // namespace ion

@@ -7,6 +7,7 @@
 
 #include "BaselineJIT.h"
 #include "BaselineIC.h"
+#include "BaselineHelpers.h"
 #include "BaselineCompiler.h"
 #include "FixedList.h"
 #include "IonLinker.h"
@@ -68,17 +69,29 @@ BaselineCompiler::compile()
 
     JS_ASSERT(!script->hasBaselineScript());
 
-    script->baseline = BaselineScript::New(cx, caches_.length());
-    if (!script->baseline)
+    BaselineScript *baselineScript = BaselineScript::New(cx, icEntries_.length());
+    if (!baselineScript)
         return Method_Error;
+    script->baseline = baselineScript;
 
     IonSpew(IonSpew_Codegen, "Created BaselineScript %p (raw %p)",
             (void *) script->baseline, (void *) code->raw());
 
     script->baseline->setMethod(code);
 
-    if (caches_.length())
-        script->baseline->copyCacheEntries(&caches_[0], masm);
+    // Copy IC entries
+    if (icEntries_.length())
+        baselineScript->copyICEntries(&icEntries_[0], masm);
+
+    // Patch IC loads using IC entries
+    for (size_t i = 0; i < icLoadLabels_.length(); i++) {
+        CodeOffsetLabel label = icLoadLabels_[i];
+        label.fixup(&masm);
+        ICEntry *entryAddr = &(baselineScript->icEntry(i));
+        Assembler::patchDataWithValueCheck(CodeLocationLabel(code, label),
+                                           ImmWord(uintptr_t(entryAddr)),
+                                           ImmWord(uintptr_t(-1)));
+    }
 
     return Method_Compiled;
 }
@@ -136,7 +149,7 @@ BaselineCompiler::emitBody()
     while (true) {
         SPEW_OPCODE();
         JSOp op = JSOp(*pc);
-
+        IonSpew(IonSpew_Scripts, "Compiling op: %s", js_CodeName[op]);
         frame.assertValidState(pc);
 
         masm.bind(labelOf(pc));
@@ -192,13 +205,27 @@ BaselineCompiler::emit_JSOP_GOTO()
 bool
 BaselineCompiler::emit_JSOP_IFNE()
 {
+    // Allocate IC entry and stub.
+    ICToBool_Fallback::Compiler stubCompiler(cx);
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    if (!entry)
+        return false;
+
+    // CODEGEN
+    
+    // Keep top JSStack value in R0
     frame.popRegsAndSync(1);
 
-    //XXX: this assumes the value is boolean or int32. We should emit this in
-    // the common case (for instance x < y or !x loop condition), but for other
-    // cases we need a ToBoolean IC.
-    jsbytecode *target = pc + GET_JUMP_OFFSET(pc);
-    masm.branchTest32(Assembler::NonZero, R0.payloadReg(), R0.payloadReg(), labelOf(target));
+    // Call IC
+    CodeOffsetLabel patchOffset;
+    EmitCallIC(&patchOffset, masm);
+    entry->setReturnOffset(masm.currentOffset());
+    if (!addICLoadLabel(patchOffset))
+        return false;
+
+    // IC will leave a JSBool value (guaranteed) in R0, just need to branch on it.
+    masm.branchTestBooleanTruthy(true, R0, labelOf(pc + GET_JUMP_OFFSET(pc)));
+
     return true;
 }
 
@@ -287,40 +314,25 @@ BaselineCompiler::storeValue(const StackValue *source, const Address &dest,
 bool
 BaselineCompiler::emit_JSOP_ADD()
 {
-    // Store two TOS values in R0 and R1.
-    frame.popRegsAndSync(2);
-
-    Label done;
-#if 0
-    // Inline path.
-    {
-        Label notInt32, overflow;
-        masm.branchTestInt32(Assembler::NotEqual, R0, &notInt32);
-        masm.branchTestInt32(Assembler::NotEqual, R1, &notInt32);
-
-        masm.addl(R1.payloadReg(), R0.payloadReg());
-        masm.j(Assembler::Overflow, &overflow);
-        
-        masm.jump(&done);
-
-        // Overflow.
-        masm.bind(&overflow);
-        //XXX: restore R0.
-
-        // Update cache state.
-        masm.bind(&notInt32);
-    }
-#endif
-
-    CacheData data;
-    BinaryOpCache cache(data, pc);
-    IonCode *stub = cache.getCode(cx);
-    data.call = masm.callWithPatch(stub);
-
-    if (!allocateCache(cache))
+    // Allocate IC entry and stub.
+    ICBinaryArith_Fallback::Compiler stubCompiler(cx);
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    if (!entry)
         return false;
 
-    masm.bind(&done);
+    // CODEGEN
+    
+    // Keep top JSStack value in R0 and R2
+    frame.popRegsAndSync(2);
+
+    // Call IC
+    CodeOffsetLabel patchOffset;
+    EmitCallIC(&patchOffset, masm);
+    entry->setReturnOffset(masm.currentOffset());
+    if (!addICLoadLabel(patchOffset))
+        return false;
+
+    // Mark R0 as pushed stack value.
     frame.push(R0);
     return true;
 }
@@ -328,46 +340,37 @@ BaselineCompiler::emit_JSOP_ADD()
 bool
 BaselineCompiler::emit_JSOP_LT()
 {
-    // Store two TOS values in R0 and R1.
-    frame.popRegsAndSync(2);
+    return emitCompare();
+}
 
-    Label done;
-#if 0
-    // Inline path.
-    {
-        Label notInt32;
-        masm.branchTestInt32(Assembler::NotEqual, R0, &notInt32);
-        masm.branchTestInt32(Assembler::NotEqual, R1, &notInt32);
+bool
+BaselineCompiler::emit_JSOP_GT()
+{
+    return emitCompare();
+}
 
-        masm.cmpl(R0.payloadReg(), R1.payloadReg());
-
-        switch (JSOp(*pc)) {
-        case JSOP_LT:
-            masm.setCC(Assembler::LessThan, R0.payloadReg());
-            break;
-
-        default:
-            JS_NOT_REACHED("Unexpected compare op");
-            break;
-        }
-
-        masm.movzxbl(R0.payloadReg(), R0.payloadReg());
-        masm.movl(ImmType(JSVAL_TYPE_BOOLEAN), R0.typeReg());
-        masm.jump(&done);
-
-        masm.bind(&notInt32);
-    }
-#endif
-
-    CacheData data;
-    CompareCache cache(data, pc);
-    IonCode *stub = cache.getCode(cx);
-    data.call = masm.callWithPatch(stub);
-
-    if (!allocateCache(cache))
+bool
+BaselineCompiler::emitCompare()
+{
+    // Allocate IC entry and stub.
+    ICCompare_Fallback::Compiler stubCompiler(cx);
+    ICEntry *entry = allocateICEntry(stubCompiler.getStub());
+    if (!entry)
         return false;
 
-    masm.bind(&done);
+    // CODEGEN
+
+    // Keep top JSStack value in R0 and R2.
+    frame.popRegsAndSync(2);
+
+    // Call IC.
+    CodeOffsetLabel patchOffset;
+    EmitCallIC(&patchOffset, masm);
+    entry->setReturnOffset(masm.currentOffset());
+    if (!addICLoadLabel(patchOffset))
+        return false;
+
+    // Mark R0 as pushed stack value.
     frame.push(R0);
     return true;
 }

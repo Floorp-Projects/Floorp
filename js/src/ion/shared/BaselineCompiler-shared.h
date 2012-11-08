@@ -25,13 +25,36 @@ class BaselineCompilerShared
     MacroAssembler masm;
 
     FrameInfo frame;
-    js::Vector<CacheData, 16, SystemAllocPolicy> caches_;
+
+    js::Vector<ICEntry, 16, SystemAllocPolicy> icEntries_;
+
+    // Labels for the 'movWithPatch' for loading IC entry pointers in
+    // the generated IC-calling code in the main jitcode.  These need
+    // to be patched with the actual icEntry offsets after the BaselineScript
+    // has been allocated.
+    js::Vector<CodeOffsetLabel, 16, SystemAllocPolicy> icLoadLabels_;
 
     BaselineCompilerShared(JSContext *cx, JSScript *script);
 
-    bool allocateCache(const BaseCache &cache) {
-        JS_ASSERT(cache.data.pc == pc);
-        return caches_.append(cache.data);
+    ICEntry *allocateICEntry(ICStub *stub) {
+        if (!stub)
+            return NULL;
+
+        // Create the entry and add it to the vector.
+        ICEntry entry((uint32_t) (pc - script->code));
+        if (!icEntries_.append(entry))
+            return NULL;
+        ICEntry &vecEntry = icEntries_[icEntries_.length() - 1];
+
+        // Set the first stub for the IC entry to the fallback stub
+        vecEntry.setFirstStub(stub);
+
+        // Return pointer to the IC entry
+        return &vecEntry;
+    }
+
+    bool addICLoadLabel(CodeOffsetLabel offset) {
+        return icLoadLabels_.append(offset);
     }
 };
 
