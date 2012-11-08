@@ -266,6 +266,11 @@ void TabParent::HandleSingleTap(const nsIntPoint& aPoint)
   unused << SendHandleSingleTap(aPoint);
 }
 
+void TabParent::HandleLongTap(const nsIntPoint& aPoint)
+{
+  unused << SendHandleLongTap(aPoint);
+}
+
 void
 TabParent::Activate()
 {
