@@ -80,7 +80,7 @@ nsOggReader::nsOggReader(nsBuiltinDecoder* aDecoder)
     mTheoraState(nullptr),
     mVorbisState(nullptr),
     mOpusState(nullptr),
-    mOpusEnabled(nsHTMLMediaElement::IsOpusEnabled()),
+    mOpusEnabled(nsMediaDecoder::IsOpusEnabled()),
     mSkeletonState(nullptr),
     mVorbisSerial(0),
     mOpusSerial(0),

@@ -6,6 +6,7 @@
 
 #include "nsMediaDecoder.h"
 #include "MediaResource.h"
+#include "mozilla/Preferences.h"
 
 #include "nsHTMLMediaElement.h"
 #include "nsError.h"
@@ -184,6 +185,80 @@ bool nsMediaDecoder::CanPlayThrough()
   return stats.mTotalBytes == stats.mDownloadPosition ||
          stats.mDownloadPosition > stats.mPlaybackPosition + readAheadMargin;
 }
+
+#ifdef MOZ_RAW
+bool
+nsMediaDecoder::IsRawEnabled()
+{
+  return Preferences::GetBool("media.raw.enabled");
+}
+#endif
+
+#ifdef MOZ_OGG
+bool
+nsMediaDecoder::IsOpusEnabled()
+{
+#ifdef MOZ_OPUS
+  return Preferences::GetBool("media.opus.enabled");
+#else
+  return false;
+#endif
+}
+
+bool
+nsMediaDecoder::IsOggEnabled()
+{
+  return Preferences::GetBool("media.ogg.enabled");
+}
+#endif
+
+#ifdef MOZ_WAVE
+bool
+nsMediaDecoder::IsWaveEnabled()
+{
+  return Preferences::GetBool("media.wave.enabled");
+}
+#endif
+
+#ifdef MOZ_WEBM
+bool
+nsMediaDecoder::IsWebMEnabled()
+{
+  return Preferences::GetBool("media.webm.enabled");
+}
+#endif
+
+#ifdef MOZ_GSTREAMER
+bool
+nsMediaDecoder::IsGStreamerEnabled()
+{
+  return Preferences::GetBool("media.gstreamer.enabled");
+}
+#endif
+
+#ifdef MOZ_WIDGET_GONK
+bool
+nsMediaDecoder::IsOmxEnabled()
+{
+  return Preferences::GetBool("media.omx.enabled", false);
+}
+#endif
+
+#ifdef MOZ_MEDIA_PLUGINS
+bool
+nsMediaDecoder::IsMediaPluginsEnabled()
+{
+  return Preferences::GetBool("media.plugins.enabled");
+}
+#endif
+
+#ifdef MOZ_DASH
+bool
+nsMediaDecoder::IsDASHEnabled()
+{
+  return Preferences::GetBool("media.dash.enabled");
+}
+#endif
 
 namespace mozilla {
 
