@@ -38,6 +38,7 @@
 #include "mozilla/Selection.h"
 #include "nsEventListenerManager.h"
 #include "nsContentUtils.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2001,6 +2002,12 @@ nsTextEditorState::UpdatePlaceholderVisibility(bool aNotify)
   GetValue(value, true);
 
   mPlaceholderVisibility = value.IsEmpty();
+
+  if (mPlaceholderVisibility &&
+      !Preferences::GetBool("dom.placeholder.show_on_focus", true)) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
+    mPlaceholderVisibility = !nsContentUtils::IsFocusedContent(content);
+  }
 
   if (mBoundFrame && aNotify) {
     mBoundFrame->InvalidateFrame();
