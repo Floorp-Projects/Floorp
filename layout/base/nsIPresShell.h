@@ -200,10 +200,7 @@ public:
     mPresArenaAllocCount++;
 #endif
     void* result = mFrameArena.AllocateByFrameID(aID, aSize);
-  
-    if (result) {
-      memset(result, 0, aSize);
-    }
+    memset(result, 0, aSize);
     return result;
   }
 
@@ -228,10 +225,7 @@ public:
     mPresArenaAllocCount++;
 #endif
     void* result = mFrameArena.AllocateByObjectID(aID, aSize);
-  
-    if (result) {
-      memset(result, 0, aSize);
-    }
+    memset(result, 0, aSize);
     return result;
   }
 
