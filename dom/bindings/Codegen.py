@@ -1095,7 +1095,9 @@ class MethodDefiner(PropertyDefiner):
                                  "flags": "JSPROP_ENUMERATE",
                                  "pref": None })
 
-        if not descriptor.interface.parent and not static and descriptor.nativeOwnership == 'nsisupports':
+        if (not descriptor.interface.parent and not static and
+            descriptor.nativeOwnership == 'nsisupports' and
+            descriptor.interface.hasInterfacePrototypeObject()):
             self.chrome.append({"name": 'QueryInterface',
                                 "methodInfo": False,
                                 "length": 1,
@@ -5634,50 +5636,53 @@ class CGDescriptor(CGThing):
         assert not descriptor.concrete or descriptor.interface.hasInterfacePrototypeObject()
 
         cgThings = []
-        if descriptor.interface.hasInterfacePrototypeObject():
-            # These are set to true if at least one non-static
-            # method/getter/setter exist on the interface.
-            (hasMethod, hasGetter, hasLenientGetter,
-             hasSetter, hasLenientSetter) = False, False, False, False, False
-            for m in descriptor.interface.members:
-                if (m.isMethod() and
-                    (not m.isIdentifierLess() or m == descriptor.operations['Stringifier'])):
-                    if m.isStatic():
-                        cgThings.append(CGStaticMethod(descriptor, m))
+        # These are set to true if at least one non-static
+        # method/getter/setter exist on the interface.
+        (hasMethod, hasGetter, hasLenientGetter,
+         hasSetter, hasLenientSetter) = False, False, False, False, False
+        for m in descriptor.interface.members:
+            if (m.isMethod() and
+                (not m.isIdentifierLess() or m == descriptor.operations['Stringifier'])):
+                if m.isStatic():
+                    assert descriptor.interface.hasInterfaceObject
+                    cgThings.append(CGStaticMethod(descriptor, m))
+                elif descriptor.interface.hasInterfacePrototypeObject():
+                    cgThings.append(CGSpecializedMethod(descriptor, m))
+                    cgThings.append(CGMemberJITInfo(descriptor, m))
+                    hasMethod = True
+            elif m.isAttr():
+                if m.isStatic():
+                    assert descriptor.interface.hasInterfaceObject
+                    cgThings.append(CGStaticGetter(descriptor, m))
+                elif descriptor.interface.hasInterfacePrototypeObject():
+                    cgThings.append(CGSpecializedGetter(descriptor, m))
+                    if m.hasLenientThis():
+                        hasLenientGetter = True
                     else:
-                        cgThings.append(CGSpecializedMethod(descriptor, m))
-                        cgThings.append(CGMemberJITInfo(descriptor, m))
-                        hasMethod = True
-                elif m.isAttr():
+                        hasGetter = True
+                if not m.readonly:
                     if m.isStatic():
-                        cgThings.append(CGStaticGetter(descriptor, m))
-                    else:
-                        cgThings.append(CGSpecializedGetter(descriptor, m))
+                        assert descriptor.interface.hasInterfaceObject
+                        cgThings.append(CGStaticSetter(descriptor, m))
+                    elif descriptor.interface.hasInterfacePrototypeObject():
+                        cgThings.append(CGSpecializedSetter(descriptor, m))
                         if m.hasLenientThis():
-                            hasLenientGetter = True
+                            hasLenientSetter = True
                         else:
-                            hasGetter = True
-                    if not m.readonly:
-                        if m.isStatic():
-                            cgThings.append(CGStaticSetter(descriptor, m))
-                        else:
-                            cgThings.append(CGSpecializedSetter(descriptor, m))
-                            if m.hasLenientThis():
-                                hasLenientSetter = True
-                            else:
-                                hasSetter = True
-                    elif m.getExtendedAttribute("PutForwards"):
-                        cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
-                        hasSetter = True
-                    if not m.isStatic():
-                        cgThings.append(CGMemberJITInfo(descriptor, m))
-            if hasMethod: cgThings.append(CGGenericMethod(descriptor))
-            if hasGetter: cgThings.append(CGGenericGetter(descriptor))
-            if hasLenientGetter: cgThings.append(CGGenericGetter(descriptor,
-                                                                 lenientThis=True))
-            if hasSetter: cgThings.append(CGGenericSetter(descriptor))
-            if hasLenientSetter: cgThings.append(CGGenericSetter(descriptor,
-                                                                 lenientThis=True))
+                            hasSetter = True
+                elif m.getExtendedAttribute("PutForwards"):
+                    cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
+                    hasSetter = True
+                if (not m.isStatic() and
+                    descriptor.interface.hasInterfacePrototypeObject()):
+                    cgThings.append(CGMemberJITInfo(descriptor, m))
+        if hasMethod: cgThings.append(CGGenericMethod(descriptor))
+        if hasGetter: cgThings.append(CGGenericGetter(descriptor))
+        if hasLenientGetter: cgThings.append(CGGenericGetter(descriptor,
+                                                             lenientThis=True))
+        if hasSetter: cgThings.append(CGGenericSetter(descriptor))
+        if hasLenientSetter: cgThings.append(CGGenericSetter(descriptor,
+                                                             lenientThis=True))
 
         if descriptor.concrete:
             if descriptor.nativeOwnership == 'owned' or descriptor.nativeOwnership == 'refcounted':
@@ -5805,9 +5810,10 @@ class CGNamespacedEnum(CGThing):
 
 class CGDictionary(CGThing):
     def __init__(self, dictionary, descriptorProvider):
-        self.dictionary = dictionary;
+        self.dictionary = dictionary
         self.descriptorProvider = descriptorProvider
         self.workers = descriptorProvider.workers
+        self.needToInitIds = not self.workers and len(dictionary.members) > 0
         if all(CGDictionary(d, descriptorProvider).generatable for
                d in CGDictionary.getDictionaryDependencies(dictionary)):
             self.generatable = True
@@ -5869,7 +5875,7 @@ class CGDictionary(CGThing):
                 "  ${selfName}(const ${selfName}&) MOZ_DELETE;\n" +
                 # NOTE: jsids are per-runtime, so don't use them in workers
                 ("  static bool InitIds(JSContext* cx);\n"
-                 "  static bool initedIds;\n" if not self.workers else "") +
+                 "  static bool initedIds;\n" if self.needToInitIds else "") +
                 "\n".join("  static jsid " +
                           self.makeIdName(m.identifier.name) + ";" for
                           m in d.members) + "\n"
@@ -5934,7 +5940,7 @@ class CGDictionary(CGThing):
              "  initedIds = true;\n"
              "  return true;\n"
              "}\n"
-             "\n" if not self.workers else "") +
+             "\n" if self.needToInitIds else "") +
             "bool\n"
             "${selfName}::Init(JSContext* cx, const JS::Value& val)\n"
             "{\n"
@@ -5944,10 +5950,10 @@ class CGDictionary(CGThing):
             # NOTE: jsids are per-runtime, so don't use them in workers
             ("  if (cx && !initedIds && !InitIds(cx)) {\n"
              "    return false;\n"
-             "  }\n" if not self.workers else "") +
-            "${initParent}"
-            "  JSBool found;\n"
-            "  JS::Value temp;\n"
+             "  }\n" if self.needToInitIds else "") +
+            "${initParent}" +
+            ("  JSBool found;\n"
+             "  JS::Value temp;\n" if len(memberInits) > 0 else "") +
             "  bool isNull = val.isNullOrUndefined();\n"
             "  if (!isNull && !val.isObject()) {\n"
             "    return ThrowErrorMessage(cx, MSG_NOT_OBJECT);\n"
@@ -5963,7 +5969,7 @@ class CGDictionary(CGThing):
             # NOTE: jsids are per-runtime, so don't use them in workers
             ("  if (!initedIds && !InitIds(cx)) {\n"
              "    return false;\n"
-             "  }\n" if not self.workers else "") +
+             "  }\n" if self.needToInitIds else "") +
             "${toObjectParent}"
             "${ensureObject}"
             "\n"

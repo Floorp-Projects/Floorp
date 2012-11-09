@@ -17,6 +17,7 @@ webidl_files = \
   AudioNode.webidl \
   AudioParam.webidl \
   AudioSourceNode.webidl \
+  BiquadFilterNode.webidl \
   Blob.webidl \
   CanvasRenderingContext2D.webidl \
   ClientRectList.webidl \
@@ -52,6 +53,7 @@ webidl_files = \
   SVGTransformList.webidl \
   TextDecoder.webidl \
   TextEncoder.webidl \
+  URL.webidl \
   WebSocket.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \

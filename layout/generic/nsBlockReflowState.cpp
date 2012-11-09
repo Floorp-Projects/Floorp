@@ -760,15 +760,28 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // (This code is only for DISABLE_FLOAT_BREAKING_IN_COLUMNS .)
   //
   // Likewise, if none of the float fit, and it needs to be pushed in
-  // its entirety to the next page (NS_FRAME_IS_TRUNCATED), we need to
-  // do the same.
+  // its entirety to the next page (NS_FRAME_IS_TRUNCATED or
+  // NS_INLINE_IS_BREAK_BEFORE), we need to do the same.
   if ((mContentArea.height != NS_UNCONSTRAINEDSIZE &&
        adjustedAvailableSpace.height == NS_UNCONSTRAINEDSIZE &&
        !mustPlaceFloat &&
        aFloat->GetSize().height + floatMargin.TopBottom() >
          mContentArea.YMost() - floatY) ||
-      NS_FRAME_IS_TRUNCATED(reflowStatus)) {
+      NS_FRAME_IS_TRUNCATED(reflowStatus) ||
+      NS_INLINE_IS_BREAK_BEFORE(reflowStatus)) {
+    PushFloatPastBreak(aFloat);
+    return false;
+  }
 
+  // We can't use aFloat->ShouldAvoidBreakInside(mReflowState) here since
+  // its mIsTopOfPage may be true even though the float isn't at the
+  // top when floatY > 0.
+  if (!mustPlaceFloat && (!mReflowState.mFlags.mIsTopOfPage || floatY > 0) &&
+      NS_STYLE_PAGE_BREAK_AVOID == aFloat->GetStyleDisplay()->mBreakInside &&
+      (!NS_FRAME_IS_FULLY_COMPLETE(reflowStatus) ||
+       aFloat->GetSize().height + floatMargin.TopBottom() >
+         mContentArea.YMost() - floatY) &&
+      !aFloat->GetPrevInFlow()) {
     PushFloatPastBreak(aFloat);
     return false;
   }

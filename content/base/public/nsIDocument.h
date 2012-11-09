@@ -79,8 +79,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x0e1324c9, 0xc997, 0x447e, \
-  { 0xbc, 0xd9, 0xa6, 0x57, 0x80, 0x29, 0x91, 0xe4 } }
+{ 0x20d19edb, 0xa74c, 0x4ce4, \
+  { 0xb2, 0x7c, 0x5b, 0xdd, 0x6f, 0xbd, 0x2b, 0x66 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1557,13 +1557,13 @@ public:
   virtual nsISupports* GetCurrentContentSink() = 0;
 
   /**
-   * Register/Unregister a filedata uri as being "owned" by this document. 
+   * Register/Unregister a hostobject uri as being "owned" by this document.
    * I.e. that its lifetime is connected with this document. When the document
    * goes away it should "kill" the uri by calling
-   * nsBlobProtocolHandler::RemoveFileDataEntry
+   * nsHostObjectProtocolHandler::RemoveDataEntry
    */
-  virtual void RegisterFileDataUri(const nsACString& aUri) = 0;
-  virtual void UnregisterFileDataUri(const nsACString& aUri) = 0;
+  virtual void RegisterHostObjectUri(const nsACString& aUri) = 0;
+  virtual void UnregisterHostObjectUri(const nsACString& aUri) = 0;
 
   virtual void SetScrollToRef(nsIURI *aDocumentURI) = 0;
   virtual void ScrollToRef() = 0;

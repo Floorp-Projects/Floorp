@@ -1595,6 +1595,7 @@ struct nsStyleDisplay {
   uint8_t mOriginalFloats;      // [reset] saved mFloats for position:absolute/fixed;
                                 //         otherwise equal to mFloats
   uint8_t mBreakType;           // [reset] see nsStyleConsts.h NS_STYLE_CLEAR_*
+  uint8_t mBreakInside;         // [reset] NS_STYLE_PAGE_BREAK_AUTO/AVOID
   bool mBreakBefore;    // [reset]
   bool mBreakAfter;     // [reset]
   uint8_t mOverflowX;           // [reset] see nsStyleConsts.h

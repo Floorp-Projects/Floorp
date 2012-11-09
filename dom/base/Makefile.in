@@ -84,6 +84,7 @@ EXPORTS_mozilla/dom = \
   DOMRequest.h \
   StructuredCloneTags.h \
   ScreenOrientation.h \
+  URL.h \
   $(NULL)
 
 CPPSRCS =			\
@@ -115,6 +116,7 @@ CPPSRCS =			\
 	DOMError.cpp \
 	DOMRequest.cpp \
 	Navigator.cpp \
+	URL.cpp \
 	$(NULL)
 
 include $(topsrcdir)/dom/dom-config.mk
