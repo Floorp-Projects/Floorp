@@ -76,7 +76,7 @@ static void ToolkitSleepWakeCallback(void *refCon, io_service_t service, natural
   {
     case kIOMessageSystemWillSleep:
       // System is going to sleep now.
-      nsToolkit::PostSleepWakeNotification("sleep_notification");
+      nsToolkit::PostSleepWakeNotification(NS_WIDGET_SLEEP_OBSERVER_TOPIC);
       ::IOAllowPowerChange(gRootPort, (long)messageArgument);
       break;
       
@@ -91,7 +91,7 @@ static void ToolkitSleepWakeCallback(void *refCon, io_service_t service, natural
       
     case kIOMessageSystemHasPoweredOn:
       // Handle wakeup.
-      nsToolkit::PostSleepWakeNotification("wake_notification");
+      nsToolkit::PostSleepWakeNotification(NS_WIDGET_WAKE_OBSERVER_TOPIC);
       break;
   }
 
