@@ -31,3 +31,4 @@ random-if(winWidget) == placeholder-19.xul  placeholder-overridden-ref.xul
 # needs-focus == placeholder-20.html placeholder-focus-ref.html
 needs-focus == placeholder-21.html placeholder-blank-ref.html
 needs-focus == placeholder-22.html placeholder-blank-ref.html
+== placeholder-rtl.html placeholder-rtl-ref.html
