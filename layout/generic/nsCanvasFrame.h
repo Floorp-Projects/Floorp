@@ -122,12 +122,12 @@ protected:
  * We can also paint an "extra background color" behind the normal
  * background.
  */
-class nsDisplayCanvasBackground : public nsDisplayBackground {
+class nsDisplayCanvasBackground : public nsDisplayBackgroundImage {
 public:
   nsDisplayCanvasBackground(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
                             uint32_t aLayer, bool aIsThemed,
                             const nsStyleBackground* aBackgroundStyle)
-    : nsDisplayBackground(aBuilder, aFrame, aLayer, aIsThemed, aBackgroundStyle),
+    : nsDisplayBackgroundImage(aBuilder, aFrame, aLayer, aIsThemed, aBackgroundStyle),
       mExtraBackgroundColor(NS_RGBA(0,0,0,0))
   {
   }
@@ -137,7 +137,7 @@ public:
                                  const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE
   {
     return NS_GET_A(mExtraBackgroundColor) > 0 ||
-      nsDisplayBackground::ComputeVisibility(aBuilder, aVisibleRegion,
+      nsDisplayBackgroundImage::ComputeVisibility(aBuilder, aVisibleRegion,
                                              aAllowVisibleRegionExpansion);
   }
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
@@ -146,12 +146,12 @@ public:
     if (NS_GET_A(mExtraBackgroundColor) == 255) {
       return nsRegion(GetBounds(aBuilder, aSnap));
     }
-    return nsDisplayBackground::GetOpaqueRegion(aBuilder, aSnap);
+    return nsDisplayBackgroundImage::GetOpaqueRegion(aBuilder, aSnap);
   }
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) MOZ_OVERRIDE
   {
     nscolor background;
-    if (!nsDisplayBackground::IsUniform(aBuilder, &background))
+    if (!nsDisplayBackgroundImage::IsUniform(aBuilder, &background))
       return false;
     NS_ASSERTION(background == NS_RGBA(0,0,0,0),
                  "The nsDisplayBackground for a canvas frame doesn't paint "
