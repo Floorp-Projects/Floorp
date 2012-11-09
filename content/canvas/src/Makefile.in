@@ -16,12 +16,6 @@ MODULE		= content
 LIBRARY_NAME	= gkconcvs_s
 LIBXUL_LIBRARY  = 1
 
-EXPORTS = \
-	WebGLContext.h \
-	WebGLElementArrayCache.h \
-	WebGLExtensions.h \
-	$(NULL)
-
 EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
