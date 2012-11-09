@@ -651,8 +651,8 @@ var SocialMenu = {
     // This menu is only accessible through keyboard navigation.
     let submenu = document.getElementById("menu_socialAmbientMenuPopup");
     let ambientMenuItems = submenu.getElementsByClassName("ambient-menuitem");
-    for (let ambientMenuItem of ambientMenuItems)
-      submenu.removeChild(ambientMenuItem);
+    while (ambientMenuItems.length)
+      submenu.removeChild(ambientMenuItems.item(0));
 
     let separator = document.getElementById("socialAmbientMenuSeparator");
     separator.hidden = true;
