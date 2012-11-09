@@ -803,6 +803,8 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcSliceBudget(SliceBudget::Unlimited),
     gcIncrementalEnabled(true),
     gcExactScanningEnabled(true),
+    gcInTransplant(false),
+    gcObjectsMarkedInDeadCompartments(0),
     gcPoke(false),
     heapState(Idle),
 #ifdef JS_GC_ZEAL
@@ -1555,6 +1557,8 @@ JS_TransplantObject(JSContext *cx, JSObject *origobjArg, JSObject *targetArg)
     JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
     JS_ASSERT(!IsCrossCompartmentWrapper(target));
 
+    AutoTransplantGC agc(cx);
+
     JSCompartment *destination = target->compartment();
     WrapperMap &map = destination->crossCompartmentWrappers;
     Value origv = ObjectValue(*origobj);
@@ -1626,6 +1630,8 @@ js_TransplantObjectWithWrapper(JSContext *cx,
     RootedObject origwrapper(cx, origwrapperArg);
     RootedObject targetobj(cx, targetobjArg);
     RootedObject targetwrapper(cx, targetwrapperArg);
+
+    AutoTransplantGC agc(cx);
 
     AssertHeapIsIdle(cx);
     JS_ASSERT(!IsCrossCompartmentWrapper(origobj));
