@@ -6,6 +6,7 @@
 
 #include "nsMediaOmxReader.h"
 
+#include "nsBuiltinDecoderStateMachine.h"
 #include "mozilla/TimeStamp.h"
 #include "nsTimeRanges.h"
 #include "MediaResource.h"
@@ -37,7 +38,7 @@ nsresult nsMediaOmxReader::Init(nsBuiltinDecoderReader* aCloneDonor)
 }
 
 nsresult nsMediaOmxReader::ReadMetadata(nsVideoInfo* aInfo,
-                                        nsHTMLMediaElement::MetadataTags** aTags)
+                                        MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 

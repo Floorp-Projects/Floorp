@@ -150,7 +150,8 @@ public:
   NS_IMETHOD_(nsIContent*) GetRootEditorNode();
   NS_IMETHOD_(nsIContent*) CreatePlaceholderNode();
   NS_IMETHOD_(nsIContent*) GetPlaceholderNode();
-  NS_IMETHOD_(void) SetPlaceholderClass(bool aVisible, bool aNotify);
+  NS_IMETHOD_(void) UpdatePlaceholderVisibility(bool aNotify);
+  NS_IMETHOD_(bool) GetPlaceholderVisibility();
   NS_IMETHOD_(void) InitializeKeyboardEventListeners();
   NS_IMETHOD_(void) OnValueChanged(bool aNotify);
   NS_IMETHOD_(bool) HasCachedSelection();

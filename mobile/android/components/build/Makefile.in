@@ -28,4 +28,12 @@ CPPSRCS = \
 	nsShellService.cpp \
 	$(NULL)
 
+ifdef MOZ_ANDROID_HISTORY
+CPPSRCS += nsAndroidHistory.cpp
+LOCAL_INCLUDES += \
+	-I$(topsrcdir)/docshell/base \
+	-I$(topsrcdir)/content/base/src \
+	$(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk

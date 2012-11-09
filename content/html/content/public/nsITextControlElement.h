@@ -18,8 +18,8 @@ class nsTextControlFrame;
 
 // IID for the nsITextControl interface
 #define NS_ITEXTCONTROLELEMENT_IID    \
-{ 0xe0a05008, 0xef02, 0x4fa2,    \
-  { 0x93, 0xf2, 0x78, 0xe1, 0xec, 0xf7, 0x5b, 0x79 } }
+{ 0x3dd53b59, 0x9d8f, 0x40a3, \
+  { 0x81, 0xd7, 0xb3, 0x43, 0xa0, 0x51, 0xfc, 0xb5 } }
 
 /**
  * This interface is used for the text control frame to get the editor and
@@ -151,9 +151,14 @@ public:
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() = 0;
 
   /**
-   * Show/hide the placeholder for the control.
+   * Update the placeholder visibility based on the element's state.
    */
-  NS_IMETHOD_(void) SetPlaceholderClass(bool aVisible, bool aNotify) = 0;
+  NS_IMETHOD_(void) UpdatePlaceholderVisibility(bool aNotify) = 0;
+
+  /**
+   * Returns the current expected placeholder visibility state.
+   */
+  NS_IMETHOD_(bool) GetPlaceholderVisibility() = 0;
 
   /**
    * Callback called whenever the value is changed.

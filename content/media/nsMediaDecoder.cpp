@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsMediaDecoder.h"
+#include "MediaDecoderOwner.h"
 #include "MediaResource.h"
+#include "mozilla/Preferences.h"
 
-#include "nsHTMLMediaElement.h"
 #include "nsError.h"
 
 using namespace mozilla;
@@ -27,7 +27,7 @@ static const uint32_t STALL_MS = 3000;
 static const int64_t CAN_PLAY_THROUGH_MARGIN = 10;
 
 nsMediaDecoder::nsMediaDecoder() :
-  mElement(nullptr),
+  mOwner(nullptr),
   mFrameBufferLength(0),
   mPinnedForSeek(false),
   mShuttingDown(false)
@@ -42,22 +42,22 @@ nsMediaDecoder::~nsMediaDecoder()
   MediaMemoryReporter::RemoveMediaDecoder(this);
 }
 
-bool nsMediaDecoder::Init(nsHTMLMediaElement* aElement)
+bool nsMediaDecoder::Init(MediaDecoderOwner* aOwner)
 {
-  mElement = aElement;
-  mVideoFrameContainer = aElement->GetVideoFrameContainer();
+  mOwner = aOwner;
+  mVideoFrameContainer = aOwner->GetVideoFrameContainer();
   return true;
 }
 
 void nsMediaDecoder::Shutdown()
 {
   StopProgress();
-  mElement = nullptr;
+  mOwner = nullptr;
 }
 
-nsHTMLMediaElement* nsMediaDecoder::GetMediaElement()
+MediaDecoderOwner* nsMediaDecoder::GetMediaOwner() const
 {
-  return mElement;
+  return mOwner;
 }
 
 nsresult nsMediaDecoder::RequestFrameBufferLength(uint32_t aLength)
@@ -78,7 +78,7 @@ static void ProgressCallback(nsITimer* aTimer, void* aClosure)
 
 void nsMediaDecoder::Progress(bool aTimer)
 {
-  if (!mElement)
+  if (!mOwner)
     return;
 
   TimeStamp now = TimeStamp::Now();
@@ -93,13 +93,13 @@ void nsMediaDecoder::Progress(bool aTimer)
        now - mProgressTime >= TimeDuration::FromMilliseconds(PROGRESS_MS)) &&
       !mDataTime.IsNull() &&
       now - mDataTime <= TimeDuration::FromMilliseconds(PROGRESS_MS)) {
-    mElement->DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
+    mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
     mProgressTime = now;
   }
 
   if (!mDataTime.IsNull() &&
       now - mDataTime >= TimeDuration::FromMilliseconds(STALL_MS)) {
-    mElement->DownloadStalled();
+    mOwner->DownloadStalled();
     // Null it out
     mDataTime = TimeStamp();
   }
@@ -130,9 +130,9 @@ nsresult nsMediaDecoder::StopProgress()
 
 void nsMediaDecoder::FireTimeUpdate()
 {
-  if (!mElement)
+  if (!mOwner)
     return;
-  mElement->FireTimeUpdate(true);
+  mOwner->FireTimeUpdate(true);
 }
 
 void nsMediaDecoder::PinForSeek()
@@ -184,6 +184,80 @@ bool nsMediaDecoder::CanPlayThrough()
   return stats.mTotalBytes == stats.mDownloadPosition ||
          stats.mDownloadPosition > stats.mPlaybackPosition + readAheadMargin;
 }
+
+#ifdef MOZ_RAW
+bool
+nsMediaDecoder::IsRawEnabled()
+{
+  return Preferences::GetBool("media.raw.enabled");
+}
+#endif
+
+#ifdef MOZ_OGG
+bool
+nsMediaDecoder::IsOpusEnabled()
+{
+#ifdef MOZ_OPUS
+  return Preferences::GetBool("media.opus.enabled");
+#else
+  return false;
+#endif
+}
+
+bool
+nsMediaDecoder::IsOggEnabled()
+{
+  return Preferences::GetBool("media.ogg.enabled");
+}
+#endif
+
+#ifdef MOZ_WAVE
+bool
+nsMediaDecoder::IsWaveEnabled()
+{
+  return Preferences::GetBool("media.wave.enabled");
+}
+#endif
+
+#ifdef MOZ_WEBM
+bool
+nsMediaDecoder::IsWebMEnabled()
+{
+  return Preferences::GetBool("media.webm.enabled");
+}
+#endif
+
+#ifdef MOZ_GSTREAMER
+bool
+nsMediaDecoder::IsGStreamerEnabled()
+{
+  return Preferences::GetBool("media.gstreamer.enabled");
+}
+#endif
+
+#ifdef MOZ_WIDGET_GONK
+bool
+nsMediaDecoder::IsOmxEnabled()
+{
+  return Preferences::GetBool("media.omx.enabled", false);
+}
+#endif
+
+#ifdef MOZ_MEDIA_PLUGINS
+bool
+nsMediaDecoder::IsMediaPluginsEnabled()
+{
+  return Preferences::GetBool("media.plugins.enabled");
+}
+#endif
+
+#ifdef MOZ_DASH
+bool
+nsMediaDecoder::IsDASHEnabled()
+{
+  return Preferences::GetBool("media.dash.enabled");
+}
+#endif
 
 namespace mozilla {
 

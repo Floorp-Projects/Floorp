@@ -105,6 +105,12 @@ protected:
   nsEventStatus HandleSingleTapConfirmedEvent(const MultiTouchInput& aEvent);
 
   /**
+   * Attempts to handle a long tap confirmation. This is what will use
+   * for context menu.
+   */
+  nsEventStatus HandleLongTapEvent(const MultiTouchInput& aEvent);
+
+  /**
    * Attempts to handle a tap event cancellation. This happens when we think
    * something was a tap but it actually wasn't. In general, this will not
    * attempt to block the touch event from being passed along to
@@ -130,6 +136,11 @@ protected:
    * has time to tap again (to make a double tap).
    */
   void TimeoutDoubleTap();
+  /**
+   * Times out a long tap. This should be called a 'long' time after a single
+   * tap is detected.
+   */
+  void TimeoutLongTap();
 
   nsRefPtr<AsyncPanZoomController> mAsyncPanZoomController;
 
@@ -182,6 +193,13 @@ protected:
    * we can cancel it if a double tap actually comes in.
    */
   CancelableTask *mDoubleTapTimeoutTask;
+
+  /**
+   * Task used to timeout a long tap. This gets posted to the UI thread such
+   * that it runs a time when a single tap happens. We cache it so that
+   * we can cancel it if any other touch event happens.
+   */
+  CancelableTask *mLongTapTimeoutTask;
 
   /**
    * Position of the last touch starting. This is only valid during an attempt

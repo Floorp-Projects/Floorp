@@ -282,21 +282,26 @@ BaseProxyHandler::construct(JSContext *cx, JSObject *proxy, unsigned argc,
 JSString *
 BaseProxyHandler::obj_toString(JSContext *cx, JSObject *proxy)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                         JSMSG_INCOMPATIBLE_PROTO,
-                         js_Object_str, js_toString_str,
-                         "object");
-    return NULL;
+    return JS_NewStringCopyZ(cx, IsFunctionProxy(proxy)
+                                 ? "[object Function]"
+                                 : "[object Object]");
 }
 
 JSString *
 BaseProxyHandler::fun_toString(JSContext *cx, JSObject *proxy, unsigned indent)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                         JSMSG_INCOMPATIBLE_PROTO,
-                         js_Function_str, js_toString_str,
-                         "object");
-    return NULL;
+    Value fval = GetCall(proxy);
+    if (IsFunctionProxy(proxy) &&
+        (fval.isPrimitive() || !fval.toObject().isFunction())) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_INCOMPATIBLE_PROTO,
+                             js_Function_str, js_toString_str,
+                             "object");
+        return NULL;
+    }
+    RootedObject obj(cx, &fval.toObject());
+    return fun_toStringHelper(cx, obj, indent);
+
 }
 
 bool

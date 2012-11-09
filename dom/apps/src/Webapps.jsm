@@ -566,8 +566,8 @@ this.DOMApplicationRegistry = {
   removeMessageListener: function(aMsgNames, aMm) {
     if (aMsgNames.length === 1 &&
         aMsgNames[0] === "Webapps:Internal:AllMessages") {
-      for (let i = this.children.length - 1; i >= 0; i -= 1) {
-        let msg = this.children[i];
+      for (let msgName in this.children) {
+        let msg = this.children[msgName];
 
         for (let mmI = msg.length - 1; mmI >= 0; mmI -= 1) {
           let mmRef = msg[mmI];
@@ -577,7 +577,7 @@ this.DOMApplicationRegistry = {
         }
 
         if (msg.length === 0) {
-          this.children.splice(i, 1);
+          delete this.children[msgName];
         }
       }
       return;

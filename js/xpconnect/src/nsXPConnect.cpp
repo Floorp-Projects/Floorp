@@ -2322,7 +2322,7 @@ DeferredRelease(nsISupports *obj)
     return nsXPConnect::GetRuntimeInstance()->DeferredRelease(obj);
 }
 
-bool
+NS_EXPORT_(bool)
 Base64Encode(JSContext *cx, JS::Value val, JS::Value *out)
 {
     MOZ_ASSERT(cx);
@@ -2348,7 +2348,7 @@ Base64Encode(JSContext *cx, JS::Value val, JS::Value *out)
     return true;
 }
 
-bool
+NS_EXPORT_(bool)
 Base64Decode(JSContext *cx, JS::Value val, JS::Value *out)
 {
     MOZ_ASSERT(cx);

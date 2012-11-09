@@ -133,11 +133,6 @@ select option, select optgroup {
   pointer-events: none;
 }
 
-input:-moz-placeholder,
-textarea:-moz-placeholder {
-  color: GrayText;
-}
-
 select:not([size]):not([multiple]),
 select[size="0"],
 select[size="1"],

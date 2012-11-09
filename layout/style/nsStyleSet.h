@@ -385,7 +385,7 @@ class nsStyleSet
 
   // Empty style rules to force things that restrict which properties
   // apply into different branches of the rule tree.
-  nsRefPtr<nsEmptyStyleRule> mFirstLineRule, mFirstLetterRule;
+  nsRefPtr<nsEmptyStyleRule> mFirstLineRule, mFirstLetterRule, mPlaceholderRule;
 
   // Style rule which sets all properties to their initial values for
   // determining when context-sensitive values are in use.

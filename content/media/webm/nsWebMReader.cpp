@@ -180,7 +180,7 @@ void nsWebMReader::Cleanup()
 }
 
 nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo,
-                                    nsHTMLMediaElement::MetadataTags** aTags)
+                                    MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
