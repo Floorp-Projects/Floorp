@@ -271,7 +271,9 @@ interface TestExampleInterface {
   void passUnionWithArrayBuffer((ArrayBuffer or long) arg);
   void passUnionWithString((DOMString or object) arg);
   //void passUnionWithEnum((TestEnum or object) arg);
-  void passUnionWithCallback((TestCallback or long) arg);
+  // Trying to use a callback in a union won't include the test
+  // headers, unfortunately, so won't compile.
+  //  void passUnionWithCallback((TestCallback or long) arg);
   void passUnionWithObject((object or long) arg);
   //void passUnionWithDict((Dict or long) arg);
 

@@ -16,6 +16,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/EventHandlerBinding.h"
 
 // Need this for BinaryType.
 #include "mozilla/dom/WebSocketBinding.h"
@@ -50,10 +51,11 @@ namespace dom {
     nsresult rv = GetOn##_lowercase(aCx, &val);                         \
     return NS_SUCCEEDED(rv) ? JSVAL_TO_OBJECT(val) : nullptr;           \
   }                                                                     \
-  void SetOn##_lowercase(JSContext* aCx, JSObject* aCallback,           \
+  void SetOn##_lowercase(JSContext* aCx, EventHandlerNonNull* aCallback,\
                          ErrorResult& aRv)                              \
   {                                                                     \
-    aRv = SetOn##_lowercase(aCx, OBJECT_TO_JSVAL(aCallback));           \
+    JSObject* callback = aCallback ? aCallback->Callable() : nullptr;   \
+    aRv = SetOn##_lowercase(aCx, JS::ObjectOrNullValue(callback));      \
   }                                                                     \
   NS_IMETHOD GetOn##_lowercase(JSContext* cx, JS::Value* aVal);         \
   NS_IMETHOD SetOn##_lowercase(JSContext* cx, const JS::Value& aVal);
