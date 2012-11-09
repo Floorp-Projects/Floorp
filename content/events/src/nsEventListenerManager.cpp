@@ -528,7 +528,7 @@ nsEventListenerManager::SetEventHandlerInternal(nsIScriptContext *aContext,
                                                 bool aPermitUntrustedEvents,
                                                 nsListenerStruct **aListenerStruct)
 {
-  NS_ASSERTION(aContext || aHandler.HasEventHandler(),
+  NS_ASSERTION((aContext && aScopeObject) || aHandler.HasEventHandler(),
                "Must have one or the other!");
 
   nsresult rv = NS_OK;
@@ -1203,12 +1203,10 @@ nsEventListenerManager::SetEventHandlerToJsval(nsIAtom* aEventName,
     handler.SetHandler(handlerCallback);
   }
 
-  JSAutoCompartment ac(cx, aScope);
-  JSObject *scope = ::JS_GetGlobalForObject(cx, aScope);
   // Untrusted events are always permitted for non-chrome script
   // handlers.
   nsListenerStruct *ignored;
-  return SetEventHandlerInternal(nullptr, scope, aEventName, handler,
+  return SetEventHandlerInternal(nullptr, nullptr, aEventName, handler,
                                  !nsContentUtils::IsCallerChrome(), &ignored);
 }
 

@@ -263,9 +263,10 @@ protected:
   /**
    * Set the "inline" event listener for aName to aHandler.  aHandler may be
    * have no actual handler set to indicate that we should lazily get and
-   * compile the string for this listener, but in that case aContext must be
-   * non-null.  Otherwise, aContext is allowed to be null.  The nsListenerStruct
-   * that results, if any, is returned in aListenerStruct.
+   * compile the string for this listener, but in that case aContext and
+   * aScopeGlobal must be non-null.  Otherwise, aContext and aScopeGlobal are
+   * allowed to be null.  The nsListenerStruct that results, if any, is returned
+   * in aListenerStruct.
    */
   nsresult SetEventHandlerInternal(nsIScriptContext *aContext,
                                    JSObject* aScopeGlobal,
