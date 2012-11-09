@@ -1953,7 +1953,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
   }
 }
 
-#editBMPanel_tagsField > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
+#editBMPanel_tagsField > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input::-moz-placeholder {
   color: #bbb;
 }
 

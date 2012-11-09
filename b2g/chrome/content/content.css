@@ -110,8 +110,8 @@ select option, select optgroup {
   pointer-events: none;
 }
 
-input:-moz-placeholder,
-textarea:-moz-placeholder {
+input::-moz-placeholder,
+textarea::-moz-placeholder {
   color: GrayText;
 }
 
