@@ -442,7 +442,7 @@ input.name:focus {
   color: #555;
 }
 
-input.name:-moz-placeholder {
+input.name::-moz-placeholder {
   font-style: italic !important;
   color: transparent;
   background-image: url(chrome://browser/skin/tabview/edit-light.png);
@@ -450,7 +450,7 @@ input.name:-moz-placeholder {
   -moz-padding-start: 20px;
 }
 
-.title-container:hover input.name:-moz-placeholder {
+.title-container:hover input.name::-moz-placeholder {
   color: #CCC;
 }
 

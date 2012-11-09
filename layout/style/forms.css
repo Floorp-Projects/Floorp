@@ -69,7 +69,8 @@ input {
   text-shadow: none;
 }
 
-input > .anonymous-div {
+input > .anonymous-div,
+input::-moz-placeholder {
   word-wrap: normal !important;
   /* Make the line-height equal to the available height */
   line-height: -moz-block-height;
@@ -80,11 +81,13 @@ input > .anonymous-div {
    cmd_switchTextDirection (which applies a dir attribute to the input box's
    anonymous div. */
 @-moz-document url-prefix(chrome://) {
-  input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div {
+  input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div,
+  input.uri-element-right-align:-moz-locale-dir(rtl)::-moz-placeholder {
     text-align: right !important;
   }
 
-  input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div[dir=ltr] {
+  input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div[dir=ltr],
+  input.uri-element-right-align:-moz-locale-dir(rtl)::-moz-placeholder[dir=ltr] {
     text-align: left !important;
   }
 }
@@ -116,7 +119,9 @@ textarea > scrollbar {
 }
 
 textarea > .anonymous-div,
-input > .anonymous-div {
+input > .anonymous-div,
+input::-moz-placeholder,
+textarea::-moz-placeholder {
   white-space: pre;
   overflow: auto;
   border: 0px !important;
@@ -140,24 +145,13 @@ input > .anonymous-div.inherit-overflow {
   overflow: inherit;
 }
 
-input:-moz-placeholder,
-textarea:-moz-placeholder {
+input::-moz-placeholder,
+textarea::-moz-placeholder {
   color: GrayText;
 }
 
-input:-moz-placeholder > .anonymous-div:not(.placeholder),
-textarea:-moz-placeholder > .anonymous-div:not(.placeholder) {
-  color: -moz-FieldText;
-}
-
-input > .placeholder,
-textarea > .placeholder {
-  overflow: hidden;
-  pointer-events: none;
+textarea::-moz-placeholder {
   resize: none;
-}
-
-textarea > .placeholder {
   white-space: pre-wrap;
 }
 
@@ -592,6 +586,8 @@ input[type="submit"]:disabled {
   */
 textarea > .anonymous-div,
 input > .anonymous-div,
+input::-moz-placeholder,
+textarea::-moz-placeholder,
 *|*::-moz-button-content,
 *|*::-moz-display-comboboxcontrol-frame,
 optgroup:before {
