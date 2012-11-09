@@ -1153,11 +1153,6 @@ nsHTMLTextAreaElement::IntrinsicState() const
     }
   }
 
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&
-      IsValueEmpty()) {
-    state |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
-  }
-
   return state;
 }
 
@@ -1521,8 +1516,7 @@ nsHTMLTextAreaElement::OnValueChanged(bool aNotify)
   UpdateTooLongValidityState();
   UpdateValueMissingValidityState();
 
-  if (validBefore != IsValid() ||
-      HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder)) {
+  if (validBefore != IsValid()) {
     UpdateState(aNotify);
   }
 }

@@ -378,8 +378,18 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     nsIContent* placeholderNode = txtCtrl->CreatePlaceholderNode();
     NS_ENSURE_TRUE(placeholderNode, NS_ERROR_OUT_OF_MEMORY);
 
-    if (!aElements.AppendElement(placeholderNode))
+    // Associate ::-moz-placeholder pseudo-element with the placeholder node.
+    nsCSSPseudoElements::Type pseudoType =
+      nsCSSPseudoElements::ePseudo_mozPlaceholder;
+
+    nsRefPtr<nsStyleContext> placeholderStyleContext =
+      PresContext()->StyleSet()->ResolvePseudoElementStyle(
+          mContent->AsElement(), pseudoType, GetStyleContext());
+
+    if (!aElements.AppendElement(ContentInfo(placeholderNode,
+                                 placeholderStyleContext))) {
       return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   rv = UpdateValueDisplay(false);

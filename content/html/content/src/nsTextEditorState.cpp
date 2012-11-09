@@ -1661,10 +1661,6 @@ be called if @placeholder is the empty string when trimmed from line breaks");
   rv = mPlaceholderDiv->AppendChildTo(placeholderText, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mPlaceholderDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                           NS_LITERAL_STRING("anonymous-div placeholder"),
-                           false);
-
   // initialize the text
   UpdatePlaceholderText(false);
 

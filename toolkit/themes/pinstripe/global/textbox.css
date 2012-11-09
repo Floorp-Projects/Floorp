@@ -32,8 +32,8 @@ html|*.textbox-textarea {
   font: inherit;
 }
 
-html|*.textbox-input:-moz-placeholder,
-html|*.textbox-textarea:-moz-placeholder {
+html|*.textbox-input::-moz-placeholder,
+html|*.textbox-textarea::-moz-placeholder {
   color: GrayText;
 }
 
