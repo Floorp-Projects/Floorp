@@ -176,6 +176,7 @@ public:
     mTarget = base.get();
   }
 
+  // Can return null if we already have a handler.
   nsIScriptContext *GetEventContext() const
   {
     return mContext;
@@ -208,9 +209,12 @@ public:
 
   // Set a handler for this event listener.  The handler must already
   // be bound to the right target.
-  void SetHandler(const nsEventHandler& aHandler)
+  void SetHandler(const nsEventHandler& aHandler, nsIScriptContext* aContext,
+                  JSObject* aScopeObject)
   {
     mHandler.SetHandler(aHandler);
+    mContext = aContext;
+    mScopeObject = aScopeObject;
   }
   void SetHandler(mozilla::dom::EventHandlerNonNull* aHandler)
   {
@@ -260,7 +264,9 @@ protected:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSEventListener, NS_IJSEVENTLISTENER_IID)
 
-/* factory function.  aHandler must already be bound to aTarget */
+/* factory function.  aHandler must already be bound to aTarget.
+   aContext is allowed to be null if aHandler is already set up.
+ */
 nsresult NS_NewJSEventListener(nsIScriptContext *aContext,
                                JSObject* aScopeObject, nsISupports* aTarget,
                                nsIAtom* aType, const nsEventHandler& aHandler,

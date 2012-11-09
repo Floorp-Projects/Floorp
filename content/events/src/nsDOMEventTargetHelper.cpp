@@ -238,8 +238,7 @@ nsDOMEventTargetHelper::SetEventHandler(nsIAtom* aType,
     return NS_OK;
   }
   
-  return elm->SetEventHandlerToJsval(aType, aCx, obj, aValue,
-                                     HasOrHasHadOwner());
+  return elm->SetEventHandlerToJsval(aType, aCx, obj, aValue);
 }
 
 void
