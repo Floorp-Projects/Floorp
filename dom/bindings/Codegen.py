@@ -3026,7 +3026,7 @@ class CGArgumentConverter(CGThing):
             self.argcAndIndex).define()
 
 def getWrapTemplateForType(type, descriptorProvider, result, successCode,
-                           isCreator):
+                           isCreator, exceptionCode):
     """
     Reflect a C++ value stored in "result", of IDL type "type" into JS.  The
     "successCode" is the code to run once we have successfully done the
@@ -3035,9 +3035,12 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
 
     Returns (templateString, infallibility of conversion template)
     """
-    haveSuccessCode = successCode is not None
-    if not haveSuccessCode:
+    if successCode is None:
         successCode = "return true;"
+
+    # We often want exceptionCode to be indented, since it often appears in an
+    # if body.
+    exceptionCodeIndented = CGIndenter(CGGeneric(exceptionCode))
 
     def setValue(value, callWrapValue=False):
         """
@@ -3046,13 +3049,11 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         """
         if not callWrapValue:
             tail = successCode
-        elif haveSuccessCode:
+        else:
             tail = ("if (!MaybeWrapValue(cx, ${obj}, ${jsvalPtr})) {\n" +
-                    "  return false;\n" +
+                    ("%s\n" % exceptionCodeIndented.define()) +
                     "}\n" +
                     successCode)
-        else:
-            tail = "return MaybeWrapValue(cx, ${obj}, ${jsvalPtr});"
         return ("${jsvalRef} = %s;\n" +
                 tail) % (value)
 
@@ -3062,9 +3063,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         is the code to run if calling "wrapCall" fails 
         """
         if failureCode is None:
-            if not haveSuccessCode:
-                return "return " + wrapCall + ";"
-            failureCode = "return false;"
+            failureCode = exceptionCode
         str = ("if (!%s) {\n" +
                CGIndenter(CGGeneric(failureCode)).define() + "\n" +
                "}\n" +
@@ -3082,7 +3081,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             # Nullable sequences are Nullable< nsTArray<T> >
             (recTemplate, recInfall) = getWrapTemplateForType(type.inner, descriptorProvider,
                                                               "%s.Value()" % result, successCode,
-                                                              isCreator)
+                                                              isCreator, exceptionCode)
             return ("""
 if (%s.IsNull()) {
 %s
@@ -3099,7 +3098,8 @@ if (%s.IsNull()) {
                 'successCode': "break;",
                 'jsvalRef': "tmp",
                 'jsvalPtr': "&tmp",
-                'isCreator': isCreator
+                'isCreator': isCreator,
+                'exceptionCode': exceptionCode
                 }
             )
         innerTemplate = CGIndenter(CGGeneric(innerTemplate), 6).define()
@@ -3107,7 +3107,7 @@ if (%s.IsNull()) {
 uint32_t length = %s.Length();
 JSObject *returnArray = JS_NewArrayObject(cx, length, NULL);
 if (!returnArray) {
-  return false;
+%s
 }
 // Scope for 'tmp'
 {
@@ -3120,10 +3120,13 @@ if (!returnArray) {
     } while (0);
     if (!JS_DefineElement(cx, returnArray, i, tmp,
                           nullptr, nullptr, JSPROP_ENUMERATE)) {
-      return false;
+%s
     }
   }
-}\n""" % (result, innerTemplate)) + setValue("JS::ObjectValue(*returnArray)"), False)
+}\n""" % (result, exceptionCodeIndented.define(),
+          innerTemplate,
+          CGIndenter(exceptionCodeIndented, 4).define())) +
+                setValue("JS::ObjectValue(*returnArray)"), False)
 
     if type.isGeckoInterface():
         descriptor = descriptorProvider.getDescriptor(type.unroll().inner.identifier.name)
@@ -3152,7 +3155,7 @@ if (!returnArray) {
                 # if they already threw an exception.  Same thing for
                 # non-prefable bindings.
                 failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
-                          "return false;")
+                          "%s" % exceptionCode)
             else:
                 if descriptor.notflattened:
                     raise TypeError("%s is prefable but not flattened; "
@@ -3184,11 +3187,12 @@ if (!returnArray) {
         return ("""MOZ_ASSERT(uint32_t(%(result)s) < ArrayLength(%(strings)s));
 JSString* %(resultStr)s = JS_NewStringCopyN(cx, %(strings)s[uint32_t(%(result)s)].value, %(strings)s[uint32_t(%(result)s)].length);
 if (!%(resultStr)s) {
-  return false;
+%(exceptionCode)s
 }
 """ % { "result" : result,
         "resultStr" : result + "_str",
-        "strings" : type.inner.identifier.name + "Values::strings" } +
+        "strings" : type.inner.identifier.name + "Values::strings",
+        "exceptionCode" : exceptionCode } +
         setValue("JS::StringValue(%s_str)" % result), False)
 
     if type.isCallback():
@@ -3218,7 +3222,10 @@ if (!%(resultStr)s) {
 
     if type.isDictionary():
         assert not type.nullable()
-        return ("return %s.ToObject(cx, ${obj}, ${jsvalPtr});" % result, False)
+        return ("if (!%s.ToObject(cx, ${obj}, ${jsvalPtr})) {\n"
+                "%s\n"
+                "}\n"
+                "return true;" % (result, exceptionCodeIndented.define()), False)
 
     if not type.isPrimitive():
         raise TypeError("Need to learn to wrap %s" % type)
@@ -3226,7 +3233,7 @@ if (!%(resultStr)s) {
     if type.nullable():
         (recTemplate, recInfal) = getWrapTemplateForType(type.inner, descriptorProvider,
                                                          "%s.Value()" % result, successCode,
-                                                         isCreator)
+                                                         isCreator, exceptionCode)
         return ("if (%s.IsNull()) {\n" % result +
                 CGIndenter(CGGeneric(setValue("JSVAL_NULL"))).define() + "\n" +
                 "}\n" + recTemplate, recInfal)
@@ -3272,11 +3279,16 @@ def wrapForType(type, descriptorProvider, templateValues):
                                   will be used as the code
       * 'isCreator' (optional): If true, we're wrapping for the return value of
                                 a [Creator] method.  Assumed false if not set.
+      * 'exceptionCode' (optional): Code to run when a JS exception is thrown.
+                                    The default is "return false;".  The code
+                                    passed here must return.
     """
     wrap = getWrapTemplateForType(type, descriptorProvider,
                                   templateValues.get('result', 'result'),
                                   templateValues.get('successCode', None),
-                                  templateValues.get('isCreator', False))[0]
+                                  templateValues.get('isCreator', False),
+                                  templateValues.get('exceptionCode',
+                                                     "return false;"))[0]
 
     defaultValues = {'obj': 'obj'}
     return string.Template(wrap).substitute(defaultValues, **templateValues)
@@ -3293,7 +3305,7 @@ def infallibleForMember(member, type, descriptorProvider):
         failure conditions.
     """
     return getWrapTemplateForType(type, descriptorProvider, 'result', None,\
-                                  memberIsCreator(member))[1]
+                                  memberIsCreator(member), "return false;")[1]
 
 def typeNeedsCx(type, retVal=False):
     if type is None:
