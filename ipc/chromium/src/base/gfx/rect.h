@@ -12,7 +12,7 @@
 #ifndef BASE_GFX_RECT_H__
 #define BASE_GFX_RECT_H__
 
-#include <iostream>
+#include <ostream>
 
 #include "base/gfx/point.h"
 #include "base/gfx/size.h"
