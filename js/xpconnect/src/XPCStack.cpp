@@ -122,7 +122,7 @@ XPCJSStackFrame::CreateStack(JSContext* cx, XPCJSStackFrame** stack)
                 if (length != size_t(-1)) {
                     self->mFunname = static_cast<char *>(nsMemory::Alloc(length + 1));
                     if (self->mFunname) {
-                        JS_EncodeStringToBuffer(funid, self->mFunname, length);
+                        JS_EncodeStringToBuffer(cx, funid, self->mFunname, length);
                         self->mFunname[length] = '\0';
                     }
                 }
