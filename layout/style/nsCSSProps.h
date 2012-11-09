@@ -101,6 +101,9 @@ MOZ_STATIC_ASSERT((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // Is this property (which must be a shorthand) really an alias?
 #define CSS_PROPERTY_IS_ALIAS                     (1<<17)
 
+// Does the property apply to ::-moz-placeholder?
+#define CSS_PROPERTY_APPLIES_TO_PLACEHOLDER       (1<<18)
+
 /**
  * Types of animatable values.
  */

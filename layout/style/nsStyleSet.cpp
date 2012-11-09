@@ -129,9 +129,7 @@ nsStyleSet::Init(nsPresContext *aPresContext)
 {
   mFirstLineRule = new nsEmptyStyleRule;
   mFirstLetterRule = new nsEmptyStyleRule;
-  if (!mFirstLineRule || !mFirstLetterRule) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  mPlaceholderRule = new nsEmptyStyleRule;
 
   if (!BuildDefaultStyleData(aPresContext)) {
     mDefaultStyleData.Destroy(0, aPresContext);
@@ -1065,6 +1063,8 @@ nsStyleSet::WalkRestrictionRule(nsCSSPseudoElements::Type aPseudoType,
     aRuleWalker->Forward(mFirstLetterRule);
   else if (aPseudoType == nsCSSPseudoElements::ePseudo_firstLine)
     aRuleWalker->Forward(mFirstLineRule);
+  else if (aPseudoType == nsCSSPseudoElements::ePseudo_mozPlaceholder)
+    aRuleWalker->Forward(mPlaceholderRule);
 }
 
 already_AddRefed<nsStyleContext>

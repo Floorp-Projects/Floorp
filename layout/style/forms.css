@@ -125,8 +125,12 @@ textarea::-moz-placeholder {
   white-space: pre;
   overflow: auto;
   border: 0px !important;
-  /* The 1px horizontal padding is for parity with Win/IE */
-  padding: 0px 1px;
+  /*
+   * The 1px horizontal padding is for parity with Win/IE.
+   * We need to mark it !important to make sure it can't be changed on the
+   * placeholder.
+   */
+  padding: 0px 1px !important;
   margin: 0px;
   text-decoration: inherit;
   -moz-text-decoration-color: inherit;
@@ -147,12 +151,23 @@ input > .anonymous-div.inherit-overflow {
 
 input::-moz-placeholder,
 textarea::-moz-placeholder {
+  /*
+   * Changing display to inline can leads to broken behaviour and will assert.
+   */
+  display: inline-block !important;
+
+  /*
+   * Changing resize would display a broken behaviour and will assert.
+   */
+  resize: none !important;
+
+  overflow: hidden !important;
+
   color: GrayText;
 }
 
 textarea::-moz-placeholder {
-  resize: none;
-  white-space: pre-wrap;
+  white-space: pre-wrap !important;
 }
 
 input:-moz-read-write,
