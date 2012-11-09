@@ -3099,7 +3099,8 @@ if (%s.IsNull()) {
                 'jsvalRef': "tmp",
                 'jsvalPtr': "&tmp",
                 'isCreator': isCreator,
-                'exceptionCode': exceptionCode
+                'exceptionCode': exceptionCode,
+                'obj': "returnArray"
                 }
             )
         innerTemplate = CGIndenter(CGGeneric(innerTemplate), 6).define()
@@ -3138,7 +3139,7 @@ if (!returnArray) {
             wrappingCode = ""
 
         if descriptor.interface.isCallback():
-            wrap = "WrapCallbackInterface(cx, obj, %s, ${jsvalPtr})" % result
+            wrap = "WrapCallbackInterface(cx, ${obj}, %s, ${jsvalPtr})" % result
             failed = None
         elif not descriptor.interface.isExternal() and not descriptor.skipGen:
             if descriptor.wrapperCache:
@@ -6618,13 +6619,19 @@ class CGBindingRoot(CGThing):
 
 class CGNativeMember(ClassMethod):
     def __init__(self, descriptor, member, name, signature, extendedAttrs,
-                 breakAfter=True, passCxAsNeeded=True, visibility="public"):
+                 breakAfter=True, passCxAsNeeded=True, visibility="public",
+                 jsObjectsArePtr=False):
+        """
+        If jsObjectsArePtr is true, typed arrays and "object" will be
+        passed as JSObject*
+        """
         self.descriptor = descriptor
         self.member = member
         self.extendedAttrs = extendedAttrs
         self.resultAlreadyAddRefed = isResultAlreadyAddRefed(self.descriptor,
                                                              self.extendedAttrs)
         self.passCxAsNeeded = passCxAsNeeded
+        self.jsObjectsArePtr = jsObjectsArePtr
         breakAfterSelf = "\n" if breakAfter else ""
         ClassMethod.__init__(self, name,
                              self.getReturnType(signature[0], False),
@@ -6843,13 +6850,17 @@ class CGNativeMember(ClassMethod):
 
         if type.isSpiderMonkeyInterface():
             assert not isMember
-            if type.nullable():
-                typeDecl = "%s*"
+            if self.jsObjectsArePtr:
+                typeDecl = "JSObject*"
             else:
-                typeDecl = "%s"
-                if not optional:
-                    typeDecl += "&"
-            return (typeDecl % type.name), False, False
+                if type.nullable():
+                    typeDecl = "%s*"
+                else:
+                    typeDecl = "%s"
+                    if not optional:
+                        typeDecl += "&"
+                typeDecl = typeDecl % type.name
+            return typeDecl, False, False
 
         if type.isString():
             if isMember:
@@ -6875,7 +6886,7 @@ class CGNativeMember(ClassMethod):
             return "JS::Value", False, False
 
         if type.isObject():
-            if type.nullable():
+            if type.nullable() or self.jsObjectsArePtr:
                 declType = "%s*"
             else:
                 if optional:
@@ -7200,6 +7211,7 @@ class CallCallback(CGNativeMember):
     def __init__(self, callback, descriptorProvider):
         sig = callback.signatures()[0]
         self.retvalType = sig[0]
+        self.callback = callback
         args = sig[1]
         self.argCount = len(args)
         class FakeMember():
@@ -7220,16 +7232,20 @@ class CallCallback(CGNativeMember):
                                 "Call", (self.retvalType, args),
                                 extendedAttrs={},
                                 passCxAsNeeded=False,
-                                visibility="private")
+                                visibility="private",
+                                jsObjectsArePtr=True)
         # We have to do all the generation of our body now, because
         # the caller relies on us throwing if we can't manage it.
+        self.exceptionCode=("aRv.Throw(NS_ERROR_UNEXPECTED);\n"
+                            "return%s;" % self.getDefaultRetval())
         self.body = self.getImpl()
 
     def getImpl(self):
         replacements = {
             "errorReturn" : self.getDefaultRetval(),
             "argCount": self.argCount,
-            "returnResult": self.getResultConversion()
+            "returnResult": self.getResultConversion(),
+            "convertArgs": self.getArgConversions()
             }
         if self.argCount > 0:
             replacements["argvDecl"] = string.Template(
@@ -7243,8 +7259,9 @@ class CallCallback(CGNativeMember):
         return string.Template(
             "JS::Value rval = JSVAL_VOID;\n"
             "${argvDecl}" # Newlines and semicolons are in the value
+            "${convertArgs}"
             "if (!JS_CallFunctionValue(cx, aThisObj, JS::ObjectValue(*mCallable),\n"
-            "                          ${argCount}, ${argv}, &rval)) {\n"
+            "                          argc, ${argv}, &rval)) {\n"
             "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
             "  return${errorReturn};\n"
             "}\n"
@@ -7257,18 +7274,75 @@ class CallCallback(CGNativeMember):
             "holderName" : "rvalHolder",
             "declName" : "rvalDecl"
             }
-        exceptionCode=("aRv.Throw(NS_ERROR_UNEXPECTED);\n"
-                       "return%s;" % self.getDefaultRetval())
 
         convertType = instantiateJSToNativeConversionTemplate(
             getJSToNativeConversionTemplate(self.retvalType,
                                             self.descriptor,
-                                            exceptionCode=exceptionCode),
+                                            exceptionCode=self.exceptionCode),
             replacements)
         assignRetval = string.Template(
             self.getRetvalInfo(self.retvalType,
                                False)[2]).substitute(replacements)
         return convertType.define() + "\n" + assignRetval
+
+    def getArgConversions(self):
+        # Just reget the arglist from self.callback, because our superclasses
+        # just have way to many members they like to clobber, so I can't find a
+        # safe member name to store it in.
+        argConversions = [self.getArgConversion(i, arg) for (i, arg)
+                          in enumerate(self.callback.signatures()[0][1])]
+        # Do them back to front, so our argc modifications will work
+        # correctly, because we examine trailing arguments first.
+        argConversions.reverse();
+        # Wrap each one in a scope so that any locals it has don't leak out, and
+        # also so that we can just "break;" for our successCode.
+        argConversions = [CGWrapper(CGIndenter(CGGeneric(c)),
+                                    pre="do {\n",
+                                    post="\n} while (0);")
+                          for c in argConversions]
+        argConversions.insert(0,
+                              CGGeneric("unsigned argc = %d;" % self.argCount));
+        # And slap them together.
+        return CGList(argConversions, "\n\n").define() + "\n\n"
+
+    def getArgConversion(self, i, arg):
+        argval = arg.identifier.name
+        if arg.optional:
+            argval += ".Value()"
+        if arg.type.isString():
+            # XPConnect string-to-JS conversion wants to mutate the string.  So
+            # let's give it a string it can mutate
+            # XXXbz if we try to do a sequence of strings, this will kinda fail.
+            result = "mutableStr"
+            prepend = "nsString mutableStr(%s);\n" % argval
+        else:
+            result = argval
+            prepend = ""
+
+        conversion = prepend + wrapForType(
+            arg.type, self.descriptor,
+            {
+                'result' : result,
+                'successCode' : "break;",
+                'jsvalRef' : "argv[%d]" % i,
+                'jsvalPtr' : "&argv[%d]" % i,
+                # XXXbz we don't have anything better to use for 'obj',
+                # really...
+                'obj' : 'mCallable',
+                'isCreator': False,
+                'exceptionCode' : self.exceptionCode
+                })
+        if arg.optional:
+            conversion = (
+                CGIfWrapper(CGGeneric(conversion),
+                            "%s.WasPassed()" % arg.identifier.name).define() +
+                " else if (argc == %d) {\n"
+                "  // This is our current trailing argument; reduce argc\n"
+                "  --argc;\n"
+                "} else {\n"
+                "  argv[%d] = JS::UndefinedValue();\n"
+                "}" % (i+1, i))
+        return conversion
 
     def getDefaultRetval(self):
         default = self.getRetvalInfo(self.retvalType, False)[1]
