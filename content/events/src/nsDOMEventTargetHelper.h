@@ -92,9 +92,20 @@ public:
   nsresult SetEventHandler(nsIAtom* aType,
                            JSContext* aCx,
                            const JS::Value& aValue);
+  void SetEventHandler(nsIAtom* aType,
+                       mozilla::dom::EventHandlerNonNull* aHandler,
+                       mozilla::ErrorResult& rv)
+  {
+    rv = GetListenerManager(true)->SetEventHandler(aType, aHandler);
+  }
   void GetEventHandler(nsIAtom* aType,
                        JSContext* aCx,
                        JS::Value* aValue);
+  mozilla::dom::EventHandlerNonNull* GetEventHandler(nsIAtom* aType)
+  {
+    nsEventListenerManager* elm = GetListenerManager(false);
+    return elm ? elm->GetEventHandler(aType) : nullptr;
+  }
 
   nsresult CheckInnerWindowCorrectness()
   {
@@ -162,9 +173,7 @@ private:
                             mozilla::dom::EventHandlerNonNull* aCallback, \
                             ErrorResult& aRv)                             \
   {                                                                       \
-    JSObject* callback = aCallback ? aCallback->Callable() : nullptr;     \
-    aRv = SetEventHandler(nsGkAtoms::on##_event, aCx,                     \
-                          JS::ObjectOrNullValue(callback));               \
+    SetEventHandler(nsGkAtoms::on##_event, aCallback, aRv);               \
   }
 
 /* Use this macro to declare functions that forward the behavior of this

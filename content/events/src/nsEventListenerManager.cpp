@@ -1161,65 +1161,62 @@ nsEventListenerManager::HasUnloadListeners()
 }
 
 nsresult
-nsEventListenerManager::SetEventHandlerToJsval(nsIAtom* aEventName,
-                                               JSContext* cx,
-                                               JSObject* aScope,
-                                               const jsval& v)
+nsEventListenerManager::SetEventHandler(nsIAtom* aEventName,
+                                        EventHandlerNonNull* aHandler)
 {
-  JSObject *callable;
-  if (JSVAL_IS_PRIMITIVE(v) ||
-      !JS_ObjectIsCallable(cx, callable = JSVAL_TO_OBJECT(v))) {
+  if (!aHandler) {
     RemoveEventHandler(aEventName);
     return NS_OK;
-  }
-
-  nsEventHandler handler;
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mTarget);
-  if (aEventName == nsGkAtoms::onerror && win) {
-    bool ok;
-    nsRefPtr<OnErrorEventHandlerNonNull> handlerCallback =
-      new OnErrorEventHandlerNonNull(cx, aScope, callable, &ok);
-    if (!ok) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    handler.SetHandler(handlerCallback);
-  } else if (aEventName == nsGkAtoms::onbeforeunload) {
-    MOZ_ASSERT(win,
-               "Should not have onbeforeunload handlers on non-Window objects");
-    bool ok;
-    nsRefPtr<BeforeUnloadEventHandlerNonNull> handlerCallback =
-      new BeforeUnloadEventHandlerNonNull(cx, aScope, callable, &ok);
-    if (!ok) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    handler.SetHandler(handlerCallback);
-  } else {
-    bool ok;
-    nsRefPtr<EventHandlerNonNull> handlerCallback =
-      new EventHandlerNonNull(cx, aScope, callable, &ok);
-    if (!ok) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    handler.SetHandler(handlerCallback);
   }
 
   // Untrusted events are always permitted for non-chrome script
   // handlers.
   nsListenerStruct *ignored;
-  return SetEventHandlerInternal(nullptr, nullptr, aEventName, handler,
+  return SetEventHandlerInternal(nullptr, nullptr, aEventName,
+                                 nsEventHandler(aHandler),
                                  !nsContentUtils::IsCallerChrome(), &ignored);
 }
 
-void
-nsEventListenerManager::GetEventHandler(nsIAtom *aEventName, jsval *vp)
+nsresult
+nsEventListenerManager::SetEventHandler(OnErrorEventHandlerNonNull* aHandler)
+{
+  if (!aHandler) {
+    RemoveEventHandler(nsGkAtoms::onerror);
+    return NS_OK;
+  }
+
+  // Untrusted events are always permitted for non-chrome script
+  // handlers.
+  nsListenerStruct *ignored;
+  return SetEventHandlerInternal(nullptr, nullptr, nsGkAtoms::onerror,
+                                 nsEventHandler(aHandler),
+                                 !nsContentUtils::IsCallerChrome(), &ignored);
+}
+
+nsresult
+nsEventListenerManager::SetEventHandler(BeforeUnloadEventHandlerNonNull* aHandler)
+{
+  if (!aHandler) {
+    RemoveEventHandler(nsGkAtoms::onbeforeunload);
+    return NS_OK;
+  }
+
+  // Untrusted events are always permitted for non-chrome script
+  // handlers.
+  nsListenerStruct *ignored;
+  return SetEventHandlerInternal(nullptr, nullptr, nsGkAtoms::onbeforeunload,
+                                 nsEventHandler(aHandler),
+                                 !nsContentUtils::IsCallerChrome(), &ignored);
+}
+
+const nsEventHandler*
+nsEventListenerManager::GetEventHandlerInternal(nsIAtom *aEventName)
 {
   uint32_t eventType = nsContentUtils::GetEventId(aEventName);
   nsListenerStruct* ls = FindEventHandler(eventType, aEventName);
 
-  *vp = JSVAL_NULL;
-
   if (!ls) {
-    return;
+    return nullptr;
   }
 
   nsIJSEventListener *listener = ls->GetJSListener();
@@ -1230,10 +1227,10 @@ nsEventListenerManager::GetEventHandler(nsIAtom *aEventName, jsval *vp)
 
   const nsEventHandler& handler = listener->GetHandler();
   if (handler.HasEventHandler()) {
-    *vp = OBJECT_TO_JSVAL(handler.Ptr()->Callable());
-  } else {
-    *vp = JS::NullValue();
+    return &handler;
   }
+
+  return nullptr;
 }
 
 size_t
