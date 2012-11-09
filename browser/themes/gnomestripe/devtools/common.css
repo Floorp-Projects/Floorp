@@ -148,6 +148,7 @@
 
 .devtools-searchinput > .textbox-input-box > .textbox-input::-moz-placeholder {
   color: hsl(208,10%,66%);
+  opacity: 1.0;
 }
 
 /* Close button */

@@ -428,6 +428,7 @@ input.name:focus {
 }
 
 input.name::-moz-placeholder {
+  opacity: 1.0;
   font-style: italic !important;
   color: transparent;
   background-image: url(chrome://browser/skin/tabview/edit-light.png);

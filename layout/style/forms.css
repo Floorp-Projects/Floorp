@@ -169,7 +169,7 @@ textarea::-moz-placeholder {
    */
   pointer-events: none !important;
 
-  color: GrayText;
+  opacity: 0.54;
 }
 
 textarea::-moz-placeholder {
