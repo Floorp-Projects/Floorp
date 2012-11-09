@@ -471,7 +471,6 @@ struct GetNativePropertyStub
 
         // TODO: ensure stack is aligned?
         DebugOnly<uint32> initialStack = masm.framePushed();
-        masm.checkStackAlignment();
 
         Label success, exception;
 

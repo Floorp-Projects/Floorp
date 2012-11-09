@@ -990,9 +990,14 @@ struct ScriptSource
     friend class SourceCompressorThread;
   private:
     union {
-        // When the script source is ready, compressedLength_ != 0 implies
-        // compressed holds the compressed data; otherwise, source holds the
-        // uncompressed source.
+        // Before setSourceCopy or setSource are successfully called, this union
+        // has a NULL pointer. When the script source is ready,
+        // compressedLength_ != 0 implies compressed holds the compressed data;
+        // otherwise, source holds the uncompressed source. There is a special
+        // pointer |emptySource| for source code for length 0.
+        //
+        // The only function allowed to malloc, realloc, or free the pointers in
+        // this union is adjustDataSize(). Don't do it elsewhere.
         jschar *source;
         unsigned char *compressed;
     } data;
@@ -1068,6 +1073,7 @@ struct ScriptSource
     size_t computedSizeOfData() const {
         return compressed() ? compressedLength_ : sizeof(jschar) * length_;
     }
+    bool adjustDataSize(size_t nbytes);
 };
 
 class ScriptSourceHolder

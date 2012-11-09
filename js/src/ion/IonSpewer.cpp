@@ -230,6 +230,8 @@ ion::CheckLogging()
         EnableChannel(IonSpew_Safepoints);
     if (ContainsFlag(env, "pools"))
         EnableChannel(IonSpew_Pools);
+    if (ContainsFlag(env, "cacheflush"))
+        EnableChannel(IonSpew_CacheFlush);
     if (ContainsFlag(env, "logs"))
         EnableIonDebugLogging();
     if (ContainsFlag(env, "all"))

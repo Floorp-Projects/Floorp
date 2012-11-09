@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function eventHandlerLoad() {
+  var win = document.getElementById('ifr').contentWindow;
+  win.location = "file_bug809290_c.html";
+}
+</script>
+</head>
+<body onload="eventHandlerLoad();">
+<iframe id="ifr" src="file_empty.html">
+</body>
+</html>

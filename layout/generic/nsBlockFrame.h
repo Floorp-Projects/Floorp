@@ -631,11 +631,14 @@ protected:
                                          nsIFrame*           aFrame,
                                          bool&             aMadeNewFrame);
 
-  // Push aLine, which cannot be placed on this page/column but should
-  // fit on a future one.  Set aKeepReflowGoing to false.
+  /**
+   * Push aLine (and any after it), since it cannot be placed on this
+   * page/column.  Set aKeepReflowGoing to false and set
+   * flag aState.mReflowStatus as incomplete.
+   */
   void PushTruncatedLine(nsBlockReflowState& aState,
                          line_iterator       aLine,
-                         bool&             aKeepReflowGoing);
+                         bool*               aKeepReflowGoing);
 
   nsresult SplitLine(nsBlockReflowState& aState,
                      nsLineLayout& aLineLayout,

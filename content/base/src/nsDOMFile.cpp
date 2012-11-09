@@ -27,7 +27,7 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIUUIDGenerator.h"
-#include "nsBlobProtocolHandler.h"
+#include "nsHostObjectProtocolHandler.h"
 #include "nsStringStream.h"
 #include "nsJSUtils.h"
 #include "nsPrintfCString.h"
@@ -284,26 +284,15 @@ nsDOMFileBase::GetInternalUrl(nsIPrincipal* aPrincipal, nsAString& aURL)
 {
   NS_ENSURE_STATE(aPrincipal);
 
-  nsresult rv;
-  nsCOMPtr<nsIUUIDGenerator> uuidgen =
-    do_GetService("@mozilla.org/uuid-generator;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsID id;
-  rv = uuidgen->GenerateUUIDInPlace(&id);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  char chars[NSID_LENGTH];
-  id.ToProvidedString(chars);
-    
-  nsCString url = NS_LITERAL_CSTRING(BLOBURI_SCHEME ":") +
-    Substring(chars + 1, chars + NSID_LENGTH - 2);
-
-  nsBlobProtocolHandler::AddFileDataEntry(url, this,
-                                              aPrincipal);
+  nsCString url;
+  nsresult rv = nsBlobProtocolHandler::AddDataEntry(
+    NS_LITERAL_CSTRING(BLOBURI_SCHEME),
+    static_cast<nsIDOMBlob*>(this), aPrincipal, url);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   CopyASCIItoUTF16(url, aURL);
-  
   return NS_OK;
 }
 
@@ -859,6 +848,6 @@ nsDOMFileInternalUrlHolder::~nsDOMFileInternalUrlHolder() {
   if (!mUrl.IsEmpty()) {
     nsAutoCString narrowUrl;
     CopyUTF16toUTF8(mUrl, narrowUrl);
-    nsBlobProtocolHandler::RemoveFileDataEntry(narrowUrl);
+    nsBlobProtocolHandler::RemoveDataEntry(narrowUrl);
   }
 }

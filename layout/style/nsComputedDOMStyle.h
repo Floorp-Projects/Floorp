@@ -324,6 +324,7 @@ private:
   nsIDOMCSSValue* DoGetResize();
   nsIDOMCSSValue* DoGetPageBreakAfter();
   nsIDOMCSSValue* DoGetPageBreakBefore();
+  nsIDOMCSSValue* DoGetPageBreakInside();
   nsIDOMCSSValue* DoGetTransform();
   nsIDOMCSSValue* DoGetTransformOrigin();
   nsIDOMCSSValue* DoGetPerspective();
