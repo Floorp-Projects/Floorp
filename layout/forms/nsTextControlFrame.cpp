@@ -1307,7 +1307,7 @@ nsTextControlFrame::SetValueChanged(bool aValueChanged)
     GetTextLength(&textLength);
 
     nsWeakFrame weakFrame(this);
-    txtCtrl->SetPlaceholderClass(!textLength, true);
+    txtCtrl->SetPlaceholderVisibility(!textLength, true);
     if (!weakFrame.IsAlive()) {
       return;
     }
@@ -1365,7 +1365,7 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   if (mUsePlaceholder && !aBeforeEditorInit)
   {
     nsWeakFrame weakFrame(this);
-    txtCtrl->SetPlaceholderClass(value.IsEmpty(), aNotify);
+    txtCtrl->SetPlaceholderVisibility(value.IsEmpty(), aNotify);
     NS_ENSURE_STATE(weakFrame.IsAlive());
   }
 
@@ -1455,3 +1455,38 @@ nsTextControlFrame::PeekOffset(nsPeekOffsetStruct *aPos)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists)
+{
+  /*
+   * The implementation of this method is equivalent as:
+   * nsContainerFrame::BuildDisplayList()
+   * with the difference that we filter-out the placeholder frame when it
+   * should not be visible.
+   */
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsTextControlFrame");
+
+  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
+  NS_ASSERTION(txtCtrl, "Content not a text control element!");
+
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIFrame* kid = mFrames.FirstChild();
+  nsDisplayListSet set(aLists, aLists.Content());
+
+  while (kid) {
+    // If the frame is the placeholder frame, we should only show it if the
+    // placeholder has to be visible.
+    if (kid->GetContent() != txtCtrl->GetPlaceholderNode() ||
+        txtCtrl->GetPlaceholderVisibility()) {
+      nsresult rv = BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set, 0);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    kid = kid->GetNextSibling();
+  }
+
+  return NS_OK;
+}

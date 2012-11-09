@@ -933,7 +933,8 @@ nsTextEditorState::nsTextEditorState(nsITextControlElement* aOwningElement)
     mInitializing(false),
     mValueTransferInProgress(false),
     mSelectionCached(true),
-    mSelectionRestoreEagerInit(false)
+    mSelectionRestoreEagerInit(false),
+    mPlaceholderVisibility(false)
 {
   MOZ_COUNT_CTOR(nsTextEditorState);
 }
@@ -1660,6 +1661,10 @@ be called if @placeholder is the empty string when trimmed from line breaks");
   rv = mPlaceholderDiv->AppendChildTo(placeholderText, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mPlaceholderDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                           NS_LITERAL_STRING("anonymous-div placeholder"),
+                           false);
+
   // initialize the text
   UpdatePlaceholderText(false);
 
@@ -1969,7 +1974,7 @@ nsTextEditorState::ValueWasChanged(bool aNotify)
 
   nsAutoString valueString;
   GetValue(valueString, true);
-  SetPlaceholderClass(valueString.IsEmpty(), aNotify);
+  SetPlaceholderVisibility(valueString.IsEmpty(), aNotify);
 }
 
 void
@@ -1993,28 +1998,17 @@ nsTextEditorState::UpdatePlaceholderText(bool aNotify)
 }
 
 void
-nsTextEditorState::SetPlaceholderClass(bool aVisible,
-                                       bool aNotify)
+nsTextEditorState::SetPlaceholderVisibility(bool aVisible,
+                                            bool aNotify)
 {
   NS_ASSERTION(mPlaceholderDiv, "This function should not be called if "
                                 "mPlaceholderDiv isn't set");
 
-  // No need to do anything if we don't have a frame yet
-  if (!mBoundFrame)
-    return;
+  mPlaceholderVisibility = aVisible;
 
-  nsAutoString classValue;
-
-  classValue.Assign(NS_LITERAL_STRING("anonymous-div placeholder"));
-
-  if (!aVisible)
-    classValue.AppendLiteral(" hidden");
-
-  nsIContent* placeholderDiv = GetPlaceholderNode();
-  NS_ENSURE_TRUE_VOID(placeholderDiv);
-
-  placeholderDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                          classValue, aNotify);
+  if (mBoundFrame && aNotify) {
+    mBoundFrame->InvalidateFrame();
+  }
 }
 
 void
