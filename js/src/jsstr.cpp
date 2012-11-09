@@ -3726,25 +3726,6 @@ js::InflateUTF8String(JSContext *cx, const char *bytes, size_t *lengthp)
     return NULL;
 }
 
-/*
- * May be called with null cx.
- */
-char *
-js::DeflateString(JSContext *maybecx, const jschar *chars, size_t nchars)
-{
-    AutoAssertNoGC nogc;
-    size_t nbytes = nchars;
-    char *bytes = maybecx
-                  ? maybecx->pod_malloc<char>(nbytes + 1)
-                  : js_pod_malloc<char>(nbytes + 1);
-    if (!bytes)
-        return NULL;
-    for (size_t i = 0; i < nbytes; i++)
-        bytes[i] = (char) chars[i];
-    bytes[nbytes] = 0;
-    return bytes;
-}
-
 size_t
 js::GetDeflatedStringLength(JSContext *cx, const jschar *chars, size_t nchars)
 {

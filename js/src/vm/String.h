@@ -11,6 +11,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 
+#include "js/CharacterEncoding.h"
+
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jsfriendapi.h"
@@ -476,6 +478,11 @@ class JSLinearString : public JSString
     const jschar *chars() const {
         JS_ASSERT(JSString::isLinear());
         return d.u1.chars;
+    }
+
+    JS::TwoByteChars range() const {
+        JS_ASSERT(JSString::isLinear());
+        return JS::TwoByteChars(d.u1.chars, length());
     }
 };
 
