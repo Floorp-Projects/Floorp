@@ -522,14 +522,14 @@ nsEventListenerManager::FindEventHandler(uint32_t aEventType,
 
 nsresult
 nsEventListenerManager::SetEventHandlerInternal(nsIScriptContext *aContext,
-                                                JSContext* aCx,
                                                 JSObject* aScopeObject,
                                                 nsIAtom* aName,
                                                 const nsEventHandler& aHandler,
                                                 bool aPermitUntrustedEvents,
                                                 nsListenerStruct **aListenerStruct)
 {
-  NS_ASSERTION(aContext || aCx, "Must have one or the other!");
+  NS_ASSERTION(aContext || aHandler.HasEventHandler(),
+               "Must have one or the other!");
 
   nsresult rv = NS_OK;
   uint32_t eventType = nsContentUtils::GetEventId(aName);
@@ -538,53 +538,23 @@ nsEventListenerManager::SetEventHandlerInternal(nsIScriptContext *aContext,
   if (!ls) {
     // If we didn't find a script listener or no listeners existed
     // create and add a new one.
-    const uint32_t flags = NS_EVENT_FLAG_BUBBLE |
-                           (aContext ? NS_PRIV_EVENT_FLAG_SCRIPT : 0);
-    nsCOMPtr<nsIDOMEventListener> listener;
+    const uint32_t flags = NS_EVENT_FLAG_BUBBLE | NS_PRIV_EVENT_FLAG_SCRIPT;
 
-    if (aContext) {
-      nsCOMPtr<nsIJSEventListener> scriptListener;
-      rv = NS_NewJSEventListener(aContext, aScopeObject, mTarget, aName,
-                                 aHandler, getter_AddRefs(scriptListener));
-      listener = scriptListener.forget();
-    } else {
-      // If we don't have a script context, we're setting an event handler from
-      // a component or other odd scope.  Ask XPConnect if it can make us an
-      // nsIDOMEventListener.
-      MOZ_ASSERT(aHandler.HasEventHandler());
-      rv = nsContentUtils::XPConnect()->WrapJS(aCx,
-                                               aHandler.Ptr()->Callable(),
-                                               NS_GET_IID(nsIDOMEventListener),
-                                               getter_AddRefs(listener));
-    }
+    nsCOMPtr<nsIJSEventListener> scriptListener;
+    rv = NS_NewJSEventListener(aContext, aScopeObject, mTarget, aName,
+                               aHandler, getter_AddRefs(scriptListener));
 
     if (NS_SUCCEEDED(rv)) {
-      AddEventListener(listener, eventType, aName, flags, true);
+      AddEventListener(scriptListener, eventType, aName, flags, true);
 
       ls = FindEventHandler(eventType, aName);
     }
   } else {
-    // Don't mix 'real' JS event handlers and 'fake' JS event handlers.
     nsIJSEventListener* scriptListener = ls->GetJSListener();
+    MOZ_ASSERT(scriptListener,
+               "How can we have an event handler with no nsIJSEventListener?");
 
-    if ((!aContext && scriptListener) ||
-        (aContext && !scriptListener)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    if (scriptListener) {
-      scriptListener->SetHandler(aHandler);
-    } else {
-      MOZ_ASSERT(aHandler.HasEventHandler());
-      nsCOMPtr<nsIDOMEventListener> listener;
-      rv = nsContentUtils::XPConnect()->WrapJS(aCx,
-                                               aHandler.Ptr()->Callable(),
-                                               NS_GET_IID(nsIDOMEventListener),
-                                               getter_AddRefs(listener));
-      if (NS_SUCCEEDED(rv)) {
-        ls->mListener = listener.forget();
-      }
-    }
+    scriptListener->SetHandler(aHandler, aContext, aScopeObject);
   }
 
   if (NS_SUCCEEDED(rv) && ls) {
@@ -710,7 +680,7 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
   JSObject* scope = global->GetGlobalJSObject();
 
   nsListenerStruct *ls;
-  rv = SetEventHandlerInternal(context, nullptr, scope, aName, nsEventHandler(),
+  rv = SetEventHandlerInternal(context, scope, aName, nsEventHandler(),
                                aPermitUntrustedEvents, &ls);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1194,8 +1164,7 @@ nsresult
 nsEventListenerManager::SetEventHandlerToJsval(nsIAtom* aEventName,
                                                JSContext* cx,
                                                JSObject* aScope,
-                                               const jsval& v,
-                                               bool aExpectScriptContext)
+                                               const jsval& v)
 {
   JSObject *callable;
   if (JSVAL_IS_PRIMITIVE(v) ||
@@ -1234,17 +1203,12 @@ nsEventListenerManager::SetEventHandlerToJsval(nsIAtom* aEventName,
     handler.SetHandler(handlerCallback);
   }
 
-  // We might not have a script context, e.g. if we're setting a listener
-  // on a dead Window.
-  nsIScriptContext *context = nsJSUtils::GetStaticScriptContext(aScope);
-  NS_ENSURE_TRUE(context || !aExpectScriptContext, NS_ERROR_FAILURE);
-
   JSAutoCompartment ac(cx, aScope);
   JSObject *scope = ::JS_GetGlobalForObject(cx, aScope);
   // Untrusted events are always permitted for non-chrome script
   // handlers.
   nsListenerStruct *ignored;
-  return SetEventHandlerInternal(context, cx, scope, aEventName, handler,
+  return SetEventHandlerInternal(nullptr, scope, aEventName, handler,
                                  !nsContentUtils::IsCallerChrome(), &ignored);
 }
 
