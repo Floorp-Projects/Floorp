@@ -118,7 +118,7 @@ private:
 public:
   nsAudioMetadataEventRunner(nsBuiltinDecoder* aDecoder, uint32_t aChannels,
                              uint32_t aRate, bool aHasAudio,
-                             nsHTMLMediaElement::MetadataTags* aTags) :
+                             MetadataTags* aTags) :
     mDecoder(aDecoder),
     mChannels(aChannels),
     mRate(aRate),
@@ -136,7 +136,7 @@ public:
   const uint32_t mChannels;
   const uint32_t mRate;
   const bool mHasAudio;
-  nsHTMLMediaElement::MetadataTags* mTags;
+  MetadataTags* mTags;
 };
 
 // Owns the global state machine thread and counts of
@@ -1726,7 +1726,7 @@ nsresult nsBuiltinDecoderStateMachine::DecodeMetadata()
   LOG(PR_LOG_DEBUG, ("%p Decoding Media Headers", mDecoder.get()));
   nsresult res;
   nsVideoInfo info;
-  nsHTMLMediaElement::MetadataTags* tags;
+  MetadataTags* tags;
   {
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
     res = mReader->ReadMetadata(&info, &tags);
