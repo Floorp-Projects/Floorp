@@ -12,8 +12,8 @@ FAIL_ON_WARNINGS = 1
 include $(DEPTH)/config/autoconf.mk
 
 LOCAL_INCLUDES := \
-    -I$(srcdir)/../../src \
-    $(NULL)
+  -I$(srcdir)/../src \
+  $(NULL)
 
 CPP_UNIT_TESTS := \
   TestWebGLElementArrayCache.cpp \
