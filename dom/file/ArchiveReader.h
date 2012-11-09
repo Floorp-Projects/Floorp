@@ -48,6 +48,8 @@ public:
   nsresult GetInputStream(nsIInputStream** aInputStream);
   nsresult GetSize(uint64_t* aSize);
 
+  static bool PrefEnabled();
+
 public: // for the ArchiveRequest:
   nsresult RegisterRequest(ArchiveRequest* aRequest);
 

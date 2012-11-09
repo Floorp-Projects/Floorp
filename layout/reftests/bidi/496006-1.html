@@ -1,4 +1,4 @@
-<html>
+<html class="reftest-wait">
 <head>
 </head>
 <body style="direction: rtl;">
@@ -13,6 +13,7 @@ var a=document.getElementById('a');
 a.style.outline = '1px solid transparent';
 document.body.offsetHeight;
 a.style.outline = '';
+document.documentElement.removeAttribute('class');
 }
 setTimeout(doe, 500);
 </script>

@@ -59,6 +59,7 @@
 #include "nsIContent.h"
 #include "nsIIDBFactory.h"
 #include "nsFrameMessageManager.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
 #include "nsIDOMTouchEvent.h"
 #include "nsIInlineEventHandlers.h"
@@ -111,7 +112,6 @@ class PostMessageEvent;
 class nsRunnable;
 class nsDOMEventTargetHelper;
 class nsDOMOfflineResourceList;
-class nsDOMMozURLProperty;
 class nsDOMWindowUtils;
 class nsIIdleService;
 
@@ -124,6 +124,7 @@ class nsWindowSizes;
 namespace mozilla {
 namespace dom {
 class Navigator;
+class URL;
 } // namespace dom
 } // namespace mozilla
 
@@ -138,7 +139,7 @@ NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
  * timeout.  Holds a strong reference to an nsIScriptTimeoutHandler, which
  * abstracts the language specific cruft.
  */
-struct nsTimeout : PRCList
+struct nsTimeout : mozilla::LinkedListElement<nsTimeout>
 {
   nsTimeout();
   ~nsTimeout();
@@ -147,16 +148,6 @@ struct nsTimeout : PRCList
 
   nsrefcnt Release();
   nsrefcnt AddRef();
-
-  nsTimeout* Next() {
-    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return static_cast<nsTimeout*>(PR_NEXT_LINK(this));
-  }
-
-  nsTimeout* Prev() {
-    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return static_cast<nsTimeout*>(PR_PREV_LINK(this));
-  }
 
   nsresult InitTimer(nsTimerCallbackFunc aFunc, uint64_t delay) {
     return mTimer->InitWithFuncCallback(aFunc, this, delay,
@@ -282,8 +273,6 @@ class nsGlobalWindow : public nsPIDOMWindow,
 #endif // MOZ_B2G
 {
 public:
-  friend class nsDOMMozURLProperty;
-
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
   typedef mozilla::dom::Navigator Navigator;
@@ -886,20 +875,6 @@ protected:
 
   bool IsInModalState();
 
-  nsTimeout* FirstTimeout() {
-    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return static_cast<nsTimeout*>(PR_LIST_HEAD(&mTimeouts));
-  }
-
-  nsTimeout* LastTimeout() {
-    // Note: might not actually return an nsTimeout.  Use IsTimeout to check.
-    return static_cast<nsTimeout*>(PR_LIST_TAIL(&mTimeouts));
-  }
-
-  bool IsTimeout(PRCList* aList) {
-    return aList != &mTimeouts;
-  }
-
   // Convenience functions for the many methods that need to scale
   // from device to CSS pixels or vice versa.  Note: if a presentation
   // context is not available, they will assume a 1:1 ratio.
@@ -1067,7 +1042,7 @@ protected:
   // non-null.  In that case, the dummy timeout pointed to by
   // mTimeoutInsertionPoint may have a later mWhen than some of the timeouts
   // that come after it.
-  PRCList                       mTimeouts;
+  mozilla::LinkedList<nsTimeout> mTimeouts;
   // If mTimeoutInsertionPoint is non-null, insertions should happen after it.
   // This is a dummy timeout at the moment; if that ever changes, the logic in
   // ResetTimersForNonBackgroundWindow needs to change.
@@ -1127,8 +1102,6 @@ protected:
   // window (e.g. when we are closing the tab and therefore are guaranteed to be
   // destroying this window).
   bool                          mDialogsPermanentlyDisabled;
-
-  nsRefPtr<nsDOMMozURLProperty> mURLProperty;
 
   nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> > mEventTargetObjects;
 

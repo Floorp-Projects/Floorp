@@ -27,10 +27,10 @@
 #include "nsISupportsPriority.h"
 #include "nsCOMPtr.h"
 #include "pldhash.h"
-#include "prclist.h"
 #include "nsAutoPtr.h"
 
-struct nsRequestInfo;
+#include "mozilla/LinkedList.h"
+
 struct nsListenerInfo;
 
 /****************************************************************************
@@ -194,6 +194,54 @@ protected:
     }        
 
 protected:
+    struct nsStatusInfo : public mozilla::LinkedListElement<nsStatusInfo>
+    {
+        nsString mStatusMessage;
+        nsresult mStatusCode;
+        // Weak mRequest is ok; we'll be told if it decides to go away.
+        nsIRequest * const mRequest;
+
+        nsStatusInfo(nsIRequest* aRequest) :
+            mRequest(aRequest)
+        {
+            MOZ_COUNT_CTOR(nsStatusInfo);
+        }
+        ~nsStatusInfo()
+        {
+            MOZ_COUNT_DTOR(nsStatusInfo);
+        }
+    };
+
+    struct nsRequestInfo : public PLDHashEntryHdr
+    {
+        nsRequestInfo(const void* key)
+            : mKey(key), mCurrentProgress(0), mMaxProgress(0), mUploading(false)
+            , mLastStatus(nullptr)
+        {
+            MOZ_COUNT_CTOR(nsRequestInfo);
+        }
+
+        ~nsRequestInfo()
+        {
+            MOZ_COUNT_DTOR(nsRequestInfo);
+        }
+
+        nsIRequest* Request() {
+            return static_cast<nsIRequest*>(const_cast<void*>(mKey));
+        }
+
+        const void* mKey; // Must be first for the pldhash stubs to work
+        int64_t mCurrentProgress;
+        int64_t mMaxProgress;
+        bool mUploading;
+
+        nsAutoPtr<nsStatusInfo> mLastStatus;
+    };
+
+    static bool RequestInfoHashInitEntry(PLDHashTable* table, PLDHashEntryHdr* entry,
+                                         const void* key);
+    static void RequestInfoHashClearEntry(PLDHashTable* table, PLDHashEntryHdr* entry);
+
     // IMPORTANT: The ownership implicit in the following member
     // variables has been explicitly checked and set using nsCOMPtr
     // for owning pointers and raw COM interface pointers for weak
@@ -223,7 +271,7 @@ protected:
     PLDHashTable mRequestInfoHash;
     int64_t mCompletedTotalProgress;
 
-    PRCList mStatusInfoList;
+    mozilla::LinkedList<nsStatusInfo> mStatusInfoList;
 
     /*
      * This flag indicates that the loader is loading a document.  It is set
@@ -268,6 +316,9 @@ private:
     nsRequestInfo *GetRequestInfo(nsIRequest* aRequest);
     void ClearRequestInfoHash();
     int64_t CalculateMaxProgress();
+    static PLDHashOperator CalcMaxProgressCallback(PLDHashTable* table,
+                                                   PLDHashEntryHdr* hdr,
+                                                   uint32_t number, void* arg);
 ///    void DumpChannelInfo(void);
 
     // used to clear our internal progress state between loads...

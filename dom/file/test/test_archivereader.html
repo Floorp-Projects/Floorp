@@ -8,14 +8,8 @@
 
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
 
-<body>
-<p id="display">
-  <input id="fileList" type="file"></input>
-</p>
-
-<script type="text/javascript;version=1.7">
+  <script type="text/javascript;version=1.7">
   function createZipFileWithData(fileData) {
     var Cc = SpecialPowers.Cc;
     var Ci = SpecialPowers.Ci;
@@ -58,7 +52,7 @@
   function markTestDone() {
     ++handleFinished;
     if (isFinished()) {
-      SimpleTest.finish();
+      finishTest();
     }
   }
   function isFinished() {
@@ -251,11 +245,17 @@
       ok(false, "ArchiveReader.getFiles() should not return an 'error'");
       markTestDone();
     }
+    yield;
   }
 
-  SimpleTest.waitForExplicitFinish();
-  testSteps();
   </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+</head>
+
+<body onload="runTest();">
+<p id="display">
+  <input id="fileList" type="file"></input>
+</p>
 </body>
 
 </html>

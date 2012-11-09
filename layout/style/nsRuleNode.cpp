@@ -4812,6 +4812,12 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   }
   // end temp fix
 
+  // page-break-inside: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForPageBreakInside(),
+              display->mBreakInside, canStoreInRuleTree,
+              SETDSC_ENUMERATED, parentDisplay->mBreakInside,
+              NS_STYLE_PAGE_BREAK_AUTO, 0, 0, 0, 0);
+
   // float: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForCssFloat(),
               display->mFloats, canStoreInRuleTree,

@@ -1701,9 +1701,9 @@ ion::InvalidateAll(FreeOp *fop, JSCompartment *c)
     CancelOffThreadIonCompile(c, NULL);
 
     FinishAllOffThreadCompilations(c->ionCompartment());
-
     for (IonActivationIterator iter(fop->runtime()); iter.more(); ++iter) {
         if (iter.activation()->compartment() == c) {
+            IonContext ictx(NULL, c, NULL);
             AutoFlushCache afc ("InvalidateAll", c->ionCompartment());
             IonSpew(IonSpew_Invalidate, "Invalidating all frames for GC");
             InvalidateActivation(fop, iter.top(), true);
@@ -1875,10 +1875,8 @@ AutoFlushCache::AutoFlushCache(const char *nonce, IonCompartment *comp)
     name_(nonce),
     used_(false)
 {
-    if (comp == NULL) {
-        if (CurrentIonContext() != NULL)
-            comp = GetIonContext()->compartment->ionCompartment();
-    }
+    if (CurrentIonContext() != NULL)
+        comp = GetIonContext()->compartment->ionCompartment();
     // If a compartment isn't available, then be a nop, nobody will ever see this flusher
     if (comp) {
         if (comp->flusher())
