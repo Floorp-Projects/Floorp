@@ -133,3 +133,14 @@ nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(JSContext *aContext)
   return innerWindowID;
 }
 
+void
+nsJSUtils::ReportPendingException(JSContext *aContext)
+{
+  if (JS_IsExceptionPending(aContext)) {
+    bool saved = JS_SaveFrameChain(aContext);
+    JS_ReportPendingException(aContext);
+    if (saved) {
+      JS_RestoreFrameChain(aContext);
+    }
+  }
+}

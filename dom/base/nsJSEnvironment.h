@@ -218,8 +218,10 @@ private:
   JSContext *mContext;
   bool mActive;
 
-protected:
+  // Public so we can use it from CallbackFunction
+public:
   struct TerminationFuncHolder;
+protected:
   friend struct TerminationFuncHolder;
   
   struct TerminationFuncClosure
@@ -242,6 +244,8 @@ protected:
     TerminationFuncClosure* mNext;
   };
 
+  // Public so we can use it from CallbackFunction
+public:
   struct TerminationFuncHolder
   {
     TerminationFuncHolder(nsJSContext* aContext)
@@ -269,7 +273,8 @@ protected:
     nsJSContext* mContext;
     TerminationFuncClosure* mTerminations;
   };
-  
+
+protected:
   TerminationFuncClosure* mTerminations;
 
 private:
