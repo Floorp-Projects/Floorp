@@ -354,6 +354,15 @@ nsIMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
     return;
   }
 
+  // If the nsTextStateManager instance isn't managing the editor actually,
+  // we need to recreate the instance.
+  if (sTextStateObserver) {
+    if (sTextStateObserver->IsManaging(aPresContext, aContent)) {
+      return;
+    }
+    DestroyTextStateManager();
+  }
+
   CreateTextStateManager();
 }
 
@@ -371,22 +380,34 @@ nsIMEStateManager::UpdateIMEState(const IMEState &aNewIMEState,
     return;
   }
 
-  // Don't update IME state when enabled state isn't actually changed.
-  InputContext context = widget->GetInputContext();
-  if (context.mIMEState.mEnabled == aNewIMEState.mEnabled) {
-    return;
+  // If the nsTextStateManager instance isn't managing the editor's current
+  // editable root content, the editor frame might be reframed.  We should
+  // recreate the instance at that time.
+  bool createTextStateManager =
+    (!sTextStateObserver ||
+     !sTextStateObserver->IsManaging(sPresContext, aContent));
+
+  bool updateIMEState =
+    (widget->GetInputContext().mIMEState.mEnabled != aNewIMEState.mEnabled);
+
+  if (updateIMEState) {
+    // commit current composition before modifying IME state.
+    NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, widget);
   }
 
-  // commit current composition
-  NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, widget);
+  if (createTextStateManager) {
+    DestroyTextStateManager();
+  }
 
-  DestroyTextStateManager();
+  if (updateIMEState) {
+    InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
+                              InputContextAction::FOCUS_NOT_CHANGED);
+    SetIMEState(aNewIMEState, aContent, widget, action);
+  }
 
-  InputContextAction action(InputContextAction::CAUSE_UNKNOWN,
-                            InputContextAction::FOCUS_NOT_CHANGED);
-  SetIMEState(aNewIMEState, aContent, widget, action);
-
-  CreateTextStateManager();
+  if (createTextStateManager) {
+    CreateTextStateManager();
+  }
 }
 
 IMEState
