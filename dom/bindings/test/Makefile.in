@@ -63,6 +63,7 @@ MOCHITEST_FILES := \
   file_bug775543.html \
   test_bug788369.html \
   test_bug742191.html \
+  test_namedNoIndexed.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \
