@@ -162,7 +162,7 @@ void nsOggReader::BuildSerialList(nsTArray<uint32_t>& aTracks)
 }
 
 nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo,
-                                   nsHTMLMediaElement::MetadataTags** aTags)
+                                   MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 

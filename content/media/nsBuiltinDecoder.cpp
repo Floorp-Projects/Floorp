@@ -543,7 +543,7 @@ void nsBuiltinDecoder::AudioAvailable(float* aFrameBuffer,
 void nsBuiltinDecoder::MetadataLoaded(uint32_t aChannels,
                                       uint32_t aRate,
                                       bool aHasAudio,
-                                      const nsHTMLMediaElement::MetadataTags* aTags)
+                                      const MetadataTags* aTags)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mShuttingDown) {
