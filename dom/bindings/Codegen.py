@@ -554,15 +554,17 @@ def SortedDictValues(d):
 
 def UnionTypes(descriptors, dictionaries, callbacks, config):
     """
-    Returns a tuple containing a set of header filenames to include, a set of
-    tuples containing a type declaration and a boolean if the type is a struct
-    for member types of the unions and a CGList containing CGUnionStructs for
-    every union.
+    Returns a tuple containing a set of header filenames to include in
+    UnionTypes.h, a set of header filenames to include in UnionTypes.cpp, a set
+    of tuples containing a type declaration and a boolean if the type is a
+    struct for member types of the unions and a CGList containing CGUnionStructs
+    for every union.
     """
 
     # Now find all the things we'll need as arguments and return values because
     # we need to wrap or unwrap them.
     headers = set()
+    implheaders = set(["UnionTypes.h"])
     declarations = set()
     unionStructs = dict()
 
@@ -594,12 +596,15 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
                             except NoSuchDescriptorError:
                                 continue
                             declarations.add((typeDesc.nativeType, False))
+                            implheaders.add(typeDesc.headerFile)
                 elif f.isDictionary():
                     declarations.add((f.inner.identifier.name, True))
+                    implheaders.add(CGHeaders.getDeclarationFilename(f.inner))
 
     callForEachType(descriptors, dictionaries, callbacks, addInfoForType)
 
-    return (headers, declarations, CGList(SortedDictValues(unionStructs), "\n"))
+    return (headers, implheaders, declarations,
+            CGList(SortedDictValues(unionStructs), "\n"))
 
 def UnionConversions(descriptors):
     """
@@ -3260,10 +3265,16 @@ if (!%(resultStr)s) {
 
     if type.isDictionary():
         assert not type.nullable()
-        return ("if (!%s.ToObject(cx, ${obj}, ${jsvalPtr})) {\n"
-                "%s\n"
-                "}\n"
-                "return true;" % (result, exceptionCodeIndented.define()), False)
+        return (wrapAndSetPtr("%s.ToObject(cx, ${obj}, ${jsvalPtr})" % result),
+                False)
+
+    if type.isUnion():
+        if type.nullable():
+            prefix = "%s->"
+        else:
+            prefix = "%s."
+        return (wrapAndSetPtr((prefix % result) +
+                              "ToJSVal(cx, ${obj}, ${jsvalPtr})"), False)
 
     if not type.isPrimitive():
         raise TypeError("Need to learn to wrap %s" % type)
@@ -3425,6 +3436,8 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
                                             descriptorProvider.workers) +
             "Initializer")
         return result, True
+    if returnType.isUnion():
+        raise TypeError("Need to sort out ownership model for union retvals");
     raise TypeError("Don't know how to declare return value for %s" %
                     returnType)
 
@@ -4606,10 +4619,13 @@ class CGUnionStruct(CGThing):
         CGThing.__init__(self)
         self.type = type.unroll()
         self.descriptorProvider = descriptorProvider
+        self.templateVars = map(
+            lambda t: getUnionTypeTemplateVars(t, self.descriptorProvider),
+            self.type.flatMemberTypes)
+
 
     def declare(self):
-        templateVars = map(lambda t: getUnionTypeTemplateVars(t, self.descriptorProvider),
-                           self.type.flatMemberTypes)
+        templateVars = self.templateVars
 
         callDestructors = []
         enumValues = []
@@ -4667,6 +4683,8 @@ ${callDestructors}
 
 ${methods}
 
+  bool ToJSVal(JSContext* cx, JSObject* scopeObj, JS::Value* vp) const;
+
 private:
   friend class ${structName}Argument;
 
@@ -4691,12 +4709,70 @@ ${destructors}
        "destructors": "\n".join(destructors),
        "methods": "\n\n".join(methods),
        "enumValues": ",\n    ".join(enumValues),
-       "values": "\n    ".join(values),
+       "values": "\n    ".join(values)
        })
 
     def define(self):
-        return """
-"""
+        templateVars = self.templateVars
+        conversionsToJS = []
+        if self.type.hasNullableType:
+            conversionsToJS.append("    case eNull:\n"
+                                   "      *vp = JS::NullValue();\n"
+                                   "      break;")
+        conversionsToJS.extend(
+            caseDecl + caseBody for (caseDecl, caseBody) in
+            zip(mapTemplate("    case e${name}:\n", templateVars),
+                map(self.getConversiontoJS,
+                    zip(templateVars, self.type.flatMemberTypes))))
+
+        return string.Template("""bool
+${structName}::ToJSVal(JSContext* cx, JSObject* scopeObj, JS::Value* vp) const
+{
+  switch (mType) {
+${doConversionsToJS}
+
+    case eUninitialized:
+      break;
+  }
+  return false;
+}
+""").substitute({
+                "structName": str(self.type),
+                "doConversionsToJS": "\n\n".join(conversionsToJS)
+                })
+
+    def getConversiontoJS(self, arg):
+        (templateVars, type) = arg
+        val = "mValue.m%(name)s.Value()" % templateVars
+        if type.isString():
+            # XPConnect string-to-JS conversion wants to mutate the string.  So
+            # let's give it a string it can mutate
+            # XXXbz if we try to do a sequence of strings, this will kinda fail.
+            prepend = "nsString mutableStr(%s);\n" % val
+            val = "mutableStr"
+        else:
+            prepend = ""
+            if type.isObject() and not type.nullable():
+                # We'll have a NonNull<JSObject> while the wrapping code
+                # wants a JSObject*
+                val = "%s.get()" % val
+            elif type.isSpiderMonkeyInterface():
+                # We have a NonNull<TypedArray> object while the wrapping code
+                # wants a JSObject*.  Cheat with .get() so we don't have to
+                # figure out the right reference type to cast to.
+                val = "%s.get()->Obj()" % val
+        wrapCode = prepend + wrapForType(
+            type, self.descriptorProvider,
+            {
+                "jsvalRef": "*vp",
+                "jsvalPtr": "vp",
+                "obj": "scopeObj",
+                "result": val,
+                "objectCanBeNonNull": True
+                })
+        return CGIndenter(CGWrapper(CGIndenter(CGGeneric(wrapCode)),
+                                    pre="{\n",
+                                    post="\n}"), 4).define()
 
 class CGUnionConversionStruct(CGThing):
     def __init__(self, type, descriptorProvider):
@@ -7505,10 +7581,11 @@ struct PrototypeIDMap;
     @staticmethod
     def UnionTypes(config):
 
-        (includes, declarations, unions) = UnionTypes(config.getDescriptors(),
-                                                      config.getDictionaries(),
-                                                      config.getCallbacks(),
-                                                      config)
+        (includes, implincludes,
+         declarations, unions) = UnionTypes(config.getDescriptors(),
+                                            config.getDictionaries(),
+                                            config.getCallbacks(),
+                                            config)
         includes.add("mozilla/dom/BindingUtils.h")
 
         # Wrap all of that in our namespaces.
@@ -7545,7 +7622,7 @@ struct PrototypeIDMap;
 
         curr = CGList([stack[0], curr], "\n")
 
-        curr = CGHeaders([], [], [], includes, [], curr)
+        curr = CGHeaders([], [], [], includes, implincludes, curr)
 
         # Add include guards.
         curr = CGIncludeGuard('UnionTypes', curr)
