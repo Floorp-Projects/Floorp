@@ -36,6 +36,8 @@
 #include "mozilla/Attributes.h"
 #include "nsEventDispatcher.h"
 #include "TextComposition.h"
+#include "mozilla/Preferences.h"
+#include "nsAsyncDOMEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -83,6 +85,7 @@ nsIContent*    nsIMEStateManager::sContent      = nullptr;
 nsPresContext* nsIMEStateManager::sPresContext  = nullptr;
 bool           nsIMEStateManager::sInstalledMenuKeyboardListener = false;
 bool           nsIMEStateManager::sInSecureInputMode = false;
+bool           nsIMEStateManager::sIsTestingIME = false;
 
 nsTextStateManager* nsIMEStateManager::sTextStateObserver = nullptr;
 TextCompositionArray* nsIMEStateManager::sTextCompositions = nullptr;
@@ -730,6 +733,12 @@ nsTextStateManager::nsTextStateManager(nsIWidget* aWidget,
   }
   NS_ENSURE_TRUE_VOID(mRootContent);
 
+  if (nsIMEStateManager::sIsTestingIME) {
+    nsIDocument* doc = aPresContext->Document();
+    (new nsAsyncDOMEvent(doc, NS_LITERAL_STRING("MozIMEFocusIn"),
+                         false, false))->RunDOMEventWhenSafe();
+  }
+
   nsresult rv = mWidget->OnIMEFocusChange(true);
   if (rv == NS_ERROR_NOT_IMPLEMENTED) {
     return;
@@ -762,6 +771,11 @@ nsTextStateManager::ObserveEditableNode()
 void
 nsTextStateManager::Destroy(void)
 {
+  if (nsIMEStateManager::sIsTestingIME && mEditableNode) {
+    nsIDocument* doc = mEditableNode->OwnerDoc();
+    (new nsAsyncDOMEvent(doc, NS_LITERAL_STRING("MozIMEFocusOut"),
+                         false, false))->RunDOMEventWhenSafe();
+  }
   mWidget->OnIMEFocusChange(false);
   if (mObserving && mSel) {
     nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSel));
@@ -1026,6 +1040,12 @@ nsIMEStateManager::CreateTextStateManager()
   // If it's not text ediable, we don't need to create nsTextStateManager.
   if (!IsEditableIMEState(widget)) {
     return;
+  }
+
+  static bool sInitializeIsTestingIME = true;
+  if (sInitializeIsTestingIME) {
+    Preferences::AddBoolVarCache(&sIsTestingIME, "test.IME", false);
+    sInitializeIsTestingIME = false;
   }
 
   sTextStateObserver = new nsTextStateManager(widget, sPresContext, sContent);
