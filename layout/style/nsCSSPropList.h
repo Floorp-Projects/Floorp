@@ -2485,7 +2485,8 @@ CSS_PROP_VISIBILITY(
     pointer-events,
     pointer_events,
     PointerEvents,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
     "",
     VARIANT_HK,
     kPointerEventsKTable,
