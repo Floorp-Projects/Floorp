@@ -7116,11 +7116,65 @@ class CGExampleClass(CGClass):
             appendMethod(iface.ctor())
         for m in iface.members:
             if m.isMethod():
+                if (m.isIdentifierLess() and
+                    m != descriptor.operations['Stringifier']):
+                    continue
                 appendMethod(m)
             elif m.isAttr():
                 methodDecls.append(CGExampleGetter(descriptor, m))
                 if not m.readonly:
                     methodDecls.append(CGExampleSetter(descriptor, m))
+
+        # Now do the special operations
+        def appendSpecialOperation(name, op):
+            if op is None:
+                return
+            if name == "IndexedCreator" or name == "NamedCreator":
+                # These are identical to the setters
+                return
+            assert len(op.signatures()) == 1
+            (returnType, args) = op.signatures()[0]
+            # Make a copy of the args, since we plan to modify them.
+            args = list(args)
+            if op.isGetter() or op.isDeleter():
+                # This is a total hack.  The '&' belongs with the
+                # type, not the name!  But it works, and is simpler
+                # than trying to somehow make this pretty.
+                args.append(FakeArgument(BuiltinTypes[IDLBuiltinType.Types.boolean],
+                                         op, name="&found"))
+            if name == "Stringifier" and op.isIdentifierLess():
+                # XXXbz I wish we were consistent about our renaming here.
+                name = "__stringify"
+            methodDecls.append(
+                CGNativeMember(descriptor, op,
+                               name,
+                               (returnType, args),
+                               descriptor.getExtendedAttributes(op)))
+        # Sort things by name so we get stable ordering in the output.
+        ops = descriptor.operations.items()
+        ops.sort(key=lambda x: x[0])
+        for (name, op) in ops:
+            appendSpecialOperation(name, op)
+        # If we support indexed properties, then we need a Length()
+        # method so we know which indices are supported.
+        if descriptor.supportsIndexedProperties():
+            methodDecls.append(
+                CGNativeMember(descriptor, FakeMember(),
+                               "Length",
+                               (BuiltinTypes[IDLBuiltinType.Types.unsigned_long],
+                                []),
+                               { "infallible": True }))
+        # And if we support named properties we need to be able to
+        # enumerate the supported names.
+        if descriptor.supportsNamedProperties():
+            methodDecls.append(
+                CGNativeMember(
+                    descriptor, FakeMember(),
+                    "GetSupportedNames",
+                    (IDLSequenceType(None,
+                                     BuiltinTypes[IDLBuiltinType.Types.domstring]),
+                     []),
+                    { "infallible": True }))
 
         wrapArgs = [Argument('JSContext*', 'aCx'),
                     Argument('JSObject*', 'aScope')]
@@ -7336,6 +7390,21 @@ class CGCallbackFunction(CGClass):
                             body=bodyWithoutThis),
                 callCallback]
 
+class FakeMember():
+    def __init__(self):
+        self.treatUndefinedAs = self.treatNullAs = "Default"
+    def isStatic(self):
+        return False
+    def isAttr(self):
+        return False
+    def getExtendedAttribute(self, name):
+        # Claim to be a [Creator] so we can avoid the "mark this
+        # resultNotAddRefed" comments CGNativeMember codegen would
+        # otherwise stick in.
+        if name == "Creator":
+            return True
+        return None
+
 class CallCallback(CGNativeMember):
     def __init__(self, callback, descriptorProvider):
         sig = callback.signatures()[0]
@@ -7343,20 +7412,6 @@ class CallCallback(CGNativeMember):
         self.callback = callback
         args = sig[1]
         self.argCount = len(args)
-        class FakeMember():
-            def __init__(self):
-                self.treatUndefinedAs = self.treatNullAs = "Default"
-            def isStatic(self):
-                return False
-            def isAttr(self):
-                return False
-            def getExtendedAttribute(self, name):
-                # Claim to be a [Creator] so we can avoid the "mark this
-                # resultNotAddRefed" comments CGNativeMember codegen would
-                # otherwise stick in.
-                if name == "Creator":
-                    return True
-                return None
         CGNativeMember.__init__(self, descriptorProvider, FakeMember(),
                                 "Call", (self.retvalType, args),
                                 extendedAttrs={},
