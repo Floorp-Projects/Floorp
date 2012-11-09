@@ -1474,11 +1474,11 @@ nsHTMLInputElement::GetPlaceholderNode()
 }
 
 NS_IMETHODIMP_(void)
-nsHTMLInputElement::SetPlaceholderVisibility(bool aVisible, bool aNotify)
+nsHTMLInputElement::UpdatePlaceholderVisibility(bool aNotify)
 {
   nsTextEditorState *state = GetEditorState();
   if (state) {
-    state->SetPlaceholderVisibility(aVisible, aNotify);
+    state->UpdatePlaceholderVisibility(aNotify);
   }
 }
 

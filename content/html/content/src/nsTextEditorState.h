@@ -174,7 +174,7 @@ public:
   }
 
   // placeholder methods
-  void SetPlaceholderVisibility(bool aVisible, bool aNotify);
+  void UpdatePlaceholderVisibility(bool aNotify);
   bool GetPlaceholderVisibility() {
     return mPlaceholderVisibility;
   }
