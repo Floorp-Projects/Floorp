@@ -3270,7 +3270,7 @@ def typeNeedsCx(type, retVal=False):
 # value, or None if there is no need for a return value, and a boolean signaling
 # whether the return value is passed in an out parameter.
 #
-# Whenever this is modified, please update CGNativeMember.getReturnType as
+# Whenever this is modified, please update CGNativeMember.getRetvalInfo as
 # needed
 def getRetvalDeclarationForType(returnType, descriptorProvider,
                                 resultAlreadyAddRefed):
@@ -3848,7 +3848,7 @@ class FakeArgument():
     A class that quacks like an IDLArgument.  This is used to make
     setters look like method calls or for special operations.
     """
-    def __init__(self, type, interfaceMember):
+    def __init__(self, type, interfaceMember, name="arg"):
         self.type = type
         self.optional = False
         self.variadic = False
@@ -3859,7 +3859,7 @@ class FakeArgument():
         self.clamp = False
         class FakeIdentifier():
             def __init__(self):
-                self.name = "arg"
+                self.name = name
         self.identifier = FakeIdentifier()
 
 class CGSetterCall(CGPerSignatureCall):
@@ -6502,6 +6502,12 @@ class CGBindingRoot(CGThing):
         cgthings.extend([CGDictionary(d, config.getDescriptorProvider(False))
                          for d in dictionaries])
 
+        # Do codegen for all the callbacks.  Only do non-worker codegen for now,
+        # since we don't have a sane setup yet for invoking callbacks in workers
+        # and managing their lifetimes.
+        cgthings.extend(CGCallbackFunction(c, config.getDescriptorProvider(False))
+                        for c in callbacks)
+
         # Do codegen for all the descriptors
         cgthings.extend([CGDescriptor(x) for x in descriptors])
 
@@ -6558,12 +6564,13 @@ class CGBindingRoot(CGThing):
 
 class CGNativeMember(ClassMethod):
     def __init__(self, descriptor, member, name, signature, extendedAttrs,
-                 breakAfter=True):
+                 breakAfter=True, passCxAsNeeded=True, visibility="public"):
         self.descriptor = descriptor
         self.member = member
         self.extendedAttrs = extendedAttrs
         self.resultAlreadyAddRefed = isResultAlreadyAddRefed(self.descriptor,
                                                              self.extendedAttrs)
+        self.passCxAsNeeded = passCxAsNeeded
         breakAfterSelf = "\n" if breakAfter else ""
         ClassMethod.__init__(self, name,
                              self.getReturnType(signature[0], False),
@@ -6574,25 +6581,39 @@ class CGNativeMember(ClassMethod):
                              const=(not member.isStatic() and member.isAttr() and
                                     not signature[0].isVoid()),
                              breakAfterReturnDecl=" ",
-                             breakAfterSelf=breakAfterSelf)
+                             breakAfterSelf=breakAfterSelf,
+                             visibility=visibility)
 
     def getReturnType(self, type, isMember):
+        return self.getRetvalInfo(type, isMember)[0]
+
+    def getRetvalInfo(self, type, isMember):
+        """
+        Returns a tuple: The first element is the type declaration for the
+        retval, the second is a default value that can be used on error returns.
+        For cases whose behavior depends on isMember, the second element will be
+        None if isMember is true.
+        """
         if type.isVoid():
-            return "void"
+            return "void", ""
         if type.isPrimitive() and type.tag() in builtinNames:
             result = CGGeneric(builtinNames[type.tag()])
+            defaultReturnArg = "0"
             if type.nullable():
                 result = CGWrapper(result, pre="Nullable<", post=">")
-            return result.define()
+                defaultReturnArg = ""
+            return (result.define(),
+                    "%s(%s)" % (result.define(), defaultReturnArg))
         if type.isString():
             if isMember:
-                return "nsString"
+                return "nsString", None
             # Outparam
-            return "void"
+            return "void", ""
         if type.isEnum():
             if type.nullable():
                 raise TypeError("We don't support nullable enum return values")
-            return type.inner.identifier.name
+            typeName = type.inner.identifier.name
+            return typeName, "%s(0)" % typeName
         if type.isGeckoInterface():
             nativeType = self.descriptor.getDescriptor(
                 type.unroll().inner.identifier.name).nativeType
@@ -6617,19 +6638,19 @@ class CGNativeMember(ClassMethod):
                                    post=">")
             else:
                 result = CGWrapper(result, post="*")
-            return result.define()
+            return result.define(), "nullptr"
         if type.isCallback():
             # XXXbz we're going to assume that callback types are always
             # nullable for now.
-            return "JSObject*"
+            return "JSObject*", "nullptr"
         if type.isAny():
-            return "JS::Value"
+            return "JS::Value", "JS::UndefinedValue()"
         if type.isObject() or type.isSpiderMonkeyInterface():
-            return "JSObject*"
+            return "JSObject*", "nullptr"
         if type.isSequence():
             assert not isMember
             # Outparam
-            return "void"
+            return "void", ""
         raise TypeError("Don't know how to declare return value for %s" %
                         type)
 
@@ -6657,7 +6678,8 @@ class CGNativeMember(ClassMethod):
             args.insert(0, Argument("nsISupports*", "global"))
         # And jscontext bits.  needCx expects a list of tuples, in each of which
         # the first element is the actual argument
-        if needCx(returnType, ((a, "") for a in argList), self.extendedAttrs):
+        if (self.passCxAsNeeded and
+            needCx(returnType, ((a, "") for a in argList), self.extendedAttrs)):
             args.insert(0, Argument("JSContext*", "cx"))
         return args
 
@@ -6966,6 +6988,158 @@ class CGExampleRoot(CGThing):
     def define(self):
         return self.root.define()
 
+class CGCallbackFunction(CGClass):
+    def __init__(self, callback, descriptorProvider):
+        name = callback.identifier.name
+        if descriptorProvider.workers:
+            name += "Workers"
+        try:
+            # For our public Call() method we want most of the same args and the
+            # same return type as what CallCallback generates.  So we want to
+            # take advantage of all its CGNativeMember infrastructure, but that
+            # infrastructure can't deal with templates and most especially
+            # template arguments.  So just cheat and have CallCallback compute
+            # all those things for us.
+            callCallback = CallCallback(callback, descriptorProvider)
+            CGClass.__init__(self, name,
+                             bases=[ClassBase("CallbackFunction")],
+                             constructors=[self.getConstructor()],
+                             methods=self.getCallImpls(callCallback))
+            self.generatable = True
+        except NoSuchDescriptorError, err:
+            if not descriptorProvider.workers:
+                raise err
+            self.generatable = False
+
+    def define(self):
+        if not self.generatable:
+            return ""
+        return CGClass.define(self)
+
+    def declare(self):
+        if not self.generatable:
+            return ""
+        return CGClass.declare(self)
+
+    def getConstructor(self):
+        return ClassConstructor(
+            [Argument("JSContext*", "cx"),
+             Argument("JSObject*", "aOwner"),
+             Argument("JSObject*", "aCallable"),
+             Argument("bool*", "aInited")],
+            bodyInHeader=True,
+            visibility="public",
+            baseConstructors=[
+                "CallbackFunction(cx, aOwner, aCallable, aInited)"
+                ],
+            body="")
+
+    def getCallImpls(self, callCallback):
+        args = list(callCallback.args)
+        # Strip out the JSContext*/JSObject* args
+        # that got added.
+        assert args[0].name == "cx" and args[0].argType == "JSContext*"
+        assert args[1].name == "aThisObj" and args[1].argType == "JSObject*"
+        args = args[2:]
+        # Record the names of all the arguments, so we can use them when we call
+        # the private method.
+        argnames = [arg.name for arg in args]
+        argnamesWithThis = ["s.GetContext()", "thisObjJS"] + argnames
+        argnamesWithoutThis = ["s.GetContext()", "nullptr"] + argnames
+        # And now insert our template argument.
+        argsWithoutThis = list(args)
+        args.insert(0, Argument("const T&",  "thisObj"))
+
+        setupCall = ("CallSetup s(mCallable);\n"
+                     "if (!s.GetContext()) {\n"
+                     "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
+                     "  return${errorReturn};\n"
+                     "}\n")
+
+        bodyWithThis = string.Template(
+            setupCall+
+            "JSObject* thisObjJS = WrapCallThisObject(s.GetContext(), mCallable, thisObj);\n"
+            "if (!thisObjJS) {\n"
+            "  aRv.Throw(NS_ERROR_FAILURE);\n"
+            "  return${errorReturn};\n"
+            "}\n"
+            "return Call(${callArgs});").substitute({
+                "errorReturn" : callCallback.getDefaultRetval(),
+                "callArgs" : ", ".join(argnamesWithThis)
+                })
+        bodyWithoutThis = string.Template(
+            setupCall +
+            "return Call(${callArgs});").substitute({
+                "errorReturn" : callCallback.getDefaultRetval(),
+                "callArgs" : ", ".join(argnamesWithoutThis)
+                })
+        return [ClassMethod("Call", callCallback.returnType, args,
+                            bodyInHeader=True,
+                            templateArgs=["typename T"],
+                            body=bodyWithThis),
+                ClassMethod("Call", callCallback.returnType, argsWithoutThis,
+                            bodyInHeader=True,
+                            body=bodyWithoutThis),
+                callCallback]
+
+class CallCallback(CGNativeMember):
+    def __init__(self, callback, descriptorProvider):
+        sig = callback.signatures()[0]
+        self.retvalType = sig[0]
+        args = sig[1]
+        self.argCount = len(args)
+        class FakeMember():
+            def __init__(self):
+                self.treatUndefinedAs = self.treatNullAs = "Default"
+            def isStatic(self):
+                return False
+            def isAttr(self):
+                return False
+        CGNativeMember.__init__(self, descriptorProvider, FakeMember(),
+                                "Call", (self.retvalType, args),
+                                extendedAttrs={},
+                                passCxAsNeeded=False,
+                                visibility="private")
+        # We have to do all the generation of our body now, because
+        # the caller relies on us throwing if we can't manage it.
+        self.body = self.getImpl()
+
+    def getImpl(self):
+        replacements = {
+            "errorReturn" : self.getDefaultRetval(),
+            "argCount": self.argCount
+            }
+        if self.argCount > 0:
+            replacements["argvDecl"] = string.Template(
+                "JS::Value argv[${argCount}];\n").substitute(replacements)
+            replacements["argv"] = "argv"
+        else:
+            # Avoid weird 0-sized arrays
+            replacements["argvDecl"] = ""
+            replacements["argv"] = "nullptr"
+
+        return string.Template(
+            "JS::Value rval = JSVAL_VOID;\n"
+            "${argvDecl}" # Newlines and semicolons are in the value
+            "if (!JS_CallFunctionValue(cx, aThisObj, JS::ObjectValue(*mCallable),\n"
+            "                          ${argCount}, ${argv}, &rval)) {\n"
+            "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
+            "  return${errorReturn};\n"
+            "}\n"
+            "return${errorReturn};").substitute(replacements)
+
+    def getDefaultRetval(self):
+        default = self.getRetvalInfo(self.retvalType, False)[1]
+        if len(default) != 0:
+            default = " " + default
+        return default
+
+    def getArgs(self, returnType, argList):
+        args = CGNativeMember.getArgs(self, returnType, argList)
+        # We want to allow the caller to pass in a "this" object, as
+        # well as a JSContext.
+        return [Argument("JSContext*", "cx"),
+                Argument("JSObject*", "aThisObj")] + args
 
 class GlobalGenRoots():
     """
