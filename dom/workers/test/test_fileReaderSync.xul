@@ -56,7 +56,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
     res = "";
     for (var i = 0; i < s.length; ++i) {
       c = s.charCodeAt(i);
-      res += String.fromCharCode(c >>> 8, c & 255);
+      res += String.fromCharCode(c & 255, c >>> 8);
     }
     return res;
   }
