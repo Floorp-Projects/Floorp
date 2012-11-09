@@ -9,7 +9,6 @@
 #define jscompartment_h___
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Util.h"
 
 #include "jscntxt.h"
 #include "jsfun.h"
@@ -279,13 +278,6 @@ struct JSCompartment
     void                         *data;
     bool                         active;  // GC flag, whether there are active frames
     js::WrapperMap               crossCompartmentWrappers;
-
-    /*
-     * These flags help us to discover if a compartment that shouldn't be alive
-     * manages to outlive a GC.
-     */
-    bool                         scheduledForDestruction;
-    bool                         maybeAlive;
 
     /* Last time at which an animation was played for a global in this compartment. */
     int64_t                      lastAnimationTime;
