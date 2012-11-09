@@ -42,7 +42,7 @@ nsDisplayBorderGeometry::MoveBy(const nsPoint& aOffset)
   mContentRect.MoveBy(aOffset);
 }
 
-nsDisplayBackgroundGeometry::nsDisplayBackgroundGeometry(nsDisplayBackground* aItem,
+nsDisplayBackgroundGeometry::nsDisplayBackgroundGeometry(nsDisplayBackgroundImage* aItem,
                                                          nsDisplayListBuilder* aBuilder)
   : nsDisplayItemGeometry(aItem, aBuilder)
   , mPositioningArea(aItem->GetPositioningArea())

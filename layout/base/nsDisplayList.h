@@ -1782,9 +1782,10 @@ private:
 };
 
 /**
- * The standard display item to paint the CSS background of a frame.
+ * A display item to paint one background-image for a frame. Each background
+ * image layer gets its own nsDisplayBackgroundImage.
  */
-class nsDisplayBackground : public nsDisplayItem {
+class nsDisplayBackgroundImage : public nsDisplayItem {
 public:
   /**
    * aLayer signifies which background layer this item represents.
@@ -1792,10 +1793,10 @@ public:
    * aBackgroundStyle should be the result of
    * nsCSSRendering::FindBackground, or null if FindBackground returned false.
    */
-  nsDisplayBackground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      uint32_t aLayer, bool aIsThemed,
-                      const nsStyleBackground* aBackgroundStyle);
-  virtual ~nsDisplayBackground();
+  nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                           uint32_t aLayer, bool aIsThemed,
+                           const nsStyleBackground* aBackgroundStyle);
+  virtual ~nsDisplayBackgroundImage();
 
   // This will create and append new items for all the layers of the
   // background. If given, aBackground will be set with the address of the
@@ -1803,7 +1804,7 @@ public:
   static nsresult AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
                                              nsIFrame* aFrame,
                                              nsDisplayList* aList,
-                                             nsDisplayBackground** aBackground = nullptr);
+                                             nsDisplayBackgroundImage** aBackground = nullptr);
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
