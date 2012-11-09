@@ -383,7 +383,7 @@ class CGIncludeGuard(CGWrapper):
                            declarePre='#ifndef %s\n#define %s\n\n' % (define, define),
                            declarePost='\n#endif // %s\n' % define)
 
-def getTypes(descriptor):
+def getTypesFromDescriptor(descriptor):
     """
     Get all argument and return types for all members of the descriptor
     """
@@ -396,17 +396,64 @@ def getTypes(descriptor):
         assert len(s) == 2
         (returnType, arguments) = s
         types.append(returnType)
-        types.extend([a.type for a in arguments])
+        types.extend(a.type for a in arguments)
 
     types.extend(a.type for a in members if a.isAttr())
     return types
+
+def getTypesFromDictionary(dictionary):
+    """
+    Get all member types for this dictionary
+    """
+    types = []
+    curDict = dictionary
+    while curDict:
+        types.extend([m.type for m in curDict.members])
+        curDict = curDict.parent
+    return types
+
+def getTypesFromCallback(callback):
+    """
+    Get the types this callback depends on: its return type and the
+    types of its arguments.
+    """
+    sig = callback.signatures()[0]
+    types = [sig[0]] # Return type
+    types.extend(arg.type for arg in sig[1]) # Arguments
+    return types
+
+def getRelevantProviders(descriptor, dictionary, config):
+    assert not descriptor or not dictionary
+    if descriptor is not None:
+        return [descriptor]
+    if dictionary is not None:
+        # Do both the non-worker and worker versions
+        return [
+            config.getDescriptorProvider(False),
+            config.getDescriptorProvider(True)
+            ]
+    # Do non-workers only for callbacks
+    return [ config.getDescriptorProvider(False) ]
+
+def callForEachType(descriptors, dictionaries, callbacks, func):
+    for d in descriptors:
+        if d.interface.isExternal():
+            continue
+        for t in getTypesFromDescriptor(d):
+            func(t, descriptor=d)
+    for dictionary in dictionaries:
+        for t in getTypesFromDictionary(dictionary):
+            func(t, dictionary=dictionary)
+    for callback in callbacks:
+        for t in getTypesFromCallback(callback):
+            func(t)
 
 class CGHeaders(CGWrapper):
     """
     Generates the appropriate include statements.
     """
-    def __init__(self, descriptors, dictionaries, declareIncludes,
-                 defineIncludes, child):
+    def __init__(self, descriptors, dictionaries, callbacks, declareIncludes,
+                 defineIncludes, child, config=None):
         """
         Builds a set of includes to cover |descriptors|.
 
@@ -430,35 +477,49 @@ class CGHeaders(CGWrapper):
         # Now find all the things we'll need as arguments because we
         # need to wrap or unwrap them.
         bindingHeaders = set()
-        for d in descriptors:
-            types = getTypes(d)
-            for dictionary in dictionaries:
-                curDict = dictionary
-                while curDict:
-                    types.extend([m.type for m in curDict.members])
-                    curDict = curDict.parent
+        def addHeadersForType(t, descriptor=None, dictionary=None):
+            """
+            Add the relevant headers for this type.  We use descriptor and
+            dictionary, if passed, to decide what to do with interface types.
+            """
+            assert not descriptor or not dictionary
+            if t.unroll().isUnion():
+                # UnionConversions.h includes UnionTypes.h
+                bindingHeaders.add("mozilla/dom/UnionConversions.h")
+            elif t.unroll().isInterface():
+                if t.unroll().isSpiderMonkeyInterface():
+                    bindingHeaders.add("jsfriendapi.h")
+                    bindingHeaders.add("mozilla/dom/TypedArray.h")
+                else:
+                    providers = getRelevantProviders(descriptor, dictionary,
+                                                     config)
+                    for p in providers:
+                        try:
+                            typeDesc = p.getDescriptor(t.unroll().inner.identifier.name)
+                        except NoSuchDescriptorError:
+                            continue
+                        implementationIncludes.add(typeDesc.headerFile)
+                        bindingHeaders.add(self.getDeclarationFilename(typeDesc.interface))
+            elif t.unroll().isDictionary():
+                bindingHeaders.add(self.getDeclarationFilename(t.unroll().inner))
+            elif t.unroll().isCallback():
+                # Callbacks are both a type and an object
+                bindingHeaders.add(self.getDeclarationFilename(t.unroll()))
 
-            for t in types:
-                if t.unroll().isUnion():
-                    # UnionConversions.h includes UnionTypes.h
-                    bindingHeaders.add("mozilla/dom/UnionConversions.h")
-                elif t.unroll().isInterface():
-                    if t.unroll().isSpiderMonkeyInterface():
-                        bindingHeaders.add("jsfriendapi.h")
-                        bindingHeaders.add("mozilla/dom/TypedArray.h")
-                    else:
-                        typeDesc = d.getDescriptor(t.unroll().inner.identifier.name)
-                        if typeDesc is not None:
-                            implementationIncludes.add(typeDesc.headerFile)
-                            bindingHeaders.add(self.getDeclarationFilename(typeDesc.interface))
-                elif t.unroll().isDictionary():
-                    bindingHeaders.add(self.getDeclarationFilename(t.unroll().inner))
+        callForEachType(descriptors, dictionaries, callbacks, addHeadersForType)
 
         declareIncludes = set(declareIncludes)
         for d in dictionaries:
             if d.parent:
                 declareIncludes.add(self.getDeclarationFilename(d.parent))
             bindingHeaders.add(self.getDeclarationFilename(d))
+
+        for c in callbacks:
+            bindingHeaders.add(self.getDeclarationFilename(c))
+
+        if len(callbacks) != 0:
+            # We need CallbackFunction to serve as our parent class
+            declareIncludes.add("mozilla/dom/CallbackFunction.h")
 
         # Let the machinery do its thing.
         def _includeString(includes):
@@ -491,7 +552,7 @@ def SortedDictValues(d):
     # We're only interested in the values.
     return (i[1] for i in d)
 
-def UnionTypes(descriptors):
+def UnionTypes(descriptors, dictionaries, callbacks, config):
     """
     Returns a tuple containing a set of header filenames to include, a set of
     tuples containing a type declaration and a boolean if the type is a struct
@@ -504,28 +565,39 @@ def UnionTypes(descriptors):
     headers = set()
     declarations = set()
     unionStructs = dict()
-    for d in descriptors:
-        if d.interface.isExternal():
-            continue
 
-        for t in getTypes(d):
-            t = t.unroll()
-            if t.isUnion():
-                name = str(t)
-                if not name in unionStructs:
-                    unionStructs[name] = CGUnionStruct(t, d)
-                    for f in t.flatMemberTypes:
-                        f = f.unroll()
-                        if f.isInterface():
-                            if f.isSpiderMonkeyInterface():
-                                headers.add("jsfriendapi.h")
-                                headers.add("mozilla/dom/TypedArray.h")
-                            else:
-                                typeDesc = d.getDescriptor(f.inner.identifier.name)
-                                if typeDesc is not None:
-                                    declarations.add((typeDesc.nativeType, False))
-                        elif f.isDictionary():
-                            declarations.add((f.inner.identifier.name, True))
+    def addInfoForType(t, descriptor=None, dictionary=None):
+        """
+        Add info for the given type.  descriptor and dictionary, if passed, are
+        used to figure out what to do with interface types.
+        """
+        assert not descriptor or not dictionary
+        t = t.unroll()
+        if not t.isUnion():
+            return
+        name = str(t)
+        if not name in unionStructs:
+            providers = getRelevantProviders(descriptor, dictionary,
+                                             config)
+            # FIXME: Unions are broken in workers.  See bug 809899.
+            unionStructs[name] = CGUnionStruct(t, providers[0])
+            for f in t.flatMemberTypes:
+                f = f.unroll()
+                if f.isInterface():
+                    if f.isSpiderMonkeyInterface():
+                        headers.add("jsfriendapi.h")
+                        headers.add("mozilla/dom/TypedArray.h")
+                    else:
+                        for p in providers:
+                            try:
+                                typeDesc = p.getDescriptor(f.inner.identifier.name)
+                            except NoSuchDescriptorError:
+                                continue
+                            declarations.add((typeDesc.nativeType, False))
+                elif f.isDictionary():
+                    declarations.add((f.inner.identifier.name, True))
+
+    callForEachType(descriptors, dictionaries, callbacks, addInfoForType)
 
     return (headers, declarations, CGList(SortedDictValues(unionStructs), "\n"))
 
@@ -6224,35 +6296,38 @@ class CGBindingRoot(CGThing):
                                             hasInterfaceOrInterfacePrototypeObject=True,
                                             skipGen=False)
         dictionaries = config.getDictionaries(webIDLFile)
+        callbacks = config.getCallbacks(webIDLFile)
 
         forwardDeclares = [CGClassForwardDeclare('XPCWrappedNativeScope')]
 
         descriptorsForForwardDeclaration = list(descriptors)
+        ifaces = []
         for dictionary in dictionaries:
-            curDict = dictionary
-            ifacemembers = []
-            while curDict:
-                ifacemembers.extend([m.type.unroll().inner for m
-                                     in curDict.members
-                                     if m.type.unroll().isInterface()])
-                curDict = curDict.parent
-            # Put in all the non-worker descriptors
-            descriptorsForForwardDeclaration.extend(
-                [config.getDescriptor(iface.identifier.name, False) for
-                 iface in ifacemembers])
-            # And now the worker ones.  But these may not exist, so we
-            # have to be more careful.
-            for iface in ifacemembers:
-                try:
-                    descriptorsForForwardDeclaration.append(
-                        config.getDescriptor(iface.identifier.name, True))
-                except NoSuchDescriptorError:
-                    # just move along
-                    pass
+            ifaces.extend(type.unroll().inner
+                          for type in getTypesFromDictionary(dictionary)
+                          if type.unroll().isGeckoInterface())
 
-        for x in descriptorsForForwardDeclaration:
-            nativeType = x.nativeType
-            components = x.nativeType.split('::')
+        for callback in callbacks:
+            ifaces.extend(t.unroll().inner
+                          for t in getTypesFromCallback(callback)
+                          if t.unroll().isGeckoInterface())
+
+        # Put in all the non-worker descriptors
+        descriptorsForForwardDeclaration.extend(
+            config.getDescriptor(iface.identifier.name, False) for
+            iface in ifaces)
+        # And now the worker ones.  But these may not exist, so we
+        # have to be more careful.
+        for iface in ifaces:
+            try:
+                descriptorsForForwardDeclaration.append(
+                    config.getDescriptor(iface.identifier.name, True))
+            except NoSuchDescriptorError:
+                # just move along
+                pass
+
+        def declareNativeType(nativeType):
+            components = nativeType.split('::')
             className = components[-1]
             # JSObject is a struct, not a class
             declare = CGClassForwardDeclare(className, className is "JSObject")
@@ -6261,7 +6336,17 @@ class CGBindingRoot(CGThing):
                                             CGWrapper(declare, declarePre='\n',
                                                       declarePost='\n'),
                                             declareOnly=True)
-            forwardDeclares.append(CGWrapper(declare, declarePost='\n'))
+            return CGWrapper(declare, declarePost='\n')
+
+        for x in descriptorsForForwardDeclaration:
+            forwardDeclares.append(declareNativeType(x.nativeType))
+
+        # Now add the forward declarations we need for our union types
+        for callback in callbacks:
+            forwardDeclares.extend(
+                declareNativeType("mozilla::dom::" + str(t.unroll()))
+                for t in getTypesFromCallback(callback)
+                if t.unroll().isUnion())
 
         forwardDeclares = CGList(forwardDeclares)
 
@@ -6341,6 +6426,7 @@ class CGBindingRoot(CGThing):
         # Add header includes.
         curr = CGHeaders(descriptors,
                          dictionaries,
+                         callbacks,
                          ['mozilla/dom/BindingUtils.h',
                           'mozilla/dom/DOMJSClass.h',
                           'mozilla/dom/DOMJSProxyHandler.h'],
@@ -6358,7 +6444,8 @@ class CGBindingRoot(CGThing):
                           # for old-binding things with castability.
                           'nsDOMQS.h'
                           ],
-                         curr)
+                         curr,
+                         config)
 
         # Add include guards.
         curr = CGIncludeGuard(prefix, curr)
@@ -6748,7 +6835,7 @@ class CGExampleRoot(CGThing):
                             self.root], "\n")
 
         # Throw in our #includes
-        self.root = CGHeaders([], [],
+        self.root = CGHeaders([], [], [],
                               [ "nsWrapperCache.h",
                                 "nsCycleCollectionParticipant.h",
                                 "mozilla/Attributes.h" ],
@@ -6852,7 +6939,7 @@ struct PrototypeIDMap;
                                                             workers=False,
                                                             register=True)]
         defineIncludes.append('nsScriptNameSpaceManager.h')
-        curr = CGHeaders([], [], [], defineIncludes, curr)
+        curr = CGHeaders([], [], [], [], defineIncludes, curr)
 
         # Add include guards.
         curr = CGIncludeGuard('RegisterBindings', curr)
@@ -6863,7 +6950,10 @@ struct PrototypeIDMap;
     @staticmethod
     def UnionTypes(config):
 
-        (includes, declarations, unions) = UnionTypes(config.getDescriptors())
+        (includes, declarations, unions) = UnionTypes(config.getDescriptors(),
+                                                      config.getDictionaries(),
+                                                      config.getCallbacks(),
+                                                      config)
         includes.add("mozilla/dom/BindingUtils.h")
 
         # Wrap all of that in our namespaces.
@@ -6900,7 +6990,7 @@ struct PrototypeIDMap;
 
         curr = CGList([stack[0], curr], "\n")
 
-        curr = CGHeaders([], [], includes, [], curr)
+        curr = CGHeaders([], [], [], includes, [], curr)
 
         # Add include guards.
         curr = CGIncludeGuard('UnionTypes', curr)
@@ -6918,7 +7008,7 @@ struct PrototypeIDMap;
 
         curr = CGWrapper(curr, post='\n')
 
-        curr = CGHeaders([], [], ["nsDebug.h", "mozilla/dom/UnionTypes.h", "nsDOMQS.h", "XPCWrapper.h"], [], curr)
+        curr = CGHeaders([], [], [], ["nsDebug.h", "mozilla/dom/UnionTypes.h", "nsDOMQS.h", "XPCWrapper.h"], [], curr)
 
         # Add include guards.
         curr = CGIncludeGuard('UnionConversions', curr)
