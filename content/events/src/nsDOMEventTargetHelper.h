@@ -126,6 +126,7 @@ private:
   bool                       mHasOrHasHadOwner;
 };
 
+// XPIDL event handlers
 #define NS_IMPL_EVENT_HANDLER(_class, _event)                                 \
     NS_IMETHODIMP _class::GetOn##_event(JSContext* aCx, JS::Value* aValue)    \
     {                                                                         \
@@ -148,6 +149,23 @@ private:
     {                                                                         \
       return _baseclass::SetOn##_event(aCx, aValue);                          \
     }
+
+// WebIDL event handlers
+#define IMPL_EVENT_HANDLER(_event)                                        \
+  inline JSObject* GetOn##_event(JSContext* aCx)                          \
+  {                                                                       \
+    JS::Value val;                                                        \
+    GetEventHandler(nsGkAtoms::on##_event, aCx, &val);                    \
+    return val.toObjectOrNull();                                          \
+  }                                                                       \
+  inline void SetOn##_event(JSContext* aCx,                               \
+                            mozilla::dom::EventHandlerNonNull* aCallback, \
+                            ErrorResult& aRv)                             \
+  {                                                                       \
+    JSObject* callback = aCallback ? aCallback->Callable() : nullptr;     \
+    aRv = SetEventHandler(nsGkAtoms::on##_event, aCx,                     \
+                          JS::ObjectOrNullValue(callback));               \
+  }
 
 /* Use this macro to declare functions that forward the behavior of this
  * interface to another object.

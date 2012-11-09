@@ -44,22 +44,6 @@
 namespace mozilla {
 namespace dom {
 
-#define IMPL_EVENT_HANDLER(_lowercase)                                  \
-  inline JSObject* GetOn##_lowercase(JSContext* aCx)                    \
-  {                                                                     \
-    JS::Value val;                                                      \
-    nsresult rv = GetOn##_lowercase(aCx, &val);                         \
-    return NS_SUCCEEDED(rv) ? JSVAL_TO_OBJECT(val) : nullptr;           \
-  }                                                                     \
-  void SetOn##_lowercase(JSContext* aCx, EventHandlerNonNull* aCallback,\
-                         ErrorResult& aRv)                              \
-  {                                                                     \
-    JSObject* callback = aCallback ? aCallback->Callable() : nullptr;   \
-    aRv = SetOn##_lowercase(aCx, JS::ObjectOrNullValue(callback));      \
-  }                                                                     \
-  NS_IMETHOD GetOn##_lowercase(JSContext* cx, JS::Value* aVal);         \
-  NS_IMETHOD SetOn##_lowercase(JSContext* cx, const JS::Value& aVal);
-
 class WebSocket : public nsDOMEventTargetHelper,
                   public nsIInterfaceRequestor,
                   public nsIWebSocketListener,

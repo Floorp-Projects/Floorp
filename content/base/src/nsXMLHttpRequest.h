@@ -54,21 +54,6 @@ class AsyncVerifyRedirectCallbackForwarder;
 class nsIUnicodeDecoder;
 class nsIDOMFormData;
 
-#define IMPL_EVENT_HANDLER(_lowercase)                                  \
-  inline JSObject* GetOn##_lowercase(JSContext* aCx)                    \
-  {                                                                     \
-    JS::Value val;                                                      \
-    nsresult rv = GetOn##_lowercase(aCx, &val);                         \
-    return NS_SUCCEEDED(rv) ? JSVAL_TO_OBJECT(val) : nullptr;           \
-  }                                                                     \
-  void SetOn##_lowercase(JSContext* aCx,                                \
-                         mozilla::dom::EventHandlerNonNull* aCallback,  \
-                         ErrorResult& aRv)                              \
-  {                                                                     \
-    JSObject* callback = aCallback ? aCallback->Callable() : nullptr;   \
-    aRv = SetOn##_lowercase(aCx, JS::ObjectOrNullValue(callback));      \
-  }
-
 class nsXHREventTarget : public nsDOMEventTargetHelper,
                          public nsIXMLHttpRequestEventTarget
 {
