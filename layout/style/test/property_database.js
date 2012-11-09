@@ -3172,7 +3172,7 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "capitalize", "uppercase", "lowercase" ],
+		other_values: [ "capitalize", "uppercase", "lowercase", "full-width" ],
 		invalid_values: []
 	},
 	"top": {
