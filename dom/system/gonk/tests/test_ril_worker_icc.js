@@ -143,6 +143,26 @@ add_test(function test_is_icc_service_available() {
 });
 
 /**
+ * Verify RIL.sendStkTerminalProfile
+ */
+add_test(function test_send_stk_terminal_profile() {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+  let buf = worker.Buf;
+
+  ril.sendStkTerminalProfile(STK_SUPPORTED_TERMINAL_PROFILE);
+
+  buf.seekIncoming(8);
+  let profile = buf.readString();
+  for (let i = 0; i < STK_SUPPORTED_TERMINAL_PROFILE.length; i++) {
+    do_check_eq(parseInt(profile.substring(2 * i, 2 * i + 2), 16),
+                STK_SUPPORTED_TERMINAL_PROFILE[i]);
+  }
+
+  run_next_test();
+});
+
+/**
  * Verify ComprehensionTlvHelper.writeLocationInfoTlv
  */
 add_test(function test_write_location_info_tlv() {
