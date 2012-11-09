@@ -114,7 +114,6 @@ public:
 //==== NSITEXTCONTROLFRAME
 
   NS_IMETHOD    GetEditor(nsIEditor **aEditor) MOZ_OVERRIDE;
-  NS_IMETHOD    GetTextLength(int32_t* aTextLength) MOZ_OVERRIDE;
   NS_IMETHOD    SetSelectionStart(int32_t aSelectionStart) MOZ_OVERRIDE;
   NS_IMETHOD    SetSelectionEnd(int32_t aSelectionEnd) MOZ_OVERRIDE;
   NS_IMETHOD    SetSelectionRange(int32_t aSelectionStart,

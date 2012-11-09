@@ -757,19 +757,6 @@ nsTextControlFrame::GetEditor(nsIEditor **aEditor)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTextControlFrame::GetTextLength(int32_t* aTextLength)
-{
-  NS_ENSURE_ARG_POINTER(aTextLength);
-
-  nsAutoString   textContents;
-  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
-  NS_ASSERTION(txtCtrl, "Content not a text control element");
-  txtCtrl->GetTextEditorValue(textContents, false);   // this is expensive!
-  *aTextLength = textContents.Length();
-  return NS_OK;
-}
-
 nsresult
 nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
                                          int32_t aStartOffset,
