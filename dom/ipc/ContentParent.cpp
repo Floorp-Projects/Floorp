@@ -47,6 +47,7 @@
 #include "nsCOMPtr.h"
 #include "nsChromeRegistryChrome.h"
 #include "nsConsoleMessage.h"
+#include "nsConsoleService.h"
 #include "nsDebugImpl.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDOMFile.h"
@@ -56,7 +57,6 @@
 #include "nsIAlertsService.h"
 #include "nsIAppsService.h"
 #include "nsIClipboard.h"
-#include "nsIConsoleService.h"
 #include "nsIDOMApplicationRegistry.h"
 #include "nsIDOMGeoGeolocation.h"
 #include "nsIDOMWindow.h"
@@ -632,6 +632,8 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     Preferences::RemoveObserver(this, "");
 
     RecvRemoveGeolocationListener();
+
+    mConsoleService = nullptr;
 
     nsCOMPtr<nsIThreadInternal>
         threadInt(do_QueryInterface(NS_GetCurrentThread()));
@@ -1888,15 +1890,33 @@ ContentParent::HandleEvent(nsIDOMGeoPosition* postion)
   return NS_OK;
 }
 
+nsConsoleService *
+ContentParent::GetConsoleService()
+{
+    if (mConsoleService) {
+        return mConsoleService.get();
+    }
+
+    // Get the ConsoleService by CID rather than ContractID, so that we
+    // can cast the returned pointer to an nsConsoleService (rather than
+    // just an nsIConsoleService). This allows us to call the non-idl function
+    // nsConsoleService::LogMessageWithMode.
+    NS_DEFINE_CID(consoleServiceCID, NS_CONSOLESERVICE_CID);
+    nsCOMPtr<nsConsoleService>  consoleService(do_GetService(consoleServiceCID));
+    mConsoleService = consoleService;
+    return mConsoleService.get();
+}
+
 bool
 ContentParent::RecvConsoleMessage(const nsString& aMessage)
 {
-  nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-  if (!svc)
+  nsRefPtr<nsConsoleService> consoleService = GetConsoleService();
+  if (!consoleService) {
     return true;
+  }
   
   nsRefPtr<nsConsoleMessage> msg(new nsConsoleMessage(aMessage.get()));
-  svc->LogMessage(msg);
+  consoleService->LogMessageWithMode(msg, nsConsoleService::SuppressLog);
   return true;
 }
 
@@ -1909,9 +1929,10 @@ ContentParent::RecvScriptError(const nsString& aMessage,
                                       const uint32_t& aFlags,
                                       const nsCString& aCategory)
 {
-  nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-  if (!svc)
-      return true;
+  nsRefPtr<nsConsoleService> consoleService = GetConsoleService();
+  if (!consoleService) {
+    return true;
+  }
 
   nsCOMPtr<nsIScriptError> msg(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
   nsresult rv = msg->Init(aMessage, aSourceName, aSourceLine,
@@ -1919,7 +1940,7 @@ ContentParent::RecvScriptError(const nsString& aMessage,
   if (NS_FAILED(rv))
     return true;
 
-  svc->LogMessage(msg);
+  consoleService->LogMessageWithMode(msg, nsConsoleService::SuppressLog);
   return true;
 }
 

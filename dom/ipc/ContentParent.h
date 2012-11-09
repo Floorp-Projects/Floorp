@@ -29,6 +29,7 @@
 #define CHILD_PROCESS_SHUTDOWN_MESSAGE NS_LITERAL_STRING("child-process-shutdown")
 
 class mozIApplication;
+class nsConsoleService;
 class nsIDOMBlob;
 
 namespace mozilla {
@@ -334,6 +335,9 @@ private:
     bool mIsForBrowser;
 
     friend class CrashReporterParent;
+
+    nsRefPtr<nsConsoleService>  mConsoleService;
+    already_AddRefed<nsConsoleService> GetConsoleService();
 };
 
 } // namespace dom
