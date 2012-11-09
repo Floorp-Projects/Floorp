@@ -315,11 +315,9 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOM
     theDir = @"/Applications/";
   }
 
-  // On 10.6+, we let users change the filters. Unfortunately, some methods
-  // are not available on 10.5 and without using them it happens to be buggy.
   int result;
   nsCocoaUtils::PrepareForNativeAppModalDialog();
-  if (mFilters.Length() > 1 && nsCocoaFeatures::OnSnowLeopardOrLater()) {
+  if (mFilters.Length() > 1) {
     // [NSURL initWithString:] (below) throws an exception if URLString is nil.
     if (!theDir) {
       theDir = @"";
