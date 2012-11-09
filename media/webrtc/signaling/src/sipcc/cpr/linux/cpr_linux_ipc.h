@@ -20,7 +20,7 @@
 
 /* Message buffer layout */
 struct msgbuffer {
-    int32_t mtype;    /* Message type */
+    long    mtype;    /* Message type */
     void   *msgPtr;   /* Ptr to msg */
     void   *usrPtr;   /* Ptr to user data */
 };
