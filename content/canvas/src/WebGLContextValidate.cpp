@@ -11,9 +11,7 @@
 
 #include "jsfriendapi.h"
 
-#if defined(USE_ANGLE)
 #include "angle/ShaderLang.h"
-#endif
 
 #include <algorithm>
 
@@ -1001,7 +999,6 @@ WebGLContext::InitAndValidateGL()
     mShaderValidation =
         Preferences::GetBool("webgl.shader_validator", mShaderValidation);
 
-#if defined(USE_ANGLE)
     // initialize shader translator
     if (mShaderValidation) {
         if (!ShInitialize()) {
@@ -1009,7 +1006,6 @@ WebGLContext::InitAndValidateGL()
             return false;
         }
     }
-#endif
 
     // Mesa can only be detected with the GL_VERSION string, of the form "2.1 Mesa 7.11.0"
     mIsMesa = strstr((const char *)(gl->fGetString(LOCAL_GL_VERSION)), "Mesa");
