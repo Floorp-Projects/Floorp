@@ -78,6 +78,12 @@ public:
     return mCallable;
   }
 
+  bool HasGrayCallable() const
+  {
+    // Play it safe in case this gets called after unlink.
+    return mCallable && xpc_IsGrayGCThing(mCallable);
+  }
+
 protected:
   void DropCallback()
   {

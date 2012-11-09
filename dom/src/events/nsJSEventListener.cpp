@@ -38,6 +38,8 @@ public:
 static EventListenerCounter sEventListenerCounter;
 #endif
 
+using namespace mozilla::dom;
+
 /*
  * nsJSEventListener implementation
  */
@@ -45,9 +47,8 @@ nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
                                      JSObject* aScopeObject,
                                      nsISupports *aTarget,
                                      nsIAtom* aType,
-                                     JSObject *aHandler)
-  : nsIJSEventListener(aContext, aScopeObject, aTarget, aHandler),
-    mEventName(aType)
+                                     const nsEventHandler& aHandler)
+  : nsIJSEventListener(aContext, aScopeObject, aTarget, aType, aHandler)
 {
   // aScopeObject is the inner window's JS object, which we need to lock
   // until we are done with it.
@@ -70,6 +71,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
     tmp->mScopeObject = nullptr;
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContext)
   }
+  tmp->mHandler.ForgetHandler();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSEventListener)
   if (MOZ_UNLIKELY(cb.WantDebugInfo()) && tmp->mEventName) {
@@ -82,12 +84,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSEventListener)
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsJSEventListener, tmp->mRefCnt.get())
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mHandler.Ptr())
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSEventListener)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScopeObject)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mHandler)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsJSEventListener)
@@ -131,7 +133,8 @@ nsJSEventListener::IsBlackForCC()
 {
   if (mContext &&
       (!mScopeObject || !xpc_IsGrayGCThing(mScopeObject)) &&
-      (!mHandler || !xpc_IsGrayGCThing(mHandler))) {
+      (!mHandler.HasEventHandler() ||
+       !mHandler.Ptr()->HasGrayCallable())) {
     nsIScriptGlobalObject* sgo =
       static_cast<nsJSContext*>(mContext.get())->GetCachedGlobalObject();
     return sgo && sgo->IsBlackForCC();
@@ -143,7 +146,7 @@ nsresult
 nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTarget);
-  if (!target || !mContext || !mHandler)
+  if (!target || !mContext || !mHandler.HasEventHandler())
     return NS_ERROR_FAILURE;
 
   nsresult rv;
@@ -208,9 +211,9 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 #endif
   nsCOMPtr<nsIVariant> vrv;
   xpc_UnmarkGrayObject(mScopeObject);
-  xpc_UnmarkGrayObject(mHandler);
-  rv = mContext->CallEventHandler(mTarget, mScopeObject, mHandler, iargv,
-                                  getter_AddRefs(vrv));
+  rv = mContext->CallEventHandler(mTarget, mScopeObject,
+                                  mHandler.Ptr()->Callable(),
+                                  iargv, getter_AddRefs(vrv));
 
   if (NS_SUCCEEDED(rv)) {
     uint16_t dataType = nsIDataType::VTYPE_VOID;
@@ -257,18 +260,6 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   return rv;
 }
 
-/* virtual */ void
-nsJSEventListener::SetHandler(JSObject *aHandler)
-{
-  // Technically we should drop the old mHandler and hold the new
-  // one... except for JS this is a no-op, and we're really not
-  // pretending very hard to support anything else.  And since we
-  // can't in fact only drop one script object (we'd have to drop
-  // mScope too, and then re-hold it), let's just not worry about it
-  // all.
-  mHandler = aHandler;
-}
-
 /*
  * Factory functions
  */
@@ -276,7 +267,8 @@ nsJSEventListener::SetHandler(JSObject *aHandler)
 nsresult
 NS_NewJSEventListener(nsIScriptContext* aContext, JSObject* aScopeObject,
                       nsISupports*aTarget, nsIAtom* aEventType,
-                      JSObject* aHandler, nsIJSEventListener** aReturn)
+                      const nsEventHandler& aHandler,
+                      nsIJSEventListener** aReturn)
 {
   NS_ENSURE_ARG(aEventType);
   nsJSEventListener* it =
