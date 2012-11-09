@@ -67,8 +67,6 @@ public:
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
   virtual bool IsCollapsed();
 
-  DECL_DO_GLOBAL_REFLOW_COUNT_DSP(nsTextControlFrame, nsContainerFrame)
-
   virtual bool IsLeaf() const;
   
 #ifdef ACCESSIBILITY
@@ -100,6 +98,10 @@ public:
 
   NS_IMETHOD SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList) MOZ_OVERRIDE;
+
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
 //==== BEGIN NSIFORMCONTROLFRAME
   virtual void SetFocus(bool aOn , bool aRepaint); 
