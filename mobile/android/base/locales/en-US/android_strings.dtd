@@ -56,7 +56,7 @@
 <!ENTITY close_tab "Close Tab">
 <!ENTITY new_tab "New Tab">
 <!ENTITY one_tab "1 tab">
-<!-- Localization note (num_tabs) : Number of tabs is always more than one. 
+<!-- Localization note (num_tabs) : Number of tabs is always more than one.
      We can't use android plural forms, sadly. See bug #753859. -->
 <!ENTITY num_tabs "&#037;d tabs">
 <!ENTITY new_tab_opened "New tab opened">
@@ -247,11 +247,11 @@ just addresses the organization to follow, e.g. "This site is run by " -->
  <!-- Updater notifications -->
 <!ENTITY updater_start_title2 "Update available for &brandShortName;">
 <!ENTITY updater_start_select2 "Touch to download">
- 
+
 <!ENTITY updater_downloading_title2 "Downloading &brandShortName;">
 <!ENTITY updater_downloading_title_failed2 "Download failed">
 <!ENTITY updater_downloading_select2 "Touch to apply update once downloaded">
 <!ENTITY updater_downloading_retry2 "Touch to retry">
- 
+
 <!ENTITY updater_apply_title2 "Update available for &brandShortName;">
 <!ENTITY updater_apply_select2 "Touch to update">
