@@ -753,6 +753,11 @@ bool
 nsTextStateManager::IsManaging(nsPresContext* aPresContext,
                                   nsIContent* aContent)
 {
+  // If mRootContent has been removed from mEditableNode, this is not managing
+  // the content actually.
+  if (!mRootContent || !mRootContent->IsInDoc()) {
+    return false;
+  }
   return mEditableNode == nsIMEStateManager::GetRootEditableNode(aPresContext,
                                                                  aContent);
 }
