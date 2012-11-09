@@ -353,15 +353,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
 
   // Don't evaluate special cases when we're evaluating the downloaded blocklist.
   if (!aDriverInfo.Length()) {
-    // Many WebGL issues on 10.5, especially:
-    //   * bug 631258: WebGL shader paints using textures belonging to other processes on Mac OS 10.5
-    //   * bug 618848: Post process shaders and texture mapping crash OS X 10.5
-    if (aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL &&
-        !nsCocoaFeatures::OnSnowLeopardOrLater()) {
-      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
-      return NS_OK;
-    }
-
     // The code around the following has been moved into the global blocklist.
 #if 0
       // CGL reports a list of renderers, some renderers are slow (e.g. software)
