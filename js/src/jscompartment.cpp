@@ -66,6 +66,8 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     typeLifoAlloc(LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     data(NULL),
     active(false),
+    scheduledForDestruction(false),
+    maybeAlive(true),
     lastAnimationTime(0),
     regExps(rt),
     propertyTree(thisForCtor()),
@@ -307,9 +309,9 @@ JSCompartment::wrap(JSContext *cx, Value *vp, JSObject *existing)
 
     RootedObject obj(cx, &vp->toObject());
 
-    /* See if we can reuse |existing| as the wrapper for |obj|. */
     JSObject *proto = Proxy::LazyProto;
     if (existing) {
+        /* Is it possible to reuse |existing|? */
         if (!existing->getTaggedProto().isLazy() ||
             existing->getClass() != &ObjectProxyClass ||
             existing->getParent() != global ||

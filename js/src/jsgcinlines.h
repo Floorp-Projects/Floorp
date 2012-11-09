@@ -24,6 +24,32 @@ namespace js {
 
 struct Shape;
 
+/*
+ * This auto class should be used around any code that might cause a mark bit to
+ * be set on an object in a dead compartment. See AutoTransplantGC for more
+ * details.
+ */
+struct AutoMarkInDeadCompartment
+{
+    AutoMarkInDeadCompartment(JSCompartment *comp)
+      : compartment(comp),
+        scheduled(comp->scheduledForDestruction)
+    {
+        if (comp->rt->gcInTransplant && comp->scheduledForDestruction) {
+            comp->rt->gcObjectsMarkedInDeadCompartments++;
+            comp->scheduledForDestruction = false;
+        }
+    }
+
+    ~AutoMarkInDeadCompartment() {
+        compartment->scheduledForDestruction = scheduled;
+    }
+
+  private:
+    JSCompartment *compartment;
+    bool scheduled;
+};
+
 namespace gc {
 
 inline JSGCTraceKind

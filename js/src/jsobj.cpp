@@ -2942,6 +2942,9 @@ JSObject::swap(JSContext *cx, JSObject *other_)
     RootedObject self(cx, this);
     RootedObject other(cx, other_);
 
+    AutoMarkInDeadCompartment adc1(self->compartment());
+    AutoMarkInDeadCompartment adc2(other->compartment());
+
     // Ensure swap doesn't cause a finalizer to not be run.
     JS_ASSERT(IsBackgroundFinalized(getAllocKind()) ==
               IsBackgroundFinalized(other->getAllocKind()));
