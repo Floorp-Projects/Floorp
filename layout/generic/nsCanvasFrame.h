@@ -127,10 +127,9 @@ public:
   nsDisplayCanvasBackground(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
                             uint32_t aLayer, bool aIsThemed,
                             const nsStyleBackground* aBackgroundStyle)
-    : nsDisplayBackground(aBuilder, aFrame, aLayer,
-                          aIsThemed, aBackgroundStyle, true)
+    : nsDisplayBackground(aBuilder, aFrame, aLayer, aIsThemed, aBackgroundStyle),
+      mExtraBackgroundColor(NS_RGBA(0,0,0,0))
   {
-    mExtraBackgroundColor = NS_RGBA(0,0,0,0);
   }
 
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -172,7 +171,17 @@ public:
     // We need to override so we don't consider border-radius.
     aOutFrames->AppendElement(mFrame);
   }
-  
+  virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE
+  {
+    // Put background-attachment:fixed canvas background images in their own
+    // compositing layer. Since we know their background painting area can't
+    // change (unless the viewport size itself changes), async scrolling
+    // will work well.
+    return mBackgroundStyle &&
+      mBackgroundStyle->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
+      !mBackgroundStyle->mLayers[mLayer].mImage.IsEmpty();
+  }
+
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) MOZ_OVERRIDE;
 
@@ -186,6 +195,5 @@ public:
 private:
   nscolor mExtraBackgroundColor;
 };
-
 
 #endif /* nsCanvasFrame_h___ */
