@@ -4786,7 +4786,7 @@ ContentComponentsGetterOp(JSContext *cx, JSHandleObject obj, JSHandleId id,
     // Warn once.
     JSAutoCompartment ac(cx, obj);
     nsCOMPtr<nsPIDOMWindow> win =
-        do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, obj));
+        do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(obj));
     if (win) {
         nsCOMPtr<nsIDocument> doc =
             do_QueryInterface(win->GetExtantDocument());

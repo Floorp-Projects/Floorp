@@ -1734,7 +1734,7 @@ nsContentUtils::GetDocumentFromCaller()
   JSAutoCompartment ac(cx, obj);
 
   nsCOMPtr<nsPIDOMWindow> win =
-    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, obj));
+    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(obj));
   if (!win) {
     return nullptr;
   }
