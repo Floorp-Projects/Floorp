@@ -565,17 +565,37 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
               // They won't get acceleration.
               return;
             }
-    
-            hr = factory1->EnumAdapters1(0, getter_AddRefs(adapter1));
 
+            bool checkDX10 =
+              Preferences::GetBool("gfx.direct3d.checkDX10", true);
+            hr = factory1->EnumAdapters1(0, getter_AddRefs(adapter1));
             if (SUCCEEDED(hr) && adapter1) {
+              // We have an adapter, check if we've ever found that
+              // createD3DDevice fails for both DX10 and DX10.1.
+              if (!checkDX10) {
+                // Even if the CheckInterfaceSupport call fails, the
+                // createD3DDevice call may still succeed.
+                // We only check it here to reset the pref which is used to skip
+                // the createD3DDevice calls.  This is done in case hardware
+                // changes.
                 hr = adapter1->CheckInterfaceSupport(__uuidof(ID3D10Device),
                                                      nullptr);
-                if (FAILED(hr)) {
-                    // We should return and not accelerate if we don't have
-                    // D3D 10.0 support.
-                    return;
+                if (SUCCEEDED(hr)) {
+                  checkDX10 = true;
+                  Preferences::SetBool("gfx.direct3d.checkDX10", true);
                 }
+              }
+            } else {
+              // We should return and not accelerate if we can't obtain
+              // an adapter.
+              return;
+            }
+
+            // If we know that the DX10 calls have failed in the past, just
+            // bail out early.  This value will be reset if the adapter's
+            // CheckInterfaceSupport call ever succeeds with ID3D10Device
+            if (!checkDX10) {
+              return;
             }
         }
 
@@ -665,6 +685,10 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
                 Preferences::SetBool("gfx.direct3d.prefer_10_1", true);
             }
             mD2DDevice = cairo_d2d_create_device_from_d3d10device(device);
+        }
+
+        if (FAILED(hr) || !device) {
+          Preferences::SetBool("gfx.direct3d.checkDX10", false);
         }
     }
 
