@@ -329,6 +329,7 @@
 
 #header-search > .textbox-input-box > html|*.textbox-input::-moz-placeholder {
   color: #5C6470;
+  opacity: 1.0;
 }
 
 .view-header {
