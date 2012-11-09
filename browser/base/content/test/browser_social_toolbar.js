@@ -62,7 +62,25 @@ var tests = {
       label: "Test Ambient 1",
       menuURL: "https://example.com/testAmbient1"
     };
+    let ambience2 = {
+      name: "testIcon2",
+      iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
+      contentPanel: "about:blank",
+      counter: 0,
+      label: "Test Ambient 2",
+      menuURL: "https://example.com/testAmbient2"
+    };
+    let ambience3 = {
+      name: "testIcon3",
+      iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
+      contentPanel: "about:blank",
+      counter: 0,
+      label: "Test Ambient 3",
+      menuURL: "https://example.com/testAmbient3"
+    };
     Social.provider.setAmbientNotification(ambience);
+    Social.provider.setAmbientNotification(ambience2);
+    Social.provider.setAmbientNotification(ambience3);
 
     let statusIcon = document.querySelector("#social-toolbar-item > box");
     waitForCondition(function() {
@@ -86,7 +104,7 @@ var tests = {
         toolsPopup.removeEventListener("popupshown", ontoolspopupshownAmbient);
         let socialToggleMore = document.getElementById("menu_socialAmbientMenu");
         ok(socialToggleMore, "Keyboard accessible social menu should exist");
-        is(socialToggleMore.querySelectorAll("menuitem").length, 3, "The number of menuitems is minimum plus one ambient notification menuitem.");
+        is(socialToggleMore.querySelectorAll("menuitem").length, 5, "The number of menuitems is minimum plus one ambient notification menuitem.");
         is(socialToggleMore.hidden, false, "Menu is visible when ambient notifications have label & menuURL");
         let menuitem = socialToggleMore.querySelector("menuitem");
         is(menuitem.getAttribute("label"), "Test Ambient 1", "Keyboard accessible ambient menuitem should have specified label");
