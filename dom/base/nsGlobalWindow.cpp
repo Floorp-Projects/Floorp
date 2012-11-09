@@ -11192,10 +11192,13 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
                                              jsval *vp) {                    \
     nsEventListenerManager *elm = GetListenerManager(false);                 \
     if (elm) {                                                               \
-      elm->GetEventHandler(nsGkAtoms::on##name_, vp);                        \
-    } else {                                                                 \
-      *vp = JSVAL_NULL;                                                      \
+      EventHandlerNonNull* h = elm->GetEventHandler(nsGkAtoms::on##name_);   \
+      if (h) {                                                               \
+        *vp = JS::ObjectValue(*h->Callable());                               \
+        return NS_OK;                                                        \
+      }                                                                      \
     }                                                                        \
+    *vp = JSVAL_NULL;                                                        \
     return NS_OK;                                                            \
   }                                                                          \
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
@@ -11209,7 +11212,92 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
     if (!obj) {                                                              \
       return NS_ERROR_UNEXPECTED;                                            \
     }                                                                        \
-    return elm->SetEventHandlerToJsval(nsGkAtoms::on##name_, cx, obj, v);    \
+    nsRefPtr<EventHandlerNonNull> handler;                                   \
+    JSObject *callable;                                                      \
+    if (v.isObject() &&                                                      \
+        JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
+      bool ok;                                                               \
+      handler = new EventHandlerNonNull(cx, obj, callable, &ok);             \
+      if (!ok) {                                                             \
+        return NS_ERROR_OUT_OF_MEMORY;                                       \
+      }                                                                      \
+    }                                                                        \
+    return elm->SetEventHandler(nsGkAtoms::on##name_, handler);              \
+  }
+#define ERROR_EVENT(name_, id_, type_, struct_)                              \
+  NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
+                                             jsval *vp) {                    \
+    nsEventListenerManager *elm = GetListenerManager(false);                 \
+    if (elm) {                                                               \
+      OnErrorEventHandlerNonNull* h = elm->GetOnErrorEventHandler();         \
+      if (h) {                                                               \
+        *vp = JS::ObjectValue(*h->Callable());                               \
+        return NS_OK;                                                        \
+      }                                                                      \
+    }                                                                        \
+    *vp = JSVAL_NULL;                                                        \
+    return NS_OK;                                                            \
+  }                                                                          \
+  NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
+                                             const jsval &v) {               \
+    nsEventListenerManager *elm = GetListenerManager(true);                  \
+    if (!elm) {                                                              \
+      return NS_ERROR_OUT_OF_MEMORY;                                         \
+    }                                                                        \
+                                                                             \
+    JSObject *obj = mJSObject;                                               \
+    if (!obj) {                                                              \
+      return NS_ERROR_UNEXPECTED;                                            \
+    }                                                                        \
+    nsRefPtr<OnErrorEventHandlerNonNull> handler;                            \
+    JSObject *callable;                                                      \
+    if (v.isObject() &&                                                      \
+        JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
+      bool ok;                                                               \
+      handler = new OnErrorEventHandlerNonNull(cx, obj, callable, &ok);      \
+      if (!ok) {                                                             \
+        return NS_ERROR_OUT_OF_MEMORY;                                       \
+      }                                                                      \
+    }                                                                        \
+    return elm->SetEventHandler(handler);                                    \
+  }
+#define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                       \
+  NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \
+                                             jsval *vp) {                    \
+    nsEventListenerManager *elm = GetListenerManager(false);                 \
+    if (elm) {                                                               \
+      BeforeUnloadEventHandlerNonNull* h =                                   \
+        elm->GetOnBeforeUnloadEventHandler();                                \
+      if (h) {                                                               \
+        *vp = JS::ObjectValue(*h->Callable());                               \
+        return NS_OK;                                                        \
+      }                                                                      \
+    }                                                                        \
+    *vp = JSVAL_NULL;                                                        \
+    return NS_OK;                                                            \
+  }                                                                          \
+  NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
+                                             const jsval &v) {               \
+    nsEventListenerManager *elm = GetListenerManager(true);                  \
+    if (!elm) {                                                              \
+      return NS_ERROR_OUT_OF_MEMORY;                                         \
+    }                                                                        \
+                                                                             \
+    JSObject *obj = mJSObject;                                               \
+    if (!obj) {                                                              \
+      return NS_ERROR_UNEXPECTED;                                            \
+    }                                                                        \
+    nsRefPtr<BeforeUnloadEventHandlerNonNull> handler;                       \
+    JSObject *callable;                                                      \
+    if (v.isObject() &&                                                      \
+        JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
+      bool ok;                                                               \
+      handler = new BeforeUnloadEventHandlerNonNull(cx, obj, callable, &ok); \
+      if (!ok) {                                                             \
+        return NS_ERROR_OUT_OF_MEMORY;                                       \
+      }                                                                      \
+    }                                                                        \
+    return elm->SetEventHandler(handler);                                    \
   }
 #define WINDOW_ONLY_EVENT EVENT
 #define TOUCH_EVENT EVENT
