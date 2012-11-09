@@ -45,6 +45,8 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
 {
     JS_ASSERT(parent);
 
+    AutoMarkInDeadCompartment amd(cx->compartment);
+
 #if JS_HAS_XML_SUPPORT
     if (obj->isXML()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -989,21 +991,34 @@ js::IsDeadProxyObject(RawObject obj)
     return IsProxy(obj) && GetProxyHandler(obj) == &DeadObjectProxy::singleton;
 }
 
+static void
+NukeSlot(JSObject *wrapper, uint32_t slot, Value v)
+{
+    Value old = wrapper->getSlot(slot);
+    if (old.isMarkable()) {
+        Cell *cell = static_cast<Cell *>(old.toGCThing());
+        AutoMarkInDeadCompartment amd(cell->compartment());
+        wrapper->setReservedSlot(slot, v);
+    } else {
+        wrapper->setReservedSlot(slot, v);
+    }
+}
+
 void
 js::NukeCrossCompartmentWrapper(JSContext *cx, JSObject *wrapper)
 {
     JS_ASSERT(IsCrossCompartmentWrapper(wrapper));
 
-    SetProxyPrivate(wrapper, NullValue());
+    NukeSlot(wrapper, JSSLOT_PROXY_PRIVATE, NullValue());
     SetProxyHandler(wrapper, &DeadObjectProxy::singleton);
 
     if (IsFunctionProxy(wrapper)) {
-        wrapper->setReservedSlot(JSSLOT_PROXY_CALL, NullValue());
-        wrapper->setReservedSlot(JSSLOT_PROXY_CONSTRUCT, NullValue());
+        NukeSlot(wrapper, JSSLOT_PROXY_CALL, NullValue());
+        NukeSlot(wrapper, JSSLOT_PROXY_CONSTRUCT, NullValue());
     }
 
-    wrapper->setReservedSlot(JSSLOT_PROXY_EXTRA + 0, NullValue());
-    wrapper->setReservedSlot(JSSLOT_PROXY_EXTRA + 1, NullValue());
+    NukeSlot(wrapper, JSSLOT_PROXY_EXTRA + 0, NullValue());
+    NukeSlot(wrapper, JSSLOT_PROXY_EXTRA + 1, NullValue());
 }
 
 /*
@@ -1149,6 +1164,8 @@ JS_FRIEND_API(bool)
 js::RecomputeWrappers(JSContext *cx, const CompartmentFilter &sourceFilter,
                       const CompartmentFilter &targetFilter)
 {
+    AutoTransplantGC agc(cx);
+
     AutoWrapperVector toRecompute(cx);
 
     for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
