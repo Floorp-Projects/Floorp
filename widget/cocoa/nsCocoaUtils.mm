@@ -430,7 +430,7 @@ nsCocoaUtils::InitInputEvent(nsInputEvent &aInputEvent,
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NSUInteger modifiers =
-    aNativeEvent ? [aNativeEvent modifierFlags] : GetCurrentModifiers();
+    aNativeEvent ? [aNativeEvent modifierFlags] : [NSEvent modifierFlags];
   InitInputEvent(aInputEvent, modifiers);
 
   aInputEvent.time = PR_IntervalNow();
@@ -480,45 +480,6 @@ nsCocoaUtils::InitInputEvent(nsInputEvent &aInputEvent,
   // other keys are pressed. We cannot check whether 'fn' key is pressed or
   // not by the flag.
 
-}
-
-// static
-NSUInteger
-nsCocoaUtils::GetCurrentModifiers()
-{
-  // NOTE: [[NSApp currentEvent] modifiers] isn't useful because it sometime 0
-  //       and we cannot check if it's actual state.
-  if (nsCocoaFeatures::OnSnowLeopardOrLater()) {
-    // XXX [NSEvent modifierFlags] returns "current" modifier state, so,
-    //     it's not event-queue-synchronized.  GetCurrentEventKeyModifiers()
-    //     might be better, but it's Carbon API, we shouldn't use it as far as
-    //     possible.
-    return [NSEvent modifierFlags];
-  }
-
-  // If [NSEvent modifierFlags] isn't available, use carbon API.
-  // GetCurrentEventKeyModifiers() might be better?
-  // It's event-queue-synchronized.
-  UInt32 carbonModifiers = ::GetCurrentKeyModifiers();
-  NSUInteger cocoaModifiers = 0;
-
-  if (carbonModifiers & alphaLock) {
-    cocoaModifiers |= NSAlphaShiftKeyMask;
-  }
-  if (carbonModifiers & (controlKey | rightControlKey)) {
-    cocoaModifiers |= NSControlKeyMask;
-  }
-  if (carbonModifiers & (optionKey | rightOptionKey)) {
-    cocoaModifiers |= NSAlternateKeyMask;
-  }
-  if (carbonModifiers & (shiftKey | rightShiftKey)) {
-    cocoaModifiers |= NSShiftKeyMask;
-  }
-  if (carbonModifiers & cmdKey) {
-    cocoaModifiers |= NSCommandKeyMask;
-  }
-
-  return cocoaModifiers;
 }
 
 // static
