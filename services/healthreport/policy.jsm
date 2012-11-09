@@ -640,6 +640,22 @@ HealthReportPolicy.prototype = {
 
     let now = this.now();
     let nowT = now.getTime();
+    let nextSubmissionDate = this.nextDataSubmissionDate;
+
+    // If the system clock were ever set to a time in the distant future,
+    // it's possible our next schedule date is far out as well. We know
+    // we shouldn't schedule for more than a day out, so we reset the next
+    // scheduled date appropriately. 3 days was chosen arbitrarily.
+    if (nextSubmissionDate.getTime() >= nowT + 3 * MILLISECONDS_PER_DAY) {
+      this._log.warn("Next data submission time is far away. Was the system " +
+                     "clock recently readjusted? " + nextSubmissionDate);
+
+      // It shouldn't really matter what we set this to. 1 day in the future
+      // should be pretty safe.
+      this._moveScheduleForward24h();
+
+      // Fall through and prompt for user notification, if necessary.
+    }
 
     // If the user hasn't responded to the data policy, don't do anything.
     if (!this.ensureNotifyResponse(now)) {
@@ -654,8 +670,6 @@ HealthReportPolicy.prototype = {
 
     // User has responded to data policy and data submission is enabled. Now
     // comes the scheduling part.
-
-    let nextSubmissionDate = this.nextDataSubmissionDate;
 
     if (nowT < nextSubmissionDate.getTime()) {
       this._log.debug("Next data submission is scheduled in the future: " +

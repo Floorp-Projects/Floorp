@@ -356,6 +356,30 @@ add_test(function test_submission_daily_scheduling() {
   run_next_test();
 });
 
+add_test(function test_submission_far_future_scheduling() {
+  let [policy, prefs, listener] = getPolicy("submission_far_future_scheduling");
+
+  let now = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  defineNow(policy, now);
+  policy.recordUserAcceptance();
+  now = new Date();
+  defineNow(policy, now);
+
+  let nextDate = policy._futureDate(3 * 24 * 60 * 60 * 1000 - 1);
+  policy.nextDataSubmissionDate = nextDate;
+  policy.checkStateAndTrigger();
+  do_check_eq(listener.requestDataSubmissionCount, 0);
+  do_check_eq(policy.nextDataSubmissionDate.getTime(), nextDate.getTime());
+
+  policy.nextDataSubmissionDate = new Date(nextDate.getTime() + 1);
+  policy.checkStateAndTrigger();
+  do_check_eq(listener.requestDataSubmissionCount, 0);
+  do_check_eq(policy.nextDataSubmissionDate.getTime(),
+              policy._futureDate(24 * 60 * 60 * 1000).getTime());
+
+  run_next_test();
+});
+
 add_test(function test_submission_backoff() {
   let [policy, prefs, listener] = getPolicy("submission_backoff");
 
