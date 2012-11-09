@@ -309,14 +309,6 @@ nsEditor::PostCreate()
   // update nsTextStateManager and caret if we have focus
   nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
   if (focusedContent) {
-    nsCOMPtr<nsIPresShell> ps = GetPresShell();
-    NS_ASSERTION(ps, "no pres shell even though we have focus");
-    NS_ENSURE_TRUE(ps, NS_ERROR_UNEXPECTED);
-    nsPresContext* pc = ps->GetPresContext(); 
-
-    nsIMEStateManager::OnChangeFocus(pc, focusedContent,
-                                     InputContextAction::CAUSE_UNKNOWN);
-
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(focusedContent);
     if (target) {
       InitializeSelection(target);
@@ -328,6 +320,12 @@ nsEditor::PostCreate()
     nsEditorEventListener* listener =
       reinterpret_cast<nsEditorEventListener*> (mEventListener.get());
     listener->SpellCheckIfNeeded();
+
+    IMEState newState;
+    rv = GetPreferredIMEState(&newState);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+    nsCOMPtr<nsIContent> content = GetFocusedContentForIME();
+    nsIMEStateManager::UpdateIMEState(newState, content);
   }
   return NS_OK;
 }
@@ -484,6 +482,12 @@ nsEditor::SetFlags(uint32_t aFlags)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // If this is called from PostCreate(), it will update the IME state if it's
+  // necessary.
+  if (!mDidPostCreate) {
+    return NS_OK;
+  }
+
   // Might be changing editable state, so, we need to reset current IME state
   // if we're focused and the flag change causes IME state change.
   nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
@@ -493,7 +497,8 @@ nsEditor::SetFlags(uint32_t aFlags)
     if (NS_SUCCEEDED(rv)) {
       // NOTE: When the enabled state isn't going to be modified, this method
       // is going to do nothing.
-      nsIMEStateManager::UpdateIMEState(newState, focusedContent);
+      nsCOMPtr<nsIContent> content = GetFocusedContentForIME();
+      nsIMEStateManager::UpdateIMEState(newState, content);
     }
   }
 
@@ -5215,6 +5220,12 @@ nsEditor::GetFocusedContent()
 
   nsCOMPtr<nsIContent> content = fm->GetFocusedContent();
   return SameCOMIdentity(content, piTarget) ? content.forget() : nullptr;
+}
+
+already_AddRefed<nsIContent>
+nsEditor::GetFocusedContentForIME()
+{
+  return GetFocusedContent();
 }
 
 bool
