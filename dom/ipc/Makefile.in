@@ -85,7 +85,7 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES += \
 	-I$(srcdir)/../../content/base/src \
 	-I$(srcdir)/../../content/events/src \
-	-I$(srcdir)/../../toolkit/components/places \
+	-I$(srcdir)/../../docshell/base \
 	-I$(topsrcdir)/chrome/src \
 	-I$(topsrcdir)/uriloader/exthandler \
 	-I$(srcdir)/../../netwerk/base/src \

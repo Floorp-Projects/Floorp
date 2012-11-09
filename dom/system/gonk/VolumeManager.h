@@ -73,7 +73,7 @@ namespace system {
 *
 ***************************************************************************/
 
-class VolumeManager : public MessageLoopForIO::Watcher,
+class VolumeManager : public MessageLoopForIO::LineWatcher,
                       public RefCounted<VolumeManager>
 {
 public:
@@ -131,8 +131,9 @@ public:
 
 protected:
 
-  virtual void OnFileCanReadWithoutBlocking(int aFd);
+  virtual void OnLineRead(int aFd, nsDependentCSubstring& aMessage);
   virtual void OnFileCanWriteWithoutBlocking(int aFd);
+  virtual void OnError();
 
 private:
   bool OpenSocket();
@@ -155,8 +156,6 @@ private:
   VolumeArray         mVolumeArray;
   CommandQueue        mCommands;
   bool                mCommandPending;
-  char                mRcvBuf[kRcvBufSize];
-  size_t              mRcvIdx;
   MessageLoopForIO::FileDescriptorWatcher mReadWatcher;
   MessageLoopForIO::FileDescriptorWatcher mWriteWatcher;
   RefPtr<VolumeResponseCallback>          mBroadcastCallback;

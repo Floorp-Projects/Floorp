@@ -26,6 +26,11 @@
  * This will be passed as the extra data when the pressure 
  * observer is being asked to flush for low-memory conditions.
  *
+ * "low-memory-no-forward"
+ * This will be passed as the extra data when the pressure observer
+ * is being asked to flush for low-memory conditions but the resulting
+ * notification should not be forwarded to the child processes.
+ *
  * "heap-minimize"
  * This will be passed as the extra data when the pressure 
  * observer is being asked to flush because of a heap minimize 

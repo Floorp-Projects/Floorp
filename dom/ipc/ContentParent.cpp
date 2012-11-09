@@ -17,7 +17,7 @@
 
 #include "AppProcessPermissions.h"
 #include "CrashReporterParent.h"
-#include "History.h"
+#include "IHistory.h"
 #include "IDBFactory.h"
 #include "IndexedDBParent.h"
 #include "IndexedDatabaseManager.h"
@@ -123,7 +123,6 @@ using namespace mozilla::hal_sandbox;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::net;
-using namespace mozilla::places;
 
 namespace mozilla {
 namespace dom {
@@ -1043,7 +1042,8 @@ ContentParent::Observe(nsISupports* aSubject,
         return NS_OK;
 
     // listening for memory pressure event
-    if (!strcmp(aTopic, "memory-pressure")) {
+    if (!strcmp(aTopic, "memory-pressure") &&
+        !NS_LITERAL_STRING("low-memory-no-forward").Equals(aData)) {
         unused << SendFlushMemory(nsDependentString(aData));
     }
     // listening for remotePrefs...
@@ -1145,6 +1145,18 @@ ContentParent::RecvGetProcessAttributes(uint64_t* aId, bool* aStartBackground,
         (mAppManifestURL == MAGIC_PREALLOCATED_APP_MANIFEST_URL);
     *aIsForApp = IsForApp();
     *aIsForBrowser = mIsForBrowser;
+
+    return true;
+}
+
+bool
+ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline)
+{
+    nsCOMPtr<nsIIOService> io(do_GetIOService());
+    NS_ASSERTION(io, "No IO service?");
+    DebugOnly<nsresult> rv = io->GetOffline(aIsOffline);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed getting offline?");
+
     return true;
 }
 
@@ -1600,7 +1612,6 @@ ContentParent::RecvStartVisitedQuery(const URIParams& aURI)
         return false;
     }
     nsCOMPtr<IHistory> history = services::GetHistoryService();
-    NS_ABORT_IF_FALSE(history, "History must exist at this point.");
     if (history) {
         history->RegisterVisitedCallback(newURI, nullptr);
     }
@@ -1619,7 +1630,6 @@ ContentParent::RecvVisitURI(const URIParams& uri,
     }
     nsCOMPtr<nsIURI> ourReferrer = DeserializeURI(referrer);
     nsCOMPtr<IHistory> history = services::GetHistoryService();
-    NS_ABORT_IF_FALSE(history, "History must exist at this point");
     if (history) {
         history->VisitURI(ourURI, ourReferrer, flags);
     }
@@ -1636,7 +1646,6 @@ ContentParent::RecvSetURITitle(const URIParams& uri,
         return false;
     }
     nsCOMPtr<IHistory> history = services::GetHistoryService();
-    NS_ABORT_IF_FALSE(history, "History must exist at this point");
     if (history) {
         history->SetURITitle(ourURI, title);
     }

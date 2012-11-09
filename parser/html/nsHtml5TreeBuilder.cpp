@@ -51,6 +51,7 @@
 #include "nsAHtml5TreeBuilderState.h"
 #include "nsHtml5Highlighter.h"
 #include "nsHtml5ViewSourceUtils.h"
+#include "mozilla/Likely.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5MetaScanner.h"
@@ -63,8 +64,6 @@
 #include "nsHtml5Portability.h"
 
 #include "nsHtml5TreeBuilder.h"
-
-#include "mozilla/Likely.h"
 
 PRUnichar nsHtml5TreeBuilder::REPLACEMENT_CHARACTER[] = { 0xfffd };
 static const char* const QUIRKY_PUBLIC_IDS_DATA[] = { "+//silmaril//dtd html pro v0r11 19970101//", "-//advasoft ltd//dtd html 3.0 aswedit + extensions//", "-//as//dtd html 3.0 aswedit + extensions//", "-//ietf//dtd html 2.0 level 1//", "-//ietf//dtd html 2.0 level 2//", "-//ietf//dtd html 2.0 strict level 1//", "-//ietf//dtd html 2.0 strict level 2//", "-//ietf//dtd html 2.0 strict//", "-//ietf//dtd html 2.0//", "-//ietf//dtd html 2.1e//", "-//ietf//dtd html 3.0//", "-//ietf//dtd html 3.2 final//", "-//ietf//dtd html 3.2//", "-//ietf//dtd html 3//", "-//ietf//dtd html level 0//", "-//ietf//dtd html level 1//", "-//ietf//dtd html level 2//", "-//ietf//dtd html level 3//", "-//ietf//dtd html strict level 0//", "-//ietf//dtd html strict level 1//", "-//ietf//dtd html strict level 2//", "-//ietf//dtd html strict level 3//", "-//ietf//dtd html strict//", "-//ietf//dtd html//", "-//metrius//dtd metrius presentational//", "-//microsoft//dtd internet explorer 2.0 html strict//", "-//microsoft//dtd internet explorer 2.0 html//", "-//microsoft//dtd internet explorer 2.0 tables//", "-//microsoft//dtd internet explorer 3.0 html strict//", "-//microsoft//dtd internet explorer 3.0 html//", "-//microsoft//dtd internet explorer 3.0 tables//", "-//netscape comm. corp.//dtd html//", "-//netscape comm. corp.//dtd strict html//", "-//o'reilly and associates//dtd html 2.0//", "-//o'reilly and associates//dtd html extended 1.0//", "-//o'reilly and associates//dtd html extended relaxed 1.0//", "-//softquad software//dtd hotmetal pro 6.0::19990601::extensions to html 4.0//", "-//softquad//dtd hotmetal pro 4.0::19971010::extensions to html 4.0//", "-//spyglass//dtd html 2.0 extended//", "-//sq//dtd html 2.0 hotmetal + extensions//", "-//sun microsystems corp.//dtd hotjava html//", "-//sun microsystems corp.//dtd hotjava strict html//", "-//w3c//dtd html 3 1995-03-24//", "-//w3c//dtd html 3.2 draft//", "-//w3c//dtd html 3.2 final//", "-//w3c//dtd html 3.2//", "-//w3c//dtd html 3.2s draft//", "-//w3c//dtd html 4.0 frameset//", "-//w3c//dtd html 4.0 transitional//", "-//w3c//dtd html experimental 19960712//", "-//w3c//dtd html experimental 970421//", "-//w3c//dtd w3 html//", "-//w3o//dtd w3 html 3.0//", "-//webtechs//dtd mozilla html 2.0//", "-//webtechs//dtd mozilla html//" };
@@ -125,28 +124,21 @@ void
 nsHtml5TreeBuilder::doctype(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier, bool forceQuirks)
 {
   needToDropLF = false;
-  if (!isInForeign()) {
-    switch(mode) {
-      case NS_HTML5TREE_BUILDER_INITIAL: {
-        nsString* emptyString = nsHtml5Portability::newEmptyString();
-        appendDoctypeToDocument(!name ? nsHtml5Atoms::emptystring : name, !publicIdentifier ? emptyString : publicIdentifier, !systemIdentifier ? emptyString : systemIdentifier);
-        nsHtml5Portability::releaseString(emptyString);
-        if (isQuirky(name, publicIdentifier, systemIdentifier, forceQuirks)) {
-          errQuirkyDoctype();
-          documentModeInternal(QUIRKS_MODE, publicIdentifier, systemIdentifier, false);
-        } else if (isAlmostStandards(publicIdentifier, systemIdentifier)) {
-          errAlmostStandardsDoctype();
-          documentModeInternal(ALMOST_STANDARDS_MODE, publicIdentifier, systemIdentifier, false);
-        } else {
-          documentModeInternal(STANDARDS_MODE, publicIdentifier, systemIdentifier, false);
-        }
-        mode = NS_HTML5TREE_BUILDER_BEFORE_HTML;
-        return;
-      }
-      default: {
-        break;
-      }
+  if (!isInForeign() && mode == NS_HTML5TREE_BUILDER_INITIAL) {
+    nsString* emptyString = nsHtml5Portability::newEmptyString();
+    appendDoctypeToDocument(!name ? nsHtml5Atoms::emptystring : name, !publicIdentifier ? emptyString : publicIdentifier, !systemIdentifier ? emptyString : systemIdentifier);
+    nsHtml5Portability::releaseString(emptyString);
+    if (isQuirky(name, publicIdentifier, systemIdentifier, forceQuirks)) {
+      errQuirkyDoctype();
+      documentModeInternal(QUIRKS_MODE, publicIdentifier, systemIdentifier, false);
+    } else if (isAlmostStandards(publicIdentifier, systemIdentifier)) {
+      errAlmostStandardsDoctype();
+      documentModeInternal(ALMOST_STANDARDS_MODE, publicIdentifier, systemIdentifier, false);
+    } else {
+      documentModeInternal(STANDARDS_MODE, publicIdentifier, systemIdentifier, false);
     }
+    mode = NS_HTML5TREE_BUILDER_BEFORE_HTML;
+    return;
   }
   errStrayDoctype();
   return;
@@ -637,6 +629,36 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
       }
     }
     switch(mode) {
+      case NS_HTML5TREE_BUILDER_IN_ROW: {
+        switch(group) {
+          case NS_HTML5TREE_BUILDER_TD_OR_TH: {
+            clearStackBackTo(findLastOrRoot(NS_HTML5TREE_BUILDER_TR));
+            appendToCurrentNodeAndPushElement(elementName, attributes);
+            mode = NS_HTML5TREE_BUILDER_IN_CELL;
+            insertMarker();
+            attributes = nullptr;
+            NS_HTML5_BREAK(starttagloop);
+          }
+          case NS_HTML5TREE_BUILDER_CAPTION:
+          case NS_HTML5TREE_BUILDER_COL:
+          case NS_HTML5TREE_BUILDER_COLGROUP:
+          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT:
+          case NS_HTML5TREE_BUILDER_TR: {
+            eltPos = findLastOrRoot(NS_HTML5TREE_BUILDER_TR);
+            if (!eltPos) {
+              MOZ_ASSERT(fragment);
+              errNoTableRowToClose();
+              NS_HTML5_BREAK(starttagloop);
+            }
+            clearStackBackTo(eltPos);
+            pop();
+            mode = NS_HTML5TREE_BUILDER_IN_TABLE_BODY;
+            continue;
+          }
+          default:
+            ; // fall through
+        }
+      }
       case NS_HTML5TREE_BUILDER_IN_TABLE_BODY: {
         switch(group) {
           case NS_HTML5TREE_BUILDER_TR: {
@@ -667,36 +689,6 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               mode = NS_HTML5TREE_BUILDER_IN_TABLE;
               continue;
             }
-          }
-          default:
-            ; // fall through
-        }
-      }
-      case NS_HTML5TREE_BUILDER_IN_ROW: {
-        switch(group) {
-          case NS_HTML5TREE_BUILDER_TD_OR_TH: {
-            clearStackBackTo(findLastOrRoot(NS_HTML5TREE_BUILDER_TR));
-            appendToCurrentNodeAndPushElement(elementName, attributes);
-            mode = NS_HTML5TREE_BUILDER_IN_CELL;
-            insertMarker();
-            attributes = nullptr;
-            NS_HTML5_BREAK(starttagloop);
-          }
-          case NS_HTML5TREE_BUILDER_CAPTION:
-          case NS_HTML5TREE_BUILDER_COL:
-          case NS_HTML5TREE_BUILDER_COLGROUP:
-          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT:
-          case NS_HTML5TREE_BUILDER_TR: {
-            eltPos = findLastOrRoot(NS_HTML5TREE_BUILDER_TR);
-            if (!eltPos) {
-              MOZ_ASSERT(fragment);
-              errNoTableRowToClose();
-              NS_HTML5_BREAK(starttagloop);
-            }
-            clearStackBackTo(eltPos);
-            pop();
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE_BODY;
-            continue;
           }
           default:
             ; // fall through
@@ -2534,6 +2526,45 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
         }
       }
+      case NS_HTML5TREE_BUILDER_IN_HEAD: {
+        switch(group) {
+          case NS_HTML5TREE_BUILDER_HEAD: {
+            pop();
+            mode = NS_HTML5TREE_BUILDER_AFTER_HEAD;
+            NS_HTML5_BREAK(endtagloop);
+          }
+          case NS_HTML5TREE_BUILDER_BR:
+          case NS_HTML5TREE_BUILDER_HTML:
+          case NS_HTML5TREE_BUILDER_BODY: {
+            pop();
+            mode = NS_HTML5TREE_BUILDER_AFTER_HEAD;
+            continue;
+          }
+          default: {
+            errStrayEndTag(name);
+            NS_HTML5_BREAK(endtagloop);
+          }
+        }
+      }
+      case NS_HTML5TREE_BUILDER_IN_HEAD_NOSCRIPT: {
+        switch(group) {
+          case NS_HTML5TREE_BUILDER_NOSCRIPT: {
+            pop();
+            mode = NS_HTML5TREE_BUILDER_IN_HEAD;
+            NS_HTML5_BREAK(endtagloop);
+          }
+          case NS_HTML5TREE_BUILDER_BR: {
+            errStrayEndTag(name);
+            pop();
+            mode = NS_HTML5TREE_BUILDER_IN_HEAD;
+            continue;
+          }
+          default: {
+            errStrayEndTag(name);
+            NS_HTML5_BREAK(endtagloop);
+          }
+        }
+      }
       case NS_HTML5TREE_BUILDER_IN_COLUMN_GROUP: {
         switch(group) {
           case NS_HTML5TREE_BUILDER_COLGROUP: {
@@ -2709,45 +2740,6 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           case NS_HTML5TREE_BUILDER_HTML:
           case NS_HTML5TREE_BUILDER_BODY: {
             appendToCurrentNodeAndPushHeadElement(nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
-            mode = NS_HTML5TREE_BUILDER_IN_HEAD;
-            continue;
-          }
-          default: {
-            errStrayEndTag(name);
-            NS_HTML5_BREAK(endtagloop);
-          }
-        }
-      }
-      case NS_HTML5TREE_BUILDER_IN_HEAD: {
-        switch(group) {
-          case NS_HTML5TREE_BUILDER_HEAD: {
-            pop();
-            mode = NS_HTML5TREE_BUILDER_AFTER_HEAD;
-            NS_HTML5_BREAK(endtagloop);
-          }
-          case NS_HTML5TREE_BUILDER_BR:
-          case NS_HTML5TREE_BUILDER_HTML:
-          case NS_HTML5TREE_BUILDER_BODY: {
-            pop();
-            mode = NS_HTML5TREE_BUILDER_AFTER_HEAD;
-            continue;
-          }
-          default: {
-            errStrayEndTag(name);
-            NS_HTML5_BREAK(endtagloop);
-          }
-        }
-      }
-      case NS_HTML5TREE_BUILDER_IN_HEAD_NOSCRIPT: {
-        switch(group) {
-          case NS_HTML5TREE_BUILDER_NOSCRIPT: {
-            pop();
-            mode = NS_HTML5TREE_BUILDER_IN_HEAD;
-            NS_HTML5_BREAK(endtagloop);
-          }
-          case NS_HTML5TREE_BUILDER_BR: {
-            errStrayEndTag(name);
-            pop();
             mode = NS_HTML5TREE_BUILDER_IN_HEAD;
             continue;
           }

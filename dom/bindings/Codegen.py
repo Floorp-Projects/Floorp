@@ -5079,7 +5079,7 @@ class CGProxyIndexedGetter(CGProxyIndexedOperation):
     """
     def __init__(self, descriptor, templateValues=None):
         self.templateValues = templateValues
-        CGProxySpecialOperation.__init__(self, descriptor, 'IndexedGetter')
+        CGProxyIndexedOperation.__init__(self, descriptor, 'IndexedGetter')
 
 class CGProxyIndexedPresenceChecker(CGProxyIndexedGetter):
     """
@@ -5095,18 +5095,24 @@ class CGProxyIndexedSetter(CGProxyIndexedOperation):
     Class to generate a call to an indexed setter.
     """
     def __init__(self, descriptor):
-        CGProxySpecialOperation.__init__(self, descriptor, 'IndexedSetter')
+        CGProxyIndexedOperation.__init__(self, descriptor, 'IndexedSetter')
 
 class CGProxyNamedOperation(CGProxySpecialOperation):
     """
     Class to generate a call to a named operation.
+
+    'value' is the jsval to use for the name; None indicates that it should be
+    gotten from the property id.
     """
-    def __init__(self, descriptor, name):
+    def __init__(self, descriptor, name, value=None):
         CGProxySpecialOperation.__init__(self, descriptor, name)
+        if value is None:
+            value = "js::IdToValue(id)"
+        self.value = value
     def define(self):
         # Our first argument is the id we're getting.
         argName = self.arguments[0].identifier.name
-        return (("JS::Value nameVal = STRING_TO_JSVAL(JSID_TO_STRING(id));\n"
+        return (("JS::Value nameVal = %s;\n"
                  "FakeDependentString %s;\n"
                  "if (!ConvertJSValueToString(cx, nameVal, &nameVal,\n"
                  "                            eStringify, eStringify, %s)) {\n"
@@ -5114,17 +5120,19 @@ class CGProxyNamedOperation(CGProxySpecialOperation):
                  "}\n"
                  "\n"
                  "%s* self = UnwrapProxy(proxy);\n" %
-                 (argName, argName, self.descriptor.nativeType)) +
+                 (self.value, argName, argName, self.descriptor.nativeType)) +
                 CGProxySpecialOperation.define(self))
 
 class CGProxyNamedGetter(CGProxyNamedOperation):
     """
     Class to generate a call to an named getter. If templateValues is not None
     the returned value will be wrapped with wrapForType using templateValues.
+    'value' is the jsval to use for the name; None indicates that it should be
+    gotten from the property id.
     """
-    def __init__(self, descriptor, templateValues=None):
+    def __init__(self, descriptor, templateValues=None, value=None):
         self.templateValues = templateValues
-        CGProxySpecialOperation.__init__(self, descriptor, 'NamedGetter')
+        CGProxyNamedOperation.__init__(self, descriptor, 'NamedGetter', value)
 
 class CGProxyNamedPresenceChecker(CGProxyNamedGetter):
     """
@@ -5140,21 +5148,21 @@ class CGProxyNamedSetter(CGProxyNamedOperation):
     Class to generate a call to a named setter.
     """
     def __init__(self, descriptor):
-        CGProxySpecialOperation.__init__(self, descriptor, 'NamedSetter')
+        CGProxyNamedOperation.__init__(self, descriptor, 'NamedSetter')
 
 class CGProxyIndexedDeleter(CGProxyIndexedOperation):
     """
     Class to generate a call to an indexed deleter.
     """
     def __init__(self, descriptor):
-        CGProxySpecialOperation.__init__(self, descriptor, 'IndexedDeleter')
+        CGProxyIndexedOperation.__init__(self, descriptor, 'IndexedDeleter')
 
 class CGProxyNamedDeleter(CGProxyNamedOperation):
     """
     Class to generate a call to a named deleter.
     """
     def __init__(self, descriptor):
-        CGProxySpecialOperation.__init__(self, descriptor, 'NamedDeleter')
+        CGProxyNamedOperation.__init__(self, descriptor, 'NamedDeleter')
 
 class CGProxyIsProxy(CGAbstractMethod):
     def __init__(self, descriptor):
@@ -5214,28 +5222,34 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             fillDescriptor = "FillPropertyDescriptor(desc, proxy, %s);\nreturn true;" % readonly
             templateValues = {'jsvalRef': 'desc->value', 'jsvalPtr': '&desc->value',
                               'obj': 'proxy', 'successCode': fillDescriptor}
-            get = ("if (index >= 0) {\n" +
+            get = ("if (IsArrayIndex(index)) {\n" +
                    CGIndenter(CGProxyIndexedGetter(self.descriptor, templateValues)).define() + "\n" +
                    "}\n") % (self.descriptor.nativeType)
 
         if indexedSetter or self.descriptor.operations['NamedSetter']:
             setOrIndexedGet += "if (set) {\n"
             if indexedSetter:
-                setOrIndexedGet += ("  if (index >= 0) {\n")
+                setOrIndexedGet += ("  if (IsArrayIndex(index)) {\n")
                 if not 'IndexedCreator' in self.descriptor.operations:
-                    # FIXME need to check that this is a 'supported property index'
+                    # FIXME need to check that this is a 'supported property
+                    # index'.  But if that happens, watch out for the assumption
+                    # below that the name setter always returns for
+                    # IsArrayIndex(index).
                     assert False
                 setOrIndexedGet += ("    FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);\n" +
                                     "    return true;\n" +
                                     "  }\n")
             if self.descriptor.operations['NamedSetter']:
-                setOrIndexedGet += "  if (JSID_IS_STRING(id)) {\n"
                 if not 'NamedCreator' in self.descriptor.operations:
                     # FIXME need to check that this is a 'supported property name'
                     assert False
-                setOrIndexedGet += ("    FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);\n" +
-                                    "    return true;\n" +
-                                    "  }\n")
+                create = CGGeneric("FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);\n"
+                                   "return true;")
+                # If we have an indexed setter we've already returned
+                if (self.descriptor.supportsIndexedProperties() and
+                    not indexedSetter):
+                    create = CGIfWrapper(create, "!IsArrayIndex(index)")
+                setOrIndexedGet += CGIndenter(create).define() + "\n"
             setOrIndexedGet += "}"
             if indexedGetter:
                 setOrIndexedGet += (" else {\n" +
@@ -5255,10 +5269,13 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             # Once we start supporting OverrideBuiltins we need to make
             # ResolveOwnProperty or EnumerateOwnProperties filter out named
             # properties that shadow prototype properties.
+            condition = "!set && !HasPropertyOnPrototype(cx, proxy, this, id)"
+            if self.descriptor.supportsIndexedProperties():
+                condition = "!IsArrayIndex(index) && " + condition
             namedGet = ("\n" +
-                        "if (!set && JSID_IS_STRING(id) && !HasPropertyOnPrototype(cx, proxy, this, id)) {\n" +
-                        CGIndenter(CGProxyNamedGetter(self.descriptor, templateValues)).define() + "\n" +
-                        "}\n")
+                        CGIfWrapper(CGProxyNamedGetter(self.descriptor, templateValues),
+                                    condition).define() +
+                        "\n")
         else:
             namedGet = ""
 
@@ -5293,12 +5310,15 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             if not (self.descriptor.operations['IndexedCreator'] is indexedSetter):
                 raise TypeError("Can't handle creator that's different from the setter")
             set += ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
-                    "if (index >= 0) {\n" +
+                    "if (IsArrayIndex(index)) {\n" +
                     CGIndenter(CGProxyIndexedSetter(self.descriptor)).define() +
                     "  return true;\n" +
                     "}\n") % (self.descriptor.nativeType)
         elif self.descriptor.supportsIndexedProperties():
-            set += ("if (GetArrayIndexFromId(cx, id) >= 0) {\n" +
+            # XXXbz Once this is fixed to only throw in strict mode, update the
+            # code that decides whether to do a
+            # CGDOMJSProxyHandler_defineProperty at all.
+            set += ("if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {\n" +
                     "  return ThrowErrorMessage(cx, MSG_NO_PROPERTY_SETTER, \"%s\");\n" +
                     "}\n") % self.descriptor.name
 
@@ -5306,18 +5326,24 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
         if namedSetter:
             if not self.descriptor.operations['NamedCreator'] is namedSetter:
                 raise TypeError("Can't handle creator that's different from the setter")
-            set += ("if (JSID_IS_STRING(id)) {\n" +
-                    CGIndenter(CGProxyNamedSetter(self.descriptor)).define() + "\n" +
-                    "  return true;\n" +
-                    "}\n")
-        elif self.descriptor.supportsNamedProperties():
-            set += ("if (JSID_IS_STRING(id)) {\n" +
-                    CGIndenter(CGProxyNamedPresenceChecker(self.descriptor)).define() +
-                    "  if (found) {\n"
-                    "    return ThrowErrorMessage(cx, MSG_NO_PROPERTY_SETTER, \"%s\");\n" +
-                    "  }\n" +
-                    "}\n") % (self.descriptor.name)
-        return set + """return mozilla::dom::DOMProxyHandler::defineProperty(%s);""" % ", ".join(a.name for a in self.args)
+            # If we support indexed properties, we won't get down here for
+            # indices, so we can just do our setter unconditionally here.
+            set += (CGProxyNamedSetter(self.descriptor).define() + "\n" +
+                    "return true;\n")
+        else:
+            if self.descriptor.supportsNamedProperties():
+                # XXXbz Once this is fixed to only throw in strict mode, update
+                # the code that decides whether to do a
+                # CGDOMJSProxyHandler_defineProperty at all.  If we support
+                # indexed properties, we won't get down here for indices, so we
+                # can just do our setter unconditionally here.
+                set += (CGProxyNamedPresenceChecker(self.descriptor).define() + "\n" +
+                        "if (found) {\n"
+                        "  return ThrowErrorMessage(cx, MSG_NO_PROPERTY_SETTER, \"%s\");\n"
+                        "}" % self.descriptor.name)
+            set += ("return mozilla::dom::DOMProxyHandler::defineProperty(%s);" %
+                    ", ".join(a.name for a in self.args))
+        return set
 
 class CGDOMJSProxyHandler_delete(ClassMethod):
     def __init__(self, descriptor):
@@ -5365,7 +5391,7 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
         indexedBody = getDeleterBody("Indexed")
         if indexedBody is not None:
             delete += ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
-                       "if (index >= 0) {\n" +
+                       "if (IsArrayIndex(index)) {\n" +
                        CGIndenter(CGGeneric(indexedBody)).define() + "\n"
                        "  // We always return here, even if the property was not found\n"
                        "  return true;\n" +
@@ -5373,7 +5399,10 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
 
         namedBody = getDeleterBody("Named")
         if namedBody is not None:
-            delete += ("if (JSID_IS_STRING(id) && !HasPropertyOnPrototype(cx, proxy, this, id)) {\n" +
+            # We always return above for an index id in the case when we support
+            # indexed properties, so we can just treat the id as a name
+            # unconditionally here.
+            delete += ("if (!HasPropertyOnPrototype(cx, proxy, this, id)) {\n" +
                        CGIndenter(CGGeneric(namedBody)).define() + "\n"
                        "  if (found) {\n"
                        "    return true;\n"
@@ -5433,7 +5462,7 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
     def getBody(self):
         if self.descriptor.supportsIndexedProperties():
             indexed = ("int32_t index = GetArrayIndexFromId(cx, id);\n" + 
-                       "if (index >= 0) {\n" +
+                       "if (IsArrayIndex(index)) {\n" +
                        CGIndenter(CGProxyIndexedPresenceChecker(self.descriptor)).define() + "\n" +
                        "  *bp = found;\n" +
                        "  return true;\n" +
@@ -5442,7 +5471,9 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
             indexed = ""
 
         if self.descriptor.supportsNamedProperties():
-            named = ("if (JSID_IS_STRING(id) && !HasPropertyOnPrototype(cx, proxy, this, id)) {\n" +
+            # If we support indexed properties we always return above for index
+            # property names, so no need to check for those here.
+            named = ("if (!HasPropertyOnPrototype(cx, proxy, this, id)) {\n" +
                      CGIndenter(CGProxyNamedPresenceChecker(self.descriptor)).define() + "\n" +
                      "  *bp = found;\n"
                      "  return true;\n"
@@ -5488,7 +5519,7 @@ if (expando) {
 
         if self.descriptor.supportsIndexedProperties():
             getIndexedOrExpando = ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
-                                   "if (index >= 0) {\n" +
+                                   "if (IsArrayIndex(index)) {\n" +
                                    CGIndenter(CGProxyIndexedGetter(self.descriptor, templateValues)).define()) % (self.descriptor.nativeType)
             getIndexedOrExpando += """
   // Even if we don't have this index, we don't forward the
@@ -5501,9 +5532,10 @@ if (expando) {
             getIndexedOrExpando = getFromExpando + "\n"
 
         if self.descriptor.supportsNamedProperties():
-            getNamed = ("if (JSID_IS_STRING(id)) {\n" +
-                        CGIndenter(CGProxyNamedGetter(self.descriptor, templateValues)).define() +
-                        "}\n")
+            getNamed = CGProxyNamedGetter(self.descriptor, templateValues)
+            if self.descriptor.supportsIndexedProperties():
+                getNamed = CGIfWrapper(getNamed, "!IsArrayIndex(index)")
+            getNamed = getNamed.define() + "\n"
         else:
             getNamed = ""
 
@@ -5511,13 +5543,15 @@ if (expando) {
             "Should not have a XrayWrapper here");
 
 %s
-bool found;
-if (!GetPropertyOnPrototype(cx, proxy, id, &found, vp)) {
-  return false;
-}
+{  // Scope for this "found" so it doesn't leak to things below
+  bool found;
+  if (!GetPropertyOnPrototype(cx, proxy, id, &found, vp)) {
+    return false;
+  }
 
-if (found) {
-  return true;
+  if (found) {
+    return true;
+  }
 }
 %s
 vp->setUndefined();
@@ -5549,16 +5583,20 @@ class CGDOMJSProxyHandler_getElementIfPresent(ClassMethod):
         ClassMethod.__init__(self, "getElementIfPresent", "bool", args)
         self.descriptor = descriptor
     def getBody(self):
+        successCode = ("*present = found;\n"
+                       "return true;")
+        templateValues = {'jsvalRef': '*vp', 'jsvalPtr': 'vp',
+                          'obj': 'proxy', 'successCode': successCode}
         if self.descriptor.supportsIndexedProperties():
-            successCode = """*present = found;
-return true;"""
-            templateValues = {'jsvalRef': '*vp', 'jsvalPtr': 'vp',
-                              'obj': 'proxy', 'successCode': successCode}
             get = (CGProxyIndexedGetter(self.descriptor, templateValues).define() + "\n"
-                   "// We skip the expando object if there is an indexed getter.\n" +
+                   "// We skip the expando object and any named getters if\n"
+                   "// there is an indexed getter.\n" +
                    "\n") % (self.descriptor.nativeType)
         else:
-            get = """
+            if self.descriptor.supportsNamedProperties():
+                get = CGProxyNamedGetter(self.descriptor, templateValues,
+                                         "UINT_TO_JSVAL(index)").define()
+            get += """
 
 JSObject* expando = GetExpandoObject(proxy);
 if (expando) {
@@ -5577,8 +5615,6 @@ if (expando) {
              "Should not have a XrayWrapper here");
 
 """ + get + """
-// No need to worry about name getters here, so just check the proto.
-
 JSObject *proto;
 if (!js::GetObjectProto(cx, proxy, &proto)) {
   return false;
@@ -5607,6 +5643,9 @@ class CGDOMJSProxyHandler(CGClass):
     def __init__(self, descriptor):
         constructors = [CGDOMJSProxyHandler_CGDOMJSProxyHandler()]
         methods = [CGDOMJSProxyHandler_getOwnPropertyDescriptor(descriptor)]
+        # XXXbz This should really just test supportsIndexedProperties() and
+        # supportsNamedProperties(), but that would make us throw in all cases
+        # because we don't know whether we're in strict mode.
         if descriptor.operations['IndexedSetter'] or descriptor.operations['NamedSetter']:
             methods.append(CGDOMJSProxyHandler_defineProperty(descriptor))
         methods.extend([CGDOMJSProxyHandler_getOwnPropertyNames(descriptor),

@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=808991
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 808991</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=808991">Mozilla Bug 808991</a>
+<p id="display"></p>
+<div id="content" style="display: none" data-1="foo" data-bar="baz">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 808991 **/
+is($("content").dataset[1], "foo",
+   "Indexed props should work like named on dataset");
+is($("content").dataset["1"], "foo",
+   "Indexed props as strings should work like named on dataset");
+is($("content").dataset.bar, "baz",
+   "Named props should work on dataset");
+is($("content").dataset['bar'], "baz",
+   "Named props as strings should work on dataset");
+
+
+
+</script>
+</pre>
+</body>
+</html>

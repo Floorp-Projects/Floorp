@@ -1251,6 +1251,22 @@ TabChild::RecvHandleSingleTap(const nsIntPoint& aPoint)
 }
 
 bool
+TabChild::RecvHandleLongTap(const nsIntPoint& aPoint)
+{
+  if (!mCx || !mTabChildGlobal) {
+    return true;
+  }
+
+  RecvMouseEvent(NS_LITERAL_STRING("contextmenu"), aPoint.x, aPoint.y,
+                 2 /* Right button */,
+                 1 /* Click count */,
+                 0 /* Modifiers */,
+                 false /* Ignore root scroll frame */);
+
+  return true;
+}
+
+bool
 TabChild::RecvActivate()
 {
   nsCOMPtr<nsIWebBrowserFocus> browser = do_QueryInterface(mWebNav);

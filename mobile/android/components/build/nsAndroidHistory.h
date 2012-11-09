@@ -28,7 +28,6 @@ public:
   static nsAndroidHistory* GetSingleton();
 
   nsAndroidHistory();
-  static void NotifyURIVisited(const nsString& str);
 
 private:
   static nsAndroidHistory* sHistory;

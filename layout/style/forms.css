@@ -69,7 +69,8 @@ input {
   text-shadow: none;
 }
 
-input > .anonymous-div {
+input > .anonymous-div,
+input::-moz-placeholder {
   word-wrap: normal !important;
   /* Make the line-height equal to the available height */
   line-height: -moz-block-height;
@@ -80,11 +81,13 @@ input > .anonymous-div {
    cmd_switchTextDirection (which applies a dir attribute to the input box's
    anonymous div. */
 @-moz-document url-prefix(chrome://) {
-  input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div {
+  input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div,
+  input.uri-element-right-align:-moz-locale-dir(rtl)::-moz-placeholder {
     text-align: right !important;
   }
 
-  input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div[dir=ltr] {
+  input.uri-element-right-align:-moz-locale-dir(rtl) > .anonymous-div[dir=ltr],
+  input.uri-element-right-align:-moz-locale-dir(rtl)::-moz-placeholder[dir=ltr] {
     text-align: left !important;
   }
 }
@@ -116,12 +119,18 @@ textarea > scrollbar {
 }
 
 textarea > .anonymous-div,
-input > .anonymous-div {
+input > .anonymous-div,
+input::-moz-placeholder,
+textarea::-moz-placeholder {
   white-space: pre;
   overflow: auto;
   border: 0px !important;
-  /* The 1px horizontal padding is for parity with Win/IE */
-  padding: 0px 1px;
+  /*
+   * The 1px horizontal padding is for parity with Win/IE.
+   * We need to mark it !important to make sure it can't be changed on the
+   * placeholder.
+   */
+  padding: 0px 1px !important;
   margin: 0px;
   text-decoration: inherit;
   -moz-text-decoration-color: inherit;
@@ -140,30 +149,31 @@ input > .anonymous-div.inherit-overflow {
   overflow: inherit;
 }
 
-input:-moz-placeholder,
-textarea:-moz-placeholder {
-  color: GrayText;
+input::-moz-placeholder,
+textarea::-moz-placeholder {
+  /*
+   * Changing display to inline can leads to broken behaviour and will assert.
+   */
+  display: inline-block !important;
+
+  /*
+   * Changing resize would display a broken behaviour and will assert.
+   */
+  resize: none !important;
+
+  overflow: hidden !important;
+
+  /*
+   * The placeholder should be ignored by pointer otherwise, we might have some
+   * unexpected behavior like the resize handle not being selectable.
+   */
+  pointer-events: none !important;
+
+  opacity: 0.54;
 }
 
-input:-moz-placeholder > .anonymous-div:not(.placeholder),
-textarea:-moz-placeholder > .anonymous-div:not(.placeholder) {
-  color: -moz-FieldText;
-}
-
-input > .placeholder,
-textarea > .placeholder {
-  overflow: hidden;
-  pointer-events: none;
-  resize: none;
-}
-
-textarea > .placeholder {
-  white-space: pre-wrap;
-}
-
-input > .placeholder.hidden,
-textarea > .placeholder.hidden {
-  visibility: hidden;
+textarea::-moz-placeholder {
+  white-space: pre-wrap !important;
 }
 
 input:-moz-read-write,
@@ -597,6 +607,8 @@ input[type="submit"]:disabled {
   */
 textarea > .anonymous-div,
 input > .anonymous-div,
+input::-moz-placeholder,
+textarea::-moz-placeholder,
 *|*::-moz-button-content,
 *|*::-moz-display-comboboxcontrol-frame,
 optgroup:before {

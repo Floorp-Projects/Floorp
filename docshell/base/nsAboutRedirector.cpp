@@ -64,6 +64,8 @@ static RedirEntry kRedirMap[] = {
       nsIAboutModule::ALLOW_SCRIPT |
       nsIAboutModule::HIDE_FROM_ABOUTABOUT },
     { "support", "chrome://global/content/aboutSupport.xhtml",
+      nsIAboutModule::ALLOW_SCRIPT },
+    { "telemetry", "chrome://global/content/aboutTelemetry.xhtml",
       nsIAboutModule::ALLOW_SCRIPT }
 };
 static const int kRedirTotal = NS_ARRAY_LENGTH(kRedirMap);

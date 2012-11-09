@@ -156,16 +156,18 @@ public:
 		friend class Wrapper<classname>; \
 		typedef classname ## Ptr Ptr; \
 		typedef handletype Handle; \
-		static Wrapper<classname> wrapper;
+		static Wrapper<classname>& getWrapper() { \
+			static Wrapper<classname> wrapper; \
+			return wrapper; \
+		}
 
 #define CSF_IMPLEMENT_WRAP(classname, handletype) \
-	Wrapper<classname> classname::wrapper; \
 	classname ## Ptr classname::wrap(handletype handle) \
 	{ \
-		return wrapper.wrap(handle); \
+		return getWrapper().wrap(handle); \
 	} \
 	void classname::reset() \
 	{ \
-		wrapper.reset(); \
+		getWrapper().reset(); \
 	}
 

@@ -64,21 +64,25 @@ SettingsListener.observe('audio.volume.master', 0.5, function(value) {
   audioManager.masterVolume = Math.max(0.0, Math.min(value, 1.0));
 });
 
-const nsIAudioManager = Ci.nsIAudioManager;
-let audioSettings = [
-  // settings name, default value, stream type
-  ['audio.volume.voice_call', 10, nsIAudioManager.STREAM_TYPE_VOICE_CALL],
-  ['audio.volume.system', 10,  nsIAudioManager.STREAM_TYPE_SYSTEM],
-  ['audio.volume.ring', 7, nsIAudioManager.STREAM_TYPE_RING],
-  ['audio.volume.music', 15, nsIAudioManager.STREAM_TYPE_MUSIC],
-  ['audio.volume.alarm', 7, nsIAudioManager.STREAM_TYPE_ALARM],
-  ['audio.volume.notification', 7, nsIAudioManager.STREAM_TYPE_NOTIFICATION],
-  ['audio.volume.bt_sco', 15, nsIAudioManager.STREAM_TYPE_BLUETOOTH_SCO],
-  ['audio.volume.enforced_audible', 7, nsIAudioManager.STREAM_TYPE_ENFORCED_AUDIBLE],
-  ['audio.volume.dtmf', 15, nsIAudioManager.STREAM_TYPE_DTMF],
-  ['audio.volume.tts', 15, nsIAudioManager.STREAM_TYPE_TTS],
-  ['audio.volume.fm', 10, nsIAudioManager.STREAM_TYPE_FM],
-];
+let audioSettings = [];
+
+if ("nsIAudioManager" in Ci) {
+  const nsIAudioManager = Ci.nsIAudioManager;
+  audioSettings = [
+    // settings name, default value, stream type
+    ['audio.volume.voice_call', 10, nsIAudioManager.STREAM_TYPE_VOICE_CALL],
+    ['audio.volume.system', 10,  nsIAudioManager.STREAM_TYPE_SYSTEM],
+    ['audio.volume.ring', 7, nsIAudioManager.STREAM_TYPE_RING],
+    ['audio.volume.music', 15, nsIAudioManager.STREAM_TYPE_MUSIC],
+    ['audio.volume.alarm', 7, nsIAudioManager.STREAM_TYPE_ALARM],
+    ['audio.volume.notification', 7, nsIAudioManager.STREAM_TYPE_NOTIFICATION],
+    ['audio.volume.bt_sco', 15, nsIAudioManager.STREAM_TYPE_BLUETOOTH_SCO],
+    ['audio.volume.enforced_audible', 7, nsIAudioManager.STREAM_TYPE_ENFORCED_AUDIBLE],
+    ['audio.volume.dtmf', 15, nsIAudioManager.STREAM_TYPE_DTMF],
+    ['audio.volume.tts', 15, nsIAudioManager.STREAM_TYPE_TTS],
+    ['audio.volume.fm', 10, nsIAudioManager.STREAM_TYPE_FM],
+  ];
+}
 
 for each (let [setting, defaultValue, streamType] in audioSettings) {
   (function AudioStreamSettings(s, d, t) {
@@ -91,6 +95,12 @@ for each (let [setting, defaultValue, streamType] in audioSettings) {
     });
   })(setting, defaultValue, streamType);
 }
+
+// =================== Console ======================
+
+SettingsListener.observe('debug.console.enabled', true, function(value) {
+  Services.prefs.setBoolPref('consoleservice.enabled', value);
+});
 
 // =================== Languages ====================
 SettingsListener.observe('language.current', 'en-US', function(value) {
@@ -113,7 +123,6 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
 
   shell.start();
 });
-
 
 // =================== RIL ====================
 (function RILSettingsToPrefs() {
