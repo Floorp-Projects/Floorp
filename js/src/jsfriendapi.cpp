@@ -882,12 +882,7 @@ IncrementalReferenceBarrier(void *ptr)
 {
     if (!ptr)
         return;
-
-    gc::Cell *cell = static_cast<gc::Cell *>(ptr);
-    JS_ASSERT(!cell->compartment()->rt->isHeapBusy());
-
-    AutoMarkInDeadCompartment amn(cell->compartment());
-
+    JS_ASSERT(!static_cast<gc::Cell *>(ptr)->compartment()->rt->isHeapBusy());
     uint32_t kind = gc::GetGCThingTraceKind(ptr);
     if (kind == JSTRACE_OBJECT)
         JSObject::writeBarrierPre((JSObject *) ptr);
