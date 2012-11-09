@@ -15,18 +15,27 @@ this.MockPolicyListener = function MockPolicyListener() {
   this._log = Log4Moz.repository.getLogger("HealthReport.Testing.MockPolicyListener");
   this._log.level = Log4Moz.Level["Debug"];
 
-  this.requestDataSubmissionCount = 0;
+  this.requestDataUploadCount = 0;
   this.lastDataRequest = null;
+
+  this.requestRemoteDeleteCount = 0;
+  this.lastRemoteDeleteRequest = null;
 
   this.notifyUserCount = 0;
   this.lastNotifyRequest = null;
 }
 
 MockPolicyListener.prototype = {
-  onRequestDataSubmission: function onRequestDataSubmission(request) {
-    this._log.info("onRequestDataSubmission invoked.");
-    this.requestDataSubmissionCount++;
+  onRequestDataUpload: function onRequestDataUpload(request) {
+    this._log.info("onRequestDataUpload invoked.");
+    this.requestDataUploadCount++;
     this.lastDataRequest = request;
+  },
+
+  onRequestRemoteDelete: function onRequestRemoteDelete(request) {
+    this._log.info("onRequestRemoteDelete invoked.");
+    this.requestRemoteDeleteCount++;
+    this.lastRemoteDeleteRequest = request;
   },
 
   onNotifyDataPolicy: function onNotifyDataPolicy(request) {

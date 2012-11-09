@@ -107,7 +107,9 @@ Object.freeze(NotifyPolicyRequest.prototype);
 /**
  * Represents a request to submit data.
  *
- * Instances of this are created when the policy requests data submission.
+ * Instances of this are created when the policy requests data upload or
+ * deletion.
+ *
  * Receivers are expected to call one of the provided on* functions to signal
  * completion of the request.
  *
@@ -115,9 +117,10 @@ Object.freeze(NotifyPolicyRequest.prototype);
  * Receivers of instances of this type should not attempt to do anything with
  * the instance except call one of the on* methods.
  */
-function DataSubmissionRequest(promise, expiresDate) {
+function DataSubmissionRequest(promise, expiresDate, isDelete) {
   this.promise = promise;
   this.expiresDate = expiresDate;
+  this.isDelete = isDelete;
 
   this.state = null;
   this.reason = null;
@@ -131,6 +134,10 @@ DataSubmissionRequest.prototype = {
 
   /**
    * No submission was attempted because no data was available.
+   *
+   * In the case of upload, this means there is no data to upload (perhaps
+   * it isn't available yet). In case of remote deletion, it means that there
+   * is no remote data to delete.
    */
   onNoDataAvailable: function onNoDataAvailable() {
     this.state = this.NO_DATA_AVAILABLE;
@@ -139,6 +146,9 @@ DataSubmissionRequest.prototype = {
 
   /**
    * Data submission has completed successfully.
+   *
+   * In case of upload, this means the upload completed successfully. In case
+   * of deletion, the data was deleted successfully.
    *
    * @param date
    *        (Date) When data submission occurred.
@@ -204,10 +214,15 @@ Object.freeze(DataSubmissionRequest.prototype);
  * The listener passed into the instance must have the following properties
  * (which are callbacks that will be invoked at certain key events):
  *
- *   * onRequestDataSubmission(request) - Called when the policy is requesting
+ *   * onRequestDataUpload(request) - Called when the policy is requesting
  *     data to be submitted. The function is passed a `DataSubmissionRequest`.
  *     The listener should call one of the special resolving functions on that
  *     instance (see the documentation for that type).
+ *
+ *   * onRequestRemoteDelete(request) - Called when the policy is requesting
+ *     deletion of remotely stored data. The function is passed a
+ *     `DataSubmissionRequest`. The listener should call one of the special
+ *     resolving functions on that instance (just like `onRequestDataUpload`).
  *
  *   * onNotifyDataPolicy(request) - Called when the policy is requesting the
  *     user to be notified that data submission will occur. The function
@@ -321,7 +336,11 @@ HealthReportPolicy.prototype = {
   STATE_NOTIFY_WAIT: "waiting",
   STATE_NOTIFY_COMPLETE: "ok",
 
-  REQUIRED_LISTENERS: ["onRequestDataSubmission", "onNotifyDataPolicy"],
+  REQUIRED_LISTENERS: [
+    "onRequestDataUpload",
+    "onRequestRemoteDelete",
+    "onNotifyDataPolicy",
+  ],
 
   /**
    * The first time the health report policy came into existence.
@@ -402,8 +421,8 @@ HealthReportPolicy.prototype = {
   /**
    * Whether submission of data is allowed.
    *
-   * This is the master switch for data submission. If it is off, we will
-   * never submit data, even if the user has agreed to it.
+   * This is the master switch for remote server communication. If it is
+   * false, we never request upload or deletion.
    */
   get dataSubmissionEnabled() {
     // Default is true because we are opt-out.
@@ -412,6 +431,22 @@ HealthReportPolicy.prototype = {
 
   set dataSubmissionEnabled(value) {
     this._prefs.set("dataSubmissionEnabled", !!value);
+  },
+
+  /**
+   * Whether upload of data is allowed.
+   *
+   * This is a kill switch for upload. It is meant to reflect a system or
+   * deployment policy decision. User intent should be reflected in the
+   * "dataSubmissionPolicy" prefs.
+   */
+  get dataUploadEnabled() {
+    // Default is true because we are opt-out.
+    return this._prefs.get("dataUploadEnabled", true);
+  },
+
+  set dataUploadEnabled(value) {
+    this._prefs.set("dataUploadEnabled", !!value);
   },
 
   /**
@@ -542,6 +577,21 @@ HealthReportPolicy.prototype = {
   },
 
   /**
+   * Whether a request to delete remote data is awaiting completion.
+   *
+   * If this is true, the policy will request that remote data be deleted.
+   * Furthermore, no new data will be uploaded (if it's even allowed) until
+   * the remote deletion is fulfilled.
+   */
+  get pendingDeleteRemoteData() {
+    return !!this._prefs.get("pendingDeleteRemoteData", false);
+  },
+
+  set pendingDeleteRemoteData(value) {
+    this._prefs.set("pendingDeleteRemoteData", !!value);
+  },
+
+  /**
    * Record user acceptance of data submission policy.
    *
    * Data submission will not be allowed to occur until this is called.
@@ -576,6 +626,25 @@ HealthReportPolicy.prototype = {
     this.dataSubmissionPolicyResponseDate = this.now();
     this.dataSubmissionPolicyResponseType = "rejected-" + reason;
     this.dataSubmissionPolicyAccepted = false;
+  },
+
+  /**
+   * Request that remote data be deleted.
+   *
+   * This will record an intent that previously uploaded data is to be deleted.
+   * The policy will eventually issue a request to the listener for data
+   * deletion. It will keep asking for deletion until the listener acknowledges
+   * that data has been deleted.
+   */
+  deleteRemoteData: function deleteRemoteData(reason="no-reason") {
+    this._log.info("Remote data deletion requested: " + reason);
+
+    this.pendingDeleteRemoteData = true;
+
+    // We want delete deletion to occur as soon as possible. Move up any
+    // pending scheduled data submission and try to trigger.
+    this.nextDataSubmissionDate = this.now();
+    this.checkStateAndTrigger();
   },
 
   /**
@@ -654,7 +723,29 @@ HealthReportPolicy.prototype = {
       // should be pretty safe.
       this._moveScheduleForward24h();
 
-      // Fall through and prompt for user notification, if necessary.
+      // Fall through since we may have other actions.
+    }
+
+    // Tend to any in progress work.
+    if (this._processInProgressSubmission()) {
+      return;
+    }
+
+    // Requests to delete remote data take priority above everything else.
+    if (this.pendingDeleteRemoteData) {
+      if (nowT < nextSubmissionDate.getTime()) {
+        this._log.debug("Deletion request is scheduled for the future: " +
+                        nextSubmissionDate);
+        return;
+      }
+
+      this._dispatchSubmissionRequest("onRequestRemoteDelete", true);
+      return;
+    }
+
+    if (!this.dataUploadEnabled) {
+      this._log.debug("Data upload is disabled. Doing nothing.");
+      return;
     }
 
     // If the user hasn't responded to the data policy, don't do anything.
@@ -677,53 +768,7 @@ HealthReportPolicy.prototype = {
       return;
     }
 
-    if (this._inProgressSubmissionRequest) {
-      if (this._inProgressSubmissionRequest.expiresDate.getTime() > nowT) {
-        this._log.info("Waiting on in-progress submission request to finish.");
-        return;
-      }
-
-      this._log.warn("Old submission request has expired from no activity.");
-      this._inProgressSubmissionRequest.promise.reject(new Error("Request has expired."));
-      this._inProgressSubmissionRequest = null;
-      if (!this._handleSubmissionFailure()) {
-        return;
-      }
-    }
-
-    // We're past our scheduled next data submission date, so let's do it!
-    this.lastDataSubmissionRequestedDate = now;
-    let deferred = Promise.defer();
-    let requestExpiresDate =
-      this._futureDate(this.SUBMISSION_REQUEST_EXPIRE_INTERVAL_MSEC);
-    this._inProgressSubmissionRequest = new DataSubmissionRequest(deferred,
-                                                                  requestExpiresDate);
-
-    let onSuccess = function onSuccess(result) {
-      this._inProgressSubmissionRequest = null;
-      this._handleSubmissionResult(result);
-    }.bind(this);
-
-    let onError = function onError(error) {
-      this._log.error("Error when handling data submission result: " +
-                      CommonUtils.exceptionStr(result));
-      this._inProgressSubmissionRequest = null;
-      this._handleSubmissionFailure();
-    }.bind(this);
-
-    deferred.promise.then(onSuccess, onError);
-
-    this._log.info("Requesting data submission. Will expire at " +
-                   requestExpiresDate);
-    try {
-      this._listener.onRequestDataSubmission(this._inProgressSubmissionRequest);
-    } catch (ex) {
-      this._log.warn("Exception when calling onRequestDataSubmission: " +
-                     CommonUtils.exceptionStr(ex));
-      this._inProgressSubmissionRequest = null;
-      this._handleSubmissionFailure();
-      return;
-    }
+    this._dispatchSubmissionRequest("onRequestDataUpload", false);
   },
 
   /**
@@ -797,25 +842,108 @@ HealthReportPolicy.prototype = {
     return true;
   },
 
+  _processInProgressSubmission: function _processInProgressSubmission() {
+    if (!this._inProgressSubmissionRequest) {
+      return false;
+    }
+
+    let now = this.now().getTime();
+    if (this._inProgressSubmissionRequest.expiresDate.getTime() > now) {
+      this._log.info("Waiting on in-progress submission request to finish.");
+      return true;
+    }
+
+    this._log.warn("Old submission request has expired from no activity.");
+    this._inProgressSubmissionRequest.promise.reject(new Error("Request has expired."));
+    this._inProgressSubmissionRequest = null;
+    this._handleSubmissionFailure();
+
+    return false;
+  },
+
+  _dispatchSubmissionRequest: function _dispatchSubmissionRequest(handler, isDelete) {
+    let now = this.now();
+
+    // We're past our scheduled next data submission date, so let's do it!
+    this.lastDataSubmissionRequestedDate = now;
+    let deferred = Promise.defer();
+    let requestExpiresDate =
+      this._futureDate(this.SUBMISSION_REQUEST_EXPIRE_INTERVAL_MSEC);
+    this._inProgressSubmissionRequest = new DataSubmissionRequest(deferred,
+                                                                  requestExpiresDate,
+                                                                  isDelete);
+
+    let onSuccess = function onSuccess(result) {
+      this._inProgressSubmissionRequest = null;
+      this._handleSubmissionResult(result);
+    }.bind(this);
+
+    let onError = function onError(error) {
+      this._log.error("Error when handling data submission result: " +
+                      CommonUtils.exceptionStr(result));
+      this._inProgressSubmissionRequest = null;
+      this._handleSubmissionFailure();
+    }.bind(this);
+
+    deferred.promise.then(onSuccess, onError);
+
+    this._log.info("Requesting data submission. Will expire at " +
+                   requestExpiresDate);
+    try {
+      this._listener[handler](this._inProgressSubmissionRequest);
+    } catch (ex) {
+      this._log.warn("Exception when calling " + handler + ": " +
+                     CommonUtils.exceptionStr(ex));
+      this._inProgressSubmissionRequest = null;
+      this._handleSubmissionFailure();
+      return;
+    }
+  },
+
   _handleSubmissionResult: function _handleSubmissionResult(request) {
     let state = request.state;
     let reason = request.reason || "no reason";
     this._log.info("Got submission request result: " + state);
 
     if (state == request.SUBMISSION_SUCCESS) {
-      this._log.info("Successful data submission reported.");
+      if (request.isDelete) {
+        this.pendingDeleteRemoteData = false;
+        this._log.info("Successful data delete reported.");
+      } else {
+        this._log.info("Successful data upload reported.");
+      }
+
       this.lastDataSubmissionSuccessfulDate = request.submissionDate;
-      this.nextDataSubmissionDate =
+
+      let nextSubmissionDate =
         new Date(request.submissionDate.getTime() + MILLISECONDS_PER_DAY);
+
+      // Schedule pending deletes immediately. This has potential to overload
+      // the server. However, the frequency of delete requests across all
+      // clients should be low, so this shouldn't pose a problem.
+      if (this.pendingDeleteRemoteData) {
+        nextSubmissionDate = this.now();
+      }
+
+      this.nextDataSubmissionDate = nextSubmissionDate;
       this.currentDaySubmissionFailureCount = 0;
       return;
     }
 
     if (state == request.NO_DATA_AVAILABLE) {
+      if (request.isDelete) {
+        this._log.info("Remote data delete requested but no remote data was stored.");
+        this.pendingDeleteRemoteData = false;
+        return;
+      }
+
       this._log.info("No data was available to submit. May try later.");
       this._handleSubmissionFailure();
       return;
     }
+
+    // We don't special case request.isDelete for these failures because it
+    // likely means there was a server error.
 
     if (state == request.SUBMISSION_FAILURE_SOFT) {
       this._log.warn("Soft error submitting data: " + reason);
@@ -862,3 +990,4 @@ HealthReportPolicy.prototype = {
 };
 
 Object.freeze(HealthReportPolicy.prototype);
+

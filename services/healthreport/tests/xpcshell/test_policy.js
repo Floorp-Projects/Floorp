@@ -34,7 +34,8 @@ function run_test() {
 add_test(function test_constructor() {
   let prefs = new Preferences("foo.bar");
   let listener = {
-    onRequestDataSubmission: function() {},
+    onRequestDataUpload: function() {},
+    onRequestRemoteDelete: function() {},
     onNotifyDataPolicy: function() {},
   };
 
@@ -98,6 +99,10 @@ add_test(function test_prefs() {
   policy.currentDaySubmissionFailureCount = 2;
   do_check_eq(prefs.get("currentDaySubmissionFailureCount", 0), 2);
   do_check_eq(policy.currentDaySubmissionFailureCount, 2);
+
+  policy.pendingDeleteRemoteData = true;
+  do_check_true(prefs.get("pendingDeleteRemoteData"));
+  do_check_true(policy.pendingDeleteRemoteData);
 
   run_next_test();
 });
@@ -233,7 +238,7 @@ add_test(function test_notification_rejected() {
   // No requests for submission should occur if user has rejected.
   defineNow(policy, new Date(policy.nextDataSubmissionDate.getTime() + 10000));
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 0);
+  do_check_eq(listener.requestDataUploadCount, 0);
 
   run_next_test();
 });
@@ -245,13 +250,30 @@ add_test(function test_submission_kill_switch() {
   policy.nextDataSubmissionDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
   policy.recordUserAcceptance("accept-old-ack");
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 1);
+  do_check_eq(listener.requestDataUploadCount, 1);
 
   defineNow(policy,
     new Date(Date.now() + policy.SUBMISSION_REQUEST_EXPIRE_INTERVAL_MSEC + 100));
   policy.dataSubmissionEnabled = false;
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 1);
+  do_check_eq(listener.requestDataUploadCount, 1);
+
+  run_next_test();
+});
+
+add_test(function test_upload_kill_switch() {
+  let [policy, prefs, listener] = getPolicy("upload_kill_switch");
+
+  defineNow(policy, policy._futureDate(-24 * 60 * 60 * 1000));
+  policy.recordUserAcceptance();
+  defineNow(policy, policy.nextDataSubmissionDate);
+
+  policy.dataUploadEnabled = false;
+  policy.checkStateAndTrigger();
+  do_check_eq(listener.requestDataUploadCount, 0);
+  policy.dataUploadEnabled = true;
+  policy.checkStateAndTrigger();
+  do_check_eq(listener.requestDataUploadCount, 1);
 
   run_next_test();
 });
@@ -263,15 +285,15 @@ add_test(function test_data_submission_no_data() {
   policy.dataSubmissionPolicyAccepted = true;
   let now = new Date(policy.nextDataSubmissionDate.getTime() + 1);
   defineNow(policy, now);
-  do_check_eq(listener.requestDataSubmissionCount, 0);
+  do_check_eq(listener.requestDataUploadCount, 0);
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 1);
+  do_check_eq(listener.requestDataUploadCount, 1);
   listener.lastDataRequest.onNoDataAvailable();
 
   // The next trigger should try again.
   defineNow(policy, new Date(now.getTime() + 155 * 60 * 1000));
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 2);
+  do_check_eq(listener.requestDataUploadCount, 2);
 
   run_next_test();
 });
@@ -286,7 +308,7 @@ add_test(function test_data_submission_submit_failure_hard() {
   defineNow(policy, now);
 
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 1);
+  do_check_eq(listener.requestDataUploadCount, 1);
   listener.lastDataRequest.onSubmissionFailureHard();
   do_check_eq(listener.lastDataRequest.state,
               listener.lastDataRequest.SUBMISSION_FAILURE_HARD);
@@ -296,7 +318,7 @@ add_test(function test_data_submission_submit_failure_hard() {
 
   defineNow(policy, new Date(now.getTime() + 10));
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 1);
+  do_check_eq(listener.requestDataUploadCount, 1);
 
   run_next_test();
 });
@@ -327,7 +349,7 @@ add_test(function test_submission_daily_scheduling() {
   let now = new Date(policy.nextDataSubmissionDate.getTime());
   defineNow(policy, now);
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 1);
+  do_check_eq(listener.requestDataUploadCount, 1);
   do_check_eq(policy.lastDataSubmissionRequestedDate.getTime(), now.getTime());
 
   let finishedDate = new Date(now.getTime() + 250);
@@ -344,11 +366,11 @@ add_test(function test_submission_daily_scheduling() {
   // Fast forward some arbitrary time. We shouldn't do any work yet.
   defineNow(policy, new Date(now.getTime() + 40000));
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 1);
+  do_check_eq(listener.requestDataUploadCount, 1);
 
   defineNow(policy, nextScheduled);
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 2);
+  do_check_eq(listener.requestDataUploadCount, 2);
   listener.lastDataRequest.onSubmissionSuccess(new Date(nextScheduled.getTime() + 200));
   do_check_eq(policy.nextDataSubmissionDate.getTime(),
     new Date(nextScheduled.getTime() + 24 * 60 * 60 * 1000 + 200).getTime());
@@ -368,12 +390,12 @@ add_test(function test_submission_far_future_scheduling() {
   let nextDate = policy._futureDate(3 * 24 * 60 * 60 * 1000 - 1);
   policy.nextDataSubmissionDate = nextDate;
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 0);
+  do_check_eq(listener.requestDataUploadCount, 0);
   do_check_eq(policy.nextDataSubmissionDate.getTime(), nextDate.getTime());
 
   policy.nextDataSubmissionDate = new Date(nextDate.getTime() + 1);
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 0);
+  do_check_eq(listener.requestDataUploadCount, 0);
   do_check_eq(policy.nextDataSubmissionDate.getTime(),
               policy._futureDate(24 * 60 * 60 * 1000).getTime());
 
@@ -391,7 +413,7 @@ add_test(function test_submission_backoff() {
   let now = new Date(policy.nextDataSubmissionDate.getTime());
   defineNow(policy, now);
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 1);
+  do_check_eq(listener.requestDataUploadCount, 1);
   do_check_eq(policy.currentDaySubmissionFailureCount, 0);
 
   now = new Date(now.getTime() + 5000);
@@ -408,13 +430,13 @@ add_test(function test_submission_backoff() {
   now = new Date(policy.nextDataSubmissionDate.getTime() - 1);
   defineNow(policy, now);
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 1);
+  do_check_eq(listener.requestDataUploadCount, 1);
 
   // 2nd request for submission.
   now = new Date(policy.nextDataSubmissionDate.getTime());
   defineNow(policy, now);
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 2);
+  do_check_eq(listener.requestDataUploadCount, 2);
 
   now = new Date(now.getTime() + 5000);
   defineNow(policy, now);
@@ -428,7 +450,7 @@ add_test(function test_submission_backoff() {
   now = new Date(policy.nextDataSubmissionDate.getTime());
   defineNow(policy, now);
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 3);
+  do_check_eq(listener.requestDataUploadCount, 3);
 
   now = new Date(now.getTime() + 5000);
   defineNow(policy, now);
@@ -452,16 +474,126 @@ add_test(function test_submission_expiring() {
   let now = new Date(policy.nextDataSubmissionDate.getTime());
   defineNow(policy, now);
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 1);
+  do_check_eq(listener.requestDataUploadCount, 1);
   defineNow(policy, new Date(now.getTime() + 500));
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 1);
+  do_check_eq(listener.requestDataUploadCount, 1);
 
   defineNow(policy, new Date(policy.now().getTime() +
                              policy.SUBMISSION_REQUEST_EXPIRE_INTERVAL_MSEC));
 
   policy.checkStateAndTrigger();
-  do_check_eq(listener.requestDataSubmissionCount, 2);
+  do_check_eq(listener.requestDataUploadCount, 2);
+
+  run_next_test();
+});
+
+add_test(function test_delete_remote_data() {
+  let [policy, prefs, listener] = getPolicy("delete_remote_data");
+
+  do_check_false(policy.pendingDeleteRemoteData);
+  let nextSubmissionDate = policy.nextDataSubmissionDate;
+
+  let now = new Date();
+  defineNow(policy, now);
+
+  policy.deleteRemoteData();
+  do_check_true(policy.pendingDeleteRemoteData);
+  do_check_neq(nextSubmissionDate.getTime(),
+               policy.nextDataSubmissionDate.getTime());
+  do_check_eq(now.getTime(), policy.nextDataSubmissionDate.getTime());
+
+  do_check_eq(listener.requestRemoteDeleteCount, 1);
+  do_check_true(listener.lastRemoteDeleteRequest.isDelete);
+  defineNow(policy, policy._futureDate(1000));
+
+  listener.lastRemoteDeleteRequest.onSubmissionSuccess(policy.now());
+  do_check_false(policy.pendingDeleteRemoteData);
+
+  run_next_test();
+});
+
+// Ensure that deletion requests take priority over regular data submission.
+add_test(function test_delete_remote_data_priority() {
+  let [policy, prefs, listener] = getPolicy("delete_remote_data_priority");
+
+  let now = new Date();
+  defineNow(policy, policy._futureDate(-24 * 60 * 60 * 1000));
+  policy.recordUserAcceptance();
+  defineNow(policy, new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000));
+
+  policy.checkStateAndTrigger();
+  do_check_eq(listener.requestDataUploadCount, 1);
+  policy._inProgressSubmissionRequest = null;
+
+  policy.deleteRemoteData();
+  policy.checkStateAndTrigger();
+
+  do_check_eq(listener.requestRemoteDeleteCount, 1);
+  do_check_eq(listener.requestDataUploadCount, 1);
+
+  run_next_test();
+});
+
+add_test(function test_delete_remote_data_backoff() {
+  let [policy, prefs, listener] = getPolicy("delete_remote_data_backoff");
+
+  let now = new Date();
+  defineNow(policy, policy._futureDate(-24 * 60 * 60 * 1000));
+  policy.recordUserAcceptance();
+  defineNow(policy, now);
+  policy.nextDataSubmissionDate = now;
+  policy.deleteRemoteData();
+
+  policy.checkStateAndTrigger();
+  do_check_eq(listener.requestRemoteDeleteCount, 1);
+  defineNow(policy, policy._futureDate(1000));
+  policy.checkStateAndTrigger();
+  do_check_eq(listener.requestDataUploadCount, 0);
+  do_check_eq(listener.requestRemoteDeleteCount, 1);
+
+  defineNow(policy, policy._futureDate(500));
+  listener.lastRemoteDeleteRequest.onSubmissionFailureSoft();
+  defineNow(policy, policy._futureDate(50));
+
+  policy.checkStateAndTrigger();
+  do_check_eq(listener.requestRemoteDeleteCount, 1);
+
+  defineNow(policy, policy._futureDate(policy.FAILURE_BACKOFF_INTERVALS[0] - 50));
+  policy.checkStateAndTrigger();
+  do_check_eq(listener.requestRemoteDeleteCount, 2);
+
+  run_next_test();
+});
+
+// If we request delete while an upload is in progress, delete should be
+// scheduled immediately after upload.
+add_test(function test_delete_remote_data_in_progress_upload() {
+  let [policy, prefs, listener] = getPolicy("delete_remote_data_in_progress_upload");
+
+  let now = new Date();
+  defineNow(policy, policy._futureDate(-24 * 60 * 60 * 1000));
+  policy.recordUserAcceptance();
+  defineNow(policy, policy.nextDataSubmissionDate);
+
+  policy.checkStateAndTrigger();
+  do_check_eq(listener.requestDataUploadCount, 1);
+  defineNow(policy, policy._futureDate(50 * 1000));
+
+  // If we request a delete during a pending request, nothing should be done.
+  policy.deleteRemoteData();
+  policy.checkStateAndTrigger();
+  do_check_eq(listener.requestDataUploadCount, 1);
+  do_check_eq(listener.requestRemoteDeleteCount, 0);
+
+  // Now wait a little bit and finish the request.
+  defineNow(policy, policy._futureDate(10 * 1000));
+  listener.lastDataRequest.onSubmissionSuccess(policy._futureDate(1000));
+  defineNow(policy, policy._futureDate(5000));
+
+  policy.checkStateAndTrigger();
+  do_check_eq(listener.requestDataUploadCount, 1);
+  do_check_eq(listener.requestRemoteDeleteCount, 1);
 
   run_next_test();
 });
@@ -489,7 +621,7 @@ add_test(function test_polling() {
         policy.stopPolling();
 
         do_check_eq(listener.notifyUserCount, 0);
-        do_check_eq(listener.requestDataSubmissionCount, 0);
+        do_check_eq(listener.requestDataUploadCount, 0);
 
         run_next_test();
       }
@@ -539,16 +671,16 @@ add_test(function test_polling_implicit_acceptance() {
 
       if (count < 4) {
         do_check_false(policy.dataSubmissionPolicyAccepted);
-        do_check_eq(listener.requestDataSubmissionCount, 0);
+        do_check_eq(listener.requestDataUploadCount, 0);
       } else {
         do_check_true(policy.dataSubmissionPolicyAccepted);
         do_check_eq(policy.dataSubmissionPolicyResponseType,
                     "accepted-implicit-time-elapsed");
-        do_check_eq(listener.requestDataSubmissionCount, 1);
+        do_check_eq(listener.requestDataUploadCount, 1);
       }
 
       if (count > 4) {
-        do_check_eq(listener.requestDataSubmissionCount, 1);
+        do_check_eq(listener.requestDataUploadCount, 1);
         policy.stopPolling();
         run_next_test();
       }
