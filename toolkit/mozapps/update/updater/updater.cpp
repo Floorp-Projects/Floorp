@@ -651,7 +651,7 @@ static int ensure_copy(const NS_tchar *path, const NS_tchar *dest)
   if (!buffer)
     return UPDATER_MEM_ERROR;
 
-  while (!feof(infile)) {
+  while (!feof(infile.get())) {
     size_t read = fread(buffer, 1, blockSize, infile);
     if (ferror(infile.get())) {
       LOG(("ensure_copy: failed to read the file: " LOG_S ", err: %d",
