@@ -337,7 +337,7 @@ private:
     friend class CrashReporterParent;
 
     nsRefPtr<nsConsoleService>  mConsoleService;
-    already_AddRefed<nsConsoleService> GetConsoleService();
+    nsConsoleService* GetConsoleService();
 };
 
 } // namespace dom
