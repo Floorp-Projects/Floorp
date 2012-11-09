@@ -4,6 +4,7 @@
  */
 
 var testGenerator = testSteps();
+var archiveReaderEnabled = false;
 
 // The test js is shared between xpcshell (which has no SpecialPowers object)
 // and content mochitests (where the |Components| object is accessible only as
@@ -68,6 +69,8 @@ if (!window.runTest) {
       allowUnlimitedQuota();
     }
 
+    enableArchiveReader();
+
     clearAllDatabases(function () { testGenerator.next(); });
   }
 }
@@ -75,6 +78,7 @@ if (!window.runTest) {
 function finishTest()
 {
   resetUnlimitedQuota();
+  resetArchiveReader();
 
   SimpleTest.executeSoon(function() {
     testGenerator.close();
@@ -163,12 +167,12 @@ function compareKeys(k1, k2) {
     if (!(k2 instanceof Array) ||
         k1.length != k2.length)
       return false;
-    
+
     for (let i = 0; i < k1.length; ++i) {
       if (!compareKeys(k1[i], k2[i]))
         return false;
     }
-    
+
     return true;
   }
 
@@ -209,6 +213,17 @@ function denyUnlimitedQuota(url)
 function resetUnlimitedQuota(url)
 {
   removePermission("indexedDB-unlimited", url);
+}
+
+function enableArchiveReader()
+{
+  archiveReaderEnabled = SpecialPowers.getBoolPref("dom.archivereader.enabled");
+  SpecialPowers.setBoolPref("dom.archivereader.enabled", true);
+}
+
+function resetArchiveReader()
+{
+  SpecialPowers.setBoolPref("dom.archivereader.enabled", archiveReaderEnabled);
 }
 
 function gc()

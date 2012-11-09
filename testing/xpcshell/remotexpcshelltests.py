@@ -163,6 +163,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         if self.options.localAPK:
           self.xpcsCmd.extend(['--greomni', self.remoteAPK])
         self.xpcsCmd.extend([
+           '-m',
+           '-n',
            '-s',
            '-e', 'const _HTTPD_JS_PATH = "%s";' % self.remoteJoin(self.remoteComponentsDir, 'httpd.js'),
            '-e', 'const _HEAD_JS_PATH = "%s";' % self.remoteJoin(self.remoteScriptsDir, 'head.js'),
@@ -211,19 +213,36 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
           self.log.info("TEST-INFO | profile dir is %s" % self.profileDir)
         return self.profileDir
 
+    def logCommand(self, name, completeCmd, testdir):
+        self.log.info("TEST-INFO | %s | full command: %r" % (name, completeCmd))
+        self.log.info("TEST-INFO | %s | current directory: %r" % (name, self.remoteHere))
+        self.log.info("TEST-INFO | %s | environment: %s" % (name, self.env))
+
+    def setupLeakLogging(self):
+        # Leak logging disabled on Android because it makes the command
+        # line too long: bug 752126
+
+        # filename = "leaks"
+        # leakLogFile = self.remoteJoin(self.profileDir, filename)
+        # self.env["XPCOM_MEM_LEAK_LOG"] = leakLogFile
+        leakLogFile = ""
+        return leakLogFile
+
     def setLD_LIBRARY_PATH(self, env):
         env["LD_LIBRARY_PATH"]=self.remoteBinDir
 
+    def buildEnvironment(self):
+        self.env = {}
+        self.setLD_LIBRARY_PATH(self.env)
+        self.env["MOZ_LINKER_CACHE"]=self.remoteBinDir
+        if self.options.localAPK and self.appRoot:
+          self.env["GRE_HOME"]=self.appRoot
+        self.env["XPCSHELL_TEST_PROFILE_DIR"]=self.profileDir
+        self.env["TMPDIR"]=self.remoteTmpDir
+        self.env["HOME"]=self.profileDir
+
     def launchProcess(self, cmd, stdout, stderr, env, cwd):
         cmd[0] = self.remoteJoin(self.remoteBinDir, "xpcshell")
-        env = {}
-        self.setLD_LIBRARY_PATH(env)
-        env["MOZ_LINKER_CACHE"]=self.remoteBinDir
-        if self.options.localAPK and self.appRoot:
-          env["GRE_HOME"]=self.appRoot
-        env["XPCSHELL_TEST_PROFILE_DIR"]=self.profileDir
-        env["TMPDIR"]=self.remoteTmpDir
-        env["HOME"]=self.profileDir
         outputFile = "xpcshelloutput"
         f = open(outputFile, "w+")
         self.shellReturnCode = self.device.shell(cmd, f, cwd=self.remoteHere, env=env)

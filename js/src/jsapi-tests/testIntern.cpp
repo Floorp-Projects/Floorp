@@ -7,7 +7,7 @@
 
 #include "vm/String.h"
 
-using namespace mozilla;
+using mozilla::ArrayLength;
 
 BEGIN_TEST(testAtomizedIsNotInterned)
 {

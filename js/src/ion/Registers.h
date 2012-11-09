@@ -20,7 +20,7 @@
 #include "FixedArityList.h"
 
 // ARM defines the RegisterID within Architecture-arm.h
-#ifndef JS_CPU_ARM
+#if !defined(JS_CPU_ARM) && defined(JS_METHODJIT)
 #include "assembler/assembler/MacroAssembler.h"
 #endif
 

@@ -116,6 +116,7 @@
 #include "nsIDOMSVGFilters.h"
 #include "DOMSVGTests.h"
 #include "nsSVGEffects.h"
+#include "nsSVGTextPathFrame.h"
 #include "nsSVGUtils.h"
 
 #include "nsRefreshDriver.h"
@@ -4407,6 +4408,9 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable) },
     { NS_STYLE_DISPLAY_INLINE_TABLE,
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable) },
+    // NOTE: In the unlikely event that we add another table-part here that has
+    // a desired-parent-type (& hence triggers table fixup), we'll need to also
+    // update the flexbox chunk in nsStyleContext::ApplyStyleFixups().
     { NS_STYLE_DISPLAY_TABLE_CAPTION,
       FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_ALLOW_BLOCK_STYLES |
                   FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_SKIP_ABSPOS_PUSH |
@@ -7797,6 +7801,12 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
         aFrame->InvalidateFrameSubtree();
       }
     }
+    if (aChange & nsChangeHint_UpdateTextPath) {
+      NS_ABORT_IF_FALSE(aFrame->GetType() == nsGkAtoms::svgTextPathFrame,
+                        "textPath frame expected");
+      // Invalidate and reflow the entire nsSVGTextFrame:
+      static_cast<nsSVGTextPathFrame*>(aFrame)->NotifyGlyphMetricsChange();
+    }
     if (aChange & nsChangeHint_UpdateOpacityLayer) {
       // FIXME/bug 796697: we can get away with empty transactions for
       // opacity updates in many cases.
@@ -8190,6 +8200,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       // problems could arise.
       RecreateFramesForContent(content, false);
     } else {
+      NS_ASSERTION(frame, "This shouldn't happen");
+
       if ((frame->GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
           (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
         // frame does not maintain overflow rects, so avoid calling
@@ -8199,7 +8211,6 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
                                 nsChangeHint_ChildrenOnlyTransform));
       }
 
-      NS_ASSERTION(frame, "This shouldn't happen");
       if (hint & nsChangeHint_UpdateEffects) {
         nsSVGEffects::UpdateEffects(frame);
       }

@@ -75,6 +75,15 @@ MOCHITEST_FILES =	parser_datreader.js \
 		test_viewsource.html \
 		test_bug715112.html \
 		test_bug715739.html \
+		test_bug716579.html \
+		file_bug716579-8.html \
+		file_bug716579-8.html^headers^ \
+		file_bug716579-16.html \
+		file_bug716579-16.html^headers^ \
+		file_bug716579-8.xhtml \
+		file_bug716579-8.xhtml^headers^ \
+		file_bug716579-16.xhtml \
+		file_bug716579-16.xhtml^headers^ \
 		test_bug717180.html \
 		file_bug717180.html \
 		$(NULL)

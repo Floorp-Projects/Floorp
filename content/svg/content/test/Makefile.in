@@ -43,7 +43,7 @@ MOCHITEST_FILES = \
 		test_getSubStringLength.xhtml \
 		getSubStringLength-helper.svg \
 		test_isSupported.xhtml \
-		test_lang.xhtml \
+		$(warning test_lang.xhtml is disabled for intermittent failures. Bug 701060) \
 		test_nonAnimStrings.xhtml \
 		test_pathAnimInterpolation.xhtml \
 		test_pathSeg.xhtml \

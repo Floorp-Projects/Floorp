@@ -64,6 +64,33 @@ SettingsListener.observe('audio.volume.master', 0.5, function(value) {
   audioManager.masterVolume = Math.max(0.0, Math.min(value, 1.0));
 });
 
+const nsIAudioManager = Ci.nsIAudioManager;
+let audioSettings = [
+  // settings name, default value, stream type
+  ['audio.volume.voice_call', 10, nsIAudioManager.STREAM_TYPE_VOICE_CALL],
+  ['audio.volume.system', 10,  nsIAudioManager.STREAM_TYPE_SYSTEM],
+  ['audio.volume.ring', 7, nsIAudioManager.STREAM_TYPE_RING],
+  ['audio.volume.music', 15, nsIAudioManager.STREAM_TYPE_MUSIC],
+  ['audio.volume.alarm', 7, nsIAudioManager.STREAM_TYPE_ALARM],
+  ['audio.volume.notification', 7, nsIAudioManager.STREAM_TYPE_NOTIFICATION],
+  ['audio.volume.bt_sco', 15, nsIAudioManager.STREAM_TYPE_BLUETOOTH_SCO],
+  ['audio.volume.enforced_audible', 7, nsIAudioManager.STREAM_TYPE_ENFORCED_AUDIBLE],
+  ['audio.volume.dtmf', 15, nsIAudioManager.STREAM_TYPE_DTMF],
+  ['audio.volume.tts', 15, nsIAudioManager.STREAM_TYPE_TTS],
+  ['audio.volume.fm', 10, nsIAudioManager.STREAM_TYPE_FM],
+];
+
+for each (let [setting, defaultValue, streamType] in audioSettings) {
+  (function AudioStreamSettings(s, d, t) {
+    SettingsListener.observe(s, d, function(value) {
+      let audioManager = Services.audioManager;
+      if (!audioManager)
+        return;
+
+      audioManager.setStreamVolumeIndex(t, Math.min(value, d));
+    });
+  })(setting, defaultValue, streamType);
+}
 
 // =================== Languages ====================
 SettingsListener.observe('language.current', 'en-US', function(value) {
@@ -103,6 +130,11 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
         Services.prefs.setIntPref(key, value);
       }
     });
+  });
+
+  SettingsListener.observe('ril.sms.strict7BitEncoding.enabled', false,
+    function(value) {
+      Services.prefs.setBoolPref('dom.sms.strict7BitEncoding', value);
   });
 })();
 
@@ -197,3 +229,7 @@ SettingsListener.observe('app.reportCrashes', 'ask', function(value) {
   }
 });
 
+// ================ Updates ================
+SettingsListener.observe('app.update.interval', 86400, function(value) {
+  Services.prefs.setIntPref('app.update.interval', value);
+});

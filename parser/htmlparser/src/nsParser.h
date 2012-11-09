@@ -246,15 +246,6 @@ class nsParser : public nsIParser,
      */
     virtual nsIStreamListener* GetStreamListener();
 
-    /** 
-     * Detects the existence of a META tag with charset information in 
-     * the given buffer.
-     */
-    bool DetectMetaTag(const char* aBytes, 
-                         int32_t aLen, 
-                         nsCString& oCharset, 
-                         int32_t& oCharsetSource);
-
     void SetSinkCharset(nsACString& aCharset);
 
     /**

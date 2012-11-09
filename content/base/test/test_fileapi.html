@@ -444,7 +444,7 @@ function convertToUTF16(s) {
   res = "";
   for (var i = 0; i < s.length; ++i) {
     c = s.charCodeAt(i);
-    res += String.fromCharCode(c >>> 8, c & 255);
+    res += String.fromCharCode(c & 255, c >>> 8);
   }
   return res;
 }

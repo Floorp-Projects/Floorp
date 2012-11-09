@@ -267,6 +267,7 @@
  "layout/style/test/test_animations.html": "",
  "layout/style/test/test_bug379440.html": "",
  "layout/style/test/test_compute_data_with_start_struct.html": "",
+ "layout/style/test/test_css_cross_domain.html": "bug 536603",
  "layout/style/test/test_inherit_computation.html": "",
  "layout/style/test/test_initial_computation.html": "",
  "layout/style/test/test_selectors.html": "bug 775227", 

@@ -592,8 +592,8 @@ OpenFile(const nsAFlatString &name, int osflags, int mode,
 {
     int32_t access = 0;
 
-    PRInt32 disposition = 0;
-    PRInt32 attributes = 0;
+    int32_t disposition = 0;
+    int32_t attributes = 0;
 
     if (osflags & PR_SYNC) 
         attributes = FILE_FLAG_WRITE_THROUGH;

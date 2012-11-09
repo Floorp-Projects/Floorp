@@ -944,8 +944,7 @@ SourceCompressorThread::internalCompress()
         // Try to keep the maximum memory usage down by only allocating half the
         // size of the string, first.
         size_t firstSize = nbytes / 2;
-        ss->data.compressed = static_cast<unsigned char *>(js_malloc(firstSize));
-        if (!ss->data.compressed)
+        if (!ss->adjustDataSize(firstSize))
             return false;
         Compressor comp(reinterpret_cast<const unsigned char *>(tok->chars), nbytes);
         if (!comp.init())
@@ -964,13 +963,8 @@ SourceCompressorThread::internalCompress()
 
                 // The compressed output is greater than half the size of the
                 // original string. Reallocate to the full size.
-                void *newmem = js_realloc(ss->data.compressed, nbytes);
-                if (!newmem) {
-                    js_free(ss->data.compressed);
-                    ss->data.compressed = NULL;
+                if (!ss->adjustDataSize(nbytes))
                     return false;
-                }
-                ss->data.compressed = static_cast<unsigned char *>(newmem);
                 comp.setOutput(ss->data.compressed, nbytes);
                 break;
               }
@@ -988,22 +982,12 @@ SourceCompressorThread::internalCompress()
     }
 #endif
     if (compressedLength == 0) {
-        // Note ss->data.source might be NULL.
-        jschar *buf = static_cast<jschar *>(js_realloc(ss->data.source, nbytes));
-        if (!buf) {
-            if (ss->data.source) {
-                js_free(ss->data.source);
-                ss->data.source = NULL;
-            }
+        if (!ss->adjustDataSize(nbytes))
             return false;
-        }
-        ss->data.source = buf;
         PodCopy(ss->data.source, tok->chars, ss->length());
     } else {
         // Shrink the buffer to the size of the compressed data. Shouldn't fail.
-        void *newmem = js_realloc(ss->data.compressed, compressedLength);
-        JS_ASSERT(newmem);
-        ss->data.compressed = static_cast<unsigned char *>(newmem);
+        JS_ALWAYS_TRUE(ss->adjustDataSize(compressedLength));
     }
     ss->compressedLength_ = compressedLength;
     return true;
@@ -1084,6 +1068,29 @@ SourceCompressorThread::abort(SourceCompressionToken *userTok)
     stop = true;
 }
 #endif /* JS_THREADSAFE */
+
+static const unsigned char emptySource[] = "";
+
+/* Adjust the amount of memory this script source uses for source data,
+   reallocating if needed. */
+bool
+ScriptSource::adjustDataSize(size_t nbytes)
+{
+    // Allocating 0 bytes has undefined behavior, so special-case it.
+    if (nbytes == 0) {
+        if (data.compressed != emptySource)
+            js_free(data.compressed);
+        data.compressed = const_cast<unsigned char *>(emptySource);
+        return true;
+    }
+
+    // |data.compressed| can be NULL.
+    void *buf = js_realloc(data.compressed, nbytes);
+    if (!buf && data.compressed != emptySource)
+        js_free(data.compressed);
+    data.compressed = static_cast<unsigned char *>(buf);
+    return !!data.compressed;
+}
 
 void
 JSScript::setScriptSource(ScriptSource *ss)
@@ -1210,8 +1217,7 @@ ScriptSource::setSourceCopy(JSContext *cx, StableCharPtr src, uint32_t length,
     } else
 #endif
     {
-        data.source = cx->runtime->pod_malloc<jschar>(length);
-        if (!data.source)
+        if (!adjustDataSize(sizeof(jschar) * length))
             return false;
         PodCopy(data.source, src.get(), length_);
     }
@@ -1257,7 +1263,7 @@ void
 ScriptSource::destroy(JSRuntime *rt)
 {
     JS_ASSERT(ready());
-    js_free(data.compressed);
+    adjustDataSize(0);
     js_free(sourceMap_);
 #ifdef DEBUG
     ready_ = false;
@@ -1270,9 +1276,9 @@ ScriptSource::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf)
 {
     JS_ASSERT(ready());
 
-    // data is a union, but both members are pointers to allocated memory or
-    // NULL, so just using compressed will work.
-    return mallocSizeOf(this) + mallocSizeOf(data.compressed);
+    // |data| is a union, but both members are pointers to allocated memory,
+    // |emptySource|, or NULL, so just using |data.compressed| will work.
+    return mallocSizeOf(this) + ((data.compressed != emptySource) ? mallocSizeOf(data.compressed) : 0);
 }
 
 template<XDRMode mode>
@@ -1305,8 +1311,7 @@ ScriptSource::performXDR(XDRState<mode> *xdr)
 
         size_t byteLen = compressedLength ? compressedLength : (length * sizeof(jschar));
         if (mode == XDR_DECODE) {
-            data.compressed = static_cast<unsigned char *>(xdr->cx()->malloc_(byteLen));
-            if (!data.compressed)
+            if (!adjustDataSize(byteLen))
                 return false;
         }
         if (!xdr->codeBytes(data.compressed, byteLen)) {
@@ -1826,8 +1831,11 @@ JSScript::isShortRunning()
 {
     return length < 100 &&
            hasAnalysis() &&
-           !analysis()->hasFunctionCalls() &&
-           getMaxLoopCount() < 40;
+           !analysis()->hasFunctionCalls()
+#ifdef JS_METHODJIT
+           && getMaxLoopCount() < 40
+#endif
+           ;
 }
 
 bool

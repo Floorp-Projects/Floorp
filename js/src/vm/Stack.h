@@ -9,7 +9,9 @@
 #define Stack_h__
 
 #include "jsfun.h"
+#ifdef JS_ION
 #include "ion/IonFrameIterator.h"
+#endif
 #include "jsautooplen.h"
 
 struct JSContext;
@@ -1710,6 +1712,7 @@ class GeneratorFrameGuard : public FrameGuard
 class StackIter
 {
     friend class ContextStack;
+    PerThreadData *perThread_;
     JSContext    *maybecx_;
   public:
     enum SavedOption { STOP_AT_SAVED, GO_THROUGH_SAVED };

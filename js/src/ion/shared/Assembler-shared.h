@@ -163,7 +163,7 @@ struct LabelBase
     void operator =(const LabelBase &label);
     static int id_count;
   public:
-    DebugOnly <int> id;
+    mozilla::DebugOnly <int> id;
     static const int32 INVALID_OFFSET = -1;
 
     LabelBase() : offset_(INVALID_OFFSET), bound_(false), id(id_count++)
@@ -440,7 +440,7 @@ class CodeOffsetLabel
 class CodeLocationJump
 {
     uint8 *raw_;
-    DebugOnly<bool> absolute_;
+    mozilla::DebugOnly<bool> absolute_;
 
 #ifdef JS_SMALL_BRANCH
     uint8 *jumpTableEntry_;
@@ -483,7 +483,7 @@ class CodeLocationJump
 class CodeLocationCall
 {
     uint8 *raw_;
-    DebugOnly<bool> absolute_;
+    mozilla::DebugOnly<bool> absolute_;
 
 #ifdef JS_SMALL_BRANCH
     uint8 *jumpTableEntry_;
@@ -526,7 +526,7 @@ class CodeLocationCall
 class CodeLocationLabel
 {
     uint8 *raw_;
-    DebugOnly<bool> absolute_;
+    mozilla::DebugOnly<bool> absolute_;
 
   public:
     CodeLocationLabel() {}

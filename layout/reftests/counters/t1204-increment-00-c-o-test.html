@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
  <head>
   <title>CSS 2.1 Test Suite: dynamic changes to 'counter-increment'</title>
   <link rel="help" href="http://www.w3.org/TR/CSS21/generate.html#counters"/>
@@ -21,11 +21,13 @@
 	s.setAttribute("class", "increment");
 	s.appendChild(document.createTextNode("new-"));
 	t.insertBefore(s, t.childNodes.item(1));
+	document.documentElement.removeAttribute('class');
   }
 
+  document.addEventListener("MozReftestInvalidate", run, false);
   </script>
  </head>
- <body onload="setTimeout('run()', 0)">
+ <body>
 
  <div id="test"><span class="increment"></span><span class="increment"></span><span class="increment"></span></div>
 

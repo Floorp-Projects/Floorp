@@ -1008,9 +1008,9 @@ ParallelArrayObject::initClass(JSContext *cx, JSObject *obj)
     unsigned flags = JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_GETTER;
 
     RootedObject scriptedLength(cx, js_NewFunction(cx, NullPtr(), NonGenericMethod<lengthGetter>,
-                                                   0, 0, global, NullPtr()));
+                                                   0, JSFunction::NATIVE_FUN, global, NullPtr()));
     RootedObject scriptedShape(cx, js_NewFunction(cx, NullPtr(), NonGenericMethod<dimensionsGetter>,
-                                                  0, 0, global, NullPtr()));
+                                                  0, JSFunction::NATIVE_FUN, global, NullPtr()));
 
     RootedValue value(cx, UndefinedValue());
     if (!scriptedLength || !scriptedShape ||

@@ -263,6 +263,21 @@ PathCairo::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
   return cairo_in_fill(*mPathContext, transformed.x, transformed.y);
 }
 
+bool
+PathCairo::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
+                               const Point &aPoint,
+                               const Matrix &aTransform) const
+{
+  CairoTempMatrix(*mPathContext, mTransform);
+
+  Matrix inverse = aTransform;
+  inverse.Invert();
+  Point transformed = inverse * aPoint;
+
+  SetCairoStrokeOptions(*mPathContext, aStrokeOptions);
+  return cairo_in_stroke(*mPathContext, transformed.x, transformed.y);
+}
+
 Rect
 PathCairo::GetBounds(const Matrix &aTransform) const
 {

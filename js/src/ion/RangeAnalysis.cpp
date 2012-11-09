@@ -418,6 +418,24 @@ Range::shr(const Range *lhs, int32 c)
 }
 
 bool
+Range::precisionLossMul(const Range *lhs, const Range *rhs)
+{
+    int64_t loss  = 1LL<<53; // result must be lower than 2^53
+    int64_t a = (int64_t)lhs->lower_ * (int64_t)rhs->lower_;
+    int64_t b = (int64_t)lhs->lower_ * (int64_t)rhs->upper_;
+    int64_t c = (int64_t)lhs->upper_ * (int64_t)rhs->lower_;
+    int64_t d = (int64_t)lhs->upper_ * (int64_t)rhs->upper_;
+    int64_t lower = Min( Min(a, b), Min(c, d) );
+    int64_t upper = Max( Max(a, b), Max(c, d) );
+    if (lower < 0)
+        lower = -lower;
+    if (upper < 0)
+        upper = -upper;
+
+    return lower > loss || upper > loss;
+}
+
+bool
 Range::update(const Range *other)
 {
     bool changed =

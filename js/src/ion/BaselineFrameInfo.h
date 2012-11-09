@@ -68,7 +68,7 @@ class StackValue
             Value v;
         } constant;
         struct {
-            AlignedStorage2<ValueOperand> reg;
+            mozilla::AlignedStorage2<ValueOperand> reg;
         } reg;
         struct {
             uint32_t slot;

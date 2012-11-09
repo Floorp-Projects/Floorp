@@ -30,7 +30,7 @@ public class Tabs implements GeckoEventListener {
     private Tab mSelectedTab;
     private final HashMap<Integer, Tab> mTabs = new HashMap<Integer, Tab>();
     private final CopyOnWriteArrayList<Tab> mOrder = new CopyOnWriteArrayList<Tab>();
-    private boolean mRestoringSession;
+    private volatile boolean mInitialTabsAdded;
 
     // Keeps track of how much has happened since we last updated our persistent tab store.
     private volatile int mScore = 0;
@@ -63,7 +63,6 @@ public class Tabs implements GeckoEventListener {
         registerEventListener("Tab:Close");
         registerEventListener("Tab:Select");
         registerEventListener("Content:LocationChange");
-        registerEventListener("Session:RestoreBegin");
         registerEventListener("Session:RestoreEnd");
         registerEventListener("Reader:Added");
         registerEventListener("Reader:Removed");
@@ -102,7 +101,8 @@ public class Tabs implements GeckoEventListener {
         mTabs.put(id, tab);
         mOrder.add(tab);
 
-        if (!mRestoringSession) {
+        // Suppress the ADDED event to prevent animation of tabs created via session restore
+        if (mInitialTabsAdded) {
             notifyListeners(tab, TabEvents.ADDED);
         }
 
@@ -187,8 +187,11 @@ public class Tabs implements GeckoEventListener {
 
     /** Close tab and then select nextTab */
     public void closeTab(final Tab tab, Tab nextTab) {
-        if (tab == null || nextTab == null)
+        if (tab == null)
             return;
+
+        if (nextTab == null)
+            nextTab = loadUrl("about:home", LOADURL_NEW_TAB);
 
         selectTab(nextTab.getId());
 
@@ -281,10 +284,7 @@ public class Tabs implements GeckoEventListener {
                 if (tab != null) {
                     tab.handleLocationChange(message);
                 }
-            } else if (event.equals("Session:RestoreBegin")) {
-                mRestoringSession = true;
             } else if (event.equals("Session:RestoreEnd")) {
-                mRestoringSession = false;
                 notifyListeners(null, TabEvents.RESTORED);
             } else if (event.equals("Reader:Added")) {
                 final boolean success = message.getBoolean("success");
@@ -402,6 +402,9 @@ public class Tabs implements GeckoEventListener {
         switch(msg) {
             case LOCATION_CHANGE:
                 mScore += SCORE_INCREMENT_TAB_LOCATION_CHANGE;
+                break;
+            case RESTORED:
+                mInitialTabsAdded = true;
                 break;
 
             // When one tab is deselected, another one is always selected, so only

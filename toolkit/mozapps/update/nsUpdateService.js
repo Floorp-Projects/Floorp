@@ -16,6 +16,7 @@ Components.utils.import("resource://gre/modules/ctypes.jsm");
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const Cu = Components.utils;
 
 const UPDATESERVICE_CID = Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}");
 const UPDATESERVICE_CONTRACTID = "@mozilla.org/updates/update-service;1";
@@ -206,6 +207,13 @@ XPCOMUtils.defineLazyGetter(this, "gABI", function aus_gABI() {
 #endif
   return abi;
 });
+
+#ifdef MOZ_WIDGET_GONK
+XPCOMUtils.defineLazyGetter(this, "gProductModel", function aus_gProductModel() {
+  Cu.import("resource://gre/modules/systemlibs.js");
+  return libcutils.property_get("ro.product.model");
+});
+#endif
 
 XPCOMUtils.defineLazyGetter(this, "gOSVersion", function aus_gOSVersion() {
   let osVersion;
@@ -2781,6 +2789,10 @@ Checker.prototype = {
     url = url.replace(/%DISTRIBUTION_VERSION%/g,
                       getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION));
     url = url.replace(/\+/g, "%2B");
+
+#ifdef MOZ_WIDGET_GONK
+    url = url.replace(/%PRODUCT_MODEL%/g, gProductModel);
+#endif
 
     if (force)
       url += (url.indexOf("?") != -1 ? "&" : "?") + "force=1";

@@ -11,13 +11,17 @@ relativesrcdir := @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES := \
+  webaudio.js \
   test_bug808374.html \
   test_AudioBuffer.html \
   test_AudioContext.html \
   test_AudioListener.html \
   test_badConnect.html \
+  test_biquadFilterNode.html \
   test_delayNode.html \
+  test_dynamicsCompressorNode.html \
   test_gainNode.html \
+  test_pannerNode.html \
   test_singleSourceDest.html \
   $(NULL)
 

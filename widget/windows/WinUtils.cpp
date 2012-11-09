@@ -909,7 +909,7 @@ WinUtils::ConvertHRGNToRegion(HRGN aRgn)
   nsIntRegion rgn;
 
   DWORD size = ::GetRegionData(aRgn, 0, NULL);
-  nsAutoTArray<PRUint8,100> buffer;
+  nsAutoTArray<uint8_t,100> buffer;
   if (!buffer.SetLength(size))
     return rgn;
 
@@ -923,7 +923,7 @@ WinUtils::ConvertHRGNToRegion(HRGN aRgn)
   }
 
   RECT* rects = reinterpret_cast<RECT*>(data->Buffer);
-  for (PRUint32 i = 0; i < data->rdh.nCount; ++i) {
+  for (uint32_t i = 0; i < data->rdh.nCount; ++i) {
     RECT* r = rects + i;
     rgn.Or(rgn, ToIntRect(*r));
   }

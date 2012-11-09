@@ -1387,8 +1387,7 @@ nsWindow::SetFocus(bool aRaise)
     if (gRaiseWindows && aRaise && toplevelWidget &&
         !gtk_widget_has_focus(owningWidget) &&
         !gtk_widget_has_focus(toplevelWidget)) {
-        GtkWidget* top_window = nullptr;
-        GetToplevelWidget(&top_window);
+        GtkWidget* top_window = GetToplevelWidget();
         if (top_window && (gtk_widget_get_visible(top_window)))
         {
             gdk_window_show_unraised(gtk_widget_get_window(top_window));
@@ -1689,7 +1688,7 @@ nsWindow::GetNativeData(uint32_t aDataType)
         break;
 
     case NS_NATIVE_SHELLWIDGET:
-        return (void *) mShell;
+        return GetToplevelWidget();
 
     case NS_NATIVE_SHAREABLE_WINDOW:
         return (void *) GDK_WINDOW_XID(gdk_window_get_toplevel(mGdkWindow));
@@ -1873,11 +1872,9 @@ nsWindow::GetAttention(int32_t aCycleCount)
 {
     LOG(("nsWindow::GetAttention [%p]\n", (void *)this));
 
-    GtkWidget* top_window = nullptr;
-    GtkWidget* top_focused_window = nullptr;
-    GetToplevelWidget(&top_window);
-    if (gFocusWindow)
-        gFocusWindow->GetToplevelWidget(&top_focused_window);
+    GtkWidget* top_window = GetToplevelWidget();
+    GtkWidget* top_focused_window =
+        gFocusWindow ? gFocusWindow->GetToplevelWidget() : nullptr;
 
     // Don't get attention if the window is focused anyway.
     if (top_window && (gtk_widget_get_visible(top_window)) &&
@@ -2790,8 +2787,7 @@ nsWindow::OnContainerFocusInEvent(GdkEventFocus *aEvent)
     LOGFOCUS(("OnContainerFocusInEvent [%p]\n", (void *)this));
 
     // Unset the urgency hint, if possible
-    GtkWidget* top_window = nullptr;
-    GetToplevelWidget(&top_window);
+    GtkWidget* top_window = GetToplevelWidget();
     if (top_window && (gtk_widget_get_visible(top_window)))
         SetUrgencyHint(top_window, false);
 
@@ -4028,8 +4024,7 @@ nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
 {
     if (!mShell) {
         // Pass the request to the toplevel window
-        GtkWidget *topWidget = nullptr;
-        GetToplevelWidget(&topWidget);
+        GtkWidget *topWidget = GetToplevelWidget();
         if (!topWidget)
             return;
 
@@ -4062,8 +4057,7 @@ nsWindow::GetTransparencyMode()
 {
     if (!mShell) {
         // Pass the request to the toplevel window
-        GtkWidget *topWidget = nullptr;
-        GetToplevelWidget(&topWidget);
+        GtkWidget *topWidget = GetToplevelWidget();
         if (!topWidget) {
             return eTransparencyOpaque;
         }
@@ -4378,8 +4372,7 @@ nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
 {
     if (!mShell) {
         // Pass the request to the toplevel window
-        GtkWidget *topWidget = nullptr;
-        GetToplevelWidget(&topWidget);
+        GtkWidget *topWidget = GetToplevelWidget();
         if (!topWidget)
             return NS_ERROR_FAILURE;
 
@@ -4474,21 +4467,18 @@ nsWindow::ReleaseGrabs(void)
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
 }
 
-void
-nsWindow::GetToplevelWidget(GtkWidget **aWidget)
+GtkWidget *
+nsWindow::GetToplevelWidget()
 {
-    *aWidget = nullptr;
-
     if (mShell) {
-        *aWidget = mShell;
-        return;
+        return mShell;
     }
 
     GtkWidget *widget = GetMozContainerWidget();
     if (!widget)
-        return;
+        return nullptr;
 
-    *aWidget = gtk_widget_get_toplevel(widget);
+    return gtk_widget_get_toplevel(widget);
 }
 
 GtkWidget *
@@ -4724,8 +4714,7 @@ nsWindow::HideWindowChrome(bool aShouldHide)
 {
     if (!mShell) {
         // Pass the request to the toplevel window
-        GtkWidget *topWidget = nullptr;
-        GetToplevelWidget(&topWidget);
+        GtkWidget *topWidget = GetToplevelWidget();
         if (!topWidget)
             return NS_ERROR_FAILURE;
 

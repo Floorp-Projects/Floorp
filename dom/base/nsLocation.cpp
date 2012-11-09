@@ -38,6 +38,7 @@
 #include "nsContentUtils.h"
 #include "nsEventStateManager.h"
 #include "mozilla/Likely.h"
+#include "nsCycleCollectionParticipant.h"
 
 static nsresult
 GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
@@ -83,15 +84,16 @@ nsLocation::~nsLocation()
 DOMCI_DATA(Location, nsLocation)
 
 // QueryInterface implementation for nsLocation
-NS_INTERFACE_MAP_BEGIN(nsLocation)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsLocation)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMLocation)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMLocation)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Location)
 NS_INTERFACE_MAP_END
 
-
-NS_IMPL_ADDREF(nsLocation)
-NS_IMPL_RELEASE(nsLocation)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsLocation)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsLocation)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsLocation)
 
 void
 nsLocation::SetDocShell(nsIDocShell *aDocShell)
@@ -104,31 +106,6 @@ nsLocation::GetDocShell()
 {
   nsCOMPtr<nsIDocShell> docshell(do_QueryReferent(mDocShell));
   return docshell;
-}
-
-// Try to get the the document corresponding to the given JSScript.
-static already_AddRefed<nsIDocument>
-GetScriptDocument(JSContext *cx, JSScript *script)
-{
-  if (!cx || !script)
-    return nullptr;
-
-  JSObject* scope = JS_GetGlobalFromScript(script);
-  if (!scope)
-    return nullptr;
-
-  JSAutoCompartment ac(cx, scope);
-
-  nsCOMPtr<nsIDOMWindow> window =
-    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, scope));
-  if (!window)
-    return nullptr;
-
-  // If it's a window, get its document.
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  window->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  return doc.forget();
 }
 
 nsresult
@@ -164,13 +141,12 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
     // current URI as the referrer.  If they don't match, use the principal's
     // URI.
 
-    JSScript* script = nullptr;
     nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsIURI> docOriginalURI, docCurrentURI, principalURI;
-    // NB: A false return value from JS_DescribeScriptedCaller means no caller
-    // was found. It does not signal that an exception was thrown.
-    if (JS_DescribeScriptedCaller(cx, &script, nullptr)) {
-      doc = GetScriptDocument(cx, script);
+    nsCOMPtr<nsPIDOMWindow> entryPoint =
+      do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
+    if (entryPoint) {
+      doc = entryPoint->GetDoc();
     }
     if (doc) {
       docOriginalURI = doc->GetOriginalURI();
@@ -909,6 +885,14 @@ nsLocation::ToString(nsAString& aReturn)
 {
   // NB: GetHref checks CallerSubsumes().
   return GetHref(aReturn);
+}
+
+NS_IMETHODIMP
+nsLocation::ValueOf(nsIDOMLocation** aReturn)
+{
+  nsCOMPtr<nsIDOMLocation> loc(this);
+  loc.forget(aReturn);
+  return NS_OK;
 }
 
 nsresult

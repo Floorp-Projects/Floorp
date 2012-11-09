@@ -463,6 +463,8 @@ WINDOW_ONLY_EVENT(devicelight,
                   NS_DEVICE_LIGHT,
                   EventNameType_None,
                   NS_EVENT)
+
+#ifdef MOZ_B2G
 WINDOW_ONLY_EVENT(moztimechange,
                   NS_MOZ_TIME_CHANGE_EVENT,
                   EventNameType_None,
@@ -475,6 +477,7 @@ WINDOW_ONLY_EVENT(moznetworkdownload,
                   NS_NETWORK_DOWNLOAD_EVENT,
                   EventNameType_None,
                   NS_EVENT)
+#endif // MOZ_B2G
 
 TOUCH_EVENT(touchstart,
             NS_TOUCH_START,

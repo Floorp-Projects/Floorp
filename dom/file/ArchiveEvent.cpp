@@ -28,7 +28,11 @@ ArchiveItem::~ArchiveItem()
 nsCString
 ArchiveItem::GetType()
 {
-  return mType.IsEmpty() ? nsCString("binary/octet-stream") : mType;
+  if (mType.IsEmpty()) {
+    return NS_LITERAL_CSTRING("binary/octet-stream");
+  }
+
+  return mType;
 }
 
 void
@@ -109,20 +113,29 @@ ArchiveReaderEvent::ShareMainThread()
     for (uint32_t index = 0; index < mFileList.Length(); ++index) {
       nsRefPtr<ArchiveItem> item = mFileList[index];
 
-      int32_t offset = item->GetFilename().RFindChar('.');
+      nsString tmp;
+      nsresult rv = item->GetFilename(tmp);
+      nsCString filename = NS_ConvertUTF16toUTF8(tmp);
+      if (NS_FAILED(rv)) {
+        continue;
+      }
+
+      int32_t offset = filename.RFindChar('.');
       if (offset != kNotFound) {
-        nsCString ext(item->GetFilename());
-        ext.Cut(0, offset + 1);
+        filename.Cut(0, offset + 1);
 
         // Just to be sure, if something goes wrong, the mimetype is an empty string:
         nsCString type;
-        if (NS_SUCCEEDED(GetType(ext, type)))
+        if (NS_SUCCEEDED(GetType(filename, type))) {
           item->SetType(type);
+        }
       }
 
       // This is a nsDOMFile:
       nsRefPtr<nsIDOMFile> file = item->File(mArchiveReader);
-      fileList.AppendElement(file);
+      if (file) {
+        fileList.AppendElement(file);
+      }
     }
   }
 

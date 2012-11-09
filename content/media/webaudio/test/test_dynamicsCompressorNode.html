@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test DynamicsCompressorNode</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function near(a, b, msg) {
+  ok(Math.abs(a - b) < 1e-4, msg);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+
+  var context = new mozAudioContext();
+  var buffer = context.createBuffer(1, 2048, 44100);
+  for (var i = 0; i < 2048; ++i) {
+    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / 44100);
+  }
+
+  var destination = context.destination;
+
+  var source = context.createBufferSource();
+
+  var compressor = context.createDynamicsCompressor();
+
+  source.buffer = buffer;
+
+  source.connect(compressor);
+  compressor.connect(destination);
+
+  // Verify default values
+  with (compressor) {
+    near(threshold.defaultValue, -24, "Correct default value for threshold");
+    near(knee.defaultValue, 30, "Correct default value for knee");
+    near(ratio.defaultValue, 12, "Correct default value for ratio");
+    near(reduction.defaultValue, 0, "Correct default value for reduction");
+    near(attack.defaultValue, 0.003, "Correct default value for attack");
+    near(release.defaultValue, 0.25, "Correct default value for release");
+  }
+
+  // Verify min/max values
+  with (compressor) {
+    near(threshold.minValue, -100, "Correct min value for threshold");
+    near(knee.minValue, 0, "Correct min value for knee");
+    near(ratio.minValue, 1, "Correct min value for ratio");
+    near(reduction.minValue, -20, "Correct min value for reduction");
+    near(attack.minValue, 0, "Correct min value for attack");
+    near(release.minValue, 0, "Correct min value for release");
+    near(threshold.maxValue, 0, "Correct max value for threshold");
+    near(knee.maxValue, 40, "Correct max value for knee");
+    near(ratio.maxValue, 20, "Correct max value for ratio");
+    near(reduction.maxValue, 0, "Correct max value for reduction");
+    near(attack.maxValue, 1, "Correct max value for attack");
+    near(release.maxValue, 1, "Correct max value for release");
+  }
+
+  source.start(0);
+  SimpleTest.executeSoon(function() {
+    source.stop(0);
+    source.disconnect();
+    compressor.disconnect();
+
+    SpecialPowers.clearUserPref("media.webaudio.enabled");
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
