@@ -17,8 +17,9 @@
 #include "imgITools.h"
 #include "nsStringStream.h"
 #include "nsNetUtil.h"
+#ifdef MOZ_PLACES
 #include "mozIAsyncFavicons.h"
- 
+#endif
 #include "nsIIconURI.h"
 #include "nsIDownloader.h"
 #include "nsINetUtil.h"
@@ -30,7 +31,9 @@ namespace mozilla {
 namespace widget {
 
   NS_IMPL_ISUPPORTS1(myDownloadObserver, nsIDownloadObserver)
+#ifdef MOZ_PLACES
   NS_IMPL_ISUPPORTS1(AsyncFaviconDataReady, nsIFaviconDataCallback)
+#endif
   NS_IMPL_THREADSAFE_ISUPPORTS1(AsyncWriteIconToDisk, nsIRunnable)
   NS_IMPL_THREADSAFE_ISUPPORTS1(AsyncDeleteIconFromDisk, nsIRunnable)
   NS_IMPL_THREADSAFE_ISUPPORTS1(AsyncDeleteAllFaviconsFromDisk, nsIRunnable)
@@ -392,6 +395,7 @@ WinUtils::SHCreateItemFromParsingName(PCWSTR pszPath, IBindCtx *pbc,
   return sCreateItemFromParsingName(pszPath, pbc, riid, ppv);
 }
 
+#ifdef MOZ_PLACES
 /************************************************************************/
 /* Constructs as AsyncFaviconDataReady Object
 /* @param aIOThread : the thread which performs the action
@@ -489,6 +493,7 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
 
   return NS_OK;
 }
+#endif
 
 // Warning: AsyncWriteIconToDisk assumes ownership of the aData buffer passed in
 AsyncWriteIconToDisk::AsyncWriteIconToDisk(const nsAString &aIconPath,
@@ -846,6 +851,7 @@ nsresult
                                                   nsCOMPtr<nsIThread> &aIOThread,
                                                   bool aURLShortcut)
 {
+#ifdef MOZ_PLACES
   // Obtain the favicon service and get the favicon for the specified page
   nsCOMPtr<mozIAsyncFavicons> favIconSvc(
     do_GetService("@mozilla.org/browser/favicon-service;1"));
@@ -857,6 +863,7 @@ nsresult
                                                aURLShortcut);
 
   favIconSvc->GetFaviconDataForPage(aFaviconPageURI, callback);
+#endif
   return NS_OK;
 }
 
