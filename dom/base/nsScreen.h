@@ -105,19 +105,7 @@ public:
 
   void GetMozOrientation(nsString& aOrientation);
 
-  JSObject* GetOnmozorientationchange(JSContext* aCx)
-  {
-    JS::Value val;
-    nsresult rv = GetOnmozorientationchange(aCx, &val);
-    return NS_SUCCEEDED(rv) ? val.toObjectOrNull() : nullptr;
-  }
-  void SetOnmozorientationchange(JSContext* aCx,
-                                 mozilla::dom::EventHandlerNonNull* aCallback,
-                                 ErrorResult& aRv)
-  {
-    JSObject* callback = aCallback ? aCallback->Callable() : nullptr;
-    aRv = SetOnmozorientationchange(aCx, JS::ObjectOrNullValue(callback));
-  }
+  IMPL_EVENT_HANDLER(mozorientationchange)
 
   bool MozLockOrientation(const nsAString& aOrientation, ErrorResult& aRv);
   bool MozLockOrientation(const mozilla::dom::Sequence<nsString>& aOrientations, ErrorResult& aRv);
