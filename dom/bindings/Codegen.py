@@ -7273,7 +7273,8 @@ class CGExampleRoot(CGThing):
         self.root = CGHeaders([], [], [],
                               [ "nsWrapperCache.h",
                                 "nsCycleCollectionParticipant.h",
-                                "mozilla/Attributes.h" ],
+                                "mozilla/Attributes.h",
+                                "mozilla/ErrorResult.h" ],
                               [ "%s.h" % interfaceName,
                                 "mozilla/dom/%sBinding.h" % interfaceName,
                                 "nsContentUtils.h" ], self.root);

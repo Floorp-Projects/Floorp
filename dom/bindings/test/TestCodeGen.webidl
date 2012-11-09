@@ -397,6 +397,10 @@ interface TestInterface {
   [PutForwards=writableByte] readonly attribute TestInterface putForwardsAttr;
   [PutForwards=writableByte, LenientThis] readonly attribute TestInterface putForwardsAttr2;
   [PutForwards=writableByte, ChromeOnly] readonly attribute TestInterface putForwardsAttr3;
+  [Throws] void throwingMethod();
+  [Throws] attribute boolean throwingAttr;
+  [GetterThrows] attribute boolean throwingGetterAttr;
+  [SetterThrows] attribute boolean throwingSetterAttr;
 
   // If you add things here, add them to TestExampleGen as well
 };
