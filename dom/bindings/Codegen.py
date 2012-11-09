@@ -7018,11 +7018,10 @@ class CGNativeMember(ClassMethod):
         if type.isObject():
             if type.nullable() or self.jsObjectsArePtr:
                 declType = "%s*"
+            elif optional:
+                declType = "NonNull<%s>"
             else:
-                if optional:
-                    declType = "NonNull<%s>"
-                else:
-                    declType = "%s&"
+                declType = "%s&"
             return (declType % "JSObject"), False, False
 
         if type.isDictionary():
@@ -7129,7 +7128,7 @@ class CGExampleClass(CGClass):
             wrapArgs.append(Argument('bool*', 'aTriedToWrap'))
         methodDecls.insert(0,
                            ClassMethod("WrapObject", "JSObject*",
-                                       wrapArgs, virtual=True,
+                                       wrapArgs, virtual=descriptor.wrapperCache,
                                        breakAfterReturnDecl=" "))
         getParentObjectReturnType = (
             "// TODO: return something sensible here, and change the return type\n"
@@ -7146,8 +7145,8 @@ class CGExampleClass(CGClass):
             "\n" % descriptor.name)
 
         CGClass.__init__(self, descriptor.name,
-                         bases=[ClassBase("nsISupports"),
-                                ClassBase("nsWrapperCache")],
+                         bases=[ClassBase("nsISupports /* Change nativeOwnership in the binding configuration if you don't want this */"),
+                                ClassBase("nsWrapperCache /* Change wrapperCache in the binding configuration if you don't want this */")],
                          constructors=[ClassConstructor([],
                                                         visibility="public")],
                          destructor=ClassDestructor(visibility="public"),
