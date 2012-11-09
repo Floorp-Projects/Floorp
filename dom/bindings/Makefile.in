@@ -38,6 +38,7 @@ globalgen_targets := \
   RegisterBindings.h \
   RegisterBindings.cpp \
   UnionTypes.h \
+  UnionTypes.cpp \
   UnionConversions.h \
   $(NULL)
 
