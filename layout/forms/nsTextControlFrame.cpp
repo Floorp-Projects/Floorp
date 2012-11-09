@@ -648,6 +648,12 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
   // Revoke the previous scroll event if one exists
   mScrollEvent.Revoke();
 
+  // If 'dom.placeholeder.show_on_focus' preference is 'false', focusing or
+  // blurring the frame can have an impact on the placeholder visibility.
+  if (mUsePlaceholder) {
+    txtCtrl->UpdatePlaceholderVisibility(true);
+  }
+
   if (!aOn) {
     return;
   }
