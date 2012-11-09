@@ -2686,6 +2686,10 @@ for (uint32_t i = 0; i < length; ++i) {
         if invalidEnumValueFatal:
             handleInvalidEnumValueCode = "  MOZ_ASSERT(index >= 0);\n"
         else:
+            # invalidEnumValueFatal is false only for attributes.  So we won't
+            # have a non-default exceptionCode here unless attribute "arg
+            # conversion" code starts passing in an exceptionCode.  At which
+            # point we'll need to figure out what that even means.
             assert exceptionCode == "return false;"
             handleInvalidEnumValueCode = (
                 "  if (index < 0) {\n"
