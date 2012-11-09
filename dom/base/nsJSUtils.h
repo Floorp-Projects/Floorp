@@ -30,11 +30,9 @@ public:
   static JSBool GetCallingLocation(JSContext* aContext, const char* *aFilename,
                                    uint32_t* aLineno);
 
-  static nsIScriptGlobalObject *GetStaticScriptGlobal(JSContext* aContext,
-                                                      JSObject* aObj);
+  static nsIScriptGlobalObject *GetStaticScriptGlobal(JSObject* aObj);
 
-  static nsIScriptContext *GetStaticScriptContext(JSContext* aContext,
-                                                  JSObject* aObj);
+  static nsIScriptContext *GetStaticScriptContext(JSObject* aObj);
 
   static nsIScriptGlobalObject *GetDynamicScriptGlobal(JSContext *aContext);
 
