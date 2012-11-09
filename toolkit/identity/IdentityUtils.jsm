@@ -8,7 +8,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["checkRenamed"];
+this.EXPORTED_SYMBOLS = ["checkDeprecated", "checkRenamed"];
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -23,15 +23,15 @@ function defined(item) {
   return typeof item !== 'undefined';
 }
 
-function checkDeprecated(aOptions, aField) {
+var checkDeprecated = this.checkDeprecated = function checkDeprecated(aOptions, aField) {
   if (defined(aOptions[aField])) {
     log("WARNING: field is deprecated:", aField);
     return true;
   }
   return false;
-}
+};
 
-let checkRenamed = function checkRenamed(aOptions, aOldName, aNewName) {
+this.checkRenamed = function checkRenamed(aOptions, aOldName, aNewName) {
   if (defined(aOptions[aOldName]) &&
       defined(aOptions[aNewName])) {
     let err = "You cannot provide both " + aOldName + " and " + aNewName;

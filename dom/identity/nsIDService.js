@@ -8,10 +8,11 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-function IDService() {
+this.IDService = function IDService() {
   this.wrappedJSObject = this;
-}
-IDService.prototype = {
+};
+
+this.IDService.prototype = {
   classID: Components.ID("{baa581e5-8e72-406c-8c9f-dcd4b23a6f82}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
