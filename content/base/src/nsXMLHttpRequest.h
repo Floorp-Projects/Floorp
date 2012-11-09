@@ -41,6 +41,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
+#include "mozilla/dom/EventHandlerBinding.h"
 
 #ifdef Status
 /* Xlib headers insist on this for some reason... Nuke it because
@@ -60,10 +61,12 @@ class nsIDOMFormData;
     nsresult rv = GetOn##_lowercase(aCx, &val);                         \
     return NS_SUCCEEDED(rv) ? JSVAL_TO_OBJECT(val) : nullptr;           \
   }                                                                     \
-  void SetOn##_lowercase(JSContext* aCx, JSObject* aCallback,           \
+  void SetOn##_lowercase(JSContext* aCx,                                \
+                         mozilla::dom::EventHandlerNonNull* aCallback,  \
                          ErrorResult& aRv)                              \
   {                                                                     \
-    aRv = SetOn##_lowercase(aCx, OBJECT_TO_JSVAL(aCallback));           \
+    JSObject* callback = aCallback ? aCallback->Callable() : nullptr;   \
+    aRv = SetOn##_lowercase(aCx, JS::ObjectOrNullValue(callback));      \
   }
 
 class nsXHREventTarget : public nsDOMEventTargetHelper,
