@@ -68,7 +68,6 @@ public:
   nsCOMPtr<nsISelection>         mSel;
   nsCOMPtr<nsIContent>           mRootContent;
   nsCOMPtr<nsINode>              mEditableNode;
-  bool                           mDestroying;
 
 private:
   void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
@@ -668,7 +667,6 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
 
 nsTextStateManager::nsTextStateManager()
 {
-  mDestroying = false;
 }
 
 nsresult
@@ -755,9 +753,8 @@ bool
 nsTextStateManager::IsManaging(nsPresContext* aPresContext,
                                   nsIContent* aContent)
 {
-  return !mDestroying &&
-    mEditableNode == nsIMEStateManager::GetRootEditableNode(aPresContext,
-                                                            aContent);
+  return mEditableNode == nsIMEStateManager::GetRootEditableNode(aPresContext,
+                                                                 aContent);
 }
 
 NS_IMPL_ISUPPORTS2(nsTextStateManager,
@@ -968,13 +965,13 @@ nsIMEStateManager::IsEditableIMEState(nsIWidget* aWidget)
 void
 nsIMEStateManager::DestroyTextStateManager()
 {
-  if (!sTextStateObserver || sTextStateObserver->mDestroying) {
+  if (!sTextStateObserver) {
     return;
   }
 
-  sTextStateObserver->mDestroying = true;
-  sTextStateObserver->Destroy();
-  NS_RELEASE(sTextStateObserver);
+  nsRefPtr<nsTextStateManager> tsm;
+  tsm.swap(sTextStateObserver);
+  tsm->Destroy();
 }
 
 void
@@ -1018,10 +1015,8 @@ nsIMEStateManager::CreateTextStateManager()
     return;
   }
 
-  sTextStateObserver->mDestroying = true;
-  sTextStateObserver->Destroy();
-  NS_RELEASE(sTextStateObserver);
   widget->OnIMEFocusChange(false);
+  DestroyTextStateManager();
 }
 
 nsresult
