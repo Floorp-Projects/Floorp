@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <!--
+    This test checks that setting a background on a ::-moz-placeholder works.
+    However, given that it is not possible to do an actualy equality check, we
+    have te check that setting a background doesn't produce the same result
+    as not setting it.
+  -->
+  <style>
+    :-moz-any(input, textarea).color::-moz-placeholder {
+      background-color: blue;
+    }
+    :-moz-any(input, textarea).gradient::-moz-placeholder {
+      background: linear-gradient(to right, blue, white, red);
+    }
+  </style>
+  <body>
+    <input class="color" placeholder='foo'>
+    <textarea class="color" placeholder='foo'></textarea>
+    <input class="gradient" placeholder='foo'>
+    <textarea class="gradient" placeholder='foo'></textarea>
+  </body>
+</html>
