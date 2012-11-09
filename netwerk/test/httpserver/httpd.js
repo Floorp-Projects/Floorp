@@ -10,7 +10,7 @@
  * httpd.js.
  */
 
-const EXPORTED_SYMBOLS = [
+this.EXPORTED_SYMBOLS = [
   "HTTP_400",
   "HTTP_401",
   "HTTP_402",
@@ -78,7 +78,7 @@ function NS_ASSERT(cond, msg)
 }
 
 /** Constructs an HTTP error object. */
-function HttpError(code, description)
+this.HttpError = function HttpError(code, description)
 {
   this.code = code;
   this.description = description;
@@ -94,30 +94,30 @@ HttpError.prototype =
 /**
  * Errors thrown to trigger specific HTTP server responses.
  */
-const HTTP_400 = new HttpError(400, "Bad Request");
-const HTTP_401 = new HttpError(401, "Unauthorized");
-const HTTP_402 = new HttpError(402, "Payment Required");
-const HTTP_403 = new HttpError(403, "Forbidden");
-const HTTP_404 = new HttpError(404, "Not Found");
-const HTTP_405 = new HttpError(405, "Method Not Allowed");
-const HTTP_406 = new HttpError(406, "Not Acceptable");
-const HTTP_407 = new HttpError(407, "Proxy Authentication Required");
-const HTTP_408 = new HttpError(408, "Request Timeout");
-const HTTP_409 = new HttpError(409, "Conflict");
-const HTTP_410 = new HttpError(410, "Gone");
-const HTTP_411 = new HttpError(411, "Length Required");
-const HTTP_412 = new HttpError(412, "Precondition Failed");
-const HTTP_413 = new HttpError(413, "Request Entity Too Large");
-const HTTP_414 = new HttpError(414, "Request-URI Too Long");
-const HTTP_415 = new HttpError(415, "Unsupported Media Type");
-const HTTP_417 = new HttpError(417, "Expectation Failed");
+this.HTTP_400 = new HttpError(400, "Bad Request");
+this.HTTP_401 = new HttpError(401, "Unauthorized");
+this.HTTP_402 = new HttpError(402, "Payment Required");
+this.HTTP_403 = new HttpError(403, "Forbidden");
+this.HTTP_404 = new HttpError(404, "Not Found");
+this.HTTP_405 = new HttpError(405, "Method Not Allowed");
+this.HTTP_406 = new HttpError(406, "Not Acceptable");
+this.HTTP_407 = new HttpError(407, "Proxy Authentication Required");
+this.HTTP_408 = new HttpError(408, "Request Timeout");
+this.HTTP_409 = new HttpError(409, "Conflict");
+this.HTTP_410 = new HttpError(410, "Gone");
+this.HTTP_411 = new HttpError(411, "Length Required");
+this.HTTP_412 = new HttpError(412, "Precondition Failed");
+this.HTTP_413 = new HttpError(413, "Request Entity Too Large");
+this.HTTP_414 = new HttpError(414, "Request-URI Too Long");
+this.HTTP_415 = new HttpError(415, "Unsupported Media Type");
+this.HTTP_417 = new HttpError(417, "Expectation Failed");
 
-const HTTP_500 = new HttpError(500, "Internal Server Error");
-const HTTP_501 = new HttpError(501, "Not Implemented");
-const HTTP_502 = new HttpError(502, "Bad Gateway");
-const HTTP_503 = new HttpError(503, "Service Unavailable");
-const HTTP_504 = new HttpError(504, "Gateway Timeout");
-const HTTP_505 = new HttpError(505, "HTTP Version Not Supported");
+this.HTTP_500 = new HttpError(500, "Internal Server Error");
+this.HTTP_501 = new HttpError(501, "Not Implemented");
+this.HTTP_502 = new HttpError(502, "Bad Gateway");
+this.HTTP_503 = new HttpError(503, "Service Unavailable");
+this.HTTP_504 = new HttpError(504, "Gateway Timeout");
+this.HTTP_505 = new HttpError(505, "HTTP Version Not Supported");
 
 /** Creates a hash with fields corresponding to the values in arr. */
 function array2obj(arr)
@@ -806,7 +806,7 @@ nsHttpServer.prototype =
   }
 };
 
-var HttpServer = nsHttpServer;
+this.HttpServer = nsHttpServer;
 
 //
 // RFC 2396 section 3.2.2:
