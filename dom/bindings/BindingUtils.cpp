@@ -492,6 +492,26 @@ NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
   return true;
 }
 
+bool
+TryPreserveWrapper(JSObject* obj)
+{
+  nsISupports* native;
+  if (UnwrapDOMObjectToISupports(obj, native)) {
+    nsWrapperCache* cache = nullptr;
+    CallQueryInterface(native, &cache);
+    if (cache) {
+      nsContentUtils::PreserveWrapper(native, cache);
+    }
+    return true;
+  }
+
+  // If this DOMClass is not cycle collected, then it isn't wrappercached,
+  // so it does not need to be preserved. If it is cycle collected, then
+  // we can't tell if it is wrappercached or not, so we just return false.
+  const DOMClass* domClass = GetDOMClass(obj);
+  return domClass && !domClass->mParticipant;
+}
+
 // Can only be called with the immediate prototype of the instance object. Can
 // only be called on the prototype of an object known to be a DOM instance.
 JSBool
