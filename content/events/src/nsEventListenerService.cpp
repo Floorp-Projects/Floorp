@@ -83,7 +83,7 @@ nsEventListenerInfo::GetJSVal(JSContext* aCx, mozilla::Maybe<JSAutoCompartment>&
 
   nsCOMPtr<nsIJSEventListener> jsl = do_QueryInterface(mListener);
   if (jsl) {
-    JSObject *handler = jsl->GetHandler();
+    JSObject *handler = jsl->GetHandler().Ptr()->Callable();
     if (handler) {
       aAc.construct(aCx, handler);
       *aJSVal = OBJECT_TO_JSVAL(handler);
