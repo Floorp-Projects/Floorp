@@ -16,7 +16,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsILoadGroup.h"
 #include "nsIObserver.h"
-#include "nsDataHashtable.h"
 #include "nsAudioStream.h"
 #include "VideoFrameContainer.h"
 #include "mozilla/CORSMode.h"
@@ -46,8 +45,6 @@ public:
   typedef mozilla::VideoFrameContainer VideoFrameContainer;
   typedef mozilla::MediaStream MediaStream;
   typedef mozilla::MediaResource MediaResource;
-
-  typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
 
 #ifdef MOZ_DASH
   friend class nsDASHDecoder;

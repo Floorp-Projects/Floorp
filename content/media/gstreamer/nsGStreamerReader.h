@@ -27,7 +27,7 @@ public:
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                 int64_t aTimeThreshold);
   virtual nsresult ReadMetadata(nsVideoInfo* aInfo,
-                                nsHTMLMediaElement::MetadataTags** aTags);
+                                MetadataTags** aTags);
   virtual nsresult Seek(int64_t aTime,
                         int64_t aStartTime,
                         int64_t aEndTime,

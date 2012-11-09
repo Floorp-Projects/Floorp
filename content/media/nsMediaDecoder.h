@@ -10,6 +10,7 @@
 #include "VideoFrameContainer.h"
 #include "MediaStreamGraph.h"
 #include "nsIObserver.h"
+#include "nsDataHashtable.h"
 
 class nsHTMLMediaElement;
 class nsIStreamListener;
@@ -32,6 +33,8 @@ static const uint32_t FRAMEBUFFER_LENGTH_PER_CHANNEL = 1024;
 // has to be within the following range.
 static const uint32_t FRAMEBUFFER_LENGTH_MIN = 512;
 static const uint32_t FRAMEBUFFER_LENGTH_MAX = 16384;
+
+typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
 
 // All methods of nsMediaDecoder must be called from the main thread only
 // with the exception of GetVideoFrameContainer and GetStatistics,

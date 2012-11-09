@@ -395,7 +395,7 @@ public:
   // with tag metadata from the file.
   // Returns NS_OK on success, or NS_ERROR_FAILURE on failure.
   virtual nsresult ReadMetadata(nsVideoInfo* aInfo,
-                                nsHTMLMediaElement::MetadataTags** aTags) = 0;
+                                MetadataTags** aTags) = 0;
 
   // Stores the presentation time of the first frame we'd be able to play if
   // we started playback at the current position. Returns the first video
