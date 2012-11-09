@@ -8,7 +8,7 @@
 
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsGenericHTMLElement.h"
-#include "nsMediaDecoder.h"
+#include "MediaDecoderOwner.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsThreadUtils.h"
@@ -37,7 +37,8 @@ class nsDASHDecoder;
 #endif
 
 class nsHTMLMediaElement : public nsGenericHTMLElement,
-                           public nsIObserver
+                           public nsIObserver,
+                           public mozilla::MediaDecoderOwner
 {
 public:
   typedef mozilla::TimeStamp TimeStamp;
@@ -116,49 +117,49 @@ public:
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
   // etc.
-  void MetadataLoaded(uint32_t aChannels,
-                      uint32_t aRate,
-                      bool aHasAudio,
-                      const MetadataTags* aTags);
+  virtual void MetadataLoaded(uint32_t aChannels,
+                              uint32_t aRate,
+                              bool aHasAudio,
+                              const MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread,
   // when it has read the first frame of the video
   // aResourceFullyLoaded should be true if the resource has been
   // fully loaded and the caller will call ResourceLoaded next.
-  void FirstFrameLoaded(bool aResourceFullyLoaded);
+  virtual void FirstFrameLoaded(bool aResourceFullyLoaded) MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has completed downloading.
-  void ResourceLoaded();
+  virtual void ResourceLoaded() MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has a network error during loading.
-  void NetworkError();
+  virtual void NetworkError() MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread, when the
   // resource has a decode error during metadata loading or decoding.
-  void DecodeError();
+  virtual void DecodeError() MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread, when the
   // resource load has been cancelled.
-  void LoadAborted();
+  virtual void LoadAborted() MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread,
   // when the video playback has ended.
-  void PlaybackEnded();
+  virtual void PlaybackEnded() MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has started seeking.
-  void SeekStarted();
+  virtual void SeekStarted() MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has completed seeking.
-  void SeekCompleted();
+  virtual void SeekCompleted() MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the media stream, on the main thread, when the download
   // has been suspended by the cache or because the element itself
   // asked the decoder to suspend the download.
-  void DownloadSuspended();
+  virtual void DownloadSuspended() MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the media stream, on the main thread, when the download
   // has been resumed by the cache or because the element itself
@@ -167,15 +168,15 @@ public:
   // previously finished. We are downloading the middle of the media after
   // having downloaded the end, we need to notify the element a download in
   // ongoing.
-  void DownloadResumed(bool aForceNetworkLoading = false);
+  virtual void DownloadResumed(bool aForceNetworkLoading = false) MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the media decoder to indicate that the download has stalled
   // (no data has arrived for a while).
-  void DownloadStalled();
+  virtual void DownloadStalled() MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the media decoder to indicate whether the media cache has
   // suspended the channel.
-  void NotifySuspendedByCache(bool aIsSuspended);
+  virtual void NotifySuspendedByCache(bool aIsSuspended) MOZ_FINAL MOZ_OVERRIDE;
 
   // Called when a "MozAudioAvailable" event listener is added. The media
   // element will then notify its decoder that it needs to make a copy of
@@ -186,7 +187,7 @@ public:
 
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
-  VideoFrameContainer* GetVideoFrameContainer();
+  virtual VideoFrameContainer* GetVideoFrameContainer() MOZ_FINAL MOZ_OVERRIDE;
   ImageContainer* GetImageContainer()
   {
     VideoFrameContainer* container = GetVideoFrameContainer();
@@ -199,8 +200,8 @@ public:
 
   // Dispatch events
   using nsGenericHTMLElement::DispatchEvent;
-  nsresult DispatchEvent(const nsAString& aName);
-  nsresult DispatchAsyncEvent(const nsAString& aName);
+  virtual nsresult DispatchEvent(const nsAString& aName) MOZ_FINAL MOZ_OVERRIDE;
+  virtual nsresult DispatchAsyncEvent(const nsAString& aName) MOZ_FINAL MOZ_OVERRIDE;
   nsresult DispatchAudioAvailableEvent(float* aFrameBuffer,
                                        uint32_t aFrameBufferLength,
                                        float aTime);
@@ -213,7 +214,7 @@ public:
   // the data for the next frame is available. This method will
   // decide whether to set the ready state to HAVE_CURRENT_DATA,
   // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
-  void UpdateReadyStateForData(nsMediaDecoder::NextFrameStatus aNextFrame);
+  virtual void UpdateReadyStateForData(nsMediaDecoder::NextFrameStatus aNextFrame) MOZ_FINAL MOZ_OVERRIDE;
 
   // Use this method to change the mReadyState member, so required
   // events can be fired.
@@ -225,7 +226,7 @@ public:
   // Notify that enough data has arrived to start autoplaying.
   // If the element is 'autoplay' and is ready to play back (not paused,
   // autoplay pref enabled, etc), it should start playing back.
-  void NotifyAutoplayDataReady();
+  virtual void NotifyAutoplayDataReady() MOZ_FINAL MOZ_OVERRIDE;
 
   // Check if the media element had crossorigin set when loading started
   bool ShouldCheckAllowOrigin();
@@ -244,7 +245,7 @@ public:
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
   // called to notify that the principal of the decoder's media resource has changed.
-  void NotifyDecoderPrincipalChanged();
+  virtual void NotifyDecoderPrincipalChanged() MOZ_FINAL MOZ_OVERRIDE;
 
   // Update the visual size of the media. Called from the decoder on the
   // main thread when/if the size changes.
@@ -331,8 +332,8 @@ public:
   /**
    * Called when data has been written to the underlying audio stream.
    */
-  void NotifyAudioAvailable(float* aFrameBuffer, uint32_t aFrameBufferLength,
-                            float aTime);
+  virtual void NotifyAudioAvailable(float* aFrameBuffer, uint32_t aFrameBufferLength,
+                                    float aTime) MOZ_FINAL MOZ_OVERRIDE;
 
   virtual bool IsNodeOfType(uint32_t aFlags) const;
 
@@ -375,7 +376,7 @@ public:
    * last 250ms, as required by the spec when the current time is periodically
    * increasing during playback.
    */
-  void FireTimeUpdate(bool aPeriodic);
+  virtual void FireTimeUpdate(bool aPeriodic) MOZ_FINAL MOZ_OVERRIDE;
 
   MediaStream* GetSrcMediaStream()
   {
@@ -625,6 +626,21 @@ protected:
    * Process any media fragment entries in the URI
    */
   void ProcessMediaFragmentURI();
+
+  // Get the nsHTMLMediaElement object if the decoder is being used from an
+  // HTML media element, and null otherwise.
+  virtual nsHTMLMediaElement* GetMediaElement() MOZ_FINAL MOZ_OVERRIDE
+  {
+    return this;
+  }
+
+  // Return true if decoding should be paused
+  virtual bool GetPaused() MOZ_FINAL MOZ_OVERRIDE
+  {
+    bool isPaused = false;
+    GetPaused(&isPaused);
+    return isPaused;
+  }
 
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
