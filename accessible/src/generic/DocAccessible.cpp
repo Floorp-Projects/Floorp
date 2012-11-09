@@ -1264,7 +1264,13 @@ DocAccessible::ContentStateChanged(nsIDocument* aDocument,
     nsRefPtr<AccEvent> event =
       new AccStateChangeEvent(aContent, states::INVALID, true);
     FireDelayedAccessibleEvent(event);
-   }
+  }
+
+  if (aStateMask.HasState(NS_EVENT_STATE_VISITED)) {
+    nsRefPtr<AccEvent> event =
+      new AccStateChangeEvent(aContent, states::TRAVERSED, true);
+    FireDelayedAccessibleEvent(event);
+  }
 }
 
 void
