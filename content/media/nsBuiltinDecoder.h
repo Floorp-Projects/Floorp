@@ -192,7 +192,6 @@ destroying the nsBuiltinDecoder object.
 #include "gfxRect.h"
 #include "MediaResource.h"
 #include "nsMediaDecoder.h"
-#include "nsHTMLMediaElement.h"
 #include "mozilla/ReentrantMonitor.h"
 
 namespace mozilla {
@@ -233,7 +232,7 @@ public:
   nsBuiltinDecoder();
   ~nsBuiltinDecoder();
 
-  virtual bool Init(nsHTMLMediaElement* aElement);
+  virtual bool Init(mozilla::MediaDecoderOwner* aOwner);
 
   // This method must be called by the owning object before that
   // object disposes of this decoder object.
