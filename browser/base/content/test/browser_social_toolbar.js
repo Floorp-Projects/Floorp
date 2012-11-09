@@ -104,7 +104,7 @@ var tests = {
         toolsPopup.removeEventListener("popupshown", ontoolspopupshownAmbient);
         let socialToggleMore = document.getElementById("menu_socialAmbientMenu");
         ok(socialToggleMore, "Keyboard accessible social menu should exist");
-        is(socialToggleMore.querySelectorAll("menuitem").length, 5, "The number of menuitems is minimum plus one ambient notification menuitem.");
+        is(socialToggleMore.querySelectorAll("menuitem").length, 5, "The number of menuitems is minimum plus three ambient notification menuitems.");
         is(socialToggleMore.hidden, false, "Menu is visible when ambient notifications have label & menuURL");
         let menuitem = socialToggleMore.querySelector("menuitem");
         is(menuitem.getAttribute("label"), "Test Ambient 1", "Keyboard accessible ambient menuitem should have specified label");
