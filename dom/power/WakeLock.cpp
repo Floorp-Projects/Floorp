@@ -175,9 +175,10 @@ WakeLock::HandleEvent(nsIDOMEvent *aEvent)
     aEvent->GetTarget(getter_AddRefs(target));
     nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(target);
     NS_ENSURE_STATE(domDoc);
+    bool oldHidden = mHidden;
     domDoc->GetMozHidden(&mHidden);
 
-    if (mLocked) {
+    if (mLocked && oldHidden != mHidden) {
       hal::ModifyWakeLock(mTopic,
                           hal::WAKE_LOCK_NO_CHANGE,
                           mHidden ? hal::WAKE_LOCK_ADD_ONE : hal::WAKE_LOCK_REMOVE_ONE);
