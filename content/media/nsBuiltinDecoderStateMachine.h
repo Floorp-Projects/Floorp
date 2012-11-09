@@ -79,7 +79,6 @@ hardware (via nsAudioStream and libsydneyaudio).
 #include "nsThreadUtils.h"
 #include "nsBuiltinDecoder.h"
 #include "nsAudioAvailableEventManager.h"
-#include "nsHTMLMediaElement.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsITimer.h"
 #include "AudioSegment.h"

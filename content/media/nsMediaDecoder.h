@@ -401,6 +401,39 @@ public:
     NEXT_FRAME_UNAVAILABLE
   };
 
+#ifdef MOZ_RAW
+  static bool IsRawEnabled();
+#endif
+
+#ifdef MOZ_OGG
+  static bool IsOggEnabled();
+  static bool IsOpusEnabled();
+#endif
+
+#ifdef MOZ_WAVE
+  static bool IsWaveEnabled();
+#endif
+
+#ifdef MOZ_WEBM
+  static bool IsWebMEnabled();
+#endif
+
+#ifdef MOZ_GSTREAMER
+  static bool IsGStreamerEnabled();
+#endif
+
+#ifdef MOZ_WIDGET_GONK
+  static bool IsOmxEnabled();
+#endif
+
+#ifdef MOZ_MEDIA_PLUGINS
+  static bool IsMediaPluginsEnabled();
+#endif
+
+#ifdef MOZ_DASH
+  static bool IsDASHEnabled();
+#endif
+
 protected:
 
   // Start timer to update download progress information.

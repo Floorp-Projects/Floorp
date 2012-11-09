@@ -268,42 +268,32 @@ public:
   // false here even if CanHandleMediaType would return true.
   static bool ShouldHandleMediaType(const char* aMIMEType);
 
-#ifdef MOZ_RAW
-  static bool IsRawEnabled();
-#endif
-
 #ifdef MOZ_OGG
-  static bool IsOggEnabled();
   static bool IsOggType(const nsACString& aType);
   static const char gOggTypes[3][16];
   static char const *const gOggCodecs[3];
-  static bool IsOpusEnabled();
   static char const *const gOggCodecsWithOpus[4];
 #endif
 
 #ifdef MOZ_WAVE
-  static bool IsWaveEnabled();
   static bool IsWaveType(const nsACString& aType);
   static const char gWaveTypes[4][15];
   static char const *const gWaveCodecs[2];
 #endif
 
 #ifdef MOZ_WEBM
-  static bool IsWebMEnabled();
   static bool IsWebMType(const nsACString& aType);
   static const char gWebMTypes[2][11];
   static char const *const gWebMCodecs[4];
 #endif
 
 #ifdef MOZ_GSTREAMER
-  static bool IsGStreamerEnabled();
   static bool IsGStreamerSupportedType(const nsACString& aType);
   static bool IsH264Type(const nsACString& aType);
   static const char gH264Types[3][16];
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-  static bool IsOmxEnabled();
   static bool IsOmxSupportedType(const nsACString& aType);
   static const char gOmxTypes[5][16];
 #endif
@@ -313,12 +303,10 @@ public:
 #endif
 
 #ifdef MOZ_MEDIA_PLUGINS
-  static bool IsMediaPluginsEnabled();
   static bool IsMediaPluginsType(const nsACString& aType);
 #endif
 
 #ifdef MOZ_DASH
-  static bool IsDASHEnabled();
   static bool IsDASHMPDType(const nsACString& aType);
   static const char gDASHMPDTypes[1][21];
 #endif
