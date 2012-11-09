@@ -65,6 +65,7 @@ CPPSRCS = \
   testProfileStrings.cpp \
   testJSEvaluateScript.cpp \
   testErrorCopying.cpp \
+  testEnclosingFunction.cpp \
   $(NULL)
 
 # Disabled: an entirely unrelated test seems to cause this to fail.  Moreover,

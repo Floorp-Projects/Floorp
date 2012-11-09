@@ -398,6 +398,18 @@ NotifyAnimationActivity(RawObject obj);
 JS_FRIEND_API(bool)
 IsOriginalScriptFunction(JSFunction *fun);
 
+/*
+ * Return the outermost enclosing function (script) of the scripted caller.
+ * This function returns NULL in several cases:
+ *  - no script is running on the context
+ *  - the caller is in global or eval code
+ * In particular, this function will "stop" its outermost search at eval() and
+ * thus it will really return the outermost enclosing function *since the
+ * innermost eval*.
+ */
+JS_FRIEND_API(JSScript *)
+GetOutermostEnclosingFunctionOfScriptedCaller(JSContext *cx);
+
 JS_FRIEND_API(JSFunction *)
 DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, JSNative call,
                            unsigned nargs, unsigned attrs);
