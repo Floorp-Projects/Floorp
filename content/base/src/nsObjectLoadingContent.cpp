@@ -1563,13 +1563,18 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   // NOTE LoadFallback can override this in some cases
   FallbackType fallbackType = eFallbackAlternate;
 
-  if (mType == eType_Null) {
+  // mType can differ with GetTypeOfContent(mContentType) if we support this
+  // type, but the parameters are invalid e.g. a embed tag with type "image/png"
+  // but no URI -- don't show a plugin error or unknown type error in that case.
+  if (mType == eType_Null && GetTypeOfContent(mContentType) == eType_Null) {
+    // See if a disabled or blocked plugin could've handled this
     nsresult pluginsupport = IsPluginEnabledForType(mContentType);
     if (pluginsupport == NS_ERROR_PLUGIN_DISABLED) {
       fallbackType = eFallbackDisabled;
     } else if (pluginsupport == NS_ERROR_PLUGIN_BLOCKLISTED) {
       fallbackType = eFallbackBlocklisted;
     } else {
+      // Completely unknown type
       fallbackType = eFallbackUnsupported;
     }
   }
