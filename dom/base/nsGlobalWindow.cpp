@@ -148,7 +148,6 @@
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
-#include "nsBlobProtocolHandler.h"
 #include "nsIDOMFile.h"
 #include "nsIDOMFileList.h"
 #include "nsIURIFixup.h"
@@ -423,85 +422,6 @@ static const char sPopStatePrefStr[] = "browser.history.allowPopState";
 #define NETWORK_DOWNLOAD_EVENT_NAME   NS_LITERAL_STRING("moznetworkdownload")
 
 /**
- * An object implementing the window.URL property.
- */
-class nsDOMMozURLProperty MOZ_FINAL : public nsIDOMMozURLProperty
-{
-public:
-  nsDOMMozURLProperty(nsGlobalWindow* aWindow)
-    : mWindow(aWindow)
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMOZURLPROPERTY
-
-  void ClearWindowReference() {
-    mWindow = nullptr;
-  }
-private:
-  nsGlobalWindow* mWindow;
-};
-
-DOMCI_DATA(MozURLProperty, nsDOMMozURLProperty)
-NS_IMPL_ADDREF(nsDOMMozURLProperty)
-NS_IMPL_RELEASE(nsDOMMozURLProperty)
-NS_INTERFACE_MAP_BEGIN(nsDOMMozURLProperty)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMMozURLProperty)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMozURLProperty)
-    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozURLProperty)
-NS_INTERFACE_MAP_END
-
-NS_IMETHODIMP
-nsDOMMozURLProperty::CreateObjectURL(nsIDOMBlob* aBlob, nsAString& aURL)
-{
-  NS_PRECONDITION(!mWindow || mWindow->IsInnerWindow(),
-                  "Should be inner window");
-
-  NS_ENSURE_STATE(mWindow && mWindow->mDoc);
-  NS_ENSURE_ARG_POINTER(aBlob);
-
-  nsIDocument* doc = mWindow->mDoc;
-
-  nsresult rv = aBlob->GetInternalUrl(doc->NodePrincipal(), aURL);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  doc->RegisterFileDataUri(NS_LossyConvertUTF16toASCII(aURL));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMMozURLProperty::RevokeObjectURL(const nsAString& aURL)
-{
-  NS_PRECONDITION(!mWindow || mWindow->IsInnerWindow(),
-                  "Should be inner window");
-
-  NS_ENSURE_STATE(mWindow);
-
-  NS_LossyConvertUTF16toASCII asciiurl(aURL);
-
-  nsIPrincipal* winPrincipal = mWindow->GetPrincipal();
-  if (!winPrincipal) {
-    return NS_OK;
-  }
-
-  nsIPrincipal* principal =
-    nsBlobProtocolHandler::GetFileDataEntryPrincipal(asciiurl);
-  bool subsumes;
-  if (principal && winPrincipal &&
-      NS_SUCCEEDED(winPrincipal->Subsumes(principal, &subsumes)) &&
-      subsumes) {
-    if (mWindow->mDoc) {
-      mWindow->mDoc->UnregisterFileDataUri(asciiurl);
-    }
-    nsBlobProtocolHandler::RemoveFileDataEntry(asciiurl);
-  }
-
-  return NS_OK;
-}
-
-/**
  * An indirect observer object that means we don't have to implement nsIObserver
  * on nsGlobalWindow, where any script could see it.
  */
@@ -533,6 +453,14 @@ private:
 NS_IMPL_ISUPPORTS2(nsGlobalWindowObserver, nsIObserver, nsIInterfaceRequestor)
 
 nsTimeout::nsTimeout()
+  : mCleared(false),
+    mRunning(false),
+    mIsInterval(false),
+    mPublicId(0),
+    mInterval(0),
+    mFiringDepth(0),
+    mNestingLevel(0),
+    mPopupState(openAllowed)
 {
 #ifdef DEBUG_jst
   {
@@ -541,8 +469,6 @@ nsTimeout::nsTimeout()
     ++gTimeoutCnt;
   }
 #endif
-
-  memset(this, 0, sizeof(*this));
 
   MOZ_COUNT_CTOR(nsTimeout);
 }
@@ -722,9 +648,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
   // Initialize the PRCList (this).
   PR_INIT_CLIST(this);
-
-  // Initialize timeout storage
-  PR_INIT_CLIST(&mTimeouts);
 
   if (aOuterWindow) {
     // |this| is an inner window, add this inner window to the outer
@@ -928,10 +851,6 @@ nsGlobalWindow::~nsGlobalWindow()
   nsCycleCollector_DEBUG_wasFreed(static_cast<nsIScriptGlobalObject*>(this));
 #endif
 
-  if (mURLProperty) {
-    mURLProperty->ClearWindowReference();
-  }
-
   nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
   if (ac)
     ac->RemoveWindowAsListener(this);
@@ -1026,8 +945,10 @@ nsGlobalWindow::CleanUp(bool aIgnoreModalDialog)
       os->RemoveObserver(mObserver, "dom-storage2-changed");
     }
 
+#ifdef MOZ_B2G
     DisableNetworkEvent(NS_NETWORK_UPLOAD_EVENT);
     DisableNetworkEvent(NS_NETWORK_DOWNLOAD_EVENT);
+#endif // MOZ_B2G
 
     if (mIdleService) {
       mIdleService->RemoveIdleObserver(mObserver, MIN_IDLE_NOTIFICATION_TIME_S);
@@ -1226,6 +1147,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   // Make sure this matches the cast in nsGlobalWindow::FromWrapper()
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
+#ifdef MOZ_B2G
+  NS_INTERFACE_MAP_ENTRY(nsIDOMWindowB2G)
+#endif // MOZ_B2G
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSWindow)
   if (aIID.Equals(NS_GET_IID(nsIDOMWindowInternal))) {
     foundInterface = static_cast<nsIDOMWindowInternal*>(this);
@@ -1314,9 +1238,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mListenerManager,
                                                   nsEventListenerManager)
 
-  for (nsTimeout* timeout = tmp->FirstTimeout();
-       tmp->IsTimeout(timeout);
-       timeout = timeout->Next()) {
+  for (nsTimeout* timeout = tmp->mTimeouts.getFirst();
+       timeout;
+       timeout = timeout->getNext()) {
     cb.NoteNativeChild(timeout, NS_CYCLE_COLLECTION_PARTICIPANT(nsTimeout));
   }
 
@@ -1421,9 +1345,9 @@ nsGlobalWindow::IsBlackForCC()
 void
 nsGlobalWindow::UnmarkGrayTimers()
 {
-  for (nsTimeout* timeout = FirstTimeout();
-       timeout && IsTimeout(timeout);
-       timeout = timeout->Next()) {
+  for (nsTimeout* timeout = mTimeouts.getFirst();
+       timeout;
+       timeout = timeout->getNext()) {
     if (timeout->mScriptHandler) {
       JSObject* o = timeout->mScriptHandler->GetScriptObject();
       xpc_UnmarkGrayObject(o);
@@ -2313,8 +2237,7 @@ nsGlobalWindow::DetachFromDocShell()
   // (mJSObject) so that it can be retrieved later (until it is
   // finalized by the JS GC).
 
-  NS_ASSERTION(PR_CLIST_IS_EMPTY(&mTimeouts),
-               "Uh, outer window holds timeouts!");
+  NS_ASSERTION(mTimeouts.isEmpty(), "Uh, outer window holds timeouts!");
 
   // Call FreeInnerObjects on all inner windows, not just the current
   // one, since some could be held by WindowStateHolder objects that
@@ -9151,6 +9074,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
+#ifdef MOZ_B2G
   if (!nsCRT::strcmp(aTopic, NS_NETWORK_ACTIVITY_BLIP_UPLOAD_TOPIC) ||
       !nsCRT::strcmp(aTopic, NS_NETWORK_ACTIVITY_BLIP_DOWNLOAD_TOPIC)) {
     nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nullptr, nullptr);
@@ -9167,6 +9091,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     bool dummy;
     return DispatchEvent(event, &dummy);
   }
+#endif // MOZ_B2G
 
   NS_WARNING("unrecognized topic in nsGlobalWindow::Observe");
   return NS_ERROR_FAILURE;
@@ -9899,7 +9824,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   // timeout events fire "early", so we need to test the timer as well
   // as the deadline.
   last_expired_timeout = nullptr;
-  for (timeout = FirstTimeout(); IsTimeout(timeout); timeout = timeout->Next()) {
+  for (timeout = mTimeouts.getFirst(); timeout; timeout = timeout->getNext()) {
     if (((timeout == aTimeout) || (timeout->mWhen <= deadline)) &&
         (timeout->mFiringDepth == 0)) {
       // Mark any timeouts that are on the list to be fired with the
@@ -9933,7 +9858,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   // list for any timeouts inserted as a result of running a timeout.
   dummy_timeout.mFiringDepth = firingDepth;
   dummy_timeout.mWhen = now;
-  PR_INSERT_AFTER(&dummy_timeout, last_expired_timeout);
+  last_expired_timeout->setNext(&dummy_timeout);
 
   // Don't let ClearWindowTimeouts throw away our stack-allocated
   // dummy timeout.
@@ -9947,10 +9872,10 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
   Telemetry::AutoCounter<Telemetry::DOM_TIMERS_FIRED_PER_NATIVE_TIMEOUT> timeoutsRan;
 
-  for (timeout = FirstTimeout();
+  for (timeout = mTimeouts.getFirst();
        timeout != &dummy_timeout && !IsFrozen();
        timeout = nextTimeout) {
-    nextTimeout = timeout->Next();
+    nextTimeout = timeout->getNext();
 
     if (timeout->mFiringDepth != firingDepth) {
       // We skip the timeout since it's on the list to run at another
@@ -10014,9 +9939,9 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
     // Running a timeout can cause another timeout to be deleted, so
     // we need to reset the pointer to the following timeout.
-    nextTimeout = timeout->Next();
+    nextTimeout = timeout->getNext();
 
-    PR_REMOVE_LINK(timeout);
+    timeout->remove();
 
     if (needsReinsertion) {
       // Insert interval timeout onto list sorted in deadline order.
@@ -10029,7 +9954,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   }
 
   // Take the dummy timeout off the head of the list
-  PR_REMOVE_LINK(&dummy_timeout);
+  dummy_timeout.remove();
 
   mTimeoutInsertionPoint = last_insertion_point;
 }
@@ -10067,9 +9992,7 @@ nsGlobalWindow::ClearTimeoutOrInterval(int32_t aTimerID)
   uint32_t public_id = (uint32_t)aTimerID;
   nsTimeout *timeout;
 
-  for (timeout = FirstTimeout();
-       IsTimeout(timeout);
-       timeout = timeout->Next()) {
+  for (timeout = mTimeouts.getFirst(); timeout; timeout = timeout->getNext()) {
     if (timeout->mPublicId == public_id) {
       if (timeout->mRunning) {
         /* We're running from inside the timeout. Mark this
@@ -10079,7 +10002,7 @@ nsGlobalWindow::ClearTimeoutOrInterval(int32_t aTimerID)
       }
       else {
         /* Delete the timeout from the pending timeout list */
-        PR_REMOVE_LINK(timeout);
+        timeout->remove();
 
         if (timeout->mTimer) {
           timeout->mTimer->Cancel();
@@ -10114,13 +10037,13 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
   // start at the timer after mTimeoutInsertionPoint, if there is one.
   // Otherwise, start at the beginning of the list.
   for (nsTimeout *timeout = mTimeoutInsertionPoint ?
-         mTimeoutInsertionPoint->Next() : FirstTimeout();
-       IsTimeout(timeout); ) {
+         mTimeoutInsertionPoint->getNext() : mTimeouts.getFirst();
+       timeout; ) {
     // It's important that this check be <= so that we guarantee that
     // taking NS_MAX with |now| won't make a quantity equal to
     // timeout->mWhen below.
     if (timeout->mWhen <= now) {
-      timeout = timeout->Next();
+      timeout = timeout->getNext();
       continue;
     }
 
@@ -10157,14 +10080,14 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
       
       // Get the pointer to the next timeout now, before we move the
       // current timeout in the list.
-      nsTimeout* nextTimeout = timeout->Next();
+      nsTimeout* nextTimeout = timeout->getNext();
 
       // It is safe to remove and re-insert because mWhen is now
       // strictly smaller than it used to be, so we know we'll insert
       // |timeout| before nextTimeout.
-      NS_ASSERTION(!IsTimeout(nextTimeout) ||
+      NS_ASSERTION(!nextTimeout ||
                    timeout->mWhen < nextTimeout->mWhen, "How did that happen?");
-      PR_REMOVE_LINK(timeout);
+      timeout->remove();
       // InsertTimeoutIntoList will addref |timeout| and reset
       // mFiringDepth.  Make sure to undo that after calling it.
       uint32_t firingDepth = timeout->mFiringDepth;
@@ -10181,7 +10104,7 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
 
       timeout = nextTimeout;
     } else {
-      timeout = timeout->Next();
+      timeout = timeout->getNext();
     }
   }
 
@@ -10193,7 +10116,7 @@ nsGlobalWindow::ClearAllTimeouts()
 {
   nsTimeout *timeout, *nextTimeout;
 
-  for (timeout = FirstTimeout(); IsTimeout(timeout); timeout = nextTimeout) {
+  for (timeout = mTimeouts.getFirst(); timeout; timeout = nextTimeout) {
     /* If RunTimeout() is higher up on the stack for this
        window, e.g. as a result of document.write from a timeout,
        then we need to reset the list insertion point for
@@ -10202,7 +10125,7 @@ nsGlobalWindow::ClearAllTimeouts()
     if (mRunningTimeout == timeout)
       mTimeoutInsertionPoint = nullptr;
 
-    nextTimeout = timeout->Next();
+    nextTimeout = timeout->getNext();
 
     if (timeout->mTimer) {
       timeout->mTimer->Cancel();
@@ -10222,7 +10145,7 @@ nsGlobalWindow::ClearAllTimeouts()
   }
 
   // Clear out our list
-  PR_INIT_CLIST(&mTimeouts);
+  mTimeouts.clear();
 }
 
 void
@@ -10235,19 +10158,23 @@ nsGlobalWindow::InsertTimeoutIntoList(nsTimeout *aTimeout)
   // mTimeoutInsertionPoint, though.  This optimizes for the common case of
   // insertion at the end.
   nsTimeout* prevSibling;
-  for (prevSibling = LastTimeout();
-       IsTimeout(prevSibling) && prevSibling != mTimeoutInsertionPoint &&
+  for (prevSibling = mTimeouts.getLast();
+       prevSibling && prevSibling != mTimeoutInsertionPoint &&
          // This condition needs to match the one in SetTimeoutOrInterval that
          // determines whether to set mWhen or mTimeRemaining.
          ((IsFrozen() || mTimeoutsSuspendDepth) ?
           prevSibling->mTimeRemaining > aTimeout->mTimeRemaining :
           prevSibling->mWhen > aTimeout->mWhen);
-       prevSibling = prevSibling->Prev()) {
+       prevSibling = prevSibling->getPrevious()) {
     /* Do nothing; just searching */
   }
 
   // Now link in aTimeout after prevSibling.
-  PR_INSERT_AFTER(aTimeout, prevSibling);
+  if (prevSibling) {
+    prevSibling->setNext(aTimeout);
+  } else {
+    mTimeouts.insertFront(aTimeout);
+  }
 
   aTimeout->mFiringDepth = 0;
 
@@ -10539,7 +10466,7 @@ nsGlobalWindow::SuspendTimeouts(uint32_t aIncrease,
     mozilla::dom::workers::SuspendWorkersForWindow(cx, this);
 
     TimeStamp now = TimeStamp::Now();
-    for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
+    for (nsTimeout *t = mTimeouts.getFirst(); t; t = t->getNext()) {
       // Set mTimeRemaining to be the time remaining for this timer.
       if (t->mWhen > now)
         t->mTimeRemaining = t->mWhen - now;
@@ -10627,7 +10554,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
     bool _seenDummyTimeout = false;
 #endif
 
-    for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
+    for (nsTimeout *t = mTimeouts.getFirst(); t; t = t->getNext()) {
       // There's a chance we're being called with RunTimeout on the stack in which
       // case we have a dummy timeout in the list that *must not* be resumed. It
       // can be identified by a null mWindow.
@@ -10761,20 +10688,6 @@ nsGlobalWindow::DisableDeviceSensor(uint32_t aType)
   if (ac) {
     ac->RemoveWindowListener(aType, this);
   }
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetURL(nsIDOMMozURLProperty** aURL)
-{
-  FORWARD_TO_INNER(GetURL, (aURL), NS_ERROR_UNEXPECTED);
-
-  if (!mURLProperty) {
-    mURLProperty = new nsDOMMozURLProperty(this);
-  }
-
-  NS_ADDREF(*aURL = mURLProperty);
-
-  return NS_OK;
 }
 
 void
@@ -11220,6 +11133,7 @@ nsGlobalWindow::SetHasAudioAvailableEventListeners()
   }
 }
 
+#ifdef MOZ_B2G
 void
 nsGlobalWindow::EnableNetworkEvent(uint32_t aType)
 {
@@ -11271,6 +11185,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
       break;
   }
 }
+#endif // MOZ_B2G
 
 #define EVENT(name_, id_, type_, struct_)                                    \
   NS_IMETHODIMP nsGlobalWindow::GetOn##name_(JSContext *cx,                  \

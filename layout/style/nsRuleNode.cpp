@@ -127,7 +127,9 @@ nsRuleNode::ChildrenHashOps = {
 //  - if the display value (argument) is not a block-type
 //    then we set it to a valid block display value
 //  - For enforcing the floated/positioned element CSS2 rules
-static void EnsureBlockDisplay(uint8_t& display)
+/* static */
+void
+nsRuleNode::EnsureBlockDisplay(uint8_t& display)
 {
   // see if the display value is already a block
   switch (display) {
@@ -1320,7 +1322,7 @@ nsRuleNode::~nsRuleNode()
 {
   MOZ_COUNT_DTOR(nsRuleNode);
   if (mStyleData.mResetData || mStyleData.mInheritedData)
-    mStyleData.Destroy(0, mPresContext);
+    mStyleData.Destroy(mDependentBits, mPresContext);
   NS_IF_RELEASE(mRule);
 }
 
@@ -1377,6 +1379,30 @@ nsRuleNode::Transition(nsIStyleRule* aRule, uint8_t aLevel,
   return next;
 }
 
+void nsRuleNode::SetUsedDirectly()
+{
+  mDependentBits |= NS_RULE_NODE_USED_DIRECTLY;
+
+  // Maintain the invariant that any rule node that is used directly has
+  // all structs that live in the rule tree cached (which
+  // nsRuleNode::GetStyleData depends on for speed).
+  if (mDependentBits & NS_STYLE_INHERIT_MASK) {
+    for (nsStyleStructID sid = nsStyleStructID(0); sid < nsStyleStructID_Length;
+         sid = nsStyleStructID(sid + 1)) {
+      uint32_t bit = nsCachedStyleData::GetBitForSID(sid);
+      if (mDependentBits & bit) {
+        nsRuleNode *source = mParent;
+        while ((source->mDependentBits & bit) && !source->IsUsedDirectly()) {
+          source = source->mParent;
+        }
+        void *data = source->mStyleData.GetStyleData(sid);
+        NS_ASSERTION(data, "unexpected null struct");
+        mStyleData.SetStyleData(sid, mPresContext, data);
+      }
+    }
+  }
+}
+
 void
 nsRuleNode::ConvertChildrenToHash()
 {
@@ -1411,20 +1437,28 @@ nsRuleNode::PropagateNoneBit(uint32_t aBit, nsRuleNode* aHighestNode)
 }
 
 inline void
-nsRuleNode::PropagateDependentBit(uint32_t aBit, nsRuleNode* aHighestNode)
+nsRuleNode::PropagateDependentBit(nsStyleStructID aSID, nsRuleNode* aHighestNode,
+                                  void* aStruct)
 {
+  NS_ASSERTION(aStruct, "expected struct");
+
+  uint32_t bit = nsCachedStyleData::GetBitForSID(aSID);
   for (nsRuleNode* curr = this; curr != aHighestNode; curr = curr->mParent) {
-    if (curr->mDependentBits & aBit) {
+    if (curr->mDependentBits & bit) {
 #ifdef DEBUG
       while (curr != aHighestNode) {
-        NS_ASSERTION(curr->mDependentBits & aBit, "bit not set");
+        NS_ASSERTION(curr->mDependentBits & bit, "bit not set");
         curr = curr->mParent;
       }
 #endif
       break;
     }
 
-    curr->mDependentBits |= aBit;
+    curr->mDependentBits |= bit;
+
+    if (curr->IsUsedDirectly()) {
+      curr->mStyleData.SetStyleData(aSID, mPresContext, aStruct);
+    }
   }
 }
 
@@ -1893,7 +1927,10 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
 
     // If the dependent bit is set on a rule node for this struct, that
     // means its rule won't have any information to add, so skip it.
-    while (ruleNode->mDependentBits & bit) {
+    // NOTE: If we exit the loop because of the !IsUsedDirectly() check,
+    // then we're guaranteed to break immediately afterwards due to a
+    // non-null startStruct.
+    while ((ruleNode->mDependentBits & bit) && !ruleNode->IsUsedDirectly()) {
       NS_ASSERTION(ruleNode->mStyleData.GetStyleData(aSID) == nullptr,
                    "dependent bit with cached data makes no sense");
       // Climb up to the next rule in the tree (a less specific rule).
@@ -1969,7 +2006,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     // node in the tree to the node that specified the data that tells nodes on that
     // branch that they never need to examine their rules for this particular struct type
     // ever again.
-    PropagateDependentBit(bit, ruleNode);
+    PropagateDependentBit(aSID, ruleNode, startStruct);
     return startStruct;
   }
   // FIXME Do we need to check for mPostResolveCallback?
@@ -2429,7 +2466,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     aHighestNode->mStyleData.mInheritedData->                                 \
       mStyleStructs[eStyleStruct_##type_] = data_;                            \
     /* Propagate the bit down. */                                             \
-    PropagateDependentBit(NS_STYLE_INHERIT_BIT(type_), aHighestNode);         \
+    PropagateDependentBit(eStyleStruct_##type_, aHighestNode, data_);         \
     /* Tell the style context that it doesn't own the data */                 \
     aContext->                                                                \
       AddStyleBit(nsCachedStyleData::GetBitForSID(eStyleStruct_##type_));     \
@@ -2473,7 +2510,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     aHighestNode->mStyleData.mResetData->                                     \
       mStyleStructs[eStyleStruct_##type_] = data_;                            \
     /* Propagate the bit down. */                                             \
-    PropagateDependentBit(NS_STYLE_INHERIT_BIT(type_), aHighestNode);         \
+    PropagateDependentBit(eStyleStruct_##type_, aHighestNode, data_);         \
   }                                                                           \
                                                                               \
   return data_;
@@ -4774,6 +4811,12 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     display->mBreakAfter = parentDisplay->mBreakAfter;
   }
   // end temp fix
+
+  // page-break-inside: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForPageBreakInside(),
+              display->mBreakInside, canStoreInRuleTree,
+              SETDSC_ENUMERATED, parentDisplay->mBreakInside,
+              NS_STYLE_PAGE_BREAK_AUTO, 0, 0, 0, 0);
 
   // float: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForCssFloat(),
@@ -7621,65 +7664,17 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
   COMPUTE_END_RESET(SVGReset, svgReset)
 }
 
-inline const void*
-nsRuleNode::GetParentData(const nsStyleStructID aSID)
-{
-  NS_PRECONDITION(mDependentBits & nsCachedStyleData::GetBitForSID(aSID),
-                  "should be called when node depends on parent data");
-  NS_ASSERTION(mStyleData.GetStyleData(aSID) == nullptr,
-               "both struct and dependent bits present");
-  // Walk up the rule tree from this rule node (towards less specific
-  // rules).
-  uint32_t bit = nsCachedStyleData::GetBitForSID(aSID);
-  nsRuleNode *ruleNode = mParent;
-  while (ruleNode->mDependentBits & bit) {
-    NS_ASSERTION(ruleNode->mStyleData.GetStyleData(aSID) == nullptr,
-                 "both struct and dependent bits present");
-    ruleNode = ruleNode->mParent;
-  }
-
-  return ruleNode->mStyleData.GetStyleData(aSID);
-}
-
-#define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                      \
-inline const nsStyle##name_ *                                               \
-nsRuleNode::GetParent##name_()                                              \
-{                                                                           \
-  NS_PRECONDITION(mDependentBits &                                          \
-                  nsCachedStyleData::GetBitForSID(eStyleStruct_##name_),    \
-                  "should be called when node depends on parent data");     \
-  NS_ASSERTION(mStyleData.GetStyle##name_() == nullptr,                      \
-               "both struct and dependent bits present");                   \
-  /* Walk up the rule tree from this rule node (towards less specific */    \
-  /* rules). */                                                             \
-  uint32_t bit = nsCachedStyleData::GetBitForSID(eStyleStruct_##name_);     \
-  nsRuleNode *ruleNode = mParent;                                           \
-  while (ruleNode->mDependentBits & bit) {                                  \
-    NS_ASSERTION(ruleNode->mStyleData.GetStyle##name_() == nullptr,          \
-                 "both struct and dependent bits present");                 \
-    ruleNode = ruleNode->mParent;                                           \
-  }                                                                         \
-                                                                            \
-  return ruleNode->mStyleData.GetStyle##name_();                            \
-}
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-
 const void*
 nsRuleNode::GetStyleData(nsStyleStructID aSID,
                          nsStyleContext* aContext,
                          bool aComputeData)
 {
-  const void *data;
-  if (mDependentBits & nsCachedStyleData::GetBitForSID(aSID)) {
-    // We depend on an ancestor for this struct since the cached struct
-    // it has is also appropriate for this rule node.  Just go up the
-    // rule tree and return the first cached struct we find.
-    data = GetParentData(aSID);
-    NS_ASSERTION(data, "dependent bits set but no cached struct present");
-    return data;
-  }
+  NS_ASSERTION(IsUsedDirectly(),
+               "if we ever call this on rule nodes that aren't used "
+               "directly, we should adjust handling of mDependentBits "
+               "in some way.");
 
+  const void *data;
   data = mStyleData.GetStyleData(aSID);
   if (MOZ_LIKELY(data != nullptr))
     return data; // We have a fully specified struct. Just return it.
@@ -7710,14 +7705,12 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
 const nsStyle##name_*                                                         \
 nsRuleNode::GetStyle##name_(nsStyleContext* aContext, bool aComputeData)    \
 {                                                                             \
-  const nsStyle##name_ *data;                                                 \
-  if (mDependentBits &                                                        \
-      nsCachedStyleData::GetBitForSID(eStyleStruct_##name_)) {                \
-    data = GetParent##name_();                                                \
-    NS_ASSERTION(data, "dependent bits set but no cached struct present");    \
-    return data;                                                              \
-  }                                                                           \
+  NS_ASSERTION(IsUsedDirectly(),                                              \
+               "if we ever call this on rule nodes that aren't used "         \
+               "directly, we should adjust handling of mDependentBits "       \
+               "in some way.");                                               \
                                                                               \
+  const nsStyle##name_ *data;                                                 \
   data = mStyleData.GetStyle##name_();                                        \
   if (MOZ_LIKELY(data != nullptr))                                            \
     return data;                                                              \

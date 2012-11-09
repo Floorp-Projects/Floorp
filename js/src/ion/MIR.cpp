@@ -958,9 +958,20 @@ MMul::analyzeEdgeCasesBackward()
         canBeNegativeZero_ = NeedNegativeZeroCheck(this);
 }
 
-bool
-MMul::updateForReplacement(MDefinition *ins)
+void
+MMul::analyzeTruncateBackward()
 {
+    if (!isPossibleTruncated())
+        setPossibleTruncated(js::ion::EdgeCaseAnalysis::AllUsesTruncate(this));
+}
+
+bool
+MMul::updateForReplacement(MDefinition *ins_)
+{
+    JS_ASSERT(ins_->isMul());
+    MMul *ins = ins_->toMul();
+    if (isPossibleTruncated())
+        setPossibleTruncated(ins->isPossibleTruncated());
     return true;
 }
 

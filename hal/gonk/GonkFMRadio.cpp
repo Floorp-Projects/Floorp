@@ -18,6 +18,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/FileUtils.h"
 
+#include <cutils/properties.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/videodev2.h>
@@ -70,12 +71,29 @@ static void
 initTavaruaRadio(hal::FMRadioSettings &aInfo)
 {
   mozilla::ScopedClose fd(sRadioFD);
-  char command[64];
-  snprintf(command, sizeof(command), "/system/bin/fm_qsoc_patches %d 0", sTavaruaVersion);
-  int rc = system(command);
-  if (rc) {
-    HAL_LOG(("Unable to initialize radio"));
-    return;
+  char version[64];
+  int rc;
+  snprintf(version, sizeof(version), "%d", sTavaruaVersion);
+  property_set("hw.fm.version", version);
+
+  /* Set the mode for soc downloader */
+  property_set("hw.fm.mode", "normal");
+  /* start fm_dl service */
+  property_set("ctl.start", "fm_dl");
+
+  /*
+   * Fix bug 800263. Wait until the FM radio chips initialization is done
+   * then set other properties, or the system will hang and reboot. This
+   * work around is from codeaurora
+   * (git://codeaurora.org/platform/frameworks/base.git).
+   */
+  for (int i = 0; i < 4; ++i) {
+    sleep(1);
+    char value[PROPERTY_VALUE_MAX];
+    property_get("hw.fm.init", value, "0");
+    if (!strcmp(value, "1")) {
+      break;
+    }
   }
 
   rc = setControl(V4L2_CID_PRIVATE_TAVARUA_STATE, FM_RECV);

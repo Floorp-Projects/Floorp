@@ -921,8 +921,18 @@ DownloadsViewItem.prototype = {
                                             DownloadsCommon.strings.statePaused,
                                             transfer);
     } else if (this.dataItem.state == nsIDM.DOWNLOAD_DOWNLOADING) {
+      // We don't show the rate for each download in order to reduce clutter.
+      // The remaining time per download is likely enough information for the
+      // panel.
+      [status] =
+        DownloadUtils.getDownloadStatusNoRate(this.dataItem.currBytes,
+                                              this.dataItem.maxBytes,
+                                              this.dataItem.speed,
+                                              this.lastEstimatedSecondsLeft);
+
+      // We are, however, OK with displaying the rate in the tooltip.
       let newEstimatedSecondsLeft;
-      [status, newEstimatedSecondsLeft] =
+      [statusTip, newEstimatedSecondsLeft] =
         DownloadUtils.getDownloadStatus(this.dataItem.currBytes,
                                         this.dataItem.maxBytes,
                                         this.dataItem.speed,
@@ -1230,6 +1240,13 @@ DownloadsViewItemController.prototype = {
         // URL handler.
         this._openExternal(localFile);
       }
+
+      // We explicitly close the panel here to give the user the feedback that
+      // their click has been received, and we're handling the action.
+      // Otherwise, we'd have to wait for the file-type handler to execute
+      // before the panel would close. This also helps to prevent the user from
+      // accidentally opening a file several times.
+      DownloadsPanel.hidePanel();
     },
 
     downloadsCmd_show: function DVIC_downloadsCmd_show()
@@ -1254,6 +1271,13 @@ DownloadsViewItemController.prototype = {
           }
         }
       }
+
+      // We explicitly close the panel here to give the user the feedback that
+      // their click has been received, and we're handling the action.
+      // Otherwise, we'd have to wait for the operating system file manager
+      // window to open before the panel closed. This also helps to prevent the
+      // user from opening the containing folder several times.
+      DownloadsPanel.hidePanel();
     },
 
     downloadsCmd_pauseResume: function DVIC_downloadsCmd_pauseResume()

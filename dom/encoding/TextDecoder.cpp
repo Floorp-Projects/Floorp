@@ -21,38 +21,21 @@ TextDecoder::Init(const nsAString& aEncoding,
   nsAutoString label(aEncoding);
   EncodingUtils::TrimSpaceCharacters(label);
 
-  // If label is a case-insensitive match for "utf-16"
-  // then set the internal useBOM flag.
-  if (label.LowerCaseEqualsLiteral("utf-16")) {
-    mUseBOM = true;
-    mIsUTF16Family = true;
-    mEncoding = "utf-16le";
-    // If BOM is used, we can't determine the converter yet.
-    return;
-  }
-
-  // Run the steps to get an encoding from Encoding.
+  // Let encoding be the result of getting an encoding from label.
+  // If encoding is failure, throw a TypeError.
   if (!EncodingUtils::FindEncodingForLabel(label, mEncoding)) {
-    // If the steps result in failure,
-    // throw a "EncodingError" exception and terminate these steps.
-    aRv.Throw(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+    aRv.ThrowTypeError(MSG_ENCODING_NOT_SUPPORTED, &label);
     return;
   }
 
-  mIsUTF16Family = !strcmp(mEncoding, "utf-16le") ||
-                   !strcmp(mEncoding, "utf-16be");
+  mIsUTF16Family = mEncoding.EqualsLiteral("UTF-16LE") ||
+                   mEncoding.EqualsLiteral("UTF-16BE");
 
   // If the constructor is called with an options argument,
   // and the fatal property of the dictionary is set,
   // set the internal fatal flag of the decoder object.
   mFatal = aFatal.fatal;
 
-  CreateDecoder(aRv);
-}
-
-void
-TextDecoder::CreateDecoder(ErrorResult& aRv)
-{
   // Create a decoder object for mEncoding.
   nsCOMPtr<nsICharsetConverterManager> ccm =
     do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
@@ -61,7 +44,7 @@ TextDecoder::CreateDecoder(ErrorResult& aRv)
     return;
   }
 
-  ccm->GetUnicodeDecoder(mEncoding, getter_AddRefs(mDecoder));
+  ccm->GetUnicodeDecoderRaw(mEncoding.get(), getter_AddRefs(mDecoder));
   if (!mDecoder) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
@@ -73,12 +56,10 @@ TextDecoder::CreateDecoder(ErrorResult& aRv)
 }
 
 void
-TextDecoder::ResetDecoder(bool aResetOffset)
+TextDecoder::ResetDecoder()
 {
   mDecoder->Reset();
-  if (aResetOffset) {
-    mOffset = 0;
-  }
+  mOffset = 0;
 }
 
 void
@@ -187,27 +168,12 @@ TextDecoder::HandleBOM(const char*& aData, uint32_t& aLength,
   aLength -= 2 - mOffset;
   mOffset = 2;
 
-  const char* encoding = "";
+  nsAutoCString encoding;
   if (!EncodingUtils::IdentifyDataOffset(mInitialBytes, 2, encoding) ||
-      strcmp(encoding, mEncoding)) {
+      !encoding.Equals(mEncoding)) {
     // If the stream doesn't start with BOM or the BOM doesn't match the
     // encoding, feed a BOM to workaround decoder's bug (bug 634541).
-    if (!mUseBOM) {
-      FeedBytes(!strcmp(mEncoding, "utf-16le") ? "\xFF\xFE" : "\xFE\xFF");
-    }
-  }
-  if (mUseBOM) {
-    // Select a decoder corresponding to the BOM.
-    if (!*encoding) {
-      encoding = "utf-16le";
-    }
-    // If the endian has not been changed, reuse the decoder.
-    if (mDecoder && !strcmp(encoding, mEncoding)) {
-      ResetDecoder(false);
-    } else {
-      mEncoding = encoding;
-      CreateDecoder(aRv);
-    }
+    FeedBytes(mEncoding.EqualsLiteral("UTF-16LE") ? "\xFF\xFE" : "\xFE\xFF");
   }
   FeedBytes(mInitialBytes, &aOutString);
 }
@@ -235,12 +201,13 @@ TextDecoder::GetEncoding(nsAString& aEncoding)
   // "utf-16".
   // This workaround should not be exposed to the public API and so "utf-16"
   // is returned by GetEncoding() if the internal encoding name is "utf-16le".
-  if (mUseBOM || !strcmp(mEncoding, "utf-16le")) {
+  if (mEncoding.EqualsLiteral("UTF-16LE")) {
     aEncoding.AssignLiteral("utf-16");
     return;
   }
 
-  aEncoding.AssignASCII(mEncoding);
+  CopyASCIItoUTF16(mEncoding, aEncoding);
+  nsContentUtils::ASCIIToLower(aEncoding);
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TextDecoder)

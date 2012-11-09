@@ -56,7 +56,7 @@ public:
   nsresult GetVideoSizes(nsTArray<CameraSize>& aVideoSizes);
   nsresult PushParameters();
 
-  nsresult SetupRecording(int aFd, int64_t aMaxFileSizeBytes = -1, int64_t aMaxVideoLengthMs = -1);
+  nsresult SetupRecording(int aFd, int aRotation = 0, int64_t aMaxFileSizeBytes = -1, int64_t aMaxVideoLengthMs = -1);
   nsresult SetupVideoMode(const nsAString& aProfile);
 
   void AutoFocusComplete(bool aSuccess);
@@ -107,7 +107,6 @@ protected:
   android::MediaProfiles*   mMediaProfiles;
   android::GonkRecorder*    mRecorder;
 
-  uint32_t                  mVideoRotation;
   nsString                  mVideoFile;
 
   // camcorder profile settings for the desired quality level

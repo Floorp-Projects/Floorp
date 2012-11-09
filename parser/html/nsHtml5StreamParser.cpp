@@ -6,7 +6,6 @@
 
 #include "nsHtml5StreamParser.h"
 #include "nsICharsetConverterManager.h"
-#include "nsCharsetAlias.h"
 #include "nsServiceManagerUtils.h"
 #include "nsEncoderDecoderUtils.h"
 #include "nsContentUtils.h"
@@ -24,9 +23,12 @@
 #include "expat.h"
 #include "nsINestedURI.h"
 #include "nsCharsetSource.h"
+#include "nsIWyciwygChannel.h"
+
+#include "mozilla/dom/EncodingUtils.h"
 
 using namespace mozilla;
-
+using mozilla::dom::EncodingUtils;
 
 int32_t nsHtml5StreamParser::sTimerInitialDelay = 120;
 int32_t nsHtml5StreamParser::sTimerSubsequentDelay = 120;
@@ -495,8 +497,8 @@ nsHtml5StreamParser::FinalizeSniffing(const uint8_t* aFromSegment, // can be nul
                                       uint32_t aCountToSniffingLimit)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
-  NS_ASSERTION(mCharsetSource < kCharsetFromMetaTag,
-      "Should not finalize sniffing when already confident.");
+  NS_ASSERTION(mCharsetSource < kCharsetFromParentForced,
+      "Should not finalize sniffing when using forced charset.");
   if (mMode == VIEW_SOURCE_XML) {
     static const XML_Memory_Handling_Suite memsuite =
       {
@@ -634,6 +636,11 @@ nsHtml5StreamParser::SniffStreamBytes(const uint8_t* aFromSegment,
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   nsresult rv = NS_OK;
   uint32_t writeCount;
+
+  // mCharset and mCharsetSource potentially have come from channel or higher
+  // by now. If we find a BOM, SetupDecodingFromBom() will overwrite them.
+  // If we don't find a BOM, the previously set values of mCharset and
+  // mCharsetSource are not modified by the BOM sniffing here.
   for (uint32_t i = 0; i < aCount && mBomState != BOM_SNIFFING_OVER; i++) {
     switch (mBomState) {
       case BOM_SNIFFING_NOT_STARTED:
@@ -701,8 +708,36 @@ nsHtml5StreamParser::SniffStreamBytes(const uint8_t* aFromSegment,
         break;
     }
   }
-  // if we get here, there either was no BOM or the BOM sniffing isn't complete yet
+  // if we get here, there either was no BOM or the BOM sniffing isn't complete
+  // yet
   
+  if (mBomState == BOM_SNIFFING_OVER &&
+    mCharsetSource >= kCharsetFromChannel) {
+    // There was no BOM and the charset came from channel or higher. mCharset
+    // still contains the charset from the channel or higher as set by an
+    // earlier call to SetDocumentCharset(), since we didn't find a BOM and
+    // overwrite mCharset.
+    nsCOMPtr<nsICharsetConverterManager> convManager =
+      do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
+    convManager->GetUnicodeDecoder(mCharset.get(),
+                                   getter_AddRefs(mUnicodeDecoder));
+    if (mUnicodeDecoder) {
+      mUnicodeDecoder->SetInputErrorBehavior(
+          nsIUnicodeDecoder::kOnError_Recover);
+      mFeedChardet = false;
+      mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
+      mMetaScanner = nullptr;
+      return WriteSniffingBufferAndCurrentSegment(aFromSegment,
+                                                  aCount,
+                                                  aWriteCount);
+    } else {
+      // nsHTMLDocument is supposed to make sure this does not happen. Let's
+      // deal with this anyway, since who knows how kCharsetFromOtherComponent
+      // is used.
+      mCharsetSource = kCharsetFromWeakDocTypeDefault;
+    }
+  }
+
   if (!mMetaScanner && (mMode == NORMAL ||
                         mMode == VIEW_SOURCE_HTML ||
                         mMode == LOAD_AS_DATA)) {
@@ -963,7 +998,13 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     mFeedChardet = false;
   }
   
-  if (mCharsetSource <= kCharsetFromMetaPrescan) {
+  nsCOMPtr<nsIWyciwygChannel> wyciwygChannel(do_QueryInterface(mRequest));
+  if (wyciwygChannel) {
+    mReparseForbidden = true;
+    mFeedChardet = false;
+    // If we are reloading a document.open()ed doc, fall through to converter
+    // instantiation here and avoid BOM sniffing.
+  } else if (mCharsetSource < kCharsetFromParentForced) {
     // we aren't ready to commit to an encoding yet
     // leave converter uninstantiated for now
     return NS_OK;
@@ -1153,28 +1194,25 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
 bool
 nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
 {
-  nsAutoCString newEncoding(aEncoding);
-  newEncoding.Trim(" \t\r\n\f");
-  if (newEncoding.LowerCaseEqualsLiteral("utf-16") ||
-      newEncoding.LowerCaseEqualsLiteral("utf-16be") ||
-      newEncoding.LowerCaseEqualsLiteral("utf-16le")) {
-    mTreeBuilder->MaybeComplainAboutCharset("EncMetaUtf16",
-                                            true,
-                                            mTokenizer->getLineNumber());
-    newEncoding.Assign("UTF-8");
-  }
-
-  nsresult rv = NS_OK;
-  bool eq;
-  rv = nsCharsetAlias::Equals(newEncoding, mCharset, &eq);
-  if (NS_FAILED(rv)) {
+  nsAutoCString newEncoding;
+  if (!EncodingUtils::FindEncodingForLabel(aEncoding, newEncoding)) {
     // the encoding name is bogus
     mTreeBuilder->MaybeComplainAboutCharset("EncMetaUnsupported",
                                             true,
                                             mTokenizer->getLineNumber());
     return false;
   }
-  if (eq) {
+
+  if (newEncoding.EqualsLiteral("UTF-16") ||
+      newEncoding.EqualsLiteral("UTF-16BE") ||
+      newEncoding.EqualsLiteral("UTF-16LE")) {
+    mTreeBuilder->MaybeComplainAboutCharset("EncMetaUtf16",
+                                            true,
+                                            mTokenizer->getLineNumber());
+    newEncoding.Assign("UTF-8");
+  }
+
+  if (newEncoding.Equals(mCharset)) {
     if (mCharsetSource < kCharsetFromMetaPrescan) {
       if (mInitialEncodingWasFromParentFrame) {
         mTreeBuilder->MaybeComplainAboutCharset("EncLateMetaFrame",
@@ -1191,36 +1229,7 @@ nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
     return false;
   }
 
-  // XXX check HTML5 non-IANA aliases here
-
-  nsAutoCString preferred;
-  rv = nsCharsetAlias::GetPreferred(newEncoding, preferred);
-  if (NS_FAILED(rv)) {
-    // This charset has been blacklisted for permitting XSS smuggling.
-    // EncMetaNonRoughSuperset is a reasonable approximation to the
-    // right error message.
-    mTreeBuilder->MaybeComplainAboutCharset("EncMetaNonRoughSuperset",
-                                            true,
-                                            mTokenizer->getLineNumber());
-    return false;
-  }
-
-  // ??? Explicit further blacklist of character sets that are not
-  // "rough supersets" of ASCII.  Some of these are handled above (utf-16),
-  // some by the XSS smuggling blacklist in charsetData.properties,
-  // maybe all of the remainder should also be blacklisted there.
-  if (preferred.LowerCaseEqualsLiteral("utf-16") ||
-      preferred.LowerCaseEqualsLiteral("utf-16be") ||
-      preferred.LowerCaseEqualsLiteral("utf-16le") ||
-      preferred.LowerCaseEqualsLiteral("utf-7") ||
-      preferred.LowerCaseEqualsLiteral("x-imap4-modified-utf7")) {
-    // Not a rough ASCII superset
-    mTreeBuilder->MaybeComplainAboutCharset("EncMetaNonRoughSuperset",
-                                            true,
-                                            mTokenizer->getLineNumber());
-    return false;
-  }
-  aEncoding.Assign(preferred);
+  aEncoding.Assign(newEncoding);
   return true;
 }
 

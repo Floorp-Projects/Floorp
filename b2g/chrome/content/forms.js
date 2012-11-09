@@ -18,6 +18,13 @@ XPCOMUtils.defineLazyServiceGetter(Services, "fm",
                                    "@mozilla.org/focus-manager;1",
                                    "nsIFocusManager");
 
+XPCOMUtils.defineLazyGetter(this, "domWindowUtils", function () {
+  return content.QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIDOMWindowUtils);
+});
+
+const FOCUS_CHANGE_DELAY = 20;
+
 let HTMLInputElement = Ci.nsIDOMHTMLInputElement;
 let HTMLTextAreaElement = Ci.nsIDOMHTMLTextAreaElement;
 let HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
@@ -28,7 +35,6 @@ let FormAssistant = {
   init: function fa_init() {
     addEventListener("focus", this, true, false);
     addEventListener("blur", this, true, false);
-    addEventListener("keypress", this, true, false);
     addEventListener("resize", this, true, false);
     addMessageListener("Forms:Select:Choice", this);
     addMessageListener("Forms:Input:Value", this);
@@ -36,6 +42,10 @@ let FormAssistant = {
     Services.obs.addObserver(this, "ime-enabled-state-changed", false);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
+
+  ignoredInputTypes: new Set([
+    'button', 'file', 'checkbox', 'radio', 'reset', 'submit', 'image'
+  ]),
 
   isKeyboardOpened: false,
   selectionStart: 0,
@@ -80,43 +90,24 @@ let FormAssistant = {
 
     switch (evt.type) {
       case "focus":
-        if (this.isKeyboardOpened)
+        if (this.isTextInputElement(target) && this.isIMEDisabled())
           return;
 
-        let ignore = {
-          button: true,
-          file: true,
-          checkbox: true,
-          radio: true,
-          reset: true,
-          submit: true,
-          image: true
-        };
-    
-        if (target instanceof HTMLSelectElement) { 
-          content.setTimeout(function showIMEForSelect() {
-            sendAsyncMessage("Forms:Input", getJSON(target));
-          });
-          this.setFocusedElement(target);
-        } else if (target instanceof HTMLOptionElement &&
-                   target.parentNode instanceof HTMLSelectElement) {
-          target = target.parentNode;
-          content.setTimeout(function showIMEForSelect() {
-            sendAsyncMessage("Forms:Input", getJSON(target));
-          });
-          this.setFocusedElement(target);
-        } else if ((target instanceof HTMLInputElement && !ignore[target.type]) ||
-                    target instanceof HTMLTextAreaElement) {
-          this.isKeyboardOpened = this.tryShowIme(target);
-          this.setFocusedElement(target);
+        if (target && this.isFocusableElement(target)) {
+          if (this.blurTimeout) {
+            this.blurTimeout = content.clearTimeout(this.blurTimeout);
+            this.handleIMEStateDisabled();
+          }
+          this.handleIMEStateEnabled(target);
         }
         break;
 
       case "blur":
         if (this.focusedElement) {
-          sendAsyncMessage("Forms:Input", { "type": "blur" });
-          this.setFocusedElement(null);
-          this.isKeyboardOpened = false;
+          this.blurTimeout = content.setTimeout(function () {
+            this.blurTimeout = null;
+            this.handleIMEStateDisabled();
+          }.bind(this), FOCUS_CHANGE_DELAY);
         }
         break;
 
@@ -145,17 +136,6 @@ let FormAssistant = {
         if (this.focusedElement) {
           this.focusedElement.scrollIntoView(false);
         }
-        break;
-
-      case "keypress":
-        if (evt.keyCode != evt.DOM_VK_ESCAPE || !this.isKeyboardOpened)
-          return;
-
-        sendAsyncMessage("Forms:Input", { "type": "blur" });
-        this.isKeyboardOpened = false;
-
-        evt.preventDefault();
-        evt.stopPropagation();
         break;
     }
   },
@@ -213,21 +193,17 @@ let FormAssistant = {
   observe: function fa_observe(subject, topic, data) {
     switch (topic) {
       case "ime-enabled-state-changed":
-        let isOpen = this.isKeyboardOpened;
         let shouldOpen = parseInt(data);
-        if (shouldOpen && !isOpen) {
-          let target = Services.fm.focusedElement;
+        let target = Services.fm.focusedElement;
+        if (!target || !this.isTextInputElement(target))
+          return;
 
-          if (!target || !this.tryShowIme(target)) {
-            this.setFocusedElement(null);
-            return;
-          } else {
-            this.setFocusedElement(target);
-          }
-        } else if (!shouldOpen && isOpen) {
-          sendAsyncMessage("Forms:Input", { "type": "blur" });
+        if (shouldOpen) {
+          if (!this.focusedElement && this.isFocusableElement(target))
+            this.handleIMEStateEnabled(target);
+        } else if (this._focusedElement == target) {
+          this.handleIMEStateDisabled();
         }
-        this.isKeyboardOpened = shouldOpen;
         break;
 
       case "xpcom-shutdown":
@@ -239,11 +215,54 @@ let FormAssistant = {
     }
   },
 
-  tryShowIme: function(element) {
-    if (!element) {
-      return;
-    }
+  isIMEDisabled: function fa_isIMEDisabled() {
+    let disabled = false;
+    try {
+      disabled = domWindowUtils.IMEStatus == domWindowUtils.IME_STATUS_DISABLED;
+    } catch (e) {}
 
+    return disabled;
+  },
+
+  handleIMEStateEnabled: function fa_handleIMEStateEnabled(target) {
+    if (this.isKeyboardOpened)
+      return;
+
+    if (target instanceof HTMLOptionElement)
+      target = target.parentNode;
+
+    let kbOpened = this.tryShowIme(target);
+    if (this.isTextInputElement(target))
+      this.isKeyboardOpened = kbOpened;
+
+    this.setFocusedElement(target);
+  },
+
+  handleIMEStateDisabled: function fa_handleIMEStateDisabled() {
+    sendAsyncMessage("Forms:Input", { "type": "blur" });
+    this.isKeyboardOpened = false;
+    this.setFocusedElement(null);
+  },
+
+  isFocusableElement: function fa_isFocusableElement(element) {
+    if (element instanceof HTMLSelectElement ||
+        element instanceof HTMLTextAreaElement)
+      return true;
+
+    if (element instanceof HTMLOptionElement &&
+        element.parentNode instanceof HTMLSelectElement)
+      return true;
+
+    return (element instanceof HTMLInputElement &&
+            !this.ignoredInputTypes.has(element.type));
+  },
+
+  isTextInputElement: function fa_isTextInputElement(element) {
+    return element instanceof HTMLInputElement ||
+           element instanceof HTMLTextAreaElement;
+  },
+
+  tryShowIme: function(element) {
     // FIXME/bug 729623: work around apparent bug in the IME manager
     // in gecko.
     let readonly = element.getAttribute("readonly");

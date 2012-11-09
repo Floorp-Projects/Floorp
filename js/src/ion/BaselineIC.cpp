@@ -92,7 +92,7 @@ ICCompare_Fallback::Compiler::generateStubCode()
 
     IonCode *wrapper = generateVMWrapper(fun);
     if (!wrapper)
-        return false;
+        return NULL;
 
     // Push arguments.
     masm.pushValue(R1);
@@ -152,7 +152,7 @@ ICToBool_Fallback::Compiler::generateStubCode()
 
     IonCode *wrapper = generateVMWrapper(fun);
     if (!wrapper)
-        return false;
+        return NULL;
 
     // Push arguments.
     masm.pushValue(R0);
@@ -250,7 +250,7 @@ ICBinaryArith_Fallback::Compiler::generateStubCode()
 
     IonCode *wrapper = generateVMWrapper(fun);
     if (!wrapper)
-        return false;
+        return NULL;
 
     // Push arguments.
     masm.pushValue(R1);

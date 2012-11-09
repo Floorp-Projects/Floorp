@@ -1434,8 +1434,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(ArchiveRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MozURLProperty, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(ModalContentWindow, nsWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
@@ -2375,6 +2373,21 @@ nsDOMClassInfo::RegisterExternalClasses()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMUIEvent)                                    \
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
 
+#ifdef MOZ_B2G
+#define DOM_CLASSINFO_WINDOW_MAP_ENTRIES(_support_indexed_db)                  \
+  DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)                                        \
+  DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowB2G)                                     \
+  DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)                                      \
+  DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                   \
+  DOM_CLASSINFO_MAP_ENTRY(nsIInlineEventHandlers)                              \
+  DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMStorageIndexedDB,                  \
+                                      _support_indexed_db)                     \
+  DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMWindowPerformance,                 \
+                                      nsGlobalWindow::HasPerformanceSupport()) \
+  DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,                   \
+                                      nsDOMTouchEvent::PrefEnabled())          \
+  DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIWindowCrypto, domCryptoEnabled)
+#else // !MOZ_B2G
 #define DOM_CLASSINFO_WINDOW_MAP_ENTRIES(_support_indexed_db)                  \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)                                        \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)                                      \
@@ -2387,6 +2400,7 @@ nsDOMClassInfo::RegisterExternalClasses()
   DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,                   \
                                       nsDOMTouchEvent::PrefEnabled())          \
   DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIWindowCrypto, domCryptoEnabled)
+#endif // MOZ_B2G
 
 nsresult
 nsDOMClassInfo::Init()
@@ -3990,10 +4004,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(ArchiveRequest, nsIDOMArchiveRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMArchiveRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MozURLProperty, nsIDOMMozURLProperty)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozURLProperty)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ModalContentWindow, nsIDOMWindow)
@@ -6663,6 +6673,14 @@ ConstructorEnabled(const nsGlobalNameStruct *aStruct, nsGlobalWindow *aWin)
   // Don't expose CSSSupportsRule unless @supports processing is enabled.
   if (aStruct->mDOMClassInfoID == eDOMClassInfo_CSSSupportsRule_id) {
     if (!CSSSupportsRule::PrefEnabled()) {
+      return false;
+    }
+  }
+
+  // Don't expose ArchiveReader unless user has explicitly enabled it
+  if (aStruct->mDOMClassInfoID == eDOMClassInfo_ArchiveReader_id ||
+      aStruct->mDOMClassInfoID == eDOMClassInfo_ArchiveRequest_id) {
+    if (!dom::file::ArchiveReader::PrefEnabled()) {
       return false;
     }
   }

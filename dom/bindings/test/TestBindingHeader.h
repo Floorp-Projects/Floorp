@@ -616,6 +616,22 @@ public:
   void GetSupportedNames(nsTArray<nsString>&);
 };
 
+class TestIndexedGetterAndSetterAndNamedGetterInterface : public nsISupports,
+                                                          public nsWrapperCache
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  // We need a GetParentObject to make binding codegen happy
+  virtual nsISupports* GetParentObject();
+
+  void NamedGetter(const nsAString&, bool&, nsAString&);
+  void GetSupportedNames(nsTArray<nsString>&);
+  int32_t IndexedGetter(uint32_t, bool&);
+  void IndexedSetter(uint32_t, int32_t);
+  uint32_t Length();
+};
+
 class TestIndexedAndNamedGetterInterface : public nsISupports,
                                            public nsWrapperCache
 {

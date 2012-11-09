@@ -338,11 +338,22 @@ public:
    * @param aFrame should be the first continuation
    */
   static EffectProperties GetEffectProperties(nsIFrame *aFrame);
+
   /**
-   * Called by nsCSSFrameConstructor when style changes require the
-   * effect properties on aFrame to be updated
+   * Called when changes to an element (e.g. CSS property changes) cause its
+   * frame to start/stop referencing (or reference different) SVG resource
+   * elements. (_Not_ called for changes to referenced resource elements.)
+   *
+   * This function handles such changes by discarding _all_ the frame's SVG
+   * effects frame properties (causing those properties to stop watching their
+   * target element). It also synchronously (re)creates the filter and marker
+   * frame properties (XXX why not the other properties?), which makes it
+   * useful for initializing those properties during first reflow.
+   *
+   * XXX rename to something more meaningful like RefreshResourceReferences?
    */
   static void UpdateEffects(nsIFrame *aFrame);
+
   /**
    * @param aFrame should be the first continuation
    */

@@ -349,6 +349,23 @@ private:
     aVp.set(STRING_TO_JSVAL(jsName));
     return true;
   }
+
+  static JSBool
+  GetLastModifiedDate(JSContext* aCx, JSHandleObject aObj, JSHandleId aIdval, JSMutableHandleValue aVp)
+  {
+    nsIDOMFile* file = GetInstancePrivate(aCx, aObj, "lastModifiedDate");
+    if (!file) {
+      return false;
+    }
+
+    JS::Value value;
+    if (NS_FAILED(file->GetLastModifiedDate(aCx, &value))) {
+      return false;
+    }
+
+    aVp.set(value);
+    return true;
+  }
 };
 
 JSClass File::sClass = {
@@ -360,6 +377,8 @@ JSClass File::sClass = {
 
 JSPropertySpec File::sProperties[] = {
   { "name", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetName),
+    JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
+  { "lastModifiedDate", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetLastModifiedDate),
     JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
   { "mozFullPath", 0, PROPERTY_FLAGS, JSOP_WRAPPER(GetMozFullPath),
     JSOP_WRAPPER(js_GetterOnlyPropertyStub) },

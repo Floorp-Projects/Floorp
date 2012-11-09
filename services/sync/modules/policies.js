@@ -621,26 +621,33 @@ ErrorHandler.prototype = {
     let index = 0;
     let threshold = Date.now() - 1000 * Svc.Prefs.get("log.appender.file.maxErrorAge");
 
+    this._log.debug("Log cleanup threshold time: " + threshold);
     while (direntries.hasMoreElements()) {
       let logFile = direntries.getNext().QueryInterface(Ci.nsIFile);
       if (logFile.lastModifiedTime < threshold) {
+        this._log.trace(" > Noting " + logFile.leafName +
+                        " for cleanup (" + logFile.lastModifiedTime + ")");
         oldLogs.push(logFile);
       }
     }
 
     // Deletes a file from oldLogs each tick until there are none left.
+    let errorHandler = this;
     function deleteFile() {
       if (index >= oldLogs.length) {
-        this._cleaningUpFileLogs = false;
+        errorHandler._log.debug("Done deleting files.");
+        errorHandler._cleaningUpFileLogs = false;
         Svc.Obs.notify("weave:service:cleanup-logs");
         return;
       }
       try {
-        oldLogs[index].remove(false);
+        let file = oldLogs[index];
+        file.remove(false);
+        errorHandler._log.trace("Deleted " + file.leafName + ".");
       } catch (ex) {
-        this._log._debug("Encountered error trying to clean up old log file '"
-                         + oldLogs[index].leafName + "':"
-                         + Utils.exceptionStr(ex));
+        errorHandler._log._debug("Encountered error trying to clean up old log file '"
+                                 + oldLogs[index].leafName + "':"
+                                 + Utils.exceptionStr(ex));
       }
       index++;
       Utils.nextTick(deleteFile);
@@ -649,6 +656,8 @@ ErrorHandler.prototype = {
     if (oldLogs.length > 0) {
       this._cleaningUpFileLogs = true;
       Utils.nextTick(deleteFile);
+    } else {
+      this._log.debug("No logs to clean up.");
     }
   },
 
@@ -667,15 +676,22 @@ ErrorHandler.prototype = {
     let inStream = this._logAppender.getInputStream();
     this._logAppender.reset();
     if (flushToFile && inStream) {
+      this._log.debug("Flushing file log.");
       try {
         let filename = filenamePrefix + Date.now() + ".txt";
         let file = FileUtils.getFile("ProfD", ["weave", "logs", filename]);
         let outStream = FileUtils.openFileOutputStream(file);
 
+        this._log.trace("Beginning stream copy to " + file.leafName + ": " +
+                        Date.now());
         NetUtil.asyncCopy(inStream, outStream, function onCopyComplete() {
+          this._log.trace("onCopyComplete: " + Date.now());
+          this._log.trace("Output file timestamp: " + file.lastModifiedTime);
           Svc.Obs.notify("weave:service:reset-file-log");
+          this._log.trace("Notified: " + Date.now());
           if (filenamePrefix == LOG_PREFIX_ERROR &&
               !this._cleaningUpFileLogs) {
+            this._log.trace("Scheduling cleanup.");
             Utils.nextTick(this.cleanupLogs, this);
           }
         }.bind(this));

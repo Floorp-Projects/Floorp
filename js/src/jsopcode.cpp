@@ -52,12 +52,13 @@
 
 #include "vm/RegExpObject-inl.h"
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
+
 using js::frontend::IsIdentifier;
 using js::frontend::LetDataToGroupAssign;
 using js::frontend::LetDataToOffset;
+using mozilla::ArrayLength;
 
 /*
  * Index limit must stay within 32 bits.
@@ -324,9 +325,10 @@ js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
  * If counts != NULL, include a counter of the number of times each op was executed.
  */
 JS_FRIEND_API(JSBool)
-js_DisassembleAtPC(JSContext *cx, JSScript *script_, JSBool lines, jsbytecode *pc, Sprinter *sp)
+js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines, jsbytecode *pc, Sprinter *sp)
 {
-    Rooted<JSScript*> script(cx, script_);
+    AssertCanGC();
+    RootedScript script(cx, scriptArg);
 
     jsbytecode *next, *end;
     unsigned len;
@@ -368,10 +370,12 @@ js_Disassemble(JSContext *cx, HandleScript script, JSBool lines, Sprinter *sp)
 JS_FRIEND_API(JSBool)
 js_DumpPC(JSContext *cx)
 {
+    AssertCanGC();
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return JS_FALSE;
-    JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script().unsafeGet(), true, cx->regs().pc, &sprinter);
+    RootedScript script(cx, cx->fp()->script());
+    JSBool ok = js_DisassembleAtPC(cx, script, true, cx->regs().pc, &sprinter);
     fprintf(stdout, "%s", sprinter.string());
     return ok;
 }
@@ -394,6 +398,7 @@ QuoteString(Sprinter *sp, JSString *str, uint32_t quote);
 static bool
 ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
 {
+    AssertCanGC();
     if (JSVAL_IS_STRING(v)) {
         Sprinter sprinter(cx);
         if (!sprinter.init())
@@ -474,6 +479,7 @@ unsigned
 js_Disassemble1(JSContext *cx, HandleScript script, jsbytecode *pc,
                 unsigned loc, JSBool lines, Sprinter *sp)
 {
+    AssertCanGC();
     JSOp op = (JSOp)*pc;
     if (op >= JSOP_LIMIT) {
         char numBuf1[12], numBuf2[12];
@@ -3636,7 +3642,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
               case JSOP_RETURN:
                 LOCAL_ASSERT(jp->fun);
                 fun = jp->fun;
-                if (fun->flags & JSFUN_EXPR_CLOSURE) {
+                if (fun->isExprClosure()) {
                     /* Turn on parens around comma-expression here. */
                     op = JSOP_SETNAME;
                     rval = PopStr(ss, op, &rvalpc);
@@ -3645,7 +3651,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                         js_printf(jp, "(");
                     SprintOpcodePermanent(jp, rval, rvalpc);
                     js_printf(jp, parens ? ")%s" : "%s",
-                              ((fun->flags & JSFUN_LAMBDA) || !fun->atom())
+                              (fun->isLambda() || !fun->atom())
                               ? ""
                               : ";");
                     todo = -2;
@@ -4862,7 +4868,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                      * parenthesization without confusing getter/setter code
                      * that checks for JSOP_LAMBDA.
                      */
-                    bool grouped = !(fun->flags & JSFUN_EXPR_CLOSURE);
+                    bool grouped = !fun->isExprClosure();
                     bool strict = jp->script->strictModeCode;
                     str = js_DecompileToString(cx, "lambda", fun, 0,
                                                false, grouped, strict,
@@ -5542,7 +5548,7 @@ DecompileBody(JSPrinter *jp, JSScript *script, jsbytecode *pc)
 {
     /* Print a strict mode code directive, if needed. */
     if (script->strictModeCode && !jp->strict) {
-        if (jp->fun && (jp->fun->flags & JSFUN_EXPR_CLOSURE)) {
+        if (jp->fun && jp->fun->isExprClosure()) {
             /*
              * We have no syntax for strict function expressions;
              * at least give a hint.
@@ -5618,7 +5624,7 @@ js_DecompileFunction(JSPrinter *jp)
     if (jp->pretty) {
         js_printf(jp, "\t");
     } else {
-        if (!jp->grouped && (fun->flags & JSFUN_LAMBDA))
+        if (!jp->grouped && fun->isLambda())
             js_puts(jp, "(");
     }
 
@@ -5726,7 +5732,7 @@ js_DecompileFunction(JSPrinter *jp)
         if (!ok)
             return JS_FALSE;
         js_printf(jp, ") ");
-        if (!(fun->flags & JSFUN_EXPR_CLOSURE)) {
+        if (!fun->isExprClosure()) {
             js_printf(jp, "{\n");
             jp->indent += 4;
         }
@@ -5735,13 +5741,13 @@ js_DecompileFunction(JSPrinter *jp)
         if (!ok)
             return JS_FALSE;
 
-        if (!(fun->flags & JSFUN_EXPR_CLOSURE)) {
+        if (!fun->isExprClosure()) {
             jp->indent -= 4;
             js_printf(jp, "\t}");
         }
     }
 
-    if (!jp->pretty && !jp->grouped && (fun->flags & JSFUN_LAMBDA))
+    if (!jp->pretty && !jp->grouped && fun->isLambda())
         js_puts(jp, ")");
 
     return JS_TRUE;

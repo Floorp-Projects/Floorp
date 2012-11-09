@@ -307,6 +307,21 @@ struct RuntimeFriendFields {
     /* Limit pointer for checking native stack consumption. */
     uintptr_t           nativeStackLimit;
 
+    RuntimeFriendFields()
+      : interrupt(0),
+        nativeStackLimit(0) { }
+
+    static const RuntimeFriendFields *get(const JSRuntime *rt) {
+        return reinterpret_cast<const RuntimeFriendFields *>(rt);
+    }
+};
+
+class PerThreadData;
+
+struct PerThreadDataFriendFields
+{
+    PerThreadDataFriendFields();
+
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
     /*
      * Stack allocated GC roots for stack GC heap pointers, which may be
@@ -315,12 +330,15 @@ struct RuntimeFriendFields {
     Rooted<void*> *thingGCRooters[THING_ROOT_LIMIT];
 #endif
 
-    RuntimeFriendFields()
-      : interrupt(0),
-        nativeStackLimit(0) { }
+    static PerThreadDataFriendFields *get(js::PerThreadData *pt) {
+        return reinterpret_cast<PerThreadDataFriendFields *>(pt);
+    }
 
-    static const RuntimeFriendFields *get(const JSRuntime *rt) {
-        return reinterpret_cast<const RuntimeFriendFields *>(rt);
+    static PerThreadDataFriendFields *getMainThread(JSRuntime *rt) {
+        // mainThread must always appear directly after |RuntimeFriendFields|.
+        // Tested by a JS_STATIC_ASSERT in |jsfriendapi.cpp|
+        return reinterpret_cast<PerThreadDataFriendFields *>(
+            reinterpret_cast<char*>(rt) + sizeof(RuntimeFriendFields));
     }
 };
 

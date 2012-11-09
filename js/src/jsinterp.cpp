@@ -82,6 +82,8 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
+using mozilla::DebugOnly;
+
 /* Some objects (e.g., With) delegate 'this' to another object. */
 static inline JSObject *
 CallThisObjectHook(JSContext *cx, HandleObject obj, Value *argv)
@@ -793,7 +795,8 @@ void
 js::UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs)
 {
     /* c.f. the regular (catchable) TryNoteIter loop in Interpret. */
-    for (TryNoteIter tni(regs); !tni.done(); ++tni) {
+    AutoAssertNoGC nogc;
+    for (TryNoteIter tni(cx, regs); !tni.done(); ++tni) {
         JSTryNote *tn = *tni;
         if (tn->kind == JSTRY_ITER) {
             Value *sp = regs.spForStackDepth(tn->stackDepth);
@@ -802,9 +805,9 @@ js::UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs)
     }
 }
 
-TryNoteIter::TryNoteIter(const FrameRegs &regs)
+TryNoteIter::TryNoteIter(JSContext *cx, const FrameRegs &regs)
   : regs(regs),
-    script(regs.fp()->script().unsafeGet()),
+    script(cx, regs.fp()->script()),
     pcOffset(regs.pc - script->main())
 {
     if (script->hasTrynotes()) {
@@ -1121,8 +1124,10 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     RootedScript script(cx);
     SET_SCRIPT(regs.fp()->script());
 
+#ifdef JS_METHODJIT
     /* Reset the loop count on the script we're entering. */
     script->resetLoopCount();
+#endif
 
 #if JS_TRACE_LOGGING
     AutoTraceLog logger(TraceLogging::defaultLogger(),
@@ -1335,8 +1340,9 @@ END_EMPTY_CASES
 
 BEGIN_CASE(JSOP_LOOPHEAD)
 
+#ifdef JS_METHODJIT
     script->incrLoopCount();
-
+#endif
 END_CASE(JSOP_LOOPHEAD)
 
 BEGIN_CASE(JSOP_LABEL)
@@ -2338,7 +2344,9 @@ BEGIN_CASE(JSOP_FUNCALL)
         goto error;
 
     SET_SCRIPT(regs.fp()->script());
+#ifdef JS_METHODJIT
     script->resetLoopCount();
+#endif
 
 #ifdef JS_ION
     if (!newType && ion::IsEnabled(cx)) {
@@ -3689,7 +3697,7 @@ END_CASE(JSOP_ARRAYPUSH)
             }
         }
 
-        for (TryNoteIter tni(regs); !tni.done(); ++tni) {
+        for (TryNoteIter tni(cx, regs); !tni.done(); ++tni) {
             JSTryNote *tn = *tni;
 
             UnwindScope(cx, tn->stackDepth);

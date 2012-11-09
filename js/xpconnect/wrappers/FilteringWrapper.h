@@ -19,12 +19,14 @@ class FilteringWrapper : public Base {
     FilteringWrapper(unsigned flags);
     virtual ~FilteringWrapper();
 
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
-    virtual bool enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
-    virtual bool keys(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
-    virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags, js::Value *vp);
+    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, bool set, js::PropertyDescriptor *desc) MOZ_OVERRIDE;
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, bool set, js::PropertyDescriptor *desc) MOZ_OVERRIDE;
+    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props) MOZ_OVERRIDE;
+    virtual bool enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props) MOZ_OVERRIDE;
+    virtual bool keys(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props) MOZ_OVERRIDE;
+    virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags, js::Value *vp) MOZ_OVERRIDE;
 
-    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act, bool *bp);
+    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act, bool *bp) MOZ_OVERRIDE;
 
     static FilteringWrapper singleton;
 };

@@ -29,16 +29,19 @@
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
+#ifdef JS_ION
 #include "ion/IonCompartment.h"
 #include "ion/Ion.h"
+#endif
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
 #endif
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
+
+using mozilla::DebugOnly;
 
 JSCompartment::JSCompartment(JSRuntime *rt)
   : rt(rt),

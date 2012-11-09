@@ -1555,13 +1555,6 @@ MacroAssemblerARMCompat::load16ZeroExtend(const Address &address, const Register
 }
 
 void
-MacroAssemblerARMCompat::load16ZeroExtend_mask(const Address &address, Imm32 mask, const Register &dest)
-{
-    load16ZeroExtend(address, dest);
-    ma_and(mask, dest, dest);
-}
-
-void
 MacroAssemblerARMCompat::load16ZeroExtend(const BaseIndex &src, const Register &dest)
 {
     Register index = src.index;

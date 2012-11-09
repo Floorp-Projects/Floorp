@@ -389,7 +389,10 @@ NetworkManager.prototype = {
     let options = {
       cmd: this.active.dhcp ? "runDHCPAndSetDefaultRouteAndDNS" : "setDefaultRouteAndDNS",
       ifname: this.active.name,
-      oldIfname: (oldInterface && oldInterface != this.active) ? oldInterface.name : null
+      oldIfname: (oldInterface && oldInterface != this.active) ? oldInterface.name : null,
+      gateway_str: this.active.gateway,
+      dns1_str: this.active.dns1,
+      dns2_str: this.active.dns2
     };
     this.worker.postMessage(options);
     this.setNetworkProxy();

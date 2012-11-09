@@ -1020,6 +1020,11 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
   rv = ReflowChildren(aPresContext, aDesiredSize, aReflowState, *tableFrame,
                       aStatus);
 
+  if (aPresContext->IsPaginated() && !NS_FRAME_IS_FULLY_COMPLETE(aStatus) &&
+      ShouldAvoidBreakInside(aReflowState)) {
+    aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+  }
+
   // just set our width to what was available. The table will calculate the width and not use our value.
   aDesiredSize.width = aReflowState.availableWidth;
 

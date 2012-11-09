@@ -1095,7 +1095,9 @@ class MethodDefiner(PropertyDefiner):
                                  "flags": "JSPROP_ENUMERATE",
                                  "pref": None })
 
-        if not descriptor.interface.parent and not static and descriptor.nativeOwnership == 'nsisupports':
+        if (not descriptor.interface.parent and not static and
+            descriptor.nativeOwnership == 'nsisupports' and
+            descriptor.interface.hasInterfacePrototypeObject()):
             self.chrome.append({"name": 'QueryInterface',
                                 "methodInfo": False,
                                 "length": 1,
@@ -5052,7 +5054,25 @@ class CGProxySpecialOperation(CGPerSignatureCall):
         wrap = CGIfWrapper(wrap, "found")
         return "\n" + wrap.define()
 
-class CGProxyIndexedGetter(CGProxySpecialOperation):
+class CGProxyIndexedOperation(CGProxySpecialOperation):
+    """
+    Class to generate a call to an indexed operation.
+    """
+    def __init__(self, descriptor, name):
+        CGProxySpecialOperation.__init__(self, descriptor, name)
+    def define(self):
+        # Our first argument is the id we're getting.
+        argName = self.arguments[0].identifier.name
+        if argName == "index":
+            # We already have our index in a variable with that name
+            setIndex = ""
+        else:
+            setIndex = "uint32_t %s = index;\n" % argName
+        return (setIndex +
+                "%s* self = UnwrapProxy(proxy);\n" +
+                CGProxySpecialOperation.define(self))
+
+class CGProxyIndexedGetter(CGProxyIndexedOperation):
     """
     Class to generate a call to an indexed getter. If templateValues is not None
     the returned value will be wrapped with wrapForType using templateValues.
@@ -5070,14 +5090,34 @@ class CGProxyIndexedPresenceChecker(CGProxyIndexedGetter):
     def __init__(self, descriptor):
         CGProxyIndexedGetter.__init__(self, descriptor)
 
-class CGProxyIndexedSetter(CGProxySpecialOperation):
+class CGProxyIndexedSetter(CGProxyIndexedOperation):
     """
     Class to generate a call to an indexed setter.
     """
     def __init__(self, descriptor):
         CGProxySpecialOperation.__init__(self, descriptor, 'IndexedSetter')
 
-class CGProxyNamedGetter(CGProxySpecialOperation):
+class CGProxyNamedOperation(CGProxySpecialOperation):
+    """
+    Class to generate a call to a named operation.
+    """
+    def __init__(self, descriptor, name):
+        CGProxySpecialOperation.__init__(self, descriptor, name)
+    def define(self):
+        # Our first argument is the id we're getting.
+        argName = self.arguments[0].identifier.name
+        return (("JS::Value nameVal = STRING_TO_JSVAL(JSID_TO_STRING(id));\n"
+                 "FakeDependentString %s;\n"
+                 "if (!ConvertJSValueToString(cx, nameVal, &nameVal,\n"
+                 "                            eStringify, eStringify, %s)) {\n"
+                 "  return false;\n"
+                 "}\n"
+                 "\n"
+                 "%s* self = UnwrapProxy(proxy);\n" %
+                 (argName, argName, self.descriptor.nativeType)) +
+                CGProxySpecialOperation.define(self))
+
+class CGProxyNamedGetter(CGProxyNamedOperation):
     """
     Class to generate a call to an named getter. If templateValues is not None
     the returned value will be wrapped with wrapForType using templateValues.
@@ -5095,21 +5135,21 @@ class CGProxyNamedPresenceChecker(CGProxyNamedGetter):
     def __init__(self, descriptor):
         CGProxyNamedGetter.__init__(self, descriptor)
 
-class CGProxyNamedSetter(CGProxySpecialOperation):
+class CGProxyNamedSetter(CGProxyNamedOperation):
     """
     Class to generate a call to a named setter.
     """
     def __init__(self, descriptor):
         CGProxySpecialOperation.__init__(self, descriptor, 'NamedSetter')
 
-class CGProxyIndexedDeleter(CGProxySpecialOperation):
+class CGProxyIndexedDeleter(CGProxyIndexedOperation):
     """
     Class to generate a call to an indexed deleter.
     """
     def __init__(self, descriptor):
         CGProxySpecialOperation.__init__(self, descriptor, 'IndexedDeleter')
 
-class CGProxyNamedDeleter(CGProxySpecialOperation):
+class CGProxyNamedDeleter(CGProxyNamedOperation):
     """
     Class to generate a call to a named deleter.
     """
@@ -5175,7 +5215,6 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             templateValues = {'jsvalRef': 'desc->value', 'jsvalPtr': '&desc->value',
                               'obj': 'proxy', 'successCode': fillDescriptor}
             get = ("if (index >= 0) {\n" +
-                   "  %s* self = UnwrapProxy(proxy);\n" +
                    CGIndenter(CGProxyIndexedGetter(self.descriptor, templateValues)).define() + "\n" +
                    "}\n") % (self.descriptor.nativeType)
 
@@ -5218,16 +5257,8 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             # properties that shadow prototype properties.
             namedGet = ("\n" +
                         "if (!set && JSID_IS_STRING(id) && !HasPropertyOnPrototype(cx, proxy, this, id)) {\n" +
-                        "  JS::Value nameVal = STRING_TO_JSVAL(JSID_TO_STRING(id));\n" +
-                        "  FakeDependentString name;\n"
-                        "  if (!ConvertJSValueToString(cx, nameVal, &nameVal,\n" +
-                        "                              eStringify, eStringify, name)) {\n" +
-                        "    return false;\n" +
-                        "  }\n" +
-                        "\n" +
-                        "  %s* self = UnwrapProxy(proxy);\n" +
                         CGIndenter(CGProxyNamedGetter(self.descriptor, templateValues)).define() + "\n" +
-                        "}\n") % (self.descriptor.nativeType)
+                        "}\n")
         else:
             namedGet = ""
 
@@ -5263,7 +5294,6 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 raise TypeError("Can't handle creator that's different from the setter")
             set += ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
                     "if (index >= 0) {\n" +
-                    "  %s* self = UnwrapProxy(proxy);\n" +
                     CGIndenter(CGProxyIndexedSetter(self.descriptor)).define() +
                     "  return true;\n" +
                     "}\n") % (self.descriptor.nativeType)
@@ -5277,31 +5307,16 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             if not self.descriptor.operations['NamedCreator'] is namedSetter:
                 raise TypeError("Can't handle creator that's different from the setter")
             set += ("if (JSID_IS_STRING(id)) {\n" +
-                    "  JS::Value nameVal = STRING_TO_JSVAL(JSID_TO_STRING(id));\n" +
-                    "  FakeDependentString name;\n"
-                    "  if (!ConvertJSValueToString(cx, nameVal, &nameVal,\n" +
-                    "                              eStringify, eStringify, name)) {\n" +
-                    "    return false;\n" +
-                    "  }\n" +
-                    "\n" +
-                    "  %s* self = UnwrapProxy(proxy);\n" +
                     CGIndenter(CGProxyNamedSetter(self.descriptor)).define() + "\n" +
                     "  return true;\n" +
-                    "}\n") % (self.descriptor.nativeType)
+                    "}\n")
         elif self.descriptor.supportsNamedProperties():
             set += ("if (JSID_IS_STRING(id)) {\n" +
-                    "  JS::Value nameVal = STRING_TO_JSVAL(JSID_TO_STRING(id));\n" +
-                    "  FakeDependentString name;\n"
-                    "  if (!ConvertJSValueToString(cx, nameVal, &nameVal,\n" +
-                    "                              eStringify, eStringify, name)) {\n" +
-                    "    return false;\n" +
-                    "  }\n" +
-                    "  %s* self = UnwrapProxy(proxy);\n" +
                     CGIndenter(CGProxyNamedPresenceChecker(self.descriptor)).define() +
                     "  if (found) {\n"
                     "    return ThrowErrorMessage(cx, MSG_NO_PROPERTY_SETTER, \"%s\");\n" +
                     "  }\n" +
-                    "}\n") % (self.descriptor.nativeType, self.descriptor.name)
+                    "}\n") % (self.descriptor.name)
         return set + """return mozilla::dom::DOMProxyHandler::defineProperty(%s);""" % ", ".join(a.name for a in self.args)
 
 class CGDOMJSProxyHandler_delete(ClassMethod):
@@ -5351,7 +5366,6 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
         if indexedBody is not None:
             delete += ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
                        "if (index >= 0) {\n" +
-                       "  %s* self = UnwrapProxy(proxy);\n" +
                        CGIndenter(CGGeneric(indexedBody)).define() + "\n"
                        "  // We always return here, even if the property was not found\n"
                        "  return true;\n" +
@@ -5359,19 +5373,12 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
 
         namedBody = getDeleterBody("Named")
         if namedBody is not None:
-            delete += ("if (JSID_IS_STRING(id) && !HasPropertyOnPrototype(cx, proxy, this, id)) {\n"
-                       "  jsval nameVal = STRING_TO_JSVAL(JSID_TO_STRING(id));\n" +
-                       "  FakeDependentString name;\n"
-                       "  if (!ConvertJSValueToString(cx, nameVal, &nameVal,\n" +
-                       "                              eStringify, eStringify, name)) {\n" +
-                       "    return false;\n" +
-                       "  }\n" +
-                       "  %s* self = UnwrapProxy(proxy);\n" +
+            delete += ("if (JSID_IS_STRING(id) && !HasPropertyOnPrototype(cx, proxy, this, id)) {\n" +
                        CGIndenter(CGGeneric(namedBody)).define() + "\n"
                        "  if (found) {\n"
                        "    return true;\n"
                        "  }\n"
-                       "}\n") % self.descriptor.nativeType
+                       "}\n")
 
         delete += "return dom::DOMProxyHandler::delete_(cx, proxy, id, bp);";
 
@@ -5427,7 +5434,6 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
         if self.descriptor.supportsIndexedProperties():
             indexed = ("int32_t index = GetArrayIndexFromId(cx, id);\n" + 
                        "if (index >= 0) {\n" +
-                       "  %s* self = UnwrapProxy(proxy);\n" +
                        CGIndenter(CGProxyIndexedPresenceChecker(self.descriptor)).define() + "\n" +
                        "  *bp = found;\n" +
                        "  return true;\n" +
@@ -5437,19 +5443,11 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
 
         if self.descriptor.supportsNamedProperties():
             named = ("if (JSID_IS_STRING(id) && !HasPropertyOnPrototype(cx, proxy, this, id)) {\n" +
-                     "  jsval nameVal = STRING_TO_JSVAL(JSID_TO_STRING(id));\n" +
-                     "  FakeDependentString name;\n"
-                     "  if (!ConvertJSValueToString(cx, nameVal, &nameVal,\n" +
-                     "                              eStringify, eStringify, name)) {\n" +
-                     "    return false;\n" +
-                     "  }\n" +
-                     "\n" +
-                     "  %s* self = UnwrapProxy(proxy);\n" +
                      CGIndenter(CGProxyNamedPresenceChecker(self.descriptor)).define() + "\n" +
                      "  *bp = found;\n"
                      "  return true;\n"
                      "}\n" +
-                     "\n") % (self.descriptor.nativeType)
+                     "\n")
         else:
             named = ""
 
@@ -5491,7 +5489,6 @@ if (expando) {
         if self.descriptor.supportsIndexedProperties():
             getIndexedOrExpando = ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
                                    "if (index >= 0) {\n" +
-                                   "  %s* self = UnwrapProxy(proxy);\n" +
                                    CGIndenter(CGProxyIndexedGetter(self.descriptor, templateValues)).define()) % (self.descriptor.nativeType)
             getIndexedOrExpando += """
   // Even if we don't have this index, we don't forward the
@@ -5505,16 +5502,8 @@ if (expando) {
 
         if self.descriptor.supportsNamedProperties():
             getNamed = ("if (JSID_IS_STRING(id)) {\n" +
-                        "  JS::Value nameVal = STRING_TO_JSVAL(JSID_TO_STRING(id));\n" +
-                        "  FakeDependentString name;\n"
-                        "  if (!ConvertJSValueToString(cx, nameVal, &nameVal,\n" +
-                        "                              eStringify, eStringify, name)) {\n" +
-                        "    return false;\n" +
-                        "  }\n" +
-                        "\n" +
-                        "  %s* self = UnwrapProxy(proxy);\n" +
                         CGIndenter(CGProxyNamedGetter(self.descriptor, templateValues)).define() +
-                        "}\n") % (self.descriptor.nativeType)
+                        "}\n")
         else:
             getNamed = ""
 
@@ -5565,8 +5554,7 @@ class CGDOMJSProxyHandler_getElementIfPresent(ClassMethod):
 return true;"""
             templateValues = {'jsvalRef': '*vp', 'jsvalPtr': 'vp',
                               'obj': 'proxy', 'successCode': successCode}
-            get = ("%s* self = UnwrapProxy(proxy);\n" +
-                   CGProxyIndexedGetter(self.descriptor, templateValues).define() + "\n"
+            get = (CGProxyIndexedGetter(self.descriptor, templateValues).define() + "\n"
                    "// We skip the expando object if there is an indexed getter.\n" +
                    "\n") % (self.descriptor.nativeType)
         else:
@@ -5648,50 +5636,53 @@ class CGDescriptor(CGThing):
         assert not descriptor.concrete or descriptor.interface.hasInterfacePrototypeObject()
 
         cgThings = []
-        if descriptor.interface.hasInterfacePrototypeObject():
-            # These are set to true if at least one non-static
-            # method/getter/setter exist on the interface.
-            (hasMethod, hasGetter, hasLenientGetter,
-             hasSetter, hasLenientSetter) = False, False, False, False, False
-            for m in descriptor.interface.members:
-                if (m.isMethod() and
-                    (not m.isIdentifierLess() or m == descriptor.operations['Stringifier'])):
-                    if m.isStatic():
-                        cgThings.append(CGStaticMethod(descriptor, m))
+        # These are set to true if at least one non-static
+        # method/getter/setter exist on the interface.
+        (hasMethod, hasGetter, hasLenientGetter,
+         hasSetter, hasLenientSetter) = False, False, False, False, False
+        for m in descriptor.interface.members:
+            if (m.isMethod() and
+                (not m.isIdentifierLess() or m == descriptor.operations['Stringifier'])):
+                if m.isStatic():
+                    assert descriptor.interface.hasInterfaceObject
+                    cgThings.append(CGStaticMethod(descriptor, m))
+                elif descriptor.interface.hasInterfacePrototypeObject():
+                    cgThings.append(CGSpecializedMethod(descriptor, m))
+                    cgThings.append(CGMemberJITInfo(descriptor, m))
+                    hasMethod = True
+            elif m.isAttr():
+                if m.isStatic():
+                    assert descriptor.interface.hasInterfaceObject
+                    cgThings.append(CGStaticGetter(descriptor, m))
+                elif descriptor.interface.hasInterfacePrototypeObject():
+                    cgThings.append(CGSpecializedGetter(descriptor, m))
+                    if m.hasLenientThis():
+                        hasLenientGetter = True
                     else:
-                        cgThings.append(CGSpecializedMethod(descriptor, m))
-                        cgThings.append(CGMemberJITInfo(descriptor, m))
-                        hasMethod = True
-                elif m.isAttr():
+                        hasGetter = True
+                if not m.readonly:
                     if m.isStatic():
-                        cgThings.append(CGStaticGetter(descriptor, m))
-                    else:
-                        cgThings.append(CGSpecializedGetter(descriptor, m))
+                        assert descriptor.interface.hasInterfaceObject
+                        cgThings.append(CGStaticSetter(descriptor, m))
+                    elif descriptor.interface.hasInterfacePrototypeObject():
+                        cgThings.append(CGSpecializedSetter(descriptor, m))
                         if m.hasLenientThis():
-                            hasLenientGetter = True
+                            hasLenientSetter = True
                         else:
-                            hasGetter = True
-                    if not m.readonly:
-                        if m.isStatic():
-                            cgThings.append(CGStaticSetter(descriptor, m))
-                        else:
-                            cgThings.append(CGSpecializedSetter(descriptor, m))
-                            if m.hasLenientThis():
-                                hasLenientSetter = True
-                            else:
-                                hasSetter = True
-                    elif m.getExtendedAttribute("PutForwards"):
-                        cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
-                        hasSetter = True
-                    if not m.isStatic():
-                        cgThings.append(CGMemberJITInfo(descriptor, m))
-            if hasMethod: cgThings.append(CGGenericMethod(descriptor))
-            if hasGetter: cgThings.append(CGGenericGetter(descriptor))
-            if hasLenientGetter: cgThings.append(CGGenericGetter(descriptor,
-                                                                 lenientThis=True))
-            if hasSetter: cgThings.append(CGGenericSetter(descriptor))
-            if hasLenientSetter: cgThings.append(CGGenericSetter(descriptor,
-                                                                 lenientThis=True))
+                            hasSetter = True
+                elif m.getExtendedAttribute("PutForwards"):
+                    cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
+                    hasSetter = True
+                if (not m.isStatic() and
+                    descriptor.interface.hasInterfacePrototypeObject()):
+                    cgThings.append(CGMemberJITInfo(descriptor, m))
+        if hasMethod: cgThings.append(CGGenericMethod(descriptor))
+        if hasGetter: cgThings.append(CGGenericGetter(descriptor))
+        if hasLenientGetter: cgThings.append(CGGenericGetter(descriptor,
+                                                             lenientThis=True))
+        if hasSetter: cgThings.append(CGGenericSetter(descriptor))
+        if hasLenientSetter: cgThings.append(CGGenericSetter(descriptor,
+                                                             lenientThis=True))
 
         if descriptor.concrete:
             if descriptor.nativeOwnership == 'owned' or descriptor.nativeOwnership == 'refcounted':
@@ -5819,9 +5810,10 @@ class CGNamespacedEnum(CGThing):
 
 class CGDictionary(CGThing):
     def __init__(self, dictionary, descriptorProvider):
-        self.dictionary = dictionary;
+        self.dictionary = dictionary
         self.descriptorProvider = descriptorProvider
         self.workers = descriptorProvider.workers
+        self.needToInitIds = not self.workers and len(dictionary.members) > 0
         if all(CGDictionary(d, descriptorProvider).generatable for
                d in CGDictionary.getDictionaryDependencies(dictionary)):
             self.generatable = True
@@ -5883,7 +5875,7 @@ class CGDictionary(CGThing):
                 "  ${selfName}(const ${selfName}&) MOZ_DELETE;\n" +
                 # NOTE: jsids are per-runtime, so don't use them in workers
                 ("  static bool InitIds(JSContext* cx);\n"
-                 "  static bool initedIds;\n" if not self.workers else "") +
+                 "  static bool initedIds;\n" if self.needToInitIds else "") +
                 "\n".join("  static jsid " +
                           self.makeIdName(m.identifier.name) + ";" for
                           m in d.members) + "\n"
@@ -5948,7 +5940,7 @@ class CGDictionary(CGThing):
              "  initedIds = true;\n"
              "  return true;\n"
              "}\n"
-             "\n" if not self.workers else "") +
+             "\n" if self.needToInitIds else "") +
             "bool\n"
             "${selfName}::Init(JSContext* cx, const JS::Value& val)\n"
             "{\n"
@@ -5958,10 +5950,10 @@ class CGDictionary(CGThing):
             # NOTE: jsids are per-runtime, so don't use them in workers
             ("  if (cx && !initedIds && !InitIds(cx)) {\n"
              "    return false;\n"
-             "  }\n" if not self.workers else "") +
-            "${initParent}"
-            "  JSBool found;\n"
-            "  JS::Value temp;\n"
+             "  }\n" if self.needToInitIds else "") +
+            "${initParent}" +
+            ("  JSBool found;\n"
+             "  JS::Value temp;\n" if len(memberInits) > 0 else "") +
             "  bool isNull = val.isNullOrUndefined();\n"
             "  if (!isNull && !val.isObject()) {\n"
             "    return ThrowErrorMessage(cx, MSG_NOT_OBJECT);\n"
@@ -5977,7 +5969,7 @@ class CGDictionary(CGThing):
             # NOTE: jsids are per-runtime, so don't use them in workers
             ("  if (!initedIds && !InitIds(cx)) {\n"
              "    return false;\n"
-             "  }\n" if not self.workers else "") +
+             "  }\n" if self.needToInitIds else "") +
             "${toObjectParent}"
             "${ensureObject}"
             "\n"

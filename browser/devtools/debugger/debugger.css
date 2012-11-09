@@ -63,6 +63,21 @@
   display: -moz-box;
 }
 
+.scope[non-header] > .title,
+.variable[non-header] > .title,
+.property[non-header] > .title {
+  display: none;
+}
+
+/**
+ * Variables and properties searching
+ */
+
+.variable[non-match] > .title,
+.property[non-match] > .title {
+  display: none;
+}
+
 /**
  * Toolbar
  */

@@ -44,7 +44,7 @@ ArchiveRequestEvent::Run()
   return NS_OK;
 }
 
-/* ArchiveRequest */
+// ArchiveRequest
 
 ArchiveRequest::ArchiveRequest(nsIDOMWindow* aWindow,
                                ArchiveReader* aReader)
@@ -90,8 +90,9 @@ ArchiveRequest::Run()
   // Register this request to the reader.
   // When the reader is ready to return data, a 'Ready()' will be called
   nsresult rv = mArchiveReader->RegisterRequest(this);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     FireError(rv);
+  }
 }
 
 void
@@ -107,6 +108,12 @@ ArchiveRequest::OpGetFile(const nsAString& aFilename)
   mFilename = aFilename;
 }
 
+void
+ArchiveRequest::OpGetFiles()
+{
+  mOperation = GetFiles;
+}
+
 nsresult
 ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
                             nsresult aStatus)
@@ -116,7 +123,7 @@ ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
     return NS_OK;
   }
 
-  jsval result;
+  JS::Value result;
   nsresult rv;
 
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
@@ -139,6 +146,10 @@ ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
     case GetFile:
       rv = GetFileResult(cx, &result, aFileList);
       break;
+
+      case GetFiles:
+        rv = GetFilesResult(cx, &result, aFileList);
+        break;
   }
 
   if (NS_FAILED(rv)) {
@@ -157,7 +168,7 @@ ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
 
 nsresult
 ArchiveRequest::GetFilenamesResult(JSContext* aCx,
-                                   jsval* aValue,
+                                   JS::Value* aValue,
                                    nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList)
 {
   JSObject* array = JS_NewArrayObject(aCx, aFileList.Length(), nullptr);
@@ -177,7 +188,7 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
     JSString* str = JS_NewUCStringCopyZ(aCx, filename.get());
     NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
-    jsval item = STRING_TO_JSVAL(str);
+    JS::Value item = STRING_TO_JSVAL(str);
 
     if (NS_FAILED(rv) || !JS_SetElement(aCx, array, i, &item)) {
       return NS_ERROR_FAILURE;
@@ -187,14 +198,14 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
   if (!JS_FreezeObject(aCx, array)) {
     return NS_ERROR_FAILURE;
   }
-  
+
   *aValue = OBJECT_TO_JSVAL(array);
   return NS_OK;
 }
 
 nsresult
 ArchiveRequest::GetFileResult(JSContext* aCx,
-                              jsval* aValue,
+                              JS::Value* aValue,
                               nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList)
 {
   for (uint32_t i = 0; i < aFileList.Length(); ++i) {
@@ -205,13 +216,39 @@ ArchiveRequest::GetFileResult(JSContext* aCx,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (filename == mFilename) {
-      JSObject* scope = JS_GetGlobalForScopeChain(aCx);
-      nsresult rv = nsContentUtils::WrapNative(aCx, scope, file, aValue, nullptr, true);
+      nsresult rv = nsContentUtils::WrapNative(
+                      aCx, JS_GetGlobalForScopeChain(aCx),
+                      file, &NS_GET_IID(nsIDOMFile), aValue);
       return rv;
     }
   }
 
   return NS_ERROR_FAILURE;
+}
+
+nsresult
+ArchiveRequest::GetFilesResult(JSContext* aCx,
+                               JS::Value* aValue,
+                               nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList)
+{
+  JSObject* array = JS_NewArrayObject(aCx, aFileList.Length(), nullptr);
+  if (!array) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  for (uint32_t i = 0; i < aFileList.Length(); ++i) {
+    nsCOMPtr<nsIDOMFile> file = aFileList[i];
+
+    JS::Value value;
+    nsresult rv = nsContentUtils::WrapNative(aCx, JS_GetGlobalForScopeChain(aCx),
+                                             file, &NS_GET_IID(nsIDOMFile), &value);
+    if (NS_FAILED(rv) || !JS_SetElement(aCx, array, i, &value)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  aValue->setObject(*array);
+  return NS_OK;
 }
 
 // static

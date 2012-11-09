@@ -29,8 +29,9 @@ SmsService::GetNumberOfMessagesForText(const nsAString& aText, uint16_t* aResult
 }
 
 NS_IMETHODIMP
-SmsService::Send(const nsAString& aNumber, const nsAString& aMessage,
-                 int32_t aRequestId, uint64_t aProcessId)
+SmsService::Send(const nsAString& aNumber,
+                 const nsAString& aMessage,
+                 nsISmsRequest* aRequest)
 {
   NS_ERROR("We should not be here!");
   return NS_OK;

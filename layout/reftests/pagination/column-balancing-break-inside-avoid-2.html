@@ -1,0 +1,49 @@
+<html class="reftest-wait">
+<head>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=685012">
+  <link rel="help" href="http://www.w3.org/TR/CSS21/page.html#propdef-page-break-inside">
+  <meta name="flags" content="paged">
+    <meta charset="utf-8">
+    <title>Balancing Overflow, page-break-inside:avoid</title>
+<style>
+/* Sets of heights that trigger crash:
+    100px/50px/51+px
+    100px/30px/74+px
+   Get only an assert unless you set ".d { position: absolute; }".
+   
+   Trigger hang (separate issue, absolute not needed):
+    10px/10px/9999px
+    10px/10px/999999px --> "bad height" notreached
+*/
+/* Note: The -moz-column-gap and the backgrounds 
+   are just added here for easier visualization */
+#colset { width: 200px;
+          padding: 2px;
+          -moz-column-count: 3;
+          -moz-column-gap: 2px; }
+#a      { height: 100px;   background: lightblue;}
+#b      { height:  50px;   background: lightblue;}
+#c      { height:  51px;   background: orange;}
+div {page-break-inside:avoid; }
+</style>
+<script>
+  function boom() {
+    document.getElementById('colset').offsetHeight;
+    document.getElementById('a').style.height = 'auto';
+    document.documentElement.className = ''
+  }
+</script>
+</head>
+<!-- Removing whitespace in body for simpler frame trees -->
+<body onload="boom()"
+ ><div id="colset"
+   ><div
+     ><div id="a"></div
+     ><div id="b"
+       ><div id="c"></div
+       ><div id="d"></div
+     ></div
+   ></div
+ ></div
+></body>
+</html>

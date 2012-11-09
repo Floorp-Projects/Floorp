@@ -14,7 +14,10 @@
 #include "AudioBuffer.h"
 #include "GainNode.h"
 #include "DelayNode.h"
+#include "PannerNode.h"
 #include "AudioListener.h"
+#include "DynamicsCompressorNode.h"
+#include "BiquadFilterNode.h"
 
 namespace mozilla {
 namespace dom {
@@ -105,6 +108,29 @@ AudioContext::CreateDelay(float aMaxDelayTime)
 {
   nsRefPtr<DelayNode> delayNode = new DelayNode(this, aMaxDelayTime);
   return delayNode.forget();
+}
+
+already_AddRefed<PannerNode>
+AudioContext::CreatePanner()
+{
+  nsRefPtr<PannerNode> pannerNode = new PannerNode(this);
+  return pannerNode.forget();
+}
+
+already_AddRefed<DynamicsCompressorNode>
+AudioContext::CreateDynamicsCompressor()
+{
+  nsRefPtr<DynamicsCompressorNode> compressorNode =
+    new DynamicsCompressorNode(this);
+  return compressorNode.forget();
+}
+
+already_AddRefed<BiquadFilterNode>
+AudioContext::CreateBiquadFilter()
+{
+  nsRefPtr<BiquadFilterNode> filterNode =
+    new BiquadFilterNode(this);
+  return filterNode.forget();
 }
 
 AudioListener*

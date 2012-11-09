@@ -77,9 +77,11 @@
 #include "TraceLogging.h"
 #endif
 
-using namespace mozilla;
 using namespace js;
 using namespace js::cli;
+
+using mozilla::ArrayLength;
+using mozilla::Maybe;
 
 typedef enum JSShellExitCode {
     EXITCODE_RUNTIME_ERROR      = 3,
@@ -712,7 +714,7 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         errno = 0;
         CompileOptions opts(cx);
-        opts.setCompileAndGo(true).setNoScriptRval(true);
+        opts.setUTF8(true).setCompileAndGo(true).setNoScriptRval(true);
         if ((compileOnly && !Compile(cx, thisobj, opts, filename.ptr())) ||
             !Evaluate(cx, thisobj, opts, filename.ptr(), NULL))
         {
@@ -1751,18 +1753,20 @@ DisassembleScript(JSContext *cx, JSScript *script_, JSFunction *fun, bool lines,
 {
     Rooted<JSScript*> script(cx, script_);
 
-    if (fun && (fun->flags & ~7U)) {
-        uint16_t flags = fun->flags;
+    if (fun) {
         Sprint(sp, "flags:");
-
-#define SHOW_FLAG(flag) if (flags & JSFUN_##flag) Sprint(sp, " " #flag);
-
-        SHOW_FLAG(LAMBDA);
-        SHOW_FLAG(HEAVYWEIGHT);
-        SHOW_FLAG(EXPR_CLOSURE);
-
-#undef SHOW_FLAG
-
+        if (fun->isLambda())
+            Sprint(sp, " LAMBDA");
+        if (fun->isHeavyweight())
+            Sprint(sp, " HEAVYWEIGHT");
+        if (fun->isExprClosure())
+            Sprint(sp, " EXPRESSION CLOSURE");
+        if (fun->isFunctionPrototype())
+            Sprint(sp, " Function.prototype");
+        if (fun->isSelfHostedBuiltin())
+            Sprint(sp, " SELF_HOSTED");
+        if (fun->isSelfHostedConstructor())
+            Sprint(sp, " SELF_HOSTED_CTOR");
         Sprint(sp, "\n");
     }
 
@@ -2800,7 +2804,7 @@ WatchdogMain(void *arg)
             int64_t sleepDuration = gWatchdogHasTimeout
                                     ? gWatchdogTimeout - now
                                     : PR_INTERVAL_NO_TIMEOUT;
-            DebugOnly<PRStatus> status =
+            mozilla::DebugOnly<PRStatus> status =
                 PR_WaitCondVar(gWatchdogWakeup, sleepDuration);
             JS_ASSERT(status == PR_SUCCESS);
         }
@@ -3417,7 +3421,7 @@ RelaxRootChecks(JSContext *cx, unsigned argc, jsval *vp)
     }
 
 #ifdef DEBUG
-    cx->runtime->gcRelaxRootChecks = true;
+    cx->runtime->mainThread.gcRelaxRootChecks = true;
 #endif
 
     return true;

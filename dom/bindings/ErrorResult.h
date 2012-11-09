@@ -11,21 +11,47 @@
 #ifndef mozilla_ErrorResult_h
 #define mozilla_ErrorResult_h
 
+#include <stdarg.h>
+
+#include "jsapi.h"
 #include "nscore.h"
 #include "mozilla/Assertions.h"
 
 namespace mozilla {
+
+namespace dom {
+
+enum ErrNum {
+#define MSG_DEF(_name, _argc, _str) \
+  _name,
+#include "mozilla/dom/Errors.msg"
+#undef MSG_DEF
+  Err_Limit
+};
+
+} // namespace dom
 
 class ErrorResult {
 public:
   ErrorResult() {
     mResult = NS_OK;
   }
+#ifdef DEBUG
+  ~ErrorResult() {
+    MOZ_ASSERT_IF(IsTypeError(), !mMessage);
+  }
+#endif
 
   void Throw(nsresult rv) {
     MOZ_ASSERT(NS_FAILED(rv), "Please don't try throwing success");
+    MOZ_ASSERT(rv != NS_ERROR_TYPE_ERR, "Use ThrowTypeError()");
+    MOZ_ASSERT(!IsTypeError(), "Don't overwite TypeError");
     mResult = rv;
   }
+
+  void ThrowTypeError(const dom::ErrNum errorNumber, ...);
+  void ReportTypeError(JSContext* cx);
+  bool IsTypeError() const { return ErrorCode() == NS_ERROR_TYPE_ERR; }
 
   // In the future, we can add overloads of Throw that take more
   // interesting things, like strings or DOM exception types or
@@ -35,6 +61,8 @@ public:
   // Throw() here because people can easily pass success codes to
   // this.
   void operator=(nsresult rv) {
+    MOZ_ASSERT(rv != NS_ERROR_TYPE_ERR, "Use ThrowTypeError()");
+    MOZ_ASSERT(!IsTypeError(), "Don't overwite TypeError");
     mResult = rv;
   }
 
@@ -48,6 +76,9 @@ public:
 
 private:
   nsresult mResult;
+  struct Message;
+  // Do not use nsAutoPtr to avoid extra initalizatoin and check.
+  Message* mMessage;
 
   // Not to be implemented, to make sure people always pass this by
   // reference, not by value.

@@ -839,7 +839,7 @@ public:
   virtual NS_HIDDEN_(void)
     EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData);
 
-  nsTArray<nsCString> mFileDataUris;
+  nsTArray<nsCString> mHostObjectURIs;
 
   // Returns our (lazily-initialized) animation controller.
   // If HasAnimationController is true, this is guaranteed to return non-null.
@@ -891,8 +891,8 @@ public:
 
   virtual nsEventStates GetDocumentState();
 
-  virtual void RegisterFileDataUri(const nsACString& aUri);
-  virtual void UnregisterFileDataUri(const nsACString& aUri);
+  virtual void RegisterHostObjectUri(const nsACString& aUri);
+  virtual void UnregisterHostObjectUri(const nsACString& aUri);
 
   // Only BlockOnload should call this!
   void AsyncBlockOnload();

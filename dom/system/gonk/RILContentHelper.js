@@ -817,10 +817,7 @@ RILContentHelper.prototype = {
         break;
       case "RIL:SendMMI:Return:OK":
       case "RIL:CancelMMI:Return:OK":
-        request = this.takeRequest(msg.json.requestId);
-        if (request) {
-          Services.DOMRequest.fireSuccess(request, msg.json.result);
-        }
+        this.handleSendCancelMMIOK(msg.json);
         break;
       case "RIL:SendMMI:Return:KO":
       case "RIL:CancelMMI:Return:KO":
@@ -945,6 +942,19 @@ RILContentHelper.prototype = {
     }
   },
 
+  _cfRulesToMobileCfInfo: function _cfRulesToMobileCfInfo(rules) {
+    for (let i = 0; i < rules.length; i++) {
+      let rule = rules[i];
+      let info = new MobileCFInfo();
+
+      for (let key in rule) {
+        info[key] = rule[key];
+      }
+
+      rules[i] = info;
+    }
+  },
+
   handleGetCallForwardingOption: function handleGetCallForwardingOption(message) {
     let requestId = message.requestId;
     let request = this.takeRequest(requestId);
@@ -957,19 +967,8 @@ RILContentHelper.prototype = {
       return;
     }
 
-    let rules = message.rules;
-    for (let i = 0; i < rules.length; i++) {
-      let rule = rules[i];
-      let info = new MobileCFInfo();
-
-      for (let key in rule) {
-        info[key] = rule[key];
-      }
-
-      rules[i] = info;
-    }
-
-    Services.DOMRequest.fireSuccess(request, rules);
+    this._cfRulesToMobileCfInfo(message.rules);
+    Services.DOMRequest.fireSuccess(request, message.rules);
   },
 
   handleSetCallForwardingOption: function handleSetCallForwardingOption(message) {
@@ -984,6 +983,23 @@ RILContentHelper.prototype = {
       return;
     }
     Services.DOMRequest.fireSuccess(request, null);
+  },
+
+  handleSendCancelMMIOK: function handleSendCancelMMIOK(message) {
+    let request = this.takeRequest(message.requestId);
+    if (!request) {
+      return;
+    }
+
+    // MMI query call forwarding options request returns a set of rules that
+    // will be exposed in the form of an array of nsIDOMMozMobileCFInfo
+    // instances.
+    if (message.success && message.rules) {
+      this._cfRulesToMobileCfInfo(message.rules);
+      message.result = message.rules;
+    }
+
+    Services.DOMRequest.fireSuccess(request, message.result);
   },
 
   _getRandomId: function _getRandomId() {

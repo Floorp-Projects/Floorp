@@ -60,6 +60,7 @@ struct nsCSSValueList;
 
 // Additional bits for nsRuleNode's mDependentBits:
 #define NS_RULE_NODE_GC_MARK              0x02000000
+#define NS_RULE_NODE_USED_DIRECTLY        0x04000000
 #define NS_RULE_NODE_IS_IMPORTANT         0x08000000
 #define NS_RULE_NODE_LEVEL_MASK           0xf0000000
 #define NS_RULE_NODE_LEVEL_SHIFT          28
@@ -1594,6 +1595,7 @@ struct nsStyleDisplay {
   uint8_t mOriginalFloats;      // [reset] saved mFloats for position:absolute/fixed;
                                 //         otherwise equal to mFloats
   uint8_t mBreakType;           // [reset] see nsStyleConsts.h NS_STYLE_CLEAR_*
+  uint8_t mBreakInside;         // [reset] NS_STYLE_PAGE_BREAK_AUTO/AVOID
   bool mBreakBefore;    // [reset]
   bool mBreakAfter;     // [reset]
   uint8_t mOverflowX;           // [reset] see nsStyleConsts.h

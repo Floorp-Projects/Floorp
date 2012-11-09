@@ -50,14 +50,12 @@ SmsService::GetNumberOfMessagesForText(const nsAString& aText, uint16_t* aResult
 NS_IMETHODIMP
 SmsService::Send(const nsAString& aNumber,
                  const nsAString& aMessage,
-                 int32_t aRequestId,
-                 uint64_t aProcessId)
+                 nsISmsRequest* aRequest)
 {
   if (!mRIL) {
     return NS_OK;
   }
-
-  mRIL->SendSMS(aNumber, aMessage, aRequestId, aProcessId);
+  mRIL->SendSMS(aNumber, aMessage, aRequest);
   return NS_OK;
 }
 

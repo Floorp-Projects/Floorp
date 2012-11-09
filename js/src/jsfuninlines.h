@@ -31,11 +31,11 @@ JSFunction::initAtom(JSAtom *atom)
 inline void
 JSFunction::setGuessedAtom(JSAtom *atom)
 {
-    JS_ASSERT(this->atom_ == NULL);
+    JS_ASSERT(atom_ == NULL);
     JS_ASSERT(atom != NULL);
     JS_ASSERT(!hasGuessedAtom());
-    this->atom_ = atom;
-    this->flags |= JSFUN_HAS_GUESSED_ATOM;
+    atom_ = atom;
+    flags |= HAS_GUESSED_ATOM;
 }
 
 inline JSObject *
@@ -86,7 +86,7 @@ JSFunction::initializeExtended()
 {
     JS_ASSERT(isExtended());
 
-    JS_ASSERT(js::ArrayLength(toExtended()->extendedSlots) == 2);
+    JS_ASSERT(mozilla::ArrayLength(toExtended()->extendedSlots) == 2);
     toExtended()->extendedSlots[0].init(js::UndefinedValue());
     toExtended()->extendedSlots[1].init(js::UndefinedValue());
 }
@@ -94,14 +94,14 @@ JSFunction::initializeExtended()
 inline void
 JSFunction::setExtendedSlot(size_t which, const js::Value &val)
 {
-    JS_ASSERT(which < js::ArrayLength(toExtended()->extendedSlots));
+    JS_ASSERT(which < mozilla::ArrayLength(toExtended()->extendedSlots));
     toExtended()->extendedSlots[which] = val;
 }
 
 inline const js::Value &
 JSFunction::getExtendedSlot(size_t which) const
 {
-    JS_ASSERT(which < js::ArrayLength(toExtended()->extendedSlots));
+    JS_ASSERT(which < mozilla::ArrayLength(toExtended()->extendedSlots));
     return toExtended()->extendedSlots[which];
 }
 
@@ -183,7 +183,7 @@ IsConstructing(const Value *vp)
     JSObject *callee = &JS_CALLEE(cx, vp).toObject();
     if (callee->isFunction()) {
         JSFunction *fun = callee->toFunction();
-        JS_ASSERT((fun->flags & JSFUN_CONSTRUCTOR) != 0);
+        JS_ASSERT(fun->isNativeConstructor());
     } else {
         JS_ASSERT(callee->getClass()->construct != NULL);
     }
@@ -255,26 +255,6 @@ CloneFunctionObjectIfNotSingleton(JSContext *cx, HandleFunction fun, HandleObjec
     }
 
     return CloneFunctionObject(cx, fun, parent);
-}
-
-inline JSFunction *
-CloneFunctionObject(JSContext *cx, HandleFunction fun)
-{
-    /*
-     * Variant which makes an exact clone of fun, preserving parent and proto.
-     * Calling the above version CloneFunctionObject(cx, fun, fun->getParent())
-     * is not equivalent: API clients, including XPConnect, can reparent
-     * objects so that fun->global() != fun->getProto()->global().
-     * See ReparentWrapperIfFound.
-     */
-    JS_ASSERT(fun->getParent() && fun->getProto());
-
-    if (fun->hasSingletonType())
-        return fun;
-
-    Rooted<JSObject*> env(cx, fun->environment());
-    Rooted<JSObject*> proto(cx, fun->getProto());
-    return js_CloneFunctionObject(cx, fun, env, proto, JSFunction::ExtendedFinalizeKind);
 }
 
 } /* namespace js */

@@ -260,9 +260,7 @@ nsIFrame*
 NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, uint32_t aFlags)
 {
   nsBlockFrame* it = new (aPresShell) nsBlockFrame(aContext);
-  if (it) {
-    it->SetFlags(aFlags);
-  }
+  it->SetFlags(aFlags);
   return it;
 }
 
@@ -1501,6 +1499,13 @@ nsBlockFrame::UpdateOverflow()
     for (nsIFrame* lineFrame = line->mFirstChild;
          n > 0; lineFrame = lineFrame->GetNextSibling(), --n) {
       ConsiderChildOverflow(lineAreas, lineFrame);
+    }
+
+    // Consider the overflow areas of the floats attached to the line as well
+    if (line->HasFloats()) {
+      for (nsFloatCache* fc = line->GetFirstFloat(); fc; fc = fc->Next()) {
+        ConsiderChildOverflow(lineAreas, fc->mFloat);
+      }
     }
 
     line->SetOverflowAreas(lineAreas);
@@ -3053,9 +3058,13 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // constrained height to turn into an unconstrained one.
       aState.mY = startingY;
       aState.mPrevBottomMargin = incomingMargin;
-      PushLines(aState, aLine.prev());
-      NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
       *aKeepReflowGoing = false;
+      if (ShouldAvoidBreakInside(aState.mReflowState)) {
+        aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+      } else {
+        PushLines(aState, aLine.prev());
+        NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
+      }
       return NS_OK;
     }
 
@@ -3115,9 +3124,13 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     
     if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
       // None of the child block fits.
-      PushLines(aState, aLine.prev());
       *aKeepReflowGoing = false;
-      NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
+      if (ShouldAvoidBreakInside(aState.mReflowState)) {
+        aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+      } else {
+        PushLines(aState, aLine.prev());
+        NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
+      }
     }
     else {
       // Note: line-break-after a block is a nop
@@ -3136,6 +3149,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                                          collapsedBottomMargin,
                                          aLine->mBounds, overflowAreas,
                                          frameReflowStatus);
+      if (!NS_FRAME_IS_FULLY_COMPLETE(frameReflowStatus) &&
+          ShouldAvoidBreakInside(aState.mReflowState)) {
+        *aKeepReflowGoing = false;
+      }
+
       if (aLine->SetCarriedOutBottomMargin(collapsedBottomMargin)) {
         line_iterator nextLine = aLine;
         ++nextLine;
@@ -3276,16 +3294,14 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                brc.GetCarriedOutBottomMargin(), collapsedBottomMargin.get(),
                aState.mPrevBottomMargin);
 #endif
-      }
-      else {
-        // None of the block fits. Determine the correct reflow status.
-        if (aLine == mLines.front() && !GetPrevInFlow()) {
-          // If it's our very first line then we need to be pushed to
-          // our parents next-in-flow. Therefore, return break-before
-          // status for our reflow status.
+      } else {
+        if ((aLine == mLines.front() && !GetPrevInFlow()) ||
+            ShouldAvoidBreakInside(aState.mReflowState)) {
+          // If it's our very first line *or* we're not at the top of the page
+          // and we have page-break-inside:avoid, then we need to be pushed to
+          // our parent's next-in-flow.
           aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
-        }
-        else {
+        } else {
           // Push the line that didn't fit and any lines that follow it
           // to our next-in-flow.
           PushLines(aState, aLine.prev());
@@ -3394,12 +3410,10 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
 void
 nsBlockFrame::PushTruncatedLine(nsBlockReflowState& aState,
                                 line_iterator       aLine,
-                                bool&             aKeepReflowGoing)
+                                bool*               aKeepReflowGoing)
 {
-  line_iterator prevLine = aLine;
-  --prevLine;
-  PushLines(aState, prevLine);
-  aKeepReflowGoing = false;
+  PushLines(aState, aLine.prev());
+  *aKeepReflowGoing = false;
   NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
 }
 
@@ -3620,8 +3634,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
         // it to the next page/column where its contents can fit not
         // next to a float.
         lineReflowStatus = LINE_REFLOW_TRUNCATED;
-        // Push the line that didn't fit
-        PushTruncatedLine(aState, aLine, *aKeepReflowGoing);
+        PushTruncatedLine(aState, aLine, aKeepReflowGoing);
       }
     }
 
@@ -4186,21 +4199,25 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     newY = aState.mY + dy;
   }
 
-  // See if the line fit. If it doesn't we need to push it. Our first
-  // line will always fit.
+  if (!NS_FRAME_IS_FULLY_COMPLETE(aState.mReflowStatus) &&
+      ShouldAvoidBreakInside(aState.mReflowState)) {
+    aLine->AppendFloats(aState.mCurrentLineFloats);
+    aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+    return true;
+  }
+
+  // See if the line fit (our first line always does).
   if (mLines.front() != aLine &&
       newY > aState.mBottomEdge &&
       aState.mBottomEdge != NS_UNCONSTRAINEDSIZE) {
-    // Push this line and all of its children and anything else that
-    // follows to our next-in-flow
-    NS_ASSERTION((aState.mCurrentLine == aLine), "oops");
-    PushLines(aState, aLine.prev());
-
-    // Stop reflow and whack the reflow status if reflow hasn't
-    // already been stopped.
-    if (*aKeepReflowGoing) {
-      NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
-      *aKeepReflowGoing = false;
+    NS_ASSERTION(aState.mCurrentLine == aLine, "oops");
+    if (ShouldAvoidBreakInside(aState.mReflowState)) {
+      // All our content doesn't fit, start on the next page.
+      aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+    } else {
+      // Push aLine and all of its children and anything else that
+      // follows to our next-in-flow.
+      PushTruncatedLine(aState, aLine, aKeepReflowGoing);
     }
     return true;
   }
@@ -5750,11 +5767,15 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
                          aReflowStatus, aState);
   } while (NS_SUCCEEDED(rv) && clearanceFrame);
 
-  // An incomplete reflow status means we should split the float 
-  // if the height is constrained (bug 145305). 
-  if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) &&
-      (NS_UNCONSTRAINEDSIZE == aAdjustedAvailableSpace.height))
+  if (!NS_FRAME_IS_FULLY_COMPLETE(aReflowStatus) &&
+      ShouldAvoidBreakInside(floatRS)) {
+    aReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+  } else if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) &&
+             (NS_UNCONSTRAINEDSIZE == aAdjustedAvailableSpace.height)) {
+    // An incomplete reflow status means we should split the float 
+    // if the height is constrained (bug 145305). 
     aReflowStatus = NS_FRAME_COMPLETE;
+  }
 
   if (aReflowStatus & NS_FRAME_REFLOW_NEXTINFLOW) {
     aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;

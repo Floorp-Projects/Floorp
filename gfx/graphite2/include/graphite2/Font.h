@@ -63,7 +63,7 @@ enum gr_face_options {
     /** Cache the lookup from code point to glyph ID at construction time */
     gr_face_cacheCmap = 4,
     /** Preload everything */
-    gr_face_preloadAll = 6
+    gr_face_preloadAll = gr_face_preloadGlyphs | gr_face_cacheCmap
 };
 
 /** Holds information about a particular Graphite silf table that has been loaded */

@@ -2089,6 +2089,7 @@ nsStyleDisplay::nsStyleDisplay()
   mFloats = NS_STYLE_FLOAT_NONE;
   mOriginalFloats = mFloats;
   mBreakType = NS_STYLE_CLEAR_NONE;
+  mBreakInside = NS_STYLE_PAGE_BREAK_AUTO;
   mBreakBefore = false;
   mBreakAfter = false;
   mOverflowX = NS_STYLE_OVERFLOW_VISIBLE;
@@ -2142,6 +2143,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mFloats(aSource.mFloats)
   , mOriginalFloats(aSource.mOriginalFloats)
   , mBreakType(aSource.mBreakType)
+  , mBreakInside(aSource.mBreakInside)
   , mBreakBefore(aSource.mBreakBefore)
   , mBreakAfter(aSource.mBreakAfter)
   , mOverflowX(aSource.mOverflowX)
@@ -2202,6 +2204,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
   // XXX the following is conservative, for now: changing float breaking shouldn't
   // necessarily require a repaint, reflow should suffice.
   if (mBreakType != aOther.mBreakType
+      || mBreakInside != aOther.mBreakInside
       || mBreakBefore != aOther.mBreakBefore
       || mBreakAfter != aOther.mBreakAfter
       || mAppearance != aOther.mAppearance

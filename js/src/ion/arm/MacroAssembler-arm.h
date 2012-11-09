@@ -14,6 +14,8 @@
 #include "ion/MoveResolver.h"
 #include "jsopcode.h"
 
+using mozilla::DebugOnly;
+
 namespace js {
 namespace ion {
 
@@ -923,7 +925,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void load16SignExtend(const BaseIndex &src, const Register &dest);
 
     void load16ZeroExtend(const Address &address, const Register &dest);
-    void load16ZeroExtend_mask(const Address &address, Imm32 mask, const Register &dest);
     void load16ZeroExtend(const BaseIndex &src, const Register &dest);
 
     void load32(const Address &address, const Register &dest);
