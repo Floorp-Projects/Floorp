@@ -55,21 +55,21 @@ nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
 {
   // aScopeObject is the inner window's JS object, which we need to lock
   // until we are done with it.
-  NS_ASSERTION(aScopeObject && aContext,
+  NS_ASSERTION(aScopeObject,
                "EventListener with no context or scope?");
   NS_HOLD_JS_OBJECTS(this, nsJSEventListener);
 }
 
 nsJSEventListener::~nsJSEventListener() 
 {
-  if (mContext) {
+  if (mScopeObject) {
     NS_DROP_JS_OBJECTS(this, nsJSEventListener);
   }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
-  if (tmp->mContext) {
+  if (tmp->mScopeObject) {
     NS_DROP_JS_OBJECTS(tmp, nsJSEventListener);
     tmp->mScopeObject = nullptr;
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContext)
@@ -134,10 +134,15 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSEventListener)
 bool
 nsJSEventListener::IsBlackForCC()
 {
-  if (mContext &&
-      (!mScopeObject || !xpc_IsGrayGCThing(mScopeObject)) &&
+  // We can claim to be black if all the things we reference are
+  // effectively black already.
+  if ((!mScopeObject || !xpc_IsGrayGCThing(mScopeObject)) &&
       (!mHandler.HasEventHandler() ||
        !mHandler.Ptr()->HasGrayCallable())) {
+    if (!mContext) {
+      // Well, we certainly won't be marking it, so move on!
+      return true;
+    }
     nsIScriptGlobalObject* sgo =
       static_cast<nsJSContext*>(mContext.get())->GetCachedGlobalObject();
     return sgo && sgo->IsBlackForCC();
@@ -149,7 +154,7 @@ nsresult
 nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mTarget);
-  if (!target || !mContext || !mHandler.HasEventHandler())
+  if (!target || !mHandler.HasEventHandler())
     return NS_ERROR_FAILURE;
 
   if (mHandler.Type() == nsEventHandler::eOnError) {
@@ -256,6 +261,8 @@ NS_NewJSEventListener(nsIScriptContext* aContext, JSObject* aScopeObject,
                       const nsEventHandler& aHandler,
                       nsIJSEventListener** aReturn)
 {
+  MOZ_ASSERT(aContext || aHandler.HasEventHandler(),
+             "Must have a handler if we don't have an nsIScriptContext");
   NS_ENSURE_ARG(aEventType);
   nsJSEventListener* it =
     new nsJSEventListener(aContext, aScopeObject, aTarget, aEventType,

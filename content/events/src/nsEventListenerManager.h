@@ -263,11 +263,11 @@ protected:
   /**
    * Set the "inline" event listener for aName to aHandler.  aHandler may be
    * have no actual handler set to indicate that we should lazily get and
-   * compile the string for this listener.  The nsListenerStruct that results,
-   * if any, is returned in aListenerStruct.
+   * compile the string for this listener, but in that case aContext must be
+   * non-null.  Otherwise, aContext is allowed to be null.  The nsListenerStruct
+   * that results, if any, is returned in aListenerStruct.
    */
   nsresult SetEventHandlerInternal(nsIScriptContext *aContext,
-                                   JSContext* aCx,
                                    JSObject* aScopeGlobal,
                                    nsIAtom* aName,
                                    const nsEventHandler& aHandler,
@@ -284,12 +284,10 @@ public:
    * might actually remove the event listener, depending on the value
    * of |v|.  Note that on entry to this function cx and aScope might
    * not be in the same compartment, though cx and v are guaranteed to
-   * be in the same compartment.  If aExpectScriptContext is false,
-   * not finding an nsIScriptContext does not cause failure.
+   * be in the same compartment.
    */
   nsresult SetEventHandlerToJsval(nsIAtom* aEventName, JSContext* cx,
-                                  JSObject* aScope, const jsval& v,
-                                  bool aExpectScriptContext);
+                                  JSObject* aScope, const jsval& v);
   /**
    * Get the value of the "inline" event listener for aEventName.
    * This may cause lazy compilation if the listener is uncompiled.
