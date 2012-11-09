@@ -105,13 +105,15 @@ function test() {
       is(elt.textContent, res1[i].value, res1[i].selector + " has the right value.");
     }
 
+    gBrowser.selectedBrowser.addEventListener("MozAfterPaint", test2, false);
+
     InspectorUI.selection.style.height = "150px";
     InspectorUI.selection.style.paddingRight = "50px";
-
-    setTimeout(test2, 200); // Should be enough to get a MozAfterPaint event
   }
 
   function test2() {
+    gBrowser.selectedBrowser.removeEventListener("MozAfterPaint", test2, false);
+
     let viewdoc = view.iframe.contentDocument;
 
     for (let i = 0; i < res2.length; i++) {
