@@ -697,6 +697,18 @@ var Scratchpad = {
             file.initWithPath(filePath);
           }
 
+          if (!file.exists()) {
+            this.notificationBox.appendNotification(
+              this.strings.GetStringFromName("fileNoLongerExists.notification"),
+              "file-no-longer-exists",
+              null,
+              this.notificationBox.PRIORITY_WARNING_HIGH,
+              null);
+
+            this.clearFiles(aIndex, 1);
+            return;
+          }
+
           this.setFilename(file.path);
           this.importFromFile(file, false);
           this.setRecentFile(file);
@@ -848,6 +860,31 @@ var Scratchpad = {
   },
 
   /**
+   * Clear a range of files from the list.
+   * 
+   * @param integer aIndex
+   *        Index of file in menu to remove.
+   * @param integer aLength
+   *        Number of files from the index 'aIndex' to remove.
+   */
+  clearFiles: function SP_clearFile(aIndex, aLength)
+  {
+    let filePaths = this.getRecentFiles();
+    filePaths.splice(aIndex, aLength);
+
+    // WARNING: Do not use setCharPref here, it doesn't play nicely with
+    // Unicode strings.
+
+    let str = Cc["@mozilla.org/supports-string;1"]
+      .createInstance(Ci.nsISupportsString);
+    str.data = JSON.stringify(filePaths);
+
+    let branch = Services.prefs.getBranch("devtools.scratchpad.");
+    branch.setComplexValue("recentFilePaths",
+      Ci.nsISupportsString, str);
+  },
+
+  /**
    * Clear all recent files.
    */
   clearRecentFiles: function SP_clearRecentFiles()
@@ -878,18 +915,7 @@ var Scratchpad = {
       let filePaths = this.getRecentFiles();
       if (maxRecent < filePaths.length) {
         let diff = filePaths.length - maxRecent;
-        filePaths.splice(0, diff);
-
-        // WARNING: Do not use setCharPref here, it doesn't play nicely with
-        // Unicode strings.
-
-        let str = Cc["@mozilla.org/supports-string;1"]
-          .createInstance(Ci.nsISupportsString);
-        str.data = JSON.stringify(filePaths);
-
-        let branch = Services.prefs.getBranch("devtools.scratchpad.");
-        branch.setComplexValue("recentFilePaths",
-          Ci.nsISupportsString, str);
+        this.clearFiles(0, diff);
       }
     }
   },
