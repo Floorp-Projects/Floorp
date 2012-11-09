@@ -143,6 +143,7 @@
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif // MOZ_MEDIA
+#include "IPeerConnection.h"
 
 #include "mozAutoDocUpdate.h"
 #include "nsGlobalWindow.h"
@@ -6740,6 +6741,18 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
     indexedDB::IndexedDatabaseManager::Get();
   if (idbManager && idbManager->HasOpenTransactions(win)) {
     return false;
+  }
+
+  // Check if we have active PeerConnections
+  nsCOMPtr<IPeerConnectionManager> pcManager =
+    do_GetService(IPEERCONNECTION_MANAGER_CONTRACTID);
+
+  if (pcManager && win) {
+    bool active;
+    pcManager->HasActivePeerConnection(win->WindowID(), &active);
+    if (active) {
+      return false;
+    }
   }
 
   bool canCache = true;

@@ -12,10 +12,12 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const PC_CONTRACT = "@mozilla.org/dom/peerconnection;1";
 const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
+const PC_MANAGER_CONTRACT = "@mozilla.org/dom/peerconnectionmanager;1";
 
 const PC_CID = Components.ID("{7cb2b368-b1ce-4560-acac-8e0dbda7d3d0}");
 const PC_ICE_CID = Components.ID("{8c5dbd70-2c8e-4ecb-a5ad-2fc919099f01}");
 const PC_SESSION_CID = Components.ID("{5f21ffd9-b73f-4ba0-a685-56b4667aaf1c}");
+const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
 
 // Global list of PeerConnection objects, so they can be cleaned up when
 // a page is torn down. (Maps inner window ID to an array of PC objects).
@@ -25,7 +27,27 @@ function GlobalPCList() {
 }
 GlobalPCList.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+                                         Ci.nsISupportsWeakReference,
+                                         Ci.IPeerConnectionManager]),
+
+  classID: PC_MANAGER_CID,
+  classInfo: XPCOMUtils.generateCI({classID: PC_MANAGER_CID,
+                                    contractID: PC_MANAGER_CONTRACT,
+                                    classDescription: "PeerConnectionManager",
+                                    interfaces: [
+                                      Ci.nsIObserver,
+                                      Ci.nsISupportsWeakReference,
+                                      Ci.IPeerConnectionManager
+                                    ]}),
+
+  _xpcom_factory: {
+    createInstance: function(outer, iid) {
+      if (outer) {
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
+      }
+      return _globalPCList.QueryInterface(iid);
+    }
+  },
 
   addPC: function(pc) {
     let winID = pc._winID;
@@ -34,6 +56,10 @@ GlobalPCList.prototype = {
     } else {
       this._list[winID] = [pc];
     }
+  },
+
+  hasActivePeerConnection: function(winID) {
+    return this._list[winID] ? true : false;
   },
 
   observe: function(subject, topic, data) {
@@ -675,5 +701,5 @@ PeerConnectionObserver.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
-  [IceCandidate, SessionDescription, PeerConnection]
+  [GlobalPCList, IceCandidate, SessionDescription, PeerConnection]
 );
