@@ -163,6 +163,12 @@ textarea::-moz-placeholder {
 
   overflow: hidden !important;
 
+  /*
+   * The placeholder should be ignored by pointer otherwise, we might have some
+   * unexpected behavior like the resize handle not being selectable.
+   */
+  pointer-events: none !important;
+
   color: GrayText;
 }
 
