@@ -47,6 +47,13 @@ public:
    * @returns uint64_t the inner window ID.
    */
   static uint64_t GetCurrentlyRunningCodeInnerWindowID(JSContext *aContext);
+
+  /**
+   * Report a pending exception on aContext, if any.  Note that this
+   * can be called when the context has a JS stack.  If that's the
+   * case, the stack will be set aside before reporting the exception.
+   */
+  static void ReportPendingException(JSContext *aContext);
 };
 
 

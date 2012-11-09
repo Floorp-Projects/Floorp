@@ -1650,6 +1650,11 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     if (!result)
       return NS_ERROR_DOM_SECURITY_ERR;
 
+    if (!aTargetObj) {
+        // We're done here
+        return NS_OK;
+    }
+
     /*
     ** Get origin of subject and object and compare.
     */
