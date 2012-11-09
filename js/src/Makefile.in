@@ -127,6 +127,7 @@ CPPSRCS		= \
 		String.cpp \
 		BytecodeCompiler.cpp \
 		BytecodeEmitter.cpp \
+		CharacterEncoding.cpp \
 		FoldConstants.cpp \
 		Intl.cpp \
 		NameFunctions.cpp \
@@ -216,6 +217,7 @@ EXPORTS_NAMESPACES += js
 # that we ensure we don't over-expose our internal integer typedefs.  Note that
 # LegacyIntTypes.h below is deliberately exempted from this requirement.
 EXPORTS_js = \
+		CharacterEncoding.h \
 		HashTable.h \
 		HeapAPI.h \
 		LegacyIntTypes.h \

@@ -64,6 +64,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
+#include "js/CharacterEncoding.h"
 #include "js/MemoryMetrics.h"
 #include "vm/Debugger.h"
 #include "vm/NumericConversions.h"
@@ -6231,27 +6232,24 @@ JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst, size_
 }
 
 JS_PUBLIC_API(char *)
-JS_EncodeString(JSContext *cx, JSRawString strArg)
+JS_EncodeString(JSContext *cx, JSRawString str)
 {
-    RootedString str(cx, strArg);
-
+    AutoAssertNoGC nogc;
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    const jschar *chars = str->getChars(cx);
-    if (!chars)
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
         return NULL;
-    return DeflateString(cx, chars, str->length());
+
+    return LossyTwoByteCharsToNewLatin1CharsZ(cx, linear->range()).c_str();
 }
 
 JS_PUBLIC_API(size_t)
 JS_GetStringEncodingLength(JSContext *cx, JSString *str)
 {
-    /* jsd calls us with a NULL cx. Ugh. */
-    if (cx) {
-        AssertHeapIsIdle(cx);
-        CHECK_REQUEST(cx);
-    }
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
 
     const jschar *chars = str->getChars(cx);
     if (!chars)
@@ -6260,8 +6258,11 @@ JS_GetStringEncodingLength(JSContext *cx, JSString *str)
 }
 
 JS_PUBLIC_API(size_t)
-JS_EncodeStringToBuffer(JSString *str, char *buffer, size_t length)
+JS_EncodeStringToBuffer(JSContext *cx, JSString *str, char *buffer, size_t length)
 {
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
     /*
      * FIXME bug 612141 - fix DeflateStringToBuffer interface so the result
      * would allow to distinguish between insufficient buffer and encoding
