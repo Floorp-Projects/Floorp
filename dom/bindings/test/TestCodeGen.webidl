@@ -29,6 +29,28 @@ enum TestEnum {
 callback TestCallback = void();
 [TreatNonCallableAsNull] callback TestTreatAsNullCallback = void();
 
+// Callback return value tests
+callback TestIntegerReturn = long();
+callback TestNullableIntegerReturn = long?();
+callback TestBooleanReturn = boolean();
+callback TestFloatReturn = float();
+callback TestStringReturn = DOMString();
+callback TestEnumReturn = TestEnum();
+callback TestInterfaceReturn = TestInterface();
+callback TestNullableInterfaceReturn = TestInterface?();
+callback TestExternalInterfaceReturn = TestExternalInterface();
+callback TestNullableExternalInterfaceReturn = TestExternalInterface?();
+callback TestCallbackInterfaceReturn = TestCallbackInterface();
+callback TestNullableCallbackInterfaceReturn = TestCallbackInterface?();
+callback TestCallbackReturn = TestCallback();
+callback TestNullableCallbackReturn = TestCallback?();
+callback TestObjectReturn = object();
+callback TestNullableObjectReturn = object?();
+callback TestTypedArrayReturn = ArrayBuffer();
+callback TestNullableTypedArrayReturn = ArrayBuffer?();
+callback TestSequenceReturn = sequence<boolean>();
+callback TestNullableSequenceReturn = sequence<boolean>?();
+
 TestInterface implements ImplementedInterface;
 
 // This interface is only for use in the constructor below
