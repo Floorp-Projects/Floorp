@@ -1946,7 +1946,7 @@ def typeIsSequenceOrHasSequenceMember(type):
                    type.flatMemberTypes)
     return False
 
-# If this function is modified, modify CGExampleMember.getArg accordingly
+# If this function is modified, modify CGNativeMember.getArg accordingly
 def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
                                     isDefinitelyObject=False,
                                     isMember=False,
@@ -3270,7 +3270,7 @@ def typeNeedsCx(type, retVal=False):
 # value, or None if there is no need for a return value, and a boolean signaling
 # whether the return value is passed in an out parameter.
 #
-# Whenever this is modified, please update CGExampleMember.getReturnType as
+# Whenever this is modified, please update CGNativeMember.getReturnType as
 # needed
 def getRetvalDeclarationForType(returnType, descriptorProvider,
                                 resultAlreadyAddRefed):
@@ -4663,7 +4663,9 @@ class ClassBase(ClassItem):
 class ClassMethod(ClassItem):
     def __init__(self, name, returnType, args, inline=False, static=False,
                  virtual=False, const=False, bodyInHeader=False,
-                 templateArgs=None, visibility='public', body=None):
+                 templateArgs=None, visibility='public', body=None,
+                 breakAfterReturnDecl="\n",
+                 breakAfterSelf="\n"):
         self.returnType = returnType
         self.args = args
         self.inline = inline or bodyInHeader
@@ -4673,6 +4675,8 @@ class ClassMethod(ClassItem):
         self.bodyInHeader = bodyInHeader
         self.templateArgs = templateArgs
         self.body = body
+        self.breakAfterReturnDecl = breakAfterReturnDecl
+        self.breakAfterSelf = breakAfterSelf
         ClassItem.__init__(self, name, visibility)
 
     def getDecorators(self, declaring):
@@ -4703,15 +4707,18 @@ class ClassMethod(ClassItem):
         else:
            body = ';'
 
-        return string.Template("""${templateClause}${decorators}${returnType}
-${name}(${args})${const}${body}
-""").substitute({ 'templateClause': templateClause,
-                  'decorators': self.getDecorators(True),
-                  'returnType': self.returnType,
-                  'name': self.name,
-                  'const': ' const' if self.const else '',
-                  'args': args,
-                  'body': body })
+        return string.Template("${templateClause}${decorators}${returnType}%s"
+                               "${name}(${args})${const}${body}%s" %
+                               (self.breakAfterReturnDecl, self.breakAfterSelf)
+                               ).substitute({
+                'templateClause': templateClause,
+                'decorators': self.getDecorators(True),
+                'returnType': self.returnType,
+                'name': self.name,
+                'const': ' const' if self.const else '',
+                'args': args,
+                'body': body
+                })
 
     def define(self, cgClass):
         if self.bodyInHeader:
@@ -4837,6 +4844,70 @@ ${className}::${className}(${args})${initializationList}
                   'initializationList': self.getInitializationList(cgClass),
                   'body': body })
 
+class ClassDestructor(ClassItem):
+    """
+    Used for adding a constructor to a CGClass.
+
+    inline should be True if the destructor should be marked inline.
+
+    bodyInHeader should be True if the body should be placed in the class
+    declaration in the header.
+
+    visibility determines the visibility of the destructor (public,
+    protected, private), defaults to private.
+
+    body contains a string with the code for the destructor, defaults to None.
+    """
+    def __init__(self, inline=False, bodyInHeader=False,
+                 visibility="private", body=None):
+        self.inline = inline or bodyInHeader
+        self.bodyInHeader = bodyInHeader
+        self.body = body
+        ClassItem.__init__(self, None, visibility)
+
+    def getDecorators(self, declaring):
+        decorators = []
+        if self.inline and declaring:
+            decorators.append('inline')
+        if decorators:
+            return ' '.join(decorators) + ' '
+        return ''
+
+    def getBody(self):
+        assert self.body is not None
+        return self.body
+
+    def declare(self, cgClass):
+        if self.bodyInHeader:
+            body = '  ' + self.getBody();
+            body = stripTrailingWhitespace(body.replace('\n', '\n  '))
+            if len(body) > 0:
+                body += '\n'
+            body = '\n{\n' + body + '}'
+        else:
+            body = ';'
+
+        return string.Template("""${decorators}~${className}()${body}
+""").substitute({ 'decorators': self.getDecorators(True),
+                  'className': cgClass.getNameString(),
+                  'body': body })
+
+    def define(self, cgClass):
+        if self.bodyInHeader:
+            return ''
+
+        body = '  ' + self.getBody()
+        body = '\n' + stripTrailingWhitespace(body.replace('\n', '\n  '))
+        if len(body) > 0:
+            body += '\n'
+
+        return string.Template("""${decorators}
+${className}::~${className}()
+{${body}}\n
+""").substitute({ 'decorators': self.getDecorators(False),
+                  'className': cgClass.getNameString(),
+                  'body': body })
+
 class ClassMember(ClassItem):
     def __init__(self, name, type, visibility="private", static=False,
                  body=None):
@@ -4893,14 +4964,21 @@ class ClassEnum(ClassItem):
         return ''
 
 class CGClass(CGThing):
-    def __init__(self, name, bases=[], members=[], constructors=[], methods=[],
+    def __init__(self, name, bases=[], members=[], constructors=[],
+                 destructor=None, methods=[],
                  typedefs = [], enums=[], templateArgs=[],
-                 templateSpecialization=[], isStruct=False, indent=''):
+                 templateSpecialization=[], isStruct=False, indent='',
+                 decorators='',
+                 extradeclarations='',
+                 extradefinitions=''):
         CGThing.__init__(self)
         self.name = name
         self.bases = bases
         self.members = members
         self.constructors = constructors
+        # We store our single destructor in a list, since all of our
+        # code wants lists of members.
+        self.destructors = [destructor] if destructor else []
         self.methods = methods
         self.typedefs = typedefs
         self.enums = enums
@@ -4909,6 +4987,9 @@ class CGClass(CGThing):
         self.isStruct = isStruct
         self.indent = indent
         self.defaultVisibility ='public' if isStruct else 'private'
+        self.decorators = decorators
+        self.extradeclarations = extradeclarations
+        self.extradefinitions = extradefinitions
 
     def getNameString(self):
         className = self.name
@@ -4934,13 +5015,26 @@ class CGClass(CGThing):
         else:
             specialization = ''
 
-        result = result + '%s%s %s%s' \
-                 % (self.indent, type, self.name, specialization)
+        myself = '%s%s %s%s' % (self.indent, type, self.name, specialization)
+        if self.decorators != '':
+            myself += " " + self.decorators
+        result += myself
 
         if self.bases:
-            result = result + ' : %s' % ', '.join([d.declare(self) for d in self.bases])
+            inherit = ' : '
+            result += inherit
+            # Grab our first base
+            baseItems = [CGGeneric(b.declare(self)) for b in self.bases]
+            bases = baseItems[:1]
+            # Indent the rest
+            bases.extend(CGIndenter(b, len(myself) + len(inherit)) for
+                         b in baseItems[1:])
+            result += ",\n".join(b.define() for b in bases)
 
         result = result + '\n%s{\n' % self.indent
+
+        result += CGIndenter(CGGeneric(self.extradeclarations),
+                             len(self.indent)).define()
 
         def declareMembers(cgClass, memberList, defaultVisibility, itemCount,
                            separator=''):
@@ -4977,7 +5071,8 @@ class CGClass(CGThing):
             return (result, lastVisibility, itemCount)
 
         order = [(self.enums, ''), (self.typedefs, ''), (self.members, ''),
-                 (self.constructors, '\n'), (self.methods, '\n')]
+                 (self.constructors, '\n'), (self.destructors, '\n'),
+                 (self.methods, '\n')]
 
         lastVisibility = self.defaultVisibility
         itemCount = 0
@@ -5004,9 +5099,9 @@ class CGClass(CGThing):
             return (result, itemCount)
 
         order = [(self.members, '\n'), (self.constructors, '\n'),
-                 (self.methods, '\n')]
+                 (self.destructors, '\n'), (self.methods, '\n')]
 
-        result = ''
+        result = self.extradefinitions
         itemCount = 0
         for (memberList, separator) in order:
             (memberString, itemCount) = defineMembers(self, memberList,
@@ -6461,30 +6556,25 @@ class CGBindingRoot(CGThing):
     def define(self):
         return stripTrailingWhitespace(self.root.define())
 
-class CGExampleMember(CGThing):
-    def __init__(self, descriptor, member, name, signatures, extendedAttrs):
+class CGNativeMember(ClassMethod):
+    def __init__(self, descriptor, member, name, signature, extendedAttrs,
+                 breakAfter=True):
         self.descriptor = descriptor
         self.member = member
-        self.name = name
-        self.signatures = signatures
         self.extendedAttrs = extendedAttrs
         self.resultAlreadyAddRefed = isResultAlreadyAddRefed(self.descriptor,
                                                              self.extendedAttrs)
-
-    def define(self):
-        static = "static " if self.member.isStatic() else ""
-        # Mark our getters, which are attrs that have a non-void return type,
-        # as const.
-        if not self.member.isStatic() and self.member.isAttr() and not self.signatures[0][0].isVoid():
-            const = " const"
-        else:
-            const = ""
-        return "\n".join("%s%s %s(%s)%s;" %
-                         (static,
-                          self.getReturnType(s[0], False),
-                          self.name,
-                          self.getArgs(s[0], s[1]),
-                          const) for s in self.signatures)
+        breakAfterSelf = "\n" if breakAfter else ""
+        ClassMethod.__init__(self, name,
+                             self.getReturnType(signature[0], False),
+                             self.getArgs(signature[0], signature[1]),
+                             static=member.isStatic(),
+                             # Mark our getters, which are attrs that
+                             # have a non-void return type, as const.
+                             const=(not member.isStatic() and member.isAttr() and
+                                    not signature[0].isVoid()),
+                             breakAfterReturnDecl=" ",
+                             breakAfterSelf=breakAfterSelf)
 
     def getReturnType(self, type, isMember):
         if type.isVoid():
@@ -6547,7 +6637,7 @@ class CGExampleMember(CGThing):
         args = [self.getArg(arg) for arg in argList]
         # Now the outparams
         if returnType.isString():
-            args.append("nsString& retval")
+            args.append(Argument("nsString&", "retval"))
         elif returnType.isSequence():
             nullable = returnType.nullable()
             if nullable:
@@ -6557,18 +6647,19 @@ class CGExampleMember(CGThing):
             type = CGWrapper(CGGeneric(elementDecl), pre="nsTArray< ", post=" >")
             if nullable:
                 type = CGWrapper(type, pre="Nullable< ", post=" >")
-            args.append("%s& retval" % type.define())
+            args.append(Argument("%s&" % type.define(), "retval"))
         # And the ErrorResult
         if not 'infallible' in self.extendedAttrs:
-            args.append("ErrorResult& rv")
+            # Use aRv so it won't conflict with local vars named "rv"
+            args.append(Argument("ErrorResult&", "aRv"))
         # And if we're static, a global
         if self.member.isStatic():
-            args.insert(0, "nsISupports* global")
+            args.insert(0, Argument("nsISupports*", "global"))
         # And jscontext bits.  needCx expects a list of tuples, in each of which
         # the first element is the actual argument
         if needCx(returnType, ((a, "") for a in argList), self.extendedAttrs):
-            args.insert(0, "JSContext* cx")
-        return ", ".join(args)
+            args.insert(0, Argument("JSContext*", "cx"))
+        return args
 
     def doGetArgType(self, type, optional, isMember):
         """
@@ -6689,37 +6780,44 @@ class CGExampleMember(CGThing):
         if ref:
             decl = CGWrapper(decl, pre="const ", post="&")
 
-        return "%s %s" % (decl.define(), arg.identifier.name)
+        return Argument(decl.define(), arg.identifier.name)
 
 
-class CGExampleMethod(CGExampleMember):
-    def __init__(self, descriptor, method):
-        CGExampleMember.__init__(self, descriptor, method,
-                                 CGSpecializedMethod.makeNativeName(descriptor,
-                                                                    method),
-                                 method.signatures(),
-                                 descriptor.getExtendedAttributes(method))
+class CGExampleMethod(CGNativeMember):
+    def __init__(self, descriptor, method, signature, breakAfter=True):
+        CGNativeMember.__init__(self, descriptor, method,
+                                CGSpecializedMethod.makeNativeName(descriptor,
+                                                                   method),
+                                signature,
+                                descriptor.getExtendedAttributes(method),
+                                breakAfter)
+    def define(self, cgClass):
+        return ''
 
-class CGExampleGetter(CGExampleMember):
+class CGExampleGetter(CGNativeMember):
     def __init__(self, descriptor, attr):
-        CGExampleMember.__init__(self, descriptor, attr,
-                                 CGSpecializedGetter.makeNativeName(descriptor,
-                                                                    attr),
-                                 [(attr.type, [])],
-                                 descriptor.getExtendedAttributes(attr,
-                                                                  getter=True))
+        CGNativeMember.__init__(self, descriptor, attr,
+                                CGSpecializedGetter.makeNativeName(descriptor,
+                                                                   attr),
+                                (attr.type, []),
+                                descriptor.getExtendedAttributes(attr,
+                                                                 getter=True))
+    def define(self, cgClass):
+        return ''
 
-class CGExampleSetter(CGExampleMember):
+class CGExampleSetter(CGNativeMember):
     def __init__(self, descriptor, attr):
-        CGExampleMember.__init__(self, descriptor, attr,
-                                 CGSpecializedSetter.makeNativeName(descriptor,
-                                                                    attr),
-                                 [(BuiltinTypes[IDLBuiltinType.Types.void],
-                                   [FakeArgument(attr.type, attr)])],
-                                 descriptor.getExtendedAttributes(attr,
-                                                                  setter=True))
+        CGNativeMember.__init__(self, descriptor, attr,
+                                CGSpecializedSetter.makeNativeName(descriptor,
+                                                                   attr),
+                                (BuiltinTypes[IDLBuiltinType.Types.void],
+                                 [FakeArgument(attr.type, attr)]),
+                                descriptor.getExtendedAttributes(attr,
+                                                                 setter=True))
+    def define(self, cgClass):
+        return ''
 
-class CGExampleClass(CGThing):
+class CGExampleClass(CGClass):
     """
     Codegen for the actual example class implemenation for this descriptor
     """
@@ -6729,53 +6827,59 @@ class CGExampleClass(CGThing):
         iface = descriptor.interface
 
         methodDecls = []
+        def appendMethod(m):
+            sigs = m.signatures()
+            for s in sigs[:-1]:
+                # Don't put an empty line after overloads, until we
+                # get to the last one.
+                methodDecls.append(CGExampleMethod(descriptor, m, s,
+                                                   breakAfter=False))
+            methodDecls.append(CGExampleMethod(descriptor, m, sigs[-1]))
+
         if iface.ctor():
-            methodDecls.append(CGExampleMethod(descriptor, iface.ctor()))
+            appendMethod(iface.ctor())
         for m in iface.members:
             if m.isMethod():
-                methodDecls.append(CGExampleMethod(descriptor, m))
+                appendMethod(m)
             elif m.isAttr():
                 methodDecls.append(CGExampleGetter(descriptor, m))
                 if not m.readonly:
                     methodDecls.append(CGExampleSetter(descriptor, m))
 
-        self.decl = CGIndenter(CGList(methodDecls, "\n\n"))
-
+        wrapArgs = [Argument('JSContext*', 'aCx'),
+                    Argument('JSObject*', 'aScope')]
         if descriptor.wrapperCache:
-            wrapFunc = ("  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,\n"
-                        "                               bool* aTriedToWrap);\n")
-        else:
-            wrapFunc = "  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope);\n"
+            wrapArgs.append(Argument('bool*', 'aTriedToWrap'))
+        methodDecls.insert(0,
+                           ClassMethod("WrapObject", "JSObject*",
+                                       wrapArgs, virtual=True,
+                                       breakAfterReturnDecl=" "))
+        getParentObjectReturnType = (
+            "// TODO: return something sensible here, and change the return type\n"
+            "%s*" % descriptor.name)
+        methodDecls.insert(0,
+                           ClassMethod("GetParentObject",
+                                       getParentObjectReturnType,
+                                       [], const=True,
+                                       breakAfterReturnDecl=" "))
+        extradeclarations=(
+            "public:\n"
+            "  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
+            "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)\n"
+            "\n" % descriptor.name)
 
-        classDecl = CGWrapper(
-            CGGeneric("public nsISupports,\n"
-                      "public nsWrapperCache"),
-            pre=("class %s MOZ_FINAL : " % descriptor.name),
-            post=(string.Template(
-                    "\n"
-                    "{\n"
-                    "public:\n"
-                    "  ${ifaceName}();\n"
-                    "  ~${ifaceName}();\n"
-                    "\n"
-                    "  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
-                    "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(${ifaceName})\n"
-                    "\n"
-                    "  // TODO: return something sensible here, and change the return type\n"
-                    "  ${ifaceName}* GetParentObject() const;\n"
-                    "\n" +
-                    wrapFunc +
-                    "\n").substitute({ "ifaceName": descriptor.name })),
-            reindent=True)
-
-        self.decl = CGWrapper(self.decl,
-                              pre=("\n" + classDecl.define()),
-                              post="\n};\n\n")
-
-    def declare(self):
-        return self.decl.define()
+        CGClass.__init__(self, descriptor.name,
+                         bases=[ClassBase("nsISupports"),
+                                ClassBase("nsWrapperCache")],
+                         constructors=[ClassConstructor([],
+                                                        visibility="public")],
+                         destructor=ClassDestructor(visibility="public"),
+                         methods=methodDecls,
+                         decorators="MOZ_FINAL",
+                         extradeclarations=extradeclarations)
 
     def define(self):
+        # Just override CGClass and do our own thing
         classImpl = """
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(${ifaceName})
 NS_IMPL_CYCLE_COLLECTING_ADDREF(${ifaceName})
@@ -6827,7 +6931,8 @@ class CGExampleRoot(CGThing):
         # Let's assume we're not doing workers stuff
         descriptor = config.getDescriptor(interfaceName, False)
 
-        self.root = CGExampleClass(descriptor)
+        self.root = CGWrapper(CGExampleClass(descriptor),
+                              pre="\n", post="\n")
 
         self.root = CGNamespace.build(["mozilla", "dom"], self.root);
 
