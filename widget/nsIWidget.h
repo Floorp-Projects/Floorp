@@ -161,6 +161,29 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
 };
 
 /**
+ * Before the OS goes to sleep, this topic is notified.
+ */
+#define NS_WIDGET_SLEEP_OBSERVER_TOPIC "sleep_notification"
+
+/**
+ * After the OS wakes up, this topic is notified.
+ */
+#define NS_WIDGET_WAKE_OBSERVER_TOPIC "wake_notification"
+
+/**
+ * Before the OS suspends the current process, this topic is notified.  Some
+ * OS will kill processes that are suspended instead of resuming them.
+ * For that reason this topic may be useful to safely close down resources.
+ */
+#define NS_WIDGET_SUSPEND_PROCESS_OBSERVER_TOPIC "suspend_process_notification"
+
+/**
+ * After the current process resumes from being suspended, this topic is
+ * notified.
+ */
+#define NS_WIDGET_RESUME_PROCESS_OBSERVER_TOPIC "resume_process_notification"
+
+/**
  * Preference for receiving IME updates
  *
  * If mWantUpdates is true, PuppetWidget will forward
