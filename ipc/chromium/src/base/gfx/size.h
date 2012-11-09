@@ -7,7 +7,7 @@
 
 #include "build/build_config.h"
 
-#include <iostream>
+#include <ostream>
 
 #if defined(OS_WIN)
 typedef struct tagSIZE SIZE;

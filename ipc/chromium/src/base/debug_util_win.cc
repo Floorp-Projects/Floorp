@@ -6,6 +6,7 @@
 
 #include <windows.h>
 #include <dbghelp.h>
+#include <iostream>
 
 #include "base/basictypes.h"
 #include "base/lock.h"
