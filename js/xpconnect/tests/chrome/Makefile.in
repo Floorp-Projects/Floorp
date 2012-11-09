@@ -70,6 +70,7 @@ MOCHITEST_CHROME_FILES = \
 		test_weakmap_keys_preserved2.xul \
 		test_weakref.xul \
 		test_wrappers.xul \
+		test_paris_weakmap_keys.xul \
 		$(NULL)
 
 ifneq ($(OS_ARCH),WINNT)
