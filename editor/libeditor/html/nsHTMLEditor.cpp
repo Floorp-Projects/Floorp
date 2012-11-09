@@ -5164,6 +5164,19 @@ nsHTMLEditor::GetFocusedContent()
   return OurWindowHasFocus() ? focusedContent.forget() : nullptr;
 }
 
+already_AddRefed<nsIContent>
+nsHTMLEditor::GetFocusedContentForIME()
+{
+  nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
+  if (!focusedContent) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
+  NS_ENSURE_TRUE(doc, nullptr);
+  return doc->HasFlag(NODE_IS_EDITABLE) ? nullptr : focusedContent.forget();
+}
+
 bool
 nsHTMLEditor::IsActiveInDOMWindow()
 {
