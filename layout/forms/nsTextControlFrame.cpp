@@ -1313,11 +1313,8 @@ nsTextControlFrame::SetValueChanged(bool aValueChanged)
   NS_ASSERTION(txtCtrl, "Content not a text control element");
 
   if (mUsePlaceholder) {
-    int32_t textLength;
-    GetTextLength(&textLength);
-
     nsWeakFrame weakFrame(this);
-    txtCtrl->SetPlaceholderVisibility(!textLength, true);
+    txtCtrl->UpdatePlaceholderVisibility(true);
     if (!weakFrame.IsAlive()) {
       return;
     }
@@ -1375,7 +1372,7 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   if (mUsePlaceholder && !aBeforeEditorInit)
   {
     nsWeakFrame weakFrame(this);
-    txtCtrl->SetPlaceholderVisibility(value.IsEmpty(), aNotify);
+    txtCtrl->UpdatePlaceholderVisibility(aNotify);
     NS_ENSURE_STATE(weakFrame.IsAlive());
   }
 

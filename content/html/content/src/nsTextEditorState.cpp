@@ -1968,9 +1968,7 @@ nsTextEditorState::ValueWasChanged(bool aNotify)
     return;
   }
 
-  nsAutoString valueString;
-  GetValue(valueString, true);
-  SetPlaceholderVisibility(valueString.IsEmpty(), aNotify);
+  UpdatePlaceholderVisibility(aNotify);
 }
 
 void
@@ -1994,13 +1992,15 @@ nsTextEditorState::UpdatePlaceholderText(bool aNotify)
 }
 
 void
-nsTextEditorState::SetPlaceholderVisibility(bool aVisible,
-                                            bool aNotify)
+nsTextEditorState::UpdatePlaceholderVisibility(bool aNotify)
 {
   NS_ASSERTION(mPlaceholderDiv, "This function should not be called if "
                                 "mPlaceholderDiv isn't set");
 
-  mPlaceholderVisibility = aVisible;
+  nsAutoString value;
+  GetValue(value, true);
+
+  mPlaceholderVisibility = value.IsEmpty();
 
   if (mBoundFrame && aNotify) {
     mBoundFrame->InvalidateFrame();
