@@ -163,14 +163,11 @@ private:
 
 // WebIDL event handlers
 #define IMPL_EVENT_HANDLER(_event)                                        \
-  inline JSObject* GetOn##_event(JSContext* aCx)                          \
+  inline mozilla::dom::EventHandlerNonNull* GetOn##_event()               \
   {                                                                       \
-    JS::Value val;                                                        \
-    GetEventHandler(nsGkAtoms::on##_event, aCx, &val);                    \
-    return val.toObjectOrNull();                                          \
+    return GetEventHandler(nsGkAtoms::on##_event);                        \
   }                                                                       \
-  inline void SetOn##_event(JSContext* aCx,                               \
-                            mozilla::dom::EventHandlerNonNull* aCallback, \
+  inline void SetOn##_event(mozilla::dom::EventHandlerNonNull* aCallback, \
                             ErrorResult& aRv)                             \
   {                                                                       \
     SetEventHandler(nsGkAtoms::on##_event, aCallback, aRv);               \
