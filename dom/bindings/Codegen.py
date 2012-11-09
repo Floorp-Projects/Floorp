@@ -4709,13 +4709,13 @@ ${destructors}
         conversionsToJS = []
         if self.type.hasNullableType:
             conversionsToJS.append("    case eNull:\n"
+                                   "    {\n"
                                    "      *vp = JS::NullValue();\n"
-                                   "      break;")
+                                   "      return true;\n"
+                                   "    }")
         conversionsToJS.extend(
-            caseDecl + caseBody for (caseDecl, caseBody) in
-            zip(mapTemplate("    case e${name}:\n", templateVars),
-                map(self.getConversiontoJS,
-                    zip(templateVars, self.type.flatMemberTypes))))
+            map(self.getConversionToJS,
+                zip(templateVars, self.type.flatMemberTypes)))
 
         return string.Template("""bool
 ${structName}::ToJSVal(JSContext* cx, JSObject* scopeObj, JS::Value* vp) const
@@ -4724,7 +4724,9 @@ ${structName}::ToJSVal(JSContext* cx, JSObject* scopeObj, JS::Value* vp) const
 ${doConversionsToJS}
 
     case eUninitialized:
+    {
       break;
+    }
   }
   return false;
 }
@@ -4733,8 +4735,9 @@ ${doConversionsToJS}
                 "doConversionsToJS": "\n\n".join(conversionsToJS)
                 })
 
-    def getConversiontoJS(self, arg):
+    def getConversionToJS(self, arg):
         (templateVars, type) = arg
+        assert not type.nullable() # flatMemberTypes never has nullable types
         val = "mValue.m%(name)s.Value()" % templateVars
         if type.isString():
             # XPConnect string-to-JS conversion wants to mutate the string.  So
@@ -4744,7 +4747,7 @@ ${doConversionsToJS}
             val = "mutableStr"
         else:
             prepend = ""
-            if type.isObject() and not type.nullable():
+            if type.isObject():
                 # We'll have a NonNull<JSObject> while the wrapping code
                 # wants a JSObject*
                 val = "%s.get()" % val
@@ -4762,9 +4765,12 @@ ${doConversionsToJS}
                 "result": val,
                 "objectCanBeNonNull": True
                 })
-        return CGIndenter(CGWrapper(CGIndenter(CGGeneric(wrapCode)),
-                                    pre="{\n",
-                                    post="\n}"), 4).define()
+        return CGIndenter(CGList([CGGeneric("case e%(name)s:" % templateVars),
+                                  CGWrapper(CGIndenter(CGGeneric(wrapCode)),
+                                            pre="{\n",
+                                            post="\n}")],
+                                 "\n"),
+                          4).define()
 
 class CGUnionConversionStruct(CGThing):
     def __init__(self, type, descriptorProvider):
