@@ -2314,33 +2314,6 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
   }
 }
 
-bool
-FrameLayerBuilder::NeedToInvalidateFixedDisplayItem(nsDisplayListBuilder* aBuilder,
-                                                    nsDisplayItem* aItem)
-{
-  if (!aItem->ShouldFixToViewport(aBuilder)) {
-    return true;
-  }
-
-  nsRefPtr<LayerManager> layerManager;
-  nsIFrame* referenceFrame = aBuilder->RootReferenceFrame();
-  NS_ASSERTION(referenceFrame == nsLayoutUtils::GetDisplayRootFrame(referenceFrame),
-               "Reference frame must be a display root for us to use the layer manager");
-  nsIWidget* window = referenceFrame->GetNearestWidget();
-  if (window) {
-    layerManager = window->GetLayerManager();
-  }
-
-  if (layerManager) {
-    DisplayItemData* data = GetDisplayItemDataForManager(aItem, layerManager);
-    if (data) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 void
 FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
                                         nsDisplayItem* aItem,
