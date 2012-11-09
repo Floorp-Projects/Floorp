@@ -319,3 +319,13 @@ interface TestExampleInterface {
 
   // If you add things here, add them to TestCodeGen as well
 };
+
+interface TestExampleProxyInterface {
+  getter long longIndexedGetter(unsigned long ix);
+  deleter void (unsigned long ix);
+  setter creator void longIndexedSetter(unsigned long y, long z);
+  stringifier DOMString myStringifier();
+  getter short shortNameGetter(DOMString nom);
+  deleter void (DOMString nomnom);
+  setter creator void shortNamedSetter(DOMString me, short value);
+};
