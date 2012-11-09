@@ -1786,17 +1786,15 @@ private:
  */
 class nsDisplayBackground : public nsDisplayItem {
 public:
-  // aLayer signifies which background layer this item represents. Normally
-  // a background layer will only be marked as fixed if it covers the scroll-
-  // port of the root scroll-frame. This check can be skipped using
-  // aSkipFixedItemBoundsCheck.
-  // aIsThemed should be the value of aFrame->IsThemed.
-  // aBackgroundStyle should be the result of
-  // nsCSSRendering::FindBackground, or null if FindBackground returned false.
+  /**
+   * aLayer signifies which background layer this item represents.
+   * aIsThemed should be the value of aFrame->IsThemed.
+   * aBackgroundStyle should be the result of
+   * nsCSSRendering::FindBackground, or null if FindBackground returned false.
+   */
   nsDisplayBackground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       uint32_t aLayer, bool aIsThemed,
-                      const nsStyleBackground* aBackgroundStyle,
-                      bool aSkipFixedItemBoundsCheck = false);
+                      const nsStyleBackground* aBackgroundStyle);
   virtual ~nsDisplayBackground();
 
   // This will create and append new items for all the layers of the
@@ -1825,7 +1823,6 @@ public:
   virtual bool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
                                                 nsIFrame* aFrame) MOZ_OVERRIDE;
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) MOZ_OVERRIDE;
-  virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
   /**
    * GetBounds() returns the background painting area.
    */
@@ -1883,9 +1880,6 @@ protected:
   nsITheme::Transparency mThemeTransparency;
   /* Used to cache mFrame->IsThemed() since it isn't a cheap call */
   bool mIsThemed;
-  /* true if this item represents a background-attachment:fixed layer and
-   * should fix to the viewport. */
-  bool mIsFixed;
   /* true if this item represents the bottom-most background layer */
   bool mIsBottommostLayer;
 };
