@@ -148,8 +148,8 @@ class TypedOrValueRegister
 
     // Space to hold either an AnyRegister or a ValueOperand.
     union U {
-        AlignedStorage2<AnyRegister> typed;
-        AlignedStorage2<ValueOperand> value;
+        mozilla::AlignedStorage2<AnyRegister> typed;
+        mozilla::AlignedStorage2<ValueOperand> value;
     } data;
 
     AnyRegister &dataTyped() {
@@ -208,8 +208,8 @@ class ConstantOrRegister
 
     // Space to hold either a Value or a TypedOrValueRegister.
     union U {
-        AlignedStorage2<Value> constant;
-        AlignedStorage2<TypedOrValueRegister> reg;
+        mozilla::AlignedStorage2<Value> constant;
+        mozilla::AlignedStorage2<TypedOrValueRegister> reg;
     } data;
 
     Value &dataValue() {

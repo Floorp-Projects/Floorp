@@ -41,8 +41,7 @@ public:
   }
 
   TextDecoder(nsISupports* aGlobal)
-    : mGlobal(aGlobal)
-    , mFatal(false), mUseBOM(false), mOffset(0), mIsUTF16Family(false)
+    : mGlobal(aGlobal), mFatal(false), mOffset(0), mIsUTF16Family(false)
   {
     MOZ_ASSERT(aGlobal);
     SetIsDOMBinding();
@@ -93,11 +92,10 @@ public:
               ErrorResult& aRv);
 
 private:
-  const char* mEncoding;
+  nsCString mEncoding;
   nsCOMPtr<nsIUnicodeDecoder> mDecoder;
   nsCOMPtr<nsISupports> mGlobal;
   bool mFatal;
-  bool mUseBOM;
   uint8_t mOffset;
   char mInitialBytes[3];
   bool mIsUTF16Family;
@@ -117,8 +115,7 @@ private:
             ErrorResult& aRv);
 
   // Internal helper functions.
-  void CreateDecoder(ErrorResult& aRv);
-  void ResetDecoder(bool aResetOffset = true);
+  void ResetDecoder();
   void HandleBOM(const char*& aData, uint32_t& aLength,
                  const TextDecodeOptions& aOptions,
                  nsAString& aOutString, ErrorResult& aRv);

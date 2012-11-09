@@ -138,8 +138,8 @@ public:
   virtual const char* Name() const { return "Basic"; }
 #endif // MOZ_LAYERS_HAVE_LOG
 
-  // Clear the cached contents of this layer.
-  void ClearCachedResources();
+  // Clear the cached contents of this layer tree.
+  virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;
 
   void SetTransactionIncomplete() { mTransactionIncomplete = true; }
   bool IsTransactionIncomplete() { return mTransactionIncomplete; }
@@ -270,6 +270,10 @@ public:
   virtual bool HasShadowManagerInternal() const { return HasShadowManager(); }
 
   virtual void SetIsFirstPaint() MOZ_OVERRIDE;
+
+  // Drop cached resources and ask our shadow manager to do the same,
+  // if we have one.
+  virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;
 
   void SetRepeatTransaction() { mRepeatTransaction = true; }
 

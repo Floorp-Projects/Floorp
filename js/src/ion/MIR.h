@@ -2498,11 +2498,24 @@ class MSub : public MBinaryArithInstruction
 
 class MMul : public MBinaryArithInstruction
 {
+    // Annotation the result could be a negative zero
+    // and we need to guard this during execution.
     bool canBeNegativeZero_;
+
+    // Annotation the result of this Mul is only used in int32 domain
+    // and we could possible truncate the result.
+    bool possibleTruncate_;
+
+    // Annotation the Mul can truncate. This is only set after range analysis,
+    // because the result could be in the imprecise double range.
+    // In that case the truncated result isn't correct.
+    bool implicitTruncate_;
 
     MMul(MDefinition *left, MDefinition *right, MIRType type)
       : MBinaryArithInstruction(left, right),
-        canBeNegativeZero_(true)
+        canBeNegativeZero_(true),
+        possibleTruncate_(false),
+        implicitTruncate_(false)
     {
         if (type != MIRType_Value)
             specialization_ = type;
@@ -2521,13 +2534,14 @@ class MMul : public MBinaryArithInstruction
     MDefinition *foldsTo(bool useValueNumbers);
     void analyzeEdgeCasesForward();
     void analyzeEdgeCasesBackward();
+    void analyzeTruncateBackward();
 
     double getIdentity() {
         return 1;
     }
 
     bool canOverflow() {
-        return !range()->isFinite();
+        return !implicitTruncate_ && !range()->isFinite();
     }
 
     bool canBeNegativeZero() {
@@ -2546,7 +2560,17 @@ class MMul : public MBinaryArithInstruction
             return false;
         Range *left = getOperand(0)->range();
         Range *right = getOperand(1)->range();
+        if (isPossibleTruncated())
+            implicitTruncate_ = !Range::precisionLossMul(left, right);
         return range()->update(Range::mul(left, right));
+    }
+
+    bool isPossibleTruncated() const {
+        return possibleTruncate_;
+    }
+
+    void setPossibleTruncated(bool truncate) {
+        possibleTruncate_ = truncate;
     }
 };
 

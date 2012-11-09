@@ -69,7 +69,7 @@ class B2GAutomation:
         # here is where you'd do that. Right now, we just return a list of
         # tests
         testlist = []
-        for i in mft.get():
+        for i in mft.active_tests(exists=False, disabled=False):
             testlist.append(i["path"])
 
         return testlist

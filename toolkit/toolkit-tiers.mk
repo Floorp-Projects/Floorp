@@ -151,6 +151,12 @@ tier_platform_dirs += \
 		$(NULL)
 endif
 
+ifdef MOZ_SOUNDTOUCH
+tier_platform_dirs += \
+		media/libsoundtouch \
+		$(NULL)
+endif
+
 ifdef MOZ_CUBEB
 tier_platform_dirs += \
 		media/libcubeb \

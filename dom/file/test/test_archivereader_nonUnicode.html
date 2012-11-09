@@ -1,0 +1,104 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Archive Reader Non-Unicode Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function createNonUnicodeData() {
+    const Cc = SpecialPowers.wrap(Components).classes;
+    const Ci = SpecialPowers.wrap(Components).interfaces;
+
+    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+    var testFile = dirSvc.get("ProfD", Ci.nsIFile);
+    testFile.append("fileArchiveReader_nonUnicode.zip");
+    var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
+                   0666, 0);
+
+    var binaryData = "";
+    for (var i = 0, len = binaryString.length / 2; i < len; ++i) {
+      var hex = binaryString[i * 2] + binaryString[i * 2 + 1];
+      binaryData += String.fromCharCode(parseInt(hex,16));
+    }
+    outStream.write(binaryData, binaryData.length);
+    outStream.close();
+
+    var fileList = document.getElementById('fileList');
+    SpecialPowers.wrap(fileList).value = testFile.path;
+
+    return fileList.files[0];
+  }
+
+  function test1()
+  {
+    var binaryFile = createNonUnicodeData();
+
+    var r = new ArchiveReader(binaryFile, { encoding: "ISO-8859-1" });
+    isnot(r, null, "ArchiveReader cannot be null");
+
+    // GetFilename
+    var handle = r.getFilenames();
+    isnot(handle, null, "ArchiveReader.getFilenames() cannot be null");
+    handle.onsuccess = function() {
+      ok(true, "ArchiveReader.getFilenames() should return a 'success'");
+      is(this.result instanceof Array, true, "ArchiveReader.getFilenames() should return an array");
+      is(this.result.length, 1, "ArchiveReader.getFilenames(): the array contains 1 item");
+      ok(this.reader, r, "ArchiveRequest.reader should be == ArchiveReader");
+      dump('Content: ' + this.result[0] + '\n');
+      test2();
+    }
+  }
+
+  function test2()
+  {
+    var binaryFile = createNonUnicodeData();
+
+    var r = new ArchiveReader(binaryFile, { encoding: "random stuff" });
+    isnot(r, null, "ArchiveReader cannot be null");
+
+    // GetFilename
+    var handle = r.getFilenames();
+    isnot(handle, null, "ArchiveReader.getFilenames() cannot be null");
+    handle.onsuccess = function() {
+      ok(true, "ArchiveReader.getFilenames() should return a 'success'");
+      is(this.result instanceof Array, true, "ArchiveReader.getFilenames() should return an array");
+      is(this.result.length, 0, "ArchiveReader.getFilenames(): the array contains 0 item");
+      ok(this.reader, r, "ArchiveRequest.reader should be == ArchiveReader");
+      finishTest();
+    }
+  }
+
+  function testSteps()
+  {
+    test1();
+    yield;
+  }
+
+
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();">
+<p id="display">
+  <input id="fileList" type="file"></input>
+</p>
+<script type="text/javascript;version=1.7">
+var binaryString = '' +
+'504B0304140000000000255D094100000000000000000000000002000000912F504B03040A0000000000285D09416BB50A5A' +
+'010000000100000007000000912F9B2E747874D8504B01023F00140000000000255D09410000000000000000000000000200' +
+'24000000000000001000000000000000912F0A002000000000000100180062505F1A1376CD0162505F1A1376CD01FE3F8D59' +
+'1176CD01504B01023F000A0000000000285D09416BB50A5A0100000001000000070024000000000000002000000020000000' +
+'912F9B2E7478740A0020000000000001001800565EF41D1376CD0107BD73631176CD0107BD73631176CD01504B0506000000' +
+'0002000200AD000000460000000000';
+</script>
+</body>
+
+</html>

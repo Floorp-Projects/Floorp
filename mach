@@ -39,6 +39,8 @@ SEARCH_PATHS = [
 MACH_MODULES = [
     'layout/tools/reftest/mach_commands.py',
     'python/mozboot/mozboot/mach_commands.py',
+    'python/mozbuild/mozbuild/config.py',
+    'python/mozbuild/mozbuild/mach_commands.py',
     'testing/mochitest/mach_commands.py',
     'testing/xpcshell/mach_commands.py',
 ]
@@ -54,7 +56,6 @@ except ImportError:
 
 # All of the code is in a module because EVERYTHING IS A LIBRARY.
 mach = mach.main.Mach(our_dir)
-mach.load_commands_from_sys_path()
 
 for path in MACH_MODULES:
     mach.load_commands_from_file(os.path.join(our_dir, path))

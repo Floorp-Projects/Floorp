@@ -79,9 +79,12 @@ let PaymentManager =  {
           if (!pr) {
             continue;
           }
+          if (!(pr instanceof Ci.nsIDOMPaymentRequestInfo)) {
+            return;
+          }
           // We consider jwt type repetition an error.
           if (jwtTypes[pr.type]) {
-            this.paymentFailed("DUPLICATE_JWT_TYPE");
+            this.paymentFailed("PAY_REQUEST_ERROR_DUPLICATED_JWT_TYPE");
             return;
           }
           jwtTypes[pr.type] = true;
@@ -89,7 +92,7 @@ let PaymentManager =  {
         }
 
         if (!paymentRequests.length) {
-          this.paymentFailed("NO_VALID_PAYMENT_REQUEST");
+          this.paymentFailed("PAY_REQUEST_ERROR_NO_VALID_REQUEST_FOUND");
           return;
         }
 
@@ -101,7 +104,7 @@ let PaymentManager =  {
                    .createInstance(Ci.nsIPaymentUIGlue);
         if (!glue) {
           debug("Could not create nsIPaymentUIGlue instance");
-          this.paymentFailed("CREATE_PAYMENT_GLUE_FAILED");
+          this.paymentFailed("INTERNAL_ERROR_CREATE_PAYMENT_GLUE_FAILED");
           return;
         }
 
@@ -111,7 +114,7 @@ let PaymentManager =  {
           if (!selectedProvider || !selectedProvider.uri) {
             debug("Could not retrieve a valid provider based on user's " +
                   "selection");
-            this.paymentFailed("NO_VALID_SELECTED_PROVIDER");
+            this.paymentFailed("INTERNAL_ERROR_NO_VALID_SELECTED_PROVIDER");
             return;
           }
 
@@ -124,7 +127,7 @@ let PaymentManager =  {
           }
           if (!jwt) {
             debug("The selected request has no JWT information associated");
-            this.paymentFailed("NO_JWT_ASSOCIATED_TO_REQUEST");
+            this.paymentFailed("INTERNAL_ERROR_NO_JWT_ASSOCIATED_TO_REQUEST");
             return;
           }
 
@@ -214,7 +217,8 @@ let PaymentManager =  {
    */
   getPaymentRequestInfo: function getPaymentRequestInfo(aJwt) {
     if (!aJwt) {
-      return null;
+      this.paymentFailed("INTERNAL_ERROR_CALL_WITH_MISSING_JWT");
+      return true;
     }
 
     // First thing, we check that the jwt type is an allowed type and has a
@@ -226,7 +230,8 @@ let PaymentManager =  {
     if (segments.length !== 3) {
       debug("Error getting payment provider's uri. " +
             "Not enough or too many segments");
-      return null;
+      this.paymentFailed("PAY_REQUEST_ERROR_WRONG_SEGMENTS_COUNT");
+      return true;
     }
 
     let payloadObject;
@@ -236,6 +241,10 @@ let PaymentManager =  {
       // the payment request information to be shown to the user.
       let payload = atob(segments[1]);
       debug("Payload " + payload);
+      if (!payload.length) {
+        this.paymentFailed("PAY_REQUEST_ERROR_EMPTY_PAYLOAD");
+        return true;
+      }
 
       // We get rid off the quotes and backslashes so we can parse the JSON
       // object.
@@ -248,88 +257,61 @@ let PaymentManager =  {
       payload = payload.replace(/\\/g, '');
 
       payloadObject = JSON.parse(payload);
+      if (!payloadObject) {
+        this.paymentFailed("PAY_REQUEST_ERROR_ERROR_PARSING_JWT_PAYLOAD");
+        return true;
+      }
     } catch (e) {
-      debug("Error decoding jwt " + e);
-      return null;
+      this.paymentFailed("PAY_REQUEST_ERROR_ERROR_DECODING_JWT");
+      return true;
     }
 
-    if (!payloadObject || !payloadObject.typ || !payloadObject.request) {
-      debug("Error decoding jwt. Not valid jwt. " +
-            "No payload or jwt type or request found");
-      return null;
+    if (!payloadObject.typ) {
+      this.paymentFailed("PAY_REQUEST_ERROR_NO_TYP_PARAMETER");
+      return true;
+    }
+
+    if (!payloadObject.request) {
+      this.paymentFailed("PAY_REQUEST_ERROR_NO_REQUEST_PARAMETER");
+      return true;
     }
 
     // Once we got the jwt 'typ' value we look for a match within the payment
-    // providers stored preferences.
+    // providers stored preferences. If the jwt 'typ' is not recognized as one
+    // of the allowed values for registered payment providers, we skip the jwt
+    // validation but we don't fire any error. This way developers might have
+    // a default set of well formed JWTs that might be used in different B2G
+    // devices with a different set of allowed payment providers.
     let provider = this.registeredProviders[payloadObject.typ];
-    if (!provider || !provider.uri || !provider.name) {
+    if (!provider) {
       debug("Not registered payment provider for jwt type: " +
             payloadObject.typ);
-      return null;
+      return false;
+    }
+
+    if (!provider.uri || !provider.name) {
+      this.paymentFailed("INTERNAL_ERROR_WRONG_REGISTERED_PAY_PROVIDER");
+      return true;
     }
 
     // We only allow https for payment providers uris.
     if (!/^https/.exec(provider.uri.toLowerCase())) {
+      // We should never get this far.
       debug("Payment provider uris must be https: " + provider.uri);
-      return null;
+      this.paymentFailed("INTERNAL_ERROR_NON_HTTPS_PROVIDER_URI");
+      return true;
     }
 
     let pldRequest = payloadObject.request;
-    let request;
-    if (pldRequest.refund) {
-      // The request is a refund request.
-      request = Cc["@mozilla.org/payment/request-refund-info;1"]
-                .createInstance(Ci.nsIDOMPaymentRequestRefundInfo);
-
-      // Refund request should contain a refund reason.
-      if (!request || !pldRequest.reason) {
-        debug("Not valid refund request");
-        return null;
-      }
-      request.wrappedJSObject.init(aJwt,
-                                   payloadObject.typ,
-                                   provider.name,
-                                   pldRequest.reason);
-    } else {
-      // The request is a payment request.
-      request = Cc["@mozilla.org/payment/request-payment-info;1"]
-                .createInstance(Ci.nsIDOMPaymentRequestPaymentInfo);
-
-      // The payment request should contain at least a 'name', 'description' and
-      // 'price' parameters.
-      if (!request || !pldRequest.name || !pldRequest.description ||
-          !pldRequest.price) {
-        debug("Not valid payment request");
-        return null;
-      }
-
-      // The payment request 'price' parameter is a collection of objects with
-      // 'currency' and 'amount' members.
-      let productPrices = [];
-      if (!Array.isArray(pldRequest.price)) {
-        pldRequest.price = [pldRequest.price];
-      }
-
-      for (let i in pldRequest.price) {
-        if (!pldRequest.price[i].currency || !pldRequest.price[i].amount) {
-          debug("Not valid payment request. " +
-                "Price parameter is not well formed");
-          return null;
-        }
-        let price = Cc["@mozilla.org/payment/product-price;1"]
-                    .createInstance(Ci.nsIDOMPaymentProductPrice);
-        price.wrappedJSObject.init(pldRequest.price[i].currency,
-                                   pldRequest.price[i].amount);
-        productPrices.push(price);
-      }
-      request.wrappedJSObject.init(aJwt,
-                                   payloadObject.typ,
-                                   provider.name,
-                                   pldRequest.name,
-                                   pldRequest.description,
-                                   productPrices);
+    let request = Cc["@mozilla.org/payment/request-info;1"]
+                  .createInstance(Ci.nsIDOMPaymentRequestInfo);
+    if (!request) {
+      this.paymentFailed("INTERNAL_ERROR_ERROR_CREATING_PAY_REQUEST");
+      return true;
     }
-
+    request.wrappedJSObject.init(aJwt,
+                                 payloadObject.typ,
+                                 provider.name);
     return request;
   },
 
@@ -344,7 +326,7 @@ let PaymentManager =  {
                .createInstance(Ci.nsIPaymentUIGlue);
     if (!glue) {
       debug("Could not create nsIPaymentUIGlue instance");
-      this.paymentFailed("CREATE_PAYMENT_GLUE_FAILED");
+      this.paymentFailed("INTERNAL_ERROR_CREATE_PAYMENT_GLUE_FAILED");
       return false;
     }
     glue.showPaymentFlow(paymentFlowInfo, this.paymentFailed.bind(this));

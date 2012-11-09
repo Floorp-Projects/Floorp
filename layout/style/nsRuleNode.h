@@ -145,6 +145,21 @@ struct nsCachedStyleData
     return nullptr;
   }
 
+  void NS_FASTCALL SetStyleData(const nsStyleStructID aSID,
+                                nsPresContext *aPresContext, void *aData) {
+    if (IsReset(aSID)) {
+      if (!mResetData) {
+        mResetData = new (aPresContext) nsResetStyleData;
+      }
+      mResetData->mStyleStructs[aSID] = aData;
+    } else {
+      if (!mInheritedData) {
+        mInheritedData = new (aPresContext) nsInheritedStyleData;
+      }
+      mInheritedData->mStyleStructs[aSID] = aData;
+    }
+  }
+
   // Typesafe and faster versions of the above
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_, ctor_args_)       \
     nsStyle##name_ * NS_FASTCALL GetStyle##name_ () {                    \
@@ -398,7 +413,8 @@ public:
 
 protected:
   void DestroyInternal(nsRuleNode ***aDestroyQueueTail);
-  void PropagateDependentBit(uint32_t aBit, nsRuleNode* aHighestNode);
+  void PropagateDependentBit(nsStyleStructID aSID, nsRuleNode* aHighestNode,
+                             void* aStruct);
   void PropagateNoneBit(uint32_t aBit, nsRuleNode* aHighestNode);
 
   const void* SetDefaultOnRoot(const nsStyleStructID aSID,
@@ -608,12 +624,6 @@ protected:
   inline RuleDetail CheckSpecifiedProperties(const nsStyleStructID aSID,
                                              const nsRuleData* aRuleData);
 
-  const void* GetParentData(const nsStyleStructID aSID);
-  #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)  \
-    const nsStyle##name_* GetParent##name_();
-  #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT
-
   already_AddRefed<nsCSSShadowArray>
               GetShadowData(const nsCSSValueList* aList,
                             nsStyleContext* aContext,
@@ -627,6 +637,7 @@ private:
 
 public:
   static nsRuleNode* CreateRootNode(nsPresContext* aPresContext);
+  static void EnsureBlockDisplay(uint8_t& display);
 
   // Transition never returns null; on out of memory it'll just return |this|.
   nsRuleNode* Transition(nsIStyleRule* aRule, uint8_t aLevel,
@@ -643,6 +654,16 @@ public:
   bool IsImportantRule() const {
     NS_ASSERTION(!IsRoot(), "can't call on root");
     return (mDependentBits & NS_RULE_NODE_IS_IMPORTANT) != 0;
+  }
+
+  /**
+   * Has this rule node at some time in its lifetime been the mRuleNode
+   * of some style context (as opposed to only being the ancestor of
+   * some style context's mRuleNode)?
+   */
+  void SetUsedDirectly();
+  bool IsUsedDirectly() const {
+    return (mDependentBits & NS_RULE_NODE_USED_DIRECTLY) != 0;
   }
 
   // NOTE:  Does not |AddRef|.

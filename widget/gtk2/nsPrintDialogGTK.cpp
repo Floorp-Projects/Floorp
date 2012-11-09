@@ -38,29 +38,10 @@ static const char header_footer_tags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"}
 
 #define CUSTOM_VALUE_INDEX ArrayLength(header_footer_tags)
 
-// XXXdholbert Duplicated from widget/gtk2/nsFilePicker.cpp
-// Needs to be unified in some generic utility class.
 static GtkWindow *
 get_gtk_window_for_nsiwidget(nsIWidget *widget)
 {
-  // Get native GdkWindow
-  GdkWindow *gdk_win = GDK_WINDOW(widget->GetNativeData(NS_NATIVE_WIDGET));
-  if (!gdk_win)
-    return NULL;
-
-  // Get the container
-  gpointer user_data = NULL;
-  gdk_window_get_user_data(gdk_win, &user_data);
-  if (!user_data)
-    return NULL;
-
-  // Make sure its really a container
-  MozContainer *parent_container = MOZ_CONTAINER(user_data);
-  if (!parent_container)
-    return NULL;
-
-  // Get its toplevel
-  return GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(parent_container)));
+  return GTK_WINDOW(widget->GetNativeData(NS_NATIVE_SHELLWIDGET));
 }
 
 static void

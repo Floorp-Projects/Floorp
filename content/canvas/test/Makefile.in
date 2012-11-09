@@ -55,6 +55,7 @@ MOCHITEST_FILES = \
 	test_toDataURL_lowercase_ascii.html \
 	test_toDataURL_parameters.html \
 	test_mozGetAsFile.html \
+	test_mozIsPointInStroke.html \
 	test_canvas_strokeStyle_getter.html \
 	test_bug613794.html \
 	test_bug753758.html \

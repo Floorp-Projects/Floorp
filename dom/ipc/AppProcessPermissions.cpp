@@ -41,10 +41,6 @@ AssertAppProcessPermission(PBrowserParent* aActor, const char* aPermission)
 
   if (!hasPermission) {
     printf_stderr("Security problem: Content process does not have `%s' permission.  It will be killed.\n", aPermission);
-    if (!strcmp(aPermission, "indexedDB-chrome-settings-read") || !strcmp(aPermission, "indexedDB-chrome-settings-write")) {
-      printf_stderr("XXX FIXXME BUG 808327: We ignore indexedDB-chrome-settings-* for now.");
-      return true;
-    }
     ContentParent* process = static_cast<ContentParent*>(aActor->Manager());
     process->KillHard();
   }

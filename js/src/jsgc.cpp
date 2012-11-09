@@ -82,8 +82,8 @@
 #include "ion/IonCode.h"
 #ifdef JS_ION
 # include "ion/IonMacroAssembler.h"
-#endif
 #include "ion/IonFrameIterator.h"
+#endif
 
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -108,9 +108,12 @@
 #include "TraceLogging.h"
 #endif
 
-using namespace mozilla;
 using namespace js;
 using namespace js::gc;
+
+using mozilla::ArrayEnd;
+using mozilla::DebugOnly;
+using mozilla::Maybe;
 
 namespace js {
 
@@ -992,7 +995,7 @@ MarkExactStackRoots(JSTracer *trc)
         for (ContextIter cx(trc->runtime); !cx.done(); cx.next()) {
             MarkExactStackRooters(trc, cx->thingGCRooters[i], ThingRootKind(i));
         }
-        MarkExactStackRooters(trc, rt->thingGCRooters[i], ThingRootKind(i));
+        MarkExactStackRooters(trc, rt->mainThread.thingGCRooters[i], ThingRootKind(i));
     }
 }
 #endif /* JSGC_USE_EXACT_ROOTING */
@@ -1125,7 +1128,8 @@ MarkIfGCThingWord(JSTracer *trc, uintptr_t w)
 
 #ifdef DEBUG
     if (trc->runtime->gcIncrementalState == MARK_ROOTS)
-        trc->runtime->gcSavedRoots.append(JSRuntime::SavedGCRoot(thing, traceKind));
+        trc->runtime->mainThread.gcSavedRoots.append(
+            PerThreadData::SavedGCRoot(thing, traceKind));
 #endif
 
     return CGCT_VALID;
@@ -1186,8 +1190,8 @@ MarkConservativeStackRoots(JSTracer *trc, bool useSavedRoots)
 
 #ifdef DEBUG
     if (useSavedRoots) {
-        for (JSRuntime::SavedGCRoot *root = rt->gcSavedRoots.begin();
-             root != rt->gcSavedRoots.end();
+        for (PerThreadData::SavedGCRoot *root = rt->mainThread.gcSavedRoots.begin();
+             root != rt->mainThread.gcSavedRoots.end();
              root++)
         {
             JS_SET_TRACING_NAME(trc, "cstack");
@@ -1197,7 +1201,7 @@ MarkConservativeStackRoots(JSTracer *trc, bool useSavedRoots)
     }
 
     if (rt->gcIncrementalState == MARK_ROOTS)
-        rt->gcSavedRoots.clearAndFree();
+        rt->mainThread.gcSavedRoots.clearAndFree();
 #endif
 
     ConservativeGCData *cgcd = &rt->conservativeGC;
@@ -4079,7 +4083,7 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
         AutoCopyFreeListToArenas copy(rt);
         for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
             if (c->isGCMarking()) {
-                c->setNeedsBarrier(false, JSCompartment::DontUpdateIon);
+                c->setNeedsBarrier(false, JSCompartment::UpdateIon);
                 c->setGCState(JSCompartment::NoGC);
                 wasMarking = true;
             }
@@ -4154,12 +4158,12 @@ AutoGCSlice::AutoGCSlice(JSRuntime *rt)
 
 AutoGCSlice::~AutoGCSlice()
 {
-    for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
+    /* We can't use GCCompartmentsIter if this is the end of the last slice. */
+    for (CompartmentsIter c(runtime); !c.done(); c.next()) {
         if (c->isGCMarking()) {
             c->setNeedsBarrier(true, JSCompartment::UpdateIon);
             c->arenas.prepareForIncrementalGC(runtime);
         } else {
-            JS_ASSERT(c->isGCSweeping());
             c->setNeedsBarrier(false, JSCompartment::UpdateIon);
         }
     }
@@ -4912,7 +4916,8 @@ CheckStackRoot(JSTracer *trc, uintptr_t *w)
         bool matched = false;
         JSRuntime *rt = trc->runtime;
         for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
-            CheckStackRootThings(w, rt->thingGCRooters[i], ThingRootKind(i), &matched);
+            CheckStackRootThings(w, rt->mainThread.thingGCRooters[i],
+                                 ThingRootKind(i), &matched);
             for (ContextIter cx(rt); !cx.done(); cx.next()) {
                 CheckStackRootThings(w, cx->thingGCRooters[i], ThingRootKind(i), &matched);
                 SkipRoot *skip = cx->skipGCRooters;

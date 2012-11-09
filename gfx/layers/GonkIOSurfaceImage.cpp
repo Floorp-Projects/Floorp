@@ -20,7 +20,7 @@ uint32_t GonkIOSurfaceImage::sColorIdMap[] = {
     HAL_PIXEL_FORMAT_YCbCr_420_P, OMX_COLOR_FormatYUV420Planar,
     HAL_PIXEL_FORMAT_YCbCr_422_P, OMX_COLOR_FormatYUV422Planar,
     HAL_PIXEL_FORMAT_YCbCr_420_SP, OMX_COLOR_FormatYUV420SemiPlanar,
-    HAL_PIXEL_FORMAT_YCrCb_420_SP_ADRENO, OMX_QCOM_COLOR_FormatYVU420SemiPlanar,
+    HAL_PIXEL_FORMAT_YCrCb_420_SP_ADRENO, -1,
     HAL_PIXEL_FORMAT_YV12, OMX_COLOR_FormatYUV420Planar,
     0, 0
 };
@@ -33,6 +33,47 @@ struct GraphicBufferAutoUnlock {
 
   ~GraphicBufferAutoUnlock() { mGraphicBuffer->unlock(); }
 };
+
+/**
+ * Converts YVU420 semi planar frames to RGB565, possibly taking different
+ * stride values.
+ * Needed because the Android ColorConverter class assumes that the Y and UV
+ * channels have equal stride.
+ */
+static void
+ConvertYVU420SPToRGB565(void *aYData, uint32_t aYStride,
+                        void *aUVData, uint32_t aUVStride,
+                        void *aOut,
+                        uint32_t aWidth, uint32_t aHeight)
+{
+  uint8_t *y = (uint8_t*)aYData;
+  int8_t *uv = (int8_t*)aUVData;
+
+  uint16_t *rgb = (uint16_t*)aOut;
+
+  for (int i = 0; i < aHeight; i++) {
+    for (int j = 0; j < aWidth; j++) {
+      int8_t d = uv[j | 1] - 128;
+      int8_t e = uv[j & ~1] - 128;
+
+      // Constants taken from https://en.wikipedia.org/wiki/YUV
+      int32_t r = (298 * y[j] + 409 * e + 128) >> 11;
+      int32_t g = (298 * y[j] - 100 * d - 208 * e + 128) >> 10;
+      int32_t b = (298 * y[j] + 516 * d + 128) >> 11;
+
+      r = r > 0x1f ? 0x1f : r < 0 ? 0 : r;
+      g = g > 0x3f ? 0x3f : g < 0 ? 0 : g;
+      b = b > 0x1f ? 0x1f : b < 0 ? 0 : b;
+
+      *rgb++ = (uint16_t)(r << 11 | g << 5 | b);
+    }
+
+    y += aYStride;
+    if (i % 2) {
+      uv += aUVStride;
+    }
+  }
+}
 
 already_AddRefed<gfxASurface>
 GonkIOSurfaceImage::GetAsSurface()
@@ -69,29 +110,36 @@ GonkIOSurfaceImage::GetAsSurface()
   nsRefPtr<gfxImageSurface> imageSurface =
     new gfxImageSurface(GetSize(), gfxASurface::ImageFormatRGB16_565);
 
-  android::ColorConverter *colorConverter =
-    new android::ColorConverter((OMX_COLOR_FORMATTYPE)omxFormat,
-                                OMX_COLOR_Format16bitRGB565);
+  uint32_t width = GetSize().width;
+  uint32_t height = GetSize().height;
 
-  if (!colorConverter->isValid()) {
+  if (format == HAL_PIXEL_FORMAT_YCrCb_420_SP_ADRENO) {
+    // The Adreno hardware decoder aligns image dimensions to a multiple of 32,
+    // so we have to account for that here
+    uint32_t alignedWidth = ALIGN(width, 32);
+    uint32_t alignedHeight = ALIGN(height, 32);
+    uint32_t uvOffset = ALIGN(alignedHeight * alignedWidth, 4096);
+    uint32_t uvStride = 2 * ALIGN(width / 2, 32);
+    ConvertYVU420SPToRGB565(buffer, alignedWidth,
+                            buffer + uvOffset, uvStride,
+                            imageSurface->Data(),
+                            width, height);
+
+    return imageSurface.forget();
+  }
+
+  android::ColorConverter colorConverter((OMX_COLOR_FORMATTYPE)omxFormat,
+                                         OMX_COLOR_Format16bitRGB565);
+
+  if (!colorConverter.isValid()) {
     NS_WARNING("Invalid color conversion");
     return nullptr;
   }
 
-  uint32_t width = GetSize().width;
-  uint32_t height = GetSize().height;
-
-  if (omxFormat == OMX_QCOM_COLOR_FormatYVU420SemiPlanar) {
-    // The Adreno hardware decoder aligns image dimensions to a multiple of 32,
-    //  so we have to account for that here
-    width = ALIGN(width, 32);
-    height = ALIGN(height, 32);
-  }
-
-  rv = colorConverter->convert(buffer, width, height,
-                               0, 0, width - 1, height - 1 /* source crop */,
-                               imageSurface->Data(), width, height,
-                               0, 0, width - 1, height - 1 /* dest crop */);
+  rv = colorConverter.convert(buffer, width, height,
+                              0, 0, width - 1, height - 1 /* source crop */,
+                              imageSurface->Data(), width, height,
+                              0, 0, width - 1, height - 1 /* dest crop */);
 
   if (rv) {
     NS_WARNING("OMX color conversion failed");

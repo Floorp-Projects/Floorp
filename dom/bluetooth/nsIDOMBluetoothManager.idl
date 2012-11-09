@@ -9,12 +9,14 @@
 interface nsIDOMDOMRequest;
 interface nsIDOMBluetoothAdapter;
 
-[scriptable, builtinclass, uuid(d27ec867-949f-4585-b718-d2352e420ec6)]
+[scriptable, builtinclass, uuid(3300693f-ae91-4a3f-b887-bf502c6a97ee)]
 interface nsIDOMBluetoothManager : nsIDOMEventTarget
 {
   readonly attribute bool enabled;
 
   nsIDOMDOMRequest getDefaultAdapter();
+
+  bool isConnected(in unsigned short aProfile);
 
   [implicit_jscontext] attribute jsval onenabled;
   [implicit_jscontext] attribute jsval ondisabled;

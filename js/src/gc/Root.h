@@ -519,27 +519,23 @@ class Rooted : public RootedBase<T>
     {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
         ContextFriendFields *cx = ContextFriendFields::get(cxArg);
-
-        ThingRootKind kind = RootMethods<T>::kind();
-        this->stack = reinterpret_cast<Rooted<T>**>(&cx->thingGCRooters[kind]);
-        this->prev = *stack;
-        *stack = this;
-
-        JS_ASSERT(!RootMethods<T>::poisoned(ptr));
+        commonInit(cx->thingGCRooters);
 #endif
     }
 
     void init(JSRuntime *rtArg)
     {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
-        RuntimeFriendFields *rt = const_cast<RuntimeFriendFields *>(RuntimeFriendFields::get(rtArg));
+        PerThreadDataFriendFields *pt = PerThreadDataFriendFields::getMainThread(rtArg);
+        commonInit(pt->thingGCRooters);
+#endif
+    }
 
-        ThingRootKind kind = RootMethods<T>::kind();
-        this->stack = reinterpret_cast<Rooted<T>**>(&rt->thingGCRooters[kind]);
-        this->prev = *stack;
-        *stack = this;
-
-        JS_ASSERT(!RootMethods<T>::poisoned(ptr));
+    void init(js::PerThreadData *ptArg)
+    {
+#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
+        PerThreadDataFriendFields *pt = PerThreadDataFriendFields::get(ptArg);
+        commonInit(pt->thingGCRooters);
 #endif
     }
 
@@ -576,6 +572,22 @@ class Rooted : public RootedBase<T>
         init(cx);
     }
 
+    Rooted(js::PerThreadData *pt
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : ptr(RootMethods<T>::initial())
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(pt);
+    }
+
+    Rooted(js::PerThreadData *pt, T initial
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : ptr(initial)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(pt);
+    }
+
     template <typename S>
     Rooted(JSContext *cx, const Return<S> &initial
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
@@ -583,6 +595,15 @@ class Rooted : public RootedBase<T>
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         init(cx);
+    }
+
+    template <typename S>
+    Rooted(js::PerThreadData *pt, const Return<S> &initial
+           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : ptr(initial.ptr_)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(pt);
     }
 
     ~Rooted()
@@ -625,6 +646,17 @@ class Rooted : public RootedBase<T>
     }
 
   private:
+    void commonInit(Rooted<void*> **thingGCRooters) {
+#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
+        ThingRootKind kind = RootMethods<T>::kind();
+        this->stack = reinterpret_cast<Rooted<T>**>(&thingGCRooters[kind]);
+        this->prev = *stack;
+        *stack = this;
+
+        JS_ASSERT(!RootMethods<T>::poisoned(ptr));
+#endif
+    }
+
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
     Rooted<T> **stack, *prev;
 #endif
@@ -769,15 +801,11 @@ public:
 /*
  * AssertCanGC will assert if it is called inside of an AutoAssertNoGC region.
  */
-#ifdef DEBUG
 JS_ALWAYS_INLINE void
 AssertCanGC()
 {
     JS_ASSERT(!InNoGCScope());
 }
-#else
-# define AssertCanGC()
-#endif
 
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
 extern void

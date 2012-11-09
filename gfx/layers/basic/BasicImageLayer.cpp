@@ -181,6 +181,11 @@ public:
 
   virtual void Paint(gfxContext* aContext, Layer* aMaskLayer);
 
+  virtual void ClearCachedResources() MOZ_OVERRIDE
+  {
+    DestroyBackBuffer();
+  }
+
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   {
     aAttrs = ImageLayerAttributes(mFilter, mForceSingleTile);

@@ -55,8 +55,8 @@ function testNonEnumProperties() {
         ".nonenum container should be visible.");
 
       // Uncheck 'show hidden properties'.
-      gDebugger.DebuggerView.Options._showNonEnumItem.setAttribute("checked", "false");
-      gDebugger.DebuggerView.Options._toggleShowNonEnum();
+      gDebugger.DebuggerView.Options._showVariablesNonEnumItem.setAttribute("checked", "false");
+      gDebugger.DebuggerView.Options._toggleShowVariablesNonEnum();
 
       ok(details.hasAttribute("open"),
         ".details container should stay visible.");
@@ -65,8 +65,8 @@ function testNonEnumProperties() {
         ".nonenum container should become hidden.");
 
       // Check 'show hidden properties'.
-      gDebugger.DebuggerView.Options._showNonEnumItem.setAttribute("checked", "true");
-      gDebugger.DebuggerView.Options._toggleShowNonEnum();
+      gDebugger.DebuggerView.Options._showVariablesNonEnumItem.setAttribute("checked", "true");
+      gDebugger.DebuggerView.Options._toggleShowVariablesNonEnum();
 
       ok(details.hasAttribute("open"),
         ".details container should stay visible.");
@@ -83,8 +83,8 @@ function testNonEnumProperties() {
         ".nonenum container should be hidden.");
 
       // Uncheck 'show hidden properties'.
-      gDebugger.DebuggerView.Options._showNonEnumItem.setAttribute("checked", "false");
-      gDebugger.DebuggerView.Options._toggleShowNonEnum();
+      gDebugger.DebuggerView.Options._showVariablesNonEnumItem.setAttribute("checked", "false");
+      gDebugger.DebuggerView.Options._toggleShowVariablesNonEnum();
 
       ok(!details.hasAttribute("open"),
         ".details container should stay hidden.");
@@ -93,8 +93,8 @@ function testNonEnumProperties() {
         ".nonenum container should stay hidden.");
 
       // Check 'show hidden properties'.
-      gDebugger.DebuggerView.Options._showNonEnumItem.setAttribute("checked", "true");
-      gDebugger.DebuggerView.Options._toggleShowNonEnum();
+      gDebugger.DebuggerView.Options._showVariablesNonEnumItem.setAttribute("checked", "true");
+      gDebugger.DebuggerView.Options._toggleShowVariablesNonEnum();
 
       gDebugger.DebuggerController.activeThread.resume(function() {
         closeDebuggerAndFinish();

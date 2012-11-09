@@ -373,7 +373,8 @@ protected:
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
                          nsTableFrame*            aTableFrame,
-                         nsReflowStatus&          aStatus);
+                         nsReflowStatus&          aStatus,
+                         bool                     aRowForcedPageBreak);
 
   void SplitSpanningCells(nsPresContext&           aPresContext,
                           const nsHTMLReflowState& aReflowState,

@@ -13,8 +13,9 @@
 
 #include "methodjit/MethodJIT.h"
 #include "vm/Stack.h"
+#ifdef JS_ION
 #include "ion/IonFrameIterator-inl.h"
-
+#endif
 #include "jsscriptinlines.h"
 
 #include "ArgumentsObject-inl.h"

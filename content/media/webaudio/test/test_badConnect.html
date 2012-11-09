@@ -7,19 +7,8 @@
 </head>
 <body>
 <pre id="test">
+<script src="webaudio.js" type="text/javascript"></script>
 <script class="testbody" type="text/javascript">
-
-function expectException(func, exceptionCode) {
-  var threw = false;
-  try {
-    func();
-  } catch (ex) {
-    threw = true;
-    ok(ex instanceof DOMException, "Expect a DOM exception");
-    ok(ex.code, exceptionCode, "Expect the correct exception code");
-  }
-  ok(threw, "The exception was thrown");
-}
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {

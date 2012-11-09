@@ -17,6 +17,7 @@ webidl_files = \
   AudioNode.webidl \
   AudioParam.webidl \
   AudioSourceNode.webidl \
+  BiquadFilterNode.webidl \
   Blob.webidl \
   CanvasRenderingContext2D.webidl \
   ClientRectList.webidl \
@@ -26,6 +27,7 @@ webidl_files = \
   DOMTokenList.webidl \
   DOMSettableTokenList.webidl \
   DOMStringMap.webidl \
+  DynamicsCompressorNode.webidl \
   Function.webidl \
   EventHandler.webidl \
   EventListener.webidl \
@@ -39,6 +41,7 @@ webidl_files = \
   ImageData.webidl \
   NodeList.webidl \
   PaintRequestList.webidl \
+  PannerNode.webidl \
   Performance.webidl \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
@@ -50,6 +53,7 @@ webidl_files = \
   SVGTransformList.webidl \
   TextDecoder.webidl \
   TextEncoder.webidl \
+  URL.webidl \
   WebSocket.webidl \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \
