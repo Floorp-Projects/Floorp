@@ -7,6 +7,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/EventHandlerBinding.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Hal.h"
@@ -110,10 +111,12 @@ public:
     nsresult rv = GetOnmozorientationchange(aCx, &val);
     return NS_SUCCEEDED(rv) ? val.toObjectOrNull() : nullptr;
   }
-  void SetOnmozorientationchange(JSContext* aCx, JSObject* aCallback,
+  void SetOnmozorientationchange(JSContext* aCx,
+                                 mozilla::dom::EventHandlerNonNull* aCallback,
                                  ErrorResult& aRv)
   {
-    aRv = SetOnmozorientationchange(aCx, JS::ObjectOrNullValue(aCallback));
+    JSObject* callback = aCallback ? aCallback->Callable() : nullptr;
+    aRv = SetOnmozorientationchange(aCx, JS::ObjectOrNullValue(callback));
   }
 
   bool MozLockOrientation(const nsAString& aOrientation, ErrorResult& aRv);

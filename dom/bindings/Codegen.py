@@ -2723,10 +2723,24 @@ for (uint32_t i = 0; i < length; ++i) {
             raise TypeError("Can't handle member callbacks; need to sort out "
                             "rooting issues")
 
-        if type.nullable():
-            declType = CGGeneric("JSObject*")
+        if descriptorProvider.workers:
+            if type.nullable():
+                declType = CGGeneric("JSObject*")
+            else:
+                declType = CGGeneric("NonNull<JSObject>")
+            conversion = "  ${declName} = &${val}.toObject();\n"
         else:
-            declType = CGGeneric("NonNull<JSObject>")
+            name = type.unroll().identifier.name
+            if type.nullable():
+                declType = CGGeneric("nsRefPtr<%s>" % name);
+            else:
+                declType = CGGeneric("OwningNonNull<%s>" % name)
+            conversion = (
+                "  bool inited;\n"
+                "  ${declName} = new %s(cx, ${obj}, &${val}.toObject(), &inited);\n"
+                "  if (!inited) {\n"
+                "%s\n"
+                "  }\n" % (name, CGIndenter(exceptionCodeIndented).define()))
 
         if type.treatNonCallableAsNull():
             haveCallable = "JS_ObjectIsCallable(cx, &${val}.toObject())"
@@ -2736,15 +2750,15 @@ for (uint32_t i = 0; i < length; ++i) {
                 assert(isinstance(defaultValue, IDLNullValue))
                 haveCallable = "${haveValue} && " + haveCallable
             template = (
-                "if (%s) {\n"
-                "  ${declName} = &${val}.toObject();\n"
+                ("if (%s) {\n" % haveCallable) +
+                conversion +
                 "} else {\n"
                 "  ${declName} = nullptr;\n"
-                "}" % haveCallable)
+                "}")
         else:
             template = wrapObjectTemplate(
-                "if (JS_ObjectIsCallable(cx, &${val}.toObject())) {\n"
-                "  ${declName} = &${val}.toObject();\n"
+                "if (JS_ObjectIsCallable(cx, &${val}.toObject())) {\n" +
+                conversion +
                 "} else {\n"
                 "%s"
                 "}" % CGIndenter(onFailureNotCallable(failureCode)).define(),
@@ -3210,7 +3224,19 @@ if (!%(resultStr)s) {
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
         # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
-        return (setValue("JS::ObjectOrNullValue(%s)" % result, True), False)
+        # XXXbz Event handlers are special for now, until we fix their
+        # storage to store the EventHandlerNonNull*.
+        if (descriptorProvider.workers or
+            type.unroll().identifier.name == "EventHandlerNonNull"):
+            return (setValue("JS::ObjectOrNullValue(%s)" % result, True), False)
+
+        wrapCode = (("if (%(result)s) {\n" +
+                     CGIndenter(CGGeneric(setValue(
+                            "JS::ObjectValue(*%(result)s->Callable())", True))).define() +
+                     "} else {\n" +
+                     setValue("JS::NullValue()") +
+                     "}") % { "result": result })
+        return wrapCode, False
 
     if type.tag() == IDLType.Tags.any:
         # See comments in WrapNewBindingObject explaining why we need
@@ -3315,7 +3341,7 @@ def infallibleForMember(member, type, descriptorProvider):
     return getWrapTemplateForType(type, descriptorProvider, 'result', None,\
                                   memberIsCreator(member), "return false;")[1]
 
-def typeNeedsCx(type, retVal=False):
+def typeNeedsCx(type, descriptorProvider, retVal=False):
     if type is None:
         return False
     if type.nullable():
@@ -3323,10 +3349,16 @@ def typeNeedsCx(type, retVal=False):
     if type.isSequence() or type.isArray():
         type = type.inner
     if type.isUnion():
-        return any(typeNeedsCx(t) for t in type.unroll().flatMemberTypes)
+        return any(typeNeedsCx(t, descriptorProvider) for t in
+                   type.unroll().flatMemberTypes)
     if retVal and type.isSpiderMonkeyInterface():
         return True
-    return type.isCallback() or type.isAny() or type.isObject()
+    if type.isCallback():
+        # XXXbz Event handlers are special for now, until we fix their
+        # storage to store the EventHandlerNonNull*.
+        return (descriptorProvider.workers or
+                type.unroll().identifier.name == "EventHandlerNonNull")
+    return type.isAny() or type.isObject()
 
 # Returns a tuple consisting of a CGThing containing the type of the return
 # value, or None if there is no need for a return value, and a boolean signaling
@@ -3359,9 +3391,12 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
             result = CGWrapper(result, post="*")
         return result, False
     if returnType.isCallback():
-        # XXXbz we're going to assume that callback types are always
-        # nullable for now.
-        return CGGeneric("JSObject*"), False
+        name = returnType.unroll().identifier.name
+        # XXXbz Event handlers are special for now, until we fix their
+        # storage to store the EventHandlerNonNull*.
+        if descriptorProvider.workers or name == "EventHandlerNonNull":
+            return CGGeneric("JSObject*"), False
+        return CGGeneric("nsRefPtr<%s>" % name), False
     if returnType.isAny():
         return CGGeneric("JS::Value"), False
     if returnType.isObject() or returnType.isSpiderMonkeyInterface():
@@ -3393,9 +3428,9 @@ def isResultAlreadyAddRefed(descriptor, extendedAttributes):
     # Default to already_AddRefed on the main thread, raw pointer in workers
     return not descriptor.workers and not 'resultNotAddRefed' in extendedAttributes
 
-def needCx(returnType, arguments, extendedAttributes):
-    return (typeNeedsCx(returnType, True) or
-            any(typeNeedsCx(a.type) for (a, _) in arguments) or
+def needCx(returnType, arguments, extendedAttributes, descriptorProvider):
+    return (typeNeedsCx(returnType, descriptorProvider, True) or
+            any(typeNeedsCx(a.type, descriptorProvider) for (a, _) in arguments) or
             'implicitJSContext' in extendedAttributes)
 
 class CGCallGenerator(CGThing):
@@ -3434,7 +3469,8 @@ class CGCallGenerator(CGThing):
         if isFallible:
             args.append(CGGeneric("rv"))
 
-        needsCx = needCx(returnType, arguments, extendedAttributes)
+        needsCx = needCx(returnType, arguments, extendedAttributes,
+                         descriptorProvider)
 
         if not "cx" in argsPre and needsCx:
             args.prepend(CGGeneric("cx"))
@@ -4459,9 +4495,15 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
         return CGGeneric(type.inner.identifier.name)
 
     if type.isCallback():
+        if descriptorProvider.workers:
+            if type.nullable():
+                return CGGeneric("JSObject*")
+            return CGGeneric("JSObject&")
         if type.nullable():
-            return CGGeneric("JSObject*")
-        return CGGeneric("JSObject&")
+            typeName = "%s*"
+        else:
+            typeName = "%s&"
+        return CGGeneric(typeName % type.unroll().identifier.name)
 
     if type.isAny():
         return CGGeneric("JS::Value")
@@ -6741,13 +6783,8 @@ class CGNativeMember(ClassMethod):
                               "return ${declName}.Ptr();")
             return result.define(), "nullptr", returnCode
         if type.isCallback():
-            if type.nullable():
-                returnCode = "return ${declName};"
-            else:
-                returnCode = "return ${declName}.Ptr();"
-            # XXXbz we're going to assume that callback types are always
-            # nullable for now in our return value.
-            return "JSObject*", "nullptr", returnCode
+            return ("already_AddRefed<%s>" % type.unroll().identifier.name,
+                    "nullptr", "return ${declName}.forget();")
         if type.isAny():
             return "JS::Value", "JS::UndefinedValue()", "return ${declName};"
         if type.isObject():
@@ -6811,7 +6848,8 @@ class CGNativeMember(ClassMethod):
         # And jscontext bits.  needCx expects a list of tuples, in each of which
         # the first element is the actual argument
         if (self.passCxAsNeeded and
-            needCx(returnType, ((a, "") for a in argList), self.extendedAttrs)):
+            needCx(returnType, ((a, "") for a in argList), self.extendedAttrs,
+                   self.descriptor)):
             args.insert(0, Argument("JSContext*", "cx"))
         return args
 
@@ -6885,13 +6923,16 @@ class CGNativeMember(ClassMethod):
 
         if type.isCallback():
             if type.nullable():
-                declType = "JSObject*"
+                if optional:
+                    declType = "nsRefPtr<%s>"
+                else:
+                    declType = "%s*"
             else:
                 if optional:
-                    declType = "NonNull<JSObject>"
+                    declType = "OwningNonNull<%s>"
                 else:
-                    declType = "JSObject&"
-            return declType, False, False
+                    declType = "%s&"
+            return declType % type.unroll().identifier.name, False, False
 
         if type.isAny():
             return "JS::Value", False, False
