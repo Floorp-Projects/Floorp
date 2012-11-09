@@ -261,16 +261,16 @@ protected:
   nsListenerStruct* FindEventHandler(uint32_t aEventType, nsIAtom* aTypeAtom);
 
   /**
-   * Set the "inline" event listener for aName to aHandler.  aHandler
-   * may be null to indicate that we should lazily get and compile the
-   * string for this listener.  The nsListenerStruct that results, if
-   * any, is returned in aListenerStruct.
+   * Set the "inline" event listener for aName to aHandler.  aHandler may be
+   * have no actual handler set to indicate that we should lazily get and
+   * compile the string for this listener.  The nsListenerStruct that results,
+   * if any, is returned in aListenerStruct.
    */
   nsresult SetEventHandlerInternal(nsIScriptContext *aContext,
                                    JSContext* aCx,
                                    JSObject* aScopeGlobal,
                                    nsIAtom* aName,
-                                   JSObject *aHandler,
+                                   const nsEventHandler& aHandler,
                                    bool aPermitUntrustedEvents,
                                    nsListenerStruct **aListenerStruct);
 
