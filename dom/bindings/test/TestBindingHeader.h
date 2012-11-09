@@ -444,6 +444,13 @@ public:
   TestInterface* PutForwardsAttr();
   TestInterface* PutForwardsAttr2();
   TestInterface* PutForwardsAttr3();
+  void ThrowingMethod(ErrorResult& aRv);
+  bool GetThrowingAttr(ErrorResult& aRv) const;
+  void SetThrowingAttr(bool arg, ErrorResult& aRv);
+  bool GetThrowingGetterAttr(ErrorResult& aRv) const;
+  void SetThrowingGetterAttr(bool arg);
+  bool ThrowingSetterAttr() const;
+  void SetThrowingSetterAttr(bool arg, ErrorResult& aRv);
 
   // Methods and properties imported via "implements"
   bool ImplementedProperty();
