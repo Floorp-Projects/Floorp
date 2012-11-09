@@ -22,6 +22,7 @@ class nsITimer;
 namespace mozilla {
 class MediaResource;
 class MediaByteRange;
+class MediaDecoderOwner;
 }
 
 // The size to use for audio data frames in MozAudioAvailable events.
@@ -62,7 +63,7 @@ public:
   // Perform any initialization required for the decoder.
   // Return true on successful initialisation, false
   // on failure.
-  virtual bool Init(nsHTMLMediaElement* aElement);
+  virtual bool Init(mozilla::MediaDecoderOwner* aOwner);
 
   // Get the current MediaResource being used. Its URI will be returned
   // by currentSrc. Returns what was passed to Load(), if Load() has been called.
@@ -354,7 +355,7 @@ public:
 
   // Returns a weak reference to the media element we're decoding for,
   // if it's available.
-  nsHTMLMediaElement* GetMediaElement();
+  mozilla::MediaDecoderOwner* GetMediaOwner() const;
 
   // Returns the current size of the framebuffer used in
   // MozAudioAvailable events.
@@ -454,7 +455,7 @@ protected:
   // This should only ever be accessed from the main thread.
   // It is set in Init and cleared in Shutdown when the element goes away.
   // The decoder does not add a reference the element.
-  nsHTMLMediaElement* mElement;
+  mozilla::MediaDecoderOwner* mOwner;
 
   // Counters related to decode and presentation of frames.
   FrameStatistics mFrameStats;
